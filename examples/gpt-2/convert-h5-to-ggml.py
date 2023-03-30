@@ -140,7 +140,7 @@ for name in list_vars.keys():
         name = "model/wte"
     elif name == "wpe.weight":
         name = "model/wpe"
-    elif re.match(r'h\.\d+\.ln_1\.weight', name):
+    elif re.match(r"h\.\d+\.ln_1\.weight", name):
         i = re.findall("\d+", name)[0]
         name = f"model/h{i}/ln_1/g"
     elif re.match(r"h\.\d+\.ln_1\.bias", name):
