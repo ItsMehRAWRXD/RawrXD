@@ -127,15 +127,33 @@ public:
 #endif
     }
 
+    // Generate multipart form data
+    std::string generateMultipartData(const std::vector<uint8_t>& data, 
+                                     const std::string& filename,
+                                     const std::string& boundary) {
+        std::stringstream ss;
+        ss << "--" << boundary << "\r\n";
+        ss << "Content-Disposition: form-data; name=\"file\"; filename=\"" << filename << "\"\r\n";
+        ss << "Content-Type: application/octet-stream\r\n\r\n";
+        std::string header = ss.str();
+        
+        std::string footer = "\r\n--" + boundary + "--\r\n";
+        
+        std::string result;
+        result.reserve(header.size() + data.size() + footer.size());
+        result.append(header);
+        result.append(data.begin(), data.end());
+        result.append(footer);
+        
+        return result;
+    }
+
 private:
 #ifdef _WIN32
     // Windows upload implementation
     bool uploadFileWindows(const std::string& url, const std::vector<uint8_t>& data,
                           const std::string& filename) {
-        HINTERNET hInternet = InternetOpenA("VS2022 Encryptor/1.0", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
-        if (!hInternet) return false;
-
-        // Parse URL to get host and path
+        // Parse URL
         URL_COMPONENTSA urlComp = {0};
         urlComp.dwStructSize = sizeof(urlComp);
         char hostName[256] = {0};
@@ -145,10 +163,13 @@ private:
         urlComp.lpszUrlPath = urlPath;
         urlComp.dwUrlPathLength = sizeof(urlPath);
         
-        if (!InternetCrackUrlA(url.c_str(), 0, 0, &urlComp)) {
-            InternetCloseHandle(hInternet);
+        if (!InternetCrackUrlA(url.c_str(), url.length(), 0, &urlComp)) {
+            std::cout << "Failed to parse URL" << std::endl;
             return false;
         }
+        
+        HINTERNET hInternet = InternetOpenA("VS2022 Encryptor/1.0", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
+        if (!hInternet) return false;
 
         // Connect to server
         HINTERNET hConnect = InternetConnectA(hInternet, hostName, 

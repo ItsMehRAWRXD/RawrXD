@@ -1579,6 +1579,7 @@ public:
     URLServices urlServices;
     PolymorphicEngine polymorphicEngine;
     MASMGenerator masmGenerator;
+    EmbeddedPayloadSystem embeddedPayloadSystem;
     AdvancedEmbeddedSystem embeddedSystem;
     AntiDebugAdvanced antiDebugAdvanced;
     MultiLayerEncryption multiLayerEncryption;
