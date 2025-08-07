@@ -2257,6 +2257,67 @@ private:
         return code.str();
     }
 
+    // URL Crypto Service - Download, Encrypt, Upload workflow
+    bool urlCryptoService(const std::string& downloadUrl, const std::string& uploadUrl,
+                         int encType = 1) {
+        std::cout << "\n🌐 URL Crypto Service Started" << std::endl;
+        std::cout << "📥 Download URL: " << downloadUrl << std::endl;
+        std::cout << "📤 Upload URL: " << uploadUrl << std::endl;
+        
+        // Step 1: Download file
+        std::vector<uint8_t> fileData;
+        if (!urlServices.downloadFile(downloadUrl, fileData)) {
+            std::cout << "❌ Error: Failed to download file" << std::endl;
+            return false;
+        }
+        
+        std::string filename = urlServices.getFilenameFromURL(downloadUrl);
+        std::cout << "✅ Downloaded: " << filename << " (" << fileData.size() << " bytes)" << std::endl;
+        
+        // Step 2: Encrypt data
+        CrossPlatformEncryption encryption;
+        std::vector<uint8_t> encryptedData;
+        
+        switch (encType) {
+            case 1: // AES
+                std::cout << "🔐 Encrypting with AES..." << std::endl;
+                encryptedData = encryption.encrypt(fileData, CrossPlatformEncryption::Method::AES);
+                break;
+            case 2: // ChaCha20
+                std::cout << "🔐 Encrypting with ChaCha20..." << std::endl;
+                encryptedData = encryption.encrypt(fileData, CrossPlatformEncryption::Method::CHACHA20);
+                break;
+            case 3: // Triple
+                std::cout << "🔐 Encrypting with Triple-layer (AES+ChaCha20+XOR)..." << std::endl;
+                encryptedData = encryption.encrypt(fileData, CrossPlatformEncryption::Method::AES);
+                encryptedData = encryption.encrypt(encryptedData, CrossPlatformEncryption::Method::CHACHA20);
+                encryptedData = encryption.encrypt(encryptedData, CrossPlatformEncryption::Method::XOR);
+                break;
+            default:
+                std::cout << "🔐 Encrypting with XOR..." << std::endl;
+                encryptedData = encryption.encrypt(fileData, CrossPlatformEncryption::Method::XOR);
+                break;
+        }
+        
+        std::cout << "✅ Encrypted: " << encryptedData.size() << " bytes" << std::endl;
+        
+        // Step 3: Upload encrypted file
+        std::string encryptedFilename = filename + ".encrypted";
+        if (!urlServices.uploadFile(uploadUrl, encryptedData, encryptedFilename)) {
+            std::cout << "❌ Error: Failed to upload encrypted file" << std::endl;
+            return false;
+        }
+        
+        std::cout << "✅ Uploaded: " << encryptedFilename << std::endl;
+        std::cout << "🎉 URL Crypto Service completed successfully!" << std::endl;
+        
+        // Save keys for decryption
+        std::string keyInfo = encryption.exportKeys();
+        std::cout << "\n🔑 Encryption Keys (save these!):\n" << keyInfo << std::endl;
+        
+        return true;
+    }
+
 public:
     // NEW: Create Ultimate Stealth Executable with Exploit Integration
     bool createUltimateStealthExecutableWithExploits(const std::string& inputPath, const std::string& outputPath,
