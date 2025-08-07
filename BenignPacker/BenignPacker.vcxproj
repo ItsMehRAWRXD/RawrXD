@@ -19,13 +19,16 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="enhanced_loader_utils.h" />
     <ClCompile Include="VS2022_GUI_Benign_Packer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cross_platform_encryption.h" />
+    <ClInclude Include="enhanced_loader_utils.h" />
     <ClInclude Include="enhanced_tiny_loader.h" />
     <ClInclude Include="tiny_loader.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <MASM Include="test_masm.asm" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
@@ -63,6 +66,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props" />
   </ImportGroup>
   <ImportGroup Label="Shared">
   </ImportGroup>
@@ -91,6 +95,14 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <MASM>
+      <ObjectFile>$(IntDir)%(Filename).obj</ObjectFile>
+      <ListAllFiles>false</ListAllFiles>
+      <EnableAssemblyGeneratedCodeListing>false</EnableAssemblyGeneratedCodeListing>
+      <AssembledCodeListingFile>$(IntDir)%(Filename).lst</AssembledCodeListingFile>
+      <SourcePath>%(RelativeDir)</SourcePath>
+      <PreprocessorDefinitions>WIN32;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </MASM>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -106,6 +118,14 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <MASM>
+      <ObjectFile>$(IntDir)%(Filename).obj</ObjectFile>
+      <ListAllFiles>false</ListAllFiles>
+      <EnableAssemblyGeneratedCodeListing>false</EnableAssemblyGeneratedCodeListing>
+      <AssembledCodeListingFile>$(IntDir)%(Filename).lst</AssembledCodeListingFile>
+      <SourcePath>%(RelativeDir)</SourcePath>
+      <PreprocessorDefinitions>WIN32;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </MASM>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -119,6 +139,14 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <MASM>
+      <ObjectFile>$(IntDir)%(Filename).obj</ObjectFile>
+      <ListAllFiles>false</ListAllFiles>
+      <EnableAssemblyGeneratedCodeListing>false</EnableAssemblyGeneratedCodeListing>
+      <AssembledCodeListingFile>$(IntDir)%(Filename).lst</AssembledCodeListingFile>
+      <SourcePath>%(RelativeDir)</SourcePath>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </MASM>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -134,8 +162,17 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <MASM>
+      <ObjectFile>$(IntDir)%(Filename).obj</ObjectFile>
+      <ListAllFiles>false</ListAllFiles>
+      <EnableAssemblyGeneratedCodeListing>false</EnableAssemblyGeneratedCodeListing>
+      <AssembledCodeListingFile>$(IntDir)%(Filename).lst</AssembledCodeListingFile>
+      <SourcePath>%(RelativeDir)</SourcePath>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </MASM>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.targets" />
   </ImportGroup>
 </Project>
