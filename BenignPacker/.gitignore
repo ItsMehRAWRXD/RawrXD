@@ -1,0 +1,47 @@
+# Build artifacts
+*.exe
+*.o
+*.obj
+*.dll
+*.so
+*.dylib
+*.a
+*.lib
+
+# Core dumps
+core
+core.*
+
+# Temporary files
+*.tmp
+*.temp
+temp_*
+test_*
+*_test_*
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
+debug_*.txt
+
+# Test outputs
+test_*_output.*
+*_output.exe
+
+# Windows specific
+*.pdb
+*.ilk
+*.exp
+
+# Linux specific
+*.out

