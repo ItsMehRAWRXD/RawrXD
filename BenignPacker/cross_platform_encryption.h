@@ -108,6 +108,15 @@ public:
 #endif
     }
 
+    // AES Decryption
+    std::vector<uint8_t> aesDecrypt(const std::vector<uint8_t>& data) {
+#ifdef _WIN32
+        return aesDecryptWindows(data);
+#else
+        return aesDecryptOpenSSL(data);
+#endif
+    }
+
     // ChaCha20 Encryption (implemented as enhanced XOR for portability)
     std::vector<uint8_t> chacha20Encrypt(const std::vector<uint8_t>& data) {
         // Simplified ChaCha20-style encryption using multiple rounds
