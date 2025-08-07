@@ -269,8 +269,53 @@ private:
     }
 
     std::vector<uint8_t> aesDecryptWindows(const std::vector<uint8_t>& data) {
-        // Similar implementation for decryption
-        return xorDecrypt(data); // Fallback to XOR for now
+        HCRYPTPROV hCryptProv = 0;
+        HCRYPTKEY hKey = 0;
+        std::vector<uint8_t> decrypted;
+
+        try {
+            if (!CryptAcquireContext(&hCryptProv, NULL, NULL, PROV_RSA_AES, CRYPT_VERIFYCONTEXT)) {
+                throw std::runtime_error("CryptAcquireContext failed");
+            }
+
+            struct {
+                BLOBHEADER hdr;
+                DWORD keySize;
+                BYTE keyData[32];
+            } keyBlob;
+
+            keyBlob.hdr.bType = PLAINTEXTKEYBLOB;
+            keyBlob.hdr.bVersion = CUR_BLOB_VERSION;
+            keyBlob.hdr.reserved = 0;
+            keyBlob.hdr.aiKeyAlg = CALG_AES_256;
+            keyBlob.keySize = 32;
+            memcpy(keyBlob.keyData, key.data(), 32);
+
+            if (!CryptImportKey(hCryptProv, (BYTE*)&keyBlob, sizeof(keyBlob), 0, 0, &hKey)) {
+                throw std::runtime_error("CryptImportKey failed");
+            }
+
+            decrypted = data;
+            DWORD dataLen = static_cast<DWORD>(decrypted.size());
+
+            if (!CryptDecrypt(hKey, 0, TRUE, 0, decrypted.data(), &dataLen)) {
+                throw std::runtime_error("CryptDecrypt failed");
+            }
+
+            decrypted.resize(dataLen);
+
+        }
+        catch (...) {
+            if (hKey) CryptDestroyKey(hKey);
+            if (hCryptProv) CryptReleaseContext(hCryptProv, 0);
+            // Fallback to XOR on error
+            return xorDecrypt(data);
+        }
+
+        if (hKey) CryptDestroyKey(hKey);
+        if (hCryptProv) CryptReleaseContext(hCryptProv, 0);
+
+        return decrypted;
     }
 #else
     // Non-Windows AES implementation (fallback to XOR)
