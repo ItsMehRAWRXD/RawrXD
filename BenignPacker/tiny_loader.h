@@ -62,3 +62,8 @@ static const unsigned int tiny_loader_bin_len = sizeof(tiny_loader_bin);
 // Patch offsets for runtime values
 #define PAYLOAD_SIZE_OFFSET 0xF8
 #define PAYLOAD_RVA_OFFSET  0xFC
+
+// Validate that the loader is properly structured
+static_assert(sizeof(tiny_loader_bin) >= 0x100, "Tiny loader too small");
+static_assert(PAYLOAD_SIZE_OFFSET + 3 < sizeof(tiny_loader_bin), "PAYLOAD_SIZE_OFFSET out of bounds");
+static_assert(PAYLOAD_RVA_OFFSET + 3 < sizeof(tiny_loader_bin), "PAYLOAD_RVA_OFFSET out of bounds");
