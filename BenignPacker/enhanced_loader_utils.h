@@ -35,7 +35,34 @@ public:
     static bool patchLoaderWithEncryption(std::vector<uint8_t>& loader,
         const EncryptionMetadata& metadata,
         size_t payloadRVA) {
-        // Simple implementation using existing loader
+        // Validate size
+        size_t requiredSize = ENHANCED_DECRYPT_KEY_OFFSET + metadata.keySize + metadata.ivSize;
+        if (loader.size() < requiredSize) {
+            return false; // loader binary too small
+        }
+
+        // Helper lambda to write 32-bit little-endian value
+        auto writeLe32 = [&](size_t offset, uint32_t value) {
+            loader[offset] = static_cast<uint8_t>(value & 0xFF);
+            loader[offset + 1] = static_cast<uint8_t>((value >> 8) & 0xFF);
+            loader[offset + 2] = static_cast<uint8_t>((value >> 16) & 0xFF);
+            loader[offset + 3] = static_cast<uint8_t>((value >> 24) & 0xFF);
+        };
+
+        // Patch payload size & RVA
+        writeLe32(ENHANCED_PAYLOAD_SIZE_OFFSET, metadata.payloadSize);
+        writeLe32(ENHANCED_PAYLOAD_RVA_OFFSET, static_cast<uint32_t>(payloadRVA));
+
+        // Patch key and IV directly into the loader
+        std::memcpy(loader.data() + ENHANCED_DECRYPT_KEY_OFFSET, metadata.key, metadata.keySize);
+        std::memcpy(loader.data() + ENHANCED_DECRYPT_KEY_OFFSET + metadata.keySize, metadata.iv, metadata.ivSize);
+
+        // Optionally patch encryption method just after IV
+        size_t methodOffset = ENHANCED_DECRYPT_KEY_OFFSET + metadata.keySize + metadata.ivSize;
+        if (loader.size() >= methodOffset + 4) {
+            writeLe32(methodOffset, metadata.method);
+        }
+
         return true;
     }
 };

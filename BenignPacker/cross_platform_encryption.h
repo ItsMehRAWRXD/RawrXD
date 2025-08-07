@@ -6,8 +6,9 @@
 #include <wincrypt.h>
 #pragma comment(lib, "advapi32.lib")
 #else
-// OpenSSL includes would go here if building on Linux
-// For now, fallback to simple XOR encryption on non-Windows
+// OpenSSL includes for Linux / macOS builds
+#include <openssl/evp.h>
+#include <openssl/err.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #endif
@@ -269,19 +270,104 @@ private:
     }
 
     std::vector<uint8_t> aesDecryptWindows(const std::vector<uint8_t>& data) {
-        // Similar implementation for decryption
-        return xorDecrypt(data); // Fallback to XOR for now
+        std::vector<uint8_t> decrypted = data;
+        HCRYPTPROV hCryptProv = 0;
+        HCRYPTKEY hKey = 0;
+
+        try {
+            if (!CryptAcquireContext(&hCryptProv, NULL, NULL, PROV_RSA_AES, CRYPT_VERIFYCONTEXT)) {
+                throw std::runtime_error("CryptAcquireContext failed");
+            }
+
+            struct {
+                BLOBHEADER hdr;
+                DWORD keySize;
+                BYTE keyData[32];
+            } keyBlob;
+
+            keyBlob.hdr.bType = PLAINTEXTKEYBLOB;
+            keyBlob.hdr.bVersion = CUR_BLOB_VERSION;
+            keyBlob.hdr.reserved = 0;
+            keyBlob.hdr.aiKeyAlg = CALG_AES_256;
+            keyBlob.keySize = 32;
+            memcpy(keyBlob.keyData, key.data(), 32);
+
+            if (!CryptImportKey(hCryptProv, (BYTE*)&keyBlob, sizeof(keyBlob), 0, 0, &hKey)) {
+                throw std::runtime_error("CryptImportKey failed");
+            }
+
+            DWORD dataLen = static_cast<DWORD>(decrypted.size());
+            if (!CryptDecrypt(hKey, 0, TRUE, 0, decrypted.data(), &dataLen)) {
+                throw std::runtime_error("CryptDecrypt failed");
+            }
+            decrypted.resize(dataLen);
+
+        } catch (...) {
+            if (hKey) CryptDestroyKey(hKey);
+            if (hCryptProv) CryptReleaseContext(hCryptProv, 0);
+            throw;
+        }
+
+        if (hKey) CryptDestroyKey(hKey);
+        if (hCryptProv) CryptReleaseContext(hCryptProv, 0);
+
+        return decrypted;
     }
 #else
-    // Non-Windows AES implementation (fallback to XOR)
+    // Non-Windows AES implementation using OpenSSL EVP (AES-256-CBC)
     std::vector<uint8_t> aesEncryptOpenSSL(const std::vector<uint8_t>& data) {
-        // Fallback to XOR encryption on non-Windows platforms
-        return xorEncrypt(data);
+        EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+        if (!ctx) throw std::runtime_error("EVP_CIPHER_CTX_new failed");
+
+        const EVP_CIPHER* cipher = EVP_aes_256_cbc();
+        if (EVP_EncryptInit_ex(ctx, cipher, nullptr, key.data(), iv.data()) != 1) {
+            EVP_CIPHER_CTX_free(ctx);
+            throw std::runtime_error("EVP_EncryptInit_ex failed");
+        }
+
+        // Allocate output buffer: input length + block size - 1 (worst-case for padding)
+        std::vector<uint8_t> encrypted(data.size() + EVP_CIPHER_block_size(cipher));
+        int outLen1 = 0;
+        if (EVP_EncryptUpdate(ctx, encrypted.data(), &outLen1, data.data(), static_cast<int>(data.size())) != 1) {
+            EVP_CIPHER_CTX_free(ctx);
+            throw std::runtime_error("EVP_EncryptUpdate failed");
+        }
+
+        int outLen2 = 0;
+        if (EVP_EncryptFinal_ex(ctx, encrypted.data() + outLen1, &outLen2) != 1) {
+            EVP_CIPHER_CTX_free(ctx);
+            throw std::runtime_error("EVP_EncryptFinal_ex failed");
+        }
+        encrypted.resize(outLen1 + outLen2);
+        EVP_CIPHER_CTX_free(ctx);
+        return encrypted;
     }
 
     std::vector<uint8_t> aesDecryptOpenSSL(const std::vector<uint8_t>& data) {
-        // Fallback to XOR decryption on non-Windows platforms
-        return xorDecrypt(data);
+        EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+        if (!ctx) throw std::runtime_error("EVP_CIPHER_CTX_new failed");
+
+        const EVP_CIPHER* cipher = EVP_aes_256_cbc();
+        if (EVP_DecryptInit_ex(ctx, cipher, nullptr, key.data(), iv.data()) != 1) {
+            EVP_CIPHER_CTX_free(ctx);
+            throw std::runtime_error("EVP_DecryptInit_ex failed");
+        }
+
+        std::vector<uint8_t> decrypted(data.size());
+        int outLen1 = 0;
+        if (EVP_DecryptUpdate(ctx, decrypted.data(), &outLen1, data.data(), static_cast<int>(data.size())) != 1) {
+            EVP_CIPHER_CTX_free(ctx);
+            throw std::runtime_error("EVP_DecryptUpdate failed");
+        }
+
+        int outLen2 = 0;
+        if (EVP_DecryptFinal_ex(ctx, decrypted.data() + outLen1, &outLen2) != 1) {
+            EVP_CIPHER_CTX_free(ctx);
+            throw std::runtime_error("EVP_DecryptFinal_ex failed – possibly wrong key/iv");
+        }
+        decrypted.resize(outLen1 + outLen2);
+        EVP_CIPHER_CTX_free(ctx);
+        return decrypted;
     }
 #endif
 
