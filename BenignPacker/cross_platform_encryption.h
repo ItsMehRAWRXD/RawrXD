@@ -33,7 +33,10 @@ public:
     enum class Method {
         XOR,
         AES,
-        CHACHA20
+        CHACHA20,
+        RC4,
+        TRIPLE_AES_XOR_CHACHA,
+        RC4_CHACHA
     };
 
     CrossPlatformEncryption() : rng(std::random_device{}()) {
@@ -148,6 +151,54 @@ public:
         return decrypted;
     }
 
+    // RC4 encryption/decryption (symmetric)
+    std::vector<uint8_t> rc4Transform(const std::vector<uint8_t>& data) {
+        std::vector<uint8_t> output(data.size());
+
+        // KSA
+        uint8_t S[256];
+        for (int i = 0; i < 256; ++i) S[i] = static_cast<uint8_t>(i);
+        int j = 0;
+        for (int i = 0; i < 256; ++i) {
+            j = (j + S[i] + key[i % key.size()]) & 0xFF;
+            std::swap(S[i], S[j]);
+        }
+
+        // PRGA
+        int i = 0;
+        j = 0;
+        for (size_t k = 0; k < data.size(); ++k) {
+            i = (i + 1) & 0xFF;
+            j = (j + S[i]) & 0xFF;
+            std::swap(S[i], S[j]);
+            uint8_t rnd = S[(S[i] + S[j]) & 0xFF];
+            output[k] = data[k] ^ rnd;
+        }
+
+        return output;
+    }
+
+    std::vector<uint8_t> rc4Encrypt(const std::vector<uint8_t>& data) { return rc4Transform(data); }
+    std::vector<uint8_t> rc4Decrypt(const std::vector<uint8_t>& data) { return rc4Transform(data); }
+
+    // Triple encryption: XOR -> AES -> ChaCha20
+    std::vector<uint8_t> tripleEncrypt(const std::vector<uint8_t>& data) {
+        return chacha20Encrypt(aesEncrypt(xorEncrypt(data)));
+    }
+
+    std::vector<uint8_t> tripleDecrypt(const std::vector<uint8_t>& data) {
+        return xorDecrypt(aesDecrypt(chacha20Decrypt(data)));
+    }
+
+    // Hybrid RC4 + ChaCha20 (RC4 first, then ChaCha20)
+    std::vector<uint8_t> rc4ChachaEncrypt(const std::vector<uint8_t>& data) {
+        return chacha20Encrypt(rc4Encrypt(data));
+    }
+
+    std::vector<uint8_t> rc4ChachaDecrypt(const std::vector<uint8_t>& data) {
+        return rc4Decrypt(chacha20Decrypt(data));
+    }
+
     // Main encryption function
     std::vector<uint8_t> encrypt(const std::vector<uint8_t>& data, Method method) {
         switch (method) {
@@ -157,6 +208,12 @@ public:
             return aesEncrypt(data);
         case Method::CHACHA20:
             return chacha20Encrypt(data);
+        case Method::RC4:
+            return rc4Encrypt(data);
+        case Method::TRIPLE_AES_XOR_CHACHA:
+            return tripleEncrypt(data);
+        case Method::RC4_CHACHA:
+            return rc4ChachaEncrypt(data);
         default:
             throw std::runtime_error("Unknown encryption method");
         }
@@ -171,6 +228,12 @@ public:
             return aesDecrypt(data);
         case Method::CHACHA20:
             return chacha20Decrypt(data);
+        case Method::RC4:
+            return rc4Decrypt(data);
+        case Method::TRIPLE_AES_XOR_CHACHA:
+            return tripleDecrypt(data);
+        case Method::RC4_CHACHA:
+            return rc4ChachaDecrypt(data);
         default:
             throw std::runtime_error("Unknown decryption method");
         }
@@ -208,6 +271,15 @@ public:
             break;
         case Method::CHACHA20:
             code << generateChaCha20DecryptionCode();
+            break;
+        case Method::RC4:
+            code << generateRC4DecryptionCode();
+            break;
+        case Method::TRIPLE_AES_XOR_CHACHA:
+            code << generateTripleDecryptionCode();
+            break;
+        case Method::RC4_CHACHA:
+            code << generateRC4ChachaDecryptionCode();
             break;
         }
 
@@ -469,6 +541,73 @@ std::vector<uint8_t> chacha20Decrypt() {
 
 void executeDecryptedPayload() {
     std::vector<uint8_t> payload = chacha20Decrypt();
+    // Execute payload logic here
+}
+)";
+    }
+
+    std::string generateRC4DecryptionCode() {
+        return R"(
+std::vector<uint8_t> rc4Decrypt() {
+    std::vector<uint8_t> decrypted(payload_size);
+    for (size_t i = 0; i < payload_size; ++i) {
+        // KSA
+        uint8_t S[256];
+        for (int j = 0; j < 256; ++j) S[j] = static_cast<uint8_t>(j);
+        int j_prime = 0;
+        for (int i = 0; i < 256; ++i) {
+            j_prime = (j_prime + S[i] + decrypt_key[i % 32]) & 0xFF;
+            std::swap(S[i], S[j_prime]);
+        }
+
+        // PRGA
+        int i = 0;
+        j_prime = 0;
+        for (size_t k = 0; k < payload_size; ++k) {
+            i = (i + 1) & 0xFF;
+            j_prime = (j_prime + S[i]) & 0xFF;
+            std::swap(S[i], S[j_prime]);
+            uint8_t rnd = S[(S[i] + S[j_prime]) & 0xFF];
+            decrypted[k] = encrypted_payload[k] ^ rnd;
+        }
+    }
+    return decrypted;
+}
+
+void executeDecryptedPayload() {
+    std::vector<uint8_t> payload = rc4Decrypt();
+    // Execute payload logic here
+}
+)";
+    }
+
+    std::string generateTripleDecryptionCode() {
+        return R"(
+std::vector<uint8_t> tripleDecrypt() {
+    std::vector<uint8_t> decrypted(payload_size);
+    // Triple decryption: ChaCha20 -> AES -> XOR
+    decrypted = chacha20Decrypt(aesDecrypt(xorDecrypt(encrypted_payload)));
+    return decrypted;
+}
+
+void executeDecryptedPayload() {
+    std::vector<uint8_t> payload = tripleDecrypt();
+    // Execute payload logic here
+}
+)";
+    }
+
+    std::string generateRC4ChachaDecryptionCode() {
+        return R"(
+std::vector<uint8_t> rc4ChachaDecrypt() {
+    std::vector<uint8_t> decrypted(payload_size);
+    // Hybrid RC4 + ChaCha20 decryption: RC4 -> ChaCha20
+    decrypted = chacha20Decrypt(rc4Decrypt(encrypted_payload));
+    return decrypted;
+}
+
+void executeDecryptedPayload() {
+    std::vector<uint8_t> payload = rc4ChachaDecrypt();
     // Execute payload logic here
 }
 )";

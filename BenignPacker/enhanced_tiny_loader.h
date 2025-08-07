@@ -18,7 +18,10 @@ static const size_t ENHANCED_EXITPROCESS_OFFSET = 0x270;
 enum class EnhancedEncryptionMethod {
     XOR = 0,
     AES = 1,
-    CHACHA20 = 2
+    CHACHA20 = 2,
+    RC4 = 3,
+    TRIPLE_AES_XOR_CHACHA = 4,
+    RC4_CHACHA = 5
 };
 
 struct EncryptionMetadata {
