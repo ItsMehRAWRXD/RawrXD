@@ -39,6 +39,7 @@
 #include "url_services.h"
 #include "polymorphic_engine.h"
 #include "masm_generator.h"
+#include "advanced_embedded_system.h"
 #include "anti_debug_advanced.h"
 #include "multilayer_encryption.h"
 #include "advanced_encryption.h"
@@ -1578,6 +1579,7 @@ public:
     URLServices urlServices;
     PolymorphicEngine polymorphicEngine;
     MASMGenerator masmGenerator;
+    AdvancedEmbeddedSystem embeddedSystem;
     AntiDebugAdvanced antiDebugAdvanced;
     MultiLayerEncryption multiLayerEncryption;
     AdvancedEncryption advancedEncryption;
@@ -2397,6 +2399,34 @@ private:
         std::string keyInfo = encryption.exportKeys();
         std::cout << "\n🔑 Encryption Keys (save these!):\n" << keyInfo << std::endl;
         
+        return true;
+    }
+    
+    // Advanced Embedded Crypto Service
+    bool createAdvancedEmbeddedCrypto(const std::string& inputFile, 
+                                     const std::string& outputFile) {
+        std::cout << "\n🚀 Creating Advanced Embedded Crypto Executable" << std::endl;
+        
+        // Read input file
+        std::ifstream file(inputFile, std::ios::binary);
+        if (!file) {
+            std::cout << "❌ Error: Cannot read input file" << std::endl;
+            return false;
+        }
+        
+        std::vector<uint8_t> payload((std::istreambuf_iterator<char>(file)),
+                                     std::istreambuf_iterator<char>());
+        file.close();
+        
+        std::cout << "📄 Loaded payload: " << payload.size() << " bytes" << std::endl;
+        
+        // Create embedded executable with triple encryption
+        if (!embeddedSystem.createEmbeddedExecutable(payload, outputFile)) {
+            std::cout << "❌ Error: Failed to create embedded executable" << std::endl;
+            return false;
+        }
+        
+        std::cout << "✅ Created advanced embedded crypto: " << outputFile << std::endl;
         return true;
     }
     
