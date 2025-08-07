@@ -752,7 +752,7 @@ std::vector<uint8_t> decryptPayload() {
 // Big Decimal Decryption
 std::vector<uint8_t> decryptPayload() {
     // Convert big decimal string back to bytes
-    std::string decimal((char*)")" + varName + R"(", )" + varName + R"(_size);
+    std::string decimal((char*))" + varName + R"(, )" + varName + R"(_size);
     // Implementation would include decimal to bytes conversion
     // This is a simplified version
     
