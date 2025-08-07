@@ -39,6 +39,7 @@
 #include "tiny_loader.h"
 #include "cross_platform_encryption.h"
 #include "enhanced_loader_utils.h"
+#include "enhanced_encryption_system.h"
 
 #pragma comment(lib, "ole32.lib")
 #pragma comment(lib, "crypt32.lib")
@@ -96,7 +97,8 @@ enum EncryptionType {
     ENCRYPT_NONE = 0,           // No encryption - plain binary
     ENCRYPT_XOR = 1,            // XOR encryption (simple but effective)
     ENCRYPT_AES = 2,            // AES-256 encryption
-    ENCRYPT_CHACHA20 = 3        // ChaCha20 encryption (modern, secure)
+    ENCRYPT_CHACHA20 = 3,       // ChaCha20 encryption (modern, secure)
+    ENCRYPT_TRIPLE = 4          // Triple encryption (XOR -> AES -> ChaCha20)
 };
 
 // Function to kill running instances before build
@@ -1547,6 +1549,7 @@ public:
     PEEmbedder peEmbedder;
     AdvancedExploitEngine exploitEngine;
     EmbeddedCompiler embeddedCompiler;
+    EnhancedEncryptionSystem enhancedEncryption;
 
     struct CompanyProfile {
         std::string name;
