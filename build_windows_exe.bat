@@ -10,11 +10,11 @@ if %ERRORLEVEL% neq 0 (
 python -m pip install --upgrade pip
 pip install --upgrade pyinstaller
 
-pyinstaller --noconfirm --onefile --console --name AICodeGenerator ai_coder_windows.py
+pyinstaller --noconfirm --onefile --console --name AICodeGenerator --distpath . ai_coder_windows.py
 
-if exist "dist\AICodeGenerator.exe" (
+if exist "AICodeGenerator.exe" (
   echo.
-  echo ✅ Build complete: dist\AICodeGenerator.exe
+  echo ✅ Build complete: AICodeGenerator.exe
   exit /b 0
 ) else (
   echo.
