@@ -5,6 +5,8 @@
 #include <string>
 #include <algorithm>
 #include <cctype>
+#include <cstdint>
+#include <cstring>
 
 class DataConverter {
 public:
@@ -47,7 +49,7 @@ public:
         
         for (size_t i = 0; i < cleanHex.length(); i += 2) {
             std::string byteString = cleanHex.substr(i, 2);
-            uint8_t byte = static_cast<uint8_t>(std::stoi(byteString, nullptr, 16));
+            uint8_t byte = static_cast<uint8_t>(std::strtol(byteString.c_str(), nullptr, 16));
             bytes.push_back(byte);
         }
         
@@ -71,7 +73,9 @@ public:
         std::string base = "1";
         
         for (int i = length - 1; i >= 0; i--) {
-            std::string byteValue = std::to_string(bytes[i]);
+            std::stringstream ss;
+            ss << static_cast<int>(bytes[i]);
+            std::string byteValue = ss.str();
             result = addStrings(result, multiplyStrings(byteValue, base));
             base = multiplyStrings(base, "256");
         }
@@ -97,9 +101,12 @@ public:
             std::string quotient;
             
             // Divide by 16
-            for (char digit : num) {
+            for (size_t k = 0; k < num.length(); k++) {
+                char digit = num[k];
                 int current = remainder * 10 + (digit - '0');
-                quotient += std::to_string(current / 16);
+                std::stringstream ss;
+                ss << (current / 16);
+                quotient += ss.str();
                 remainder = current % 16;
             }
             
@@ -230,7 +237,9 @@ private:
             if (i >= 0) sum += num1[i--] - '0';
             if (j >= 0) sum += num2[j--] - '0';
             carry = sum / 10;
-            result = std::to_string(sum % 10) + result;
+            std::stringstream ss;
+            ss << (sum % 10);
+            result = ss.str() + result;
         }
         
         return result;
@@ -255,9 +264,13 @@ private:
         
         std::string str;
         bool leadingZero = true;
-        for (int i = 0; i < result.size(); i++) {
+        for (size_t i = 0; i < result.size(); i++) {
             if (result[i] != 0) leadingZero = false;
-            if (!leadingZero) str += std::to_string(result[i]);
+            if (!leadingZero) {
+                std::stringstream ss;
+                ss << result[i];
+                str += ss.str();
+            }
         }
         
         return str.empty() ? "0" : str;
