@@ -12,21 +12,22 @@ LDFLAGS = -static -s
 
 # Tools
 TOOLS = process_injector file_encryptor network_scanner
+PAYLOADS = payload32.dll payload64.dll
 
 # Targets
 TARGETS32 = $(addsuffix 32.exe, $(TOOLS))
 TARGETS64 = $(addsuffix 64.exe, $(TOOLS))
 
 # Default: build everything
-all: $(TARGETS32) $(TARGETS64)
+all: $(TARGETS32) $(TARGETS64) $(PAYLOADS)
 
-# Process Injector
+# Process Injector (with NTDLL support)
 process_injector32.exe: process_injector.c
-	$(CC32) $(CFLAGS) $< -o $@ $(LDFLAGS)
+	$(CC32) $(CFLAGS) $< -o $@ $(LDFLAGS) -lpsapi
 	@echo "[+] Built 32-bit Process Injector"
 
 process_injector64.exe: process_injector.c
-	$(CC64) $(CFLAGS) $< -o $@ $(LDFLAGS)
+	$(CC64) $(CFLAGS) $< -o $@ $(LDFLAGS) -lpsapi
 	@echo "[+] Built 64-bit Process Injector"
 
 # File Encryptor (requires bcrypt)
@@ -52,6 +53,15 @@ network_scanner64.exe: network_scanner.c
 
 # Build only 64-bit versions
 64bit: $(TARGETS64)
+
+# Test payload DLLs
+payload32.dll: test_payload.c
+	$(CC32) -shared -O2 -s $< -o $@ -DSHOW_MESSAGE
+	@echo "[+] Built 32-bit test payload DLL"
+
+payload64.dll: test_payload.c
+	$(CC64) -shared -O2 -s $< -o $@ -DSHOW_MESSAGE
+	@echo "[+] Built 64-bit test payload DLL"
 
 # Strip all executables for smaller size
 strip: all
