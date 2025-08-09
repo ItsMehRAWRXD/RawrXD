@@ -23,7 +23,7 @@ OBJDIR = $(BUILDDIR)/obj
 BINDIR = $(BUILDDIR)/bin
 
 # Source files
-CORE_MASM_SRC = core_masm_bot/core_payload.asm
+CORE_MASM_SRC = core_masm_bot/core_payload.s
 PE_BUILDER_SRC = pe_builder/pe_dropper.cpp
 STUB_GENERATOR_SRC = stub_generator/fileless_stub.cpp
 ORCHESTRATOR_SRC = orchestrator/build_manager.cpp
