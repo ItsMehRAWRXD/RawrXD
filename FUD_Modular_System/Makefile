@@ -4,14 +4,14 @@
 # ===============================================================================
 
 # Compiler settings
-CXX = x86_64-w64-mingw32-g++
-ASM = x86_64-w64-mingw32-as
-WINDRES = x86_64-w64-mingw32-windres
+CXX = i686-w64-mingw32-g++
+ASM = i686-w64-mingw32-as
+WINDRES = i686-w64-mingw32-windres
 
 # Compiler flags
-CXXFLAGS = -std=c++17 -O2 -static-libgcc -static-libstdc++ -static
-ASMFLAGS = --64
-LDFLAGS = -static -s
+CXXFLAGS = -std=c++17 -O2 -static-libgcc -static-libstdc++ -static -m32
+ASMFLAGS = --32
+LDFLAGS = -static -s -m32
 
 # Windows libraries
 LIBS = -lwininet -lcrypt32 -lpsapi -limagehlp -ladvapi32 -lkernel32 -luser32 -lshell32 -lntdll
@@ -23,7 +23,7 @@ OBJDIR = $(BUILDDIR)/obj
 BINDIR = $(BUILDDIR)/bin
 
 # Source files
-CORE_MASM_SRC = core_masm_bot/core_payload.s
+CORE_MASM_SRC = core_masm_bot/core_payload.c
 PE_BUILDER_SRC = pe_builder/pe_dropper.cpp
 STUB_GENERATOR_SRC = stub_generator/fileless_stub.cpp
 ORCHESTRATOR_SRC = orchestrator/build_manager.cpp
@@ -59,14 +59,14 @@ setup:
 	@mkdir -p $(OBJDIR)
 	@mkdir -p $(BINDIR)
 
-# Core MASM Bot (Assembly)
+# Core MASM Bot (C version)
 $(CORE_MASM_EXE): $(CORE_MASM_OBJ)
 	@echo "Linking Core MASM Bot..."
 	$(CXX) $(LDFLAGS) -o $@ $< $(LIBS)
 
 $(CORE_MASM_OBJ): $(CORE_MASM_SRC)
-	@echo "Assembling Core MASM Bot..."
-	$(ASM) $(ASMFLAGS) -o $@ $<
+	@echo "Compiling Core MASM Bot..."
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 # PE Builder
 $(PE_BUILDER_EXE): $(PE_BUILDER_OBJ)
