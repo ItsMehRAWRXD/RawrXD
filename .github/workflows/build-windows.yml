@@ -1,0 +1,56 @@
+name: Build Windows EXE
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ai_coder_windows.py
+      - .github/workflows/build-windows.yml
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install PyInstaller
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+
+      - name: Build (onedir)
+        shell: pwsh
+        run: |
+          $IconFlag = Test-Path 'app.ico' ? "--icon app.ico" : ""
+          $VersionFlag = Test-Path 'windows_version_info.txt' ? "--version-file windows_version_info.txt" : ""
+          pyinstaller --clean --noupx --onedir --console --name AICodeGenerator --distpath . $IconFlag $VersionFlag ai_coder_windows.py
+
+      - name: Optional Code Sign
+        if: ${{ env.CERT_PFX_BASE64 != '' && env.CERT_PFX_PASSWORD != '' }}
+        shell: pwsh
+        env:
+          CERT_PFX_BASE64: ${{ secrets.CERT_PFX_BASE64 || '' }}
+          CERT_PFX_PASSWORD: ${{ secrets.CERT_PFX_PASSWORD || '' }}
+        run: |
+          if ($env:CERT_PFX_BASE64 -and $env:CERT_PFX_PASSWORD) {
+            $pfxPath = "$env:RUNNER_TEMP\codesign.pfx"
+            [IO.File]::WriteAllBytes($pfxPath, [Convert]::FromBase64String($env:CERT_PFX_BASE64))
+            $signtool = (Get-Command signtool.exe -ErrorAction SilentlyContinue)
+            if ($signtool) {
+              & $signtool sign /f $pfxPath /p $env:CERT_PFX_PASSWORD /tr http://timestamp.digicert.com /td SHA256 /fd SHA256 "AICodeGenerator/AICodeGenerator.exe"
+            } else {
+              Write-Host "signtool not found; skipping signing."
+            }
+          }
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AICodeGenerator-onedir
+          path: AICodeGenerator/**
