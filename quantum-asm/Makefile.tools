@@ -1,0 +1,95 @@
+# Master Makefile for Single-File Windows Tools
+# Build powerful Windows tools with MinGW
+
+# Compilers
+CC32 = i686-w64-mingw32-gcc
+CC64 = x86_64-w64-mingw32-gcc
+
+# Optimization flags for maximum performance
+CFLAGS = -O3 -fomit-frame-pointer -s -static
+CFLAGS += -D_WIN32_WINNT=0x0601 -DWINVER=0x0601
+LDFLAGS = -static -s
+
+# Tools
+TOOLS = process_injector file_encryptor network_scanner
+
+# Targets
+TARGETS32 = $(addsuffix 32.exe, $(TOOLS))
+TARGETS64 = $(addsuffix 64.exe, $(TOOLS))
+
+# Default: build everything
+all: $(TARGETS32) $(TARGETS64)
+
+# Process Injector
+process_injector32.exe: process_injector.c
+	$(CC32) $(CFLAGS) $< -o $@ $(LDFLAGS)
+	@echo "[+] Built 32-bit Process Injector"
+
+process_injector64.exe: process_injector.c
+	$(CC64) $(CFLAGS) $< -o $@ $(LDFLAGS)
+	@echo "[+] Built 64-bit Process Injector"
+
+# File Encryptor (requires bcrypt)
+file_encryptor32.exe: file_encryptor.c
+	$(CC32) $(CFLAGS) $< -o $@ $(LDFLAGS) -lbcrypt
+	@echo "[+] Built 32-bit File Encryptor"
+
+file_encryptor64.exe: file_encryptor.c
+	$(CC64) $(CFLAGS) $< -o $@ $(LDFLAGS) -lbcrypt
+	@echo "[+] Built 64-bit File Encryptor"
+
+# Network Scanner
+network_scanner32.exe: network_scanner.c
+	$(CC32) $(CFLAGS) $< -o $@ $(LDFLAGS) -lws2_32 -liphlpapi
+	@echo "[+] Built 32-bit Network Scanner"
+
+network_scanner64.exe: network_scanner.c
+	$(CC64) $(CFLAGS) $< -o $@ $(LDFLAGS) -lws2_32 -liphlpapi
+	@echo "[+] Built 64-bit Network Scanner"
+
+# Build only 32-bit versions
+32bit: $(TARGETS32)
+
+# Build only 64-bit versions
+64bit: $(TARGETS64)
+
+# Strip all executables for smaller size
+strip: all
+	@echo "[*] Stripping executables..."
+	-strip --strip-all *.exe
+	@echo "[+] Done"
+
+# Pack with UPX for even smaller size (requires UPX)
+pack: strip
+	@echo "[*] Packing with UPX..."
+	-upx --best --lzma *.exe
+	@echo "[+] Done"
+
+# Clean
+clean:
+	rm -f *.exe *.o
+
+# Install to a directory
+install: all
+	@mkdir -p ../tools/x86
+	@mkdir -p ../tools/x64
+	@cp *32.exe ../tools/x86/
+	@cp *64.exe ../tools/x64/
+	@echo "[+] Installed to ../tools/"
+
+# Show sizes
+sizes: all
+	@echo "=== Executable Sizes ==="
+	@ls -lh *.exe
+
+# Quick test (requires Wine)
+test:
+	@echo "=== Testing builds ==="
+	@echo "Testing process_injector32..."
+	-wine process_injector32.exe || true
+	@echo "\nTesting file_encryptor32..."
+	-wine file_encryptor32.exe || true
+	@echo "\nTesting network_scanner32..."
+	-wine network_scanner32.exe || true
+
+.PHONY: all 32bit 64bit clean strip pack install sizes test
