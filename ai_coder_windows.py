@@ -340,6 +340,94 @@ pause
             "asm": {
                 "win64_messagebox": "; NASM x86_64 Windows MessageBox example\n; Build (MSYS2 MinGW x64):\n;   nasm -f win64 -o build/main.obj src/main.asm\n;   gcc -o build/asm_app.exe build/main.obj -luser32 -lkernel32\n; Run: .\\build\\asm_app.exe\n\n        default rel\n        extern  MessageBoxA\n        extern  ExitProcess\n\n        section .data\n        title   db  'AI Code Generator', 0\n        text    db  'Hello from x64 Windows ASM!', 0\n\n        section .text\n        global  main\nmain:\n        ; int MessageBoxA(HWND hWnd, LPCSTR lpText, LPCSTR lpCaption, UINT uType);\n        sub     rsp, 32                 ; shadow space\n        xor     rcx, rcx                ; hWnd = NULL\n        lea     rdx, [rel text]         ; lpText\n        lea     r8,  [rel title]        ; lpCaption\n        mov     r9d, 0                  ; uType = 0\n        call    MessageBoxA\n\n        xor     ecx, ecx                ; exit code 0\n        call    ExitProcess\n",
             },
+            "c": {
+                "console": """#include <stdio.h>
+
+int main(void) {
+    printf("Hello from C!\\n");
+    return 0;
+}
+""",
+            },
+            "cpp": {
+                "console": """#include <iostream>
+
+int main() {
+    std::cout << "Hello from C++!" << std::endl;
+    return 0;
+}
+""",
+            },
+            "cs": {
+                "console": """using System;
+
+class Program {
+    static void Main(string[] args) {
+        Console.WriteLine("Hello from C#!");
+    }
+}
+""",
+            },
+            "go": {
+                "console": """package main
+import "fmt"
+
+func main() {
+    fmt.Println("Hello from Go!")
+}
+""",
+            },
+            "rust": {
+                "console": """fn main() {
+    println!("Hello from Rust!");
+}
+""",
+            },
+            "java": {
+                "console": """public class App {
+    public static void main(String[] args) {
+        System.out.println("Hello from Java!");
+    }
+}
+""",
+            },
+            "ts": {
+                "node": """// TypeScript Node.js example
+function main(): void {
+  console.log('Hello from TypeScript!');
+}
+main();
+""",
+            },
+            "bash": {
+                "basic": """#!/usr/bin/env bash
+set -euo pipefail
+
+echo "Hello from Bash!"
+""",
+            },
+            "powershell": {
+                "basic": """Write-Host "Hello from PowerShell!""",
+            },
+            "sql": {
+                "basic": """-- SQL example
+CREATE TABLE example (
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL
+);
+
+INSERT INTO example (id, name) VALUES (1, 'hello');
+""",
+            },
+            "dockerfile": {
+                "basic": """# syntax=docker/dockerfile:1
+FROM python:3.11-slim
+WORKDIR /app
+COPY . .
+RUN pip install --no-cache-dir -r requirements.txt || true
+CMD ["python", "main.py"]
+""",
+            },
         }
 
         prompt_lower = prompt.lower()
@@ -359,6 +447,22 @@ pause
             return templates["batch"]["basic"]
         elif "asm" in prompt_lower or "assembly" in prompt_lower or language == "asm":
             return templates["asm"]["win64_messagebox"]
+        elif language in ("c", "cpp", "cs", "go", "rust", "java", "ts", "bash", "powershell", "sql", "dockerfile"):
+            # Pick sensible defaults per language
+            defaults = {
+                "c": "console",
+                "cpp": "console",
+                "cs": "console",
+                "go": "console",
+                "rust": "console",
+                "java": "console",
+                "ts": "node",
+                "bash": "basic",
+                "powershell": "basic",
+                "sql": "basic",
+                "dockerfile": "basic",
+            }
+            return templates[language][defaults[language]]
         else:
             # Default to a Python web app template
             return templates["python"]["web_app"]
@@ -978,7 +1082,7 @@ def run_interactive(generator: AICodeGenerator) -> int:
             elif choice == "2":
                 task = input("Describe the code you want to generate: ").strip()
                 language = (
-                    input("Language (python/javascript/html/batch/asm): ").strip().lower()
+                    input("Language (python/javascript/html/batch/asm/c/cpp/cs/go/rust/java/ts/bash/powershell/sql/dockerfile): ").strip().lower()
                     or "python"
                 )
                 if task:
@@ -1042,7 +1146,11 @@ def build_arg_parser() -> argparse.ArgumentParser:
     sp_gen.add_argument(
         "--language",
         default="python",
-        choices=["python", "javascript", "html", "batch", "asm"],
+        choices=[
+            "python", "javascript", "html", "batch", "asm",
+            "c", "cpp", "cs", "go", "rust", "java", "ts",
+            "bash", "powershell", "sql", "dockerfile",
+        ],
         help="Target language for code generation",
     )
 
