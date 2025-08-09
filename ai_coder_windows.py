@@ -337,6 +337,9 @@ echo Installation completed!
 pause
 """,
             },
+            "asm": {
+                "win64_messagebox": "; NASM x86_64 Windows MessageBox example\n; Build (MSYS2 MinGW x64):\n;   nasm -f win64 -o build/main.obj src/main.asm\n;   gcc -o build/asm_app.exe build/main.obj -luser32 -lkernel32\n; Run: .\\build\\asm_app.exe\n\n        default rel\n        extern  MessageBoxA\n        extern  ExitProcess\n\n        section .data\n        title   db  'AI Code Generator', 0\n        text    db  'Hello from x64 Windows ASM!', 0\n\n        section .text\n        global  main\nmain:\n        ; int MessageBoxA(HWND hWnd, LPCSTR lpText, LPCSTR lpCaption, UINT uType);\n        sub     rsp, 32                 ; shadow space\n        xor     rcx, rcx                ; hWnd = NULL\n        lea     rdx, [rel text]         ; lpText\n        lea     r8,  [rel title]        ; lpCaption\n        mov     r9d, 0                  ; uType = 0\n        call    MessageBoxA\n\n        xor     ecx, ecx                ; exit code 0\n        call    ExitProcess\n",
+            },
         }
 
         prompt_lower = prompt.lower()
@@ -354,6 +357,8 @@ pause
             return templates["html"]["basic"]
         elif "batch" in prompt_lower or "windows" in prompt_lower:
             return templates["batch"]["basic"]
+        elif "asm" in prompt_lower or "assembly" in prompt_lower or language == "asm":
+            return templates["asm"]["win64_messagebox"]
         else:
             # Default to a Python web app template
             return templates["python"]["web_app"]
@@ -375,6 +380,8 @@ pause
             return self.create_cli_project(project_name, idea)
         elif "windows" in idea_lower or "batch" in idea_lower:
             return self.create_windows_project(project_name, idea)
+        elif "asm" in idea_lower or "assembly" in idea_lower:
+            return self.create_asm_project(project_name, idea)
         else:
             return self.create_generic_project(project_name, idea)
 
@@ -896,6 +903,43 @@ python main.py
         }
         return self.create_project_structure(project_name, structure)
 
+    def create_asm_project(self, project_name: str, idea: str) -> Path:
+        """Create a Windows NASM x64 assembly project with MinGW build scripts."""
+        structure: Dict[str, Any] = {
+            "src": {
+                "main.asm": self.generate_code(
+                    f"Create a Windows x64 NASM MessageBox demo for {idea}", "asm"
+                ),
+            },
+            "build": {},
+            "build_mingw64.bat": (
+                """@echo off\nsetlocal\n\nif not exist build mkdir build\n\nwhere nasm >nul 2>nul\nif %ERRORLEVEL% neq 0 (\n  echo NASM not found in PATH. Install via MSYS2: pacman -S mingw-w64-x86_64-nasm\n  exit /b 1\n)\n\nwhere gcc >nul 2>nul\nif %ERRORLEVEL% neq 0 (\n  echo GCC (mingw-w64) not found in PATH. Use MSYS2 MinGW x64 shell and install: pacman -S mingw-w64-x86_64-gcc\n  exit /b 1\n)\n\necho Assembling...\n"""
+                + "nasm -f win64 -o build\\main.obj src\\main.asm\n"
+                + "echo Linking...\n"
+                + "gcc -o build\\asm_app.exe build\\main.obj -luser32 -lkernel32\n"
+                + "if exist build\\asm_app.exe (\n  echo ✅ Built: build\\asm_app.exe\n  exit /b 0\n) else (\n  echo ❌ Build failed\n  exit /b 1\n)\n"
+            ),
+            "README.md": f"""# {project_name.replace('_', ' ').title()} (ASM)
+
+Windows x64 NASM project for {idea}.
+
+## Requirements (MSYS2 MinGW x64)
+- nasm (pacman -S mingw-w64-x86_64-nasm)
+- gcc/linker (pacman -S mingw-w64-x86_64-gcc)
+
+## Build
+```cmd
+build_mingw64.bat
+```
+
+## Run
+```cmd
+build\asm_app.exe
+```
+""",
+        }
+        return self.create_project_structure(project_name, structure)
+
 
 # ----------------------------
 # CLI and interactive frontend
@@ -934,7 +978,7 @@ def run_interactive(generator: AICodeGenerator) -> int:
             elif choice == "2":
                 task = input("Describe the code you want to generate: ").strip()
                 language = (
-                    input("Language (python/javascript/html/batch): ").strip().lower()
+                    input("Language (python/javascript/html/batch/asm): ").strip().lower()
                     or "python"
                 )
                 if task:
@@ -998,7 +1042,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
     sp_gen.add_argument(
         "--language",
         default="python",
-        choices=["python", "javascript", "html", "batch"],
+        choices=["python", "javascript", "html", "batch", "asm"],
         help="Target language for code generation",
     )
 
