@@ -32,6 +32,7 @@ import sys
 import textwrap
 from pathlib import Path
 from typing import Any, Dict
+from uuid import uuid4
 
 
 class AICodeGenerator:
@@ -1007,6 +1008,195 @@ python main.py
         }
         return self.create_project_structure(project_name, structure)
 
+    # ----------------------------
+    # Visual Studio 2022 projects
+    # ----------------------------
+    def create_vs_cpp_project(self, project_name: str, idea: str, include_masm: bool = False) -> Path:
+        project_dir = self.project_dir / project_name
+        project_guid = str(uuid4()).upper()
+        filter_guid = str(uuid4()).upper()
+        vcxproj = f"""<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{{{project_guid}}}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>{project_name}</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\\BuildCustomizations\\masm.props" Condition="Exists('$(VCTargetsPath)\\BuildCustomizations\\masm.props')" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+  </ItemGroup>
+  {('<ItemGroup>\n    <MASM Include="main.asm" />\n  </ItemGroup>' if include_masm else '')}
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\\BuildCustomizations\\masm.targets" Condition="Exists('$(VCTargetsPath)\\BuildCustomizations\\masm.targets')" />
+  </ImportGroup>
+</Project>
+"""
+        filters = f"""<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{{{filter_guid}}}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  {('<ItemGroup>\n    <MASM Include="main.asm">\n      <Filter>Source Files</Filter>\n    </MASM>\n  </ItemGroup>' if include_masm else '')}
+</Project>
+"""
+        sln = f"""Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}}") = "{project_name}", "{project_name}\\{project_name}.vcxproj", "{{{project_guid}}}"
+EndProject
+Global
+    GlobalSection(SolutionConfigurationPlatforms) = preSolution
+        Debug|x64 = Debug|x64
+        Release|x64 = Release|x64
+    EndGlobalSection
+    GlobalSection(ProjectConfigurationPlatforms) = postSolution
+        {{{project_guid}}}.Debug|x64.ActiveCfg = Debug|x64
+        {{{project_guid}}}.Debug|x64.Build.0 = Debug|x64
+        {{{project_guid}}}.Release|x64.ActiveCfg = Release|x64
+        {{{project_guid}}}.Release|x64.Build.0 = Release|x64
+    EndGlobalSection
+    GlobalSection(SolutionProperties) = preSolution
+        HideSolutionNode = FALSE
+    EndGlobalSection
+EndGlobal
+"""
+        main_cpp = """#include <iostream>
+
+int main() {
+    std::cout << "Hello from Visual Studio C++!" << std::endl;
+    return 0;
+}
+"""
+        main_asm = "; Simple MASM file optionally included in the project\n.code\nmain_asm_example PROC\n    ret\nmain_asm_example ENDP\nEND\n"
+
+        # Write files
+        (project_dir / project_name).mkdir(parents=True, exist_ok=True)
+        self.create_file(f"{project_name}.sln", sln)
+        self.create_file(f"{project_name}/{project_name}.vcxproj", vcxproj)
+        self.create_file(f"{project_name}/{project_name}.vcxproj.filters", filters)
+        self.create_file(f"{project_name}/main.cpp", main_cpp)
+        if include_masm:
+            self.create_file(f"{project_name}/main.asm", main_asm)
+        return project_dir
+
+    def create_vs_cs_project(self, project_name: str, idea: str) -> Path:
+        project_dir = self.project_dir / project_name
+        project_guid = str(uuid4()).upper()
+        csproj = f"""<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+</Project>
+"""
+        program_cs = """using System;
+
+Console.WriteLine("Hello from Visual Studio C#!");
+"""
+        sln = f"""Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}}") = "{project_name}", "{project_name}\\{project_name}.csproj", "{{{project_guid}}}"
+EndProject
+Global
+    GlobalSection(SolutionConfigurationPlatforms) = preSolution
+        Debug|Any CPU = Debug|Any CPU
+        Release|Any CPU = Release|Any CPU
+    EndGlobalSection
+    GlobalSection(ProjectConfigurationPlatforms) = postSolution
+        {{{project_guid}}}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+        {{{project_guid}}}.Debug|Any CPU.Build.0 = Debug|Any CPU
+        {{{project_guid}}}.Release|Any CPU.ActiveCfg = Release|Any CPU
+        {{{project_guid}}}.Release|Any CPU.Build.0 = Release|Any CPU
+    EndGlobalSection
+    GlobalSection(SolutionProperties) = preSolution
+        HideSolutionNode = FALSE
+    EndGlobalSection
+EndGlobal
+"""
+        (project_dir / project_name).mkdir(parents=True, exist_ok=True)
+        self.create_file(f"{project_name}.sln", sln)
+        self.create_file(f"{project_name}/{project_name}.csproj", csproj)
+        self.create_file(f"{project_name}/Program.cs", program_cs)
+        return project_dir
+
+    def create_vs_masm_project(self, project_name: str, idea: str) -> Path:
+        # Create a C++ console app with optional MASM file wired in
+        return self.create_vs_cpp_project(project_name, idea, include_masm=True)
+
     def create_asm_project(self, project_name: str, idea: str) -> Path:
         """Create a Windows NASM x64 assembly project with MinGW build scripts."""
         structure: Dict[str, Any] = {
@@ -1165,6 +1355,12 @@ def build_arg_parser() -> argparse.ArgumentParser:
         ),
     )
 
+    # create-vs (Visual Studio project)
+    sp_vs = subparsers.add_parser("create-vs", help="Create a Visual Studio 2022 project (C++/C#/MASM)")
+    sp_vs.add_argument("--language", required=True, choices=["cpp", "cs", "masm"], help="Project language")
+    sp_vs.add_argument("--name", required=True, help="Project/solution name")
+    sp_vs.add_argument("--idea", required=False, default="", help="Optional description")
+
     return parser
 
 
@@ -1196,6 +1392,20 @@ def main(argv: list[str] | None = None) -> int:
             # Read from stdin
             content = sys.stdin.read()
         generator.create_file(args.filename, content)
+        return 0
+
+    if args.command == "create-vs":
+        lang = args.language
+        name = args.name
+        idea = args.idea or name
+        if lang == "cpp":
+            path = generator.create_vs_cpp_project(name, idea)
+        elif lang == "cs":
+            path = generator.create_vs_cs_project(name, idea)
+        else:  # masm
+            path = generator.create_vs_masm_project(name, idea)
+        print(f"🎉 Visual Studio project created at: {path}")
+        print("Open the .sln in Visual Studio 2022 and build Debug|x64.")
         return 0
 
     # Fallback
