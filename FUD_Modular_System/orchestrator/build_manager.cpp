@@ -150,14 +150,14 @@ public:
         wc.hInstance = GetModuleHandle(NULL);
         wc.hCursor = LoadCursor(NULL, IDC_ARROW);
         wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-        wc.lpszClassName = L"FUDOrchestrator";
+        wc.lpszClassName = "FUDOrchestrator";
         wc.cbWndExtra = sizeof(FUDOrchestrator*);
         
         if (!RegisterClassEx(&wc)) return false;
         
         hMainWindow = CreateWindowEx(
             WS_EX_APPWINDOW,
-            L"FUDOrchestrator",
+            "FUDOrchestrator",
             L"FUD System Orchestrator - Ultimate Evasion Builder",
             WS_OVERLAPPEDWINDOW,
             CW_USEDEFAULT, CW_USEDEFAULT, 1200, 800,

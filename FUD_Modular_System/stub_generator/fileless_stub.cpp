@@ -5,6 +5,8 @@
 #include <string>
 #include <fstream>
 #include <map>
+#include <cstdint>
+#include <ctime>
 
 #pragma comment(lib, "wininet.lib")
 
