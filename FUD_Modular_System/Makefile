@@ -27,12 +27,14 @@ CORE_MASM_SRC = core_masm_bot/core_payload.c
 PE_BUILDER_SRC = pe_builder/pe_dropper.cpp
 STUB_GENERATOR_SRC = stub_generator/fileless_stub.cpp
 ORCHESTRATOR_SRC = orchestrator/build_manager.cpp
+QUANTUM_SRC = quantum_module/quantum_payload.c
 
 # Object files
 CORE_MASM_OBJ = $(OBJDIR)/core_payload.o
 PE_BUILDER_OBJ = $(OBJDIR)/pe_dropper.o
 STUB_GENERATOR_OBJ = $(OBJDIR)/fileless_stub.o
 ORCHESTRATOR_OBJ = $(OBJDIR)/build_manager.o
+QUANTUM_OBJ = $(OBJDIR)/quantum_payload.o
 
 # Target executables
 CORE_MASM_EXE = $(BINDIR)/core_payload.exe
@@ -41,7 +43,7 @@ STUB_GENERATOR_EXE = $(BINDIR)/fileless_stub.exe
 ORCHESTRATOR_EXE = $(BINDIR)/fud_builder.exe
 
 # All targets
-ALL_TARGETS = $(CORE_MASM_EXE) $(PE_BUILDER_EXE) $(STUB_GENERATOR_EXE) $(ORCHESTRATOR_EXE)
+ALL_TARGETS = $(CORE_MASM_EXE) $(PE_BUILDER_EXE) $(STUB_GENERATOR_EXE) $(ORCHESTRATOR_EXE) $(QUANTUM_EXE)
 
 # Default target
 all: setup $(ALL_TARGETS)
@@ -52,6 +54,7 @@ all: setup $(ALL_TARGETS)
 	@echo "PE Builder:        $(PE_BUILDER_EXE)"
 	@echo "Stub Generator:    $(STUB_GENERATOR_EXE)"
 	@echo "Orchestrator:      $(ORCHESTRATOR_EXE)"
+	@echo "Quantum Module:    $(QUANTUM_EXE)"
 	@echo "==============================================================================="
 
 # Setup build directories
@@ -107,6 +110,18 @@ stub: setup $(STUB_GENERATOR_EXE)
 
 orchestrator: setup $(ORCHESTRATOR_EXE)
 	@echo "Orchestrator built: $(ORCHESTRATOR_EXE)"
+
+# Quantum Module
+$(QUANTUM_EXE): $(QUANTUM_OBJ)
+	@echo "Linking Quantum Module..."
+	$(CXX) $(LDFLAGS) -o $@ $< $(LIBS)
+
+$(QUANTUM_OBJ): $(QUANTUM_SRC)
+	@echo "Compiling Quantum Module..."
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+quantum: setup $(QUANTUM_EXE)
+	@echo "Quantum Module built: $(QUANTUM_EXE)"
 
 # Testing targets
 test: all

