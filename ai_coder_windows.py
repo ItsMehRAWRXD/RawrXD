@@ -1131,12 +1131,19 @@ Global
 EndGlobal
 """
         main_cpp = """#include <iostream>
+#include <string>
 
-int main() {
+int main(int argc, char** argv) {
+    std::cout << "App: " << (argc > 0 ? argv[0] : "unknown") << std::endl;
+    std::cout << "Args:";
+    for (int i = 1; i < argc; ++i) {
+        std::cout << " " << argv[i];
+    }
+    std::cout << std::endl;
     return 0;
 }
 """
-        main_asm = "; Simple MASM file optionally included in the project\n.code\nmain_asm_example PROC\n    ret\nmain_asm_example ENDP\nEND\n"
+        main_asm = "; x64 MASM module example\noption casemap:none\n.code\n; int add_two(int a, int b)\nadd_two PROC\n    ; rcx=a, rdx=b (Windows x64 calling convention)\n    mov eax, ecx\n    add eax, edx\n    ret\nadd_two ENDP\nEND\n"
 
         # Write files
         (project_dir / project_name).mkdir(parents=True, exist_ok=True)
@@ -1162,7 +1169,10 @@ int main() {
 """
         program_cs = """using System;
 
-// Entry point for C# console app
+if (args?.Length > 0)
+{
+    Console.WriteLine("Args: " + string.Join(' ', args));
+}
 """
         sln = f"""Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
@@ -1314,6 +1324,7 @@ EndGlobal
 #include <windows.h>
 
 int APIENTRY wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
+    MessageBoxW(NULL, L"App initialized.", L"Win32", MB_OK);
     return 0;
 }
 """
@@ -1424,6 +1435,11 @@ namespace {NAME}
         {
             this.Text = "WinForms App";
             this.ClientSize = new System.Drawing.Size(600, 400);
+            var button = new System.Windows.Forms.Button();
+            button.Text = "Click";
+            button.Left = 20; button.Top = 20;
+            button.Click += (s, e) => System.Windows.Forms.MessageBox.Show("Clicked");
+            this.Controls.Add(button);
         }
     }
 }
