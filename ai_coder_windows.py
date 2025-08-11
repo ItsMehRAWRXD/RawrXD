@@ -1133,7 +1133,6 @@ EndGlobal
         main_cpp = """#include <iostream>
 
 int main() {
-    std::cout << "Hello from Visual Studio C++!" << std::endl;
     return 0;
 }
 """
@@ -1163,7 +1162,7 @@ int main() {
 """
         program_cs = """using System;
 
-Console.WriteLine("Hello from Visual Studio C#!");
+// Entry point for C# console app
 """
         sln = f"""Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
@@ -1314,8 +1313,7 @@ EndGlobal
         main_cpp = """
 #include <windows.h>
 
-int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
-    MessageBoxW(NULL, L"Hello from Win32 GUI!", L"AI Code Generator", MB_OK | MB_ICONINFORMATION);
+int APIENTRY wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
     return 0;
 }
 """
@@ -1493,7 +1491,6 @@ namespace {NAME}
         xmlns:x=\"http://schemas.microsoft.com/winfx/2006/xaml\"
         Title=\"WPF App\" Height=\"450\" Width=\"800\">
     <Grid>
-        <TextBlock Text=\"Hello from WPF!\" VerticalAlignment=\"Center\" HorizontalAlignment=\"Center\" FontSize=\"24\"/>
     </Grid>
 </Window>
 """.replace("{NAME}", project_name)
