@@ -1197,6 +1197,351 @@ EndGlobal
         # Create a C++ console app with optional MASM file wired in
         return self.create_vs_cpp_project(project_name, idea, include_masm=True)
 
+    def create_vs_cpp_win32_project(self, project_name: str, idea: str) -> Path:
+        project_dir = self.project_dir / project_name
+        project_guid = str(uuid4()).upper()
+        filter_guid = str(uuid4()).upper()
+        vcxproj = f"""<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{{{project_guid}}}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>{project_name}</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <ConformanceMode>true</ConformanceMode>
+      <PreprocessorDefinitions>UNICODE;_UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <ConformanceMode>true</ConformanceMode>
+      <PreprocessorDefinitions>UNICODE;_UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets" />
+</Project>
+"""
+        filters = f"""<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{{{filter_guid}}}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
+"""
+        sln = f"""Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}}") = "{project_name}", "{project_name}\{project_name}.vcxproj", "{{{project_guid}}}"
+EndProject
+Global
+    GlobalSection(SolutionConfigurationPlatforms) = preSolution
+        Debug|x64 = Debug|x64
+        Release|x64 = Release|x64
+    EndGlobalSection
+    GlobalSection(ProjectConfigurationPlatforms) = postSolution
+        {{{project_guid}}}.Debug|x64.ActiveCfg = Debug|x64
+        {{{project_guid}}}.Debug|x64.Build.0 = Debug|x64
+        {{{project_guid}}}.Release|x64.ActiveCfg = Release|x64
+        {{{project_guid}}}.Release|x64.Build.0 = Release|x64
+    EndGlobalSection
+    GlobalSection(SolutionProperties) = preSolution
+        HideSolutionNode = FALSE
+    EndGlobalSection
+EndGlobal
+"""
+        main_cpp = """
+#include <windows.h>
+
+int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int) {
+    MessageBoxW(NULL, L"Hello from Win32 GUI!", L"AI Code Generator", MB_OK | MB_ICONINFORMATION);
+    return 0;
+}
+"""
+        (project_dir / project_name).mkdir(parents=True, exist_ok=True)
+        self.create_file(f"{project_name}.sln", sln)
+        self.create_file(f"{project_name}/{project_name}.vcxproj", vcxproj)
+        self.create_file(f"{project_name}/{project_name}.vcxproj.filters", filters)
+        self.create_file(f"{project_name}/main.cpp", main_cpp)
+        return project_dir
+
+    def create_vs_cpp_cmake_project(self, project_name: str, idea: str, with_tests: bool = False, with_vcpkg: bool = False) -> Path:
+        project_dir = self.project_dir / project_name
+        cmakelists = f"""cmake_minimum_required(VERSION 3.20)
+project({project_name} LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+add_executable({project_name} src/main.cpp)
+target_compile_features({project_name} PRIVATE cxx_std_20)
+"""
+        main_cpp = """#include <iostream>
+int main() {
+    std::cout << "Hello from CMake C++!" << std::endl;
+    return 0;
+}
+"""
+        test_cmake = """
+enable_testing()
+add_executable(sample_test tests/sample_test.cpp)
+add_test(NAME sample_test COMMAND sample_test)
+"""
+        sample_test = """#include <cassert>
+int main() {
+    assert(1 + 1 == 2);
+    return 0;
+}
+"""
+        vcpkg_json = """{
+  "name": "{name}",
+  "version-string": "0.1.0",
+  "dependencies": []
+}
+""".replace("{name}", project_name)
+        (project_dir / "src").mkdir(parents=True, exist_ok=True)
+        self.create_file(f"{project_name}/CMakeLists.txt", cmakelists)
+        self.create_file(f"{project_name}/src/main.cpp", main_cpp)
+        if with_tests:
+            (project_dir / "tests").mkdir(parents=True, exist_ok=True)
+            self.create_file(f"{project_name}/tests/CMakeLists.txt", "# tests\n")
+            self.create_file(f"{project_name}/tests/sample_test.cpp", sample_test)
+            # append tests to main CMakeLists
+            self.create_file(f"{project_name}/tests/enabled.txt", "tests enabled")
+            # naive append
+            path = project_dir / "CMakeLists.txt"
+            path.write_text(path.read_text() + test_cmake, encoding="utf-8")
+        if with_vcpkg:
+            self.create_file(f"{project_name}/vcpkg.json", vcpkg_json)
+        # VS can open this folder directly (Open Folder)
+        self.create_file(f"{project_name}/README.md", "Open this folder in Visual Studio 2022 (File > Open > Folder) and use CMake menu to configure/build.")
+        return project_dir
+
+    def create_vs_cs_winforms_project(self, project_name: str, idea: str) -> Path:
+        project_dir = self.project_dir / project_name
+        csproj = """<Project Sdk=\"Microsoft.NET.Sdk\">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+  </PropertyGroup>
+</Project>
+"""
+        program_cs = """using System;
+using System.Windows.Forms;
+
+namespace {NAME}
+{
+    internal static class Program
+    {
+        [STAThread]
+        static void Main()
+        {
+            ApplicationConfiguration.Initialize();
+            Application.Run(new Form1());
+        }
+    }
+}
+""".replace("{NAME}", project_name)
+        form1_cs = """using System.Windows.Forms;
+
+namespace {NAME}
+{
+    public partial class Form1 : Form
+    {
+        public Form1()
+        {
+            InitializeComponent();
+        }
+    }
+}
+""".replace("{NAME}", project_name)
+        form1_designer = """namespace {NAME}
+{
+    partial class Form1
+    {
+        private void InitializeComponent()
+        {
+            this.Text = "WinForms App";
+            this.ClientSize = new System.Drawing.Size(600, 400);
+        }
+    }
+}
+""".replace("{NAME}", project_name)
+        (project_dir).mkdir(parents=True, exist_ok=True)
+        self.create_file(f"{project_name}/{project_name}.csproj", csproj)
+        self.create_file(f"{project_name}/Program.cs", program_cs)
+        self.create_file(f"{project_name}/Form1.cs", form1_cs)
+        self.create_file(f"{project_name}/Form1.Designer.cs", form1_designer)
+        # Create simple solution that references the csproj
+        project_guid = str(uuid4()).upper()
+        sln = f"""Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}}") = "{project_name}", "{project_name}\{project_name}.csproj", "{{{project_guid}}}"
+EndProject
+Global
+    GlobalSection(SolutionConfigurationPlatforms) = preSolution
+        Debug|Any CPU = Debug|Any CPU
+        Release|Any CPU = Release|Any CPU
+    EndGlobalSection
+    GlobalSection(ProjectConfigurationPlatforms) = postSolution
+        {{{project_guid}}}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+        {{{project_guid}}}.Debug|Any CPU.Build.0 = Debug|Any CPU
+        {{{project_guid}}}.Release|Any CPU.ActiveCfg = Release|Any CPU
+        {{{project_guid}}}.Release|Any CPU.Build.0 = Release|Any CPU
+    EndGlobalSection
+    GlobalSection(SolutionProperties) = preSolution
+        HideSolutionNode = FALSE
+    EndGlobalSection
+EndGlobal
+"""
+        self.create_file(f"{project_name}.sln", sln)
+        return project_dir
+
+    def create_vs_cs_wpf_project(self, project_name: str, idea: str) -> Path:
+        project_dir = self.project_dir / project_name
+        csproj = """<Project Sdk=\"Microsoft.NET.Sdk\">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+  </PropertyGroup>
+</Project>
+"""
+        app_xaml = """<Application x:Class=\"{NAME}.App\"
+             xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\"
+             xmlns:x=\"http://schemas.microsoft.com/winfx/2006/xaml\"
+             StartupUri=\"MainWindow.xaml\">
+    <Application.Resources>
+    </Application.Resources>
+</Application>
+""".replace("{NAME}", project_name)
+        app_cs = """using System.Windows;
+
+namespace {NAME}
+{
+    public partial class App : Application { }
+}
+""".replace("{NAME}", project_name)
+        mainwindow_xaml = """<Window x:Class=\"{NAME}.MainWindow\"
+        xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\"
+        xmlns:x=\"http://schemas.microsoft.com/winfx/2006/xaml\"
+        Title=\"WPF App\" Height=\"450\" Width=\"800\">
+    <Grid>
+        <TextBlock Text=\"Hello from WPF!\" VerticalAlignment=\"Center\" HorizontalAlignment=\"Center\" FontSize=\"24\"/>
+    </Grid>
+</Window>
+""".replace("{NAME}", project_name)
+        mainwindow_cs = """using System.Windows;
+
+namespace {NAME}
+{
+    public partial class MainWindow : Window
+    {
+        public MainWindow()
+        {
+            InitializeComponent();
+        }
+    }
+}
+""".replace("{NAME}", project_name)
+        (project_dir).mkdir(parents=True, exist_ok=True)
+        self.create_file(f"{project_name}/{project_name}.csproj", csproj)
+        self.create_file(f"{project_name}/App.xaml", app_xaml)
+        self.create_file(f"{project_name}/App.xaml.cs", app_cs)
+        self.create_file(f"{project_name}/MainWindow.xaml", mainwindow_xaml)
+        self.create_file(f"{project_name}/MainWindow.xaml.cs", mainwindow_cs)
+        project_guid = str(uuid4()).upper()
+        sln = f"""Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}}") = "{project_name}", "{project_name}\{project_name}.csproj", "{{{project_guid}}}"
+EndProject
+Global
+    GlobalSection(SolutionConfigurationPlatforms) = preSolution
+        Debug|Any CPU = Debug|Any CPU
+        Release|Any CPU = Release|Any CPU
+    EndGlobalSection
+    GlobalSection(ProjectConfigurationPlatforms) = postSolution
+        {{{project_guid}}}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+        {{{project_guid}}}.Debug|Any CPU.Build.0 = Debug|Any CPU
+        {{{project_guid}}}.Release|Any CPU.ActiveCfg = Release|Any CPU
+        {{{project_guid}}}.Release|Any CPU.Build.0 = Release|Any CPU
+    EndGlobalSection
+    GlobalSection(SolutionProperties) = preSolution
+        HideSolutionNode = FALSE
+    EndGlobalSection
+EndGlobal
+"""
+        self.create_file(f"{project_name}.sln", sln)
+        return project_dir
+
     def create_asm_project(self, project_name: str, idea: str) -> Path:
         """Create a Windows NASM x64 assembly project with MinGW build scripts."""
         structure: Dict[str, Any] = {
@@ -1360,6 +1705,14 @@ def build_arg_parser() -> argparse.ArgumentParser:
     sp_vs.add_argument("--language", required=True, choices=["cpp", "cs", "masm"], help="Project language")
     sp_vs.add_argument("--name", required=True, help="Project/solution name")
     sp_vs.add_argument("--idea", required=False, default="", help="Optional description")
+    sp_vs.add_argument(
+        "--type",
+        required=False,
+        default="console",
+        help="Project type: cpp=[console|win32|cmake], cs=[console|winforms|wpf], masm=[console]",
+    )
+    sp_vs.add_argument("--with-tests", action="store_true", help="Add basic test target (CMake only)")
+    sp_vs.add_argument("--with-vcpkg", action="store_true", help="Add vcpkg.json (CMake only)")
 
     return parser
 
@@ -1398,14 +1751,28 @@ def main(argv: list[str] | None = None) -> int:
         lang = args.language
         name = args.name
         idea = args.idea or name
+        ptype = getattr(args, "type", "console")
         if lang == "cpp":
-            path = generator.create_vs_cpp_project(name, idea)
+            if ptype == "win32":
+                path = generator.create_vs_cpp_win32_project(name, idea)
+            elif ptype == "cmake":
+                path = generator.create_vs_cpp_cmake_project(name, idea, with_tests=args.with_tests, with_vcpkg=args.with_vcpkg)
+            else:
+                path = generator.create_vs_cpp_project(name, idea)
         elif lang == "cs":
-            path = generator.create_vs_cs_project(name, idea)
+            if ptype == "winforms":
+                path = generator.create_vs_cs_winforms_project(name, idea)
+            elif ptype == "wpf":
+                path = generator.create_vs_cs_wpf_project(name, idea)
+            else:
+                path = generator.create_vs_cs_project(name, idea)
         else:  # masm
             path = generator.create_vs_masm_project(name, idea)
         print(f"🎉 Visual Studio project created at: {path}")
-        print("Open the .sln in Visual Studio 2022 and build Debug|x64.")
+        if lang == "cpp" and ptype == "cmake":
+            print("Open the folder in Visual Studio 2022 (File > Open > Folder) and use CMake to build.")
+        else:
+            print("Open the .sln in Visual Studio 2022 and build Debug|x64 (C# uses Any CPU).")
         return 0
 
     # Fallback
