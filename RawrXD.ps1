@@ -65,7 +65,7 @@ param(
         'test-ollama', 'list-models', 'chat', 'analyze-file', 
         'git-status', 'create-agent', 'list-agents', 
         'marketplace-sync', 'marketplace-search', 'marketplace-install', 'list-extensions',
-        'vscode-popular', 'vscode-search', 'vscode-install', 'vscode-categories',
+        'vscode-popular', 'vscode-search', 'vscode-install', 'vscode-categories', 'copilot-status',
         'diagnose', 'help',
         'test-editor-settings', 'test-file-operations', 'test-settings-persistence',
         'test-visibility', 'check-editor-visibility',
@@ -29040,6 +29040,391 @@ function Invoke-CliDiagnose {
     }
 }
 
+function Get-EditorCliPath {
+    <#
+    .SYNOPSIS
+        Resolve the CLI path and invocation hint for supported editors.
+    #>
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('VSCode', 'Cursor')]
+        [string]$Editor
+    )
+
+    $commandCandidates = switch ($Editor) {
+        'VSCode' { @('code', 'code-insiders', 'code.cmd', 'code-insiders.cmd') }
+        'Cursor' { @('cursor', 'cursor-insiders', 'cursor.cmd') }
+    }
+
+    foreach ($candidate in $commandCandidates) {
+        try {
+            $command = Get-Command $candidate -ErrorAction SilentlyContinue
+            if ($command) {
+                return [pscustomobject]@{
+                    Path       = $command.Source
+                    Invocation = $command.Name
+                }
+            }
+        }
+        catch {
+            # Ignore lookup errors and continue
+        }
+    }
+
+    $paths = @()
+
+    try {
+        $isWindows = [System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform([System.Runtime.InteropServices.OSPlatform]::Windows)
+        $isLinux   = [System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform([System.Runtime.InteropServices.OSPlatform]::Linux)
+        $isMacOS   = [System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform([System.Runtime.InteropServices.OSPlatform]::OSX)
+    }
+    catch {
+        $isWindows = $env:OS -eq 'Windows_NT'
+        $isLinux   = -not $isWindows
+        $isMacOS   = $false
+    }
+
+    if ($isWindows) {
+        if ($Editor -eq 'VSCode') {
+            if ($env:LOCALAPPDATA) {
+                $paths += (Join-Path $env:LOCALAPPDATA 'Programs\Microsoft VS Code\bin\code.cmd')
+                $paths += (Join-Path $env:LOCALAPPDATA 'Programs\Microsoft VS Code\Code.exe')
+            }
+            if ($env:ProgramFiles) {
+                $paths += (Join-Path $env:ProgramFiles 'Microsoft VS Code\bin\code.cmd')
+            }
+            $programFilesX86 = ${env:ProgramFiles(x86)}
+            if ($programFilesX86) {
+                $paths += (Join-Path $programFilesX86 'Microsoft VS Code\bin\code.cmd')
+            }
+        }
+        else {
+            if ($env:LOCALAPPDATA) {
+                $paths += (Join-Path $env:LOCALAPPDATA 'Programs\Cursor\cursor.exe')
+                $paths += (Join-Path $env:LOCALAPPDATA 'Programs\Cursor\Application\cursor.exe')
+            }
+        }
+    }
+    elseif ($isMacOS) {
+        if ($Editor -eq 'VSCode') {
+            $paths += '/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code'
+            $paths += '/usr/local/bin/code'
+        }
+        else {
+            $paths += '/Applications/Cursor.app/Contents/MacOS/Cursor'
+            $paths += '/Applications/Cursor.app/Contents/Resources/app/bin/cursor'
+        }
+    }
+    elseif ($isLinux) {
+        if ($Editor -eq 'VSCode') {
+            $paths += '/usr/bin/code'
+            $paths += '/snap/bin/code'
+            if ($env:HOME) {
+                $paths += (Join-Path $env:HOME '.vscode-server/bin/code')
+            }
+        }
+        else {
+            $paths += '/usr/bin/cursor'
+            $paths += '/snap/bin/cursor'
+            if ($env:HOME) {
+                $paths += (Join-Path $env:HOME '.local/bin/cursor')
+            }
+        }
+    }
+
+    foreach ($candidatePath in $paths) {
+        try {
+            if ($candidatePath -and (Test-Path -LiteralPath $candidatePath)) {
+                $invocation = if ($candidatePath -match '\s') { "`"$candidatePath`"" } else { $candidatePath }
+                return [pscustomobject]@{
+                    Path       = $candidatePath
+                    Invocation = $invocation
+                }
+            }
+        }
+        catch {
+            # Ignore filesystem errors and keep scanning
+        }
+    }
+
+    return $null
+}
+
+function Get-EditorCopilotStatus {
+    <#
+    .SYNOPSIS
+        Inspect local editor installations and determine GitHub Copilot coverage.
+    #>
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('VSCode', 'Cursor')]
+        [string]$Editor
+    )
+
+    $displayName = if ($Editor -eq 'VSCode') { 'VS Code' } else { 'Cursor' }
+    $defaultInvocation = if ($Editor -eq 'VSCode') { 'code' } else { 'cursor' }
+
+    $result = [ordered]@{
+        Editor               = $displayName
+        Installed            = $false
+        CliPath              = $null
+        InvocationHint       = $defaultInvocation
+        Version              = 'Not detected'
+        CopilotInstalled     = $false
+        CopilotVersion       = 'Not installed'
+        CopilotChatInstalled = $false
+        CopilotChatVersion   = 'Not installed'
+        Notes                = @()
+    }
+
+    $cliInfo = Get-EditorCliPath -Editor $Editor
+    if (-not $cliInfo) {
+        $result.Notes += "$displayName CLI not found. Install $displayName and add it to PATH."
+        return [pscustomobject]$result
+    }
+
+    $result.CliPath = $cliInfo.Path
+    $result.InvocationHint = $cliInfo.Invocation
+    $result.Installed = $true
+
+    try {
+        $versionOutput = & $cliInfo.Path '--version' 2>$null
+        if ($versionOutput) {
+            $firstLine = ($versionOutput | Select-Object -First 1).Trim()
+            if ($firstLine) {
+                $result.Version = $firstLine
+            }
+        }
+    }
+    catch {
+        $result.Notes += "Unable to read version information: $($_.Exception.Message)"
+    }
+
+    try {
+        $extensionOutput = & $cliInfo.Path '--list-extensions' '--show-versions' 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            throw "Extension query exited with code $LASTEXITCODE"
+        }
+
+        foreach ($line in $extensionOutput) {
+            $trimmed = $line.Trim()
+            if (-not $trimmed) { continue }
+
+            if ($trimmed -match '^(?i)github\.copilot(?:@(?<ver>.+))?$') {
+                $result.CopilotInstalled = $true
+                if ($matches.ver) {
+                    $result.CopilotVersion = $matches.ver
+                }
+                else {
+                    $result.CopilotVersion = 'Installed'
+                }
+            }
+            elseif ($trimmed -match '^(?i)github\.copilot-chat(?:@(?<ver>.+))?$') {
+                $result.CopilotChatInstalled = $true
+                if ($matches.ver) {
+                    $result.CopilotChatVersion = $matches.ver
+                }
+                else {
+                    $result.CopilotChatVersion = 'Installed'
+                }
+            }
+        }
+    }
+    catch {
+        $result.Notes += "Unable to enumerate extensions: $($_.Exception.Message)"
+    }
+
+    return [pscustomobject]$result
+}
+
+function Get-GitHubCopilotServiceStatus {
+    <#
+    .SYNOPSIS
+        Fetch GitHub status API details for Copilot services.
+    #>
+    param()
+
+    $statusInfo = @{
+        Status     = 'unknown'
+        Components = @()
+        Retrieved  = Get-Date
+        Message    = $null
+    }
+
+    try {
+        $response = Invoke-RestMethod -Uri 'https://www.githubstatus.com/api/v2/components.json' -Method Get -TimeoutSec 10 -ErrorAction Stop
+        if ($response.components) {
+            $copilotComponents = $response.components | Where-Object { $_.name -match 'Copilot' }
+            if ($copilotComponents) {
+                $severityRank = @{
+                    'operational'          = 0
+                    'under_maintenance'    = 1
+                    'degraded_performance' = 2
+                    'partial_outage'       = 3
+                    'major_outage'         = 4
+                }
+                $worstComponent = $copilotComponents | Sort-Object -Property {
+                    if ($severityRank.ContainsKey($_.status)) { $severityRank[$_.status] } else { 5 }
+                } -Descending | Select-Object -First 1
+
+                $statusInfo.Status = $worstComponent.status
+                $statusInfo.Components = $copilotComponents
+                return $statusInfo
+            }
+        }
+
+        $statusInfo.Message = 'GitHub status API did not return Copilot components.'
+    }
+    catch {
+        $statusInfo.Message = $_.Exception.Message
+    }
+
+    return $statusInfo
+}
+
+function Invoke-CliCopilotStatus {
+    <#
+    .SYNOPSIS
+        Display VS Code/Cursor GitHub Copilot status and optionally install extensions.
+    #>
+    param(
+        [Parameter(Mandatory = $false)]
+        [string]$Action
+    )
+
+    Write-Host "`n=== Cursor & VS Code GitHub Copilot Status ===" -ForegroundColor Cyan
+
+    $printSummary = {
+        param(
+            [Parameter(Mandatory = $true)]$Data,
+            [string]$Title = $null
+        )
+
+        if ($Title) {
+            Write-Host "`n$Title" -ForegroundColor Yellow
+        }
+
+        $table = $Data | Select-Object `
+            @{ Name = 'Editor'; Expression = { $_.Editor } },
+            @{ Name = 'Installed'; Expression = { if ($_.Installed) { '✅' } else { '❌' } } },
+            @{ Name = 'Version'; Expression = { $_.Version } },
+            @{ Name = 'Copilot'; Expression = { if ($_.CopilotInstalled) { "✅ $($_.CopilotVersion)" } else { '❌ Missing' } } },
+            @{ Name = 'Copilot Chat'; Expression = { if ($_.CopilotChatInstalled) { "✅ $($_.CopilotChatVersion)" } else { '❌ Missing' } } },
+            @{ Name = 'CLI'; Expression = { if ($_.CliPath) { $_.CliPath } else { 'Not detected' } } }
+
+        $table | Format-Table -AutoSize
+    }
+
+    $statuses = @('VSCode', 'Cursor') | ForEach-Object { Get-EditorCopilotStatus -Editor $_ }
+
+    & $printSummary $statuses 'Current local status'
+
+    foreach ($status in $statuses) {
+        if ($status.Notes -and $status.Notes.Count -gt 0) {
+            Write-Host "`nNotes for $($status.Editor):" -ForegroundColor DarkYellow
+            foreach ($note in $status.Notes) {
+                Write-Host "  - $note" -ForegroundColor Gray
+            }
+        }
+    }
+
+    $serviceStatus = Get-GitHubCopilotServiceStatus
+    if ($serviceStatus.Components -and $serviceStatus.Components.Count -gt 0) {
+        $iconMap = @{
+            'operational'          = '✅'
+            'under_maintenance'    = '🛠️'
+            'degraded_performance' = '⚠️'
+            'partial_outage'       = '⚠️'
+            'major_outage'         = '🛑'
+        }
+        $overallIcon = if ($iconMap.ContainsKey($serviceStatus.Status)) { $iconMap[$serviceStatus.Status] } else { 'ℹ️' }
+        Write-Host "`nCloud Status: $overallIcon $($serviceStatus.Status)" -ForegroundColor Cyan
+        foreach ($component in $serviceStatus.Components) {
+            $componentIcon = if ($iconMap.ContainsKey($component.status)) { $iconMap[$component.status] } else { '•' }
+            Write-Host "  $componentIcon $($component.name): $($component.status)" -ForegroundColor Gray
+        }
+    }
+    elseif ($serviceStatus.Message) {
+        Write-Host "`nCloud Status: Unable to reach GitHub status API ($($serviceStatus.Message))" -ForegroundColor Yellow
+    }
+    else {
+        Write-Host "`nCloud Status: Unknown (no data returned)" -ForegroundColor Yellow
+    }
+
+    $actionNormalized = if ($Action) { $Action.Trim().ToLowerInvariant() } else { '' }
+    $shouldInstall = $actionNormalized -in @('install', 'ensure', 'setup', 'fix', 'auto', 'auto-install')
+
+    if ($shouldInstall) {
+        Write-Host "`nAttempting to install missing GitHub Copilot extensions (PowerShell only)..." -ForegroundColor Cyan
+        foreach ($status in $statuses) {
+            if (-not $status.Installed -or -not $status.CliPath) {
+                Write-Host "  Skipping $($status.Editor) (CLI not detected)" -ForegroundColor DarkGray
+                continue
+            }
+
+            $extensionsToEnsure = @(
+                @{ Id = 'GitHub.copilot'; Property = 'CopilotInstalled' },
+                @{ Id = 'GitHub.copilot-chat'; Property = 'CopilotChatInstalled' }
+            )
+
+            foreach ($extension in $extensionsToEnsure) {
+                $property = $status.PSObject.Properties[$extension.Property]
+                if ($property -and $property.Value) {
+                    continue
+                }
+
+                try {
+                    Write-Host "  Installing $($extension.Id) for $($status.Editor)..." -ForegroundColor Yellow
+                    $installOutput = & $status.CliPath '--install-extension' $extension.Id 2>&1
+                    if ($LASTEXITCODE -eq 0) {
+                        Write-Host "    ✓ Installed $($extension.Id)" -ForegroundColor Green
+                    }
+                    else {
+                        Write-Host "    ✗ CLI exited with code $LASTEXITCODE" -ForegroundColor Red
+                        if ($installOutput) {
+                            $formattedOutput = if ($installOutput -is [System.Array]) { $installOutput -join "`n" } else { $installOutput }
+                            Write-Host $formattedOutput -ForegroundColor DarkGray
+                        }
+                    }
+                }
+                catch {
+                    Write-Host "    ✗ Failed to install $($extension.Id): $($_.Exception.Message)" -ForegroundColor Red
+                }
+            }
+        }
+
+        $statuses = @('VSCode', 'Cursor') | ForEach-Object { Get-EditorCopilotStatus -Editor $_ }
+        & $printSummary $statuses 'Updated status after install attempt'
+    }
+    else {
+        $missingCopilot = $statuses | Where-Object { $_.Installed -and -not $_.CopilotInstalled }
+        if ($missingCopilot) {
+            Write-Host "`nInstall GitHub Copilot locally:" -ForegroundColor Yellow
+            foreach ($status in $missingCopilot) {
+                Write-Host "  $($status.InvocationHint) --install-extension GitHub.copilot" -ForegroundColor White
+            }
+        }
+
+        $missingChat = $statuses | Where-Object { $_.Installed -and -not $_.CopilotChatInstalled }
+        if ($missingChat) {
+            Write-Host "`nInstall GitHub Copilot Chat:" -ForegroundColor Yellow
+            foreach ($status in $missingChat) {
+                Write-Host "  $($status.InvocationHint) --install-extension GitHub.copilot-chat" -ForegroundColor White
+            }
+        }
+    }
+
+    $missingEditors = $statuses | Where-Object { -not $_.Installed }
+    if ($missingEditors) {
+        Write-Host "`nEnable CLI access for these editors to allow automation:" -ForegroundColor Yellow
+        foreach ($editorStatus in $missingEditors) {
+            Write-Host "  - $($editorStatus.Editor): enable '$($editorStatus.InvocationHint)' command in PATH" -ForegroundColor Gray
+        }
+    }
+
+    return $true
+}
+
 function Show-CliHelp {
     <#
     .SYNOPSIS
@@ -29068,6 +29453,7 @@ function Show-CliHelp {
         @{Name = "vscode-search"; Description = "🌐 Search VSCode Marketplace (Live API)"; Options = "-Prompt <search_term>" }
         @{Name = "vscode-install"; Description = "🌐 Install VSCode extension (Live API)"; Options = "-Prompt <extension_id>" }
         @{Name = "vscode-categories"; Description = "🌐 Browse VSCode extension categories"; Options = "" }
+        @{Name = "copilot-status"; Description = "⚙️ Check VS Code/Cursor + GitHub Copilot status"; Options = "[-Prompt install]" }
         @{Name = "diagnose"; Description = "Run comprehensive diagnostic checks"; Options = "" }
         @{Name = "test-editor-settings"; Description = "Test editor settings (colors, fonts, syntax) - no GUI needed"; Options = "" }
         @{Name = "test-file-operations"; Description = "Test file operations (open, save, read) - no GUI needed"; Options = "" }
@@ -29108,6 +29494,8 @@ function Show-CliHelp {
     Write-Host "  .\RawrXD.ps1 -CliMode -Command vscode-popular" -ForegroundColor Cyan
     Write-Host "  .\RawrXD.ps1 -CliMode -Command vscode-search -Prompt 'copilot'" -ForegroundColor Cyan
     Write-Host "  .\RawrXD.ps1 -CliMode -Command vscode-install -Prompt 'GitHub.copilot'" -ForegroundColor Cyan
+    Write-Host "  .\RawrXD.ps1 -CliMode -Command copilot-status" -ForegroundColor Gray
+    Write-Host "  .\RawrXD.ps1 -CliMode -Command copilot-status -Prompt install" -ForegroundColor Gray
     Write-Host ""
     Write-Host "🎬 Video Engine Examples:" -ForegroundColor Magenta
     Write-Host "  .\RawrXD.ps1 -CliMode -Command video-search -Prompt 'python tutorial'" -ForegroundColor Gray
@@ -29396,6 +29784,11 @@ if ($CliMode) {
             }
             catch {
                 Write-Host "Error displaying categories: $($_.Exception.Message)" -ForegroundColor Red
+                $exitCode = 1
+            }
+        }
+        "copilot-status" {
+            if (-not (Invoke-CliCopilotStatus -Action $Prompt)) {
                 $exitCode = 1
             }
         }
