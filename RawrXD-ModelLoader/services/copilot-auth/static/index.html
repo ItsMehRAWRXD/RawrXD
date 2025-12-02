@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Copilot Auth - Test Client</title>
+  <style>body{font-family:Segoe UI,Arial;background:#f7f7f8;color:#111;padding:24px}button{padding:10px 14px;border-radius:6px;border:1px solid #ccc;background:#fff;cursor:pointer}pre{background:#222;color:#eee;padding:12px;border-radius:6px;overflow:auto}</style>
+</head>
+<body>
+  <h1>Copilot Auth - Test Client</h1>
+  <p>This page lets you open the OAuth flow and fetch the saved token (local dev only).</p>
+  <p>
+    <a href="/authorize"><button id="authBtn">Start OAuth (Open GitHub)</button></a>
+    <button id="getToken">Fetch Stored Token</button>
+  </p>
+  <h3>Stored Token (dev only)</h3>
+  <pre id="tokenBox">(click &quot;Fetch Stored Token&quot;)</pre>
+  <script>
+    document.getElementById('getToken').addEventListener('click', async () => {
+      try {
+        const r = await fetch('/token');
+        if (!r.ok) throw new Error(await r.text());
+        const j = await r.json();
+        document.getElementById('tokenBox').textContent = JSON.stringify(j, null, 2);
+      } catch (e) {
+        document.getElementById('tokenBox').textContent = 'Error: ' + e.message;
+      }
+    });
+  </script>
+  <p style="margin-top:20px;color:#666">Note: The `/token` endpoint is for local dev testing only. Protect or remove in production.</p>
+</body>
+</html>

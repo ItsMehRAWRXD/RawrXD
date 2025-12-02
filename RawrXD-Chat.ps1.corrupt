@@ -1,0 +1,2761 @@
+# ============================================
+# RawrXD Chat Module
+# ============================================
+# This module contains all chat-related functionality including:
+# - Chat tab management (New-ChatTab, Remove-ChatTab, Get-ActiveChatTab)
+# - Agentic AI functions (Process-AgentCommand, Write-AgenticErrorLog)
+# - Ollama server management (Connect-OllamaServer, Authenticate-OllamaUser, Switch-OllamaServer, Test-OllamaServerConnection, Get-OllamaServerModels, Start-OllamaHealthMonitoring, Show-OllamaServerManager)
+# - Multithreading infrastructure (Initialize-MultithreadedAgents, Start-AgentTaskAsync, Start-ParallelChatProcessing, Start-ChatJobMonitor, Process-ThreadSafeLogs)
+# ============================================
+
+# ============================================
+# Model Management Functions
+# ============================================
+
+function Get-AvailableModels {
+    <#
+    .SYNOPSIS
+        Dynamically retrieves available Ollama models, with fallback to defaults
+    .DESCRIPTION
+        Attempts to get models from 'ollama list' command with timeout protection.
+        Falls back to hardcoded defaults if Ollama is unavailable or slow.
+    .OUTPUTS
+        Array of model names
+    #>
+    param()
+
+    # Default fallback models
+    $defaultModels = @("bigdaddyg-fast:latest", "llama3.2", "llama3.2:1b", "llama3.1", "codellama", "mistral", "qwen2.5-coder")
+
+    try {
+        # Check if ollama command is available
+        if (Get-Command ollama -ErrorAction SilentlyContinue) {
+            Write-DevConsole "🔍 Querying Ollama for available models..." "INFO"
+
+            # Use job with timeout to prevent hanging
+            $job = Start-Job -ScriptBlock {
+                try {
+                    $result = ollama list 2>$null
+                    if ($result) {
+                        # Parse the output - skip header line and extract model names
+                        $models = $result | Select-Object -Skip 1 | ForEach-Object {
+                            if ($_ -match '^\s*(\S+)') {
+                                $matches[1]
+                            }
+                        } | Where-Object { $_ } # Filter out empty entries
+
+                        return $models
+                    }
+                }
+                catch {
+                    return $null
+                }
+            } -ErrorAction SilentlyContinue
+
+            if ($job) {
+                # Wait up to 3 seconds for the job to complete
+                $result = Wait-Job -Job $job -Timeout 3 -ErrorAction SilentlyContinue
+                if ($result -and $result.State -eq 'Completed') {
+                    $ollamaModels = Receive-Job -Job $job -ErrorAction SilentlyContinue
+                    if ($ollamaModels -and $ollamaModels.Count -gt 0) {
+                        Write-DevConsole "✅ Loaded $($ollamaModels.Count) models from Ollama" "SUCCESS"
+                        Stop-Job -Job $job -ErrorAction SilentlyContinue
+                        Remove-Job -Job $job -ErrorAction SilentlyContinue
+                        return $ollamaModels
+                    }
+                }
+
+                # Clean up job if still running
+                if ($job.State -eq 'Running') {
+                    Stop-Job -Job $job -ErrorAction SilentlyContinue
+                }
+                Remove-Job -Job $job -ErrorAction SilentlyContinue
+            }
+        }
+    }
+    catch {
+        Write-DevConsole "⚠️ Could not query Ollama models: $($_.Exception.Message)" "WARNING"
+    }
+
+    # Fallback to defaults
+    Write-DevConsole "📋 Using default model list" "INFO"
+    return $defaultModels
+}
+    $modelCombo.SelectedItem = $Model
+    $tabPage.Controls.Add($modelCombo)========
+# Chat Tab Management
+    # Create send button======================
+    $sendButton = New-Object System.Windows.Forms.Button
+    $sendButton.Text = "Send"
+    $sendButton.Location = New-Object System.Drawing.Point(490, 395)
+    $sendButton.Size = New-Object System.Drawing.Size(95, 25)
+    $sendButton.BackColor = [System.Drawing.Color]::FromArgb(0, 120, 215)
+    $sendButton.ForeColor = [System.Drawing.Color]::White
+    $sendButton.FlatStyle = "Flat"
+    $tabPage.Controls.Add($sendButton)
+    if ($script:chatTabs.Count -ge $script:maxChatTabs) {
+    # Wire up eventssole "❌ Maximum chat tabs reached ($($script:maxChatTabs))" "ERROR"
+    $inputBox.add_KeyDown({
+            param($sender, $e)
+            if ($e.KeyCode -eq "Enter" -and -not $e.Shift) {
+                $e.SuppressKeyPress = $true
+                $sendButton.PerformClick()tring().Substring(0,8))"
+            }ng]::IsNullOrEmpty($TabName)) {
+        })abName = "Chat $($script:chatTabs.Count + 1)"
+    }
+    $sendButton.add_Click({
+            param($sender, $e)
+            Send-ChatMessage -TabId $tabId
+        })bId          = $tabId
+        TabPage        = $null
+    $modelCombo.add_SelectedIndexChanged({
+            param($sender, $e)
+            Update-ChatModel -TabId $tabId -Model $modelCombo.SelectedItem
+        })ndButton     = $null
+        Messages       = @()
+    # Store controls in sessionte
+    $chatSession.TabPage = $tabPage
+    $chatSession.ChatBox = $chatBox
+    $chatSession.InputBox = $inputBox
+    $chatSession.ModelCombo = $modelCombo
+    $chatSession.SendButton = $sendButtonForms.TabPage
+    $tabPage.Text = $TabName
+    # Add to tab controlId
+    $chatTabControl.TabPages.Add($tabPage)olor]::FromArgb(30, 30, 30)
+
+    # Store in collection (RichTextBox)
+    $script:chatTabs[$tabId] = $chatSessionrms.RichTextBox
+    $chatBox.Location = New-Object System.Drawing.Point(5, 5)
+    # Set as active tab-Object System.Drawing.Size(580, 350)
+    $chatTabControl.SelectedTab = $tabPageolor]::FromArgb(20, 20, 20)
+    $script:activeChatTabId = $tabIdwing.Color]::White
+    $chatBox.ReadOnly = $true
+    # Welcome messageew-Object System.Drawing.Font("Consolas", 10)
+    $welcomeText = "🤖 Welcome to RawrXD AI Chat!`n💡 Type your message and press Enter or click Send.`n🔧 Model: $Model`n`n"
+    $chatBox.AppendText($welcomeText)
+    $chatBox.ScrollToCaret()hatBox)
+
+    Update-ChatStatusx
+    Write-DevConsole "✅ Created new chat tab: $TabName ($tabId)" "SUCCESS"
+    $inputBox.Location = New-Object System.Drawing.Point(5, 365)
+    return $tabIde = New-Object System.Drawing.Size(480, 25)
+}   $inputBox.BackColor = [System.Drawing.Color]::FromArgb(45, 45, 45)
+    $inputBox.ForeColor = [System.Drawing.Color]::White
+function Remove-ChatTab {Object System.Drawing.Font("Consolas", 10)
+    param([string]$TabId) $true
+    $inputBox.AcceptsReturn = $true
+    if (-not $script:chatTabs.ContainsKey($TabId)) {
+        Write-DevConsole "❌ Chat tab $TabId not found" "ERROR"
+        returnodel selector
+    }modelCombo = New-Object System.Windows.Forms.ComboBox
+    $modelCombo.Location = New-Object System.Drawing.Point(490, 365)
+    $chatSession = $script:chatTabs[$TabId]awing.Size(95, 25)
+    $modelCombo.BackColor = [System.Drawing.Color]::FromArgb(45, 45, 45)
+    # Remove from tab controlSystem.Drawing.Color]::White
+    $chatTabControl.TabPages.Remove($chatSession.TabPage)
+    $modelCombo.DropDownStyle = [System.Windows.Forms.ComboBoxStyle]::DropDownList
+    # Clean up resourcesdRange(@("bigdaddyg-fast:latest", "llama3.2", "llama3.2:1b", "llama3.1", "codellama", "mistral", "qwen2.5-coder"))
+    $chatSession.TabPage.Dispose()del
+    $tabPage.Controls.Add($modelCombo)
+    # Remove from collection
+    $script:chatTabs.Remove($TabId)
+    $sendButton = New-Object System.Windows.Forms.Button
+    # Update active tab if this was active
+    if ($script:activeChatTabId -eq $TabId) {Drawing.Point(490, 395)
+        $tabPageCount = $chatTabControl.TabPages.Count95, 25)
+        if ($tabPageCount -gt 0) {m.Drawing.Color]::FromArgb(0, 120, 215)
+            $script:activeChatTabId = $chatTabControl.SelectedTab.Name
+        }Button.FlatStyle = "Flat"
+        else {ontrols.Add($sendButton)
+            $script:activeChatTabId = $null
+        }e up events
+    }inputBox.add_KeyDown({
+            param($sender, $e)
+    Update-ChatStatusyCode -eq "Enter" -and -not $e.Shift) {
+    Write-DevConsole "✅ Closed chat tab: $($chatSession.TabPage.Text)" "SUCCESS"
+}               $sendButton.PerformClick()
+            }
+function Get-ActiveChatTab {
+    if ($script:activeChatTabId -and $script:chatTabs.ContainsKey($script:activeChatTabId)) {
+        return $script:chatTabs[$script:activeChatTabId]
+    }       param($sender, $e)
+    return $null-ChatMessage -TabId $tabId
+}       })
+
+function Send-ChatMessage {dIndexChanged({
+    param(  param($sender, $e)
+        [string]$TabId,Model -TabId $tabId -Model $modelCombo.SelectedItem
+        [switch]$UseMultithreading
+    )
+    # Store controls in session
+    # Default to multithreading if not specified
+    if (-not $PSBoundParameters.ContainsKey('UseMultithreading')) {
+        $UseMultithreading = $trueBox
+    }chatSession.ModelCombo = $modelCombo
+    $chatSession.SendButton = $sendButton
+    if (-not $script:chatTabs.ContainsKey($TabId)) { return }
+    # Add to tab control
+    $chatSession = $script:chatTabs[$TabId]
+    $message = $chatSession.InputBox.Text.Trim()
+    # Store in collection
+    if ([string]::IsNullOrWhiteSpace($message)) { return }
+
+    # Check for natural language agent commands
+    $agentCommand = Detect-AgentIntent -Message $message
+    if ($agentCommand) {bId = $tabId
+        $userText = "You: $message`n"
+        $chatSession.ChatBox.AppendText($userText)
+        $chatSession.ChatBox.ScrollToCaret()Chat!`n💡 Type your message and press Enter or click Send.`n🔧 Model: $Model`n`n"
+    $chatBox.AppendText($welcomeText)
+        # Execute agent command
+        $agentResult = Process-AgentCommand -Command $agentCommand.Command -Parameters $agentCommand.Parameters -SourceContext "Chat:$TabId"
+        # Use actual result instead of canned message
+        if ($agentResult -is [string] -and $agentResult.Length -gt 0) {
+            $responseMessage = $agentResult
+        } elseif ($agentResult) {
+            $responseMessage = "✅ Agent task completed: $agentResult"
+        } else {
+            $responseMessage = "❌ Agent task failed or returned no result."
+        }
+    Write-DevConsole "✅ Created new chat tab: $TabName ($tabId)" "SUCCESS"
+        # Add AI response
+        $aiText = "AI: $responseMessage`n`n"
+        $chatSession.ChatBox.AppendText($aiText)
+        $chatSession.ChatBox.ScrollToCaret()
+function Remove-ChatTab {
+        # Store messages in session
+        $chatSession.Messages += @{
+            Role      = "user"ContainsKey($TabId)) {
+            Content   = $message tab $TabId not found" "ERROR"
+            Timestamp = Get-Date
+        }
+        $chatSession.Messages += @{
+            Role      = "assistant"[$TabId]
+            Content   = $responseMessage
+            Timestamp = Get-Date
+        }TabControl.TabPages.Remove($chatSession.TabPage)
+
+        # Clear input and update activity
+        $chatSession.InputBox.Text = ""
+        $chatSession.LastActivity = Get-Date
+    # Remove from collection
+        returnatTabs.Remove($TabId)
+    }
+    # Update active tab if this was active
+    # Check for theme switching commandsId) {
+    if ($message -match "^/(theme|set-theme)\s+(.+)" -or $message -match "switch theme to (.+)" -or $message -match "use (.+) theme" -or $message -match "^/(theme|current-theme)$" -or $message -match "what theme" -or $message -match "current theme") {
+        $themeRequest = $matches[1] -or $matches[2]
+        $themeRequest = $themeRequest.Trim()abControl.SelectedTab.Name
+        }
+        $userText = "You: $message`n"
+        $chatSession.ChatBox.AppendText($userText)
+        $chatSession.ChatBox.ScrollToCaret()
+    }
+        # Process theme change
+        $themeChanged = $false
+        $responseMessage = ""d chat tab: $($chatSession.TabPage.Text)" "SUCCESS"
+}
+        # Check for theme status request
+        if ($message -match "^/(theme|current-theme)$" -or $message -match "what theme" -or $message -match "current theme") {
+            $responseMessage = "🎨 Current theme: $script:CurrentTheme`n📋 Available themes: stealth-cheetah (default), dark, light, custom"
+        }eturn $script:chatTabs[$script:activeChatTabId]
+        else {
+            $themeRequest = $matches[1] -or $matches[2]
+            $themeRequest = $themeRequest.Trim()
+
+            switch -regex ($themeRequest) {
+                "stealth.?cheetah|cheetah.?stealth" {
+                    Apply-Theme "Stealth-Cheetah"
+                    $themeChanged = $true
+                    $responseMessage = "🐆 Stealth-Cheetah theme activated! Maximum stealth mode enabled with amber highlights."
+                }
+                "dark" {reading if not specified
+                    Apply-Theme "Dark"nsKey('UseMultithreading')) {
+                    $themeChanged = $true
+                    $responseMessage = "🌙 Dark theme applied! Professional dark interface activated."
+                }
+                "light" {Tabs.ContainsKey($TabId)) { return }
+                    Apply-Theme "Light"
+                    $themeChanged = $trued]
+                    $responseMessage = "☀️ Light theme applied! Clean bright interface activated."
+                }
+                "custom" {WhiteSpace($message)) { return }
+                    Show-CustomThemeBuilder
+                    $responseMessage = "🎨 Opening custom theme builder... Create your perfect theme!"
+                } = Detect-AgentIntent -Message $message
+                default {
+                    $responseMessage = "❓ Available themes: stealth-cheetah (default), dark, light, custom. Try '/theme stealth-cheetah' or 'switch theme to dark'"
+                }ion.ChatBox.AppendText($userText)
+            }Session.ChatBox.ScrollToCaret()
+        }
+        # Execute agent command
+        # Add AI responseocess-AgentCommand -Command $agentCommand.Command -Parameters $agentCommand.Parameters -SourceContext "Chat:$TabId"
+        $aiText = "AI: $responseMessage`n`n" { "✅ Agent task completed successfully." } else { "❌ Agent task failed or returned no result." }
+        $chatSession.ChatBox.AppendText($aiText)
+        $chatSession.ChatBox.ScrollToCaret()
+        $aiText = "AI: $responseMessage`n`n"
+        # Store messages in sessionText($aiText)
+        $chatSession.Messages += @{ToCaret()
+            Role      = "user"
+            Content   = $messageion
+            Timestamp = Get-Date @{
+        }   Role      = "user"
+        $chatSession.Messages += @{
+            Role      = "assistant"
+            Content   = $responseMessage
+            Timestamp = Get-Date @{
+        }   Role      = "assistant"
+            Content   = $responseMessage
+        # Clear input and update activity
+        $chatSession.InputBox.Text = ""
+        $chatSession.LastActivity = Get-Date
+        # Clear input and update activity
+        if ($themeChanged) {x.Text = ""
+            # Update current theme and save settings
+            $script:CurrentTheme = $themeRequest -replace "stealth.?cheetah", "Stealth-Cheetah" -replace "dark", "Dark" -replace "light", "Light"
+            Save-CustomizationSettings
+            Write-StartupLog "🎨 Theme changed via chat command: $script:CurrentTheme" "SUCCESS"
+        }
+    # Check for theme switching commands
+        returnge -match "^/(theme|set-theme)\s+(.+)" -or $message -match "switch theme to (.+)" -or $message -match "use (.+) theme" -or $message -match "^/(theme|current-theme)$" -or $message -match "what theme" -or $message -match "current theme") {
+    }   $themeRequest = $matches[1] -or $matches[2]
+        $themeRequest = $themeRequest.Trim()
+    # Add user message to chat
+    $userText = "You: $message`n"e`n"
+    $chatSession.ChatBox.AppendText($userText)ext)
+    $chatSession.ChatBox.ScrollToCaret()et()
+
+    # Store message in session
+    $chatSession.Messages += @{
+        Role      = "user" ""
+        Content   = $message
+        Timestamp = Get-Dateatus request
+    }   if ($message -match "^/(theme|current-theme)$" -or $message -match "what theme" -or $message -match "current theme") {
+            $responseMessage = "🎨 Current theme: $script:CurrentTheme`n📋 Available themes: stealth-cheetah (default), dark, light, custom"
+    # Clear input
+    $chatSession.InputBox.Text = ""
+    $chatSession.LastActivity = Get-Date-or $matches[2]
+            $themeRequest = $themeRequest.Trim()
+    # Show processing indicator
+    $processingText = "AI (processing...): "
+    $chatSession.ChatBox.AppendText($processingText){
+    $chatSession.ChatBox.ScrollToCaret()-Cheetah"
+                    $themeChanged = $true
+    # Check if multithreading is available and enabledetah theme activated! Maximum stealth mode enabled with amber highlights."
+    if ($UseMultithreading -and $script:threadSafeContext.RunspacePool) {
+        # Use the new multithreaded system
+        $messageHistory = @($chatSession.Messages)
+        $historyCount = $messageHistory.Count
+        $chatRequest = @{onseMessage = "🌙 Dark theme applied! Professional dark interface activated."
+            TabId       = $TabId
+            Message     = $message
+            Model       = $chatSession.ModelCombo.SelectedItem
+            ChatHistory = if ($historyCount -gt 1) { $messageHistory[0..($historyCount - 2)] } else { @() }
+        }           $responseMessage = "☀️ Light theme applied! Clean bright interface activated."
+                }
+        Start-ParallelChatProcessing -ChatRequests @($chatRequest)
+        Write-DevConsole "🔄 Using multithreaded chat processing for $TabId" "INFO"
+        return      $responseMessage = "🎨 Opening custom theme builder... Create your perfect theme!"
+    }           }
+                default {
+    # Fallback to original single-threaded approach themes: stealth-cheetah (default), dark, light, custom. Try '/theme stealth-cheetah' or 'switch theme to dark'"
+    Write-DevConsole "🔄 Using single-threaded chat processing for $TabId" "INFO"
+            }
+    $cursorToken = Enter-CursorWaitState -Reason "Chat:$TabId" -Style "Wait"
+    $sequentialInitComplete = $false
+    $completionTracker = $null
+    try {aiText = "AI: $responseMessage`n`n"
+        # Send to Ollama asynchronously (original approach)
+        $runspace = [runspacefactory]::CreateRunspace()
+        $runspace.Open()
+        $powershell = [powershell]::Create()
+        $powershell.Runspace = $runspace
+            Role      = "user"
+        $null = $powershell.AddScript({
+                param($message, $model, $chatHistory)
+        }
+                try {Messages += @{
+                    # Build context from chat history
+                    $context = ""Message
+                    foreach ($msg in $chatHistory) {
+                        $context += "$($msg.Role): $($msg.Content)`n"
+                    }
+        # Clear input and update activity
+                    $body = @{Text = ""
+                        model  = $model-Date
+                        prompt = $context + "user: $message`n"
+                        stream = $false
+                    } | ConvertTo-Json -Depth 3tings
+            $script:CurrentTheme = $themeRequest -replace "stealth.?cheetah", "Stealth-Cheetah" -replace "dark", "Dark" -replace "light", "Light"
+                    $response = Invoke-RestMethod -Uri "http://localhost:11434/api/generate" -Method POST -Body $body -ContentType "application/json"
+                    return $response.responsed via chat command: $script:CurrentTheme" "SUCCESS"
+                }
+                catch {
+                    return "Error: $($_.Exception.Message)"
+                }
+            })
+    # Add user message to chat
+        $null = $powershell.AddParameter("message", $message)
+        $null = $powershell.AddParameter("model", $chatSession.ModelCombo.SelectedItem)
+        $messageHistory = @($chatSession.Messages)
+        $historyCount = $messageHistory.Count
+        $chatHistoryParam = if ($historyCount -gt 1) { $messageHistory[0..($historyCount - 2)] } else { @() }
+        $null = $powershell.AddParameter("chatHistory", $chatHistoryParam)
+        Role      = "user"
+        $job = $powershell.BeginInvoke()
+        Timestamp = Get-Date
+        # Create completion tracking with proper variable capture
+        $completionTracker = @{
+            Job            = $job
+            PowerShell     = $powershell
+            Runspace       = $runspacete
+            ProcessingText = $processingText
+            ChatSession    = $chatSession
+            TabId          = $TabIdng...): "
+            Timer          = $nullt($processingText)
+            CursorToken    = $cursorToken
+        }
+    # Check if multithreading is available and enabled
+        # Update UI when complete (timer-based polling)xt.RunspacePool) {
+        $completionTracker.Timer = New-Object System.Windows.Forms.Timer
+        $completionTracker.Timer.Interval = 100es)
+        $completionTracker.Timer.add_Tick({nt
+                if ($completionTracker.Job.IsCompleted) {
+                    try { $TabId
+                        $aiResponse = $completionTracker.PowerShell.EndInvoke($completionTracker.Job)
+            Model       = $chatSession.ModelCombo.SelectedItem
+                        # Update chat displaygt 1) { $messageHistory[0..($historyCount - 2)] } else { @() }
+                        $completionTracker.ChatSession.ChatBox.Text = $completionTracker.ChatSession.ChatBox.Text -replace "$([regex]::Escape($completionTracker.ProcessingText))$", "AI: $aiResponse`n`n"
+                        $completionTracker.ChatSession.ChatBox.ScrollToCaret()
+        Start-ParallelChatProcessing -ChatRequests @($chatRequest)
+                        # Store AI responseeaded chat processing for $TabId" "INFO"
+                        $completionTracker.ChatSession.Messages += @{
+                            Role      = "assistant"
+                            Content   = $aiResponse
+                            Timestamp = Get-Dateach
+                        }Using single-threaded chat processing for $TabId" "INFO"
+
+                        Write-DevConsole "✅ AI response received for chat $($completionTracker.TabId)" "SUCCESS"
+                    }mplete = $false
+                    catch {ull
+                        $completionTracker.ChatSession.ChatBox.Text = $completionTracker.ChatSession.ChatBox.Text -replace "$([regex]::Escape($completionTracker.ProcessingText))$", "AI: Error generating response`n`n"
+                        Write-DevConsole "❌ Error in chat $($completionTracker.TabId) : $($_.Exception.Message)" "ERROR"
+                    }runspacefactory]::CreateRunspace()
+                    finally {
+                        $completionTracker.Timer.Stop()
+                        $completionTracker.Timer.Dispose()
+                        $completionTracker.PowerShell.Dispose()
+                        $completionTracker.Runspace.Close()
+                        if ($completionTracker.CursorToken) {
+                            Exit-CursorWaitState -Token $completionTracker.CursorToken
+                            $completionTracker.CursorToken = $null
+                        }ld context from chat history
+                    }context = ""
+                }   foreach ($msg in $chatHistory) {
+            }.GetNewClosure())xt += "$($msg.Role): $($msg.Content)`n"
+        $completionTracker.Timer.Start()
+        $sequentialInitComplete = $true
+    }               $body = @{
+    catch {             model  = $model
+        try {           prompt = $context + "user: $message`n"
+            $chatSession.ChatBox.Text = $chatSession.ChatBox.Text -replace "$([regex]::Escape($processingText))$", "AI: Error initializing request`n`n"
+        }           } | ConvertTo-Json -Depth 3
+        catch { }
+        Write-DevConsole "❌ Failed to start single-threaded chat job for $TabId : $($_.Exception.Message)" "ERROR"ody -ContentType "application/json"
+    }               return $response.response
+    finally {   }
+        if (-not $sequentialInitComplete -and $cursorToken) {
+            Exit-CursorWaitState -Token $cursorTokenssage)"
+        }       }
+    }       })
+}
+        $null = $powershell.AddParameter("message", $message)
+function Update-ChatModel {.AddParameter("model", $chatSession.ModelCombo.SelectedItem)
+    param([string]$TabId, [string]$Model)Messages)
+        $historyCount = $messageHistory.Count
+    if (-not $script:chatTabs.ContainsKey($TabId)) { return }geHistory[0..($historyCount - 2)] } else { @() }
+        $null = $powershell.AddParameter("chatHistory", $chatHistoryParam)
+    $chatSession = $script:chatTabs[$TabId]
+    Write-DevConsole "🔄 Changed model for $($chatSession.TabPage.Text) to $Model" "INFO"
+}
+        # Create completion tracking with proper variable capture
+function Update-ChatStatus { @{
+    $activeCount = if ($script:chatTabs) { @($script:chatTabs).Count } else { 0 }
+            PowerShell     = $powershell
+    # Find the chat status label from the form controls
+    if ($script:chatStatusLabel) {essingText
+        if ($activeCount -eq 0) {tSession
+            $script:chatStatusLabel.Text = "No active chats"
+        }   Timer          = $null
+        else {rsorToken    = $cursorToken
+            $script:chatStatusLabel.Text = "$activeCount/$($global:settings.MaxChatTabs) chats active"
+        }
+    }   # Update UI when complete (timer-based polling)
+}       $completionTracker.Timer = New-Object System.Windows.Forms.Timer
+        $completionTracker.Timer.Interval = 100
+function Detect-AgentIntent {mer.add_Tick({
+    param([string]$Message)tionTracker.Job.IsCompleted) {
+                    try {
+    $message = $Message.ToLower()se = $completionTracker.PowerShell.EndInvoke($completionTracker.Job)
+
+    # Pattern: check/lint/analyze [file] for errors
+    if ($message -match "(check|lint|analyze)\s+(.+?)\s+for\s+(errors?|issues?|problems?)") {Session.ChatBox.Text -replace "$([regex]::Escape($completionTracker.ProcessingText))$", "AI: $aiResponse`n`n"
+        $filePath = $matches[2].Trim()cker.ChatSession.ChatBox.ScrollToCaret()
+        return @{
+            Command = "analyze_code"esponse
+            Parameters = @{ FilePath = $filePath }sion.Messages += @{
+        }                   Role      = "assistant"
+    }                       Content   = $aiResponse
+                            Timestamp = Get-Date
+    # Pattern: double check [file]
+    if ($message -match "(double\s+check|verify)\s+(.+)") {
+        $filePath = $matches[2].Trim()le "✅ AI response received for chat $($completionTracker.TabId)" "SUCCESS"
+        return @{   }
+            Command = "analyze_code"
+            Parameters = @{ FilePath = $filePath }sion.ChatBox.Text = $completionTracker.ChatSession.ChatBox.Text -replace "$([regex]::Escape($completionTracker.ProcessingText))$", "AI: Error generating response`n`n"
+        }               Write-DevConsole "❌ Error in chat $($completionTracker.TabId) : $($_.Exception.Message)" "ERROR"
+    }               }
+                    finally {
+    # Pattern: scan [file] for securityker.Timer.Stop()
+    if ($message -match "(scan|check)\s+(.+?)\s+for\s+(security|vulnerabilities?)") {
+        $target = $matches[2].Trim()racker.PowerShell.Dispose()
+        return @{       $completionTracker.Runspace.Close()
+            Command = "security_scan"onTracker.CursorToken) {
+            Parameters = @{ Target = $target }te -Token $completionTracker.CursorToken
+        }                   $completionTracker.CursorToken = $null
+    }                   }
+                    }
+    # Pattern: optimize performance
+    if ($message -match "(optimize|improve)\s+(performance|speed|efficiency)") {
+        return @{onTracker.Timer.Start()
+            Command = "optimize_performance"
+            Parameters = @{}
+        } {
+    }   try {
+            $chatSession.ChatBox.Text = $chatSession.ChatBox.Text -replace "$([regex]::Escape($processingText))$", "AI: Error initializing request`n`n"
+    # Pattern: refactor [file] [type]
+    if ($message -match "(refactor|restructure)\s+(.+?)\s+(extract|rename|optimize)") {
+        $filePath = $matches[2].Trim()start single-threaded chat job for $TabId : $($_.Exception.Message)" "ERROR"
+        $refactorType = $matches[3].Trim()
+        return @{
+            Command = "refactor_code"ete -and $cursorToken) {
+            Parameters = @{ FilePath = $filePath; RefactorType = $refactorType }
+        }
+    }
+}
+    # Pattern: generate tests for [file]
+    if ($message -match "(generate|create)\s+(tests?|unit\s+tests?)\s+(for|of)\s+(.+)") {
+        $filePath = $matches[4].Trim()el)
+        return @{
+            Command = "generate_tests"Key($TabId)) { return }
+            Parameters = @{ FilePath = $filePath }
+        }Session = $script:chatTabs[$TabId]
+    }rite-DevConsole "🔄 Changed model for $($chatSession.TabPage.Text) to $Model" "INFO"
+}
+    # Pattern: debug [error] or help with [error]
+    if ($message -match "(debug|fix|help\s+with)\s+(.+)") {
+        $errorDesc = $matches[2].Trim()) { @($script:chatTabs).Count } else { 0 }
+        return @{
+            Command = "debug_code"rom the form controls
+            Parameters = @{ ErrorMessage = $errorDesc }
+        }f ($activeCount -eq 0) {
+    }       $script:chatStatusLabel.Text = "No active chats"
+        }
+    # Pattern: document [file]
+    if ($message -match "(document|add\s+docs?\s+to)\s+(.+)") {bal:settings.MaxChatTabs) chats active"
+        $filePath = $matches[2].Trim()
+        return @{
+            Command = "document_code"
+            Parameters = @{ FilePath = $filePath }
+        }Detect-AgentIntent {
+    }aram([string]$Message)
+
+    # Pattern: search for [query] or find [query]
+    if ($message -match "(search|find|grep)\s+(for\s+)?(.+)") {
+        $query = $matches[3].Trim()file] for errors
+        return @{-match "(check|lint|analyze)\s+(.+?)\s+for\s+(errors?|issues?|problems?)") {
+            Command = "search_codebase"
+            Parameters = @{ Query = $query }
+        }   Command = "analyze_code"
+    }       Parameters = @{ FilePath = $filePath }
+        }
+    # Pattern: explain [file] or what does [file] do
+    if ($message -match "(explain|what\s+does)\s+(.+?)\s+(do|contain|mean)?") {
+        $target = $matches[2].Trim()
+        if (Test-Path $target) {\s+check|verify)\s+(.+)") {
+            return @{matches[2].Trim()
+                Command = "explain_code"
+                Parameters = @{ FilePath = $target }
+            }arameters = @{ FilePath = $filePath }
+        }
+    }
+
+    # Pattern: suggest improvements for [file]
+    if ($message -match "(suggest|recommend)\s+(improvements?|changes?)\s+(for|to)\s+(.+)") {
+        $filePath = $matches[4].Trim()
+        return @{
+            Command = "suggest_improvements"
+            Parameters = @{ FilePath = $filePath }
+        }
+    }
+
+    # Pattern: run [command]ormance
+    if ($message -match "(run|execute)\s+(.+)") {rformance|speed|efficiency)") {
+        $command = $matches[2].Trim()
+        return @{nd = "optimize_performance"
+            Command = "run_command"
+            Parameters = @{ Command = $command }
+        }
+    }
+    # Pattern: refactor [file] [type]
+    # Pattern: read [file] or show me [file]re)\s+(.+?)\s+(extract|rename|optimize)") {
+    if ($message -match "(read|show\s+me|display)\s+(.+)") {
+        $filePath = $matches[2].Trim()im()
+        return @{
+            Command = "read_file"ode"
+            Parameters = @{ FilePath = $filePath }RefactorType = $refactorType }
+        }
+    }
+
+    # Pattern: write [content] to [file] or save [content] as [file]
+    if ($message -match "(write|save)\s+(.+?)\s+(to|as)\s+(.+)") {)\s+(for|of)\s+(.+)") {
+        $content = $matches[2].Trim())
+        $filePath = $matches[4].Trim()
+        return @{nd = "generate_tests"
+            Command = "write_file"th = $filePath }
+            Parameters = @{ FilePath = $filePath; Content = $content }
+        }
+    }
+    # Pattern: debug [error] or help with [error]
+    # No matchge -match "(debug|fix|help\s+with)\s+(.+)") {
+    return $nullsc = $matches[2].Trim()
+}       return @{
+            Command = "debug_code"
+function Show-ChatSettings {ErrorMessage = $errorDesc }
+    Write-DevConsole "🔧 Opening Chat Settings..." "INFO"
+    }
+    $chatSettingsForm = New-Object System.Windows.Forms.Form
+    $chatSettingsForm.Text = "Chat Settings"
+    $chatSettingsForm.Size = New-Object System.Drawing.Size(450, 400)
+    $chatSettingsForm.StartPosition = "CenterScreen"
+    $chatSettingsForm.FormBorderStyle = "FixedDialog"
+    $chatSettingsForm.MaximizeBox = $false
+    $chatSettingsForm.MinimizeBox = $falselePath }
+        }
+    # Max Chat Tabs
+    $maxTabsLabel = New-Object System.Windows.Forms.Label
+    $maxTabsLabel.Text = "Maximum Chat Tabs:"ery]
+    $maxTabsLabel.Location = New-Object System.Drawing.Point(20, 20)
+    $maxTabsLabel.Size = New-Object System.Drawing.Size(150, 20)
+    $chatSettingsForm.Controls.Add($maxTabsLabel)
+            Command = "search_codebase"
+    $maxTabsNumeric = New-Object System.Windows.Forms.NumericUpDown
+    $maxTabsNumeric.Location = New-Object System.Drawing.Point(180, 18)
+    $maxTabsNumeric.Size = New-Object System.Drawing.Size(60, 20)
+    $maxTabsNumeric.Minimum = 1
+    $maxTabsNumeric.Maximum = 100  # Match the main MaxTabs maximum to avoid value conflicts
+    $maxTabsNumeric.Value = $global:settings.MaxChatTabs+(do|contain|mean)?") {
+    $chatSettingsForm.Controls.Add($maxTabsNumeric)
+        if (Test-Path $target) {
+    # Auto Close Tabs
+    $autoCloseCheck = New-Object System.Windows.Forms.CheckBox
+    $autoCloseCheck.Text = "Auto-close inactive tabs"
+    $autoCloseCheck.Location = New-Object System.Drawing.Point(20, 60)
+    $autoCloseCheck.Size = New-Object System.Drawing.Size(200, 20)
+    $autoCloseCheck.Checked = $global:settings.ChatTabAutoClose
+    $chatSettingsForm.Controls.Add($autoCloseCheck)
+    # Pattern: suggest improvements for [file]
+    # Chat Positionatch "(suggest|recommend)\s+(improvements?|changes?)\s+(for|to)\s+(.+)") {
+    $positionLabel = New-Object System.Windows.Forms.Label
+    $positionLabel.Text = "Chat Tab Position:"
+    $positionLabel.Location = New-Object System.Drawing.Point(20, 100)
+    $positionLabel.Size = New-Object System.Drawing.Size(150, 20)
+    $chatSettingsForm.Controls.Add($positionLabel)
+    }
+    $positionCombo = New-Object System.Windows.Forms.ComboBox
+    $positionCombo.Location = New-Object System.Drawing.Point(180, 98)
+    $positionCombo.Size = New-Object System.Drawing.Size(120, 20)
+    $positionCombo.DropDownStyle = [System.Windows.Forms.ComboBoxStyle]::DropDownList
+    $positionCombo.Items.AddRange(@("Right", "Bottom", "Popup"))
+    $positionCombo.SelectedItem = $global:settings.ChatTabPosition
+    $chatSettingsForm.Controls.Add($positionCombo)
+        }
+    # Default Model
+    $defaultModelLabel = New-Object System.Windows.Forms.Label
+    $defaultModelLabel.Text = "Default Model for New Chats:"
+    $defaultModelLabel.Location = New-Object System.Drawing.Point(20, 140)
+    $defaultModelLabel.Size = New-Object System.Drawing.Size(180, 20)
+    $chatSettingsForm.Controls.Add($defaultModelLabel)
+            Command = "read_file"
+    $defaultModelCombo = New-Object System.Windows.Forms.ComboBox
+    $defaultModelCombo.Location = New-Object System.Drawing.Point(20, 165)
+    $defaultModelCombo.Size = New-Object System.Drawing.Size(200, 20)
+    $defaultModelCombo.DropDownStyle = [System.Windows.Forms.ComboBoxStyle]::DropDownList
+    $defaultModelCombo.Items.AddRange(@("bigdaddyg-fast:latest", "llama3.2", "llama3.2:1b", "llama3.1", "codellama", "mistral", "qwen2.5-coder"))
+    $defaultModelCombo.SelectedItem = $global:settings.OllamaModel
+    $chatSettingsForm.Controls.Add($defaultModelCombo)
+        $filePath = $matches[4].Trim()
+    # Current Chat Status
+    $statusLabel = New-Object System.Windows.Forms.Label
+    $statusLabel.Text = "Active Chats:"$filePath; Content = $content }
+    $statusLabel.Location = New-Object System.Drawing.Point(20, 210)
+    $statusLabel.Size = New-Object System.Drawing.Size(100, 20)
+    $chatSettingsForm.Controls.Add($statusLabel)
+    # No match
+    $statusListBox = New-Object System.Windows.Forms.ListBox
+    $statusListBox.Location = New-Object System.Drawing.Point(20, 235)
+    $statusListBox.Size = New-Object System.Drawing.Size(380, 80)
+function Show-ChatSettings {
+    foreach ($chatId in $script:chatTabs.Keys) {." "INFO"
+        $chat = $script:chatTabs[$chatId]
+        $msgCount = @($chat.Messages).Countindows.Forms.Form
+        $status = "$($chat.TabPage.Text) - Model: $($chat.ModelCombo.SelectedItem) - Messages: $msgCount"
+        $statusListBox.Items.Add($status)ystem.Drawing.Size(450, 400)
+    }chatSettingsForm.StartPosition = "CenterScreen"
+    $chatSettingsForm.Controls.Add($statusListBox)og"
+    $chatSettingsForm.MaximizeBox = $false
+    # ButtonsingsForm.MinimizeBox = $false
+    $okBtn = New-Object System.Windows.Forms.Button
+    $okBtn.Text = "OK"
+    $okBtn.Location = New-Object System.Drawing.Point(250, 330)
+    $okBtn.Size = New-Object System.Drawing.Size(75, 23)
+    $okBtn.DialogResult = [System.Windows.Forms.DialogResult]::OK20)
+    $chatSettingsForm.Controls.Add($okBtn).Drawing.Size(150, 20)
+    $chatSettingsForm.Controls.Add($maxTabsLabel)
+    $cancelBtn = New-Object System.Windows.Forms.Button
+    $cancelBtn.Text = "Cancel"ct System.Windows.Forms.NumericUpDown
+    $cancelBtn.Location = New-Object System.Drawing.Point(335, 330) 18)
+    $cancelBtn.Size = New-Object System.Drawing.Size(75, 23), 20)
+    $cancelBtn.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
+    $chatSettingsForm.Controls.Add($cancelBtn) main MaxTabs maximum to avoid value conflicts
+    $maxTabsNumeric.Value = $global:settings.MaxChatTabs
+    # OK button click handlers.Add($maxTabsNumeric)
+    $okBtn.add_Click({
+            $global:settings.MaxChatTabs = $maxTabsNumeric.Value
+            $global:settings.ChatTabAutoClose = $autoCloseCheck.Checked
+            $global:settings.ChatTabPosition = $positionCombo.SelectedItem
+            $global:settings.OllamaModel = $defaultModelCombo.SelectedItem
+            $script:maxChatTabs = $global:settings.MaxChatTabs 20)
+    $autoCloseCheck.Checked = $global:settings.ChatTabAutoClose
+            Save-Settingstrols.Add($autoCloseCheck)
+            Update-ChatStatus
+            Write-DevConsole "✅ Chat settings saved" "SUCCESS"
+    $positionLabel = New-Object System.Windows.Forms.Label
+            $chatSettingsForm.Close()osition:"
+        })ionLabel.Location = New-Object System.Drawing.Point(20, 100)
+    $positionLabel.Size = New-Object System.Drawing.Size(150, 20)
+    # Show formgsForm.Controls.Add($positionLabel)
+    $null = $chatSettingsForm.ShowDialog()
+    $chatSettingsForm.Dispose() System.Windows.Forms.ComboBox
+}   $positionCombo.Location = New-Object System.Drawing.Point(180, 98)
+    $positionCombo.Size = New-Object System.Drawing.Size(120, 20)
+# ============================================dows.Forms.ComboBoxStyle]::DropDownList
+# Agentic AI Functionsms.AddRange(@("Right", "Bottom", "Popup"))
+# ============================================ings.ChatTabPosition
+    $chatSettingsForm.Controls.Add($positionCombo)
+function Process-AgentCommand {
+    param(ult Model
+        [Parameter(Mandatory = $true)]stem.Windows.Forms.Label
+        [string]$Command,xt = "Default Model for New Chats:"
+    $defaultModelLabel.Location = New-Object System.Drawing.Point(20, 140)
+        [Parameter(Mandatory = $false)]t System.Drawing.Size(180, 20)
+        [hashtable]$Parameters = @{},efaultModelLabel)
+
+        [Parameter(Mandatory = $false)]tem.Windows.Forms.ComboBox
+        [string]$SourceContext = "Unknown"ct System.Drawing.Point(20, 165)
+    )defaultModelCombo.Size = New-Object System.Drawing.Size(200, 20)
+    $defaultModelCombo.DropDownStyle = [System.Windows.Forms.ComboBoxStyle]::DropDownList
+    try {ultModelCombo.Items.AddRange(@("bigdaddyg-fast:latest", "llama3.2", "llama3.2:1b", "llama3.1", "codellama", "mistral", "qwen2.5-coder"))
+        Write-SecurityLog "Processing agent command" "INFO" "Command: $Command, Source: $SourceContext"
+    $chatSettingsForm.Controls.Add($defaultModelCombo)
+        # Validate command safety
+        if (-not (Test-InputSafety -Input $Command -Type "Command")) {
+            Write-ErrorLog "Unsafe agent command blocked" "SECURITY" "HIGH" "Process-AgentCommand" @{Command = $Command; Source = $SourceContext }
+            return $falseActive Chats:"
+        }usLabel.Location = New-Object System.Drawing.Point(20, 210)
+    $statusLabel.Size = New-Object System.Drawing.Size(100, 20)
+        # Process different command typessLabel)
+        switch ($Command.ToLower()) {
+            "analyze_code" {ect System.Windows.Forms.ListBox
+                if ($Parameters.ContainsKey('FilePath')) {int(20, 235)
+                    $result = Invoke-CodeAnalysis -FilePath $Parameters.FilePath
+                    Write-StartupLog "Code analysis completed for: $($Parameters.FilePath)" "SUCCESS"
+                    return $resultatTabs.Keys) {
+                }script:chatTabs[$chatId]
+            }ount = @($chat.Messages).Count
+            "generate_summary" {ge.Text) - Model: $($chat.ModelCombo.SelectedItem) - Messages: $msgCount"
+                if ($Parameters.ContainsKey('Content')) {
+                    $result = Invoke-ContentSummary -Content $Parameters.Content
+                    Write-StartupLog "Content summary generated" "SUCCESS"
+                    return $result
+                }
+            }New-Object System.Windows.Forms.Button
+            "security_scan" {
+                $result = Invoke-SecurityScan -Target $Parameters.Target
+                Write-StartupLog "Security scan completed" "SUCCESS"
+                return $resulttem.Windows.Forms.DialogResult]::OK
+            }ingsForm.Controls.Add($okBtn)
+            "optimize_performance" {
+                $result = Invoke-PerformanceOptimization
+                Write-StartupLog "Performance optimization completed" "SUCCESS"
+                return $resultObject System.Drawing.Point(335, 330)
+            }n.Size = New-Object System.Drawing.Size(75, 23)
+            "refactor_code" { [System.Windows.Forms.DialogResult]::Cancel
+                if ($Parameters.ContainsKey('FilePath') -and $Parameters.ContainsKey('RefactorType')) {
+                    $result = Invoke-CodeRefactoring -FilePath $Parameters.FilePath -RefactorType $Parameters.RefactorType
+                    Write-StartupLog "Code refactoring completed for: $($Parameters.FilePath)" "SUCCESS"
+                    return $result
+                }al:settings.MaxChatTabs = $maxTabsNumeric.Value
+            }global:settings.ChatTabAutoClose = $autoCloseCheck.Checked
+            "generate_tests" {hatTabPosition = $positionCombo.SelectedItem
+                if ($Parameters.ContainsKey('FilePath')) {mbo.SelectedItem
+                    $result = Invoke-TestGeneration -FilePath $Parameters.FilePath
+                    Write-StartupLog "Test generation completed for: $($Parameters.FilePath)" "SUCCESS"
+                    return $result
+                }e-ChatStatus
+            }rite-DevConsole "✅ Chat settings saved" "SUCCESS"
+            "debug_code" {
+                if ($Parameters.ContainsKey('ErrorMessage') -or $Parameters.ContainsKey('FilePath')) {
+                    $result = Invoke-DebugAssistance -ErrorMessage $Parameters.ErrorMessage -FilePath $Parameters.FilePath
+                    Write-StartupLog "Debug assistance provided" "SUCCESS"
+                    return $result
+                }SettingsForm.ShowDialog()
+            }ingsForm.Dispose()
+            "document_code" {
+                if ($Parameters.ContainsKey('FilePath')) {
+                    $result = Invoke-CodeDocumentation -FilePath $Parameters.FilePath
+                    Write-StartupLog "Code documentation generated for: $($Parameters.FilePath)" "SUCCESS"
+                    return $result============
+                }
+            }ess-AgentCommand {
+            "search_codebase" {
+                if ($Parameters.ContainsKey('Query')) {
+                    $result = Invoke-CodeSearch -Query $Parameters.Query -FilePattern $Parameters.FilePattern
+                    Write-StartupLog "Codebase search completed for: $($Parameters.Query)" "SUCCESS"
+                    return $resultlse)]
+                }e]$Parameters = @{},
+            }
+            "explain_code" { = $false)]
+                if ($Parameters.ContainsKey('CodeSnippet') -or $Parameters.ContainsKey('FilePath')) {
+                    $result = Invoke-CodeExplanation -CodeSnippet $Parameters.CodeSnippet -FilePath $Parameters.FilePath
+                    Write-StartupLog "Code explanation provided" "SUCCESS"
+                    return $result
+                }urityLog "Processing agent command" "INFO" "Command: $Command, Source: $SourceContext"
+            }
+            "suggest_improvements" {
+                if ($Parameters.ContainsKey('FilePath')) {Command")) {
+                    $result = Invoke-CodeSuggestions -FilePath $Parameters.FilePaths-AgentCommand" @{Command = $Command; Source = $SourceContext }
+                    Write-StartupLog "Code improvement suggestions provided for: $($Parameters.FilePath)" "SUCCESS"
+                    return $result
+                }
+            }cess different command types
+            "run_command" {Lower()) {
+                if ($Parameters.ContainsKey('Command')) {
+                    $result = Invoke-ShellCommand -Command $Parameters.Command
+                    Write-StartupLog "Shell command executed: $($Parameters.Command)" "SUCCESS"
+                    return $resultog "Code analysis completed for: $($Parameters.FilePath)" "SUCCESS"
+                }   return $result
+            }   }
+            "read_file" {
+                if ($Parameters.ContainsKey('FilePath')) {
+                    $result = Invoke-FileRead -FilePath $Parameters.FilePath -StartLine $Parameters.StartLine -EndLine $Parameters.EndLine
+                    Write-StartupLog "File read completed for: $($Parameters.FilePath)" "SUCCESS"
+                    return $resultog "Content summary generated" "SUCCESS"
+                }   return $result
+            }   }
+            "write_file" {
+                if ($Parameters.ContainsKey('FilePath') -and $Parameters.ContainsKey('Content')) {
+                    $result = Invoke-FileWrite -FilePath $Parameters.FilePath -Content $Parameters.Content
+                    Write-StartupLog "File write completed for: $($Parameters.FilePath)" "SUCCESS"
+                    return $result
+                }
+            }optimize_performance" {
+            default {lt = Invoke-PerformanceOptimization
+                Write-ErrorLog "Unknown agent command: $Command" "OPERATION" "MEDIUM" "Process-AgentCommand" @{Command = $Command }
+                return $falset
+            }
+        }   "refactor_code" {
+                if ($Parameters.ContainsKey('FilePath') -and $Parameters.ContainsKey('RefactorType')) {
+        Write-SecurityLog "Agent command processed successfully" "SUCCESS" "Command: $Command"ype $Parameters.RefactorType
+        return $trueWrite-StartupLog "Code refactoring completed for: $($Parameters.FilePath)" "SUCCESS"
+                    return $result
+    }           }
+    catch { }
+        Write-ErrorLog "Agent command processing failed: $_" "OPERATION" "HIGH" "Process-AgentCommand" @{Command = $Command; Error = $_.Exception.Message }
+        return $falseParameters.ContainsKey('FilePath')) {
+    }               $result = Invoke-TestGeneration -FilePath $Parameters.FilePath
+}                   Write-StartupLog "Test generation completed for: $($Parameters.FilePath)" "SUCCESS"
+                    return $result
+function Write-AgenticErrorLog {
+    param(  }
+        [string]$ErrorMessage,
+        [string]$ErrorCategory = "AI",nsKey('ErrorMessage') -or $Parameters.ContainsKey('FilePath')) {
+        [string]$Severity = "MEDIUM",DebugAssistance -ErrorMessage $Parameters.ErrorMessage -FilePath $Parameters.FilePath
+        [string]$AgentContext = "",g "Debug assistance provided" "SUCCESS"
+        [string]$AIModel = "",sult
+        [hashtable]$AIMetrics = @{}
+    )       }
+            "document_code" {
+    try {       if ($Parameters.ContainsKey('FilePath')) {
+        # Create AI-specific log directoryocumentation -FilePath $Parameters.FilePath
+        $aiLogPath = Join-Path $script:EmergencyLogPath "AI_Errors"for: $($Parameters.FilePath)" "SUCCESS"
+        if (-not (Test-Path $aiLogPath)) {
+            New-Item -ItemType Directory -Path $aiLogPath -Force | Out-Null
+        }   }
+            "search_codebase" {
+        # AI error log file with dateinsKey('Query')) {
+        $dateStr = Get-Date -Format "yyyy-MM-dd"-Query $Parameters.Query -FilePattern $Parameters.FilePattern
+        $aiLogFile = Join-Path $aiLogPath "ai_errors_$dateStr.log"r: $($Parameters.Query)" "SUCCESS"
+                    return $result
+        # Build detailed AI error entry
+        $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss.fff"
+        $aiErrorEntry = @" {
+[$timestamp] [$Severity] AI_ERRORontainsKey('CodeSnippet') -or $Parameters.ContainsKey('FilePath')) {
+Category: $ErrorCategoryult = Invoke-CodeExplanation -CodeSnippet $Parameters.CodeSnippet -FilePath $Parameters.FilePath
+Message: $ErrorMessageite-StartupLog "Code explanation provided" "SUCCESS"
+Agent_Context: $AgentContextresult
+AI_Model: $AIModel
+"@          }
+            "suggest_improvements" {
+        # Add AI metrics if availableinsKey('FilePath')) {
+        if ($AIMetrics.Count -gt 0) {CodeSuggestions -FilePath $Parameters.FilePath
+            $aiErrorEntry += "`nAI_Metrics:"mprovement suggestions provided for: $($Parameters.FilePath)" "SUCCESS"
+            foreach ($metric in $AIMetrics.GetEnumerator()) {
+                $aiErrorEntry += "`n  $($metric.Key): $($metric.Value)"
+            }
+        }   "run_command" {
+                if ($Parameters.ContainsKey('Command')) {
+        $aiErrorEntry += "`n" + ("=" * 80) + "`n" -Command $Parameters.Command
+                    Write-StartupLog "Shell command executed: $($Parameters.Command)" "SUCCESS"
+        # Write to AI error logult
+        Add-Content -Path $aiLogFile -Value $aiErrorEntry -Encoding UTF8 -ErrorAction SilentlyContinue
+            }
+        # Also log to main error log
+        Write-StartupLog "[AI_ERROR] $ErrorMessage | Context: $AgentContext | Model: $AIModel" "ERROR"
+                    $result = Invoke-FileRead -FilePath $Parameters.FilePath -StartLine $Parameters.StartLine -EndLine $Parameters.EndLine
+        # Update AI error statistics "File read completed for: $($Parameters.FilePath)" "SUCCESS"
+        Update-AIErrorStatistics -ErrorCategory $ErrorCategory -Severity $Severity -AIModel $AIModel
+                }
+    }       }
+    catch { "write_file" {
+        Write-StartupLog "Failed to write agentic error log: $($_.Exception.Message)" "ERROR"')) {
+    }               $result = Invoke-FileWrite -FilePath $Parameters.FilePath -Content $Parameters.Content
+}                   Write-StartupLog "File write completed for: $($Parameters.FilePath)" "SUCCESS"
+                    return $result
+function Update-AIErrorStatistics {
+    param(  }
+        [string]$ErrorCategory,
+        [string]$Severity,rLog "Unknown agent command: $Command" "OPERATION" "MEDIUM" "Process-AgentCommand" @{Command = $Command }
+        [string]$AIModelfalse
+    )       }
+        }
+    try {
+        # AI statistics filegent command processed successfully" "SUCCESS" "Command: $Command"
+        $statsFile = Join-Path $script:EmergencyLogPath "ai_error_stats.json"
+
+        # Load existing stats or create new
+        $stats = @{
+            TotalErrors      = 0mmand processing failed: $_" "OPERATION" "HIGH" "Process-AgentCommand" @{Command = $Command; Error = $_.Exception.Message }
+            ErrorsByCategory = @{}
+            ErrorsBySeverity = @{}
+            ErrorsByModel    = @{}
+            LastUpdated      = ""
+        }Write-AgenticErrorLog {
+    param(
+        if (Test-Path $statsFile) {
+            $existingStats = Get-Content $statsFile -Raw | ConvertFrom-Json
+            $stats.TotalErrors = $existingStats.TotalErrors
+            $stats.ErrorsByCategory = $existingStats.ErrorsByCategory
+            $stats.ErrorsBySeverity = $existingStats.ErrorsBySeverity
+            $stats.ErrorsByModel = $existingStats.ErrorsByModel
+        }
+
+        # Update statistics
+        $stats.TotalErrors++ log directory
+        $stats.LastUpdated = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+        if (-not (Test-Path $aiLogPath)) {
+        # Category statisticse Directory -Path $aiLogPath -Force | Out-Null
+        if (-not $stats.ErrorsByCategory.$ErrorCategory) {
+            $stats.ErrorsByCategory.$ErrorCategory = 0
+        } AI error log file with date
+        $stats.ErrorsByCategory.$ErrorCategory++
+        $aiLogFile = Join-Path $aiLogPath "ai_errors_$dateStr.log"
+        # Severity statistics
+        if (-not $stats.ErrorsBySeverity.$Severity) {
+            $stats.ErrorsBySeverity.$Severity = 0 HH:mm:ss.fff"
+        }aiErrorEntry = @"
+        $stats.ErrorsBySeverity.$Severity++
+Category: $ErrorCategory
+        # Model statistics
+        if ($AIModel -and -not $stats.ErrorsByModel.$AIModel) {
+            $stats.ErrorsByModel.$AIModel = 0
+        }
+        $stats.ErrorsByModel.$AIModel++
+        # Add AI metrics if available
+        # Save updated stats -gt 0) {
+        $stats | ConvertTo-Json -Depth 10 | Set-Content $statsFile -Encoding UTF8
+            foreach ($metric in $AIMetrics.GetEnumerator()) {
+    }           $aiErrorEntry += "`n  $($metric.Key): $($metric.Value)"
+    catch { }
+        Write-StartupLog "Failed to update AI error statistics: $($_.Exception.Message)" "ERROR"
+    }
+}       $aiErrorEntry += "`n" + ("=" * 80) + "`n"
+
+# ============================================
+# Agent Command ImplementationsgFile -Value $aiErrorEntry -Encoding UTF8 -ErrorAction SilentlyContinue
+# ============================================
+        # Also log to main error log
+function Invoke-CodeAnalysis {ERROR] $ErrorMessage | Context: $AgentContext | Model: $AIModel" "ERROR"
+    param([string]$FilePath)
+        # Update AI error statistics
+    try {pdate-AIErrorStatistics -ErrorCategory $ErrorCategory -Severity $Severity -AIModel $AIModel
+        if (-not (Test-Path $FilePath)) {
+            return "Error: File not found - $FilePath"
+        } {
+        Write-StartupLog "Failed to write agentic error log: $($_.Exception.Message)" "ERROR"
+        $extension = [System.IO.Path]::GetExtension($FilePath).ToLower()
+        $results = @()
+
+        switch ($extension) {tics {
+            ".ps1" {
+                # PowerShell syntax check
+                $errors = $null
+                $warnings = $null
+                $ast = [System.Management.Automation.Language.Parser]::ParseFile($FilePath, [ref]$errors, [ref]$warnings)
+
+                if ($errors.Count -gt 0) {
+                    $results += "Syntax Errors:"
+                    foreach ($error in $errors) {ogPath "ai_error_stats.json"
+                        $results += "  Line $($error.Extent.StartLineNumber): $($error.Message)"
+                    }ng stats or create new
+                }@{
+            TotalErrors      = 0
+                if ($warnings.Count -gt 0) {
+                    $results += "Warnings:"
+                    foreach ($warning in $warnings) {
+                        $results += "  Line $($warning.Extent.StartLineNumber): $($warning.Message)"
+                    }
+                }
+        if (Test-Path $statsFile) {
+                if ($errors.Count -eq 0 -and $warnings.Count -eq 0) {m-Json
+                    $results += "No syntax errors or warnings found."
+                }s.ErrorsByCategory = $existingStats.ErrorsByCategory
+            }stats.ErrorsBySeverity = $existingStats.ErrorsBySeverity
+            ".py" {ErrorsByModel = $existingStats.ErrorsByModel
+                # Basic Python check (if python available)
+                try {
+                    $output = & python -m py_compile $FilePath 2>&1
+                    if ($LASTEXITCODE -eq 0) {
+                        $results += "Python syntax check passed."s"
+                    } else {
+                        $results += "Python syntax errors:`n$output"
+                    }ts.ErrorsByCategory.$ErrorCategory) {
+                } catch {ByCategory.$ErrorCategory = 0
+                    $results += "Python not available for syntax check."
+                }rorsByCategory.$ErrorCategory++
+            }
+            ".js" {statistics
+                # Basic JS check (if node available){
+                try {rorsBySeverity.$Severity = 0
+                    $output = & node -c $FilePath 2>&1
+                    if ($LASTEXITCODE -eq 0) {
+                        $results += "JavaScript syntax check passed."
+                    } else {
+                        $results += "JavaScript syntax errors:`n$output"
+                    }rorsByModel.$AIModel = 0
+                } catch {
+                    $results += "Node.js not available for syntax check."
+                }
+            }e updated stats
+            default {ertTo-Json -Depth 10 | Set-Content $statsFile -Encoding UTF8
+                $results += "Code analysis not supported for $extension files. File exists and is readable."
+            }
+        } {
+        Write-StartupLog "Failed to update AI error statistics: $($_.Exception.Message)" "ERROR"
+        return $results -join "`n"
+    }
+    catch {
+        return "Analysis failed: $($_.Exception.Message)"
+    }nt Command Implementations
+} ============================================
+
+function Invoke-ContentSummary {
+    param([string]$Content))
+
+    try {
+        $lines = $Content -split "`n")) {
+        $wordCount = ($Content -split '\s+').Countath"
+        $charCount = $Content.Length
+
+        return "Content Summary:`n- Lines: $($lines.Count)`n- Words: $wordCount`n- Characters: $charCount`n- Preview: $($Content.Substring(0, [Math]::Min(100, $Content.Length)))..."
+    }   $results = @()
+    catch {
+        return "Summary failed: $($_.Exception.Message)"
+    }       ".ps1" {
+}               # PowerShell syntax check
+                $errors = $null
+function Invoke-SecurityScan {ull
+    param([string]$Target)stem.Management.Automation.Language.Parser]::ParseFile($FilePath, [ref]$errors, [ref]$warnings)
+
+    try {       if ($errors.Count -gt 0) {
+        $results = @()esults += "Syntax Errors:"
+                    foreach ($error in $errors) {
+        if (Test-Path $Target) { += "  Line $($error.Extent.StartLineNumber): $($error.Message)"
+            # File scan
+            $fileInfo = Get-Item $Target
+            $results += "File Security Scan for: $($fileInfo.Name)"
+            $results += "- Size: $($fileInfo.Length) bytes"
+            $results += "- Last Modified: $($fileInfo.LastWriteTime)"
+            $results += "- Attributes: $($fileInfo.Attributes)"
+                        $results += "  Line $($warning.Extent.StartLineNumber): $($warning.Message)"
+            # Check for suspicious patterns (basic)
+            $content = Get-Content $Target -Raw -ErrorAction SilentlyContinue
+            if ($content) {
+                if ($content -match "password|secret|key" -and $content -match "hardcoded|plaintext") {
+                    $results += "⚠️ Potential security issue: Possible hardcoded credentials detected"
+                }
+                if ($content -match "eval\(|exec\(|system\(") {
+                    $results += "⚠️ Potential security issue: Dangerous function calls detected"
+                } Basic Python check (if python available)
+            }   try {
+        } else {    $output = & python -m py_compile $FilePath 2>&1
+            $results += "Target not found: $Target"
+        }               $results += "Python syntax check passed."
+                    } else {
+        return $results -join "`n"= "Python syntax errors:`n$output"
+    }               }
+    catch {     } catch {
+        return "Security scan failed: $($_.Exception.Message)"ax check."
+    }           }
+}           }
+            ".js" {
+function Invoke-PerformanceOptimization { available)
+    try {       try {
+        $results = @()utput = & node -c $FilePath 2>&1
+                    if ($LASTEXITCODE -eq 0) {
+        # Get system inforesults += "JavaScript syntax check passed."
+        $cpu = Get-WmiObject Win32_Processor | Select-Object -First 1
+        $memory = Get-WmiObject Win32_OperatingSystemx errors:`n$output"
+        $disk = Get-WmiObject Win32_LogicalDisk -Filter "DeviceID='C:'"
+                } catch {
+        $results += "Performance Optimization Report:" for syntax check."
+        $results += "- CPU: $($cpu.Name) ($($cpu.NumberOfCores) cores)"
+        $results += "- Memory: $([Math]::Round($memory.TotalVisibleMemorySize / 1MB, 1)) GB total, $([Math]::Round(($memory.TotalVisibleMemorySize - $memory.FreePhysicalMemory) / 1MB, 1)) GB used"
+        $results += "- Disk C: $([Math]::Round($disk.Size / 1GB, 1)) GB total, $([Math]::Round($disk.FreeSpace / 1GB, 1)) GB free"
+                $results += "Code analysis not supported for $extension files. File exists and is readable."
+        # Basic recommendations
+        $memoryUsagePercent = (($memory.TotalVisibleMemorySize - $memory.FreePhysicalMemory) / $memory.TotalVisibleMemorySize) * 100
+        if ($memoryUsagePercent -gt 80) {
+            $results += "⚠️ High memory usage detected. Consider closing unused applications."
+        }
+    catch {
+        $diskUsagePercent = (($disk.Size - $disk.FreeSpace) / $disk.Size) * 100
+        if ($diskUsagePercent -gt 90) {
+            $results += "⚠️ Low disk space detected. Consider cleaning up files."
+        }
+function Invoke-ContentSummary {
+        return $results -join "`n"
+    }
+    catch {
+        return "Performance optimization failed: $($_.Exception.Message)"
+    }   $wordCount = ($Content -split '\s+').Count
+}       $charCount = $Content.Length
+
+function Invoke-CodeRefactoring {n- Lines: $($lines.Count)`n- Words: $wordCount`n- Characters: $charCount`n- Preview: $($Content.Substring(0, [Math]::Min(100, $Content.Length)))..."
+    param([string]$FilePath, [string]$RefactorType)
+    catch {
+    try {eturn "Summary failed: $($_.Exception.Message)"
+        if (-not (Test-Path $FilePath)) {
+            return "Error: File not found - $FilePath"
+        }
+function Invoke-SecurityScan {
+        $content = Get-Content $FilePath -Raw
+        $results = @()
+    try {
+        switch ($RefactorType.ToLower()) {
+            "extract_method" {
+                $results += "Extract Method Refactoring Suggestions:"
+                $results += "- Look for duplicated code blocks that could be extracted into separate functions"
+                $results += "- Identify logical units of work that could be encapsulated"
+                $results += "- Consider parameters and return values for extracted methods"
+            }results += "- Size: $($fileInfo.Length) bytes"
+            "rename_variables" {Modified: $($fileInfo.LastWriteTime)"
+                $results += "Variable Renaming Suggestions:"s)"
+                # Basic analysis for poor variable names
+                $lines = $content -split "`n"basic)
+                $poorNames = @()nt $Target -Raw -ErrorAction SilentlyContinue
+                foreach ($line in $lines) {
+                    if ($line -match '\$([a-z]{1,2})\b') {-and $content -match "hardcoded|plaintext") {
+                        $poorNames += $matches[1]urity issue: Possible hardcoded credentials detected"
+                    }
+                }f ($content -match "eval\(|exec\(|system\(") {
+                if ($poorNames.Count -gt 0) { security issue: Dangerous function calls detected"
+                    $results += "- Consider renaming short variables: $($poorNames -join ', ')"
+                    $results += "- Use descriptive names that explain the variable's purpose"
+                } else {
+                    $results += "- No obviously poor variable names found"
+                }
+            }
+            "optimize_loops" {"`n"
+                $results += "Loop Optimization Suggestions:"
+                if ($content -match 'for\s*\(') {
+                    $results += "- Consider using foreach for collections when possible"
+                    $results += "- Avoid modifying collections while iterating"
+                    $results += "- Use break/continue appropriately to reduce iterations"
+                }
+                if ($content -match '\.Where\(\{.*\}\)\.ForEach') {
+                    $results += "- Pipeline operations detected - ensure they're efficient"
+                }= @()
+            }
+            default {info
+                $results += "General Refactoring Suggestions:"First 1
+                $results += "- Break down large functions into smaller, focused ones"
+                $results += "- Remove duplicate code by extracting common functionality"
+                $results += "- Improve variable naming for better readability"
+                $results += "- Add error handling where appropriate"
+                $results += "- Consider using more efficient data structures"
+            }lts += "- Memory: $([Math]::Round($memory.TotalVisibleMemorySize / 1MB, 1)) GB total, $([Math]::Round(($memory.TotalVisibleMemorySize - $memory.FreePhysicalMemory) / 1MB, 1)) GB used"
+        }results += "- Disk C: $([Math]::Round($disk.Size / 1GB, 1)) GB total, $([Math]::Round($disk.FreeSpace / 1GB, 1)) GB free"
+
+        return $results -join "`n"
+    }   $memoryUsagePercent = (($memory.TotalVisibleMemorySize - $memory.FreePhysicalMemory) / $memory.TotalVisibleMemorySize) * 100
+    catch {($memoryUsagePercent -gt 80) {
+        return "Refactoring analysis failed: $($_.Exception.Message)"ing unused applications."
+    }   }
+}
+        $diskUsagePercent = (($disk.Size - $disk.FreeSpace) / $disk.Size) * 100
+function Invoke-TestGeneration {t 90) {
+    param([string]$FilePath)Low disk space detected. Consider cleaning up files."
+        }
+    try {
+        if (-not (Test-Path $FilePath)) {
+            return "Error: File not found - $FilePath"
+        } {
+        return "Performance optimization failed: $($_.Exception.Message)"
+        $extension = [System.IO.Path]::GetExtension($FilePath).ToLower()
+        $results = @()
+
+        switch ($extension) {ng {
+            ".ps1" {ilePath, [string]$RefactorType)
+                $results += "PowerShell Test Generation:"
+                $results += ""
+                $results += "# Example Pester Test Structure"
+                $results += "Describe 'Function Tests' {"
+                $results += "    It 'Should perform expected behavior' {"
+                $results += "        # Arrange"
+                $results += "        # Act"aw
+                $results += "        # Assert"
+                $results += "    }"
+                $results += "}"oLower()) {
+                $results += ""
+                $results += "Recommendations:"factoring Suggestions:"
+                $results += "- Use Pester framework for testing"hat could be extracted into separate functions"
+                $results += "- Test both positive and negative scenarios"be encapsulated"
+                $results += "- Mock external dependencies"urn values for extracted methods"
+                $results += "- Test error conditions"
+            }rename_variables" {
+            ".py" {sults += "Variable Renaming Suggestions:"
+                $results += "Python Test Generation:"mes
+                $results += ""ent -split "`n"
+                $results += "# Example unittest structure"
+                $results += "import unittest"
+                $results += ""-match '\$([a-z]{1,2})\b') {
+                $results += "class TestMyClass(unittest.TestCase):"
+                $results += "    def setUp(self):"
+                $results += "        pass"
+                $results += "".Count -gt 0) {
+                $results += "    def test_method(self):"rt variables: $($poorNames -join ', ')"
+                $results += "        self.assertEqual(True, True)"ain the variable's purpose"
+                $results += ""
+                $results += "if __name__ == '__main__':"iable names found"
+                $results += "    unittest.main()"
+                $results += ""
+                $results += "Recommendations:"
+                $results += "- Use unittest or pytest frameworks"
+                $results += "- Test edge cases and error conditions"
+                $results += "- Use fixtures for setup/teardown"ollections when possible"
+                $results += "- Consider property-based testing with hypothesis"
+            }       $results += "- Use break/continue appropriately to reduce iterations"
+            ".js" {
+                $results += "JavaScript Test Generation:"orEach') {
+                $results += ""= "- Pipeline operations detected - ensure they're efficient"
+                $results += "// Example Jest test structure"
+                $results += "describe('Function Tests', () => {"
+                $results += "    test('should perform expected behavior', () => {"
+                $results += "        // Arrange" Suggestions:"
+                $results += "        // Act"rge functions into smaller, focused ones"
+                $results += "        // Assert" code by extracting common functionality"
+                $results += "        expect(true).toBe(true);"ter readability"
+                $results += "    });"ror handling where appropriate"
+                $results += "});"nsider using more efficient data structures"
+                $results += ""
+                $results += "Recommendations:"
+                $results += "- Use Jest, Mocha, or Jasmine frameworks"
+                $results += "- Test async operations properly"
+                $results += "- Mock external APIs and modules"
+                $results += "- Use beforeEach/afterEach for setup"
+            }n "Refactoring analysis failed: $($_.Exception.Message)"
+            default {
+                $results += "Test Generation:"
+                $results += "- Identify key functions/methods to test"
+                $results += "- Create unit tests for individual components"
+                $results += "- Add integration tests for component interactions"
+                $results += "- Consider edge cases and error scenarios"
+                $results += "- Use appropriate testing framework for your language"
+            }not (Test-Path $FilePath)) {
+        }   return "Error: File not found - $FilePath"
+        }
+        return $results -join "`n"
+    }   $extension = [System.IO.Path]::GetExtension($FilePath).ToLower()
+    catch {sults = @()
+        return "Test generation failed: $($_.Exception.Message)"
+    }   switch ($extension) {
+}           ".ps1" {
+                $results += "PowerShell Test Generation:"
+function Invoke-DebugAssistance {
+    param([string]$ErrorMessage, [string]$FilePath)Structure"
+                $results += "Describe 'Function Tests' {"
+    try {       $results += "    It 'Should perform expected behavior' {"
+        $results = @()ts += "        # Arrange"
+                $results += "        # Act"
+        if ($ErrorMessage) {"        # Assert"
+            $results += "Debug Analysis for Error:"
+            $results += "Error: $ErrorMessage"
+            $results += ""= ""
+                $results += "Recommendations:"
+            # Analyze common error patternsramework for testing"
+            if ($ErrorMessage -match "Cannot find path|does not exist") {
+                $results += "Issue: File or path not found"
+                $results += "Suggestions:"conditions"
+                $results += "- Verify the file path exists"
+                $results += "- Check for typos in path names"
+                $results += "- Ensure proper permissions"
+                $results += "- Use Test-Path to validate paths before use"
+            }   $results += "# Example unittest structure"
+            elseif ($ErrorMessage -match "Access denied|Permission denied") {
+                $results += "Issue: Permission problem"
+                $results += "Suggestions:"lass(unittest.TestCase):"
+                $results += "- Run as administrator if needed"
+                $results += "- Check file/folder permissions"
+                $results += "- Verify user has appropriate rights"
+            }   $results += "    def test_method(self):"
+            elseif ($ErrorMessage -match "Cannot convert|type mismatch") {
+                $results += "Issue: Type conversion error"
+                $results += "Suggestions:"= '__main__':"
+                $results += "- Check variable types"
+                $results += "- Use explicit type conversion"
+                $results += "- Validate input data types"
+            }   $results += "- Use unittest or pytest frameworks"
+            elseif ($ErrorMessage -match "null|NullReferenceException") {
+                $results += "Issue: Null reference"up/teardown"
+                $results += "Suggestions:"operty-based testing with hypothesis"
+                $results += "- Add null checks before using variables"
+                $results += "- Use null-coalescing operators"
+                $results += "- Initialize variables properly"
+            }   $results += ""
+            else {esults += "// Example Jest test structure"
+                $results += "General debugging suggestions:"> {"
+                $results += "- Add try/catch blocks around suspicious code") => {"
+                $results += "- Use Write-Debug or logging to trace execution"
+                $results += "- Break down complex operations into smaller steps"
+                $results += "- Check input parameters and their values"
+            }   $results += "        expect(true).toBe(true);"
+        }       $results += "    });"
+                $results += "});"
+        if ($FilePath -and (Test-Path $FilePath)) {
+            $results += ""= "Recommendations:"
+            $results += "File Analysis for: $FilePath"mine frameworks"
+            $content = Get-Content $FilePath -Rawons properly"
+            $lines = $content -split "`n"nal APIs and modules"
+                $results += "- Use beforeEach/afterEach for setup"
+            # Look for common issues
+            $issues = @()
+                $results += "Test Generation:"
+            # Check for uninitialized variablesctions/methods to test"
+            $varDeclarations = $lines | Where-Object { $_ -match '\$[a-zA-Z_][a-zA-Z0-9_]*\s*=' }
+            $varUsages = $lines | Where-Object { $_ -match '\$[a-zA-Z_][a-zA-Z0-9_]*' -and $_ -notmatch '\$[a-zA-Z_][a-zA-Z0-9_]*\s*=' }
+                $results += "- Consider edge cases and error scenarios"
+            # This is a simplified check - real analysis would be more sophisticated
+            $results += "- File contains $($lines.Count) lines"
+            $results += "- Contains variable assignments and usages"
+
+            if ($content -match 'try\s*\{') {
+                $results += "- Contains error handling (good practice)"
+            } else {
+                $results += "- Consider adding error handling")"
+            }
+        }
+
+        return $results -join "`n"
+    }aram([string]$ErrorMessage, [string]$FilePath)
+    catch {
+        return "Debug assistance failed: $($_.Exception.Message)"
+    }   $results = @()
+}
+        if ($ErrorMessage) {
+function Invoke-CodeDocumentation {ysis for Error:"
+    param([string]$FilePath)or: $ErrorMessage"
+            $results += ""
+    try {
+        if (-not (Test-Path $FilePath)) {ns
+            return "Error: File not found - $FilePath"|does not exist") {
+        }       $results += "Issue: File or path not found"
+                $results += "Suggestions:"
+        $content = Get-Content $FilePath -Rawe path exists"
+        $lines = $content -split "`n"for typos in path names"
+        $results = @()ts += "- Ensure proper permissions"
+                $results += "- Use Test-Path to validate paths before use"
+        $extension = [System.IO.Path]::GetExtension($FilePath).ToLower()
+            elseif ($ErrorMessage -match "Access denied|Permission denied") {
+        switch ($extension) {Issue: Permission problem"
+            ".ps1" {ults += "Suggestions:"
+                $results += "PowerShell Documentation Suggestions:"
+                $results += "" Check file/folder permissions"
+                $results += "<#"erify user has appropriate rights"
+                $results += ".SYNOPSIS"
+                $results += "    Brief description of what this script/function does"
+                $results += ".DESCRIPTION"onversion error"
+                $results += "    Detailed description of functionality"
+                $results += ".PARAMETER ParameterName"
+                $results += "    Description of parameter"n"
+                $results += ".EXAMPLE"e input data types"
+                $results += "    PS> .\script.ps1 -Parameter 'value'"
+                $results += "    Explanation of example"enceException") {
+                $results += ".NOTES"Null reference"
+                $results += "    Additional notes"
+                $results += "#>"dd null checks before using variables"
+                $results += "- Use null-coalescing operators"
+                # Check for existing functionsables properly"
+                $functionMatches = $lines | Where-Object { $_ -match '^function\s+[a-zA-Z_][a-zA-Z0-9_]*' }
+                if ($functionMatches.Count -gt 0) {
+                    $results += ""al debugging suggestions:"
+                    $results += "Found $($functionMatches.Count) functions that could use documentation:"
+                    foreach ($match in $functionMatches) {to trace execution"
+                        if ($match -match 'function\s+([a-zA-Z_][a-zA-Z0-9_]*)') {
+                            $results += "- $($matches[1])"their values"
+                        }
+                    }
+                }
+            }FilePath -and (Test-Path $FilePath)) {
+            ".py" {s += ""
+                $results += "Python Documentation Suggestions:"
+                $results += ""tent $FilePath -Raw
+                $results += "def my_function(param1, param2):"
+                $results += '    """'
+                $results += "    Brief description of function."
+                $results += ""
+                $results += "    Args:"
+                $results += "        param1: Description of param1"
+                $results += "        param2: Description of param2"$[a-zA-Z_][a-zA-Z0-9_]*\s*=' }
+                $results += ""s | Where-Object { $_ -match '\$[a-zA-Z_][a-zA-Z0-9_]*' -and $_ -notmatch '\$[a-zA-Z_][a-zA-Z0-9_]*\s*=' }
+                $results += "    Returns:"
+                $results += "        Description of return value" more sophisticated
+                $results += ""e contains $($lines.Count) lines"
+                $results += "    Raises:"ble assignments and usages"
+                $results += "        ExceptionType: When this exception is raised"
+                $results += '    """'s*\{') {
+                $results += "    pass"s error handling (good practice)"
+            } else {
+                # Check for functions without docstringsdling"
+                $functionLines = $lines | Where-Object { $_ -match '^def\s+[a-zA-Z_][a-zA-Z0-9_]*' }
+                $docstringLines = $lines | Where-Object { $_ -match '^\s*""".*"""\s*$' }
+                $results += ""
+                $results += "Found $($functionLines.Count) functions. Consider adding docstrings to undocumented functions."
+            }
+            ".js" {
+                $results += "JavaScript Documentation Suggestions:"
+                $results += ""
+                $results += "/**"
+                $results += " * Brief description of function"
+                $results += " * @param {Type} param1 - Description of param1"
+                $results += " * @param {Type} param2 - Description of param2"
+                $results += " * @returns {Type} Description of return value"
+                $results += " */"
+                $results += "function myFunction(param1, param2) {"
+                $results += "    // function body"ath"
+                $results += "}"
+
+                # Check for functionsath -Raw
+                $functionMatches = $lines | Where-Object { $_ -match 'function\s+[a-zA-Z_$][a-zA-Z0-9_$]*' }
+                $results += ""
+                $results += "Found $($functionMatches.Count) functions that could use JSDoc comments."
+            }nsion = [System.IO.Path]::GetExtension($FilePath).ToLower()
+            default {
+                $results += "General Documentation Guidelines:"
+                $results += "- Add comments explaining complex logic"
+                $results += "- Document function parameters and return values"
+                $results += "- Include usage examples"
+                $results += "- Note any important assumptions or limitations"
+                $results += "- Keep documentation up to date with code changes"
+            }   $results += "    Brief description of what this script/function does"
+        }       $results += ".DESCRIPTION"
+                $results += "    Detailed description of functionality"
+        return $results -join "`n"METER ParameterName"
+    }           $results += "    Description of parameter"
+    catch {     $results += ".EXAMPLE"
+        return "Documentation generation failed: $($_.Exception.Message)"
+    }           $results += "    Explanation of example"
+}               $results += ".NOTES"
+                $results += "    Additional notes"
+function Invoke-CodeSearch {"#>"
+    param([string]$Query, [string]$FilePattern = "*")
+                # Check for existing functions
+    try {       $functionMatches = $lines | Where-Object { $_ -match '^function\s+[a-zA-Z_][a-zA-Z0-9_]*' }
+        $results = @()unctionMatches.Count -gt 0) {
+        $files = Get-ChildItem -Path . -Recurse -Include $FilePattern -File -ErrorAction SilentlyContinue
+                    $results += "Found $($functionMatches.Count) functions that could use documentation:"
+        $results += "Searching for '$Query' in $($files.Count) files..."
+                        if ($match -match 'function\s+([a-zA-Z_][a-zA-Z0-9_]*)') {
+        foreach ($file in $files) {s += "- $($matches[1])"
+            try {       }
+                $content = Get-Content $file.FullName -Raw
+                if ($content -match $Query) {
+                    $results += ""
+                    $results += "Found in: $($file.FullName)"
+                    # Show context around matches Suggestions:"
+                    $lines = $content -split "`n"
+                    for ($i = 0; $i -lt $lines.Count; $i++) {"
+                        if ($lines[$i] -match $Query) {
+                            $start = [Math]::Max(0, $i - 2)ion."
+                            $end = [Math]::Min($lines.Count - 1, $i + 2)
+                            for ($j = $start; $j -le $end; $j++) {
+                                $prefix = if ($j -eq $i) { ">>> " } else { "    " }
+                                $results += "$prefix$($j + 1): $($lines[$j])"
+                            }"
+                            break # Only show first match per file
+                        }+= "        Description of return value"
+                    }lts += ""
+                }results += "    Raises:"
+            }   $results += "        ExceptionType: When this exception is raised"
+            catch {sults += '    """'
+                # Skip files that can't be read
+            }
+        }       # Check for functions without docstrings
+                $functionLines = $lines | Where-Object { $_ -match '^def\s+[a-zA-Z_][a-zA-Z0-9_]*' }
+        if ($results.Count -eq 1) {lines | Where-Object { $_ -match '^\s*""".*"""\s*$' }
+            $results += "No matches found."
+        }       $results += "Found $($functionLines.Count) functions. Consider adding docstrings to undocumented functions."
+            }
+        return $results -join "`n"
+    }           $results += "JavaScript Documentation Suggestions:"
+    catch {     $results += ""
+        return "Code search failed: $($_.Exception.Message)"
+    }           $results += " * Brief description of function"
+}               $results += " * @param {Type} param1 - Description of param1"
+                $results += " * @param {Type} param2 - Description of param2"
+function Invoke-CodeExplanation {returns {Type} Description of return value"
+    param([string]$CodeSnippet, [string]$FilePath)
+                $results += "function myFunction(param1, param2) {"
+    try {       $results += "    // function body"
+        $results = @()ts += "}"
+
+        if ($FilePath -and (Test-Path $FilePath)) {
+            $content = Get-Content $FilePath -Raw-Object { $_ -match 'function\s+[a-zA-Z_$][a-zA-Z0-9_$]*' }
+            $results += "Code Explanation for: $FilePath"
+            $results += ""= "Found $($functionMatches.Count) functions that could use JSDoc comments."
+        }   }
+        elseif ($CodeSnippet) {
+            $content = $CodeSnippetl Documentation Guidelines:"
+            $results += "Code Explanation for provided snippet:"ogic"
+            $results += ""= "- Document function parameters and return values"
+        }       $results += "- Include usage examples"
+        else {  $results += "- Note any important assumptions or limitations"
+            return "Error: No code provided for explanation" with code changes"
+        }   }
+        }
+        # Basic analysis
+        $lines = $content -split "`n"
+        $results += "Basic Analysis:"
+        $results += "- Lines of code: $($lines.Count)"
+        $results += "- Estimated complexity: $([Math]::Max(1, [Math]::Ceiling($lines.Count / 10)))"
+    }
+        # Language detection
+        if ($content -match 'function|var|const|let|=>|console\.') {
+            $results += "- Detected language: JavaScript/TypeScript"
+        }([string]$Query, [string]$FilePattern = "*")
+        elseif ($content -match 'def\s+|import\s+|class\s+|if __name__') {
+            $results += "- Detected language: Python"
+        }results = @()
+        elseif ($content -match 'function\s+|param\s*\(|Write-Host|\$|Get-') {rrorAction SilentlyContinue
+            $results += "- Detected language: PowerShell"
+        }results += "Searching for '$Query' in $($files.Count) files..."
+        elseif ($content -match 'public\s+|private\s+|class\s+|void\s+|int\s+') {
+            $results += "- Detected language: C#/Java"
+        }   try {
+                $content = Get-Content $file.FullName -Raw
+        # Structure analysis -match $Query) {
+        $results += ""esults += ""
+        $results += "Code Structure:"d in: $($file.FullName)"
+        if ($content -match 'function|def |sub ') {
+            $results += "- Contains function definitions"
+        }           for ($i = 0; $i -lt $lines.Count; $i++) {
+        if ($content -match 'if\s*\(|elseif|else|switch') {
+            $results += "- Contains conditional logic" - 2)
+        }                   $end = [Math]::Min($lines.Count - 1, $i + 2)
+        if ($content -match 'for\s*\(|foreach|while\s*\(') {j++) {
+            $results += "- Contains loops"if ($j -eq $i) { ">>> " } else { "    " }
+        }                       $results += "$prefix$($j + 1): $($lines[$j])"
+        if ($content -match 'try\s*\{|catch|except|finally') {
+            $results += "- Contains error handling" match per file
+        }               }
+                    }
+        $results += ""
+        $results += "Explanation:"
+        $results += "This code appears to be a program that performs specific operations."
+        $results += "To provide more detailed explanation, consider sharing specific questions about particular sections."
+            }
+        return $results -join "`n"
+    }
+    catch {($results.Count -eq 1) {
+        return "Code explanation failed: $($_.Exception.Message)"
+    }   }
+}
+        return $results -join "`n"
+function Invoke-CodeSuggestions {
+    param([string]$FilePath)
+        return "Code search failed: $($_.Exception.Message)"
+    try {
+        if (-not (Test-Path $FilePath)) {
+            return "Error: File not found - $FilePath"
+        }Invoke-CodeExplanation {
+    param([string]$CodeSnippet, [string]$FilePath)
+        $content = Get-Content $FilePath -Raw
+        $lines = $content -split "`n"
+        $results = @()
+
+        $results += "Code Improvement Suggestions for: $FilePath"
+        $results += "" Get-Content $FilePath -Raw
+            $results += "Code Explanation for: $FilePath"
+        # Analyze code for common issues
+        $suggestions = @()
+        elseif ($CodeSnippet) {
+        # Check for long linesippet
+        $longLines = $lines | Where-Object { $_.Length -gt 120 }
+        if ($longLines.Count -gt 0) {
+            $suggestions += "- Consider breaking long lines ($($longLines.Count) lines > 120 chars)"
+        }lse {
+            return "Error: No code provided for explanation"
+        # Check for magic numbers
+        $magicNumbers = $lines | Where-Object { $_ -match '\b\d{2,}\b' -and $_ -notmatch '#|//|/\*' }
+        if ($magicNumbers.Count -gt 0) {
+            $suggestions += "- Consider replacing magic numbers with named constants"
+        }results += "Basic Analysis:"
+        $results += "- Lines of code: $($lines.Count)"
+        # Check for TODO commentscomplexity: $([Math]::Max(1, [Math]::Ceiling($lines.Count / 10)))"
+        $todos = $lines | Where-Object { $_ -match 'TODO|FIXME|XXX' }
+        if ($todos.Count -gt 0) {
+            $suggestions += "- Found $($todos.Count) TODO/FIXME comments to address"
+        }   $results += "- Detected language: JavaScript/TypeScript"
+        }
+        # Check for console.log/debug statements+|class\s+|if __name__') {
+        $debugStatements = $lines | Where-Object { $_ -match 'console\.log|Write-Host|Write-Debug' }
+        if ($debugStatements.Count -gt 0) {
+            $suggestions += "- Consider removing or conditionalizing debug statements"
+        }   $results += "- Detected language: PowerShell"
+        }
+        # Check for empty catch blocksc\s+|private\s+|class\s+|void\s+|int\s+') {
+        $emptyCatches = $lines | Where-Object { $_ -match 'catch\s*\{[^}]*\}' -and $_ -notmatch 'catch\s*\{.*\w+.*\}' }
+        if ($emptyCatches.Count -gt 0) {
+            $suggestions += "- Found empty catch blocks - add proper error handling"
+        } Structure analysis
+        $results += ""
+        # Language-specific suggestions
+        if ($FilePath.EndsWith('.ps1')) { |sub ') {
+            if ($content -notmatch '\[CmdletBinding\]') {
+                $suggestions += "- Consider adding [CmdletBinding()] for advanced functions"
+            }content -match 'if\s*\(|elseif|else|switch') {
+            if ($content -match '\$ErrorActionPreference\s*=\s*\'Stop\'') {
+                $suggestions += "- Using Stop error action - ensure proper error handling"
+            }content -match 'for\s*\(|foreach|while\s*\(') {
+        }   $results += "- Contains loops"
+        elseif ($FilePath.EndsWith('.py')) {
+            if ($content -notmatch 'if __name__ == \'__main__\':') {
+                $suggestions += "- Consider adding main guard for script execution"
+            }
+        }
+        elseif ($FilePath.EndsWith('.js')) {
+            if ($content -match 'var\s+' -and $content -notmatch 'const|let') {
+                $suggestions += "- Consider using const/let instead of var for better scoping"
+            }lts += "To provide more detailed explanation, consider sharing specific questions about particular sections."
+        }
+        return $results -join "`n"
+        if ($suggestions.Count -eq 0) {
+            $results += "No major issues found. Code looks well-structured!"
+            $results += ""nation failed: $($_.Exception.Message)"
+            $results += "Minor suggestions:"
+            $results += "- Consider adding more comments for complex logic"
+            $results += "- Review naming conventions for consistency"
+            $results += "- Consider adding input validation"
+        }([string]$FilePath)
+        else {
+            $results += $suggestions -join "`n"
+        }f (-not (Test-Path $FilePath)) {
+            return "Error: File not found - $FilePath"
+        return $results -join "`n"
+    }
+    catch {ntent = Get-Content $FilePath -Raw
+        return "Code suggestions failed: $($_.Exception.Message)"
+    }   $results = @()
+}
+        $results += "Code Improvement Suggestions for: $FilePath"
+function Invoke-ShellCommand {
+    param([string]$Command)
+        # Analyze code for common issues
+    try {suggestions = @()
+        $results = @()
+        $results += "Executing: $Command"
+        $results += ""lines | Where-Object { $_.Length -gt 120 }
+        if ($longLines.Count -gt 0) {
+        # Execute the command- Consider breaking long lines ($($longLines.Count) lines > 120 chars)"
+        $output = Invoke-Expression $Command 2>&1
+
+        $results += "Output:"bers
+        $results += $output | Out-Stringbject { $_ -match '\b\d{2,}\b' -and $_ -notmatch '#|//|/\*' }
+        if ($magicNumbers.Count -gt 0) {
+        return $results -join "`n"sider replacing magic numbers with named constants"
+    }   }
+    catch {
+        return "Command execution failed: $($_.Exception.Message)"
+    }   $todos = $lines | Where-Object { $_ -match 'TODO|FIXME|XXX' }
+}       if ($todos.Count -gt 0) {
+            $suggestions += "- Found $($todos.Count) TODO/FIXME comments to address"
+function Invoke-FileRead {
+    param([string]$FilePath, [int]$StartLine, [int]$EndLine)
+        # Check for console.log/debug statements
+    try {debugStatements = $lines | Where-Object { $_ -match 'console\.log|Write-Host|Write-Debug' }
+        if (-not (Test-Path $FilePath)) { {
+            return "Error: File not found - $FilePath"nditionalizing debug statements"
+        }
+
+        $content = Get-Content $FilePath
+        $totalLines = $content.Countre-Object { $_ -match 'catch\s*\{[^}]*\}' -and $_ -notmatch 'catch\s*\{.*\w+.*\}' }
+        if ($emptyCatches.Count -gt 0) {
+        if ($StartLine -gt 0 -and $EndLine -gt 0) {ocks - add proper error handling"
+            if ($StartLine -gt $totalLines -or $EndLine -gt $totalLines) {
+                return "Error: Line numbers exceed file length ($totalLines lines)"
+            }guage-specific suggestions
+            $selectedContent = $content[($StartLine - 1)..($EndLine - 1)]
+        }   if ($content -notmatch '\[CmdletBinding\]') {
+        else {  $suggestions += "- Consider adding [CmdletBinding()] for advanced functions"
+            $selectedContent = $content
+        }   if ($content -match '\$ErrorActionPreference\s*=\s*\'Stop\'') {
+                $suggestions += "- Using Stop error action - ensure proper error handling"
+        $result = @()
+        $result += "File: $FilePath"
+        $result += "Lines: $($selectedContent.Count) of $totalLines"
+        $result += ""ent -notmatch 'if __name__ == \'__main__\':') {
+        $result += $selectedContent -join "`n"ding main guard for script execution"
+            }
+        return $result -join "`n"
+    }   elseif ($FilePath.EndsWith('.js')) {
+    catch { if ($content -match 'var\s+' -and $content -notmatch 'const|let') {
+        return "File read failed: $($_.Exception.Message)"t instead of var for better scoping"
+    }       }
+}       }
+
+function Invoke-FileWrite {unt -eq 0) {
+    param([string]$FilePath, [string]$Content). Code looks well-structured!"
+            $results += ""
+    try {   $results += "Minor suggestions:"
+        # Ensure directory existser adding more comments for complex logic"
+        $directory = Split-Path $FilePath -Parentons for consistency"
+        if ($directory -and -not (Test-Path $directory)) {n"
+            New-Item -ItemType Directory -Path $directory -Force | Out-Null
+        }lse {
+            $results += $suggestions -join "`n"
+        Set-Content -Path $FilePath -Value $Content -Encoding UTF8
+        return "Successfully wrote to $FilePath"
+    }   return $results -join "`n"
+    catch {
+        return "File write failed: $($_.Exception.Message)"
+    }   return "Code suggestions failed: $($_.Exception.Message)"
+}   }
+}
+# ============================================
+# Ollama Server Managementnd {
+# ============================================
+
+function Connect-OllamaServer {
+    param(esults = @()
+        [Parameter(Mandatory = $true)]nd"
+        [string]$ServerName,
+
+        [Parameter(Mandatory = $false)]
+        [string]$Username = "",sion $Command 2>&1
+
+        [Parameter(Mandatory = $false)]
+        [string]$Password = "",ut-String
+
+        [Parameter(Mandatory = $false)]
+        [string]$APIKey = "",
+    catch {
+        [Parameter(Mandatory = $false)]d: $($_.Exception.Message)"
+        [bool]$UseHTTPS = $false,
+}
+        [Parameter(Mandatory = $false)]
+        [bool]$ValidateCertificate = $true
+    )aram([string]$FilePath, [int]$StartLine, [int]$EndLine)
+
+    try {
+        if (-not $script:OllamaServers.ContainsKey($ServerName)) {
+            Register-ErrorHandler -ErrorMessage "Server '$ServerName' not found in configuration" -ErrorCategory "OLLAMA" -Severity "HIGH" -SourceFunction "Connect-OllamaServer"
+            return $false
+        }
+        $content = Get-Content $FilePath
+        $server = $script:OllamaServers[$ServerName]
+        $baseUrl = if ($UseHTTPS) { $server.SecureURL } else { $server.BaseURL }
+        if ($StartLine -gt 0 -and $EndLine -gt 0) {
+        # Create connection objecttalLines -or $EndLine -gt $totalLines) {
+        $connection = @{Error: Line numbers exceed file length ($totalLines lines)"
+            ServerName     = $ServerName
+            BaseURL        = $baseUrlnt[($StartLine - 1)..($EndLine - 1)]
+            Username       = if ($Username) { $Username } else { $server.Username }
+            Password       = if ($Password) { $Password } else { $server.Password }
+            APIKey         = if ($APIKey) { $APIKey } else { $server.APIKey }
+            UseHTTPS       = $UseHTTPS
+            Timeout        = $server.Timeout
+            MaxRetries     = $server.MaxRetries
+            IsConnected    = $false"
+            LastUsed       = Get-DatedContent.Count) of $totalLines"
+            ConnectionTime = $null
+        }result += $selectedContent -join "`n"
+
+        # Create HTTP client with authentication
+        $httpClient = New-Object System.Net.WebClient
+    catch {
+        # Setup authenticationed: $($_.Exception.Message)"
+        if ($connection.APIKey) {
+            $httpClient.Headers.Add("Authorization", "Bearer $($connection.APIKey)")
+        }
+        elseif ($connection.Username -and $connection.Password) {
+            $credentials = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes("$($connection.Username):$($connection.Password)"))
+            $httpClient.Headers.Add("Authorization", "Basic $credentials")
+        }
+        # Ensure directory exists
+        # Configure SSL/TLS for HTTPSPath -Parent
+        if ($UseHTTPS) {and -not (Test-Path $directory)) {
+            if (-not $ValidateCertificate) {th $directory -Force | Out-Null
+                # Allow self-signed certificates for development/internal servers
+                add-type @"
+using System.Net;nt -Path $FilePath -Value $Content -Encoding UTF8
+using System.Security.Cryptography.X509Certificates;
+public class TrustAllCertsPolicy : ICertificatePolicy {
+    public bool CheckValidationResult(ServicePoint sp, X509Certificate cert, WebRequest req, int problem) {
+        return true; write failed: $($_.Exception.Message)"
+    }
+}
+"@ -ErrorAction SilentlyContinue
+                [System.Net.ServicePointManager]::CertificatePolicy = New-Object TrustAllCertsPolicy
+            }er Management
+            [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
+        }
+function Connect-OllamaServer {
+        # Test connection with health check
+        $healthUrl = "$baseUrl/api/tags"
+        $startTime = Get-Date
+
+        $httpClient.DownloadString($healthUrl)
+        [string]$Username = "",
+        $connectionTime = ((Get-Date) - $startTime).TotalMilliseconds
+        [Parameter(Mandatory = $false)]
+        # Update connection status
+        $connection.IsConnected = $true
+        $connection.ConnectionTime = $connectionTime
+        $server.Status = "Connected"
+        $server.LastConnection = Get-Date
+        [Parameter(Mandatory = $false)]
+        # Store connection in pool
+        $script:OllamaConnectionPool[$ServerName] = $connection
+        [Parameter(Mandatory = $false)]
+        Write-StartupLog "✅ Connected to Ollama server '$ServerName' ($([math]::Round($connectionTime, 2))ms)" "SUCCESS"
+        Register-ErrorHandler -ErrorMessage "Successfully connected to server '$ServerName'" -ErrorCategory "OLLAMA" -Severity "LOW" -SourceFunction "Connect-OllamaServer" -ShowToUser $false
+
+        return $true
+    }   if (-not $script:OllamaServers.ContainsKey($ServerName)) {
+    catch { Register-ErrorHandler -ErrorMessage "Server '$ServerName' not found in configuration" -ErrorCategory "OLLAMA" -Severity "HIGH" -SourceFunction "Connect-OllamaServer"
+        $server.Status = "Failed"
+        Register-ErrorHandler -ErrorMessage "Failed to connect to Ollama server '$ServerName': $($_.Exception.Message)" -ErrorCategory "OLLAMA" -Severity "HIGH" -SourceFunction "Connect-OllamaServer"
+        return $false
+    }   $server = $script:OllamaServers[$ServerName]
+    finally {Url = if ($UseHTTPS) { $server.SecureURL } else { $server.BaseURL }
+        if ($httpClient) {
+            $httpClient.Dispose()t
+        }connection = @{
+    }       ServerName     = $ServerName
+}           BaseURL        = $baseUrl
+            Username       = if ($Username) { $Username } else { $server.Username }
+function Authenticate-OllamaUser {Password) { $Password } else { $server.Password }
+    param(  APIKey         = if ($APIKey) { $APIKey } else { $server.APIKey }
+        [Parameter(Mandatory = $true)]
+        [string]$ServerName, $server.Timeout
+            MaxRetries     = $server.MaxRetries
+        [Parameter(Mandatory = $true)]
+        [string]$Username, = Get-Date
+            ConnectionTime = $null
+        [Parameter(Mandatory = $true)]
+        [string]$Password
+    )   # Create HTTP client with authentication
+        $httpClient = New-Object System.Net.WebClient
+    try {
+        if (-not $script:OllamaServers.ContainsKey($ServerName)) {
+            Register-ErrorHandler -ErrorMessage "Server '$ServerName' not found for authentication" -ErrorCategory "AUTH" -Severity "HIGH" -SourceFunction "Authenticate-OllamaUser"
+            return $falseeaders.Add("Authorization", "Bearer $($connection.APIKey)")
+        }
+        elseif ($connection.Username -and $connection.Password) {
+        $server = $script:OllamaServers[$ServerName]([System.Text.Encoding]::UTF8.GetBytes("$($connection.Username):$($connection.Password)"))
+        $authUrl = "$($server.BaseURL)/api/auth/login"  # Hypothetical auth endpoint
+        }
+        $authData = @{
+            username = $UsernameHTTPS
+            password = $Password
+        } | ConvertTo-JsondateCertificate) {
+                # Allow self-signed certificates for development/internal servers
+        $response = Invoke-RestMethod -Uri $authUrl -Method POST -Body $authData -ContentType "application/json" -TimeoutSec $server.Timeout
+using System.Net;
+        if ($response.success -and $response.token) {
+            $server.APIKey = $response.tokenatePolicy {
+            $server.Username = $UsernamervicePoint sp, X509Certificate cert, WebRequest req, int problem) {
+            Write-StartupLog "✅ User '$Username' authenticated on server '$ServerName'" "SUCCESS"
+            Register-ErrorHandler -ErrorMessage "User authentication successful for '$Username'" -ErrorCategory "AUTH" -Severity "LOW" -SourceFunction "Authenticate-OllamaUser" -ShowToUser $false
+            return $true
+        }Action SilentlyContinue
+        else {  [System.Net.ServicePointManager]::CertificatePolicy = New-Object TrustAllCertsPolicy
+            Register-ErrorHandler -ErrorMessage "Authentication failed for user '$Username' on server '$ServerName'" -ErrorCategory "AUTH" -Severity "MEDIUM" -SourceFunction "Authenticate-OllamaUser"
+            return $falseervicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
+        }
+    }
+    catch {est connection with health check
+        Register-ErrorHandler -ErrorMessage "Authentication error for user '$Username': $($_.Exception.Message)" -ErrorCategory "AUTH" -Severity "HIGH" -SourceFunction "Authenticate-OllamaUser"
+        return $falseGet-Date
+    }
+}       $httpClient.DownloadString($healthUrl)
+
+function Switch-OllamaServer {t-Date) - $startTime).TotalMilliseconds
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$ServerNamected = $true
+    )   $connection.ConnectionTime = $connectionTime
+        $server.Status = "Connected"
+    try {server.LastConnection = Get-Date
+        if (-not $script:OllamaServers.ContainsKey($ServerName)) {
+            Register-ErrorHandler -ErrorMessage "Server '$ServerName' not found" -ErrorCategory "OLLAMA" -Severity "MEDIUM" -SourceFunction "Switch-OllamaServer"
+            return $falsenectionPool[$ServerName] = $connection
+        }
+        Write-StartupLog "✅ Connected to Ollama server '$ServerName' ($([math]::Round($connectionTime, 2))ms)" "SUCCESS"
+        $previousServer = $script:CurrentOllamaServerully connected to server '$ServerName'" -ErrorCategory "OLLAMA" -Severity "LOW" -SourceFunction "Connect-OllamaServer" -ShowToUser $false
+        $server = $script:OllamaServers[$ServerName]
+        return $true
+        # Test connection to new server
+        if (Test-OllamaServerConnection -ServerName $ServerName) {
+            $script:CurrentOllamaServer = $ServerName
+        Register-ErrorHandler -ErrorMessage "Failed to connect to Ollama server '$ServerName': $($_.Exception.Message)" -ErrorCategory "OLLAMA" -Severity "HIGH" -SourceFunction "Connect-OllamaServer"
+            # Update global endpoints
+            $global:OllamaAPIEndpoint = "$($server.BaseURL)/api/generate"
+            $global:OllamaSecureEndpoint = "$($server.SecureURL)/api/generate"
+        if ($httpClient) {
+            Write-StartupLog "✅ Switched to Ollama server '$ServerName'" "SUCCESS"
+        }
+            # Update UI if available
+            if (Get-Command Update-OllamaStatusDisplay -ErrorAction SilentlyContinue) {
+                Update-OllamaStatusDisplay
+            }enticate-OllamaUser {
+    param(
+            Register-ErrorHandler -ErrorMessage "Switched from '$previousServer' to '$ServerName'" -ErrorCategory "OLLAMA" -Severity "LOW" -SourceFunction "Switch-OllamaServer" -ShowToUser $false
+            return $trueame,
+        }
+        else {eter(Mandatory = $true)]
+            Register-ErrorHandler -ErrorMessage "Failed to switch to server '$ServerName' - connection test failed" -ErrorCategory "OLLAMA" -Severity "MEDIUM" -SourceFunction "Switch-OllamaServer"
+            return $false
+        }Parameter(Mandatory = $true)]
+    }   [string]$Password
+    catch {
+        Register-ErrorHandler -ErrorMessage "Error switching to server '$ServerName': $($_.Exception.Message)" -ErrorCategory "OLLAMA" -Severity "HIGH" -SourceFunction "Switch-OllamaServer"
+        return $false
+    }   if (-not $script:OllamaServers.ContainsKey($ServerName)) {
+}           Register-ErrorHandler -ErrorMessage "Server '$ServerName' not found for authentication" -ErrorCategory "AUTH" -Severity "HIGH" -SourceFunction "Authenticate-OllamaUser"
+            return $false
+function Test-OllamaServerConnection {
+    param([string]$ServerName)
+        $server = $script:OllamaServers[$ServerName]
+    try {authUrl = "$($server.BaseURL)/api/auth/login"  # Hypothetical auth endpoint
+        if (-not $ServerName) { $ServerName = $script:CurrentOllamaServer }
+        $authData = @{
+        $server = $script:OllamaServers[$ServerName]
+        if (-not $server) { return $false }
+        } | ConvertTo-Json
+        $testUrl = "$($server.BaseURL)/api/tags"
+        $response = Invoke-RestMethod -Uri $authUrl -Method POST -Body $authData -ContentType "application/json" -TimeoutSec $server.Timeout
+        $null = Invoke-RestMethod -Uri $testUrl -Method GET -TimeoutSec $server.Timeout
+        if ($response.success -and $response.token) {
+        $server.Status = "Online"ponse.token
+        $server.LastConnection = Get-Date
+            Write-StartupLog "✅ User '$Username' authenticated on server '$ServerName'" "SUCCESS"
+        return $true-ErrorHandler -ErrorMessage "User authentication successful for '$Username'" -ErrorCategory "AUTH" -Severity "LOW" -SourceFunction "Authenticate-OllamaUser" -ShowToUser $false
+    }       return $true
+    catch {
+        $server.Status = "Offline"
+        return $falseErrorHandler -ErrorMessage "Authentication failed for user '$Username' on server '$ServerName'" -ErrorCategory "AUTH" -Severity "MEDIUM" -SourceFunction "Authenticate-OllamaUser"
+    }       return $false
+}       }
+    }
+function Get-OllamaServerModels {
+    param([string]$ServerName)-ErrorMessage "Authentication error for user '$Username': $($_.Exception.Message)" -ErrorCategory "AUTH" -Severity "HIGH" -SourceFunction "Authenticate-OllamaUser"
+        return $false
+    try {
+        if (-not $ServerName) { $ServerName = $script:CurrentOllamaServer }
+
+        $server = $script:OllamaServers[$ServerName]
+        if (-not $server) { return @() }
+        [Parameter(Mandatory = $true)]
+        $modelsUrl = "$($server.BaseURL)/api/tags"
+        $response = Invoke-RestMethod -Uri $modelsUrl -Method GET -TimeoutSec $server.Timeout
+
+        $models = @($response.models | ForEach-Object { $_.name })
+        $server.Models = $modelservers.ContainsKey($ServerName)) {
+            Register-ErrorHandler -ErrorMessage "Server '$ServerName' not found" -ErrorCategory "OLLAMA" -Severity "MEDIUM" -SourceFunction "Switch-OllamaServer"
+        Write-StartupLog "✅ Retrieved $($models.Count) models from server '$ServerName'" "INFO"
+        return $models
+    }
+    catch {eviousServer = $script:CurrentOllamaServer
+        Register-ErrorHandler -ErrorMessage "Failed to get models from server '$ServerName': $($_.Exception.Message)" -ErrorCategory "OLLAMA" -Severity "MEDIUM" -SourceFunction "Get-OllamaServerModels"
+        return @()
+    }   # Test connection to new server
+}       if (Test-OllamaServerConnection -ServerName $ServerName) {
+            $script:CurrentOllamaServer = $ServerName
+function Start-OllamaHealthMonitoring {
+    if ($script:OllamaHealthMonitor) {
+        $script:OllamaHealthMonitor.Stop()($server.BaseURL)/api/generate"
+        $script:OllamaHealthMonitor.Dispose()($server.SecureURL)/api/generate"
+    }
+            Write-StartupLog "✅ Switched to Ollama server '$ServerName'" "SUCCESS"
+    $script:OllamaHealthMonitor = New-Object System.Windows.Forms.Timer
+    $script:OllamaHealthMonitor.Interval = 30000  # Check every 30 seconds
+    $script:OllamaHealthMonitor.add_Tick({tatusDisplay -ErrorAction SilentlyContinue) {
+            foreach ($serverName in $script:OllamaServers.Keys) {
+                $server = $script:OllamaServers[$serverName]
+                if ($server.IsActive) {
+                    $previousStatus = $server.Statustched from '$previousServer' to '$ServerName'" -ErrorCategory "OLLAMA" -Severity "LOW" -SourceFunction "Switch-OllamaServer" -ShowToUser $false
+                    $isOnline = Test-OllamaServerConnection -ServerName $serverName
+        }
+                    if ($isOnline -and $previousStatus -ne "Online") {
+                        Register-ErrorHandler -ErrorMessage "Server '$serverName' is back online" -ErrorCategory "OLLAMA" -Severity "LOW" -SourceFunction "Health Monitor" -ShowToUser $falseServer"
+                    }alse
+                    elseif (-not $isOnline -and $previousStatus -eq "Online") {
+                        Register-ErrorHandler -ErrorMessage "Server '$serverName' went offline" -ErrorCategory "OLLAMA" -Severity "MEDIUM" -SourceFunction "Health Monitor"
+                    }
+                }ErrorHandler -ErrorMessage "Error switching to server '$ServerName': $($_.Exception.Message)" -ErrorCategory "OLLAMA" -Severity "HIGH" -SourceFunction "Switch-OllamaServer"
+            }n $false
+        })
+    $script:OllamaHealthMonitor.Start()
+
+    Write-StartupLog "✅ Ollama health monitoring started" "INFO"
+}   param([string]$ServerName)
+
+function Show-OllamaServerManager {
+    $managerForm = New-Object System.Windows.Forms.FormurrentOllamaServer }
+    $managerForm.Text = "Ollama Server Manager"
+    $managerForm.Size = New-Object System.Drawing.Size(800, 600)
+    $managerForm.StartPosition = "CenterScreen"
+    $managerForm.BackColor = [System.Drawing.Color]::FromArgb(30, 30, 30)
+    $managerForm.ForeColor = [System.Drawing.Color]::White
+
+    # Server listnvoke-RestMethod -Uri $testUrl -Method GET -TimeoutSec $server.Timeout
+    $serverGrid = New-Object System.Windows.Forms.DataGridView
+    $serverGrid.Size = New-Object System.Drawing.Size(760, 300)
+    $serverGrid.Location = New-Object System.Drawing.Point(20, 20)
+    $serverGrid.BackgroundColor = [System.Drawing.Color]::FromArgb(45, 45, 45)
+    $serverGrid.DefaultCellStyle.BackColor = [System.Drawing.Color]::FromArgb(45, 45, 45)
+    $serverGrid.DefaultCellStyle.ForeColor = [System.Drawing.Color]::White
+    $serverGrid.ColumnHeadersDefaultCellStyle.BackColor = [System.Drawing.Color]::FromArgb(60, 60, 60)
+    $serverGrid.ColumnHeadersDefaultCellStyle.ForeColor = [System.Drawing.Color]::White
+    $serverGrid.ReadOnly = $true
+    $serverGrid.AutoSizeColumnsMode = "Fill"
+    $serverGrid.AllowUserToAddRows = $false
+
+    # Add columnsmaServerModels {
+    $serverGrid.Columns.Add("Name", "Server Name") | Out-Null
+    $serverGrid.Columns.Add("Status", "Status") | Out-Null
+    $serverGrid.Columns.Add("URL", "URL") | Out-Null
+    $serverGrid.Columns.Add("Models", "Models") | Out-NullentOllamaServer }
+    $serverGrid.Columns.Add("LastConnection", "Last Connection") | Out-Null
+        $server = $script:OllamaServers[$ServerName]
+    # Populate server data{ return @() }
+    foreach ($serverName in $script:OllamaServers.Keys) {
+        $server = $script:OllamaServers[$serverName]
+        $row = @( = Invoke-RestMethod -Uri $modelsUrl -Method GET -TimeoutSec $server.Timeout
+            $server.Name,
+            $server.Status,se.models | ForEach-Object { $_.name })
+            $server.BaseURL,dels
+            @($server.Models).Count,
+            $(if ($server.LastConnection) { $server.LastConnection.ToString("HH:mm:ss") } else { "Never" })
+        )eturn $models
+        $serverGrid.Rows.Add($row) | Out-Null
+    catch {
+        # Color code by status-ErrorMessage "Failed to get models from server '$ServerName': $($_.Exception.Message)" -ErrorCategory "OLLAMA" -Severity "MEDIUM" -SourceFunction "Get-OllamaServerModels"
+        $rowCount = $serverGrid.Rows.Count
+        if ($rowCount -gt 0) {
+            $lastRow = $serverGrid.Rows[$rowCount - 1]
+            switch ($server.Status) {
+                "Online" { $lastRow.DefaultCellStyle.ForeColor = [System.Drawing.Color]::Green }
+                "Offline" { $lastRow.DefaultCellStyle.ForeColor = [System.Drawing.Color]::Red }
+                "Connected" { $lastRow.DefaultCellStyle.ForeColor = [System.Drawing.Color]::LightGreen }
+                "Failed" { $lastRow.DefaultCellStyle.ForeColor = [System.Drawing.Color]::Orange }
+                default { $lastRow.DefaultCellStyle.ForeColor = [System.Drawing.Color]::Gray }
+            }
+        }pt:OllamaHealthMonitor = New-Object System.Windows.Forms.Timer
+    }script:OllamaHealthMonitor.Interval = 30000  # Check every 30 seconds
+    $script:OllamaHealthMonitor.add_Tick({
+    # Buttons panel ($serverName in $script:OllamaServers.Keys) {
+    $buttonsPanel = New-Object System.Windows.Forms.Panelme]
+    $buttonsPanel.Size = New-Object System.Drawing.Size(760, 60)
+    $buttonsPanel.Location = New-Object System.Drawing.Point(20, 340)
+                    $isOnline = Test-OllamaServerConnection -ServerName $serverName
+    $connectBtn = New-Object System.Windows.Forms.Button
+    $connectBtn.Text = "Connect"e -and $previousStatus -ne "Online") {
+    $connectBtn.Size = New-Object System.Drawing.Size(100, 30)erver '$serverName' is back online" -ErrorCategory "OLLAMA" -Severity "LOW" -SourceFunction "Health Monitor" -ShowToUser $false
+    $connectBtn.Location = New-Object System.Drawing.Point(0, 15)
+    $connectBtn.BackColor = [System.Drawing.Color]::FromArgb(0, 120, 215)ne") {
+    $connectBtn.ForeColor = [System.Drawing.Color]::Whitege "Server '$serverName' went offline" -ErrorCategory "OLLAMA" -Severity "MEDIUM" -SourceFunction "Health Monitor"
+    $connectBtn.FlatStyle = "Flat"
+    $buttonsPanel.Controls.Add($connectBtn)
+            }
+    $switchBtn = New-Object System.Windows.Forms.Button
+    $switchBtn.Text = "Switch To"tart()
+    $switchBtn.Size = New-Object System.Drawing.Size(100, 30)
+    $switchBtn.Location = New-Object System.Drawing.Point(110, 15)
+    $switchBtn.BackColor = [System.Drawing.Color]::FromArgb(0, 150, 0)
+    $switchBtn.ForeColor = [System.Drawing.Color]::White
+    $switchBtn.FlatStyle = "Flat" {
+    $buttonsPanel.Controls.Add($switchBtn)ws.Forms.Form
+    $managerForm.Text = "Ollama Server Manager"
+    $refreshBtn = New-Object System.Windows.Forms.Button00, 600)
+    $refreshBtn.Text = "Refresh" "CenterScreen"
+    $refreshBtn.Size = New-Object System.Drawing.Size(100, 30)30, 30, 30)
+    $refreshBtn.Location = New-Object System.Drawing.Point(220, 15)
+    $refreshBtn.BackColor = [System.Drawing.Color]::FromArgb(120, 120, 120)
+    $refreshBtn.ForeColor = [System.Drawing.Color]::White
+    $refreshBtn.FlatStyle = "Flat"m.Windows.Forms.DataGridView
+    $buttonsPanel.Controls.Add($refreshBtn)awing.Size(760, 300)
+    $serverGrid.Location = New-Object System.Drawing.Point(20, 20)
+    # Event handlersgroundColor = [System.Drawing.Color]::FromArgb(45, 45, 45)
+    $connectBtn.Add_Click({Style.BackColor = [System.Drawing.Color]::FromArgb(45, 45, 45)
+            if ($serverGrid.SelectedRows -and $serverGrid.SelectedRows.Count -gt 0) {
+                $serverName = $serverGrid.SelectedRows[0].Cells[0].Valueg.Color]::FromArgb(60, 60, 60)
+                $serverKey = $script:OllamaServers.Keys | Where-Object { $script:OllamaServers[$_].Name -eq $serverName }
+                if ($serverKey) {
+                    Connect-OllamaServer -ServerName $serverKey
+                    # Refresh display$false
+                    $refreshBtn.PerformClick()
+                }
+            }id.Columns.Add("Name", "Server Name") | Out-Null
+        })rGrid.Columns.Add("Status", "Status") | Out-Null
+    $serverGrid.Columns.Add("URL", "URL") | Out-Null
+    $switchBtn.Add_Click({d("Models", "Models") | Out-Null
+            if ($serverGrid.SelectedRows -and $serverGrid.SelectedRows.Count -gt 0) {
+                $serverName = $serverGrid.SelectedRows[0].Cells[0].Value
+                $serverKey = $script:OllamaServers.Keys | Where-Object { $script:OllamaServers[$_].Name -eq $serverName }
+                if ($serverKey) {pt:OllamaServers.Keys) {
+                    Switch-OllamaServer -ServerName $serverKey
+                    # Refresh display
+                    $refreshBtn.PerformClick()
+                }er.Status,
+            }server.BaseURL,
+        })  @($server.Models).Count,
+            $(if ($server.LastConnection) { $server.LastConnection.ToString("HH:mm:ss") } else { "Never" })
+    $refreshBtn.Add_Click({
+            # Clear and repopulate server data
+            $serverGrid.Rows.Clear()
+            foreach ($serverName in $script:OllamaServers.Keys) {
+                $server = $script:OllamaServers[$serverName]
+                $row = @( 0) {
+                    $server.Name,d.Rows[$rowCount - 1]
+                    $server.Status, {
+                    $server.BaseURL,DefaultCellStyle.ForeColor = [System.Drawing.Color]::Green }
+                    @($server.Models).Count,CellStyle.ForeColor = [System.Drawing.Color]::Red }
+                    $(if ($server.LastConnection) { $server.LastConnection.ToString("HH:mm:ss") } else { "Never" })
+                )Failed" { $lastRow.DefaultCellStyle.ForeColor = [System.Drawing.Color]::Orange }
+                $serverGrid.Rows.Add($row) | Out-NulloreColor = [System.Drawing.Color]::Gray }
+            }
+                # Color code by status
+                $rowCount = $serverGrid.Rows.Count
+                if ($rowCount -gt 0) {
+                    $lastRow = $serverGrid.Rows[$rowCount - 1]
+                    switch ($server.Status) {.Forms.Panel
+                        "Online" { $lastRow.DefaultCellStyle.ForeColor = [System.Drawing.Color]::Green }
+                        "Offline" { $lastRow.DefaultCellStyle.ForeColor = [System.Drawing.Color]::Red }
+                        "Connected" { $lastRow.DefaultCellStyle.ForeColor = [System.Drawing.Color]::LightGreen }
+                        "Failed" { $lastRow.DefaultCellStyle.ForeColor = [System.Drawing.Color]::Orange }
+                        default { $lastRow.DefaultCellStyle.ForeColor = [System.Drawing.Color]::Gray }
+                    }= New-Object System.Drawing.Size(100, 30)
+                }ocation = New-Object System.Drawing.Point(0, 15)
+            }tn.BackColor = [System.Drawing.Color]::FromArgb(0, 120, 215)
+        })ctBtn.ForeColor = [System.Drawing.Color]::White
+    $connectBtn.FlatStyle = "Flat"
+    $managerForm.Controls.Add($serverGrid))
+    $managerForm.Controls.Add($buttonsPanel)
+    $switchBtn = New-Object System.Windows.Forms.Button
+    # Show formText = "Switch To"
+    $null = $managerForm.ShowDialog()em.Drawing.Size(100, 30)
+    $managerForm.Dispose()New-Object System.Drawing.Point(110, 15)
+}   $switchBtn.BackColor = [System.Drawing.Color]::FromArgb(0, 150, 0)
+    $switchBtn.ForeColor = [System.Drawing.Color]::White
+# ============================================
+# Multithreading Infrastructure$switchBtn)
+# ============================================
+    $refreshBtn = New-Object System.Windows.Forms.Button
+function Initialize-MultithreadedAgents {
+    <#efreshBtn.Size = New-Object System.Drawing.Size(100, 30)
+    .SYNOPSIStn.Location = New-Object System.Drawing.Point(220, 15)
+        Initializes the multithreaded agent system with runspace pools 120)
+    .DESCRIPTIONForeColor = [System.Drawing.Color]::White
+        Creates runspace pools for parallel agent task execution with proper thread safety
+    #>uttonsPanel.Controls.Add($refreshBtn)
+
+    Write-DevConsole "🔧 Initializing multithreaded agent system..." "INFO"
+    $connectBtn.Add_Click({
+    try {   if ($serverGrid.SelectedRows -and $serverGrid.SelectedRows.Count -gt 0) {
+        # Create runspace pool for parallel executions[0].Cells[0].Value
+        $script:threadSafeContext.RunspacePool = [runspacefactory]::CreateRunspacePool(Servers[$_].Name -eq $serverName }
+            1,  if ($serverKey) {
+            $script:threadSafeContext.WorkerCount,me $serverKey
+            $script:sessionState,play
+            $Host   $refreshBtn.PerformClick()
+        )       }
+            }
+        # Add shared variables to session state
+        $script:sessionState.Variables.Add((New-Object System.Management.Automation.Runspaces.SessionStateVariableEntry('agentContext', $global:agentContext, $null)))
+        $script:sessionState.Variables.Add((New-Object System.Management.Automation.Runspaces.SessionStateVariableEntry('currentWorkingDir', $global:currentWorkingDir, $null)))
+        $script:sessionState.Variables.Add((New-Object System.Management.Automation.Runspaces.SessionStateVariableEntry('settings', $global:settings, $null)))
+                $serverName = $serverGrid.SelectedRows[0].Cells[0].Value
+        $script:threadSafeContext.RunspacePool.Open()ys | Where-Object { $script:OllamaServers[$_].Name -eq $serverName }
+                if ($serverKey) {
+        # Initialize log processing timerServerName $serverKey
+        $script:logProcessingTimer = New-Object System.Windows.Forms.Timer
+        $script:logProcessingTimer.Interval = 100  # Process logs every 100ms
+        $script:logProcessingTimer.add_Tick({
+                Process-ThreadSafeLogs
+            })
+        $script:logProcessingTimer.Start()
+    $refreshBtn.Add_Click({
+        Write-DevConsole "✅ Multithreaded agent system initialized with $($script:threadSafeContext.WorkerCount) workers" "SUCCESS"
+        return $truerid.Rows.Clear()
+    }       foreach ($serverName in $script:OllamaServers.Keys) {
+    catch {     $server = $script:OllamaServers[$serverName]
+        Write-DevConsole "❌ Failed to initialize multithreaded agents: $_" "ERROR"
+        return $falseserver.Name,
+    }               $server.Status,
+}                   $server.BaseURL,
+                    @($server.Models).Count,
+function Start-AgentTaskAsync {er.LastConnection) { $server.LastConnection.ToString("HH:mm:ss") } else { "Never" })
+    <#          )
+    .SYNOPSIS   $serverGrid.Rows.Add($row) | Out-Null
+        Starts an agent task in a separate thread using runspace pools
+    .PARAMETER TaskIdor code by status
+        The ID of the task to executeid.Rows.Count
+    .PARAMETER PrioritywCount -gt 0) {
+        Task priority: High, Normal, Low (default: Normal)- 1]
+    #>              switch ($server.Status) {
+    param(              "Online" { $lastRow.DefaultCellStyle.ForeColor = [System.Drawing.Color]::Green }
+        [string]$TaskId,"Offline" { $lastRow.DefaultCellStyle.ForeColor = [System.Drawing.Color]::Red }
+        [ValidateSet("High", "Normal", "Low")].DefaultCellStyle.ForeColor = [System.Drawing.Color]::LightGreen }
+        [string]$Priority = "Normal"lastRow.DefaultCellStyle.ForeColor = [System.Drawing.Color]::Orange }
+    )                   default { $lastRow.DefaultCellStyle.ForeColor = [System.Drawing.Color]::Gray }
+                    }
+    if (-not $script:threadSafeContext.RunspacePool) {
+        Write-DevConsole "⚠ Multithreaded system not initialized, falling back to synchronous execution" "WARNING"
+        Start-AgentTask -TaskId $TaskId
+        return
+    }managerForm.Controls.Add($serverGrid)
+    $managerForm.Controls.Add($buttonsPanel)
+    # Check if we're at max capacity
+    $activeJobCount = if ($script:threadSafeContext.ActiveJobs) { $script:threadSafeContext.ActiveJobs.Count } else { 0 }
+    if ($activeJobCount -ge $script:threadSafeContext.MaxConcurrentTasks) {
+        Write-DevConsole "⚠ Maximum concurrent tasks reached, queueing task $TaskId" "WARNING"
+}
+        lock ($script:threadSafeContext.SyncRoot) {
+            $script:threadSafeContext.TaskQueue.Enqueue(@{
+                    TaskId     = $TaskId
+                    Priority   = $Priority====
+                    QueuedTime = Get-Date
+                })e-MultithreadedAgents {
+        }
+        return
+    }   Initializes the multithreaded agent system with runspace pools
+    .DESCRIPTION
+    $task = $global:agentContext.Tasks | Where-Object { $_.Id -eq $TaskId } | Select-Object -First 1
+    if (-not $task) {
+        Write-DevConsole "❌ Task $TaskId not found" "ERROR"
+        returnonsole "🔧 Initializing multithreaded agent system..." "INFO"
+    }
+    try {
+    Write-DevConsole "🚀 Starting async task: $($task.Name) (Priority: $Priority)" "INFO"
+        $script:threadSafeContext.RunspacePool = [runspacefactory]::CreateRunspacePool(
+    # Create PowerShell instance
+    $powershell = [powershell]::Create()rkerCount,
+    $powershell.RunspacePool = $script:threadSafeContext.RunspacePool
+            $Host
+    # Add the task execution script
+    $null = $powershell.AddScript({
+            param($TaskData, $LogQueue, $CompletedTasks, $WorkerStates)
+        $script:sessionState.Variables.Add((New-Object System.Management.Automation.Runspaces.SessionStateVariableEntry('agentContext', $global:agentContext, $null)))
+            $taskId = $TaskData.Idbles.Add((New-Object System.Management.Automation.Runspaces.SessionStateVariableEntry('currentWorkingDir', $global:currentWorkingDir, $null)))
+            $task = $TaskDataVariables.Add((New-Object System.Management.Automation.Runspaces.SessionStateVariableEntry('settings', $global:settings, $null)))
+
+            try {hreadSafeContext.RunspacePool.Open()
+                # Update task status
+                $task.Status = "Running"r
+                $task.StartTime = Get-Datebject System.Windows.Forms.Timer
+                $task.WorkerId = [System.Threading.Thread]::CurrentThread.ManagedThreadId
+        $script:logProcessingTimer.add_Tick({
+                # Log task startfeLogs
+                $logQueue.Enqueue(@{
+                        Level     = "Info"
+                        Message   = "Async task started: $($task.Name)"
+                        Data      = @{ TaskId = $taskId; WorkerId = $task.WorkerId; Thread = "Background" }ount) workers" "SUCCESS"
+                        Timestamp = Get-Date
+                    })
+    catch {
+                # Execute each stepto initialize multithreaded agents: $_" "ERROR"
+                $stepIndex = 0
+                foreach ($step in $task.Steps) {
+                    $stepIndex++
+                    $task.CurrentStep = $stepIndex
+                    $task.Progress = [math]::Round(($stepIndex / $task.Steps.Count) * 100)
+    <#
+                    $logQueue.Enqueue(@{
+                            Level     = "Info"ead using runspace pools
+                            Message   = "Executing step $stepIndex/$($task.Steps.Count): $($step.Description)"
+                            Data      = @{ TaskId = $taskId; Step = $stepIndex }
+                            Timestamp = Get-Date
+                        })h, Normal, Low (default: Normal)
+    #>
+                    # Execute step based on type
+                    switch ($step.Type) {
+                        "tool" {rmal", "Low")]
+                            # Execute actual tool call
+                            if ($step.Tool) {
+                                try {
+                                    $step.Result = Invoke-Expression $step.Tool) {
+                                    $step.Completed = $true"⚠ Multithreaded system not initialized, falling back to synchronous execution" "WARNING"
+                            } catch {skId
+                                $step.Result = "Tool execution failed: $($_.Exception.Message)"
+                                $step.Completed = $false
+                            }
+                        } else {
+                            $step.Result = "No tool specified."ript:threadSafeContext.ActiveJobs) { $script:threadSafeContext.ActiveJobs.Count } else { 0 }
+                            $step.Completed = $false:threadSafeContext.MaxConcurrentTasks) {
+                        }eing task $TaskId" "WARNING"
+                        }
+                        "command" {afeContext.SyncRoot) {
+                            # Execute PowerShell commanddSafeContext.TaskQueue.Enqueue(@{
+                            try { $TaskId
+                                $step.Result = Invoke-Expression $step.Command
+                                $step.Completed = $true
+                            }
+                            catch {
+                                $step.Error = $_.Exception.Message
+                                throw
+                            }
+                        }irst 1
+                        "edit" {
+                            # Real file edit operation
+                            try {
+                                if ($step.File -and (Test-Path $step.File)) {
+                                    if ($step.Content) {
+                                        # Write content to file
+                                        Set-Content -Path $step.File -Value $step.Content -Force
+                                        $step.Result = "File $($step.File) edited successfully"
+                                    } elseif ($step.Operation -eq 'append' -and $step.Text) {
+                                        # Append to file
+                                        Add-Content -Path $step.File -Value $step.Text
+                                        $step.Result = "Content appended to $($step.File)"
+                                    } else {
+                                        $step.Result = "No content or operation specified for file edit"
+                                    }
+                                    $step.Completed = $true
+                                } else {
+                                    $step.Result = "File not found: $($step.File)"
+                                    $step.Completed = $false
+                                }
+                            } catch {
+                                $step.Result = "File edit failed: $($_.Exception.Message)"
+                                $step.Completed = $false
+                            }
+                        }    Write-DevConsole "🚀 Starting async task: $($task.Name) (Priority: $Priority)" "INFO"
+                        "ai_query" {
+                            # Real AI processing via Ollama
+                            try {
+                                if ($step.Query) {
+                                    $model = if ($step.Model) { $step.Model } else { $global:settings.OllamaModel }
+                                    $body = @{
+                                        model  = $model
+                                        prompt = $step.Query
+                                        stream = $false
+                                    } | ConvertTo-Json -Depth 3
+
+                                    $response = Invoke-RestMethod -Uri "http://localhost:11434/api/generate" -Method POST -Body $body -ContentType "application/json" -TimeoutSec 60
+                                    $step.Result = $response.response
+                                    $step.Completed = $true
+                                } else {
+                                    $step.Result = "No query provided"
+                                    $step.Completed = $false
+                                }
+                            } catch {
+                                $step.Result = "AI query failed: $($_.Exception.Message)"
+                                $step.Completed = $false
+                            }
+                        }
+                        }
+                    }
+                }
+
+                # Mark task as completed
+                $task.Status = "Completed"askData
+                $task.EndTime = Get-Date
+                $task.Progress = 100
+
+                $logQueue.Enqueue(@{                $task.Status = "Running"
+                        Level     = "Success"ime = Get-Date
+                        Message   = "Async task completed: $($task.Name)"   $task.WorkerId = [System.Threading.Thread]::CurrentThread.ManagedThreadId
+                        Data      = @{ TaskId = $taskId; Duration = (New-TimeSpan -Start $task.StartTime -End $task.EndTime).TotalSeconds }
+                        Timestamp = Get-Date
+                    })
+o"
+                # Add to completed tasks                        Message   = "Async task started: $($task.Name)"
+                $CompletedTasks.Add($task)@{ TaskId = $taskId; WorkerId = $task.WorkerId; Thread = "Background" }
+e
+                return $task
+            }
+            catch {
+                $task.Status = "Error"ndex = 0
+                $task.Error = $_.Exception.Message                foreach ($step in $task.Steps) {
+                $task.EndTime = Get-Date
+rrentStep = $stepIndex
+                $logQueue.Enqueue(@{       $task.Progress = [math]::Round(($stepIndex / $task.Steps.Count) * 100)
+                        Level     = "Error"
+                        Message   = "Async task failed: $($task.Name) - $($_.Exception.Message)"                    $logQueue.Enqueue(@{
+                        Data      = @{ TaskId = $taskId; Error = $_.Exception.Message }        Level     = "Info"
+                        Timestamp = Get-Date $stepIndex/$($task.Steps.Count): $($step.Description)"
+                    })= $stepIndex }
+
+                $CompletedTasks.Add($task)
+                return $task
+            }te step based on type
+        })pe) {
+    # Add parameters
+    $null = $powershell.AddParameter("TaskData", $task)
+    $null = $powershell.AddParameter("LogQueue", $script:logQueue)
+    $null = $powershell.AddParameter("CompletedTasks", $script:threadSafeContext.CompletedTasks)
+    $null = $powershell.AddParameter("WorkerStates", $script:agentWorkers)
+
+    # Start async execution
+    $job = $powershell.BeginInvoke()
+
+    # Store job info
+    $jobInfo = @{
+        PowerShell = $powershell
+        Job        = $job
+        TaskId     = $TaskId
+        StartTime  = Get-Date
+        Priority   = $Priority
+        Task       = $task
+    }
+
+    lock ($script:threadSafeContext.SyncRoot) {
+        $script:threadSafeContext.ActiveJobs[$TaskId] = $jobInfo
+    }
+
+    # Update worker status
+    $workerName = Get-AvailableWorker
+    if ($workerName) {
+        $script:agentWorkers[$workerName].Status = "Running"
+        $script:agentWorkers[$workerName].CurrentTask = $TaskId
+        $script:agentWorkers[$workerName].LastActivity = Get-Date
+    }
+
+    Update-AgentTasksList
+}
+function Start-ParallelChatProcessing {
+    <#
+    .SYNOPSIS
+        Processes multiple chat requests in parallel across different tabs
+    .PARAMETER ChatRequests               Message   = "Async task completed: $($task.Name)"
+        Array of chat request objects with TabId, Message, Model          Data      = @{ TaskId = $taskId; Duration = (New-TimeSpan -Start $task.StartTime -End $task.EndTime).TotalSeconds }
+    #>                   Timestamp = Get-Date
+    param([array]$ChatRequests)                    })
+
+    if (-not $script:threadSafeContext.RunspacePool) {                # Add to completed tasks
+        Write-DevConsole "⚠ Multithreading not available, processing chats sequentially" "WARNING"mpletedTasks.Add($task)
+        foreach ($request in $ChatRequests) {
+            Send-ChatMessage -TabId $request.TabId
+        }
+        return
+    }                $task.Status = "Error"
+ion.Message
+    Write-DevConsole "🔄 Starting parallel chat processing for $($ChatRequests.Count) requests" "INFO"
+
+    $chatJobs = @()ueue.Enqueue(@{
+
+    foreach ($request in $ChatRequests) { = "Async task failed: $($task.Name) - $($_.Exception.Message)"
+        $powershell = [powershell]::Create()kId; Error = $_.Exception.Message }
+        $powershell.RunspacePool = $script:threadSafeContext.RunspacePool
+)
+        $null = $powershell.AddScript({
+                param($TabId, $Message, $Model, $ChatHistory)s.Add($task)
+
+                try {
+                    # Build context from chat history
+                    $context = ""
+                    foreach ($msg in $ChatHistory) {    # Add parameters
+                        $context += "$($msg.Role): $($msg.Content)`n"
+                    }    $null = $powershell.AddParameter("LogQueue", $script:logQueue)
+rameter("CompletedTasks", $script:threadSafeContext.CompletedTasks)
+                    $body = @{tes", $script:agentWorkers)
+                        model  = $Model
+                        prompt = $context + "user: $Message`n"
+                        stream = $false
+                    } | ConvertTo-Json -Depth 3
+nfo
+                    $response = Invoke-RestMethod -Uri "http://localhost:11434/api/generate" -Method POST -Body $body -ContentType "application/json"
+ell
+                    return @{
+                        TabId          = $TabId
+                        Success        = $true
+                        Response       = $response.response
+                        ProcessingTime = (Get-Date)$task
+                    }
+                }
+                catch {    lock ($script:threadSafeContext.SyncRoot) {
+                    return @{
+                        TabId          = $TabId
+                        Success        = $false
+                        Error          = $_.Exception.Message
+                        ProcessingTime = (Get-Date)    $workerName = Get-AvailableWorker
+                    }
+                }        $script:agentWorkers[$workerName].Status = "Running"
+            })rkers[$workerName].CurrentTask = $TaskId
+Name].LastActivity = Get-Date
+        $null = $powershell.AddParameter("TabId", $request.TabId)
+        $null = $powershell.AddParameter("Message", $request.Message)
+        $null = $powershell.AddParameter("Model", $request.Model)
+        $null = $powershell.AddParameter("ChatHistory", $request.ChatHistory)
+
+        $job = $powershell.BeginInvoke()function Start-ParallelChatProcessing {
+
+        $chatJobs += @{
+            PowerShell = $powershell       Processes multiple chat requests in parallel across different tabs
+            Job        = $job    .PARAMETER ChatRequests
+            TabId      = $request.TabIdbjects with TabId, Message, Model
+            StartTime  = Get-Date
+        }    param([array]$ChatRequests)
+    }
+.RunspacePool) {
+    # Monitor chat jobs completion        Write-DevConsole "⚠ Multithreading not available, processing chats sequentially" "WARNING"
+    Start-ChatJobMonitor -ChatJobsToAdd $chatJobs
+}t.TabId
+
+function Start-ChatJobMonitor {
+    param([array]$ChatJobsToAdd)    }
+
+    # Add new jobs to the script-level collectionrallel chat processing for $($ChatRequests.Count) requests" "INFO"
+    $script:chatJobs += $ChatJobsToAdd
+
+    # Only create timer if we don't already have one running
+    if (-not $script:chatJobMonitorTimer) {tRequests) {
+        $script:chatJobMonitorTimer = New-Object System.Windows.Forms.Timer
+        $script:chatJobMonitorTimer.Interval = 250        $powershell.RunspacePool = $script:threadSafeContext.RunspacePool
+
+        $script:chatJobMonitorTimer.add_Tick({
+                $completedJobs = @()                param($TabId, $Message, $Model, $ChatHistory)
+
+                foreach ($chatJob in $script:chatJobs) {
+                    if ($chatJob.Job.IsCompleted) {                    # Build context from chat history
+                        try {
+                            $result = $chatJob.PowerShell.EndInvoke($chatJob.Job)
+
+                            # Update UI on main thread
+                            [System.Windows.Forms.Control]::CheckForIllegalCrossThreadCalls = $false
+
+                            if ($script:chatTabs.ContainsKey($result.TabId)) {
+                                $chatSession = $script:chatTabs[$result.TabId]
+
+                                if ($result.Success) {
+                                    # Find and replace the processing indicator
+                                    $processingText = "AI (processing...): "                    $response = Invoke-RestMethod -Uri "http://localhost:11434/api/generate" -Method POST -Body $body -ContentType "application/json"
+                                    $chatSession.ChatBox.Text = $chatSession.ChatBox.Text -replace [regex]::Escape($processingText), "AI: $($result.Response)`n`n"
+
+                                    # Store AI response = $TabId
+                                    $chatSession.Messages += @{
+                                        Role      = "assistant"
+                                        Content   = $result.ResponsegTime = (Get-Date)
+                                        Timestamp = Get-Date                    }
+                                    }
+
+                                    Write-DevConsole "✅ Parallel chat response received for tab $($result.TabId)" "SUCCESS"                    return @{
+                                }
+                                else {uccess        = $false
+                                    $chatSession.ChatBox.Text = $chatSession.ChatBox.Text -replace [regex]::Escape($processingText), "AI: Error - $($result.Error)`n`n"        = $_.Exception.Message
+                                    Write-DevConsole "❌ Parallel chat error for tab $($result.TabId): $($result.Error)" "ERROR"
+                                }
+
+                                $chatSession.ChatBox.ScrollToCaret()
+                            }
+ll.AddParameter("TabId", $request.TabId)
+                            $completedJobs += $chatJobrshell.AddParameter("Message", $request.Message)
+                        }powershell.AddParameter("Model", $request.Model)
+                        catch {        $null = $powershell.AddParameter("ChatHistory", $request.ChatHistory)
+                            Write-DevConsole "❌ Error processing chat job completion: $_" "ERROR"
+                            $completedJobs += $chatJob
+                        }
+                        finally { += @{
+                            $chatJob.PowerShell.Dispose()            PowerShell = $powershell
+                        }
+                    }
+                }
+
+                # Remove completed jobs
+                foreach ($completed in $completedJobs) {
+                    $script:chatJobs = @($script:chatJobs | Where-Object { $_.TabId -ne $completed.TabId })t jobs completion
+                }JobMonitor -ChatJobsToAdd $chatJobs
+}
+                # Stop timer if all jobs completed
+                if (@($script:chatJobs).Count -eq 0) {ion Start-ChatJobMonitor {
+                    $script:chatJobMonitorTimer.Stop()   param([array]$ChatJobsToAdd)
+                    $script:chatJobMonitorTimer.Dispose()
+                    $script:chatJobMonitorTimer = $nulllevel collection
+                    Write-DevConsole "✅ All parallel chat jobs completed" "SUCCESS"cript:chatJobs += $ChatJobsToAdd
+                }
+            })
+ (-not $script:chatJobMonitorTimer) {
+        $script:chatJobMonitorTimer.Start()        $script:chatJobMonitorTimer = New-Object System.Windows.Forms.Timer
+    }50
+}
+MonitorTimer.add_Tick({
+function Process-ThreadSafeLogs {obs = @()
+    <#
+    .SYNOPSIS
+        Processes logs from background threads and displays them in the UIchatJob.Job.IsCompleted) {
+    #>                        try {
+tJob.PowerShell.EndInvoke($chatJob.Job)
+    if ($script:logQueue.Count -eq 0) { return }
+                   # Update UI on main thread
+    $processedCount = 0                            [System.Windows.Forms.Control]::CheckForIllegalCrossThreadCalls = $false
+    $maxProcessPerTick = 10
+bs.ContainsKey($result.TabId)) {
+    while ($script:logQueue.Count -gt 0 -and $processedCount -lt $maxProcessPerTick) {ession = $script:chatTabs[$result.TabId]
+        $logEntry = $null
+
+        lock ($script:logQueue.SyncRoot) {                   # Find and replace the processing indicator
+            $logEntry = $script:logQueue.Dequeue()         $processingText = "AI (processing...): "
+        }$chatSession.ChatBox.Text -replace [regex]::Escape($processingText), "AI: $($result.Response)`n`n"
+
+        if ($logEntry) {         # Store AI response
+            # Process log entry based on level
+            switch ($logEntry.Level) {                       Role      = "assistant"
+                "Info" {               Content   = $result.Response
+                    Write-DevConsole $logEntry.Message "INFO"
+                }                   }
+                "Success" {
+                    Write-DevConsole $logEntry.Message "SUCCESS"                                    Write-DevConsole "✅ Parallel chat response received for tab $($result.TabId)" "SUCCESS"
+                }
+                "Warning" {
+                    Write-DevConsole $logEntry.Message "WARNING"Text), "AI: Error - $($result.Error)`n`n"
+                }        Write-DevConsole "❌ Parallel chat error for tab $($result.TabId): $($result.Error)" "ERROR"
+                "Error" {
+                    Write-DevConsole $logEntry.Message "ERROR"
+                }et()
+            }       }
+
+            # Update task status if task-related
+            if ($logEntry.Data -and $logEntry.Data.TaskId) {   }
+                $task = $global:agentContext.Tasks | Where-Object { $_.Id -eq $logEntry.Data.TaskId } | Select-Object -First 1
+                if ($task) {           Write-DevConsole "❌ Error processing chat job completion: $_" "ERROR"
+                    # Update task progress or status based on log data               $completedJobs += $chatJob
+                    if ($logEntry.Data.ContainsKey("Progress")) {                        }
+                        $task.Progress = $logEntry.Data.Progressly {
+                    }                   $chatJob.PowerShell.Dispose()
+                    if ($logEntry.Data.ContainsKey("Status")) {                   }
+                        $task.Status = $logEntry.Data.Status                   }
+                    }                }
+
+
+
+
+
+
+
+
+
+}    }        }            $processedCount++            }                }                    Update-AgentTasksList
+                # Remove completed jobs
+                foreach ($completed in $completedJobs) {
+                    $script:chatJobs = @($script:chatJobs | Where-Object { $_.TabId -ne $completed.TabId })
+                }
+
+                # Stop timer if all jobs completed
+                if (@($script:chatJobs).Count -eq 0) {
+                    $script:chatJobMonitorTimer.Stop()
+                    $script:chatJobMonitorTimer.Dispose()
+                    $script:chatJobMonitorTimer = $null
+                    Write-DevConsole "✅ All parallel chat jobs completed" "SUCCESS"
+                }
+            })
+
+        $script:chatJobMonitorTimer.Start()
+    }
+}
+
+function Process-ThreadSafeLogs {
+    <#
+    .SYNOPSIS
+        Processes logs from background threads and displays them in the UI
+    #>
+
+    if ($script:logQueue.Count -eq 0) { return }
+
+    $processedCount = 0
+    $maxProcessPerTick = 10
+
+    while ($script:logQueue.Count -gt 0 -and $processedCount -lt $maxProcessPerTick) {
+        $logEntry = $null
+
+        lock ($script:logQueue.SyncRoot) {
+            $logEntry = $script:logQueue.Dequeue()
+        }
+
+        if ($logEntry) {
+            # Process log entry based on level
+            switch ($logEntry.Level) {
+                "Info" {
+                    Write-DevConsole $logEntry.Message "INFO"
+                }
+                "Success" {
+                    Write-DevConsole $logEntry.Message "SUCCESS"
+                }
+                "Warning" {
+                    Write-DevConsole $logEntry.Message "WARNING"
+                }
+                "Error" {
+                    Write-DevConsole $logEntry.Message "ERROR"
+                }
+            }
+
+            # Update task status if task-related
+            if ($logEntry.Data -and $logEntry.Data.TaskId) {
+                $task = $global:agentContext.Tasks | Where-Object { $_.Id -eq $logEntry.Data.TaskId } | Select-Object -First 1
+                if ($task) {
+                    # Update task progress or status based on log data
+                    if ($logEntry.Data.ContainsKey("Progress")) {
+                        $task.Progress = $logEntry.Data.Progress
+                    }
+                    if ($logEntry.Data.ContainsKey("Status")) {
+                        $task.Status = $logEntry.Data.Status
+                    }
+                    Update-AgentTasksList
+                }
+            }
+
+            $processedCount++
+        }
+    }
+}

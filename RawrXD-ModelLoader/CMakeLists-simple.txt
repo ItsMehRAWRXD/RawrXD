@@ -1,0 +1,56 @@
+cmake_minimum_required(VERSION 3.20)
+project(RawrXD-ModelLoader LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Minimal configuration - Vulkan from system
+include_directories(
+    ${CMAKE_SOURCE_DIR}/include
+    C:/Program\ Files/VulkanSDK/1.3.280/Include
+)
+
+link_directories(
+    C:/Program\ Files/VulkanSDK/1.3.280/Lib
+)
+
+# Source files
+set(SOURCES
+    src/main.cpp
+    src/gguf_loader.cpp
+    src/vulkan_compute.cpp
+    src/hf_downloader.cpp
+    src/gui.cpp
+    src/api_server.cpp
+)
+
+# Create executable
+add_executable(RawrXD-ModelLoader ${SOURCES})
+
+# Link Vulkan and Windows libraries
+target_link_libraries(RawrXD-ModelLoader PRIVATE
+    vulkan-1
+    ws2_32
+    winmm
+    imm32
+    ole32
+    oleaut32
+    winspool
+    advapi32
+    shell32
+    user32
+    gdi32
+)
+
+# Compiler flags
+if(MSVC)
+    target_compile_options(RawrXD-ModelLoader PRIVATE /W4 /O2)
+    target_compile_definitions(RawrXD-ModelLoader PRIVATE _CRT_SECURE_NO_WARNINGS)
+else()
+    target_compile_options(RawrXD-ModelLoader PRIVATE -Wall -Wextra -O2)
+endif()
+
+# Output directory
+set_target_properties(RawrXD-ModelLoader PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+)

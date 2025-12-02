@@ -1,0 +1,84 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 20,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "win-base",
+      "hidden": true,
+      "generator": "Visual Studio 17 2022",
+      "architecture": "x64",
+      "cacheVariables": {
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/install",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "win-rel-scalar",
+      "displayName": "Windows Release (Scalar)",
+      "inherits": "win-base",
+      "binaryDir": "${sourceDir}/build-scalar",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_CXX_FLAGS_RELEASE": "/O2 /GL /DNDEBUG",
+        "CMAKE_EXE_LINKER_FLAGS_RELEASE": "/LTCG /OPT:REF /OPT:ICF",
+        "GGUF_ENABLE_AVX2": "OFF"
+      }
+    },
+    {
+      "name": "win-rel-avx2",
+      "displayName": "Windows Release (AVX2 + Q4_0)",
+      "inherits": "win-base",
+      "binaryDir": "${sourceDir}/build-avx2",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_CXX_FLAGS_RELEASE": "/O2 /arch:AVX2 /fp:fast /GL /DNDEBUG",
+        "CMAKE_EXE_LINKER_FLAGS_RELEASE": "/LTCG /OPT:REF /OPT:ICF",
+        "GGUF_ENABLE_AVX2": "ON"
+      }
+    },
+    {
+      "name": "win-debug",
+      "displayName": "Windows Debug",
+      "inherits": "win-base",
+      "binaryDir": "${sourceDir}/build-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "GGUF_ENABLE_AVX2": "OFF"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "win-rel-scalar",
+      "configurePreset": "win-rel-scalar",
+      "configuration": "Release",
+      "targets": [
+        "RawrXD-QtShell"
+      ]
+    },
+    {
+      "name": "win-rel-avx2",
+      "configurePreset": "win-rel-avx2",
+      "configuration": "Release",
+      "targets": [
+        "RawrXD-QtShell"
+      ]
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "win-rel-scalar",
+      "configurePreset": "win-rel-scalar",
+      "configuration": "Release"
+    },
+    {
+      "name": "win-rel-avx2",
+      "configurePreset": "win-rel-avx2",
+      "configuration": "Release"
+    }
+  ]
+}

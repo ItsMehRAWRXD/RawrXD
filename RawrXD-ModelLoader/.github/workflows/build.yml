@@ -1,0 +1,65 @@
+name: Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Vulkan SDK (Optional)
+        run: |
+          echo "Skipping explicit Vulkan install; relying on system runtime"
+
+      - name: Install CMake
+        uses: jwlawson/actions-setup-cmake@v1
+        with:
+          cmake-version: '3.27.7'
+
+      - name: Configure (NMake + Clang)
+        shell: pwsh
+        run: |
+          cmake -S . -B build -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang-cl -DCMAKE_CXX_COMPILER=clang-cl -DCMAKE_CXX_FLAGS="/O2 /std:c++20"
+
+      - name: Build
+        shell: pwsh
+        run: |
+          cmake --build build --config Release
+
+      - name: Archive Artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: RawrXD-ModelLoader-binaries
+          path: build/bin/*.exe
+
+      - name: Run Benchmark (No GPU)
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          if (Test-Path build/bin/model_loader_bench.exe) { build/bin/model_loader_bench.exe README.md --no-gpu }
+
+      - name: Finalize Bench JSON
+        if: success()
+        shell: pwsh
+        run: |
+          if (Test-Path build/bench/bench_results.json) {
+            ./scripts/finalize-bench-json.ps1 -InputPath build/bench/bench_results.json -OutputPath build/bench/bench_results_final.json
+          }
+
+      - name: Upload Bench Results
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bench-results
+          path: |
+            build/bench/bench_results.json
+            build/bench/bench_results_final.json

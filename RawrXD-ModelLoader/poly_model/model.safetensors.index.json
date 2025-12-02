@@ -1,0 +1,30 @@
+{
+  "metadata": {"total_size":18446744073172680704},
+  "weight_map": {
+    "model.layers.76.k.weight": "model.safetensors",
+    "model.layers.32.mlp.weight": "model.safetensors",
+    "model.layers.59.embed.weight": "model.safetensors",
+    "model.layers.23.down.weight": "model.safetensors",
+    "model.layers.58.gate.weight": "model.safetensors",
+    "model.layers.76.v.weight": "model.safetensors",
+    "model.layers.44.v.weight": "model.safetensors",
+    "model.layers.21.mlp.weight": "model.safetensors",
+    "model.layers.64.self_attn.weight": "model.safetensors",
+    "model.layers.6.self_attn.weight": "model.safetensors",
+    "model.layers.79.down.weight": "model.safetensors",
+    "model.layers.69.v.weight": "model.safetensors",
+    "model.layers.26.norm.weight": "model.safetensors",
+    "model.layers.38.mlp.weight": "model.safetensors",
+    "model.layers.3.o.weight": "model.safetensors",
+    "model.layers.79.down.weight": "model.safetensors",
+    "model.layers.39.k.weight": "model.safetensors",
+    "model.layers.27.self_attn.weight": "model.safetensors",
+    "model.layers.64.self_attn.weight": "model.safetensors",
+    "model.layers.50.v.weight": "model.safetensors",
+    "model.layers.65.k.weight": "model.safetensors",
+    "model.layers.64.k.weight": "model.safetensors",
+    "model.layers.48.mlp.weight": "model.safetensors",
+    "model.layers.13.v.weight": "model.safetensors",
+    "model.layers.41.o.weight": "model.safetensors"
+  }
+}

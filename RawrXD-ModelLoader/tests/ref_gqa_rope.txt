@@ -1,0 +1,6 @@
+ref_logits= 0.496714 7.891234 0.647689 1.523030 -0.234153
+ref_kv_bytes= 16384
+ref_canary= 7.891234
+n_head= 32
+n_kv_head= 4
+head_dim= 128
