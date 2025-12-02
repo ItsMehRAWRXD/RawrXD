@@ -1,0 +1,65 @@
+name: Release Build with Code Signing
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+env:
+  QT_VERSION: '6.7.3'
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: ${{ env.QT_VERSION }}
+        host: windows
+        target: desktop
+        arch: win64_msvc2022_64
+        modules: 'qtwebsockets'
+    
+    - name: Setup MSVC
+      uses: ilammy/msvc-dev-cmd@v1
+    
+    - name: Build
+      run: |
+        cmake -B build -G "Visual Studio 17 2022" -A x64
+        cmake --build build --config Release --target RawrXD-QtShell
+    
+    - name: Smoke Tests
+      run: pwsh -File testbench.ps1 -BuildDir build -Verbose
+    
+    - name: Code Sign
+      if: ${{ secrets.CODESIGN_PFX != '' }}
+      uses: dlemstra/code-sign-action@v1
+      with:
+        certificate: ${{ secrets.CODESIGN_PFX }}
+        password: ${{ secrets.CODESIGN_PWD }}
+        folder: build\bin-msvc\Release
+    
+    - name: Package
+      run: |
+        $version = "${{ github.ref_name }}"
+        $zipName = "RawrXD-QtShell-${version}-win64.zip"
+        Compress-Archive -Path build\bin-msvc\Release\RawrXD-QtShell.exe -DestinationPath $zipName
+        $size = (Get-Item build\bin-msvc\Release\RawrXD-QtShell.exe).Length / 1KB
+        echo "SIZE=$([math]::Round($size, 1)) KB" >> $env:GITHUB_ENV
+    
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: RawrXD-QtShell-*.zip
+        body: |
+          **Size:** ${{ env.SIZE }} (uncompressed)
+          
+          Features: Cloud Runner, LSP, Inline Chat, Plugins
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
