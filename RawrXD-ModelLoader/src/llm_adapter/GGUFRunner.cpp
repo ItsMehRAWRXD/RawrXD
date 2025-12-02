@@ -713,42 +713,9 @@ void GGUFRunner::matmul(const float* A, const float* B, float* C, int N, int M, 
 #ifdef GGUF_USE_AVX2
     // Runtime dispatch: use AVX2 if available, otherwise fall back to scalar
     if (context_.hasAVX2) {
-        // Allocate transposed B: B^T is K×M instead of M×K
-        // This converts strided column access into contiguous vector loads
-        std::vector<float> BT(K * M);
-        for (int k = 0; k < M; ++k) {
-            for (int j = 0; j < K; ++j) {
-                BT[j * M + k] = B[k * K + j];  // BT[j][k] = B[k][j]
-            }
-        }
-        
-        // AVX2 SIMD path: process 8 floats at a time with contiguous loads
-        for (int i = 0; i < N; ++i) {
-            for (int j = 0; j < K; ++j) {
-                __m256 sum = _mm256_setzero_ps();  // Accumulator for 8 partial sums
-                int k = 0;
-                
-                // Process 8 elements at a time with contiguous memory access
-                for (; k + 7 < M; k += 8) {
-                    __m256 a = _mm256_loadu_ps(&A[i * M + k]);      // Contiguous load from A
-                    __m256 b = _mm256_loadu_ps(&BT[j * M + k]);     // Contiguous load from B transpose
-                    sum = _mm256_fmadd_ps(a, b, sum);               // FMA: sum += a * b
-                }
-                
-                // Horizontal reduction: sum 8 lanes into single float
-                float result[8];
-                _mm256_storeu_ps(result, sum);
-                float s = result[0] + result[1] + result[2] + result[3] +
-                          result[4] + result[5] + result[6] + result[7];
-                
-                // Handle remaining elements (scalar tail)
-                for (; k < M; ++k) {
-                    s += A[i * M + k] * BT[j * M + k];
-                }
-                
-                C[i * K + j] = s;
-            }
-        }
+        // Use the optimized AVX2 micro-kernel when available
+        // Signature: matmul_kernel_avx2(A[NxM], B[MxK], C[NxK], N, M, K)
+        matmul_kernel_avx2(const_cast<float*>(A), const_cast<float*>(B), C, N, M, K);
         return;
     }
 #endif
