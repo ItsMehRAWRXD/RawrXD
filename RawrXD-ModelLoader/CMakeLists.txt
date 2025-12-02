@@ -600,6 +600,27 @@ set_target_properties(RawrXD-AgenticIDE PROPERTIES
 
 message(STATUS "RawrXD-ModelLoader configured successfully with Clang C++20")
 
+# ------------------------
+# Q4_0 unpack unit test
+# ------------------------
+find_package(Threads)
+add_executable(test_q4_0_unpack
+    tests/test_q4_0_unpack.cpp
+    kernels/q4_0_unpack_avx2.cc
+)
+if(MSVC)
+    target_compile_options(test_q4_0_unpack PRIVATE /EHsc /O2)
+else()
+    target_compile_options(test_q4_0_unpack PRIVATE -fexceptions -O2)
+endif()
+if(GGUF_ENABLE_AVX2)
+    target_compile_definitions(test_q4_0_unpack PRIVATE __AVX2__)
+endif()
+target_link_libraries(test_q4_0_unpack PRIVATE ${CMAKE_THREAD_LIBS_INIT})
+set_target_properties(test_q4_0_unpack PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
+)
+
 if(FALSE) # Disabled until headers exist
 # IDE Test Runner - Comprehensive function testing
 add_executable(RawrXD-TestRunner
