@@ -59,7 +59,7 @@ if(MSVC)
             src/qtapp/utils/ModelCompilerUtils.h
             src/orchestrator/TaskNode.cpp
             src/orchestrator/AgentOrchestrator.cpp
-            src/llm_adapter/matmul_avx2.cpp
+            kernels/matmul_kernel_avx2.cc
         )
         
         # Add Assembly kernel for high-performance MatMul (MSVC-specific syntax)
@@ -442,6 +442,28 @@ target_compile_definitions(RawrXD-Chromatic PRIVATE _CRT_SECURE_NO_WARNINGS NOMI
 
 message(STATUS "RawrXD-ModelLoader configured successfully with Clang C++20")
 
+# ------------------------
+# Q4_0 end-to-end benchmark
+# ------------------------
+add_executable(bench_q4_0_end2end
+    tests/bench_q4_0_end2end.cpp
+    kernels/q4_0_unpack_avx2.cc
+    kernels/q4_0_gemm_avx2.cc
+    kernels/matmul_kernel_avx2.cc
+)
+if(MSVC)
+    target_compile_options(bench_q4_0_end2end PRIVATE /EHsc /O2)
+else()
+    target_compile_options(bench_q4_0_end2end PRIVATE -fexceptions -O2)
+endif()
+if(GGUF_ENABLE_AVX2)
+    target_compile_definitions(bench_q4_0_end2end PRIVATE __AVX2__)
+endif()
+find_package(Threads)
+target_link_libraries(bench_q4_0_end2end PRIVATE ${CMAKE_THREAD_LIBS_INIT})
+set_target_properties(bench_q4_0_end2end PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
+)
 if(FALSE) # Disabled until headers exist
 # IDE Test Runner - Comprehensive function testing
 add_executable(RawrXD-TestRunner
