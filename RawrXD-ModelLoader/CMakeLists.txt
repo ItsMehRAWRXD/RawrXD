@@ -590,3 +590,35 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_compact_wire.cpp")
     )
 endif()
 
+# NASM-based gzip (stored-block) bench — no external libs
+if(MSVC AND EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_deflate_masm.cpp")
+    enable_language(ASM_NASM)
+    add_executable(bench_deflate_masm
+        tests/bench_deflate_masm.cpp
+        kernels/deflate_nasm.nasm
+    )
+    target_compile_definitions(bench_deflate_masm PRIVATE NO_ZLIB_REF=1 DEFLATE_NASM=1)
+    set_target_properties(bench_deflate_masm PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
+    )
+endif()
+
+
+# NASM deflate benchmark
+enable_language(ASM_NASM)
+add_executable(bench_deflate_nasm tests/bench_deflate_masm.cpp kernels/deflate_nasm.asm)
+target_compile_definitions(bench_deflate_nasm PRIVATE NO_ZLIB_REF=1 DEFLATE_NASM=1)
+set_target_properties(bench_deflate_nasm PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+
+# MASM God-Mode deflate benchmark
+if(MSVC)
+    enable_language(ASM_MASM)
+    add_executable(bench_deflate_godmode tests/bench_deflate_masm.cpp kernels/deflate_godmode_masm.asm)
+    target_compile_definitions(bench_deflate_godmode PRIVATE NO_ZLIB_REF=1 DEFLATE_GODMODE=1)
+    set_target_properties(bench_deflate_godmode PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+
+    # Brutal MASM benchmark
+    add_executable(bench_deflate_brutal tests/bench_deflate_brutal.cpp kernels/deflate_brutal_masm.asm)
+    set_target_properties(bench_deflate_brutal PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+endif()
+
