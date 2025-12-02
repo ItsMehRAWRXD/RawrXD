@@ -30,6 +30,7 @@
 
 // Keep linkage visible to the ASM translation unit.
 extern "C" void matmul_kernel_avx2(float* A, float* B, float* C, int N, int M, int K);
+extern "C" void ggml_gemm_q4_0(int M, int N, int K, const float* A, const uint8_t* Bq4, float scale, float* C);
 
 namespace {
 constexpr const char* kDefaultModelPath = "model/llama-7b-q4_0.gguf";
@@ -258,10 +259,15 @@ bool GGUFRunner::runInference(const QString& prompt, float* outputBuffer)
             mlpForward(static_cast<int>(l), x.data(), ff.data());
             for (qsizetype i = 0; i < context_.embedDim; ++i) x[i] += ff[i]; // residual
         }
-        // Final layernorm then logits = x * tok_embeddings^T
+        // Final layernorm then logits projection
         std::vector<float> xnorm(context_.embedDim);
         layerNorm(x.data(), xnorm.data(), context_.ln_f_g, context_.ln_f_b, context_.embedDim);
-        if (context_.tok_embeddings.size() == static_cast<size_t>(context_.vocabSize * context_.embedDim)) {
+        // Prefer raw Q4_0 output.weight if available (runtime-dispatched GEMM)
+        if (!context_.raw_q4_output.empty()) {
+            if (context_.logits.size() != context_.vocabSize) context_.logits.resize(context_.vocabSize);
+            ggml_gemm_q4_0(1, static_cast<int>(context_.vocabSize), static_cast<int>(context_.embedDim),
+                           xnorm.data(), context_.raw_q4_output.data(), 1.0f, context_.logits.data());
+        } else if (context_.tok_embeddings.size() == static_cast<size_t>(context_.vocabSize * context_.embedDim)) {
             for (qsizetype v = 0; v < context_.vocabSize; ++v) {
                 const float* Ev = context_.tok_embeddings.data() + v * context_.embedDim;
                 float dot = 0.0f;
@@ -925,6 +931,11 @@ bool GGUFRunner::loadTensor(QFile& file, const QString& name, std::vector<float>
         const float* ptr = reinterpret_cast<const float*>(rawData.constData());
         std::copy(ptr, ptr + totalElements, weights.begin());
     } else if (desc.type == GgmlType::Q4_0) {
+        // Keep raw bytes for output.weight to enable runtime-dispatched GEMM
+        if (name == QLatin1String("output.weight")) {
+            context_.raw_q4_output.assign(reinterpret_cast<const uint8_t*>(rawData.constData()),
+                                          reinterpret_cast<const uint8_t*>(rawData.constData()) + rawData.size());
+        }
         dequantizeRowQ4_0_scalar(rawData.constData(), weights.data(), totalElements);
     } else if (desc.type == GgmlType::Q8_0) {
         dequantizeRowQ8_0_scalar(rawData.constData(), weights.data(), totalElements);
