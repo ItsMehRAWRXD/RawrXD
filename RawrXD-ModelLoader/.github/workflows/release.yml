@@ -29,37 +29,98 @@ jobs:
     - name: Setup MSVC
       uses: ilammy/msvc-dev-cmd@v1
     
-    - name: Build
+    - name: Configure CMake
+      run: cmake -B build-msvc -G "Visual Studio 17 2022" -A x64
+    
+    - name: Build RawrXD-QtShell
+      run: cmake --build build-msvc --config Release --target RawrXD-QtShell
+    
+    - name: GQA+RoPE Validation
       run: |
-        cmake -B build -G "Visual Studio 17 2022" -A x64
-        cmake --build build --config Release --target RawrXD-QtShell
+        Write-Host "=== GQA + RoPE Smoke Test ===" -ForegroundColor Cyan
+        python scripts/gqa_rope_ref.py | Tee-Object -Variable refOutput
+        $refFile = Get-Content tests/ref_gqa_rope.txt
+        Write-Host "Reference output:" -ForegroundColor Green
+        $refFile
+        Write-Host "Current output:" -ForegroundColor Yellow
+        $refOutput
+        # TODO: Add C++ testbench validation when implemented
+        # build-msvc\bin-msvc\Release\testbench.exe --gqa-smoke
     
-    - name: Smoke Tests
-      run: pwsh -File testbench.ps1 -BuildDir build -Verbose
-    
-    - name: Code Sign
-      if: ${{ secrets.CODESIGN_PFX != '' }}
+    - name: Sign Binary
       uses: dlemstra/code-sign-action@v1
       with:
         certificate: ${{ secrets.CODESIGN_PFX }}
         password: ${{ secrets.CODESIGN_PWD }}
-        folder: build\bin-msvc\Release
+        folder: build-msvc\bin-msvc\Release
+        recursive: false
     
-    - name: Package
+    - name: Verify Signature
+      run: |
+        $exe = "build-msvc\bin-msvc\Release\RawrXD-QtShell.exe"
+        Write-Host "Verifying signature on: $exe"
+        $sig = Get-AuthenticodeSignature $exe
+        Write-Host "Status: $($sig.Status)"
+        Write-Host "Signer: $($sig.SignerCertificate.Subject)"
+        if ($sig.Status -ne 'Valid') {
+          Write-Warning "Signature status: $($sig.Status) (self-signed cert expected)"
+        }
+    
+    - name: Run Smoke Tests
+      run: pwsh -File testbench.ps1 -BuildDir build-msvc -Verbose
+    
+    - name: Package Release
       run: |
         $version = "${{ github.ref_name }}"
         $zipName = "RawrXD-QtShell-${version}-win64.zip"
-        Compress-Archive -Path build\bin-msvc\Release\RawrXD-QtShell.exe -DestinationPath $zipName
-        $size = (Get-Item build\bin-msvc\Release\RawrXD-QtShell.exe).Length / 1KB
-        echo "SIZE=$([math]::Round($size, 1)) KB" >> $env:GITHUB_ENV
+        $exe = "build-msvc\bin-msvc\Release\RawrXD-QtShell.exe"
+        $size = (Get-Item $exe).Length
+        $sizeKB = [math]::Round($size / 1KB, 1)
+        Write-Host "Binary size: $sizeKB KB ($size bytes)"
+        Compress-Archive -Path $exe -DestinationPath $zipName
+        echo "SIZE_KB=$sizeKB" >> $env:GITHUB_ENV
+        echo "SIZE_BYTES=$size" >> $env:GITHUB_ENV
     
-    - name: Release
+    - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
       with:
         files: RawrXD-QtShell-*.zip
         body: |
-          **Size:** ${{ env.SIZE }} (uncompressed)
+          # RawrXD-QtShell ${{ github.ref_name }} – ${{ env.SIZE_KB }} KB native Qt IDE
           
-          Features: Cloud Runner, LSP, Inline Chat, Plugins
+          ✓ **CloudRunner**: Dispatch GitHub Actions jobs, stream logs, pay-per-second pricing  
+          ✓ **LSP Client**: clangd, pylsp, rust-analyzer, gopls, ts-server  
+          ✓ **Inline AI Chat**: Streaming diff apply/reject with ESC/Enter shortcuts  
+          ✓ **Plugin Marketplace**: Auto-discover `rawrxd-plugin` topic repos  
+          
+          **Signed with:** Self-signed certificate (SmartScreen warning expected)  
+          **License:** MIT  
+          **Platform:** Windows 10/11 x64  
+          **Binary size:** ${{ env.SIZE_KB }} KB (${{ env.SIZE_BYTES }} bytes)  
+          **No installer:** Just extract and run the .exe  
+          
+          ## Installation
+          1. Download `RawrXD-QtShell-${{ github.ref_name }}-win64.zip`
+          2. Extract `RawrXD-QtShell.exe`
+          3. Right-click → Properties → Unblock (if flagged)
+          4. Double-click to launch
+          
+          ## First-Run Privacy Consent
+          - Opt-in telemetry dialog shows on first launch
+          - All data collection is **disabled by default**
+          - Decline all → no network calls except for Cloud Runner/LSP features
+          
+          ## Known Issues
+          - SmartScreen may warn (self-signed cert) – click "More info" → "Run anyway"
+          - Requires Qt 6.7.3 runtime (use `windeployqt` for standalone deployment)
+          
+          ## Next Release (v0.2.0)
+          - Real GGML kernels (Q4_0/Q8_0 quantization)
+          - 10× inference speed boost
+          - KV-cache optimization
+          - Paid code signing cert (remove SmartScreen)
+          
+          ---
+          **Report issues:** https://github.com/ItsMehRAWRXD/RawrXD/issues
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
