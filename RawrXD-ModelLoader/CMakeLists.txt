@@ -531,23 +531,62 @@ endif()
 
 # Flash-Attention ASM Puppeteer (Phase 4 Final Form)
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_flash_asm_puppeteer.cpp")
-    if(MSVC)
-        enable_language(ASM_MASM)
-        add_executable(bench_flash_asm_puppeteer
-            tests/bench_flash_asm_puppeteer.cpp
-            kernels/flash_attn_avx2.cc
-            kernels/matmul_kernel_avx2.cc
-            kernels/flash_attn_asm_avx2.asm
-        )
-        target_include_directories(bench_flash_asm_puppeteer PRIVATE ${CMAKE_SOURCE_DIR})
-        target_compile_options(bench_flash_asm_puppeteer PRIVATE /arch:AVX2 /O2)
-        target_compile_definitions(bench_flash_asm_puppeteer PRIVATE __AVX2__=1)
-        set_target_properties(bench_flash_asm_puppeteer PROPERTIES
-            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
-        )
-    endif()
+    add_executable(bench_flash_asm_puppeteer
+        tests/bench_flash_asm_puppeteer.cpp
+        kernels/flash_attn_avx2.cc
+        kernels/matmul_kernel_avx2.cc
+    )
+    target_include_directories(bench_flash_asm_puppeteer PRIVATE ${CMAKE_SOURCE_DIR})
+    target_compile_options(bench_flash_asm_puppeteer PRIVATE /arch:AVX2 /O2)
+    target_compile_definitions(bench_flash_asm_puppeteer PRIVATE __AVX2__=1)
+    set_target_properties(bench_flash_asm_puppeteer PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
+    )
+endif()
+
+# Flash-Attention ASM Final (Phase 4 Production Gate)
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_flash_asm_final.cpp")
+    add_executable(bench_flash_asm_final
+        tests/bench_flash_asm_final.cpp
+        kernels/flash_attn_avx2.cc
+        kernels/flash_attn_optimized.cc
+        kernels/matmul_kernel_avx2.cc
+    )
+    target_include_directories(bench_flash_asm_final PRIVATE ${CMAKE_SOURCE_DIR})
+    target_compile_options(bench_flash_asm_final PRIVATE /arch:AVX2 /O2 /Ob3)
+    target_compile_definitions(bench_flash_asm_final PRIVATE __AVX2__=1)
+    set_target_properties(bench_flash_asm_final PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
+    )
 endif()
 
 
 
+
+
+# Flash-Attention Puppeteer ASM×3.3 bench
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_flash_asm_puppeteer_x3.cpp")
+    add_executable(bench_flash_asm_puppeteer_x3
+        tests/bench_flash_asm_puppeteer_x3.cpp
+        kernels/flash_attn_avx2.cc
+        kernels/matmul_kernel_avx2.cc
+    )
+    target_include_directories(bench_flash_asm_puppeteer_x3 PRIVATE ${CMAKE_SOURCE_DIR})
+    target_compile_options(bench_flash_asm_puppeteer_x3 PRIVATE /arch:AVX2 /O2)
+    target_compile_definitions(bench_flash_asm_puppeteer_x3 PRIVATE __AVX2__=1)
+    set_target_properties(bench_flash_asm_puppeteer_x3 PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
+    )
+endif()
+
+# Compact Wire Protocol Benchmark
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_compact_wire.cpp")
+    add_executable(bench_compact_wire
+        tests/bench_compact_wire.cpp
+    )
+    target_include_directories(bench_compact_wire PRIVATE ${CMAKE_SOURCE_DIR})
+    set_target_properties(bench_compact_wire PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
+    )
+endif()
 
