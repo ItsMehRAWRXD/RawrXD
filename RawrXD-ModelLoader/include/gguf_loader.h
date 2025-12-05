@@ -7,8 +7,18 @@
 #include <fstream>
 #include <unordered_map>
 #include "vulkan_compute.h"
+#include "brutal_gzip.h"
+#include "deflate_brutal_qt.hpp"
 
 class VulkanCompute;
+
+// Compression type enumeration for GGUF tensors
+enum class CompressionType : uint32_t {
+    NONE = 0,
+    DEFLATE = 1,
+    BRUTAL_GZIP = 2,
+    ZLIB = 3,
+};
 
 enum class GGMLType : uint32_t {
     F32 = 0,
@@ -99,6 +109,13 @@ public:
     bool LoadTensorRange(size_t start_idx, size_t count, std::vector<uint8_t>& data) override;
     void AttachVulkanEngine(VulkanCompute* engine) { vulkan_engine_ = engine; }
     
+    // Compression support for MASM-optimized decompression
+    bool IsCompressed() const { return compression_type_ != CompressionType::NONE; }
+    CompressionType GetCompressionType() const { return compression_type_; }
+    bool SetCompressionType(CompressionType type);
+    bool DecompressData(const std::vector<uint8_t>& compressed, std::vector<uint8_t>& decompressed);
+    bool CompressData(const std::vector<uint8_t>& raw_data, std::vector<uint8_t>& compressed);
+    
     // GGUF Alignment Helpers (tensor data section is 32-byte aligned per spec)
     static constexpr uint64_t GGUF_TENSOR_ALIGNMENT = 32;
     inline uint64_t AlignTo32Bytes(uint64_t offset) const {
@@ -145,6 +162,9 @@ private:
     void* file_handle_{nullptr};  // HANDLE on Windows
     void* map_handle_{nullptr};   // HANDLE on Windows
     bool use_mmap_{false};
+    
+    // Compression support (optimized with existing brutal_gzip)
+    CompressionType compression_type_ = CompressionType::NONE;
     
     // Internal parsing helpers
     template<typename T>

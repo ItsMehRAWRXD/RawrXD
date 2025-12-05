@@ -2,14 +2,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <QtCore/QByteArray>
-
-extern "C" {
-// Brutal MASM deflate (stored blocks only)
-// Returns heap buffer (must free) or nullptr on failure
-std::uint8_t* deflate_brutal_masm(const std::uint8_t* src,
-                                  std::uint64_t       len,
-                                  std::uint64_t*      out_len);
-}
+#include "brutal_gzip.h"
 
 namespace brutal {
 
@@ -27,10 +20,10 @@ inline QByteArray compress(const QByteArray& in)
     if (in.isEmpty()) return {};
     
     std::uint64_t packedSz = 0;
-    std::uint8_t* p = deflate_brutal_masm(
-        reinterpret_cast<const std::uint8_t*>(in.constData()),
-        static_cast<std::uint64_t>(in.size()),
-        &packedSz
+    void* p = deflate_brutal_masm(
+        reinterpret_cast<const void*>(in.constData()),
+        in.size(),
+        reinterpret_cast<size_t*>(&packedSz)
     );
     
     if (!p) return {};  // malloc failure
@@ -51,10 +44,10 @@ inline QByteArray compress(const void* data, std::size_t size)
     if (!data || size == 0) return {};
     
     std::uint64_t packedSz = 0;
-    std::uint8_t* p = deflate_brutal_masm(
-        static_cast<const std::uint8_t*>(data),
-        static_cast<std::uint64_t>(size),
-        &packedSz
+    void* p = deflate_brutal_masm(
+        data,
+        size,
+        reinterpret_cast<size_t*>(&packedSz)
     );
     
     if (!p) return {};

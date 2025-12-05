@@ -123,35 +123,98 @@ std::vector<std::string> HFDownloader::ParseAvailableFormats(const std::string& 
 
 bool HFDownloader::FetchJSON(const std::string& url, std::string& response,
                             const std::string& token) {
-    std::cout << "Fetching: " << url << std::endl;
-    
-    // Placeholder implementation
-    // In real implementation, would use curl or cpp-httplib
-    response = "{}";  // Empty JSON
-    
-    return true;
+    // Use libcurl to perform an HTTP GET request and capture the response body.
+    CURL* curl = curl_easy_init();
+    if (!curl) {
+        std::cerr << "CURL init failed" << std::endl;
+        return false;
+    }
+
+    struct curl_slist* headers = nullptr;
+    if (!token.empty()) {
+        std::string auth = "Authorization: Bearer " + token;
+        headers = curl_slist_append(headers, auth.c_str());
+    }
+
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+    curl_easy_setopt(curl, CURLOPT_USERAGENT, "RawrXD-AgenticIDE/1.0");
+
+    CURLcode res = curl_easy_perform(curl);
+    bool success = (res == CURLE_OK);
+    if (!success) {
+        std::cerr << "CURL error: " << curl_easy_strerror(res) << std::endl;
+    }
+
+    curl_slist_free_all(headers);
+    curl_easy_cleanup(curl);
+    return success;
 }
 
 bool HFDownloader::DownloadFile(const std::string& url, const std::string& output_path,
                                ProgressCallback callback, const std::string& token) {
     std::cout << "Downloading: " << url << " to " << output_path << std::endl;
     
-    // Placeholder implementation
-    // In real implementation, would use curl with progress callbacks
-    
+    // Perform download using libcurl and write directly to file
+    FILE* fp = fopen(output_path.c_str(), "wb");
+    if (!fp) {
+        std::cerr << "Failed to open output file: " << output_path << std::endl;
+        return false;
+    }
+
+    CURL* curl = curl_easy_init();
+    if (!curl) {
+        std::cerr << "CURL init failed" << std::endl;
+        fclose(fp);
+        return false;
+    }
+
+    struct curl_slist* headers = nullptr;
+    if (!token.empty()) {
+        std::string auth = "Authorization: Bearer " + token;
+        headers = curl_slist_append(headers, auth.c_str());
+    }
+
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+    curl_easy_setopt(curl, CURLOPT_USERAGENT, "RawrXD-AgenticIDE/1.0");
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, +[](void* ptr, size_t size, size_t nmemb, void* stream) -> size_t {
+        return fwrite(ptr, size, nmemb, static_cast<FILE*>(stream));
+    });
+
+    CURLcode res = curl_easy_perform(curl);
+    bool success = (res == CURLE_OK);
+    if (!success) {
+        std::cerr << "CURL error: " << curl_easy_strerror(res) << std::endl;
+    }
+
+    // Retrieve download size for progress reporting
+    curl_off_t dl_total = 0;
+    curl_easy_getinfo(curl, CURLINFO_SIZE_DOWNLOAD_T, &dl_total);
+
+    // Clean up
+    curl_slist_free_all(headers);
+    curl_easy_cleanup(curl);
+    fclose(fp);
+
+    // Populate progress information
     DownloadProgress progress;
     progress.current_file = output_path;
-    progress.total_bytes = 1000000000;  // Placeholder
-    progress.downloaded_bytes = 1000000000;
-    progress.progress_percent = 100.0f;
-    progress.is_completed = true;
-    
+    progress.total_bytes = static_cast<uint64_t>(dl_total);
+    progress.downloaded_bytes = success ? static_cast<uint64_t>(dl_total) : 0;
+    progress.progress_percent = success && dl_total ? 100.0f : 0.0f;
+    progress.is_completed = success;
     if (callback) {
         callback(progress);
     }
     current_progress_ = progress;
-    
-    return true;
+
+    return success;
 }
 
 std::string HFDownloader::BuildHFUrl(const std::string& repo_id, const std::string& filename) const {

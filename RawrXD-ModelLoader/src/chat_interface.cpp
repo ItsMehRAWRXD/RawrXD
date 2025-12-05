@@ -1,5 +1,6 @@
 // Chat Interface - Chat UI component
 #include "chat_interface.h"
+#include "agentic_engine.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -171,7 +172,89 @@ void ChatInterface::sendMessage() {
     if (!message.isEmpty()) {
         addMessage("User", message);
         statusLabel_->setText("Processing...");
-        emit messageSent(message);
+        
+        // Check if this is an agent command
+        if (isAgentCommand(message)) {
+            executeAgentCommand(message);
+        } else {
+            emit messageSent(message);
+        }
+        
         message_input_->clear();
     }
 }
+
+bool ChatInterface::isAgentCommand(const QString& message) const {
+    // Commands start with @ or use known keywords
+    return message.startsWith("@") || 
+           message.startsWith("grep ") ||
+           message.startsWith("read ") ||
+           message.startsWith("search ") ||
+           message.startsWith("ref ");
+}
+
+void ChatInterface::executeAgentCommand(const QString& command, const QString& args) {
+    Q_UNUSED(args);  // Currently using command parsing instead
+    
+    if (!m_agenticEngine) {
+        addMessage("System", "Agentic Engine not initialized");
+        statusLabel_->setText("Agent error: Engine not ready");
+        return;
+    }
+    
+    QString response;
+    
+    // Parse and execute agent commands
+    if (command.startsWith("@grep ")) {
+        QString pattern = command.mid(6).trimmed();
+        response = m_agenticEngine->grepFiles(pattern, ".");
+        addMessage("Agent", response);
+    } 
+    else if (command.startsWith("@read ")) {
+        QString filepath = command.mid(6).trimmed();
+        response = m_agenticEngine->readFile(filepath);
+        addMessage("Agent", response);
+    } 
+    else if (command.startsWith("@search ")) {
+        QString query = command.mid(8).trimmed();
+        response = m_agenticEngine->searchFiles(query, ".");
+        addMessage("Agent", response);
+    } 
+    else if (command.startsWith("@ref ")) {
+        QString symbol = command.mid(5).trimmed();
+        response = m_agenticEngine->referenceSymbol(symbol);
+        addMessage("Agent", response);
+    }
+    else if (command.startsWith("grep ")) {
+        // Support without @ prefix
+        QString pattern = command.mid(5).trimmed();
+        response = m_agenticEngine->grepFiles(pattern, ".");
+        addMessage("Agent", response);
+    }
+    else if (command.startsWith("read ")) {
+        QString filepath = command.mid(5).trimmed();
+        response = m_agenticEngine->readFile(filepath);
+        addMessage("Agent", response);
+    }
+    else if (command.startsWith("search ")) {
+        QString query = command.mid(7).trimmed();
+        response = m_agenticEngine->searchFiles(query, ".");
+        addMessage("Agent", response);
+    }
+    else if (command.startsWith("ref ")) {
+        QString symbol = command.mid(4).trimmed();
+        response = m_agenticEngine->referenceSymbol(symbol);
+        addMessage("Agent", response);
+    }
+    else {
+        response = "Unknown agent command. Available commands:\n"
+                   "  @grep <pattern> - Search for text pattern in files\n"
+                   "  @read <filepath> - Read file contents\n"
+                   "  @search <query> - Search for files matching query\n"
+                   "  @ref <symbol> - Find symbol references and definitions";
+        addMessage("System", response);
+    }
+    
+    statusLabel_->setText("Agent command executed");
+}
+

@@ -16,6 +16,7 @@ class Telemetry;
 class PlanningAgent;
 class TodoManager;
 class TodoDock;
+class AgenticCopilotBridge;
 
 class AgenticIDE : public QMainWindow
 {
@@ -72,6 +73,7 @@ private:
     TodoDock *m_todoDock;
     Settings *m_settings;
     Telemetry *m_telemetry;
+    AgenticCopilotBridge *m_copilotBridge;
     
     // Dock widgets for toggle functionality
     class QDockWidget *m_fileDock;

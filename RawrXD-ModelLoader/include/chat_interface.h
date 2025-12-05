@@ -8,15 +8,23 @@ class QLineEdit;
 class QComboBox;
 class QCheckBox;
 class QLabel;
+class AgenticEngine;
 
 class ChatInterface : public QWidget {
     Q_OBJECT
 public:
     explicit ChatInterface(QWidget* parent = nullptr);
     
+    void setAgenticEngine(AgenticEngine* engine) { m_agenticEngine = engine; }
+    
     void addMessage(const QString& sender, const QString& message);
     QString selectedModel() const;
     bool isMaxMode() const;
+    
+    // Agent tool commands
+    // Updated to accept optional arguments string for future extensions
+    void executeAgentCommand(const QString& command, const QString& args = "");
+    bool isAgentCommand(const QString& message) const;
     
 public slots:
     void displayResponse(const QString& response);
@@ -40,4 +48,5 @@ private:
     QCheckBox* maxModeToggle_;
     QLabel* statusLabel_;
     bool maxMode_;
+    AgenticEngine* m_agenticEngine = nullptr;
 };

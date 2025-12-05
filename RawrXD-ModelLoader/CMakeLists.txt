@@ -972,6 +972,12 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/chat_interface.cpp")
         list(APPEND AGENTICIDE_SOURCES src/chat_interface.cpp)
     endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/agentic_copilot_bridge.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/agentic_copilot_bridge.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/inflate_deflate_cpp.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/inflate_deflate_cpp.cpp)
+    endif()
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/file_browser.cpp")
         list(APPEND AGENTICIDE_SOURCES src/file_browser.cpp)
     endif()
@@ -1010,6 +1016,7 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
     list(APPEND AGENTICIDE_SOURCES
         include/agentic_ide.h
         include/agentic_engine.h
+        include/agentic_copilot_bridge.h
         include/chat_interface.h
         include/chat_workspace.h
         include/multi_tab_editor.h
@@ -1048,6 +1055,7 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
         Qt6::Gui
         Qt6::Widgets
         Qt6::Network
+        brutal_gzip
     )
     
     # Add Vulkan linkage if available

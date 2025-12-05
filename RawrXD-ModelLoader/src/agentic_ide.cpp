@@ -11,6 +11,7 @@
 #include "planning_agent.h"
 #include "todo_manager.h"
 #include "todo_dock.h"
+#include "agentic_copilot_bridge.h"
 #include <QApplication>
 #include <QMainWindow>
 #include <QTabWidget>
@@ -49,6 +50,7 @@ AgenticIDE::AgenticIDE(QWidget *parent)
     , m_todoManager(new TodoManager(this))
     , m_settings(new Settings())
     , m_telemetry(new Telemetry())
+    , m_copilotBridge(new AgenticCopilotBridge(this))
 {
     setWindowTitle("RawrXD Agentic IDE");
     setMinimumSize(1200, 800);
@@ -60,6 +62,11 @@ AgenticIDE::AgenticIDE(QWidget *parent)
     // Initialize engines
     m_agenticEngine->initialize();
     m_planningAgent->initialize();
+    
+    // Initialize Copilot bridge with all IDE components
+    m_copilotBridge->initialize(m_agenticEngine, m_chatInterface, m_multiTabEditor, m_terminalPool);
+    
+    qInfo() << "Agentic IDE initialized with Copilot/Cursor-like capabilities";
     
     // Create TODO dock
     m_todoDock = new TodoDock(m_todoManager, this);
@@ -151,6 +158,39 @@ void AgenticIDE::setupMenus()
     agentMenu->addAction("Hot-Patch Model", this, &AgenticIDE::hotPatchModel);
     agentMenu->addSeparator();
     agentMenu->addAction("Settings", this, &AgenticIDE::showSettings);
+    
+    // Copilot menu (like VS Code with GitHub Copilot or Cursor IDE)
+    QMenu *copilotMenu = menuBar->addMenu("Copilot");
+    copilotMenu->addAction("Code Completion", this, [this]() { 
+        QString prefix = m_multiTabEditor->getCurrentText();
+        QString completion = m_copilotBridge->generateCodeCompletion(prefix);
+        m_chatInterface->addMessage("Copilot", completion); 
+    });
+    copilotMenu->addAction("Analyze File", this, [this]() { 
+        QString analysis = m_copilotBridge->analyzeActiveFile();
+        m_chatInterface->addMessage("Copilot", analysis); 
+    });
+    copilotMenu->addAction("Suggest Refactoring", this, [this]() { 
+        QString code = m_multiTabEditor->getCurrentText();
+        QString suggestion = m_copilotBridge->suggestRefactoring(code);
+        m_chatInterface->addMessage("Copilot", suggestion); 
+    });
+    copilotMenu->addAction("Generate Tests", this, [this]() { 
+        QString code = m_multiTabEditor->getCurrentText();
+        QString tests = m_copilotBridge->generateTestsForCode(code);
+        m_chatInterface->addMessage("Copilot", tests); 
+    });
+    copilotMenu->addSeparator();
+    copilotMenu->addAction("Explain Code", this, [this]() { 
+        QString code = m_multiTabEditor->getCurrentText();
+        QString explanation = m_copilotBridge->explainCode(code);
+        m_chatInterface->addMessage("Copilot", explanation); 
+    });
+    copilotMenu->addAction("Find Bugs", this, [this]() { 
+        QString code = m_multiTabEditor->getCurrentText();
+        QString bugs = m_copilotBridge->findBugs(code);
+        m_chatInterface->addMessage("Copilot", bugs); 
+    });
 }
 
 void AgenticIDE::setupToolbar()
@@ -169,6 +209,9 @@ void AgenticIDE::setupConnections()
     // Connect file browser to editor
     connect(m_fileBrowser, &FileBrowser::fileSelected, 
             m_multiTabEditor, &MultiTabEditor::openFile);
+    
+    // Set agentic engine in chat interface for tool commands
+    m_chatInterface->setAgenticEngine(m_agenticEngine);
     
     // Connect chat interface to agentic engine
     connect(m_chatInterface, &ChatInterface::messageSent,
