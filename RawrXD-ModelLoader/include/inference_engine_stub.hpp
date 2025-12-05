@@ -11,6 +11,7 @@
 // Forward declarations
 class GGUFLoader;
 class VulkanCompute;
+class TransformerBlockScalar;
 
 /**
  * @brief Real GGUF inference engine with Vulkan GPU acceleration
@@ -59,8 +60,13 @@ private:
     std::vector<float> RunForwardPass(const std::vector<float>& input_embedding);
     int32_t SampleNextToken(const std::vector<float>& logits);
     
+    // Production transformer inference
+    bool LoadTransformerWeights();
+    std::vector<float> ApplyOutputProjection(const std::vector<float>& hidden_states);
+    
     // State
     std::unique_ptr<GGUFLoader> m_loader;
+    std::unique_ptr<TransformerBlockScalar> m_transformer;
     // Note: Vulkan GPU support deferred - CPU inference is functional
     
     std::string m_modelPath;
@@ -68,6 +74,11 @@ private:
     uint32_t m_vocabSize = 0;
     uint32_t m_embeddingDim = 0;
     uint32_t m_layerCount = 0;
+    uint32_t m_headCount = 32;
+    uint32_t m_headDim = 128;
+    
+    std::vector<float> m_embeddingTable;
+    std::vector<float> m_outputWeights;
     
     // Pre-initialized RNG (avoid repeated initialization overhead - Bottleneck #13 fix)
     static std::mt19937 m_rng;

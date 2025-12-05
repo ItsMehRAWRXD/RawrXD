@@ -8,6 +8,7 @@
 
 class VulkanCompute;
 class GGUFLoader;
+class TransformerBlockScalar;
 struct VulkanTensor;
 
 class InferenceEngine : public QObject {
@@ -36,11 +37,21 @@ private:
     std::string Detokenize(const std::vector<uint32_t>& token_ids);
     std::vector<float> RunForwardPass(const std::vector<float>& input_embedding);
     uint32_t SampleToken(const std::vector<float>& logits);
+    
+    // Production transformer inference
+    bool LoadTransformerWeights();
+    std::vector<float> RunTransformerForward(const std::vector<float>& embeddings, uint32_t seqLen);
+    std::vector<float> ApplyOutputProjection(const std::vector<float>& hidden_states);
 
     std::unique_ptr<VulkanCompute> vulkan_;
     std::unique_ptr<GGUFLoader> loader_;
+    std::unique_ptr<TransformerBlockScalar> transformer_;
     bool initialized_{false};
     uint32_t vocab_size_{0};
     uint32_t embedding_dim_{0};
     uint32_t layer_count_{0};
+    uint32_t head_count_{8};  // Typical multi-head attention
+    uint32_t head_dim_{64};   // embedding_dim / head_count
+    std::vector<float> embedding_table_;  // Token embeddings
+    std::vector<float> output_weights_;   // Final projection to vocab
 };
