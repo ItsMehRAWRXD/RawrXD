@@ -976,8 +976,13 @@ private:
     HWND m_hwndCopilotChatOutput;
     HWND m_hwndCopilotSendBtn;
     HWND m_hwndCopilotClearBtn;
+    HWND m_hwndModelSelector;
+    HWND m_hwndMaxTokensSlider;
+    HWND m_hwndMaxTokensLabel;
     bool m_secondarySidebarVisible;
     int m_secondarySidebarWidth;
+    int m_currentMaxTokens;
+    std::vector<std::string> m_availableModels;
     std::vector<std::pair<std::string, std::string>> m_chatHistory; // role, message
     static LRESULT CALLBACK SecondarySidebarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     
@@ -1192,6 +1197,17 @@ private:
     void toggleDebugger();
     void attachDebugger();
     void detachDebugger();
+    
+    // ========================================================================
+    // AI CHAT PANEL IMPLEMENTATION
+    // ========================================================================
+    
+    void createChatPanel();
+    void HandleCopilotSend();
+    void HandleCopilotClear();
+    void populateModelSelector();
+    void onModelSelectionChanged();
+    void onMaxTokensChanged(int newValue);
     
     // Debugger Execution Control
     void pauseExecution();

@@ -1,0 +1,10 @@
+model,file_size_gb,tokens,load_time_sec,gen_time_ms,tps,latency_ms,success
+bigdaddyg_q5_k_m,45.4064,64,0,0,0,0,false
+BigDaddyG-F32-FROM-Q4,36.2035,64,0,0,0,0,false
+BigDaddyG-NO-REFUSE-Q4_K_M,36.2035,64,0,0,0,0,false
+BigDaddyG-UNLEASHED-Q4_K_M,36.2035,64,0,0,0,0,false
+BigDaddyG-Custom-Q2_K,23.7146,64,0,0,0,0,false
+BigDaddyG-Q2_K-CHEETAH,23.7146,64,0,0,0,0,false
+BigDaddyG-Q2_K-ULTRA,23.7146,64,0,0,0,0,false
+BigDaddyG-Q2_K-PRUNED-16GB,15.8061,64,0,0,0,0,false
+Codestral-22B-v0.1-hf.Q4_K_S,11.7909,64,0,0,0,0,false

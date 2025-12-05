@@ -5,6 +5,11 @@ add_definitions(-DNOMINMAX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Pin MSVC runtime for deterministic builds
+if(MSVC)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+endif()
+
 # Detect compiler and set output directory suffix
 if(MINGW)
     set(COMPILER_SUFFIX "mingw")
@@ -261,11 +266,14 @@ if(MSVC)
             # src/qtapp/distributed_trainer.h      # Temporarily disabled due to compilation issues
             # src/qtapp/interpretability_panel.cpp  # Temporarily disabled due to compilation issues
             # src/qtapp/interpretability_panel.h    # Temporarily disabled due to compilation issues
+            include/checkpoint_manager.h
             src/qtapp/checkpoint_manager.cpp
+            include/tokenizer_selector.h
             src/qtapp/tokenizer_selector.cpp
+            include/ci_cd_settings.h
             src/qtapp/ci_cd_settings.cpp
-            src/qtapp/settings_manager.cpp
             src/qtapp/settings_manager.h
+            src/qtapp/settings_manager.cpp
             src/qtapp/advanced_checkpoint_manager.cpp
             src/qtapp/advanced_checkpoint_manager.h
             src/qtapp/tokenizer_language_selector.cpp
@@ -307,6 +315,22 @@ if(MSVC)
             src/agent/meta_learn.cpp
             src/agent/hot_reload.cpp
             src/agent/auto_update.cpp
+            src/agent/planner.cpp
+            src/agent/self_patch.cpp
+            src/agent/release_agent.cpp
+            src/agent/zero_touch.cpp
+            src/agent/sentry_integration.hpp
+            src/agent/sentry_integration.cpp
+            src/agent/code_signer.hpp
+            src/agent/code_signer.cpp
+            src/agent/telemetry_collector.hpp
+            src/agent/telemetry_collector.cpp
+            # Code quality improvement modules
+            src/utils/ErrorReporter.hpp
+            src/utils/ErrorReporter.cpp
+            src/model_loader/GGUFConstants.hpp
+            src/utils/Diagnostics.hpp
+            src/utils/Diagnostics.cpp
         )
         
         add_library(self_test_gate STATIC
@@ -380,7 +404,15 @@ target_link_libraries(RawrXD-QtShell PRIVATE
             message(STATUS "RawrXD-QtShell: ggml quantization enabled")
         endif()
         
-        target_include_directories(RawrXD-QtShell PRIVATE include ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/qtapp ${CMAKE_SOURCE_DIR}/src/llm_adapter ${CMAKE_SOURCE_DIR}/src/agent)
+        target_include_directories(RawrXD-QtShell PRIVATE 
+            include 
+            ${CMAKE_SOURCE_DIR}/src 
+            ${CMAKE_SOURCE_DIR}/src/qtapp 
+            ${CMAKE_SOURCE_DIR}/src/llm_adapter 
+            ${CMAKE_SOURCE_DIR}/src/agent
+            ${CMAKE_SOURCE_DIR}/src/utils
+            ${CMAKE_SOURCE_DIR}/src/model_loader
+        )
         
         set_target_properties(RawrXD-QtShell PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
@@ -1087,6 +1119,12 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/transformer_inference.cpp")
         list(APPEND AGENTICIDE_SOURCES src/qtapp/transformer_inference.cpp)
     endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/gguf_loader.hpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/gguf_loader.hpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/gguf_loader.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/gguf_loader.cpp)
+    endif()
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/gguf_loader.cpp")
         list(APPEND AGENTICIDE_SOURCES src/gguf_loader.cpp)
     endif()
@@ -1269,6 +1307,11 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
             "$<TARGET_FILE_DIR:RawrXD-AgenticIDE>/platforms/"
         COMMENT "Copying Qt platform plugins"
     )
+    
+    # Include smoke tests
+    if(EXISTS "${CMAKE_SOURCE_DIR}/smoke_tests.cmake")
+        include(${CMAKE_SOURCE_DIR}/smoke_tests.cmake)
+    endif()
     
     message(STATUS "RawrXD-AgenticIDE: Advanced AI-powered IDE enabled with Qt ${Qt6_VERSION}")
     message(STATUS "AgenticIDE sources: ${AGENTICIDE_SOURCES}")

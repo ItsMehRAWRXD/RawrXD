@@ -1,5 +1,5 @@
 #include "gguf_server.hpp"
-#include "inference_engine_stub.hpp"
+#include "inference_engine.hpp"
 #include <QNetworkInterface>
 #include <QHostAddress>
 #include <QDateTime>
@@ -634,7 +634,7 @@ void GGUFServer::handleTagsRequest(HttpResponse& response) {
     
     if (m_engine && m_engine->isModelLoaded()) {
         QJsonObject model;
-        model["name"] = QString::fromStdString(m_engine->modelPath());
+        model["name"] = m_engine->modelPath();
         model["modified_at"] = getCurrentTimestamp();
         model["size"] = 0; // TODO: Get actual model size
         models.append(model);
@@ -713,7 +713,7 @@ void GGUFServer::handleHealthRequest(HttpResponse& response) {
     responseObj["model_loaded"] = (m_engine && m_engine->isModelLoaded());
     
     if (m_engine && m_engine->isModelLoaded()) {
-        responseObj["model_path"] = QString::fromStdString(m_engine->modelPath());
+        responseObj["model_path"] = m_engine->modelPath();
     }
     
     QJsonDocument responseDoc(responseObj);

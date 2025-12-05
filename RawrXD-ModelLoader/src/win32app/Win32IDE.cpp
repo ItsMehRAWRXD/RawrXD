@@ -2,6 +2,7 @@
 #include "IDELogger.h"
 #include "Win32IDE_AgenticBridge.h"
 #include "streaming_gguf_loader.h"
+#include "../utils/ErrorReporter.hpp"
 #include <commdlg.h>
 #include <richedit.h>
 #include <commctrl.h>
@@ -252,6 +253,8 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
     m_powerShellExecuting(false), m_powerShellProcessHandle(nullptr),
     m_dedicatedPowerShellTerminal(nullptr)
     , m_hwndCommandPalette(nullptr), m_hwndCommandPaletteInput(nullptr), m_hwndCommandPaletteList(nullptr), m_commandPaletteVisible(false)
+    , m_hwndModelSelector(nullptr), m_hwndMaxTokensSlider(nullptr), m_hwndMaxTokensLabel(nullptr)
+    , m_currentMaxTokens(512)
 {
     // DIAGNOSTIC: Constructor entry
     {
@@ -260,7 +263,6 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
     }
 
     // Initialize logger ABSOLUTELY FIRST - with fallback error handling
-    /* DISABLED - Logger crashes
     try {
         IDELogger::getInstance().initialize("C:\\RawrXD_IDE.log");
         LOG_INFO("=== Win32IDE constructor started ===");
@@ -273,7 +275,6 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
     } catch (...) {
         OutputDebugStringA("FATAL: Logger initialization failed with unknown exception\n");
     }
-    */
     
     // DIAGNOSTIC: After logger section
     {
@@ -283,17 +284,17 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
     
     // Prepare DirectX renderer with safety wrapper
     try {
-        // LOG_DEBUG("Creating TransparentRenderer...");
+        LOG_DEBUG("Creating TransparentRenderer...");
         m_renderer = std::make_unique<TransparentRenderer>();
-        // LOG_INFO("TransparentRenderer created successfully");
+        LOG_INFO("TransparentRenderer created successfully");
     } catch (const std::exception& e) {
-        // LOG_CRITICAL(std::string("TransparentRenderer creation failed: ") + e.what());
+        LOG_CRITICAL(std::string("TransparentRenderer creation failed: ") + e.what());
         OutputDebugStringA("ERROR: TransparentRenderer failed: ");
         OutputDebugStringA(e.what());
         OutputDebugStringA("\n");
         m_renderer = nullptr; // Use null renderer
     } catch (...) {
-        // LOG_CRITICAL("TransparentRenderer creation failed with unknown exception");
+        LOG_CRITICAL("TransparentRenderer creation failed with unknown exception");
         OutputDebugStringA("ERROR: TransparentRenderer failed with unknown exception\n");
         m_renderer = nullptr;
     }
@@ -306,14 +307,14 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
     
     // Initialize PowerShell state with safety
     try {
-        // LOG_DEBUG("Initializing PowerShell state...");
+        LOG_DEBUG("Initializing PowerShell state...");
         initializePowerShellState();
-        // LOG_INFO("PowerShell state initialized");
+        LOG_INFO("PowerShell state initialized");
     } catch (const std::exception& e) {
-        // LOG_ERROR(std::string("PowerShell state init failed: ") + e.what());
+        LOG_ERROR(std::string("PowerShell state init failed: ") + e.what());
         OutputDebugStringA("ERROR: PowerShell init failed\n");
     } catch (...) {
-        // LOG_ERROR("PowerShell state init failed with unknown exception");
+        LOG_ERROR("PowerShell state init failed with unknown exception");
         OutputDebugStringA("ERROR: PowerShell init failed\n");
     }
     
@@ -325,11 +326,11 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
     
     // Initialize default theme
     try {
-        // LOG_DEBUG("Resetting to default theme...");
+        LOG_DEBUG("Resetting to default theme...");
         resetToDefaultTheme();
-        // LOG_DEBUG("Theme reset complete");
+        LOG_DEBUG("Theme reset complete");
     } catch (...) {
-        // LOG_ERROR("Theme reset failed");
+        LOG_ERROR("Theme reset failed");
         OutputDebugStringA("ERROR: Theme reset failed\n");
     }
     
@@ -341,11 +342,11 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
     
     // Load code snippets
     try {
-        // LOG_DEBUG("Loading code snippets...");
+        LOG_DEBUG("Loading code snippets...");
         loadCodeSnippets();
-        // LOG_DEBUG("Code snippets loaded");
+        LOG_DEBUG("Code snippets loaded");
     } catch (...) {
-        // LOG_ERROR("Code snippets loading failed");
+        LOG_ERROR("Code snippets loading failed");
         OutputDebugStringA("ERROR: Code snippets loading failed\n");
     }
     
@@ -357,7 +358,7 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
     
     // Initialize profiling frequency
     QueryPerformanceFrequency(&m_profilingFreq);
-    // LOG_DEBUG("Profiling frequency initialized");
+    LOG_DEBUG("Profiling frequency initialized");
     
     // Initialize clipboard history
     m_clipboardHistory.reserve(MAX_CLIPBOARD_HISTORY);
@@ -940,9 +941,9 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                 case IDM_FILE_LOAD_MODEL: openFileDialog(); return 0;
                 case IDM_FILE_EXIT: PostQuitMessage(0); return 0;
                 
-                // Copilot controls (TODO: implement)
-                // case IDC_COPILOT_SEND_BTN: HandleCopilotSend(); return 0;
-                // case IDC_COPILOT_CLEAR_BTN: HandleCopilotClear(); return 0;
+                // Copilot controls
+                case IDC_COPILOT_SEND_BTN: HandleCopilotSend(); return 0;
+                case IDC_COPILOT_CLEAR_BTN: HandleCopilotClear(); return 0;
                 
                 // Edit menu
                 case IDM_EDIT_FIND: showFindDialog(); return 0;
@@ -1239,6 +1240,10 @@ void Win32IDE::onCreate(HWND hwnd)
     // Create debugger panel
     LOG_DEBUG("Creating debugger UI...");
     createDebuggerUI();
+    
+    // Create AI Chat panel (right sidebar)
+    LOG_DEBUG("Creating AI Chat panel...");
+    createChatPanel();
     
     // Apply theme
     LOG_DEBUG("Applying theme...");
@@ -4102,7 +4107,7 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
     if (!m_ggufLoader) {
         std::string error = "Error: GGUF Loader not initialized";
         appendToOutput(error, "Errors", OutputSeverity::Error);
-        MessageBoxA(m_hwndMain, error.c_str(), "Load Error", MB_OK | MB_ICONERROR);
+        ErrorReporter::report(error, m_hwndMain);
         return false;
     }
 
@@ -4115,7 +4120,7 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
         if (!m_ggufLoader->Open(filepath)) {
             std::string error = "❌ Failed to open GGUF file: " + filepath + "\nCheck if file exists and is readable.";
             appendToOutput(error, "Errors", OutputSeverity::Error);
-            MessageBoxA(m_hwndMain, error.c_str(), "File Open Error", MB_OK | MB_ICONERROR);
+            ErrorReporter::report(error, m_hwndMain);
             return false;
         }
 
@@ -4123,7 +4128,7 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
         if (!m_ggufLoader->ParseHeader()) {
             std::string error = "❌ Failed to parse GGUF header from: " + filepath + "\nFile may be corrupted or not a valid GGUF.";
             appendToOutput(error, "Errors", OutputSeverity::Error);
-            MessageBoxA(m_hwndMain, error.c_str(), "Header Parse Error", MB_OK | MB_ICONERROR);
+            ErrorReporter::report(error, m_hwndMain);
             m_ggufLoader->Close();
             return false;
         }
@@ -4132,7 +4137,7 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
         if (!m_ggufLoader->ParseMetadata()) {
             std::string error = "❌ Failed to parse GGUF metadata from: " + filepath + "\nFile structure may be invalid.";
             appendToOutput(error, "Errors", OutputSeverity::Error);
-            MessageBoxA(m_hwndMain, error.c_str(), "Metadata Parse Error", MB_OK | MB_ICONERROR);
+            ErrorReporter::report(error, m_hwndMain);
             m_ggufLoader->Close();
             return false;
         }
@@ -4142,7 +4147,7 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
         if (!m_ggufLoader->BuildTensorIndex()) {
             std::string error = "❌ Failed to build tensor index from: " + filepath + "\nFile may be too large or corrupted.";
             appendToOutput(error, "Errors", OutputSeverity::Error);
-            MessageBoxA(m_hwndMain, error.c_str(), "Index Build Error", MB_OK | MB_ICONERROR);
+            ErrorReporter::report(error, m_hwndMain);
             m_ggufLoader->Close();
             return false;
         }
@@ -4157,13 +4162,13 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
     catch (const std::exception& e) {
         std::string error = "❌ Exception loading GGUF file:\n" + std::string(e.what()) + "\n\nFile: " + filepath;
         appendToOutput(error + "\n", "Errors", OutputSeverity::Error);
-        MessageBoxA(m_hwndMain, error.c_str(), "Model Load Exception", MB_OK | MB_ICONERROR);
+        ErrorReporter::report(error, m_hwndMain);
         return false;
     }
     catch (...) {
         std::string error = "❌ Unknown exception loading GGUF file: " + filepath;
         appendToOutput(error + "\n", "Errors", OutputSeverity::Error);
-        MessageBoxA(m_hwndMain, error.c_str(), "Model Load Error", MB_OK | MB_ICONERROR);
+        ErrorReporter::report(error, m_hwndMain);
         return false;
     }
 
@@ -5417,4 +5422,270 @@ void Win32IDE::onAutonomyViewMemory() {
     appendToOutput("Autonomy Memory Snapshot displayed\n", "Debug", OutputSeverity::Debug);
     MessageBoxA(m_hwndMain, report.c_str(), "Autonomy Memory", MB_OK);
 }
+
+// ======================================================================
+// AI CHAT PANEL IMPLEMENTATION
+// ======================================================================
+
+void Win32IDE::createChatPanel() {
+    LOG_DEBUG("Creating AI Chat panel...");
+    
+    if (!m_hwndMain) {
+        LOG_ERROR("Cannot create chat panel - main window is null");
+        return;
+    }
+
+    // Create secondary sidebar container (right side)
+    m_hwndSecondarySidebar = CreateWindowExA(
+        WS_EX_CLIENTEDGE, "STATIC", "",
+        WS_CHILD | WS_VISIBLE,
+        0, 0, 300, 600,
+        m_hwndMain, (HMENU)IDC_SECONDARY_SIDEBAR, m_hInstance, nullptr);
+    
+    if (!m_hwndSecondarySidebar) {
+        LOG_ERROR("Failed to create secondary sidebar");
+        return;
+    }
+    
+    // Create header with title
+    m_hwndSecondarySidebarHeader = CreateWindowExA(
+        0, "STATIC", "AI Chat",
+        WS_CHILD | WS_VISIBLE | SS_LEFT,
+        5, 5, 290, 25,
+        m_hwndSecondarySidebar, nullptr, m_hInstance, nullptr);
+    
+    HFONT hFont = CreateFontA(14, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, 
+                              OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, 
+                              DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+    if (m_hwndSecondarySidebarHeader) {
+        SendMessage(m_hwndSecondarySidebarHeader, WM_SETFONT, (WPARAM)hFont, TRUE);
+    }
+    
+    // Model Selection Label
+    CreateWindowExA(0, "STATIC", "Model:",
+        WS_CHILD | WS_VISIBLE | SS_LEFT,
+        5, 35, 50, 18,
+        m_hwndSecondarySidebar, nullptr, m_hInstance, nullptr);
+    
+    // Model Selector Combobox
+    m_hwndModelSelector = CreateWindowExA(
+        0, "COMBOBOX", "",
+        WS_CHILD | WS_VISIBLE | CBS_DROPDOWN | CBS_AUTOHSCROLL,
+        60, 35, 235, 200,
+        m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_SEND_BTN, m_hInstance, nullptr);
+    
+    if (m_hwndModelSelector) {
+        SendMessage(m_hwndModelSelector, WM_SETFONT, (WPARAM)hFont, TRUE);
+        populateModelSelector();
+    }
+    
+    // Max Tokens Label
+    CreateWindowExA(0, "STATIC", "Max Tokens:",
+        WS_CHILD | WS_VISIBLE | SS_LEFT,
+        5, 60, 80, 18,
+        m_hwndSecondarySidebar, nullptr, m_hInstance, nullptr);
+    
+    // Max Tokens Label (value display)
+    m_hwndMaxTokensLabel = CreateWindowExA(0, "STATIC", "512",
+        WS_CHILD | WS_VISIBLE | SS_RIGHT,
+        245, 60, 50, 18,
+        m_hwndSecondarySidebar, nullptr, m_hInstance, nullptr);
+    
+    // Max Tokens Slider
+    m_hwndMaxTokensSlider = CreateWindowExA(
+        0, "TRACKBAR_CLASS", "",
+        WS_CHILD | WS_VISIBLE | TBS_HORZ | TBS_NOTICKS,
+        5, 80, 290, 25,
+        m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_CLEAR_BTN, m_hInstance, nullptr);
+    
+    if (m_hwndMaxTokensSlider) {
+        SendMessage(m_hwndMaxTokensSlider, TBM_SETRANGE, TRUE, MAKELPARAM(32, 2048));
+        SendMessage(m_hwndMaxTokensSlider, TBM_SETPOS, TRUE, 512);
+        SendMessage(m_hwndMaxTokensSlider, TBM_SETTICFREQ, 256, 0);
+        m_currentMaxTokens = 512;
+    }
+    
+    // Chat Output Textbox
+    m_hwndCopilotChatOutput = CreateWindowExA(
+        WS_EX_CLIENTEDGE, "EDIT", "",
+        WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | WS_VSCROLL,
+        5, 110, 290, 300,
+        m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_CHAT_OUTPUT, m_hInstance, nullptr);
+    
+    if (m_hwndCopilotChatOutput) {
+        SendMessage(m_hwndCopilotChatOutput, WM_SETFONT, (WPARAM)hFont, TRUE);
+    }
+    
+    // Chat Input Textbox
+    m_hwndCopilotChatInput = CreateWindowExA(
+        WS_EX_CLIENTEDGE, "EDIT", "",
+        WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | ES_WANTRETURN | WS_VSCROLL,
+        5, 415, 290, 85,
+        m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_CHAT_INPUT, m_hInstance, nullptr);
+    
+    if (m_hwndCopilotChatInput) {
+        SendMessage(m_hwndCopilotChatInput, WM_SETFONT, (WPARAM)hFont, TRUE);
+    }
+    
+    // Send Button
+    m_hwndCopilotSendBtn = CreateWindowExA(
+        0, "BUTTON", "Send",
+        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        5, 505, 140, 30,
+        m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_SEND_BTN, m_hInstance, nullptr);
+    
+    if (m_hwndCopilotSendBtn) {
+        SendMessage(m_hwndCopilotSendBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
+    }
+    
+    // Clear Button
+    m_hwndCopilotClearBtn = CreateWindowExA(
+        0, "BUTTON", "Clear",
+        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        150, 505, 140, 30,
+        m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_CLEAR_BTN, m_hInstance, nullptr);
+    
+    if (m_hwndCopilotClearBtn) {
+        SendMessage(m_hwndCopilotClearBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
+    }
+    
+    m_secondarySidebarVisible = true;
+    m_secondarySidebarWidth = 300;
+    LOG_INFO("AI Chat panel created successfully");
+}
+
+void Win32IDE::populateModelSelector() {
+    if (!m_hwndModelSelector) return;
+    
+    LOG_DEBUG("Populating model selector...");
+    
+    // Clear existing items
+    SendMessage(m_hwndModelSelector, CB_RESETCONTENT, 0, 0);
+    
+    // Try to scan OllamaModels directory for available models
+    std::string ollamaPath = "D:\\OllamaModels";
+    m_availableModels.clear();
+    
+    // Add default models
+    m_availableModels.push_back("llama2");
+    m_availableModels.push_back("mistral");
+    m_availableModels.push_back("neural-chat");
+    m_availableModels.push_back("dolphin-mixtral");
+    
+    // Try to scan directory
+    WIN32_FIND_DATAA findData;
+    HANDLE findHandle = FindFirstFileA((ollamaPath + "\\*").c_str(), &findData);
+    
+    if (findHandle != INVALID_HANDLE_VALUE) {
+        do {
+            if ((findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && 
+                strcmp(findData.cFileName, ".") != 0 && strcmp(findData.cFileName, "..") != 0) {
+                m_availableModels.push_back(findData.cFileName);
+            }
+        } while (FindNextFileA(findHandle, &findData));
+        FindClose(findHandle);
+    }
+    
+    // Populate combobox
+    for (const auto& model : m_availableModels) {
+        SendMessageA(m_hwndModelSelector, CB_ADDSTRING, 0, (LPARAM)model.c_str());
+    }
+    
+    // Set first item as selected
+    if (!m_availableModels.empty()) {
+        SendMessage(m_hwndModelSelector, CB_SETCURSEL, 0, 0);
+    }
+    
+    LOG_DEBUG("Model selector populated with " + std::to_string(m_availableModels.size()) + " models");
+}
+
+void Win32IDE::HandleCopilotSend() {
+    if (!m_hwndCopilotChatInput || !m_hwndCopilotChatOutput) return;
+    
+    LOG_DEBUG("Handling Copilot Send button...");
+    
+    // Get input text
+    char inputBuffer[2048] = {0};
+    GetWindowTextA(m_hwndCopilotChatInput, inputBuffer, sizeof(inputBuffer) - 1);
+    std::string userMessage(inputBuffer);
+    
+    if (userMessage.empty()) {
+        LOG_WARNING("Empty message - ignoring");
+        return;
+    }
+    
+    // Get selected model
+    int modelIdx = (int)SendMessage(m_hwndModelSelector, CB_GETCURSEL, 0, 0);
+    std::string selectedModel = (modelIdx >= 0 && modelIdx < (int)m_availableModels.size()) 
+        ? m_availableModels[modelIdx] 
+        : "llama2";
+    
+    LOG_INFO("Sending message to model: " + selectedModel);
+    
+    // Display user message
+    std::string displayText = "\n> User: " + userMessage + "\n";
+    
+    // Append to output
+    int len = GetWindowTextLengthA(m_hwndCopilotChatOutput);
+    if (len > 0) {
+        SendMessage(m_hwndCopilotChatOutput, EM_SETSEL, len, len);
+    }
+    SendMessageA(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE, (LPARAM)displayText.c_str());
+    
+    // Clear input
+    SetWindowTextA(m_hwndCopilotChatInput, "");
+    
+    // Generate response asynchronously
+    auto onResponse = [this](const std::string& response, bool complete) {
+        if (!m_hwndCopilotChatOutput) return;
+        
+        std::string displayResp = "AI: " + response + (complete ? "\n" : "");
+        int len = GetWindowTextLengthA(m_hwndCopilotChatOutput);
+        if (len > 0) {
+            SendMessage(m_hwndCopilotChatOutput, EM_SETSEL, len, len);
+        }
+        SendMessageA(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE, (LPARAM)displayResp.c_str());
+    };
+    
+    // Set model override temporarily
+    m_ollamaModelOverride = selectedModel;
+    
+    // Generate response
+    generateResponseAsync(userMessage, onResponse);
+    
+    LOG_DEBUG("Message sent and awaiting response");
+}
+
+void Win32IDE::HandleCopilotClear() {
+    if (!m_hwndCopilotChatOutput || !m_hwndCopilotChatInput) return;
+    
+    LOG_DEBUG("Clearing chat panel...");
+    
+    SetWindowTextA(m_hwndCopilotChatOutput, "Welcome to RawrXD AI Chat!\n\nSelect a model and type your message to begin.");
+    SetWindowTextA(m_hwndCopilotChatInput, "");
+    m_chatHistory.clear();
+    
+    LOG_INFO("Chat panel cleared");
+}
+
+void Win32IDE::onModelSelectionChanged() {
+    int idx = (int)SendMessage(m_hwndModelSelector, CB_GETCURSEL, 0, 0);
+    if (idx >= 0 && idx < (int)m_availableModels.size()) {
+        m_ollamaModelOverride = m_availableModels[idx];
+        LOG_INFO("Model changed to: " + m_ollamaModelOverride);
+    }
+}
+
+void Win32IDE::onMaxTokensChanged(int newValue) {
+    m_currentMaxTokens = newValue;
+    m_inferenceConfig.maxTokens = newValue;
+    
+    // Update label
+    if (m_hwndMaxTokensLabel) {
+        SetWindowTextA(m_hwndMaxTokensLabel, std::to_string(newValue).c_str());
+    }
+    
+    LOG_DEBUG("Max tokens changed to: " + std::to_string(newValue));
+}
+
 

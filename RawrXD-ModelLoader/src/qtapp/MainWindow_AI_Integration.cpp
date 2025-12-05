@@ -385,7 +385,9 @@ void MainWindow::runInference()
 /**
  * @brief Setup autonomous agent system with Ctrl+Shift+A trigger
  * Call this from MainWindow constructor
+ * NOTE: This function is now implemented in MainWindow.cpp to avoid duplicate symbols
  */
+/*
 void MainWindow::setupAgentSystem()
 {
     // Create agent bootstrap instance
@@ -410,6 +412,7 @@ void MainWindow::setupAgentSystem()
     
     qDebug() << "Agent system initialized";
 }
+*/
 
 /**
  * @brief Setup Ctrl+Shift+A shortcut for agent mode

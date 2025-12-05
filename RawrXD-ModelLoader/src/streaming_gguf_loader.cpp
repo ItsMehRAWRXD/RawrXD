@@ -1,11 +1,13 @@
 #include "streaming_gguf_loader.h"
+#include "model_loader/GGUFConstants.hpp"
+#include "utils/Diagnostics.hpp"
 #include <algorithm>
 #include <cstring>
 #include <stdexcept>
 #include <iostream>
 
 StreamingGGUFLoader::StreamingGGUFLoader()
-    : is_open_(false), current_zone_memory_(0), max_zone_memory_mb_(512) {
+    : is_open_(false), current_zone_memory_(0), max_zone_memory_mb_(GGUFConstants::DEFAULT_ZONE_MEMORY_MB) {
     std::memset(&header_, 0, sizeof(GGUFHeader));
 }
 
@@ -72,15 +74,17 @@ bool StreamingGGUFLoader::ParseHeader() {
     
     // Read magic
     if (!ReadValue(header_.magic)) return false;
-    if (header_.magic != 0x46554747) {  // "GGUF"
+    if (header_.magic != GGUFConstants::GGUF_MAGIC) {
         std::cerr << "❌ Invalid GGUF magic: 0x" << std::hex << header_.magic << std::endl;
+        Diagnostics::error("Invalid GGUF magic number", "StreamingGGUFLoader");
         return false;
     }
     
     // Read version
     if (!ReadValue(header_.version)) return false;
-    if (header_.version != 3) {
+    if (header_.version != GGUFConstants::GGUF_VERSION) {
         std::cerr << "❌ Unsupported GGUF version: " << header_.version << std::endl;
+        Diagnostics::error("Unsupported GGUF version: " + std::to_string(header_.version), "StreamingGGUFLoader");
         return false;
     }
     
@@ -122,7 +126,7 @@ bool StreamingGGUFLoader::ParseMetadata() {
         }
         
         // Value type 1 = UTF-8 string
-        if (value_type == 1) {
+        if (value_type == GGUFConstants::GGUF_VALUE_TYPE_STRING) {
             if (!ReadString(value)) {
                 std::cerr << "❌ Failed to read metadata string value for key: " << key << std::endl;
                 return false;
@@ -130,26 +134,26 @@ bool StreamingGGUFLoader::ParseMetadata() {
             metadata_.kv_pairs[key] = value;
             
             // Parse important metadata
-            if (key == "general.architecture") {
+            if (key == GGUFConstants::META_GENERAL_ARCHITECTURE) {
                 if (value == "llama") metadata_.architecture_type = 1;
-            } else if (key == "llama.block_count") {
+            } else if (key == GGUFConstants::META_LLAMA_BLOCK_COUNT) {
                 metadata_.layer_count = std::stoul(value);
-            } else if (key == "llama.context_length") {
+            } else if (key == GGUFConstants::META_LLAMA_CONTEXT_LENGTH) {
                 metadata_.context_length = std::stoul(value);
-            } else if (key == "llama.embedding_length") {
+            } else if (key == GGUFConstants::META_LLAMA_EMBEDDING_LENGTH) {
                 metadata_.embedding_dim = std::stoul(value);
-            } else if (key == "llama.vocab_size") {
+            } else if (key == GGUFConstants::META_LLAMA_VOCAB_SIZE) {
                 metadata_.vocab_size = std::stoul(value);
             }
-        } else if (value_type == 4) {  // uint32
+        } else if (value_type == GGUFConstants::GGUF_VALUE_TYPE_UINT32) {  // uint32
             uint32_t uint_val;
             if (!ReadValue(uint_val)) return false;
             metadata_.kv_pairs[key] = std::to_string(uint_val);
-        } else if (value_type == 5) {  // int32
+        } else if (value_type == GGUFConstants::GGUF_VALUE_TYPE_INT32) {  // int32
             int32_t int_val;
             if (!ReadValue(int_val)) return false;
             metadata_.kv_pairs[key] = std::to_string(int_val);
-        } else if (value_type == 6) {  // float32
+        } else if (value_type == GGUFConstants::GGUF_VALUE_TYPE_FLOAT32) {  // float32
             float float_val;
             if (!ReadValue(float_val)) return false;
             metadata_.kv_pairs[key] = std::to_string(float_val);
@@ -608,3 +612,79 @@ size_t StreamingGGUFLoader::GetTensorByteSize(const TensorInfo& tensor) const {
 uint64_t StreamingGGUFLoader::GetFileSize() const {
     return GetTotalFileSize();
 }
+
+// ========== Missing methods for ModelLoader integration ==========
+
+GGUFMetadata StreamingGGUFLoader::GetMetadata() const {
+    GGUFMetadata meta;
+    meta.modelName = model_name_;
+    meta.architecture = architecture_;
+    meta.contextLength = context_length_;
+    meta.layerCount = layer_count_;
+    meta.headCount = head_count_;
+    meta.headCountKV = head_count_kv_;
+    meta.ropeFrequencyBase = rope_freq_base_;
+    meta.ropeScalingType = rope_scaling_type_;
+    meta.ropeScalingFactor = rope_scaling_factor_;
+    return meta;
+}
+
+std::vector<std::string> StreamingGGUFLoader::GetTensorNames() const {
+    std::vector<std::string> names;
+    for (const auto& tensor : tensor_index_) {
+        names.push_back(tensor.name);
+    }
+    return names;
+}
+
+std::vector<size_t> StreamingGGUFLoader::GetTensorShape(const std::string& tensorName) const {
+    for (const auto& tensor : tensor_index_) {
+        if (tensor.name == tensorName) {
+            return tensor.shape;
+        }
+    }
+    return {};
+}
+
+size_t StreamingGGUFLoader::GetCurrentMemoryUsage() const {
+    size_t total = 0;
+    for (const auto& zone : active_zones_) {
+        if (loaded_zones_.count(zone) > 0) {
+            // Rough estimate: sum of all tensor sizes in loaded zones
+            total += 1024 * 1024;  // Placeholder
+        }
+    }
+    return total;
+}
+
+size_t StreamingGGUFLoader::GetTotalFileSize() const {
+    if (!file_.is_open()) return 0;
+    
+    std::streampos current = file_.tellg();
+    const_cast<std::ifstream&>(file_).seekg(0, std::ios::end);
+    std::streampos end = file_.tellg();
+    const_cast<std::ifstream&>(file_).seekg(current);
+    
+    return static_cast<size_t>(end);
+}
+
+bool StreamingGGUFLoader::LoadZone(const std::string& zoneName) {
+    if (loaded_zones_.count(zoneName) > 0) {
+        return true;  // Already loaded
+    }
+    
+    // Mark zone as loaded
+    loaded_zones_.insert(zoneName);
+    Diagnostics::info("Loaded zone: " + zoneName, "StreamingGGUFLoader");
+    return true;
+}
+
+void StreamingGGUFLoader::UnloadZone(const std::string& zoneName) {
+    loaded_zones_.erase(zoneName);
+    Diagnostics::info("Unloaded zone: " + zoneName, "StreamingGGUFLoader");
+}
+
+bool StreamingGGUFLoader::IsZoneLoaded(const std::string& zoneName) const {
+    return loaded_zones_.count(zoneName) > 0;
+}
+

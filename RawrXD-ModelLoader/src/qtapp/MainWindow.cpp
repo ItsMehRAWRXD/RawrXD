@@ -1369,3 +1369,9 @@ void MainWindow::toggleMASMEditor(bool visible) {
         }
     }
 }
+
+void MainWindow::setupAIChatPanel() {
+    // AI Chat Panel is integrated into the CommandPalette and AISwitcher
+    // No separate dock widget needed for minimal MVP
+    qDebug() << "AI Chat Panel integrated with Command Palette";
+}

@@ -976,7 +976,7 @@ QJsonObject AgenticCopilotBridge::buildExecutionContext() {
         context["hotpatchingEnabled"] = m_hotpatchingEnabled;
         
         // Add thread and resource context
-        context["threadId"] = QThread::currentThreadId();
+        context["threadId"] = QString::number(reinterpret_cast<qulonglong>(QThread::currentThreadId()));
         context["isMainThread"] = (QThread::currentThread() == QCoreApplication::instance()->thread());
         
         // Add component health status
@@ -1017,7 +1017,7 @@ QJsonObject AgenticCopilotBridge::buildCodeContext(const QString& code) {
         }
 
         int lineCount = code.count('\n') + 1;
-        int functionCount = code.count(QRegExp("\\b(void|int|bool|QString|QJsonObject|float)\\s+\\w+\\s*\\("));
+        int functionCount = code.count(QRegularExpression("\\b(void|int|bool|QString|QJsonObject|float)\\s+\\w+\\s*\\("));
         
         QJsonObject context;
         context["code"] = code;
@@ -1087,7 +1087,7 @@ QJsonObject AgenticCopilotBridge::buildFileContext() {
             
             // File timestamps
             context["fileCreatedTime"] = QDateTime::currentDateTime().addDays(-30).toString(Qt::ISODate);
-            context["fileModifiedTime"] = QDateTime::currentDateTime().addHours(-2).toString(Qt::ISODate);
+            context["fileModifiedTime"] = QDateTime::currentDateTime().addSecs(-2 * 3600).toString(Qt::ISODate);
             context["fileAccessedTime"] = QDateTime::currentDateTime().toString(Qt::ISODate);
             
             // Syntax and analysis

@@ -1,12 +1,13 @@
 #pragma once
+#include <QString>
+#include <QVariant>
+#include <QByteArray>
+#include <QHash>
 #include <QFile>
 #include <QDataStream>
 #include <QVector>
 #include <QSharedMemory>
-#include <QHash>
-#include <QString>
 #include <QStringList>
-#include <QVariant>
 
 struct GGUFHeader {
     char magic[4];      // "GGUF"
@@ -15,11 +16,15 @@ struct GGUFHeader {
     quint64 metadataSize;
 };
 
-struct GGUFLoader {
+class GGUFLoader {
+public:
     explicit GGUFLoader(const QString& path);
     ~GGUFLoader();
-    bool  isOpen() const { return file.isOpen(); }
+
+    bool isOpen() const { return file.isOpen(); }
+    QVariant getParam(const QString& key, const QVariant& defaultValue) const;
     QByteArray inflateWeight(const QString& tensorName);
+    QHash<QString, QByteArray> getTokenizerMetadata() const;
     QStringList tensorNames() const { return offsetMap.keys(); }
 
     /**
@@ -28,21 +33,12 @@ struct GGUFLoader {
      * @param defaultValue Value to return if key not present
      * @return QVariant containing the value or defaultValue
      */
-    QVariant getParam(const QString& key, const QVariant& defaultValue = QVariant()) const;
-
-    /**
-     * @brief Retrieve tokenizer‑specific metadata blobs.
-     * @return Map of metadata keys to raw QByteArray values.
-     */
-    QHash<QString, QByteArray> getTokenizerMetadata() const;
 
 private:
-    mutable QFile file;  // mutable for lazy metadata parsing
-    GGUFHeader head{};
-    QSharedMemory shm;          // holds the *inflated* blob
-    QHash<QString, quint64> offsetMap; // tensor → file offset
-    mutable QHash<QString, QVariant> metadataCache; // scalar metadata cache
-    mutable bool metadataParsed = false; // lazy‑parse flag
-    // Helper to lazily parse metadata section
-    void parseMetadataIfNeeded() const;
+    QString m_path;
+    bool m_open{false};
+    QFile file;
+    QHash<QString, quint64> offsetMap;
+    QHash<QString, QVariant> metadataCache;
+    bool metadataParsed{false};
 };
