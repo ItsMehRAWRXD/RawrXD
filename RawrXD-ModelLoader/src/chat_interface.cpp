@@ -23,7 +23,7 @@ ChatInterface::ChatInterface(QWidget* parent) : QWidget(parent), maxMode_(false)
     // Model selector row
     QHBoxLayout* modelLayout = new QHBoxLayout();
     
-    QLabel* modelLabel = new QLabel("Model:", this);
+    QLabel* modelLabel = new QLabel("Model 1:", this);
     modelLayout->addWidget(modelLabel);
     
     modelSelector_ = new QComboBox(this);
@@ -33,6 +33,18 @@ ChatInterface::ChatInterface(QWidget* parent) : QWidget(parent), maxMode_(false)
     connect(modelSelector_, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &ChatInterface::onModelChanged);
     modelLayout->addWidget(modelSelector_);
+    
+    // Second model selector for dual GGUF loading
+    QLabel* model2Label = new QLabel("Model 2:", this);
+    modelLayout->addWidget(model2Label);
+    
+    modelSelector2_ = new QComboBox(this);
+    modelSelector2_->setMinimumWidth(200);
+    modelSelector2_->addItem("No Model Selected");
+    loadAvailableModelsForSecond();
+    connect(modelSelector2_, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &ChatInterface::onModel2Changed);
+    modelLayout->addWidget(modelSelector2_);
     
     modelLayout->addStretch();
     
@@ -111,14 +123,25 @@ void ChatInterface::loadAvailableModels() {
 
 void ChatInterface::refreshModels() {
     QString currentModel = modelSelector_->currentData().toString();
+    QString currentModel2 = modelSelector2_->currentData().toString();
+    
     modelSelector_->clear();
     modelSelector_->addItem("No Model Selected");
     loadAvailableModels();
     
-    // Try to restore previous selection
+    modelSelector2_->clear();
+    modelSelector2_->addItem("No Model Selected");
+    loadAvailableModelsForSecond();
+    
+    // Try to restore previous selections
     int idx = modelSelector_->findData(currentModel);
     if (idx >= 0) {
         modelSelector_->setCurrentIndex(idx);
+    }
+    
+    int idx2 = modelSelector2_->findData(currentModel2);
+    if (idx2 >= 0) {
+        modelSelector2_->setCurrentIndex(idx2);
     }
     
     statusLabel_->setText("Model list refreshed");
@@ -143,6 +166,40 @@ void ChatInterface::onMaxModeToggled(bool enabled) {
         statusLabel_->setText("Standard mode");
     }
     emit maxModeChanged(enabled);
+}
+
+void ChatInterface::loadAvailableModelsForSecond() {
+    // Check common GGUF model locations
+    QStringList searchPaths = {
+        "D:/OllamaModels",
+        QDir::homePath() + "/.ollama/models",
+        QDir::homePath() + "/models",
+        "C:/models",
+        "./models"
+    };
+    
+    for (const QString& path : searchPaths) {
+        QDir dir(path);
+        if (dir.exists()) {
+            QStringList filters;
+            filters << "*.gguf";
+            QFileInfoList files = dir.entryInfoList(filters, QDir::Files);
+            for (const QFileInfo& file : files) {
+                modelSelector2_->addItem(file.fileName(), file.absoluteFilePath());
+            }
+        }
+    }
+}
+
+void ChatInterface::onModel2Changed(int index) {
+    if (index > 0) {
+        QString modelPath = modelSelector2_->currentData().toString();
+        QString modelName = modelSelector2_->currentText();
+        statusLabel_->setText("Model 2 selected: " + modelName);
+        emit model2Selected(modelPath);
+    } else {
+        statusLabel_->setText("No secondary model selected");
+    }
 }
 
 QString ChatInterface::selectedModel() const {

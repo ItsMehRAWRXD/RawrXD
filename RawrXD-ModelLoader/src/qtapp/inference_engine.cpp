@@ -114,6 +114,12 @@ double InferenceEngine::temperature() const
     return m_temperature;
 }
 
+QString InferenceEngine::quantMode() const
+{
+    QMutexLocker lock(&m_mutex);
+    return m_quantMode;
+}
+
 void InferenceEngine::request(const QString& prompt, qint64 reqId)
 {
     QMutexLocker lock(&m_mutex);

@@ -78,6 +78,7 @@ public:
     bool isModelLoaded() const { return m_modelLoaded; }
     QString currentModelPath() const { return QString::fromStdString(m_currentModelPath); }
     QString generateResponse(const QString& message);
+    void setInferenceEngine(class InferenceEngine* engine) { m_inferenceEngine = engine; }
     
 public slots:
     void setModel(const QString& modelPath);
@@ -91,6 +92,7 @@ signals:
     
 private:
     QString generateTokenizedResponse(const QString& message);
+    QString generateFallbackResponse(const QString& message);
     bool loadModelAsync(const std::string& modelPath);
     
     // Internal AI processing
@@ -118,5 +120,5 @@ private:
     // Model state
     bool m_modelLoaded = false;
     std::string m_currentModelPath;
-    void* m_inferenceEngine = nullptr;
+    class InferenceEngine* m_inferenceEngine = nullptr;
 };

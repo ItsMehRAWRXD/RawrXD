@@ -536,7 +536,6 @@ QJsonObject AgentCoordinator::getPlanStatus(const QString& planId) const
     m_statusCache[planId] = status;
     return status;
 }
-}
 
 QJsonObject AgentCoordinator::getCoordinatorStats() const
 {

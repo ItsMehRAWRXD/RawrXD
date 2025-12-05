@@ -20,6 +20,7 @@
 #include <vector>
 #include <memory>
 #include <unordered_map>
+#include <QRegularExpression>
 
 // Assembly language syntax highlighter
 class AssemblyHighlighter : public QSyntaxHighlighter {

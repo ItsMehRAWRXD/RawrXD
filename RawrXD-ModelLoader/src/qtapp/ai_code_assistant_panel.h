@@ -34,7 +34,7 @@ public:
 
 private slots:
     // Response from AI
-    void onSuggestionReady(const AICodeAssistant::CodeSuggestion &suggestion);
+    void onSuggestionReady(const int dummy);  // Placeholder slot, actual connections use lambdas
     void onSuggestionStreaming(const QString &partial);
     void onSuggestionStreamComplete();
     void onError(const QString &error);
@@ -84,7 +84,8 @@ private:
     QListWidget *suggestion_history_;
     
     // State
-    AICodeAssistant::CodeSuggestion current_suggestion_;
+    QString current_suggestion_text_;
+    QString current_suggestion_type_;
     bool streaming_in_progress_;
 };
 

@@ -42,7 +42,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Network Sql Concurrent Tes
 
 if(Qt6_FOUND)
     message(STATUS "Qt6 found: ${Qt6_VERSION}")
-    add_definitions(-DHAVE_QT_CORE)
+    add_definitions(-DHAVE_QT_CORE -DQT_NO_OPENGL)
     include_directories(${Qt6_INCLUDE_DIRS})
     link_libraries(Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Network Qt6::Sql Qt6::Concurrent Qt6::Test Qt6::Charts)
 else()
@@ -255,12 +255,25 @@ if(MSVC)
             # ============================================================
             # Phase 3: Production Enhancement Components (5,280 LOC)
             # ============================================================
-            src/qtapp/security_manager.cpp
-            src/qtapp/distributed_trainer.cpp
-            src/qtapp/interpretability_panel.cpp
+            # src/qtapp/security_manager.cpp
+            # src/qtapp/security_manager.h
+            # src/qtapp/distributed_trainer.cpp    # Temporarily disabled due to compilation issues
+            # src/qtapp/distributed_trainer.h      # Temporarily disabled due to compilation issues
+            # src/qtapp/interpretability_panel.cpp  # Temporarily disabled due to compilation issues
+            # src/qtapp/interpretability_panel.h    # Temporarily disabled due to compilation issues
             src/qtapp/checkpoint_manager.cpp
             src/qtapp/tokenizer_selector.cpp
             src/qtapp/ci_cd_settings.cpp
+            src/qtapp/settings_manager.cpp
+            src/qtapp/settings_manager.h
+            src/qtapp/advanced_checkpoint_manager.cpp
+            src/qtapp/advanced_checkpoint_manager.h
+            src/qtapp/tokenizer_language_selector.cpp
+            src/qtapp/tokenizer_language_selector.h
+            src/qtapp/ci_pipeline_manager.cpp
+            src/qtapp/ci_pipeline_manager.h
+            src/qtapp/codec.h
+            src/qtapp/codec.cpp
             # ============================================================
             # Phase 4: AI Code Assistant (Code Completion with MASM Transport)
             # ============================================================
@@ -272,21 +285,25 @@ if(MSVC)
             src/agent/agentic_puppeteer.cpp
             src/agent/agentic_failure_detector.hpp
             src/agent/agentic_failure_detector.cpp
+            src/agent/agentic_copilot_bridge.hpp
+            src/agent/agentic_copilot_bridge.cpp
             # ============================================================
             # Hot-Patching System: Real-time hallucination detection & correction
             # ============================================================
-            src/agent/agent_hot_patcher.cpp
-            src/agent/gguf_proxy_server.cpp
-            src/agent/ide_agent_bridge_hot_patching_integration.cpp
+            # src/agent/agent_hot_patcher.cpp
+            # src/agent/gguf_proxy_server.cpp
+            # src/agent/ide_agent_bridge_hot_patching_integration.cpp
             src/llm_adapter/QuantBackend.cpp
             src/llm_adapter/QuantBackend.h
             src/agent/auto_bootstrap.cpp
-            src/agent/zero_touch.cpp
+            src/qtapp/widgets/masm_editor_widget.cpp
+            src/qtapp/widgets/hotpatch_panel.cpp
+            # src/agent/zero_touch.cpp
             # kernels/quant_ladder_avx2.cpp  # Conflicts with ggml quantization functions
-            src/agent/planner.cpp
-            src/agent/self_patch.cpp
-            src/agent/sign_binary.cpp
-            src/agent/release_agent.cpp
+            # src/agent/planner.cpp
+            # src/agent/self_patch.cpp
+            # src/agent/sign_binary.cpp
+            # src/agent/release_agent.cpp
             src/agent/meta_learn.cpp
             src/agent/hot_reload.cpp
             src/agent/auto_update.cpp
@@ -331,7 +348,6 @@ target_link_libraries(RawrXD-QtShell PRIVATE
             Qt6::Network
             Qt6::Sql
             Qt6::Concurrent
-            Qt6::Charts
             brutal_gzip
             self_test_gate
             quant_utils
@@ -656,6 +672,9 @@ if(MSVC) # Re-enabled to test
         $<$<BOOL:${ENABLE_VULKAN}>:src/win32app/VulkanRenderer.cpp>
         $<$<BOOL:${ENABLE_COPILOT}>:src/win32app/Win32IDE_CopilotIntegration.cpp>
         $<$<BOOL:${ENABLE_COPILOT}>:src/win32app/CopilotStreaming.cpp>
+        # Agentic navigation integration
+        src/agentic/AgenticNavigator.cpp
+        src/agentic/AgenticCopilotIntegration.cpp
     )
     
     target_link_libraries(RawrXD-Win32IDE PRIVATE
@@ -1022,6 +1041,28 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/agentic_copilot_bridge.cpp")
         list(APPEND AGENTICIDE_SOURCES src/agentic_copilot_bridge.cpp)
     endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/ai_code_assistant.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/ai_code_assistant.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/ai_code_assistant_panel.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/ai_code_assistant_panel.cpp)
+    endif()
+    # Phase 3: Production Enhancement Components
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/checkpoint_manager.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/checkpoint_manager.cpp)
+    endif()
+    # if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/distributed_trainer.cpp")  # Temporarily disabled
+    #     list(APPEND AGENTICIDE_SOURCES src/qtapp/distributed_trainer.cpp)
+    # endif()
+    # if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/interpretability_panel.cpp")  # Temporarily disabled
+    #     list(APPEND AGENTICIDE_SOURCES src/qtapp/interpretability_panel.cpp)
+    # endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/tokenizer_selector.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/tokenizer_selector.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/ci_cd_settings.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/ci_cd_settings.cpp)
+    endif()
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/inflate_deflate_cpp.cpp")
         list(APPEND AGENTICIDE_SOURCES src/qtapp/inflate_deflate_cpp.cpp)
     endif()
@@ -1030,6 +1071,21 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
     endif()
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/inference_engine.cpp")
         list(APPEND AGENTICIDE_SOURCES src/inference_engine.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/inference_engine.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/inference_engine.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/sentencepiece_tokenizer.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/sentencepiece_tokenizer.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/vocabulary_loader.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/vocabulary_loader.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/bpe_tokenizer.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/bpe_tokenizer.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/transformer_inference.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/transformer_inference.cpp)
     endif()
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/gguf_loader.cpp")
         list(APPEND AGENTICIDE_SOURCES src/gguf_loader.cpp)
@@ -1055,9 +1111,10 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/todo_dock.cpp")
         list(APPEND AGENTICIDE_SOURCES src/todo_dock.cpp)
     endif()
-    if(EXISTS "${CMAKE_SOURCE_DIR}/src/inference_engine_stub.cpp")
-        list(APPEND AGENTICIDE_SOURCES src/inference_engine_stub.cpp)
-    endif()
+    # NOTE: inference_engine_stub.cpp is excluded because src/qtapp/inference_engine.cpp is the primary implementation
+    # if(EXISTS "${CMAKE_SOURCE_DIR}/src/inference_engine_stub.cpp")
+    #     list(APPEND AGENTICIDE_SOURCES src/inference_engine_stub.cpp)
+    # endif()
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/agentic_executor.cpp")
         list(APPEND AGENTICIDE_SOURCES src/agentic_executor.cpp)
     endif()
@@ -1088,24 +1145,25 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
     endif()
     
     # Phase 3: Production Enhancements
-    if(EXISTS "${CMAKE_SOURCE_DIR}/src/security_manager.cpp")
-        list(APPEND AGENTICIDE_SOURCES src/security_manager.cpp)
-    endif()
-    if(EXISTS "${CMAKE_SOURCE_DIR}/src/distributed_trainer.cpp")
-        list(APPEND AGENTICIDE_SOURCES src/distributed_trainer.cpp)
-    endif()
-    if(EXISTS "${CMAKE_SOURCE_DIR}/src/interpretability_panel.cpp")
-        list(APPEND AGENTICIDE_SOURCES src/interpretability_panel.cpp)
-    endif()
-    if(EXISTS "${CMAKE_SOURCE_DIR}/src/ci_cd_settings.cpp")
-        list(APPEND AGENTICIDE_SOURCES src/ci_cd_settings.cpp)
-    endif()
-    if(EXISTS "${CMAKE_SOURCE_DIR}/src/tokenizer_selector.cpp")
-        list(APPEND AGENTICIDE_SOURCES src/tokenizer_selector.cpp)
-    endif()
-    if(EXISTS "${CMAKE_SOURCE_DIR}/src/checkpoint_manager.cpp")
-        list(APPEND AGENTICIDE_SOURCES src/checkpoint_manager.cpp)
-    endif()
+    # NOTE: Phase 3 components are in src/qtapp/ and included in RawrXD-QtShell target, not here
+    # if(EXISTS "${CMAKE_SOURCE_DIR}/src/security_manager.cpp")
+    #     list(APPEND AGENTICIDE_SOURCES src/security_manager.cpp)
+    # endif()
+    # if(EXISTS "${CMAKE_SOURCE_DIR}/src/distributed_trainer.cpp")
+    #     list(APPEND AGENTICIDE_SOURCES src/distributed_trainer.cpp)
+    # endif()
+    # if(EXISTS "${CMAKE_SOURCE_DIR}/src/interpretability_panel.cpp")
+    #     list(APPEND AGENTICIDE_SOURCES src/interpretability_panel.cpp)
+    # endif()
+    # if(EXISTS "${CMAKE_SOURCE_DIR}/src/ci_cd_settings.cpp")
+    #     list(APPEND AGENTICIDE_SOURCES src/ci_cd_settings.cpp)
+    # endif()
+    # if(EXISTS "${CMAKE_SOURCE_DIR}/src/tokenizer_selector.cpp")
+    #     list(APPEND AGENTICIDE_SOURCES src/tokenizer_selector.cpp)
+    # endif()
+    # if(EXISTS "${CMAKE_SOURCE_DIR}/src/checkpoint_manager.cpp")
+    #     list(APPEND AGENTICIDE_SOURCES src/checkpoint_manager.cpp)
+    # endif()
     
     # Add headers for MOC processing
     list(APPEND AGENTICIDE_SOURCES
@@ -1119,7 +1177,7 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
         include/terminal_pool.h
         include/file_browser.h
         include/planning_agent.h
-        include/inference_engine_stub.hpp
+        # include/inference_engine_stub.hpp  # Using qtapp/inference_engine.hpp instead
         include/scalar_server.h
         include/telemetry.h
         include/transformer_block_scalar.h
@@ -1133,11 +1191,11 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
         include/observability_dashboard.h
         include/hardware_backend_selector.h
         include/security_manager.h
-        include/distributed_trainer.h
-        include/interpretability_panel.h
-        include/ci_cd_settings.h
-        include/tokenizer_selector.h
-        include/checkpoint_manager.h
+        # include/distributed_trainer.h  # Using qtapp version
+        # include/interpretability_panel.h  # Using qtapp version
+        # include/ci_cd_settings.h  # Using qtapp version
+        # include/tokenizer_selector.h  # Using qtapp version
+        # include/checkpoint_manager.h  # Using qtapp version
     )
     
     add_executable(RawrXD-AgenticIDE WIN32 ${AGENTICIDE_SOURCES})
@@ -1148,6 +1206,9 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
     target_include_directories(RawrXD-AgenticIDE PRIVATE 
         ${CMAKE_SOURCE_DIR}
         ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src/qtapp
+        ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
+        ${CMAKE_SOURCE_DIR}/3rdparty/ggml/src
     )
     target_link_libraries(RawrXD-AgenticIDE PRIVATE 
         user32 
@@ -1165,8 +1226,9 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
         Qt6::Widgets
         Qt6::Network
         Qt6::Sql
-        Qt6::Charts
         brutal_gzip
+        quant_utils
+        ggml_interface
     )
     
     # Add Vulkan linkage if available

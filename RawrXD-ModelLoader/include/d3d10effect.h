@@ -11,6 +11,10 @@
 // ------------------------------------------------------------------------------
 //  Forward-compat layer:  ID3D10Effect*  --->  D3D11
 // ------------------------------------------------------------------------------
+
+// Define GUID for ID3D10Effect interface (required for __uuidof)
+interface __declspec(uuid("9537ab04-3250-412e-8213-fcd2f8677933")) ID3D10Effect;
+
 struct ID3D10Effect;
 struct ID3D10EffectTechnique;
 struct ID3D10EffectPass;
@@ -47,13 +51,16 @@ struct D3D10_TECHNIQUE_DESC {
     UINT Passes;
     UINT Annotations;
 };
+    UINT Passes;
+    UINT Annotations;
+};
 
 // ------------------------------------------------------------------------------
 //  Variable / Type / Buffer  (very small subset, enough for most IDEs)
 // ------------------------------------------------------------------------------
 class D3D10EffectType : public IUnknownImpl {
 public:
-    D3D11_SHADER_TYPE_DESC desc{};
+    D3D11_SHADER_TYPE_DESC desc;
     static D3D10EffectType* make(const D3D11_SHADER_TYPE_DESC& d) { auto p = new D3D10EffectType; p->desc = d; return p; }
 };
 
@@ -80,7 +87,7 @@ public:
     ID3D10EffectVariable* GetMemberByName(const char*) { return nullptr; }
     ID3D10EffectVariable* GetMemberBySemantic(const char*) { return nullptr; }
     ID3D10EffectVariable* GetElement(UINT) { return nullptr; }
-    ID3D10EffectType* GetType() { return type; }
+    ID3D10EffectType* GetType() { return reinterpret_cast<ID3D10EffectType*>(type); }
     HRESULT SetRawValue(void* src, UINT srcSize, UINT destOffset) {
         if (destOffset + srcSize > rawData.size()) return E_INVALIDARG;
         std::memcpy(rawData.data() + destOffset, src, srcSize);
@@ -204,7 +211,7 @@ inline HRESULT D3DX10CreateEffectFromMemory(
     e->techniques.push_back(tech);
     e->techMap[tech->name] = tech;
 
-    *effect = e;
+    *effect = reinterpret_cast<ID3D10Effect*>(e);
     return S_OK;
 }
 

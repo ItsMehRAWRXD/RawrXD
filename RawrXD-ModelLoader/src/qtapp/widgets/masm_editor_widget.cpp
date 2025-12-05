@@ -659,7 +659,7 @@ void MASMEditorWidget::goToLine(int line) {
     
     QTextCursor cursor(editors[idx]->document()->findBlockByLineNumber(line - 1));
     editors[idx]->setTextCursor(cursor);
-    editors[idx]->centerCursor();
+    editors[idx]->ensureCursorVisible();
 }
 
 int MASMEditorWidget::getLineCount(int index) const {

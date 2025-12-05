@@ -31,7 +31,8 @@ bool GGUFLoader::Open(const std::string& filepath) {
     filepath_ = filepath;
     file_.open(filepath, std::ios::binary);
     if (!file_.is_open()) {
-        throw std::runtime_error("Failed to open GGUF file: " + filepath);
+        // Return false instead of throwing to allow graceful fallback
+        return false;
     }
     
     is_open_ = true;

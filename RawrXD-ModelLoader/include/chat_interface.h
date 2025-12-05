@@ -32,19 +32,23 @@ public slots:
     void sendMessage();
     void refreshModels();
     void onModelChanged(int index);
+    void onModel2Changed(int index);
     void onMaxModeToggled(bool enabled);
     
 signals:
     void messageSent(const QString& message);
     void modelSelected(const QString& modelPath);
+    void model2Selected(const QString& modelPath);
     void maxModeChanged(bool enabled);
     
 private:
     void loadAvailableModels();
+    void loadAvailableModelsForSecond();
     
     QTextEdit* message_history_;
     QLineEdit* message_input_;
     QComboBox* modelSelector_;
+    QComboBox* modelSelector2_;
     QCheckBox* maxModeToggle_;
     QLabel* statusLabel_;
     bool maxMode_;

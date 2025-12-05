@@ -18,7 +18,10 @@ MultiTabEditor::MultiTabEditor(QWidget* parent) : QWidget(parent) {
     
     // Connect tab close signal
     connect(tab_widget_, QOverload<int>::of(&QTabWidget::tabCloseRequested),
-            this, [this](int index) { tab_widget_->removeTab(index); });
+            this, [this](int index) { 
+                tab_file_paths_.remove(tab_widget_->widget(index));
+                tab_widget_->removeTab(index); 
+            });
     
     // Create initial empty tab
     newFile();
@@ -39,6 +42,9 @@ void MultiTabEditor::openFile(const QString& filepath) {
     QString filename = filepath.section('/', -1);
     tab_widget_->addTab(editor, filename);
     tab_widget_->setCurrentWidget(editor);
+    
+    // Store the full file path
+    tab_file_paths_[editor] = filepath;
     
     qDebug() << "Opened file:" << filepath;
 }
@@ -68,9 +74,10 @@ void MultiTabEditor::saveCurrentFile() {
             stream << currentEditor->toPlainText();
             file.close();
             
-            // Update tab name
+            // Update tab name and store full path
             QString fileName = filePath.section('/', -1);
             tab_widget_->setTabText(tab_widget_->currentIndex(), fileName);
+            tab_file_paths_[currentEditor] = filePath;
             
             QMessageBox::information(this, "Success", "File saved successfully");
         } else {
@@ -134,6 +141,24 @@ QString MultiTabEditor::getCurrentText() const {
     QTextEdit* currentEditor = qobject_cast<QTextEdit*>(tab_widget_->currentWidget());
     if (currentEditor) {
         return currentEditor->toPlainText();
+    }
+    return QString();
+}
+
+QString MultiTabEditor::getSelectedText() const {
+    QTextEdit* currentEditor = qobject_cast<QTextEdit*>(tab_widget_->currentWidget());
+    if (currentEditor) {
+        QTextCursor cursor = currentEditor->textCursor();
+        return cursor.selectedText();
+    }
+    return QString();
+}
+
+QString MultiTabEditor::getCurrentFilePath() const {
+    QTextEdit* currentEditor = qobject_cast<QTextEdit*>(tab_widget_->currentWidget());
+    if (currentEditor) {
+        // Return the stored full file path, or empty string if not saved yet
+        return tab_file_paths_.value(currentEditor, QString());
     }
     return QString();
 }

@@ -6,7 +6,7 @@
 #include "multi_tab_editor.h"
 #include "terminal_pool.h"
 #include "file_browser.h"
-#include "inference_engine.h"
+#include "qtapp/inference_engine.hpp"
 #include "settings.h"
 #include "telemetry.h"
 #include "planning_agent.h"
@@ -58,7 +58,7 @@
 AgenticIDE::AgenticIDE(QWidget *parent)
     : QMainWindow(parent)
     , m_agenticEngine(new AgenticEngine(this))
-    , m_inferenceEngine(new InferenceEngine(this))
+    , m_inferenceEngine(new InferenceEngine(QString(), this))
     , m_planningAgent(new PlanningAgent(this))
     , m_todoManager(new TodoManager(this))
     , m_settings(new Settings())
@@ -91,6 +91,7 @@ AgenticIDE::AgenticIDE(QWidget *parent)
 
     // Initialize engines
     m_agenticEngine->initialize();
+    m_agenticEngine->setInferenceEngine(m_inferenceEngine);
     m_planningAgent->initialize();
     m_agenticExecutor->initialize(m_agenticEngine, m_inferenceEngine);
 
@@ -237,9 +238,9 @@ agentMenu->addAction("Settings", this, &AgenticIDE::showSettings);
     
     // Phase 4: AI Code Assistant menu
     QMenu *aiMenu = menuBar->addMenu("AI Assistant");
-    aiMenu->addAction("Request Code Completion", this, &AgenticIDE::requestCodeCompletion, Qt::CTRL + Qt::ALT + Qt::Key_C);
-    aiMenu->addAction("Request Refactoring", this, &AgenticIDE::requestRefactoring, Qt::CTRL + Qt::ALT + Qt::Key_R);
-    aiMenu->addAction("Request Explanation", this, &AgenticIDE::requestExplanation, Qt::CTRL + Qt::ALT + Qt::Key_E);
+    aiMenu->addAction("Request Code Completion", this, &AgenticIDE::requestCodeCompletion, QKeySequence(Qt::CTRL | Qt::ALT | Qt::Key_C));
+    aiMenu->addAction("Request Refactoring", this, &AgenticIDE::requestRefactoring, QKeySequence(Qt::CTRL | Qt::ALT | Qt::Key_R));
+    aiMenu->addAction("Request Explanation", this, &AgenticIDE::requestExplanation, QKeySequence(Qt::CTRL | Qt::ALT | Qt::Key_E));
     aiMenu->addSeparator();
     aiMenu->addAction("Toggle Panel", this, &AgenticIDE::toggleAICodeAssistant);
     
@@ -302,9 +303,8 @@ void AgenticIDE::setupConnections()
                 }
             });
     
-    // Connect terminal to inference engine
-    connect(m_terminalPool, &TerminalPool::commandExecuted,
-            m_inferenceEngine, &InferenceEngine::processCommand);
+    // Terminal connected to agentic engine for command processing
+    // (InferenceEngine handles model inference, not command execution)
     
     // Connect planning agent signals
     connect(m_planningAgent, &PlanningAgent::planCreated,
@@ -415,8 +415,8 @@ void AgenticIDE::hotPatchModel()
 {
     QString modelPath = QFileDialog::getOpenFileName(this, "Select Model File", "", "GGUF Files (*.gguf)");
     if (!modelPath.isEmpty()) {
-        // Hot-patch the model
-        if (m_inferenceEngine->HotPatchModel(modelPath.toStdString())) {
+        // Hot-patch the model by loading a new model
+        if (m_inferenceEngine->loadModel(modelPath)) {
             m_chatInterface->addMessage("System", "Model hot-patched successfully: " + modelPath);
             statusBar()->showMessage("Model hot-patched successfully");
         } else {

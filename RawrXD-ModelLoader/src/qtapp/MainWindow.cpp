@@ -139,7 +139,7 @@ MainWindow::MainWindow(QWidget* parent)
     });
 
     // Enable zero-touch triggers so the agent auto-starts without manual input
-    AutoBootstrap::installZeroTouch();
+    // AutoBootstrap::installZeroTouch();
 
     // Optional: initialize per-layer quantization UI
     setupLayerQuantWidget();
@@ -1170,8 +1170,8 @@ void MainWindow::onHotReload() {
 // ============================================================
 
 void MainWindow::setupAgentSystem() {
-    // Initialize AutoBootstrap (autonomous agent orchestration)
-    m_agentBootstrap = new AutoBootstrap(this);
+    // Initialize AutoBootstrap (autonomous agent orchestration) - uses singleton pattern
+    m_agentBootstrap = AutoBootstrap::instance();
     
     // Initialize HotReload (quantization library hot-reload)
     m_hotReload = new HotReload(this);

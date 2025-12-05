@@ -18,9 +18,10 @@ public slots:
     void redo();
     void find();
     void replace();
-    
+
     QString getCurrentText() const;
-    
-private:
+    QString getSelectedText() const;
+    QString getCurrentFilePath() const;private:
     QTabWidget* tab_widget_;
+    QMap<QWidget*, QString> tab_file_paths_;  // Maps editor widget to file path
 };

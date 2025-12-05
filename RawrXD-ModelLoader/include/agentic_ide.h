@@ -98,6 +98,11 @@ private slots:
     void requestCodeCompletion();       // Request AI code completion
     void requestRefactoring();          // Request code refactoring suggestion
     void requestExplanation();          // Request code explanation
+    void onAISearchWorkspace();         // AI-powered file search
+    void onAIGrepWorkspace();           // AI-powered grep search
+    void onAIExecuteCommand();          // AI-powered PowerShell command execution
+    void onAIAnalyzeCode();             // AI code analysis
+    void onAIAutofixError();            // AI auto-fix error suggestion
 
 private:
     void setupUI();
@@ -148,4 +153,5 @@ private:
     class QDockWidget *m_todoDockWidget;
     
     QStringList m_recentFiles;
+    QString m_workspaceRoot;  // Current workspace root directory
 };

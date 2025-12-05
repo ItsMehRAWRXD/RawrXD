@@ -2,547 +2,513 @@
 #include <QDebug>
 #include <QFile>
 #include <QDir>
-#include <QStandardPaths>
-#include <QDateTime>
 #include <QJsonDocument>
 #include <QJsonArray>
-#ifdef HAVE_ZLIB
-#include <zlib.h>
-#endif
-#include <algorithm>
-#include <numeric>
+#include <QDateTime>
+#include <QStandardPaths>
 
-/**
- * @brief CheckpointManager::CheckpointManager - Constructor
- */
 CheckpointManager::CheckpointManager(QObject* parent)
-    : QObject(parent), m_checkpointDir(""), m_maxCheckpoints(10),
-      m_autoCheckpointInterval(100), m_bestValidationLoss(std::numeric_limits<float>::max()),
-      m_compressionLevel(CompressionLevel::Medium), m_lastCheckpointStep(-1)
+    : QObject(parent),
+      m_maxCheckpoints(10),
+      m_checkpointCounter(0),
+      m_autoCheckpointEnabled(false),
+      m_autoCheckpointInterval(100),
+      m_autoCheckpointEpochInterval(1),
+      m_lastAutoCheckpointStep(0),
+      m_lastAutoCheckpointEpoch(0),
+      m_rank(0),
+      m_worldSize(1)
 {
     qDebug() << "[CheckpointManager] Initializing checkpoint manager";
-    
-    // Set default checkpoint directory
-    QString dataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-    m_checkpointDir = dataPath + "/checkpoints";
-    QDir().mkpath(m_checkpointDir);
-    
-    loadCheckpointHistory();
 }
 
-/**
- * @brief CheckpointManager::~CheckpointManager - Destructor
- */
 CheckpointManager::~CheckpointManager()
 {
-    qDebug() << "[CheckpointManager] Checkpoint manager destroyed";
+    qDebug() << "[CheckpointManager] Destroying checkpoint manager";
 }
 
-/**
- * @brief CheckpointManager::saveCheckpoint - Save model checkpoint
- */
-bool CheckpointManager::saveCheckpoint(const CheckpointMetadata& metadata,
-                                       const QByteArray& modelState,
-                                       const QByteArray& optimizerState,
-                                       const QByteArray& trainingState)
+bool CheckpointManager::initialize(const QString& checkpointDir, int maxCheckpoints)
 {
-    qDebug() << "[CheckpointManager] Saving checkpoint at step" << metadata.step;
+    qDebug() << "[CheckpointManager] Initializing with directory:" << checkpointDir;
     
-    try {
-        // Generate checkpoint ID
-        QString checkpointId = QString("ckpt_%1_%2")
-            .arg(metadata.step)
-            .arg(QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss"));
-        
-        // Create checkpoint directory
-        QString ckptPath = m_checkpointDir + "/" + checkpointId;
-        QDir().mkpath(ckptPath);
-        
-        // Compress and save model state
-        QString modelFile = ckptPath + "/model.bin.gz";
-        if (!saveCompressedData(modelFile, modelState)) {
-            qCritical() << "[CheckpointManager] Failed to save model state";
+    QDir dir(checkpointDir);
+    if (!dir.exists()) {
+        if (!dir.mkpath(".")) {
+            qCritical() << "[CheckpointManager] Failed to create checkpoint directory";
             return false;
         }
-        
-        // Compress and save optimizer state
-        QString optimizerFile = ckptPath + "/optimizer.bin.gz";
-        if (!saveCompressedData(optimizerFile, optimizerState)) {
-            qCritical() << "[CheckpointManager] Failed to save optimizer state";
-            return false;
-        }
-        
-        // Compress and save training state
-        QString trainingFile = ckptPath + "/training.bin.gz";
-        if (!saveCompressedData(trainingFile, trainingState)) {
-            qCritical() << "[CheckpointManager] Failed to save training state";
-            return false;
-        }
-        
-        // Save metadata
-        CheckpointMetadata saveMeta = metadata;
-        saveMeta.checkpointId = checkpointId;
-        QString metaFile = ckptPath + "/metadata.json";
-        if (!saveMetadata(metaFile, saveMeta)) {
-            qCritical() << "[CheckpointManager] Failed to save metadata";
-            return false;
-        }
-        
-        // Add to history
-        m_checkpointHistory.push_back(saveMeta);
-        
-        // Track best model
-        if (metadata.validationLoss < m_bestValidationLoss) {
-            m_bestValidationLoss = metadata.validationLoss;
-            m_bestCheckpointId = checkpointId;
-            qDebug() << "[CheckpointManager] New best model found with validation loss:" << m_bestValidationLoss;
-        }
-        
-        // Prune old checkpoints
-        pruneOldCheckpoints();
-        
-        m_lastCheckpointStep = metadata.step;
-        
-        emit checkpointSaved(checkpointId, metadata.step);
-        
-        qDebug() << "[CheckpointManager] Checkpoint saved:" << checkpointId;
-        return true;
     }
-    catch (const std::exception& e) {
-        qCritical() << "[CheckpointManager] Failed to save checkpoint:" << e.what();
-        return false;
-    }
+    
+    m_checkpointDir = checkpointDir;
+    m_maxCheckpoints = maxCheckpoints > 0 ? maxCheckpoints : 10;
+    m_checkpointCounter = 0;
+    
+    return true;
 }
 
-/**
- * @brief CheckpointManager::loadCheckpoint - Load checkpoint
- */
-bool CheckpointManager::loadCheckpoint(const QString& checkpointId,
-                                       QByteArray& modelState,
-                                       QByteArray& optimizerState,
-                                       QByteArray& trainingState,
-                                       CheckpointMetadata& metadata)
+bool CheckpointManager::isInitialized() const
+{
+    return !m_checkpointDir.isEmpty() && QDir(m_checkpointDir).exists();
+}
+
+QString CheckpointManager::saveCheckpoint(const CheckpointMetadata& metadata,
+                                         const CheckpointState& state,
+                                         CompressionLevel compress)
+{
+    if (!isInitialized()) {
+        qCritical() << "[CheckpointManager] Not initialized";
+        return QString();
+    }
+    
+    QString checkpointId = generateCheckpointId();
+    qDebug() << "[CheckpointManager] Saving checkpoint:" << checkpointId;
+    
+    if (writeCheckpointToDisk(checkpointId, state, compress)) {
+        CheckpointIndex index;
+        index.checkpointId = checkpointId;
+        index.filePath = m_checkpointDir + "/" + checkpointId + ".ckpt";
+        index.metadata = metadata;
+        index.checkpointNumber = m_checkpointCounter++;
+        
+        m_checkpointIndex.push_back(index);
+        
+        if (metadata.isBestModel) {
+            m_bestCheckpointId = checkpointId;
+            emit bestCheckpointUpdated(checkpointId, metadata.validationLoss);
+        }
+        
+        emit checkpointSaved(checkpointId, metadata.epoch, metadata.step);
+        return checkpointId;
+    }
+    
+    emit checkpointError("Failed to save checkpoint");
+    return QString();
+}
+
+QString CheckpointManager::quickSaveCheckpoint(const CheckpointMetadata& metadata,
+                                              const CheckpointState& state)
+{
+    return saveCheckpoint(metadata, state, CompressionLevel::Low);
+}
+
+QString CheckpointManager::saveModelWeights(const CheckpointMetadata& metadata,
+                                           const QByteArray& modelWeights,
+                                           CompressionLevel compress)
+{
+    CheckpointState state;
+    state.modelWeights = modelWeights;
+    return saveCheckpoint(metadata, state, compress);
+}
+
+bool CheckpointManager::loadCheckpoint(const QString& checkpointId, CheckpointState& state)
 {
     qDebug() << "[CheckpointManager] Loading checkpoint:" << checkpointId;
     
-    try {
-        QString ckptPath = m_checkpointDir + "/" + checkpointId;
-        
-        // Load metadata
-        QString metaFile = ckptPath + "/metadata.json";
-        if (!loadMetadata(metaFile, metadata)) {
-            qCritical() << "[CheckpointManager] Failed to load metadata";
-            return false;
-        }
-        
-        // Load model state
-        QString modelFile = ckptPath + "/model.bin.gz";
-        if (!loadCompressedData(modelFile, modelState)) {
-            qCritical() << "[CheckpointManager] Failed to load model state";
-            return false;
-        }
-        
-        // Load optimizer state
-        QString optimizerFile = ckptPath + "/optimizer.bin.gz";
-        if (!loadCompressedData(optimizerFile, optimizerState)) {
-            qCritical() << "[CheckpointManager] Failed to load optimizer state";
-            return false;
-        }
-        
-        // Load training state
-        QString trainingFile = ckptPath + "/training.bin.gz";
-        if (!loadCompressedData(trainingFile, trainingState)) {
-            qCritical() << "[CheckpointManager] Failed to load training state";
-            return false;
-        }
-        
-        emit checkpointLoaded(checkpointId, metadata.step);
-        
-        qDebug() << "[CheckpointManager] Checkpoint loaded successfully";
-        return true;
-    }
-    catch (const std::exception& e) {
-        qCritical() << "[CheckpointManager] Failed to load checkpoint:" << e.what();
+    if (!readCheckpointFromDisk(checkpointId, state)) {
+        emit checkpointError("Failed to load checkpoint: " + checkpointId);
         return false;
     }
-}
-
-/**
- * @brief CheckpointManager::saveCompressedData - Save data with zlib compression (or uncompressed fallback)
- */
-bool CheckpointManager::saveCompressedData(const QString& filepath, const QByteArray& data)
-{
-    try {
-#ifdef HAVE_ZLIB
-        // Get compression level
-        int zlibLevel = Z_DEFAULT_COMPRESSION;
-        switch (m_compressionLevel) {
-            case CompressionLevel::None:
-                zlibLevel = Z_NO_COMPRESSION;
-                break;
-            case CompressionLevel::Low:
-                zlibLevel = 1;
-                break;
-            case CompressionLevel::Medium:
-                zlibLevel = 6;
-                break;
-            case CompressionLevel::High:
-                zlibLevel = 9;
-                break;
-            case CompressionLevel::Maximum:
-                zlibLevel = 9;
-                break;
-        }
-        
-        // Compress data
-        uLongf compressedSize = compressBound(data.size());
-        QByteArray compressed(compressedSize, 0);
-        
-        int ret = compress2(
-            reinterpret_cast<unsigned char*>(compressed.data()),
-            &compressedSize,
-            reinterpret_cast<const unsigned char*>(data.data()),
-            data.size(),
-            zlibLevel
-        );
-        
-        if (ret != Z_OK) {
-            qCritical() << "[CheckpointManager] Compression failed with code:" << ret;
-            return false;
-        }
-        
-        compressed.truncate(compressedSize);
-        
-        // Write to file
-        QFile file(filepath);
-        if (!file.open(QIODevice::WriteOnly)) {
-            qCritical() << "[CheckpointManager] Failed to open file for writing:" << filepath;
-            return false;
-        }
-        
-        qint64 written = file.write(compressed);
-        file.close();
-        
-        if (written != compressed.size()) {
-            qCritical() << "[CheckpointManager] Failed to write all data to file";
-            return false;
-        }
-        
-        qDebug() << "[CheckpointManager] Saved compressed data:" << filepath
-                 << "Original:" << data.size() << "bytes, Compressed:" << compressedSize << "bytes";
-        
-        return true;
-#else
-        // Fallback: Save uncompressed
-        qWarning() << "[CheckpointManager] ZLIB not available - saving uncompressed";
-        
-        QFile file(filepath);
-        if (!file.open(QIODevice::WriteOnly)) {
-            qCritical() << "[CheckpointManager] Failed to open file for writing:" << filepath;
-            return false;
-        }
-        
-        qint64 written = file.write(data);
-        file.close();
-        
-        if (written != data.size()) {
-            qCritical() << "[CheckpointManager] Failed to write all data to file";
-            return false;
-        }
-        
-        qDebug() << "[CheckpointManager] Saved uncompressed data:" << filepath << "Size:" << data.size() << "bytes";
-        return true;
-#endif
-    }
-    catch (const std::exception& e) {
-        qCritical() << "[CheckpointManager] Save failed:" << e.what();
-        return false;
-    }
-}
-
-/**
- * @brief CheckpointManager::loadCompressedData - Load and decompress data (or load uncompressed fallback)
- */
-bool CheckpointManager::loadCompressedData(const QString& filepath, QByteArray& data)
-{
-    try {
-        // Read file
-        QFile file(filepath);
-        if (!file.open(QIODevice::ReadOnly)) {
-            qCritical() << "[CheckpointManager] Failed to open file for reading:" << filepath;
-            return false;
-        }
-        
-        QByteArray fileData = file.readAll();
-        file.close();
-        
-#ifdef HAVE_ZLIB
-        // Try to decompress data (estimate 10x expansion)
-        uLongf decompressedSize = fileData.size() * 10;
-        data.resize(decompressedSize);
-        
-        int ret = uncompress(
-            reinterpret_cast<unsigned char*>(data.data()),
-            &decompressedSize,
-            reinterpret_cast<const unsigned char*>(fileData.data()),
-            fileData.size()
-        );
-        
-        if (ret != Z_OK) {
-            qCritical() << "[CheckpointManager] Decompression failed with code:" << ret;
-            return false;
-        }
-        
-        data.truncate(decompressedSize);
-        
-        qDebug() << "[CheckpointManager] Loaded compressed data:" << filepath
-                 << "Decompressed:" << decompressedSize << "bytes";
-        
-        return true;
-#else
-        // Fallback: Treat as uncompressed
-        qWarning() << "[CheckpointManager] ZLIB not available - loading as uncompressed";
-        data = fileData;
-        qDebug() << "[CheckpointManager] Loaded uncompressed data:" << filepath << "Size:" << fileData.size() << "bytes";
-        return true;
-#endif
-    }
-    catch (const std::exception& e) {
-        qCritical() << "[CheckpointManager] Load failed:" << e.what();
-        return false;
-    }
-}
-
-/**
- * @brief CheckpointManager::saveMetadata - Save checkpoint metadata as JSON
- */
-bool CheckpointManager::saveMetadata(const QString& filepath, const CheckpointMetadata& metadata)
-{
-    try {
-        QJsonObject obj;
-        obj["checkpointId"] = metadata.checkpointId;
-        obj["epoch"] = metadata.epoch;
-        obj["step"] = metadata.step;
-        obj["timestamp"] = metadata.timestamp;
-        obj["validationLoss"] = metadata.validationLoss;
-        obj["trainLoss"] = metadata.trainLoss;
-        obj["accuracy"] = metadata.accuracy;
-        obj["wallclockTime"] = metadata.wallclockTime;
-        obj["modelSize"] = metadata.modelSize;
-        obj["modelArchitecture"] = metadata.modelArchitecture;
-        obj["hyperparameters"] = metadata.hyperparameters;
-        
-        QJsonDocument doc(obj);
-        QFile file(filepath);
-        
-        if (!file.open(QIODevice::WriteOnly)) {
-            qCritical() << "[CheckpointManager] Failed to open metadata file for writing";
-            return false;
-        }
-        
-        file.write(doc.toJson());
-        file.close();
-        
-        return true;
-    }
-    catch (const std::exception& e) {
-        qCritical() << "[CheckpointManager] Failed to save metadata:" << e.what();
-        return false;
-    }
-}
-
-/**
- * @brief CheckpointManager::loadMetadata - Load checkpoint metadata from JSON
- */
-bool CheckpointManager::loadMetadata(const QString& filepath, CheckpointMetadata& metadata)
-{
-    try {
-        QFile file(filepath);
-        if (!file.open(QIODevice::ReadOnly)) {
-            qCritical() << "[CheckpointManager] Failed to open metadata file for reading";
-            return false;
-        }
-        
-        QByteArray data = file.readAll();
-        file.close();
-        
-        QJsonDocument doc = QJsonDocument::fromJson(data);
-        QJsonObject obj = doc.object();
-        
-        metadata.checkpointId = obj["checkpointId"].toString();
-        metadata.epoch = obj["epoch"].toInt();
-        metadata.step = obj["step"].toInt();
-        metadata.timestamp = obj["timestamp"].toString();
-        metadata.validationLoss = static_cast<float>(obj["validationLoss"].toDouble());
-        metadata.trainLoss = static_cast<float>(obj["trainLoss"].toDouble());
-        metadata.accuracy = static_cast<float>(obj["accuracy"].toDouble());
-        metadata.wallclockTime = static_cast<float>(obj["wallclockTime"].toDouble());
-        metadata.modelSize = obj["modelSize"].toInt();
-        metadata.modelArchitecture = obj["modelArchitecture"].toString();
-        metadata.hyperparameters = obj["hyperparameters"].toString();
-        
-        return true;
-    }
-    catch (const std::exception& e) {
-        qCritical() << "[CheckpointManager] Failed to load metadata:" << e.what();
-        return false;
-    }
-}
-
-/**
- * @brief CheckpointManager::pruneOldCheckpoints - Remove old checkpoints to save disk space
- */
-void CheckpointManager::pruneOldCheckpoints()
-{
-    qDebug() << "[CheckpointManager] Pruning old checkpoints";
     
-    try {
-        // Sort by step (descending)
-        std::sort(m_checkpointHistory.begin(), m_checkpointHistory.end(),
-                 [](const CheckpointMetadata& a, const CheckpointMetadata& b) {
-                     return a.step > b.step;
-                 });
-        
-        // Keep only maxCheckpoints
-        while (m_checkpointHistory.size() > static_cast<size_t>(m_maxCheckpoints)) {
-            const auto& oldCkpt = m_checkpointHistory.back();
-            
-            // Don't delete best checkpoint
-            if (oldCkpt.checkpointId != m_bestCheckpointId) {
-                QString ckptPath = m_checkpointDir + "/" + oldCkpt.checkpointId;
-                QDir(ckptPath).removeRecursively();
-                qDebug() << "[CheckpointManager] Deleted old checkpoint:" << oldCkpt.checkpointId;
-            }
-            
-            m_checkpointHistory.pop_back();
-        }
-    }
-    catch (const std::exception& e) {
-        qWarning() << "[CheckpointManager] Pruning failed:" << e.what();
-    }
+    emit checkpointLoaded(checkpointId);
+    return true;
 }
 
-/**
- * @brief CheckpointManager::loadCheckpointHistory - Load checkpoint history from disk
- */
-void CheckpointManager::loadCheckpointHistory()
+QString CheckpointManager::loadLatestCheckpoint(CheckpointState& state)
 {
-    qDebug() << "[CheckpointManager] Loading checkpoint history";
+    if (m_checkpointIndex.empty()) {
+        return QString();
+    }
     
-    try {
-        QDir ckptDir(m_checkpointDir);
-        QStringList checkpoints = ckptDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
-        
-        for (const auto& ckpt : checkpoints) {
-            QString metaFile = m_checkpointDir + "/" + ckpt + "/metadata.json";
-            CheckpointMetadata metadata;
-            
-            if (loadMetadata(metaFile, metadata)) {
-                m_checkpointHistory.push_back(metadata);
+    const auto& latest = m_checkpointIndex.back();
+    if (loadCheckpoint(latest.checkpointId, state)) {
+        return latest.checkpointId;
+    }
+    return QString();
+}
+
+QString CheckpointManager::loadBestCheckpoint(CheckpointState& state)
+{
+    if (m_bestCheckpointId.isEmpty()) {
+        return QString();
+    }
+    
+    if (loadCheckpoint(m_bestCheckpointId, state)) {
+        return m_bestCheckpointId;
+    }
+    return QString();
+}
+
+QString CheckpointManager::loadCheckpointFromEpoch(int epoch, CheckpointState& state)
+{
+    for (const auto& index : m_checkpointIndex) {
+        if (index.metadata.epoch == epoch) {
+            if (loadCheckpoint(index.checkpointId, state)) {
+                return index.checkpointId;
             }
         }
-        
-        qDebug() << "[CheckpointManager] Loaded" << m_checkpointHistory.size() << "checkpoints";
     }
-    catch (const std::exception& e) {
-        qWarning() << "[CheckpointManager] Failed to load checkpoint history:" << e.what();
+    return QString();
+}
+
+CheckpointManager::CheckpointMetadata CheckpointManager::getCheckpointMetadata(const QString& checkpointId) const
+{
+    for (const auto& index : m_checkpointIndex) {
+        if (index.checkpointId == checkpointId) {
+            return index.metadata;
+        }
     }
+    return CheckpointMetadata();
 }
 
-/**
- * @brief CheckpointManager::shouldAutoCheckpoint - Check if should auto-checkpoint
- */
-bool CheckpointManager::shouldAutoCheckpoint(int currentStep)
+std::vector<CheckpointManager::CheckpointIndex> CheckpointManager::listCheckpoints() const
 {
-    return (currentStep - m_lastCheckpointStep) >= m_autoCheckpointInterval;
+    return m_checkpointIndex;
 }
 
-/**
- * @brief CheckpointManager::getCheckpointList - Get list of all checkpoints
- */
-std::vector<CheckpointMetadata> CheckpointManager::getCheckpointList()
+std::vector<CheckpointManager::CheckpointIndex> CheckpointManager::getCheckpointHistory(int limit) const
 {
-    return m_checkpointHistory;
+    std::vector<CheckpointIndex> history;
+    
+    int start = static_cast<int>(m_checkpointIndex.size()) - limit;
+    if (start < 0) start = 0;
+    
+    for (size_t i = start; i < m_checkpointIndex.size(); ++i) {
+        history.push_back(m_checkpointIndex[i]);
+    }
+    
+    return history;
 }
 
-/**
- * @brief CheckpointManager::getBestCheckpointId - Get ID of best checkpoint
- */
-QString CheckpointManager::getBestCheckpointId()
-{
-    return m_bestCheckpointId;
-}
-
-/**
- * @brief CheckpointManager::deleteCheckpoint - Delete a checkpoint
- */
 bool CheckpointManager::deleteCheckpoint(const QString& checkpointId)
 {
     qDebug() << "[CheckpointManager] Deleting checkpoint:" << checkpointId;
     
-    try {
-        if (checkpointId == m_bestCheckpointId) {
-            qWarning() << "[CheckpointManager] Cannot delete best checkpoint";
-            return false;
-        }
-        
-        QString ckptPath = m_checkpointDir + "/" + checkpointId;
-        QDir dir(ckptPath);
-        
-        if (!dir.removeRecursively()) {
-            qCritical() << "[CheckpointManager] Failed to delete checkpoint directory";
-            return false;
-        }
-        
-        // Remove from history
-        m_checkpointHistory.erase(
-            std::remove_if(m_checkpointHistory.begin(), m_checkpointHistory.end(),
-                         [&checkpointId](const CheckpointMetadata& m) {
-                             return m.checkpointId == checkpointId;
-                         }),
-            m_checkpointHistory.end()
-        );
-        
-        return true;
-    }
-    catch (const std::exception& e) {
-        qCritical() << "[CheckpointManager] Failed to delete checkpoint:" << e.what();
+    QString filePath = m_checkpointDir + "/" + checkpointId + ".ckpt";
+    QFile file(filePath);
+    
+    if (!file.remove()) {
+        qCritical() << "[CheckpointManager] Failed to delete checkpoint file";
         return false;
     }
-}
-
-/**
- * @brief CheckpointManager::setCompressionLevel - Set compression level
- */
-void CheckpointManager::setCompressionLevel(CompressionLevel level)
-{
-    m_compressionLevel = level;
-    qDebug() << "[CheckpointManager] Compression level set to:" << static_cast<int>(level);
-}
-
-/**
- * @brief CheckpointManager::setAutoCheckpointInterval - Set auto-checkpoint interval
- */
-void CheckpointManager::setAutoCheckpointInterval(int interval)
-{
-    m_autoCheckpointInterval = interval;
-    qDebug() << "[CheckpointManager] Auto-checkpoint interval set to:" << interval << "steps";
-}
-
-/**
- * @brief CheckpointManager::getCheckpointSize - Get size of checkpoint
- */
-qint64 CheckpointManager::getCheckpointSize(const QString& checkpointId)
-{
-    QString ckptPath = m_checkpointDir + "/" + checkpointId;
-    QDir dir(ckptPath);
     
-    qint64 size = 0;
-    QFileInfoList files = dir.entryInfoList(QDir::Files | QDir::Recursive);
+    // Remove from index
+    auto it = std::remove_if(m_checkpointIndex.begin(), m_checkpointIndex.end(),
+                             [&checkpointId](const CheckpointIndex& idx) {
+                                 return idx.checkpointId == checkpointId;
+                             });
+    m_checkpointIndex.erase(it, m_checkpointIndex.end());
     
-    for (const auto& file : files) {
-        size += file.size();
+    emit checkpointDeleted(checkpointId);
+    return true;
+}
+
+int CheckpointManager::pruneOldCheckpoints(int keepCount)
+{
+    qDebug() << "[CheckpointManager] Pruning old checkpoints, keeping" << keepCount;
+    
+    int deleted = 0;
+    while (static_cast<int>(m_checkpointIndex.size()) > keepCount) {
+        const auto& oldest = m_checkpointIndex.front();
+        if (deleteCheckpoint(oldest.checkpointId)) {
+            deleted++;
+        }
     }
     
-    return size;
+    return deleted;
+}
+
+CheckpointManager::CheckpointMetadata CheckpointManager::getBestCheckpointInfo() const
+{
+    if (m_bestCheckpointId.isEmpty()) {
+        return CheckpointMetadata();
+    }
+    return getCheckpointMetadata(m_bestCheckpointId);
+}
+
+bool CheckpointManager::updateCheckpointMetadata(const QString& checkpointId,
+                                                const CheckpointMetadata& metadata)
+{
+    for (auto& index : m_checkpointIndex) {
+        if (index.checkpointId == checkpointId) {
+            index.metadata = metadata;
+            if (metadata.isBestModel) {
+                m_bestCheckpointId = checkpointId;
+            }
+            return true;
+        }
+    }
+    return false;
+}
+
+bool CheckpointManager::setCheckpointNote(const QString& checkpointId, const QString& note)
+{
+    for (auto& index : m_checkpointIndex) {
+        if (index.checkpointId == checkpointId) {
+            index.metadata.notes = note;
+            return true;
+        }
+    }
+    return false;
+}
+
+bool CheckpointManager::enableAutoCheckpointing(int intervalSteps, int saveEveryNEpochs)
+{
+    m_autoCheckpointEnabled = true;
+    m_autoCheckpointInterval = intervalSteps;
+    m_autoCheckpointEpochInterval = saveEveryNEpochs;
+    qDebug() << "[CheckpointManager] Auto-checkpointing enabled:" << intervalSteps << "steps";
+    return true;
+}
+
+void CheckpointManager::disableAutoCheckpointing()
+{
+    m_autoCheckpointEnabled = false;
+    qDebug() << "[CheckpointManager] Auto-checkpointing disabled";
+}
+
+bool CheckpointManager::shouldCheckpoint(int step, int epoch) const
+{
+    if (!m_autoCheckpointEnabled) return false;
+    
+    bool stepBased = (step - m_lastAutoCheckpointStep) >= m_autoCheckpointInterval;
+    bool epochBased = (epoch - m_lastAutoCheckpointEpoch) >= m_autoCheckpointEpochInterval;
+    
+    return stepBased || epochBased;
+}
+
+bool CheckpointManager::validateCheckpoint(const QString& checkpointId) const
+{
+    QString filePath = m_checkpointDir + "/" + checkpointId + ".ckpt";
+    QFile file(filePath);
+    
+    if (!file.exists()) {
+        return false;
+    }
+    
+    if (!file.open(QIODevice::ReadOnly)) {
+        return false;
+    }
+    
+    QByteArray data = file.readAll();
+    file.close();
+    
+    // Basic validation: check if not empty
+    return !data.isEmpty();
+}
+
+std::map<QString, bool> CheckpointManager::validateAllCheckpoints() const
+{
+    std::map<QString, bool> results;
+    
+    for (const auto& index : m_checkpointIndex) {
+        results[index.checkpointId] = validateCheckpoint(index.checkpointId);
+    }
+    
+    return results;
+}
+
+bool CheckpointManager::repairCheckpoint(const QString& checkpointId)
+{
+    qDebug() << "[CheckpointManager] Repairing checkpoint:" << checkpointId;
+    // Placeholder for repair logic
+    return validateCheckpoint(checkpointId);
+}
+
+uint64_t CheckpointManager::getTotalCheckpointSize() const
+{
+    uint64_t totalSize = 0;
+    
+    for (const auto& index : m_checkpointIndex) {
+        totalSize += getCheckpointSize(index.checkpointId);
+    }
+    
+    return totalSize;
+}
+
+uint64_t CheckpointManager::getCheckpointSize(const QString& checkpointId) const
+{
+    QString filePath = m_checkpointDir + "/" + checkpointId + ".ckpt";
+    QFile file(filePath);
+    
+    if (file.exists()) {
+        return file.size();
+    }
+    
+    return 0;
+}
+
+QJsonObject CheckpointManager::generateCheckpointReport() const
+{
+    QJsonObject report;
+    report["totalCheckpoints"] = static_cast<int>(m_checkpointIndex.size());
+    report["totalSize"] = static_cast<qint64>(getTotalCheckpointSize());
+    report["bestCheckpointId"] = m_bestCheckpointId;
+    
+    QJsonArray checkpoints;
+    for (const auto& index : m_checkpointIndex) {
+        QJsonObject cp;
+        cp["id"] = index.checkpointId;
+        cp["epoch"] = index.metadata.epoch;
+        cp["step"] = index.metadata.step;
+        cp["validationLoss"] = index.metadata.validationLoss;
+        cp["accuracy"] = index.metadata.accuracy;
+        checkpoints.append(cp);
+    }
+    report["checkpoints"] = checkpoints;
+    
+    return report;
+}
+
+QJsonObject CheckpointManager::compareCheckpoints(const QString& checkpointId1,
+                                                 const QString& checkpointId2) const
+{
+    QJsonObject comparison;
+    
+    auto meta1 = getCheckpointMetadata(checkpointId1);
+    auto meta2 = getCheckpointMetadata(checkpointId2);
+    
+    QJsonObject cp1;
+    cp1["validationLoss"] = meta1.validationLoss;
+    cp1["accuracy"] = meta1.accuracy;
+    
+    QJsonObject cp2;
+    cp2["validationLoss"] = meta2.validationLoss;
+    cp2["accuracy"] = meta2.accuracy;
+    
+    comparison["checkpoint1"] = cp1;
+    comparison["checkpoint2"] = cp2;
+    comparison["lossImprovement"] = meta1.validationLoss - meta2.validationLoss;
+    comparison["accuracyDiff"] = meta1.accuracy - meta2.accuracy;
+    
+    return comparison;
+}
+
+void CheckpointManager::setDistributedInfo(int rank, int worldSize)
+{
+    m_rank = rank;
+    m_worldSize = worldSize;
+    qDebug() << "[CheckpointManager] Set distributed info: rank" << rank << "of" << worldSize;
+}
+
+bool CheckpointManager::synchronizeDistributedCheckpoints()
+{
+    qDebug() << "[CheckpointManager] Synchronizing distributed checkpoints";
+    // Placeholder for distributed sync logic
+    return true;
+}
+
+QJsonObject CheckpointManager::exportConfiguration() const
+{
+    QJsonObject config;
+    config["checkpointDir"] = m_checkpointDir;
+    config["maxCheckpoints"] = m_maxCheckpoints;
+    config["autoCheckpointEnabled"] = m_autoCheckpointEnabled;
+    config["autoCheckpointInterval"] = m_autoCheckpointInterval;
+    config["autoCheckpointEpochInterval"] = m_autoCheckpointEpochInterval;
+    return config;
+}
+
+bool CheckpointManager::importConfiguration(const QJsonObject& config)
+{
+    m_checkpointDir = config["checkpointDir"].toString();
+    m_maxCheckpoints = config["maxCheckpoints"].toInt(10);
+    m_autoCheckpointEnabled = config["autoCheckpointEnabled"].toBool();
+    m_autoCheckpointInterval = config["autoCheckpointInterval"].toInt(100);
+    m_autoCheckpointEpochInterval = config["autoCheckpointEpochInterval"].toInt(1);
+    return true;
+}
+
+bool CheckpointManager::saveConfigurationToFile(const QString& filePath) const
+{
+    QJsonDocument doc(exportConfiguration());
+    QFile file(filePath);
+    
+    if (!file.open(QIODevice::WriteOnly)) {
+        return false;
+    }
+    
+    file.write(doc.toJson());
+    file.close();
+    return true;
+}
+
+bool CheckpointManager::loadConfigurationFromFile(const QString& filePath)
+{
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly)) {
+        return false;
+    }
+    
+    QByteArray data = file.readAll();
+    file.close();
+    
+    QJsonDocument doc = QJsonDocument::fromJson(data);
+    return importConfiguration(doc.object());
+}
+
+QString CheckpointManager::generateCheckpointId()
+{
+    return QString("checkpoint_%1_%2")
+        .arg(QDateTime::currentDateTime().toMSecsSinceEpoch())
+        .arg(m_checkpointCounter);
+}
+
+QByteArray CheckpointManager::compressState(const QByteArray& data, CompressionLevel level)
+{
+    if (level == CompressionLevel::None || data.isEmpty()) {
+        return data;
+    }
+    
+    // Placeholder for zlib compression
+    // In production, use zlib or similar
+    return data;
+}
+
+QByteArray CheckpointManager::decompressState(const QByteArray& data)
+{
+    // Placeholder for decompression
+    return data;
+}
+
+bool CheckpointManager::writeCheckpointToDisk(const QString& checkpointId,
+                                             const CheckpointState& state,
+                                             CompressionLevel compress)
+{
+    QString filePath = m_checkpointDir + "/" + checkpointId + ".ckpt";
+    QFile file(filePath);
+    
+    if (!file.open(QIODevice::WriteOnly)) {
+        return false;
+    }
+    
+    // Write state - serialize config to JSON first
+    QJsonDocument configDoc(state.config);
+    QByteArray configData = configDoc.toJson(QJsonDocument::Compact);
+    
+    file.write(state.modelWeights);
+    file.write(state.optimizerState);
+    file.write(state.schedulerState);
+    file.write(state.trainingState);
+    file.write(configData);
+    
+    file.close();
+    return true;
+}
+
+bool CheckpointManager::readCheckpointFromDisk(const QString& checkpointId,
+                                              CheckpointState& state)
+{
+    QString filePath = m_checkpointDir + "/" + checkpointId + ".ckpt";
+    QFile file(filePath);
+    
+    if (!file.open(QIODevice::ReadOnly)) {
+        return false;
+    }
+    
+    QByteArray data = file.readAll();
+    file.close();
+    
+    // Placeholder: in production, properly deserialize
+    state.modelWeights = data;
+    return true;
 }

@@ -27,6 +27,16 @@ class AICodeAssistant : public QObject
     Q_OBJECT
 
 public:
+    // Data structures
+    struct CodeSuggestion {
+        QString text;           // The suggestion text
+        QString type;           // Type: "completion", "refactoring", "explanation", "bugfix", "optimization"
+        QString context;        // Original code context
+        float confidence;       // Confidence score 0.0-1.0
+        qint64 latency_ms;      // Response latency in milliseconds
+        QDateTime timestamp;    // When the suggestion was generated
+    };
+
     explicit AICodeAssistant(QObject *parent = nullptr);
     ~AICodeAssistant();
 

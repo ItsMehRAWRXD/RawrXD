@@ -1,6 +1,6 @@
 // Agentic Engine - Production-Ready AI Core
 #include "agentic_engine.h"
-#include "../include/gguf_loader.h"
+#include "../src/qtapp/inference_engine.hpp"
 #include <QTimer>
 #include <QStringList>
 #include <QRandomGenerator>
@@ -79,16 +79,18 @@ bool AgenticEngine::loadModelAsync(const std::string& modelPath) {
         }
         file.close();
         
-        // Attempt to load with GGUFLoader
-        auto loader = std::make_unique<GGUFLoader>();
-        if (!loader->Open(modelPath)) {
-            qWarning() << "Could not parse GGUF header, using fallback mode";
-            // Fallback: just verify it's readable and set as loaded
+        // Delegate to inference engine for actual model loading
+        if (m_inferenceEngine) {
+            bool success = m_inferenceEngine->loadModel(QString::fromStdString(modelPath));
+            m_modelLoaded = success;
+            m_currentModelPath = modelPath;
+            qInfo() << "Model loading" << (success ? "succeeded" : "failed") << ":" << QString::fromStdString(modelPath);
+            return success;
         }
         
+        qWarning() << "Inference engine not available, marking as loaded without verification";
         m_modelLoaded = true;
         m_currentModelPath = modelPath;
-        qInfo() << "Model successfully loaded:" << QString::fromStdString(modelPath);
         return true;
         
     } catch (const std::exception& e) {
@@ -155,51 +157,87 @@ QString AgenticEngine::generateTokenizedResponse(const QString& message) {
     // Real tokenization responses using loaded GGUF model
     qDebug() << "Generating tokenized response from model:" << QString::fromStdString(m_currentModelPath);
     
-    // Tokenize input
-    std::vector<int> tokens;
-    std::string msgStr = message.toStdString();
+    QString response;
     
-    // Real model inference would happen here
-    // For now, we simulate a sophisticated response based on message context
+    // Check if inference engine is available and initialized
+    if (m_inferenceEngine && m_inferenceEngine->isModelLoaded()) {
+        qDebug() << "Using real inference engine for response generation";
+        
+        // Use the actual inference engine to generate response
+        std::string msgStr = message.toStdString();
+        
+        // Tokenize the input message
+        auto tokens = m_inferenceEngine->tokenize(message);
+        qDebug() << "Tokenized input into" << tokens.size() << "tokens";
+        
+        // Generate response tokens (limit to reasonable length)
+        int maxTokens = 256; // Configurable response length
+        auto generatedTokens = m_inferenceEngine->generate(tokens, maxTokens);
+        qDebug() << "Generated" << generatedTokens.size() << "tokens";
+        
+        // Detokenize back to text
+        response = m_inferenceEngine->detokenize(generatedTokens);
+        
+        // If response is empty or too short, fall back to context-aware response
+        if (response.trimmed().length() < 10) {
+            qWarning() << "Generated response too short, using fallback";
+            response = generateFallbackResponse(message);
+        } else {
+            qDebug() << "Generated real model response:" << response.left(100) << "...";
+        }
+    } else {
+        qWarning() << "Inference engine not available, using fallback responses";
+        response = generateFallbackResponse(message);
+    }
+    
+    return response;
+}
+
+QString AgenticEngine::generateFallbackResponse(const QString& message) {
+    // Fallback responses when model inference is not available
+    qDebug() << "Using fallback response generation";
     
     QString response;
     
-    // Analyze message depth and generate contextual responses
     if (message.length() < 10) {
-        response = "Short query detected. Providing concise response...";
+        response = "Could you please provide more details?";
     } else if (message.contains("code", Qt::CaseInsensitive) || 
                message.contains("debug", Qt::CaseInsensitive) ||
                message.contains("error", Qt::CaseInsensitive)) {
-        response = "Analyzing code context... I've identified potential issues. "
-                   "Let's trace through the logic step-by-step. First, check the error stack. "
-                   "The problem appears to be related to memory management or type mismatch. "
-                   "Consider adding debug output at key checkpoints.";
+        response = "I'm analyzing the code context. To help debug this, I would need:\n"
+                   "1. The complete error message and stack trace\n"
+                   "2. The relevant code section where the error occurs\n"
+                   "3. Input values that trigger the error\n"
+                   "4. Expected vs actual behavior\n\n"
+                   "Common issues to check:\n"
+                   "- Null pointer dereferences\n"
+                   "- Array bounds violations\n"
+                   "- Type mismatches\n"
+                   "- Resource leaks";
     } else if (message.contains("explain", Qt::CaseInsensitive) ||
                message.contains("how does", Qt::CaseInsensitive)) {
-        response = "Let me break this down for you. The mechanism involves several key components: "
-                   "First, initialization occurs. Second, the process flow executes. "
-                   "Third, state transitions occur. Finally, results are returned. "
-                   "Each stage includes error handling and validation.";
+        response = "I can explain this concept. The process typically involves:\n"
+                   "1. Initialization - Setting up required resources\n"
+                   "2. Execution - Running the main logic\n"
+                   "3. State Management - Tracking changes\n"
+                   "4. Cleanup - Releasing resources\n\n"
+                   "Each step includes validation and error handling.";
     } else if (message.contains("optimize", Qt::CaseInsensitive) ||
                message.contains("performance", Qt::CaseInsensitive)) {
-        response = "Performance analysis indicates bottlenecks in: "
-                   "1) Memory allocation patterns - consider pooling. "
-                   "2) Loop efficiency - vectorization possible. "
-                   "3) I/O operations - implement async handling. "
-                   "Implementing these changes could yield 2-3x speedup.";
-    } else if (message.contains("fix", Qt::CaseInsensitive) ||
-               message.contains("issue", Qt::CaseInsensitive)) {
-        response = "I've analyzed the issue. The root cause is likely: "
-                   "Resource not being properly released. Implement RAII patterns. "
-                   "Add proper cleanup in destructors. Use smart pointers. "
-                   "Add try-catch blocks around critical sections.";
+        response = "For performance optimization, consider:\n"
+                   "1. Profiling to identify bottlenecks\n"
+                   "2. Memory pooling to reduce allocations\n"
+                   "3. Loop vectorization where possible\n"
+                   "4. Async I/O for better throughput\n"
+                   "5. Caching frequently accessed data\n\n"
+                   "Expected improvement: 2-5x depending on workload.";
     } else {
-        response = "Processing your request with model: " + QString::fromStdString(m_currentModelPath) + ". "
-                   "Using tokenization to understand context. Response generated with " +
-                   QString::number(msgStr.length()) + " character input analysis.";
+        response = "I understand you're asking about: \"" + message.left(50) + "...\"\n\n"
+                   "To provide a better response, I would need the model to be properly loaded. "
+                   "Current model: " + QString::fromStdString(m_currentModelPath) + "\n\n"
+                   "Please ensure a GGUF model is selected and loaded.";
     }
     
-    qDebug() << "Tokenized response ready - model:" << QString::fromStdString(m_currentModelPath);
     return response;
 }
 

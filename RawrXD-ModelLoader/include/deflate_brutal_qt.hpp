@@ -3,7 +3,6 @@
 #include <cstdlib>
 #include <QtCore/QByteArray>
 #include "brutal_gzip.h"
-#include <zlib.h>
 
 namespace brutal {
 
@@ -110,27 +109,49 @@ inline QByteArray decompress(const QByteArray& compressed)
         return {};
     }
 #else
-    // Fallback: use zlib (Qt's built-in gzip support)
-    // Since brutal format is stored blocks, this is lossless
-    z_stream stream{};
-    stream.avail_in = compressed.size();
-    stream.next_in = reinterpret_cast<Bytef*>(const_cast<char*>(compressed.constData()));
-    stream.avail_out = max_uncompressed;
-    stream.next_out = reinterpret_cast<Bytef*>(out_buf);
+    // Fallback: use Qt's built-in zlib (qUncompress for gzip with custom header handling)
+    // Since brutal format is RFC 1952 gzip, we need to strip the gzip header/footer manually
     
-    if (inflateInit2(&stream, 16 + MAX_WBITS) != Z_OK) {  // +16 for gzip header
+    // Skip gzip header (10 bytes minimum)
+    const unsigned char* data = reinterpret_cast<const unsigned char*>(compressed.constData());
+    size_t data_len = compressed.size();
+    
+    if (data_len < 18) {  // Minimum: 10-byte header + data + 8-byte footer
         free(out_buf);
         return {};
     }
     
-    int ret = inflate(&stream, Z_FINISH);
-    out_len = stream.total_out;
-    inflateEnd(&stream);
-    
-    if (ret != Z_STREAM_END) {
+    // Verify gzip magic number
+    if (data[0] != 0x1f || data[1] != 0x8b) {
         free(out_buf);
         return {};
     }
+    
+    // Skip to deflate data (skip variable-length gzip header)
+    size_t header_size = 10;
+    if (data[3] & 0x04) {  // FEXTRA flag
+        header_size += 2 + (data[header_size] | (data[header_size + 1] << 8));
+    }
+    if (data[3] & 0x08) {  // FNAME flag
+        while (header_size < data_len && data[header_size] != 0) header_size++;
+        header_size++;
+    }
+    if (data[3] & 0x10) {  // FCOMMENT flag
+        while (header_size < data_len && data[header_size] != 0) header_size++;
+        header_size++;
+    }
+    if (data[3] & 0x02) {  // FHCRC flag
+        header_size += 2;
+    }
+    
+    // Extract raw deflate data (without 8-byte gzip footer)
+    QByteArray deflateData(reinterpret_cast<const char*>(data + header_size), 
+                           data_len - header_size - 8);
+    
+    // Use Qt's qUncompress (handles raw DEFLATE)
+    QByteArray decompressed = qUncompress(deflateData);
+    free(out_buf);
+    return decompressed;
 #endif
     
     QByteArray result(reinterpret_cast<const char*>(out_buf), static_cast<int>(out_len));

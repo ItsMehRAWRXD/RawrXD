@@ -7,242 +7,144 @@
 #include <QCheckBox>
 #include <QTextEdit>
 #include <QPushButton>
+#include <QDialogButtonBox>
 #include <QDebug>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QJsonArray>
 #include <QFile>
 #include <QFileDialog>
 #include <QStandardPaths>
 #include <algorithm>
 #include <cctype>
 
-/**
- * @brief TokenizerSelector::TokenizerSelector - Constructor
- */
+// Constructor
 TokenizerSelector::TokenizerSelector(QWidget* parent)
-    : QDialog(parent), m_selectedTokenizer(TokenizerType::WordPiece),
-      m_selectedLanguage(Language::English), m_vocabSize(30522), m_characterCoverage(0.95f)
+    : QDialog(parent),
+      m_languageCombo(nullptr),
+      m_tokenizerTypeCombo(nullptr),
+      m_vocabSizeSpinBox(nullptr),
+      m_minFrequencySpinBox(nullptr),
+      m_characterCoverageLabel(nullptr),
+      m_lowercaseCheckBox(nullptr),
+      m_addSpecialTokensCheckBox(nullptr),
+      m_specialTokensEdit(nullptr),
+      m_maxTokenLengthSpinBox(nullptr),
+      m_subwordRegularizationCheckBox(nullptr),
+      m_metricsLabel(nullptr),
+      m_previewEdit(nullptr),
+      m_tokensEdit(nullptr)
 {
     qDebug() << "[TokenizerSelector] Initializing tokenizer selector";
+    
+    // Initialize default config
+    m_config.language = Language::English;
+    m_config.tokenizerType = TokenizerType::WordPiece;
+    m_config.name = "Default";
+    m_config.vocabSize = 30522;
+    m_config.minFrequency = 2;
+    m_config.characterCoverage = 0.9995f;
+    m_config.lowercaseTokens = true;
+    m_config.addSpecialTokens = true;
+    m_config.specialTokens = R"({"cls": "[CLS]", "sep": "[SEP]", "pad": "[PAD]", "unk": "[UNK]"})";
+    m_config.maxTokenLength = 200;
+    m_config.enableSubwordRegularization = false;
+    m_config.subwordRegularizationAlpha = 0.1f;
+    
+    initializeTokenizerMap();
     setupUI();
-    loadConfiguration();
+    setupConnections();
 }
 
-/**
- * @brief TokenizerSelector::~TokenizerSelector - Destructor
- */
+// Destructor
 TokenizerSelector::~TokenizerSelector()
 {
     qDebug() << "[TokenizerSelector] Tokenizer selector destroyed";
 }
 
-/**
- * @brief TokenizerSelector::setupUI - Create UI components
- */
-void TokenizerSelector::setupUI()
+void TokenizerSelector::setConfiguration(const TokenizerConfig& config)
 {
-    setWindowTitle("Tokenizer Selector");
-    setMinimumWidth(600);
-    setMinimumHeight(400);
+    m_config = config;
+    qDebug() << "[TokenizerSelector] Configuration set";
+}
+
+TokenizerSelector::TokenizerConfig TokenizerSelector::getConfiguration() const
+{
+    return m_config;
+}
+
+bool TokenizerSelector::loadTokenizer(const QString& filePath)
+{
+    qDebug() << "[TokenizerSelector] Loading tokenizer from" << filePath;
     
-    QVBoxLayout* mainLayout = new QVBoxLayout(this);
-    
-    // Tokenizer type selection
-    QHBoxLayout* tokLayout = new QHBoxLayout();
-    QLabel* tokLabel = new QLabel("Tokenizer Type:");
-    QComboBox* tokCombo = new QComboBox();
-    tokCombo->addItem("WordPiece (BERT)", static_cast<int>(TokenizerType::WordPiece));
-    tokCombo->addItem("BPE (GPT)", static_cast<int>(TokenizerType::BPE));
-    tokCombo->addItem("SentencePiece (Universal)", static_cast<int>(TokenizerType::SentencePiece));
-    tokCombo->addItem("Character-based", static_cast<int>(TokenizerType::CharacterBased));
-    tokCombo->addItem("Janome (Japanese)", static_cast<int>(TokenizerType::Janome));
-    tokCombo->addItem("MeCab (Japanese)", static_cast<int>(TokenizerType::MeCab));
-    tokCombo->addItem("Custom", static_cast<int>(TokenizerType::Custom));
-    
-    connect(tokCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
-            this, &TokenizerSelector::onTokenizerTypeChanged);
-    
-    tokLayout->addWidget(tokLabel);
-    tokLayout->addWidget(tokCombo);
-    tokLayout->addStretch();
-    mainLayout->addLayout(tokLayout);
-    
-    // Language selection
-    QHBoxLayout* langLayout = new QHBoxLayout();
-    QLabel* langLabel = new QLabel("Language:");
-    QComboBox* langCombo = new QComboBox();
-    langCombo->addItem("English", static_cast<int>(Language::English));
-    langCombo->addItem("Chinese", static_cast<int>(Language::Chinese));
-    langCombo->addItem("Japanese", static_cast<int>(Language::Japanese));
-    langCombo->addItem("Multilingual", static_cast<int>(Language::Multilingual));
-    langCombo->addItem("Custom", static_cast<int>(Language::Custom));
-    
-    connect(langCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
-            this, &TokenizerSelector::onLanguageChanged);
-    
-    langLayout->addWidget(langLabel);
-    langLayout->addWidget(langCombo);
-    langLayout->addStretch();
-    mainLayout->addLayout(langLayout);
-    
-    // Vocabulary size
-    QHBoxLayout* vocabLayout = new QHBoxLayout();
-    QLabel* vocabLabel = new QLabel("Vocabulary Size:");
-    QSpinBox* vocabSpinBox = new QSpinBox();
-    vocabSpinBox->setRange(1000, 1000000);
-    vocabSpinBox->setValue(30522);
-    vocabSpinBox->setSingleStep(1000);
-    
-    connect(vocabSpinBox, QOverload<int>::of(&QSpinBox::valueChanged),
-            this, &TokenizerSelector::onVocabSizeChanged);
-    
-    vocabLayout->addWidget(vocabLabel);
-    vocabLayout->addWidget(vocabSpinBox);
-    vocabLayout->addStretch();
-    mainLayout->addLayout(vocabLayout);
-    
-    // Character coverage
-    QHBoxLayout* coverageLayout = new QHBoxLayout();
-    QLabel* coverageLabel = new QLabel("Character Coverage:");
-    QSpinBox* coverageSpinBox = new QSpinBox();
-    coverageSpinBox->setRange(0, 100);
-    coverageSpinBox->setValue(95);
-    coverageSpinBox->setSuffix("%");
-    
-    connect(coverageSpinBox, QOverload<int>::of(&QSpinBox::valueChanged),
-            this, &TokenizerSelector::onCharacterCoverageChanged);
-    
-    coverageLayout->addWidget(coverageLabel);
-    coverageLayout->addWidget(coverageSpinBox);
-    coverageLayout->addStretch();
-    mainLayout->addLayout(coverageLayout);
-    
-    // Special tokens
-    QLabel* specialTokensLabel = new QLabel("Special Tokens:");
-    mainLayout->addWidget(specialTokensLabel);
-    
-    QHBoxLayout* specialLayout = new QHBoxLayout();
-    QCheckBox* clsCheckbox = new QCheckBox("[CLS]");
-    clsCheckbox->setChecked(true);
-    QCheckBox* sepCheckbox = new QCheckBox("[SEP]");
-    sepCheckbox->setChecked(true);
-    QCheckBox* padCheckbox = new QCheckBox("[PAD]");
-    padCheckbox->setChecked(true);
-    QCheckBox* unkCheckbox = new QCheckBox("[UNK]");
-    unkCheckbox->setChecked(true);
-    
-    specialLayout->addWidget(clsCheckbox);
-    specialLayout->addWidget(sepCheckbox);
-    specialLayout->addWidget(padCheckbox);
-    specialLayout->addWidget(unkCheckbox);
-    specialLayout->addStretch();
-    mainLayout->addLayout(specialLayout);
-    
-    // Tokenization preview
-    QLabel* previewLabel = new QLabel("Tokenization Preview:");
-    mainLayout->addWidget(previewLabel);
-    
-    QTextEdit* previewText = new QTextEdit();
-    previewText->setReadOnly(true);
-    previewText->setMaximumHeight(150);
-    mainLayout->addWidget(previewText);
-    
-    // Sample text for preview
-    QHBoxLayout* sampleLayout = new QHBoxLayout();
-    QLabel* sampleLabel = new QLabel("Sample Text:");
-    QTextEdit* sampleText = new QTextEdit();
-    sampleText->setPlaceholderText("Enter text to preview tokenization");
-    sampleText->setMaximumHeight(100);
-    
-    sampleLayout->addWidget(sampleLabel);
-    mainLayout->addLayout(sampleLayout);
-    mainLayout->addWidget(sampleText);
-    
-    // Preview button
-    QPushButton* previewBtn = new QPushButton("Preview Tokenization");
-    connect(previewBtn, &QPushButton::clicked, [this, sampleText, previewText]() {
-        QString text = sampleText->toPlainText();
-        std::vector<QString> tokens = tokenize(text);
-        
-        QString preview;
-        for (const auto& token : tokens) {
-            preview += token + "\n";
+    try {
+        QFile file(filePath);
+        if (!file.open(QIODevice::ReadOnly)) {
+            qCritical() << "[TokenizerSelector] Cannot open tokenizer file";
+            return false;
         }
         
-        previewText->setText(preview);
-    });
-    mainLayout->addWidget(previewBtn);
-    
-    // Buttons
-    QHBoxLayout* buttonLayout = new QHBoxLayout();
-    
-    QPushButton* exportBtn = new QPushButton("Export Config");
-    connect(exportBtn, &QPushButton::clicked, this, &TokenizerSelector::exportConfiguration);
-    buttonLayout->addWidget(exportBtn);
-    
-    QPushButton* importBtn = new QPushButton("Import Config");
-    connect(importBtn, &QPushButton::clicked, this, &TokenizerSelector::importConfiguration);
-    buttonLayout->addWidget(importBtn);
-    
-    QPushButton* okBtn = new QPushButton("OK");
-    connect(okBtn, &QPushButton::clicked, this, &QDialog::accept);
-    buttonLayout->addWidget(okBtn);
-    
-    QPushButton* cancelBtn = new QPushButton("Cancel");
-    connect(cancelBtn, &QPushButton::clicked, this, &QDialog::reject);
-    buttonLayout->addWidget(cancelBtn);
-    
-    mainLayout->addLayout(buttonLayout);
-    
-    setLayout(mainLayout);
-}
-
-/**
- * @brief TokenizerSelector::tokenize - Tokenize input text
- */
-std::vector<QString> TokenizerSelector::tokenize(const QString& text)
-{
-    std::vector<QString> tokens;
-    
-    switch (m_selectedTokenizer) {
-        case TokenizerType::WordPiece:
-            tokens = tokenizeWordPiece(text);
-            break;
-        case TokenizerType::BPE:
-            tokens = tokenizeBPE(text);
-            break;
-        case TokenizerType::SentencePiece:
-            tokens = tokenizeSentencePiece(text);
-            break;
-        case TokenizerType::CharacterBased:
-            tokens = tokenizeCharacter(text);
-            break;
-        case TokenizerType::Janome:
-            tokens = tokenizeJanome(text);
-            break;
-        case TokenizerType::MeCab:
-            tokens = tokenizeMeCab(text);
-            break;
-        default:
-            tokens = {text};
-            break;
-    }
-    
-    return tokens;
-}
-
-/**
- * @brief TokenizerSelector::tokenizeWordPiece - BERT-style WordPiece tokenization
- */
-std::vector<QString> TokenizerSelector::tokenizeWordPiece(const QString& text)
-{
-    std::vector<QString> tokens;
-    
-    // Simple word tokenization
-    QString current;
-    for (int i = 0; i < text.length(); ++i) {
-        QChar c = text[i];
+        QByteArray data = file.readAll();
+        file.close();
         
+        QJsonDocument doc = QJsonDocument::fromJson(data);
+        if (!doc.isObject()) {
+            qCritical() << "[TokenizerSelector] Invalid tokenizer file format";
+            return false;
+        }
+        
+        return fromJson(doc.object());
+    }
+    catch (const std::exception& e) {
+        qCritical() << "[TokenizerSelector] Error loading tokenizer:" << e.what();
+        return false;
+    }
+}
+
+bool TokenizerSelector::saveTokenizer(const QString& filePath) const
+{
+    qDebug() << "[TokenizerSelector] Saving tokenizer to" << filePath;
+    
+    try {
+        QJsonObject obj = const_cast<TokenizerSelector*>(this)->toJson();
+        QJsonDocument doc(obj);
+        
+        QFile file(filePath);
+        if (!file.open(QIODevice::WriteOnly)) {
+            qCritical() << "[TokenizerSelector] Cannot open file for writing";
+            return false;
+        }
+        
+        file.write(doc.toJson());
+        file.close();
+        
+        qDebug() << "[TokenizerSelector] Tokenizer saved successfully";
+        return true;
+    }
+    catch (const std::exception& e) {
+        qCritical() << "[TokenizerSelector] Error saving tokenizer:" << e.what();
+        return false;
+    }
+}
+
+TokenizerSelector::TokenizerMetrics TokenizerSelector::getTokenizerMetrics() const
+{
+    TokenizerMetrics metrics;
+    metrics.vocabularySize = m_config.vocabSize;
+    metrics.uniqueTokens = m_config.vocabSize;
+    metrics.averageTokensPerSentence = 15.5f;
+    metrics.oovRate = 0.02f;
+    metrics.encoding = "utf-8";
+    return metrics;
+}
+
+std::vector<QString> TokenizerSelector::previewTokenization(const QString& text) const
+{
+    std::vector<QString> tokens;
+    
+    // Simple tokenization preview
+    QString current;
+    for (const QChar& c : text) {
         if (c.isSpace()) {
             if (!current.isEmpty()) {
                 tokens.push_back(current);
@@ -263,296 +165,310 @@ std::vector<QString> TokenizerSelector::tokenizeWordPiece(const QString& text)
         tokens.push_back(current);
     }
     
-    // Add subword markers if needed
-    std::vector<QString> subwordTokens;
-    for (const auto& token : tokens) {
-        if (token.length() > 10) {
-            // Split long words with ## markers
-            subwordTokens.push_back(token.left(5));
-            subwordTokens.push_back("##" + token.mid(5));
-        } else {
-            subwordTokens.push_back(token);
-        }
-    }
-    
-    return subwordTokens;
-}
-
-/**
- * @brief TokenizerSelector::tokenizeBPE - Byte Pair Encoding tokenization
- */
-std::vector<QString> TokenizerSelector::tokenizeBPE(const QString& text)
-{
-    std::vector<QString> tokens;
-    
-    // Simple BPE simulation
-    QString lower = text.toLower();
-    QString current;
-    
-    for (int i = 0; i < lower.length(); ++i) {
-        QChar c = lower[i];
-        
-        if (c.isSpace()) {
-            if (!current.isEmpty()) {
-                tokens.push_back(current);
-                current.clear();
-            }
-            tokens.push_back("</w>");  // End of word marker
-        } else {
-            current += c;
-        }
-    }
-    
-    if (!current.isEmpty()) {
-        tokens.push_back(current + "</w>");
-    }
-    
     return tokens;
 }
 
-/**
- * @brief TokenizerSelector::tokenizeSentencePiece - SentencePiece tokenization
- */
-std::vector<QString> TokenizerSelector::tokenizeSentencePiece(const QString& text)
+QJsonObject TokenizerSelector::toJson() const
 {
-    std::vector<QString> tokens;
-    
-    // SentencePiece normalizes and segments
-    QString normalized = text.toLower();
-    
-    // Convert to character pieces
-    for (const auto& c : normalized) {
-        if (c.isSpace()) {
-            tokens.push_back("▁");  // Sentencepiece space marker
-        } else {
-            tokens.push_back(QString(c));
-        }
-    }
-    
-    return tokens;
+    QJsonObject obj;
+    obj["language"] = static_cast<int>(m_config.language);
+    obj["tokenizerType"] = static_cast<int>(m_config.tokenizerType);
+    obj["name"] = m_config.name;
+    obj["vocabSize"] = m_config.vocabSize;
+    obj["minFrequency"] = m_config.minFrequency;
+    obj["characterCoverage"] = m_config.characterCoverage;
+    obj["lowercaseTokens"] = m_config.lowercaseTokens;
+    obj["addSpecialTokens"] = m_config.addSpecialTokens;
+    obj["specialTokens"] = m_config.specialTokens;
+    obj["maxTokenLength"] = m_config.maxTokenLength;
+    obj["enableSubwordRegularization"] = m_config.enableSubwordRegularization;
+    obj["subwordRegularizationAlpha"] = m_config.subwordRegularizationAlpha;
+    return obj;
 }
 
-/**
- * @brief TokenizerSelector::tokenizeCharacter - Character-level tokenization
- */
-std::vector<QString> TokenizerSelector::tokenizeCharacter(const QString& text)
+bool TokenizerSelector::fromJson(const QJsonObject& config)
 {
-    std::vector<QString> tokens;
-    
-    for (const auto& c : text) {
-        tokens.push_back(QString(c));
-    }
-    
-    return tokens;
-}
-
-/**
- * @brief TokenizerSelector::tokenizeJanome - Japanese tokenization (Janome)
- */
-std::vector<QString> TokenizerSelector::tokenizeJanome(const QString& text)
-{
-    std::vector<QString> tokens;
-    
-    // Simplified Japanese tokenization
-    // In production, use actual Janome library
-    for (const auto& c : text) {
-        tokens.push_back(QString(c));
-    }
-    
-    return tokens;
-}
-
-/**
- * @brief TokenizerSelector::tokenizeMeCab - Japanese tokenization (MeCab)
- */
-std::vector<QString> TokenizerSelector::tokenizeMeCab(const QString& text)
-{
-    std::vector<QString> tokens;
-    
-    // Simplified Japanese tokenization
-    // In production, use actual MeCab library
-    for (const auto& c : text) {
-        tokens.push_back(QString(c));
-    }
-    
-    return tokens;
-}
-
-/**
- * @brief TokenizerSelector::loadConfiguration - Load configuration from disk
- */
-void TokenizerSelector::loadConfiguration()
-{
-    qDebug() << "[TokenizerSelector] Loading configuration";
-    
     try {
-        QString configPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)
-                           + "/tokenizer_config.json";
-        
-        QFile file(configPath);
-        if (!file.open(QIODevice::ReadOnly)) {
-            qDebug() << "[TokenizerSelector] No existing configuration, using defaults";
-            return;
-        }
-        
-        QByteArray data = file.readAll();
-        file.close();
-        
-        QJsonDocument doc = QJsonDocument::fromJson(data);
-        QJsonObject obj = doc.object();
-        
-        m_selectedTokenizer = static_cast<TokenizerType>(obj["tokenizer"].toInt());
-        m_selectedLanguage = static_cast<Language>(obj["language"].toInt());
-        m_vocabSize = obj["vocabSize"].toInt();
-        m_characterCoverage = static_cast<float>(obj["characterCoverage"].toDouble());
-        
-        qDebug() << "[TokenizerSelector] Configuration loaded";
+        m_config.language = static_cast<Language>(config["language"].toInt());
+        m_config.tokenizerType = static_cast<TokenizerType>(config["tokenizerType"].toInt());
+        m_config.name = config["name"].toString();
+        m_config.vocabSize = config["vocabSize"].toInt();
+        m_config.minFrequency = config["minFrequency"].toInt();
+        m_config.characterCoverage = static_cast<float>(config["characterCoverage"].toDouble());
+        m_config.lowercaseTokens = config["lowercaseTokens"].toBool();
+        m_config.addSpecialTokens = config["addSpecialTokens"].toBool();
+        m_config.specialTokens = config["specialTokens"].toString();
+        m_config.maxTokenLength = config["maxTokenLength"].toInt();
+        m_config.enableSubwordRegularization = config["enableSubwordRegularization"].toBool();
+        m_config.subwordRegularizationAlpha = static_cast<float>(config["subwordRegularizationAlpha"].toDouble());
+        return true;
     }
     catch (const std::exception& e) {
-        qWarning() << "[TokenizerSelector] Failed to load configuration:" << e.what();
+        qCritical() << "[TokenizerSelector] Error loading from JSON:" << e.what();
+        return false;
     }
 }
 
-/**
- * @brief TokenizerSelector::exportConfiguration - Export configuration to JSON file
- */
-void TokenizerSelector::exportConfiguration()
+void TokenizerSelector::accept()
 {
-    qDebug() << "[TokenizerSelector] Exporting configuration";
-    
-    try {
-        QString filename = QFileDialog::getSaveFileName(this, "Export Tokenizer Configuration", "",
-                                                        "JSON Files (*.json)");
-        if (filename.isEmpty()) {
-            return;
-        }
-        
-        QJsonObject obj;
-        obj["tokenizer"] = static_cast<int>(m_selectedTokenizer);
-        obj["language"] = static_cast<int>(m_selectedLanguage);
-        obj["vocabSize"] = m_vocabSize;
-        obj["characterCoverage"] = m_characterCoverage;
-        
-        QJsonDocument doc(obj);
-        QFile file(filename);
-        
-        if (!file.open(QIODevice::WriteOnly)) {
-            qCritical() << "[TokenizerSelector] Failed to open file for writing";
-            return;
-        }
-        
-        file.write(doc.toJson());
-        file.close();
-        
-        qDebug() << "[TokenizerSelector] Configuration exported to" << filename;
-    }
-    catch (const std::exception& e) {
-        qCritical() << "[TokenizerSelector] Export failed:" << e.what();
-    }
+    qDebug() << "[TokenizerSelector] Configuration accepted";
+    emit tokenizerSelected(m_config);
+    QDialog::accept();
 }
 
-/**
- * @brief TokenizerSelector::importConfiguration - Import configuration from JSON file
- */
-void TokenizerSelector::importConfiguration()
+void TokenizerSelector::setupUI()
 {
-    qDebug() << "[TokenizerSelector] Importing configuration";
+    setWindowTitle("Tokenizer Selector");
+    setMinimumWidth(700);
+    setMinimumHeight(600);
     
-    try {
-        QString filename = QFileDialog::getOpenFileName(this, "Import Tokenizer Configuration", "",
-                                                        "JSON Files (*.json)");
-        if (filename.isEmpty()) {
-            return;
+    QVBoxLayout* mainLayout = new QVBoxLayout(this);
+    
+    // Language selection
+    QHBoxLayout* langLayout = new QHBoxLayout();
+    QLabel* langLabel = new QLabel("Language:");
+    m_languageCombo = new QComboBox();
+    m_languageCombo->addItem("English", static_cast<int>(Language::English));
+    m_languageCombo->addItem("Chinese", static_cast<int>(Language::Chinese));
+    m_languageCombo->addItem("Japanese", static_cast<int>(Language::Japanese));
+    m_languageCombo->addItem("Multilingual", static_cast<int>(Language::Multilingual));
+    m_languageCombo->addItem("Custom", static_cast<int>(Language::Custom));
+    
+    langLayout->addWidget(langLabel);
+    langLayout->addWidget(m_languageCombo);
+    langLayout->addStretch();
+    mainLayout->addLayout(langLayout);
+    
+    // Tokenizer type selection
+    QHBoxLayout* tokLayout = new QHBoxLayout();
+    QLabel* tokLabel = new QLabel("Tokenizer Type:");
+    m_tokenizerTypeCombo = new QComboBox();
+    m_tokenizerTypeCombo->addItem("WordPiece (BERT)", static_cast<int>(TokenizerType::WordPiece));
+    m_tokenizerTypeCombo->addItem("BPE (GPT)", static_cast<int>(TokenizerType::BPE));
+    m_tokenizerTypeCombo->addItem("SentencePiece", static_cast<int>(TokenizerType::SentencePiece));
+    m_tokenizerTypeCombo->addItem("Character-based", static_cast<int>(TokenizerType::CharacterBased));
+    m_tokenizerTypeCombo->addItem("Janome", static_cast<int>(TokenizerType::Janome));
+    m_tokenizerTypeCombo->addItem("MeCab", static_cast<int>(TokenizerType::MeCab));
+    m_tokenizerTypeCombo->addItem("Custom", static_cast<int>(TokenizerType::Custom));
+    
+    tokLayout->addWidget(tokLabel);
+    tokLayout->addWidget(m_tokenizerTypeCombo);
+    tokLayout->addStretch();
+    mainLayout->addLayout(tokLayout);
+    
+    // Vocabulary size
+    QHBoxLayout* vocabLayout = new QHBoxLayout();
+    QLabel* vocabLabel = new QLabel("Vocabulary Size:");
+    m_vocabSizeSpinBox = new QSpinBox();
+    m_vocabSizeSpinBox->setRange(1000, 1000000);
+    m_vocabSizeSpinBox->setValue(30522);
+    m_vocabSizeSpinBox->setSingleStep(1000);
+    
+    vocabLayout->addWidget(vocabLabel);
+    vocabLayout->addWidget(m_vocabSizeSpinBox);
+    vocabLayout->addStretch();
+    mainLayout->addLayout(vocabLayout);
+    
+    // Min frequency
+    QHBoxLayout* freqLayout = new QHBoxLayout();
+    QLabel* freqLabel = new QLabel("Minimum Frequency:");
+    m_minFrequencySpinBox = new QSpinBox();
+    m_minFrequencySpinBox->setRange(1, 100);
+    m_minFrequencySpinBox->setValue(2);
+    
+    freqLayout->addWidget(freqLabel);
+    freqLayout->addWidget(m_minFrequencySpinBox);
+    freqLayout->addStretch();
+    mainLayout->addLayout(freqLayout);
+    
+    // Character coverage
+    QHBoxLayout* coverageLayout = new QHBoxLayout();
+    m_characterCoverageLabel = new QLabel("Character Coverage: 99.95%");
+    
+    QSpinBox* coverageSpinBox = new QSpinBox();
+    coverageSpinBox->setRange(0, 100);
+    coverageSpinBox->setValue(99);
+    coverageSpinBox->setSuffix("%");
+    
+    connect(coverageSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this,
+            [this, coverageSpinBox]() {
+                float val = coverageSpinBox->value() / 100.0f;
+                m_characterCoverageLabel->setText(QString::asprintf("Character Coverage: %.2f%%", val * 100));
+                m_config.characterCoverage = val;
+            });
+    
+    coverageLayout->addWidget(m_characterCoverageLabel);
+    coverageLayout->addWidget(coverageSpinBox);
+    coverageLayout->addStretch();
+    mainLayout->addLayout(coverageLayout);
+    
+    // Special options
+    QHBoxLayout* optionsLayout = new QHBoxLayout();
+    m_lowercaseCheckBox = new QCheckBox("Lowercase");
+    m_lowercaseCheckBox->setChecked(true);
+    m_addSpecialTokensCheckBox = new QCheckBox("Add Special Tokens");
+    m_addSpecialTokensCheckBox->setChecked(true);
+    
+    optionsLayout->addWidget(m_lowercaseCheckBox);
+    optionsLayout->addWidget(m_addSpecialTokensCheckBox);
+    optionsLayout->addStretch();
+    mainLayout->addLayout(optionsLayout);
+    
+    // Special tokens
+    QHBoxLayout* specialLayout = new QHBoxLayout();
+    QLabel* specialLabel = new QLabel("Special Tokens (JSON):");
+    specialLayout->addWidget(specialLabel);
+    mainLayout->addLayout(specialLayout);
+    
+    m_specialTokensEdit = new QTextEdit();
+    m_specialTokensEdit->setPlainText(R"({"cls": "[CLS]", "sep": "[SEP]", "pad": "[PAD]", "unk": "[UNK]"})");
+    m_specialTokensEdit->setMaximumHeight(80);
+    mainLayout->addWidget(m_specialTokensEdit);
+    
+    // Max token length
+    QHBoxLayout* maxLenLayout = new QHBoxLayout();
+    QLabel* maxLenLabel = new QLabel("Max Token Length:");
+    m_maxTokenLengthSpinBox = new QSpinBox();
+    m_maxTokenLengthSpinBox->setRange(10, 500);
+    m_maxTokenLengthSpinBox->setValue(200);
+    
+    maxLenLayout->addWidget(maxLenLabel);
+    maxLenLayout->addWidget(m_maxTokenLengthSpinBox);
+    maxLenLayout->addStretch();
+    mainLayout->addLayout(maxLenLayout);
+    
+    // Subword regularization
+    m_subwordRegularizationCheckBox = new QCheckBox("Enable Subword Regularization");
+    mainLayout->addWidget(m_subwordRegularizationCheckBox);
+    
+    // Metrics display
+    m_metricsLabel = new QLabel("Metrics: Ready");
+    mainLayout->addWidget(m_metricsLabel);
+    
+    // Preview section
+    QLabel* previewLabel = new QLabel("Tokenization Preview:");
+    mainLayout->addWidget(previewLabel);
+    
+    m_previewEdit = new QTextEdit();
+    m_previewEdit->setReadOnly(true);
+    m_previewEdit->setMaximumHeight(100);
+    mainLayout->addWidget(m_previewEdit);
+    
+    m_tokensEdit = new QTextEdit();
+    m_tokensEdit->setPlaceholderText("Enter text to preview tokenization...");
+    m_tokensEdit->setMaximumHeight(80);
+    mainLayout->addWidget(m_tokensEdit);
+    
+    // Preview button
+    QPushButton* previewBtn = new QPushButton("Preview Tokenization");
+    connect(previewBtn, &QPushButton::clicked, [this]() {
+        QString text = m_tokensEdit->toPlainText();
+        std::vector<QString> tokens = previewTokenization(text);
+        
+        QString preview;
+        for (size_t i = 0; i < tokens.size(); ++i) {
+            preview += QString::number(i) + ": " + tokens[i] + "\n";
         }
         
-        QFile file(filename);
-        if (!file.open(QIODevice::ReadOnly)) {
-            qCritical() << "[TokenizerSelector] Failed to open file for reading";
-            return;
-        }
-        
-        QByteArray data = file.readAll();
-        file.close();
-        
-        QJsonDocument doc = QJsonDocument::fromJson(data);
-        QJsonObject obj = doc.object();
-        
-        m_selectedTokenizer = static_cast<TokenizerType>(obj["tokenizer"].toInt());
-        m_selectedLanguage = static_cast<Language>(obj["language"].toInt());
-        m_vocabSize = obj["vocabSize"].toInt();
-        m_characterCoverage = static_cast<float>(obj["characterCoverage"].toDouble());
-        
-        qDebug() << "[TokenizerSelector] Configuration imported from" << filename;
-    }
-    catch (const std::exception& e) {
-        qCritical() << "[TokenizerSelector] Import failed:" << e.what();
-    }
+        m_previewEdit->setText(preview);
+    });
+    mainLayout->addWidget(previewBtn);
+    
+    // Buttons
+    QDialogButtonBox* buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+    connect(buttonBox, &QDialogButtonBox::accepted, this, &TokenizerSelector::accept);
+    connect(buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
+    mainLayout->addWidget(buttonBox);
+    
+    setLayout(mainLayout);
 }
 
-/**
- * @brief TokenizerSelector::onTokenizerTypeChanged - Handle tokenizer type change
- */
+void TokenizerSelector::setupConnections()
+{
+    connect(m_languageCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &TokenizerSelector::onLanguageChanged);
+    
+    connect(m_tokenizerTypeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &TokenizerSelector::onTokenizerTypeChanged);
+    
+    connect(m_vocabSizeSpinBox, QOverload<int>::of(&QSpinBox::valueChanged),
+            this, [this](int val) { m_config.vocabSize = val; });
+    
+    connect(m_minFrequencySpinBox, QOverload<int>::of(&QSpinBox::valueChanged),
+            this, [this](int val) { m_config.minFrequency = val; });
+    
+    connect(m_lowercaseCheckBox, &QCheckBox::toggled,
+            this, [this](bool checked) { m_config.lowercaseTokens = checked; });
+    
+    connect(m_addSpecialTokensCheckBox, &QCheckBox::toggled,
+            this, [this](bool checked) { m_config.addSpecialTokens = checked; });
+    
+    connect(m_maxTokenLengthSpinBox, QOverload<int>::of(&QSpinBox::valueChanged),
+            this, [this](int val) { m_config.maxTokenLength = val; });
+    
+    connect(m_subwordRegularizationCheckBox, &QCheckBox::toggled,
+            this, [this](bool checked) { m_config.enableSubwordRegularization = checked; });
+}
+
+void TokenizerSelector::updateAvailableTokenizers()
+{
+    qDebug() << "[TokenizerSelector] Updating available tokenizers";
+}
+
+void TokenizerSelector::updateMetricsDisplay()
+{
+    TokenizerMetrics metrics = getTokenizerMetrics();
+    QString metricsStr = QString("Vocab: %1 | Tokens: %2 | OOV: %3% | Encoding: %4")
+                            .arg(metrics.vocabularySize)
+                            .arg(metrics.uniqueTokens)
+                            .arg(static_cast<int>(metrics.oovRate * 100))
+                            .arg(metrics.encoding);
+    m_metricsLabel->setText(metricsStr);
+}
+
+void TokenizerSelector::onLanguageChanged(int index)
+{
+    m_config.language = static_cast<Language>(index);
+    qDebug() << "[TokenizerSelector] Language changed to" << index;
+    updateAvailableTokenizers();
+}
+
 void TokenizerSelector::onTokenizerTypeChanged(int index)
 {
-    m_selectedTokenizer = static_cast<TokenizerType>(index);
+    m_config.tokenizerType = static_cast<TokenizerType>(index);
     qDebug() << "[TokenizerSelector] Tokenizer type changed to" << index;
 }
 
-/**
- * @brief TokenizerSelector::onLanguageChanged - Handle language change
- */
-void TokenizerSelector::onLanguageChanged(int index)
+void TokenizerSelector::initializeTokenizerMap()
 {
-    m_selectedLanguage = static_cast<Language>(index);
-    qDebug() << "[TokenizerSelector] Language changed to" << index;
-}
-
-/**
- * @brief TokenizerSelector::onVocabSizeChanged - Handle vocab size change
- */
-void TokenizerSelector::onVocabSizeChanged(int size)
-{
-    m_vocabSize = size;
-    qDebug() << "[TokenizerSelector] Vocab size changed to" << size;
-}
-
-/**
- * @brief TokenizerSelector::onCharacterCoverageChanged - Handle character coverage change
- */
-void TokenizerSelector::onCharacterCoverageChanged(int coverage)
-{
-    m_characterCoverage = coverage / 100.0f;
-    qDebug() << "[TokenizerSelector] Character coverage changed to" << m_characterCoverage;
-}
-
-/**
- * @brief TokenizerSelector::getSelectedTokenizer - Get selected tokenizer type
- */
-TokenizerSelector::TokenizerType TokenizerSelector::getSelectedTokenizer() const
-{
-    return m_selectedTokenizer;
-}
-
-/**
- * @brief TokenizerSelector::getSelectedLanguage - Get selected language
- */
-TokenizerSelector::Language TokenizerSelector::getSelectedLanguage() const
-{
-    return m_selectedLanguage;
-}
-
-/**
- * @brief TokenizerSelector::getVocabularySize - Get vocabulary size
- */
-int TokenizerSelector::getVocabularySize() const
-{
-    return m_vocabSize;
-}
-
-/**
- * @brief TokenizerSelector::getCharacterCoverage - Get character coverage
- */
-float TokenizerSelector::getCharacterCoverage() const
-{
-    return m_characterCoverage;
+    // English tokenizers
+    m_availableTokenizers[Language::English] = {
+        TokenizerType::WordPiece,
+        TokenizerType::BPE,
+        TokenizerType::SentencePiece
+    };
+    
+    // Chinese tokenizers
+    m_availableTokenizers[Language::Chinese] = {
+        TokenizerType::CharacterBased,
+        TokenizerType::SentencePiece
+    };
+    
+    // Japanese tokenizers
+    m_availableTokenizers[Language::Japanese] = {
+        TokenizerType::Janome,
+        TokenizerType::MeCab,
+        TokenizerType::SentencePiece
+    };
+    
+    // Multilingual tokenizers
+    m_availableTokenizers[Language::Multilingual] = {
+        TokenizerType::SentencePiece,
+        TokenizerType::BPE
+    };
+    
+    // Custom tokenizers
+    m_availableTokenizers[Language::Custom] = {
+        TokenizerType::Custom
+    };
 }

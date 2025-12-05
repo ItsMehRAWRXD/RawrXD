@@ -24,6 +24,16 @@ static_lit_len  DB 8,8,8,8,8,8,8,8, 9,9,9,9,9,9,9,9, 7,7,7,7,7,7,7,7, 8,8,8,8
 static_dist_len DB 5,5,5,5,5,5,5,5, 5,5,5,5,5,5,5,5, 5,5,5,5,5,5,5,5, 5,5,5,5
 gz_header       DB 0x1F, 0x8B, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03
 
+; Labels for jumps
+fail           EQU $
+zero_hash      EQU $
+god_done       EQU $
+god_literal    EQU $
+match_done     EQU $
+match_loop     EQU $
+god_loop       EQU $
+no_flush       EQU $
+
 .code
 deflate_godmode PROC
     ; Prologue
@@ -49,11 +59,11 @@ deflate_godmode PROC
 
     ; Validate
     test    rsi, rsi
-    jz      _fail
+    jz      fail
     test    r15, r15
-    jz      _fail
+    jz      fail
     test    r9, r9
-    jz      _fail
+    jz      fail
 
     ; Allocate output (2× + 1024)
     mov     rcx, r15
@@ -63,17 +73,17 @@ deflate_godmode PROC
     call    malloc
     add     rsp, 32
     test    rax, rax
-    jz      _fail
+    jz      fail
     mov     rdi, rax          ; out base
 
     ; Zero hash table (runtime, no .bss)
     xor     ecx, ecx
     mov     r10d, HASH_SIZE
-.zero_hash:
+zero_hash:
     mov     dword ptr [r9 + rcx*4], 0xFFFFFFFF
     inc     ecx
     cmp     ecx, r10d
-    jl      .zero_hash
+    jl      zero_hash
 
     ; Gzip header (10 bytes)
     lea     rax, [gz_header]

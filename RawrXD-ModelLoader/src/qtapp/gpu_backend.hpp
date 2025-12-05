@@ -6,6 +6,9 @@
 #include <cstddef>
 #include <cstdint>
 
+// Suppress OpenGL headers for Qt
+#define QT_NO_OPENGL
+
 /**
  * @brief GPU backend abstraction for CUDA, HIP, and Vulkan
  * 

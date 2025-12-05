@@ -7,19 +7,19 @@
 #include <QElapsedTimer>
 #include <vector>
 #include <cstdint>
+#include <random>
 #include "gguf_loader.hpp"
 #include "transformer_inference.hpp"
 #include "bpe_tokenizer.hpp"
 #include "sentencepiece_tokenizer.hpp"
-#include "vocabulary_loader.hpp"/**
- * @brief Inference engine for GGUF models with brutal_gzip compression support
- * 
- * This class runs in a worker thread and handles model loading, tensor decompression,
- * and inference requests. It integrates with the existing brutal_gzip MASM/NEON
- * deflate implementation for fast compression/decompression.
- */
+#include "vocabulary_loader.hpp"
+
 class InferenceEngine : public QObject {
     Q_OBJECT
+    Q_PROPERTY(QString modelPath READ modelPath CONSTANT)
+    Q_PROPERTY(bool modelLoaded READ isModelLoaded NOTIFY modelLoadedChanged)
+    Q_PROPERTY(QString quantMode READ quantMode WRITE setQuantMode NOTIFY quantChanged)
+
 public:
     /**
      * @brief Construct an inference engine
@@ -68,6 +68,11 @@ public:
      */
     double temperature() const;
     
+    /**
+     * @brief Get current quantization mode
+     */
+    QString quantMode() const;
+
     /**
      * @brief Generate tokens synchronously (for server API)
      * @param inputTokens Input token sequence
@@ -168,26 +173,23 @@ signals:
     void inferenceError(const QString& requestId, const QString& errorMessage);
 
 private:
-    QString m_modelPath;
     GGUFLoader* m_loader;
-    mutable QMutex m_mutex;
-    QString m_quantMode{"Q4_0"};  // Default quantization
-    QHash<QString, QString> m_perLayerQuant;  // Tensor-specific quants
-    QHash<QString, QByteArray> m_tensorCache;  // Cached quantized tensors
-    
-    // Performance tracking
-    qint64 m_memoryUsageMB{0};
-    double m_tokensPerSecond{0.0};
-    double m_temperature{0.8};
-    QElapsedTimer m_inferenceTimer;
-    
-    // Transformer inference
     TransformerInference m_transformer;
-    
-    // Tokenizers (auto-detect which to use)
     BPETokenizer m_bpeTokenizer;
     SentencePieceTokenizer m_spTokenizer;
     VocabularyLoader m_vocab;
+
+    mutable QMutex m_mutex;
+    QString m_modelPath;
+    qint64 m_memoryUsageMB{0};
+    double m_tokensPerSecond{0.0};
+    double m_temperature{0.8};
+    double m_topP{0.95};
+    QString m_quantMode{"Q4_0"};  // Default quantization
+    QHash<QString, QByteArray> m_tensorCache;  // Cached quantized tensors
+    QHash<QString, QString> m_perLayerQuant;  // Tensor-specific quants
+    QElapsedTimer m_inferenceTimer;
+    
     enum TokenizerMode {
         TOKENIZER_FALLBACK,  // Simple word-based fallback
         TOKENIZER_BPE,       // BPE (GPT-2/GPT-3 style)
@@ -199,12 +201,15 @@ private:
     void rebuildTensorCache();
     void initializeTokenizer();
     
-    // Advanced sampling
+    // Elegant two-phase inference with KV-cache
+
+    // Advanced sampling for more natural text generation
     int32_t sampleNextToken(std::vector<float>& logits, double temperature, double topP);
+
+    // Thread-safe random number generation
     float getRandomFloat(float min, float max);
     
     // Sampling configuration
-    double m_topP{0.9};  // Top-P (nucleus) sampling threshold
-    std::mt19937 m_randomEngine;  // Thread-safe random number generator
     bool m_kvCacheReady{false};  // Track if KV-cache is prefilled
+    std::mt19937 m_randomEngine;  // Thread-safe random number generator
 };

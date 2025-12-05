@@ -3,8 +3,6 @@
 #include <QString>
 #include <QJsonObject>
 #include <QObject>
-#include <QAudioInput>
-#include <QAudioFormat>
 #include <QBuffer>
 #include <QTimer>
 #include <QMutex>
