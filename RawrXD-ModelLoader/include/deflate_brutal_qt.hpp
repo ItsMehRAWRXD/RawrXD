@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <QtCore/QByteArray>
 #include "brutal_gzip.h"
+#include <zlib.h>
 
 namespace brutal {
 
@@ -68,6 +69,73 @@ inline std::size_t maxCompressedSize(std::size_t rawSize)
 {
     std::size_t blockCount = (rawSize + 65534) / 65535;
     return 10 + (blockCount * 5) + rawSize + 8;
+}
+
+/**
+ * @brief Decompress gzip stream using MASM inflate kernel
+ * @param compressed Compressed gzip data
+ * @return Decompressed raw data, empty if decompression fails
+ * 
+ * Fast decompression using MASM-optimized inflate algorithm.
+ * Handles RFC 1952 gzip format with DEFLATE stored blocks.
+ */
+inline QByteArray decompress(const QByteArray& compressed)
+{
+    if (compressed.isEmpty()) return {};
+    
+    // Try to use MASM inflate if available; fallback to Qt's gzip decompression
+    // For stored-block gzip, we can use standard zlib
+    // The brutal format is RFC 1952 compliant, so standard tools work
+    
+    size_t max_uncompressed = compressed.size() * 4;  // Initial guess
+    void* out_buf = malloc(max_uncompressed);
+    if (!out_buf) return {};
+    
+    size_t out_len = 0;
+    
+#ifdef HAS_BRUTAL_INFLATE_MASM
+    // Use MASM inflate if available
+    extern "C" int inflate_brutal_masm(const void* src, size_t src_len, 
+                                       void* dst, size_t dst_len, size_t* out_len);
+    int result = inflate_brutal_masm(
+        reinterpret_cast<const void*>(compressed.constData()),
+        compressed.size(),
+        out_buf,
+        max_uncompressed,
+        &out_len
+    );
+    
+    if (result != 0) {
+        free(out_buf);
+        return {};
+    }
+#else
+    // Fallback: use zlib (Qt's built-in gzip support)
+    // Since brutal format is stored blocks, this is lossless
+    z_stream stream{};
+    stream.avail_in = compressed.size();
+    stream.next_in = reinterpret_cast<Bytef*>(const_cast<char*>(compressed.constData()));
+    stream.avail_out = max_uncompressed;
+    stream.next_out = reinterpret_cast<Bytef*>(out_buf);
+    
+    if (inflateInit2(&stream, 16 + MAX_WBITS) != Z_OK) {  // +16 for gzip header
+        free(out_buf);
+        return {};
+    }
+    
+    int ret = inflate(&stream, Z_FINISH);
+    out_len = stream.total_out;
+    inflateEnd(&stream);
+    
+    if (ret != Z_STREAM_END) {
+        free(out_buf);
+        return {};
+    }
+#endif
+    
+    QByteArray result(reinterpret_cast<const char*>(out_buf), static_cast<int>(out_len));
+    free(out_buf);
+    return result;
 }
 
 } // namespace brutal

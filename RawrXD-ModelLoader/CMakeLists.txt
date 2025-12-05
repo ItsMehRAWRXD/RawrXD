@@ -252,6 +252,22 @@ if(MSVC)
               # src/qtapp/compliance_logger.cpp  # MOC issue RESOLVED but case expression errors remain
               src/qtapp/sla_manager.hpp
               src/qtapp/sla_manager.cpp
+            # ============================================================
+            # Phase 3: Production Enhancement Components (5,280 LOC)
+            # ============================================================
+            src/qtapp/security_manager.cpp
+            src/qtapp/distributed_trainer.cpp
+            src/qtapp/interpretability_panel.cpp
+            src/qtapp/checkpoint_manager.cpp
+            src/qtapp/tokenizer_selector.cpp
+            src/qtapp/ci_cd_settings.cpp
+            # ============================================================
+            # Phase 4: AI Code Assistant (Code Completion with MASM Transport)
+            # ============================================================
+            src/qtapp/ai_code_assistant.h
+            src/qtapp/ai_code_assistant.cpp
+            src/qtapp/ai_code_assistant_panel.h
+            src/qtapp/ai_code_assistant_panel.cpp
             src/agent/agentic_puppeteer.hpp
             src/agent/agentic_puppeteer.cpp
             src/agent/agentic_failure_detector.hpp
@@ -288,6 +304,12 @@ if(MSVC)
         add_library(quant_utils STATIC src/qtapp/quant_utils.cpp)
         target_include_directories(quant_utils PUBLIC ${CMAKE_SOURCE_DIR}/src/qtapp ${CMAKE_SOURCE_DIR}/include)
         target_link_libraries(quant_utils PUBLIC Qt6::Core)
+        
+        # Find OpenSSL for SecurityManager encryption/HMAC
+        find_package(OpenSSL REQUIRED)
+        
+        # Find zlib for CheckpointManager compression
+        find_package(ZLIB REQUIRED)
 
         # Link Qt modules including WebSockets for swarm collaboration
 target_link_libraries(RawrXD-QtShell PRIVATE
@@ -297,9 +319,13 @@ target_link_libraries(RawrXD-QtShell PRIVATE
             Qt6::Network
             Qt6::Sql
             Qt6::Concurrent
+            Qt6::Charts
             brutal_gzip
             self_test_gate
             quant_utils
+            OpenSSL::Crypto
+            OpenSSL::SSL
+            ZLIB::ZLIB
         )        # Try to find Qt WebSockets (optional for swarm editing)
         find_package(Qt6 COMPONENTS WebSockets QUIET)
         if(Qt6WebSockets_FOUND)
