@@ -1,6 +1,7 @@
 // Agentic Copilot Bridge - Production-Ready IDE Integration
 #include "agentic_copilot_bridge.h"
 #include "agentic_engine.h"
+#include "agentic_executor.h"
 #include "chat_interface.h"
 #include "multi_tab_editor.h"
 #include "terminal_pool.h"
@@ -38,7 +39,7 @@ AgenticCopilotBridge::~AgenticCopilotBridge()
 }
 
 void AgenticCopilotBridge::initialize(AgenticEngine* engine, ChatInterface* chat,
-                                      MultiTabEditor* editor, TerminalPool* terminals)
+                                      MultiTabEditor* editor, TerminalPool* terminals, AgenticExecutor* executor)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     
@@ -46,6 +47,15 @@ void AgenticCopilotBridge::initialize(AgenticEngine* engine, ChatInterface* chat
     m_chatInterface = chat;
     m_multiTabEditor = editor;
     m_terminalPool = terminals;
+    m_agenticExecutor = executor;
+    
+    // Connect training signals
+    if (m_agenticExecutor) {
+        connect(m_agenticExecutor, &AgenticExecutor::trainingProgress,
+                this, &AgenticCopilotBridge::onTrainingProgress);
+        connect(m_agenticExecutor, &AgenticExecutor::trainingCompleted,
+                this, &AgenticCopilotBridge::onTrainingCompleted);
+    }
     
     qInfo() << "[AgenticCopilot] Bridge initialized with all IDE components";
 }
@@ -644,6 +654,68 @@ void AgenticCopilotBridge::updateModel(const QString& newModelPath)
         QString error = QString("Model update failed: %1").arg(e.what());
         qCritical() << "[AgenticCopilot]" << error;
         emit errorOccurred(error);
+    }
+}
+
+// ========== PRODUCTION FEATURES: MODEL TRAINING ==========
+
+QJsonObject AgenticCopilotBridge::trainModel(const QString& datasetPath, const QString& modelPath, const QJsonObject& config)
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    
+    if (!m_agenticExecutor) {
+        QJsonObject result;
+        result["success"] = false;
+        result["error"] = "Agentic executor not available";
+        emit errorOccurred("Cannot train model: Executor not available");
+        return result;
+    }
+    
+    qInfo() << "[AgenticCopilot] Starting model training:" << datasetPath;
+    
+    QJsonObject result = m_agenticExecutor->trainModel(datasetPath, modelPath, config);
+    
+    if (!result["success"].toBool()) {
+        emit errorOccurred("Model training failed: " + result["error"].toString());
+    }
+    
+    return result;
+}
+
+bool AgenticCopilotBridge::isTrainingModel() const
+{
+    if (!m_agenticExecutor) return false;
+    return m_agenticExecutor->isTrainingModel();
+}
+
+void AgenticCopilotBridge::onTrainingProgress(int epoch, int totalEpochs, float loss, float perplexity)
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    
+    if (!m_chatInterface) return;
+    
+    QString message = QString("Training Progress - Epoch %1/%2: Loss=%.4f, Perplexity=%.4f")
+        .arg(epoch).arg(totalEpochs).arg(loss).arg(perplexity);
+    
+    m_chatInterface->addMessage("Training", message);
+    emit trainingProgress(epoch, totalEpochs, loss, perplexity);
+}
+
+void AgenticCopilotBridge::onTrainingCompleted(const QString& modelPath, float finalPerplexity)
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    
+    if (!m_chatInterface) return;
+    
+    QString message = QString("Training completed! Model saved to: %1 (Perplexity: %2)")
+        .arg(modelPath).arg(finalPerplexity);
+    
+    m_chatInterface->addMessage("Training", message);
+    emit trainingCompleted(modelPath, finalPerplexity);
+    
+    // Update model in the IDE
+    if (m_agenticEngine) {
+        m_agenticEngine->setModel(modelPath);
     }
 }
 

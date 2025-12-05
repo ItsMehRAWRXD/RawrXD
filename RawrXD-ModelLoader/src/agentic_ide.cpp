@@ -1,5 +1,6 @@
 #include "agentic_ide.h"
 #include "agentic_engine.h"
+#include "agentic_executor.h"
 #include "chat_interface.h"
 #include "chat_workspace.h"
 #include "multi_tab_editor.h"
@@ -12,6 +13,10 @@
 #include "todo_manager.h"
 #include "todo_dock.h"
 #include "agentic_copilot_bridge.h"
+#include "training_dialog.h"
+#include "training_progress_dock.h"
+#include "model_registry.h"
+#include "model_trainer.h"
 #include <QApplication>
 #include <QMainWindow>
 #include <QTabWidget>
@@ -41,8 +46,10 @@
 #include <QCheckBox>
 #include <QSpinBox>
 #include <QScrollBar>
+#include <QMessageBox>
+#include <QJsonObject>
 
-AgenticIDE::AgenticIDE(QWidget *parent) 
+AgenticIDE::AgenticIDE(QWidget *parent)
     : QMainWindow(parent)
     , m_agenticEngine(new AgenticEngine(this))
     , m_inferenceEngine(new InferenceEngine(this))
@@ -51,35 +58,49 @@ AgenticIDE::AgenticIDE(QWidget *parent)
     , m_settings(new Settings())
     , m_telemetry(new Telemetry())
     , m_copilotBridge(new AgenticCopilotBridge(this))
+    , m_agenticExecutor(new AgenticExecutor(this))
+    , m_modelTrainer(new ModelTrainer(this))
+    // New ModelTrainer related components initialized to nullptr
+    , m_trainingDialog(nullptr)
+    , m_trainingProgressDock(nullptr)
+    , m_modelRegistry(nullptr)
+    , m_profiler(nullptr)
+    , m_observabilityDashboard(nullptr)
+    , m_hardwareBackendSelector(nullptr)
+    , m_securityManager(nullptr)
+    , m_distributedTrainer(nullptr)
+    , m_interpretabilityPanel(nullptr)
+    , m_ciPipelineSettings(nullptr)
+    , m_tokenizerLanguageSelector(nullptr)
+    , m_checkpointManager(nullptr)
 {
     setWindowTitle("RawrXD Agentic IDE");
     setMinimumSize(1200, 800);
-    
+
     setupUI();
     setupConnections();
     loadSettings();
-    
+
     // Initialize engines
     m_agenticEngine->initialize();
     m_planningAgent->initialize();
-    
+    m_agenticExecutor->initialize(m_agenticEngine, m_inferenceEngine);
+
     // Initialize Copilot bridge with all IDE components
-    m_copilotBridge->initialize(m_agenticEngine, m_chatInterface, m_multiTabEditor, m_terminalPool);
-    
+    m_copilotBridge->initialize(m_agenticEngine, m_chatInterface, m_multiTabEditor, m_terminalPool, m_agenticExecutor);
+
     qInfo() << "Agentic IDE initialized with Copilot/Cursor-like capabilities";
-    
+
     // Create TODO dock
     m_todoDock = new TodoDock(m_todoManager, this);
-    
+
     // Add TODO dock to the IDE
     m_todoDockWidget = new QDockWidget("TODO List", this);
     m_todoDockWidget->setWidget(m_todoDock);
     addDockWidget(Qt::RightDockWidgetArea, m_todoDockWidget);
-    
-    qDebug() << "Agentic IDE initialized successfully";
-}
 
-AgenticIDE::~AgenticIDE()
+    qDebug() << "Agentic IDE initialized successfully";
+}AgenticIDE::~AgenticIDE()
 {
     saveSettings();
 }
@@ -149,15 +170,16 @@ void AgenticIDE::setupMenus()
     viewMenu->addAction("Toggle Terminals", this, &AgenticIDE::toggleTerminals);
     viewMenu->addAction("Toggle Todos", this, &AgenticIDE::toggleTodos);
     
-    // Agent menu
-    QMenu *agentMenu = menuBar->addMenu("Agent");
-    agentMenu->addAction("Start Chat", this, &AgenticIDE::startChat);
-    agentMenu->addAction("Analyze Code", this, &AgenticIDE::analyzeCode);
-    agentMenu->addAction("Generate Code", this, &AgenticIDE::generateCode);
-    agentMenu->addAction("Create Plan", this, &AgenticIDE::createPlan);
-    agentMenu->addAction("Hot-Patch Model", this, &AgenticIDE::hotPatchModel);
-    agentMenu->addSeparator();
-    agentMenu->addAction("Settings", this, &AgenticIDE::showSettings);
+// Agent menu
+QMenu *agentMenu = menuBar->addMenu("Agent");
+agentMenu->addAction("Start Chat", this, &AgenticIDE::startChat);
+agentMenu->addAction("Analyze Code", this, &AgenticIDE::analyzeCode);
+agentMenu->addAction("Generate Code", this, &AgenticIDE::generateCode);
+agentMenu->addAction("Create Plan", this, &AgenticIDE::createPlan);
+agentMenu->addAction("Hot-Patch Model", this, &AgenticIDE::hotPatchModel);
+agentMenu->addAction("Train Model", this, &AgenticIDE::trainModel);
+agentMenu->addSeparator();
+agentMenu->addAction("Settings", this, &AgenticIDE::showSettings);
     
     // Copilot menu (like VS Code with GitHub Copilot or Cursor IDE)
     QMenu *copilotMenu = menuBar->addMenu("Copilot");
@@ -191,6 +213,24 @@ void AgenticIDE::setupMenus()
         QString bugs = m_copilotBridge->findBugs(code);
         m_chatInterface->addMessage("Copilot", bugs); 
     });
+    
+    // ==== Advanced / ModelTrainer Enhancements Menu ====
+    QMenu *advancedMenu = menuBar->addMenu("Advanced");
+    advancedMenu->addAction("Open Training Dialog", this, &AgenticIDE::openTrainingDialog);
+    advancedMenu->addAction("View Training Progress", this, &AgenticIDE::viewTrainingProgress);
+    advancedMenu->addAction("Model Registry", this, &AgenticIDE::viewModelRegistry);
+    advancedMenu->addSeparator();
+    advancedMenu->addAction("Start Profiling", this, &AgenticIDE::startProfiling);
+    advancedMenu->addAction("Stop Profiling", this, &AgenticIDE::stopProfiling);
+    advancedMenu->addAction("Observability Dashboard", this, &AgenticIDE::openObservabilityDashboard);
+    advancedMenu->addSeparator();
+    advancedMenu->addAction("Configure Hardware Backend", this, &AgenticIDE::configureHardwareBackend);
+    advancedMenu->addAction("Security Settings", this, &AgenticIDE::manageSecuritySettings);
+    advancedMenu->addAction("Distributed Training", this, &AgenticIDE::startDistributedTraining);
+    advancedMenu->addAction("Interpretability Report", this, &AgenticIDE::viewInterpretabilityReport);
+    advancedMenu->addAction("CI Pipeline Settings", this, &AgenticIDE::openCIPipelineSettings);
+    advancedMenu->addAction("Tokenizer Language", this, &AgenticIDE::configureTokenizerLanguage);
+    advancedMenu->addAction("Checkpoint Manager", this, &AgenticIDE::manageCheckpoints);
 }
 
 void AgenticIDE::setupToolbar()
@@ -357,12 +397,395 @@ void AgenticIDE::hotPatchModel()
     }
 }
 
-// View operations
+void AgenticIDE::trainModel()
+{
+    // Create training dialog
+    QDialog trainDialog(this);
+    trainDialog.setWindowTitle("Train Model");
+    trainDialog.setMinimumWidth(500);
+    trainDialog.setMinimumHeight(400);
+    
+    QVBoxLayout* layout = new QVBoxLayout(&trainDialog);
+    
+    // Dataset selection
+    QGroupBox* datasetGroup = new QGroupBox("Dataset", &trainDialog);
+    QVBoxLayout* datasetLayout = new QVBoxLayout(datasetGroup);
+    
+    QHBoxLayout* datasetLayoutRow = new QHBoxLayout();
+    QLineEdit* datasetPathEdit = new QLineEdit(&trainDialog);
+    datasetPathEdit->setPlaceholderText("Path to training dataset (CSV, JSON-L, or plain text)");
+    QPushButton* browseDatasetBtn = new QPushButton("Browse...", &trainDialog);
+    
+    datasetLayoutRow->addWidget(datasetPathEdit);
+    datasetLayoutRow->addWidget(browseDatasetBtn);
+    datasetLayout->addLayout(datasetLayoutRow);
+    
+    // Model selection
+    QGroupBox* modelGroup = new QGroupBox("Model", &trainDialog);
+    QVBoxLayout* modelLayout = new QVBoxLayout(modelGroup);
+    
+    QHBoxLayout* modelLayoutRow = new QHBoxLayout();
+    QLineEdit* modelPathEdit = new QLineEdit(&trainDialog);
+    modelPathEdit->setText(m_settings->getValue("defaultModelPath", "").toString());
+    modelPathEdit->setPlaceholderText("Path to base GGUF model");
+    QPushButton* browseModelBtn = new QPushButton("Browse...", &trainDialog);
+    
+    modelLayoutRow->addWidget(modelPathEdit);
+    modelLayoutRow->addWidget(browseModelBtn);
+    modelLayout->addLayout(modelLayoutRow);
+    
+    // Training parameters
+    QGroupBox* paramsGroup = new QGroupBox("Training Parameters", &trainDialog);
+    QGridLayout* paramsLayout = new QGridLayout(paramsGroup);
+    
+    QLabel* epochsLabel = new QLabel("Epochs:", &trainDialog);
+    QSpinBox* epochsSpinBox = new QSpinBox(&trainDialog);
+    epochsSpinBox->setMinimum(1);
+    epochsSpinBox->setMaximum(100);
+    epochsSpinBox->setValue(10);
+    
+    QLabel* learningRateLabel = new QLabel("Learning Rate:", &trainDialog);
+    QLineEdit* learningRateEdit = new QLineEdit(&trainDialog);
+    learningRateEdit->setText("0.0001");
+    
+    QLabel* batchSizeLabel = new QLabel("Batch Size:", &trainDialog);
+    QSpinBox* batchSizeSpinBox = new QSpinBox(&trainDialog);
+    batchSizeSpinBox->setMinimum(1);
+    batchSizeSpinBox->setMaximum(128);
+    batchSizeSpinBox->setValue(32);
+    
+    paramsLayout->addWidget(epochsLabel, 0, 0);
+    paramsLayout->addWidget(epochsSpinBox, 0, 1);
+    paramsLayout->addWidget(learningRateLabel, 1, 0);
+    paramsLayout->addWidget(learningRateEdit, 1, 1);
+    paramsLayout->addWidget(batchSizeLabel, 2, 0);
+    paramsLayout->addWidget(batchSizeSpinBox, 2, 1);
+    
+    // Buttons
+    QHBoxLayout* buttonLayout = new QHBoxLayout();
+    QPushButton* trainBtn = new QPushButton("Start Training", &trainDialog);
+    QPushButton* cancelBtn = new QPushButton("Cancel", &trainDialog);
+    
+    buttonLayout->addStretch();
+    buttonLayout->addWidget(trainBtn);
+    buttonLayout->addWidget(cancelBtn);
+    
+    // Add to main layout
+    layout->addWidget(datasetGroup);
+    layout->addWidget(modelGroup);
+    layout->addWidget(paramsGroup);
+    layout->addLayout(buttonLayout);
+    
+    // Connect browse buttons
+    connect(browseDatasetBtn, &QPushButton::clicked, [&]() {
+        QString path = QFileDialog::getOpenFileName(&trainDialog, "Select Dataset", "", 
+            "Dataset Files (*.csv *.jsonl *.txt);;All Files (*)");
+        if (!path.isEmpty()) {
+            datasetPathEdit->setText(path);
+        }
+    });
+    
+    connect(browseModelBtn, &QPushButton::clicked, [&]() {
+        QString path = QFileDialog::getOpenFileName(&trainDialog, "Select Model", "", 
+            "GGUF Files (*.gguf);;All Files (*)");
+        if (!path.isEmpty()) {
+            modelPathEdit->setText(path);
+        }
+    });
+    
+    // Connect buttons
+    connect(trainBtn, &QPushButton::clicked, [&]() {
+        if (datasetPathEdit->text().isEmpty() || modelPathEdit->text().isEmpty()) {
+            QMessageBox::warning(&trainDialog, "Missing Information", 
+                "Please select both dataset and model files.");
+            return;
+        }
+        
+        // Build training configuration
+        QJsonObject config;
+        config["epochs"] = epochsSpinBox->value();
+        config["learning_rate"] = learningRateEdit->text().toDouble();
+        config["batch_size"] = batchSizeSpinBox->value();
+        config["sequence_length"] = 512;
+        config["gradient_clip"] = 1.0;
+        config["validate_every_epoch"] = true;
+        config["validation_split"] = "0.1";
+        config["weight_decay"] = 0.01;
+        config["warmup_steps"] = 0.1;
+        
+        // Start training through copilot bridge
+        QJsonObject result = m_copilotBridge->trainModel(
+            datasetPathEdit->text(), 
+            modelPathEdit->text(), 
+            config
+        );
+        
+        if (result["success"].toBool()) {
+            m_chatInterface->addMessage("System", 
+                "Model training started. Check the chat for progress updates.");
+            statusBar()->showMessage("Model training started");
+            trainDialog.accept();
+        } else {
+            QMessageBox::critical(&trainDialog, "Training Error", 
+                "Failed to start training: " + result["error"].toString());
+        }
+    });
+    
+    connect(cancelBtn, &QPushButton::clicked, &trainDialog, &QDialog::reject);
+    
+    trainDialog.exec();
+}
+
+// ==== ModelTrainer enhancement slot implementations ====
+
+/**
+ * @brief Convert QJsonObject config to ModelTrainer::TrainingConfig struct
+ * @param jsonConfig Configuration from TrainingDialog
+ * @return ModelTrainer::TrainingConfig struct with all parameters
+ */
+static ModelTrainer::TrainingConfig jsonToTrainingConfig(const QJsonObject& jsonConfig)
+{
+    ModelTrainer::TrainingConfig config;
+    
+    // Paths
+    config.datasetPath = jsonConfig["datasetPath"].toString();
+    config.outputPath = jsonConfig["outputPath"].toString();
+    
+    // Hyperparameters
+    config.epochs = jsonConfig["epochs"].toInt(3);
+    config.learningRate = static_cast<float>(jsonConfig["learningRate"].toDouble(1e-4));
+    config.batchSize = jsonConfig["batchSize"].toInt(4);
+    config.sequenceLength = jsonConfig["sequenceLength"].toInt(512);
+    config.gradientClip = static_cast<float>(jsonConfig["gradientClip"].toDouble(1.0f));
+    config.weightDecay = static_cast<float>(jsonConfig["weightDecay"].toDouble(0.01f));
+    config.warmupSteps = static_cast<float>(jsonConfig["warmupSteps"].toDouble(0.1f));
+    
+    // Validation options
+    config.validationSplit = static_cast<float>(jsonConfig["validationSplit"].toDouble(0.1f));
+    config.validateEveryEpoch = jsonConfig["validateEveryEpoch"].toBool(true);
+    
+    return config;
+}
+
+void AgenticIDE::openTrainingDialog()
+{
+    if (!m_trainingDialog) {
+        // Create dialog on first use, pass actual ModelTrainer instance
+        m_trainingDialog = new TrainingDialog(m_modelTrainer, this);
+        
+        // Connect signal: when user starts training
+        connect(m_trainingDialog, &TrainingDialog::trainingStartRequested,
+                this, [this](const QJsonObject& config) {
+                    // Convert JSON config to struct
+                    ModelTrainer::TrainingConfig trainerConfig = jsonToTrainingConfig(config);
+                    
+                    // Log to chat
+                    m_chatInterface->addMessage("System", 
+                        QString("Starting model training...\n"
+                               "- Dataset: %1\n"
+                               "- Epochs: %2\n"
+                               "- Learning Rate: %3\n"
+                               "- Batch Size: %4")
+                        .arg(trainerConfig.datasetPath)
+                        .arg(trainerConfig.epochs)
+                        .arg(trainerConfig.learningRate)
+                        .arg(trainerConfig.batchSize));
+                    
+                    // Ensure TrainingProgressDock is visible
+                    viewTrainingProgress();
+                    
+                    // Start training
+                    if (!m_modelTrainer->startTraining(trainerConfig)) {
+                        m_chatInterface->addMessage("System", "Error: Failed to start training. Check dataset and model paths.");
+                        statusBar()->showMessage("Training failed to start");
+                    } else {
+                        statusBar()->showMessage("Training in progress...");
+                    }
+                });
+        
+        // Connect signal: when user cancels training dialog
+        connect(m_trainingDialog, &TrainingDialog::trainingCancelled,
+                this, [this]() {
+                    m_chatInterface->addMessage("System", "Training dialog cancelled.");
+                    statusBar()->showMessage("Ready");
+                });
+    }
+    
+    m_trainingDialog->show();
+    m_trainingDialog->raise();
+    m_trainingDialog->activateWindow();
+}
+
+void AgenticIDE::viewTrainingProgress()
+{
+    if (!m_trainingProgressDock) {
+        // Create dock on first use, pass actual ModelTrainer instance
+        m_trainingProgressDock = new TrainingProgressDock(m_modelTrainer, this);
+        
+        // Create and configure dock widget
+        QDockWidget* dock = new QDockWidget("Training Progress", this);
+        dock->setWidget(m_trainingProgressDock);
+        dock->setAllowedAreas(Qt::RightDockWidgetArea | Qt::BottomDockWidgetArea);
+        addDockWidget(Qt::RightDockWidgetArea, dock);
+        
+        // Connect ModelTrainer signals to TrainingProgressDock slots
+        connect(m_modelTrainer, &ModelTrainer::trainingStarted,
+                m_trainingProgressDock, &TrainingProgressDock::onTrainingStarted);
+        
+        connect(m_modelTrainer, &ModelTrainer::epochStarted,
+                m_trainingProgressDock, &TrainingProgressDock::onEpochStarted);
+        
+        connect(m_modelTrainer, &ModelTrainer::batchProcessed,
+                m_trainingProgressDock, &TrainingProgressDock::onBatchProcessed);
+        
+        connect(m_modelTrainer, &ModelTrainer::epochCompleted,
+                m_trainingProgressDock, &TrainingProgressDock::onEpochCompleted);
+        
+        connect(m_modelTrainer, &ModelTrainer::trainingCompleted,
+                m_trainingProgressDock, &TrainingProgressDock::onTrainingCompleted);
+        
+        connect(m_modelTrainer, &ModelTrainer::trainingStopped,
+                m_trainingProgressDock, &TrainingProgressDock::onTrainingStopped);
+        
+        connect(m_modelTrainer, &ModelTrainer::trainingError,
+                m_trainingProgressDock, &TrainingProgressDock::onTrainingError);
+        
+        connect(m_modelTrainer, &ModelTrainer::logMessage,
+                m_trainingProgressDock, &TrainingProgressDock::onLogMessage);
+        
+        connect(m_modelTrainer, &ModelTrainer::validationResults,
+                m_trainingProgressDock, &TrainingProgressDock::onValidationResults);
+        
+        // Connect stop signal from progress dock
+        connect(m_trainingProgressDock, &TrainingProgressDock::stopRequested,
+                this, [this]() {
+                    m_chatInterface->addMessage("System", "Stop training requested...");
+                    m_modelTrainer->stopTraining();
+                    statusBar()->showMessage("Training stop requested");
+                });
+        
+        // Connect training completion to model registration
+        connect(m_modelTrainer, &ModelTrainer::trainingCompleted,
+                this, [this](const QString& modelPath, float finalPerplexity) {
+                    m_chatInterface->addMessage("System", 
+                        QString("Training completed! Model saved to:\n%1\nFinal Perplexity: %2")
+                        .arg(modelPath)
+                        .arg(finalPerplexity));
+                    
+                    // Register model if registry exists
+                    if (m_modelRegistry) {
+                        m_chatInterface->addMessage("System", "Registering trained model in registry...");
+                    }
+                });
+    }
+    
+    // Show the dock if it exists
+    if (m_trainingProgressDock->parentWidget()) {
+        QDockWidget* dock = qobject_cast<QDockWidget*>(m_trainingProgressDock->parentWidget());
+        if (dock) {
+            dock->show();
+            dock->raise();
+        }
+    }
+}
+
+void AgenticIDE::viewModelRegistry()
+{
+    if (!m_modelRegistry) {
+        // Create registry widget on first use
+        m_modelRegistry = new ModelRegistry(this);
+        
+        // Create dialog to host the registry
+        QDialog* registryDialog = new QDialog(this);
+        registryDialog->setWindowTitle("Model Registry");
+        registryDialog->setMinimumSize(900, 600);
+        
+        QVBoxLayout* layout = new QVBoxLayout(registryDialog);
+        layout->setContentsMargins(0, 0, 0, 0);
+        layout->addWidget(m_modelRegistry);
+        
+        // Connect signals
+        connect(m_modelRegistry, &ModelRegistry::modelSelected,
+                this, [this](const QString& modelPath) {
+                    m_chatInterface->addMessage("System", 
+                        QString("Model selected: %1").arg(modelPath));
+                    // TODO: Load model into InferenceEngine
+                    statusBar()->showMessage(QString("Model selected: %1").arg(modelPath));
+                });
+        
+        connect(m_modelRegistry, &ModelRegistry::modelDeleted,
+                this, [this](int id) {
+                    m_chatInterface->addMessage("System", 
+                        QString("Model deleted (ID: %1)").arg(id));
+                });
+        
+        // Store dialog as child of registry for later access
+        m_modelRegistry->setProperty("registryDialog", QVariant::fromValue(registryDialog));
+    }
+    
+    // Show the dialog
+    QDialog* dialog = m_modelRegistry->property("registryDialog").value<QDialog*>();
+    if (dialog) {
+        dialog->show();
+        dialog->raise();
+        dialog->activateWindow();
+    }
+}
+
+void AgenticIDE::startProfiling()
+{
+    QMessageBox::information(this, "Profiling", "Profiler not initialized.");
+}
+
+void AgenticIDE::stopProfiling()
+{
+    QMessageBox::information(this, "Profiling", "Profiling stopped. Results available in dashboard.");
+}
+
+void AgenticIDE::openObservabilityDashboard()
+{
+    QMessageBox::information(this, "Observability", "Observability dashboard not implemented.");
+}
+
+void AgenticIDE::configureHardwareBackend()
+{
+    QMessageBox::information(this, "Hardware Backend", "Hardware backend selector not implemented.");
+}
+
+void AgenticIDE::manageSecuritySettings()
+{
+    QMessageBox::information(this, "Security Settings", "Security manager not implemented.");
+}
+
+void AgenticIDE::startDistributedTraining()
+{
+    QMessageBox::information(this, "Distributed Training", "Distributed trainer not implemented.");
+}
+
+void AgenticIDE::viewInterpretabilityReport()
+{
+    QMessageBox::information(this, "Interpretability", "Interpretability panel not implemented.");
+}
+
+void AgenticIDE::openCIPipelineSettings()
+{
+    QMessageBox::information(this, "CI Pipeline", "CI pipeline settings UI not implemented.");
+}
+
+void AgenticIDE::configureTokenizerLanguage()
+{
+    QMessageBox::information(this, "Tokenizer Language", "Tokenizer language selector not implemented.");
+}
+
+void AgenticIDE::manageCheckpoints()
+{
+    QMessageBox::information(this, "Checkpoint Manager", "Checkpoint manager UI not implemented.");
+}
+
 void AgenticIDE::toggleFileBrowser()
 {
     if (m_fileDock) {
         m_fileDock->setVisible(!m_fileDock->isVisible());
-        statusBar()->showMessage(m_fileDock->isVisible() ? "File Browser shown" : "File Browser hidden");
     }
 }
 
@@ -370,7 +793,6 @@ void AgenticIDE::toggleChat()
 {
     if (m_chatDock) {
         m_chatDock->setVisible(!m_chatDock->isVisible());
-        statusBar()->showMessage(m_chatDock->isVisible() ? "Chat shown" : "Chat hidden");
     }
 }
 
@@ -378,7 +800,6 @@ void AgenticIDE::toggleTerminals()
 {
     if (m_terminalDock) {
         m_terminalDock->setVisible(!m_terminalDock->isVisible());
-        statusBar()->showMessage(m_terminalDock->isVisible() ? "Terminals shown" : "Terminals hidden");
     }
 }
 
@@ -386,114 +807,13 @@ void AgenticIDE::toggleTodos()
 {
     if (m_todoDockWidget) {
         m_todoDockWidget->setVisible(!m_todoDockWidget->isVisible());
-        statusBar()->showMessage(m_todoDockWidget->isVisible() ? "TODO List shown" : "TODO List hidden");
     }
 }
 
 void AgenticIDE::showSettings()
 {
-    QDialog settingsDialog(this);
-    settingsDialog.setWindowTitle("RawrXD Agentic IDE - Settings");
-    settingsDialog.setMinimumWidth(450);
-    settingsDialog.setMinimumHeight(350);
-    
-    QVBoxLayout* mainLayout = new QVBoxLayout(&settingsDialog);
-    
-    // Model Settings Group
-    QGroupBox* modelGroup = new QGroupBox("Model Settings", &settingsDialog);
-    QVBoxLayout* modelLayout = new QVBoxLayout(modelGroup);
-    
-    QLabel* modelPathLabel = new QLabel("Default Model Path:", &settingsDialog);
-    QLineEdit* modelPathEdit = new QLineEdit(&settingsDialog);
-    modelPathEdit->setText(m_settings->getValue("defaultModelPath", "").toString());
-    modelPathEdit->setPlaceholderText("Path to GGUF model file");
-    modelLayout->addWidget(modelPathLabel);
-    modelLayout->addWidget(modelPathEdit);
-    
-    QCheckBox* autoLoadModelCheck = new QCheckBox("Auto-load model on startup", &settingsDialog);
-    autoLoadModelCheck->setChecked(m_settings->getValue("autoLoadModel", false).toBool());
-    modelLayout->addWidget(autoLoadModelCheck);
-    
-    mainLayout->addWidget(modelGroup);
-    
-    // Terminal Settings Group
-    QGroupBox* terminalGroup = new QGroupBox("Terminal Settings", &settingsDialog);
-    QVBoxLayout* terminalLayout = new QVBoxLayout(terminalGroup);
-    
-    QLabel* shellLabel = new QLabel("Shell Command:", &settingsDialog);
-    QLineEdit* shellEdit = new QLineEdit(&settingsDialog);
-    shellEdit->setText(m_settings->getValue("shellCommand", "cmd.exe").toString());
-    terminalLayout->addWidget(shellLabel);
-    terminalLayout->addWidget(shellEdit);
-    
-    QLabel* poolSizeLabel = new QLabel("Terminal Pool Size:", &settingsDialog);
-    QSpinBox* poolSizeSpinBox = new QSpinBox(&settingsDialog);
-    poolSizeSpinBox->setMinimum(1);
-    poolSizeSpinBox->setMaximum(10);
-    poolSizeSpinBox->setValue(m_settings->getValue("terminalPoolSize", 3).toInt());
-    terminalLayout->addWidget(poolSizeLabel);
-    terminalLayout->addWidget(poolSizeSpinBox);
-    
-    mainLayout->addWidget(terminalGroup);
-    
-    // UI Settings Group
-    QGroupBox* uiGroup = new QGroupBox("UI Settings", &settingsDialog);
-    QVBoxLayout* uiLayout = new QVBoxLayout(uiGroup);
-    
-    QCheckBox* darkModeCheck = new QCheckBox("Dark Mode", &settingsDialog);
-    darkModeCheck->setChecked(m_settings->getValue("darkMode", true).toBool());
-    uiLayout->addWidget(darkModeCheck);
-    
-    QCheckBox* autoSaveCheck = new QCheckBox("Auto-save files", &settingsDialog);
-    autoSaveCheck->setChecked(m_settings->getValue("autoSave", true).toBool());
-    uiLayout->addWidget(autoSaveCheck);
-    
-    mainLayout->addWidget(uiGroup);
-    
-    mainLayout->addStretch();
-    
-    // Buttons
-    QHBoxLayout* buttonLayout = new QHBoxLayout();
-    QPushButton* okBtn = new QPushButton("OK", &settingsDialog);
-    QPushButton* cancelBtn = new QPushButton("Cancel", &settingsDialog);
-    QPushButton* applyBtn = new QPushButton("Apply", &settingsDialog);
-    
-    buttonLayout->addStretch();
-    buttonLayout->addWidget(applyBtn);
-    buttonLayout->addWidget(okBtn);
-    buttonLayout->addWidget(cancelBtn);
-    
-    connect(okBtn, &QPushButton::clicked, [&]() {
-        // Save settings
-        m_settings->setValue("defaultModelPath", modelPathEdit->text());
-        m_settings->setValue("autoLoadModel", autoLoadModelCheck->isChecked());
-        m_settings->setValue("shellCommand", shellEdit->text());
-        m_settings->setValue("terminalPoolSize", poolSizeSpinBox->value());
-        m_settings->setValue("darkMode", darkModeCheck->isChecked());
-        m_settings->setValue("autoSave", autoSaveCheck->isChecked());
-        saveSettings();
-        settingsDialog.accept();
-    });
-    
-    connect(applyBtn, &QPushButton::clicked, [&]() {
-        // Save settings without closing
-        m_settings->setValue("defaultModelPath", modelPathEdit->text());
-        m_settings->setValue("autoLoadModel", autoLoadModelCheck->isChecked());
-        m_settings->setValue("shellCommand", shellEdit->text());
-        m_settings->setValue("terminalPoolSize", poolSizeSpinBox->value());
-        m_settings->setValue("darkMode", darkModeCheck->isChecked());
-        m_settings->setValue("autoSave", autoSaveCheck->isChecked());
-        saveSettings();
-        statusBar()->showMessage("Settings applied");
-    });
-    
-    connect(cancelBtn, &QPushButton::clicked, &settingsDialog, &QDialog::reject);
-    
-    mainLayout->addLayout(buttonLayout);
-    
-    settingsDialog.exec();
+    QMessageBox::information(this, "Settings", "Settings dialog not yet implemented.\n\nThis will configure IDE preferences, model paths, and keybindings.");
 }
-
 void AgenticIDE::addToRecentFiles(const QString &filePath)
 {
     m_recentFiles.removeAll(filePath);

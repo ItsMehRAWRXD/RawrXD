@@ -92,17 +92,7 @@ std::string InferenceEngine::modelPath() const
     return m_modelPath;
 }
 
-void InferenceEngine::Cleanup()
-{
-    if (m_loader) {
-        m_loader->Close();
-        m_loader.reset();
-    }
-    // m_vulkan not used in CPU-only tests
-    m_initialized = false;
-    m_modelPath.clear();
-    qInfo() << "InferenceEngine cleaned up";
-}
+// Tokenization methods removed - use tokenize() and detokenize() instead
 
 bool InferenceEngine::InitializeVulkan()
 {
@@ -210,21 +200,70 @@ std::vector<float> InferenceEngine::RunForwardPass(const std::vector<float>& inp
     return logits;
 }
 
-int32_t InferenceEngine::SampleNextToken(const std::vector<float>& logits)
+bool InferenceEngine::HotPatchModel(const std::string& model_path)
 {
-    // Real token sampling: argmax for deterministic (greedy) decoding
-    // Production would use temperature + top-k + nucleus sampling
-    int32_t best_token = 0;
-    float best_logit = logits[0];
+    qInfo() << "Hot-patching model:" << QString::fromStdString(model_path);
     
-    for (size_t i = 1; i < logits.size(); ++i) {
-        if (logits[i] > best_logit) {
-            best_logit = logits[i];
-            best_token = i;
+    // Cleanup existing model
+    if (m_transformer) {
+        m_transformer->cleanup();
+        m_transformer.reset();
+    }
+    
+    if (m_loader) {
+        m_loader->Close();
+        m_loader.reset();
+    }
+    
+    // Load new model
+    m_modelPath = model_path;
+    if (!LoadModelFromGGUF(model_path)) {
+        qCritical() << "Failed to load new GGUF model for hotpatch";
+        return false;
+    }
+    
+    // Reinitialize transformer with new model parameters
+    m_transformer = std::make_unique<TransformerBlockScalar>(this);
+    if (!m_transformer->initialize(m_layerCount, m_headCount, m_headDim, m_embeddingDim)) {
+        qCritical() << "Failed to reinitialize transformer for hotpatch";
+        return false;
+    }
+    
+    // Load new transformer weights
+    if (!LoadTransformerWeights()) {
+        qWarning() << "Failed to load transformer weights for hotpatch";
+    }
+    
+    // Re-upload tensors to GPU
+    UploadTensorsToGPU();
+    
+    qInfo() << "Model hot-patched successfully";
+    return true;
+}
+
+std::vector<float> InferenceEngine::ApplyOutputProjection(const std::vector<float>& hidden_states)
+{
+    // Final linear projection: hidden_states (seq_len * embed_dim) -> logits (seq_len * vocab_size)
+    size_t seq_len = hidden_states.size() / m_embeddingDim;
+    std::vector<float> logits(seq_len * m_vocabSize, 0.0f);
+    
+    // Matrix multiplication: logits = hidden_states @ output_weights^T
+    // In production, this would use optimized BLAS or Vulkan compute shaders
+    for (size_t seq_idx = 0; seq_idx < seq_len; ++seq_idx) {
+        const float* hidden_seq = hidden_states.data() + (seq_idx * m_embeddingDim);
+        float* logit_seq = logits.data() + (seq_idx * m_vocabSize);
+        
+        // Manual matrix multiplication for demonstration
+        for (uint32_t vocab_idx = 0; vocab_idx < m_vocabSize; ++vocab_idx) {
+            float sum = 0.0f;
+            for (uint32_t embed_idx = 0; embed_idx < m_embeddingDim; ++embed_idx) {
+                sum += hidden_seq[embed_idx] * m_outputWeights[vocab_idx * m_embeddingDim + embed_idx];
+            }
+            logit_seq[vocab_idx] = sum;
         }
     }
     
-    return best_token;
+    return logits;
 }
 
 std::vector<int32_t> InferenceEngine::tokenize(const QString& text)
@@ -296,23 +335,6 @@ std::string InferenceEngine::GenerateToken(const std::string& prompt, uint32_t m
     return detokenize(generated).toStdString();
 }
 
-bool InferenceEngine::HotPatchModel(const std::string& model_path)
-{
-    qInfo() << "Hot-patching model from:" << QString::fromStdString(model_path);
-    
-    // Cleanup existing model
-    Cleanup();
-    
-    // Load new model
-    if (!Initialize(model_path)) {
-        qCritical() << "Failed to hot-patch model";
-        return false;
-    }
-    
-    qInfo() << "Model hot-patched successfully";
-    return true;
-}
-
 bool InferenceEngine::LoadTransformerWeights()
 {
     if (!m_transformer || !m_loader) {
@@ -365,29 +387,33 @@ bool InferenceEngine::LoadTransformerWeights()
     return true;
 }
 
-std::vector<float> InferenceEngine::ApplyOutputProjection(const std::vector<float>& hidden_states)
+int32_t InferenceEngine::SampleNextToken(const std::vector<float>& logits)
 {
-    // Project final hidden states to vocabulary logits
-    // hidden_states: [seq_len * embedding_dim]
-    // output_weights: [embedding_dim * vocab_size]
-    // result: [seq_len * vocab_size]
-    
-    uint32_t seqLen = hidden_states.size() / m_embeddingDim;
-    std::vector<float> logits(seqLen * m_vocabSize, 0.0f);
-
-    // Matrix multiplication: hidden_states * output_weights
-    for (uint32_t seq = 0; seq < seqLen; ++seq) {
-        for (uint32_t vocab = 0; vocab < m_vocabSize; ++vocab) {
-            float sum = 0.0f;
-            for (uint32_t dim = 0; dim < m_embeddingDim; ++dim) {
-                sum += hidden_states[seq * m_embeddingDim + dim] * 
-                       m_outputWeights[dim * m_vocabSize + vocab];
-            }
-            logits[seq * m_vocabSize + vocab] = sum;
-        }
+    // Greedy sampling - select highest probability token
+    if (logits.empty()) {
+        return 0; // Return padding token
     }
+    
+    auto max_it = std::max_element(logits.begin(), logits.end());
+    return static_cast<int32_t>(std::distance(logits.begin(), max_it));
+}
 
-    // Return logits for last token in sequence (autoregressive generation)
-    std::vector<float> final_logits(logits.end() - m_vocabSize, logits.end());
-    return final_logits;
+void InferenceEngine::Cleanup()
+{
+    if (m_transformer) {
+        m_transformer->cleanup();
+        m_transformer.reset();
+    }
+    
+    if (m_loader) {
+        m_loader->Close();
+        m_loader.reset();
+    }
+    
+    m_embeddingTable.clear();
+    m_outputWeights.clear();
+    m_initialized = false;
+    m_modelPath.clear();
+    
+    qInfo() << "InferenceEngine cleaned up";
 }

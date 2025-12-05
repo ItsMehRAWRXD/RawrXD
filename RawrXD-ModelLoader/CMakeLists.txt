@@ -1011,11 +1011,29 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/inference_engine_stub.cpp")
         list(APPEND AGENTICIDE_SOURCES src/inference_engine_stub.cpp)
     endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/agentic_executor.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/agentic_executor.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/model_trainer.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/model_trainer.cpp)
+    endif()
+    
+    # Phase 1: ModelTrainer UI Components
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/training_dialog.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/training_dialog.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/training_progress_dock.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/training_progress_dock.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/model_registry.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/model_registry.cpp)
+    endif()
     
     # Add headers for MOC processing
     list(APPEND AGENTICIDE_SOURCES
         include/agentic_ide.h
         include/agentic_engine.h
+        include/agentic_executor.h
         include/agentic_copilot_bridge.h
         include/chat_interface.h
         include/chat_workspace.h
@@ -1029,6 +1047,10 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
         include/transformer_block_scalar.h
         include/todo_manager.h
         include/todo_dock.h
+        include/training_dialog.h
+        include/training_progress_dock.h
+        include/model_registry.h
+        include/model_trainer.h
     )
     
     add_executable(RawrXD-AgenticIDE WIN32 ${AGENTICIDE_SOURCES})
@@ -1055,6 +1077,7 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
         Qt6::Gui
         Qt6::Widgets
         Qt6::Network
+        Qt6::Sql
         brutal_gzip
     )
     

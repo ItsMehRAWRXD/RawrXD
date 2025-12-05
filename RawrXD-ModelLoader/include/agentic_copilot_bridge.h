@@ -7,10 +7,12 @@
 #include <memory>
 #include <mutex>
 
+// Forward declarations
 class AgenticEngine;
 class ChatInterface;
 class MultiTabEditor;
 class TerminalPool;
+class AgenticExecutor;
 
 /**
  * @class AgenticCopilotBridge
@@ -26,6 +28,7 @@ class TerminalPool;
  * - User feedback collection and analysis
  * - Thread-safe concurrent operations
  * - Full IDE integration with all components
+ * - On-device model fine-tuning
  */
 class AgenticCopilotBridge : public QObject {
     Q_OBJECT
@@ -36,7 +39,7 @@ public:
     
     // Initialize with IDE components
     void initialize(AgenticEngine* engine, ChatInterface* chat, 
-                   MultiTabEditor* editor, TerminalPool* terminals);
+                   MultiTabEditor* editor, TerminalPool* terminals, AgenticExecutor* executor);
     
     // Core Copilot-like capabilities (thread-safe)
     QString generateCodeCompletion(const QString& context, const QString& prefix = "");
@@ -68,6 +71,10 @@ public:
     // Production features: Model updates
     void updateModel(const QString& newModelPath);
     
+    // Production features: Model training
+    QJsonObject trainModel(const QString& datasetPath, const QString& modelPath, const QJsonObject& config);
+    bool isTrainingModel() const;
+    
     // Production features: Enhanced UI integration
     Q_INVOKABLE void showResponse(const QString& response);
     Q_INVOKABLE void displayMessage(const QString& message);
@@ -76,6 +83,8 @@ public slots:
     void onChatMessage(const QString& message);
     void onModelLoaded(const QString& modelPath);
     void onEditorContentChanged();
+    void onTrainingProgress(int epoch, int totalEpochs, float loss, float perplexity);
+    void onTrainingCompleted(const QString& modelPath, float finalPerplexity);
     
 signals:
     void completionReady(const QString& completion);
@@ -85,6 +94,8 @@ signals:
     void errorOccurred(const QString& error);
     void feedbackSubmitted();
     void modelUpdated();
+    void trainingProgress(int epoch, int totalEpochs, float loss, float perplexity);
+    void trainingCompleted(const QString& modelPath, float finalPerplexity);
     
 private:
     // Response correction and validation
@@ -102,11 +113,11 @@ private:
     ChatInterface* m_chatInterface = nullptr;
     MultiTabEditor* m_multiTabEditor = nullptr;
     TerminalPool* m_terminalPool = nullptr;
+    AgenticExecutor* m_agenticExecutor = nullptr;
     
     QString m_lastConversationContext;
     QJsonArray m_conversationHistory;
     bool m_hotpatchingEnabled = true;
     
-    // Thread safety for concurrent operations
-    mutable std::mutex m_mutex;
+    std::mutex m_mutex; // Mutex for thread-safe operations
 };

@@ -22,6 +22,16 @@ public:
     void Cleanup();
     bool HotPatchModel(const std::string& model_path);
     
+    // Enhanced tokenization for training
+    std::vector<uint32_t> TokenizeText(const std::string& text);
+    std::string DetokenizeIds(const std::vector<uint32_t>& token_ids);
+    uint32_t GetVocabSize() const { return vocab_size_; }
+    uint32_t GetEmbeddingDim() const { return embedding_dim_; }
+    
+    // Model information
+    bool IsModelLoaded() const { return initialized_; }
+    QString GetCurrentModelPath() const { return QString::fromStdString(current_model_path_); }
+    
 public slots:
     void processCommand(const QString& command);
     QString processChat(const QString& message);
@@ -54,4 +64,5 @@ private:
     uint32_t head_dim_{64};   // embedding_dim / head_count
     std::vector<float> embedding_table_;  // Token embeddings
     std::vector<float> output_weights_;   // Final projection to vocab
+    std::string current_model_path_;      // Track current model path
 };

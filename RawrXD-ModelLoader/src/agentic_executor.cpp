@@ -2,11 +2,13 @@
 #include "agentic_executor.h"
 #include "agentic_engine.h"
 #include "inference_engine.h"
+#include "model_trainer.h"
 #include <QFile>
 #include <QTextStream>
 #include <QFileInfo>
 #include <QDateTime>
 #include <QRegularExpression>
+#include <QJsonDocument>
 #include <QDebug>
 
 AgenticExecutor::AgenticExecutor(QObject* parent)
@@ -25,8 +27,26 @@ void AgenticExecutor::initialize(AgenticEngine* engine, InferenceEngine* inferen
 {
     m_agenticEngine = engine;
     m_inferenceEngine = inference;
+    m_modelTrainer = std::make_unique<ModelTrainer>(this);
     
-    qInfo() << "[AgenticExecutor] Connected to AgenticEngine and InferenceEngine";
+    // Connect training signals
+    connect(m_modelTrainer.get(), &ModelTrainer::epochStarted, 
+            this, [this](int epoch, int totalEpochs) {
+                // Emit progress with estimated values
+                emit trainingProgress(epoch, totalEpochs, 0.0f, 0.0f);
+            });
+    connect(m_modelTrainer.get(), &ModelTrainer::trainingCompleted, 
+            this, &AgenticExecutor::trainingCompleted);
+    connect(m_modelTrainer.get(), &ModelTrainer::trainingError, 
+            this, &AgenticExecutor::errorOccurred);
+    connect(m_modelTrainer.get(), &ModelTrainer::logMessage, 
+            this, &AgenticExecutor::logMessage);
+    
+    if (m_inferenceEngine) {
+        m_modelTrainer->initialize(m_inferenceEngine, m_inferenceEngine->GetCurrentModelPath());
+    }
+    
+    qInfo() << "[AgenticExecutor] Connected to AgenticEngine, InferenceEngine, and ModelTrainer";
 }
 
 // ========== MAIN AGENTIC EXECUTION ==========
@@ -116,15 +136,26 @@ QJsonArray AgenticExecutor::decomposeTask(const QString& goal)
         "User Request: %1\n\n"
         "Break this down into detailed, actionable steps. For each step, provide:\n"
         "1. A clear description of what to do\n"
-        "2. The type of action (create_directory, create_file, compile, run, etc.)\n"
+        "2. The type of action (create_directory, create_file, compile, run, train_model, etc.)\n"
         "3. Required parameters\n"
         "4. Success criteria\n\n"
+        "Available tools:\n"
+        "- create_directory: Create a new directory\n"
+        "- create_file: Create a file with content\n"
+        "- read_file: Read file contents\n"
+        "- delete_file: Delete a file\n"
+        "- list_directory: List directory contents\n"
+        "- compile_project: Compile C++ project\n"
+        "- run_executable: Run compiled executable\n"
+        "- train_model: Fine-tune a GGUF model with dataset\n"
+        "- is_training: Check if model training is in progress\n\n"
         "Return as JSON array:\n"
         "[\n"
         "  {\"step\": 1, \"action\": \"create_directory\", \"description\": \"...\", \"params\": {...}, \"criteria\": \"...\" },\n"
         "  {\"step\": 2, \"action\": \"create_file\", \"description\": \"...\", \"params\": {\"path\": \"...\", \"content\": \"...\"}, \"criteria\": \"...\" }\n"
         "]\n\n"
-        "Be specific and include all necessary files, compilation commands, and verification steps."
+        "Be specific and include all necessary files, compilation commands, and verification steps.\n"
+        "For model training tasks, include dataset path, model path, and training configuration."
     ).arg(goal);
 
     // Get plan from model
@@ -185,7 +216,7 @@ bool AgenticExecutor::executeStep(const QJsonObject& step)
         }
         else if (action == "compile") {
             QString projectPath = params["project_path"].toString();
-            QString compiler = params.value("compiler", "g++").toString();
+            QString compiler = params.contains("compiler") ? params["compiler"].toString() : "g++";
             QJsonObject compileResult = compileProject(projectPath, compiler);
             return compileResult["success"].toBool();
         }
@@ -407,8 +438,8 @@ QJsonObject AgenticExecutor::compileProject(const QString& projectPath, const QS
         process.start(compiler, args);
         process.waitForFinished(-1);
         
-        result["compiler_output"] = process.readAllStandardOutput();
-        result["compiler_error"] = process.readAllStandardError();
+        result["compiler_output"] = QString::fromUtf8(process.readAllStandardOutput());
+        result["compiler_error"] = QString::fromUtf8(process.readAllStandardError());
         result["exit_code"] = process.exitCode();
         result["success"] = (process.exitCode() == 0);
     }
@@ -446,8 +477,8 @@ QJsonObject AgenticExecutor::runExecutable(const QString& executablePath, const 
 
     process.waitForFinished(-1);
 
-    result["stdout"] = process.readAllStandardOutput();
-    result["stderr"] = process.readAllStandardError();
+    result["stdout"] = QString::fromUtf8(process.readAllStandardOutput());
+    result["stderr"] = QString::fromUtf8(process.readAllStandardError());
     result["exit_code"] = process.exitCode();
     result["success"] = (process.exitCode() == 0);
 
@@ -517,12 +548,20 @@ QJsonArray AgenticExecutor::getAvailableTools()
 {
     QJsonArray tools;
     
+    // File system tools
     tools.append(QJsonObject{{"name", "create_directory"}, {"description", "Create a new directory"}});
     tools.append(QJsonObject{{"name", "create_file"}, {"description", "Create a file with content"}});
     tools.append(QJsonObject{{"name", "read_file"}, {"description", "Read file contents"}});
+    tools.append(QJsonObject{{"name", "delete_file"}, {"description", "Delete a file"}});
+    tools.append(QJsonObject{{"name", "list_directory"}, {"description", "List directory contents"}});
+    
+    // Compilation tools
     tools.append(QJsonObject{{"name", "compile_project"}, {"description", "Compile C++ project"}});
     tools.append(QJsonObject{{"name", "run_executable"}, {"description", "Run compiled executable"}});
-    tools.append(QJsonObject{{"name", "list_directory"}, {"description", "List directory contents"}});
+    
+    // Model tools
+    tools.append(QJsonObject{{"name", "train_model"}, {"description", "Fine-tune a GGUF model with dataset"}});
+    tools.append(QJsonObject{{"name", "is_training"}, {"description", "Check if model training is in progress"}});
     
     return tools;
 }
@@ -548,6 +587,10 @@ QJsonObject AgenticExecutor::callTool(const QString& toolName, const QJsonObject
         result["success"] = !content.isEmpty();
         result["content"] = content;
     }
+    else if (toolName == "delete_file") {
+        bool success = deleteFile(params["path"].toString());
+        result["success"] = success;
+    }
     else if (toolName == "compile_project") {
         QJsonObject compileResult = compileProject(params["project_path"].toString());
         result = compileResult;
@@ -560,6 +603,18 @@ QJsonObject AgenticExecutor::callTool(const QString& toolName, const QJsonObject
         QStringList entries = listDirectory(params["path"].toString());
         result["success"] = true;
         result["entries"] = QJsonArray::fromStringList(entries);
+    }
+    else if (toolName == "train_model") {
+        QString datasetPath = params["dataset_path"].toString();
+        QString modelPath = params["model_path"].toString();
+        QJsonObject config = params["config"].toObject();
+        QJsonObject trainResult = trainModel(datasetPath, modelPath, config);
+        result = trainResult;
+    }
+    else if (toolName == "is_training") {
+        bool training = isTrainingModel();
+        result["success"] = true;
+        result["is_training"] = training;
     }
     else {
         result["success"] = false;
@@ -667,4 +722,56 @@ QJsonObject AgenticExecutor::retryWithCorrection(const QJsonObject& failedStep)
     
     m_currentRetryCount = 0; // Reset for next task
     return result;
+}
+
+// ========== MODEL TRAINING ==========
+
+QJsonObject AgenticExecutor::trainModel(const QString& datasetPath, const QString& modelPath, const QJsonObject& config)
+{
+    QJsonObject result;
+    
+    if (!m_modelTrainer) {
+        result["success"] = false;
+        result["error"] = "Model trainer not initialized";
+        return result;
+    }
+    
+    if (!m_inferenceEngine || !m_inferenceEngine->IsModelLoaded()) {
+        result["success"] = false;
+        result["error"] = "No model loaded for training";
+        return result;
+    }
+    
+    qInfo() << "[AgenticExecutor] Starting model training:" << datasetPath;
+    emit logMessage("Starting model training with dataset: " + datasetPath);
+    
+    // Configure training
+    ModelTrainer::TrainingConfig trainConfig;
+    trainConfig.datasetPath = datasetPath;
+    trainConfig.outputPath = modelPath + ".trained";
+    trainConfig.epochs = config.value("epochs").toInt(10);
+    trainConfig.learningRate = static_cast<float>(config.value("learning_rate").toDouble(1e-4));
+    trainConfig.batchSize = config.value("batch_size").toInt(32);
+    trainConfig.sequenceLength = config.value("sequence_length").toInt(512);
+    trainConfig.gradientClip = static_cast<float>(config.value("gradient_clip").toDouble(1.0));
+    trainConfig.validateEveryEpoch = config.value("validate_every_epoch").toBool(true);
+    trainConfig.validationSplit = static_cast<float>(config.value("validation_split").toDouble(0.1));
+    trainConfig.weightDecay = static_cast<float>(config.value("weight_decay").toDouble(0.01));
+    trainConfig.warmupSteps = static_cast<float>(config.value("warmup_steps").toDouble(0.1));
+    
+    // Start training
+    bool success = m_modelTrainer->startTraining(trainConfig);
+    
+    result["success"] = success;
+    result["output_model_path"] = trainConfig.outputPath;
+    if (!success) {
+        result["error"] = "Failed to start training";
+    }
+    
+    return result;
+}
+
+bool AgenticExecutor::isTrainingModel() const
+{
+    return m_modelTrainer && m_modelTrainer->isTraining();
 }

@@ -17,6 +17,21 @@ class PlanningAgent;
 class TodoManager;
 class TodoDock;
 class AgenticCopilotBridge;
+class AgenticExecutor;
+// Forward declarations for ModelTrainer enhancements
+class ModelTrainer;
+class TrainingDialog;
+class TrainingProgressDock;
+class ModelRegistry;
+class Profiler;
+class ObservabilityDashboard;
+class HardwareBackendSelector;
+class SecurityManager;
+class DistributedTrainer;
+class InterpretabilityPanel;
+class CIPipelineSettings;
+class TokenizerLanguageSelector;
+class CheckpointManager;
 
 class AgenticIDE : public QMainWindow
 {
@@ -38,6 +53,7 @@ private slots:
     void generateCode();
     void createPlan();
     void hotPatchModel();
+    void trainModel();
     
     // View operations
     void toggleFileBrowser();
@@ -51,6 +67,30 @@ private slots:
     void redo();
     void find();
     void replace();
+
+    // ==== ModelTrainer related UI actions ====
+    // Training workflow
+    void openTrainingDialog();          // Show dialog to configure and start training
+    void viewTrainingProgress();        // Open a dock/widget showing live training metrics
+    void viewModelRegistry();           // Manage trained model versions
+    // Profiling & observability
+    void startProfiling();              // Begin performance profiling session
+    void stopProfiling();               // End profiling and show results
+    void openObservabilityDashboard();  // Show metrics dashboard (e.g., Grafana embed)
+    // Hardware & compatibility
+    void configureHardwareBackend();    // Select CPU/GPU/Vulkan backend
+    // Security & privacy
+    void manageSecuritySettings();      // Encryption & authentication options
+    // Distributed training
+    void startDistributedTraining();    // Launch MPI/cluster training
+    // Interpretability
+    void viewInterpretabilityReport();  // Show attention/feature importance visualizations
+    // CI/CD integration
+    void openCIPipelineSettings();      // Configure automated build/test pipelines
+    // Multilingual support
+    void configureTokenizerLanguage();  // Choose language for tokenization
+    // Checkpointing & resume
+    void manageCheckpoints();           // Save/load training checkpoints
 
 private:
     void setupUI();
@@ -74,6 +114,22 @@ private:
     Settings *m_settings;
     Telemetry *m_telemetry;
     AgenticCopilotBridge *m_copilotBridge;
+    AgenticExecutor *m_agenticExecutor;
+    ModelTrainer *m_modelTrainer;                         // Model training orchestrator
+
+    // ==== New components for ModelTrainer enhancements ====
+    class TrainingDialog *m_trainingDialog;               // UI for configuring training
+    class TrainingProgressDock *m_trainingProgressDock;   // Live metrics view
+    class ModelRegistry *m_modelRegistry;                // Registry of trained models
+    class Profiler *m_profiler;                          // Performance profiling tool
+    class ObservabilityDashboard *m_observabilityDashboard; // Metrics dashboard UI
+    class HardwareBackendSelector *m_hardwareBackendSelector; // Backend chooser
+    class SecurityManager *m_securityManager;            // Encryption/auth handling
+    class DistributedTrainer *m_distributedTrainer;      // Distributed training manager
+    class InterpretabilityPanel *m_interpretabilityPanel; // Visual explanations
+    class CIPipelineSettings *m_ciPipelineSettings;     // CI/CD configuration UI
+    class TokenizerLanguageSelector *m_tokenizerLanguageSelector; // Language selector
+    class CheckpointManager *m_checkpointManager;        // Checkpoint handling
     
     // Dock widgets for toggle functionality
     class QDockWidget *m_fileDock;

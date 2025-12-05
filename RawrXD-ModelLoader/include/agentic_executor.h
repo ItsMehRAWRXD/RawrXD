@@ -11,6 +11,7 @@
 
 class AgenticEngine;
 class InferenceEngine;
+class ModelTrainer;
 
 /**
  * @class AgenticExecutor
@@ -23,6 +24,7 @@ class InferenceEngine;
  * - Uses function calling to interact with the IDE
  * - Maintains memory across tasks
  * - Self-corrects on failures
+ * - Can fine-tune models with on-device training
  */
 class AgenticExecutor : public QObject {
     Q_OBJECT
@@ -58,6 +60,10 @@ public:
     QJsonArray getAvailableTools();
     QJsonObject callTool(const QString& toolName, const QJsonObject& params);
 
+    // Model training capabilities
+    QJsonObject trainModel(const QString& datasetPath, const QString& modelPath, const QJsonObject& config);
+    bool isTrainingModel() const;
+
     // Memory and context
     void addToMemory(const QString& key, const QVariant& value);
     QVariant getFromMemory(const QString& key);
@@ -76,6 +82,8 @@ signals:
     void executionComplete(const QJsonObject& result);
     void errorOccurred(const QString& error);
     void logMessage(const QString& message);
+    void trainingProgress(int epoch, int totalEpochs, float loss, float perplexity);
+    void trainingCompleted(const QString& modelPath, float finalPerplexity);
 
 private:
     // Agent reasoning using model
@@ -87,10 +95,11 @@ private:
     // Internal helpers
     QJsonObject buildToolCallPrompt(const QString& goal, const QJsonArray& tools);
     QString extractCodeFromResponse(const QString& response);
-    bool validateGenerated Code(const QString& code);
+    bool validateGeneratedCode(const QString& code);
 
     AgenticEngine* m_agenticEngine = nullptr;
     InferenceEngine* m_inferenceEngine = nullptr;
+    std::unique_ptr<ModelTrainer> m_modelTrainer;
     
     QMap<QString, QVariant> m_memory;
     QJsonArray m_executionHistory;
