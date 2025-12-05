@@ -38,13 +38,13 @@ endif()
 set(Qt6_DIR "C:/Qt/6.7.3/msvc2022_64/lib/cmake/Qt6")
 list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.7.3/msvc2022_64")
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Network Sql Concurrent Test)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Network Sql Concurrent Test Charts)
 
 if(Qt6_FOUND)
     message(STATUS "Qt6 found: ${Qt6_VERSION}")
     add_definitions(-DHAVE_QT_CORE)
     include_directories(${Qt6_INCLUDE_DIRS})
-    link_libraries(Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Network Qt6::Sql Qt6::Concurrent Qt6::Test)
+    link_libraries(Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Network Qt6::Sql Qt6::Concurrent Qt6::Test Qt6::Charts)
 else()
     message(WARNING "Qt6 not found. Qt-based benchmarks will be skipped.")
 endif()
@@ -1029,6 +1029,37 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
         list(APPEND AGENTICIDE_SOURCES src/model_registry.cpp)
     endif()
     
+    # Phase 2: Advanced Monitoring Components
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/profiler.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/profiler.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/observability_dashboard.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/observability_dashboard.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/hardware_backend_selector.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/hardware_backend_selector.cpp)
+    endif()
+    
+    # Phase 3: Production Enhancements
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/security_manager.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/security_manager.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/distributed_trainer.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/distributed_trainer.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/interpretability_panel.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/interpretability_panel.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/ci_cd_settings.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/ci_cd_settings.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/tokenizer_selector.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/tokenizer_selector.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/checkpoint_manager.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/checkpoint_manager.cpp)
+    endif()
+    
     # Add headers for MOC processing
     list(APPEND AGENTICIDE_SOURCES
         include/agentic_ide.h
@@ -1051,6 +1082,15 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
         include/training_progress_dock.h
         include/model_registry.h
         include/model_trainer.h
+        include/profiler.h
+        include/observability_dashboard.h
+        include/hardware_backend_selector.h
+        include/security_manager.h
+        include/distributed_trainer.h
+        include/interpretability_panel.h
+        include/ci_cd_settings.h
+        include/tokenizer_selector.h
+        include/checkpoint_manager.h
     )
     
     add_executable(RawrXD-AgenticIDE WIN32 ${AGENTICIDE_SOURCES})
@@ -1078,6 +1118,7 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
         Qt6::Widgets
         Qt6::Network
         Qt6::Sql
+        Qt6::Charts
         brutal_gzip
     )
     

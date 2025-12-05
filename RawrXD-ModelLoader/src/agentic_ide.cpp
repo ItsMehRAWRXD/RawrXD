@@ -17,6 +17,9 @@
 #include "training_progress_dock.h"
 #include "model_registry.h"
 #include "model_trainer.h"
+#include "profiler.h"
+#include "observability_dashboard.h"
+#include "hardware_backend_selector.h"
 #include <QApplication>
 #include <QMainWindow>
 #include <QTabWidget>
@@ -734,22 +737,94 @@ void AgenticIDE::viewModelRegistry()
 
 void AgenticIDE::startProfiling()
 {
-    QMessageBox::information(this, "Profiling", "Profiler not initialized.");
+    if (!m_profiler) {
+        m_profiler = new Profiler(this);
+    }
+    
+    m_profiler->startProfiling();
+    m_chatInterface->addMessage("System", "Performance profiling started. Monitoring CPU, memory, and throughput...");
+    statusBar()->showMessage("Profiling: Active");
 }
 
 void AgenticIDE::stopProfiling()
 {
-    QMessageBox::information(this, "Profiling", "Profiling stopped. Results available in dashboard.");
+    if (!m_profiler) {
+        QMessageBox::warning(this, "Profiling", "Profiler not active.");
+        return;
+    }
+    
+    m_profiler->stopProfiling();
+    m_chatInterface->addMessage("System", "Profiling stopped. Report available in observability dashboard.");
+    statusBar()->showMessage("Profiling: Complete");
+    
+    // Auto-open observability dashboard
+    openObservabilityDashboard();
 }
 
 void AgenticIDE::openObservabilityDashboard()
 {
-    QMessageBox::information(this, "Observability", "Observability dashboard not implemented.");
+    if (!m_observabilityDashboard) {
+        if (!m_profiler) {
+            m_profiler = new Profiler(this);
+        }
+        
+        m_observabilityDashboard = new ObservabilityDashboard(m_profiler, this);
+        
+        // Connect profiler signals to dashboard
+        connect(m_profiler, &Profiler::metricsUpdated,
+                this, [this](const Profiler::ProfileSnapshot& snap) {
+                    m_observabilityDashboard->onMetricsUpdated(
+                        snap.cpuUsagePercent,
+                        snap.memoryUsageMB,
+                        snap.gpuUsagePercent,
+                        snap.gpuMemoryMB
+                    );
+                    m_observabilityDashboard->onThroughputUpdated(
+                        snap.batchLatencyMs,
+                        snap.throughputSamples
+                    );
+                });
+        
+        connect(m_profiler, &Profiler::performanceWarning,
+                m_observabilityDashboard, &ObservabilityDashboard::onPerformanceWarning);
+    }
+    
+    m_observabilityDashboard->show();
+    m_observabilityDashboard->raise();
+    m_observabilityDashboard->activateWindow();
+    
+    m_chatInterface->addMessage("System", "Observability dashboard opened. Real-time metrics visible.");
 }
 
 void AgenticIDE::configureHardwareBackend()
 {
-    QMessageBox::information(this, "Hardware Backend", "Hardware backend selector not implemented.");
+    if (!m_hardwareBackendSelector) {
+        m_hardwareBackendSelector = new HardwareBackendSelector(this);
+        
+        // Connect signals
+        connect(m_hardwareBackendSelector, QOverload<int>::of(&HardwareBackendSelector::backendSelected),
+                this, [this](int backend) {
+                    m_chatInterface->addMessage("System", 
+                        QString("Backend selected: %1")
+                        .arg(m_hardwareBackendSelector->getSelectedBackendName()));
+                });
+        
+        connect(m_hardwareBackendSelector, &HardwareBackendSelector::backendConfirmed,
+                this, [this](int backend) {
+                    QJsonObject config = m_hardwareBackendSelector->getBackendConfig();
+                    m_chatInterface->addMessage("System",
+                        QString("Hardware backend configured:\n"
+                               "- Backend: %1\n"
+                               "- Precision: %2\n"
+                               "- Memory Pool: %3 MB")
+                        .arg(config["backendName"].toString())
+                        .arg(config["precision"].toString())
+                        .arg(config["memoryPoolMB"].toInt()));
+                    statusBar()->showMessage("Backend: " + config["backendName"].toString());
+                });
+    }
+    
+    m_hardwareBackendSelector->exec();
 }
 
 void AgenticIDE::manageSecuritySettings()

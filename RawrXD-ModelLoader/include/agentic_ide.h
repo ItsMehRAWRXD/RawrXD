@@ -26,7 +26,6 @@ class ModelRegistry;
 class Profiler;
 class ObservabilityDashboard;
 class HardwareBackendSelector;
-class SecurityManager;
 class DistributedTrainer;
 class InterpretabilityPanel;
 class CIPipelineSettings;
