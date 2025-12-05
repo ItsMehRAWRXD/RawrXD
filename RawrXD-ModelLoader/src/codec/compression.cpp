@@ -67,8 +67,28 @@ QByteArray inflate(const QByteArray& data, bool* success) {
 }
 
 QByteArray deflate_brutal_masm(const QByteArray& data, bool* success) {
-    // Fallback to standard deflate if MASM version not available
-    return deflate(data, success);
+    if (data.isEmpty()) {
+        if (success) *success = true;
+        return QByteArray();
+    }
+    
+    // Maximum compression with zlib (\"brutal\" mode)
+    uLongf compressedSize = compressBound(data.size());
+    QByteArray compressed(compressedSize, Qt::Uninitialized);
+    
+    int result = compress2(reinterpret_cast<Bytef*>(compressed.data()), &compressedSize,
+                          reinterpret_cast<const Bytef*>(data.constData()), data.size(),
+                          Z_BEST_COMPRESSION);  // Level 9
+    
+    if (result == Z_OK) {
+        compressed.resize(compressedSize);
+        if (success) *success = true;
+        qDebug() << \"[codec] Brutal compression:\" << data.size() << \"→\" << compressedSize << \"bytes\";\n        return compressed;
+    } else {
+        if (success) *success = false;
+        qWarning() << \"Brutal compression failed with error:\" << result;
+        return QByteArray();
+    }
 }
 
 } // namespace codec

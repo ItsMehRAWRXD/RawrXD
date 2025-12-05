@@ -1193,9 +1193,9 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
         include/security_manager.h
         # include/distributed_trainer.h  # Using qtapp version
         # include/interpretability_panel.h  # Using qtapp version
-        # include/ci_cd_settings.h  # Using qtapp version
-        # include/tokenizer_selector.h  # Using qtapp version
-        # include/checkpoint_manager.h  # Using qtapp version
+        include/ci_cd_settings.h
+        include/tokenizer_selector.h
+        include/checkpoint_manager.h
     )
     
     add_executable(RawrXD-AgenticIDE WIN32 ${AGENTICIDE_SOURCES})

@@ -27,6 +27,8 @@ public:
      * @param parent QObject parent
      */
     explicit InferenceEngine(const QString& ggufPath = QString(), QObject* parent = nullptr);
+    // Overload used by server components expecting QObject* only
+    explicit InferenceEngine(QObject* parent);
     
     /**
      * @brief Load a GGUF model file
@@ -90,6 +92,10 @@ public:
      * @brief Detokenize tokens to text (public for server API)
      */
     QString detokenize(const std::vector<int32_t>& tokens);
+
+    // Server-oriented helper APIs
+    QString processChat(const QString& prompt);
+    QString analyzeCode(const QString& code);
 
 public slots:
     /**

@@ -22,6 +22,11 @@ InferenceEngine::InferenceEngine(const QString& ggufPath, QObject* parent)
     }
 }
 
+InferenceEngine::InferenceEngine(QObject* parent)
+    : QObject(parent), m_loader(nullptr)
+{
+}
+
 bool InferenceEngine::loadModel(const QString& path)
 {
     QMutexLocker lock(&m_mutex);
@@ -76,6 +81,26 @@ bool InferenceEngine::loadModel(const QString& path)
     
     emit modelLoadedChanged(true, modelName);
     return true;
+}
+
+QString InferenceEngine::processChat(const QString& prompt)
+{
+    // Tokenize, run a short generation, and detokenize
+    auto input = tokenize(prompt);
+    auto out = generate(input, 64);
+    return detokenize(out);
+}
+
+QString InferenceEngine::analyzeCode(const QString& code)
+{
+    // Simple analysis stub leveraging existing tokenizer to avoid heavy changes
+    QString analysis = QString(
+        "Code Analysis:\n"
+        "- Length: %1 chars\n"
+        "- Lines: %2\n"
+        "- Tokens: %3"
+    ).arg(code.size()).arg(code.count('\n') + 1).arg(tokenize(code).size());
+    return analysis;
 }
 
 bool InferenceEngine::isModelLoaded() const
