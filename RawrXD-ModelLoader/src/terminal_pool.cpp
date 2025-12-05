@@ -46,10 +46,10 @@ void TerminalPool::createNewTerminal() {
     terminal_layout->addWidget(terminal_output);
     terminal_layout->addWidget(terminal_input);
     
-    // Create process for this terminal
+    // Create process for this terminal (PowerShell)
     QProcess* process = new QProcess(this);
-    process->setProgram("cmd.exe"); // Windows command prompt
-    process->setArguments({"/q", "/k", "prompt $P$G"}); // /q disables echo
+    process->setProgram("pwsh.exe"); // PowerShell Core
+    process->setArguments({"-NoExit", "-Command", "$host.ui.RawUI.WindowTitle='RawrXD Terminal'"}); 
     process->start();
     
     // Store terminal components
@@ -61,6 +61,11 @@ void TerminalPool::createNewTerminal() {
     
     QString label = "Terminal " + QString::number(terminals_.size());
     int index = tab_widget_->addTab(terminal_container, label);
+    tab_widget_->setTabsClosable(true); // Enable tab closing
+    
+    // Connect tab close signal
+    connect(tab_widget_, QOverload<int>::of(&QTabWidget::tabCloseRequested),
+            this, &TerminalPool::closeTerminal);
     
     // Connect input to command execution
     connect(terminal_input, &QLineEdit::returnPressed, 
@@ -119,4 +124,37 @@ void TerminalPool::readProcessError(int terminal_index) {
     // Scroll to bottom
     QScrollBar* scroll = info.output_widget->verticalScrollBar();
     scroll->setValue(scroll->maximum());
+}
+
+void TerminalPool::closeTerminal(int tab_index) {
+    if (tab_index < 0 || tab_index >= static_cast<int>(terminals_.size())) {
+        return;
+    }
+    
+    TerminalInfo& info = terminals_[tab_index];
+    
+    // Terminate the process
+    if (info.process) {
+        info.process->terminate();
+        if (!info.process->waitForFinished(3000)) {
+            info.process->kill();
+        }
+    }
+    
+    // Remove the tab
+    tab_widget_->removeTab(tab_index);
+    
+    // Clean up
+    if (info.output_widget) {
+        info.output_widget->deleteLater();
+    }
+    if (info.input_widget) {
+        info.input_widget->deleteLater();
+    }
+    if (info.process) {
+        info.process->deleteLater();
+    }
+    
+    // Remove from terminals list and reindex
+    terminals_.erase(terminals_.begin() + tab_index);
 }

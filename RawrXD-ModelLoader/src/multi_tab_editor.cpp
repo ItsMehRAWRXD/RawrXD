@@ -13,8 +13,12 @@
 MultiTabEditor::MultiTabEditor(QWidget* parent) : QWidget(parent) {
     QVBoxLayout* layout = new QVBoxLayout(this);
     tab_widget_ = new QTabWidget(this);
-    tab_widget_->setTabsClosable(false); // Disable tab closing
+    tab_widget_->setTabsClosable(true); // Enable tab closing
     layout->addWidget(tab_widget_);
+    
+    // Connect tab close signal
+    connect(tab_widget_, QOverload<int>::of(&QTabWidget::tabCloseRequested),
+            this, [this](int index) { tab_widget_->removeTab(index); });
     
     // Create initial empty tab
     newFile();

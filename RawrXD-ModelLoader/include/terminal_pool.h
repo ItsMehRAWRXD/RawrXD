@@ -26,6 +26,7 @@ public slots:
     void executeCommand(int terminal_index);
     void readProcessOutput(int terminal_index);
     void readProcessError(int terminal_index);
+    void closeTerminal(int tab_index);
     
 signals:
     void commandExecuted(const QString& command);

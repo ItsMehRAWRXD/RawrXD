@@ -26,13 +26,6 @@ public slots:
     void onModelChanged(int index);
     void onMaxModeToggled(bool enabled);
     
-    // Display a response from the agent
-    void displayResponse(const QString& response);
-    // Add a generic message (system, planner, etc.)
-    void addMessage(const QString& sender, const QString& message);
-    // Focus the input line edit (used when chat is opened)
-    void focusInput();
-    
 signals:
     void messageSent(const QString& message);
     void modelSelected(const QString& modelPath);

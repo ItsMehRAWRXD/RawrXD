@@ -4,9 +4,33 @@
 #include <sstream>
 #include <QStandardPaths>
 #include <QDir>
+#include <QSettings>
 
-Settings::Settings() {}
-Settings::~Settings() {}
+Settings::Settings() : settings_(nullptr) {
+    // Initialize Qt settings for GUI preferences
+    settings_ = new QSettings("RawrXD", "AgenticIDE");
+}
+
+Settings::~Settings() {
+    if (settings_) {
+        delete settings_;
+        settings_ = nullptr;
+    }
+}
+
+void Settings::setValue(const QString& key, const QVariant& value) {
+    if (settings_) {
+        settings_->setValue(key, value);
+        settings_->sync();  // Force immediate write
+    }
+}
+
+QVariant Settings::getValue(const QString& key, const QVariant& default_value) {
+    if (settings_) {
+        return settings_->value(key, default_value);
+    }
+    return default_value;
+}
 
 static void EnsureSettingsDir(const std::string& path) {
     std::filesystem::path p(path);

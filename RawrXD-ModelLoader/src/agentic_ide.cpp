@@ -33,6 +33,13 @@
 #include <QThread>
 #include <QTimer>
 #include <QDebug>
+#include <QGroupBox>
+#include <QLabel>
+#include <QLineEdit>
+#include <QPushButton>
+#include <QCheckBox>
+#include <QSpinBox>
+#include <QScrollBar>
 
 AgenticIDE::AgenticIDE(QWidget *parent) 
     : QMainWindow(parent)
@@ -342,7 +349,106 @@ void AgenticIDE::toggleTodos()
 
 void AgenticIDE::showSettings()
 {
-    QMessageBox::information(this, "Settings", "Settings dialog will be implemented soon");
+    QDialog settingsDialog(this);
+    settingsDialog.setWindowTitle("RawrXD Agentic IDE - Settings");
+    settingsDialog.setMinimumWidth(450);
+    settingsDialog.setMinimumHeight(350);
+    
+    QVBoxLayout* mainLayout = new QVBoxLayout(&settingsDialog);
+    
+    // Model Settings Group
+    QGroupBox* modelGroup = new QGroupBox("Model Settings", &settingsDialog);
+    QVBoxLayout* modelLayout = new QVBoxLayout(modelGroup);
+    
+    QLabel* modelPathLabel = new QLabel("Default Model Path:", &settingsDialog);
+    QLineEdit* modelPathEdit = new QLineEdit(&settingsDialog);
+    modelPathEdit->setText(m_settings->getValue("defaultModelPath", "").toString());
+    modelPathEdit->setPlaceholderText("Path to GGUF model file");
+    modelLayout->addWidget(modelPathLabel);
+    modelLayout->addWidget(modelPathEdit);
+    
+    QCheckBox* autoLoadModelCheck = new QCheckBox("Auto-load model on startup", &settingsDialog);
+    autoLoadModelCheck->setChecked(m_settings->getValue("autoLoadModel", false).toBool());
+    modelLayout->addWidget(autoLoadModelCheck);
+    
+    mainLayout->addWidget(modelGroup);
+    
+    // Terminal Settings Group
+    QGroupBox* terminalGroup = new QGroupBox("Terminal Settings", &settingsDialog);
+    QVBoxLayout* terminalLayout = new QVBoxLayout(terminalGroup);
+    
+    QLabel* shellLabel = new QLabel("Shell Command:", &settingsDialog);
+    QLineEdit* shellEdit = new QLineEdit(&settingsDialog);
+    shellEdit->setText(m_settings->getValue("shellCommand", "cmd.exe").toString());
+    terminalLayout->addWidget(shellLabel);
+    terminalLayout->addWidget(shellEdit);
+    
+    QLabel* poolSizeLabel = new QLabel("Terminal Pool Size:", &settingsDialog);
+    QSpinBox* poolSizeSpinBox = new QSpinBox(&settingsDialog);
+    poolSizeSpinBox->setMinimum(1);
+    poolSizeSpinBox->setMaximum(10);
+    poolSizeSpinBox->setValue(m_settings->getValue("terminalPoolSize", 3).toInt());
+    terminalLayout->addWidget(poolSizeLabel);
+    terminalLayout->addWidget(poolSizeSpinBox);
+    
+    mainLayout->addWidget(terminalGroup);
+    
+    // UI Settings Group
+    QGroupBox* uiGroup = new QGroupBox("UI Settings", &settingsDialog);
+    QVBoxLayout* uiLayout = new QVBoxLayout(uiGroup);
+    
+    QCheckBox* darkModeCheck = new QCheckBox("Dark Mode", &settingsDialog);
+    darkModeCheck->setChecked(m_settings->getValue("darkMode", true).toBool());
+    uiLayout->addWidget(darkModeCheck);
+    
+    QCheckBox* autoSaveCheck = new QCheckBox("Auto-save files", &settingsDialog);
+    autoSaveCheck->setChecked(m_settings->getValue("autoSave", true).toBool());
+    uiLayout->addWidget(autoSaveCheck);
+    
+    mainLayout->addWidget(uiGroup);
+    
+    mainLayout->addStretch();
+    
+    // Buttons
+    QHBoxLayout* buttonLayout = new QHBoxLayout();
+    QPushButton* okBtn = new QPushButton("OK", &settingsDialog);
+    QPushButton* cancelBtn = new QPushButton("Cancel", &settingsDialog);
+    QPushButton* applyBtn = new QPushButton("Apply", &settingsDialog);
+    
+    buttonLayout->addStretch();
+    buttonLayout->addWidget(applyBtn);
+    buttonLayout->addWidget(okBtn);
+    buttonLayout->addWidget(cancelBtn);
+    
+    connect(okBtn, &QPushButton::clicked, [&]() {
+        // Save settings
+        m_settings->setValue("defaultModelPath", modelPathEdit->text());
+        m_settings->setValue("autoLoadModel", autoLoadModelCheck->isChecked());
+        m_settings->setValue("shellCommand", shellEdit->text());
+        m_settings->setValue("terminalPoolSize", poolSizeSpinBox->value());
+        m_settings->setValue("darkMode", darkModeCheck->isChecked());
+        m_settings->setValue("autoSave", autoSaveCheck->isChecked());
+        saveSettings();
+        settingsDialog.accept();
+    });
+    
+    connect(applyBtn, &QPushButton::clicked, [&]() {
+        // Save settings without closing
+        m_settings->setValue("defaultModelPath", modelPathEdit->text());
+        m_settings->setValue("autoLoadModel", autoLoadModelCheck->isChecked());
+        m_settings->setValue("shellCommand", shellEdit->text());
+        m_settings->setValue("terminalPoolSize", poolSizeSpinBox->value());
+        m_settings->setValue("darkMode", darkModeCheck->isChecked());
+        m_settings->setValue("autoSave", autoSaveCheck->isChecked());
+        saveSettings();
+        statusBar()->showMessage("Settings applied");
+    });
+    
+    connect(cancelBtn, &QPushButton::clicked, &settingsDialog, &QDialog::reject);
+    
+    mainLayout->addLayout(buttonLayout);
+    
+    settingsDialog.exec();
 }
 
 void AgenticIDE::addToRecentFiles(const QString &filePath)
