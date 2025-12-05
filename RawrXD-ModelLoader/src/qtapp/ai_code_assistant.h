@@ -2,113 +2,130 @@
 #define AI_CODE_ASSISTANT_H
 
 #include <QObject>
-#include <QString>
-#include <QStringList>
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
-#include <QUrl>
-#include <memory>
-#include <vector>
+#include <QString>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QProcess>
+#include <QElapsedTimer>
+#include <functional>
 
-// MASM-compressed GGUF server support
-#include "deflate_brutal_qt.hpp"
-
-class QNetworkReply;
-class AICodeAssistant : public QObject {
+/**
+ * @brief AICodeAssistant - AGENTIC AI assistant with full IDE integration
+ * 
+ * Full IDE integration capabilities:
+ * - Code completion/refactoring/explanation via Ollama
+ * - File searching and grepping across workspace
+ * - PowerShell command execution and automation
+ * - Structured logging and performance metrics
+ * - Real-time performance monitoring
+ */
+class AICodeAssistant : public QObject
+{
     Q_OBJECT
 
 public:
-    enum SuggestionType {
-        CodeCompletion,      // Inline code continuation
-        Refactoring,         // Code improvement suggestion
-        Explanation,         // Explain what code does
-        BugFix,              // Suggest fix for potential bug
-        Optimization         // Performance optimization
-    };
-    Q_ENUM(SuggestionType)
-
-    struct CodeSuggestion {
-        SuggestionType type;
-        QString original_code;
-        QString suggested_code;
-        QString explanation;
-        float confidence;        // 0.0-1.0
-        int latency_ms;          // Response time
-    };
-
     explicit AICodeAssistant(QObject *parent = nullptr);
     ~AICodeAssistant();
 
     // Configuration
     void setOllamaUrl(const QString &url);
     void setModel(const QString &model);
-    void setMaxTokens(int tokens);
     void setTemperature(float temp);
+    void setMaxTokens(int tokens);
+    void setWorkspaceRoot(const QString &root);
 
-    // Request suggestions (async)
-    void getCodeCompletion(const QString &code, int cursorPos);
-    void getRefactoringSuggestion(const QString &code);
-    void getExplanation(const QString &code);
-    void getBugFix(const QString &code, const QString &errorMessage);
-    void getOptimization(const QString &code);
+    // AI Code Suggestions
+    void getCodeCompletion(const QString &code);
+    void getRefactoringSuggestions(const QString &code);
+    void getCodeExplanation(const QString &code);
+    void getBugFixSuggestions(const QString &code);
+    void getOptimizationSuggestions(const QString &code);
 
-    // Cancellation
-    void cancelPendingRequest();
+    // IDE Integration - File Operations
+    void searchFiles(const QString &pattern, const QString &directory = "");
+    void grepFiles(const QString &pattern, const QString &directory = "", bool caseSensitive = false);
+    void findInFile(const QString &filePath, const QString &pattern);
 
-    // Query Ollama connectivity
-    bool isOllamaAvailable();
-    QString getModelInfo();
+    // IDE Integration - Command Execution (PowerShell)
+    void executePowerShellCommand(const QString &command);
+    void runBuildCommand(const QString &command);
+    void runTestCommand(const QString &command);
+
+    // Agentic reasoning
+    void analyzeAndRecommend(const QString &context);
+    void autoFixIssue(const QString &issueDescription, const QString &codeContext);
 
 signals:
-    // Emitted when suggestion is ready
-    void suggestionReady(const CodeSuggestion &suggestion);
+    // AI response signals
+    void suggestionReceived(const QString &suggestion, const QString &type);
+    void suggestionStreamChunk(const QString &chunk);
+    void suggestionComplete(bool success, const QString &message);
     
-    // Streaming suggestions (for real-time display)
-    void suggestionStreaming(const QString &partial);
-    void suggestionStreamComplete();
+    // File search signals
+    void searchResultsReady(const QStringList &results);
+    void grepResultsReady(const QStringList &results);
+    void fileSearchProgress(int processed, int total);
     
-    // Error handling
-    void error(const QString &errorMessage);
+    // Command execution signals
+    void commandOutputReceived(const QString &output);
+    void commandErrorReceived(const QString &error);
+    void commandCompleted(int exitCode);
+    void commandProgress(const QString &status);
     
-    // Connection status
-    void connectionStatusChanged(bool connected);
+    // Agentic signals
+    void analysisComplete(const QString &recommendation);
+    void agentActionExecuted(const QString &action, const QString &result);
     
-    // Performance metrics
-    void latencyMeasured(int latency_ms);
+    // Metrics and logging
+    void latencyMeasured(qint64 milliseconds);
+    void errorOccurred(const QString &error);
 
 private slots:
-    void onNetworkReplyFinished();
-    void onNetworkReplyReadyRead();
-    void onNetworkReplyError();
+    void onNetworkReply();
+    void onProcessFinished(int exitCode, QProcess::ExitStatus exitStatus);
+    void onProcessError(QProcess::ProcessError error);
+    void onProcessOutput();
 
 private:
-    // Internal helpers
-    QString buildCompletionPrompt(const QString &code, int cursorPos);
-    QString buildRefactoringPrompt(const QString &code);
-    QString buildExplanationPrompt(const QString &code);
-    QString buildBugFixPrompt(const QString &code, const QString &errorMessage);
-    QString buildOptimizationPrompt(const QString &code);
+    // Network helpers
+    void performOllamaRequest(const QString &systemPrompt, const QString &userPrompt, 
+                             const QString &suggestType);
+    void setupNetworkRequest(QNetworkRequest &request);
     
-    CodeSuggestion parseOllamaResponse(const QString &response, SuggestionType type, const QString &originalCode);
+    // File system helpers
+    QStringList recursiveFileSearch(const QString &directory, const QString &pattern);
+    QStringList performGrep(const QString &directory, const QString &pattern, bool caseSensitive);
     
-    void makeAsyncRequest(const QString &prompt, SuggestionType type, const QString &originalCode);
-    void checkOllamaConnectivity();
+    // Command execution helpers
+    QString executePowerShellSync(const QString &command, bool &success);
+    void executePowerShellAsync(const QString &command);
+    
+    // Agentic reasoning helpers
+    QString parseAIResponse(const QString &response);
+    QString formatAgentPrompt(const QString &context);
+    
+    // Performance measurement
+    void startTiming();
+    void endTiming(const QString &operation);
+    
+    // Logging
+    void logStructured(const QString &level, const QString &message, 
+                      const QJsonObject &metadata = QJsonObject());
 
     // Members
-    std::unique_ptr<QNetworkAccessManager> network_manager_;
-    QNetworkReply *current_reply_;
-    
-    QString ollama_url_;              // e.g., "http://localhost:11434"
-    QString model_name_;              // e.g., "ministral-3"
-    int max_tokens_;
-    float temperature_;
-    
-    SuggestionType current_request_type_;
-    QString current_original_code_;
-    QString accumulated_response_;
-    
-    bool ollama_available_;
-    long request_start_time_;
+    QNetworkAccessManager *m_networkManager;
+    QProcess *m_process;
+    QString m_ollamaUrl;
+    QString m_model;
+    float m_temperature;
+    int m_maxTokens;
+    QString m_workspaceRoot;
+    QElapsedTimer m_timer;
+    QByteArray m_responseBuffer;
+    QString m_currentSuggestionType;
 };
 
 #endif // AI_CODE_ASSISTANT_H

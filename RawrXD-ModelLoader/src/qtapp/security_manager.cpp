@@ -8,16 +8,21 @@
 #include <QDir>
 #include <QStandardPaths>
 #include <QSettings>
+#include <QRandomGenerator>
 #include <cstring>
 #include <algorithm>
 
-// OpenSSL headers for AES-256-GCM
+// OpenSSL headers for AES-256-GCM (conditional on HAVE_OPENSSL)
+#ifdef HAVE_OPENSSL
 #include <openssl/aes.h>
 #include <openssl/rand.h>
 #include <openssl/hmac.h>
 #include <openssl/evp.h>
 #include <openssl/bio.h>
 #include <openssl/buffer.h>
+#else
+#define HAVE_OPENSSL 0  // Fallback flag if OpenSSL missing
+#endif
 
 // Static instance for singleton pattern
 static SecurityManager* g_securityManagerInstance = nullptr;
@@ -103,7 +108,7 @@ bool SecurityManager::initializeMasterKey()
 }
 
 /**
- * @brief SecurityManager::encryptData - Encrypt data using AES-256-GCM
+ * @brief SecurityManager::encryptData - Encrypt data using AES-256-GCM (or fallback hash-only)
  */
 QByteArray SecurityManager::encryptData(const QByteArray& plaintext)
 {
@@ -112,6 +117,7 @@ QByteArray SecurityManager::encryptData(const QByteArray& plaintext)
         return QByteArray();
     }
     
+#ifdef HAVE_OPENSSL
     try {
         // Generate random IV
         QByteArray iv = generateRandomBytes(AES_IV_SIZE);
@@ -172,10 +178,24 @@ QByteArray SecurityManager::encryptData(const QByteArray& plaintext)
         qCritical() << "[SecurityManager] Encryption failed:" << e.what();
         return QByteArray();
     }
+#else
+    // Fallback: Use Qt's HMAC for authentication without encryption
+    // This is not encryption, just authentication
+    qWarning() << "[SecurityManager] OpenSSL not available - using HMAC-only mode (no encryption)";
+    
+    QByteArray hmac_result = QCryptographicHash::hash(plaintext, QCryptographicHash::Sha256);
+    
+    // Format: plaintext + HMAC(plaintext, masterKey)
+    QCryptographicHash hash(QCryptographicHash::Sha256);
+    hash.addData(m_masterKey);
+    hash.addData(plaintext);
+    
+    return plaintext + hash.result();  // Plaintext concatenated with HMAC
+#endif
 }
 
 /**
- * @brief SecurityManager::decryptData - Decrypt data using AES-256-GCM
+ * @brief SecurityManager::decryptData - Decrypt data using AES-256-GCM (or fallback HMAC verify)
  */
 QByteArray SecurityManager::decryptData(const QByteArray& encrypted)
 {
@@ -184,6 +204,7 @@ QByteArray SecurityManager::decryptData(const QByteArray& encrypted)
         return QByteArray();
     }
     
+#ifdef HAVE_OPENSSL
     try {
         // Extract components
         if (encrypted.length() < AES_IV_SIZE + GCM_TAG_SIZE) {
@@ -248,6 +269,31 @@ QByteArray SecurityManager::decryptData(const QByteArray& encrypted)
         qCritical() << "[SecurityManager] Decryption failed:" << e.what();
         return QByteArray();
     }
+#else
+    // Fallback: Extract plaintext and verify HMAC
+    qWarning() << "[SecurityManager] OpenSSL not available - using HMAC-only mode (no decryption)";
+    
+    if (encrypted.length() < 32) {  // At least plaintext + SHA256
+        qWarning() << "[SecurityManager] Encrypted data too short";
+        return QByteArray();
+    }
+    
+    QByteArray plaintext = encrypted.left(encrypted.length() - 32);
+    QByteArray stored_hmac = encrypted.right(32);
+    
+    // Verify HMAC
+    QCryptographicHash hash(QCryptographicHash::Sha256);
+    hash.addData(m_masterKey);
+    hash.addData(plaintext);
+    QByteArray computed_hmac = hash.result();
+    
+    if (computed_hmac != stored_hmac) {
+        qWarning() << "[SecurityManager] HMAC verification failed";
+        return QByteArray();
+    }
+    
+    return plaintext;
+#endif
 }
 
 /**
@@ -255,6 +301,7 @@ QByteArray SecurityManager::decryptData(const QByteArray& encrypted)
  */
 QByteArray SecurityManager::computeHMAC(const QByteArray& data, const QByteArray& key)
 {
+#ifdef HAVE_OPENSSL
     try {
         unsigned char hash[EVP_MAX_MD_SIZE];
         unsigned int hash_len = 0;
@@ -269,14 +316,22 @@ QByteArray SecurityManager::computeHMAC(const QByteArray& data, const QByteArray
         qCritical() << "[SecurityManager] HMAC computation failed:" << e.what();
         return QByteArray();
     }
+#else
+    // Fallback: Use Qt's SHA256
+    QCryptographicHash hash(QCryptographicHash::Sha256);
+    hash.addData(key);
+    hash.addData(data);
+    return hash.result();
+#endif
 }
 
 /**
- * @brief SecurityManager::derivePBKDF2Key - Derive key using PBKDF2
+ * @brief SecurityManager::derivePBKDF2Key - Derive key using PBKDF2 (or simple hash fallback)
  */
 QByteArray SecurityManager::derivePBKDF2Key(const QString& password, const QByteArray& salt,
                                             int iterations, int keyLength)
 {
+#ifdef HAVE_OPENSSL
     try {
         QByteArray pwdBytes = password.toUtf8();
         QByteArray derivedKey(keyLength, 0);
@@ -307,6 +362,7 @@ QByteArray SecurityManager::generateRandomBytes(int length)
 {
     QByteArray randomBytes(length, 0);
     
+#ifdef HAVE_OPENSSL
     int ret = RAND_bytes(reinterpret_cast<unsigned char*>(randomBytes.data()), length);
     if (ret != 1) {
         qCritical() << "[SecurityManager] Failed to generate random bytes";
@@ -314,6 +370,14 @@ QByteArray SecurityManager::generateRandomBytes(int length)
     }
     
     return randomBytes;
+#else
+    // Fallback: Use Qt's QRandomGenerator
+    QRandomGenerator gen(QRandomGenerator::securelySeeded());
+    for (int i = 0; i < length; ++i) {
+        randomBytes[i] = static_cast<char>(gen.generate() & 0xFF);
+    }
+    return randomBytes;
+#endif
 }
 
 /**

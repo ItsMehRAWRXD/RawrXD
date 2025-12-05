@@ -6,7 +6,9 @@
 #include <QDateTime>
 #include <QJsonDocument>
 #include <QJsonArray>
+#ifdef HAVE_ZLIB
 #include <zlib.h>
+#endif
 #include <algorithm>
 #include <numeric>
 
@@ -166,11 +168,12 @@ bool CheckpointManager::loadCheckpoint(const QString& checkpointId,
 }
 
 /**
- * @brief CheckpointManager::saveCompressedData - Save data with zlib compression
+ * @brief CheckpointManager::saveCompressedData - Save data with zlib compression (or uncompressed fallback)
  */
 bool CheckpointManager::saveCompressedData(const QString& filepath, const QByteArray& data)
 {
     try {
+#ifdef HAVE_ZLIB
         // Get compression level
         int zlibLevel = Z_DEFAULT_COMPRESSION;
         switch (m_compressionLevel) {
@@ -229,38 +232,60 @@ bool CheckpointManager::saveCompressedData(const QString& filepath, const QByteA
                  << "Original:" << data.size() << "bytes, Compressed:" << compressedSize << "bytes";
         
         return true;
+#else
+        // Fallback: Save uncompressed
+        qWarning() << "[CheckpointManager] ZLIB not available - saving uncompressed";
+        
+        QFile file(filepath);
+        if (!file.open(QIODevice::WriteOnly)) {
+            qCritical() << "[CheckpointManager] Failed to open file for writing:" << filepath;
+            return false;
+        }
+        
+        qint64 written = file.write(data);
+        file.close();
+        
+        if (written != data.size()) {
+            qCritical() << "[CheckpointManager] Failed to write all data to file";
+            return false;
+        }
+        
+        qDebug() << "[CheckpointManager] Saved uncompressed data:" << filepath << "Size:" << data.size() << "bytes";
+        return true;
+#endif
     }
     catch (const std::exception& e) {
-        qCritical() << "[CheckpointManager] Compression failed:" << e.what();
+        qCritical() << "[CheckpointManager] Save failed:" << e.what();
         return false;
     }
 }
 
 /**
- * @brief CheckpointManager::loadCompressedData - Load and decompress data
+ * @brief CheckpointManager::loadCompressedData - Load and decompress data (or load uncompressed fallback)
  */
 bool CheckpointManager::loadCompressedData(const QString& filepath, QByteArray& data)
 {
     try {
-        // Read compressed file
+        // Read file
         QFile file(filepath);
         if (!file.open(QIODevice::ReadOnly)) {
             qCritical() << "[CheckpointManager] Failed to open file for reading:" << filepath;
             return false;
         }
         
-        QByteArray compressed = file.readAll();
+        QByteArray fileData = file.readAll();
         file.close();
         
-        // Decompress data (estimate 10x expansion)
-        uLongf decompressedSize = compressed.size() * 10;
+#ifdef HAVE_ZLIB
+        // Try to decompress data (estimate 10x expansion)
+        uLongf decompressedSize = fileData.size() * 10;
         data.resize(decompressedSize);
         
         int ret = uncompress(
             reinterpret_cast<unsigned char*>(data.data()),
             &decompressedSize,
-            reinterpret_cast<const unsigned char*>(compressed.data()),
-            compressed.size()
+            reinterpret_cast<const unsigned char*>(fileData.data()),
+            fileData.size()
         );
         
         if (ret != Z_OK) {
@@ -274,9 +299,16 @@ bool CheckpointManager::loadCompressedData(const QString& filepath, QByteArray& 
                  << "Decompressed:" << decompressedSize << "bytes";
         
         return true;
+#else
+        // Fallback: Treat as uncompressed
+        qWarning() << "[CheckpointManager] ZLIB not available - loading as uncompressed";
+        data = fileData;
+        qDebug() << "[CheckpointManager] Loaded uncompressed data:" << filepath << "Size:" << fileData.size() << "bytes";
+        return true;
+#endif
     }
     catch (const std::exception& e) {
-        qCritical() << "[CheckpointManager] Decompression failed:" << e.what();
+        qCritical() << "[CheckpointManager] Load failed:" << e.what();
         return false;
     }
 }

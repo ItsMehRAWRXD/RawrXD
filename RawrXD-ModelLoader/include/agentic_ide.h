@@ -31,6 +31,9 @@ class InterpretabilityPanel;
 class CIPipelineSettings;
 class TokenizerLanguageSelector;
 class CheckpointManager;
+// Forward declarations for Phase 4: AI Code Assistant
+class AICodeAssistant;
+class AICodeAssistantPanel;
 
 class AgenticIDE : public QMainWindow
 {
@@ -90,6 +93,11 @@ private slots:
     void configureTokenizerLanguage();  // Choose language for tokenization
     // Checkpointing & resume
     void manageCheckpoints();           // Save/load training checkpoints
+    // Phase 4: AI Code Assistant
+    void toggleAICodeAssistant();       // Show/hide AI suggestions panel
+    void requestCodeCompletion();       // Request AI code completion
+    void requestRefactoring();          // Request code refactoring suggestion
+    void requestExplanation();          // Request code explanation
 
 private:
     void setupUI();
@@ -129,6 +137,9 @@ private:
     class CIPipelineSettings *m_ciPipelineSettings;     // CI/CD configuration UI
     class TokenizerLanguageSelector *m_tokenizerLanguageSelector; // Language selector
     class CheckpointManager *m_checkpointManager;        // Checkpoint handling
+    // Phase 4: AI Code Assistant
+    class AICodeAssistant *m_aiCodeAssistant;            // AI suggestion engine
+    class AICodeAssistantPanel *m_aiCodeAssistantPanel;  // AI suggestions UI panel
     
     // Dock widgets for toggle functionality
     class QDockWidget *m_fileDock;

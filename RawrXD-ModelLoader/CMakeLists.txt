@@ -305,11 +305,23 @@ if(MSVC)
         target_include_directories(quant_utils PUBLIC ${CMAKE_SOURCE_DIR}/src/qtapp ${CMAKE_SOURCE_DIR}/include)
         target_link_libraries(quant_utils PUBLIC Qt6::Core)
         
-        # Find OpenSSL for SecurityManager encryption/HMAC
-        find_package(OpenSSL REQUIRED)
+        # Find OpenSSL for SecurityManager encryption/HMAC (optional, with fallback)
+        find_package(OpenSSL QUIET)
+        if(OpenSSL_FOUND)
+            message(STATUS "OpenSSL found - SecurityManager encryption enabled")
+            add_compile_definitions(HAVE_OPENSSL=1)
+        else()
+            message(STATUS "OpenSSL not found - SecurityManager will use basic hash-only mode")
+        endif()
         
-        # Find zlib for CheckpointManager compression
-        find_package(ZLIB REQUIRED)
+        # Find zlib for CheckpointManager compression (optional with fallback)
+        find_package(ZLIB QUIET)
+        if(ZLIB_FOUND)
+            message(STATUS "ZLIB found - CheckpointManager compression enabled")
+            add_compile_definitions(HAVE_ZLIB=1)
+        else()
+            message(STATUS "ZLIB not found - CheckpointManager will use no compression")
+        endif()
 
         # Link Qt modules including WebSockets for swarm collaboration
 target_link_libraries(RawrXD-QtShell PRIVATE
@@ -323,10 +335,19 @@ target_link_libraries(RawrXD-QtShell PRIVATE
             brutal_gzip
             self_test_gate
             quant_utils
-            OpenSSL::Crypto
-            OpenSSL::SSL
-            ZLIB::ZLIB
-        )        # Try to find Qt WebSockets (optional for swarm editing)
+        )
+        
+        # Conditionally link OpenSSL if found
+        if(OpenSSL_FOUND)
+            target_link_libraries(RawrXD-QtShell PRIVATE OpenSSL::Crypto OpenSSL::SSL)
+        endif()
+        
+        # Conditionally link ZLIB if found
+        if(ZLIB_FOUND)
+            target_link_libraries(RawrXD-QtShell PRIVATE ZLIB::ZLIB)
+        endif()
+        
+        # Try to find Qt WebSockets (optional for swarm editing)
         find_package(Qt6 COMPONENTS WebSockets QUIET)
         if(Qt6WebSockets_FOUND)
             target_link_libraries(RawrXD-QtShell PRIVATE Qt6::WebSockets)

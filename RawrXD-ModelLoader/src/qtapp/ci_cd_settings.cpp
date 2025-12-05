@@ -1,524 +1,503 @@
 #include "ci_cd_settings.h"
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QTabWidget>
-#include <QLabel>
-#include <QComboBox>
-#include <QCheckBox>
-#include <QSpinBox>
-#include <QLineEdit>
-#include <QPushButton>
-#include <QTableWidget>
-#include <QTableWidgetItem>
 #include <QDebug>
 #include <QDateTime>
 #include <QJsonDocument>
-#include <QJsonObject>
 #include <QJsonArray>
 #include <QFile>
 #include <QStandardPaths>
+#include <QDir>
 #include <algorithm>
+#include <random>
 
-/**
- * @brief CICDSettings::CICDSettings - Constructor
- */
 CICDSettings::CICDSettings(QObject* parent)
-    : QObject(parent), m_selectedStrategy(DeploymentStrategy::Immediate),
-      m_jobQueueSize(0), m_maxConcurrentJobs(4)
+    : QObject(parent)
 {
-    qDebug() << "[CICDSettings] Initializing CI/CD settings";
-    loadConfiguration();
+    qDebug() << "[CICDSettings] Initializing CI/CD settings module";
 }
 
-/**
- * @brief CICDSettings::~CICDSettings - Destructor
- */
 CICDSettings::~CICDSettings()
 {
-    qDebug() << "[CICDSettings] CI/CD settings destroyed";
-    saveConfiguration();
+    qDebug() << "[CICDSettings] Destroying CI/CD settings module";
 }
 
-/**
- * @brief CICDSettings::createJobConfig - Create a new training job configuration
- */
-QString CICDSettings::createJobConfig(const JobConfiguration& config)
-{
-    qDebug() << "[CICDSettings] Creating job configuration:" << config.jobName;
-    
-    try {
-        // Generate job ID
-        QString jobId = QString("job_%1_%2")
-            .arg(QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss"))
-            .arg(qrand() % 10000);
-        
-        // Create job object
-        QJsonObject jobObj;
-        jobObj["jobId"] = jobId;
-        jobObj["jobName"] = config.jobName;
-        jobObj["status"] = static_cast<int>(JobStatus::Pending);
-        jobObj["createdAt"] = QDateTime::currentDateTime().toString(Qt::ISODate);
-        
-        // Store training parameters
-        jobObj["model"] = config.model;
-        jobObj["dataset"] = config.dataset;
-        jobObj["batchSize"] = config.batchSize;
-        jobObj["epochs"] = config.epochs;
-        jobObj["learningRate"] = config.learningRate;
-        jobObj["validationSplit"] = config.validationSplit;
-        
-        // Store scheduling info
-        jobObj["trigger"] = static_cast<int>(config.trigger);
-        jobObj["schedule"] = config.schedule;  // Cron expression
-        
-        m_jobConfigurations[jobId] = jobObj;
-        m_jobQueue.push_back(jobId);
-        m_jobQueueSize = m_jobQueue.size();
-        
-        // Emit signal
-        emit jobCreated(jobId, config.jobName);
-        
-        qDebug() << "[CICDSettings] Job created with ID:" << jobId;
-        return jobId;
-    }
-    catch (const std::exception& e) {
-        qCritical() << "[CICDSettings] Failed to create job:" << e.what();
-        return "";
-    }
-}
+// ===== Job Management =====
 
-/**
- * @brief CICDSettings::addPipelineStage - Add stage to deployment pipeline
- */
-bool CICDSettings::addPipelineStage(const PipelineStage& stage)
+bool CICDSettings::createJob(const TrainingJob& job)
 {
-    qDebug() << "[CICDSettings] Adding pipeline stage:" << stage.stageName;
-    
+    qDebug() << "[CICDSettings] Creating training job:" << job.jobName;
     try {
-        QJsonObject stageObj;
-        stageObj["stageName"] = stage.stageName;
-        stageObj["command"] = stage.command;
-        stageObj["timeout"] = stage.timeoutSeconds;
-        stageObj["retries"] = stage.maxRetries;
-        
-        m_pipelineStages.push_back(stageObj);
-        
-        emit pipelineStageAdded(stage.stageName);
-        
+        m_jobs[job.jobId] = job;
         return true;
-    }
-    catch (const std::exception& e) {
-        qCritical() << "[CICDSettings] Failed to add pipeline stage:" << e.what();
+    } catch (const std::exception& e) {
+        qCritical() << "[CICDSettings] Error creating job:" << e.what();
         return false;
     }
 }
 
-/**
- * @brief CICDSettings::configureDeploymentStrategy - Set deployment strategy
- */
-bool CICDSettings::configureDeploymentStrategy(DeploymentStrategy strategy,
-                                              const DeploymentConfig& config)
+bool CICDSettings::updateJob(const QString& jobId, const TrainingJob& job)
 {
-    qDebug() << "[CICDSettings] Configuring deployment strategy:" << static_cast<int>(strategy);
+    auto it = m_jobs.find(jobId);
+    if (it == m_jobs.end()) return false;
     
-    try {
-        m_selectedStrategy = strategy;
-        
-        QJsonObject strategyObj;
-        strategyObj["strategy"] = static_cast<int>(strategy);
-        
-        switch (strategy) {
-            case DeploymentStrategy::Immediate:
-                strategyObj["description"] = "Deploy immediately after build";
-                break;
-                
-            case DeploymentStrategy::Canary: {
-                strategyObj["description"] = "Gradual rollout to subset of traffic";
-                strategyObj["canaryPercentage"] = config.canaryTrafficPercentage;
-                strategyObj["metricsWindow"] = config.metricsWindow;
-                strategyObj["errorThreshold"] = config.errorThreshold;
-                break;
-            }
-            
-            case DeploymentStrategy::BlueGreen:
-                strategyObj["description"] = "Switch between active and inactive environments";
-                strategyObj["switchBackOnFailure"] = config.switchBackOnFailure;
-                break;
-                
-            case DeploymentStrategy::RollingUpdate:
-                strategyObj["description"] = "Gradually replace instances";
-                strategyObj["maxUnavailable"] = config.maxUnavailable;
-                strategyObj["maxSurge"] = config.maxSurge;
-                break;
-        }
-        
-        m_deploymentConfig = strategyObj;
-        
-        emit deploymentStrategyConfigured(static_cast<int>(strategy));
-        
-        return true;
-    }
-    catch (const std::exception& e) {
-        qCritical() << "[CICDSettings] Failed to configure deployment:" << e.what();
-        return false;
-    }
+    m_jobs[jobId] = job;
+    return true;
 }
 
-/**
- * @brief CICDSettings::addWebhook - Add GitHub/GitLab webhook
- */
-bool CICDSettings::addWebhook(const WebhookConfig& webhook)
+CICDSettings::TrainingJob CICDSettings::getJob(const QString& jobId) const
 {
-    qDebug() << "[CICDSettings] Adding webhook for:" << webhook.repository;
-    
-    try {
-        QJsonObject hookObj;
-        hookObj["repository"] = webhook.repository;
-        hookObj["events"] = webhook.events;
-        hookObj["branch"] = webhook.branch;
-        hookObj["addedAt"] = QDateTime::currentDateTime().toString(Qt::ISODate);
-        
-        m_webhooks.push_back(hookObj);
-        
-        emit webhookAdded(webhook.repository);
-        
-        qDebug() << "[CICDSettings] Webhook added";
-        return true;
-    }
-    catch (const std::exception& e) {
-        qCritical() << "[CICDSettings] Failed to add webhook:" << e.what();
-        return false;
-    }
+    auto it = m_jobs.find(jobId);
+    if (it == m_jobs.end()) return TrainingJob();
+    return it->second;
 }
 
-/**
- * @brief CICDSettings::queueJob - Queue a job for execution
- */
-bool CICDSettings::queueJob(const QString& jobId)
+std::vector<CICDSettings::TrainingJob> CICDSettings::listJobs() const
+{
+    std::vector<TrainingJob> result;
+    for (const auto& pair : m_jobs) {
+        result.push_back(pair.second);
+    }
+    return result;
+}
+
+bool CICDSettings::deleteJob(const QString& jobId)
+{
+    auto it = m_jobs.find(jobId);
+    if (it == m_jobs.end()) return false;
+    
+    m_jobs.erase(it);
+    return true;
+}
+
+bool CICDSettings::setJobEnabled(const QString& jobId, bool enabled)
+{
+    auto it = m_jobs.find(jobId);
+    if (it == m_jobs.end()) return false;
+    
+    it->second.enabled = enabled;
+    return true;
+}
+
+// ===== Job Execution =====
+
+QString CICDSettings::queueJob(const QString& jobId)
 {
     qDebug() << "[CICDSettings] Queuing job:" << jobId;
     
-    try {
-        if (m_jobConfigurations.find(jobId) == m_jobConfigurations.end()) {
-            qWarning() << "[CICDSettings] Job not found:" << jobId;
-            return false;
-        }
-        
-        // Add to queue if not already there
-        auto it = std::find(m_jobQueue.begin(), m_jobQueue.end(), jobId);
-        if (it == m_jobQueue.end()) {
-            m_jobQueue.push_back(jobId);
-        }
-        
-        m_jobQueueSize = m_jobQueue.size();
-        
-        // Update job status
-        m_jobConfigurations[jobId]["status"] = static_cast<int>(JobStatus::Queued);
-        
-        emit jobQueued(jobId);
-        
-        return true;
-    }
-    catch (const std::exception& e) {
-        qCritical() << "[CICDSettings] Failed to queue job:" << e.what();
-        return false;
-    }
+    auto it = m_jobs.find(jobId);
+    if (it == m_jobs.end()) return "";
+    
+    // Generate run ID
+    QString runId = QString("run_%1_%2").arg(
+        QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss")
+    ).arg(rand() % 10000);
+    
+    JobRunLog log;
+    log.jobId = jobId;
+    log.runId = runId;
+    log.status = JobStatus::Queued;
+    log.startTime = QDateTime::currentDateTime().toMSecsSinceEpoch();
+    
+    m_runLogs[runId] = log;
+    
+    emit jobQueued(jobId, runId);
+    return runId;
 }
 
-/**
- * @brief CICDSettings::runPipeline - Execute deployment pipeline
- */
-bool CICDSettings::runPipeline(const QString& jobId)
+bool CICDSettings::cancelJob(const QString& runId)
 {
-    qDebug() << "[CICDSettings] Running pipeline for job:" << jobId;
+    qDebug() << "[CICDSettings] Cancelling job run:" << runId;
     
-    try {
-        if (m_jobConfigurations.find(jobId) == m_jobConfigurations.end()) {
-            qWarning() << "[CICDSettings] Job not found:" << jobId;
-            return false;
+    auto it = m_runLogs.find(runId);
+    if (it == m_runLogs.end()) return false;
+    
+    it->second.status = JobStatus::Cancelled;
+    it->second.endTime = QDateTime::currentDateTime().toMSecsSinceEpoch();
+    
+    return true;
+}
+
+QString CICDSettings::retryJob(const QString& runId)
+{
+    qDebug() << "[CICDSettings] Retrying job run:" << runId;
+    
+    auto it = m_runLogs.find(runId);
+    if (it == m_runLogs.end()) return "";
+    
+    // Generate new run ID
+    QString newRunId = QString("run_%1_%2").arg(
+        QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss")
+    ).arg(rand() % 10000);
+    
+    JobRunLog newLog = it->second;
+    newLog.runId = newRunId;
+    newLog.status = JobStatus::Queued;
+    newLog.startTime = QDateTime::currentDateTime().toMSecsSinceEpoch();
+    newLog.endTime = 0;
+    newLog.logOutput = "";
+    newLog.errorMessage = "";
+    
+    m_runLogs[newRunId] = newLog;
+    
+    return newRunId;
+}
+
+CICDSettings::JobRunLog CICDSettings::getJobRunLog(const QString& runId) const
+{
+    auto it = m_runLogs.find(runId);
+    if (it == m_runLogs.end()) return JobRunLog();
+    return it->second;
+}
+
+std::vector<CICDSettings::JobRunLog> CICDSettings::getJobRunHistory(const QString& jobId, int limit) const
+{
+    std::vector<JobRunLog> result;
+    int count = 0;
+    
+    for (auto it = m_runLogs.rbegin(); it != m_runLogs.rend() && count < limit; ++it) {
+        if (it->second.jobId == jobId) {
+            result.push_back(it->second);
+            count++;
         }
-        
-        // Update job status
-        m_jobConfigurations[jobId]["status"] = static_cast<int>(JobStatus::Running);
-        m_jobConfigurations[jobId]["startedAt"] = QDateTime::currentDateTime().toString(Qt::ISODate);
-        
-        // Execute each stage
-        for (const auto& stage : m_pipelineStages) {
-            // Simulate stage execution
-            qDebug() << "[CICDSettings] Executing stage:" << stage["stageName"].toString();
+    }
+    
+    return result;
+}
+
+std::tuple<int, int, int, float> CICDSettings::getJobStatistics(const QString& jobId) const
+{
+    int totalRuns = 0;
+    int successCount = 0;
+    int failureCount = 0;
+    float avgDuration = 0.0f;
+    
+    float totalDuration = 0.0f;
+    
+    for (const auto& pair : m_runLogs) {
+        if (pair.second.jobId == jobId) {
+            totalRuns++;
+            if (pair.second.status == JobStatus::Completed) {
+                successCount++;
+            } else if (pair.second.status == JobStatus::Failed) {
+                failureCount++;
+            }
             
-            // In production, actually execute the command
-            // For now, just log it
+            if (pair.second.endTime > 0) {
+                float duration = (pair.second.endTime - pair.second.startTime) / 1000.0f;
+                totalDuration += duration;
+            }
+        }
+    }
+    
+    if (totalRuns > 0) {
+        avgDuration = totalDuration / totalRuns;
+    }
+    
+    return std::make_tuple(totalRuns, successCount, failureCount, avgDuration);
+}
+
+// ===== Pipeline Configuration =====
+
+bool CICDSettings::definePipeline(const QString& jobId, const std::vector<PipelineStage>& stages)
+{
+    qDebug() << "[CICDSettings] Defining pipeline for job:" << jobId << "with" << stages.size() << "stages";
+    
+    m_pipelines[jobId] = stages;
+    return true;
+}
+
+std::vector<CICDSettings::PipelineStage> CICDSettings::getPipeline(const QString& jobId) const
+{
+    auto it = m_pipelines.find(jobId);
+    if (it == m_pipelines.end()) return std::vector<PipelineStage>();
+    return it->second;
+}
+
+// ===== Deployment Configuration =====
+
+bool CICDSettings::setDeploymentConfig(const QString& jobId, const DeploymentConfig& config)
+{
+    qDebug() << "[CICDSettings] Setting deployment config for job:" << jobId;
+    
+    m_deploymentConfigs[jobId] = config;
+    return true;
+}
+
+CICDSettings::DeploymentConfig CICDSettings::getDeploymentConfig(const QString& jobId) const
+{
+    auto it = m_deploymentConfigs.find(jobId);
+    if (it == m_deploymentConfigs.end()) return DeploymentConfig();
+    return it->second;
+}
+
+QString CICDSettings::deployModel(const QString& jobId, const QString& runId)
+{
+    qDebug() << "[CICDSettings] Deploying model for job:" << jobId << "run:" << runId;
+    
+    // Generate deployment ID
+    QString deploymentId = QString("deploy_%1_%2").arg(
+        QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss")
+    ).arg(rand() % 10000);
+    
+    emit deploymentStarted(deploymentId);
+    
+    // Simulate deployment (in production, actually deploy)
+    emit deploymentCompleted(deploymentId, true);
+    
+    return deploymentId;
+}
+
+bool CICDSettings::rollbackDeployment(const QString& deploymentId, const QString& targetRunId)
+{
+    qDebug() << "[CICDSettings] Rolling back deployment:" << deploymentId << "to run:" << targetRunId;
+    
+    emit deploymentRolledBack(deploymentId);
+    return true;
+}
+
+// ===== Webhook Integration =====
+
+QString CICDSettings::registerWebhook(const QString& jobId, const QString& platform,
+                                     const QString& repository, const QString& branch)
+{
+    qDebug() << "[CICDSettings] Registering webhook for:" << repository << "on" << platform;
+    
+    // Generate webhook URL
+    QString webhookId = QString("webhook_%1_%2").arg(
+        QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss")
+    ).arg(rand() % 10000);
+    
+    QString webhookUrl = QString("https://api.example.com/webhooks/%1").arg(webhookId);
+    
+    emit webhookReceived(platform, "registered");
+    
+    return webhookUrl;
+}
+
+QString CICDSettings::handleWebhook(const QJsonObject& webhookData)
+{
+    qDebug() << "[CICDSettings] Handling incoming webhook";
+    
+    // In production, parse webhook and trigger appropriate job
+    // For now, just log it
+    
+    return "";
+}
+
+// ===== Notifications =====
+
+bool CICDSettings::setNotificationConfig(const NotificationConfig& config)
+{
+    qDebug() << "[CICDSettings] Setting notification config";
+    
+    m_notificationConfig = config;
+    return true;
+}
+
+CICDSettings::NotificationConfig CICDSettings::getNotificationConfig() const
+{
+    return m_notificationConfig;
+}
+
+bool CICDSettings::sendTestNotification() const
+{
+    qDebug() << "[CICDSettings] Sending test notification";
+    
+    // In production, actually send notification
+    return true;
+}
+
+// ===== Artifact Management =====
+
+bool CICDSettings::storeArtifact(const QString& artifactId, const QString& artifactPath,
+                                const QJsonObject& metadata)
+{
+    qDebug() << "[CICDSettings] Storing artifact:" << artifactId;
+    
+    QJsonObject artifact = metadata;
+    artifact["artifactId"] = artifactId;
+    artifact["path"] = artifactPath;
+    artifact["timestamp"] = QDateTime::currentDateTime().toString(Qt::ISODate);
+    
+    m_artifacts[artifactId] = artifact;
+    return true;
+}
+
+QString CICDSettings::getArtifact(const QString& artifactId) const
+{
+    auto it = m_artifacts.find(artifactId);
+    if (it == m_artifacts.end()) return "";
+    
+    return it->second["path"].toString();
+}
+
+std::vector<QString> CICDSettings::listArtifacts(const QString& jobId) const
+{
+    std::vector<QString> result;
+    
+    for (const auto& pair : m_artifacts) {
+        if (pair.second["jobId"].toString() == jobId) {
+            result.push_back(pair.first);
+        }
+    }
+    
+    return result;
+}
+
+int CICDSettings::cleanupOldArtifacts(int olderThanDays)
+{
+    qDebug() << "[CICDSettings] Cleaning up artifacts older than" << olderThanDays << "days";
+    
+    int removed = 0;
+    QDateTime cutoff = QDateTime::currentDateTime().addDays(-olderThanDays);
+    
+    auto it = m_artifacts.begin();
+    while (it != m_artifacts.end()) {
+        QString timestampStr = it->second["timestamp"].toString();
+        QDateTime timestamp = QDateTime::fromString(timestampStr, Qt::ISODate);
+        
+        if (timestamp < cutoff) {
+            it = m_artifacts.erase(it);
+            removed++;
+        } else {
+            ++it;
+        }
+    }
+    
+    return removed;
+}
+
+// ===== Configuration Export/Import =====
+
+QJsonObject CICDSettings::exportConfiguration() const
+{
+    qDebug() << "[CICDSettings] Exporting configuration";
+    
+    QJsonObject config;
+    
+    // Export jobs
+    QJsonArray jobsArray;
+    for (const auto& pair : m_jobs) {
+        QJsonObject jobObj;
+        jobObj["jobId"] = pair.second.jobId;
+        jobObj["jobName"] = pair.second.jobName;
+        jobObj["modelName"] = pair.second.modelName;
+        jobObj["enabled"] = pair.second.enabled;
+        jobsArray.append(jobObj);
+    }
+    config["jobs"] = jobsArray;
+    
+    // Export deployment configs
+    QJsonObject deploymentObj;
+    for (const auto& pair : m_deploymentConfigs) {
+        QJsonObject configObj;
+        configObj["strategy"] = static_cast<int>(pair.second.strategy);
+        configObj["targetEnvironment"] = pair.second.targetEnvironment;
+        deploymentObj[pair.first] = configObj;
+    }
+    config["deploymentConfigs"] = deploymentObj;
+    
+    // Export notification config
+    QJsonObject notifObj;
+    notifObj["enableSlack"] = m_notificationConfig.enableSlack;
+    notifObj["enableEmail"] = m_notificationConfig.enableEmail;
+    config["notifications"] = notifObj;
+    
+    return config;
+}
+
+bool CICDSettings::importConfiguration(const QJsonObject& config)
+{
+    qDebug() << "[CICDSettings] Importing configuration";
+    
+    try {
+        // Import jobs
+        if (config.contains("jobs")) {
+            QJsonArray jobsArray = config["jobs"].toArray();
+            for (const auto& jobValue : jobsArray) {
+                QJsonObject jobObj = jobValue.toObject();
+                TrainingJob job;
+                job.jobId = jobObj["jobId"].toString();
+                job.jobName = jobObj["jobName"].toString();
+                job.modelName = jobObj["modelName"].toString();
+                job.enabled = jobObj["enabled"].toBool();
+                m_jobs[job.jobId] = job;
+            }
         }
         
-        // Mark as completed
-        m_jobConfigurations[jobId]["status"] = static_cast<int>(JobStatus::Completed);
-        m_jobConfigurations[jobId]["completedAt"] = QDateTime::currentDateTime().toString(Qt::ISODate);
-        
-        emit pipelineCompleted(jobId);
-        
-        qDebug() << "[CICDSettings] Pipeline completed for job:" << jobId;
         return true;
-    }
-    catch (const std::exception& e) {
-        qCritical() << "[CICDSettings] Pipeline failed:" << e.what();
-        
-        // Mark as failed
-        m_jobConfigurations[jobId]["status"] = static_cast<int>(JobStatus::Failed);
-        m_jobConfigurations[jobId]["completedAt"] = QDateTime::currentDateTime().toString(Qt::ISODate);
-        
-        emit pipelineFailed(jobId, e.what());
-        
+    } catch (const std::exception& e) {
+        qCritical() << "[CICDSettings] Error importing configuration:" << e.what();
         return false;
     }
 }
 
-/**
- * @brief CICDSettings::cancelJob - Cancel a queued or running job
- */
-bool CICDSettings::cancelJob(const QString& jobId)
+bool CICDSettings::saveToFile(const QString& filePath) const
 {
-    qDebug() << "[CICDSettings] Cancelling job:" << jobId;
+    qDebug() << "[CICDSettings] Saving configuration to file:" << filePath;
     
     try {
-        if (m_jobConfigurations.find(jobId) == m_jobConfigurations.end()) {
+        QJsonObject config = exportConfiguration();
+        QJsonDocument doc(config);
+        
+        QFile file(filePath);
+        if (!file.open(QIODevice::WriteOnly)) {
+            qCritical() << "[CICDSettings] Failed to open file for writing";
             return false;
         }
         
-        // Remove from queue
-        auto it = std::find(m_jobQueue.begin(), m_jobQueue.end(), jobId);
-        if (it != m_jobQueue.end()) {
-            m_jobQueue.erase(it);
-        }
-        
-        // Update status
-        m_jobConfigurations[jobId]["status"] = static_cast<int>(JobStatus::Cancelled);
-        m_jobQueueSize = m_jobQueue.size();
-        
-        emit jobCancelled(jobId);
+        file.write(doc.toJson());
+        file.close();
         
         return true;
-    }
-    catch (const std::exception& e) {
-        qCritical() << "[CICDSettings] Failed to cancel job:" << e.what();
+    } catch (const std::exception& e) {
+        qCritical() << "[CICDSettings] Error saving to file:" << e.what();
         return false;
     }
 }
 
-/**
- * @brief CICDSettings::retryJob - Retry a failed job
- */
-bool CICDSettings::retryJob(const QString& jobId, int maxRetries)
+bool CICDSettings::loadFromFile(const QString& filePath)
 {
-    qDebug() << "[CICDSettings] Retrying job:" << jobId;
+    qDebug() << "[CICDSettings] Loading configuration from file:" << filePath;
     
     try {
-        if (m_jobConfigurations.find(jobId) == m_jobConfigurations.end()) {
-            return false;
-        }
-        
-        // Update status and retry count
-        int retries = m_jobConfigurations[jobId]["retries"].toInt();
-        if (retries >= maxRetries) {
-            qWarning() << "[CICDSettings] Max retries exceeded for job:" << jobId;
-            return false;
-        }
-        
-        m_jobConfigurations[jobId]["status"] = static_cast<int>(JobStatus::Queued);
-        m_jobConfigurations[jobId]["retries"] = retries + 1;
-        
-        // Add back to queue
-        m_jobQueue.push_back(jobId);
-        m_jobQueueSize = m_jobQueue.size();
-        
-        emit jobRetried(jobId);
-        
-        return true;
-    }
-    catch (const std::exception& e) {
-        qCritical() << "[CICDSettings] Failed to retry job:" << e.what();
-        return false;
-    }
-}
-
-/**
- * @brief CICDSettings::sendNotification - Send notification via Slack/Email
- */
-bool CICDSettings::sendNotification(const QString& channel, const QString& message)
-{
-    qDebug() << "[CICDSettings] Sending notification to" << channel << ":" << message;
-    
-    try {
-        // In production, integrate with Slack/Email API
-        QJsonObject notification;
-        notification["channel"] = channel;
-        notification["message"] = message;
-        notification["timestamp"] = QDateTime::currentDateTime().toString(Qt::ISODate);
-        
-        m_notifications.push_back(notification);
-        
-        emit notificationSent(channel, message);
-        
-        return true;
-    }
-    catch (const std::exception& e) {
-        qCritical() << "[CICDSettings] Failed to send notification:" << e.what();
-        return false;
-    }
-}
-
-/**
- * @brief CICDSettings::getJobStatus - Get status of a job
- */
-CICDSettings::JobStatus CICDSettings::getJobStatus(const QString& jobId)
-{
-    if (m_jobConfigurations.find(jobId) == m_jobConfigurations.end()) {
-        return JobStatus::Pending;
-    }
-    
-    int status = m_jobConfigurations[jobId]["status"].toInt();
-    return static_cast<JobStatus>(status);
-}
-
-/**
- * @brief CICDSettings::getQueuedJobs - Get all queued jobs
- */
-std::vector<QString> CICDSettings::getQueuedJobs()
-{
-    return m_jobQueue;
-}
-
-/**
- * @brief CICDSettings::getArtifactVersions - Get available artifact versions
- */
-std::vector<ArtifactVersion> CICDSettings::getArtifactVersions()
-{
-    std::vector<ArtifactVersion> versions;
-    
-    for (const auto& artifact : m_artifacts) {
-        ArtifactVersion ver;
-        ver.version = artifact["version"].toString();
-        ver.buildNumber = artifact["buildNumber"].toInt();
-        ver.timestamp = artifact["timestamp"].toString();
-        ver.size = artifact["size"].toInt();
-        ver.checksum = artifact["checksum"].toString();
-        
-        versions.push_back(ver);
-    }
-    
-    return versions;
-}
-
-/**
- * @brief CICDSettings::loadConfiguration - Load configuration from disk
- */
-void CICDSettings::loadConfiguration()
-{
-    qDebug() << "[CICDSettings] Loading configuration";
-    
-    try {
-        QString configPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)
-                           + "/ci_cd_config.json";
-        
-        QFile file(configPath);
+        QFile file(filePath);
         if (!file.open(QIODevice::ReadOnly)) {
-            qDebug() << "[CICDSettings] No existing configuration";
-            return;
+            qWarning() << "[CICDSettings] File not found:" << filePath;
+            return false;
         }
         
         QByteArray data = file.readAll();
         file.close();
         
         QJsonDocument doc = QJsonDocument::fromJson(data);
-        QJsonObject obj = doc.object();
-        
-        // Load deployment strategy
-        m_selectedStrategy = static_cast<DeploymentStrategy>(obj["deploymentStrategy"].toInt());
-        
-        // Load max concurrent jobs
-        m_maxConcurrentJobs = obj["maxConcurrentJobs"].toInt(4);
-        
-        qDebug() << "[CICDSettings] Configuration loaded";
-    }
-    catch (const std::exception& e) {
-        qWarning() << "[CICDSettings] Failed to load configuration:" << e.what();
-    }
-}
-
-/**
- * @brief CICDSettings::saveConfiguration - Save configuration to disk
- */
-void CICDSettings::saveConfiguration()
-{
-    qDebug() << "[CICDSettings] Saving configuration";
-    
-    try {
-        QString configPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)
-                           + "/ci_cd_config.json";
-        
-        QJsonObject obj;
-        obj["deploymentStrategy"] = static_cast<int>(m_selectedStrategy);
-        obj["maxConcurrentJobs"] = m_maxConcurrentJobs;
-        obj["jobCount"] = static_cast<int>(m_jobConfigurations.size());
-        obj["lastSaved"] = QDateTime::currentDateTime().toString(Qt::ISODate);
-        
-        QJsonDocument doc(obj);
-        QFile file(configPath);
-        
-        if (!file.open(QIODevice::WriteOnly)) {
-            qCritical() << "[CICDSettings] Failed to open config file for writing";
-            return;
+        if (!doc.isObject()) {
+            qCritical() << "[CICDSettings] Invalid JSON format";
+            return false;
         }
         
-        file.write(doc.toJson());
-        file.close();
-        
-        qDebug() << "[CICDSettings] Configuration saved";
-    }
-    catch (const std::exception& e) {
-        qWarning() << "[CICDSettings] Failed to save configuration:" << e.what();
+        return importConfiguration(doc.object());
+    } catch (const std::exception& e) {
+        qCritical() << "[CICDSettings] Error loading from file:" << e.what();
+        return false;
     }
 }
 
-/**
- * @brief CICDSettings::exportJobLog - Export job execution log
- */
-QJsonObject CICDSettings::exportJobLog(const QString& jobId)
+std::map<QString, QJsonObject> CICDSettings::getPipelineTemplates() const
 {
-    QJsonObject log;
+    qDebug() << "[CICDSettings] Getting pipeline templates";
     
-    if (m_jobConfigurations.find(jobId) != m_jobConfigurations.end()) {
-        log = m_jobConfigurations[jobId];
-    }
+    std::map<QString, QJsonObject> templates;
     
-    return log;
-}
-
-/**
- * @brief CICDSettings::getJobStatistics - Get job execution statistics
- */
-QJsonObject CICDSettings::getJobStatistics()
-{
-    QJsonObject stats;
+    // Define some standard templates
+    QJsonObject basicTemplate;
+    basicTemplate["name"] = "Basic Training";
+    basicTemplate["stages"] = QJsonArray();
+    templates["basic"] = basicTemplate;
     
-    stats["totalJobs"] = static_cast<int>(m_jobConfigurations.size());
-    stats["queuedJobs"] = static_cast<int>(m_jobQueue.size());
-    stats["maxConcurrentJobs"] = m_maxConcurrentJobs;
-    stats["deploymentStrategy"] = static_cast<int>(m_selectedStrategy);
-    stats["lastUpdated"] = QDateTime::currentDateTime().toString(Qt::ISODate);
+    QJsonObject advancedTemplate;
+    advancedTemplate["name"] = "Advanced With Testing";
+    advancedTemplate["stages"] = QJsonArray();
+    templates["advanced"] = advancedTemplate;
     
-    // Count by status
-    int pending = 0, completed = 0, failed = 0;
-    for (const auto& job : m_jobConfigurations) {
-        int status = job["status"].toInt();
-        if (status == static_cast<int>(JobStatus::Completed)) completed++;
-        else if (status == static_cast<int>(JobStatus::Failed)) failed++;
-        else if (status == static_cast<int>(JobStatus::Pending)) pending++;
-    }
-    
-    stats["statusPending"] = pending;
-    stats["statusCompleted"] = completed;
-    stats["statusFailed"] = failed;
-    
-    return stats;
+    return templates;
 }

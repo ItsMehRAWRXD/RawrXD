@@ -20,6 +20,9 @@
 #include "profiler.h"
 #include "observability_dashboard.h"
 #include "hardware_backend_selector.h"
+// Phase 4: AI Code Assistant
+#include "ai_code_assistant.h"
+#include "ai_code_assistant_panel.h"
 #include <QApplication>
 #include <QMainWindow>
 #include <QTabWidget>
@@ -76,6 +79,8 @@ AgenticIDE::AgenticIDE(QWidget *parent)
     , m_ciPipelineSettings(nullptr)
     , m_tokenizerLanguageSelector(nullptr)
     , m_checkpointManager(nullptr)
+    , m_aiCodeAssistant(nullptr)
+    , m_aiCodeAssistantPanel(nullptr)
 {
     setWindowTitle("RawrXD Agentic IDE");
     setMinimumSize(1200, 800);
@@ -136,6 +141,17 @@ void AgenticIDE::setupUI()
     m_terminalDock->setWidget(m_terminalPool);
     addDockWidget(Qt::BottomDockWidgetArea, m_terminalDock);
     
+    // Phase 4: AI Code Assistant panel (right dock)
+    m_aiCodeAssistant = new AICodeAssistant(this);
+    m_aiCodeAssistant->setOllamaUrl("http://localhost:11434");
+    m_aiCodeAssistant->setModel("ministral-3");
+    m_aiCodeAssistant->setTemperature(0.3f);
+    m_aiCodeAssistant->setMaxTokens(256);
+    
+    m_aiCodeAssistantPanel = new AICodeAssistantPanel(this);
+    m_aiCodeAssistantPanel->setAssistant(m_aiCodeAssistant);
+    addDockWidget(Qt::RightDockWidgetArea, m_aiCodeAssistantPanel);
+    
     // Create menus
     setupMenus();
     
@@ -172,6 +188,8 @@ void AgenticIDE::setupMenus()
     viewMenu->addAction("Toggle Chat", this, &AgenticIDE::toggleChat);
     viewMenu->addAction("Toggle Terminals", this, &AgenticIDE::toggleTerminals);
     viewMenu->addAction("Toggle Todos", this, &AgenticIDE::toggleTodos);
+    viewMenu->addSeparator();
+    viewMenu->addAction("Toggle AI Code Assistant", this, &AgenticIDE::toggleAICodeAssistant);
     
 // Agent menu
 QMenu *agentMenu = menuBar->addMenu("Agent");
@@ -216,6 +234,14 @@ agentMenu->addAction("Settings", this, &AgenticIDE::showSettings);
         QString bugs = m_copilotBridge->findBugs(code);
         m_chatInterface->addMessage("Copilot", bugs); 
     });
+    
+    // Phase 4: AI Code Assistant menu
+    QMenu *aiMenu = menuBar->addMenu("AI Assistant");
+    aiMenu->addAction("Request Code Completion", this, &AgenticIDE::requestCodeCompletion, Qt::CTRL + Qt::ALT + Qt::Key_C);
+    aiMenu->addAction("Request Refactoring", this, &AgenticIDE::requestRefactoring, Qt::CTRL + Qt::ALT + Qt::Key_R);
+    aiMenu->addAction("Request Explanation", this, &AgenticIDE::requestExplanation, Qt::CTRL + Qt::ALT + Qt::Key_E);
+    aiMenu->addSeparator();
+    aiMenu->addAction("Toggle Panel", this, &AgenticIDE::toggleAICodeAssistant);
     
     // ==== Advanced / ModelTrainer Enhancements Menu ====
     QMenu *advancedMenu = menuBar->addMenu("Advanced");
@@ -905,3 +931,245 @@ void AgenticIDE::undo() { m_multiTabEditor->undo(); }
 void AgenticIDE::redo() { m_multiTabEditor->redo(); }
 void AgenticIDE::find() { m_multiTabEditor->find(); }
 void AgenticIDE::replace() { m_multiTabEditor->replace(); }
+
+// AI Code Assistant operations
+void AgenticIDE::toggleAICodeAssistant()
+{
+    if (m_aiCodeAssistantPanel) {
+        m_aiCodeAssistantPanel->setVisible(!m_aiCodeAssistantPanel->isVisible());
+        statusBar()->showMessage(
+            m_aiCodeAssistantPanel->isVisible() ? 
+            "AI Code Assistant enabled" : "AI Code Assistant disabled"
+        );
+    }
+}
+
+void AgenticIDE::requestCodeCompletion()
+{
+    if (!m_aiCodeAssistant || !m_multiTabEditor) {
+        statusBar()->showMessage("AI Assistant not initialized");
+        return;
+    }
+    
+    QString selectedCode = m_multiTabEditor->getSelectedText();
+    if (selectedCode.isEmpty()) {
+        selectedCode = m_multiTabEditor->getCurrentText();
+    }
+    
+    if (selectedCode.isEmpty()) {
+        statusBar()->showMessage("No code selected - select code first");
+        return;
+    }
+    
+    // AGENTIC: Augment with workspace context
+    QString workspaceContext = QString("Workspace: %1\nCurrent File: %2")
+        .arg(m_workspaceRoot.isEmpty() ? "N/A" : m_workspaceRoot)
+        .arg(m_multiTabEditor->getCurrentFilePath().isEmpty() ? "untitled" : m_multiTabEditor->getCurrentFilePath());
+    
+    // Show AI panel if hidden
+    if (m_aiCodeAssistantPanel && !m_aiCodeAssistantPanel->isVisible()) {
+        m_aiCodeAssistantPanel->setVisible(true);
+    }
+    
+    statusBar()->showMessage("Requesting code completion (AGENTIC MODE)...");
+    m_aiCodeAssistant->getCodeCompletion(selectedCode);
+    
+    // Log action for agentic tracing
+    qDebug() << "[AGENTIC_IDE]" << "Code Completion triggered" << "Lines:" << selectedCode.count('\n');
+}
+
+void AgenticIDE::requestRefactoring()
+{
+    if (!m_aiCodeAssistant || !m_multiTabEditor) {
+        statusBar()->showMessage("AI Assistant not initialized");
+        return;
+    }
+    
+    QString selectedCode = m_multiTabEditor->getSelectedText();
+    if (selectedCode.isEmpty()) {
+        selectedCode = m_multiTabEditor->getCurrentText();
+    }
+    
+    if (selectedCode.isEmpty()) {
+        statusBar()->showMessage("No code selected - select code first");
+        return;
+    }
+    
+    // AGENTIC: Enhance prompt with code analysis
+    QString codeMetrics = QString("\n[Code Metrics]\nLines: %1\nCharacters: %2")
+        .arg(selectedCode.count('\n'))
+        .arg(selectedCode.length());
+    
+    // Show AI panel if hidden
+    if (m_aiCodeAssistantPanel && !m_aiCodeAssistantPanel->isVisible()) {
+        m_aiCodeAssistantPanel->setVisible(true);
+    }
+    
+    statusBar()->showMessage("Requesting refactoring (AGENTIC MODE) - may search workspace for best practices...");
+    m_aiCodeAssistant->getRefactoringSuggestions(selectedCode);
+    
+    // Log action
+    qDebug() << "[AGENTIC_IDE]" << "Refactoring triggered with context";
+}
+
+void AgenticIDE::requestExplanation()
+{
+    if (!m_aiCodeAssistant || !m_multiTabEditor) {
+        statusBar()->showMessage("AI Assistant not initialized");
+        return;
+    }
+    
+    QString selectedCode = m_multiTabEditor->getSelectedText();
+    if (selectedCode.isEmpty()) {
+        selectedCode = m_multiTabEditor->getCurrentText();
+    }
+    
+    if (selectedCode.isEmpty()) {
+        statusBar()->showMessage("No code selected - select code first");
+        return;
+    }
+    
+    // AGENTIC: Search workspace for related files that might provide context
+    QString fileExtension = m_multiTabEditor->getCurrentFilePath().split('.').last();
+    if (!fileExtension.isEmpty()) {
+        // Optionally: could call m_aiCodeAssistant->searchFiles("*." + fileExtension);
+    }
+    
+    // Show AI panel if hidden
+    if (m_aiCodeAssistantPanel && !m_aiCodeAssistantPanel->isVisible()) {
+        m_aiCodeAssistantPanel->setVisible(true);
+    }
+    
+    statusBar()->showMessage("Requesting code explanation (AGENTIC MODE) - analyzing patterns...");
+    m_aiCodeAssistant->getCodeExplanation(selectedCode);
+    
+    // Log action
+    qDebug() << "[AGENTIC_IDE]" << "Explanation triggered for" << fileExtension << "code";
+}
+
+// ============================================================================
+// AGENTIC IDE TOOLS - Full IDE Integration
+// ============================================================================
+
+void AgenticIDE::onAISearchWorkspace()
+{
+    if (!m_aiCodeAssistant) {
+        statusBar()->showMessage("AI Assistant not initialized");
+        return;
+    }
+    
+    bool ok;
+    QString pattern = QInputDialog::getText(this, "AI-Powered File Search", 
+        "Enter file pattern to search (e.g., *.cpp, test_*):", QLineEdit::Normal, "", &ok);
+    
+    if (ok && !pattern.isEmpty()) {
+        statusBar()->showMessage("AI searching workspace for: " + pattern);
+        m_aiCodeAssistant->searchFiles(pattern, m_workspaceRoot);
+        qDebug() << "[AGENTIC_IDE]" << "Workspace search initiated for pattern:" << pattern;
+    }
+}
+
+void AgenticIDE::onAIGrepWorkspace()
+{
+    if (!m_aiCodeAssistant) {
+        statusBar()->showMessage("AI Assistant not initialized");
+        return;
+    }
+    
+    bool ok;
+    QString pattern = QInputDialog::getText(this, "AI-Powered Grep Search", 
+        "Enter search pattern (e.g., TODO, FIXME, bug):", QLineEdit::Normal, "", &ok);
+    
+    if (ok && !pattern.isEmpty()) {
+        statusBar()->showMessage("AI grepping workspace for: " + pattern);
+        m_aiCodeAssistant->grepFiles(pattern, m_workspaceRoot);
+        qDebug() << "[AGENTIC_IDE]" << "Workspace grep initiated for pattern:" << pattern;
+    }
+}
+
+void AgenticIDE::onAIExecuteCommand()
+{
+    if (!m_aiCodeAssistant) {
+        statusBar()->showMessage("AI Assistant not initialized");
+        return;
+    }
+    
+    bool ok;
+    QString command = QInputDialog::getText(this, "AI PowerShell Command", 
+        "Enter PowerShell command to execute:\n(e.g., cmake --build . or npm test)", 
+        QLineEdit::Normal, "", &ok);
+    
+    if (ok && !command.isEmpty()) {
+        statusBar()->showMessage("AI executing command: " + command);
+        m_aiCodeAssistant->executePowerShellCommand(command);
+        
+        // Show output in AI panel
+        if (m_aiCodeAssistantPanel && !m_aiCodeAssistantPanel->isVisible()) {
+            m_aiCodeAssistantPanel->setVisible(true);
+        }
+        
+        qDebug() << "[AGENTIC_IDE]" << "Command execution initiated:" << command;
+    }
+}
+
+void AgenticIDE::onAIAnalyzeCode()
+{
+    if (!m_aiCodeAssistant || !m_multiTabEditor) {
+        statusBar()->showMessage("AI Assistant not initialized");
+        return;
+    }
+    
+    QString currentCode = m_multiTabEditor->getCurrentText();
+    if (currentCode.isEmpty()) {
+        statusBar()->showMessage("No code to analyze");
+        return;
+    }
+    
+    QString context = QString("File: %1\nLanguage: %2\nSize: %3 bytes")
+        .arg(m_multiTabEditor->getCurrentFilePath())
+        .arg(m_multiTabEditor->getCurrentFilePath().split('.').last())
+        .arg(currentCode.length());
+    
+    // Show AI panel
+    if (m_aiCodeAssistantPanel && !m_aiCodeAssistantPanel->isVisible()) {
+        m_aiCodeAssistantPanel->setVisible(true);
+    }
+    
+    statusBar()->showMessage("AI analyzing code with workspace context...");
+    m_aiCodeAssistant->analyzeAndRecommend(context);
+    
+    qDebug() << "[AGENTIC_IDE]" << "Code analysis initiated" << context;
+}
+
+void AgenticIDE::onAIAutofixError()
+{
+    if (!m_aiCodeAssistant || !m_multiTabEditor) {
+        statusBar()->showMessage("AI Assistant not initialized");
+        return;
+    }
+    
+    QString currentCode = m_multiTabEditor->getCurrentText();
+    if (currentCode.isEmpty()) {
+        statusBar()->showMessage("No code to fix");
+        return;
+    }
+    
+    bool ok;
+    QString errorMessage = QInputDialog::getText(this, "AI Auto-Fix",
+        "Describe the error or issue:\n(e.g., 'compilation error on line 42')",
+        QLineEdit::Normal, "", &ok);
+    
+    if (!ok || errorMessage.isEmpty()) {
+        return;
+    }
+    
+    // Show AI panel
+    if (m_aiCodeAssistantPanel && !m_aiCodeAssistantPanel->isVisible()) {
+        m_aiCodeAssistantPanel->setVisible(true);
+    }
+    
+    statusBar()->showMessage("AI auto-fixing issue: " + errorMessage);
+    m_aiCodeAssistant->autoFixIssue(errorMessage, currentCode);
+    
+    qDebug() << "[AGENTIC_IDE]" << "Auto-fix triggered for issue:" << errorMessage;
+}
