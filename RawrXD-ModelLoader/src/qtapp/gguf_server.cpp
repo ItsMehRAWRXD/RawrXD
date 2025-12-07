@@ -94,7 +94,10 @@ void GGUFServer::stop() {
         return;
     }
     
-    m_healthTimer->stop();
+    // Stop timer safely - only if it belongs to this thread
+    if (m_healthTimer->thread() == QThread::currentThread()) {
+        m_healthTimer->stop();
+    }
     
     if (m_server->isListening()) {
         m_server->close();
