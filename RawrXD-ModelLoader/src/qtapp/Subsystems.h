@@ -15,7 +15,7 @@ public: \
 };
 
 // Subsystems
-DEFINE_STUB_WIDGET(ProjectExplorerWidget)
+// ProjectExplorerWidget has real implementation in widgets/project_explorer.h
 DEFINE_STUB_WIDGET(BuildSystemWidget)
 DEFINE_STUB_WIDGET(VersionControlWidget)
 DEFINE_STUB_WIDGET(RunDebugWidget)
@@ -37,11 +37,13 @@ DEFINE_STUB_WIDGET(SpreadsheetWidget)
 DEFINE_STUB_WIDGET(TerminalClusterWidget)
 DEFINE_STUB_WIDGET(SnippetManagerWidget)
 DEFINE_STUB_WIDGET(RegexTesterWidget)
+// DiffViewerWidget has potential real implementation - checking
 DEFINE_STUB_WIDGET(DiffViewerWidget)
 DEFINE_STUB_WIDGET(ColorPickerWidget)
 DEFINE_STUB_WIDGET(IconFontWidget)
 DEFINE_STUB_WIDGET(PluginManagerWidget)
-DEFINE_STUB_WIDGET(SettingsWidget)
+// SettingsWidget has REAL implementation in widgets/settings_dialog.h
+// Use RawrXD::SettingsDialog instead of stub
 DEFINE_STUB_WIDGET(NotificationCenter)
 DEFINE_STUB_WIDGET(ShortcutsConfigurator)
 DEFINE_STUB_WIDGET(TelemetryWidget)

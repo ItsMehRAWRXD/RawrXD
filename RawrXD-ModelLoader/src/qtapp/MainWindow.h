@@ -386,7 +386,7 @@ private: /* ---------------  new IDE members  --------------- */
     QPointer<QSystemTrayIcon> trayIcon_;
 
     /* Project & Build */
-    QPointer<ProjectExplorerWidget> projectExplorer_;
+    QPointer<RawrXD::ProjectExplorerWidget> projectExplorer_;  // Real file browser!
     QPointer<BuildSystemWidget> buildWidget_;
     QPointer<VersionControlWidget> vcsWidget_;
     QPointer<RunDebugWidget> debugWidget_;
@@ -474,6 +474,9 @@ private: /* ---------------  new IDE members  --------------- */
     /* Autonomous Agent System */
     class AutoBootstrap* m_agentBootstrap{};
     class HotReload* m_hotReload{};
+    class ActionExecutor* m_actionExecutor{};  // Real agent plan executor
+    class ModelInvoker* m_modelInvoker{};      // LLM invocation for wish→plan
+    class MetaPlanner* m_metaPlanner{};        // Plan generator
 
     /* MASM Text Editor */
     class MASMEditorWidget* m_masmEditor{};

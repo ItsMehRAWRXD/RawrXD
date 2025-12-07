@@ -88,29 +88,54 @@ bool GGUFServer::start(quint16 port) {
 }
 
 void GGUFServer::stop() {
-    QMutexLocker locker(&m_mutex);
-    
     if (!m_isRunning) {
         return;
     }
     
+    // Don't use QMutexLocker here - it can deadlock during shutdown
+    m_mutex.lock();
+    bool wasRunning = m_isRunning;
+    m_isRunning = false;
+    m_mutex.unlock();
+    
+    if (!wasRunning) {
+        return;
+    }
+    
     // Stop timer safely - only if it belongs to this thread
-    if (m_healthTimer->thread() == QThread::currentThread()) {
+    if (m_healthTimer && m_healthTimer->thread() == QThread::currentThread()) {
         m_healthTimer->stop();
     }
     
-    if (m_server->isListening()) {
+    if (m_server && m_server->isListening()) {
         m_server->close();
+        // Wait a bit for pending accepts to complete
+        m_server->waitForNewConnection(100);
     }
     
-    // Close all pending connections
-    for (auto socket : m_pendingRequests.keys()) {
-        socket->disconnectFromHost();
-        socket->deleteLater();
+    // Force close all pending connections
+    m_mutex.lock();
+    QList<QTcpSocket*> socketsToClose = m_pendingRequests.keys();
+    m_mutex.unlock();
+    
+    for (auto socket : socketsToClose) {
+        if (socket) {
+            // Immediately close the socket - don't wait for signal handlers
+            socket->disconnectFromHost();
+            
+            // If socket is still open, force close it
+            if (socket->state() != QAbstractSocket::UnconnectedState) {
+                socket->close();
+            }
+            
+            // Delete immediately instead of using deleteLater
+            socket->deleteLater();
+        }
     }
+    
+    m_mutex.lock();
     m_pendingRequests.clear();
-    
-    m_isRunning = false;
+    m_mutex.unlock();
     
     qInfo() << "GGUF Server stopped";
     emit serverStopped();
