@@ -3,42 +3,29 @@
 #include <QVariant>
 #include <QByteArray>
 #include <QHash>
-#include <QFile>
-#include <QDataStream>
-#include <QVector>
-#include <QSharedMemory>
 #include <QStringList>
+#include <memory>
 
-struct GGUFHeader {
-    char magic[4];      // "GGUF"
-    quint32 version;
-    quint64 tensorCount;
-    quint64 metadataSize;
-};
-
+// Qt wrapper for basic GGUF file parsing and tensor discovery
 class GGUFLoader {
 public:
     explicit GGUFLoader(const QString& path);
     ~GGUFLoader();
 
-    bool isOpen() const { return file.isOpen(); }
+    bool isOpen() const;
     QVariant getParam(const QString& key, const QVariant& defaultValue) const;
     QByteArray inflateWeight(const QString& tensorName);
     QHash<QString, QByteArray> getTokenizerMetadata() const;
-    QStringList tensorNames() const { return offsetMap.keys(); }
-
-    /**
-     * @brief Retrieve a scalar parameter from GGUF metadata.
-     * @param key Metadata key (e.g., "n_layer")
-     * @param defaultValue Value to return if key not present
-     * @return QVariant containing the value or defaultValue
-     */
+    QStringList tensorNames() const;
 
 private:
     QString m_path;
-    bool m_open{false};
-    QFile file;
-    QHash<QString, quint64> offsetMap;
-    QHash<QString, QVariant> metadataCache;
-    bool metadataParsed{false};
+    mutable QHash<QString, QVariant> m_metadataCache;
+    mutable QStringList m_cachedTensorNames;
+    bool m_initialized{false};
+    
+    void initializeNativeLoader();
 };
+
+
+
