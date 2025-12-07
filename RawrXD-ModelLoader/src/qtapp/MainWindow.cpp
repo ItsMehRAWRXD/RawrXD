@@ -1371,7 +1371,119 @@ void MainWindow::toggleMASMEditor(bool visible) {
 }
 
 void MainWindow::setupAIChatPanel() {
-    // AI Chat Panel is integrated into the CommandPalette and AISwitcher
-    // No separate dock widget needed for minimal MVP
-    qDebug() << "AI Chat Panel integrated with Command Palette";
+    // Create AI Chat Panel widget
+    m_aiChatPanel = new AIChatPanel(this);
+    
+    // Create dock widget to hold the chat panel
+    m_aiChatPanelDock = new QDockWidget("AI Chat Panel", this);
+    m_aiChatPanelDock->setWidget(m_aiChatPanel);
+    m_aiChatPanelDock->setObjectName("AIChatPanelDock");
+    m_aiChatPanelDock->setAllowedAreas(Qt::AllDockWidgetAreas);
+    m_aiChatPanelDock->setFeatures(QDockWidget::DockWidgetMovable |
+                                    QDockWidget::DockWidgetFloatable |
+                                    QDockWidget::DockWidgetClosable);
+    
+    // Add to right dock area by default
+    addDockWidget(Qt::RightDockWidgetArea, m_aiChatPanelDock);
+    
+    // Tabify with MASM editor if present
+    if (m_masmEditorDock) {
+        tabifyDockWidget(m_masmEditorDock, m_aiChatPanelDock);
+        m_aiChatPanelDock->raise();
+    }
+    
+    // Connect chat panel signals to inference engine
+    connect(m_aiChatPanel, &AIChatPanel::messageSubmitted,
+            this, &MainWindow::onAIChatMessageSubmitted);
+    connect(m_aiChatPanel, &AIChatPanel::quickActionTriggered,
+            this, &MainWindow::onAIChatQuickActionTriggered);
+    
+    // Connect inference engine responses to chat panel
+    connect(m_inferenceEngine, &InferenceEngine::streamToken,
+            this, [this](qint64, const QString& token) {
+                if (m_aiChatPanel) m_aiChatPanel->updateStreamingMessage(token);
+            });
+    connect(m_inferenceEngine, &InferenceEngine::streamFinished,
+            this, [this](qint64) {
+                if (m_aiChatPanel) m_aiChatPanel->finishStreaming();
+            });
+    
+    // Add View menu toggle for AI Chat Panel
+    QMenu* viewMenu = nullptr;
+    for (QAction* action : menuBar()->actions()) {
+        if (action->text() == "View") {
+            viewMenu = action->menu();
+            break;
+        }
+    }
+    
+    if (!viewMenu) {
+        viewMenu = menuBar()->addMenu("View");
+    }
+    
+    QAction* toggleChatAction = viewMenu->addAction("AI Chat Panel");
+    toggleChatAction->setCheckable(true);
+    toggleChatAction->setChecked(true);
+    connect(toggleChatAction, &QAction::triggered, this, [this](bool visible) {
+        if (m_aiChatPanelDock) {
+            if (visible) {
+                m_aiChatPanelDock->show();
+                m_aiChatPanelDock->raise();
+            } else {
+                m_aiChatPanelDock->hide();
+            }
+        }
+    });
+    
+    qDebug() << "AI Chat Panel dockable widget created on right side";
+}
+
+void MainWindow::onAIChatMessageSubmitted(const QString& message) {
+    if (!m_aiChatPanel) return;
+    
+    try {
+        // Add user message to chat
+        m_aiChatPanel->addUserMessage(message);
+        
+        // Send to inference engine
+        if (m_inferenceEngine && m_inferenceEngine->isModelLoaded()) {
+            qint64 reqId = QDateTime::currentMSecsSinceEpoch();
+            m_currentStreamId = reqId;
+            
+            m_aiChatPanel->addAssistantMessage("", true);  // Start streaming
+            
+            QMetaObject::invokeMethod(m_inferenceEngine, "processPrompt", Qt::QueuedConnection,
+                                      Q_ARG(QString, message),
+                                      Q_ARG(qint64, reqId));
+        } else {
+            m_aiChatPanel->addAssistantMessage("No model loaded. Please load a GGUF model first.", false);
+        }
+    } catch (const std::exception& e) {
+        qCritical() << "Chat message submission error:" << e.what();
+        if (m_aiChatPanel) {
+            m_aiChatPanel->addAssistantMessage(QString("Error: %1").arg(e.what()), false);
+        }
+    }
+}
+
+void MainWindow::onAIChatQuickActionTriggered(const QString& action, const QString& context) {
+    if (!m_aiChatPanel) return;
+    
+    try {
+        QString prompt;
+        
+        if (action == "explain") {
+            prompt = QString("Explain this code:\n%1").arg(context);
+        } else if (action == "fix") {
+            prompt = QString("Fix any issues in this code:\n%1").arg(context);
+        } else if (action == "refactor") {
+            prompt = QString("Refactor this code to be more efficient:\n%1").arg(context);
+        } else {
+            prompt = action;
+        }
+        
+        onAIChatMessageSubmitted(prompt);
+    } catch (const std::exception& e) {
+        qCritical() << "Quick action error:" << e.what();
+    }
 }

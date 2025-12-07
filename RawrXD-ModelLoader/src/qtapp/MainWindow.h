@@ -245,6 +245,8 @@ private slots: /* ----------  new IDE-wide slots  ---------- */
     void showInferenceError(qint64 reqId, const QString& errorMsg);
     void onModelLoadedChanged(bool loaded, const QString& modelName);
     void batchCompressFolder();
+    void onAIChatMessageSubmitted(const QString& message);
+    void onAIChatQuickActionTriggered(const QString& action, const QString& context);
 
     // Agent integration
     void onCtrlShiftA();
@@ -452,6 +454,7 @@ private: /* ---------------  new IDE members  --------------- */
     bool m_streamingMode{false};
     qint64 m_currentStreamId{0};
     QDockWidget* m_modelMonitorDock{};
+    QDockWidget* m_aiChatPanelDock{};
     
     /* Unified AI Backend (Cursor-style switcher) */
     class AISwitcher* m_aiSwitcher{};
