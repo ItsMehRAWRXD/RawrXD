@@ -29,58 +29,103 @@ InferenceEngine::InferenceEngine(QObject* parent)
 
 bool InferenceEngine::loadModel(const QString& path)
 {
-    QMutexLocker lock(&m_mutex);
-    
-    if (m_loader) {
-        delete m_loader;
-        m_loader = nullptr;
-    }
-    
-    m_loader = new GGUFLoader(path);
-    
-    if (!m_loader->isOpen()) {
-        qWarning() << "Failed to load GGUF model:" << path;
-        delete m_loader;
-        m_loader = nullptr;
+    try {
+        QMutexLocker lock(&m_mutex);
+        
+        if (m_loader) {
+            delete m_loader;
+            m_loader = nullptr;
+        }
+        
+        if (path.isEmpty()) {
+            qWarning() << "[InferenceEngine] Model path is empty";
+            emit modelLoadedChanged(false, QString());
+            return false;
+        }
+        
+        qInfo() << "[InferenceEngine] Attempting to load model from:" << path;
+        
+        // Create loader with error checking
+        m_loader = new GGUFLoader(path);
+        
+        if (!m_loader->isOpen()) {
+            qWarning() << "[InferenceEngine] GGUFLoader failed to open file:" << path;
+            delete m_loader;
+            m_loader = nullptr;
+            emit modelLoadedChanged(false, QString());
+            return false;
+        }
+        
+        m_modelPath = path;
+        QString modelName = extractModelName(path);
+        
+        // Initialize tokenizer from model
+        try {
+            initializeTokenizer();
+        } catch (const std::exception& e) {
+            qWarning() << "[InferenceEngine] Failed to initialize tokenizer:" << e.what();
+            // Continue anyway - tokenizer is optional for basic inference
+        }
+        
+        // Build initial quantized tensor cache
+        try {
+            rebuildTensorCache();
+        } catch (const std::exception& e) {
+            qWarning() << "[InferenceEngine] Failed to build tensor cache:" << e.what();
+            // Continue anyway - we'll try without cache
+        }
+        
+        // === FIX: Dynamically read model architecture from GGUF metadata ===
+        // These values are now read from the actual GGUF file instead of hardcoded
+        int nLayers = m_loader->getParam("n_layer", 12).toInt();
+        int nEmbd = m_loader->getParam("n_embd", 768).toInt();
+        int nHead = m_loader->getParam("n_head", 12).toInt();
+        int nVocab = m_loader->getParam("n_vocab", 50257).toInt();
+
+        // Log the actual parameters read from the GGUF file
+        qInfo() << QString("[InferenceEngine] Detected model architecture: Layers=%1, Embedding=%2, Heads=%3, Vocab=%4")
+                     .arg(nLayers).arg(nEmbd).arg(nHead).arg(nVocab);
+        
+        if (!m_tensorCache.isEmpty()) {
+            try {
+                bool transformerLoaded = m_transformer.loadWeights(m_tensorCache, nLayers, nEmbd, nHead, nVocab);
+                if (!transformerLoaded) {
+                    qWarning() << "[InferenceEngine] Transformer weight loading failed, inference will be limited";
+                } else {
+                    qInfo() << "[InferenceEngine] Transformer initialized successfully with real model parameters";
+                }
+            } catch (const std::exception& e) {
+                qWarning() << "[InferenceEngine] Exception loading transformer weights:" << e.what();
+                // Continue anyway - model may work in limited capacity
+            }
+        } else {
+            qWarning() << "[InferenceEngine] Tensor cache is empty, transformer initialization skipped";
+        }
+        
+        // Reset KV-cache state for new model
+        m_kvCacheReady = false;
+        
+        qInfo() << "[InferenceEngine] Model loaded successfully:" << modelName;
+        emit modelLoadedChanged(true, modelName);
+        return true;
+        
+    } catch (const std::exception& e) {
+        qCritical() << "[InferenceEngine] CRITICAL: Exception during model loading:" << e.what();
+        if (m_loader) {
+            delete m_loader;
+            m_loader = nullptr;
+        }
+        emit modelLoadedChanged(false, QString());
+        return false;
+    } catch (...) {
+        qCritical() << "[InferenceEngine] CRITICAL: Unknown exception during model loading";
+        if (m_loader) {
+            delete m_loader;
+            m_loader = nullptr;
+        }
         emit modelLoadedChanged(false, QString());
         return false;
     }
-    
-    m_modelPath = path;
-    QString modelName = extractModelName(path);
-    qInfo() << "Model loaded successfully:" << modelName;
-    
-    // Initialize tokenizer from model
-    initializeTokenizer();
-    
-    // Build initial quantized tensor cache
-    rebuildTensorCache();
-    
-    // === FIX: Dynamically read model architecture from GGUF metadata ===
-    // These values are now read from the actual GGUF file instead of hardcoded
-    int nLayers = m_loader->getParam("n_layer", 12).toInt();
-    int nEmbd = m_loader->getParam("n_embd", 768).toInt();
-    int nHead = m_loader->getParam("n_head", 12).toInt();
-    int nVocab = m_loader->getParam("n_vocab", 50257).toInt();
-
-    // Log the actual parameters read from the GGUF file
-    qInfo() << QString("Detected model architecture: Layers=%1, Embedding=%2, Heads=%3, Vocab=%4")
-                 .arg(nLayers).arg(nEmbd).arg(nHead).arg(nVocab);
-    
-    if (!m_tensorCache.isEmpty()) {
-        bool transformerLoaded = m_transformer.loadWeights(m_tensorCache, nLayers, nEmbd, nHead, nVocab);
-        if (!transformerLoaded) {
-            qWarning() << "Transformer weight loading failed, inference will be limited";
-        } else {
-            qInfo() << "Transformer initialized successfully with real model parameters";
-        }
-    }
-    
-    // Reset KV-cache state for new model
-    m_kvCacheReady = false;
-    
-    emit modelLoadedChanged(true, modelName);
-    return true;
 }
 
 QString InferenceEngine::processChat(const QString& prompt)
@@ -251,21 +296,53 @@ void InferenceEngine::setLayerQuant(const QString& tensorName, const QString& qu
 
 void InferenceEngine::rebuildTensorCache()
 {
-    m_tensorCache.clear();
-    
-    if (!m_loader) return;
-    
-    QStringList names = m_loader->tensorNames();
-    for (const QString& name : names) {
-        const QString qmode = m_perLayerQuant.contains(name) ? m_perLayerQuant.value(name) : m_quantMode;
-        QByteArray raw = m_loader->inflateWeight(name);
-        if (raw.isEmpty()) continue;
-        m_tensorCache.insert(name, apply_quant(raw, qmode));
-    }
-    
-    // Reload transformer weights if cache was rebuilt
-    if (!m_tensorCache.isEmpty() && m_loader) {
-        m_transformer.loadWeights(m_tensorCache, 12, 768, 12, 50257);
+    try {
+        m_tensorCache.clear();
+        
+        if (!m_loader) {
+            qWarning() << "[InferenceEngine] No GGUF loader available for tensor cache rebuild";
+            return;
+        }
+        
+        QStringList names = m_loader->tensorNames();
+        qInfo() << "[InferenceEngine] Rebuilding tensor cache with" << names.size() << "tensors";
+        
+        for (const QString& name : names) {
+            try {
+                const QString qmode = m_perLayerQuant.contains(name) ? m_perLayerQuant.value(name) : m_quantMode;
+                QByteArray raw = m_loader->inflateWeight(name);
+                
+                if (raw.isEmpty()) {
+                    qDebug() << "[InferenceEngine] Empty tensor data for:" << name;
+                    continue;
+                }
+                
+                // Apply quantization safely
+                try {
+                    QByteArray quantized = apply_quant(raw, qmode);
+                    m_tensorCache.insert(name, quantized);
+                } catch (const std::exception& e) {
+                    qWarning() << "[InferenceEngine] Failed to quantize tensor" << name << ":" << e.what();
+                }
+            } catch (const std::exception& e) {
+                qWarning() << "[InferenceEngine] Error processing tensor" << name << ":" << e.what();
+            }
+        }
+        
+        qInfo() << "[InferenceEngine] Tensor cache built with" << m_tensorCache.size() << "tensors";
+        
+        // Reload transformer weights if cache was rebuilt
+        if (!m_tensorCache.isEmpty() && m_loader) {
+            try {
+                m_transformer.loadWeights(m_tensorCache, 12, 768, 12, 50257);
+            } catch (const std::exception& e) {
+                qWarning() << "[InferenceEngine] Failed to load weights to transformer:" << e.what();
+            }
+        }
+    } catch (const std::exception& e) {
+        qCritical() << "[InferenceEngine] Critical exception in rebuildTensorCache:" << e.what();
+    } catch (...) {
+        qCritical() << "[InferenceEngine] Unknown exception in rebuildTensorCache";
     }
 }
 
@@ -376,37 +453,66 @@ QString InferenceEngine::detokenize(const std::vector<int32_t>& tokens)
 
 void InferenceEngine::initializeTokenizer()
 {
-    // Try to load vocabulary from GGUF file
-    if (m_vocab.loadFromGGUF(m_modelPath)) {
-        qInfo() << "Vocabulary loaded:" << m_vocab.size() << "tokens";
+    try {
+        // Try to load vocabulary from GGUF file
+        if (!m_loader) {
+            qWarning() << "[InferenceEngine] No GGUF loader available, skipping tokenizer init";
+            return;
+        }
+        
+        if (!m_vocab.loadFromGGUF(m_modelPath)) {
+            qWarning() << "[InferenceEngine] Failed to load vocabulary from GGUF";
+            return;
+        }
+        
+        qInfo() << "[InferenceEngine] Vocabulary loaded:" << m_vocab.size() << "tokens";
         
         // === FIX: Load real metadata required for the tokenizer ===
         // The tokenizer needs parameters like merges/patterns (for BPE) or 
         // the raw SentencePiece model file content (often stored as an array in GGUF metadata)
-        QHash<QString, QByteArray> tokenizerMetadata = m_loader ? m_loader->getTokenizerMetadata() 
-                                                                  : QHash<QString, QByteArray>();
+        QHash<QString, QByteArray> tokenizerMetadata;
+        try {
+            tokenizerMetadata = m_loader->getTokenizerMetadata();
+        } catch (const std::exception& e) {
+            qWarning() << "[InferenceEngine] Failed to load tokenizer metadata:" << e.what();
+            // Continue without metadata
+        }
         
         // Determine which tokenizer to use based on vocab type
         VocabularyLoader::TokenizerType vocabType = m_vocab.getType();
         
         if (vocabType == VocabularyLoader::BPE) {
-            // Initialize BPE tokenizer with real GGUF metadata
-            if (m_bpeTokenizer.loadFromGGUFMetadata(tokenizerMetadata)) {
-                m_tokenizerMode = TOKENIZER_BPE;
-                qInfo() << "Using BPE tokenizer (GPT-2 compatible)";
+            try {
+                // Initialize BPE tokenizer with real GGUF metadata
+                if (m_bpeTokenizer.loadFromGGUFMetadata(tokenizerMetadata)) {
+                    m_tokenizerMode = TOKENIZER_BPE;
+                    qInfo() << "[InferenceEngine] Using BPE tokenizer (GPT-2 compatible)";
+                }
+            } catch (const std::exception& e) {
+                qWarning() << "[InferenceEngine] Failed to initialize BPE tokenizer:" << e.what();
             }
         } else if (vocabType == VocabularyLoader::SENTENCEPIECE) {
-            // Initialize SentencePiece tokenizer with real GGUF metadata
-            if (m_spTokenizer.loadFromGGUFMetadata(tokenizerMetadata)) {
-                m_tokenizerMode = TOKENIZER_SP;
-                qInfo() << "Using SentencePiece tokenizer (LLaMA/Mistral compatible)";
+            try {
+                // Initialize SentencePiece tokenizer with real GGUF metadata
+                if (m_spTokenizer.loadFromGGUFMetadata(tokenizerMetadata)) {
+                    m_tokenizerMode = TOKENIZER_SP;
+                    qInfo() << "[InferenceEngine] Using SentencePiece tokenizer (LLaMA/Mistral compatible)";
+                }
+            } catch (const std::exception& e) {
+                qWarning() << "[InferenceEngine] Failed to initialize SentencePiece tokenizer:" << e.what();
             }
         }
+    } catch (const std::exception& e) {
+        qWarning() << "[InferenceEngine] Critical exception in tokenizer initialization:" << e.what();
+        m_tokenizerMode = TOKENIZER_FALLBACK;
+    } catch (...) {
+        qWarning() << "[InferenceEngine] Unknown exception in tokenizer initialization";
+        m_tokenizerMode = TOKENIZER_FALLBACK;
     }
     
     // Fallback message
     if (m_tokenizerMode == TOKENIZER_FALLBACK) {
-        qInfo() << "Using fallback word-based tokenizer (limited functionality)";
+        qInfo() << "[InferenceEngine] Using fallback word-based tokenizer (limited functionality)";
     }
 }
 

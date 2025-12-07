@@ -1449,10 +1449,12 @@ void MainWindow::onAIChatMessageSubmitted(const QString& message) {
         if (m_inferenceEngine && m_inferenceEngine->isModelLoaded()) {
             qint64 reqId = QDateTime::currentMSecsSinceEpoch();
             m_currentStreamId = reqId;
+            m_streamingMode = true;
             
             m_aiChatPanel->addAssistantMessage("", true);  // Start streaming
             
-            QMetaObject::invokeMethod(m_inferenceEngine, "processPrompt", Qt::QueuedConnection,
+            // Call the 'request' slot which is the actual inference method
+            QMetaObject::invokeMethod(m_inferenceEngine, "request", Qt::QueuedConnection,
                                       Q_ARG(QString, message),
                                       Q_ARG(qint64, reqId));
         } else {
