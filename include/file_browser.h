@@ -2,6 +2,7 @@
 
 #include <QWidget>
 #include <QString>
+#include <QFileInfo>
 
 class QTreeWidget;
 class QTreeWidgetItem;
@@ -21,6 +22,20 @@ signals:
 private slots:
     void handleItemClicked(QTreeWidgetItem* item, int column);
     void handleItemExpanded(QTreeWidgetItem* item);
+    
+private:
+    // Production-ready utility methods
+    void ClearLazyLoadingIndicators(QTreeWidgetItem* item);
+    void StartAsyncDirectoryLoad(QTreeWidgetItem* item, const QString& dirPath);
+    QTreeWidgetItem* CreateFileTreeItem(const QFileInfo& info);
+    void AddSmartLazyLoader(QTreeWidgetItem* parentItem, const QString& dirPath);
+    
+    // Error handling utilities
+    void HandleDirectoryLoadError(QTreeWidgetItem* item, const QString& error);
+    void LogDirectoryAccess(const QString& path, bool success);
+    
+    // Performance monitoring
+    void TrackLoadingMetrics(const QString& path, int itemCount, qint64 loadTimeMs);
     
 private:
     QTreeWidget* tree_widget_;

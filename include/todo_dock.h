@@ -25,6 +25,10 @@ private slots:
     void onTodoCompleted(const QString& id);
     void onTodoRemoved(const QString& id);
     void onItemDoubleClicked(QTreeWidgetItem* item, int column);
+    void onAddTodo();
+    void onCompleteTodo();
+    void onRemoveTodo();
+    void onScanCode();
     
 private:
     void setupUI();

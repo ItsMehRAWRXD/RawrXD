@@ -34,5 +34,8 @@ signals:
     void todoRemoved(const QString& id);
     
 private:
+    void saveTodos();
+    void loadTodos();
+    
     QList<TodoItem> todos_;
 };
