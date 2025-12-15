@@ -72,7 +72,18 @@ endif()
 set(Qt6_DIR "C:/Qt/6.7.3/msvc2022_64/lib/cmake/Qt6")
 list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.7.3/msvc2022_64")
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Network Sql Concurrent Test Charts)
+# Try to find Qt6 with Charts, fall back to without if not available
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Network Sql Concurrent Test)
+
+# Qt Charts is optional - try to find it but don't fail if missing
+find_package(Qt6 COMPONENTS Charts QUIET)
+if(Qt6Charts_FOUND)
+    message(STATUS "Qt6Charts found - full charting support enabled")
+    set(HAVE_QT_CHARTS TRUE)
+else()
+    message(WARNING "Qt6Charts not found - charting features will be disabled")
+    set(HAVE_QT_CHARTS FALSE)
+endif()
 
 find_package(CURL QUIET)
 if(CURL_FOUND)
@@ -90,6 +101,14 @@ if(ZSTD_FOUND)
 else()
     message(WARNING "ZSTD not found - compression will use passthrough. Set ZSTD_ROOT or install zstd for full functionality.")
     set(HAVE_ZSTD 0)
+endif()
+
+find_package(OpenSSL REQUIRED)
+if(OpenSSL_FOUND)
+    message(STATUS "OpenSSL found: ${OPENSSL_VERSION}")
+    link_libraries(OpenSSL::Crypto OpenSSL::SSL)
+else()
+    message(FATAL_ERROR "OpenSSL not found - required for JWT verification and TLS tooling")
 endif()
 
 if(Qt6_FOUND)
@@ -926,6 +945,27 @@ if(MSVC) # Re-enabled to test
         src/qtapp/vocabulary_loader.cpp
         src/qtapp/transformer_inference.cpp
         src/qtapp/gguf_loader.cpp
+        # UI Widgets and Panels (Q_OBJECT compilation)
+        src/qtapp/health_check_server.cpp
+        src/qtapp/layer_quant_widget.cpp
+        src/qtapp/agentic_failure_detector.cpp
+        src/qtapp/agentic_puppeteer.cpp
+        src/qtapp/agent_mode_handler.cpp
+        src/qtapp/ask_mode_handler.cpp
+        src/qtapp/plan_mode_handler.cpp
+        src/qtapp/ollama_hotpatch_proxy.cpp
+        src/qtapp/StreamingGGUFLoader.cpp
+        # Headers requiring MOC processing for Q_OBJECT
+        src/qtapp/health_check_server.hpp
+        src/qtapp/layer_quant_widget.hpp
+        src/qtapp/agentic_failure_detector.hpp
+        src/qtapp/agentic_puppeteer.hpp
+        src/qtapp/agent_mode_handler.hpp
+        src/qtapp/ask_mode_handler.hpp
+        src/qtapp/plan_mode_handler.hpp
+        src/qtapp/ollama_hotpatch_proxy.hpp
+        src/qtapp/StreamingGGUFLoader.hpp
+        src/qtapp/interpretability_panel_production.hpp
     )
     
     target_link_libraries(RawrXD-Win32IDE PRIVATE
@@ -967,6 +1007,12 @@ if(MSVC) # Re-enabled to test
         target_link_libraries(RawrXD-Win32IDE PRIVATE ggml)
         target_compile_definitions(RawrXD-Win32IDE PRIVATE HAVE_GGML=1)
     endif()
+    
+    # Enable Qt MOC for Q_OBJECT headers in widgets
+    set_target_properties(RawrXD-Win32IDE PROPERTIES 
+        AUTOMOC ON
+        AUTOMOC_MOC_OPTIONS "-I${CMAKE_SOURCE_DIR}/include;-I${CMAKE_CURRENT_SOURCE_DIR}/src/qtapp"
+    )
     
     # Compiler options - MSVC only now
     target_compile_options(RawrXD-Win32IDE PRIVATE /EHsc /O2)
@@ -1445,8 +1491,26 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/cloud_api_client.cpp")
         list(APPEND AGENTICIDE_SOURCES src/cloud_api_client.cpp)
     endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/config_manager.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/config_manager.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/feature_toggle.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/feature_toggle.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/logging/logging.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/logging/logging.cpp)
+    endif()
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/cloud_api_client.h")
         list(APPEND AGENTICIDE_SOURCES src/cloud_api_client.h)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/include/config_manager.h")
+        list(APPEND AGENTICIDE_SOURCES include/config_manager.h)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/include/feature_toggle.h")
+        list(APPEND AGENTICIDE_SOURCES include/feature_toggle.h)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/include/logging/logging.h")
+        list(APPEND AGENTICIDE_SOURCES include/logging/logging.h)
     endif()
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/tool_registry.cpp")
         list(APPEND AGENTICIDE_SOURCES src/tool_registry.cpp)
@@ -1536,6 +1600,10 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/moc_includes.cpp")
         list(APPEND AGENTICIDE_SOURCES src/qtapp/moc_includes.cpp)
     endif()
+    # Explicit trigger: ensure AUTOMOC sees ZeroDayAgenticEngine Q_OBJECT header
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/zero_day_agentic_engine_moc_trigger.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/zero_day_agentic_engine_moc_trigger.cpp)
+    endif()
     
     # Enterprise Telemetry Window - must be included for MOC processing
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/TelemetryWindow.h")
@@ -1561,6 +1629,16 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
     # Phase 3: Production Streaming Support
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/streaming_engine.cpp")
         list(APPEND AGENTICIDE_SOURCES src/streaming_engine.cpp)
+    endif()
+    
+    # Enterprise Autonomous Agent System (Zero-Day Agentic Engine)
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/zero_day_agentic_engine.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/zero_day_agentic_engine.cpp)
+    endif()
+    
+    # Add zero_day header to sources for tracking (MOC handled globally below)
+    if(EXISTS "${CMAKE_SOURCE_DIR}/include/zero_day_agentic_engine.hpp")
+        list(APPEND AGENTICIDE_SOURCES include/zero_day_agentic_engine.hpp)
     endif()
     
     add_executable(RawrXD-AgenticIDE WIN32 ${AGENTICIDE_SOURCES})
@@ -1652,17 +1730,79 @@ endif()
 
 message(STATUS "RawrXD-ModelLoader configured successfully with Clang C++20")
 
+# ============================================================
+# SHARED MOC GENERATION - Used by both RawrXD-AgenticIDE and test_ide_main
+# ============================================================
+if(EXISTS "${CMAKE_SOURCE_DIR}/include/zero_day_agentic_engine.hpp")
+    qt_wrap_cpp(ZERO_DAY_MOC_GENERATED "${CMAKE_SOURCE_DIR}/include/zero_day_agentic_engine.hpp")
+    message(STATUS "Shared MOC generated for ZeroDayAgenticEngine")
+    # Add to RawrXD-AgenticIDE if the target was created
+    if(TARGET RawrXD-AgenticIDE)
+        target_sources(RawrXD-AgenticIDE PRIVATE ${ZERO_DAY_MOC_GENERATED})
+    endif()
+endif()
+
 # Stub test to verify WinMain can be reached at all
 add_executable(stub_test WIN32 src/stub_main.cpp)
 
 # Test IDE main - test if Qt can initialize
-add_executable(test_ide_main WIN32 src/test_ide_main.cpp src/agentic_ide.cpp)
+add_executable(test_ide_main WIN32 
+    src/test_ide_main.cpp 
+    src/agentic_ide.cpp
+    src/telemetry.cpp
+    src/settings.cpp
+    src/multi_tab_editor.cpp
+    src/chat_interface.cpp
+    src/agentic_engine.cpp
+    src/terminal_pool.cpp
+    src/plan_orchestrator.cpp
+    src/lsp_client.cpp
+    src/universal_model_router.cpp
+    src/cloud_api_client.cpp
+    src/model_interface.cpp
+    src/qtapp/inference_engine.cpp
+    src/qtapp/bpe_tokenizer.cpp
+    src/qtapp/sentencepiece_tokenizer.cpp
+    src/qtapp/vocabulary_loader.cpp
+    src/qtapp/transformer_inference.cpp
+    src/qtapp/gguf_loader.cpp
+    src/gguf_loader.cpp
+    src/gguf_vocab_resolver.cpp
+    src/qtapp/agent_mode_handler.cpp
+    src/qtapp/agentic_tools.cpp
+    src/qtapp/agentic_textedit.cpp
+    src/qtapp/quant_impl.cpp
+    src/zero_day_agentic_engine.cpp
+    src/tool_registry.cpp
+)
+
+# Reuse the shared MOC file generated globally for zero_day_agentic_engine
+target_sources(test_ide_main PRIVATE ${ZERO_DAY_MOC_GENERATED})
+
 set_target_properties(test_ide_main PROPERTIES AUTOMOC ON)
 target_link_libraries(test_ide_main PRIVATE 
-    Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Network Qt6::Sql
+    Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Network Qt6::Sql Qt6::Concurrent Qt6::Test
     user32 gdi32 wbemuuid pdh winhttp ws2_32 comctl32 d3d11 dxgi d3dcompiler
+    RawrXDOrchestration RawrXDGit RawrXDTerminal brutal_gzip
 )
-target_include_directories(test_ide_main PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src/qtapp)
+
+# Link ggml if available
+if(TARGET ggml)
+    target_link_libraries(test_ide_main PRIVATE ggml)
+    target_compile_definitions(test_ide_main PRIVATE HAVE_GGML=1)
+endif()
+
+target_include_directories(test_ide_main PRIVATE 
+    ${CMAKE_SOURCE_DIR}/include 
+    ${CMAKE_SOURCE_DIR}/src 
+    ${CMAKE_SOURCE_DIR}/src/qtapp
+    ${CMAKE_SOURCE_DIR}/src/orchestration
+    ${CMAKE_SOURCE_DIR}/src/git
+    ${CMAKE_SOURCE_DIR}/src/terminal
+    ${CMAKE_SOURCE_DIR}/src/agent
+    ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
+    ${CMAKE_SOURCE_DIR}/3rdparty/ggml/src
+)
 
 # Copy Qt DLLs for test_ide_main
 add_custom_command(TARGET test_ide_main POST_BUILD

@@ -38,9 +38,9 @@ jobs:
           Write-Host "Installing Qt 6.7.3 base libraries..."
           python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64
           
-          # Install Qt Charts separately - it's a separate module in 6.7.3
+          # Install Qt Charts using install-tool command (correct way for aqt)
           Write-Host "Installing Qt Charts module..."
-          python -m aqt install-module windows desktop 6.7.3 win64_msvc2019_64 qtcharts || Write-Host "Note: Qt Charts install command completed with status $LASTEXITCODE"
+          python -m aqt install-tool windows desktop tools_qt charts 6.7.3 || Write-Host "Qt Charts install attempted"
           
           # Locate Qt installation
           $QtPath = Get-ChildItem -Path (Get-Location) -Filter "6.7.3" -Directory -Recurse | Select-Object -First 1
@@ -52,7 +52,7 @@ jobs:
           
           Write-Host "Qt6 base path: $QtBase"
           Write-Host "Checking for Qt6Config.cmake..."
-          Get-ChildItem "$QtBase\lib\cmake" -Recurse -Filter "Qt6Config.cmake" | ForEach-Object { Write-Host "Found: $($_.FullName)" }
+          Get-ChildItem "$QtBase\lib\cmake" -Recurse -Filter "Qt6Config.cmake" 2>$null | ForEach-Object { Write-Host "Found: $($_.FullName)" }
           
           # Check for Qt Charts specifically
           Write-Host "Checking for Qt6ChartsConfig.cmake..."
@@ -60,7 +60,12 @@ jobs:
           if ($chartsConfig) {
             Write-Host "Found Qt Charts at: $($chartsConfig.FullName)"
           } else {
-            Write-Host "WARNING: Qt6ChartsConfig.cmake not found - Charts module may not be available"
+            Write-Host "WARNING: Qt6ChartsConfig.cmake not found in standard location"
+            # Try alternate location
+            $altChartsPath = Get-ChildItem "D:\a\RawrXD\RawrXD" -Recurse -Filter "Qt6ChartsConfig.cmake" -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($altChartsPath) {
+              Write-Host "Found Qt Charts at alternate location: $($altChartsPath.FullName)"
+            }
           }
           
           # Set Qt6_DIR to the cmake directory
