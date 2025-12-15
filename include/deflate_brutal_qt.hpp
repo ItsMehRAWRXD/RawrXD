@@ -19,14 +19,33 @@ inline QByteArray compress(const QByteArray& in)
 {
     if (in.isEmpty()) return {};
     
-    std::uint64_t packedSz = 0;
-    void* p = deflate_brutal_masm(
+    // Allocate buffer for compression
+    size_t packedSz = maxCompressedSize(in.size());
+    void* p = std::malloc(packedSz);
+    if (!p) return {};
+    
+    // Use our new MASM deflate function
+    extern "C" size_t AsmDeflate(const void* src, size_t src_len, 
+                                 void* dst, size_t dst_len);
+    size_t result = AsmDeflate(
         reinterpret_cast<const void*>(in.constData()),
         in.size(),
-        reinterpret_cast<size_t*>(&packedSz)
+        p,
+        packedSz
     );
     
-    if (!p) return {};  // malloc failure
+    if (result == 0) {
+        std::free(p);
+        return {};
+    }
+    packedSz = result;
+    );
+    
+    if (result == 0) {
+        std::free(p);
+        return {};
+    }
+    packedSz = result;
     
     QByteArray out(reinterpret_cast<const char*>(p), static_cast<int>(packedSz));
     std::free(p);
@@ -43,14 +62,26 @@ inline QByteArray compress(const void* data, std::size_t size)
 {
     if (!data || size == 0) return {};
     
-    std::uint64_t packedSz = 0;
-    void* p = deflate_brutal_masm(
+    // Allocate buffer for compression
+    size_t packedSz = maxCompressedSize(size);
+    void* p = std::malloc(packedSz);
+    if (!p) return {};
+    
+    // Use our new MASM deflate function
+    extern "C" size_t AsmDeflate(const void* src, size_t src_len, 
+                                 void* dst, size_t dst_len);
+    size_t result = AsmDeflate(
         data,
         size,
-        reinterpret_cast<size_t*>(&packedSz)
+        p,
+        packedSz
     );
     
-    if (!p) return {};
+    if (result == 0) {
+        std::free(p);
+        return {};
+    }
+    packedSz = result;
     
     QByteArray out(reinterpret_cast<const char*>(p), static_cast<int>(packedSz));
     std::free(p);
@@ -92,67 +123,21 @@ inline QByteArray decompress(const QByteArray& compressed)
     
     size_t out_len = 0;
     
-#ifdef HAS_BRUTAL_INFLATE_MASM
-    // Use MASM inflate if available
-    extern "C" int inflate_brutal_masm(const void* src, size_t src_len, 
-                                       void* dst, size_t dst_len, size_t* out_len);
-    int result = inflate_brutal_masm(
+    // Use our new MASM inflate function
+    extern "C" size_t AsmInflate(const void* src, size_t src_len, 
+                                  void* dst, size_t dst_len);
+    size_t result = AsmInflate(
         reinterpret_cast<const void*>(compressed.constData()),
         compressed.size(),
         out_buf,
-        max_uncompressed,
-        &out_len
+        max_uncompressed
     );
     
-    if (result != 0) {
+    if (result == 0) {
         free(out_buf);
         return {};
     }
-#else
-    // Fallback: use Qt's built-in zlib (qUncompress for gzip with custom header handling)
-    // Since brutal format is RFC 1952 gzip, we need to strip the gzip header/footer manually
-    
-    // Skip gzip header (10 bytes minimum)
-    const unsigned char* data = reinterpret_cast<const unsigned char*>(compressed.constData());
-    size_t data_len = compressed.size();
-    
-    if (data_len < 18) {  // Minimum: 10-byte header + data + 8-byte footer
-        free(out_buf);
-        return {};
-    }
-    
-    // Verify gzip magic number
-    if (data[0] != 0x1f || data[1] != 0x8b) {
-        free(out_buf);
-        return {};
-    }
-    
-    // Skip to deflate data (skip variable-length gzip header)
-    size_t header_size = 10;
-    if (data[3] & 0x04) {  // FEXTRA flag
-        header_size += 2 + (data[header_size] | (data[header_size + 1] << 8));
-    }
-    if (data[3] & 0x08) {  // FNAME flag
-        while (header_size < data_len && data[header_size] != 0) header_size++;
-        header_size++;
-    }
-    if (data[3] & 0x10) {  // FCOMMENT flag
-        while (header_size < data_len && data[header_size] != 0) header_size++;
-        header_size++;
-    }
-    if (data[3] & 0x02) {  // FHCRC flag
-        header_size += 2;
-    }
-    
-    // Extract raw deflate data (without 8-byte gzip footer)
-    QByteArray deflateData(reinterpret_cast<const char*>(data + header_size), 
-                           data_len - header_size - 8);
-    
-    // Use Qt's qUncompress (handles raw DEFLATE)
-    QByteArray decompressed = qUncompress(deflateData);
-    free(out_buf);
-    return decompressed;
-#endif
+    out_len = result;
     
     QByteArray result(reinterpret_cast<const char*>(out_buf), static_cast<int>(out_len));
     free(out_buf);
