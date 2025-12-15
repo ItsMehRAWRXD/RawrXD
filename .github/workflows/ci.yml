@@ -33,8 +33,13 @@ jobs:
         shell: pwsh
         run: |
           pip install aqtinstall
+          # First list available modules to see what's available
+          python -m aqt list-qt windows desktop --modules 6.7.3 win64_msvc2019_64
           # Install Qt base with all required components
-          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64 -m qtbase qttools qtdeclarative qtcharts
+          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64
+          # Install additional modules separately
+          python -m aqt install-tool windows desktop tools_ifw 6.7.3
+          python -m aqt install-tool windows desktop tools_qtcharts 6.7.3
           $QtPath = Get-ChildItem -Path (Get-Location) -Filter "6.7.3" -Directory -Recurse | Select-Object -First 1
           if ($QtPath) {
             $QtBase = Join-Path $QtPath.FullName "msvc2019_64"
