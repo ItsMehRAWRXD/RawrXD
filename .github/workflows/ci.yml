@@ -33,7 +33,8 @@ jobs:
         shell: pwsh
         run: |
           pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64
+          # Install Qt base with all required components
+          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64 -m qtbase qttools qtdeclarative qtcharts
           $QtPath = Get-ChildItem -Path (Get-Location) -Filter "6.7.3" -Directory -Recurse | Select-Object -First 1
           if ($QtPath) {
             $QtBase = Join-Path $QtPath.FullName "msvc2019_64"
