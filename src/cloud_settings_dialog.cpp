@@ -11,6 +11,7 @@
 #include <QApplication>
 #include <QSettings>
 #include <QFileDialog>
+#include <QFileInfo>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QDebug>
@@ -18,6 +19,8 @@
 #include <QHeaderView>
 #include <QTimer>
 #include <QCloseEvent>
+#include <QDir>
+#include <QStandardPaths>
 #include <cstdlib>
 
 CloudSettingsDialog::CloudSettingsDialog(ModelRouterAdapter *adapter, QWidget *parent)
@@ -30,6 +33,7 @@ CloudSettingsDialog::CloudSettingsDialog(ModelRouterAdapter *adapter, QWidget *p
     createUI();
     setupConnections();
     loadSettings();
+    loadApiKeysFromFile();
     
     qDebug() << "[CloudSettingsDialog] Constructed";
 }
@@ -438,6 +442,8 @@ void CloudSettingsDialog::loadSettings()
     m_google_key_input->setText(settings.value("google_api_key", "").toString());
     m_moonshot_key_input->setText(settings.value("moonshot_api_key", "").toString());
     m_azure_key_input->setText(settings.value("azure_openai_api_key", "").toString());
+    m_aws_access_key_input->setText(settings.value("aws_access_key_id", "").toString());
+    m_aws_secret_key_input->setText(settings.value("aws_secret_access_key", "").toString());
     
     // Load configuration
     m_timeout_spinbox->setValue(settings.value("request_timeout_ms", 30000).toInt());
@@ -453,6 +459,90 @@ void CloudSettingsDialog::loadSettings()
     qDebug() << "[CloudSettingsDialog::loadSettings] Settings loaded";
 }
 
+QString CloudSettingsDialog::cloudKeysFilePath() const
+{
+    // Prefer config/cloud_keys.json alongside the executable; fallback to AppData
+    QString baseDir = QCoreApplication::applicationDirPath();
+    QString configDir = QDir(baseDir).filePath("config");
+    QString candidate = QDir(configDir).filePath("cloud_keys.json");
+    if (QFileInfo::exists(candidate) || QFileInfo(configDir).isDir()) {
+        return candidate;
+    }
+    QString appData = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    QDir().mkpath(appData);
+    return QDir(appData).filePath("cloud_keys.json");
+}
+
+void CloudSettingsDialog::loadApiKeysFromFile()
+{
+    const QString path = cloudKeysFilePath();
+    QFile file(path);
+    if (!file.exists()) {
+        return;
+    }
+    if (!file.open(QIODevice::ReadOnly)) {
+        qWarning() << "[CloudSettingsDialog] Failed to open" << path;
+        return;
+    }
+    const QByteArray data = file.readAll();
+    file.close();
+
+    QJsonParseError err{};
+    const auto doc = QJsonDocument::fromJson(data, &err);
+    if (err.error != QJsonParseError::NoError || !doc.isObject()) {
+        qWarning() << "[CloudSettingsDialog] Invalid cloud_keys.json" << err.errorString();
+        return;
+    }
+
+    const QJsonObject obj = doc.object();
+    auto setField = [&](const char* key, QLineEdit* edit) {
+        const auto val = obj.value(QLatin1String(key)).toString();
+        if (!val.isEmpty()) edit->setText(val);
+    };
+
+    setField("OPENAI_API_KEY", m_openai_key_input);
+    setField("ANTHROPIC_API_KEY", m_anthropic_key_input);
+    setField("GOOGLE_API_KEY", m_google_key_input);
+    setField("MOONSHOT_API_KEY", m_moonshot_key_input);
+    setField("AZURE_OPENAI_API_KEY", m_azure_key_input);
+    setField("AWS_ACCESS_KEY_ID", m_aws_access_key_input);
+    setField("AWS_SECRET_ACCESS_KEY", m_aws_secret_key_input);
+}
+
+void CloudSettingsDialog::saveApiKeysToFile()
+{
+    QJsonObject obj;
+    obj.insert("OPENAI_API_KEY", m_openai_key_input->text());
+    obj.insert("ANTHROPIC_API_KEY", m_anthropic_key_input->text());
+    obj.insert("GOOGLE_API_KEY", m_google_key_input->text());
+    obj.insert("MOONSHOT_API_KEY", m_moonshot_key_input->text());
+    obj.insert("AZURE_OPENAI_API_KEY", m_azure_key_input->text());
+    obj.insert("AWS_ACCESS_KEY_ID", m_aws_access_key_input->text());
+    obj.insert("AWS_SECRET_ACCESS_KEY", m_aws_secret_key_input->text());
+
+    const QString path = cloudKeysFilePath();
+    QDir().mkpath(QFileInfo(path).absolutePath());
+    QFile file(path);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        qWarning() << "[CloudSettingsDialog] Failed to write" << path;
+        return;
+    }
+    file.write(QJsonDocument(obj).toJson(QJsonDocument::Indented));
+    file.close();
+
+    // Also set environment for current process so the router can use them immediately
+    auto setEnv = [](const QString& k, const QString& v) {
+        if (!v.isEmpty()) qputenv(k.toUtf8(), v.toUtf8());
+    };
+    setEnv("OPENAI_API_KEY", m_openai_key_input->text());
+    setEnv("ANTHROPIC_API_KEY", m_anthropic_key_input->text());
+    setEnv("GOOGLE_API_KEY", m_google_key_input->text());
+    setEnv("MOONSHOT_API_KEY", m_moonshot_key_input->text());
+    setEnv("AZURE_OPENAI_API_KEY", m_azure_key_input->text());
+    setEnv("AWS_ACCESS_KEY_ID", m_aws_access_key_input->text());
+    setEnv("AWS_SECRET_ACCESS_KEY", m_aws_secret_key_input->text());
+}
+
 void CloudSettingsDialog::applySettings()
 {
     if (!m_adapter) return;
@@ -465,6 +555,8 @@ void CloudSettingsDialog::applySettings()
     settings.setValue("google_api_key", m_google_key_input->text());
     settings.setValue("moonshot_api_key", m_moonshot_key_input->text());
     settings.setValue("azure_openai_api_key", m_azure_key_input->text());
+    settings.setValue("aws_access_key_id", m_aws_access_key_input->text());
+    settings.setValue("aws_secret_access_key", m_aws_secret_key_input->text());
     
     // Save configuration
     settings.setValue("request_timeout_ms", m_timeout_spinbox->value());
@@ -652,6 +744,7 @@ void CloudSettingsDialog::onEnableFallbackChanged(bool checked)
 void CloudSettingsDialog::onSaveSettings()
 {
     applySettings();
+    saveApiKeysToFile();
     QMessageBox::information(this, "Settings Saved", "Cloud settings have been saved successfully!");
     accept();
 }

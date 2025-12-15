@@ -102,6 +102,9 @@ private:
     void setupConnections();
     void loadSettings();
     void applySettings();
+    void loadApiKeysFromFile();
+    void saveApiKeysToFile();
+    QString cloudKeysFilePath() const;
     
     // Helper methods
     void updateProviderStatus();
