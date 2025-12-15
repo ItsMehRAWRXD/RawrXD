@@ -223,50 +223,124 @@ void MainWindow::initializePhase3()
     
     try {
         // Create chat interface dock
-        m_chatInterface = new ChatInterface(this);
-        m_chatInterface->initialize();
-        m_chatInterface->setAgenticEngine(m_agenticEngine);
-        m_chatInterface->setPlanOrchestrator(m_planOrchestrator);
+        m_chatTabs = new QTabWidget(this);
+        m_chatTabs->setTabsClosable(true);
+        connect(m_chatTabs, &QTabWidget::tabCloseRequested, this, [this](int index){
+            QWidget* w = m_chatTabs->widget(index);
+            if (auto* panel = qobject_cast<AIChatPanel*>(w)) {
+                m_chatPanelManager->destroyPanel(panel);
+            }
+            m_chatTabs->removeTab(index);
+        });
         
+        // Update current panel when tab changes
+        connect(m_chatTabs, QOverload<int>::of(&QTabWidget::currentChanged), this, [this](int index){
+            if (index >= 0) {
+                m_currentChatPanel = qobject_cast<AIChatPanel*>(m_chatTabs->widget(index));
+            }
+        });
+
+        m_chatPanelManager = new AIChatPanelManager(this);
+        AIChatPanel* firstPanel = m_chatPanelManager->createPanel(this);
+        if (firstPanel) {
+            m_chatTabs->addTab(firstPanel, "Chat 1");
+            m_currentChatPanel = firstPanel;  // Set as current active panel
+        }
+
         m_chatDock = new QDockWidget("AI Chat & Commands", this);
-        m_chatDock->setWidget(m_chatInterface);
+        m_chatDock->setWidget(m_chatTabs);
         addDockWidget(Qt::RightDockWidgetArea, m_chatDock);
+
+        // Add "New Chat" action to menu bar
+        QAction* newChatAct = new QAction(tr("New Chat"), this);
+        connect(newChatAct, &QAction::triggered, this, [this](){
+            if (!m_chatPanelManager) return;
+            AIChatPanel* panel = m_chatPanelManager->createPanel(this);
+            if (panel) {
+                int idx = m_chatTabs->addTab(panel, tr("Chat %1").arg(m_chatTabs->count()+1));
+                m_chatTabs->setCurrentIndex(idx);
+                m_currentChatPanel = panel;
+                // Rewire signals for new panel
+                connect(panel, &AIChatPanel::messageSubmitted,
+                    this, &MainWindow::onChatMessageSent);
+                connect(m_agenticEngine, &AgenticEngine::responseReady,
+                    panel, &AIChatPanel::addAssistantMessage);
+            }
+        });
+        menuBar()->addAction(newChatAct);
         
         updateSplashProgress("✓ Chat interface ready", 65);
         
-        // Connect chat messages to agentic engine with editor context
-        connect(m_chatInterface, &ChatInterface::messageSent,
+        // Connect chat messages to agentic engine with editor context using current panel
+        if (m_currentChatPanel) {
+            connect(m_currentChatPanel, &AIChatPanel::messageSubmitted,
                 this, &MainWindow::onChatMessageSent);
-        connect(m_agenticEngine, &AgenticEngine::responseReady,
-                m_chatInterface, &ChatInterface::messageReceived);
+            connect(m_agenticEngine, &AgenticEngine::responseReady,
+                m_currentChatPanel, &AIChatPanel::addAssistantMessage);
+        }
         
         // Connect model selection to load GGUF files
-        connect(m_chatInterface, &ChatInterface::modelSelected,
-                this, &MainWindow::onModelSelected);
+        // Connect settings dialog to apply AI chat configuration
+        connect(this, &MainWindow::settingsApplied, this, [this](){
+            if (m_chatPanelManager) {
+                // Load settings from QSettings and apply to manager
+                QSettings settings;
+                bool cloudEnabled = settings.value("aichat/enableCloud", false).toBool();
+                QString cloudEndpoint = settings.value("aichat/cloudEndpoint", "https://api.openai.com/v1/chat/completions").toString();
+                QString apiKey = settings.value("aichat/apiKey", "").toString();
+                bool localEnabled = settings.value("aichat/enableLocal", true).toBool();
+                QString localEndpoint = settings.value("aichat/localEndpoint", "http://localhost:11434/api/generate").toString();
+                int timeout = settings.value("aichat/requestTimeout", 30000).toInt();
+                
+                m_chatPanelManager->setCloudConfig(cloudEnabled, cloudEndpoint, apiKey);
+                m_chatPanelManager->setLocalConfig(localEnabled, localEndpoint);
+                m_chatPanelManager->setRequestTimeout(timeout);
+            }
+        });
         
-        // Connect model ready signal to enable/disable chat input
-        connect(m_agenticEngine, &AgenticEngine::modelReady,
-                m_chatInterface, &ChatInterface::setCanSendMessage);
+        // Connect model ready signal to enable/disable chat input in all panels
+        connect(m_agenticEngine, &AgenticEngine::modelReady, this, [this](bool ready){
+            if (m_chatPanelManager && m_chatTabs) {
+                // Enable/disable all chat panels based on model readiness
+                for (int i = 0; i < m_chatTabs->count(); ++i) {
+                    if (auto* panel = qobject_cast<AIChatPanel*>(m_chatTabs->widget(i))) {
+                        // Enable/disable input field based on model readiness
+                        panel->setInputEnabled(ready);
+                        if (ready) {
+                            qDebug() << "[MainWindow] Panel" << i << "input enabled - model ready";
+                        } else {
+                            qDebug() << "[MainWindow] Panel" << i << "input disabled - model loading";
+                        }
+                    }
+                }
+            }
+        });
         
         // Wire progress signals
         connect(m_planOrchestrator, &RawrXD::PlanOrchestrator::planningStarted,
-                m_chatInterface, [this](const QString& prompt) {
-                    m_chatInterface->addMessage("System", "📋 Planning: " + prompt);
+                this, [this](const QString& prompt) {
+                    if (m_currentChatPanel) {
+                        m_currentChatPanel->addAssistantMessage("📋 Planning: " + prompt, false);
+                    }
                 });
         
         connect(m_planOrchestrator, &RawrXD::PlanOrchestrator::executionStarted,
-                m_chatInterface, [this](int taskCount) {
-                    m_chatInterface->addMessage("System", 
-                        QString("🚀 Executing %1 tasks...").arg(taskCount));
+                this, [this](int taskCount) {
+                    if (m_currentChatPanel) {
+                        m_currentChatPanel->addAssistantMessage(
+                            QString("🚀 Executing %1 tasks...").arg(taskCount), false);
+                    }
                 });
         
         connect(m_planOrchestrator, &RawrXD::PlanOrchestrator::taskExecuted,
-                m_chatInterface, [this](int index, bool success, const QString& desc) {
-                    QString status = success ? "✓" : "✗";
-                    QString color = success ? "#4ec9b0" : "#f48771";
-                    m_chatInterface->addMessage("Task", 
-                        QString("<span style='color:%1;'>%2 [%3] %4</span>")
-                            .arg(color).arg(status).arg(index + 1).arg(desc));
+                this, [this](int index, bool success, const QString& desc) {
+                    if (m_currentChatPanel) {
+                        QString status = success ? "✓" : "✗";
+                        QString color = success ? "#4ec9b0" : "#f48771";
+                        m_currentChatPanel->addAssistantMessage(
+                            QString("<span style='color:%1;'>%2 [%3] %4</span>")
+                                .arg(color).arg(status).arg(index + 1).arg(desc), false);
+                    }
                 });
         
         // Create file browser dock
@@ -406,6 +480,19 @@ void MainWindow::setupMenuBar()
     QMenu *todoMenu = viewMenu->addMenu("TODO Panel");
     todoMenu->addAction("Add TODO", this, &MainWindow::addTodo, QKeySequence("Ctrl+T"));
     todoMenu->addAction("Scan Code for TODOs", this, &MainWindow::scanCodeForTodos);
+    todoMenu->addSeparator();
+    todoMenu->addAction("Clear All TODOs", this, [this]() {
+        if (m_todoManager) {
+            m_todoManager->clearAllTodos();
+            statusBar()->showMessage("All TODOs cleared", 2000);
+        }
+    });
+    todoMenu->addAction("Clear All TODOs", this, [this]() {
+        if (m_todoManager) {
+            m_todoManager->clearAllTodos();
+            statusBar()->showMessage("✓ All TODOs cleared", 2000);
+        }
+    });
     
     // Terminals submenu
     QMenu *termMenu = viewMenu->addMenu("Terminals");
@@ -600,35 +687,38 @@ void MainWindow::startChat()
     if (m_chatDock) {
         m_chatDock->setVisible(true);
         m_chatDock->raise();
-        if (m_chatInterface) {
-            m_chatInterface->setFocus();
+        if (m_currentChatPanel) {
+            m_currentChatPanel->setFocus();
         }
     }
 }
 
 void MainWindow::analyzeCode()
 {
-    if (m_chatInterface) {
-        m_chatInterface->sendMessageProgrammatically("@analyze current file");
+    if (m_currentChatPanel) {
+        m_currentChatPanel->addUserMessage("@analyze current file");
+        onChatMessageSent("@analyze current file");
     }
 }
 
 void MainWindow::generateCode()
 {
-    if (m_chatInterface) {
-        m_chatInterface->sendMessageProgrammatically("@generate ");
-        m_chatInterface->focusInput();
+    if (m_currentChatPanel) {
+        m_currentChatPanel->addUserMessage("@generate ");
+        m_currentChatPanel->setFocus();
     }
 }
 
 void MainWindow::refactorCode()
 {
-    if (m_chatInterface) {
-        m_chatInterface->addMessage("System", 
+    if (m_currentChatPanel) {
+        m_currentChatPanel->addAssistantMessage(
             "💡 Tip: Type '/refactor <description>' to perform multi-file refactoring\n"
-            "Example: /refactor change UserManager to use UUID instead of int ID");
-        m_chatDock->setVisible(true);
-        m_chatDock->raise();
+            "Example: /refactor change UserManager to use UUID instead of int ID", false);
+        if (m_chatDock) {
+            m_chatDock->setVisible(true);
+            m_chatDock->raise();
+        }
     }
 }
 
@@ -647,15 +737,18 @@ void MainWindow::showAbout()
 
 void MainWindow::showAIHelp()
 {
-    if (m_chatInterface) {
-        m_chatInterface->addMessage("System",
+    if (m_currentChatPanel) {
+        m_currentChatPanel->addAssistantMessage(
             "<h3>AI Commands</h3>"
             "<b>/refactor &lt;prompt&gt;</b> - Multi-file AI refactoring<br>"
             "<b>@plan &lt;task&gt;</b> - Create implementation plan<br>"
             "<b>@analyze</b> - Analyze current file<br>"
             "<b>@generate &lt;spec&gt;</b> - Generate code<br>"
-            "<b>/help</b> - Show all commands");
-        m_chatDock->setVisible(true);
+            "<b>/help</b> - Show all commands", false);
+        if (m_chatDock) {
+            m_chatDock->setVisible(true);
+            m_chatDock->raise();
+        }
     }
 }
 
@@ -1119,8 +1212,16 @@ void MainWindow::showPreferences()
     mainLayout->addWidget(buttons);
     
     if (dialog->exec() == QDialog::Accepted) {
-        // TODO: Save preferences to QSettings
-        statusBar()->showMessage("Preferences saved", 3000);
+        // Save preferences to QSettings
+        QSettings settings("RawrXD", "AgenticIDE");
+        settings.setValue("lsp/command", lspCmdEdit->text());
+        settings.setValue("lsp/autoStart", lspAutoStart->isChecked());
+        settings.setValue("editor/fontSize", fontSpin->value());
+        settings.setValue("editor/lineNumbers", lineNumbers->isChecked());
+        settings.setValue("editor/wordWrap", wordWrap->isChecked());
+        settings.setValue("terminal/shell", shellCombo->currentText());
+        settings.sync();
+        statusBar()->showMessage("✓ Preferences saved", 3000);
     }
     
     delete dialog;
@@ -1157,7 +1258,6 @@ void MainWindow::scanCodeForTodos()
     
     if (selectedDir.isEmpty()) return;
     projectDir = selectedDir;
-    
     // Confirm scan
     auto reply = QMessageBox::question(this, "Scan for TODOs",
         QString("Scan all source files in:\n%1\n\nfor TODO/FIXME/XXX comments?").arg(projectDir),

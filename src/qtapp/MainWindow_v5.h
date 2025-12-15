@@ -1,3 +1,6 @@
+#include "ai_chat_panel.hpp"
+
+// RawrXD Agentic IDE - v5.0 Clean Header
 // RawrXD Agentic IDE - v5.0 Clean Header
 #pragma once
 
@@ -92,6 +95,9 @@ private slots:
     // Settings
     void showPreferences();
     
+    // Settings signal
+    void settingsApplied();
+    
     // TODO operations
     void addTodo();
     void scanCodeForTodos();
@@ -130,7 +136,10 @@ private:
     
     // Core components (created in phases)
     MultiTabEditor *m_multiTabEditor;
-    ChatInterface *m_chatInterface;
+    // Replaced single ChatInterface with a tabbed container managed by AIChatPanelManager
+    QTabWidget* m_chatTabs = nullptr;
+    AIChatPanelManager* m_chatPanelManager = nullptr;
+        AIChatPanel* m_currentChatPanel = nullptr;
     TerminalPool *m_terminalPool;
     FileBrowser *m_fileBrowser;
     AgenticEngine *m_agenticEngine;

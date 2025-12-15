@@ -9,6 +9,9 @@
 #include <QScrollArea>
 #include <QFrame>
 #include <QList>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QJsonDocument>
 
 /**
  * @brief GitHub Copilot-style AI chat panel
@@ -47,6 +50,7 @@ public:
     void clear();
     
     void setContext(const QString& code, const QString& filePath);
+    void setInputEnabled(bool enabled);  // Enable/disable input based on model readiness
     
 signals:
     void messageSubmitted(const QString& message);
@@ -55,6 +59,8 @@ signals:
 private slots:
     void onSendClicked();
     void onQuickActionClicked(const QString& action);
+    void onNetworkFinished(QNetworkReply* reply);
+    void onNetworkError(QNetworkReply::NetworkError code);
     
 private:
     void setupUI();
@@ -62,13 +68,17 @@ private:
     QWidget* createMessageBubble(const Message& msg);
     QWidget* createQuickActions();
     void scrollToBottom();
+    void sendMessageToBackend(const QString& message);
+    QByteArray buildCloudPayload(const QString& message) const;
+    QByteArray buildLocalPayload(const QString& message) const;
+    QString extractAssistantText(const QJsonDocument& doc) const;
     
-    QVBoxLayout* m_messagesLayout;
-    QScrollArea* m_scrollArea;
-    QWidget* m_messagesContainer;
-    QLineEdit* m_inputField;
-    QPushButton* m_sendButton;
-    QWidget* m_quickActionsWidget;
+    QVBoxLayout* m_messagesLayout = nullptr;
+    QScrollArea* m_scrollArea = nullptr;
+    QWidget* m_messagesContainer = nullptr;
+    QLineEdit* m_inputField = nullptr;
+    QPushButton* m_sendButton = nullptr;
+    QWidget* m_quickActionsWidget = nullptr;
     
     QList<Message> m_messages;
     QWidget* m_streamingBubble = nullptr;
@@ -76,4 +86,19 @@ private:
     
     QString m_contextCode;
     QString m_contextFilePath;
+    
+    // Cloud/Local configuration
+    bool m_initialized = false;
+    bool m_cloudEnabled = false;
+    bool m_localEnabled = false;
+    QString m_cloudEndpoint;
+    QString m_localEndpoint;
+    QString m_apiKey;
+    int m_requestTimeout = 30000; // 30 seconds
+    
+    // Lazy initialization tracking
+    bool m_widgetsCreated = false;
+
+    // Networking
+    QNetworkAccessManager* m_network = nullptr;
 };
