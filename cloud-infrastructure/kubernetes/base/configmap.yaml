@@ -1,0 +1,141 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-config
+  namespace: production
+data:
+  LOG_LEVEL: "INFO"
+  ENVIRONMENT: "production"
+  API_VERSION: "v1"
+  CORS_ORIGINS: "https://app.example.com,https://admin.example.com"
+  MAX_REQUEST_SIZE: "10485760"
+  REQUEST_TIMEOUT_MS: "30000"
+  MAX_CONNECTIONS: "1000"
+  CONNECTION_POOL_SIZE: "20"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: db-config
+  namespace: production
+data:
+  host: "postgresql.database.svc.cluster.local"
+  port: "5432"
+  database: "production_db"
+  max-connections: "100"
+  connection-timeout: "30"
+  statement-timeout: "300000"
+  ssl-mode: "require"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cache-config
+  namespace: production
+data:
+  redis-host: "redis.cache.svc.cluster.local"
+  redis-port: "6379"
+  redis-db: "0"
+  redis-ttl: "3600"
+  redis-max-connections: "50"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: observability-config
+  namespace: production
+data:
+  prometheus-enabled: "true"
+  jaeger-enabled: "true"
+  metrics-port: "9090"
+  jaeger-sampler-type: "probabilistic"
+  jaeger-sampler-param: "0.1"
+  jaeger-agent-host: "jaeger-agent.monitoring.svc.cluster.local"
+  jaeger-agent-port: "6831"
+  log-format: "json"
+  log-output: "stdout"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+  namespace: production
+data:
+  nginx.conf: |
+    user nginx;
+    worker_processes auto;
+    error_log /var/log/nginx/error.log warn;
+    pid /var/run/nginx.pid;
+
+    events {
+      worker_connections 1024;
+      use epoll;
+    }
+
+    http {
+      include /etc/nginx/mime.types;
+      default_type application/octet-stream;
+
+      log_format main '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+      access_log /var/log/nginx/access.log main;
+
+      sendfile on;
+      tcp_nopush on;
+      tcp_nodelay on;
+      keepalive_timeout 65;
+      types_hash_max_size 2048;
+      client_max_body_size 10m;
+
+      gzip on;
+      gzip_vary on;
+      gzip_proxied any;
+      gzip_comp_level 6;
+      gzip_types text/plain text/css text/xml text/javascript application/json application/javascript application/xml+rss;
+
+      upstream api_backend {
+        least_conn;
+        server api-service:8080 max_fails=3 fail_timeout=30s;
+        keepalive 32;
+      }
+
+      server {
+        listen 80;
+        server_name _;
+        
+        location /health {
+          access_log off;
+          proxy_pass http://api_backend;
+          proxy_http_version 1.1;
+          proxy_set_header Connection "";
+        }
+
+        location / {
+          proxy_pass http://api_backend;
+          proxy_http_version 1.1;
+          proxy_set_header Upgrade $http_upgrade;
+          proxy_set_header Connection "upgrade";
+          proxy_set_header Host $host;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_set_header X-Forwarded-Proto $scheme;
+          proxy_connect_timeout 60s;
+          proxy_send_timeout 60s;
+          proxy_read_timeout 60s;
+        }
+      }
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-feature-flags
+  namespace: production
+data:
+  feature.beta-api: "true"
+  feature.advanced-analytics: "false"
+  feature.real-time-collaboration: "true"
+  feature.pqc-encryption: "true"
+  feature.ml-recommendations: "true"

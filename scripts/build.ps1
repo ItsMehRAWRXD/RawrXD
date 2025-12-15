@@ -21,10 +21,10 @@ New-Item -ItemType Directory -Path "build" -Force | Out-Null
 Write-Host ">>> Configuring CMake ..."
 # Disable Vulkan in CI if not available
 if ($env:CI -eq "true") {
-    Write-Host "CI environment detected - disabling Vulkan (not available in CI)"
-    cmake -S . -B build -A $A -DCMAKE_BUILD_TYPE=$Config -DGGML_VULKAN=OFF
+  Write-Host "CI environment detected - disabling Vulkan (not available in CI)"
+  cmake -S . -B build -A $A -DCMAKE_BUILD_TYPE=$Config -DGGML_VULKAN=OFF -DENABLE_VULKAN=OFF
 } else {
-    cmake -S . -B build -A $A -DCMAKE_BUILD_TYPE=$Config
+  cmake -S . -B build -A $A -DCMAKE_BUILD_TYPE=$Config
 }
 if ($LASTEXITCODE -ne 0) { throw "CMake configure failed" }
 
