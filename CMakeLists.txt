@@ -178,8 +178,10 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/3rdparty/ggml/CMakeLists.txt")
     set(GGML_STATIC ON CACHE BOOL "" FORCE)
     set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
     
-    # Enable GPU backends
-    set(GGML_VULKAN ON CACHE BOOL "" FORCE)  # Vulkan for AMD/NVIDIA/Intel
+    # Enable GPU backends (can be overridden by user via -DGGML_VULKAN=OFF)
+    if(NOT DEFINED GGML_VULKAN)
+        set(GGML_VULKAN ON CACHE BOOL "" FORCE)  # Vulkan for AMD/NVIDIA/Intel
+    endif()
     set(GGML_CUDA OFF CACHE BOOL "" FORCE)   # CUDA for NVIDIA only
     set(GGML_METAL OFF CACHE BOOL "" FORCE)  # Metal for macOS only
     
