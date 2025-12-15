@@ -38,13 +38,11 @@ jobs:
           Write-Host "Installing Qt 6.7.3 base libraries..."
           python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64
           
-          # Attempt to install Qt Charts as a module addon
-          Write-Host "Attempting to install Qt Charts module..."
-          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64 -m qtcharts 2>&1 | Tee-Object -Variable chartsOutput
+          # Install Qt add-on modules required by orchestration (Charts, Multimedia)
+          Write-Host "Installing Qt add-on modules (qtcharts, qtmultimedia)..."
+          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64 -m "qtcharts qtmultimedia"
           if ($LASTEXITCODE -ne 0) {
-            Write-Host "Qt Charts installation failed or not available - build will continue without Charts (optional module)"
-          } else {
-            Write-Host "Qt Charts installed successfully"
+            throw "Qt add-on modules install failed (qtcharts, qtmultimedia)"
           }
           
           # Locate Qt installation
