@@ -34,7 +34,7 @@ jobs:
         run: |
           pip install aqtinstall
           python -m aqt install-qt windows desktop 6.5.2 win64_msvc2019_64
-          $QtBase = Join-Path $PWD "Qt\6.5.2\msvc2019_64"
+          $QtBase = Join-Path $PWD "6.5.2\msvc2019_64"
           echo "Qt6_DIR=$QtBase" >> $env:GITHUB_ENV
           echo "CMAKE_PREFIX_PATH=$QtBase" >> $env:GITHUB_ENV
           echo "$($QtBase)\bin" >> $env:GITHUB_PATH
