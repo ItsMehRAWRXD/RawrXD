@@ -121,26 +121,30 @@ QByteArray CheckpointManager::compressState(const QByteArray& data, CompressionL
         case CompressionLevel::None: {
             return data;
         }
-        case CompressionLevel::Low:
-        case CompressionLevel::Medium: {
-            bool ok = false;
-            QByteArray out = codec::deflate(data, &ok);
-            return ok ? out : QByteArray();
+        case CompressionLevel::Low: {
+            // Use our MASM brutal compression for all levels
+            QByteArray compressed = deflate_brutal_masm(data);
+            return compressed.isEmpty() ? data : compressed;
         }
-        case CompressionLevel::High:
+        case CompressionLevel::Medium: {
+            QByteArray compressed = deflate_brutal_masm(data);
+            return compressed.isEmpty() ? data : compressed;
+        }
+        case CompressionLevel::High: {
+            QByteArray compressed = deflate_brutal_masm(data);
+            return compressed.isEmpty() ? data : compressed;
+        }
         case CompressionLevel::Maximum: {
-            bool ok = false;
-            QByteArray out = codec::deflate_brutal_masm(data, &ok);
-            return ok ? out : QByteArray();
+            QByteArray compressed = deflate_brutal_masm(data);
+            return compressed.isEmpty() ? data : compressed;
         }
     }
     return data;
 }
 
 QByteArray CheckpointManager::decompressState(const QByteArray& data) {
-    bool ok = false;
-    QByteArray out = codec::inflate(data, &ok);
-    return ok ? out : QByteArray();
+    QByteArray decompressed = inflate_brutal_masm(data);
+    return decompressed.isEmpty() ? data : decompressed;
 }
 
 bool CheckpointManager::writeCheckpointToDisk(const QString& checkpointId, const CheckpointState& state, CompressionLevel compress) {
