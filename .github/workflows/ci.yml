@@ -33,28 +33,49 @@ jobs:
         shell: pwsh
         run: |
           pip install aqtinstall
-          # List available modules for Qt 6.7.3 to see what we can install
-          Write-Host "Available Qt 6.7.3 modules:"
-          python -m aqt list-qt windows desktop --modules 6.7.3 win64_msvc2019_64
-          # Install Qt base first
+          
+          # Install Qt 6.7.3 base (includes Core, Gui, Widgets, Network, Sql, Concurrent, Test)
+          Write-Host "Installing Qt 6.7.3 base libraries..."
           python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64
-          # Try to install Qt Charts as a separate module if available
-          python -m aqt install-module windows desktop 6.7.3 win64_msvc2019_64 qtcharts 2>$null || Write-Host "Qt Charts module not available as separate module, will check if included in base install"
+          
+          # Install Qt Charts separately - it's a separate module in 6.7.3
+          Write-Host "Installing Qt Charts module..."
+          python -m aqt install-module windows desktop 6.7.3 win64_msvc2019_64 qtcharts || Write-Host "Note: Qt Charts install command completed with status $LASTEXITCODE"
+          
+          # Locate Qt installation
           $QtPath = Get-ChildItem -Path (Get-Location) -Filter "6.7.3" -Directory -Recurse | Select-Object -First 1
           if ($QtPath) {
             $QtBase = Join-Path $QtPath.FullName "msvc2019_64"
           } else {
             $QtBase = Join-Path $PWD "6.7.3\msvc2019_64"
           }
-          Write-Host "Qt6 path: $QtBase"
-          # Set Qt6_DIR to the cmake directory
-          if (Test-Path "$QtBase\lib\cmake\Qt6\Qt6Config.cmake") {
-            echo "Qt6_DIR=$QtBase\lib\cmake\Qt6" >> $env:GITHUB_ENV
+          
+          Write-Host "Qt6 base path: $QtBase"
+          Write-Host "Checking for Qt6Config.cmake..."
+          Get-ChildItem "$QtBase\lib\cmake" -Recurse -Filter "Qt6Config.cmake" | ForEach-Object { Write-Host "Found: $($_.FullName)" }
+          
+          # Check for Qt Charts specifically
+          Write-Host "Checking for Qt6ChartsConfig.cmake..."
+          $chartsConfig = Get-ChildItem "$QtBase\lib\cmake" -Recurse -Filter "Qt6ChartsConfig.cmake" -ErrorAction SilentlyContinue
+          if ($chartsConfig) {
+            Write-Host "Found Qt Charts at: $($chartsConfig.FullName)"
           } else {
+            Write-Host "WARNING: Qt6ChartsConfig.cmake not found - Charts module may not be available"
+          }
+          
+          # Set Qt6_DIR to the cmake directory
+          $qt6ConfigPath = "$QtBase\lib\cmake\Qt6"
+          if (Test-Path "$qt6ConfigPath\Qt6Config.cmake") {
+            Write-Host "Setting Qt6_DIR=$qt6ConfigPath"
+            echo "Qt6_DIR=$qt6ConfigPath" >> $env:GITHUB_ENV
+          } else {
+            Write-Host "Qt6Config.cmake not found at expected location, using base path"
             echo "Qt6_DIR=$QtBase" >> $env:GITHUB_ENV
           }
+          
           echo "CMAKE_PREFIX_PATH=$QtBase" >> $env:GITHUB_ENV
           echo "$($QtBase)\bin" >> $env:GITHUB_PATH
+          Write-Host "Qt installation complete"
 
       - name: Clean build folder
         shell: pwsh
