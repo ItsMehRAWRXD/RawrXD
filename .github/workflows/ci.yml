@@ -34,11 +34,12 @@ jobs:
         run: |
           pip install aqtinstall
           # List available modules for Qt 6.7.3 to see what we can install
+          Write-Host "Available Qt 6.7.3 modules:"
           python -m aqt list-qt windows desktop --modules 6.7.3 win64_msvc2019_64
           # Install Qt base first
           python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64
           # Try to install Qt Charts as a separate module if available
-          python -m aqt install-module windows desktop 6.7.3 win64_msvc2019_64 qtcharts || echo "Qt Charts module not available, continuing without it"
+          python -m aqt install-module windows desktop 6.7.3 win64_msvc2019_64 qtcharts 2>$null || Write-Host "Qt Charts module not available as separate module, will check if included in base install"
           $QtPath = Get-ChildItem -Path (Get-Location) -Filter "6.7.3" -Directory -Recurse | Select-Object -First 1
           if ($QtPath) {
             $QtBase = Join-Path $QtPath.FullName "msvc2019_64"
