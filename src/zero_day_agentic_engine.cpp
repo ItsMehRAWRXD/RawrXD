@@ -110,3 +110,5 @@ void ZeroDayAgenticEngine::abortMission() {
     d->running.store(false);
     emit agentStream("\n🛑 Mission aborted.\n");
 }
+
+

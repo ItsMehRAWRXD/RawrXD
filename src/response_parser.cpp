@@ -2,42 +2,80 @@
 #include <sstream>
 #include <algorithm>
 #include <cctype>
+#include <regex>
+
+// STEP 2: Special token filtering - Remove LLM markers from output
+static const std::vector<std::string> SPECIAL_TOKENS_TO_FILTER = {
+    "<|endoftext|>", "<|end_of_text|>", "<|im_end|>", "<|im_start|>",
+    "[UNK]", "[PAD]", "[MASK]", "[CLS]", "[SEP]",
+    "<unk>", "<pad>", "<mask>", "</s>", "<s>",
+    "<BOS>", "<EOS>", "<EOD>", "<|padding|>",
+    "<start_of_turn>", "<end_of_turn>",
+    "</tool>", "<tool>",
+    "<|RESERVED_SPECIAL_TOKEN", "<|SYSTEM|>", "<|HUMAN|>", "<|ASSISTANT|>"
+};
+
+std::string filterSpecialTokens(const std::string& text) {
+    std::string result = text;
+    for (const auto& token : SPECIAL_TOKENS_TO_FILTER) {
+        size_t pos = 0;
+        while ((pos = result.find(token, pos)) != std::string::npos) {
+            result.erase(pos, token.length());
+        }
+    }
+    return result;
+}
 
 ResponseParser::ResponseParser(
     std::shared_ptr<Logger> logger,
     std::shared_ptr<Metrics> metrics)
-    : m_logger(logger), m_metrics(metrics) {
+    : m_logger(logger), m_metrics(metrics), m_incompleteUtf8Buffer("") {
     if (m_logger) {
         m_logger->info("ResponseParser initialized with {} statement boundaries, {} custom delimiters",
                        m_statementBoundaries.size(), m_customDelimiters.size());
+        m_logger->info("STEP 2: Special token filtering enabled (filtering {} LLM markers)", SPECIAL_TOKENS_TO_FILTER.size());
+        m_logger->info("STEP 4: Comprehensive logging enabled for garbled output diagnosis");
+        m_logger->info("STEP 1: UTF-8 aware buffering enabled for multi-byte character handling");
     }
 }
 
 std::vector<ParsedCompletion> ResponseParser::parseResponse(const std::string& response) {
-    if (m_logger) m_logger->debug("Parsing complete response ({} chars)", response.length());
+    // STEP 4: Log raw response for diagnosis
+    if (m_logger) {
+        m_logger->debug("[STEP 2] Parsing response, raw length: {} chars", response.length());
+        if (response.length() < 200) {
+            m_logger->debug("[STEP 2] Raw response content: {}", response);
+        }
+    }
+
+    // STEP 2: Filter special tokens from response
+    std::string cleanedResponse = filterSpecialTokens(response);
+    if (m_logger && cleanedResponse != response) {
+        m_logger->info("[STEP 2] Filtered special tokens: {} -> {} chars", response.length(), cleanedResponse.length());
+    }
 
     // Strategy: Try multiple parsing approaches in order
     // 1. First split by statement boundaries (most accurate for code)
     // 2. Then by line boundaries
     // 3. Finally by token boundaries as fallback
 
-    auto completions = splitByStatementBoundaries(response);
+    auto completions = splitByStatementBoundaries(cleanedResponse);
     if (completions.empty()) {
-        if (m_logger) m_logger->debug("No completions found via statement boundaries, trying line boundaries");
-        completions = splitByLineBoundaries(response);
+        if (m_logger) m_logger->debug("[STEP 4] No completions found via statement boundaries, trying line boundaries");
+        completions = splitByLineBoundaries(cleanedResponse);
     }
     if (completions.empty()) {
-        if (m_logger) m_logger->debug("No completions found via line boundaries, trying token boundaries");
-        completions = splitByTokenBoundaries(response);
+        if (m_logger) m_logger->debug("[STEP 4] No completions found via line boundaries, trying token boundaries");
+        completions = splitByTokenBoundaries(cleanedResponse);
     }
 
     // If still empty, create single completion from entire response
     if (completions.empty()) {
-        if (m_logger) m_logger->debug("No boundaries found, creating single completion from response");
+        if (m_logger) m_logger->debug("[STEP 4] No boundaries found, creating single completion from cleaned response");
         ParsedCompletion comp;
-        comp.text = response;
-        comp.tokenCount = estimateTokenCount(response);
-        comp.confidence = calculateConfidence(response);
+        comp.text = cleanedResponse;
+        comp.tokenCount = estimateTokenCount(cleanedResponse);
+        comp.confidence = calculateConfidence(cleanedResponse);
         comp.boundary = "END_OF_STREAM";
         comp.isComplete = true;
         completions.push_back(comp);
@@ -46,6 +84,11 @@ std::vector<ParsedCompletion> ResponseParser::parseResponse(const std::string& r
     // Score each completion
     for (auto& comp : completions) {
         comp.confidence = calculateConfidence(comp.text);
+        // STEP 4: Log completion details
+        if (m_logger) {
+            m_logger->debug("[STEP 4] Completion: {} chars, confidence: {:.2f}, boundary: {}",
+                           comp.text.length(), comp.confidence, comp.boundary);
+        }
     }
 
     m_totalCharsParsed += response.length();
@@ -57,10 +100,60 @@ std::vector<ParsedCompletion> ResponseParser::parseResponse(const std::string& r
 }
 
 std::vector<ParsedCompletion> ResponseParser::parseChunk(const std::string& chunk) {
-    m_logger->debug("Parsing chunk ({} chars, buffer size: {})", chunk.length(), m_buffer.length());
+    // STEP 1: Handle UTF-8 aware buffering for incomplete multi-byte characters
+    if (m_logger) {
+        m_logger->debug("[STEP 1] Parsing chunk: {} chars (incomplete buffer: {} bytes)",
+                       chunk.length(), m_incompleteUtf8Buffer.length());
+    }
 
-    // Add to buffer
-    m_buffer += chunk;
+    // Combine incomplete UTF-8 from previous chunk with new chunk
+    std::string fullChunk = m_incompleteUtf8Buffer + chunk;
+    m_incompleteUtf8Buffer.clear();
+
+    // STEP 1: Find last complete UTF-8 character
+    size_t validBytes = fullChunk.length();
+    for (int i = static_cast<int>(fullChunk.length()) - 1; i >= 0; --i) {
+        unsigned char c = static_cast<unsigned char>(fullChunk[i]);
+        // Check if this is the start of a multi-byte UTF-8 sequence
+        if ((c & 0x80) == 0) { // Single byte ASCII
+            validBytes = i + 1;
+            break;
+        } else if ((c & 0xC0) == 0xC0) { // Start of multi-byte sequence
+            // Count continuation bytes
+            int expectedContinuation = 0;
+            if ((c & 0xE0) == 0xC0) expectedContinuation = 1;
+            else if ((c & 0xF0) == 0xE0) expectedContinuation = 2;
+            else if ((c & 0xF8) == 0xF0) expectedContinuation = 3;
+            
+            if (i + expectedContinuation + 1 <= static_cast<int>(fullChunk.length())) {
+                validBytes = i + expectedContinuation + 1;
+            } else {
+                validBytes = i; // Incomplete sequence, save for next chunk
+            }
+            break;
+        }
+    }
+
+    // STEP 2: Filter special tokens from the valid chunk
+    std::string validChunk = fullChunk.substr(0, validBytes);
+    std::string cleanedChunk = filterSpecialTokens(validChunk);
+
+    if (m_logger && cleanedChunk != validChunk) {
+        m_logger->info("[STEP 2] Chunk special tokens filtered: {} -> {} chars",
+                      validChunk.length(), cleanedChunk.length());
+    }
+
+    // Store incomplete UTF-8 bytes for next chunk
+    if (validBytes < fullChunk.length()) {
+        m_incompleteUtf8Buffer = fullChunk.substr(validBytes);
+        if (m_logger) {
+            m_logger->debug("[STEP 1] Buffered incomplete UTF-8: {} bytes for next chunk",
+                           m_incompleteUtf8Buffer.length());
+        }
+    }
+
+    // Add cleaned chunk to buffer
+    m_buffer += cleanedChunk;
 
     std::vector<ParsedCompletion> result;
 
@@ -82,8 +175,8 @@ std::vector<ParsedCompletion> ResponseParser::parseChunk(const std::string& chun
                 comp.isComplete = true;
                 result.push_back(comp);
 
-                if (m_logger) m_logger->debug("Extracted completion: {} chars, boundary: '{}'",
-                               completionText.length(), boundary);
+                if (m_logger) m_logger->debug("[STEP 4] Extracted completion: {} chars, boundary: '{}', confidence: {:.2f}",
+                               completionText.length(), boundary, comp.confidence);
             }
 
             lastBoundary = pos + boundary.length();
@@ -101,25 +194,50 @@ std::vector<ParsedCompletion> ResponseParser::parseChunk(const std::string& chun
     m_totalCharsParsed += chunk.length();
     if (m_metrics) m_metrics->recordHistogram("chunk_parsed_completions", result.size());
 
+    // STEP 4: Log chunk processing summary
+    if (m_logger) {
+        m_logger->debug("[STEP 4] Chunk processing complete: {} completions extracted, buffer size: {} chars",
+                       result.size(), m_buffer.length());
+    }
+
     return result;
 }
 
 std::vector<ParsedCompletion> ResponseParser::flush() {
-    if (m_logger) m_logger->debug("Flushing buffer ({} chars remaining)", m_buffer.length());
+    // STEP 1: Handle any remaining incomplete UTF-8 buffer
+    std::string finalBuffer = m_buffer + m_incompleteUtf8Buffer;
+    
+    if (m_logger) {
+        m_logger->debug("[STEP 1] Flushing buffers: main={} chars, incomplete_utf8={} bytes, total={} chars",
+                       m_buffer.length(), m_incompleteUtf8Buffer.length(), finalBuffer.length());
+    }
 
     std::vector<ParsedCompletion> result;
 
-    if (!m_buffer.empty()) {
+    if (!finalBuffer.empty()) {
+        // STEP 2: Filter any remaining special tokens
+        std::string cleanedFinal = filterSpecialTokens(finalBuffer);
+        if (m_logger && cleanedFinal != finalBuffer) {
+            m_logger->info("[STEP 2] Final flush removed special tokens: {} -> {} chars",
+                          finalBuffer.length(), cleanedFinal.length());
+        }
+
         ParsedCompletion comp;
-        comp.text = m_buffer;
-        comp.tokenCount = estimateTokenCount(m_buffer);
-        comp.confidence = calculateConfidence(m_buffer);
+        comp.text = cleanedFinal;
+        comp.tokenCount = estimateTokenCount(cleanedFinal);
+        comp.confidence = calculateConfidence(cleanedFinal);
         comp.boundary = "BUFFER_END";
         comp.isComplete = false; // Incomplete due to buffer end
         result.push_back(comp);
 
-        if (m_logger) m_logger->info("Flushed {} chars from buffer", m_buffer.length());
+        // STEP 4: Log final flush
+        if (m_logger) {
+            m_logger->info("[STEP 4] Final flush: {} chars extracted, confidence: {:.2f}",
+                          comp.text.length(), comp.confidence);
+        }
+        
         m_buffer.clear();
+        m_incompleteUtf8Buffer.clear();
     }
 
     return result;
@@ -333,8 +451,12 @@ std::vector<std::pair<std::string, double>> ResponseParser::getStatistics() cons
 }
 
 void ResponseParser::reset() {
-    if (m_logger) m_logger->debug("Resetting parser state");
+    if (m_logger) {
+        m_logger->debug("[STEP 1] Resetting parser state (buffer: {} chars, incomplete_utf8: {} bytes)",
+                       m_buffer.length(), m_incompleteUtf8Buffer.length());
+    }
     m_buffer.clear();
+    m_incompleteUtf8Buffer.clear();
     m_totalCharsParsed = 0;
 }
 

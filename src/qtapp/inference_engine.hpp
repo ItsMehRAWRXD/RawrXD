@@ -90,6 +90,52 @@ public:
      */
     QString quantMode() const;
 
+    /**
+     * @struct HealthStatus
+     * @brief Comprehensive health status for monitoring
+     */
+    struct HealthStatus {
+        // Model status
+        bool model_loaded = false;
+        bool inference_ready = false;
+        QString model_name;
+        QString quantization;
+        
+        // GPU status
+        bool gpu_available = false;
+        double total_vram_mb = 0.0;
+        double used_vram_mb = 0.0;
+        
+        // Performance metrics
+        double tokens_per_second = 0.0;
+        double avg_latency_ms = 0.0;
+        double p95_latency_ms = 0.0;
+        double p99_latency_ms = 0.0;
+        
+        // Request tracking
+        int pending_requests = 0;
+        int active_requests = 0;
+        int total_requests = 0;
+        int total_requests_processed = 0;
+        double memory_usage_mb = 0.0;
+        
+        // Error tracking
+        QString last_error;
+        QString backend = "Vulkan";
+    };
+
+    /**
+     * @brief Get comprehensive health status
+     * @return Current system health metrics
+     */
+    HealthStatus getHealthStatus() const;
+
+    /**
+     * @brief Get real-time tokens per second metric
+     * @return Current TPS based on recent inference
+     */
+    double getTokensPerSecond() const;
+
     void setThreadingEnabled(bool on) { m_threadingEnabled.store(on); }
     bool threadingEnabled() const { return m_threadingEnabled.load(); }
 
@@ -315,6 +361,12 @@ private:
     // FIX 6: Add request queue and processing state
     QQueue<InferenceRequest> m_requestQueue;
     bool m_isProcessingInference{false};
+    
+    // Performance tracking for health monitoring
+    mutable std::atomic<int> m_totalRequests{0};
+    mutable std::atomic<int> m_activeRequests{0};
+    mutable std::atomic<double> m_avgLatencyMs{0.0};
+    mutable std::atomic<double> m_realtimeTokensPerSecond{0.0};
     
     // Progress callback for model loading (used by background threads)
     std::function<void(const QString&)> m_loadProgressCallback;

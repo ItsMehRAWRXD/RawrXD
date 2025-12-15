@@ -242,9 +242,21 @@ QString HealthCheckServer::createReadyJson() {
     json["timestamp"] = QDateTime::currentDateTime().toString(Qt::ISODate);
     
     QJsonArray checks;
-    checks.append(QJsonObject{{"name", "model_loaded"}, {"passed", health.model_loaded}});
-    checks.append(QJsonObject{{"name", "inference_ready"}, {"passed", health.inference_ready}});
-    checks.append(QJsonObject{{"name", "gpu_available"}, {"passed", health.gpu_available}});
+    
+    QJsonObject check1;
+    check1["name"] = "model_loaded";
+    check1["passed"] = health.model_loaded;
+    checks.append(check1);
+    
+    QJsonObject check2;
+    check2["name"] = "inference_ready";
+    check2["passed"] = health.inference_ready;
+    checks.append(check2);
+    
+    QJsonObject check3;
+    check3["name"] = "gpu_available";
+    check3["passed"] = health.gpu_available;
+    checks.append(check3);
     
     json["checks"] = checks;
     

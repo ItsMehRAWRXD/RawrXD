@@ -11,6 +11,7 @@
 #include <QQueue>
 #include <QTimer>
 #include <functional>
+#include "model_memory_hotpatch.hpp"
 
 // Ollama-specific patch rule
 struct OllamaHotpatchRule {

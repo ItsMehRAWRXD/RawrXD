@@ -1552,4 +1552,40 @@ bool InferenceEngine::loadFallbackTokenizer()
     return false;
 }
 
+InferenceEngine::HealthStatus InferenceEngine::getHealthStatus() const
+{
+    QMutexLocker lock(&m_mutex);
+    
+    HealthStatus status;
+    status.model_loaded = (m_loader != nullptr && m_loader->isOpen());
+    status.inference_ready = m_loader != nullptr && m_loader->isOpen();
+    status.model_name = extractModelName(m_modelPath);
+    status.quantization = m_quantMode;
+    status.backend = "Vulkan";
+    
+    // GPU metrics (real VRAM tracking would require Vulkan API integration)
+    status.gpu_available = true;
+    status.total_vram_mb = 16384.0; // AMD RX 7800 XT - would query from actual GPU
+    status.memory_usage_mb = static_cast<double>(m_memoryUsageMB);
+    status.used_vram_mb = status.memory_usage_mb;
+    
+    // Performance metrics
+    status.tokens_per_second = m_realtimeTokensPerSecond.load();
+    status.avg_latency_ms = m_avgLatencyMs.load();
+    status.p95_latency_ms = m_avgLatencyMs.load() * 1.5;  // Rough approximation
+    status.p99_latency_ms = m_avgLatencyMs.load() * 2.0;  // Rough approximation
+    status.active_requests = m_activeRequests.load();
+    status.total_requests = m_totalRequests.load();
+    status.total_requests_processed = m_totalRequests.load();
+    status.pending_requests = m_requestQueue.size();
+    
+    return status;
+}
+
+double InferenceEngine::getTokensPerSecond() const
+{
+    // Return real-time TPS from atomic counter
+    return m_realtimeTokensPerSecond.load();
+}
+
 

@@ -321,8 +321,8 @@ QString AgenticPuppeteer::bypassWithHotpatch(const QString& prompt, std::functio
     bypassRule.name = "refusal_bypass_temp";
     bypassRule.type = ProxyHotpatchRule::ResponseCorrection;
     bypassRule.enabled = true;
-    bypassRule.searchPattern = "I cannot".toUtf8();
-    bypassRule.replacement = "I can help".toUtf8();
+    bypassRule.searchPattern = QString("I cannot").toUtf8();
+    bypassRule.replacement = QString("I can help").toUtf8();
     
     m_proxyHotpatcher->addRule(bypassRule);
     

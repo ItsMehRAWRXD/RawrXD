@@ -19,6 +19,40 @@ static uint32_t parseUint32(const std::string& str) {
     }
 }
 
+// STEP 3: UTF-8 aware token validation
+static bool isValidUtf8Character(const unsigned char* bytes, size_t remaining) {
+    if (remaining == 0) return false;
+    
+    unsigned char b = bytes[0];
+    int expectedBytes = 1;
+    
+    // Determine how many bytes this UTF-8 character should have
+    if ((b & 0x80) == 0) {
+        expectedBytes = 1; // ASCII
+    } else if ((b & 0xE0) == 0xC0) {
+        expectedBytes = 2;
+    } else if ((b & 0xF0) == 0xE0) {
+        expectedBytes = 3;
+    } else if ((b & 0xF8) == 0xF0) {
+        expectedBytes = 4;
+    } else {
+        return false; // Invalid UTF-8 start byte
+    }
+    
+    if (remaining < static_cast<size_t>(expectedBytes)) {
+        return false; // Not enough bytes
+    }
+    
+    // Validate continuation bytes
+    for (int i = 1; i < expectedBytes; ++i) {
+        if ((bytes[i] & 0xC0) != 0x80) {
+            return false; // Invalid continuation byte
+        }
+    }
+    
+    return true;
+}
+
 GGUFVocabResolver::GGUFVocabResolver() {
     setupVocabMappings();
 }
@@ -56,6 +90,10 @@ VocabSizeDetection GGUFVocabResolver::detectVocabSize(
     const std::map<std::string, std::string>& metadata,
     const std::string& modelPath) {
     
+    // STEP 3: Add diagnostic logging for vocab detection
+    std::cout << "[VocabResolver] STEP 3: Starting vocab size detection for model: " << modelPath << std::endl;
+    std::cout << "[VocabResolver] Metadata entries: " << metadata.size() << std::endl;
+    
     // Strategy 1: TinyLlama special case (fixes 7M bug)
     VocabSizeDetection tinyLlamaResult = detectForTinyLlama(metadata);
     if (tinyLlamaResult.isConfident) {
@@ -66,6 +104,7 @@ VocabSizeDetection GGUFVocabResolver::detectVocabSize(
     // Strategy 2: Direct metadata lookup
     VocabSizeDetection metadataResult = detectFromMetadata(metadata);
     if (metadataResult.isConfident) {
+        std::cout << "[VocabResolver] Vocab size detected from metadata: " << metadataResult.detectedSize << std::endl;
         return metadataResult;
     }
     
@@ -74,11 +113,12 @@ VocabSizeDetection GGUFVocabResolver::detectVocabSize(
     if (!modelFamily.empty() && expectedVocabSizes.count(modelFamily)) {
         uint32_t expectedSize = expectedVocabSizes[modelFamily];
         std::vector<std::string> evidence = {"model_family:" + modelFamily};
+        std::cout << "[VocabResolver] Using family heuristic (" << modelFamily << "): " << expectedSize << std::endl;
         return createDetection("family_heuristic", expectedSize, true, evidence, modelFamily);
     }
     
     // Strategy 4: Fallback to common sizes
-    std::cout << "[VocabResolver] WARNING: Could not confidently detect vocab size, using fallback" << std::endl;
+    std::cout << "[VocabResolver] WARNING: Could not confidently detect vocab size, using fallback (32000)" << std::endl;
     return createDetection("fallback", 32000, false, {}, "unknown");
 }
 

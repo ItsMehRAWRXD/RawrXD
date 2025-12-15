@@ -5,8 +5,8 @@
 
 #include "agent_mode_handler.hpp"
 #include "unified_backend.hpp"
-#include "../agent/meta_planner.hpp"
-#include "../backend/agentic_tools.hpp"
+#include "meta_planner.hpp"
+#include "agentic_tools.hpp"
 #include <QTimer>
 #include <QElapsedTimer>
 #include <QFile>
@@ -179,7 +179,7 @@ void AgentModeHandler::executeNextStep()
     step.status = ExecutionStep::InProgress;
     emit stepStarting(m_currentStepIndex, step);
     emit progressUpdated(getProgressPercentage(), QString("Executing step %1: %2")
-        .arg(m_currentStepIndex + 1, step.title));
+        .arg(m_currentStepIndex + 1).arg(step.title));
 
     executeSingleStep(step);
 }
@@ -207,8 +207,8 @@ void AgentModeHandler::executeSingleStep(const ExecutionStep& step)
 
     emit stepExecuting(m_currentStepIndex, toolName);
 
-    // Execute the tool
-    m_toolExecutor->executeTool(toolName, step.title);
+    // Execute the tool with step description as arguments
+    m_toolExecutor->executeTool(toolName, QStringList() << step.title);
 
     // Set a timeout for the step
     QTimer::singleShot(30000, this, [this, stepIdx = m_currentStepIndex]() {

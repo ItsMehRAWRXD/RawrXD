@@ -222,3 +222,18 @@ void UnifiedBackend::onLocalDone(qint64 id, const QString& answer)
     emit streamToken(id, answer);
     emit streamFinished(id);
 }
+
+qint64 UnifiedBackend::requestCompletion(const QString& modelName, const QString& prompt, double temperature)
+{
+    static qint64 nextId = 1;
+    qint64 reqId = nextId++;
+    
+    UnifiedRequest req;
+    req.reqId = reqId;
+    req.prompt = prompt;
+    // Map model name to backend or use "local" as default
+    req.backend = (modelName == "default") ? "local" : modelName;
+    
+    submit(req);
+    return reqId;
+}

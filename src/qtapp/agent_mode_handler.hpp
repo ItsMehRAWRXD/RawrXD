@@ -16,13 +16,47 @@
 #include <QString>
 #include <QStringList>
 #include <QMap>
+#include <QVector>
 #include <memory>
 
 class UnifiedBackend;
 class MetaPlanner;
 class AgenticToolExecutor;
-struct Plan;
 struct PlanStep;
+
+/**
+ * @struct PlanStep
+ * @brief Single step within a plan
+ */
+struct PlanStep {
+    int id;
+    QString title;
+    QString description;
+    QStringList tools;              ///< Tools required for this step
+    QStringList dependencies;       ///< Previous step IDs this depends on
+    QStringList requiredFiles;      ///< Files required or modified by this step
+    int estimatedTimeMs = 0;
+    enum Status {
+        NotStarted,
+        InProgress,
+        Completed,
+        Failed
+    } status = NotStarted;
+};
+
+/**
+ * @struct Plan
+ * @brief Complete execution plan with all steps
+ */
+struct Plan {
+    int id;
+    QString title;
+    QString description;
+    QVector<PlanStep> steps;
+    int totalEstimatedTimeMs = 0;
+    bool approved = false;
+    QString approvalNotes;
+};
 
 /**
  * @struct ExecutionStep

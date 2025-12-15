@@ -35,6 +35,15 @@ public:
     void submit(const UnifiedRequest& req);
     
     /**
+     * @brief Request text completion from unified backend
+     * @param modelName Model identifier or "default"
+     * @param prompt Input text
+     * @param temperature Sampling temperature (0.0-1.0)
+     * @return Request ID for tracking
+     */
+    qint64 requestCompletion(const QString& modelName, const QString& prompt, double temperature = 0.5);
+    
+    /**
      * @brief Set the local inference engine (for "local" backend)
      */
     void setLocalEngine(QObject* engine) { m_localEngine = engine; }

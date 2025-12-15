@@ -45,6 +45,7 @@ private:
     
     // State tracking
     std::string m_buffer;
+    std::string m_incompleteUtf8Buffer;  // UTF-8 aware buffering for multi-byte characters
     size_t m_totalCharsParsed = 0;
 
 public:

@@ -310,7 +310,7 @@ FailureDetection AgenticFailureDetector::detectToolMisuse(const QString& respons
     }
     
     // Extract and validate tool calls
-    QRegularExpression toolCallRegex(R"(<invoke name="([^"]+)">)");
+    QRegularExpression toolCallRegex("<invoke name=\\\"([^\\\"]+)\\\">"  );
     QRegularExpressionMatchIterator matches = toolCallRegex.globalMatch(response);
     
     while (matches.hasNext()) {
