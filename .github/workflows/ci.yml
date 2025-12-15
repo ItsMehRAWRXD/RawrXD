@@ -33,13 +33,12 @@ jobs:
         shell: pwsh
         run: |
           pip install aqtinstall
-          # First list available modules to see what's available
+          # List available modules for Qt 6.7.3 to see what we can install
           python -m aqt list-qt windows desktop --modules 6.7.3 win64_msvc2019_64
-          # Install Qt base with all required components
+          # Install Qt base first
           python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64
-          # Install additional modules separately
-          python -m aqt install-tool windows desktop tools_ifw 6.7.3
-          python -m aqt install-tool windows desktop tools_qtcharts 6.7.3
+          # Try to install Qt Charts as a separate module if available
+          python -m aqt install-module windows desktop 6.7.3 win64_msvc2019_64 qtcharts || echo "Qt Charts module not available, continuing without it"
           $QtPath = Get-ChildItem -Path (Get-Location) -Filter "6.7.3" -Directory -Recurse | Select-Object -First 1
           if ($QtPath) {
             $QtBase = Join-Path $QtPath.FullName "msvc2019_64"
@@ -47,6 +46,7 @@ jobs:
             $QtBase = Join-Path $PWD "6.7.3\msvc2019_64"
           }
           Write-Host "Qt6 path: $QtBase"
+          # Set Qt6_DIR to the cmake directory
           if (Test-Path "$QtBase\lib\cmake\Qt6\Qt6Config.cmake") {
             echo "Qt6_DIR=$QtBase\lib\cmake\Qt6" >> $env:GITHUB_ENV
           } else {
