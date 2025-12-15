@@ -20,12 +20,24 @@ New-Item -ItemType Directory -Path "build" -Force | Out-Null
 
 Write-Host ">>> Configuring CMake ..."
 # Disable Vulkan in CI if not available
+$cmakeArgs = @("-S", ".", "-B", "build", "-A", $A, "-DCMAKE_BUILD_TYPE=$Config")
+
 if ($env:CI -eq "true") {
   Write-Host "CI environment detected - disabling Vulkan (not available in CI)"
-  cmake -S . -B build -A $A -DCMAKE_BUILD_TYPE=$Config -DGGML_VULKAN=OFF -DENABLE_VULKAN=OFF
-} else {
-  cmake -S . -B build -A $A -DCMAKE_BUILD_TYPE=$Config
+  $cmakeArgs += "-DGGML_VULKAN=OFF"
+  $cmakeArgs += "-DENABLE_VULKAN=OFF"
 }
+
+# Set OpenSSL path if available from environment
+if ($env:OPENSSL_DIR) {
+  Write-Host "Using OpenSSL from: $($env:OPENSSL_DIR)"
+  $cmakeArgs += "-DOPENSSL_DIR=$($env:OPENSSL_DIR)"
+} elseif ($env:OPENSSL_ROOT_DIR) {
+  Write-Host "Using OpenSSL from: $($env:OPENSSL_ROOT_DIR)"
+  $cmakeArgs += "-DOPENSSL_ROOT_DIR=$($env:OPENSSL_ROOT_DIR)"
+}
+
+cmake @cmakeArgs
 if ($LASTEXITCODE -ne 0) { throw "CMake configure failed" }
 
 Write-Host ">>> Building ..."

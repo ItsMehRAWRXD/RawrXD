@@ -29,6 +29,13 @@ jobs:
           choco install nasm -y
           $env:PATH += ";C:\Program Files\NASM"
 
+      - name: Install OpenSSL
+        run: |
+          choco install openssl -y
+          $env:PATH += ";C:\Program Files\OpenSSL-Win64\bin"
+          echo "OPENSSL_ROOT_DIR=C:\Program Files\OpenSSL-Win64" >> $env:GITHUB_ENV
+          echo "OPENSSL_DIR=C:\Program Files\OpenSSL-Win64" >> $env:GITHUB_ENV
+
       - name: Install Qt via aqtinstall
         shell: pwsh
         run: |
