@@ -33,9 +33,19 @@ jobs:
         shell: pwsh
         run: |
           pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.5.2 win64_msvc2019_64
-          $QtBase = Join-Path $PWD "6.5.2\msvc2019_64"
-          echo "Qt6_DIR=$QtBase" >> $env:GITHUB_ENV
+          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64
+          $QtPath = Get-ChildItem -Path (Get-Location) -Filter "6.7.3" -Directory -Recurse | Select-Object -First 1
+          if ($QtPath) {
+            $QtBase = Join-Path $QtPath.FullName "msvc2019_64"
+          } else {
+            $QtBase = Join-Path $PWD "6.7.3\msvc2019_64"
+          }
+          Write-Host "Qt6 path: $QtBase"
+          if (Test-Path "$QtBase\lib\cmake\Qt6\Qt6Config.cmake") {
+            echo "Qt6_DIR=$QtBase\lib\cmake\Qt6" >> $env:GITHUB_ENV
+          } else {
+            echo "Qt6_DIR=$QtBase" >> $env:GITHUB_ENV
+          }
           echo "CMAKE_PREFIX_PATH=$QtBase" >> $env:GITHUB_ENV
           echo "$($QtBase)\bin" >> $env:GITHUB_PATH
 
