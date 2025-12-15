@@ -29,12 +29,22 @@ if ($env:CI -eq "true") {
 }
 
 # Set OpenSSL path if available from environment
+$opensslPath = $null
 if ($env:OPENSSL_DIR) {
-  Write-Host "Using OpenSSL from: $($env:OPENSSL_DIR)"
-  $cmakeArgs += "-DOPENSSL_DIR=$($env:OPENSSL_DIR)"
+  $opensslPath = $env:OPENSSL_DIR
 } elseif ($env:OPENSSL_ROOT_DIR) {
-  Write-Host "Using OpenSSL from: $($env:OPENSSL_ROOT_DIR)"
-  $cmakeArgs += "-DOPENSSL_ROOT_DIR=$($env:OPENSSL_ROOT_DIR)"
+  $opensslPath = $env:OPENSSL_ROOT_DIR
+}
+
+if ($opensslPath) {
+  Write-Host "Using OpenSSL from: $opensslPath"
+  $cmakeArgs += "-DOPENSSL_ROOT_DIR=$opensslPath"
+  $cmakeArgs += "-DOPENSSL_DIR=$opensslPath"
+  if ($env:CMAKE_PREFIX_PATH) {
+    $cmakeArgs += "-DCMAKE_PREFIX_PATH=$opensslPath;$($env:CMAKE_PREFIX_PATH)"
+  } else {
+    $cmakeArgs += "-DCMAKE_PREFIX_PATH=$opensslPath"
+  }
 }
 
 cmake @cmakeArgs

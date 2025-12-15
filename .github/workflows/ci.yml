@@ -31,10 +31,11 @@ jobs:
 
       - name: Install OpenSSL
         run: |
-          choco install openssl -y
+          choco install openssl.light -y
           $env:PATH += ";C:\Program Files\OpenSSL-Win64\bin"
           echo "OPENSSL_ROOT_DIR=C:\Program Files\OpenSSL-Win64" >> $env:GITHUB_ENV
           echo "OPENSSL_DIR=C:\Program Files\OpenSSL-Win64" >> $env:GITHUB_ENV
+          echo "CMAKE_PREFIX_PATH=C:\Program Files\OpenSSL-Win64;$env:CMAKE_PREFIX_PATH" >> $env:GITHUB_ENV
 
       - name: Install Qt via aqtinstall
         shell: pwsh

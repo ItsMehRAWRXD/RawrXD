@@ -6,8 +6,10 @@
 #include <cstddef>
 #include <cstdint>
 
-// Suppress OpenGL headers for Qt
+// Suppress OpenGL headers for Qt (if not already defined via CMake)
+#if !defined(QT_NO_OPENGL)
 #define QT_NO_OPENGL
+#endif
 
 /**
  * @brief GPU backend abstraction for CUDA, HIP, and Vulkan
