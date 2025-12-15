@@ -29,13 +29,30 @@ jobs:
           choco install nasm -y
           $env:PATH += ";C:\Program Files\NASM"
 
-      - name: Install OpenSSL
+      - name: Install OpenSSL (full SDK)
+        shell: pwsh
         run: |
-          choco install openssl.light -y
-          $env:PATH += ";C:\Program Files\OpenSSL-Win64\bin"
-          echo "OPENSSL_ROOT_DIR=C:\Program Files\OpenSSL-Win64" >> $env:GITHUB_ENV
-          echo "OPENSSL_DIR=C:\Program Files\OpenSSL-Win64" >> $env:GITHUB_ENV
-          echo "CMAKE_PREFIX_PATH=C:\Program Files\OpenSSL-Win64;$env:CMAKE_PREFIX_PATH" >> $env:GITHUB_ENV
+          choco install openssl -y
+
+          $opensslRoot = "C:\Program Files\OpenSSL-Win64"
+          $opensslInclude = Join-Path $opensslRoot "include"
+          $opensslLib = Join-Path $opensslRoot "lib"
+
+          if (-not (Test-Path (Join-Path $opensslInclude "openssl\ssl.h"))) {
+            throw "OpenSSL headers not found at $opensslInclude. The full SDK is required (not openssl.light)."
+          }
+
+          if (-not (Test-Path (Join-Path $opensslLib "libcrypto.lib"))) {
+            throw "OpenSSL import libraries not found at $opensslLib. The full SDK is required (not openssl.light)."
+          }
+
+          $env:PATH += ";$opensslRoot\bin"
+          echo "OPENSSL_ROOT_DIR=$opensslRoot" >> $env:GITHUB_ENV
+          echo "OPENSSL_DIR=$opensslRoot" >> $env:GITHUB_ENV
+          echo "OPENSSL_INCLUDE_DIR=$opensslInclude" >> $env:GITHUB_ENV
+          echo "OPENSSL_CRYPTO_LIBRARY=$opensslLib\libcrypto.lib" >> $env:GITHUB_ENV
+          echo "OPENSSL_SSL_LIBRARY=$opensslLib\libssl.lib" >> $env:GITHUB_ENV
+          echo "CMAKE_PREFIX_PATH=$opensslRoot;$env:CMAKE_PREFIX_PATH" >> $env:GITHUB_ENV
 
       - name: Install Qt via aqtinstall
         shell: pwsh

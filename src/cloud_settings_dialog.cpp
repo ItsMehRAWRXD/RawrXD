@@ -254,6 +254,14 @@ void CloudSettingsDialog::createConfigurationTab()
     m_enable_fallback_checkbox->setChecked(true);
     model_grid->addWidget(m_enable_fallback_checkbox, 3, 0, 1, 2);
 
+    // Ollama routing preference
+    model_grid->addWidget(new QLabel("Ollama routing:"), 4, 0);
+    m_ollama_local_radio = new QRadioButton("Force local Ollama (default)", this);
+    m_ollama_cloud_radio = new QRadioButton("Allow Ollama Cloud if available", this);
+    m_ollama_local_radio->setChecked(true);
+    model_grid->addWidget(m_ollama_local_radio, 4, 1);
+    model_grid->addWidget(m_ollama_cloud_radio, 5, 1);
+
     layout->addWidget(model_group);
 
     // Request settings
@@ -455,6 +463,9 @@ void CloudSettingsDialog::loadSettings()
     m_prefer_local_models_checkbox->setChecked(settings.value("prefer_local_models", true).toBool());
     m_enable_streaming_checkbox->setChecked(settings.value("enable_streaming", true).toBool());
     m_enable_fallback_checkbox->setChecked(settings.value("enable_fallback", true).toBool());
+    bool ollama_cloud = settings.value("ollama_use_cloud", false).toBool();
+    m_ollama_cloud_radio->setChecked(ollama_cloud);
+    m_ollama_local_radio->setChecked(!ollama_cloud);
     
     qDebug() << "[CloudSettingsDialog::loadSettings] Settings loaded";
 }
@@ -568,11 +579,19 @@ void CloudSettingsDialog::applySettings()
     settings.setValue("prefer_local_models", m_prefer_local_models_checkbox->isChecked());
     settings.setValue("enable_streaming", m_enable_streaming_checkbox->isChecked());
     settings.setValue("enable_fallback", m_enable_fallback_checkbox->isChecked());
+    settings.setValue("ollama_use_cloud", m_ollama_cloud_radio->isChecked());
     
     // Apply to adapter
     m_adapter->setCostAlertThreshold(m_cost_alert_threshold_spinbox->value());
     m_adapter->setLatencyThreshold(m_timeout_spinbox->value());
     m_adapter->setRetryPolicy(m_max_retries_spinbox->value(), m_retry_delay_spinbox->value());
+
+    // Propagate Ollama mode preference to environment for downstream components
+    if (m_ollama_cloud_radio->isChecked()) {
+        qputenv("OLLAMA_MODE", "cloud");
+    } else {
+        qputenv("OLLAMA_MODE", "local");
+    }
     
     qDebug() << "[CloudSettingsDialog::applySettings] Settings applied";
 }

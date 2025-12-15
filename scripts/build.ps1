@@ -28,18 +28,33 @@ if ($env:CI -eq "true") {
   $cmakeArgs += "-DENABLE_VULKAN=OFF"
 }
 
-# Set OpenSSL path if available from environment
+# Set OpenSSL path if available from environment or common install location
 $opensslPath = $null
 if ($env:OPENSSL_DIR) {
   $opensslPath = $env:OPENSSL_DIR
 } elseif ($env:OPENSSL_ROOT_DIR) {
   $opensslPath = $env:OPENSSL_ROOT_DIR
+} elseif (Test-Path "C:\\Program Files\\OpenSSL-Win64") {
+  # Fallback to standard install path used by choco 'openssl' (full SDK)
+  $opensslPath = "C:\\Program Files\\OpenSSL-Win64"
 }
 
 if ($opensslPath) {
+  $opensslInclude = Join-Path $opensslPath "include"
+  $opensslLib = Join-Path $opensslPath "lib"
+  $cryptoLib = Join-Path $opensslLib "libcrypto.lib"
+  $sslLib = Join-Path $opensslLib "libssl.lib"
+
   Write-Host "Using OpenSSL from: $opensslPath"
+  if (-not (Test-Path $cryptoLib) -or -not (Test-Path $sslLib) -or -not (Test-Path (Join-Path $opensslInclude "openssl"))) {
+    Write-Warning "OpenSSL SDK appears incomplete at '$opensslPath'. Ensure full SDK (not openssl.light) is installed."
+  }
+
   $cmakeArgs += "-DOPENSSL_ROOT_DIR=$opensslPath"
   $cmakeArgs += "-DOPENSSL_DIR=$opensslPath"
+  $cmakeArgs += "-DOPENSSL_INCLUDE_DIR=$opensslInclude"
+  $cmakeArgs += "-DOPENSSL_CRYPTO_LIBRARY=$cryptoLib"
+  $cmakeArgs += "-DOPENSSL_SSL_LIBRARY=$sslLib"
   if ($env:CMAKE_PREFIX_PATH) {
     $cmakeArgs += "-DCMAKE_PREFIX_PATH=$opensslPath;$($env:CMAKE_PREFIX_PATH)"
   } else {

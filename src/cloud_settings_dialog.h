@@ -6,6 +6,7 @@
 #include <QPushButton>
 #include <QCheckBox>
 #include <QComboBox>
+#include <QRadioButton>
 #include <QTableWidget>
 #include <QTabWidget>
 #include <QLabel>
@@ -162,6 +163,8 @@ private:
     QCheckBox *m_prefer_local_models_checkbox;
     QCheckBox *m_enable_streaming_checkbox;
     QCheckBox *m_enable_fallback_checkbox;
+    QRadioButton *m_ollama_local_radio;
+    QRadioButton *m_ollama_cloud_radio;
     
     QSpinBox *m_timeout_spinbox;      // Request timeout (ms)
     QSpinBox *m_max_retries_spinbox;
