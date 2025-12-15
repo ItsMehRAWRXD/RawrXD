@@ -40,7 +40,7 @@ jobs:
           
           # Install Qt add-on modules required by orchestration (Charts, Multimedia)
           Write-Host "Installing Qt add-on modules (qtcharts, qtmultimedia)..."
-          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64 -m "qtcharts qtmultimedia"
+          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64 -m qtcharts qtmultimedia
           if ($LASTEXITCODE -ne 0) {
             throw "Qt add-on modules install failed (qtcharts, qtmultimedia)"
           }
