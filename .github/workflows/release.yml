@@ -357,52 +357,12 @@ jobs:
           # Example: deploy.sh production
           echo "✅ Production deployment complete"
 
-      - name: Post Deployment Notification
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: `## 🚀 Production Deployment Complete
-
-**Release**: ${{ github.ref_name }}
-
-### Deployment Summary
-- ✅ Windows x64, x86, ARM64 built successfully
-- ✅ All tests passed
-- ✅ Security scan complete
-- ✅ Production servers updated
-
-### Verification
-- Visit [Release Page](https://github.com/ItsMehRAWRXD/RawrXD/releases/tag/${{ github.ref_name }})
-- Download binaries for your platform
-- Run the application`
-            });
-
-      - name: Create Deployment Record
+      - name: Log Deployment Complete
         shell: bash
         run: |
-          mkdir -p deployment_records
-          cat > "deployment_records/${{ github.ref_name }}.json" << 'EOF'
-          {
-            "version": "${{ github.ref_name }}",
-            "timestamp": "$(date -Iseconds)",
-            "git_commit": "$(git rev-parse HEAD)",
-            "environment": "production",
-            "status": "success",
-            "deployment_url": "${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ github.ref_name }}"
-          }
-          EOF
-
-      - name: Upload Deployment Record
-        uses: actions/upload-artifact@v4
-        with:
-          name: deployment-records
-          path: deployment_records/*.json
-          retention-days: 365
+          echo "✅ Production Deployment Complete"
+          echo "Release: ${{ github.ref_name }}"
+          echo "Commit: ${{ github.sha }}"
 
   # ============================================================
   # Post-Deployment Verification
