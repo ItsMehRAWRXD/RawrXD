@@ -3,6 +3,10 @@
 // Integrated with Qt Network framework for cross-platform HTTP handling
 
 #include "rest_api_server.h"
+
+// Only compile the full implementation if QT_HTTPSERVER is available
+#if defined(QT_HTTPSERVER_LIB) || defined(QT_HTTPSERVER_MODULE)
+
 #include "metrics_emitter.h"
 #include "oauth2_manager.h"
 
@@ -476,3 +480,5 @@ QString ConnectionHandler::getHttpStatusText(int statusCode) {
 
 } // namespace API
 } // namespace RawrXD
+
+#endif // QT_HTTPSERVER_LIB || QT_HTTPSERVER_MODULE

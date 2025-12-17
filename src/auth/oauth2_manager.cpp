@@ -139,11 +139,11 @@ bool OAuth2Manager::registerUser(const QString& username, const QString& email,
     return true;
 }
 
-OAuth2Manager::TokenResult OAuth2Manager::authenticate(const QString& username, 
+RawrXD::Auth::TokenResult OAuth2Manager::authenticate(const QString& username, 
                                                         const QString& password) {
     QMutexLocker lock(&impl->mutex);
     
-    TokenResult result;
+    RawrXD::Auth::TokenResult result;
     result.success = false;
     
     // Check rate limiting
@@ -205,10 +205,10 @@ OAuth2Manager::TokenResult OAuth2Manager::authenticate(const QString& username,
     return result;
 }
 
-OAuth2Manager::TokenResult OAuth2Manager::refreshAccessToken(const QString& refreshToken) {
+RawrXD::Auth::TokenResult OAuth2Manager::refreshAccessToken(const QString& refreshToken) {
     QMutexLocker lock(&impl->mutex);
     
-    TokenResult result;
+    RawrXD::Auth::TokenResult result;
     result.success = false;
     
     auto it = impl->refreshTokens.find(refreshToken);

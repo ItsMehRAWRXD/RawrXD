@@ -55,6 +55,9 @@ void SettingsDialog::setupUI()
     // CI/CD Settings Tab
     tabWidget->addTab(createCICDTab(), "CI/CD");
     
+    // Enterprise Settings Tab
+    tabWidget->addTab(createEnterpriseTab(), "Enterprise");
+    
     mainLayout->addWidget(tabWidget);
     
     // Buttons
@@ -198,29 +201,55 @@ QWidget* SettingsDialog::createTrainingTab()
     return tab;
 }
 
-QWidget* SettingsDialog::createCICDTab()
+QWidget* SettingsDialog::createAIChatTab()
 {
     QWidget *tab = new QWidget(this);
     QVBoxLayout *layout = new QVBoxLayout(tab);
     
-    QGroupBox *ciGroup = new QGroupBox("CI/CD Pipeline Settings", tab);
-    QVBoxLayout *ciLayout = new QVBoxLayout(ciGroup);
+    // Cloud AI Settings
+    QGroupBox *cloudGroup = new QGroupBox("Cloud AI Settings", tab);
+    QVBoxLayout *cloudLayout = new QVBoxLayout(cloudGroup);
     
-    m_enableCICD = new QCheckBox("Enable CI/CD Pipeline", ciGroup);
-    m_autoDeploy = new QCheckBox("Auto Deploy After Training", ciGroup);
-    m_notificationEmail = new QLineEdit(ciGroup);
-    m_notificationEmail->setPlaceholderText("email@example.com");
+    m_enableCloudAI = new QCheckBox("Enable Cloud AI", cloudGroup);
+    m_cloudEndpoint = new QLineEdit(cloudGroup);
+    m_cloudEndpoint->setPlaceholderText("https://api.openai.com/v1/chat/completions");
+    m_apiKey = new QLineEdit(cloudGroup);
+    m_apiKey->setEchoMode(QLineEdit::Password);
+    m_apiKey->setPlaceholderText("API Key");
     
-    QPushButton *configurePipelineBtn = new QPushButton("Configure Pipeline", ciGroup);
-    connect(configurePipelineBtn, &QPushButton::clicked, this, &SettingsDialog::configureCIPipeline);
+    cloudLayout->addWidget(m_enableCloudAI);
+    cloudLayout->addWidget(new QLabel("Cloud Endpoint:", cloudGroup));
+    cloudLayout->addWidget(m_cloudEndpoint);
+    cloudLayout->addWidget(new QLabel("API Key:", cloudGroup));
+    cloudLayout->addWidget(m_apiKey);
     
-    ciLayout->addWidget(m_enableCICD);
-    ciLayout->addWidget(m_autoDeploy);
-    ciLayout->addWidget(new QLabel("Notification Email:", ciGroup));
-    ciLayout->addWidget(m_notificationEmail);
-    ciLayout->addWidget(configurePipelineBtn);
+    // Local AI Settings
+    QGroupBox *localGroup = new QGroupBox("Local AI Settings", tab);
+    QVBoxLayout *localLayout = new QVBoxLayout(localGroup);
     
-    layout->addWidget(ciGroup);
+    m_enableLocalAI = new QCheckBox("Enable Local AI", localGroup);
+    m_localEndpoint = new QLineEdit(localGroup);
+    m_localEndpoint->setPlaceholderText("http://localhost:11434/api/generate");
+    
+    localLayout->addWidget(m_enableLocalAI);
+    localLayout->addWidget(new QLabel("Local Endpoint:", localGroup));
+    localLayout->addWidget(m_localEndpoint);
+    
+    // Request Settings
+    QGroupBox *requestGroup = new QGroupBox("Request Settings", tab);
+    QVBoxLayout *requestLayout = new QVBoxLayout(requestGroup);
+    
+    m_requestTimeout = new QSpinBox(requestGroup);
+    m_requestTimeout->setRange(1000, 60000);
+    m_requestTimeout->setSuffix(" ms");
+    m_requestTimeout->setValue(30000);
+    
+    requestLayout->addWidget(new QLabel("Request Timeout:", requestGroup));
+    requestLayout->addWidget(m_requestTimeout);
+    
+    layout->addWidget(cloudGroup);
+    layout->addWidget(localGroup);
+    layout->addWidget(requestGroup);
     layout->addStretch();
     
     return tab;
@@ -267,6 +296,45 @@ QWidget* SettingsDialog::createModelTab()
     return tab;
 }
 
+QWidget* SettingsDialog::createCICDTab()
+{
+    QWidget *tab = new QWidget(this);
+    QVBoxLayout *layout = new QVBoxLayout(tab);
+
+    // CI/CD Feature Flags
+    QGroupBox *cicdGroup = new QGroupBox("CI/CD Pipeline", tab);
+    QVBoxLayout *cicdLayout = new QVBoxLayout(cicdGroup);
+
+    m_enableCICD = new QCheckBox("Enable CI/CD Integration", cicdGroup);
+    m_autoDeploy = new QCheckBox("Auto-deploy on successful training", cicdGroup);
+
+    QHBoxLayout *emailLayout = new QHBoxLayout();
+    QLabel *emailLabel = new QLabel("Notification Email:", cicdGroup);
+    m_notificationEmail = new QLineEdit(cicdGroup);
+    emailLayout->addWidget(emailLabel);
+    emailLayout->addWidget(m_notificationEmail);
+
+    QPushButton *configureBtn = new QPushButton("Configure Pipeline...", cicdGroup);
+    connect(configureBtn, &QPushButton::clicked, this, &SettingsDialog::configureCIPipeline);
+
+    cicdLayout->addWidget(m_enableCICD);
+    cicdLayout->addWidget(m_autoDeploy);
+    cicdLayout->addLayout(emailLayout);
+    cicdLayout->addWidget(configureBtn);
+
+    // Info/Help
+    QLabel *info = new QLabel(
+        "Integrate with your CI/CD to run training jobs,\n"
+        "export GGUF artifacts, and deploy automatically.", cicdGroup);
+    info->setWordWrap(true);
+    cicdLayout->addWidget(info);
+
+    layout->addWidget(cicdGroup);
+    layout->addStretch();
+
+    return tab;
+}
+
 void SettingsDialog::loadSettings()
 {
     if (!m_settings) return;
@@ -297,6 +365,23 @@ void SettingsDialog::loadSettings()
     m_gpuBackend->setCurrentText(m_settings->getValue("gpu/backend", "Vulkan").toString());
     m_maxTokens->setValue(m_settings->getValue("inference/maxTokens", 2048).toInt());
     m_temperature->setValue(m_settings->getValue("inference/temperature", 0.7).toDouble());
+    
+    // Load Enterprise Settings
+    if (m_enterpriseLicenseKey) {
+        m_enterpriseLicenseKey->setText(m_settings->getValue("enterprise/licenseKey", "").toString());
+        m_enableCovertTelemetry->setChecked(m_settings->getValue("enterprise/covertTelemetry", false).toBool());
+        m_telemetryInterval->setValue(m_settings->getValue("enterprise/telemetryInterval", 30).toInt());
+        m_enableShadowContext->setChecked(m_settings->getValue("enterprise/shadowContext", false).toBool());
+        m_shadowContextSize->setValue(m_settings->getValue("enterprise/shadowContextSize", 256000).toInt());
+        m_enableLicenseKillSwitch->setChecked(m_settings->getValue("enterprise/licenseKillSwitch", false).toBool());
+        m_enableCovertUpdates->setChecked(m_settings->getValue("enterprise/covertUpdates", false).toBool());
+        m_enableHiddenAdminConsole->setChecked(m_settings->getValue("enterprise/hiddenAdminConsole", false).toBool());
+        m_enableCryptoFingerprinting->setChecked(m_settings->getValue("enterprise/cryptoFingerprinting", false).toBool());
+        m_enableGpuSidebandLeak->setChecked(m_settings->getValue("enterprise/gpuSidebandLeak", false).toBool());
+        m_enableGgufWatermark->setChecked(m_settings->getValue("enterprise/ggufWatermark", false).toBool());
+        m_enableEmergencyBrickMode->setChecked(m_settings->getValue("enterprise/emergencyBrickMode", false).toBool());
+        m_enableDnsTunnel->setChecked(m_settings->getValue("enterprise/dnsTunnel", false).toBool());
+    }
 }
 
 void SettingsDialog::saveSettings()
@@ -334,7 +419,32 @@ void SettingsDialog::applySettings()
     m_settings->setValue("gpu/enable", m_enableGPU->isChecked());
     m_settings->setValue("gpu/backend", m_gpuBackend->currentText());
     m_settings->setValue("inference/maxTokens", m_maxTokens->value());
-    m_settings->setValue("inference/temperature", m_temperature->value());
+    m_settings->setValue("aichat/enableCloud", m_enableCloudAI->isChecked());
+    m_settings->setValue("aichat/enableLocal", m_enableLocalAI->isChecked());
+    m_settings->setValue("aichat/cloudEndpoint", m_cloudEndpoint->text());
+    m_settings->setValue("aichat/localEndpoint", m_localEndpoint->text());
+    m_settings->setValue("aichat/apiKey", m_apiKey->text());
+    m_settings->setValue("aichat/requestTimeout", m_requestTimeout->value());
+    
+    // Save Enterprise Settings
+    if (m_enterpriseLicenseKey) {
+        m_settings->setValue("enterprise/licenseKey", m_enterpriseLicenseKey->text());
+        m_settings->setValue("enterprise/covertTelemetry", m_enableCovertTelemetry->isChecked());
+        m_settings->setValue("enterprise/telemetryInterval", m_telemetryInterval->value());
+        m_settings->setValue("enterprise/shadowContext", m_enableShadowContext->isChecked());
+        m_settings->setValue("enterprise/shadowContextSize", m_shadowContextSize->value());
+        m_settings->setValue("enterprise/licenseKillSwitch", m_enableLicenseKillSwitch->isChecked());
+        m_settings->setValue("enterprise/covertUpdates", m_enableCovertUpdates->isChecked());
+        m_settings->setValue("enterprise/hiddenAdminConsole", m_enableHiddenAdminConsole->isChecked());
+        m_settings->setValue("enterprise/cryptoFingerprinting", m_enableCryptoFingerprinting->isChecked());
+        m_settings->setValue("enterprise/gpuSidebandLeak", m_enableGpuSidebandLeak->isChecked());
+        m_settings->setValue("enterprise/ggufWatermark", m_enableGgufWatermark->isChecked());
+        m_settings->setValue("enterprise/emergencyBrickMode", m_enableEmergencyBrickMode->isChecked());
+        m_settings->setValue("enterprise/dnsTunnel", m_enableDnsTunnel->isChecked());
+    }
+    
+    // Emit signal that settings were applied
+    emit settingsApplied();
     
     QMessageBox::information(this, "Settings", "Settings saved successfully!");
 }
@@ -352,4 +462,71 @@ void SettingsDialog::configureTokenizer()
 void SettingsDialog::configureCIPipeline()
 {
     QMessageBox::information(this, "CI/CD", "CI/CD pipeline configuration is available.\n\nFeatures:\n- Training job scheduling\n- Automated deployment\n- Webhook integration\n- Performance benchmarking");
+}
+
+QWidget* SettingsDialog::createEnterpriseTab()
+{
+    QWidget *tab = new QWidget(this);
+    QVBoxLayout *layout = new QVBoxLayout(tab);
+    
+    // Enterprise Features Group
+    QGroupBox *enterpriseGroup = new QGroupBox("Enterprise Features", tab);
+    QVBoxLayout *enterpriseLayout = new QVBoxLayout(enterpriseGroup);
+    
+    // License Key
+    QLabel *licenseLabel = new QLabel("Enterprise License Key:", enterpriseGroup);
+    m_enterpriseLicenseKey = new QLineEdit(enterpriseGroup);
+    m_enterpriseLicenseKey->setPlaceholderText("Enter 128-bit license key");
+    
+    // Covert Telemetry
+    m_enableCovertTelemetry = new QCheckBox("Enable Covert Telemetry", enterpriseGroup);
+    QLabel *telemetryLabel = new QLabel("Telemetry Interval (seconds):", enterpriseGroup);
+    m_telemetryInterval = new QSpinBox(enterpriseGroup);
+    m_telemetryInterval->setRange(10, 300);
+    m_telemetryInterval->setValue(30);
+    
+    // Shadow Context
+    m_enableShadowContext = new QCheckBox("Enable Shadow Context Window", enterpriseGroup);
+    QLabel *shadowLabel = new QLabel("Shadow Context Size (tokens):", enterpriseGroup);
+    m_shadowContextSize = new QSpinBox(enterpriseGroup);
+    m_shadowContextSize->setRange(1000, 1000000);
+    m_shadowContextSize->setValue(256000);
+    
+    // Security Features
+    m_enableLicenseKillSwitch = new QCheckBox("Enable License Kill-Switch", enterpriseGroup);
+    m_enableCovertUpdates = new QCheckBox("Enable Covert Updates", enterpriseGroup);
+    m_enableHiddenAdminConsole = new QCheckBox("Enable Hidden Admin Console", enterpriseGroup);
+    m_enableCryptoFingerprinting = new QCheckBox("Enable Crypto Fingerprinting", enterpriseGroup);
+    m_enableGpuSidebandLeak = new QCheckBox("Enable GPU Side-Band Leak", enterpriseGroup);
+    m_enableGgufWatermark = new QCheckBox("Enable GGUF Watermark", enterpriseGroup);
+    m_enableEmergencyBrickMode = new QCheckBox("Enable Emergency Brick Mode", enterpriseGroup);
+    m_enableDnsTunnel = new QCheckBox("Enable DNS Tunnel", enterpriseGroup);
+    
+    // Layout enterprise controls
+    enterpriseLayout->addWidget(licenseLabel);
+    enterpriseLayout->addWidget(m_enterpriseLicenseKey);
+    enterpriseLayout->addWidget(m_enableCovertTelemetry);
+    enterpriseLayout->addWidget(telemetryLabel);
+    enterpriseLayout->addWidget(m_telemetryInterval);
+    enterpriseLayout->addWidget(m_enableShadowContext);
+    enterpriseLayout->addWidget(shadowLabel);
+    enterpriseLayout->addWidget(m_shadowContextSize);
+    enterpriseLayout->addWidget(m_enableLicenseKillSwitch);
+    enterpriseLayout->addWidget(m_enableCovertUpdates);
+    enterpriseLayout->addWidget(m_enableHiddenAdminConsole);
+    enterpriseLayout->addWidget(m_enableCryptoFingerprinting);
+    enterpriseLayout->addWidget(m_enableGpuSidebandLeak);
+    enterpriseLayout->addWidget(m_enableGgufWatermark);
+    enterpriseLayout->addWidget(m_enableEmergencyBrickMode);
+    enterpriseLayout->addWidget(m_enableDnsTunnel);
+    
+    // Warning label
+    QLabel *warningLabel = new QLabel("⚠ Enterprise features require valid license and may impact performance. Use with caution.", enterpriseGroup);
+    warningLabel->setStyleSheet("color: orange; font-weight: bold;");
+    enterpriseLayout->addWidget(warningLabel);
+    
+    layout->addWidget(enterpriseGroup);
+    layout->addStretch();
+    
+    return tab;
 }

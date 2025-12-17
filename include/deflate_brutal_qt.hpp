@@ -4,7 +4,26 @@
 #include <QtCore/QByteArray>
 #include "brutal_gzip.h"
 
+// Forward declare MASM functions at global scope
+extern "C" {
+    size_t AsmDeflate(const void* src, size_t src_len, void* dst, size_t dst_len);
+    size_t AsmInflate(const void* src, size_t src_len, void* dst, size_t dst_len);
+}
+
 namespace brutal {
+
+/**
+ * @brief Calculate worst-case compressed size for planning/allocation
+ * @param rawSize Input size
+ * @return Maximum possible compressed size (gzip header + stored blocks + footer)
+ * 
+ * Formula: header(10) + ceil(rawSize/65535)*5 + rawSize + footer(8)
+ */
+inline std::size_t maxCompressedSize(std::size_t rawSize)
+{
+    std::size_t blockCount = (rawSize + 65534) / 65535;
+    return 10 + (blockCount * 5) + rawSize + 8;
+}
 
 /**
  * @brief Compress QByteArray using brutal MASM stored-block gzip
@@ -25,8 +44,6 @@ inline QByteArray compress(const QByteArray& in)
     if (!p) return {};
     
     // Use our new MASM deflate function
-    extern "C" size_t AsmDeflate(const void* src, size_t src_len, 
-                                 void* dst, size_t dst_len);
     size_t result = AsmDeflate(
         reinterpret_cast<const void*>(in.constData()),
         in.size(),
@@ -38,16 +55,8 @@ inline QByteArray compress(const QByteArray& in)
         std::free(p);
         return {};
     }
-    packedSz = result;
-    );
     
-    if (result == 0) {
-        std::free(p);
-        return {};
-    }
-    packedSz = result;
-    
-    QByteArray out(reinterpret_cast<const char*>(p), static_cast<int>(packedSz));
+    QByteArray out(reinterpret_cast<const char*>(p), static_cast<int>(result));
     std::free(p);
     return out;
 }
@@ -68,8 +77,6 @@ inline QByteArray compress(const void* data, std::size_t size)
     if (!p) return {};
     
     // Use our new MASM deflate function
-    extern "C" size_t AsmDeflate(const void* src, size_t src_len, 
-                                 void* dst, size_t dst_len);
     size_t result = AsmDeflate(
         data,
         size,
@@ -81,24 +88,10 @@ inline QByteArray compress(const void* data, std::size_t size)
         std::free(p);
         return {};
     }
-    packedSz = result;
     
-    QByteArray out(reinterpret_cast<const char*>(p), static_cast<int>(packedSz));
+    QByteArray out(reinterpret_cast<const char*>(p), static_cast<int>(result));
     std::free(p);
     return out;
-}
-
-/**
- * @brief Calculate worst-case compressed size for planning/allocation
- * @param rawSize Input size
- * @return Maximum possible compressed size (gzip header + stored blocks + footer)
- * 
- * Formula: header(10) + ceil(rawSize/65535)*5 + rawSize + footer(8)
- */
-inline std::size_t maxCompressedSize(std::size_t rawSize)
-{
-    std::size_t blockCount = (rawSize + 65534) / 65535;
-    return 10 + (blockCount * 5) + rawSize + 8;
 }
 
 /**
@@ -121,25 +114,20 @@ inline QByteArray decompress(const QByteArray& compressed)
     void* out_buf = malloc(max_uncompressed);
     if (!out_buf) return {};
     
-    size_t out_len = 0;
-    
     // Use our new MASM inflate function
-    extern "C" size_t AsmInflate(const void* src, size_t src_len, 
-                                  void* dst, size_t dst_len);
-    size_t result = AsmInflate(
+    size_t resultLen = AsmInflate(
         reinterpret_cast<const void*>(compressed.constData()),
         compressed.size(),
         out_buf,
         max_uncompressed
     );
     
-    if (result == 0) {
+    if (resultLen == 0) {
         free(out_buf);
         return {};
     }
-    out_len = result;
     
-    QByteArray result(reinterpret_cast<const char*>(out_buf), static_cast<int>(out_len));
+    QByteArray result(reinterpret_cast<const char*>(out_buf), static_cast<int>(resultLen));
     free(out_buf);
     return result;
 }

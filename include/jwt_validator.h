@@ -3,6 +3,7 @@
 #include <QString>
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QJsonDocument>
 #include <memory>
 #include <vector>
 
@@ -26,9 +27,11 @@ struct JWK {
     QString xCoordinate;      // x (for EC)
     QString yCoordinate;      // y (for EC)
     bool isPublic = true;
+    QJsonObject header;       // Complete header object
 
     static JWK fromJson(const QJsonObject& json) {
         JWK jwk;
+        jwk.header = json;  // Store complete header
         jwk.keyId = json["kid"].toString();
         jwk.keyType = json["kty"].toString();
         jwk.algorithm = json["alg"].toString();
@@ -173,6 +176,7 @@ struct JWT {
     QString algorithm;        // from header
     QString keyId;           // from header (kid)
     QString tokenType;       // from header (typ)
+    QJsonObject header;      // Complete header object
     TokenClaims claims;
     QString signature;
     QString rawToken;
@@ -199,6 +203,7 @@ struct JWT {
             return jwt;
         }
 
+        jwt.header = header;  // Store complete header
         jwt.algorithm = header["alg"].toString();
         jwt.keyId = header["kid"].toString();
         jwt.tokenType = header["typ"].toString();

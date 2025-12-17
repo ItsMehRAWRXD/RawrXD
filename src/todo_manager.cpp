@@ -145,6 +145,22 @@ void TodoManager::removeTodo(const QString& id) {
     }
 }
 
+void TodoManager::clearAllTodos() {
+    try {
+        int count = todos_.size();
+        todos_.clear();
+        
+        LogTodoOperation("CLEAR_ALL", 
+            QString("Cleared all %1 TODO items").arg(count));
+        
+        // Persist immediately
+        saveTodos();
+        
+    } catch (const std::exception& e) {
+        LogTodoOperation("ERROR", QString("Failed to clear all TODOs: %1").arg(e.what()));
+    }
+}
+
 QList<TodoItem> TodoManager::getTodos() const {
     LogTodoOperation("QUERY", QString("Retrieved %1 total TODOs").arg(todos_.size()));
     return todos_;

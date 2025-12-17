@@ -81,7 +81,7 @@ struct MemoryPatch {
     int timesApplied = 0;
 };
 
-struct TensorInfo {
+struct TensorMemoryInfo {
     QString name;
     size_t offset;
     size_t size;
@@ -194,7 +194,7 @@ private:
     quint32 m_integrityHash = 0;
 
     QHash<QString, MemoryPatch> m_patches;
-    QHash<QString, TensorInfo> m_tensorMap;
+    QHash<QString, TensorMemoryInfo> m_tensorMap;
     QByteArray m_fullBackup;
     QVector<QString> m_history;
     

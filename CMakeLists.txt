@@ -30,12 +30,12 @@ endif()
 # This ensures all DLLs link against the same MSVC runtime DLL
 if(MSVC)
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
-    # Force /MD for all targets to prevent CRT mismatch
+    # Force /MD for C/C++ targets only (not MASM) to prevent CRT mismatch
     add_compile_options(
-        $<$<CONFIG:Debug>:/MDd>
-        $<$<CONFIG:Release>:/MD>
-        $<$<CONFIG:RelWithDebInfo>:/MD>
-        $<$<CONFIG:MinSizeRel>:/MD>
+        $<$<COMPILE_LANGUAGE:C,CXX>:$<$<CONFIG:Debug>:/MDd>>
+        $<$<COMPILE_LANGUAGE:C,CXX>:$<$<CONFIG:Release>:/MD>>
+        $<$<COMPILE_LANGUAGE:C,CXX>:$<$<CONFIG:RelWithDebInfo>:/MD>>
+        $<$<COMPILE_LANGUAGE:C,CXX>:$<$<CONFIG:MinSizeRel>:/MD>>
     )
 endif()
 
@@ -49,8 +49,9 @@ else()
 endif()
 
 # Build options
-option(ENABLE_COPILOT "Enable Copilot streaming integration for Win32 IDE" OFF)
+option(ENABLE_COPILOT "Enable Copilot streaming integration for Win32 IDE" ON)
 option(ENABLE_VULKAN "Enable Vulkan GPU acceleration" ON)
+option(TEST_BRUTAL "Enable Brutal codec test harness" ON)
 
 # Force Windows SDK version that ships all required headers
 set(CMAKE_SYSTEM_VERSION "10.0.22621.0")
@@ -85,6 +86,16 @@ else()
     set(HAVE_QT_CHARTS FALSE)
 endif()
 
+# Qt HttpServer is optional - try to find it but don't fail if missing
+find_package(Qt6 COMPONENTS HttpServer QUIET)
+if(Qt6HttpServer_FOUND)
+    message(STATUS "Qt6HttpServer found - API server features enabled")
+    set(HAVE_QT_HTTPSERVER TRUE)
+else()
+    message(WARNING "Qt6HttpServer not found - API server features will be disabled")
+    set(HAVE_QT_HTTPSERVER FALSE)
+endif()
+
 find_package(CURL QUIET)
 if(CURL_FOUND)
     message(STATUS "CURL found: ${CURL_VERSION_STRING}")
@@ -103,12 +114,14 @@ else()
     set(HAVE_ZSTD 0)
 endif()
 
-find_package(OpenSSL REQUIRED)
+find_package(OpenSSL QUIET)
 if(OpenSSL_FOUND)
     message(STATUS "OpenSSL found: ${OPENSSL_VERSION}")
     link_libraries(OpenSSL::Crypto OpenSSL::SSL)
+    set(HAVE_OPENSSL 1)
 else()
-    message(FATAL_ERROR "OpenSSL not found - required for JWT verification and TLS tooling")
+    message(WARNING "OpenSSL not found - JWT verification will be disabled. Set OPENSSL_ROOT_DIR or install OpenSSL for full security features.")
+    set(HAVE_OPENSSL 0)
 endif()
 
 if(Qt6_FOUND)
@@ -121,6 +134,47 @@ if(Qt6_FOUND)
     # AUTOMATIC DLL DEPLOYMENT - Deploy ALL dependencies automatically
     # ============================================================
     find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${Qt6_DIR}/../../../bin")
+
+    # Locate 64-bit MSVC redist (CRT) so we can copy msvcp/vcruntime/concrt DLLs explicitly.
+    if(MSVC)
+        set(MSVC_REDIST_DIR "")
+        set(_msvc_redist_candidates
+            "$ENV{VCToolsRedistDir}"
+            "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Redist/MSVC"
+            "C:/Program Files (x86)/Microsoft Visual Studio/2022/Community/VC/Redist/MSVC"
+        )
+
+        foreach(_cand IN LISTS _msvc_redist_candidates)
+            if(NOT _cand)
+                continue()
+            endif()
+            # Candidate may already point at the versioned root (contains x64/...).
+            if(EXISTS "${_cand}/x64/Microsoft.VC${MSVC_TOOLSET_VERSION}.CRT")
+                set(MSVC_REDIST_DIR "${_cand}/x64/Microsoft.VC${MSVC_TOOLSET_VERSION}.CRT")
+                break()
+            endif()
+
+            # Otherwise, walk immediate subdirs to find the latest versioned CRT folder.
+            file(GLOB _msvc_redist_subdirs "${_cand}/*")
+            list(SORT _msvc_redist_subdirs ORDER DESCENDING)
+            foreach(_sub IN LISTS _msvc_redist_subdirs)
+                if(IS_DIRECTORY "${_sub}" AND EXISTS "${_sub}/x64/Microsoft.VC${MSVC_TOOLSET_VERSION}.CRT")
+                    set(MSVC_REDIST_DIR "${_sub}/x64/Microsoft.VC${MSVC_TOOLSET_VERSION}.CRT")
+                    break()
+                endif()
+            endforeach()
+
+            if(MSVC_REDIST_DIR)
+                break()
+            endif()
+        endforeach()
+
+        if(NOT MSVC_REDIST_DIR)
+            message(WARNING "MSVC_REDIST_DIR not found; set VCToolsRedistDir or install VS redist so msvcp/vcruntime DLLs (m140) are copied.")
+        else()
+            message(STATUS "MSVC redist CRT path: ${MSVC_REDIST_DIR}")
+        endif()
+    endif()
     
     function(deploy_runtime_dependencies target_name)
         if(WIN32 AND WINDEPLOYQT_EXECUTABLE)
@@ -144,16 +198,58 @@ if(Qt6_FOUND)
                     "$<TARGET_FILE_DIR:${target_name}>/"
                 COMMENT "Ensuring Qt6Sql.dll is deployed for ${target_name}"
             )
-            
-            # Copy MSVC OpenMP runtime (vcomp140.dll) if not already deployed
-            if(EXISTS "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Redist/MSVC/14.44.35207/x64/Microsoft.VC144.OpenMP/vcomp140.dll")
+            # Copy Windows CRT forwarder DLLs (api-ms-win-crt-*.dll) for x64
+            file(GLOB CRT_DLLS "${MSVC_REDIST_DIR}/x64/api-ms-win-crt-*.dll")
+            foreach(CRT_DLL IN LISTS CRT_DLLS)
                 add_custom_command(TARGET ${target_name} POST_BUILD
                     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                        "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Redist/MSVC/14.44.35207/x64/Microsoft.VC144.OpenMP/vcomp140.dll"
+                        "${CRT_DLL}"
                         "$<TARGET_FILE_DIR:${target_name}>/"
-                    COMMENT "Deploying vcomp140.dll for ${target_name}"
+                    COMMENT "Copying ${CRT_DLL} to ${target_name} output"
                 )
+            endforeach()
+            
+            # Copy MSVC CRT runtimes explicitly (covers msvcp/vcruntime/concrt "m140" family)
+            if(MSVC_REDIST_DIR)
+                set(_msvc_crt_dlls
+                    msvcp140.dll
+                    msvcp140_1.dll
+                    msvcp140_2.dll
+                    msvcp140_atomic_wait.dll
+                    vcruntime140.dll
+                    vcruntime140_1.dll
+                    concrt140.dll
+                    vccorlib140.dll
+                )
+                foreach(_dll IN LISTS _msvc_crt_dlls)
+                    if(EXISTS "${MSVC_REDIST_DIR}/${_dll}")
+                        add_custom_command(TARGET ${target_name} POST_BUILD
+                            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                                "${MSVC_REDIST_DIR}/${_dll}"
+                                "$<TARGET_FILE_DIR:${target_name}>/"
+                            COMMENT "Deploying ${_dll} for ${target_name}"
+                        )
+                    endif()
+                endforeach()
             endif()
+
+            # Copy MSVC OpenMP runtime (vcomp140.dll) - search multiple locations
+            set(_vcomp_paths
+                "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Redist/MSVC/14.44.35207/onecore/x64/Microsoft.VC143.OpenMP/vcomp140.dll"
+                "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Redist/MSVC/14.44.35112/onecore/x64/Microsoft.VC143.OpenMP/vcomp140.dll"
+                "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Redist/MSVC/14.44.35207/x64/Microsoft.VC143.OpenMP/vcomp140.dll"
+            )
+            foreach(_vcomp_path IN LISTS _vcomp_paths)
+                if(EXISTS "${_vcomp_path}")
+                    add_custom_command(TARGET ${target_name} POST_BUILD
+                        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                            "${_vcomp_path}"
+                            "$<TARGET_FILE_DIR:${target_name}>/"
+                        COMMENT "Deploying vcomp140.dll for ${target_name}"
+                    )
+                    break()
+                endif()
+            endforeach()
             
             message(STATUS "✓ Automatic DLL deployment enabled for ${target_name}")
         else()
@@ -458,16 +554,47 @@ if(MSVC)
             # Project UI components
             src/qtapp/widgets/project_explorer.cpp
             src/qtapp/widgets/project_explorer.h
+            src/qtapp/widgets/breadcrumb_navigation.cpp
+            src/qtapp/widgets/breadcrumb_navigation.hpp
+            # TODO Management
+            src/qtapp/todo_manager.h
+            src/qtapp/todo_manager.cpp
+            # Agent Chat enhancements with breadcrumb and model selector
+            src/qtapp/agent_chat_breadcrumb.hpp
+            src/qtapp/agent_chat_breadcrumb.cpp
+            # Code Minimap Widget - Visual code overview
+            src/qtapp/code_minimap.h
+            src/qtapp/code_minimap.cpp
+            src/qtapp/editor_with_minimap.h
+            src/qtapp/editor_with_minimap.cpp
             # Code quality improvement modules
             src/utils/ErrorReporter.hpp
             src/utils/ErrorReporter.cpp
             src/model_loader/GGUFConstants.hpp
             src/utils/Diagnostics.hpp
             src/utils/Diagnostics.cpp
+            # ============================================================
+            # RawrXD Cryptographic Library (OpenSSL replacement)
+            # Production-ready from-scratch implementation
+            # ============================================================
+            src/crypto/rawrxd_crypto.h
+            src/crypto/rawrxd_crypto_base.cpp
+            src/crypto/rawrxd_crypto_bigint.cpp
+            src/crypto/rawrxd_crypto_rsa_ecc.cpp
+            src/crypto/rawrxd_crypto_aes.cpp
             # Full Utility Tool Registry with Production Readiness
             # TODO: Fix Windows RPC macro conflicts with nlohmann::json in tool_registry.cpp
             # include/tool_registry.hpp
             # src/tool_registry.cpp
+            # ============================================================
+            # GitHub-Style Enterprise Tools Panel (44 Tools)
+            # Production-ready tool management with toggle controls
+            # ============================================================
+            src/qtapp/enterprise_tools_panel.h
+            src/qtapp/enterprise_tools_panel.cpp
+            # Experimental Features Menu (quantization, KV cache, streaming, pruning)
+            src/qtapp/experimental_features_menu.hpp
+            src/qtapp/experimental_features_menu.cpp
         )
         
         add_library(self_test_gate STATIC
@@ -483,14 +610,10 @@ if(MSVC)
         target_include_directories(quant_utils PUBLIC ${CMAKE_SOURCE_DIR}/src/qtapp ${CMAKE_SOURCE_DIR}/include)
         target_link_libraries(quant_utils PUBLIC Qt6::Core)
         
-        # Find OpenSSL for SecurityManager encryption/HMAC (optional, with fallback)
-        find_package(OpenSSL QUIET)
-        if(OpenSSL_FOUND)
-            message(STATUS "OpenSSL found - SecurityManager encryption enabled")
-            add_compile_definitions(HAVE_OPENSSL=1)
-        else()
-            message(STATUS "OpenSSL not found - SecurityManager will use basic hash-only mode")
-        endif()
+        # RawrXD Cryptographic Library - No external dependencies needed
+        # All cryptographic operations use our from-scratch implementation
+        add_compile_definitions(HAVE_RAWRXD_CRYPTO=1)
+        message(STATUS "RawrXD Cryptographic Library integrated - full crypto support enabled")
         
         # Find zlib for CheckpointManager compression (optional with fallback)
         find_package(ZLIB QUIET)
@@ -563,6 +686,19 @@ target_link_libraries(RawrXD-QtShell PRIVATE
             WIN32_EXECUTABLE TRUE
             AUTOMOC ON
             AUTOMOC_MOC_OPTIONS "-I${CMAKE_SOURCE_DIR}/include;-I${CMAKE_CURRENT_SOURCE_DIR}/src/qtapp"
+        )
+
+        # ------------------------------------------------------------
+        # OPTIONAL UI PANELS – compiled but not shown on startup
+        # ------------------------------------------------------------
+        # MASM editor widget (assembly editing with brutal_gzip compression)
+        target_sources(RawrXD-QtShell PRIVATE 
+            src/qtapp/widgets/masm_editor_widget.cpp
+        )
+
+        # Model tuner / multi‑file search panel (also uses brutal_gzip)
+        target_sources(RawrXD-QtShell PRIVATE 
+            src/qtapp/widgets/multi_file_search.cpp
         )
 
         # Explicitly wrap canonical headers so AUTOMOC generates moc sources for Q_OBJECT classes in include/
@@ -1430,6 +1566,10 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/inflate_deflate_cpp.cpp")
         list(APPEND AGENTICIDE_SOURCES src/qtapp/inflate_deflate_cpp.cpp)
     endif()
+    # Ensure MASM wrapper is linked so deflate_brutal_masm resolves
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/brutal_gzip_wrapper.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/brutal_gzip_wrapper.cpp)
+    endif()
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/file_browser.cpp")
         list(APPEND AGENTICIDE_SOURCES src/file_browser.cpp)
     endif()
@@ -1463,6 +1603,21 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/gguf_vocab_resolver.cpp")
         list(APPEND AGENTICIDE_SOURCES src/gguf_vocab_resolver.cpp)
     endif()
+    
+    # Model Loader with Brutal MASM Compression
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/model_loader_with_compression.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/model_loader_with_compression.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/model_loader_with_compression.hpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/model_loader_with_compression.hpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/model_loader_widget.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/model_loader_widget.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/model_loader_widget.hpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/model_loader_widget.hpp)
+    endif()
+    
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/vulkan_compute.cpp")
         list(APPEND AGENTICIDE_SOURCES src/vulkan_compute.cpp)
     endif()
@@ -1525,6 +1680,9 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
     endif()
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/telemetry.cpp")
         list(APPEND AGENTICIDE_SOURCES src/telemetry.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/telemetry_singleton.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/telemetry_singleton.cpp)
     endif()
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/todo_manager.cpp")
         list(APPEND AGENTICIDE_SOURCES src/todo_manager.cpp)
@@ -1598,6 +1756,101 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
         list(APPEND AGENTICIDE_SOURCES src/qtapp/tokenizer_selector.cpp)
     endif()
     
+    # ============================================================
+    # IDE WIDGETS - MASM Editor, Hotpatch Panel, Project Explorer, etc.
+    # All IDE functions accessible via View menu
+    # ============================================================
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/widgets/masm_editor_widget.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/widgets/masm_editor_widget.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/widgets/masm_editor_widget.h")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/widgets/masm_editor_widget.h)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/widgets/hotpatch_panel.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/widgets/hotpatch_panel.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/widgets/hotpatch_panel.h")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/widgets/hotpatch_panel.h)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/widgets/project_explorer.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/widgets/project_explorer.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/widgets/project_explorer.h")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/widgets/project_explorer.h)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/widgets/find_widget.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/widgets/find_widget.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/widgets/find_widget.h")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/widgets/find_widget.h)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/widgets/multi_file_search.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/widgets/multi_file_search.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/widgets/multi_file_search.h")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/widgets/multi_file_search.h)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/widgets/breadcrumb_navigation.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/widgets/breadcrumb_navigation.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/widgets/breadcrumb_navigation.hpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/widgets/breadcrumb_navigation.hpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/widgets/layer_quant_widget.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/widgets/layer_quant_widget.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/widgets/layer_quant_widget.hpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/widgets/layer_quant_widget.hpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/widgets/OverlayWidget.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/widgets/OverlayWidget.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/widgets/OverlayWidget.hpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/widgets/OverlayWidget.hpp)
+    endif()
+    
+    # Interpretability Panel (Production)
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/interpretability_panel_enhanced.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/interpretability_panel_enhanced.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/interpretability_panel_enhanced.hpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/interpretability_panel_enhanced.hpp)
+    endif()
+    
+    # ============================================================
+    # THEME SYSTEM COMPONENTS (TEMPORARILY DISABLED - MOC issues)
+    # ============================================================
+    # Will be re-enabled after fixing theme header dependencies
+    
+    # ============================================================
+    # AI Chat Panel and Utils (required for MainWindow chat features)
+    # ============================================================
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/ai_chat_panel.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/ai_chat_panel.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/ai_chat_panel.hpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/ai_chat_panel.hpp)
+    endif()
+    # Agent chat breadcrumb (mode + model selector)
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/agent_chat_breadcrumb.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/agent_chat_breadcrumb.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/agent_chat_breadcrumb.hpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/agent_chat_breadcrumb.hpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/utils/file_operations.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/utils/file_operations.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/utils/project_detector.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/utils/project_detector.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/utils/qt_file_writer.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/utils/qt_file_writer.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/utils/qt_directory_manager.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/utils/qt_directory_manager.cpp)
+    endif()
+    
     # Add moc_includes.cpp to force AUTOMOC to process all Q_OBJECT headers
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/moc_includes.cpp")
         list(APPEND AGENTICIDE_SOURCES src/qtapp/moc_includes.cpp)
@@ -1608,6 +1861,7 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
     endif()
     
     # Production API Server, Auth, Crypto, and Infrastructure Components
+    # These files have internal guards for QT_HTTPSERVER_LIB
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/production_api_stub.cpp")
         list(APPEND AGENTICIDE_SOURCES src/production_api_stub.cpp)
     endif()
@@ -1620,6 +1874,7 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/api/rest_api_server.cpp")
         list(APPEND AGENTICIDE_SOURCES src/api/rest_api_server.cpp)
     endif()
+    
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/auth/oauth2_manager.cpp")
         list(APPEND AGENTICIDE_SOURCES src/auth/oauth2_manager.cpp)
     endif()
@@ -1641,9 +1896,10 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/semantic-analysis/ast_analyzer.cpp")
         list(APPEND AGENTICIDE_SOURCES src/semantic-analysis/ast_analyzer.cpp)
     endif()
-    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/agentic_textedit.cpp")
-        list(APPEND AGENTICIDE_SOURCES src/qtapp/agentic_textedit.cpp)
-    endif()
+    # NOTE: agentic_textedit.cpp excluded - conflicts with src/agentic_text_edit.cpp (same class name)
+    # if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/agentic_textedit.cpp")
+    #     list(APPEND AGENTICIDE_SOURCES src/qtapp/agentic_textedit.cpp)
+    # endif()
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/agentic_tools.cpp")
         list(APPEND AGENTICIDE_SOURCES src/qtapp/agentic_tools.cpp)
     endif()
@@ -1651,15 +1907,34 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
         list(APPEND AGENTICIDE_SOURCES src/qtapp/quant_impl.cpp)
     endif()
     
+    # ============================================================
+    # Crypto Library (RSA/ECDSA for JWT validation)
+    # ============================================================
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/crypto/rawrxd_crypto_base.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/crypto/rawrxd_crypto_base.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/crypto/rawrxd_crypto_bigint.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/crypto/rawrxd_crypto_bigint.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/crypto/rawrxd_crypto_rsa_ecc.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/crypto/rawrxd_crypto_rsa_ecc.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/crypto/rawrxd_crypto_aes.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/crypto/rawrxd_crypto_aes.cpp)
+    endif()
+    
     # Production API and Infrastructure Headers
-    if(EXISTS "${CMAKE_SOURCE_DIR}/include/production_api_server.h")
-        list(APPEND AGENTICIDE_SOURCES include/production_api_server.h)
-    endif()
-    if(EXISTS "${CMAKE_SOURCE_DIR}/include/production_api_configuration.h")
-        list(APPEND AGENTICIDE_SOURCES include/production_api_configuration.h)
-    endif()
-    if(EXISTS "${CMAKE_SOURCE_DIR}/include/rest_api_server.h")
-        list(APPEND AGENTICIDE_SOURCES include/rest_api_server.h)
+    # Only add if Qt HttpServer is available
+    if(HAVE_QT_HTTPSERVER)
+        if(EXISTS "${CMAKE_SOURCE_DIR}/include/production_api_server.h")
+            list(APPEND AGENTICIDE_SOURCES include/production_api_server.h)
+        endif()
+        if(EXISTS "${CMAKE_SOURCE_DIR}/include/production_api_configuration.h")
+            list(APPEND AGENTICIDE_SOURCES include/production_api_configuration.h)
+        endif()
+        if(EXISTS "${CMAKE_SOURCE_DIR}/include/rest_api_server.h")
+            list(APPEND AGENTICIDE_SOURCES include/rest_api_server.h)
+        endif()
     endif()
     if(EXISTS "${CMAKE_SOURCE_DIR}/include/oauth2_manager.h")
         list(APPEND AGENTICIDE_SOURCES include/oauth2_manager.h)
@@ -1718,6 +1993,28 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
     if(EXISTS "${CMAKE_SOURCE_DIR}/include/zero_day_agentic_engine.hpp")
         list(APPEND AGENTICIDE_SOURCES include/zero_day_agentic_engine.hpp)
     endif()
+
+    # Enterprise Streaming GGUF System
+    list(APPEND AGENTICIDE_SOURCES 
+        src/Memory/streaming_gguf_memory_manager.hpp
+        src/Memory/streaming_gguf_memory_manager.cpp
+        src/Memory/lazy_model_loader.hpp
+        src/Memory/lazy_model_loader.cpp
+        src/Memory/large_model_optimizer.hpp
+        src/Memory/large_model_optimizer.cpp
+        src/Memory/enterprise_streaming_controller.hpp
+        src/Memory/enterprise_streaming_controller.cpp
+        src/monitoring/enterprise_metrics_collector.hpp
+        src/monitoring/enterprise_metrics_collector.cpp
+        src/Memory/fault_tolerance_manager.hpp
+        src/Memory/fault_tolerance_manager.cpp
+    )
+    
+    # Theme System Sources - MUST be before add_executable
+    list(APPEND AGENTICIDE_SOURCES src/qtapp/ThemeManager.cpp)
+    list(APPEND AGENTICIDE_SOURCES src/qtapp/ThemeConfigurationPanel.cpp)
+    list(APPEND AGENTICIDE_SOURCES src/qtapp/TransparencyControlPanel.cpp)
+    list(APPEND AGENTICIDE_SOURCES src/qtapp/ThemedCodeEditor.cpp)
     
     add_executable(RawrXD-AgenticIDE WIN32 ${AGENTICIDE_SOURCES})
     
@@ -1758,6 +2055,12 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
         quant_utils
         ggml_interface
     )
+
+    # Enable Brutal compression test harness when requested
+    if(TEST_BRUTAL)
+        target_compile_definitions(RawrXD-AgenticIDE PRIVATE TEST_BRUTAL=1)
+        message(STATUS "TEST_BRUTAL enabled: ModelLoaderWidget will run codec round-trip test")
+    endif()
 
     if(CURL_FOUND)
         target_link_libraries(RawrXD-AgenticIDE PRIVATE CURL::libcurl)
@@ -2227,7 +2530,8 @@ target_include_directories(brutal_gzip PUBLIC include)
 
 if(MSVC AND CMAKE_SYSTEM_PROCESSOR MATCHES "AMD64")
     enable_language(ASM_MASM)
-    target_sources(brutal_gzip PRIVATE kernels/deflate_brutal_masm.asm)
+    # Use inflate_deflate_asm.asm which exports AsmDeflate and AsmInflate
+    target_sources(brutal_gzip PRIVATE src/qtapp/inflate_deflate_asm.asm)
     target_compile_definitions(brutal_gzip PUBLIC HAS_BRUTAL_GZIP_MASM=1)
 elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|ARM64")
     enable_language(ASM)

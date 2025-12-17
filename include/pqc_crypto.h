@@ -18,7 +18,9 @@ enum class Algorithm {
     KYBER1024 = 2,
     DILITHIUM2 = 3,
     DILITHIUM3 = 4,
-    DILITHIUM5 = 5
+    DILITHIUM5 = 5,
+    FALCON512 = 6,
+    SPHINCSSHA2256F = 7
 };
 
 struct KeyPairResult {

@@ -1,8 +1,13 @@
 #pragma once
+#if defined(QT_HTTPSERVER_LIB) || defined(QT_HTTPSERVER_MODULE)
+
 
 #include "production_api_server.h"
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QJsonDocument>
+#include <QFile>
+#include <QIODevice>
 #include <QString>
 #include <memory>
 
@@ -132,8 +137,8 @@ public:
     }
 
 private:
-    static std::unique_ptr<ProductionAPIServer>& loadFromJson(ProductionAPIServer* server, 
-                                                              const QJsonObject& config) {
+    static void loadFromJson(ProductionAPIServer* server, const QJsonObject& config) {
+#ifdef QT_HTTPSERVER_LIB
         // Configure TLS
         if (config.contains("tls")) {
             QJsonObject tlsObj = config["tls"].toObject();
@@ -175,10 +180,11 @@ private:
             server->setLoggingEnabled(serverObj["logRequests"].toBool(true));
             server->setMetricsEnabled(serverObj["metricsEnabled"].toBool(true));
         }
-
-        return std::unique_ptr<ProductionAPIServer>(server);
+#endif // QT_HTTPSERVER_LIB
     }
 };
 
 } // namespace API
 } // namespace RawrXD
+#endif // QT_HTTPSERVER_LIB
+

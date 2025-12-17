@@ -24,6 +24,7 @@ public:
     void addTodo(const QString& description, const QString& filePath = "", int lineNumber = -1);
     void completeTodo(const QString& id);
     void removeTodo(const QString& id);
+    void clearAllTodos();
     QList<TodoItem> getTodos() const;
     QList<TodoItem> getPendingTodos() const;
     QList<TodoItem> getCompletedTodos() const;

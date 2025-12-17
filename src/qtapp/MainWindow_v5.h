@@ -1,6 +1,3 @@
-#include "ai_chat_panel.hpp"
-
-// RawrXD Agentic IDE - v5.0 Clean Header
 // RawrXD Agentic IDE - v5.0 Clean Header
 #pragma once
 
@@ -8,6 +5,8 @@
 #include <QString>
 #include <QFutureWatcher>
 #include <QProgressDialog>
+#include "ai_chat_panel.hpp"
+#include "ai_chat_panel_manager.hpp"
 
 class QAction;
 
@@ -24,6 +23,17 @@ class InferenceEngine;
 class TodoManager;
 class TodoDock;
 class ModelLoaderThread;
+class ModelLoaderWidget;
+class MasmEditorWidget;
+class MultiFileSearch;
+class AIChatPanelManager;
+class MASMEditorWidget;
+class InterpretabilityPanelEnhanced;
+class HotpatchPanel;
+
+namespace RawrXD {
+    class MultiFileSearchWidget;
+}
 
 // Phase 2 forward declarations
 namespace RawrXD {
@@ -40,6 +50,10 @@ class DiffDock;  // Day 2 simplified diff viewer
 namespace RawrXD {
     class PlanOrchestrator;
     class LSPClient;
+    class ThemeManager;
+    class ThemeConfigurationPanel;
+    class TransparencyControlPanel;
+    class ThemedCodeEditor;
 }
 
 namespace RawrXD {
@@ -68,6 +82,14 @@ private slots:
     void toggleTerminals();
     void toggleTodos();
     void toggleTelemetryWindow();
+    void showMasmEditor();
+    void showModelTuner();
+    void toggleMASMEditor();
+    void toggleModelTuner();
+    void toggleInterpretabilityPanel();
+    void toggleHotpatchPanel();
+    void toggleMultiFileSearch();
+    void toggleToolsPanel();  // NEW: Toggle GitHub-style tools panel
     
     // AI operations
     void startChat();
@@ -98,7 +120,12 @@ private slots:
     // Settings signal
     void settingsApplied();
     
-    // TODO operations
+    // Theme operations
+    void showThemeConfiguration();
+    void showTransparencyControls();
+    void onThemeChanged();
+    
+    // Todo operations
     void addTodo();
     void scanCodeForTodos();
     
@@ -138,8 +165,8 @@ private:
     MultiTabEditor *m_multiTabEditor;
     // Replaced single ChatInterface with a tabbed container managed by AIChatPanelManager
     QTabWidget* m_chatTabs = nullptr;
-    AIChatPanelManager* m_chatPanelManager = nullptr;
-        AIChatPanel* m_currentChatPanel = nullptr;
+    AIChatPanel* m_currentChatPanel = nullptr;
+        AIChatPanelManager* m_chatPanelManager = nullptr;
     TerminalPool *m_terminalPool;
     FileBrowser *m_fileBrowser;
     AgenticEngine *m_agenticEngine;
@@ -157,15 +184,38 @@ private:
     QDockWidget *m_terminalDock;
     QDockWidget *m_fileDock;
     QDockWidget *m_todoDockWidget;
+    QDockWidget *m_masmEditorDock{nullptr};
+    QDockWidget *m_modelTunerDock{nullptr};
+    QDockWidget *m_interpretabilityDock{nullptr};
+    QDockWidget *m_hotpatchDock{nullptr};
+    QDockWidget *m_multiFileSearchDock{nullptr};
+    QDockWidget *m_toolsPanelDock{nullptr};  // NEW: Enterprise Tools Panel dock
+    
+    // Additional components (hidden by default, viewable via View menu)
+    MASMEditorWidget *m_masmEditor{nullptr};
+    ModelLoaderWidget *m_modelTuner{nullptr};
+    InterpretabilityPanelEnhanced *m_interpretabilityPanel{nullptr};
+    HotpatchPanel *m_hotpatchPanel{nullptr};
+    RawrXD::MultiFileSearchWidget *m_multiFileSearch{nullptr};
     
     // Phase 2: Polish feature widgets
     DiffDock *m_diffPreviewDock{nullptr};  // Day 2: Simplified diff viewer
     RawrXD::GPUBackendSelector *m_backendSelector{nullptr};
     
-    // Splash screen for initialization
-    QWidget *m_splashWidget;
-    QLabel *m_splashLabel;
-    QProgressBar *m_splashProgress;
+    // Status bar
+    QStatusBar *m_statusBar;
+    
+    // Theme System
+    RawrXD::ThemeManager* m_themeManager{nullptr};
+    QDockWidget* m_themeDock{nullptr};
+    QDockWidget* m_transparencyDock{nullptr};
+    QAction* m_themeConfigAction{nullptr};
+    QAction* m_transparencyAction{nullptr};
+    
+    // Splash screen widgets
+    QWidget *m_splashWidget{nullptr};
+    QLabel *m_splashLabel{nullptr};
+    QProgressBar *m_splashProgress{nullptr};
 };
 
 } // namespace RawrXD

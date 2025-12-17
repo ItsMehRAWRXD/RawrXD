@@ -1,0 +1,1076 @@
+MSBuild version 17.14.23+b0019275e for .NET Framework
+
+  Checking File Globs
+  Automatic MOC for target brutal_gzip
+  brutal_gzip.vcxproj -> D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\Release\brutal_gzip.lib
+  ggml-base.vcxproj -> D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\3rdparty\ggml\src\Release\ggml-base.lib
+  ggml-cpu.vcxproj -> D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\3rdparty\ggml\src\Release\ggml-cpu.lib
+  1>Performing build step for 'vulkan-shaders-gen'
+  MSBuild version 17.14.23+b0019275e for .NET Framework
+  
+    vulkan-shaders-gen.vcxproj -> D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\3rdparty\ggml\src\ggml-vulkan\vulkan-shaders-gen-prefix\src\vulkan-shaders-gen-build\Release\vulkan-shaders-gen.exe
+  Performing install step for 'vulkan-shaders-gen'
+  -- Up-to-date: D:/temp/RawrXD-agentic-ide-production/RawrXD-ModelLoader/build/Release/./vulkan-shaders-gen.exe
+  Completed 'vulkan-shaders-gen'
+  ggml-vulkan.vcxproj -> D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\3rdparty\ggml\src\ggml-vulkan\Release\ggml-vulkan.lib
+  ggml.vcxproj -> D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\3rdparty\ggml\src\Release\ggml.lib
+  Automatic MOC for target quant_utils
+  quant_utils.vcxproj -> D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\Release\quant_utils.lib
+  Automatic MOC for target RawrXD-AgenticIDE
+  AutoMoc: D:/temp/RawrXD-agentic-ide-production/RawrXD-ModelLoader/include/rest_api_server.h: note: No relevant classes found. No output generated.
+  AutoMoc: D:/temp/RawrXD-agentic-ide-production/RawrXD-ModelLoader/include/production_api_server.h: note: No relevant classes found. No output generated.
+  main_v5.cpp
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\MainWindow_v5.h(141,23): error C2143: syntax error: missing ';' before '*' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/qtapp/main_v5.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\MainWindow_v5.h(141,5): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/qtapp/main_v5.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\MainWindow_v5.h(141,53): error C2238: unexpected token(s) preceding ';' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/qtapp/main_v5.cpp')
+  
+  MainWindow_v5.cpp
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\MainWindow_v5.h(141,23): error C2143: syntax error: missing ';' before '*' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/qtapp/MainWindow_v5.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\MainWindow_v5.h(141,5): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/qtapp/MainWindow_v5.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\MainWindow_v5.h(141,53): error C2238: unexpected token(s) preceding ';' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/qtapp/MainWindow_v5.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\MainWindow_v5.cpp(87,7): error C2614: 'RawrXD::MainWindow': illegal member initialization: 'm_chatInterface' is not a base or member [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\MainWindow_v5.cpp(231,17): error C2065: 'm_chatPanelManager': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\MainWindow_v5.cpp(243,9): error C2065: 'm_chatPanelManager': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\MainWindow_v5.cpp(243,34): error C2061: syntax error: identifier 'AIChatPanelManager' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\MainWindow_v5.cpp(244,35): error C2065: 'm_chatPanelManager': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\MainWindow_v5.cpp(257,18): error C2065: 'm_chatPanelManager': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\MainWindow_v5.cpp(258,34): error C2065: 'm_chatPanelManager': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\MainWindow_v5.cpp(285,17): error C2065: 'm_chatPanelManager': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\MainWindow_v5.cpp(295,17): error C2065: 'm_chatPanelManager': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\MainWindow_v5.cpp(296,17): error C2065: 'm_chatPanelManager': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\MainWindow_v5.cpp(297,17): error C2065: 'm_chatPanelManager': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\MainWindow_v5.cpp(303,17): error C2065: 'm_chatPanelManager': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\MainWindow_v5.cpp(486,28): error C2039: 'clearAllTodos': is not a member of 'TodoManager' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\todo_manager.h(18,7):
+      see declaration of 'TodoManager'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\MainWindow_v5.cpp(492,28): error C2039: 'clearAllTodos': is not a member of 'TodoManager' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\todo_manager.h(18,7):
+      see declaration of 'TodoManager'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\MainWindow_v5.cpp(931,17): error C2065: 'm_chatInterface': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\MainWindow_v5.cpp(932,17): error C2065: 'm_chatInterface': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\MainWindow_v5.cpp(1390,28): error C2065: 'm_chatInterface': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\MainWindow_v5.cpp(1392,17): error C2065: 'm_chatInterface': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\MainWindow_v5.cpp(1501,13): error C2065: 'm_chatInterface': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\MainWindow_v5.cpp(1502,13): error C2065: 'm_chatInterface': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  settings_dialog.cpp
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_dialog.cpp(210,5): error C2065: 'm_enableCloudAI': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_dialog.cpp(211,5): error C2065: 'm_cloudEndpoint': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_dialog.cpp(212,5): error C2065: 'm_cloudEndpoint': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_dialog.cpp(213,5): error C2065: 'm_apiKey': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_dialog.cpp(214,5): error C2065: 'm_apiKey': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_dialog.cpp(215,5): error C2065: 'm_apiKey': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_dialog.cpp(217,28): error C2065: 'm_enableCloudAI': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_dialog.cpp(219,28): error C2065: 'm_cloudEndpoint': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_dialog.cpp(221,28): error C2065: 'm_apiKey': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_dialog.cpp(227,5): error C2065: 'm_enableLocalAI': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_dialog.cpp(228,5): error C2065: 'm_localEndpoint': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_dialog.cpp(229,5): error C2065: 'm_localEndpoint': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_dialog.cpp(231,28): error C2065: 'm_enableLocalAI': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_dialog.cpp(233,28): error C2065: 'm_localEndpoint': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_dialog.cpp(239,5): error C2065: 'm_requestTimeout': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_dialog.cpp(240,5): error C2065: 'm_requestTimeout': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_dialog.cpp(241,5): error C2065: 'm_requestTimeout': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_dialog.cpp(242,5): error C2065: 'm_requestTimeout': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_dialog.cpp(245,30): error C2065: 'm_requestTimeout': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_dialog.cpp(363,48): error C2065: 'm_enableCloudAI': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_dialog.cpp(363,17): error C2660: 'SettingsManager::setValue': function does not take 1 arguments [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_manager.h(18,10):
+      see declaration of 'SettingsManager::setValue'
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_dialog.cpp(363,17):
+      while trying to match the argument list '(const char [19])'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_dialog.cpp(364,48): error C2065: 'm_enableLocalAI': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_dialog.cpp(364,17): error C2660: 'SettingsManager::setValue': function does not take 1 arguments [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_manager.h(18,10):
+      see declaration of 'SettingsManager::setValue'
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_dialog.cpp(364,17):
+      while trying to match the argument list '(const char [19])'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_dialog.cpp(365,50): error C2065: 'm_cloudEndpoint': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_dialog.cpp(365,17): error C2660: 'SettingsManager::setValue': function does not take 1 arguments [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_manager.h(18,10):
+      see declaration of 'SettingsManager::setValue'
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_dialog.cpp(365,17):
+      while trying to match the argument list '(const char [21])'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_dialog.cpp(366,50): error C2065: 'm_localEndpoint': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_dialog.cpp(366,17): error C2660: 'SettingsManager::setValue': function does not take 1 arguments [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_manager.h(18,10):
+      see declaration of 'SettingsManager::setValue'
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_dialog.cpp(366,17):
+      while trying to match the argument list '(const char [21])'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_dialog.cpp(367,43): error C2065: 'm_apiKey': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_dialog.cpp(367,17): error C2660: 'SettingsManager::setValue': function does not take 1 arguments [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_manager.h(18,10):
+      see declaration of 'SettingsManager::setValue'
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_dialog.cpp(367,17):
+      while trying to match the argument list '(const char [14])'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_dialog.cpp(368,51): error C2065: 'm_requestTimeout': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_dialog.cpp(368,17): error C2660: 'SettingsManager::setValue': function does not take 1 arguments [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_manager.h(18,10):
+      see declaration of 'SettingsManager::setValue'
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\settings_dialog.cpp(368,17):
+      while trying to match the argument list '(const char [22])'
+  
+  production_api_stub.cpp
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_server.h(316,20): error C2061: syntax error: identifier 'quint16' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(28,9): error C2065: 'QFile': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(28,15): error C2146: syntax error: missing ';' before identifier 'configFile' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(28,15): error C3861: 'configFile': identifier not found [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(29,14): error C2065: 'configFile': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(29,41): error C2027: use of undefined type 'QIODevice' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+      C:\Qt\6.7.3\msvc2022_64\include\QtCore\qdatastream.h(25,7):
+      see declaration of 'QIODevice'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(29,41): error C2065: 'ReadOnly': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(34,23): error C2079: 'doc' uses undefined class 'QJsonDocument' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(34,44): error C2027: use of undefined type 'QJsonDocument' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+      C:\Qt\6.7.3\msvc2022_64\include\QtCore\qmetatype.h(1546,1):
+      see declaration of 'QJsonDocument'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(34,53): error C2065: 'configFile': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(34,44): error C3861: 'fromJson': identifier not found [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(35,9): error C2065: 'configFile': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(42,16): error C2665: 'RawrXD::API::ProductionAPIConfiguration::loadFromJson': no overloaded function could convert all the argument types [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(48,49):
+      could be 'std::unique_ptr<RawrXD::API::ProductionAPIServer,std::default_delete<RawrXD::API::ProductionAPIServer>> RawrXD::API::ProductionAPIConfiguration::loadFromJson(const QJsonObject &)'
+          D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(42,16):
+          'std::unique_ptr<RawrXD::API::ProductionAPIServer,std::default_delete<RawrXD::API::ProductionAPIServer>> RawrXD::API::ProductionAPIConfiguration::loadFromJson(const QJsonObject &)': cannot convert argument 1 from 'RawrXD::API::ProductionAPIServer *' to 'const QJsonObject &'
+              D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(42,39):
+              Reason: cannot convert from 'RawrXD::API::ProductionAPIServer *' to 'const QJsonObject'
+              D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(42,39):
+              'QJsonObject::QJsonObject': no overloaded function could convert all the argument types
+                  C:\Qt\6.7.3\msvc2022_64\include\QtCore\qjsonobject.h(28,5):
+                  could be 'QJsonObject::QJsonObject(const QJsonObject &) noexcept'
+                      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(42,39):
+                      'QJsonObject::QJsonObject(const QJsonObject &) noexcept': cannot convert argument 1 from 'RawrXD::API::ProductionAPIServer *' to 'const QJsonObject &'
+                          D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(42,39):
+                          Reason: cannot convert from 'RawrXD::API::ProductionAPIServer *' to 'const QJsonObject'
+                          D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(42,39):
+                          Conversion requires a second user-defined-conversion operator or constructor
+                  C:\Qt\6.7.3\msvc2022_64\include\QtCore\qjsonobject.h(31,5):
+                  or       'QJsonObject::QJsonObject(QJsonObject &&) noexcept'
+                      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(42,39):
+                      'QJsonObject::QJsonObject(QJsonObject &&) noexcept': cannot convert argument 1 from 'RawrXD::API::ProductionAPIServer *' to 'QJsonObject &&'
+                          D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(42,39):
+                          Reason: cannot convert from 'RawrXD::API::ProductionAPIServer *' to 'QJsonObject'
+                          D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(42,39):
+                          Conversion requires a second user-defined-conversion operator or constructor
+                  C:\Qt\6.7.3\msvc2022_64\include\QtCore\qjsonobject.h(247,5):
+                  or       'QJsonObject::QJsonObject(QCborContainerPrivate *)'
+                      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(42,39):
+                      'QJsonObject::QJsonObject(QCborContainerPrivate *)': cannot convert argument 1 from 'RawrXD::API::ProductionAPIServer *' to 'QCborContainerPrivate *'
+                          D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(42,39):
+                          Types pointed to are unrelated; conversion requires reinterpret_cast, C-style cast or parenthesized function-style cast
+                  C:\Qt\6.7.3\msvc2022_64\include\QtCore\qjsonobject.h(24,5):
+                  or       'QJsonObject::QJsonObject(std::initializer_list<std::pair<QString,QJsonValue>>)'
+                      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(42,39):
+                      'QJsonObject::QJsonObject(std::initializer_list<std::pair<QString,QJsonValue>>)': cannot convert argument 1 from 'RawrXD::API::ProductionAPIServer *' to 'std::initializer_list<std::pair<QString,QJsonValue>>'
+                          D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(42,39):
+                          Conversion requires a second user-defined-conversion operator or constructor
+                  D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(42,39):
+                  while trying to match the argument list '(RawrXD::API::ProductionAPIServer *)'
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(42,16):
+      while trying to match the argument list '(RawrXD::API::ProductionAPIServer *)'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(140,13): error C2065: 'TLSConfig': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(140,23): error C2146: syntax error: missing ';' before identifier 'tls' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(140,23): error C2065: 'tls': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(141,13): error C2065: 'tls': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(142,13): error C2065: 'tls': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(143,13): error C2065: 'tls': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(144,13): error C2065: 'tls': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(145,13): error C2065: 'tls': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(149,17): error C2065: 'tls': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(152,21): error C2039: 'configureTLS': is not a member of 'RawrXD::API::ProductionAPIServer' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_server.h(313,11):
+      see declaration of 'RawrXD::API::ProductionAPIServer'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(152,34): error C2065: 'tls': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(158,13): error C2065: 'OIDCConfig': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(158,24): error C2146: syntax error: missing ';' before identifier 'oidc' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(158,24): error C2065: 'oidc': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(159,13): error C2065: 'oidc': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(160,13): error C2065: 'oidc': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(161,13): error C2065: 'oidc': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(162,13): error C2065: 'oidc': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(163,13): error C2065: 'oidc': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(164,13): error C2065: 'oidc': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(165,13): error C2065: 'oidc': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(166,13): error C2065: 'oidc': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(167,13): error C2065: 'oidc': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(169,21): error C2039: 'configureOIDC': is not a member of 'RawrXD::API::ProductionAPIServer' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_server.h(313,11):
+      see declaration of 'RawrXD::API::ProductionAPIServer'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(169,35): error C2065: 'oidc': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(175,21): error C2039: 'setLoggingEnabled': is not a member of 'RawrXD::API::ProductionAPIServer' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_server.h(313,11):
+      see declaration of 'RawrXD::API::ProductionAPIServer'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(176,21): error C2039: 'setMetricsEnabled': is not a member of 'RawrXD::API::ProductionAPIServer' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_server.h(313,11):
+      see declaration of 'RawrXD::API::ProductionAPIServer'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(179,9): error C2440: 'return': cannot convert from 'std::unique_ptr<RawrXD::API::ProductionAPIServer,std::default_delete<RawrXD::API::ProductionAPIServer>>' to 'std::unique_ptr<RawrXD::API::ProductionAPIServer,std::default_delete<RawrXD::API::ProductionAPIServer>> &' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(179,9):
+      A non-const reference may only be bound to an lvalue
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\jwt_validator.h(235,23): error C2079: 'doc' uses undefined class 'QJsonDocument' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\jwt_validator.h(235,44): error C2027: use of undefined type 'QJsonDocument' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+      C:\Qt\6.7.3\msvc2022_64\include\QtCore\qmetatype.h(1546,1):
+      see declaration of 'QJsonDocument'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\jwt_validator.h(235,44): error C3861: 'fromJson': identifier not found [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_stub.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_stub.cpp(19,57): error C2039: 'Impl': is not a member of 'RawrXD::API::ProductionAPIServer' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_server.h(313,11):
+      see declaration of 'RawrXD::API::ProductionAPIServer'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_stub.cpp(19,57): error C2065: 'Impl': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_stub.cpp(19,25): error C2923: 'std::unique_ptr': 'Impl' is not a valid template type argument for parameter '_Ty' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_stub.cpp(19,57):
+      see declaration of 'Impl'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_stub.cpp(19,25): error C2976: 'std::unique_ptr': too few template arguments [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(3347,7):
+      see declaration of 'std::unique_ptr'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_stub.cpp(19,25): error C2990: 'std::unique_ptr': non-class template has already been declared as a class template [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(3347,7):
+      see declaration of 'std::unique_ptr'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_stub.cpp(19,62): error C2946: explicit instantiation; 'std::unique_ptr' is not a template-class specialization [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  production_api_server.cpp
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_server.h(316,20): error C2061: syntax error: identifier 'quint16' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_server.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_server.cpp(3,10): error C1083: Cannot open include file: 'QHttpServer': No such file or directory [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  production_api_example.cpp
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_server.h(316,20): error C2061: syntax error: identifier 'quint16' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(28,9): error C2065: 'QFile': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(28,15): error C2146: syntax error: missing ';' before identifier 'configFile' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(28,15): error C3861: 'configFile': identifier not found [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(29,14): error C2065: 'configFile': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(29,41): error C2027: use of undefined type 'QIODevice' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+      C:\Qt\6.7.3\msvc2022_64\include\QtCore\qdatastream.h(25,7):
+      see declaration of 'QIODevice'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(29,41): error C2065: 'ReadOnly': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(34,23): error C2079: 'doc' uses undefined class 'QJsonDocument' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(34,44): error C2027: use of undefined type 'QJsonDocument' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+      C:\Qt\6.7.3\msvc2022_64\include\QtCore\qmetatype.h(1546,1):
+      see declaration of 'QJsonDocument'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(34,53): error C2065: 'configFile': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(34,44): error C3861: 'fromJson': identifier not found [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(35,9): error C2065: 'configFile': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(42,16): error C2665: 'RawrXD::API::ProductionAPIConfiguration::loadFromJson': no overloaded function could convert all the argument types [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(48,49):
+      could be 'std::unique_ptr<RawrXD::API::ProductionAPIServer,std::default_delete<RawrXD::API::ProductionAPIServer>> RawrXD::API::ProductionAPIConfiguration::loadFromJson(const QJsonObject &)'
+          D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(42,16):
+          'std::unique_ptr<RawrXD::API::ProductionAPIServer,std::default_delete<RawrXD::API::ProductionAPIServer>> RawrXD::API::ProductionAPIConfiguration::loadFromJson(const QJsonObject &)': cannot convert argument 1 from 'RawrXD::API::ProductionAPIServer *' to 'const QJsonObject &'
+              D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(42,39):
+              Reason: cannot convert from 'RawrXD::API::ProductionAPIServer *' to 'const QJsonObject'
+              D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(42,39):
+              'QJsonObject::QJsonObject': no overloaded function could convert all the argument types
+                  C:\Qt\6.7.3\msvc2022_64\include\QtCore\qjsonobject.h(28,5):
+                  could be 'QJsonObject::QJsonObject(const QJsonObject &) noexcept'
+                      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(42,39):
+                      'QJsonObject::QJsonObject(const QJsonObject &) noexcept': cannot convert argument 1 from 'RawrXD::API::ProductionAPIServer *' to 'const QJsonObject &'
+                          D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(42,39):
+                          Reason: cannot convert from 'RawrXD::API::ProductionAPIServer *' to 'const QJsonObject'
+                          D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(42,39):
+                          Conversion requires a second user-defined-conversion operator or constructor
+                  C:\Qt\6.7.3\msvc2022_64\include\QtCore\qjsonobject.h(31,5):
+                  or       'QJsonObject::QJsonObject(QJsonObject &&) noexcept'
+                      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(42,39):
+                      'QJsonObject::QJsonObject(QJsonObject &&) noexcept': cannot convert argument 1 from 'RawrXD::API::ProductionAPIServer *' to 'QJsonObject &&'
+                          D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(42,39):
+                          Reason: cannot convert from 'RawrXD::API::ProductionAPIServer *' to 'QJsonObject'
+                          D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(42,39):
+                          Conversion requires a second user-defined-conversion operator or constructor
+                  C:\Qt\6.7.3\msvc2022_64\include\QtCore\qjsonobject.h(247,5):
+                  or       'QJsonObject::QJsonObject(QCborContainerPrivate *)'
+                      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(42,39):
+                      'QJsonObject::QJsonObject(QCborContainerPrivate *)': cannot convert argument 1 from 'RawrXD::API::ProductionAPIServer *' to 'QCborContainerPrivate *'
+                          D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(42,39):
+                          Types pointed to are unrelated; conversion requires reinterpret_cast, C-style cast or parenthesized function-style cast
+                  C:\Qt\6.7.3\msvc2022_64\include\QtCore\qjsonobject.h(24,5):
+                  or       'QJsonObject::QJsonObject(std::initializer_list<std::pair<QString,QJsonValue>>)'
+                      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(42,39):
+                      'QJsonObject::QJsonObject(std::initializer_list<std::pair<QString,QJsonValue>>)': cannot convert argument 1 from 'RawrXD::API::ProductionAPIServer *' to 'std::initializer_list<std::pair<QString,QJsonValue>>'
+                          D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(42,39):
+                          Conversion requires a second user-defined-conversion operator or constructor
+                  D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(42,39):
+                  while trying to match the argument list '(RawrXD::API::ProductionAPIServer *)'
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(42,16):
+      while trying to match the argument list '(RawrXD::API::ProductionAPIServer *)'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(140,13): error C2065: 'TLSConfig': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(140,23): error C2146: syntax error: missing ';' before identifier 'tls' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(140,23): error C2065: 'tls': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(141,13): error C2065: 'tls': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(142,13): error C2065: 'tls': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(143,13): error C2065: 'tls': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(144,13): error C2065: 'tls': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(145,13): error C2065: 'tls': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(149,17): error C2065: 'tls': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(152,21): error C2039: 'configureTLS': is not a member of 'RawrXD::API::ProductionAPIServer' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_server.h(313,11):
+      see declaration of 'RawrXD::API::ProductionAPIServer'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(152,34): error C2065: 'tls': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(158,13): error C2065: 'OIDCConfig': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(158,24): error C2146: syntax error: missing ';' before identifier 'oidc' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(158,24): error C2065: 'oidc': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(159,13): error C2065: 'oidc': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(160,13): error C2065: 'oidc': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(161,13): error C2065: 'oidc': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(162,13): error C2065: 'oidc': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(163,13): error C2065: 'oidc': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(164,13): error C2065: 'oidc': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(165,13): error C2065: 'oidc': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(166,13): error C2065: 'oidc': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(167,13): error C2065: 'oidc': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(169,21): error C2039: 'configureOIDC': is not a member of 'RawrXD::API::ProductionAPIServer' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_server.h(313,11):
+      see declaration of 'RawrXD::API::ProductionAPIServer'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(169,35): error C2065: 'oidc': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(175,21): error C2039: 'setLoggingEnabled': is not a member of 'RawrXD::API::ProductionAPIServer' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_server.h(313,11):
+      see declaration of 'RawrXD::API::ProductionAPIServer'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(176,21): error C2039: 'setMetricsEnabled': is not a member of 'RawrXD::API::ProductionAPIServer' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_server.h(313,11):
+      see declaration of 'RawrXD::API::ProductionAPIServer'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(179,9): error C2440: 'return': cannot convert from 'std::unique_ptr<RawrXD::API::ProductionAPIServer,std::default_delete<RawrXD::API::ProductionAPIServer>>' to 'std::unique_ptr<RawrXD::API::ProductionAPIServer,std::default_delete<RawrXD::API::ProductionAPIServer>> &' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_configuration.h(179,9):
+      A non-const reference may only be bound to an lvalue
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\jwt_validator.h(235,23): error C2079: 'doc' uses undefined class 'QJsonDocument' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\jwt_validator.h(235,44): error C2027: use of undefined type 'QJsonDocument' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+      C:\Qt\6.7.3\msvc2022_64\include\QtCore\qmetatype.h(1546,1):
+      see declaration of 'QJsonDocument'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\jwt_validator.h(235,44): error C3861: 'fromJson': identifier not found [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/production_api_example.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(36,5): error C2065: 'TLSConfig': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(36,15): error C2146: syntax error: missing ';' before identifier 'tlsConfig' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(36,15): error C2065: 'tlsConfig': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(37,5): error C2065: 'tlsConfig': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(38,5): error C2065: 'tlsConfig': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(39,5): error C2065: 'tlsConfig': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(40,5): error C2065: 'tlsConfig': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(41,5): error C2065: 'tlsConfig': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(46,13): error C2039: 'configureTLS': is not a member of 'RawrXD::API::ProductionAPIServer' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_server.h(313,11):
+      see declaration of 'RawrXD::API::ProductionAPIServer'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(46,26): error C2065: 'tlsConfig': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(49,5): error C2065: 'OIDCConfig': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(49,16): error C2146: syntax error: missing ';' before identifier 'oidcConfig' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(49,16): error C2065: 'oidcConfig': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(50,5): error C2065: 'oidcConfig': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(51,5): error C2065: 'oidcConfig': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(52,5): error C2065: 'oidcConfig': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(53,5): error C2065: 'oidcConfig': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(54,5): error C2065: 'oidcConfig': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(55,5): error C2065: 'oidcConfig': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(56,5): error C2065: 'oidcConfig': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(57,5): error C2065: 'oidcConfig': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(58,13): error C2039: 'configureOIDC': is not a member of 'RawrXD::API::ProductionAPIServer' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_server.h(313,11):
+      see declaration of 'RawrXD::API::ProductionAPIServer'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(58,27): error C2065: 'oidcConfig': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(65,13): error C2039: 'use': is not a member of 'RawrXD::API::ProductionAPIServer' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_server.h(313,11):
+      see declaration of 'RawrXD::API::ProductionAPIServer'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(65,20): error C2187: syntax error: 'RequestContext' was unexpected here [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(65,36): error C2065: 'ctx': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(65,39): error C2059: syntax error: ')' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(65,41): error C2143: syntax error: missing ';' before '{' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(67,20): error C2065: 'ctx': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(68,20): error C2065: 'ctx': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(70,20): error C2065: 'ctx': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(72,6): error C2059: syntax error: ')' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(75,13): error C2039: 'use': is not a member of 'RawrXD::API::ProductionAPIServer' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_server.h(313,11):
+      see declaration of 'RawrXD::API::ProductionAPIServer'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(75,20): error C2187: syntax error: 'RequestContext' was unexpected here [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(75,36): error C2065: 'ctx': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(75,39): error C2059: syntax error: ')' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(75,41): error C2143: syntax error: missing ';' before '{' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(76,13): error C2065: 'ctx': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(76,37): error C2065: 'ctx': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(77,35): error C2065: 'ctx': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(79,61): error C2065: 'ctx': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(79,75): error C2065: 'ctx': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(84,6): error C2059: syntax error: ')' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(91,13): error C2039: 'registerRESTEndpoint': is not a member of 'RawrXD::API::ProductionAPIServer' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_server.h(313,11):
+      see declaration of 'RawrXD::API::ProductionAPIServer'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(92,25): error C3878: syntax error: unexpected token 'response' following 'expression' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(102,6): error C2059: syntax error: ',' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(105,13): error C2039: 'registerRESTEndpoint': is not a member of 'RawrXD::API::ProductionAPIServer' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_server.h(313,11):
+      see declaration of 'RawrXD::API::ProductionAPIServer'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(106,25): error C3878: syntax error: unexpected token 'response' following 'expression' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(112,6): error C2059: syntax error: ',' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(115,13): error C2039: 'registerRESTEndpoint': is not a member of 'RawrXD::API::ProductionAPIServer' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_server.h(313,11):
+      see declaration of 'RawrXD::API::ProductionAPIServer'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(116,25): error C3878: syntax error: unexpected token 'response' following 'expression' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(152,6): error C2059: syntax error: ',' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(155,13): error C2039: 'registerRESTEndpoint': is not a member of 'RawrXD::API::ProductionAPIServer' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_server.h(313,11):
+      see declaration of 'RawrXD::API::ProductionAPIServer'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(156,25): error C3878: syntax error: unexpected token 'response' following 'expression' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(171,6): error C2059: syntax error: ',' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(177,13): error C2039: 'registerGraphQLQuery': is not a member of 'RawrXD::API::ProductionAPIServer' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_server.h(313,11):
+      see declaration of 'RawrXD::API::ProductionAPIServer'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(192,13): error C2039: 'registerGraphQLQuery': is not a member of 'RawrXD::API::ProductionAPIServer' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\production_api_server.h(313,11):
+      see declaration of 'RawrXD::API::ProductionAPIServer'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\production_api_example.cpp(192,13): error C1003: error count exceeds 100; stopping compilation [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  rest_api_server.cpp
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(30,22): error C2039: 'Impl': is not a member of 'RawrXD::API::RESTAPIServer' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\rest_api_server.h(119,11):
+      see declaration of 'RawrXD::API::RESTAPIServer'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(32,17): error C3646: 'server': unknown override specifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(32,5): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(41,73): error C2065: 'RESTRequest': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(41,67): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(41,84): error C2143: syntax error: missing ',' before '&' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(41,86): error C2143: syntax error: missing ')' before '>' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(47,36): error C2065: 'RESTRequest': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(47,48): error C2059: syntax error: ',' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(47,50): error C2065: 'RESTResponse': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(47,63): error C2059: syntax error: ')' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(59,30): error C2065: 'RESTRequest': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(59,24): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(59,41): error C2143: syntax error: missing ',' before '&' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(59,43): error C2143: syntax error: missing ')' before '>' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(62,16): error C2084: function 'RawrXD::API::RESTAPIServer::RESTAPIServer(void)' already has a body [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\rest_api_server.h(121,9):
+      see previous definition of 'RawrXD::API::RESTAPIServer::RESTAPIServer'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(63,7): error C2614: 'RawrXD::API::RESTAPIServer': illegal member initialization: 'impl' is not a base or member [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(65,5): error C2065: 'impl': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(68,17): error C2600: 'RawrXD::API::RESTAPIServer::~RESTAPIServer': cannot define a compiler-generated special member function (must be declared in the class first) [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(70,21): error C2039: 'start': is not a member of 'RawrXD::API::RESTAPIServer' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\rest_api_server.h(119,11):
+      see declaration of 'RawrXD::API::RESTAPIServer'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(71,24): error C2065: 'impl': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(71,22): error C2641: cannot deduce template arguments for 'QMutexLocker' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(71,22): error C2780: 'QMutexLocker<Mutex> QMutexLocker(const QMutexLocker<Mutex> &)': expects 1 arguments - 0 provided [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      C:\Qt\6.7.3\msvc2022_64\include\QtCore\qmutex.h(272,5):
+      see declaration of 'QMutexLocker'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(71,22): error C2780: 'QMutexLocker<Mutex> QMutexLocker(QMutexLocker<Mutex> &&) noexcept': expects 1 arguments - 0 provided [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      C:\Qt\6.7.3\msvc2022_64\include\QtCore\qmutex.h(229,5):
+      see declaration of 'QMutexLocker'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(71,22): error C2780: 'QMutexLocker<Mutex> QMutexLocker(Mutex *) noexcept': expects 1 arguments - 0 provided [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      C:\Qt\6.7.3\msvc2022_64\include\QtCore\qmutex.h(219,5):
+      see declaration of 'QMutexLocker'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(71,22): error C2780: 'QMutexLocker<Mutex> QMutexLocker(QMutexLocker<Mutex>)': expects 1 arguments - 0 provided [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      C:\Qt\6.7.3\msvc2022_64\include\QtCore\qmutex.h(215,7):
+      see declaration of 'QMutexLocker'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(73,5): error C2065: 'impl': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(76,10): error C2065: 'impl': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(76,49): error C2065: 'impl': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(77,69): error C2065: 'impl': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(81,5): error C2065: 'impl': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(82,53): error C2065: 'impl': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(85,5): error C2065: 'impl': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(93,21): error C2039: 'stop': is not a member of 'RawrXD::API::RESTAPIServer' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\rest_api_server.h(119,11):
+      see declaration of 'RawrXD::API::RESTAPIServer'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(94,24): error C2065: 'impl': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(94,22): error C2641: cannot deduce template arguments for 'QMutexLocker' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(94,22): error C2780: 'QMutexLocker<Mutex> QMutexLocker(const QMutexLocker<Mutex> &)': expects 1 arguments - 0 provided [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      C:\Qt\6.7.3\msvc2022_64\include\QtCore\qmutex.h(272,5):
+      see declaration of 'QMutexLocker'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(94,22): error C2780: 'QMutexLocker<Mutex> QMutexLocker(QMutexLocker<Mutex> &&) noexcept': expects 1 arguments - 0 provided [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      C:\Qt\6.7.3\msvc2022_64\include\QtCore\qmutex.h(229,5):
+      see declaration of 'QMutexLocker'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(94,22): error C2780: 'QMutexLocker<Mutex> QMutexLocker(Mutex *) noexcept': expects 1 arguments - 0 provided [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      C:\Qt\6.7.3\msvc2022_64\include\QtCore\qmutex.h(219,5):
+      see declaration of 'QMutexLocker'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(94,22): error C2780: 'QMutexLocker<Mutex> QMutexLocker(QMutexLocker<Mutex>)': expects 1 arguments - 0 provided [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      C:\Qt\6.7.3\msvc2022_64\include\QtCore\qmutex.h(215,7):
+      see declaration of 'QMutexLocker'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(95,5): error C2065: 'impl': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(96,5): error C2065: 'impl': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(100,21): error C2039: 'isRunning': is not a member of 'RawrXD::API::RESTAPIServer' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\rest_api_server.h(119,11):
+      see declaration of 'RawrXD::API::RESTAPIServer'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(100,21): error C2270: 'isRunning': modifiers not allowed on nonmember functions [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(101,12): error C2065: 'impl': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(104,21): error C2039: 'registerOpenAPIRoute': is not a member of 'RawrXD::API::RESTAPIServer' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\rest_api_server.h(119,11):
+      see declaration of 'RawrXD::API::RESTAPIServer'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(105,75): error C2061: syntax error: identifier 'RouteHandler' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(106,24): error C2065: 'impl': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(106,22): error C2641: cannot deduce template arguments for 'QMutexLocker' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(106,22): error C2780: 'QMutexLocker<Mutex> QMutexLocker(const QMutexLocker<Mutex> &)': expects 1 arguments - 0 provided [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      C:\Qt\6.7.3\msvc2022_64\include\QtCore\qmutex.h(272,5):
+      see declaration of 'QMutexLocker'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(106,22): error C2780: 'QMutexLocker<Mutex> QMutexLocker(QMutexLocker<Mutex> &&) noexcept': expects 1 arguments - 0 provided [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      C:\Qt\6.7.3\msvc2022_64\include\QtCore\qmutex.h(229,5):
+      see declaration of 'QMutexLocker'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(106,22): error C2780: 'QMutexLocker<Mutex> QMutexLocker(Mutex *) noexcept': expects 1 arguments - 0 provided [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      C:\Qt\6.7.3\msvc2022_64\include\QtCore\qmutex.h(219,5):
+      see declaration of 'QMutexLocker'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(106,22): error C2780: 'QMutexLocker<Mutex> QMutexLocker(QMutexLocker<Mutex>)': expects 1 arguments - 0 provided [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      C:\Qt\6.7.3\msvc2022_64\include\QtCore\qmutex.h(215,7):
+      see declaration of 'QMutexLocker'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(109,5): error C2065: 'impl': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(109,39): error C2065: 'handler': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(110,5): error C2065: 'impl': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(114,9): error C2065: 'impl': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(114,35): error C3482: 'this' can only be used as a lambda capture within a non-static member function [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(114,41): error C3481: 'handler': lambda capture variable not found [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(115,47): error C2065: 'handler': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(115,20): error C3861: 'handleHttpRequest': identifier not found [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(118,9): error C2065: 'impl': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(118,34): error C2653: 'QHttpServerRequest': is not a class or namespace name [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(118,62): error C2065: 'Post': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(119,32): error C3482: 'this' can only be used as a lambda capture within a non-static member function [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(119,38): error C3481: 'handler': lambda capture variable not found [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(120,47): error C2065: 'handler': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(120,20): error C3861: 'handleHttpRequest': identifier not found [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(123,9): error C2065: 'impl': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(123,34): error C2653: 'QHttpServerRequest': is not a class or namespace name [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(123,62): error C2065: 'Put': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(124,32): error C3482: 'this' can only be used as a lambda capture within a non-static member function [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(124,38): error C3481: 'handler': lambda capture variable not found [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(125,47): error C2065: 'handler': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(125,20): error C3861: 'handleHttpRequest': identifier not found [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(128,9): error C2065: 'impl': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(128,34): error C2653: 'QHttpServerRequest': is not a class or namespace name [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(128,62): error C2065: 'Delete': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(129,32): error C3482: 'this' can only be used as a lambda capture within a non-static member function [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(129,38): error C3481: 'handler': lambda capture variable not found [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(130,47): error C2065: 'handler': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(130,20): error C3861: 'handleHttpRequest': identifier not found [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(137,36): error C2039: 'handleHttpRequest': is not a member of 'RawrXD::API::RESTAPIServer' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\rest_api_server.h(119,11):
+      see declaration of 'RawrXD::API::RESTAPIServer'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(137,1): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(137,36): error C2146: syntax error: missing ';' before identifier 'handleHttpRequest' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(138,78): error C2143: syntax error: missing ';' before '{' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(138,78): error C2447: '{': missing function header (old-style formal list?) [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(184,21): error C2039: 'setRateLimit': is not a member of 'RawrXD::API::RESTAPIServer' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\rest_api_server.h(119,11):
+      see declaration of 'RawrXD::API::RESTAPIServer'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(185,5): error C2065: 'impl': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(188,21): error C2039: 'enableMetrics': is not a member of 'RawrXD::API::RESTAPIServer' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\rest_api_server.h(119,11):
+      see declaration of 'RawrXD::API::RESTAPIServer'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(189,5): error C2065: 'impl': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(192,21): error C2039: 'setAuthValidator': is not a member of 'RawrXD::API::RESTAPIServer' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\rest_api_server.h(119,11):
+      see declaration of 'RawrXD::API::RESTAPIServer'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(192,69): error C2065: 'RESTRequest': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(192,63): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(192,80): error C2143: syntax error: missing ',' before '&' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(192,82): error C2143: syntax error: missing ')' before '>' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(192,38): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(192,44): error C2144: syntax error: '<error type>' should be preceded by ')' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(192,44): error C2144: syntax error: '<error type>' should be preceded by ';' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(192,94): error C2059: syntax error: ')' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(193,5): error C2065: 'impl': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(193,36): error C2059: syntax error: ';' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(196,6): error C2653: 'RESTAPIServer': is not a class or namespace name [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(197,24): error C2065: 'impl': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(197,22): error C2641: cannot deduce template arguments for 'QMutexLocker' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\api\rest_api_server.cpp(197,22): error C1003: error count exceeds 100; stopping compilation [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  oauth2_manager.cpp
+  jwt_validator.cpp
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\jwt_validator.h(235,23): error C2079: 'doc' uses undefined class 'QJsonDocument' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/jwt_validator.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\jwt_validator.h(235,44): error C2027: use of undefined type 'QJsonDocument' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/jwt_validator.cpp')
+      C:\Qt\6.7.3\msvc2022_64\include\QtCore\qmetatype.h(1546,1):
+      see declaration of 'QJsonDocument'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\include\jwt_validator.h(235,44): error C3861: 'fromJson': identifier not found [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file '../src/jwt_validator.cpp')
+  
+  pqc_crypto.cpp
+  mocs_compilation_Release.cpp
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\MainWindow_v5.h(141,23): error C2143: syntax error: missing ';' before '*' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\MainWindow_v5.h(141,5): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\MainWindow_v5.h(141,53): error C2238: unexpected token(s) preceding ';' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\qtapp\agentic_textedit.hpp(20,7): error C2011: 'RawrXD::AgenticTextEdit': 'class' type redefinition [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\agentic_text_edit.h(29,7):
+      see declaration of 'RawrXD::AgenticTextEdit'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(37,8): error C2011: '`anonymous-namespace'::qt_meta_stringdata_CLASSRawrXDSCOPEAgenticTextEditENDCLASS_t': 'struct' type redefinition [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\UVLADIE3JM\moc_agentic_text_edit.cpp(38,8):
+      see declaration of '`anonymous-namespace'::qt_meta_stringdata_CLASSRawrXDSCOPEAgenticTextEditENDCLASS_t'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(38,16): error C2374: '`anonymous-namespace'::qt_meta_stringdata_CLASSRawrXDSCOPEAgenticTextEditENDCLASS': redefinition; multiple initialization [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\UVLADIE3JM\moc_agentic_text_edit.cpp(39,16):
+      see declaration of '`anonymous-namespace'::qt_meta_stringdata_CLASSRawrXDSCOPEAgenticTextEditENDCLASS'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(38,16): error C2086: 'const QtMocHelpers::StringData<42,319> `anonymous-namespace'::qt_meta_stringdata_CLASSRawrXDSCOPEAgenticTextEditENDCLASS': redefinition [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\UVLADIE3JM\moc_agentic_text_edit.cpp(39,16):
+      see declaration of '`anonymous-namespace'::qt_meta_stringdata_CLASSRawrXDSCOPEAgenticTextEditENDCLASS'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(38,16): error C2371: '`anonymous-namespace'::qt_meta_stringdata_CLASSRawrXDSCOPEAgenticTextEditENDCLASS': redefinition; different basic types [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(51,31): error C2374: 'qt_meta_data_CLASSRawrXDSCOPEAgenticTextEditENDCLASS': redefinition; multiple initialization [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\UVLADIE3JM\moc_agentic_text_edit.cpp(67,31):
+      see declaration of 'qt_meta_data_CLASSRawrXDSCOPEAgenticTextEditENDCLASS'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(51,31): error C2086: 'const uint qt_meta_data_CLASSRawrXDSCOPEAgenticTextEditENDCLASS[101]': redefinition [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\UVLADIE3JM\moc_agentic_text_edit.cpp(67,31):
+      see declaration of 'qt_meta_data_CLASSRawrXDSCOPEAgenticTextEditENDCLASS'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(77,56): error C2027: use of undefined type 'RawrXD::AgenticTextEdit' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\agentic_text_edit.h(29,7):
+      see declaration of 'RawrXD::AgenticTextEdit'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(81,5): error C2065: 'qt_static_metacall': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(85,41): error C2065: 'AgenticTextEdit': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(85,20): error C2923: 'QtPrivate::TypeAndForceComplete': 'AgenticTextEdit' is not a valid template type argument for parameter 'T' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(85,41):
+      see declaration of 'AgenticTextEdit'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(85,20): error C3203: 'TypeAndForceComplete': unspecialized class template can't be used as a template argument for template parameter 'T', expected a real type [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+C:\Qt\6.7.3\msvc2022_64\include\QtCore\qmetatype.h(2591,24): error C2651: '<error type>': left of '::' must be a class, struct or union [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+      C:\Qt\6.7.3\msvc2022_64\include\QtCore\qmetatype.h(2591,24):
+      the template instantiation context (the oldest one first) is
+          D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(83,5):
+          see reference to variable template 'const QtPrivate::QMetaTypeInterface *const qt_incomplete_metaTypeArray<`anonymous namespace'::qt_meta_stringdata_CLASSRawrXDSCOPEAgenticTextEditENDCLASS_t,int,QtPrivate::TypeAndForceComplete<void,std::integral_constant<bool,0> >,QtPrivate::TypeAndForceComplete<void,std::integral_constant<bool,0> >,QtPrivate::TypeAndForceComplete<void,std::integral_constant<bool,0> >,QtPrivate::TypeAndForceComplete<QString const &,std::integral_constant<bool,0> > >[5]' being compiled
+          C:\Qt\6.7.3\msvc2022_64\include\QtCore\qmetatype.h(2660,16):
+          see reference to function template instantiation 'const QtPrivate::QMetaTypeInterface *QtPrivate::qTryMetaTypeInterfaceForType<`anonymous-namespace'::qt_meta_stringdata_CLASSRawrXDSCOPEAgenticTextEditENDCLASS_t,<error type>>(void)' being compiled
+  
+C:\Qt\6.7.3\msvc2022_64\include\QtCore\qmetatype.h(2591,15): error C2651: '<error type>': left of '::' must be a class, struct or union [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+C:\Qt\6.7.3\msvc2022_64\include\QtCore\qmetatype.h(2591,15): error C2144: syntax error: '<error type>' should be preceded by ';' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+C:\Qt\6.7.3\msvc2022_64\include\QtCore\qmetatype.h(2591,42): error C2039: 'type': is not a member of '`global namespace'' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+C:\Qt\6.7.3\msvc2022_64\include\QtCore\qmetatype.h(2592,27): error C2651: '<error type>': left of '::' must be a class, struct or union [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+C:\Qt\6.7.3\msvc2022_64\include\QtCore\qmetatype.h(2592,27): error C2144: syntax error: '<error type>' should be preceded by ';' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+C:\Qt\6.7.3\msvc2022_64\include\QtCore\qmetatype.h(2592,54): error C2039: 'ForceComplete': is not a member of '`global namespace'' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+C:\Qt\6.7.3\msvc2022_64\include\QtCore\qmetatype.h(2592,54): error C2377: 'QtPrivate::qTryMetaTypeInterfaceForType::ForceComplete': redefinition; typedef cannot be overloaded with any other symbol [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+      C:\Qt\6.7.3\msvc2022_64\include\QtCore\qmetatype.h(2592,11):
+      see declaration of 'QtPrivate::qTryMetaTypeInterfaceForType::ForceComplete'
+  
+C:\Qt\6.7.3\msvc2022_64\include\QtCore\qmetatype.h(2599,26): error C2825: 'QtPrivate::qTryMetaTypeInterfaceForType::ForceComplete': must be a class or namespace when followed by '::' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+C:\Qt\6.7.3\msvc2022_64\include\QtCore\qmetatype.h(2599,41): error C2510: 'ForceComplete': left of '::' must be a class/struct/union [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+C:\Qt\6.7.3\msvc2022_64\include\QtCore\qmetatype.h(2599,41): error C2065: 'value': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+C:\Qt\6.7.3\msvc2022_64\include\QtCore\qmetatype.h(2599,41): error C2131: expression did not evaluate to a constant [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+      C:\Qt\6.7.3\msvc2022_64\include\QtCore\qmetatype.h(2599,41):
+      a non-constant (sub-)expression was encountered
+  
+C:\Qt\6.7.3\msvc2022_64\include\QtCore\qmetatype.h(2659,86): error C3615: constexpr function 'QtPrivate::qTryMetaTypeInterfaceForType' cannot result in a constant expression [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+      C:\Qt\6.7.3\msvc2022_64\include\QtCore\qmetatype.h(2589,36):
+      failure was caused by control reaching the end of a constexpr function
+      C:\Qt\6.7.3\msvc2022_64\include\QtCore\qmetatype.h(2659,86):
+      the call stack of the evaluation (the oldest call first) is
+          C:\Qt\6.7.3\msvc2022_64\include\QtCore\qmetatype.h(2660,55):
+          while evaluating function 'const QtPrivate::QMetaTypeInterface *QtPrivate::qTryMetaTypeInterfaceForType<`anonymous-namespace'::qt_meta_stringdata_CLASSRawrXDSCOPEAgenticTextEditENDCLASS_t,<error type>>(void)'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(77,56): error C2737: 'staticMetaObject': const object must be initialized [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(97,31): error C2027: use of undefined type 'RawrXD::AgenticTextEdit' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\agentic_text_edit.h(29,7):
+      see declaration of 'RawrXD::AgenticTextEdit'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(100,32): error C2061: syntax error: identifier 'AgenticTextEdit' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(101,15): error C3536: '_t': cannot be used before it is initialized [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(111,30): error C2653: 'AgenticTextEdit': is not a class or namespace name [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(111,30): error C2061: syntax error: identifier 'AgenticTextEdit' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(112,17): error C2065: '_t': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(112,20): error C2146: syntax error: missing ';' before identifier '_q_method' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(112,30): error C2059: syntax error: '=' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(112,33): error C2653: 'AgenticTextEdit': is not a class or namespace name [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(112,84): error C2061: syntax error: identifier '_t' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(112,109): error C2059: syntax error: ')' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(112,111): error C2143: syntax error: missing ';' before '{' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(118,30): error C2653: 'AgenticTextEdit': is not a class or namespace name [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(118,30): error C2061: syntax error: identifier 'AgenticTextEdit' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(119,17): error C2065: '_t': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(119,20): error C2146: syntax error: missing ';' before identifier '_q_method' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(119,30): error C2059: syntax error: '=' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(119,33): error C2653: 'AgenticTextEdit': is not a class or namespace name [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(119,81): error C2061: syntax error: identifier '_t' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(119,106): error C2059: syntax error: ')' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(119,108): error C2143: syntax error: missing ';' before '{' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(125,30): error C2653: 'AgenticTextEdit': is not a class or namespace name [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(125,30): error C2061: syntax error: identifier 'AgenticTextEdit' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(126,17): error C2065: '_t': undeclared identifier [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(126,20): error C2146: syntax error: missing ';' before identifier '_q_method' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(126,30): error C2059: syntax error: '=' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(126,33): error C2653: 'AgenticTextEdit': is not a class or namespace name [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(126,85): error C2061: syntax error: identifier '_t' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(126,110): error C2059: syntax error: ')' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(126,112): error C2143: syntax error: missing ';' before '{' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(134,45): error C2027: use of undefined type 'RawrXD::AgenticTextEdit' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\agentic_text_edit.h(29,7):
+      see declaration of 'RawrXD::AgenticTextEdit'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(134,45): error C2270: 'metaObject': modifiers not allowed on nonmember functions [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(139,32): error C2027: use of undefined type 'RawrXD::AgenticTextEdit' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\agentic_text_edit.h(29,7):
+      see declaration of 'RawrXD::AgenticTextEdit'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(143,35): error C2355: 'this': can only be referenced inside non-static member functions or non-static data member initializers [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(144,23): error C2352: 'QTextEdit::qt_metacast': a call of a non-static member function requires an object [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+      C:\Qt\6.7.3\msvc2022_64\include\QtWidgets\qtextedit.h(28,5):
+      see declaration of 'QTextEdit::qt_metacast'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(147,30): error C2027: use of undefined type 'RawrXD::AgenticTextEdit' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\agentic_text_edit.h(29,7):
+      see declaration of 'RawrXD::AgenticTextEdit'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(149,22): error C2352: 'QTextEdit::qt_metacall': a call of a non-static member function requires an object [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+      C:\Qt\6.7.3\msvc2022_64\include\QtWidgets\qtextedit.h(28,5):
+      see declaration of 'QTextEdit::qt_metacall'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(154,32): error C2355: 'this': can only be referenced inside non-static member functions or non-static data member initializers [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(165,31): error C2027: use of undefined type 'RawrXD::AgenticTextEdit' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\agentic_text_edit.h(29,7):
+      see declaration of 'RawrXD::AgenticTextEdit'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(167,27): error C2355: 'this': can only be referenced inside non-static member functions or non-static data member initializers [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(171,31): error C2027: use of undefined type 'RawrXD::AgenticTextEdit' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\agentic_text_edit.h(29,7):
+      see declaration of 'RawrXD::AgenticTextEdit'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(173,27): error C2355: 'this': can only be referenced inside non-static member functions or non-static data member initializers [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(177,31): error C2027: use of undefined type 'RawrXD::AgenticTextEdit' [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+      D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\src\agentic_text_edit.h(29,7):
+      see declaration of 'RawrXD::AgenticTextEdit'
+  
+D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE_autogen\include_Release\GRIW4O4K45\moc_agentic_textedit.cpp(180,27): error C2355: 'this': can only be referenced inside non-static member functions or non-static data member initializers [D:\temp\RawrXD-agentic-ide-production\RawrXD-ModelLoader\build\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+  Generating Code...

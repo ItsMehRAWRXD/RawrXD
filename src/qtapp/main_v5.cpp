@@ -59,6 +59,10 @@ void fileMessageHandler(QtMsgType type, const QMessageLogContext &context, const
 
 int main(int argc, char *argv[])
 {
+    // Early console output before Qt initialization
+    fprintf(stderr, "[Main] Starting RawrXD Agentic IDE v5.0\n");
+    fflush(stderr);
+    
     // Setup file logging BEFORE anything else
     QString logFileName = QString("RawrXD_ModelLoader_%1.log")
         .arg(QDateTime::currentDateTime().toString("yyyyMMdd_HHmmss"));
@@ -72,7 +76,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "WARNING: Could not open log file %s\n", logFileName.toLocal8Bit().constData());
     }
     
-    qDebug() << "[Main] Starting RawrXD Agentic IDE v5.0";
+    qDebug() << "[Main] Creating QApplication";
     
     QApplication app(argc, argv);
     

@@ -474,7 +474,7 @@ bool ModelMemoryHotpatch::findTensor(const QString& tensorName, size_t& offset, 
     if (!m_attached) return false;
     
     if (m_tensorMap.contains(tensorName)) {
-        const TensorInfo& info = m_tensorMap.value(tensorName);
+        const TensorMemoryInfo& info = m_tensorMap.value(tensorName);
         offset = info.offset;
         size = info.size;
         return true;

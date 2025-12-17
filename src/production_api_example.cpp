@@ -1,3 +1,6 @@
+// Only compile example if QT_HTTPSERVER is available
+#if defined(QT_HTTPSERVER_LIB) || defined(QT_HTTPSERVER_MODULE)
+
 #include "production_api_server.h"
 #include "production_api_configuration.h"
 #include "jwt_validator.h"
@@ -309,3 +312,8 @@ int main(int argc, char* argv[]) {
     // Run the application
     return app.exec();
 }
+
+#else
+// Stub main when QT_HTTPSERVER is not available
+// This file is included in the build but doesn't do anything without QHttpServer
+#endif // QT_HTTPSERVER_LIB || QT_HTTPSERVER_MODULE

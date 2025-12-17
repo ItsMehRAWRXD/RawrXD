@@ -17,11 +17,13 @@ class CodeSyntaxHighlighter;
  * @class AgenticTextEdit
  * @brief Advanced text editor with syntax highlighting, LSP completion, and AI features
  */
-class AgenticTextEdit : public QTextEdit {
+// Legacy alternate implementation to avoid duplicate class symbols.
+// The primary implementation lives in `src/agentic_text_edit.h`.
+class AgenticTextEditLegacy : public QTextEdit {
     Q_OBJECT
 
 public:
-    explicit AgenticTextEdit(QWidget* parent = nullptr);
+    explicit AgenticTextEditLegacy(QWidget* parent = nullptr);
     
     /**
      * @brief Initialize the editor (set up highlighting, connections, etc.)

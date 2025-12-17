@@ -1,4 +1,8 @@
 #pragma once
+// This module requires Qt HttpServer
+#if defined(QT_HTTPSERVER_LIB) || defined(QT_HTTPSERVER_MODULE)
+#include <QtGlobal>
+
 
 #include <QObject>
 #include <QHttpServer>
@@ -304,3 +308,49 @@ private:
 
 } // namespace API
 } // namespace RawrXD
+
+#else  // Qt HttpServer not available - provide stub
+
+#include <QtGlobal>
+#include <QString>
+#include <QJsonObject>
+#include <memory>
+#include <vector>
+#include <chrono>
+
+namespace RawrXD {
+namespace API {
+
+// Minimal stub types when Qt HttpServer is not available
+struct TLSConfig {
+    bool enabled = false;
+    QString certificatePath;
+    QString privateKeyPath;
+    QString caChainPath;
+    int minTLSVersion = 12;
+    std::vector<QString> cipherSuites;
+    bool isValid() const { return !enabled || (!certificatePath.isEmpty() && !privateKeyPath.isEmpty()); }
+};
+
+struct OIDCConfig {
+    bool enabled = false;
+    QString issuerUrl;
+    QString clientId;
+    QString clientSecret;
+    QString jwksUrl;
+    std::chrono::seconds tokenExpiry{3600};
+    bool isValid() const { return !enabled || (!issuerUrl.isEmpty() && !clientId.isEmpty()); }
+};
+
+class ProductionAPIServer {
+public:
+    ProductionAPIServer() = default;
+    void start(quint16) {}
+    void stop() {}
+    bool isRunning() const { return false; }
+};
+
+} // namespace API
+} // namespace RawrXD
+
+#endif  // QT_HTTPSERVER_LIB

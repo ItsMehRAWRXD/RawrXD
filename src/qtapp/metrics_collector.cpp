@@ -105,6 +105,17 @@ void MetricsCollector::recordToken(qint64 requestId) {
     }
 }
 
+void MetricsCollector::recordEvent(const QString& eventName, const QMap<QString, QVariant>& properties) {
+    if (!m_enabled) return;
+    
+    QMutexLocker locker(&m_mutex);
+    
+    qInfo() << "[MetricsCollector] Event:" << eventName;
+    for (auto it = properties.begin(); it != properties.end(); ++it) {
+        qInfo() << "  " << it.key() << ":" << it.value();
+    }
+}
+
 void MetricsCollector::recordMemoryUsage(size_t bytes) {
     if (!m_enabled) return;
     

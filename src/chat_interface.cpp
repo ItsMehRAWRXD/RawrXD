@@ -48,6 +48,25 @@ void ChatInterface::initialize() {
     title->setStyleSheet("font-weight: bold; font-size: 14px;");
     layout->addWidget(title);
     
+    // === NEW: Workflow Breadcrumb Dropdown ===
+    QHBoxLayout* breadcrumbLayout = new QHBoxLayout();
+    QLabel* workflowLabel = new QLabel("Workflow:", this);
+    workflowBreadcrumb_ = new QComboBox(this);
+    workflowBreadcrumb_->setMinimumWidth(180);
+    workflowBreadcrumb_->addItem("Agent", static_cast<int>(AgentWorkflowState::Agent));
+    workflowBreadcrumb_->addItem("Ask", static_cast<int>(AgentWorkflowState::Ask));
+    workflowBreadcrumb_->addItem("Plan", static_cast<int>(AgentWorkflowState::Plan));
+    workflowBreadcrumb_->addItem("Edit", static_cast<int>(AgentWorkflowState::Edit));
+    workflowBreadcrumb_->addItem("Configure Custom Agents", static_cast<int>(AgentWorkflowState::Configure));
+    
+    connect(workflowBreadcrumb_, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &ChatInterface::onWorkflowStateChanged);
+    
+    breadcrumbLayout->addWidget(workflowLabel);
+    breadcrumbLayout->addWidget(workflowBreadcrumb_);
+    breadcrumbLayout->addStretch();
+    layout->addLayout(breadcrumbLayout);
+    
     // Model selector row
     QHBoxLayout* modelLayout = new QHBoxLayout();
     
@@ -57,16 +76,32 @@ void ChatInterface::initialize() {
     modelSelector_ = new QComboBox(this);
     modelSelector_->setMinimumWidth(200);
     modelSelector_->addItem("No Model Selected");
-    //try {
-    //    loadAvailableModels(); // Re-enabled scanner
-    //} catch (const std::exception &e) {
-    //    qWarning() << "[ChatInterface] loadAvailableModels threw exception:" << e.what();
-    //} catch (...) {
-    //    qWarning() << "[ChatInterface] loadAvailableModels threw unknown exception";
-    //}
     connect(modelSelector_, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &ChatInterface::onModelChanged);
     modelLayout->addWidget(modelSelector_);
+    
+    // === NEW: Auto-selecting Model Dropdown ===
+    QLabel* autoModelLabel = new QLabel("Auto Model:", this);
+    modelLayout->addWidget(autoModelLabel);
+    
+    modelAutoSelector_ = new QComboBox(this);
+    modelAutoSelector_->setMinimumWidth(200);
+    modelAutoSelector_->addItem("Auto - Context");
+    modelAutoSelector_->addItem("Auto - Agentic");
+    modelAutoSelector_->addItem("Auto - Large");
+    modelAutoSelector_->addItem("Auto - Code");
+    modelAutoSelector_->setToolTip("Smart model selection based on task requirements");
+    
+    connect(modelAutoSelector_, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &ChatInterface::onAutoModelSelected);
+    
+    autoModelButton_ = new QPushButton("🤖 Auto-Select", this);
+    autoModelButton_->setMaximumWidth(120);
+    autoModelButton_->setToolTip("Automatically select best model for current workflow");
+    connect(autoModelButton_, &QPushButton::clicked, this, &ChatInterface::onAutoModelSelected);
+    
+    modelLayout->addWidget(modelAutoSelector_);
+    modelLayout->addWidget(autoModelButton_);
     
     // Second model selector for dual GGUF loading
     QLabel* model2Label = new QLabel("Model 2:", this);
@@ -75,13 +110,6 @@ void ChatInterface::initialize() {
     modelSelector2_ = new QComboBox(this);
     modelSelector2_->setMinimumWidth(200);
     modelSelector2_->addItem("No Model Selected");
-    //try {
-    //    loadAvailableModelsForSecond(); // Re-enabled scanner
-    //} catch (const std::exception &e) {
-    //    qWarning() << "[ChatInterface] loadAvailableModelsForSecond threw exception:" << e.what();
-    //} catch (...) {
-    //    qWarning() << "[ChatInterface] loadAvailableModelsForSecond threw unknown exception";
-    //}
     connect(modelSelector2_, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &ChatInterface::onModel2Changed);
     modelLayout->addWidget(modelSelector2_);
@@ -103,6 +131,13 @@ void ChatInterface::initialize() {
     
     layout->addLayout(modelLayout);
     
+    // Initialize model preferences for smart selection
+    m_modelPreferences[AgentWorkflowState::Agent] = "llama3.2:3b";      // Default agent
+    m_modelPreferences[AgentWorkflowState::Ask] = "llama3.2:3b";        // Clarification - smaller
+    m_modelPreferences[AgentWorkflowState::Plan] = "llama3.2:8b";       // Planning - medium
+    m_modelPreferences[AgentWorkflowState::Edit] = "dolphin3:8b";       // Code editing - specialized
+    m_modelPreferences[AgentWorkflowState::Configure] = "llama3.2:8b";  // Configuration - medium
+    
     // ==== PHASE 2: STREAMING TOKEN PROGRESS BAR ====
     m_tokenProgress = new QProgressBar(this);
     m_tokenProgress->setRange(0, 0);       // Busy indicator (indeterminate)
@@ -114,7 +149,7 @@ void ChatInterface::initialize() {
         "stop:0 #4ec9b0, stop:0.5 #569cd6, stop:1 #4ec9b0); }"
     );
     m_tokenProgress->hide();
-    layout->insertWidget(1, m_tokenProgress);  // Insert right after title
+    layout->insertWidget(2, m_tokenProgress);  // Insert after breadcrumb
     
     m_hideTimer = new QTimer(this);
     m_hideTimer->setSingleShot(true);
@@ -165,7 +200,7 @@ void ChatInterface::initialize() {
     
     // Initial state: Input enabled, prompt user to select model
     if (statusLabel_) {
-        statusLabel_->setText("Select a model with matching .gguf file in D:/OllamaModels");
+        statusLabel_->setText("Select workflow and model, or use Auto-Select");
     }
 }
 
@@ -342,6 +377,125 @@ QString ChatInterface::selectedModel() const {
 bool ChatInterface::isMaxMode() const {
     return maxMode_;
 }
+
+void ChatInterface::onWorkflowStateChanged(int state) {
+    m_workflowState = static_cast<AgentWorkflowState>(state);
+    
+    // Log workflow change to telemetry
+    auto &telemetry = RawrXD::EnterpriseTelemetry::instance();
+    QString stateStr = QString::number(static_cast<int>(m_workflowState));
+    telemetry.recordEvent("agent.workflowChange", stateStr, workflowBreadcrumb_->currentText());
+    
+    // Update status
+    statusLabel_->setText("Workflow changed to: " + workflowBreadcrumb_->currentText());
+    
+    // Emit signal for observers
+    emit workflowStateChanged(m_workflowState);
+}
+
+QString ChatInterface::selectBestModelForTask(AgentWorkflowState task) {
+    // Smart model selection based on workflow state and available models
+    QString preferredModel = m_modelPreferences.value(task, "llama3.2:3b");
+    
+    // Try to find the preferred model in our list
+    for (int i = 0; i < modelSelector_->count(); ++i) {
+        QString modelData = modelSelector_->itemData(i).toString();
+        if (modelData.contains(preferredModel, Qt::CaseInsensitive)) {
+            return modelData;
+        }
+    }
+    
+    // Fallback: use task-specific heuristics
+    switch (task) {
+        case AgentWorkflowState::Ask:
+            // Clarification - prefer smaller, faster models
+            for (int i = 0; i < modelSelector_->count(); ++i) {
+                QString model = modelSelector_->itemData(i).toString();
+                if (model.contains("3b", Qt::CaseInsensitive)) return model;
+            }
+            break;
+            
+        case AgentWorkflowState::Plan:
+        case AgentWorkflowState::Configure:
+            // Planning - prefer medium-sized models
+            for (int i = 0; i < modelSelector_->count(); ++i) {
+                QString model = modelSelector_->itemData(i).toString();
+                if (model.contains("8b", Qt::CaseInsensitive) || model.contains("7b", Qt::CaseInsensitive)) {
+                    return model;
+                }
+            }
+            break;
+            
+        case AgentWorkflowState::Edit:
+            // Code editing - prefer specialized (Dolphin, etc) or larger models
+            for (int i = 0; i < modelSelector_->count(); ++i) {
+                QString model = modelSelector_->itemData(i).toString();
+                if (model.contains("dolphin", Qt::CaseInsensitive)) return model;
+                if (model.contains("13b", Qt::CaseInsensitive)) return model;
+                if (model.contains("8b", Qt::CaseInsensitive)) return model;
+            }
+            break;
+            
+        case AgentWorkflowState::Agent:
+        default:
+            // Default - use any available model
+            break;
+    }
+    
+    // Final fallback: first available model that isn't "No Model Selected"
+    for (int i = 1; i < modelSelector_->count(); ++i) {
+        return modelSelector_->itemData(i).toString();
+    }
+    
+    return "";  // No model available
+}
+
+void ChatInterface::onAutoModelSelected() {
+    auto &telemetry = RawrXD::EnterpriseTelemetry::instance();
+    auto timer = telemetry.startTimer(QStringLiteral("agent.autoSelectModel"));
+    
+    QString autoMode = modelAutoSelector_->currentText();
+    QString selectedModel;
+    
+    // Select model based on auto-mode selection
+    if (autoMode.contains("Context")) {
+        // Context analysis - use smaller model for efficiency
+        selectedModel = selectBestModelForTask(AgentWorkflowState::Ask);
+    } else if (autoMode.contains("Agentic")) {
+        // Agentic reasoning - use larger model
+        selectedModel = selectBestModelForTask(AgentWorkflowState::Plan);
+    } else if (autoMode.contains("Large")) {
+        // Large model - for complex tasks
+        for (int i = modelSelector_->count() - 1; i >= 1; --i) {
+            QString model = modelSelector_->itemData(i).toString();
+            if (model.contains("13b", Qt::CaseInsensitive) || model.contains("70b", Qt::CaseInsensitive)) {
+                selectedModel = model;
+                break;
+            }
+        }
+    } else if (autoMode.contains("Code")) {
+        // Code-specialized models
+        selectedModel = selectBestModelForTask(AgentWorkflowState::Edit);
+    } else {
+        // Default: use current workflow preference
+        selectedModel = selectBestModelForTask(m_workflowState);
+    }
+    
+    // Apply the selected model
+    if (!selectedModel.isEmpty()) {
+        int idx = modelSelector_->findData(selectedModel);
+        if (idx >= 0) {
+            modelSelector_->setCurrentIndex(idx);
+            statusLabel_->setText("Auto-selected: " + selectedModel + " for " + autoMode);
+            
+            QString details = QString("mode=%1 model=%2 workflow=%3").arg(autoMode, selectedModel, workflowBreadcrumb_->currentText());
+            telemetry.recordEvent("agent.autoModelSelected", selectedModel, details);
+        }
+    } else {
+        statusLabel_->setText("No suitable model found for " + autoMode);
+    }
+}
+
 
 void ChatInterface::addMessage(const QString& sender, const QString& message) {
     QString color = (sender == "User") ? "#569cd6" : "#4ec9b0";
@@ -772,4 +926,16 @@ QString ChatInterface::resolveGgufPath(const QString& modelName)
     qWarning() << "           2) Exporting from Ollama and saving as .gguf file";
     return QString();
 }
+
+    // Remove duplicate implementation
+    // void ChatInterface::onWorkflowStateChanged(int state)
+    // {
+    //     Q_UNUSED(state);
+    //     // Placeholder implementation - workflow state change handling
+    // }
+    
+    // void ChatInterface::onAutoModelSelected()
+    // {
+    //     // Placeholder implementation - auto model selection
+    // }
 

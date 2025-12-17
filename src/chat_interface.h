@@ -2,6 +2,7 @@
 
 #include <QWidget>
 #include <QString>
+#include <QMap>
 
 class QTextEdit;
 class QLineEdit;
@@ -10,12 +11,22 @@ class QCheckBox;
 class QLabel;
 class QProgressBar;
 class QTimer;
+class QPushButton;
 class AgenticEngine;
 class ZeroDayAgenticEngine;
 
 namespace RawrXD {
     class PlanOrchestrator;
 }
+
+// Agent workflow breadcrumb states
+enum class AgentWorkflowState {
+    Agent,      // Initial agent state
+    Ask,        // Asking/clarifying phase
+    Plan,       // Planning/analyzing phase
+    Edit,       // Code editing phase
+    Configure   // Custom agent configuration
+};
 
 class ChatInterface : public QWidget {
     Q_OBJECT
@@ -39,6 +50,9 @@ public:
     void executeAgentCommand(const QString& command, const QString& args = "");
     bool isAgentCommand(const QString& message) const;
     
+    // Get current agent workflow state
+    AgentWorkflowState currentWorkflowState() const { return m_workflowState; }
+    
 public slots:
     void displayResponse(const QString& response);
     void focusInput();
@@ -53,22 +67,33 @@ public slots:
     void onTokenGenerated(int delta);
     void hideProgress();
     
+    // Breadcrumb workflow navigation
+    void onWorkflowStateChanged(int state);
+    void onAutoModelSelected();
+    
 signals:
     void messageSent(const QString& message);
     void modelSelected(const QString& modelPath);
     void model2Selected(const QString& modelPath);
     void maxModeChanged(bool enabled);
     void messageReceived(const QString& reply);
+    void workflowStateChanged(AgentWorkflowState state);
     
 private:
     void loadAvailableModels();
     void loadAvailableModelsForSecond();
     QString resolveGgufPath(const QString& modelName);  // Resolve Ollama model name to GGUF file
     
+    // Helper to select best model based on task
+    QString selectBestModelForTask(AgentWorkflowState task);
+    
     QTextEdit* message_history_;
     QLineEdit* message_input_;
     QComboBox* modelSelector_;
     QComboBox* modelSelector2_;
+    QComboBox* workflowBreadcrumb_;  // Agent/Ask/Plan/Edit/Configure dropdown
+    QComboBox* modelAutoSelector_;   // Auto-selecting model dropdown
+    QPushButton* autoModelButton_;   // Button to trigger auto-selection
     QCheckBox* maxModeToggle_;
     QLabel* statusLabel_;
     bool maxMode_;
@@ -77,6 +102,11 @@ private:
     AgenticEngine* m_agenticEngine = nullptr;
     RawrXD::PlanOrchestrator* m_planOrchestrator = nullptr;
     ZeroDayAgenticEngine* m_zeroDayAgent = nullptr;
+    AgentWorkflowState m_workflowState = AgentWorkflowState::Agent;
+    
+    // Available models map for smart selection
+    QMap<QString, QString> m_modelDescriptions;
+    QMap<AgentWorkflowState, QString> m_modelPreferences;
     
     // Phase 2: Streaming token progress bar
     QProgressBar* m_tokenProgress{nullptr};

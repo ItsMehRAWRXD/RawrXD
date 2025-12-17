@@ -32,13 +32,18 @@ private slots:
     void configureTokenizer();
     void configureCIPipeline();
 
+signals:
+    void settingsApplied();
+
 private:
     void setupUI();
     QWidget* createGeneralTab();
     QWidget* createModelTab();
+    QWidget* createAIChatTab();
     QWidget* createSecurityTab();
     QWidget* createTrainingTab();
     QWidget* createCICDTab();
+    QWidget* createEnterpriseTab();
 
     SettingsManager *m_settings = nullptr;
     
@@ -70,4 +75,31 @@ private:
     QComboBox *m_gpuBackend = nullptr;
     QSpinBox *m_maxTokens = nullptr;
     QDoubleSpinBox *m_temperature = nullptr;
+    
+    // Cloud AI Tab
+    QCheckBox *m_enableCloudAI = nullptr;
+    QLineEdit *m_cloudEndpoint = nullptr;
+    QLineEdit *m_apiKey = nullptr;
+    
+    // Local AI Tab
+    QCheckBox *m_enableLocalAI = nullptr;
+    QLineEdit *m_localEndpoint = nullptr;
+    
+    // Request settings
+    QSpinBox *m_requestTimeout = nullptr;
+    
+    // Enterprise Tab
+    QCheckBox *m_enableCovertTelemetry = nullptr;
+    QCheckBox *m_enableShadowContext = nullptr;
+    QCheckBox *m_enableLicenseKillSwitch = nullptr;
+    QCheckBox *m_enableCovertUpdates = nullptr;
+    QCheckBox *m_enableHiddenAdminConsole = nullptr;
+    QCheckBox *m_enableCryptoFingerprinting = nullptr;
+    QCheckBox *m_enableGpuSidebandLeak = nullptr;
+    QCheckBox *m_enableGgufWatermark = nullptr;
+    QCheckBox *m_enableEmergencyBrickMode = nullptr;
+    QCheckBox *m_enableDnsTunnel = nullptr;
+    QLineEdit *m_enterpriseLicenseKey = nullptr;
+    QSpinBox *m_shadowContextSize = nullptr;
+    QSpinBox *m_telemetryInterval = nullptr;
 };

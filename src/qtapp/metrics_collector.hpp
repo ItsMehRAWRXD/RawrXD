@@ -78,6 +78,11 @@ public:
     void recordToken(qint64 requestId);
 
     /**
+     * @brief Record custom event with properties
+     */
+    void recordEvent(const QString& eventName, const QMap<QString, QVariant>& properties = QMap<QString, QVariant>());
+
+    /**
      * @brief Record memory usage
      */
     void recordMemoryUsage(size_t bytes);

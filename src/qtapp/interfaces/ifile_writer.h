@@ -10,20 +10,11 @@
 
 #include <QString>
 #include <QByteArray>
+#include "../utils/file_operations.h"  // Use FileOperationResult from here
 
 namespace RawrXD {
 
-/**
- * \brief Result of a file operation
- */
-struct FileOperationResult {
-    bool success;
-    QString errorMessage;
-    QString backupPath;  ///< Path to backup file (if created)
-    
-    FileOperationResult(bool ok = false, const QString& error = QString())
-        : success(ok), errorMessage(error) {}
-};
+// FileOperationResult is now defined in utils/file_operations.h
 
 /**
  * \brief Abstract interface for file writing operations

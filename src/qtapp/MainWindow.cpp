@@ -14,6 +14,7 @@
 #include "model_monitor.hpp"
 #include "command_palette.hpp"
 #include "ai_chat_panel.hpp"
+#include "model_loader_widget.hpp"
 #include "../agent/auto_bootstrap.hpp"
 #include "../agent/hot_reload.hpp"
 #include "../agent/self_test_gate.hpp"
@@ -21,8 +22,11 @@
 #include "../agent/action_executor.hpp"
 #include "../agent/model_invoker.hpp"
 #include "widgets/layer_quant_widget.hpp"
+#include "widgets/breadcrumb_navigation.hpp"
 #include "settings_dialog.h"
 #include "settings_manager.h"
+// Experimental features menu (toggle advanced runtime optimizations)
+#include "experimental_features_menu.hpp"
 
 // Forward declaration resolved by include above
 
@@ -145,6 +149,7 @@ MainWindow::MainWindow(QWidget* parent)
     setupAIChatPanel();
     setupMASMEditor();
     setupInterpretabilityPanel();  // Model analysis & diagnostics
+    setupModelLoaderWidget();       // Model loading with brutal MASM compression
     
     // Setup Ctrl+Shift+P for command palette
     QShortcut* commandPaletteShortcut = new QShortcut(QKeySequence("Ctrl+Shift+P"), this);
@@ -243,8 +248,9 @@ void MainWindow::createVSCodeLayout()
     QVBoxLayout* scmLayout = new QVBoxLayout(scmView);
     QLabel* scmLabel = new QLabel("Source Control\n\nNo folder open", m_primarySidebar);
     scmLabel->setStyleSheet("QLabel { color: #e0e0e0; }");
-    scmLabel->setAlignment(Qt::AlignCenter);
-    scmLayout->addWidget(scmLabel);
+    #include "command_palette.hpp"
+    // The UI version of CommandPalette (../ui/CommandPalette.hpp) defines the same class and caused a redefinition error.
+    // It is not needed because the Qt app version is already included above.
     m_sidebarStack->addWidget(scmView);
     
     // Create Debug view (placeholder)
@@ -284,10 +290,70 @@ void MainWindow::createVSCodeLayout()
         "QTabWidget::pane { border: none; }"
     );
     
+    // Add file path label under tabs
+    m_filePathLabel_ = new QLabel(editorFrame);
+    m_filePathLabel_->setStyleSheet(
+        "QLabel { background-color: #2d2d30; color: #cccccc; padding: 4px 8px; "
+        "font-family: 'Consolas', monospace; font-size: 9pt; border-bottom: 1px solid #3e3e42; }");
+    m_filePathLabel_->setText("No file open");
+    m_filePathLabel_->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    editorLayout->addWidget(m_filePathLabel_);
+    
+    // Add breadcrumb navigation with dropdowns
+    m_breadcrumbNav_ = new BreadcrumbNavigation(editorFrame);
+    editorLayout->addWidget(m_breadcrumbNav_);
+    
+    // Connect breadcrumb signals
+    connect(m_breadcrumbNav_, &BreadcrumbNavigation::fileSelected, this, [this](const QString& filePath) {
+        // Open file in editor when selected from breadcrumb
+        QFile file(filePath);
+        if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            QTextStream in(&file);
+            QString content = in.readAll();
+            file.close();
+            
+            if (editorTabs_) {
+                // Check if file is already open
+                bool alreadyOpen = false;
+                for (int i = 0; i < editorTabs_->count(); ++i) {
+                    QWidget* widget = editorTabs_->widget(i);
+                    if (m_tabFilePaths_.value(widget) == filePath) {
+                        editorTabs_->setCurrentIndex(i);
+                        alreadyOpen = true;
+                        break;
+                    }
+                }
+                
+                if (!alreadyOpen) {
+                    QTextEdit* editor = new QTextEdit(this);
+                    editor->setStyleSheet(codeView_->styleSheet());
+                    editor->setText(content);
+                    int index = editorTabs_->addTab(editor, QFileInfo(filePath).fileName());
+                    editorTabs_->setCurrentIndex(index);
+                    m_tabFilePaths_[editor] = filePath;
+                    updateFilePathDisplay();
+                }
+            }
+            
+            statusBar()->showMessage(tr("Opened: %1").arg(QFileInfo(filePath).fileName()), 3000);
+        }
+    });
+    
+    connect(m_breadcrumbNav_, &BreadcrumbNavigation::directorySelected, this, [this](const QString& dirPath) {
+        // Update project explorer when directory is clicked
+        if (projectExplorer_) {
+            projectExplorer_->openProject(dirPath);
+        }
+        statusBar()->showMessage(tr("Directory: %1").arg(dirPath), 2000);
+    });
+    
     codeView_ = new QTextEdit(editorFrame);
     codeView_->setStyleSheet("QTextEdit { background-color: #1e1e1e; color: #e0e0e0; font-family: 'Consolas', monospace; font-size: 11pt; }");
     codeView_->setLineWrapMode(QTextEdit::NoWrap);
     editorTabs_->addTab(codeView_, "Untitled");
+    
+    // Store initial tab with no file path (Untitled)
+    m_tabFilePaths_[codeView_] = QString();
     
     editorLayout->addWidget(editorTabs_, 1);
     
@@ -444,6 +510,9 @@ void MainWindow::createVSCodeLayout()
         if (m_hexMagConsole) m_panelStack->setCurrentWidget(m_hexMagConsole); 
         else m_panelStack->setCurrentIndex(3); 
     });
+    
+    // Connect editor tab changes to update file path display
+    connect(editorTabs_, &QTabWidget::currentChanged, this, &MainWindow::updateFilePathDisplay);
 }
 
 void MainWindow::applyDarkTheme()
@@ -656,6 +725,13 @@ void MainWindow::setupMenuBar()
 
     QMenu* helpMenu = menuBar()->addMenu(tr("&Help"));
     helpMenu->addAction(tr("&About"), this, &MainWindow::onAbout);
+
+    // Experimental Features menu: enterprise-grade toggles for low-memory optimizations
+    auto* experimentalMenu = new ExperimentalFeaturesMenu(this);
+    menuBar()->addMenu(experimentalMenu);
+    connect(experimentalMenu, &ExperimentalFeaturesMenu::memoryUsageChanged, this, [this](size_t usage_mb){
+        statusBar()->showMessage(tr("Memory usage: %1 MB").arg(static_cast<qulonglong>(usage_mb)), 1000);
+    });
 }
 
 void MainWindow::setupToolBars()
@@ -1205,6 +1281,12 @@ void MainWindow::handleAddFile() {
                 editor->setText(content);
                 int index = editorTabs_->addTab(editor, QFileInfo(filePath).fileName());
                 editorTabs_->setCurrentIndex(index);
+                
+                // Store the full file path for this tab
+                m_tabFilePaths_[editor] = filePath;
+                
+                // Update the file path display
+                updateFilePathDisplay();
             }
             
             statusBar()->showMessage(tr("File added: %1").arg(QFileInfo(filePath).fileName()), 3000);
@@ -1264,6 +1346,20 @@ void MainWindow::loadContextItemIntoEditor(QListWidgetItem* item) {
             QTextStream in(&file);
             if (codeView_) {
                 codeView_->setText(in.readAll());
+                
+                // Update file path for current tab
+                if (editorTabs_) {
+                    int currentIndex = editorTabs_->currentIndex();
+                    if (currentIndex >= 0) {
+                        QWidget* currentWidget = editorTabs_->widget(currentIndex);
+                        if (currentWidget) {
+                            m_tabFilePaths_[currentWidget] = itemText;
+                            editorTabs_->setTabText(currentIndex, QFileInfo(itemText).fileName());
+                            updateFilePathDisplay();
+                        }
+                    }
+                }
+                
                 statusBar()->showMessage(tr("Loaded: %1").arg(itemText), 3000);
             }
             file.close();
@@ -1295,8 +1391,69 @@ void MainWindow::handleTabClose(int index) {
     }
     
     editorTabs_->removeTab(index);
+    
+    // Remove from file path tracking
+    if (m_tabFilePaths_.contains(widget)) {
+        m_tabFilePaths_.remove(widget);
+    }
+    
     delete widget;
+    
+    // Update file path display after tab removal
+    updateFilePathDisplay();
 }
+
+void MainWindow::updateFilePathDisplay()
+{
+    if (!m_filePathLabel_ || !editorTabs_) {
+        return;
+    }
+    
+    int currentIndex = editorTabs_->currentIndex();
+    if (currentIndex < 0 || currentIndex >= editorTabs_->count()) {
+        m_filePathLabel_->setText("No file open");
+        if (m_breadcrumbNav_) {
+            m_breadcrumbNav_->clear();
+        }
+        return;
+    }
+    
+    QWidget* currentWidget = editorTabs_->widget(currentIndex);
+    if (!currentWidget) {
+        m_filePathLabel_->setText("No file open");
+        if (m_breadcrumbNav_) {
+            m_breadcrumbNav_->clear();
+        }
+        return;
+    }
+    
+    // Get file path from tracking hash
+    QString filePath = m_tabFilePaths_.value(currentWidget, QString());
+    
+    if (filePath.isEmpty()) {
+        // Check if it's an untitled tab
+        QString tabText = editorTabs_->tabText(currentIndex);
+        if (tabText == "Untitled" || tabText.startsWith("Untitled")) {
+            m_filePathLabel_->setText("Untitled file (not saved)");
+        } else {
+            m_filePathLabel_->setText("No file path associated");
+        }
+        
+        // Clear breadcrumb for untitled files
+        if (m_breadcrumbNav_) {
+            m_breadcrumbNav_->clear();
+        }
+    } else {
+        // Display full file path
+        m_filePathLabel_->setText(filePath);
+        
+        // Update breadcrumb navigation
+        if (m_breadcrumbNav_) {
+            m_breadcrumbNav_->setFilePath(filePath);
+        }
+    }
+}
+
 void MainWindow::handlePwshCommand() { statusBar()->showMessage(tr("PowerShell executing...")); }
 void MainWindow::handleCmdCommand() { statusBar()->showMessage(tr("CMD executing...")); }
 void MainWindow::readPwshOutput() { qDebug() << "Reading PowerShell output"; }
@@ -3965,6 +4122,61 @@ void MainWindow::onAIChatQuickActionTriggered(const QString& action, const QStri
 }
 
 // ============================================================
+// Model Loader Widget Setup (with Brutal MASM Compression)
+// ============================================================
+
+void MainWindow::setupModelLoaderWidget() {
+    // Create Model Loader Widget with compression support
+    m_modelLoaderWidget = new ModelLoaderWidget(this);
+    
+    // Create dock widget to hold the model loader
+    m_modelLoaderDock = new QDockWidget("Model Loader (MASM Compression)", this);
+    m_modelLoaderDock->setWidget(m_modelLoaderWidget);
+    m_modelLoaderDock->setObjectName("ModelLoaderDock");
+    m_modelLoaderDock->setAllowedAreas(Qt::AllDockWidgetAreas);
+    m_modelLoaderDock->setFeatures(QDockWidget::DockWidgetMovable |
+                                    QDockWidget::DockWidgetFloatable |
+                                    QDockWidget::DockWidgetClosable);
+    
+    // Add to right dock area by default
+    addDockWidget(Qt::RightDockWidgetArea, m_modelLoaderDock);
+    
+    // Tabify with AI Chat Panel if present
+    if (m_aiChatPanelDock) {
+        tabifyDockWidget(m_aiChatPanelDock, m_modelLoaderDock);
+    }
+    
+    // Add View menu toggle for Model Loader
+    QMenu* viewMenu = nullptr;
+    for (QAction* action : menuBar()->actions()) {
+        if (action->text() == "View") {
+            viewMenu = action->menu();
+            break;
+        }
+    }
+    
+    if (!viewMenu) {
+        viewMenu = menuBar()->addMenu("View");
+    }
+    
+    QAction* toggleModelLoaderAction = viewMenu->addAction("Model Loader");
+    toggleModelLoaderAction->setCheckable(true);
+    toggleModelLoaderAction->setChecked(true);
+    connect(toggleModelLoaderAction, &QAction::triggered, this, [this](bool visible) {
+        if (m_modelLoaderDock) {
+            if (visible) {
+                m_modelLoaderDock->show();
+                m_modelLoaderDock->raise();
+            } else {
+                m_modelLoaderDock->hide();
+            }
+        }
+    });
+    
+    qDebug() << "Model Loader widget with brutal MASM compression created";
+}
+
+// ============================================================
 // Layer Quantization Widget Setup
 // ============================================================
 
@@ -4281,14 +4493,16 @@ void MainWindow::toggleSettings(bool visible)
 
 void MainWindow::setupCommandPalette()
 {
-    // Stub implementation - command palette initialization
-    // In production, this would create CommandPalette widget and wire signals
-    qDebug() << "[MainWindow] Command palette setup requested - stub implementation";
+    // Create Cursor-class command palette with fuzzy matching
+    m_commandPalette = new CommandPalette(this);
     
-    if (!m_commandPalette) {
-        // Future: instantiate CommandPalette widget here
-        qInfo() << "[MainWindow] Command palette widget not yet initialized";
-    }
+    // Connect Ctrl+Shift+P shortcut to show palette at cursor position
+    QShortcut* commandPaletteShortcut = new QShortcut(QKeySequence("Ctrl+Shift+P"), this);
+    connect(commandPaletteShortcut, &QShortcut::activated, this, [this]() {
+        m_commandPalette->show();
+    });
+    
+    qDebug() << "[MainWindow] Cursor-class command palette initialized with fuzzy matching";
 }
 
 

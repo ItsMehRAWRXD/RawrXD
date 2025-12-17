@@ -1,4 +1,5 @@
 #include "jwt_validator.h"
+#include "../src/crypto/rawrxd_crypto.h"
 
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -8,9 +9,6 @@
 #include <QMessageAuthenticationCode>
 #include <QDateTime>
 #include <ctime>
-#include <openssl/evp.h>
-#include <openssl/rsa.h>
-#include <openssl/bn.h>
 
 namespace RawrXD {
 namespace Auth {
@@ -59,87 +57,86 @@ bool JWKSManager::verifyJWTSignature(const JWT& token, const std::shared_ptr<JWK
         return false;
     }
 
-    auto base64UrlDecode = [](const QString& input) -> QByteArray {
-        QByteArray data = input.toUtf8();
-        data.replace('-', '+');
-        data.replace('_', '/');
-        while (data.size() % 4 != 0) {
-            data.append('=');
-        }
-        return QByteArray::fromBase64(data);
-    };
-
-    // Rebuild RSA public key from modulus and exponent
-    QByteArray modulus = base64UrlDecode(key->publicKeyModulus);
-    QByteArray exponent = base64UrlDecode(key->publicKeyExponent);
-    QByteArray signature = base64UrlDecode(token.signature);
-
-    if (modulus.isEmpty() || exponent.isEmpty() || signature.isEmpty()) {
-        return false;
-    }
-
+    // Use our custom crypto library (RawrXD::Crypto)
     const QStringList parts = token.rawToken.split('.');
     if (parts.size() != 3) {
         return false;
     }
+    
+    // Get signing input (header.payload)
     QByteArray signingInput = parts[0].toUtf8() + '.' + parts[1].toUtf8();
-
-    BIGNUM* n = BN_bin2bn(reinterpret_cast<const unsigned char*>(modulus.constData()), modulus.size(), nullptr);
-    BIGNUM* e = BN_bin2bn(reinterpret_cast<const unsigned char*>(exponent.constData()), exponent.size(), nullptr);
-    if (!n || !e) {
-        if (n) BN_free(n);
-        if (e) BN_free(e);
+    std::vector<uint8_t> message(signingInput.begin(), signingInput.end());
+    
+    // Decode signature
+    std::vector<uint8_t> signature = Crypto::Base64Url::decode(token.signature.toStdString());
+    if (signature.empty()) {
         return false;
     }
-
-    RSA* rsa = RSA_new();
-    if (!rsa) {
-        BN_free(n);
-        BN_free(e);
-        return false;
+    
+    // Determine algorithm and verify
+    QString alg = token.header.value("alg").toString();
+    
+    try {
+        // Handle RSA algorithms (RS256, RS384, RS512, PS256, PS384, PS512)
+        if (alg.startsWith("RS") || alg.startsWith("PS")) {
+            // Load RSA public key from JWK
+            Crypto::RSAPublicKey rsaKey;
+            if (!rsaKey.loadFromJWK(key->publicKeyModulus.toStdString(),
+                                    key->publicKeyExponent.toStdString())) {
+                return false;
+            }
+            
+            // Determine hash algorithm
+            std::string hashAlg = "SHA-256";
+            if (alg.endsWith("384")) {
+                hashAlg = "SHA-384";
+            } else if (alg.endsWith("512")) {
+                hashAlg = "SHA-512";
+            }
+            
+            // Verify signature (PKCS#1 v1.5 or PSS)
+            if (alg.startsWith("RS")) {
+                return rsaKey.verifyPKCS1(message, signature, hashAlg);
+            } else {
+                return rsaKey.verifyPSS(message, signature, hashAlg);
+            }
+        }
+        // Handle ECDSA algorithms (ES256, ES384, ES512)
+        else if (alg.startsWith("ES")) {
+            Crypto::ECCurve::CurveType curve = Crypto::ECCurve::CurveType::P256;
+            std::string hashAlg = "SHA-256";
+            
+            if (alg == "ES384") {
+                curve = Crypto::ECCurve::CurveType::P384;
+                hashAlg = "SHA-384";
+            } else if (alg == "ES512") {
+                curve = Crypto::ECCurve::CurveType::P521;
+                hashAlg = "SHA-512";
+            }
+            
+            Crypto::ECDSAPublicKey ecKey(curve);
+            // Note: JWK should have 'x', 'y', 'crv' fields for EC keys
+            QString x = key->header.value("x").toString();
+            QString y = key->header.value("y").toString();
+            QString crv = key->header.value("crv").toString();
+            
+            if (!ecKey.loadFromJWK(x.toStdString(), y.toStdString(), crv.toStdString())) {
+                return false;
+            }
+            
+            return ecKey.verify(message, signature, hashAlg);
+        }
+        // Handle HMAC algorithms (HS256, HS384, HS512)
+        else if (alg.startsWith("HS")) {
+            // HMAC requires a shared secret, typically not used with public JWKs
+            // For completeness, implement if secret is available
+            return false; // Not supported via JWK (requires shared secret)
+        }
+        
+        return false; // Unsupported algorithm
+    } catch (...) {
+        return false; // Verification failed
     }
-
-    if (RSA_set0_key(rsa, n, e, nullptr) != 1) {
-        RSA_free(rsa);
-        BN_free(n);
-        BN_free(e);
-        return false;
-    }
-
-    EVP_PKEY* pkey = EVP_PKEY_new();
-    if (!pkey) {
-        RSA_free(rsa);
-        return false;
-    }
-
-    if (EVP_PKEY_assign_RSA(pkey, rsa) != 1) {
-        EVP_PKEY_free(pkey);
-        RSA_free(rsa);
-        return false;
-    }
-
-    EVP_MD_CTX* ctx = EVP_MD_CTX_new();
-    if (!ctx) {
-        EVP_PKEY_free(pkey);
-        return false;
-    }
-
-    const EVP_MD* md = EVP_sha256();
-    bool ok = EVP_DigestVerifyInit(ctx, nullptr, md, nullptr, pkey) == 1;
-    if (ok) {
-        ok = EVP_DigestVerifyUpdate(ctx,
-                                    reinterpret_cast<const unsigned char*>(signingInput.constData()),
-                                    signingInput.size()) == 1;
-    }
-    if (ok) {
-        ok = EVP_DigestVerifyFinal(ctx,
-                                   reinterpret_cast<const unsigned char*>(signature.constData()),
-                                   signature.size()) == 1;
-    }
-
-    EVP_MD_CTX_free(ctx);
-    EVP_PKEY_free(pkey); // frees rsa too
-    return ok;
 }
 
 bool JWKSManager::validateJWT(const JWT& token,

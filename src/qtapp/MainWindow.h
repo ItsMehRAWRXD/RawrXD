@@ -93,6 +93,8 @@ class MASMEditorWidget;
 class HotpatchPanel;
 class LayerQuantWidget;
 class InterpretabilityPanelEnhanced;
+class ModelLoaderWidget;
+class BreadcrumbNavigation;
 
 /* ============================================================ */
 /**
@@ -344,6 +346,7 @@ private: /* ---------------  UI creators  --------------- */
     void setupMASMEditor();
     void setupHotpatchPanel();
     void setupInterpretabilityPanel();
+    void setupModelLoaderWidget();
     void restoreSession();
     void saveSession();
     
@@ -352,6 +355,7 @@ private: /* ---------------  UI creators  --------------- */
     void onAbout();
 
     void initSubsystems();
+    void updateFilePathDisplay();  // Update file path label when tab changes
 
     
 
@@ -363,6 +367,9 @@ private: /* ---------------  original members  --------------- */
     QListWidget* contextList_{};
     QTabWidget* editorTabs_{};
     QTextEdit* codeView_{};
+    QLabel* m_filePathLabel_{};  // Display full file path under tabs
+    BreadcrumbNavigation* m_breadcrumbNav_{};  // Breadcrumb navigation with dropdowns
+    QHash<QWidget*, QString> m_tabFilePaths_{};  // Track file path for each tab
     AISuggestionOverlay* overlay_{};
     QString suggestionBuffer_{};
     QString architectBuffer_{};
@@ -502,6 +509,10 @@ private: /* ---------------  new IDE members  --------------- */
     /* Interpretability Panel - Model Analysis & Diagnostics */
     class InterpretabilityPanelEnhanced* m_interpretabilityPanel{};
     QDockWidget* m_interpretabilityPanelDock{};
+    
+    /* Model Loader with MASM Brutal Compression */
+    class ModelLoaderWidget* m_modelLoaderWidget{};
+    QDockWidget* m_modelLoaderDock{};
 
     /* VS Code-like Layout Components */
     class ActivityBar* m_activityBar{};

@@ -1,4 +1,8 @@
 #include "production_api_server.h"
+#include <QDebug>
+
+// Only compile the full implementation if QT_HTTPSERVER is available
+#if defined(QT_HTTPSERVER_LIB) || defined(QT_HTTPSERVER_MODULE)
 
 #include <QHttpServer>
 #include <QHttpServerResponder>
@@ -857,3 +861,14 @@ bool ProductionAPIServer::validateAuthContext(const AuthContext& auth, bool requ
 
 } // namespace API
 } // namespace RawrXD
+
+#else // !QT_HTTPSERVER_LIB && !QT_HTTPSERVER_MODULE
+// Stub implementation when QHttpServer is not available
+// The header already provides inline stub implementations for ProductionAPIServer
+// No additional definitions needed here - the header has:
+//   ProductionAPIServer() = default;
+//   void start(quint16) {}
+//   void stop() {}
+//   bool isRunning() const { return false; }
+
+#endif // QT_HTTPSERVER_LIB || QT_HTTPSERVER_MODULE

@@ -11,7 +11,7 @@
 #include <QDir>
 #include <QDateTime>
 #include <QTextStream>
-#include <QTextCodec>
+#include <QStringConverter>  // Qt6 replacement for QTextCodec
 #include <QSaveFile>
 #include <QStandardPaths>
 #include <QDebug>
