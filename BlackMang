@@ -1,0 +1,2 @@
+# 1. Re-enumerate every PCI device (like a “soft reseat”)
+Get-PnpDevice | ? {$_.FriendlyName -like '*NVIDIA*' -or $_.FriendlyName -like '*AMD*' -or $_.FriendlyName -like '*Radeon*' -or $_.FriendlyName -like '*GeForce*'} | Disable-PnpDevice -Confirm:$false; sleep 2; Get-PnpDevice | ? {$_.FriendlyName -like '*NVIDIA*' -or $_.FriendlyName -like '*AMD*' -or $_.FriendlyName -like '*Radeon*' -or $_.FriendlyName -like '*GeForce*'} | Enable-PnpDevice -Confirm:$false
