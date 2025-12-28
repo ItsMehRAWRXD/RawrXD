@@ -1,0 +1,29 @@
+{
+    "Name": "AmazonQPlugin",
+    "Version": "1.0.0",
+    "CompatVersion": "1.0.0",
+    "Vendor": "Amazon Web Services",
+    "Copyright": "(C) 2024 Amazon Web Services, Inc.",
+    "License": "Apache 2.0",
+    "Description": "Amazon Q Developer integration for MASM IDE",
+    "Url": "https://aws.amazon.com/q/developer/",
+    "Category": "AI Assistant",
+    "Experimental": false,
+    "DisabledByDefault": false,
+    "EnabledByDefault": true,
+    "Dependencies": [
+        {
+            "Name": "Core",
+            "Version": "1.0.0"
+        },
+        {
+            "Name": "TextEditor",
+            "Version": "1.0.0"
+        }
+    ],
+    "Arguments": [],
+    "Mimetypes": [
+        "text/x-asm",
+        "text/x-masm"
+    ]
+}

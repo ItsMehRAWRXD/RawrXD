@@ -1,0 +1,1496 @@
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\GGML-VULKAN-SHADERS.HPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\ABS.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/abs.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/abs.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/abs.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/59e0e60a6a928a6cec27d9acffba24baba7c888386b6faed3cd0423dcb93e2a1.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\ACC.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/acc.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/acc.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/acc.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/b55818d9e4fa7104922f30b750d401215cd8300d32fbe7d6b9a6ed51a6e8386b.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\ADD.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/add.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/add.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/add.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/f058974bc79940a53c661064f254aa79583911822495d83b6056c1ddf4f45f40.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\ADD_ID.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/add_id.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/add_id.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/add_id.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/c2db1881bf88380989a9e4de7e7e0932d45409014a7401c46033a761042d34ad.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\ARGMAX.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/argmax.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/argmax.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/argmax.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/f0995e3199104ebddd0902fd571efaa1daae06979d647073202461d2fa9be89f.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\ARGSORT.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/argsort.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/argsort.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/argsort.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/b1bf4cd1a59a4acf73634a1ad1c3d4660c3301d81259c72b625bd4b6c1ece302.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\CLAMP.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/clamp.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/clamp.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/clamp.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/2c8f6fe71fe625a3d3888bcfb09313559639fab0b45e9466db0ddffb5ce2e5d1.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\CONCAT.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/concat.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/concat.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/concat.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/90688029b34167fe82fbb1da03f192e8f59476ecf4a80a0afe70693cadc7b6d3.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\CONTIG_COPY.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/contig_copy.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/contig_copy.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/contig_copy.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/60b524aef1c6d109154561d79b872fb20967f546592ce4e88af873f3ebb12728.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\CONV2D_DW.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/conv2d_dw.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/conv2d_dw.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/conv2d_dw.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/5429772cdff11be7435a83d221bd2c3e0e8269d68f87a8412743411ddba995b2.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\CONV2D_MM.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/conv2d_mm.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/conv2d_mm.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/conv2d_mm.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/1e50440bf9fc6f3cfe98277c80da42d204b908053086fee14be05fd1172e1cea.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\CONV_TRANSPOSE_1D.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/conv_transpose_1d.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/conv_transpose_1d.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/conv_transpose_1d.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/81b018b53e4f841a5d688e8f309cf24aef9b746d1e964a2ab4c67ae745175b4f.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\COPY.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/copy.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/copy.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/copy.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/b688704d0bcf612e05755b9c7377fc1b5d3442b1c45de0a8c6e34adb3c7e8e8e.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\COPY_FROM_QUANT.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/copy_from_quant.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/copy_from_quant.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/copy_from_quant.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/5c16ad96ed84e1fe6ad112cf5ceb9f0b09992d0420c301139b61dfda935c3633.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\COPY_TO_QUANT.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/copy_to_quant.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/copy_to_quant.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/copy_to_quant.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/18d5d624880870267f794ba86b5c0b3a472da58aba18e4681b2c3bef1c5048c9.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\COS.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/cos.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/cos.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/cos.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/101c145b578973d0b03ec1bcb43e56334a9fd07a3ac998ee8ae1eba04e7842b7.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\COUNT_EQUAL.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/count_equal.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/count_equal.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/count_equal.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/6b91d3fdc4a033a63754f3663ad0ad6ec96c660de3c8221ce910a55547a974b8.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\DEQUANT_F32.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/dequant_f32.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/dequant_f32.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/dequant_f32.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/f330e36d65fdf65f54adbf3e311234c4c93f8e3fa90e17f8b62f5220971ff63a.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\DEQUANT_IQ1_M.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/dequant_iq1_m.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/dequant_iq1_m.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/dequant_iq1_m.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/33f9ed712a9476dba63758008927c131ede105e446fc1219d91b390d44f5e4df.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\DEQUANT_IQ1_S.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/dequant_iq1_s.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/dequant_iq1_s.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/dequant_iq1_s.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/91f70d4ce13eb4c419e2ec9ef23addebe854614b84bf29d6c659945a1428f372.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\DEQUANT_IQ2_S.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/dequant_iq2_s.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/dequant_iq2_s.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/dequant_iq2_s.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/efb8c804f09c79423635749e1d57941fe5eac3f0982442a62e37bea931d68d21.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\DEQUANT_IQ2_XS.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/dequant_iq2_xs.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/dequant_iq2_xs.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/dequant_iq2_xs.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/d66c66ccff8d8395dfe27ff8fd12f0e0052be870a7c926866e4a806885033d80.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\DEQUANT_IQ2_XXS.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/dequant_iq2_xxs.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/dequant_iq2_xxs.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/dequant_iq2_xxs.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/cb6faaeef52fb9c1a4d482958ac3c52bc47d0d00deb5cd25a19d8b2b0fa57c71.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\DEQUANT_IQ3_S.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/dequant_iq3_s.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/dequant_iq3_s.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/dequant_iq3_s.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/3e6320d8f2670e0323c576ddba5fbb1ad99a2f8bf81bb8233fe3c1a75bdd7ea4.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\DEQUANT_IQ3_XXS.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/dequant_iq3_xxs.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/dequant_iq3_xxs.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/dequant_iq3_xxs.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/4643896c3df311dda1d0e988e024298116c354ab7f0ddb16e19e7f2585c4523f.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\DEQUANT_IQ4_NL.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/dequant_iq4_nl.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/dequant_iq4_nl.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/dequant_iq4_nl.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/f3f713ed88c350458448581752d77235381719bf98558ec36b2bd4e20be0c3d3.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\DEQUANT_IQ4_XS.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/dequant_iq4_xs.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/dequant_iq4_xs.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/dequant_iq4_xs.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/ed5a35c602bd80685c34dea9f50df5e0d7b3fba52aefaf94b1786477b797f48e.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\DEQUANT_MXFP4.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/dequant_mxfp4.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/dequant_mxfp4.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/dequant_mxfp4.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/c806bcc4a2fe574ca8cfc70ffbd2fc8718c0570ab2150e539c577701e0dc1acf.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\DEQUANT_Q2_K.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/dequant_q2_k.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/dequant_q2_k.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/dequant_q2_k.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/0e0a3a398506ac294b578911d2d0f0d7596cbbefdaa3a085d64285bb1879f72a.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\DEQUANT_Q3_K.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/dequant_q3_k.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/dequant_q3_k.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/dequant_q3_k.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/cfdb90e989839134c46185a3820a6c1b54bd00ec740c4d5a3e660bedd60f4f96.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\DEQUANT_Q4_0.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/dequant_q4_0.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/dequant_q4_0.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/dequant_q4_0.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/873d7b4c903cb0ef47a4c12971adcc82179d78bc33dc3e3cf139979881784c9b.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\DEQUANT_Q4_1.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/dequant_q4_1.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/dequant_q4_1.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/dequant_q4_1.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/b40ff60e5ce64244e9ac653636901f9fcf1d8ddbea7b6de51632ccbeba265f5b.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\DEQUANT_Q4_K.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/dequant_q4_k.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/dequant_q4_k.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/dequant_q4_k.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/ac3dbcb7a75c3297b03a65c687691ca251731a8c9256004424873b013e7b3aa4.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\DEQUANT_Q5_0.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/dequant_q5_0.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/dequant_q5_0.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/dequant_q5_0.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/9f4ebdcd415484179a4385f65e31ae2827637b92d465cb6cbe8379c0074c7309.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\DEQUANT_Q5_1.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/dequant_q5_1.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/dequant_q5_1.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/dequant_q5_1.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/d8ee59587faafc73958e2aed039335e31c540826b0cdc929827d92e43b8f96de.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\DEQUANT_Q5_K.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/dequant_q5_k.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/dequant_q5_k.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/dequant_q5_k.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/a95d3dbfe2b431761eeb018326627c43b92368322e6aaeeab0b488dab2df5697.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\DEQUANT_Q6_K.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/dequant_q6_k.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/dequant_q6_k.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/dequant_q6_k.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/e91db1f9dde36d6ca1cd078769726ec56eef28bcfacf6ddc0822911121e295a0.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\DEQUANT_Q8_0.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/dequant_q8_0.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/dequant_q8_0.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/dequant_q8_0.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/db5f61080985521d6ec80346a9abcbfe104dde3fdf847e0f1d320ba6d186edc5.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\DIAG_MASK_INF.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/diag_mask_inf.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/diag_mask_inf.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/diag_mask_inf.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/144e26f218f2902a2809a7dcf5a543c9c50865b719ec6a77f9510c1bf80cb6a5.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\DIV.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/div.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/div.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/div.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/8d1321d9ff67d66480765cd9d1492466aeff04caafee5677543456c6d12df11c.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\EXP.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/exp.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/exp.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/exp.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/1561e2ec055d7accbd2447eb8d2899aed054fc68d5bf7fb7e936a48041b7fb18.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\FLASH_ATTN.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/flash_attn.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/flash_attn.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/f56ca35784a063ba25e30267da452ea9373d19fe69241547886217201bec87c0.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\FLASH_ATTN_CM1.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_cm1.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/flash_attn_cm1.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/flash_attn_cm1.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/c7f60efcaf93f49c2a7f5d15747d73fbfc82338cd5fec3ccd700af1882ab2f5b.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\FLASH_ATTN_CM2.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_cm2.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/flash_attn_cm2.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/flash_attn_cm2.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/9cd6a0cc64eda43381dcb71367397dc6381db90346c87ba1b38f4be1bd618686.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\FLASH_ATTN_SPLIT_K_REDUCE.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_split_k_reduce.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/flash_attn_split_k_reduce.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/flash_attn_split_k_reduce.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/dcdc3921144891096c65e2a23d6b845f6ab61aa8f64889144f282529490303d0.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\GEGLU.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/geglu.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/geglu.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/geglu.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/d25d49ce8ac61ec5198474a75ceca7ba89cd8ca2c4295c931900ae85226ddc62.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\GEGLU_ERF.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/geglu_erf.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/geglu_erf.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/geglu_erf.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/530e37f603fedf76eb0feee3fab0be471331b2e767aa87815720755062193287.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\GEGLU_QUICK.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/geglu_quick.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/geglu_quick.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/geglu_quick.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/da6b7249382ff530d15b8f0bab3822268d15cc178909e811afed0749e358aeff.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\GELU.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/gelu.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/gelu.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/gelu.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/05c7311b759092107b28d5f0622c554efc724b62be76467d874783e55fcd7da8.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\GELU_ERF.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/gelu_erf.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/gelu_erf.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/gelu_erf.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/b9b81131f3bc4000e0a690811f0d1a400619a3323eb84ed8c034a79f8f5cb818.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\GELU_QUICK.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/gelu_quick.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/gelu_quick.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/gelu_quick.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/96f05bd6432a503861a28acde241212ee7c63bd4e6063a4223550912d77f05a0.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\GET_ROWS.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/get_rows.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/get_rows.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/get_rows.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/880a030bad475fe9a6458882369e6839ef43c0269add2c55afc399ae3671d602.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\GET_ROWS_QUANT.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/get_rows_quant.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/get_rows_quant.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/get_rows_quant.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/2810895dbcd6b740b974f4e60f6fcdf4fcd3568a846f17e660173ce538aa1c95.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\GROUP_NORM.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/group_norm.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/group_norm.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/group_norm.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/7fb66b93389f95d0aa21f23675ee89c0748a7f3b69fdc4324d675c7e0501e603.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\HARDSIGMOID.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/hardsigmoid.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/hardsigmoid.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/hardsigmoid.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/ecee6de76065161549fd7d0c28e97267aeb209acf8beec0ea22bcbffb658fe4d.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\HARDSWISH.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/hardswish.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/hardswish.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/hardswish.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/aba2bdb76cee85ecec6099c96a5c62d9fa886b702247dfb75f58a89dbae31fb1.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\IM2COL.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/im2col.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/im2col.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/im2col.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/e0876f5bdbd5940ce0ae34199aa8a3855ba9bff603e4a795ccb0cccaf58f8bc2.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\IM2COL_3D.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/im2col_3d.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/im2col_3d.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/im2col_3d.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/204ad636a7ec4c405d9b206ca5746316f2129011562f9af4a19e31b71941500a.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\L2_NORM.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/l2_norm.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/l2_norm.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/l2_norm.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/8c50694b8097ef465608dfdfa244894bfc81449a7ae51d5d49b6e7a6fb95c1a3.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\LEAKY_RELU.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/leaky_relu.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/leaky_relu.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/leaky_relu.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/9fd4bae9c4d8ac3c14a91e8d56c8047413dc17dbbbec1be2603bdc886ea88114.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\LOG.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/log.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/log.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/log.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/2484ddcc5d939d3c28c40b19372428b732a5580438d65eadc186e3a8876becae.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\MUL.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/mul.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/mul.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/d50a9afd2e61fb18148501a3b4870fe8f81ba802ad79ecf3afb3ba49743b6df6.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\MUL_MAT_SPLIT_K_REDUCE.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul_mat_split_k_reduce.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/mul_mat_split_k_reduce.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/mul_mat_split_k_reduce.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/b8aeb928d029a7110972b6e06301f878ebf3d78aab3cfc64af07c8da2effb021.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\MUL_MAT_VEC.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul_mat_vec.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/79a4801b1c2617930ae023dadba3ad00c7811f064f789a816195b5ff0c3d25b3.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\MUL_MAT_VEC_IQ1_M.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul_mat_vec_iq1_m.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_iq1_m.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_iq1_m.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/918a9111be622188c59d13988424be0be4e40e48043813f238d46f76fdceb95c.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\MUL_MAT_VEC_IQ1_S.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul_mat_vec_iq1_s.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_iq1_s.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_iq1_s.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/5ed985cf17cfc91fdb5cf966ccf4a34d8e555bc66d9fb05473ba5547e6bee7f9.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\MUL_MAT_VEC_IQ2_S.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul_mat_vec_iq2_s.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_iq2_s.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_iq2_s.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/22637c7927355a1b2b17911923185980950b114351d52e6c1c05c944d225f98d.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\MUL_MAT_VEC_IQ2_XS.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul_mat_vec_iq2_xs.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_iq2_xs.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_iq2_xs.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/e84b0432ac4f07d249bdccb626b47e42a52354a8a8d74c1aac681899dde1ad32.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\MUL_MAT_VEC_IQ2_XXS.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul_mat_vec_iq2_xxs.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_iq2_xxs.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_iq2_xxs.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/c9ac81300776609c46015a26d5e6d6033bd68b3fed5c729730e6a82aca929118.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\MUL_MAT_VEC_IQ3_S.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul_mat_vec_iq3_s.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_iq3_s.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_iq3_s.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/2628757bcd2ba349da0ad6679bf9f72d1ff6e528e0f04b22ab740a0dfe7a6bc2.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\MUL_MAT_VEC_IQ3_XXS.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul_mat_vec_iq3_xxs.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_iq3_xxs.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_iq3_xxs.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/f4f609d5dee6c8a1feccf83a42f0f377b7991d1746d8616ce1b475aaaad27182.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\MUL_MAT_VEC_NC.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul_mat_vec_nc.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_nc.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_nc.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/31cd20645972d7196aded1bfe985fde838add0293c6ef61102829d025c9458d7.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\MUL_MAT_VEC_P021.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul_mat_vec_p021.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_p021.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_p021.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/b65fff03bd24f490fce6945e8046449a79a288874944075008b7591eeb45ed8f.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\MUL_MAT_VEC_Q2_K.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul_mat_vec_q2_k.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_q2_k.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_q2_k.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/35890bca513221d2b48950b7b0cbec22f1571ce511f5faed143fddcf5bd66478.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\MUL_MAT_VEC_Q3_K.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul_mat_vec_q3_k.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_q3_k.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_q3_k.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/8aab60a35985a984fa287be94086821632fb090fa3269a6547a01389c05cdd8e.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\MUL_MAT_VEC_Q4_K.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul_mat_vec_q4_k.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_q4_k.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_q4_k.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/c784078f560e4077defa6602846772efed6b8fc3646b4d0eecc9876de3702cef.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\MUL_MAT_VEC_Q5_K.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul_mat_vec_q5_k.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_q5_k.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_q5_k.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/8605a9e683504a4f9bb154d2b04d621dfc8dd172e6c4bae7ea8d2c70319e5658.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\MUL_MAT_VEC_Q6_K.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul_mat_vec_q6_k.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_q6_k.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/mul_mat_vec_q6_k.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/cc6abe4be3d5a64032bea877462e6a65d3e38f0461d9237a75a4e0e5603b2772.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\MUL_MAT_VECQ.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul_mat_vecq.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/mul_mat_vecq.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/mul_mat_vecq.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/abb15a2271ad038ed8618321f97f408a80ef868de1485ae9216a5f1776c12bef.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\MUL_MM.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul_mm.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/mul_mm.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/mul_mm.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/38f0dd1e04808ac89aa1d258320ee6441e2fe7e78d8194ac4c40e04fa50646ae.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\MUL_MM_CM2.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul_mm_cm2.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/mul_mm_cm2.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/mul_mm_cm2.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/29a4b004356c3eb792b9522a178723f440152e278c1ce1cfc91a8541f78c2e86.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\MUL_MMQ.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/mul_mmq.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/mul_mmq.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/mul_mmq.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/5db924a931cc04b303d3f561ca7a9ffe746339b361d15a7f2b8c1a91ae03ea2e.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\MULTI_ADD.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/multi_add.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/multi_add.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/multi_add.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/43a0db62cd1f72fd405008c2a4e770a7c01fb87e6483335f53632c943b56609b.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\NEG.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/neg.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/neg.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/neg.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/f8bce6c0d81266a88aea7a81528535b9e679d74e881ca3f3851bc10785bd4ed3.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\NORM.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/norm.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/norm.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/norm.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/79dcf0d4e6880551aa9d214ad8bd26d9755b99fda8885294f343d23b4a934d70.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\OPT_STEP_ADAMW.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/opt_step_adamw.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/opt_step_adamw.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/opt_step_adamw.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/b79079aacb08b381648ac1faeb8939ccd785276728c1710a5d375790cb05e8e9.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\OPT_STEP_SGD.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/opt_step_sgd.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/opt_step_sgd.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/opt_step_sgd.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/48fde359653f94044ef8dca45b283c17d5fc808f675ffd508243828e01b23fcc.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\PAD.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/pad.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/pad.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/pad.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/f2af86fdc856779737f297f0a40230aa901683ef0bb3d96a091607c0a3e38e88.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\POOL2D.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/pool2d.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/pool2d.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/pool2d.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/1215b6761f044dc9bda7ba51214ff9ffeaa669a307a480b3f657b518b0e7e9b6.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\QUANTIZE_Q8_1.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/quantize_q8_1.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/quantize_q8_1.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/quantize_q8_1.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/ae36c8f80b959ac2d15eab38e3974ce2b22f82868bcfe5359adc68a42e0549ef.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\REGLU.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/reglu.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/reglu.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/reglu.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/00cd37824253c1c29b355dc199f6d0b10fafea20acde56789f5db7c65bb029b8.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\RELU.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/relu.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/relu.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/relu.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/b90480c0a852e06183e1a8253539f851d4dc671b89563620f701ef5453d44f4f.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\REPEAT.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/repeat.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/repeat.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/repeat.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/20d7bc4842e8bfe18905c4e1580c1d078df65db36b75cff0e8a850506072df0b.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\REPEAT_BACK.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/repeat_back.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/repeat_back.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/repeat_back.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/6120d2810ba87abac0b5f8d9a76d9a8af2103f785b6c568d87f714b8ec96a36c.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\RMS_NORM.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/rms_norm.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/rms_norm.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/rms_norm.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/b544eefc4552bc305ebd3b9a42eb509fa23d07215149f82755cb54478d26dc69.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\RMS_NORM_BACK.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/rms_norm_back.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/rms_norm_back.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/rms_norm_back.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/dd3acf5d1e3c6e20085b75b7d159f9d19ad4a6cec69fc123a99724f2709f7d47.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\RMS_NORM_PARTIALS.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/rms_norm_partials.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/rms_norm_partials.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/rms_norm_partials.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/1e45b236a5f7e60ecd6a88242f37f14fc4bd8cbdfcf5c211db1df45ee7631b86.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\ROLL.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/roll.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/roll.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/roll.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/923bea66dcbfae3c2cb15462f1a09ef8f1089ef451efc658bef6dfec34d6934a.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\ROPE_MULTI.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/rope_multi.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/rope_multi.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/rope_multi.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/234fcdd52cf6ea68836aa24b9c072e1e51d5771550fbfec5fb2b9330a101619e.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\ROPE_NEOX.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/rope_neox.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/rope_neox.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/rope_neox.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/387430f14d3821b8b5f8970e4469e4f16028f410eb2f2a8b50e46e5d8059ebe3.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\ROPE_NORM.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/rope_norm.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/rope_norm.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/rope_norm.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/6e5162099cd737f38847a5f8781e2b028a5587bc3dbdb5fec0c2182e1c6ecb3b.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\ROPE_VISION.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/rope_vision.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/rope_vision.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/rope_vision.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/06cf0f227108b3f79a590829535fae61cde18c66675bdf678cfd438119662996.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\SCALE.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/scale.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/scale.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/scale.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/2f8a6745a946e641936a4f628f753c56f1ee96b03dbb7fb69550be22c69ba4f7.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\SIGMOID.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/sigmoid.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/sigmoid.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/sigmoid.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/d59fa10484d6c47342c17fc53b788f4e22844eaec7b7b76df08479d3667d3b12.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\SILU.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/silu.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/silu.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/silu.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/6944128a7bca14eee022896529a6a14eb1f6aab95df68e6ee770e8c933643628.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\SILU_BACK.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/silu_back.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/silu_back.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/silu_back.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/6003092293d3bcb908bdc801e16f236cfef5913698cad00c71ee18bcd77d7afa.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\SIN.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/sin.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/sin.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/sin.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/2001f1af92769b5e9906529522bd77770316dd85a4749cb1008ead2a5d089716.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\SOFT_MAX.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/soft_max.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/soft_max.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/soft_max.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/18cd6f9003d374fb447f17832063caf2ce6f757d0e3f3e2dc41a8d40fc664d1a.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\SOFT_MAX_BACK.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/soft_max_back.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/soft_max_back.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/soft_max_back.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/2e240e14b281f818f8f7b7658d8073a9e57b799bed930be0f1a97c3e63ea7caf.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\SQRT.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/sqrt.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/sqrt.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/sqrt.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/be560f5069d9a5ea28f2a4a61b8a40a688fa7620cbeec47757c7264a9a5577ac.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\SQUARE.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/square.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/square.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/square.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/d34a31b6430e84d59f477fca3eafb34b635c8969940a68003fc4652397a35548.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\SSM_CONV.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/ssm_conv.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ssm_conv.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ssm_conv.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/b8de5c7b46984695446676125df7c8bceae0730d06e07cd53e49e4e169ac661f.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\SSM_SCAN.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/ssm_scan.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ssm_scan.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ssm_scan.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/91fefd263cbbf75ba1efa85884c1dc0def6a70ba673ffe6b230367d4b6c944b4.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\SUB.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/sub.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/sub.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/sub.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/55533a0f76ec4b85090e854204fbbd92fc029e68666dad6ae2d4246c299bdd77.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\SUM_ROWS.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/sum_rows.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/sum_rows.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/sum_rows.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/8b1a3752c683e494fc5ce39f5660e9a3252e17c126a9d4e6aa43812824124a3f.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\SWIGLU.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/swiglu.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/swiglu.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/swiglu.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/68544c09d6d7360eca10b968674f2435b8c2233c9afc990ee3cdf9a21ca143ac.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\SWIGLU_OAI.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/swiglu_oai.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/swiglu_oai.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/swiglu_oai.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/1e3fe62e7d150672120d3015dc08d9a0f156c358141c42e461ce423fa1330295.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\TANH.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/tanh.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/tanh.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/tanh.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/ebcbe2395b8b400bb2dc8ead1979a4c43393bc692c5c29400aed2949833f73de.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\TIMESTEP_EMBEDDING.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/timestep_embedding.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/timestep_embedding.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/timestep_embedding.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/dd54b15866e2c567ac3bc3bd660cc31c72698a638b852c4a23daed04fcad95f4.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\TOPK_MOE.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/topk_moe.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/topk_moe.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/topk_moe.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/d0b27bcb5574f0dcb443fbed8bbb494e44edba9d9b81d36232b51448a71057e3.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\UPSCALE.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/upscale.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/upscale.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/upscale.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/37b882878414f9e69af437983aeb113fade694e9e9bbfa53d358dac3d585ee77.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\WKV6.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/wkv6.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/wkv6.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/wkv6.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/0efc182f025de00f04d25f4faf8ab9248be190639c4374a397d45d11b01e5ade.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\2715B2D2CC71F8280511236EB7ED2DE1\WKV7.COMP.CPP.RULE
+setlocal
+..\..\..\..\Release\vulkan-shaders-gen.exe --glslc C:/VulkanSDK/1.4.328.1/Bin/glslc.exe --source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders/wkv7.comp --output-dir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders.spv --target-hpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/ggml-vulkan-shaders.hpp --target-cpp C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/wkv7.comp.cpp
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E cmake_transform_depfile "Visual Studio 17 2022" MSBuildAdditionalInputs C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/wkv7.comp.cpp.d C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/d/d7e26acbbea819bf9f07b607076e907a8f0e9d67244da93d5336c5e410122b91.AdditionalInputs
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\3RDPARTY\GGML\SRC\GGML-VULKAN\CMAKELISTS.TXT
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/HiH8e/Downloads/RawrXD-production-lazy-init -BC:/Users/HiH8e/Downloads/RawrXD-production-lazy-init --check-stamp-file C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

@@ -1,0 +1,17 @@
+; External dependencies - ALL required functions
+EXTERN asm_malloc:PROC
+EXTERN asm_free:PROC
+EXTERN asm_mutex_create:PROC
+EXTERN asm_mutex_destroy:PROC
+EXTERN asm_mutex_lock:PROC
+EXTERN asm_mutex_unlock:PROC
+EXTERN asm_event_loop_create:PROC
+EXTERN asm_event_loop_destroy:PROC
+EXTERN asm_event_loop_emit:PROC
+EXTERN asm_event_loop_process_all:PROC
+EXTERN masm_byte_patch_find_pattern:PROC
+EXTERN masm_byte_patch_apply:PROC
+EXTERN masm_server_hotpatch_add:PROC
+EXTERN masm_server_hotpatch_cleanup:PROC
+
+.code

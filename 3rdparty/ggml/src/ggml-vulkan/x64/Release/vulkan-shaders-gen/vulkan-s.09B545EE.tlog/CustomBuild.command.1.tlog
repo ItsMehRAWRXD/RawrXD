@@ -1,0 +1,124 @@
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\B3608CBBE43D18C937FBB06588F01737\VULKAN-SHADERS-GEN-MKDIR.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -Dcfgdir=/Release -P C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders-gen-prefix/tmp/vulkan-shaders-gen-mkdirs.cmake
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E touch C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders-gen-prefix/src/vulkan-shaders-gen-stamp/Release/vulkan-shaders-gen-mkdir
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\B3608CBBE43D18C937FBB06588F01737\VULKAN-SHADERS-GEN-DOWNLOAD.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -E echo_append
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E touch C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders-gen-prefix/src/vulkan-shaders-gen-stamp/Release/vulkan-shaders-gen-download
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\B3608CBBE43D18C937FBB06588F01737\VULKAN-SHADERS-GEN-UPDATE.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -E echo_append
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E touch C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders-gen-prefix/src/vulkan-shaders-gen-stamp/Release/vulkan-shaders-gen-update
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\B3608CBBE43D18C937FBB06588F01737\VULKAN-SHADERS-GEN-PATCH.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -E echo_append
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E touch C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders-gen-prefix/src/vulkan-shaders-gen-stamp/Release/vulkan-shaders-gen-patch
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\B3608CBBE43D18C937FBB06588F01737\VULKAN-SHADERS-GEN-CONFIGURE.RULE
+setlocal
+cd C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\3rdparty\ggml\src\ggml-vulkan\vulkan-shaders-gen-prefix\src\vulkan-shaders-gen-build
+if %errorlevel% neq 0 goto :cmEnd
+C:
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -DCMAKE_INSTALL_PREFIX=C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/Release -DCMAKE_INSTALL_BINDIR=. -DCMAKE_BUILD_TYPE=Release "-DCMAKE_CXX_FLAGS=/I D:/temp/RawrXD-q8-wire/RawrXD-ModelLoader/include" "-DCMAKE_C_FLAGS=/I D:/temp/RawrXD-q8-wire/RawrXD-ModelLoader/include" -DGGML_VULKAN_COOPMAT_GLSLC_SUPPORT=ON -DGGML_VULKAN_COOPMAT2_GLSLC_SUPPORT=ON -DGGML_VULKAN_INTEGER_DOT_GLSLC_SUPPORT=ON -DGGML_VULKAN_BFLOAT16_GLSLC_SUPPORT=ON "-GVisual Studio 17 2022" -Ax64 "-DCMAKE_GENERATOR_INSTANCE:INTERNAL=C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools" -S C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders -B C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders-gen-prefix/src/vulkan-shaders-gen-build
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E touch C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders-gen-prefix/src/vulkan-shaders-gen-stamp/Release/vulkan-shaders-gen-configure
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\B3608CBBE43D18C937FBB06588F01737\VULKAN-SHADERS-GEN-BUILD.RULE
+setlocal
+cd C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\3rdparty\ggml\src\ggml-vulkan\vulkan-shaders-gen-prefix\src\vulkan-shaders-gen-build
+if %errorlevel% neq 0 goto :cmEnd
+C:
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" --build . --config Release
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\B3608CBBE43D18C937FBB06588F01737\VULKAN-SHADERS-GEN-INSTALL.RULE
+setlocal
+cd C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\3rdparty\ggml\src\ggml-vulkan\vulkan-shaders-gen-prefix\src\vulkan-shaders-gen-build
+if %errorlevel% neq 0 goto :cmEnd
+C:
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E env --unset=DESTDIR "C:/Program Files/CMake/bin/cmake.exe" --install . --config Release
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\348527E6722EE33F7335EEB49C3B4EB7\VULKAN-SHADERS-GEN-COMPLETE.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -E make_directory C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/CMakeFiles/Release
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E touch C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/CMakeFiles/Release/vulkan-shaders-gen-complete
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\cmake.exe" -E touch C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders-gen-prefix/src/vulkan-shaders-gen-stamp/Release/vulkan-shaders-gen-done
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\5E98973FF8EE63FE7BFB560E305FE787\VULKAN-SHADERS-GEN.RULE
+setlocal
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\3RDPARTY\GGML\SRC\GGML-VULKAN\CMAKELISTS.TXT
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/HiH8e/Downloads/RawrXD-production-lazy-init -BC:/Users/HiH8e/Downloads/RawrXD-production-lazy-init --check-stamp-file C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

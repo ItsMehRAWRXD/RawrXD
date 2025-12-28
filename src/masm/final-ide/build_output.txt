@@ -1,0 +1,164 @@
+
+===========================================================================
+Building RawrXD IDE - Pure MASM64 (No C++ Dependencies)
+===========================================================================
+
+[*] MASM32 Path: C:\masm32
+[*] ML64:       C:\masm32\bin\ml64.exe
+
+[*] Assembling MASM64 source files...
+
+Assembling: agentic_engine.asm
+ Assembling: agentic_engine.asm
+Assembling: agentic_failure_detector.asm
+ Assembling: agentic_failure_detector.asm
+Assembling: agentic_masm.asm
+ Assembling: agentic_masm.asm
+Assembling: asm_events.asm
+ Assembling: asm_events.asm
+Assembling: asm_log.asm
+ Assembling: asm_log.asm
+Assembling: asm_memory.asm
+ Assembling: asm_memory.asm
+Assembling: asm_string.asm
+ Assembling: asm_string.asm
+Assembling: asm_sync.asm
+ Assembling: asm_sync.asm
+Assembling: byte_level_hotpatcher.asm
+ Assembling: byte_level_hotpatcher.asm
+Assembling: console_log.asm
+ Assembling: console_log.asm
+Assembling: extension_agent.asm
+ Assembling: extension_agent.asm
+Assembling: gguf_server_hotpatch.asm
+ Assembling: gguf_server_hotpatch.asm
+Assembling: gui_designer_agent.asm
+ Assembling: gui_designer_agent.asm
+gui_designer_agent.asm(945) : error A2006:undefined symbol : _copy_string
+gui_designer_agent.asm(968) : error A2006:undefined symbol : _append_string
+gui_designer_agent.asm(973) : error A2006:undefined symbol : _append_string
+gui_designer_agent.asm(982) : error A2006:undefined symbol : _append_string
+gui_designer_agent.asm(984) : error A2006:undefined symbol : _append_int
+gui_designer_agent.asm(988) : error A2006:undefined symbol : _append_string
+gui_designer_agent.asm(990) : error A2006:undefined symbol : _append_int
+gui_designer_agent.asm(994) : error A2006:undefined symbol : _append_string
+gui_designer_agent.asm(996) : error A2006:undefined symbol : _append_int
+gui_designer_agent.asm(1000) : error A2006:undefined symbol : _append_string
+gui_designer_agent.asm(1002) : error A2006:undefined symbol : _append_int
+gui_designer_agent.asm(1005) : error A2006:undefined symbol : _append_string
+gui_designer_agent.asm(1007) : error A2006:undefined symbol : _append_int
+gui_designer_agent.asm(1010) : error A2006:undefined symbol : _append_string
+gui_designer_agent.asm(1012) : error A2006:undefined symbol : _append_int
+gui_designer_agent.asm(1015) : error A2006:undefined symbol : _append_string
+gui_designer_agent.asm(1017) : error A2006:undefined symbol : _append_int
+gui_designer_agent.asm(1021) : error A2006:undefined symbol : _append_string
+gui_designer_agent.asm(1028) : error A2006:undefined symbol : _append_bool
+gui_designer_agent.asm(1032) : error A2006:undefined symbol : _append_string
+gui_designer_agent.asm(1039) : error A2006:undefined symbol : _append_bool
+gui_designer_agent.asm(1043) : error A2006:undefined symbol : _append_string
+gui_designer_agent.asm(1050) : error A2006:undefined symbol : _append_bool
+gui_designer_agent.asm(1054) : error A2006:undefined symbol : _append_string
+gui_designer_agent.asm(1063) : error A2006:undefined symbol : _append_string
+gui_designer_agent.asm(1068) : error A2006:undefined symbol : _write_json_to_file
+gui_designer_agent.asm(1101) : error A2006:undefined symbol : _read_json_from_file
+gui_designer_agent.asm(1117) : error A2006:undefined symbol : _find_json_key
+gui_designer_agent.asm(1133) : error A2022:instruction operands must be the same size
+gui_designer_agent.asm(1139) : error A2006:undefined symbol : _parse_json_int
+gui_designer_agent.asm(1144) : error A2006:undefined symbol : _parse_json_int
+gui_designer_agent.asm(1149) : error A2006:undefined symbol : _parse_json_int
+gui_designer_agent.asm(1154) : error A2006:undefined symbol : _parse_json_int
+gui_designer_agent.asm(1159) : error A2006:undefined symbol : _parse_json_int
+gui_designer_agent.asm(1164) : error A2006:undefined symbol : _parse_json_int
+gui_designer_agent.asm(1169) : error A2006:undefined symbol : _parse_json_int
+gui_designer_agent.asm(1174) : error A2006:undefined symbol : _parse_json_bool
+gui_designer_agent.asm(1179) : error A2006:undefined symbol : _parse_json_bool
+gui_designer_agent.asm(1184) : error A2006:undefined symbol : _parse_json_bool
+ERROR: Assembly failed for gui_designer_agent.asm
+Assembling: main_masm.asm
+ Assembling: main_masm.asm
+Assembling: ml_masm.asm
+ Assembling: ml_masm.asm
+Assembling: model_memory_hotpatch.asm
+ Assembling: model_memory_hotpatch.asm
+Assembling: process_manager.asm
+ Assembling: process_manager.asm
+Assembling: proxy_hotpatcher.asm
+ Assembling: proxy_hotpatcher.asm
+Assembling: rawr1024_dual_engine_custom.asm
+ Assembling: rawr1024_dual_engine_custom.asm
+Assembling: RawrXD_AgenticPatchOrchestrator.asm
+ Assembling: RawrXD_AgenticPatchOrchestrator.asm
+Assembling: RawrXD_DualEngineManager.asm
+ Assembling: RawrXD_DualEngineManager.asm
+Assembling: RawrXD_DualEngineStreamer.asm
+ Assembling: RawrXD_DualEngineStreamer.asm
+Assembling: RawrXD_MathHotpatchEntry.asm
+ Assembling: RawrXD_MathHotpatchEntry.asm
+Assembling: RawrXD_RuntimePatcher.asm
+ Assembling: RawrXD_RuntimePatcher.asm
+Assembling: ui_masm.asm
+ Assembling: ui_masm.asm
+Assembling: unified_masm_hotpatch.asm
+ Assembling: unified_masm_hotpatch.asm
+
+[+] Assembly complete. Generated objects:
+  - agentic_engine.obj
+  - agentic_failure_detector.obj
+  - agentic_masm.obj
+  - asm_events.obj
+  - asm_log.obj
+  - asm_memory.obj
+  - asm_string.obj
+  - asm_sync.obj
+  - byte_level_hotpatcher.obj
+  - console_log.obj
+  - extension_agent.obj
+  - gguf_server_hotpatch.obj
+  - main_masm.obj
+  - ml_masm.obj
+  - model_memory_hotpatch.obj
+  - process_manager.obj
+  - proxy_hotpatcher.obj
+  - rawr1024_dual_engine_custom.obj
+  - RawrXD_AgenticPatchOrchestrator.obj
+  - RawrXD_DualEngineManager.obj
+  - RawrXD_DualEngineStreamer.obj
+  - RawrXD_MathHotpatchEntry.obj
+  - RawrXD_RuntimePatcher.obj
+  - ui_masm.obj
+  - unified_masm_hotpatch.obj
+
+[*] Linking to RawrXD-Pure-MASM64.exe...
+
+RawrXD_MathHotpatchEntry.obj : error LNK2001: unresolved external symbol masm_puppeteer_correct_response
+RawrXD_RuntimePatcher.obj : error LNK2001: unresolved external symbol masm_puppeteer_correct_response
+agentic_engine.obj : error LNK2001: unresolved external symbol masm_puppeteer_correct_response
+RawrXD_AgenticPatchOrchestrator.obj : error LNK2001: unresolved external symbol masm_puppeteer_correct_response
+RawrXD_DualEngineManager.obj : error LNK2001: unresolved external symbol masm_puppeteer_correct_response
+RawrXD_DualEngineStreamer.obj : error LNK2001: unresolved external symbol masm_puppeteer_correct_response
+RawrXD_MathHotpatchEntry.obj : error LNK2001: unresolved external symbol masm_puppeteer_get_stats
+RawrXD_RuntimePatcher.obj : error LNK2001: unresolved external symbol masm_puppeteer_get_stats
+agentic_engine.obj : error LNK2001: unresolved external symbol masm_puppeteer_get_stats
+RawrXD_AgenticPatchOrchestrator.obj : error LNK2001: unresolved external symbol masm_puppeteer_get_stats
+RawrXD_DualEngineManager.obj : error LNK2001: unresolved external symbol masm_puppeteer_get_stats
+RawrXD_DualEngineStreamer.obj : error LNK2001: unresolved external symbol masm_puppeteer_get_stats
+agentic_masm.obj : error LNK2019: unresolved external symbol gui_agent_inspect referenced in function agent_init_tools
+main_masm.obj : error LNK2001: unresolved external symbol gui_agent_inspect
+agentic_masm.obj : error LNK2019: unresolved external symbol gui_agent_modify referenced in function agent_init_tools
+main_masm.obj : error LNK2001: unresolved external symbol gui_agent_modify
+agentic_masm.obj : error LNK2019: unresolved external symbol gui_create_complete_ide referenced in function agent_init_tools
+main_masm.obj : error LNK2001: unresolved external symbol gui_create_complete_ide
+main_masm.obj : error LNK2019: unresolved external symbol ide_init_all_components referenced in function init_application
+main_masm.obj : error LNK2001: unresolved external symbol ide_init_file_tree
+main_masm.obj : error LNK2001: unresolved external symbol ide_editor_open_file
+main_masm.obj : error LNK2001: unresolved external symbol ide_tabs_create_tab
+main_masm.obj : error LNK2001: unresolved external symbol ide_minimap_init
+main_masm.obj : error LNK2001: unresolved external symbol ide_palette_init
+main_masm.obj : error LNK2001: unresolved external symbol ide_panes_init
+main_masm.obj : error LNK2019: unresolved external symbol gui_init_registry referenced in function init_application
+main_masm.obj : error LNK2001: unresolved external symbol gui_create_component
+ui_masm.obj : error LNK2001: unresolved external symbol gui_create_component
+RawrXD-Pure-MASM64.exe : fatal error LNK1120: 14 unresolved externals
+
+ERROR: Linker failed
+Check link.exe output above for details.

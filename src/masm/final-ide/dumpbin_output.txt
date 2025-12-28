@@ -1,0 +1,73 @@
+Microsoft (R) COFF/PE Dumper Version 14.50.35719.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+
+Dump of file c:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide\build\bin\Release\RawrXD.exe
+
+File Type: EXECUTABLE IMAGE
+
+  Section contains the following imports:
+
+    KERNEL32.dll
+                405000 Import Address Table
+                4052B8 Import Name Table
+                     0 time date stamp
+                     0 Index of first forwarder reference
+
+                         37F HeapFree
+                         449 OutputDebugStringA
+                         480 QueryPerformanceCounter
+                         481 QueryPerformanceFrequency
+                         619 VirtualProtect
+                         28C GetLastError
+                          DD CreateFileA
+                         4A8 ReadFile
+                         65F WriteFile
+                         567 SetFilePointer
+                          9C CloseHandle
+                         2A1 GetModuleHandleA
+                         37B HeapAlloc
+                          DE CreateFileMappingA
+                         411 MapViewOfFile
+                         5FD UnmapViewOfFile
+                         3F3 LoadLibraryA
+                         2DC GetProcAddress
+                         519 RtlZeroMemory
+                         1A0 FindFirstFileA
+                         1B1 FindNextFileA
+                         19C FindClose
+                         276 GetFileSize
+                         2E3 GetProcessHeap
+
+    USER32.dll
+                4050C8 Import Address Table
+                405380 Import Name Table
+                     0 time date stamp
+                     0 Index of first forwarder reference
+
+                          78 CreateWindowExA
+                         327 SendMessageA
+                          B8 DestroyWindow
+                         2BC PostQuitMessage
+                          A9 DefWindowProcA
+                         2EC RegisterClassExA
+                         18E GetMessageA
+                         3D0 TranslateMessage
+                          BF DispatchMessageA
+                         263 LoadCursorA
+                         267 LoadIconA
+                          73 CreateMenu
+                          74 CreatePopupMenu
+                           B AppendMenuA
+                         35B SetMenu
+                         3AF ShowWindow
+                         3EA UpdateWindow
+                         40C wsprintfA
+                         291 MessageBoxA
+
+  Summary
+
+       84000 .data
+        1000 .rdata
+        1000 .reloc
+        4000 .text

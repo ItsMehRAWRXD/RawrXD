@@ -1,0 +1,153 @@
+name: HexMag Swarm & IDE Build Test
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+      - production-lazy-init
+      - feature/**
+      - feat/**
+      - bugfix/**
+      - hotfix/**
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Add MSBuild
+        uses: microsoft/setup-msbuild@v1.3
+
+      - name: Install NASM
+        run: |
+          choco install nasm -y
+          $env:PATH += ";C:\Program Files\NASM"
+
+      - name: Install OpenSSL (full SDK)
+        shell: pwsh
+        run: |
+          choco install openssl -y
+
+          $opensslRoot = "C:\Program Files\OpenSSL-Win64"
+          $opensslInclude = Join-Path $opensslRoot "include"
+          $opensslLib = Join-Path $opensslRoot "lib"
+
+          if (-not (Test-Path (Join-Path $opensslInclude "openssl\ssl.h"))) {
+            throw "OpenSSL headers not found at $opensslInclude. The full SDK is required (not openssl.light)."
+          }
+
+          if (-not (Test-Path (Join-Path $opensslLib "libcrypto.lib"))) {
+            throw "OpenSSL import libraries not found at $opensslLib. The full SDK is required (not openssl.light)."
+          }
+
+          $env:PATH += ";$opensslRoot\bin"
+          echo "OPENSSL_ROOT_DIR=$opensslRoot" >> $env:GITHUB_ENV
+          echo "OPENSSL_DIR=$opensslRoot" >> $env:GITHUB_ENV
+          echo "OPENSSL_INCLUDE_DIR=$opensslInclude" >> $env:GITHUB_ENV
+          echo "OPENSSL_CRYPTO_LIBRARY=$opensslLib\libcrypto.lib" >> $env:GITHUB_ENV
+          echo "OPENSSL_SSL_LIBRARY=$opensslLib\libssl.lib" >> $env:GITHUB_ENV
+          echo "CMAKE_PREFIX_PATH=$opensslRoot;$env:CMAKE_PREFIX_PATH" >> $env:GITHUB_ENV
+
+      - name: Install Qt via aqtinstall
+        shell: pwsh
+        run: |
+          pip install aqtinstall
+          
+          # Install Qt 6.7.3 base (includes Core, Gui, Widgets, Network, Sql, Concurrent, Test)
+          Write-Host "Installing Qt 6.7.3 base libraries..."
+          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64
+          
+          # Install Qt add-on modules required by orchestration (Charts, Multimedia)
+          # Note: aqt expects module names as separate arguments (no quotes)
+          Write-Host "Installing Qt add-on modules (qtcharts, qtmultimedia)..."
+          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64 -m qtcharts qtmultimedia
+          if ($LASTEXITCODE -ne 0) {
+            throw "Qt add-on modules install failed (qtcharts, qtmultimedia)"
+          }
+          
+          # Locate Qt installation
+          $QtPath = Get-ChildItem -Path (Get-Location) -Filter "6.7.3" -Directory -Recurse | Select-Object -First 1
+          if ($QtPath) {
+            $QtBase = Join-Path $QtPath.FullName "msvc2019_64"
+          } else {
+            $QtBase = Join-Path $PWD "6.7.3\msvc2019_64"
+          }
+          
+          Write-Host "Qt6 base path: $QtBase"
+          Write-Host "Checking for Qt6Config.cmake..."
+          Get-ChildItem "$QtBase\lib\cmake" -Recurse -Filter "Qt6Config.cmake" 2>$null | ForEach-Object { Write-Host "Found: $($_.FullName)" }
+          
+          # Check for Qt Charts specifically
+          Write-Host "Checking for Qt6ChartsConfig.cmake..."
+          $chartsConfig = Get-ChildItem "$QtBase\lib\cmake" -Recurse -Filter "Qt6ChartsConfig.cmake" -ErrorAction SilentlyContinue
+          if ($chartsConfig) {
+            Write-Host "Found Qt Charts at: $($chartsConfig.FullName)"
+          } else {
+            Write-Host "WARNING: Qt6ChartsConfig.cmake not found in standard location"
+            # Try alternate location
+            $altChartsPath = Get-ChildItem "D:\a\RawrXD\RawrXD" -Recurse -Filter "Qt6ChartsConfig.cmake" -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($altChartsPath) {
+              Write-Host "Found Qt Charts at alternate location: $($altChartsPath.FullName)"
+            }
+          }
+          
+          # Set Qt6_DIR to the cmake directory
+          $qt6ConfigPath = "$QtBase\lib\cmake\Qt6"
+          if (Test-Path "$qt6ConfigPath\Qt6Config.cmake") {
+            Write-Host "Setting Qt6_DIR=$qt6ConfigPath"
+            echo "Qt6_DIR=$qt6ConfigPath" >> $env:GITHUB_ENV
+          } else {
+            Write-Host "Qt6Config.cmake not found at expected location, using base path"
+            echo "Qt6_DIR=$QtBase" >> $env:GITHUB_ENV
+          }
+          
+          echo "CMAKE_PREFIX_PATH=$QtBase" >> $env:GITHUB_ENV
+          echo "$($QtBase)\bin" >> $env:GITHUB_PATH
+          Write-Host "Qt installation complete"
+
+      - name: Clean build folder
+        shell: pwsh
+        run: |
+          if (Test-Path .\build) {
+            Write-Host "Removing existing build folder to avoid stale CMake cache..."
+            Remove-Item .\build -Recurse -Force -ErrorAction SilentlyContinue
+          }
+
+      - name: Build Win32 IDE
+        run: .\scripts\build.ps1 -Config Release -A x64
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        working-directory: services
+        run: pip install -r requirements.txt
+
+      - name: Start HexMag Test Swarm (background on port 8001)
+        working-directory: services/hexmag
+        shell: pwsh
+        run: |
+          Start-Process python -ArgumentList "hexmag_engine.py --port 8001" -NoNewWindow
+          do {
+            Start-Sleep -Seconds 1
+            $r = try { (Invoke-WebRequest http://localhost:8001/health -TimeoutSec 5 -ErrorAction Stop).StatusCode } catch { 0 }
+          } while ($r -ne 200)
+
+      - name: Smoke-test /ask and /agent endpoints
+        working-directory: services
+        shell: pwsh
+        run: python test_smoke.py
+
+      - name: Kill test swarm
+        if: always()
+        shell: pwsh
+        run: |
+          Get-Process python -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue

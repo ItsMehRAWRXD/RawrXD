@@ -1,0 +1,10 @@
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\BUILD_MASM\CMAKEFILES\09B731FF594CBCBD0A5B6C427BCC449E\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/HiH8e/Downloads/RawrXD-production-lazy-init -BC:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/build_masm --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/build_masm/RawrXD-ModelLoader.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

@@ -1,0 +1,54 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: production-overlay
+
+bases:
+  - ../../base
+
+namespace: production
+
+patchesStrategicMerge:
+  - deployment-patch.yaml
+
+patchesJson6902:
+  - target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: api-server
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 5
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: ENVIRONMENT
+          value: production
+
+configMapGenerator:
+  - name: api-config
+    behavior: merge
+    literals:
+      - LOG_LEVEL=WARN
+      - ENVIRONMENT=production
+      - API_VERSION=v2
+
+images:
+  - name: api-server
+    newTag: "1.0.0-prod"
+    newName: registry.example.com/api-server
+
+replicas:
+  - name: api-server
+    count: 5
+
+commonLabels:
+  environment: production
+  managed-by: gitops
+
+commonAnnotations:
+  gitops-sync: "true"
+  last-updated: "2025-01-01"

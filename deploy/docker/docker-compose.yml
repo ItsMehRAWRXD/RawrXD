@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  llama-server:
+    build:
+      context: ./docker
+      dockerfile: Dockerfile
+    container_name: llama-cpp-server
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./models:/models
+      - ./cache:/root/.cache
+    environment:
+      - THREADS=2
+      - CONTEXT_SIZE=2048
+      - BATCH_SIZE=512
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - llama-net
+
+networks:
+  llama-net:
+    driver: bridge

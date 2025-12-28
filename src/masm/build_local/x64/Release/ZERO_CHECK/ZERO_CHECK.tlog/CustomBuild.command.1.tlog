@@ -1,0 +1,10 @@
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\SRC\MASM\BUILD_LOCAL\CMAKEFILES\1B1AC25164BC2284763DE791BF031973\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/src/masm -BC:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/src/masm/build_local --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/src/masm/build_local/RawrXD_MASM_Hotpatch.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

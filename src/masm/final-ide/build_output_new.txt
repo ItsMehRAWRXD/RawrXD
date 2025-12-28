@@ -1,0 +1,87 @@
+============================================================================
+RawrXD Pure MASM IDE Build System
+============================================================================
+Configuration: Release
+Time: Thu 12/25/2025 23:34:33.03
+
+[1/5] Assembling MASM runtime...
+Microsoft (R) Macro Assembler (x64) Version 14.50.35719.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: asm_memory.asm
+Microsoft (R) Macro Assembler (x64) Version 14.50.35719.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: asm_sync.asm
+Microsoft (R) Macro Assembler (x64) Version 14.50.35719.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: asm_string.asm
+Microsoft (R) Macro Assembler (x64) Version 14.50.35719.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: asm_events.asm
+Microsoft (R) Macro Assembler (x64) Version 14.50.35719.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: asm_log.asm
+Microsoft (R) Macro Assembler (x64) Version 14.50.35719.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: console_log.asm
+Microsoft (R) Macro Assembler (x64) Version 14.50.35719.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: process_manager.asm
+[2/5] Assembling hotpatch layers...
+Microsoft (R) Macro Assembler (x64) Version 14.50.35719.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: model_memory_hotpatch.asm
+Microsoft (R) Macro Assembler (x64) Version 14.50.35719.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: byte_level_hotpatcher.asm
+Microsoft (R) Macro Assembler (x64) Version 14.50.35719.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: gguf_server_hotpatch.asm
+Microsoft (R) Macro Assembler (x64) Version 14.50.35719.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: proxy_hotpatcher.asm
+Microsoft (R) Macro Assembler (x64) Version 14.50.35719.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: unified_masm_hotpatch.asm
+Microsoft (R) Macro Assembler (x64) Version 14.50.35719.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: unified_hotpatch_manager.asm
+[3/5] Assembling agentic systems...
+Microsoft (R) Macro Assembler (x64) Version 14.50.35719.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: agentic_failure_detector.asm
+Microsoft (R) Macro Assembler (x64) Version 14.50.35719.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: agentic_puppeteer.asm
+Microsoft (R) Macro Assembler (x64) Version 14.50.35719.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: gui_designer_agent.asm
+gui_designer_agent.asm(1285) : error A2008:syntax error : name
+gui_designer_agent.asm(497) : error A2006:undefined symbol : ApplyComponentStyle
+gui_designer_agent.asm(501) : error A2006:undefined symbol : UpdateComponentAppearance
+gui_designer_agent.asm(508) : error A2006:undefined symbol : StartStyleAnimation
+gui_designer_agent.asm(565) : error A2006:undefined symbol : ParseAnimationJson
+gui_designer_agent.asm(660) : error A2006:undefined symbol : ParseLayoutJson
+gui_designer_agent.asm(674) : error A2006:undefined symbol : ApplyLayoutProperties
+gui_designer_agent.asm(678) : error A2006:undefined symbol : RecalculateLayout
+gui_designer_agent.asm(871) : error A2006:undefined symbol : UpdateAnimation
+gui_designer_agent.asm(881) : error A2006:undefined symbol : RequestRedraw
+
+============================================================================
+BUILD FAILED
+============================================================================

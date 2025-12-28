@@ -1,0 +1,6 @@
+; Add EXTERN declarations for asm_string.asm
+EXTERN asm_malloc:PROC
+EXTERN asm_free:PROC
+EXTERN asm_memcpy:PROC
+
+.code

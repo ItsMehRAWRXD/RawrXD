@@ -1,0 +1,10 @@
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\BUILD_MASM\3RDPARTY\GGML\SRC\GGML-VULKAN\VULKAN-SHADERS-GEN-PREFIX\SRC\VULKAN-SHADERS-GEN-BUILD\CMAKEFILES\3BA60C11C3346F60799BEBF00EA1915F\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders -BC:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/build_masm/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders-gen-prefix/src/vulkan-shaders-gen-build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/build_masm/3rdparty/ggml/src/ggml-vulkan/vulkan-shaders-gen-prefix/src/vulkan-shaders-gen-build/vulkan-shaders-gen.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

@@ -1,0 +1,61 @@
+{
+  "name": "bigdaddyg-copilot",
+  "displayName": "BigDaddyG Copilot",
+  "publisher": "bigdaddyg",
+  "version": "1.0.0",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:bigdaddyg.openChat",
+    "onCommand:bigdaddyg.beaconChat",
+    "onCommand:bigdaddyg.toggleBypass",
+    "onCommand:bigdaddyg.startBypass",
+    "onCommand:bigdaddyg.stopBypass"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "bigdaddyg.openChat",
+        "title": "BigDaddyG: Open AI Chat"
+      },
+      {
+        "command": "bigdaddyg.beaconChat",
+        "title": "BigDaddyG: Beacon Chat (Local Ollama)"
+      },
+      {
+        "command": "bigdaddyg.toggleBypass",
+        "title": "BigDaddyG: Toggle Cursor Bypass"
+      },
+      {
+        "command": "bigdaddyg.startBypass",
+        "title": "BigDaddyG: Start Cursor Bypass"
+      },
+      {
+        "command": "bigdaddyg.stopBypass",
+        "title": "BigDaddyG: Stop Cursor Bypass"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "bigdaddyg.openChat",
+        "key": "ctrl+l",
+        "when": "editorTextFocus"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "tsc -p ./",
+    "compile": "tsc -p ./",
+    "package": "vsce package",
+    "install": "code --install-extension bigdaddyg-copilot-1.0.0.vsix"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.6.3"
+  }
+}

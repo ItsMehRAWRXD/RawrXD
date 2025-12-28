@@ -1,0 +1,1572 @@
+; ml_masm.asm - Model Loader for MASM IDE
+; Handles GGUF model loading and inference
+
+option casemap:none
+
+include windows.inc
+includelib kernel32.lib
+
+; Custom Engine (rawr1024_dual_engine_custom.asm)
+EXTERN rawr1024_init:PROC
+EXTERN rawr1024_start_engine:PROC
+EXTERN rawr1024_process:PROC
+EXTERN rawr1024_stop_engine:PROC
+EXTERN rawr1024_cleanup:PROC
+
+; Win32 APIs for logging
+EXTERN OutputDebugStringA:PROC
+
+;==========================================================================
+; CONSTANTS
+;==========================================================================
+GGUF_MAGIC          EQU 46554747h        ; "GGUF"
+MAX_TENSOR_COUNT    EQU 10000
+MAX_RESPONSE_LEN    EQU 8192
+MAX_PROMPT_LEN      EQU 4096
+MAX_TENSOR_CACHE    EQU MAX_TENSOR_COUNT
+TENSOR_NAME_LEN     EQU 64
+MODEL_NAME_LEN      EQU 64
+MODEL_VERSION_LEN   EQU 32
+QUANT_LEVEL_LEN     EQU 16
+GGUF_HEADER_SIZE    EQU 24
+MAX_META_STRING     EQU 512
+
+;==========================================================================
+; STRUCTURES
+;==========================================================================
+GGUF_HEADER STRUCT
+    magic           DWORD ?
+    version         DWORD ?
+    tensor_count    QWORD ?
+    metadata_kv_count QWORD ?
+GGUF_HEADER ENDS
+
+MODEL_STATE STRUCT
+    is_loaded       DWORD ?
+    file_handle     QWORD ?
+    file_mapping    QWORD ?
+    mapped_data     QWORD ?
+    file_size       QWORD ?
+    tensor_count    QWORD ?
+    metadata_count  QWORD ?
+    model_name      BYTE 260 DUP (?)
+    last_error      BYTE 512 DUP (?)
+MODEL_STATE ENDS
+
+TENSOR_INFO STRUCT
+    name_str            BYTE TENSOR_NAME_LEN DUP(?)  ; Name field
+    shape               DWORD 4 DUP(?)               ; Placeholder dims
+    dtype               DWORD ?                      ; Data type enum
+    strides             DWORD 4 DUP(?)               ; Stride placeholders
+    data_ptr            QWORD ?                      ; Points into mapped data
+    size_bytes          QWORD ?
+    is_quantized        DWORD ?
+    quant_bits          DWORD ?
+    reserved            QWORD ?
+TENSOR_INFO ENDS
+
+MODEL_ARCH STRUCT
+    model_name          BYTE MODEL_NAME_LEN DUP(?)
+    version             BYTE MODEL_VERSION_LEN DUP(?)
+    num_layers          DWORD ?
+    hidden_size         DWORD ?
+    num_attention_heads DWORD ?
+    max_seq_length      DWORD ?
+    vocab_size          DWORD ?
+    quantization_level  BYTE QUANT_LEVEL_LEN DUP(?)
+MODEL_ARCH ENDS
+
+;==========================================================================
+; DATA SEGMENT
+;==========================================================================
+.data?
+    g_model_state   MODEL_STATE <>
+    response_buffer BYTE MAX_RESPONSE_LEN DUP (?)
+    temp_buffer     BYTE 1024 DUP (?)
+    g_tensor_cache  TENSOR_INFO MAX_TENSOR_CACHE DUP(<> )
+    g_tensor_count  DWORD 0
+    g_model_arch    MODEL_ARCH <>
+
+.data
+    log_init        BYTE "ML: Initializing model loader...", 0
+    log_loading     BYTE "ML: Loading model file...", 0
+    log_mapping     BYTE "ML: Memory mapping file...", 0
+    log_parsing     BYTE "ML: Parsing GGUF header...", 0
+    log_parse_meta  BYTE "ML: Parsing GGUF metadata...", 0
+    log_cache_tensors BYTE "ML: Building tensor cache...", 0
+    log_arch_ready  BYTE "ML: Architecture metadata ready", 0
+    log_ready       BYTE "ML: Model ready for inference", 0
+    log_inference   BYTE "ML: Running inference...", 0
+    log_cleanup     BYTE "ML: Cleaning up resources...", 0
+    
+    err_file_open   BYTE "Failed to open model file", 0
+    err_file_size   BYTE "Model file too large", 0
+    err_mapping     BYTE "Failed to map file to memory", 0
+    err_invalid_gguf BYTE "Invalid GGUF file format", 0
+    err_no_model    BYTE "No model loaded", 0
+    err_inference   BYTE "Inference failed", 0
+    
+    default_response BYTE "I'm a simple AI assistant. How can I help you?", 0
+    thinking_response BYTE "Let me think about that...", 0
+    szKey_n_layer BYTE "n_layer",0
+    szKey_layer_count BYTE "layer_count",0
+    szKey_llama_block_count BYTE "llama.block_count",0
+    szKey_n_embd BYTE "n_embd",0
+    szKey_hidden_size BYTE "hidden_size",0
+    szKey_llama_embedding_length BYTE "llama.embedding_length",0
+    szKey_num_attention_heads BYTE "num_attention_heads",0
+    szKey_n_head BYTE "n_head",0
+    szKey_n_ctx BYTE "n_ctx",0
+    szKey_max_seq_length BYTE "max_seq_length",0
+    szKey_llama_context_length BYTE "llama.context_length",0
+    szKey_n_vocab BYTE "n_vocab",0
+    szKey_llama_vocab_size BYTE "llama.vocab_size",0
+    szKey_model_name BYTE "model.name",0
+    szKey_general_name BYTE "general.name",0
+    szKey_model_version BYTE "model.version",0
+    szKey_version BYTE "version",0
+    szKey_quantization BYTE "quantization",0
+    szKey_model_quantization BYTE "model.quantization",0
+
+;==========================================================================
+; CODE SEGMENT
+;==========================================================================
+.code
+
+;==========================================================================
+; PUBLIC: ml_masm_init(model_path: rcx, flags: rdx)
+; Initialize model loader with GGUF file
+; Returns: 1 on success, 0 on failure
+;==========================================================================
+PUBLIC ml_masm_init
+ALIGN 16
+ml_masm_init PROC
+    push rbx
+    push rsi
+    push rdi
+    sub rsp, 40h
+    
+    mov rbx, rcx                    ; save model path
+    mov rsi, rdx                    ; save flags
+    
+    ; Log initialization
+    lea rcx, log_init
+    call OutputDebugStringA
+    
+    ; Clear previous state
+    call ml_masm_free
+    
+    ; Copy model path
+    mov rsi, rbx
+    lea rdi, g_model_state.model_name
+    mov rcx, 260
+    call strcpy_limited
+    
+    ; Log loading
+    lea rcx, log_loading
+    call OutputDebugStringA
+    
+    ; Initialize custom engine
+    call rawr1024_init
+    test rax, rax
+    jz init_engine_failed
+    
+    ; Start engine 0
+    mov rcx, 0
+    call rawr1024_start_engine
+    test rax, rax
+    jz init_engine_failed
+    
+    ; Open file
+    mov rcx, rbx                    ; file path
+    mov rdx, GENERIC_READ
+    mov r8, FILE_SHARE_READ
+    xor r9, r9                      ; security attributes
+    mov QWORD PTR [rsp+20h], OPEN_EXISTING
+    mov QWORD PTR [rsp+28h], FILE_ATTRIBUTE_NORMAL
+    xor rax, rax
+    mov QWORD PTR [rsp+30h], rax    ; template file
+    call CreateFileA
+    
+    cmp rax, INVALID_HANDLE_VALUE
+    je file_error
+    mov g_model_state.file_handle, rax
+    
+    ; Get file size
+    mov rcx, rax
+    lea rdx, temp_buffer
+    call GetFileSizeEx
+    test eax, eax
+    jz file_error
+    
+    mov rax, QWORD PTR [temp_buffer]
+    mov g_model_state.file_size, rax
+    
+    ; Log mapping
+    lea rcx, log_mapping
+    call OutputDebugStringA
+    
+    ; Create file mapping
+    mov rcx, g_model_state.file_handle
+    xor rdx, rdx                    ; security attributes
+    mov r8d, PAGE_READONLY
+    xor r9, r9                      ; high size
+    mov QWORD PTR [rsp+20h], 0      ; low size (entire file)
+    xor rax, rax
+    mov QWORD PTR [rsp+28h], rax    ; name
+    call CreateFileMappingA
+    
+    test rax, rax
+    jz mapping_error
+    mov g_model_state.file_mapping, rax
+    
+    ; Map view of file
+    mov rcx, rax
+    mov rdx, FILE_MAP_READ
+    xor r8, r8                      ; offset high
+    xor r9, r9                      ; offset low
+    mov QWORD PTR [rsp+20h], 0      ; bytes to map (entire file)
+    call MapViewOfFile
+    
+    test rax, rax
+    jz mapping_error
+    mov g_model_state.mapped_data, rax
+    
+    ; Log parsing
+    lea rcx, log_parsing
+    call OutputDebugStringA
+    
+    ; Parse GGUF header
+    call parse_gguf_header
+    test rax, rax
+    jz format_error
+
+    ; Parse metadata
+    mov rcx, rax
+    call parse_gguf_metadata
+    test rax, rax
+    jz format_error
+
+    ; Build tensor cache
+    mov rcx, rax
+    call build_tensor_cache
+    test eax, eax
+    jz format_error
+    
+    ; Mark as loaded
+    mov g_model_state.is_loaded, 1
+    
+    ; Log ready
+    lea rcx, log_ready
+    call OutputDebugStringA
+    
+    mov eax, 1
+    jmp done_label
+    
+init_engine_failed:
+    lea rcx, err_no_model
+    call set_last_error
+    jmp error_label
+    
+file_error:
+    lea rcx, err_file_open
+    call set_last_error
+    jmp error_label
+    
+size_error:
+    lea rcx, err_file_size
+    call set_last_error
+    jmp error_label
+    
+mapping_error:
+    lea rcx, err_mapping
+    call set_last_error
+    jmp error_label
+    
+format_error:
+    lea rcx, err_invalid_gguf
+    call set_last_error
+    jmp error_label
+    
+error_label:
+    call ml_masm_free
+    xor eax, eax
+    
+done_label:
+    add rsp, 40h
+    pop rdi
+    pop rsi
+    pop rbx
+    ret
+ml_masm_init ENDP
+
+;==========================================================================
+; PUBLIC: ml_masm_inference(prompt: rcx)
+; Run inference with given prompt
+; Returns: 1 on success, 0 on failure
+;==========================================================================
+PUBLIC ml_masm_inference
+ALIGN 16
+ml_masm_inference PROC
+    push rbx
+    sub rsp, 30h
+    
+    mov rbx, rcx                    ; save prompt
+    
+    ; Check if model is loaded
+    cmp g_model_state.is_loaded, 0
+    je no_model
+    
+    ; Log inference
+    lea rcx, log_inference
+    call OutputDebugStringA
+    
+    ; Copy prompt to response buffer
+    mov rsi, rbx
+    lea rdi, response_buffer
+    call strcpy_simple
+    
+    ; Get prompt length
+    mov rcx, rbx
+    call strlen_simple
+    
+    ; Run custom engine process on the buffer (XOR demo)
+    mov rdx, OFFSET response_buffer
+    mov r8, rax                     ; size
+    mov rcx, 0                      ; engine 0
+    call rawr1024_process
+    
+    ; Since XOR makes it unreadable, let's just return a success message for now
+    ; to prove the engine was called.
+    lea rsi, default_response
+    lea rdi, response_buffer
+    call strcpy_simple
+    
+    mov eax, 1
+    jmp done_label
+    
+no_model:
+    lea rcx, err_no_model
+    call set_last_error
+    xor eax, eax
+    
+done_label:
+    add rsp, 30h
+    pop rbx
+    ret
+ml_masm_inference ENDP
+
+;==========================================================================
+; PUBLIC: ml_masm_get_response(buffer: rcx, max_len: rdx)
+; Get the last inference response
+; Returns: length of response
+;==========================================================================
+PUBLIC ml_masm_get_response
+ALIGN 16
+ml_masm_get_response PROC
+    push rbx
+    push rsi
+    push rdi
+    
+    mov rbx, rcx                    ; save buffer
+    mov rsi, rdx                    ; save max_len
+    
+    ; Copy response to buffer
+    lea rsi, response_buffer
+    mov rdi, rbx
+    mov rcx, rsi                    ; max_len
+    call strcpy_limited
+    
+    ; Return length
+    mov rcx, rbx
+    call strlen_simple
+    
+    pop rdi
+    pop rsi
+    pop rbx
+    ret
+ml_masm_get_response ENDP
+
+;==========================================================================
+; PUBLIC: ml_masm_get_tensor(index: rcx)
+; Get tensor information by index
+; Returns: pointer to tensor info or NULL
+;==========================================================================
+PUBLIC ml_masm_get_tensor
+ALIGN 16
+ml_masm_get_tensor PROC
+    ; rcx = tensor name (ASCII)
+    push rbx
+    push rsi
+    push rdi
+    sub rsp, 32
+
+    test rcx, rcx
+    jz mgt_done
+
+    mov rsi, rcx                    ; name ptr
+    mov eax, g_tensor_count
+    test eax, eax
+    jz mgt_done
+    xor edx, edx                    ; idx
+    lea rbx, g_tensor_cache
+
+mgt_loop:
+    cmp edx, g_tensor_count
+    jae mgt_done
+    mov rdi, rbx
+    ; compare name_str
+    lea rcx, [rdi + TENSOR_INFO.name_str]
+    mov rdx, rsi
+    mov r8d, TENSOR_NAME_LEN
+    call strncmp_limited
+    test eax, eax
+    jz mgt_found
+    ; next entry
+    add rbx, SIZEOF TENSOR_INFO
+    inc edx
+    jmp mgt_loop
+
+mgt_found:
+    ; return pointer to TENSOR_INFO
+    mov rax, rdi
+    add rsp, 32
+    pop rdi
+    pop rsi
+    pop rbx
+    ret
+
+mgt_done:
+    add rsp, 32
+    pop rdi
+    pop rsi
+    pop rbx
+    xor rax, rax
+    ret
+ml_masm_get_tensor ENDP
+
+;==========================================================================
+; PUBLIC: ml_masm_get_arch()
+; Get model architecture string
+; Returns: pointer to architecture string
+;==========================================================================
+PUBLIC ml_masm_get_arch
+ALIGN 16
+ml_masm_get_arch PROC
+    ; Return pointer to human-readable architecture string built from metadata
+    lea rax, arch_string
+    ret
+ml_masm_get_arch ENDP
+
+;==========================================================================
+; PUBLIC: ml_masm_last_error()
+; Get last error message
+; Returns: pointer to error string
+;==========================================================================
+PUBLIC ml_masm_last_error
+ALIGN 16
+ml_masm_last_error PROC
+    lea rax, g_model_state.last_error
+    ret
+ml_masm_last_error ENDP
+
+;==========================================================================
+; PUBLIC: ml_masm_free()
+; Free model resources
+;==========================================================================
+PUBLIC ml_masm_free
+ALIGN 16
+ml_masm_free PROC
+    sub rsp, 28h
+    
+    ; Log cleanup
+    lea rcx, log_cleanup
+    call OutputDebugStringA
+    
+    ; Unmap view
+    cmp g_model_state.mapped_data, 0
+    je skip_unmap
+    
+    mov rcx, g_model_state.mapped_data
+    call UnmapViewOfFile
+    mov g_model_state.mapped_data, 0
+    
+skip_unmap:
+    ; Close file mapping
+    cmp g_model_state.file_mapping, 0
+    je skip_mapping
+    
+    mov rcx, g_model_state.file_mapping
+    call CloseHandle
+    mov g_model_state.file_mapping, 0
+    
+skip_mapping:
+    ; Close file handle
+    cmp g_model_state.file_handle, 0
+    je skip_file
+    
+    mov rcx, g_model_state.file_handle
+    call CloseHandle
+    mov g_model_state.file_handle, 0
+    
+skip_file:
+    ; Clear state
+    mov g_model_state.is_loaded, 0
+    mov g_model_state.tensor_count, 0
+    
+    add rsp, 28h
+    ret
+ml_masm_free ENDP
+
+;==========================================================================
+; INTERNAL: parse_gguf_header()
+; Parse GGUF file header
+; Returns: pointer to metadata block or NULL on failure
+;==========================================================================
+parse_gguf_header PROC
+    push rbx
+    push rsi
+
+    mov rbx, g_model_state.mapped_data
+    test rbx, rbx
+    jz header_fail
+
+    ; Verify magic
+    mov eax, DWORD PTR [rbx]
+    cmp eax, GGUF_MAGIC
+    jne header_fail
+
+    ; Only version 3 supported for now
+    mov eax, DWORD PTR [rbx + 4]
+    cmp eax, 3
+    jne header_fail
+
+    ; Record tensor/metadata counts
+    mov rax, QWORD PTR [rbx + 8]
+    mov g_model_state.tensor_count, rax
+    mov rdx, QWORD PTR [rbx + 16]
+    mov g_model_state.metadata_count, rdx
+
+    ; Return pointer to metadata section
+    lea rax, [rbx + GGUF_HEADER_SIZE]
+    jmp header_done
+
+header_fail:
+    xor rax, rax
+
+header_done:
+    pop rsi
+    pop rbx
+    ret
+parse_gguf_header ENDP
+
+;==========================================================================
+    ; Get tensor count
+    mov rax, QWORD PTR [rbx + 8]
+    mov g_model_state.tensor_count, rax
+
+    ; Get metadata kv count (if present)
+    mov rax, QWORD PTR [rbx + 16]
+    mov g_model_state.metadata_count, rax
+
+    ; Parse metadata (best-effort ASCII scan)
+    lea rcx, log_parse_meta
+    call OutputDebugStringA
+    call parse_gguf_metadata_simple
+
+    ; Build tensor cache (best-effort scan)
+    lea rcx, log_cache_tensors
+    call OutputDebugStringA
+    call build_tensor_cache_simple
+;==========================================================================
+ALIGN 16
+ReadMetadataString PROC
+
+    ;==========================================================================
+    ; INTERNAL: parse_gguf_metadata_simple()
+    ; Best-effort ASCII scan of mapped GGUF to populate g_model_arch and arch_string
+    ;==========================================================================
+    parse_gguf_metadata_simple PROC
+        push rbx
+        push rsi
+        push rdi
+
+        mov rbx, g_model_state.mapped_data
+        mov rdi, g_model_state.file_size
+        test rbx, rbx
+        jz meta_done
+
+        ; Initialize defaults
+        lea rcx, g_model_arch
+        mov DWORD PTR [rcx + MODEL_ARCH.num_layers], 0
+        mov DWORD PTR [rcx + MODEL_ARCH.hidden_size], 0
+        mov DWORD PTR [rcx + MODEL_ARCH.num_attention_heads], 0
+        mov DWORD PTR [rcx + MODEL_ARCH.max_seq_length], 0
+        mov DWORD PTR [rcx + MODEL_ARCH.vocab_size], 0
+        ; Copy model name (first bytes of file or placeholder)
+        lea rsi, g_model_state.model_name
+        lea rdx, g_model_arch.model_name
+        mov ecx, MODEL_NAME_LEN
+        call memcpy_limited
+
+        ; Search helper: mem_search_ascii(base=rbx, len=rdi, key=ptr)
+        ; Keys: "num_layers", "hidden_size", "n_heads", "max_seq_len", "vocab_size", "quantization"
+
+        ; num_layers
+        lea r8, szKeyNumLayers
+        mov rcx, rbx
+        mov rdx, rdi
+        call mem_search_ascii
+        test rax, rax
+        jz skip_layers
+        mov rcx, rax
+        call parse_uint_after_key
+        mov [g_model_arch.num_layers], eax
+    skip_layers:
+
+        ; hidden_size
+        lea r8, szKeyHiddenSize
+        mov rcx, rbx
+        mov rdx, rdi
+        call mem_search_ascii
+        test rax, rax
+        jz skip_hidden
+        mov rcx, rax
+        call parse_uint_after_key
+        mov [g_model_arch.hidden_size], eax
+    skip_hidden:
+
+        ; n_heads
+        lea r8, szKeyHeads
+        mov rcx, rbx
+        mov rdx, rdi
+        call mem_search_ascii
+        test rax, rax
+        jz skip_heads
+        mov rcx, rax
+        call parse_uint_after_key
+        mov [g_model_arch.num_attention_heads], eax
+    skip_heads:
+
+        ; max_seq_len
+        lea r8, szKeyMaxSeq
+        mov rcx, rbx
+        mov rdx, rdi
+        call mem_search_ascii
+        test rax, rax
+        jz skip_seq
+        mov rcx, rax
+        call parse_uint_after_key
+        mov [g_model_arch.max_seq_length], eax
+    skip_seq:
+
+        ; vocab_size
+        lea r8, szKeyVocab
+        mov rcx, rbx
+        mov rdx, rdi
+        call mem_search_ascii
+        test rax, rax
+        jz skip_vocab
+        mov rcx, rax
+        call parse_uint_after_key
+        mov [g_model_arch.vocab_size], eax
+    skip_vocab:
+
+        ; quantization string copy
+        lea r8, szKeyQuant
+        mov rcx, rbx
+        mov rdx, rdi
+        call mem_search_ascii
+        test rax, rax
+        jz skip_quant
+        ; Copy limited ASCII following key into quantization_level buffer
+        mov rcx, rax
+        lea rdx, g_model_arch.quantization_level
+        mov r8d, QUANT_LEVEL_LEN
+        call copy_ascii_value_after_key
+    skip_quant:
+
+        ; Build human-readable arch_string
+        lea rcx, arch_string
+        lea rdx, g_model_arch
+        call build_arch_string
+        lea rcx, log_arch_ready
+        call OutputDebugStringA
+
+    meta_done:
+        pop rdi
+        pop rsi
+        pop rbx
+        ret
+    parse_gguf_metadata_simple ENDP
+
+    ;==========================================================================
+    ; INTERNAL: build_tensor_cache_simple()
+    ; Best-effort scan for common tensor name patterns and fill g_tensor_cache
+    ;==========================================================================
+    build_tensor_cache_simple PROC
+        push rbx
+        push rsi
+        push rdi
+
+        mov rbx, g_model_state.mapped_data
+        mov rdi, g_model_state.file_size
+        test rbx, rbx
+        jz btc_done
+        mov DWORD PTR g_tensor_count, 0
+
+        ; Pattern list (simplified): ".weight", ".bias"
+        lea rsi, szPatWeight
+    scan_loop:
+        mov rcx, rbx
+        mov rdx, rdi
+        mov r8, rsi
+        call mem_search_ascii
+        test rax, rax
+        jz btc_done
+
+        ; Backtrack to start of token name (letters, dots, underscores)
+        mov r9, rax
+    backtrack:
+        mov al, BYTE PTR [r9 - 1]
+        cmp al, 'a'
+        jl name_start
+        cmp al, 'z'
+        jle cont_back
+        cmp al, 'A'
+        jl name_start
+        cmp al, 'Z'
+        jle cont_back
+        cmp al, '.'
+        je cont_back
+        cmp al, '_'
+        je cont_back
+        jmp name_start
+    cont_back:
+        dec r9
+        jmp backtrack
+    name_start:
+        ; Copy name into cache entry
+        mov eax, g_tensor_count
+        cmp eax, MAX_TENSOR_CACHE
+        jae btc_done
+        imul eax, SIZEOF TENSOR_INFO
+        lea r8, g_tensor_cache
+        add r8, rax
+        lea rcx, [r8 + TENSOR_INFO.name_str]
+        mov rdx, r9
+        mov r10d, TENSOR_NAME_LEN
+        call strncpy_limited
+
+        ; Store data_ptr to occurrence
+        mov [r8 + TENSOR_INFO.data_ptr], rax
+        mov DWORD PTR [r8 + TENSOR_INFO.is_quantized], 0
+        mov QWORD PTR [r8 + TENSOR_INFO.size_bytes], 0
+        inc g_tensor_count
+
+        ; Advance search window beyond current match
+        lea rbx, [rax + 8]
+        sub rdi, 8
+        jmp scan_loop
+
+    btc_done:
+        pop rdi
+        pop rsi
+        pop rbx
+        ret
+    build_tensor_cache_simple ENDP
+    push rbx
+    push rsi
+    push rdi
+    push r12
+    push r13
+
+    mov rbx, rcx                ; pointer to length field
+    mov r12, rdx                ; destination buffer
+    mov r13, r8                 ; capacity
+
+    mov rax, QWORD PTR [rbx]    ; actual string length
+    mov r10, rax                ; preserve length
+    add rbx, 8                  ; move past length to string data
+    cmp r10, MAX_META_STRING
+    ja metadata_fail
+
+    cmp r13, 0
+    je metadata_fail
+
+    mov r11, r10
+    mov rdx, r13
+    dec rdx                     ; leave room for null terminator
+    cmp rdx, r11
+    jge metadata_copy
+    mov r11, rdx
+metadata_copy:
+    test r11, r11
+    jz metadata_zero_copy
+    mov rcx, r11
+    mov rsi, rbx
+    mov rdi, r12
+    rep movsb
+metadata_zero_copy:
+    mov byte ptr [r12 + r11], 0
+    lea rax, [rbx + r10]
+    jmp metadata_done
+
+metadata_fail:
+    xor rax, rax
+
+metadata_done:
+    pop r13
+    pop r12
+    pop rdi
+    pop rsi
+    pop rbx
+    ret
+ReadMetadataString ENDP
+
+;==========================================================================
+; INTERNAL: parse_gguf_metadata()
+; Reads GGUF metadata key/value pairs and fills the architecture record
+; Returns: pointer to the first tensor block or NULL on failure
+;==========================================================================
+ALIGN 16
+parse_gguf_metadata PROC
+    push rbx
+    push rsi
+    push rdi
+    push r12
+    push r13
+    push r14
+    push r15
+
+    mov rbx, g_model_state.metadata_count
+    test rbx, rbx
+    jz metadata_done_no_scan  ; no metadata, pointer already valid
+
+    mov rsi, rcx
+    mov r15, rcx
+
+    ; Zero architecture record so stale values disappear
+    lea rdi, g_model_arch
+    mov rcx, SIZEOF MODEL_ARCH
+    xor rax, rax
+    rep stosb
+
+metadata_loop:
+    cmp rbx, 0
+    je metadata_done
+
+    ; Read key string
+    mov rcx, rsi
+    lea rdx, temp_buffer
+    mov r8, MAX_META_STRING
+    call ReadMetadataString
+    test rax, rax
+    jz metadata_fail
+    mov rsi, rax
+
+    ; Read value type
+    mov eax, DWORD PTR [rsi]
+    mov r14d, eax             ; value_type
+    add rsi, 4
+
+    cmp r14d, 8               ; string value
+    je metadata_string_value
+    cmp r14d, 9               ; array
+    je metadata_array_value
+
+    cmp r14d, 4               ; uint32
+    je metadata_uint32
+    cmp r14d, 5               ; int32
+    je metadata_int32
+    cmp r14d, 10              ; uint64
+    je metadata_uint64
+    cmp r14d, 11              ; int64
+    je metadata_int64
+    cmp r14d, 6               ; float32
+    je metadata_float32
+    cmp r14d, 7               ; bool
+    je metadata_bool
+    cmp r14d, 0               ; uint8
+    je metadata_uint8
+    cmp r14d, 1               ; int8
+    je metadata_int8
+    cmp r14d, 2               ; uint16
+    je metadata_uint16
+    cmp r14d, 3               ; int16
+    je metadata_int16
+    cmp r14d, 12              ; float64
+    je metadata_float64
+
+    ; Unknown scalar, skip default 4 bytes
+    add rsi, 4
+    jmp metadata_record_key
+
+metadata_string_value:
+    mov rcx, rsi
+    lea rdx, temp_buffer+MAX_META_STRING
+    mov r8, MAX_META_STRING
+    call ReadMetadataString
+    test rax, rax
+    jz metadata_fail
+    mov rsi, rax
+    lea rdx, temp_buffer+MAX_META_STRING
+    ; Compare keys for string sinks
+    lea rcx, temp_buffer
+    lea rdi, szKey_model_name
+    call StringCompare
+    test rax, rax
+    jz metadata_store_model_name
+    lea rdi, szKey_general_name
+    lea rcx, temp_buffer
+    call StringCompare
+    test rax, rax
+    jz metadata_store_model_name
+    lea rdi, szKey_model_version
+    lea rcx, temp_buffer
+    call StringCompare
+    test rax, rax
+    jz metadata_store_model_version
+    lea rdi, szKey_version
+    lea rcx, temp_buffer
+    call StringCompare
+    test rax, rax
+    jz metadata_store_model_version
+    lea rdi, szKey_quantization
+    lea rcx, temp_buffer
+    call StringCompare
+    test rax, rax
+    jz metadata_store_quantization
+    lea rdi, szKey_model_quantization
+    lea rcx, temp_buffer
+    call StringCompare
+    test rax, rax
+    jz metadata_store_quantization
+    jmp metadata_record_key
+
+metadata_store_model_name:
+    mov rsi, temp_buffer+MAX_META_STRING
+    lea rdi, g_model_arch.model_name
+    mov rcx, MODEL_NAME_LEN
+    call strcpy_limited
+    jmp metadata_record_key
+
+metadata_store_model_version:
+    mov rsi, temp_buffer+MAX_META_STRING
+    lea rdi, g_model_arch.version
+    mov rcx, MODEL_VERSION_LEN
+    call strcpy_limited
+    jmp metadata_record_key
+
+metadata_store_quantization:
+    mov rsi, temp_buffer+MAX_META_STRING
+    lea rdi, g_model_arch.quantization_level
+    mov rcx, QUANT_LEVEL_LEN
+    call strcpy_limited
+    jmp metadata_record_key
+
+metadata_uint32:
+    mov eax, DWORD PTR [rsi]
+    movzx r10d, eax
+    add rsi, 4
+    jmp metadata_numeric
+metadata_int32:
+    mov eax, DWORD PTR [rsi]
+    movsx r10d, eax
+    add rsi, 4
+    jmp metadata_numeric
+metadata_uint64:
+    mov r10, QWORD PTR [rsi]
+    add rsi, 8
+    jmp metadata_numeric
+metadata_int64:
+    mov r10, QWORD PTR [rsi]
+    add rsi, 8
+    jmp metadata_numeric
+metadata_bool:
+    movzx r10d, BYTE PTR [rsi]
+    add rsi, 1
+    jmp metadata_numeric
+metadata_uint8:
+    movzx r10d, BYTE PTR [rsi]
+    add rsi, 1
+    jmp metadata_numeric
+metadata_int8:
+    movsx r10d, BYTE PTR [rsi]
+    add rsi, 1
+    jmp metadata_numeric
+metadata_uint16:
+    movzx r10d, WORD PTR [rsi]
+    add rsi, 2
+    jmp metadata_numeric
+metadata_int16:
+    movsx r10d, WORD PTR [rsi]
+    add rsi, 2
+    jmp metadata_numeric
+metadata_float32:
+    add rsi, 4
+    jmp metadata_record_key
+metadata_float64:
+    add rsi, 8
+    jmp metadata_record_key
+
+metadata_numeric:
+    lea rcx, temp_buffer
+    lea rdx, szKey_n_layer
+    call StringCompare
+    test rax, rax
+    jz metadata_set_num_layers
+    lea rdx, szKey_layer_count
+    lea rcx, temp_buffer
+    call StringCompare
+    test rax, rax
+    jz metadata_set_num_layers
+    lea rdx, szKey_llama_block_count
+    lea rcx, temp_buffer
+    call StringCompare
+    test rax, rax
+    jz metadata_set_num_layers
+    lea rdx, szKey_n_embd
+    lea rcx, temp_buffer
+    call StringCompare
+    test rax, rax
+    jz metadata_set_hidden_size
+    lea rdx, szKey_hidden_size
+    lea rcx, temp_buffer
+    call StringCompare
+    test rax, rax
+    jz metadata_set_hidden_size
+    lea rdx, szKey_llama_embedding_length
+    lea rcx, temp_buffer
+    call StringCompare
+    test rax, rax
+    jz metadata_set_hidden_size
+    lea rdx, szKey_n_head
+    lea rcx, temp_buffer
+    call StringCompare
+    test rax, rax
+    jz metadata_set_heads
+    lea rdx, szKey_num_attention_heads
+    lea rcx, temp_buffer
+    call StringCompare
+    test rax, rax
+    jz metadata_set_heads
+    lea rdx, szKey_n_ctx
+    lea rcx, temp_buffer
+    call StringCompare
+    test rax, rax
+    jz metadata_set_ctx
+    lea rdx, szKey_max_seq_length
+    lea rcx, temp_buffer
+    call StringCompare
+    test rax, rax
+    jz metadata_set_ctx
+    lea rdx, szKey_llama_context_length
+    lea rcx, temp_buffer
+    call StringCompare
+    test rax, rax
+    jz metadata_set_ctx
+    lea rdx, szKey_n_vocab
+    lea rcx, temp_buffer
+    call StringCompare
+    test rax, rax
+    jz metadata_set_vocab
+    lea rdx, szKey_llama_vocab_size
+    lea rcx, temp_buffer
+    call StringCompare
+    test rax, rax
+    jz metadata_set_vocab
+    jmp metadata_record_key
+
+metadata_set_num_layers:
+    mov dword ptr [g_model_arch.num_layers], r10d
+    jmp metadata_record_key
+metadata_set_hidden_size:
+    mov dword ptr [g_model_arch.hidden_size], r10d
+    jmp metadata_record_key
+metadata_set_heads:
+    mov dword ptr [g_model_arch.num_attention_heads], r10d
+    jmp metadata_record_key
+metadata_set_ctx:
+    mov dword ptr [g_model_arch.max_seq_length], r10d
+    jmp metadata_record_key
+metadata_set_vocab:
+    mov dword ptr [g_model_arch.vocab_size], r10d
+    jmp metadata_record_key
+
+metadata_array_value:
+    mov eax, DWORD PTR [rsi]
+    mov r11d, eax
+    add rsi, 4
+    mov r12, QWORD PTR [rsi]
+    add rsi, 8
+array_loop:
+    test r12, r12
+    jz metadata_record_key
+    cmp r11d, 8
+    je array_skip_string
+    cmp r11d, 4
+    je array_skip4
+    cmp r11d, 5
+    je array_skip4
+    cmp r11d, 6
+    je array_skip4
+    cmp r11d, 7
+    je array_skip1
+    cmp r11d, 10
+    je array_skip8
+    cmp r11d, 11
+    je array_skip8
+    cmp r11d, 0
+    je array_skip1
+    cmp r11d, 1
+    je array_skip1
+    cmp r11d, 2
+    je array_skip2
+    cmp r11d, 3
+    je array_skip2
+    jmp array_skip1
+array_skip_string:
+    mov rax, QWORD PTR [rsi]
+    add rsi, 8
+    add rsi, rax
+    jmp array_delta
+array_skip8:
+    add rsi, 8
+    jmp array_delta
+array_skip4:
+    add rsi, 4
+    jmp array_delta
+array_skip2:
+    add rsi, 2
+    jmp array_delta
+array_skip1:
+    add rsi, 1
+array_delta:
+    dec r12
+    jnz array_loop
+    jmp metadata_record_key
+
+metadata_record_key:
+    dec rbx
+    jnz metadata_loop
+    mov rax, rsi            ; pointer to tensor block
+    jmp metadata_done
+
+metadata_fail:
+    xor rax, rax
+
+metadata_done_no_scan:
+    mov rax, r15
+    jmp metadata_done
+
+metadata_done:
+    pop r15
+    pop r14
+    pop r13
+    pop r12
+    pop rdi
+    pop rsi
+    pop rbx
+    ret
+parse_gguf_metadata ENDP
+
+;==========================================================================
+; INTERNAL: build_tensor_cache()
+; Reads tensor metadata and populates the tensor cache
+; Returns: 1 on success, 0 on failure
+;==========================================================================
+ALIGN 16
+build_tensor_cache PROC
+    push rbx
+    push rsi
+    push rdi
+    push r12
+    push r13
+    push r14
+.    push r15
+
+    mov rbx, g_model_state.tensor_count
+    cmp rbx, MAX_TENSOR_CACHE
+    jle .cache_limit_ok
+    mov rbx, MAX_TENSOR_CACHE
+.cache_limit_ok:
+    test rbx, rbx
+    jz .cache_done_zero
+
+    mov rsi, rcx
+    lea r12, g_tensor_cache
+    xor r13, r13
+    mov r10, g_model_state.mapped_data
+
+.cache_loop:
+    cmp r13, rbx
+    jge .cache_done
+    mov r14, r13
+    imul r14, SIZEOF TENSOR_INFO
+    lea rdi, [r12 + r14]            ; entry base
+    mov r15, rdi
+
+    ; Read tensor name
+    mov rcx, rsi
+    lea rdx, temp_buffer
+    mov r8, TENSOR_NAME_LEN
+    call ReadMetadataString
+    test rax, rax
+    jz .cache_fail
+    mov rsi, rax
+    lea rdi, [r15 + TENSOR_INFO.name_str]
+    mov rcx, TENSOR_NAME_LEN
+    call strcpy_limited
+
+    ; Zero strides/subfields for safety
+    lea rdi, [r15 + TENSOR_INFO.strides]
+    mov rcx, 4
+    xor rax, rax
+    rep stosd
+
+    ; Read dimension count
+    mov eax, DWORD PTR [rsi]
+    mov r9d, eax
+    add rsi, 4
+
+    ; Initialize shape slots to zero
+    lea rdi, [r15 + TENSOR_INFO.shape]
+    mov rcx, 4
+    xor rax, rax
+    rep stosq
+
+    ; Store each dimension
+    mov rcx, 0
+.shape_loop:
+    cmp rcx, r9d
+    jge .shape_done
+    mov rax, QWORD PTR [rsi]
+    mov [r15 + TENSOR_INFO.shape + rcx*8], rax
+    add rsi, 8
+    inc rcx
+    jmp .shape_loop
+.shape_done:
+
+    ; Read tensor type
+    mov edx, DWORD PTR [rsi]
+    mov [r15 + TENSOR_INFO.dtype], edx
+    add rsi, 4
+
+    ; Read offset and compute data pointer
+    mov rax, QWORD PTR [rsi]
+    add rsi, 8
+    mov rcx, r10
+    add rcx, rax
+    mov [r15 + TENSOR_INFO.data_ptr], rcx
+
+    ; Compute element count
+    mov rax, 1
+    xor rcx, rcx
+.elem_count_loop:
+    cmp rcx, r9d
+    jge .elem_count_done
+    mov rdx, QWORD PTR [r15 + TENSOR_INFO.shape + rcx*8]
+    test rdx, rdx
+    jz .elem_skip
+    imul rax, rdx
+.elem_skip:
+    inc rcx
+    jmp .elem_count_loop
+.elem_count_done:
+
+    ; Estimate byte size (assume 4 bytes per element)
+    mov rdx, 4
+    mul rdx
+    mov [r15 + TENSOR_INFO.size_bytes], rax
+
+    inc r13
+    jmp .cache_loop
+
+.cache_done_zero:
+    xor eax, eax
+    mov g_tensor_count, eax
+    mov eax, 1
+    jmp .cache_exit
+
+.cache_done:
+    mov eax, r13d
+    mov g_tensor_count, eax
+    mov eax, 1
+    jmp .cache_exit
+
+.cache_fail:
+    xor eax, eax
+
+.cache_exit:
+    pop r15
+    pop r14
+    pop r13
+    pop r12
+    pop rdi
+    pop rsi
+    pop rbx
+    ret
+build_tensor_cache ENDP
+
+;==========================================================================
+; INTERNAL: set_last_error(msg: rcx)
+; Set last error message
+;==========================================================================
+set_last_error PROC
+    push rsi
+    push rdi
+    
+    mov rsi, rcx
+    lea rdi, g_model_state.last_error
+    call strcpy_simple
+    
+    pop rdi
+    pop rsi
+    ret
+set_last_error ENDP
+
+;==========================================================================
+; INTERNAL: strcpy_simple(src: rsi, dst: rdi)
+; Simple string copy
+;==========================================================================
+strcpy_simple PROC
+    push rax
+    
+copy_loop:
+    mov al, BYTE PTR [rsi]
+    mov BYTE PTR [rdi], al
+    test al, al
+    jz done_label
+    inc rsi
+    inc rdi
+    jmp copy_loop
+    
+done_label:
+    pop rax
+    ret
+strcpy_simple ENDP
+
+;==========================================================================
+; INTERNAL: strcat_simple(src: rsi, dst: rdi)
+; Append src to end of dst (assumes dst has room)
+;==========================================================================
+strcat_simple PROC
+    push rax
+    push rbx
+    mov rbx, rdi
+find_end:
+    mov al, BYTE PTR [rbx]
+    test al, al
+    jz append
+    inc rbx
+    jmp find_end
+append:
+    ; copy src to end
+    mov rdi, rbx
+    call strcpy_simple
+    pop rbx
+    pop rax
+    ret
+strcat_simple ENDP
+
+;==========================================================================
+; INTERNAL: strcat_int_simple(value: eax, dst: rdi)
+; Append integer value as decimal to dst
+;==========================================================================
+strcat_int_simple PROC
+    push rbx
+    push rsi
+    ; convert eax to decimal string in temp_buffer
+    lea rsi, temp_buffer
+    mov rbx, rsi
+    mov ecx, 0
+    cmp eax, 0
+    jne si_loop
+    mov BYTE PTR [rbx], '0'
+    mov BYTE PTR [rbx+1], 0
+    jmp si_copy
+si_loop:
+    ; simplistic conversion (reverse), buffer is large enough
+    mov edx, 0
+    mov ecx, 10
+    div ecx
+    add edx, '0'
+    mov BYTE PTR [rbx], dl
+    inc rbx
+    test eax, eax
+    jnz si_loop
+    ; reverse into temp_buffer2
+    lea rax, temp_buffer
+    lea rsi, temp_buffer
+    mov rdi, rbx
+    dec rdi
+si_rev:
+    cmp rdi, rsi
+    jb si_endrev
+    mov dl, BYTE PTR [rdi]
+    mov BYTE PTR [rsi], dl
+    inc rsi
+    dec rdi
+    jmp si_rev
+si_endrev:
+    mov BYTE PTR [rsi], 0
+si_copy:
+    ; append to dest
+    mov rsi, temp_buffer
+    call strcat_simple
+    pop rsi
+    pop rbx
+    ret
+strcat_int_simple ENDP
+
+;==========================================================================
+; INTERNAL: strncpy_limited(dst: rcx, src: rdx, max: r10d)
+;==========================================================================
+strncpy_limited PROC
+    push rbx
+    xor rbx, rbx
+copy_n_loop:
+    cmp rbx, r10
+    jge copy_n_done
+    mov al, BYTE PTR [rdx + rbx]
+    mov BYTE PTR [rcx + rbx], al
+    test al, al
+    jz copy_n_done
+    inc rbx
+    jmp copy_n_loop
+copy_n_done:
+    mov BYTE PTR [rcx + rbx], 0
+    pop rbx
+    ret
+strncpy_limited ENDP
+
+;==========================================================================
+; INTERNAL: strncmp_limited(a: rcx, b: rdx, max: r8d) -> eax (0 equal)
+;==========================================================================
+strncmp_limited PROC
+    push rbx
+    xor rbx, rbx
+cmp_loop:
+    cmp rbx, r8
+    jge cmp_done
+    mov al, BYTE PTR [rcx + rbx]
+    mov dl, BYTE PTR [rdx + rbx]
+    cmp al, dl
+    jne cmp_noteq
+    test al, al
+    jz cmp_done
+    inc rbx
+    jmp cmp_loop
+cmp_noteq:
+    mov eax, 1
+    pop rbx
+    ret
+cmp_done:
+    xor eax, eax
+    pop rbx
+    ret
+strncmp_limited ENDP
+
+;==========================================================================
+; INTERNAL: memcpy_limited(dst: rdx, src: rsi, max: ecx)
+;==========================================================================
+memcpy_limited PROC
+    push rbx
+    xor rbx, rbx
+ml_loop:
+    cmp rbx, rcx
+    jge ml_done
+    mov al, BYTE PTR [rsi + rbx]
+    mov BYTE PTR [rdx + rbx], al
+    test al, al
+    jz ml_done
+    inc rbx
+    jmp ml_loop
+ml_done:
+    pop rbx
+    ret
+memcpy_limited ENDP
+; INTERNAL: strcpy_limited(src: rsi, dst: rdi, max: rcx)
+; String copy with length limit
+;==========================================================================
+strcpy_limited PROC
+    push rax
+    push rbx
+    
+    xor rbx, rbx
+    
+copy_loop:
+    cmp rbx, rcx
+    jge done_label
+    
+    mov al, BYTE PTR [rsi + rbx]
+    mov BYTE PTR [rdi + rbx], al
+    
+    test al, al
+    jz done_label
+    
+    inc rbx
+    jmp copy_loop
+    
+done_label:
+    ; Ensure null termination
+    cmp rbx, rcx
+    jl null_term
+    dec rbx
+    
+null_term:
+    mov BYTE PTR [rdi + rbx], 0
+    
+    pop rbx
+    pop rax
+    ret
+strcpy_limited ENDP
+
+;==========================================================================
+; INTERNAL: strlen_simple(str: rcx)
+; Get string length
+;==========================================================================
+strlen_simple PROC
+    push rbx
+    
+    xor rbx, rbx
+    
+len_loop:
+    mov al, BYTE PTR [rcx + rbx]
+    test al, al
+    jz done_label
+    inc rbx
+    jmp len_loop
+    
+done_label:
+    mov rax, rbx
+    pop rbx
+    ret
+strlen_simple ENDP
+
+; External Win32 APIs
+EXTERN CreateFileA:PROC
+EXTERN GetFileSizeEx:PROC
+EXTERN CreateFileMappingA:PROC
+EXTERN MapViewOfFile:PROC
+EXTERN UnmapViewOfFile:PROC
+EXTERN CloseHandle:PROC
+EXTERN LoadLibraryA:PROC
+EXTERN OutputDebugStringA:PROC
+EXTERN strstr_masm:PROC
+
+.data
+    arch_string BYTE 256 DUP(0)
+    szKeyNumLayers BYTE "num_layers",0
+    szKeyHiddenSize BYTE "hidden_size",0
+    szKeyHeads BYTE "n_heads",0
+    szKeyMaxSeq BYTE "max_seq_len",0
+    szKeyVocab BYTE "vocab_size",0
+    szKeyQuant BYTE "quantization",0
+    szPatWeight BYTE ".weight",0
+    szArchPrefix BYTE "Model:",0
+
+END
+
+

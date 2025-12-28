@@ -1,0 +1,1 @@
+powershell -ExecutionPolicy Bypass -File "c:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\masm_ide\INTEGRATE_CPP_COMPONENTS.bat"
