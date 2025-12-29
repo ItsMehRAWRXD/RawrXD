@@ -13,7 +13,24 @@ includelib kernel32.lib
 
 .CODE
 
-; ------------------------- Batch 3: Agent Orchestration ---------------------
+; ============================================================================
+; Phase 7 Batches 3-10 Stub Exports (Placeholders, Non-Destructive)
+; Provides PUBLIC symbols to avoid unresolved externals while full
+; implementations are built. All functions currently return 0/NULL.
+; ============================================================================
+
+option casemap:none
+
+include windows.inc
+include kernel32.inc
+
+includelib kernel32.lib
+
+.CODE
+
+; Batch 3: Agent Orchestration - NOW FULLY IMPLEMENTED in agent_orchestration.asm
+; These stubs are kept for backward compatibility during transition
+
 PUBLIC AgentPool_Create
 AgentPool_Create PROC FRAME
     xor rax, rax
@@ -49,6 +66,30 @@ AgentState_Restore PROC FRAME
     xor rax, rax
     ret
 AgentState_Restore ENDP
+
+PUBLIC AgentPool_GetMetrics
+AgentPool_GetMetrics PROC FRAME
+    xor rax, rax
+    ret
+AgentPool_GetMetrics ENDP
+
+PUBLIC AgentPool_ResetMetrics
+AgentPool_ResetMetrics PROC FRAME
+    xor rax, rax
+    ret
+AgentPool_ResetMetrics ENDP
+
+PUBLIC Test_AgentPool_BasicOperations
+Test_AgentPool_BasicOperations PROC FRAME
+    xor rax, rax
+    ret
+Test_AgentPool_BasicOperations ENDP
+
+PUBLIC Test_AgentRouter_Dispatch
+Test_AgentRouter_Dispatch PROC FRAME
+    xor rax, rax
+    ret
+Test_AgentRouter_Dispatch ENDP
 
 ; ------------------------- Batch 4: Security Policies -----------------------
 PUBLIC Security_LoadPolicies
