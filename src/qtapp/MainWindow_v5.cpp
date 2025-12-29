@@ -1,6 +1,8 @@
 // RawrXD Agentic IDE - v5.0 Clean Implementation
 // Integrates v4.3 features with proper lazy initialization and async operations
 #include "MainWindow_v5.h"
+#include "latency_monitor.h"
+#include "latency_status_panel.h"
 #include "model_loader_thread.hpp"
 #include "chat_interface.h"
 #include "multi_tab_editor.h"
@@ -703,6 +705,17 @@ void MainWindow::setupToolBars()
 void MainWindow::setupStatusBar()
 {
     statusBar()->showMessage("Initializing...");
+    
+    // Create latency monitor and status panel
+    m_latencyMonitor = new LatencyMonitor(this);
+    m_latencyPanel = new LatencyStatusPanel(m_latencyMonitor, this);
+    m_latencyDock = new QDockWidget("Latency & Statistics", this);
+    m_latencyDock->setWidget(m_latencyPanel);
+    m_latencyDock->setAllowedAreas(Qt::BottomDockWidgetArea | Qt::LeftDockWidgetArea);
+    addDockWidget(Qt::BottomDockWidgetArea, m_latencyDock);
+    
+    // Initial status
+    m_latencyMonitor->setStatus("idle");
     
     // Delay MASM property binding until after initialization
     QTimer::singleShot(300, [this]() {

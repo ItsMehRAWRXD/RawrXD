@@ -205,6 +205,11 @@ private:
     // Status bar
     QStatusBar *m_statusBar;
     
+    // Latency monitoring
+    LatencyMonitor* m_latencyMonitor{nullptr};
+    LatencyStatusPanel* m_latencyPanel{nullptr};
+    QDockWidget* m_latencyDock{nullptr};
+    
     // Theme System
     RawrXD::ThemeManager* m_themeManager{nullptr};
     QDockWidget* m_themeDock{nullptr};
@@ -218,4 +223,7 @@ private:
     QProgressBar *m_splashProgress{nullptr};
 };
 
-} // namespace RawrXD
+    // Forward declarations for latency monitoring
+    class LatencyMonitor;
+    class LatencyStatusPanel;
+}

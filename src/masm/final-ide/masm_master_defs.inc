@@ -213,3 +213,23 @@ WNDCLASSEXA ENDS
 ;   pi PROCESS_INFORMATION <>
 ;   si STARTUPINFOA <>
 
+; ============================================================================
+; COMPONENT INCLUDES
+; ============================================================================
+
+; Phase A: Foundation Layer
+; Settings Manager component
+include settings_manager.inc
+
+; Terminal Pool component
+include terminal_pool.inc
+
+; Hotpatch System component
+include hotpatch_system.inc
+
+; Phase B: Core IDE Layer
+; MainWindow Architecture component
+include mainwindow_masm.inc
+
+; File Browser component
+include file_browser.inc

@@ -26,6 +26,8 @@
 #include "widgets/breadcrumb_navigation.hpp"
 #include "settings_dialog.h"
 #include "settings_manager.h"
+#include "latency_monitor.h"
+#include "latency_status_panel.h"
 // Experimental features menu (toggle advanced runtime optimizations)
 #include "experimental_features_menu.hpp"
 
@@ -1163,6 +1165,22 @@ void MainWindow::createCentralEditor()
 void MainWindow::setupStatusBar()
 {
     statusBar()->showMessage(tr("Ready | ggml Q4_0/Q8_0 quantization available"));
+    
+    // Create latency monitor for model-to-IDE communication measurement
+    m_latencyMonitor = new RawrXD::LatencyMonitor(this);
+    m_latencyPanel = new RawrXD::LatencyStatusPanel(m_latencyMonitor, this);
+    
+    m_latencyDock = new QDockWidget(tr("Latency Monitor"), this);
+    m_latencyDock->setWidget(m_latencyPanel);
+    m_latencyDock->setAllowedAreas(Qt::BottomDockWidgetArea | Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    
+    // Add to bottom dock area
+    addDockWidget(Qt::BottomDockWidgetArea, m_latencyDock);
+    
+    // Start monitoring
+    if (m_latencyMonitor) {
+        m_latencyMonitor->setStatus("idle");
+    }
 }
 
 void MainWindow::initSubsystems()

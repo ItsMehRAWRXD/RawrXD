@@ -100,6 +100,11 @@ class InterpretabilityPanelEnhanced;
 class ModelLoaderWidget;
 class BreadcrumbNavigation;
 
+namespace RawrXD {
+class LatencyMonitor;
+class LatencyStatusPanel;
+}
+
 /* ============================================================ */
 /**
  * \class MainWindow
@@ -534,6 +539,11 @@ private: /* ---------------  new IDE members  --------------- */
     class ModelLoaderWidget* m_modelLoaderWidget{};
     QDockWidget* m_modelLoaderDock{};
     QDockWidget* m_diagnosticsDock{};
+    
+    /* Latency Monitoring - Model-to-IDE Communication Distance */
+    RawrXD::LatencyMonitor* m_latencyMonitor{};
+    RawrXD::LatencyStatusPanel* m_latencyPanel{};
+    QDockWidget* m_latencyDock{};
 
     /* VS Code-like Layout Components */
     class ActivityBar* m_activityBar{};
