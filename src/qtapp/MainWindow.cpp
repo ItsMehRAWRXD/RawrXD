@@ -3905,16 +3905,26 @@ QWidget* MainWindow::createTerminalPanel() {
         pwshOutput_->appendPlainText("PowerShell 7.x\nCopyright (c) Microsoft Corporation. All rights reserved.\n");
         cmdOutput_->appendPlainText("Microsoft Windows [Version 10.0.xxxxx]\n(c) Microsoft Corporation. All rights reserved.\n");
         
-        // Start the processes with interactive arguments
-        pwshProcess_->start("pwsh.exe", QStringList() << "-NoExit" << "-Command" << "-");
-        cmdProcess_->start("cmd.exe", QStringList() << "/K");
+        // CRITICAL FIX: Defer process startup to avoid SIGSEGV during MainWindow construction
+        // QProcess::start() during window creation can cause access violations.
+        // Using QTimer::singleShot to defer startup until event loop is active.
+        QTimer::singleShot(100, this, [this]() {
+            if (pwshProcess_ && pwshProcess_->state() != QProcess::Running) {
+                qDebug() << "[createTerminalPanel] Deferred: Starting PowerShell process";
+                pwshProcess_->start("pwsh.exe", QStringList() << "-NoExit" << "-Command" << "-");
+            }
+            if (cmdProcess_ && cmdProcess_->state() != QProcess::Running) {
+                qDebug() << "[createTerminalPanel] Deferred: Starting CMD process";
+                cmdProcess_->start("cmd.exe", QStringList() << "/K");
+            }
+        });
         
         // Set initial focus to PowerShell input
         if (pwshInput_) {
             pwshInput_->setFocus();
         }
         
-        qDebug() << "[createTerminalPanel] Terminal panel created successfully";
+        qDebug() << "[createTerminalPanel] Terminal panel created successfully (processes deferred)";
         return terminalWidget;
         
     } catch (const std::exception& e) {

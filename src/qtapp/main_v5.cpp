@@ -1,11 +1,13 @@
 // RawrXD Agentic IDE - v5.0 Entry Point
 #include "MainWindow_v5.h"
+#include "qt_masm_bridge.h"
 #include <QApplication>
 #include <QDebug>
 #include <QFile>
 #include <QTextStream>
 #include <QDateTime>
 #include <QFileInfo>
+#include <QTimer>
 
 // Global file for real-time logging
 static QFile* g_logFile = nullptr;
@@ -80,12 +82,33 @@ int main(int argc, char *argv[])
     
     QApplication app(argc, argv);
     
-    qDebug() << "[Main] QApplication created, showing MainWindow";
+    qDebug() << "[Main] QApplication created";
+
+    // TEMPORARILY DISABLE MASM BRIDGE INITIALIZATION TO FIX CRASH
+    // RawrXD::QtMasmBridge::instance().initialize();
     
+    // Delay signal registration until after MainWindow is shown
+    // to avoid triggering MASM initialization too early
+    QTimer::singleShot(100, []() {
+        // RawrXD::QtMasmBridge::instance().registerSignalHandler(
+        //     RawrXD::QtMasmBridge::SignalId::HotpatchApplied,
+        //     [](uint32_t signalId, const QVariantList& args) {
+        //         qInfo() << "[Bridge] Signal" << signalId << "arrived with" << args;
+        //     }
+        // );
+    });
+        );
+    });
+
     RawrXD::MainWindow mainWindow;
     mainWindow.show();
     
     qDebug() << "[Main] Entering event loop";
+
+    // Delay property update until after MainWindow is shown
+    QTimer::singleShot(200, []() {
+        // RawrXD::QtMasmBridge::instance().updateProperty("main.status", "Phase 6 Qt-MASM bridge active");
+    });
     
     int result = app.exec();
     

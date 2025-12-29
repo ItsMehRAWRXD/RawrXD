@@ -115,7 +115,7 @@ LVNI_SELECTED    EQU 0002h
 LVIS_SELECTED    EQU 0002h
 
 TCITEM STRUCT
-    mask                DWORD   ?
+    dwMask              DWORD   ?
     dwState             DWORD   ?
     dwStateMask         DWORD   ?
     pszText             QWORD   ?
@@ -125,7 +125,7 @@ TCITEM STRUCT
 TCITEM ENDS
 
 LVCOLUMN STRUCT
-    mask                DWORD   ?
+    dwMask              DWORD   ?
     fmt                 DWORD   ?
     cx_                 DWORD   ?
     pszText             QWORD   ?
@@ -137,7 +137,7 @@ LVCOLUMN STRUCT
 LVCOLUMN ENDS
 
 LVITEM STRUCT
-    mask                DWORD   ?
+    dwMask              DWORD   ?
     iItem               DWORD   ?
     iSubItem            DWORD   ?
     state               DWORD   ?

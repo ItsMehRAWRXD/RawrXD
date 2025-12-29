@@ -298,7 +298,7 @@ AddTabToControl PROC
     sub rsp, sizeof(TCITEM) + 20h ; shadow space + struct
     
     ; Initialize TCITEM
-    mov dword ptr [rsp+20h].TCITEM.mask, TCIF_TEXT
+    mov dword ptr [rsp+20h].TCITEM.dwMask, TCIF_TEXT
     mov rax, [rsi+TAB_PAGE.szTitle]
     mov [rsp+20h].TCITEM.pszText, rax
     mov eax, [rsi+TAB_PAGE.title_len]

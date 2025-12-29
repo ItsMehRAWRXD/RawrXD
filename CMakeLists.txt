@@ -1635,6 +1635,7 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
     set(AGENTICIDE_SOURCES
         src/qtapp/main_v5.cpp
         src/qtapp/MainWindow_v5.cpp
+        src/qtapp/qt_masm_bridge.cpp
     )
     
     # Check if additional source files exist

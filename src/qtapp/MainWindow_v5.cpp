@@ -74,6 +74,7 @@ using RawrXD::MultiFileSearchWidget;
 #include "ci_cd_settings.h"
 #include "tokenizer_selector.h"
 #include "checkpoint_manager.h"
+#include "qt_masm_bridge.h"
 
 #include <QApplication>
 #include <QMenuBar>
@@ -702,6 +703,17 @@ void MainWindow::setupToolBars()
 void MainWindow::setupStatusBar()
 {
     statusBar()->showMessage("Initializing...");
+    
+    // Delay MASM property binding until after initialization
+    QTimer::singleShot(300, [this]() {
+        // RawrXD::QtMasmBridge::instance().bindProperty(
+        //     "main.status",
+        //     [this](const QVariant& value) {
+        //         statusBar()->showMessage(value.toString(), 4000);
+        //     },
+        //     "Phase 6 Qt-MASM bridge ready"
+        // );
+    });
 }
 
 void MainWindow::loadSettings()

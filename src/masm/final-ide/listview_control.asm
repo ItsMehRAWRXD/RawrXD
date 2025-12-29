@@ -360,7 +360,7 @@ AddColumnToControl PROC
     sub rsp, sizeof(LVCOLUMN) + 20h ; shadow space + struct
     
     ; Initialize LVCOLUMN
-    mov dword ptr [rsp+20h].LVCOLUMN.mask, LVCF_TEXT or LVCF_WIDTH or LVCF_FMT or LVCF_SUBITEM
+    mov dword ptr [rsp+20h].LVCOLUMN.dwMask, LVCF_TEXT or LVCF_WIDTH or LVCF_FMT or LVCF_SUBITEM
     mov eax, [rsi+LISTVIEW_COLUMN.format]
     mov [rsp+20h].LVCOLUMN.fmt, eax
     mov eax, [rsi+LISTVIEW_COLUMN.width]
@@ -483,7 +483,7 @@ AddItemToControl PROC
     sub rsp, sizeof(LVITEM) + 20h ; shadow space + struct
     
     ; Initialize LVITEM
-    mov dword ptr [rsp+20h].LVITEM.mask, LVIF_TEXT
+    mov dword ptr [rsp+20h].LVITEM.dwMask, LVIF_TEXT
     mov eax, [rbx+LISTVIEW_CONTROL.item_count]
     dec eax
     mov [rsp+20h].LVITEM.iItem, eax
@@ -496,7 +496,7 @@ AddItemToControl PROC
     test eax, eax
     jz no_icon
     
-    or dword ptr [rsp+20h].LVITEM.mask, LVIF_IMAGE
+    or dword ptr [rsp+20h].LVITEM.dwMask, LVIF_IMAGE
     mov [rsp+20h].LVITEM.iImage, eax
     
 no_icon:
@@ -562,7 +562,7 @@ SetSelectedItem PROC
     sub rsp, sizeof(LVITEM) + 20h
     
     ; Clear current selection
-    mov dword ptr [rsp+20h].LVITEM.mask, LVIF_STATE
+    mov dword ptr [rsp+20h].LVITEM.dwMask, LVIF_STATE
     mov dword ptr [rsp+20h].LVITEM.state, 0
     mov dword ptr [rsp+20h].LVITEM.stateMask, LVIS_SELECTED
     

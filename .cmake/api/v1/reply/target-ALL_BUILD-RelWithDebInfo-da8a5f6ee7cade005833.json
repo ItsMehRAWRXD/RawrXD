@@ -1,0 +1,71 @@
+{
+	"backtrace" : 0,
+	"backtraceGraph" : 
+	{
+		"commands" : [],
+		"files" : 
+		[
+			"3rdparty/ggml/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			}
+		]
+	},
+	"codemodelVersion" : 
+	{
+		"major" : 2,
+		"minor" : 9
+	},
+	"dependencies" : 
+	[
+		{
+			"id" : "ggml-base::@be17251fbe8c79eff835"
+		},
+		{
+			"id" : "ggml-cpu::@be17251fbe8c79eff835"
+		},
+		{
+			"id" : "ggml-vulkan::@aae7555ca1223a1c687a"
+		},
+		{
+			"id" : "ggml::@be17251fbe8c79eff835"
+		},
+		{
+			"id" : "vulkan-shaders-gen::@aae7555ca1223a1c687a"
+		},
+		{
+			"id" : "ZERO_CHECK::@6890427a1f51a3e7e1df"
+		}
+	],
+	"id" : "ALL_BUILD::@4414ec007182e15cd511",
+	"isGeneratorProvided" : true,
+	"name" : "ALL_BUILD",
+	"orderDependencies" : 
+	[
+		{
+			"id" : "ggml-base::@be17251fbe8c79eff835"
+		},
+		{
+			"id" : "ggml-cpu::@be17251fbe8c79eff835"
+		},
+		{
+			"id" : "ggml-vulkan::@aae7555ca1223a1c687a"
+		},
+		{
+			"id" : "ggml::@be17251fbe8c79eff835"
+		},
+		{
+			"id" : "vulkan-shaders-gen::@aae7555ca1223a1c687a"
+		}
+	],
+	"paths" : 
+	{
+		"build" : "3rdparty/ggml",
+		"source" : "3rdparty/ggml"
+	},
+	"sources" : [],
+	"type" : "UTILITY"
+}
