@@ -133,7 +133,7 @@ endif()
 # Build options
 option(ENABLE_COPILOT "Enable Copilot streaming integration for Win32 IDE" OFF)
 option(ENABLE_VULKAN "Enable Vulkan GPU acceleration" ON)
-option(ENABLE_MASM_INTEGRATION "Include MASM hotpatch files in QtShell build" ON)
+option(ENABLE_MASM_INTEGRATION "Include MASM hotpatch files in QtShell build" OFF)
 option(TEST_BRUTAL "Enable Brutal codec test harness" ON)
 
 # Force Windows SDK version that ships all required headers
