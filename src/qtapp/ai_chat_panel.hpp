@@ -187,4 +187,7 @@ private:
     
     // Agentic execution
     AgenticExecutor* m_agenticExecutor = nullptr;
+    
+    // Helper for local response generation
+    QString generateLocalResponse(const QString& message, const QString& model);
 };
