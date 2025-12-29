@@ -247,3 +247,16 @@ include agent_coordinator.inc
 ; Server Layer component
 include server_layer.inc
 
+; Phase D: Advanced Infrastructure
+; Caching Layer component
+include caching_layer.inc
+
+; Stream Processor component
+include stream_processor.inc
+
+; Distributed Executor component
+include distributed_executor.inc
+
+; Advanced Auth component
+include advanced_auth.inc
+
