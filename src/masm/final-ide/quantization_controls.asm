@@ -497,6 +497,65 @@ QuantizationControls_GenerateModelKey PROC FRAME USES rbx rsi
 	ret
 QuantizationControls_GenerateModelKey ENDP
 
+; ============================================================================
+; FNV-1a Hash Implementation for Model Path Hashing
+; ============================================================================
+PRIVATE HashString
+HashString PROC FRAME USES rbx rsi
+	; RCX = input string
+	; Returns: EAX = 32-bit FNV-1a hash
+	
+	mov rsi, rcx
+	test rsi, rsi
+	jz hash_empty
+	
+	mov eax, 2166136261     ; FNV offset basis (32-bit)
+	xor ecx, ecx
+	
+hash_loop:
+	movzx ecx, BYTE PTR [rsi]
+	test cl, cl
+	jz hash_done
+	
+	xor eax, ecx
+	imul eax, 16777619      ; FNV prime (32-bit)
+	
+	inc rsi
+	jmp hash_loop
+	
+hash_empty:
+	mov eax, 2166136261
+hash_done:
+	ret
+HashString ENDP
+
+PUBLIC QuantizationControls_GenerateModelKey
+QuantizationControls_GenerateModelKey PROC FRAME USES rbx rsi rdi
+	; RCX = model path (string)
+	; RDX = destination buffer for key name (260 bytes)
+	; Returns: RAX = length of key name
+	
+	mov rsi, rcx
+	mov rdi, rdx
+	test rsi, rsi
+	jz qc_gen_key_fail
+	
+	mov rcx, rsi
+	call HashString
+	mov ebx, eax            ; hash in EBX
+	
+	; Format: "ModelProfile_XXXXXXXX" (FNV-1a hash as hex)
+	lea rcx, str_ModelProfileKey
+	mov rdx, rdi
+	mov r8d, ebx
+	invoke wsprintfA, rdx, rcx, r8d
+	ret
+	
+qc_gen_key_fail:
+	xor rax, rax
+	ret
+QuantizationControls_GenerateModelKey ENDP
+
 PUBLIC QuantizationControls_LoadModelProfile
 QuantizationControls_LoadModelProfile PROC FRAME USES rbx rsi rdi
 	LOCAL profileKey[260]:BYTE
@@ -554,6 +613,33 @@ QuantizationControls_SaveModelProfile ENDP
 ; Phase 5 Test Integration
 ; ============================================================================
 
+PUBLIC QuantizationControls_Destroy
+QuantizationControls_Destroy PROC FRAME USES rbx
+	mov rbx, pQuantizationState
+	test rbx, rbx
+	jz qc_destroy_done
+	
+	mov rcx, hQuantizationChangeEvent
+	test rcx, rcx
+	jz qc_destroy_free
+	invoke CloseHandle, rcx
+	
+qc_destroy_free:
+	invoke GetProcessHeap
+	test rax, rax
+	jz qc_destroy_done
+	invoke HeapFree, rax, 0, rbx
+	mov pQuantizationState, 0
+	
+qc_destroy_done:
+	mov rax, 1
+	ret
+QuantizationControls_Destroy ENDP
+
+; ============================================================================
+; Phase 5 Test Integration
+; ============================================================================
+
 PUBLIC Test_QuantizationControls_ValidateVRAMCalculations
 Test_QuantizationControls_ValidateVRAMCalculations PROC FRAME USES rbx
 	; Ensure state exists
@@ -578,5 +664,25 @@ qc_test_fail:
 	xor rax, rax
 	ret
 Test_QuantizationControls_ValidateVRAMCalculations ENDP
+
+PUBLIC Test_QuantizationControls_HashFunctionality
+Test_QuantizationControls_HashFunctionality PROC FRAME
+	; Test FNV-1a hashing
+	lea rcx, testModelPath
+	call HashString
+	
+	cmp eax, 0
+	je qc_hash_test_fail
+	
+	mov rax, 1
+	ret
+
+qc_hash_test_fail:
+	xor rax, rax
+	ret
+Test_QuantizationControls_HashFunctionality ENDP
+
+.DATA
+testModelPath DB "test-model.gguf",0
 
 END

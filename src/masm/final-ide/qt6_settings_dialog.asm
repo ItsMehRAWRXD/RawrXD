@@ -136,6 +136,15 @@ szGithubToken             DB "GitHub API Token:",0
 szComplianceLogging       DB "Enable Compliance Logging",0
 szTelemetryEnabled        DB "Enable Telemetry",0
 szEnterpriseInfo          DB "Enterprise features require activation",0
+
+; Phase 7 Quantization Tab Strings
+STR_QUANT_TYPE            DW 'Q','u','a','n','t','i','z','a','t','i','o','n',' ','T','y','p','e',':',0
+STR_QUANT_SELECT          DW 'S','e','l','e','c','t',' ','q','u','a','n','t','i','z','a','t','i','o','n',0
+STR_AUTO_SELECT           DW 'A','u','t','o','-','S','e','l','e','c','t',' ','B','a','s','e','d',' ','o','n',' ','V','R','A','M',0
+STR_VRAM_AVAILABLE        DW 'A','v','a','i','l','a','b','l','e',' ','V','R','A','M',':',0
+STR_CURRENT_QUANT         DW 'C','u','r','r','e','n','t',' ','Q','u','a','n','t','i','z','a','t','i','o','n',':',0
+STR_APPLY                 DW 'A','p','p','l','y',' ','Q','u','a','n','t','i','z','a','t','i','o','n',0
+
 STR_TAB_QUANTIZATION      DW 'Q','u','a','n','t','i','z','a','t','i','o','n',0
 
 .CODE
@@ -1566,6 +1575,106 @@ CreateProgressBar PROC
     add rsp, 68h
     ret
 CreateProgressBar ENDP
+
+; ============================================================================
+; CreateQuantizationTabControls: Create controls for Quantization tab (Phase 7)
+; Parameters:
+;   rcx = parent HWND
+; Returns: rax = 1 if success
+; ============================================================================
+CreateQuantizationTabControls PROC
+    push rbx rdi
+    sub rsp, 30h
+    
+    mov rbx, rcx  ; tab_hwnd
+    
+    ; Initialize quantization controls module
+    call QuantizationControls_Create
+    mov rdi, rax  ; save quantization state pointer
+    
+    ; Create Quantization Type label
+    mov rcx, rbx
+    lea rdx, STR_QUANT_TYPE
+    mov r8d, 20
+    mov r9d, 25
+    mov [rsp], 25
+    mov [rsp+8], 150
+    call CreateStaticText
+    add rsp, 10h
+    
+    ; Create Quantization Type combo box
+    mov rcx, rbx
+    lea rdx, STR_QUANT_SELECT
+    mov r8d, 170
+    mov r9d, 20
+    mov [rsp], 150           ; width
+    mov [rsp+8], 25          ; height
+    mov [rsp+10h], IDC_QUANT_COMBO
+    call CreateComboBox
+    add rsp, 18h
+    
+    ; Populate combo box
+    mov rcx, rax            ; combo box handle
+    mov rdx, rdi            ; quantization state
+    call QuantizationControls_PopulateComboBox
+    
+    ; Create Auto-Select checkbox
+    mov rcx, rbx
+    lea rdx, STR_AUTO_SELECT
+    mov r8d, 20
+    mov r9d, 65
+    mov [rsp], 25
+    mov [rsp+8], 250
+    call CreateCheckbox
+    add rsp, 10h
+    
+    ; Create VRAM Available label
+    mov rcx, rbx
+    lea rdx, STR_VRAM_AVAILABLE
+    mov r8d, 20
+    mov r9d, 105
+    mov [rsp], 25
+    mov [rsp+8], 200
+    call CreateStaticText
+    add rsp, 10h
+    
+    ; Create VRAM Progress bar
+    mov rcx, rbx
+    xor rdx, rdx
+    mov r8d, 170
+    mov r9d, 100
+    mov [rsp], 150           ; width
+    mov [rsp+8], 20          ; height
+    mov [rsp+10h], IDC_VRAM_PROGRESS
+    call CreateProgressBar
+    add rsp, 18h
+    
+    ; Create Current Quantization label
+    mov rcx, rbx
+    lea rdx, STR_CURRENT_QUANT
+    mov r8d, 20
+    mov r9d, 145
+    mov [rsp], 25
+    mov [rsp+8], 200
+    call CreateStaticText
+    add rsp, 10h
+    
+    ; Create Apply button
+    mov rcx, rbx
+    lea rdx, STR_APPLY
+    mov r8d, 250
+    mov r9d, 180
+    mov [rsp], 100           ; width
+    mov [rsp+8], 25          ; height
+    mov [rsp+10h], IDC_APPLY_QUANT_BUTTON
+    call CreateButton
+    add rsp, 18h
+    
+    add rsp, 30h
+    pop rdi rbx
+    mov rax, 1
+    ret
+CreateQuantizationTabControls ENDP
 
 ; ============================================================================
 ; CreateTrainingTabControls: Create controls for Training tab
