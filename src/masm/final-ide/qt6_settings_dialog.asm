@@ -21,6 +21,7 @@ EXTERN QuantizationControls_Create:PROC
 EXTERN QuantizationControls_PopulateComboBox:PROC
 EXTERN QuantizationControls_UpdateVRAMDisplay:PROC
 EXTERN QuantizationControls_ApplyQuantization:PROC
+EXTERN QuantizationControls_GetRecommendedQuantization:PROC
 EXTERN QuantizationControls_SaveSettings:PROC
 
 .DATA
@@ -94,6 +95,7 @@ WC_EDIT_W                 DW 'E','D','I','T',0
 WC_COMBOBOX_W             DW 'C','O','M','B','O','B','O','X',0
 WC_UPDOWN_W               DW 'm','s','c','t','l','s','_','u','p','d','o','w','n','3','2',0
 WC_STATIC_W               DW 'S','T','A','T','I','C',0
+WC_PROGRESS               DW 'm','s','c','t','l','s','_','p','r','o','g','r','e','s','s','3','2',0
 
 ; ============================================================================
 ; UI Strings (Wide)
@@ -671,10 +673,65 @@ check_cancel:
     
 check_apply:
     cmp esi, IDC_APPLY
-    jne check_other_controls
+    jne check_quant_apply
     
     mov rcx, rdi                  ; Save but keep dialog
     call SaveSettingsFromUI
+    mov rax, 1
+    jmp command_done
+    
+check_quant_apply:
+    cmp esi, IDC_APPLY_QUANT_BUTTON
+    jne check_auto_select
+    
+    ; Get selected quantization type from combo box
+    mov rcx, rbx
+    mov edx, IDC_QUANT_COMBO
+    mov r8d, WM_GETTEXT
+    xor r9, r9
+    call SendMessageW
+    
+    ; RAX contains selected index (0-9 for Q2_K through F32)
+    mov ecx, eax  ; quantization_type
+    
+    ; Apply quantization
+    call QuantizationControls_ApplyQuantization
+    
+    ; Update VRAM display and save settings
+    call QuantizationControls_UpdateVRAMDisplay
+    mov rcx, rdi
+    call SaveSettingsFromUI
+    mov rax, 1
+    jmp command_done
+
+check_auto_select:
+    cmp esi, IDC_AUTO_SELECT_CHECK
+    jne check_other_controls
+    
+    ; Get checkbox state
+    mov rcx, rbx
+    mov edx, IDC_AUTO_SELECT_CHECK
+    call IsDlgButtonChecked
+    
+    ; If checked, get recommended quantization and auto-select
+    test eax, eax
+    jz other_controls_continue
+    
+    ; Call GetRecommendedQuantization - it returns type in RAX
+    call QuantizationControls_GetRecommendedQuantization
+    mov ecx, eax
+    
+    ; Update combo box with recommended type
+    mov rcx, rbx
+    mov edx, IDC_QUANT_COMBO
+    mov r8d, CB_SETCURSEL
+    mov r9d, ecx  ; recommended_type
+    call SendMessageW
+    
+    ; Update VRAM display
+    call QuantizationControls_UpdateVRAMDisplay
+    
+other_controls_continue:
     mov rax, 1
     jmp command_done
     
@@ -1477,6 +1534,38 @@ CreateDropdown PROC
     add rsp, 68h
     ret
 CreateDropdown ENDP
+
+; CreateComboBox: Alias for CreateDropdown (Phase 7 quantization)
+; rcx = parent, rdx = text, r8d = x, r9d = y, [rsp+28h] = w, [rsp+30h] = h, [rsp+38h] = id
+CreateComboBox PROC
+    jmp CreateDropdown
+CreateComboBox ENDP
+
+; CreateProgressBar: Create a progress bar control
+; rcx = parent, rdx = text, r8d = x, r9d = y, [rsp+28h] = w, [rsp+30h] = h, [rsp+38h] = id
+CreateProgressBar PROC
+    sub rsp, 68h
+    mov rax, [rsp+90h] ; id
+    mov [rsp+58h], rax
+    xor rax, rax
+    mov [rsp+50h], rax
+    mov rax, [rsp+90h] ; id
+    mov [rsp+48h], rax
+    mov [rsp+40h], rcx
+    mov eax, [rsp+88h] ; height
+    mov [rsp+38h], eax
+    mov eax, [rsp+80h] ; width
+    mov [rsp+30h], eax
+    mov [rsp+28h], r9d
+    mov [rsp+20h], r8d
+    mov r9d, WS_CHILD or WS_VISIBLE or PBS_SMOOTH
+    mov r8, 0  ; no text
+    lea rdx, WC_PROGRESS    ; "msctls_progress32"
+    xor rcx, rcx
+    call CreateWindowExW
+    add rsp, 68h
+    ret
+CreateProgressBar ENDP
 
 ; ============================================================================
 ; CreateTrainingTabControls: Create controls for Training tab
