@@ -1,52 +1,42 @@
-; ============================================================================
-; FILE: agentic_failure_recovery.asm
-; TITLE: Real-Time Agentic Failure Detection & Auto-Recovery
-; PURPOSE: Detect hallucinations, timeouts, refusals; auto-hotpatch responses
-; LINES: 540 (Production MASM)
-; ============================================================================
+; =============================================================================
+; Phase 7 Batch 7: Agentic Failure Recovery
+; Pure MASM x64 Implementation
+; 
+; Purpose: Detect and recover from agent failures (refusals, hallucinations, timeouts)
+;          with automatic correction and intelligent retry scheduling
+;
+; Public API (5 functions):
+;   1. FailureDetector_Analyze(responseBuffer, responseSize) -> confidence (0.0-1.0)
+;   2. FailureCorrector_Apply(detectedFailure, mode, outputBuffer) -> success
+;   3. RetryScheduler_Schedule(failureId, attemptCount, maxRetries) -> delayMs
+;   4. FailureDetector_GetMetrics(metricsBuffer) -> bytesWritten
+;   5. Test_FailureDetection() -> testResult
+;   6. Test_FailureCorrection() -> testResult
+;
+; Thread Safety: QMutex for failure state tracking
+; Observable: Logging hooks (detection, correction, retry decisions), metrics
+; Registry: HKCU\Software\RawrXD\FailureRecovery
+; =============================================================================
 
-.code
+; EXTERN declarations (Phase 4 utilities)
+EXTERN RegistryOpenKey:PROC
+EXTERN RegistryCloseKey:PROC
+EXTERN RegistryGetDWORD:PROC
+EXTERN RegistrySetDWORD:PROC
 
-; ============================================================================
-; FAILURE DETECTION STRUCTURES
-; ============================================================================
+; Windows API declarations
+EXTERN GetProcessHeap:PROC
+EXTERN HeapAlloc:PROC
+EXTERN HeapFree:PROC
+EXTERN InitializeCriticalSection:PROC
+EXTERN DeleteCriticalSection:PROC
+EXTERN EnterCriticalSection:PROC
+EXTERN LeaveCriticalSection:PROC
+EXTERN QueryPerformanceCounter:PROC
+EXTERN RtlZeroMemory:PROC
+EXTERN RtlCopyMemory:PROC
 
-; FailureSignature: Pattern-based failure detection
-; Type            Patterns
-; ----            --------
-; Hallucination   "I don't have", "unknown", "not found", invalid references
-; Refusal         "can't", "cannot", "cannot assist", "inappropriate", "I'm not"
-; Timeout         Response time > 10 seconds, incomplete sentences
-; Contradiction   Earlier statement contradicts new statement
-; ResourceExhaust "out of memory", "resource limit", "too large"
-
-; FailureSignatureSet: Tracks detected failures
-; Offset  Size  Field
-; ----    ----  -----
-;   0      8    responseText (pointer)
-;   8      4    hallucConfidence (0-100)
-;   12     4    refusalConfidence (0-100)
-;   16     4    timeoutConfidence (0-100)
-;   20     4    contradictionConfidence (0-100)
-;   24     4    resourceConfidence (0-100)
-;   28     4    maxConfidence (overall failure severity)
-;   32     8    detectedAt (timestamp)
-;   40     8    recovery
-
-FAILURE_SIGNATURE_SIZE = 48
-HALLUCINATION_THRESHOLD = 60         ; 60% confidence to trigger
-REFUSAL_THRESHOLD = 70
-TIMEOUT_THRESHOLD = 75
-TIMEOUT_SECONDS = 10
-
-; ============================================================================
-; GLOBAL STATE
-; ============================================================================
-
-EXTERN outputLogHandle: QWORD
-EXTERN agenticChatHandle: QWORD
-EXTERN inferenceEngineHandle: QWORD
-EXTERN hotpatchCoordinatorHandle: QWORD
+.CODE
 
 ; Failure signatures (patterns to match)
 hallucPatterns: QWORD 0                ; Array of hallucination patterns
