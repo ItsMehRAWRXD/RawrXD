@@ -596,6 +596,10 @@ if(MSVC)
             src/qtapp/settings_dialog.cpp
             src/qtapp/settings_manager.h
             src/qtapp/settings_manager.cpp
+            src/qtapp/latency_monitor.h
+            src/qtapp/latency_monitor.cpp
+            src/qtapp/latency_status_panel.h
+            src/qtapp/latency_status_panel.cpp
             src/qtapp/advanced_checkpoint_manager.cpp
             src/qtapp/advanced_checkpoint_manager.h
             src/qtapp/tokenizer_language_selector.cpp
@@ -1263,7 +1267,6 @@ if(MSVC) # Re-enabled to test
         src/qtapp/agent_mode_handler.cpp
         src/qtapp/ask_mode_handler.cpp
         src/qtapp/plan_mode_handler.cpp
-        src/qtapp/ollama_hotpatch_proxy.cpp
         src/qtapp/StreamingGGUFLoader.cpp
         # Headers requiring MOC processing for Q_OBJECT
         src/qtapp/health_check_server.hpp
@@ -1271,7 +1274,6 @@ if(MSVC) # Re-enabled to test
         src/qtapp/agent_mode_handler.hpp
         src/qtapp/ask_mode_handler.hpp
         src/qtapp/plan_mode_handler.hpp
-        src/qtapp/ollama_hotpatch_proxy.hpp
         src/qtapp/StreamingGGUFLoader.hpp
         src/qtapp/interpretability_panel_production.hpp
     )

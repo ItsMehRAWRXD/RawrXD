@@ -42,12 +42,15 @@ C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\sla_manager.cpp;C
 C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\interpretability_panel_enhanced.cpp;C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-QtShell.dir\Release\interpretability_panel_enhanced.obj
 C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\checkpoint_manager.cpp;C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-QtShell.dir\Release\checkpoint_manager.obj
 C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\tokenizer_selector.cpp;C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-QtShell.dir\Release\tokenizer_selector.obj
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\masm_orchestration_stubs.cpp;C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-QtShell.dir\Release\masm_orchestration_stubs.obj
 C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\ci_cd_settings.cpp;C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-QtShell.dir\Release\ci_cd_settings.obj
 C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\utils\project_detector.cpp;C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-QtShell.dir\Release\project_detector.obj
 C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\utils\qt_file_writer.cpp;C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-QtShell.dir\Release\qt_file_writer.obj
 C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\utils\qt_directory_manager.cpp;C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-QtShell.dir\Release\qt_directory_manager.obj
 C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\settings_dialog.cpp;C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-QtShell.dir\Release\settings_dialog.obj
 C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\settings_manager.cpp;C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-QtShell.dir\Release\settings_manager.obj
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\latency_monitor.cpp;C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-QtShell.dir\Release\latency_monitor.obj
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\latency_status_panel.cpp;C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-QtShell.dir\Release\latency_status_panel.obj
 C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\advanced_checkpoint_manager.cpp;C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-QtShell.dir\Release\advanced_checkpoint_manager.obj
 C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\tokenizer_language_selector.cpp;C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-QtShell.dir\Release\tokenizer_language_selector.obj
 C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\ci_pipeline_manager.cpp;C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-QtShell.dir\Release\ci_pipeline_manager.obj

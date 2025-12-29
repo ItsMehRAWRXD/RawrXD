@@ -48,6 +48,8 @@ C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\utils\qt_file_wri
 C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\utils\qt_directory_manager.cpp;C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\build_masm\RawrXD-QtShell.dir\Release\qt_directory_manager.obj
 C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\settings_dialog.cpp;C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\build_masm\RawrXD-QtShell.dir\Release\settings_dialog.obj
 C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\settings_manager.cpp;C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\build_masm\RawrXD-QtShell.dir\Release\settings_manager.obj
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\latency_monitor.cpp;C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\build_masm\RawrXD-QtShell.dir\Release\latency_monitor.obj
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\latency_status_panel.cpp;C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\build_masm\RawrXD-QtShell.dir\Release\latency_status_panel.obj
 C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\advanced_checkpoint_manager.cpp;C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\build_masm\RawrXD-QtShell.dir\Release\advanced_checkpoint_manager.obj
 C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\tokenizer_language_selector.cpp;C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\build_masm\RawrXD-QtShell.dir\Release\tokenizer_language_selector.obj
 C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\ci_pipeline_manager.cpp;C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\build_masm\RawrXD-QtShell.dir\Release\ci_pipeline_manager.obj
