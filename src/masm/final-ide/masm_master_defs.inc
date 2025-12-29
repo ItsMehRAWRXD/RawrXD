@@ -233,3 +233,17 @@ include mainwindow_masm.inc
 
 ; File Browser component
 include file_browser.inc
+
+; Phase C: Backend Infrastructure
+; LSP Client component
+include lsp_client.inc
+
+; Inference Manager component
+include inference_manager.inc
+
+; Agent Coordinator component
+include agent_coordinator.inc
+
+; Server Layer component
+include server_layer.inc
+
