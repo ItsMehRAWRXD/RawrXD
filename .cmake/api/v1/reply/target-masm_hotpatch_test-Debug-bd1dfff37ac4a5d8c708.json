@@ -1,0 +1,272 @@
+{
+	"artifacts" : 
+	[
+		{
+			"path" : "bin/tests/Debug/masm_hotpatch_test.exe"
+		},
+		{
+			"path" : "bin/tests/Debug/masm_hotpatch_test.pdb"
+		}
+	],
+	"backtrace" : 1,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_executable",
+			"add_definitions"
+		],
+		"files" : 
+		[
+			"src/masm/CMakeLists.txt",
+			"CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 190,
+				"parent" : 0
+			},
+			{
+				"file" : 1
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 61,
+				"parent" : 2
+			}
+		]
+	},
+	"codemodelVersion" : 
+	{
+		"major" : 2,
+		"minor" : 9
+	},
+	"compileGroups" : 
+	[
+		{
+			"defines" : 
+			[
+				{
+					"backtrace" : 3,
+					"define" : "NOMINMAX"
+				}
+			],
+			"language" : "ASM",
+			"sourceIndexes" : 
+			[
+				0
+			]
+		}
+	],
+	"dependencies" : 
+	[
+		{
+			"id" : "masm_hotpatch_unified_obj::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "ZERO_CHECK::@6890427a1f51a3e7e1df"
+		}
+	],
+	"id" : "masm_hotpatch_test::@f589df1e8a76cfd5da38",
+	"link" : 
+	{
+		"commandFragments" : 
+		[
+			{
+				"fragment" : "/machine:x64 /debug /INCREMENTAL",
+				"role" : "flags"
+			},
+			{
+				"fragment" : "/SUBSYSTEM:CONSOLE /ENTRY:main kernel32.lib user32.lib",
+				"role" : "flags"
+			}
+		],
+		"language" : "ASM"
+	},
+	"name" : "masm_hotpatch_test",
+	"nameOnDisk" : "masm_hotpatch_test.exe",
+	"objectDependencies" : 
+	[
+		{
+			"backtrace" : 1,
+			"id" : "masm_hotpatch_unified_obj::@f589df1e8a76cfd5da38"
+		}
+	],
+	"orderDependencies" : 
+	[
+		{
+			"id" : "masm_hotpatch_unified_obj::@f589df1e8a76cfd5da38"
+		}
+	],
+	"paths" : 
+	{
+		"build" : "src/masm",
+		"source" : "src/masm"
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "",
+			"sourceIndexes" : 
+			[
+				0
+			]
+		},
+		{
+			"name" : "Object Libraries",
+			"sourceIndexes" : 
+			[
+				1,
+				2,
+				3,
+				4,
+				5,
+				6,
+				7,
+				8,
+				9,
+				10,
+				11,
+				12,
+				13,
+				14,
+				15,
+				16,
+				17,
+				18,
+				19
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "src/masm/masm_test_main.asm",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"isGenerated" : true,
+			"path" : "src/masm/masm_hotpatch_unified_obj.dir/$(Configuration)/asm_memory.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"isGenerated" : true,
+			"path" : "src/masm/masm_hotpatch_unified_obj.dir/$(Configuration)/asm_sync.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"isGenerated" : true,
+			"path" : "src/masm/masm_hotpatch_unified_obj.dir/$(Configuration)/asm_string.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"isGenerated" : true,
+			"path" : "src/masm/masm_hotpatch_unified_obj.dir/$(Configuration)/asm_events.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"isGenerated" : true,
+			"path" : "src/masm/masm_hotpatch_unified_obj.dir/$(Configuration)/asm_log.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"isGenerated" : true,
+			"path" : "src/masm/masm_hotpatch_unified_obj.dir/$(Configuration)/qt6_foundation.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"isGenerated" : true,
+			"path" : "src/masm/masm_hotpatch_unified_obj.dir/$(Configuration)/qt6_main_window.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"isGenerated" : true,
+			"path" : "src/masm/masm_hotpatch_unified_obj.dir/$(Configuration)/qt6_text_editor.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"isGenerated" : true,
+			"path" : "src/masm/masm_hotpatch_unified_obj.dir/$(Configuration)/qt6_syntax_highlighter.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"isGenerated" : true,
+			"path" : "src/masm/masm_hotpatch_unified_obj.dir/$(Configuration)/qt6_statusbar.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"isGenerated" : true,
+			"path" : "src/masm/masm_hotpatch_unified_obj.dir/$(Configuration)/model_memory_hotpatch.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"isGenerated" : true,
+			"path" : "src/masm/masm_hotpatch_unified_obj.dir/$(Configuration)/RawrXD_DualEngineStreamer.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"isGenerated" : true,
+			"path" : "src/masm/masm_hotpatch_unified_obj.dir/$(Configuration)/RawrXD_RuntimePatcher.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"isGenerated" : true,
+			"path" : "src/masm/masm_hotpatch_unified_obj.dir/$(Configuration)/RawrXD_DualEngineManager.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"isGenerated" : true,
+			"path" : "src/masm/masm_hotpatch_unified_obj.dir/$(Configuration)/RawrXD_AgenticPatchOrchestrator.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"isGenerated" : true,
+			"path" : "src/masm/masm_hotpatch_unified_obj.dir/$(Configuration)/RawrXD_MathHotpatchEntry.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"isGenerated" : true,
+			"path" : "src/masm/masm_hotpatch_unified_obj.dir/$(Configuration)/proxy_hotpatcher.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"isGenerated" : true,
+			"path" : "src/masm/masm_hotpatch_unified_obj.dir/$(Configuration)/agentic_failure_detector.obj",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"isGenerated" : true,
+			"path" : "src/masm/masm_hotpatch_unified_obj.dir/$(Configuration)/agentic_puppeteer.obj",
+			"sourceGroupIndex" : 1
+		}
+	],
+	"type" : "EXECUTABLE"
+}

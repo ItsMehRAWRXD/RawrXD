@@ -1,0 +1,13 @@
+ Assembling: qt6_text_editor.asm
+qt6_text_editor.asm(468) : error A2022:instruction operands must be the same size
+qt6_text_editor.asm(684) : error A2206:missing operator in expression
+qt6_text_editor.asm(685) : error A2206:missing operator in expression
+qt6_text_editor.asm(813) : error A2022:instruction operands must be the same size
+qt6_text_editor.asm(899) : error A2206:missing operator in expression
+qt6_text_editor.asm(943) : error A2022:instruction operands must be the same size
+qt6_text_editor.asm(944) : error A2022:instruction operands must be the same size
+qt6_text_editor.asm(946) : error A2022:instruction operands must be the same size
+qt6_text_editor.asm(1054) : error A2206:missing operator in expression
+qt6_text_editor.asm(1055) : error A2206:missing operator in expression
+qt6_text_editor.asm(1374) : error A2206:missing operator in expression
+qt6_text_editor.asm(1701) : error A2206:missing operator in expression

@@ -1,0 +1,8 @@
+digraph "RawrXD-QtShell" {
+node [
+  fontsize = "12"
+];
+    "node48" [ label = "RawrXD-QtShell", shape = egg ];
+    "node48" [ label = "RawrXD-QtShell", shape = egg ];
+    "node48" -> "node48"  // RawrXD-QtShell -> RawrXD-QtShell
+}

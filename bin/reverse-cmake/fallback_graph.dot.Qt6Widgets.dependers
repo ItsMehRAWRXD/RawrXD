@@ -1,0 +1,280 @@
+digraph "Qt6::Widgets" {
+node [
+  fontsize = "12"
+];
+    "node20" [ label = "Qt6::Widgets", shape = doubleoctagon ];
+    "node19" [ label = "Qt6::OpenGLWidgets", shape = doubleoctagon ];
+    "node19" -> "node20" [ style = dashed ] // Qt6::OpenGLWidgets -> Qt6::Widgets
+    "node18" [ label = "Qt::OpenGLWidgets", shape = pentagon ];
+    "node18" -> "node19" [ style = dashed ] // Qt::OpenGLWidgets -> Qt6::OpenGLWidgets
+    "node1" [ label = "Qt6::Charts", shape = doubleoctagon ];
+    "node1" -> "node18" [ style = dashed ] // Qt6::Charts -> Qt::OpenGLWidgets
+    "node0" [ label = "RawrXD-Agent", shape = egg ];
+    "node0" -> "node1" [ style = dotted ] // RawrXD-Agent -> Qt6::Charts
+    "node29" [ label = "self_test_gate", shape = octagon ];
+    "node29" -> "node1"  // self_test_gate -> Qt6::Charts
+    "node0" [ label = "RawrXD-Agent", shape = egg ];
+    "node0" -> "node29" [ style = dotted ] // RawrXD-Agent -> self_test_gate
+    "node48" [ label = "RawrXD-QtShell", shape = egg ];
+    "node48" -> "node29" [ style = dotted ] // RawrXD-QtShell -> self_test_gate
+    "node48" [ label = "RawrXD-QtShell", shape = egg ];
+    "node48" -> "node48"  // RawrXD-QtShell -> RawrXD-QtShell
+    "node30" [ label = "RawrXD-AgenticIDE", shape = egg ];
+    "node30" -> "node1" [ style = dotted ] // RawrXD-AgenticIDE -> Qt6::Charts
+    "node32" [ label = "brutal_gzip", shape = octagon ];
+    "node32" -> "node1"  // brutal_gzip -> Qt6::Charts
+    "node30" [ label = "RawrXD-AgenticIDE", shape = egg ];
+    "node30" -> "node32" [ style = dotted ] // RawrXD-AgenticIDE -> brutal_gzip
+    "node30" [ label = "RawrXD-AgenticIDE", shape = egg ];
+    "node30" -> "node30"  // RawrXD-AgenticIDE -> RawrXD-AgenticIDE
+    "node48" [ label = "RawrXD-QtShell", shape = egg ];
+    "node48" -> "node32" [ style = dotted ] // RawrXD-QtShell -> brutal_gzip
+    "node59" [ label = "RawrXD-Win32IDE", shape = egg ];
+    "node59" -> "node32" [ style = dotted ] // RawrXD-Win32IDE -> brutal_gzip
+    "node66" [ label = "bench_deflate_50mb", shape = egg ];
+    "node66" -> "node32" [ style = dotted ] // bench_deflate_50mb -> brutal_gzip
+    "node72" [ label = "benchmark_completions", shape = egg ];
+    "node72" -> "node32" [ style = dotted ] // benchmark_completions -> brutal_gzip
+    "node72" [ label = "benchmark_completions", shape = egg ];
+    "node72" -> "node72"  // benchmark_completions -> benchmark_completions
+    "node73" [ label = "gguf_hotpatch_tester", shape = egg ];
+    "node73" -> "node32" [ style = dotted ] // gguf_hotpatch_tester -> brutal_gzip
+    "node74" [ label = "gpu_inference_benchmark", shape = egg ];
+    "node74" -> "node32" [ style = dotted ] // gpu_inference_benchmark -> brutal_gzip
+    "node100" [ label = "test_agent_coordinator_integration", shape = egg ];
+    "node100" -> "node32" [ style = dotted ] // test_agent_coordinator_integration -> brutal_gzip
+    "node101" [ label = "test_chat_streaming", shape = egg ];
+    "node101" -> "node32" [ style = dotted ] // test_chat_streaming -> brutal_gzip
+    "node102" [ label = "test_gguf_loader", shape = egg ];
+    "node102" -> "node32" [ style = dotted ] // test_gguf_loader -> brutal_gzip
+    "node103" [ label = "test_gguf_loader_simple", shape = egg ];
+    "node103" -> "node32" [ style = dotted ] // test_gguf_loader_simple -> brutal_gzip
+    "node105" [ label = "test_ide_main", shape = egg ];
+    "node105" -> "node32" [ style = dotted ] // test_ide_main -> brutal_gzip
+    "node37" [ label = "ggml\n(ggml::ggml)", shape = octagon ];
+    "node37" -> "node1"  // ggml -> Qt6::Charts
+    "node36" [ label = "ggml_interface", shape = pentagon ];
+    "node36" -> "node37" [ style = dashed ] // ggml_interface -> ggml
+    "node30" [ label = "RawrXD-AgenticIDE", shape = egg ];
+    "node30" -> "node36" [ style = dotted ] // RawrXD-AgenticIDE -> ggml_interface
+    "node48" [ label = "RawrXD-QtShell", shape = egg ];
+    "node48" -> "node36" [ style = dotted ] // RawrXD-QtShell -> ggml_interface
+    "node59" [ label = "RawrXD-Win32IDE", shape = egg ];
+    "node59" -> "node37" [ style = dotted ] // RawrXD-Win32IDE -> ggml
+    "node72" [ label = "benchmark_completions", shape = egg ];
+    "node72" -> "node37" [ style = dotted ] // benchmark_completions -> ggml
+    "node73" [ label = "gguf_hotpatch_tester", shape = egg ];
+    "node73" -> "node37" [ style = dotted ] // gguf_hotpatch_tester -> ggml
+    "node74" [ label = "gpu_inference_benchmark", shape = egg ];
+    "node74" -> "node37" [ style = dotted ] // gpu_inference_benchmark -> ggml
+    "node97" [ label = "simple_gpu_test", shape = egg ];
+    "node97" -> "node37" [ style = dotted ] // simple_gpu_test -> ggml
+    "node101" [ label = "test_chat_streaming", shape = egg ];
+    "node101" -> "node37" [ style = dotted ] // test_chat_streaming -> ggml
+    "node105" [ label = "test_ide_main", shape = egg ];
+    "node105" -> "node37" [ style = dotted ] // test_ide_main -> ggml
+    "node38" [ label = "ggml-base", shape = octagon ];
+    "node38" -> "node1"  // ggml-base -> Qt6::Charts
+    "node37" [ label = "ggml\n(ggml::ggml)", shape = octagon ];
+    "node37" -> "node38"  // ggml -> ggml-base
+    "node39" [ label = "ggml-cpu", shape = octagon ];
+    "node39" -> "node38" [ style = dotted ] // ggml-cpu -> ggml-base
+    "node37" [ label = "ggml\n(ggml::ggml)", shape = octagon ];
+    "node37" -> "node39"  // ggml -> ggml-cpu
+    "node72" [ label = "benchmark_completions", shape = egg ];
+    "node72" -> "node39" [ style = dotted ] // benchmark_completions -> ggml-cpu
+    "node42" [ label = "ggml-vulkan", shape = octagon ];
+    "node42" -> "node38" [ style = dotted ] // ggml-vulkan -> ggml-base
+    "node37" [ label = "ggml\n(ggml::ggml)", shape = octagon ];
+    "node37" -> "node42"  // ggml -> ggml-vulkan
+    "node72" [ label = "benchmark_completions", shape = egg ];
+    "node72" -> "node42" [ style = dotted ] // benchmark_completions -> ggml-vulkan
+    "node39" [ label = "ggml-cpu", shape = octagon ];
+    "node39" -> "node1"  // ggml-cpu -> Qt6::Charts
+    "node42" [ label = "ggml-vulkan", shape = octagon ];
+    "node42" -> "node1"  // ggml-vulkan -> Qt6::Charts
+    "node44" [ label = "quant_utils", shape = octagon ];
+    "node44" -> "node1"  // quant_utils -> Qt6::Charts
+    "node30" [ label = "RawrXD-AgenticIDE", shape = egg ];
+    "node30" -> "node44" [ style = dotted ] // RawrXD-AgenticIDE -> quant_utils
+    "node48" [ label = "RawrXD-QtShell", shape = egg ];
+    "node48" -> "node44" [ style = dotted ] // RawrXD-QtShell -> quant_utils
+    "node59" [ label = "RawrXD-Win32IDE", shape = egg ];
+    "node59" -> "node44" [ style = dotted ] // RawrXD-Win32IDE -> quant_utils
+    "node94" [ label = "quant_correctness_tests", shape = egg ];
+    "node94" -> "node44" [ style = dotted ] // quant_correctness_tests -> quant_utils
+    "node95" [ label = "quant_engine_test", shape = egg ];
+    "node95" -> "node44" [ style = dotted ] // quant_engine_test -> quant_utils
+    "node47" [ label = "RawrXD-Chromatic", shape = egg ];
+    "node47" -> "node1" [ style = dotted ] // RawrXD-Chromatic -> Qt6::Charts
+    "node48" [ label = "RawrXD-QtShell", shape = egg ];
+    "node48" -> "node1" [ style = dotted ] // RawrXD-QtShell -> Qt6::Charts
+    "node55" [ label = "masm_ide_orchestration_obj", shape = hexagon ];
+    "node55" -> "node1"  // masm_ide_orchestration_obj -> Qt6::Charts
+    "node48" [ label = "RawrXD-QtShell", shape = egg ];
+    "node48" -> "node55"  // RawrXD-QtShell -> masm_ide_orchestration_obj
+    "node59" [ label = "RawrXD-Win32IDE", shape = egg ];
+    "node59" -> "node1" [ style = dotted ] // RawrXD-Win32IDE -> Qt6::Charts
+    "node60" [ label = "RawrXDGit", shape = octagon ];
+    "node60" -> "node1"  // RawrXDGit -> Qt6::Charts
+    "node59" [ label = "RawrXD-Win32IDE", shape = egg ];
+    "node59" -> "node60" [ style = dotted ] // RawrXD-Win32IDE -> RawrXDGit
+    "node105" [ label = "test_ide_main", shape = egg ];
+    "node105" -> "node60" [ style = dotted ] // test_ide_main -> RawrXDGit
+    "node61" [ label = "RawrXDOrchestration", shape = octagon ];
+    "node61" -> "node1"  // RawrXDOrchestration -> Qt6::Charts
+    "node60" [ label = "RawrXDGit", shape = octagon ];
+    "node60" -> "node61" [ style = dotted ] // RawrXDGit -> RawrXDOrchestration
+    "node59" [ label = "RawrXD-Win32IDE", shape = egg ];
+    "node59" -> "node61" [ style = dotted ] // RawrXD-Win32IDE -> RawrXDOrchestration
+    "node63" [ label = "RawrXDTerminal", shape = octagon ];
+    "node63" -> "node61" [ style = dotted ] // RawrXDTerminal -> RawrXDOrchestration
+    "node59" [ label = "RawrXD-Win32IDE", shape = egg ];
+    "node59" -> "node63" [ style = dotted ] // RawrXD-Win32IDE -> RawrXDTerminal
+    "node105" [ label = "test_ide_main", shape = egg ];
+    "node105" -> "node63" [ style = dotted ] // test_ide_main -> RawrXDTerminal
+    "node99" [ label = "test_agent_coordinator", shape = egg ];
+    "node99" -> "node61" [ style = dotted ] // test_agent_coordinator -> RawrXDOrchestration
+    "node100" [ label = "test_agent_coordinator_integration", shape = egg ];
+    "node100" -> "node61" [ style = dotted ] // test_agent_coordinator_integration -> RawrXDOrchestration
+    "node105" [ label = "test_ide_main", shape = egg ];
+    "node105" -> "node61" [ style = dotted ] // test_ide_main -> RawrXDOrchestration
+    "node63" [ label = "RawrXDTerminal", shape = octagon ];
+    "node63" -> "node1"  // RawrXDTerminal -> Qt6::Charts
+    "node66" [ label = "bench_deflate_50mb", shape = egg ];
+    "node66" -> "node1" [ style = dotted ] // bench_deflate_50mb -> Qt6::Charts
+    "node67" [ label = "bench_deflate_brutal", shape = egg ];
+    "node67" -> "node1" [ style = dotted ] // bench_deflate_brutal -> Qt6::Charts
+    "node68" [ label = "bench_flash_all_quant", shape = egg ];
+    "node68" -> "node1" [ style = dotted ] // bench_flash_all_quant -> Qt6::Charts
+    "node69" [ label = "bench_flash_asm_puppeteer", shape = egg ];
+    "node69" -> "node1" [ style = dotted ] // bench_flash_asm_puppeteer -> Qt6::Charts
+    "node70" [ label = "bench_flash_attn", shape = egg ];
+    "node70" -> "node1" [ style = dotted ] // bench_flash_attn -> Qt6::Charts
+    "node71" [ label = "bench_q8_0_end2end", shape = egg ];
+    "node71" -> "node1" [ style = dotted ] // bench_q8_0_end2end -> Qt6::Charts
+    "node72" [ label = "benchmark_completions", shape = egg ];
+    "node72" -> "node1" [ style = dotted ] // benchmark_completions -> Qt6::Charts
+    "node73" [ label = "gguf_hotpatch_tester", shape = egg ];
+    "node73" -> "node1" [ style = dotted ] // gguf_hotpatch_tester -> Qt6::Charts
+    "node74" [ label = "gpu_inference_benchmark", shape = egg ];
+    "node74" -> "node1" [ style = dotted ] // gpu_inference_benchmark -> Qt6::Charts
+    "node92" [ label = "minimal_qt_test", shape = egg ];
+    "node92" -> "node1" [ style = dotted ] // minimal_qt_test -> Qt6::Charts
+    "node93" [ label = "production_feature_test", shape = egg ];
+    "node93" -> "node1" [ style = dotted ] // production_feature_test -> Qt6::Charts
+    "node94" [ label = "quant_correctness_tests", shape = egg ];
+    "node94" -> "node1" [ style = dotted ] // quant_correctness_tests -> Qt6::Charts
+    "node95" [ label = "quant_engine_test", shape = egg ];
+    "node95" -> "node1" [ style = dotted ] // quant_engine_test -> Qt6::Charts
+    "node96" [ label = "quant_scalar_smoke", shape = egg ];
+    "node96" -> "node1" [ style = dotted ] // quant_scalar_smoke -> Qt6::Charts
+    "node97" [ label = "simple_gpu_test", shape = egg ];
+    "node97" -> "node1" [ style = dotted ] // simple_gpu_test -> Qt6::Charts
+    "node98" [ label = "stub_test", shape = egg ];
+    "node98" -> "node1" [ style = dotted ] // stub_test -> Qt6::Charts
+    "node99" [ label = "test_agent_coordinator", shape = egg ];
+    "node99" -> "node1" [ style = dotted ] // test_agent_coordinator -> Qt6::Charts
+    "node100" [ label = "test_agent_coordinator_integration", shape = egg ];
+    "node100" -> "node1" [ style = dotted ] // test_agent_coordinator_integration -> Qt6::Charts
+    "node101" [ label = "test_chat_streaming", shape = egg ];
+    "node101" -> "node1" [ style = dotted ] // test_chat_streaming -> Qt6::Charts
+    "node102" [ label = "test_gguf_loader", shape = egg ];
+    "node102" -> "node1" [ style = dotted ] // test_gguf_loader -> Qt6::Charts
+    "node103" [ label = "test_gguf_loader_simple", shape = egg ];
+    "node103" -> "node1" [ style = dotted ] // test_gguf_loader_simple -> Qt6::Charts
+    "node104" [ label = "test_header", shape = egg ];
+    "node104" -> "node1" [ style = dotted ] // test_header -> Qt6::Charts
+    "node105" [ label = "test_ide_main", shape = egg ];
+    "node105" -> "node1" [ style = dotted ] // test_ide_main -> Qt6::Charts
+    "node106" [ label = "test_kv_cache", shape = egg ];
+    "node106" -> "node1" [ style = dotted ] // test_kv_cache -> Qt6::Charts
+    "node107" [ label = "test_qmainwindow", shape = egg ];
+    "node107" -> "node1" [ style = dotted ] // test_qmainwindow -> Qt6::Charts
+    "node21" [ label = "Qt::Widgets", shape = pentagon ];
+    "node21" -> "node20" [ style = dashed ] // Qt::Widgets -> Qt6::Widgets
+    "node1" [ label = "Qt6::Charts", shape = doubleoctagon ];
+    "node1" -> "node21" [ style = dashed ] // Qt6::Charts -> Qt::Widgets
+    "node0" [ label = "RawrXD-Agent", shape = egg ];
+    "node0" -> "node20" [ style = dotted ] // RawrXD-Agent -> Qt6::Widgets
+    "node29" [ label = "self_test_gate", shape = octagon ];
+    "node29" -> "node20"  // self_test_gate -> Qt6::Widgets
+    "node30" [ label = "RawrXD-AgenticIDE", shape = egg ];
+    "node30" -> "node20" [ style = dotted ] // RawrXD-AgenticIDE -> Qt6::Widgets
+    "node32" [ label = "brutal_gzip", shape = octagon ];
+    "node32" -> "node20"  // brutal_gzip -> Qt6::Widgets
+    "node37" [ label = "ggml\n(ggml::ggml)", shape = octagon ];
+    "node37" -> "node20"  // ggml -> Qt6::Widgets
+    "node38" [ label = "ggml-base", shape = octagon ];
+    "node38" -> "node20"  // ggml-base -> Qt6::Widgets
+    "node39" [ label = "ggml-cpu", shape = octagon ];
+    "node39" -> "node20"  // ggml-cpu -> Qt6::Widgets
+    "node42" [ label = "ggml-vulkan", shape = octagon ];
+    "node42" -> "node20"  // ggml-vulkan -> Qt6::Widgets
+    "node44" [ label = "quant_utils", shape = octagon ];
+    "node44" -> "node20"  // quant_utils -> Qt6::Widgets
+    "node47" [ label = "RawrXD-Chromatic", shape = egg ];
+    "node47" -> "node20" [ style = dotted ] // RawrXD-Chromatic -> Qt6::Widgets
+    "node48" [ label = "RawrXD-QtShell", shape = egg ];
+    "node48" -> "node20" [ style = dotted ] // RawrXD-QtShell -> Qt6::Widgets
+    "node55" [ label = "masm_ide_orchestration_obj", shape = hexagon ];
+    "node55" -> "node20"  // masm_ide_orchestration_obj -> Qt6::Widgets
+    "node59" [ label = "RawrXD-Win32IDE", shape = egg ];
+    "node59" -> "node20" [ style = dotted ] // RawrXD-Win32IDE -> Qt6::Widgets
+    "node60" [ label = "RawrXDGit", shape = octagon ];
+    "node60" -> "node20"  // RawrXDGit -> Qt6::Widgets
+    "node61" [ label = "RawrXDOrchestration", shape = octagon ];
+    "node61" -> "node20"  // RawrXDOrchestration -> Qt6::Widgets
+    "node63" [ label = "RawrXDTerminal", shape = octagon ];
+    "node63" -> "node20"  // RawrXDTerminal -> Qt6::Widgets
+    "node66" [ label = "bench_deflate_50mb", shape = egg ];
+    "node66" -> "node20" [ style = dotted ] // bench_deflate_50mb -> Qt6::Widgets
+    "node67" [ label = "bench_deflate_brutal", shape = egg ];
+    "node67" -> "node20" [ style = dotted ] // bench_deflate_brutal -> Qt6::Widgets
+    "node68" [ label = "bench_flash_all_quant", shape = egg ];
+    "node68" -> "node20" [ style = dotted ] // bench_flash_all_quant -> Qt6::Widgets
+    "node69" [ label = "bench_flash_asm_puppeteer", shape = egg ];
+    "node69" -> "node20" [ style = dotted ] // bench_flash_asm_puppeteer -> Qt6::Widgets
+    "node70" [ label = "bench_flash_attn", shape = egg ];
+    "node70" -> "node20" [ style = dotted ] // bench_flash_attn -> Qt6::Widgets
+    "node71" [ label = "bench_q8_0_end2end", shape = egg ];
+    "node71" -> "node20" [ style = dotted ] // bench_q8_0_end2end -> Qt6::Widgets
+    "node72" [ label = "benchmark_completions", shape = egg ];
+    "node72" -> "node20" [ style = dotted ] // benchmark_completions -> Qt6::Widgets
+    "node73" [ label = "gguf_hotpatch_tester", shape = egg ];
+    "node73" -> "node20" [ style = dotted ] // gguf_hotpatch_tester -> Qt6::Widgets
+    "node74" [ label = "gpu_inference_benchmark", shape = egg ];
+    "node74" -> "node20" [ style = dotted ] // gpu_inference_benchmark -> Qt6::Widgets
+    "node92" [ label = "minimal_qt_test", shape = egg ];
+    "node92" -> "node20" [ style = dotted ] // minimal_qt_test -> Qt6::Widgets
+    "node93" [ label = "production_feature_test", shape = egg ];
+    "node93" -> "node20" [ style = dotted ] // production_feature_test -> Qt6::Widgets
+    "node94" [ label = "quant_correctness_tests", shape = egg ];
+    "node94" -> "node20" [ style = dotted ] // quant_correctness_tests -> Qt6::Widgets
+    "node95" [ label = "quant_engine_test", shape = egg ];
+    "node95" -> "node20" [ style = dotted ] // quant_engine_test -> Qt6::Widgets
+    "node96" [ label = "quant_scalar_smoke", shape = egg ];
+    "node96" -> "node20" [ style = dotted ] // quant_scalar_smoke -> Qt6::Widgets
+    "node97" [ label = "simple_gpu_test", shape = egg ];
+    "node97" -> "node20" [ style = dotted ] // simple_gpu_test -> Qt6::Widgets
+    "node98" [ label = "stub_test", shape = egg ];
+    "node98" -> "node20" [ style = dotted ] // stub_test -> Qt6::Widgets
+    "node99" [ label = "test_agent_coordinator", shape = egg ];
+    "node99" -> "node20" [ style = dotted ] // test_agent_coordinator -> Qt6::Widgets
+    "node100" [ label = "test_agent_coordinator_integration", shape = egg ];
+    "node100" -> "node20" [ style = dotted ] // test_agent_coordinator_integration -> Qt6::Widgets
+    "node101" [ label = "test_chat_streaming", shape = egg ];
+    "node101" -> "node20" [ style = dotted ] // test_chat_streaming -> Qt6::Widgets
+    "node102" [ label = "test_gguf_loader", shape = egg ];
+    "node102" -> "node20" [ style = dotted ] // test_gguf_loader -> Qt6::Widgets
+    "node103" [ label = "test_gguf_loader_simple", shape = egg ];
+    "node103" -> "node20" [ style = dotted ] // test_gguf_loader_simple -> Qt6::Widgets
+    "node104" [ label = "test_header", shape = egg ];
+    "node104" -> "node20" [ style = dotted ] // test_header -> Qt6::Widgets
+    "node105" [ label = "test_ide_main", shape = egg ];
+    "node105" -> "node20" [ style = dotted ] // test_ide_main -> Qt6::Widgets
+    "node106" [ label = "test_kv_cache", shape = egg ];
+    "node106" -> "node20" [ style = dotted ] // test_kv_cache -> Qt6::Widgets
+    "node107" [ label = "test_qmainwindow", shape = egg ];
+    "node107" -> "node20" [ style = dotted ] // test_qmainwindow -> Qt6::Widgets
+}

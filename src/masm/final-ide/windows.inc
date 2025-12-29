@@ -1,6 +1,5 @@
-; Minimal windows.inc stub for assembly samples
-; NOTE: This is a small stub to allow assembling the example modules in this repo.
-; For production builds, replace with a full SDK-provided include set (MASM/UASM headers).
+IFNDEF WINDOWS_INC
+WINDOWS_INC EQU 1
 
 ; Types
 HWND        typedef QWORD
@@ -78,13 +77,6 @@ TEXTRANGE STRUCT
     lpstrText       QWORD ?
 TEXTRANGE ENDS
 
-GENERIC_READ     EQU 80000000h
-GENERIC_WRITE    EQU 40000000h
-FILE_SHARE_READ  EQU 00000001h
-OPEN_EXISTING    EQU 3
-CREATE_ALWAYS    EQU 2
-FILE_ATTRIBUTE_NORMAL EQU 00000080h
-
 WS_OVERLAPPEDWINDOW EQU 00CF0000h
 WS_POPUP         EQU 80000000h
 WS_BORDER        EQU 00800000h
@@ -97,12 +89,66 @@ WS_SYSMENU       EQU 00080000h
 WS_EX_CLIENTEDGE EQU 00000200h
 WS_EX_TOOLWINDOW EQU 00000080h
 
-ES_MULTILINE     EQU 0004h
-ES_READONLY      EQU 0800h
-ES_AUTOHSCROLL   EQU 0080h
+SW_SHOW          EQU 5
+PM_REMOVE        EQU 1
+WM_INITDIALOG    EQU 0110h
+WM_CLOSE         EQU 0010h
+WS_CLIPSIBLINGS  EQU 04000000h
+TCIF_TEXT        EQU 0001h
+TCIF_IMAGE       EQU 0002h
+TCIF_PARAM       EQU 0008h
+TCIF_RTLREADING  EQU 0004h
+TCIF_STATE       EQU 0010h
 
-LBS_NOTIFY       EQU 0001h
-BS_PUSHBUTTON    EQU 0h
+LVCF_FMT         EQU 0001h
+LVCF_WIDTH       EQU 0002h
+LVCF_TEXT        EQU 0004h
+LVCF_SUBITEM     EQU 0008h
+
+LVIF_TEXT        EQU 0001h
+LVIF_IMAGE       EQU 0002h
+LVIF_PARAM       EQU 0004h
+LVIF_STATE       EQU 0008h
+
+LVS_REPORT       EQU 0001h
+LVNI_SELECTED    EQU 0002h
+LVIS_SELECTED    EQU 0002h
+
+TCITEM STRUCT
+    mask                DWORD   ?
+    dwState             DWORD   ?
+    dwStateMask         DWORD   ?
+    pszText             QWORD   ?
+    cchTextMax          DWORD   ?
+    iImage              DWORD   ?
+    lParam              QWORD   ?
+TCITEM ENDS
+
+LVCOLUMN STRUCT
+    mask                DWORD   ?
+    fmt                 DWORD   ?
+    cx_                 DWORD   ?
+    pszText             QWORD   ?
+    cchTextMax          DWORD   ?
+    iSubItem            DWORD   ?
+    iImage              DWORD   ?
+    iOrder              DWORD   ?
+    _padding            DWORD   ?
+LVCOLUMN ENDS
+
+LVITEM STRUCT
+    mask                DWORD   ?
+    iItem               DWORD   ?
+    iSubItem            DWORD   ?
+    state               DWORD   ?
+    stateMask           DWORD   ?
+    pszText             QWORD   ?
+    cchTextMax          DWORD   ?
+    iImage              DWORD   ?
+    lParam              QWORD   ?
+    iIndent             DWORD   ?
+    _padding            DWORD   ?
+LVITEM ENDS
 
 MB_OK            EQU 0h
 MB_OKCANCEL      EQU 1h
@@ -162,7 +208,6 @@ FILE_MAP_READ       EQU 04h
 
 ; File search
 MAX_PATH            EQU 260
-INVALID_HANDLE_VALUE EQU -1
 
 WIN32_FIND_DATA STRUCT
     dwFileAttributes    DWORD   ?
@@ -212,7 +257,14 @@ PROCESS_INFORMATION STRUCT
     dwThreadId          DWORD   ?
 PROCESS_INFORMATION ENDS
 
-WndClassEx STRUCT 8 ; Align to 8 bytes for x64
+RECT STRUCT
+    left                DWORD   ?
+    top                 DWORD   ?
+    right               DWORD   ?
+    bottom              DWORD   ?
+RECT ENDS
+
+WNDCLASSEX STRUCT
     cbSize              DWORD   ?
     style               DWORD   ?
     lpfnWndProc         QWORD   ?
@@ -225,10 +277,7 @@ WndClassEx STRUCT 8 ; Align to 8 bytes for x64
     lpszMenuName        QWORD   ?
     lpszClassName       QWORD   ?
     hIconSm             QWORD   ?
-WndClassEx ENDS
-
-; Standard Windows name
-WNDCLASSEX EQU WndClassEx
+WNDCLASSEX ENDS
 
 MSG STRUCT
     hwnd                QWORD   ?
@@ -289,7 +338,6 @@ EXTERN CreateMenu:PROC
 EXTERN CreatePopupMenu:PROC
 EXTERN AppendMenuA:PROC
 EXTERN SetMenu:PROC
-EXTERN LoadLibraryA:PROC
 EXTERN GetProcAddress:PROC
 EXTERN GetLastError:PROC
 EXTERN GetTickCount:PROC
@@ -298,17 +346,13 @@ EXTERN ShowWindow:PROC
 EXTERN UpdateWindow:PROC
 EXTERN RtlZeroMemory:PROC
 EXTERN VirtualProtect:PROC
-
-; Additional UI helpers for designer agent
 EXTERN GetWindowLongPtrA:PROC
 EXTERN GetClassNameA:PROC
 EXTERN GetParent:PROC
 EXTERN ScreenToClient:PROC
 EXTERN EnumChildWindows:PROC
-
 EXTERN GetDC:PROC
 EXTERN ReleaseDC:PROC
-EXTERN GetClientRect:PROC
 EXTERN PostMessageA:PROC
 EXTERN GetDesktopWindow:PROC
 EXTERN SetWindowPos:PROC
@@ -316,15 +360,11 @@ EXTERN GetWindowRect:PROC
 EXTERN FindFirstFileA:PROC
 EXTERN FindNextFileA:PROC
 EXTERN FindClose:PROC
-EXTERN LoadLibraryA:PROC
-EXTERN GetProcAddress:PROC
 EXTERN CreatePipe:PROC
 EXTERN SetHandleInformation:PROC
 EXTERN DuplicateHandle:PROC
 EXTERN GetCurrentProcess:PROC
 EXTERN CreateProcessA:PROC
-
-; GDI and Modern UI APIs
 EXTERN CreateDIBSection:PROC
 EXTERN SelectObject:PROC
 EXTERN BitBlt:PROC
@@ -333,13 +373,6 @@ EXTERN BeginBufferedPaint:PROC
 EXTERN EndBufferedPaint:PROC
 EXTERN D2D1CreateFactory:PROC
 EXTERN DWriteCreateFactory:PROC
+EXTERN EnableWindow:PROC
 
-; Modern UI Constants
-D2D1_FACTORY_TYPE_SINGLE_THREADED EQU 0
-DWRITE_FACTORY_TYPE_SHARED        EQU 0
-
-; GUIDs (as bytes for convenience)
-.data
-    IID_ID2D1Factory    BYTE 057h, 048h, 02fh, 006h, 06eh, 05eh, 0d1h, 046h, 0b6h, 0d6h, 006h, 0d3h, 056h, 0a0h, 070h, 028h
-    IID_IDWriteFactory  BYTE 025h, 0e1h, 0d1h, 0b8h, 016h, 09fh, 049h, 04bh, 08bh, 077h, 0c1h, 034h, 011h, 0b9h, 062h, 092h
-.code
+ENDIF

@@ -1,0 +1,8 @@
+digraph "benchmark_completions" {
+node [
+  fontsize = "12"
+];
+    "node72" [ label = "benchmark_completions", shape = egg ];
+    "node72" [ label = "benchmark_completions", shape = egg ];
+    "node72" -> "node72"  // benchmark_completions -> benchmark_completions
+}

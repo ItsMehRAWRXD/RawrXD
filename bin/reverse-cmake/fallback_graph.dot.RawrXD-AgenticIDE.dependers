@@ -1,0 +1,8 @@
+digraph "RawrXD-AgenticIDE" {
+node [
+  fontsize = "12"
+];
+    "node30" [ label = "RawrXD-AgenticIDE", shape = egg ];
+    "node30" [ label = "RawrXD-AgenticIDE", shape = egg ];
+    "node30" -> "node30"  // RawrXD-AgenticIDE -> RawrXD-AgenticIDE
+}

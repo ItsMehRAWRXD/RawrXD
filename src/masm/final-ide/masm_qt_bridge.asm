@@ -1,12 +1,14 @@
 ;==============================================================================
 ; masm_qt_bridge.asm - Qt/MASM Signal and Function Bridge
 ; Purpose: Marshal Qt signals/slots and invoke callbacks from MASM
-; Size: 450 lines of production-grade integration code
+; Author: RawrXD CI/CD
+; Date: Dec 28, 2025
 ;==============================================================================
 
 option casemap:none
 
 include windows.inc
+include masm_master_defs.inc
 includelib kernel32.lib
 includelib user32.lib
 
@@ -14,7 +16,7 @@ includelib user32.lib
 ; CONSTANTS & STRUCTURES
 ;==============================================================================
 
-; Signal callback entry
+; Signal callback entry structure
 SIGNAL_CALLBACK STRUCT
     signal_id       DWORD ?
     callback_addr   QWORD ?
@@ -30,6 +32,21 @@ QT_PARAM STRUCT
     param_len       DWORD ?
 QT_PARAM ENDS
 
+; Signal ID constants (mapped from Qt signals)
+SIG_CHAT_MESSAGE_RECEIVED    EQU 1001h
+SIG_FILE_OPENED              EQU 1002h
+SIG_TERMINAL_OUTPUT          EQU 1003h
+SIG_HOTPATCH_APPLIED         EQU 1004h
+SIG_EDITOR_TEXT_CHANGED      EQU 1005h
+SIG_PANE_RESIZED             EQU 1006h
+SIG_FAILURE_DETECTED         EQU 1007h
+SIG_CORRECTION_APPLIED       EQU 1008h
+
+; Event queue size constant
+MAX_PENDING_EVENTS           EQU 256
+SIGNAL_CALLBACK_SIZE         EQU SIZEOF SIGNAL_CALLBACK
+MAX_CALLBACK_SLOTS           EQU 32
+
 ;==============================================================================
 ; EXPORTED FUNCTIONS
 ;==============================================================================
@@ -42,136 +59,151 @@ PUBLIC masm_event_pump
 PUBLIC masm_thread_safe_call
 
 ;==============================================================================
-; GLOBAL DATA
+; GLOBAL DATA SECTION
 ;==============================================================================
 .data
+    ; Callback array (32 slots, 32 bytes each = 1KB)
     g_signal_callbacks SIGNAL_CALLBACK 32 DUP(<>)
-    g_callback_count   DWORD 0
-    g_bridge_mutex     QWORD 0
-    g_pending_events   QWORD 0
-    g_event_count      DWORD 0
     
-    ; Signal IDs (mapped from Qt)
-    SIG_CHAT_MESSAGE_RECEIVED    EQU 1001h
-    SIG_FILE_OPENED              EQU 1002h
-    SIG_TERMINAL_OUTPUT          EQU 1003h
-    SIG_HOTPATCH_APPLIED         EQU 1004h
-    SIG_EDITOR_TEXT_CHANGED      EQU 1005h
-    SIG_PANE_RESIZED             EQU 1006h
-    SIG_FAILURE_DETECTED         EQU 1007h
-    SIG_CORRECTION_APPLIED       EQU 1008h
+    ; Global state variables
+    g_callback_count   DWORD 0              ; Number of active callbacks
+    g_bridge_mutex     QWORD 0              ; HANDLE to bridge synchronization mutex
+    g_pending_events   QWORD 0              ; Pointer to event queue
+    g_event_count      DWORD 0              ; Number of pending events
     
-    szBridgeInitMsg  BYTE "Qt/MASM Bridge Initialized",0
-    szSignalConnected BYTE "Signal %d connected to callback",0
-    szCallbackInvoked BYTE "Callback invoked with %d parameters",0
+    ; Debug strings (for logging/diagnostics)
+    szBridgeInitMsg    BYTE "Qt/MASM Bridge Initialized",0
+    szSignalConnected  BYTE "Signal connected",0
+    szCallbackInvoked  BYTE "Callback invoked",0
+    szErrorInit        BYTE "Bridge initialization failed",0
 
 .data?
-    g_tls_slot      DWORD ?  ; Thread-local storage slot
+    ; Uninitialized globals
+    g_tls_slot         DWORD ?              ; Thread-local storage slot
+    g_heap_handle      QWORD ?              ; Process heap handle
 
 ;==============================================================================
 ; CODE SECTION
 ;==============================================================================
 .code
+ALIGN 16
 
 ;==============================================================================
 ; PUBLIC: masm_qt_bridge_init() -> bool (rax)
 ; Initialize the Qt/MASM bridge system
+; Returns: 1 = success, 0 = failure
 ;==============================================================================
-ALIGN 16
 masm_qt_bridge_init PROC
     push rbx
-    sub rsp, 40
+    sub rsp, 40h
+    
+    ; Get process heap handle
+    call GetProcessHeap
+    mov g_heap_handle, rax
+    test rax, rax
+    jz init_error
     
     ; Create mutex for thread safety
-    lea rcx, g_bridge_mutex
+    xor rcx, rcx                    ; lpMutexAttributes = NULL
+    mov rdx, 0                      ; bInitialOwner = FALSE
+    lea r8, [szBridgeInitMsg]
     call CreateMutexA
     test rax, rax
-    jz .init_error
+    jz init_error
     mov g_bridge_mutex, rax
     
-    ; Initialize callback array
+    ; Initialize callback count to 0
     mov g_callback_count, 0
     mov g_event_count, 0
     
-    ; Allocate pending event queue (64KB)
-    mov rcx, 65536
+    ; Allocate pending event queue (65536 bytes)
+    mov rcx, g_heap_handle          ; hHeap
+    xor rdx, rdx                    ; dwFlags = 0
+    mov r8, 65536                   ; dwBytes
     call HeapAlloc
     test rax, rax
-    jz .init_error
+    jz init_error
     mov g_pending_events, rax
     
+    ; Success return
     mov eax, 1
-    add rsp, 40
+    add rsp, 40h
     pop rbx
     ret
     
-.init_error:
-    xor eax, eax
-    add rsp, 40
+init_error:
+    xor eax, eax                    ; Return 0 (failure)
+    add rsp, 40h
     pop rbx
     ret
 masm_qt_bridge_init ENDP
 
 ;==============================================================================
-; PUBLIC: masm_signal_connect(signal_id: ecx, callback: rdx) -> bool (rax)
-; Register a signal handler callback from MASM
+; PUBLIC: masm_signal_connect(ecx=signal_id, rdx=callback_addr) -> bool (rax)
+; Register a signal handler callback
+; Args: RCX = signal_id, RDX = callback address
+; Returns: 1 = success, 0 = failure
 ;==============================================================================
 ALIGN 16
 masm_signal_connect PROC
-    ; ecx = signal_id, rdx = callback address
     push rbx
-    sub rsp, 32
+    push r12
+    sub rsp, 32h
     
-    ; Acquire bridge mutex
+    mov r12d, ecx                   ; Save signal_id
+    mov r10, rdx                    ; Save callback_addr
+    
+    ; Acquire bridge mutex for thread safety
     mov r8, g_bridge_mutex
     mov rcx, r8
     mov rdx, INFINITE
     call WaitForSingleObject
     cmp eax, WAIT_OBJECT_0
-    jne .connect_error
+    jne connect_failed
     
-    ; Check callback limit (32 max)
+    ; Check if we have space (max 32 callbacks)
     mov eax, g_callback_count
-    cmp eax, 32
-    jge .connect_full
+    cmp eax, MAX_CALLBACK_SLOTS
+    jge connect_full
     
-    ; Find callback entry
+    ; Find an empty slot in the callback array
+    xor r11d, r11d                  ; slot_index = 0
     mov rbx, OFFSET g_signal_callbacks
-    mov r9, 0
     
-.find_slot:
-    mov eax, r9d
-    cmp eax, g_callback_count
-    jge .add_new_callback
+search_empty_slot:
+    cmp r11d, MAX_CALLBACK_SLOTS
+    jge add_new_callback_entry
     
-    mov r10d, [rbx + rax*SIZEOF SIGNAL_CALLBACK + SIGNAL_CALLBACK.signal_id]
-    test r10d, r10d
-    jz .reuse_slot
+    mov eax, r11d
+    imul eax, SIGNAL_CALLBACK_SIZE
+    mov r9d, [rbx + rax]            ; Check signal_id field
+    test r9d, r9d
+    jz found_empty_slot
     
-    inc r9
-    jmp .find_slot
+    inc r11d
+    jmp search_empty_slot
     
-.reuse_slot:
-    mov rax, r9
-    jmp .store_callback
+found_empty_slot:
+    ; Store signal and callback in the empty slot
+    mov eax, r11d
+    jmp store_callback_data
     
-.add_new_callback:
+add_new_callback_entry:
     mov eax, g_callback_count
+    mov r11d, eax
     inc g_callback_count
     
-.store_callback:
-    ; Store callback in array
-    mov r10d, [rsp + 40]  ; signal_id parameter (ecx)
-    mov r11, [rsp + 48]   ; callback address (rdx)
+store_callback_data:
+    ; RBX = base of g_signal_callbacks, EAX = slot index
+    imul eax, SIGNAL_CALLBACK_SIZE
+    add rax, rbx
     
-    mov r8d, eax
-    imul r8d, SIZEOF SIGNAL_CALLBACK
-    add r8, OFFSET g_signal_callbacks
-    
-    mov [r8 + SIGNAL_CALLBACK.signal_id], r10d
-    mov [r8 + SIGNAL_CALLBACK.callback_addr], r11
-    mov DWORD PTR [r8 + SIGNAL_CALLBACK.is_active], 1
-    mov DWORD PTR [r8 + SIGNAL_CALLBACK.param_count], 0
+    ; Fill SIGNAL_CALLBACK structure at RBX + offset
+    mov [rax + 0],  r12d            ; signal_id
+    mov [rax + 8],  r10             ; callback_addr
+    mov QWORD PTR [rax + 16], 0     ; context
+    mov DWORD PTR [rax + 24], 1     ; is_active
+    mov DWORD PTR [rax + 28], 0     ; param_count
     
     ; Release mutex
     mov rcx, g_bridge_mutex
@@ -179,30 +211,37 @@ masm_signal_connect PROC
     
     ; Success
     mov eax, 1
-    add rsp, 32
+    add rsp, 32h
+    pop r12
     pop rbx
     ret
     
-.connect_full:
+connect_full:
     mov rcx, g_bridge_mutex
     call ReleaseMutex
-    jmp .connect_error
+    jmp connect_failed
     
-.connect_error:
-    xor eax, eax
-    add rsp, 32
+connect_failed:
+    xor eax, eax                    ; Return 0 (failure)
+    add rsp, 32h
+    pop r12
     pop rbx
     ret
 masm_signal_connect ENDP
 
 ;==============================================================================
-; PUBLIC: masm_signal_disconnect(signal_id: ecx) -> bool (rax)
-; Unregister a signal handler
+; PUBLIC: masm_signal_disconnect(ecx=signal_id) -> bool (rax)
+; Unregister a signal handler callback
+; Args: RCX = signal_id
+; Returns: 1 = success, 0 = not found/failure
 ;==============================================================================
 ALIGN 16
 masm_signal_disconnect PROC
     push rbx
-    sub rsp, 32
+    push r12
+    sub rsp, 32h
+    
+    mov r12d, ecx                   ; Save signal_id
     
     ; Acquire mutex
     mov r8, g_bridge_mutex
@@ -210,276 +249,259 @@ masm_signal_disconnect PROC
     mov rdx, INFINITE
     call WaitForSingleObject
     cmp eax, WAIT_OBJECT_0
-    jne .disconnect_error
+    jne disconnect_failed
     
-    ; Search for signal in callbacks
-    mov ebx, 0
+    ; Search for matching signal_id
+    xor r11d, r11d                  ; index = 0
+    mov rbx, OFFSET g_signal_callbacks
     
-.search_loop:
-    cmp ebx, g_callback_count
-    jge .not_found
+search_signal_id:
+    cmp r11d, g_callback_count
+    jge signal_not_found
     
-    mov r8d, ebx
-    imul r8d, SIZEOF SIGNAL_CALLBACK
-    add r8, OFFSET g_signal_callbacks
+    mov eax, r11d
+    imul eax, SIGNAL_CALLBACK_SIZE
+    mov r10d, [rbx + rax]           ; Check signal_id
+    cmp r10d, r12d
+    je found_signal_to_remove
     
-    mov eax, [r8 + SIGNAL_CALLBACK.signal_id]
-    cmp eax, ecx
-    je .found_signal
+    inc r11d
+    jmp search_signal_id
     
-    inc ebx
-    jmp .search_loop
+found_signal_to_remove:
+    ; Clear the callback entry (zero out structure)
+    mov eax, r11d
+    imul eax, SIGNAL_CALLBACK_SIZE
+    add rax, rbx
     
-.found_signal:
-    ; Mark as inactive
-    mov DWORD PTR [r8 + SIGNAL_CALLBACK.is_active], 0
+    mov DWORD PTR [rax + 0], 0      ; signal_id = 0
+    mov QWORD PTR [rax + 8], 0      ; callback_addr = 0
+    mov QWORD PTR [rax + 16], 0     ; context = 0
+    mov DWORD PTR [rax + 24], 0     ; is_active = 0
+    mov DWORD PTR [rax + 28], 0     ; param_count = 0
     
     ; Release mutex
     mov rcx, g_bridge_mutex
     call ReleaseMutex
     
-    mov eax, 1
-    add rsp, 32
+    mov eax, 1                      ; Success
+    add rsp, 32h
+    pop r12
     pop rbx
     ret
     
-.not_found:
+signal_not_found:
     mov rcx, g_bridge_mutex
     call ReleaseMutex
-    jmp .disconnect_error
     
-.disconnect_error:
-    xor eax, eax
-    add rsp, 32
+disconnect_failed:
+    xor eax, eax                    ; Return 0 (failure)
+    add rsp, 32h
+    pop r12
     pop rbx
     ret
 masm_signal_disconnect ENDP
 
 ;==============================================================================
-; PUBLIC: masm_signal_emit(signal_id: ecx, param: rdx) -> bool (rax)
-; Emit a signal to all registered handlers
+; PUBLIC: masm_signal_emit(ecx=signal_id, rdx=param_count, r8=params_ptr) -> bool (rax)
+; Emit a signal and invoke all registered callbacks
+; Args: RCX = signal_id, RDX = parameter count, R8 = parameter array
+; Returns: 1 = success, 0 = failure
 ;==============================================================================
 ALIGN 16
 masm_signal_emit PROC
-    ; ecx = signal_id, rdx = parameter (void*)
     push rbx
     push r12
-    sub rsp, 40
+    push r13
+    sub rsp, 32h
     
-    mov r12d, ecx     ; Save signal_id
-    mov r11, rdx      ; Save parameter
+    mov r12d, ecx                   ; Save signal_id
+    mov r13d, edx                   ; Save param_count
+    mov r10, r8                     ; Save params_ptr
     
     ; Acquire mutex
-    mov rcx, g_bridge_mutex
+    mov r8, g_bridge_mutex
+    mov rcx, r8
     mov rdx, INFINITE
     call WaitForSingleObject
     cmp eax, WAIT_OBJECT_0
-    jne .emit_error
+    jne emit_failed
     
-    ; Iterate through callbacks
-    mov ebx, 0
+    ; Iterate through callbacks and find matching signal_id
+    xor r11d, r11d                  ; callback_index = 0
+    mov rbx, OFFSET g_signal_callbacks
     
-.emit_loop:
-    cmp ebx, g_callback_count
-    jge .emit_done
+emit_callback_loop:
+    cmp r11d, g_callback_count
+    jge emit_complete
     
-    mov r8d, ebx
-    imul r8d, SIZEOF SIGNAL_CALLBACK
-    add r8, OFFSET g_signal_callbacks
+    mov eax, r11d
+    imul eax, SIGNAL_CALLBACK_SIZE
+    mov r9d, [rbx + rax]            ; signal_id field
+    test r9d, r9d
+    jz emit_next_callback
     
-    ; Check if active and matches signal
-    mov eax, [r8 + SIGNAL_CALLBACK.is_active]
-    test eax, eax
-    jz .emit_next
+    cmp r9d, r12d
+    jne emit_next_callback
     
-    mov eax, [r8 + SIGNAL_CALLBACK.signal_id]
-    cmp eax, r12d
-    jne .emit_next
+    ; Found matching callback - invoke it
+    ; RBX + EAX = pointer to SIGNAL_CALLBACK structure
+    mov r9, [rbx + rax + 8]         ; callback_addr (qword at offset 8)
+    test r9, r9
+    jz emit_next_callback
     
-    ; Invoke callback (signal matches)
-    mov rcx, r11    ; Pass parameter
-    call QWORD PTR [r8 + SIGNAL_CALLBACK.callback_addr]
+    ; Call the callback with parameters
+    ; Parameters: RCX = signal_id, RDX = param_count, R8 = params_ptr
+    mov ecx, r12d
+    mov edx, r13d
+    mov r8, r10
+    call r9
     
-.emit_next:
-    inc ebx
-    jmp .emit_loop
+emit_next_callback:
+    inc r11d
+    jmp emit_callback_loop
     
-.emit_done:
-    ; Release mutex
+emit_complete:
     mov rcx, g_bridge_mutex
     call ReleaseMutex
     
-    mov eax, 1
-    add rsp, 40
+    mov eax, 1                      ; Success
+    add rsp, 32h
+    pop r13
     pop r12
     pop rbx
     ret
     
-.emit_error:
+emit_failed:
     xor eax, eax
-    add rsp, 40
+    add rsp, 32h
+    pop r13
     pop r12
     pop rbx
     ret
 masm_signal_emit ENDP
 
 ;==============================================================================
-; PUBLIC: masm_callback_invoke(callback: rcx, param1: rdx, param2: r8) -> rax
-; Safely invoke a MASM callback with parameters
+; PUBLIC: masm_callback_invoke(rcx=callback_addr, rdx=param) -> QWORD (rax)
+; Invoke a callback directly with a single parameter
+; Args: RCX = callback address, RDX = parameter
+; Returns: return value from callback
 ;==============================================================================
 ALIGN 16
 masm_callback_invoke PROC
-    ; rcx = callback address, rdx = param1, r8 = param2
-    push rbx
-    sub rsp, 32
+    sub rsp, 32h
     
-    ; Validate callback pointer
-    test rcx, rcx
-    jz .invoke_error
+    mov rax, rcx
+    test rax, rax
+    jz invoke_failed
     
-    ; Call callback with up to 2 parameters
-    ; First param: rdx (already set)
-    ; Second param: r8 (already set)
-    call rcx
+    ; Call with single parameter in RDX
+    mov rcx, rdx
+    call rax
     
-    ; Return value in rax
-    add rsp, 32
-    pop rbx
+    add rsp, 32h
     ret
     
-.invoke_error:
+invoke_failed:
     xor eax, eax
-    add rsp, 32
-    pop rbx
+    add rsp, 32h
     ret
 masm_callback_invoke ENDP
 
 ;==============================================================================
-; PUBLIC: masm_event_pump() -> bool (rax)
-; Process pending events from Qt event queue
-; Returns true if events were processed, false if queue empty
+; PUBLIC: masm_event_pump() -> DWORD (rax)
+; Process all pending events in the event queue
+; Returns: number of events processed
 ;==============================================================================
 ALIGN 16
 masm_event_pump PROC
     push rbx
     push r12
-    sub rsp, 32
+    sub rsp, 32h
     
-    ; Acquire mutex
-    mov rcx, g_bridge_mutex
-    mov rdx, INFINITE
-    call WaitForSingleObject
-    cmp eax, WAIT_OBJECT_0
-    jne .pump_error
+    ; Get event count
+    mov eax, g_event_count
+    test eax, eax
+    jz event_pump_empty
     
-    ; Check if any pending events
-    cmp g_event_count, 0
-    je .pump_empty
+    xor r12d, r12d                  ; processed_count = 0
+    mov rbx, g_pending_events
+    mov r10d, g_event_count
     
-    ; Process events (limited to 10 per pump to prevent starvation)
-    mov r12d, 0
+process_event_loop:
+    cmp r12d, r10d
+    jge event_pump_done
     
-.pump_loop:
-    cmp r12d, 10
-    jge .pump_limit
+    ; Process event at g_pending_events[r12d]
+    ; (Event processing would happen here)
     
-    cmp g_event_count, 0
-    je .pump_complete
-    
-    ; Get next event from queue
-    mov rax, g_pending_events
-    
-    ; Process event (would copy from queue, invoke handler, etc.)
-    ; For now, just decrement counter
-    dec g_event_count
     inc r12d
+    jmp process_event_loop
     
-    jmp .pump_loop
-    
-.pump_limit:
-.pump_complete:
-    ; Release mutex
-    mov rcx, g_bridge_mutex
-    call ReleaseMutex
-    
-    ; Return true if we processed events
-    cmp r12d, 0
-    mov eax, 1
-    jne .pump_exit
-    xor eax, eax
-    
-.pump_exit:
-    add rsp, 32
+event_pump_done:
+    ; Clear event count
+    mov g_event_count, 0
+    mov eax, r10d                   ; Return count of processed events
+    add rsp, 32h
     pop r12
     pop rbx
     ret
     
-.pump_empty:
-    mov rcx, g_bridge_mutex
-    call ReleaseMutex
+event_pump_empty:
     xor eax, eax
-    add rsp, 32
-    pop r12
-    pop rbx
-    ret
-    
-.pump_error:
-    xor eax, eax
-    add rsp, 32
+    add rsp, 32h
     pop r12
     pop rbx
     ret
 masm_event_pump ENDP
 
 ;==============================================================================
-; PUBLIC: masm_thread_safe_call(func: rcx, param: rdx) -> rax
-; Invoke a function in a thread-safe manner
+; PUBLIC: masm_thread_safe_call(rcx=func_ptr, rdx=arg1, r8=arg2) -> QWORD (rax)
+; Invoke a function with mutex protection
+; Args: RCX = function pointer, RDX = arg1, R8 = arg2
+; Returns: function return value
 ;==============================================================================
 ALIGN 16
 masm_thread_safe_call PROC
-    ; rcx = function pointer, rdx = parameter
     push rbx
-    sub rsp, 32
+    sub rsp, 32h
     
-    ; Validate function pointer
-    test rcx, rcx
-    jz .tsc_error
+    mov rax, rcx
+    test rax, rax
+    jz tsc_failed
     
-    ; Acquire mutex for thread safety
+    ; Acquire mutex
     mov r8, g_bridge_mutex
-    test r8, r8
-    jz .no_mutex
-    
     mov rcx, r8
     mov rdx, INFINITE
     call WaitForSingleObject
     cmp eax, WAIT_OBJECT_0
-    jne .tsc_error
+    jne tsc_failed
     
-.no_mutex:
-    ; Call function with parameter
-    mov rcx, [rsp + 40]   ; Get function pointer
-    mov rdx, [rsp + 48]   ; Get parameter
-    call rcx
+    ; Call function with arguments
+    mov rax, [rsp + 40h]            ; Get func_ptr from stack
+    mov rcx, [rsp + 48h]            ; Get arg1
+    mov rdx, [rsp + 50h]            ; Get arg2
+    call rax
+    mov rbx, rax                    ; Save return value
     
-    ; Release mutex if acquired
-    mov r8, g_bridge_mutex
-    test r8, r8
-    jz .tsc_exit
-    
-    mov rcx, r8
+    ; Release mutex
+    mov rcx, g_bridge_mutex
     call ReleaseMutex
     
-.tsc_exit:
-    add rsp, 32
+    mov rax, rbx                    ; Restore return value
+    add rsp, 32h
     pop rbx
     ret
     
-.tsc_error:
+tsc_failed:
     xor eax, eax
-    add rsp, 32
+    add rsp, 32h
     pop rbx
     ret
 masm_thread_safe_call ENDP
 
+;==============================================================================
+; END OF FILE
+;==============================================================================
 END

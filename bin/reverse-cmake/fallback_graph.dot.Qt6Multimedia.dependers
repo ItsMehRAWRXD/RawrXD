@@ -1,0 +1,28 @@
+digraph "Qt6::Multimedia" {
+node [
+  fontsize = "12"
+];
+    "node62" [ label = "Qt6::Multimedia", shape = doubleoctagon ];
+    "node61" [ label = "RawrXDOrchestration", shape = octagon ];
+    "node61" -> "node62"  // RawrXDOrchestration -> Qt6::Multimedia
+    "node60" [ label = "RawrXDGit", shape = octagon ];
+    "node60" -> "node61" [ style = dotted ] // RawrXDGit -> RawrXDOrchestration
+    "node59" [ label = "RawrXD-Win32IDE", shape = egg ];
+    "node59" -> "node60" [ style = dotted ] // RawrXD-Win32IDE -> RawrXDGit
+    "node105" [ label = "test_ide_main", shape = egg ];
+    "node105" -> "node60" [ style = dotted ] // test_ide_main -> RawrXDGit
+    "node59" [ label = "RawrXD-Win32IDE", shape = egg ];
+    "node59" -> "node61" [ style = dotted ] // RawrXD-Win32IDE -> RawrXDOrchestration
+    "node63" [ label = "RawrXDTerminal", shape = octagon ];
+    "node63" -> "node61" [ style = dotted ] // RawrXDTerminal -> RawrXDOrchestration
+    "node59" [ label = "RawrXD-Win32IDE", shape = egg ];
+    "node59" -> "node63" [ style = dotted ] // RawrXD-Win32IDE -> RawrXDTerminal
+    "node105" [ label = "test_ide_main", shape = egg ];
+    "node105" -> "node63" [ style = dotted ] // test_ide_main -> RawrXDTerminal
+    "node99" [ label = "test_agent_coordinator", shape = egg ];
+    "node99" -> "node61" [ style = dotted ] // test_agent_coordinator -> RawrXDOrchestration
+    "node100" [ label = "test_agent_coordinator_integration", shape = egg ];
+    "node100" -> "node61" [ style = dotted ] // test_agent_coordinator_integration -> RawrXDOrchestration
+    "node105" [ label = "test_ide_main", shape = egg ];
+    "node105" -> "node61" [ style = dotted ] // test_ide_main -> RawrXDOrchestration
+}

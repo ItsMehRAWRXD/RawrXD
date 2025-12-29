@@ -48,6 +48,20 @@ EXTERN hpatch_reset_stats:PROC
 
 ; Agentic engine (agentic_masm.asm)
 EXTERN agent_init_tools:PROC
+
+; Qt6 Components (qt6_*.asm)
+EXTERN main_window_system_init:PROC
+EXTERN main_window_system_cleanup:PROC
+EXTERN main_window_create:PROC
+EXTERN main_window_show:PROC
+EXTERN main_window_hide:PROC
+EXTERN main_window_destroy:PROC
+EXTERN main_window_set_title:PROC
+EXTERN main_window_get_title:PROC
+EXTERN main_window_set_status:PROC
+EXTERN main_window_get_status:PROC
+EXTERN qt_foundation_init:PROC
+EXTERN qt_foundation_cleanup:PROC
 EXTERN agent_process_command:PROC
 EXTERN agent_list_tools:PROC
 EXTERN agent_get_tool:PROC
@@ -65,9 +79,24 @@ EXTERN gui_agent_inspect:PROC
 EXTERN gui_agent_modify:PROC
 EXTERN gui_create_complete_ide:PROC
 
-; MainWindow implementation
-EXTERN MainWindow_Initialize:PROC
-EXTERN MainWindow_Run:PROC
+; Qt6 Foundation (qt6_foundation.asm)
+EXTERN qt_foundation_init:PROC
+EXTERN qt_foundation_cleanup:PROC
+EXTERN object_create:PROC
+EXTERN object_destroy:PROC
+
+; Qt6 Main Window (qt6_main_window.asm)
+EXTERN main_window_system_init:PROC
+EXTERN main_window_system_cleanup:PROC
+EXTERN main_window_create:PROC
+EXTERN main_window_show:PROC
+EXTERN main_window_set_title:PROC
+EXTERN main_window_add_menu:PROC
+EXTERN main_window_add_menu_item:PROC
+
+; MainWindow implementation (legacy/bridge)
+; EXTERN MainWindow_Initialize:PROC
+; EXTERN MainWindow_Run:PROC
 
 ; UI layer (ui_masm.asm)
 EXTERN ui_create_main_window:PROC
@@ -217,8 +246,8 @@ EM_SETLIMITTEXT      equ 00C5h
 
 .data
     dbg_reached_main    BYTE "Reached main()",0
-        dbg_hinst_msg       BYTE "About to create UI",0
-        dbg_after_ui        BYTE "ui_create returned",0
+    dbg_hinst_msg       BYTE "About to create UI",0
+    dbg_after_ui        BYTE "ui_create returned",0
     dbg_main_init       BYTE "[Main] Initializing RawrXD...",13,10,0
     szHotPatchPath      BYTE "hotpatch_engine.dll",0
     dbg_menu_start      BYTE "Main: Creating menu...",13,10,0
@@ -232,6 +261,7 @@ EM_SETLIMITTEXT      equ 00C5h
     dbg_init_ready      BYTE "Init: Ready message...",13,10,0
     dbg_init_done       BYTE "Init: Done.",13,10,0
     app_name            BYTE "RawrXD AI IDE (Pure MASM64)",0
+    sz_default_title    BYTE "RawrXD IDE - Pure MASM Edition",0
     welcome_msg         BYTE "RawrXD Agentic IDE - Ready",0
     loading_model       BYTE "Loading model...",0
     model_ready         BYTE "Model loaded. Type /help for commands.",0
@@ -970,7 +1000,7 @@ main PROC
     sub rsp, 40
 
     ; Ensure probe handle starts as NULL (data? is uninitialized)
-    mov QWORD PTR probe_hFile, 0
+    mov QWORD PTR [probe_hFile], 0
 
     ; Debug: reached main
     lea rcx, dbg_stdout_start
@@ -1001,7 +1031,7 @@ main PROC
     push rcx                                ; Save original rcx if it had anything
     xor rcx, rcx
     call GetModuleHandleA
-    mov h_instance, rax                     ; Save the module handle
+    mov [h_instance], rax                     ; Save the module handle
     pop rcx                                 ; Restore
     
     ; Write initial marker to log (console_log_init already opened run.log)
@@ -1010,16 +1040,15 @@ main PROC
 
 create_file_done:
     
-    ; Debug: Log h_instance value before calling ui_create_main_window
+    ; Debug: Log h_instance value before calling main_window_system_init
     lea rcx, dbg_before_ui
     call file_log_append
 
     lea rcx, dbg_probe_before_win
     call probe_write
     
-    ; Initialize MainWindow (replaces all UI creation calls)
-    mov rcx, h_instance
-    call MainWindow_Initialize
+    ; Initialize MainWindow system
+    call main_window_system_init
     test rax, rax
     jnz ui_ok
     lea rcx, app_name
@@ -1114,13 +1143,45 @@ menu_ok:
     lea rcx, dbg_probe_after_init
     call probe_write
     
-    lea rcx, dbg_main_loop
-    call file_log_append
+    ; Create Main Window
+    lea rcx, sz_default_title
+    mov rdx, 1280
+    mov r8, 800
+    call main_window_create
+    test rax, rax
+    jz init_app_fail
     
-    ; Enter MainWindow message loop
-    call MainWindow_Run
+    mov rbx, rax                        ; rbx = MAIN_WINDOW ptr
+    
+    ; Show Main Window
+    mov rcx, rbx
+    call main_window_show
+    
+    ; Enter message loop
+    sub rsp, 48                         ; MSG structure is 48 bytes
+    mov rsi, rsp                        ; rsi = &msg
+    
+msg_loop:
+    mov rcx, rsi
+    xor rdx, rdx
+    xor r8, r8
+    xor r9, r9
+    call GetMessageA
+    test eax, eax
+    jz exit_loop
+    
+    mov rcx, rsi
+    call TranslateMessage
+    mov rcx, rsi
+    call DispatchMessageA
+    jmp msg_loop
+    
+exit_loop:
+    add rsp, 48
     
     ; Cleanup
+    call main_window_system_cleanup
+    call qt_foundation_cleanup
     call ml_masm_free
     
     ; Exit with success

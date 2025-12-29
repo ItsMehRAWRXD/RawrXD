@@ -1,4 +1,6 @@
 #pragma once
+#ifndef DEFLATE_BRUTAL_QT_HPP
+#define DEFLATE_BRUTAL_QT_HPP
 #include <cstdint>
 #include <cstdlib>
 #include <QtCore/QByteArray>
@@ -133,3 +135,5 @@ inline QByteArray decompress(const QByteArray& compressed)
 }
 
 } // namespace brutal
+
+#endif // DEFLATE_BRUTAL_QT_HPP

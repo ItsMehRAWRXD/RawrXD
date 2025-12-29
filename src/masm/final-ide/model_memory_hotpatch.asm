@@ -38,6 +38,16 @@ EXTERN asm_str_create:PROC
 EXTERN VirtualProtect:PROC
 EXTERN asm_log:PROC
 
+; Consolidated Core Libraries (NEW - Phase 2)
+EXTERN masm_core_direct_copy:PROC
+EXTERN masm_core_transform_dispatch:PROC
+EXTERN masm_core_crc32_calculate:PROC
+
+; Transform Engine Integration (NEW - Reversible Transforms)
+EXTERN masm_transform_on_model_load:PROC
+EXTERN masm_transform_on_model_unload:PROC
+EXTERN masm_transform_execute_command:PROC
+
 .data
 
 ; Global statistics
@@ -50,6 +60,14 @@ msg_mem_patch_enter DB "MEMPATCH enter",0
 msg_mem_patch_fail  DB "MEMPATCH fail",0
 msg_mem_patch_exit  DB "MEMPATCH exit",0
 
+; Result detail strings
+str_patch_success   DB "Patch success",0
+str_fail_invalid    DB "Invalid patch",0
+str_fail_nomem      DB "Out of memory",0
+str_fail_protect    DB "VirtualProtect failed",0
+str_fail_type       DB "Invalid patch type",0
+str_fail_verify     DB "Verification failed",0
+
 .code
 
 ; External Win32 APIs
@@ -60,6 +78,11 @@ EXTERN GetSystemInfo:PROC
 PUBLIC masm_hotpatch_apply_memory
 PUBLIC masm_hotpatch_rollback
 PUBLIC masm_hotpatch_get_stats
+
+; Model Selection Hooks (NEW - Auto Transform)
+PUBLIC masm_hotpatch_on_model_selected
+PUBLIC masm_hotpatch_on_model_deselected
+PUBLIC masm_hotpatch_execute_chat_command
 
 ;=====================================================================
 ; masm_hotpatch_apply_memory(patch_ptr: rcx, result_ptr: rdx) -> void
@@ -155,74 +178,29 @@ masm_hotpatch_apply_memory PROC
     mov rax, [rsp + 32]
     mov [r12 + 40], rax
     
-    ; Apply patch based on type
+    ; Apply patch based on type using consolidated transform_dispatch
     mov rax, [rbx + 32]     ; rax = patch_type
     
-    cmp rax, 0
-    je patch_type_replace
-    
-    cmp rax, 1
-    je patch_type_xor
-    
-    cmp rax, 2
-    je patch_type_add
-    
-    cmp rax, 3
-    je patch_type_multiply
-    
-    jmp patch_fail_invalid_type
-
-patch_type_replace:
-    ; Simple memory copy: target = patch_data
-    mov rcx, r13            ; dest = target
-    mov rdx, r14            ; src = patch_data
+    ; REFACTORED: Use consolidated transform_dispatch for all patch types
+    ; masm_core_transform_dispatch(operation_type: rcx, buffer: rdx,
+    ;                              size: r8, param1: r9, flags: [rsp+32])
+    mov rcx, rax            ; operation_type (0=replace, 1=xor, 2=add, 3=multiply)
+    mov rdx, r13            ; buffer (target_address)
     mov r8, r15             ; size
-    call asm_memcpy_fast
+    mov r9, r14             ; param1 (patch_data_ptr)
+    mov qword ptr [rsp + 32], 0  ; flags = FORWARD
+    
+    call masm_core_transform_dispatch  ; ← CONSOLIDATED CALL
+    
+    test rax, rax
+    jz patch_fail_apply
+    
     jmp patch_applied
 
-patch_type_xor:
-    ; XOR operation: target ^= patch_data
-    xor rcx, rcx            ; rcx = offset counter
-    
-patch_xor_loop:
-    cmp rcx, r15
-    jge patch_applied
-    
-    mov al, [r14 + rcx]     ; Load patch byte
-    xor [r13 + rcx], al     ; XOR with target
-    
-    inc rcx
-    jmp patch_xor_loop
-
-patch_type_add:
-    ; ADD operation: target += patch_data (byte-wise)
-    xor rcx, rcx
-    
-patch_add_loop:
-    cmp rcx, r15
-    jge patch_applied
-    
-    mov al, [r14 + rcx]
-    add [r13 + rcx], al
-    
-    inc rcx
-    jmp patch_add_loop
-
-patch_type_multiply:
-    ; MULTIPLY operation: target *= patch_data (byte-wise)
-    xor rcx, rcx
-    
-patch_mul_loop:
-    cmp rcx, r15
-    jge patch_applied
-    
-    mov al, [r13 + rcx]
-    mov bl, byte ptr [r14 + rcx]
-    mul bl                  ; al *= bl (result in AX)
-    mov [r13 + rcx], al
-    
-    inc rcx
-    jmp patch_mul_loop
+patch_fail_apply:
+    ; Transform dispatch failed
+    lea rcx, [str_fail_type]
+    jmp patch_fail_common
 
 patch_applied:
     ; Restore original memory protection
@@ -511,6 +489,106 @@ asm_str_create_from_cstr ENDP
 ;=====================================================================
 
 .data
+
+str_hotpatch_success    DB "Memory hotpatch applied successfully",0
+str_hotpatch_failure    DB "Memory hotpatch failed",0
+str_rollback_success    DB "Hotpatch rollback completed",0
+
+;=====================================================================
+; Model Selection Hooks (NEW - Auto Transform Integration)
+;=====================================================================
+
+ALIGN 16
+masm_hotpatch_on_model_selected PROC
+    ; Called when user selects a model from dropdown
+    ; rcx = model_handle
+    ; rdx = model_name_ptr
+    ; r8 = vocab_size
+    
+    push rbx
+    push r12
+    push r13
+    sub rsp, 48
+    
+    mov r12, rcx            ; model_handle
+    mov r13, rdx            ; model_name
+    
+    ; Log model selection
+    lea rcx, msg_model_selected
+    call asm_log
+    mov rcx, r13
+    call asm_log
+    
+    ; Call transform engine to apply auto-transforms
+    mov rcx, r12
+    mov rdx, r13
+    ; r8 already has vocab_size
+    call masm_transform_on_model_load
+    
+    add rsp, 48
+    pop r13
+    pop r12
+    pop rbx
+    ret
+    
+masm_hotpatch_on_model_selected ENDP
+
+ALIGN 16
+masm_hotpatch_on_model_deselected PROC
+    ; Called when user switches away from a model
+    ; rcx = model_handle
+    
+    push rbx
+    sub rsp, 32
+    
+    mov rbx, rcx            ; model_handle
+    
+    ; Log model deselection
+    lea rcx, msg_model_deselected
+    call asm_log
+    
+    ; Call transform engine to reverse transforms
+    mov rcx, rbx
+    call masm_transform_on_model_unload
+    
+    add rsp, 32
+    pop rbx
+    ret
+    
+masm_hotpatch_on_model_deselected ENDP
+
+ALIGN 16
+masm_hotpatch_execute_chat_command PROC
+    ; Called when user types /Reverse or /Apply command in chat
+    ; rcx = command_string_ptr
+    
+    push rbx
+    sub rsp, 32
+    
+    mov rbx, rcx            ; command_string
+    
+    ; Log command
+    lea rcx, msg_chat_command
+    call asm_log
+    mov rcx, rbx
+    call asm_log
+    
+    ; Forward to transform engine
+    mov rcx, rbx
+    call masm_transform_execute_command
+    
+    add rsp, 32
+    pop rbx
+    ret
+    
+masm_hotpatch_execute_chat_command ENDP
+
+; New log messages
+msg_model_selected      DB "[Hotpatch] Model selected - applying auto-transforms", 0
+msg_model_deselected    DB "[Hotpatch] Model deselected - reversing transforms", 0
+msg_chat_command        DB "[Hotpatch] Chat command received: ", 0
+
+END
 
 str_patch_success   DB "Patch applied", 0
 str_fail_invalid    DB "Invalid parameters", 0

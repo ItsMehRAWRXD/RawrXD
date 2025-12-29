@@ -26,6 +26,11 @@ C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\byte_level_hotpat
 C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\gguf_server_hotpatch.cpp;C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-QtShell.dir\Release\gguf_server_hotpatch.obj
 C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\unified_hotpatch_manager.cpp;C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-QtShell.dir\Release\unified_hotpatch_manager.obj
 C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\proxy_hotpatcher.cpp;C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-QtShell.dir\Release\proxy_hotpatcher.obj
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\masm_feature_manager.cpp;C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-QtShell.dir\Release\masm_feature_manager.obj
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\masm_feature_settings_panel.cpp;C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-QtShell.dir\Release\masm_feature_settings_panel.obj
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\real_time_integration_coordinator.cpp;C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-QtShell.dir\Release\real_time_integration_coordinator.obj
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\real_time_terminal_pool.cpp;C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-QtShell.dir\Release\real_time_terminal_pool.obj
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\real_time_editor_integration.cpp;C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-QtShell.dir\Release\real_time_editor_integration.obj
 C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\orchestration\TaskOrchestrator.cpp;C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-QtShell.dir\Release\TaskOrchestrator.obj
 C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\orchestration\OrchestrationUI.cpp;C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-QtShell.dir\Release\OrchestrationUI.obj
 C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\model_queue.cpp;C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-QtShell.dir\Release\model_queue.obj
@@ -82,6 +87,7 @@ C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\crypto\rawrxd_crypto_rs
 C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\crypto\rawrxd_crypto_aes.cpp;C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-QtShell.dir\Release\rawrxd_crypto_aes.obj
 C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\enterprise_tools_panel.cpp;C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-QtShell.dir\Release\enterprise_tools_panel.obj
 C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\experimental_features_menu.cpp;C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-QtShell.dir\Release\experimental_features_menu.obj
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\masm_orchestration_wrapper.cpp;C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-QtShell.dir\Release\masm_orchestration_wrapper.obj
 C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\widgets\multi_file_search.cpp;C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-QtShell.dir\Release\multi_file_search.obj
 C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\build_stubs.cpp;C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-QtShell.dir\Release\build_stubs.obj
 C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-QtShell_autogen\mocs_compilation_Release.cpp;C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-QtShell.dir\Release\mocs_compilation_Release.obj

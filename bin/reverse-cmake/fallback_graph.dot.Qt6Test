@@ -1,0 +1,18 @@
+digraph "Qt6::Test" {
+node [
+  fontsize = "12"
+];
+    "node27" [ label = "Qt6::Test", shape = doubleoctagon ];
+    "node3" [ label = "Qt6::Core", shape = doubleoctagon ];
+    "node27" -> "node3" [ style = dashed ] // Qt6::Test -> Qt6::Core
+    "node4" [ label = "Qt6::Platform", shape = pentagon ];
+    "node3" -> "node4" [ style = dashed ] // Qt6::Core -> Qt6::Platform
+    "node5" [ label = "Threads::Threads", shape = pentagon ];
+    "node4" -> "node5" [ style = dashed ] // Qt6::Platform -> Threads::Threads
+    "node6" [ label = "WrapAtomic::WrapAtomic", shape = pentagon ];
+    "node3" -> "node6" [ style = dashed ] // Qt6::Core -> WrapAtomic::WrapAtomic
+    "node7" [ label = "mpr", shape = septagon ];
+    "node3" -> "node7" [ style = dashed ] // Qt6::Core -> mpr
+    "node8" [ label = "userenv", shape = septagon ];
+    "node3" -> "node8" [ style = dashed ] // Qt6::Core -> userenv
+}

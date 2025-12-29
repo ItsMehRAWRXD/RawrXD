@@ -1,0 +1,8 @@
+digraph "masm_hotpatch_core" {
+node [
+  fontsize = "12"
+];
+    "node78" [ label = "masm_hotpatch_core", shape = octagon ];
+    "node79" [ label = "masm_hotpatch_core_obj", shape = hexagon ];
+    "node78" -> "node79"  // masm_hotpatch_core -> masm_hotpatch_core_obj
+}

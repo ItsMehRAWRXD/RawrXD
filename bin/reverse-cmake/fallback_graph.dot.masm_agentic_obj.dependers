@@ -1,0 +1,8 @@
+digraph "masm_agentic_obj" {
+node [
+  fontsize = "12"
+];
+    "node76" [ label = "masm_agentic_obj", shape = hexagon ];
+    "node75" [ label = "masm_agentic", shape = octagon ];
+    "node75" -> "node76"  // masm_agentic -> masm_agentic_obj
+}

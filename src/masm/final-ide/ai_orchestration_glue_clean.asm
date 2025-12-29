@@ -50,8 +50,8 @@ ai_orchestration_install PROC
     ; initialize basic orchestration
     
     ; Create an event for timing
-    lea rcx, 0                          ; bManualReset = FALSE, bInitialState = FALSE
-    lea rdx, 0                          ; lpName = NULL
+    xor rcx, rcx                        ; bManualReset = FALSE, bInitialState = FALSE
+    xor rdx, rdx                        ; lpName = NULL
     call CreateEventA
     mov [executionTimerHandle], rax
     
@@ -76,7 +76,7 @@ ai_orchestration_poll PROC
     
     ; Poll timer event (non-blocking)
     mov rcx, [executionTimerHandle]
-    lea rdx, 0                          ; timeout = 0 (non-blocking)
+    xor rdx, rdx                        ; timeout = 0 (non-blocking)
     call WaitForSingleObject
     
     ; If event is signaled, do some work

@@ -1,0 +1,24 @@
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKEFILES\91F84F3C68B81405CC514B0C4C14F7F2\SELF-MASMIZE.RULE
+setlocal
+cd C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init
+if %errorlevel% neq 0 goto :cmEnd
+C:
+if %errorlevel% neq 0 goto :cmEnd
+pwsh -ExecutionPolicy Bypass -File C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/tools/cpp-to-masm-selfcompile.ps1 -SourceDir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init -OutDir C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/bin/self-masmize
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\HIH8E\DOWNLOADS\RAWRXD-PRODUCTION-LAZY-INIT\CMAKELISTS.TXT
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/HiH8e/Downloads/RawrXD-production-lazy-init -BC:/Users/HiH8e/Downloads/RawrXD-production-lazy-init --check-stamp-file C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

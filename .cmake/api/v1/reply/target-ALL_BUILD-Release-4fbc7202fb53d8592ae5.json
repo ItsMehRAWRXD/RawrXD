@@ -1,0 +1,371 @@
+{
+	"backtrace" : 0,
+	"backtraceGraph" : 
+	{
+		"commands" : [],
+		"files" : 
+		[
+			"CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			}
+		]
+	},
+	"codemodelVersion" : 
+	{
+		"major" : 2,
+		"minor" : 9
+	},
+	"dependencies" : 
+	[
+		{
+			"id" : "production_feature_test::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "gpu_inference_benchmark::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "masm_ide_orchestration_obj::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "self_test_gate::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "quant_utils::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "masm_hexmag_stubs_obj::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "RawrXD-QtShell::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "simple_gpu_test::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "test_chat_streaming::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "gguf_hotpatch_tester::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "RawrXD-Agent::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "RawrXD-Win32IDE::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "stub_test::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "minimal_qt_test::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "RawrXD-AgenticIDE::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "test_ide_main::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "RawrXD-Chromatic::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "bench_flash_all_quant::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "bench_flash_asm_puppeteer::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "quant_engine_test::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "quant_correctness_tests::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "bench_deflate_50mb::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "bench_q8_0_end2end::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "test_qmainwindow::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "test_header::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "bench_flash_attn::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "bench_deflate_brutal::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "quant_scalar_smoke::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "benchmark_completions::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "masm_runtime_obj::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "test_agent_coordinator_integration::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "test_kv_cache::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "test_gguf_loader::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "test_agent_coordinator::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "test_gguf_loader_simple::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "brutal_gzip::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "masm_hotpatch_core_obj::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_orchestration_obj::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_ui_obj::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_agentic::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_hotpatch_unified::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_qt6_foundation::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_qt6_foundation_obj::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_runtime::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_hotpatch_core::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_agentic_obj::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_orchestration::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_ui::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_hotpatch_unified_obj::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_hotpatch_test::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_header_gen::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_source_stub_gen::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "RawrXDOrchestration::@b3acaa3a5b8b054b65f5"
+		},
+		{
+			"id" : "RawrXDTerminal::@40684461092d78089b2a"
+		},
+		{
+			"id" : "RawrXDGit::@3a65447891679f8da01c"
+		},
+		{
+			"id" : "ZERO_CHECK::@6890427a1f51a3e7e1df"
+		}
+	],
+	"id" : "ALL_BUILD::@6890427a1f51a3e7e1df",
+	"isGeneratorProvided" : true,
+	"name" : "ALL_BUILD",
+	"orderDependencies" : 
+	[
+		{
+			"id" : "production_feature_test::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "gpu_inference_benchmark::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "masm_ide_orchestration_obj::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "self_test_gate::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "quant_utils::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "masm_hexmag_stubs_obj::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "RawrXD-QtShell::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "simple_gpu_test::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "test_chat_streaming::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "gguf_hotpatch_tester::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "RawrXD-Agent::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "RawrXD-Win32IDE::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "stub_test::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "minimal_qt_test::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "RawrXD-AgenticIDE::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "test_ide_main::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "RawrXD-Chromatic::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "bench_flash_all_quant::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "bench_flash_asm_puppeteer::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "quant_engine_test::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "quant_correctness_tests::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "bench_deflate_50mb::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "bench_q8_0_end2end::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "test_qmainwindow::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "test_header::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "bench_flash_attn::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "bench_deflate_brutal::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "quant_scalar_smoke::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "benchmark_completions::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "masm_runtime_obj::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "test_agent_coordinator_integration::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "test_kv_cache::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "test_gguf_loader::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "test_agent_coordinator::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "test_gguf_loader_simple::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "brutal_gzip::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "masm_hotpatch_core_obj::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_orchestration_obj::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_ui_obj::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_agentic::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_hotpatch_unified::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_qt6_foundation::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_qt6_foundation_obj::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_runtime::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_hotpatch_core::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_agentic_obj::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_orchestration::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_ui::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_hotpatch_unified_obj::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_hotpatch_test::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_header_gen::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_source_stub_gen::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "RawrXDOrchestration::@b3acaa3a5b8b054b65f5"
+		},
+		{
+			"id" : "RawrXDTerminal::@40684461092d78089b2a"
+		},
+		{
+			"id" : "RawrXDGit::@3a65447891679f8da01c"
+		}
+	],
+	"paths" : 
+	{
+		"build" : ".",
+		"source" : "."
+	},
+	"sources" : [],
+	"type" : "UTILITY"
+}

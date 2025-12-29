@@ -1,0 +1,10 @@
+digraph "uxtheme" {
+node [
+  fontsize = "12"
+];
+    "node58" [ label = "uxtheme", shape = septagon ];
+    "node48" [ label = "RawrXD-QtShell", shape = egg ];
+    "node48" -> "node58" [ style = dotted ] // RawrXD-QtShell -> uxtheme
+    "node48" [ label = "RawrXD-QtShell", shape = egg ];
+    "node48" -> "node48"  // RawrXD-QtShell -> RawrXD-QtShell
+}

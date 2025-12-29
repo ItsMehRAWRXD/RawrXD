@@ -1,0 +1,10 @@
+digraph "masm_ide_orchestration_obj" {
+node [
+  fontsize = "12"
+];
+    "node55" [ label = "masm_ide_orchestration_obj", shape = hexagon ];
+    "node48" [ label = "RawrXD-QtShell", shape = egg ];
+    "node48" -> "node55"  // RawrXD-QtShell -> masm_ide_orchestration_obj
+    "node48" [ label = "RawrXD-QtShell", shape = egg ];
+    "node48" -> "node48"  // RawrXD-QtShell -> RawrXD-QtShell
+}

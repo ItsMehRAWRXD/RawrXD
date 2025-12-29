@@ -1,0 +1,565 @@
+============================================================
+RAWRXD MASM64 IDE - FULL BUILD (PHASES 1-4)
+============================================================
+[1/4] Building Infrastructure...
+Microsoft (R) Macro Assembler (x64) Version 14.50.35719.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: dialog_system.asm
+windows.inc(234) : error A2005:symbol redefinition : WndClassEx
+dialog_system.asm(277) : error A2070:invalid instruction operands
+dialog_system.asm(278) : error A2070:invalid instruction operands
+dialog_system.asm(279) : error A2070:invalid instruction operands
+dialog_system.asm(280) : error A2070:invalid instruction operands
+dialog_system.asm(283) : error A2070:invalid instruction operands
+dialog_system.asm(119) : error A2006:undefined symbol : malloc
+dialog_system.asm(160) : error A2006:undefined symbol
+dialog_system.asm(172) : error A2006:undefined symbol
+dialog_system.asm(173) : error A2006:undefined symbol : SW_SHOW
+dialog_system.asm(179) : error A2006:undefined symbol : EnableWindow
+dialog_system.asm(195) : error A2006:undefined symbol : free
+dialog_system.asm(200) : error A2006:undefined symbol : EnableWindow
+dialog_system.asm(216) : error A2006:undefined symbol : free
+dialog_system.asm(221) : error A2006:undefined symbol
+dialog_system.asm(224) : error A2006:undefined symbol : free
+dialog_system.asm(307) : error A2006:undefined symbol : PM_REMOVE
+dialog_system.asm(314) : error A2006:undefined symbol
+dialog_system.asm(320) : error A2006:undefined symbol
+dialog_system.asm(360) : error A2006:undefined symbol : WM_INITDIALOG
+dialog_system.asm(369) : error A2006:undefined symbol
+dialog_system.asm(382) : error A2006:undefined symbol
+dialog_system.asm(390) : error A2006:undefined symbol
+dialog_system.asm(400) : error A2006:undefined symbol
+dialog_system.asm(412) : error A2006:undefined symbol
+dialog_system.asm(421) : error A2006:undefined symbol : WM_CLOSE
+dialog_system.asm(425) : error A2006:undefined symbol
+dialog_system.asm(593) : error A2006:undefined symbol
+dialog_system.asm(612) : error A2006:undefined symbol : free
+Microsoft (R) Macro Assembler (x64) Version 14.50.35719.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: tab_control.asm
+windows.inc(234) : error A2005:symbol redefinition : WndClassEx
+tab_control.asm(24) : error A2008:syntax error : RECT
+tab_control.asm(180) : error A2070:invalid instruction operands
+tab_control.asm(181) : error A2070:invalid instruction operands
+tab_control.asm(182) : error A2070:invalid instruction operands
+tab_control.asm(221) : error A2008:syntax error : title
+tab_control.asm(303) : error A2008:syntax error : title
+tab_control.asm(83) : error A2006:undefined symbol : malloc
+tab_control.asm(110) : error A2006:undefined symbol : malloc
+tab_control.asm(132) : error A2006:undefined symbol
+tab_control.asm(144) : error A2006:undefined symbol : free
+tab_control.asm(150) : error A2006:undefined symbol : free
+tab_control.asm(152) : error A2006:undefined symbol : free
+tab_control.asm(184) : error A2006:undefined symbol : WS_CLIPSIBLINGS
+tab_control.asm(186) : error A2006:undefined symbol : WC_TABCONTROL
+tab_control.asm(214) : error A2006:undefined symbol : malloc
+tab_control.asm(225) : error A2006:undefined symbol : strlen
+tab_control.asm(228) : error A2006:undefined symbol
+tab_control.asm(278) : error A2006:undefined symbol : free
+tab_control.asm(301) : error A2006:undefined symbol : TCITEM
+tab_control.asm(302) : error A2006:undefined symbol : TCIF_TEXT
+tab_control.asm(309) : error A2006:undefined symbol
+tab_control.asm(313) : error A2006:undefined symbol : TCM_INSERTITEM
+tab_control.asm(365) : error A2006:undefined symbol
+tab_control.asm(367) : error A2022:instruction operands must be the same size
+tab_control.asm(417) : error A2006:undefined symbol
+tab_control.asm(422) : error A2006:undefined symbol : SW_SHOW
+tab_control.asm(456) : error A2006:undefined symbol
+tab_control.asm(519) : error A2006:undefined symbol : not_active
+tab_control.asm(547) : error A2006:undefined symbol
+tab_control.asm(548) : error A2006:undefined symbol : TCM_DELETEITEM
+tab_control.asm(549) : error A2022:instruction operands must be the same size
+tab_control.asm(559) : error A2006:undefined symbol
+tab_control.asm(568) : error A2006:undefined symbol : free
+tab_control.asm(627) : error A2006:undefined symbol
+tab_control.asm(672) : error A2006:undefined symbol
+tab_control.asm(684) : error A2006:undefined symbol : free
+tab_control.asm(689) : error A2006:undefined symbol : free
+Microsoft (R) Macro Assembler (x64) Version 14.50.35719.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: listview_control.asm
+windows.inc(234) : error A2005:symbol redefinition : WndClassEx
+listview_control.asm(30) : error A2008:syntax error : width
+listview_control.asm(212) : error A2070:invalid instruction operands
+listview_control.asm(213) : error A2070:invalid instruction operands
+listview_control.asm(214) : error A2070:invalid instruction operands
+listview_control.asm(268) : error A2008:syntax error : title
+listview_control.asm(351) : error A2008:syntax error : title
+listview_control.asm(91) : error A2006:undefined symbol : malloc
+listview_control.asm(118) : error A2006:undefined symbol : malloc
+listview_control.asm(132) : error A2006:undefined symbol : malloc
+listview_control.asm(154) : error A2006:undefined symbol
+listview_control.asm(166) : error A2006:undefined symbol : free
+listview_control.asm(172) : error A2006:undefined symbol : free
+listview_control.asm(174) : error A2006:undefined symbol : free
+listview_control.asm(180) : error A2006:undefined symbol : free
+listview_control.asm(182) : error A2006:undefined symbol : free
+listview_control.asm(184) : error A2006:undefined symbol : free
+listview_control.asm(216) : error A2006:undefined symbol : LVS_REPORT
+listview_control.asm(218) : error A2006:undefined symbol : WC_LISTVIEW
+listview_control.asm(261) : error A2006:undefined symbol : malloc
+listview_control.asm(269) : error A2081:missing operand after unary operator
+listview_control.asm(317) : error A2006:undefined symbol : free
+listview_control.asm(345) : error A2006:undefined symbol : LVCOLUMN
+listview_control.asm(347) : error A2006:undefined symbol : LVCF_TEXT
+listview_control.asm(349) : error A2081:missing operand after unary operator
+listview_control.asm(359) : error A2006:undefined symbol
+listview_control.asm(362) : error A2006:undefined symbol : LVM_INSERTCOLUMN
+listview_control.asm(399) : error A2006:undefined symbol : malloc
+listview_control.asm(448) : error A2006:undefined symbol : free
+listview_control.asm(471) : error A2006:undefined symbol : LVITEM
+listview_control.asm(472) : error A2006:undefined symbol : LVIF_TEXT
+listview_control.asm(485) : error A2006:undefined symbol : LVIF_IMAGE
+listview_control.asm(490) : error A2006:undefined symbol
+listview_control.asm(492) : error A2006:undefined symbol : LVM_INSERTITEM
+listview_control.asm(519) : error A2006:undefined symbol
+listview_control.asm(520) : error A2006:undefined symbol : LVM_GETNEXTITEM
+listview_control.asm(522) : error A2006:undefined symbol : LVNI_SELECTED
+listview_control.asm(547) : error A2006:undefined symbol
+listview_control.asm(548) : error A2006:undefined symbol : LVM_SETITEMSTATE
+listview_control.asm(552) : error A2006:undefined symbol : LVIS_SELECTED
+listview_control.asm(556) : error A2006:undefined symbol
+listview_control.asm(557) : error A2006:undefined symbol : LVM_SETITEMSTATE
+listview_control.asm(558) : error A2022:instruction operands must be the same size
+listview_control.asm(560) : error A2006:undefined symbol : LVIS_SELECTED
+listview_control.asm(561) : error A2006:undefined symbol : LVIS_SELECTED
+listview_control.asm(614) : error A2006:undefined symbol
+listview_control.asm(615) : error A2006:undefined symbol : LVM_DELETEITEM
+listview_control.asm(616) : error A2022:instruction operands must be the same size
+listview_control.asm(627) : error A2006:undefined symbol : free
+listview_control.asm(675) : error A2006:undefined symbol
+listview_control.asm(676) : error A2006:undefined symbol : LVM_DELETEALLITEMS
+listview_control.asm(697) : error A2006:undefined symbol : free
+listview_control.asm(757) : error A2006:undefined symbol
+listview_control.asm(769) : error A2006:undefined symbol : free
+listview_control.asm(777) : error A2006:undefined symbol : free
+listview_control.asm(782) : error A2006:undefined symbol : free
+Microsoft (R) Macro Assembler (x64) Version 14.50.35719.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: registry_persistence.asm
+windows.inc(234) : error A2005:symbol redefinition : WndClassEx
+registry_persistence.asm(10) : fatal error A1000:cannot open file : "settings_dialog.inc"
+Microsoft (R) Macro Assembler (x64) Version 14.50.35719.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: qt6_settings_dialog.asm
+windows.inc(234) : error A2005:symbol redefinition : WndClassEx
+qt6_settings_dialog.asm(13) : fatal error A1000:cannot open file : "dialog_system.inc"
+[2/4] Building 10 Core Components...
+Microsoft (R) Macro Assembler (x64) Version 14.50.35719.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: cpp_to_masm_terminal_manager.asm
+cpp_to_masm_terminal_manager.asm(164) : error A2008:syntax error : .
+cpp_to_masm_terminal_manager.asm(167) : error A2008:syntax error : .
+cpp_to_masm_terminal_manager.asm(220) : error A2008:syntax error : .
+cpp_to_masm_terminal_manager.asm(226) : error A2008:syntax error : .
+cpp_to_masm_terminal_manager.asm(234) : error A2008:syntax error : .
+cpp_to_masm_terminal_manager.asm(275) : error A2008:syntax error : .
+cpp_to_masm_terminal_manager.asm(409) : error A2008:syntax error : .
+cpp_to_masm_terminal_manager.asm(415) : error A2008:syntax error : .
+cpp_to_masm_terminal_manager.asm(421) : error A2008:syntax error : .
+cpp_to_masm_terminal_manager.asm(427) : error A2008:syntax error : .
+cpp_to_masm_terminal_manager.asm(433) : error A2008:syntax error : .
+cpp_to_masm_terminal_manager.asm(440) : error A2008:syntax error : .
+cpp_to_masm_terminal_manager.asm(446) : error A2008:syntax error : .
+cpp_to_masm_terminal_manager.asm(98) : error A2009:syntax error in expression
+cpp_to_masm_terminal_manager.asm(99) : error A2009:syntax error in expression
+cpp_to_masm_terminal_manager.asm(100) : error A2009:syntax error in expression
+cpp_to_masm_terminal_manager.asm(101) : error A2009:syntax error in expression
+cpp_to_masm_terminal_manager.asm(102) : error A2009:syntax error in expression
+cpp_to_masm_terminal_manager.asm(103) : error A2009:syntax error in expression
+cpp_to_masm_terminal_manager.asm(104) : error A2009:syntax error in expression
+cpp_to_masm_terminal_manager.asm(105) : error A2009:syntax error in expression
+cpp_to_masm_terminal_manager.asm(131) : error A2006:undefined symbol : pipe_error
+cpp_to_masm_terminal_manager.asm(138) : error A2006:undefined symbol : pipe_error
+cpp_to_masm_terminal_manager.asm(145) : error A2006:undefined symbol : pipe_error
+cpp_to_masm_terminal_manager.asm(158) : error A2006:undefined symbol : use_cmd
+cpp_to_masm_terminal_manager.asm(162) : error A2006:undefined symbol : create_process
+cpp_to_masm_terminal_manager.asm(172) : error A2009:syntax error in expression
+cpp_to_masm_terminal_manager.asm(173) : error A2206:missing operator in expression
+cpp_to_masm_terminal_manager.asm(176) : error A2206:missing operator in expression
+cpp_to_masm_terminal_manager.asm(179) : error A2206:missing operator in expression
+cpp_to_masm_terminal_manager.asm(182) : error A2206:missing operator in expression
+cpp_to_masm_terminal_manager.asm(202) : error A2006:undefined symbol : create_error
+cpp_to_masm_terminal_manager.asm(205) : error A2009:syntax error in expression
+cpp_to_masm_terminal_manager.asm(216) : error A2006:undefined symbol : skip_started
+cpp_to_masm_terminal_manager.asm(255) : error A2009:syntax error in expression
+cpp_to_masm_terminal_manager.asm(256) : error A2006:undefined symbol : not_running
+cpp_to_masm_terminal_manager.asm(269) : error A2009:syntax error in expression
+cpp_to_masm_terminal_manager.asm(299) : error A2009:syntax error in expression
+cpp_to_masm_terminal_manager.asm(364) : error A2022:instruction operands must be the same size
+cpp_to_masm_terminal_manager.asm(406) : error A2006:undefined symbol : skip_process
+cpp_to_masm_terminal_manager.asm(413) : error A2006:undefined symbol : skip_stdout_read
+cpp_to_masm_terminal_manager.asm(419) : error A2006:undefined symbol : skip_stdout_write
+cpp_to_masm_terminal_manager.asm(425) : error A2006:undefined symbol : skip_stderr_read
+cpp_to_masm_terminal_manager.asm(431) : error A2006:undefined symbol : skip_stderr_write
+cpp_to_masm_terminal_manager.asm(438) : error A2006:undefined symbol : skip_out_buf
+cpp_to_masm_terminal_manager.asm(444) : error A2006:undefined symbol : skip_err_buf
+Microsoft (R) Macro Assembler (x64) Version 14.50.35719.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: cpp_to_masm_theme_manager.asm
+cpp_to_masm_theme_manager.asm(145) : error A2070:invalid instruction operands
+cpp_to_masm_theme_manager.asm(70) : error A2009:syntax error in expression
+cpp_to_masm_theme_manager.asm(73) : error A2009:syntax error in expression
+cpp_to_masm_theme_manager.asm(103) : error A2009:syntax error in expression
+cpp_to_masm_theme_manager.asm(106) : error A2009:syntax error in expression
+Microsoft (R) Macro Assembler (x64) Version 14.50.35719.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: cpp_to_masm_ai_chat_panel.asm
+cpp_to_masm_ai_chat_panel.asm(174) : error A2008:syntax error : .
+cpp_to_masm_ai_chat_panel.asm(233) : error A2008:syntax error : .
+cpp_to_masm_ai_chat_panel.asm(238) : error A2008:syntax error : .
+cpp_to_masm_ai_chat_panel.asm(271) : error A2008:syntax error : .
+cpp_to_masm_ai_chat_panel.asm(317) : error A2008:syntax error : .
+cpp_to_masm_ai_chat_panel.asm(388) : error A2008:syntax error : .
+cpp_to_masm_ai_chat_panel.asm(403) : error A2008:syntax error : .
+cpp_to_masm_ai_chat_panel.asm(407) : error A2008:syntax error : .
+cpp_to_masm_ai_chat_panel.asm(431) : error A2008:syntax error : .
+cpp_to_masm_ai_chat_panel.asm(438) : error A2008:syntax error : .
+cpp_to_masm_ai_chat_panel.asm(444) : error A2008:syntax error : .
+cpp_to_masm_ai_chat_panel.asm(450) : error A2008:syntax error : .
+cpp_to_masm_ai_chat_panel.asm(107) : error A2009:syntax error in expression
+cpp_to_masm_ai_chat_panel.asm(133) : error A2006:undefined symbol : no_room
+cpp_to_masm_ai_chat_panel.asm(141) : error A2009:syntax error in expression
+cpp_to_masm_ai_chat_panel.asm(162) : error A2009:syntax error in expression
+cpp_to_masm_ai_chat_panel.asm(197) : error A2006:undefined symbol : no_room
+cpp_to_masm_ai_chat_panel.asm(205) : error A2009:syntax error in expression
+cpp_to_masm_ai_chat_panel.asm(206) : error A2009:syntax error in expression
+cpp_to_masm_ai_chat_panel.asm(225) : error A2009:syntax error in expression
+cpp_to_masm_ai_chat_panel.asm(228) : error A2006:undefined symbol : not_streaming
+cpp_to_masm_ai_chat_panel.asm(258) : error A2006:undefined symbol : buffer_full
+cpp_to_masm_ai_chat_panel.asm(296) : error A2009:syntax error in expression
+cpp_to_masm_ai_chat_panel.asm(314) : error A2006:undefined symbol : skip_free
+cpp_to_masm_ai_chat_panel.asm(374) : error A2009:syntax error in expression
+cpp_to_masm_ai_chat_panel.asm(390) : error A2006:undefined symbol : clear_done
+cpp_to_masm_ai_chat_panel.asm(398) : error A2006:undefined symbol : next_msg
+cpp_to_masm_ai_chat_panel.asm(405) : error A2006:undefined symbol : clear_loop
+cpp_to_masm_ai_chat_panel.asm(429) : error A2006:undefined symbol : skip_msgs
+cpp_to_masm_ai_chat_panel.asm(436) : error A2006:undefined symbol : skip_stream
+cpp_to_masm_ai_chat_panel.asm(442) : error A2006:undefined symbol : skip_ctx
+cpp_to_masm_ai_chat_panel.asm(448) : error A2006:undefined symbol : skip_path
+Microsoft (R) Macro Assembler (x64) Version 14.50.35719.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: cpp_to_masm_compliance_logger.asm
+cpp_to_masm_compliance_logger.asm(176) : error A2008:syntax error : .
+cpp_to_masm_compliance_logger.asm(304) : error A2008:syntax error : .
+cpp_to_masm_compliance_logger.asm(310) : error A2008:syntax error : .
+cpp_to_masm_compliance_logger.asm(317) : error A2008:syntax error : .
+cpp_to_masm_compliance_logger.asm(141) : error A2006:undefined symbol : buffer_full
+cpp_to_masm_compliance_logger.asm(161) : error A2009:syntax error in expression
+cpp_to_masm_compliance_logger.asm(162) : error A2009:syntax error in expression
+cpp_to_masm_compliance_logger.asm(248) : error A2022:instruction operands must be the same size
+cpp_to_masm_compliance_logger.asm(302) : error A2006:undefined symbol : skip_name
+cpp_to_masm_compliance_logger.asm(308) : error A2006:undefined symbol : skip_entries
+cpp_to_masm_compliance_logger.asm(314) : error A2006:undefined symbol : INVALID_HANDLE_VALUE
+cpp_to_masm_compliance_logger.asm(315) : error A2006:undefined symbol : skip_close
+Microsoft (R) Macro Assembler (x64) Version 14.50.35719.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: cpp_to_masm_model_loader_thread.asm
+cpp_to_masm_model_loader_thread.asm(92) : error A2008:syntax error : .
+cpp_to_masm_model_loader_thread.asm(105) : error A2008:syntax error : .
+cpp_to_masm_model_loader_thread.asm(109) : error A2008:syntax error : .
+cpp_to_masm_model_loader_thread.asm(122) : error A2008:syntax error : .
+cpp_to_masm_model_loader_thread.asm(261) : error A2008:syntax error : .
+cpp_to_masm_model_loader_thread.asm(309) : error A2008:syntax error : .
+cpp_to_masm_model_loader_thread.asm(316) : error A2008:syntax error : .
+cpp_to_masm_model_loader_thread.asm(77) : error A2009:syntax error in expression
+cpp_to_masm_model_loader_thread.asm(93) : error A2009:syntax error in expression
+cpp_to_masm_model_loader_thread.asm(94) : error A2006:undefined symbol : load_canceled
+cpp_to_masm_model_loader_thread.asm(99) : error A2006:undefined symbol : skip_progress
+cpp_to_masm_model_loader_thread.asm(107) : error A2006:undefined symbol : load_loop
+cpp_to_masm_model_loader_thread.asm(116) : error A2006:undefined symbol : skip_complete
+cpp_to_masm_model_loader_thread.asm(124) : error A2009:syntax error in expression
+cpp_to_masm_model_loader_thread.asm(218) : error A2009:syntax error in expression
+cpp_to_masm_model_loader_thread.asm(229) : error A2009:syntax error in expression
+cpp_to_masm_model_loader_thread.asm(240) : error A2009:syntax error in expression
+cpp_to_masm_model_loader_thread.asm(256) : error A2006:undefined symbol : timeout
+cpp_to_masm_model_loader_thread.asm(297) : error A2009:syntax error in expression
+cpp_to_masm_model_loader_thread.asm(307) : error A2006:undefined symbol : skip_close
+cpp_to_masm_model_loader_thread.asm(314) : error A2006:undefined symbol : skip_path
+cpp_to_masm_model_loader_thread.asm(134) : error A2220:Missing .ENDPROLOG
+Microsoft (R) Macro Assembler (x64) Version 14.50.35719.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: cpp_to_masm_metrics_collector.asm
+cpp_to_masm_metrics_collector.asm(69) : error A2179:structure improperly initialized
+cpp_to_masm_metrics_collector.asm(69) : error A2008:syntax error : in structure
+cpp_to_masm_metrics_collector.asm(187) : error A2008:syntax error : .
+cpp_to_masm_metrics_collector.asm(201) : error A2008:syntax error : .
+cpp_to_masm_metrics_collector.asm(225) : error A2008:syntax error : .
+cpp_to_masm_metrics_collector.asm(240) : error A2008:syntax error : .
+cpp_to_masm_metrics_collector.asm(270) : error A2008:syntax error : .
+cpp_to_masm_metrics_collector.asm(285) : error A2008:syntax error : .
+cpp_to_masm_metrics_collector.asm(288) : error A2008:syntax error : .
+cpp_to_masm_metrics_collector.asm(292) : error A2008:syntax error : .
+cpp_to_masm_metrics_collector.asm(306) : error A2008:syntax error : .
+cpp_to_masm_metrics_collector.asm(372) : error A2008:syntax error : .
+cpp_to_masm_metrics_collector.asm(384) : error A2008:syntax error : ALIGN
+cpp_to_masm_metrics_collector.asm(118) : error A2006:undefined symbol : aggregates
+cpp_to_masm_metrics_collector.asm(123) : error A2006:undefined symbol : aggregates
+cpp_to_masm_metrics_collector.asm(143) : error A2009:syntax error in expression
+cpp_to_masm_metrics_collector.asm(189) : error A2006:undefined symbol : not_found
+cpp_to_masm_metrics_collector.asm(196) : error A2006:undefined symbol : found
+cpp_to_masm_metrics_collector.asm(199) : error A2006:undefined symbol : find_loop
+cpp_to_masm_metrics_collector.asm(217) : error A2006:undefined symbol : skip_tokens_per_sec
+cpp_to_masm_metrics_collector.asm(227) : error A2009:syntax error in expression
+cpp_to_masm_metrics_collector.asm(262) : error A2006:undefined symbol : aggregates
+cpp_to_masm_metrics_collector.asm(263) : error A2006:undefined symbol : aggregates
+cpp_to_masm_metrics_collector.asm(264) : error A2006:undefined symbol : aggregates
+cpp_to_masm_metrics_collector.asm(272) : error A2006:undefined symbol : aggregate_done
+cpp_to_masm_metrics_collector.asm(279) : error A2009:syntax error in expression
+cpp_to_masm_metrics_collector.asm(280) : error A2006:undefined symbol : not_success
+cpp_to_masm_metrics_collector.asm(282) : error A2006:undefined symbol : aggregates
+cpp_to_masm_metrics_collector.asm(283) : error A2006:undefined symbol : next_aggregate
+cpp_to_masm_metrics_collector.asm(286) : error A2006:undefined symbol : aggregates
+cpp_to_masm_metrics_collector.asm(290) : error A2006:undefined symbol : aggregate_loop
+cpp_to_masm_metrics_collector.asm(293) : error A2006:undefined symbol : aggregates
+cpp_to_masm_metrics_collector.asm(294) : error A2006:undefined symbol : aggregates
+cpp_to_masm_metrics_collector.asm(295) : error A2006:undefined symbol : aggregates
+cpp_to_masm_metrics_collector.asm(299) : error A2006:undefined symbol : skip_avg
+cpp_to_masm_metrics_collector.asm(304) : error A2006:undefined symbol : aggregates
+cpp_to_masm_metrics_collector.asm(309) : error A2006:undefined symbol : aggregates
+cpp_to_masm_metrics_collector.asm(310) : error A2006:undefined symbol : aggregates
+cpp_to_masm_metrics_collector.asm(311) : error A2006:undefined symbol : aggregates
+cpp_to_masm_metrics_collector.asm(341) : error A2006:undefined symbol : aggregates
+cpp_to_masm_metrics_collector.asm(351) : error A2009:syntax error in expression
+cpp_to_masm_metrics_collector.asm(352) : error A2009:syntax error in expression
+cpp_to_masm_metrics_collector.asm(353) : error A2009:syntax error in expression
+cpp_to_masm_metrics_collector.asm(370) : error A2006:undefined symbol : skip_metrics
+Microsoft (R) Macro Assembler (x64) Version 14.50.35719.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: cpp_to_masm_backup_manager.asm
+cpp_to_masm_backup_manager.asm(184) : error A2008:syntax error : .
+cpp_to_masm_backup_manager.asm(228) : error A2008:syntax error : .
+cpp_to_masm_backup_manager.asm(249) : error A2008:syntax error : .
+cpp_to_masm_backup_manager.asm(264) : error A2008:syntax error : .
+cpp_to_masm_backup_manager.asm(288) : error A2008:syntax error : .
+cpp_to_masm_backup_manager.asm(302) : error A2008:syntax error : .
+cpp_to_masm_backup_manager.asm(328) : error A2008:syntax error : .
+cpp_to_masm_backup_manager.asm(343) : error A2008:syntax error : .
+cpp_to_masm_backup_manager.asm(361) : error A2008:syntax error : .
+cpp_to_masm_backup_manager.asm(383) : error A2008:syntax error : .
+cpp_to_masm_backup_manager.asm(398) : error A2008:syntax error : .
+cpp_to_masm_backup_manager.asm(409) : error A2008:syntax error : .
+cpp_to_masm_backup_manager.asm(426) : error A2008:syntax error : .
+cpp_to_masm_backup_manager.asm(441) : error A2008:syntax error : .
+cpp_to_masm_backup_manager.asm(445) : error A2008:syntax error : .
+cpp_to_masm_backup_manager.asm(479) : error A2008:syntax error : .
+cpp_to_masm_backup_manager.asm(493) : error A2008:syntax error : .
+cpp_to_masm_backup_manager.asm(516) : error A2008:syntax error : .
+cpp_to_masm_backup_manager.asm(523) : error A2008:syntax error : .
+cpp_to_masm_backup_manager.asm(534) : error A2008:syntax error : ALIGN
+cpp_to_masm_backup_manager.asm(124) : error A2009:syntax error in expression
+cpp_to_masm_backup_manager.asm(125) : error A2009:syntax error in expression
+cpp_to_masm_backup_manager.asm(150) : error A2006:undefined symbol : capacity_exceeded
+cpp_to_masm_backup_manager.asm(154) : error A2009:syntax error in expression
+cpp_to_masm_backup_manager.asm(179) : error A2022:instruction operands must be the same size
+cpp_to_masm_backup_manager.asm(205) : error A2006:undefined symbol : inc_failed
+cpp_to_masm_backup_manager.asm(208) : error A2009:syntax error in expression
+cpp_to_masm_backup_manager.asm(224) : error A2022:instruction operands must be the same size
+cpp_to_masm_backup_manager.asm(251) : error A2006:undefined symbol : backup_not_found
+cpp_to_masm_backup_manager.asm(259) : error A2006:undefined symbol : backup_found
+cpp_to_masm_backup_manager.asm(262) : error A2006:undefined symbol : find_backup
+cpp_to_masm_backup_manager.asm(281) : error A2006:undefined symbol : rto_ok
+cpp_to_masm_backup_manager.asm(290) : error A2009:syntax error in expression
+cpp_to_masm_backup_manager.asm(330) : error A2006:undefined symbol : verify_not_found
+cpp_to_masm_backup_manager.asm(338) : error A2006:undefined symbol : verify_found
+cpp_to_masm_backup_manager.asm(341) : error A2006:undefined symbol : verify_find
+cpp_to_masm_backup_manager.asm(345) : error A2009:syntax error in expression
+cpp_to_masm_backup_manager.asm(354) : error A2022:instruction operands must be the same size
+cpp_to_masm_backup_manager.asm(385) : error A2006:undefined symbol : restore_not_found
+cpp_to_masm_backup_manager.asm(393) : error A2006:undefined symbol : restore_found
+cpp_to_masm_backup_manager.asm(396) : error A2006:undefined symbol : restore_find
+cpp_to_masm_backup_manager.asm(428) : error A2006:undefined symbol : info_not_found
+cpp_to_masm_backup_manager.asm(436) : error A2006:undefined symbol : info_found
+cpp_to_masm_backup_manager.asm(439) : error A2006:undefined symbol : info_find
+cpp_to_masm_backup_manager.asm(481) : error A2006:undefined symbol : cleanup_done
+cpp_to_masm_backup_manager.asm(491) : error A2006:undefined symbol : cleanup_loop
+cpp_to_masm_backup_manager.asm(513) : error A2006:undefined symbol : skip_backups
+cpp_to_masm_backup_manager.asm(520) : error A2006:undefined symbol : skip_basedir
+Microsoft (R) Macro Assembler (x64) Version 14.50.35719.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: cpp_to_masm_bpe_tokenizer.asm
+cpp_to_masm_bpe_tokenizer.asm(232) : error A2008:syntax error : .
+cpp_to_masm_bpe_tokenizer.asm(252) : error A2008:syntax error : .
+cpp_to_masm_bpe_tokenizer.asm(292) : error A2008:syntax error : .
+cpp_to_masm_bpe_tokenizer.asm(304) : error A2008:syntax error : .
+cpp_to_masm_bpe_tokenizer.asm(319) : error A2008:syntax error : .
+cpp_to_masm_bpe_tokenizer.asm(335) : error A2008:syntax error : .
+cpp_to_masm_bpe_tokenizer.asm(339) : error A2008:syntax error : .
+cpp_to_masm_bpe_tokenizer.asm(378) : error A2008:syntax error : .
+cpp_to_masm_bpe_tokenizer.asm(393) : error A2008:syntax error : .
+cpp_to_masm_bpe_tokenizer.asm(397) : error A2008:syntax error : .
+cpp_to_masm_bpe_tokenizer.asm(446) : error A2008:syntax error : .
+cpp_to_masm_bpe_tokenizer.asm(469) : error A2008:syntax error : .
+cpp_to_masm_bpe_tokenizer.asm(479) : error A2008:syntax error : .
+cpp_to_masm_bpe_tokenizer.asm(546) : error A2008:syntax error : .
+cpp_to_masm_bpe_tokenizer.asm(560) : error A2008:syntax error : .
+cpp_to_masm_bpe_tokenizer.asm(564) : error A2008:syntax error : .
+cpp_to_masm_bpe_tokenizer.asm(571) : error A2008:syntax error : .
+cpp_to_masm_bpe_tokenizer.asm(578) : error A2008:syntax error : .
+cpp_to_masm_bpe_tokenizer.asm(585) : error A2008:syntax error : .
+cpp_to_masm_bpe_tokenizer.asm(113) : error A2022:instruction operands must be the same size
+cpp_to_masm_bpe_tokenizer.asm(135) : error A2009:syntax error in expression
+cpp_to_masm_bpe_tokenizer.asm(168) : error A2022:instruction operands must be the same size
+cpp_to_masm_bpe_tokenizer.asm(171) : error A2022:instruction operands must be the same size
+cpp_to_masm_bpe_tokenizer.asm(192) : error A2022:instruction operands must be the same size
+cpp_to_masm_bpe_tokenizer.asm(195) : error A2022:instruction operands must be the same size
+cpp_to_masm_bpe_tokenizer.asm(234) : error A2006:undefined symbol : encode_done
+cpp_to_masm_bpe_tokenizer.asm(237) : error A2009:syntax error in expression
+cpp_to_masm_bpe_tokenizer.asm(244) : error A2006:undefined symbol : encode_done
+cpp_to_masm_bpe_tokenizer.asm(250) : error A2006:undefined symbol : encode_loop
+cpp_to_masm_bpe_tokenizer.asm(294) : error A2006:undefined symbol : decode_done
+cpp_to_masm_bpe_tokenizer.asm(306) : error A2006:undefined symbol : token_not_found
+cpp_to_masm_bpe_tokenizer.asm(314) : error A2006:undefined symbol : token_found
+cpp_to_masm_bpe_tokenizer.asm(317) : error A2006:undefined symbol : find_token
+cpp_to_masm_bpe_tokenizer.asm(337) : error A2006:undefined symbol : decode_loop
+cpp_to_masm_bpe_tokenizer.asm(341) : error A2009:syntax error in expression
+cpp_to_masm_bpe_tokenizer.asm(380) : error A2006:undefined symbol : token_text_not_found
+cpp_to_masm_bpe_tokenizer.asm(388) : error A2006:undefined symbol : token_text_found
+cpp_to_masm_bpe_tokenizer.asm(391) : error A2006:undefined symbol : search_token
+cpp_to_masm_bpe_tokenizer.asm(415) : error A2006:undefined symbol : vocab_full
+cpp_to_masm_bpe_tokenizer.asm(444) : error A2009:syntax error in expression
+cpp_to_masm_bpe_tokenizer.asm(464) : error A2009:syntax error in expression
+cpp_to_masm_bpe_tokenizer.asm(471) : error A2006:undefined symbol : train_done
+cpp_to_masm_bpe_tokenizer.asm(477) : error A2006:undefined symbol : train_loop
+cpp_to_masm_bpe_tokenizer.asm(548) : error A2006:undefined symbol : vocab_freed
+cpp_to_masm_bpe_tokenizer.asm(557) : error A2006:undefined symbol : skip_vocab_text
+cpp_to_masm_bpe_tokenizer.asm(562) : error A2006:undefined symbol : free_vocab_loop
+cpp_to_masm_bpe_tokenizer.asm(568) : error A2006:undefined symbol : skip_vocab_array
+cpp_to_masm_bpe_tokenizer.asm(575) : error A2006:undefined symbol : skip_merges
+cpp_to_masm_bpe_tokenizer.asm(582) : error A2006:undefined symbol : skip_buffer
+Microsoft (R) Macro Assembler (x64) Version 14.50.35719.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: cpp_to_masm_inference_engine.asm
+cpp_to_masm_inference_engine.asm(230) : error A2008:syntax error : .
+cpp_to_masm_inference_engine.asm(252) : error A2008:syntax error : .
+cpp_to_masm_inference_engine.asm(267) : error A2008:syntax error : .
+cpp_to_masm_inference_engine.asm(272) : error A2008:syntax error : .
+cpp_to_masm_inference_engine.asm(341) : error A2008:syntax error : mod
+cpp_to_masm_inference_engine.asm(359) : error A2008:syntax error : .
+cpp_to_masm_inference_engine.asm(368) : error A2008:syntax error : .
+cpp_to_masm_inference_engine.asm(393) : error A2008:syntax error : .
+cpp_to_masm_inference_engine.asm(404) : error A2008:syntax error : .
+cpp_to_masm_inference_engine.asm(446) : error A2008:syntax error : .
+cpp_to_masm_inference_engine.asm(461) : error A2008:syntax error : .
+cpp_to_masm_inference_engine.asm(465) : error A2008:syntax error : .
+cpp_to_masm_inference_engine.asm(518) : error A2008:syntax error : .
+cpp_to_masm_inference_engine.asm(525) : error A2008:syntax error : .
+cpp_to_masm_inference_engine.asm(532) : error A2008:syntax error : .
+cpp_to_masm_inference_engine.asm(543) : error A2008:syntax error : ALIGN
+cpp_to_masm_inference_engine.asm(151) : error A2206:missing operator in expression
+cpp_to_masm_inference_engine.asm(152) : error A2009:syntax error in expression
+cpp_to_masm_inference_engine.asm(184) : error A2006:undefined symbol : load_error
+cpp_to_masm_inference_engine.asm(213) : error A2009:syntax error in expression
+cpp_to_masm_inference_engine.asm(216) : error A2009:syntax error in expression
+cpp_to_masm_inference_engine.asm(234) : error A2206:missing operator in expression
+cpp_to_masm_inference_engine.asm(254) : error A2006:undefined symbol : model_not_found
+cpp_to_masm_inference_engine.asm(262) : error A2006:undefined symbol : model_found
+cpp_to_masm_inference_engine.asm(265) : error A2006:undefined symbol : find_model
+cpp_to_masm_inference_engine.asm(308) : error A2009:syntax error in expression
+cpp_to_masm_inference_engine.asm(309) : error A2009:syntax error in expression
+cpp_to_masm_inference_engine.asm(312) : error A2009:syntax error in expression
+cpp_to_masm_inference_engine.asm(332) : error A2009:syntax error in expression
+cpp_to_masm_inference_engine.asm(333) : error A2006:undefined symbol : generation_done
+cpp_to_masm_inference_engine.asm(345) : error A2022:instruction operands must be the same size
+cpp_to_masm_inference_engine.asm(349) : error A2009:syntax error in expression
+cpp_to_masm_inference_engine.asm(350) : error A2009:syntax error in expression
+cpp_to_masm_inference_engine.asm(354) : error A2006:undefined symbol : mark_done
+cpp_to_masm_inference_engine.asm(360) : error A2009:syntax error in expression
+cpp_to_masm_inference_engine.asm(364) : error A2022:instruction operands must be the same size
+cpp_to_masm_inference_engine.asm(369) : error A2206:missing operator in expression
+cpp_to_masm_inference_engine.asm(395) : error A2006:undefined symbol : copy_done
+cpp_to_masm_inference_engine.asm(402) : error A2006:undefined symbol : copy_loop
+cpp_to_masm_inference_engine.asm(405) : error A2009:syntax error in expression
+cpp_to_masm_inference_engine.asm(431) : error A2009:syntax error in expression
+cpp_to_masm_inference_engine.asm(448) : error A2006:undefined symbol : info_not_found
+cpp_to_masm_inference_engine.asm(456) : error A2006:undefined symbol : info_found
+cpp_to_masm_inference_engine.asm(459) : error A2006:undefined symbol : find_info
+cpp_to_masm_inference_engine.asm(496) : error A2009:syntax error in expression
+cpp_to_masm_inference_engine.asm(497) : error A2009:syntax error in expression
+cpp_to_masm_inference_engine.asm(498) : error A2009:syntax error in expression
+cpp_to_masm_inference_engine.asm(515) : error A2006:undefined symbol : skip_models
+cpp_to_masm_inference_engine.asm(522) : error A2006:undefined symbol : skip_buffer
+cpp_to_masm_inference_engine.asm(529) : error A2006:undefined symbol : skip_genstate
+Microsoft (R) Macro Assembler (x64) Version 14.50.35719.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: cpp_to_masm_streaming_inference.asm
+cpp_to_masm_streaming_inference.asm(227) : error A2008:syntax error : .
+cpp_to_masm_streaming_inference.asm(232) : error A2008:syntax error : .
+cpp_to_masm_streaming_inference.asm(254) : error A2008:syntax error : .
+cpp_to_masm_streaming_inference.asm(276) : error A2008:syntax error : .
+cpp_to_masm_streaming_inference.asm(311) : error A2008:syntax error : .
+cpp_to_masm_streaming_inference.asm(464) : error A2008:syntax error : .
+cpp_to_masm_streaming_inference.asm(471) : error A2008:syntax error : .
+cpp_to_masm_streaming_inference.asm(478) : error A2008:syntax error : .
+cpp_to_masm_streaming_inference.asm(485) : error A2008:syntax error : .
+cpp_to_masm_streaming_inference.asm(506) : error A2008:syntax error : .
+cpp_to_masm_streaming_inference.asm(522) : error A2008:syntax error : .
+cpp_to_masm_streaming_inference.asm(560) : error A2008:syntax error : .
+cpp_to_masm_streaming_inference.asm(565) : error A2008:syntax error : .
+cpp_to_masm_streaming_inference.asm(574) : error A2005:symbol redefinition : static_stream_id
+cpp_to_masm_streaming_inference.asm(131) : error A2009:syntax error in expression
+cpp_to_masm_streaming_inference.asm(132) : error A2009:syntax error in expression
+cpp_to_masm_streaming_inference.asm(133) : error A2009:syntax error in expression
+cpp_to_masm_streaming_inference.asm(134) : error A2009:syntax error in expression
+cpp_to_masm_streaming_inference.asm(140) : error A2009:syntax error in expression
+cpp_to_masm_streaming_inference.asm(153) : error A2009:syntax error in expression
+cpp_to_masm_streaming_inference.asm(181) : error A2009:syntax error in expression
+cpp_to_masm_streaming_inference.asm(214) : error A2009:syntax error in expression
+cpp_to_masm_streaming_inference.asm(222) : error A2006:undefined symbol : wrap_check
+cpp_to_masm_streaming_inference.asm(224) : error A2006:undefined symbol : queue_full
+cpp_to_masm_streaming_inference.asm(225) : error A2006:undefined symbol : queue_ok
+cpp_to_masm_streaming_inference.asm(230) : error A2006:undefined symbol : queue_full
+cpp_to_masm_streaming_inference.asm(245) : error A2006:undefined symbol : GetTickCount64
+cpp_to_masm_streaming_inference.asm(251) : error A2006:undefined symbol : no_wrap
+cpp_to_masm_streaming_inference.asm(256) : error A2009:syntax error in expression
+cpp_to_masm_streaming_inference.asm(259) : error A2009:syntax error in expression
+cpp_to_masm_streaming_inference.asm(278) : error A2009:syntax error in expression
+cpp_to_masm_streaming_inference.asm(300) : error A2009:syntax error in expression
+cpp_to_masm_streaming_inference.asm(308) : error A2006:undefined symbol : size_ok
+cpp_to_masm_streaming_inference.asm(319) : error A2009:syntax error in expression
+cpp_to_masm_streaming_inference.asm(322) : error A2009:syntax error in expression
+cpp_to_masm_streaming_inference.asm(326) : error A2022:instruction operands must be the same size
+cpp_to_masm_streaming_inference.asm(350) : error A2009:syntax error in expression
+cpp_to_masm_streaming_inference.asm(360) : error A2022:instruction operands must be the same size
+cpp_to_masm_streaming_inference.asm(375) : error A2009:syntax error in expression
+cpp_to_masm_streaming_inference.asm(444) : error A2009:syntax error in expression
+cpp_to_masm_streaming_inference.asm(461) : error A2006:undefined symbol : skip_thread
+cpp_to_masm_streaming_inference.asm(468) : error A2006:undefined symbol : skip_event
+cpp_to_masm_streaming_inference.asm(475) : error A2006:undefined symbol : skip_queue
+cpp_to_masm_streaming_inference.asm(482) : error A2006:undefined symbol : skip_output
+cpp_to_masm_streaming_inference.asm(507) : error A2009:syntax error in expression
+cpp_to_masm_streaming_inference.asm(508) : error A2006:undefined symbol : stream_exit
+cpp_to_masm_streaming_inference.asm(510) : error A2009:syntax error in expression
+cpp_to_masm_streaming_inference.asm(511) : error A2006:undefined symbol : stream_exit
+cpp_to_masm_streaming_inference.asm(524) : error A2006:undefined symbol : stream_loop
+cpp_to_masm_streaming_inference.asm(557) : error A2006:undefined symbol : no_wrap2
+cpp_to_masm_streaming_inference.asm(563) : error A2006:undefined symbol : process_loop
+[3/4] Building Test Runners...
+Microsoft (R) Macro Assembler (x64) Version 14.50.35719.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: test_phase4.asm
+[4/4] Linking Phase 4 Test Runner...
+Microsoft (R) Incremental Linker Version 14.50.35719.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+"C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\link.exe" 
+C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\link.exe : fatal error LNK1107: invalid or corrupt file: cannot read at 0x300
+============================================================
+BUILD FAILED Check errors above.
+============================================================

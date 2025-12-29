@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <cstdlib>
+#include <cstring>
 
 // ============================================================
 // TEMPORARY STUB: Brutal GZIP wrappers

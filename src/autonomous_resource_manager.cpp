@@ -68,7 +68,7 @@ uint32_t AutonomousResourceManager::getOptimalThreadCount() {
     }
 }
 
-bool AutonomousResourceManager::shouldUseCompression(const SystemResources& resources) {
+bool AutonomousResourceManager::shouldUseCompression(const SystemResources& resources) const {
     // Autonomous decision: use compression if memory is limited
     const uint64_t MEMORY_THRESHOLD = 4ULL * 1024 * 1024 * 1024; // 4GB
     

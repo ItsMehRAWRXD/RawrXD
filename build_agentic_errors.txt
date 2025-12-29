@@ -1,0 +1,183 @@
+MSBuild version 17.14.23+b0019275e for .NET Framework
+
+  Checking File Globs
+  Automatic MOC for target brutal_gzip
+  brutal_gzip.vcxproj -> C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\Release\brutal_gzip.lib
+  ggml-base.vcxproj -> C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\3rdparty\ggml\src\Release\ggml-base.lib
+  ggml-cpu.vcxproj -> C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\3rdparty\ggml\src\Release\ggml-cpu.lib
+  1>Performing build step for 'vulkan-shaders-gen'
+  MSBuild version 17.14.23+b0019275e for .NET Framework
+  
+    vulkan-shaders-gen.vcxproj -> C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\3rdparty\ggml\src\ggml-vulkan\vulkan-shaders-gen-prefix\src\vulkan-shaders-gen-build\Release\vulkan-shaders-gen.exe
+  Performing install step for 'vulkan-shaders-gen'
+  -- Up-to-date: C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/Release/./vulkan-shaders-gen.exe
+  Completed 'vulkan-shaders-gen'
+  ggml-vulkan.vcxproj -> C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\3rdparty\ggml\src\ggml-vulkan\Release\ggml-vulkan.lib
+  ggml.vcxproj -> C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\3rdparty\ggml\src\Release\ggml.lib
+  Automatic MOC for target quant_utils
+  quant_utils.vcxproj -> C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\Release\quant_utils.lib
+  Automatic MOC for target RawrXD-AgenticIDE
+  MainWindow_v5.cpp
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\inference_engine.hpp(18,10): error C1083: Cannot open include file: 'agentic_failure_detector.hpp': No such file or directory [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'src/qtapp/MainWindow_v5.cpp')
+  
+  scalar_server.cpp
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\inference_engine.hpp(18,10): error C1083: Cannot open include file: 'agentic_failure_detector.hpp': No such file or directory [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'src/scalar_server.cpp')
+  
+  multi_tab_editor.cpp
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\inference_engine.hpp(18,10): error C1083: Cannot open include file: 'agentic_failure_detector.hpp': No such file or directory [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'src/multi_tab_editor.cpp')
+  
+  agentic_engine.cpp
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\inference_engine.hpp(18,10): error C1083: Cannot open include file: 'agentic_failure_detector.hpp': No such file or directory [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'src/agentic_engine.cpp')
+  
+  real_time_completion_engine.cpp
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\real_time_completion_engine.cpp(31,31): error C2039: 'function': is not a member of 'std' [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\mutex(29,1):
+      see declaration of 'std'
+  
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\real_time_completion_engine.cpp(31,31): error C2061: syntax error: identifier 'function' [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\real_time_completion_engine.cpp(32,9): error C3861: 'callback': identifier not found [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+  brutal_gzip_wrapper.cpp
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\brutal_gzip_wrapper.cpp(28,10): error C2039: 'memcpy': is not a member of 'std' [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\cstdlib(36,1):
+      see declaration of 'std'
+  
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\brutal_gzip_wrapper.cpp(28,10): error C3861: 'memcpy': identifier not found [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\brutal_gzip_wrapper.cpp(50,10): error C2039: 'memcpy': is not a member of 'std' [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\cstdlib(36,1):
+      see declaration of 'std'
+  
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\brutal_gzip_wrapper.cpp(50,10): error C3861: 'memcpy': identifier not found [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+  inference_engine.cpp
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\inference_engine.hpp(18,10): error C1083: Cannot open include file: 'agentic_failure_detector.hpp': No such file or directory [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'src/qtapp/inference_engine.cpp')
+  
+  transformer_inference.cpp
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\inference_engine.hpp(18,10): error C1083: Cannot open include file: 'agentic_failure_detector.hpp': No such file or directory [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'src/qtapp/transformer_inference.cpp')
+  
+  agentic_text_edit.cpp
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\inference_engine.hpp(18,10): error C1083: Cannot open include file: 'agentic_failure_detector.hpp': No such file or directory [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'src/agentic_text_edit.cpp')
+  
+  ai_completion_provider.cpp
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\inference_engine.hpp(18,10): error C1083: Cannot open include file: 'agentic_failure_detector.hpp': No such file or directory [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'src/qtapp/ai_completion_provider.cpp')
+  
+  model_loader_thread.cpp
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\inference_engine.hpp(18,10): error C1083: Cannot open include file: 'agentic_failure_detector.hpp': No such file or directory [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'src/qtapp/model_loader_thread.cpp')
+  
+  agentic_executor.cpp
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\inference_engine.hpp(18,10): error C1083: Cannot open include file: 'agentic_failure_detector.hpp': No such file or directory [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'src/agentic_executor.cpp')
+  
+  autonomous_model_manager.cpp
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_model_manager.cpp(8,30): error C2039: 'loadModelAutonomously': is not a member of 'AutonomousModelManager' [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+      C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_model_manager.h(41,7):
+      see declaration of 'AutonomousModelManager'
+  
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_model_manager.cpp(9,5): error C2065: 'QFileInfo': undeclared identifier [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_model_manager.cpp(9,15): error C2146: syntax error: missing ';' before identifier 'fileInfo' [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_model_manager.cpp(9,15): error C3861: 'fileInfo': identifier not found [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_model_manager.cpp(10,10): error C2065: 'fileInfo': undeclared identifier [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_model_manager.cpp(16,5): error C2065: 'm_compressionProvider': undeclared identifier [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_model_manager.cpp(16,29): error C3861: 'selectOptimalCompression': identifier not found [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_model_manager.cpp(20,17): error C2065: 'm_compressionProvider': undeclared identifier [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_model_manager.cpp(20,64): error C2065: 'm_compressionProvider': undeclared identifier [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_model_manager.cpp(23,33): error C2065: 'm_stats': undeclared identifier [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_model_manager.cpp(23,10): error C3861: 'modelLoaded': identifier not found [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_model_manager.cpp(27,17): error C2065: 'ICompressionProvider': undeclared identifier [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_model_manager.cpp(27,6): error C2923: 'std::shared_ptr': 'ICompressionProvider' is not a valid template type argument for parameter '_Ty' [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+      C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_model_manager.cpp(27,17):
+      see declaration of 'ICompressionProvider'
+  
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_model_manager.cpp(27,63): error C2039: 'selectOptimalCompression': is not a member of 'AutonomousModelManager' [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+      C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_model_manager.h(41,7):
+      see declaration of 'AutonomousModelManager'
+  
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_model_manager.cpp(27,63): error C2955: 'std::shared_ptr': use of class template requires template argument list [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(1565,7):
+      see declaration of 'std::shared_ptr'
+  
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_model_manager.cpp(27,63): error C2079: 'selectOptimalCompression' uses undefined class 'std::shared_ptr' [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_model_manager.cpp(34,21): error C2653: 'CompressionFactory': is not a class or namespace name [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_model_manager.cpp(34,41): error C3861: 'Create': identifier not found [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_model_manager.cpp(41,16): error C2653: 'CompressionFactory': is not a class or namespace name [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_model_manager.cpp(41,36): error C3861: 'Create': identifier not found [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_model_manager.cpp(48,5): error C2440: 'return': cannot convert from 'nullptr' to 'std::shared_ptr' [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+      C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_model_manager.cpp(48,5):
+      'std::shared_ptr<_Ty>::shared_ptr(std::nullptr_t) noexcept': cannot convert 'this' pointer from 'std::shared_ptr' to 'std::shared_ptr<_Ty> &'
+          C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_model_manager.cpp(48,5):
+          Reason: cannot convert from 'std::shared_ptr' to 'std::shared_ptr<_Ty>'
+          C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_model_manager.cpp(48,5):
+          Conversion requires a second user-defined-conversion operator or constructor
+          C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(1578,5):
+          could be 'std::shared_ptr<_Ty>::shared_ptr(std::nullptr_t) noexcept'
+              C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_model_manager.cpp(48,5):
+              'std::shared_ptr<_Ty>::shared_ptr(std::nullptr_t) noexcept': cannot convert 'this' pointer from 'std::shared_ptr' to 'std::shared_ptr<_Ty> &'
+                  C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_model_manager.cpp(48,5):
+                  Reason: cannot convert from 'std::shared_ptr' to 'std::shared_ptr<_Ty>'
+                  C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_model_manager.cpp(48,5):
+                  Conversion requires a second user-defined-conversion operator or constructor
+          C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(1673,5):
+          or       'std::shared_ptr<_Ty>::shared_ptr(std::unique_ptr<_Ux,_Dx> &&)'
+          C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(1649,5):
+          or       'std::shared_ptr<_Ty>::shared_ptr(std::shared_ptr<_Ty2> &&) noexcept'
+          C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(1639,5):
+          or       'std::shared_ptr<_Ty>::shared_ptr(const std::shared_ptr<_Ty2> &) noexcept'
+          C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(1629,5):
+          or       'std::shared_ptr<_Ty>::shared_ptr(std::shared_ptr<_Ty2> &&,remove_extent<_Ty>::type *) noexcept'
+          C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(1623,5):
+          or       'std::shared_ptr<_Ty>::shared_ptr(const std::shared_ptr<_Ty2> &,remove_extent<_Ty>::type *) noexcept'
+          C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(1618,5):
+          or       'std::shared_ptr<_Ty>::shared_ptr(std::nullptr_t,_Dx,_Alloc)'
+          C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(1612,5):
+          or       'std::shared_ptr<_Ty>::shared_ptr(std::nullptr_t,_Dx)'
+          C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(1606,5):
+          or       'std::shared_ptr<_Ty>::shared_ptr(_Ux *,_Dx,_Alloc)'
+          C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\memory(1598,5):
+          or       'std::shared_ptr<_Ty>::shared_ptr(_Ux *,_Dx)'
+          C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_model_manager.cpp(48,5):
+          while trying to match the argument list '(nullptr)'
+  
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_model_manager.cpp(51,30): error C2039: 'adaptCompressionSettings': is not a member of 'AutonomousModelManager' [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+      C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_model_manager.h(41,7):
+      see declaration of 'AutonomousModelManager'
+  
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_model_manager.cpp(51,55): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_model_manager.cpp(51,77): error C2143: syntax error: missing ',' before '&' [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_model_manager.cpp(52,5): error C2065: 'm_stats': undeclared identifier [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_model_manager.cpp(52,15): error C2065: 'stats': undeclared identifier [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_model_manager.cpp(55,9): error C2065: 'stats': undeclared identifier [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_model_manager.cpp(56,27): error C2065: 'stats': undeclared identifier [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_model_manager.cpp(59,18): error C3861: 'compressionOptimized': identifier not found [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+  autonomous_resource_manager.cpp
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_resource_manager.cpp(84,12): error C2663: 'AutonomousResourceManager::shouldUseCompression': no overloaded function has valid conversion for 'this' pointer [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+      C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_resource_manager.cpp(71,33):
+      could be 'bool AutonomousResourceManager::shouldUseCompression(const AutonomousResourceManager::SystemResources &)'
+          C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_resource_manager.cpp(84,12):
+          'bool AutonomousResourceManager::shouldUseCompression(const AutonomousResourceManager::SystemResources &)': cannot convert 'this' pointer from 'const AutonomousResourceManager' to 'AutonomousResourceManager &'
+              C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_resource_manager.cpp(84,12):
+              Conversion loses qualifiers
+      C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\autonomous_resource_manager.cpp(84,12):
+      while trying to match the argument list '(AutonomousResourceManager::SystemResources)'
+  
+  compression_interface.cpp
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\compression_interface.cpp(193,9): error C2065: 'compression_calls_': undeclared identifier [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\compression_interface.cpp(232,9): error C2065: 'total_decompressed_bytes_': undeclared identifier [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\compression_interface.cpp(233,9): error C2065: 'decompression_calls_': undeclared identifier [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\compression_interface.cpp(256,32): error C2065: 'total_decompressed_bytes_': undeclared identifier [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\compression_interface.cpp(257,25): error C2065: 'decompression_calls_': undeclared identifier [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+  model_trainer.cpp
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\inference_engine.hpp(18,10): error C1083: Cannot open include file: 'agentic_failure_detector.hpp': No such file or directory [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'src/model_trainer.cpp')
+  
+  mocs_compilation_Release.cpp
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\qtapp\inference_engine.hpp(18,10): error C1083: Cannot open include file: 'agentic_failure_detector.hpp': No such file or directory [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\RawrXD-AgenticIDE.vcxproj]
+  (compiling source file 'RawrXD-AgenticIDE_autogen/mocs_compilation_Release.cpp')
+  
+  Generating Code...

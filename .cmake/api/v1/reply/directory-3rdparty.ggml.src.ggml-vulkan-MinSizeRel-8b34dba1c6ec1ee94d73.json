@@ -1,0 +1,58 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"install",
+			"ggml_add_backend_library"
+		],
+		"files" : 
+		[
+			"3rdparty/ggml/src/CMakeLists.txt",
+			"3rdparty/ggml/src/ggml-vulkan/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 1
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 57,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 261,
+				"parent" : 1
+			}
+		]
+	},
+	"codemodelVersion" : 
+	{
+		"major" : 2,
+		"minor" : 9
+	},
+	"installers" : 
+	[
+		{
+			"backtrace" : 2,
+			"component" : "Unspecified",
+			"destination" : "lib",
+			"paths" : 
+			[
+				"3rdparty/ggml/src/ggml-vulkan/MinSizeRel/ggml-vulkan.lib"
+			],
+			"targetId" : "ggml-vulkan::@aae7555ca1223a1c687a",
+			"targetIndex" : 26,
+			"type" : "target"
+		}
+	],
+	"paths" : 
+	{
+		"build" : "3rdparty/ggml/src/ggml-vulkan",
+		"source" : "3rdparty/ggml/src/ggml-vulkan"
+	}
+}

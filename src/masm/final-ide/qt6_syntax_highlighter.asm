@@ -13,7 +13,7 @@
 ;
 ; Architecture:
 ;   - SYNTAX_HIGHLIGHTER structure
-;   - Token array (type, start offset, length, color)
+;   - Token array (type_id, start offset, length, color)
 ;   - Language-specific keyword tables
 ;   - Lazy re-highlighting (only affected lines)
 ;
@@ -21,25 +21,52 @@
 
 option casemap:none
 
+; External memory functions (provided by malloc_wrapper.asm)
+EXTERN malloc:PROC
+EXTERN free:PROC
+EXTERN realloc:PROC
+EXTERN memset:PROC
+
 include windows.inc
 includelib kernel32.lib
 includelib user32.lib
 
+; Define OBJECT_BASE structure (from qt6_foundation)
+OBJECT_BASE STRUCT
+    obj_vmt          QWORD ?
+    obj_hwnd         QWORD ?
+    obj_parent       QWORD ?
+    obj_children     QWORD ?
+    obj_child_count  DWORD ?
+    obj_flags        DWORD ?
+    obj_user_data    QWORD ?
+OBJECT_BASE ENDS
+
+FLAG_VISIBLE         EQU 00000001h
+FLAG_DIRTY           EQU 00000008h
+
 ;==========================================================================
 ; STRUCTURES
-;==========================================================================
+;=========================================================================
 
 ; Syntax token
 SYNTAX_TOKEN STRUCT
-    start_offset    QWORD ?         ; Byte offset in source
-    length          DWORD ?         ; Token length
-    type            DWORD ?         ; TOKEN_KEYWORD, TOKEN_STRING, etc.
+    start_offset    QWORD ?         ; Byte offset in_val source
+    token_length    DWORD ?         ; Token length
+    type_id         DWORD ?         ; TOKEN_KEYWORD, TOKEN_STRING, etc.
     color           DWORD ?         ; RGB color
 SYNTAX_TOKEN ENDS
 
 ; Syntax highlighter
 SYNTAX_HIGHLIGHTER STRUCT
-    base            OBJECT_BASE <>  ; Inherit from OBJECT_BASE
+    ; OBJECT_BASE fields
+    obj_vmt          QWORD ?
+    obj_hwnd         QWORD ?
+    obj_parent       QWORD ?
+    obj_children     QWORD ?
+    obj_child_count  DWORD ?
+    obj_flags        DWORD ?
+    obj_user_data    QWORD ?
     
     ; Source code
     source_ptr      QWORD ?         ; Pointer to source text
@@ -50,7 +77,7 @@ SYNTAX_HIGHLIGHTER STRUCT
     token_count     DWORD ?         ; Number of tokens
     max_tokens      DWORD ?         ; Allocated slots
     
-    ; File type
+    ; File type_id
     file_ext        DWORD ?         ; EXT_ASM, EXT_C, EXT_CPP
     
     ; State
@@ -83,13 +110,19 @@ EXT_CPP             EQU 3
 EXT_HEADER          EQU 4
 
 ; Colors
-COLOR_KEYWORD       EQU 0x0000FF    ; Blue
-COLOR_STRING        EQU 0x008000    ; Green
-COLOR_COMMENT       EQU 0x808080    ; Gray
-COLOR_NUMBER        EQU 0xFF0000    ; Red
-COLOR_PREPROC       EQU 0x800080    ; Purple
-COLOR_TEXT          EQU 0x000000    ; Black
+COLOR_KEYWORD       EQU 0000FFh    ; Blue
+COLOR_STRING        EQU 008000h    ; Green
+COLOR_COMMENT       EQU 808080h    ; Gray
+COLOR_NUMBER        EQU 0FF0000h   ; Red
+COLOR_PREPROC       EQU 800080h    ; Purple
+COLOR_TEXT          EQU 000000h    ; Black
 
+;==========================================================================
+; DATA SECTION - Keyword Tables
+;==========================================================================
+
+.DATA
+ALIGN 8
 ; MASM keywords (common)
 MASM_KEYWORDS:
     db "MOV", 0
@@ -162,7 +195,7 @@ PUBLIC syntax_highlighter_detect_language
 ; IMPLEMENTATION
 ;==========================================================================
 
-.CODE
+.code
 
 ; =============== syntax_highlighter_create ===============
 ; Create a syntax highlighter instance
@@ -219,7 +252,7 @@ syntax_highlighter_tokenize PROC
     ;   - Check if identifier (letter or _)
     ;   - Check if operator (+ - * / etc)
     ; TODO: Create SYNTAX_TOKEN for each
-    ; TODO: Store in tokens array
+    ; TODO: Store in_val tokens array
     ; TODO: Return token count
     
     xor rax, rax
@@ -303,12 +336,12 @@ is_keyword ENDP
 ; Outputs: rax = 1 (is digit) or 0 (not digit)
 is_digit PROC
     cmp al, '0'
-    jb .notdigit
+    jb notdigit
     cmp al, '9'
-    ja .notdigit
+    ja notdigit
     mov rax, 1
     ret
-.notdigit:
+notdigit:
     xor rax, rax
     ret
 is_digit ENDP
@@ -319,21 +352,21 @@ is_digit ENDP
 ; Outputs: rax = 1 (is alpha) or 0 (not alpha)
 is_alpha PROC
     cmp al, 'a'
-    jl .check_upper
+    jl check_upper
     cmp al, 'z'
-    jle .isalpha
-.check_upper:
+    jle isalpha
+check_upper:
     cmp al, 'A'
-    jl .check_underscore
+    jl check_underscore
     cmp al, 'Z'
-    jle .isalpha
-.check_underscore:
+    jle isalpha
+check_underscore:
     cmp al, '_'
-    jne .notaplha
-.isalpha:
+    jne notalpha
+isalpha:
     mov rax, 1
     ret
-.notaplha:
+notalpha:
     xor rax, rax
     ret
 is_alpha ENDP

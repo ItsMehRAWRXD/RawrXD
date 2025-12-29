@@ -1,0 +1,46 @@
+digraph "ggml-base" {
+node [
+  fontsize = "12"
+];
+    "node38" [ label = "ggml-base", shape = octagon ];
+    "node37" [ label = "ggml\n(ggml::ggml)", shape = octagon ];
+    "node37" -> "node38"  // ggml -> ggml-base
+    "node36" [ label = "ggml_interface", shape = pentagon ];
+    "node36" -> "node37" [ style = dashed ] // ggml_interface -> ggml
+    "node30" [ label = "RawrXD-AgenticIDE", shape = egg ];
+    "node30" -> "node36" [ style = dotted ] // RawrXD-AgenticIDE -> ggml_interface
+    "node30" [ label = "RawrXD-AgenticIDE", shape = egg ];
+    "node30" -> "node30"  // RawrXD-AgenticIDE -> RawrXD-AgenticIDE
+    "node48" [ label = "RawrXD-QtShell", shape = egg ];
+    "node48" -> "node36" [ style = dotted ] // RawrXD-QtShell -> ggml_interface
+    "node48" [ label = "RawrXD-QtShell", shape = egg ];
+    "node48" -> "node48"  // RawrXD-QtShell -> RawrXD-QtShell
+    "node59" [ label = "RawrXD-Win32IDE", shape = egg ];
+    "node59" -> "node37" [ style = dotted ] // RawrXD-Win32IDE -> ggml
+    "node72" [ label = "benchmark_completions", shape = egg ];
+    "node72" -> "node37" [ style = dotted ] // benchmark_completions -> ggml
+    "node72" [ label = "benchmark_completions", shape = egg ];
+    "node72" -> "node72"  // benchmark_completions -> benchmark_completions
+    "node73" [ label = "gguf_hotpatch_tester", shape = egg ];
+    "node73" -> "node37" [ style = dotted ] // gguf_hotpatch_tester -> ggml
+    "node74" [ label = "gpu_inference_benchmark", shape = egg ];
+    "node74" -> "node37" [ style = dotted ] // gpu_inference_benchmark -> ggml
+    "node97" [ label = "simple_gpu_test", shape = egg ];
+    "node97" -> "node37" [ style = dotted ] // simple_gpu_test -> ggml
+    "node101" [ label = "test_chat_streaming", shape = egg ];
+    "node101" -> "node37" [ style = dotted ] // test_chat_streaming -> ggml
+    "node105" [ label = "test_ide_main", shape = egg ];
+    "node105" -> "node37" [ style = dotted ] // test_ide_main -> ggml
+    "node39" [ label = "ggml-cpu", shape = octagon ];
+    "node39" -> "node38" [ style = dotted ] // ggml-cpu -> ggml-base
+    "node37" [ label = "ggml\n(ggml::ggml)", shape = octagon ];
+    "node37" -> "node39"  // ggml -> ggml-cpu
+    "node72" [ label = "benchmark_completions", shape = egg ];
+    "node72" -> "node39" [ style = dotted ] // benchmark_completions -> ggml-cpu
+    "node42" [ label = "ggml-vulkan", shape = octagon ];
+    "node42" -> "node38" [ style = dotted ] // ggml-vulkan -> ggml-base
+    "node37" [ label = "ggml\n(ggml::ggml)", shape = octagon ];
+    "node37" -> "node42"  // ggml -> ggml-vulkan
+    "node72" [ label = "benchmark_completions", shape = egg ];
+    "node72" -> "node42" [ style = dotted ] // benchmark_completions -> ggml-vulkan
+}

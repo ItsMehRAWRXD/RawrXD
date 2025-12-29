@@ -1,0 +1,8 @@
+digraph "masm_hotpatch_unified" {
+node [
+  fontsize = "12"
+];
+    "node82" [ label = "masm_hotpatch_unified", shape = octagon ];
+    "node81" [ label = "masm_hotpatch_unified_obj", shape = hexagon ];
+    "node82" -> "node81"  // masm_hotpatch_unified -> masm_hotpatch_unified_obj
+}

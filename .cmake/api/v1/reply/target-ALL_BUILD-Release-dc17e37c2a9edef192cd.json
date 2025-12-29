@@ -1,0 +1,143 @@
+{
+	"backtrace" : 0,
+	"backtraceGraph" : 
+	{
+		"commands" : [],
+		"files" : 
+		[
+			"src/masm/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			}
+		]
+	},
+	"codemodelVersion" : 
+	{
+		"major" : 2,
+		"minor" : 9
+	},
+	"dependencies" : 
+	[
+		{
+			"id" : "masm_runtime_obj::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_hotpatch_core_obj::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_orchestration_obj::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_ui_obj::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_agentic::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_hotpatch_unified::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_qt6_foundation::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_qt6_foundation_obj::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_runtime::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_hotpatch_core::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_agentic_obj::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_orchestration::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_ui::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_hotpatch_unified_obj::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_hotpatch_test::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_header_gen::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_source_stub_gen::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "ZERO_CHECK::@6890427a1f51a3e7e1df"
+		}
+	],
+	"id" : "ALL_BUILD::@f589df1e8a76cfd5da38",
+	"isGeneratorProvided" : true,
+	"name" : "ALL_BUILD",
+	"orderDependencies" : 
+	[
+		{
+			"id" : "masm_runtime_obj::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_hotpatch_core_obj::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_orchestration_obj::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_ui_obj::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_agentic::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_hotpatch_unified::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_qt6_foundation::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_qt6_foundation_obj::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_runtime::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_hotpatch_core::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_agentic_obj::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_orchestration::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_ui::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_hotpatch_unified_obj::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_hotpatch_test::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_header_gen::@f589df1e8a76cfd5da38"
+		},
+		{
+			"id" : "masm_source_stub_gen::@f589df1e8a76cfd5da38"
+		}
+	],
+	"paths" : 
+	{
+		"build" : "src/masm",
+		"source" : "src/masm"
+	},
+	"sources" : [],
+	"type" : "UTILITY"
+}

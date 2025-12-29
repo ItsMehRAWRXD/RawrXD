@@ -1,0 +1,12 @@
+digraph "self_test_gate" {
+node [
+  fontsize = "12"
+];
+    "node29" [ label = "self_test_gate", shape = octagon ];
+    "node0" [ label = "RawrXD-Agent", shape = egg ];
+    "node0" -> "node29" [ style = dotted ] // RawrXD-Agent -> self_test_gate
+    "node48" [ label = "RawrXD-QtShell", shape = egg ];
+    "node48" -> "node29" [ style = dotted ] // RawrXD-QtShell -> self_test_gate
+    "node48" [ label = "RawrXD-QtShell", shape = egg ];
+    "node48" -> "node48"  // RawrXD-QtShell -> RawrXD-QtShell
+}

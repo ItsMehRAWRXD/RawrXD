@@ -1,0 +1,10 @@
+digraph "ole32" {
+node [
+  fontsize = "12"
+];
+    "node56" [ label = "ole32", shape = septagon ];
+    "node48" [ label = "RawrXD-QtShell", shape = egg ];
+    "node48" -> "node56" [ style = dotted ] // RawrXD-QtShell -> ole32
+    "node48" [ label = "RawrXD-QtShell", shape = egg ];
+    "node48" -> "node48"  // RawrXD-QtShell -> RawrXD-QtShell
+}

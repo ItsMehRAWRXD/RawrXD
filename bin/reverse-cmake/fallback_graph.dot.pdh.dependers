@@ -1,0 +1,12 @@
+digraph "pdh" {
+node [
+  fontsize = "12"
+];
+    "node43" [ label = "pdh", shape = septagon ];
+    "node30" [ label = "RawrXD-AgenticIDE", shape = egg ];
+    "node30" -> "node43" [ style = dotted ] // RawrXD-AgenticIDE -> pdh
+    "node30" [ label = "RawrXD-AgenticIDE", shape = egg ];
+    "node30" -> "node30"  // RawrXD-AgenticIDE -> RawrXD-AgenticIDE
+    "node105" [ label = "test_ide_main", shape = egg ];
+    "node105" -> "node43" [ style = dotted ] // test_ide_main -> pdh
+}

@@ -1,0 +1,12 @@
+digraph "shlwapi" {
+node [
+  fontsize = "12"
+];
+    "node57" [ label = "shlwapi", shape = septagon ];
+    "node48" [ label = "RawrXD-QtShell", shape = egg ];
+    "node48" -> "node57" [ style = dotted ] // RawrXD-QtShell -> shlwapi
+    "node48" [ label = "RawrXD-QtShell", shape = egg ];
+    "node48" -> "node48"  // RawrXD-QtShell -> RawrXD-QtShell
+    "node59" [ label = "RawrXD-Win32IDE", shape = egg ];
+    "node59" -> "node57" [ style = dotted ] // RawrXD-Win32IDE -> shlwapi
+}

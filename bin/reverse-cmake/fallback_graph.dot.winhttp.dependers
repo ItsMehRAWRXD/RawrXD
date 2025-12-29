@@ -1,0 +1,14 @@
+digraph "winhttp" {
+node [
+  fontsize = "12"
+];
+    "node46" [ label = "winhttp", shape = septagon ];
+    "node30" [ label = "RawrXD-AgenticIDE", shape = egg ];
+    "node30" -> "node46" [ style = dotted ] // RawrXD-AgenticIDE -> winhttp
+    "node30" [ label = "RawrXD-AgenticIDE", shape = egg ];
+    "node30" -> "node30"  // RawrXD-AgenticIDE -> RawrXD-AgenticIDE
+    "node59" [ label = "RawrXD-Win32IDE", shape = egg ];
+    "node59" -> "node46" [ style = dotted ] // RawrXD-Win32IDE -> winhttp
+    "node105" [ label = "test_ide_main", shape = egg ];
+    "node105" -> "node46" [ style = dotted ] // test_ide_main -> winhttp
+}

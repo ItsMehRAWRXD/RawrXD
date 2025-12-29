@@ -8,13 +8,21 @@
 option casemap:none
 
 include windows.inc
-include masm_hotpatch.inc
-include logging.inc
 
 includelib kernel32.lib
 includelib user32.lib
 includelib gdi32.lib
 includelib shell32.lib
+
+; ============================================================================
+; EXTERNAL DECLARATIONS - Windows API
+; ============================================================================
+extern CreatePipe:proc
+extern SetHandleInformation:proc
+extern GetCurrentDirectoryA:proc
+extern InvalidateRect:proc
+extern Sleep:proc
+extern PeekNamedPipe:proc
 
 ; ============================================================================
 ; CONSTANTS AND STRUCTURES

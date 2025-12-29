@@ -1,0 +1,12 @@
+digraph "wbemuuid" {
+node [
+  fontsize = "12"
+];
+    "node45" [ label = "wbemuuid", shape = septagon ];
+    "node30" [ label = "RawrXD-AgenticIDE", shape = egg ];
+    "node30" -> "node45" [ style = dotted ] // RawrXD-AgenticIDE -> wbemuuid
+    "node30" [ label = "RawrXD-AgenticIDE", shape = egg ];
+    "node30" -> "node30"  // RawrXD-AgenticIDE -> RawrXD-AgenticIDE
+    "node105" [ label = "test_ide_main", shape = egg ];
+    "node105" -> "node45" [ style = dotted ] // test_ide_main -> wbemuuid
+}

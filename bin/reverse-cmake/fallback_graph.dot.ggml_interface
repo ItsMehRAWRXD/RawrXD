@@ -1,0 +1,158 @@
+digraph "ggml_interface" {
+node [
+  fontsize = "12"
+];
+    "node36" [ label = "ggml_interface", shape = pentagon ];
+    "node37" [ label = "ggml\n(ggml::ggml)", shape = octagon ];
+    "node36" -> "node37" [ style = dashed ] // ggml_interface -> ggml
+    "node1" [ label = "Qt6::Charts", shape = doubleoctagon ];
+    "node37" -> "node1"  // ggml -> Qt6::Charts
+    "node2" [ label = "Qt::Core", shape = pentagon ];
+    "node1" -> "node2" [ style = dashed ] // Qt6::Charts -> Qt::Core
+    "node3" [ label = "Qt6::Core", shape = doubleoctagon ];
+    "node2" -> "node3" [ style = dashed ] // Qt::Core -> Qt6::Core
+    "node4" [ label = "Qt6::Platform", shape = pentagon ];
+    "node3" -> "node4" [ style = dashed ] // Qt6::Core -> Qt6::Platform
+    "node5" [ label = "Threads::Threads", shape = pentagon ];
+    "node4" -> "node5" [ style = dashed ] // Qt6::Platform -> Threads::Threads
+    "node6" [ label = "WrapAtomic::WrapAtomic", shape = pentagon ];
+    "node3" -> "node6" [ style = dashed ] // Qt6::Core -> WrapAtomic::WrapAtomic
+    "node7" [ label = "mpr", shape = septagon ];
+    "node3" -> "node7" [ style = dashed ] // Qt6::Core -> mpr
+    "node8" [ label = "userenv", shape = septagon ];
+    "node3" -> "node8" [ style = dashed ] // Qt6::Core -> userenv
+    "node9" [ label = "Qt::Gui", shape = pentagon ];
+    "node1" -> "node9" [ style = dashed ] // Qt6::Charts -> Qt::Gui
+    "node10" [ label = "Qt6::Gui", shape = doubleoctagon ];
+    "node9" -> "node10" [ style = dashed ] // Qt::Gui -> Qt6::Gui
+    "node3" [ label = "Qt6::Core", shape = doubleoctagon ];
+    "node10" -> "node3" [ style = dashed ] // Qt6::Gui -> Qt6::Core
+    "node11" [ label = "WrapVulkanHeaders::WrapVulkanHeaders", shape = pentagon ];
+    "node10" -> "node11" [ style = dashed ] // Qt6::Gui -> WrapVulkanHeaders::WrapVulkanHeaders
+    "node12" [ label = "d3d11", shape = septagon ];
+    "node10" -> "node12" [ style = dashed ] // Qt6::Gui -> d3d11
+    "node13" [ label = "d3d12", shape = septagon ];
+    "node10" -> "node13" [ style = dashed ] // Qt6::Gui -> d3d12
+    "node14" [ label = "dxgi", shape = septagon ];
+    "node10" -> "node14" [ style = dashed ] // Qt6::Gui -> dxgi
+    "node15" [ label = "dxguid", shape = septagon ];
+    "node10" -> "node15" [ style = dashed ] // Qt6::Gui -> dxguid
+    "node16" [ label = "Qt::OpenGL", shape = pentagon ];
+    "node1" -> "node16" [ style = dashed ] // Qt6::Charts -> Qt::OpenGL
+    "node17" [ label = "Qt6::OpenGL", shape = doubleoctagon ];
+    "node16" -> "node17" [ style = dashed ] // Qt::OpenGL -> Qt6::OpenGL
+    "node3" [ label = "Qt6::Core", shape = doubleoctagon ];
+    "node17" -> "node3" [ style = dashed ] // Qt6::OpenGL -> Qt6::Core
+    "node10" [ label = "Qt6::Gui", shape = doubleoctagon ];
+    "node17" -> "node10" [ style = dashed ] // Qt6::OpenGL -> Qt6::Gui
+    "node11" [ label = "WrapVulkanHeaders::WrapVulkanHeaders", shape = pentagon ];
+    "node17" -> "node11" [ style = dashed ] // Qt6::OpenGL -> WrapVulkanHeaders::WrapVulkanHeaders
+    "node18" [ label = "Qt::OpenGLWidgets", shape = pentagon ];
+    "node1" -> "node18" [ style = dashed ] // Qt6::Charts -> Qt::OpenGLWidgets
+    "node19" [ label = "Qt6::OpenGLWidgets", shape = doubleoctagon ];
+    "node18" -> "node19" [ style = dashed ] // Qt::OpenGLWidgets -> Qt6::OpenGLWidgets
+    "node17" [ label = "Qt6::OpenGL", shape = doubleoctagon ];
+    "node19" -> "node17" [ style = dashed ] // Qt6::OpenGLWidgets -> Qt6::OpenGL
+    "node20" [ label = "Qt6::Widgets", shape = doubleoctagon ];
+    "node19" -> "node20" [ style = dashed ] // Qt6::OpenGLWidgets -> Qt6::Widgets
+    "node3" [ label = "Qt6::Core", shape = doubleoctagon ];
+    "node20" -> "node3" [ style = dashed ] // Qt6::Widgets -> Qt6::Core
+    "node10" [ label = "Qt6::Gui", shape = doubleoctagon ];
+    "node20" -> "node10" [ style = dashed ] // Qt6::Widgets -> Qt6::Gui
+    "node21" [ label = "Qt::Widgets", shape = pentagon ];
+    "node1" -> "node21" [ style = dashed ] // Qt6::Charts -> Qt::Widgets
+    "node20" [ label = "Qt6::Widgets", shape = doubleoctagon ];
+    "node21" -> "node20" [ style = dashed ] // Qt::Widgets -> Qt6::Widgets
+    "node22" [ label = "user32", shape = septagon ];
+    "node1" -> "node22" [ style = dashed ] // Qt6::Charts -> user32
+    "node23" [ label = "Qt6::Concurrent", shape = doubleoctagon ];
+    "node37" -> "node23"  // ggml -> Qt6::Concurrent
+    "node3" [ label = "Qt6::Core", shape = doubleoctagon ];
+    "node23" -> "node3" [ style = dashed ] // Qt6::Concurrent -> Qt6::Core
+    "node3" [ label = "Qt6::Core", shape = doubleoctagon ];
+    "node37" -> "node3"  // ggml -> Qt6::Core
+    "node10" [ label = "Qt6::Gui", shape = doubleoctagon ];
+    "node37" -> "node10"  // ggml -> Qt6::Gui
+    "node24" [ label = "Qt6::Network", shape = doubleoctagon ];
+    "node37" -> "node24"  // ggml -> Qt6::Network
+    "node3" [ label = "Qt6::Core", shape = doubleoctagon ];
+    "node24" -> "node3" [ style = dashed ] // Qt6::Network -> Qt6::Core
+    "node25" [ label = "ws2_32", shape = septagon ];
+    "node24" -> "node25" [ style = dashed ] // Qt6::Network -> ws2_32
+    "node26" [ label = "Qt6::Sql", shape = doubleoctagon ];
+    "node37" -> "node26"  // ggml -> Qt6::Sql
+    "node3" [ label = "Qt6::Core", shape = doubleoctagon ];
+    "node26" -> "node3" [ style = dashed ] // Qt6::Sql -> Qt6::Core
+    "node27" [ label = "Qt6::Test", shape = doubleoctagon ];
+    "node37" -> "node27"  // ggml -> Qt6::Test
+    "node3" [ label = "Qt6::Core", shape = doubleoctagon ];
+    "node27" -> "node3" [ style = dashed ] // Qt6::Test -> Qt6::Core
+    "node20" [ label = "Qt6::Widgets", shape = doubleoctagon ];
+    "node37" -> "node20"  // ggml -> Qt6::Widgets
+    "node38" [ label = "ggml-base", shape = octagon ];
+    "node37" -> "node38"  // ggml -> ggml-base
+    "node1" [ label = "Qt6::Charts", shape = doubleoctagon ];
+    "node38" -> "node1"  // ggml-base -> Qt6::Charts
+    "node23" [ label = "Qt6::Concurrent", shape = doubleoctagon ];
+    "node38" -> "node23"  // ggml-base -> Qt6::Concurrent
+    "node3" [ label = "Qt6::Core", shape = doubleoctagon ];
+    "node38" -> "node3"  // ggml-base -> Qt6::Core
+    "node10" [ label = "Qt6::Gui", shape = doubleoctagon ];
+    "node38" -> "node10"  // ggml-base -> Qt6::Gui
+    "node24" [ label = "Qt6::Network", shape = doubleoctagon ];
+    "node38" -> "node24"  // ggml-base -> Qt6::Network
+    "node26" [ label = "Qt6::Sql", shape = doubleoctagon ];
+    "node38" -> "node26"  // ggml-base -> Qt6::Sql
+    "node27" [ label = "Qt6::Test", shape = doubleoctagon ];
+    "node38" -> "node27"  // ggml-base -> Qt6::Test
+    "node20" [ label = "Qt6::Widgets", shape = doubleoctagon ];
+    "node38" -> "node20"  // ggml-base -> Qt6::Widgets
+    "node5" [ label = "Threads::Threads", shape = pentagon ];
+    "node38" -> "node5" [ style = dotted ] // ggml-base -> Threads::Threads
+    "node39" [ label = "ggml-cpu", shape = octagon ];
+    "node37" -> "node39"  // ggml -> ggml-cpu
+    "node40" [ label = "OpenMP::OpenMP_C", shape = pentagon ];
+    "node39" -> "node40" [ style = dotted ] // ggml-cpu -> OpenMP::OpenMP_C
+    "node41" [ label = "OpenMP::OpenMP_CXX", shape = pentagon ];
+    "node39" -> "node41" [ style = dotted ] // ggml-cpu -> OpenMP::OpenMP_CXX
+    "node1" [ label = "Qt6::Charts", shape = doubleoctagon ];
+    "node39" -> "node1"  // ggml-cpu -> Qt6::Charts
+    "node23" [ label = "Qt6::Concurrent", shape = doubleoctagon ];
+    "node39" -> "node23"  // ggml-cpu -> Qt6::Concurrent
+    "node3" [ label = "Qt6::Core", shape = doubleoctagon ];
+    "node39" -> "node3"  // ggml-cpu -> Qt6::Core
+    "node10" [ label = "Qt6::Gui", shape = doubleoctagon ];
+    "node39" -> "node10"  // ggml-cpu -> Qt6::Gui
+    "node24" [ label = "Qt6::Network", shape = doubleoctagon ];
+    "node39" -> "node24"  // ggml-cpu -> Qt6::Network
+    "node26" [ label = "Qt6::Sql", shape = doubleoctagon ];
+    "node39" -> "node26"  // ggml-cpu -> Qt6::Sql
+    "node27" [ label = "Qt6::Test", shape = doubleoctagon ];
+    "node39" -> "node27"  // ggml-cpu -> Qt6::Test
+    "node20" [ label = "Qt6::Widgets", shape = doubleoctagon ];
+    "node39" -> "node20"  // ggml-cpu -> Qt6::Widgets
+    "node38" [ label = "ggml-base", shape = octagon ];
+    "node39" -> "node38" [ style = dotted ] // ggml-cpu -> ggml-base
+    "node42" [ label = "ggml-vulkan", shape = octagon ];
+    "node37" -> "node42"  // ggml -> ggml-vulkan
+    "node1" [ label = "Qt6::Charts", shape = doubleoctagon ];
+    "node42" -> "node1"  // ggml-vulkan -> Qt6::Charts
+    "node23" [ label = "Qt6::Concurrent", shape = doubleoctagon ];
+    "node42" -> "node23"  // ggml-vulkan -> Qt6::Concurrent
+    "node3" [ label = "Qt6::Core", shape = doubleoctagon ];
+    "node42" -> "node3"  // ggml-vulkan -> Qt6::Core
+    "node10" [ label = "Qt6::Gui", shape = doubleoctagon ];
+    "node42" -> "node10"  // ggml-vulkan -> Qt6::Gui
+    "node24" [ label = "Qt6::Network", shape = doubleoctagon ];
+    "node42" -> "node24"  // ggml-vulkan -> Qt6::Network
+    "node26" [ label = "Qt6::Sql", shape = doubleoctagon ];
+    "node42" -> "node26"  // ggml-vulkan -> Qt6::Sql
+    "node27" [ label = "Qt6::Test", shape = doubleoctagon ];
+    "node42" -> "node27"  // ggml-vulkan -> Qt6::Test
+    "node20" [ label = "Qt6::Widgets", shape = doubleoctagon ];
+    "node42" -> "node20"  // ggml-vulkan -> Qt6::Widgets
+    "node31" [ label = "Vulkan::Vulkan", shape = septagon ];
+    "node42" -> "node31" [ style = dotted ] // ggml-vulkan -> Vulkan::Vulkan
+    "node38" [ label = "ggml-base", shape = octagon ];
+    "node42" -> "node38" [ style = dotted ] // ggml-vulkan -> ggml-base
+}

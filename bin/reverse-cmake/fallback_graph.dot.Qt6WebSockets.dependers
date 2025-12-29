@@ -1,0 +1,8 @@
+digraph "Qt6::WebSockets" {
+node [
+  fontsize = "12"
+];
+    "node50" [ label = "Qt6::WebSockets", shape = doubleoctagon ];
+    "node48" [ label = "RawrXD-QtShell", shape = egg ];
+    "node48" -> "node50" [ style = dotted ] // RawrXD-QtShell -> Qt6::WebSockets
+}

@@ -1,0 +1,14 @@
+digraph "ggml_interface" {
+node [
+  fontsize = "12"
+];
+    "node36" [ label = "ggml_interface", shape = pentagon ];
+    "node30" [ label = "RawrXD-AgenticIDE", shape = egg ];
+    "node30" -> "node36" [ style = dotted ] // RawrXD-AgenticIDE -> ggml_interface
+    "node30" [ label = "RawrXD-AgenticIDE", shape = egg ];
+    "node30" -> "node30"  // RawrXD-AgenticIDE -> RawrXD-AgenticIDE
+    "node48" [ label = "RawrXD-QtShell", shape = egg ];
+    "node48" -> "node36" [ style = dotted ] // RawrXD-QtShell -> ggml_interface
+    "node48" [ label = "RawrXD-QtShell", shape = egg ];
+    "node48" -> "node48"  // RawrXD-QtShell -> RawrXD-QtShell
+}

@@ -1,0 +1,8 @@
+digraph "masm_runtime_obj" {
+node [
+  fontsize = "12"
+];
+    "node88" [ label = "masm_runtime_obj", shape = hexagon ];
+    "node87" [ label = "masm_runtime", shape = octagon ];
+    "node87" -> "node88"  // masm_runtime -> masm_runtime_obj
+}

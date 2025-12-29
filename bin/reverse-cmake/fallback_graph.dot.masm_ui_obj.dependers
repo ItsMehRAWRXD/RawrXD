@@ -1,0 +1,8 @@
+digraph "masm_ui_obj" {
+node [
+  fontsize = "12"
+];
+    "node91" [ label = "masm_ui_obj", shape = hexagon ];
+    "node90" [ label = "masm_ui", shape = octagon ];
+    "node90" -> "node91"  // masm_ui -> masm_ui_obj
+}

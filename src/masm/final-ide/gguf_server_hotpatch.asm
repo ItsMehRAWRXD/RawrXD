@@ -50,6 +50,12 @@ EXTERN asm_mutex_unlock:PROC
 EXTERN asm_memcpy_fast:PROC
 EXTERN asm_log:PROC
 
+; Consolidated core functions
+EXTERN masm_core_direct_copy:PROC
+
+; Consolidated core functions
+EXTERN masm_core_direct_copy:PROC
+
 ; External dependencies from kernel32.lib
 EXTERN GetTickCount64:PROC
 
@@ -167,7 +173,7 @@ masm_server_hotpatch_add PROC
     mov rcx, r12            ; dest
     mov rdx, rbx            ; src
     mov r8, 512             ; size
-    call asm_memcpy_fast
+    call masm_core_direct_copy
     
     ; Assign hotpatch_id
     mov rax, [g_server_hotpatch_count]

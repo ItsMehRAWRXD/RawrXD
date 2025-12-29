@@ -1,0 +1,8 @@
+digraph "Psapi" {
+node [
+  fontsize = "12"
+];
+    "node49" [ label = "Psapi", shape = septagon ];
+    "node48" [ label = "RawrXD-QtShell", shape = egg ];
+    "node48" -> "node49" [ style = dotted ] // RawrXD-QtShell -> Psapi
+}

@@ -1,0 +1,92 @@
+digraph "masm_ide_orchestration_obj" {
+node [
+  fontsize = "12"
+];
+    "node55" [ label = "masm_ide_orchestration_obj", shape = hexagon ];
+    "node1" [ label = "Qt6::Charts", shape = doubleoctagon ];
+    "node55" -> "node1"  // masm_ide_orchestration_obj -> Qt6::Charts
+    "node2" [ label = "Qt::Core", shape = pentagon ];
+    "node1" -> "node2" [ style = dashed ] // Qt6::Charts -> Qt::Core
+    "node3" [ label = "Qt6::Core", shape = doubleoctagon ];
+    "node2" -> "node3" [ style = dashed ] // Qt::Core -> Qt6::Core
+    "node4" [ label = "Qt6::Platform", shape = pentagon ];
+    "node3" -> "node4" [ style = dashed ] // Qt6::Core -> Qt6::Platform
+    "node5" [ label = "Threads::Threads", shape = pentagon ];
+    "node4" -> "node5" [ style = dashed ] // Qt6::Platform -> Threads::Threads
+    "node6" [ label = "WrapAtomic::WrapAtomic", shape = pentagon ];
+    "node3" -> "node6" [ style = dashed ] // Qt6::Core -> WrapAtomic::WrapAtomic
+    "node7" [ label = "mpr", shape = septagon ];
+    "node3" -> "node7" [ style = dashed ] // Qt6::Core -> mpr
+    "node8" [ label = "userenv", shape = septagon ];
+    "node3" -> "node8" [ style = dashed ] // Qt6::Core -> userenv
+    "node9" [ label = "Qt::Gui", shape = pentagon ];
+    "node1" -> "node9" [ style = dashed ] // Qt6::Charts -> Qt::Gui
+    "node10" [ label = "Qt6::Gui", shape = doubleoctagon ];
+    "node9" -> "node10" [ style = dashed ] // Qt::Gui -> Qt6::Gui
+    "node3" [ label = "Qt6::Core", shape = doubleoctagon ];
+    "node10" -> "node3" [ style = dashed ] // Qt6::Gui -> Qt6::Core
+    "node11" [ label = "WrapVulkanHeaders::WrapVulkanHeaders", shape = pentagon ];
+    "node10" -> "node11" [ style = dashed ] // Qt6::Gui -> WrapVulkanHeaders::WrapVulkanHeaders
+    "node12" [ label = "d3d11", shape = septagon ];
+    "node10" -> "node12" [ style = dashed ] // Qt6::Gui -> d3d11
+    "node13" [ label = "d3d12", shape = septagon ];
+    "node10" -> "node13" [ style = dashed ] // Qt6::Gui -> d3d12
+    "node14" [ label = "dxgi", shape = septagon ];
+    "node10" -> "node14" [ style = dashed ] // Qt6::Gui -> dxgi
+    "node15" [ label = "dxguid", shape = septagon ];
+    "node10" -> "node15" [ style = dashed ] // Qt6::Gui -> dxguid
+    "node16" [ label = "Qt::OpenGL", shape = pentagon ];
+    "node1" -> "node16" [ style = dashed ] // Qt6::Charts -> Qt::OpenGL
+    "node17" [ label = "Qt6::OpenGL", shape = doubleoctagon ];
+    "node16" -> "node17" [ style = dashed ] // Qt::OpenGL -> Qt6::OpenGL
+    "node3" [ label = "Qt6::Core", shape = doubleoctagon ];
+    "node17" -> "node3" [ style = dashed ] // Qt6::OpenGL -> Qt6::Core
+    "node10" [ label = "Qt6::Gui", shape = doubleoctagon ];
+    "node17" -> "node10" [ style = dashed ] // Qt6::OpenGL -> Qt6::Gui
+    "node11" [ label = "WrapVulkanHeaders::WrapVulkanHeaders", shape = pentagon ];
+    "node17" -> "node11" [ style = dashed ] // Qt6::OpenGL -> WrapVulkanHeaders::WrapVulkanHeaders
+    "node18" [ label = "Qt::OpenGLWidgets", shape = pentagon ];
+    "node1" -> "node18" [ style = dashed ] // Qt6::Charts -> Qt::OpenGLWidgets
+    "node19" [ label = "Qt6::OpenGLWidgets", shape = doubleoctagon ];
+    "node18" -> "node19" [ style = dashed ] // Qt::OpenGLWidgets -> Qt6::OpenGLWidgets
+    "node17" [ label = "Qt6::OpenGL", shape = doubleoctagon ];
+    "node19" -> "node17" [ style = dashed ] // Qt6::OpenGLWidgets -> Qt6::OpenGL
+    "node20" [ label = "Qt6::Widgets", shape = doubleoctagon ];
+    "node19" -> "node20" [ style = dashed ] // Qt6::OpenGLWidgets -> Qt6::Widgets
+    "node3" [ label = "Qt6::Core", shape = doubleoctagon ];
+    "node20" -> "node3" [ style = dashed ] // Qt6::Widgets -> Qt6::Core
+    "node10" [ label = "Qt6::Gui", shape = doubleoctagon ];
+    "node20" -> "node10" [ style = dashed ] // Qt6::Widgets -> Qt6::Gui
+    "node21" [ label = "Qt::Widgets", shape = pentagon ];
+    "node1" -> "node21" [ style = dashed ] // Qt6::Charts -> Qt::Widgets
+    "node20" [ label = "Qt6::Widgets", shape = doubleoctagon ];
+    "node21" -> "node20" [ style = dashed ] // Qt::Widgets -> Qt6::Widgets
+    "node22" [ label = "user32", shape = septagon ];
+    "node1" -> "node22" [ style = dashed ] // Qt6::Charts -> user32
+    "node23" [ label = "Qt6::Concurrent", shape = doubleoctagon ];
+    "node55" -> "node23"  // masm_ide_orchestration_obj -> Qt6::Concurrent
+    "node3" [ label = "Qt6::Core", shape = doubleoctagon ];
+    "node23" -> "node3" [ style = dashed ] // Qt6::Concurrent -> Qt6::Core
+    "node3" [ label = "Qt6::Core", shape = doubleoctagon ];
+    "node55" -> "node3"  // masm_ide_orchestration_obj -> Qt6::Core
+    "node10" [ label = "Qt6::Gui", shape = doubleoctagon ];
+    "node55" -> "node10"  // masm_ide_orchestration_obj -> Qt6::Gui
+    "node24" [ label = "Qt6::Network", shape = doubleoctagon ];
+    "node55" -> "node24"  // masm_ide_orchestration_obj -> Qt6::Network
+    "node3" [ label = "Qt6::Core", shape = doubleoctagon ];
+    "node24" -> "node3" [ style = dashed ] // Qt6::Network -> Qt6::Core
+    "node25" [ label = "ws2_32", shape = septagon ];
+    "node24" -> "node25" [ style = dashed ] // Qt6::Network -> ws2_32
+    "node26" [ label = "Qt6::Sql", shape = doubleoctagon ];
+    "node55" -> "node26"  // masm_ide_orchestration_obj -> Qt6::Sql
+    "node3" [ label = "Qt6::Core", shape = doubleoctagon ];
+    "node26" -> "node3" [ style = dashed ] // Qt6::Sql -> Qt6::Core
+    "node27" [ label = "Qt6::Test", shape = doubleoctagon ];
+    "node55" -> "node27"  // masm_ide_orchestration_obj -> Qt6::Test
+    "node3" [ label = "Qt6::Core", shape = doubleoctagon ];
+    "node27" -> "node3" [ style = dashed ] // Qt6::Test -> Qt6::Core
+    "node20" [ label = "Qt6::Widgets", shape = doubleoctagon ];
+    "node55" -> "node20"  // masm_ide_orchestration_obj -> Qt6::Widgets
+    "node28" [ label = "Qt6::moc", shape = egg ];
+    "node55" -> "node28"  // masm_ide_orchestration_obj -> Qt6::moc
+}

@@ -47,11 +47,19 @@ PUBLIC masm_byte_patch_get_stats
 
 ; External Win32 APIs
 EXTERN CreateFileA:PROC
+EXTERN CloseHandle:PROC
+EXTERN SetFilePointer:PROC
 EXTERN ReadFile:PROC
 EXTERN WriteFile:PROC
-EXTERN SetFilePointer:PROC
-EXTERN CloseHandle:PROC
 EXTERN GetLastError:PROC
+
+; Consolidated Core Libraries (NEW - Phase 2)
+EXTERN masm_core_direct_read:PROC
+EXTERN masm_core_direct_write:PROC
+EXTERN masm_core_direct_search:PROC
+EXTERN masm_core_boyer_moore_search:PROC
+EXTERN masm_core_transform_dispatch:PROC
+EXTERN masm_core_crc32_calculate:PROC
 
 ;=====================================================================
 ; masm_byte_patch_open_file(filename_ptr: rcx, patch_ptr: rdx) -> rax
@@ -124,7 +132,7 @@ masm_byte_patch_open_file ENDP
 ;=====================================================================
 ; masm_byte_patch_find_pattern(patch_ptr: rcx) -> rax
 ;
-; Searches for pattern in file using Boyer-Moore algorithm.
+; Searches for pattern in file using consolidated core functions.
 ; Returns offset if found, -1 if not found.
 ; Stores result in patch_ptr->match_offset.
 ;=====================================================================
@@ -136,8 +144,7 @@ masm_byte_patch_find_pattern PROC
     push r12
     push r13
     push r14
-    push r15
-    sub rsp, 4896           ; Stack buffer for file reading
+    sub rsp, 4096           ; Stack buffer (reduced from 4896)
     
     mov rbx, rcx            ; rbx = patch structure
     
@@ -152,50 +159,35 @@ masm_byte_patch_find_pattern PROC
     test r13, r13
     jz find_fail
     
-    ; Read file into buffer using chunked reading for large files
-    mov rcx, [rbx]          ; file handle
-    lea rdx, [rsp + 32]     ; buffer
-    mov r8d, 4096           ; bytes to read (4KB chunk)
-    lea r9, [rsp + 16]      ; lpNumberOfBytesRead
-    mov qword ptr [rsp + 48], 0  ; lpOverlapped = NULL
+    ; REFACTORED: Use consolidated direct_read
+    ; Read file into buffer using consolidated core function
+    mov rcx, [rbx]          ; file_handle
+    mov rdx, 0              ; offset = 0
+    lea r8, [rsp + 32]      ; buffer
+    mov r9, 4096            ; size (4KB chunk)
     
-    call ReadFile
-    test eax, eax
+    call masm_core_direct_read  ; ← CONSOLIDATED CALL
+    
+    test rax, rax
     jz find_fail
     
-    ; Get actual bytes read
-    mov r15, [rsp + 16]     ; r15 = bytes_read
+    mov r14, rax            ; r14 = bytes_read
     
-    ; Efficient search loop
-    xor r14, r14            ; r14 = file position
-    lea r8, [rsp + 32]      ; r8 = file buffer
+    ; REFACTORED: Use consolidated search
+    ; Search for pattern using consolidated core function
+    lea rcx, [rsp + 32]     ; haystack (buffer)
+    mov rdx, r12            ; needle (pattern)
+    mov r8, r14             ; haystack_len (bytes_read)
+    mov r9, r13             ; needle_len (pattern_len)
     
-find_loop:
-    mov rax, r15
-    sub rax, r13
-    cmp r14, rax
-    jg find_check_next_chunk
+    call masm_core_direct_search  ; ← CONSOLIDATED CALL
     
-    ; Compare pattern at current position using repe cmpsb
-    mov rsi, r12            ; pattern
-    lea rdi, [r8 + r14]     ; buffer position
-    mov rcx, r13            ; length
-    repe cmpsb
-    je find_match_found
+    cmp rax, -1
+    je find_not_found
     
-    inc r14
-    jmp find_loop
-
-find_check_next_chunk:
-    ; In production, we would seek back (pattern_len - 1) and read next chunk
-    ; to handle patterns split across chunks.
-    jmp find_not_found
-
-find_match_found:
+    mov [rbx + 56], rax     ; Store match_offset
     lock inc [g_patterns_found]
     
-    mov [rbx + 56], r14     ; Store match_offset
-    mov rax, r14            ; Return offset
     jmp find_exit
 
 find_not_found:
@@ -207,8 +199,7 @@ find_fail:
     mov rax, -1
 
 find_exit:
-    add rsp, 4896
-    pop r15
+    add rsp, 4096
     pop r14
     pop r13
     pop r12
@@ -220,7 +211,7 @@ masm_byte_patch_find_pattern ENDP
 ;=====================================================================
 ; masm_byte_patch_apply(patch_ptr: rcx) -> rax (1=success, 0=fail)
 ;
-; Applies the specified byte-level operation at match_offset.
+; Applies the specified byte-level operation using consolidated core functions.
 ; Operation types:
 ;   0 = Replace (direct write)
 ;   1 = XOR (byte-wise XOR with replacement)
@@ -235,7 +226,7 @@ masm_byte_patch_apply PROC
     push r12
     push r13
     push r14
-    sub rsp, 4896           ; Buffer space
+    sub rsp, 4096           ; Buffer space (reduced from 4896)
     
     mov rbx, rcx            ; rbx = patch structure
     lea rcx, msg_byte_apply_enter
@@ -247,223 +238,71 @@ masm_byte_patch_apply PROC
     je apply_fail           ; No match found
     
     mov r13, [rbx + 48]     ; r13 = operation_type
+    mov r14, [rbx + 40]     ; r14 = replacement_len
     
-    ; Seek to match position
-    mov rcx, [rbx]          ; file handle
+    ; REFACTORED: Use consolidated direct_write for replace operation
+    ; Direct write replacement data using consolidated core function
+    mov rcx, [rbx]          ; file_handle
     mov rdx, r12            ; offset
-    xor r8, r8
-    xor r9d, r9d            ; FILE_BEGIN
+    mov r8, [rbx + 32]      ; replacement_ptr
+    mov r9, r14             ; replacement_len
     
-    call SetFilePointer
-    cmp rax, -1
-    je apply_fail
+    call masm_core_direct_write  ; ← CONSOLIDATED CALL
     
-    ; Dispatch to operation type
-    cmp r13, 0
-    je apply_replace
-    
-    cmp r13, 1
-    je apply_xor
-    
-    cmp r13, 2
-    je apply_swap
-    
-    cmp r13, 3
-    je apply_rotate
-    
-    jmp apply_fail
-
-apply_replace:
-    ; Direct write replacement data
-    mov rcx, [rbx]          ; file handle
-    mov rdx, [rbx + 32]     ; replacement_ptr
-    mov r8d, [rbx + 40]     ; replacement_len (dword)
-    lea r9, [rsp + 16]      ; lpNumberOfBytesWritten
-    mov qword ptr [rsp + 48], 0
-    
-    call WriteFile
-    test eax, eax
+    test rax, rax
     jz apply_fail
     
+    ; Handle special operations (XOR, rotate, reverse, swap)
+    cmp r13, 0              ; 0 = Replace (already done)
+    je apply_success
+    
+    ; REFACTORED: Use consolidated transform_dispatch for all transforms
+    ; masm_core_transform_dispatch(operation_type: rcx, buffer: rdx,
+    ;                              size: r8, param1: r9, flags: [rsp+32])
+    mov rcx, r13            ; operation_type (1=XOR, 2=ROTATE, etc.)
+    mov rdx, [rbx + 32]     ; buffer (replacement data)
+    mov r8, r14             ; size
+    mov r9, [rbx + 16]      ; param1 (pattern as key for XOR)
+    mov qword ptr [rsp + 32], 0  ; flags = FORWARD
+    
+    call masm_core_transform_dispatch  ; ← CONSOLIDATED CALL
+    
+    test rax, rax
+    jz apply_fail
+    
+    ; Verify checksum if requested
+    cmp qword ptr [rbx + 64], 0  ; verify_checksum
+    je apply_success
+    
+    ; REFACTORED: Use consolidated CRC32
+    ; Calculate and verify checksum using consolidated core
+    mov rcx, [rbx + 32]     ; buffer
+    mov rdx, r14            ; size
+    
+    call masm_core_crc32_calculate  ; ← CONSOLIDATED CALL
+    
+    cmp rax, [rbx + 64]     ; Compare with expected checksum
+    jne apply_fail
+
+apply_success:
     ; Update statistics
-    mov rax, [rbx + 40]
+    mov rax, r14
     lock add [g_bytes_modified], rax
     lock inc [g_byte_patches_applied]
     
     mov rax, 1
-    jmp apply_exit
-
-apply_xor:
-    ; Read current data
-    mov rcx, [rbx]
-    lea rdx, [rsp + 32]     ; buffer
-    mov r8d, [rbx + 40]     ; replacement_len
-    lea r9, [rsp + 16]
-    mov qword ptr [rsp + 48], 0
-    
-    call ReadFile
-    test eax, eax
-    jz apply_fail
-    
-    ; XOR operation
-    mov r14, [rbx + 40]     ; length
-    xor rcx, rcx            ; counter
-    
-apply_xor_loop:
-    cmp rcx, r14
-    jge apply_xor_write
-    
-    mov rax, [rbx + 32]     ; replacement_ptr
-    mov al, [rax + rcx]     ; replacement byte
-    lea r10, [rsp + 32 + rcx]
-    xor byte ptr [r10], al
-    
-    inc rcx
-    jmp apply_xor_loop
-
-apply_xor_write:
-    ; Seek back
-    mov rcx, [rbx]
-    mov rdx, r12            ; match_offset
-    xor r8, r8
-    xor r9d, r9d
-    call SetFilePointer
-    
-    ; Write XORed data
-    mov rcx, [rbx]
-    lea rdx, [rsp + 32]
-    mov r8d, [rbx + 40]
-    lea r9, [rsp + 16]
-    mov qword ptr [rsp + 48], 0
-    
-    call WriteFile
-    test eax, eax
-    jz apply_fail
-    
-    mov rax, 1
-    jmp apply_exit
-
-apply_swap:
-    ; Read data, reverse bytes, write back
-    mov rcx, [rbx]
-    lea rdx, [rsp + 32]
-    mov r8d, [rbx + 40]
-    lea r9, [rsp + 16]
-    mov qword ptr [rsp + 48], 0
-    
-    call ReadFile
-    test eax, eax
-    jz apply_fail
-    
-    ; Reverse bytes in buffer
-    mov r14, [rbx + 40]     ; length
-    xor rcx, rcx            ; left index
-    mov rdx, r14
-    dec rdx                 ; right index
-
-swap_loop:
-    cmp rcx, rdx
-    jge swap_done
-    
-    ; Swap bytes
-    lea r10, [rsp + 32 + rcx]
-    lea r11, [rsp + 32 + rdx]
-    mov al, [r10]
-    mov r8b, [r11]
-    mov [r10], r8b
-    mov [r11], al
-    
-    inc rcx
-    dec rdx
-    jmp swap_loop
-
-swap_done:
-    ; Seek back and write
-    mov rcx, [rbx]
-    mov rdx, r12
-    xor r8, r8
-    xor r9d, r9d
-    call SetFilePointer
-    
-    mov rcx, [rbx]
-    lea rdx, [rsp + 32]
-    mov r8d, [rbx + 40]
-    lea r9, [rsp + 16]
-    mov qword ptr [rsp + 48], 0
-    
-    call WriteFile
-    test eax, eax
-    jz apply_fail
-    
-    mov rax, 1
-    jmp apply_exit
-
-apply_rotate:
-    ; Circular bit rotation with variable rotation amount
-    mov rcx, [rbx]
-    lea rdx, [rsp + 32]
-    mov r8d, [rbx + 40]
-    lea r9, [rsp + 16]
-    mov qword ptr [rsp + 48], 0
-    
-    call ReadFile
-    test eax, eax
-    jz apply_fail
-    
-    ; Rotate each byte left by specified amount (default 1)
-    mov r14, [rbx + 40]
-    xor rcx, rcx
-    mov dl, 1 ; Rotation amount
-
-rotate_loop:
-    cmp rcx, r14
-    jge rotate_write
-    
-    lea r10, [rsp + 32 + rcx]
-    mov al, [r10]
-    
-    ; Perform rotation
-    mov cl, dl
-    rol al, cl
-    
-    mov [r10], al
-    
-    inc rcx
-    jmp rotate_loop
-
-rotate_write:
-    mov rcx, [rbx]
-    mov rdx, r12
-    xor r8, r8
-    xor r9d, r9d
-    call SetFilePointer
-    
-    mov rcx, [rbx]
-    lea rdx, [rsp + 32]
-    mov r8d, [rbx + 40]
-    lea r9, [rsp + 16]
-    mov qword ptr [rsp + 48], 0
-    
-    call WriteFile
-    test eax, eax
-    jz apply_fail
-    
-    mov rax, 1
+    lea rcx, msg_byte_apply_exit
+    call asm_log
     jmp apply_exit
 
 apply_fail:
+    lock inc [g_bytes_modified]  ; Might track as failed
     xor rax, rax
+    lea rcx, msg_byte_apply_fail
+    call asm_log
 
 apply_exit:
-    cmp rax, 0
-    je apply_exit_fail
-    lea rcx, msg_byte_apply_exit
-    jmp apply_exit_log
-apply_exit_fail:
-    lea rcx, msg_byte_apply_fail
-apply_exit_log:
-    call asm_log
-    add rsp, 4896
+    add rsp, 4096
     pop r14
     pop r13
     pop r12

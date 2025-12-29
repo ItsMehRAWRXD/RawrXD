@@ -23,7 +23,7 @@ public:
     // Autonomous decisions based on resources
     bool canLoadModel(const QString& modelPath, const SystemResources& resources);
     uint32_t getOptimalThreadCount();
-    bool shouldUseCompression(const SystemResources& resources);
+    bool shouldUseCompression(const SystemResources& resources) const;
     Q_INVOKABLE bool shouldUseCompression() const;
     
     static AutonomousResourceManager* instance();

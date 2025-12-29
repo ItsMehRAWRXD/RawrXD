@@ -1,0 +1,8 @@
+digraph "masm_orchestration" {
+node [
+  fontsize = "12"
+];
+    "node83" [ label = "masm_orchestration", shape = octagon ];
+    "node84" [ label = "masm_orchestration_obj", shape = hexagon ];
+    "node83" -> "node84"  // masm_orchestration -> masm_orchestration_obj
+}

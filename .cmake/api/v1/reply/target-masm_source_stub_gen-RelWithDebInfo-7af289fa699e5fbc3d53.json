@@ -1,0 +1,127 @@
+{
+	"artifacts" : 
+	[
+		{
+			"path" : "bin/RelWithDebInfo/masm_source_stub_gen.exe"
+		},
+		{
+			"path" : "bin/RelWithDebInfo/masm_source_stub_gen.pdb"
+		}
+	],
+	"backtrace" : 1,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_executable",
+			"add_definitions"
+		],
+		"files" : 
+		[
+			"src/masm/CMakeLists.txt",
+			"CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 235,
+				"parent" : 0
+			},
+			{
+				"file" : 1
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 61,
+				"parent" : 2
+			}
+		]
+	},
+	"codemodelVersion" : 
+	{
+		"major" : 2,
+		"minor" : 9
+	},
+	"compileGroups" : 
+	[
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "/nologo /Zi /c /Cp /W3 /I\"C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/src/masm/final-ide\""
+				}
+			],
+			"defines" : 
+			[
+				{
+					"backtrace" : 3,
+					"define" : "NOMINMAX"
+				}
+			],
+			"language" : "ASM_MASM",
+			"sourceIndexes" : 
+			[
+				0
+			]
+		}
+	],
+	"dependencies" : 
+	[
+		{
+			"id" : "ZERO_CHECK::@6890427a1f51a3e7e1df"
+		}
+	],
+	"id" : "masm_source_stub_gen::@f589df1e8a76cfd5da38",
+	"link" : 
+	{
+		"commandFragments" : 
+		[
+			{
+				"fragment" : "/nologo /Zi /c /Cp /W3 /I\"C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/src/masm/final-ide\"",
+				"role" : "flags"
+			},
+			{
+				"fragment" : "/machine:x64 /debug /INCREMENTAL",
+				"role" : "flags"
+			},
+			{
+				"fragment" : "/SUBSYSTEM:CONSOLE /ENTRY:main kernel32.lib",
+				"role" : "flags"
+			}
+		],
+		"language" : "ASM_MASM"
+	},
+	"name" : "masm_source_stub_gen",
+	"nameOnDisk" : "masm_source_stub_gen.exe",
+	"paths" : 
+	{
+		"build" : "src/masm",
+		"source" : "src/masm"
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "",
+			"sourceIndexes" : 
+			[
+				0
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "src/masm/tools/masm_source_stub_gen.asm",
+			"sourceGroupIndex" : 0
+		}
+	],
+	"type" : "EXECUTABLE"
+}

@@ -1,0 +1,12 @@
+digraph "d2d1" {
+node [
+  fontsize = "12"
+];
+    "node52" [ label = "d2d1", shape = septagon ];
+    "node48" [ label = "RawrXD-QtShell", shape = egg ];
+    "node48" -> "node52" [ style = dotted ] // RawrXD-QtShell -> d2d1
+    "node48" [ label = "RawrXD-QtShell", shape = egg ];
+    "node48" -> "node48"  // RawrXD-QtShell -> RawrXD-QtShell
+    "node59" [ label = "RawrXD-Win32IDE", shape = egg ];
+    "node59" -> "node52" [ style = dotted ] // RawrXD-Win32IDE -> d2d1
+}

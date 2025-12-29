@@ -9,6 +9,7 @@
 #include <QString>
 #include <QVector>
 #include <memory>
+#include "../include/compression_interface.h"
 
 // Enterprise-grade model recommendation structure
 struct ModelRecommendation {
@@ -53,14 +54,14 @@ private:
     SystemAnalysis currentSystem;
     QString lastRecommendedModel;
     
+    // Compression system members
+    std::shared_ptr<ICompressionProvider> m_compressionProvider;
+    CompressionStats m_stats;
+    
     // Configuration
     QString huggingFaceApiEndpoint = "https://huggingface.co/api";
     QString modelsRepository = "models";
     int autoUpdateInterval = 3600000; // 1 hour
-    int optimizationInterval = 1800000; // 30 minutes
-    double minimumSuitabilityScore = 0.75;
-    qint64 maxModelSize = 10LL * 1024 * 1024 * 1024; // 10GB default
-    
 public:
     explicit AutonomousModelManager(QObject* parent = nullptr);
     ~AutonomousModelManager();
@@ -70,6 +71,9 @@ public:
     bool autoDownloadAndSetup(const QString& modelId);
     bool autoUpdateModels();
     bool autoOptimizeModel(const QString& modelId);
+    bool loadModelAutonomously(const QString& modelPath);
+    std::shared_ptr<ICompressionProvider> selectOptimalCompression();
+    void adaptCompressionSettings(const CompressionStats& stats);
     
     // Intelligent analysis
     SystemAnalysis analyzeSystemCapabilities();
@@ -93,7 +97,6 @@ public:
     bool integrateWithHuggingFace();
     bool syncWithModelRegistry();
     bool validateModelIntegrity(const QString& modelId);
-    
 signals:
     void modelRecommended(const ModelRecommendation& recommendation);
     void modelInstalled(const QString& modelId);
@@ -104,7 +107,8 @@ signals:
     void errorOccurred(const QString& error);
     void downloadProgress(const QString& modelId, int percentage, qint64 speedBytesPerSec, qint64 etaSeconds);
     void downloadCompleted(const QString& modelId, bool success);
-    void modelLoaded(const QString& modelId);
+    void modelLoaded(const QString& modelId, const CompressionStats& stats);
+    void compressionOptimized(const QString& strategy, double ratio);
 
 private:
     void setupNetworkManager();

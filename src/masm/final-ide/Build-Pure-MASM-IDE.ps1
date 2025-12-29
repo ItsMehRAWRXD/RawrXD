@@ -77,10 +77,21 @@ Write-Host "  link.exe: $LINK" -ForegroundColor Cyan
 # Define MASM source files in correct build order
 $masmFiles = @(
     # Phase 1 - Foundation (x64 versions - working)
-    @{File="asm_memory_x64.asm"; Desc="Memory management (malloc/free)"; LOC=0},
-    @{File="asm_string_x64.asm"; Desc="String operations"; LOC=0},
-    @{File="console_log_x64.asm"; Desc="Logging support"; LOC=0},
-    @{File="win32_window_framework_x64.asm"; Desc="Win32 window framework"; LOC=0}
+    @{File="asm_memory.asm"; Desc="Memory management (asm_malloc/asm_free)"; LOC=639},
+    @{File="malloc_wrapper.asm"; Desc="C-style malloc/free wrappers"; LOC=45},
+    @{File="asm_string.asm"; Desc="String operations"; LOC=400},
+    @{File="asm_log.asm"; Desc="Logging support"; LOC=300},
+    @{File="asm_events.asm"; Desc="Event system"; LOC=500},
+    
+    # Phase 2 - Qt Parity Layer
+    @{File="qt6_foundation.asm"; Desc="Qt-like object model foundation"; LOC=1150},
+    @{File="qt6_main_window.asm"; Desc="QMainWindow replacement"; LOC=743},
+    @{File="qt6_statusbar.asm"; Desc="QStatusBar replacement"; LOC=323},
+    @{File="qt6_text_editor.asm"; Desc="QPlainTextEdit replacement"; LOC=1793},
+    @{File="qt6_syntax_highlighter.asm"; Desc="QSyntaxHighlighter replacement"; LOC=342},
+    
+    # Phase 3 - Application Logic
+    @{File="main_masm.asm"; Desc="Application entry point"; LOC=500}
 )
 
 # Compile function
@@ -137,7 +148,7 @@ Write-Host "══════════════════════�
 Write-Host ""
 
 $success = $true
-foreach ($item in $masmFiles[0..3]) {
+foreach ($item in $masmFiles) {
     if (-not (Compile-AsmFile -asmFile $item.File -description $item.Desc -loc $item.LOC)) {
         $success = $false
         break
@@ -181,20 +192,22 @@ $exePath = Join-Path $BIN_DIR "RawrXD-Pure-MASM-IDE.exe"
 
 # Link executable
 $linkerArgs = @(
-    "/NOLOGO"
-    "/SUBSYSTEM:WINDOWS"
-    "/ENTRY:WinMainCRTStartup"
-    "/OUT:`"$exePath`""
-    $objFilesList
-    "kernel32.lib"
-    "user32.lib"
-    "gdi32.lib"
-    "shell32.lib"
-    "comdlg32.lib"
-    "advapi32.lib"
-    "ole32.lib"
-    "oleaut32.lib"
-    "uuid.lib"
+    "/NOLOGO",
+    "/SUBSYSTEM:WINDOWS",
+    "/ENTRY:_start",
+    "/OUT:$exePath"
+)
+$linkerArgs += $objFiles.FullName
+$linkerArgs += @(
+    "kernel32.lib",
+    "user32.lib",
+    "gdi32.lib",
+    "shell32.lib",
+    "comdlg32.lib",
+    "advapi32.lib",
+    "ole32.lib",
+    "oleaut32.lib",
+    "uuid.lib",
     "comctl32.lib"
 )
 

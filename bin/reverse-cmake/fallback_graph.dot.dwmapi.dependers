@@ -1,0 +1,12 @@
+digraph "dwmapi" {
+node [
+  fontsize = "12"
+];
+    "node53" [ label = "dwmapi", shape = septagon ];
+    "node48" [ label = "RawrXD-QtShell", shape = egg ];
+    "node48" -> "node53" [ style = dotted ] // RawrXD-QtShell -> dwmapi
+    "node48" [ label = "RawrXD-QtShell", shape = egg ];
+    "node48" -> "node48"  // RawrXD-QtShell -> RawrXD-QtShell
+    "node59" [ label = "RawrXD-Win32IDE", shape = egg ];
+    "node59" -> "node53" [ style = dotted ] // RawrXD-Win32IDE -> dwmapi
+}

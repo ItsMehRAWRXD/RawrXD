@@ -1,0 +1,14 @@
+digraph "comctl32" {
+node [
+  fontsize = "12"
+];
+    "node33" [ label = "comctl32", shape = septagon ];
+    "node30" [ label = "RawrXD-AgenticIDE", shape = egg ];
+    "node30" -> "node33" [ style = dotted ] // RawrXD-AgenticIDE -> comctl32
+    "node30" [ label = "RawrXD-AgenticIDE", shape = egg ];
+    "node30" -> "node30"  // RawrXD-AgenticIDE -> RawrXD-AgenticIDE
+    "node59" [ label = "RawrXD-Win32IDE", shape = egg ];
+    "node59" -> "node33" [ style = dotted ] // RawrXD-Win32IDE -> comctl32
+    "node105" [ label = "test_ide_main", shape = egg ];
+    "node105" -> "node33" [ style = dotted ] // test_ide_main -> comctl32
+}

@@ -201,6 +201,10 @@ public:
     void applyPreset(Preset preset);
     Preset getCurrentPreset() const;
     
+    // Helper methods (public for UI components)
+    QString categoryToString(Category category) const;
+    Category stringToCategory(const QString& categoryStr) const;
+    
 signals:
     void featureEnabledChanged(const QString& featureName, bool enabled);
     void categoryEnabledChanged(Category category, bool enabled);
@@ -224,8 +228,4 @@ private:
     // Initialization
     void initializeFeatures();
     void registerFeature(const FeatureInfo& info);
-    
-    // Helper methods
-    QString categoryToString(Category category) const;
-    Category stringToCategory(const QString& categoryStr) const;
 };

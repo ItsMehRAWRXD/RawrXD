@@ -1,0 +1,596 @@
+{
+	"archive" : 
+	{
+		"commandFragments" : 
+		[
+			{
+				"fragment" : "/machine:x64",
+				"role" : "flags"
+			}
+		]
+	},
+	"artifacts" : 
+	[
+		{
+			"path" : "src/terminal/Release/RawrXDTerminal.lib"
+		}
+	],
+	"backtrace" : 1,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_library",
+			"target_link_libraries",
+			"add_compile_options",
+			"target_compile_options",
+			"add_definitions",
+			"add_compile_definitions",
+			"target_include_directories",
+			"include_directories"
+		],
+		"files" : 
+		[
+			"src/terminal/CMakeLists.txt",
+			"CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 2,
+				"parent" : 0
+			},
+			{
+				"command" : 1,
+				"file" : 0,
+				"line" : 9,
+				"parent" : 0
+			},
+			{
+				"file" : 1
+			},
+			{
+				"command" : 2,
+				"file" : 1,
+				"line" : 116,
+				"parent" : 3
+			},
+			{
+				"command" : 3,
+				"file" : 0,
+				"line" : 30,
+				"parent" : 0
+			},
+			{
+				"command" : 4,
+				"file" : 1,
+				"line" : 212,
+				"parent" : 3
+			},
+			{
+				"command" : 5,
+				"file" : 1,
+				"line" : 449,
+				"parent" : 3
+			},
+			{
+				"command" : 4,
+				"file" : 1,
+				"line" : 61,
+				"parent" : 3
+			},
+			{
+				"command" : 6,
+				"file" : 0,
+				"line" : 17,
+				"parent" : 0
+			},
+			{
+				"command" : 7,
+				"file" : 1,
+				"line" : 368,
+				"parent" : 3
+			}
+		]
+	},
+	"codemodelVersion" : 
+	{
+		"major" : 2,
+		"minor" : 9
+	},
+	"compileDependencies" : 
+	[
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Core::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Gui::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Widgets::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Network::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Sql::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Concurrent::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Test::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Charts::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "Qt6::Core::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "Qt6::Network::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "RawrXDOrchestration::@b3acaa3a5b8b054b65f5"
+		}
+	],
+	"compileGroups" : 
+	[
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "/DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -std:c++17 -MD"
+				},
+				{
+					"backtrace" : 4,
+					"fragment" : "/MD"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "/W4"
+				},
+				{
+					"backtrace" : 1,
+					"fragment" : "-Zc:__cplusplus"
+				},
+				{
+					"backtrace" : 1,
+					"fragment" : "-permissive-"
+				},
+				{
+					"backtrace" : 1,
+					"fragment" : "-utf-8"
+				}
+			],
+			"defines" : 
+			[
+				{
+					"backtrace" : 6,
+					"define" : "HAVE_QT_CORE"
+				},
+				{
+					"backtrace" : 7,
+					"define" : "HAVE_VULKAN=1"
+				},
+				{
+					"backtrace" : 8,
+					"define" : "NOMINMAX"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "QT_CHARTS_LIB"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "QT_CONCURRENT_LIB"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "QT_CORE_LIB"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "QT_GUI_LIB"
+				},
+				{
+					"backtrace" : 2,
+					"define" : "QT_MULTIMEDIA_LIB"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "QT_NETWORK_LIB"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "QT_NO_DEBUG"
+				},
+				{
+					"backtrace" : 6,
+					"define" : "QT_NO_OPENGL"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "QT_OPENGLWIDGETS_LIB"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "QT_OPENGL_LIB"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "QT_SQL_LIB"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "QT_TESTCASE_BUILDDIR=\"C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/src/terminal\""
+				},
+				{
+					"backtrace" : 1,
+					"define" : "QT_TESTCASE_SOURCEDIR=\"C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/src/terminal\""
+				},
+				{
+					"backtrace" : 1,
+					"define" : "QT_TESTLIB_LIB"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "QT_WIDGETS_LIB"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "UNICODE"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "WIN32"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "WIN64"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "_ENABLE_EXTENDED_ALIGNED_STORAGE"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "_UNICODE"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "_WIN64"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 9,
+					"path" : "C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/src/terminal"
+				},
+				{
+					"backtrace" : 9,
+					"path" : "C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/src/terminal/.."
+				},
+				{
+					"backtrace" : 2,
+					"path" : "C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/src/orchestration"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/src/orchestration/.."
+				},
+				{
+					"backtrace" : 2,
+					"path" : "C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/include/orchestration"
+				},
+				{
+					"backtrace" : 10,
+					"isSystem" : true,
+					"path" : "C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/include"
+				},
+				{
+					"backtrace" : 1,
+					"isSystem" : true,
+					"path" : "C:/Qt/6.7.3/msvc2022_64/include/QtCore"
+				},
+				{
+					"backtrace" : 1,
+					"isSystem" : true,
+					"path" : "C:/Qt/6.7.3/msvc2022_64/include"
+				},
+				{
+					"backtrace" : 1,
+					"isSystem" : true,
+					"path" : "C:/Qt/6.7.3/msvc2022_64/mkspecs/win32-msvc"
+				},
+				{
+					"backtrace" : 1,
+					"isSystem" : true,
+					"path" : "C:/Qt/6.7.3/msvc2022_64/include/QtGui"
+				},
+				{
+					"backtrace" : 1,
+					"isSystem" : true,
+					"path" : "C:/VulkanSDK/1.4.328.1/include"
+				},
+				{
+					"backtrace" : 1,
+					"isSystem" : true,
+					"path" : "C:/Qt/6.7.3/msvc2022_64/include/QtWidgets"
+				},
+				{
+					"backtrace" : 1,
+					"isSystem" : true,
+					"path" : "C:/Qt/6.7.3/msvc2022_64/include/QtNetwork"
+				},
+				{
+					"backtrace" : 1,
+					"isSystem" : true,
+					"path" : "C:/Qt/6.7.3/msvc2022_64/include/QtSql"
+				},
+				{
+					"backtrace" : 1,
+					"isSystem" : true,
+					"path" : "C:/Qt/6.7.3/msvc2022_64/include/QtConcurrent"
+				},
+				{
+					"backtrace" : 1,
+					"isSystem" : true,
+					"path" : "C:/Qt/6.7.3/msvc2022_64/include/QtTest"
+				},
+				{
+					"backtrace" : 1,
+					"isSystem" : true,
+					"path" : "C:/Qt/6.7.3/msvc2022_64/include/QtCharts"
+				},
+				{
+					"backtrace" : 1,
+					"isSystem" : true,
+					"path" : "C:/Qt/6.7.3/msvc2022_64/include/QtOpenGL"
+				},
+				{
+					"backtrace" : 1,
+					"isSystem" : true,
+					"path" : "C:/Qt/6.7.3/msvc2022_64/include/QtOpenGLWidgets"
+				},
+				{
+					"backtrace" : 2,
+					"isSystem" : true,
+					"path" : "C:/Qt/6.7.3/msvc2022_64/include/QtMultimedia"
+				}
+			],
+			"language" : "CXX",
+			"languageStandard" : 
+			{
+				"backtraces" : 
+				[
+					1,
+					1
+				],
+				"standard" : "17"
+			},
+			"sourceIndexes" : 
+			[
+				1,
+				3
+			]
+		}
+	],
+	"dependencies" : 
+	[
+		{
+			"backtrace" : 2,
+			"id" : "RawrXDOrchestration::@b3acaa3a5b8b054b65f5"
+		},
+		{
+			"id" : "ZERO_CHECK::@6890427a1f51a3e7e1df"
+		}
+	],
+	"id" : "RawrXDTerminal::@40684461092d78089b2a",
+	"interfaceCompileDependencies" : 
+	[
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Core::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Gui::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Widgets::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Network::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Sql::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Concurrent::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Test::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Charts::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "Qt6::Core::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "Qt6::Network::@6890427a1f51a3e7e1df"
+		}
+	],
+	"interfaceLinkLibraries" : 
+	[
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Core::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Gui::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Widgets::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Network::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Sql::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Concurrent::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Test::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Charts::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "Qt6::Core::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "Qt6::Network::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "RawrXDOrchestration::@b3acaa3a5b8b054b65f5"
+		}
+	],
+	"linkLibraries" : 
+	[
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Core::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Gui::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Widgets::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Network::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Sql::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Concurrent::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Test::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Charts::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "Qt6::Core::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "Qt6::Network::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "RawrXDOrchestration::@b3acaa3a5b8b054b65f5"
+		}
+	],
+	"name" : "RawrXDTerminal",
+	"nameOnDisk" : "RawrXDTerminal.lib",
+	"paths" : 
+	{
+		"build" : "src/terminal",
+		"source" : "src/terminal"
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "Header Files",
+			"sourceIndexes" : 
+			[
+				0,
+				2
+			]
+		},
+		{
+			"name" : "Source Files",
+			"sourceIndexes" : 
+			[
+				1,
+				3
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 1,
+			"path" : "src/terminal/sandboxed_terminal.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "src/terminal/sandboxed_terminal.cpp",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "src/terminal/zero_retention_manager.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "src/terminal/zero_retention_manager.cpp",
+			"sourceGroupIndex" : 1
+		}
+	],
+	"type" : "STATIC_LIBRARY"
+}

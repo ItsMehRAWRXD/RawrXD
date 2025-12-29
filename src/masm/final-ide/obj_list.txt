@@ -1,0 +1,11 @@
+asm_events.obj
+asm_log.obj
+asm_memory.obj
+asm_string.obj
+main_masm.obj
+malloc_wrapper.obj
+qt6_foundation.obj
+qt6_main_window.obj
+qt6_statusbar.obj
+qt6_syntax_highlighter.obj
+qt6_text_editor.obj

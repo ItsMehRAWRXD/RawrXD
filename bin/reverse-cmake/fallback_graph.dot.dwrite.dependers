@@ -1,0 +1,12 @@
+digraph "dwrite" {
+node [
+  fontsize = "12"
+];
+    "node54" [ label = "dwrite", shape = septagon ];
+    "node48" [ label = "RawrXD-QtShell", shape = egg ];
+    "node48" -> "node54" [ style = dotted ] // RawrXD-QtShell -> dwrite
+    "node48" [ label = "RawrXD-QtShell", shape = egg ];
+    "node48" -> "node48"  // RawrXD-QtShell -> RawrXD-QtShell
+    "node59" [ label = "RawrXD-Win32IDE", shape = egg ];
+    "node59" -> "node54" [ style = dotted ] // RawrXD-Win32IDE -> dwrite
+}

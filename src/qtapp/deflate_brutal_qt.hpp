@@ -1,5 +1,7 @@
 // MASM-backed brutal codec Qt wrapper
 #pragma once
+#ifndef DEFLATE_BRUTAL_QT_HPP
+#define DEFLATE_BRUTAL_QT_HPP
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
@@ -54,6 +56,7 @@ inline std::size_t decompress(std::uint8_t* dst, std::size_t dst_max,
 
 } // namespace brutal
 
+#endif // DEFLATE_BRUTAL_QT_HPP
 // Qt-friendly overloads
 namespace brutal {
 

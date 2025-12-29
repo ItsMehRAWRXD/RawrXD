@@ -218,6 +218,27 @@ install(FILES masm_hotpatch.inc
     DESTINATION include/masm
 )
 
+# ==== Tools: MASM Header Generator (pure MASM) ====
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tools/masm_header_gen.asm")
+    set_source_files_properties(tools/masm_header_gen.asm PROPERTIES LANGUAGE ASM_MASM)
+    add_executable(masm_header_gen tools/masm_header_gen.asm)
+    # Static link flags for a simple console app with kernel32
+    set_target_properties(masm_header_gen PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        LINK_FLAGS "/SUBSYSTEM:CONSOLE /ENTRY:main kernel32.lib"
+    )
+endif()
+
+# ==== Tools: MASM Source Stub Generator (pure MASM) ====
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tools/masm_source_stub_gen.asm")
+    set_source_files_properties(tools/masm_source_stub_gen.asm PROPERTIES LANGUAGE ASM_MASM)
+    add_executable(masm_source_stub_gen tools/masm_source_stub_gen.asm)
+    set_target_properties(masm_source_stub_gen PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        LINK_FLAGS "/SUBSYSTEM:CONSOLE /ENTRY:main kernel32.lib"
+    )
+endif()
+
 # ==== Build Summary ====
 message(STATUS "========================================")
 message(STATUS "MASM x64 Hotpatch System (PURE ASM)")

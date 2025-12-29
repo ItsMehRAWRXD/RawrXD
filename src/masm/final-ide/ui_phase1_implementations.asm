@@ -137,7 +137,7 @@ ERROR_LOCATION STRUCT
     column_number       DWORD ?         ; Column number (1-based)
     error_type          DWORD ?         ; 0=error, 1=warning, 2=info
     message             QWORD ?         ; Error message pointer
-ERROR_LOCATION STRUCT
+ERROR_LOCATION ENDS
 
 ;==========================================================================
 ; DATA SEGMENT
@@ -830,5 +830,4 @@ strncpy_masm ENDP
     sz_build_action      BYTE "Build", 0
     sz_test_action       BYTE "Test", 0
 
-.end
-
+END

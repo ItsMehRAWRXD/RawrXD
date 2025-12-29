@@ -1,0 +1,10 @@
+digraph "RawrXDGit" {
+node [
+  fontsize = "12"
+];
+    "node60" [ label = "RawrXDGit", shape = octagon ];
+    "node59" [ label = "RawrXD-Win32IDE", shape = egg ];
+    "node59" -> "node60" [ style = dotted ] // RawrXD-Win32IDE -> RawrXDGit
+    "node105" [ label = "test_ide_main", shape = egg ];
+    "node105" -> "node60" [ style = dotted ] // test_ide_main -> RawrXDGit
+}

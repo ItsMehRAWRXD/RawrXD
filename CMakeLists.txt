@@ -1,3 +1,61 @@
+# Reverse-CMake helper target (uses PowerShell + CMake File API)
+add_custom_target(reverse-cmake
+    COMMAND pwsh -ExecutionPolicy Bypass -File "${CMAKE_SOURCE_DIR}/tools/reverse-cmake.ps1" -SourceDir "${CMAKE_SOURCE_DIR}" -BuildDir "${CMAKE_BINARY_DIR}" -OutDir "${CMAKE_SOURCE_DIR}/bin/reverse-cmake"
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    COMMENT "Generating reverse CMake summary via File API"
+)
+add_custom_target(hexmag-chain
+    COMMAND pwsh -ExecutionPolicy Bypass -File "${CMAKE_SOURCE_DIR}/tools/hexmag-orchestrator.ps1" -HexmagPath "${CMAKE_SOURCE_DIR}/hexmag.sqlite" -SourceDir "${CMAKE_SOURCE_DIR}" -OutDir "${CMAKE_SOURCE_DIR}/bin/hexmag" -GraphDot "${CMAKE_SOURCE_DIR}/bin/reverse-cmake/fallback_graph.dot"
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    COMMENT "Running Hexmag orchestrator to chain MASM stub generation and task setup"
+)
+
+add_custom_target(self-masmize
+    COMMAND pwsh -ExecutionPolicy Bypass -File "${CMAKE_SOURCE_DIR}/tools/cpp-to-masm-selfcompile.ps1" -SourceDir "${CMAKE_SOURCE_DIR}" -OutDir "${CMAKE_SOURCE_DIR}/bin/self-masmize"
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    COMMENT "Reverse-engineering C++ units to MASM artifacts (listings + stubs)"
+)
+
+# Integrate generated MASM stubs (from hexmag) into QtShell build if present
+set(HEXMAG_STUB_DIR "${CMAKE_SOURCE_DIR}/bin/hexmag")
+set(HEXMAG_STUB_SCAFFOLDER "${CMAKE_SOURCE_DIR}/tools/stub_scaffolder.ps1")
+set(HEXMAG_SCAFFOLD_OUTPUTS
+    "${HEXMAG_STUB_DIR}/src_stubs_scaffold.cpp"
+    "${HEXMAG_STUB_DIR}/qtapp_stubs_scaffold.cpp"
+    "${HEXMAG_STUB_DIR}/include_stubs_scaffold.cpp")
+
+add_custom_command(
+    OUTPUT ${HEXMAG_SCAFFOLD_OUTPUTS}
+    COMMAND pwsh -ExecutionPolicy Bypass -File "${HEXMAG_STUB_SCAFFOLDER}" -StubDir "${HEXMAG_STUB_DIR}" -OutDir "${HEXMAG_STUB_DIR}"
+    DEPENDS hexmag-chain
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    COMMENT "Generating C++ scaffolding for Hexmag stubs"
+)
+add_custom_target(hexmag-scaffold DEPENDS ${HEXMAG_SCAFFOLD_OUTPUTS})
+
+file(GLOB HEXMAG_STUBS "${HEXMAG_STUB_DIR}/*_stubs.asm")
+file(GLOB HEXMAG_SCAFFOLD ${HEXMAG_SCAFFOLD_OUTPUTS})
+if(HEXMAG_SCAFFOLD)
+    add_library(masm_hexmag_stubs_obj OBJECT ${HEXMAG_SCAFFOLD})
+    add_dependencies(masm_hexmag_stubs_obj hexmag-scaffold)
+elseif(HEXMAG_STUBS)
+    add_library(masm_hexmag_stubs_obj OBJECT ${HEXMAG_STUBS})
+    set_source_files_properties(${HEXMAG_STUBS} PROPERTIES LANGUAGE ASM_MASM)
+    add_dependencies(masm_hexmag_stubs_obj hexmag-chain)
+endif()
+
+if(TARGET RawrXD-QtShell AND TARGET masm_hexmag_stubs_obj)
+    target_link_libraries(RawrXD-QtShell PRIVATE $<TARGET_OBJECTS:masm_hexmag_stubs_obj>)
+    message(STATUS "Linked hexmag-generated stubs (scaffold preferred) into RawrXD-QtShell")
+endif()
+
+# MASM/C++ hotpatch bridge (lets MASM shims drive UnifiedHotpatchManager)
+if(TARGET RawrXD-QtShell)
+    target_sources(RawrXD-QtShell PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/qtapp/masm_hotpatch_bridge.cpp
+        ${CMAKE_SOURCE_DIR}/src/masm/hotpatch_bridge.asm)
+    set_source_files_properties(${CMAKE_SOURCE_DIR}/src/masm/hotpatch_bridge.asm PROPERTIES LANGUAGE ASM_MASM)
+endif()
 cmake_minimum_required(VERSION 3.20)
 project(RawrXD-ModelLoader VERSION 1.0.13)
 add_definitions(-DNOMINMAX)
@@ -5,16 +63,23 @@ add_definitions(-DNOMINMAX)
 # Enable MASM x64 assembler for pure runtime layer
 enable_language(ASM_MASM)
 
-# Configure MASM include directories for ml64.exe
-# This allows ml64 to find windows.inc and other headers when assembling .asm files
+# Configure MASM compiler for ml64.exe
 if(MSVC)
-    # Set MASM flags to prevent C++ flags from being passed
-    set(CMAKE_ASM_MASM_FLAGS "/nologo /Zi /c /Cp /W3 /I\"${CMAKE_SOURCE_DIR}/src/masm/final-ide\"")
-    # Override the compile command to ONLY use MASM flags - remove <DEFINES> to prevent /E and /O2
-    set(CMAKE_ASM_MASM_COMPILE_OBJECT "<CMAKE_ASM_MASM_COMPILER> /nologo /Zi /c /Cp /W3 /I\"${CMAKE_SOURCE_DIR}/src/masm/final-ide\" /Fo<OBJECT> /Ta<SOURCE>")
-    message(STATUS "MASM include path: /I\"${CMAKE_SOURCE_DIR}/src/masm/final-ide\"")
-    message(STATUS "CMAKE_ASM_MASM_FLAGS: ${CMAKE_ASM_MASM_FLAGS}")
-    message(STATUS "CMAKE_ASM_MASM_COMPILE_OBJECT: ${CMAKE_ASM_MASM_COMPILE_OBJECT}")
+    # Suppress C++ flags from being injected into MASM compilation
+    # Set both FLAGS and COMPILE_OBJECT to ensure clean MASM-only invocation
+    set(CMAKE_ASM_MASM_FLAGS "/nologo /Zi /c /Cp /W3")
+    
+    # Force explicit flag list to prevent C++ flag contamination
+    # This overrides Visual Studio's masm.targets which tries to inject /EHsc and /O2
+    set(CMAKE_ASM_MASM_COMPILE_OBJECT 
+        "<CMAKE_ASM_MASM_COMPILER> <DEFINES> <INCLUDES> <FLAGS> /Fo<OBJECT> <SOURCE>")
+    
+    # Explicitly clear any C++ flags that might leak into MASM
+    set(CMAKE_ASM_MASM_FLAGS_RELEASE "/nologo /Zi /c /Cp /W3" CACHE STRING "MASM Release flags" FORCE)
+    set(CMAKE_ASM_MASM_FLAGS_DEBUG "/nologo /Zi /c /Cp /W3" CACHE STRING "MASM Debug flags" FORCE)
+    
+    message(STATUS "MASM compiler configured: ${CMAKE_ASM_MASM_COMPILER}")
+    message(STATUS "MASM compile flags: ${CMAKE_ASM_MASM_FLAGS}")
 endif()
 
 add_subdirectory(src/masm)
@@ -517,44 +582,9 @@ if(MSVC)
             src/qtapp/checkpoint_manager.cpp
             include/tokenizer_selector.h
             src/qtapp/tokenizer_selector.cpp
-            # MASM hotpatch integration (optional)
-            $<$<BOOL:${ENABLE_MASM_INTEGRATION}>:src/masm/final-ide/ai_orchestration_glue.asm>
-            $<$<BOOL:${ENABLE_MASM_INTEGRATION}>:src/masm/final-ide/system_init_stubs.asm>
-            $<$<BOOL:${ENABLE_MASM_INTEGRATION}>:src/masm/final-ide/agent_orchestrator_main.asm>
-            $<$<BOOL:${ENABLE_MASM_INTEGRATION}>:src/masm/final-ide/ai_orchestration_coordinator.asm>
-            $<$<BOOL:${ENABLE_MASM_INTEGRATION}>:src/masm/final-ide/autonomous_task_executor_clean.asm>
-            $<$<BOOL:${ENABLE_MASM_INTEGRATION}>:src/masm/final-ide/output_pane_logger_clean.asm>
-            $<$<BOOL:${ENABLE_MASM_INTEGRATION}>:src/masm/final-ide/masm_gpu_backend.asm>
-            $<$<BOOL:${ENABLE_MASM_INTEGRATION}>:src/masm/final-ide/masm_security_manager.asm>
-            $<$<BOOL:${ENABLE_MASM_INTEGRATION}>:src/masm/final-ide/agentic_failure_detector.asm>
-            $<$<BOOL:${ENABLE_MASM_INTEGRATION}>:src/masm/final-ide/masm_inference_engine.asm>
-            $<$<BOOL:${ENABLE_MASM_INTEGRATION}>:src/masm/final-ide/agentic_copilot_bridge.asm>
-            $<$<BOOL:${ENABLE_MASM_INTEGRATION}>:src/masm/final-ide/agentic_masm_system.asm>
-            $<$<BOOL:${ENABLE_MASM_INTEGRATION}>:src/masm/final-ide/agent_utility_agents.asm>
-            $<$<BOOL:${ENABLE_MASM_INTEGRATION}>:src/masm/final-ide/agent_meta_learn.asm>
-            $<$<BOOL:${ENABLE_MASM_INTEGRATION}>:src/masm/final-ide/masm_metrics_collector.asm>
-            $<$<BOOL:${ENABLE_MASM_INTEGRATION}>:src/masm/final-ide/masm_tokenizer.asm>
-            $<$<BOOL:${ENABLE_MASM_INTEGRATION}>:src/masm/final-ide/masm_proxy_server.asm>
-            $<$<BOOL:${ENABLE_MASM_INTEGRATION}>:src/masm/final-ide/agent_auto_bootstrap.asm>
-            $<$<BOOL:${ENABLE_MASM_INTEGRATION}>:src/masm/final-ide/masm_agent_logic.asm>
-            $<$<BOOL:${ENABLE_MASM_INTEGRATION}>:src/masm/final-ide/masm_terminal_integration.asm>
-            $<$<BOOL:${ENABLE_MASM_INTEGRATION}>:src/masm/final-ide/masm_ui_framework.asm>
-            $<$<BOOL:${ENABLE_MASM_INTEGRATION}>:src/masm/final-ide/agent_chat_modes.asm>
-            $<$<BOOL:${ENABLE_MASM_INTEGRATION}>:src/masm/final-ide/console_log_simple.asm>
-            $<$<BOOL:${ENABLE_MASM_INTEGRATION}>:src/masm/final-ide/agent_chat_hotpatch_bridge.asm>
-            $<$<BOOL:${ENABLE_MASM_INTEGRATION}>:src/masm/final-ide/masm_qt_bridge.asm>
-            $<$<BOOL:${ENABLE_MASM_INTEGRATION}>:src/masm/final-ide/missing_stubs.asm>
-            $<$<BOOL:${ENABLE_MASM_INTEGRATION}>:src/masm/final-ide/ai_orchestration_glue_clean.asm>
-            $<$<BOOL:${ENABLE_MASM_INTEGRATION}>:src/masm/final-ide/system_init_stubs_clean.asm>
-            # Production-Ready Phase Implementations (from Pure MASM Audit)
-            $<$<BOOL:${ENABLE_MASM_INTEGRATION}>:src/masm/final-ide/ui_phase1_implementations.asm>
-            $<$<BOOL:${ENABLE_MASM_INTEGRATION}>:src/masm/final-ide/chat_persistence_phase2.asm>
-            $<$<BOOL:${ENABLE_MASM_INTEGRATION}>:src/masm/final-ide/agentic_nlp_phase3.asm>
-            # Phase 2 Advanced Components (Dec 28, 2025)
-            $<$<BOOL:${ENABLE_MASM_INTEGRATION}>:src/masm/final-ide/menu_system.asm>
-            $<$<BOOL:${ENABLE_MASM_INTEGRATION}>:src/masm/final-ide/masm_theme_system_complete.asm>
-            $<$<BOOL:${ENABLE_MASM_INTEGRATION}>:src/masm/final-ide/masm_file_browser_complete.asm>
-            $<$<BOOL:${ENABLE_MASM_INTEGRATION}>:src/masm/final-ide/phase2_integration.asm>
+            # MASM stubs - provides C function implementations when MASM is disabled
+            # (These are only used when ENABLE_MASM_INTEGRATION=OFF)
+            $<$<NOT:$<BOOL:${ENABLE_MASM_INTEGRATION}>>:src/qtapp/masm_orchestration_stubs.cpp>
             include/ci_cd_settings.h
             src/qtapp/ci_cd_settings.cpp
             # Project detection and metadata management
@@ -671,41 +701,67 @@ if(MSVC)
             src/masm/masm_orchestration_wrapper.cpp
         )
 
-        set_source_files_properties(
-            src/masm/final-ide/ai_orchestration_glue.asm
-            src/masm/final-ide/system_init_stubs.asm
-            src/masm/final-ide/agent_orchestrator_main.asm
-            src/masm/final-ide/ai_orchestration_coordinator.asm
-            src/masm/final-ide/autonomous_task_executor_clean.asm
-            src/masm/final-ide/output_pane_logger_clean.asm
-            src/masm/final-ide/masm_gpu_backend_clean.asm
-            src/masm/final-ide/masm_security_manager.asm
-            src/masm/final-ide/agentic_failure_detector.asm
-            src/masm/final-ide/masm_inference_engine.asm
-            src/masm/final-ide/agentic_copilot_bridge.asm
-            src/masm/final-ide/agentic_masm_system.asm
-            src/masm/final-ide/agent_utility_agents.asm
-            src/masm/final-ide/agent_meta_learn.asm
-            src/masm/final-ide/masm_metrics_collector.asm
-            src/masm/final-ide/masm_tokenizer.asm
-            src/masm/final-ide/masm_proxy_server.asm
-            src/masm/final-ide/agent_auto_bootstrap.asm
-            src/masm/final-ide/masm_agent_logic.asm
-            src/masm/final-ide/masm_terminal_integration.asm
-            src/masm/final-ide/masm_ui_framework.asm
-            src/masm/final-ide/agent_chat_modes.asm
-            src/masm/final-ide/console_log_simple.asm
-            src/masm/final-ide/agent_chat_hotpatch_bridge.asm
-            src/masm/final-ide/masm_qt_bridge.asm
-            src/masm/final-ide/missing_stubs.asm
-            src/masm/final-ide/ai_orchestration_glue_clean.asm
-            src/masm/final-ide/system_init_stubs_clean.asm
-            # Production-Ready Phase Implementations (from Pure MASM Audit)
-            src/masm/final-ide/ui_phase1_implementations.asm
-            src/masm/final-ide/chat_persistence_phase2.asm
-            src/masm/final-ide/agentic_nlp_phase3.asm
-            PROPERTIES LANGUAGE ASM_MASM
-        )
+        # MASM Orchestration OBJECT Library (beaconism pattern)
+        # Creates object files that get directly linked into RawrXD-QtShell
+        # NOTE: Only includes MASM files that compile without errors
+        if(ENABLE_MASM_INTEGRATION)
+            add_library(masm_ide_orchestration_obj OBJECT
+                src/masm/final-ide/ai_orchestration_glue.asm
+                src/masm/final-ide/system_init_stubs.asm
+                src/masm/final-ide/agent_orchestrator_main.asm
+                # Pure MASM core + brutal bridges
+                src/masm/final-ide/rawr_core_masm.asm
+                src/masm/final-ide/masm_brutal_bridges.asm
+                # Disabled: ai_orchestration_coordinator.asm - multiplydefined with ai_orchestration_glue
+                # src/masm/final-ide/ai_orchestration_coordinator.asm
+                # Disabled: autonomous_task_executor_clean.asm - duplicate of original
+                # src/masm/final-ide/autonomous_task_executor_clean.asm
+                # Disabled: output_pane_logger_clean.asm - duplicate of original
+                # src/masm/final-ide/output_pane_logger_clean.asm
+                # Disabled: masm_gpu_backend_clean.asm - duplicate of original
+                # src/masm/final-ide/masm_gpu_backend_clean.asm
+                src/masm/final-ide/masm_security_manager.asm
+                src/masm/final-ide/agentic_failure_detector.asm
+                src/masm/final-ide/masm_inference_engine.asm
+                src/masm/final-ide/agentic_copilot_bridge.asm
+                src/masm/final-ide/agentic_masm_system.asm
+                # Disabled: agent_utility_agents.asm - multiply defined with system_init_stubs
+                # src/masm/final-ide/agent_utility_agents.asm
+                src/masm/final-ide/agent_meta_learn.asm
+                src/masm/final-ide/masm_metrics_collector.asm
+                src/masm/final-ide/masm_tokenizer.asm
+                src/masm/final-ide/masm_proxy_server.asm
+                src/masm/final-ide/console_log_simple.asm
+                # src/masm/final-ide/agent_chat_hotpatch_bridge.asm  # invalid instruction operands
+                src/masm/final-ide/masm_qt_bridge.asm
+                src/masm/final-ide/missing_stubs_minimal.asm
+                # Disabled: ai_orchestration_glue_clean.asm - duplicate of original
+                # src/masm/final-ide/ai_orchestration_glue_clean.asm
+                # Disabled: system_init_stubs_clean.asm - duplicate of original
+                # src/masm/final-ide/system_init_stubs_clean.asm
+                src/masm/final-ide/ui_phase1_implementations_fixed.asm
+                # Disabled: chat_persistence_phase2.asm - rip usage and undefined labels
+                # src/masm/final-ide/chat_persistence_phase2.asm
+                # Disabled: agentic_nlp_phase3.asm - complex syntax issues
+                # src/masm/final-ide/agentic_nlp_phase3.asm
+                # Disabled: menu_system.asm - needs review
+                # src/masm/final-ide/menu_system.asm
+                # Disabled: masm_theme_system_complete.asm - needs review
+                # src/masm/final-ide/masm_theme_system_complete.asm
+                # Disabled: masm_file_browser_complete.asm - needs review
+                # src/masm/final-ide/masm_file_browser_complete.asm
+                # Disabled: phase2_integration.asm - needs review
+                # src/masm/final-ide/phase2_integration.asm
+            )
+            # Set MASM-specific properties on all sources
+            set_target_properties(masm_ide_orchestration_obj PROPERTIES
+                LINKER_LANGUAGE CXX
+            )
+            # Mark all sources as MASM
+            get_target_property(MASM_SOURCES masm_ide_orchestration_obj SOURCES)
+            set_source_files_properties(${MASM_SOURCES} PROPERTIES LANGUAGE ASM_MASM)
+            message(STATUS "MASM orchestration OBJECT library created with ${CMAKE_CURRENT_LIST_LINE} sources")
+        endif()
         
         add_library(self_test_gate STATIC
             src/agent/self_test.cpp
@@ -735,7 +791,8 @@ if(MSVC)
         endif()
 
         # Link Qt modules including WebSockets for swarm collaboration
-target_link_libraries(RawrXD-QtShell PRIVATE
+        # Use beaconism pattern for MASM object files
+        target_link_libraries(RawrXD-QtShell PRIVATE
             Qt6::Core
             Qt6::Gui
             Qt6::Widgets
@@ -745,6 +802,7 @@ target_link_libraries(RawrXD-QtShell PRIVATE
             brutal_gzip
             self_test_gate
             quant_utils
+            $<$<BOOL:${ENABLE_MASM_INTEGRATION}>:$<TARGET_OBJECTS:masm_ide_orchestration_obj>>
             Psapi
             dwmapi
             uxtheme
@@ -1611,6 +1669,19 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/agentic_copilot_bridge.cpp")
         list(APPEND AGENTICIDE_SOURCES src/agentic_copilot_bridge.cpp)
     endif()
+    # Add agentic failure detector and puppeteer for hotpatching
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/agent/agentic_failure_detector.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/agent/agentic_failure_detector.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/agent/agentic_failure_detector.hpp")
+        list(APPEND AGENTICIDE_SOURCES src/agent/agentic_failure_detector.hpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/agent/agentic_puppeteer.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/agent/agentic_puppeteer.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/agent/agentic_puppeteer.hpp")
+        list(APPEND AGENTICIDE_SOURCES src/agent/agentic_puppeteer.hpp)
+    endif()
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/ai_code_assistant.cpp")
         list(APPEND AGENTICIDE_SOURCES src/qtapp/ai_code_assistant.cpp)
     endif()
@@ -1646,6 +1717,9 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
     endif()
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/real_time_completion_engine.cpp")
         list(APPEND AGENTICIDE_SOURCES src/real_time_completion_engine.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/include/real_time_completion_engine.h")
+        list(APPEND AGENTICIDE_SOURCES include/real_time_completion_engine.h)
     endif()
     if(EXISTS "${CMAKE_SOURCE_DIR}/include/tokenizer_selector.h")
         list(APPEND AGENTICIDE_SOURCES include/tokenizer_selector.h)
@@ -1805,12 +1879,15 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
     endif()
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/autonomous_model_manager.cpp")
         list(APPEND AGENTICIDE_SOURCES src/autonomous_model_manager.cpp)
+        list(APPEND AGENTICIDE_SOURCES src/autonomous_model_manager.h)
     endif()
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/autonomous_resource_manager.cpp")
         list(APPEND AGENTICIDE_SOURCES src/autonomous_resource_manager.cpp)
+        list(APPEND AGENTICIDE_SOURCES include/autonomous_resource_manager.h)
     endif()
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/agentic_learning_system.cpp")
         list(APPEND AGENTICIDE_SOURCES src/agentic_learning_system.cpp)
+        list(APPEND AGENTICIDE_SOURCES include/agentic_learning_system.h)
     endif()
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/compression_interface.cpp")
         list(APPEND AGENTICIDE_SOURCES src/compression_interface.cpp)
@@ -2149,7 +2226,12 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
     target_include_directories(RawrXD-AgenticIDE BEFORE PRIVATE 
         ${CMAKE_SOURCE_DIR}
         ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
         ${CMAKE_SOURCE_DIR}/src/qtapp
+        ${CMAKE_SOURCE_DIR}/src/agent
+        ${CMAKE_SOURCE_DIR}/src/ui
+        ${CMAKE_SOURCE_DIR}/src/utils
+        ${CMAKE_SOURCE_DIR}/src/gui
         ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
         ${CMAKE_SOURCE_DIR}/3rdparty/ggml/src
     )

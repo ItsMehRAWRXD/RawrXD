@@ -1,0 +1,16 @@
+digraph "d3dcompiler" {
+node [
+  fontsize = "12"
+];
+    "node34" [ label = "d3dcompiler", shape = septagon ];
+    "node30" [ label = "RawrXD-AgenticIDE", shape = egg ];
+    "node30" -> "node34" [ style = dotted ] // RawrXD-AgenticIDE -> d3dcompiler
+    "node30" [ label = "RawrXD-AgenticIDE", shape = egg ];
+    "node30" -> "node30"  // RawrXD-AgenticIDE -> RawrXD-AgenticIDE
+    "node47" [ label = "RawrXD-Chromatic", shape = egg ];
+    "node47" -> "node34" [ style = dotted ] // RawrXD-Chromatic -> d3dcompiler
+    "node59" [ label = "RawrXD-Win32IDE", shape = egg ];
+    "node59" -> "node34" [ style = dotted ] // RawrXD-Win32IDE -> d3dcompiler
+    "node105" [ label = "test_ide_main", shape = egg ];
+    "node105" -> "node34" [ style = dotted ] // test_ide_main -> d3dcompiler
+}

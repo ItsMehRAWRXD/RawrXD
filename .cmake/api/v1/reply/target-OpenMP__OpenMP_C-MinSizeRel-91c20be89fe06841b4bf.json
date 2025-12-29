@@ -1,0 +1,63 @@
+{
+	"abstract" : true,
+	"backtrace" : 4,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_library",
+			"find_package",
+			"ggml_add_cpu_backend_variant_impl"
+		],
+		"files" : 
+		[
+			"C:/Program Files/CMake/share/cmake-4.2/Modules/FindOpenMP.cmake",
+			"3rdparty/ggml/src/ggml-cpu/CMakeLists.txt",
+			"3rdparty/ggml/src/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 2
+			},
+			{
+				"command" : 2,
+				"file" : 2,
+				"line" : 409,
+				"parent" : 0
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 71,
+				"parent" : 1
+			},
+			{
+				"file" : 0,
+				"parent" : 2
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 757,
+				"parent" : 3
+			}
+		]
+	},
+	"codemodelVersion" : 
+	{
+		"major" : 2,
+		"minor" : 9
+	},
+	"id" : "OpenMP::OpenMP_C::@be17251fbe8c79eff835",
+	"imported" : true,
+	"local" : true,
+	"name" : "OpenMP::OpenMP_C",
+	"paths" : 
+	{
+		"build" : "3rdparty/ggml/src",
+		"source" : "3rdparty/ggml/src"
+	},
+	"sources" : [],
+	"type" : "INTERFACE_LIBRARY"
+}

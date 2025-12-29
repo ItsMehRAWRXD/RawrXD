@@ -1,0 +1,14 @@
+digraph "gdi32" {
+node [
+  fontsize = "12"
+];
+    "node35" [ label = "gdi32", shape = septagon ];
+    "node30" [ label = "RawrXD-AgenticIDE", shape = egg ];
+    "node30" -> "node35" [ style = dotted ] // RawrXD-AgenticIDE -> gdi32
+    "node30" [ label = "RawrXD-AgenticIDE", shape = egg ];
+    "node30" -> "node30"  // RawrXD-AgenticIDE -> RawrXD-AgenticIDE
+    "node47" [ label = "RawrXD-Chromatic", shape = egg ];
+    "node47" -> "node35" [ style = dotted ] // RawrXD-Chromatic -> gdi32
+    "node105" [ label = "test_ide_main", shape = egg ];
+    "node105" -> "node35" [ style = dotted ] // test_ide_main -> gdi32
+}

@@ -1,0 +1,8 @@
+digraph "Qt6::Platform" {
+node [
+  fontsize = "12"
+];
+    "node4" [ label = "Qt6::Platform", shape = pentagon ];
+    "node5" [ label = "Threads::Threads", shape = pentagon ];
+    "node4" -> "node5" [ style = dashed ] // Qt6::Platform -> Threads::Threads
+}

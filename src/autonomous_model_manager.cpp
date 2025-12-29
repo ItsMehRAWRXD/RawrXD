@@ -1,8 +1,15 @@
 #include "autonomous_model_manager.h"
 #include <QDebug>
+#include <QFileInfo>
+#include <memory>
 
 AutonomousModelManager::AutonomousModelManager(QObject* parent)
     : QObject(parent) {
+}
+
+AutonomousModelManager::~AutonomousModelManager() {
+    // Clean up compression provider
+    m_compressionProvider.reset();
 }
 
 bool AutonomousModelManager::loadModelAutonomously(const QString& modelPath) {

@@ -1,0 +1,20 @@
+digraph "quant_utils" {
+node [
+  fontsize = "12"
+];
+    "node44" [ label = "quant_utils", shape = octagon ];
+    "node30" [ label = "RawrXD-AgenticIDE", shape = egg ];
+    "node30" -> "node44" [ style = dotted ] // RawrXD-AgenticIDE -> quant_utils
+    "node30" [ label = "RawrXD-AgenticIDE", shape = egg ];
+    "node30" -> "node30"  // RawrXD-AgenticIDE -> RawrXD-AgenticIDE
+    "node48" [ label = "RawrXD-QtShell", shape = egg ];
+    "node48" -> "node44" [ style = dotted ] // RawrXD-QtShell -> quant_utils
+    "node48" [ label = "RawrXD-QtShell", shape = egg ];
+    "node48" -> "node48"  // RawrXD-QtShell -> RawrXD-QtShell
+    "node59" [ label = "RawrXD-Win32IDE", shape = egg ];
+    "node59" -> "node44" [ style = dotted ] // RawrXD-Win32IDE -> quant_utils
+    "node94" [ label = "quant_correctness_tests", shape = egg ];
+    "node94" -> "node44" [ style = dotted ] // quant_correctness_tests -> quant_utils
+    "node95" [ label = "quant_engine_test", shape = egg ];
+    "node95" -> "node44" [ style = dotted ] // quant_engine_test -> quant_utils
+}

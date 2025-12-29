@@ -1,0 +1,3 @@
+MSBuild version 17.14.23+b0019275e for .NET Framework
+MSBUILD : error MSB1009: Project file does not exist.
+Switch: help.vcxproj

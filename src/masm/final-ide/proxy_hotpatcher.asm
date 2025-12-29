@@ -28,6 +28,9 @@ EXTERN asm_mutex_lock:PROC
 EXTERN asm_mutex_unlock:PROC
 EXTERN asm_memcpy_fast:PROC
 
+; Consolidated core functions
+EXTERN masm_core_direct_copy:PROC
+
 ; ProxyHotpatch Structure (512 bytes):
 ;   [+0]:  hotpatch_id (qword)
 ;   [+8]:  target_token_id (qword)
@@ -133,7 +136,7 @@ masm_proxy_hotpatch_add PROC
     mov rcx, r12
     mov rdx, rbx
     mov r8, 512
-    call asm_memcpy_fast
+    call masm_core_direct_copy
     
     ; Assign ID
     mov rax, [g_proxy_hotpatch_count]
@@ -328,7 +331,7 @@ rst_apply_injection:
     mov rdx, rbx            ; src = stream_ptr
     mov r8, r12             ; size = stream_len
     push rax
-    call asm_memcpy_fast
+    call masm_core_direct_copy
     pop rax
     
     ; Append termination pattern
@@ -337,7 +340,7 @@ rst_apply_injection:
     mov rdx, [rax + 48]     ; src = pattern_ptr
     mov r8, [rax + 56]      ; size = pattern_len
     push rax
-    call asm_memcpy_fast
+    call masm_core_direct_copy
     pop rax
     
     ; Update output length

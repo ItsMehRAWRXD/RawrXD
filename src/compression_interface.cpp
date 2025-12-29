@@ -52,11 +52,12 @@ bool BrutalGzipWrapper::Compress(const std::vector<uint8_t>& raw,
         
         // Copy compressed data to output vector
         compressed.assign(output.constData(), output.constData() + output.size());
-        
-        if (raw.size() > 0) {
-            double ratio = 100.0 * compressed.size() / raw.size();
+
+        double ratio = 0.0;
+        if (!raw.empty()) {
+            ratio = 100.0 * compressed.size() / raw.size();
             qInfo() << "[Compression] BrutalGzip:" << raw.size() << "->" << compressed.size() 
-                    << "bytes (" << QString::number(ratio, 'f', 2) << "%)";
+                    << "bytes (" << QString::number(ratio, 'f', 2) << "% )";
             
             // Telemetry
             QJsonObject meta;
@@ -68,6 +69,16 @@ bool BrutalGzipWrapper::Compress(const std::vector<uint8_t>& raw,
             GetTelemetry().recordEvent("compression_op", meta);
         } else {
             qWarning() << "[Compression] Attempted to compress empty data";
+        }
+
+        stats_.total_compressed_bytes += compressed.size();
+        const double previous_calls = static_cast<double>(stats_.compression_calls);
+        stats_.compression_calls++;
+        stats_.total_calls = stats_.compression_calls + stats_.decompression_calls;
+        if (!raw.empty()) {
+            const double call_count = static_cast<double>(stats_.compression_calls);
+            stats_.avg_compression_ratio = ((stats_.avg_compression_ratio * previous_calls) + ratio) / call_count;
+            stats_.avg_ratio = stats_.avg_compression_ratio;
         }
         
         return true;
@@ -105,6 +116,10 @@ bool BrutalGzipWrapper::Decompress(const std::vector<uint8_t>& compressed,
         
         // Copy decompressed data to output vector
         raw.assign(output.constData(), output.constData() + output.size());
+
+        stats_.total_decompressed_bytes += raw.size();
+        stats_.decompression_calls++;
+        stats_.total_calls = stats_.compression_calls + stats_.decompression_calls;
         
         qInfo() << "[Compression] BrutalGzip decompressed:" << compressed.size() 
                 << "->" << raw.size() << "bytes";
@@ -191,14 +206,26 @@ bool DeflateWrapper::Compress(const std::vector<uint8_t>& raw,
         
         total_compressed_input_ += raw.size();
         compression_calls_++;
-        
-        if (raw.size() > 0) {
-            double ratio = 100.0 * compressed.size() / raw.size();
+
+        double ratio = 0.0;
+        if (!raw.empty()) {
+            ratio = 100.0 * compressed.size() / raw.size();
             qInfo() << "[Compression] Deflate:" << raw.size() << "->" << compressed.size() 
-                    << "bytes (" << QString::number(ratio, 'f', 2) << "%)";
+                    << "bytes (" << QString::number(ratio, 'f', 2) << "% )";
         } else {
             qWarning() << "[Compression] Attempted to compress empty data";
         }
+
+        stats_.total_compressed_bytes += compressed.size();
+        const double previous_calls = static_cast<double>(stats_.compression_calls);
+        stats_.compression_calls++;
+        stats_.total_calls = stats_.compression_calls + stats_.decompression_calls;
+        if (!raw.empty()) {
+            const double call_count = static_cast<double>(stats_.compression_calls);
+            stats_.avg_compression_ratio = ((stats_.avg_compression_ratio * previous_calls) + ratio) / call_count;
+            stats_.avg_ratio = stats_.avg_compression_ratio;
+        }
+        stats_.active_kernel = "deflate_brutal";
         
         return true;
     } catch (const std::exception& e) {
@@ -231,9 +258,14 @@ bool DeflateWrapper::Decompress(const std::vector<uint8_t>& compressed,
         
         total_decompressed_bytes_ += raw.size();
         decompression_calls_++;
+
+        stats_.total_decompressed_bytes += raw.size();
+        stats_.decompression_calls++;
+        stats_.total_calls = stats_.compression_calls + stats_.decompression_calls;
+        stats_.active_kernel = "deflate_brutal";
         
         qInfo() << "[Compression] Deflate decompressed:" << compressed.size() 
-                << "->" << raw.size() << "bytes";
+            << "->" << raw.size() << "bytes";
         
         return true;
     } catch (const std::exception& e) {
@@ -244,6 +276,10 @@ bool DeflateWrapper::Decompress(const std::vector<uint8_t>& compressed,
 
 bool DeflateWrapper::IsSupported() const {
     return is_initialized_;
+}
+
+std::string DeflateWrapper::GetActiveKernel() const {
+    return "deflate_brutal";
 }
 
 void DeflateWrapper::SetCompressionLevel(uint32_t level) {
@@ -308,4 +344,22 @@ std::string CompressionStats::ToString() const {
         << "  Avg Compression Ratio: " << avg_compression_ratio << "\n"
         << "}";
     return oss.str();
+}
+
+// BrutalGzipWrapper::GetStats()
+CompressionStats BrutalGzipWrapper::GetStats() const {
+    CompressionStats copy = stats_;
+    copy.active_kernel = GetActiveKernel();
+    copy.avg_ratio = copy.avg_compression_ratio;
+    copy.total_calls = copy.compression_calls + copy.decompression_calls;
+    return copy;
+}
+
+// DeflateWrapper::GetStats()
+CompressionStats DeflateWrapper::GetStats() const {
+    CompressionStats copy = stats_;
+    copy.active_kernel = "deflate_brutal";
+    copy.avg_ratio = copy.avg_compression_ratio;
+    copy.total_calls = copy.compression_calls + copy.decompression_calls;
+    return copy;
 }

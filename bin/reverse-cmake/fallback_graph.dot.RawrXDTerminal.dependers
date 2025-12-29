@@ -1,0 +1,10 @@
+digraph "RawrXDTerminal" {
+node [
+  fontsize = "12"
+];
+    "node63" [ label = "RawrXDTerminal", shape = octagon ];
+    "node59" [ label = "RawrXD-Win32IDE", shape = egg ];
+    "node59" -> "node63" [ style = dotted ] // RawrXD-Win32IDE -> RawrXDTerminal
+    "node105" [ label = "test_ide_main", shape = egg ];
+    "node105" -> "node63" [ style = dotted ] // test_ide_main -> RawrXDTerminal
+}

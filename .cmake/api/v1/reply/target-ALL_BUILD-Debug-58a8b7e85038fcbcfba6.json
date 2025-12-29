@@ -1,0 +1,47 @@
+{
+	"backtrace" : 0,
+	"backtraceGraph" : 
+	{
+		"commands" : [],
+		"files" : 
+		[
+			"src/orchestration/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			}
+		]
+	},
+	"codemodelVersion" : 
+	{
+		"major" : 2,
+		"minor" : 9
+	},
+	"dependencies" : 
+	[
+		{
+			"id" : "RawrXDOrchestration::@b3acaa3a5b8b054b65f5"
+		},
+		{
+			"id" : "ZERO_CHECK::@6890427a1f51a3e7e1df"
+		}
+	],
+	"id" : "ALL_BUILD::@b3acaa3a5b8b054b65f5",
+	"isGeneratorProvided" : true,
+	"name" : "ALL_BUILD",
+	"orderDependencies" : 
+	[
+		{
+			"id" : "RawrXDOrchestration::@b3acaa3a5b8b054b65f5"
+		}
+	],
+	"paths" : 
+	{
+		"build" : "src/orchestration",
+		"source" : "src/orchestration"
+	},
+	"sources" : [],
+	"type" : "UTILITY"
+}

@@ -1,0 +1,14 @@
+[
+  {
+    "cpp": "C:\\Users\\HiH8e\\Downloads\\RawrXD-production-lazy-init\\src\\qtapp\\codec.cpp",
+    "cod": "C:\\Users\\HiH8e\\Downloads\\RawrXD-production-lazy-init\\bin\\self-masmize\\lst\\codec.cod"
+  },
+  {
+    "cpp": "C:\\Users\\HiH8e\\Downloads\\RawrXD-production-lazy-init\\src\\qtapp\\gguf_loader.cpp",
+    "cod": "C:\\Users\\HiH8e\\Downloads\\RawrXD-production-lazy-init\\bin\\self-masmize\\lst\\gguf_loader.cod"
+  },
+  {
+    "cpp": "C:\\Users\\HiH8e\\Downloads\\RawrXD-production-lazy-init\\src\\qtapp\\vocabulary_loader.cpp",
+    "cod": "C:\\Users\\HiH8e\\Downloads\\RawrXD-production-lazy-init\\bin\\self-masmize\\lst\\vocabulary_loader.cod"
+  }
+]

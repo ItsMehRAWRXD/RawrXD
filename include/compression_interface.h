@@ -1,8 +1,12 @@
 #pragma once
+#ifndef COMPRESSION_INTERFACE_H
+#define COMPRESSION_INTERFACE_H
 
 #include <vector>
 #include <cstdint>
 #include <memory>
+#include <string>
+#include <sstream>
 #include "brutal_gzip.h"
 #include "deflate_brutal_qt.hpp"
 
@@ -23,6 +27,34 @@ class IGZIPCompressor;
 class IDeflateCompressor;
 
 /**
+ * @class CompressionStats
+ * @brief Collects compression statistics for monitoring
+ */
+struct CompressionStats {
+    uint64_t total_compressed_bytes = 0;
+    uint64_t total_decompressed_bytes = 0;
+    uint32_t decompression_calls = 0;
+    uint32_t compression_calls = 0;
+    uint64_t total_calls = 0;
+    double avg_compression_ratio = 0.0;
+    double avg_ratio = 0.0;
+    std::string active_kernel;
+
+    void Reset() {
+        total_compressed_bytes = 0;
+        total_decompressed_bytes = 0;
+        decompression_calls = 0;
+        compression_calls = 0;
+        total_calls = 0;
+        avg_compression_ratio = 0.0;
+        avg_ratio = 0.0;
+        active_kernel.clear();
+    }
+
+    std::string ToString() const;
+};
+
+/**
  * @class ICompressionProvider
  * @brief Abstract interface for compression algorithms
  */
@@ -32,6 +64,8 @@ public:
     virtual bool Compress(const std::vector<uint8_t>& raw, std::vector<uint8_t>& compressed) = 0;
     virtual bool Decompress(const std::vector<uint8_t>& compressed, std::vector<uint8_t>& raw) = 0;
     virtual bool IsSupported() const = 0;
+    virtual std::string GetActiveKernel() const = 0;
+    virtual CompressionStats GetStats() const = 0;
 };
 
 /**
@@ -62,7 +96,7 @@ public:
      * @brief Get the actual MASM kernel being used
      * @return String describing the kernel (e.g., "brutal_masm", "godmode_masm", "fallback")
      */
-    std::string GetActiveKernel() const;
+    std::string GetActiveKernel() const override;
     
     /**
      * @brief Set threading model for decompression
@@ -70,9 +104,15 @@ public:
      */
     void SetThreadCount(uint32_t num_threads);
 
+    /**
+     * @brief Get compression statistics
+     */
+    CompressionStats GetStats() const override;
+
 private:
     uint32_t thread_count_ = 0;  // 0 = auto-detect
     bool is_initialized_ = false;
+    CompressionStats stats_{};
 };
 
 /**
@@ -98,6 +138,7 @@ public:
     bool Compress(const std::vector<uint8_t>& raw, std::vector<uint8_t>& compressed) override;
     bool Decompress(const std::vector<uint8_t>& compressed, std::vector<uint8_t>& raw) override;
     bool IsSupported() const override;
+    std::string GetActiveKernel() const override;
     
     /**
      * @brief Set compression level (1-9, 9 = best compression)
@@ -111,11 +152,19 @@ public:
      */
     std::string GetDecompressionStats() const;
 
+    /**
+     * @brief Get compression statistics
+     */
+    CompressionStats GetStats() const override;
+
 private:
     uint32_t compression_level_ = 6;  // Default: balanced
     bool is_initialized_ = false;
-    uint64_t total_decompressed_ = 0;
+    uint64_t total_decompressed_bytes_ = 0;
     uint64_t total_compressed_input_ = 0;
+    uint64_t decompression_calls_ = 0;
+    uint64_t compression_calls_ = 0;
+    CompressionStats stats_{};
 };
 
 /**
@@ -139,32 +188,5 @@ public:
     static bool IsSupported(uint32_t type);
 };
 
-/**
- * @class CompressionStats
- * @brief Collects compression statistics for monitoring
- */
-struct CompressionStats {
-    uint64_t total_compressed_bytes = 0;
-    uint64_t total_decompressed_bytes = 0;
-    uint32_t decompression_calls = 0;
-    uint32_t compression_calls = 0;
-    double avg_compression_ratio = 0.0;
-    
-    /**
-     * @brief Reset statistics
-     */
-    void Reset() {
-        total_compressed_bytes = 0;
-        total_decompressed_bytes = 0;
-        decompression_calls = 0;
-        compression_calls = 0;
-        avg_compression_ratio = 0.0;
-    }
-    
-    /**
-     * @brief Get human-readable statistics string
-     */
-    std::string ToString() const;
-};
-
 #endif // COMPRESSION_INTERFACE_H
+

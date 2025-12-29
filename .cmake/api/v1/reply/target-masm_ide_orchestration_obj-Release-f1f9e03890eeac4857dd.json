@@ -1,0 +1,867 @@
+{
+	"artifacts" : 
+	[
+		{
+			"path" : "masm_ide_orchestration_obj.dir/Release/mocs_compilation_Release.obj"
+		},
+		{
+			"path" : "masm_ide_orchestration_obj.dir/Release/ai_orchestration_glue.obj"
+		},
+		{
+			"path" : "masm_ide_orchestration_obj.dir/Release/system_init_stubs.obj"
+		},
+		{
+			"path" : "masm_ide_orchestration_obj.dir/Release/agent_orchestrator_main.obj"
+		},
+		{
+			"path" : "masm_ide_orchestration_obj.dir/Release/rawr_core_masm.obj"
+		},
+		{
+			"path" : "masm_ide_orchestration_obj.dir/Release/masm_brutal_bridges.obj"
+		},
+		{
+			"path" : "masm_ide_orchestration_obj.dir/Release/masm_security_manager.obj"
+		},
+		{
+			"path" : "masm_ide_orchestration_obj.dir/Release/agentic_failure_detector.obj"
+		},
+		{
+			"path" : "masm_ide_orchestration_obj.dir/Release/masm_inference_engine.obj"
+		},
+		{
+			"path" : "masm_ide_orchestration_obj.dir/Release/agentic_copilot_bridge.obj"
+		},
+		{
+			"path" : "masm_ide_orchestration_obj.dir/Release/agentic_masm_system.obj"
+		},
+		{
+			"path" : "masm_ide_orchestration_obj.dir/Release/agent_meta_learn.obj"
+		},
+		{
+			"path" : "masm_ide_orchestration_obj.dir/Release/masm_metrics_collector.obj"
+		},
+		{
+			"path" : "masm_ide_orchestration_obj.dir/Release/masm_tokenizer.obj"
+		},
+		{
+			"path" : "masm_ide_orchestration_obj.dir/Release/masm_proxy_server.obj"
+		},
+		{
+			"path" : "masm_ide_orchestration_obj.dir/Release/console_log_simple.obj"
+		},
+		{
+			"path" : "masm_ide_orchestration_obj.dir/Release/masm_qt_bridge.obj"
+		},
+		{
+			"path" : "masm_ide_orchestration_obj.dir/Release/missing_stubs_minimal.obj"
+		},
+		{
+			"path" : "masm_ide_orchestration_obj.dir/Release/ui_phase1_implementations_fixed.obj"
+		}
+	],
+	"backtrace" : 1,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_library",
+			"add_definitions",
+			"add_compile_definitions",
+			"include_directories",
+			"add_compile_options"
+		],
+		"files" : 
+		[
+			"CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 708,
+				"parent" : 0
+			},
+			{
+				"command" : 1,
+				"file" : 0,
+				"line" : 212,
+				"parent" : 0
+			},
+			{
+				"command" : 2,
+				"file" : 0,
+				"line" : 781,
+				"parent" : 0
+			},
+			{
+				"command" : 2,
+				"file" : 0,
+				"line" : 449,
+				"parent" : 0
+			},
+			{
+				"command" : 1,
+				"file" : 0,
+				"line" : 61,
+				"parent" : 0
+			},
+			{
+				"command" : 3,
+				"file" : 0,
+				"line" : 368,
+				"parent" : 0
+			},
+			{
+				"command" : 4,
+				"file" : 0,
+				"line" : 116,
+				"parent" : 0
+			}
+		]
+	},
+	"codemodelVersion" : 
+	{
+		"major" : 2,
+		"minor" : 9
+	},
+	"compileDependencies" : 
+	[
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Core::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Gui::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Widgets::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Network::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Sql::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Concurrent::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Test::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Charts::@6890427a1f51a3e7e1df"
+		}
+	],
+	"compileGroups" : 
+	[
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "/DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MD"
+				},
+				{
+					"backtrace" : 7,
+					"fragment" : "/MD"
+				},
+				{
+					"backtrace" : 1,
+					"fragment" : "-Zc:__cplusplus"
+				},
+				{
+					"backtrace" : 1,
+					"fragment" : "-permissive-"
+				},
+				{
+					"backtrace" : 1,
+					"fragment" : "-utf-8"
+				}
+			],
+			"defines" : 
+			[
+				{
+					"backtrace" : 2,
+					"define" : "HAVE_QT_CORE"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "HAVE_RAWRXD_CRYPTO=1"
+				},
+				{
+					"backtrace" : 4,
+					"define" : "HAVE_VULKAN=1"
+				},
+				{
+					"backtrace" : 5,
+					"define" : "NOMINMAX"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "QT_CHARTS_LIB"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "QT_CONCURRENT_LIB"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "QT_CORE_LIB"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "QT_GUI_LIB"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "QT_NETWORK_LIB"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "QT_NO_DEBUG"
+				},
+				{
+					"backtrace" : 2,
+					"define" : "QT_NO_OPENGL"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "QT_OPENGLWIDGETS_LIB"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "QT_OPENGL_LIB"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "QT_SQL_LIB"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "QT_TESTCASE_BUILDDIR=\"C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init\""
+				},
+				{
+					"backtrace" : 1,
+					"define" : "QT_TESTCASE_SOURCEDIR=\"C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init\""
+				},
+				{
+					"backtrace" : 1,
+					"define" : "QT_TESTLIB_LIB"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "QT_WIDGETS_LIB"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "UNICODE"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "WIN32"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "WIN64"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "_ENABLE_EXTENDED_ALIGNED_STORAGE"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "_UNICODE"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "_WIN64"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 0,
+					"path" : "C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/masm_ide_orchestration_obj_autogen/include_Release"
+				},
+				{
+					"backtrace" : 6,
+					"isSystem" : true,
+					"path" : "C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/include"
+				},
+				{
+					"backtrace" : 1,
+					"isSystem" : true,
+					"path" : "C:/Qt/6.7.3/msvc2022_64/include/QtCore"
+				},
+				{
+					"backtrace" : 1,
+					"isSystem" : true,
+					"path" : "C:/Qt/6.7.3/msvc2022_64/include"
+				},
+				{
+					"backtrace" : 1,
+					"isSystem" : true,
+					"path" : "C:/Qt/6.7.3/msvc2022_64/mkspecs/win32-msvc"
+				},
+				{
+					"backtrace" : 1,
+					"isSystem" : true,
+					"path" : "C:/Qt/6.7.3/msvc2022_64/include/QtGui"
+				},
+				{
+					"backtrace" : 1,
+					"isSystem" : true,
+					"path" : "C:/VulkanSDK/1.4.328.1/include"
+				},
+				{
+					"backtrace" : 1,
+					"isSystem" : true,
+					"path" : "C:/Qt/6.7.3/msvc2022_64/include/QtWidgets"
+				},
+				{
+					"backtrace" : 1,
+					"isSystem" : true,
+					"path" : "C:/Qt/6.7.3/msvc2022_64/include/QtNetwork"
+				},
+				{
+					"backtrace" : 1,
+					"isSystem" : true,
+					"path" : "C:/Qt/6.7.3/msvc2022_64/include/QtSql"
+				},
+				{
+					"backtrace" : 1,
+					"isSystem" : true,
+					"path" : "C:/Qt/6.7.3/msvc2022_64/include/QtConcurrent"
+				},
+				{
+					"backtrace" : 1,
+					"isSystem" : true,
+					"path" : "C:/Qt/6.7.3/msvc2022_64/include/QtTest"
+				},
+				{
+					"backtrace" : 1,
+					"isSystem" : true,
+					"path" : "C:/Qt/6.7.3/msvc2022_64/include/QtCharts"
+				},
+				{
+					"backtrace" : 1,
+					"isSystem" : true,
+					"path" : "C:/Qt/6.7.3/msvc2022_64/include/QtOpenGL"
+				},
+				{
+					"backtrace" : 1,
+					"isSystem" : true,
+					"path" : "C:/Qt/6.7.3/msvc2022_64/include/QtOpenGLWidgets"
+				}
+			],
+			"language" : "CXX",
+			"languageStandard" : 
+			{
+				"backtraces" : 
+				[
+					1,
+					1
+				],
+				"standard" : "20"
+			},
+			"sourceIndexes" : 
+			[
+				0
+			]
+		},
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "/nologo /Zi /c /Cp /W3 /nologo /Zi /c /Cp /W3"
+				}
+			],
+			"defines" : 
+			[
+				{
+					"backtrace" : 2,
+					"define" : "HAVE_QT_CORE"
+				},
+				{
+					"backtrace" : 3,
+					"define" : "HAVE_RAWRXD_CRYPTO=1"
+				},
+				{
+					"backtrace" : 4,
+					"define" : "HAVE_VULKAN=1"
+				},
+				{
+					"backtrace" : 5,
+					"define" : "NOMINMAX"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "QT_CHARTS_LIB"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "QT_CONCURRENT_LIB"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "QT_CORE_LIB"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "QT_GUI_LIB"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "QT_NETWORK_LIB"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "QT_NO_DEBUG"
+				},
+				{
+					"backtrace" : 2,
+					"define" : "QT_NO_OPENGL"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "QT_OPENGLWIDGETS_LIB"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "QT_OPENGL_LIB"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "QT_SQL_LIB"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "QT_TESTCASE_BUILDDIR=\"C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init\""
+				},
+				{
+					"backtrace" : 1,
+					"define" : "QT_TESTCASE_SOURCEDIR=\"C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init\""
+				},
+				{
+					"backtrace" : 1,
+					"define" : "QT_TESTLIB_LIB"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "QT_WIDGETS_LIB"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "UNICODE"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "WIN32"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "WIN64"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "_ENABLE_EXTENDED_ALIGNED_STORAGE"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "_UNICODE"
+				},
+				{
+					"backtrace" : 1,
+					"define" : "_WIN64"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 0,
+					"path" : "C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/masm_ide_orchestration_obj_autogen/include_Release"
+				},
+				{
+					"backtrace" : 6,
+					"isSystem" : true,
+					"path" : "C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/include"
+				},
+				{
+					"backtrace" : 1,
+					"isSystem" : true,
+					"path" : "C:/Qt/6.7.3/msvc2022_64/include/QtCore"
+				},
+				{
+					"backtrace" : 1,
+					"isSystem" : true,
+					"path" : "C:/Qt/6.7.3/msvc2022_64/include"
+				},
+				{
+					"backtrace" : 1,
+					"isSystem" : true,
+					"path" : "C:/Qt/6.7.3/msvc2022_64/mkspecs/win32-msvc"
+				},
+				{
+					"backtrace" : 1,
+					"isSystem" : true,
+					"path" : "C:/Qt/6.7.3/msvc2022_64/include/QtGui"
+				},
+				{
+					"backtrace" : 1,
+					"isSystem" : true,
+					"path" : "C:/VulkanSDK/1.4.328.1/include"
+				},
+				{
+					"backtrace" : 1,
+					"isSystem" : true,
+					"path" : "C:/Qt/6.7.3/msvc2022_64/include/QtWidgets"
+				},
+				{
+					"backtrace" : 1,
+					"isSystem" : true,
+					"path" : "C:/Qt/6.7.3/msvc2022_64/include/QtNetwork"
+				},
+				{
+					"backtrace" : 1,
+					"isSystem" : true,
+					"path" : "C:/Qt/6.7.3/msvc2022_64/include/QtSql"
+				},
+				{
+					"backtrace" : 1,
+					"isSystem" : true,
+					"path" : "C:/Qt/6.7.3/msvc2022_64/include/QtConcurrent"
+				},
+				{
+					"backtrace" : 1,
+					"isSystem" : true,
+					"path" : "C:/Qt/6.7.3/msvc2022_64/include/QtTest"
+				},
+				{
+					"backtrace" : 1,
+					"isSystem" : true,
+					"path" : "C:/Qt/6.7.3/msvc2022_64/include/QtCharts"
+				},
+				{
+					"backtrace" : 1,
+					"isSystem" : true,
+					"path" : "C:/Qt/6.7.3/msvc2022_64/include/QtOpenGL"
+				},
+				{
+					"backtrace" : 1,
+					"isSystem" : true,
+					"path" : "C:/Qt/6.7.3/msvc2022_64/include/QtOpenGLWidgets"
+				}
+			],
+			"language" : "ASM_MASM",
+			"sourceIndexes" : 
+			[
+				1,
+				2,
+				3,
+				4,
+				5,
+				6,
+				7,
+				8,
+				9,
+				10,
+				11,
+				12,
+				13,
+				14,
+				15,
+				16,
+				17,
+				18
+			]
+		}
+	],
+	"dependencies" : 
+	[
+		{
+			"id" : "ZERO_CHECK::@6890427a1f51a3e7e1df"
+		}
+	],
+	"id" : "masm_ide_orchestration_obj::@6890427a1f51a3e7e1df",
+	"interfaceCompileDependencies" : 
+	[
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Core::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Gui::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Widgets::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Network::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Sql::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Concurrent::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Test::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Charts::@6890427a1f51a3e7e1df"
+		}
+	],
+	"interfaceLinkLibraries" : 
+	[
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Core::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Gui::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Widgets::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Network::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Sql::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Concurrent::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Test::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Charts::@6890427a1f51a3e7e1df"
+		}
+	],
+	"linkLibraries" : 
+	[
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Core::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Gui::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Widgets::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Network::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Sql::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Concurrent::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Test::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 1,
+			"id" : "Qt6::Charts::@6890427a1f51a3e7e1df"
+		}
+	],
+	"name" : "masm_ide_orchestration_obj",
+	"orderDependencies" : 
+	[
+		{
+			"backtrace" : 0,
+			"id" : "Qt6::moc::@6890427a1f51a3e7e1df"
+		}
+	],
+	"paths" : 
+	{
+		"build" : ".",
+		"source" : "."
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "Source Files",
+			"sourceIndexes" : 
+			[
+				0
+			]
+		},
+		{
+			"name" : "",
+			"sourceIndexes" : 
+			[
+				1,
+				2,
+				3,
+				4,
+				5,
+				6,
+				7,
+				8,
+				9,
+				10,
+				11,
+				12,
+				13,
+				14,
+				15,
+				16,
+				17,
+				18
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 0,
+			"compileGroupIndex" : 0,
+			"isGenerated" : true,
+			"path" : "masm_ide_orchestration_obj_autogen/mocs_compilation_Release.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 1,
+			"path" : "src/masm/final-ide/ai_orchestration_glue.asm",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 1,
+			"path" : "src/masm/final-ide/system_init_stubs.asm",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 1,
+			"path" : "src/masm/final-ide/agent_orchestrator_main.asm",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 1,
+			"path" : "src/masm/final-ide/rawr_core_masm.asm",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 1,
+			"path" : "src/masm/final-ide/masm_brutal_bridges.asm",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 1,
+			"path" : "src/masm/final-ide/masm_security_manager.asm",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 1,
+			"path" : "src/masm/final-ide/agentic_failure_detector.asm",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 1,
+			"path" : "src/masm/final-ide/masm_inference_engine.asm",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 1,
+			"path" : "src/masm/final-ide/agentic_copilot_bridge.asm",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 1,
+			"path" : "src/masm/final-ide/agentic_masm_system.asm",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 1,
+			"path" : "src/masm/final-ide/agent_meta_learn.asm",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 1,
+			"path" : "src/masm/final-ide/masm_metrics_collector.asm",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 1,
+			"path" : "src/masm/final-ide/masm_tokenizer.asm",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 1,
+			"path" : "src/masm/final-ide/masm_proxy_server.asm",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 1,
+			"path" : "src/masm/final-ide/console_log_simple.asm",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 1,
+			"path" : "src/masm/final-ide/masm_qt_bridge.asm",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 1,
+			"path" : "src/masm/final-ide/missing_stubs_minimal.asm",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 1,
+			"path" : "src/masm/final-ide/ui_phase1_implementations_fixed.asm",
+			"sourceGroupIndex" : 1
+		}
+	],
+	"type" : "OBJECT_LIBRARY"
+}

@@ -6,7 +6,7 @@
 ; Features:
 ;   - File name and modification status (*)
 ;   - Cursor position (line:column)
-;   - File size in bytes
+;   - File size_val in_val bytes
 ;   - Line ending mode (CRLF, LF, CR)
 ;   - Character encoding (UTF-8, ASCII)
 ;   - Mode indicators (INSERT, NORMAL, VISUAL)
@@ -21,20 +21,51 @@
 
 option casemap:none
 
+; External memory functions (provided by malloc_wrapper.asm)
+EXTERN malloc:PROC
+EXTERN free:PROC
+EXTERN realloc:PROC
+EXTERN memset:PROC
+
+; Win32 API
+EXTERN CreateWindowExA:PROC
+EXTERN DestroyWindow:PROC
+EXTERN SetWindowPos:PROC
+EXTERN GetDC:PROC
+EXTERN ReleaseDC:PROC
+EXTERN TextOutA:PROC
+EXTERN CreateFontA:PROC
+EXTERN DeleteObject:PROC
+
 include windows.inc
 includelib kernel32.lib
 includelib user32.lib
+includelib gdi32.lib
+
+; Define OBJECT_BASE structure (from qt6_foundation)
+OBJECT_BASE STRUCT
+    obj_vmt          QWORD ?
+    obj_hwnd         QWORD ?
+    obj_parent       QWORD ?
+    obj_children     QWORD ?
+    obj_child_count  DWORD ?
+    obj_flags        DWORD ?
+    obj_user_data    QWORD ?
+OBJECT_BASE ENDS
+
+FLAG_VISIBLE         EQU 00000001h
+FLAG_DIRTY           EQU 00000008h
 
 ;==========================================================================
 ; STRUCTURES
-;==========================================================================
+;=========================================================================
 
 ; Status bar segment
 STATUS_SEGMENT STRUCT
     text_ptr        QWORD ?         ; Pointer to text buffer
     text_len        DWORD ?         ; Text length
     x               DWORD ?         ; Pixel position
-    width           DWORD ?         ; Segment width
+    width_val       DWORD ?         ; Segment width_val
     color_bg        DWORD ?         ; Background color
     color_text      DWORD ?         ; Text color
     alignment       DWORD ?         ; ALIGN_LEFT, ALIGN_CENTER, ALIGN_RIGHT
@@ -42,7 +73,14 @@ STATUS_SEGMENT ENDS
 
 ; Status bar
 STATUS_BAR STRUCT
-    base            OBJECT_BASE <>  ; Inherit from OBJECT_BASE
+    ; OBJECT_BASE fields
+    obj_vmt          QWORD ?
+    obj_hwnd         QWORD ?
+    obj_parent       QWORD ?
+    obj_children     QWORD ?
+    obj_child_count  DWORD ?
+    obj_flags        DWORD ?
+    obj_user_data    QWORD ?
     
     ; Segments
     left_segment    STATUS_SEGMENT <>
@@ -58,12 +96,12 @@ STATUS_BAR STRUCT
     hwnd            QWORD ?         ; Window handle
     x               DWORD ?         ; Position
     y               DWORD ?         ; Position
-    width           DWORD ?         ; Bar width
+    width_val       DWORD ?         ; Bar width_val
     height          DWORD ?         ; Bar height (24 pixels)
     
     ; File state (references from editor)
     file_name_ptr   QWORD ?         ; Current file name
-    file_size       QWORD ?         ; File size in bytes
+    file_size       QWORD ?         ; File size_val in_val bytes
     is_modified     DWORD ?         ; Modified flag (*)
     
     ; Cursor state
@@ -85,7 +123,7 @@ STATUS_BAR STRUCT
     
     ; Flags
     flags           DWORD ?         ; FLAG_VISIBLE, FLAG_DIRTY
-SYNTAX_HIGHLIGHTER ENDS
+STATUS_BAR ENDS
 
 ;==========================================================================
 ; CONSTANTS
@@ -114,14 +152,12 @@ ENC_UTF8            EQU 1
 COLOR_STATUSBAR_BG  EQU 0xF0F0F0    ; Light gray
 COLOR_STATUSBAR_TX  EQU 0x000000    ; Black
 COLOR_MODIFIED_TX   EQU 0xFF0000    ; Red (for *)
-
 ; Flags
-FLAG_VISIBLE        EQU 1
-FLAG_DIRTY          EQU 2
+; FLAG_VISIBLE and FLAG_DIRTY already defined in OBJECT_BASE section above
 
 ;==========================================================================
 ; PUBLIC FUNCTIONS
-;==========================================================================
+;===========================================================================
 
 PUBLIC statusbar_create
 PUBLIC statusbar_destroy
@@ -140,7 +176,7 @@ PUBLIC statusbar_on_mouse
 
 ; =============== statusbar_create ===============
 ; Create status bar instance
-; Inputs:  rcx = hwnd, rdx = y position, r8 = width
+; Inputs:  rcx = hwnd, rdx = y position, r8 = width_val
 ; Outputs: rax = STATUS_BAR ptr
 statusbar_create PROC
     push rbp
@@ -149,12 +185,12 @@ statusbar_create PROC
     
     ; TODO: Allocate STATUS_BAR structure (~1024 bytes with text buffers)
     ; TODO: Initialize segments:
-    ;   - left: file name, file size (30% of width)
-    ;   - center: cursor position, mode indicator (40% of width)
-    ;   - right: zoom, encoding, line ending (30% of width)
+    ;   - left: file name, file size_val (30% of width_val)
+    ;   - center: cursor position, mode indicator (40% of width_val)
+    ;   - right: zoom, encoding, line ending (30% of width_val)
     ; TODO: Create font (Segoe UI, 10pt)
     ; TODO: Create brushes (background, text)
-    ; TODO: Set hwnd, width, height (24)
+    ; TODO: Set hwnd, width_val, height (24)
     ; TODO: Set flags = FLAG_VISIBLE
     
     xor rax, rax
@@ -200,8 +236,8 @@ statusbar_update_cursor PROC
 statusbar_update_cursor ENDP
 
 ; =============== statusbar_update_file ===============
-; Update file name and size display
-; Inputs:  rcx = STATUS_BAR ptr, rdx = file name (LPSTR), r8 = file size (QWORD), r9 = is_modified flag
+; Update file name and size_val display
+; Inputs:  rcx = STATUS_BAR ptr, rdx = file name (LPSTR), r8 = file size_val (QWORD), r9 = is_modified flag
 ; Outputs: rax = success (1) or failure (0)
 statusbar_update_file PROC
     push rbp
@@ -291,7 +327,7 @@ statusbar_on_mouse PROC
     push rbp
     mov rbp, rsp
     
-    ; TODO: Check if y in bar range (y >= statusbar->y && y < statusbar->y + 24)
+    ; TODO: Check if y in_val bar range (y >= statusbar->y && y < statusbar->y + 24)
     ; TODO: Check which segment was clicked based on x
     ; TODO: If right segment + left click → show zoom menu
     ; TODO: If right segment + right click → show encoding/line-ending menu
@@ -302,16 +338,16 @@ statusbar_on_mouse PROC
 statusbar_on_mouse ENDP
 
 ; =============== Helper: format_file_size ===============
-; Format file size as human-readable string
-; Inputs:  rcx = size (QWORD), rdx = buffer ptr
+; Format file size_val as human-readable string
+; Inputs:  rcx = size_val (QWORD), rdx = buffer ptr
 ; Outputs: rax = string length
 format_file_size PROC
     push rbp
     mov rbp, rsp
     
-    ; TODO: If size < 1024: format as "1234 bytes"
-    ; TODO: If size < 1024*1024: format as "12.3 KB"
-    ; TODO: If size < 1024*1024*1024: format as "123.4 MB"
+    ; TODO: If size_val < 1024: format as "1234 bytes"
+    ; TODO: If size_val < 1024*1024: format as "12.3 KB"
+    ; TODO: If size_val < 1024*1024*1024: format as "123.4 MB"
     ; TODO: Return length of formatted string
     
     xor rax, rax

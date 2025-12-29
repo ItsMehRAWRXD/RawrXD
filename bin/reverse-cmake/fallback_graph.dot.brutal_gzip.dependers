@@ -1,0 +1,36 @@
+digraph "brutal_gzip" {
+node [
+  fontsize = "12"
+];
+    "node32" [ label = "brutal_gzip", shape = octagon ];
+    "node30" [ label = "RawrXD-AgenticIDE", shape = egg ];
+    "node30" -> "node32" [ style = dotted ] // RawrXD-AgenticIDE -> brutal_gzip
+    "node30" [ label = "RawrXD-AgenticIDE", shape = egg ];
+    "node30" -> "node30"  // RawrXD-AgenticIDE -> RawrXD-AgenticIDE
+    "node48" [ label = "RawrXD-QtShell", shape = egg ];
+    "node48" -> "node32" [ style = dotted ] // RawrXD-QtShell -> brutal_gzip
+    "node48" [ label = "RawrXD-QtShell", shape = egg ];
+    "node48" -> "node48"  // RawrXD-QtShell -> RawrXD-QtShell
+    "node59" [ label = "RawrXD-Win32IDE", shape = egg ];
+    "node59" -> "node32" [ style = dotted ] // RawrXD-Win32IDE -> brutal_gzip
+    "node66" [ label = "bench_deflate_50mb", shape = egg ];
+    "node66" -> "node32" [ style = dotted ] // bench_deflate_50mb -> brutal_gzip
+    "node72" [ label = "benchmark_completions", shape = egg ];
+    "node72" -> "node32" [ style = dotted ] // benchmark_completions -> brutal_gzip
+    "node72" [ label = "benchmark_completions", shape = egg ];
+    "node72" -> "node72"  // benchmark_completions -> benchmark_completions
+    "node73" [ label = "gguf_hotpatch_tester", shape = egg ];
+    "node73" -> "node32" [ style = dotted ] // gguf_hotpatch_tester -> brutal_gzip
+    "node74" [ label = "gpu_inference_benchmark", shape = egg ];
+    "node74" -> "node32" [ style = dotted ] // gpu_inference_benchmark -> brutal_gzip
+    "node100" [ label = "test_agent_coordinator_integration", shape = egg ];
+    "node100" -> "node32" [ style = dotted ] // test_agent_coordinator_integration -> brutal_gzip
+    "node101" [ label = "test_chat_streaming", shape = egg ];
+    "node101" -> "node32" [ style = dotted ] // test_chat_streaming -> brutal_gzip
+    "node102" [ label = "test_gguf_loader", shape = egg ];
+    "node102" -> "node32" [ style = dotted ] // test_gguf_loader -> brutal_gzip
+    "node103" [ label = "test_gguf_loader_simple", shape = egg ];
+    "node103" -> "node32" [ style = dotted ] // test_gguf_loader_simple -> brutal_gzip
+    "node105" [ label = "test_ide_main", shape = egg ];
+    "node105" -> "node32" [ style = dotted ] // test_ide_main -> brutal_gzip
+}

@@ -1,0 +1,8 @@
+digraph "masm_qt6_foundation_obj" {
+node [
+  fontsize = "12"
+];
+    "node86" [ label = "masm_qt6_foundation_obj", shape = hexagon ];
+    "node85" [ label = "masm_qt6_foundation", shape = octagon ];
+    "node85" -> "node86"  // masm_qt6_foundation -> masm_qt6_foundation_obj
+}
