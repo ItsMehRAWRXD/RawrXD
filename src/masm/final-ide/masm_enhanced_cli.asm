@@ -352,8 +352,7 @@ enhanced_cli_create_window PROC
     mov rax, g_enhanced_cli.hWindow
     add rsp, 96
     pop rbx
-    ret
-    
+
 .data
 szEnhancedCLITitle db "Enhanced CLI",0
 .code
@@ -365,6 +364,7 @@ enhanced_cli_create_window ENDP
 ;==========================================================================
 enhanced_cli_execute_command PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 512
@@ -437,10 +437,11 @@ enhanced_cli_execute_command PROC
     
     mov rax, 1  ; Success
     add rsp, 512
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 enhanced_cli_execute_command ENDP
 
 ;==========================================================================
@@ -449,6 +450,7 @@ enhanced_cli_execute_command ENDP
 ;==========================================================================
 enhanced_cli_start_repl PROC
     push rbx
+
     push rsi
     sub rsp, 32
     
@@ -499,10 +501,10 @@ enhanced_cli_start_repl PROC
     
 @done:
     add rsp, 32
+
     pop rsi
-    pop rbx
-    ret
-enhanced_cli_start_repl ENDP
+    pop enhanced
+    pop rbx_cli_start_repl ENDP
 
 ;==========================================================================
 ; enhanced_cli_stop_repl() -> bool (rax)
@@ -760,3 +762,7 @@ enhanced_cli_export_history PROC
 enhanced_cli_export_history ENDP
 
 end
+
+
+
+

@@ -32,6 +32,7 @@ EXTERN masm_mmap_open:PROC
 PUBLIC masm_gguf_parse
 masm_gguf_parse PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -53,7 +54,7 @@ masm_gguf_parse PROC
     ; 2. Check Magic "GGUF"
     mov eax, [rbx]
     cmp eax, 46554747h  ; "GGUF"
-    jne .fail_magic
+    jne @@fail_magic
     
     ; 3. Parse Header
     mov eax, [rbx+4]    ; Version
@@ -67,20 +68,24 @@ masm_gguf_parse PROC
     call console_log
     
     mov rax, rbx        ; Return base pointer as context for now
-    jmp .exit
-
-.fail_magic:
+    jmp @@exit
+@@fail_magic:
     lea rcx, szGgufError
     call console_log
-.fail:
+@@fail:
     xor rax, rax
-
-.exit:
+@@exit:
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 masm_gguf_parse ENDP
 
 END
+
+
+
+
+

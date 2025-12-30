@@ -132,6 +132,7 @@ gui_init_registry ENDP
 PUBLIC gui_create_component
 gui_create_component PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64                         ; space for RECT (16) + alignment
@@ -192,10 +193,11 @@ gui_create_component PROC
     
 create_done:
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 gui_create_component ENDP
 
 ;==========================================================================
@@ -205,6 +207,7 @@ PUBLIC gui_agent_inspect
 ALIGN 16
 gui_agent_inspect PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -354,10 +357,11 @@ inspect_done:
     
     lea rax, gui_output_buffer
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 gui_agent_inspect ENDP
 
 ;==========================================================================
@@ -372,7 +376,7 @@ gui_agent_modify ENDP
 ; Helper functions
 append_string PROC
     push rsi
-    mov rsi, rcx
+    push mov rsi, rcx
 as_loop:
     mov al, [rsi]
     test al, al
@@ -383,13 +387,14 @@ as_loop:
     jmp as_loop
 as_done:
     pop rsi
-    ret
+
 append_string ENDP
 
 append_int PROC
     push rbx
+
     push rdx
-    test eax, eax
+    push test eax, eax
     jnz not_zero
     mov byte ptr [rdi], '0'
     inc rdi
@@ -410,9 +415,14 @@ ai_loop:
     mov rcx, rsi
     call append_string
 ai_done:
+
     pop rdx
-    pop rbx
-    ret
-append_int ENDP
+    pop append
+    pop rbx_int ENDP
 
 END
+
+
+
+
+

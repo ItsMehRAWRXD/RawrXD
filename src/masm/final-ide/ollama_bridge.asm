@@ -66,10 +66,13 @@ OllamaGenerate PROC
     LOCAL response:QWORD
     
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
+
     push r14
     sub rsp, 512
     
@@ -123,14 +126,16 @@ generate_fail:
     
 generate_done:
     add rsp, 512
-    pop r14
-    pop r13
-    pop r12
-    pop rdi
+
+    pop r13 pop r14
+
+
+    pop rdi pop r12
+
+
     pop rsi
-    pop rbx
-    ret
-OllamaGenerate ENDP
+    pop OllamaGenerate
+    pop rbx ENDP
 
 ;==============================================================================
 ; PUBLIC: OllamaChat(model: rcx, message: rdx, pResponse: r8) -> eax
@@ -143,10 +148,13 @@ OllamaChat PROC
     LOCAL jsonBody[2048]:BYTE
     
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
+
     push r14
     sub rsp, 512
     
@@ -200,14 +208,16 @@ chat_fail:
     
 chat_done:
     add rsp, 512
-    pop r14
-    pop r13
-    pop r12
-    pop rdi
+
+    pop r13 pop r14
+
+
+    pop rdi pop r12
+
+
     pop rsi
-    pop rbx
-    ret
-OllamaChat ENDP
+    pop OllamaChat
+    pop rbx ENDP
 
 ;==============================================================================
 ; PUBLIC: OllamaListModels(pResponse: rcx) -> eax
@@ -219,6 +229,7 @@ OllamaListModels PROC
     LOCAL request:HTTP_REQUEST
     
     push rbx
+
     push rsi
     push rdi
     sub rsp, 256
@@ -253,10 +264,11 @@ list_fail:
     
 list_done:
     add rsp, 256
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 OllamaListModels ENDP
 
 END
@@ -290,14 +302,16 @@ generate_fail:
     
 generate_done:
     add rsp, 512
-    pop r14
-    pop r13
-    pop r12
-    pop rdi
+
+    pop r13 pop r14
+
+
+    pop rdi pop r12
+
+
     pop rsi
-    pop rbx
-    ret
-OllamaGenerate ENDP
+    pop OllamaGenerate
+    pop rbx ENDP
 
 ;==============================================================================
 ; PUBLIC: OllamaChat(model: rcx, message: rdx, pResponse: r8) -> eax
@@ -311,10 +325,13 @@ OllamaChat PROC
     LOCAL response:QWORD
     
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
+
     push r14
     sub rsp, 512
     
@@ -373,14 +390,16 @@ chat_fail:
     
 chat_done:
     add rsp, 512
-    pop r14
-    pop r13
-    pop r12
-    pop rdi
+
+    pop r13 pop r14
+
+
+    pop rdi pop r12
+
+
     pop rsi
-    pop rbx
-    ret
-OllamaChat ENDP
+    pop OllamaChat
+    pop rbx ENDP
 
 ;==============================================================================
 ; PUBLIC: OllamaListModels(pResponse: rcx) -> eax
@@ -394,8 +413,10 @@ OllamaListModels PROC
     LOCAL response:QWORD
     
     push rbx
+
     push rsi
     push rdi
+
     push r12
     sub rsp, 256
     
@@ -450,12 +471,13 @@ list_fail:
     
 list_done:
     add rsp, 256
-    pop r12
-    pop rdi
+
+    pop rdi pop r12
+
+
     pop rsi
-    pop rbx
-    ret
-OllamaListModels ENDP
+    pop OllamaListModels
+    pop rbx ENDP
 
 ;==============================================================================
 ; PUBLIC: OllamaShowModel(modelName: rcx, pResponse: rdx) -> eax
@@ -469,8 +491,10 @@ OllamaShowModel PROC
     LOCAL response:QWORD
     
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
     sub rsp, 256
@@ -528,12 +552,14 @@ show_fail:
     
 show_done:
     add rsp, 256
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 OllamaShowModel ENDP
 
 ;==============================================================================
@@ -548,8 +574,10 @@ OllamaDeleteModel PROC
     LOCAL response:QWORD
     
     push rbx
+
     push rsi
     push rdi
+
     push r12
     sub rsp, 256
     
@@ -604,12 +632,18 @@ delete_fail:
     
 delete_done:
     add rsp, 256
-    pop r12
-    pop rdi
+
+    pop rdi pop r12
+
+
     pop rsi
-    pop rbx
-    ret
-OllamaDeleteModel ENDP
+    pop OllamaDeleteModel
+    pop rbx ENDP
 
 END
+
+
+
+
+
 

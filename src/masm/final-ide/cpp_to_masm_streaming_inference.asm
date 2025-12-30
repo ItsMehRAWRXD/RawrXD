@@ -99,8 +99,7 @@ STREAM_CONTEXT ENDS
 PUBLIC streaming_create
 streaming_create PROC
     push rbx
-    
-    mov rbx, rcx                    ; rbx = enginePtr
+    push mov rbx, rcx                    ; rbx = enginePtr
     mov r8, rdx                     ; r8 = maxTokens
     
     ; Allocate context
@@ -157,7 +156,7 @@ streaming_create PROC
     
     mov rax, r9
     pop rbx
-    ret
+
 streaming_create ENDP
 
 ; ============================================================================
@@ -168,8 +167,7 @@ streaming_create ENDP
 PUBLIC streaming_start
 streaming_start PROC
     push rbx
-    
-    mov rbx, rcx                    ; rbx = stream
+    push mov rbx, rcx                    ; rbx = stream
     
     ; Log
     lea rcx, [szStreamStarted]
@@ -193,7 +191,7 @@ streaming_start PROC
     mov [rbx + STREAM_CONTEXT.threadId], eax
     
     pop rbx
-    ret
+
 streaming_start ENDP
 
 ; ============================================================================
@@ -204,9 +202,9 @@ streaming_start ENDP
 PUBLIC streaming_push_token
 streaming_push_token PROC
     push rbx
+
     push rsi
-    
-    mov rbx, rcx                    ; rbx = stream
+    push mov rbx, rcx                    ; rbx = stream
     mov r9d, edx                    ; r9d = tokenId
     mov rsi, r8                     ; rsi = tokenText
     
@@ -221,15 +219,13 @@ streaming_push_token PROC
     sub r10d, r11d
     js .wrap_check
     cmp r10d, r12d
-    jge .queue_full
-    jmp .queue_ok
-    
-.wrap_check:
+    jge @@queue_full
+    jmp @@queue_ok
+@@wrap_check:
     add r10d, r12d
     cmp r10d, r12d
-    jge .queue_full
-    
-.queue_ok:
+    jge @@queue_full
+@@queue_ok:
     ; Get queue entry
     mov r13, [rbx + STREAM_CONTEXT.tokenQueue]
     mov r14d, [rbx + STREAM_CONTEXT.queueHead]
@@ -248,10 +244,9 @@ streaming_push_token PROC
     ; Advance head
     inc r14d
     cmp r14d, r12d
-    jl .no_wrap
+    jl @@no_wrap
     xor r14d, r14d
-    
-.no_wrap:
+@@no_wrap:
     mov [rbx + STREAM_CONTEXT.queueHead], r14d
     inc dword [rbx + STREAM_CONTEXT.tokenCount]
     
@@ -269,18 +264,17 @@ streaming_push_token PROC
     call SetEvent
     
     mov rax, 1
+
     pop rsi
     pop rbx
-    ret
-    
-.queue_full:
+@@queue_full:
     ; Unlock
     mov byte [rbx + STREAM_CONTEXT.dataLock], 0
     xor rax, rax
+
     pop rsi
-    pop rbx
-    ret
-streaming_push_token ENDP
+    pop streaming
+    pop rbx_push_token ENDP
 
 ; ============================================================================
 
@@ -290,9 +284,9 @@ streaming_push_token ENDP
 PUBLIC streaming_get_chunk
 streaming_get_chunk PROC
     push rbx
+
     push rsi
-    
-    mov rbx, rcx                    ; rbx = stream
+    push mov rbx, rcx                    ; rbx = stream
     mov rsi, rdx                    ; rsi = outputBuffer
     mov r12, r8                     ; r12 = maxLength
     
@@ -305,10 +299,9 @@ streaming_get_chunk PROC
     
     ; Check size
     cmp r14, r12
-    jle .size_ok
+    jle @@size_ok
     mov r14, r12
-    
-.size_ok:
+@@size_ok:
     ; Copy data
     mov rcx, r13
     mov rdx, rsi
@@ -330,10 +323,10 @@ streaming_get_chunk PROC
     call console_log
     
     mov rax, r14
+
     pop rsi
-    pop rbx
-    ret
-streaming_get_chunk ENDP
+    pop streaming
+    pop rbx_get_chunk ENDP
 
 ; ============================================================================
 
@@ -343,8 +336,7 @@ streaming_get_chunk ENDP
 PUBLIC streaming_finish
 streaming_finish PROC
     push rbx
-    
-    mov rbx, rcx                    ; rbx = stream
+    push mov rbx, rcx                    ; rbx = stream
     
     ; Mark as done
     mov byte [rbx + STREAM_CONTEXT.done], 1
@@ -363,7 +355,7 @@ streaming_finish PROC
     
     mov rax, 1
     pop rbx
-    ret
+
 streaming_finish ENDP
 
 ; ============================================================================
@@ -452,43 +444,38 @@ streaming_is_complete ENDP
 PUBLIC streaming_destroy
 streaming_destroy PROC
     push rbx
-    
-    mov rbx, rcx
+    push mov rbx, rcx
     
     ; Close thread handle
     mov rcx, [rbx + STREAM_CONTEXT.streamThread]
     cmp rcx, 0
-    je .skip_thread
+    je @@skip_thread
     call CloseHandle
-    
-.skip_thread:
+@@skip_thread:
     ; Close data ready event
     mov rcx, [rbx + STREAM_CONTEXT.dataReady]
     cmp rcx, 0
-    je .skip_event
+    je @@skip_event
     call CloseHandle
-    
-.skip_event:
+@@skip_event:
     ; Free token queue
     mov rcx, [rbx + STREAM_CONTEXT.tokenQueue]
     cmp rcx, 0
-    je .skip_queue
+    je @@skip_queue
     call free
-    
-.skip_queue:
+@@skip_queue:
     ; Free output buffer
     mov rcx, [rbx + STREAM_CONTEXT.outputBuffer]
     cmp rcx, 0
-    je .skip_output
+    je @@skip_output
     call free
-    
-.skip_output:
+@@skip_output:
     ; Free context
     mov rcx, rbx
     call free
     
     pop rbx
-    ret
+
 streaming_destroy ENDP
 
 ; ============================================================================
@@ -499,16 +486,15 @@ streaming_destroy ENDP
 ; Internal thread function for streaming
 streaming_thread_proc PROC
     push rbx
-    
-    mov rbx, rcx                    ; rbx = context
+    push mov rbx, rcx                    ; rbx = context
     
     ; Main streaming loop
-.stream_loop:
+@@stream_loop:
     cmp byte [rbx + STREAM_CONTEXT.done], 1
-    je .stream_exit
+    je @@stream_exit
     
     cmp byte [rbx + STREAM_CONTEXT.cancelled], 1
-    je .stream_exit
+    je @@stream_exit
     
     ; Wait for data
     mov rcx, [rbx + STREAM_CONTEXT.dataReady]
@@ -518,10 +504,9 @@ streaming_thread_proc PROC
     ; Process queued tokens
     mov r8d, [rbx + STREAM_CONTEXT.queueTail]
     mov r9d, [rbx + STREAM_CONTEXT.queueHead]
-    
-.process_loop:
+@@process_loop:
     cmp r8d, r9d
-    je .stream_loop
+    je @@stream_loop
     
     ; Get token from queue
     mov r10, [rbx + STREAM_CONTEXT.tokenQueue]
@@ -554,17 +539,15 @@ streaming_thread_proc PROC
     inc r8d
     mov r10d, [rbx + STREAM_CONTEXT.queueSize]
     cmp r8d, r10d
-    jl .no_wrap2
+    jl @@no_wrap2
     xor r8d, r8d
-    
-.no_wrap2:
+@@no_wrap2:
     mov [rbx + STREAM_CONTEXT.queueTail], r8d
     
-    jmp .process_loop
-    
-.stream_exit:
+    jmp @@process_loop
+@@stream_exit:
     pop rbx
-    ret
+
 streaming_thread_proc ENDP
 
 ; ============================================================================
@@ -574,3 +557,8 @@ streaming_thread_proc ENDP
     static_stream_id QWORD 1
 
 END
+
+
+
+
+

@@ -197,6 +197,7 @@ PUBLIC ide_init_file_tree
 ALIGN 16
 ide_init_file_tree PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 128
@@ -266,10 +267,11 @@ populate_done:
 init_done:
     mov eax, 1
     add rsp, 128
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 ide_init_file_tree ENDP
 
 .data
@@ -282,9 +284,10 @@ ide_init_file_tree ENDP
 PUBLIC ide_scan_directory
 ide_scan_directory PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 1024
     push rbx
+
     push rsi
     push rdi
     
@@ -340,10 +343,11 @@ next_file:
     call FindClose
     
 scan_done:
-    pop rdi
-    pop rsi
-    pop rbx
-    leave
+
+    pop rsi pop rdi
+
+
+    pop leave rbx
     ret
 ide_scan_directory ENDP
 
@@ -440,6 +444,7 @@ PUBLIC ide_editor_open_file
 ALIGN 16
 ide_editor_open_file PROC
     push rbx
+
     push rsi
     sub rsp, 40
     
@@ -495,16 +500,15 @@ file_already_open:
     
     mov eax, 1
     add rsp, 40
-    pop rsi
-    pop rbx
-    ret
 
-ide_get_language_from_ext PROC
+    pop rsi
+    pop ide
+    pop rbx_get_language_from_ext PROC
     ; Simple extension check
     ; rcx = path
     ; returns rax = language id
     push rbx
-    mov rbx, rcx
+    push mov rbx, rcx
     
     ; Find last dot
     xor rax, rax
@@ -548,7 +552,7 @@ lang_none:
     xor rax, rax
 lang_done:
     pop rbx
-    ret
+
 ide_get_language_from_ext ENDP
 
 .data
@@ -579,17 +583,19 @@ strcmp_simple ENDP
 open_file_fail:
     xor eax, eax
     add rsp, 40
+
     pop rsi
-    pop rbx
-    ret
-ide_editor_open_file ENDP
+    pop ide
+    pop rbx_editor_open_file ENDP
 
 PUBLIC ide_read_file_content
 ALIGN 16
 ide_read_file_content PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
     sub rsp, 64
@@ -706,25 +712,28 @@ split_done:
     mov rdx, r12        ; Return line count in rdx (caller needs to handle this)
     
     add rsp, 64
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
-    
+
 read_alloc_fail:
     mov rcx, rsi
     call CloseHandle
 read_fail:
     xor eax, eax
     add rsp, 64
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 ide_read_file_content ENDP
 
 PUBLIC ide_editor_insert_text
@@ -756,7 +765,7 @@ ide_editor_insert_text PROC
     
     add rsp, 32
     pop rbx
-    ret
+
 ide_editor_insert_text ENDP
 
 PUBLIC ide_editor_delete_char
@@ -786,13 +795,14 @@ ide_editor_delete_char PROC
     
     add rsp, 32
     pop rbx
-    ret
+
 ide_editor_delete_char ENDP
 
 PUBLIC ide_editor_save_file
 ALIGN 16
 ide_editor_save_file PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -867,10 +877,10 @@ ide_editor_save_file PROC
     
 save_done:
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
 
 save_fail:
     mov rcx, r12
@@ -953,9 +963,9 @@ PUBLIC ide_tabs_close_tab
 ALIGN 16
 ide_tabs_close_tab PROC
     push rbx
+
     push rsi
-    
-    mov rsi, rcx
+    push mov rsi, rcx
     mov eax, SIZEOF TAB_INFO
     imul eax, ecx
     lea rbx, g_tabs
@@ -973,11 +983,10 @@ ide_tabs_close_tab PROC
     call asm_memcpy
     
     dec g_open_file_count
-    
+
     pop rsi
-    pop rbx
-    ret
-ide_tabs_close_tab ENDP
+    pop ide
+    pop rbx_tabs_close_tab ENDP
 
 ;==========================================================================
 ; 4. MINIMAP
@@ -1003,6 +1012,7 @@ PUBLIC ide_minimap_render
 ALIGN 16
 ide_minimap_render PROC
     push rbx
+
     push rsi
     sub rsp, 32
     
@@ -1020,10 +1030,10 @@ minimap_loop:
     
 minimap_done:
     add rsp, 32
+
     pop rsi
-    pop rbx
-    ret
-ide_minimap_render ENDP
+    pop ide
+    pop rbx_minimap_render ENDP
 
 ;==========================================================================
 ; 5. COMMAND PALETTE
@@ -1266,7 +1276,7 @@ PUBLIC ide_init_all_components
 ALIGN 16
 ide_init_all_components PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     call ide_init_file_tree
@@ -1345,7 +1355,7 @@ ide_init_all_components PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
+
 ide_init_all_components ENDP
 
 ;==========================================================================
@@ -1371,3 +1381,8 @@ ide_init_all_components ENDP
     desc_paste              BYTE "Paste text",0
 
 END
+
+
+
+
+

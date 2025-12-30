@@ -410,7 +410,7 @@ training_studio_init PROC
     mov rax, g_training_studio.hMutex
     add rsp, 32
     pop rbx
-    ret
+
 training_studio_init ENDP
 
 ;==========================================================================
@@ -419,6 +419,7 @@ training_studio_init ENDP
 ;==========================================================================
 training_studio_create_window PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 128
@@ -469,10 +470,11 @@ training_studio_create_window PROC
     
     mov rax, g_training_studio.hWindow
     add rsp, 128
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 training_studio_create_window ENDP
 
 ;==========================================================================
@@ -481,8 +483,10 @@ training_studio_create_window ENDP
 ;==========================================================================
 training_studio_load_dataset PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     sub rsp, 256
     
@@ -566,12 +570,13 @@ training_studio_load_dataset PROC
     
 @done:
     add rsp, 256
-    pop r12
-    pop rdi
+
+    pop rdi pop r12
+
+
     pop rsi
-    pop rbx
-    ret
-training_studio_load_dataset ENDP
+    pop training
+    pop rbx_studio_load_dataset ENDP
 
 ;==========================================================================
 ; training_studio_create_model(name: rcx, type: edx, architecture: r8) -> model_id (eax)
@@ -579,8 +584,10 @@ training_studio_load_dataset ENDP
 ;==========================================================================
 training_studio_create_model PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     sub rsp, 256
     
@@ -652,12 +659,13 @@ training_studio_create_model PROC
     
 @done:
     add rsp, 256
-    pop r12
-    pop rdi
+
+    pop rdi pop r12
+
+
     pop rsi
-    pop rbx
-    ret
-training_studio_create_model ENDP
+    pop training
+    pop rbx_studio_create_model ENDP
 
 ;==========================================================================
 ; training_studio_start_training(model_id: ecx, dataset_id: edx, config_json: r8) -> experiment_id (eax)
@@ -665,8 +673,10 @@ training_studio_create_model ENDP
 ;==========================================================================
 training_studio_start_training PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
     sub rsp, 512
@@ -752,12 +762,14 @@ training_studio_start_training PROC
     
 @done:
     add rsp, 512
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 training_studio_start_training ENDP
 
 ;==========================================================================
@@ -766,6 +778,7 @@ training_studio_start_training ENDP
 ;==========================================================================
 training_studio_stop_training PROC
     push rbx
+
     push rsi
     sub rsp, 64
     
@@ -809,10 +822,10 @@ training_studio_stop_training PROC
     
 @done:
     add rsp, 64
+
     pop rsi
-    pop rbx
-    ret
-training_studio_stop_training ENDP
+    pop training
+    pop rbx_studio_stop_training ENDP
 
 ;==========================================================================
 ; Helper functions for core functionality
@@ -821,7 +834,7 @@ training_studio_stop_training ENDP
 find_model_by_id PROC
     ; ecx = model_id -> rax = model_ptr
     push rbx
-    xor rax, rax
+    push xor rax, rax
     mov ebx, ecx
     xor ecx, ecx
     
@@ -845,13 +858,13 @@ find_model_by_id PROC
     
 @not_found:
     pop rbx
-    ret
+
 find_model_by_id ENDP
 
 find_dataset_by_id PROC
     ; ecx = dataset_id -> rax = dataset_ptr
     push rbx
-    xor rax, rax
+    push xor rax, rax
     mov ebx, ecx
     xor ecx, ecx
     
@@ -875,13 +888,13 @@ find_dataset_by_id PROC
     
 @not_found:
     pop rbx
-    ret
+
 find_dataset_by_id ENDP
 
 find_experiment_by_id PROC
     ; ecx = experiment_id -> rax = experiment_ptr
     push rbx
-    xor rax, rax
+    push xor rax, rax
     mov ebx, ecx
     xor ecx, ecx
     
@@ -905,7 +918,7 @@ find_experiment_by_id PROC
     
 @not_found:
     pop rbx
-    ret
+
 find_experiment_by_id ENDP
 
 ;==========================================================================
@@ -1082,3 +1095,8 @@ strncpy PROC
 strncpy ENDP
 
 end
+
+
+
+
+

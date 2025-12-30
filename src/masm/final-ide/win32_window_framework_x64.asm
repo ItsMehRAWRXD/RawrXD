@@ -180,6 +180,7 @@ WndProc_Main endp
 ; ============================================================================
 WindowClass_Register proc
     push rbx
+
     push rsi
     sub rsp, 32
     
@@ -194,11 +195,10 @@ WindowClass_Register proc
     call RegisterClassExA
     
     add rsp, 32
-    pop rsi
-    pop rbx
-    ret
 
-WindowClass_Register endp
+    pop rsi
+    pop WindowClass
+    pop rbx_Register endp
 
 ; ============================================================================
 ; WindowClass_Create - Create main window
@@ -207,6 +207,7 @@ WindowClass_Register endp
 ; ============================================================================
 WindowClass_Create proc
     push rbx
+
     push rsi
     sub rsp, 40
     
@@ -245,11 +246,10 @@ WindowClass_Create proc
     mov [rbx], rax      ; Store window handle
     
     add rsp, 40
-    pop rsi
-    pop rbx
-    ret
 
-WindowClass_Create endp
+    pop rsi
+    pop WindowClass
+    pop rbx_Create endp
 
 ; ============================================================================
 ; WindowClass_ShowWindow - Show the window
@@ -296,7 +296,6 @@ msg_loop:
 msg_exit:
     add rsp, 32
     pop rbx
-    ret
 
 WindowClass_MessageLoop endp
 
@@ -313,7 +312,6 @@ WindowClass_Cleanup proc
     
     add rsp, 32
     pop rbx
-    ret
 
 WindowClass_Cleanup endp
 
@@ -322,8 +320,9 @@ WindowClass_Cleanup endp
 ; ============================================================================
 WinMain proc
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     push rbx
+
     push rsi
     sub rsp, 32
     
@@ -363,10 +362,10 @@ main_error:
 
 main_exit:
     add rsp, 32
-    pop rsi
-    pop rbx
+
+    pop rbx pop rsi
+
     pop rbp
-    ret
 
 WinMain endp
 
@@ -386,3 +385,8 @@ WinMainCRTStartup proc
 WinMainCRTStartup endp
 
 end
+
+
+
+
+

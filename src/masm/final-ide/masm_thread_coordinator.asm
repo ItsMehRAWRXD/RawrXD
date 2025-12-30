@@ -76,6 +76,7 @@ PUBLIC thread_wait_event
 ALIGN 16
 thread_coordinator_init PROC
     push rbx
+
     push r12
     sub rsp, 40
     
@@ -87,13 +88,11 @@ thread_coordinator_init PROC
     jz .init_defaults
     
     cmp r12d, ebx
-    jle .init_valid
-    
-.init_defaults:
+    jle @@init_valid
+@@init_defaults:
     mov r12d, 2
     mov ebx, 8
-    
-.init_valid:
+@@init_valid:
     mov g_thread_pool.min_threads, r12d
     mov g_thread_pool.max_threads, ebx
     mov g_thread_pool.thread_count, 0
@@ -129,32 +128,29 @@ thread_coordinator_init PROC
     
     ; Create minimum number of worker threads
     mov r8d, 0
-    
-.create_workers:
+@@create_workers:
     cmp r8d, r12d
-    jge .init_success
+    jge @@init_success
     
     call thread_create_worker
     test rax, rax
     jz .init_error
     
     inc r8d
-    jmp .create_workers
-    
-.init_success:
+    jmp @@create_workers
+@@init_success:
     mov eax, 1
     add rsp, 40
+
     pop r12
     pop rbx
-    ret
-    
-.init_error:
+@@init_error:
     xor eax, eax
     add rsp, 40
+
     pop r12
-    pop rbx
-    ret
-masm_thread_coordinator_init ENDP
+    pop masm
+    pop rbx_thread_coordinator_init ENDP
 
 ;==============================================================================
 ; PUBLIC: thread_coordinator_shutdown() -> void
@@ -193,7 +189,7 @@ thread_coordinator_shutdown PROC
     
     add rsp, 32
     pop rbx
-    ret
+
 masm_thread_coordinator_shutdown ENDP
 
 ;==============================================================================
@@ -204,6 +200,7 @@ ALIGN 16
 thread_safe_queue_work PROC
     ; rcx = function, rdx = parameter, r8d = priority
     push rbx
+
     push r12
     push r13
     sub rsp, 40
@@ -217,12 +214,12 @@ thread_safe_queue_work PROC
     mov rdx, INFINITE
     call WaitForSingleObject
     cmp eax, WAIT_OBJECT_0
-    jne .queue_error
+    jne @@queue_error
     
     ; Check queue space
     mov eax, g_thread_pool.queue_count
     cmp eax, 256
-    jge .queue_full
+    jge @@queue_full
     
     ; Find next available slot
     mov rax, g_thread_pool.queue_count
@@ -252,23 +249,23 @@ thread_safe_queue_work PROC
     
     mov eax, 1
     add rsp, 40
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
-    
-.queue_full:
+
+@@queue_full:
     mov rcx, g_thread_pool.pool_mutex
     call ReleaseMutex
-    jmp .queue_error
-    
-.queue_error:
+    jmp @@queue_error
+@@queue_error:
     xor eax, eax
     add rsp, 40
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
+
 masm_thread_safe_queue_work ENDP
 
 ;==============================================================================
@@ -283,8 +280,7 @@ thread_wait_for_completion PROC
     
     mov r8d, ecx      ; Save timeout
     mov ebx, 0        ; Counter
-    
-.wait_loop:
+@@wait_loop:
     ; Check if queue is empty
     mov rcx, g_thread_pool.pool_mutex
     mov rdx, INFINITE
@@ -301,24 +297,22 @@ thread_wait_for_completion PROC
     ; Check timeout
     inc ebx
     cmp ebx, r8d
-    jge .wait_timeout
+    jge @@wait_timeout
     
     ; Sleep 1ms and retry
     mov ecx, 1
     call Sleep
-    jmp .wait_loop
-    
-.wait_complete:
+    jmp @@wait_loop
+@@wait_complete:
     mov eax, 1
     add rsp, 40
     pop rbx
-    ret
-    
-.wait_timeout:
+
+@@wait_timeout:
     xor eax, eax
     add rsp, 40
     pop rbx
-    ret
+
 masm_thread_wait_for_completion ENDP
 
 ;==============================================================================
@@ -344,7 +338,7 @@ thread_create_worker PROC
     mov eax, g_thread_pool.thread_count
     mov ebx, g_thread_pool.max_threads
     cmp eax, ebx
-    jge .worker_limit
+    jge @@worker_limit
     
     ; Create thread
     xor ecx, ecx
@@ -367,14 +361,13 @@ thread_create_worker PROC
     mov eax, 1
     add rsp, 40
     pop rbx
-    ret
-    
-.worker_limit:
-.worker_error:
+
+@@worker_limit:
+@@worker_error:
     xor eax, eax
     add rsp, 40
     pop rbx
-    ret
+
 masm_thread_create_worker ENDP
 
 ;==============================================================================
@@ -383,11 +376,11 @@ masm_thread_create_worker ENDP
 ALIGN 16
 worker_thread_proc PROC
     push rbx
+
     push r12
     push r13
     sub rsp, 40
-    
-.worker_loop:
+@@worker_loop:
     ; Wait for work event
     mov rcx, g_thread_pool.work_event
     mov rdx, INFINITE
@@ -400,7 +393,7 @@ worker_thread_proc PROC
     
     ; Get work item if available
     cmp g_thread_pool.queue_count, 0
-    je .no_work
+    je @@no_work
     
     ; Get first work item
     mov rax, g_thread_pool.work_queue
@@ -410,10 +403,9 @@ worker_thread_proc PROC
     ; Move remaining items up
     mov rcx, 0
     mov rbx, 1
-    
-.shift_items:
+@@shift_items:
     cmp rbx, g_thread_pool.queue_count
-    jge .items_shifted
+    jge @@items_shifted
     
     mov rax, g_thread_pool.work_queue
     mov r8, rbx
@@ -432,9 +424,8 @@ worker_thread_proc PROC
     
     inc rcx
     inc rbx
-    jmp .shift_items
-    
-.items_shifted:
+    jmp @@shift_items
+@@items_shifted:
     dec g_thread_pool.queue_count
     
     ; Release mutex
@@ -445,12 +436,11 @@ worker_thread_proc PROC
     mov rcx, r13    ; Pass parameter
     call r12
     
-    jmp .worker_loop
-    
-.no_work:
+    jmp @@worker_loop
+@@no_work:
     mov rcx, g_thread_pool.pool_mutex
     call ReleaseMutex
-    jmp .worker_loop
+    jmp @@worker_loop
 masm_thread_create_worker ENDP
 
 ;==============================================================================
@@ -465,7 +455,7 @@ thread_signal_event PROC
     
     ; Validate event index
     cmp ecx, 32
-    jge .signal_error
+    jge @@signal_error
     
     ; Get event handle
     mov rax, ecx
@@ -485,13 +475,12 @@ thread_signal_event PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
-    
-.signal_error:
+
+@@signal_error:
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 masm_thread_signal_event ENDP
 
 ;==============================================================================
@@ -506,7 +495,7 @@ thread_wait_event PROC
     
     ; Validate event index
     cmp ecx, 32
-    jge .wait_error
+    jge @@wait_error
     
     ; Get event handle
     mov rax, rcx
@@ -523,18 +512,22 @@ thread_wait_event PROC
     call WaitForSingleObject
     
     cmp eax, WAIT_OBJECT_0
-    jne .wait_error
+    jne @@wait_error
     
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
-    
-.wait_error:
+
+@@wait_error:
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 masm_thread_wait_event ENDP
 
 END
+
+
+
+
+

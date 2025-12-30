@@ -1,0 +1,1 @@
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\masm_hotpatch_core_obj.dir\Release\masm_hotpatch_core_obj.lib

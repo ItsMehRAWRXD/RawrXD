@@ -217,10 +217,13 @@ szExtBMP            BYTE ".bmp", 0
 ;==========================================================================
 FileBrowser_Create PROC
     push rbx
+
     push rdi
     push rsi
+
     push r12
     push r13
+
     push r14
     push r15
     sub rsp, 120
@@ -348,26 +351,31 @@ FileBrowser_Create PROC
     
     mov rax, rdi        ; Return FILE_BROWSER*
     add rsp, 120
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop rsi
-    pop rdi
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
+
+    pop rdi pop rsi
+
     pop rbx
-    ret
-    
+
 CreateFailed:
     xor rax, rax
     add rsp, 120
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop rsi
-    pop rdi
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
+
+    pop rdi pop rsi
+
     pop rbx
-    ret
+
 FileBrowser_Create ENDP
 
 ;==========================================================================
@@ -378,6 +386,7 @@ FileBrowser_Create ENDP
 ;==========================================================================
 SetupListViewColumns PROC
     push rbx
+
     push rdi
     sub rsp, 120
     
@@ -434,10 +443,10 @@ SetupListViewColumns PROC
     call SendMessageA
     
     add rsp, 120
+
     pop rdi
-    pop rbx
-    ret
-SetupListViewColumns ENDP
+    pop SetupListViewColumns
+    pop rbx ENDP
 
 ;==========================================================================
 ; FileBrowser_LoadDrives - Enumerate and display system drives
@@ -447,8 +456,10 @@ SetupListViewColumns ENDP
 ;==========================================================================
 FileBrowser_LoadDrives PROC
     push rbx
+
     push rdi
     push rsi
+
     push r12
     sub rsp, 80
     
@@ -485,21 +496,22 @@ LoadDriveLoop:
 LoadDrivesComplete:
     mov rax, r12
     add rsp, 80
-    pop r12
-    pop rsi
+
+    pop rsi pop r12
+
+
     pop rdi
-    pop rbx
-    ret
-    
-LoadDrivesFailed:
+    pop LoadDrivesFailed
+    pop rbx:
     xor rax, rax
     add rsp, 80
-    pop r12
-    pop rsi
+
+    pop rsi pop r12
+
+
     pop rdi
-    pop rbx
-    ret
-FileBrowser_LoadDrives ENDP
+    pop FileBrowser
+    pop rbx_LoadDrives ENDP
 
 ;==========================================================================
 ; AddDriveToTree - Add a drive to TreeView
@@ -511,6 +523,7 @@ FileBrowser_LoadDrives ENDP
 ;==========================================================================
 AddDriveToTree PROC
     push rbx
+
     push rdi
     push rsi
     sub rsp, 128
@@ -548,10 +561,11 @@ AddDriveToTree PROC
     call SendMessageA
     
     add rsp, 128
-    pop rsi
-    pop rdi
+
+    pop rdi pop rsi
+
     pop rbx
-    ret
+
 AddDriveToTree ENDP
 
 ;==========================================================================
@@ -564,8 +578,10 @@ AddDriveToTree ENDP
 ;==========================================================================
 FileBrowser_LoadDirectory PROC
     push rbx
+
     push rdi
     push rsi
+
     push r12
     push r13
     sub rsp, 640  ; Large stack for WIN32_FIND_DATA
@@ -653,24 +669,27 @@ SkipDotEntry:
     mov eax, [rbx + 60]  ; Return fileCount
     movzx rax, eax
     add rsp, 640
-    pop r13
-    pop r12
-    pop rsi
-    pop rdi
+
+    pop r12 pop r13
+
+
+    pop rdi pop rsi
+
     pop rbx
-    ret
-    
+
 LoadDirFailed:
     lea rcx, [rbx + 128]
     call LeaveCriticalSection
     xor rax, rax
     add rsp, 640
-    pop r13
-    pop r12
-    pop rsi
-    pop rdi
+
+    pop r12 pop r13
+
+
+    pop rdi pop rsi
+
     pop rbx
-    ret
+
 FileBrowser_LoadDirectory ENDP
 
 ;==========================================================================
@@ -684,6 +703,7 @@ FileBrowser_LoadDirectory ENDP
 ;==========================================================================
 AddFileToList PROC
     push rbx
+
     push rdi
     push rsi
     sub rsp, 32
@@ -737,18 +757,19 @@ AddFileToList PROC
     
     mov rax, 1
     add rsp, 32
-    pop rsi
-    pop rdi
+
+    pop rdi pop rsi
+
     pop rbx
-    ret
-    
+
 AddFileFailed:
     xor rax, rax
     add rsp, 32
-    pop rsi
-    pop rdi
+
+    pop rdi pop rsi
+
     pop rbx
-    ret
+
 AddFileToList ENDP
 
 ;==========================================================================
@@ -795,7 +816,7 @@ DoSort:
 SortComplete:
     add rsp, 32
     pop rbx
-    ret
+
 SortFileList ENDP
 
 ;==========================================================================
@@ -813,7 +834,7 @@ CompareFilesByName PROC
     
     add rsp, 32
     pop rbx
-    ret
+
 CompareFilesByName ENDP
 
 ;==========================================================================
@@ -850,8 +871,10 @@ CompareFilesBySize ENDP
 ;==========================================================================
 UpdateListView PROC
     push rbx
+
     push rdi
     push rsi
+
     push r12
     sub rsp, 120
     
@@ -895,12 +918,13 @@ UpdateLoop:
     
 UpdateComplete:
     add rsp, 120
-    pop r12
-    pop rsi
+
+    pop rsi pop r12
+
+
     pop rdi
-    pop rbx
-    ret
-UpdateListView ENDP
+    pop UpdateListView
+    pop rbx ENDP
 
 ;==========================================================================
 ; FileBrowser_GetSelectedPath - Get currently selected file path
@@ -912,6 +936,7 @@ UpdateListView ENDP
 ;==========================================================================
 FileBrowser_GetSelectedPath PROC
     push rbx
+
     push rdi
     sub rsp, 40
     
@@ -941,17 +966,16 @@ FileBrowser_GetSelectedPath PROC
     mov rcx, rdi
     call strlen
     add rsp, 40
+
     pop rdi
-    pop rbx
-    ret
-    
-NoSelection:
+    pop NoSelection
+    pop rbx:
     xor rax, rax
     add rsp, 40
+
     pop rdi
-    pop rbx
-    ret
-FileBrowser_GetSelectedPath ENDP
+    pop FileBrowser
+    pop rbx_GetSelectedPath ENDP
 
 ;==========================================================================
 ; FileBrowser_SetFilter - Set file type filter
@@ -991,7 +1015,7 @@ FileBrowser_SortBy PROC
     
     add rsp, 32
     pop rbx
-    ret
+
 FileBrowser_SortBy ENDP
 
 ;==========================================================================
@@ -1013,7 +1037,7 @@ FileBrowser_Refresh PROC
     
     add rsp, 32
     pop rbx
-    ret
+
 FileBrowser_Refresh ENDP
 
 ;==========================================================================
@@ -1066,7 +1090,7 @@ SkipHistory:
     
     add rsp, 32
     pop rbx
-    ret
+
 FileBrowser_Destroy ENDP
 
 ;==========================================================================
@@ -1104,3 +1128,8 @@ CompareFilesByDate PROC
 CompareFilesByDate ENDP
 
 END
+
+
+
+
+

@@ -97,13 +97,12 @@ memory_bridge_init PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
-    
-.init_error:
+
+@@init_error:
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 masm_memory_bridge_init ENDP
 
 ;==============================================================================
@@ -114,6 +113,7 @@ ALIGN 16
 memory_bridge_alloc PROC
     ; rcx = size
     push rbx
+
     push r12
     push r13
     sub rsp, 40
@@ -125,11 +125,11 @@ memory_bridge_alloc PROC
     mov rdx, INFINITE
     call WaitForSingleObject
     cmp eax, WAIT_OBJECT_0
-    jne .alloc_error
+    jne @@alloc_error
     
     ; Check block limit
     cmp g_block_count, MAX_ALLOCATIONS
-    jge .alloc_limit
+    jge @@alloc_limit
     
     ; Calculate total size with metadata
     mov rax, r12
@@ -175,24 +175,24 @@ memory_bridge_alloc PROC
     ; Return user pointer
     mov rax, rbx
     add rsp, 40
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
-    
-.alloc_limit:
-.alloc_fail:
+
+@@alloc_limit:
+@@alloc_fail:
     mov rcx, g_memory_mutex
     call ReleaseMutex
-    jmp .alloc_error
-    
-.alloc_error:
+    jmp @@alloc_error
+@@alloc_error:
     xor eax, eax
     add rsp, 40
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
+
 masm_memory_bridge_alloc ENDP
 
 ;==============================================================================
@@ -203,6 +203,7 @@ ALIGN 16
 memory_bridge_free PROC
     ; rcx = user pointer
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -213,7 +214,7 @@ memory_bridge_free PROC
     mov rdx, INFINITE
     call WaitForSingleObject
     cmp eax, WAIT_OBJECT_0
-    jne .free_error
+    jne @@free_error
     
     ; Find metadata (should be SIZEOF MEMORY_BLOCK before user pointer)
     mov rax, r12
@@ -222,7 +223,7 @@ memory_bridge_free PROC
     ; Validate magic number
     mov ebx, [rax + MEMORY_BLOCK.magic]
     cmp ebx, MEMORY_MAGIC
-    jne .free_invalid
+    jne @@free_invalid
     
     ; Check valid flag
     mov ebx, [rax + MEMORY_BLOCK.is_valid]
@@ -252,23 +253,21 @@ memory_bridge_free PROC
     
     mov eax, 1
     add rsp, 32
+
     pop r12
     pop rbx
-    ret
-    
-.free_invalid:
-.free_fail:
+@@free_invalid:
+@@free_fail:
     mov rcx, g_memory_mutex
     call ReleaseMutex
-    jmp .free_error
-    
-.free_error:
+    jmp @@free_error
+@@free_error:
     xor eax, eax
     add rsp, 32
+
     pop r12
-    pop rbx
-    ret
-masm_memory_bridge_free ENDP
+    pop masm
+    pop rbx_memory_bridge_free ENDP
 
 ;==============================================================================
 ; PUBLIC: memory_bridge_copy(dest: rcx, src: rdx, size: r8) -> bool (rax)
@@ -291,21 +290,20 @@ memory_bridge_copy PROC
     ; Check reasonable size (<100MB)
     mov rax, 104857600
     cmp r8, rax
-    jg .copy_error
+    jg @@copy_error
     
     ; Validate destination pointer
     mov rax, rcx
     sub rax, SIZEOF MEMORY_BLOCK
     mov ebx, [rax + MEMORY_BLOCK.magic]
     cmp ebx, MEMORY_MAGIC
-    jne .copy_not_validated
+    jne @@copy_not_validated
     
     ; Size check
     mov rax, [rax + MEMORY_BLOCK.size]
     cmp r8, rax
-    jg .copy_error
-    
-.copy_not_validated:
+    jg @@copy_error
+@@copy_not_validated:
     ; Perform memory copy
     mov rsi, rdx      ; Source
     mov rdi, rcx      ; Destination
@@ -313,27 +311,24 @@ memory_bridge_copy PROC
     
     ; Copy byte by byte (safe fallback)
     mov rax, 0
-    
-.copy_loop:
+@@copy_loop:
     cmp rax, rcx
-    jge .copy_done
+    jge @@copy_done
     
     mov bl, BYTE PTR [rsi + rax]
     mov BYTE PTR [rdi + rax], bl
     inc rax
-    jmp .copy_loop
-    
-.copy_done:
+    jmp @@copy_loop
+@@copy_done:
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
-    
-.copy_error:
+
+@@copy_error:
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 masm_memory_bridge_copy ENDP
 
 ;==============================================================================
@@ -353,7 +348,7 @@ memory_bridge_validate PROC
     mov rax, rcx
     mov rbx, 140737488355328  ; Max user space address on x64
     cmp rax, rbx
-    jg .validate_invalid
+    jg @@validate_invalid
     
     ; Try to read magic number (protected by SEH in real implementation)
     mov rax, rcx
@@ -361,7 +356,7 @@ memory_bridge_validate PROC
     
     mov ebx, [rax + MEMORY_BLOCK.magic]
     cmp ebx, MEMORY_MAGIC
-    jne .validate_unknown
+    jne @@validate_unknown
     
     ; Check valid flag
     mov ebx, [rax + MEMORY_BLOCK.is_valid]
@@ -371,20 +366,18 @@ memory_bridge_validate PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
-    
-.validate_unknown:
+
+@@validate_unknown:
     ; Pointer not allocated by bridge, but might be valid external memory
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
-    
-.validate_invalid:
+
+@@validate_invalid:
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 masm_memory_bridge_validate ENDP
 
 ;==============================================================================
@@ -408,18 +401,22 @@ memory_bridge_get_stats PROC
     
     ; Release if locked
     cmp eax, WAIT_OBJECT_0
-    jne .stats_return
+    jne @@stats_return
     mov r8, g_memory_mutex
     mov rcx, r8
     call ReleaseMutex
-    
-.stats_return:
+@@stats_return:
     ; Return: rax = total allocated, rcx = block count
     mov rdx, g_total_allocated
     mov rcx, g_block_count
     add rsp, 32
     pop rbx
-    ret
+
 masm_memory_bridge_get_stats ENDP
 
 END
+
+
+
+
+

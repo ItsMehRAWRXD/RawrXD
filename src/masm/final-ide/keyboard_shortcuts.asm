@@ -103,6 +103,7 @@ keyboard_shortcut_init ENDP
 PUBLIC keyboard_shortcut_handler
 keyboard_shortcut_handler PROC
     push rbx
+
     push rsi
     sub rsp, 32
     
@@ -250,10 +251,10 @@ shortcut_search_output:
     
 handler_done:
     add rsp, 32
+
     pop rsi
-    pop rbx
-    ret
-keyboard_shortcut_handler ENDP
+    pop keyboard
+    pop rbx_shortcut_handler ENDP
 
 ;==========================================================================
 ; PUBLIC: keyboard_shortcut_keyup(keyCode: ecx) -> eax
@@ -284,7 +285,7 @@ keyup_done:
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
+
 keyboard_shortcut_keyup ENDP
 
 ;==========================================================================
@@ -341,3 +342,8 @@ desc_ctrl_shift_f:
 keyboard_shortcut_get_description ENDP
 
 END
+
+
+
+
+

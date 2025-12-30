@@ -120,7 +120,6 @@ terminal_system_init PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
 
 terminal_system_init ENDP
 
@@ -132,6 +131,7 @@ ALIGN 16
 terminal_write_text PROC
 
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -184,10 +184,10 @@ write_would_overflow:
 
 write_done:
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
 
 terminal_write_text ENDP
 
@@ -241,7 +241,6 @@ zero_done:
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
 
 terminal_clear ENDP
 
@@ -334,8 +333,12 @@ status_bar_init PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
 
 status_bar_init ENDP
 
 END
+
+
+
+
+

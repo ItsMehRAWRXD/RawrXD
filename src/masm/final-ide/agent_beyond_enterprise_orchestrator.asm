@@ -173,7 +173,7 @@ AgenticEngine_Initialize PROC
     mov rax, 1
     add rsp, 32
     pop rbx
-    ret
+
 AgenticEngine_Initialize ENDP
 
 ;==========================================================================
@@ -183,10 +183,13 @@ AgenticEngine_Initialize ENDP
 ;==========================================================================
 AgenticEngine_ProcessResponse PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
+
     push r14
     push r15
     sub rsp, 128
@@ -295,14 +298,17 @@ block_response:
 done:
     mov g_orch_ctx.state, ORCH_STATE_IDLE
     add rsp, 128
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 AgenticEngine_ProcessResponse ENDP
 
 ;==========================================================================
@@ -336,7 +342,7 @@ step_ok:
     mov g_orch_ctx.state, ORCH_STATE_IDLE
     add rsp, 32
     pop rbx
-    ret
+
 AgenticEngine_ExecuteTask ENDP
 
 ;==========================================================================
@@ -353,3 +359,8 @@ AgenticEngine_GetStats ENDP
 ; (Assuming console_log is available)
 
 END
+
+
+
+
+

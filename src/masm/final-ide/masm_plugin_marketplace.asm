@@ -92,7 +92,7 @@ szUserAgent db "RawrXD-IDE/1.0",0
 PUBLIC marketplace_init
 marketplace_init PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     ; Initialize WinHTTP session
@@ -135,7 +135,7 @@ marketplace_init ENDP
 PUBLIC marketplace_fetch_catalog
 marketplace_fetch_catalog PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 64
     
     ; Create HTTP request
@@ -144,11 +144,13 @@ marketplace_fetch_catalog PROC
     lea r8, szApiPath
     xor r9, r9
     push 0
+
     push 0
     push WINHTTP_FLAG_SECURE
     push r9
-    call WinHttpOpenRequest
-    add rsp, 32
+    push call
+    push WinHttpOpenRequest
+    push add rsp, 32
     
     test rax, rax
     jz fetch_failed
@@ -161,8 +163,9 @@ marketplace_fetch_catalog PROC
     mov r8, -1
     xor r9, r9
     push 0
+
     push 0
-    call WinHttpSendRequest
+    push call WinHttpSendRequest
     add rsp, 16
     
     test rax, rax
@@ -215,12 +218,12 @@ marketplace_fetch_catalog ENDP
 PUBLIC marketplace_install_plugin
 marketplace_install_plugin PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 64
     push rbx
+
     push rsi
-    
-    mov rbx, rcx  ; Plugin ID
+    push mov rbx, rcx  ; Plugin ID
     
     ; Find plugin in catalog
     mov rcx, rbx
@@ -276,21 +279,21 @@ plugin_not_found:
     xor eax, eax
     
 done:
-    pop rsi
-    pop rbx
-    leave
+
+    pop rsi leave
     ret
+    pop rbx
 marketplace_install_plugin ENDP
 
 ; resolve_dependencies(entry: rcx) -> bool (rax)
 resolve_dependencies PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     push rbx
+
     push rsi
-    
-    mov rbx, rcx
+    push mov rbx, rcx
     
     ; Build dependency tree
     mov rcx, rbx
@@ -321,10 +324,10 @@ resolve_failed:
     xor eax, eax
     
 done:
-    pop rsi
-    pop rbx
-    leave
+
+    pop rsi leave
     ret
+    pop rbx
 resolve_dependencies ENDP
 
 ; version_compare(v1: rcx, v2: rdx) -> result (rax)
@@ -332,7 +335,7 @@ resolve_dependencies ENDP
 PUBLIC version_compare
 version_compare PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     
     ; Compare major version
     mov eax, [rcx.major]
@@ -371,7 +374,7 @@ version_compare ENDP
 ; verify_plugin_signature(filePath: rcx) -> bool (rax)
 verify_plugin_signature PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     ; Check digital signature
@@ -389,11 +392,11 @@ verify_plugin_signature ENDP
 
 marketplace_find_entry PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     push rbx
+
     push rsi
-    
-    mov rbx, rcx
+    push mov rbx, rcx
     lea rsi, [globalMarketplace.entries]
     mov ecx, [globalMarketplace.entryCount]
     
@@ -403,13 +406,14 @@ find_loop:
     
     ; Compare plugin ID
     push rcx
+
     push rsi
-    mov rcx, rbx
+    push mov rcx, rbx
     lea rdx, [rsi.id]
     call string_compare
-    pop rsi
-    pop rcx
-    
+
+    pop rcx pop rsi
+
     test rax, rax
     jz found_entry
     
@@ -425,23 +429,24 @@ not_found:
     xor rax, rax
     
 find_done:
-    pop rsi
-    pop rbx
-    leave
+
+    pop rsi leave
     ret
+    pop rbx
 marketplace_find_entry ENDP
 
 marketplace_parse_catalog PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 64
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
-    
-    mov rsi, rcx        ; JSON buffer
+    push mov rsi, rcx        ; JSON buffer
     mov r12d, edx       ; buffer length
     
     mov [globalMarketplace.entryCount], 0
@@ -498,12 +503,14 @@ parse_loop:
     jb parse_loop
     
 parse_done:
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
-    pop rbx
-    leave
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
+
+    pop leave rbx
     ret
     
 .data
@@ -521,8 +528,9 @@ find_json_field PROC
     ; rcx = buffer, rdx = field name
     ; Returns pointer to value start
     push rsi
+
     push rdi
-    mov rsi, rcx
+    push mov rsi, rcx
     mov rdi, rdx
     
     ; Simple string search
@@ -532,13 +540,14 @@ find_field_loop:
     jz field_not_found
     
     push rsi
+
     push rdi
-    mov rcx, rsi
+    push mov rcx, rsi
     mov rdx, rdi
     call string_starts_with
-    pop rdi
-    pop rsi
-    
+
+    pop rsi pop rdi
+
     test rax, rax
     jnz field_found
     
@@ -572,18 +581,19 @@ field_not_found:
     xor rax, rax
     
 find_field_exit:
+
     pop rdi
-    pop rsi
-    ret
-find_json_field ENDP
+    pop find
+    pop rsi_json_field ENDP
 
 extract_json_string PROC
     ; Extract string value until next quote
     ; rcx = destination, rdx = source
     ; Returns pointer to next char in source
     push rsi
+
     push rdi
-    mov rdi, rcx
+    push mov rdi, rcx
     mov rsi, rdx
     
 extract_loop:
@@ -600,16 +610,17 @@ extract_loop:
 extract_done:
     mov byte ptr [rdi], 0
     mov rax, rsi
+
     pop rdi
-    pop rsi
-    ret
-extract_json_string ENDP
+    pop extract
+    pop rsi_json_string ENDP
 
 download_plugin_file PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 256
     push rbx
+
     push rsi
     push rdi
     
@@ -638,8 +649,9 @@ download_plugin_file PROC
     mov r10, CREATE_ALWAYS
     mov r11, FILE_ATTRIBUTE_NORMAL
     push 0
-    call CreateFileA
-    add rsp, 8
+    push call
+    push CreateFileA
+    push add rsp, 8
     
     test rax, rax
     jz download_fail
@@ -660,10 +672,11 @@ download_fail:
     xor rax, rax
     
 download_exit:
-    pop rdi
-    pop rsi
-    pop rbx
-    leave
+
+    pop rsi pop rdi
+
+
+    pop leave rbx
     ret
     
 .data
@@ -676,9 +689,10 @@ download_plugin_file ENDP
 
 build_dependency_tree PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 64
     push rbx
+
     push rsi
     push rdi
     
@@ -730,16 +744,17 @@ build_failed:
     xor rax, rax
     
 build_exit:
-    pop rdi
-    pop rsi
-    pop rbx
-    leave
+
+    pop rsi pop rdi
+
+
+    pop leave rbx
     ret
 build_dependency_tree ENDP
 
 check_circular_dependencies PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     ; Simple DFS to detect cycles
@@ -751,12 +766,12 @@ check_circular_dependencies ENDP
 
 install_dependency_tree PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 64
     push rbx
+
     push rsi
-    
-    mov rbx, rcx        ; DEPENDENCY_NODE
+    push mov rbx, rcx        ; DEPENDENCY_NODE
     
     ; Post-order traversal (install children first)
     mov esi, [rbx.childCount]
@@ -789,10 +804,10 @@ install_failed:
     xor rax, rax
     
 install_exit:
-    pop rsi
-    pop rbx
-    leave
+
+    pop rsi leave
     ret
+    pop rbx
     
 marketplace_install_plugin_internal:
     ; Actual installation logic (copying files, etc.)
@@ -803,9 +818,9 @@ install_dependency_tree ENDP
 string_compare PROC
     ; Compare two null-terminated strings
     push rsi
+
     push rdi
-    
-    mov rsi, rcx
+    push mov rsi, rcx
     mov rdi, rdx
     
 cmp_loop:
@@ -827,9 +842,13 @@ not_equal:
     mov rax, 1
     
 cmp_done:
+
     pop rdi
-    pop rsi
-    ret
-string_compare ENDP
+    pop string
+    pop rsi_compare ENDP
 
 end
+
+
+
+

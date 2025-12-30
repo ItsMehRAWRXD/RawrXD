@@ -94,6 +94,7 @@ LOG_ENTRY ENDS
 PUBLIC output_pane_init
 output_pane_init PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -132,10 +133,11 @@ init_fail:
     
 init_done:
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 output_pane_init ENDP
 
 ;==========================================================================
@@ -146,6 +148,7 @@ output_pane_init ENDP
 PUBLIC output_log_editor
 output_log_editor PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -182,10 +185,11 @@ log_editor_format:
     
     mov eax, 1
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 output_log_editor ENDP
 
 ;==========================================================================
@@ -196,6 +200,7 @@ output_log_editor ENDP
 PUBLIC output_log_tab
 output_log_tab PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -228,10 +233,11 @@ log_tab_format:
     
     mov eax, 1
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 output_log_tab ENDP
 
 ;==========================================================================
@@ -242,6 +248,7 @@ output_log_tab ENDP
 PUBLIC output_log_agent
 output_log_agent PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -273,10 +280,11 @@ log_agent_format:
     
     mov eax, 1
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 output_log_agent ENDP
 
 ;==========================================================================
@@ -286,6 +294,7 @@ output_log_agent ENDP
 PUBLIC output_log_hotpatch
 output_log_hotpatch PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -308,10 +317,11 @@ output_log_hotpatch PROC
     
     mov eax, 1
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 output_log_hotpatch ENDP
 
 ;==========================================================================
@@ -321,6 +331,7 @@ output_log_hotpatch ENDP
 PUBLIC output_log_filetree
 output_log_filetree PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -341,10 +352,11 @@ output_log_filetree PROC
     
     mov eax, 1
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 output_log_filetree ENDP
 
 ;==========================================================================
@@ -353,6 +365,7 @@ output_log_filetree ENDP
 ;==========================================================================
 output_pane_append PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -396,10 +409,11 @@ output_pane_append PROC
     
 append_done:
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 output_pane_append ENDP
 
 ;==========================================================================
@@ -435,7 +449,7 @@ output_pane_clear PROC
 clear_done:
     add rsp, 32
     pop rbx
-    ret
+
 output_pane_clear ENDP
 
 ;==========================================================================
@@ -443,4 +457,9 @@ output_pane_clear ENDP
 ;==========================================================================
 .data
     szRichEditClass  BYTE "RichEdit20W",0
+
+
+
+
+
 

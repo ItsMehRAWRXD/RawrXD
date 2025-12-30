@@ -178,6 +178,7 @@ MODEL_MEMORY_MAP ENDS
 PUBLIC memory_persist_init
 memory_persist_init PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -215,10 +216,11 @@ memory_persist_init PROC
     
     mov eax, 1
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 memory_persist_init ENDP
 
 ;==========================================================================
@@ -229,7 +231,7 @@ memory_persist_init ENDP
 PUBLIC memory_persist_save
 memory_persist_save PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 96
     
     ; Create temporary file for atomic write
@@ -332,7 +334,7 @@ save_error:
 save_done:
     mov rsp, rbp
     pop rbp
-    ret
+
 memory_persist_save ENDP
 
 ;==========================================================================
@@ -343,7 +345,7 @@ memory_persist_save ENDP
 PUBLIC memory_persist_load
 memory_persist_load PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 64
     
     ; Log restore attempt
@@ -420,7 +422,7 @@ load_error:
 load_done:
     mov rsp, rbp
     pop rbp
-    ret
+
 memory_persist_load ENDP
 
 ;==========================================================================
@@ -481,7 +483,7 @@ memory_too_large:
 memory_done:
     add rsp, 32
     pop rbx
-    ret
+
 memory_persist_set_model_memory ENDP
 
 ;==========================================================================
@@ -506,7 +508,7 @@ persist_write_header PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
+
 persist_write_header ENDP
 
 ;==========================================================================
@@ -548,6 +550,7 @@ persist_write_layout ENDP
 PUBLIC persist_save_session
 persist_save_session PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -615,11 +618,11 @@ save_fail:
     
 save_done:
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
-    
+
 szTempExt BYTE ".tmp",0
 persist_save_session ENDP
 
@@ -629,6 +632,7 @@ persist_save_session ENDP
 ;==========================================================================
 persist_write_model_memory PROC
     push rbx
+
     push rsi
     sub rsp, 32
     
@@ -659,10 +663,10 @@ size_ok:
 write_done:
     mov eax, 1
     add rsp, 32
+
     pop rsi
-    pop rbx
-    ret
-persist_write_model_memory ENDP
+    pop persist
+    pop rbx_write_model_memory ENDP
 
 ;==========================================================================
 ; INTERNAL: WriteFile_wrapper(hFile: rcx, buffer: rdx, size: r8) -> eax
@@ -692,7 +696,7 @@ write_fail:
 write_exit:
     add rsp, 48
     pop rbx
-    ret
+
 WriteFile_wrapper ENDP
 
 ;==========================================================================
@@ -711,3 +715,8 @@ FILE_ATTRIBUTE_NORMAL   EQU 80h
 MOVEFILE_REPLACE_EXISTING EQU 1
 
 END
+
+
+
+
+

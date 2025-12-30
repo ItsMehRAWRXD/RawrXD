@@ -91,6 +91,7 @@ CHAT_SESSION ENDS
 PUBLIC chat_persistence_init
 chat_persistence_init PROC
     push rbx
+
     push rdi
     sub rsp, 32
     
@@ -108,10 +109,10 @@ chat_persistence_init PROC
     
     mov eax, 1                          ; Success
     add rsp, 32
+
     pop rdi
-    pop rbx
-    ret
-chat_persistence_init ENDP
+    pop chat
+    pop rbx_persistence_init ENDP
 
 ;==========================================================================
 ; PUBLIC: chat_persistence_save_session(session_id: rcx) -> eax
@@ -120,6 +121,7 @@ chat_persistence_init ENDP
 PUBLIC chat_persistence_save_session
 chat_persistence_save_session PROC
     push rbx
+
     push rdi
     push rsi
     sub rsp, 32
@@ -165,18 +167,19 @@ chat_persistence_save_session PROC
     inc SessionsSaved
     mov eax, 1                          ; Success
     add rsp, 32
-    pop rsi
-    pop rdi
+
+    pop rdi pop rsi
+
     pop rbx
-    ret
-    
-.save_fail:
+
+@@save_fail:
     xor eax, eax
     add rsp, 32
-    pop rsi
-    pop rdi
+
+    pop rdi pop rsi
+
     pop rbx
-    ret
+
 chat_persistence_save_session ENDP
 
 ;==========================================================================
@@ -186,6 +189,7 @@ chat_persistence_save_session ENDP
 PUBLIC chat_persistence_load_session
 chat_persistence_load_session PROC
     push rbx
+
     push rdi
     push rsi
     sub rsp, 32
@@ -226,18 +230,19 @@ chat_persistence_load_session PROC
     inc SessionsLoaded
     mov eax, 1                          ; Success
     add rsp, 32
-    pop rsi
-    pop rdi
+
+    pop rdi pop rsi
+
     pop rbx
-    ret
-    
-.load_fail:
+
+@@load_fail:
     xor eax, eax
     add rsp, 32
-    pop rsi
-    pop rdi
+
+    pop rdi pop rsi
+
     pop rbx
-    ret
+
 chat_persistence_load_session ENDP
 
 ;==========================================================================
@@ -261,6 +266,7 @@ build_session_filename ENDP
 PRIVATE parse_json_session
 parse_json_session PROC
     push rbx
+
     push rdi
     push rsi
     
@@ -276,9 +282,9 @@ parse_json_session PROC
     jz .parse_done
     
     ; Parse each message object
-.parse_loop:
+@@parse_loop:
     cmp edi, MAX_CHAT_HISTORY
-    jge .parse_done
+    jge @@parse_done
     
     ; Find next message object {
     mov rcx, rsi
@@ -291,14 +297,14 @@ parse_json_session PROC
     ; TODO: Extract message fields (role, timestamp, content)
     
     inc edi
-    jmp .parse_loop
-    
-.parse_done:
+    jmp @@parse_loop
+@@parse_done:
     mov eax, edi
-    pop rsi
-    pop rdi
+
+    pop rdi pop rsi
+
     pop rbx
-    ret
+
 parse_json_session ENDP
 
 ;==========================================================================
@@ -307,11 +313,10 @@ parse_json_session ENDP
 PRIVATE create_directory_safe
 create_directory_safe PROC
     push rbx
-    
-    call CreateDirectoryA
-    
-    pop rbx
-    ret
+    push call
+    push CreateDirectoryA
+    push pop rbx
+
 create_directory_safe ENDP
 
 ;==========================================================================
@@ -329,7 +334,7 @@ write_file_safe PROC
     
     add rsp, 32
     pop rbx
-    ret
+
 write_file_safe ENDP
 
 ;==========================================================================
@@ -345,7 +350,7 @@ read_file_safe PROC
     
     add rsp, 32
     pop rbx
-    ret
+
 read_file_safe ENDP
 
 ;==========================================================================
@@ -380,3 +385,8 @@ GetFileTime_Unix PROC
 GetFileTime_Unix ENDP
 
 END
+
+
+
+
+

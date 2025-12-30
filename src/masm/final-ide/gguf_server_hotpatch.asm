@@ -135,7 +135,6 @@ init_fail:
 init_exit:
     add rsp, 32
     pop rbx
-    ret
 
 masm_server_hotpatch_init ENDP
 
@@ -150,6 +149,7 @@ ALIGN 16
 masm_server_hotpatch_add PROC
 
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -196,11 +196,10 @@ add_registry_full:
 
 add_exit:
     add rsp, 32
-    pop r12
-    pop rbx
-    ret
 
-masm_server_hotpatch_add ENDP
+    pop r12
+    pop masm
+    pop rbx_server_hotpatch_add ENDP
 
 ;=====================================================================
 ; masm_server_hotpatch_apply(injection_point: rcx, data_ptr: rdx, 
@@ -215,8 +214,10 @@ ALIGN 16
 masm_server_hotpatch_apply PROC
 
     push rbx
+
     push r12
     push r13
+
     push r14
     push r15
     sub rsp, 64
@@ -269,14 +270,13 @@ apply_loop:
     mov r9, r15             ; output_len_ptr
     
     push r10
+
     push rax
-    
     ; Call transform function
     call r8
-    
-    pop rax
-    pop r10
-    
+
+    pop r10 pop rax
+
     ; Update statistics
     inc qword ptr [rax + 56] ; transform_count++
     lock inc [g_server_transforms_applied]
@@ -295,12 +295,13 @@ apply_done:
     call asm_log
 
     add rsp, 64
-    pop r15
-    pop r14
-    pop r13
-    pop r12
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
     pop rbx
-    ret
 
 masm_server_hotpatch_apply ENDP
 
@@ -316,6 +317,7 @@ ALIGN 16
 masm_server_cache_get PROC
 
     push rbx
+
     push r12
     push r13
     sub rsp, 32
@@ -366,10 +368,10 @@ cache_miss:
 cache_done:
     
     add rsp, 32
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
 
 masm_server_cache_get ENDP
 
@@ -384,6 +386,7 @@ ALIGN 16
 masm_server_cache_put PROC
 
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -436,10 +439,10 @@ cache_fail:
     
 put_done:
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
 
 masm_server_cache_put ENDP
 
@@ -489,7 +492,6 @@ enable_invalid:
 enable_exit:
     add rsp, 32
     pop rbx
-    ret
 
 masm_server_hotpatch_enable ENDP
 
@@ -534,7 +536,6 @@ disable_invalid:
 disable_exit:
     add rsp, 32
     pop rbx
-    ret
 
 masm_server_hotpatch_disable ENDP
 
@@ -603,9 +604,13 @@ cleanup_no_registry:
 cleanup_exit:
     add rsp, 32
     pop rbx
-    ret
 
 masm_server_hotpatch_cleanup ENDP
 
 END
+
+
+
+
+
 

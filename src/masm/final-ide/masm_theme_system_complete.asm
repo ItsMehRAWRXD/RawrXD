@@ -166,6 +166,7 @@ szThemeApplied  BYTE "Theme applied successfully", 0
 ;==========================================================================
 ThemeManager_Init PROC
     push rbx
+
     push rdi
     sub rsp, 32
     
@@ -192,17 +193,16 @@ ThemeManager_Init PROC
     ; Success
     mov rax, 1
     add rsp, 32
+
     pop rdi
-    pop rbx
-    ret
-    
-InitFailed:
+    pop InitFailed
+    pop rbx:
     xor rax, rax
     add rsp, 32
+
     pop rdi
-    pop rbx
-    ret
-ThemeManager_Init ENDP
+    pop ThemeManager
+    pop rbx_Init ENDP
 
 ;==========================================================================
 ; SetDefaultDarkTheme - Set VS Code Dark+ theme colors
@@ -212,7 +212,7 @@ ThemeManager_Init ENDP
 ;==========================================================================
 SetDefaultDarkTheme PROC
     push rdi
-    mov rdi, rcx
+    push mov rdi, rcx
     
     ; Editor colors
     mov BYTE PTR [rdi + 0], 30      ; editorBackground.r
@@ -289,10 +289,10 @@ SetDefaultDarkTheme PROC
     mov DWORD PTR [rdi + 148], 3F800000h ; 1.0f (chatOpacity)
     mov DWORD PTR [rdi + 152], 3F800000h ; 1.0f (editorOpacity)
     
-    pop rdi
-    ret
-SetDefaultDarkTheme ENDP
+    pop ENDP
 
+
+    pop SetDefaultDarkTheme rdi
 ;==========================================================================
 ; SetDefaultLightTheme - Set VS Code Light+ theme colors
 ;
@@ -301,7 +301,7 @@ SetDefaultDarkTheme ENDP
 ;==========================================================================
 SetDefaultLightTheme PROC
     push rdi
-    mov rdi, rcx
+    push mov rdi, rcx
     
     ; Editor colors (Light theme)
     mov BYTE PTR [rdi + 0], 255     ; editorBackground.r (White)
@@ -336,10 +336,10 @@ SetDefaultLightTheme PROC
     mov BYTE PTR [rdi + 98], 240
     mov BYTE PTR [rdi + 99], 255
     
-    pop rdi
-    ret
-SetDefaultLightTheme ENDP
+    pop ENDP
 
+
+    pop SetDefaultLightTheme rdi
 ;==========================================================================
 ; ThemeManager_SetTheme - Switch to a different theme
 ;
@@ -348,6 +348,7 @@ SetDefaultLightTheme ENDP
 ;==========================================================================
 ThemeManager_SetTheme PROC
     push rbx
+
     push rdi
     sub rsp, 32
     
@@ -406,19 +407,18 @@ ThemeSet:
     
     mov rax, 1
     add rsp, 32
+
     pop rdi
-    pop rbx
-    ret
-    
-SetThemeFailed:
+    pop SetThemeFailed
+    pop rbx:
     lea rcx, gThemeManager.hCritSection
     call LeaveCriticalSection
     xor rax, rax
     add rsp, 32
+
     pop rdi
-    pop rbx
-    ret
-ThemeManager_SetTheme ENDP
+    pop ThemeManager
+    pop rbx_SetTheme ENDP
 
 ;==========================================================================
 ; ThemeManager_GetColor - Get a color value by index
@@ -467,15 +467,14 @@ ThemeManager_GetColor PROC
     
     add rsp, 32
     pop rdi
-    ret
-    
+
 GetColorFailed:
     lea rcx, gThemeManager.hCritSection
     call LeaveCriticalSection
     xor eax, eax
     add rsp, 32
     pop rdi
-    ret
+
 ThemeManager_GetColor ENDP
 
 ;==========================================================================
@@ -536,15 +535,14 @@ OpacitySet:
     mov rax, 1
     add rsp, 32
     pop rdi
-    ret
-    
+
 SetOpacityFailed:
     lea rcx, gThemeManager.hCritSection
     call LeaveCriticalSection
     xor rax, rax
     add rsp, 32
     pop rdi
-    ret
+
 ThemeManager_SetOpacity ENDP
 
 ;==========================================================================
@@ -602,15 +600,14 @@ OpacityRetrieved:
     
     add rsp, 32
     pop rdi
-    ret
-    
+
 GetOpacityFailed:
     lea rcx, gThemeManager.hCritSection
     call LeaveCriticalSection
     xorps xmm0, xmm0  ; Return 0.0
     add rsp, 32
     pop rdi
-    ret
+
 ThemeManager_GetOpacity ENDP
 
 ;==========================================================================
@@ -734,6 +731,7 @@ ThemeManager_ScaleSize ENDP
 ;==========================================================================
 ThemeManager_ApplyTheme PROC
     push rbx
+
     push rdi
     sub rsp, 40
     
@@ -765,17 +763,16 @@ ThemeManager_ApplyTheme PROC
     
     mov rax, 1
     add rsp, 40
+
     pop rdi
-    pop rbx
-    ret
-    
-ApplyFailed:
+    pop ApplyFailed
+    pop rbx:
     xor rax, rax
     add rsp, 40
+
     pop rdi
-    pop rbx
-    ret
-ThemeManager_ApplyTheme ENDP
+    pop ThemeManager
+    pop rbx_ApplyTheme ENDP
 
 ;==========================================================================
 ; ThemeManager_SaveTheme - Save theme to file
@@ -830,7 +827,12 @@ SkipFree:
     
     add rsp, 32
     pop rbx
-    ret
+
 ThemeManager_Cleanup ENDP
 
 END
+
+
+
+
+

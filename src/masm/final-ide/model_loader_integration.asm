@@ -141,7 +141,7 @@ already_initialized:
 init_done:
     add rsp, 32
     pop rbx
-    ret
+
 model_loader_init ENDP
 
 ;==========================================================================
@@ -158,8 +158,10 @@ PUBLIC model_loader_load_gguf_model
 ALIGN 16
 model_loader_load_gguf_model PROC
     push rbx
+
     push rsi
     push rdi
+
     push r8
     push r9
     sub rsp, 80h
@@ -237,13 +239,14 @@ load_error:
     
 load_done:
     add rsp, 80h
-    pop r9
-    pop r8
-    pop rdi
-    pop rsi
+
+    pop r8 pop r9
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
-    
+
 need_init:
     ; Auto-initialize
     call model_loader_init
@@ -260,8 +263,10 @@ PUBLIC model_loader_run_inference
 ALIGN 16
 model_loader_run_inference PROC
     push rbx
+
     push rsi
     push rdi
+
     push r8
     sub rsp, 80h
     
@@ -367,12 +372,13 @@ inference_error:
     
 inference_done:
     add rsp, 80h
-    pop r8
-    pop rdi
+
+    pop rdi pop r8
+
+
     pop rsi
-    pop rbx
-    ret
-model_loader_run_inference ENDP
+    pop model
+    pop rbx_loader_run_inference ENDP
 
 ;==========================================================================
 ; PUBLIC: model_loader_get_metrics() -> rax (pointer to PERF_METRICS)
@@ -452,7 +458,7 @@ model_loader_run_self_tests PROC
     
     add rsp, 32
     pop rbx
-    ret
+
 model_loader_run_self_tests ENDP
 
 ;==========================================================================
@@ -466,9 +472,9 @@ model_loader_run_self_tests ENDP
 ALIGN 16
 strcpy_safe_masm PROC
     push rax
+
     push rbx
-    
-    xor eax, eax
+    push xor eax, eax
     
 safe_copy_loop:
     cmp rax, r8
@@ -490,11 +496,10 @@ safe_copy_done:
     
 safe_null_term:
     mov BYTE PTR [rdx + rax], 0
-    
+
     pop rbx
-    pop rax
-    ret
-strcpy_safe_masm ENDP
+    pop strcpy
+    pop rax_safe_masm ENDP
 
 ;==========================================================================
 ; INTERNAL: int_to_string(value: eax, buffer: rdx)
@@ -503,8 +508,10 @@ strcpy_safe_masm ENDP
 ALIGN 16
 int_to_string PROC
     push rbx
+
     push rcx
     push rdx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -553,12 +560,19 @@ i2s_copy:
     
 i2s_done:
     add rsp, 64
-    pop rdi
-    pop rsi
-    pop rdx
-    pop rcx
+
+    pop rsi pop rdi
+
+
+    pop rcx pop rdx
+
     pop rbx
-    ret
+
 int_to_string ENDP
 
 END
+
+
+
+
+

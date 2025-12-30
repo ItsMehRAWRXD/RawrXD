@@ -106,7 +106,6 @@ editor_system_init PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
 
 editor_system_init ENDP
 
@@ -118,6 +117,7 @@ ALIGN 16
 editor_buffer_create PROC
 
     push rbx
+
     push rsi
     sub rsp, 32
 
@@ -169,11 +169,10 @@ size_ok:
 
     mov rax, rbx
     add rsp, 32
-    pop rsi
-    pop rbx
-    ret
 
-editor_buffer_create ENDP
+    pop rsi
+    pop editor
+    pop rbx_buffer_create ENDP
 
 ;==========================================================================
 ; editor_buffer_insert(buffer: RCX, pos: RDX, text: R8, len: R9) -> EAX
@@ -183,6 +182,7 @@ ALIGN 16
 editor_buffer_insert PROC
 
     push rbx
+
     push rsi
     push rdi
     sub rsp, 48
@@ -272,10 +272,10 @@ insert_fail:
 
 insert_done:
     add rsp, 48
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
 
 editor_buffer_insert ENDP
 
@@ -287,6 +287,7 @@ ALIGN 16
 editor_buffer_delete PROC
 
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -345,10 +346,10 @@ delete_fail:
 
 delete_done:
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
 
 editor_buffer_delete ENDP
 
@@ -410,6 +411,7 @@ ALIGN 16
 editor_reparse_lines PROC
 
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -457,10 +459,10 @@ reparse_done:
     call console_log
 
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
 
 editor_reparse_lines ENDP
 
@@ -512,6 +514,7 @@ UNDO_OPERATION ENDS
 ALIGN 16
 editor_push_undo PROC
     push rbx
+
     push rsi
     sub rsp, 32
     
@@ -544,10 +547,10 @@ undo_push_no_text:
     
 undo_push_done:
     add rsp, 32
+
     pop rsi
-    pop rbx
-    ret
-editor_push_undo ENDP
+    pop editor
+    pop rbx_push_undo ENDP
 
 ;==========================================================================
 ; editor_undo(buffer: RCX) -> EAX (1=success)
@@ -556,6 +559,7 @@ PUBLIC editor_undo
 ALIGN 16
 editor_undo PROC
     push rbx
+
     push rsi
     sub rsp, 32
     
@@ -604,10 +608,10 @@ undo_fail:
     
 undo_done:
     add rsp, 32
+
     pop rsi
-    pop rbx
-    ret
-editor_undo ENDP
+    pop editor
+    pop rbx_undo ENDP
 
 ;==========================================================================
 ; editor_redo(buffer: RCX) -> EAX (1=success)
@@ -616,6 +620,7 @@ PUBLIC editor_redo
 ALIGN 16
 editor_redo PROC
     push rbx
+
     push rsi
     sub rsp, 32
     
@@ -660,9 +665,14 @@ redo_fail:
     
 redo_done:
     add rsp, 32
+
     pop rsi
-    pop rbx
-    ret
-editor_redo ENDP
+    pop editor
+    pop rbx_redo ENDP
 
 END
+
+
+
+
+

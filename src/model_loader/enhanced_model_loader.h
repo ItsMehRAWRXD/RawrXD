@@ -9,6 +9,7 @@ class InferenceEngine;
 class GGUFServer;
 class HFDownloader;
 class OllamaProxy;
+class UniversalFormatLoader;
 
 enum class ModelFormat;
 
@@ -23,6 +24,7 @@ public:
     bool loadHFModel(const QString& repoId);
     bool loadOllamaModel(const QString& modelName);
     bool loadCompressedModel(const QString& compressedPath);
+    bool loadUniversalFormat(const QString& modelPath);  // Phase 1: SafeTensors, PyTorch, etc.
     bool decompressAndLoad(const QString& compressedPath, int compressionType);
 
     bool startServer(quint16 port);
@@ -53,6 +55,7 @@ private:
 private:
     std::unique_ptr<InferenceEngine> m_engine{nullptr};
     std::unique_ptr<GGUFServer> m_server{nullptr};
+    std::unique_ptr<UniversalFormatLoader> m_universalLoader{nullptr};
     std::unique_ptr<HFDownloader> m_hfDownloader{nullptr};
     std::unique_ptr<OllamaProxy> m_ollamaProxy{nullptr};
     std::string m_tempDirectory;

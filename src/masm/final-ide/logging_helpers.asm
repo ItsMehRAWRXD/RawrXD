@@ -29,6 +29,7 @@ PUBLIC log_int32
 ALIGN 16
 log_int32 PROC
     push rsi
+
     push rdi
     push rbx
     sub rsp, 32
@@ -45,10 +46,11 @@ log_int32 PROC
     call OutputDebugStringA
     
     add rsp, 32
-    pop rbx
-    pop rdi
+
+    pop rdi pop rbx
+
     pop rsi
-    ret
+
 log_int32 ENDP
 
 ;==========================================================================
@@ -60,6 +62,7 @@ PUBLIC log_int64
 ALIGN 16
 log_int64 PROC
     push rsi
+
     push rdi
     push rbx
     sub rsp, 32
@@ -76,10 +79,11 @@ log_int64 PROC
     call OutputDebugStringA
     
     add rsp, 32
-    pop rbx
-    pop rdi
+
+    pop rdi pop rbx
+
     pop rsi
-    ret
+
 log_int64 ENDP
 
 ;==========================================================================
@@ -174,9 +178,9 @@ EXTERN int_to_string:PROC
 ;==========================================================================
 int64_to_string PROC
     push rsi
+
     push rbx
-    
-    mov rbx, 10         ; divisor
+    push mov rbx, 10         ; divisor
     
     ; Handle negative
     test rax, rax
@@ -217,10 +221,10 @@ reverse_loop64:
     jmp reverse_loop64
     
 reverse_done64:
+
     pop rbx
-    pop rsi
-    ret
-int64_to_string ENDP
+    pop int64
+    pop rsi_to_string ENDP
 
 ;==========================================================================
 ; EXTERNAL DECLARATIONS
@@ -228,3 +232,8 @@ int64_to_string ENDP
 EXTERN OutputDebugStringA:PROC
 
 END
+
+
+
+
+

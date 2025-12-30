@@ -302,7 +302,7 @@ tensor_debugger_init PROC
     mov rax, g_tensor_debugger.hMutex
     add rsp, 32
     pop rbx
-    ret
+
 tensor_debugger_init ENDP
 
 ;==========================================================================
@@ -311,6 +311,7 @@ tensor_debugger_init ENDP
 ;==========================================================================
 tensor_debugger_create_window PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 128
@@ -350,10 +351,11 @@ tensor_debugger_create_window PROC
     
     mov rax, g_tensor_debugger.hWindow
     add rsp, 128
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 tensor_debugger_create_window ENDP
 
 ;==========================================================================
@@ -391,7 +393,7 @@ tensor_debugger_attach_model PROC
     
     add rsp, 64
     pop rbx
-    ret
+
 tensor_debugger_attach_model ENDP
 
 ;==========================================================================
@@ -422,7 +424,7 @@ tensor_debugger_detach_model PROC
     
     add rsp, 64
     pop rbx
-    ret
+
 tensor_debugger_detach_model ENDP
 
 ;==========================================================================
@@ -431,6 +433,7 @@ tensor_debugger_detach_model ENDP
 ;==========================================================================
 tensor_debugger_set_breakpoint PROC
     push rbx
+
     push rsi
     sub rsp, 128
     
@@ -493,10 +496,10 @@ tensor_debugger_set_breakpoint PROC
     call ReleaseMutex
     
     add rsp, 128
+
     pop rsi
-    pop rbx
-    ret
-tensor_debugger_set_breakpoint ENDP
+    pop tensor
+    pop rbx_debugger_set_breakpoint ENDP
 
 ;==========================================================================
 ; tensor_debugger_clear_breakpoint(bp_id: ecx) -> success (eax)
@@ -543,7 +546,7 @@ tensor_debugger_clear_breakpoint PROC
     
     add rsp, 64
     pop rbx
-    ret
+
 tensor_debugger_clear_breakpoint ENDP
 
 ;==========================================================================
@@ -585,8 +588,7 @@ tensor_debugger_inspect_tensor PROC
     
     add rsp, 64
     pop rbx
-    ret
-    
+
 @not_found:
     xor rax, rax
     jmp @unlock
@@ -646,7 +648,7 @@ tensor_debugger_unwatch_tensor ENDP
 find_tensor_by_id PROC
     ; ecx = tensor_id -> rax = tensor_ptr
     push rbx
-    xor rax, rax
+    push xor rax, rax
     xor ebx, ebx
     
 @loop:
@@ -669,7 +671,7 @@ find_tensor_by_id PROC
     
 @not_found:
     pop rbx
-    ret
+
 find_tensor_by_id ENDP
 
 compute_tensor_statistics PROC
@@ -760,3 +762,8 @@ strncpy PROC
 strncpy ENDP
 
 end
+
+
+
+
+

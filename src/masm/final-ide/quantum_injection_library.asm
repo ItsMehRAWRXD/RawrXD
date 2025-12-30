@@ -357,8 +357,10 @@ ALIGN 16
 masm_quantum_library_init PROC
 
     push rbx
+
     push r12
     push r13
+
     push r14
     sub rsp, 64
     
@@ -499,13 +501,13 @@ init_fail:
 
 init_exit:
     add rsp, 64
-    pop r14
-    pop r13
-    pop r12
-    pop rbx
-    ret
 
-masm_quantum_library_init ENDP
+    pop r13 pop r14
+
+
+    pop r12
+    pop masm
+    pop rbx_quantum_library_init ENDP
 
 ;=====================================================================
 ; masm_quantum_library_attach_model(model_handle: rcx,
@@ -521,8 +523,10 @@ ALIGN 16
 masm_quantum_library_attach_model PROC
 
     push rbx
+
     push r12
     push r13
+
     push r14
     push r15
     sub rsp, 64
@@ -604,12 +608,13 @@ attach_no_library:
 
 attach_exit:
     add rsp, 64
-    pop r15
-    pop r14
-    pop r13
-    pop r12
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
     pop rbx
-    ret
 
 masm_quantum_library_attach_model ENDP
 
@@ -652,7 +657,6 @@ detach_no_library:
 detach_exit:
     add rsp, 32
     pop rbx
-    ret
 
 masm_quantum_library_detach_model ENDP
 
@@ -667,6 +671,7 @@ ALIGN 16
 masm_quantum_library_expand_context PROC
 
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -701,11 +706,10 @@ expand_no_library:
 
 expand_exit:
     add rsp, 32
-    pop r12
-    pop rbx
-    ret
 
-masm_quantum_library_expand_context ENDP
+    pop r12
+    pop masm
+    pop rbx_quantum_library_expand_context ENDP
 
 ;=====================================================================
 ; masm_quantum_library_expand_vocabulary(model_handle: rcx) -> rax
@@ -718,6 +722,7 @@ ALIGN 16
 masm_quantum_library_expand_vocabulary PROC
 
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -752,11 +757,10 @@ vocab_no_library:
 
 vocab_exit:
     add rsp, 32
-    pop r12
-    pop rbx
-    ret
 
-masm_quantum_library_expand_vocabulary ENDP
+    pop r12
+    pop masm
+    pop rbx_quantum_library_expand_vocabulary ENDP
 
 ;=====================================================================
 ; masm_quantum_library_inject_features(model_handle: rcx,
@@ -771,6 +775,7 @@ ALIGN 16
 masm_quantum_library_inject_features PROC
 
     push rbx
+
     push r12
     push r13
     sub rsp, 48
@@ -837,10 +842,10 @@ inject_no_library:
 
 inject_exit:
     add rsp, 48
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
 
 masm_quantum_library_inject_features ENDP
 
@@ -862,8 +867,10 @@ ALIGN 16
 masm_quantum_library_double_reverse_load PROC
 
     push rbx
+
     push r12
     push r13
+
     push r14
     sub rsp, 64
     
@@ -937,13 +944,13 @@ drl_no_library:
 
 drl_exit:
     add rsp, 64
-    pop r14
-    pop r13
-    pop r12
-    pop rbx
-    ret
 
-masm_quantum_library_double_reverse_load ENDP
+    pop r13 pop r14
+
+
+    pop r12
+    pop masm
+    pop rbx_quantum_library_double_reverse_load ENDP
 
 ;=====================================================================
 ; masm_quantum_library_get_bridge_size() -> rax
@@ -1072,6 +1079,7 @@ ALIGN 16
 neon_quantize_embeddings PROC
 
     push rbx
+
     push r12
     sub rsp, 64
     
@@ -1132,11 +1140,10 @@ quantize_loop:
 quantize_done:
     mov rax, r10            ; Return compressed size
     add rsp, 64
-    pop r12
-    pop rbx
-    ret
 
-neon_quantize_embeddings ENDP
+    pop r12
+    pop neon
+    pop rbx_quantize_embeddings ENDP
 
 ; CompressSparseMatrix - Store only non-zero values (>0.1%)
 ; rcx = input matrix (dense float format)
@@ -1148,6 +1155,7 @@ ALIGN 16
 neon_compress_sparse_matrix PROC
 
     push rbx
+
     push r12
     push r13
     sub rsp, 64
@@ -1212,10 +1220,10 @@ sparse_done:
     imul rax, 8             ; 4 bytes value + 4 bytes index
     
     add rsp, 64
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
 
 neon_compress_sparse_matrix ENDP
 
@@ -1274,7 +1282,6 @@ compress_fail:
 compress_done:
     add rsp, 48
     pop rbx
-    ret
 
 neon_compress_section ENDP
 
@@ -1326,7 +1333,6 @@ get_not_found:
 get_done:
     add rsp, 48
     pop rbx
-    ret
 
 neon_get_quantum_section ENDP
 
@@ -1370,7 +1376,6 @@ init_compress_fail:
 init_compress_done:
     add rsp, 48
     pop rbx
-    ret
 
 neon_initialize_compression ENDP
 
@@ -1423,13 +1428,11 @@ _forward_done:
     mov rax, 1
     add rsp, 32
     pop rbx
-    ret
-    
+
 _forward_fail:
     xor rax, rax
     add rsp, 32
     pop rbx
-    ret
 
 quantum_forward_pass_mark_all ENDP
 
@@ -1439,6 +1442,7 @@ ALIGN 16
 quantum_reverse_pass_unmark_cold PROC FRAME
 
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -1507,18 +1511,16 @@ _reverse_done:
     
     mov rax, 1
     add rsp, 32
+
     pop r12
     pop rbx
-    ret
-    
 _reverse_fail:
     xor rax, rax
     add rsp, 32
-    pop r12
-    pop rbx
-    ret
 
-quantum_reverse_pass_unmark_cold ENDP
+    pop r12
+    pop quantum
+    pop rbx_reverse_pass_unmark_cold ENDP
 
 ; Load hot tensors only (typically 10% of total)
 ; Returns: GPS achieved in rax
@@ -1526,6 +1528,7 @@ ALIGN 16
 quantum_load_hot_tensors PROC FRAME
 
     push rbx
+
     push r12
     push r13
     sub rsp, 64
@@ -1587,18 +1590,18 @@ _skip_gps_calc:
     
     mov rax, (TensorMetadata PTR [rbx + 168])     ; Return GPS
     add rsp, 64
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
-    
+
 _load_fail:
     xor rax, rax
     add rsp, 64
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
 
 quantum_load_hot_tensors ENDP
 
@@ -1610,6 +1613,7 @@ quantum_library_init_120b PROC FRAME pModelPath:QWORD,
                                       dwTensorCount:DWORD
 
     push rbx
+
     push r12
     sub rsp, 48
     
@@ -1684,18 +1688,16 @@ _alloc_mem:
     
     mov rax, 1
     add rsp, 48
+
     pop r12
     pop rbx
-    ret
-    
 _init_120b_fail:
     xor rax, rax
     add rsp, 48
-    pop r12
-    pop rbx
-    ret
 
-quantum_library_init_120b ENDP
+    pop r12
+    pop quantum
+    pop rbx_library_init_120b ENDP
 
 ; Log messages and statistics
 .data
@@ -2877,3 +2879,8 @@ PUBLIC DecompressWithHardwareDictionary
 PUBLIC UpdateDictionaryFromRuntimeFeedback
 
 END
+
+
+
+
+

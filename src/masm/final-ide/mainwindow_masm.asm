@@ -192,7 +192,7 @@ masm_mainwindow_init PROC USES rbx rsi rdi
     sub rsp, 32
 
     cmp g_initialized, 1
-    je .init_already
+    je @@init_already
 
     ; Get process heap
     call GetProcessHeap
@@ -216,15 +216,13 @@ masm_mainwindow_init PROC USES rbx rsi rdi
     mov g_mainWindow.MAINWINDOW.windowState, WINDOW_STATE_CLOSED
     mov g_initialized, 1
     mov rax, 1
-    jmp .init_done
-
-.init_already:
+    jmp @@init_done
+@@init_already:
     mov rax, 1
-
-.init_done:
+@@init_done:
     add rsp, 32
     pop rbp
-    ret
+
 masm_mainwindow_init ENDP
 
 ; masm_mainwindow_shutdown - Shutdown the MainWindow system
@@ -234,53 +232,52 @@ masm_mainwindow_shutdown PROC USES rbx rsi rdi
     sub rsp, 32
 
     cmp g_initialized, 0
-    je .shutdown_not_init
+    je @@shutdown_not_init
 
     ; Close window if open
     cmp g_mainWindow.MAINWINDOW.windowState, WINDOW_STATE_CLOSED
-    je .skip_close_window
+    je @@skip_close_window
     
     mov rcx, g_mainWindow.MAINWINDOW.hMainWindow
     cmp rcx, 0
-    je .skip_close_window
+    je @@skip_close_window
     
     ; TODO: Call Qt close() on window
-.skip_close_window:
+@@skip_close_window:
 
     ; Free all dock resources
     xor rbx, rbx
-.free_docks:
+@@free_docks:
     cmp rbx, g_mainWindow.MAINWINDOW.dockCount
-    jge .docks_freed
+    jge @@docks_freed
 
-    lea rax, [g_mainWindow.MAINWINDOW.docks + rbx * (SIZEOF DOCK_WIDGET)]
+    mov rax, SIZEOF DOCK_WIDGET
+    imul rax, rbx
+    lea rax, [g_mainWindow.MAINWINDOW.docks + rax]
     
     ; Free dock name string if allocated
     mov rcx, [rax].DOCK_WIDGET.contentWidget
     cmp rcx, 0
-    je .skip_dock_free
+    je @@skip_dock_free
     ; TODO: Free Qt widget
-.skip_dock_free:
+@@skip_dock_free:
 
     inc rbx
-    jmp .free_docks
-
-.docks_freed:
+    jmp @@free_docks
+@@docks_freed:
     ; Close mutex
     mov rcx, g_mainWindow.MAINWINDOW.windowMutex
     call CloseHandle
 
     mov g_initialized, 0
     mov rax, 1
-    jmp .shutdown_done
-
-.shutdown_not_init:
+    jmp @@shutdown_done
+@@shutdown_not_init:
     xor rax, rax
-
-.shutdown_done:
+@@shutdown_done:
     add rsp, 32
     pop rbp
-    ret
+
 masm_mainwindow_shutdown ENDP
 
 ; masm_mainwindow_create - Create the main window
@@ -295,7 +292,7 @@ masm_mainwindow_create PROC USES rbx rsi rdi r12 r13 r14
     mov r14, r8    ; Title
 
     cmp g_initialized, 0
-    je .create_not_init
+    je @@create_not_init
 
     ; Store dimensions
     mov g_mainWindow.MAINWINDOW.width, r12d
@@ -312,15 +309,13 @@ masm_mainwindow_create PROC USES rbx rsi rdi r12 r13 r14
     call masm_setup_default_menus
 
     mov rax, 1
-    jmp .create_done
-
-.create_not_init:
+    jmp @@create_done
+@@create_not_init:
     xor rax, rax
-
-.create_done:
+@@create_done:
     add rsp, 32
     pop rbp
-    ret
+
 masm_mainwindow_create ENDP
 
 ; masm_mainwindow_show - Show the main window
@@ -330,21 +325,19 @@ masm_mainwindow_show PROC USES rbx rsi rdi
     sub rsp, 32
 
     cmp g_mainWindow.MAINWINDOW.windowState, WINDOW_STATE_CREATED
-    jne .show_not_ready
+    jne @@show_not_ready
 
     mov g_mainWindow.MAINWINDOW.windowState, WINDOW_STATE_SHOWN
 
     ; TODO: Call Qt show() on window
     mov rax, 1
-    jmp .show_done
-
-.show_not_ready:
+    jmp @@show_done
+@@show_not_ready:
     xor rax, rax
-
-.show_done:
+@@show_done:
     add rsp, 32
     pop rbp
-    ret
+
 masm_mainwindow_show ENDP
 
 ; masm_mainwindow_hide - Hide the main window
@@ -358,7 +351,7 @@ masm_mainwindow_hide PROC USES rbx rsi rdi
 
     add rsp, 32
     pop rbp
-    ret
+
 masm_mainwindow_hide ENDP
 
 ; masm_mainwindow_close - Close the main window
@@ -372,7 +365,7 @@ masm_mainwindow_close PROC USES rbx rsi rdi
 
     add rsp, 32
     pop rbp
-    ret
+
 masm_mainwindow_close ENDP
 
 ; masm_mainwindow_resize - Resize the window
@@ -388,7 +381,7 @@ masm_mainwindow_resize PROC USES rbx rsi rdi
 
     add rsp, 32
     pop rbp
-    ret
+
 masm_mainwindow_resize ENDP
 
 ; masm_mainwindow_set_title - Set window title
@@ -403,7 +396,7 @@ masm_mainwindow_set_title PROC USES rbx rsi rdi
 
     add rsp, 32
     pop rbp
-    ret
+
 masm_mainwindow_set_title ENDP
 
 ; masm_mainwindow_add_dock - Add a dock widget
@@ -418,10 +411,12 @@ masm_mainwindow_add_dock PROC USES rbx rsi rdi r12 r13 r14
     mov r14, r8    ; Content widget
 
     cmp g_mainWindow.MAINWINDOW.dockCount, MAX_DOCKS
-    jge .add_dock_full
+    jge @@add_dock_full
 
     mov eax, g_mainWindow.MAINWINDOW.dockCount
-    lea rbx, [g_mainWindow.MAINWINDOW.docks + rax * (SIZEOF DOCK_WIDGET)]
+    mov rbx, SIZEOF DOCK_WIDGET
+    imul rbx, rax
+    lea rbx, [g_mainWindow.MAINWINDOW.docks + rbx]
 
     ; Initialize dock
     mov [rbx].DOCK_WIDGET.dockId, eax
@@ -434,28 +429,25 @@ masm_mainwindow_add_dock PROC USES rbx rsi rdi r12 r13 r14
     mov rsi, r12
     lea rdi, [rbx + OFFSET DOCK_WIDGET.name]
     mov ecx, 256
-.copy_dock_name:
+@@copy_dock_name:
     cmp ecx, 0
-    je .dock_name_done
+    je @@dock_name_done
     mov al, [rsi]
     mov [rdi], al
     inc rsi
     inc rdi
     dec ecx
-    jmp .copy_dock_name
-
-.dock_name_done:
+    jmp @@copy_dock_name
+@@dock_name_done:
     mov eax, g_mainWindow.MAINWINDOW.dockCount
     inc g_mainWindow.MAINWINDOW.dockCount
-    jmp .add_dock_done
-
-.add_dock_full:
+    jmp @@add_dock_done
+@@add_dock_full:
     xor eax, eax
-
-.add_dock_done:
+@@add_dock_done:
     add rsp, 32
     pop rbp
-    ret
+
 masm_mainwindow_add_dock ENDP
 
 ; masm_mainwindow_remove_dock - Remove a dock widget
@@ -469,30 +461,31 @@ masm_mainwindow_remove_dock PROC USES rbx rsi rdi
 
     ; Find dock
     xor r9d, r9d
-.find_dock:
+@@find_dock:
     cmp r9d, g_mainWindow.MAINWINDOW.dockCount
-    jge .dock_not_found
+    jge @@dock_not_found
 
-    lea rax, [g_mainWindow.MAINWINDOW.docks + r9 * (SIZEOF DOCK_WIDGET)]
+    mov rax, SIZEOF DOCK_WIDGET
+    imul rax, r9
+    lea rax, [g_mainWindow.MAINWINDOW.docks + rax]
     cmp [rax].DOCK_WIDGET.dockId, r8d
-    je .dock_found
+    je @@dock_found
 
     inc r9d
-    jmp .find_dock
-
-.dock_found:
-    lea rax, [g_mainWindow.MAINWINDOW.docks + r9 * (SIZEOF DOCK_WIDGET)]
+    jmp @@find_dock
+@@dock_found:
+    mov rax, SIZEOF DOCK_WIDGET
+    imul rax, r9
+    lea rax, [g_mainWindow.MAINWINDOW.docks + rax]
     mov [rax].DOCK_WIDGET.isVisible, 0
     mov rax, 1
-    jmp .remove_dock_done
-
-.dock_not_found:
+    jmp @@remove_dock_done
+@@dock_not_found:
     xor rax, rax
-
-.remove_dock_done:
+@@remove_dock_done:
     add rsp, 32
     pop rbp
-    ret
+
 masm_mainwindow_remove_dock ENDP
 
 ; masm_mainwindow_show_dock - Show a dock widget
@@ -505,29 +498,28 @@ masm_mainwindow_show_dock PROC USES rbx rsi rdi
     mov r8d, ecx
 
     xor r9d, r9d
-.find_show:
+@@find_show:
     cmp r9d, g_mainWindow.MAINWINDOW.dockCount
-    jge .show_not_found
+    jge @@show_not_found
 
-    lea rax, [g_mainWindow.MAINWINDOW.docks + r9 * (SIZEOF DOCK_WIDGET)]
+    mov rax, SIZEOF DOCK_WIDGET
+    imul rax, r9
+    lea rax, [g_mainWindow.MAINWINDOW.docks + rax]
     cmp [rax].DOCK_WIDGET.dockId, r8d
-    je .show_found
+    je @@show_found
 
     inc r9d
-    jmp .find_show
-
-.show_found:
+    jmp @@find_show
+@@show_found:
     mov [rax].DOCK_WIDGET.isVisible, 1
     mov rax, 1
-    jmp .show_dock_done
-
-.show_not_found:
+    jmp @@show_dock_done
+@@show_not_found:
     xor rax, rax
-
-.show_dock_done:
+@@show_dock_done:
     add rsp, 32
     pop rbp
-    ret
+
 masm_mainwindow_show_dock ENDP
 
 ; masm_mainwindow_hide_dock - Hide a dock widget
@@ -540,29 +532,28 @@ masm_mainwindow_hide_dock PROC USES rbx rsi rdi
     mov r8d, ecx
 
     xor r9d, r9d
-.find_hide:
+@@find_hide:
     cmp r9d, g_mainWindow.MAINWINDOW.dockCount
-    jge .hide_not_found
+    jge @@hide_not_found
 
-    lea rax, [g_mainWindow.MAINWINDOW.docks + r9 * (SIZEOF DOCK_WIDGET)]
+    mov rax, SIZEOF DOCK_WIDGET
+    imul rax, r9
+    lea rax, [g_mainWindow.MAINWINDOW.docks + rax]
     cmp [rax].DOCK_WIDGET.dockId, r8d
-    je .hide_found
+    je @@hide_found
 
     inc r9d
-    jmp .find_hide
-
-.hide_found:
+    jmp @@find_hide
+@@hide_found:
     mov [rax].DOCK_WIDGET.isVisible, 0
     mov rax, 1
-    jmp .hide_dock_done
-
-.hide_not_found:
+    jmp @@hide_dock_done
+@@hide_not_found:
     xor rax, rax
-
-.hide_dock_done:
+@@hide_dock_done:
     add rsp, 32
     pop rbp
-    ret
+
 masm_mainwindow_hide_dock ENDP
 
 ; masm_mainwindow_add_menu_item - Add a menu item
@@ -573,10 +564,12 @@ masm_mainwindow_add_menu_item PROC USES rbx rsi rdi
     sub rsp, 32
 
     cmp g_mainWindow.MAINWINDOW.menuCount, MAX_MENU_ITEMS
-    jge .menu_full
+    jge @@menu_full
 
     mov eax, g_mainWindow.MAINWINDOW.menuCount
-    lea rbx, [g_mainWindow.MAINWINDOW.menus + rax * (SIZEOF MENU_ITEM)]
+    mov rbx, SIZEOF MENU_ITEM
+    imul rbx, rax
+    lea rbx, [g_mainWindow.MAINWINDOW.menus + rbx]
 
     mov [rbx].MENU_ITEM.itemId, eax
     mov [rbx].MENU_ITEM.menuType, ecx
@@ -584,15 +577,13 @@ masm_mainwindow_add_menu_item PROC USES rbx rsi rdi
     mov [rbx].MENU_ITEM.isEnabled, 1
 
     inc g_mainWindow.MAINWINDOW.menuCount
-    jmp .add_menu_done
-
-.menu_full:
+    jmp @@add_menu_done
+@@menu_full:
     xor eax, eax
-
-.add_menu_done:
+@@add_menu_done:
     add rsp, 32
     pop rbp
-    ret
+
 masm_mainwindow_add_menu_item ENDP
 
 ; masm_mainwindow_remove_menu_item - Remove a menu item
@@ -605,29 +596,28 @@ masm_mainwindow_remove_menu_item PROC USES rbx rsi rdi
     mov r8d, ecx
 
     xor r9d, r9d
-.find_menu:
+@@find_menu:
     cmp r9d, g_mainWindow.MAINWINDOW.menuCount
-    jge .menu_not_found
+    jge @@menu_not_found
 
-    lea rax, [g_mainWindow.MAINWINDOW.menus + r9 * (SIZEOF MENU_ITEM)]
+    mov rax, SIZEOF MENU_ITEM
+    imul rax, r9
+    lea rax, [g_mainWindow.MAINWINDOW.menus + rax]
     cmp [rax].MENU_ITEM.itemId, r8d
-    je .menu_found
+    je @@menu_found
 
     inc r9d
-    jmp .find_menu
-
-.menu_found:
+    jmp @@find_menu
+@@menu_found:
     mov [rax].MENU_ITEM.isEnabled, 0
     mov rax, 1
-    jmp .remove_menu_done
-
-.menu_not_found:
+    jmp @@remove_menu_done
+@@menu_not_found:
     xor rax, rax
-
-.remove_menu_done:
+@@remove_menu_done:
     add rsp, 32
     pop rbp
-    ret
+
 masm_mainwindow_remove_menu_item ENDP
 
 ; masm_mainwindow_set_status - Set status bar text
@@ -641,21 +631,20 @@ masm_mainwindow_set_status PROC USES rbx rsi rdi
     mov rsi, rcx
     lea rdi, [rel g_mainWindow.MAINWINDOW.statusText]
     mov ecx, 512
-.copy_status:
+@@copy_status:
     cmp ecx, 0
-    je .status_copied
+    je @@status_copied
     mov al, [rsi]
     mov [rdi], al
     inc rsi
     inc rdi
     dec ecx
-    jmp .copy_status
-
-.status_copied:
+    jmp @@copy_status
+@@status_copied:
     mov rax, 1
     add rsp, 32
     pop rbp
-    ret
+
 masm_mainwindow_set_status ENDP
 
 ; masm_mainwindow_get_status - Get status bar text
@@ -668,22 +657,20 @@ masm_mainwindow_get_status PROC USES rbx rsi rdi
     mov rdi, rcx
     mov esi, edx
     lea rsi, [rel g_mainWindow.MAINWINDOW.statusText]
-
-.copy_get_status:
+@@copy_get_status:
     cmp esi, 0
-    je .get_status_done
+    je @@get_status_done
     mov al, [rsi]
     mov [rdi], al
     inc rsi
     inc rdi
     dec esi
-    jmp .copy_get_status
-
-.get_status_done:
+    jmp @@copy_get_status
+@@get_status_done:
     mov rax, 1
     add rsp, 32
     pop rbp
-    ret
+
 masm_mainwindow_get_status ENDP
 
 ; masm_mainwindow_set_theme - Set window theme
@@ -698,7 +685,7 @@ masm_mainwindow_set_theme PROC USES rbx rsi rdi
 
     add rsp, 32
     pop rbp
-    ret
+
 masm_mainwindow_set_theme ENDP
 
 ; masm_mainwindow_get_theme - Get current theme
@@ -720,7 +707,7 @@ masm_mainwindow_dispatch_signal PROC USES rbx rsi rdi
 
     add rsp, 32
     pop rbp
-    ret
+
 masm_mainwindow_dispatch_signal ENDP
 
 ; masm_mainwindow_list_docks - List all docks
@@ -734,25 +721,26 @@ masm_mainwindow_list_docks PROC USES rbx rsi rdi
     mov r9d, edx
 
     xor r10d, r10d
-.list_loop:
+@@list_loop:
     cmp r10d, g_mainWindow.MAINWINDOW.dockCount
-    jge .list_done
+    jge @@list_done
 
     cmp r10d, r9d
-    jge .list_done
+    jge @@list_done
 
-    lea rax, [g_mainWindow.MAINWINDOW.docks + r10 * (SIZEOF DOCK_WIDGET)]
+    mov rax, SIZEOF DOCK_WIDGET
+    imul rax, r10
+    lea rax, [g_mainWindow.MAINWINDOW.docks + rax]
     mov edx, [rax].DOCK_WIDGET.dockId
     mov [r8 + r10 * 4], edx
 
     inc r10d
-    jmp .list_loop
-
-.list_done:
+    jmp @@list_loop
+@@list_done:
     mov rax, r10
     add rsp, 32
     pop rbp
-    ret
+
 masm_mainwindow_list_docks ENDP
 
 ; masm_mainwindow_save_layout - Save window layout to file
@@ -767,7 +755,7 @@ masm_mainwindow_save_layout PROC USES rbx rsi rdi
 
     add rsp, 32
     pop rbp
-    ret
+
 masm_mainwindow_save_layout ENDP
 
 ; masm_mainwindow_load_layout - Load window layout from file
@@ -782,7 +770,7 @@ masm_mainwindow_load_layout PROC USES rbx rsi rdi
 
     add rsp, 32
     pop rbp
-    ret
+
 masm_mainwindow_load_layout ENDP
 
 ; Helper: Setup default docks
@@ -828,7 +816,7 @@ masm_setup_default_docks PROC USES rbx rsi rdi
 
     add rsp, 32
     pop rbp
-    ret
+
 masm_setup_default_docks ENDP
 
 ; Helper: Setup default menus
@@ -868,7 +856,12 @@ masm_setup_default_menus PROC USES rbx rsi rdi
 
     add rsp, 32
     pop rbp
-    ret
+
 masm_setup_default_menus ENDP
 
 END
+
+
+
+
+

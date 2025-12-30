@@ -52,6 +52,7 @@ tokenizer_init ENDP
 PUBLIC tokenizer_encode
 tokenizer_encode PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -66,10 +67,16 @@ tokenizer_encode PROC
     xor rax, rax        ; Return 0 tokens for now
     
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 tokenizer_encode ENDP
 
 END
+
+
+
+
+

@@ -107,7 +107,7 @@ run_build:
 exec_done:
     add rsp, 32
     pop rbx
-    ret
+
 agent_action_execute ENDP
 
 ;==========================================================================
@@ -116,6 +116,7 @@ agent_action_execute ENDP
 run_command PROC
     ; rcx = lpCommandLine, rdx = timeout_ms
     push rbx
+
     push rsi
     push rdi
     sub rsp, 176                ; space for locals
@@ -196,10 +197,11 @@ fail_return:
 
 rc_exit:
     add rsp, 176
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 run_command ENDP
 
 ;==========================================================================
@@ -231,6 +233,7 @@ agent_action_run_test ENDP
 PUBLIC agent_action_executor_run
 agent_action_executor_run PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 48
@@ -341,10 +344,16 @@ done_all:
 
 exec_exit:
     add rsp, 48
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 agent_action_executor_run ENDP
 
 END
+
+
+
+
+

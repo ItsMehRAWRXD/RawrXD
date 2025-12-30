@@ -211,13 +211,14 @@ PUBLIC bridge_init
 bridge_init PROC
     ; Prologue
     push rbx
+
     push rsi
     push rdi
     
     ; Check if already initialized
     mov al, [g_bridgeContext.initialized]
     cmp al, 1
-    je .already_init
+    je @@already_init
     
     ; Initialize critical section for thread safety
     lea rcx, [g_bridgeLock]
@@ -230,7 +231,7 @@ bridge_init PROC
     ; Initialize pipeline subsystem
     call pipeline_executor_init
     cmp rax, 0
-    jne .pipeline_error
+    jne @@pipeline_error
     
     ; Log pipeline init
     lea rcx, [szInitSuccess]
@@ -242,7 +243,7 @@ bridge_init PROC
     ; Initialize telemetry subsystem
     call telemetry_collector_init
     cmp rax, 0
-    jne .telemetry_error
+    jne @@telemetry_error
     
     mov [g_bridgeContext.systemStatus.telemetryStatus.initFlag], 1
     mov [g_bridgeContext.systemStatus.telemetryStatus.lastUpdate], rax
@@ -250,7 +251,7 @@ bridge_init PROC
     ; Initialize animation subsystem
     call animation_system_init
     cmp rax, 0
-    jne .animation_error
+    jne @@animation_error
     
     mov [g_bridgeContext.systemStatus.animationStatus.initFlag], 1
     mov [g_bridgeContext.systemStatus.animationStatus.lastUpdate], rax
@@ -266,40 +267,36 @@ bridge_init PROC
     call console_log
     
     xor rax, rax  ; Return STATUS_OK
-    jmp .init_done
-    
-.already_init:
+    jmp @@init_done
+@@already_init:
     mov rax, STATUS_ALREADY_INITIALIZED
     lea rcx, [szAlreadyInitialized]
     call console_log
-    jmp .init_done
-    
-.pipeline_error:
+    jmp @@init_done
+@@pipeline_error:
     mov [g_bridgeContext.systemStatus.pipelineStatus.errorCode], eax
     mov rax, STATUS_ERROR
     lea rcx, [szPipelineError]
     call console_log
-    jmp .init_done
-    
-.telemetry_error:
+    jmp @@init_done
+@@telemetry_error:
     mov [g_bridgeContext.systemStatus.telemetryStatus.errorCode], eax
     mov rax, STATUS_ERROR
     lea rcx, [szTelemetryError]
     call console_log
-    jmp .init_done
-    
-.animation_error:
+    jmp @@init_done
+@@animation_error:
     mov [g_bridgeContext.systemStatus.animationStatus.errorCode], eax
     mov rax, STATUS_ERROR
     lea rcx, [szAnimationError]
     call console_log
-    jmp .init_done
-    
-.init_done:
-    pop rdi
-    pop rsi
+    jmp @@init_done
+@@init_done:
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 bridge_init ENDP
 
 ; ============================================================================
@@ -312,12 +309,12 @@ PUBLIC bridge_start_ci_job
 bridge_start_ci_job PROC
     ; Prologue
     push rbx
+
     push rsi
-    
     ; Check initialization
     mov al, [g_bridgeContext.initialized]
     cmp al, 1
-    jne .not_init
+    jne @@not_init
     
     ; Log operation
     mov r9, rcx  ; Save jobName
@@ -336,7 +333,7 @@ bridge_start_ci_job PROC
     
     ; Check result
     cmp rax, 0
-    jle .create_error
+    jle @@create_error
     
     ; Store job ID
     mov rbx, rax
@@ -345,7 +342,7 @@ bridge_start_ci_job PROC
     mov rcx, rbx
     call pipeline_queue_job
     cmp rax, 0
-    jne .queue_error
+    jne @@queue_error
     
     ; Update metrics
     inc qword [g_bridgeContext.systemStatus.pipelineTotalJobs]
@@ -359,31 +356,27 @@ bridge_start_ci_job PROC
     
     ; Return job ID
     mov rax, rbx
-    jmp .job_done
-    
-.not_init:
+    jmp @@job_done
+@@not_init:
     mov rax, STATUS_NOT_INITIALIZED
     lea rcx, [szNotInitialized]
     call console_log
-    jmp .job_done
-    
-.create_error:
+    jmp @@job_done
+@@create_error:
     mov rax, STATUS_ERROR
     mov [g_bridgeContext.systemStatus.pipelineStatus.errorCode], eax
     inc qword [g_bridgeContext.systemStatus.pipelineFailedJobs]
-    jmp .job_done
-    
-.queue_error:
+    jmp @@job_done
+@@queue_error:
     mov rax, STATUS_ERROR
     mov [g_bridgeContext.systemStatus.pipelineStatus.errorCode], eax
     inc qword [g_bridgeContext.systemStatus.pipelineFailedJobs]
-    jmp .job_done
-    
-.job_done:
+    jmp @@job_done
+@@job_done:
+
     pop rsi
-    pop rbx
-    ret
-bridge_start_ci_job ENDP
+    pop bridge
+    pop rbx_start_ci_job ENDP
 
 ; ============================================================================
 
@@ -393,11 +386,11 @@ bridge_start_ci_job ENDP
 PUBLIC bridge_execute_pipeline_stage
 bridge_execute_pipeline_stage PROC
     push rbx
+
     push rsi
-    
     ; Validate job ID
     cmp rcx, 0
-    jle .invalid_id
+    jle @@invalid_id
     
     ; Log stage start
     mov r8, rcx
@@ -412,33 +405,30 @@ bridge_execute_pipeline_stage PROC
     
     ; Check result
     cmp eax, 0
-    je .stage_success
+    je @@stage_success
     
     ; Log failure
     inc qword [g_bridgeContext.systemStatus.pipelineFailedJobs]
     mov [g_bridgeContext.systemStatus.pipelineStatus.errorCode], eax
-    jmp .stage_done
-    
-.stage_success:
+    jmp @@stage_done
+@@stage_success:
     lea rcx, [szStageCompleted]
     mov rdx, r8
     mov r8, r9
     mov r9d, 1
     call console_log
-    jmp .stage_done
-    
-.invalid_id:
+    jmp @@stage_done
+@@invalid_id:
     mov eax, STATUS_INVALID_ID
     lea rcx, [szInvalidJobId]
     mov rdx, rcx
     call console_log
-    jmp .stage_done
-    
-.stage_done:
+    jmp @@stage_done
+@@stage_done:
+
     pop rsi
-    pop rbx
-    ret
-bridge_execute_pipeline_stage ENDP
+    pop bridge
+    pop rbx_execute_pipeline_stage ENDP
 
 ; ============================================================================
 
@@ -451,10 +441,11 @@ PUBLIC bridge_track_inference_request
 bridge_track_inference_request PROC
     ; Prologue
     push rbx
+
     push rsi
     push rdi
+
     push r12
-    
     ; Start request tracking
     mov r12, rcx  ; Save modelName
     mov r10d, edx ; Save promptTokens
@@ -462,7 +453,7 @@ bridge_track_inference_request PROC
     
     ; Check if request started successfully
     cmp rax, 0
-    jle .request_error
+    jle @@request_error
     
     mov rbx, rax  ; Save requestId
     
@@ -474,7 +465,7 @@ bridge_track_inference_request PROC
     call telemetry_end_request
     
     cmp eax, 0
-    jne .end_error
+    jne @@end_error
     
     ; Update telemetry metrics
     inc qword [g_bridgeContext.systemStatus.telemetryTotalRequests]
@@ -488,25 +479,23 @@ bridge_track_inference_request PROC
     
     ; Return request ID
     mov rax, rbx
-    jmp .request_done
-    
-.request_error:
+    jmp @@request_done
+@@request_error:
     mov eax, STATUS_ERROR
     inc qword [g_bridgeContext.systemStatus.telemetryFailedRequests]
-    jmp .request_done
-    
-.end_error:
+    jmp @@request_done
+@@end_error:
     mov eax, STATUS_ERROR
     inc qword [g_bridgeContext.systemStatus.telemetryFailedRequests]
-    jmp .request_done
-    
-.request_done:
-    pop r12
-    pop rdi
+    jmp @@request_done
+@@request_done:
+
+    pop rdi pop r12
+
+
     pop rsi
-    pop rbx
-    ret
-bridge_track_inference_request ENDP
+    pop bridge
+    pop rbx_track_inference_request ENDP
 
 ; ============================================================================
 
@@ -516,8 +505,8 @@ bridge_track_inference_request ENDP
 PUBLIC bridge_animate_theme_transition
 bridge_animate_theme_transition PROC
     push rbx
+
     push rsi
-    
     ; Log animation start
     lea rcx, [szThemeAnimating]
     mov rdx, rcx  ; fromTheme
@@ -540,7 +529,7 @@ bridge_animate_theme_transition PROC
     
     ; Check if created successfully
     cmp rax, 0
-    jle .anim_error
+    jle @@anim_error
     
     mov rbx, rax  ; Save animationId
     
@@ -548,7 +537,7 @@ bridge_animate_theme_transition PROC
     mov rcx, rbx
     call animation_start
     cmp rax, 0
-    jne .start_error
+    jne @@start_error
     
     ; Update metrics
     inc dword [g_bridgeContext.systemStatus.animationActiveCount]
@@ -561,23 +550,20 @@ bridge_animate_theme_transition PROC
     
     ; Return animation ID
     mov rax, rbx
-    jmp .anim_done
-    
-.anim_error:
+    jmp @@anim_done
+@@anim_error:
     mov eax, STATUS_ERROR
     mov [g_bridgeContext.systemStatus.animationStatus.errorCode], eax
-    jmp .anim_done
-    
-.start_error:
+    jmp @@anim_done
+@@start_error:
     mov eax, STATUS_ERROR
     mov [g_bridgeContext.systemStatus.animationStatus.errorCode], eax
-    jmp .anim_done
-    
-.anim_done:
+    jmp @@anim_done
+@@anim_done:
+
     pop rsi
-    pop rbx
-    ret
-bridge_animate_theme_transition ENDP
+    pop bridge
+    pop rbx_animate_theme_transition ENDP
 
 ; ============================================================================
 
@@ -587,6 +573,7 @@ bridge_animate_theme_transition ENDP
 PUBLIC bridge_export_metrics
 bridge_export_metrics PROC
     push rbx
+
     push rsi
     push rdi
     
@@ -602,55 +589,50 @@ bridge_export_metrics PROC
     mov rcx, MAX_BUFFER_SIZE
     call malloc
     cmp rax, 0
-    je .export_error
+    je @@export_error
     
     mov rsi, rax  ; Save buffer pointer
     mov rdi, rax  ; Buffer for output
     
     ; Call appropriate export function based on format
     cmp rbx, FORMAT_JSON
-    je .export_json
+    je @@export_json
     cmp rbx, FORMAT_CSV
-    je .export_csv
+    je @@export_csv
     cmp rbx, FORMAT_PROMETHEUS
-    je .export_prometheus
+    je @@export_prometheus
     
-    jmp .format_error
-    
-.export_json:
+    jmp @@format_error
+@@export_json:
     mov rcx, rsi
     mov rdx, MAX_BUFFER_SIZE
     call telemetry_export_json
-    jmp .export_done
-    
-.export_csv:
+    jmp @@export_done
+@@export_csv:
     mov rcx, rsi
     mov rdx, MAX_BUFFER_SIZE
     call telemetry_export_csv
-    jmp .export_done
-    
-.export_prometheus:
+    jmp @@export_done
+@@export_prometheus:
     mov rcx, rsi
     mov rdx, MAX_BUFFER_SIZE
     call telemetry_export_prometheus
-    jmp .export_done
-    
-.format_error:
+    jmp @@export_done
+@@format_error:
     mov rcx, rsi
     call free
     mov rax, 0
-    jmp .export_done
-    
-.export_error:
+    jmp @@export_done
+@@export_error:
     mov rax, 0
-    
-.export_done:
+@@export_done:
     ; RAX contains pointer to exported data
     ; Caller must free with bridge_free_buffer()
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 bridge_export_metrics ENDP
 
 ; ============================================================================
@@ -675,7 +657,7 @@ bridge_set_alert PROC
     mov rax, 1    ; Return alertId = 1 (simplified)
     
     pop rbx
-    ret
+
 bridge_set_alert ENDP
 
 ; ============================================================================
@@ -686,6 +668,7 @@ bridge_set_alert ENDP
 PUBLIC bridge_get_system_status
 bridge_get_system_status PROC
     push rbx
+
     push rsi
     push rdi
     
@@ -699,7 +682,7 @@ bridge_get_system_status PROC
     mov rcx, STATUS_BUFFER_SIZE
     call malloc
     cmp rax, 0
-    je .status_error
+    je @@status_error
     
     mov rsi, rax  ; Save buffer pointer
     
@@ -719,16 +702,15 @@ bridge_get_system_status PROC
     
     ; Return buffer pointer
     mov rax, rsi
-    jmp .status_done
-    
-.status_error:
+    jmp @@status_done
+@@status_error:
     mov rax, 0
-    
-.status_done:
-    pop rdi
-    pop rsi
+@@status_done:
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 bridge_get_system_status ENDP
 
 ; ============================================================================
@@ -743,7 +725,7 @@ bridge_shutdown ENDP
     ; Check if initialized
     mov al, [g_bridgeContext.initialized]
     cmp al, 1
-    jne .not_initialized
+    jne @@not_initialized
     
     ; Export final metrics
     mov rcx, FORMAT_JSON
@@ -760,14 +742,12 @@ bridge_shutdown ENDP
     call DeleteCriticalSection
     
     xor rax, rax  ; Return STATUS_OK
-    jmp .shutdown_done
-    
-.not_initialized:
+    jmp @@shutdown_done
+@@not_initialized:
     mov eax, STATUS_NOT_INITIALIZED
-    
-.shutdown_done:
+@@shutdown_done:
     pop rbx
-    ret
+
 bridge_shutdown ENDP
 
 ; ============================================================================
@@ -784,7 +764,7 @@ bridge_free_buffer PROC
     
     xor rax, rax  ; Return STATUS_OK
     pop rbx
-    ret
+
 bridge_free_buffer ENDP
 
 ; ============================================================================
@@ -841,3 +821,8 @@ bridge_get_animation_metrics ENDP
 ; ============================================================================
 
 END
+
+
+
+
+

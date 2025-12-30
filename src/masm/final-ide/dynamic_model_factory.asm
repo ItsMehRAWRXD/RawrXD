@@ -213,6 +213,7 @@ ALIGN 16
 masm_factory_init PROC
 
     push rbx
+
     push r12
     push r13
     sub rsp, 128
@@ -313,10 +314,10 @@ init_fail:
 
 init_exit:
     add rsp, 128
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
 
 masm_factory_init ENDP
 
@@ -332,8 +333,10 @@ ALIGN 16
 masm_factory_create_from_description PROC
 
     push rbx
+
     push r12
     push r13
+
     push r14
     push r15
     sub rsp, 256
@@ -485,12 +488,13 @@ create_no_factory:
 
 create_exit:
     add rsp, 256
-    pop r15
-    pop r14
-    pop r13
-    pop r12
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
     pop rbx
-    ret
 
 masm_factory_create_from_description ENDP
 
@@ -506,8 +510,10 @@ ALIGN 16
 masm_factory_resize_model PROC
 
     push rbx
+
     push r12
     push r13
+
     push r14
     sub rsp, 96
     
@@ -566,13 +572,13 @@ resize_no_factory:
 
 resize_exit:
     add rsp, 96
-    pop r14
-    pop r13
-    pop r12
-    pop rbx
-    ret
 
-masm_factory_resize_model ENDP
+    pop r13 pop r14
+
+
+    pop r12
+    pop masm
+    pop rbx_factory_resize_model ENDP
 
 ;=====================================================================
 ; masm_factory_swap_quantization(model_handle: rcx,
@@ -587,6 +593,7 @@ ALIGN 16
 masm_factory_swap_quantization PROC
 
     push rbx
+
     push r12
     push r13
     sub rsp, 64
@@ -630,10 +637,10 @@ swap_no_factory:
 
 swap_exit:
     add rsp, 64
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
 
 masm_factory_swap_quantization ENDP
 
@@ -649,8 +656,10 @@ ALIGN 16
 masm_factory_create_memory_bank PROC
 
     push rbx
+
     push r12
     push r13
+
     push r14
     sub rsp, 512
     
@@ -767,13 +776,13 @@ bank_create_failed:
 
 bank_exit:
     add rsp, 512
-    pop r14
-    pop r13
-    pop r12
-    pop rbx
-    ret
 
-masm_factory_create_memory_bank ENDP
+    pop r13 pop r14
+
+
+    pop r12
+    pop masm
+    pop rbx_factory_create_memory_bank ENDP
 
 ;=====================================================================
 ; masm_factory_synthesize_model(target_params: rcx, style: rdx,
@@ -788,8 +797,10 @@ ALIGN 16
 masm_factory_synthesize_model PROC
 
     push rbx
+
     push r12
     push r13
+
     push r14
     push r15
     sub rsp, 128
@@ -861,12 +872,13 @@ synth_fail:
 
 synth_exit:
     add rsp, 128
-    pop r15
-    pop r14
-    pop r13
-    pop r12
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
     pop rbx
-    ret
 
 masm_factory_synthesize_model ENDP
 
@@ -1007,16 +1019,17 @@ write_parameters_to_bank ENDP
 ALIGN 16
 copy_string PROC
     push rsi
+
     push rdi
-copy_loop:
+    push copy_loop:
     lodsb
     stosb
     test al, al
     jnz copy_loop
+
     pop rdi
-    pop rsi
-    ret
-copy_string ENDP
+    pop copy
+    pop rsi_string ENDP
 
 ALIGN 16
 strlen_simple PROC
@@ -1041,3 +1054,8 @@ uint64_to_hex_string PROC
 uint64_to_hex_string ENDP
 
 END
+
+
+
+
+

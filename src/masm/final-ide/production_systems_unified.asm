@@ -130,7 +130,7 @@ production_systems_init PROC
     sub rsp, 48
 
     cmp byte ptr [g_systemInitialized], 1
-    je .already_init
+    je @@already_init
 
     ; Initialize Pipeline Executor
     call pipeline_executor_init
@@ -161,19 +161,17 @@ production_systems_init PROC
     mov eax, 1
     add rsp, 48
     pop rbx
-    ret
 
-.already_init:
+@@already_init:
     mov eax, 1
     add rsp, 48
     pop rbx
-    ret
 
-.init_failed:
+@@init_failed:
     xor eax, eax
     add rsp, 48
     pop rbx
-    ret
+
 production_systems_init ENDP
 
 ; ======================================================================
@@ -214,7 +212,7 @@ production_start_ci_job PROC
 
     add rsp, 40
     pop rbx
-    ret
+
 production_start_ci_job ENDP
 
 ;-----------------------------------------------------------------------
@@ -238,17 +236,15 @@ production_execute_pipeline_stage PROC
     jz .stage_failed
 
     mov rbx, eax
-    jmp .stage_done
-
-.stage_failed:
+    jmp @@stage_done
+@@stage_failed:
     inc qword ptr [g_productionStatus.pipelineJobsFailed]
     mov rbx, 0
-
-.stage_done:
+@@stage_done:
     mov eax, ebx
     add rsp, 40
     pop rbx
-    ret
+
 production_execute_pipeline_stage ENDP
 
 ; ======================================================================
@@ -269,6 +265,7 @@ ALIGN 16
 production_track_inference_request PROC
 
     push rbx
+
     push r12
     sub rsp, 56
 
@@ -309,20 +306,18 @@ production_track_inference_request PROC
     ; Update global metrics
     inc qword ptr [g_productionStatus.totalRequests]
     cmp r14d, 1
-    jne .track_failed
+    jne @@track_failed
     inc qword ptr [g_productionStatus.successfulRequests]
-    jmp .track_done
-
-.track_failed:
+    jmp @@track_done
+@@track_failed:
     inc qword ptr [g_productionStatus.failedRequests]
-
-.track_done:
+@@track_done:
     mov rax, rbx
     add rsp, 56
+
     pop r12
-    pop rbx
-    ret
-production_track_inference_request ENDP
+    pop production
+    pop rbx_track_inference_request ENDP
 
 ;-----------------------------------------------------------------------
 ; production_export_metrics(
@@ -341,30 +336,26 @@ production_export_metrics PROC
     mov r9, rax                     ; Output buffer
 
     cmp r8d, 0
-    je .export_json
+    je @@export_json
 
     cmp r8d, 1
-    je .export_csv
+    je @@export_csv
 
     cmp r8d, 2
-    je .export_prometheus
-
-.export_json:
+    je @@export_prometheus
+@@export_json:
     mov rcx, r9
     mov edx, 1000000
     call telemetry_export_json
-    jmp .export_complete
-
-.export_csv:
+    jmp @@export_complete
+@@export_csv:
     mov rcx, r9
     call telemetry_export_csv
-    jmp .export_complete
-
-.export_prometheus:
+    jmp @@export_complete
+@@export_prometheus:
     mov rcx, r9
     call telemetry_export_prometheus
-
-.export_complete:
+@@export_complete:
     ; Log export
     lea rcx, szMetricsExport
     mov rdx, [r8d]                  ; Format name
@@ -373,7 +364,7 @@ production_export_metrics PROC
 
     add rsp, 40
     pop rbx
-    ret
+
 production_export_metrics ENDP
 
 ;-----------------------------------------------------------------------
@@ -398,7 +389,7 @@ production_set_alert PROC
 
     add rsp, 40
     pop rbx
-    ret
+
 production_set_alert ENDP
 
 ; ======================================================================
@@ -419,6 +410,7 @@ ALIGN 16
 production_animate_theme_transition PROC
 
     push rbx
+
     push r12
     push r13
     sub rsp, 56
@@ -438,10 +430,9 @@ production_animate_theme_transition PROC
 
     ; Create animation for each color
     xor r14d, r14d                  ; Color index
-
-.animate_colors:
+@@animate_colors:
     cmp r14d, r13d
-    jge .animation_complete
+    jge @@animation_complete
 
     ; Get color from array
     mov rax, rbx
@@ -467,19 +458,19 @@ production_animate_theme_transition PROC
     call animation_set_easing
 
     inc r14d
-    jmp .animate_colors
-
-.animation_complete:
+    jmp @@animate_colors
+@@animation_complete:
     ; Update animation count
     mov eax, r13d
     add [g_productionStatus.activeAnimations], eax
 
     mov rax, r15                    ; Return last animation ID
     add rsp, 56
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
+
 production_animate_theme_transition ENDP
 
 ; ======================================================================
@@ -537,7 +528,7 @@ production_get_system_status PROC
     mov eax, 1
     add rsp, 56
     pop rbx
-    ret
+
 production_get_system_status ENDP
 
 ; ======================================================================
@@ -556,7 +547,7 @@ production_shutdown PROC
     sub rsp, 40
 
     cmp byte ptr [g_systemInitialized], 0
-    je .already_shutdown
+    je @@already_shutdown
 
     ; Cancel all running animations
     ; (Would iterate through animation system)
@@ -576,13 +567,12 @@ production_shutdown PROC
     mov eax, 1
     add rsp, 40
     pop rbx
-    ret
 
-.already_shutdown:
+@@already_shutdown:
     mov eax, 0
     add rsp, 40
     pop rbx
-    ret
+
 production_shutdown ENDP
 
 ; ======================================================================
@@ -625,3 +615,8 @@ sprintf_log:
 ;   production_shutdown()
 
 END
+
+
+
+
+

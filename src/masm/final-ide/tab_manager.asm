@@ -108,6 +108,7 @@ TAB ENDS
 PUBLIC tab_manager_init
 tab_manager_init PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 48
@@ -154,10 +155,11 @@ init_chat_tabs:
 init_done:
     mov eax, dword ptr [rax]
     add rsp, 48
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 tab_manager_init ENDP
 
 ;==========================================================================
@@ -167,8 +169,10 @@ tab_manager_init ENDP
 PUBLIC tab_create_editor
 tab_create_editor PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     sub rsp, 32
     
@@ -243,12 +247,13 @@ tab_create_full:
     
 create_editor_done:
     add rsp, 32
-    pop r12
-    pop rdi
+
+    pop rdi pop r12
+
+
     pop rsi
-    pop rbx
-    ret
-tab_create_editor ENDP
+    pop tab
+    pop rbx_create_editor ENDP
 
 ;==========================================================================
 ; PUBLIC: tab_close_editor(tab_id: ecx) -> eax
@@ -257,6 +262,7 @@ tab_create_editor ENDP
 PUBLIC tab_close_editor
 tab_close_editor PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -354,10 +360,11 @@ close_editor_fail:
     
 close_editor_done:
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 tab_close_editor ENDP
 
 ;==========================================================================
@@ -383,7 +390,7 @@ mode_invalid:
 mode_done:
     add rsp, 32
     pop rbx
-    ret
+
 tab_set_agent_mode ENDP
 
 ;==========================================================================
@@ -442,7 +449,7 @@ mark_fail:
 mark_done:
     add rsp, 32
     pop rbx
-    ret
+
 tab_mark_modified ENDP
 
 ;==========================================================================
@@ -541,6 +548,7 @@ EXTERN strcmp_masm:PROC
 PUBLIC tab_reorder
 tab_reorder PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -621,10 +629,15 @@ shift_done:
 reorder_done:
     mov eax, 1
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 tab_reorder ENDP
 
 END
+
+
+
+

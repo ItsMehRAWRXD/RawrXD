@@ -444,7 +444,7 @@ gui_builder_create_windows PROC
     mov rax, 1  ; Success
     add rsp, 96
     pop rbx
-    ret
+
 gui_builder_create_windows ENDP
 
 ;==========================================================================
@@ -469,10 +469,9 @@ create_canvas_window PROC
     
     ; Create back buffer
     push rax
-    call create_canvas_buffer
-    pop rax
-    
-    add rsp, 96
+    push call create_canvas_buffer
+    pop add
+    pop rax rsp, 96
     ret
     
 .data
@@ -516,7 +515,7 @@ create_canvas_buffer PROC
     
     add rsp, 32
     pop rbx
-    ret
+
 create_canvas_buffer ENDP
 
 ;==========================================================================
@@ -638,7 +637,7 @@ gui_builder_add_widget PROC
 @done:
     add rsp, 48
     pop rbx
-    ret
+
 gui_builder_add_widget ENDP
 
 ;==========================================================================
@@ -688,7 +687,7 @@ gui_builder_delete_widget PROC
 @done:
     add rsp, 32
     pop rbx
-    ret
+
 gui_builder_delete_widget ENDP
 
 ;==========================================================================
@@ -698,6 +697,7 @@ gui_builder_delete_widget ENDP
 ;==========================================================================
 gui_builder_generate_code PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -733,10 +733,11 @@ gui_builder_generate_code PROC
 @done:
     lea rax, g_builder.codegen.output_buffer
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 gui_builder_generate_code ENDP
 
 ;==========================================================================
@@ -795,8 +796,7 @@ find_widget_by_id PROC
     ; rcx = widget ID
     ; Returns: rax = pointer to WIDGET_DEF or 0
     push rbx
-    
-    xor rbx, rbx
+    push xor rbx, rbx
     xor r12, r12
     
 @loop:
@@ -823,7 +823,7 @@ find_widget_by_id PROC
     
 @done:
     pop rbx
-    ret
+
 find_widget_by_id ENDP
 
 repaint_canvas PROC
@@ -880,3 +880,8 @@ gui_builder_distribute_widgets PROC
 gui_builder_distribute_widgets ENDP
 
 end
+
+
+
+
+

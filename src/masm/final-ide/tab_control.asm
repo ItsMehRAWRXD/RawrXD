@@ -60,6 +60,7 @@ MAX_TAB_PAGES      EQU 16
 CreateTabControl PROC FRAME
     ; Save non-volatile registers
     push rbx
+
     push rsi
     push rdi
     .PUSHREG rbx
@@ -155,10 +156,11 @@ window_creation_failed:
 tab_control_created:
     ; Cleanup stack and return
     add rsp, 30h
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 CreateTabControl ENDP
 
 ; ============================================================================
@@ -692,3 +694,7 @@ no_pages_array:
 DestroyTabControl ENDP
 
 END
+
+
+
+

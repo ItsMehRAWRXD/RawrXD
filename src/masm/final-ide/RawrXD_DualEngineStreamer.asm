@@ -54,11 +54,12 @@ INIT_FAILED:
 INIT_EXIT:
     add rsp, 32
     pop rbx
-    ret
+
 RawrXD_DualEngineStreamInit ENDP
 
 RawrXD_DualEngineStreamChunk PROC FRAME
     push rbx
+
     push rbp
     .pushreg rbx
     .pushreg rbp
@@ -96,10 +97,10 @@ RawrXD_DualEngineStreamChunk PROC FRAME
     call RawrXD_PerformanceLogMetrics
     
     add rsp, 48
+
     pop rbp
-    pop rbx
-    ret
-RawrXD_DualEngineStreamChunk ENDP
+    pop RawrXD
+    pop rbx_DualEngineStreamChunk ENDP
 
 ; Detect quantization format from GGUF metadata
 RawrXD_DetectModelFormat PROC
@@ -125,3 +126,8 @@ SET_QUANTIZED:
 RawrXD_DetectModelFormat ENDP
 
 END
+
+
+
+
+

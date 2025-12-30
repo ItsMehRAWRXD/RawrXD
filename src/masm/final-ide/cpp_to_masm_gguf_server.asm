@@ -131,8 +131,7 @@ API_CHAT_COMPLETIONS DB "/v1/chat/completions", 0
 PUBLIC gguf_server_create
 gguf_server_create PROC
     push rbx
-    
-    mov rbx, rcx                    ; rbx = enginePtr
+    push mov rbx, rcx                    ; rbx = enginePtr
     
     ; Allocate server
     mov rcx, SIZEOF GGUF_SERVER
@@ -172,7 +171,7 @@ gguf_server_create PROC
     
     mov rax, r9
     pop rbx
-    ret
+
 gguf_server_create ENDP
 
 ; ============================================================================
@@ -183,28 +182,25 @@ gguf_server_create ENDP
 PUBLIC gguf_server_start
 gguf_server_start PROC
     push rbx
-    
-    mov rbx, rcx                    ; rbx = server
+    push mov rbx, rcx                    ; rbx = server
     
     ; Check if already running
     cmp byte [rbx + GGUF_SERVER.serverRunning], 1
-    je .already_running
+    je @@already_running
     
     ; Set port
     cmp edx, 0
-    je .use_default_port
+    je @@use_default_port
     mov [rbx + GGUF_SERVER.port], edx
-    
-.use_default_port:
+@@use_default_port:
     ; Check port conflict (simplified)
     mov eax, [rbx + GGUF_SERVER.port]
     cmp eax, DEFAULT_PORT
-    jne .port_available
+    jne @@port_available
     
     ; Simulate port conflict check
     mov rax, 1                      ; Assume port available
-    
-.port_available:
+@@port_available:
     test rax, rax
     jz .port_conflict
     
@@ -228,21 +224,19 @@ gguf_server_start PROC
     
     mov rax, 1
     pop rbx
-    ret
-    
-.already_running:
+
+@@already_running:
     mov rax, 1
     pop rbx
-    ret
-    
-.port_conflict:
+
+@@port_conflict:
     lea rcx, [szPortConflict]
     mov edx, [rbx + GGUF_SERVER.port]
     call console_log
     
     xor rax, rax
     pop rbx
-    ret
+
 gguf_server_start ENDP
 
 ; ============================================================================
@@ -252,12 +246,11 @@ gguf_server_start ENDP
 PUBLIC gguf_server_stop
 gguf_server_stop PROC
     push rbx
-    
-    mov rbx, rcx
+    push mov rbx, rcx
     
     ; Check if running
     cmp byte [rbx + GGUF_SERVER.serverRunning], 1
-    jne .already_stopped
+    jne @@already_stopped
     
     ; Stop server thread
     mov byte [rbx + GGUF_SERVER.serverRunning], 0
@@ -274,10 +267,9 @@ gguf_server_stop PROC
     ; Log
     lea rcx, [szServerStopped]
     call console_log
-    
-.already_stopped:
+@@already_stopped:
     pop rbx
-    ret
+
 gguf_server_stop ENDP
 
 ; ============================================================================
@@ -310,9 +302,9 @@ gguf_server_port ENDP
 PUBLIC gguf_server_handle_request
 gguf_server_handle_request PROC
     push rbx
+
     push rsi
-    
-    mov rbx, rcx                    ; rbx = server
+    push mov rbx, rcx                    ; rbx = server
     mov rsi, rdx                    ; rsi = request
     mov r9, r8                      ; r9 = requestSize
     
@@ -332,7 +324,7 @@ gguf_server_handle_request PROC
     lea rdx, [API_GENERATE]
     call strstr
     cmp rax, 0
-    je .not_generate
+    je @@not_generate
     
     ; Handle /api/generate
     mov rcx, rbx
@@ -340,28 +332,25 @@ gguf_server_handle_request PROC
     mov r8, r9
     call handle_generate_request
     mov r11, rax                    ; r11 = response
-    jmp .request_handled
-    
-.not_generate:
+    jmp @@request_handled
+@@not_generate:
     mov rcx, rsi
     lea rdx, [API_TAGS]
     call strstr
     cmp rax, 0
-    je .not_tags
+    je @@not_tags
     
     ; Handle /api/tags
     mov rcx, rbx
     call handle_tags_request
     mov r11, rax
-    jmp .request_handled
-    
-.not_tags:
+    jmp @@request_handled
+@@not_tags:
     ; Default response
     mov rcx, rbx
     call handle_default_request
     mov r11, rax
-    
-.request_handled:
+@@request_handled:
     ; Update statistics
     inc qword [rbx + GGUF_SERVER.totalRequests]
     inc qword [rbx + GGUF_SERVER.totalResponses]
@@ -373,10 +362,10 @@ gguf_server_handle_request PROC
     call console_log
     
     mov rax, r11                    ; Return response
+
     pop rsi
-    pop rbx
-    ret
-gguf_server_handle_request ENDP
+    pop gguf
+    pop rbx_server_handle_request ENDP
 
 ; ============================================================================
 
@@ -385,8 +374,7 @@ gguf_server_handle_request ENDP
 ; Returns: RAX = pointer to SERVER_RESPONSE
 handle_generate_request PROC
     push rbx
-    
-    mov rbx, rcx
+    push mov rbx, rcx
     
     ; Allocate response
     mov rcx, SIZEOF SERVER_RESPONSE
@@ -407,7 +395,7 @@ handle_generate_request PROC
     
     mov rax, r9
     pop rbx
-    ret
+
 handle_generate_request ENDP
 
 ; ============================================================================
@@ -417,8 +405,7 @@ handle_generate_request ENDP
 ; Returns: RAX = pointer to SERVER_RESPONSE
 handle_tags_request PROC
     push rbx
-    
-    mov rbx, rcx
+    push mov rbx, rcx
     
     ; Allocate response
     mov rcx, SIZEOF SERVER_RESPONSE
@@ -439,7 +426,7 @@ handle_tags_request PROC
     
     mov rax, r9
     pop rbx
-    ret
+
 handle_tags_request ENDP
 
 ; ============================================================================
@@ -449,8 +436,7 @@ handle_tags_request ENDP
 ; Returns: RAX = pointer to SERVER_RESPONSE
 handle_default_request PROC
     push rbx
-    
-    mov rbx, rcx
+    push mov rbx, rcx
     
     ; Allocate response
     mov rcx, SIZEOF SERVER_RESPONSE
@@ -471,7 +457,7 @@ handle_default_request PROC
     
     mov rax, r9
     pop rbx
-    ret
+
 handle_default_request ENDP
 
 ; ============================================================================
@@ -493,8 +479,7 @@ gguf_server_get_statistics ENDP
 PUBLIC gguf_server_destroy
 gguf_server_destroy PROC
     push rbx
-    
-    mov rbx, rcx
+    push mov rbx, rcx
     
     ; Stop server if running
     mov rcx, rbx
@@ -503,23 +488,21 @@ gguf_server_destroy PROC
     ; Close data ready event
     mov rcx, [rbx + GGUF_SERVER.dataReady]
     cmp rcx, 0
-    je .skip_event
+    je @@skip_event
     call CloseHandle
-    
-.skip_event:
+@@skip_event:
     ; Free clients array
     mov rcx, [rbx + GGUF_SERVER.clients]
     cmp rcx, 0
-    je .skip_clients
+    je @@skip_clients
     call free
-    
-.skip_clients:
+@@skip_clients:
     ; Free server
     mov rcx, rbx
     call free
     
     pop rbx
-    ret
+
 gguf_server_destroy ENDP
 
 ; ============================================================================
@@ -530,23 +513,21 @@ gguf_server_destroy ENDP
 ; Internal server thread function
 server_thread_proc PROC
     push rbx
-    
-    mov rbx, rcx                    ; rbx = server
+    push mov rbx, rcx                    ; rbx = server
     
     ; Main server loop
-.server_loop:
+@@server_loop:
     cmp byte [rbx + GGUF_SERVER.serverRunning], 1
-    jne .server_exit
+    jne @@server_exit
     
     ; Simulate client connection handling
     mov rcx, 1000                   ; 1 second delay
     call Sleep
     
-    jmp .server_loop
-    
-.server_exit:
+    jmp @@server_loop
+@@server_exit:
     pop rbx
-    ret
+
 server_thread_proc ENDP
 
 ; ============================================================================
@@ -557,3 +538,8 @@ server_thread_proc ENDP
     szNotFoundResponse DB "{\"error\":\"Endpoint not found\"}", 0
 
 END
+
+
+
+
+

@@ -85,6 +85,7 @@ ALIGN 16
 masm_core_transform_xor PROC
 
     push rbx
+
     push r12
     push r13
     sub rsp, 64
@@ -132,10 +133,10 @@ xor_transform_fail:
 
 xor_transform_exit:
     add rsp, 64
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
 
 masm_core_transform_xor ENDP
 
@@ -153,6 +154,7 @@ ALIGN 16
 masm_core_transform_rotate PROC
 
     push rbx
+
     push r12
     push r13
     sub rsp, 64
@@ -205,10 +207,10 @@ rotate_transform_fail:
 
 rotate_transform_exit:
     add rsp, 64
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
 
 masm_core_transform_rotate ENDP
 
@@ -225,6 +227,7 @@ ALIGN 16
 masm_core_transform_reverse PROC
 
     push rbx
+
     push r12
     sub rsp, 64
     
@@ -265,11 +268,10 @@ reverse_transform_fail:
 
 reverse_transform_exit:
     add rsp, 64
-    pop r12
-    pop rbx
-    ret
 
-masm_core_transform_reverse ENDP
+    pop r12
+    pop masm
+    pop rbx_core_transform_reverse ENDP
 
 ;=====================================================================
 ; masm_core_transform_swap(addr_a: rcx, addr_b: rdx, 
@@ -284,6 +286,7 @@ ALIGN 16
 masm_core_transform_swap PROC
 
     push rbx
+
     push r12
     push r13
     sub rsp, 96
@@ -350,10 +353,10 @@ swap_transform_fail:
 
 swap_transform_exit:
     add rsp, 96
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
 
 masm_core_transform_swap ENDP
 
@@ -370,6 +373,7 @@ ALIGN 16
 masm_core_transform_bitflip PROC
 
     push rbx
+
     push r12
     sub rsp, 64
     
@@ -406,11 +410,10 @@ bitflip_transform_fail:
 
 bitflip_transform_exit:
     add rsp, 64
-    pop r12
-    pop rbx
-    ret
 
-masm_core_transform_bitflip ENDP
+    pop r12
+    pop masm
+    pop rbx_core_transform_bitflip ENDP
 
 ;=====================================================================
 ; masm_core_transform_pipeline(pipeline_ptr: rcx) -> rax
@@ -426,6 +429,7 @@ ALIGN 16
 masm_core_transform_pipeline PROC
 
     push rbx
+
     push r12
     push r13
     sub rsp, 64
@@ -463,6 +467,7 @@ pipeline_loop:
     
     ; Dispatch based on operation type
     push rbx
+
     push r12
     push r13
     
@@ -471,12 +476,11 @@ pipeline_loop:
     mov qword ptr [rsp + 32], TRANSFORM_FORWARD
     call masm_core_transform_dispatch
     add rsp, 40
-    
-    pop r13
-    pop r12
-    pop rbx
-    
-    test rax, rax
+
+    pop r12 pop r13
+
+    pop test
+    pop rbx rax, rax
     jz pipeline_fail
     
     inc r13
@@ -494,10 +498,10 @@ pipeline_fail:
 
 pipeline_exit:
     add rsp, 64
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
 
 masm_core_transform_pipeline ENDP
 
@@ -514,6 +518,7 @@ ALIGN 16
 masm_core_transform_abort_pipeline PROC
 
     push rbx
+
     push r12
     push r13
     sub rsp, 64
@@ -544,6 +549,7 @@ abort_loop:
     
     ; Dispatch with REVERSE flag
     push rbx
+
     push r12
     push r13
     
@@ -551,9 +557,9 @@ abort_loop:
     mov qword ptr [rsp + 32], TRANSFORM_REVERSE
     call masm_core_transform_dispatch
     add rsp, 40
-    
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
     
     ; Even if one undo fails, we try to continue? 
@@ -579,10 +585,10 @@ abort_fail:
 
 abort_exit:
     add rsp, 64
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
 
 masm_core_transform_abort_pipeline ENDP
 
@@ -669,3 +675,8 @@ dispatch_swap:
 masm_core_transform_dispatch ENDP
 
 END
+
+
+
+
+

@@ -90,7 +90,7 @@ szBashPrompt db "$ ",0
 PUBLIC terminal_init
 terminal_init PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 64
     
     mov [globalTerminal.hTerminal], rcx
@@ -120,7 +120,7 @@ terminal_init ENDP
 PUBLIC terminal_start_shell
 terminal_start_shell PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 128
     
     ; Check if already running
@@ -261,6 +261,7 @@ create_process:
     lea r8, terminal_reader_thread
     xor r9, r9
     push 0
+
     push 0
     sub rsp, 32
     call CreateThread
@@ -300,7 +301,7 @@ terminal_start_shell ENDP
 ; Background thread to read from terminal pipe
 terminal_reader_thread PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 1024 + 64
     
 @read_loop:
@@ -341,7 +342,7 @@ terminal_reader_thread ENDP
 PUBLIC terminal_execute_command
 terminal_execute_command PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 64
     
     ; Check if terminal is running
@@ -382,12 +383,12 @@ terminal_execute_command ENDP
 PUBLIC terminal_read_output
 terminal_read_output PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 64
     push rbx
-    push rsi
 
-    mov rbx, rcx        ; Buffer
+    push rsi
+    push mov rbx, rcx        ; Buffer
     mov rsi, rdx        ; Max length
 
     ; Ensure shell is running
@@ -403,8 +404,9 @@ terminal_read_output PROC
     lea r10, bytesAvailable
     xor r11, r11
     push r11
+
     push r10
-    call PeekNamedPipe
+    push call PeekNamedPipe
     add rsp, 16
 
     test rax, rax
@@ -425,8 +427,9 @@ do_read:
     LOCAL bytesRead:DWORD
     lea r9, bytesRead
     push 0
-    call ReadFile
-    add rsp, 8
+    push call
+    push ReadFile
+    push add rsp, 8
 
     test rax, rax
     jz no_output
@@ -438,10 +441,10 @@ no_output:
     xor eax, eax
 
 done:
-    pop rsi
-    pop rbx
-    leave
+
+    pop rsi leave
     ret
+    pop rbx
 terminal_read_output ENDP
 
 ; terminal_update_display() -> bool (rax)
@@ -449,7 +452,7 @@ terminal_read_output ENDP
 PUBLIC terminal_update_display
 terminal_update_display PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 64
 
     ; Read available output
@@ -485,7 +488,7 @@ terminal_update_display ENDP
 PUBLIC terminal_add_to_buffer
 terminal_add_to_buffer PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
 
     mov r8, rcx
@@ -523,9 +526,10 @@ terminal_add_to_buffer ENDP
 ; Build index of newline-terminated strings
 terminal_process_lines PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 64
     push rbx
+
     push rsi
     push rdi
 
@@ -560,10 +564,11 @@ find_newline:
     jmp line_loop
 
 lines_done:
-    pop rdi
-    pop rsi
-    pop rbx
-    leave
+
+    pop rsi pop rdi
+
+
+    pop leave rbx
     ret
 terminal_process_lines ENDP
     
@@ -572,9 +577,10 @@ terminal_process_lines ENDP
 PUBLIC terminal_redraw
 terminal_redraw PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 128
     push rbx
+
     push rsi
     push rdi
 
@@ -631,11 +637,11 @@ draw_done:
     lea rdx, ps
     mov rcx, rbx
     call EndPaint
-    
-    pop rdi
-    pop rsi
-    pop rbx
-    leave
+
+    pop rsi pop rdi
+
+
+    pop leave rbx
     ret
 terminal_redraw ENDP
 
@@ -646,7 +652,7 @@ terminal_redraw ENDP
 ; strlen(string: rcx) -> length (rax)
 strlen PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     
     mov rax, rcx
     xor rcx, rcx
@@ -668,7 +674,7 @@ strlen ENDP
 ; strcpy(dest: rcx, src: rdx)
 strcpy PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     
     mov rdi, rcx
     mov rsi, rdx
@@ -692,3 +698,7 @@ newline db 0Dh, 0Ah, 0
 outputBuffer BYTE 1024 DUP(?)
 
 end
+
+
+
+

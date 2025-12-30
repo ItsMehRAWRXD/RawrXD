@@ -58,7 +58,7 @@ init_fail:
     
 init_done:
     pop rbx
-    ret
+
 InitializeIntegratedIDE ENDP
 
 ;==============================================================================
@@ -108,7 +108,7 @@ create_fail:
     
 create_done:
     pop rbx
-    ret
+
 CreateEnhancedPanes ENDP
 
 ;==============================================================================
@@ -124,10 +124,10 @@ ProcessPaneMessage PROC
     ; Update affected panes
     call UpdateAllPanes
     
-    pop rbx
-    ret
-ProcessPaneMessage ENDP
+    pop ENDP
 
+
+    pop ProcessPaneMessage rbx
 ;==============================================================================
 ; UpdateAllPanes - Refresh all panes with current state
 ;==============================================================================
@@ -140,10 +140,10 @@ UpdateAllPanes PROC
     call UpdateChatPanes
     call UpdateDebugPanes
     
-    pop rbx
-    ret
-UpdateAllPanes ENDP
+    pop ENDP
 
+
+    pop UpdateAllPanes rbx
 ;==============================================================================
 ; Helper Functions (Minimal implementations)
 ;==============================================================================
@@ -180,3 +180,7 @@ asm_chat_handler PROC
 asm_chat_handler ENDP
 
 END
+
+
+
+

@@ -21,6 +21,7 @@ EXTERN asm_mutex_unlock:PROC
 ; rcx = targetAddress (QWORD*), rdx = newFunctionPtr
 RawrXD_AtomicPatch PROC FRAME
     push rbx
+
     push rbp
     .pushreg rbx
     .pushreg rbp
@@ -69,10 +70,10 @@ RawrXD_AtomicPatch PROC FRAME
     
     xor eax, eax
     add rsp, 48
+
     pop rbp
-    pop rbx
-    ret
-RawrXD_AtomicPatch ENDP
+    pop RawrXD
+    pop rbx_AtomicPatch ENDP
 
 ; Rollback last patch (for error recovery)
 RawrXD_AtomicRollback PROC FRAME
@@ -101,7 +102,7 @@ acquire_lock:
     
     add rsp, 32
     pop rbx
-    ret
+
 RawrXD_AcquirePatchMutex ENDP
 
 RawrXD_ReleasePatchMutex PROC
@@ -117,7 +118,7 @@ RawrXD_ReleasePatchMutex PROC
 no_mutex_release:
     add rsp, 32
     pop rbx
-    ret
+
 RawrXD_ReleasePatchMutex ENDP
 
 ; Log patch to IDE console
@@ -128,3 +129,8 @@ RawrXD_LogPatchEvent PROC
 RawrXD_LogPatchEvent ENDP
 
 END
+
+
+
+
+

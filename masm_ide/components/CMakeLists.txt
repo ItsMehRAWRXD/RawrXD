@@ -25,6 +25,7 @@ set(MASM_SOURCES
 set(MASM_HEADERS
     include/streaming_token_manager.h
     include/model_router.h
+    include/masm_tool_registry.h
     include/tool_registry.h
     include/agentic_planner.h
     include/command_palette.h

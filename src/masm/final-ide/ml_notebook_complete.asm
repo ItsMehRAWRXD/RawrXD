@@ -242,7 +242,7 @@ notebook_init PROC
     mov rax, g_notebook_doc.execution_lock
     add rsp, 32
     pop rbx
-    ret
+
 notebook_init ENDP
 
 ;==========================================================================
@@ -251,6 +251,7 @@ notebook_init ENDP
 ;==========================================================================
 notebook_create_window PROC
     push rbx
+
     push rsi
     sub rsp, 64
     
@@ -285,10 +286,10 @@ notebook_create_window PROC
     
     mov rax, g_notebook_doc.hWindow
     add rsp, 64
+
     pop rsi
-    pop rbx
-    ret
-notebook_create_window ENDP
+    pop notebook
+    pop rbx_create_window ENDP
 
 ;==========================================================================
 ; notebook_add_cell(cell_type: ecx, position: edx) -> cell_id (rax)
@@ -296,6 +297,7 @@ notebook_create_window ENDP
 ;==========================================================================
 notebook_add_cell PROC
     push rbx
+
     push rsi
     sub rsp, 64
     
@@ -337,10 +339,10 @@ notebook_add_cell PROC
     call ReleaseMutex
     
     add rsp, 64
+
     pop rsi
-    pop rbx
-    ret
-notebook_add_cell ENDP
+    pop notebook
+    pop rbx_add_cell ENDP
 
 ;==========================================================================
 ; notebook_delete_cell(cell_id: rcx) -> success (eax)
@@ -348,6 +350,7 @@ notebook_add_cell ENDP
 ;==========================================================================
 notebook_delete_cell PROC
     push rbx
+
     push rsi
     sub rsp, 64
     
@@ -414,10 +417,10 @@ notebook_delete_cell PROC
     call ReleaseMutex
     
     add rsp, 64
+
     pop rsi
-    pop rbx
-    ret
-notebook_delete_cell ENDP
+    pop notebook
+    pop rbx_delete_cell ENDP
 
 ;==========================================================================
 ; notebook_execute_cell(cell_id: rcx) -> execution_count (eax)
@@ -425,8 +428,10 @@ notebook_delete_cell ENDP
 ;==========================================================================
 notebook_execute_cell PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     sub rsp, 256
     
@@ -538,12 +543,13 @@ notebook_execute_cell PROC
     call ReleaseMutex
     
     add rsp, 256
-    pop r12
-    pop rdi
+
+    pop rdi pop r12
+
+
     pop rsi
-    pop rbx
-    ret
-notebook_execute_cell ENDP
+    pop notebook
+    pop rbx_execute_cell ENDP
 
 ;==========================================================================
 ; notebook_execute_all() -> success (eax)
@@ -551,6 +557,7 @@ notebook_execute_cell ENDP
 ;==========================================================================
 notebook_execute_all PROC
     push rbx
+
     push rsi
     sub rsp, 64
     
@@ -584,17 +591,16 @@ notebook_execute_all PROC
 @cancelled:
     mov eax, 0
     add rsp, 64
+
     pop rsi
     pop rbx
-    ret
-    
 @done:
     mov eax, 1
     add rsp, 64
+
     pop rsi
-    pop rbx
-    ret
-notebook_execute_all ENDP
+    pop notebook
+    pop rbx_execute_all ENDP
 
 ;==========================================================================
 ; Stub implementations for remaining functions
@@ -739,3 +745,8 @@ strncpy ENDP
 szKernelError BYTE "Kernel error: failed to execute code", 0
 
 end
+
+
+
+
+

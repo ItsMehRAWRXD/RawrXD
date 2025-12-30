@@ -97,16 +97,14 @@ ghost_text_init PROC
     lea rcx, CurrentSuggestions
     xor edx, edx
     mov r8d, MAX_SUGGESTIONS * (SIZE SUGGESTION) / 8
-    
-.zero_loop:
+@@zero_loop:
     cmp r8d, 0
-    je .zero_done
+    je @@zero_done
     mov QWORD PTR [rcx + rdx], 0
     add rdx, 8
     dec r8d
-    jmp .zero_loop
-    
-.zero_done:
+    jmp @@zero_loop
+@@zero_done:
     mov SuggestionCount, 0
     mov CurrentSuggestion, 0
     mov GhostTextState, GHOST_STATE_HIDDEN
@@ -114,7 +112,7 @@ ghost_text_init PROC
     mov eax, 1                          ; Success
     add rsp, 32
     pop rbx
-    ret
+
 ghost_text_init ENDP
 
 ;==========================================================================
@@ -125,6 +123,7 @@ ghost_text_init ENDP
 PUBLIC ghost_text_generate_suggestions
 ghost_text_generate_suggestions PROC
     push rbx
+
     push rdi
     push rsi
     sub rsp, 32
@@ -153,8 +152,7 @@ ghost_text_generate_suggestions PROC
     call add_suggestion
     
     inc edi
-    
-.check_if_pattern:
+@@check_if_pattern:
     mov rcx, rsi
     lea rdx, szIfPattern
     call string_ends_with
@@ -168,8 +166,7 @@ ghost_text_generate_suggestions PROC
     call add_suggestion
     
     inc edi
-    
-.check_while_pattern:
+@@check_while_pattern:
     mov rcx, rsi
     lea rdx, szWhilePattern
     call string_ends_with
@@ -183,8 +180,7 @@ ghost_text_generate_suggestions PROC
     call add_suggestion
     
     inc edi
-    
-.check_function_pattern:
+@@check_function_pattern:
     mov rcx, rsi
     lea rdx, szFunctionPattern
     call string_ends_with
@@ -198,8 +194,7 @@ ghost_text_generate_suggestions PROC
     call add_suggestion
     
     inc edi
-    
-.suggestions_done:
+@@suggestions_done:
     ; Store context for next time
     mov rcx, rsi
     lea rdx, PreviousContext
@@ -210,10 +205,11 @@ ghost_text_generate_suggestions PROC
     mov eax, edi                        ; Return suggestion count
     
     add rsp, 32
-    pop rsi
-    pop rdi
+
+    pop rdi pop rsi
+
     pop rbx
-    ret
+
 ghost_text_generate_suggestions ENDP
 
 ;==========================================================================
@@ -222,10 +218,9 @@ ghost_text_generate_suggestions ENDP
 PRIVATE add_suggestion
 add_suggestion PROC
     push rbx
-    
-    mov rbx, SuggestionCount
+    push mov rbx, SuggestionCount
     cmp rbx, MAX_SUGGESTIONS
-    jge .add_done
+    jge @@add_done
     
     ; Get suggestion entry
     imul eax, ebx, SIZE SUGGESTION
@@ -246,10 +241,9 @@ add_suggestion PROC
     mov QWORD PTR [rax + MAX_SUGGESTION_LEN + 8], rax
     
     inc SuggestionCount
-    
-.add_done:
+@@add_done:
     pop rbx
-    ret
+
 add_suggestion ENDP
 
 ;==========================================================================
@@ -258,21 +252,19 @@ add_suggestion ENDP
 PRIVATE copy_suggestion_text
 copy_suggestion_text PROC
     xor ecx, ecx
-    
-.copy_loop:
+@@copy_loop:
     cmp ecx, r9d
-    jge .copy_done
+    jge @@copy_done
     
     movzx ebx, BYTE PTR [rdx + rcx]
     mov BYTE PTR [rax + rcx], bl
     
     test bl, bl
-    je .copy_done
+    je @@copy_done
     
     inc ecx
-    jmp .copy_loop
-    
-.copy_done:
+    jmp @@copy_loop
+@@copy_done:
     mov BYTE PTR [rax + rcx], 0
     ret
 copy_suggestion_text ENDP
@@ -284,13 +276,14 @@ copy_suggestion_text ENDP
 PUBLIC ghost_text_show
 ghost_text_show PROC
     push rbx
+
     push rdi
     push rsi
     sub rsp, 32
     
     ; Validate index
     cmp ecx, SuggestionCount
-    jge .show_fail
+    jge @@show_fail
     
     mov CurrentSuggestion, ecx
     
@@ -320,18 +313,19 @@ ghost_text_show PROC
     
     mov eax, 1                          ; Success
     add rsp, 32
-    pop rsi
-    pop rdi
+
+    pop rdi pop rsi
+
     pop rbx
-    ret
-    
-.show_fail:
+
+@@show_fail:
     xor eax, eax
     add rsp, 32
-    pop rsi
-    pop rdi
+
+    pop rdi pop rsi
+
     pop rbx
-    ret
+
 ghost_text_show ENDP
 
 ;==========================================================================
@@ -344,7 +338,7 @@ ghost_text_accept PROC
     sub rsp, 32
     
     cmp GhostTextState, GHOST_STATE_VISIBLE
-    jne .accept_fail
+    jne @@accept_fail
     
     ; Get current suggestion text
     mov eax, CurrentSuggestion
@@ -370,13 +364,12 @@ ghost_text_accept PROC
     mov eax, 1                          ; Success
     add rsp, 32
     pop rbx
-    ret
-    
-.accept_fail:
+
+@@accept_fail:
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 ghost_text_accept ENDP
 
 ;==========================================================================
@@ -405,11 +398,10 @@ ghost_text_cycle_next PROC
     mov eax, CurrentSuggestion
     inc eax
     cmp eax, SuggestionCount
-    jl .show_next
+    jl @@show_next
     
     xor eax, eax                        ; Wrap to first
-    
-.show_next:
+@@show_next:
     mov ecx, eax
     call ghost_text_show
     ret
@@ -425,30 +417,26 @@ string_ends_with PROC
     ; Get text length
     mov rsi, rcx
     xor eax, eax
-    
-.len_loop:
+@@len_loop:
     cmp BYTE PTR [rsi + rax], 0
-    je .len_found
+    je @@len_found
     inc eax
-    jmp .len_loop
-    
-.len_found:
+    jmp @@len_loop
+@@len_found:
     mov ebx, eax                        ; ebx = text length
     
     ; Get pattern length
     mov rsi, rdx
     xor eax, eax
-    
-.pattern_len_loop:
+@@pattern_len_loop:
     cmp BYTE PTR [rsi + rax], 0
-    je .pattern_len_found
+    je @@pattern_len_found
     inc eax
-    jmp .pattern_len_loop
-    
-.pattern_len_found:
+    jmp @@pattern_len_loop
+@@pattern_len_found:
     ; Check if pattern fits at end of text
     cmp eax, ebx
-    jg .no_match
+    jg @@no_match
     
     ; Compare last N characters
     mov esi, ebx
@@ -458,28 +446,25 @@ string_ends_with PROC
     add rdi, rsi
     
     mov rcx, 0
-    
-.compare_loop:
+@@compare_loop:
     mov al, BYTE PTR [rdi + rcx]
     mov bl, BYTE PTR [rdx + rcx]
     cmp al, bl
-    jne .no_match
+    jne @@no_match
     
     test bl, bl
-    je .match_found
+    je @@match_found
     
     inc rcx
-    jmp .compare_loop
-    
-.match_found:
+    jmp @@compare_loop
+@@match_found:
     mov eax, 1
     pop rbx
-    ret
-    
-.no_match:
+
+@@no_match:
     xor eax, eax
     pop rbx
-    ret
+
 string_ends_with ENDP
 
 ;==========================================================================
@@ -488,21 +473,19 @@ string_ends_with ENDP
 PRIVATE copy_ghost_text
 copy_ghost_text PROC
     xor eax, eax
-    
-.copy_loop:
+@@copy_loop:
     cmp eax, r8d
-    jge .copy_done
+    jge @@copy_done
     
     movzx ebx, BYTE PTR [rdx + rax]
     mov BYTE PTR [rcx + rax], bl
     
     test bl, bl
-    je .copy_done
+    je @@copy_done
     
     inc eax
-    jmp .copy_loop
-    
-.copy_done:
+    jmp @@copy_loop
+@@copy_done:
     ret
 copy_ghost_text ENDP
 
@@ -512,21 +495,19 @@ copy_ghost_text ENDP
 PRIVATE copy_context_safe
 copy_context_safe PROC
     xor eax, eax
-    
-.copy_loop:
+@@copy_loop:
     cmp eax, r8d
-    jge .copy_done
+    jge @@copy_done
     
     movzx ebx, BYTE PTR [rdx + rax]
     mov BYTE PTR [rcx + rax], bl
     
     test bl, bl
-    je .copy_done
+    je @@copy_done
     
     inc eax
-    jmp .copy_loop
-    
-.copy_done:
+    jmp @@copy_loop
+@@copy_done:
     ret
 copy_context_safe ENDP
 
@@ -571,3 +552,8 @@ log_ghost_text_event ENDP
     szSuggestionFunctionBody BYTE "    ret",0
 
 END
+
+
+
+
+

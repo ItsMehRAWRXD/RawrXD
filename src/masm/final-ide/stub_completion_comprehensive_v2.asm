@@ -261,6 +261,7 @@ ALIGN 16
 StartAnimationTimer PROC
     ; ecx = duration_ms, rdx = callback address
     push rbx
+
     push r12
     push r13
     sub rsp, 48
@@ -277,12 +278,11 @@ StartAnimationTimer PROC
     mov rcx, [rcx]
     test rcx, rcx
     jz .create_mutex
-    
-.mutex_acquired:
+@@mutex_acquired:
     ; Check limit
     mov eax, [g_timer_count]
     cmp eax, MAX_ANIMATIONS
-    jge .start_anim_limit_error
+    jge @@start_anim_limit_error
     
     ; Calculate timer slot offset
     mov rbx, OFFSET g_animation_timers
@@ -309,12 +309,12 @@ StartAnimationTimer PROC
     mov [g_timer_count], ecx
     
     add rsp, 48
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
-    
-.create_mutex:
+
+@@create_mutex:
     ; Create new mutex for first time
     xor ecx, ecx            ; No initial owner
     xor edx, edx            ; No name
@@ -323,21 +323,20 @@ StartAnimationTimer PROC
     mov [rcx], rax
     test rax, rax
     jnz .mutex_acquired
-    
-.start_anim_limit_error:
+@@start_anim_limit_error:
     ; Release mutex before error exit
     mov rcx, [g_timer_mutex]
     test rcx, rcx
     jz .start_anim_error
     call ReleaseMutex
-    
-.start_anim_error:
+@@start_anim_error:
     xor eax, eax
     add rsp, 48
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
+
 StartAnimationTimer ENDP
 
 ;==============================================================================
@@ -354,9 +353,9 @@ UpdateAnimation PROC
     
     ; Validate timer ID
     cmp ecx, MAX_ANIMATIONS
-    jge .update_anim_invalid
+    jge @@update_anim_invalid
     cmp ecx, [g_timer_count]
-    jge .update_anim_invalid
+    jge @@update_anim_invalid
     
     ; Get timer entry
     mov rbx, OFFSET g_animation_timers
@@ -366,7 +365,7 @@ UpdateAnimation PROC
     ; Check state
     mov eax, [rbx + ANIMATION_TIMER.state]
     cmp eax, ANIM_STATE_RUNNING
-    jne .update_anim_not_running
+    jne @@update_anim_not_running
     
     ; Add delta to elapsed time
     mov eax, [rbx + ANIMATION_TIMER.elapsed_ms]
@@ -388,29 +387,26 @@ UpdateAnimation PROC
     
     ; Check completion
     cmp eax, 100
-    jl .update_anim_exit
+    jl @@update_anim_exit
     
     ; Animation complete
     mov DWORD PTR [rbx + ANIMATION_TIMER.state], ANIM_STATE_COMPLETE
     mov eax, 100
-    
-.update_anim_exit:
+@@update_anim_exit:
     add rsp, 32
     pop rbx
-    ret
-    
-.update_anim_not_running:
+
+@@update_anim_not_running:
     ; Return current progress even if not running
     mov eax, [rbx + ANIMATION_TIMER.progress_percent]
     add rsp, 32
     pop rbx
-    ret
-    
-.update_anim_invalid:
+
+@@update_anim_invalid:
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 UpdateAnimation ENDP
 
 ;==============================================================================
@@ -423,6 +419,7 @@ ALIGN 16
 ParseAnimationJson PROC
     ; rcx = pointer to JSON string
     push rbx
+
     push r12
     sub rsp, 64
     
@@ -449,9 +446,9 @@ ParseAnimationJson PROC
     
     ; Validate animation limits
     cmp ecx, 10             ; Min 10ms
-    jl .parse_json_error
+    jl @@parse_json_error
     cmp ecx, 10000          ; Max 10 seconds
-    jg .parse_json_error
+    jg @@parse_json_error
     
     ; Look for "easing" field
     mov rsi, r12
@@ -461,18 +458,16 @@ ParseAnimationJson PROC
     ; Simple success return
     mov eax, 1
     add rsp, 64
+
     pop r12
     pop rbx
-    ret
-    
-.parse_json_error:
+@@parse_json_error:
     xor eax, eax
     add rsp, 64
+
     pop r12
     pop rbx
-    ret
-    
-.find_json_field:
+@@find_json_field:
     ; Helper: Find JSON field value
     ; Returns field value in eax, or 0 on error
     xor eax, eax
@@ -510,15 +505,13 @@ StartStyleAnimation PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
-    
-.start_style_error:
+
+@@start_style_error:
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
-    
-.animation_callback:
+
+@@animation_callback:
     ; Callback for style animation frame update
     ret
 StartStyleAnimation ENDP
@@ -532,6 +525,7 @@ ALIGN 16
 UpdateComponentPositions PROC
     ; rcx = pointer to LAYOUT_STRUCT
     push rbx
+
     push r12
     sub rsp, 48
     
@@ -544,16 +538,15 @@ UpdateComponentPositions PROC
     ; Get component count
     mov eax, [rcx + LAYOUT_STRUCT.component_count]
     cmp eax, 0
-    jle .update_pos_error
+    jle @@update_pos_error
     cmp eax, MAX_LAYOUT_COMPONENTS
-    jg .update_pos_error
+    jg @@update_pos_error
     
     ; Process each component
     xor ebx, ebx            ; Component index
-    
-.update_component_loop:
+@@update_component_loop:
     cmp ebx, eax
-    jge .update_pos_success
+    jge @@update_pos_success
     
     ; Calculate component offset
     mov ecx, ebx
@@ -564,22 +557,20 @@ UpdateComponentPositions PROC
     ; (Simplified: in production would evaluate constraint expressions)
     
     inc ebx
-    jmp .update_component_loop
-    
-.update_pos_success:
+    jmp @@update_component_loop
+@@update_pos_success:
     mov eax, 1
     add rsp, 48
+
     pop r12
     pop rbx
-    ret
-    
-.update_pos_error:
+@@update_pos_error:
     xor eax, eax
     add rsp, 48
+
     pop r12
-    pop rbx
-    ret
-UpdateComponentPositions ENDP
+    pop UpdateComponentPositions
+    pop rbx ENDP
 
 ;==============================================================================
 ; FUNCTION: RequestRedraw(component_hwnd: rcx) -> void
@@ -633,13 +624,12 @@ ParseLayoutJson PROC
     mov rax, rbx
     add rsp, 32
     pop rbx
-    ret
-    
-.parse_layout_error:
+
+@@parse_layout_error:
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 ParseLayoutJson ENDP
 
 ;==============================================================================
@@ -677,13 +667,12 @@ ApplyLayoutProperties PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
-    
-.apply_layout_error:
+
+@@apply_layout_error:
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 ApplyLayoutProperties ENDP
 
 ;==============================================================================
@@ -695,6 +684,7 @@ ALIGN 16
 RecalculateLayout PROC
     ; rcx = root component handle
     push rbx
+
     push r12
     sub rsp, 48
     
@@ -715,17 +705,16 @@ RecalculateLayout PROC
     
     mov eax, 1
     add rsp, 48
+
     pop r12
     pop rbx
-    ret
-    
-.recalc_error:
+@@recalc_error:
     xor eax, eax
     add rsp, 48
+
     pop r12
-    pop rbx
-    ret
-RecalculateLayout ENDP
+    pop RecalculateLayout
+    pop rbx ENDP
 
 ;==============================================================================
 ; SYSTEM 2: UI SYSTEM & MODE MANAGEMENT (5 functions, 200 lines)
@@ -782,7 +771,7 @@ ui_create_mode_combo PROC
     mov rax, rbx            ; Return combobox handle
     add rsp, 64
     pop rbx
-    ret
+
 ui_create_mode_combo ENDP
 
 ;==============================================================================
@@ -816,7 +805,7 @@ ui_create_mode_checkboxes PROC
     
     add rsp, 32
     pop rbx
-    ret
+
 ui_create_mode_checkboxes ENDP
 
 ;==============================================================================
@@ -829,6 +818,7 @@ ALIGN 16
 ui_open_file_dialog PROC
     ; rcx = filter string pointer
     push rbx
+
     push r12
     sub rsp, 256 + 32       ; Space for OPENFILENAMEA + local vars
     
@@ -862,17 +852,16 @@ ui_open_file_dialog PROC
     ; Return path pointer
     lea rax, [g_dialog_path]
     add rsp, 256 + 32
+
     pop r12
     pop rbx
-    ret
-    
-.file_dialog_cancel:
+@@file_dialog_cancel:
     xor eax, eax
     add rsp, 256 + 32
+
     pop r12
-    pop rbx
-    ret
-ui_open_file_dialog ENDP
+    pop ui
+    pop rbx_open_file_dialog ENDP
 
 ;==============================================================================
 ; SYSTEM 3: FEATURE HARNESS & ENTERPRISE CONTROLS (18 functions, 700 lines)
@@ -887,6 +876,7 @@ ALIGN 16
 LoadUserFeatureConfiguration PROC
     ; rcx = config file path
     push rbx
+
     push r12
     sub rsp, 128
     
@@ -902,7 +892,7 @@ LoadUserFeatureConfiguration PROC
     call CreateFileA
     
     cmp rax, INVALID_HANDLE_VALUE
-    je .load_config_error
+    je @@load_config_error
     
     mov rbx, rax            ; Save file handle
     
@@ -923,17 +913,16 @@ LoadUserFeatureConfiguration PROC
     
     mov eax, 1
     add rsp, 128
+
     pop r12
     pop rbx
-    ret
-    
-.load_config_error:
+@@load_config_error:
     xor eax, eax
     add rsp, 128
+
     pop r12
-    pop rbx
-    ret
-LoadUserFeatureConfiguration ENDP
+    pop LoadUserFeatureConfiguration
+    pop rbx ENDP
 
 ;==============================================================================
 ; FUNCTION: ValidateFeatureConfiguration() -> success: eax
@@ -953,10 +942,9 @@ ValidateFeatureConfiguration PROC
     
     ; Validate each feature's dependencies
     xor ebx, ebx                    ; Feature index
-    
-.validate_feature_loop:
+@@validate_feature_loop:
     cmp ebx, [g_feature_count]
-    jge .validate_config_success
+    jge @@validate_config_success
     
     ; Get feature entry
     mov ecx, ebx
@@ -967,13 +955,12 @@ ValidateFeatureConfiguration PROC
     ; (Simplified validation)
     
     inc ebx
-    jmp .validate_feature_loop
-    
-.validate_config_success:
+    jmp @@validate_feature_loop
+@@validate_config_success:
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
+
 ValidateFeatureConfiguration ENDP
 
 ;==============================================================================
@@ -989,10 +976,9 @@ ApplyEnterpriseFeaturePolicy PROC
     
     ; Iterate through all features
     xor ebx, ebx
-    
-.apply_policy_loop:
+@@apply_policy_loop:
     cmp ebx, [g_feature_count]
-    jge .apply_policy_success
+    jge @@apply_policy_success
     
     ; Get feature
     mov ecx, ebx
@@ -1006,22 +992,19 @@ ApplyEnterpriseFeaturePolicy PROC
     jz .no_license_policy
     
     ; Apply license-based restriction (placeholder)
-    
-.no_license_policy:
+@@no_license_policy:
     test eax, POLICY_DEPARTMENT_CTRL
     jz .no_dept_policy
     
     ; Apply department control
-    
-.no_dept_policy:
+@@no_dept_policy:
     inc ebx
-    jmp .apply_policy_loop
-    
-.apply_policy_success:
+    jmp @@apply_policy_loop
+@@apply_policy_success:
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
+
 ApplyEnterpriseFeaturePolicy ENDP
 
 ;==============================================================================
@@ -1043,7 +1026,7 @@ InitializeFeaturePerformanceMonitoring PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
+
 InitializeFeaturePerformanceMonitoring ENDP
 
 ;==============================================================================
@@ -1065,7 +1048,7 @@ InitializeFeatureSecurityMonitoring PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
+
 InitializeFeatureSecurityMonitoring ENDP
 
 ;==============================================================================
@@ -1087,7 +1070,7 @@ InitializeFeatureTelemetry PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
+
 InitializeFeatureTelemetry ENDP
 
 ;==============================================================================
@@ -1098,6 +1081,7 @@ InitializeFeatureTelemetry ENDP
 ALIGN 16
 SetupFeatureDependencyResolution PROC
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -1109,10 +1093,10 @@ SetupFeatureDependencyResolution PROC
     
     mov eax, 1
     add rsp, 32
+
     pop r12
-    pop rbx
-    ret
-SetupFeatureDependencyResolution ENDP
+    pop SetupFeatureDependencyResolution
+    pop rbx ENDP
 
 ;==============================================================================
 ; FUNCTION: SetupFeatureConflictDetection() -> success: eax
@@ -1133,7 +1117,7 @@ SetupFeatureConflictDetection PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
+
 SetupFeatureConflictDetection ENDP
 
 ;==============================================================================
@@ -1144,6 +1128,7 @@ SetupFeatureConflictDetection ENDP
 ALIGN 16
 ApplyInitialFeatureConfiguration PROC
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -1169,29 +1154,26 @@ ApplyInitialFeatureConfiguration PROC
     
     ; Initialize each feature
     xor ebx, ebx
-    
-.init_feature_loop:
+@@init_feature_loop:
     cmp ebx, [g_feature_count]
-    jge .apply_init_success
+    jge @@apply_init_success
     
     ; Feature init code here
     inc ebx
-    jmp .init_feature_loop
-    
-.apply_init_success:
+    jmp @@init_feature_loop
+@@apply_init_success:
     mov eax, 1
     add rsp, 32
+
     pop r12
     pop rbx
-    ret
-    
-.apply_init_error:
+@@apply_init_error:
     xor eax, eax
     add rsp, 32
+
     pop r12
-    pop rbx
-    ret
-ApplyInitialFeatureConfiguration ENDP
+    pop ApplyInitialFeatureConfiguration
+    pop rbx ENDP
 
 ;==============================================================================
 ; FUNCTION: LogFeatureHarnessInitialization() -> void
@@ -1215,7 +1197,7 @@ LogFeatureHarnessInitialization PROC
     
     add rsp, 32
     pop rbx
-    ret
+
 LogFeatureHarnessInitialization ENDP
 
 ;==============================================================================
@@ -1246,7 +1228,7 @@ ui_create_feature_toggle_window PROC
     mov rbx, rax
     add rsp, 32
     pop rbx
-    ret
+
 ui_create_feature_toggle_window ENDP
 
 ;==============================================================================
@@ -1271,7 +1253,7 @@ ui_create_feature_tree_view PROC
     
     add rsp, 32
     pop rbx
-    ret
+
 ui_create_feature_tree_view ENDP
 
 ;==============================================================================
@@ -1296,7 +1278,7 @@ ui_create_feature_list_view PROC
     
     add rsp, 32
     pop rbx
-    ret
+
 ui_create_feature_list_view ENDP
 
 ;==============================================================================
@@ -1317,7 +1299,7 @@ ui_populate_feature_tree PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
+
 ui_populate_feature_tree ENDP
 
 ;==============================================================================
@@ -1337,7 +1319,7 @@ ui_setup_feature_ui_event_handlers PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
+
 ui_setup_feature_ui_event_handlers ENDP
 
 ;==============================================================================
@@ -1357,7 +1339,7 @@ ui_apply_feature_states_to_ui PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
+
 ui_apply_feature_states_to_ui ENDP
 
 ;==============================================================================
@@ -1387,19 +1369,18 @@ ml_masm_get_tensor PROC
     mov al, BYTE PTR [rcx]
     mov bl, BYTE PTR [r8]
     cmp al, bl
-    jne .tensor_not_found
+    jne @@tensor_not_found
     
     ; Found tensor - return pointer
     mov rax, OFFSET g_tensor_cache
     add rsp, 32
     pop rbx
-    ret
-    
-.tensor_not_found:
+
+@@tensor_not_found:
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 ml_masm_get_tensor ENDP
 
 ;==============================================================================
@@ -1422,8 +1403,7 @@ ml_masm_get_arch PROC
     mov rbx, rcx
     mov rcx, OFFSET g_model_arch
     mov edx, SIZEOF MODEL_ARCH
-    
-.copy_arch_loop:
+@@copy_arch_loop:
     test edx, edx
     jz .get_arch_success
     mov al, BYTE PTR [rcx]
@@ -1431,19 +1411,17 @@ ml_masm_get_arch PROC
     inc rcx
     inc rbx
     dec edx
-    jmp .copy_arch_loop
-    
-.get_arch_success:
+    jmp @@copy_arch_loop
+@@get_arch_success:
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
-    
-.get_arch_error:
+
+@@get_arch_error:
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 ml_masm_get_arch ENDP
 
 ;==============================================================================
@@ -1476,13 +1454,12 @@ rawr1024_build_model PROC
     mov rax, rbx
     add rsp, 32
     pop rbx
-    ret
-    
-.build_model_error:
+
+@@build_model_error:
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 rawr1024_build_model ENDP
 
 ;==============================================================================
@@ -1503,15 +1480,14 @@ rawr1024_quantize_model PROC
     
     ; Check quant bits
     cmp edx, 4
-    je .quantize_valid
+    je @@quantize_valid
     cmp edx, 8
-    je .quantize_valid
+    je @@quantize_valid
     cmp edx, 16
-    je .quantize_valid
+    je @@quantize_valid
     
-    jmp .quantize_error
-    
-.quantize_valid:
+    jmp @@quantize_error
+@@quantize_valid:
     ; Apply quantization
     mov rbx, rcx
     mov DWORD PTR [rbx + 4], edx  ; Store quant bits
@@ -1519,13 +1495,12 @@ rawr1024_quantize_model PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
-    
-.quantize_error:
+
+@@quantize_error:
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 rawr1024_quantize_model ENDP
 
 ;==============================================================================
@@ -1538,6 +1513,7 @@ ALIGN 16
 rawr1024_direct_load PROC
     ; rcx = GGUF file path
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -1553,7 +1529,7 @@ rawr1024_direct_load PROC
     call CreateFileA
     
     cmp rax, INVALID_HANDLE_VALUE
-    je .direct_load_error
+    je @@direct_load_error
     
     mov rbx, rax            ; Save file handle
     
@@ -1580,21 +1556,19 @@ rawr1024_direct_load PROC
     
     mov rax, rbx
     add rsp, 32
+
     pop r12
     pop rbx
-    ret
-    
-.direct_load_close_error:
+@@direct_load_close_error:
     mov rcx, rbx
     call CloseHandle
-    
-.direct_load_error:
+@@direct_load_error:
     xor eax, eax
     add rsp, 32
+
     pop r12
-    pop rbx
-    ret
-rawr1024_direct_load ENDP
+    pop rawr1024
+    pop rbx_direct_load ENDP
 
 ;==============================================================================
 ; STRING AND CLASS NAME DEFINITIONS
@@ -1621,3 +1595,8 @@ rawr1024_direct_load ENDP
 ;==============================================================================
 
 END
+
+
+
+
+

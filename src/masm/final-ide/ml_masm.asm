@@ -133,6 +133,7 @@ PUBLIC ml_masm_init
 ALIGN 16
 ml_masm_init PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 40h
@@ -281,10 +282,11 @@ error_init:
     
 done_init:
     add rsp, 40h
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 ml_masm_init ENDP
 
 ;==========================================================================
@@ -339,7 +341,7 @@ no_model:
 done_label:
     add rsp, 30h
     pop rbx
-    ret
+
 ml_masm_inference ENDP
 
 ;==========================================================================
@@ -351,6 +353,7 @@ PUBLIC ml_masm_get_response
 ALIGN 16
 ml_masm_get_response PROC
     push rbx
+
     push rsi
     push rdi
     
@@ -366,11 +369,11 @@ ml_masm_get_response PROC
     ; Return length
     mov rcx, rbx
     call strlen_simple
-    
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 ml_masm_get_response ENDP
 
 ;==========================================================================
@@ -382,6 +385,7 @@ PUBLIC ml_masm_get_tensor
 ALIGN 16
 ml_masm_get_tensor PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -414,17 +418,18 @@ mgt_loop:
 mgt_found:
     mov rax, rbx
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
-    
+
 mgt_not_found:
     add rsp, 32
-    pop rdi
-    pop rsi
-    pop rbx
-    xor eax, eax
+
+    pop rsi pop rdi
+
+    pop xor
+    pop rbx eax, eax
     ret
 ml_masm_get_tensor ENDP
 
@@ -514,6 +519,7 @@ ml_masm_free ENDP
 ;==========================================================================
 parse_gguf_header PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 40h
@@ -576,10 +582,11 @@ error_label_header:
     
 done_label_header:
     add rsp, 40h
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 parse_gguf_header ENDP
 
 ;==========================================================================
@@ -590,8 +597,10 @@ parse_gguf_header ENDP
 ;==========================================================================
 parse_gguf_metadata_kv PROC
     push rbx
+
     push rsi
     push rdi
+
     push r8
     sub rsp, 64h    ; space for key buffer and work
     
@@ -719,12 +728,13 @@ kv_error:
     
 kv_done:
     add rsp, 64h
-    pop r8
-    pop rdi
+
+    pop rdi pop r8
+
+
     pop rsi
-    pop rbx
-    ret
-parse_gguf_metadata_kv ENDP
+    pop parse
+    pop rbx_gguf_metadata_kv ENDP
 
 .data
 ; String constants for KV key matching
@@ -739,7 +749,7 @@ kv_name_seqlen      BYTE "llama.context_length", 0
 ; Returns: 1 if equal, 0 otherwise
 kv_streq PROC
     push rsi
-kse_loop:
+    push kse_loop:
     mov al, BYTE PTR [rcx]
     mov sil, BYTE PTR [rdx]
     cmp al, sil
@@ -752,11 +762,11 @@ kse_loop:
 kse_match:
     mov eax, 1
     pop rsi
-    ret
+
 kse_fail:
     xor eax, eax
     pop rsi
-    ret
+
 kv_streq ENDP
 
 ;==========================================================================
@@ -766,8 +776,10 @@ kv_streq ENDP
 ;==========================================================================
 populate_tensor_cache PROC
     push rbx
+
     push rsi
     push rdi
+
     push r8
     sub rsp, 32
     
@@ -827,22 +839,23 @@ ptc_loop:
 ptc_done:
     mov g_tensor_count, ecx     ; Update global tensor count
     add rsp, 32
-    pop r8
-    pop rdi
+
+    pop rdi pop r8
+
+
     pop rsi
-    pop rbx
-    ret
-    
-ptc_error:
+    pop ptc
+    pop rbx_error:
     xor ecx, ecx
     mov g_tensor_count, 0
     add rsp, 32
-    pop r8
-    pop rdi
+
+    pop rdi pop r8
+
+
     pop rsi
-    pop rbx
-    ret
-populate_tensor_cache ENDP
+    populate
+    pop rbx_tensor_cache ENDP
 
 ;==========================================================================
 ; INTERNAL: set_last_error(msg: rcx)
@@ -850,16 +863,15 @@ populate_tensor_cache ENDP
 ;==========================================================================
 set_last_error PROC
     push rsi
+
     push rdi
-    
-    mov rsi, rcx
+    push mov rsi, rcx
     lea rdi, g_model_state.last_error
     call strcpy_simple
-    
+
     pop rdi
-    pop rsi
-    ret
-set_last_error ENDP
+    pop set
+    pop rsi_last_error ENDP
 
 ;==========================================================================
 ; INTERNAL: strcpy_simple(src: rsi, dst: rdi)
@@ -867,8 +879,7 @@ set_last_error ENDP
 ;==========================================================================
 strcpy_simple PROC
     push rax
-    
-copy_loop_simple:
+    push copy_loop_simple:
     mov al, BYTE PTR [rsi]
     mov BYTE PTR [rdi], al
     test al, al
@@ -879,7 +890,7 @@ copy_loop_simple:
     
 done_simple:
     pop rax
-    ret
+
 strcpy_simple ENDP
 
 ;==========================================================================
@@ -888,9 +899,9 @@ strcpy_simple ENDP
 ;==========================================================================
 strcpy_limited PROC
     push rax
+
     push rbx
-    
-    xor rbx, rbx
+    push xor rbx, rbx
     
 copy_loop:
     cmp rbx, rcx
@@ -912,11 +923,10 @@ done_strcpy:
     
 null_term:
     mov BYTE PTR [rdi + rbx], 0
-    
+
     pop rbx
-    pop rax
-    ret
-strcpy_limited ENDP
+    pop strcpy
+    pop rax_limited ENDP
 
 ;==========================================================================
 ; INTERNAL: strlen_simple(str: rcx)
@@ -924,8 +934,7 @@ strcpy_limited ENDP
 ;==========================================================================
 strlen_simple PROC
     push rbx
-    
-    xor rbx, rbx
+    push xor rbx, rbx
     
 len_loop:
     mov al, BYTE PTR [rcx + rbx]
@@ -937,7 +946,7 @@ len_loop:
 done_strlen:
     mov rax, rbx
     pop rbx
-    ret
+
 strlen_simple ENDP
 
 ;==========================================================================
@@ -945,7 +954,7 @@ strlen_simple ENDP
 ;==========================================================================
 strncmp_limited PROC
     push rbx
-    xor rbx, rbx
+    push xor rbx, rbx
 cmp_loop:
     cmp rbx, r8
     jge cmp_done
@@ -960,11 +969,11 @@ cmp_loop:
 cmp_noteq:
     mov eax, 1
     pop rbx
-    ret
+
 cmp_done:
     xor eax, eax
     pop rbx
-    ret
+
 strncmp_limited ENDP
 
 ; External Win32 APIs
@@ -976,3 +985,8 @@ EXTERN UnmapViewOfFile:PROC
 EXTERN CloseHandle:PROC
 
 END
+
+
+
+
+

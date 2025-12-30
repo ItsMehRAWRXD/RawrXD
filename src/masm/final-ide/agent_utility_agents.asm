@@ -65,7 +65,7 @@ agent_code_sign_exe PROC
     
     add rsp, 32
     pop rsi
-    ret
+
 agent_code_sign_exe ENDP
 
 ;==========================================================================
@@ -84,3 +84,8 @@ agent_telemetry_init PROC
 agent_telemetry_init ENDP
 
 END
+
+
+
+
+

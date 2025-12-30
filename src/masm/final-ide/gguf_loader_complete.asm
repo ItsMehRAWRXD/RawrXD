@@ -128,7 +128,6 @@ gguf_loader_init PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
 
 gguf_loader_init ENDP
 
@@ -140,6 +139,7 @@ ALIGN 16
 gguf_load_file PROC
 
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -209,10 +209,10 @@ load_version_mismatch:
 
 load_done:
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
 
 gguf_load_file ENDP
 
@@ -290,7 +290,6 @@ gguf_unload PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
 
 gguf_unload ENDP
 
@@ -329,7 +328,6 @@ inference_engine_init PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
 
 inference_engine_init ENDP
 
@@ -341,6 +339,7 @@ ALIGN 16
 inference_forward_pass PROC
 
     push rbx
+
     push rsi
     sub rsp, 32
 
@@ -360,11 +359,10 @@ inference_forward_pass PROC
     mov rax, [g_inference_state.output_logits]
 
     add rsp, 32
-    pop rsi
-    pop rbx
-    ret
 
-inference_forward_pass ENDP
+    pop rsi
+    pop inference
+    pop rbx_forward_pass ENDP
 
 ;==========================================================================
 ; inference_sample_token(logits: RCX, vocab_size: EDX) -> EAX (token_id)
@@ -409,3 +407,8 @@ model_quantize_tensor PROC
 model_quantize_tensor ENDP
 
 END
+
+
+
+
+

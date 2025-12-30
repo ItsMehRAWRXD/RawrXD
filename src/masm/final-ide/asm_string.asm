@@ -71,7 +71,7 @@ create_from_cstr_null:
 create_from_cstr_done:
     add rsp, 32
     pop rbx
-    ret
+
 asm_str_create_from_cstr ENDP
 
 ;=====================================================================
@@ -83,6 +83,7 @@ asm_str_create_from_cstr ENDP
 ALIGN 16
 StringFind PROC
     push rbx
+
     push rsi
     push rdi
     
@@ -135,10 +136,11 @@ find_not_found:
     xor rax, rax
     
 find_done:
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 StringFind ENDP
 
 ;=====================================================================
@@ -185,6 +187,7 @@ ALIGN 16
 asm_str_create PROC
 
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -263,11 +266,10 @@ str_create_fail:
     
 str_create_done:
     add rsp, 32
-    pop r12
-    pop rbx
-    ret
 
-asm_str_create ENDP
+    pop r12
+    pop asm
+    pop rbx_str_create ENDP
 
 ;=====================================================================
 ; asm_str_destroy(handle: rcx) -> void
@@ -339,6 +341,7 @@ ALIGN 16
 asm_str_concat PROC
 
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -413,11 +416,10 @@ concat_fail:
     
 concat_done:
     add rsp, 32
-    pop r12
-    pop rbx
-    ret
 
-asm_str_concat ENDP
+    pop r12
+    pop asm
+    pop rbx_str_concat ENDP
 
 ;=====================================================================
 ; asm_str_compare(str1: rcx, str2: rdx) -> rax
@@ -491,7 +493,6 @@ str_cmp_null2:
 str_cmp_done:
     add rsp, 32
     pop rbx
-    ret
 
 asm_str_compare ENDP
 
@@ -508,6 +509,7 @@ ALIGN 16
 asm_str_find PROC
 
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -566,11 +568,10 @@ str_find_notfound:
     
 str_find_done:
     add rsp, 32
-    pop r12
-    pop rbx
-    ret
 
-asm_str_find ENDP
+    pop r12
+    pop asm
+    pop rbx_str_find ENDP
 
 ;=====================================================================
 ; asm_str_substring(str: rcx, start: rdx, length: r8) -> rax
@@ -583,6 +584,7 @@ ALIGN 16
 asm_str_substring PROC
 
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -647,11 +649,10 @@ substring_fail:
     
 substring_done:
     add rsp, 32
-    pop r12
-    pop rbx
-    ret
 
-asm_str_substring ENDP
+    pop r12
+    pop asm
+    pop rbx_str_substring ENDP
 
 ;=====================================================================
 ; asm_str_to_utf16(utf8_handle: rcx) -> rax
@@ -666,8 +667,10 @@ ALIGN 16
 asm_str_to_utf16 PROC
 
     push rbx
+
     push r12
     push r13
+
     push r14
     sub rsp, 48
     
@@ -721,13 +724,13 @@ utf16_fail:
     
 utf16_ret:
     add rsp, 48
-    pop r14
-    pop r13
-    pop r12
-    pop rbx
-    ret
 
-asm_str_to_utf16 ENDP
+    pop r13 pop r14
+
+
+    pop r12
+    pop asm
+    pop rbx_str_to_utf16 ENDP
 
 ;=====================================================================
 ; asm_str_from_utf16(utf16_ptr: rcx) -> rax
@@ -742,8 +745,10 @@ ALIGN 16
 asm_str_from_utf16 PROC
 
     push rbx
+
     push r12
     push r13
+
     push r14
     sub rsp, 48
     
@@ -805,13 +810,13 @@ utf8_from_utf16_fail:
     
 utf8_from_utf16_ret:
     add rsp, 48
-    pop r14
-    pop r13
-    pop r12
-    pop rbx
-    ret
 
-asm_str_from_utf16 ENDP
+    pop r13 pop r14
+
+
+    pop r12
+    pop asm
+    pop rbx_str_from_utf16 ENDP
 
 ;=====================================================================
 ; asm_str_format(format: rcx, args_ptr: rdx, args_count: r8) -> rax
@@ -849,3 +854,8 @@ asm_str_data PROC
 asm_str_data ENDP
 
 END
+
+
+
+
+

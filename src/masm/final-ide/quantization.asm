@@ -73,8 +73,10 @@ QUANTIZATION_CONTEXT ENDS
 ;==============================================================================
 RawrQ_Quantize_Int4 PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
     sub rsp, 256
@@ -184,12 +186,14 @@ pack_done_scalar:
 quant_int4_done:
     mov eax, 1
     add rsp, 256
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 RawrQ_Quantize_Int4 ENDP
 
 ;==============================================================================
@@ -198,8 +202,10 @@ RawrQ_Quantize_Int4 ENDP
 ;==============================================================================
 RawrQ_Quantize_Int8 PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     sub rsp, 256
     
@@ -264,12 +270,13 @@ quant_int8_scalar_fallback:
 quant_int8_done:
     mov eax, 1
     add rsp, 256
-    pop r12
-    pop rdi
+
+    pop rdi pop r12
+
+
     pop rsi
-    pop rbx
-    ret
-RawrQ_Quantize_Int8 ENDP
+    pop RawrQ
+    pop rbx_Quantize_Int8 ENDP
 
 ;==============================================================================
 ; PUBLIC: RawrZ_AVX512_Quantize(context: rcx) -> eax
@@ -279,10 +286,13 @@ PUBLIC RawrZ_AVX512_Quantize
 ALIGN 16
 RawrZ_AVX512_Quantize PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
+
     push r14
     push r15
     sub rsp, 512
@@ -443,14 +453,17 @@ quant_rawrz_done:
     
     mov eax, 1
     add rsp, 512
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 RawrZ_AVX512_Quantize ENDP
 
 ;==============================================================================
@@ -461,10 +474,13 @@ PUBLIC RawrX_AVX512_Quantize
 ALIGN 16
 RawrX_AVX512_Quantize PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
+
     push r14
     push r15
     sub rsp, 512
@@ -552,14 +568,17 @@ quant_rawrx_done:
     
     mov eax, 1
     add rsp, 512
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 RawrX_AVX512_Quantize ENDP
 
 ;==============================================================================
@@ -570,6 +589,7 @@ PUBLIC QuantizeModel
 ALIGN 16
 QuantizeModel PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 256
@@ -635,10 +655,11 @@ quant_model_fail:
     
 quant_model_exit:
     add rsp, 256
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 QuantizeModel ENDP
 
 .data
@@ -651,4 +672,9 @@ QuantizeModel ENDP
     fltScaleDiv      REAL4 255.0
 
 END
+
+
+
+
+
 

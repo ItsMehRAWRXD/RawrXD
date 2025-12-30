@@ -41,6 +41,7 @@ PUBLIC mmap_close
 
 masm_mmap_open PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -127,10 +128,11 @@ fail:
     xor rax, rax
 mm_exit:
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 masm_mmap_open ENDP
 
 ; Thin wrapper to match unified bridge extern
@@ -162,3 +164,8 @@ mmap_close_done:
 mmap_close ENDP
 
 END
+
+
+
+
+

@@ -106,7 +106,8 @@ RegisterCorePanes PROC USES rbx
     lea     rdx, szExplorer
     mov     r8, OFFSET CreateExplorerPane
     mov     r9, OFFSET UpdateExplorerPane
-    push    OFFSET DestroyExplorerPane
+    push OFFSET
+    push DestroyExplorerPane
     sub     rsp, 32
     call    PaneSystem_RegisterPane
     add     rsp, 40
@@ -116,7 +117,8 @@ RegisterCorePanes PROC USES rbx
     lea     rdx, szEditor
     mov     r8, OFFSET CreateEditorPane
     mov     r9, OFFSET UpdateEditorPane
-    push    OFFSET DestroyEditorPane
+    push OFFSET
+    push DestroyEditorPane
     sub     rsp, 32
     call    PaneSystem_RegisterPane
     add     rsp, 40
@@ -126,7 +128,8 @@ RegisterCorePanes PROC USES rbx
     lea     rdx, szTerminal
     mov     r8, OFFSET CreateTerminalPane
     mov     r9, OFFSET UpdateTerminalPane
-    push    OFFSET DestroyTerminalPane
+    push OFFSET
+    push DestroyTerminalPane
     sub     rsp, 32
     call    PaneSystem_RegisterPane
     add     rsp, 40
@@ -136,7 +139,8 @@ RegisterCorePanes PROC USES rbx
     lea     rdx, szChat
     mov     r8, OFFSET CreateChatPane
     mov     r9, OFFSET UpdateChatPane
-    push    OFFSET DestroyChatPane
+    push OFFSET
+    push DestroyChatPane
     sub     rsp, 32
     call    PaneSystem_RegisterPane
     add     rsp, 40
@@ -146,7 +150,8 @@ RegisterCorePanes PROC USES rbx
     lea     rdx, szTabs
     mov     r8, OFFSET CreateTabsPane
     mov     r9, OFFSET UpdateTabsPane
-    push    OFFSET DestroyTabsPane
+    push OFFSET
+    push DestroyTabsPane
     sub     rsp, 32
     call    PaneSystem_RegisterPane
     add     rsp, 40
@@ -156,7 +161,8 @@ RegisterCorePanes PROC USES rbx
     lea     rdx, szStatusBar
     mov     r8, OFFSET CreateStatusPane
     mov     r9, OFFSET UpdateStatusPane
-    push    OFFSET DestroyStatusPane
+    push OFFSET
+    push DestroyStatusPane
     sub     rsp, 32
     call    PaneSystem_RegisterPane
     add     rsp, 40
@@ -321,15 +327,16 @@ create_pane_window:
     test    rax, rax
     jz      next_pane
     
-    push    rcx
-    push    rdi
-    mov     rcx, rdi      ; Pass pane structure
+    push rcx
+
+    push rdi
+    push mov     rcx, rdi      ; Pass pane structure
     sub     rsp, 32
     call    rax
     add     rsp, 32
-    pop     rdi
-    pop     rcx
-    
+
+    pop rcx pop rdi
+
     ; Store returned window handle
     mov     (IDE_PANE PTR [rdi]).hWnd, rax
     
@@ -365,8 +372,9 @@ PaneSystem_LoadPlugins ENDP
 ;==============================================================================
 ALIGN 16
 PaneSystem_HandleResize PROC
-    push    rbx
-    push    rsi
+    push rbx
+
+    push rsi
     push    rdi
     sub     rsp, 32
     
@@ -403,10 +411,11 @@ next_resize:
     
 resize_done:
     add     rsp, 32
-    pop     rdi
-    pop     rsi
-    pop     rbx
-    ret
+
+    pop rsi pop rdi
+
+    pop rbx
+
 PaneSystem_HandleResize ENDP
 
 ;==============================================================================
@@ -420,8 +429,8 @@ EXTERN hwnd_chat:QWORD
 EXTERN hwnd_status:QWORD
 
 CreateExplorerPane PROC
-    push    rbp
-    mov     rbp, rsp
+    push rbp
+    push mov     rbp, rsp
     sub     rsp, 32
     call    ide_init_file_tree
     mov     rax, hwnd_file_tree
@@ -435,8 +444,8 @@ CreateEditorPane PROC
 CreateEditorPane ENDP
 
 CreateTerminalPane PROC
-    push    rbp
-    mov     rbp, rsp
+    push rbp
+    push mov     rbp, rsp
     sub     rsp, 32
     mov     ecx, 1 ; PowerShell
     call    terminal_start_shell
@@ -446,8 +455,8 @@ CreateTerminalPane PROC
 CreateTerminalPane ENDP
 
 CreateChatPane PROC
-    push    rbp
-    mov     rbp, rsp
+    push rbp
+    push mov     rbp, rsp
     sub     rsp, 32
     call    agent_chat_init
     mov     rax, hwnd_chat
@@ -548,3 +557,7 @@ pane_not_found:
 PaneSystem_GetPane ENDP
 
 END
+
+
+
+

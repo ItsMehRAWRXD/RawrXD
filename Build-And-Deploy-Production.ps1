@@ -127,6 +127,29 @@ if ($vcDlls) {
     Write-Warning "  ! No VC runtime DLLs found - may need manual VC redist install"
 }
 
+# Ship the DirectX shader compiler binaries so the IDE never needs a separate install.
+# Use the correct environment variable syntax for ProgramFiles(x86)
+$dxRedistDir = Join-Path ${env:ProgramFiles(x86)} "Windows Kits\10\Redist\D3D\x64"
+$dxDlls = @("dxcompiler.dll","dxil.dll")
+if (Test-Path $dxRedistDir) {
+    $dxDeployed = @()
+    foreach ($dll in $dxDlls) {
+        $source = Join-Path $dxRedistDir $dll
+        if (Test-Path $source) {
+            Copy-Item $source -Destination "$BuildDir\bin\Release" -Force
+            $dxDeployed += $dll
+        } else {
+            Write-Warning "  ! Missing DirectX shader DLL: $dll"
+        }
+    }
+    if ($dxDeployed.Count) {
+        Write-Host "  ✓ DirectX shader compiler delivered:" -ForegroundColor Green
+        $dxDeployed | ForEach-Object { Write-Host "    - $_" -ForegroundColor Gray }
+    }
+} else {
+    Write-Warning "  ! Windows Kits DirectX redist not found at $dxRedistDir"
+}
+
 # Step 6: Test Launch
 Write-Host ""
 Write-Host "[6/6] Testing application launch..." -ForegroundColor Yellow

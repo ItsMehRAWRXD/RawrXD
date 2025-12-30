@@ -422,7 +422,7 @@ SEARCH_RESULT ENDS
 ;==========================================================================
 rawr1024_init_engine PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     ; Initialize engine states
@@ -478,7 +478,7 @@ rawr1024_init_engine PROC
     xor eax, eax
     add rsp, 32
     pop rbp
-    ret
+
 rawr1024_init_engine ENDP
 
 ;==========================================================================
@@ -486,7 +486,7 @@ rawr1024_init_engine ENDP
 ;==========================================================================
 rawr1024_load_model PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 48
     
     ; rcx = model_path, rdx = model_size, r8 = engine_id
@@ -538,7 +538,7 @@ rawr1024_load_model PROC
     xor eax, eax
     add rsp, 48
     pop rbp
-    ret
+
 rawr1024_load_model ENDP
 
 ;==========================================================================
@@ -546,7 +546,7 @@ rawr1024_load_model ENDP
 ;==========================================================================
 rawr1024_quantize_model PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     ; rcx = quant_format, rdx = input_buffer, r8 = output_buffer, r9 = size
@@ -585,7 +585,7 @@ rawr1024_quantize_model PROC
     xor eax, eax
     add rsp, 32
     pop rbp
-    ret
+
 rawr1024_quantize_model ENDP
 
 ;==========================================================================
@@ -593,7 +593,7 @@ rawr1024_quantize_model ENDP
 ;==========================================================================
 rawr1024_quantum_encrypt PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     ; rcx = data_buffer, rdx = data_size, r8 = key_id
@@ -635,7 +635,7 @@ rawr1024_quantum_encrypt PROC
     xor eax, eax
     add rsp, 32
     pop rbp
-    ret
+
 rawr1024_quantum_encrypt ENDP
 
 ;==========================================================================
@@ -643,7 +643,7 @@ rawr1024_quantum_encrypt ENDP
 ;==========================================================================
 rawr1024_beacon_sync PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     ; rcx = node_id, rdx = model_hash
@@ -673,7 +673,7 @@ rawr1024_beacon_sync PROC
     xor eax, eax
     add rsp, 32
     pop rbp
-    ret
+
 rawr1024_beacon_sync ENDP
 
 ;==========================================================================
@@ -681,7 +681,7 @@ rawr1024_beacon_sync ENDP
 ;==========================================================================
 rawr1024_sliding_door_load PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     ; rcx = door_id, rdx = offset, r8 = size
@@ -704,7 +704,7 @@ rawr1024_sliding_door_load PROC
     xor eax, eax
     add rsp, 32
     pop rbp
-    ret
+
 rawr1024_sliding_door_load ENDP
 
 ;==========================================================================
@@ -712,7 +712,7 @@ rawr1024_sliding_door_load ENDP
 ;==========================================================================
 rawr1024_avx512_accelerate PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     ; rcx = input_data, rdx = output_data, r8 = block_count
@@ -747,7 +747,7 @@ rawr1024_avx512_accelerate PROC
     xor eax, eax
     add rsp, 32
     pop rbp
-    ret
+
 rawr1024_avx512_accelerate ENDP
 
 ;==========================================================================
@@ -783,7 +783,7 @@ rawr1024_get_performance_metrics ENDP
 ;==========================================================================
 rawr1024_cleanup PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     ; Set all engines to STOPPING
@@ -823,7 +823,7 @@ rawr1024_cleanup PROC
     xor eax, eax
     add rsp, 32
     pop rbp
-    ret
+
 rawr1024_cleanup ENDP
 
 END,30,31
@@ -854,6 +854,7 @@ END,30,31
 ; Returns: EAX = 0 on success, error code on failure
 Rawr1024_Initialize PROC
     push rbx
+
     push rsi
     sub rsp, 20h
     
@@ -901,16 +902,17 @@ Rawr1024_Initialize PROC
     ; Cleanup on error
     :
     add rsp, 20h
+
     pop rsi
-    pop rbx
-    ret
-Rawr1024_Initialize ENDP
+    pop Rawr1024
+    pop rbx_Initialize ENDP
 
 ; Rawr1024_LoadModel - Load model with dual engines
 ; RCX = model file path
 ; Returns: EAX = 0 on success
 Rawr1024_LoadModel PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 20h
@@ -944,10 +946,11 @@ Rawr1024_LoadModel PROC
     mov eax, -1
     :
     add rsp, 20h
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 Rawr1024_LoadModel ENDP
 
 ; FindIdleEngine - Find available engine
@@ -958,14 +961,13 @@ FindIdleEngine PROC
     jge 
     
     push rax
-    imul eax, sizeof DUAL_ENGINE_STATE
+    push imul eax, sizeof DUAL_ENGINE_STATE
     lea rcx, g_dual_engines
     add rcx, rax
     
     cmp [rcx].DUAL_ENGINE_STATE.status, ENGINE_STATUS_IDLE
-    pop rax
-    je 
-    
+
+    pop je rax
     inc eax
     jmp 
     :
@@ -978,6 +980,7 @@ FindIdleEngine ENDP
 ; ECX = engine index, RDX = file path
 Engine_StartLoad PROC
     push rbx
+
     push rsi
     sub rsp, 28h
     
@@ -1062,10 +1065,10 @@ engine_load_fail:
 engine_load_exit:
     
     add rsp, 28h
+
     pop rsi
-    pop rbx
-    ret
-Engine_StartLoad ENDP
+    pop Engine
+    pop rbx_StartLoad ENDP
 
 ; Quantum_Initialize - Initialize quantum crypto
 Quantum_Initialize PROC
@@ -1140,7 +1143,7 @@ Kyber_KeyGen PROC
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 Kyber_KeyGen ENDP
 
 Dilithium_KeyGen PROC
@@ -1166,7 +1169,7 @@ Dilithium_KeyGen PROC
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 Dilithium_KeyGen ENDP
 
 CheckAVX512Support PROC
@@ -1181,10 +1184,10 @@ CheckAVX512Support PROC
     setc al
     movzx eax, al
     
-    pop rbx
-    ret
-CheckAVX512Support ENDP
+    pop ENDP
 
+
+    pop CheckAVX512Support rbx
 ; External functions
 EXTERN InitializeCriticalSection:PROC
 EXTERN EnterCriticalSection:PROC
@@ -1346,10 +1349,13 @@ PUBLIC rawr1024_build_model
 ALIGN 16
 rawr1024_build_model PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
+
     push r14
     push r15
     sub rsp, 512
@@ -1403,14 +1409,17 @@ build_config_failed:
     
 build_done:
     add rsp, 512
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 rawr1024_build_model ENDP
 
 ;==========================================================================
@@ -1420,10 +1429,13 @@ PUBLIC rawr1024_quantize_model
 ALIGN 16
 rawr1024_quantize_model PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
+
     push r14
     push r15
     sub rsp, 1024
@@ -1497,14 +1509,17 @@ quant_complete:
     
 quant_done:
     add rsp, 1024
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 rawr1024_quantize_model ENDP
 
 ;==========================================================================
@@ -1512,10 +1527,13 @@ rawr1024_quantize_model ENDP
 ;==========================================================================
 RawrQ_AVX512_Quantize PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
+
     push r14
     push r15
     sub rsp, 2048
@@ -1581,14 +1599,17 @@ quant_done:
     vzeroupper
     
     add rsp, 2048
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 RawrQ_AVX512_Quantize ENDP
 
 ;==========================================================================
@@ -1596,10 +1617,13 @@ RawrQ_AVX512_Quantize ENDP
 ;==========================================================================
 RawrZ_AVX512_Quantize PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
+
     push r14
     push r15
     sub rsp, 2048
@@ -1673,14 +1697,17 @@ quantz_done:
     vzeroupper
     
     add rsp, 2048
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 RawrZ_AVX512_Quantize ENDP
 
 ;==========================================================================
@@ -1688,10 +1715,13 @@ RawrZ_AVX512_Quantize ENDP
 ;==========================================================================
 RawrX_AVX512_Quantize PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
+
     push r14
     push r15
     sub rsp, 2048
@@ -1747,14 +1777,17 @@ quantx_done:
     vzeroupper
     
     add rsp, 2048
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 RawrX_AVX512_Quantize ENDP
 
 ;==========================================================================
@@ -1764,10 +1797,13 @@ PUBLIC rawr1024_encrypt_model
 ALIGN 16
 rawr1024_encrypt_model PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
+
     push r14
     push r15
     sub rsp, 2048
@@ -1814,14 +1850,17 @@ encrypt_crypto_failed:
     
 encrypt_done:
     add rsp, 2048
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 rawr1024_encrypt_model ENDP
 
 ;==========================================================================
@@ -1831,10 +1870,13 @@ PUBLIC rawr1024_direct_load
 ALIGN 16
 rawr1024_direct_load PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
+
     push r14
     push r15
     sub rsp, 4096
@@ -1887,14 +1929,17 @@ load_mapping_failed:
     
 load_done:
     add rsp, 4096
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 rawr1024_direct_load ENDP
 
 ;==========================================================================
@@ -1904,10 +1949,13 @@ PUBLIC rawr1024_beacon_sync
 ALIGN 16
 rawr1024_beacon_sync PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
+
     push r14
     push r15
     sub rsp, 2048
@@ -1951,14 +1999,17 @@ beacon_network_failed:
     
 beacon_done:
     add rsp, 2048
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 rawr1024_beacon_sync ENDP
 
 ;==========================================================================
@@ -1966,6 +2017,7 @@ rawr1024_beacon_sync ENDP
 ;==========================================================================
 InitializeQuantumCrypto PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 256
@@ -2015,10 +2067,11 @@ crypto_dilithium_failed:
     
 crypto_done:
     add rsp, 256
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 InitializeQuantumCrypto ENDP
 
 ;==========================================================================
@@ -2026,6 +2079,7 @@ InitializeQuantumCrypto ENDP
 ;==========================================================================
 GenerateKyberKeypair PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -2057,10 +2111,11 @@ kyber_fail:
     
 kyber_done:
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 GenerateKyberKeypair ENDP
 
 ;==========================================================================
@@ -2068,6 +2123,7 @@ GenerateKyberKeypair ENDP
 ;==========================================================================
 GenerateDilithiumKeypair PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -2099,10 +2155,11 @@ dilithium_fail:
     
 dilithium_done:
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 GenerateDilithiumKeypair ENDP
 
 ;==========================================================================
@@ -2121,7 +2178,7 @@ GenerateQuantumSessionKey PROC
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 GenerateQuantumSessionKey ENDP
 
 ;==========================================================================
@@ -2129,6 +2186,7 @@ GenerateQuantumSessionKey ENDP
 ;==========================================================================
 ApplyKyberEncryption PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -2156,10 +2214,11 @@ encrypt_loop:
 encrypt_done:
     xor eax, eax
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 ApplyKyberEncryption ENDP
 
 ;==========================================================================
@@ -2167,6 +2226,7 @@ ApplyKyberEncryption ENDP
 ;==========================================================================
 ApplyDilithiumSignature PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -2179,10 +2239,11 @@ ApplyDilithiumSignature PROC
     
     xor eax, eax
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 ApplyDilithiumSignature ENDP
 
 ;==========================================================================
@@ -2231,7 +2292,7 @@ wsa_fail:
 wsa_done:
     add rsp, 32
     pop rbx
-    ret
+
 InitializeBeaconNetwork ENDP
 
 ;==========================================================================
@@ -2259,7 +2320,7 @@ StartBeaconBroadcasting PROC
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 StartBeaconBroadcasting ENDP
 
 ;==========================================================================
@@ -2287,7 +2348,7 @@ ListenForBeacons PROC
     xor eax, eax
     add rsp, 64
     pop rbx
-    ret
+
 ListenForBeacons ENDP
 
 ;==========================================================================
@@ -2322,7 +2383,7 @@ conn_done:
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 EstablishSecureBeaconConnections ENDP
 
 ;==========================================================================
@@ -2342,7 +2403,7 @@ SynchronizeModelChunks PROC
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 SynchronizeModelChunks ENDP
 
 ;==========================================================================
@@ -2358,7 +2419,7 @@ VerifyDistributedIntegrity PROC
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 VerifyDistributedIntegrity ENDP
 
 ;==========================================================================
@@ -2366,6 +2427,7 @@ VerifyDistributedIntegrity ENDP
 ;==========================================================================
 SHA3_512_Hash PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 128
@@ -2403,10 +2465,11 @@ hash_done:
     
     xor eax, eax        ; Success
     add rsp, 128
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 SHA3_512_Hash ENDP
 
 ;==========================================================================
@@ -2414,8 +2477,10 @@ SHA3_512_Hash ENDP
 ;==========================================================================
 StartDualMotorLoading PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
     sub rsp, 128
@@ -2445,12 +2510,14 @@ StartDualMotorLoading PROC
     
     xor eax, eax
     add rsp, 128
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 StartDualMotorLoading ENDP
 
 ;==========================================================================
@@ -2458,8 +2525,10 @@ StartDualMotorLoading ENDP
 ;==========================================================================
 InitializeSlidingDoors PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     sub rsp, 64
     
@@ -2500,20 +2569,23 @@ doors_done:
     mov ActiveDoors, 0
     
     add rsp, 64
-    pop r12
-    pop rdi
+
+    pop rdi pop r12
+
+
     pop rsi
-    pop rbx
-    ret
-InitializeSlidingDoors ENDP
+    pop InitializeSlidingDoors
+    pop rbx ENDP
 
 ;==========================================================================
 ; INTERNAL: RawrQ_AVX512_Pack4Bit()
 ;==========================================================================
 RawrQ_AVX512_Pack4Bit PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     sub rsp, 128
     
@@ -2540,20 +2612,23 @@ RawrQ_AVX512_Pack4Bit PROC
     ; vpmovwb zmm7, k4, zmm7
     
     add rsp, 128
-    pop r12
-    pop rdi
+
+    pop rdi pop r12
+
+
     pop rsi
-    pop rbx
-    ret
-RawrQ_AVX512_Pack4Bit ENDP
+    pop RawrQ
+    pop rbx_AVX512_Pack4Bit ENDP
 
 ;==========================================================================
 ; INTERNAL: BeaconHashChain()
 ;==========================================================================
 BeaconHashChain PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     sub rsp, 256
     
@@ -2586,20 +2661,23 @@ hash_chain_loop:
     loop hash_chain_loop
     
     add rsp, 256
-    pop r12
-    pop rdi
+
+    pop rdi pop r12
+
+
     pop rsi
-    pop rbx
-    ret
-BeaconHashChain ENDP
+    pop BeaconHashChain
+    pop rbx ENDP
 
 ;==========================================================================
 ; INTERNAL: Motor1ThreadProc()
 ;==========================================================================
 Motor1ThreadProc PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
     sub rsp, 128
@@ -2634,12 +2712,14 @@ motor1_exit:
     ; mov [rax + DUAL_ENGINE_STATE.end_time], rax ; rax is used for status
     
     add rsp, 128
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 Motor1ThreadProc ENDP
 
 ;==========================================================================
@@ -2647,8 +2727,10 @@ Motor1ThreadProc ENDP
 ;==========================================================================
 Motor2ThreadProc PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
     sub rsp, 128
@@ -2682,12 +2764,14 @@ motor2_exit:
     mov DWORD PTR [rax + DUAL_ENGINE_STATE.status], ENGINE_STATUS_READY
     
     add rsp, 128
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 Motor2ThreadProc ENDP
 
 ;==========================================================================
@@ -2697,6 +2781,7 @@ PUBLIC rawr1024_get_metrics
 ALIGN 16
 rawr1024_get_metrics PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 128
@@ -2742,10 +2827,11 @@ metrics_invalid:
     
 metrics_done:
     add rsp, 128
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 rawr1024_get_metrics ENDP
 
 ;==========================================================================
@@ -2758,8 +2844,10 @@ rawr1024_get_metrics ENDP
 ;==========================================================================
 ParseBuildConfig PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
     sub rsp, 256
@@ -2857,22 +2945,25 @@ parse_complete:
 parse_default_done:
     xor eax, eax        ; Success
     add rsp, 256
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
-    
+
 parse_invalid:
     mov eax, 1          ; Error
     add rsp, 256
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 ParseBuildConfig ENDP
 
 ;==========================================================================
@@ -2882,6 +2973,7 @@ FindJsonKey PROC
     ; rsi = JSON string, rdi = output buffer (unused for now)
     ; Returns: rax = pointer to value or 0
     push rbx
+
     push rsi
     push rdi
     
@@ -2926,10 +3018,11 @@ find_key_not_found:
     xor rax, rax
     
 find_key_done:
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 FindJsonKey ENDP
 
 ;==========================================================================
@@ -2937,6 +3030,7 @@ FindJsonKey ENDP
 ;==========================================================================
 InitializeRawr1024Engines PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -2975,10 +3069,11 @@ InitializeRawr1024Engines PROC
     
     xor eax, eax        ; Success
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 InitializeRawr1024Engines ENDP
 
 ;==========================================================================
@@ -3004,7 +3099,7 @@ StartDualEngineBuild PROC
     xor eax, eax        ; Success
     add rsp, 32
     pop rbx
-    ret
+
 StartDualEngineBuild ENDP
 
 ;==========================================================================
@@ -3043,7 +3138,7 @@ monitor_done:
     xor eax, eax        ; Success
     add rsp, 32
     pop rbx
-    ret
+
 MonitorBuildProgress ENDP
 
 ;==========================================================================
@@ -3077,7 +3172,7 @@ encrypt_failed:
 encrypt_done:
     add rsp, 32
     pop rbx
-    ret
+
 ApplyQuantumEncryption ENDP
 
 ;==========================================================================
@@ -3110,7 +3205,7 @@ beacon_failed:
 beacon_done:
     add rsp, 32
     pop rbx
-    ret
+
 InitializeBeaconSync ENDP
 
 ;==========================================================================
@@ -3138,7 +3233,7 @@ doors_failed:
 doors_done:
     add rsp, 32
     pop rbx
-    ret
+
 SetupSlidingDoors ENDP
 
 ;==========================================================================
@@ -3147,7 +3242,6 @@ SetupSlidingDoors ENDP
 CheckAVX512Support PROC
     push rbx
     pushfq
-    
     ; Check CPUID for AVX-512 support
     mov eax, 7
     xor ecx, ecx
@@ -3175,7 +3269,7 @@ avx512_not_supported:
 avx512_done:
     popfq
     pop rbx
-    ret
+
 CheckAVX512Support ENDP
 
 ;==========================================================================
@@ -3183,6 +3277,7 @@ CheckAVX512Support ENDP
 ;==========================================================================
 InitializeQuantizationContext PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -3210,10 +3305,11 @@ InitializeQuantizationContext PROC
     
     xor eax, eax        ; Success
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 InitializeQuantizationContext ENDP
 
 ;==========================================================================
@@ -3221,6 +3317,7 @@ InitializeQuantizationContext ENDP
 ;==========================================================================
 PostQuantizationOptimize PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -3256,10 +3353,11 @@ optimize_done:
     
     xor eax, eax        ; Success
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 PostQuantizationOptimize ENDP
 
 ;==========================================================================
@@ -3267,6 +3365,7 @@ PostQuantizationOptimize ENDP
 ;==========================================================================
 VerifyQuantizationIntegrity PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -3290,10 +3389,11 @@ verify_failed:
     
 verify_done:
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 VerifyQuantizationIntegrity ENDP
 
 ;==========================================================================
@@ -3301,6 +3401,7 @@ VerifyQuantizationIntegrity ENDP
 ;==========================================================================
 LoadTensorData_AVX512 PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -3331,10 +3432,11 @@ load_fallback:
     
 load_done:
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 LoadTensorData_AVX512 ENDP
 
 ;==========================================================================
@@ -3342,6 +3444,7 @@ LoadTensorData_AVX512 ENDP
 ;==========================================================================
 ClusterQuantize_4bit PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -3381,10 +3484,11 @@ cluster_fallback:
     
 cluster_done:
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 ClusterQuantize_4bit ENDP
 
 ;==========================================================================
@@ -3400,7 +3504,7 @@ Pack4BitValues_AVX512 PROC
     xor eax, eax        ; Success
     add rsp, 32
     pop rbx
-    ret
+
 Pack4BitValues_AVX512 ENDP
 
 ;==========================================================================
@@ -3408,6 +3512,7 @@ Pack4BitValues_AVX512 ENDP
 ;==========================================================================
 StoreQuantizedTensor PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -3428,10 +3533,11 @@ StoreQuantizedTensor PROC
     
     xor eax, eax        ; Success
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 StoreQuantizedTensor ENDP
 
 ;==========================================================================
@@ -3439,6 +3545,7 @@ StoreQuantizedTensor ENDP
 ;==========================================================================
 GenerateQuantumSessionKey PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -3457,10 +3564,11 @@ GenerateQuantumSessionKey PROC
     
     xor eax, eax        ; Success
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 GenerateQuantumSessionKey ENDP
 
 ;==========================================================================
@@ -3469,8 +3577,10 @@ GenerateQuantumSessionKey ENDP
 ;==========================================================================
 ApplyKyberEncryption PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
     sub rsp, 512
@@ -3551,12 +3661,14 @@ kyber_cleanup:
     
 kyber_done:
     add rsp, 512
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 ApplyKyberEncryption ENDP
 
 ;========================================================================
@@ -3565,10 +3677,13 @@ ApplyKyberEncryption ENDP
 ;==========================================================================
 KyberEncapsulate PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
+
     push r14
     push r15
     sub rsp, 256
@@ -3622,14 +3737,17 @@ kyber_xor_loop:
     
     xor eax, eax        ; Success
     add rsp, 256
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 KyberEncapsulate ENDP
 
 ;==========================================================================
@@ -3637,8 +3755,10 @@ KyberEncapsulate ENDP
 ;==========================================================================
 ApplyDilithiumSignature PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     sub rsp, 512
     
@@ -3669,12 +3789,13 @@ dilithium_not_ready:
     
 dilithium_done:
     add rsp, 512
-    pop r12
-    pop rdi
+
+    pop rdi pop r12
+
+
     pop rsi
-    pop rbx
-    ret
-ApplyDilithiumSignature ENDP
+    pop ApplyDilithiumSignature
+    pop rbx ENDP
 
 ;==========================================================================
 ; AddMemoryProtection() -> eax
@@ -3693,7 +3814,7 @@ AddMemoryProtection PROC
     xor eax, eax        ; Success
     add rsp, 32
     pop rbx
-    ret
+
 AddMemoryProtection ENDP
 
 ;==========================================================================
@@ -3717,7 +3838,7 @@ SetupHSMIntegration PROC
     xor eax, eax        ; Success
     add rsp, 32
     pop rbx
-    ret
+
 SetupHSMIntegration ENDP
 
 ;==========================================================================
@@ -3725,6 +3846,7 @@ SetupHSMIntegration ENDP
 ;==========================================================================
 SetupMemoryMapping PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 128
@@ -3771,10 +3893,11 @@ mapping_failed:
     
 mapping_done:
     add rsp, 128
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 SetupMemoryMapping ENDP
 
 ;==========================================================================
@@ -3782,8 +3905,10 @@ SetupMemoryMapping ENDP
 ;==========================================================================
 DecryptOnTheFly PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     sub rsp, 64
     
@@ -3814,12 +3939,13 @@ decrypt_not_ready:
     
 decrypt_done:
     add rsp, 64
-    pop r12
-    pop rdi
+
+    pop rdi pop r12
+
+
     pop rsi
-    pop rbx
-    ret
-DecryptOnTheFly ENDP
+    pop DecryptOnTheFly
+    pop rbx ENDP
 
 ;==========================================================================
 ; ApplyZeroCopyLoading() -> eax
@@ -3838,7 +3964,7 @@ ApplyZeroCopyLoading PROC
     xor eax, eax        ; Success
     add rsp, 32
     pop rbx
-    ret
+
 ApplyZeroCopyLoading ENDP
 
 ;==========================================================================
@@ -3846,6 +3972,7 @@ ApplyZeroCopyLoading ENDP
 ;==========================================================================
 VerifySlidingIntegrity PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 256
@@ -3854,7 +3981,7 @@ VerifySlidingIntegrity PROC
     ; In production: hash verification, checksum checking, etc.
     
     push r12
-    xor r12d, r12d      ; door index
+    push xor r12d, r12d      ; door index
     
 verify_door_loop:
     cmp r12d, SLIDING_DOOR_COUNT
@@ -3891,12 +4018,13 @@ verify_done:
 
 verify_exit:
     add rsp, 256
-    pop r12
-    pop rdi
+
+    pop rdi pop r12
+
+
     pop rsi
-    pop rbx
-    ret
-VerifySlidingIntegrity ENDP
+    pop VerifySlidingIntegrity
+    pop rbx ENDP
 
 ;==========================================================================
 ; CompleteLoading() -> eax
@@ -3923,7 +4051,7 @@ CompleteLoading PROC
     xor eax, eax        ; Success
     add rsp, 32
     pop rbx
-    ret
+
 CompleteLoading ENDP
 
 ;==========================================================================
@@ -3931,6 +4059,7 @@ CompleteLoading ENDP
 ;==========================================================================
 InitializeBeaconNetwork PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 128
@@ -3940,7 +4069,7 @@ InitializeBeaconNetwork PROC
     
     ; Initialize all nodes
     push r12
-    xor r12d, r12d      ; node index
+    push xor r12d, r12d      ; node index
     
 beacon_init_loop:
     cmp r12d, BEACON_NETWORK_SIZE
@@ -3971,18 +4100,20 @@ beacon_init_done:
     
     xor eax, eax        ; Success
     add rsp, 128
-    pop r12
-    pop rdi
+
+    pop rdi pop r12
+
+
     pop rsi
-    pop rbx
-    ret
-InitializeBeaconNetwork ENDP
+    pop InitializeBeaconNetwork
+    pop rbx ENDP
 
 ;==========================================================================
 ; StartBeaconBroadcasting() -> eax
 ;==========================================================================
 StartBeaconBroadcasting PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 512
@@ -4037,10 +4168,11 @@ beacon_init_failed:
     
 beacon_done:
     add rsp, 512
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 StartBeaconBroadcasting ENDP
 
 ;==========================================================================
@@ -4048,6 +4180,7 @@ StartBeaconBroadcasting ENDP
 ;==========================================================================
 ListenForBeacons PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 512
@@ -4089,10 +4222,11 @@ listen_failed:
     
 listen_done:
     add rsp, 512
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 ListenForBeacons ENDP
 
 ;==========================================================================
@@ -4120,7 +4254,7 @@ EstablishSecureBeaconConnections PROC
     xor eax, eax        ; Success
     add rsp, 32
     pop rbx
-    ret
+
 EstablishSecureBeaconConnections ENDP
 
 ;==========================================================================
@@ -4128,6 +4262,7 @@ EstablishSecureBeaconConnections ENDP
 ;==========================================================================
 SynchronizeModelChunks PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -4155,10 +4290,11 @@ sync_loop:
     
     xor eax, eax        ; Success
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 SynchronizeModelChunks ENDP
 
 ;==========================================================================
@@ -4166,6 +4302,7 @@ SynchronizeModelChunks ENDP
 ;==========================================================================
 VerifyDistributedIntegrity PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 512
@@ -4194,10 +4331,11 @@ integrity_failed:
     
 integrity_done:
     add rsp, 512
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 VerifyDistributedIntegrity ENDP
 
 ;==========================================================================
@@ -4213,7 +4351,7 @@ GenerateKyberKeypair PROC
     xor eax, eax        ; Success
     add rsp, 32
     pop rbx
-    ret
+
 GenerateKyberKeypair ENDP
 
 ;==========================================================================
@@ -4229,7 +4367,7 @@ GenerateDilithiumKeypair PROC
     xor eax, eax        ; Success
     add rsp, 32
     pop rbx
-    ret
+
 GenerateDilithiumKeypair ENDP
 
 ;==========================================================================
@@ -4257,7 +4395,7 @@ SetupSessionKeyRotation PROC
     xor eax, eax        ; Success
     add rsp, 32
     pop rbx
-    ret
+
 SetupSessionKeyRotation ENDP
 
 ;==========================================================================
@@ -4265,6 +4403,7 @@ SetupSessionKeyRotation ENDP
 ;==========================================================================
 CreateThreadPool PROC
     push rbx
+
     push rsi
     sub rsp, 32
     
@@ -4281,16 +4420,17 @@ CreateThreadPool PROC
     
     xor eax, eax        ; Success
     add rsp, 32
+
     pop rsi
-    pop rbx
-    ret
-CreateThreadPool ENDP
+    pop CreateThreadPool
+    pop rbx ENDP
 
 ;==========================================================================
 ; CreateMotorThread(proc: rcx, speed: edx) -> eax (thread handle)
 ;==========================================================================
 CreateMotorThread PROC
     push rbx
+
     push rsi
     sub rsp, 48
     
@@ -4308,16 +4448,17 @@ CreateMotorThread PROC
     
     ; Return thread handle
     add rsp, 48
+
     pop rsi
-    pop rbx
-    ret
-CreateMotorThread ENDP
+    pop CreateMotorThread
+    pop rbx ENDP
 
 ;==========================================================================
 ; InitializeMotorBuffers() -> eax
 ;==========================================================================
 InitializeMotorBuffers PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -4330,10 +4471,11 @@ InitializeMotorBuffers PROC
     
     xor eax, eax        ; Success
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 InitializeMotorBuffers ENDP
 
 ;==========================================================================
@@ -4355,7 +4497,7 @@ StartMotorCoordination PROC
     xor eax, eax        ; Success
     add rsp, 32
     pop rbx
-    ret
+
 StartMotorCoordination ENDP
 
 ;==========================================================================
@@ -4379,7 +4521,7 @@ StartParallelProcessing PROC
     xor eax, eax        ; Success
     add rsp, 32
     pop rbx
-    ret
+
 StartParallelProcessing ENDP
 
 ;==========================================================================
@@ -4387,6 +4529,7 @@ StartParallelProcessing ENDP
 ;==========================================================================
 GenerateDoorKey PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -4408,10 +4551,11 @@ GenerateDoorKey PROC
     mov rax, rbx
     
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 GenerateDoorKey ENDP
 
 ;==========================================================================
@@ -4419,6 +4563,7 @@ GenerateDoorKey ENDP
 ;==========================================================================
 GetQuantumRandomSeed PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -4438,10 +4583,11 @@ GetQuantumRandomSeed PROC
     mov rax, rbx
     
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 GetQuantumRandomSeed ENDP
 
 ;==========================================================================
@@ -4450,8 +4596,10 @@ GetQuantumRandomSeed ENDP
 ;==========================================================================
 SHA3_512_Hash PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     sub rsp, 512
     
@@ -4522,64 +4670,66 @@ hash_len_done:
     
     xor eax, eax        ; Success
     add rsp, 512
-    pop r12
-    pop rdi
+
+    pop rdi pop r12
+
+
     pop rsi
-    pop rbx
-    ret
-    
-hash_provider_failed:
+    pop hash
+    pop rbx_provider_failed:
     mov eax, 1
     add rsp, 512
-    pop r12
-    pop rdi
+
+    pop rdi pop r12
+
+
     pop rsi
-    pop rbx
-    ret
-    
-hash_create_failed:
+    pop hash
+    pop rbx_create_failed:
     mov rcx, r12
     call BCryptCloseAlgorithmProvider
     mov eax, 2
     add rsp, 512
-    pop r12
-    pop rdi
+
+    pop rdi pop r12
+
+
     pop rsi
-    pop rbx
-    ret
-    
-hash_data_failed:
+    pop hash
+    pop rbx_data_failed:
     mov rcx, rdi
     call BCryptDestroyHash
     mov rcx, r12
     call BCryptCloseAlgorithmProvider
     mov eax, 3
     add rsp, 512
-    pop r12
-    pop rdi
+
+    pop rdi pop r12
+
+
     pop rsi
-    pop rbx
-    ret
-    
-hash_finish_failed:
+    pop hash
+    pop rbx_finish_failed:
     mov rcx, rdi
     call BCryptDestroyHash
     mov rcx, r12
     call BCryptCloseAlgorithmProvider
     mov eax, 4
     add rsp, 512
-    pop r12
-    pop rdi
+
+    pop rdi pop r12
+
+
     pop rsi
-    pop rbx
-    ret
-SHA3_512_Hash ENDP
+    pop SHA3
+    pop rbx_512_Hash ENDP
 
 ;==========================================================================
 ; AddQuantumNoise() -> eax
 ;==========================================================================
 AddQuantumNoise PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -4603,10 +4753,11 @@ noise_loop:
     
     xor eax, eax        ; Success
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 AddQuantumNoise ENDP
 
 ;==========================================================================
@@ -4614,6 +4765,7 @@ AddQuantumNoise ENDP
 ;==========================================================================
 MixNetworkEntropy PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -4634,10 +4786,11 @@ mix_loop:
     
     xor eax, eax        ; Success
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 MixNetworkEntropy ENDP
 
 ;==========================================================================
@@ -4645,6 +4798,7 @@ MixNetworkEntropy ENDP
 ;==========================================================================
 LoadNextSlidingChunk PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 128
@@ -4695,12 +4849,13 @@ next_door:
     
 load_chunk_done:
     add rsp, 128
-    pop r12
-    pop rdi
+
+    pop rdi pop r12
+
+
     pop rsi
-    pop rbx
-    ret
-LoadNextSlidingChunk ENDP
+    pop LoadNextSlidingChunk
+    pop rbx ENDP
 
 ;==========================================================================
 ; SignalMotor2() -> eax
@@ -4723,7 +4878,7 @@ SignalMotor2 PROC
     xor eax, eax        ; Success
     add rsp, 32
     pop rbx
-    ret
+
 SignalMotor2 ENDP
 
 ;==========================================================================
@@ -4741,7 +4896,7 @@ WaitForMotor1Signal PROC
     xor eax, eax        ; Success
     add rsp, 32
     pop rbx
-    ret
+
 WaitForMotor1Signal ENDP
 
 ;==========================================================================
@@ -4758,7 +4913,7 @@ QuantizeReceivedChunk PROC
     xor eax, eax        ; Success
     add rsp, 32
     pop rbx
-    ret
+
 QuantizeReceivedChunk ENDP
 
 END
@@ -4775,7 +4930,7 @@ END
 ;--------------------------------------------------------------------------
 BigDaddyG_Initialize PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     
     ; Initialize agent state
     mov rax, BIGDADDYG_MAGIC
@@ -4796,7 +4951,7 @@ BigDaddyG_Initialize PROC
     
     mov rsp, rbp
     pop rbp
-    ret
+
 BigDaddyG_Initialize ENDP
 
 ;--------------------------------------------------------------------------
@@ -4805,7 +4960,7 @@ BigDaddyG_Initialize ENDP
 ;--------------------------------------------------------------------------
 SelectModel PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     
     ; Validate model ID
     cmp ecx, 1
@@ -4865,7 +5020,7 @@ model_selected:
 exit_proc:
     mov rsp, rbp
     pop rbp
-    ret
+
 SelectModel ENDP
 
 ;--------------------------------------------------------------------------
@@ -4873,7 +5028,7 @@ SelectModel ENDP
 ;--------------------------------------------------------------------------
 ToggleMaxMode PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     
     ; Get current max mode
     mov eax, [bigdaddyg_state.max_mode]
@@ -4896,7 +5051,7 @@ set_mode:
 mode_set:
     mov rsp, rbp
     pop rbp
-    ret
+
 ToggleMaxMode ENDP
 
 ;--------------------------------------------------------------------------
@@ -4905,7 +5060,7 @@ ToggleMaxMode ENDP
 ;--------------------------------------------------------------------------
 EnableDeepThinking PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     
     ; Validate thinking mode
     cmp ecx, 1
@@ -4937,7 +5092,7 @@ invalid_thinking:
 exit_thinking:
     mov rsp, rbp
     pop rbp
-    ret
+
 EnableDeepThinking ENDP
 
 ;--------------------------------------------------------------------------
@@ -4946,8 +5101,9 @@ EnableDeepThinking ENDP
 ;--------------------------------------------------------------------------
 PerformDeepSearch PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     push rbx
+
     push rsi
     push rdi
     
@@ -4987,13 +5143,13 @@ skip_academic:
 skip_deep_web:
     ; Mark search complete
     mov [thinking_context.is_complete], 1
-    
-    pop rdi
-    pop rsi
-    pop rbx
-    mov rsp, rbp
+
+    pop rsi pop rdi
+
+    pop mov
+    pop rbx rsp, rbp
     pop rbp
-    ret
+
 PerformDeepSearch ENDP
 
 ;--------------------------------------------------------------------------
@@ -5060,3 +5216,7 @@ main PROC
 main ENDP
 
 END main
+
+
+
+

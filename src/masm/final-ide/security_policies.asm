@@ -180,7 +180,7 @@ securityMetrics SECURITY_METRICS <0, 0, 0, 0, 0, 0, 0, 0>
 PUBLIC Security_LoadPolicies
 Security_LoadPolicies PROC FRAME
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 48
     
     ; Allocate policy structure
@@ -207,14 +207,14 @@ Security_LoadPolicies PROC FRAME
     
     add rsp, 48
     pop rbp
-    ret
+
 Security_LoadPolicies ENDP
 
 ; Security_SavePolicies(RCX = policy handle) -> RAX = DWORD (success code)
 PUBLIC Security_SavePolicies
 Security_SavePolicies PROC FRAME
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     ; RCX = policy handle
@@ -236,22 +236,20 @@ Security_SavePolicies PROC FRAME
     inc QWORD PTR [securityMetrics + OFFSET securityMetrics.PoliciesSaved]
     
     mov rax, SECURITY_E_SUCCESS
-    jmp .L1_exit
-    
-.L1_invalid_handle:
+    jmp @@L1_exit
+@@L1_invalid_handle:
     mov rax, SECURITY_E_NOT_INITIALIZED
-    
-.L1_exit:
+@@L1_exit:
     add rsp, 32
     pop rbp
-    ret
+
 Security_SavePolicies ENDP
 
 ; Security_CheckCapability(RCX = policy, RDX = roleId, R8D = capabilityId) -> RAX = BYTE (1=allowed, 0=denied)
 PUBLIC Security_CheckCapability
 Security_CheckCapability PROC FRAME
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     ; RCX = policy handle
@@ -263,7 +261,7 @@ Security_CheckCapability PROC FRAME
     
     ; Validate role ID (0-31)
     cmp rdx, SECURITY_MAX_ROLES
-    jge .L2_error
+    jge @@L2_error
     
     ; Acquire mutex
     
@@ -277,23 +275,21 @@ Security_CheckCapability PROC FRAME
     
     xor rax, rax
     mov al, 1                       ; Return 1 (allowed) for now (placeholder)
-    jmp .L2_exit
-    
-.L2_error:
+    jmp @@L2_exit
+@@L2_error:
     inc QWORD PTR [securityMetrics + OFFSET securityMetrics.CapabilityDenials]
     xor rax, rax                    ; Return 0 (denied)
-    
-.L2_exit:
+@@L2_exit:
     add rsp, 32
     pop rbp
-    ret
+
 Security_CheckCapability ENDP
 
 ; Security_Audit(RCX = auditLog, RDX = action, R8D = userId, R9D = resourceId) -> RAX = DWORD (bytes written)
 PUBLIC Security_Audit
 Security_Audit PROC FRAME
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     ; RCX = audit log buffer pointer
@@ -318,22 +314,20 @@ Security_Audit PROC FRAME
     inc QWORD PTR [securityMetrics + OFFSET securityMetrics.AuditEntriesLogged]
     
     mov rax, SIZE SECURITY_AUDIT_ENTRY   ; Return bytes written
-    jmp .L3_exit
-    
-.L3_error:
+    jmp @@L3_exit
+@@L3_error:
     xor rax, rax
-    
-.L3_exit:
+@@L3_exit:
     add rsp, 32
     pop rbp
-    ret
+
 Security_Audit ENDP
 
 ; Security_IssueToken(RCX = secretKey, RDX = userId, R8D = expirationMinutes, R9 = tokenBuffer) -> RAX = DWORD (bytes written)
 PUBLIC Security_IssueToken
 Security_IssueToken PROC FRAME
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     ; RCX = secret key (32 bytes)
@@ -361,23 +355,21 @@ Security_IssueToken PROC FRAME
     inc QWORD PTR [securityMetrics + OFFSET securityMetrics.TokensIssued]
     
     mov rax, SECURITY_TOKEN_SIZE    ; Return bytes written
-    jmp .L4_exit
-    
-.L4_error:
+    jmp @@L4_exit
+@@L4_error:
     inc QWORD PTR [securityMetrics + OFFSET securityMetrics.TokenFailures]
     xor rax, rax
-    
-.L4_exit:
+@@L4_exit:
     add rsp, 32
     pop rbp
-    ret
+
 Security_IssueToken ENDP
 
 ; Security_ValidateToken(RCX = secretKey, RDX = tokenBuffer, R8 = tokenSize) -> RAX = BYTE (1=valid, 0=invalid)
 PUBLIC Security_ValidateToken
 Security_ValidateToken PROC FRAME
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     ; RCX = secret key (32 bytes)
@@ -391,7 +383,7 @@ Security_ValidateToken PROC FRAME
     
     ; Validate token size
     cmp r8, SECURITY_TOKEN_SIZE
-    jne .L5_invalid
+    jne @@L5_invalid
     
     ; Extract token parts:
     ; Header (bytes 0-15)
@@ -406,23 +398,21 @@ Security_ValidateToken PROC FRAME
     inc QWORD PTR [securityMetrics + OFFSET securityMetrics.TokenValidations]
     
     mov rax, 1                      ; Return 1 (valid) for now (placeholder)
-    jmp .L5_exit
-    
-.L5_invalid:
+    jmp @@L5_exit
+@@L5_invalid:
     inc QWORD PTR [securityMetrics + OFFSET securityMetrics.TokenFailures]
     xor rax, rax                    ; Return 0 (invalid)
-    
-.L5_exit:
+@@L5_exit:
     add rsp, 32
     pop rbp
-    ret
+
 Security_ValidateToken ENDP
 
 ; Security_GetPolicies(RCX = policy handle, RDX = buffer) -> RAX = DWORD (bytes written)
 PUBLIC Security_GetPolicies
 Security_GetPolicies PROC FRAME
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     ; RCX = policy handle
@@ -437,15 +427,13 @@ Security_GetPolicies PROC FRAME
     ; RtlCopyMemory(buffer, policy, SIZE SECURITY_POLICY)
     
     mov rax, SIZE SECURITY_POLICY
-    jmp .L6_exit
-    
-.L6_error:
+    jmp @@L6_exit
+@@L6_error:
     xor rax, rax
-    
-.L6_exit:
+@@L6_exit:
     add rsp, 32
     pop rbp
-    ret
+
 Security_GetPolicies ENDP
 
 ; =============================================================================
@@ -456,7 +444,7 @@ Security_GetPolicies ENDP
 PUBLIC Test_Security_RBAC
 Test_Security_RBAC PROC FRAME
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 64
     
     ; Test sequence:
@@ -472,14 +460,14 @@ Test_Security_RBAC PROC FRAME
     
     add rsp, 64
     pop rbp
-    ret
+
 Test_Security_RBAC ENDP
 
 ; Test_Security_TokenValidation(VOID) -> RAX = DWORD (test result code)
 PUBLIC Test_Security_TokenValidation
 Security_TokenValidation PROC FRAME
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 64
     
     ; Test sequence:
@@ -494,7 +482,12 @@ Security_TokenValidation PROC FRAME
     
     add rsp, 64
     pop rbp
-    ret
+
 Test_Security_TokenValidation ENDP
 
 END
+
+
+
+
+

@@ -139,17 +139,16 @@ error_recovery_init PROC
     
     ; Clear error array
     mov ecx, 0
-.init_loop:
+@@init_loop:
     cmp ecx, 64
-    jge .init_done
+    jge @@init_done
     mov rax, offset error_array
     lea rbx, [rax + rcx*sizeof(error_info)]
     mov DWORD PTR [rbx + error_info.category], 0
     mov DWORD PTR [rbx + error_info.confidence], 0
     inc ecx
-    jmp .init_loop
-    
-.init_done:
+    jmp @@init_loop
+@@init_done:
     mov DWORD PTR error_count, 0
     mov DWORD PTR fix_count, 0
     mov QWORD PTR recovery_log_pos, offset recovery_log_buf
@@ -157,7 +156,7 @@ error_recovery_init PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
+
 error_recovery_init ENDP
 
 ;==========================================================================
@@ -173,6 +172,7 @@ PUBLIC error_detect_from_buildlog
 ALIGN 16
 error_detect_from_buildlog PROC
     push rbx
+
     push r12
     sub rsp, 1024 + 32  ; buffer for file operations
     
@@ -194,7 +194,7 @@ error_detect_from_buildlog PROC
     call CreateFileA
     
     cmp rax, INVALID_HANDLE_VALUE
-    je .detect_error
+    je @@detect_error
     
     mov rbx, rax        ; rbx = file handle
     
@@ -215,17 +215,15 @@ error_detect_from_buildlog PROC
     
     ; Return error count
     mov eax, DWORD PTR error_count
-    jmp .detect_done
-    
-.detect_error:
+    jmp @@detect_done
+@@detect_error:
     xor eax, eax
-    
-.detect_done:
+@@detect_done:
     add rsp, 1024 + 32
+
     pop r12
-    pop rbx
-    ret
-error_detect_from_buildlog ENDP
+    pop error
+    pop rbx_detect_from_buildlog ENDP
 
 ;==========================================================================
 ; INTERNAL: analyze_log_content(log_buffer: rcx)
@@ -236,6 +234,7 @@ error_detect_from_buildlog ENDP
 ALIGN 16
 analyze_log_content PROC PRIVATE
     push rbx
+
     push r12
     push r13
     sub rsp, 32
@@ -259,8 +258,7 @@ analyze_log_content PROC PRIVATE
     mov DWORD PTR [r12 + r13*sizeof(error_info) + error_info.error_code], 2275
     mov DWORD PTR [r12 + r13*sizeof(error_info) + error_info.confidence], 85
     inc r13
-    
-.analyze_next_1:
+@@analyze_next_1:
     ; Pattern 2: "error A2006:"
     lea rcx, [rsp - 256]
     lea rdx, pattern_a2006
@@ -274,8 +272,7 @@ analyze_log_content PROC PRIVATE
     mov DWORD PTR [r12 + r13*sizeof(error_info) + error_info.error_code], 2006
     mov DWORD PTR [r12 + r13*sizeof(error_info) + error_info.confidence], 80
     inc r13
-    
-.analyze_next_2:
+@@analyze_next_2:
     ; Pattern 3: "LNK2019:"
     lea rcx, [rsp - 256]
     lea rdx, pattern_lnk2019
@@ -289,15 +286,15 @@ analyze_log_content PROC PRIVATE
     mov DWORD PTR [r12 + r13*sizeof(error_info) + error_info.error_code], 2019
     mov DWORD PTR [r12 + r13*sizeof(error_info) + error_info.confidence], 75
     inc r13
-    
-.analyze_done:
+@@analyze_done:
     mov DWORD PTR error_count, r13d
     
     add rsp, 32
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
+
 analyze_log_content ENDP
 
 ;==========================================================================
@@ -312,10 +309,10 @@ find_pattern_in_array PROC PRIVATE
     ; rdx = pattern (error code string)
     
     push rbx
-    xor eax, eax        ; match count = 0
+    push xor eax, eax        ; match count = 0
     
     ; Simple pattern matching (look for substring)
-.find_loop:
+@@find_loop:
     ; Check if pattern found in buffer
     ; For production: use Boyer-Moore from byte_level_hotpatcher
     ; For now: simple strcmp at current position
@@ -325,7 +322,7 @@ find_pattern_in_array PROC PRIVATE
     ; existing boyer_moore_search() from byte_level_hotpatcher
     
     pop rbx
-    ret
+
 find_pattern_in_array ENDP
 
 ;==========================================================================
@@ -341,6 +338,7 @@ PUBLIC error_analyze_and_suggest
 ALIGN 16
 error_analyze_and_suggest PROC
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -357,22 +355,21 @@ error_analyze_and_suggest PROC
     mov eax, DWORD PTR [rbx + error_info.category]
     
     cmp eax, ERROR_CATEGORY_UNDEFINED_SYMBOL
-    je .analyze_undefined
+    je @@analyze_undefined
     
     cmp eax, ERROR_CATEGORY_TEMPLATE_ERROR
-    je .analyze_template
+    je @@analyze_template
     
     cmp eax, ERROR_CATEGORY_LINKER_ERROR
-    je .analyze_linker
+    je @@analyze_linker
     
     cmp eax, ERROR_CATEGORY_AGENTIC_FAILURE
-    je .analyze_agentic
+    je @@analyze_agentic
     
     ; No fix available
     xor eax, eax
-    jmp .analyze_done
-    
-.analyze_undefined:
+    jmp @@analyze_done
+@@analyze_undefined:
     ; A2006: Undefined symbol
     ; Suggestion: Add EXTERN declaration
     mov eax, DWORD PTR fix_count
@@ -388,9 +385,8 @@ error_analyze_and_suggest PROC
     
     inc DWORD PTR fix_count
     mov rax, rbx
-    jmp .analyze_done
-    
-.analyze_template:
+    jmp @@analyze_done
+@@analyze_template:
     ; C2275: Template issue
     ; Suggestion: Replace std::function with void*
     mov eax, DWORD PTR fix_count
@@ -406,9 +402,8 @@ error_analyze_and_suggest PROC
     
     inc DWORD PTR fix_count
     mov rax, rbx
-    jmp .analyze_done
-    
-.analyze_linker:
+    jmp @@analyze_done
+@@analyze_linker:
     ; LNK2019: Unresolved external
     mov eax, DWORD PTR fix_count
     mov ecx, sizeof(fix_suggestion)
@@ -423,9 +418,8 @@ error_analyze_and_suggest PROC
     
     inc DWORD PTR fix_count
     mov rax, rbx
-    jmp .analyze_done
-    
-.analyze_agentic:
+    jmp @@analyze_done
+@@analyze_agentic:
     ; Agentic failure - suggest response correction
     mov eax, DWORD PTR fix_count
     mov ecx, sizeof(fix_suggestion)
@@ -440,14 +434,13 @@ error_analyze_and_suggest PROC
     
     inc DWORD PTR fix_count
     mov rax, rbx
-    jmp .analyze_done
-    
-.analyze_done:
+    jmp @@analyze_done
+@@analyze_done:
     add rsp, 32
+
     pop r12
-    pop rbx
-    ret
-error_analyze_and_suggest ENDP
+    pop error
+    pop rbx_analyze_and_suggest ENDP
 
 ;==========================================================================
 ; PUBLIC: error_apply_fix(fix_ptr: rcx)
@@ -462,6 +455,7 @@ PUBLIC error_apply_fix
 ALIGN 16
 error_apply_fix PROC
     push rbx
+
     push r12
     sub rsp, 1024 + 32
     
@@ -472,24 +466,23 @@ error_apply_fix PROC
     
     ; Only apply AUTO fixes (others require user review)
     cmp eax, FIX_SAFETY_AUTO
-    jne .apply_nope
+    jne @@apply_nope
     
     ; Get fix type
     mov eax, DWORD PTR [r12 + fix_suggestion.fix_type]
     
     cmp eax, FIX_TYPE_ADD_EXTERN
-    je .apply_extern
+    je @@apply_extern
     
     cmp eax, FIX_TYPE_ADD_INCLUDELIB
-    je .apply_includelib
+    je @@apply_includelib
     
     cmp eax, FIX_TYPE_REPLACE_PATTERN
-    je .apply_replace
+    je @@apply_replace
     
     ; Unknown fix type
-    jmp .apply_nope
-    
-.apply_extern:
+    jmp @@apply_nope
+@@apply_extern:
     ; Add EXTERN declaration to source
     ; This would involve:
     ;   1. Reading source file
@@ -498,29 +491,25 @@ error_apply_fix PROC
     ;   4. Saving file
     ; (Stub - full implementation uses file I/O functions)
     mov eax, 1
-    jmp .apply_done
-    
-.apply_includelib:
+    jmp @@apply_done
+@@apply_includelib:
     ; Add includelib statement
     ; (Stub)
     mov eax, 1
-    jmp .apply_done
-    
-.apply_replace:
+    jmp @@apply_done
+@@apply_replace:
     ; Replace pattern in file
     ; (Stub)
     mov eax, 1
-    jmp .apply_done
-    
-.apply_nope:
+    jmp @@apply_done
+@@apply_nope:
     xor eax, eax
-    
-.apply_done:
+@@apply_done:
     add rsp, 1024 + 32
+
     pop r12
-    pop rbx
-    ret
-error_apply_fix ENDP
+    pop error
+    pop rbx_apply_fix ENDP
 
 ;==========================================================================
 ; PUBLIC: error_recovery_get_status()
@@ -553,16 +542,15 @@ error_recovery_log_append PROC
     mov rcx, QWORD PTR recovery_log_pos
     
     ; Copy message to log buffer
-.copy_loop:
+@@copy_loop:
     mov al, BYTE PTR [rbx]
     test al, al
     jz .copy_done
     mov BYTE PTR [rcx], al
     inc rcx
     inc rbx
-    jmp .copy_loop
-    
-.copy_done:
+    jmp @@copy_loop
+@@copy_done:
     ; Add newline
     mov BYTE PTR [rcx], 0Ah  ; \n
     inc rcx
@@ -573,7 +561,7 @@ error_recovery_log_append PROC
     
     add rsp, 32
     pop rbx
-    ret
+
 error_recovery_log_append ENDP
 
 ;==========================================================================
@@ -603,9 +591,8 @@ error_detect_agentic_failure PROC
     
     mov eax, ERROR_CATEGORY_AGENTIC_FAILURE
     mov edx, 80  ; confidence
-    jmp .agentic_done
-    
-.agentic_continue_1:
+    jmp @@agentic_done
+@@agentic_continue_1:
     ; Pattern 2: Hallucination (contradictory statements)
     lea rcx, [rbx]
     call .scan_for_hallucination
@@ -614,17 +601,15 @@ error_detect_agentic_failure PROC
     
     mov eax, ERROR_CATEGORY_AGENTIC_FAILURE
     mov edx, 60  ; lower confidence
-    jmp .agentic_done
-    
-.agentic_continue_2:
+    jmp @@agentic_done
+@@agentic_continue_2:
     ; Pattern 3: Timeout (no response)
     xor eax, eax
     mov edx, 0
-    
-.agentic_done:
+@@agentic_done:
     add rsp, 32
     pop rbx
-    ret
+
 error_detect_agentic_failure ENDP
 
 ;==========================================================================
@@ -639,13 +624,13 @@ scan_for_refusal PROC PRIVATE
     ; Full implementation would use string search
     
     push rbx
-    xor eax, eax  ; Default: no refusal
+    push xor eax, eax  ; Default: no refusal
     
     ; (Check for patterns in rcx)
     ; For now: stub
     
     pop rbx
-    ret
+
 scan_for_refusal ENDP
 
 ;==========================================================================
@@ -662,10 +647,15 @@ scan_for_hallucination PROC PRIVATE
     ;   - Made-up function names
     
     push rbx
-    xor eax, eax  ; Default: no hallucination
+    push xor eax, eax  ; Default: no hallucination
     
     pop rbx
-    ret
+
 scan_for_hallucination ENDP
 
 END
+
+
+
+
+

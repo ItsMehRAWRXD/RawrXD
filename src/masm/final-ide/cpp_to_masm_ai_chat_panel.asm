@@ -111,7 +111,7 @@ chat_create PROC
     
     mov rax, rbx
     pop rbx
-    ret
+
 chat_create ENDP
 
 ; ============================================================================
@@ -121,16 +121,16 @@ chat_create ENDP
 PUBLIC chat_add_user_message
 chat_add_user_message PROC
     push rbx
+
     push rsi
-    
-    mov rbx, rcx                   ; rbx = context
+    push mov rbx, rcx                   ; rbx = context
     mov rsi, rdx                   ; rsi = message
     mov r9, r8                     ; r9 = size
     
     ; Check if room for new message
     mov rax, [rbx + CHAT_CONTEXT.messageCount]
     cmp rax, [rbx + CHAT_CONTEXT.maxMessages]
-    jge .no_room
+    jge @@no_room
     
     ; Get message slot
     mov rcx, [rbx + CHAT_CONTEXT.messages]
@@ -145,11 +145,10 @@ chat_add_user_message PROC
     inc rdx                        ; +1 for null terminator
     
     push rcx
-    mov rcx, rdx
+    push mov rcx, rdx
     call malloc
-    pop rcx
-    
-    mov [rcx + CHAT_MESSAGE.content], rax
+    pop mov
+    pop rcx [rcx + CHAT_MESSAGE.content], rax
     mov [rcx + CHAT_MESSAGE.contentSize], r9
     
     ; Copy message text
@@ -166,16 +165,14 @@ chat_add_user_message PROC
     mov edx, MSG_ROLE_USER
     mov r8, r9
     call console_log
-    
+
     pop rsi
     pop rbx
-    ret
-    
-.no_room:
+@@no_room:
+
     pop rsi
-    pop rbx
-    ret
-chat_add_user_message ENDP
+    pop chat
+    pop rbx_add_user_message ENDP
 
 ; ============================================================================
 
@@ -184,9 +181,9 @@ chat_add_user_message ENDP
 PUBLIC chat_add_assistant_message
 chat_add_assistant_message PROC
     push rbx
+
     push rsi
-    
-    mov rbx, rcx
+    push mov rbx, rcx
     mov rsi, rdx
     mov r10, r8
     mov r11b, r9b
@@ -194,7 +191,7 @@ chat_add_assistant_message PROC
     ; Check room
     mov rax, [rbx + CHAT_CONTEXT.messageCount]
     cmp rax, [rbx + CHAT_CONTEXT.maxMessages]
-    jge .no_room
+    jge @@no_room
     
     ; Get message slot
     mov rcx, [rbx + CHAT_CONTEXT.messages]
@@ -210,11 +207,10 @@ chat_add_assistant_message PROC
     inc rdx
     
     push rcx
-    mov rcx, rdx
+    push mov rcx, rdx
     call malloc
-    pop rcx
-    
-    mov [rcx + CHAT_MESSAGE.content], rax
+    pop mov
+    pop rcx [rcx + CHAT_MESSAGE.content], rax
     mov [rcx + CHAT_MESSAGE.contentSize], r10
     
     mov rcx, rax
@@ -225,21 +221,19 @@ chat_add_assistant_message PROC
     inc qword [rbx + CHAT_CONTEXT.messageCount]
     
     cmp r11b, 1
-    jne .not_streaming
+    jne @@not_streaming
     
     lea rcx, [szStreamingStarted]
     call console_log
-    
-.not_streaming:
+@@not_streaming:
+
     pop rsi
     pop rbx
-    ret
-    
-.no_room:
+@@no_room:
+
     pop rsi
-    pop rbx
-    ret
-chat_add_assistant_message ENDP
+    pop chat
+    pop rbx_add_assistant_message ENDP
 
 ; ============================================================================
 
@@ -255,7 +249,7 @@ chat_update_streaming PROC
     mov rax, r9
     add rax, r8
     cmp rax, STREAMING_BUFFER_SIZE
-    jge .buffer_full
+    jge @@buffer_full
     
     ; Copy token
     mov rcx, r10
@@ -267,8 +261,7 @@ chat_update_streaming PROC
     add [rsp - 16], r8             ; Update streamingSize
     
     ret
-    
-.buffer_full:
+@@buffer_full:
     ret
 chat_update_streaming ENDP
 
@@ -305,28 +298,25 @@ chat_finish_streaming ENDP
 PUBLIC chat_set_context
 chat_set_context PROC
     push rbx
-    
-    mov rbx, rcx                   ; rbx = chat context
+    push mov rbx, rcx                   ; rbx = chat context
     
     ; Free old context
     mov rcx, [rbx + CHAT_CONTEXT.context]
     cmp rcx, 0
-    je .skip_free
+    je @@skip_free
     call free
-    
-.skip_free:
+@@skip_free:
     ; Allocate and copy new context
     mov rcx, r8
     inc rcx
     
     push r8
+
     push r9
-    
-    call malloc
-    
-    pop r9
-    pop r8
-    
+    push call malloc
+
+    pop r8 pop r9
+
     mov [rbx + CHAT_CONTEXT.context], rax
     mov [rbx + CHAT_CONTEXT.contextSize], r8
     
@@ -341,14 +331,13 @@ chat_set_context PROC
     inc rax                        ; +1 for null terminator
     
     push r8
+
     push r9
-    
-    mov rcx, rax
+    push mov rcx, rax
     call malloc
-    
-    pop r9
-    pop r8
-    
+
+    pop r8 pop r9
+
     mov [rbx + CHAT_CONTEXT.filePath], rax
     
     mov rcx, rax
@@ -362,7 +351,7 @@ chat_set_context PROC
     call console_log
     
     pop rbx
-    ret
+
 chat_set_context ENDP
 
 ; ============================================================================
@@ -385,9 +374,9 @@ chat_clear PROC
     
     ; Free all message contents
     xor r9, r9
-.clear_loop:
+@@clear_loop:
     cmp r9, r8
-    jge .clear_done
+    jge @@clear_done
     
     mov r10, [rcx + CHAT_CONTEXT.messages]
     imul r9, SIZEOF CHAT_MESSAGE
@@ -395,16 +384,14 @@ chat_clear PROC
     
     mov rdx, [r10 + CHAT_MESSAGE.content]
     cmp rdx, 0
-    je .next_msg
+    je @@next_msg
     
     mov rcx, rdx
     call free
-    
-.next_msg:
+@@next_msg:
     inc r9
-    jmp .clear_loop
-    
-.clear_done:
+    jmp @@clear_loop
+@@clear_done:
     mov [rcx + CHAT_CONTEXT.messageCount], 0
     
     ret
@@ -417,8 +404,7 @@ chat_clear ENDP
 PUBLIC chat_destroy
 chat_destroy PROC
     push rbx
-    
-    mov rbx, rcx
+    push mov rbx, rcx
     
     ; Clear messages
     call chat_clear
@@ -426,37 +412,42 @@ chat_destroy PROC
     ; Free message array
     mov rcx, [rbx + CHAT_CONTEXT.messages]
     cmp rcx, 0
-    je .skip_msgs
+    je @@skip_msgs
     call free
-.skip_msgs:
+@@skip_msgs:
     
     ; Free buffers
     mov rcx, [rbx + CHAT_CONTEXT.streamingBuffer]
     cmp rcx, 0
-    je .skip_stream
+    je @@skip_stream
     call free
-.skip_stream:
+@@skip_stream:
     
     mov rcx, [rbx + CHAT_CONTEXT.context]
     cmp rcx, 0
-    je .skip_ctx
+    je @@skip_ctx
     call free
-.skip_ctx:
+@@skip_ctx:
     
     mov rcx, [rbx + CHAT_CONTEXT.filePath]
     cmp rcx, 0
-    je .skip_path
+    je @@skip_path
     call free
-.skip_path:
+@@skip_path:
     
     ; Free context
     mov rcx, rbx
     call free
     
     pop rbx
-    ret
+
 chat_destroy ENDP
 
 ; ============================================================================
 
 END
+
+
+
+
+

@@ -198,7 +198,7 @@ theme_manager_init PROC
     mov rax, 1  ; Success
     add rsp, 32
     pop rbx
-    ret
+
 theme_manager_init ENDP
 
 ;==========================================================================
@@ -463,7 +463,7 @@ update_cached_brushes PROC
     
     add rsp, 32
     pop rbx
-    ret
+
 update_cached_brushes ENDP
 
 ;==========================================================================
@@ -472,6 +472,7 @@ update_cached_brushes ENDP
 ;==========================================================================
 theme_manager_load_theme PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -559,10 +560,11 @@ theme_manager_load_theme PROC
     call LeaveCriticalSection
     
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 theme_manager_load_theme ENDP
 
 ;==========================================================================
@@ -617,7 +619,7 @@ theme_manager_set_window_opacity PROC
     mov rax, 1  ; Success
     add rsp, 32
     pop rbx
-    ret
+
 theme_manager_set_window_opacity ENDP
 
 ;==========================================================================
@@ -659,7 +661,7 @@ theme_manager_set_always_on_top PROC
     
     add rsp, 48
     pop rbx
-    ret
+
 theme_manager_set_always_on_top ENDP
 
 ;==========================================================================
@@ -681,8 +683,7 @@ theme_manager_apply_to_window PROC
     mov rax, 1
     add rsp, 32
     pop rbx
-    ret
-    
+
 theme_manager_apply_to_window ENDP
 
 ;==========================================================================
@@ -719,6 +720,7 @@ theme_manager_export_theme ENDP
 ; compare_strings(str1: rdi, str2: rsi) -> bool (rax)
 compare_strings PROC
     push rdi
+
     push rsi
 @@:
     mov al, [rdi]
@@ -736,11 +738,16 @@ compare_strings PROC
 @not_equal:
     xor rax, rax
 @done:
+
     pop rsi
-    pop rdi
-    ret
-compare_strings ENDP
+    pop compare
+    pop rdi_strings ENDP
 
 EXTERN InvalidateRect:PROC
 
 end
+
+
+
+
+

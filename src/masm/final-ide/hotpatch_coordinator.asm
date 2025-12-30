@@ -99,7 +99,7 @@ bypass_fail:
 bypass_done:
     add rsp, 64
     pop rbx
-    ret
+
 BypassVRAMCheck ENDP
 
 ;==============================================================================
@@ -121,7 +121,7 @@ HotpatchInitialize PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
+
 HotpatchInitialize ENDP
 
 ;==============================================================================
@@ -133,8 +133,10 @@ HotpatchApply PROC
     LOCAL oldProtect:DWORD
     
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
     sub rsp, 256
@@ -208,12 +210,14 @@ hotpatch_apply_fail:
     
 hotpatch_apply_done:
     add rsp, 256
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 HotpatchApply ENDP
 
 ;==============================================================================
@@ -223,7 +227,7 @@ EXTERN GetCurrentProcess:PROC
 
 END
     pop rbx
-    ret
+
 BypassVRAMCheck ENDP
 
 ;==============================================================================
@@ -237,10 +241,13 @@ HotpatchApply PROC
     LOCAL patchEntry:QWORD
     
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
+
     push r14
     push r15
     sub rsp, 256
@@ -363,14 +370,17 @@ hotpatch_fail:
     
 hotpatch_done:
     add rsp, 256
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 HotpatchApply ENDP
 
 ;==============================================================================
@@ -381,6 +391,7 @@ PUBLIC ApplyBypassHotpatches
 ALIGN 16
 ApplyBypassHotpatches PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 256
@@ -410,10 +421,11 @@ bypass_all_fail:
     
 bypass_all_done:
     add rsp, 256
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 ApplyBypassHotpatches ENDP
 
 ;==============================================================================
@@ -438,8 +450,13 @@ HotpatchInitialize PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
+
 HotpatchInitialize ENDP
 
 END
+
+
+
+
+
 

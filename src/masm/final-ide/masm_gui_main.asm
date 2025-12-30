@@ -108,6 +108,7 @@ WinMain PROC
     ; r8 = lpCmdLine, r9d = nCmdShow
     
     push rbx
+
     push r12
     sub rsp, 64
     
@@ -261,8 +262,7 @@ WinMain PROC
     
     sub rsp, SIZEOF MSG
     mov rbx, rsp
-    
-.msg_loop:
+@@msg_loop:
     ; GetMessageA(&msg, NULL, 0, 0)
     mov rcx, rbx        ; lpMsg
     mov rdx, 0          ; hWnd (NULL = all windows)
@@ -271,7 +271,7 @@ WinMain PROC
     call GetMessageA
     
     test eax, eax
-    jle .msg_loop_exit  ; Exit on WM_QUIT or error
+    jle @@msg_loop_exit  ; Exit on WM_QUIT or error
     
     ; TranslateMessage(&msg)
     mov rcx, rbx
@@ -281,9 +281,8 @@ WinMain PROC
     mov rcx, rbx
     call DispatchMessageA
     
-    jmp .msg_loop
-    
-.msg_loop_exit:
+    jmp @@msg_loop
+@@msg_loop_exit:
     add rsp, SIZEOF MSG
     
     ; =========================================================================
@@ -298,36 +297,32 @@ WinMain PROC
     xor eax, eax
     
     add rsp, 64
+
     pop r12
     pop rbx
-    ret
-    
-.init_failed:
+@@init_failed:
     lea rcx, szInitFailed
     call log_message
     mov eax, 1
-    jmp .exit_cleanup
-    
-.register_failed:
+    jmp @@exit_cleanup
+@@register_failed:
     lea rcx, szCreateWndFailed
     call log_message
     add rsp, SIZEOF WNDCLASSA
     mov eax, 1
-    jmp .exit_cleanup
-    
-.wnd_create_failed:
+    jmp @@exit_cleanup
+@@wnd_create_failed:
     lea rcx, szCreateWndFailed
     call log_message
     mov eax, 1
-    jmp .exit_cleanup
-    
-.exit_cleanup:
+    jmp @@exit_cleanup
+@@exit_cleanup:
     call cleanup_logging
     add rsp, 64
+
     pop r12
-    pop rbx
-    ret
-ALIGN 16
+    pop ALIGN
+    pop rbx 16
 WinMain ENDP
 
 ;==============================================================================
@@ -340,6 +335,7 @@ MainWndProc PROC
     ; rcx = hWnd, edx = uMsg, r8 = wParam, r9 = lParam
     
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -347,54 +343,50 @@ MainWndProc PROC
     mov eax, edx
     
     cmp eax, WM_CREATE
-    je .handle_create
+    je @@handle_create
     
     cmp eax, WM_DESTROY
-    je .handle_destroy
+    je @@handle_destroy
     
     cmp eax, WM_CLOSE
-    je .handle_close
+    je @@handle_close
     
     cmp eax, WM_PAINT
-    je .handle_paint
+    je @@handle_paint
     
     cmp eax, WM_SIZE
-    je .handle_size
+    je @@handle_size
     
     cmp eax, WM_CUSTOM_WISH
-    je .handle_wish
+    je @@handle_wish
     
     cmp eax, WM_CUSTOM_STATUS
-    je .handle_status
+    je @@handle_status
     
     cmp eax, WM_CUSTOM_EXECUTE
-    je .handle_execute
+    je @@handle_execute
     
     ; Default message handling
     mov rcx, r9         ; lParam
     mov edx, r8         ; wParam
     mov rdx, edx
     call DefWindowProcA
-    jmp .msg_done
-    
-.handle_create:
+    jmp @@msg_done
+@@handle_create:
     xor eax, eax       ; Return 0 for success
-    jmp .msg_done
-    
-.handle_destroy:
+    jmp @@msg_done
+@@handle_destroy:
     xor ecx, ecx
     call PostQuitMessage  ; Send WM_QUIT
     xor eax, eax
-    jmp .msg_done
-    
-.handle_close:
+    jmp @@msg_done
+@@handle_close:
     ; Gracefully close the window
     mov rcx, g_main_window
     call DestroyWindow
     xor eax, eax
-    jmp .msg_done
-    
-.handle_paint:
+    jmp @@msg_done
+@@handle_paint:
     ; Forward to Qt if needed
     sub rsp, SIZEOF PAINTSTRUCT
     mov rbx, rsp
@@ -414,16 +406,14 @@ MainWndProc PROC
     
     add rsp, SIZEOF PAINTSTRUCT
     xor eax, eax
-    jmp .msg_done
-    
-.handle_size:
+    jmp @@msg_done
+@@handle_size:
     ; Resize panels to fit window
     ; r8 = new width, r9 = new height
     ; TODO: Resize panels
     xor eax, eax
-    jmp .msg_done
-    
-.handle_wish:
+    jmp @@msg_done
+@@handle_wish:
     ; Custom message: user submitted a wish
     ; r8 = wish text pointer
     lea rcx, szWishReceived
@@ -452,29 +442,26 @@ MainWndProc PROC
     call display_status_message
     
     xor eax, eax
-    jmp .msg_done
-    
-.handle_status:
+    jmp @@msg_done
+@@handle_status:
     ; Custom message: status update from bridge
     ; r8 = status code, r9 = progress percentage
     mov edx, r9d
     lea rcx, szExecutionUpdate
     call display_status_message
     xor eax, eax
-    jmp .msg_done
-    
-.handle_execute:
+    jmp @@msg_done
+@@handle_execute:
     ; Custom message: execute a task
     ; r8 = task pointer
     xor eax, eax
-    jmp .msg_done
-    
-.msg_done:
+    jmp @@msg_done
+@@msg_done:
     add rsp, 32
+
     pop r12
-    pop rbx
-    ret
-ALIGN 16
+    pop ALIGN
+    pop rbx 16
 MainWndProc ENDP
 
 ;==============================================================================
@@ -509,14 +496,13 @@ log_message PROC
     ; Calculate string length
     mov rsi, rcx
     xor edx, edx
-.len_loop:
+@@len_loop:
     cmp BYTE PTR [rsi], 0
-    je .len_done
+    je @@len_done
     inc edx
     inc rsi
-    jmp .len_loop
-    
-.len_done:
+    jmp @@len_loop
+@@len_done:
     ; Write to stdout
     mov rcx, rbx        ; hFile
     mov rdx, rcx        ; lpBuffer (original message ptr)
@@ -535,7 +521,7 @@ log_message PROC
     
     add rsp, 32
     pop rbx
-    ret
+
 ALIGN 16
 log_message ENDP
 
@@ -582,3 +568,8 @@ WISH_CONTEXT STRUCT
 WISH_CONTEXT ENDS
 
 END
+
+
+
+
+

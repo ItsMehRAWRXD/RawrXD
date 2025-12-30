@@ -204,6 +204,7 @@ command_palette_execute PROC
     ; Returns: eax = 0 (success), non-zero (error)
     
     push rbx
+
     push r12
     push r13
     sub rsp, 128
@@ -233,14 +234,12 @@ command_palette_execute PROC
     mov rcx, r13
     mov al, BYTE PTR [rcx + 1]          ; Check for space after colon
     cmp al, ' '
-    jne .cmd_no_space
+    jne @@cmd_no_space
     add r13, 2                          ; Skip ": "
-    jmp .cmd_action_extract
-    
-.cmd_no_space:
+    jmp @@cmd_action_extract
+@@cmd_no_space:
     add r13, 1                          ; Skip ":"
-    
-.cmd_action_extract:
+@@cmd_action_extract:
     mov rcx, [rsp + 64]                 ; Action buffer
     mov rdx, r13
     call strcpy_masm
@@ -250,103 +249,96 @@ command_palette_execute PROC
     lea rdx, [rip + sz_file_category]
     call strcmp_masm
     cmp eax, 0
-    je .dispatch_file_commands
+    je @@dispatch_file_commands
     
     lea rcx, [rsp]
     lea rdx, [rip + sz_edit_category]
     call strcmp_masm
     cmp eax, 0
-    je .dispatch_edit_commands
+    je @@dispatch_edit_commands
     
     lea rcx, [rsp]
     lea rdx, [rip + sz_search_category]
     call strcmp_masm
     cmp eax, 0
-    je .dispatch_search_commands
+    je @@dispatch_search_commands
     
     lea rcx, [rsp]
     lea rdx, [rip + sz_run_category]
     call strcmp_masm
     cmp eax, 0
-    je .dispatch_run_commands
+    je @@dispatch_run_commands
     
-    jmp .cmd_invalid
-    
-.dispatch_file_commands:
+    jmp @@cmd_invalid
+@@dispatch_file_commands:
     ; Compare action with file subcommands
     lea rcx, [rsp + 64]
     lea rdx, [rip + sz_new_action]
     call strcmp_masm
     cmp eax, 0
-    je .cmd_file_new
+    je @@cmd_file_new
     
     lea rcx, [rsp + 64]
     lea rdx, [rip + sz_open_action]
     call strcmp_masm
     cmp eax, 0
-    je .cmd_file_open
+    je @@cmd_file_open
     
     lea rcx, [rsp + 64]
     lea rdx, [rip + sz_save_action]
     call strcmp_masm
     cmp eax, 0
-    je .cmd_file_save
+    je @@cmd_file_save
     
     lea rcx, [rsp + 64]
     lea rdx, [rip + sz_save_as_action]
     call strcmp_masm
     cmp eax, 0
-    je .cmd_file_save_as
+    je @@cmd_file_save_as
     
-    jmp .cmd_invalid
-    
-.cmd_file_new:
+    jmp @@cmd_invalid
+@@cmd_file_new:
     xor rcx, rcx
     call ui_editor_set_text
     lea rcx, [rip + sz_cmd_file_new]
     call ui_add_chat_message
     xor eax, eax
-    jmp .cmd_done
-    
-.cmd_file_open:
+    jmp @@cmd_done
+@@cmd_file_open:
     call ui_file_open_dialog
     xor eax, eax
-    jmp .cmd_done
-    
-.cmd_file_save:
+    jmp @@cmd_done
+@@cmd_file_save:
     call ui_file_save
     xor eax, eax
-    jmp .cmd_done
-    
-.cmd_file_save_as:
+    jmp @@cmd_done
+@@cmd_file_save_as:
     ; Save with different name (calls file dialog first)
     call ui_file_open_dialog
     call ui_file_save
     xor eax, eax
-    jmp .cmd_done
-    
-.dispatch_edit_commands:
+    jmp @@cmd_done
+@@dispatch_edit_commands:
     lea rcx, [rsp + 64]
     lea rdx, [rip + sz_cut_action]
     call strcmp_masm
     cmp eax, 0
-    je .cmd_edit_cut
+    je @@cmd_edit_cut
     
     lea rcx, [rsp + 64]
     lea rdx, [rip + sz_copy_action]
     call strcmp_masm
     cmp eax, 0
-    je .cmd_edit_copy
+    je @@cmd_edit_copy
     
     lea rcx, [rsp + 64]
     lea rdx, [rip + sz_paste_action]
     call strcmp_masm
     cmp eax, 0
-    je .cmd_edit_paste
+    je @@cmd_edit_paste
     
-    jmp .cmd_invalid
-    
-.cmd_edit_cut:
+    jmp @@cmd_invalid
+@@cmd_edit_cut:
     mov rcx, [rip + hwnd_editor]
     mov rdx, WM_CUT
     xor r8, r8
@@ -355,9 +347,8 @@ command_palette_execute PROC
     lea rcx, [rip + sz_cmd_edit_cut]
     call ui_add_chat_message
     xor eax, eax
-    jmp .cmd_done
-    
-.cmd_edit_copy:
+    jmp @@cmd_done
+@@cmd_edit_copy:
     mov rcx, [rip + hwnd_editor]
     mov rdx, WM_COPY
     xor r8, r8
@@ -366,9 +357,8 @@ command_palette_execute PROC
     lea rcx, [rip + sz_cmd_edit_copy]
     call ui_add_chat_message
     xor eax, eax
-    jmp .cmd_done
-    
-.cmd_edit_paste:
+    jmp @@cmd_done
+@@cmd_edit_paste:
     mov rcx, [rip + hwnd_editor]
     mov rdx, WM_PASTE
     xor r8, r8
@@ -377,65 +367,57 @@ command_palette_execute PROC
     lea rcx, [rip + sz_cmd_edit_paste]
     call ui_add_chat_message
     xor eax, eax
-    jmp .cmd_done
-    
-.dispatch_search_commands:
+    jmp @@cmd_done
+@@dispatch_search_commands:
     lea rcx, [rsp + 64]
     lea rdx, [rip + sz_find_action]
     call strcmp_masm
     cmp eax, 0
-    je .cmd_search_find
+    je @@cmd_search_find
     
     lea rcx, [rsp + 64]
     lea rdx, [rip + sz_replace_action]
     call strcmp_masm
     cmp eax, 0
-    je .cmd_search_replace
+    je @@cmd_search_replace
     
-    jmp .cmd_invalid
-    
-.cmd_search_find:
+    jmp @@cmd_invalid
+@@cmd_search_find:
     ; Get search pattern and execute find
     xor eax, eax
-    jmp .cmd_done
-    
-.cmd_search_replace:
+    jmp @@cmd_done
+@@cmd_search_replace:
     xor eax, eax
-    jmp .cmd_done
-    
-.dispatch_run_commands:
+    jmp @@cmd_done
+@@dispatch_run_commands:
     lea rcx, [rsp + 64]
     lea rdx, [rip + sz_build_action]
     call strcmp_masm
     cmp eax, 0
-    je .cmd_run_build
+    je @@cmd_run_build
     
     lea rcx, [rsp + 64]
     lea rdx, [rip + sz_test_action]
     call strcmp_masm
     cmp eax, 0
-    je .cmd_run_test
+    je @@cmd_run_test
     
-    jmp .cmd_invalid
-    
-.cmd_run_build:
+    jmp @@cmd_invalid
+@@cmd_run_build:
     xor eax, eax
-    jmp .cmd_done
-    
-.cmd_run_test:
+    jmp @@cmd_done
+@@cmd_run_test:
     xor eax, eax
-    jmp .cmd_done
-    
-.cmd_invalid:
+    jmp @@cmd_done
+@@cmd_invalid:
     mov eax, 1                          ; Error code
-    
-.cmd_done:
+@@cmd_done:
     add rsp, 128
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
-    
+
 command_palette_execute ENDP
 
 ;==========================================================================
@@ -457,8 +439,10 @@ file_search_recursive PROC
     ; Returns: eax = file count
     
     push rbx
+
     push r12
     push r13
+
     push r14
     sub rsp, 512
     
@@ -470,7 +454,7 @@ file_search_recursive PROC
     
     ; Check recursion depth
     cmp r9d, r14d
-    jge .search_exit
+    jge @@search_exit
     
     ; Build search path: directory\*.*
     lea rcx, [rsp + 8]
@@ -492,11 +476,10 @@ file_search_recursive PROC
     call FindFirstFileA
     
     cmp rax, -1
-    je .search_exit
+    je @@search_exit
     
     mov r12d, eax                       ; Save search handle
-    
-.search_loop:
+@@search_loop:
     ; Check cFileName against pattern
     lea rcx, [rsp + 256 + 44]           ; cFileName offset in WIN32_FIND_DATA
     mov rdx, r13                        ; Pattern
@@ -514,20 +497,20 @@ file_search_recursive PROC
     
     ; Check depth and recurse
     cmp r9d, r14d
-    jge .search_next_file
+    jge @@search_next_file
     
     ; Skip "." and ".." entries
     lea rcx, [rsp + 256 + 44]
     lea rdx, [rip + sz_dot_dir]
     call lstrcmpA
     cmp eax, 0
-    je .search_next_file
+    je @@search_next_file
     
     lea rcx, [rsp + 256 + 44]
     lea rdx, [rip + sz_dotdot_dir]
     call lstrcmpA
     cmp eax, 0
-    je .search_next_file
+    je @@search_next_file
     
     ; Recurse into subdirectory
     mov rcx, r12                        ; Current directory
@@ -538,8 +521,7 @@ file_search_recursive PROC
     call file_search_recursive
     
     add ebx, eax                        ; Add to total count
-    
-.search_next_file:
+@@search_next_file:
     mov rcx, r12d
     lea rdx, [rsp + 256]
     call FindNextFileA
@@ -549,17 +531,16 @@ file_search_recursive PROC
     ; Close search handle
     mov rcx, r12d
     call FindClose
-    
-.search_exit:
+@@search_exit:
     mov eax, ebx
     add rsp, 512
-    pop r14
-    pop r13
+
+    pop r13 pop r14
+
+
     pop r12
-    pop rbx
-    ret
-    
-file_search_recursive ENDP
+    pop file
+    pop rbx_search_recursive ENDP
 
 ;==========================================================================
 ; PROBLEM NAVIGATION (2+ hours of functionality)
@@ -577,8 +558,10 @@ problem_navigate_to_error PROC
     ; Returns: eax = 0 (success), non-zero (error)
     
     push rbx
+
     push r12
     push r13
+
     push r14
     sub rsp, 256
     
@@ -637,20 +620,18 @@ problem_navigate_to_error PROC
     call console_log
     
     xor eax, eax                        ; Success
-    jmp .nav_done
-    
-.nav_invalid:
+    jmp @@nav_done
+@@nav_invalid:
     mov eax, 1                          ; Error code
-    
-.nav_done:
+@@nav_done:
     add rsp, 256
-    pop r14
-    pop r13
+
+    pop r13 pop r14
+
+
     pop r12
-    pop rbx
-    ret
-    
-problem_navigate_to_error ENDP
+    pop problem
+    pop rbx_navigate_to_error ENDP
 
 ;==========================================================================
 ; DEBUG COMMAND HANDLING (6+ hours of functionality)
@@ -669,6 +650,7 @@ debug_handle_command PROC
     ; Returns: eax = 0 (success), non-zero (error)
     
     push rbx
+
     push r12
     sub rsp, 128
     
@@ -680,81 +662,73 @@ debug_handle_command PROC
     mov rdx, r12
     call strcmp_masm
     cmp eax, 0
-    je .debug_break_cmd
+    je @@debug_break_cmd
     
     lea rcx, [rip + sz_debug_continue]
     mov rdx, r12
     call strcmp_masm
     cmp eax, 0
-    je .debug_continue_cmd
+    je @@debug_continue_cmd
     
     lea rcx, [rip + sz_debug_step_over]
     mov rdx, r12
     call strcmp_masm
     cmp eax, 0
-    je .debug_step_over_cmd
+    je @@debug_step_over_cmd
     
     lea rcx, [rip + sz_debug_step_into]
     mov rdx, r12
     call strcmp_masm
     cmp eax, 0
-    je .debug_step_into_cmd
+    je @@debug_step_into_cmd
     
     lea rcx, [rip + sz_debug_step_out]
     mov rdx, r12
     call strcmp_masm
     cmp eax, 0
-    je .debug_step_out_cmd
+    je @@debug_step_out_cmd
     
-    jmp .debug_invalid
-    
-.debug_break_cmd:
+    jmp @@debug_invalid
+@@debug_break_cmd:
     ; Set breakpoint at line number (ebx)
     mov edx, ebx
     lea rcx, [rip + sz_debug_breakpoint_set]
     ; Format: "[DEBUG] Breakpoint set at file:line"
     call console_log
     xor eax, eax
-    jmp .debug_done
-    
-.debug_continue_cmd:
+    jmp @@debug_done
+@@debug_continue_cmd:
     ; Resume execution
     lea rcx, [rip + sz_debug_continue_cmd]
     call console_log
     xor eax, eax
-    jmp .debug_done
-    
-.debug_step_over_cmd:
+    jmp @@debug_done
+@@debug_step_over_cmd:
     ; Step over (execute one line, skip function calls)
     lea rcx, [rip + sz_debug_step_cmd]
     call console_log
     xor eax, eax
-    jmp .debug_done
-    
-.debug_step_into_cmd:
+    jmp @@debug_done
+@@debug_step_into_cmd:
     ; Step into (enter function calls)
     lea rcx, [rip + sz_debug_step_cmd]
     call console_log
     xor eax, eax
-    jmp .debug_done
-    
-.debug_step_out_cmd:
+    jmp @@debug_done
+@@debug_step_out_cmd:
     ; Step out (exit current function)
     lea rcx, [rip + sz_debug_step_cmd]
     call console_log
     xor eax, eax
-    jmp .debug_done
-    
-.debug_invalid:
+    jmp @@debug_done
+@@debug_invalid:
     mov eax, 1                          ; Error code
-    
-.debug_done:
+@@debug_done:
     add rsp, 128
+
     pop r12
-    pop rbx
-    ret
-    
-debug_handle_command ENDP
+    pop debug
+    pop rbx_handle_command ENDP
 
 ;==========================================================================
 ; UTILITY FUNCTIONS
@@ -764,21 +738,21 @@ debug_handle_command ENDP
 ; rcx = string pointer, rax = number value
 parse_number_masm PROC
     xor eax, eax
-.parse_loop:
+@@parse_loop:
     mov dl, BYTE PTR [rcx]
     test dl, dl
     jz .parse_done
     cmp dl, '0'
-    jl .parse_done
+    jl @@parse_done
     cmp dl, '9'
-    jg .parse_done
+    jg @@parse_done
     imul eax, eax, 10
     sub dl, '0'
     movzx edx, dl
     add eax, edx
     inc rcx
-    jmp .parse_loop
-.parse_done:
+    jmp @@parse_loop
+@@parse_done:
     ret
 parse_number_masm ENDP
 
@@ -786,9 +760,9 @@ parse_number_masm ENDP
 ; rcx = dest, rdx = src, r8 = max length
 strncpy_masm PROC
     xor eax, eax
-.copy_loop:
+@@copy_loop:
     cmp eax, r8
-    jge .copy_done
+    jge @@copy_done
     mov al, BYTE PTR [rdx]
     mov BYTE PTR [rcx], al
     test al, al
@@ -796,8 +770,8 @@ strncpy_masm PROC
     inc rcx
     inc rdx
     inc eax
-    jmp .copy_loop
-.copy_done:
+    jmp @@copy_loop
+@@copy_done:
     ret
 strncpy_masm ENDP
 
@@ -831,3 +805,8 @@ strncpy_masm ENDP
     sz_test_action       BYTE "Test", 0
 
 END
+
+
+
+
+

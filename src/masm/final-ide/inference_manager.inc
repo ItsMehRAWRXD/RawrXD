@@ -18,17 +18,17 @@ EXTERN cache_embeddings:PROC
 EXTERN optimize_memory:PROC
 
 INFERENCE_REQUEST STRUCT
-    input_tokens qword
-    input_length dword
-    max_gen_tokens dword
-    output_buffer qword
-    request_id dword
-    status dword
+    input_tokens QWORD ?
+    input_length DWORD ?
+    max_gen_tokens DWORD ?
+    output_buffer QWORD ?
+    request_id DWORD ?
+    status DWORD ?
 INFERENCE_REQUEST ENDS
 
 KV_CACHE STRUCT
-    key_tensors qword
-    value_tensors qword
-    seq_position dword
-    max_seq_len dword
+    key_tensors QWORD ?
+    value_tensors QWORD ?
+    seq_position DWORD ?
+    max_seq_len DWORD ?
 KV_CACHE ENDS

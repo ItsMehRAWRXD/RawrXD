@@ -84,7 +84,7 @@ szPluginExt db "*.dll",0
 PUBLIC plugin_system_init
 plugin_system_init PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     ; Setup default plugin directory
@@ -110,7 +110,7 @@ plugin_system_init ENDP
 PUBLIC plugin_load
 plugin_load PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 64
     
     ; Check if we have space for more plugins
@@ -208,7 +208,7 @@ plugin_load ENDP
 PUBLIC plugin_unload
 plugin_unload PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     mov rdi, rcx
@@ -252,7 +252,7 @@ plugin_unload ENDP
 PUBLIC plugin_process_all
 plugin_process_all PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     mov ecx, [globalPluginManager.pluginCount]
@@ -277,14 +277,13 @@ process_loop:
     
     ; Call plugin process function
     push rcx
+
     push rsi
-    
-    mov rcx, rdi
+    push mov rcx, rdi
     call [rdi.processFunc]
-    
-    pop rsi
-    pop rcx
-    
+
+    pop rcx pop rsi
+
 skip_plugin:
     add rsi, 8
     dec ecx
@@ -307,7 +306,7 @@ plugin_process_all ENDP
 PUBLIC plugin_scan_directory
 plugin_scan_directory PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 512
     
     ; Setup find data structure
@@ -378,7 +377,7 @@ plugin_scan_directory ENDP
 ; Remove plugin from manager (internal)
 plugin_remove_from_manager PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     mov rdi, rcx
@@ -430,7 +429,7 @@ plugin_remove_from_manager ENDP
 ; Check if file has .dll extension
 is_dll_file PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     
     mov rsi, rcx
     
@@ -470,7 +469,7 @@ is_dll_file ENDP
 ; malloc(size: rcx) -> pointer (rax)
 malloc PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     mov rdx, rcx
@@ -484,7 +483,7 @@ malloc ENDP
 ; free(ptr: rcx)
 free PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     mov rdx, rcx
@@ -499,7 +498,7 @@ free ENDP
 ; Simple string formatting
 sprintf PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 64
     
     ; Basic implementation - just concatenate strings
@@ -535,3 +534,7 @@ searchPattern BYTE 260 DUP(?)
 fullPath BYTE 520 DUP(?)
 
 end
+
+
+
+

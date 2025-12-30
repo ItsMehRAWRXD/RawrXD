@@ -150,6 +150,7 @@ Phase2State ENDS
 PUBLIC Phase2_Initialize
 Phase2_Initialize PROC
     push rbx
+
     push rdi
     push rsi
     sub rsp, 32
@@ -220,21 +221,22 @@ Phase2_Init_SkipBrowser:
     ; Success
     mov eax, 1
     add rsp, 32
-    pop rsi
-    pop rdi
+
+    pop rdi pop rsi
+
     pop rbx
-    ret
-    
+
 Phase2_Init_Failed:
     ; Cleanup partial initialization
     call Phase2_Cleanup
     
     xor eax, eax  ; Return 0 (failure)
     add rsp, 32
-    pop rsi
-    pop rdi
+
+    pop rdi pop rsi
+
     pop rbx
-    ret
+
 Phase2_Initialize ENDP
 
 ; ============================================================================
@@ -278,7 +280,7 @@ Phase2_Cleanup_SkipMenu:
     
     add rsp, 32
     pop rbx
-    ret
+
 Phase2_Cleanup ENDP
 
 ; ============================================================================
@@ -298,6 +300,7 @@ Phase2_Cleanup ENDP
 PUBLIC Phase2_HandleCommand
 Phase2_HandleCommand PROC
     push rbx
+
     push rdi
     sub rsp, 40
     
@@ -359,11 +362,10 @@ Phase2_Cmd_ThemeApplied:
     
     mov eax, 1  ; Command handled
     add rsp, 40
+
     pop rdi
-    pop rbx
-    ret
-    
-Phase2_Cmd_ToggleExplorer:
+    pop Phase2
+    pop rbx_Cmd_ToggleExplorer:
     ; Toggle file browser visibility
     mov eax, gPhase2State.browserVisible
     test eax, eax
@@ -390,8 +392,9 @@ Phase2_Cmd_ExplorerToggled:
     ; Get client rect
     lea r8, [rsp+32]  ; &RECT
     push rcx
-    call GetClientRect
-    pop rcx
+    push call
+    push GetClientRect
+    push pop rcx
     
     ; Extract width and height
     mov r9d, DWORD PTR [rsp+40]  ; right (width)
@@ -406,11 +409,10 @@ Phase2_Cmd_ExplorerToggled:
     
     mov eax, 1  ; Command handled
     add rsp, 40
+
     pop rdi
-    pop rbx
-    ret
-    
-Phase2_Cmd_FileNew:
+    pop Phase2
+    pop rbx_Cmd_FileNew:
     ; Handle File->New (clear file browser selection)
     mov rcx, gPhase2State.hFileBrowser
     test rcx, rcx
@@ -421,11 +423,10 @@ Phase2_Cmd_FileNew:
     
     mov eax, 1  ; Command handled
     add rsp, 40
+
     pop rdi
-    pop rbx
-    ret
-    
-Phase2_Cmd_FileOpen:
+    pop Phase2
+    pop rbx_Cmd_FileOpen:
     ; Handle File->Open (get selected file from browser)
     mov rcx, gPhase2State.hFileBrowser
     test rcx, rcx
@@ -440,17 +441,16 @@ Phase2_Cmd_FileOpen:
     
     mov eax, 1  ; Command handled
     add rsp, 40
+
     pop rdi
-    pop rbx
-    ret
-    
-Phase2_Cmd_NotHandled:
+    pop Phase2
+    pop rbx_Cmd_NotHandled:
     xor eax, eax  ; Return 0 (not handled)
     add rsp, 40
+
     pop rdi
-    pop rbx
-    ret
-Phase2_HandleCommand ENDP
+    pop Phase2
+    pop rbx_HandleCommand ENDP
 
 ; ============================================================================
 ; PUBLIC FUNCTION: Phase2_HandleSize
@@ -469,6 +469,7 @@ Phase2_HandleCommand ENDP
 PUBLIC Phase2_HandleSize
 Phase2_HandleSize PROC
     push rbx
+
     push rdi
     sub rsp, 32
     
@@ -506,10 +507,10 @@ Phase2_HandleSize PROC
     
 Phase2_Size_Done:
     add rsp, 32
+
     pop rdi
-    pop rbx
-    ret
-Phase2_HandleSize ENDP
+    pop Phase2
+    pop rbx_HandleSize ENDP
 
 ; ============================================================================
 ; PUBLIC FUNCTION: Phase2_HandlePaint
@@ -527,6 +528,7 @@ Phase2_HandleSize ENDP
 PUBLIC Phase2_HandlePaint
 Phase2_HandlePaint PROC
     push rbx
+
     push rdi
     sub rsp, 56  ; PAINTSTRUCT (64 bytes)
     
@@ -560,19 +562,19 @@ Phase2_HandlePaint PROC
     call FillRect
     
     ; Delete brush
+
+    pop DeleteObject call
     pop rcx
-    call DeleteObject
-    
     ; EndPaint
     mov rcx, rbx
     lea rdx, [rsp+32]  ; &PAINTSTRUCT
     call EndPaint
     
     add rsp, 56
+
     pop rdi
-    pop rbx
-    ret
-Phase2_HandlePaint ENDP
+    pop Phase2
+    pop rbx_HandlePaint ENDP
 
 ; ============================================================================
 ; PUBLIC FUNCTION: Phase2_GetFileBrowserHandle
@@ -627,3 +629,8 @@ Phase2_IsInitialized PROC
 Phase2_IsInitialized ENDP
 
 END
+
+
+
+
+

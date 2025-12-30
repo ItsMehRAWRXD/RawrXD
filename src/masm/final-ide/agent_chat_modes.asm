@@ -187,7 +187,7 @@ agent_chat_init PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
+
 agent_chat_init ENDP
 
 ;==========================================================================
@@ -197,6 +197,7 @@ agent_chat_init ENDP
 PUBLIC agent_chat_set_mode
 agent_chat_set_mode PROC
     push rbx
+
     push rsi
     sub rsp, 48
     
@@ -252,10 +253,10 @@ mode_invalid:
     
 mode_done:
     add rsp, 48
+
     pop rsi
-    pop rbx
-    ret
-agent_chat_set_mode ENDP
+    pop agent
+    pop rbx_chat_set_mode ENDP
 
 ;==========================================================================
 ; PUBLIC: agent_chat_send_message(message: rcx) -> rax
@@ -264,8 +265,10 @@ agent_chat_set_mode ENDP
 PUBLIC agent_chat_send_message
 agent_chat_send_message PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     sub rsp, 64
     
@@ -316,12 +319,13 @@ agent_response_got:
     
     mov eax, 1
     add rsp, 64
-    pop r12
-    pop rdi
+
+    pop rdi pop r12
+
+
     pop rsi
-    pop rbx
-    ret
-agent_chat_send_message ENDP
+    pop agent
+    pop rbx_chat_send_message ENDP
 
 ;==========================================================================
 ; PUBLIC: agent_chat_add_message(message: rcx, type: edx) -> rax
@@ -331,8 +335,10 @@ agent_chat_send_message ENDP
 PUBLIC agent_chat_add_message
 agent_chat_add_message PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     sub rsp, 64
     
@@ -406,12 +412,13 @@ copy_sender:
     
 message_done:
     add rsp, 64
-    pop r12
-    pop rdi
+
+    pop rdi pop r12
+
+
     pop rsi
-    pop rbx
-    ret
-agent_chat_add_message ENDP
+    pop agent
+    pop rbx_chat_add_message ENDP
 
 ;==========================================================================
 ; PUBLIC: agent_chat_clear() -> rax
@@ -448,7 +455,7 @@ agent_chat_clear PROC
 clear_done:
     add rsp, 32
     pop rbx
-    ret
+
 agent_chat_clear ENDP
 
 ;==========================================================================
@@ -457,6 +464,7 @@ agent_chat_clear ENDP
 ;==========================================================================
 agent_chat_show_mode_info PROC
     push rbx
+
     push rsi
     sub rsp, 48
     
@@ -498,10 +506,10 @@ info_got:
     
     mov eax, 1
     add rsp, 48
+
     pop rsi
-    pop rbx
-    ret
-agent_chat_show_mode_info ENDP
+    pop agent
+    pop rbx_chat_show_mode_info ENDP
 
 ;==========================================================================
 ; INTERNAL: agent_chat_update_display() -> rax
@@ -509,7 +517,7 @@ agent_chat_show_mode_info ENDP
 ;==========================================================================
 agent_chat_update_display PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 1024 + 64
     
     ; Get last message
@@ -588,7 +596,7 @@ strcpy_rdi ENDP
 
 agent_ask_response PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 64
     
     mov rsi, rdx        ; input message
@@ -630,7 +638,7 @@ agent_ask_response ENDP
 
 agent_edit_response PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 64
     mov rdi, rcx
     lea rdx, szEditResponse
@@ -641,7 +649,7 @@ agent_edit_response ENDP
 
 agent_plan_response PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 64
     mov rdi, rcx
     lea rdx, szPlanResponse
@@ -652,7 +660,7 @@ agent_plan_response ENDP
 
 agent_config_response PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 64
     mov rdi, rcx
     lea rdx, szConfigResponse
@@ -683,6 +691,7 @@ strstr_simple PROC
     jz @not_found
     
     push rcx
+
     push rdx
 @inner:
     mov al, [rcx]
@@ -695,14 +704,15 @@ strstr_simple PROC
     inc rdx
     jmp @inner
 @next:
-    pop rdx
-    pop rcx
+
+    pop rcx pop rdx
+
     inc rcx
     jmp @outer
 @found:
+
     pop rdx
     pop rax
-    ret
 @not_found:
     xor rax, rax
     ret
@@ -737,4 +747,9 @@ EXTERN GetTickCount:PROC
 EXTERN wsprintfA:PROC
 EXTERN ml_masm_inference:PROC
 EXTERN ml_masm_get_response:PROC
+
+
+
+
+
 

@@ -100,3 +100,8 @@ msg_heap_fail DB "FAIL: GetProcessHeap", 13, 10, 0
 msg_alloc_fail DB "FAIL: HeapAlloc returned NULL", 13, 10, 0
 
 END
+
+
+
+
+

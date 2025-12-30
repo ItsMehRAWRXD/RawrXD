@@ -237,6 +237,7 @@ zero_cpp_bridge_initialize PROC
     ; rcx = config_flags, rdx = callback_hwnd
     
     push rbx
+
     push r12
     sub rsp, 48
     
@@ -361,18 +362,17 @@ verify_complete:
     call console_log
     
     add rsp, 48
-    pop r12
-    pop rbx
-    ret
 
-verify_error:
+    pop r12
+    pop verify
+    pop rbx_error:
     xor eax, eax      ; Failure
     mov g_last_error_code, eax
     add rsp, 48
+
     pop r12
-    pop rbx
-    ret
-ALIGN 16
+    pop ALIGN
+    pop rbx 16
 zero_cpp_bridge_initialize ENDP
 
 ;==============================================================================
@@ -385,6 +385,7 @@ zero_cpp_bridge_process_wish PROC
     ; Returns: rax = EXECUTION_CONTEXT ptr
     
     push rbx
+
     push r12
     sub rsp, 64
     
@@ -507,11 +508,10 @@ skip_checkpoint:
     
     inc g_total_wishes_processed
     add rsp, 64
+
     pop r12
-    pop rbx
-    ret
-    
-plan_failed:
+    pop plan
+    pop rbx_failed:
     xor eax, eax
     mov g_last_error_code, 1  ; PLAN_GENERATION_FAILED
     ; Record error counter
@@ -520,11 +520,10 @@ plan_failed:
     xor r8, r8
     call metrics_collector_record
     add rsp, 64
+
     pop r12
-    pop rbx
-    ret
-    
-execution_error:
+    pop execution
+    pop rbx_error:
     mov DWORD PTR [rbx + EXECUTION_CONTEXT.execution_state], 4  ; ERROR
     mov [rbx + EXECUTION_CONTEXT.rollback_needed], 1
     ; Record error counter
@@ -542,10 +541,10 @@ execution_error:
     
     mov rax, rbx      ; Return context with error state
     add rsp, 64
+
     pop r12
-    pop rbx
-    ret
-ALIGN 16
+    pop ALIGN
+    pop rbx 16
 zero_cpp_bridge_process_wish ENDP
 
 ;==============================================================================
@@ -619,13 +618,12 @@ zero_cpp_bridge_apply_hotpatch PROC
     mov eax, 1        ; Success
     add rsp, 32
     pop rbx
-    ret
-    
+
 hotpatch_failed:
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 ALIGN 16
 zero_cpp_bridge_apply_hotpatch ENDP
 
@@ -649,7 +647,7 @@ zero_cpp_bridge_rollback PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
+
 ALIGN 16
 zero_cpp_bridge_rollback ENDP
 
@@ -721,7 +719,7 @@ allocate_memory PROC
     
     add rsp, 32
     pop rbx
-    ret
+
 ALIGN 16
 allocate_memory ENDP
 
@@ -745,3 +743,8 @@ ALIGN 16
 zero_cpp_bridge_shutdown ENDP
 
 END
+
+
+
+
+

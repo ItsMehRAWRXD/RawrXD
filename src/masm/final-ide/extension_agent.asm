@@ -65,6 +65,7 @@ PUBLIC agent_terminal_run
 ALIGN 16
 agent_terminal_run PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 256 ; Space for PROCESS_INFO_EX and params
@@ -122,10 +123,11 @@ terminal_fail:
     
 terminal_done:
     add rsp, 256
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 agent_terminal_run ENDP
 
 .data
@@ -134,10 +136,11 @@ agent_terminal_run ENDP
 ;==========================================================================
 ; PUBLIC: agent_git_push()
 ;==========================================================================
-PUBLIC agent_git_push
-ALIGN 16
+PUBLIC agent_git_push ALIGN
+    push 16
 agent_git_push PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 256
@@ -172,9 +175,9 @@ agent_git_push PROC
     mov rcx, [rsp + 32 + 8]
     call CloseHandle
     
-    ; 3. git push
-    lea rcx, szGitPush
-    lea rdx, [rsp + 32]
+    ; 3. git push lea
+    push rcx, szGitpush lea
+    push rdx, [rsp + 32]
     call CreateRedirectedProcess
     test rax, rax
     jz git_fail
@@ -192,10 +195,11 @@ git_fail:
 
 git_done:
     add rsp, 256
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 agent_git_push ENDP
 
 .data
@@ -208,10 +212,13 @@ PUBLIC agent_apply_highlighting
 ALIGN 16
 agent_apply_highlighting PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
+
     push r14
     sub rsp, 256 ; Space for CHARFORMAT2, FINDTEXTA, etc.
     
@@ -287,10 +294,10 @@ find_next_occurrence:
     mov r9, rax
     ; Calculate length of keyword
     push rax
-    mov rcx, rsi
+    push mov rcx, rsi
     call lstrlenA
-    pop rdx
-    add r9, rax
+    pop add
+    pop rdx r9, rax
     call SendMessageA
     
     ; Apply format
@@ -324,14 +331,16 @@ highlight_finished:
     
 highlight_done:
     add rsp, 256
-    pop r14
-    pop r13
-    pop r12
-    pop rdi
+
+    pop r13 pop r14
+
+
+    pop rdi pop r12
+
+
     pop rsi
-    pop rbx
-    ret
-agent_apply_highlighting ENDP
+    pop agent
+    pop rbx_apply_highlighting ENDP
 
 ;==========================================================================
 ; PUBLIC: agent_scaffold_project()
@@ -365,7 +374,7 @@ agent_scaffold_project PROC
     lea rax, szScaffoldOk
     add rsp, 64
     pop rbx
-    ret
+
 agent_scaffold_project ENDP
 
 ; Helper: create_and_write_file(filename: rcx)
@@ -400,7 +409,7 @@ create_and_write_file PROC
 cwf_done:
     add rsp, 64
     pop rbx
-    ret
+
 create_and_write_file ENDP
 
 .data
@@ -428,7 +437,7 @@ END
 cwf_done:
     add rsp, 64
     pop rbx
-    ret
+
 create_and_write_file ENDP
 
 .data
@@ -440,3 +449,8 @@ create_and_write_file ENDP
     szScaffoldOk        BYTE "Agent: Project scaffolded successfully.", 0
 
 END
+
+
+
+
+

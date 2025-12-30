@@ -33,10 +33,14 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 set(MASM_RUNTIME_SOURCES
     asm_memory.asm
     asm_sync.asm
+    asm_thread_pool.asm
     asm_string.asm
     asm_events.asm
     asm_log.asm
 )
+
+# Mark all MASM sources as ASM_MASM language to avoid mixing with other ASM variants
+set_source_files_properties(${MASM_RUNTIME_SOURCES} PROPERTIES LANGUAGE ASM_MASM)
 
 # ==== Qt6 Foundation Layer (NEW) ====
 # Pure MASM implementation of Qt6 foundation abstractions
@@ -47,7 +51,26 @@ set(MASM_QT6_FOUNDATION_SOURCES
     final-ide/qt6_text_editor.asm
     final-ide/qt6_syntax_highlighter.asm
     final-ide/qt6_statusbar.asm
+    final-ide/qt6_signal_slot_bridge.asm
+    final-ide/qt6_widget_factory_bridge.asm
+    final-ide/masm_qt_bridge.asm
+    final-ide/agentic_copilot_bridge.asm
+    final-ide/settings_manager.asm
+    final-ide/terminal_pool.asm
+    final-ide/hotpatch_system.asm
+    final-ide/file_browser.asm
+    final-ide/lsp_client.asm
+    final-ide/inference_manager.asm
+    final-ide/agent_coordinator.asm
+    final-ide/server_layer.asm
+    final-ide/caching_layer.asm
+    final-ide/stream_processor.asm
+    final-ide/distributed_executor.asm
+    final-ide/advanced_auth.asm
+    final-ide/missing_stubs.asm
 )
+
+set_source_files_properties(${MASM_QT6_FOUNDATION_SOURCES} PROPERTIES LANGUAGE ASM_MASM)
 
 option(ENABLE_MASM_EXPERIMENTAL_OPS "Build experimental MASM tensor/logging modules" OFF)
 if(ENABLE_MASM_EXPERIMENTAL_OPS)
@@ -104,6 +127,11 @@ foreach(src ${MASM_HOTPATCH_SOURCES})
     endif()
 endforeach()
 
+# Mark all hotpatch sources as ASM_MASM
+if(MASM_HOTPATCH_SOURCES)
+    set_source_files_properties(${MASM_HOTPATCH_SOURCES} PROPERTIES LANGUAGE ASM_MASM)
+endif()
+
 add_library(masm_hotpatch_core_obj OBJECT ${MASM_HOTPATCH_SOURCES})
 add_library(masm_hotpatch_core STATIC $<TARGET_OBJECTS:masm_hotpatch_core_obj>)
 set_target_properties(masm_hotpatch_core PROPERTIES
@@ -120,6 +148,7 @@ foreach(src proxy_hotpatcher.asm agentic_failure_detector.asm agentic_puppeteer.
 endforeach()
 
 if(MASM_AGENTIC_SOURCES)
+    set_source_files_properties(${MASM_AGENTIC_SOURCES} PROPERTIES LANGUAGE ASM_MASM)
     add_library(masm_agentic_obj OBJECT ${MASM_AGENTIC_SOURCES})
     add_library(masm_agentic STATIC $<TARGET_OBJECTS:masm_agentic_obj>)
     set_target_properties(masm_agentic PROPERTIES
@@ -145,6 +174,10 @@ foreach(src ${MASM_ORCHESTRATION_SOURCES})
     endif()
 endforeach()
 
+if(MASM_ORCHESTRATION_SOURCES)
+    set_source_files_properties(${MASM_ORCHESTRATION_SOURCES} PROPERTIES LANGUAGE ASM_MASM)
+endif()
+
 add_library(masm_orchestration_obj OBJECT ${MASM_ORCHESTRATION_SOURCES})
 add_library(masm_orchestration STATIC $<TARGET_OBJECTS:masm_orchestration_obj>)
 set_target_properties(masm_orchestration PROPERTIES
@@ -161,11 +194,99 @@ foreach(src output_pane_logger.asm tab_manager.asm file_tree_driver.asm agent_ch
 endforeach()
 
 if(MASM_UI_SOURCES)
+    set_source_files_properties(${MASM_UI_SOURCES} PROPERTIES LANGUAGE ASM_MASM)
     add_library(masm_ui_obj OBJECT ${MASM_UI_SOURCES})
     add_library(masm_ui STATIC $<TARGET_OBJECTS:masm_ui_obj>)
     set_target_properties(masm_ui PROPERTIES
         OUTPUT_NAME "masm_ui"
     )
+endif()
+
+# ==== MASM Autonomous Features Library (Pure Win32 Runtime) ====
+# Pure MASM64 implementation of autonomous IDE features
+# No Qt dependencies - uses Win32 API directly (kernel32/user32/gdi32/comctl32)
+# Converted from Qt C++ autonomous_feature_engine.h/autonomous_widgets.h
+set(MASM_AUTONOMOUS_SOURCES
+    masm_pure/autonomous_features.asm
+    masm_pure/autonomous_widgets.asm
+)
+
+# Check which files exist
+foreach(src ${MASM_AUTONOMOUS_SOURCES})
+    if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${src}")
+        message(WARNING "MASM autonomous source missing: ${src}")
+        list(REMOVE_ITEM MASM_AUTONOMOUS_SOURCES ${src})
+    else()
+        message(STATUS "✅ MASM autonomous feature found: ${src}")
+    endif()
+endforeach()
+
+if(MASM_AUTONOMOUS_SOURCES)
+    set_source_files_properties(${MASM_AUTONOMOUS_SOURCES} PROPERTIES LANGUAGE ASM_MASM)
+    add_library(masm_autonomous_features_obj OBJECT ${MASM_AUTONOMOUS_SOURCES})
+    add_library(masm_autonomous_features STATIC $<TARGET_OBJECTS:masm_autonomous_features_obj>)
+    set_target_properties(masm_autonomous_features PROPERTIES
+        OUTPUT_NAME "masm_autonomous_features"
+    )
+    target_link_libraries(masm_autonomous_features PUBLIC comctl32)
+    message(STATUS "✅ MASM autonomous features library created")
+endif()
+
+# ==== MASM Universal Format Loader Library (Phase 1 + Phase 3) ====
+# Pure MASM implementation of format detection and conversion for ML models
+# Phase 1: SafeTensors, PyTorch, TensorFlow, ONNX detection
+# Phase 3: Pure MASM implementation of universal_format_loader, format_router, enhanced_model_loader
+set(MASM_UNIVERSAL_FORMAT_LOADER_SOURCES
+    universal_format_loader/universal_format_detector.asm
+    universal_format_loader/safetensors_parser.asm
+    universal_format_loader/pytorch_loader.asm
+    universal_format_loader/universal_format_loader.asm
+    universal_format_loader/universal_wrapper.asm
+    # universal_format_loader/format_router.asm  ; TODO: fix MASM syntax
+    # universal_format_loader/enhanced_model_loader.asm ; TODO: fix MASM syntax
+)
+
+# Verify all sources exist
+foreach(src ${MASM_UNIVERSAL_FORMAT_LOADER_SOURCES})
+    if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${src}")
+        message(FATAL_ERROR "Universal Format Loader source missing: ${src}")
+    else()
+        message(STATUS "Universal Format Loader module found: ${src}")
+    endif()
+endforeach()
+
+# Mark MASM files explicitly as ASM_MASM language
+set_source_files_properties(${MASM_UNIVERSAL_FORMAT_LOADER_SOURCES} PROPERTIES LANGUAGE ASM_MASM)
+
+if(MASM_UNIVERSAL_FORMAT_LOADER_SOURCES)
+    add_library(masm_universal_format_loader_obj OBJECT ${MASM_UNIVERSAL_FORMAT_LOADER_SOURCES})
+    add_library(masm_universal_format_loader STATIC $<TARGET_OBJECTS:masm_universal_format_loader_obj>)
+    set_target_properties(masm_universal_format_loader PROPERTIES
+        OUTPUT_NAME "masm_universal_format_loader"
+    )
+    message(STATUS "✓ Universal Format Loader library created")
+endif()
+
+# ==== MASM Phase 2: TensorFlow & ONNX Parsers ====
+set(MASM_PHASE2_SOURCES)
+foreach(src 
+    universal_format_loader/tensorflow_parser.asm
+    universal_format_loader/onnx_parser.asm)
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${src}")
+        list(APPEND MASM_PHASE2_SOURCES ${src})
+        get_filename_component(fname "${src}" NAME)
+        message(STATUS "Phase 2 module found: ${fname}")
+    endif()
+endforeach()
+
+if(MASM_PHASE2_SOURCES)
+    set_source_files_properties(${MASM_PHASE2_SOURCES} PROPERTIES LANGUAGE ASM_MASM)
+    add_library(masm_phase2_parsers_obj OBJECT ${MASM_PHASE2_SOURCES})
+    add_library(masm_phase2_parsers STATIC $<TARGET_OBJECTS:masm_phase2_parsers_obj>)
+    set_target_properties(masm_phase2_parsers PROPERTIES
+        OUTPUT_NAME "masm_phase2_parsers"
+    )
+    message(STATUS "✓ Phase 2 parser library created")
 endif()
 
 # ==== Unified MASM Hotpatch Library (All-in-One) ====
@@ -175,11 +296,29 @@ list(APPEND MASM_UNIFIED_SOURCES ${MASM_HOTPATCH_SOURCES})
 if(MASM_AGENTIC_SOURCES)
     list(APPEND MASM_UNIFIED_SOURCES ${MASM_AGENTIC_SOURCES})
 endif()
+if(MASM_UNIVERSAL_FORMAT_LOADER_SOURCES)
+    list(APPEND MASM_UNIFIED_SOURCES ${MASM_UNIVERSAL_FORMAT_LOADER_SOURCES})
+endif()
+# Temporarily disable Phase 2 for testing
+# if(MASM_PHASE2_SOURCES)
+#     list(APPEND MASM_UNIFIED_SOURCES ${MASM_PHASE2_SOURCES})
+# endif()
+if(MASM_TEST_GENERATOR_SOURCES)
+    list(APPEND MASM_UNIFIED_SOURCES ${MASM_TEST_GENERATOR_SOURCES})
+endif()
+if(MASM_SIMPLE_TEST_SOURCES)
+    list(APPEND MASM_UNIFIED_SOURCES ${MASM_SIMPLE_TEST_SOURCES})
+endif()
 
 add_library(masm_hotpatch_unified_obj OBJECT ${MASM_UNIFIED_SOURCES})
+set_target_properties(masm_hotpatch_unified_obj PROPERTIES
+    LINKER_LANGUAGE ASM_MASM
+)
+
 add_library(masm_hotpatch_unified STATIC $<TARGET_OBJECTS:masm_hotpatch_unified_obj>)
 set_target_properties(masm_hotpatch_unified PROPERTIES
     OUTPUT_NAME "masm_hotpatch_unified"
+    LINKER_LANGUAGE ASM_MASM
 )
 
 # ==== Pure MASM Test Harness (NO C/C++ CODE) ====
@@ -195,11 +334,25 @@ if(BUILD_MASM_TESTS AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/masm_test_main.asm")
     set_target_properties(masm_hotpatch_test PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/tests"
         LINK_FLAGS "/SUBSYSTEM:CONSOLE /ENTRY:main kernel32.lib user32.lib"
+        LINKER_LANGUAGE ASM_MASM
     )
     
     # Add test
     enable_testing()
     add_test(NAME MASM_HotpatchSuite COMMAND masm_hotpatch_test)
+    
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_threading.asm")
+        add_executable(test_threading
+            tests/test_threading.asm
+            $<TARGET_OBJECTS:masm_runtime_obj>
+        )
+        set_target_properties(test_threading PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/tests"
+            LINK_FLAGS "/SUBSYSTEM:CONSOLE /ENTRY:main kernel32.lib user32.lib"
+            LINKER_LANGUAGE ASM_MASM
+        )
+        add_test(NAME MASM_ThreadingTest COMMAND test_threading)
+    endif()
     
     set_tests_properties(MASM_HotpatchSuite PROPERTIES
         PASS_REGULAR_EXPRESSION "Test Summary"
@@ -214,9 +367,49 @@ install(TARGETS masm_runtime masm_qt6_foundation masm_hotpatch_core masm_hotpatc
     RUNTIME DESTINATION bin
 )
 
+if(TARGET masm_universal_format_loader)
+    install(TARGETS masm_universal_format_loader
+        ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION lib
+        RUNTIME DESTINATION bin
+    )
+endif()
+
+if(TARGET masm_phase2_parsers)
+    install(TARGETS masm_phase2_parsers
+        ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION lib
+        RUNTIME DESTINATION bin
+    )
+endif()
+
 install(FILES masm_hotpatch.inc
     DESTINATION include/masm
 )
+
+# ==== MASM Autonomous Features Test Executable ====
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../tests/autonomous/test_autonomous_masm.cpp")
+    add_executable(test_autonomous_masm
+        ../tests/autonomous/test_autonomous_masm.cpp
+        masm_pure/autonomous_features.asm
+        masm_pure/autonomous_widgets.asm
+    )
+    
+    set_source_files_properties(
+        masm_pure/autonomous_features.asm
+        masm_pure/autonomous_widgets.asm
+        PROPERTIES LANGUAGE ASM_MASM
+    )
+    
+    target_include_directories(test_autonomous_masm PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/masm_pure)
+    target_link_libraries(test_autonomous_masm PRIVATE kernel32 user32 gdi32 comctl32)
+    
+    set_target_properties(test_autonomous_masm PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/tests"
+    )
+    
+    message(STATUS "✅ test_autonomous_masm: MASM autonomous features test enabled")
+endif()
 
 # ==== Tools: MASM Header Generator (pure MASM) ====
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tools/masm_header_gen.asm")

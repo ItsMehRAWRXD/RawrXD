@@ -119,7 +119,7 @@ rgb_to_hsv PROC FRAME
     
     ; If cmax == r
     cmpltss xmm0, xmm4
-    jne .check_g
+    jne @@check_g
     
     ; H = 60 * (((g - b) / delta) mod 6)
     movaps xmm11, xmm1
@@ -134,11 +134,10 @@ rgb_to_hsv PROC FRAME
     subss xmm11, xmm12              ; Modulo 6
     mulss xmm11, [fSixty]
     movaps xmm10, xmm11
-    jmp .calc_hsv_done
-    
-.check_g:
+    jmp @@calc_hsv_done
+@@check_g:
     cmpltss xmm1, xmm4
-    jne .check_b
+    jne @@check_b
     
     ; H = 60 * ((b - r) / delta + 2)
     movaps xmm11, xmm2
@@ -147,9 +146,8 @@ rgb_to_hsv PROC FRAME
     addss xmm11, [fTwo]
     mulss xmm11, [fSixty]
     movaps xmm10, xmm11
-    jmp .calc_hsv_done
-    
-.check_b:
+    jmp @@calc_hsv_done
+@@check_b:
     ; H = 60 * ((r - g) / delta + 4)
     movaps xmm11, xmm0
     subss xmm11, xmm1
@@ -157,8 +155,7 @@ rgb_to_hsv PROC FRAME
     addss xmm11, [fFour]
     mulss xmm11, [fSixty]
     movaps xmm10, xmm11
-    
-.calc_hsv_done:
+@@calc_hsv_done:
     ; Convert H (0-360) to integer
     mulss xmm10, [fOne]             ; Ensure H is in 0-360 range
     cvttss2si eax, xmm10            ; H as integer (0-360)
@@ -217,55 +214,49 @@ hsv_to_rgb PROC
     xorps xmm6, xmm6               ; b' = 0
     
     cmp ebx, 0
-    jne .check_h1
+    jne @@check_h1
     
     ; H' in [0, 1): (r', g', b') = (c, x, 0)
     movaps xmm4, xmm3
     movaps xmm5, xmm3
-    jmp .match_v
-    
-.check_h1:
+    jmp @@match_v
+@@check_h1:
     cmp ebx, 1
-    jne .check_h2
+    jne @@check_h2
     
     ; H' in [1, 2): (r', g', b') = (x, c, 0)
     movaps xmm4, xmm3
     movaps xmm6, xmm3
-    jmp .match_v
-    
-.check_h2:
+    jmp @@match_v
+@@check_h2:
     cmp ebx, 2
-    jne .check_h3
+    jne @@check_h3
     
     ; H' in [2, 3): (r', g', b') = (0, c, x)
     movaps xmm5, xmm3
     movaps xmm6, xmm3
-    jmp .match_v
-    
-.check_h3:
+    jmp @@match_v
+@@check_h3:
     cmp ebx, 3
-    jne .check_h4
+    jne @@check_h4
     
     ; H' in [3, 4): (r', g', b') = (0, x, c)
     movaps xmm5, xmm3
     movaps xmm6, xmm3
-    jmp .match_v
-    
-.check_h4:
+    jmp @@match_v
+@@check_h4:
     cmp ebx, 4
-    jne .check_h5
+    jne @@check_h5
     
     ; H' in [4, 5): (r', g', b') = (x, 0, c)
     movaps xmm4, xmm3
     movaps xmm6, xmm3
-    jmp .match_v
-    
-.check_h5:
+    jmp @@match_v
+@@check_h5:
     ; H' in [5, 6): (r', g', b') = (c, 0, x)
     movaps xmm4, xmm3
     movaps xmm5, xmm3
-    
-.match_v:
+@@match_v:
     ; m = V - C
     movaps xmm7, xmm2
     subss xmm7, xmm3
@@ -292,7 +283,7 @@ hsv_to_rgb PROC
     or eax, 0xFF000000              ; Alpha = 255
     
     pop rbx
-    ret
+
 hsv_to_rgb ENDP
 
 ; ============================================================================
@@ -379,7 +370,7 @@ rgb_to_lab PROC
     mov r8d, 0                      ; b ≈ 0
     
     pop rbx
-    ret
+
 rgb_to_lab ENDP
 
 ; ============================================================================
@@ -474,6 +465,7 @@ interpolate_rgb ENDP
 PUBLIC interpolate_hsv
 interpolate_hsv PROC
     push rbx
+
     push rsi
     push rdi
     
@@ -520,11 +512,10 @@ interpolate_hsv PROC
     mov eax, r9d
     sub eax, ebx
     cmp eax, 180
-    jle .h_direct
+    jle @@h_direct
     
     sub r9d, 360
-    
-.h_direct:
+@@h_direct:
     mov eax, ebx
     add eax, (r9d - ebx) * r8d / 255  ; H_interp
     
@@ -537,11 +528,11 @@ interpolate_hsv PROC
     
     ; Convert back to RGB
     call hsv_to_rgb
-    
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 interpolate_hsv ENDP
 
 ; ============================================================================
@@ -604,3 +595,8 @@ color_distance_euclidean ENDP
 ; ============================================================================
 
 END
+
+
+
+
+

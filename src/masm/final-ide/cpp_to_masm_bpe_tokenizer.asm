@@ -100,8 +100,7 @@ BPE_TOKENIZER ENDS
 PUBLIC bpe_tokenizer_create
 bpe_tokenizer_create PROC
     push rbx
-    
-    mov r8d, ecx                    ; r8d = modelType
+    push mov r8d, ecx                    ; r8d = modelType
     mov r9d, edx                    ; r9d = vocabSize
     
     ; Allocate tokenizer
@@ -147,7 +146,7 @@ bpe_tokenizer_create PROC
     
     mov rax, rbx
     pop rbx
-    ret
+
 bpe_tokenizer_create ENDP
 
 ; ============================================================================
@@ -158,9 +157,9 @@ bpe_tokenizer_create ENDP
 PUBLIC bpe_load_vocab
 bpe_load_vocab PROC
     push rbx
+
     push rsi
-    
-    mov rbx, rcx                    ; rbx = tokenizer
+    push mov rbx, rcx                    ; rbx = tokenizer
     mov rsi, rdx                    ; rsi = vocabFile
     
     ; Log
@@ -169,10 +168,10 @@ bpe_load_vocab PROC
     call console_log
     
     mov rax, [rbx + BPE_TOKENIZER.vocabSize]
+
     pop rsi
-    pop rbx
-    ret
-bpe_load_vocab ENDP
+    pop bpe
+    pop rbx_load_vocab ENDP
 
 ; ============================================================================
 
@@ -182,9 +181,9 @@ bpe_load_vocab ENDP
 PUBLIC bpe_load_merges
 bpe_load_merges PROC
     push rbx
+
     push rsi
-    
-    mov rbx, rcx                    ; rbx = tokenizer
+    push mov rbx, rcx                    ; rbx = tokenizer
     mov rsi, rdx                    ; rsi = mergesFile
     
     ; Log
@@ -193,10 +192,10 @@ bpe_load_merges PROC
     call console_log
     
     mov rax, [rbx + BPE_TOKENIZER.mergeRuleCount]
+
     pop rsi
-    pop rbx
-    ret
-bpe_load_merges ENDP
+    pop bpe
+    pop rbx_load_merges ENDP
 
 ; ============================================================================
 
@@ -206,10 +205,11 @@ bpe_load_merges ENDP
 PUBLIC bpe_encode
 bpe_encode PROC
     push rbx
+
     push rsi
     push r12
+
     push r13
-    
     mov rbx, rcx                    ; rbx = tokenizer
     mov rsi, rdx                    ; rsi = text
     mov r12, r8                     ; r12 = outputTokens
@@ -228,10 +228,9 @@ bpe_encode PROC
     ; Initialize encoding process
     xor r11d, r11d                  ; r11d = token count
     xor r14, r14                    ; r14 = position in text
-    
-.encode_loop:
+@@encode_loop:
     cmp r14, r10
-    jge .encode_done
+    jge @@encode_done
     
     ; Get character at current position
     mov al, byte [rsi + r14]
@@ -241,28 +240,27 @@ bpe_encode PROC
     
     ; Store token
     cmp r11d, r13d
-    jge .encode_done
+    jge @@encode_done
     
     mov [r12 + r11 * 4], eax        ; Store token ID
     inc r11d
     inc r14
     
-    jmp .encode_loop
-    
-.encode_done:
+    jmp @@encode_loop
+@@encode_done:
     ; Log completion
     lea rcx, [szEncodeComplete]
     mov rdx, r11
     call console_log
     
     mov eax, r11d                   ; Return token count
-    
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
+
     pop rsi
-    pop rbx
-    ret
-bpe_encode ENDP
+    pop bpe
+    pop rbx_encode ENDP
 
 ; ============================================================================
 
@@ -272,6 +270,7 @@ bpe_encode ENDP
 PUBLIC bpe_decode
 bpe_decode PROC
     push rbx
+
     push rsi
     push r12
     
@@ -288,10 +287,9 @@ bpe_decode PROC
     ; Find vocab entries for each token
     xor r14, r14                    ; r14 = output position
     xor r15d, r15d                  ; r15d = loop counter
-    
-.decode_loop:
+@@decode_loop:
     cmp r15d, r12d
-    jge .decode_done
+    jge @@decode_done
     
     ; Get token ID
     mov r8d, [rsi + r15 * 4]
@@ -300,10 +298,9 @@ bpe_decode PROC
     mov r10, [rbx + BPE_TOKENIZER.vocab]
     mov r11d, [rbx + BPE_TOKENIZER.vocabSize]
     xor r9d, r9d
-    
-.find_token:
+@@find_token:
     cmp r9d, r11d
-    jge .token_not_found
+    jge @@token_not_found
     
     mov rax, r10
     mov rcx, r9
@@ -311,12 +308,11 @@ bpe_decode PROC
     add rax, rcx
     
     cmp [rax + BPE_VOCAB.tokenId], r8d
-    je .token_found
+    je @@token_found
     
     inc r9d
-    jmp .find_token
-    
-.token_found:
+    jmp @@find_token
+@@token_found:
     ; Copy token text to output
     mov rdx, [rax + BPE_VOCAB.tokenText]
     
@@ -331,12 +327,10 @@ bpe_decode PROC
     call memcpy
     
     add r14, rax                    ; Update output position
-    
-.token_not_found:
+@@token_not_found:
     inc r15d
-    jmp .decode_loop
-    
-.decode_done:
+    jmp @@decode_loop
+@@decode_done:
     ; Null-terminate output
     mov byte [r13 + r14], 0
     
@@ -346,11 +340,11 @@ bpe_decode PROC
     call console_log
     
     mov rax, r14                    ; Return output length
-    
-    pop r12
-    pop rsi
+
+    pop rsi pop r12
+
     pop rbx
-    ret
+
 bpe_decode ENDP
 
 ; ============================================================================
@@ -374,10 +368,9 @@ bpe_get_token_text PROC
     mov r8, [rcx + BPE_TOKENIZER.vocab]
     mov r9d, [rcx + BPE_TOKENIZER.vocabSize]
     xor r10d, r10d
-    
-.search_token:
+@@search_token:
     cmp r10d, r9d
-    jge .token_text_not_found
+    jge @@token_text_not_found
     
     mov r11, r8
     mov r12, r10
@@ -385,16 +378,14 @@ bpe_get_token_text PROC
     add r11, r12
     
     cmp [r11 + BPE_VOCAB.tokenId], edx
-    je .token_text_found
+    je @@token_text_found
     
     inc r10d
-    jmp .search_token
-    
-.token_text_found:
+    jmp @@search_token
+@@token_text_found:
     mov rax, [r11 + BPE_VOCAB.tokenText]
     ret
-    
-.token_text_not_found:
+@@token_text_not_found:
     xor rax, rax
     ret
 bpe_get_token_text ENDP
@@ -406,13 +397,12 @@ bpe_get_token_text ENDP
 PUBLIC bpe_add_vocab_entry
 bpe_add_vocab_entry PROC
     push rbx
-    
-    mov rbx, rcx                    ; rbx = tokenizer
+    push mov rbx, rcx                    ; rbx = tokenizer
     
     ; Check capacity
     mov r9d, [rbx + BPE_TOKENIZER.vocabSize]
     cmp r9d, [rbx + BPE_TOKENIZER.maxVocabSize]
-    jge .vocab_full
+    jge @@vocab_full
     
     ; Get vocab entry slot
     mov r10, [rbx + BPE_TOKENIZER.vocab]
@@ -442,10 +432,9 @@ bpe_add_vocab_entry PROC
     
     ; Increment vocab size
     inc dword [rbx + BPE_TOKENIZER.vocabSize]
-    
-.vocab_full:
+@@vocab_full:
     pop rbx
-    ret
+
 bpe_add_vocab_entry ENDP
 
 ; ============================================================================
@@ -456,8 +445,7 @@ bpe_add_vocab_entry ENDP
 PUBLIC bpe_train
 bpe_train PROC
     push rbx
-    
-    mov rbx, rcx                    ; rbx = tokenizer
+    push mov rbx, rcx                    ; rbx = tokenizer
     mov r8, r8                      ; r8 = numIterations
     
     ; Mark as trained
@@ -465,21 +453,19 @@ bpe_train PROC
     
     ; Run merge iterations (simplified)
     xor r9, r9
-    
-.train_loop:
+@@train_loop:
     cmp r9, r8
-    jge .train_done
+    jge @@train_done
     
     ; Perform BPE merge iteration
     ; (Simplified: just increment iteration counter)
     
     inc r9
-    jmp .train_loop
-    
-.train_done:
+    jmp @@train_loop
+@@train_done:
     mov eax, [rbx + BPE_TOKENIZER.vocabSize]
     pop rbx
-    ret
+
 bpe_train ENDP
 
 ; ============================================================================
@@ -534,18 +520,17 @@ bpe_get_special_tokens ENDP
 PUBLIC bpe_destroy
 bpe_destroy PROC
     push rbx
+
     push rsi
-    
-    mov rbx, rcx
+    push mov rbx, rcx
     
     ; Free vocabulary entries
     mov r10, [rbx + BPE_TOKENIZER.vocab]
     mov r11d, [rbx + BPE_TOKENIZER.vocabSize]
     xor r12d, r12d
-    
-.free_vocab_loop:
+@@free_vocab_loop:
     cmp r12d, r11d
-    jge .vocab_freed
+    jge @@vocab_freed
     
     mov r13, r10
     mov r14, r12
@@ -554,42 +539,41 @@ bpe_destroy PROC
     
     mov rcx, [r13 + BPE_VOCAB.tokenText]
     cmp rcx, 0
-    je .skip_vocab_text
+    je @@skip_vocab_text
     call free
-    
-.skip_vocab_text:
+@@skip_vocab_text:
     inc r12d
-    jmp .free_vocab_loop
-    
-.vocab_freed:
+    jmp @@free_vocab_loop
+@@vocab_freed:
     ; Free vocabulary array
     mov rcx, [rbx + BPE_TOKENIZER.vocab]
     cmp rcx, 0
-    je .skip_vocab_array
+    je @@skip_vocab_array
     call free
-    
-.skip_vocab_array:
+@@skip_vocab_array:
     ; Free merge rules
     mov rcx, [rbx + BPE_TOKENIZER.mergeRules]
     cmp rcx, 0
-    je .skip_merges
+    je @@skip_merges
     call free
-    
-.skip_merges:
+@@skip_merges:
     ; Free encoded buffer
     mov rcx, [rbx + BPE_TOKENIZER.encodedBuffer]
     cmp rcx, 0
-    je .skip_buffer
+    je @@skip_buffer
     call free
-    
-.skip_buffer:
+@@skip_buffer:
     ; Free tokenizer
     mov rcx, rbx
     call free
-    
+
     pop rsi
-    pop rbx
-    ret
-bpe_destroy ENDP
+    pop bpe
+    pop rbx_destroy ENDP
 
 END
+
+
+
+
+

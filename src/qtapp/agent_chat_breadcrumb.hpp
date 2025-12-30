@@ -76,12 +76,14 @@ public:
     void setSelectedModel(const QString& modelName);
     QString getSelectedModel() const;
     AgentMode getSelectedMode() const;
+    QList<ModelInfo> getAvailableModels() const { return m_availableModels; }
     
     // Register available models
     void registerLocalModel(const QString& name, const QString& endpoint);
     void registerOllamaModel(const QString& name);
     void registerCloudModel(const QString& provider, const QString& modelId);
     void loadModelsFromConfiguration();
+    void scanLocalModels();
     void fetchOllamaModels(const QString& endpoint = "http://localhost:11434");
     
     // Performance enhanced methods

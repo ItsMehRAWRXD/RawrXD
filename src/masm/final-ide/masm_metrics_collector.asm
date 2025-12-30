@@ -48,6 +48,7 @@ metrics_init ENDP
 PUBLIC metrics_log_request
 metrics_log_request PROC
     push rbx
+
     push rsi
     sub rsp, 32
     
@@ -66,10 +67,10 @@ metrics_log_request PROC
     call console_log
     
     add rsp, 32
+
     pop rsi
-    pop rbx
-    ret
-metrics_log_request ENDP
+    pop metrics
+    pop rbx_log_request ENDP
 
 ;==========================================================================
 ; Compatibility shims for unified bridge expectations
@@ -95,7 +96,12 @@ metrics_collector_record PROC
     
     add rsp, 32
     pop rbx
-    ret
+
 metrics_collector_record ENDP
 
 END
+
+
+
+
+

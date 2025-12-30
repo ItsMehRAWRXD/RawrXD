@@ -17,6 +17,7 @@ PUBLIC mem_search_ascii
 ALIGN 16
 mem_search_ascii PROC
     push rbx
+
     push rsi
     push rdi
     
@@ -47,6 +48,7 @@ search_loop:
     
     ; Compare key at current position
     push rcx
+
     push rsi
     push rdi
     mov rdx, r10
@@ -62,27 +64,31 @@ compare_loop:
     jnz compare_loop
     
     ; Found!
-    pop rdi
-    pop rsi
-    pop rcx
-    lea rax, [rsi + rcx]
+
+    pop rsi pop rdi
+
+    pop lea
+    pop rcx rax, [rsi + rcx]
     jmp search_done
     
 compare_fail:
-    pop rdi
-    pop rsi
-    pop rcx
-    inc rcx
-    jmp search_loop
+
+    pop rsi pop rdi
+
+
+    pop rcx inc
+    pop jmp
+    pop rcx search_loop
     
 search_fail:
     xor rax, rax
     
 search_done:
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 mem_search_ascii ENDP
 
 ;==========================================================================
@@ -136,9 +142,9 @@ PUBLIC copy_ascii_value_after_key
 ALIGN 16
 copy_ascii_value_after_key PROC
     push rsi
+
     push rdi
-    
-    mov rsi, rcx
+    push mov rsi, rcx
     mov rdi, rdx
     mov r10d, r8d       ; max len
     xor r9, r9          ; current len
@@ -183,11 +189,10 @@ copy_loop:
 copy_done:
     mov byte ptr [rdi], 0
     mov rax, r9
-    
+
     pop rdi
-    pop rsi
-    ret
-copy_ascii_value_after_key ENDP
+    pop copy
+    pop rsi_ascii_value_after_key ENDP
 
 ;==========================================================================
 ; build_arch_string(out_buf: rcx, arch_struct: rdx)
@@ -229,7 +234,7 @@ build_arch_string PROC
     
     add rsp, 128
     pop rbx
-    ret
+
 build_arch_string ENDP
 
 ;==========================================================================
@@ -287,6 +292,7 @@ FILE_END            EQU 2
 ALIGN 16
 ml_helpers_log_append PROC
     push rbx
+
     push rsi
     sub rsp, 64
     
@@ -339,10 +345,10 @@ len_done:
     
 log_done:
     add rsp, 64
+
     pop rsi
-    pop rbx
-    ret
-ml_helpers_log_append ENDP
+    pop ml
+    pop rbx_helpers_log_append ENDP
 
 .data
     szArchFmt BYTE "Model: %s, Layers: %d, Hidden: %d, Heads: %d, Seq: %d, Vocab: %d, Quant: %s", 0
@@ -350,3 +356,8 @@ ml_helpers_log_append ENDP
     szNewline BYTE 13, 10, 0
 
 END
+
+
+
+
+

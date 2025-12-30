@@ -118,8 +118,7 @@ PROTECTION_READ_WRITE EQU 0x04      ; PAGE_READWRITE
 PUBLIC model_memory_hotpatch_create
 model_memory_hotpatch_create PROC
     push rbx
-    
-    mov rbx, rcx                    ; rbx = modelPtr
+    push mov rbx, rcx                    ; rbx = modelPtr
     mov r9, rdx                     ; r9 = modelSize
     
     ; Allocate hotpatch
@@ -160,7 +159,7 @@ model_memory_hotpatch_create PROC
     
     mov rax, r10
     pop rbx
-    ret
+
 model_memory_hotpatch_create ENDP
 
 ; ============================================================================
@@ -171,14 +170,14 @@ model_memory_hotpatch_create ENDP
 PUBLIC memory_hotpatch_apply_patch
 memory_hotpatch_apply_patch PROC
     push rbx
+
     push rsi
-    
-    mov rbx, rcx                    ; rbx = hotpatch
+    push mov rbx, rcx                    ; rbx = hotpatch
     mov rsi, rdx                    ; rsi = patch
     
     ; Check if patch enabled
     cmp byte [rsi + MEMORY_PATCH.enabled], 1
-    jne .patch_disabled
+    jne @@patch_disabled
     
     ; Get start time
     call GetSystemTimeAsFileTime
@@ -256,13 +255,12 @@ memory_hotpatch_apply_patch PROC
     call console_log
     
     mov rax, r9                     ; Return result
+
     pop rsi
     pop rbx
-    ret
-    
-.protection_failed:
-.restore_failed:
-.patch_disabled:
+@@protection_failed:
+@@restore_failed:
+@@patch_disabled:
     ; Set error result
     mov byte [r9 + PATCH_RESULT.success], 0
     lea rax, [szPatchFailedDetail]
@@ -278,10 +276,10 @@ memory_hotpatch_apply_patch PROC
     inc dword [rbx + MODEL_MEMORY_HOTPATCH.totalErrors]
     
     mov rax, r9
+
     pop rsi
-    pop rbx
-    ret
-memory_hotpatch_apply_patch ENDP
+    pop memory
+    pop rbx_hotpatch_apply_patch ENDP
 
 ; ============================================================================
 
@@ -291,9 +289,9 @@ memory_hotpatch_apply_patch ENDP
 PUBLIC memory_hotpatch_add_patch
 memory_hotpatch_add_patch PROC
     push rbx
+
     push rsi
-    
-    mov rbx, rcx                    ; rbx = hotpatch
+    push mov rbx, rcx                    ; rbx = hotpatch
     mov rsi, rdx                    ; rsi = name
     mov r10, r8                     ; r10 = description
     mov r11d, r9d                   ; r11d = type
@@ -301,7 +299,7 @@ memory_hotpatch_add_patch PROC
     ; Check capacity
     mov r12d, [rbx + MODEL_MEMORY_HOTPATCH.patchCount]
     cmp r12d, [rbx + MODEL_MEMORY_HOTPATCH.maxPatches]
-    jge .capacity_exceeded
+    jge @@capacity_exceeded
     
     ; Get patch slot
     mov r13, [rbx + MODEL_MEMORY_HOTPATCH.patches]
@@ -356,16 +354,15 @@ memory_hotpatch_add_patch PROC
     inc dword [rbx + MODEL_MEMORY_HOTPATCH.patchCount]
     
     mov eax, r12d                   ; Return patch ID
+
     pop rsi
     pop rbx
-    ret
-    
-.capacity_exceeded:
+@@capacity_exceeded:
     xor rax, rax
+
     pop rsi
-    pop rbx
-    ret
-memory_hotpatch_add_patch ENDP
+    pop memory
+    pop rbx_hotpatch_add_patch ENDP
 
 ; ============================================================================
 
@@ -375,9 +372,9 @@ memory_hotpatch_add_patch ENDP
 PUBLIC memory_hotpatch_add_region
 memory_hotpatch_add_region PROC
     push rbx
+
     push rsi
-    
-    mov rbx, rcx                    ; rbx = hotpatch
+    push mov rbx, rcx                    ; rbx = hotpatch
     mov rsi, rdx                    ; rsi = baseAddress
     mov r10, r8                     ; r10 = size
     mov r11, r9                     ; r11 = description
@@ -385,7 +382,7 @@ memory_hotpatch_add_region PROC
     ; Check capacity
     mov r12d, [rbx + MODEL_MEMORY_HOTPATCH.regionCount]
     cmp r12d, [rbx + MODEL_MEMORY_HOTPATCH.maxRegions]
-    jge .capacity_exceeded
+    jge @@capacity_exceeded
     
     ; Get region slot
     mov r13, [rbx + MODEL_MEMORY_HOTPATCH.regions]
@@ -420,16 +417,15 @@ memory_hotpatch_add_region PROC
     call console_log
     
     mov eax, r12d                   ; Return region ID
+
     pop rsi
     pop rbx
-    ret
-    
-.capacity_exceeded:
+@@capacity_exceeded:
     xor rax, rax
+
     pop rsi
-    pop rbx
-    ret
-memory_hotpatch_add_region ENDP
+    pop memory
+    pop rbx_hotpatch_add_region ENDP
 
 ; ============================================================================
 
@@ -441,10 +437,9 @@ memory_hotpatch_get_patch PROC
     mov r8, [rcx + MODEL_MEMORY_HOTPATCH.patches]
     mov r9d, [rcx + MODEL_MEMORY_HOTPATCH.patchCount]
     xor r10d, r10d
-    
-.find_patch:
+@@find_patch:
     cmp r10d, r9d
-    jge .patch_not_found
+    jge @@patch_not_found
     
     mov r11, r8
     mov r12, r10
@@ -452,16 +447,14 @@ memory_hotpatch_get_patch PROC
     add r11, r12
     
     cmp r10d, edx
-    je .patch_found
+    je @@patch_found
     
     inc r10d
-    jmp .find_patch
-    
-.patch_found:
+    jmp @@find_patch
+@@patch_found:
     mov rax, r11
     ret
-    
-.patch_not_found:
+@@patch_not_found:
     xor rax, rax
     ret
 memory_hotpatch_get_patch ENDP
@@ -476,10 +469,9 @@ memory_hotpatch_get_region PROC
     mov r8, [rcx + MODEL_MEMORY_HOTPATCH.regions]
     mov r9d, [rcx + MODEL_MEMORY_HOTPATCH.regionCount]
     xor r10d, r10d
-    
-.find_region:
+@@find_region:
     cmp r10d, r9d
-    jge .region_not_found
+    jge @@region_not_found
     
     mov r11, r8
     mov r12, r10
@@ -487,16 +479,14 @@ memory_hotpatch_get_region PROC
     add r11, r12
     
     cmp r10d, edx
-    je .region_found
+    je @@region_found
     
     inc r10d
-    jmp .find_region
-    
-.region_found:
+    jmp @@find_region
+@@region_found:
     mov rax, r11
     ret
-    
-.region_not_found:
+@@region_not_found:
     xor rax, rax
     ret
 memory_hotpatch_get_region ENDP
@@ -520,17 +510,15 @@ memory_hotpatch_get_statistics ENDP
 PUBLIC memory_hotpatch_destroy
 memory_hotpatch_destroy PROC
     push rbx
-    
-    mov rbx, rcx
+    push mov rbx, rcx
     
     ; Free patches array
     mov r10, [rbx + MODEL_MEMORY_HOTPATCH.patches]
     mov r11d, [rbx + MODEL_MEMORY_HOTPATCH.patchCount]
     xor r12d, r12d
-    
-.free_patches:
+@@free_patches:
     cmp r12d, r11d
-    jge .patches_freed
+    jge @@patches_freed
     
     mov r13, r10
     mov r14, r12
@@ -539,51 +527,44 @@ memory_hotpatch_destroy PROC
     
     mov rcx, [r13 + MEMORY_PATCH.name]
     cmp rcx, 0
-    je .skip_patch_name
+    je @@skip_patch_name
     call free
-    
-.skip_patch_name:
+@@skip_patch_name:
     mov rcx, [r13 + MEMORY_PATCH.description]
     cmp rcx, 0
-    je .skip_patch_desc
+    je @@skip_patch_desc
     call free
-    
-.skip_patch_desc:
+@@skip_patch_desc:
     mov rcx, [r13 + MEMORY_PATCH.originalData]
     cmp rcx, 0
-    je .skip_original
+    je @@skip_original
     call free
-    
-.skip_original:
+@@skip_original:
     mov rcx, [r13 + MEMORY_PATCH.patchData]
     cmp rcx, 0
-    je .skip_patch
+    je @@skip_patch
     call free
-    
-.skip_patch:
+@@skip_patch:
     inc r12d
-    jmp .free_patches
-    
-.patches_freed:
+    jmp @@free_patches
+@@patches_freed:
     mov rcx, [rbx + MODEL_MEMORY_HOTPATCH.patches]
     cmp rcx, 0
-    je .skip_patches_array
+    je @@skip_patches_array
     call free
-    
-.skip_patches_array:
+@@skip_patches_array:
     ; Free regions array
     mov rcx, [rbx + MODEL_MEMORY_HOTPATCH.regions]
     cmp rcx, 0
-    je .skip_regions
+    je @@skip_regions
     call free
-    
-.skip_regions:
+@@skip_regions:
     ; Free hotpatch
     mov rcx, rbx
     call free
     
     pop rbx
-    ret
+
 memory_hotpatch_destroy ENDP
 
 ; ============================================================================
@@ -593,3 +574,8 @@ memory_hotpatch_destroy ENDP
     szPatchFailedDetail DB "Patch application failed", 0
 
 END
+
+
+
+
+

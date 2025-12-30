@@ -174,12 +174,16 @@ ui_create_main_window PROC
     mov r10, CW_USEDEFAULT
     mov r11, CW_USEDEFAULT
     push 0
+
     push 0
     push r11
+
     push r10
     push r9
+
     push r8
     push rdx
+
     push rcx
     call CreateWindowExA
     add rsp, 64
@@ -296,12 +300,16 @@ ui_create_chat_control PROC
     mov r10, 10
     mov r11, 400
     push 0
+
     push 0
     push r11
+
     push r10
     push r9
+
     push r8
     push rdx
+
     push rcx
     call CreateWindowExA
     add rsp, 64
@@ -332,12 +340,16 @@ ui_create_send_button PROC
     mov r10, 420
     mov r11, 25
     push 0
+
     push 0
     push r11
+
     push r10
     push r9
+
     push r8
     push rdx
+
     push rcx
     call CreateWindowExA
     add rsp, 64
@@ -368,12 +380,16 @@ ui_create_mode_combo PROC
     mov r10, 500
     mov r11, 150
     push 0
+
     push 0
     push r11
+
     push r10
     push r9
+
     push r8
     push rdx
+
     push rcx
     call CreateWindowExA
     add rsp, 64
@@ -660,3 +676,7 @@ szSaveFileTitle db "Save File",0
 ; ============================================================================
 
 END
+
+
+
+

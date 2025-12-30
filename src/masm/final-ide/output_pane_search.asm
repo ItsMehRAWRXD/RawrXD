@@ -112,6 +112,7 @@ output_search_init ENDP
 PUBLIC output_search_find
 output_search_find PROC
     push rbx
+
     push rdi
     push rsi
     sub rsp, 48
@@ -152,10 +153,9 @@ output_search_find PROC
     ; Search through text
     lea rdi, SearchTerm                 ; rdi = search term
     lea rsi, TempSearchBuffer           ; rsi = pane text
-    
-.search_loop:
+@@search_loop:
     cmp BYTE PTR [rsi], 0               ; End of text?
-    je .search_done
+    je @@search_done
     
     ; Try to match at current position
     mov rcx, rsi
@@ -169,7 +169,7 @@ output_search_find PROC
     ; Record match
     mov ebx, MatchCount
     cmp ebx, MAX_OUTPUT_ENTRIES
-    jge .search_done                    ; Buffer full
+    jge @@search_done                    ; Buffer full
     
     ; Calculate offset
     mov r8d, ebx
@@ -181,12 +181,10 @@ output_search_find PROC
     mov DWORD PTR [r8 + 12], 0          ; start_pos
     
     inc MatchCount
-    
-.no_match_here:
+@@no_match_here:
     inc rsi
-    jmp .search_loop
-    
-.search_done:
+    jmp @@search_loop
+@@search_done:
     ; Calculate search duration
     call GetTickCount64
     sub rax, LastSearchTime
@@ -194,10 +192,11 @@ output_search_find PROC
     
     mov eax, MatchCount                 ; Return number of matches
     add rsp, 48
-    pop rsi
-    pop rdi
+
+    pop rdi pop rsi
+
     pop rbx
-    ret
+
 output_search_find ENDP
 
 ;==========================================================================
@@ -206,21 +205,19 @@ output_search_find ENDP
 PRIVATE copy_string_safe_search
 copy_string_safe_search PROC
     xor eax, eax
-    
-.copy_loop:
+@@copy_loop:
     cmp eax, r8d
-    jge .done
+    jge @@done
     
     movzx ebx, BYTE PTR [rdx + rax]
     mov BYTE PTR [rcx + rax], bl
     
     test bl, bl
-    je .done
+    je @@done
     
     inc eax
-    jmp .copy_loop
-    
-.done:
+    jmp @@copy_loop
+@@done:
     mov BYTE PTR [rcx + rax], 0
     ret
 copy_string_safe_search ENDP
@@ -233,44 +230,41 @@ copy_string_safe_search ENDP
 PRIVATE string_match_at_position
 string_match_at_position PROC
     push rbx
+
     push rsi
-    xor eax, eax                        ; Default: no match
+    push xor eax, eax                        ; Default: no match
     
     ; Simple case-insensitive/sensitive matching
     cmp r8d, 0                          ; flags
-    je .case_insensitive
+    je @@case_insensitive
     
     ; Case sensitive - direct byte comparison
     mov rsi, rcx                        ; rsi = text
     mov rbx, rdx                        ; rbx = pattern
-    
-.sensitive_loop:
+@@sensitive_loop:
     movzx eax, BYTE PTR [rbx]
     test al, al
     jz .match_found
     
     movzx ecx, BYTE PTR [rsi]
     cmp al, cl
-    jne .no_match
+    jne @@no_match
     
     inc rsi
     inc rbx
-    jmp .sensitive_loop
-    
-.case_insensitive:
+    jmp @@sensitive_loop
+@@case_insensitive:
     ; TODO: case-insensitive matching
     mov eax, 0
-    jmp .match_exit
-    
-.match_found:
+    jmp @@match_exit
+@@match_found:
     mov eax, 1
-    
-.match_exit:
-.no_match:
+@@match_exit:
+@@no_match:
+
     pop rsi
-    pop rbx
-    ret
-string_match_at_position ENDP
+    pop string
+    pop rbx_match_at_position ENDP
 
 ;==========================================================================
 ; PRIVATE: get_pane_text_length() -> eax
@@ -288,7 +282,7 @@ get_pane_text_length PROC
     call SendMessage
     
     pop rcx
-    ret
+
 get_pane_text_length ENDP
 
 ;==========================================================================
@@ -312,18 +306,16 @@ output_search_find_next PROC
     mov eax, CurrentMatchIdx
     mov edx, MatchCount
     cmp eax, edx
-    jge .not_found
+    jge @@not_found
     
     ; Move to next match
     inc CurrentMatchIdx
     cmp CurrentMatchIdx, MatchCount
-    jl .found
-    
-.not_found:
+    jl @@found
+@@not_found:
     xor eax, eax
     ret
-    
-.found:
+@@found:
     mov eax, 1
     ret
 output_search_find_next ENDP
@@ -335,13 +327,12 @@ output_search_find_next ENDP
 PUBLIC output_search_find_prev
 output_search_find_prev PROC
     cmp CurrentMatchIdx, 0
-    je .not_found
+    je @@not_found
     
     dec CurrentMatchIdx
     mov eax, 1
     ret
-    
-.not_found:
+@@not_found:
     xor eax, eax
     ret
 output_search_find_prev ENDP
@@ -354,13 +345,12 @@ PUBLIC output_search_get_current
 output_search_get_current PROC
     mov eax, CurrentMatchIdx
     cmp eax, MatchCount
-    jge .invalid
+    jge @@invalid
     
     imul eax, SIZE SEARCH_RESULT
     lea rax, SearchMatches[rax]
     ret
-    
-.invalid:
+@@invalid:
     xor eax, eax
     ret
 output_search_get_current ENDP
@@ -394,13 +384,12 @@ output_search_highlight_current PROC
     mov eax, 1                          ; Success
     add rsp, 32
     pop rbx
-    ret
-    
-.highlight_fail:
+
+@@highlight_fail:
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 output_search_highlight_current ENDP
 
 ;==========================================================================
@@ -418,3 +407,8 @@ SendMessage_EM_SETSEL PROC
 SendMessage_EM_SETSEL ENDP
 
 END
+
+
+
+
+

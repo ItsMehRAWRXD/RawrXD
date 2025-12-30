@@ -38,6 +38,7 @@ EXTERN console_log:PROC
 PUBLIC agent_ide_bridge_execute_wish
 agent_ide_bridge_execute_wish PROC
     push rbx
+
     push rsi
     sub rsp, 32
     
@@ -73,16 +74,19 @@ agent_ide_bridge_execute_wish PROC
     xor rdx, rdx
     call masm_signal_emit
     
-    jmp .exit
-
-.fail:
+    jmp @@exit
+@@fail:
     ; ...
-    
-.exit:
+@@exit:
     add rsp, 32
+
     pop rsi
-    pop rbx
-    ret
-agent_ide_bridge_execute_wish ENDP
+    pop agent
+    pop rbx_ide_bridge_execute_wish ENDP
 
 END
+
+
+
+
+

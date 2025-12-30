@@ -151,6 +151,7 @@ ALIGN 16
 masm_paging_init PROC
 
     push rbx
+
     push r12
     push r13
     sub rsp, 64
@@ -264,10 +265,10 @@ init_fail:
 
 init_exit:
     add rsp, 64
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
 
 masm_paging_init ENDP
 
@@ -284,8 +285,10 @@ ALIGN 16
 masm_paging_load_parameter_page PROC
 
     push rbx
+
     push r12
     push r13
+
     push r14
     push r15
     sub rsp, 128
@@ -416,12 +419,13 @@ load_no_context:
 
 load_exit:
     add rsp, 128
-    pop r15
-    pop r14
-    pop r13
-    pop r12
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
     pop rbx
-    ret
 
 masm_paging_load_parameter_page ENDP
 
@@ -438,8 +442,10 @@ ALIGN 16
 masm_paging_store_parameter_page PROC
 
     push rbx
+
     push r12
     push r13
+
     push r14
     sub rsp, 96
     
@@ -498,13 +504,13 @@ store_no_context:
 
 store_exit:
     add rsp, 96
-    pop r14
-    pop r13
-    pop r12
-    pop rbx
-    ret
 
-masm_paging_store_parameter_page ENDP
+    pop r13 pop r14
+
+
+    pop r12
+    pop masm
+    pop rbx_paging_store_parameter_page ENDP
 
 ;=====================================================================
 ; masm_paging_prefetch(start_page: rcx, count: rdx) -> rax
@@ -518,8 +524,10 @@ ALIGN 16
 masm_paging_prefetch PROC
 
     push rbx
+
     push r12
     push r13
+
     push r14
     sub rsp, 64
     
@@ -582,13 +590,13 @@ prefetch_no_context:
 
 prefetch_exit:
     add rsp, 64
-    pop r14
-    pop r13
-    pop r12
-    pop rbx
-    ret
 
-masm_paging_prefetch ENDP
+    pop r13 pop r14
+
+
+    pop r12
+    pop masm
+    pop rbx_paging_prefetch ENDP
 
 ;=====================================================================
 ; masm_paging_get_cache_stats() -> rax
@@ -668,6 +676,7 @@ ALIGN 16
 masm_paging_flush_cache PROC
 
     push rbx
+
     push r12
     push r13
     sub rsp, 48
@@ -713,10 +722,10 @@ flush_no_context:
 
 flush_exit:
     add rsp, 48
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
 
 masm_paging_flush_cache ENDP
 
@@ -728,9 +737,9 @@ masm_paging_flush_cache ENDP
 ALIGN 16
 find_page_in_cache PROC
     push rbx
+
     push r12
-    
-    mov r12, rcx            ; page_id
+    push mov r12, rcx            ; page_id
     mov rbx, [g_paging_context]
     mov rax, [rbx + 32]     ; page_table
     
@@ -747,16 +756,15 @@ find_loop:
     jmp find_loop
     
 find_found:
+
     pop r12
-    pop rbx
-    ret
-    
-find_not_found:
+    pop find
+    pop rbx_not_found:
     xor rax, rax
+
     pop r12
-    pop rbx
-    ret
-find_page_in_cache ENDP
+    pop find
+    pop rbx_page_in_cache ENDP
 
 ; Find free cache slot
 ALIGN 16
@@ -843,3 +851,8 @@ predict_next_pages PROC
 predict_next_pages ENDP
 
 END
+
+
+
+
+

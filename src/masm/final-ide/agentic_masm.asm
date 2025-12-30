@@ -49,6 +49,7 @@ file_log_append EQU ml_helpers_log_append
 PUBLIC agent_execute_tool
 agent_execute_tool PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -68,10 +69,11 @@ tool_not_found:
     
 done:
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 agent_execute_tool ENDP
 
 ; Alias for string length
@@ -83,8 +85,10 @@ asm_str_length EQU strlen_masm
 ;==========================================================================
 agent_execute_with_retry PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
     sub rsp, 512 ; Space for FailureDetectionResult
@@ -138,12 +142,13 @@ agent_execute_with_retry PROC
 
 @done:
     add rsp, 512
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
 
 .data
 szRetryingMsg db "Agentic failure detected. Retrying...",0
@@ -250,8 +255,7 @@ MAX_OUTPUT_SIZE     EQU 65536
 PUBLIC agent_init_tools
 agent_init_tools PROC
     push rbx
-    
-    mov ToolCount, 0
+    push mov ToolCount, 0
     
     ; Register Core Tools
     lea rcx, szReadFile
@@ -312,7 +316,7 @@ agent_init_tools PROC
     call register_tool
     
     pop rbx
-    ret
+
 agent_init_tools ENDP
 
 ;==========================================================================
@@ -344,6 +348,7 @@ register_tool ENDP
 PUBLIC agent_process_command
 agent_process_command PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -412,17 +417,19 @@ tool_not_found:
     
 process_done:
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 agent_process_command ENDP
 
 ; Helper: str_starts_with(str, prefix) -> eax (1 if true)
 str_starts_with PROC
     push rsi
+
     push rdi
-ssw_loop:
+    push ssw_loop:
     mov al, [rdx]
     test al, al
     jz ssw_match
@@ -438,10 +445,10 @@ ssw_match:
 ssw_fail:
     xor eax, eax
 ssw_done:
+
     pop rdi
-    pop rsi
-    ret
-str_starts_with ENDP
+    pop str
+    pop rsi_starts_with ENDP
 
 ; Helper: strlen_masm(str) -> rax
 strlen_masm PROC
@@ -460,6 +467,7 @@ strlen_masm ENDP
 ;==========================================================================
 read_file_tool PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -510,10 +518,11 @@ rf_fail:
     lea rax, szFileError
 rf_done:
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 read_file_tool ENDP
 
 ;==========================================================================
@@ -521,6 +530,7 @@ read_file_tool ENDP
 ;==========================================================================
 execute_command_tool PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 700            ; Space for PROCESS_INFO_EX
@@ -565,10 +575,11 @@ exec_fail:
     lea rax, szCmdError
 exec_done:
     add rsp, 700
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 execute_command_tool ENDP
 
 ;==========================================================================
@@ -595,6 +606,7 @@ agent_list_tools ENDP
 PUBLIC agent_get_tool
 agent_get_tool PROC
     push rbx
+
     push rsi
     push rdi
     
@@ -629,10 +641,11 @@ agt_not_found:
     xor rax, rax
     
 agt_done:
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 agent_get_tool ENDP
 
 ;==========================================================================
@@ -640,6 +653,7 @@ agent_get_tool ENDP
 ;==========================================================================
 strcmp_masm PROC
     push rbx
+
     push rsi
     push rdi
     
@@ -679,10 +693,11 @@ scm_not_equal:
     mov eax, 1
     
 scm_done:
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 strcmp_masm ENDP
 
 ;==========================================================================
@@ -690,13 +705,15 @@ strcmp_masm ENDP
 ;==========================================================================
 strstr_masm PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r10
+
     push r11
-    
-    mov rsi, rcx            ; haystack
+    push mov rsi, rcx            ; haystack
     mov rdi, rdx            ; needle
     
     ; Get needle length
@@ -757,13 +774,20 @@ ssm_not_found:
     xor rax, rax
     
 ssm_done:
-    pop r11
-    pop r10
-    pop r12
-    pop rdi
+
+    pop r10 pop r11
+
+
+    pop rdi pop r12
+
+
     pop rsi
-    pop rbx
-    ret
-strstr_masm ENDP
+    pop strstr
+    pop rbx_masm ENDP
 
 END
+
+
+
+
+

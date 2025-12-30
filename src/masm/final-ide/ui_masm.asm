@@ -610,7 +610,7 @@ safe_cwe_fail:
 safe_cwe_done:
     add rsp, 32
     pop rbx
-    ret
+
 safe_create_window_ex ENDP
 
 ;==========================================================================
@@ -642,7 +642,6 @@ ui_create_main_window PROC
     call console_log
     add rsp, 112
     pop rbx
-    ret
 
 ui_do_gui:
     ; cache instance for later child windows
@@ -729,13 +728,12 @@ ui_do_gui:
     mov rax, hwnd_main
     add rsp, 112
     pop rbx
-    ret
 
 ui_create_main_window_fail:
     xor eax, eax
     add rsp, 112
     pop rbx
-    ret
+
 ui_create_main_window ENDP
 
 ;==========================================================================
@@ -749,6 +747,7 @@ PUBLIC ui_create_layout_shell
 ALIGN 16
 ui_create_layout_shell PROC
     push rbx
+
     push r12
     sub rsp, 112                        ; space for CreateWindowExA params
 
@@ -1364,10 +1363,10 @@ ui_create_layout_shell PROC
     call gui_create_complete_ide
 
     add rsp, 112
+
     pop r12
-    pop rbx
-    ret
-ui_create_layout_shell ENDP
+    pop ui
+    pop rbx_create_layout_shell ENDP
 
 ;==========================================================================
 ; PUBLIC: ui_get_main_hwnd() -> hwnd (rax)
@@ -1429,6 +1428,7 @@ PUBLIC ui_open_text_file_dialog
 ALIGN 16
 ui_open_text_file_dialog PROC
     push rbx
+
     push rdi
     sub rsp, 160
 
@@ -1453,10 +1453,10 @@ ui_open_text_file_dialog PROC
     call GetOpenFileNameA
 
     add rsp, 160
+
     pop rdi
-    pop rbx
-    ret
-ui_open_text_file_dialog ENDP
+    pop ui
+    pop rbx_open_text_file_dialog ENDP
 
 ;==========================================================================
 ; PUBLIC: ui_save_text_file_dialog(out_path: rcx, max_len: rdx) -> bool (rax)
@@ -1465,6 +1465,7 @@ PUBLIC ui_save_text_file_dialog
 ALIGN 16
 ui_save_text_file_dialog PROC
     push rbx
+
     push rdi
     sub rsp, 160
 
@@ -1489,10 +1490,10 @@ ui_save_text_file_dialog PROC
     call GetSaveFileNameA
 
     add rsp, 160
+
     pop rdi
-    pop rbx
-    ret
-ui_save_text_file_dialog ENDP
+    pop ui
+    pop rbx_save_text_file_dialog ENDP
 
 ;==========================================================================
 ; PUBLIC: ui_create_menu() -> hmenu (rax)
@@ -1503,6 +1504,7 @@ PUBLIC ui_create_menu
 ALIGN 16
 ui_create_menu PROC
     push rbx
+
     push r12
     push r13
     sub rsp, 56                             ; Shadow space + alignment
@@ -1611,10 +1613,11 @@ ui_create_menu PROC
     
     mov rax, rbx
     add rsp, 56
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
+
 ui_create_menu ENDP
 
 ;==========================================================================
@@ -1651,7 +1654,7 @@ hp_mem_fail:
 hp_mem_done:
     add rsp, 32
     pop rbx
-    ret
+
 ui_on_hotpatch_memory ENDP
 
 ;==========================================================================
@@ -1780,7 +1783,7 @@ ui_create_chat_control PROC
     mov hwnd_chat, rax
     add rsp, 112
     pop rbx
-    ret
+
 ui_create_chat_control ENDP
 
 ;==========================================================================
@@ -1814,7 +1817,7 @@ ui_create_input_control PROC
     mov hwnd_input, rax
     add rsp, 112
     pop rbx
-    ret
+
 ui_create_input_control ENDP
 
 ;==========================================================================
@@ -1848,7 +1851,7 @@ ui_create_terminal_control PROC
     mov hwnd_terminal, rax
     add rsp, 112
     pop rbx
-    ret
+
 ui_create_terminal_control ENDP
 
 ; Lightweight wrappers used by integration layer expecting ui_create_terminal/ui_create_chat
@@ -1901,7 +1904,7 @@ ui_create_send_button PROC
     mov hwnd_send, rax
     add rsp, 112
     pop rbx
-    ret
+
 ui_create_send_button ENDP
 
 ;==========================================================================
@@ -1980,7 +1983,7 @@ combo_done:
     mov rax, rbx
     add rsp, 112
     pop rbx
-    ret
+
 ui_create_mode_combo ENDP
 
 ;==========================================================================
@@ -2086,7 +2089,7 @@ ui_create_mode_checkboxes PROC
     
     add rsp, 112
     pop rbx
-    ret
+
 ui_create_mode_checkboxes ENDP
 
 ;==========================================================================
@@ -2098,6 +2101,7 @@ PUBLIC ui_open_file_dialog
 ALIGN 16
 ui_open_file_dialog PROC
     push rbx
+
     push rdi
     sub rsp, 160                            ; Space for OPENFILENAMEA (136) + alignment
     
@@ -2128,10 +2132,10 @@ ui_open_file_dialog PROC
     call GetOpenFileNameA
     
     add rsp, 160
+
     pop rdi
-    pop rbx
-    ret
-ui_open_file_dialog ENDP
+    pop ui
+    pop rbx_open_file_dialog ENDP
 
 .data
     szFilter BYTE "GGUF Models (*.gguf)",0,"*.gguf",0,"All Files (*.*)",0,"*.*",0,0
@@ -2196,7 +2200,7 @@ chat_done:
     call console_log
     add rsp, 32
     pop rbx
-    ret
+
 ui_add_chat_message ENDP
 
 ;==========================================================================
@@ -2210,12 +2214,13 @@ ui_get_input_text PROC
     sub rsp, 40
     
     push rcx
+
     push rdx
-    lea rcx, szLogGetInput
+    push lea rcx, szLogGetInput
     call asm_log
-    pop rdx
-    pop rcx
-    
+
+    pop rcx pop rdx
+
     mov r8, rdx                             ; max_len
     mov r9, rcx                             ; out_buf
     mov rcx, hwnd_input
@@ -2258,12 +2263,13 @@ ui_show_dialog PROC
     sub rsp, 40
     
     push rcx
+
     push rdx
-    lea rcx, szLogShowDialog
+    push lea rcx, szLogShowDialog
     call asm_log
-    pop rdx
-    pop rcx
-    
+
+    pop rcx pop rdx
+
     mov r8, rcx                             ; title
     mov r9d, MB_OK
     mov rcx, hwnd_main
@@ -2571,7 +2577,7 @@ wm_command_palette:
     
     ; rax = selected index; -1 means no selection
     cmp rax, -1
-    je .cmd_palette_done
+    je @@cmd_palette_done
     
     ; Map index to command ID and dispatch
     add rax, 1000
@@ -2579,51 +2585,49 @@ wm_command_palette:
     
     ; Dispatch based on command ID
     cmp r8d, 1001
-    je .cmd_file_open
+    je @@cmd_file_open
     cmp r8d, 1002
-    je .cmd_file_new
+    je @@cmd_file_new
     cmp r8d, 1003
-    je .cmd_file_save
+    je @@cmd_file_save
     cmp r8d, 2001
-    je .cmd_edit_cut
+    je @@cmd_edit_cut
     cmp r8d, 2002
-    je .cmd_edit_copy
+    je @@cmd_edit_copy
     cmp r8d, 2003
-    je .cmd_edit_paste
-    jmp .cmd_palette_done
-    
-.cmd_file_open:
+    je @@cmd_edit_paste
+    jmp @@cmd_palette_done
+@@cmd_file_open:
     call ui_file_open_dialog
-    jmp .cmd_palette_done
-.cmd_file_new:
+    jmp @@cmd_palette_done
+@@cmd_file_new:
     xor rcx, rcx
     call ui_editor_set_text
-    jmp .cmd_palette_done
-.cmd_file_save:
+    jmp @@cmd_palette_done
+@@cmd_file_save:
     call ui_file_save
-    jmp .cmd_palette_done
-.cmd_edit_cut:
+    jmp @@cmd_palette_done
+@@cmd_edit_cut:
     mov rcx, hwnd_editor
     mov rdx, WM_CUT
     xor r8, r8
     xor r9, r9
     call SendMessageA
-    jmp .cmd_palette_done
-.cmd_edit_copy:
+    jmp @@cmd_palette_done
+@@cmd_edit_copy:
     mov rcx, hwnd_editor
     mov rdx, WM_COPY
     xor r8, r8
     xor r9, r9
     call SendMessageA
-    jmp .cmd_palette_done
-.cmd_edit_paste:
+    jmp @@cmd_palette_done
+@@cmd_edit_paste:
     mov rcx, hwnd_editor
     mov rdx, WM_PASTE
     xor r8, r8
     xor r9, r9
     call SendMessageA
-    
-.cmd_palette_done:
+@@cmd_palette_done:
     xor eax, eax
     add rsp, 40
     ret
@@ -2670,6 +2674,7 @@ wm_file_tree_done:
 wm_search_box:
     ; Handle search box input - file search with recursion
     push rbx
+
     push r12
     sub rsp, 256
     
@@ -2691,8 +2696,9 @@ wm_search_box:
     call OutputDebugStringA
     
     add rsp, 256
-    pop r12
-    pop rbx
+
+    pop rbx pop r12
+
     xor eax, eax
     add rsp, 40
     ret
@@ -2702,13 +2708,14 @@ file_search_recursive PROC
     ; rcx = directory path, rdx = pattern, r8d = depth
     ; Returns eax = match count
     push rbx
+
     push r12
     push r13
     sub rsp, 256
     
     ; Limit recursion depth to 10
     cmp r8d, 10
-    jge .search_exit
+    jge @@search_exit
     
     mov r12, rcx                        ; Save directory
     mov r13, rdx                        ; Save pattern
@@ -2731,11 +2738,10 @@ file_search_recursive PROC
     call rax
     
     cmp rax, -1
-    je .search_exit
+    je @@search_exit
     
     mov r12d, eax                       ; Save search handle
-    
-.search_loop:\n    ; Check if filename matches pattern (case-insensitive)
+@@search_loop:\n    ; Check if filename matches pattern (case-insensitive)
     lea rcx, [rsp + 256 - 560 + 44]     ; cFileName field
     mov rdx, r13                        ; Pattern
     call strstr_case_insensitive
@@ -2744,8 +2750,7 @@ file_search_recursive PROC
     
     ; Match found - increment counter
     inc ebx
-    
-.search_next_file:
+@@search_next_file:
     ; FindNextFileW
     mov rcx, r12d                       ; Search handle
     lea rdx, [rsp + 256 - 560]          ; Find data
@@ -2758,14 +2763,14 @@ file_search_recursive PROC
     mov rcx, r12d
     mov rax, [rip + find_close_addr]
     call rax
-    
-.search_exit:
+@@search_exit:
     mov eax, ebx                        ; Return match count
     add rsp, 256
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
+
 file_search_recursive ENDP
 
 ; Case-insensitive string search helper
@@ -2774,8 +2779,7 @@ strstr_case_insensitive PROC
     ; Returns rax = pointer to match or NULL
     xor r8, r8                          ; Position in haystack
     xor r9, r9                          ; Position in needle
-    
-.search:
+@@search:
     mov al, BYTE PTR [rcx + r8]
     test al, al
     jz .not_found
@@ -2787,38 +2791,35 @@ strstr_case_insensitive PROC
     ; Lowercase comparison
     mov r10b, al
     cmp r10b, 'A'
-    jl .skip_al
+    jl @@skip_al
     cmp r10b, 'Z'
-    jg .skip_al
+    jg @@skip_al
     add r10b, 32
-.skip_al:
+@@skip_al:
     
     mov r11b, r9b
     cmp r11b, 'A'
-    jl .skip_b
+    jl @@skip_b
     cmp r11b, 'Z'
-    jg .skip_b
+    jg @@skip_b
     add r11b, 32
-.skip_b:
+@@skip_b:
     
     cmp r10b, r11b
-    jne .advance
+    jne @@advance
     
     inc r8
     inc rdx
-    jmp .search
-    
-.advance:
+    jmp @@search
+@@advance:
     inc rcx
     xor r8, r8
     mov rdx, [rsp + 8]                  ; Reload needle pointer
-    jmp .search
-    
-.found:
+    jmp @@search
+@@found:
     lea rax, [rcx + r8]
     ret
-    
-.not_found:
+@@not_found:
     xor rax, rax
     ret
 strstr_case_insensitive ENDP
@@ -2840,7 +2841,7 @@ wm_problems_list:
     call SendMessageA
     
     cmp rax, -1
-    je .problem_done
+    je @@problem_done
     
     mov ebx, eax                        ; Save index
     
@@ -2854,53 +2855,47 @@ wm_problems_list:
     lea rsi, [rsp + 8]
     xor ecx, ecx                        ; Position counter
     xor r8d, r8d                        ; Line number
-    
-.parse_colon:
+@@parse_colon:
     mov al, BYTE PTR [rsi + rcx]
     test al, al
     jz .parse_end
     cmp al, ':'
-    je .found_colon
+    je @@found_colon
     inc ecx
-    jmp .parse_colon
-    
-.found_colon:
+    jmp @@parse_colon
+@@found_colon:
     ; rcx now points to first ':'
     ; Extract line number after it
     add rcx, 1
     xor r8d, r8d
-    
-.parse_line:
+@@parse_line:
     mov al, BYTE PTR [rsi + rcx]
     cmp al, ':'
-    je .have_line
+    je @@have_line
     cmp al, 0
-    je .have_line
+    je @@have_line
     
     sub al, '0'
     cmp al, 9
-    ja .have_line
+    ja @@have_line
     
     ; Accumulate digit
     imul r8d, 10
     movzx rax, al
     add r8d, eax
     inc ecx
-    jmp .parse_line
-    
-.have_line:
+    jmp @@parse_line
+@@have_line:
     ; Jump to line in editor
     mov rcx, r8
     call editor_jump_to_line
-    
-.parse_end:
+@@parse_end:
     lea rcx, dbg_problem_navigate
     call OutputDebugStringA
-    
-.problem_done:
+@@problem_done:
     add rsp, 256
-    pop rbx
-    xor eax, eax
+    pop xor
+    pop rbx eax, eax
     add rsp, 40
     ret
 
@@ -2934,7 +2929,7 @@ editor_jump_to_line PROC
     
     add rsp, 32
     pop rbx
-    ret
+
 editor_jump_to_line ENDP
 
 placeholder_error db "file.asm:100:5: error",0
@@ -2984,28 +2979,23 @@ wm_debug_console:
     
     ; Unknown command
     lea rcx, [rip + szUnknownDebugCmd]
-    jmp .cmd_output
-    
-.cmd_break:
+    jmp @@cmd_output
+@@cmd_break:
     call debug_set_breakpoint
     lea rcx, [rip + szBreakpointSet]
-    jmp .cmd_output
-    
-.cmd_continue:
+    jmp @@cmd_output
+@@cmd_continue:
     call debug_resume
     lea rcx, [rip + szDebugContinued]
-    jmp .cmd_output
-    
-.cmd_step:
+    jmp @@cmd_output
+@@cmd_step:
     call debug_step_into
     lea rcx, [rip + szDebugStepped]
-    jmp .cmd_output
-    
-.cmd_next:
+    jmp @@cmd_output
+@@cmd_next:
     call debug_step_over
     lea rcx, [rip + szDebugStepped]
-    
-.cmd_output:
+@@cmd_output:
     ; Display result in debug output window
     mov rbx, rcx
     mov rcx, hwnd_debug_output
@@ -3025,8 +3015,8 @@ wm_debug_console:
     call OutputDebugStringA
     
     add rsp, 256
-    pop rbx
-    xor eax, eax
+    pop xor
+    pop rbx eax, eax
     add rsp, 40
     ret
 
@@ -3440,7 +3430,7 @@ do_show:
 
     add rsp, 32
     pop rbx
-    ret
+
 ui_switch_sidebar_view ENDP
 
 ;==========================================================================
@@ -3492,7 +3482,7 @@ bottom_do_show:
     
     add rsp, 32
     pop rbx
-    ret
+
 ui_switch_bottom_tab ENDP
 
 ;==========================================================================
@@ -3507,6 +3497,7 @@ pane_hit_test PROC
     ; Returns: eax = pane_id (or 0 if no pane at position)
     
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -3579,10 +3570,11 @@ hit_test_no_pane:
     
 hit_test_done:
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 pane_hit_test ENDP
 
 ;==========================================================================
@@ -3618,6 +3610,7 @@ ALIGN 16
 pane_finalize_move PROC
     ; ecx = pane_id, edx = final_x, r9d = final_y
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -3655,10 +3648,11 @@ create_floating_pane:
     
 finalize_done:
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 pane_finalize_move ENDP
 
 ;==========================================================================
@@ -3669,6 +3663,7 @@ pane_finalize_move ENDP
 ALIGN 16
 add_file_tree_item PROC
     push rbx
+
     push r12
     sub rsp, 88
     
@@ -3725,10 +3720,10 @@ add_file_tree_item PROC
     call SendMessageA
     
     add rsp, 88
+
     pop r12
-    pop rbx
-    ret
-add_file_tree_item ENDP
+    pop add
+    pop rbx_file_tree_item ENDP
 
 ;==========================================================================
 ; PUBLIC: ui_init_file_explorer()
@@ -3739,6 +3734,7 @@ PUBLIC ui_init_file_explorer
 ALIGN 16
 ui_init_file_explorer PROC
     push rbx
+
     push r12
     sub rsp, 56
     
@@ -3794,10 +3790,10 @@ populate_drives:
     
 populate_done:
     add rsp, 56
+
     pop r12
-    pop rbx
-    ret
-ui_init_file_explorer ENDP
+    pop ui
+    pop rbx_init_file_explorer ENDP
 
 ;==========================================================================
 ; PUBLIC: ui_init_search_box()
@@ -3830,7 +3826,7 @@ ui_init_search_box PROC
 
     add rsp, 112
     pop rbx
-    ret
+
 ui_init_search_box ENDP
 
 ;==========================================================================
@@ -3864,7 +3860,7 @@ ui_init_minimap PROC
 
     add rsp, 112
     pop rbx
-    ret
+
 ui_init_minimap ENDP
 
 ;==========================================================================
@@ -3898,7 +3894,7 @@ ui_init_command_palette PROC
 
     add rsp, 112
     pop rbx
-    ret
+
 ui_init_command_palette ENDP
 
 ;==========================================================================
@@ -3932,7 +3928,7 @@ ui_init_status_bar PROC
 
     add rsp, 112
     pop rbx
-    ret
+
 ui_init_status_bar ENDP
 
 ;==========================================================================
@@ -3999,6 +3995,7 @@ PUBLIC ui_scan_directory
 ALIGN 16
 ui_scan_directory PROC
     push rbx
+
     push r12
     push r13
     sub rsp, 320
@@ -4048,10 +4045,11 @@ next_file:
     
 scan_done:
     add rsp, 320
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
+
 ui_scan_directory ENDP
 
 ;==========================================================================
@@ -4129,7 +4127,7 @@ ps_failed:
 ps_done:
     add rsp, 80
     pop rbx
-    ret
+
 ui_start_powershell ENDP
 
 ;==========================================================================
@@ -4141,6 +4139,7 @@ PUBLIC ui_load_file
 ALIGN 16
 ui_load_file PROC
     push rbx
+
     push r12
     sub rsp, 56
     
@@ -4214,10 +4213,10 @@ load_failed:
     
 load_done:
     add rsp, 56
+
     pop r12
-    pop rbx
-    ret
-ui_load_file ENDP
+    pop ui
+    pop rbx_load_file ENDP
 
 ;==========================================================================
 ; PUBLIC: ui_save_file() -> bool (rax)
@@ -4281,7 +4280,7 @@ save_failed:
 save_done:
     add rsp, 56
     pop rbx
-    ret
+
 ui_save_file ENDP
 
 ;==========================================================================
@@ -4364,11 +4363,11 @@ skip_reg_debug:
 
     add rsp, 40
     pop rbx
-    ret
+
 reg_skip_all:
     add rsp, 40
     pop rbx
-    ret
+
 ui_register_components ENDP
 
 ;==========================================================================
@@ -4600,6 +4599,7 @@ PUBLIC save_layout_json
 ALIGN 16
 save_layout_json PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 256
@@ -4609,10 +4609,11 @@ save_layout_json PROC
     call gui_save_pane_layout
     
     add rsp, 256
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 save_layout_json ENDP
 
 ;==========================================================================
@@ -4624,6 +4625,7 @@ PUBLIC load_layout_json
 ALIGN 16
 load_layout_json PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 256
@@ -4639,10 +4641,11 @@ load_layout_json PROC
     call InvalidateRect
     
     add rsp, 256
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 load_layout_json ENDP
 
 ;==========================================================================
@@ -4654,8 +4657,10 @@ PUBLIC find_in_files
 ALIGN 16
 find_in_files PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
     sub rsp, 1024
@@ -4670,12 +4675,14 @@ find_in_files PROC
     call asm_log
     
     add rsp, 1024
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 find_in_files ENDP
 
 .data
@@ -4683,3 +4690,8 @@ find_in_files ENDP
     szLogSearchStart    BYTE "UI: Starting file search...",0
 
 END
+
+
+
+
+

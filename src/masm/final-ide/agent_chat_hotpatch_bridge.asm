@@ -193,7 +193,7 @@ bridge_init PROC
     mov rax, 1
     add rsp, 32
     pop rbx
-    ret
+
 bridge_init ENDP
 
 ;==========================================================================
@@ -233,8 +233,10 @@ bridge_get_stats ENDP
 PUBLIC agent_stream_token
 agent_stream_token PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     sub rsp, 96
     
@@ -379,12 +381,13 @@ event_pos_valid:
     mov eax, edi        ; Return corrected token length
     
     add rsp, 96
-    pop r12
-    pop rdi
+
+    pop rdi pop r12
+
+
     pop rsi
-    pop rbx
-    ret
-agent_stream_token ENDP
+    pop agent
+    pop rbx_stream_token ENDP
 
 ;==========================================================================
 ; PUBLIC: agent_stream_complete(model_response: rcx) -> rax
@@ -394,6 +397,7 @@ agent_stream_token ENDP
 PUBLIC agent_stream_complete
 agent_stream_complete PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 128 ; Increased stack for local structures
@@ -447,10 +451,11 @@ correction_applied:
 response_complete:
     mov rax, rdi        ; Return final response pointer
     add rsp, 128
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 agent_stream_complete ENDP
 
 ;==========================================================================
@@ -488,7 +493,7 @@ agent_create_correction_context PROC
     lea rax, ActiveCorrectionContext
     add rsp, 48
     pop rbx
-    ret
+
 agent_create_correction_context ENDP
 
 ;==========================================================================
@@ -547,7 +552,7 @@ token_invalid_syntax:
 token_validation_done:
     add rsp, 48
     pop rbx
-    ret
+
 agent_validate_token_in_context ENDP
 
 ;==========================================================================
@@ -601,7 +606,7 @@ no_correction_available:
 correction_requested:
     add rsp, 320
     pop rbx
-    ret
+
 agent_request_token_correction ENDP
 
 ;==========================================================================
@@ -649,7 +654,7 @@ hotpatch_applied:
     
     add rsp, 96
     pop rbx
-    ret
+
 agent_apply_hotpatch_correction ENDP
 
 ;==========================================================================
@@ -672,7 +677,7 @@ agent_log_correction_applied PROC
     
     add rsp, 48
     pop rbx
-    ret
+
 agent_log_correction_applied ENDP
 
 ;==========================================================================
@@ -702,3 +707,8 @@ agent_memset_safe ENDP
 EXTERN SymbolTablePtr: QWORD
 
 END
+
+
+
+
+

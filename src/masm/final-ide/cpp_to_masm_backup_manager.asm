@@ -99,8 +99,7 @@ BACKUP_MANAGER ENDS
 PUBLIC backup_manager_create
 backup_manager_create PROC
     push rbx
-    
-    mov rbx, rcx                    ; rbx = baseDir
+    push mov rbx, rcx                    ; rbx = baseDir
     mov r8d, edx                    ; r8d = maxBackups
     
     ; Allocate manager
@@ -111,9 +110,10 @@ backup_manager_create PROC
     mov rcx, r8
     imul rcx, SIZEOF BACKUP_INFO
     push rax
-    call malloc
-    pop rbx
-    mov [rbx + BACKUP_MANAGER.backups], rax
+    push call
+    push malloc
+    push pop mov
+    pop rbx [rbx + BACKUP_MANAGER.backups], rax
     
     ; Initialize
     mov [rbx + BACKUP_MANAGER.backupCount], 0
@@ -127,7 +127,7 @@ backup_manager_create PROC
     
     mov rax, rbx
     pop rbx
-    ret
+
 backup_manager_create ENDP
 
 ; ============================================================================
@@ -138,16 +138,16 @@ backup_manager_create ENDP
 PUBLIC backup_start_full
 backup_start_full PROC
     push rbx
+
     push rsi
-    
-    mov rbx, rcx                    ; rbx = manager
+    push mov rbx, rcx                    ; rbx = manager
     mov rsi, rdx                    ; rsi = sourceDir
     mov r12, r8                     ; r12 = backupDir
     
     ; Check capacity
     mov r9d, [rbx + BACKUP_MANAGER.backupCount]
     cmp r9d, [rbx + BACKUP_MANAGER.maxBackups]
-    jge .capacity_exceeded
+    jge @@capacity_exceeded
     
     ; Get new backup ID
     mov r8d, [rbx + BACKUP_MANAGER.currentBackupId]
@@ -177,16 +177,15 @@ backup_start_full PROC
     call console_log
     
     mov rax, r8d                    ; Return backup ID
+
     pop rsi
     pop rbx
-    ret
-    
-.capacity_exceeded:
+@@capacity_exceeded:
     xor rax, rax                    ; Return 0 on error
+
     pop rsi
-    pop rbx
-    ret
-backup_start_full ENDP
+    pop backup
+    pop rbx_start_full ENDP
 
 ; ============================================================================
 
@@ -196,13 +195,12 @@ backup_start_full ENDP
 PUBLIC backup_start_incremental
 backup_start_incremental PROC
     push rbx
-    
-    mov rbx, rcx
+    push mov rbx, rcx
     
     ; Similar to full backup but different type
     mov r9d, [rbx + BACKUP_MANAGER.backupCount]
     cmp r9d, [rbx + BACKUP_MANAGER.maxBackups]
-    jge .inc_failed
+    jge @@inc_failed
     
     mov r10d, [rbx + BACKUP_MANAGER.currentBackupId]
     inc dword [rbx + BACKUP_MANAGER.currentBackupId]
@@ -223,12 +221,11 @@ backup_start_incremental PROC
     
     mov rax, r10d
     pop rbx
-    ret
-    
-.inc_failed:
+
+@@inc_failed:
     xor rax, rax
     pop rbx
-    ret
+
 backup_start_incremental ENDP
 
 ; ============================================================================
@@ -238,17 +235,15 @@ backup_start_incremental ENDP
 PUBLIC backup_end_backup
 backup_end_backup PROC
     push rbx
-    
-    mov rbx, rcx                    ; rbx = manager
+    push mov rbx, rcx                    ; rbx = manager
     
     ; Find backup by ID
     mov r10, [rbx + BACKUP_MANAGER.backups]
     mov r11d, [rbx + BACKUP_MANAGER.backupCount]
     xor r12, r12
-    
-.find_backup:
+@@find_backup:
     cmp r12d, r11d
-    jge .backup_not_found
+    jge @@backup_not_found
     
     mov r13, r10
     mov r14, r12
@@ -256,12 +251,11 @@ backup_end_backup PROC
     add r13, r14
     
     cmp edx, [r13 + BACKUP_INFO.backupId]
-    je .backup_found
+    je @@backup_found
     
     inc r12d
-    jmp .find_backup
-    
-.backup_found:
+    jmp @@find_backup
+@@backup_found:
     ; Get end time
     lea rax, [r13 + BACKUP_INFO.endTime]
     mov rdx, rax
@@ -278,14 +272,13 @@ backup_end_backup PROC
     
     ; Check RTO/RPO
     cmp rax, BACKUP_RTO_MS
-    jle .rto_ok
+    jle @@rto_ok
     
     lea rcx, [szRTOMissed]
     mov rdx, rax
     mov r8, BACKUP_RTO_MS
     call console_log
-    
-.rto_ok:
+@@rto_ok:
     ; Increment backup count
     inc dword [rbx + BACKUP_MANAGER.backupCount]
     
@@ -298,10 +291,9 @@ backup_end_backup PROC
     movsd xmm1, xmm0
     mov r9b, [r13 + BACKUP_INFO.verified]
     call console_log
-    
-.backup_not_found:
+@@backup_not_found:
     pop rbx
-    ret
+
 backup_end_backup ENDP
 
 ; ============================================================================
@@ -312,8 +304,7 @@ backup_end_backup ENDP
 PUBLIC backup_verify
 backup_verify PROC
     push rbx
-    
-    mov rbx, rcx                    ; rbx = manager
+    push mov rbx, rcx                    ; rbx = manager
     
     ; Log verification start
     lea rcx, [szVerifying]
@@ -324,10 +315,9 @@ backup_verify PROC
     mov r10, [rbx + BACKUP_MANAGER.backups]
     mov r11d, [rbx + BACKUP_MANAGER.backupCount]
     xor r12d, r12d
-    
-.verify_find:
+@@verify_find:
     cmp r12d, r11d
-    jge .verify_not_found
+    jge @@verify_not_found
     
     mov r13, r10
     mov r14, r12
@@ -335,12 +325,11 @@ backup_verify PROC
     add r13, r14
     
     cmp edx, [r13 + BACKUP_INFO.backupId]
-    je .verify_found
+    je @@verify_found
     
     inc r12d
-    jmp .verify_find
-    
-.verify_found:
+    jmp @@verify_find
+@@verify_found:
     ; Mark as verified
     mov byte [r13 + BACKUP_INFO.verified], 1
     
@@ -356,12 +345,11 @@ backup_verify PROC
     
     mov rax, 1
     pop rbx
-    ret
-    
-.verify_not_found:
+
+@@verify_not_found:
     xor rax, rax
     pop rbx
-    ret
+
 backup_verify ENDP
 
 ; ============================================================================
@@ -372,17 +360,15 @@ backup_verify ENDP
 PUBLIC backup_restore
 backup_restore PROC
     push rbx
-    
-    mov rbx, rcx                    ; rbx = manager
+    push mov rbx, rcx                    ; rbx = manager
     
     ; Find backup to restore
     mov r10, [rbx + BACKUP_MANAGER.backups]
     mov r11d, [rbx + BACKUP_MANAGER.backupCount]
     xor r12d, r12d
-    
-.restore_find:
+@@restore_find:
     cmp r12d, r11d
-    jge .restore_not_found
+    jge @@restore_not_found
     
     mov r13, r10
     mov r14, r12
@@ -390,12 +376,11 @@ backup_restore PROC
     add r13, r14
     
     cmp edx, [r13 + BACKUP_INFO.backupId]
-    je .restore_found
+    je @@restore_found
     
     inc r12d
-    jmp .restore_find
-    
-.restore_found:
+    jmp @@restore_find
+@@restore_found:
     ; Copy files from backup to restore path
     mov rcx, [r13 + BACKUP_INFO.backupDir]
     mov rdx, r8
@@ -404,12 +389,11 @@ backup_restore PROC
     
     mov rax, 1
     pop rbx
-    ret
-    
-.restore_not_found:
+
+@@restore_not_found:
     xor rax, rax
     pop rbx
-    ret
+
 backup_restore ENDP
 
 ; ============================================================================
@@ -422,10 +406,9 @@ backup_get_info PROC
     mov r8, [rcx + BACKUP_MANAGER.backups]
     mov r9d, [rcx + BACKUP_MANAGER.backupCount]
     xor r10d, r10d
-    
-.info_find:
+@@info_find:
     cmp r10d, r9d
-    jge .info_not_found
+    jge @@info_not_found
     
     mov r11, r8
     mov r12, r10
@@ -433,16 +416,14 @@ backup_get_info PROC
     add r11, r12
     
     cmp edx, [r11 + BACKUP_INFO.backupId]
-    je .info_found
+    je @@info_found
     
     inc r10d
-    jmp .info_find
-    
-.info_found:
+    jmp @@info_find
+@@info_found:
     mov rax, r11
     ret
-    
-.info_not_found:
+@@info_not_found:
     xor rax, rax
     ret
 backup_get_info ENDP
@@ -466,19 +447,18 @@ backup_list_backups ENDP
 PUBLIC backup_cleanup_old
 backup_cleanup_old PROC
     push rbx
+
     push rsi
-    
-    mov rbx, rcx                    ; rbx = manager
+    push mov rbx, rcx                    ; rbx = manager
     mov rsi, rdx                    ; rsi = daysOld
     xor r8, r8                      ; Count removed
     
     mov r10, [rbx + BACKUP_MANAGER.backups]
     mov r11d, [rbx + BACKUP_MANAGER.backupCount]
     xor r12d, r12d
-    
-.cleanup_loop:
+@@cleanup_loop:
     cmp r12d, r11d
-    jge .cleanup_done
+    jge @@cleanup_done
     
     mov r13, r10
     mov r14, r12
@@ -488,14 +468,13 @@ backup_cleanup_old PROC
     ; Check age (simplified - just count)
     inc r8
     inc r12d
-    jmp .cleanup_loop
-    
-.cleanup_done:
+    jmp @@cleanup_loop
+@@cleanup_done:
     mov rax, r8
+
     pop rsi
-    pop rbx
-    ret
-backup_cleanup_old ENDP
+    pop backup
+    pop rbx_cleanup_old ENDP
 
 ; ============================================================================
 
@@ -504,29 +483,26 @@ backup_cleanup_old ENDP
 PUBLIC backup_destroy
 backup_destroy PROC
     push rbx
-    
-    mov rbx, rcx
+    push mov rbx, rcx
     
     ; Free backups array
     mov rcx, [rbx + BACKUP_MANAGER.backups]
     cmp rcx, 0
-    je .skip_backups
+    je @@skip_backups
     call free
-    
-.skip_backups:
+@@skip_backups:
     ; Free base directory string
     mov rcx, [rbx + BACKUP_MANAGER.baseDir]
     cmp rcx, 0
-    je .skip_basedir
+    je @@skip_basedir
     call free
-    
-.skip_basedir:
+@@skip_basedir:
     ; Free manager
     mov rcx, rbx
     call free
     
     pop rbx
-    ret
+
 backup_destroy ENDP
 
 ; ============================================================================
@@ -538,3 +514,8 @@ backup_destroy ENDP
     f1M REAL8 1000000.0
 
 END
+
+
+
+
+

@@ -197,7 +197,7 @@ flog_flush:
 flog_append_done:
     add rsp, 48
     pop rbx
-    ret
+
 file_log_append ENDP
 
 ;---------------------------------------------------------------------
@@ -237,7 +237,7 @@ utoa_rev_loop:
 
     add rsp, 32
     pop rbx
-    ret
+
 utoa32_inline ENDP
 
 PUBLIC console_log
@@ -269,7 +269,12 @@ console_log PROC
 log_done:
     add rsp, 48
     pop rbx
-    ret
+
 console_log ENDP
 
 END
+
+
+
+
+

@@ -1,20 +1,122 @@
+CMake is re-running because C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/generate.stamp is out-of-date.
+  the file 'C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeLists.txt'
+  is newer than 'C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/CMakeFiles/generate.stamp.depend'
+  result='-1'
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- MASM compiler configured: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/ml64.exe
+-- MASM compile flags: /nologo /Zi /c /Cp /W3
+-- Qt6 foundation found: final-ide/qt6_foundation.asm
+-- Qt6 foundation found: final-ide/qt6_main_window.asm
+-- Qt6 foundation found: final-ide/qt6_text_editor.asm
+-- Qt6 foundation found: final-ide/qt6_syntax_highlighter.asm
+-- Qt6 foundation found: final-ide/qt6_statusbar.asm
+CMake Warning at src/masm/CMakeLists.txt:107 (message):
+  MASM source file missing: stub_completion_comprehensive_v2.asm
+
+
+CMake Warning at src/masm/CMakeLists.txt:107 (message):
+  MASM source file missing: stub_integration_bridges.asm
+
+
+CMake Warning at src/masm/CMakeLists.txt:154 (message):
+  MASM source file missing: masm_orchestration_wrapper.asm
+
+
+-- Universal Format Loader module found: universal_format_loader/universal_format_detector.asm
+-- Universal Format Loader module found: universal_format_loader/safetensors_parser.asm
+-- Universal Format Loader module found: universal_format_loader/pytorch_loader.asm
+-- ✓ Universal Format Loader library created
+-- ========================================
+-- MASM x64 Hotpatch System (PURE ASM)
+-- ========================================
+-- Compiler: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/ml64.exe
+-- Build type: Release
+-- Output: C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/lib
+-- 
+-- Libraries (ZERO C/C++ dependencies):
+--   - masm_runtime
+--   - masm_qt6_foundation (Qt6 object model, event queue, signal/slot)
+--   - masm_hotpatch_core
+--   - masm_hotpatch_unified
+-- 
+-- Build tests: ON
+-- ========================================
+-- ✓ 64-bit configuration validated: pointer size = 8, platform = x64
+-- Qt6Charts found - full charting support enabled
+-- Qt6HttpServer found - API server features enabled
+CMake Warning at CMakeLists.txt:187 (message):
+  CURL not found - HTTP client will use fallback.  Set CURL_DIR or install
+  libcurl for full functionality.
+
+
+CMake Warning at CMakeLists.txt:196 (message):
+  ZSTD not found - compression will use passthrough.  Set ZSTD_ROOT or
+  install zstd for full functionality.
+
+
+CMake Warning at CMakeLists.txt:206 (message):
+-- Qt6 found: 6.7.3
+  OpenSSL not found - JWT verification will be disabled.  Set
+  OPENSSL_ROOT_DIR or install OpenSSL for full security features.
+
+
+-- MSVC redist CRT path: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Redist/MSVC/14.44.35112/x64/Microsoft.VC143.CRT
+-- Adding ggml submodule for quantized inference
+-- ccache found, compilation results will be cached. Disable with GGML_CCACHE=OFF.
+-- CMAKE_SYSTEM_PROCESSOR: AMD64
+-- CMAKE_GENERATOR_PLATFORM: x64
+-- GGML_SYSTEM_ARCH: x86
+-- Including CPU backend
+-- x86 detected
+-- Adding CPU backend variant ggml-cpu:  
+-- Vulkan found
+-- GL_KHR_cooperative_matrix supported by glslc
+-- GL_NV_cooperative_matrix2 supported by glslc
+-- GL_EXT_integer_dot_product supported by glslc
+-- GL_EXT_bfloat16 supported by glslc
+-- Including Vulkan backend
+-- ggml version: 0.9.4
+-- ggml commit:  70ae668-dirty
+-- CUDA Toolkit not found - NVIDIA GPU support disabled
+-- ROCm/HIP not found - AMD GPU support disabled
+-- To enable AMD GPU: Install ROCm for Windows and set HIP_PATH
+-- Vulkan found: 1.4.328
+-- Adding advanced orchestration modules for AI-native IDE
+-- Building Qt Shell with Qt version: 6.7.3
+-- RawrXD Cryptographic Library integrated - full crypto support enabled
+-- ZLIB not found - CheckpointManager will use no compression
+-- Qt WebSockets found - swarm collaboration enabled
+-- RawrXD-QtShell: ggml quantization enabled
+-- ✓ Automatic DLL deployment enabled for RawrXD-QtShell
+-- RawrXD-Agent: Autonomous coding agent enabled
+-- Building RawrXD-AgenticIDE with Qt 6.7.3
+-- TEST_BRUTAL enabled: ModelLoaderWidget will run codec round-trip test
+-- ✓ Automatic DLL deployment enabled for RawrXD-AgenticIDE
+-- Smoke tests configured. Run with: ctest -C Release --output-on-failure
+-- RawrXD-AgenticIDE: Advanced AI-powered IDE enabled with Qt 6.7.3
+-- AgenticIDE sources: src/qtapp/main_v5.cpp;src/qtapp/MainWindow_v5.cpp;src/qtapp/qt_masm_bridge.cpp;src/agentic_ide.cpp;src/scalar_server.cpp;src/chat_workspace.cpp;src/multi_tab_editor.cpp;src/terminal_pool.cpp;src/agentic_engine.cpp;src/zero_day_agentic_engine.cpp;include/zero_day_agentic_engine.hpp;src/chat_interface.cpp;src/agentic_copilot_bridge.cpp;src/agent/agentic_failure_detector.cpp;src/agent/agentic_failure_detector.hpp;src/agent/agentic_puppeteer.cpp;src/agent/agentic_puppeteer.hpp;src/qtapp/ai_code_assistant.cpp;src/qtapp/ai_code_assistant_panel.cpp;src/qtapp/settings_dialog.cpp;src/qtapp/settings_manager.cpp;src/gui/ModelConversionDialog.cpp;src/qtapp/TerminalManager.cpp;src/utils/InferenceSettingsManager.cpp;src/ui/InferenceSettingsDialog.cpp;src/qtapp/tokenizer_selector.cpp;src/real_time_completion_engine.cpp;include/real_time_completion_engine.h;include/tokenizer_selector.h;src/qtapp/ci_cd_settings.cpp;src/qtapp/ci_cd_settings.h;include/ci_cd_settings.h;src/qtapp/checkpoint_manager.cpp;src/qtapp/checkpoint_manager.h;include/checkpoint_manager.h;src/qtapp/inflate_deflate_cpp.cpp;src/qtapp/brutal_gzip_wrapper.cpp;src/file_browser.cpp;src/qtapp/inference_engine.cpp;src/qtapp/sentencepiece_tokenizer.cpp;src/qtapp/vocabulary_loader.cpp;src/qtapp/bpe_tokenizer.cpp;src/qtapp/transformer_inference.cpp;src/qtapp/gguf_loader.hpp;src/qtapp/gguf_loader.cpp;src/gguf_loader.cpp;src/gguf_vocab_resolver.cpp;src/qtapp/model_loader_with_compression.cpp;src/qtapp/model_loader_with_compression.hpp;src/qtapp/model_loader_widget.cpp;src/qtapp/model_loader_widget.hpp;src/vulkan_compute.cpp;src/transformer_block_scalar.cpp;src/settings.cpp;src/planning_agent.cpp;src/plan_orchestrator.cpp;src/lsp_client.cpp;src/agentic_text_edit.cpp;src/ghost_text_renderer.cpp;src/universal_model_router.cpp;src/cloud_api_client.cpp;src/config_manager.cpp;src/feature_toggle.cpp;src/logging/logging.cpp;src/cloud_api_client.h;include/config_manager.h;include/feature_toggle.h;include/logging/logging.h;src/tool_registry.cpp;src/qtapp/ai_completion_provider.cpp;src/qtapp/model_loader_thread.cpp;src/telemetry.cpp;src/telemetry_singleton.cpp;src/todo_manager.cpp;src/todo_dock.cpp;src/agentic_executor.cpp;src/autonomous_model_manager.cpp;src/autonomous_model_manager.h;src/autonomous_resource_manager.cpp;include/autonomous_resource_manager.h;src/agentic_learning_system.cpp;include/agentic_learning_system.h;src/compression_interface.cpp;src/model_trainer.cpp;src/training_dialog.cpp;src/training_progress_dock.cpp;src/model_registry.cpp;src/profiler.cpp;src/observability_dashboard.cpp;src/hardware_backend_selector.cpp;src/ui/diff_dock.cpp;src/ui/gpu_backend_selector.cpp;src/ui/auto_model_downloader.cpp;src/ui/model_download_dialog_new.cpp;src/ui/telemetry_optin_dialog.cpp;src/qtapp/security_manager.cpp;src/qtapp/checkpoint_manager.cpp;src/qtapp/ci_cd_settings.cpp;src/qtapp/tokenizer_selector.cpp;src/qtapp/widgets/masm_editor_widget.cpp;src/qtapp/widgets/masm_editor_widget.h;src/qtapp/widgets/hotpatch_panel.cpp;src/qtapp/widgets/hotpatch_panel.h;src/qtapp/widgets/project_explorer.cpp;src/qtapp/widgets/project_explorer.h;src/qtapp/widgets/find_widget.cpp;src/qtapp/widgets/find_widget.h;src/qtapp/widgets/multi_file_search.cpp;src/qtapp/widgets/multi_file_search.h;src/qtapp/widgets/breadcrumb_navigation.cpp;src/qtapp/widgets/breadcrumb_navigation.hpp;src/qtapp/widgets/layer_quant_widget.cpp;src/qtapp/widgets/layer_quant_widget.hpp;src/qtapp/widgets/OverlayWidget.cpp;src/qtapp/widgets/OverlayWidget.hpp;src/qtapp/interpretability_panel_enhanced.cpp;src/qtapp/interpretability_panel_enhanced.hpp;src/qtapp/ai_chat_panel.cpp;src/qtapp/ai_chat_panel.hpp;src/qtapp/agent_chat_breadcrumb.cpp;src/qtapp/agent_chat_breadcrumb.hpp;src/qtapp/utils/file_operations.cpp;src/qtapp/utils/project_detector.cpp;src/qtapp/utils/qt_file_writer.cpp;src/qtapp/utils/qt_directory_manager.cpp;src/qtapp/zero_day_agentic_engine_moc_trigger.cpp;src/production_api_stub.cpp;src/production_api_server.cpp;src/production_api_example.cpp;src/api/rest_api_server.cpp;src/auth/oauth2_manager.cpp;src/jwt_validator.cpp;src/config_manager.cpp;src/crypto/pqc_crypto.cpp;src/db/database_manager.cpp;src/monitoring/metrics_emitter.cpp;src/semantic-analysis/ast_analyzer.cpp;src/qtapp/agentic_tools.cpp;src/qtapp/quant_impl.cpp;src/crypto/rawrxd_crypto_base.cpp;src/crypto/rawrxd_crypto_bigint.cpp;src/crypto/rawrxd_crypto_rsa_ecc.cpp;src/crypto/rawrxd_crypto_aes.cpp;include/production_api_server.h;include/production_api_configuration.h;include/rest_api_server.h;include/oauth2_manager.h;include/jwt_validator.h;include/config_manager.h;include/pqc_crypto.h;include/database_manager.h;include/metrics_emitter.h;include/ast_analyzer.h;src/qtapp/TelemetryWindow.h;src/response_parser.cpp;src/model_tester.cpp;src/library_integration.cpp;src/ai_implementation.cpp;src/streaming_engine.cpp;src/zero_day_agentic_engine.cpp;include/zero_day_agentic_engine.hpp;src/Memory/streaming_gguf_memory_manager.hpp;src/Memory/streaming_gguf_memory_manager.cpp;src/Memory/lazy_model_loader.hpp;src/Memory/lazy_model_loader.cpp;src/Memory/large_model_optimizer.hpp;src/Memory/large_model_optimizer.cpp;src/Memory/enterprise_streaming_controller.hpp;src/Memory/enterprise_streaming_controller.cpp;src/monitoring/enterprise_metrics_collector.hpp;src/monitoring/enterprise_metrics_collector.cpp;src/Memory/fault_tolerance_manager.hpp;src/Memory/fault_tolerance_manager.cpp;src/qtapp/ThemeManager.cpp;src/qtapp/ThemeConfigurationPanel.cpp;src/qtapp/TransparencyControlPanel.cpp;src/qtapp/ThemedCodeEditor.cpp
+-- RawrXD-ModelLoader configured successfully with Clang C++20
+-- Shared MOC generated for ZeroDayAgenticEngine
+-- BrutalGzip: Including MASM source C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/src/qtapp/inflate_deflate_asm.asm
+-- ccache found, compilation results will be cached. Disable with GGML_CCACHE=OFF.
+-- CMAKE_SYSTEM_PROCESSOR: AMD64
+-- CMAKE_GENERATOR_PLATFORM: x64
+-- GGML_SYSTEM_ARCH: x86
+-- Using GGML targets from submodule
+-- ✓ Automatic DLL deployment enabled for benchmark_completions
+-- ✓ Building benchmark_completions (FULL PRODUCTION VERSION)
+-- ggml version: 
+-- ggml commit:  
+-- MASM IDE build script found - pure assembly alternative available
+-- MASM compiler found: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/ml64.exe
+-- Configuring done (1.6s)
+-- Generating done (1.3s)
+-- Build files have been written to: C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init
 MSBuild version 17.14.23+b0019275e for .NET Framework
 
   Checking File Globs
-  Automatic MOC for target masm_ide_orchestration_obj
-  masm_ide_orchestration_obj.vcxproj -> C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\masm_ide_orchestration_obj.dir\Release\masm_ide_orchestration_obj.lib
   Automatic MOC for target brutal_gzip
   brutal_gzip.vcxproj -> C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\Release\brutal_gzip.lib
-  ggml.c
-  ggml.cpp
-  ggml-alloc.c
-  ggml-quants.c
-  Generating Code...
-  ggml-backend.cpp
-  ggml-opt.cpp
-  ggml-threading.cpp
-  gguf.cpp
-  Generating Code...
   ggml-base.vcxproj -> C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\3rdparty\ggml\src\Release\ggml-base.lib
   ggml-cpu.vcxproj -> C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\3rdparty\ggml\src\Release\ggml-cpu.lib
   1>Performing build step for 'vulkan-shaders-gen'
@@ -26,9 +128,12 @@ MSBuild version 17.14.23+b0019275e for .NET Framework
   Completed 'vulkan-shaders-gen'
   ggml-vulkan.vcxproj -> C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\3rdparty\ggml\src\ggml-vulkan\Release\ggml-vulkan.lib
   ggml.vcxproj -> C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\3rdparty\ggml\src\Release\ggml.lib
+  Assembling C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\universal_format_loader\universal_format_detector.asm...
+  Assembling C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\universal_format_loader\safetensors_parser.asm...
+  Assembling C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\universal_format_loader\pytorch_loader.asm...
+C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\universal_format_loader\pytorch_loader.asm(280): error A2022: instruction operands must be the same size [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\masm_universal_format_loader_obj.vcxproj]
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\BuildCustomizations\masm.targets(70,5): error MSB3721: The command "ml64.exe /c /nologo /Zi /Fo"masm_universal_format_loader_obj.dir\Release\pytorch_loader.obj" /D"CMAKE_INTDIR="Release"" /I "C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\final-ide" /Cp /W3 /errorReport:prompt  /c /c /Ta"C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\universal_format_loader\pytorch_loader.asm"" exited with code 1. [C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\src\masm\masm_universal_format_loader_obj.vcxproj]
   Automatic MOC for target quant_utils
   quant_utils.vcxproj -> C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\Release\quant_utils.lib
   Automatic MOC for target self_test_gate
   self_test_gate.vcxproj -> C:\Users\HiH8e\Downloads\RawrXD-production-lazy-init\Release\self_test_gate.lib
-  Automatic MOC for target RawrXD-QtShell
-  MainWindow.cpp

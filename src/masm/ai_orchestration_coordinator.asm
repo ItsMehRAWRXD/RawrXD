@@ -5,7 +5,57 @@
 ; LINES: 480 (Production MASM)
 ; ============================================================================
 
+; Constants
+INFINITE EQU 0FFFFFFFFh
+WAIT_OBJECT_0 EQU 0
+EM_REPLACESEL EQU 0C2h
+MAX_ACTIVE_STREAMS EQU 16
+TIMER_POLL_ID EQU 1001
+COORDINATOR_STATE_SIZE EQU 180
+
+.data
+; Global state
+globalCoordinator QWORD 0
+coordinatorInitialized BYTE 0
+coordinationLatency QWORD 0
+totalOperations QWORD 0
+inferenceCount QWORD 0
+autonomousTaskCount QWORD 0
+failureRecoveryCount QWORD 0
+currentlyInferring BYTE 0
+currentlyExecuting BYTE 0
+currentlyRecovering BYTE 0
+outputLogHandle QWORD 0
+agenticChatHandle QWORD 0
+chatHandle QWORD 0
+coordState DWORD 0
+streamPool QWORD MAX_ACTIVE_STREAMS DUP (0)
+temperature REAL8 0.7
+
 .code
+
+; External functions
+extern malloc:proc
+extern free:proc
+extern agentic_inference_stream_init:proc
+extern autonomous_task_executor_init:proc
+extern agentic_failure_recovery_init:proc
+extern CreateThread:proc
+extern CreateEventA:proc
+extern output_pane_append:proc
+extern agentic_inference_stream_start:proc
+extern autonomous_task_schedule:proc
+extern agentic_failure_detect:proc
+extern autonomous_task_status:proc
+extern autonomous_task_execute_pending:proc
+extern SetEvent:proc
+extern WaitForSingleObject:proc
+extern CloseHandle:proc
+extern wsprintfA:proc
+extern SendMessageA:proc
+extern get_stream_result:proc
+extern SetTimer:proc
+extern Sleep:proc
 
 ; ============================================================================
 ; ORCHESTRATION STRUCTURES
@@ -26,34 +76,10 @@
 ;   64     8    hStopEvent (shutdown signal)
 ;   72    100   operationLog (recent operations)
 
-COORDINATOR_STATE_SIZE = 180
-COORDINATOR_IDLE = 0
-COORDINATOR_INFERRING = 1
-COORDINATOR_EXECUTING = 2
-COORDINATOR_RECOVERING = 3
-
-; ============================================================================
-; GLOBAL STATE
-; ============================================================================
-
-EXTERN outputLogHandle: QWORD
-EXTERN agenticChatHandle: QWORD
-
-; Single global coordinator instance
-globalCoordinator: QWORD 0              ; Singleton coordinator
-coordinatorInitialized: BYTE 0          ; Init flag
-
-; Performance metrics
-coordinationLatency: QWORD 0            ; Average coordination time (microseconds)
-totalOperations: QWORD 0                ; Total coordinated operations
-inferenceCount: QWORD 0                 ; Total inferences started
-autonomousTaskCount: QWORD 0            ; Total tasks executed
-failureRecoveryCount: QWORD 0           ; Total recovery attempts
-
-; Real-time state
-currentlyInferring: BYTE 0              ; Is inference active?
-currentlyExecuting: BYTE 0              ; Is task executing?
-currentlyRecovering: BYTE 0             ; Is recovery in progress?
+COORDINATOR_IDLE EQU 0
+COORDINATOR_INFERRING EQU 1
+COORDINATOR_EXECUTING EQU 2
+COORDINATOR_RECOVERING EQU 3
 
 ; ============================================================================
 ; PUBLIC API
@@ -646,13 +672,6 @@ ai_orchestration_schedule_task PROC
     ret
 ai_orchestration_schedule_task ENDP
 
-TIMER_POLL_ID = 1001
-
 ; ============================================================================
 
-; Temperature parameter storage (for inference)
-temperature: REAL8 0.7                  ; Default 0.7 temperature
-
-; ============================================================================
-
-.end
+END

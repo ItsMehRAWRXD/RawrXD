@@ -356,8 +356,7 @@ notebook_create_window PROC
     mov rax, g_notebook_document.hWindow
     add rsp, 96
     pop rbx
-    ret
-    
+
 .data
 szNotebookTitle db "Notebook",0
 .code
@@ -369,6 +368,7 @@ notebook_create_window ENDP
 ;==========================================================================
 notebook_add_cell PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 256
@@ -429,10 +429,11 @@ notebook_add_cell PROC
     
 @done:
     add rsp, 256
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 notebook_add_cell ENDP
 
 ;==========================================================================
@@ -441,6 +442,7 @@ notebook_add_cell ENDP
 ;==========================================================================
 notebook_delete_cell PROC
     push rbx
+
     push rsi
     sub rsp, 32
     
@@ -485,10 +487,10 @@ notebook_delete_cell PROC
     
 @done:
     add rsp, 32
+
     pop rsi
-    pop rbx
-    ret
-notebook_delete_cell ENDP
+    pop notebook
+    pop rbx_delete_cell ENDP
 
 ;==========================================================================
 ; notebook_execute_cell(cell_id: ecx) -> bool (rax)
@@ -496,6 +498,7 @@ notebook_delete_cell ENDP
 ;==========================================================================
 notebook_execute_cell PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 512
@@ -560,10 +563,11 @@ notebook_execute_cell PROC
     
 @done:
     add rsp, 512
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 notebook_execute_cell ENDP
 
 ;==========================================================================
@@ -572,6 +576,7 @@ notebook_execute_cell ENDP
 ;==========================================================================
 notebook_execute_all PROC
     push rbx
+
     push rsi
     sub rsp, 32
     
@@ -601,10 +606,10 @@ notebook_execute_all PROC
 @done:
     mov rax, 1  ; Success
     add rsp, 32
+
     pop rsi
-    pop rbx
-    ret
-notebook_execute_all ENDP
+    pop notebook
+    pop rbx_execute_all ENDP
 
 ;==========================================================================
 ; Helper functions
@@ -706,12 +711,12 @@ find_cell_by_id ENDP
 
 send_to_kernel PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 64
     push rbx
+
     push rsi
-    
-    mov rbx, rcx        ; kernel_ptr
+    push mov rbx, rcx        ; kernel_ptr
     mov rsi, rdx        ; code_string
     
     ; Check if kernel is running
@@ -735,8 +740,9 @@ send_to_kernel PROC
     mov rdx, rsi
     lea r9, bytesWritten
     push 0
-    call WriteFile
-    add rsp, 8
+    push call
+    push WriteFile
+    push add rsp, 8
     
     ; Add newline to trigger execution
     mov rcx, [rbx + NOTEBOOK_KERNEL.stdin_write]
@@ -744,8 +750,9 @@ send_to_kernel PROC
     mov r8, 2
     lea r9, bytesWritten
     push 0
-    call WriteFile
-    add rsp, 8
+    push call
+    push WriteFile
+    push add rsp, 8
     
     mov rax, 1
     jmp @done
@@ -754,10 +761,10 @@ send_to_kernel PROC
     xor rax, rax
     
 @done:
-    pop rsi
-    pop rbx
-    leave
+
+    pop rsi leave
     ret
+    pop rbx
     
 .data
 szNewline db 0Dh, 0Ah, 0
@@ -766,9 +773,10 @@ send_to_kernel ENDP
 
 receive_from_kernel PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 64
     push rbx
+
     push rsi
     push rdi
     
@@ -787,8 +795,9 @@ receive_from_kernel PROC
     lea r10, bytesAvailable
     xor r11, r11
     push r11
+
     push r10
-    call PeekNamedPipe
+    push call PeekNamedPipe
     add rsp, 16
     
     test rax, rax
@@ -808,8 +817,9 @@ receive_from_kernel PROC
 @do_read:
     mov r9, rdi         ; output_len_ptr
     push 0
-    call ReadFile
-    add rsp, 8
+    push call
+    push ReadFile
+    push add rsp, 8
     
     mov rax, 1
     jmp @done
@@ -819,20 +829,20 @@ receive_from_kernel PROC
     xor rax, rax
     
 @done:
-    pop rdi
-    pop rsi
-    pop rbx
-    leave
+
+    pop rsi pop rdi
+
+
+    pop leave rbx
     ret
 receive_from_kernel ENDP
 
 start_kernel_process PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 128
     push rbx
-    
-    mov rbx, rcx        ; kernel_ptr
+    push mov rbx, rcx        ; kernel_ptr
     
     ; Create pipes
     LOCAL hStdInRead:QWORD, hStdInWrite:QWORD
@@ -869,12 +879,14 @@ start_kernel_process PROC
     xor r8, r8
     xor r9, r9
     push 0
+
     push 0
     push CREATE_NO_WINDOW
     push 1  ; bInheritHandles
     push 0
+
     push 0
-    call CreateProcessA
+    push call CreateProcessA
     add rsp, 48
     
     test rax, rax
@@ -898,8 +910,8 @@ start_kernel_process PROC
     xor rax, rax
     
 @done:
-    pop rbx
-    leave
+
+    pop leave rbx
     ret
 start_kernel_process ENDP
 
@@ -989,3 +1001,7 @@ notebook_set_kernel PROC
 notebook_set_kernel ENDP
 
 end
+
+
+
+

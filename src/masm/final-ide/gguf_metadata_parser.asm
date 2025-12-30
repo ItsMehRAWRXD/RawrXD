@@ -93,12 +93,16 @@ PUBLIC parse_gguf_metadata_complete
 ALIGN 16
 parse_gguf_metadata_complete PROC
     push rbx
+
     push rsi
     push rdi
+
     push r8
     push r9
+
     push r10
     push r11
+
     push r12
     sub rsp, 512            ; large stack for key buffer and work
     
@@ -331,16 +335,19 @@ parse_error:
     
 parse_exit:
     add rsp, 512
-    pop r12
-    pop r11
-    pop r10
-    pop r9
-    pop r8
-    pop rdi
+
+    pop r11 pop r12
+
+
+    pop r9 pop r10
+
+
+    pop rdi pop r8
+
+
     pop rsi
-    pop rbx
-    ret
-parse_gguf_metadata_complete ENDP
+    pop parse
+    pop rbx_gguf_metadata_complete ENDP
 
 ;==========================================================================
 ; INTERNAL: compare_strings(str1: rcx, str2: rdx) -> eax (1 match, 0 no)
@@ -349,8 +356,7 @@ parse_gguf_metadata_complete ENDP
 ALIGN 16
 compare_strings PROC
     push rsi
-    
-compare_loop:
+    push compare_loop:
     mov al, BYTE PTR [rcx]
     mov sil, BYTE PTR [rdx]
     cmp al, sil
@@ -366,12 +372,11 @@ compare_loop:
 compare_match:
     mov eax, 1
     pop rsi
-    ret
-    
+
 compare_fail:
     xor eax, eax
     pop rsi
-    ret
+
 compare_strings ENDP
 
 ;==========================================================================
@@ -392,10 +397,13 @@ PUBLIC extract_tensor_names_from_gguf
 ALIGN 16
 extract_tensor_names_from_gguf PROC
     push rbx
+
     push rsi
     push rdi
+
     push r8
     push r9
+
     push r10
     push r11
     sub rsp, 64h
@@ -411,14 +419,17 @@ extract_tensor_names_from_gguf PROC
     xor eax, eax            ; Return count = 0 for now
     
     add rsp, 64h
-    pop r11
-    pop r10
-    pop r9
-    pop r8
-    pop rdi
-    pop rsi
+
+    pop r10 pop r11
+
+
+    pop r8 pop r9
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 extract_tensor_names_from_gguf ENDP
 
 ;==========================================================================
@@ -435,8 +446,10 @@ PUBLIC format_arch_string
 ALIGN 16
 format_arch_string PROC
     push rbx
+
     push rsi
     push rdi
+
     push r8
     sub rsp, 96h
     
@@ -514,12 +527,13 @@ format_arch_string PROC
     sub rax, rdx            ; rax = length of output string
     
     add rsp, 96h
-    pop r8
-    pop rdi
+
+    pop rdi pop r8
+
+
     pop rsi
-    pop rbx
-    ret
-format_arch_string ENDP
+    pop format
+    pop rbx_arch_string ENDP
 
 ;==========================================================================
 ; INTERNAL: append_int_to_buffer(value: eax)
@@ -528,8 +542,10 @@ format_arch_string ENDP
 ALIGN 16
 append_int_to_buffer PROC
     push rax
+
     push rbx
     push rcx
+
     push rdx
     push rsi
     sub rsp, 32
@@ -570,12 +586,19 @@ digits_done:
     
 append_done:
     add rsp, 32
-    pop rsi
-    pop rdx
-    pop rcx
-    pop rbx
+
+    pop rdx pop rsi
+
+
+    pop rbx pop rcx
+
     pop rax
-    ret
+
 append_int_to_buffer ENDP
 
 END
+
+
+
+
+

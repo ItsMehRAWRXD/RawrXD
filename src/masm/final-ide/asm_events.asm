@@ -65,6 +65,7 @@ ALIGN 16
 asm_event_loop_create PROC
 
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -133,11 +134,10 @@ event_loop_create_fail:
     
 event_loop_create_done:
     add rsp, 32
-    pop r12
-    pop rbx
-    ret
 
-asm_event_loop_create ENDP
+    pop r12
+    pop asm
+    pop rbx_event_loop_create ENDP
 
 ;=====================================================================
 ; asm_event_loop_register_signal(loop: rcx, signal_id: rdx, handler: r8) -> void
@@ -187,6 +187,7 @@ ALIGN 16
 asm_event_loop_emit PROC
 
     push rbx
+
     push r12
     push r13
     sub rsp, 48             ; 40 bytes shadow + 8 for p3
@@ -267,10 +268,10 @@ emit_queue_full:
     
 emit_done:
     add rsp, 48
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
 
 asm_event_loop_emit ENDP
 
@@ -290,6 +291,7 @@ ALIGN 16
 asm_event_loop_process_one PROC
 
     push rbx
+
     push r12
     push r13
     sub rsp, 32
@@ -395,10 +397,10 @@ process_one_fail:
     
 process_one_exit:
     add rsp, 32
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
 
 asm_event_loop_process_one ENDP
 
@@ -444,7 +446,6 @@ process_all_done:
     mov rax, rbx
     add rsp, 32
     pop rbx
-    ret
 
 asm_event_loop_process_all ENDP
 
@@ -485,7 +486,6 @@ asm_event_loop_destroy PROC
 loop_destroy_done:
     add rsp, 32
     pop rbx
-    ret
 
 asm_event_loop_destroy ENDP
 
@@ -515,3 +515,8 @@ loop_stats_zero:
 asm_event_loop_stats ENDP
 
 END
+
+
+
+
+

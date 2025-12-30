@@ -1101,49 +1101,39 @@ void AIChatPanel::setInputEnabled(bool enabled)
 
 void AIChatPanel::fetchAvailableModels()
 {
-    // Use built-in models - no Ollama dependency needed
-    if (!m_localEnabled) {
-        qDebug() << "Local models disabled, using cloud endpoint only";
+    if (!m_modelSelector || !m_breadcrumb) {
+        qWarning() << "Model selector or breadcrumb not initialized";
         return;
     }
     
-    qDebug() << "Loading built-in models (no external Ollama required)";
-    
-    if (!m_modelSelector) {
-        qWarning() << "Model selector not initialized";
-        return;
-    }
+    qDebug() << "Fetching models from breadcrumb registry...";
     
     m_modelSelector->blockSignals(true);
     m_modelSelector->clear();
     
-    // Built-in model list - available without any external dependencies
-    QStringList builtInModels = {
-        "llama3.1",
-        "mistral",
-        "neural-chat",
-        "dolphin-mixtral",
-        "gpt4all",
-        "tinyllama"
-    };
+    QList<AgentChatBreadcrumb::ModelInfo> models = m_breadcrumb->getAvailableModels();
     
-    // Add models with metadata format
-    for (const QString& modelName : builtInModels) {
-        QString displayText = QString("%1 [built-in]").arg(modelName);
-        m_modelSelector->addItem(displayText, modelName);
-        qDebug() << "Added built-in model:" << modelName;
+    if (models.isEmpty()) {
+        // Fallback to built-in if nothing discovered yet
+        QStringList builtInModels = {"llama3.1", "mistral", "neural-chat", "dolphin-mixtral", "gpt4all", "tinyllama"};
+        for (const QString& modelName : builtInModels) {
+            m_modelSelector->addItem(QString("%1 [built-in]").arg(modelName), modelName);
+        }
+    } else {
+        for (const auto& info : models) {
+            m_modelSelector->addItem(info.displayName, info.name);
+        }
     }
     
-    // Set default selection and enable input
+    // Set default selection
     if (m_modelSelector->count() > 0) {
         m_modelSelector->insertItem(0, "Select a model...", "");
         m_modelSelector->setCurrentIndex(0);
-        qDebug() << "Built-in model list ready";
     } else {
         m_modelSelector->addItem("No models available");
     }
     
-    setInputEnabled(false);  // Wait for model selection
+    setInputEnabled(false);
     m_modelSelector->blockSignals(false);
 }
 

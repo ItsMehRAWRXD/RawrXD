@@ -90,7 +90,6 @@ telemetry_system_init PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
 
 telemetry_system_init ENDP
 
@@ -119,7 +118,6 @@ metrics_collector_init PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
 
 metrics_collector_init ENDP
 
@@ -275,3 +273,8 @@ config_get_value PROC
 config_get_value ENDP
 
 END
+
+
+
+
+

@@ -314,13 +314,14 @@ StartAnimationTimer PROC
     mov eax, ERR_SUCCESS
     add rsp, 32
     pop rbx
-    ret
+
 StartAnimationTimer ENDP
 
 ALIGN 16
 AnimationTimerCallback PROC
     ; Called every 16ms for animation updates
     push rbx
+
     push r12
     sub rsp, 48
     
@@ -338,40 +339,38 @@ AnimationTimerCallback PROC
     
     ; Process all active animations
     mov rbx, 0          ; Animation index
-    
-.anim_process_loop:
+@@anim_process_loop:
     cmp rbx, g_animation_count
-    jge .anim_process_done
+    jge @@anim_process_done
     
     ; Get animation
     lea rcx, g_animations[rbx * SIZEOF ANIMATION]
     
     ; Check if running
     cmp DWORD PTR [rcx + ANIMATION.is_running], 0
-    je .anim_process_next
+    je @@anim_process_next
     
     ; Update animation
     mov rdx, r12        ; Current time
     mov r8, rcx         ; Animation pointer
     call UpdateAnimation
-    
-.anim_process_next:
+@@anim_process_next:
     inc rbx
-    jmp .anim_process_loop
-    
-.anim_process_done:
+    jmp @@anim_process_loop
+@@anim_process_done:
     inc g_total_animations
     
     add rsp, 48
+
     pop r12
-    pop rbx
-    ret
-AnimationTimerCallback ENDP
+    pop AnimationTimerCallback
+    pop rbx ENDP
 
 ALIGN 16
 UpdateAnimation PROC
     ; rcx = animation pointer, rdx = current time, r8 = animation data
     push rbx
+
     push r12
     sub rsp, 48
     
@@ -386,7 +385,7 @@ UpdateAnimation PROC
     ; Check if animation duration exceeded
     mov eax, [r12 + ANIMATION.duration_ms]
     cmp r9d, eax
-    jl .still_animating
+    jl @@still_animating
     
     ; Animation complete
     mov DWORD PTR [r12 + ANIMATION.elapsed_ms], eax  ; Clamp to max
@@ -399,15 +398,13 @@ UpdateAnimation PROC
     
     mov rdx, [r12 + ANIMATION.user_data]
     call rcx
-    
-.skip_callback:
+@@skip_callback:
     xor eax, eax        ; Return 0 = animation done
     add rsp, 48
+
     pop r12
     pop rbx
-    ret
-    
-.still_animating:
+@@still_animating:
     ; Calculate progress (0.0 - 1.0)
     mov eax, [r12 + ANIMATION.duration_ms]
     mov ecx, [r12 + ANIMATION.elapsed_ms]
@@ -423,29 +420,26 @@ UpdateAnimation PROC
     mov ecx, r8d        ; Progress percentage
     
     cmp eax, EASING_LINEAR
-    je .linear_easing
+    je @@linear_easing
     cmp eax, EASING_EASE_IN
-    je .ease_in
+    je @@ease_in
     cmp eax, EASING_EASE_OUT
-    je .ease_out
+    je @@ease_out
     cmp eax, EASING_EASE_IN_OUT
-    je .ease_in_out
-    
-.linear_easing:
+    je @@ease_in_out
+@@linear_easing:
     ; progress = t (0-100)
     mov eax, ecx
-    jmp .easing_done
-    
-.ease_in:
+    jmp @@easing_done
+@@ease_in:
     ; progress = t^2
     mov eax, ecx
     imul eax, eax
     mov edx, 0
     mov r8d, 10000
     idiv r8d
-    jmp .easing_done
-    
-.ease_out:
+    jmp @@easing_done
+@@ease_out:
     ; progress = 1 - (1-t)^2
     mov eax, 100
     sub eax, ecx
@@ -455,9 +449,8 @@ UpdateAnimation PROC
     idiv r8d
     mov eax, 100
     sub eax, r8d
-    jmp .easing_done
-    
-.ease_in_out:
+    jmp @@easing_done
+@@ease_in_out:
     ; Cubic ease-in-out
     mov eax, ecx
     imul eax, ecx
@@ -465,8 +458,7 @@ UpdateAnimation PROC
     mov edx, 0
     mov r8d, 10000
     idiv r8d
-    
-.easing_done:
+@@easing_done:
     ; Interpolate between start and end values
     mov ecx, [r12 + ANIMATION.start_value]
     mov edx, [r12 + ANIMATION.end_value]
@@ -490,19 +482,19 @@ UpdateAnimation PROC
     xor r8d, r8d
     xor r9d, r9d
     call SendMessageA
-    
-.no_hwnd_update:
+@@no_hwnd_update:
     mov eax, 1          ; Still animating
     add rsp, 48
+
     pop r12
-    pop rbx
-    ret
-UpdateAnimation ENDP
+    pop UpdateAnimation
+    pop rbx ENDP
 
 ALIGN 16
 ParseAnimationJson PROC
     ; rcx = JSON buffer, edx = size, r8 = animation output
     push rbx
+
     push r12
     sub rsp, 48
     
@@ -527,8 +519,7 @@ ParseAnimationJson PROC
     ; Parse duration value (should be number)
     mov ecx, [eax]      ; Read integer value
     mov [r12 + ANIMATION.duration_ms], ecx
-    
-.duration_not_found:
+@@duration_not_found:
     ; Find "easing"
     lea rcx, "easing"
     call FindJsonKey
@@ -558,30 +549,25 @@ ParseAnimationJson PROC
     test eax, eax
     jz .set_ease_in_out
     
-    jmp .easing_not_found
-    
-.set_linear:
+    jmp @@easing_not_found
+@@set_linear:
     mov DWORD PTR [r12 + ANIMATION.easing_type], EASING_LINEAR
-    jmp .easing_not_found
-    
-.set_ease_in:
+    jmp @@easing_not_found
+@@set_ease_in:
     mov DWORD PTR [r12 + ANIMATION.easing_type], EASING_EASE_IN
-    jmp .easing_not_found
-    
-.set_ease_out:
+    jmp @@easing_not_found
+@@set_ease_out:
     mov DWORD PTR [r12 + ANIMATION.easing_type], EASING_EASE_OUT
-    jmp .easing_not_found
-    
-.set_ease_in_out:
+    jmp @@easing_not_found
+@@set_ease_in_out:
     mov DWORD PTR [r12 + ANIMATION.easing_type], EASING_EASE_IN_OUT
-    
-.easing_not_found:
+@@easing_not_found:
     mov eax, ERR_SUCCESS
     add rsp, 48
+
     pop r12
-    pop rbx
-    ret
-ParseAnimationJson ENDP
+    pop ParseAnimationJson
+    pop rbx ENDP
 
 ALIGN 16
 StartStyleAnimation PROC
@@ -591,7 +577,7 @@ StartStyleAnimation PROC
     
     ; Add animation to registry
     cmp g_animation_count, MAX_ANIMATIONS
-    jge .start_style_failed
+    jge @@start_style_failed
     
     mov eax, g_animation_count
     lea rbx, g_animations[rax * SIZEOF ANIMATION]
@@ -612,13 +598,12 @@ StartStyleAnimation PROC
     mov eax, ERR_SUCCESS
     add rsp, 32
     pop rbx
-    ret
-    
-.start_style_failed:
+
+@@start_style_failed:
     mov eax, ERR_NO_MEMORY
     add rsp, 32
     pop rbx
-    ret
+
 StartStyleAnimation ENDP
 
 ALIGN 16
@@ -636,7 +621,7 @@ UpdateComponentPositions PROC
     mov eax, ERR_SUCCESS
     add rsp, 32
     pop rbx
-    ret
+
 UpdateComponentPositions ENDP
 
 ALIGN 16
@@ -677,15 +662,13 @@ CalculateEasing PROC
     ; Returns: eax = eased progress
     
     cmp edx, EASING_LINEAR
-    je .easing_linear
+    je @@easing_linear
     cmp edx, EASING_EASE_IN
-    je .easing_ease_in
-    
-.easing_linear:
+    je @@easing_ease_in
+@@easing_linear:
     mov eax, ecx        ; Return progress as-is
     ret
-    
-.easing_ease_in:
+@@easing_ease_in:
     ; t^2
     mov eax, ecx
     imul eax, eax
@@ -767,7 +750,7 @@ ui_create_mode_combo PROC
     mov eax, ERR_SUCCESS
     add rsp, 32
     pop rbx
-    ret
+
 ui_create_mode_combo ENDP
 
 ALIGN 16
@@ -813,7 +796,7 @@ ui_create_mode_checkboxes PROC
     mov eax, ERR_SUCCESS
     add rsp, 32
     pop rbx
-    ret
+
 ui_create_mode_checkboxes ENDP
 
 ALIGN 16
@@ -845,13 +828,12 @@ ui_open_file_dialog PROC
     mov eax, 1          ; Success
     add rsp, 64
     pop rbx
-    ret
-    
-.no_file_selected:
+
+@@no_file_selected:
     xor eax, eax
     add rsp, 64
     pop rbx
-    ret
+
 ui_open_file_dialog ENDP
 
 ALIGN 16
@@ -864,13 +846,12 @@ ALIGN 16
 SetCurrentUIMode PROC
     ; ecx = new mode
     cmp ecx, AGENT_MODES
-    jge .mode_invalid
+    jge @@mode_invalid
     
     mov g_current_mode, ecx
     mov eax, ERR_SUCCESS
     ret
-    
-.mode_invalid:
+@@mode_invalid:
     mov eax, ERR_INVALID_PARAM
     ret
 SetCurrentUIMode ENDP
@@ -881,13 +862,12 @@ GetUIOption PROC
     ; Returns: eax = option value
     
     cmp ecx, 16
-    jge .option_invalid
+    jge @@option_invalid
     
     lea rax, g_ui_options[rcx * SIZEOF UI_OPTION]
     mov eax, [rax + UI_OPTION.current_value]
     ret
-    
-.option_invalid:
+@@option_invalid:
     xor eax, eax
     ret
 GetUIOption ENDP
@@ -897,14 +877,13 @@ SetUIOption PROC
     ; rcx = option index, edx = new value
     
     cmp ecx, 16
-    jge .set_option_invalid
+    jge @@set_option_invalid
     
     lea rax, g_ui_options[rcx * SIZEOF UI_OPTION]
     mov [rax + UI_OPTION.current_value], edx
     mov eax, ERR_SUCCESS
     ret
-    
-.set_option_invalid:
+@@set_option_invalid:
     mov eax, ERR_INVALID_PARAM
     ret
 SetUIOption ENDP
@@ -928,7 +907,7 @@ LoadUserFeatureConfiguration PROC
     mov r9d, OPEN_EXISTING
     call CreateFileA
     cmp rax, INVALID_HANDLE_VALUE
-    je .config_load_failed
+    je @@config_load_failed
     
     ; Read file into buffer
     mov rcx, rax
@@ -942,13 +921,12 @@ LoadUserFeatureConfiguration PROC
     mov eax, ERR_SUCCESS
     add rsp, 32
     pop rbx
-    ret
-    
-.config_load_failed:
+
+@@config_load_failed:
     mov eax, ERR_FILE_NOT_FOUND
     add rsp, 32
     pop rbx
-    ret
+
 LoadUserFeatureConfiguration ENDP
 
 ALIGN 16
@@ -961,10 +939,9 @@ ValidateFeatureConfiguration PROC
     
     ; Iterate through features checking dependencies
     mov rbx, 0
-    
-.validate_loop:
+@@validate_loop:
     cmp rbx, g_feature_count
-    jge .validate_done
+    jge @@validate_done
     
     lea rcx, g_features[rbx * SIZEOF FEATURE_DEFINITION]
     
@@ -975,56 +952,50 @@ ValidateFeatureConfiguration PROC
     
     ; For each dependency, verify it exists and is enabled
     mov r8d, 0          ; Dependency index
-    
-.validate_deps_loop:
+@@validate_deps_loop:
     cmp r8d, eax
-    jge .check_conflicts
+    jge @@check_conflicts
     
     mov edx, [rcx + FEATURE_DEFINITION.dependencies + r8 * 4]
     cmp edx, 0
-    je .validate_deps_next
+    je @@validate_deps_next
     
     ; Find feature with this ID
     mov r9d, 0
-.find_dep_loop:
+@@find_dep_loop:
     cmp r9d, g_feature_count
-    jge .dep_not_found
+    jge @@dep_not_found
     
     lea r10, g_features[r9 * SIZEOF FEATURE_DEFINITION]
     mov r10d, [r10 + FEATURE_DEFINITION.feature_id]
     cmp r10d, edx
-    je .dep_found
+    je @@dep_found
     
     inc r9d
-    jmp .find_dep_loop
-    
-.dep_not_found:
+    jmp @@find_dep_loop
+@@dep_not_found:
     mov eax, ERR_INVALID_PARAM
     add rsp, 32
     pop rbx
-    ret
-    
-.dep_found:
-.validate_deps_next:
+
+@@dep_found:
+@@validate_deps_next:
     inc r8d
-    jmp .validate_deps_loop
-    
-.check_conflicts:
+    jmp @@validate_deps_loop
+@@check_conflicts:
     mov eax, [rcx + FEATURE_DEFINITION.conflict_count]
     test eax, eax
     jz .validate_next
     
     ; Similar check for conflicts
-    
-.validate_next:
+@@validate_next:
     inc rbx
-    jmp .validate_loop
-    
-.validate_done:
+    jmp @@validate_loop
+@@validate_done:
     mov eax, ERR_SUCCESS
     add rsp, 32
     pop rbx
-    ret
+
 ValidateFeatureConfiguration ENDP
 
 ALIGN 16
@@ -1039,36 +1010,33 @@ ApplyEnterpriseFeaturePolicy PROC
     
     ; Find feature
     mov r8d, 0
-.find_feat_loop:
+@@find_feat_loop:
     cmp r8d, g_feature_count
-    jge .feat_not_found
+    jge @@feat_not_found
     
     lea rcx, g_features[r8 * SIZEOF FEATURE_DEFINITION]
     cmp [rcx + FEATURE_DEFINITION.feature_id], ebx
-    je .feat_found
+    je @@feat_found
     
     inc r8d
-    jmp .find_feat_loop
-    
-.feat_not_found:
+    jmp @@find_feat_loop
+@@feat_not_found:
     mov eax, ERR_NOT_FOUND
     add rsp, 32
     pop rbx
-    ret
-    
-.feat_found:
+
+@@feat_found:
     ; Check if policy restricts this feature
     mov eax, [rcx + FEATURE_DEFINITION.policy_restricted]
     test eax, eax
     jz .policy_allowed
     
     mov DWORD PTR [rcx + FEATURE_DEFINITION.state], FEATURE_STATE_RESTRICTED
-    
-.policy_allowed:
+@@policy_allowed:
     mov eax, ERR_SUCCESS
     add rsp, 32
     pop rbx
-    ret
+
 ApplyEnterpriseFeaturePolicy ENDP
 
 ALIGN 16
@@ -1137,27 +1105,24 @@ IsFeatureEnabled PROC
     ; Returns: eax = 1 if enabled, 0 if not
     
     mov r8d, 0
-.find_feature:
+@@find_feature:
     cmp r8d, g_feature_count
-    jge .feature_disabled
+    jge @@feature_disabled
     
     lea rax, g_features[r8 * SIZEOF FEATURE_DEFINITION]
     cmp [rax + FEATURE_DEFINITION.feature_id], ecx
-    je .check_enabled
+    je @@check_enabled
     
     inc r8d
-    jmp .find_feature
-    
-.check_enabled:
+    jmp @@find_feature
+@@check_enabled:
     mov eax, [rax + FEATURE_DEFINITION.state]
     cmp eax, FEATURE_STATE_ENABLED
-    je .feature_enabled
-    
-.feature_disabled:
+    je @@feature_enabled
+@@feature_disabled:
     xor eax, eax
     ret
-    
-.feature_enabled:
+@@feature_enabled:
     mov eax, 1
     ret
 IsFeatureEnabled ENDP
@@ -1168,22 +1133,20 @@ GetFeatureState PROC
     ; Returns: eax = feature state
     
     mov r8d, 0
-.find_feature_state:
+@@find_feature_state:
     cmp r8d, g_feature_count
-    jge .feature_state_not_found
+    jge @@feature_state_not_found
     
     lea rax, g_features[r8 * SIZEOF FEATURE_DEFINITION]
     cmp [rax + FEATURE_DEFINITION.feature_id], ecx
-    je .return_state
+    je @@return_state
     
     inc r8d
-    jmp .find_feature_state
-    
-.return_state:
+    jmp @@find_feature_state
+@@return_state:
     mov eax, [rax + FEATURE_DEFINITION.state]
     ret
-    
-.feature_state_not_found:
+@@feature_state_not_found:
     xor eax, eax
     ret
 GetFeatureState ENDP
@@ -1193,23 +1156,21 @@ SetFeatureState PROC
     ; rcx = feature id, edx = new state
     
     mov r8d, 0
-.find_feature_set:
+@@find_feature_set:
     cmp r8d, g_feature_count
-    jge .feature_not_found_set
+    jge @@feature_not_found_set
     
     lea rax, g_features[r8 * SIZEOF FEATURE_DEFINITION]
     cmp [rax + FEATURE_DEFINITION.feature_id], ecx
-    je .set_state
+    je @@set_state
     
     inc r8d
-    jmp .find_feature_set
-    
-.set_state:
+    jmp @@find_feature_set
+@@set_state:
     mov [rax + FEATURE_DEFINITION.state], edx
     mov eax, ERR_SUCCESS
     ret
-    
-.feature_not_found_set:
+@@feature_not_found_set:
     mov eax, ERR_NOT_FOUND
     ret
 SetFeatureState ENDP
@@ -1245,10 +1206,9 @@ ml_masm_get_tensor PROC
     
     mov rbx, rcx        ; Tensor name
     mov r8d, 0          ; Index
-    
-.find_tensor:
+@@find_tensor:
     cmp r8d, g_tensor_count
-    jge .tensor_not_found
+    jge @@tensor_not_found
     
     mov rax, [g_tensor_registry + r8 * 8]
     test rax, rax
@@ -1262,18 +1222,16 @@ ml_masm_get_tensor PROC
     jnz .tensor_found
     
     inc r8d
-    jmp .find_tensor
-    
-.tensor_found:
+    jmp @@find_tensor
+@@tensor_found:
     add rsp, 32
     pop rbx
-    ret
-    
-.tensor_not_found:
+
+@@tensor_not_found:
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 ml_masm_get_tensor ENDP
 
 ALIGN 16
@@ -1306,33 +1264,29 @@ rawr1024_quantize_model PROC
     
     ; Check quantization type
     cmp edx, 4
-    je .quant_4bit
+    je @@quant_4bit
     cmp edx, 8
-    je .quant_8bit
+    je @@quant_8bit
     cmp edx, 16
-    je .quant_16bit
+    je @@quant_16bit
     
     mov eax, ERR_INVALID_PARAM
     add rsp, 32
     pop rbx
-    ret
-    
-.quant_4bit:
+
+@@quant_4bit:
     mov [rbx + MODEL_ARCH.quantization], QUANT_4BIT
-    jmp .quant_done
-    
-.quant_8bit:
+    jmp @@quant_done
+@@quant_8bit:
     mov [rbx + MODEL_ARCH.quantization], QUANT_8BIT
-    jmp .quant_done
-    
-.quant_16bit:
+    jmp @@quant_done
+@@quant_16bit:
     mov [rbx + MODEL_ARCH.quantization], QUANT_16BIT
-    
-.quant_done:
+@@quant_done:
     mov eax, ERR_SUCCESS
     add rsp, 32
     pop rbx
-    ret
+
 rawr1024_quantize_model ENDP
 
 ALIGN 16
@@ -1341,6 +1295,7 @@ rawr1024_direct_load PROC
     ; Direct load GGUF v3 file
     
     push rbx
+
     push r12
     sub rsp, 48
     
@@ -1354,7 +1309,7 @@ rawr1024_direct_load PROC
     mov r9d, OPEN_EXISTING
     call CreateFileA
     cmp rax, INVALID_HANDLE_VALUE
-    je .load_failed
+    je @@load_failed
     
     ; Read GGUF header and data
     mov rcx, rax
@@ -1369,17 +1324,16 @@ rawr1024_direct_load PROC
     mov rcx, rbx
     mov eax, ERR_SUCCESS
     add rsp, 48
+
     pop r12
     pop rbx
-    ret
-    
-.load_failed:
+@@load_failed:
     mov eax, ERR_FILE_NOT_FOUND
     add rsp, 48
+
     pop r12
-    pop rbx
-    ret
-rawr1024_direct_load ENDP
+    pop rawr1024
+    pop rbx_direct_load ENDP
 
 ALIGN 16
 LoadModelFromFile PROC
@@ -1418,24 +1372,22 @@ StringCompare PROC
     ; Returns: eax = 1 if equal, 0 if not
     
     xor r8d, r8d
-.cmp_loop:
+@@cmp_loop:
     mov al, BYTE PTR [rcx + r8]
     mov bl, BYTE PTR [rdx + r8]
     cmp al, bl
-    jne .cmp_not_equal
+    jne @@cmp_not_equal
     
     test al, al
     jz .cmp_equal
     
     inc r8d
     cmp r8d, 256
-    jl .cmp_loop
-    
-.cmp_equal:
+    jl @@cmp_loop
+@@cmp_equal:
     mov eax, 1
     ret
-    
-.cmp_not_equal:
+@@cmp_not_equal:
     xor eax, eax
     ret
 StringCompare ENDP
@@ -1445,9 +1397,9 @@ CopyString PROC
     ; rsi = src, rdi = dst, ecx = max length
     
     xor r8d, r8d
-.copy_loop:
+@@copy_loop:
     cmp r8d, ecx
-    jge .copy_done
+    jge @@copy_done
     
     mov al, BYTE PTR [rsi + r8]
     mov BYTE PTR [rdi + r8], al
@@ -1456,9 +1408,8 @@ CopyString PROC
     jz .copy_done
     
     inc r8d
-    jmp .copy_loop
-    
-.copy_done:
+    jmp @@copy_loop
+@@copy_done:
     ret
 CopyString ENDP
 
@@ -1472,3 +1423,8 @@ FindJsonKey PROC
 FindJsonKey ENDP
 
 END
+
+
+
+
+

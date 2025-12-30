@@ -91,7 +91,7 @@ ALIGN 16
 masm_settings_init PROC
     push rbx
     push r12
-    sub rsp, 20h
+    sub rsp, 32
     
     ; Get process heap handle
     call GetProcessHeap
@@ -105,14 +105,14 @@ masm_settings_init PROC
     
     ; Success return
     mov eax, 1
-    add rsp, 20h
+    add rsp, 32
     pop r12
     pop rbx
     ret
-    
+
 init_error:
     xor eax, eax                    ; Return 0 (failure)
-    add rsp, 20h
+    add rsp, 32
     pop r12
     pop rbx
     ret
@@ -127,7 +127,7 @@ masm_settings_load PROC
     push rbx
     push r12
     push r13
-    sub rsp, 40h
+    sub rsp, 32
     
     ; Check if initialized
     cmp g_settingsManager.isInitialized, 0
@@ -136,15 +136,15 @@ masm_settings_load PROC
     ; TODO: Implement registry loading
     ; For now, just return success
     mov eax, 1
-    add rsp, 40h
+    add rsp, 32
     pop r13
     pop r12
     pop rbx
     ret
-    
+
 load_error:
     xor eax, eax
-    add rsp, 40h
+    add rsp, 32
     pop r13
     pop r12
     pop rbx
@@ -160,7 +160,7 @@ masm_settings_save PROC
     push rbx
     push r12
     push r13
-    sub rsp, 40h
+    sub rsp, 32
     
     ; Check if initialized
     cmp g_settingsManager.isInitialized, 0
@@ -169,15 +169,15 @@ masm_settings_save PROC
     ; TODO: Implement registry saving
     ; For now, just return success
     mov eax, 1
-    add rsp, 40h
+    add rsp, 32
     pop r13
     pop r12
     pop rbx
     ret
-    
+
 save_error:
     xor eax, eax
-    add rsp, 40h
+    add rsp, 32
     pop r13
     pop r12
     pop rbx
@@ -194,7 +194,7 @@ masm_settings_get_int PROC
     push rbx
     push r12
     push r13
-    sub rsp, 20h
+    sub rsp, 32
     
     ; Check if initialized
     cmp g_settingsManager.isInitialized, 0
@@ -203,15 +203,15 @@ masm_settings_get_int PROC
     ; TODO: Implement key lookup
     ; For now, return 0
     xor eax, eax
-    add rsp, 20h
+    add rsp, 32
     pop r13
     pop r12
     pop rbx
     ret
-    
+
 get_int_default:
     xor eax, eax
-    add rsp, 20h
+    add rsp, 32
     pop r13
     pop r12
     pop rbx
@@ -228,7 +228,7 @@ masm_settings_set_int PROC
     push rbx
     push r12
     push r13
-    sub rsp, 30h
+    sub rsp, 32
     
     ; Check if initialized
     cmp g_settingsManager.isInitialized, 0
@@ -237,15 +237,15 @@ masm_settings_set_int PROC
     ; TODO: Implement key setting
     ; For now, just return success
     mov eax, 1
-    add rsp, 30h
+    add rsp, 32
     pop r13
     pop r12
     pop rbx
     ret
-    
+
 set_int_error:
     xor eax, eax
-    add rsp, 30h
+    add rsp, 32
     pop r13
     pop r12
     pop rbx
@@ -263,7 +263,7 @@ masm_settings_get_string PROC
     push r12
     push r13
     push r14
-    sub rsp, 40h
+    sub rsp, 32
     
     ; Check if initialized
     cmp g_settingsManager.isInitialized, 0
@@ -272,16 +272,16 @@ masm_settings_get_string PROC
     ; TODO: Implement string key lookup
     ; For now, just return failure
     xor eax, eax
-    add rsp, 40h
+    add rsp, 32
     pop r14
     pop r13
     pop r12
     pop rbx
     ret
-    
+
 get_string_error:
     xor eax, eax
-    add rsp, 40h
+    add rsp, 32
     pop r14
     pop r13
     pop r12
@@ -300,7 +300,7 @@ masm_settings_set_string PROC
     push r12
     push r13
     push r14
-    sub rsp, 40h
+    sub rsp, 32
     
     ; Check if initialized
     cmp g_settingsManager.isInitialized, 0
@@ -309,16 +309,16 @@ masm_settings_set_string PROC
     ; TODO: Implement string key setting
     ; For now, just return success
     mov eax, 1
-    add rsp, 40h
+    add rsp, 32
     pop r14
     pop r13
     pop r12
     pop rbx
     ret
-    
+
 set_string_error:
     xor eax, eax
-    add rsp, 40h
+    add rsp, 32
     pop r14
     pop r13
     pop r12
@@ -336,7 +336,7 @@ masm_settings_get_bool PROC
     push rbx
     push r12
     push r13
-    sub rsp, 20h
+    sub rsp, 32
     
     ; Check if initialized
     cmp g_settingsManager.isInitialized, 0
@@ -345,15 +345,15 @@ masm_settings_get_bool PROC
     ; Delegate to int getter (bool is stored as int)
     call masm_settings_get_int
     ; Return value is already in eax
-    add rsp, 20h
+    add rsp, 32
     pop r13
     pop r12
     pop rbx
     ret
-    
+
 get_bool_default:
     xor eax, eax
-    add rsp, 20h
+    add rsp, 32
     pop r13
     pop r12
     pop rbx
@@ -370,7 +370,7 @@ masm_settings_set_bool PROC
     push rbx
     push r12
     push r13
-    sub rsp, 30h
+    sub rsp, 32
     
     ; Check if initialized
     cmp g_settingsManager.isInitialized, 0
@@ -379,15 +379,15 @@ masm_settings_set_bool PROC
     ; Delegate to int setter (bool is stored as int)
     call masm_settings_set_int
     ; Return value is already in eax
-    add rsp, 30h
+    add rsp, 32
     pop r13
     pop r12
     pop rbx
     ret
-    
+
 set_bool_error:
     xor eax, eax
-    add rsp, 30h
+    add rsp, 32
     pop r13
     pop r12
     pop rbx
@@ -404,7 +404,7 @@ masm_settings_get_float PROC
     push rbx
     push r12
     push r13
-    sub rsp, 20h
+    sub rsp, 32
     
     ; Check if initialized
     cmp g_settingsManager.isInitialized, 0
@@ -413,15 +413,15 @@ masm_settings_get_float PROC
     ; TODO: Implement float key lookup
     ; For now, return 0.0
     xorps xmm0, xmm0
-    add rsp, 20h
+    add rsp, 32
     pop r13
     pop r12
     pop rbx
     ret
-    
+
 get_float_default:
     xorps xmm0, xmm0
-    add rsp, 20h
+    add rsp, 32
     pop r13
     pop r12
     pop rbx
@@ -438,7 +438,7 @@ masm_settings_set_float PROC
     push rbx
     push r12
     push r13
-    sub rsp, 30h
+    sub rsp, 32
     
     ; Check if initialized
     cmp g_settingsManager.isInitialized, 0
@@ -447,15 +447,15 @@ masm_settings_set_float PROC
     ; TODO: Implement float key setting
     ; For now, just return success
     mov eax, 1
-    add rsp, 30h
+    add rsp, 32
     pop r13
     pop r12
     pop rbx
     ret
-    
+
 set_float_error:
     xor eax, eax
-    add rsp, 30h
+    add rsp, 32
     pop r13
     pop r12
     pop rbx
@@ -471,7 +471,7 @@ masm_settings_reset_to_defaults PROC
     push rbx
     push r12
     push r13
-    sub rsp, 20h
+    sub rsp, 32
     
     ; Check if initialized
     cmp g_settingsManager.isInitialized, 0
@@ -480,15 +480,15 @@ masm_settings_reset_to_defaults PROC
     ; TODO: Implement reset to defaults
     ; For now, just return success
     mov eax, 1
-    add rsp, 20h
+    add rsp, 32
     pop r13
     pop r12
     pop rbx
     ret
-    
+
 reset_error:
     xor eax, eax
-    add rsp, 20h
+    add rsp, 32
     pop r13
     pop r12
     pop rbx

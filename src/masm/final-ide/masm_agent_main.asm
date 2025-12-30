@@ -93,6 +93,7 @@ main PROC
     ; Standard C runtime: rcx = argc, rdx = argv
     
     push rbx
+
     push r12
     push r13
     sub rsp, 64
@@ -118,23 +119,21 @@ main PROC
     lea rcx, szCmdLineTip
     call print_line
     mov g_exit_code, 1
-    jmp .cleanup
-    
-.parse_ok:
+    jmp @@cleanup
+@@parse_ok:
     
     ; If --help was specified, print help and exit
     ; (parse_commandline returns 2 for help)
     cmp eax, 2
-    je .show_help
+    je @@show_help
     
     ; If --status was specified, show status and exit
     cmp DWORD PTR g_show_status, 1
-    jne .skip_status
+    jne @@skip_status
     
     call show_system_status
-    jmp .cleanup
-    
-.skip_status:
+    jmp @@cleanup
+@@skip_status:
     
     ; =========================================================================
     ; PHASE 2: INITIALIZE ZERO C++ CORE
@@ -159,7 +158,7 @@ main PROC
     
     ; Check if wish was provided
     cmp QWORD PTR g_wish_text, 0
-    je .no_wish
+    je @@no_wish
     
     ; Create wish context
     sub rsp, SIZEOF WISH_CONTEXT
@@ -202,21 +201,18 @@ main PROC
     call format_and_print
     
     add rsp, SIZEOF WISH_CONTEXT
-    jmp .phase4
-    
-.no_wish:
+    jmp @@phase4
+@@no_wish:
     lea rcx, szErrNoWish
     call print_line
     mov g_exit_code, 1
-    jmp .phase4
-    
-.wish_failed:
+    jmp @@phase4
+@@wish_failed:
     lea rcx, szWishExecError
     call print_line
     mov g_exit_code, 1
-    jmp .phase4
-    
-.phase4:
+    jmp @@phase4
+@@phase4:
     
     ; =========================================================================
     ; PHASE 4: SHUTDOWN
@@ -230,29 +226,27 @@ main PROC
     lea rcx, szShutdownOk
     call print_line
     
-    jmp .cleanup
-    
-.show_help:
+    jmp @@cleanup
+@@show_help:
     lea rcx, szCmdLineUsage
     call print_line
     lea rcx, szCmdLineTip
     call print_line
     xor g_exit_code, g_exit_code
-    jmp .cleanup
-    
-.init_failed:
+    jmp @@cleanup
+@@init_failed:
     lea rcx, szInitFailed
     call print_line
     mov g_exit_code, 1
-    jmp .cleanup
-    
-.cleanup:
+    jmp @@cleanup
+@@cleanup:
     mov eax, g_exit_code
     add rsp, 64
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
+
 ALIGN 16
 main ENDP
 
@@ -266,6 +260,7 @@ parse_commandline PROC
     ; Returns: eax = 0 (ok), 1 (error), 2 (help)
     
     push rbx
+
     push r12
     push r13
     sub rsp, 32
@@ -273,10 +268,9 @@ parse_commandline PROC
     mov r12d, ecx       ; argc
     mov r13, rdx        ; argv
     mov ebx, 1          ; Skip program name (argv[0])
-    
-.parse_loop:
+@@parse_loop:
     cmp ebx, r12d
-    jge .parse_done
+    jge @@parse_done
     
     ; Get current argument
     mov rax, r13
@@ -324,17 +318,15 @@ parse_commandline PROC
     lea rdx, szErrInvalidOpt
     call format_and_print
     mov eax, 1
-    jmp .parse_exit
-    
-.set_status:
+    jmp @@parse_exit
+@@set_status:
     mov DWORD PTR g_show_status, 1
     inc ebx
-    jmp .parse_loop
-    
-.get_wish:
+    jmp @@parse_loop
+@@get_wish:
     inc ebx
     cmp ebx, r12d
-    jge .missing_value
+    jge @@missing_value
     
     ; Get next argument as wish
     mov rax, r13
@@ -346,22 +338,21 @@ parse_commandline PROC
     ; Calculate wish length
     mov rsi, rax
     xor ecx, ecx
-.wish_len_loop:
+@@wish_len_loop:
     cmp BYTE PTR [rsi], 0
-    je .wish_len_done
+    je @@wish_len_done
     inc ecx
     inc rsi
-    jmp .wish_len_loop
-.wish_len_done:
+    jmp @@wish_len_loop
+@@wish_len_done:
     mov g_wish_length, ecx
     
     inc ebx
-    jmp .parse_loop
-    
-.get_timeout:
+    jmp @@parse_loop
+@@get_timeout:
     inc ebx
     cmp ebx, r12d
-    jge .missing_value
+    jge @@missing_value
     
     ; Get next argument as timeout
     mov rax, r13
@@ -374,12 +365,11 @@ parse_commandline PROC
     mov g_timeout_ms, eax
     
     inc ebx
-    jmp .parse_loop
-    
-.get_priority:
+    jmp @@parse_loop
+@@get_priority:
     inc ebx
     cmp ebx, r12d
-    jge .missing_value
+    jge @@missing_value
     
     ; Get next argument as priority
     mov rax, r13
@@ -392,33 +382,29 @@ parse_commandline PROC
     mov g_priority, eax
     
     inc ebx
-    jmp .parse_loop
-    
-.parse_done:
+    jmp @@parse_loop
+@@parse_done:
     xor eax, eax      ; Success
-    jmp .parse_exit
-    
-.show_help_msg:
+    jmp @@parse_exit
+@@show_help_msg:
     mov eax, 2        ; Help requested
-    jmp .parse_exit
-    
-.show_version_msg:
+    jmp @@parse_exit
+@@show_version_msg:
     lea rcx, szAppVersion
     call print_line
     mov eax, 2
-    jmp .parse_exit
-    
-.missing_value:
+    jmp @@parse_exit
+@@missing_value:
     lea rcx, szErrInvalidOpt
     call print_line
     mov eax, 1
-    
-.parse_exit:
+@@parse_exit:
     add rsp, 32
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
+
 ALIGN 16
 parse_commandline ENDP
 
@@ -430,23 +416,20 @@ ALIGN 16
 compare_strings PROC
     ; rcx = string1, rdx = string2
     ; Returns: eax = 0 if equal, non-zero if not
-    
-.cmp_loop:
+@@cmp_loop:
     mov al, BYTE PTR [rcx]
     mov bl, BYTE PTR [rdx]
     cmp al, bl
-    jne .cmp_fail
+    jne @@cmp_fail
     test al, al
     jz .cmp_ok
     inc rcx
     inc rdx
-    jmp .cmp_loop
-    
-.cmp_ok:
+    jmp @@cmp_loop
+@@cmp_ok:
     xor eax, eax
     ret
-    
-.cmp_fail:
+@@cmp_fail:
     mov eax, 1
     ret
 ALIGN 16
@@ -458,15 +441,15 @@ string_to_int PROC
     ; Returns: eax = integer value
     
     xor eax, eax
-.int_loop:
+@@int_loop:
     mov bl, BYTE PTR [rcx]
     test bl, bl
     jz .int_done
     
     cmp bl, '0'
-    jl .int_done
+    jl @@int_done
     cmp bl, '9'
-    jg .int_done
+    jg @@int_done
     
     imul eax, 10
     movzx ebx, bl
@@ -474,9 +457,8 @@ string_to_int PROC
     add eax, ebx
     
     inc rcx
-    jmp .int_loop
-    
-.int_done:
+    jmp @@int_loop
+@@int_done:
     ret
 ALIGN 16
 string_to_int ENDP
@@ -495,14 +477,13 @@ print_line PROC
     ; Get string length
     mov rsi, rcx
     xor edx, edx
-.len_loop:
+@@len_loop:
     cmp BYTE PTR [rsi], 0
-    je .len_done
+    je @@len_done
     inc edx
     inc rsi
-    jmp .len_loop
-    
-.len_done:
+    jmp @@len_loop
+@@len_done:
     ; Write to stdout
     mov rsi, rcx          ; lpBuffer
     mov r8d, edx          ; nNumberOfBytesToWrite
@@ -531,7 +512,7 @@ print_line PROC
     
     add rsp, 32
     pop rbx
-    ret
+
 ALIGN 16
 print_line ENDP
 
@@ -563,3 +544,8 @@ ALIGN 16
 show_system_status ENDP
 
 END
+
+
+
+
+

@@ -1,18 +1,17 @@
 ;==========================================================================
-; rawr1024_minimal.asm - Minimal Working Rawr1024 Engine
+; rawr1024_minimal.asm - Minimal Working Rawr1024 Engine (x64)
 ;==========================================================================
 
-.686
-.model flat, stdcall
 option casemap:none
 
 include windows.inc
 includelib kernel32.lib
 includelib user32.lib
 
-Sleep PROTO :DWORD
-MessageBoxA PROTO :DWORD,:DWORD,:DWORD,:DWORD
-ExitProcess PROTO :DWORD
+; x64 external functions (for linking with C++/Qt)
+EXTERN GetStdHandle:PROC
+EXTERN WriteConsoleA:PROC
+EXTERN ExitProcess:PROC
 
 ;==========================================================================
 ; CONSTANTS
@@ -24,54 +23,38 @@ RAWR1024_VERSION      EQU 00020001h  ; v2.1
 ; DATA SEGMENT
 ;==========================================================================
 .data
-    szTitle         db "Rawr1024 Dual Engine", 0
-    szMessage       db "Rawr1024 Engine Initialized Successfully!", 0Ah
-                    db "- Dual Loading Engines: ACTIVE", 0Ah
-                    db "- AVX-512 Acceleration: ENABLED", 0Ah
-                    db "- Quantum Encryption: READY", 0Ah
-                    db "- Beaconism Protocol: ONLINE", 0Ah
-                    db "- Sliding Door Architecture: OPERATIONAL", 0Ah, 0
-    
+    szMessage       db "Rawr1024 Minimal Engine - Initialized Successfully!", 0Ah, 0
     engine_status   dd 0
     bytes_processed dd 0
 
 ;==========================================================================
-; CODE SEGMENT
+; CODE SEGMENT - Hot-Swappable Module
 ;==========================================================================
 .code
 
-start:
-    ; Initialize engine
-    call rawr1024_init
-    
-    ; Display status
-    push 0
-    push offset szTitle
-    push offset szMessage
-    push 0
-    call MessageBoxA
-    
-    ; Exit
-    push 0
-    call ExitProcess
+PUBLIC rawr1024_init_minimal
 
-;==========================================================================
-; rawr1024_init - Initialize the engine
-;==========================================================================
-rawr1024_init proc
-    push ebp
-    mov ebp, esp
+rawr1024_init_minimal PROC
+    ; x64 calling convention: rcx, rdx, r8, r9 for first 4 args
+    ; Stack: 32 bytes shadow space + any local vars
+    sub     rsp, 32
     
-    ; Set engine status to active
-    mov engine_status, 1
-    mov bytes_processed, 1024000
+    ; Initialize engine status
+    lea     rax, [engine_status]
+    mov     DWORD PTR [rax], 1             ; engine_status = 1 (ACTIVE)
     
-    ; Simulate initialization
-    push 100
-    call Sleep
+    lea     rax, [bytes_processed]
+    mov     DWORD PTR [rax], 1024000       ; bytes_processed = 1MB
     
-    pop ebp
+    ; Return success (rax = 0)
+    xor     eax, eax
+    add     rsp, 32
     ret
-rawr1024_init endp
+    
+rawr1024_init_minimal ENDP
 
-end start
+END
+
+
+
+

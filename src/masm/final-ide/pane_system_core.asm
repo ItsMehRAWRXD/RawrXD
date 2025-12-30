@@ -83,7 +83,7 @@ PUBLIC Beacon_Publish
 Beacon_Publish PROC
     ; rcx = eventKind, rdx = hwnd
     push rbx
-    mov ebx, g_sub_count
+    push mov ebx, g_sub_count
     xor r8d, r8d
 pub_loop:
     cmp r8d, ebx
@@ -113,7 +113,7 @@ next_sub:
     jmp pub_loop
 pub_done:
     pop rbx
-    ret
+
 Beacon_Publish ENDP
 
 PUBLIC Beacon_Subscribe
@@ -137,7 +137,7 @@ Beacon_Subscribe ENDP
 AddPane PROC
     ; rcx = hwnd, rdx = x, r8 = y, r9 = w
     push rbx
-    mov ebx, g_pane_count
+    push mov ebx, g_pane_count
     cmp ebx, MAX_PANES
     jge add_fail
     imul ebx, SIZEOF Pane
@@ -151,11 +151,11 @@ AddPane PROC
     inc g_pane_count
     mov eax, 1
     pop rbx
-    ret
+
 add_fail:
     xor eax, eax
     pop rbx
-    ret
+
 AddPane ENDP
 
 ; PUBLIC: PaneSystem_RegisterPane(hwnd, x, y, w, h)
@@ -163,7 +163,7 @@ PUBLIC PaneSystem_RegisterPane
 PaneSystem_RegisterPane PROC
     ; rcx=hwnd, rdx=x, r8=y, r9=w
     push rbx
-    mov ebx, g_pane_count
+    push mov ebx, g_pane_count
     cmp ebx, MAX_PANES
     jge reg_fail
     imul ebx, SIZEOF Pane
@@ -182,11 +182,11 @@ PaneSystem_RegisterPane PROC
     call Beacon_Publish
     mov eax, 1
     pop rbx
-    ret
+
 reg_fail:
     xor eax, eax
     pop rbx
-    ret
+
 PaneSystem_RegisterPane ENDP
 
 ; PUBLIC: PaneSystem_GetPaneRect(hwnd, outRect*)
@@ -194,7 +194,7 @@ PUBLIC PaneSystem_GetPaneRect
 PaneSystem_GetPaneRect PROC
     ; rcx=hwnd, rdx=ptr RECT
     push rbx
-    mov ebx, 0
+    push mov ebx, 0
 find_loop:
     cmp ebx, g_pane_count
     jge not_found
@@ -221,11 +221,11 @@ found:
     mov dword ptr [rdx].bottom, eax
     mov eax, 1
     pop rbx
-    ret
+
 not_found:
     xor eax, eax
     pop rbx
-    ret
+
 PaneSystem_GetPaneRect ENDP
 
 PUBLIC GetPaneRect
@@ -237,7 +237,7 @@ PaneSystem_MovePane PROC
     ; rcx=hwnd, rdx=x, r8=y, r9=w; h from stack [rsp+40]
     ; Update registry and move window
     push rbx
-    mov ebx, 0
+    push mov ebx, 0
 mv_loop:
     cmp ebx, g_pane_count
     jge mv_done
@@ -275,7 +275,7 @@ next_mv:
     jmp mv_loop
 mv_done:
     pop rbx
-    ret
+
 PaneSystem_MovePane ENDP
 
 ; PUBLIC: PaneSystem_CreateTabGroup(hwndA, hwndB)
@@ -284,12 +284,12 @@ PaneSystem_CreateTabGroup PROC
     ; rcx = first pane hwnd, rdx = second pane hwnd
     ; Implementation note: minimal stub updates registry flags
     push rbx
-    mov ecx, BEACON_LAYOUT_CHANGED
+    push mov ecx, BEACON_LAYOUT_CHANGED
     mov rdx, rcx
     call Beacon_Publish
     mov eax, 1
     pop rbx
-    ret
+
 PaneSystem_CreateTabGroup ENDP
 
 ; PUBLIC: PaneSystem_RefreshLayout()
@@ -297,7 +297,7 @@ PUBLIC PaneSystem_RefreshLayout
 PaneSystem_RefreshLayout PROC
     ; Invalidate all pane rects
     push rbx
-    mov ebx, 0
+    push mov ebx, 0
 rf_loop:
     cmp ebx, g_pane_count
     jge rf_done
@@ -315,7 +315,7 @@ rf_done:
     xor rdx, rdx
     call Beacon_Publish
     pop rbx
-    ret
+
 PaneSystem_RefreshLayout ENDP
 
 ; PUBLIC: integrate_with_main - called by main_masm.asm
@@ -332,3 +332,8 @@ integrate_with_main PROC
 integrate_with_main ENDP
 
 END
+
+
+
+
+

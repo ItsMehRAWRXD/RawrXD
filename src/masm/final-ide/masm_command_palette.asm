@@ -308,7 +308,7 @@ palette_create_window PROC
     
     add rsp, 96
     pop rbx
-    ret
+
 palette_create_window ENDP
 
 ;==========================================================================
@@ -416,6 +416,7 @@ create_palette_font ENDP
 ;==========================================================================
 palette_register_command PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -466,10 +467,11 @@ palette_register_command PROC
     
 @done:
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 palette_register_command ENDP
 
 ;==========================================================================
@@ -603,7 +605,7 @@ palette_execute_command PROC
 @done:
     add rsp, 32
     pop rbx
-    ret
+
 palette_execute_command ENDP
 
 ;==========================================================================
@@ -619,7 +621,7 @@ palette_get_state ENDP
 ;==========================================================================
 palette_wnd_proc PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 64
     
     mov [rbp + 16], rcx
@@ -684,7 +686,7 @@ palette_wnd_proc PROC
 @done:
     add rsp, 64
     pop rbp
-    ret
+
 palette_wnd_proc ENDP
 
 ;==========================================================================
@@ -724,10 +726,13 @@ handle_search_changed ENDP
 ;==========================================================================
 perform_fuzzy_search PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
+
     push r14
     push r15
     sub rsp, 64
@@ -798,14 +803,17 @@ search_done:
     call populate_results_listbox
     
     add rsp, 64
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 perform_fuzzy_search ENDP
 
 ;==========================================================================
@@ -814,12 +822,13 @@ perform_fuzzy_search ENDP
 ;==========================================================================
 calculate_fuzzy_score PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
-    
-    mov rsi, rcx            ; filter
+    push mov rsi, rcx            ; filter
     mov rdi, rdx            ; text
     xor r12d, r12d          ; score
     xor r13d, r13d          ; filter index
@@ -889,12 +898,14 @@ match_fail:
     xor eax, eax            ; No match
     
 score_done:
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 calculate_fuzzy_score ENDP
 
 ;==========================================================================
@@ -924,6 +935,7 @@ to_lowercase ENDP
 sort_results_by_score PROC
     ; Simple bubble sort by score (descending)
     push rbx
+
     push rsi
     push rdi
     
@@ -970,14 +982,16 @@ next_pass:
     jnz outer_loop
     
 sort_done:
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 sort_results_by_score ENDP
 
 populate_results_listbox PROC
     push rbx
+
     push rsi
     sub rsp, 32
     
@@ -1016,10 +1030,10 @@ pop_loop:
     
 pop_done:
     add rsp, 32
+
     pop rsi
-    pop rbx
-    ret
-populate_results_listbox ENDP
+    populate
+    pop rbx_results_listbox ENDP
 
 ;==========================================================================
 ; handle_execute_selected() - Execute currently selected command
@@ -1046,3 +1060,8 @@ handle_execute_selected PROC
 handle_execute_selected ENDP
 
 end
+
+
+
+
+

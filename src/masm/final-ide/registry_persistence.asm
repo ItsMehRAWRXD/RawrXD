@@ -50,6 +50,7 @@ REG_SECURE_STORAGE     DB "SecureStorage",0
 ; ============================================================================
 RegistryOpenKey PROC FRAME
     push rbx
+
     push rsi
     push rdi
     sub rsp, 40h
@@ -81,10 +82,11 @@ open_failed:
     
 open_complete:
     add rsp, 40h
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 RegistryOpenKey ENDP
 
 ; ============================================================================
@@ -96,8 +98,9 @@ RegistryOpenKey ENDP
 ; ============================================================================
 RegistryCloseKey PROC
     push rcx
-    call RegCloseKey
-    mov rax, 1
+    push call
+    push RegCloseKey
+    push mov rax, 1
     ret
 RegistryCloseKey ENDP
 
@@ -112,6 +115,7 @@ RegistryCloseKey ENDP
 ; ============================================================================
 RegistrySetDWORD PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 20h
@@ -140,10 +144,11 @@ set_failed:
     
 set_complete:
     add rsp, 20h
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 RegistrySetDWORD ENDP
 
 ; ============================================================================
@@ -157,6 +162,7 @@ RegistrySetDWORD ENDP
 ; ============================================================================
 RegistryGetDWORD PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 30h
@@ -185,10 +191,11 @@ get_failed:
     
 get_complete:
     add rsp, 30h
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 RegistryGetDWORD ENDP
 
 ; ============================================================================
@@ -202,6 +209,7 @@ RegistryGetDWORD ENDP
 ; ============================================================================
 RegistrySetString PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 20h
@@ -237,10 +245,11 @@ set_failed:
     
 set_complete:
     add rsp, 20h
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 RegistrySetString ENDP
 
 ; ============================================================================
@@ -255,6 +264,7 @@ RegistrySetString ENDP
 ; ============================================================================
 RegistryGetString PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 30h
@@ -287,10 +297,11 @@ get_failed:
     
 get_complete:
     add rsp, 30h
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 RegistryGetString ENDP
 
 ; ============================================================================
@@ -302,6 +313,7 @@ RegistryGetString ENDP
 ; ============================================================================
 LoadSettingsFromRegistry PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 20h
@@ -405,10 +417,11 @@ load_failed:
     
 load_done:
     add rsp, 20h
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 LoadSettingsFromRegistry ENDP
 
 ; ============================================================================
@@ -420,6 +433,7 @@ LoadSettingsFromRegistry ENDP
 ; ============================================================================
 SaveSettingsToRegistry PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 20h
@@ -526,8 +540,13 @@ save_failed:
     
 save_done:
     add rsp, 20h
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 SaveSettingsToRegistry ENDP
+
+
+
+

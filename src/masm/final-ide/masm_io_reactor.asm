@@ -85,26 +85,23 @@ io_reactor_init PROC
     lea rcx, g_io_handles
     xor eax, eax
     mov ecx, 32 * SIZEOF IO_HANDLE / 4
-    
-.zero_loop:
+@@zero_loop:
     test ecx, ecx
     jz .zero_done
     mov DWORD PTR [rcx], eax
     add rcx, 4
     dec ecx
-    jmp .zero_loop
-    
-.zero_done:
+    jmp @@zero_loop
+@@zero_done:
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
-    
-.io_init_error:
+
+@@io_init_error:
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 masm_io_reactor_init ENDP
 
 ;==============================================================================
@@ -115,6 +112,7 @@ ALIGN 16
 io_reactor_add PROC
     ; rcx = handle, edx = type, r8 = callback
     push rbx
+
     push r12
     push r13
     sub rsp, 32
@@ -128,11 +126,11 @@ io_reactor_add PROC
     mov rdx, INFINITE
     call WaitForSingleObject
     cmp eax, WAIT_OBJECT_0
-    jne .add_error
+    jne @@add_error
     
     ; Check limit
     cmp g_handle_count, 32
-    jge .add_full
+    jge @@add_full
     
     ; Find empty slot
     mov rax, g_handle_count
@@ -159,23 +157,23 @@ io_reactor_add PROC
     
     mov eax, 1
     add rsp, 32
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
-    
-.add_full:
+
+@@add_full:
     mov rcx, g_io_mutex
     call ReleaseMutex
-    jmp .add_error
-    
-.add_error:
+    jmp @@add_error
+@@add_error:
     xor eax, eax
     add rsp, 32
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
+
 masm_io_reactor_add ENDP
 
 ;==============================================================================
@@ -194,14 +192,13 @@ io_reactor_remove PROC
     mov rdx, INFINITE
     call WaitForSingleObject
     cmp eax, WAIT_OBJECT_0
-    jne .remove_error
+    jne @@remove_error
     
     ; Search for handle
     mov rbx, 0
-    
-.search_remove:
+@@search_remove:
     cmp rbx, g_handle_count
-    jge .not_found
+    jge @@not_found
     
     mov rax, rbx
     imul rax, SIZEOF IO_HANDLE
@@ -210,12 +207,11 @@ io_reactor_remove PROC
     
     mov rax, [rcx + IO_HANDLE.handle]
     cmp rax, r8
-    je .found_remove
+    je @@found_remove
     
     inc rbx
-    jmp .search_remove
-    
-.found_remove:
+    jmp @@search_remove
+@@found_remove:
     ; Mark as inactive
     mov DWORD PTR [rcx + IO_HANDLE.is_active], 0
     
@@ -226,18 +222,16 @@ io_reactor_remove PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
-    
-.not_found:
+
+@@not_found:
     mov rcx, g_io_mutex
     call ReleaseMutex
-    jmp .remove_error
-    
-.remove_error:
+    jmp @@remove_error
+@@remove_error:
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 masm_io_reactor_remove ENDP
 
 ;==============================================================================
@@ -249,6 +243,7 @@ ALIGN 16
 io_reactor_wait PROC
     ; ecx = timeout_ms
     push rbx
+
     push r12
     sub rsp, 40
     
@@ -261,15 +256,14 @@ io_reactor_wait PROC
     
     ; If acquired, release immediately (just checking count)
     cmp eax, WAIT_OBJECT_0
-    jne .wait_no_lock
+    jne @@wait_no_lock
     
     mov rcx, g_io_mutex
     call ReleaseMutex
-    
-.wait_no_lock:
+@@wait_no_lock:
     ; Use WaitForMultipleObjects to wait on all handles
     cmp g_handle_count, 0
-    je .wait_timeout
+    je @@wait_timeout
     
     ; Build handle array
     mov ecx, g_handle_count
@@ -282,15 +276,16 @@ io_reactor_wait PROC
     mov ebx, eax
     
     add rsp, 40
-    pop r12
-    pop rbx
+
+    pop rbx pop r12
+
     mov eax, ebx
     ret
-    
-.wait_timeout:
+@@wait_timeout:
     add rsp, 40
-    pop r12
-    pop rbx
+
+    pop rbx pop r12
+
     xor eax, eax
     ret
 masm_io_reactor_wait ENDP
@@ -302,6 +297,7 @@ masm_io_reactor_wait ENDP
 ALIGN 16
 io_reactor_process PROC
     push rbx
+
     push r12
     push r13
     sub rsp, 40
@@ -311,14 +307,13 @@ io_reactor_process PROC
     mov rdx, INFINITE
     call WaitForSingleObject
     cmp eax, WAIT_OBJECT_0
-    jne .process_exit
+    jne @@process_exit
     
     ; Iterate through handles
     mov r12d, 0
-    
-.process_loop:
+@@process_loop:
     cmp r12d, g_handle_count
-    jge .process_done
+    jge @@process_done
     
     mov r13d, r12d
     imul r13d, SIZEOF IO_HANDLE
@@ -336,7 +331,7 @@ io_reactor_process PROC
     call WaitForSingleObject
     
     cmp eax, WAIT_OBJECT_0
-    jne .process_next
+    jne @@process_next
     
     ; Handle is ready - invoke callback
     mov r9, [r8 + IO_HANDLE.callback]
@@ -346,21 +341,19 @@ io_reactor_process PROC
     ; Invoke callback with context
     mov rcx, [r8 + IO_HANDLE.context]
     call r9
-    
-.process_next:
+@@process_next:
     inc r12d
-    jmp .process_loop
-    
-.process_done:
+    jmp @@process_loop
+@@process_done:
     mov rcx, g_io_mutex
     call ReleaseMutex
-    
-.process_exit:
+@@process_exit:
     add rsp, 40
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
+
 masm_io_reactor_process ENDP
 
 ;==============================================================================
@@ -384,13 +377,12 @@ io_reactor_cancel PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
-    
-.cancel_error:
+
+@@cancel_error:
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 masm_io_reactor_cancel ENDP
 
 ;==============================================================================
@@ -414,11 +406,15 @@ io_reactor_shutdown PROC
     jz .shutdown_exit
     call CloseHandle
     mov g_io_mutex, 0
-    
-.shutdown_exit:
+@@shutdown_exit:
     add rsp, 32
     pop rbx
-    ret
+
 masm_io_reactor_shutdown ENDP
 
 END
+
+
+
+
+

@@ -36,9 +36,9 @@ asm_strlen endp
 public asm_strcpy
 asm_strcpy proc
     push rdi
+
     push rsi
-    
-    mov rdi, rcx        ; rdi = destination
+    push mov rdi, rcx        ; rdi = destination
     mov rsi, rdx        ; rsi = source
 
 strcpy_loop:
@@ -52,10 +52,10 @@ strcpy_loop:
 
 strcpy_done:
     mov rax, rcx        ; return destination
+
     pop rsi
-    pop rdi
-    ret
-asm_strcpy endp
+    pop asm
+    pop rdi_strcpy endp
 
 ; ============================================================================
 ; asm_strcat - Concatenate strings
@@ -65,9 +65,9 @@ asm_strcpy endp
 public asm_strcat
 asm_strcat proc
     push rdi
+
     push rsi
-    
-    mov rdi, rcx        ; rdi = destination
+    push mov rdi, rcx        ; rdi = destination
     mov rsi, rdx        ; rsi = source
     
     ; Find end of destination
@@ -88,10 +88,10 @@ strcat_copy:
 
 strcat_done:
     mov rax, rcx        ; return destination
+
     pop rsi
-    pop rdi
-    ret
-asm_strcat endp
+    pop asm
+    pop rdi_strcat endp
 
 ; ============================================================================
 ; asm_strcmp - Compare strings
@@ -132,9 +132,9 @@ asm_strcmp endp
 public StringFind
 StringFind proc
     push rdi
+
     push rsi
-    
-    mov rsi, rcx        ; rsi = haystack
+    push mov rsi, rcx        ; rsi = haystack
     mov rdi, rdx        ; rdi = needle
     
     cmp rsi, 0
@@ -168,16 +168,15 @@ find_next:
 
 find_found:
     mov rax, rsi
-    pop rsi
-    pop rdi
-    ret
 
-find_not_found:
-    xor eax, eax
     pop rsi
-    pop rdi
-    ret
-StringFind endp
+    pop find
+    pop rdi_not_found:
+    xor eax, eax
+
+    pop rsi
+    pop StringFind
+    pop rdi endp
 
 ; ============================================================================
 ; StringCompare - Compare strings (alias for strcmp)
@@ -188,3 +187,8 @@ StringCompare proc
 StringCompare endp
 
 end
+
+
+
+
+

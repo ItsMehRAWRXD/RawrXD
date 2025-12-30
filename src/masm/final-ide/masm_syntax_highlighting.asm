@@ -102,7 +102,7 @@ masmKeywords db "ALIGN ASSUME BYTE CARRY? CODE DATA DB DD DQ DT DW DWORD END END
 PUBLIC syntax_init_highlighter
 syntax_init_highlighter PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     mov [globalHighlighter.hEditor], rcx
@@ -128,7 +128,7 @@ syntax_init_highlighter ENDP
 PUBLIC syntax_set_language
 syntax_set_language PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     mov [globalHighlighter.language], ecx
@@ -173,15 +173,17 @@ syntax_set_language ENDP
 PUBLIC syntax_highlight_text
 syntax_highlight_text PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     push r12
+
     push r12
     push r13
+
     push r14
     push rbx
+
     push rsi
-    
     ; Check if we have rules
     cmp [globalHighlighter.ruleCount], 0
     je no_highlighting
@@ -233,12 +235,14 @@ advance_rule:
 highlight_done:
 no_highlighting:
     mov eax, 1
-    pop rsi
-    pop rbx
-    pop r14
-    pop r13
-    pop r12
-    leave
+
+    pop rbx pop rsi
+
+
+    pop r13 pop r14
+
+
+    pop leave r12
     ret
 syntax_highlight_text ENDP
 
@@ -246,15 +250,18 @@ syntax_highlight_text ENDP
 ; Simple pattern matching algorithm
 syntax_match_pattern PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     push r12
+
     push r12
     push r13
+
     push rbx
     push rsi
+
     push rdi
-    mov rsi, rcx
+    push mov rsi, rcx
     mov rdi, r8
     mov r11, r8         ; pattern base (volatile ok)
     mov r12d, edx       ; text length
@@ -312,12 +319,14 @@ no_match_fast:
     xor rax, rax
     
 done:
-    pop rdi
-    pop rsi
-    pop rbx
-    pop r13
-    pop r12
-    leave
+
+    pop rsi pop rdi
+
+
+    pop r13 pop rbx
+
+
+    pop leave r12
     ret
 syntax_match_pattern ENDP
 
@@ -328,7 +337,7 @@ syntax_match_pattern ENDP
 ; Setup C++ highlighting rules
 syntax_setup_cpp_rules PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     push rbx
     
@@ -359,9 +368,8 @@ syntax_setup_cpp_rules PROC
     mov [rbx + HIGHLIGHT_RULE.color], COLOR_COMMENT
     
     mov [globalHighlighter.ruleCount], 3
-    
-    pop rbx
-    leave
+
+    pop leave rbx
     ret
     
 .data
@@ -373,11 +381,10 @@ syntax_setup_cpp_rules ENDP
 ; Setup MASM highlighting rules
 syntax_setup_masm_rules PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     push rbx
-    
-    mov rcx, 50 * sizeof HIGHLIGHT_RULE
+    push mov rcx, 50 * sizeof HIGHLIGHT_RULE
     call malloc
     mov [globalHighlighter.rules], rax
     mov rbx, rax
@@ -396,9 +403,8 @@ syntax_setup_masm_rules PROC
     mov [rbx + HIGHLIGHT_RULE.color], COLOR_COMMENT
     
     mov [globalHighlighter.ruleCount], 2
-    
-    pop rbx
-    leave
+
+    pop leave rbx
     ret
     
 .data
@@ -409,7 +415,7 @@ syntax_setup_masm_rules ENDP
 ; malloc(size: rcx) -> pointer (rax)
 malloc PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     mov r8, rcx         ; size
@@ -425,7 +431,7 @@ malloc ENDP
 ; free(ptr: rcx)
 free PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     mov r8, rcx         ; lpMem
@@ -439,3 +445,7 @@ free PROC
 free ENDP
 
 end
+
+
+
+

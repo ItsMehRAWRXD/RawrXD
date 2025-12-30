@@ -93,6 +93,7 @@ output_search_init ENDP
 PUBLIC output_search_set_text
 output_search_set_text PROC
     push rsi
+
     push rdi
     sub rsp, 32
     
@@ -121,10 +122,10 @@ copy_done:
     
     mov eax, 1
     add rsp, 32
+
     pop rdi
-    pop rsi
-    ret
-output_search_set_text ENDP
+    pop output
+    pop rsi_search_set_text ENDP
 
 ;==========================================================================
 ; PUBLIC: output_search_find_next(outputHwnd: rcx) -> eax (found: 1/0)
@@ -133,6 +134,7 @@ output_search_set_text ENDP
 PUBLIC output_search_find_next
 output_search_find_next PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 96
@@ -192,10 +194,11 @@ no_wrap:
     
 find_done:
     add rsp, 96
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 output_search_find_next ENDP
 
 ;==========================================================================
@@ -205,6 +208,7 @@ output_search_find_next ENDP
 PUBLIC output_search_find_prev
 output_search_find_prev PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 96
@@ -252,10 +256,11 @@ find_prev_not_found:
     
 find_prev_done:
     add rsp, 96
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 output_search_find_prev ENDP
 
 ;==========================================================================
@@ -321,6 +326,7 @@ output_search_get_match_count ENDP
 ;==========================================================================
 output_search_highlight_match PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -367,10 +373,11 @@ highlight_fail:
     
 highlight_done:
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 output_search_highlight_match ENDP
 
 ;==========================================================================
@@ -380,6 +387,7 @@ output_search_highlight_match ENDP
 PUBLIC output_search_find_next
 output_search_find_next PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -428,10 +436,11 @@ find_fail:
     
 find_done:
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 output_search_find_next ENDP
 
 ;==========================================================================
@@ -443,3 +452,8 @@ EXTERN SendMessageA:PROC
 EM_SCROLLCARET      EQU 0449h
 
 END
+
+
+
+
+

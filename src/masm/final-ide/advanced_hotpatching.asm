@@ -188,7 +188,7 @@ hotpatchStats HOTPATCH_STATS <0, 0, 0, 0, 0, 0, 0>
 PUBLIC Hotpatch_ApplyMemory
 Hotpatch_ApplyMemory PROC FRAME
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 48
     
     ; RCX = model base address
@@ -230,23 +230,19 @@ Hotpatch_ApplyMemory PROC FRAME
     inc QWORD PTR [hotpatchStats + OFFSET hotpatchStats.MemoryPatchesApplied]
     
     mov rax, HOTPATCH_E_SUCCESS
-    jmp .L1_exit
-    
-.L1_invalid_ptr:
+    jmp @@L1_exit
+@@L1_invalid_ptr:
     mov rax, HOTPATCH_E_MEMORY_ALLOC_FAILED
-    jmp .L1_exit
-    
-.L1_invalid_size:
+    jmp @@L1_exit
+@@L1_invalid_size:
     mov rax, HOTPATCH_E_PATCH_TOO_LARGE
-    jmp .L1_exit
-    
-.L1_invalid_patch:
+    jmp @@L1_exit
+@@L1_invalid_patch:
     mov rax, HOTPATCH_E_MEMORY_ALLOC_FAILED
-    
-.L1_exit:
+@@L1_exit:
     add rsp, 48
     pop rbp
-    ret
+
 Hotpatch_ApplyMemory ENDP
 
 ; Hotpatch_ApplyByte(RCX = modelPath, RDX = offset, R8 = patchData, R9 = patchSize) -> RAX = QWORD (bytes modified)
@@ -254,7 +250,7 @@ Hotpatch_ApplyMemory ENDP
 PUBLIC Hotpatch_ApplyByte
 Hotpatch_ApplyByte PROC FRAME
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 80
     
     ; RCX = file path string
@@ -271,7 +267,7 @@ Hotpatch_ApplyByte PROC FRAME
     
     ; Validate patch size
     cmp r9, HOTPATCH_MAX_PATCH_SIZE
-    jg .L2_invalid
+    jg @@L2_invalid
     
     ; Acquire manager lock
     
@@ -297,16 +293,14 @@ Hotpatch_ApplyByte PROC FRAME
     inc QWORD PTR [hotpatchStats + OFFSET hotpatchStats.FilePatchesApplied]
     
     mov rax, r9                     ; Return bytes written
-    jmp .L2_exit
-    
-.L2_invalid:
+    jmp @@L2_exit
+@@L2_invalid:
     inc QWORD PTR [hotpatchStats + OFFSET hotpatchStats.PatchFailures]
     xor rax, rax
-    
-.L2_exit:
+@@L2_exit:
     add rsp, 80
     pop rbp
-    ret
+
 Hotpatch_ApplyByte ENDP
 
 ; Hotpatch_AddServerHotpatch(RCX = serverId, RDX = hookType, R8 = transformFunc) -> RAX = DWORD (hookId, or error)
@@ -314,7 +308,7 @@ Hotpatch_ApplyByte ENDP
 PUBLIC Hotpatch_AddServerHotpatch
 Hotpatch_AddServerHotpatch PROC FRAME
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     ; RCX = server ID
@@ -323,15 +317,15 @@ Hotpatch_AddServerHotpatch PROC FRAME
     
     ; Validate hook type
     cmp rdx, HOOK_TYPE_STREAMCHUNK
-    jg .L3_invalid_type
+    jg @@L3_invalid_type
     cmp rdx, HOOK_TYPE_PREQUEST
-    jl .L3_invalid_type
+    jl @@L3_invalid_type
     
     ; Acquire manager lock
     
     ; Check hook count < HOTPATCH_MAX_HOOKS
     cmp DWORD PTR [hotpatchManager + OFFSET hotpatchManager.ServerHookCount], HOTPATCH_MAX_HOOKS
-    jge .L3_limit_exceeded
+    jge @@L3_limit_exceeded
     
     ; Allocate new hook ID (sequential)
     mov r9d, DWORD PTR [hotpatchManager + OFFSET hotpatchManager.ServerHookCount]
@@ -349,26 +343,23 @@ Hotpatch_AddServerHotpatch PROC FRAME
     inc QWORD PTR [hotpatchStats + OFFSET hotpatchStats.ServerHooksRegistered]
     
     mov rax, r9                     ; Return hook ID
-    jmp .L3_exit
-    
-.L3_invalid_type:
+    jmp @@L3_exit
+@@L3_invalid_type:
     mov rax, HOTPATCH_E_PATCH_TOO_LARGE   ; Reuse as invalid type code
-    jmp .L3_exit
-    
-.L3_limit_exceeded:
+    jmp @@L3_exit
+@@L3_limit_exceeded:
     mov rax, HOTPATCH_E_HOOK_LIMIT_EXCEEDED
-    
-.L3_exit:
+@@L3_exit:
     add rsp, 32
     pop rbp
-    ret
+
 Hotpatch_AddServerHotpatch ENDP
 
 ; Hotpatch_RemoveServerHotpatch(RCX = serverId, RDX = hookId) -> RAX = DWORD (status)
 PUBLIC Hotpatch_RemoveServerHotpatch
 Hotpatch_RemoveServerHotpatch PROC FRAME
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     ; RCX = server ID
@@ -378,7 +369,7 @@ Hotpatch_RemoveServerHotpatch PROC FRAME
     
     ; Validate hook ID exists
     cmp rdx, QWORD PTR [hotpatchManager + OFFSET hotpatchManager.ServerHookCount]
-    jge .L4_not_found
+    jge @@L4_not_found
     
     ; Mark hook as disabled
     ; ServerHooks[rdx].Enabled = 0
@@ -389,15 +380,13 @@ Hotpatch_RemoveServerHotpatch PROC FRAME
     ; Release manager lock
     
     mov rax, HOTPATCH_E_SUCCESS
-    jmp .L4_exit
-    
-.L4_not_found:
+    jmp @@L4_exit
+@@L4_not_found:
     mov rax, HOTPATCH_E_PATTERN_NOT_FOUND
-    
-.L4_exit:
+@@L4_exit:
     add rsp, 32
     pop rbp
-    ret
+
 Hotpatch_RemoveServerHotpatch ENDP
 
 ; Hotpatch_GetStats(VOID) -> RAX = QWORD (pointer to stats struct)
@@ -415,7 +404,7 @@ Hotpatch_GetStats ENDP
 PUBLIC Test_Hotpatch_Memory
 Test_Hotpatch_Memory PROC FRAME
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 64
     
     ; Test sequence:
@@ -432,14 +421,14 @@ Test_Hotpatch_Memory PROC FRAME
     
     add rsp, 64
     pop rbp
-    ret
+
 Test_Hotpatch_Memory ENDP
 
 ; Test_Hotpatch_File(VOID) -> RAX = DWORD (test result code)
 PUBLIC Test_Hotpatch_File
 Test_Hotpatch_File PROC FRAME
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 64
     
     ; Test sequence:
@@ -455,7 +444,12 @@ Test_Hotpatch_File PROC FRAME
     
     add rsp, 64
     pop rbp
-    ret
+
 Test_Hotpatch_File ENDP
 
 END
+
+
+
+
+

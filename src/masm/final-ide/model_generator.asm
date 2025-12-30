@@ -72,6 +72,7 @@ NAS_CONFIG ends
 ;==========================================================================
 nas_optimize_model PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 256
@@ -130,10 +131,11 @@ nas_optimize_model PROC
 
 @done:
     add rsp, 256
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 nas_optimize_model ENDP
 
 ;==========================================================================
@@ -142,6 +144,7 @@ nas_optimize_model ENDP
 ;==========================================================================
 create_model_from_template PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 256
@@ -216,10 +219,11 @@ create_model_from_template PROC
 
 @done:
     add rsp, 256
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 create_model_from_template ENDP
 
 ; Local utility
@@ -245,6 +249,7 @@ strncpy_local ENDP
 ;==========================================================================
 reverse_engineer_model PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -259,10 +264,16 @@ reverse_engineer_model PROC
     call create_model_from_template
 
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 reverse_engineer_model ENDP
 
 END
+
+
+
+
+

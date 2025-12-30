@@ -180,7 +180,6 @@ init_fail:
 init_exit:
     add rsp, 48
     pop rbx
-    ret
 
 masm_proxy_beacon_init ENDP
 
@@ -197,8 +196,10 @@ ALIGN 16
 masm_proxy_beacon_intercept_request PROC
 
     push rbx
+
     push r12
     push r13
+
     push r14
     sub rsp, 96
     
@@ -309,13 +310,13 @@ intercept_passthrough:
 
 intercept_exit:
     add rsp, 96
-    pop r14
-    pop r13
-    pop r12
-    pop rbx
-    ret
 
-masm_proxy_beacon_intercept_request ENDP
+    pop r13 pop r14
+
+
+    pop r12
+    pop masm
+    pop rbx_proxy_beacon_intercept_request ENDP
 
 ;=====================================================================
 ; masm_proxy_beacon_intercept_response(response_ptr: rcx,
@@ -330,6 +331,7 @@ ALIGN 16
 masm_proxy_beacon_intercept_response PROC
 
     push rbx
+
     push r12
     push r13
     sub rsp, 96
@@ -385,10 +387,10 @@ response_passthrough:
 
 response_exit:
     add rsp, 96
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
 
 masm_proxy_beacon_intercept_response ENDP
 
@@ -404,6 +406,7 @@ ALIGN 16
 masm_proxy_beacon_apply_transform PROC
 
     push rbx
+
     push r12
     push r13
     sub rsp, 64
@@ -458,10 +461,10 @@ apply_refusal:
 
 transform_done:
     add rsp, 64
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
 
 masm_proxy_beacon_apply_transform ENDP
 
@@ -477,6 +480,7 @@ ALIGN 16
 masm_proxy_beacon_reverse_transform PROC
 
     push rbx
+
     push r12
     push r13
     sub rsp, 64
@@ -526,10 +530,10 @@ reverse_rotate:
 
 reverse_done:
     add rsp, 64
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
 
 masm_proxy_beacon_reverse_transform ENDP
 
@@ -545,6 +549,7 @@ ALIGN 16
 masm_proxy_beacon_broadcast PROC
 
     push rbx
+
     push r12
     sub rsp, 64
     
@@ -607,11 +612,10 @@ broadcast_fail:
 
 broadcast_exit:
     add rsp, 64
-    pop r12
-    pop rbx
-    ret
 
-masm_proxy_beacon_broadcast ENDP
+    pop r12
+    pop masm
+    pop rbx_proxy_beacon_broadcast ENDP
 
 ;=====================================================================
 ; masm_proxy_beacon_handle_command(command_str: rcx) -> rax
@@ -624,6 +628,7 @@ ALIGN 16
 masm_proxy_beacon_handle_command PROC
 
     push rbx
+
     push r12
     sub rsp, 64
     
@@ -686,11 +691,10 @@ handle_all_command:
 
 command_exit:
     add rsp, 64
-    pop r12
-    pop rbx
-    ret
 
-masm_proxy_beacon_handle_command ENDP
+    pop r12
+    pop masm
+    pop rbx_proxy_beacon_handle_command ENDP
 
 ;=====================================================================
 ; HELPER FUNCTIONS
@@ -701,8 +705,7 @@ check_library_requirements PROC
     ; Analyze request to determine if quantum library needed
     ; Returns: 1 if library needed, 0 otherwise
     push rbx
-    
-    mov rbx, rcx            ; buffer
+    push mov rbx, rcx            ; buffer
     
     ; Check for large context indicators
     mov rcx, rbx
@@ -733,15 +736,14 @@ library_needed:
 
 check_done:
     pop rbx
-    ret
+
 check_library_requirements ENDP
 
 ALIGN 16
 detect_refusal_in_response PROC
     ; Simplified refusal detection
     push rbx
-    
-    mov rbx, rcx            ; buffer
+    push mov rbx, rcx            ; buffer
     
     ; Check for "cannot"
     mov rcx, rbx
@@ -772,7 +774,7 @@ refusal_found:
 
 refusal_done:
     pop rbx
-    ret
+
 detect_refusal_in_response ENDP
 
 ALIGN 16
@@ -801,8 +803,7 @@ ALIGN 16
 strstr_simple PROC
     ; Simple substring search
     push rbx
-    
-    mov rbx, rcx
+    push mov rbx, rcx
 strstr_loop:
     mov al, byte ptr [rbx]
     test al, al
@@ -817,12 +818,11 @@ strstr_loop:
 strstr_match:
     mov rax, rbx
     pop rbx
-    ret
 
 strstr_not_found:
     xor rax, rax
     pop rbx
-    ret
+
 strstr_simple ENDP
 
 ALIGN 16
@@ -850,3 +850,8 @@ indicator_extended_vocab    DB "technical terms", 0
 indicator_code_request      DB "code", 0
 
 END
+
+
+
+
+

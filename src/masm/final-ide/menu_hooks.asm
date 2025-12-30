@@ -156,6 +156,7 @@ IDM_TOOLS_RUN           EQU 7004
 PUBLIC menu_file_new
 menu_file_new PROC
     push rbx
+
     push rsi
     sub rsp, 32
     
@@ -180,10 +181,10 @@ menu_file_new PROC
     
     mov eax, 1
     add rsp, 32
+
     pop rsi
-    pop rbx
-    ret
-menu_file_new ENDP
+    pop menu
+    pop rbx_file_new ENDP
 
 ;==========================================================================
 ; PUBLIC: menu_file_open() -> eax (success)
@@ -192,7 +193,7 @@ menu_file_new ENDP
 PUBLIC menu_file_open
 menu_file_open PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 96
     
     ; Create OPENFILENAME structure on stack
@@ -268,7 +269,7 @@ open_canceled:
 open_done:
     mov rsp, rbp
     pop rbp
-    ret
+
 menu_file_open ENDP
 
 ;==========================================================================
@@ -278,6 +279,7 @@ menu_file_open ENDP
 PUBLIC menu_file_save
 menu_file_save PROC
     push rbx
+
     push rsi
     sub rsp, 32
     
@@ -342,10 +344,10 @@ save_error:
     
 save_done:
     add rsp, 32
+
     pop rsi
-    pop rbx
-    ret
-menu_file_save ENDP
+    pop menu
+    pop rbx_file_save ENDP
 
 ;==========================================================================
 ; PUBLIC: menu_file_save_as() -> eax (success)
@@ -354,7 +356,7 @@ menu_file_save ENDP
 PUBLIC menu_file_save_as
 menu_file_save_as PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 96
     
     ; Create OPENFILENAME structure on stack
@@ -403,7 +405,7 @@ save_as_canceled:
 save_as_done:
     mov rsp, rbp
     pop rbp
-    ret
+
 menu_file_save_as ENDP
 
 ;==========================================================================
@@ -431,7 +433,7 @@ menu_file_close_tab PROC
     
     add rsp, 32
     pop rbx
-    ret
+
 menu_file_close_tab ENDP
 
 ;==========================================================================
@@ -453,7 +455,7 @@ menu_agent_ask PROC
     
     add rsp, 32
     pop rbx
-    ret
+
 menu_agent_ask ENDP
 
 ;==========================================================================
@@ -475,7 +477,7 @@ menu_agent_edit PROC
     
     add rsp, 32
     pop rbx
-    ret
+
 menu_agent_edit ENDP
 
 ;==========================================================================
@@ -497,7 +499,7 @@ menu_agent_plan PROC
     
     add rsp, 32
     pop rbx
-    ret
+
 menu_agent_plan ENDP
 
 ;==========================================================================
@@ -519,7 +521,7 @@ menu_agent_config PROC
     
     add rsp, 32
     pop rbx
-    ret
+
 menu_agent_config ENDP
 
 ;==========================================================================
@@ -535,7 +537,7 @@ menu_agent_clear_chat PROC
     
     add rsp, 32
     pop rbx
-    ret
+
 menu_agent_clear_chat ENDP
 
 ;==========================================================================
@@ -558,7 +560,12 @@ menu_file_exit PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
+
 menu_file_exit ENDP
 
 END
+
+
+
+
+

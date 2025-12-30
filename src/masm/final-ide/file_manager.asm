@@ -104,7 +104,6 @@ file_manager_init PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
 
 file_manager_init ENDP
 
@@ -116,6 +115,7 @@ ALIGN 16
 file_read PROC
 
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -145,10 +145,10 @@ read_file_not_found:
 
 read_done:
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
 
 file_read ENDP
 
@@ -160,6 +160,7 @@ ALIGN 16
 file_write PROC
 
     push rbx
+
     push rsi
     sub rsp, 32
 
@@ -176,11 +177,10 @@ file_write PROC
 
     mov eax, 1
     add rsp, 32
-    pop rsi
-    pop rbx
-    ret
 
-file_write ENDP
+    pop rsi
+    pop file
+    pop rbx_write ENDP
 
 ;==========================================================================
 ; file_exists(filename: RCX) -> EAX (1=exists, 0=not found)
@@ -235,7 +235,6 @@ directory_create PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
 
 directory_create ENDP
 
@@ -307,3 +306,8 @@ szEmpty BYTE "",0
 path_get_extension ENDP
 
 END
+
+
+
+
+

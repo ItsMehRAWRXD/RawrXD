@@ -354,6 +354,7 @@ qt_foundation_init PROC
     ; Return: RAX = 0 (success) or error code
     
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -398,10 +399,10 @@ qt_foundation_init PROC
     
     xor eax, eax                ; Return success
     add rsp, 32
+
     pop r12
-    pop rbx
-    ret
-qt_foundation_init ENDP
+    pop qt
+    pop rbx_foundation_init ENDP
 
 PUBLIC qt_foundation_cleanup
 qt_foundation_cleanup PROC
@@ -409,6 +410,7 @@ qt_foundation_cleanup PROC
     ; Return: RAX = 0 (success)
     
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -437,10 +439,10 @@ cleanup_pools:
     
     xor eax, eax                ; Return success
     add rsp, 32
+
     pop r12
-    pop rbx
-    ret
-qt_foundation_cleanup ENDP
+    pop qt
+    pop rbx_foundation_cleanup ENDP
 
 ;==========================================================================
 ; OBJECT CREATION/DESTRUCTION
@@ -454,6 +456,7 @@ object_create PROC
     ; Return: RAX = object pointer
     
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -520,17 +523,16 @@ add_to_registry:
     inc dword ptr [rel g_registry_count]
     
     add rsp, 32
+
     pop r12
-    pop rbx
-    ret
-    
-create_error:
+    pop create
+    pop rbx_error:
     xor eax, eax                ; Return NULL on allocation failure
     add rsp, 32
+
     pop r12
-    pop rbx
-    ret
-object_create ENDP
+    pop object
+    pop rbx_create ENDP
 
 PUBLIC object_destroy
 object_destroy PROC
@@ -539,6 +541,7 @@ object_destroy PROC
     ; Return: RAX = 0 (success)
     
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -578,10 +581,10 @@ free_memory:
 destroy_ok:
     xor eax, eax
     add rsp, 32
+
     pop r12
-    pop rbx
-    ret
-object_destroy ENDP
+    pop object
+    pop rbx_destroy ENDP
 
 ;==========================================================================
 ; EVENT HANDLING
@@ -597,6 +600,7 @@ post_event PROC
     ; Return: RAX = 0 (success)
     
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -642,17 +646,16 @@ unlock:
     mov qword ptr [rel g_event_lock], 0
     xor eax, eax
     add rsp, 32
+
     pop r12
-    pop rbx
-    ret
-    
-post_error:
+    pop post
+    pop rbx_error:
     mov eax, 1
     add rsp, 32
+
     pop r12
-    pop rbx
-    ret
-post_event ENDP
+    pop post
+    pop rbx_event ENDP
 
 PUBLIC process_events
 process_events PROC
@@ -660,6 +663,7 @@ process_events PROC
     ; Return: RAX = number of events processed
     
     push rbx
+
     push r12
     push r13
     sub rsp, 32
@@ -715,10 +719,11 @@ skip_dispatch:
 done:
     mov rax, r13
     add rsp, 32
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
+
 process_events ENDP
 
 ;==========================================================================
@@ -757,13 +762,12 @@ connect_signal PROC
     xor eax, eax                ; Return success
     add rsp, 32
     pop rbx
-    ret
-    
+
 connect_error:
     mov eax, 1                  ; Return error
     add rsp, 32
     pop rbx
-    ret
+
 connect_signal ENDP
 
 PUBLIC emit_signal
@@ -775,8 +779,10 @@ emit_signal PROC
     ; Return: RAX = number of slots called
     
     push rbx
+
     push r12
     push r13
+
     push r14
     push r15
     sub rsp, 32
@@ -816,12 +822,14 @@ next_binding:
 emit_done:
     mov rax, r15                ; Return call count
     add rsp, 32
-    pop r15
-    pop r14
-    pop r13
-    pop r12
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
     pop rbx
-    ret
+
 emit_signal ENDP
 
 ;==========================================================================
@@ -856,7 +864,7 @@ widget_set_geometry PROC
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 widget_set_geometry ENDP
 
 PUBLIC widget_get_geometry
@@ -880,7 +888,7 @@ widget_get_geometry PROC
     mov rax, rdx
     add rsp, 32
     pop rbx
-    ret
+
 widget_get_geometry ENDP
 
 ;==========================================================================
@@ -922,7 +930,7 @@ set_color_scheme PROC
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 set_color_scheme ENDP
 
 PUBLIC get_color_scheme
@@ -946,6 +954,7 @@ enumerate_files PROC
     ; Return: RAX = error code
     
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -965,10 +974,10 @@ enumerate_files PROC
     
     xor eax, eax                ; Return success (simplified)
     add rsp, 32
+
     pop r12
-    pop rbx
-    ret
-enumerate_files ENDP
+    pop enumerate
+    pop rbx_files ENDP
 
 ;==========================================================================
 ; THREADING UTILITIES
@@ -1011,13 +1020,12 @@ create_thread PROC
     mov rax, rbx
     add rsp, 32
     pop rbx
-    ret
-    
+
 thread_error:
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 create_thread ENDP
 
 PUBLIC wait_thread
@@ -1040,7 +1048,7 @@ wait_thread PROC
     
     add rsp, 32
     pop rbx
-    ret
+
 wait_thread ENDP
 
 ;==========================================================================
@@ -1053,6 +1061,7 @@ create_chat_history PROC
     ; Return: RAX = CHAT_HISTORY pointer
     
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -1081,11 +1090,10 @@ create_chat_history PROC
     
     mov rax, r12
     add rsp, 32
+
     pop r12
-    pop rbx
-    ret
-    
-chat_array_error:
+    pop chat
+    pop rbx_array_error:
     ; Free history if array allocation failed
     mov rcx, r12
     call free
@@ -1093,10 +1101,10 @@ chat_array_error:
 chat_alloc_error:
     xor eax, eax
     add rsp, 32
+
     pop r12
-    pop rbx
-    ret
-create_chat_history ENDP
+    pop create
+    pop rbx_chat_history ENDP
 
 PUBLIC add_chat_message
 add_chat_message PROC
@@ -1106,6 +1114,7 @@ add_chat_message PROC
     ; Return: RAX = 0 (success), 1 (full)
     
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -1143,16 +1152,20 @@ add_chat_message PROC
     
     xor eax, eax                ; Return success
     add rsp, 32
+
     pop r12
-    pop rbx
-    ret
-    
-msg_full:
+    pop msg
+    pop rbx_full:
     mov eax, 1                  ; Return failure (full)
     add rsp, 32
+
     pop r12
-    pop rbx
-    ret
-add_chat_message ENDP
+    pop add
+    pop rbx_chat_message ENDP
 
 END
+
+
+
+
+

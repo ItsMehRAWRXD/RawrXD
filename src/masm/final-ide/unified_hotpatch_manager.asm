@@ -123,6 +123,7 @@ ALIGN 16
 masm_unified_manager_create PROC
 
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -227,11 +228,10 @@ create_fail:
 
 create_exit:
     add rsp, 32
-    pop r12
-    pop rbx
-    ret
 
-masm_unified_manager_create ENDP
+    pop r12
+    pop masm
+    pop rbx_unified_manager_create ENDP
 
 ;=====================================================================
 ; masm_unified_apply_memory_patch(manager: rcx, name_ptr: rdx, patch_ptr: r8, 
@@ -245,8 +245,10 @@ ALIGN 16
 masm_unified_apply_memory_patch PROC
 
     push rbx
+
     push r12
     push r13
+
     push r14
     sub rsp, 32
     
@@ -310,13 +312,13 @@ apply_mem_exit:
     lea rcx, msg_unified_mem_exit
     call asm_log
     add rsp, 32
-    pop r14
-    pop r13
-    pop r12
-    pop rbx
-    ret
 
-masm_unified_apply_memory_patch ENDP
+    pop r13 pop r14
+
+
+    pop r12
+    pop masm
+    pop rbx_unified_apply_memory_patch ENDP
 
 ;=====================================================================
 ; masm_unified_apply_byte_patch(manager: rcx, name_ptr: rdx, patch_ptr: r8, 
@@ -329,8 +331,10 @@ ALIGN 16
 masm_unified_apply_byte_patch PROC
 
     push rbx
+
     push r12
     push r13
+
     push r14
     sub rsp, 32
     
@@ -396,13 +400,13 @@ apply_byte_exit:
     lea rcx, msg_unified_byte_exit
     call asm_log
     add rsp, 32
-    pop r14
-    pop r13
-    pop r12
-    pop rbx
-    ret
 
-masm_unified_apply_byte_patch ENDP
+    pop r13 pop r14
+
+
+    pop r12
+    pop masm
+    pop rbx_unified_apply_byte_patch ENDP
 
 ;=====================================================================
 ; masm_unified_add_server_hotpatch(manager: rcx, hotpatch_ptr: rdx) -> rax (hotpatch_id or -1)
@@ -450,7 +454,6 @@ add_server_fail:
 add_server_exit:
     add rsp, 32
     pop rbx
-    ret
 
 masm_unified_add_server_hotpatch ENDP
 
@@ -482,7 +485,6 @@ process_fail:
 process_exit:
     add rsp, 32
     pop rbx
-    ret
 
 masm_unified_process_events ENDP
 
@@ -542,6 +544,7 @@ unified_handler_patch_applied PROC
     ; r8 = p3 (patch_ptr)
     
     push rbx
+
     push rsi
     sub rsp, 32
     
@@ -628,11 +631,10 @@ skip_min_update:
     mov [g_patches_successful], rax
     
     add rsp, 32
-    pop rsi
-    pop rbx
-    ret
 
-unified_handler_patch_applied ENDP
+    pop rsi
+    pop unified
+    pop rbx_handler_patch_applied ENDP
 
 ALIGN 16
 unified_handler_patch_failed PROC
@@ -642,6 +644,7 @@ unified_handler_patch_failed PROC
     ; r8 = p3 (result_ptr or 0)
     
     push rbx
+
     push rsi
     sub rsp, 32
     
@@ -729,11 +732,10 @@ skip_error_code:
     call asm_log
     
     add rsp, 32
-    pop rsi
-    pop rbx
-    ret
 
-unified_handler_patch_failed ENDP
+    pop rsi
+    pop unified
+    pop rbx_handler_patch_failed ENDP
 
 ;=====================================================================
 ; masm_unified_destroy(manager: rcx) -> void
@@ -779,7 +781,6 @@ masm_unified_destroy PROC
 destroy_exit:
     add rsp, 32
     pop rbx
-    ret
 
 masm_unified_destroy ENDP
 
@@ -864,8 +865,13 @@ hpatch_reset_stats PROC
 reset_done:
     add rsp, 32
     pop rbx
-    ret
+
 hpatch_reset_stats ENDP
 
 END
+
+
+
+
+
 

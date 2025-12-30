@@ -165,7 +165,7 @@ agentic_failure_detector_create PROC
     
     mov rax, rbx
     pop rbx
-    ret
+
 agentic_failure_detector_create ENDP
 
 ; ============================================================================
@@ -174,8 +174,7 @@ agentic_failure_detector_create ENDP
 ; Initialize default failure patterns
 initialize_default_patterns PROC
     push rbx
-    
-    mov rbx, rcx
+    push mov rbx, rcx
     
     ; Add refusal patterns
     lea rdx, [szRefusalPattern1]
@@ -201,7 +200,7 @@ initialize_default_patterns PROC
     call add_pattern
     
     pop rbx
-    ret
+
 initialize_default_patterns ENDP
 
 ; ============================================================================
@@ -210,15 +209,14 @@ initialize_default_patterns ENDP
 ; Add failure pattern
 add_pattern PROC
     push rbx
-    
-    mov rbx, rcx                    ; rbx = detector
+    push mov rbx, rcx                    ; rbx = detector
     mov r9, rdx                     ; r9 = pattern
     mov r10d, r8d                   ; r10d = type
     
     ; Check capacity
     mov r11d, [rbx + AGENTIC_FAILURE_DETECTOR.patternCount]
     cmp r11d, [rbx + AGENTIC_FAILURE_DETECTOR.maxPatterns]
-    jge .capacity_exceeded
+    jge @@capacity_exceeded
     
     ; Get pattern slot
     mov r12, [rbx + AGENTIC_FAILURE_DETECTOR.patterns]
@@ -250,10 +248,9 @@ add_pattern PROC
     mov rdx, r9
     mov r8d, r10d
     call console_log
-    
-.capacity_exceeded:
+@@capacity_exceeded:
     pop rbx
-    ret
+
 add_pattern ENDP
 
 ; ============================================================================
@@ -264,6 +261,7 @@ add_pattern ENDP
 PUBLIC agentic_detect_failure
 agentic_detect_failure PROC
     push rbx
+
     push rsi
     push r12
     
@@ -279,7 +277,7 @@ agentic_detect_failure PROC
     ; Check capacity
     mov r13d, [rbx + AGENTIC_FAILURE_DETECTOR.detectionCount]
     cmp r13d, [rbx + AGENTIC_FAILURE_DETECTOR.maxDetections]
-    jge .capacity_exceeded
+    jge @@capacity_exceeded
     
     ; Get detection slot
     mov r14, [rbx + AGENTIC_FAILURE_DETECTOR.detections]
@@ -296,10 +294,9 @@ agentic_detect_failure PROC
     mov r8, [rbx + AGENTIC_FAILURE_DETECTOR.patterns]
     mov r9d, [rbx + AGENTIC_FAILURE_DETECTOR.patternCount]
     xor r10d, r10d
-    
-.pattern_loop:
+@@pattern_loop:
     cmp r10d, r9d
-    jge .patterns_checked
+    jge @@patterns_checked
     
     mov r11, r8
     mov r12, r10
@@ -308,14 +305,14 @@ agentic_detect_failure PROC
     
     ; Check if pattern enabled
     cmp byte [r11 + FAILURE_PATTERN.enabled], 1
-    jne .next_pattern
+    jne @@next_pattern
     
     ; Check pattern match
     mov rcx, rsi
     mov rdx, [r11 + FAILURE_PATTERN.pattern]
     call strstr
     cmp rax, 0
-    je .next_pattern
+    je @@next_pattern
     
     ; Pattern matched - failure detected
     mov byte [r14 + FAILURE_DETECTION.isFailure], 1
@@ -343,33 +340,28 @@ agentic_detect_failure PROC
     movss xmm0, [r14 + FAILURE_DETECTION.confidence]
     call console_log
     
-    jmp .detection_complete
-    
-.next_pattern:
+    jmp @@detection_complete
+@@next_pattern:
     inc r10d
-    jmp .pattern_loop
-    
-.patterns_checked:
+    jmp @@pattern_loop
+@@patterns_checked:
     ; No failure detected
     lea rcx, [szNoFailure]
     call console_log
-    
-.detection_complete:
+@@detection_complete:
     ; Update statistics
     inc qword [rbx + AGENTIC_FAILURE_DETECTOR.stats.totalDetections]
     
     cmp byte [r14 + FAILURE_DETECTION.isFailure], 1
-    jne .no_failure
+    jne @@no_failure
     
     ; True positive (simplified)
     inc qword [rbx + AGENTIC_FAILURE_DETECTOR.stats.truePositives]
-    jmp .stats_updated
-    
-.no_failure:
+    jmp @@stats_updated
+@@no_failure:
     ; False negative (simplified)
     inc qword [rbx + AGENTIC_FAILURE_DETECTOR.stats.falseNegatives]
-    
-.stats_updated:
+@@stats_updated:
     ; Update accuracy metrics
     mov rax, [rbx + AGENTIC_FAILURE_DETECTOR.stats.truePositives]
     cvtsi2ss xmm0, rax
@@ -382,17 +374,18 @@ agentic_detect_failure PROC
     inc dword [rbx + AGENTIC_FAILURE_DETECTOR.detectionCount]
     
     mov rax, r14                    ; Return detection result
-    pop r12
-    pop rsi
+
+    pop rsi pop r12
+
     pop rbx
-    ret
-    
-.capacity_exceeded:
+
+@@capacity_exceeded:
     xor rax, rax
-    pop r12
-    pop rsi
+
+    pop rsi pop r12
+
     pop rbx
-    ret
+
 agentic_detect_failure ENDP
 
 ; ============================================================================
@@ -402,29 +395,25 @@ agentic_detect_failure ENDP
 ; Returns: RAX = description string
 get_failure_description PROC
     cmp eax, FAILURE_TYPE_REFUSAL
-    jne .not_refusal
+    jne @@not_refusal
     lea rax, [szRefusalDescription]
     ret
-    
-.not_refusal:
+@@not_refusal:
     cmp eax, FAILURE_TYPE_HALLUCINATION
-    jne .not_hallucination
+    jne @@not_hallucination
     lea rax, [szHallucinationDescription]
     ret
-    
-.not_hallucination:
+@@not_hallucination:
     cmp eax, FAILURE_TYPE_FORMAT_VIOLATION
-    jne .not_format
+    jne @@not_format
     lea rax, [szFormatViolationDescription]
     ret
-    
-.not_format:
+@@not_format:
     cmp eax, FAILURE_TYPE_SAFETY_VIOLATION
-    jne .not_safety
+    jne @@not_safety
     lea rax, [szSafetyViolationDescription]
     ret
-    
-.not_safety:
+@@not_safety:
     lea rax, [szUnknownFailureDescription]
     ret
 get_failure_description ENDP
@@ -436,23 +425,20 @@ get_failure_description ENDP
 ; Returns: RAX = severity level (1-10)
 get_severity_level PROC
     cmp eax, FAILURE_TYPE_REFUSAL
-    jne .not_refusal
+    jne @@not_refusal
     mov eax, 3
     ret
-    
-.not_refusal:
+@@not_refusal:
     cmp eax, FAILURE_TYPE_HALLUCINATION
-    jne .not_hallucination
+    jne @@not_hallucination
     mov eax, 7
     ret
-    
-.not_hallucination:
+@@not_hallucination:
     cmp eax, FAILURE_TYPE_SAFETY_VIOLATION
-    jne .not_safety
+    jne @@not_safety
     mov eax, 9
     ret
-    
-.not_safety:
+@@not_safety:
     mov eax, 5
     ret
 get_severity_level ENDP
@@ -467,10 +453,9 @@ agentic_get_detection PROC
     mov r8, [rcx + AGENTIC_FAILURE_DETECTOR.detections]
     mov r9d, [rcx + AGENTIC_FAILURE_DETECTOR.detectionCount]
     xor r10d, r10d
-    
-.find_detection:
+@@find_detection:
     cmp r10d, r9d
-    jge .detection_not_found
+    jge @@detection_not_found
     
     mov r11, r8
     mov r12, r10
@@ -478,16 +463,14 @@ agentic_get_detection PROC
     add r11, r12
     
     cmp r10d, edx
-    je .detection_found
+    je @@detection_found
     
     inc r10d
-    jmp .find_detection
-    
-.detection_found:
+    jmp @@find_detection
+@@detection_found:
     mov rax, r11
     ret
-    
-.detection_not_found:
+@@detection_not_found:
     xor rax, rax
     ret
 agentic_get_detection ENDP
@@ -538,17 +521,15 @@ agentic_add_pattern ENDP
 PUBLIC agentic_destroy
 agentic_destroy PROC
     push rbx
-    
-    mov rbx, rcx
+    push mov rbx, rcx
     
     ; Free patterns array
     mov r10, [rbx + AGENTIC_FAILURE_DETECTOR.patterns]
     mov r11d, [rbx + AGENTIC_FAILURE_DETECTOR.patternCount]
     xor r12d, r12d
-    
-.free_patterns:
+@@free_patterns:
     cmp r12d, r11d
-    jge .patterns_freed
+    jge @@patterns_freed
     
     mov r13, r10
     mov r14, r12
@@ -557,33 +538,29 @@ agentic_destroy PROC
     
     mov rcx, [r13 + FAILURE_PATTERN.pattern]
     cmp rcx, 0
-    je .skip_pattern
+    je @@skip_pattern
     call free
-    
-.skip_pattern:
+@@skip_pattern:
     inc r12d
-    jmp .free_patterns
-    
-.patterns_freed:
+    jmp @@free_patterns
+@@patterns_freed:
     mov rcx, [rbx + AGENTIC_FAILURE_DETECTOR.patterns]
     cmp rcx, 0
-    je .skip_patterns_array
+    je @@skip_patterns_array
     call free
-    
-.skip_patterns_array:
+@@skip_patterns_array:
     ; Free detections array
     mov rcx, [rbx + AGENTIC_FAILURE_DETECTOR.detections]
     cmp rcx, 0
-    je .skip_detections_array
+    je @@skip_detections_array
     call free
-    
-.skip_detections_array:
+@@skip_detections_array:
     ; Free detector
     mov rcx, rbx
     call free
     
     pop rbx
-    ret
+
 agentic_destroy ENDP
 
 ; ============================================================================
@@ -608,3 +585,8 @@ agentic_destroy ENDP
     szUnknownFailureDescription DB "Unknown failure type", 0
 
 END
+
+
+
+
+

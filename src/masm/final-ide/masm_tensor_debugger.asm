@@ -405,8 +405,7 @@ tensor_debugger_create_window PROC
     mov rax, g_tensor_debugger.hWindow
     add rsp, 96
     pop rbx
-    ret
-    
+
 .data
 szTensorDebuggerTitle db "Tensor Debugger",0
 .code
@@ -437,7 +436,7 @@ tensor_debugger_attach_model PROC
     mov rax, 1  ; Success
     add rsp, 32
     pop rbx
-    ret
+
 tensor_debugger_attach_model ENDP
 
 ;==========================================================================
@@ -470,6 +469,7 @@ tensor_debugger_detach_model ENDP
 ;==========================================================================
 tensor_debugger_set_breakpoint PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 256
@@ -532,10 +532,11 @@ tensor_debugger_set_breakpoint PROC
     
 @done:
     add rsp, 256
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 tensor_debugger_set_breakpoint ENDP
 
 ;==========================================================================
@@ -544,6 +545,7 @@ tensor_debugger_set_breakpoint ENDP
 ;==========================================================================
 tensor_debugger_clear_breakpoint PROC
     push rbx
+
     push rsi
     sub rsp, 32
     
@@ -579,10 +581,10 @@ tensor_debugger_clear_breakpoint PROC
     
 @done:
     add rsp, 32
+
     pop rsi
-    pop rbx
-    ret
-tensor_debugger_clear_breakpoint ENDP
+    pop tensor
+    pop rbx_debugger_clear_breakpoint ENDP
 
 ;==========================================================================
 ; tensor_debugger_inspect_tensor(tensor_ptr: rcx) -> tensor_info (rax)
@@ -590,6 +592,7 @@ tensor_debugger_clear_breakpoint ENDP
 ;==========================================================================
 tensor_debugger_inspect_tensor PROC
     push rbx
+
     push rsi
     sub rsp, 512
     
@@ -638,10 +641,10 @@ tensor_debugger_inspect_tensor PROC
     
 @done:
     add rsp, 512
+
     pop rsi
-    pop rbx
-    ret
-tensor_debugger_inspect_tensor ENDP
+    pop tensor
+    pop rbx_debugger_inspect_tensor ENDP
 
 ;==========================================================================
 ; Helper functions
@@ -794,3 +797,7 @@ tensor_debugger_resume PROC
 tensor_debugger_resume ENDP
 
 end
+
+
+
+

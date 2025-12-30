@@ -168,8 +168,10 @@ chat_serialize_to_json PROC
     ; Returns: eax = bytes written
     
     push rbx
+
     push r12
     push r13
+
     push r14
     push r15
     sub rsp, 128
@@ -190,10 +192,9 @@ chat_serialize_to_json PROC
     
     ; Iterate through messages
     xor r8d, r8d                        ; Message index
-    
-.serialize_loop:
+@@serialize_loop:
     cmp r8d, r13d
-    jge .serialize_end
+    jge @@serialize_end
     
     ; Calculate message offset
     mov rax, r8
@@ -316,7 +317,7 @@ chat_serialize_to_json PROC
     ; Add comma if not last message
     inc r8d
     cmp r8d, r13d
-    je .serialize_end
+    je @@serialize_end
     
     mov rdx, r14
     add rdx, rbx
@@ -324,9 +325,8 @@ chat_serialize_to_json PROC
     call strcpy_safe_masm
     add rbx, rax
     
-    jmp .serialize_loop
-    
-.serialize_end:
+    jmp @@serialize_loop
+@@serialize_end:
     ; Write closing array bracket
     mov rdx, r14
     add rdx, rbx
@@ -336,13 +336,14 @@ chat_serialize_to_json PROC
     
     mov rax, rbx
     add rsp, 128
-    pop r15
-    pop r14
-    pop r13
-    pop r12
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
     pop rbx
-    ret
-    
+
 chat_serialize_to_json ENDP
 
 ;==========================================================================
@@ -364,8 +365,10 @@ chat_deserialize_from_json PROC
     ; Returns: eax = messages deserialized
     
     push rbx
+
     push r12
     push r13
+
     push r14
     push r15
     sub rsp, 128
@@ -386,10 +389,9 @@ chat_deserialize_from_json PROC
     
     mov r12, rax
     add r12, 1                          ; Skip '['
-    
-.deserialize_loop:
+@@deserialize_loop:
     cmp ebx, r15d
-    jge .deserialize_end
+    jge @@deserialize_end
     
     ; Find opening object brace
     mov rcx, r12
@@ -440,18 +442,18 @@ chat_deserialize_from_json PROC
     add r12, 1                          ; Skip '}'
     
     inc ebx
-    jmp .deserialize_loop
-    
-.deserialize_end:
+    jmp @@deserialize_loop
+@@deserialize_end:
     mov eax, ebx
     add rsp, 128
-    pop r15
-    pop r14
-    pop r13
-    pop r12
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
     pop rbx
-    ret
-    
+
 chat_deserialize_from_json ENDP
 
 ;==========================================================================
@@ -472,6 +474,7 @@ chat_save_to_file PROC
     ; Returns: eax = 0 (success), non-zero (error)
     
     push rbx
+
     push r12
     push r13
     sub rsp, 256
@@ -483,8 +486,7 @@ chat_save_to_file PROC
     test r8, r8
     jnz .save_use_provided
     lea r8, [rip + sz_chat_history_file]
-    
-.save_use_provided:
+@@save_use_provided:
     mov rbx, r8                         ; Save filename
     
     ; Serialize to JSON
@@ -504,7 +506,7 @@ chat_save_to_file PROC
     call CreateFileA
     
     cmp rax, INVALID_HANDLE_VALUE
-    je .save_file_error
+    je @@save_file_error
     
     mov r13, rax                        ; Save file handle
     
@@ -525,18 +527,16 @@ chat_save_to_file PROC
     call console_log
     
     xor eax, eax                        ; Success
-    jmp .save_done
-    
-.save_file_error:
+    jmp @@save_done
+@@save_file_error:
     mov eax, 1                          ; Error code
-    
-.save_done:
+@@save_done:
     add rsp, 256
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
-    
+
 chat_save_to_file ENDP
 
 PUBLIC chat_load_from_file
@@ -547,8 +547,10 @@ chat_load_from_file PROC
     ; Returns: eax = messages loaded
     
     push rbx
+
     push r12
     push r13
+
     push r14
     sub rsp, 256
     
@@ -559,8 +561,7 @@ chat_load_from_file PROC
     test rcx, rcx
     jnz .load_use_provided
     lea rcx, [rip + sz_chat_history_file]
-    
-.load_use_provided:
+@@load_use_provided:
     mov rbx, rcx                        ; Save filename
     
     ; Open file for reading
@@ -571,7 +572,7 @@ chat_load_from_file PROC
     call CreateFileA
     
     cmp rax, INVALID_HANDLE_VALUE
-    je .load_file_error
+    je @@load_file_error
     
     mov r14, rax                        ; Save file handle
     
@@ -581,7 +582,7 @@ chat_load_from_file PROC
     call GetFileSize
     
     cmp rax, MAX_JSON_BUFFER
-    jg .load_file_too_large
+    jg @@load_file_too_large
     
     mov r13d, eax                       ; Save file size
     
@@ -608,26 +609,23 @@ chat_load_from_file PROC
     mov edx, r13d
     call console_log
     
-    jmp .load_done
-    
-.load_file_too_large:
+    jmp @@load_done
+@@load_file_too_large:
     mov rcx, r14
     call CloseHandle
     xor eax, eax
-    jmp .load_done
-    
-.load_file_error:
+    jmp @@load_done
+@@load_file_error:
     xor eax, eax
-    
-.load_done:
+@@load_done:
     add rsp, 256
-    pop r14
-    pop r13
+
+    pop r13 pop r14
+
+
     pop r12
-    pop rbx
-    ret
-    
-chat_load_from_file ENDP
+    pop chat
+    pop rbx_load_from_file ENDP
 
 ;==========================================================================
 ; HELPER FUNCTIONS
@@ -637,7 +635,7 @@ chat_load_from_file ENDP
 ; rcx = dest, rdx = src, returns eax = bytes copied
 strcpy_safe_masm PROC
     xor eax, eax
-.safe_copy_loop:
+@@safe_copy_loop:
     mov r8b, BYTE PTR [rdx]
     test r8b, r8b
     jz .safe_copy_done
@@ -645,8 +643,8 @@ strcpy_safe_masm PROC
     inc rcx
     inc rdx
     inc eax
-    jmp .safe_copy_loop
-.safe_copy_done:
+    jmp @@safe_copy_loop
+@@safe_copy_done:
     ret
 strcpy_safe_masm ENDP
 
@@ -654,36 +652,34 @@ strcpy_safe_masm ENDP
 ; eax = message type, rdx = output buffer
 write_msg_type_json PROC
     cmp eax, MSG_USER
-    je .write_user_type
+    je @@write_user_type
     cmp eax, MSG_AGENT
-    je .write_agent_type
+    je @@write_agent_type
     cmp eax, MSG_SYSTEM
-    je .write_system_type
+    je @@write_system_type
     cmp eax, MSG_REASONING
-    je .write_reasoning_type
+    je @@write_reasoning_type
     cmp eax, MSG_CORRECTION
-    je .write_correction_type
-    jmp .write_unknown_type
-    
-.write_user_type:
+    je @@write_correction_type
+    jmp @@write_unknown_type
+@@write_user_type:
     lea rcx, [rip + sz_msg_user]
-    jmp .write_type_copy
-.write_agent_type:
+    jmp @@write_type_copy
+@@write_agent_type:
     lea rcx, [rip + sz_msg_agent]
-    jmp .write_type_copy
-.write_system_type:
+    jmp @@write_type_copy
+@@write_system_type:
     lea rcx, [rip + sz_msg_system]
-    jmp .write_type_copy
-.write_reasoning_type:
+    jmp @@write_type_copy
+@@write_reasoning_type:
     lea rcx, [rip + sz_msg_reasoning]
-    jmp .write_type_copy
-.write_correction_type:
+    jmp @@write_type_copy
+@@write_correction_type:
     lea rcx, [rip + sz_msg_correction]
-    jmp .write_type_copy
-.write_unknown_type:
+    jmp @@write_type_copy
+@@write_unknown_type:
     lea rcx, [rip + sz_msg_system]
-    
-.write_type_copy:
+@@write_type_copy:
     call strcpy_safe_masm
     ret
 write_msg_type_json ENDP
@@ -694,17 +690,17 @@ write_int_json PROC
     ; Simple integer to string conversion
     xor ecx, ecx
     mov r8d, 10
-.int_convert_loop:
+@@int_convert_loop:
     xor edx, edx
     div r8d
     push rdx
-    inc ecx
-    test eax, eax
+    push inc
+    push ecx
+    push test eax, eax
     jnz .int_convert_loop
-    
-.int_write_loop:
-    pop rax
-    add al, '0'
+@@int_write_loop:
+    pop add
+    pop rax al, '0'
     mov BYTE PTR [rdx], al
     inc rdx
     dec ecx
@@ -720,59 +716,54 @@ write_escaped_string_json PROC
     mov BYTE PTR [rdx], '"'
     inc rdx
     xor eax, eax
-.escape_loop:
+@@escape_loop:
     mov r8b, BYTE PTR [rcx]
     test r8b, r8b
     jz .escape_done
     
     cmp r8b, '"'
-    je .escape_quote
+    je @@escape_quote
     cmp r8b, '\'
-    je .escape_backslash
+    je @@escape_backslash
     cmp r8b, 0Ah
-    je .escape_newline
+    je @@escape_newline
     cmp r8b, 09h
-    je .escape_tab
+    je @@escape_tab
     
     mov BYTE PTR [rdx], r8b
     inc rdx
     inc eax
     inc rcx
-    jmp .escape_loop
-    
-.escape_quote:
+    jmp @@escape_loop
+@@escape_quote:
     mov BYTE PTR [rdx], '\'
     mov BYTE PTR [rdx + 1], '"'
     add rdx, 2
     add eax, 2
     inc rcx
-    jmp .escape_loop
-    
-.escape_backslash:
+    jmp @@escape_loop
+@@escape_backslash:
     mov BYTE PTR [rdx], '\'
     mov BYTE PTR [rdx + 1], '\'
     add rdx, 2
     add eax, 2
     inc rcx
-    jmp .escape_loop
-    
-.escape_newline:
+    jmp @@escape_loop
+@@escape_newline:
     mov BYTE PTR [rdx], '\'
     mov BYTE PTR [rdx + 1], 'n'
     add rdx, 2
     add eax, 2
     inc rcx
-    jmp .escape_loop
-    
-.escape_tab:
+    jmp @@escape_loop
+@@escape_tab:
     mov BYTE PTR [rdx], '\'
     mov BYTE PTR [rdx + 1], 't'
     add rdx, 2
     add eax, 2
     inc rcx
-    jmp .escape_loop
-    
-.escape_done:
+    jmp @@escape_loop
+@@escape_done:
     mov BYTE PTR [rdx], '"'
     inc rdx
     inc eax
@@ -805,4 +796,9 @@ parse_json_string PROC
 parse_json_string ENDP
 
 .end
+
+
+
+
+
 

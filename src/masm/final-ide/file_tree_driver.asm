@@ -119,10 +119,13 @@ DRIVE_INFO ENDS
 PUBLIC file_tree_init
 file_tree_init PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
+
     push r14
     push r15
     sub rsp, 64
@@ -181,14 +184,17 @@ populate_fail:
     
 init_done:
     add rsp, 64
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 file_tree_init ENDP
 
 ;==========================================================================
@@ -197,6 +203,7 @@ file_tree_init ENDP
 ;==========================================================================
 enumerate_drives PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -264,10 +271,11 @@ enum_fail:
     
 enum_exit:
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 enumerate_drives ENDP
 
 ;==========================================================================
@@ -276,8 +284,10 @@ enumerate_drives ENDP
 ;==========================================================================
 populate_tree_drives PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     sub rsp, 96
     
@@ -338,12 +348,13 @@ drives_done:
     mov eax, 1
     
     add rsp, 96
-    pop r12
-    pop rdi
+
+    pop rdi pop r12
+
+
     pop rsi
-    pop rbx
-    ret
-populate_tree_drives ENDP
+    populate
+    pop rbx_tree_drives ENDP
 
 ;==========================================================================
 ; PUBLIC: file_tree_expand_drive(drive_id: ecx) -> eax
@@ -352,6 +363,7 @@ populate_tree_drives ENDP
 PUBLIC file_tree_expand_drive
 file_tree_expand_drive PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -384,10 +396,11 @@ expand_fail:
     
 expand_done:
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 file_tree_expand_drive ENDP
 
 ;==========================================================================
@@ -424,7 +437,7 @@ refresh_fail:
 refresh_done:
     add rsp, 32
     pop rbx
-    ret
+
 file_tree_refresh ENDP
 
 ;==========================================================================
@@ -443,4 +456,9 @@ EXTERN asm_log:PROC
 EXTERN CreateWindowExA:PROC
 EXTERN SendMessageA:PROC
 EXTERN strcmp_masm:PROC
+
+
+
+
+
 

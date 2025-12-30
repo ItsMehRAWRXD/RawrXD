@@ -1,8 +1,11 @@
 #include "agent_chat_breadcrumb.hpp"
+#include "gguf_loader.hpp"
 #include <QVBoxLayout>
 #include <QSettings>
 #include <QDebug>
 #include <QDir>
+#include <QDirIterator>
+#include <QFileInfo>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QFile>
@@ -214,6 +217,46 @@ void AgentChatBreadcrumb::registerLocalModel(const QString& name, const QString&
     model.capabilities = "General";
     model.version = "Local";
     model.description = "Local model";
+
+    // Try to extract real metadata if it's a GGUF file
+    if (endpoint.endsWith(".gguf", Qt::CaseInsensitive)) {
+        QFileInfo fileInfo(endpoint);
+        if (fileInfo.exists()) {
+            qint64 size = fileInfo.size();
+            QString sizeStr = QString::number(size / (1024.0 * 1024.0 * 1024.0), 'f', 2) + " GB";
+            model.description = QString("Local GGUF model (%1)").arg(sizeStr);
+            
+            // Use GGUFLoaderQt to get more details
+            GGUFLoaderQt loader(endpoint);
+            if (loader.isOpen()) {
+                // Try to get parameter count
+                QVariant pCount = loader.getParam("general.parameter_count", QVariant());
+                if (pCount.isValid()) {
+                    model.parameterCount = QString::number(pCount.toLongLong() / 1000000000.0, 'f', 1) + "B";
+                }
+                
+                // Try to get architecture
+                QVariant arch = loader.getParam("general.architecture", QVariant());
+                if (arch.isValid()) {
+                    model.capabilities = arch.toString();
+                }
+                
+                // Try to get quantization
+                QVariant quant = loader.getParam("general.quantization_version", QVariant());
+                if (quant.isValid()) {
+                    model.quantization = QString("v%1").arg(quant.toString());
+                }
+            }
+        }
+    } else if (endpoint.endsWith(".bin", Qt::CaseInsensitive)) {
+        QFileInfo fileInfo(endpoint);
+        if (fileInfo.exists()) {
+            qint64 size = fileInfo.size();
+            QString sizeStr = QString::number(size / (1024.0 * 1024.0 * 1024.0), 'f', 2) + " GB";
+            model.description = QString("Local Blob model (%1)").arg(sizeStr);
+        }
+    }
+
     addModel(model);
 }
 
@@ -295,8 +338,57 @@ void AgentChatBreadcrumb::registerCloudModel(const QString& provider, const QStr
     addModel(model);
 }
 
+void AgentChatBreadcrumb::scanLocalModels()
+{
+    qDebug() << "Scanning for local models...";
+    
+    QStringList searchPaths = {
+        QDir::currentPath(),
+        QDir::currentPath() + "/models",
+        QDir::currentPath() + "/src/masm",
+        QDir::currentPath() + "/Modelfiles",
+        QDir::currentPath() + "/bin",
+        QDir::currentPath() + "/build",
+        QDir::homePath() + "/.ollama/models/blobs"
+    };
+    
+    for (const QString& path : searchPaths) {
+        QDir dir(path);
+        if (!dir.exists()) continue;
+        
+        QDirIterator it(path, QDir::Files, QDirIterator::Subdirectories);
+        while (it.hasNext()) {
+            QString filePath = it.next();
+            QFileInfo fileInfo(filePath);
+            QString fileName = fileInfo.fileName();
+            
+            // Identify potential model files: .gguf, .bin, or large blobs
+            bool isModel = fileName.endsWith(".gguf", Qt::CaseInsensitive) || 
+                           fileName.endsWith(".bin", Qt::CaseInsensitive) ||
+                           fileName.startsWith("sha256-") ||
+                           (path.contains("blobs") && fileInfo.size() > 500 * 1024 * 1024); // >500MB in blobs
+            
+            if (!isModel) continue;
+            
+            QString modelName = fileInfo.baseName();
+            if (fileName.startsWith("sha256-")) {
+                modelName = "Blob-" + fileName.mid(7, 8);
+            }
+            
+            // Avoid duplicates
+            if (m_modelMap.contains(modelName)) continue;
+            
+            registerLocalModel(modelName, filePath);
+            qDebug() << "Discovered local model:" << modelName << "at" << filePath;
+        }
+    }
+}
+
 void AgentChatBreadcrumb::loadModelsFromConfiguration()
 {
+    // First scan filesystem for models
+    scanLocalModels();
+
     // Load from QSettings
     QSettings settings("RawrXD", "AgenticIDE");
     

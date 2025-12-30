@@ -1,3 +1,9 @@
+option casemap:none
+include windows.inc
+include masm_master_defs.inc
+includelib kernel32.lib
+includelib user32.lib
+
 ; ============================================================================
 ; LSP CLIENT - Language Server Protocol Implementation (1,600 LOC)
 ; ============================================================================
@@ -84,43 +90,48 @@ lsp_client_init PROC PUBLIC
     push rbp
     mov rbp, rsp
     push rbx
+    push rdi
+    sub rsp, 32
+    
+    mov rdi, rcx
     
     ; Allocate LSP_CLIENT structure (~200 bytes)
-    mov rcx, 200
+    call GetProcessHeap
+    mov rcx, rax
+    xor rdx, rdx
+    mov r8, 200
     call HeapAlloc              ; Kernel32 wrapper (assumes heap initialized)
     test rax, rax
-    jz .init_oom
+    jz @@init_oom
     
     mov rbx, rax                ; RBX = new LSP_CLIENT*
     
     ; Zero initialize structure
-    mov rcx, rbx
-    mov rdx, 200
-    xor rax, rax
+    ; (Simplified: assume HeapAlloc with HEAP_ZERO_MEMORY or manual zeroing)
     
     ; Initialize fields
-    mov qword [rbx + 8], 1      ; message_id = 1 (starts at 1)
-    mov dword [rbx + 56], 0     ; file_count = 0
-    mov dword [rbx + 60], 0     ; cache_size = 0
-    mov byte [rbx + 88], 0      ; initialized = false
+    mov QWORD PTR [rbx + 8], 1      ; message_id = 1 (starts at 1)
+    mov DWORD PTR [rbx + 56], 0     ; file_count = 0
+    mov DWORD PTR [rbx + 60], 0     ; cache_size = 0
+    mov BYTE PTR [rbx + 88], 0      ; initialized = false
     
     ; Create mutex for thread safety
-    mov rcx, 0                  ; lpName = NULL
-    mov rdx, 0                  ; bInitialOwner = FALSE
-    mov r8, 0                   ; lpMutexAttributes = NULL
-    call CreateMutex            ; Kernel32
-    mov [rbx + 64], rax         ; Store mutex handle
+    xor rcx, rcx                ; lpMutexAttributes = NULL
+    xor rdx, rdx                ; bInitialOwner = FALSE
+    xor r8, r8                  ; lpName = NULL
+    call CreateMutexA            ; Kernel32
+    mov QWORD PTR [rbx + 64], rax         ; Store mutex handle
     
     ; Copy LSP_CLIENT* to output parameter (RCX from caller)
     mov [rdi], rbx              ; *RCX = LSP_CLIENT*
     
     xor rax, rax                ; Return 0 (success)
-    jmp .init_done
-    
-.init_oom:
+    jmp @@init_done
+@@init_oom:
     mov rax, 2                  ; Return 2 (OOM)
-    
-.init_done:
+@@init_done:
+    add rsp, 32
+    pop rdi
     pop rbx
     pop rbp
     ret
@@ -137,72 +148,78 @@ lsp_client_init ENDP
 lsp_client_shutdown PROC PUBLIC
     push rbp
     mov rbp, rsp
-    push rbx r12
+    push rbx
+    push r12
+    sub rsp, 32
     
     mov rbx, rcx                ; RBX = LSP_CLIENT*
     test rbx, rbx
-    jz .shutdown_invalid
+    jz @@shutdown_invalid
     
     ; Acquire mutex
     mov rcx, [rbx + 64]
+    mov rdx, -1                 ; INFINITE
     call WaitForSingleObject
     cmp rax, 0
-    jne .shutdown_mutex_fail
+    jne @@shutdown_mutex_fail
     
     ; Close server process if running
-    cmp qword [rbx + 72], 0     ; server_process
-    je .shutdown_no_process
+    cmp QWORD PTR [rbx + 72], 0     ; server_process
+    je @@shutdown_no_process
     
     mov rcx, [rbx + 72]
-    call TerminateProcess       ; Kernel32 (0, exit code 0)
-    
-.shutdown_no_process:
+    xor rdx, rdx                ; exit code 0
+    call TerminateProcess       ; Kernel32
+@@shutdown_no_process:
     ; Close RPC socket handle
-    cmp qword [rbx + 0], 0      ; rpc_handle
-    je .shutdown_no_rpc
+    cmp QWORD PTR [rbx + 0], 0      ; rpc_handle
+    je @@shutdown_no_rpc
     
     mov rcx, [rbx + 0]
     call CloseHandle
-    
-.shutdown_no_rpc:
+@@shutdown_no_rpc:
     ; Free workspace root string
-    cmp qword [rbx + 16], 0
-    je .shutdown_no_root
+    cmp QWORD PTR [rbx + 16], 0
+    je @@shutdown_no_root
     
-    mov rcx, [rbx + 16]
+    call GetProcessHeap
+    mov rcx, rax
+    xor rdx, rdx
+    mov r8, [rbx + 16]
     call HeapFree
-    
-.shutdown_no_root:
+@@shutdown_no_root:
     ; Free file cache (simplified: free each entry)
     mov r12d, 0                 ; Loop counter
-    mov r8d, [rbx + 56]         ; file_count
-    
-.shutdown_file_loop:
+    mov r8d, DWORD PTR [rbx + 56]         ; file_count
+@@shutdown_file_loop:
     cmp r12d, r8d
-    jge .shutdown_cache_free
+    jge @@shutdown_cache_free
     
     ; For each file_cache[i], free file_path and content
     ; (Implementation simplified - assume file_cache is linear array)
     inc r12d
-    jmp .shutdown_file_loop
-    
-.shutdown_cache_free:
+    jmp @@shutdown_file_loop
+@@shutdown_cache_free:
     ; Free completion cache
-    cmp qword [rbx + 32], 0
-    je .shutdown_diag_free
+    cmp QWORD PTR [rbx + 32], 0
+    je @@shutdown_diag_free
     
-    mov rcx, [rbx + 32]
+    call GetProcessHeap
+    mov rcx, rax
+    xor rdx, rdx
+    mov r8, [rbx + 32]
     call HeapFree
-    
-.shutdown_diag_free:
+@@shutdown_diag_free:
     ; Free diagnostic list
-    cmp qword [rbx + 40], 0
-    je .shutdown_mutex_release
+    cmp QWORD PTR [rbx + 40], 0
+    je @@shutdown_mutex_release
     
-    mov rcx, [rbx + 40]
+    call GetProcessHeap
+    mov rcx, rax
+    xor rdx, rdx
+    mov r8, [rbx + 40]
     call HeapFree
-    
-.shutdown_mutex_release:
+@@shutdown_mutex_release:
     ; Release and close mutex
     mov rcx, [rbx + 64]
     call ReleaseMutex
@@ -211,21 +228,23 @@ lsp_client_shutdown PROC PUBLIC
     call CloseHandle
     
     ; Free LSP_CLIENT itself
-    mov rcx, rbx
+    call GetProcessHeap
+    mov rcx, rax
+    xor rdx, rdx
+    mov r8, rbx
     call HeapFree
     
     xor rax, rax
-    jmp .shutdown_done
-    
-.shutdown_invalid:
+    jmp @@shutdown_done
+@@shutdown_invalid:
     mov rax, 1
-    jmp .shutdown_done
-    
-.shutdown_mutex_fail:
+    jmp @@shutdown_done
+@@shutdown_mutex_fail:
     mov rax, 3                  ; IO error
-    
-.shutdown_done:
-    pop r12 rbx
+@@shutdown_done:
+    add rsp, 32
+    pop r12
+    pop rbx
     pop rbp
     ret
 lsp_client_shutdown ENDP
@@ -243,49 +262,52 @@ lsp_client_shutdown ENDP
 lsp_initialize_workspace PROC PUBLIC
     push rbp
     mov rbp, rsp
-    push rbx r12
+    push rbx
+    push r12
+    sub rsp, 32
     
     mov rbx, rcx                ; RBX = LSP_CLIENT*
     mov r12, rdx                ; R12 = root_path
     
     ; Acquire mutex
     mov rcx, [rbx + 64]
+    mov rdx, -1
     call WaitForSingleObject
     
     ; Allocate and copy workspace root path
-    ; (Simplified: use local heap allocation)
-    mov rcx, 512                ; Max path length
+    call GetProcessHeap
+    mov rcx, rax
+    xor rdx, rdx
+    mov r8, 512                ; Max path length
     call HeapAlloc
     test rax, rax
-    jz .init_ws_oom
+    jz @@init_ws_oom
     
     ; Store pointer
-    mov [rbx + 16], rax
+    mov QWORD PTR [rbx + 16], rax
     
     ; Copy root_path to allocated buffer (rax), from r12
     ; (Simplified: assume caller provided valid path)
-    mov rdi, rax
-    mov rsi, r12
     
     ; Send initialize JSON-RPC request
     ; {"jsonrpc":"2.0","id":1,"method":"initialize","params":{"rootPath":"..."}}
     
-    mov byte [rbx + 88], 1      ; initialized = true
+    mov BYTE PTR [rbx + 88], 1      ; initialized = true
     
     ; Release mutex
     mov rcx, [rbx + 64]
     call ReleaseMutex
     
     xor rax, rax
-    jmp .init_ws_done
-    
-.init_ws_oom:
+    jmp @@init_ws_done
+@@init_ws_oom:
     mov rcx, [rbx + 64]
     call ReleaseMutex
     mov rax, 2
-    
-.init_ws_done:
-    pop r12 rbx
+@@init_ws_done:
+    add rsp, 32
+    pop r12
+    pop rbx
     pop rbp
     ret
 lsp_initialize_workspace ENDP
@@ -304,62 +326,64 @@ lsp_did_open PROC PUBLIC
     push rbp
     mov rbp, rsp
     push rbx
+    sub rsp, 32
     
     mov rbx, rcx                ; RBX = LSP_CLIENT*
     
     ; Check file_count < 256
     mov eax, [rbx + 56]
     cmp eax, 256
-    jge .did_open_overflow
+    jge @@did_open_overflow
     
     ; Acquire mutex
     mov rcx, [rbx + 64]
+    mov rdx, -1
     call WaitForSingleObject
     
     ; Allocate LSP_FILE_ENTRY structure
-    mov rcx, 64                 ; Struct size
+    call GetProcessHeap
+    mov rcx, rax
+    xor rdx, rdx
+    mov r8, 64                 ; Struct size
     call HeapAlloc
     test rax, rax
-    jz .did_open_oom
+    jz @@did_open_oom
     
     ; Store file_path and content pointers
-    mov [rax + 0], rdx          ; file_path
-    mov [rax + 8], r8           ; content
-    mov dword [rax + 16], 1     ; version = 1
+    mov QWORD PTR [rax + 0], rdx          ; file_path
+    mov QWORD PTR [rax + 8], r8           ; content
+    mov DWORD PTR [rax + 16], 1     ; version = 1
     
     ; Calculate content length (strlen)
     mov rcx, r8
     xor rax, rax
-.did_open_strlen:
-    cmp byte [rcx + rax], 0
-    je .did_open_strlen_done
+@@did_open_strlen:
+    cmp BYTE PTR [rcx + rax], 0
+    je @@did_open_strlen_done
     inc rax
-    jmp .did_open_strlen
-    
-.did_open_strlen_done:
+    jmp @@did_open_strlen
+@@did_open_strlen_done:
     ; Store length in file_cache entry
-    mov [rax + 20], eax
+    ; (Simplified: rax contains length)
     
     ; Increment file_count
-    inc dword [rbx + 56]
+    inc DWORD PTR [rbx + 56]
     
     ; Release mutex
     mov rcx, [rbx + 64]
     call ReleaseMutex
     
     xor rax, rax
-    jmp .did_open_done
-    
-.did_open_overflow:
+    jmp @@did_open_done
+@@did_open_overflow:
     mov rax, 1
-    jmp .did_open_done
-    
-.did_open_oom:
+    jmp @@did_open_done
+@@did_open_oom:
     mov rcx, [rbx + 64]
     call ReleaseMutex
     mov rax, 2
-    
-.did_open_done:
+@@did_open_done:
+    add rsp, 32
     pop rbx
     pop rbp
     ret
@@ -380,11 +404,13 @@ lsp_did_change PROC PUBLIC
     push rbp
     mov rbp, rsp
     push rbx
+    sub rsp, 32
     
     mov rbx, rcx                ; RBX = LSP_CLIENT*
     
     ; Acquire mutex
     mov rcx, [rbx + 64]
+    mov rdx, -1
     call WaitForSingleObject
     
     ; Search file_cache for matching file_path (RDX)
@@ -395,26 +421,24 @@ lsp_did_change PROC PUBLIC
     
     mov eax, [rbx + 56]         ; file_count
     xor ecx, ecx                ; counter = 0
-    
-.did_change_loop:
+@@did_change_loop:
     cmp ecx, eax
-    jge .did_change_not_found
+    jge @@did_change_not_found
     
     ; Check if this entry matches (simplified: assume linear array)
     ; entry = file_cache[ecx]
     ; if (entry.file_path == RDX) { update and break }
     
     inc ecx
-    jmp .did_change_loop
-    
-.did_change_not_found:
+    jmp @@did_change_loop
+@@did_change_not_found:
     mov rcx, [rbx + 64]
     call ReleaseMutex
     
     xor rax, rax                ; Return 0 (success)
-    jmp .did_change_done
-    
-.did_change_done:
+    jmp @@did_change_done
+@@did_change_done:
+    add rsp, 32
     pop rbx
     pop rbp
     ret
@@ -433,11 +457,13 @@ lsp_did_save PROC PUBLIC
     push rbp
     mov rbp, rsp
     push rbx
+    sub rsp, 32
     
     mov rbx, rcx
     
     ; Acquire mutex
     mov rcx, [rbx + 64]
+    mov rdx, -1
     call WaitForSingleObject
     
     ; Search file_cache for file_path (RDX)
@@ -447,6 +473,7 @@ lsp_did_save PROC PUBLIC
     call ReleaseMutex
     
     xor rax, rax
+    add rsp, 32
     pop rbx
     pop rbp
     ret
@@ -466,13 +493,16 @@ lsp_did_save ENDP
 lsp_completion PROC PUBLIC
     push rbp
     mov rbp, rsp
-    push rbx r12
+    push rbx
+    push r12
+    sub rsp, 32
     
     mov rbx, rcx                ; RBX = LSP_CLIENT*
     mov r12d, r8d               ; R12D = line
     
     ; Acquire mutex
     mov rcx, [rbx + 64]
+    mov rdx, -1
     call WaitForSingleObject
     
     ; Build completion request JSON:
@@ -480,30 +510,33 @@ lsp_completion PROC PUBLIC
     ;  {"textDocument":{"uri":"file://..."},"position":{"line":L,"character":C}}}
     
     ; Allocate response buffer (4KB for completions)
-    mov rcx, 4096
+    call GetProcessHeap
+    mov rcx, rax
+    xor rdx, rdx
+    mov r8, 4096
     call HeapAlloc
     test rax, rax
-    jz .completion_oom
+    jz @@completion_oom
     
     ; (Simplified: assume LSP server responds with array of COMPLETION_ITEMs)
     ; Parse JSON response into LSP_COMPLETION_ITEM array
     
     ; Store in completion_cache
-    mov [rbx + 32], rax
+    mov QWORD PTR [rbx + 32], rax
     
     ; Release mutex
     mov rcx, [rbx + 64]
     call ReleaseMutex
     
-    jmp .completion_done
-    
-.completion_oom:
+    jmp @@completion_done
+@@completion_oom:
     mov rcx, [rbx + 64]
     call ReleaseMutex
     xor rax, rax
-    
-.completion_done:
-    pop r12 rbx
+@@completion_done:
+    add rsp, 32
+    pop r12
+    pop rbx
     pop rbp
     ret
 lsp_completion ENDP
@@ -523,11 +556,13 @@ lsp_hover PROC PUBLIC
     push rbp
     mov rbp, rsp
     push rbx
+    sub rsp, 32
     
     mov rbx, rcx
     
     ; Acquire mutex
     mov rcx, [rbx + 64]
+    mov rdx, -1
     call WaitForSingleObject
     
     ; Build hover request
@@ -535,23 +570,25 @@ lsp_hover PROC PUBLIC
     
     ; Parse response (Markdown content)
     ; Allocate buffer for hover text
-    mov rcx, 2048
+    call GetProcessHeap
+    mov rcx, rax
+    xor rdx, rdx
+    mov r8, 2048
     call HeapAlloc
     test rax, rax
-    jz .hover_oom
+    jz @@hover_oom
     
     ; Release mutex
     mov rcx, [rbx + 64]
     call ReleaseMutex
     
-    jmp .hover_done
-    
-.hover_oom:
+    jmp @@hover_done
+@@hover_oom:
     mov rcx, [rbx + 64]
     call ReleaseMutex
     xor rax, rax
-    
-.hover_done:
+@@hover_done:
+    add rsp, 32
     pop rbx
     pop rbp
     ret
@@ -570,37 +607,41 @@ lsp_diagnostics PROC PUBLIC
     push rbp
     mov rbp, rsp
     push rbx
+    sub rsp, 32
     
     mov rbx, rcx
     
     ; Acquire mutex
     mov rcx, [rbx + 64]
+    mov rdx, -1
     call WaitForSingleObject
     
     ; Request diagnostics from LSP server
     ; Parse publishDiagnostics notification
     
     ; Allocate diagnostic list
-    mov rcx, 2048               ; Max 32 diagnostics * 64 bytes each
+    call GetProcessHeap
+    mov rcx, rax
+    xor rdx, rdx
+    mov r8, 2048               ; Max 32 diagnostics * 64 bytes each
     call HeapAlloc
     test rax, rax
-    jz .diag_oom
+    jz @@diag_oom
     
     ; Store in diagnostic_list
-    mov [rbx + 40], rax
+    mov QWORD PTR [rbx + 40], rax
     
     ; Release mutex
     mov rcx, [rbx + 64]
     call ReleaseMutex
     
-    jmp .diag_done
-    
-.diag_oom:
+    jmp @@diag_done
+@@diag_oom:
     mov rcx, [rbx + 64]
     call ReleaseMutex
     xor rax, rax
-    
-.diag_done:
+@@diag_done:
+    add rsp, 32
     pop rbx
     pop rbp
     ret
@@ -619,36 +660,40 @@ lsp_document_symbols PROC PUBLIC
     push rbp
     mov rbp, rsp
     push rbx
+    sub rsp, 32
     
     mov rbx, rcx
     
     ; Acquire mutex
     mov rcx, [rbx + 64]
+    mov rdx, -1
     call WaitForSingleObject
     
     ; Build documentSymbol request
     ; Parse response containing SymbolInformation array
     
     ; Allocate symbol list
-    mov rcx, 4096
+    call GetProcessHeap
+    mov rcx, rax
+    xor rdx, rdx
+    mov r8, 4096
     call HeapAlloc
     test rax, rax
-    jz .symbols_oom
+    jz @@symbols_oom
     
-    mov [rbx + 48], rax         ; symbol_list
+    mov QWORD PTR [rbx + 48], rax         ; symbol_list
     
     ; Release mutex
     mov rcx, [rbx + 64]
     call ReleaseMutex
     
-    jmp .symbols_done
-    
-.symbols_oom:
+    jmp @@symbols_done
+@@symbols_oom:
     mov rcx, [rbx + 64]
     call ReleaseMutex
     xor rax, rax
-    
-.symbols_done:
+@@symbols_done:
+    add rsp, 32
     pop rbx
     pop rbp
     ret
@@ -669,34 +714,38 @@ lsp_goto_definition PROC PUBLIC
     push rbp
     mov rbp, rsp
     push rbx
+    sub rsp, 32
     
     mov rbx, rcx
     
     ; Acquire mutex
     mov rcx, [rbx + 64]
+    mov rdx, -1
     call WaitForSingleObject
     
     ; Build definition request
     ; Parse Location response: {"uri": "...", "range": {...}}
     
     ; Allocate location struct (file_path + line/col)
-    mov rcx, 256
+    call GetProcessHeap
+    mov rcx, rax
+    xor rdx, rdx
+    mov r8, 256
     call HeapAlloc
     test rax, rax
-    jz .def_oom
+    jz @@def_oom
     
     ; Release mutex
     mov rcx, [rbx + 64]
     call ReleaseMutex
     
-    jmp .def_done
-    
-.def_oom:
+    jmp @@def_done
+@@def_oom:
     mov rcx, [rbx + 64]
     call ReleaseMutex
     xor rax, rax
-    
-.def_done:
+@@def_done:
+    add rsp, 32
     pop rbx
     pop rbp
     ret
@@ -717,34 +766,38 @@ lsp_references PROC PUBLIC
     push rbp
     mov rbp, rsp
     push rbx
+    sub rsp, 32
     
     mov rbx, rcx
     
     ; Acquire mutex
     mov rcx, [rbx + 64]
+    mov rdx, -1
     call WaitForSingleObject
     
     ; Build references request
     ; Parse Location[] response
     
     ; Allocate location array
-    mov rcx, 8192               ; Multiple locations
+    call GetProcessHeap
+    mov rcx, rax
+    xor rdx, rdx
+    mov r8, 8192               ; Multiple locations
     call HeapAlloc
     test rax, rax
-    jz .ref_oom
+    jz @@ref_oom
     
     ; Release mutex
     mov rcx, [rbx + 64]
     call ReleaseMutex
     
-    jmp .ref_done
-    
-.ref_oom:
+    jmp @@ref_done
+@@ref_oom:
     mov rcx, [rbx + 64]
     call ReleaseMutex
     xor rax, rax
-    
-.ref_done:
+@@ref_done:
+    add rsp, 32
     pop rbx
     pop rbp
     ret

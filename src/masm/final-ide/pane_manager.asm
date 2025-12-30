@@ -101,7 +101,6 @@ pane_system_init PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
 
 pane_system_init ENDP
 
@@ -113,6 +112,7 @@ ALIGN 16
 pane_create PROC
 
     push rbx
+
     push rsi
     sub rsp, 32
 
@@ -160,18 +160,16 @@ pane_create PROC
     call console_log
 
     add rsp, 32
-    pop rsi
-    pop rbx
-    ret
 
-pane_create_fail:
+    pop rsi
+    pop pane
+    pop rbx_create_fail:
     xor eax, eax
     add rsp, 32
-    pop rsi
-    pop rbx
-    ret
 
-pane_create ENDP
+    pop rsi
+    pop pane
+    pop rbx_create ENDP
 
 ;==========================================================================
 ; pane_dock(pane_id: ECX, position: EDX) -> EAX (1=success)
@@ -181,6 +179,7 @@ ALIGN 16
 pane_dock PROC
 
     push rbx
+
     push rsi
     sub rsp, 32
 
@@ -224,11 +223,10 @@ pane_dock_fail:
 
 pane_dock_done:
     add rsp, 32
-    pop rsi
-    pop rbx
-    ret
 
-pane_dock ENDP
+    pop rsi
+    pop pane
+    pop rbx_dock ENDP
 
 ;==========================================================================
 ; pane_set_size(pane_id: ECX, width: EDX, height: R8D) -> EAX
@@ -400,7 +398,6 @@ pane_save_layout PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
 
 pane_save_layout ENDP
 
@@ -424,8 +421,12 @@ pane_load_layout PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
 
 pane_load_layout ENDP
 
 END
+
+
+
+
+

@@ -63,6 +63,7 @@ inference_engine_init ENDP
 PUBLIC inference_engine_run
 inference_engine_run PROC
     push rbx
+
     push rsi
     sub rsp, 32
     
@@ -112,9 +113,14 @@ inference_fail:
 inference_success:
     mov rax, rbx
     add rsp, 32
+
     pop rsi
-    pop rbx
-    ret
-inference_engine_run ENDP
+    pop inference
+    pop rbx_engine_run ENDP
 
 END
+
+
+
+
+

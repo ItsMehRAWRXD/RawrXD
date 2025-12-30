@@ -76,7 +76,7 @@ NO_SWITCH:
 EXIT_CHECK:
     add rsp, 32
     pop rbx
-    ret
+
 RawrXD_CheckAndSwitch ENDP
 
 ; Get current engine status
@@ -86,3 +86,8 @@ RawrXD_GetEngineStatus PROC
 RawrXD_GetEngineStatus ENDP
 
 END
+
+
+
+
+

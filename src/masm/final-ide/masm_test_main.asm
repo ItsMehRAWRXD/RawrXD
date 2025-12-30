@@ -366,6 +366,7 @@ ALIGN 16
 test_memory_allocator PROC
 
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -444,11 +445,10 @@ mem_test_fail:
 
 mem_test_exit:
     add rsp, 32
-    pop r12
-    pop rbx
-    ret
 
-test_memory_allocator ENDP
+    pop r12
+    pop test
+    pop rbx_memory_allocator ENDP
 
 ;=====================================================================
 ; test_thread_sync() -> rax (1=pass, 0=fail)
@@ -496,7 +496,6 @@ sync_test_fail:
 sync_test_exit:
     add rsp, 32
     pop rbx
-    ret
 
 test_thread_sync ENDP
 
@@ -508,6 +507,7 @@ ALIGN 16
 test_string_operations PROC
 
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -581,11 +581,10 @@ string_test_fail:
 
 string_test_exit:
     add rsp, 32
-    pop r12
-    pop rbx
-    ret
 
-test_string_operations ENDP
+    pop r12
+    pop test
+    pop rbx_string_operations ENDP
 
 ;=====================================================================
 ; test_event_loop() -> rax (1=pass, 0=fail)
@@ -641,7 +640,6 @@ event_test_fail:
 event_test_exit:
     add rsp, 32
     pop rbx
-    ret
 
 test_event_loop ENDP
 
@@ -663,6 +661,7 @@ ALIGN 16
 test_memory_hotpatcher PROC
 
     push rbx
+
     push r12
     sub rsp, 256            ; Stack space for structures
     
@@ -724,11 +723,10 @@ mem_hotpatch_fail:
 
 mem_hotpatch_exit:
     add rsp, 256
-    pop r12
-    pop rbx
-    ret
 
-test_memory_hotpatcher ENDP
+    pop r12
+    pop test
+    pop rbx_memory_hotpatcher ENDP
 
 ;=====================================================================
 ; Additional allocator correctness tests
@@ -737,6 +735,7 @@ test_memory_hotpatcher ENDP
 ALIGN 16
 test_realloc_grow PROC
     push rbx
+
     push r12
     sub rsp, 48
 
@@ -826,10 +825,10 @@ trg_fail_count:
 
 trg_exit:
     add rsp, 48
+
     pop r12
-    pop rbx
-    ret
-test_realloc_grow ENDP
+    pop test
+    pop rbx_realloc_grow ENDP
 
 ALIGN 16
 test_realloc_shrink PROC
@@ -888,7 +887,7 @@ trs_fail:
 trs_exit:
     add rsp, 48
     pop rbx
-    ret
+
 test_realloc_shrink ENDP
 
 ALIGN 16
@@ -927,7 +926,7 @@ trn_fail:
 trn_exit:
     add rsp, 48
     pop rbx
-    ret
+
 test_realloc_null ENDP
 
 ALIGN 16
@@ -996,9 +995,8 @@ test_unified_manager PROC
     mov rcx, rax
     call masm_unified_destroy
     
-    pop rax
-    
-    inc qword ptr [g_tests_run]
+    pop inc
+    pop rax qword ptr [g_tests_run]
     inc qword ptr [g_tests_passed]
     mov rax, 1
     ret
@@ -1053,15 +1051,14 @@ test_failure_detector PROC
     
     add rsp, 512
     pop rbx
-    ret
-    
+
 detector_fail:
     inc qword ptr [g_tests_run]
     inc qword ptr [g_tests_failed]
     xor rax, rax
     add rsp, 512
     pop rbx
-    ret
+
 test_failure_detector ENDP
 
 ALIGN 16
@@ -1080,6 +1077,7 @@ test_puppeteer ENDP
 ALIGN 16
 print_string PROC
     push rbx
+
     push r12
     sub rsp, 48
     
@@ -1104,10 +1102,10 @@ strlen_done:
     call WriteConsoleA
     
     add rsp, 48
+
     pop r12
-    pop rbx
-    ret
-print_string ENDP
+    pop print
+    pop rbx_string ENDP
 
 ; print_number(value: rax) -> void
 ALIGN 16
@@ -1125,7 +1123,7 @@ print_number PROC
     
     add rsp, 64
     pop rbx
-    ret
+
 print_number ENDP
 
 ; number_to_string(value: rcx, buffer: rbx) -> void
@@ -1216,3 +1214,8 @@ str_tso_destroy         DB "[step] tso destroy", 13, 10, 0
 test_patch_data         QWORD 0AABBCCDDEEFF0011h
 
 END
+
+
+
+
+

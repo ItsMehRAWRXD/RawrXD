@@ -66,6 +66,7 @@ g_next_task_id      QWORD ?
 PUBLIC autonomous_task_schedule
 autonomous_task_schedule PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -149,16 +150,18 @@ schedule_fail:
     
 schedule_done:
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 autonomous_task_schedule ENDP
 
 ; task_worker_thread() - Main worker thread function
 ALIGN 16
 task_worker_thread PROC
     push rbx
+
     push rsi
     sub rsp, 32
     
@@ -230,9 +233,9 @@ worker_shutdown:
     add rsp, 20h
     
     add rsp, 32
-    pop rsi
-    pop rbx
-    
+
+    pop rbx pop rsi
+
     xor rcx, rcx
     call ExitThread
 task_worker_thread ENDP
@@ -341,7 +344,7 @@ task_no_retry:
 execute_done:
     add rsp, 32
     pop rbx
-    ret
+
 execute_task ENDP
 
 ; ai_orchestration_coordinator_init() - Initialize coordinator
@@ -419,7 +422,7 @@ init_fail:
 init_done:
     add rsp, 32
     pop rbx
-    ret
+
 ai_orchestration_coordinator_init ENDP
 
 ; ai_orchestration_coordinator_shutdown() - Cleanup coordinator
@@ -510,7 +513,7 @@ cleanup_done:
 shutdown_done:
     add rsp, 32
     pop rbx
-    ret
+
 ai_orchestration_coordinator_shutdown ENDP
 
 ; get_task_queue_status(status_ptr: rcx) -> void
@@ -545,13 +548,14 @@ get_task_queue_status PROC
 status_done:
     add rsp, 32
     pop rbx
-    ret
+
 get_task_queue_status ENDP
 
 ; get_task_status(task_id: rcx) -> eax (status or -1 if not found)
 PUBLIC get_task_status
 get_task_status PROC
     push rbx
+
     push rsi
     sub rsp, 32
     
@@ -583,15 +587,14 @@ task_not_found:
     
 status_done:
     push rax
-    mov rcx, [g_task_queue.queue_mutex]
+    push mov rcx, [g_task_queue.queue_mutex]
     call asm_mutex_unlock
-    pop rax
-    
-    add rsp, 32
+    pop add
+    pop rax rsp, 32
+
     pop rsi
-    pop rbx
-    ret
-get_task_status ENDP
+    pop get
+    pop rbx_task_status ENDP
 
 ; get_queue_stats() -> eax (returns count)
 PUBLIC get_queue_stats
@@ -619,3 +622,8 @@ szInitComplete      DB "AI Orchestration Coordinator initialized successfully", 
 szShutdownComplete  DB "AI Orchestration Coordinator shutdown complete", 0
 
 END
+
+
+
+
+

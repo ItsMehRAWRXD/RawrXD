@@ -186,6 +186,7 @@ InitDualModelUI PROC
     ; rcx = parent window handle, rdx = chat pane handle
     
     push rbx
+
     push r12
     sub rsp, 48
     
@@ -268,10 +269,10 @@ InitDualModelUI PROC
     
     mov eax, 1         ; Success
     add rsp, 48
+
     pop r12
-    pop rbx
-    ret
-InitDualModelUI ENDP
+    pop InitDualModelUI
+    pop rbx ENDP
 
 ;==============================================================================
 ; CREATE DUAL MODEL PANEL - Main UI panel
@@ -303,7 +304,7 @@ CreateDualModelPanel PROC
     mov rax, [g_chat_output_buf]
     add rsp, 48
     pop rbx
-    ret
+
 CreateDualModelPanel ENDP
 
 ;==============================================================================
@@ -336,7 +337,7 @@ SetupModelChaining PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
+
 SetupModelChaining ENDP
 
 ;==============================================================================
@@ -365,7 +366,7 @@ OnChainModeChanged PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
+
 OnChainModeChanged ENDP
 
 ;==============================================================================
@@ -398,9 +399,8 @@ OnExecuteChainClicked PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
-    
-.execute_no_models:
+
+@@execute_no_models:
     ; Show error message
     mov ecx, 1
     lea rdx, szChainError
@@ -408,7 +408,7 @@ OnExecuteChainClicked PROC
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 OnExecuteChainClicked ENDP
 
 ;==============================================================================
@@ -421,6 +421,7 @@ ExecuteDualModelChain PROC
     ; Returns: rax = output size
     
     push rbx
+
     push r12
     sub rsp, 48
     
@@ -435,49 +436,43 @@ ExecuteDualModelChain PROC
     
     ; Dispatch to appropriate execution method
     cmp eax, CHAIN_MODE_SEQUENTIAL
-    je .dual_sequential
+    je @@dual_sequential
     cmp eax, CHAIN_MODE_PARALLEL
-    je .dual_parallel
+    je @@dual_parallel
     cmp eax, CHAIN_MODE_VOTING
-    je .dual_voting
+    je @@dual_voting
     cmp eax, CHAIN_MODE_CYCLE
-    je .dual_cycle
+    je @@dual_cycle
     cmp eax, CHAIN_MODE_FALLBACK
-    je .dual_fallback
+    je @@dual_fallback
     
-    jmp .dual_error
-    
-.dual_sequential:
+    jmp @@dual_error
+@@dual_sequential:
     mov rcx, r12
     mov rdx, rcx        ; Input
     call ExecuteSequentialDual
-    jmp .dual_complete
-    
-.dual_parallel:
+    jmp @@dual_complete
+@@dual_parallel:
     mov rcx, r12
     mov rdx, rcx
     call ExecuteParallelDual
-    jmp .dual_complete
-    
-.dual_voting:
+    jmp @@dual_complete
+@@dual_voting:
     mov rcx, r12
     mov rdx, rcx
     call ExecuteVotingDual
-    jmp .dual_complete
-    
-.dual_cycle:
+    jmp @@dual_complete
+@@dual_cycle:
     mov rcx, r12
     mov rdx, rcx
     call ExecuteCyclingDual
-    jmp .dual_complete
-    
-.dual_fallback:
+    jmp @@dual_complete
+@@dual_fallback:
     mov rcx, r12
     mov rdx, rcx
     call ExecuteFallbackDual
-    jmp .dual_complete
-    
-.dual_complete:
+    jmp @@dual_complete
+@@dual_complete:
     ; Calculate execution time
     call GetTickCount64
     sub rax, r8
@@ -490,18 +485,17 @@ ExecuteDualModelChain PROC
     ; Return output size
     mov eax, [r12 + DUAL_MODEL_CONTEXT.last_output_size]
     add rsp, 48
+
     pop r12
     pop rbx
-    ret
-    
-.dual_error:
+@@dual_error:
     inc g_dual_error_count
     xor eax, eax
     add rsp, 48
+
     pop r12
-    pop rbx
-    ret
-ExecuteDualModelChain ENDP
+    pop ExecuteDualModelChain
+    pop rbx ENDP
 
 ;==============================================================================
 ; EXECUTE TRIPLE MODEL CHAIN
@@ -530,14 +524,13 @@ ExecuteTripleModelChain PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
-    
-.triple_no_model:
+
+@@triple_no_model:
     ; Fall back to dual execution
     call ExecuteDualModelChain
     add rsp, 32
     pop rbx
-    ret
+
 ExecuteTripleModelChain ENDP
 
 ;==============================================================================
@@ -562,15 +555,13 @@ CycleModels PROC
     test edx, edx
     jz .skip_tertiary
     mov ecx, 3          ; 3 models
-    
-.skip_tertiary:
+@@skip_tertiary:
     ; Move to next model
     inc eax
     cmp eax, ecx
-    jl .cycle_valid
+    jl @@cycle_valid
     xor eax, eax        ; Wrap to 0
-    
-.cycle_valid:
+@@cycle_valid:
     mov [rbx + DUAL_MODEL_CONTEXT.current_cycle_idx], eax
     
     ; Get model name and log
@@ -579,7 +570,7 @@ CycleModels PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
+
 CycleModels ENDP
 
 ;==============================================================================
@@ -612,7 +603,7 @@ VoteModels PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
+
 VoteModels ENDP
 
 ;==============================================================================
@@ -651,12 +642,11 @@ FallbackModels PROC
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
-    
-.fallback_success:
+
+@@fallback_success:
     add rsp, 32
     pop rbx
-    ret
+
 FallbackModels ENDP
 
 ;==============================================================================
@@ -694,9 +684,9 @@ UpdateModelStatusDisplay PROC
     
     ; Update each model status in listbox
     mov edx, 0
-.status_loop:
+@@status_loop:
     cmp edx, 3
-    jge .status_done
+    jge @@status_done
     
     ; Get status for model[edx]
     call GetModelStatusByIndex
@@ -706,12 +696,11 @@ UpdateModelStatusDisplay PROC
     call AddStatusToListbox
     
     inc edx
-    jmp .status_loop
-    
-.status_done:
+    jmp @@status_loop
+@@status_done:
     add rsp, 32
     pop rbx
-    ret
+
 UpdateModelStatusDisplay ENDP
 
 ;==============================================================================
@@ -747,7 +736,7 @@ LoadModelSelections PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
+
 LoadModelSelections ENDP
 
 ;==============================================================================
@@ -781,7 +770,7 @@ SetModelWeights PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
+
 SetModelWeights ENDP
 
 ;==============================================================================
@@ -1026,3 +1015,8 @@ GetSliderPosition PROC
 GetSliderPosition ENDP
 
 END
+
+
+
+
+

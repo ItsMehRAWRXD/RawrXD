@@ -42,6 +42,7 @@ struct CommandBufferPool {
     VkCommandBuffer buffer = nullptr;
     VkFence fence = nullptr;
     bool is_available = true;
+    std::function<void(VkResult)> callback = nullptr;
 };
 
 class VulkanCompute {
@@ -81,6 +82,7 @@ public:
     bool AllocateBuffer(size_t size, VkBuffer& buffer, VkDeviceMemory& memory);
     bool CopyBufferToHost(uint32_t buffer_idx, void* host_data, size_t size);
     bool CopyBufferToHost(VkBuffer device_buffer, void* host_data, size_t size);
+    bool CopyBufferToHostAsync(VkBuffer device_buffer, void* host_data, size_t size, std::function<void(VkResult)> callback);
     bool CopyHostToBuffer(void* host_data, uint32_t buffer_idx, size_t size);
     bool CopyHostToBuffer(void* host_data, VkBuffer device_buffer, size_t size);
     
@@ -96,11 +98,23 @@ public:
     bool ExecuteCommandBuffer(VkCommandBuffer cmd_buffer);
     
     // High-performance async execution
-    VkCommandBuffer AcquireAsyncCommandBuffer();
+    VkCommandBuffer AcquireAsyncCommandBuffer(std::function<void(VkResult)> callback = nullptr);
     bool SubmitAsyncCommandBuffer(VkCommandBuffer cmd_buffer);
-    bool FlushAsyncCommands();  // Wait for all pending async operations
-    bool CheckAsyncCompletion(VkCommandBuffer cmd_buffer);  // Non-blocking check
-    
+    void InitializeCommandBufferPool(uint32_t pool_size);
+    void CleanupCommandBufferPool();
+    bool FlushAsyncCommands();
+    bool CheckAsyncCompletion(VkCommandBuffer cmd_buffer);
+
+    // Memory management
+    bool CreateMemoryPool(VkDeviceSize size, uint32_t memory_type_bits, VkMemoryPropertyFlags properties, uint32_t& pool_idx);
+    bool AllocateFromPool(uint32_t pool_idx, VkDeviceSize size, VkDeviceSize alignment, VkDeviceSize& offset);
+    void FreeToPool(uint32_t pool_idx, VkDeviceSize offset);
+    bool AllocateUnifiedBuffer(size_t size, VkBuffer& buffer, void*& mapped_ptr);
+
+    // Ray tracing extensions (optional)
+    bool InitializeRayTracing();
+    bool SetGPUPerformanceLevel(uint32_t level);
+
     // Descriptor set management
     bool CreateDescriptorSetLayout(uint32_t binding_count, VkDescriptorSetLayout& layout);
     bool AllocateDescriptorSet(VkDescriptorSetLayout layout, VkDescriptorSet& descriptor_set);
@@ -126,49 +140,59 @@ private:
     bool CreateLogicalDevice();
     bool CreateCommandPool();
     bool LoadSPIRVCode(const std::string& path, std::vector<uint32_t>& code);
-    uint32_t FindMemoryType(uint32_t type_filter, VkMemoryPropertyFlags properties);
+    uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+    bool CreateStagingBuffer(size_t size, VkBuffer& buffer, VkDeviceMemory& memory);
+    bool CopyHostToBufferOffset(const void* host_data, VkBuffer device_buffer, size_t offset, size_t size);
+    bool CopyBufferToHostOffset(VkBuffer device_buffer, size_t offset, void* host_data, size_t size);
 
     VkInstance instance_ = nullptr;
     VkPhysicalDevice physical_device_ = nullptr;
     VkDevice device_ = nullptr;
-    VkQueue compute_queue_ = nullptr;
     VkCommandPool command_pool_ = nullptr;
+    VkQueue compute_queue_ = nullptr;
     VkDescriptorPool descriptor_pool_ = nullptr;
+    VulkanDeviceInfo device_info_;
 
-    // Async command buffer pooling for high-performance batching
+    std::unordered_map<std::string, ComputeShader> shaders_;
+    std::vector<VulkanTensor> uploaded_tensors_;
+    
+    // Async command buffer pool
     std::vector<CommandBufferPool> command_buffer_pool_;
     std::queue<size_t> available_buffer_indices_;
-
-    // Permanent descriptor system for MatMul (avoid per-dispatch allocation overhead)
+    
+    // Permanent descriptor system for MatMul
     VkDescriptorSetLayout matmul_descriptor_set_layout_ = nullptr;
     VkDescriptorPool matmul_descriptor_pool_ = nullptr;
 
-    // KV Cache for autoregressive inference
-    std::vector<std::pair<VkBuffer, VkDeviceMemory>> kv_cache_buffers_; // 2 per layer (K, V)
-    uint32_t kv_cache_num_layers_ = 0;
-    uint32_t kv_cache_max_seq_len_ = 0;
-    uint32_t kv_cache_head_dim_ = 0;
-    bool kv_cache_allocated_ = false;
-    
-    // Persistent staging buffer for optimized host-to-device transfers
+    // KV Cache
+    bool kv_cache_allocated_{false};
+    uint32_t kv_cache_num_layers_{0};
+    uint32_t kv_cache_max_seq_len_{0};
+    uint32_t kv_cache_head_dim_{0};
+    std::vector<std::pair<VkBuffer, VkDeviceMemory>> kv_cache_buffers_;
+
+    // Memory pools
+    struct MemoryBlock {
+        VkDeviceSize offset;
+        VkDeviceSize size;
+        bool allocated;
+    };
+    struct MemoryPool {
+        VkDeviceMemory memory;
+        void* mapped_ptr;
+        VkDeviceSize size;
+        uint32_t memory_type_index;
+        std::vector<MemoryBlock> blocks;
+    };
+    std::vector<MemoryPool> memory_pools_;
+    std::vector<std::pair<VkBuffer, VkDeviceMemory>> allocated_buffers_;
+
+    // Ray tracing
+    bool ray_tracing_supported_{false};
+    VkPhysicalDeviceRayTracingPipelinePropertiesKHR rt_pipeline_properties_{};
+
+    // Persistent staging buffer
     VkBuffer staging_buffer_ = nullptr;
     VkDeviceMemory staging_memory_ = nullptr;
     size_t staging_buffer_size_ = 0;
-
-    VulkanDeviceInfo device_info_;
-    std::unordered_map<std::string, ComputeShader> shaders_;
-    std::vector<VulkanTensor> uploaded_tensors_;
-    std::vector<std::pair<VkBuffer, VkDeviceMemory>> allocated_buffers_;
-    std::unordered_map<std::string, VkDescriptorSetLayout> descriptor_layouts_;
-    
-    // Helper methods for command buffer pool management
-    void InitializeCommandBufferPool(uint32_t pool_size = 4);
-    void CleanupCommandBufferPool();
-    
-    // Helper for offset-based buffer copies (KV cache updates)
-    bool CopyHostToBufferOffset(const void* host_data, VkBuffer device_buffer, size_t offset, size_t size);
-    bool CopyBufferToHostOffset(VkBuffer device_buffer, size_t offset, void* host_data, size_t size);
-    
-    // Helper for creating staging buffers (reduces code duplication)
-    bool CreateStagingBuffer(size_t size, VkBuffer& buffer, VkDeviceMemory& memory);
 };

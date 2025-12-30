@@ -69,10 +69,13 @@ ForceLoadModel PROC
     LOCAL pView:QWORD
     
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
+
     push r14
     push r15
     sub rsp, 512
@@ -169,14 +172,17 @@ force_load_fail:
     
 force_load_done:
     add rsp, 512
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 ForceLoadModel ENDP
 
 END
@@ -261,14 +267,17 @@ force_load_fail:
     
 force_load_done:
     add rsp, 512
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 ForceLoadModel ENDP
 
 ;==============================================================================
@@ -316,7 +325,7 @@ skip_file:
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
+
 ForceUnloadModel ENDP
 
 ;==============================================================================
@@ -331,3 +340,8 @@ GetForceLoadedModel PROC
 GetForceLoadedModel ENDP
 
 END
+
+
+
+
+

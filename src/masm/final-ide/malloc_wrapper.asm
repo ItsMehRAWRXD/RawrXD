@@ -24,7 +24,7 @@ malloc PROC
     
     add rsp, 32
     pop rdx
-    ret
+
 malloc ENDP
 
 ; Standard free(ptr: rcx)
@@ -47,7 +47,12 @@ realloc PROC
     
     add rsp, 32
     pop r8
-    ret
+
 realloc ENDP
 
 END
+
+
+
+
+

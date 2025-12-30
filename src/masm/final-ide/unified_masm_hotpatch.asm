@@ -77,8 +77,9 @@ PatchMetaData ENDS
 ALIGN 16
 strcpy_helper PROC
     push rdi
+
     push rsi
-strcpy_loop:
+    push strcpy_loop:
     mov al, BYTE PTR [rsi]
     mov BYTE PTR [rdi], al
     test al, al
@@ -87,10 +88,10 @@ strcpy_loop:
     inc rsi
     jmp strcpy_loop
 strcpy_done:
+
     pop rsi
-    pop rdi
-    ret
-strcpy_helper ENDP
+    pop strcpy
+    pop rdi_helper ENDP
 
 ;==========================================================================
 ; MEMORY LAYER: Apply patch at runtime memory address
@@ -109,10 +110,13 @@ PUBLIC hpatch_apply_memory
 ALIGN 16
 hpatch_apply_memory PROC
     push rbx
+
     push rdi
     push rsi
+
     push r12
     push r13
+
     push r14
     push r15
     sub rsp, 48
@@ -166,15 +170,17 @@ hpatch_apply_memory PROC
     mov DWORD PTR [rax + PatchResult.error_code], 0
     
     add rsp, 48
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop rsi
-    pop rdi
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
+
+    pop rdi pop rsi
+
     pop rbx
-    ret
-    
+
 mem_patch_bad_magic:
     lea rsi, msg_bad_magic
     lea rdi, last_error
@@ -185,15 +191,17 @@ mem_patch_bad_magic:
     mov QWORD PTR [rax + PatchResult.detail], rcx
     mov DWORD PTR [rax + PatchResult.error_code], -1
     add rsp, 48
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop rsi
-    pop rdi
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
+
+    pop rdi pop rsi
+
     pop rbx
-    ret
-    
+
 mem_patch_protect_fail:
     lea rsi, msg_mem_protect_fail
     lea rdi, last_error
@@ -204,14 +212,17 @@ mem_patch_protect_fail:
     mov QWORD PTR [rax + PatchResult.detail], rcx
     mov DWORD PTR [rax + PatchResult.error_code], -2
     add rsp, 48
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop rsi
-    pop rdi
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
+
+    pop rdi pop rsi
+
     pop rbx
-    ret
+
 hpatch_apply_memory ENDP
 
 ;==========================================================================
@@ -232,10 +243,13 @@ PUBLIC hpatch_apply_byte
 ALIGN 16
 hpatch_apply_byte PROC
     push rbx
+
     push rdi
     push rsi
+
     push r12
     push r13
+
     push r14
     push r15
     sub rsp, 48
@@ -275,15 +289,17 @@ hpatch_apply_byte PROC
     mov DWORD PTR [rax + PatchResult.error_code], 0
     
     add rsp, 48
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop rsi
-    pop rdi
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
+
+    pop rdi pop rsi
+
     pop rbx
-    ret
-    
+
 byte_patch_bad_magic:
     lea rsi, msg_bad_magic
     lea rdi, last_error
@@ -294,14 +310,17 @@ byte_patch_bad_magic:
     mov QWORD PTR [rax + PatchResult.detail], rcx
     mov DWORD PTR [rax + PatchResult.error_code], -1
     add rsp, 48
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop rsi
-    pop rdi
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
+
+    pop rdi pop rsi
+
     pop rbx
-    ret
+
 hpatch_apply_byte ENDP
 
 ;==========================================================================
@@ -319,10 +338,13 @@ PUBLIC hpatch_apply_server
 ALIGN 16
 hpatch_apply_server PROC
     push rbx
+
     push rdi
     push rsi
+
     push r12
     push r13
+
     push r14
     push r15
     sub rsp, 48
@@ -359,15 +381,17 @@ hpatch_apply_server PROC
     mov DWORD PTR [rax + PatchResult.error_code], 0
     
     add rsp, 48
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop rsi
-    pop rdi
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
+
+    pop rdi pop rsi
+
     pop rbx
-    ret
-    
+
 server_patch_bad_magic:
     lea rsi, msg_bad_magic
     lea rdi, last_error
@@ -378,14 +402,17 @@ server_patch_bad_magic:
     mov QWORD PTR [rax + PatchResult.detail], rcx
     mov DWORD PTR [rax + PatchResult.error_code], -1
     add rsp, 48
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop rsi
-    pop rdi
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
+
+    pop rdi pop rsi
+
     pop rbx
-    ret
+
 hpatch_apply_server ENDP
 
 ;==========================================================================
@@ -423,6 +450,7 @@ PUBLIC masm_hotpatch_apply_memory
 ALIGN 16
 masm_hotpatch_apply_memory PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -461,10 +489,11 @@ apply_fail:
     
 apply_done:
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 masm_hotpatch_apply_memory ENDP
 
 ;==========================================================================
@@ -563,3 +592,8 @@ masm_unified_destroy PROC
 masm_unified_destroy ENDP
 
 END
+
+
+
+
+

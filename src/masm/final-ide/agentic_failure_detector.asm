@@ -105,8 +105,10 @@ ALIGN 16
 masm_detect_failure PROC
 
     push rbx
+
     push r12
     push r13
+
     push r14
     sub rsp, 32
     
@@ -317,13 +319,13 @@ detect_format_found:
 
 detect_exit:
     add rsp, 32
-    pop r14
-    pop r13
-    pop r12
-    pop rbx
-    ret
 
-masm_detect_failure ENDP
+    pop r13 pop r14
+
+
+    pop r12
+    pop masm
+    pop rbx_detect_failure ENDP
 
 ;=====================================================================
 ; detect_pattern_in_response(pattern_ptr: rcx) -> rax (1=found, 0=not found)
@@ -335,6 +337,7 @@ ALIGN 16
 detect_pattern_in_response PROC
 
     push rsi
+
     push rdi
     push r15
     sub rsp, 32
@@ -409,10 +412,10 @@ pattern_not_found:
 
 pattern_search_exit:
     add rsp, 32
-    pop r15
-    pop rdi
+
+    pop rdi pop r15
+
     pop rsi
-    ret
 
 detect_pattern_in_response ENDP
 
@@ -469,7 +472,6 @@ timeout_ok:
 timeout_exit:
     add rsp, 32
     pop rbx
-    ret
 
 masm_detect_timeout ENDP
 
@@ -525,7 +527,6 @@ resource_detected:
 resource_exit:
     add rsp, 32
     pop rbx
-    ret
 
 masm_detect_resource_exhaustion ENDP
 
@@ -588,4 +589,9 @@ str_timeout_desc        DB "Request timeout exceeded", 0
 str_resource_desc       DB "Resource exhaustion", 0
 
 END
+
+
+
+
+
 

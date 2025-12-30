@@ -81,6 +81,7 @@ ALIGN 16
 masm_byte_patch_open_file PROC
 
     push rbx
+
     push r12
     sub rsp, 48
     
@@ -123,11 +124,10 @@ open_fail:
 
 open_exit:
     add rsp, 48
-    pop r12
-    pop rbx
-    ret
 
-masm_byte_patch_open_file ENDP
+    pop r12
+    pop masm
+    pop rbx_byte_patch_open_file ENDP
 
 ;=====================================================================
 ; REFACTORED: masm_byte_patch_find_pattern(patch_ptr: rcx) -> rax
@@ -148,8 +148,10 @@ ALIGN 16
 masm_byte_patch_find_pattern PROC
 
     push rbx
+
     push r12
     push r13
+
     push r14
     push r15
     sub rsp, 4896           ; Stack buffer for file reading
@@ -214,12 +216,13 @@ find_fail:
 
 find_exit:
     add rsp, 4896
-    pop r15
-    pop r14
-    pop r13
-    pop r12
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
     pop rbx
-    ret
 
 masm_byte_patch_find_pattern ENDP
 
@@ -246,8 +249,10 @@ ALIGN 16
 masm_byte_patch_apply PROC
 
     push rbx
+
     push r12
     push r13
+
     push r14
     sub rsp, 96
     
@@ -327,13 +332,13 @@ apply_fail:
 
 apply_exit:
     add rsp, 96
-    pop r14
-    pop r13
-    pop r12
-    pop rbx
-    ret
 
-masm_byte_patch_apply ENDP
+    pop r13 pop r14
+
+
+    pop r12
+    pop masm
+    pop rbx_byte_patch_apply ENDP
 
 ;=====================================================================
 ; UNCHANGED: masm_byte_patch_close(patch_ptr: rcx) -> rax
@@ -357,7 +362,6 @@ masm_byte_patch_close PROC
     
     add rsp, 32
     pop rbx
-    ret
 
 masm_byte_patch_close ENDP
 
@@ -446,3 +450,8 @@ END
 ;   6. Benchmark: measure latency improvement (if any)
 ;
 ;=====================================================================
+
+
+
+
+

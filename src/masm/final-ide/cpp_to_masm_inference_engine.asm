@@ -120,8 +120,7 @@ INFERENCE_ENGINE ENDS
 PUBLIC inference_engine_create
 inference_engine_create PROC
     push rbx
-    
-    mov r8, rcx                     ; r8 = maxModels
+    push mov r8, rcx                     ; r8 = maxModels
     
     ; Allocate engine
     mov rcx, SIZEOF INFERENCE_ENGINE
@@ -161,7 +160,7 @@ inference_engine_create PROC
     
     mov rax, rbx
     pop rbx
-    ret
+
 inference_engine_create ENDP
 
 ; ============================================================================
@@ -172,16 +171,16 @@ inference_engine_create ENDP
 PUBLIC inference_load_model
 inference_load_model PROC
     push rbx
+
     push rsi
-    
-    mov rbx, rcx                    ; rbx = engine
+    push mov rbx, rcx                    ; rbx = engine
     mov rsi, rdx                    ; rsi = modelPath
     mov r12, r8                     ; r12 = modelName
     
     ; Check capacity
     mov r9d, [rbx + INFERENCE_ENGINE.modelCount]
     cmp r9d, [rbx + INFERENCE_ENGINE.maxModels]
-    jge .load_error
+    jge @@load_error
     
     ; Log
     lea rcx, [szModelLoading]
@@ -223,19 +222,18 @@ inference_load_model PROC
     call console_log
     
     mov eax, r9d                    ; Return model ID
+
     pop rsi
     pop rbx
-    ret
-    
-.load_error:
+@@load_error:
     lea rcx, [szModelFailed]
     mov rdx, rsi
     call console_log
     mov eax, 0xFFFFFFFF
+
     pop rsi
-    pop rbx
-    ret
-inference_load_model ENDP
+    pop inference
+    pop rbx_load_model ENDP
 
 ; ============================================================================
 
@@ -248,10 +246,9 @@ inference_set_active_model PROC
     mov r8, [rcx + INFERENCE_ENGINE.models]
     mov r9d, [rcx + INFERENCE_ENGINE.modelCount]
     xor r10d, r10d
-    
-.find_model:
+@@find_model:
     cmp r10d, r9d
-    jge .model_not_found
+    jge @@model_not_found
     
     mov r11, r8
     mov r12, r10
@@ -259,17 +256,15 @@ inference_set_active_model PROC
     add r11, r12
     
     cmp [r11 + MODEL_INFO.modelId], edx
-    je .model_found
+    je @@model_found
     
     inc r10d
-    jmp .find_model
-    
-.model_found:
+    jmp @@find_model
+@@model_found:
     mov [rcx + INFERENCE_ENGINE.activeModelId], edx
     mov rax, 1
     ret
-    
-.model_not_found:
+@@model_not_found:
     xor rax, rax
     ret
 inference_set_active_model ENDP
@@ -282,8 +277,7 @@ inference_set_active_model ENDP
 PUBLIC inference_start_generation
 inference_start_generation PROC
     push rbx
-    
-    mov rbx, rcx                    ; rbx = engine
+    push mov rbx, rcx                    ; rbx = engine
     
     ; Log
     lea rcx, [szGenerationStarted]
@@ -313,7 +307,7 @@ inference_start_generation PROC
     
     mov rax, 1                      ; Return generation ID
     pop rbx
-    ret
+
 inference_start_generation ENDP
 
 ; ============================================================================
@@ -324,13 +318,12 @@ inference_start_generation ENDP
 PUBLIC inference_generate_token
 inference_generate_token PROC
     push rbx
-    
-    mov rbx, rcx                    ; rbx = engine
+    push mov rbx, rcx                    ; rbx = engine
     mov r10, [rbx + INFERENCE_ENGINE.generationState]
     
     ; Check if generation is done
     cmp byte [r10 + GENERATION_STATE.done], 1
-    je .generation_done
+    je @@generation_done
     
     ; Simulate token generation
     ; In real implementation, would run transformer forward pass
@@ -351,12 +344,11 @@ inference_generate_token PROC
     
     ; Check if max reached
     cmp [r10 + GENERATION_STATE.generatedCount], r9d
-    jge .mark_done
+    jge @@mark_done
     
     pop rbx
-    ret
-    
-.mark_done:
+
+@@mark_done:
     mov byte [r10 + GENERATION_STATE.done], 1
     
     ; Log completion
@@ -364,11 +356,10 @@ inference_generate_token PROC
     mov rdx, [r10 + GENERATION_STATE.generatedCount]
     movsd xmm0, [fTempDefault]
     call console_log
-    
-.generation_done:
+@@generation_done:
     mov eax, 0xFFFFFFFF
     pop rbx
-    ret
+
 inference_generate_token ENDP
 
 ; ============================================================================
@@ -379,8 +370,7 @@ inference_generate_token ENDP
 PUBLIC inference_finish_generation
 inference_finish_generation PROC
     push rbx
-    
-    mov rbx, rcx                    ; rbx = engine
+    push mov rbx, rcx                    ; rbx = engine
     mov r10, [rbx + INFERENCE_ENGINE.generationState]
     
     ; Get generated tokens
@@ -389,24 +379,22 @@ inference_finish_generation PROC
     
     ; Copy to output (simplified)
     xor r13, r13
-    
-.copy_loop:
+@@copy_loop:
     cmp r13d, r12d
-    jge .copy_done
+    jge @@copy_done
     
     ; Get token (simplified: just copy token ID as ASCII)
     mov eax, [r11 + r13 * 4]
     mov [rdx + r13], al
     
     inc r13d
-    jmp .copy_loop
-    
-.copy_done:
+    jmp @@copy_loop
+@@copy_done:
     mov byte [rdx + r13], 0         ; Null terminate
     
     mov rax, r13
     pop rbx
-    ret
+
 inference_finish_generation ENDP
 
 ; ============================================================================
@@ -442,10 +430,9 @@ inference_get_model_info PROC
     mov r8, [rcx + INFERENCE_ENGINE.models]
     mov r9d, [rcx + INFERENCE_ENGINE.modelCount]
     xor r10d, r10d
-    
-.find_info:
+@@find_info:
     cmp r10d, r9d
-    jge .info_not_found
+    jge @@info_not_found
     
     mov r11, r8
     mov r12, r10
@@ -453,16 +440,14 @@ inference_get_model_info PROC
     add r11, r12
     
     cmp [r11 + MODEL_INFO.modelId], edx
-    je .info_found
+    je @@info_found
     
     inc r10d
-    jmp .find_info
-    
-.info_found:
+    jmp @@find_info
+@@info_found:
     mov rax, r11
     ret
-    
-.info_not_found:
+@@info_not_found:
     xor rax, rax
     ret
 inference_get_model_info ENDP
@@ -506,36 +491,32 @@ inference_get_statistics ENDP
 PUBLIC inference_destroy
 inference_destroy PROC
     push rbx
-    
-    mov rbx, rcx
+    push mov rbx, rcx
     
     ; Free models
     mov r10, [rbx + INFERENCE_ENGINE.models]
     cmp r10, 0
-    je .skip_models
+    je @@skip_models
     call free
-    
-.skip_models:
+@@skip_models:
     ; Free inference buffer
     mov rcx, [rbx + INFERENCE_ENGINE.inferenceBuffer]
     cmp rcx, 0
-    je .skip_buffer
+    je @@skip_buffer
     call free
-    
-.skip_buffer:
+@@skip_buffer:
     ; Free generation state
     mov rcx, [rbx + INFERENCE_ENGINE.generationState]
     cmp rcx, 0
-    je .skip_genstate
+    je @@skip_genstate
     call free
-    
-.skip_genstate:
+@@skip_genstate:
     ; Free engine
     mov rcx, rbx
     call free
     
     pop rbx
-    ret
+
 inference_destroy ENDP
 
 ; ============================================================================
@@ -545,3 +526,8 @@ inference_destroy ENDP
     GetTickCount64 LABEL QWORD
 
 END
+
+
+
+
+

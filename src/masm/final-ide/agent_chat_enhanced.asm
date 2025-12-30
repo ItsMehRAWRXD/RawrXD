@@ -282,7 +282,7 @@ agent_chat_enhanced_init PROC
     mov eax, 1
     add rsp, 48
     pop rbx
-    ret
+
 agent_chat_enhanced_init ENDP
 
 ;==========================================================================
@@ -331,7 +331,7 @@ invalid_mode:
 mode_exit:
     add rsp, 48
     pop rbx
-    ret
+
 agent_set_mode_advanced ENDP
 
 ;==========================================================================
@@ -342,8 +342,10 @@ agent_set_mode_advanced ENDP
 PUBLIC agent_send_message_with_reasoning
 agent_send_message_with_reasoning PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
     sub rsp, 96
@@ -424,12 +426,14 @@ hallucination_ok:
     
     mov eax, r13d
     add rsp, 96
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 agent_send_message_with_reasoning ENDP
 
 ;==========================================================================
@@ -452,7 +456,7 @@ agent_cot_extract_what PROC
     
     add rsp, 48
     pop rbx
-    ret
+
 agent_cot_extract_what ENDP
 
 ;==========================================================================
@@ -506,7 +510,7 @@ why_default:
 why_done:
     add rsp, 48
     pop rbx
-    ret
+
 agent_cot_determine_why ENDP
 
 ;==========================================================================
@@ -568,7 +572,7 @@ plan_analyze_code:
 plan_done:
     add rsp, 48
     pop rbx
-    ret
+
 agent_cot_plan_how ENDP
 
 ;==========================================================================
@@ -623,7 +627,7 @@ fix_code_improve:
 fix_done:
     add rsp, 48
     pop rbx
-    ret
+
 agent_cot_generate_fix ENDP
 
 ;==========================================================================
@@ -634,6 +638,7 @@ agent_cot_generate_fix ENDP
 PRIVATE_agent_validate_reasoning_trace:
 agent_validate_reasoning_trace PROC
     push rbx
+
     push rsi
     sub rsp, 64
     
@@ -707,10 +712,10 @@ halluc_cap_ok:
     mov HallucinationScore, eax
     
     add rsp, 64
+
     pop rsi
-    pop rbx
-    ret
-agent_validate_reasoning_trace ENDP
+    pop agent
+    pop rbx_validate_reasoning_trace ENDP
 
 ;==========================================================================
 ; PRIVATE: agent_auto_correct_response(buffer: rcx, cot: rdx) -> void
@@ -775,7 +780,7 @@ not_logic_issue:
 correction_done:
     add rsp, 48
     pop rbx
-    ret
+
 agent_auto_correct_response ENDP
 
 ;==========================================================================
@@ -804,7 +809,7 @@ agent_compute_confidence_score PROC
 conf_valid:
     add rsp, 48
     pop rbx
-    ret
+
 agent_compute_confidence_score ENDP
 
 ;==========================================================================
@@ -815,6 +820,7 @@ agent_compute_confidence_score ENDP
 PRIVATE_agent_format_response_with_metadata:
 agent_format_response_with_metadata PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -883,10 +889,11 @@ skip_trace:
     
     mov eax, edi        ; Return final offset
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 agent_format_response_with_metadata ENDP
 
 ;==========================================================================
@@ -935,7 +942,7 @@ conf_uncertain_lbl:
 conf_add_done:
     add rsp, 48
     pop rbx
-    ret
+
 agent_add_confidence_indicator ENDP
 
 ;==========================================================================
@@ -945,6 +952,7 @@ agent_add_confidence_indicator ENDP
 PRIVATE_agent_append_trace_steps:
 agent_append_trace_steps PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -996,10 +1004,11 @@ agent_append_trace_steps PROC
     
     mov eax, r13d
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 agent_append_trace_steps ENDP
 
 ;==========================================================================
@@ -1030,7 +1039,7 @@ agent_chat_add_enhanced_message PROC
     mov eax, 1
     add rsp, 64
     pop rbx
-    ret
+
 agent_chat_add_enhanced_message ENDP
 
 ;==========================================================================
@@ -1149,3 +1158,8 @@ agent_chat_log_reasoning ENDP
     szGenericFix            BYTE "Follow the recommendations above to resolve the issue",0
 
 END
+
+
+
+
+

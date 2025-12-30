@@ -7,6 +7,8 @@
 
 option casemap:none
 
+PAGE_EXECUTE_READWRITE EQU 40h
+
 include windows.inc
 includelib kernel32.lib
 
@@ -15,13 +17,14 @@ EXTERN asm_malloc:PROC
 EXTERN asm_free:PROC
 EXTERN VirtualProtect:PROC
 EXTERN VirtualQuery:PROC
+EXTERN GetTickCount:PROC
 
-PUBLIC hotpatch_system_init:PROC
-PUBLIC hotpatch_apply_memory:PROC
-PUBLIC hotpatch_apply_binary:PROC
-PUBLIC hotpatch_apply_server:PROC
-PUBLIC hotpatch_rollback:PROC
-PUBLIC hotpatch_verify:PROC
+PUBLIC hotpatch_system_init
+PUBLIC hotpatch_apply_memory
+PUBLIC hotpatch_apply_binary
+PUBLIC hotpatch_apply_server
+PUBLIC hotpatch_rollback
+PUBLIC hotpatch_verify
 
 ;==========================================================================
 ; HOTPATCH structure
@@ -68,22 +71,20 @@ szRollbackComplete  BYTE "[HOTPATCH] Rollback completed, %d patches reverted", 1
 ;==========================================================================
 ; hotpatch_system_init() -> EAX (1=success)
 ;==========================================================================
-PUBLIC hotpatch_system_init
 ALIGN 16
 hotpatch_system_init PROC
-
     push rbx
     sub rsp, 32
 
     ; Allocate patch array
-    mov rcx, [g_hotpatch_mgr.max_patches]
+    mov ecx, [g_hotpatch_mgr.max_patches]
     mov rdx, SIZEOF HOTPATCH
     imul rcx, rdx
     call asm_malloc
     mov [g_hotpatch_mgr.patches], rax
 
     ; Allocate rollback stack
-    mov rcx, [g_hotpatch_mgr.max_patches]
+    mov ecx, [g_hotpatch_mgr.max_patches]
     mov rdx, 32         ; 32 bytes per rollback entry
     imul rcx, rdx
     call asm_malloc
@@ -98,20 +99,18 @@ hotpatch_system_init PROC
     add rsp, 32
     pop rbx
     ret
-
 hotpatch_system_init ENDP
 
 ;==========================================================================
 ; hotpatch_apply_memory(address: RCX, data: RDX, size: R8) -> EAX (patch_id)
 ;==========================================================================
-PUBLIC hotpatch_apply_memory
 ALIGN 16
 hotpatch_apply_memory PROC
-
     push rbx
     push rsi
     push rdi
-    sub rsp, 32
+    push r12
+    sub rsp, 48
 
     ; RCX = target address, RDX = patch data, R8 = size
     mov rsi, rcx        ; address
@@ -119,7 +118,8 @@ hotpatch_apply_memory PROC
     mov r10, r8         ; size
 
     ; Check capacity
-    cmp [g_hotpatch_mgr.patch_count], [g_hotpatch_mgr.max_patches]
+    mov eax, [g_hotpatch_mgr.patch_count]
+    cmp eax, [g_hotpatch_mgr.max_patches]
     jge mem_patch_fail
 
     ; Allocate backup buffer
@@ -141,7 +141,7 @@ backup_done:
     ; Change page protection to RWX
     mov rcx, rsi
     mov rdx, r10
-    lea r8, [rsp + 0]   ; Old protect (stack)
+    lea r8, [rsp + 40]   ; Old protect (stack)
     mov r9d, PAGE_EXECUTE_READWRITE
     call VirtualProtect
 
@@ -159,13 +159,13 @@ write_done:
     ; Restore page protection
     mov rcx, rsi
     mov rdx, r10
-    mov r8, [rsp + 0]   ; Restore old protect
+    mov r8d, [rsp + 40]   ; Restore old protect
     xor r9d, r9d        ; Ignored
     call VirtualProtect
 
     ; Add to patch list
     mov rax, [g_hotpatch_mgr.patches]
-    mov r11, [g_hotpatch_mgr.patch_count]
+    mov r11d, [g_hotpatch_mgr.patch_count]
     mov r12, r11
     imul r12, SIZEOF HOTPATCH
     add r12, rax
@@ -194,7 +194,8 @@ write_done:
 
     mov eax, [g_hotpatch_mgr.next_patch_id]
     dec eax             ; Return current ID
-    add rsp, 32
+    add rsp, 48
+    pop r12
     pop rdi
     pop rsi
     pop rbx
@@ -202,68 +203,64 @@ write_done:
 
 mem_patch_fail:
     xor eax, eax
-    add rsp, 32
+    add rsp, 48
+    pop r12
     pop rdi
     pop rsi
     pop rbx
     ret
-
 hotpatch_apply_memory ENDP
 
 ;==========================================================================
 ; hotpatch_apply_binary(file_offset: RCX, data: RDX, size: R8) -> EAX (patch_id)
 ;==========================================================================
-PUBLIC hotpatch_apply_binary
 ALIGN 16
 hotpatch_apply_binary PROC
-
+    sub rsp, 32
     ; RCX = file offset, RDX = patch data, R8 = size
     ; Simplified - would write to file at offset
     
     ; Add patch record
     mov eax, [g_hotpatch_mgr.next_patch_id]
-    inc [g_hotpatch_mgr.next_patch_id]
-    inc [g_hotpatch_mgr.patch_count]
+    inc DWORD PTR [g_hotpatch_mgr.next_patch_id]
+    inc DWORD PTR [g_hotpatch_mgr.patch_count]
 
     ; Log patch
     lea rcx, szBinaryPatch
-    mov rdx, [rsp + 8]  ; file offset from caller
+    mov rdx, rcx        ; file offset
     mov r8, r8          ; size
     call console_log
 
+    add rsp, 32
     ret
-
 hotpatch_apply_binary ENDP
 
 ;==========================================================================
 ; hotpatch_apply_server(transform_func: RCX, hook_point: EDX) -> EAX (patch_id)
 ;==========================================================================
-PUBLIC hotpatch_apply_server
 ALIGN 16
 hotpatch_apply_server PROC
-
+    sub rsp, 32
     ; RCX = transform function, EDX = hook point
     ; Simplified - would register server-side transform
     
     mov eax, [g_hotpatch_mgr.next_patch_id]
-    inc [g_hotpatch_mgr.next_patch_id]
+    inc DWORD PTR [g_hotpatch_mgr.next_patch_id]
 
     ; Log patch
     lea rcx, szServerPatch
     mov edx, edx        ; hook_point
     call console_log
 
+    add rsp, 32
     ret
-
 hotpatch_apply_server ENDP
 
 ;==========================================================================
 ; hotpatch_rollback() -> EAX (1=success, 0=fail)
 ;==========================================================================
-PUBLIC hotpatch_rollback
 ALIGN 16
 hotpatch_rollback PROC
-
     push rbx
     push rsi
     sub rsp, 32
@@ -271,12 +268,12 @@ hotpatch_rollback PROC
     xor r8d, r8d        ; Rollback count
 
 rollback_loop:
-    cmp [g_hotpatch_mgr.patch_count], 0
+    cmp DWORD PTR [g_hotpatch_mgr.patch_count], 0
     jle rollback_done
 
     ; Get last patch
     mov rax, [g_hotpatch_mgr.patches]
-    mov rbx, [g_hotpatch_mgr.patch_count]
+    mov ebx, [g_hotpatch_mgr.patch_count]
     dec rbx
     mov rsi, rbx
     imul rsi, SIZEOF HOTPATCH
@@ -312,7 +309,7 @@ restore_done:
     inc r8d             ; Increment rollback count
 
 skip_rollback:
-    dec [g_hotpatch_mgr.patch_count]
+    dec DWORD PTR [g_hotpatch_mgr.patch_count]
     jmp rollback_loop
 
 rollback_done:
@@ -326,21 +323,22 @@ rollback_done:
     pop rsi
     pop rbx
     ret
-
 hotpatch_rollback ENDP
 
 ;==========================================================================
 ; hotpatch_verify(patch_id: ECX) -> EAX (bytes verified, or 0=fail)
 ;==========================================================================
-PUBLIC hotpatch_verify
 ALIGN 16
 hotpatch_verify PROC
+    push rbx
+    push rsi
+    sub rsp, 32
 
     ; ECX = patch_id
     
     xor rsi, rsi
 find_verify_loop:
-    cmp rsi, [g_hotpatch_mgr.patch_count]
+    cmp esi, [g_hotpatch_mgr.patch_count]
     jge verify_not_found
 
     mov rax, [g_hotpatch_mgr.patches]
@@ -381,16 +379,24 @@ verify_complete:
     mov rdx, r8
     call console_log
 
+    add rsp, 32
+    pop rsi
+    pop rbx
     ret
 
 verify_mismatch:
     xor rax, rax        ; Verification failed
+    add rsp, 32
+    pop rsi
+    pop rbx
     ret
 
 verify_not_found:
     xor rax, rax
+    add rsp, 32
+    pop rsi
+    pop rbx
     ret
-
 hotpatch_verify ENDP
 
 END

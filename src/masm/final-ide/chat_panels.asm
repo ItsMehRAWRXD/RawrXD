@@ -185,7 +185,7 @@ EXTERN console_log:PROC
 PUBLIC chat_panel_create
 chat_panel_create PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 60h
     
     ; Save parameters
@@ -237,7 +237,7 @@ chat_panel_create_cleanup_done:
 chat_panel_create_exit:
     add rsp, 60h
     pop rbp
-    ret
+
 chat_panel_create ENDP
 
 ;------------------------------------------------------------------------------
@@ -248,7 +248,7 @@ chat_panel_create ENDP
 PUBLIC chat_panel_destroy
 chat_panel_destroy PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     ; Remove from registry
@@ -260,7 +260,7 @@ chat_panel_destroy PROC
     mov rax, 1
     add rsp, 20h
     pop rbp
-    ret
+
 chat_panel_destroy ENDP
 
 ;------------------------------------------------------------------------------
@@ -271,7 +271,7 @@ chat_panel_destroy ENDP
 PUBLIC chat_panel_add_message
 chat_panel_add_message PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 40h
     
     ; Save parameters
@@ -345,7 +345,7 @@ chat_panel_add_cleanup_done:
 chat_panel_add_exit:
     add rsp, 40h
     pop rbp
-    ret
+
 chat_panel_add_message ENDP
 
 ;------------------------------------------------------------------------------
@@ -356,7 +356,7 @@ chat_panel_add_message ENDP
 PUBLIC chat_panel_clear
 chat_panel_clear PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     ; Clear message array
@@ -380,7 +380,7 @@ chat_panel_clear_error:
 chat_panel_clear_exit:
     add rsp, 20h
     pop rbp
-    ret
+
 chat_panel_clear ENDP
 
 ;------------------------------------------------------------------------------
@@ -391,7 +391,7 @@ chat_panel_clear ENDP
 PUBLIC chat_panel_search
 chat_panel_search PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 40h
     
     ; Save parameters
@@ -424,7 +424,7 @@ chat_panel_search_error:
 chat_panel_search_exit:
     add rsp, 40h
     pop rbp
-    ret
+
 chat_panel_search ENDP
 
 ;------------------------------------------------------------------------------
@@ -435,7 +435,7 @@ chat_panel_search ENDP
 PUBLIC chat_panel_export
 chat_panel_export PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 40h
     
     ; Save parameters
@@ -483,7 +483,7 @@ chat_panel_export_cleanup_done:
 chat_panel_export_exit:
     add rsp, 40h
     pop rbp
-    ret
+
 chat_panel_export ENDP
 
 ;------------------------------------------------------------------------------
@@ -494,7 +494,7 @@ chat_panel_export ENDP
 PUBLIC chat_panel_import
 chat_panel_import PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 40h
     
     ; Save parameters
@@ -551,7 +551,7 @@ chat_panel_import_cleanup_done:
 chat_panel_import_exit:
     add rsp, 40h
     pop rbp
-    ret
+
 chat_panel_import ENDP
 
 ;------------------------------------------------------------------------------
@@ -562,7 +562,7 @@ chat_panel_import ENDP
 PUBLIC chat_panel_set_model_name
 chat_panel_set_model_name PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     ; Validate parameters
@@ -611,7 +611,7 @@ chat_panel_set_model_error:
 chat_panel_set_model_exit:
     add rsp, 20h
     pop rbp
-    ret
+
 chat_panel_set_model_name ENDP
 
 ;------------------------------------------------------------------------------
@@ -622,7 +622,7 @@ chat_panel_set_model_name ENDP
 PUBLIC chat_panel_get_selection
 chat_panel_get_selection PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     ; Validate parameters
@@ -641,7 +641,7 @@ chat_panel_get_selection_error:
 chat_panel_get_selection_exit:
     add rsp, 20h
     pop rbp
-    ret
+
 chat_panel_get_selection ENDP
 
 ;==============================================================================
@@ -651,7 +651,7 @@ chat_panel_get_selection ENDP
 ; Initialize chat panel structure
 _initialize_chat_panel PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     ; Initialize fields
@@ -695,13 +695,13 @@ initialize_panel_error:
 initialize_panel_exit:
     add rsp, 20h
     pop rbp
-    ret
+
 _initialize_chat_panel ENDP
 
 ; Create chat window
 _create_chat_window PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 40h
     
     ; Window style
@@ -737,13 +737,13 @@ create_window_error:
 create_window_exit:
     add rsp, 40h
     pop rbp
-    ret
+
 _create_chat_window ENDP
 
 ; Initialize chat message
 _initialize_chat_message PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     ; Set message type
@@ -816,13 +816,13 @@ initialize_message_error:
 initialize_message_exit:
     add rsp, 20h
     pop rbp
-    ret
+
 _initialize_chat_message ENDP
 
 ; Add message to panel
 _add_message_to_panel PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     
     ; Get message array
     mov r8, [rcx+CHAT_PANEL.messages]
@@ -881,13 +881,13 @@ add_message_error:
     
 add_message_exit:
     pop rbp
-    ret
+
 _add_message_to_panel ENDP
 
 ; Remove oldest message
 _remove_oldest_message PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     
     ; Get message array
     mov r8, [rcx+CHAT_PANEL.messages]
@@ -963,13 +963,13 @@ remove_oldest_error:
     
 remove_oldest_exit:
     pop rbp
-    ret
+
 _remove_oldest_message ENDP
 
 ; Clear all messages
 _clear_all_messages PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     
     ; Get message array
     mov r8, [rcx+CHAT_PANEL.messages]
@@ -1008,13 +1008,13 @@ clear_all_error:
     
 clear_all_exit:
     pop rbp
-    ret
+
 _clear_all_messages ENDP
 
 ; Update scroll position
 _update_scroll_position PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     
     ; Calculate total height
     mov eax, [rcx+CHAT_PANEL.message_count]
@@ -1059,13 +1059,13 @@ _update_scroll_position PROC
 update_scroll_done:
     mov rax, 1
     pop rbp
-    ret
+
 _update_scroll_position ENDP
 
 ; Invalidate chat panel
 _invalidate_chat_panel PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     mov rdx, 0         ; NULL rect (entire client area)
@@ -1077,13 +1077,13 @@ _invalidate_chat_panel PROC
     mov rax, 1
     add rsp, 20h
     pop rbp
-    ret
+
 _invalidate_chat_panel ENDP
 
 ; Perform search
 _perform_search PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 40h
     
     ; Implementation would search through messages
@@ -1092,13 +1092,13 @@ _perform_search PROC
     mov rax, 0         ; Placeholder
     add rsp, 40h
     pop rbp
-    ret
+
 _perform_search ENDP
 
 ; Create export file
 _create_export_file PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     ; Create file
@@ -1119,13 +1119,13 @@ _create_export_file PROC
     
     add rsp, 20h
     pop rbp
-    ret
+
 _create_export_file ENDP
 
 ; Export messages
 _export_messages PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 40h
     
     ; Implementation would write messages to file
@@ -1134,13 +1134,13 @@ _export_messages PROC
     mov rax, 1         ; Placeholder
     add rsp, 40h
     pop rbp
-    ret
+
 _export_messages ENDP
 
 ; Open import file
 _open_import_file PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     ; Open file
@@ -1161,13 +1161,13 @@ _open_import_file PROC
     
     add rsp, 20h
     pop rbp
-    ret
+
 _open_import_file ENDP
 
 ; Import messages
 _import_messages PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 40h
     
     ; Implementation would read messages from file
@@ -1176,13 +1176,13 @@ _import_messages PROC
     mov rax, 1         ; Placeholder
     add rsp, 40h
     pop rbp
-    ret
+
 _import_messages ENDP
 
 ; Get message selection
 _get_message_selection PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     ; Implementation would return selected messages
@@ -1191,13 +1191,13 @@ _get_message_selection PROC
     xor rdx, rdx
     add rsp, 20h
     pop rbp
-    ret
+
 _get_message_selection ENDP
 
 ; Create chat fonts
 _create_chat_fonts PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     ; Create default font
@@ -1227,13 +1227,13 @@ _create_chat_fonts PROC
     mov rax, 1
     add rsp, 20h
     pop rbp
-    ret
+
 _create_chat_fonts ENDP
 
 ; Create chat brushes
 _create_chat_brushes PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     ; Create background brush
@@ -1269,13 +1269,13 @@ _create_chat_brushes PROC
     mov rax, 1
     add rsp, 20h
     pop rbp
-    ret
+
 _create_chat_brushes ENDP
 
 ; Get current timestamp
 _get_current_timestamp PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     ; Get current time as FILETIME
@@ -1288,13 +1288,13 @@ _get_current_timestamp PROC
     
     add rsp, 20h
     pop rbp
-    ret
+
 _get_current_timestamp ENDP
 
 ; Add chat panel to registry
 _add_chat_panel_to_registry PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     
     ; Find empty slot
     mov eax, 0
@@ -1318,13 +1318,13 @@ add_panel_found:
 add_panel_full:
     mov rax, 1
     pop rbp
-    ret
+
 _add_chat_panel_to_registry ENDP
 
 ; Remove chat panel from registry
 _remove_chat_panel_from_registry PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     
     ; Find panel
     mov eax, 0
@@ -1348,13 +1348,13 @@ remove_panel_found:
 remove_panel_done:
     mov rax, 1
     pop rbp
-    ret
+
 _remove_chat_panel_from_registry ENDP
 
 ; Cleanup chat panel
 _cleanup_chat_panel PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     
     ; Destroy window
     mov rcx, [rcx+CHAT_PANEL.panel_handle]
@@ -1400,7 +1400,7 @@ cleanup_fonts_done:
 cleanup_brushes_done:
     mov rax, 1
     pop rbp
-    ret
+
 _cleanup_chat_panel ENDP
 
 ;==============================================================================
@@ -1430,3 +1430,7 @@ szChatWindowClass db "ChatPanelClass",0
 client_rect RECT {}
 
 .end
+
+
+
+

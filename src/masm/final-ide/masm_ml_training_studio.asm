@@ -425,8 +425,7 @@ training_studio_create_window PROC
     mov rax, g_training_studio.hWindow
     add rsp, 96
     pop rbx
-    ret
-    
+
 .data
 szTrainingStudioTitle db "ML Training Studio",0
 .code
@@ -438,6 +437,7 @@ training_studio_create_window ENDP
 ;==========================================================================
 training_studio_load_dataset PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 256
@@ -492,10 +492,11 @@ training_studio_load_dataset PROC
     
 @done:
     add rsp, 256
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 training_studio_load_dataset ENDP
 
 ;==========================================================================
@@ -504,6 +505,7 @@ training_studio_load_dataset ENDP
 ;==========================================================================
 training_studio_create_model PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 256
@@ -561,10 +563,11 @@ training_studio_create_model PROC
     
 @done:
     add rsp, 256
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 training_studio_create_model ENDP
 
 ;==========================================================================
@@ -573,8 +576,10 @@ training_studio_create_model ENDP
 ;==========================================================================
 training_studio_start_training PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
     sub rsp, 512
@@ -643,12 +648,14 @@ training_studio_start_training PROC
     
 @done:
     add rsp, 512
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 training_studio_start_training ENDP
 
 ;==========================================================================
@@ -688,7 +695,7 @@ training_studio_stop_training PROC
 @done:
     add rsp, 32
     pop rbx
-    ret
+
 training_studio_stop_training ENDP
 
 ;==========================================================================
@@ -715,7 +722,7 @@ create_dataset_list PROC
     
     add rsp, 48
     pop rbx
-    ret
+
 create_dataset_list ENDP
 
 create_model_list PROC
@@ -738,7 +745,7 @@ create_model_list PROC
     
     add rsp, 48
     pop rbx
-    ret
+
 create_model_list ENDP
 
 create_experiment_list PROC
@@ -761,7 +768,7 @@ create_experiment_list PROC
     
     add rsp, 48
     pop rbx
-    ret
+
 create_experiment_list ENDP
 
 create_metrics_chart PROC
@@ -784,7 +791,7 @@ create_metrics_chart PROC
     
     add rsp, 48
     pop rbx
-    ret
+
 create_metrics_chart ENDP
 
 create_resource_chart PROC
@@ -807,7 +814,7 @@ create_resource_chart PROC
     
     add rsp, 48
     pop rbx
-    ret
+
 create_resource_chart ENDP
 
 create_hyperparam_grid PROC
@@ -830,7 +837,7 @@ create_hyperparam_grid PROC
     
     add rsp, 48
     pop rbx
-    ret
+
 create_hyperparam_grid ENDP
 
 update_dataset_list PROC
@@ -876,7 +883,7 @@ start_training_thread PROC
     
     add rsp, 32
     pop rbx
-    ret
+
 start_training_thread ENDP
 
 stop_training_thread PROC
@@ -888,7 +895,7 @@ stop_training_thread ENDP
 find_experiment_by_id PROC
     ; rcx = experiment_id -> rax = experiment_ptr
     push rbx
-    xor rax, rax
+    push xor rax, rax
     xor rbx, rbx
     
 @loop:
@@ -911,14 +918,14 @@ find_experiment_by_id PROC
     
 @not_found:
     pop rbx
-    ret
+
 find_experiment_by_id ENDP
 
 generate_dataset_name PROC
     ; Generate dataset name from path
     ; rcx = dataset ptr
     push rbx
-    lea rsi, [rcx + DATASET.path]
+    push lea rsi, [rcx + DATASET.path]
     lea rdi, [rcx + DATASET.name]
     
     ; Find last backslash
@@ -945,7 +952,7 @@ generate_dataset_name PROC
     call strncpy
     
     pop rbx
-    ret
+
 generate_dataset_name ENDP
 
 load_dataset_stats PROC
@@ -1173,11 +1180,12 @@ training_studio_wnd_proc PROC hWnd:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
 @done:
     add rsp, 32
     pop rbx
-    ret
+
 training_studio_wnd_proc ENDP
 
 metrics_chart_wnd_proc PROC hWnd:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -1281,10 +1289,11 @@ metrics_chart_wnd_proc PROC hWnd:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
     
 @done:
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 metrics_chart_wnd_proc ENDP
 
 resource_chart_wnd_proc PROC
@@ -1305,7 +1314,7 @@ resource_chart_wnd_proc PROC
 @done:
     add rsp, 32
     pop rbx
-    ret
+
 resource_chart_wnd_proc ENDP
 
 ; Stubs for remaining public functions
@@ -1326,3 +1335,7 @@ training_studio_tune_hyperparameters PROC
 training_studio_tune_hyperparameters ENDP
 
 end
+
+
+
+

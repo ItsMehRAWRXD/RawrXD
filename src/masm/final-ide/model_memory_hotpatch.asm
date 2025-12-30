@@ -104,8 +104,10 @@ ALIGN 16
 masm_hotpatch_apply_memory PROC
 
     push rbx
+
     push r12
     push r13
+
     push r14
     push r15
     sub rsp, 64             ; Local variables + shadow space
@@ -268,10 +270,10 @@ patch_fail_verify:
 
 patch_fail_common:
     push rcx
-    lea rcx, msg_mem_patch_fail
+    push lea rcx, msg_mem_patch_fail
     call asm_log
-    pop rcx
-    lock inc [g_patches_failed]
+    pop lock
+    pop rcx inc [g_patches_failed]
     
     ; Create error detail string
     call asm_str_create_from_cstr
@@ -284,12 +286,13 @@ patch_fail_common:
 
 patch_exit:
     add rsp, 64
-    pop r15
-    pop r14
-    pop r13
-    pop r12
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
     pop rbx
-    ret
 
 masm_hotpatch_apply_memory ENDP
 
@@ -303,6 +306,7 @@ ALIGN 16
 masm_hotpatch_rollback PROC
 
     push rbx
+
     push r12
     push r13
     sub rsp, 32
@@ -358,10 +362,10 @@ rollback_fail:
 
 rollback_exit:
     add rsp, 32
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
 
 masm_hotpatch_rollback ENDP
 
@@ -403,19 +407,17 @@ ALIGN 16
 asm_memcpy_fast PROC
 
     push rsi
+
     push rdi
-    
-    mov rdi, rcx            ; dest
+    push mov rdi, rcx            ; dest
     mov rsi, rdx            ; src
     mov rcx, r8             ; size
     
     rep movsb               ; Simple byte copy for now
-    
-    pop rdi
-    pop rsi
-    ret
 
-asm_memcpy_fast ENDP
+    pop rdi
+    pop asm
+    pop rsi_memcpy_fast ENDP
 
 ;=====================================================================
 ; Helper: asm_memcmp(ptr1: rcx, ptr2: rdx, size: r8) -> rax (0=equal)
@@ -480,7 +482,6 @@ strlen_done:
     
     add rsp, 32
     pop rbx
-    ret
 
 asm_str_create_from_cstr ENDP
 
@@ -506,6 +507,7 @@ masm_hotpatch_on_model_selected PROC
     ; r8 = vocab_size
     
     push rbx
+
     push r12
     push r13
     sub rsp, 48
@@ -526,11 +528,11 @@ masm_hotpatch_on_model_selected PROC
     call masm_transform_on_model_load
     
     add rsp, 48
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
-    
+
 masm_hotpatch_on_model_selected ENDP
 
 ALIGN 16
@@ -553,8 +555,7 @@ masm_hotpatch_on_model_deselected PROC
     
     add rsp, 32
     pop rbx
-    ret
-    
+
 masm_hotpatch_on_model_deselected ENDP
 
 ALIGN 16
@@ -579,8 +580,7 @@ masm_hotpatch_execute_chat_command PROC
     
     add rsp, 32
     pop rbx
-    ret
-    
+
 masm_hotpatch_execute_chat_command ENDP
 
 ; New log messages
@@ -598,3 +598,8 @@ str_fail_type       DB "Invalid patch type", 0
 str_fail_verify     DB "Verification failed", 0
 
 END
+
+
+
+
+

@@ -42,8 +42,8 @@ g_msgCount      DWORD 0
 ;==============================================================================
 pane_message_bus PROC
     push rbx
+
     push r12
-    
     ; Process all queued messages
     xor rbx, rbx
 process_loop:
@@ -65,10 +65,10 @@ process_loop:
     
 bus_done:
     mov g_msgCount, 0  ; Clear queue
+
     pop r12
-    pop rbx
-    ret
-pane_message_bus ENDP
+    pop pane
+    pop rbx_message_bus ENDP
 
 ;==============================================================================
 ; register_asm_feature - Register ASM feature with pane
@@ -76,9 +76,9 @@ pane_message_bus ENDP
 register_asm_feature PROC
     ; rcx = name, rdx = handler, r8d = pane_type
     push rdi
+
     push rsi
-    
-    mov eax, g_featureCount
+    push mov eax, g_featureCount
     cmp eax, 16
     jge reg_fail
     
@@ -104,10 +104,10 @@ reg_fail:
     xor eax, eax
     
 reg_done:
+
     pop rsi
-    pop rdi
-    ret
-register_asm_feature ENDP
+    pop register
+    pop rdi_asm_feature ENDP
 
 ;==============================================================================
 ; integrate_with_main - Connect to existing UI system
@@ -149,7 +149,7 @@ asm_syntax_handler PROC
     call highlight_directives
     
     pop rbx
-    ret
+
 asm_syntax_handler ENDP
 
 ; Debug integration
@@ -163,7 +163,7 @@ asm_debug_handler PROC
     call update_register_view
     
     pop rbx
-    ret
+
 asm_debug_handler ENDP
 
 ; Performance profiling
@@ -177,7 +177,7 @@ asm_profile_handler PROC
     call show_hotspots
     
     pop rbx
-    ret
+
 asm_profile_handler ENDP
 
 ;==============================================================================
@@ -217,3 +217,7 @@ str_debug   db "ASM_DEBUG", 0
 str_profile db "ASM_PROFILE", 0
 
 END
+
+
+
+

@@ -374,13 +374,12 @@ telemetry_collector_init PROC
     mov eax, 1
     add rsp, 40
     pop rbx
-    ret
 
-.init_failed:
+@@init_failed:
     xor eax, eax
     add rsp, 40
     pop rbx
-    ret
+
 telemetry_collector_init ENDP
 
 ; ======================================================================
@@ -422,7 +421,7 @@ telemetry_start_request PROC
     mov r10, r8
     lea rsi, [rcx + REQUEST_METRICS.modelName]
     mov ecx, 64
-.copy_model:
+@@copy_model:
     mov al, [r10]
     mov [rsi], al
     test al, al
@@ -431,8 +430,7 @@ telemetry_start_request PROC
     inc rsi
     dec ecx
     jnz .copy_model
-
-.model_done:
+@@model_done:
     ; Record start time
     call GetTickCount64
     mov [rcx + REQUEST_METRICS.startTime], rax
@@ -441,17 +439,16 @@ telemetry_start_request PROC
     mov ebx, [g_telemetry.requestPos]
     inc ebx
     cmp ebx, 10000
-    jl .pos_ok
+    jl @@pos_ok
     xor ebx, ebx
-
-.pos_ok:
+@@pos_ok:
     mov [g_telemetry.requestPos], ebx
 
     ; Return request ID
     mov rax, [rcx + REQUEST_METRICS.requestId]
     add rsp, 40
     pop rbx
-    ret
+
 telemetry_start_request ENDP
 
 ;-----------------------------------------------------------------------
@@ -466,6 +463,7 @@ ALIGN 16
 telemetry_end_request PROC
 
     push rbx
+
     push r12
     sub rsp, 48
 
@@ -476,10 +474,9 @@ telemetry_end_request PROC
     ; Find request in log
     mov rax, [g_telemetry.requestLog]
     xor r9d, r9d
-
-.find_request:
+@@find_request:
     cmp r9d, 10000
-    jge .end_not_found
+    jge @@end_not_found
 
     mov rcx, r9d
     mov rdx, SIZEOF REQUEST_METRICS
@@ -488,12 +485,11 @@ telemetry_end_request PROC
 
     mov rbx, [rcx + REQUEST_METRICS.requestId]
     cmp rbx, r12
-    je .request_found
+    je @@request_found
 
     inc r9d
-    jmp .find_request
-
-.request_found:
+    jmp @@find_request
+@@request_found:
     ; Record end time
     call GetTickCount64
     mov [rcx + REQUEST_METRICS.endTime], rax
@@ -508,14 +504,13 @@ telemetry_end_request PROC
 
     ; Calculate tokens per second
     cmp rbx, 0
-    je .skip_tps
+    je @@skip_tps
     mov rax, r10
     mov rdx, 1000
     mul rdx
     div rbx
     mov dword ptr [rcx + REQUEST_METRICS.tokensPerSecond], eax
-
-.skip_tps:
+@@skip_tps:
     ; Record success/failure
     mov [rcx + REQUEST_METRICS.success], r11b
 
@@ -526,28 +521,24 @@ telemetry_end_request PROC
     test r11d, r11d
     jz .record_failure
     inc qword ptr [rsi + AGGREGATE_METRICS.successfulRequests]
-    jmp .update_stats
-
-.record_failure:
+    jmp @@update_stats
+@@record_failure:
     inc qword ptr [rsi + AGGREGATE_METRICS.failedRequests]
-
-.update_stats:
+@@update_stats:
     ; Update latency stats
     mov rax, [rcx + REQUEST_METRICS.latency_ms]
 
     ; Check min/max
     cmp qword ptr [rsi + AGGREGATE_METRICS.minLatency_ms], 0
-    jne .check_max
+    jne @@check_max
     mov [rsi + AGGREGATE_METRICS.minLatency_ms], rax
-
-.check_max:
+@@check_max:
     mov rbx, [rsi + AGGREGATE_METRICS.maxLatency_ms]
     cmp rax, rbx
-    jle .check_avg
+    jle @@check_avg
 
     mov [rsi + AGGREGATE_METRICS.maxLatency_ms], rax
-
-.check_avg:
+@@check_avg:
     ; Add to running average
     mov rbx, [rsi + AGGREGATE_METRICS.avgLatency_ms]
     mov r8, [rsi + AGGREGATE_METRICS.totalRequests]
@@ -563,17 +554,16 @@ telemetry_end_request PROC
 
     mov eax, 1
     add rsp, 48
+
     pop r12
     pop rbx
-    ret
-
-.end_not_found:
+@@end_not_found:
     xor eax, eax
     add rsp, 48
+
     pop r12
-    pop rbx
-    ret
-telemetry_end_request ENDP
+    pop telemetry
+    pop rbx_end_request ENDP
 
 ; ======================================================================
 ; METRICS RECORDING
@@ -595,10 +585,9 @@ telemetry_record_token PROC
 
     mov rax, [g_telemetry.requestLog]
     xor r9d, r9d
-
-.find_token:
+@@find_token:
     cmp r9d, 10000
-    jge .token_not_found
+    jge @@token_not_found
 
     mov rcx, r9d
     mov rdx, SIZEOF REQUEST_METRICS
@@ -607,25 +596,23 @@ telemetry_record_token PROC
 
     mov rbx, [rcx + REQUEST_METRICS.requestId]
     cmp rbx, r8
-    je .token_found
+    je @@token_found
 
     inc r9d
-    jmp .find_token
-
-.token_found:
+    jmp @@find_token
+@@token_found:
     inc qword ptr [rcx + REQUEST_METRICS.completionTokens]
     inc qword ptr [rcx + REQUEST_METRICS.totalTokens]
 
     mov eax, 1
     add rsp, 40
     pop rbx
-    ret
 
-.token_not_found:
+@@token_not_found:
     xor eax, eax
     add rsp, 40
     pop rbx
-    ret
+
 telemetry_record_token ENDP
 
 ;-----------------------------------------------------------------------
@@ -655,25 +642,23 @@ telemetry_record_memory PROC
     lea rsi, [g_telemetry.aggregateMetrics]
     mov rdx, [rsi + AGGREGATE_METRICS.peakMemory_bytes]
     cmp rcx, rdx
-    jle .memory_ok
+    jle @@memory_ok
 
     mov [rsi + AGGREGATE_METRICS.peakMemory_bytes], rcx
-
-.memory_ok:
+@@memory_ok:
     ; Increment circular position
     mov ebx, [g_telemetry.memoryPos]
     inc ebx
     cmp ebx, MAX_TIMESERIES_POINTS
-    jl .mem_pos_ok
+    jl @@mem_pos_ok
     xor ebx, ebx
-
-.mem_pos_ok:
+@@mem_pos_ok:
     mov [g_telemetry.memoryPos], ebx
 
     mov eax, 1
     add rsp, 40
     pop rbx
-    ret
+
 telemetry_record_memory ENDP
 
 ;-----------------------------------------------------------------------
@@ -689,10 +674,10 @@ telemetry_record_gpu_usage PROC
 
     ; Validate percentage (0-100)
     cmp rcx, 100
-    jle .gpu_valid
+    jle @@gpu_valid
 
     mov rcx, 100
-.gpu_valid:
+@@gpu_valid:
 
     ; Add to circular GPU buffer
     mov rax, [g_telemetry.gpuBuffer]
@@ -710,25 +695,23 @@ telemetry_record_gpu_usage PROC
     lea rsi, [g_telemetry.aggregateMetrics]
     mov al, [rsi + AGGREGATE_METRICS.peakGPUUtil]
     cmp cl, al
-    jle .gpu_ok
+    jle @@gpu_ok
 
     mov [rsi + AGGREGATE_METRICS.peakGPUUtil], cl
-
-.gpu_ok:
+@@gpu_ok:
     ; Increment position
     mov ebx, [g_telemetry.gpuPos]
     inc ebx
     cmp ebx, MAX_TIMESERIES_POINTS
-    jl .gpu_pos_ok
+    jl @@gpu_pos_ok
     xor ebx, ebx
-
-.gpu_pos_ok:
+@@gpu_pos_ok:
     mov [g_telemetry.gpuPos], ebx
 
     mov eax, 1
     add rsp, 40
     pop rbx
-    ret
+
 telemetry_record_gpu_usage ENDP
 
 ;-----------------------------------------------------------------------
@@ -750,7 +733,7 @@ telemetry_record_event PROC
     mov eax, 1
     add rsp, 40
     pop rbx
-    ret
+
 telemetry_record_event ENDP
 
 ; ======================================================================
@@ -766,6 +749,7 @@ ALIGN 16
 telemetry_calculate_percentiles PROC
 
     push rbx
+
     push r12
     push r13
     sub rsp, 56
@@ -776,10 +760,11 @@ telemetry_calculate_percentiles PROC
 
     mov eax, 1
     add rsp, 56
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
+
 telemetry_calculate_percentiles ENDP
 
 ; ======================================================================
@@ -816,7 +801,7 @@ telemetry_create_alert PROC
     mov rsi, rcx
     lea rdi, [rax + ALERT_TRIGGER.metricName]
     mov ecx, 64
-.copy_alert_name:
+@@copy_alert_name:
     mov r9b, [rsi]
     mov [rdi], r9b
     test r9b, r9b
@@ -825,8 +810,7 @@ telemetry_create_alert PROC
     inc rdi
     dec ecx
     jnz .copy_alert_name
-
-.alert_name_done:
+@@alert_name_done:
     ; Set threshold and level
     mov [rax + ALERT_TRIGGER.triggerValue], rdx
     mov [rax + ALERT_TRIGGER.alertLevel], r8b
@@ -839,7 +823,7 @@ telemetry_create_alert PROC
     mov eax, [rax + ALERT_TRIGGER.alertId]
     add rsp, 40
     pop rbx
-    ret
+
 telemetry_create_alert ENDP
 
 ; ======================================================================
@@ -869,10 +853,9 @@ telemetry_export_json PROC
     ; Add latency metrics
     mov rax, [g_telemetry.latencyBuffer]
     xor r10d, r10d
-
-.export_latencies:
+@@export_latencies:
     cmp r10d, [g_telemetry.latencyCount]
-    jge .latencies_done
+    jge @@latencies_done
 
     mov rcx, r10d
     mov rdx, SIZEOF TIMESERIES_POINT
@@ -890,9 +873,8 @@ telemetry_export_json PROC
     ; ... (string concatenation)
 
     inc r10d
-    jmp .export_latencies
-
-.latencies_done:
+    jmp @@export_latencies
+@@latencies_done:
     ; Close JSON object
     mov byte ptr [r8], '}'
     mov byte ptr [r8 + 1], 0
@@ -903,7 +885,7 @@ telemetry_export_json PROC
 
     add rsp, 56
     pop rbx
-    ret
+
 telemetry_export_json ENDP
 
 ;-----------------------------------------------------------------------
@@ -928,7 +910,7 @@ telemetry_export_csv PROC
     mov eax, 1
     add rsp, 40
     pop rbx
-    ret
+
 telemetry_export_csv ENDP
 
 ;-----------------------------------------------------------------------
@@ -947,7 +929,7 @@ telemetry_export_prometheus PROC
     mov eax, 1
     add rsp, 40
     pop rbx
-    ret
+
 telemetry_export_prometheus ENDP
 
 ; ======================================================================
@@ -993,7 +975,12 @@ telemetry_reset PROC
     mov eax, 1
     add rsp, 40
     pop rbx
-    ret
+
 telemetry_reset ENDP
 
 END
+
+
+
+
+

@@ -212,6 +212,7 @@ PUBLIC FlushMessageQueue
 ALIGN 16
 InitializeRealTimeIntegration PROC
     push rbx
+
     push r12
     sub rsp, 40
     
@@ -265,9 +266,9 @@ InitializeRealTimeIntegration PROC
     
     ; Create worker thread pool
     mov rbx, 0
-.create_thread_loop:
+@@create_thread_loop:
     cmp rbx, THREAD_POOL_SIZE
-    jge .threads_created
+    jge @@threads_created
     
     ; Create worker thread
     lea rcx, g_rt_state.worker_thread_ids[rbx * 4]
@@ -280,23 +281,21 @@ InitializeRealTimeIntegration PROC
     
     mov [g_rt_state.worker_threads + rbx * 8], rax
     inc rbx
-    jmp .create_thread_loop
-    
-.threads_created:
+    jmp @@create_thread_loop
+@@threads_created:
     mov eax, 1          ; Success
     add rsp, 40
+
     pop r12
     pop rbx
-    ret
-    
-.thread_create_failed:
-.init_failed:
+@@thread_create_failed:
+@@init_failed:
     xor eax, eax        ; Failure
     add rsp, 40
+
     pop r12
-    pop rbx
-    ret
-InitializeRealTimeIntegration ENDP
+    pop InitializeRealTimeIntegration
+    pop rbx ENDP
 
 ;==============================================================================
 ; WORKER THREAD - Processes message queue continuously
@@ -306,8 +305,7 @@ ALIGN 16
 WorkerThreadProc PROC
     push rbx
     sub rsp, 32
-    
-.process_loop:
+@@process_loop:
     ; Wait for event or timeout
     mov rcx, g_rt_event
     mov edx, 100        ; 100ms timeout
@@ -315,7 +313,7 @@ WorkerThreadProc PROC
     
     ; Check if shutdown
     cmp g_rt_state.is_initialized, 1
-    jne .thread_exit
+    jne @@thread_exit
     
     ; Acquire queue mutex
     mov rcx, g_rt_mutex
@@ -329,14 +327,12 @@ WorkerThreadProc PROC
     ; Release mutex
     mov rcx, g_rt_mutex
     call ReleaseMutex
-    
-.unlock_and_continue:
-    jmp .process_loop
-    
-.thread_exit:
+@@unlock_and_continue:
+    jmp @@process_loop
+@@thread_exit:
     add rsp, 32
     pop rbx
-    ret
+
 WorkerThreadProc ENDP
 
 ;==============================================================================
@@ -346,13 +342,14 @@ WorkerThreadProc ENDP
 ALIGN 16
 ProcessOneMessage PROC
     push rbx
+
     push r12
     sub rsp, 48
     
     ; Check if queue empty
     mov eax, g_queue_index
     cmp eax, 0
-    je .no_message
+    je @@no_message
     
     ; Get first message
     lea rbx, g_message_queue[0]
@@ -360,47 +357,41 @@ ProcessOneMessage PROC
     
     ; Dispatch based on event type
     cmp r12d, EVENT_CHAT_MESSAGE
-    je .handle_chat
+    je @@handle_chat
     cmp r12d, EVENT_EDITOR_CHANGE
-    je .handle_editor
+    je @@handle_editor
     cmp r12d, EVENT_TERMINAL_OUTPUT
-    je .handle_terminal
+    je @@handle_terminal
     cmp r12d, EVENT_PANE_RESIZE
-    je .handle_pane
+    je @@handle_pane
     cmp r12d, EVENT_THEME_CHANGE
-    je .handle_theme
+    je @@handle_theme
     
-    jmp .remove_message
-    
-.handle_chat:
+    jmp @@remove_message
+@@handle_chat:
     mov rcx, [rbx + MESSAGE_QUEUE_ENTRY.data_ptr]
     mov edx, [rbx + MESSAGE_QUEUE_ENTRY.data_size]
     call ProcessChatMessage
-    jmp .remove_message
-    
-.handle_editor:
+    jmp @@remove_message
+@@handle_editor:
     mov rcx, [rbx + MESSAGE_QUEUE_ENTRY.data_ptr]
     mov edx, [rbx + MESSAGE_QUEUE_ENTRY.data_size]
     call ProcessEditorChange
-    jmp .remove_message
-    
-.handle_terminal:
+    jmp @@remove_message
+@@handle_terminal:
     mov rcx, [rbx + MESSAGE_QUEUE_ENTRY.data_ptr]
     mov edx, [rbx + MESSAGE_QUEUE_ENTRY.data_size]
     call ProcessTerminalOutput
-    jmp .remove_message
-    
-.handle_pane:
+    jmp @@remove_message
+@@handle_pane:
     mov rcx, [rbx + MESSAGE_QUEUE_ENTRY.data_ptr]
     call ProcessPaneResize
-    jmp .remove_message
-    
-.handle_theme:
+    jmp @@remove_message
+@@handle_theme:
     mov rcx, [rbx + MESSAGE_QUEUE_ENTRY.data_ptr]
     call ProcessThemeChange
-    jmp .remove_message
-    
-.remove_message:
+    jmp @@remove_message
+@@remove_message:
     ; Remove message from queue
     mov eax, g_queue_index
     dec eax
@@ -408,38 +399,34 @@ ProcessOneMessage PROC
     
     ; Move remaining messages forward
     mov ecx, 0
-.shift_loop:
+@@shift_loop:
     cmp ecx, eax
-    jge .shift_done
+    jge @@shift_done
     
     ; Copy next message back
     lea rbx, g_message_queue[rcx * SIZEOF MESSAGE_QUEUE_ENTRY + SIZEOF MESSAGE_QUEUE_ENTRY]
     lea r8, g_message_queue[rcx * SIZEOF MESSAGE_QUEUE_ENTRY]
     mov edx, SIZEOF MESSAGE_QUEUE_ENTRY
     mov r9d, 0
-    
-.copy_loop:
+@@copy_loop:
     cmp r9d, edx
-    jge .copy_done
+    jge @@copy_done
     mov bl, BYTE PTR [rbx + r9]
     mov BYTE PTR [r8 + r9], bl
     inc r9d
-    jmp .copy_loop
-    
-.copy_done:
+    jmp @@copy_loop
+@@copy_done:
     inc ecx
-    jmp .shift_loop
-    
-.shift_done:
+    jmp @@shift_loop
+@@shift_done:
     ; Update metrics
     inc g_messages_processed
-    
-.no_message:
+@@no_message:
     add rsp, 48
+
     pop r12
-    pop rbx
-    ret
-ProcessOneMessage ENDP
+    pop ProcessOneMessage
+    pop rbx ENDP
 
 ;==============================================================================
 ; CHAT MESSAGE PROCESSING - Real-time message integration
@@ -456,16 +443,14 @@ ProcessChatMessage PROC
     lea r8, g_chat_buffer
     mov r9d, edx
     xor r10d, r10d
-    
-.copy_msg:
+@@copy_msg:
     cmp r10d, r9d
-    jge .copy_done
+    jge @@copy_done
     mov al, BYTE PTR [rbx + r10]
     mov BYTE PTR [r8 + r10], al
     inc r10d
-    jmp .copy_msg
-    
-.copy_done:
+    jmp @@copy_msg
+@@copy_done:
     ; Update chat state
     inc g_chat_state.message_count
     mov rax, GetTickCount64
@@ -481,11 +466,10 @@ ProcessChatMessage PROC
     xor r8d, r8d
     xor r9d, r9d
     call SendMessageA
-    
-.skip_display:
+@@skip_display:
     add rsp, 32
     pop rbx
-    ret
+
 ProcessChatMessage ENDP
 
 ;==============================================================================
@@ -503,16 +487,14 @@ ProcessEditorChange PROC
     lea r8, g_editor_buffer
     mov r9d, edx
     xor r10d, r10d
-    
-.copy_edit:
+@@copy_edit:
     cmp r10d, r9d
-    jge .edit_done
+    jge @@edit_done
     mov al, BYTE PTR [rbx + r10]
     mov BYTE PTR [r8 + r10], al
     inc r10d
-    jmp .copy_edit
-    
-.edit_done:
+    jmp @@copy_edit
+@@edit_done:
     ; Mark as modified
     mov eax, g_editor_state.editor_flags
     or eax, EDITOR_MODIFIED
@@ -533,11 +515,10 @@ ProcessEditorChange PROC
     xor r8d, r8d
     xor r9d, r9d
     call SendMessageA
-    
-.skip_tab_update:
+@@skip_tab_update:
     add rsp, 32
     pop rbx
-    ret
+
 ProcessEditorChange ENDP
 
 ;==============================================================================
@@ -555,16 +536,14 @@ ProcessTerminalOutput PROC
     lea r8, g_terminal_buffer
     mov r9d, edx
     xor r10d, r10d
-    
-.copy_term:
+@@copy_term:
     cmp r10d, r9d
-    jge .term_done
+    jge @@term_done
     mov al, BYTE PTR [rbx + r10]
     mov BYTE PTR [r8 + r10], al
     inc r10d
-    jmp .copy_term
-    
-.term_done:
+    jmp @@copy_term
+@@term_done:
     ; Update terminal state
     mov rax, GetTickCount64
     call GetTickCount64
@@ -574,9 +553,9 @@ ProcessTerminalOutput PROC
     mov eax, g_terminal_state.buffer_tail
     inc eax
     cmp eax, MAX_MESSAGE_SIZE
-    jl .no_wrap
+    jl @@no_wrap
     xor eax, eax
-.no_wrap:
+@@no_wrap:
     mov g_terminal_state.buffer_tail, eax
     
     ; Update display
@@ -588,11 +567,10 @@ ProcessTerminalOutput PROC
     xor r8d, r8d
     xor r9d, r9d
     call SendMessageA
-    
-.skip_term_display:
+@@skip_term_display:
     add rsp, 32
     pop rbx
-    ret
+
 ProcessTerminalOutput ENDP
 
 ;==============================================================================
@@ -615,7 +593,7 @@ ProcessPaneResize PROC
     
     add rsp, 32
     pop rbx
-    ret
+
 ProcessPaneResize ENDP
 
 ;==============================================================================
@@ -630,22 +608,21 @@ ProcessThemeChange PROC
     
     ; Apply theme to all windows
     mov rbx, 0
-.theme_loop:
+@@theme_loop:
     cmp rbx, 10         ; Max 10 windows
-    jge .theme_done
+    jge @@theme_done
     
     ; Would enumerate and update each window
     inc rbx
-    jmp .theme_loop
-    
-.theme_done:
+    jmp @@theme_loop
+@@theme_done:
     ; Redraw all panes
     mov ecx, WM_PAINT
     call InvalidateRect
     
     add rsp, 32
     pop rbx
-    ret
+
 ProcessThemeChange ENDP
 
 ;==============================================================================
@@ -667,7 +644,7 @@ PostChatMessage PROC
     ; Check queue space
     mov eax, g_queue_index
     cmp eax, MAX_QUEUE_SIZE
-    jge .queue_full
+    jge @@queue_full
     
     ; Add message to queue
     lea rbx, g_message_queue[rax * SIZEOF MESSAGE_QUEUE_ENTRY]
@@ -686,10 +663,9 @@ PostChatMessage PROC
     ; Check for peak
     mov eax, g_queue_index
     cmp eax, g_peak_queue_size
-    jle .no_peak_update
+    jle @@no_peak_update
     mov g_peak_queue_size, eax
-    
-.no_peak_update:
+@@no_peak_update:
     ; Signal event
     mov rcx, g_rt_event
     call SetEvent
@@ -702,19 +678,17 @@ PostChatMessage PROC
     
     add rsp, 32
     pop rbx
-    ret
-    
-.queue_full:
+
+@@queue_full:
     ; Release mutex
     mov r8, g_rt_mutex
     call ReleaseMutex
-    jmp .post_failed
-    
-.post_failed:
+    jmp @@post_failed
+@@post_failed:
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 PostChatMessage ENDP
 
 ;==============================================================================
@@ -735,7 +709,7 @@ PostEditorChange PROC
     
     mov eax, g_queue_index
     cmp eax, MAX_QUEUE_SIZE
-    jge .queue_editor_full
+    jge @@queue_editor_full
     
     lea rbx, g_message_queue[rax * SIZEOF MESSAGE_QUEUE_ENTRY]
     mov DWORD PTR [rbx + MESSAGE_QUEUE_ENTRY.event_type], EVENT_EDITOR_CHANGE
@@ -756,16 +730,15 @@ PostEditorChange PROC
     
     add rsp, 32
     pop rbx
-    ret
-    
-.queue_editor_full:
+
+@@queue_editor_full:
     mov r8, g_rt_mutex
     call ReleaseMutex
-.post_editor_failed:
+@@post_editor_failed:
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 PostEditorChange ENDP
 
 ;==============================================================================
@@ -785,7 +758,7 @@ PostTerminalOutput PROC
     
     mov eax, g_queue_index
     cmp eax, MAX_QUEUE_SIZE
-    jge .queue_term_full
+    jge @@queue_term_full
     
     lea rbx, g_message_queue[rax * SIZEOF MESSAGE_QUEUE_ENTRY]
     mov DWORD PTR [rbx + MESSAGE_QUEUE_ENTRY.event_type], EVENT_TERMINAL_OUTPUT
@@ -807,16 +780,15 @@ PostTerminalOutput PROC
     
     add rsp, 32
     pop rbx
-    ret
-    
-.queue_term_full:
+
+@@queue_term_full:
     mov r8, g_rt_mutex
     call ReleaseMutex
-.post_term_failed:
+@@post_term_failed:
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 PostTerminalOutput ENDP
 
 ;==============================================================================
@@ -836,7 +808,7 @@ PostPaneResize PROC
     
     mov eax, g_queue_index
     cmp eax, MAX_QUEUE_SIZE
-    jge .queue_pane_full
+    jge @@queue_pane_full
     
     lea rbx, g_message_queue[rax * SIZEOF MESSAGE_QUEUE_ENTRY]
     mov DWORD PTR [rbx + MESSAGE_QUEUE_ENTRY.event_type], EVENT_PANE_RESIZE
@@ -853,16 +825,15 @@ PostPaneResize PROC
     
     add rsp, 32
     pop rbx
-    ret
-    
-.queue_pane_full:
+
+@@queue_pane_full:
     mov r8, g_rt_mutex
     call ReleaseMutex
-.post_pane_failed:
+@@post_pane_failed:
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 PostPaneResize ENDP
 
 ;==============================================================================
@@ -882,7 +853,7 @@ PostThemeChange PROC
     
     mov eax, g_queue_index
     cmp eax, MAX_QUEUE_SIZE
-    jge .queue_theme_full
+    jge @@queue_theme_full
     
     lea rbx, g_message_queue[rax * SIZEOF MESSAGE_QUEUE_ENTRY]
     mov DWORD PTR [rbx + MESSAGE_QUEUE_ENTRY.event_type], EVENT_THEME_CHANGE
@@ -899,16 +870,15 @@ PostThemeChange PROC
     
     add rsp, 32
     pop rbx
-    ret
-    
-.queue_theme_full:
+
+@@queue_theme_full:
     mov r8, g_rt_mutex
     call ReleaseMutex
-.post_theme_failed:
+@@post_theme_failed:
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 PostThemeChange ENDP
 
 ;==============================================================================
@@ -923,7 +893,7 @@ RegisterEventHandler PROC
     
     ; Validate event type
     cmp ecx, 16
-    jge .handler_invalid
+    jge @@handler_invalid
     
     ; Store handler
     mov [g_rt_state.event_handlers + rcx * 8], rdx
@@ -931,13 +901,12 @@ RegisterEventHandler PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
-    
-.handler_invalid:
+
+@@handler_invalid:
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 RegisterEventHandler ENDP
 
 ;==============================================================================
@@ -1020,13 +989,12 @@ SendMessageToAgent PROC
     
     add rsp, 32
     pop rbx
-    ret
-    
-.send_failed:
+
+@@send_failed:
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 SendMessageToAgent ENDP
 
 ;==============================================================================
@@ -1045,8 +1013,7 @@ UpdateEditorDisplay PROC
     
     mov ecx, FALSE
     call UpdateWindow
-    
-.no_editor:
+@@no_editor:
     mov eax, 1
     ret
 UpdateEditorDisplay ENDP
@@ -1067,8 +1034,7 @@ UpdateTerminalDisplay PROC
     
     mov ecx, FALSE
     call UpdateWindow
-    
-.no_terminal:
+@@no_terminal:
     mov eax, 1
     ret
 UpdateTerminalDisplay ENDP
@@ -1092,7 +1058,7 @@ UpdatePaneLayout PROC
     
     add rsp, 32
     pop rbx
-    ret
+
 UpdatePaneLayout ENDP
 
 ;==============================================================================
@@ -1114,7 +1080,7 @@ ApplyThemeRealTime PROC
     
     add rsp, 32
     pop rbx
-    ret
+
 ApplyThemeRealTime ENDP
 
 ;==============================================================================
@@ -1125,6 +1091,7 @@ ALIGN 16
 ExecuteCommandPalette PROC
     ; rcx = command string
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -1143,17 +1110,16 @@ ExecuteCommandPalette PROC
     
     mov eax, 1
     add rsp, 32
+
     pop r12
     pop rbx
-    ret
-    
-.cmd_not_found:
+@@cmd_not_found:
     xor eax, eax
     add rsp, 32
+
     pop r12
-    pop rbx
-    ret
-ExecuteCommandPalette ENDP
+    pop ExecuteCommandPalette
+    pop rbx ENDP
 
 ;==============================================================================
 ; PREVIEW GUI DESIGN - Live preview of GUI builder output
@@ -1179,13 +1145,12 @@ PreviewGUIDesign PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
-    
-.preview_failed:
+
+@@preview_failed:
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 PreviewGUIDesign ENDP
 
 ;==============================================================================
@@ -1202,19 +1167,17 @@ SynchronizeAllPanes PROC
     test rcx, rcx
     jz .skip_editor_sync
     call UpdateEditorDisplay
-    
-.skip_editor_sync:
+@@skip_editor_sync:
     ; Sync terminal with output pane
     mov rcx, g_terminal_state.hwnd_terminal
     test rcx, rcx
     jz .skip_term_sync
     call UpdateTerminalDisplay
-    
-.skip_term_sync:
+@@skip_term_sync:
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
+
 SynchronizeAllPanes ENDP
 
 ;==============================================================================
@@ -1224,6 +1187,7 @@ SynchronizeAllPanes ENDP
 ALIGN 16
 ShutdownRealTimeIntegration PROC
     push rbx
+
     push r12
     sub rsp, 40
     
@@ -1238,48 +1202,43 @@ ShutdownRealTimeIntegration PROC
     
     ; Close thread handles
     mov rbx, 0
-.close_threads:
+@@close_threads:
     cmp rbx, THREAD_POOL_SIZE
-    jge .threads_closed
+    jge @@threads_closed
     
     mov rcx, [g_rt_state.worker_threads + rbx * 8]
     test rcx, rcx
     jz .next_thread
     
     call CloseHandle
-    
-.next_thread:
+@@next_thread:
     inc rbx
-    jmp .close_threads
-    
-.threads_closed:
+    jmp @@close_threads
+@@threads_closed:
     ; Close synchronization objects
     mov rcx, g_rt_mutex
     test rcx, rcx
     jz .skip_mutex_close
     call CloseHandle
-    
-.skip_mutex_close:
+@@skip_mutex_close:
     mov rcx, g_rt_event
     test rcx, rcx
     jz .skip_event_close
     call CloseHandle
-    
-.skip_event_close:
+@@skip_event_close:
     ; Free queue memory
     mov rcx, g_rt_state.message_queue
     test rcx, rcx
     jz .skip_queue_free
     
     call HeapFree
-    
-.skip_queue_free:
+@@skip_queue_free:
     mov eax, 1
     add rsp, 40
+
     pop r12
-    pop rbx
-    ret
-ShutdownRealTimeIntegration ENDP
+    pop ShutdownRealTimeIntegration
+    pop rbx ENDP
 
 ;==============================================================================
 ; WAIT FOR MESSAGE PROCESSED - Block until message is processed
@@ -1295,36 +1254,33 @@ WaitForMessageProcessed PROC
     mov rbx, GetTickCount64
     call GetTickCount64
     mov r9, rax         ; Start time
-    
-.wait_loop:
+@@wait_loop:
     ; Check if queue is empty (message processed)
     mov eax, g_queue_index
     cmp eax, 0
-    je .message_processed
+    je @@message_processed
     
     ; Check timeout
     call GetTickCount64
     sub rax, r9
     cmp eax, r8
-    jge .timeout
+    jge @@timeout
     
     ; Small sleep to avoid spinning
     mov ecx, 10
     call Sleep
     
-    jmp .wait_loop
-    
-.message_processed:
+    jmp @@wait_loop
+@@message_processed:
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
-    
-.timeout:
+
+@@timeout:
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 WaitForMessageProcessed ENDP
 
 ;==============================================================================
@@ -1365,13 +1321,12 @@ FlushMessageQueue PROC
     
     add rsp, 32
     pop rbx
-    ret
-    
-.flush_failed:
+
+@@flush_failed:
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 FlushMessageQueue ENDP
 
 ;==============================================================================
@@ -1387,3 +1342,8 @@ EnumWindowsProc PROC
 EnumWindowsProc ENDP
 
 END
+
+
+
+
+

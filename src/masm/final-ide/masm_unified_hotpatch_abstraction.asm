@@ -125,6 +125,7 @@ masm_byte_layer_refactored_wrapper PROC
     ;   [+56]:  match_offset (output)
     
     push rbx
+
     push r12
     push r13
     sub rsp, 48
@@ -189,10 +190,10 @@ byte_apply_fail:
 
 byte_layer_exit:
     add rsp, 48
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
 
 masm_byte_layer_refactored_wrapper ENDP
 
@@ -226,6 +227,7 @@ masm_memory_layer_refactored_wrapper PROC
     ; result_ptr = PatchResult structure to fill in
     
     push rbx
+
     push r12
     push r13
     sub rsp, 48
@@ -274,10 +276,10 @@ memory_apply_exit:
 
 memory_layer_exit:
     add rsp, 48
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
 
 masm_memory_layer_refactored_wrapper ENDP
 
@@ -305,6 +307,7 @@ masm_server_layer_refactored_wrapper PROC
     ; request_ptr = ServerHotpatch structure
     
     push rbx
+
     push r12
     sub rsp, 48
     
@@ -352,11 +355,10 @@ server_apply_fail:
 
 server_layer_exit:
     add rsp, 48
-    pop r12
-    pop rbx
-    ret
 
-masm_server_layer_refactored_wrapper ENDP
+    pop r12
+    pop masm
+    pop rbx_server_layer_refactored_wrapper ENDP
 
 ;=====================================================================
 ; PROXY-LAYER INTEGRATION
@@ -381,6 +383,7 @@ masm_proxy_layer_refactored_wrapper PROC
     ; hotpatch_ptr = ProxyHotpatch structure
     
     push rbx
+
     push r12
     sub rsp, 48
     
@@ -429,11 +432,10 @@ proxy_apply_fail:
 
 proxy_layer_exit:
     add rsp, 48
-    pop r12
-    pop rbx
-    ret
 
-masm_proxy_layer_refactored_wrapper ENDP
+    pop r12
+    pop masm
+    pop rbx_proxy_layer_refactored_wrapper ENDP
 
 ;=====================================================================
 ; INTEGRATION INITIALIZATION
@@ -454,3 +456,8 @@ masm_unified_layer_integration_init PROC
 masm_unified_layer_integration_init ENDP
 
 END
+
+
+
+
+

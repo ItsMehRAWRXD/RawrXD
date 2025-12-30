@@ -157,6 +157,7 @@ minimap_create_window PROC
     LOCAL parentRect:RECT
     
     push rbx
+
     push rsi
     sub rsp, 56
     
@@ -202,10 +203,10 @@ minimap_create_window PROC
     mov rax, g_minimapState.hWindow
     
     add rsp, 56
+
     pop rsi
-    pop rbx
-    ret
-minimap_create_window ENDP
+    pop minimap
+    pop rbx_create_window ENDP
 
 ;==========================================================================
 ; create_back_buffer() - Create offscreen bitmap for flicker-free drawing
@@ -243,7 +244,7 @@ create_back_buffer PROC
     
     add rsp, 32
     pop rbx
-    ret
+
 create_back_buffer ENDP
 
 ;==========================================================================
@@ -270,7 +271,7 @@ minimap_update PROC
 @done:
     add rsp, 32
     pop rbx
-    ret
+
 minimap_update ENDP
 
 ;==========================================================================
@@ -310,7 +311,7 @@ query_editor_metrics PROC
 @done:
     add rsp, 32
     pop rbx
-    ret
+
 query_editor_metrics ENDP
 
 ;==========================================================================
@@ -332,7 +333,7 @@ minimap_scroll_to_line PROC
     
     add rsp, 32
     pop rbx
-    ret
+
 minimap_scroll_to_line ENDP
 
 ;==========================================================================
@@ -429,7 +430,7 @@ destroy_back_buffer ENDP
 ;==========================================================================
 minimap_wnd_proc PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 64
     
     mov [rbp + 16], rcx   ; hWnd
@@ -502,7 +503,7 @@ minimap_wnd_proc PROC
 @done:
     add rsp, 64
     pop rbp
-    ret
+
 minimap_wnd_proc ENDP
 
 ;==========================================================================
@@ -746,7 +747,7 @@ fill_rect_solid PROC
     
     add rsp, 32
     pop rbx
-    ret
+
 fill_rect_solid ENDP
 
 draw_rect_filled PROC
@@ -760,3 +761,8 @@ draw_rect_outline PROC
 draw_rect_outline ENDP
 
 end
+
+
+
+
+

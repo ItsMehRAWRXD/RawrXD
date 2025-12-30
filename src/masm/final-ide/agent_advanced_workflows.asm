@@ -238,6 +238,7 @@ SYMBOL_DEPENDENCY ENDS
 PUBLIC agent_create_multi_step_plan
 agent_create_multi_step_plan PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 96
@@ -318,10 +319,11 @@ assess_steps_done:
     
     mov eax, [rbx].WORKFLOW_PLAN.plan_id
     add rsp, 96
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 agent_create_multi_step_plan ENDP
 
 ;==========================================================================
@@ -332,8 +334,10 @@ agent_create_multi_step_plan ENDP
 PUBLIC agent_execute_plan_with_decision_making
 agent_execute_plan_with_decision_making PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     sub rsp, 96
     
@@ -483,12 +487,13 @@ plan_success:
     
 execution_done:
     add rsp, 96
-    pop r12
-    pop rdi
+
+    pop rdi pop r12
+
+
     pop rsi
-    pop rbx
-    ret
-agent_execute_plan_with_decision_making ENDP
+    pop agent
+    pop rbx_execute_plan_with_decision_making ENDP
 
 ;==========================================================================
 ; PUBLIC: agent_self_correct_from_failure() -> eax
@@ -498,6 +503,7 @@ agent_execute_plan_with_decision_making ENDP
 PUBLIC agent_self_correct_from_failure
 agent_self_correct_from_failure PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 96
@@ -585,10 +591,11 @@ correction_failed:
 correction_logged:
     mov eax, r10d
     add rsp, 96
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 agent_self_correct_from_failure ENDP
 
 ;==========================================================================
@@ -599,6 +606,7 @@ agent_self_correct_from_failure ENDP
 PUBLIC agent_analyze_cross_file_impact
 agent_analyze_cross_file_impact PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 96
@@ -665,10 +673,11 @@ deps_traced:
     
     mov eax, 1          ; Return analysis (would be full structure)
     add rsp, 96
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 agent_analyze_cross_file_impact ENDP
 
 ;==========================================================================
@@ -813,3 +822,8 @@ agent_log_format ENDP
 EXTERN QueryPerformanceCounter:PROC
 
 END
+
+
+
+
+

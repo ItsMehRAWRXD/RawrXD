@@ -137,7 +137,7 @@ AgenticEngine_Initialize PROC
     mov rax, 1
     add rsp, 32
     pop rbx
-    ret
+
 AgenticEngine_Initialize ENDP
 
 ;=====================================================================
@@ -147,8 +147,10 @@ AgenticEngine_Initialize ENDP
 ;=====================================================================
 AgenticEngine_ProcessResponse PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
     sub rsp, 64
@@ -200,12 +202,14 @@ no_failure_found:
 
 done:
     add rsp, 64
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 AgenticEngine_ProcessResponse ENDP
 
 ;=====================================================================
@@ -215,6 +219,7 @@ AgenticEngine_ProcessResponse ENDP
 ;=====================================================================
 AgenticEngine_ExecuteTask PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 48
@@ -234,10 +239,11 @@ AgenticEngine_ExecuteTask PROC
     ; rax now contains the output of the tool execution
     
     add rsp, 48
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 AgenticEngine_ExecuteTask ENDP
 
 ;=====================================================================
@@ -254,3 +260,8 @@ AgenticEngine_GetStats PROC
 AgenticEngine_GetStats ENDP
 
 END
+
+
+
+
+

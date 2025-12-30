@@ -103,7 +103,6 @@ init_fail:
 init_done:
     add rsp, 32
     pop rbx
-    ret
 
 hotpatch_initialize ENDP
 
@@ -117,6 +116,7 @@ ALIGN 16
 asm_malloc PROC
 
     push rbx
+
     push r12
     sub rsp, 48             ; 32 shadow + 16 for locals
     
@@ -185,11 +185,10 @@ malloc_fail:
     
 malloc_done:
     add rsp, 48
-    pop r12
-    pop rbx
-    ret
 
-asm_malloc ENDP
+    pop r12
+    pop asm
+    pop rbx_malloc ENDP
 
 ;=====================================================================
 ; asm_free(ptr: rcx) -> void
@@ -232,7 +231,6 @@ free_invalid:
 free_done:
     add rsp, 32
     pop rbx
-    ret
 
 asm_free ENDP
 
@@ -246,6 +244,7 @@ ALIGN 16
 asm_realloc PROC
 
     push rbx
+
     push r12
     push r13
     sub rsp, 32
@@ -317,10 +316,10 @@ realloc_fail:
     
 realloc_done:
     add rsp, 32
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
 
 asm_realloc ENDP
 
@@ -358,7 +357,6 @@ mutex_create_fail:
 mutex_create_done:
     add rsp, 32
     pop rbx
-    ret
 
 asm_mutex_create ENDP
 
@@ -455,7 +453,6 @@ event_create_fail:
 event_create_done:
     add rsp, 48
     pop rbx
-    ret
 
 asm_event_create ENDP
 
@@ -490,6 +487,7 @@ ALIGN 16
 asm_str_create PROC
 
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -563,11 +561,10 @@ str_create_fail:
     
 str_create_done:
     add rsp, 32
-    pop r12
-    pop rbx
-    ret
 
-asm_str_create ENDP
+    pop r12
+    pop asm
+    pop rbx_str_create ENDP
 
 ;=====================================================================
 ; asm_str_destroy(handle: rcx) -> void
@@ -619,6 +616,7 @@ ALIGN 16
 asm_event_loop_create PROC
 
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -676,11 +674,10 @@ loop_create_fail:
     
 loop_create_done:
     add rsp, 32
-    pop r12
-    pop rbx
-    ret
 
-asm_event_loop_create ENDP
+    pop r12
+    pop asm
+    pop rbx_event_loop_create ENDP
 
 ;=====================================================================
 ; asm_event_loop_emit(loop: rcx, signal_id: rdx, p1: r8, p2: r9, p3: [rsp+40]) -> void
@@ -690,6 +687,7 @@ ALIGN 16
 asm_event_loop_emit PROC
 
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -739,11 +737,10 @@ emit_queue_full:
     
 emit_done:
     add rsp, 32
-    pop r12
-    pop rbx
-    ret
 
-asm_event_loop_emit ENDP
+    pop r12
+    pop asm
+    pop rbx_event_loop_emit ENDP
 
 ;=====================================================================
 ; asm_event_loop_process_one(loop: rcx) -> rax
@@ -753,6 +750,7 @@ ALIGN 16
 asm_event_loop_process_one PROC
 
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -831,11 +829,10 @@ process_one_fail:
     
 process_one_exit:
     add rsp, 32
-    pop r12
-    pop rbx
-    ret
 
-asm_event_loop_process_one ENDP
+    pop r12
+    pop asm
+    pop rbx_event_loop_process_one ENDP
 
 ;=====================================================================
 ; hotpatch_apply(target_ptr: rcx, patch_data: rdx, size: r8) -> rax
@@ -855,6 +852,7 @@ ALIGN 16
 hotpatch_apply PROC
 
     push rbx
+
     push r12
     push r13
     sub rsp, 48
@@ -919,10 +917,10 @@ hotpatch_apply_fail:
     
 hotpatch_apply_done:
     add rsp, 48
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
 
 hotpatch_apply ENDP
 
@@ -937,6 +935,7 @@ ALIGN 16
 hotpatch_main PROC
 
     push rbx
+
     push r12
     push r13
     sub rsp, 32
@@ -996,10 +995,10 @@ main_fail:
     
 main_done:
     add rsp, 32
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
 
 hotpatch_main ENDP
 
@@ -1012,3 +1011,8 @@ hotpatch_main ENDP
 test_string db "Hello, MASM!", 0
 
 END
+
+
+
+
+

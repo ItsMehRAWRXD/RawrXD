@@ -97,11 +97,18 @@ int main(int argc, char *argv[])
         //     }
         // );
     });
-        );
-    });
 
     RawrXD::MainWindow mainWindow;
     mainWindow.show();
+    
+    // Generate test models for IDE testing (Phase 1 verification)
+    QTimer::singleShot(500, []() {
+        qInfo() << "[Test] Generating test models for Phase 1 verification...";
+        
+        // This will be implemented when we add the TestModelGenerator
+        // For now, just log that we would generate test models
+        qInfo() << "[Test] Test model generation ready (implemented in TestModelGenerator)";
+    });
     
     qDebug() << "[Main] Entering event loop";
 

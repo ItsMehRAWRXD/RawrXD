@@ -115,9 +115,9 @@ terminal_create ENDP
 PUBLIC terminal_start
 terminal_start PROC
     push rbx
+
     push rsi
-    
-    mov rbx, rcx                   ; rbx = context
+    push mov rbx, rcx                   ; rbx = context
     mov r8d, edx                   ; r8d = shellType
     
     ; Store shell type
@@ -192,7 +192,8 @@ create_process:
     xor r10, r10
     
     ; lpProcessAttributes, lpThreadAttributes, bInheritHandles
-    ; (would need to push these as stack args)
+    ; (would need to push these
+    push as stack args)
     
     call CreateProcessA
     
@@ -219,26 +220,24 @@ create_process:
     
 skip_started:
     mov eax, 1                     ; Success
+
     pop rsi
-    pop rbx
-    ret
-    
-pipe_error:
+    pop pipe
+    pop rbx_error:
     lea rcx, [szPipeError]
     call console_log
     xor eax, eax
+
     pop rsi
-    pop rbx
-    ret
-    
-create_error:
+    pop create
+    pop rbx_error:
     lea rcx, [szProcessError]
     call console_log
     xor eax, eax
+
     pop rsi
-    pop rbx
-    ret
-terminal_start ENDP
+    pop terminal
+    pop rbx_start ENDP
 
 ; ============================================================================
 
@@ -248,8 +247,7 @@ terminal_start ENDP
 PUBLIC terminal_stop
 terminal_stop PROC
     push rbx
-    
-    mov rbx, rcx
+    push mov rbx, rcx
     
     ; Check if running
     cmp byte ptr [rbx].TERMINAL_CONTEXT.isRunning, 1
@@ -270,12 +268,11 @@ terminal_stop PROC
     
     mov eax, 1
     pop rbx
-    ret
-    
+
 not_running:
     xor eax, eax
     pop rbx
-    ret
+
 terminal_stop ENDP
 
 ; ============================================================================
@@ -352,8 +349,7 @@ terminal_read_error ENDP
 PUBLIC terminal_get_exit_code
 terminal_get_exit_code PROC
     push rbx
-    
-    mov rbx, rcx
+    push mov rbx, rcx
     
     lea rdx, [rbx].TERMINAL_CONTEXT.isRunning
     mov rcx, [rbx].TERMINAL_CONTEXT.processHandle
@@ -364,7 +360,7 @@ terminal_get_exit_code PROC
     mov eax, [rbx].TERMINAL_CONTEXT.isRunning
     
     pop rbx
-    ret
+
 terminal_get_exit_code ENDP
 
 ; ============================================================================
@@ -394,8 +390,7 @@ terminal_set_error_callback ENDP
 PUBLIC terminal_destroy
 terminal_destroy PROC
     push rbx
-    
-    mov rbx, rcx
+    push mov rbx, rcx
     
     ; Stop if running
     call terminal_stop
@@ -450,9 +445,14 @@ skip_err_buf:
     call free
     
     pop rbx
-    ret
+
 terminal_destroy ENDP
 
 ; ============================================================================
 
 END
+
+
+
+
+

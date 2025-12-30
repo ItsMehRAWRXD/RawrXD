@@ -78,8 +78,9 @@ g_fallback_count        QWORD 0
 ALIGN 16
 copy_string_to_buffer PROC
     push rsi
+
     push rdi
-    mov rsi, rcx            ; src
+    push mov rsi, rcx            ; src
     mov rdi, rdx            ; dest
     xor rax, rax            ; counter
 copy_loop_cstb:
@@ -90,32 +91,35 @@ copy_loop_cstb:
     inc rax
     jmp copy_loop_cstb
 copy_done_cstb:
+
     pop rdi
-    pop rsi
-    ret
-copy_string_to_buffer ENDP
+    pop copy
+    pop rsi_string_to_buffer ENDP
 
 ; Helper: Appends data to buffer.
 ALIGN 16
 append_to_buffer PROC
     push rsi
+
     push rdi
-    mov rsi, rcx            ; src
+    push mov rsi, rcx            ; src
     mov rdi, r8             ; dest
     mov rcx, rdx            ; length
     rep movsb
     mov rax, rdx            ; Return appended length
+
     pop rdi
-    pop rsi
-    ret
-append_to_buffer ENDP
+    pop append
+    pop rsi_to_buffer ENDP
 
 ALIGN 16
 masm_puppeteer_correct_response PROC
 
     push rbx
+
     push r12
     push r13
+
     push r14
     sub rsp, 64
     
@@ -162,7 +166,7 @@ correct_refusal:
     mov rax, rdx
     add rax, 256            ; Add space for prefix
     push rax
-    mov rcx, rax
+    push mov rcx, rax
     mov rdx, 16
     call asm_malloc
     pop r8                  ; r8 = allocated size
@@ -651,13 +655,13 @@ correct_fail:
 
 correct_exit:
     add rsp, 64
-    pop r14
-    pop r13
-    pop r12
-    pop rbx
-    ret
 
-masm_puppeteer_correct_response ENDP
+    pop r13 pop r14
+
+
+    pop r12
+    pop masm
+    pop rbx_puppeteer_correct_response ENDP
 
 ;=====================================================================
 ; masm_puppeteer_get_stats(stats_ptr: rcx) -> void
@@ -743,7 +747,7 @@ g_format_corrections_applied QWORD ?
 ; Helper functions for string operations
 strlen_custom PROC
     push rdi
-    mov rdi, rcx
+    push mov rdi, rcx
     xor rax, rax
 strlen_loop:
     cmp byte ptr [rdi + rax], 0
@@ -752,12 +756,13 @@ strlen_loop:
     jmp strlen_loop
 strlen_done:
     pop rdi
-    ret
+
 strlen_custom ENDP
 
 strstr_custom PROC
     ; Simple substring search - returns pointer or NULL
     push rbx
+
     push rsi
     push rdi
     
@@ -790,10 +795,11 @@ strstr_not_found:
     xor rax, rax
     
 strstr_found:
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 strstr_custom ENDP
 
 strstr_case_insensitive PROC
@@ -817,9 +823,9 @@ db_search_claim ENDP
 append_str_safe PROC
     ; Safe string append stub
     push rsi
+
     push rdi
-    
-    mov rsi, rcx    ; source
+    push mov rsi, rcx    ; source
     ; rdi already set to destination
     
 append_loop:
@@ -832,17 +838,17 @@ append_loop:
     jmp append_loop
     
 append_str_done:
+
     pop rdi
-    pop rsi
-    ret
-append_str_safe ENDP
+    pop append
+    pop rsi_str_safe ENDP
 
 _extract_claims_from_text PROC
     ; Simplified claim extraction
     push rbx
+
     push rsi
-    
-    mov rsi, rcx    ; text
+    push mov rsi, rcx    ; text
     mov rbx, r8     ; claims array
     
     test rsi, rsi
@@ -859,9 +865,9 @@ extract_no_claims:
     xor rax, rax
     
 extract_claims_done:
+
     pop rsi
     pop rbx
-    ret
 _extract_claims_from_text ENDP
 
 _verify_claims_against_db PROC
@@ -873,9 +879,9 @@ _verify_claims_against_db ENDP
 _append_correction_string PROC
     ; Simplified correction append
     push rsi
+
     push rdi
-    
-    mov rdi, rcx    ; dest buffer
+    push mov rdi, rcx    ; dest buffer
     mov rsi, rdx    ; correction text
     
     test rdi, rdi
@@ -893,9 +899,9 @@ _append_correction_string PROC
     call append_str_safe
     
 append_corr_done:
+
     pop rdi
     pop rsi
-    ret
 _append_correction_string ENDP
 
 _check_dangerous_keyword PROC
@@ -972,3 +978,7 @@ szCorrectionPrefix      DB " [CORRECTION: ", 0
 g_reversals_applied     QWORD ?
 
 END
+
+
+
+

@@ -168,6 +168,7 @@ ALIGN 16
 main_initialize_all_systems PROC
 
     push rbx
+
     push r12
     push r13
     sub rsp, 32
@@ -341,10 +342,10 @@ init_failed:
     
 init_done:
     add rsp, 32
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
 
 main_initialize_all_systems ENDP
 
@@ -370,7 +371,6 @@ main_shutdown_all_systems PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
 
 main_shutdown_all_systems ENDP
 
@@ -427,7 +427,6 @@ post_msg_fail:
 post_msg_done:
     add rsp, 32
     pop rbx
-    ret
 
 main_post_message ENDP
 
@@ -507,8 +506,12 @@ loop_start:
 loop_end:
     add rsp, 64
     pop rbx
-    ret
 
 main_run_event_loop ENDP
 
 END
+
+
+
+
+

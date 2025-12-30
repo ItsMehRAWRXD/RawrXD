@@ -99,7 +99,6 @@ init_fail:
 init_exit:
     add rsp, 32
     pop rbx
-    ret
 
 masm_proxy_hotpatch_init ENDP
 
@@ -113,6 +112,7 @@ ALIGN 16
 masm_proxy_hotpatch_add PROC
 
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -159,11 +159,10 @@ add_full:
 
 add_exit:
     add rsp, 32
-    pop r12
-    pop rbx
-    ret
 
-masm_proxy_hotpatch_add ENDP
+    pop r12
+    pop masm
+    pop rbx_proxy_hotpatch_add ENDP
 
 ;=====================================================================
 ; masm_proxy_apply_logit_bias(token_id: rcx, logits_ptr: rdx, 
@@ -177,8 +176,10 @@ ALIGN 16
 masm_proxy_apply_logit_bias PROC
 
     push rbx
+
     push r12
     push r13
+
     push r14
     sub rsp, 32
     
@@ -247,13 +248,13 @@ logit_not_found:
 
 logit_exit:
     add rsp, 32
-    pop r14
-    pop r13
-    pop r12
-    pop rbx
-    ret
 
-masm_proxy_apply_logit_bias ENDP
+    pop r13 pop r14
+
+
+    pop r12
+    pop masm
+    pop rbx_proxy_apply_logit_bias ENDP
 
 ;=====================================================================
 ; masm_proxy_inject_rst(stream_ptr: rcx, stream_len: rdx, 
@@ -266,8 +267,10 @@ ALIGN 16
 masm_proxy_inject_rst PROC
 
     push rbx
+
     push r12
     push r13
+
     push r14
     sub rsp, 32
     
@@ -307,14 +310,12 @@ rst_search:
     ; Call validator: validator(stream_ptr: rcx, stream_len: rdx) -> rax (1=valid, 0=invalid)
     push rax                ; Save hotpatch ptr
     push r10
-    
-    mov rcx, rbx            ; stream_ptr
+    push mov rcx, rbx            ; stream_ptr
     mov rdx, r12            ; stream_len
     mov rax, [rax + 24]     ; validator_ptr
     call rax                ; Call through function pointer
-    
-    pop r10
-    pop r11                 ; r11 = hotpatch ptr
+
+    pop r10 r11                 ; r11 = hotpatch ptr
     
     test rax, rax
     jz rst_next             ; Validator returned false
@@ -331,7 +332,7 @@ rst_apply_injection:
     mov rdx, rbx            ; src = stream_ptr
     mov r8, r12             ; size = stream_len
     push rax
-    call masm_core_direct_copy
+    push call masm_core_direct_copy
     pop rax
     
     ; Append termination pattern
@@ -340,7 +341,7 @@ rst_apply_injection:
     mov rdx, [rax + 48]     ; src = pattern_ptr
     mov r8, [rax + 56]      ; size = pattern_len
     push rax
-    call masm_core_direct_copy
+    push call masm_core_direct_copy
     pop rax
     
     ; Update output length
@@ -380,13 +381,13 @@ rst_not_found:
 
 rst_exit:
     add rsp, 32
-    pop r14
-    pop r13
-    pop r12
-    pop rbx
-    ret
 
-masm_proxy_inject_rst ENDP
+    pop r13 pop r14
+
+
+    pop r12
+    pop masm
+    pop rbx_proxy_inject_rst ENDP
 
 ;=====================================================================
 ; masm_proxy_transform_response(response_ptr: rcx, response_len: rdx, 
@@ -399,8 +400,10 @@ ALIGN 16
 masm_proxy_transform_response PROC
 
     push rbx
+
     push r12
     push r13
+
     push r14
     sub rsp, 32
     
@@ -436,9 +439,9 @@ transform_loop:
     
     ; Call transform: transform_fn(input: rcx, input_len: rdx, output: r8, output_len: r9) -> rax
     push r10
+
     push rax
-    
-    mov rcx, rbx
+    push mov rcx, rbx
     mov rdx, r12
     mov r8, r13
     mov r9, r14
@@ -466,13 +469,13 @@ transform_done:
     mov rax, 1
 
     add rsp, 32
-    pop r14
-    pop r13
-    pop r12
-    pop rbx
-    ret
 
-masm_proxy_transform_response ENDP
+    pop r13 pop r14
+
+
+    pop r12
+    pop masm
+    pop rbx_proxy_transform_response ENDP
 
 ;=====================================================================
 ; masm_proxy_hotpatch_get_stats(stats_ptr: rcx) -> void
@@ -537,9 +540,13 @@ cleanup_no_registry:
 cleanup_exit:
     add rsp, 32
     pop rbx
-    ret
 
 masm_proxy_hotpatch_cleanup ENDP
 
 END
+
+
+
+
+
 

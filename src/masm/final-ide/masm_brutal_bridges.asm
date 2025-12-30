@@ -43,8 +43,9 @@ Bridge_BPE_Encode ENDP
 ; RCX = prefix_ptr, RDX = prefix_len, R8 = out_buf, R9 = out_max
 ; Returns RAX = number of completions written (1 on success, 0 on failure)
 Bridge_GetCompletions PROC
-    push    rbx
-    push    rsi
+    push rbx
+
+    push rsi
     push    rdi
     sub     rsp, 32
 
@@ -94,10 +95,16 @@ _fail:
 
 _exit:
     add     rsp, 32
-    pop     rdi
-    pop     rsi
-    pop     rbx
-    ret
+
+    pop rsi pop rdi
+
+    pop rbx
+
 Bridge_GetCompletions ENDP
 
 END
+
+
+
+
+

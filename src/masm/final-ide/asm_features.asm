@@ -10,6 +10,7 @@
 asm_highlight_syntax PROC
     ; rcx = text buffer, rdx = buffer length
     push rbx
+
     push rsi
     push rdi
     
@@ -66,10 +67,11 @@ highlight_next:
     jmp highlight_loop
     
 highlight_done:
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 asm_highlight_syntax ENDP
 
 ; Intellisense
@@ -114,16 +116,16 @@ asm_format_registers PROC
     ; Continue for all registers...
     
     pop rbx
-    ret
+
 asm_format_registers ENDP
 
 ; Memory Inspector
 asm_read_memory PROC
     ; rcx = address, rdx = size
     push rbx
+
     push rsi
-    
-    mov rsi, rcx        ; address
+    push mov rsi, rcx        ; address
     mov rbx, rdx        ; size
     lea rdi, memory_display_buffer
     
@@ -139,10 +141,10 @@ read_loop:
     jmp read_loop
     
 read_done:
+
     pop rsi
-    pop rbx
-    ret
-asm_read_memory ENDP
+    pop asm
+    pop rbx_read_memory ENDP
 
 ;==========================================================================
 ; Assembler Pane ASM Features
@@ -164,7 +166,7 @@ asm_invoke_masm PROC
     call parse_masm_output
     
     pop rbx
-    ret
+
 asm_invoke_masm ENDP
 
 ; Linker Interface  
@@ -284,3 +286,7 @@ masm_cmdline           db 512 dup(0)
 link_cmdline           db 512 dup(0)
 
 END
+
+
+
+

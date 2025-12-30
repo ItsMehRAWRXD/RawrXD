@@ -327,8 +327,7 @@ visualization_create_window PROC
     mov rax, g_visualization_studio.hWindow
     add rsp, 96
     pop rbx
-    ret
-    
+
 .data
 szVisualizationTitle db "ML Visualization",0
 .code
@@ -340,6 +339,7 @@ visualization_create_window ENDP
 ;==========================================================================
 visualization_render_confusion PROC
     push rbx
+
     push rsi
     sub rsp, 32
     
@@ -360,10 +360,10 @@ visualization_render_confusion PROC
     
     mov rax, 1  ; Success
     add rsp, 32
+
     pop rsi
-    pop rbx
-    ret
-visualization_render_confusion ENDP
+    pop visualization
+    pop rbx_render_confusion ENDP
 
 ;==========================================================================
 ; visualization_render_roc(roc_ptr: rcx) -> bool (rax)
@@ -371,6 +371,7 @@ visualization_render_confusion ENDP
 ;==========================================================================
 visualization_render_roc PROC
     push rbx
+
     push rsi
     sub rsp, 32
     
@@ -391,10 +392,10 @@ visualization_render_roc PROC
     
     mov rax, 1  ; Success
     add rsp, 32
+
     pop rsi
-    pop rbx
-    ret
-visualization_render_roc ENDP
+    pop visualization
+    pop rbx_render_roc ENDP
 
 ;==========================================================================
 ; visualization_render_pr(pr_ptr: rcx) -> bool (rax)
@@ -402,6 +403,7 @@ visualization_render_roc ENDP
 ;==========================================================================
 visualization_render_pr PROC
     push rbx
+
     push rsi
     sub rsp, 32
     
@@ -422,10 +424,10 @@ visualization_render_pr PROC
     
     mov rax, 1  ; Success
     add rsp, 32
+
     pop rsi
-    pop rbx
-    ret
-visualization_render_pr ENDP
+    pop visualization
+    pop rbx_render_pr ENDP
 
 ;==========================================================================
 ; visualization_render_feature_imp(feature_ptr: rcx) -> bool (rax)
@@ -433,6 +435,7 @@ visualization_render_pr ENDP
 ;==========================================================================
 visualization_render_feature_imp PROC
     push rbx
+
     push rsi
     sub rsp, 32
     
@@ -453,10 +456,10 @@ visualization_render_feature_imp PROC
     
     mov rax, 1  ; Success
     add rsp, 32
+
     pop rsi
-    pop rbx
-    ret
-visualization_render_feature_imp ENDP
+    pop visualization
+    pop rbx_render_feature_imp ENDP
 
 ;==========================================================================
 ; visualization_render_embedding(embedding_ptr: rcx) -> bool (rax)
@@ -464,6 +467,7 @@ visualization_render_feature_imp ENDP
 ;==========================================================================
 visualization_render_embedding PROC
     push rbx
+
     push rsi
     sub rsp, 32
     
@@ -484,10 +488,10 @@ visualization_render_embedding PROC
     
     mov rax, 1  ; Success
     add rsp, 32
+
     pop rsi
-    pop rbx
-    ret
-visualization_render_embedding ENDP
+    pop visualization
+    pop rbx_render_embedding ENDP
 
 ;==========================================================================
 ; visualization_render_attention(attention_ptr: rcx) -> bool (rax)
@@ -495,6 +499,7 @@ visualization_render_embedding ENDP
 ;==========================================================================
 visualization_render_attention PROC
     push rbx
+
     push rsi
     sub rsp, 32
     
@@ -515,10 +520,10 @@ visualization_render_attention PROC
     
     mov rax, 1  ; Success
     add rsp, 32
+
     pop rsi
-    pop rbx
-    ret
-visualization_render_attention ENDP
+    pop visualization
+    pop rbx_render_attention ENDP
 
 ;==========================================================================
 ; visualization_render_loss_curve(loss_ptr: rcx) -> bool (rax)
@@ -526,6 +531,7 @@ visualization_render_attention ENDP
 ;==========================================================================
 visualization_render_loss_curve PROC
     push rbx
+
     push rsi
     sub rsp, 32
     
@@ -546,10 +552,10 @@ visualization_render_loss_curve PROC
     
     mov rax, 1  ; Success
     add rsp, 32
+
     pop rsi
-    pop rbx
-    ret
-visualization_render_loss_curve ENDP
+    pop visualization
+    pop rbx_render_loss_curve ENDP
 
 ;==========================================================================
 ; Helper functions
@@ -644,3 +650,7 @@ visualization_pan PROC
 visualization_pan ENDP
 
 end
+
+
+
+

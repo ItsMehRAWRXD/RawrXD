@@ -83,7 +83,7 @@ szTriggers db ".,->,::",0
 PUBLIC intellisense_init
 intellisense_init PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     mov [globalEngine.hEditor], rcx
@@ -103,7 +103,7 @@ intellisense_init ENDP
 PUBLIC intellisense_trigger
 intellisense_trigger PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 64
     
     mov [globalEngine.triggerChar], cl
@@ -134,11 +134,11 @@ intellisense_trigger ENDP
 ; intellisense_get_context() -> bool (rax)
 intellisense_get_context PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     push rsi
+
     push rdi
-    
     ; Get current line from editor
     mov rcx, [globalEngine.hEditor]
     mov rdx, EM_LINEFROMCHAR
@@ -162,11 +162,10 @@ intellisense_get_context PROC
     
     mov eax, cursorStart
     mov [globalEngine.cursorPos], eax
-    
-    pop rdi
-    pop rsi
-    leave
+
+    pop rdi leave
     ret
+    pop rsi
     
 .data
 cursorStart DWORD ?
@@ -178,12 +177,12 @@ intellisense_get_context ENDP
 ; intellisense_generate_completions() -> count (rax)
 intellisense_generate_completions PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     push rbx
+
     push rsi
-    
-    mov [globalEngine.completionCount], 0
+    push mov [globalEngine.completionCount], 0
     
     ; Get word prefix at cursor
     lea rcx, [globalEngine.currentLine]
@@ -212,11 +211,12 @@ search_symbols:
     
     ; Add to completions
     push rsi
+
     push rdi
-    call add_completion_item
-    pop rdi
-    pop rsi
-    
+    push call add_completion_item
+
+    pop rsi pop rdi
+
 next_symbol:
     add rdi, MAX_SYMBOL_LENGTH
     dec esi
@@ -228,17 +228,16 @@ search_done:
     
 no_prefix:
     mov eax, [globalEngine.completionCount]
-    
-    pop rsi
-    pop rbx
-    leave
+
+    pop rsi leave
     ret
+    pop rbx
 intellisense_generate_completions ENDP
 
 ; intellisense_show_popup() -> bool (rax)
 intellisense_show_popup PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 64
     
     ; Create popup window if not exists
@@ -273,6 +272,7 @@ intellisense_show_popup PROC
     lea r8, szPopupTitle
     mov r9d, WS_POPUP or WS_BORDER
     push 0
+
     push 0
     push 200  ; Height
     push 300  ; Width
@@ -280,8 +280,9 @@ intellisense_show_popup PROC
     push 100  ; X
     push [globalEngine.hEditor]
     push rcx
-    call CreateWindowExA
-    add rsp, 64
+    push call
+    push CreateWindowExA
+    push add rsp, 64
     
     mov [globalEngine.hPopupWnd], rax
     
@@ -312,7 +313,7 @@ intellisense_show_popup ENDP
 PUBLIC intellisense_accept_completion
 intellisense_accept_completion PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     ; Check if active
@@ -350,7 +351,7 @@ intellisense_accept_completion ENDP
 PUBLIC intellisense_hide_popup
 intellisense_hide_popup PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     cmp [globalEngine.hPopupWnd], 0
@@ -375,7 +376,7 @@ intellisense_hide_popup ENDP
 ; intellisense_build_symbol_table()
 intellisense_build_symbol_table PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     ; Allocate symbol table
@@ -400,9 +401,10 @@ intellisense_build_symbol_table ENDP
 
 parse_keyword_list PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 64
     push rbx
+
     push rsi
     push rdi
     
@@ -451,10 +453,11 @@ skip_char:
     jmp parse_loop
     
 parse_done:
-    pop rdi
-    pop rsi
-    pop rbx
-    leave
+
+    pop rsi pop rdi
+
+
+    pop leave rbx
     ret
 parse_keyword_list ENDP
 
@@ -462,11 +465,11 @@ extract_word_prefix PROC
     ; rcx = line, edx = cursor pos
     ; Returns pointer to prefix in static buffer
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     push rsi
+
     push rdi
-    
-    mov rsi, rcx
+    push mov rsi, rcx
     mov eax, edx
     test eax, eax
     jz no_prefix
@@ -531,10 +534,10 @@ no_prefix:
     xor rax, rax
     
 exit:
-    pop rdi
-    pop rsi
-    leave
+
+    pop rdi leave
     ret
+    pop rsi
     
 .data
 szPrefixBuffer db MAX_SYMBOL_LENGTH dup(0)
@@ -544,8 +547,9 @@ extract_word_prefix ENDP
 string_starts_with PROC
     ; rcx = string, rdx = prefix
     push rsi
+
     push rdi
-    mov rsi, rcx
+    push mov rsi, rcx
     mov rdi, rdx
     
 cmp_loop:
@@ -565,10 +569,10 @@ is_match:
 no_match:
     xor rax, rax
 done:
+
     pop rdi
-    pop rsi
-    ret
-string_starts_with ENDP
+    pop string
+    pop rsi_starts_with ENDP
 
 add_completion_item PROC
     ; rdi = symbol pointer
@@ -601,7 +605,7 @@ sort_completions ENDP
 
 position_popup_at_cursor PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 64
     
     ; Get cursor position in pixels
@@ -643,3 +647,7 @@ CompletionPopupProc PROC
 CompletionPopupProc ENDP
 
 end
+
+
+
+

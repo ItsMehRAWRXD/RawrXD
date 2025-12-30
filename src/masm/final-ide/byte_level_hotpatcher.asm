@@ -73,6 +73,7 @@ ALIGN 16
 masm_byte_patch_open_file PROC
 
     push rbx
+
     push r12
     sub rsp, 48
     
@@ -123,11 +124,10 @@ open_fail:
 
 open_exit:
     add rsp, 48
-    pop r12
-    pop rbx
-    ret
 
-masm_byte_patch_open_file ENDP
+    pop r12
+    pop masm
+    pop rbx_byte_patch_open_file ENDP
 
 ;=====================================================================
 ; masm_byte_patch_find_pattern(patch_ptr: rcx) -> rax
@@ -141,8 +141,10 @@ ALIGN 16
 masm_byte_patch_find_pattern PROC
 
     push rbx
+
     push r12
     push r13
+
     push r14
     sub rsp, 4096           ; Stack buffer (reduced from 4896)
     
@@ -200,13 +202,13 @@ find_fail:
 
 find_exit:
     add rsp, 4096
-    pop r14
-    pop r13
-    pop r12
-    pop rbx
-    ret
 
-masm_byte_patch_find_pattern ENDP
+    pop r13 pop r14
+
+
+    pop r12
+    pop masm
+    pop rbx_byte_patch_find_pattern ENDP
 
 ;=====================================================================
 ; masm_byte_patch_apply(patch_ptr: rcx) -> rax (1=success, 0=fail)
@@ -223,8 +225,10 @@ ALIGN 16
 masm_byte_patch_apply PROC
 
     push rbx
+
     push r12
     push r13
+
     push r14
     sub rsp, 4096           ; Buffer space (reduced from 4896)
     
@@ -303,13 +307,13 @@ apply_fail:
 
 apply_exit:
     add rsp, 4096
-    pop r14
-    pop r13
-    pop r12
-    pop rbx
-    ret
 
-masm_byte_patch_apply ENDP
+    pop r13 pop r14
+
+
+    pop r12
+    pop masm
+    pop rbx_byte_patch_apply ENDP
 
 ;=====================================================================
 ; masm_byte_patch_close(patch_ptr: rcx) -> void
@@ -338,7 +342,6 @@ masm_byte_patch_close PROC
 close_exit:
     add rsp, 32
     pop rbx
-    ret
 
 masm_byte_patch_close ENDP
 
@@ -372,5 +375,10 @@ stats_exit:
 masm_byte_patch_get_stats ENDP
 
 END
+
+
+
+
+
 
 

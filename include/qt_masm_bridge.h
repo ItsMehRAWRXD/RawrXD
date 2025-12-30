@@ -12,6 +12,12 @@
 #include <functional>
 
 namespace RawrXD {
+    struct QtParam;
+}
+
+extern "C" void qt_masm_signal_callback(uint32_t signalId, uint32_t paramCount, const RawrXD::QtParam* params);
+
+namespace RawrXD {
 
 #pragma pack(push, 1)
 struct QtParam
@@ -69,7 +75,7 @@ private:
     void dispatchSignal(uint32_t signalId, uint32_t paramCount, const QtParam* params);
     void pumpEvents();
 
-    friend void qt_masm_signal_callback(uint32_t signalId, uint32_t paramCount, const QtParam* params);
+    friend void ::qt_masm_signal_callback(uint32_t signalId, uint32_t paramCount, const RawrXD::QtParam* params);
 
     bool m_initialized = false;
     bool m_masmInitialized = false;

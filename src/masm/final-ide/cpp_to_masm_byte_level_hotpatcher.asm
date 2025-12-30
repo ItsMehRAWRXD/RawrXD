@@ -115,8 +115,7 @@ PATCH_TYPE_DELETE EQU 7
 PUBLIC byte_level_hotpatcher_create
 byte_level_hotpatcher_create PROC
     push rbx
-    
-    mov rbx, rcx                    ; rbx = modelData
+    push mov rbx, rcx                    ; rbx = modelData
     mov r9, rdx                     ; r9 = modelSize
     
     ; Allocate hotpatcher
@@ -157,7 +156,7 @@ byte_level_hotpatcher_create PROC
     
     mov rax, r10
     pop rbx
-    ret
+
 byte_level_hotpatcher_create ENDP
 
 ; ============================================================================
@@ -168,14 +167,14 @@ byte_level_hotpatcher_create ENDP
 PUBLIC byte_hotpatcher_apply_patch
 byte_hotpatcher_apply_patch PROC
     push rbx
+
     push rsi
-    
-    mov rbx, rcx                    ; rbx = hotpatcher
+    push mov rbx, rcx                    ; rbx = hotpatcher
     mov rsi, rdx                    ; rsi = patch
     
     ; Check if patch enabled
     cmp byte [rsi + BYTE_PATCH.enabled], 1
-    jne .patch_disabled
+    jne @@patch_disabled
     
     ; Check bounds
     mov r8, [rsi + BYTE_PATCH.offset]
@@ -184,7 +183,7 @@ byte_hotpatcher_apply_patch PROC
     
     add r8, r9
     cmp r8, r10
-    jg .out_of_bounds
+    jg @@out_of_bounds
     
     ; Get start time
     call GetSystemTimeAsFileTime
@@ -199,90 +198,81 @@ byte_hotpatcher_apply_patch PROC
     mov eax, [rsi + BYTE_PATCH.type]
     
     cmp eax, PATCH_TYPE_REPLACE
-    je .apply_replace
+    je @@apply_replace
     cmp eax, PATCH_TYPE_BITFLIP
-    je .apply_bitflip
+    je @@apply_bitflip
     cmp eax, PATCH_TYPE_XOR
-    je .apply_xor
+    je @@apply_xor
     cmp eax, PATCH_TYPE_ROTATE
-    je .apply_rotate
+    je @@apply_rotate
     cmp eax, PATCH_TYPE_REVERSE
-    je .apply_reverse
+    je @@apply_reverse
     cmp eax, PATCH_TYPE_SWAP
-    je .apply_swap
+    je @@apply_swap
     cmp eax, PATCH_TYPE_INSERT
-    je .apply_insert
+    je @@apply_insert
     cmp eax, PATCH_TYPE_DELETE
-    je .apply_delete
+    je @@apply_delete
     
-    jmp .unknown_type
-    
-.apply_replace:
+    jmp @@unknown_type
+@@apply_replace:
     ; Simple replacement
     mov rcx, [rbx + BYTE_LEVEL_HOTPATCHER.modelData]
     add rcx, [rsi + BYTE_PATCH.offset]
     mov rdx, [rsi + BYTE_PATCH.patchData]
     mov r8, [rsi + BYTE_PATCH.size]
     call memcpy
-    jmp .patch_applied
-    
-.apply_bitflip:
+    jmp @@patch_applied
+@@apply_bitflip:
     ; Bitflip operation
     mov rcx, [rbx + BYTE_LEVEL_HOTPATCHER.modelData]
     add rcx, [rsi + BYTE_PATCH.offset]
     mov rdx, [rsi + BYTE_PATCH.size]
     call apply_bitflip_operation
-    jmp .patch_applied
-    
-.apply_xor:
+    jmp @@patch_applied
+@@apply_xor:
     ; XOR operation
     mov rcx, [rbx + BYTE_LEVEL_HOTPATCHER.modelData]
     add rcx, [rsi + BYTE_PATCH.offset]
     mov rdx, [rsi + BYTE_PATCH.size]
     mov r8, [rsi + BYTE_PATCH.patchData]
     call apply_xor_operation
-    jmp .patch_applied
-    
-.apply_rotate:
+    jmp @@patch_applied
+@@apply_rotate:
     ; Rotate operation
     mov rcx, [rbx + BYTE_LEVEL_HOTPATCHER.modelData]
     add rcx, [rsi + BYTE_PATCH.offset]
     mov rdx, [rsi + BYTE_PATCH.size]
     mov r8d, 1                      ; Rotate right by 1
     call apply_rotate_operation
-    jmp .patch_applied
-    
-.apply_reverse:
+    jmp @@patch_applied
+@@apply_reverse:
     ; Reverse operation
     mov rcx, [rbx + BYTE_LEVEL_HOTPATCHER.modelData]
     add rcx, [rsi + BYTE_PATCH.offset]
     mov rdx, [rsi + BYTE_PATCH.size]
     call apply_reverse_operation
-    jmp .patch_applied
-    
-.apply_swap:
+    jmp @@patch_applied
+@@apply_swap:
     ; Swap operation
     mov rcx, [rbx + BYTE_LEVEL_HOTPATCHER.modelData]
     add rcx, [rsi + BYTE_PATCH.offset]
     mov rdx, [rsi + BYTE_PATCH.size]
     call apply_swap_operation
-    jmp .patch_applied
-    
-.apply_insert:
+    jmp @@patch_applied
+@@apply_insert:
     ; Insert operation (requires buffer expansion)
     mov rcx, rbx
     mov rdx, rsi
     call apply_insert_operation
-    jmp .patch_applied
-    
-.apply_delete:
+    jmp @@patch_applied
+@@apply_delete:
     ; Delete operation (requires buffer compaction)
     mov rcx, rbx
     mov rdx, rsi
     call apply_delete_operation
-    jmp .patch_applied
-    
-.patch_applied:
+    jmp @@patch_applied
+@@patch_applied:
     ; Get end time
     call GetSystemTimeAsFileTime
     sub rax, r8                     ; rax = elapsed time
@@ -311,13 +301,12 @@ byte_hotpatcher_apply_patch PROC
     call console_log
     
     mov rax, r9                     ; Return result
+
     pop rsi
     pop rbx
-    ret
-    
-.out_of_bounds:
-.unknown_type:
-.patch_disabled:
+@@out_of_bounds:
+@@unknown_type:
+@@patch_disabled:
     ; Set error result
     mov byte [r9 + PATCH_RESULT.success], 0
     lea rax, [szPatchFailedDetail]
@@ -333,10 +322,10 @@ byte_hotpatcher_apply_patch PROC
     inc dword [rbx + BYTE_LEVEL_HOTPATCHER.totalErrors]
     
     mov rax, r9
+
     pop rsi
-    pop rbx
-    ret
-byte_hotpatcher_apply_patch ENDP
+    pop byte
+    pop rbx_hotpatcher_apply_patch ENDP
 
 ; ============================================================================
 
@@ -346,9 +335,9 @@ byte_hotpatcher_apply_patch ENDP
 PUBLIC byte_hotpatcher_add_patch
 byte_hotpatcher_add_patch PROC
     push rbx
+
     push rsi
-    
-    mov rbx, rcx                    ; rbx = hotpatcher
+    push mov rbx, rcx                    ; rbx = hotpatcher
     mov rsi, rdx                    ; rsi = name
     mov r10, r8                     ; r10 = description
     mov r11d, r9d                   ; r11d = type
@@ -356,7 +345,7 @@ byte_hotpatcher_add_patch PROC
     ; Check capacity
     mov r12d, [rbx + BYTE_LEVEL_HOTPATCHER.patchCount]
     cmp r12d, [rbx + BYTE_LEVEL_HOTPATCHER.maxPatches]
-    jge .capacity_exceeded
+    jge @@capacity_exceeded
     
     ; Get patch slot
     mov r13, [rbx + BYTE_LEVEL_HOTPATCHER.patches]
@@ -410,16 +399,15 @@ byte_hotpatcher_add_patch PROC
     inc dword [rbx + BYTE_LEVEL_HOTPATCHER.patchCount]
     
     mov eax, r12d                   ; Return patch ID
+
     pop rsi
     pop rbx
-    ret
-    
-.capacity_exceeded:
+@@capacity_exceeded:
     xor rax, rax
+
     pop rsi
-    pop rbx
-    ret
-byte_hotpatcher_add_patch ENDP
+    pop byte
+    pop rbx_hotpatcher_add_patch ENDP
 
 ; ============================================================================
 
@@ -429,16 +417,16 @@ byte_hotpatcher_add_patch ENDP
 PUBLIC byte_hotpatcher_add_pattern
 byte_hotpatcher_add_pattern PROC
     push rbx
+
     push rsi
-    
-    mov rbx, rcx                    ; rbx = hotpatcher
+    push mov rbx, rcx                    ; rbx = hotpatcher
     mov rsi, rdx                    ; rsi = pattern
     mov r9, r8                      ; r9 = patternSize
     
     ; Check capacity
     mov r10d, [rbx + BYTE_LEVEL_HOTPATCHER.patternCount]
     cmp r10d, [rbx + BYTE_LEVEL_HOTPATCHER.maxPatterns]
-    jge .capacity_exceeded
+    jge @@capacity_exceeded
     
     ; Get pattern slot
     mov r11, [rbx + BYTE_LEVEL_HOTPATCHER.patterns]
@@ -456,16 +444,15 @@ byte_hotpatcher_add_pattern PROC
     inc dword [rbx + BYTE_LEVEL_HOTPATCHER.patternCount]
     
     mov eax, r10d                   ; Return pattern ID
+
     pop rsi
     pop rbx
-    ret
-    
-.capacity_exceeded:
+@@capacity_exceeded:
     xor rax, rax
+
     pop rsi
-    pop rbx
-    ret
-byte_hotpatcher_add_pattern ENDP
+    pop byte
+    pop rbx_hotpatcher_add_pattern ENDP
 
 ; ============================================================================
 
@@ -475,6 +462,7 @@ byte_hotpatcher_add_pattern ENDP
 PUBLIC byte_hotpatcher_search_patterns
 byte_hotpatcher_search_patterns PROC
     push rbx
+
     push rsi
     push rdi
     
@@ -491,10 +479,9 @@ byte_hotpatcher_search_patterns PROC
     mov r10, [rbx + BYTE_LEVEL_HOTPATCHER.patterns]
     mov r11d, [rbx + BYTE_LEVEL_HOTPATCHER.patternCount]
     xor r12d, r12d                  ; r12d = pattern index
-    
-.search_loop:
+@@search_loop:
     cmp r12d, r11d
-    jge .search_complete
+    jge @@search_complete
     
     ; Get current pattern
     mov r13, r10
@@ -511,7 +498,7 @@ byte_hotpatcher_search_patterns PROC
     call boyer_moore_search
     
     cmp rax, -1
-    je .pattern_not_found
+    je @@pattern_not_found
     
     ; Store match result
     mov r15, rsi
@@ -532,12 +519,10 @@ byte_hotpatcher_search_patterns PROC
     mov r8, rax
     mov r9d, 100
     call console_log
-    
-.pattern_not_found:
+@@pattern_not_found:
     inc r12d
-    jmp .search_loop
-    
-.search_complete:
+    jmp @@search_loop
+@@search_complete:
     ; Update statistics
     add [rbx + BYTE_LEVEL_HOTPATCHER.totalPatternMatches], rdi
     
@@ -547,10 +532,11 @@ byte_hotpatcher_search_patterns PROC
     call console_log
     
     mov rax, rdi                    ; Return match count
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 byte_hotpatcher_search_patterns ENDP
 
 ; ============================================================================
@@ -563,10 +549,9 @@ byte_hotpatcher_get_patch PROC
     mov r8, [rcx + BYTE_LEVEL_HOTPATCHER.patches]
     mov r9d, [rcx + BYTE_LEVEL_HOTPATCHER.patchCount]
     xor r10d, r10d
-    
-.find_patch:
+@@find_patch:
     cmp r10d, r9d
-    jge .patch_not_found
+    jge @@patch_not_found
     
     mov r11, r8
     mov r12, r10
@@ -574,16 +559,14 @@ byte_hotpatcher_get_patch PROC
     add r11, r12
     
     cmp r10d, edx
-    je .patch_found
+    je @@patch_found
     
     inc r10d
-    jmp .find_patch
-    
-.patch_found:
+    jmp @@find_patch
+@@patch_found:
     mov rax, r11
     ret
-    
-.patch_not_found:
+@@patch_not_found:
     xor rax, rax
     ret
 byte_hotpatcher_get_patch ENDP
@@ -608,17 +591,15 @@ byte_hotpatcher_get_statistics ENDP
 PUBLIC byte_hotpatcher_destroy
 byte_hotpatcher_destroy PROC
     push rbx
-    
-    mov rbx, rcx
+    push mov rbx, rcx
     
     ; Free patches array
     mov r10, [rbx + BYTE_LEVEL_HOTPATCHER.patches]
     mov r11d, [rbx + BYTE_LEVEL_HOTPATCHER.patchCount]
     xor r12d, r12d
-    
-.free_patches:
+@@free_patches:
     cmp r12d, r11d
-    jge .patches_freed
+    jge @@patches_freed
     
     mov r13, r10
     mov r14, r12
@@ -627,51 +608,44 @@ byte_hotpatcher_destroy PROC
     
     mov rcx, [r13 + BYTE_PATCH.name]
     cmp rcx, 0
-    je .skip_patch_name
+    je @@skip_patch_name
     call free
-    
-.skip_patch_name:
+@@skip_patch_name:
     mov rcx, [r13 + BYTE_PATCH.description]
     cmp rcx, 0
-    je .skip_patch_desc
+    je @@skip_patch_desc
     call free
-    
-.skip_patch_desc:
+@@skip_patch_desc:
     mov rcx, [r13 + BYTE_PATCH.originalData]
     cmp rcx, 0
-    je .skip_original
+    je @@skip_original
     call free
-    
-.skip_original:
+@@skip_original:
     mov rcx, [r13 + BYTE_PATCH.patchData]
     cmp rcx, 0
-    je .skip_patch
+    je @@skip_patch
     call free
-    
-.skip_patch:
+@@skip_patch:
     inc r12d
-    jmp .free_patches
-    
-.patches_freed:
+    jmp @@free_patches
+@@patches_freed:
     mov rcx, [rbx + BYTE_LEVEL_HOTPATCHER.patches]
     cmp rcx, 0
-    je .skip_patches_array
+    je @@skip_patches_array
     call free
-    
-.skip_patches_array:
+@@skip_patches_array:
     ; Free patterns array
     mov rcx, [rbx + BYTE_LEVEL_HOTPATCHER.patterns]
     cmp rcx, 0
-    je .skip_patterns
+    je @@skip_patterns
     call free
-    
-.skip_patterns:
+@@skip_patterns:
     ; Free hotpatcher
     mov rcx, rbx
     call free
     
     pop rbx
-    ret
+
 byte_hotpatcher_destroy ENDP
 
 ; ============================================================================
@@ -682,6 +656,7 @@ byte_hotpatcher_destroy ENDP
 boyer_moore_search PROC
     ; RCX = haystack, RDX = haystackSize, R8 = needle, R9 = needleSize
     push rbx
+
     push rsi
     push rdi
     
@@ -692,12 +667,11 @@ boyer_moore_search PROC
     
     ; Simple linear search (simplified version)
     xor rbx, rbx                    ; rbx = haystack index
-    
-.search_loop:
+@@search_loop:
     mov rax, r10
     sub rax, r11
     cmp rbx, rax
-    jg .not_found
+    jg @@not_found
     
     mov rcx, rsi
     add rcx, rbx
@@ -709,109 +683,99 @@ boyer_moore_search PROC
     jz .found
     
     inc rbx
-    jmp .search_loop
-    
-.found:
+    jmp @@search_loop
+@@found:
     mov rax, rbx
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
-    
-.not_found:
+
+@@not_found:
     mov rax, -1
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 boyer_moore_search ENDP
 
 ; Bitflip operation
 apply_bitflip_operation PROC
     ; RCX = data, RDX = size
     push rbx
-    
-    mov rbx, rcx
+    push mov rbx, rcx
     xor r8, r8
-    
-.bitflip_loop:
+@@bitflip_loop:
     cmp r8, rdx
-    jge .bitflip_done
+    jge @@bitflip_done
     
     mov al, byte [rbx + r8]
     not al
     mov byte [rbx + r8], al
     
     inc r8
-    jmp .bitflip_loop
-    
-.bitflip_done:
+    jmp @@bitflip_loop
+@@bitflip_done:
     pop rbx
-    ret
+
 apply_bitflip_operation ENDP
 
 ; XOR operation
 apply_xor_operation PROC
     ; RCX = data, RDX = size, R8 = key
     push rbx
-    
-    mov rbx, rcx
+    push mov rbx, rcx
     xor r9, r9
-    
-.xor_loop:
+@@xor_loop:
     cmp r9, rdx
-    jge .xor_done
+    jge @@xor_done
     
     mov al, byte [rbx + r9]
     xor al, byte [r8 + r9]
     mov byte [rbx + r9], al
     
     inc r9
-    jmp .xor_loop
-    
-.xor_done:
+    jmp @@xor_loop
+@@xor_done:
     pop rbx
-    ret
+
 apply_xor_operation ENDP
 
 ; Rotate operation
 apply_rotate_operation PROC
     ; RCX = data, RDX = size, R8d = rotate amount
     push rbx
-    
-    mov rbx, rcx
+    push mov rbx, rcx
     xor r9, r9
-    
-.rotate_loop:
+@@rotate_loop:
     cmp r9, rdx
-    jge .rotate_done
+    jge @@rotate_done
     
     mov al, byte [rbx + r9]
     ror al, r8b
     mov byte [rbx + r9], al
     
     inc r9
-    jmp .rotate_loop
-    
-.rotate_done:
+    jmp @@rotate_loop
+@@rotate_done:
     pop rbx
-    ret
+
 apply_rotate_operation ENDP
 
 ; Reverse operation
 apply_reverse_operation PROC
     ; RCX = data, RDX = size
     push rbx
+
     push rsi
-    
-    mov rbx, rcx
+    push mov rbx, rcx
     mov rsi, rdx
     dec rsi
     xor r8, r8
-    
-.reverse_loop:
+@@reverse_loop:
     cmp r8, rsi
-    jge .reverse_done
+    jge @@reverse_done
     
     mov al, byte [rbx + r8]
     mov ah, byte [rbx + rsi]
@@ -821,25 +785,22 @@ apply_reverse_operation PROC
     inc r8
     dec rsi
     cmp r8, rsi
-    jl .reverse_loop
-    
-.reverse_done:
+    jl @@reverse_loop
+@@reverse_done:
+
     pop rsi
-    pop rbx
-    ret
-apply_reverse_operation ENDP
+    pop apply
+    pop rbx_reverse_operation ENDP
 
 ; Swap operation
 apply_swap_operation PROC
     ; RCX = data, RDX = size
     push rbx
-    
-    mov rbx, rcx
+    push mov rbx, rcx
     xor r8, r8
-    
-.swap_loop:
+@@swap_loop:
     cmp r8, rdx
-    jge .swap_done
+    jge @@swap_done
     
     mov al, byte [rbx + r8]
     mov ah, byte [rbx + r8 + 1]
@@ -847,11 +808,10 @@ apply_swap_operation PROC
     mov byte [rbx + r8 + 1], al
     
     add r8, 2
-    jmp .swap_loop
-    
-.swap_done:
+    jmp @@swap_loop
+@@swap_done:
     pop rbx
-    ret
+
 apply_swap_operation ENDP
 
 ; Insert operation (simplified)
@@ -875,3 +835,8 @@ apply_delete_operation ENDP
     szPatchFailedDetail DB "Patch application failed", 0
 
 END
+
+
+
+
+

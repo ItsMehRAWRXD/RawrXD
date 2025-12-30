@@ -124,8 +124,10 @@ temp_format_buf         BYTE 1024 DUP(?)
 PUBLIC test_gguf_loader_main
 test_gguf_loader_main PROC
     push rbx
+
     push rsi
     push rdi
+
     push r8
     push r9
     sub rsp, 40h
@@ -155,12 +157,14 @@ test_gguf_loader_main PROC
     call print_test_summary
     
     add rsp, 40h
-    pop r9
-    pop r8
-    pop rdi
-    pop rsi
+
+    pop r8 pop r9
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 test_gguf_loader_main ENDP
 
 ;==========================================================================
@@ -171,10 +175,13 @@ test_gguf_loader_main ENDP
 ALIGN 16
 test_single_model_load PROC
     push rbx
+
     push rsi
     push rdi
+
     push r8
     push r9
+
     push r10
     sub rsp, 80h
     
@@ -328,15 +335,16 @@ tensor_lookup_done:
     call ml_masm_free
     
     add rsp, 80h
-    pop r10
-    pop r9
-    pop r8
-    pop rdi
+
+    pop r9 pop r10
+
+
+    pop rdi pop r8
+
+
     pop rsi
-    pop rbx
-    ret
-    
-model_load_failed:
+    pop model
+    pop rbx_load_failed:
     ; Get error message
     call ml_masm_last_error
     mov rsi, rax
@@ -365,15 +373,16 @@ model_load_failed:
     mov DWORD PTR test_count, eax
     
     add rsp, 80h
-    pop r10
-    pop r9
-    pop r8
-    pop rdi
+
+    pop r9 pop r10
+
+
+    pop rdi pop r8
+
+
     pop rsi
-    pop rbx
-    ret
-    
-arch_retrieval_failed:
+    pop arch
+    pop rbx_retrieval_failed:
     lea rcx, temp_error_msg
     lea rdx, "Failed to retrieve architecture string"
     mov r8, ERROR_MSG_MAX
@@ -399,14 +408,16 @@ arch_retrieval_failed:
     mov DWORD PTR test_count, eax
     
     add rsp, 80h
-    pop r10
-    pop r9
-    pop r8
-    pop rdi
+
+    pop r9 pop r10
+
+
+    pop rdi pop r8
+
+
     pop rsi
-    pop rbx
-    ret
-test_single_model_load ENDP
+    pop test
+    pop rbx_single_model_load ENDP
 
 ;==========================================================================
 ; INTERNAL: print_test_summary()
@@ -415,6 +426,7 @@ test_single_model_load ENDP
 ALIGN 16
 print_test_summary PROC
     push rbx
+
     push rsi
     sub rsp, 32
     
@@ -463,10 +475,10 @@ summary_done:
     
     add rsp, 32
     add rsp, 32
+
     pop rsi
-    pop rbx
-    ret
-print_test_summary ENDP
+    pop print
+    pop rbx_test_summary ENDP
 
 ;==========================================================================
 ; INTERNAL: strcpy_masm(src: rcx, dst: rdx, max: r8)
@@ -475,9 +487,9 @@ print_test_summary ENDP
 ALIGN 16
 strcpy_masm PROC
     push rax
+
     push rbx
-    
-    xor eax, eax
+    push xor eax, eax
     
 copy_loop:
     cmp eax, r8
@@ -499,11 +511,10 @@ copy_done:
     
 null_terminate:
     mov BYTE PTR [rdx + rax], 0
-    
+
     pop rbx
-    pop rax
-    ret
-strcpy_masm ENDP
+    pop strcpy
+    pop rax_masm ENDP
 
 ;==========================================================================
 ; INTERNAL: format_string_masm(fmt: rcx, arg1: rdx, arg2: r8, buffer: r9, max: r10d)
@@ -513,6 +524,7 @@ strcpy_masm ENDP
 ALIGN 16
 format_string_masm PROC
     push rbx
+
     push rsi
     push rdi
     
@@ -569,11 +581,16 @@ fmt_done:
     
 fmt_null_term:
     mov BYTE PTR [rdi + rbx], 0
-    
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 format_string_masm ENDP
 
 END
+
+
+
+
+

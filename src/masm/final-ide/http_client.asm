@@ -105,6 +105,7 @@ PUBLIC HttpClientInitialize
 ALIGN 16
 HttpClientInitialize PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -165,10 +166,11 @@ http_init_fail:
     
 http_init_done:
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 HttpClientInitialize ENDP
 
 ;==============================================================================
@@ -183,10 +185,13 @@ HttpClientRequest PROC
     LOCAL dataAvailable:QWORD
     
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
+
     push r14
     push r15
     sub rsp, 512
@@ -371,14 +376,17 @@ http_req_fail:
     
 http_req_done:
     add rsp, 512
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 HttpClientRequest ENDP
 
 ;==============================================================================
@@ -410,7 +418,7 @@ skip_connect:
 shutdown_done:
     add rsp, 32
     pop rbx
-    ret
+
 HttpClientShutdown ENDP
 
 .data
@@ -420,4 +428,9 @@ HttpClientShutdown ENDP
     szDeleteMethod  BYTE "DELETE",0
 
 END
+
+
+
+
+
 

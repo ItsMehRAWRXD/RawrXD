@@ -68,6 +68,7 @@ MODEL_LOADER_THREAD ENDS
 ALIGN 16
 model_loader_thread_function PROC FRAME
     push rbx
+
     push rsi
     push rdi
     
@@ -89,47 +90,44 @@ model_loader_thread_function PROC FRAME
     ; This would call inference engine's loadModel() with modelPath
     
     ; Check for cancellation
-.load_loop:
+@@load_loop:
     cmp byte [rbx + MODEL_LOADER_THREAD.canceled], 1
-    je .load_canceled
+    je @@load_canceled
     
     ; Simulate progress
     mov rcx, [rbx + MODEL_LOADER_THREAD.progressCallback]
     cmp rcx, 0
-    je .skip_progress
+    je @@skip_progress
     
     lea rdx, [szLoadProgress]
     mov r8, [rbx + MODEL_LOADER_THREAD.modelPath]
     call rcx                       ; Call progress callback
-    
-.skip_progress:
+@@skip_progress:
     ; Sleep a bit and loop
-    jmp .load_loop
-    
-.load_canceled:
+    jmp @@load_loop
+@@load_canceled:
     lea rcx, [szThreadCanceled]
     call console_log
     
     ; Call completion callback with error
     mov rcx, [rbx + MODEL_LOADER_THREAD.completeCallback]
     cmp rcx, 0
-    je .skip_complete
+    je @@skip_complete
     
     xor edx, edx                   ; success = false
     lea r8, [szThreadCanceled]
     call rcx                       ; Call complete callback
-    
-.skip_complete:
+@@skip_complete:
     ; Mark as not running
     mov byte [rbx + MODEL_LOADER_THREAD.running], 0
     
     lea rcx, [szThreadCompleted]
     call console_log
-    
-    pop rdi
-    pop rsi
-    pop rbx
-    xor eax, eax                   ; Return 0
+
+    pop rsi pop rdi
+
+    pop xor
+    pop rbx eax, eax                   ; Return 0
     ret
 model_loader_thread_function ENDP
 
@@ -143,9 +141,9 @@ model_loader_thread_function ENDP
 PUBLIC model_loader_thread_create
 model_loader_thread_create PROC
     push rbx
+
     push rsi
-    
-    mov rbx, rcx                   ; rbx = enginePtr
+    push mov rbx, rcx                   ; rbx = enginePtr
     mov rsi, rdx                   ; rsi = modelPath
     
     ; Allocate thread context
@@ -163,11 +161,10 @@ model_loader_thread_create PROC
     inc rdx                        ; +1 for null terminator
     
     push rax
-    mov rcx, rdx
+    push mov rcx, rdx
     call malloc
-    pop rdx
-    
-    mov [rax + MODEL_LOADER_THREAD.modelPath], rax
+    pop mov
+    pop rdx [rax + MODEL_LOADER_THREAD.modelPath], rax
     
     mov rcx, rax
     mov rdx, rsi
@@ -177,11 +174,10 @@ model_loader_thread_create PROC
     lea rcx, [szThreadStarted]
     mov rdx, rsi
     call console_log
-    
+
     pop rsi
-    pop rbx
-    ret
-model_loader_thread_create ENDP
+    pop model
+    pop rbx_loader_thread_create ENDP
 
 ; ============================================================================
 
@@ -190,8 +186,7 @@ model_loader_thread_create ENDP
 PUBLIC model_loader_thread_start
 model_loader_thread_start PROC
     push rbx
-    
-    mov rbx, rcx                   ; rbx = thread context
+    push mov rbx, rcx                   ; rbx = thread context
     
     ; Create Win32 thread
     mov rcx, 0                     ; lpThreadAttributes
@@ -206,7 +201,7 @@ model_loader_thread_start PROC
     mov [rbx + MODEL_LOADER_THREAD.threadHandle], rax
     
     pop rbx
-    ret
+
 model_loader_thread_start ENDP
 
 ; ============================================================================
@@ -253,12 +248,11 @@ model_loader_thread_wait PROC
     call WaitForSingleObject
     
     cmp eax, 0                     ; WAIT_OBJECT_0 = success
-    jne .timeout
+    jne @@timeout
     
     mov al, 1
     ret
-    
-.timeout:
+@@timeout:
     xor eax, eax
     ret
 model_loader_thread_wait ENDP
@@ -290,8 +284,7 @@ model_loader_thread_set_complete_callback ENDP
 PUBLIC model_loader_thread_destroy
 model_loader_thread_destroy PROC
     push rbx
-    
-    mov rbx, rcx
+    push mov rbx, rcx
     
     ; Request cancellation
     mov byte [rbx + MODEL_LOADER_THREAD.canceled], 1
@@ -304,25 +297,30 @@ model_loader_thread_destroy PROC
     ; Close thread handle
     mov rcx, [rbx + MODEL_LOADER_THREAD.threadHandle]
     cmp rcx, INVALID_HANDLE_VALUE
-    je .skip_close
+    je @@skip_close
     call CloseHandle
-.skip_close:
+@@skip_close:
     
     ; Free model path
     mov rcx, [rbx + MODEL_LOADER_THREAD.modelPath]
     cmp rcx, 0
-    je .skip_path
+    je @@skip_path
     call free
-.skip_path:
+@@skip_path:
     
     ; Free context
     mov rcx, rbx
     call free
     
     pop rbx
-    ret
+
 model_loader_thread_destroy ENDP
 
 ; ============================================================================
 
 END
+
+
+
+
+

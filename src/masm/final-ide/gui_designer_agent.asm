@@ -743,10 +743,13 @@ gui_create_pane PROC
     ; rcx = pane_type, edx = position, r8 = label string
     ; Returns: eax = pane_id (-1 on failure)
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
+
     push r14
     sub rsp, 32
     
@@ -802,14 +805,16 @@ create_pane_full:
     
 create_pane_done:
     add rsp, 32
-    pop r14
-    pop r13
-    pop r12
-    pop rdi
+
+    pop r13 pop r14
+
+
+    pop rdi pop r12
+
+
     pop rsi
-    pop rbx
-    ret
-gui_create_pane ENDP
+    pop gui
+    pop rbx_create_pane ENDP
 
 ;==========================================================================
 ; PUBLIC: gui_set_pane_hwnd(pane_id: ecx, hwnd: rdx) -> eax
@@ -819,8 +824,7 @@ ALIGN 16
 gui_set_pane_hwnd PROC
     ; ecx = pane_id, rdx = hwnd
     push rsi
-    
-    lea rsi, [PaneRegistry]
+    push lea rsi, [PaneRegistry]
     mov eax, SIZEOF PANE
     imul ecx, eax
     add rsi, rcx
@@ -830,7 +834,7 @@ gui_set_pane_hwnd PROC
     
     mov eax, 1
     pop rsi
-    ret
+
 gui_set_pane_hwnd ENDP
 
 ;==========================================================================
@@ -841,6 +845,7 @@ PUBLIC gui_create_complete_ide
 ALIGN 16
 gui_create_complete_ide PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -897,10 +902,11 @@ gui_create_complete_ide PROC
 
     mov eax, 1
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 gui_create_complete_ide ENDP
 
 ;==========================================================================
@@ -912,8 +918,10 @@ gui_add_pane_tab PROC
     ; ecx = pane_id, rdx = tab_label string
     ; Returns: eax = tab_id
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
     sub rsp, 32
@@ -966,12 +974,14 @@ add_tab_full:
     
 add_tab_done:
     add rsp, 32
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 gui_add_pane_tab ENDP
 
 ;==========================================================================
@@ -982,9 +992,9 @@ ALIGN 16
 gui_set_pane_size PROC
     ; ecx = pane_id, edx = width, r8d = height
     push rsi
+
     push rbx
-    
-    mov ebx, ecx
+    push mov ebx, ecx
     lea rsi, [PaneRegistry]
     mov eax, SIZEOF PANE
     imul ecx, eax
@@ -994,10 +1004,10 @@ gui_set_pane_size PROC
     mov [rsi + PANE.pane_height], r8d
     
     mov eax, 1
+
     pop rbx
-    pop rsi
-    ret
-gui_set_pane_size ENDP
+    pop gui
+    pop rsi_set_pane_size ENDP
 
 ;==========================================================================
 ; PUBLIC: gui_toggle_pane_visibility(pane_id: ecx) -> eax
@@ -1101,6 +1111,7 @@ gui_save_pane_layout PROC
     ; rcx = filename to save layout to
     ; Returns: eax = 1 on success, 0 on failure
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32                ; shadow space for calls
@@ -1171,10 +1182,11 @@ save_fail:
 
 save_done:
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
  gui_save_pane_layout ENDP
 
 ;==========================================================================
@@ -1186,6 +1198,7 @@ gui_load_pane_layout PROC
     ; rcx = filename to load layout from
     ; Returns: eax = 1 on success, 0 on failure
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32                ; shadow space for calls
@@ -1255,10 +1268,11 @@ load_fail:
 
 load_done:
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 gui_load_pane_layout ENDP
 
 ;==========================================================================
@@ -1274,6 +1288,7 @@ gui_init_registry ENDP
 ;==========================================================================
 InitializeGUIDesigner PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -1311,10 +1326,11 @@ InitializeGUIDesigner PROC
 
     xor eax, eax
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 InitializeGUIDesigner ENDP
 
 ;==========================================================================
@@ -1324,10 +1340,13 @@ PUBLIC gui_create_component
 ALIGN 16
 gui_create_component PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
+
     push r14
     push r15
     sub rsp, 128
@@ -1401,14 +1420,17 @@ create_registry_full:
     
 create_done:
     add rsp, 128
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 gui_create_component ENDP
 
 ;==========================================================================
@@ -1419,6 +1441,7 @@ PUBLIC gui_finalize_panes
 ALIGN 16
 gui_finalize_panes PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -1453,10 +1476,11 @@ next_final:
 
 final_done:
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 gui_finalize_panes ENDP
 
 ;==========================================================================
@@ -1466,8 +1490,10 @@ PUBLIC gui_apply_style
 ALIGN 16
 gui_apply_style PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
     sub rsp, 256
@@ -1521,12 +1547,14 @@ style_parse_failed:
 
 style_done:
     add rsp, 256
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 gui_apply_style ENDP
 
 ;==========================================================================
@@ -1535,8 +1563,10 @@ gui_apply_style ENDP
 ParseStyleJson PROC
     ; rcx = dest STYLE struct, rdx = JSON string
     push rbx
+
     push rsi
     push rdi
+
     push r12
     sub rsp, 128
     
@@ -1714,18 +1744,20 @@ parse_fail:
     
 parse_done:
     add rsp, 128
-    pop r12
-    pop rdi
+
+    pop rdi pop r12
+
+
     pop rsi
-    pop rbx
-    ret
-ParseStyleJson ENDP
+    pop ParseStyleJson
+    pop rbx ENDP
 
 ;==========================================================================
 ; ApplyComponentStyle(component_id: ecx, style_ptr: rdx) -> eax
 ;==========================================================================
 ApplyComponentStyle PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 128
@@ -1818,10 +1850,11 @@ ApplyComponentStyle PROC
     
 @done:
     add rsp, 128
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 ApplyComponentStyle ENDP
 
 ;==========================================================================
@@ -1829,6 +1862,7 @@ ApplyComponentStyle ENDP
 ;==========================================================================
 UpdateComponentAppearance PROC
     push rbx
+
     push rsi
     sub rsp, 64
     
@@ -1868,10 +1902,10 @@ UpdateComponentAppearance PROC
 @no_window:
     xor eax, eax  ; Success
     add rsp, 64
+
     pop rsi
-    pop rbx
-    ret
-UpdateComponentAppearance ENDPsi, rsi
+    pop UpdateComponentAppearance
+    pop rbx ENDPsi, rsi
     jz @no_window
     
     ; Invalidate window to trigger repaint
@@ -1905,10 +1939,10 @@ UpdateComponentAppearance ENDPsi, rsi
 @no_window:
     xor eax, eax  ; Success
     add rsp, 64
+
     pop rsi
-    pop rbx
-    ret
-UpdateComponentAppearance ENDP
+    pop UpdateComponentAppearance
+    pop rbx ENDP
 
 ;==========================================================================
 ; StartStyleAnimation() -> eax
@@ -1929,7 +1963,7 @@ StartStyleAnimation PROC
     xor eax, eax  ; Success
     add rsp, 32
     pop rbx
-    ret
+
 StartStyleAnimation ENDP
 
 ;==========================================================================
@@ -2043,6 +2077,7 @@ parse_easing_type ENDP
 parse_pane_json PROC
     ; rcx = component_ptr, rdx = json_string -> returns eax (0=success)
     push rbx
+
     push rsi
     sub rsp, 128
     
@@ -2145,10 +2180,10 @@ parse_pane_json PROC
     
 @done:
     add rsp, 128
+
     pop rsi
-    pop rbx
-    ret
-parse_pane_json ENDP
+    pop parse
+    pop rbx_pane_json ENDP
 
 ;==========================================================================
 ; PUBLIC: gui_animate_component(component_id: ecx, animation_json: rdx) -> eax
@@ -2157,10 +2192,13 @@ PUBLIC gui_animate_component
 ALIGN 16
 gui_animate_component PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
+
     push r14
     sub rsp, 384
     
@@ -2239,14 +2277,16 @@ anim_component_not_found:
     
 anim_done:
     add rsp, 384
-    pop r14
-    pop r13
-    pop r12
-    pop rdi
+
+    pop r13 pop r14
+
+
+    pop rdi pop r12
+
+
     pop rsi
-    pop rbx
-    ret
-gui_animate_component ENDP
+    pop gui
+    pop rbx_animate_component ENDP
 
 ;==========================================================================
 ; PUBLIC: gui_set_layout(component_id: ecx, layout_json: rdx) -> eax
@@ -2255,8 +2295,10 @@ PUBLIC gui_set_layout
 ALIGN 16
 gui_set_layout PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
     sub rsp, 320
@@ -2310,12 +2352,14 @@ layout_component_not_found:
     
 layout_done:
     add rsp, 320
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 gui_set_layout ENDP
 
 ;==========================================================================
@@ -2325,8 +2369,10 @@ PUBLIC gui_apply_theme
 ALIGN 16
 gui_apply_theme PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
     sub rsp, 256
@@ -2382,12 +2428,14 @@ theme_not_found:
     
 theme_exit:
     add rsp, 256
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 gui_apply_theme ENDP
 
 ;==========================================================================
@@ -2397,8 +2445,10 @@ PUBLIC gui_inspect_tree
 ALIGN 16
 gui_inspect_tree PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
     sub rsp, 128
@@ -2443,12 +2493,14 @@ tree_done:
     lea rax, JsonBuffer
     
     add rsp, 128
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 gui_inspect_tree ENDP
 
 ;==========================================================================
@@ -2456,8 +2508,10 @@ gui_inspect_tree ENDP
 ;==========================================================================
 AnimationTimerProc PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
     sub rsp, 64
@@ -2496,12 +2550,14 @@ anim_done:
     
 anim_no_redraw:
     add rsp, 64
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 AnimationTimerProc ENDP
 
 ;==========================================================================
@@ -2509,6 +2565,7 @@ AnimationTimerProc ENDP
 ;==========================================================================
 CreateDefaultStyles PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -2518,11 +2575,10 @@ CreateDefaultStyles PROC
     mov [rdi + STYLE.id], 1
     lea rsi, szStyleButton
     push rdi
-    lea rdi, [rdi + STYLE.style_name]
+    push lea rdi, [rdi + STYLE.style_name]
     call StringCopySafe
-    pop rdi
-    
-    mov [rdi + STYLE.background_color], COLOR_PRIMARY
+    pop mov
+    pop rdi [rdi + STYLE.background_color], COLOR_PRIMARY
     mov [rdi + STYLE.text_color], 0FFFFFFFFh  ; White
     mov DWORD PTR [rdi + STYLE.border_radius], 1053609165 ; 2.0f
     mov DWORD PTR [rdi + STYLE.padding_left], 1089470464  ; 8.0f
@@ -2541,11 +2597,10 @@ CreateDefaultStyles PROC
     mov [rdi + STYLE.id], 2
     lea rsi, szStyleCard
     push rdi
-    lea rdi, [rdi + STYLE.style_name]
+    push lea rdi, [rdi + STYLE.style_name]
     call StringCopySafe
-    pop rdi
-    
-    mov [rdi + STYLE.background_color], COLOR_SURFACE
+    pop mov
+    pop rdi [rdi + STYLE.background_color], COLOR_SURFACE
     mov [rdi + STYLE.border_color], 01E000000h  ; Light grey
     mov DWORD PTR [rdi + STYLE.border_width], 1056964608 ; 0.5f
     mov DWORD PTR [rdi + STYLE.border_radius], 1065353216 ; 1.0f
@@ -2557,10 +2612,11 @@ CreateDefaultStyles PROC
     mov NextStyleId, 3
     
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 CreateDefaultStyles ENDP
 
 ;==========================================================================
@@ -2568,6 +2624,7 @@ CreateDefaultStyles ENDP
 ;==========================================================================
 InitializeDirect2D PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -2588,10 +2645,11 @@ InitializeDirect2D PROC
     
     xor eax, eax
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 InitializeDirect2D ENDP
 
 ;==========================================================================
@@ -2599,8 +2657,10 @@ InitializeDirect2D ENDP
 ;==========================================================================
 CreateDefaultThemes PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     sub rsp, 64
     
@@ -2612,7 +2672,7 @@ CreateDefaultThemes PROC
     mov [rdi + THEME.id], 1
     lea rsi, szThemeDarkName
     push rdi
-    lea rdi, [rdi + THEME.theme_name]
+    push lea rdi, [rdi + THEME.theme_name]
     call StringCopySafe
     pop rdi
     
@@ -2636,7 +2696,7 @@ CreateDefaultThemes PROC
     mov [rdi + THEME.id], 2
     lea rsi, szThemeLightName
     push rdi
-    lea rdi, [rdi + THEME.theme_name]
+    push lea rdi, [rdi + THEME.theme_name]
     call StringCopySafe
     pop rdi
     
@@ -2662,15 +2722,17 @@ CreateDefaultThemes PROC
     call asm_log
     
     add rsp, 64
-    pop r12
-    pop rdi
+
+    pop rdi pop r12
+
+
     pop rsi
-    pop rbx
-    ret
-CreateDefaultThemes ENDP
+    pop CreateDefaultThemes
+    pop rbx ENDP
 
 StartAnimationTimer PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 48
@@ -2697,10 +2759,11 @@ timer_fail:
     
 timer_done:
     add rsp, 48
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 StartAnimationTimer ENDP
 
 ;==========================================================================
@@ -2710,12 +2773,13 @@ PUBLIC ParseLayoutJson
 ALIGN 16
 ParseLayoutJson PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
-
-    mov r12, rcx             ; dest
+    push mov r12, rcx             ; dest
     mov r13, rdx             ; json
 
     test r12, r12
@@ -2893,12 +2957,14 @@ layout_fail:
     xor eax, eax
 
 layout_done:
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 ParseLayoutJson ENDP
 
 ;==========================================================================
@@ -2908,6 +2974,7 @@ PUBLIC ApplyLayoutProperties
 ALIGN 16
 ApplyLayoutProperties PROC
     push rbx
+
     push rsi
     push rdi
 
@@ -2920,10 +2987,11 @@ ApplyLayoutProperties PROC
     rep movsb
 
 apply_done:
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 ApplyLayoutProperties ENDP
 
 ;==========================================================================
@@ -2933,10 +3001,11 @@ PUBLIC RecalculateLayout
 ALIGN 16
 RecalculateLayout PROC
     push rbx
+
     push rsi
     push rdi
-    push r12
 
+    push r12
     xor r12d, r12d
     mov ebx, ComponentCount
     test ebx, ebx
@@ -2984,12 +3053,13 @@ recalc_loop:
     jmp recalc_loop
 
 recalc_done:
-    pop r12
-    pop rdi
+
+    pop rdi pop r12
+
+
     pop rsi
-    pop rbx
-    ret
-RecalculateLayout ENDP
+    pop RecalculateLayout
+    pop rbx ENDP
 
 ;==========================================================================
 ; ParseAnimationJson(dest: rcx, json: rdx) -> eax
@@ -2998,6 +3068,7 @@ PUBLIC ParseAnimationJson
 ALIGN 16
 ParseAnimationJson PROC
     push rbx
+
     push rsi
     push rdi
 
@@ -3174,10 +3245,11 @@ anim_fail:
     xor eax, eax
 
 anim_done:
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 ParseAnimationJson ENDP
 
 ;==========================================================================
@@ -3187,10 +3259,11 @@ PUBLIC UpdateAnimation
 ALIGN 16
 UpdateAnimation PROC
     push rbx
+
     push rsi
     push rdi
-    push r12
 
+    push r12
     mov rbx, rdi
     test rbx, rbx
     jz update_done
@@ -3312,12 +3385,13 @@ finish_state:
 update_elapsed:
     mov DWORD PTR [rbx + ANIMATION.current_time], r13d
 update_done:
-    pop r12
-    pop rdi
+
+    pop rdi pop r12
+
+
     pop rsi
-    pop rbx
-    ret
-UpdateAnimation ENDP
+    pop UpdateAnimation
+    pop rbx ENDP
 
 ;==========================================================================
 ; PUBLIC: RequestRedraw() -> void
@@ -3326,8 +3400,7 @@ PUBLIC RequestRedraw
 ALIGN 16
 RequestRedraw PROC
     push rbx
-
-    call ui_get_main_hwnd
+    push call ui_get_main_hwnd
     test rax, rax
     jz redraw_done
     xor rdx, rdx
@@ -3336,7 +3409,7 @@ RequestRedraw PROC
 
 redraw_done:
     pop rbx
-    ret
+
 RequestRedraw ENDP
 
 .data
@@ -3349,8 +3422,10 @@ RequestRedraw ENDP
 CreateComponentWindow PROC
     ; r15 = component ptr
     push rbx
+
     push rsi
     push rdi
+
     push r12
     sub rsp, 128
     
@@ -3401,12 +3476,13 @@ class_found:
     mov [rbx + COMPONENT.hwnd], rax
     
     add rsp, 128
-    pop r12
-    pop rdi
+
+    pop rdi pop r12
+
+
     pop rsi
-    pop rbx
-    ret
-CreateComponentWindow ENDP
+    pop CreateComponentWindow
+    pop rbx ENDP
 
 gui_apply_default_style PROC
     ; ecx = component_id
@@ -3423,7 +3499,7 @@ gui_apply_default_style PROC
 apply_done:
     add rsp, 32
     pop rbx
-    ret
+
 gui_apply_default_style ENDP
 
 ; Helper: Find JSON value by key
@@ -3431,6 +3507,7 @@ FindJsonValue PROC
     ; rcx = JSON string, rdx = key
     ; Returns: rax = pointer to value or 0
     push rbx
+
     push rsi
     push rdi
     
@@ -3477,16 +3554,17 @@ find_not_found:
     xor rax, rax
     
 find_done:
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 FindJsonValue ENDP
 
 ; Helper: Skip whitespace, tabs, quotes, and commas
 SkipJsonWhitespace PROC
     push rbx
-    mov rbx, rcx
+    push mov rbx, rcx
 skip_loop:
     mov al, [rbx]
     cmp al, ' '
@@ -3503,7 +3581,7 @@ skip_loop:
     je skip_inc
     mov rax, rbx
     pop rbx
-    ret
+
 skip_inc:
     inc rbx
     jmp skip_loop
@@ -3514,9 +3592,9 @@ ParseColorHex PROC
     ; rcx = hex string ("#RRGGBB")
     ; Returns: eax = 0xFFRRGGBB
     push rbx
+
     push rsi
-    
-    mov rsi, rcx
+    push mov rsi, rcx
     
     ; Skip '#' if present
     cmp byte ptr [rsi], '#'
@@ -3571,19 +3649,20 @@ parse_hex_add:
 parse_hex_done:
     shl eax, 24         ; Shift RGB to correct position (0xRRGGBB00)
     or eax, 0FF000000h  ; Add fully opaque alpha channel (0xFFRRGGBB)
-    
+
     pop rsi
-    pop rbx
-    ret
-ParseColorHex ENDP
+    pop ParseColorHex
+    pop rbx ENDP
 
 ; Helper: Parse float value
 ParseFloatValue PROC
     ; rcx = string (e.g., "3.14", "100", "0.5")
     ; Returns: xmm0 = float value
     push rbx
+
     push rsi
     push rdi
+
     push r12
     sub rsp, 64
     
@@ -3663,21 +3742,22 @@ parse_frac_convert:
     
 parse_float_done:
     add rsp, 64
-    pop r12
-    pop rdi
+
+    pop rdi pop r12
+
+
     pop rsi
-    pop rbx
-    ret
-ParseFloatValue ENDP
+    pop ParseFloatValue
+    pop rbx ENDP
 
 ; Helper: Parse integer value (for properties like fontSize, fontWeight, etc.)
 ParseIntValue PROC
     ; rcx = string (e.g., "400", "16", "100")
     ; Returns: eax = integer value
     push rbx
+
     push rsi
-    
-    mov rsi, rcx
+    push mov rsi, rcx
     xor eax, eax
     
 parse_int_loop:
@@ -3695,18 +3775,18 @@ parse_int_loop:
     jmp parse_int_loop
     
 parse_int_done:
+
     pop rsi
-    pop rbx
-    ret
-ParseIntValue ENDP
+    pop ParseIntValue
+    pop rbx ENDP
 
 FindComponent PROC
     ; ecx = component_id
     ; Returns rax = pointer to component or 0
     push rbx
+
     push rsi
-    
-    xor eax, eax
+    push xor eax, eax
     test ecx, ecx
     jz find_done
     
@@ -3736,15 +3816,17 @@ find_not_found:
     xor rax, rax
     
 find_done:
+
     pop rsi
-    pop rbx
-    ret
-FindComponent ENDP
+    pop FindComponent
+    pop rbx ENDP
 
 UpdateComponentPositions PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     sub rsp, 64
     
@@ -3783,17 +3865,19 @@ pos_next:
     
 pos_done:
     add rsp, 64
-    pop r12
-    pop rdi
+
+    pop rdi pop r12
+
+
     pop rsi
-    pop rbx
-    ret
-UpdateComponentPositions ENDP
+    pop UpdateComponentPositions
+    pop rbx ENDP
 
 FindThemeByName PROC
     ; rcx = theme_name (string)
     ; Returns rax = theme_id or 0
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -3831,15 +3915,17 @@ theme_search_not_found:
     
 theme_search_done:
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 FindThemeByName ENDP
 
 ApplyThemeToComponent PROC
     ; ecx = component_id, edx = theme_id
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -3899,43 +3985,47 @@ theme_found:
     
 apply_theme_done:
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 ApplyThemeToComponent ENDP
 
 StringCopy PROC
     ; rcx = dest, rsi = src
     push rsi
+
     push rdi
-copy_loop:
+    push copy_loop:
     lodsb
     stosb
     test al, al
     jnz copy_loop
+
     pop rdi
-    pop rsi
-    ret
-StringCopy ENDP
+    pop StringCopy
+    pop rsi ENDP
 
 StringCopySafe PROC
     ; rdi = dest, rsi = src
     push rsi
+
     push rdi
-copy_loop_safe:
+    push copy_loop_safe:
     lodsb
     stosb
     test al, al
     jnz copy_loop_safe
+
     pop rdi
-    pop rsi
-    ret
-StringCopySafe ENDP
+    pop StringCopySafe
+    pop rsi ENDP
 
 AddComponentToJson PROC
     ; ecx = component index, edx = depth
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -4039,10 +4129,11 @@ first_comp:
     mov byte ptr [rdi], 0 ; Null terminate
     
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 AddComponentToJson ENDP
 
 strlen PROC
@@ -4064,9 +4155,9 @@ strlen ENDP
 ; append_string(dest: rcx, src: rdx) -> void
 append_string PROC
     push rsi
+
     push rdi
-    
-    mov rdi, rcx    ; dest
+    push mov rdi, rcx    ; dest
     mov rsi, rdx    ; src
     
     ; Find end of dest string
@@ -4079,15 +4170,15 @@ append_loop:
     stosb
     test al, al
     jnz append_loop
-    
+
     pop rdi
-    pop rsi
-    ret
-append_string ENDP
+    pop append
+    pop rsi_string ENDP
 
 ; append_int(dest: rcx, value: edx) -> void
 append_int PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -4097,8 +4188,9 @@ append_int PROC
     
     ; Find end of dest string
     push rax
-    call strlen
-    add rdi, rax
+    push call
+    push strlen
+    push add rdi, rax
     pop rax
     
     ; Convert int to string
@@ -4147,15 +4239,17 @@ convert_loop:
     jnz convert_loop
     
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 append_int ENDP
 
 ; append_float(dest: rcx, value: xmm0) -> void
 append_float PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -4164,8 +4258,9 @@ append_float PROC
     
     ; Find end of dest string
     push rax
-    call strlen
-    add rdi, rax
+    push call
+    push strlen
+    push add rdi, rax
     pop rax
     
     ; Convert float to int (simple implementation)
@@ -4174,26 +4269,27 @@ append_float PROC
     call append_int
     
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 append_float ENDP
 
 ; append_bool(dest: rcx, value: edx) -> void
 append_bool PROC
     push rsi
+
     push rdi
-    
-    mov rdi, rcx    ; dest
+    push mov rdi, rcx    ; dest
     
     ; Find end of dest string
     push rdx
-    call strlen
-    add rdi, rax
-    pop rdx
-    
-    test edx, edx
+    push call
+    push strlen
+    push add rdi, rax
+    pop test
+    pop rdx edx, edx
     jz append_false
     
     ; Append "true"
@@ -4208,14 +4304,15 @@ append_false:
     mov byte ptr [rdi+5], 0
     
 append_bool_done:
+
     pop rdi
-    pop rsi
-    ret
-append_bool ENDP
+    pop append
+    pop rsi_bool ENDP
 
 ; write_json_to_file(filename: rcx, json_data: rdx) -> eax
 write_json_to_file PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -4260,15 +4357,17 @@ write_fail:
     
 write_done:
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 write_json_to_file ENDP
 
 ; read_json_from_file(filename: rcx, buffer: rdx, buffer_size: r8) -> eax
 read_json_from_file PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -4310,10 +4409,11 @@ read_fail:
     
 read_done:
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 read_json_from_file ENDP
 
 ; ParseStyleJson(style_struct: rcx, json_str: rdx) -> eax
@@ -4444,3 +4544,8 @@ szEaseInOut_Val      BYTE "easeInOut",0
 g_animation_active_val DWORD 0
 
 END
+
+
+
+
+

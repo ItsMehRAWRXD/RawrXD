@@ -216,6 +216,7 @@ PUBLIC feature_harness_initialize
 ALIGN 16
 feature_harness_initialize PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -239,10 +240,11 @@ feature_harness_initialize PROC
     mov eax, 1          ; SUCCESS
     
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 feature_harness_initialize ENDP
 
 ;==========================================================================
@@ -252,6 +254,7 @@ PUBLIC feature_toggle
 ALIGN 16
 feature_toggle PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 48
@@ -304,10 +307,11 @@ toggle_mandatory:
     
 toggle_done:
     add rsp, 48
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 feature_toggle ENDP
 
 ;==========================================================================
@@ -317,6 +321,7 @@ PUBLIC feature_preset
 ALIGN 16
 feature_preset PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -357,10 +362,11 @@ preset_applied:
     
 preset_done:
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 feature_preset ENDP
 
 ;==========================================================================
@@ -370,6 +376,7 @@ PUBLIC feature_get_state
 ALIGN 16
 feature_get_state PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -397,10 +404,11 @@ get_state_invalid:
     
 get_state_done:
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 feature_get_state ENDP
 
 ;==========================================================================
@@ -410,6 +418,7 @@ PUBLIC feature_get_all_states
 ALIGN 16
 feature_get_all_states PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -425,13 +434,13 @@ build_mask_loop:
     ; Get feature state
     mov ecx, ebx
     push rax
+
     push rbx
-    call feature_get_state
-    pop rbx
-    mov esi, eax
-    pop rax
-    
-    test esi, esi
+    push call feature_get_state
+    pop mov
+    pop rbx esi, eax
+    pop test
+    pop rax esi, esi
     jz feature_disabled
     
     ; Set bit
@@ -446,10 +455,11 @@ feature_disabled:
     
 mask_done:
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 feature_get_all_states ENDP
 
 ;==========================================================================
@@ -458,6 +468,7 @@ feature_get_all_states ENDP
 
 InitializeFeatureArray PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -478,14 +489,16 @@ init_loop:
     mov FeatureCount, 32
     
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 InitializeFeatureArray ENDP
 
 LoadDefaultFeatureConfiguration PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -521,14 +534,16 @@ LoadDefaultFeatureConfiguration PROC
     mov FeaturesEnabled, 2
     
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 LoadDefaultFeatureConfiguration ENDP
 
 ApplyMinimalPreset PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -559,14 +574,16 @@ skip_minimal:
     
 minimal_done:
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 ApplyMinimalPreset ENDP
 
 ApplyStandardPreset PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -589,14 +606,16 @@ ApplyStandardPreset PROC
     call feature_toggle
     
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 ApplyStandardPreset ENDP
 
 ApplyCompletePreset PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -611,18 +630,19 @@ complete_loop:
     mov ecx, ebx
     mov edx, 1
     push rbx
-    call feature_toggle
-    pop rbx
-    
-    inc ebx
-    jmp complete_loop
+    push call feature_toggle
+
+    pop ebx inc
+    pop jmp
+    pop rbx complete_loop
     
 complete_done:
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 ApplyCompletePreset ENDP
 
 ;==========================================================================
@@ -633,8 +653,10 @@ PUBLIC LoadUserFeatureConfiguration
 ALIGN 16
 LoadUserFeatureConfiguration PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
     sub rsp, 4096       ; Large buffer for file content
@@ -759,12 +781,14 @@ load_user_fail:
     
 load_user_done:
     add rsp, 4096
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 LoadUserFeatureConfiguration ENDP
 
 ;==========================================================================
@@ -772,7 +796,7 @@ LoadUserFeatureConfiguration ENDP
 ;==========================================================================
 FindNextFeatureId PROC
     push rbx
-    mov rbx, rcx
+    push mov rbx, rcx
     
 find_id_loop:
     mov al, [rbx]
@@ -798,7 +822,7 @@ find_id_not_found:
     
 find_id_done:
     pop rbx
-    ret
+
 FindNextFeatureId ENDP
 
 ;==========================================================================
@@ -806,7 +830,7 @@ FindNextFeatureId ENDP
 ;==========================================================================
 FindNextFeatureValue PROC
     push rbx
-    mov rbx, rcx
+    push mov rbx, rcx
     
 find_value_loop:
     mov al, [rbx]
@@ -851,7 +875,7 @@ find_value_not_found:
     
 find_value_done:
     pop rbx
-    ret
+
 FindNextFeatureValue ENDP
 
 ;==========================================================================
@@ -859,9 +883,9 @@ FindNextFeatureValue ENDP
 ;==========================================================================
 StringToInt PROC
     push rbx
+
     push rsi
-    
-    mov rsi, rcx
+    push mov rsi, rcx
     xor eax, eax
     xor ebx, ebx
     
@@ -880,10 +904,10 @@ int_loop:
     jmp int_loop
     
 int_done:
+
     pop rsi
-    pop rbx
-    ret
-StringToInt ENDP
+    pop StringToInt
+    pop rbx ENDP
 
 ;==========================================================================
 ; PUBLIC: ValidateFeatureConfiguration() -> eax
@@ -893,6 +917,7 @@ PUBLIC ValidateFeatureConfiguration
 ALIGN 16
 ValidateFeatureConfiguration PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -930,10 +955,11 @@ validate_fail:
     
 validate_done:
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 ValidateFeatureConfiguration ENDP
 
 ;==========================================================================
@@ -944,8 +970,10 @@ PUBLIC ApplyEnterpriseFeaturePolicy
 ALIGN 16
 ApplyEnterpriseFeaturePolicy PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
     sub rsp, 512        ; Buffer for registry values
@@ -1051,12 +1079,14 @@ skip_security:
 policy_done:
     mov eax, 1          ; SUCCESS
     add rsp, 512
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 ApplyEnterpriseFeaturePolicy ENDP
 
 ;==========================================================================
@@ -1067,6 +1097,7 @@ PUBLIC InitializeFeaturePerformanceMonitoring
 ALIGN 16
 InitializeFeaturePerformanceMonitoring PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -1113,10 +1144,11 @@ perf_mon_fail:
     
 perf_mon_done:
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 InitializeFeaturePerformanceMonitoring ENDP
 
 ;==========================================================================
@@ -1150,7 +1182,7 @@ sec_mon_fail:
 sec_mon_done:
     add rsp, 32
     pop rbx
-    ret
+
 InitializeFeatureSecurityMonitoring ENDP
 
 ;==========================================================================
@@ -1193,7 +1225,12 @@ telemetry_fail:
 telemetry_done:
     add rsp, 32
     pop rbx
-    ret
+
 InitializeFeatureTelemetry ENDP
 
 END
+
+
+
+
+

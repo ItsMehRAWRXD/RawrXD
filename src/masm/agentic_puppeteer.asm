@@ -641,8 +641,8 @@ dsc_hash_done:
     ; For this implementation, return confidence based on hash patterns
     ; In production, would do actual database lookup
     
-    ; Return fixed confidence (50% = 0x7FFFFFFF in fixed-point)
-    mov rax, 0x7FFFFFFF    ; 50% confidence
+    ; Return fixed confidence (50% = 7FFFFFFFh in fixed-point)
+    mov rax, 7FFFFFFFh    ; 50% confidence
     
     pop r12
     pop rbx
@@ -841,8 +841,8 @@ vcdb_loop:
     mov rax, r8
     call db_search_claim
     
-    ; Check confidence threshold (50% = 0x7FFFFFFF)
-    cmp rax, 0x7FFFFFFF
+    ; Check confidence threshold (50% = 7FFFFFFFh)
+    cmp rax, 7FFFFFFFh
     jl vcdb_next_claim
     
     ; Claim verified

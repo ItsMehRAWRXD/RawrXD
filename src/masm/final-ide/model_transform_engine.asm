@@ -222,7 +222,6 @@ init_fail:
 init_exit:
     add rsp, 32
     pop rbx
-    ret
 
 masm_transform_engine_init ENDP
 
@@ -240,8 +239,10 @@ ALIGN 16
 masm_transform_on_model_load PROC
 
     push rbx
+
     push r12
     push r13
+
     push r14
     sub rsp, 64
     
@@ -269,6 +270,7 @@ masm_transform_on_model_load PROC
     ; Attach static capability library to model
     ; This creates the immutable bridge: small model + library = large capabilities
     push r12
+
     push r13
     push r14
     
@@ -290,8 +292,9 @@ masm_transform_on_model_load PROC
     mov [rbx + 40], rax     ; Store effective_size in context
     
 quantum_attach_failed:
-    pop r14
-    pop r13
+
+    pop r13 pop r14
+
     pop r12
     
     ; *** DOUBLE-REVERSE LAZY LOADING ***
@@ -330,13 +333,13 @@ skip_vocab_expand:
     mov rax, 1
     
     add rsp, 64
-    pop r14
-    pop r13
-    pop r12
-    pop rbx
-    ret
 
-masm_transform_on_model_load ENDP
+    pop r13 pop r14
+
+
+    pop r12
+    pop masm
+    pop rbx_transform_on_model_load ENDP
 
 ;=====================================================================
 ; masm_transform_on_model_unload(model_handle: rcx) -> rax
@@ -350,6 +353,7 @@ ALIGN 16
 masm_transform_on_model_unload PROC
 
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -398,11 +402,10 @@ unload_mismatch:
     mov rax, 1
     
     add rsp, 32
-    pop r12
-    pop rbx
-    ret
 
-masm_transform_on_model_unload ENDP
+    pop r12
+    pop masm
+    pop rbx_transform_on_model_unload ENDP
 
 ;=====================================================================
 ; masm_transform_expand_vocabulary(model_handle: rcx,
@@ -418,8 +421,10 @@ ALIGN 16
 masm_transform_expand_vocabulary PROC
 
     push rbx
+
     push r12
     push r13
+
     push r14
     push r15
     sub rsp, 64
@@ -489,12 +494,13 @@ vocab_map_done:
     mov rax, 1
     
     add rsp, 64
-    pop r15
-    pop r14
-    pop r13
-    pop r12
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
     pop rbx
-    ret
 
 masm_transform_expand_vocabulary ENDP
 
@@ -510,8 +516,10 @@ ALIGN 16
 masm_transform_bypass_refusal PROC
 
     push rbx
+
     push r12
     push r13
+
     push r14
     push r15
     sub rsp, 128
@@ -585,12 +593,13 @@ refusal_patch_done:
     mov rax, r15
     
     add rsp, 128
-    pop r15
-    pop r14
-    pop r13
-    pop r12
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
     pop rbx
-    ret
 
 masm_transform_bypass_refusal ENDP
 
@@ -606,6 +615,7 @@ ALIGN 16
 masm_transform_optimize_loading PROC
 
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -631,11 +641,10 @@ masm_transform_optimize_loading PROC
     mov rax, 1
     
     add rsp, 32
-    pop r12
-    pop rbx
-    ret
 
-masm_transform_optimize_loading ENDP
+    pop r12
+    pop masm
+    pop rbx_transform_optimize_loading ENDP
 
 ;=====================================================================
 ; masm_transform_execute_command(command_str: rcx) -> rax
@@ -654,6 +663,7 @@ ALIGN 16
 masm_transform_execute_command PROC
 
     push rbx
+
     push r12
     sub rsp, 64
     
@@ -733,11 +743,10 @@ execute_status:
 
 command_exit:
     add rsp, 64
-    pop r12
-    pop rbx
-    ret
 
-masm_transform_execute_command ENDP
+    pop r12
+    pop masm
+    pop rbx_transform_execute_command ENDP
 
 ;=====================================================================
 ; masm_transform_get_active_transforms() -> rax
@@ -775,9 +784,9 @@ strstr_case_insensitive PROC
     ; Simplified case-insensitive substring search
     ; rcx = haystack, rdx = needle
     push rbx
+
     push r12
-    
-    mov rbx, rcx
+    push mov rbx, rcx
     mov r12, rdx
     
 strstr_search:
@@ -809,15 +818,19 @@ strstr_no_convert2:
     
 strstr_match_start:
     mov rax, rbx
+
     pop r12
-    pop rbx
-    ret
-    
-strstr_not_found:
+    pop strstr
+    pop rbx_not_found:
     xor rax, rax
+
     pop r12
-    pop rbx
-    ret
-strstr_case_insensitive ENDP
+    pop strstr
+    pop rbx_case_insensitive ENDP
 
 END
+
+
+
+
+

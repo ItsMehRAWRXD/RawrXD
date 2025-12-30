@@ -157,17 +157,16 @@ test_harness_init PROC
     
     ; Clear test array
     mov ecx, 0
-.init_loop:
+@@init_loop:
     cmp ecx, 100
-    jge .init_done
+    jge @@init_done
     mov rax, offset test_cases
     lea rbx, [rax + rcx*sizeof(test_case)]
     mov DWORD PTR [rbx + test_case.result], 0
     mov DWORD PTR [rbx + test_case.duration_ms], 0
     inc ecx
-    jmp .init_loop
-    
-.init_done:
+    jmp @@init_loop
+@@init_done:
     mov DWORD PTR test_count, 0
     mov DWORD PTR test_pass_count, 0
     mov DWORD PTR test_fail_count, 0
@@ -175,7 +174,7 @@ test_harness_init PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
+
 test_harness_init ENDP
 
 ;==========================================================================
@@ -205,18 +204,16 @@ test_ui_window_creation PROC
     lea rcx, window_fail_msg
     call .copy_string_to_buffer
     inc DWORD PTR test_fail_count
-    jmp .window_done
-    
-.window_pass:
+    jmp @@window_done
+@@window_pass:
     mov rbx, offset test_cases
     mov DWORD PTR [rbx + 0*sizeof(test_case) + test_case.result], TEST_PASS
     inc DWORD PTR test_pass_count
-    
-.window_done:
+@@window_done:
     mov eax, DWORD PTR [rbx + 0*sizeof(test_case) + test_case.result]
     add rsp, 64
     pop rbx
-    ret
+
 test_ui_window_creation ENDP
 
 ;==========================================================================
@@ -229,6 +226,7 @@ PUBLIC test_theme_application
 ALIGN 16
 test_theme_application PROC
     push rbx
+
     push r12
     sub rsp, 64
     
@@ -260,11 +258,10 @@ test_theme_application PROC
     lea rbx, [rbx + rax]
     mov DWORD PTR [rbx + test_case.result], TEST_PASS
     inc DWORD PTR test_pass_count
-    jmp .theme_done
-    
-.theme_fail_1:
-.theme_fail_2:
-.theme_fail_3:
+    jmp @@theme_done
+@@theme_fail_1:
+@@theme_fail_2:
+@@theme_fail_3:
     mov rbx, offset test_cases
     mov eax, r12d
     mov ecx, sizeof(test_case)
@@ -272,13 +269,12 @@ test_theme_application PROC
     lea rbx, [rbx + rax]
     mov DWORD PTR [rbx + test_case.result], TEST_FAIL
     inc DWORD PTR test_fail_count
-    
-.theme_done:
+@@theme_done:
     add rsp, 64
+
     pop r12
-    pop rbx
-    ret
-test_theme_application ENDP
+    pop test
+    pop rbx_theme_application ENDP
 
 ;==========================================================================
 ; PUBLIC: test_json_operations()
@@ -326,17 +322,15 @@ test_json_operations PROC
     mov rbx, offset test_cases
     mov DWORD PTR [rbx + 4*sizeof(test_case) + test_case.result], TEST_PASS
     inc DWORD PTR test_pass_count
-    jmp .json_done
-    
-.json_fail:
+    jmp @@json_done
+@@json_fail:
     mov rbx, offset test_cases
     mov DWORD PTR [rbx + 4*sizeof(test_case) + test_case.result], TEST_FAIL
     inc DWORD PTR test_fail_count
-    
-.json_done:
+@@json_done:
     add rsp, 512
     pop rbx
-    ret
+
 test_json_operations ENDP
 
 ;==========================================================================
@@ -355,29 +349,27 @@ test_failure_detection PROC
     lea rcx, refusal_test_msg
     call error_detect_agentic_failure
     cmp eax, ERROR_CATEGORY_AGENTIC_FAILURE
-    jne .fail_detect_fail
+    jne @@fail_detect_fail
     
     ; Test 2: Detect timeout
     lea rcx, timeout_test_msg
     call error_detect_agentic_failure
     cmp eax, ERROR_CATEGORY_AGENTIC_FAILURE
-    jne .fail_detect_fail
+    jne @@fail_detect_fail
     
     ; PASS
     mov rbx, offset test_cases
     mov DWORD PTR [rbx + 5*sizeof(test_case) + test_case.result], TEST_PASS
     inc DWORD PTR test_pass_count
-    jmp .fail_detect_done
-    
-.fail_detect_fail:
+    jmp @@fail_detect_done
+@@fail_detect_fail:
     mov rbx, offset test_cases
     mov DWORD PTR [rbx + 5*sizeof(test_case) + test_case.result], TEST_FAIL
     inc DWORD PTR test_fail_count
-    
-.fail_detect_done:
+@@fail_detect_done:
     add rsp, 256
     pop rbx
-    ret
+
 test_failure_detection ENDP
 
 ;==========================================================================
@@ -390,6 +382,7 @@ PUBLIC test_perf_theme_switch
 ALIGN 16
 test_perf_theme_switch PROC
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -410,26 +403,24 @@ test_perf_theme_switch PROC
     
     ; Check against target
     cmp eax, PERF_THEME_SWITCH
-    jg .theme_perf_fail
+    jg @@theme_perf_fail
     
     mov rbx, offset test_cases
     mov DWORD PTR [rbx + 7*sizeof(test_case) + test_case.result], TEST_PASS
     mov DWORD PTR [rbx + 7*sizeof(test_case) + test_case.duration_ms], eax
     inc DWORD PTR test_pass_count
-    jmp .theme_perf_done
-    
-.theme_perf_fail:
+    jmp @@theme_perf_done
+@@theme_perf_fail:
     mov rbx, offset test_cases
     mov DWORD PTR [rbx + 7*sizeof(test_case) + test_case.result], TEST_FAIL
     mov DWORD PTR [rbx + 7*sizeof(test_case) + test_case.duration_ms], eax
     inc DWORD PTR test_fail_count
-    
-.theme_perf_done:
+@@theme_perf_done:
     add rsp, 32
+
     pop r12
-    pop rbx
-    ret
-test_perf_theme_switch ENDP
+    pop test
+    pop rbx_perf_theme_switch ENDP
 
 ;==========================================================================
 ; PUBLIC: generate_tap_report()
@@ -441,6 +432,7 @@ PUBLIC generate_tap_report
 ALIGN 16
 generate_tap_report PROC
     push rbx
+
     push r12
     sub rsp, 256
     
@@ -450,9 +442,9 @@ generate_tap_report PROC
     
     ; For each test
     mov r12, 0
-.tap_loop:
+@@tap_loop:
     cmp r12d, DWORD PTR test_count
-    jge .tap_done
+    jge @@tap_done
     
     mov rax, offset test_cases
     mov ecx, sizeof(test_case)
@@ -465,30 +457,27 @@ generate_tap_report PROC
     
     mov eax, DWORD PTR [rbx + test_case.result]
     cmp eax, TEST_PASS
-    je .tap_ok
+    je @@tap_ok
     
     ; not ok
     lea rcx, tap_notok_format
-    jmp .tap_format
-    
-.tap_ok:
+    jmp @@tap_format
+@@tap_ok:
     lea rcx, tap_ok_format
-    
-.tap_format:
+@@tap_format:
     call .append_to_tap
     inc r12
-    jmp .tap_loop
-    
-.tap_done:
+    jmp @@tap_loop
+@@tap_done:
     ; Summary
     lea rcx, tap_summary_format
     call .append_to_tap
     
     add rsp, 256
+
     pop r12
-    pop rbx
-    ret
-test_perf_theme_switch ENDP
+    pop test
+    pop rbx_perf_theme_switch ENDP
 
 ;==========================================================================
 ; PUBLIC: generate_comparison_report()
@@ -513,9 +502,9 @@ generate_comparison_report PROC
     
     ; For each feature
     mov ebx, 0
-.comp_loop:
+@@comp_loop:
     cmp ebx, DWORD PTR feature_count
-    jge .comp_done
+    jge @@comp_done
     
     mov rax, offset feature_array
     mov ecx, sizeof(feature_comparison)
@@ -528,9 +517,8 @@ generate_comparison_report PROC
     call .generate_feature_row_html
     
     inc ebx
-    jmp .comp_loop
-    
-.comp_done:
+    jmp @@comp_loop
+@@comp_done:
     ; Append HTML footer
     lea rcx, [rsp]
     mov edx, 512
@@ -545,7 +533,7 @@ generate_comparison_report PROC
     
     add rsp, 512
     pop rbx
-    ret
+
 generate_comparison_report ENDP
 
 ;==========================================================================
@@ -586,15 +574,13 @@ test_harness_run_all PROC
     jz .all_pass
     
     xor eax, eax
-    jmp .all_done
-    
-.all_pass:
+    jmp @@all_done
+@@all_pass:
     mov eax, 1
-    
-.all_done:
+@@all_done:
     add rsp, 32
     pop rbx
-    ret
+
 test_harness_run_all ENDP
 
 ;==========================================================================
@@ -664,32 +650,28 @@ populate_feature_array ENDP
 ALIGN 16
 compare_buffers PROC PRIVATE
     push rbx
-    xor eax, eax
-    
-.cmp_loop:
+    push xor eax, eax
+@@cmp_loop:
     test r8d, r8d
     jz .cmp_equal
     
     mov al, BYTE PTR [rcx]
     mov bl, BYTE PTR [rdx]
     cmp al, bl
-    jne .cmp_not_equal
+    jne @@cmp_not_equal
     
     inc rcx
     inc rdx
     dec r8d
-    jmp .cmp_loop
-    
-.cmp_equal:
+    jmp @@cmp_loop
+@@cmp_equal:
     mov eax, 1
-    jmp .cmp_done
-    
-.cmp_not_equal:
+    jmp @@cmp_done
+@@cmp_not_equal:
     xor eax, eax
-    
-.cmp_done:
+@@cmp_done:
     pop rbx
-    ret
+
 compare_buffers ENDP
 
 ;==========================================================================
@@ -700,21 +682,19 @@ compare_buffers ENDP
 ALIGN 16
 append_to_tap PROC PRIVATE
     push rbx
-    mov rbx, QWORD PTR tap_pos
-    
-.app_loop:
+    push mov rbx, QWORD PTR tap_pos
+@@app_loop:
     mov al, BYTE PTR [rcx]
     test al, al
     jz .app_done
     mov BYTE PTR [rbx], al
     inc rcx
     inc rbx
-    jmp .app_loop
-    
-.app_done:
+    jmp @@app_loop
+@@app_done:
     mov QWORD PTR tap_pos, rbx
     pop rbx
-    ret
+
 append_to_tap ENDP
 
 ;==========================================================================
@@ -725,8 +705,7 @@ append_to_tap ENDP
 ALIGN 16
 copy_string_to_buffer PROC PRIVATE
     push rbx
-    
-.cpy_loop:
+@@cpy_loop:
     test r8d, r8d
     jz .cpy_done
     mov al, BYTE PTR [rcx]
@@ -736,12 +715,16 @@ copy_string_to_buffer PROC PRIVATE
     inc rcx
     inc rdx
     dec r8d
-    jmp .cpy_loop
-    
-.cpy_done:
+    jmp @@cpy_loop
+@@cpy_done:
     mov BYTE PTR [rdx], 0
     pop rbx
-    ret
+
 copy_string_to_buffer ENDP
 
 END
+
+
+
+
+

@@ -109,8 +109,7 @@ PATCH_LAYER_SERVER EQU 2
 PUBLIC unified_hotpatch_manager_create
 unified_hotpatch_manager_create PROC
     push rbx
-    
-    mov rbx, rcx                    ; rbx = memoryHotpatch
+    push mov rbx, rcx                    ; rbx = memoryHotpatch
     mov r9, rdx                     ; r9 = byteHotpatcher
     mov r10, r8                     ; r10 = serverHotpatch
     
@@ -159,7 +158,7 @@ unified_hotpatch_manager_create PROC
     
     mov rax, r11
     pop rbx
-    ret
+
 unified_hotpatch_manager_create ENDP
 
 ; ============================================================================
@@ -170,9 +169,9 @@ unified_hotpatch_manager_create ENDP
 PUBLIC unified_manager_apply_memory_patch
 unified_manager_apply_memory_patch PROC
     push rbx
+
     push rsi
-    
-    mov rbx, rcx                    ; rbx = manager
+    push mov rbx, rcx                    ; rbx = manager
     mov rsi, rdx                    ; rsi = patchName
     mov r9, r8                      ; r9 = patchData
     
@@ -214,7 +213,7 @@ unified_manager_apply_memory_patch PROC
     
     ; Check result
     cmp byte [r14 + PATCH_RESULT.success], 1
-    jne .patch_apply_failed
+    jne @@patch_apply_failed
     
     ; Get end time
     call GetSystemTimeAsFileTime
@@ -244,13 +243,12 @@ unified_manager_apply_memory_patch PROC
     call free
     
     mov rax, r11                    ; Return result
+
     pop rsi
     pop rbx
-    ret
-    
-.no_memory_hotpatch:
-.patch_creation_failed:
-.patch_apply_failed:
+@@no_memory_hotpatch:
+@@patch_creation_failed:
+@@patch_apply_failed:
     ; Set error result
     mov byte [r11 + UNIFIED_RESULT.success], 0
     lea rax, [szPatchFailedDetail]
@@ -268,10 +266,10 @@ unified_manager_apply_memory_patch PROC
     inc dword [rbx + UNIFIED_HOTPATCH_MANAGER.totalErrors]
     
     mov rax, r11
+
     pop rsi
-    pop rbx
-    ret
-unified_manager_apply_memory_patch ENDP
+    pop unified
+    pop rbx_manager_apply_memory_patch ENDP
 
 ; ============================================================================
 
@@ -281,9 +279,9 @@ unified_manager_apply_memory_patch ENDP
 PUBLIC unified_manager_apply_byte_patch
 unified_manager_apply_byte_patch PROC
     push rbx
+
     push rsi
-    
-    mov rbx, rcx                    ; rbx = manager
+    push mov rbx, rcx                    ; rbx = manager
     mov rsi, rdx                    ; rsi = patchName
     mov r9, r8                      ; r9 = patchData
     
@@ -325,7 +323,7 @@ unified_manager_apply_byte_patch PROC
     
     ; Check result
     cmp byte [r14 + PATCH_RESULT.success], 1
-    jne .patch_apply_failed
+    jne @@patch_apply_failed
     
     ; Get end time
     call GetSystemTimeAsFileTime
@@ -355,13 +353,12 @@ unified_manager_apply_byte_patch PROC
     call free
     
     mov rax, r11                    ; Return result
+
     pop rsi
     pop rbx
-    ret
-    
-.no_byte_hotpatcher:
-.patch_creation_failed:
-.patch_apply_failed:
+@@no_byte_hotpatcher:
+@@patch_creation_failed:
+@@patch_apply_failed:
     ; Set error result
     mov byte [r11 + UNIFIED_RESULT.success], 0
     lea rax, [szPatchFailedDetail]
@@ -379,10 +376,10 @@ unified_manager_apply_byte_patch PROC
     inc dword [rbx + UNIFIED_HOTPATCH_MANAGER.totalErrors]
     
     mov rax, r11
+
     pop rsi
-    pop rbx
-    ret
-unified_manager_apply_byte_patch ENDP
+    pop unified
+    pop rbx_manager_apply_byte_patch ENDP
 
 ; ============================================================================
 
@@ -392,9 +389,9 @@ unified_manager_apply_byte_patch ENDP
 PUBLIC unified_manager_add_server_hotpatch
 unified_manager_add_server_hotpatch PROC
     push rbx
+
     push rsi
-    
-    mov rbx, rcx                    ; rbx = manager
+    push mov rbx, rcx                    ; rbx = manager
     mov rsi, rdx                    ; rsi = patchName
     mov r9, r8                      ; r9 = patchData
     
@@ -437,11 +434,10 @@ unified_manager_add_server_hotpatch PROC
     call console_log
     
     mov rax, r11                    ; Return result
+
     pop rsi
     pop rbx
-    ret
-    
-.no_server_hotpatch:
+@@no_server_hotpatch:
     ; Set error result
     mov byte [r11 + UNIFIED_RESULT.success], 0
     lea rax, [szPatchFailedDetail]
@@ -459,10 +455,10 @@ unified_manager_add_server_hotpatch PROC
     inc dword [rbx + UNIFIED_HOTPATCH_MANAGER.totalErrors]
     
     mov rax, r11
+
     pop rsi
-    pop rbx
-    ret
-unified_manager_add_server_hotpatch ENDP
+    pop unified
+    pop rbx_manager_add_server_hotpatch ENDP
 
 ; ============================================================================
 
@@ -472,9 +468,9 @@ unified_manager_add_server_hotpatch ENDP
 PUBLIC unified_manager_add_hotpatch
 unified_manager_add_hotpatch PROC
     push rbx
+
     push rsi
-    
-    mov rbx, rcx                    ; rbx = manager
+    push mov rbx, rcx                    ; rbx = manager
     mov rsi, rdx                    ; rsi = name
     mov r10, r8                     ; r10 = description
     mov r11d, r9d                   ; r11d = layer
@@ -482,7 +478,7 @@ unified_manager_add_hotpatch PROC
     ; Check capacity
     mov r12d, [rbx + UNIFIED_HOTPATCH_MANAGER.hotpatchCount]
     cmp r12d, [rbx + UNIFIED_HOTPATCH_MANAGER.maxHotpatches]
-    jge .capacity_exceeded
+    jge @@capacity_exceeded
     
     ; Get hotpatch slot
     mov r13, [rbx + UNIFIED_HOTPATCH_MANAGER.hotpatches]
@@ -522,16 +518,15 @@ unified_manager_add_hotpatch PROC
     inc dword [rbx + UNIFIED_HOTPATCH_MANAGER.hotpatchCount]
     
     mov eax, r12d                   ; Return hotpatch ID
+
     pop rsi
     pop rbx
-    ret
-    
-.capacity_exceeded:
+@@capacity_exceeded:
     xor rax, rax
+
     pop rsi
-    pop rbx
-    ret
-unified_manager_add_hotpatch ENDP
+    pop unified
+    pop rbx_manager_add_hotpatch ENDP
 
 ; ============================================================================
 
@@ -541,16 +536,16 @@ unified_manager_add_hotpatch ENDP
 PUBLIC unified_manager_add_preset
 unified_manager_add_preset PROC
     push rbx
+
     push rsi
-    
-    mov rbx, rcx                    ; rbx = manager
+    push mov rbx, rcx                    ; rbx = manager
     mov rsi, rdx                    ; rsi = name
     mov r10, r8                     ; r10 = description
     
     ; Check capacity
     mov r11d, [rbx + UNIFIED_HOTPATCH_MANAGER.presetCount]
     cmp r11d, [rbx + UNIFIED_HOTPATCH_MANAGER.maxPresets]
-    jge .capacity_exceeded
+    jge @@capacity_exceeded
     
     ; Get preset slot
     mov r12, [rbx + UNIFIED_HOTPATCH_MANAGER.presets]
@@ -593,16 +588,15 @@ unified_manager_add_preset PROC
     inc dword [rbx + UNIFIED_HOTPATCH_MANAGER.presetCount]
     
     mov eax, r11d                   ; Return preset ID
+
     pop rsi
     pop rbx
-    ret
-    
-.capacity_exceeded:
+@@capacity_exceeded:
     xor rax, rax
+
     pop rsi
-    pop rbx
-    ret
-unified_manager_add_preset ENDP
+    pop unified
+    pop rbx_manager_add_preset ENDP
 
 ; ============================================================================
 
@@ -612,9 +606,9 @@ unified_manager_add_preset ENDP
 PUBLIC unified_manager_apply_preset
 unified_manager_apply_preset PROC
     push rbx
+
     push rsi
-    
-    mov rbx, rcx                    ; rbx = manager
+    push mov rbx, rcx                    ; rbx = manager
     mov esi, edx                    ; esi = presetId
     
     ; Get start time
@@ -639,10 +633,9 @@ unified_manager_apply_preset PROC
     mov r11d, [r10 + HOTPATCH_PRESET.hotpatchCount]
     xor r12d, r12d                  ; r12d = success count
     xor r13d, r13d                  ; r13d = index
-    
-.apply_loop:
+@@apply_loop:
     cmp r13d, r11d
-    jge .apply_complete
+    jge @@apply_complete
     
     ; Get hotpatch ID
     mov r14, [r10 + HOTPATCH_PRESET.hotpatches]
@@ -663,51 +656,44 @@ unified_manager_apply_preset PROC
     mov eax, [r15 + UNIFIED_HOTPATCH.layer]
     
     cmp eax, PATCH_LAYER_MEMORY
-    je .apply_memory
+    je @@apply_memory
     cmp eax, PATCH_LAYER_BYTE
-    je .apply_byte
+    je @@apply_byte
     cmp eax, PATCH_LAYER_SERVER
-    je .apply_server
+    je @@apply_server
     
-    jmp .skip_hotpatch
-    
-.apply_memory:
+    jmp @@skip_hotpatch
+@@apply_memory:
     mov rcx, rbx
     mov rdx, [r15 + UNIFIED_HOTPATCH.name]
     mov r8, [r15 + UNIFIED_HOTPATCH.data]
     call unified_manager_apply_memory_patch
-    jmp .check_result
-    
-.apply_byte:
+    jmp @@check_result
+@@apply_byte:
     mov rcx, rbx
     mov rdx, [r15 + UNIFIED_HOTPATCH.name]
     mov r8, [r15 + UNIFIED_HOTPATCH.data]
     call unified_manager_apply_byte_patch
-    jmp .check_result
-    
-.apply_server:
+    jmp @@check_result
+@@apply_server:
     mov rcx, rbx
     mov rdx, [r15 + UNIFIED_HOTPATCH.name]
     mov r8, [r15 + UNIFIED_HOTPATCH.data]
     call unified_manager_add_server_hotpatch
-    jmp .check_result
-    
-.check_result:
+    jmp @@check_result
+@@check_result:
     mov r14, rax                    ; r14 = result
     cmp byte [r14 + UNIFIED_RESULT.success], 1
-    jne .hotpatch_failed
+    jne @@hotpatch_failed
     
     inc r12d
-    
-.hotpatch_failed:
+@@hotpatch_failed:
     mov rcx, r14
     call free
-    
-.skip_hotpatch:
+@@skip_hotpatch:
     inc r13d
-    jmp .apply_loop
-    
-.apply_complete:
+    jmp @@apply_loop
+@@apply_complete:
     ; Get end time
     call GetSystemTimeAsFileTime
     sub rax, r8                     ; rax = elapsed time
@@ -727,11 +713,10 @@ unified_manager_apply_preset PROC
     call console_log
     
     mov rax, r9                     ; Return result
+
     pop rsi
     pop rbx
-    ret
-    
-.preset_not_found:
+@@preset_not_found:
     ; Set error result
     mov byte [r9 + UNIFIED_RESULT.success], 0
     lea rax, [szPresetFailedDetail]
@@ -748,10 +733,10 @@ unified_manager_apply_preset PROC
     inc dword [rbx + UNIFIED_HOTPATCH_MANAGER.totalErrors]
     
     mov rax, r9
+
     pop rsi
-    pop rbx
-    ret
-unified_manager_apply_preset ENDP
+    pop unified
+    pop rbx_manager_apply_preset ENDP
 
 ; ============================================================================
 
@@ -763,10 +748,9 @@ unified_manager_get_hotpatch PROC
     mov r8, [rcx + UNIFIED_HOTPATCH_MANAGER.hotpatches]
     mov r9d, [rcx + UNIFIED_HOTPATCH_MANAGER.hotpatchCount]
     xor r10d, r10d
-    
-.find_hotpatch:
+@@find_hotpatch:
     cmp r10d, r9d
-    jge .hotpatch_not_found
+    jge @@hotpatch_not_found
     
     mov r11, r8
     mov r12, r10
@@ -774,16 +758,14 @@ unified_manager_get_hotpatch PROC
     add r11, r12
     
     cmp r10d, edx
-    je .hotpatch_found
+    je @@hotpatch_found
     
     inc r10d
-    jmp .find_hotpatch
-    
-.hotpatch_found:
+    jmp @@find_hotpatch
+@@hotpatch_found:
     mov rax, r11
     ret
-    
-.hotpatch_not_found:
+@@hotpatch_not_found:
     xor rax, rax
     ret
 unified_manager_get_hotpatch ENDP
@@ -798,10 +780,9 @@ unified_manager_get_preset PROC
     mov r8, [rcx + UNIFIED_HOTPATCH_MANAGER.presets]
     mov r9d, [rcx + UNIFIED_HOTPATCH_MANAGER.presetCount]
     xor r10d, r10d
-    
-.find_preset:
+@@find_preset:
     cmp r10d, r9d
-    jge .preset_not_found
+    jge @@preset_not_found
     
     mov r11, r8
     mov r12, r10
@@ -809,16 +790,14 @@ unified_manager_get_preset PROC
     add r11, r12
     
     cmp r10d, edx
-    je .preset_found
+    je @@preset_found
     
     inc r10d
-    jmp .find_preset
-    
-.preset_found:
+    jmp @@find_preset
+@@preset_found:
     mov rax, r11
     ret
-    
-.preset_not_found:
+@@preset_not_found:
     xor rax, rax
     ret
 unified_manager_get_preset ENDP
@@ -842,17 +821,15 @@ unified_manager_get_statistics ENDP
 PUBLIC unified_manager_destroy
 unified_manager_destroy PROC
     push rbx
-    
-    mov rbx, rcx
+    push mov rbx, rcx
     
     ; Free hotpatches array
     mov r10, [rbx + UNIFIED_HOTPATCH_MANAGER.hotpatches]
     mov r11d, [rbx + UNIFIED_HOTPATCH_MANAGER.hotpatchCount]
     xor r12d, r12d
-    
-.free_hotpatches:
+@@free_hotpatches:
     cmp r12d, r11d
-    jge .hotpatches_freed
+    jge @@hotpatches_freed
     
     mov r13, r10
     mov r14, r12
@@ -861,34 +838,29 @@ unified_manager_destroy PROC
     
     mov rcx, [r13 + UNIFIED_HOTPATCH.name]
     cmp rcx, 0
-    je .skip_hotpatch_name
+    je @@skip_hotpatch_name
     call free
-    
-.skip_hotpatch_name:
+@@skip_hotpatch_name:
     mov rcx, [r13 + UNIFIED_HOTPATCH.description]
     cmp rcx, 0
-    je .skip_hotpatch_desc
+    je @@skip_hotpatch_desc
     call free
-    
-.skip_hotpatch_desc:
+@@skip_hotpatch_desc:
     inc r12d
-    jmp .free_hotpatches
-    
-.hotpatches_freed:
+    jmp @@free_hotpatches
+@@hotpatches_freed:
     mov rcx, [rbx + UNIFIED_HOTPATCH_MANAGER.hotpatches]
     cmp rcx, 0
-    je .skip_hotpatches_array
+    je @@skip_hotpatches_array
     call free
-    
-.skip_hotpatches_array:
+@@skip_hotpatches_array:
     ; Free presets array
     mov r10, [rbx + UNIFIED_HOTPATCH_MANAGER.presets]
     mov r11d, [rbx + UNIFIED_HOTPATCH_MANAGER.presetCount]
     xor r12d, r12d
-    
-.free_presets:
+@@free_presets:
     cmp r12d, r11d
-    jge .presets_freed
+    jge @@presets_freed
     
     mov r13, r10
     mov r14, r12
@@ -897,45 +869,39 @@ unified_manager_destroy PROC
     
     mov rcx, [r13 + HOTPATCH_PRESET.name]
     cmp rcx, 0
-    je .skip_preset_name
+    je @@skip_preset_name
     call free
-    
-.skip_preset_name:
+@@skip_preset_name:
     mov rcx, [r13 + HOTPATCH_PRESET.description]
     cmp rcx, 0
-    je .skip_preset_desc
+    je @@skip_preset_desc
     call free
-    
-.skip_preset_desc:
+@@skip_preset_desc:
     mov rcx, [r13 + HOTPATCH_PRESET.hotpatches]
     cmp rcx, 0
-    je .skip_preset_hotpatches
+    je @@skip_preset_hotpatches
     call free
-    
-.skip_preset_hotpatches:
+@@skip_preset_hotpatches:
     inc r12d
-    jmp .free_presets
-    
-.presets_freed:
+    jmp @@free_presets
+@@presets_freed:
     mov rcx, [rbx + UNIFIED_HOTPATCH_MANAGER.presets]
     cmp rcx, 0
-    je .skip_presets_array
+    je @@skip_presets_array
     call free
-    
-.skip_presets_array:
+@@skip_presets_array:
     ; Free callbacks array
     mov rcx, [rbx + UNIFIED_HOTPATCH_MANAGER.callbacks]
     cmp rcx, 0
-    je .skip_callbacks
+    je @@skip_callbacks
     call free
-    
-.skip_callbacks:
+@@skip_callbacks:
     ; Free manager
     mov rcx, rbx
     call free
     
     pop rbx
-    ret
+
 unified_manager_destroy ENDP
 
 ; ============================================================================
@@ -947,3 +913,8 @@ unified_manager_destroy ENDP
     szPresetFailedDetail DB "Preset application failed", 0
 
 END
+
+
+
+
+

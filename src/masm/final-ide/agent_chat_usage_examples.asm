@@ -43,7 +43,7 @@ example_ask_mode PROC
     
     add rsp, 48
     pop rbx
-    ret
+
 example_ask_mode ENDP
 
 .data
@@ -93,7 +93,7 @@ example_debug_mode PROC
     
     add rsp, 48
     pop rbx
-    ret
+
 example_debug_mode ENDP
 
 .data
@@ -110,6 +110,7 @@ example_debug_mode ENDP
 
 example_optimize_mode PROC
     push rbx
+
     push rsi
     sub rsp, 96
     
@@ -153,10 +154,10 @@ example_optimize_mode PROC
     ; Confidence: PROBABLE (85%)
     
     add rsp, 48
+
     pop rsi
-    pop rbx
-    ret
-example_optimize_mode ENDP
+    pop example
+    pop rbx_optimize_mode ENDP
 
 .data
     szExample3Query BYTE "Optimize the matrix multiplication in kernel.asm for AVX-512",0
@@ -172,6 +173,7 @@ example_optimize_mode ENDP
 
 example_plan_mode PROC
     push rbx
+
     push rsi
     sub rsp, 96
     
@@ -251,10 +253,10 @@ example_plan_mode PROC
     ; Ready to execute? [Yes] [Review] [Modify]
     
     add rsp, 96
+
     pop rsi
-    pop rbx
-    ret
-example_plan_mode ENDP
+    pop example
+    pop rbx_plan_mode ENDP
 
 .data
     szExample4Objective     BYTE "Migrate from GGUF to custom quantization format",0
@@ -325,7 +327,7 @@ example_teach_mode PROC
     
     add rsp, 48
     pop rbx
-    ret
+
 example_teach_mode ENDP
 
 .data
@@ -397,7 +399,7 @@ example_hallucination_correction PROC
     
     add rsp, 96
     pop rbx
-    ret
+
 example_hallucination_correction ENDP
 
 ;==========================================================================
@@ -410,6 +412,7 @@ example_hallucination_correction ENDP
 
 example_self_correction PROC
     push rbx
+
     push rsi
     sub rsp, 96
     
@@ -440,10 +443,10 @@ example_self_correction PROC
     ; Confidence: CERTAIN (97%)
     
     add rsp, 96
+
     pop rsi
-    pop rbx
-    ret
-example_self_correction ENDP
+    pop example
+    pop rbx_self_correction ENDP
 
 ;==========================================================================
 ; EXAMPLE 8: Cross-File Impact Analysis
@@ -493,7 +496,7 @@ example_cross_file_impact PROC
     
     add rsp, 96
     pop rbx
-    ret
+
 example_cross_file_impact ENDP
 
 ;==========================================================================
@@ -521,3 +524,8 @@ PUBLIC example_cross_file_impact
     full_response_buffer            BYTE 8192 DUP (?)
 
 END
+
+
+
+
+

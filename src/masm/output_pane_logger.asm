@@ -47,9 +47,9 @@ PUBLIC output_pane_clear
 
 output_pane_init PROC
     mov hOutputPane, rcx
-    xor LogPos, LogPos
-    xor LogCount, LogCount
     xor eax, eax
+    mov LogPos, rax
+    mov LogCount, eax
     ret
 output_pane_init ENDP
 
@@ -99,9 +99,9 @@ output_log_filetree PROC
 output_log_filetree ENDP
 
 output_pane_clear PROC
-    xor LogPos, LogPos
-    xor LogCount, LogCount
     xor eax, eax
+    mov LogPos, rax
+    mov LogCount, eax
     ret
 output_pane_clear ENDP
 

@@ -96,7 +96,7 @@ wish_found:
 done:
     add rsp, 32
     pop rbx
-    ret
+
 agent_bootstrap_grab_wish ENDP
 
 ;==========================================================================
@@ -128,23 +128,25 @@ agent_bootstrap_start PROC
     mov r8d, 2          ; MODE_PLAN
     call AgenticEngine_ProcessResponse
     
-    jmp .exit
-
-.no_wish:
+    jmp @@exit
+@@no_wish:
     lea rcx, szNoWishMsg
     lea rdx, szAgentTitle
     mov r8d, MB_OK or MB_ICONWARNING
     call MessageBoxA
-    jmp .exit
-
-.plan_fail:
+    jmp @@exit
+@@plan_fail:
     ; ...
-    jmp .exit
-
-.exit:
+    jmp @@exit
+@@exit:
     add rsp, 32
     pop rbx
-    ret
+
 agent_bootstrap_start ENDP
 
 END
+
+
+
+
+

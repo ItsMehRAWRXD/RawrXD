@@ -51,6 +51,7 @@ hotpatch_coord_init ENDP
 PUBLIC hotpatch_coord_apply
 hotpatch_coord_apply PROC
     push rbx
+
     push rsi
     sub rsp, 32
     
@@ -81,9 +82,14 @@ hotpatch_coord_apply PROC
 @@:
     
     add rsp, 32
+
     pop rsi
-    pop rbx
-    ret
-hotpatch_coord_apply ENDP
+    pop hotpatch
+    pop rbx_coord_apply ENDP
 
 END
+
+
+
+
+

@@ -78,6 +78,7 @@ tab_dragdrop_init ENDP
 PUBLIC tab_dragdrop_on_lbuttondown
 tab_dragdrop_on_lbuttondown PROC
     push rbx
+
     push rsi
     sub rsp, 32
     
@@ -92,10 +93,10 @@ tab_dragdrop_on_lbuttondown PROC
     
     xor eax, eax
     add rsp, 32
+
     pop rsi
-    pop rbx
-    ret
-tab_dragdrop_on_lbuttondown ENDP
+    pop tab
+    pop rbx_dragdrop_on_lbuttondown ENDP
 
 ;==========================================================================
 ; PUBLIC: tab_dragdrop_on_mousemove(x: edx, y: r8d) -> eax
@@ -105,6 +106,7 @@ tab_dragdrop_on_lbuttondown ENDP
 PUBLIC tab_dragdrop_on_mousemove
 tab_dragdrop_on_mousemove PROC
     push rbx
+
     push rsi
     sub rsp, 32
     
@@ -170,10 +172,10 @@ not_dragging_yet:
     
 dragmove_done:
     add rsp, 32
+
     pop rsi
-    pop rbx
-    ret
-tab_dragdrop_on_mousemove ENDP
+    pop tab
+    pop rbx_dragdrop_on_mousemove ENDP
 
 ;==========================================================================
 ; PUBLIC: tab_dragdrop_on_lbuttonup(x: edx, y: r8d) -> eax
@@ -182,6 +184,7 @@ tab_dragdrop_on_mousemove ENDP
 PUBLIC tab_dragdrop_on_lbuttonup
 tab_dragdrop_on_lbuttonup PROC
     push rbx
+
     push rsi
     sub rsp, 32
     
@@ -218,10 +221,10 @@ not_active:
     
 lbuttonup_done:
     add rsp, 32
+
     pop rsi
-    pop rbx
-    ret
-tab_dragdrop_on_lbuttonup ENDP
+    pop tab
+    pop rbx_dragdrop_on_lbuttonup ENDP
 
 ;==========================================================================
 ; INTERNAL: tab_reorder_tabs(source: ecx, target: edx) -> eax
@@ -229,6 +232,7 @@ tab_dragdrop_on_lbuttonup ENDP
 ;==========================================================================
 tab_reorder_tabs PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -237,10 +241,11 @@ tab_reorder_tabs PROC
     call tab_reorder
     
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 tab_reorder_tabs ENDP
 
 ;==========================================================================
@@ -259,7 +264,7 @@ tab_create_drag_image PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
+
 tab_create_drag_image ENDP
 
 ;==========================================================================
@@ -288,6 +293,7 @@ tab_update_drop_target ENDP
 PUBLIC tab_update_positions
 tab_update_positions PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -330,10 +336,11 @@ cache_loop:
 cache_done:
     mov eax, 1
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 tab_update_positions ENDP
 
 ;==========================================================================
@@ -347,3 +354,8 @@ TCM_GETITEMCOUNT    EQU 1304h
 TCM_GETITEMRECT     EQU 130Ah
 
 END
+
+
+
+
+

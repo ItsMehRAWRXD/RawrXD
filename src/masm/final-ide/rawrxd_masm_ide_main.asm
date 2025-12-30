@@ -392,12 +392,15 @@ masm_ide_create_window PROC
     mov r10, CW_USEDEFAULT
     mov r11, CW_USEDEFAULT
     push r11
+
     push r10
     push r9
+
     push r8
     push rdx
+
     push rcx
-    call CreateWindowExA
+    push call CreateWindowExA
     add rsp, 48
     
     test rax, rax
@@ -764,3 +767,7 @@ szRawrXDTitle db "RawrXD MASM IDE",0
 ; ============================================================================
 
 END
+
+
+
+

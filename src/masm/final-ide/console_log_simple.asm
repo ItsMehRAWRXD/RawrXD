@@ -57,7 +57,7 @@ write_message:
     
     add rsp, 32
     pop rbx
-    ret
+
 console_log ENDP
 
 .data
@@ -66,3 +66,8 @@ newline BYTE 13, 10
 .code
 
 END
+
+
+
+
+

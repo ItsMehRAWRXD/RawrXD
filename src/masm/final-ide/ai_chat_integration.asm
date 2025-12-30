@@ -142,7 +142,7 @@ load_failed:
 done:
     add rsp, 30h
     pop rbx
-    ret
+
 ai_chat_load_model ENDP
 
 ;==========================================================================
@@ -153,6 +153,7 @@ PUBLIC ai_chat_send_message
 ALIGN 16
 ai_chat_send_message PROC
     push rbx
+
     push rsi
     sub rsp, 38h
     
@@ -238,10 +239,10 @@ inference_failed:
     
 done:
     add rsp, 38h
+
     pop rsi
-    pop rbx
-    ret
-ai_chat_send_message ENDP
+    pop ai
+    pop rbx_chat_send_message ENDP
 
 ;==========================================================================
 ; PUBLIC: ai_chat_clear()
@@ -303,9 +304,9 @@ ai_chat_shutdown ENDP
 ;==========================================================================
 strcpy_safe PROC
     push rax
+
     push rbx
-    
-    xor rbx, rbx                    ; counter
+    push xor rbx, rbx                    ; counter
     
 copy_loop:
     cmp rbx, rcx
@@ -328,14 +329,17 @@ done_strcpy:
     
 null_term:
     mov BYTE PTR [rdi + rbx], 0
-    
+
     pop rbx
-    pop rax
-    ret
-strcpy_safe ENDP
+    pop strcpy
+    pop rax_safe ENDP
 
 .data
     msg_inference_error BYTE "AI inference failed", 0
     msg_chat_cleared    BYTE "Chat history cleared", 0
 
 END
+
+
+
+

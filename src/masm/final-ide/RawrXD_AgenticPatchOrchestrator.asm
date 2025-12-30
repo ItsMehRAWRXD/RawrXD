@@ -17,6 +17,7 @@ EXTERN Sleep:PROC
 ; Main optimization loop (runs in background thread)
 RawrXD_OptimizationLoop PROC FRAME
     push rbx
+
     push rsi
     .pushreg rbx
     .pushreg rsi
@@ -58,9 +59,14 @@ LOOP_START:
     ; jmp LOOP_START
     
     add rsp, 48
+
     pop rsi
-    pop rbx
-    ret
-RawrXD_OptimizationLoop ENDP
+    pop RawrXD
+    pop rbx_OptimizationLoop ENDP
 
 END
+
+
+
+
+

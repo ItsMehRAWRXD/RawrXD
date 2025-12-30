@@ -136,7 +136,7 @@ EXPORT_FORMAT_JSON = 4
 PUBLIC viz_create_chart
 viz_create_chart PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 64
     
     ; Register chart window class
@@ -167,12 +167,15 @@ viz_create_chart PROC
     mov r8, offset szChartTitle
     mov r9, WS_CHILD or WS_VISIBLE
     push 0
+
     push 0
     push r9
+
     push r8
     push rdx
+
     push rcx
-    call CreateWindowExA
+    push call CreateWindowExA
     add rsp, 48
     
     test rax, rax
@@ -205,7 +208,7 @@ viz_create_chart ENDP
 PUBLIC viz_add_data_point
 viz_add_data_point PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 64
     
     mov rdi, rcx
@@ -263,7 +266,7 @@ viz_add_data_point ENDP
 PUBLIC viz_draw_chart
 viz_draw_chart PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 128
     
     mov rdi, rcx
@@ -328,7 +331,7 @@ viz_draw_chart ENDP
 ; Draw bar chart
 viz_draw_bar_chart PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 64
     
     mov rbx, rcx  ; hDC
@@ -366,9 +369,9 @@ bar_loop:
     
     ; Draw bar
     push rcx
+
     push rdx
-    
-    LOCAL barRect:RECT
+    push LOCAL barRect:RECT
     mov [barRect.left], edx
     mov [barRect.top], [rect.bottom]
     sub [barRect.top], eax
@@ -399,9 +402,9 @@ bar_loop:
     call DrawTextA
     
 skip_label:
-    pop rdx
-    pop rcx
-    
+
+    pop rcx pop rdx
+
     add rdx, esi
     add rdx, 10  ; Bar spacing
     add rdi, sizeof DATA_POINT
@@ -417,7 +420,7 @@ viz_draw_bar_chart ENDP
 ; Draw line chart
 viz_draw_line_chart PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 64
     
     ; Similar to bar chart but with lines
@@ -431,7 +434,7 @@ viz_draw_line_chart ENDP
 ; Draw pie chart
 viz_draw_pie_chart PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 64
     
     ; Pie chart implementation
@@ -445,7 +448,7 @@ viz_draw_pie_chart ENDP
 ; Draw scatter chart
 viz_draw_scatter_chart PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 64
     
     ; Scatter plot implementation
@@ -458,7 +461,7 @@ viz_draw_scatter_chart ENDP
 ; Chart window procedure
 ChartWindowProc PROC hWnd:QWORD, uMsg:QWORD, wParam:QWORD, lParam:QWORD
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     mov eax, uMsg
@@ -578,7 +581,7 @@ ChartWindowProc ENDP
 ; malloc(size: rcx) -> pointer (rax)
 malloc PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     mov rdx, rcx
@@ -592,7 +595,7 @@ malloc ENDP
 ; free(ptr: rcx)
 free PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     mov rdx, rcx
@@ -618,7 +621,7 @@ zoom_factor REAL8 0.001
 PUBLIC viz_start_realtime_stream
 viz_start_realtime_stream PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     mov [globalChart.dataStream.updateRate], ecx
@@ -652,7 +655,7 @@ viz_start_realtime_stream ENDP
 PUBLIC viz_add_stream_data
 viz_add_stream_data PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     cmp [globalChart.dataStream.isActive], 0
@@ -697,12 +700,12 @@ viz_add_stream_data ENDP
 PUBLIC viz_export_chart
 viz_export_chart PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 64
     push rbx
+
     push rsi
-    
-    mov rbx, rcx  ; Format
+    push mov rbx, rcx  ; Format
     mov rsi, rdx  ; File path
     
     cmp ebx, EXPORT_FORMAT_PNG
@@ -741,20 +744,19 @@ export_json:
     call export_to_json
     
 done:
-    pop rsi
-    pop rbx
-    leave
+
+    pop rsi leave
     ret
+    pop rbx
 viz_export_chart ENDP
 
 ; viz_draw_3d_chart(hDC: rcx, rect: rdx) -> bool (rax)
 viz_draw_3d_chart PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 64
     push rbx
-    
-    mov rbx, rcx  ; hDC
+    push mov rbx, rcx  ; hDC
     
     ; Apply 3D transformations
     movsd xmm0, [globalChart.rotationX]
@@ -777,31 +779,33 @@ draw_3d_loop:
     
     ; Apply transformations
     push rcx
+
     push rsi
-    call transform_3d_point
+    push call transform_3d_point
     call project_to_2d
-    pop rsi
-    pop rcx
-    
+
+    pop rcx pop rsi
+
     ; Draw projected point
     push rcx
+
     push rsi
-    mov rcx, rbx
+    push mov rcx, rbx
     cvtsd2si edx, xmm0
     cvtsd2si r8d, xmm1
     mov r9d, 5  ; Point size
     call draw_circle
-    pop rsi
-    pop rcx
-    
+
+    pop rcx pop rsi
+
     add rsi, SIZEOF DATA_POINT
     dec ecx
     jmp draw_3d_loop
     
 draw_3d_done:
     mov eax, 1
-    pop rbx
-    leave
+
+    pop leave rbx
     ret
 viz_draw_3d_chart ENDP
 
@@ -851,11 +855,11 @@ export_to_svg ENDP
 export_to_csv PROC
     ; Export data as CSV
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     push rbx
+
     push rsi
-    
     ; Create file
     mov rdx, GENERIC_WRITE
     xor r8, r8
@@ -875,8 +879,9 @@ export_to_csv PROC
     lea rdx, csv_header
     lea r9, bytes_written
     push 0
-    call WriteFile
-    add rsp, 8
+    push call
+    push WriteFile
+    push add rsp, 8
     
     ; Write data points
     mov esi, [globalChart.pointCount]
@@ -888,27 +893,30 @@ csv_write_loop:
     
     ; Format data point as CSV line
     push rsi
+
     push rdi
-    mov rcx, rdi
+    push mov rcx, rdi
     lea rdx, csv_buffer
     call format_csv_line
-    pop rdi
-    pop rsi
-    
+
+    pop rsi pop rdi
+
     ; Write line
     push rsi
+
     push rdi
-    mov rcx, rbx
+    push mov rcx, rbx
     lea rdx, csv_buffer
     call string_length
     mov r8, rax
     lea r9, bytes_written
     push 0
-    call WriteFile
-    add rsp, 8
-    pop rdi
-    pop rsi
-    
+    push call
+    push WriteFile
+    push add rsp, 8
+
+    pop rsi pop rdi
+
     add rdi, SIZEOF DATA_POINT
     dec esi
     jmp csv_write_loop
@@ -923,10 +931,10 @@ csv_failed:
     xor eax, eax
     
 csv_done:
-    pop rsi
-    pop rbx
-    leave
+
+    pop rsi leave
     ret
+    pop rbx
     
 .data
 csv_header db "X,Y,Z,Label",13,10,0
@@ -949,7 +957,7 @@ format_csv_line ENDP
 
 string_length PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     xor rax, rax
     
 len_loop:
@@ -965,3 +973,7 @@ len_done:
 string_length ENDP
 
 end
+
+
+
+

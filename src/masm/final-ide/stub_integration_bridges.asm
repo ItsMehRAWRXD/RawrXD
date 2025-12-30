@@ -167,6 +167,7 @@ MODEL_LOAD_EVENT ENDS
 ALIGN 16
 InitializeAllStubs PROC
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -202,17 +203,16 @@ InitializeAllStubs PROC
     
     mov eax, 1
     add rsp, 32
+
     pop r12
     pop rbx
-    ret
-    
-.init_failed:
+@@init_failed:
     xor eax, eax
     add rsp, 32
+
     pop r12
-    pop rbx
-    ret
-InitializeAllStubs ENDP
+    pop InitializeAllStubs
+    pop rbx ENDP
 
 ;==============================================================================
 ; ANIMATION SYSTEM INITIALIZATION
@@ -222,6 +222,7 @@ InitializeAllStubs ENDP
 ALIGN 16
 InitializeAnimationSystem PROC
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -248,20 +249,19 @@ InitializeAnimationSystem PROC
     
     mov eax, 1
     add rsp, 32
+
     pop r12
     pop rbx
-    ret
-    
-.anim_init_error:
+@@anim_init_error:
     lea rcx, [szError]
     lea rdx, [szInitializingAnim]
     call OutputDebugStringA
     xor eax, eax
     add rsp, 32
+
     pop r12
-    pop rbx
-    ret
-InitializeAnimationSystem ENDP
+    pop InitializeAnimationSystem
+    pop rbx ENDP
 
 ;==============================================================================
 ; UI SYSTEM INITIALIZATION
@@ -271,6 +271,7 @@ InitializeAnimationSystem ENDP
 ALIGN 16
 InitializeUISystem PROC
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -287,10 +288,10 @@ InitializeUISystem PROC
     
     mov eax, 1
     add rsp, 32
+
     pop r12
-    pop rbx
-    ret
-InitializeUISystem ENDP
+    pop InitializeUISystem
+    pop rbx ENDP
 
 ;==============================================================================
 ; FEATURE HARNESS INITIALIZATION
@@ -300,6 +301,7 @@ InitializeUISystem ENDP
 ALIGN 16
 InitializeFeatureHarness PROC
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -369,20 +371,19 @@ InitializeFeatureHarness PROC
     mov DWORD PTR [g_feature_harness_ready], 1
     mov eax, 1
     add rsp, 32
+
     pop r12
     pop rbx
-    ret
-    
-.feature_init_error:
+@@feature_init_error:
     lea rcx, [szError]
     lea rdx, [szInitializingFeatures]
     call OutputDebugStringA
     xor eax, eax
     add rsp, 32
+
     pop r12
-    pop rbx
-    ret
-InitializeFeatureHarness ENDP
+    pop InitializeFeatureHarness
+    pop rbx ENDP
 
 ;==============================================================================
 ; MODEL SYSTEM INITIALIZATION
@@ -392,6 +393,7 @@ InitializeFeatureHarness ENDP
 ALIGN 16
 InitializeModelSystem PROC
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -411,20 +413,19 @@ InitializeModelSystem PROC
     
     mov eax, 1
     add rsp, 32
+
     pop r12
     pop rbx
-    ret
-    
-.model_init_error:
+@@model_init_error:
     lea rcx, [szError]
     lea rdx, [szInitializingModel]
     call OutputDebugStringA
     xor eax, eax
     add rsp, 32
+
     pop r12
-    pop rbx
-    ret
-InitializeModelSystem ENDP
+    pop InitializeModelSystem
+    pop rbx ENDP
 
 ;==============================================================================
 ; WIRE UP EVENT HANDLERS
@@ -443,7 +444,7 @@ WireUpEventHandlers PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
+
 WireUpEventHandlers ENDP
 
 ;==============================================================================
@@ -462,7 +463,7 @@ WireUpMessageRouting PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
+
 WireUpMessageRouting ENDP
 
 ;==============================================================================
@@ -491,6 +492,7 @@ AnimationTickCallback ENDP
 ALIGN 16
 HandleAnimationTick PROC
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -499,10 +501,10 @@ HandleAnimationTick PROC
     ; Queue redraw events for affected components
     
     add rsp, 32
+
     pop r12
-    pop rbx
-    ret
-HandleAnimationTick ENDP
+    pop HandleAnimationTick
+    pop rbx ENDP
 
 ;==============================================================================
 ; HANDLE UI EVENT
@@ -522,7 +524,7 @@ HandleUIEvent PROC
     
     add rsp, 32
     pop rbx
-    ret
+
 HandleUIEvent ENDP
 
 ;==============================================================================
@@ -534,6 +536,7 @@ ALIGN 16
 HandleFeatureStateChange PROC
     ; ecx = feature_id, edx = new_state (0=disabled, 1=enabled)
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -548,10 +551,10 @@ HandleFeatureStateChange PROC
     
     mov eax, 1
     add rsp, 32
+
     pop r12
-    pop rbx
-    ret
-HandleFeatureStateChange ENDP
+    pop HandleFeatureStateChange
+    pop rbx ENDP
 
 ;==============================================================================
 ; HANDLE MODEL LOADED
@@ -562,6 +565,7 @@ ALIGN 16
 HandleModelLoaded PROC
     ; rcx = model file path, rdx = model pointer from loader
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -582,10 +586,10 @@ HandleModelLoaded PROC
     
     mov eax, 1
     add rsp, 32
+
     pop r12
-    pop rbx
-    ret
-HandleModelLoaded ENDP
+    pop HandleModelLoaded
+    pop rbx ENDP
 
 ;==============================================================================
 ; INTEGRATION HELPER: CreateUIControls
@@ -605,7 +609,7 @@ CreateUIControls PROC
     
     add rsp, 32
     pop rbx
-    ret
+
 CreateUIControls ENDP
 
 ;==============================================================================
@@ -616,6 +620,7 @@ ALIGN 16
 LoadModel PROC
     ; rcx = file path
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -642,20 +647,24 @@ LoadModel PROC
     
     mov eax, 1
     add rsp, 32
+
     pop r12
     pop rbx
-    ret
-    
-.load_model_error:
+@@load_model_error:
     xor eax, eax
     add rsp, 32
+
     pop r12
-    pop rbx
-    ret
-LoadModel ENDP
+    pop LoadModel
+    pop rbx ENDP
 
 ;==============================================================================
 ; END OF FILE
 ;==============================================================================
 
 END
+
+
+
+
+

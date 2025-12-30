@@ -104,6 +104,7 @@ PUBLIC LogInitialize
 ALIGN 16
 LogInitialize PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -163,10 +164,11 @@ log_init_fail:
     
 log_init_done:
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 LogInitialize ENDP
 
 ;==============================================================================
@@ -176,6 +178,7 @@ GetCurrentTimestamp PROC
     LOCAL st:SYSTEMTIME
     
     push rbx
+
     push rsi
     push rdi
     sub rsp, 80
@@ -196,10 +199,11 @@ GetCurrentTimestamp PROC
     lea rax, timestamp_buf
     
     add rsp, 80
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 GetCurrentTimestamp ENDP
 
 ;==============================================================================
@@ -211,8 +215,10 @@ WriteLogMessage PROC
     LOCAL levelStr:QWORD
     
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
     sub rsp, 256
@@ -343,12 +349,14 @@ skip_file:
 write_log_done:
     mov eax, 1
     add rsp, 256
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 WriteLogMessage ENDP
 
 ;==============================================================================
@@ -422,7 +430,7 @@ LogMessageCommon PROC
 log_common_done:
     add rsp, 32
     pop rbx
-    ret
+
 LogMessageCommon ENDP
 
 ;==============================================================================
@@ -445,8 +453,13 @@ LogShutdown PROC
 shutdown_done:
     add rsp, 32
     pop rbx
-    ret
+
 LogShutdown ENDP
 
 END
+
+
+
+
+
 

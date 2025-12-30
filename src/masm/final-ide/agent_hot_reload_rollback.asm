@@ -44,7 +44,7 @@ agent_hot_reload_module PROC
     
     add rsp, 32
     pop rsi
-    ret
+
 agent_hot_reload_module ENDP
 
 ;==========================================================================
@@ -67,3 +67,8 @@ agent_rollback_check PROC
 agent_rollback_check ENDP
 
 END
+
+
+
+
+

@@ -106,6 +106,7 @@ SESSION_CONFIG ENDS
 PUBLIC session_manager_init
 session_manager_init PROC
     push rbx
+
     push rsi
     sub rsp, 48
     
@@ -161,10 +162,10 @@ skip_thread:
     
     mov eax, 1
     add rsp, 48
+
     pop rsi
-    pop rbx
-    ret
-session_manager_init ENDP
+    pop session
+    pop rbx_manager_init ENDP
 
 ;==========================================================================
 ; PUBLIC: session_manager_shutdown() -> eax
@@ -213,7 +214,7 @@ session_manager_shutdown PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
+
 session_manager_shutdown ENDP
 
 ;==========================================================================
@@ -262,13 +263,12 @@ sync_save:
 autosave_done:
     add rsp, 32
     pop rbx
-    ret
-    
+
 autosave_throttled:
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 session_trigger_autosave ENDP
 
 ;==========================================================================
@@ -303,7 +303,7 @@ no_timer:
 timer_done:
     add rsp, 32
     pop rbx
-    ret
+
 session_install_autosave_timer ENDP
 
 ;==========================================================================
@@ -350,6 +350,7 @@ session_get_config ENDP
 ;==========================================================================
 generate_session_id PROC
     push rbx
+
     push rsi
     sub rsp, 32
     
@@ -365,10 +366,10 @@ generate_session_id PROC
     
     mov eax, 1
     add rsp, 32
+
     pop rsi
-    pop rbx
-    ret
-generate_session_id ENDP
+    pop generate
+    pop rbx_session_id ENDP
 
 ;==========================================================================
 ; INTERNAL: load_session_config() -> eax
@@ -388,7 +389,7 @@ load_session_config PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
+
 load_session_config ENDP
 
 ;==========================================================================
@@ -427,7 +428,7 @@ no_recovery:
 recovery_done:
     add rsp, 32
     pop rbx
-    ret
+
 check_crash_recovery ENDP
 
 ;==========================================================================
@@ -513,7 +514,7 @@ session_manager_init PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
+
 session_manager_init ENDP
 
 ;==========================================================================
@@ -522,6 +523,7 @@ session_manager_init ENDP
 ;==========================================================================
 session_save_thread PROC
     push rbx
+
     push rsi
     sub rsp, 64
     
@@ -585,11 +587,10 @@ save_continue:
 save_thread_stop:
     mov eax, 0
     add rsp, 64
+
     pop rsi
-    pop rbx
-    ret
-    
-szIOError BYTE "I/O error during persistence",0
+    pop szIOError
+    pop rbx BYTE "I/O error during persistence",0
 session_save_thread ENDP
 
 ;==========================================================================
@@ -623,7 +624,7 @@ throttle_skip:
 trigger_done:
     add rsp, 32
     pop rbx
-    ret
+
 session_trigger_autosave ENDP
 
 ;==========================================================================
@@ -645,3 +646,8 @@ EXTERN CloseHandle:PROC
 EXTERN SetTimer:PROC
 
 END
+
+
+
+
+

@@ -109,6 +109,7 @@ PUBLIC orchestration_init
 ALIGN 16
 orchestration_init PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 40h
@@ -174,10 +175,11 @@ init_already:
     
 done_label:
     add rsp, 40h
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 orchestration_init ENDP
 
 ;==========================================================================
@@ -189,6 +191,7 @@ PUBLIC orchestration_process_wish
 ALIGN 16
 orchestration_process_wish PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 40h
@@ -257,10 +260,11 @@ not_init:
     
 wish_done:
     add rsp, 40h
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 orchestration_process_wish ENDP
 
 ;==========================================================================
@@ -271,6 +275,7 @@ PUBLIC orchestration_get_status
 ALIGN 16
 orchestration_get_status PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 40h
@@ -302,10 +307,11 @@ orchestration_get_status PROC
     call strlen_internal
     
     add rsp, 40h
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 orchestration_get_status ENDP
 
 ;==========================================================================
@@ -316,6 +322,7 @@ PUBLIC orchestration_shutdown
 ALIGN 16
 orchestration_shutdown PROC
     push rbx
+
     push rsi
     sub rsp, 40h
     
@@ -360,10 +367,10 @@ shutdown_done:
     xor eax, eax            ; success
     
     add rsp, 40h
+
     pop rsi
-    pop rbx
-    ret
-orchestration_shutdown ENDP
+    pop orchestration
+    pop rbx_shutdown ENDP
 
 ;==========================================================================
 ; INTERNAL HELPER FUNCTIONS
@@ -375,18 +382,17 @@ orchestration_shutdown ENDP
 ;==========================================================================
 classify_intent_internal PROC
     push rbx
+
     push rsi
-    
     ; Simple intent classification based on keywords
     ; Keywords: build, test, debug, hotpatch, rollback, etc.
     
     ; For now, return success (extended in service implementation)
     xor eax, eax
-    
+
     pop rsi
-    pop rbx
-    ret
-classify_intent_internal ENDP
+    pop classify
+    pop rbx_intent_internal ENDP
 
 ;==========================================================================
 ; INTERNAL: generate_execution_plan() -> eax (0=success, 1=error)
@@ -431,7 +437,7 @@ output_log_message PROC
     
     add rsp, 28h
     pop rax
-    ret
+
 output_log_message ENDP
 
 ;==========================================================================
@@ -440,9 +446,9 @@ output_log_message ENDP
 ;==========================================================================
 set_last_error PROC
     push rsi
+
     push rdi
-    
-    mov rsi, rcx
+    push mov rsi, rcx
     lea rdi, g_orchestration_state.last_error_msg
     
     ; Copy error message (up to 256 bytes)
@@ -457,10 +463,10 @@ copy_err_loop:
     jl copy_err_loop
     
 copy_err_done:
+
     pop rdi
-    pop rsi
-    ret
-set_last_error ENDP
+    pop set
+    pop rsi_last_error ENDP
 
 ;==========================================================================
 ; INTERNAL: memory_copy(src: rdi, dst: rbx, size: rcx)
@@ -468,7 +474,7 @@ set_last_error ENDP
 ;==========================================================================
 memory_copy PROC
     push rax
-    xor r8, r8
+    push xor r8, r8
     
 copy_loop:
     cmp r8, rcx
@@ -482,7 +488,7 @@ copy_loop:
     
 copy_done:
     pop rax
-    ret
+
 memory_copy ENDP
 
 ;==========================================================================
@@ -491,8 +497,8 @@ memory_copy ENDP
 ;==========================================================================
 strcat_internal PROC
     push rax
+
     push rsi
-    
     ; Find end of buffer
     mov rsi, rcx
     
@@ -517,10 +523,10 @@ append_loop:
     jmp append_loop
     
 append_done:
+
     pop rsi
-    pop rax
-    ret
-strcat_internal ENDP
+    pop strcat
+    pop rax_internal ENDP
 
 ;==========================================================================
 ; INTERNAL: strlen_internal(str: rcx) -> rax (length)
@@ -544,7 +550,7 @@ strlen_internal ENDP
 ;==========================================================================
 strcpy_limited_internal PROC
     push rax
-    xor r9, r9
+    push xor r9, r9
     
 copy_limited_loop:
     cmp r9, r8
@@ -569,7 +575,7 @@ null_term_ok:
     mov BYTE PTR [rdx + r9], 0
     
     pop rax
-    ret
+
 strcpy_limited_internal ENDP
 
 ;==========================================================================
@@ -578,8 +584,10 @@ strcpy_limited_internal ENDP
 ;==========================================================================
 append_number PROC
     push rax
+
     push rbx
     push rsi
+
     push rdi
     sub rsp, 40h
     
@@ -590,12 +598,13 @@ append_number PROC
     mov BYTE PTR [rdx + 1], 0
     
     add rsp, 40h
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
+
     pop rbx
-    pop rax
-    ret
-append_number ENDP
+    pop append
+    pop rax_number ENDP
 
 ;==========================================================================
 ; EXTERNAL WIN32 APIS
@@ -603,4 +612,9 @@ append_number ENDP
 EXTERN OutputDebugStringA:PROC
 
 END
+
+
+
+
+
 

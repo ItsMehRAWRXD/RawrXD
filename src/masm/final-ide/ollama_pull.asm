@@ -60,8 +60,10 @@ OllamaPullModel PROC
     LOCAL errorCode:DWORD
     
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
     sub rsp, 512
@@ -134,12 +136,14 @@ pull_failed:
     
 pull_done:
     add rsp, 512
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 OllamaPullModel ENDP
 
 END
@@ -185,12 +189,14 @@ pull_fail:
     
 pull_done:
     add rsp, 512
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 OllamaPullModel ENDP
 
 ;==============================================================================
@@ -201,6 +207,7 @@ PUBLIC OllamaInitialize
 ALIGN 16
 OllamaInitialize PROC
     push rbx
+
     push rsi
     sub rsp, 32
     
@@ -223,10 +230,10 @@ ollama_init_fail:
     
 ollama_init_done:
     add rsp, 32
+
     pop rsi
-    pop rbx
-    ret
-OllamaInitialize ENDP
+    pop OllamaInitialize
+    pop rbx ENDP
 
 ;==============================================================================
 ; PUBLIC: OllamaShutdown()
@@ -241,3 +248,8 @@ OllamaShutdown PROC
 OllamaShutdown ENDP
 
 END
+
+
+
+
+

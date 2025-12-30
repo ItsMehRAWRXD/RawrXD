@@ -86,7 +86,7 @@ agent_meta_learn_init PROC
     mov rax, 1
     add rsp, 32
     pop rbx
-    ret
+
 agent_meta_learn_init ENDP
 
 ;==========================================================================
@@ -108,7 +108,7 @@ agent_meta_learn_compute_hash PROC
     
     add rsp, 32
     pop rbx
-    ret
+
 agent_meta_learn_compute_hash ENDP
 
 ;==========================================================================
@@ -122,3 +122,8 @@ agent_meta_learn_load_db PROC
 agent_meta_learn_load_db ENDP
 
 END
+
+
+
+
+

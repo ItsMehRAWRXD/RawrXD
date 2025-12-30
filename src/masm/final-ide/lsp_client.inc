@@ -16,20 +16,20 @@ EXTERN lsp_goto_definition:PROC
 EXTERN lsp_references:PROC
 
 LSP_COMPLETION_ITEM STRUCT
-    label qword
-    kind qword
-    detail qword
-    documentation qword
-    start_line dword
-    start_col dword
-    end_line dword
-    end_col dword
+    label_ptr QWORD ?
+    kind QWORD ?
+    detail QWORD ?
+    documentation QWORD ?
+    start_line DWORD ?
+    start_col DWORD ?
+    end_line DWORD ?
+    end_col DWORD ?
 LSP_COMPLETION_ITEM ENDS
 
 LSP_DIAGNOSTIC STRUCT
-    message qword
-    severity dword
-    line dword
-    column dword
-    source qword
+    message QWORD ?
+    severity DWORD ?
+    line DWORD ?
+    column DWORD ?
+    source QWORD ?
 LSP_DIAGNOSTIC ENDS

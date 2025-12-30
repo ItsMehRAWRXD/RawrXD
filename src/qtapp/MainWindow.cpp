@@ -1,5 +1,4 @@
-// RawrXD IDE MainWindow Implementation
-// "One IDE to rule them all" - comprehensive development environment
+#include "automated_ide_tester.hpp"
 #include "MainWindow.h"
 #include "TerminalWidget.h"
 #include "Subsystems.h"
@@ -30,6 +29,7 @@
 #include "latency_status_panel.h"
 // Experimental features menu (toggle advanced runtime optimizations)
 #include "experimental_features_menu.hpp"
+#include "universal_format_loader_masm.hpp"
 
 // Forward declaration resolved by include above
 
@@ -186,6 +186,8 @@ MainWindow::MainWindow(QWidget* parent)
     // Attach current model path to hotpatch manager when loaded (byte/server ops ready immediately)
     connect(m_inferenceEngine, &InferenceEngine::modelLoadedChanged, this, [this](bool loaded, const QString& modelName){
         if (loaded && !modelName.isEmpty() && m_hotpatchManager) {
+            // Use byte-level hotpatcher for file-based operations since we don't have direct memory access
+            // The memory hotpatcher requires modelPtr/modelSize which we don't have access to
             m_hotpatchManager->attachToModel(nullptr, 0, modelName);
         }
     });
@@ -736,6 +738,9 @@ void MainWindow::setupMenuBar()
     fileMenu->addAction(tr("&Open..."), this, &MainWindow::handleNewWindow, QKeySequence::Open);
     fileMenu->addAction(tr("&Save"), this, &MainWindow::handleSaveState, QKeySequence::Save);
     fileMenu->addSeparator();
+    fileMenu->addAction(tr("Import TensorFlow SavedModel..."), this, &MainWindow::handleImportTensorFlow);
+    fileMenu->addAction(tr("Import ONNX Model..."), this, &MainWindow::handleImportONNX);
+    fileMenu->addSeparator();
     QAction* exitAct = fileMenu->addAction(tr("E&xit"));
     exitAct->setShortcut(QKeySequence::Quit);
     connect(exitAct, &QAction::triggered, this, [this]() {
@@ -958,10 +963,18 @@ void MainWindow::setupMenuBar()
     QMenu* toolsMenu = menuBar()->addMenu(tr("&Tools"));
     toolsMenu->addAction(tr("MASM Feature Settings..."), this, &MainWindow::openMASMFeatureSettings);
     toolsMenu->addSeparator();
-    toolsMenu->addAction(tr("Settings..."), this, []() {
-        // Open general settings dialog
-        qDebug() << "Settings dialog not yet implemented";
-    });
+    
+    // Automated Testing
+    QMenu* testMenu = toolsMenu->addMenu(tr("Automated Testing"));
+    testMenu->addAction(tr("Run Full Test Suite"), this, &MainWindow::runAutomatedTestSuite);
+    testMenu->addAction(tr("Test Model Loading"), this, &MainWindow::testModelLoading);
+    testMenu->addAction(tr("Test Hotpatcher"), this, &MainWindow::testHotpatcher);
+    testMenu->addAction(tr("Test UI Responsiveness"), this, &MainWindow::testUIResponsiveness);
+    testMenu->addSeparator();
+    testMenu->addAction(tr("Generate Test Report"), this, &MainWindow::generateTestReport);
+    
+    toolsMenu->addSeparator();
+    toolsMenu->addAction(tr("Settings..."), this, &MainWindow::openMASMFeatureSettings);
 
     QMenu* helpMenu = menuBar()->addMenu(tr("&Help"));
     helpMenu->addAction(tr("&About"), this, &MainWindow::onAbout);
@@ -1621,6 +1634,74 @@ void MainWindow::handleNewWindow() {
     MainWindow* newWindow = new MainWindow();
     newWindow->show();
     statusBar()->showMessage(tr("New window opened"), 2000);
+}
+
+void MainWindow::handleImportTensorFlow() {
+    QString dirPath = QFileDialog::getExistingDirectory(this, tr("Select TensorFlow SavedModel Directory"));
+    if (dirPath.isEmpty()) return;
+
+    statusBar()->showMessage(tr("Importing TensorFlow model..."));
+    
+    ParserContext ctx = {0};
+    ctx.progress_cb = [](uint64_t current, uint64_t total, void* data) {
+        MainWindow* mw = static_cast<MainWindow*>(data);
+        QMetaObject::invokeMethod(mw, [mw, current, total]() {
+            mw->statusBar()->showMessage(tr("Importing: %1%").arg((float)current/total*100, 0, 'f', 1));
+        });
+    };
+    ctx.progress_data = this;
+
+    size_t gguf_size = 0;
+    void* gguf_data = ParseTensorFlowSavedModel((const wchar_t*)dirPath.utf16(), &ctx, &gguf_size);
+
+    if (gguf_data) {
+        QString savePath = QFileDialog::getSaveFileName(this, tr("Save GGUF Model"), QString(), tr("GGUF Models (*.gguf)"));
+        if (!savePath.isEmpty()) {
+            QFile file(savePath);
+            if (file.open(QIODevice::WriteOnly)) {
+                file.write((const char*)gguf_data, gguf_size);
+                file.close();
+                QMessageBox::information(this, tr("Import Success"), tr("TensorFlow model converted to GGUF successfully."));
+            }
+        }
+        free(gguf_data);
+    } else {
+        QMessageBox::critical(this, tr("Import Failed"), tr("Failed to import TensorFlow model: %1").arg(ctx.error_message ? ctx.error_message : "Unknown error"));
+    }
+}
+
+void MainWindow::handleImportONNX() {
+    QString filePath = QFileDialog::getOpenFileName(this, tr("Select ONNX Model"), QString(), tr("ONNX Models (*.onnx)"));
+    if (filePath.isEmpty()) return;
+
+    statusBar()->showMessage(tr("Importing ONNX model..."));
+    
+    ParserContext ctx = {0};
+    ctx.progress_cb = [](uint64_t current, uint64_t total, void* data) {
+        MainWindow* mw = static_cast<MainWindow*>(data);
+        QMetaObject::invokeMethod(mw, [mw, current, total]() {
+            mw->statusBar()->showMessage(tr("Importing: %1%").arg((float)current/total*100, 0, 'f', 1));
+        });
+    };
+    ctx.progress_data = this;
+
+    size_t gguf_size = 0;
+    void* gguf_data = ParseONNXFile((const wchar_t*)filePath.utf16(), &ctx, &gguf_size);
+
+    if (gguf_data) {
+        QString savePath = QFileDialog::getSaveFileName(this, tr("Save GGUF Model"), QString(), tr("GGUF Models (*.gguf)"));
+        if (!savePath.isEmpty()) {
+            QFile file(savePath);
+            if (file.open(QIODevice::WriteOnly)) {
+                file.write((const char*)gguf_data, gguf_size);
+                file.close();
+                QMessageBox::information(this, tr("Import Success"), tr("ONNX model converted to GGUF successfully."));
+            }
+        }
+        free(gguf_data);
+    } else {
+        QMessageBox::critical(this, tr("Import Failed"), tr("Failed to import ONNX model: %1").arg(ctx.error_message ? ctx.error_message : "Unknown error"));
+    }
 }
 
 void MainWindow::handleAddFile() {
@@ -5521,6 +5602,76 @@ void MainWindow::openFileInEditor(const QString& filePath) {
             statusBar()->showMessage(tr("Opened: %1").arg(QFileInfo(filePath).fileName()), 3000);
         }
     }
+}
+
+// ============================================================================
+// Automated Testing Implementation
+// ============================================================================
+
+void MainWindow::runAutomatedTestSuite() {
+    if (!m_automatedTester) {
+        m_automatedTester = new AutomatedIdeTester(this);
+        
+        // Connect test components
+        m_automatedTester->setTestDataPath(QDir::current().absoluteFilePath("test_data"));
+        
+        // Connect signals for UI feedback
+        connect(m_automatedTester, &AutomatedIdeTester::testStarted, this, [this](const QString& testName) {
+            statusBar()->showMessage(QString("Running test: %1").arg(testName), 3000);
+        });
+        
+        connect(m_automatedTester, &AutomatedIdeTester::testFinished, this, [this](const QString& testName, bool passed, const QString& message) {
+            QString result = passed ? "PASSED" : "FAILED";
+            statusBar()->showMessage(QString("Test %1: %2 - %3").arg(testName).arg(result).arg(message), 5000);
+        });
+        
+        connect(m_automatedTester, &AutomatedIdeTester::reportReady, this, [this](const QString& report) {
+            // Show report in a dialog
+            QMessageBox::information(this, "Automated Test Report", report);
+            
+            // Also save to file
+            QFile reportFile("test_report.txt");
+            if (reportFile.open(QIODevice::WriteOnly)) {
+                reportFile.write(report.toUtf8());
+                reportFile.close();
+            }
+        });
+    }
+    
+    m_automatedTester->runFullTestSuite();
+}
+
+void MainWindow::testModelLoading() {
+    if (!m_automatedTester) {
+        m_automatedTester = new AutomatedIdeTester(this);
+    }
+    
+    m_automatedTester->runModelLoadingTests();
+}
+
+void MainWindow::testHotpatcher() {
+    if (!m_automatedTester) {
+        m_automatedTester = new AutomatedIdeTester(this);
+    }
+    
+    m_automatedTester->runHotpatcherTests();
+}
+
+void MainWindow::testUIResponsiveness() {
+    if (!m_automatedTester) {
+        m_automatedTester = new AutomatedIdeTester(this);
+    }
+    
+    m_automatedTester->runUITests();
+}
+
+void MainWindow::generateTestReport() {
+    if (!m_automatedTester) {
+        m_automatedTester = new AutomatedIdeTester(this);
+    }
+    
+    QString report = m_automatedTester->getReport();
+    QMessageBox::information(this, "Current Test Report", report);
 }
 
 

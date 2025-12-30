@@ -136,9 +136,6 @@ EVENT_CUSTOM         EQU 0100h
 
 PUBLIC qt_foundation_init
 qt_foundation_init PROC
-    ; Initialize memory pools, event queue, default theme
-    ; Return: RAX = 0 (success)
-    
     push rbx
     push r12
     sub rsp, 32
@@ -182,7 +179,7 @@ qt_foundation_init PROC
     mov qword ptr [g_registry_root], 0
     mov dword ptr [g_registry_count], 0
     
-    xor eax, eax                ; Return success
+    xor eax, eax
     add rsp, 32
     pop r12
     pop rbx
@@ -191,36 +188,29 @@ qt_foundation_init ENDP
 
 PUBLIC qt_foundation_cleanup
 qt_foundation_cleanup PROC
-    ; Clean up all objects, free pools
-    ; Return: RAX = 0 (success)
-    
     push rbx
     push r12
     sub rsp, 32
     
-    ; Walk registry root and destroy all objects
     mov rax, [g_registry_root]
     test rax, rax
     jz cleanup_pools
     
-    ; Recursively destroy all registered objects
     mov rcx, rax
     call object_destroy
     
 cleanup_pools:
-    ; Clear memory pool pointers
     lea rax, [g_widget_pool]
     mov qword ptr [rax + MEMORY_POOL.pool_ptr], 0
     
     lea rax, [g_dialog_pool]
     mov qword ptr [rax + MEMORY_POOL.pool_ptr], 0
     
-    ; Clear event queue
     mov qword ptr [g_event_queue], 0
     mov qword ptr [g_slot_bindings], 0
     mov dword ptr [g_registry_count], 0
     
-    xor eax, eax                ; Return success
+    xor eax, eax
     add rsp, 32
     pop r12
     pop rbx
@@ -233,25 +223,18 @@ qt_foundation_cleanup ENDP
 
 PUBLIC object_create
 object_create PROC
-    ; Create a new object
-    ; RCX = type_id ID
-    ; RDX = parent (optional)
-    ; Return: RAX = object pointer
-    
     push rbx
     push r12
     sub rsp, 32
     
-    mov r12, rcx                ; Save type_id
-    mov rbx, rdx                ; Save parent
+    mov r12, rcx
+    mov rbx, rdx
     
-    ; Allocate memory (256 bytes for basic object)
     mov rax, 256
     call malloc
     test rax, rax
     jz create_error
     
-    ; Initialize object base
     mov rcx, rax
     mov qword ptr [rcx + OBJECT_BASE.obj_vmt], 0
     mov qword ptr [rcx + OBJECT_BASE.obj_hwnd], 0
@@ -260,7 +243,6 @@ object_create PROC
     mov dword ptr [rcx + OBJECT_BASE.obj_child_count], 0
     mov dword ptr [rcx + OBJECT_BASE.obj_flags], FLAG_VISIBLE or FLAG_ENABLED
     
-    ; Add to registry
     mov rbx, [g_registry_root]
     mov [g_registry_root], rax
     inc dword ptr [g_registry_count]
@@ -269,7 +251,7 @@ object_create PROC
     pop r12
     pop rbx
     ret
-    
+
 create_error:
     xor eax, eax
     add rsp, 32
@@ -280,37 +262,30 @@ object_create ENDP
 
 PUBLIC object_destroy
 object_destroy PROC
-    ; Destroy an object and its children
-    ; RCX = object pointer
-    ; Return: RAX = 0
-    
     push rbx
     push r12
     sub rsp, 32
     
-    mov r12, rcx                ; Save object pointer
+    mov r12, rcx
     test r12, r12
     jz destroy_ok
     
-    ; Recursively destroy children
     mov rbx, [r12 + OBJECT_BASE.obj_children]
 destroy_loop:
     test rbx, rbx
     jz destroy_self
     
     mov rcx, rbx
-    mov rbx, [rbx + 0]          ; Get next sibling
+    mov rbx, [rbx + 0]
     call object_destroy
     jmp destroy_loop
     
 destroy_self:
-    ; Call virtual destructor if VMT exists
     mov rax, [r12 + OBJECT_BASE.obj_vmt]
     test rax, rax
     jz destroy_free
     
 destroy_free:
-    ; Free object memory
     mov rcx, r12
     call free
     
@@ -328,31 +303,22 @@ object_destroy ENDP
 
 PUBLIC post_event
 post_event PROC
-    ; Post event to queue
-    ; RCX = target object
-    ; RDX = event type
-    ; R8 = param1
-    ; R9 = param2
-    ; Return: RAX = 0 (success)
-    
     push rbx
     push r12
     sub rsp, 32
     
-    ; Allocate EVENT_ITEM
     mov rax, 64
     call malloc
     test rax, rax
     jz post_error
     
-    mov r12, rax                ; R12 = new event item
+    mov r12, rax
     mov qword ptr [r12 + EVENT_ITEM.evt_target], rcx
     mov dword ptr [r12 + EVENT_ITEM.evt_type], edx
     mov qword ptr [r12 + EVENT_ITEM.evt_param1], r8
     mov qword ptr [r12 + EVENT_ITEM.evt_param2], r9
     mov qword ptr [r12 + EVENT_ITEM.evt_next], 0
     
-    ; Add to queue
     mov rax, [g_event_queue]
     test rax, rax
     jnz find_tail
@@ -376,7 +342,7 @@ post_ok:
     pop r12
     pop rbx
     ret
-    
+
 post_error:
     mov eax, 1
     add rsp, 32
@@ -387,17 +353,12 @@ post_event ENDP
 
 PUBLIC process_events
 process_events PROC
-    ; Process all queued events
-    ; Return: RAX = number of events processed
-    
     push rbx
     push r12
     push r13
     sub rsp, 32
     
-    xor r13, r13                ; Event counter
-    
-    ; Get head and clear queue
+    xor r13, r13
     mov r12, [g_event_queue]
     mov qword ptr [g_event_queue], 0
     
@@ -408,7 +369,6 @@ process_loop:
     mov rbx, r12
     mov r12, [r12 + EVENT_ITEM.evt_next]
     
-    ; Process event
     mov rcx, [rbx + EVENT_ITEM.evt_target]
     test rcx, rcx
     jz skip_dispatch
@@ -438,29 +398,20 @@ process_events ENDP
 
 PUBLIC connect_signal
 connect_signal PROC
-    ; Connect signal to slot
-    ; RCX = sender object
-    ; RDX = signal ID
-    ; R8 = receiver object
-    ; R9 = slot handler function
-    ; Return: RAX = 0 (success)
-    
     push rbx
     sub rsp, 32
     
-    ; Allocate SLOT_BINDING
     mov rax, 64
     call malloc
     test rax, rax
     jz connect_error
     
-    mov rbx, rax                ; RBX = new binding
+    mov rbx, rax
     mov qword ptr [rbx + SLOT_BINDING.slot_sender], rcx
     mov qword ptr [rbx + SLOT_BINDING.slot_receiver], r8
     mov dword ptr [rbx + SLOT_BINDING.slot_signal_id], edx
     mov qword ptr [rbx + SLOT_BINDING.slot_handler_fn], r9
     
-    ; Link to bindings list
     mov rax, [g_slot_bindings]
     mov qword ptr [rbx + SLOT_BINDING.slot_next], rax
     mov [g_slot_bindings], rbx
@@ -469,7 +420,7 @@ connect_signal PROC
     add rsp, 32
     pop rbx
     ret
-    
+
 connect_error:
     mov eax, 1
     add rsp, 32
@@ -479,12 +430,6 @@ connect_signal ENDP
 
 PUBLIC emit_signal
 emit_signal PROC
-    ; Emit signal (call all connected slots)
-    ; RCX = sender object
-    ; RDX = signal ID
-    ; R8 = param1
-    ; Return: RAX = number of slots called
-    
     push rbx
     push r12
     push r13
@@ -492,19 +437,17 @@ emit_signal PROC
     push r15
     sub rsp, 32
     
-    mov r12, rcx                ; sender
-    mov r13d, edx               ; signal_id (32-bit mov to r13d zero-extends to r13)
-    mov r14, r8                 ; param1
-    xor r15, r15                ; slot count
+    mov r12, rcx
+    mov r13d, edx
+    mov r14, r8
+    xor r15, r15
     
-    ; Walk slot bindings chain
     mov rbx, [g_slot_bindings]
     
 find_bindings:
     test rbx, rbx
     jz emit_done
     
-    ; Check if this binding matches
     mov rax, [rbx + SLOT_BINDING.slot_sender]
     cmp rax, r12
     jne next_binding
@@ -513,19 +456,18 @@ find_bindings:
     cmp eax, r13d
     jne next_binding
     
-    ; Found matching binding, call it
     mov rcx, [rbx + SLOT_BINDING.slot_receiver]
-    mov rdx, r14                ; param1
+    mov rdx, r14
     mov rax, [rbx + SLOT_BINDING.slot_handler_fn]
-    call rax                    ; Call slot handler
-    inc r15                      ; Count calls
+    call rax
+    inc r15
     
 next_binding:
     mov rbx, [rbx + SLOT_BINDING.slot_next]
     jmp find_bindings
     
 emit_done:
-    mov rax, r15                ; Return call count
+    mov rax, r15
     add rsp, 32
     pop r15
     pop r14
@@ -541,26 +483,18 @@ emit_signal ENDP
 
 PUBLIC get_color_scheme
 get_color_scheme PROC
-    ; Get current color scheme
-    ; Return: RAX = pointer to COLOR_SCHEME
-    
     lea rax, [g_default_theme]
     ret
 get_color_scheme ENDP
 
 PUBLIC set_color_scheme
 set_color_scheme PROC
-    ; Set global color scheme
-    ; RCX = COLOR_SCHEME pointer
-    ; Return: RAX = 0 (success)
-    
     push rbx
     sub rsp, 32
     
     mov rbx, rcx
     lea rax, [g_default_theme]
     
-    ; Copy all color values
     mov ecx, [rbx + COLOR_SCHEME.clr_window_bg]
     mov [rax + COLOR_SCHEME.clr_window_bg], ecx
     mov ecx, [rbx + COLOR_SCHEME.clr_text_color]

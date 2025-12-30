@@ -50,7 +50,7 @@ checkpoint_manager_save PROC
     
     add rsp, 32
     pop rsi
-    ret
+
 checkpoint_manager_save ENDP
 
 ;==========================================================================
@@ -69,7 +69,7 @@ ci_pipeline_manager_run PROC
     
     add rsp, 32
     pop rsi
-    ret
+
 ci_pipeline_manager_run ENDP
 
 ;==========================================================================
@@ -88,7 +88,7 @@ compliance_logger_log PROC
     
     add rsp, 32
     pop rsi
-    ret
+
 compliance_logger_log ENDP
 
 ;==========================================================================
@@ -107,3 +107,8 @@ sla_manager_check PROC
 sla_manager_check ENDP
 
 END
+
+
+
+
+

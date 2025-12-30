@@ -167,7 +167,7 @@ EXTERN InterlockedCompareExchange:PROC
 PUBLIC thread_create
 thread_create PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 40h ; Shadow space + locals
     
     ; Save parameters
@@ -192,8 +192,7 @@ thread_create PROC
 thread_create_exit:
     add rsp, 40h
     pop rbp
-    ret
-    
+
 thread_create_error:
     call GetLastError
     mov g_last_thread_error, eax
@@ -209,7 +208,7 @@ thread_create ENDP
 PUBLIC thread_join
 thread_join PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     ; Wait for thread
@@ -222,7 +221,7 @@ thread_join PROC
     
     add rsp, 20h
     pop rbp
-    ret
+
 thread_join ENDP
 
 ;------------------------------------------------------------------------------
@@ -233,7 +232,7 @@ thread_join ENDP
 PUBLIC thread_terminate
 thread_terminate PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     ; Terminate thread
@@ -258,7 +257,7 @@ thread_terminate_error:
 thread_terminate_exit:
     add rsp, 20h
     pop rbp
-    ret
+
 thread_terminate ENDP
 
 ;------------------------------------------------------------------------------
@@ -283,7 +282,7 @@ thread_get_current_id ENDP
 PUBLIC thread_pool_create
 thread_pool_create PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 40h
     
     ; Validate parameters
@@ -326,7 +325,7 @@ thread_pool_create_error:
 thread_pool_create_exit:
     add rsp, 40h
     pop rbp
-    ret
+
 thread_pool_create ENDP
 
 ;------------------------------------------------------------------------------
@@ -337,7 +336,7 @@ thread_pool_create ENDP
 PUBLIC thread_pool_queue_work
 thread_pool_queue_work PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 40h
     
     ; Validate thread pool
@@ -382,7 +381,7 @@ thread_pool_queue_error:
 thread_pool_queue_exit:
     add rsp, 40h
     pop rbp
-    ret
+
 thread_pool_queue_work ENDP
 
 ;------------------------------------------------------------------------------
@@ -393,7 +392,7 @@ thread_pool_queue_work ENDP
 PUBLIC thread_pool_shutdown
 thread_pool_shutdown PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     ; Set shutdown flag
@@ -412,7 +411,7 @@ thread_pool_shutdown PROC
     mov rax, 1
     add rsp, 20h
     pop rbp
-    ret
+
 thread_pool_shutdown ENDP
 
 ;==============================================================================
@@ -427,7 +426,7 @@ thread_pool_shutdown ENDP
 PUBLIC mutex_create
 mutex_create PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     ; Create mutex
@@ -437,7 +436,7 @@ mutex_create PROC
     
     add rsp, 20h
     pop rbp
-    ret
+
 mutex_create ENDP
 
 ;------------------------------------------------------------------------------
@@ -448,7 +447,7 @@ mutex_create ENDP
 PUBLIC mutex_lock
 mutex_lock PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     ; Wait for mutex
@@ -468,7 +467,7 @@ mutex_lock_error:
 mutex_lock_exit:
     add rsp, 20h
     pop rbp
-    ret
+
 mutex_lock ENDP
 
 ;------------------------------------------------------------------------------
@@ -479,7 +478,7 @@ mutex_lock ENDP
 PUBLIC mutex_unlock
 mutex_unlock PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     ; Release mutex
@@ -498,7 +497,7 @@ mutex_unlock_error:
 mutex_unlock_exit:
     add rsp, 20h
     pop rbp
-    ret
+
 mutex_unlock ENDP
 
 ;------------------------------------------------------------------------------
@@ -509,7 +508,7 @@ mutex_unlock ENDP
 PUBLIC semaphore_create
 semaphore_create PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     ; Create semaphore
@@ -520,7 +519,7 @@ semaphore_create PROC
     
     add rsp, 20h
     pop rbp
-    ret
+
 semaphore_create ENDP
 
 ;------------------------------------------------------------------------------
@@ -531,7 +530,7 @@ semaphore_create ENDP
 PUBLIC semaphore_acquire
 semaphore_acquire PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     ; Wait for semaphore
@@ -551,7 +550,7 @@ semaphore_acquire_error:
 semaphore_acquire_exit:
     add rsp, 20h
     pop rbp
-    ret
+
 semaphore_acquire ENDP
 
 ;------------------------------------------------------------------------------
@@ -562,7 +561,7 @@ semaphore_acquire ENDP
 PUBLIC semaphore_release
 semaphore_release PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     ; Release semaphore
@@ -583,7 +582,7 @@ semaphore_release_error:
 semaphore_release_exit:
     add rsp, 20h
     pop rbp
-    ret
+
 semaphore_release ENDP
 
 ;------------------------------------------------------------------------------
@@ -594,7 +593,7 @@ semaphore_release ENDP
 PUBLIC event_create
 event_create PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     ; Create event
@@ -605,7 +604,7 @@ event_create PROC
     
     add rsp, 20h
     pop rbp
-    ret
+
 event_create ENDP
 
 ;------------------------------------------------------------------------------
@@ -616,7 +615,7 @@ event_create ENDP
 PUBLIC event_set
 event_set PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     ; Set event
@@ -635,7 +634,7 @@ event_set_error:
 event_set_exit:
     add rsp, 20h
     pop rbp
-    ret
+
 event_set ENDP
 
 ;------------------------------------------------------------------------------
@@ -646,7 +645,7 @@ event_set ENDP
 PUBLIC event_reset
 event_reset PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     ; Reset event
@@ -665,7 +664,7 @@ event_reset_error:
 event_reset_exit:
     add rsp, 20h
     pop rbp
-    ret
+
 event_reset ENDP
 
 ;------------------------------------------------------------------------------
@@ -676,7 +675,7 @@ event_reset ENDP
 PUBLIC event_wait
 event_wait PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     ; Wait for event
@@ -695,7 +694,7 @@ event_wait_timeout:
 event_wait_exit:
     add rsp, 20h
     pop rbp
-    ret
+
 event_wait ENDP
 
 ;==============================================================================
@@ -705,7 +704,7 @@ event_wait ENDP
 ; Add thread to registry
 _add_thread_to_registry PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     
     ; Acquire thread registry mutex
     mov rcx, g_thread_mutex
@@ -736,13 +735,13 @@ add_thread_full:
     call _release_mutex
     
     pop rbp
-    ret
+
 _add_thread_to_registry ENDP
 
 ; Remove thread from registry
 _remove_thread_from_registry PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     
     ; Acquire thread registry mutex
     mov rcx, g_thread_mutex
@@ -774,13 +773,13 @@ remove_thread_done:
     call _release_mutex
     
     pop rbp
-    ret
+
 _remove_thread_from_registry ENDP
 
 ; Create pool synchronization objects
 _create_pool_sync_objects PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     
     ; Create queue mutex
     mov rcx, 0         ; Non-recursive
@@ -812,13 +811,13 @@ create_sync_error:
     
 create_sync_exit:
     pop rbp
-    ret
+
 _create_pool_sync_objects ENDP
 
 ; Create work queue
 _create_work_queue PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     ; Allocate work queue
@@ -841,13 +840,13 @@ create_queue_error:
 create_queue_exit:
     add rsp, 20h
     pop rbp
-    ret
+
 _create_work_queue ENDP
 
 ; Create worker threads
 _create_worker_threads PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     ; Create minimum number of threads
@@ -876,13 +875,13 @@ create_workers_done:
 create_workers_exit:
     add rsp, 20h
     pop rbp
-    ret
+
 _create_worker_threads ENDP
 
 ; Worker thread procedure
 _worker_thread_proc PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     
 worker_thread_loop:
     ; Wait for work or shutdown
@@ -921,15 +920,15 @@ worker_thread_loop:
     jmp worker_thread_loop
     
 worker_thread_shutdown:
-    pop rbp
-    mov eax, 0         ; Exit code
+    pop mov
+    pop rbp eax, 0         ; Exit code
     ret
 _worker_thread_proc ENDP
 
 ; Add work item to queue
 _add_work_item PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     
     ; Find empty slot
     mov ecx, 0
@@ -967,13 +966,13 @@ add_work_full:
     
 add_work_exit:
     pop rbp
-    ret
+
 _add_work_item ENDP
 
 ; Get work item from queue
 _get_work_item PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     
     ; Acquire queue mutex
     mov rcx, g_thread_pool.queue_mutex
@@ -1031,13 +1030,13 @@ get_work_exit:
     call _release_mutex
     
     pop rbp
-    ret
+
 _get_work_item ENDP
 
 ; Wait for all threads to exit
 _wait_for_threads_exit PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     ; Wait for each thread
@@ -1061,13 +1060,13 @@ wait_threads_next:
 wait_threads_done:
     add rsp, 20h
     pop rbp
-    ret
+
 _wait_for_threads_exit ENDP
 
 ; Cleanup thread pool resources
 _cleanup_thread_pool PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     
     ; Cleanup synchronization objects
     call _cleanup_sync_objects
@@ -1086,13 +1085,13 @@ cleanup_queue_done:
     mov g_thread_pool.queue_count, 0
     
     pop rbp
-    ret
+
 _cleanup_thread_pool ENDP
 
 ; Cleanup synchronization objects
 _cleanup_sync_objects PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     
     ; Close queue mutex
     mov rcx, g_thread_pool.queue_mutex
@@ -1116,13 +1115,13 @@ cleanup_work_done:
     
 cleanup_shutdown_done:
     pop rbp
-    ret
+
 _cleanup_sync_objects ENDP
 
 ; Acquire mutex (internal)
 _acquire_mutex PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     mov rdx, -1        ; INFINITE timeout
@@ -1140,13 +1139,13 @@ acquire_mutex_error:
 acquire_mutex_exit:
     add rsp, 20h
     pop rbp
-    ret
+
 _acquire_mutex ENDP
 
 ; Release mutex (internal)
 _release_mutex PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     call ReleaseMutex
@@ -1163,7 +1162,7 @@ release_mutex_error:
 release_mutex_exit:
     add rsp, 20h
     pop rbp
-    ret
+
 _release_mutex ENDP
 
 ;==============================================================================
@@ -1194,3 +1193,7 @@ PUBLIC event_reset
 PUBLIC event_wait
 
 .end
+
+
+
+

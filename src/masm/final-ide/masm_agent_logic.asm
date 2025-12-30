@@ -56,7 +56,7 @@ meta_planner_plan PROC
     
     add rsp, 32
     pop rsi
-    ret
+
 meta_planner_plan ENDP
 
 ;==========================================================================
@@ -78,7 +78,7 @@ model_invoker_invoke PROC
     
     add rsp, 32
     pop rsi
-    ret
+
 model_invoker_invoke ENDP
 
 ;==========================================================================
@@ -99,7 +99,7 @@ release_agent_bump_version PROC
     
     add rsp, 32
     pop rsi
-    ret
+
 release_agent_bump_version ENDP
 
 ;==========================================================================
@@ -120,7 +120,7 @@ self_code_edit_source PROC
     
     add rsp, 32
     pop rsi
-    ret
+
 self_code_edit_source ENDP
 
 ;==========================================================================
@@ -155,7 +155,7 @@ sentry_capture_exception PROC
     
     add rsp, 32
     pop rsi
-    ret
+
 sentry_capture_exception ENDP
 
 ;==========================================================================
@@ -173,3 +173,8 @@ zero_touch_install PROC
 zero_touch_install ENDP
 
 END
+
+
+
+
+

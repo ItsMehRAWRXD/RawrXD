@@ -65,6 +65,9 @@ typedef void* MutexHandle;
 /// Opaque event handle
 typedef void* EventHandle;
 
+/// Opaque semaphore handle
+typedef void* SemaphoreHandle;
+
 /**
  * @brief Creates a new mutex (CRITICAL_SECTION wrapper)
  * @return Handle to mutex, or NULL if failed
@@ -98,6 +101,80 @@ void asm_mutex_destroy(MutexHandle handle);
  * @return Event handle, or NULL if failed
  */
 EventHandle asm_event_create(int manual_reset);
+
+/**
+ * @brief Sets event to signaled state
+ */
+void asm_event_set(EventHandle handle);
+
+/**
+ * @brief Resets event to unsignaled state
+ */
+void asm_event_reset(EventHandle handle);
+
+/**
+ * @brief Waits for event to be signaled
+ * @param timeout_ms Timeout in milliseconds (-1 for infinite)
+ * @return 0 on success, 258 on timeout, -1 on error
+ */
+int64_t asm_event_wait(EventHandle handle, int64_t timeout_ms);
+
+/**
+ * @brief Destroys event object
+ */
+void asm_event_destroy(EventHandle handle);
+
+/**
+ * @brief Creates a semaphore
+ */
+SemaphoreHandle asm_semaphore_create(int64_t initial_count, int64_t max_count);
+
+/**
+ * @brief Waits for semaphore
+ */
+int64_t asm_semaphore_wait(SemaphoreHandle handle, int64_t timeout_ms);
+
+/**
+ * @brief Releases semaphore
+ */
+int64_t asm_semaphore_release(SemaphoreHandle handle, int64_t count);
+
+/**
+ * @brief Destroys semaphore
+ */
+void asm_semaphore_destroy(SemaphoreHandle handle);
+
+//=====================================================================
+// THREAD POOL (MASM: asm_thread_pool.asm)
+//=====================================================================
+
+/// Opaque thread pool handle
+typedef void* ThreadPoolHandle;
+
+/// Task procedure type
+typedef void (*TaskProc)(void* context);
+
+/**
+ * @brief Creates a thread pool
+ * @param num_threads Number of worker threads
+ * @return Pool handle, or NULL if failed
+ */
+ThreadPoolHandle asm_thread_pool_create(size_t num_threads);
+
+/**
+ * @brief Enqueues a task to the thread pool
+ * @param pool Pool handle
+ * @param proc Function to execute
+ * @param context User data passed to proc
+ * @return 1 on success, 0 on failure
+ */
+int64_t asm_thread_pool_enqueue(ThreadPoolHandle pool, TaskProc proc, void* context);
+
+/**
+ * @brief Shuts down and destroys the thread pool
+ * @param pool Pool handle
+ */
+void asm_thread_pool_destroy(ThreadPoolHandle pool);
 
 /**
  * @brief Sets event to signaled state

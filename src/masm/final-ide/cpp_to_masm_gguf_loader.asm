@@ -111,8 +111,7 @@ Q_TYPE_F32 EQU 4
 PUBLIC gguf_loader_create
 gguf_loader_create PROC
     push rbx
-    
-    mov rbx, rcx                    ; rbx = filePath
+    push mov rbx, rcx                    ; rbx = filePath
     
     ; Allocate loader
     mov rcx, SIZEOF GGUF_LOADER
@@ -157,7 +156,7 @@ gguf_loader_create PROC
     
     mov rax, r9
     pop rbx
-    ret
+
 gguf_loader_create ENDP
 
 ; ============================================================================
@@ -168,12 +167,11 @@ gguf_loader_create ENDP
 PUBLIC gguf_loader_open
 gguf_loader_open PROC
     push rbx
-    
-    mov rbx, rcx                    ; rbx = loader
+    push mov rbx, rcx                    ; rbx = loader
     
     ; Check if already open
     cmp byte [rbx + GGUF_LOADER.isOpen], 1
-    je .already_open
+    je @@already_open
     
     ; Open file
     mov rcx, [rbx + GGUF_LOADER.filePath]
@@ -186,7 +184,7 @@ gguf_loader_open PROC
     call CreateFileA
     
     cmp rax, 0xFFFFFFFFFFFFFFFF     ; INVALID_HANDLE_VALUE
-    je .open_failed
+    je @@open_failed
     
     mov [rbx + GGUF_LOADER.fileHandle], rax
     
@@ -204,7 +202,7 @@ gguf_loader_open PROC
     
     mov eax, [magicBuffer]
     cmp eax, GGUF_MAGIC
-    jne .invalid_gguf
+    jne @@invalid_gguf
     
     mov byte [rbx + GGUF_LOADER.isOpen], 1
     mov byte [rbx + GGUF_LOADER.isValid], 1
@@ -217,22 +215,20 @@ gguf_loader_open PROC
     
     mov rax, 1
     pop rbx
-    ret
-    
-.already_open:
+
+@@already_open:
     mov rax, 1
     pop rbx
-    ret
-    
-.open_failed:
-.invalid_gguf:
+
+@@open_failed:
+@@invalid_gguf:
     lea rcx, [szFileFailed]
     mov rdx, [rbx + GGUF_LOADER.filePath]
     call console_log
     
     xor rax, rax
     pop rbx
-    ret
+
 gguf_loader_open ENDP
 
 ; ============================================================================
@@ -254,23 +250,21 @@ gguf_loader_is_open ENDP
 PUBLIC gguf_loader_get_param
 gguf_loader_get_param PROC
     push rbx
-    
-    mov rbx, rcx                    ; rbx = loader
+    push mov rbx, rcx                    ; rbx = loader
     mov r9, rdx                     ; r9 = key
     mov r10, r8                     ; r10 = defaultValue
     
     ; Check if open
     cmp byte [rbx + GGUF_LOADER.isOpen], 1
-    jne .not_open
+    jne @@not_open
     
     ; Search metadata
     mov r11, [rbx + GGUF_LOADER.metadata]
     mov r12d, [rbx + GGUF_LOADER.metadataCount]
     xor r13d, r13d
-    
-.search_metadata:
+@@search_metadata:
     cmp r13d, r12d
-    jge .key_not_found
+    jge @@key_not_found
     
     mov r14, r11
     mov r15, r13
@@ -281,12 +275,11 @@ gguf_loader_get_param PROC
     mov rdx, r9
     call strcmp
     cmp eax, 0
-    je .key_found
+    je @@key_found
     
     inc r13d
-    jmp .search_metadata
-    
-.key_found:
+    jmp @@search_metadata
+@@key_found:
     mov rax, [r14 + GGUF_METADATA.value]
     
     ; Log
@@ -295,13 +288,12 @@ gguf_loader_get_param PROC
     call console_log
     
     pop rbx
-    ret
-    
-.key_not_found:
-.not_open:
+
+@@key_not_found:
+@@not_open:
     mov rax, r10                    ; Return default value
     pop rbx
-    ret
+
 gguf_loader_get_param ENDP
 
 ; ============================================================================
@@ -312,23 +304,22 @@ gguf_loader_get_param ENDP
 PUBLIC gguf_loader_inflate_weight
 gguf_loader_inflate_weight PROC
     push rbx
+
     push rsi
-    
-    mov rbx, rcx                    ; rbx = loader
+    push mov rbx, rcx                    ; rbx = loader
     mov rsi, rdx                    ; rsi = tensorName
     
     ; Check if open
     cmp byte [rbx + GGUF_LOADER.isOpen], 1
-    jne .not_open
+    jne @@not_open
     
     ; Find tensor
     mov r8, [rbx + GGUF_LOADER.tensors]
     mov r9d, [rbx + GGUF_LOADER.tensorCount]
     xor r10d, r10d
-    
-.find_tensor:
+@@find_tensor:
     cmp r10d, r9d
-    jge .tensor_not_found
+    jge @@tensor_not_found
     
     mov r11, r8
     mov r12, r10
@@ -339,12 +330,11 @@ gguf_loader_inflate_weight PROC
     mov rdx, rsi
     call strcmp
     cmp eax, 0
-    je .tensor_found
+    je @@tensor_found
     
     inc r10d
-    jmp .find_tensor
-    
-.tensor_found:
+    jmp @@find_tensor
+@@tensor_found:
     ; Allocate buffer for tensor data
     mov rcx, [r11 + GGUF_TENSOR.size]
     call malloc
@@ -374,21 +364,20 @@ gguf_loader_inflate_weight PROC
     call console_log
     
     mov rax, r13                    ; Return data buffer
+
     pop rsi
     pop rbx
-    ret
-    
-.tensor_not_found:
-.not_open:
+@@tensor_not_found:
+@@not_open:
     lea rcx, [szTensorFailed]
     mov rdx, rsi
     call console_log
     
     xor rax, rax
+
     pop rsi
-    pop rbx
-    ret
-gguf_loader_inflate_weight ENDP
+    pop gguf
+    pop rbx_loader_inflate_weight ENDP
 
 ; ============================================================================
 
@@ -400,10 +389,9 @@ gguf_loader_tensor_names PROC
     mov r8, [rcx + GGUF_LOADER.tensors]
     mov r9d, [rcx + GGUF_LOADER.tensorCount]
     xor r10d, r10d
-    
-.copy_names:
+@@copy_names:
     cmp r10d, r9d
-    jge .names_copied
+    jge @@names_copied
     
     mov r11, r8
     mov r12, r10
@@ -414,9 +402,8 @@ gguf_loader_tensor_names PROC
     mov [rdx + r10 * 8], rax        ; Store pointer in buffer
     
     inc r10d
-    jmp .copy_names
-    
-.names_copied:
+    jmp @@copy_names
+@@names_copied:
     mov eax, r9d                    ; Return tensor count
     ret
 gguf_loader_tensor_names ENDP
@@ -429,17 +416,15 @@ gguf_loader_tensor_names ENDP
 PUBLIC gguf_loader_has_unsupported_quantization
 gguf_loader_has_unsupported_quantization PROC
     push rbx
-    
-    mov rbx, rcx
+    push mov rbx, rcx
     
     ; Check tensors for unsupported quantization
     mov r8, [rbx + GGUF_LOADER.tensors]
     mov r9d, [rbx + GGUF_LOADER.tensorCount]
     xor r10d, r10d
-    
-.check_quantization:
+@@check_quantization:
     cmp r10d, r9d
-    jge .all_supported
+    jge @@all_supported
     
     mov r11, r8
     mov r12, r10
@@ -448,24 +433,22 @@ gguf_loader_has_unsupported_quantization PROC
     
     mov eax, [r11 + GGUF_TENSOR.quantization]
     cmp eax, Q_TYPE_Q2              ; Q2 is unsupported
-    je .unsupported_found
+    je @@unsupported_found
     
     inc r10d
-    jmp .check_quantization
-    
-.unsupported_found:
+    jmp @@check_quantization
+@@unsupported_found:
     lea rcx, [szUnsupportedQuant]
     mov rdx, [r11 + GGUF_TENSOR.name]
     call console_log
     
     mov rax, 1
     pop rbx
-    ret
-    
-.all_supported:
+
+@@all_supported:
     xor rax, rax
     pop rbx
-    ret
+
 gguf_loader_has_unsupported_quantization ENDP
 
 ; ============================================================================
@@ -487,22 +470,20 @@ gguf_loader_get_statistics ENDP
 PUBLIC gguf_loader_close
 gguf_loader_close PROC
     push rbx
-    
-    mov rbx, rcx
+    push mov rbx, rcx
     
     ; Check if open
     cmp byte [rbx + GGUF_LOADER.isOpen], 1
-    jne .already_closed
+    jne @@already_closed
     
     ; Close file
     mov rcx, [rbx + GGUF_LOADER.fileHandle]
     call CloseHandle
     
     mov byte [rbx + GGUF_LOADER.isOpen], 0
-    
-.already_closed:
+@@already_closed:
     pop rbx
-    ret
+
 gguf_loader_close ENDP
 
 ; ============================================================================
@@ -512,8 +493,7 @@ gguf_loader_close ENDP
 PUBLIC gguf_loader_destroy
 gguf_loader_destroy PROC
     push rbx
-    
-    mov rbx, rcx
+    push mov rbx, rcx
     
     ; Close file if open
     mov rcx, rbx
@@ -523,10 +503,9 @@ gguf_loader_destroy PROC
     mov r10, [rbx + GGUF_LOADER.tensors]
     mov r11d, [rbx + GGUF_LOADER.tensorCount]
     xor r12d, r12d
-    
-.free_tensors:
+@@free_tensors:
     cmp r12d, r11d
-    jge .tensors_freed
+    jge @@tensors_freed
     
     mov r13, r10
     mov r14, r12
@@ -535,47 +514,41 @@ gguf_loader_destroy PROC
     
     mov rcx, [r13 + GGUF_TENSOR.name]
     cmp rcx, 0
-    je .skip_tensor_name
+    je @@skip_tensor_name
     call free
-    
-.skip_tensor_name:
+@@skip_tensor_name:
     inc r12d
-    jmp .free_tensors
-    
-.tensors_freed:
+    jmp @@free_tensors
+@@tensors_freed:
     mov rcx, [rbx + GGUF_LOADER.tensors]
     cmp rcx, 0
-    je .skip_tensors_array
+    je @@skip_tensors_array
     call free
-    
-.skip_tensors_array:
+@@skip_tensors_array:
     ; Free metadata array
     mov rcx, [rbx + GGUF_LOADER.metadata]
     cmp rcx, 0
-    je .skip_metadata
+    je @@skip_metadata
     call free
-    
-.skip_metadata:
+@@skip_metadata:
     ; Free tokenizer metadata
     mov rcx, [rbx + GGUF_LOADER.tokenizerMetadata]
     cmp rcx, 0
-    je .skip_tokenizer
+    je @@skip_tokenizer
     call free
-    
-.skip_tokenizer:
+@@skip_tokenizer:
     ; Free file path
     mov rcx, [rbx + GGUF_LOADER.filePath]
     cmp rcx, 0
-    je .skip_filepath
+    je @@skip_filepath
     call free
-    
-.skip_filepath:
+@@skip_filepath:
     ; Free loader
     mov rcx, rbx
     call free
     
     pop rbx
-    ret
+
 gguf_loader_destroy ENDP
 
 ; ============================================================================
@@ -584,3 +557,8 @@ gguf_loader_destroy ENDP
     magicBuffer DWORD ?
 
 END
+
+
+
+
+

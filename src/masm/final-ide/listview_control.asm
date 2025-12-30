@@ -68,6 +68,7 @@ MAX_LISTVIEW_COLUMNS   EQU 16
 CreateListView PROC FRAME
     ; Save non-volatile registers
     push rbx
+
     push rsi
     push rdi
     .PUSHREG rbx
@@ -187,10 +188,11 @@ window_creation_failed:
 listview_created:
     ; Cleanup stack and return
     add rsp, 30h
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 CreateListView ENDP
 
 ; ============================================================================
@@ -208,6 +210,7 @@ CreateListViewWindow PROC
     ; Create list view
     ; rcx = parent HWND, rdx = x, r8d = y, r9d = width, r10d = height
     push rbx
+
     push rsi
     push rdi
     sub rsp, 80 ; shadow space + stack args + alignment
@@ -234,10 +237,11 @@ CreateListViewWindow PROC
     call CreateWindowExA
     
     add rsp, 80
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 CreateListViewWindow ENDP
 
 ; ============================================================================
@@ -254,6 +258,7 @@ CreateListViewWindow ENDP
 AddColumn PROC FRAME
     ; Save non-volatile registers
     push rbx
+
     push rsi
     push rdi
     .PUSHREG rbx
@@ -338,10 +343,11 @@ add_column_failed:
 add_column_success:
     ; Cleanup stack and return
     add rsp, 20h
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 AddColumn ENDP
 
 ; ============================================================================
@@ -714,12 +720,13 @@ free_items_loop:
     jz skip_item
     
     push rcx
+
     push rsi
-    mov rcx, rdi
+    push mov rcx, rdi
     call free
-    pop rsi
-    pop rcx
-    
+
+    pop rcx pop rsi
+
     mov qword ptr [rcx+rsi*8], 0
     
 skip_item:
@@ -808,3 +815,7 @@ no_columns_array:
 DestroyListView ENDP
 
 END
+
+
+
+

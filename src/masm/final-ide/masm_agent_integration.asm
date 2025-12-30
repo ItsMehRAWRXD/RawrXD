@@ -52,9 +52,9 @@ PUBLIC agent_chat_send_message
 PUBLIC agent_chat_receive_response
 PUBLIC agent_hotpatch_apply
 PUBLIC agent_plan_execute
-PUBLIC agent_context_push
-PUBLIC agent_context_pop
-PUBLIC agent_get_confidence
+PUBLIC agent_context_push PUBLIC
+    push agent_context_pop agent
+    pop PUBLIC_get_confidence
 
 ;==============================================================================
 ; GLOBAL DATA
@@ -115,13 +115,12 @@ agent_integration_init PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
-    
-.agent_init_error:
+
+@@agent_init_error:
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 masm_agent_integration_init ENDP
 
 ;==============================================================================
@@ -132,6 +131,7 @@ ALIGN 16
 agent_chat_send_message PROC
     ; rcx = message pointer, edx = mode (0=Ask, 1=Edit, 2=Plan, 3=Debug, 4=Optimize)
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -143,14 +143,14 @@ agent_chat_send_message PROC
     jz .send_error
     
     cmp ebx, 4
-    jg .send_error
+    jg @@send_error
     
     ; Acquire agent mutex
     mov rcx, g_agent_mutex
     mov rdx, INFINITE
     call WaitForSingleObject
     cmp eax, WAIT_OBJECT_0
-    jne .send_error
+    jne @@send_error
     
     ; Generate request ID
     inc g_current_req_id
@@ -183,17 +183,16 @@ agent_chat_send_message PROC
     mov eax, g_current_req_id
     add rsp, SIZEOF AGENT_REQUEST
     add rsp, 32
+
     pop r12
     pop rbx
-    ret
-    
-.send_error:
+@@send_error:
     xor eax, eax
     add rsp, 32
+
     pop r12
-    pop rbx
-    ret
-masm_agent_chat_send_message ENDP
+    pop masm
+    pop rbx_agent_chat_send_message ENDP
 
 ;==============================================================================
 ; PUBLIC: agent_chat_receive_response(req_id: ecx) -> response_ptr (rax)
@@ -203,6 +202,7 @@ ALIGN 16
 agent_chat_receive_response PROC
     ; ecx = request ID to retrieve response for
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -213,7 +213,7 @@ agent_chat_receive_response PROC
     mov rdx, INFINITE
     call WaitForSingleObject
     cmp eax, WAIT_OBJECT_0
-    jne .recv_error
+    jne @@recv_error
     
     ; Get response buffer
     mov rax, g_response_buffer
@@ -232,22 +232,20 @@ agent_chat_receive_response PROC
     call ReleaseMutex
     
     add rsp, 32
+
     pop r12
     pop rbx
-    ret
-    
-.recv_error_unlock:
+@@recv_error_unlock:
     mov rcx, g_agent_mutex
     call ReleaseMutex
-    jmp .recv_error
-    
-.recv_error:
+    jmp @@recv_error
+@@recv_error:
     xor eax, eax
     add rsp, 32
+
     pop r12
-    pop rbx
-    ret
-masm_agent_chat_receive_response ENDP
+    pop masm
+    pop rbx_agent_chat_receive_response ENDP
 
 ;==============================================================================
 ; PUBLIC: agent_hotpatch_apply(patch_data: rcx) -> bool (rax)
@@ -268,7 +266,7 @@ agent_hotpatch_apply PROC
     mov rdx, INFINITE
     call WaitForSingleObject
     cmp eax, WAIT_OBJECT_0
-    jne .hotpatch_error
+    jne @@hotpatch_error
     
     ; Call Qt signal to invoke UnifiedHotpatchManager
     mov rcx, [rsp + 40]   ; Patch pointer
@@ -281,13 +279,12 @@ agent_hotpatch_apply PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
-    
-.hotpatch_error:
+
+@@hotpatch_error:
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 masm_agent_hotpatch_apply ENDP
 
 ;==============================================================================
@@ -306,7 +303,7 @@ agent_plan_execute PROC
     mov rdx, INFINITE
     call WaitForSingleObject
     cmp eax, WAIT_OBJECT_0
-    jne .plan_error
+    jne @@plan_error
     
     ; Call Qt signal to invoke PlanOrchestrator
     mov ecx, [rsp + 40]   ; Plan ID
@@ -319,18 +316,18 @@ agent_plan_execute PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
-    
-.plan_error:
+
+@@plan_error:
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 masm_agent_plan_execute ENDP
 
 ;==============================================================================
 ; PUBLIC: agent_context_push(context: rcx) -> bool (rax)
-; Push context onto agent stack
+; push context
+    push onto agent stack
 ;==============================================================================
 ALIGN 16
 agent_context_push PROC
@@ -347,12 +344,12 @@ agent_context_push PROC
     mov rdx, INFINITE
     call WaitForSingleObject
     cmp eax, WAIT_OBJECT_0
-    jne .context_push_error
+    jne @@context_push_error
     
     ; Check stack depth
     mov eax, g_context_depth
     cmp eax, 16
-    jge .context_push_full
+    jge @@context_push_full
     
     ; Store context at current depth
     mov rbx, OFFSET g_contexts
@@ -362,8 +359,7 @@ agent_context_push PROC
     ; Copy context structure
     mov r8, [rsp + 40]  ; Get context pointer
     mov eax, SIZEOF AGENT_CONTEXT
-    
-.copy_context_loop:
+@@copy_context_loop:
     test eax, eax
     jz .context_push_done
     mov bl, BYTE PTR [r8]
@@ -371,9 +367,8 @@ agent_context_push PROC
     inc r8
     inc rbx
     dec eax
-    jmp .copy_context_loop
-    
-.context_push_done:
+    jmp @@copy_context_loop
+@@context_push_done:
     inc g_context_depth
     
     mov rcx, g_agent_mutex
@@ -382,27 +377,26 @@ agent_context_push PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
-    
-.context_push_full:
+
+@@context_push_full:
     mov rcx, g_agent_mutex
     call ReleaseMutex
-    jmp .context_push_error
-    
-.context_push_error:
+    jmp @@context_push_error
+@@context_push_error:
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 masm_agent_context_push ENDP
 
 ;==============================================================================
 ; PUBLIC: agent_context_pop() -> context_ptr (rax)
-; Pop context from agent stack
+; pop from
+    pop context agent stack
 ;==============================================================================
 ALIGN 16
-agent_context_pop PROC
-    push rbx
+agent_context_pop push
+    pop PROC rbx
     sub rsp, 32
     
     ; Acquire mutex
@@ -410,14 +404,14 @@ agent_context_pop PROC
     mov rdx, INFINITE
     call WaitForSingleObject
     cmp eax, WAIT_OBJECT_0
-    jne .context_pop_error
+    jne @@context_pop_error
     
     ; Check stack not empty
     cmp g_context_depth, 0
-    je .context_pop_empty
+    je @@context_pop_empty
     
-    ; Pop context
-    dec g_context_depth
+    ; pop dec
+    pop context g_context_depth
     mov eax, g_context_depth
     
     ; Return pointer to popped context
@@ -431,18 +425,16 @@ agent_context_pop PROC
     
     add rsp, 32
     pop rbx
-    ret
-    
-.context_pop_empty:
+
+@@context_pop_empty:
     mov rcx, g_agent_mutex
     call ReleaseMutex
-    jmp .context_pop_error
-    
-.context_pop_error:
+    jmp @@context_pop_error
+@@context_pop_error:
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 masm_agent_context_pop ENDP
 
 ;==============================================================================
@@ -461,7 +453,7 @@ agent_get_confidence PROC
     mov rdx, INFINITE
     call WaitForSingleObject
     cmp eax, WAIT_OBJECT_0
-    jne .conf_error
+    jne @@conf_error
     
     ; Get response buffer
     mov rax, g_response_buffer
@@ -485,18 +477,21 @@ agent_get_confidence PROC
     
     add rsp, 32
     pop rbx
-    ret
-    
-.conf_error_unlock:
+
+@@conf_error_unlock:
     mov rcx, g_agent_mutex
     call ReleaseMutex
-    jmp .conf_error
-    
-.conf_error:
+    jmp @@conf_error
+@@conf_error:
     xor eax, eax
     add rsp, 32
     pop rbx
-    ret
+
 masm_agent_get_confidence ENDP
 
 END
+
+
+
+
+

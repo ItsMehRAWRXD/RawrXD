@@ -184,8 +184,10 @@ strstr_case_insensitive PROC
     ; Returns: rax = pointer to match in original haystack (or 0 if not found)
     
     push rbx
+
     push r12
     push r13
+
     push r14
     sub rsp, 512
     
@@ -230,33 +232,28 @@ strstr_case_insensitive PROC
     mov rax, r12
     add rax, rcx
     
-    jmp .case_insensitive_cleanup2
-    
-.case_insensitive_not_found:
+    jmp @@case_insensitive_cleanup2
+@@case_insensitive_not_found:
     xor eax, eax
-    
-.case_insensitive_cleanup2:
+@@case_insensitive_cleanup2:
     mov rcx, rbx
     call asm_free
-    
-.case_insensitive_cleanup1:
+@@case_insensitive_cleanup1:
     mov rcx, r14
     call asm_free
     
-    jmp .case_insensitive_done
-    
-.case_insensitive_fail:
+    jmp @@case_insensitive_done
+@@case_insensitive_fail:
     xor eax, eax
-    
-.case_insensitive_done:
+@@case_insensitive_done:
     add rsp, 512
-    pop r14
-    pop r13
+
+    pop r13 pop r14
+
+
     pop r12
-    pop rbx
-    ret
-    
-strstr_case_insensitive ENDP
+    pop strstr
+    pop rbx_case_insensitive ENDP
 
 ;==========================================================================
 ; SENTENCE BOUNDARY DETECTION (3 hours of functionality)
@@ -275,8 +272,10 @@ extract_sentence PROC
     ; Returns: rax = pointer to sentence, rcx = sentence length
     
     push rbx
+
     push r12
     push r13
+
     push r14
     push r15
     sub rsp, 128
@@ -286,82 +285,75 @@ extract_sentence PROC
     mov r14, r13                        ; Current search position
     
     xor r15, r15                        ; Sentence length counter
-    
-.sentence_scan_loop:
+@@sentence_scan_loop:
     mov al, BYTE PTR [r12 + r14]
     test al, al
     jz .sentence_end_of_text
     
     ; Check for sentence delimiters
     cmp al, '.'
-    je .sentence_check_period
+    je @@sentence_check_period
     cmp al, '!'
-    je .sentence_found
+    je @@sentence_found
     cmp al, '?'
-    je .sentence_found
+    je @@sentence_found
     
     inc r14
     inc r15
-    jmp .sentence_scan_loop
-    
-.sentence_check_period:
+    jmp @@sentence_scan_loop
+@@sentence_check_period:
     ; Check if it's an abbreviation by looking for pattern: "X."
     ; If previous character is uppercase letter and it's followed by space/EOL, it's likely abbr
     cmp r14, 0
-    je .sentence_check_period_is_abbr
+    je @@sentence_check_period_is_abbr
     
     mov al, BYTE PTR [r12 + r14 - 1]
     cmp al, 'A'
-    jl .sentence_period_is_end
+    jl @@sentence_period_is_end
     cmp al, 'Z'
-    jg .sentence_period_is_end
+    jg @@sentence_period_is_end
     
     ; Check next character
     mov al, BYTE PTR [r12 + r14 + 1]
     test al, al
     jz .sentence_period_is_end
     cmp al, ' '
-    je .sentence_period_is_end
+    je @@sentence_period_is_end
     cmp al, 0Ah
-    je .sentence_period_is_end
+    je @@sentence_period_is_end
     
     ; It's likely an abbreviation, continue scanning
-    jmp .sentence_period_continue
-    
-.sentence_check_period_is_abbr:
-    jmp .sentence_period_continue
-    
-.sentence_period_is_end:
+    jmp @@sentence_period_continue
+@@sentence_check_period_is_abbr:
+    jmp @@sentence_period_continue
+@@sentence_period_is_end:
     inc r14                             ; Include the period
     inc r15
-    
-.sentence_found:
+@@sentence_found:
     ; Extract sentence (from r13, length r15)
     mov rax, r12
     add rax, r13
     mov rcx, r15
     
-    jmp .sentence_done
-    
-.sentence_period_continue:
+    jmp @@sentence_done
+@@sentence_period_continue:
     inc r14
     inc r15
-    jmp .sentence_scan_loop
-    
-.sentence_end_of_text:
+    jmp @@sentence_scan_loop
+@@sentence_end_of_text:
     mov rax, r12
     add rax, r13
     mov rcx, r15
-    
-.sentence_done:
+@@sentence_done:
     add rsp, 128
-    pop r15
-    pop r14
-    pop r13
-    pop r12
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
     pop rbx
-    ret
-    
+
 extract_sentence ENDP
 
 ;==========================================================================
@@ -379,6 +371,7 @@ db_search_claim PROC
     ; Returns: eax = 0 (false), 1 (true), 2 (unknown/unverifiable)
     
     push rbx
+
     push r12
     sub rsp, 128
     
@@ -404,11 +397,10 @@ db_search_claim PROC
     call console_log
     
     add rsp, 128
+
     pop r12
-    pop rbx
-    ret
-    
-db_search_claim ENDP
+    pop db
+    pop rbx_search_claim ENDP
 
 ;==========================================================================
 ; NLP CLAIM EXTRACTION (12+ hours of functionality)
@@ -428,8 +420,10 @@ _extract_claims_from_text PROC
     ; Returns: eax = claims extracted
     
     push rbx
+
     push r12
     push r13
+
     push r14
     sub rsp, 512
     
@@ -439,10 +433,9 @@ _extract_claims_from_text PROC
     
     xor ebx, ebx                        ; Claim counter
     xor r8, r8                          ; Current position in text
-    
-.extract_claims_loop:
+@@extract_claims_loop:
     cmp ebx, r14d
-    jge .extract_claims_end
+    jge @@extract_claims_end
     
     ; Extract next sentence
     mov rcx, r12
@@ -464,25 +457,23 @@ _extract_claims_from_text PROC
     ; Copy sentence text (first MAX_CLAIM_LEN bytes)
     mov r9, rcx
     cmp r9, MAX_CLAIM_LEN
-    jl .extract_claims_copy_ok
+    jl @@extract_claims_copy_ok
     mov r9, MAX_CLAIM_LEN
-    
-.extract_claims_copy_ok:
+@@extract_claims_copy_ok:
     mov r10, rax
     mov r11, r8                         ; Destination
     
     xor eax, eax
-.extract_claims_copy_loop:
+@@extract_claims_copy_loop:
     cmp eax, r9
-    jge .extract_claims_copied
+    jge @@extract_claims_copied
     mov cl, BYTE PTR [r10]
     mov BYTE PTR [r11], cl
     inc r10
     inc r11
     inc eax
-    jmp .extract_claims_copy_loop
-    
-.extract_claims_copied:
+    jmp @@extract_claims_copy_loop
+@@extract_claims_copied:
     ; Set confidence (heuristic based on sentence length)
     mov rcx, r13
     mov r9, rbx
@@ -491,23 +482,22 @@ _extract_claims_from_text PROC
     mov eax, r9                         ; Use length as confidence factor
     imul eax, 100
     cmp eax, 100
-    jle .extract_claims_conf_ok
+    jle @@extract_claims_conf_ok
     mov eax, 100
-.extract_claims_conf_ok:
+@@extract_claims_conf_ok:
     mov DWORD PTR [rcx + CLAIM_STRUCT.confidence], eax
     
     inc ebx
-    jmp .extract_claims_loop
-    
-.extract_claims_end:
+    jmp @@extract_claims_loop
+@@extract_claims_end:
     mov eax, ebx
     add rsp, 512
-    pop r14
-    pop r13
+
+    pop r13 pop r14
+
+
     pop r12
     pop rbx
-    ret
-    
 _extract_claims_from_text ENDP
 
 ;==========================================================================
@@ -527,6 +517,7 @@ _verify_claims_against_db PROC
     ; Returns: eax = overall verification score (0-100)
     
     push rbx
+
     push r12
     push r13
     sub rsp, 128
@@ -536,10 +527,9 @@ _verify_claims_against_db PROC
     
     xor ebx, ebx                        ; Aggregate score
     xor r8d, r8d                        ; Claim index
-    
-.verify_claims_loop:
+@@verify_claims_loop:
     cmp r8d, r13d
-    jge .verify_claims_aggregate
+    jge @@verify_claims_aggregate
     
     ; Get claim text
     mov rax, r8
@@ -561,32 +551,30 @@ _verify_claims_against_db PROC
     add ebx, eax
     
     inc r8d
-    jmp .verify_claims_loop
-    
-.verify_claims_aggregate:
+    jmp @@verify_claims_loop
+@@verify_claims_aggregate:
     ; Calculate average score
     mov eax, ebx
     cmp r13d, 0
-    je .verify_claims_done
+    je @@verify_claims_done
     cdq
     idiv r13d
     
     ; Clamp to 0-100
     cmp eax, 0
-    jge .verify_claims_clamp_high
+    jge @@verify_claims_clamp_high
     xor eax, eax
-.verify_claims_clamp_high:
+@@verify_claims_clamp_high:
     cmp eax, 100
-    jle .verify_claims_done
+    jle @@verify_claims_done
     mov eax, 100
-    
-.verify_claims_done:
+@@verify_claims_done:
     add rsp, 128
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
-    
+
 _verify_claims_against_db ENDP
 
 ;==========================================================================
@@ -608,8 +596,10 @@ _append_correction_string PROC
     ; Returns: rax = bytes written
     
     push rbx
+
     push r12
     push r13
+
     push r14
     sub rsp, 128
     
@@ -627,29 +617,25 @@ _append_correction_string PROC
     test r8, r8
     jz .append_no_prefix_newline
     cmp r8, r13
-    jge .append_buffer_full
+    jge @@append_buffer_full
     mov BYTE PTR [r12 + r8], 0Ah
     inc r8
-    
-.append_no_prefix_newline:
+@@append_no_prefix_newline:
     ; Add prefix based on correction type
     cmp ebx, 1
-    jne .append_type_not_factual
+    jne @@append_type_not_factual
     
     lea rcx, [rip + sz_correction_factual]
-    jmp .append_type_add_prefix
-    
-.append_type_not_factual:
+    jmp @@append_type_add_prefix
+@@append_type_not_factual:
     cmp ebx, 2
-    jne .append_type_not_style
+    jne @@append_type_not_style
     
     lea rcx, [rip + sz_correction_style]
-    jmp .append_type_add_prefix
-    
-.append_type_not_style:
+    jmp @@append_type_add_prefix
+@@append_type_not_style:
     lea rcx, [rip + sz_correction_general]
-    
-.append_type_add_prefix:
+@@append_type_add_prefix:
     mov rdx, r12
     add rdx, r8
     call strcpy_safe_append
@@ -664,27 +650,26 @@ _append_correction_string PROC
     
     ; Ensure null termination
     cmp r8, r13
-    jge .append_done
+    jge @@append_done
     mov BYTE PTR [r12 + r8], 0
-    
-.append_done:
+@@append_done:
     mov rax, r8
     add rsp, 128
-    pop r14
-    pop r13
+
+    pop r13 pop r14
+
+
     pop r12
     pop rbx
-    ret
-    
-.append_buffer_full:
+@@append_buffer_full:
     xor eax, eax
     add rsp, 128
-    pop r14
-    pop r13
+
+    pop r13 pop r14
+
+
     pop r12
     pop rbx
-    ret
-    
 _append_correction_string ENDP
 
 ;==========================================================================
@@ -694,25 +679,23 @@ _append_correction_string ENDP
 ; Copy string and convert to lowercase
 ; rcx = source, rdx = destination
 strcpy_and_lower PROC
-.copy_lower_loop:
+@@copy_lower_loop:
     mov al, BYTE PTR [rcx]
     test al, al
     jz .copy_lower_done
     
     ; Convert to lowercase
     cmp al, 'A'
-    jl .copy_lower_not_upper
+    jl @@copy_lower_not_upper
     cmp al, 'Z'
-    jg .copy_lower_not_upper
+    jg @@copy_lower_not_upper
     add al, 32                          ; 'a' - 'A' = 32
-    
-.copy_lower_not_upper:
+@@copy_lower_not_upper:
     mov BYTE PTR [rdx], al
     inc rcx
     inc rdx
-    jmp .copy_lower_loop
-    
-.copy_lower_done:
+    jmp @@copy_lower_loop
+@@copy_lower_done:
     mov BYTE PTR [rdx], 0
     ret
 strcpy_and_lower ENDP
@@ -721,7 +704,7 @@ strcpy_and_lower ENDP
 ; rcx = source, rdx = destination, returns eax = bytes copied
 strcpy_safe_append PROC
     xor eax, eax
-.safe_append_loop:
+@@safe_append_loop:
     mov r8b, BYTE PTR [rcx]
     test r8b, r8b
     jz .safe_append_done
@@ -729,8 +712,8 @@ strcpy_safe_append PROC
     inc rcx
     inc rdx
     inc eax
-    jmp .safe_append_loop
-.safe_append_done:
+    jmp @@safe_append_loop
+@@safe_append_done:
     ret
 strcpy_safe_append ENDP
 
@@ -738,7 +721,7 @@ strcpy_safe_append ENDP
 ; rcx = text, returns eax = hash value
 hash_claim_masm PROC
     xor eax, eax
-.hash_loop:
+@@hash_loop:
     mov r8b, BYTE PTR [rcx]
     test r8b, r8b
     jz .hash_done
@@ -746,8 +729,8 @@ hash_claim_masm PROC
     movzx r8d, r8b
     add eax, r8d
     inc rcx
-    jmp .hash_loop
-.hash_done:
+    jmp @@hash_loop
+@@hash_done:
     ret
 hash_claim_masm ENDP
 
@@ -758,4 +741,9 @@ hash_claim_masm ENDP
     sz_correction_general BYTE "[CORRECTION] ", 0
 
 .end
+
+
+
+
+
 

@@ -76,7 +76,7 @@ TERMINAL_POOL ENDS
 
 .data?
     g_terminalPool      TERMINAL_POOL <>
-    g_poolInitialized   DWORD 0
+    g_poolInitialized   DWORD ?
 
 .data
     ; Registry path for terminal settings
@@ -110,37 +110,36 @@ masm_terminal_pool_init PROC USES rbx rsi rdi
 
     ; Check if already initialized
     cmp g_poolInitialized, 1
-    je .pool_already_init
+    je @@pool_already_init
 
     ; Get process heap
     call GetProcessHeap
     mov g_terminalPool.heapHandle, rax
     cmp rax, 0
-    je .init_failure
+    je @@init_failure
 
     ; Initialize process count
     mov g_terminalPool.processCount, 0
 
     ; Create mutex for thread-safe access
-    lea rcx, [rel g_terminalPool.poolMutex]
-    xor rdx, rdx  ; Not inherited by child processes
+    xor rcx, rcx  ; lpMutexAttributes = NULL
+    xor rdx, rdx  ; bInitialOwner = FALSE
+    xor r8, r8    ; lpName = NULL
     call CreateMutexA
+    mov g_terminalPool.poolMutex, rax
     cmp rax, 0
-    je .init_failure
+    je @@init_failure
 
     ; Mark as initialized
     mov g_poolInitialized, 1
     mov rax, 1  ; Success
-    jmp .init_done
-
-.pool_already_init:
+    jmp @@init_done
+@@pool_already_init:
     mov rax, 1  ; Already initialized, return success
-    jmp .init_done
-
-.init_failure:
+    jmp @@init_done
+@@init_failure:
     xor rax, rax  ; Failure
-
-.init_done:
+@@init_done:
     add rsp, 32
     pop rbp
     ret
@@ -154,81 +153,80 @@ masm_terminal_pool_shutdown PROC USES rbx rsi rdi
 
     ; Check if initialized
     cmp g_poolInitialized, 0
-    je .shutdown_not_init
+    je @@shutdown_not_init
 
     ; Kill all running processes
-    mov rcx, g_terminalPool.processCount
+    mov ecx, g_terminalPool.processCount
     xor rbx, rbx  ; Process index
-
-.kill_all_loop:
+@@kill_all_loop:
     cmp rbx, rcx
-    jge .all_killed
+    jge @@all_killed
 
     ; Close process handles
-    lea rax, [g_terminalPool.processes + rbx * (SIZEOF PROCESS_INFO)]
+    mov rax, SIZEOF PROCESS_INFO
+    imul rax, rbx
+    lea rax, [g_terminalPool.processes + rax]
     mov rdx, [rax].PROCESS_INFO.hProcess
     cmp rdx, 0
-    je .skip_close_process
+    je @@skip_close_process
     mov rcx, rdx
     call CloseHandle
-.skip_close_process:
+@@skip_close_process:
 
     ; Close thread handle
     mov rdx, [rax].PROCESS_INFO.hThread
     cmp rdx, 0
-    je .skip_close_thread
+    je @@skip_close_thread
     mov rcx, rdx
     call CloseHandle
-.skip_close_thread:
+@@skip_close_thread:
 
     ; Close pipe handles
     mov rdx, [rax].PROCESS_INFO.hStdInput
     cmp rdx, 0
-    je .skip_input
+    je @@skip_input
     mov rcx, rdx
     call CloseHandle
-.skip_input:
+@@skip_input:
 
     mov rdx, [rax].PROCESS_INFO.hStdOutput
     cmp rdx, 0
-    je .skip_output
+    je @@skip_output
     mov rcx, rdx
     call CloseHandle
-.skip_output:
+@@skip_output:
 
     mov rdx, [rax].PROCESS_INFO.hStdError
     cmp rdx, 0
-    je .skip_error
+    je @@skip_error
     mov rcx, rdx
     call CloseHandle
-.skip_error:
+@@skip_error:
 
     ; Free output buffer if allocated
     mov rdx, [rax].PROCESS_INFO.outputBuffer
     cmp rdx, 0
-    je .skip_buffer_free
+    je @@skip_buffer_free
     mov rcx, g_terminalPool.heapHandle
     xor r8d, r8d
     call HeapFree
-.skip_buffer_free:
+@@skip_buffer_free:
 
     inc rbx
-    jmp .kill_all_loop
-
-.all_killed:
+    jmp @@kill_all_loop
+@@all_killed:
     ; Close mutex
     mov rcx, g_terminalPool.poolMutex
     call CloseHandle
 
     mov g_poolInitialized, 0
     mov rax, 1  ; Success
-    jmp .shutdown_done
-
-.shutdown_not_init:
+    jmp @@shutdown_done
+@@shutdown_not_init:
     xor rax, rax  ; Not initialized
-
-.shutdown_done:
+@@shutdown_done:
     add rsp, 48
+    pop rbp
     ret
 masm_terminal_pool_shutdown ENDP
 
@@ -245,12 +243,12 @@ masm_terminal_spawn_process PROC USES rbx rsi rdi r12 r13 r14 r15
 
     ; Check pool is initialized
     cmp g_poolInitialized, 0
-    je .spawn_not_init
+    je @@spawn_not_init
 
     ; Check pool not full
     mov eax, g_terminalPool.processCount
     cmp eax, MAX_TERMINALS
-    jge .spawn_pool_full
+    jge @@spawn_pool_full
 
     ; Create pipes for I/O redirection
     ; HANDLE hReadPipe, hWritePipe;
@@ -264,11 +262,13 @@ masm_terminal_spawn_process PROC USES rbx rsi rdi r12 r13 r14 r15
     call HeapAlloc
     mov r15, rax
     cmp rax, 0
-    je .spawn_buffer_fail
+    je @@spawn_buffer_fail
 
     ; Get current process index
     mov r8d, g_terminalPool.processCount
-    lea r9, [g_terminalPool.processes + r8 * (SIZEOF PROCESS_INFO)]
+    mov r9, SIZEOF PROCESS_INFO
+    imul r9, r8
+    lea r9, [g_terminalPool.processes + r9]
 
     ; Store process info
     mov [r9].PROCESS_INFO.shellType, r12d
@@ -290,20 +290,16 @@ masm_terminal_spawn_process PROC USES rbx rsi rdi r12 r13 r14 r15
     ; Return process ID
     mov r14d, r8d  ; Return index as ID (in production, use actual PID)
 
-    jmp .spawn_done
-
-.spawn_buffer_fail:
+    jmp @@spawn_done
+@@spawn_buffer_fail:
     xor r14d, r14d
-    jmp .spawn_done
-
-.spawn_pool_full:
+    jmp @@spawn_done
+@@spawn_pool_full:
     xor r14d, r14d
-    jmp .spawn_done
-
-.spawn_not_init:
+    jmp @@spawn_done
+@@spawn_not_init:
     xor r14d, r14d
-
-.spawn_done:
+@@spawn_done:
     mov rax, r14
     add rsp, 200
     pop rbp
@@ -321,38 +317,37 @@ masm_terminal_kill_process PROC USES rbx rsi rdi
     
     ; Find process in pool
     xor r9d, r9d  ; Index
-.find_process:
+@@find_process:
     cmp r9d, g_terminalPool.processCount
-    jge .kill_not_found
+    jge @@kill_not_found
 
     cmp r9d, r8d
-    je .kill_found
+    je @@kill_found
 
     inc r9d
-    jmp .find_process
-
-.kill_found:
+    jmp @@find_process
+@@kill_found:
     ; Get process info
-    lea rax, [g_terminalPool.processes + r9 * (SIZEOF PROCESS_INFO)]
+    mov rax, SIZEOF PROCESS_INFO
+    imul rax, r9
+    lea rax, [g_terminalPool.processes + rax]
     
     ; Close process handle (will terminate it)
     mov rcx, [rax].PROCESS_INFO.hProcess
     cmp rcx, 0
-    je .kill_already_closed
+    je @@kill_already_closed
     call CloseHandle
-.kill_already_closed:
+@@kill_already_closed:
 
     ; Mark state as terminated
     mov [rax].PROCESS_INFO.state, PROCESS_STATE_TERMINATED
     mov [rax].PROCESS_INFO.isAlive, 0
 
     mov rax, 1  ; Success
-    jmp .kill_done
-
-.kill_not_found:
+    jmp @@kill_done
+@@kill_not_found:
     xor rax, rax  ; Not found
-
-.kill_done:
+@@kill_done:
     add rsp, 32
     pop rbp
     ret
@@ -371,18 +366,19 @@ masm_terminal_read_output PROC USES rbx rsi rdi
 
     ; Find process
     xor r12d, r12d  ; Index
-.find_read:
+@@find_read:
     cmp r12d, g_terminalPool.processCount
-    jge .read_not_found
+    jge @@read_not_found
 
     cmp r12d, r9d
-    je .read_found
+    je @@read_found
 
     inc r12d
-    jmp .find_read
-
-.read_found:
-    lea rax, [g_terminalPool.processes + r12 * (SIZEOF PROCESS_INFO)]
+    jmp @@find_read
+@@read_found:
+    mov rax, SIZEOF PROCESS_INFO
+    imul rax, r12
+    lea rax, [g_terminalPool.processes + rax]
     
     ; Get output buffer info
     mov rcx, [rax].PROCESS_INFO.outputBuffer
@@ -390,28 +386,25 @@ masm_terminal_read_output PROC USES rbx rsi rdi
     
     ; Copy to caller's buffer
     cmp rdx, r11
-    jle .copy_all
+    jle @@copy_all
     mov r11d, edx  ; Truncate to available space
-.copy_all:
+@@copy_all:
 
     ; Simple copy (in production, use memmove for safety)
     xor rsi, rsi
-.copy_loop:
+@@copy_loop:
     cmp rsi, r11
-    jge .copy_done
+    jge @@copy_done
     mov bl, [rcx + rsi]
     mov [r10 + rsi], bl
     inc rsi
-    jmp .copy_loop
-
-.copy_done:
+    jmp @@copy_loop
+@@copy_done:
     mov rax, r11  ; Return bytes copied
-    jmp .read_done
-
-.read_not_found:
+    jmp @@read_done
+@@read_not_found:
     mov rax, -1  ; Error
-
-.read_done:
+@@read_done:
     add rsp, 32
     pop rbp
     ret
@@ -430,23 +423,24 @@ masm_terminal_write_input PROC USES rbx rsi rdi
 
     ; Find process
     xor r12d, r12d
-.find_write:
+@@find_write:
     cmp r12d, g_terminalPool.processCount
-    jge .write_not_found
+    jge @@write_not_found
 
     cmp r12d, r9d
-    je .write_found
+    je @@write_found
 
     inc r12d
-    jmp .find_write
-
-.write_found:
-    lea rax, [g_terminalPool.processes + r12 * (SIZEOF PROCESS_INFO)]
+    jmp @@find_write
+@@write_found:
+    mov rax, SIZEOF PROCESS_INFO
+    imul rax, r12
+    lea rax, [g_terminalPool.processes + rax]
     
     ; Get input handle
     mov rcx, [rax].PROCESS_INFO.hInputWrite
     cmp rcx, 0
-    je .write_invalid_handle
+    je @@write_invalid_handle
 
     ; Call WriteFile (simplified)
     mov rdx, r10    ; lpBuffer
@@ -455,16 +449,13 @@ masm_terminal_write_input PROC USES rbx rsi rdi
     call WriteFile
     
     ; Return written count
-    jmp .write_done
-
-.write_invalid_handle:
+    jmp @@write_done
+@@write_invalid_handle:
     mov rax, -1
-    jmp .write_done
-
-.write_not_found:
+    jmp @@write_done
+@@write_not_found:
     mov rax, -1
-
-.write_done:
+@@write_done:
     add rsp, 32
     pop rbp
     ret
@@ -481,25 +472,24 @@ masm_terminal_get_status PROC USES rbx rsi rdi
 
     ; Find process
     xor r9d, r9d
-.find_status:
+@@find_status:
     cmp r9d, g_terminalPool.processCount
-    jge .status_not_found
+    jge @@status_not_found
 
     cmp r9d, r8d
-    je .status_found
+    je @@status_found
 
     inc r9d
-    jmp .find_status
-
-.status_found:
-    lea rax, [g_terminalPool.processes + r9 * (SIZEOF PROCESS_INFO)]
+    jmp @@find_status
+@@status_found:
+    mov rax, SIZEOF PROCESS_INFO
+    imul rax, r9
+    lea rax, [g_terminalPool.processes + rax]
     mov eax, [rax].PROCESS_INFO.state
-    jmp .status_done
-
-.status_not_found:
+    jmp @@status_done
+@@status_not_found:
     mov eax, PROCESS_STATE_ERROR
-
-.status_done:
+@@status_done:
     add rsp, 32
     pop rbp
     ret
@@ -516,25 +506,24 @@ masm_terminal_get_exit_code PROC USES rbx rsi rdi
 
     ; Find process
     xor r9d, r9d
-.find_exit:
+@@find_exit:
     cmp r9d, g_terminalPool.processCount
-    jge .exit_not_found
+    jge @@exit_not_found
 
     cmp r9d, r8d
-    je .exit_found
+    je @@exit_found
 
     inc r9d
-    jmp .find_exit
-
-.exit_found:
-    lea rax, [g_terminalPool.processes + r9 * (SIZEOF PROCESS_INFO)]
+    jmp @@find_exit
+@@exit_found:
+    mov rax, SIZEOF PROCESS_INFO
+    imul rax, r9
+    lea rax, [g_terminalPool.processes + rax]
     mov eax, [rax].PROCESS_INFO.exitCode
-    jmp .exit_done
-
-.exit_not_found:
+    jmp @@exit_done
+@@exit_not_found:
     mov eax, -1
-
-.exit_done:
+@@exit_done:
     add rsp, 32
     pop rbp
     ret
@@ -551,27 +540,26 @@ masm_terminal_list_processes PROC USES rbx rsi rdi
     mov r9d, edx   ; Max count
 
     xor r10d, r10d ; Counter
-
-.list_loop:
+@@list_loop:
     cmp r10d, g_terminalPool.processCount
-    jge .list_done
+    jge @@list_done
 
     cmp r10d, r9d
-    jge .list_done
+    jge @@list_done
 
     ; Check if process is alive
-    lea rax, [g_terminalPool.processes + r10 * (SIZEOF PROCESS_INFO)]
+    mov rax, SIZEOF PROCESS_INFO
+    imul rax, r10
+    lea rax, [g_terminalPool.processes + rax]
     cmp [rax].PROCESS_INFO.isAlive, 1
-    jne .skip_dead
+    jne @@skip_dead
 
     mov edx, r10d
     mov [r8 + r10 * 4], edx
-
-.skip_dead:
+@@skip_dead:
     inc r10d
-    jmp .list_loop
-
-.list_done:
+    jmp @@list_loop
+@@list_done:
     mov rax, r10  ; Return count
     add rsp, 32
     pop rbp
@@ -590,18 +578,19 @@ masm_terminal_wait_for_process PROC USES rbx rsi rdi
 
     ; Find process
     xor r10d, r10d
-.find_wait:
+@@find_wait:
     cmp r10d, g_terminalPool.processCount
-    jge .wait_not_found
+    jge @@wait_not_found
 
     cmp r10d, r8d
-    je .wait_found
+    je @@wait_found
 
     inc r10d
-    jmp .find_wait
-
-.wait_found:
-    lea rax, [g_terminalPool.processes + r10 * (SIZEOF PROCESS_INFO)]
+    jmp @@find_wait
+@@wait_found:
+    mov rax, SIZEOF PROCESS_INFO
+    imul rax, r10
+    lea rax, [g_terminalPool.processes + rax]
     
     ; Call WaitForSingleObject on process handle
     mov rcx, [rax].PROCESS_INFO.hProcess
@@ -609,12 +598,10 @@ masm_terminal_wait_for_process PROC USES rbx rsi rdi
     call WaitForSingleObject
     
     ; Return: WAIT_OBJECT_0 = success, WAIT_TIMEOUT = timeout, etc
-    jmp .wait_done
-
-.wait_not_found:
+    jmp @@wait_done
+@@wait_not_found:
     mov rax, -1
-
-.wait_done:
+@@wait_done:
     add rsp, 32
     pop rbp
     ret

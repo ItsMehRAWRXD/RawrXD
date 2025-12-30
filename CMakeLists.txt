@@ -471,6 +471,7 @@ message(STATUS "Adding advanced orchestration modules for AI-native IDE")
 add_subdirectory(src/orchestration)
 add_subdirectory(src/git)
 add_subdirectory(src/terminal)
+add_subdirectory(src/monitor)
 
 # Qt-based IDE shell (separate executable, no Vulkan)
 if(MSVC)
@@ -497,6 +498,8 @@ if(MSVC)
             src/qtapp/TerminalManager.h
             src/gguf_loader.cpp        # Native C++ loader wrapped by gguf_loader_qt
             src/gguf_vocab_resolver.cpp  # Universal vocab size detection for all GGUF models
+            src/qtapp/automated_ide_tester.hpp
+            src/qtapp/automated_ide_tester.cpp
             include/gguf_loader.h      # Ensure header is in sources for proper dependency tracking
             src/qtapp/gguf_loader.hpp  # Qt wrapper header
             src/qtapp/gguf_loader.cpp  # Qt wrapper implementation
@@ -807,6 +810,10 @@ if(MSVC)
             self_test_gate
             quant_utils
             $<$<BOOL:${ENABLE_MASM_INTEGRATION}>:$<TARGET_OBJECTS:masm_ide_orchestration_obj>>
+            $<$<TARGET_EXISTS:masm_universal_format_loader>:masm_universal_format_loader>
+            # Temporarily disable Phase 2 for testing
+            # $<$<TARGET_EXISTS:masm_phase2_parsers>:masm_phase2_parsers>
+            $<$<TARGET_EXISTS:masm_test_generator>:masm_test_generator>
             Psapi
             dwmapi
             uxtheme
@@ -891,6 +898,53 @@ if(MSVC)
         
         # Automatic DLL deployment for RawrXD-QtShell
         deploy_runtime_dependencies(RawrXD-QtShell)
+        
+        # ---------- Reference Widget Test: Qt/C++ implementations for SecurityAlert, Optimization, RichEdit ----------
+        add_executable(test_reference_widgets WIN32
+            tests/test_reference_widgets.cpp
+            src/qtapp/security_alert_widget.cpp
+            src/qtapp/security_alert_widget.hpp
+            src/qtapp/optimization_panel_widget.cpp
+            src/qtapp/optimization_panel_widget.hpp
+            src/qtapp/rich_edit_highlighter.cpp
+            src/qtapp/rich_edit_highlighter.hpp
+        )
+        
+        target_link_libraries(test_reference_widgets PRIVATE
+            Qt6::Core
+            Qt6::Gui
+            Qt6::Widgets
+        )
+        
+        target_include_directories(test_reference_widgets PRIVATE 
+            include 
+            src/qtapp
+            ${CMAKE_SOURCE_DIR}/src
+        )
+        
+        set_target_properties(test_reference_widgets PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/tests"
+            AUTOMOC ON
+            AUTORCC ON
+            AUTOUIC ON
+        )
+        
+        # ---------- CLI Test Harness (Console output for optimizations) ----------
+        add_executable(test_widgets_cli
+            tests/test_widgets_cli.cpp
+        )
+        
+        target_link_libraries(test_widgets_cli
+            Qt6::Core
+        )
+        
+        target_include_directories(test_widgets_cli PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/include
+        )
+        
+        set_target_properties(test_widgets_cli PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/tests"
+        )
         
         # ---------- Production Feature Test: Real component testing ----------
         add_executable(production_feature_test
@@ -1638,6 +1692,12 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
         src/qtapp/main_v5.cpp
         src/qtapp/MainWindow_v5.cpp
         src/qtapp/qt_masm_bridge.cpp
+        src/qtapp/security_alert_widget.cpp
+        src/qtapp/optimization_panel_widget.cpp
+        src/qtapp/rich_edit_highlighter.cpp
+        src/qtapp/latency_monitor.cpp
+        src/qtapp/latency_status_panel.cpp
+        include/qt_masm_bridge.h
     )
     
     # Check if additional source files exist
@@ -2238,10 +2298,10 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
         ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
         ${CMAKE_SOURCE_DIR}/3rdparty/ggml/src
     )
-    target_link_libraries(RawrXD-AgenticIDE PRIVATE 
-        user32 
-        gdi32 
-        wbemuuid 
+    target_link_libraries(RawrXD-AgenticIDE PRIVATE
+        user32
+        gdi32
+        wbemuuid
         pdh
         winhttp
         ws2_32
@@ -2249,6 +2309,10 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
         d3d11
         dxgi
         d3dcompiler
+        dwmapi
+        uxtheme
+        d2d1
+        dwrite
         Qt6::Core
         Qt6::Gui
         Qt6::Widgets
@@ -2257,9 +2321,14 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
         brutal_gzip
         quant_utils
         ggml_interface
-    )
-
-    # Enable Brutal compression test harness when requested
+        masm_qt6_foundation
+        masm_runtime
+        masm_hotpatch_core
+        masm_hotpatch_unified
+        masm_autonomous_features
+        masm_universal_format_loader
+        masm_phase2_parsers
+    )    # Enable Brutal compression test harness when requested
     if(TEST_BRUTAL)
         target_compile_definitions(RawrXD-AgenticIDE PRIVATE TEST_BRUTAL=1)
         message(STATUS "TEST_BRUTAL enabled: ModelLoaderWidget will run codec round-trip test")

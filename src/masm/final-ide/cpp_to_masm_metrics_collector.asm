@@ -94,8 +94,7 @@ METRICS_COLLECTOR ENDS
 PUBLIC metrics_collector_create
 metrics_collector_create PROC
     push rbx
-    
-    mov r8, rcx                    ; r8 = maxMetrics
+    push mov r8, rcx                    ; r8 = maxMetrics
     
     ; Allocate collector
     mov rcx, SIZEOF METRICS_COLLECTOR
@@ -124,7 +123,7 @@ metrics_collector_create PROC
     
     mov rax, rbx
     pop rbx
-    ret
+
 metrics_collector_create ENDP
 
 ; ============================================================================
@@ -135,8 +134,7 @@ metrics_collector_create ENDP
 PUBLIC metrics_start_request
 metrics_start_request PROC
     push rbx
-    
-    mov rbx, rcx                   ; rbx = collector
+    push mov rbx, rcx                   ; rbx = collector
     
     ; Get request ID
     mov rax, [rbx + METRICS_COLLECTOR.nextRequestId]
@@ -166,7 +164,7 @@ metrics_start_request PROC
     dec rax                        ; Return the ID we just assigned
     
     pop rbx
-    ret
+
 metrics_start_request ENDP
 
 ; ============================================================================
@@ -176,29 +174,26 @@ metrics_start_request ENDP
 PUBLIC metrics_end_request
 metrics_end_request PROC
     push rbx
-    
-    mov rbx, rcx                   ; rbx = collector
+    push mov rbx, rcx                   ; rbx = collector
     
     ; Find request by ID
     mov r10, [rbx + METRICS_COLLECTOR.metrics]
     mov r11, [rbx + METRICS_COLLECTOR.metricCount]
     xor r12, r12
-    
-.find_loop:
+@@find_loop:
     cmp r12, r11
-    jge .not_found
+    jge @@not_found
     
     mov r13, r10
     imul r12, SIZEOF REQUEST_METRICS
     add r13, r12
     
     cmp rdx, [r13 + REQUEST_METRICS.requestId]
-    je .found
+    je @@found
     
     inc r12
-    jmp .find_loop
-    
-.found:
+    jmp @@find_loop
+@@found:
     ; Get end time
     call GetTickCount64
     mov [r13 + REQUEST_METRICS.endTime], rax
@@ -214,15 +209,14 @@ metrics_end_request PROC
     
     ; Calculate tokens per second
     cmp r14, 0
-    je .skip_tokens_per_sec
+    je @@skip_tokens_per_sec
     
     cvtsi2ss xmm0, r8d             ; tokens as float
     cvtsi2ss xmm1, r14            ; ms as float
     divss xmm0, xmm1
     mulss xmm0, [f1000]            ; Convert to per-second
     movss [r13 + REQUEST_METRICS.tokensPerSecond], xmm0
-    
-.skip_tokens_per_sec:
+@@skip_tokens_per_sec:
     ; Increment counter
     inc qword [rbx + METRICS_COLLECTOR.metricCount]
     
@@ -236,10 +230,9 @@ metrics_end_request PROC
     mov r9d, [r13 + REQUEST_METRICS.tokensGenerated]
     movss xmm0, [r13 + REQUEST_METRICS.tokensPerSecond]
     call console_log
-    
-.not_found:
+@@not_found:
     pop rbx
-    ret
+
 metrics_end_request ENDP
 
 ; ============================================================================
@@ -249,9 +242,9 @@ metrics_end_request ENDP
 PUBLIC metrics_calculate_aggregates
 metrics_calculate_aggregates PROC
     push rbx
+
     push rsi
-    
-    mov rbx, rcx                   ; rbx = collector
+    push mov rbx, rcx                   ; rbx = collector
     
     ; Get metrics array
     mov rsi, [rbx + METRICS_COLLECTOR.metrics]
@@ -266,10 +259,9 @@ metrics_calculate_aggregates PROC
     ; Iterate and aggregate
     xor r10, r10
     xorpd xmm0, xmm0               ; Sum for average
-    
-.aggregate_loop:
+@@aggregate_loop:
     cmp r10, r8
-    jge .aggregate_done
+    jge @@aggregate_done
     
     mov r11, rsi
     imul r10, SIZEOF REQUEST_METRICS
@@ -277,44 +269,39 @@ metrics_calculate_aggregates PROC
     
     ; Count successes/failures
     cmp byte [r11 + REQUEST_METRICS.success], 1
-    jne .not_success
+    jne @@not_success
     
     inc dword [rbx + METRICS_COLLECTOR.aggregates.successfulRequests]
-    jmp .next_aggregate
-    
-.not_success:
+    jmp @@next_aggregate
+@@not_success:
     inc dword [rbx + METRICS_COLLECTOR.aggregates.failedRequests]
-    
-.next_aggregate:
+@@next_aggregate:
     inc r10
-    jmp .aggregate_loop
-    
-.aggregate_done:
+    jmp @@aggregate_loop
+@@aggregate_done:
     mov r9d, [rbx + METRICS_COLLECTOR.aggregates.successfulRequests]
     add r9d, [rbx + METRICS_COLLECTOR.aggregates.failedRequests]
     mov [rbx + METRICS_COLLECTOR.aggregates.totalRequests], r9d
     
     ; Calculate average latency
     cmp r9, 0
-    je .skip_avg
+    je @@skip_avg
     
     mov rax, [rbx + METRICS_COLLECTOR.totalDurationMs]
     cdq
     idiv r9
     mov [rbx + METRICS_COLLECTOR.aggregates.avgLatencyMs], rax
-    
-.skip_avg:
+@@skip_avg:
     ; Log percentiles
     lea rcx, [szPercentiles]
     movsd xmm0, [rbx + METRICS_COLLECTOR.aggregates.p50LatencyMs]
     movsd xmm1, [rbx + METRICS_COLLECTOR.aggregates.p95LatencyMs]
     movsd xmm2, [rbx + METRICS_COLLECTOR.aggregates.p99LatencyMs]
     call console_log
-    
+
     pop rsi
-    pop rbx
-    ret
-metrics_calculate_aggregates ENDP
+    pop metrics
+    pop rbx_calculate_aggregates ENDP
 
 ; ============================================================================
 
@@ -361,22 +348,21 @@ metrics_clear ENDP
 PUBLIC metrics_destroy
 metrics_destroy PROC
     push rbx
-    
-    mov rbx, rcx
+    push mov rbx, rcx
     
     ; Free metrics array
     mov rcx, [rbx + METRICS_COLLECTOR.metrics]
     cmp rcx, 0
-    je .skip_metrics
+    je @@skip_metrics
     call free
-.skip_metrics:
+@@skip_metrics:
     
     ; Free collector
     mov rcx, rbx
     call free
     
     pop rbx
-    ret
+
 metrics_destroy ENDP
 
 ; ============================================================================
@@ -385,3 +371,8 @@ metrics_destroy ENDP
     f1000 REAL4 1000.0
 
 END
+
+
+
+
+

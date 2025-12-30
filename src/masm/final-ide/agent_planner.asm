@@ -60,6 +60,7 @@ EXTERN json_builder_to_string:PROC
 PUBLIC agent_planner_plan
 agent_planner_plan PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -110,10 +111,11 @@ plan_generic:
 
 done:
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 agent_planner_plan ENDP
 
 ;==========================================================================
@@ -148,7 +150,7 @@ agent_planner_plan_quant_kernel PROC
     
     add rsp, 32
     pop rbx
-    ret
+
 agent_planner_plan_quant_kernel ENDP
 
 ; Stubs for other plan types
@@ -163,3 +165,8 @@ agent_planner_plan_generic PROC
 agent_planner_plan_generic ENDP
 
 END
+
+
+
+
+

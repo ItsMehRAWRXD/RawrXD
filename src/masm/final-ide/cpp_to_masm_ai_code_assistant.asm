@@ -103,8 +103,7 @@ AI_CODE_ASSISTANT ENDS
 PUBLIC ai_code_assistant_create
 ai_code_assistant_create PROC
     push rbx
-    
-    mov rbx, rcx                    ; rbx = ollamaUrl
+    push mov rbx, rcx                    ; rbx = ollamaUrl
     mov r9, rdx                     ; r9 = modelName
     mov r10, r8                     ; r10 = workspaceRoot
     
@@ -151,7 +150,7 @@ ai_code_assistant_create PROC
     
     mov rax, r11
     pop rbx
-    ret
+
 ai_code_assistant_create ENDP
 
 ; ============================================================================
@@ -162,8 +161,7 @@ ai_code_assistant_create ENDP
 PUBLIC ai_get_code_completion
 ai_get_code_completion PROC
     push rbx
-    
-    mov rbx, rcx                    ; rbx = assistant
+    push mov rbx, rcx                    ; rbx = assistant
     mov r9, rdx                     ; r9 = code
     mov r10, r8                     ; r10 = codeSize
     
@@ -176,7 +174,7 @@ ai_get_code_completion PROC
     ; Check capacity
     mov r11d, [rbx + AI_CODE_ASSISTANT.suggestionCount]
     cmp r11d, [rbx + AI_CODE_ASSISTANT.maxSuggestions]
-    jge .capacity_exceeded
+    jge @@capacity_exceeded
     
     ; Get suggestion slot
     mov r12, [rbx + AI_CODE_ASSISTANT.suggestions]
@@ -210,12 +208,11 @@ ai_get_code_completion PROC
     
     mov eax, r11d                   ; Return suggestion ID
     pop rbx
-    ret
-    
-.capacity_exceeded:
+
+@@capacity_exceeded:
     xor rax, rax
     pop rbx
-    ret
+
 ai_get_code_completion ENDP
 
 ; ============================================================================
@@ -226,13 +223,12 @@ ai_get_code_completion ENDP
 PUBLIC ai_get_refactoring_suggestions
 ai_get_refactoring_suggestions PROC
     push rbx
-    
-    mov rbx, rcx
+    push mov rbx, rcx
     
     ; Similar to completion but different type
     mov r9d, [rbx + AI_CODE_ASSISTANT.suggestionCount]
     cmp r9d, [rbx + AI_CODE_ASSISTANT.maxSuggestions]
-    jge .refactor_failed
+    jge @@refactor_failed
     
     mov r10, [rbx + AI_CODE_ASSISTANT.suggestions]
     mov r11, r9
@@ -250,12 +246,11 @@ ai_get_refactoring_suggestions PROC
     
     mov eax, r9d
     pop rbx
-    ret
-    
-.refactor_failed:
+
+@@refactor_failed:
     xor rax, rax
     pop rbx
-    ret
+
 ai_get_refactoring_suggestions ENDP
 
 ; ============================================================================
@@ -266,12 +261,11 @@ ai_get_refactoring_suggestions ENDP
 PUBLIC ai_get_code_explanation
 ai_get_code_explanation PROC
     push rbx
-    
-    mov rbx, rcx
+    push mov rbx, rcx
     
     mov r9d, [rbx + AI_CODE_ASSISTANT.suggestionCount]
     cmp r9d, [rbx + AI_CODE_ASSISTANT.maxSuggestions]
-    jge .explanation_failed
+    jge @@explanation_failed
     
     mov r10, [rbx + AI_CODE_ASSISTANT.suggestions]
     mov r11, r9
@@ -289,12 +283,11 @@ ai_get_code_explanation PROC
     
     mov eax, r9d
     pop rbx
-    ret
-    
-.explanation_failed:
+
+@@explanation_failed:
     xor rax, rax
     pop rbx
-    ret
+
 ai_get_code_explanation ENDP
 
 ; ============================================================================
@@ -305,8 +298,7 @@ ai_get_code_explanation ENDP
 PUBLIC ai_search_files
 ai_search_files PROC
     push rbx
-    
-    mov rbx, rcx                    ; rbx = assistant
+    push mov rbx, rcx                    ; rbx = assistant
     mov r9, rdx                     ; r9 = pattern
     mov r10, r8                     ; r10 = directory
     
@@ -319,7 +311,7 @@ ai_search_files PROC
     ; Check capacity
     mov r11d, [rbx + AI_CODE_ASSISTANT.searchResultCount]
     cmp r11d, [rbx + AI_CODE_ASSISTANT.maxSearchResults]
-    jge .search_capacity_exceeded
+    jge @@search_capacity_exceeded
     
     ; Get search result slot
     mov r12, [rbx + AI_CODE_ASSISTANT.searchResults]
@@ -360,12 +352,11 @@ ai_search_files PROC
     
     mov eax, r11d                   ; Return search ID
     pop rbx
-    ret
-    
-.search_capacity_exceeded:
+
+@@search_capacity_exceeded:
     xor rax, rax
     pop rbx
-    ret
+
 ai_search_files ENDP
 
 ; ============================================================================
@@ -376,13 +367,12 @@ ai_search_files ENDP
 PUBLIC ai_grep_files
 ai_grep_files PROC
     push rbx
-    
-    mov rbx, rcx
+    push mov rbx, rcx
     
     ; Similar to search_files but with case sensitivity
     mov r10d, [rbx + AI_CODE_ASSISTANT.searchResultCount]
     cmp r10d, [rbx + AI_CODE_ASSISTANT.maxSearchResults]
-    jge .grep_failed
+    jge @@grep_failed
     
     mov r11, [rbx + AI_CODE_ASSISTANT.searchResults]
     mov r12, r10
@@ -398,12 +388,11 @@ ai_grep_files PROC
     
     mov eax, r10d
     pop rbx
-    ret
-    
-.grep_failed:
+
+@@grep_failed:
     xor rax, rax
     pop rbx
-    ret
+
 ai_grep_files ENDP
 
 ; ============================================================================
@@ -414,8 +403,7 @@ ai_grep_files ENDP
 PUBLIC ai_execute_powershell
 ai_execute_powershell PROC
     push rbx
-    
-    mov rbx, rcx                    ; rbx = assistant
+    push mov rbx, rcx                    ; rbx = assistant
     mov r9, rdx                     ; r9 = command
     
     ; Log
@@ -427,7 +415,7 @@ ai_execute_powershell PROC
     mov rax, 1234                   ; Simulated process ID
     
     pop rbx
-    ret
+
 ai_execute_powershell ENDP
 
 ; ============================================================================
@@ -440,10 +428,9 @@ ai_get_suggestion PROC
     mov r8, [rcx + AI_CODE_ASSISTANT.suggestions]
     mov r9d, [rcx + AI_CODE_ASSISTANT.suggestionCount]
     xor r10d, r10d
-    
-.find_suggestion:
+@@find_suggestion:
     cmp r10d, r9d
-    jge .suggestion_not_found
+    jge @@suggestion_not_found
     
     mov r11, r8
     mov r12, r10
@@ -451,16 +438,14 @@ ai_get_suggestion PROC
     add r11, r12
     
     cmp r10d, edx
-    je .suggestion_found
+    je @@suggestion_found
     
     inc r10d
-    jmp .find_suggestion
-    
-.suggestion_found:
+    jmp @@find_suggestion
+@@suggestion_found:
     mov rax, r11
     ret
-    
-.suggestion_not_found:
+@@suggestion_not_found:
     xor rax, rax
     ret
 ai_get_suggestion ENDP
@@ -475,10 +460,9 @@ ai_get_search_result PROC
     mov r8, [rcx + AI_CODE_ASSISTANT.searchResults]
     mov r9d, [rcx + AI_CODE_ASSISTANT.searchResultCount]
     xor r10d, r10d
-    
-.find_search:
+@@find_search:
     cmp r10d, r9d
-    jge .search_not_found
+    jge @@search_not_found
     
     mov r11, r8
     mov r12, r10
@@ -486,16 +470,14 @@ ai_get_search_result PROC
     add r11, r12
     
     cmp r10d, edx
-    je .search_found
+    je @@search_found
     
     inc r10d
-    jmp .find_search
-    
-.search_found:
+    jmp @@find_search
+@@search_found:
     mov rax, r11
     ret
-    
-.search_not_found:
+@@search_not_found:
     xor rax, rax
     ret
 ai_get_search_result ENDP
@@ -539,17 +521,15 @@ ai_get_statistics ENDP
 PUBLIC ai_destroy
 ai_destroy PROC
     push rbx
-    
-    mov rbx, rcx
+    push mov rbx, rcx
     
     ; Free suggestions array
     mov r10, [rbx + AI_CODE_ASSISTANT.suggestions]
     mov r11d, [rbx + AI_CODE_ASSISTANT.suggestionCount]
     xor r12d, r12d
-    
-.free_suggestions:
+@@free_suggestions:
     cmp r12d, r11d
-    jge .suggestions_freed
+    jge @@suggestions_freed
     
     mov r13, r10
     mov r14, r12
@@ -558,58 +538,50 @@ ai_destroy PROC
     
     mov rcx, [r13 + CODE_SUGGESTION.text]
     cmp rcx, 0
-    je .skip_suggestion_text
+    je @@skip_suggestion_text
     call free
-    
-.skip_suggestion_text:
+@@skip_suggestion_text:
     mov rcx, [r13 + CODE_SUGGESTION.context]
     cmp rcx, 0
-    je .skip_suggestion_context
+    je @@skip_suggestion_context
     call free
-    
-.skip_suggestion_context:
+@@skip_suggestion_context:
     inc r12d
-    jmp .free_suggestions
-    
-.suggestions_freed:
+    jmp @@free_suggestions
+@@suggestions_freed:
     mov rcx, [rbx + AI_CODE_ASSISTANT.suggestions]
     cmp rcx, 0
-    je .skip_suggestions_array
+    je @@skip_suggestions_array
     call free
-    
-.skip_suggestions_array:
+@@skip_suggestions_array:
     ; Free search results array
     mov rcx, [rbx + AI_CODE_ASSISTANT.searchResults]
     cmp rcx, 0
-    je .skip_search_array
+    je @@skip_search_array
     call free
-    
-.skip_search_array:
+@@skip_search_array:
     ; Free strings
     mov rcx, [rbx + AI_CODE_ASSISTANT.ollamaUrl]
     cmp rcx, 0
-    je .skip_url
+    je @@skip_url
     call free
-    
-.skip_url:
+@@skip_url:
     mov rcx, [rbx + AI_CODE_ASSISTANT.modelName]
     cmp rcx, 0
-    je .skip_model
+    je @@skip_model
     call free
-    
-.skip_model:
+@@skip_model:
     mov rcx, [rbx + AI_CODE_ASSISTANT.workspaceRoot]
     cmp rcx, 0
-    je .skip_workspace
+    je @@skip_workspace
     call free
-    
-.skip_workspace:
+@@skip_workspace:
     ; Free assistant
     mov rcx, rbx
     call free
     
     pop rbx
-    ret
+
 ai_destroy ENDP
 
 ; ============================================================================
@@ -623,3 +595,8 @@ ai_destroy ENDP
     szOptimization DB "optimization", 0
 
 END
+
+
+
+
+

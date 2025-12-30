@@ -32,6 +32,7 @@ EXTERN console_log:PROC
 PUBLIC quantize_q8_0
 quantize_q8_0 PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -44,7 +45,7 @@ quantize_q8_0 PROC
     xorps xmm0, xmm0    ; amax = 0
     mov rcx, rbx
     mov rdx, rsi
-.find_max:
+@@find_max:
     movss xmm1, dword ptr [rdx]
     andps xmm1, xmm1    ; abs (simplified, should use mask)
     maxss xmm0, xmm1
@@ -59,7 +60,7 @@ quantize_q8_0 PROC
     mov rcx, rbx
     mov rdx, rsi
     add rdi, 4
-.quant_loop:
+@@quant_loop:
     movss xmm1, dword ptr [rdx]
     divss xmm1, xmm0    ; v = f / scale
     cvtss2si eax, xmm1  ; round to int
@@ -78,10 +79,16 @@ quantize_q8_0 PROC
     loop .quant_loop
     
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 quantize_q8_0 ENDP
 
 END
+
+
+
+
+

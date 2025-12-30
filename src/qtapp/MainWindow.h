@@ -174,6 +174,8 @@ private slots: /* ----------  original slots  ---------- */
     void handleNewChat();
     void handleNewEditor();
     void handleNewWindow();
+    void handleImportTensorFlow();
+    void handleImportONNX();
     void handleAddFile();
     void handleAddFolder();
     void handleAddSymbol();
@@ -248,6 +250,13 @@ private slots: /* ----------  new IDE-wide slots  ---------- */
     void onCodeLensClicked(const QString& command);
     void onInlayHintShown(const QString& file);
     void onInlineChatRequested(const QString& text);
+    
+    // Automated Testing slots
+    void runAutomatedTestSuite();
+    void testModelLoading();
+    void testHotpatcher();
+    void testUIResponsiveness();
+    void generateTestReport();
     void onAIReviewComment(const QString& comment);
     void onCodeStreamEdit(const QString& patch);
     void onAudioCallStarted();
@@ -539,6 +548,9 @@ private: /* ---------------  new IDE members  --------------- */
     class ModelLoaderWidget* m_modelLoaderWidget{};
     QDockWidget* m_modelLoaderDock{};
     QDockWidget* m_diagnosticsDock{};
+    
+    /* Automated Testing System */
+    class AutomatedIdeTester* m_automatedTester{};
     
     /* Latency Monitoring - Model-to-IDE Communication Distance */
     RawrXD::LatencyMonitor* m_latencyMonitor{};

@@ -220,7 +220,7 @@ agentic_engine_create PROC
     
     mov rax, rbx
     pop rbx
-    ret
+
 agentic_engine_create ENDP
 
 ; ============================================================================
@@ -231,14 +231,13 @@ agentic_engine_create ENDP
 PUBLIC agentic_analyze_code
 agentic_analyze_code PROC
     push rbx
-    
-    mov rbx, rcx                    ; rbx = engine
+    push mov rbx, rcx                    ; rbx = engine
     mov r9, rdx                     ; r9 = code
     mov r10, r8                     ; r10 = codeSize
     
     ; Check if analysis enabled
     cmp byte [rbx + AGENTIC_ENGINE.analysisEnabled], 1
-    jne .analysis_disabled
+    jne @@analysis_disabled
     
     ; Log
     lea rcx, [szAnalysisStarted]
@@ -248,7 +247,7 @@ agentic_analyze_code PROC
     ; Check capacity
     mov r11d, [rbx + AGENTIC_ENGINE.analysisCount]
     cmp r11d, [rbx + AGENTIC_ENGINE.maxAnalysisResults]
-    jge .capacity_exceeded
+    jge @@capacity_exceeded
     
     ; Get analysis slot
     mov r12, [rbx + AGENTIC_ENGINE.analysisResults]
@@ -278,13 +277,12 @@ agentic_analyze_code PROC
     
     mov eax, r11d                   ; Return analysis ID
     pop rbx
-    ret
-    
-.analysis_disabled:
-.capacity_exceeded:
+
+@@analysis_disabled:
+@@capacity_exceeded:
     xor rax, rax
     pop rbx
-    ret
+
 agentic_analyze_code ENDP
 
 ; ============================================================================
@@ -295,13 +293,12 @@ agentic_analyze_code ENDP
 PUBLIC agentic_generate_code
 agentic_generate_code PROC
     push rbx
-    
-    mov rbx, rcx                    ; rbx = engine
+    push mov rbx, rcx                    ; rbx = engine
     mov r9, rdx                     ; r9 = prompt
     
     ; Check if generation enabled
     cmp byte [rbx + AGENTIC_ENGINE.generationEnabled], 1
-    jne .generation_disabled
+    jne @@generation_disabled
     
     ; Log
     lea rcx, [szGenerationStarted]
@@ -311,7 +308,7 @@ agentic_generate_code PROC
     ; Check capacity
     mov r10d, [rbx + AGENTIC_ENGINE.generationCount]
     cmp r10d, [rbx + AGENTIC_ENGINE.maxGenerationResults]
-    jge .capacity_exceeded
+    jge @@capacity_exceeded
     
     ; Get generation slot
     mov r11, [rbx + AGENTIC_ENGINE.generationResults]
@@ -345,13 +342,12 @@ agentic_generate_code PROC
     
     mov eax, r10d                   ; Return generation ID
     pop rbx
-    ret
-    
-.generation_disabled:
-.capacity_exceeded:
+
+@@generation_disabled:
+@@capacity_exceeded:
     xor rax, rax
     pop rbx
-    ret
+
 agentic_generate_code ENDP
 
 ; ============================================================================
@@ -362,13 +358,12 @@ agentic_generate_code ENDP
 PUBLIC agentic_plan_task
 agentic_plan_task PROC
     push rbx
-    
-    mov rbx, rcx                    ; rbx = engine
+    push mov rbx, rcx                    ; rbx = engine
     mov r9, rdx                     ; r9 = goal
     
     ; Check if planning enabled
     cmp byte [rbx + AGENTIC_ENGINE.planningEnabled], 1
-    jne .planning_disabled
+    jne @@planning_disabled
     
     ; Log
     lea rcx, [szPlanningStarted]
@@ -378,7 +373,7 @@ agentic_plan_task PROC
     ; Check capacity
     mov r10d, [rbx + AGENTIC_ENGINE.planningCount]
     cmp r10d, [rbx + AGENTIC_ENGINE.maxPlanningResults]
-    jge .capacity_exceeded
+    jge @@capacity_exceeded
     
     ; Get planning slot
     mov r11, [rbx + AGENTIC_ENGINE.planningResults]
@@ -403,13 +398,12 @@ agentic_plan_task PROC
     
     mov eax, r10d                   ; Return planning ID
     pop rbx
-    ret
-    
-.planning_disabled:
-.capacity_exceeded:
+
+@@planning_disabled:
+@@capacity_exceeded:
     xor rax, rax
     pop rbx
-    ret
+
 agentic_plan_task ENDP
 
 ; ============================================================================
@@ -420,13 +414,12 @@ agentic_plan_task ENDP
 PUBLIC agentic_understand_intent
 agentic_understand_intent PROC
     push rbx
-    
-    mov rbx, rcx                    ; rbx = engine
+    push mov rbx, rcx                    ; rbx = engine
     mov r9, rdx                     ; r9 = userInput
     
     ; Check if NLP enabled
     cmp byte [rbx + AGENTIC_ENGINE.nlpEnabled], 1
-    jne .nlp_disabled
+    jne @@nlp_disabled
     
     ; Log
     lea rcx, [szNlpStarted]
@@ -436,7 +429,7 @@ agentic_understand_intent PROC
     ; Check capacity
     mov r10d, [rbx + AGENTIC_ENGINE.nlpCount]
     cmp r10d, [rbx + AGENTIC_ENGINE.maxNlpResults]
-    jge .capacity_exceeded
+    jge @@capacity_exceeded
     
     ; Get NLP slot
     mov r11, [rbx + AGENTIC_ENGINE.nlpResults]
@@ -462,13 +455,12 @@ agentic_understand_intent PROC
     
     mov eax, r10d                   ; Return NLP ID
     pop rbx
-    ret
-    
-.nlp_disabled:
-.capacity_exceeded:
+
+@@nlp_disabled:
+@@capacity_exceeded:
     xor rax, rax
     pop rbx
-    ret
+
 agentic_understand_intent ENDP
 
 ; ============================================================================
@@ -478,17 +470,16 @@ agentic_understand_intent ENDP
 PUBLIC agentic_collect_feedback
 agentic_collect_feedback PROC
     push rbx
-    
-    mov rbx, rcx                    ; rbx = engine
+    push mov rbx, rcx                    ; rbx = engine
     
     ; Check if learning enabled
     cmp byte [rbx + AGENTIC_ENGINE.learningEnabled], 1
-    jne .learning_disabled
+    jne @@learning_disabled
     
     ; Check capacity
     mov r10d, [rbx + AGENTIC_ENGINE.feedbackCount]
     cmp r10d, [rbx + AGENTIC_ENGINE.maxFeedbackEntries]
-    jge .capacity_exceeded
+    jge @@capacity_exceeded
     
     ; Store feedback (simplified)
     inc dword [rbx + AGENTIC_ENGINE.feedbackCount]
@@ -496,13 +487,12 @@ agentic_collect_feedback PROC
     
     mov rax, 1
     pop rbx
-    ret
-    
-.learning_disabled:
-.capacity_exceeded:
+
+@@learning_disabled:
+@@capacity_exceeded:
     xor rax, rax
     pop rbx
-    ret
+
 agentic_collect_feedback ENDP
 
 ; ============================================================================
@@ -515,10 +505,9 @@ agentic_get_analysis_result PROC
     mov r8, [rcx + AGENTIC_ENGINE.analysisResults]
     mov r9d, [rcx + AGENTIC_ENGINE.analysisCount]
     xor r10d, r10d
-    
-.find_analysis:
+@@find_analysis:
     cmp r10d, r9d
-    jge .analysis_not_found
+    jge @@analysis_not_found
     
     mov r11, r8
     mov r12, r10
@@ -526,16 +515,14 @@ agentic_get_analysis_result PROC
     add r11, r12
     
     cmp r10d, edx
-    je .analysis_found
+    je @@analysis_found
     
     inc r10d
-    jmp .find_analysis
-    
-.analysis_found:
+    jmp @@find_analysis
+@@analysis_found:
     mov rax, r11
     ret
-    
-.analysis_not_found:
+@@analysis_not_found:
     xor rax, rax
     ret
 agentic_get_analysis_result ENDP
@@ -550,10 +537,9 @@ agentic_get_generation_result PROC
     mov r8, [rcx + AGENTIC_ENGINE.generationResults]
     mov r9d, [rcx + AGENTIC_ENGINE.generationCount]
     xor r10d, r10d
-    
-.find_generation:
+@@find_generation:
     cmp r10d, r9d
-    jge .generation_not_found
+    jge @@generation_not_found
     
     mov r11, r8
     mov r12, r10
@@ -561,16 +547,14 @@ agentic_get_generation_result PROC
     add r11, r12
     
     cmp r10d, edx
-    je .generation_found
+    je @@generation_found
     
     inc r10d
-    jmp .find_generation
-    
-.generation_found:
+    jmp @@find_generation
+@@generation_found:
     mov rax, r11
     ret
-    
-.generation_not_found:
+@@generation_not_found:
     xor rax, rax
     ret
 agentic_get_generation_result ENDP
@@ -596,40 +580,34 @@ agentic_get_statistics ENDP
 PUBLIC agentic_set_component_enabled
 agentic_set_component_enabled PROC
     cmp edx, 0                      ; Analysis
-    jne .not_analysis
+    jne @@not_analysis
     mov [rcx + AGENTIC_ENGINE.analysisEnabled], r8b
-    jmp .done
-    
-.not_analysis:
+    jmp @@done
+@@not_analysis:
     cmp edx, 1                      ; Generation
-    jne .not_generation
+    jne @@not_generation
     mov [rcx + AGENTIC_ENGINE.generationEnabled], r8b
-    jmp .done
-    
-.not_generation:
+    jmp @@done
+@@not_generation:
     cmp edx, 2                      ; Planning
-    jne .not_planning
+    jne @@not_planning
     mov [rcx + AGENTIC_ENGINE.planningEnabled], r8b
-    jmp .done
-    
-.not_planning:
+    jmp @@done
+@@not_planning:
     cmp edx, 3                      ; NLP
-    jne .not_nlp
+    jne @@not_nlp
     mov [rcx + AGENTIC_ENGINE.nlpEnabled], r8b
-    jmp .done
-    
-.not_nlp:
+    jmp @@done
+@@not_nlp:
     cmp edx, 4                      ; Learning
-    jne .not_learning
+    jne @@not_learning
     mov [rcx + AGENTIC_ENGINE.learningEnabled], r8b
-    jmp .done
-    
-.not_learning:
+    jmp @@done
+@@not_learning:
     cmp edx, 5                      ; Security
-    jne .done
+    jne @@done
     mov [rcx + AGENTIC_ENGINE.securityEnabled], r8b
-    
-.done:
+@@done:
     ret
 agentic_set_component_enabled ENDP
 
@@ -640,50 +618,44 @@ agentic_set_component_enabled ENDP
 PUBLIC agentic_destroy
 agentic_destroy PROC
     push rbx
-    
-    mov rbx, rcx
+    push mov rbx, rcx
     
     ; Free analysis results
     mov rcx, [rbx + AGENTIC_ENGINE.analysisResults]
     cmp rcx, 0
-    je .skip_analysis
+    je @@skip_analysis
     call free
-    
-.skip_analysis:
+@@skip_analysis:
     ; Free generation results
     mov rcx, [rbx + AGENTIC_ENGINE.generationResults]
     cmp rcx, 0
-    je .skip_generation
+    je @@skip_generation
     call free
-    
-.skip_generation:
+@@skip_generation:
     ; Free planning results
     mov rcx, [rbx + AGENTIC_ENGINE.planningResults]
     cmp rcx, 0
-    je .skip_planning
+    je @@skip_planning
     call free
-    
-.skip_planning:
+@@skip_planning:
     ; Free NLP results
     mov rcx, [rbx + AGENTIC_ENGINE.nlpResults]
     cmp rcx, 0
-    je .skip_nlp
+    je @@skip_nlp
     call free
-    
-.skip_nlp:
+@@skip_nlp:
     ; Free feedback entries
     mov rcx, [rbx + AGENTIC_ENGINE.feedbackEntries]
     cmp rcx, 0
-    je .skip_feedback
+    je @@skip_feedback
     call free
-    
-.skip_feedback:
+@@skip_feedback:
     ; Free engine
     mov rcx, rbx
     call free
     
     pop rbx
-    ret
+
 agentic_destroy ENDP
 
 ; ============================================================================
@@ -698,3 +670,8 @@ agentic_destroy ENDP
     szGeneratedCode DB "// Generated code placeholder", 0
 
 END
+
+
+
+
+

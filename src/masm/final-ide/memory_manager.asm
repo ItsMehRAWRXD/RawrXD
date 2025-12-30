@@ -100,7 +100,6 @@ mem_initialize PROC
 
     add rsp, 32
     pop rbx
-    ret
 
 mem_initialize ENDP
 
@@ -112,6 +111,7 @@ ALIGN 16
 asm_malloc PROC
 
     push rbx
+
     push rsi
     sub rsp, 32
 
@@ -191,11 +191,10 @@ malloc_out_of_memory:
 
 malloc_done:
     add rsp, 32
-    pop rsi
-    pop rbx
-    ret
 
-asm_malloc ENDP
+    pop rsi
+    pop asm
+    pop rbx_malloc ENDP
 
 ;==========================================================================
 ; asm_free(ptr: RCX) -> EAX (1=success, 0=failure)
@@ -205,6 +204,7 @@ ALIGN 16
 asm_free PROC
 
     push rbx
+
     push rsi
     sub rsp, 32
 
@@ -264,11 +264,10 @@ free_invalid_ptr:
 
 free_done:
     add rsp, 32
-    pop rsi
-    pop rbx
-    ret
 
-asm_free ENDP
+    pop rsi
+    pop asm
+    pop rbx_free ENDP
 
 ;==========================================================================
 ; asm_calloc(count: RCX, size: RDX) -> RAX (zeroed memory)
@@ -311,7 +310,6 @@ calloc_fail:
 calloc_done:
     add rsp, 32
     pop rbx
-    ret
 
 asm_calloc ENDP
 
@@ -323,6 +321,7 @@ ALIGN 16
 asm_realloc PROC
 
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -380,10 +379,10 @@ realloc_fail:
 
 realloc_done:
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
 
 asm_realloc ENDP
 
@@ -445,8 +444,12 @@ mem_dump_leaks PROC
 
     add rsp, 32
     pop rbx
-    ret
 
 mem_dump_leaks ENDP
 
 END
+
+
+
+
+

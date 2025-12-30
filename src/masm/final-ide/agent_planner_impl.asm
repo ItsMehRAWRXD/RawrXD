@@ -206,8 +206,10 @@ agent_planner_generate_tasks PROC
     ; Returns: rax = EXECUTION_PLAN pointer (or NULL on failure)
     
     push rbx
+
     push r12
     push r13
+
     push r14
     sub rsp, 64
     
@@ -282,28 +284,27 @@ agent_planner_generate_tasks PROC
     
     ; Dispatch based on intent type
     cmp r8d, INTENT_BUILD_PROJECT
-    je .gen_build_plan
+    je @@gen_build_plan
     
     cmp r8d, INTENT_RUN_TESTS
-    je .gen_test_plan
+    je @@gen_test_plan
     
     cmp r8d, INTENT_HOTPATCH
-    je .gen_hotpatch_plan
+    je @@gen_hotpatch_plan
     
     cmp r8d, INTENT_DEBUG_ISSUE
-    je .gen_debug_plan
+    je @@gen_debug_plan
     
     cmp r8d, INTENT_ROLLBACK
-    je .gen_rollback_plan
+    je @@gen_rollback_plan
     
     ; Default: Generate basic single-task plan
-    jmp .gen_default_plan
+    jmp @@gen_default_plan
     
 ; =========================================================================
 ; PLAN GENERATORS
 ; =========================================================================
-
-.gen_build_plan:
+@@gen_build_plan:
     ; Generate: Validate -> Build -> Test
     
     ; Task 1: Validate build environment
@@ -324,9 +325,8 @@ agent_planner_generate_tasks PROC
     lea r8, szTest
     call add_task_to_plan
     
-    jmp .plan_complete
-    
-.gen_test_plan:
+    jmp @@plan_complete
+@@gen_test_plan:
     ; Generate: Run unit tests -> Run integration tests
     
     ; Task 1: Unit tests
@@ -341,9 +341,8 @@ agent_planner_generate_tasks PROC
     lea r8, szTest2
     call add_task_to_plan
     
-    jmp .plan_complete
-    
-.gen_hotpatch_plan:
+    jmp @@plan_complete
+@@gen_hotpatch_plan:
     ; Generate: Create hotpatch -> Apply -> Verify
     
     ; Task 1: Generate hotpatch
@@ -364,9 +363,8 @@ agent_planner_generate_tasks PROC
     lea r8, szVerify
     call add_task_to_plan
     
-    jmp .plan_complete
-    
-.gen_debug_plan:
+    jmp @@plan_complete
+@@gen_debug_plan:
     ; Generate: Diagnose -> Hotfix -> Validate
     
     ; Task 1: Diagnose issue
@@ -387,9 +385,8 @@ agent_planner_generate_tasks PROC
     lea r8, szValidate
     call add_task_to_plan
     
-    jmp .plan_complete
-    
-.gen_rollback_plan:
+    jmp @@plan_complete
+@@gen_rollback_plan:
     ; Generate: Rollback previous changes
     
     ; Task 1: Rollback
@@ -404,9 +401,8 @@ agent_planner_generate_tasks PROC
     lea r8, szVerify
     call add_task_to_plan
     
-    jmp .plan_complete
-    
-.gen_default_plan:
+    jmp @@plan_complete
+@@gen_default_plan:
     ; Default: Single execution task
     lea rcx, szPlanEmpty
     call console_log
@@ -415,8 +411,7 @@ agent_planner_generate_tasks PROC
     mov edx, TASK_TYPE_EXECUTE
     lea r8, r13         ; Use original wish as command
     call add_task_to_plan
-    
-.plan_complete:
+@@plan_complete:
     
     ; =========================================================================
     ; STEP 5: FINALIZE PLAN
@@ -436,32 +431,33 @@ agent_planner_generate_tasks PROC
     mov rax, rbx
     
     add rsp, 64
-    pop r14
-    pop r13
+
+    pop r13 pop r14
+
+
     pop r12
     pop rbx
-    ret
-    
-.empty_wish:
+@@empty_wish:
     lea rcx, szPlanEmpty
     call console_log
     xor eax, eax
     add rsp, 64
-    pop r14
-    pop r13
+
+    pop r13 pop r14
+
+
     pop r12
     pop rbx
-    ret
-    
-.alloc_failed:
+@@alloc_failed:
     xor eax, eax
     add rsp, 64
-    pop r14
-    pop r13
+
+    pop r13 pop r14
+
+
     pop r12
-    pop rbx
-    ret
-ALIGN 16
+    pop ALIGN
+    pop rbx 16
 agent_planner_generate_tasks ENDP
 
 ;==============================================================================
@@ -474,6 +470,7 @@ classify_intent PROC
     ; Returns: eax = intent type, edx = confidence score (0-100)
     
     push rbx
+
     push r12
     push r13
     sub rsp, 48
@@ -500,7 +497,7 @@ classify_intent PROC
     test eax, eax
     jz .skip_build
     add r8d, 25
-.skip_build:
+@@skip_build:
     
     mov rcx, r12
     mov edx, r13d
@@ -509,7 +506,7 @@ classify_intent PROC
     test eax, eax
     jz .skip_compile
     add r8d, 25
-.skip_compile:
+@@skip_compile:
     
     ; Check for TEST keywords
     mov rcx, r12
@@ -519,7 +516,7 @@ classify_intent PROC
     test eax, eax
     jz .skip_test
     add r9d, 30
-.skip_test:
+@@skip_test:
     
     ; Check for HOTPATCH keywords
     mov rcx, r12
@@ -529,7 +526,7 @@ classify_intent PROC
     test eax, eax
     jz .skip_hotpatch
     add r10d, 40
-.skip_hotpatch:
+@@skip_hotpatch:
     
     mov rcx, r12
     mov edx, r13d
@@ -538,7 +535,7 @@ classify_intent PROC
     test eax, eax
     jz .skip_fix
     add r10d, 20
-.skip_fix:
+@@skip_fix:
     
     ; Check for DEBUG keywords
     mov rcx, r12
@@ -548,7 +545,7 @@ classify_intent PROC
     test eax, eax
     jz .skip_debug
     add r11d, 35
-.skip_debug:
+@@skip_debug:
     
     mov rcx, r12
     mov edx, r13d
@@ -557,7 +554,7 @@ classify_intent PROC
     test eax, eax
     jz .skip_error
     add r11d, 20
-.skip_error:
+@@skip_error:
     
     ; Check for ROLLBACK keywords
     mov rcx, r12
@@ -567,7 +564,7 @@ classify_intent PROC
     test eax, eax
     jz .skip_rollback
     add ebx, 40
-.skip_rollback:
+@@skip_rollback:
     
     ; =========================================================================
     ; DETERMINE HIGHEST SCORING INTENT
@@ -577,43 +574,43 @@ classify_intent PROC
     mov ecx, r8d        ; confidence = build_score
     
     cmp r9d, ecx        ; if test_score > build_score
-    jle .test_not_best
+    jle @@test_not_best
     mov eax, INTENT_RUN_TESTS
     mov ecx, r9d
-.test_not_best:
+@@test_not_best:
     
     cmp r10d, ecx       ; if hotpatch_score > current_best
-    jle .hotpatch_not_best
+    jle @@hotpatch_not_best
     mov eax, INTENT_HOTPATCH
     mov ecx, r10d
-.hotpatch_not_best:
+@@hotpatch_not_best:
     
     cmp r11d, ecx       ; if debug_score > current_best
-    jle .debug_not_best
+    jle @@debug_not_best
     mov eax, INTENT_DEBUG_ISSUE
     mov ecx, r11d
-.debug_not_best:
+@@debug_not_best:
     
     cmp ebx, ecx        ; if rollback_score > current_best
-    jle .rollback_not_best
+    jle @@rollback_not_best
     mov eax, INTENT_ROLLBACK
     mov ecx, ebx
-.rollback_not_best:
+@@rollback_not_best:
     
     ; If no intent found with >0 score, return UNKNOWN
     test ecx, ecx
     jnz .intent_found
     mov eax, INTENT_UNKNOWN
     xor ecx, ecx
-    
-.intent_found:
+@@intent_found:
     mov edx, ecx        ; Return confidence in edx
     
     add rsp, 48
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
+
 ALIGN 16
 classify_intent ENDP
 
@@ -627,6 +624,7 @@ string_contains PROC
     ; Returns: eax = 1 if found, 0 if not
     
     push rbx
+
     push rsi
     sub rsp, 32
     
@@ -636,30 +634,29 @@ string_contains PROC
     
     ; Calculate substring length
     xor edx, edx
-.sub_len:
+@@sub_len:
     cmp BYTE PTR [rbx + rdx], 0
-    je .sub_len_done
+    je @@sub_len_done
     inc edx
-    jmp .sub_len
-.sub_len_done:
+    jmp @@sub_len
+@@sub_len_done:
     
     ; Sanity check
     cmp edx, ecx
-    jg .not_found       ; Substring longer than string
+    jg @@not_found       ; Substring longer than string
     
     ; Search for substring
     xor r9d, r9d        ; Current position
-.search_loop:
+@@search_loop:
     mov eax, ecx
     sub eax, r9d
     cmp eax, edx
-    jl .not_found       ; Not enough remaining bytes
+    jl @@not_found       ; Not enough remaining bytes
     
     ; Check if substring matches at current position
     mov r10d, edx       ; Compare length
     xor r11d, r11d      ; Comparison offset
-    
-.compare_loop:
+@@compare_loop:
     test r10d, r10d
     jz .found           ; All bytes matched
     
@@ -668,43 +665,39 @@ string_contains PROC
     
     ; Convert to lowercase for case-insensitive match
     cmp al, 'A'
-    jl .skip_lower1
+    jl @@skip_lower1
     cmp al, 'Z'
-    jg .skip_lower1
+    jg @@skip_lower1
     add al, 32
-.skip_lower1:
+@@skip_lower1:
     
     cmp bl, 'A'
-    jl .skip_lower2
+    jl @@skip_lower2
     cmp bl, 'Z'
-    jg .skip_lower2
+    jg @@skip_lower2
     add bl, 32
-.skip_lower2:
+@@skip_lower2:
     
     cmp al, bl
-    jne .no_match
+    jne @@no_match
     
     inc r11d
     dec r10d
-    jmp .compare_loop
-    
-.no_match:
+    jmp @@compare_loop
+@@no_match:
     inc r9d
-    jmp .search_loop
-    
-.found:
+    jmp @@search_loop
+@@found:
     mov eax, 1
-    jmp .search_exit
-    
-.not_found:
+    jmp @@search_exit
+@@not_found:
     xor eax, eax
-    
-.search_exit:
+@@search_exit:
     add rsp, 32
+
     pop rsi
-    pop rbx
-    ret
-ALIGN 16
+    pop ALIGN
+    pop rbx 16
 string_contains ENDP
 
 ;==============================================================================
@@ -717,6 +710,7 @@ add_task_to_plan PROC
     ; Adds a new task to the execution plan
     
     push rbx
+
     push r12
     push r13
     sub rsp, 48
@@ -729,7 +723,7 @@ add_task_to_plan PROC
     
     ; Check if we have room for more tasks (max 100)
     cmp ebx, 100
-    jge .task_full
+    jge @@task_full
     
     ; Compute destination slot in preallocated TASK array
     mov rax, [r12 + EXECUTION_PLAN.tasks_ptr]
@@ -746,15 +740,15 @@ add_task_to_plan PROC
     ; Compute command length if pointer provided
     xor edx, edx
     mov rax, r8
-.len_loop:
+@@len_loop:
     test rax, rax
     jz .len_done
     cmp BYTE PTR [rax], 0
-    je .len_done
+    je @@len_done
     inc edx
     inc rax
-    jmp .len_loop
-.len_done:
+    jmp @@len_loop
+@@len_done:
     mov DWORD PTR [r10 + TASK.command_length], edx
 
     ; Defaults
@@ -766,15 +760,20 @@ add_task_to_plan PROC
     ; Increment task count
     inc ebx
     mov [r12 + EXECUTION_PLAN.task_count], ebx
-
-.task_full:
-.task_alloc_failed:
+@@task_full:
+@@task_alloc_failed:
     add rsp, 48
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
+
 ALIGN 16
 add_task_to_plan ENDP
 
 END
+
+
+
+
+

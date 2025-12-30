@@ -76,6 +76,7 @@ szLogMsg            db "UI Function called",0
 PUBLIC ui_create_submenu
 ui_create_submenu PROC
     push rbx
+
     push rsi
     sub rsp, 40
     
@@ -104,10 +105,10 @@ submenu_fail:
     
 submenu_done:
     add rsp, 40
+
     pop rsi
-    pop rbx
-    ret
-ui_create_submenu ENDP
+    pop ui
+    pop rbx_create_submenu ENDP
 
 ;==========================================================================
 ; ui_add_menu_item - Add menu item
@@ -173,7 +174,7 @@ ui_create_toolbar PROC
     
     add rsp, 112
     pop rbx
-    ret
+
 ui_create_toolbar ENDP
 
 ;==========================================================================
@@ -186,11 +187,10 @@ ui_add_toolbar_button PROC
     
     ; Simplified - just log the call
     push rcx
-    lea rcx, szLogMsg
+    push lea rcx, szLogMsg
     call console_log
-    pop rcx
-    
-    add rsp, 40
+    pop add
+    pop rcx rsp, 40
     ret
 ui_add_toolbar_button ENDP
 
@@ -204,11 +204,10 @@ ui_add_toolbar_separator PROC
     
     ; Simplified - just log the call
     push rcx
-    lea rcx, szLogMsg
+    push lea rcx, szLogMsg
     call console_log
-    pop rcx
-    
-    add rsp, 40
+    pop add
+    pop rcx rsp, 40
     ret
 ui_add_toolbar_separator ENDP
 
@@ -241,7 +240,7 @@ ui_create_statusbar PROC
     
     add rsp, 112
     pop rbx
-    ret
+
 ui_create_statusbar ENDP
 
 ;==========================================================================
@@ -290,7 +289,7 @@ ui_create_splitter PROC
     
     add rsp, 112
     pop rbx
-    ret
+
 ui_create_splitter ENDP
 
 ;==========================================================================
@@ -322,7 +321,7 @@ ui_create_activity_bar PROC
     
     add rsp, 112
     pop rbx
-    ret
+
 ui_create_activity_bar ENDP
 
 ;==========================================================================
@@ -354,7 +353,7 @@ ui_create_editor_area PROC
     
     add rsp, 112
     pop rbx
-    ret
+
 ui_create_editor_area ENDP
 
 ;==========================================================================
@@ -386,7 +385,7 @@ ui_create_terminal_area PROC
     
     add rsp, 112
     pop rbx
-    ret
+
 ui_create_terminal_area ENDP
 
 ;==========================================================================
@@ -399,11 +398,10 @@ ui_set_splitter_proportions PROC
     
     ; Simplified - just log the call
     push rcx
-    lea rcx, szLogMsg
+    push lea rcx, szLogMsg
     call console_log
-    pop rcx
-    
-    add rsp, 40
+    pop add
+    pop rcx rsp, 40
     ret
 ui_set_splitter_proportions ENDP
 
@@ -436,7 +434,7 @@ ui_create_file_tree PROC
     
     add rsp, 112
     pop rbx
-    ret
+
 ui_create_file_tree ENDP
 
 ;==========================================================================
@@ -468,7 +466,7 @@ ui_create_hotpatch_panel PROC
     
     add rsp, 112
     pop rbx
-    ret
+
 ui_create_hotpatch_panel ENDP
 
 ;==========================================================================
@@ -500,7 +498,7 @@ ui_create_chat_panel PROC
     
     add rsp, 112
     pop rbx
-    ret
+
 ui_create_chat_panel ENDP
 
 ;==========================================================================
@@ -532,7 +530,7 @@ ui_create_command_palette PROC
     
     add rsp, 112
     pop rbx
-    ret
+
 ui_create_command_palette ENDP
 
 ;==========================================================================
@@ -617,3 +615,7 @@ CBS_DROPDOWN        equ 2h
 SB_SETTEXT          equ 401h
 
 END
+
+
+
+

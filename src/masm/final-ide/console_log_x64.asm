@@ -48,7 +48,7 @@ log_init proc
     
     add rsp, 32
     pop rbx
-    ret
+
 log_init endp
 
 ; ============================================================================
@@ -58,7 +58,7 @@ log_init endp
 public log_info
 log_info proc
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     mov r8, rcx         ; r8 = message
@@ -67,7 +67,7 @@ log_info proc
     
     add rsp, 32
     pop rbp
-    ret
+
 log_info endp
 
 ; ============================================================================
@@ -77,7 +77,7 @@ log_info endp
 public log_warning
 log_warning proc
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     mov r8, rcx         ; r8 = message
@@ -86,7 +86,7 @@ log_warning proc
     
     add rsp, 32
     pop rbp
-    ret
+
 log_warning endp
 
 ; ============================================================================
@@ -96,7 +96,7 @@ log_warning endp
 public log_error
 log_error proc
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     mov r8, rcx         ; r8 = message
@@ -105,7 +105,7 @@ log_error proc
     
     add rsp, 32
     pop rbp
-    ret
+
 log_error endp
 
 ; ============================================================================
@@ -115,7 +115,7 @@ log_error endp
 public log_debug
 log_debug proc
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     mov r8, rcx         ; r8 = message
@@ -124,7 +124,7 @@ log_debug proc
     
     add rsp, 32
     pop rbp
-    ret
+
 log_debug endp
 
 ; ============================================================================
@@ -134,6 +134,7 @@ log_debug endp
 ; ============================================================================
 _log_message proc
     push rbx
+
     push rdi
     push rsi
     sub rsp, 64
@@ -176,10 +177,16 @@ message_len_done:
     ; Write newline
     
     add rsp, 64
-    pop rsi
-    pop rdi
+
+    pop rdi pop rsi
+
     pop rbx
-    ret
+
 _log_message endp
 
 end
+
+
+
+
+

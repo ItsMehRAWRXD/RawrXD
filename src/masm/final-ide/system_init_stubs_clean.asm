@@ -11,8 +11,8 @@ EXTERN GetTickCount:PROC
 EXTERN Sleep:PROC
 
 ; Tracking variables for simple state management
-.data?
-system_state DWORD 0          ; 0 = uninitialized, 1 = initialized
+.data
+ DWORD 0          ; 0 = uninitialized, 1 = initialized
 last_init_time DWORD 0       ; Timestamp of initialization
 
 .code
@@ -229,3 +229,8 @@ szAiChatPanel     BYTE "[stub] ai_chat_panel_init", 0
 .code
 
 END
+
+
+
+
+

@@ -259,7 +259,7 @@ visualization_init PROC
     mov rax, g_visualization_studio.hMutex
     add rsp, 32
     pop rbx
-    ret
+
 visualization_init ENDP
 
 ;==========================================================================
@@ -268,6 +268,7 @@ visualization_init ENDP
 ;==========================================================================
 visualization_create_window PROC
     push rbx
+
     push rsi
     sub rsp, 128
     
@@ -295,10 +296,10 @@ visualization_create_window PROC
     
     mov rax, g_visualization_studio.hWindow
     add rsp, 128
+
     pop rsi
-    pop rbx
-    ret
-visualization_create_window ENDP
+    pop visualization
+    pop rbx_create_window ENDP
 
 ;==========================================================================
 ; visualization_render_confusion(cm_ptr: rcx) -> success (eax)
@@ -306,6 +307,7 @@ visualization_create_window ENDP
 ;==========================================================================
 visualization_render_confusion PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 128
@@ -355,10 +357,11 @@ visualization_render_confusion PROC
     call ReleaseMutex
     
     add rsp, 128
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 visualization_render_confusion ENDP
 
 ;==========================================================================
@@ -410,7 +413,7 @@ visualization_render_roc PROC
     
     add rsp, 64
     pop rbx
-    ret
+
 visualization_render_roc ENDP
 
 ;==========================================================================
@@ -525,3 +528,8 @@ create_toolbar PROC
 create_toolbar ENDP
 
 end
+
+
+
+
+

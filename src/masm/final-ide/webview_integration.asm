@@ -137,7 +137,7 @@ CreateEnvHandler PROC
     mov rax, rbx
     add rsp, 32
     pop rbx
-    ret
+
 CreateEnvHandler ENDP
 
 ;==============================================================================
@@ -159,7 +159,7 @@ EnvHandler_Invoke PROC this:QWORD, hr:DWORD, pEnv:QWORD
     xor eax, eax ; S_OK
     add rsp, 32
     pop rbx
-    ret
+
 EnvHandler_Invoke ENDP
 
 ;==============================================================================
@@ -221,3 +221,8 @@ IUnknown_Release_Stub ENDP
 END
 
 END
+
+
+
+
+

@@ -127,6 +127,7 @@ agent_response_init ENDP
 PUBLIC agent_generate_ask_response
 agent_generate_ask_response PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -166,10 +167,11 @@ agent_generate_ask_response PROC
     
     mov eax, 1
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 agent_generate_ask_response ENDP
 
 ;==========================================================================
@@ -181,6 +183,7 @@ agent_generate_ask_response ENDP
 PUBLIC agent_generate_edit_response
 agent_generate_edit_response PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -226,10 +229,11 @@ agent_generate_edit_response PROC
     
     mov eax, 1
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 agent_generate_edit_response ENDP
 
 ;==========================================================================
@@ -241,6 +245,7 @@ agent_generate_edit_response ENDP
 PUBLIC agent_generate_plan_response
 agent_generate_plan_response PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -293,10 +298,11 @@ plan_done_phases:
     
     mov eax, 1
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 agent_generate_plan_response ENDP
 
 ;==========================================================================
@@ -308,6 +314,7 @@ agent_generate_plan_response ENDP
 PUBLIC agent_generate_config_response
 agent_generate_config_response PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 64
@@ -359,10 +366,11 @@ config_done_params:
     
     mov eax, 1
     add rsp, 64
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 agent_generate_config_response ENDP
 
 ;==========================================================================
@@ -381,7 +389,7 @@ agent_append_section PROC
     mov eax, 1
     add rsp, 32
     pop rsi
-    ret
+
 agent_append_section ENDP
 
 ; agent_append_formatted(format: rcx, arg1: edx) -> eax
@@ -393,7 +401,7 @@ agent_append_formatted PROC
     mov eax, 1
     add rsp, 32
     pop rsi
-    ret
+
 agent_append_formatted ENDP
 
 ; agent_analyze_question(question: rcx) -> eax
@@ -487,3 +495,8 @@ agent_estimate_improvement PROC
 agent_estimate_improvement ENDP
 
 END
+
+
+
+
+

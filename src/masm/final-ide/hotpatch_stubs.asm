@@ -46,3 +46,7 @@ stats_exit:
 masm_hotpatch_get_stats ENDP
 
 END
+
+
+
+

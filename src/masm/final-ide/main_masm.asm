@@ -372,8 +372,9 @@ unhandled_filter ENDP
 ALIGN 16
 strcmp_proc PROC
     push rdi
+
     push rsi
-    xor eax, eax
+    push xor eax, eax
 strcmp_loop:
     mov al, BYTE PTR [rcx]
     mov bl, BYTE PTR [rdx]
@@ -390,10 +391,10 @@ strcmp_ne:
 strcmp_eq:
     xor eax, eax
 strcmp_done:
+
     pop rsi
-    pop rdi
-    ret
-strcmp_proc ENDP
+    pop strcmp
+    pop rdi_proc ENDP
 
 ;==========================================================================
 ; Helper: strlen
@@ -437,7 +438,7 @@ print_stdout PROC
 
     add rsp, 48
     pop rbx
-    ret
+
 print_stdout ENDP
 
 ;==========================================================================
@@ -507,7 +508,7 @@ pw_have:
 pw_done:
     add rsp, 48
     pop rbx
-    ret
+
 probe_write ENDP
 
 ;==========================================================================
@@ -600,7 +601,7 @@ init_model_failed:
 init_done:
     add rsp, 48
     pop rbx
-    ret
+
 init_application ENDP
 
 ;==========================================================================
@@ -667,7 +668,6 @@ process_response:
 on_send_done:
     add rsp, 48
     pop rbx
-    ret
 
 inference_failed:
     lea rcx, error_no_model
@@ -714,7 +714,7 @@ on_open_fail:
 on_open_done:
     add rsp, 48
     pop rbx
-    ret
+
 main_on_open ENDP
 
 ;=========================================================================
@@ -764,12 +764,12 @@ rtf_done:
     mov eax, 1
     add rsp, 64
     pop rbx
-    ret
+
 rtf_fail:
     xor eax, eax
     add rsp, 64
     pop rbx
-    ret
+
 read_text_file_into_editor ENDP
 
 ALIGN 16
@@ -814,12 +814,12 @@ write_editor_to_text_file PROC
     mov eax, 1
     add rsp, 64
     pop rbx
-    ret
+
 wetf_fail:
     xor eax, eax
     add rsp, 64
     pop rbx
-    ret
+
 write_editor_to_text_file ENDP
 
 ;=========================================================================
@@ -929,6 +929,7 @@ init_application_safe PROC
     ; Wrapped init with try/catch via structured exception handling
     ; Returns: eax = 1 on success, 0 on error
     push rbx
+
     push r12
     sub rsp, 40
     
@@ -983,10 +984,10 @@ safe_model_fail:
     
 safe_done:
     add rsp, 40
+
     pop r12
-    pop rbx
-    ret
-init_application_safe ENDP
+    pop init
+    pop rbx_application_safe ENDP
 
 ;==========================================================================
 ; Main Entry Point
@@ -1268,3 +1269,8 @@ RawrXD_PerformanceLogMetrics ENDP
 ;==========================================================================
 
 END
+
+
+
+
+

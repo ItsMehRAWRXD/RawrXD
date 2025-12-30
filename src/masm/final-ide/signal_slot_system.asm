@@ -131,7 +131,7 @@ EXTERN console_log:PROC
 PUBLIC signal_system_init
 signal_system_init PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     ; Initialize registry structure
@@ -182,7 +182,7 @@ signal_system_init_error:
 signal_system_init_exit:
     add rsp, 20h
     pop rbp
-    ret
+
 signal_system_init ENDP
 
 ;------------------------------------------------------------------------------
@@ -193,7 +193,7 @@ signal_system_init ENDP
 PUBLIC signal_system_cleanup
 signal_system_cleanup PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     ; Free signal array
@@ -233,7 +233,7 @@ cleanup_pending_mutex_done:
     mov rax, 1
     add rsp, 20h
     pop rbp
-    ret
+
 signal_system_cleanup ENDP
 
 ;==============================================================================
@@ -248,7 +248,7 @@ signal_system_cleanup ENDP
 PUBLIC signal_register
 signal_register PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 40h
     
     ; Save parameters
@@ -320,7 +320,7 @@ signal_register_error:
 signal_register_exit:
     add rsp, 40h
     pop rbp
-    ret
+
 signal_register ENDP
 
 ;------------------------------------------------------------------------------
@@ -331,7 +331,7 @@ signal_register ENDP
 PUBLIC signal_unregister
 signal_unregister PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     ; Acquire registry mutex
@@ -373,7 +373,7 @@ signal_unregister_error:
 signal_unregister_exit:
     add rsp, 20h
     pop rbp
-    ret
+
 signal_unregister ENDP
 
 ;==============================================================================
@@ -388,7 +388,7 @@ signal_unregister ENDP
 PUBLIC connect_signal
 connect_signal PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 40h
     
     ; Save parameters
@@ -463,7 +463,7 @@ connect_signal_error:
 connect_signal_exit:
     add rsp, 40h
     pop rbp
-    ret
+
 connect_signal ENDP
 
 ;------------------------------------------------------------------------------
@@ -474,7 +474,7 @@ connect_signal ENDP
 PUBLIC disconnect_signal
 disconnect_signal PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     ; Acquire registry mutex
@@ -517,7 +517,7 @@ disconnect_signal_error:
 disconnect_signal_exit:
     add rsp, 20h
     pop rbp
-    ret
+
 disconnect_signal ENDP
 
 ;------------------------------------------------------------------------------
@@ -528,7 +528,7 @@ disconnect_signal ENDP
 PUBLIC disconnect_all
 disconnect_all PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     ; Acquire registry mutex
@@ -570,7 +570,7 @@ disconnect_all_error:
 disconnect_all_exit:
     add rsp, 20h
     pop rbp
-    ret
+
 disconnect_all ENDP
 
 ;==============================================================================
@@ -585,7 +585,7 @@ disconnect_all ENDP
 PUBLIC emit_signal
 emit_signal PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 40h
     
     ; Save parameters
@@ -672,7 +672,7 @@ emit_signal_error:
 emit_signal_exit:
     add rsp, 40h
     pop rbp
-    ret
+
 emit_signal ENDP
 
 ;------------------------------------------------------------------------------
@@ -683,7 +683,7 @@ emit_signal ENDP
 PUBLIC process_pending_signals
 process_pending_signals PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     ; Acquire pending mutex
@@ -711,15 +711,15 @@ process_pending_loop:
     
     ; Emit signal
     push rcx
-    mov ecx, [rdx+PENDING_SIGNAL.signal_id]
+    push mov ecx, [rdx+PENDING_SIGNAL.signal_id]
     mov rdx, [rdx+PENDING_SIGNAL.param1]
     mov r8, [rdx+PENDING_SIGNAL.param2]
     mov r9, [rdx+PENDING_SIGNAL.param3]
     call _call_slots_direct
-    pop rcx
-    
-    inc ecx
-    jmp process_pending_loop
+
+    pop ecx inc
+    pop jmp
+    pop rcx process_pending_loop
     
 process_pending_done:
     ; Clear pending queue
@@ -738,7 +738,7 @@ process_pending_error:
 process_pending_exit:
     add rsp, 20h
     pop rbp
-    ret
+
 process_pending_signals ENDP
 
 ;==============================================================================
@@ -753,7 +753,7 @@ process_pending_signals ENDP
 PUBLIC block_signals
 block_signals PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     ; Find signal
@@ -774,7 +774,7 @@ block_signals_not_found:
 block_signals_exit:
     add rsp, 20h
     pop rbp
-    ret
+
 block_signals ENDP
 
 ;------------------------------------------------------------------------------
@@ -785,7 +785,7 @@ block_signals ENDP
 PUBLIC unblock_signals
 unblock_signals PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     ; Find signal
@@ -806,7 +806,7 @@ unblock_signals_not_found:
 unblock_signals_exit:
     add rsp, 20h
     pop rbp
-    ret
+
 unblock_signals ENDP
 
 ;------------------------------------------------------------------------------
@@ -817,7 +817,7 @@ unblock_signals ENDP
 PUBLIC is_signal_blocked
 is_signal_blocked PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     ; Find signal
@@ -837,7 +837,7 @@ is_signal_blocked_not_found:
 is_signal_blocked_exit:
     add rsp, 20h
     pop rbp
-    ret
+
 is_signal_blocked ENDP
 
 ;==============================================================================
@@ -847,7 +847,7 @@ is_signal_blocked ENDP
 ; Initialize signal
 _initialize_signal PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     ; Set signal ID
@@ -912,13 +912,13 @@ initialize_signal_error:
 initialize_signal_exit:
     add rsp, 20h
     pop rbp
-    ret
+
 _initialize_signal ENDP
 
 ; Initialize slot connection
 _initialize_slot_connection PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     
     ; Set slot function
     mov [rcx+SLOT_CONNECTION.slot_func], rdx
@@ -941,13 +941,13 @@ _initialize_slot_connection PROC
     
     mov rax, 1
     pop rbp
-    ret
+
 _initialize_slot_connection ENDP
 
 ; Find signal by ID
 _find_signal_by_id PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     
     ; Get signal array
     mov rdx, g_signal_registry.signals
@@ -980,13 +980,13 @@ find_signal_not_found:
     
 find_signal_exit:
     pop rbp
-    ret
+
 _find_signal_by_id ENDP
 
 ; Add signal to registry
 _add_signal_to_registry PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     
     ; Get signal array
     mov rdx, g_signal_registry.signals
@@ -1029,25 +1029,25 @@ add_signal_error:
     
 add_signal_exit:
     pop rbp
-    ret
+
 _add_signal_to_registry ENDP
 
 ; Remove signal from registry
 _remove_signal_from_registry PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     
     ; Implementation would remove signal and shift array
     mov rax, 1         ; Placeholder
     
     pop rbp
-    ret
+
 _remove_signal_from_registry ENDP
 
 ; Add slot connection
 _add_slot_connection PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     
     ; Get slots array
     mov r8, [rcx+SIGNAL.slots]
@@ -1090,38 +1090,38 @@ add_slot_error:
     
 add_slot_exit:
     pop rbp
-    ret
+
 _add_slot_connection ENDP
 
 ; Remove slot connection
 _remove_slot_connection PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     
     ; Implementation would remove connection
     mov rax, 1         ; Placeholder
     
     pop rbp
-    ret
+
 _remove_slot_connection ENDP
 
 ; Remove all slot connections
 _remove_all_slot_connections PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     
     ; Clear all slots
     mov [rcx+SIGNAL.slot_count], 0
     
     mov rax, 1
     pop rbp
-    ret
+
 _remove_all_slot_connections ENDP
 
 ; Call slots directly
 _call_slots_direct PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 40h
     
     ; Save parameters
@@ -1165,14 +1165,13 @@ call_slots_loop:
     
     ; Call slot
     push rcx
-    mov rcx, [r9+SLOT_CONNECTION.slot_param]
+    push mov rcx, [r9+SLOT_CONNECTION.slot_param]
     mov rdx, [rbp-16]  ; param1
     mov r8, [rbp-24]   ; param2
     mov r9, [rbp-32]   ; param3
     call r10
-    pop rcx
-    
-call_slots_next:
+    pop call
+    pop rcx_slots_next:
     inc ecx
     jmp call_slots_loop
     
@@ -1186,13 +1185,13 @@ call_slots_error:
 call_slots_exit:
     add rsp, 40h
     pop rbp
-    ret
+
 _call_slots_direct ENDP
 
 ; Queue signal
 _queue_signal PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     ; Acquire pending mutex
@@ -1251,25 +1250,25 @@ queue_signal_error:
 queue_signal_exit:
     add rsp, 20h
     pop rbp
-    ret
+
 _queue_signal ENDP
 
 ; Cleanup all signals
 _cleanup_all_signals PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     
     ; Implementation would free all signal resources
     mov rax, 1         ; Placeholder
     
     pop rbp
-    ret
+
 _cleanup_all_signals ENDP
 
 ; Acquire mutex
 _acquire_mutex PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     mov rdx, -1        ; INFINITE timeout
@@ -1287,13 +1286,13 @@ acquire_mutex_error:
 acquire_mutex_exit:
     add rsp, 20h
     pop rbp
-    ret
+
 _acquire_mutex ENDP
 
 ; Release mutex
 _release_mutex PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 20h
     
     call ReleaseMutex
@@ -1310,7 +1309,7 @@ release_mutex_error:
 release_mutex_exit:
     add rsp, 20h
     pop rbp
-    ret
+
 _release_mutex ENDP
 
 ;==============================================================================
@@ -1331,3 +1330,7 @@ PUBLIC unblock_signals
 PUBLIC is_signal_blocked
 
 .end
+
+
+
+

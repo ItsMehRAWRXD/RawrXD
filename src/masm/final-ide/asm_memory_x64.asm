@@ -30,7 +30,7 @@ memory_init proc
     
     add rsp, 32
     pop rbx
-    ret
+
 memory_init endp
 
 ; ============================================================================
@@ -64,7 +64,7 @@ malloc_have_heap:
     
     add rsp, 32
     pop rbx
-    ret
+
 asm_malloc endp
 
 ; ============================================================================
@@ -86,7 +86,7 @@ asm_free proc
     
     add rsp, 32
     pop rbx
-    ret
+
 asm_free endp
 
 ; ============================================================================
@@ -98,9 +98,9 @@ asm_free endp
 public asm_memcpy
 asm_memcpy proc
     push rdi
+
     push rsi
-    
-    mov rdi, rcx        ; rdi = destination
+    push mov rdi, rcx        ; rdi = destination
     mov rsi, rdx        ; rsi = source
     mov rcx, r8         ; rcx = size
     
@@ -116,10 +116,10 @@ memcpy_loop:
     jnz memcpy_loop
 
 memcpy_done:
+
     pop rsi
-    pop rdi
-    ret
-asm_memcpy endp
+    pop asm
+    pop rdi_memcpy endp
 
 ; ============================================================================
 ; asm_memset - Fill memory
@@ -130,8 +130,7 @@ asm_memcpy endp
 public asm_memset
 asm_memset proc
     push rdi
-    
-    mov rdi, rcx        ; rdi = pointer
+    push mov rdi, rcx        ; rdi = pointer
     mov rax, rdx        ; rax = value
     mov rcx, r8         ; rcx = size
     
@@ -146,7 +145,12 @@ memset_loop:
 
 memset_done:
     pop rdi
-    ret
+
 asm_memset endp
 
 end
+
+
+
+
+

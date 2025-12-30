@@ -103,16 +103,14 @@ tab_grouping_init PROC
     lea rcx, TabGroups
     xor edx, edx
     mov r8d, MAX_TAB_GROUPS * (SIZE TAB_GROUP) / 8
-    
-.zero_groups:
+@@zero_groups:
     cmp r8d, 0
-    je .zero_done
+    je @@zero_done
     mov QWORD PTR [rcx + rdx], 0
     add rdx, 8
     dec r8d
-    jmp .zero_groups
-    
-.zero_done:
+    jmp @@zero_groups
+@@zero_done:
     mov GroupCount, 0
     mov TabCount, 0
     mov PinnedTabCount, 0
@@ -120,7 +118,7 @@ tab_grouping_init PROC
     mov eax, 1                          ; Success
     add rsp, 32
     pop rbx
-    ret
+
 tab_grouping_init ENDP
 
 ;==========================================================================
@@ -130,10 +128,9 @@ tab_grouping_init ENDP
 PUBLIC tab_create_group
 tab_create_group PROC
     push rbx
-    
-    mov rbx, GroupCount
+    push mov rbx, GroupCount
     cmp rbx, MAX_TAB_GROUPS
-    jge .group_limit
+    jge @@group_limit
     
     ; Create new group
     imul eax, ebx, SIZE TAB_GROUP
@@ -160,12 +157,11 @@ tab_create_group PROC
     inc GroupCount
     
     pop rbx
-    ret
-    
-.group_limit:
+
+@@group_limit:
     mov eax, -1                         ; Error: too many groups
     pop rbx
-    ret
+
 tab_create_group ENDP
 
 ;==========================================================================
@@ -175,6 +171,7 @@ tab_create_group ENDP
 PUBLIC tab_add_to_group
 tab_add_to_group PROC
     push rbx
+
     push rdi
     sub rsp, 32
     
@@ -183,7 +180,7 @@ tab_add_to_group PROC
     
     ; Validate group_id
     cmp ebx, GroupCount
-    jge .invalid_group
+    jge @@invalid_group
     
     ; Get group structure
     imul eax, ebx, SIZE TAB_GROUP
@@ -192,12 +189,12 @@ tab_add_to_group PROC
     ; Get current tab count in group
     mov eax, DWORD PTR [rsi + MAX_PROJECT_NAME + 8]
     cmp eax, MAX_TABS_PER_GROUP
-    jge .group_full
+    jge @@group_full
     
     ; Add tab to AllTabs
     mov eax, TabCount
     cmp eax, 128
-    jge .tabs_full
+    jge @@tabs_full
     
     imul edx, eax, SIZE TAB_ENTRY
     lea rax, AllTabs[rdx]
@@ -220,31 +217,28 @@ tab_add_to_group PROC
     mov eax, TabCount
     dec eax                             ; Return tab index
     add rsp, 32
+
     pop rdi
     pop rbx
-    ret
-    
-.invalid_group:
+@@invalid_group:
     mov eax, -1
     add rsp, 32
+
     pop rdi
     pop rbx
-    ret
-    
-.group_full:
+@@group_full:
     mov eax, -2
     add rsp, 32
+
     pop rdi
     pop rbx
-    ret
-    
-.tabs_full:
+@@tabs_full:
     mov eax, -3
     add rsp, 32
+
     pop rdi
-    pop rbx
-    ret
-tab_add_to_group ENDP
+    pop tab
+    pop rbx_add_to_group ENDP
 
 ;==========================================================================
 ; PUBLIC: tab_pin(tab_index: ecx) -> eax (success)
@@ -256,7 +250,7 @@ tab_pin PROC
     
     ; Validate tab index
     cmp ecx, TabCount
-    jge .invalid_tab
+    jge @@invalid_tab
     
     ; Get tab entry
     imul eax, ecx, SIZE TAB_ENTRY
@@ -274,55 +268,48 @@ tab_pin PROC
     ; Unpinned - remove from pinned array
     xor eax, eax
     mov ebx, PinnedTabCount
-    
-.find_and_remove:
+@@find_and_remove:
     cmp eax, ebx
-    jge .remove_done
+    jge @@remove_done
     
     cmp DWORD PTR PinnedTabIndices[rax * 4], ecx
-    je .found_to_remove
+    je @@found_to_remove
     
     inc eax
-    jmp .find_and_remove
-    
-.found_to_remove:
+    jmp @@find_and_remove
+@@found_to_remove:
     ; Shift array
     mov edx, eax
     inc eax
-    
-.shift_loop:
+@@shift_loop:
     cmp eax, PinnedTabCount
-    jge .remove_done
+    jge @@remove_done
     
     mov ecx, DWORD PTR PinnedTabIndices[rax * 4]
     mov DWORD PTR PinnedTabIndices[rdx * 4], ecx
     
     inc eax
     inc edx
-    jmp .shift_loop
-    
-.remove_done:
+    jmp @@shift_loop
+@@remove_done:
     dec PinnedTabCount
-    jmp .pin_success
-    
-.now_pinned:
+    jmp @@pin_success
+@@now_pinned:
     ; Add to pinned array
     cmp PinnedTabCount, 32
-    jge .pin_success
+    jge @@pin_success
     
     mov eax, PinnedTabCount
     mov DWORD PTR PinnedTabIndices[rax * 4], ecx
     inc PinnedTabCount
-    
-.pin_success:
+@@pin_success:
     mov eax, 1
     pop rbx
-    ret
-    
-.invalid_tab:
+
+@@invalid_tab:
     xor eax, eax
     pop rbx
-    ret
+
 tab_pin ENDP
 
 ;==========================================================================
@@ -353,20 +340,18 @@ tab_get_pinned_list PROC
     mov rsi, rcx                        ; rsi = buffer
     mov edi, edx                        ; edi = max_count
     xor eax, eax
-    
-.copy_loop:
+@@copy_loop:
     cmp eax, PinnedTabCount
-    jge .copy_done
+    jge @@copy_done
     cmp eax, edi
-    jge .copy_done
+    jge @@copy_done
     
     mov edx, DWORD PTR PinnedTabIndices[rax * 4]
     mov DWORD PTR [rsi + rax * 4], edx
     
     inc eax
-    jmp .copy_loop
-    
-.copy_done:
+    jmp @@copy_loop
+@@copy_done:
     ret
 tab_get_pinned_list ENDP
 
@@ -376,21 +361,19 @@ tab_get_pinned_list ENDP
 PRIVATE copy_string_group
 copy_string_group PROC
     xor eax, eax
-    
-.copy_loop:
+@@copy_loop:
     cmp eax, r8d
-    jge .done
+    jge @@done
     
     movzx ebx, BYTE PTR [rcx + rax]
     mov BYTE PTR [rdx + rax], bl
     
     test bl, bl
-    je .done
+    je @@done
     
     inc eax
-    jmp .copy_loop
-    
-.done:
+    jmp @@copy_loop
+@@done:
     mov BYTE PTR [rdx + rax], 0
     ret
 copy_string_group ENDP
@@ -401,19 +384,22 @@ copy_string_group ENDP
 PRIVATE copy_memory_tab
 copy_memory_tab PROC
     xor edx, edx
-    
-.copy_loop:
+@@copy_loop:
     cmp edx, r8d
-    jge .copy_done
+    jge @@copy_done
     
     movzx ebx, BYTE PTR [rcx + rdx]
     mov BYTE PTR [rax + rdx], bl
     
     inc edx
-    jmp .copy_loop
-    
-.copy_done:
+    jmp @@copy_loop
+@@copy_done:
     ret
 copy_memory_tab ENDP
 
 END
+
+
+
+
+

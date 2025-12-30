@@ -134,8 +134,10 @@ PUBLIC agent_chat_load_model
 ALIGN 16
 agent_chat_load_model PROC
     push rbx
+
     push rsi
     push rdi
+
     push r8
     push r9
     sub rsp, 80h
@@ -203,12 +205,14 @@ load_model_error:
     
 load_done:
     add rsp, 80h
-    pop r9
-    pop r8
-    pop rdi
-    pop rsi
+
+    pop r8 pop r9
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 agent_chat_load_model ENDP
 
 ;==========================================================================
@@ -220,6 +224,7 @@ agent_chat_load_model ENDP
 ALIGN 16
 agent_chat_display_architecture PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 80h
@@ -304,10 +309,11 @@ arch_error:
     
 arch_done:
     add rsp, 80h
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 agent_chat_display_architecture ENDP
 
 ;==========================================================================
@@ -318,8 +324,10 @@ agent_chat_display_architecture ENDP
 ALIGN 16
 agent_chat_display_tensors PROC
     push rbx
+
     push rsi
     push rdi
+
     push r8
     push r9
     sub rsp, 64h
@@ -424,12 +432,14 @@ tensor_display_next:
     
 tensor_display_done:
     add rsp, 64h
-    pop r9
-    pop r8
-    pop rdi
-    pop rsi
+
+    pop r8 pop r9
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 agent_chat_display_tensors ENDP
 
 ;==========================================================================
@@ -441,8 +451,10 @@ PUBLIC agent_chat_run_inference
 ALIGN 16
 agent_chat_run_inference PROC
     push rbx
+
     push rsi
     push rdi
+
     push r8
     sub rsp, 80h
     
@@ -526,12 +538,13 @@ inference_error:
     
 inference_done:
     add rsp, 80h
-    pop r8
-    pop rdi
+
+    pop rdi pop r8
+
+
     pop rsi
-    pop rbx
-    ret
-agent_chat_run_inference ENDP
+    pop agent
+    pop rbx_chat_run_inference ENDP
 
 ;==========================================================================
 ; INTERNAL: agent_chat_update_history()
@@ -546,7 +559,7 @@ agent_chat_update_history PROC
     call GetSystemTimeAsFileTime
     
     pop rbx
-    ret
+
 agent_chat_update_history ENDP
 
 ;==========================================================================
@@ -593,9 +606,9 @@ agent_chat_get_inference_count ENDP
 ALIGN 16
 strcpy_limited_masm PROC
     push rax
+
     push rbx
-    
-    xor eax, eax
+    push xor eax, eax
     
 copy_loop:
     cmp eax, r8d
@@ -617,11 +630,10 @@ copy_done:
     
 null_term:
     mov BYTE PTR [rdx + rax], 0
-    
+
     pop rbx
-    pop rax
-    ret
-strcpy_limited_masm ENDP
+    pop strcpy
+    pop rax_limited_masm ENDP
 
 ;==========================================================================
 ; INTERNAL: format_ui_message(fmt: rcx, arg: rdx)
@@ -630,9 +642,9 @@ strcpy_limited_masm ENDP
 ALIGN 16
 format_ui_message PROC
     push rsi
+
     push rdi
-    
-    mov rsi, rcx                    ; format string
+    push mov rsi, rcx                    ; format string
     mov rdi, OFFSET temp_ui_buffer  ; output buffer
     mov ecx, 2048                   ; max length
     xor eax, eax                    ; position
@@ -684,11 +696,10 @@ fmt_msg_done:
     
 fmt_msg_null:
     mov BYTE PTR [rdi + rax], 0
-    
+
     pop rdi
-    pop rsi
-    ret
-format_ui_message ENDP
+    pop format
+    pop rsi_ui_message ENDP
 
 ;==========================================================================
 ; INTERNAL: format_ui_message_int(fmt: rcx, value: edx)
@@ -697,6 +708,7 @@ format_ui_message ENDP
 ALIGN 16
 format_ui_message_int PROC
     push rsi
+
     push rdi
     push rbx
     sub rsp, 32
@@ -804,13 +816,19 @@ fmt_int_null:
     mov BYTE PTR [rdi + rax], 0
     
     add rsp, 32
-    pop rbx
-    pop rdi
+
+    pop rdi pop rbx
+
     pop rsi
-    ret
+
 format_ui_message_int ENDP
 
 ; String constant for inference section header (was missing)
 ui_inference_section BYTE "=== STARTING INFERENCE ===", 0x0D, 0x0A, 0
 
 END
+
+
+
+
+

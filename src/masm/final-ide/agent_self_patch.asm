@@ -55,6 +55,7 @@ EXTERN console_log:PROC
 PUBLIC agent_self_patch_add_kernel
 agent_self_patch_add_kernel PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -80,7 +81,7 @@ agent_self_patch_add_kernel PROC
     call CreateFileA
     
     cmp rax, INVALID_HANDLE_VALUE
-    je .fail
+    je @@fail
     mov rbx, rax        ; rbx = hFile
     
     ; Read existing content
@@ -104,17 +105,21 @@ agent_self_patch_add_kernel PROC
     call CloseHandle
     
     mov rax, 1
-    jmp .exit
-
-.fail:
+    jmp @@exit
+@@fail:
     xor rax, rax
-
-.exit:
+@@exit:
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 agent_self_patch_add_kernel ENDP
 
 END
+
+
+
+
+

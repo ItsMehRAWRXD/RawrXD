@@ -133,7 +133,6 @@ agent_system_init PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
 
 agent_system_init ENDP
 
@@ -157,7 +156,6 @@ agent_executor_init PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
 
 agent_executor_init ENDP
 
@@ -186,7 +184,6 @@ agent_tools_registry_init PROC
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
 
 agent_tools_registry_init ENDP
 
@@ -198,6 +195,7 @@ ALIGN 16
 agent_execute_task PROC
 
     push rbx
+
     push rsi
     sub rsp, 32
 
@@ -246,18 +244,16 @@ agent_execute_task PROC
     call console_log
 
     add rsp, 32
-    pop rsi
-    pop rbx
-    ret
 
-task_exec_fail:
+    pop rsi
+    pop task
+    pop rbx_exec_fail:
     xor rax, rax
     add rsp, 32
-    pop rsi
-    pop rbx
-    ret
 
-agent_execute_task ENDP
+    pop rsi
+    pop agent
+    pop rbx_execute_task ENDP
 
 ;==========================================================================
 ; agent_register_tool(name: RCX, desc: RDX, executor: R8, schema: R9) -> EAX (tool_id)
@@ -267,6 +263,7 @@ ALIGN 16
 agent_register_tool PROC
 
     push rbx
+
     push rsi
     sub rsp, 32
 
@@ -310,18 +307,16 @@ agent_register_tool PROC
     call console_log
 
     add rsp, 32
-    pop rsi
-    pop rbx
-    ret
 
-register_fail:
+    pop rsi
+    pop register
+    pop rbx_fail:
     xor eax, eax
     add rsp, 32
-    pop rsi
-    pop rbx
-    ret
 
-agent_register_tool ENDP
+    pop rsi
+    pop agent
+    pop rbx_register_tool ENDP
 
 ;==========================================================================
 ; agent_get_tool(tool_name: RCX) -> RAX (AGENT_TOOL*, or NULL)
@@ -376,6 +371,7 @@ agent_correct_response PROC
     sub rsp, 32
 
     push rsi
+
     push rdi
     push r12
     sub rsp, 32
@@ -438,13 +434,13 @@ correction_done:
     call console_log
     
     add rsp, 32
-    pop r12
-    pop rdi
-    pop rsi
-    pop rbx
-    ret
 
-agent_correct_response ENDP
+    pop rdi pop r12
+
+
+    pop rsi
+    pop agent
+    pop rbx_correct_response ENDP
 
 ;==========================================================================
 ; agent_detect_failure(response: RCX) -> EAX (failure_type, or 0 if none)
@@ -454,6 +450,7 @@ ALIGN 16
 agent_detect_failure PROC
 
     push rbx
+
     push rsi
     sub rsp, 32
     
@@ -510,10 +507,14 @@ detect_token_limit:
     
 detect_exit:
     add rsp, 32
-    pop rsi
-    pop rbx
-    ret
 
-agent_detect_failure ENDP
+    pop rsi
+    pop agent
+    pop rbx_detect_failure ENDP
 
 END
+
+
+
+
+

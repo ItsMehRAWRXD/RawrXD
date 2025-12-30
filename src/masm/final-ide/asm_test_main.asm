@@ -83,6 +83,7 @@ ALIGN 16
 print_str PROC
 
     push rbx
+
     push r12
     sub rsp, 48
     
@@ -112,11 +113,10 @@ count_done:
     call WriteFile
     
     add rsp, 48
-    pop r12
-    pop rbx
-    ret
 
-print_str ENDP
+    pop r12
+    pop print
+    pop rbx_str ENDP
 
 ;=====================================================================
 ; print_hex(value: rcx) -> void
@@ -128,6 +128,7 @@ ALIGN 16
 print_hex PROC
 
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -144,11 +145,10 @@ print_hex PROC
     call print_str
     
     add rsp, 32
-    pop r12
-    pop rbx
-    ret
 
-print_hex ENDP
+    pop r12
+    pop print
+    pop rbx_hex ENDP
 
 ;=====================================================================
 ; MAIN TEST FUNCTION
@@ -158,8 +158,10 @@ ALIGN 16
 main PROC
 
     push rbx
+
     push r12
     push r13
+
     push r14
     push r15
     sub rsp, 32
@@ -390,3 +392,8 @@ main ENDP
 test_string_data db "Hello, MASM!", 0
 
 END
+
+
+
+
+

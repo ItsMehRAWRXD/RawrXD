@@ -17,7 +17,7 @@ option casemap:none
 ;==========================================================================
 RAWR1024_MAGIC        EQU 0x5241575231303234h
 RAWR1024_VERSION      EQU 0x00020001h
-RAWR1024_ENGINE_COUNT EQU 2
+RAWR1024_ENGINE_COUNT EQU 8
 
 ; Custom system call numbers
 SYS_READ              EQU 0
@@ -97,14 +97,15 @@ NETWORK_SOCKET ENDS
 ; DATA SEGMENT
 ;==========================================================================
 .data
-    ; Engine states
+    ; Engine states (exported for external use)
+    PUBLIC engine_states
     engine_states       ENGINE_STATE RAWR1024_ENGINE_COUNT DUP (<>)
     
     ; Memory management globals
     heap_base           QWORD ?
     heap_current        QWORD ?
     heap_end            QWORD ?
-    memory_blocks       MEMORY_BLOCK 256 DUP (<>)
+    memory_blocks       MEMORY_BLOCK 1024 DUP (<>)
     
     ; Memory statistics
     total_allocations   QWORD 0
@@ -144,14 +145,14 @@ NETWORK_SOCKET ENDS
 custom_syscall PROC
     ; Input: RAX = syscall number, RDI, RSI, RDX = parameters
     ; Output: RAX = result
-    push    rbp
-    mov     rbp, rsp
+    push rbp
+    push mov     rbp, rsp
     
     ; Direct system call (no Windows API)
     syscall
     
-    pop     rbp
-    ret
+    pop rbp
+
 custom_syscall ENDP
 
 ;--------------------------------------------------------------------------
@@ -162,10 +163,11 @@ custom_syscall ENDP
 custom_malloc PROC
     ; Input: RCX = size, RDX = alignment (optional, default 16)
     ; Output: RAX = aligned pointer or NULL
-    push    rbp
-    mov     rbp, rsp
-    push    rbx
-    push    r12
+    push rbp
+    push mov     rbp, rsp
+    push rbx
+
+    push r12
     push    rdi
     
     mov     r12, rcx            ; Save size
@@ -219,36 +221,35 @@ alignment_ok:
     mov     [rcx + 24], rdi     ; raw pointer
     
     ; Zero the user memory
-    push    rax
-    mov     rdi, rax
+    push rax
+    push mov     rdi, rax
     mov     rcx, r12
     xor     al, al
     rep     stosb
-    pop     rax
-    
-    jmp     malloc_done
+    pop jmp
+    pop rax     malloc_done
     
 malloc_fail:
     xor     rax, rax
     
 malloc_done:
-    pop     rdi
-    pop     r12
-    pop     rbx
-    pop     rbp
-    ret
-custom_malloc ENDP
+
+    pop r12 pop rdi
+
+
+    pop rbx
+    pop custom
+    pop rbp_malloc ENDP
 
 ;--------------------------------------------------------------------------
 ; Custom Memory Free with Validation
 ;--------------------------------------------------------------------------
 custom_free PROC
     ; Input: RCX = pointer
-    push    rbp
-    mov     rbp, rsp
-    push    rbx
-    
-    test    rcx, rcx
+    push rbp
+    push mov     rbp, rsp
+    push rbx
+    push test    rcx, rcx
     jz      free_done
     
     ; Get metadata
@@ -271,22 +272,22 @@ custom_free PROC
     ; For now, just mark as freed
     
 free_done:
-    pop     rbx
-    pop     rbp
-    ret
-custom_free ENDP
+
+    pop rbx
+    pop custom
+    pop rbp_free ENDP
 
 ;--------------------------------------------------------------------------
 ; Custom Memory Copy
 ;--------------------------------------------------------------------------
 custom_memcpy PROC
     ; Input: RCX = dest, RDX = src, R8 = count
-    push    rbp
-    mov     rbp, rsp
-    push    rdi
-    push    rsi
-    
-    mov     rdi, rcx            ; dest
+    push rbp
+    push mov     rbp, rsp
+    push rdi
+
+    push rsi
+    push mov     rdi, rcx            ; dest
     mov     rsi, rdx            ; src
     mov     rcx, r8             ; count
     
@@ -299,11 +300,11 @@ custom_memcpy PROC
     mov     rcx, rax
     and     rcx, 7
     rep     movsb
-    
-    pop     rsi
-    pop     rdi
-    pop     rbp
-    ret
+
+    pop rdi pop rsi
+
+    pop rbp
+
 custom_memcpy ENDP
 
 ;--------------------------------------------------------------------------
@@ -311,10 +312,11 @@ custom_memcpy ENDP
 ;--------------------------------------------------------------------------
 custom_aes_encrypt PROC
     ; Input: RCX = data, RDX = key, R8 = output
-    push    rbp
-    mov     rbp, rsp
-    push    rbx
-    push    rdi
+    push rbp
+    push mov     rbp, rsp
+    push rbx
+
+    push rdi
     push    rsi
     
     ; Load data into XMM registers
@@ -326,23 +328,24 @@ custom_aes_encrypt PROC
     
     ; Store result
     movdqu  [r8], xmm0
-    
-    pop     rsi
-    pop     rdi
-    pop     rbx
-    pop     rbp
-    ret
-custom_aes_encrypt ENDP
+
+    pop rdi pop rsi
+
+
+    pop rbx
+    pop custom
+    pop rbp_aes_encrypt ENDP
 
 ;--------------------------------------------------------------------------
 ; Custom SHA-256 Hash
 ;--------------------------------------------------------------------------
 custom_sha256 PROC
     ; Input: RCX = data, RDX = length, R8 = output
-    push    rbp
-    mov     rbp, rsp
-    push    rbx
-    push    rdi
+    push rbp
+    push mov     rbp, rsp
+    push rbx
+
+    push rdi
     push    rsi
     
     ; Initialize hash values
@@ -361,13 +364,13 @@ custom_sha256 PROC
     mov     [r8+4], ebx
     mov     [r8+8], edi
     mov     [r8+12], esi
-    
-    pop     rsi
-    pop     rdi
-    pop     rbx
-    pop     rbp
-    ret
-custom_sha256 ENDP
+
+    pop rdi pop rsi
+
+
+    pop rbx
+    pop custom
+    pop rbp_sha256 ENDP
 
 ;--------------------------------------------------------------------------
 ; Custom Network Socket
@@ -375,8 +378,8 @@ custom_sha256 ENDP
 custom_socket_create PROC
     ; Input: RCX = type (TCP/UDP)
     ; Output: RAX = socket handle or -1
-    push    rbp
-    mov     rbp, rsp
+    push rbp
+    push mov     rbp, rsp
     
     ; Find free socket slot
     mov     rax, 0
@@ -401,8 +404,8 @@ socket_found:
     mov     [rdx].NETWORK_SOCKET.state, 1
     
 socket_done:
-    pop     rbp
-    ret
+    pop rbp
+
 custom_socket_create ENDP
 
 ;--------------------------------------------------------------------------
@@ -410,10 +413,11 @@ custom_socket_create ENDP
 ;--------------------------------------------------------------------------
 PUBLIC rawr1024_init
 rawr1024_init PROC
-    push    rbp
-    mov     rbp, rsp
-    push    rbx
-    push    rdi
+    push rbp
+    push mov     rbp, rsp
+    push rbx
+
+    push rdi
     push    rsi
     
     ; Initialize heap
@@ -465,12 +469,13 @@ init_fail:
     xor     rax, rax
     
 init_done:
-    pop     rsi
-    pop     rdi
-    pop     rbx
-    pop     rbp
-    ret
-rawr1024_init ENDP
+
+    pop rdi pop rsi
+
+
+    pop rbx
+    pop rawr1024
+    pop rbp_init ENDP
 
 ;--------------------------------------------------------------------------
 ; Memory Statistics
@@ -488,8 +493,8 @@ get_memory_stats ENDP
 PUBLIC rawr1024_start_engine
 rawr1024_start_engine PROC
     ; Input: RCX = engine_id
-    push    rbp
-    mov     rbp, rsp
+    push rbp
+    push mov     rbp, rsp
     
     ; Validate engine ID
     cmp     rcx, RAWR1024_ENGINE_COUNT
@@ -517,8 +522,8 @@ start_fail:
     xor     rax, rax            ; failure
     
 start_done:
-    pop     rbp
-    ret
+    pop rbp
+
 rawr1024_start_engine ENDP
 
 ;--------------------------------------------------------------------------
@@ -527,10 +532,11 @@ rawr1024_start_engine ENDP
 PUBLIC rawr1024_process
 rawr1024_process PROC
     ; Input: RCX = engine_id, RDX = data, R8 = size
-    push    rbp
-    mov     rbp, rsp
-    push    rbx
-    push    rdi
+    push rbp
+    push mov     rbp, rsp
+    push rbx
+
+    push rdi
     push    rsi
     
     ; Validate engine ID
@@ -568,12 +574,13 @@ process_fail:
     xor     rax, rax            ; failure
     
 process_done:
-    pop     rsi
-    pop     rdi
-    pop     rbx
-    pop     rbp
-    ret
-rawr1024_process ENDP
+
+    pop rdi pop rsi
+
+
+    pop rbx
+    pop rawr1024
+    pop rbp_process ENDP
 
 ;--------------------------------------------------------------------------
 ; Engine Stop
@@ -581,8 +588,8 @@ rawr1024_process ENDP
 PUBLIC rawr1024_stop_engine
 rawr1024_stop_engine PROC
     ; Input: RCX = engine_id
-    push    rbp
-    mov     rbp, rsp
+    push rbp
+    push mov     rbp, rsp
     
     ; Validate engine ID
     cmp     rcx, RAWR1024_ENGINE_COUNT
@@ -603,8 +610,8 @@ stop_fail:
     xor     rax, rax            ; failure
     
 stop_done:
-    pop     rbp
-    ret
+    pop rbp
+
 rawr1024_stop_engine ENDP
 
 ;--------------------------------------------------------------------------
@@ -613,8 +620,8 @@ rawr1024_stop_engine ENDP
 PUBLIC rawr1024_get_status
 rawr1024_get_status PROC
     ; Input: RCX = engine_id, RDX = status_buffer
-    push    rbp
-    mov     rbp, rsp
+    push rbp
+    push mov     rbp, rsp
     
     ; Validate engine ID
     cmp     rcx, RAWR1024_ENGINE_COUNT
@@ -640,8 +647,8 @@ status_fail:
     xor     rax, rax            ; failure
     
 status_done:
-    pop     rbp
-    ret
+    pop rbp
+
 rawr1024_get_status ENDP
 
 ;--------------------------------------------------------------------------
@@ -649,8 +656,8 @@ rawr1024_get_status ENDP
 ;--------------------------------------------------------------------------
 PUBLIC rawr1024_cleanup
 rawr1024_cleanup PROC
-    push    rbp
-    mov     rbp, rsp
+    push rbp
+    push mov     rbp, rsp
     
     ; Stop all engines
     mov     rcx, 0
@@ -673,8 +680,8 @@ cleanup_loop:
     mov     rdx, 18             ; message length
     call    custom_syscall
     
-    pop     rbp
-    ret
+    pop rbp
+
 rawr1024_cleanup ENDP
 
 ;--------------------------------------------------------------------------
@@ -711,22 +718,214 @@ rawr1024_beacon_sync PROC
 rawr1024_beacon_sync ENDP
 
 ;--------------------------------------------------------------------------
+; Initialize Quad Dual Engine Architecture (8 Engines in 4 Groups)
+;--------------------------------------------------------------------------
+PUBLIC rawr1024_init_quad_dual_engines
+rawr1024_init_quad_dual_engines PROC
+    push rbp
+    push mov     rbp, rsp
+    push rbx
+
+    push rsi
+    push    r10
+    
+    xor     r10, r10
+quad_init_loop:
+    cmp     r10, RAWR1024_ENGINE_COUNT
+    jge     quad_init_done
+    
+    mov     rax, r10
+    shr     rax, 1
+    mov     r8d, eax
+    add     r8d, 10
+    
+    imul    rbx, r10, SIZEOF ENGINE_STATE
+    lea     rsi, engine_states
+    add     rsi, rbx
+    
+    mov     DWORD PTR [rsi].ENGINE_STATE.status, r8d
+    mov     DWORD PTR [rsi].ENGINE_STATE.id, r10d
+    mov     DWORD PTR [rsi].ENGINE_STATE.progress, 0
+    mov     DWORD PTR [rsi].ENGINE_STATE.error_code, 0
+    
+    mov     rcx, 2097152
+    call    custom_malloc
+    test    rax, rax
+    jz      quad_init_fail
+    
+    mov     QWORD PTR [rsi].ENGINE_STATE.memory_base, rax
+    mov     QWORD PTR [rsi].ENGINE_STATE.memory_size, 2097152
+    
+    inc     r10
+    jmp     quad_init_loop
+    
+quad_init_done:
+    mov     rax, 1
+    jmp     quad_init_exit
+    
+quad_init_fail:
+    xor     rax, rax
+    
+quad_init_exit:
+
+    pop rsi pop r10
+
+
+    pop rbx
+    pop rawr1024
+    pop rbp_init_quad_dual_engines ENDP
+
+;--------------------------------------------------------------------------
+; Hotpatch Engine - Runtime Reconfiguration
+;--------------------------------------------------------------------------
+PUBLIC rawr1024_hotpatch_engine
+rawr1024_hotpatch_engine PROC
+    push rbp
+    push mov     rbp, rsp
+    push rbx
+
+    push rsi
+    push mov     r9, rcx
+    mov     r10, rdx
+    
+    cmp     r9d, RAWR1024_ENGINE_COUNT
+    jge     hotpatch_fail
+    
+    imul    rbx, r9, SIZEOF ENGINE_STATE
+    lea     rsi, engine_states
+    add     rsi, rbx
+    
+    mov     eax, DWORD PTR [rsi].ENGINE_STATE.status
+    cmp     eax, 0
+    je      hotpatch_fail
+    
+    mov     rax, QWORD PTR [r10]
+    mov     rdx, QWORD PTR [rsi].ENGINE_STATE.memory_base
+    xchg    rax, QWORD PTR [rdx]
+    
+    mov     eax, DWORD PTR [rsi].ENGINE_STATE.progress
+    inc     eax
+    mov     DWORD PTR [rsi].ENGINE_STATE.progress, eax
+    
+    mov     rax, 1
+    jmp     hotpatch_exit
+    
+hotpatch_fail:
+    mov     eax, DWORD PTR [rsi].ENGINE_STATE.error_code
+    inc     eax
+    mov     DWORD PTR [rsi].ENGINE_STATE.error_code, eax
+    xor     rax, rax
+    
+hotpatch_exit:
+
+    pop rbx pop rsi
+
+    pop rbp
+
+rawr1024_hotpatch_engine ENDP
+
+;--------------------------------------------------------------------------
+; Dispatch Agent Task to Engine
+;--------------------------------------------------------------------------
+PUBLIC rawr1024_dispatch_agent_task
+rawr1024_dispatch_agent_task PROC
+    push rbp
+    push mov     rbp, rsp
+    push rbx
+
+    push rsi
+    push mov     r11d, ecx
+    
+    cmp     r11d, 3
+    jg      dispatch_fail
+    
+    cmp     r11d, 0
+    je      dispatch_to_primary
+    cmp     r11d, 1
+    je      dispatch_to_secondary
+    cmp     r11d, 2
+    je      dispatch_to_hotpatch
+    
+    mov     eax, 6
+    jmp     dispatch_assign
+    
+dispatch_to_primary:
+    lea     rsi, engine_states
+    mov     ebx, DWORD PTR [rsi].ENGINE_STATE.progress
+    mov     ecx, DWORD PTR [rsi + SIZEOF ENGINE_STATE].ENGINE_STATE.progress
+    cmp     ebx, ecx
+    jle     disp_use_0
+    mov     eax, 1
+    jmp     dispatch_assign
+disp_use_0:
+    xor     eax, eax
+    jmp     dispatch_assign
+    
+dispatch_to_secondary:
+    lea     rsi, engine_states
+    mov     ebx, DWORD PTR [rsi + 2*SIZEOF ENGINE_STATE].ENGINE_STATE.progress
+    mov     ecx, DWORD PTR [rsi + 3*SIZEOF ENGINE_STATE].ENGINE_STATE.progress
+    cmp     ebx, ecx
+    jle     disp_use_2
+    mov     eax, 3
+    jmp     dispatch_assign
+disp_use_2:
+    mov     eax, 2
+    jmp     dispatch_assign
+    
+dispatch_to_hotpatch:
+    lea     rsi, engine_states
+    mov     ebx, DWORD PTR [rsi + 4*SIZEOF ENGINE_STATE].ENGINE_STATE.status
+    cmp     ebx, 0
+    je      disp_use_4
+    mov     eax, 5
+    jmp     dispatch_assign
+disp_use_4:
+    mov     eax, 4
+    jmp     dispatch_assign
+    
+dispatch_assign:
+    imul    rdx, rax, SIZEOF ENGINE_STATE
+    lea     rsi, engine_states
+    add     rsi, rdx
+    mov     ecx, DWORD PTR [rsi].ENGINE_STATE.progress
+    inc     ecx
+    mov     DWORD PTR [rsi].ENGINE_STATE.progress, ecx
+    jmp     dispatch_exit
+    
+dispatch_fail:
+    mov     eax, -1
+    
+dispatch_exit:
+
+    pop rbx pop rsi
+
+    pop rbp
+
+rawr1024_dispatch_agent_task ENDP
+
+;--------------------------------------------------------------------------
 ; Main Entry Point (Demo)
 ;--------------------------------------------------------------------------
 rawr1024_engine_main_demo PROC
-    push    rbp
-    mov     rbp, rsp
+    push rbp
+    push mov     rbp, rsp
     
     ; Initialize the system
     call    rawr1024_init
     test    rax, rax
     jz      main_exit
     
-    ; Start both engines
-    mov     rcx, 0
+    ; Start all 8 engines
+    push r10
+    push xor     r10, r10
+start_engines_loop:
+    mov     rcx, r10
     call    rawr1024_start_engine
-    mov     rcx, 1
-    call    rawr1024_start_engine
+    inc     r10
+    cmp     r10, RAWR1024_ENGINE_COUNT
+    jl      start_engines_loop
+    pop     r10
     
     ; Demo: Process some data
     mov     rcx, 100            ; size
@@ -752,8 +951,13 @@ main_exit:
     xor     rdi, rdi            ; exit code 0
     call    custom_syscall
     
-    pop     rbp
-    ret
+    pop rbp
+
 rawr1024_engine_main_demo ENDP
 
 END
+
+
+
+
+

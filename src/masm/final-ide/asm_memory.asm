@@ -75,6 +75,7 @@ asm_malloc PROC
 
     ; Prologue: preserve non-volatile registers
     push rbx
+
     push r12
     sub rsp, 40             ; 32-byte shadow space + 8 for alignment (Total = 56, aligned)
 
@@ -184,11 +185,10 @@ malloc_fail:
     
 malloc_done:
     add rsp, 40
-    pop r12
-    pop rbx
-    ret
 
-asm_malloc ENDP
+    pop r12
+    pop asm
+    pop rbx_malloc ENDP
 
 ;=====================================================================
 ; asm_free(ptr: rcx) -> void
@@ -202,6 +202,7 @@ asm_free PROC
 
     ; Prologue
     push rbx
+
     push r12
     sub rsp, 40             ; align stack for WinAPI calls (Total = 56)
 
@@ -272,11 +273,10 @@ free_invalid_magic:
     
 free_done:
     add rsp, 40
-    pop r12
-    pop rbx
-    ret
 
-asm_free ENDP
+    pop r12
+    pop asm
+    pop rbx_free ENDP
 
 ;=====================================================================
 ; asm_realloc(ptr: rcx, new_size: rdx) -> rax
@@ -295,6 +295,7 @@ asm_realloc PROC
 
     ; Prologue
     push rbx
+
     push r12
     sub rsp, 40             ; align stack for WinAPI calls (Total = 56)
     
@@ -389,11 +390,10 @@ realloc_done:
      ; lea rcx, msg_realloc_exit
      ; call asm_log
     add rsp, 40
-    pop r12
-    pop rbx
-    ret
 
-asm_realloc ENDP
+    pop r12
+    pop asm
+    pop rbx_realloc ENDP
 
 ;=====================================================================
 ; asm_memcpy(rcx = src, rdx = dst, r8 = count) -> void
@@ -547,9 +547,9 @@ PUBLIC asm_memcpy_avx512
 ALIGN 16
 asm_memcpy_avx512 PROC
     push rdi
+
     push rsi
-    
-    mov rdi, rcx        ; dest
+    push mov rdi, rcx        ; dest
     mov rsi, rdx        ; src
     mov rcx, r8         ; size
     mov rax, rdi        ; save dest for return
@@ -578,10 +578,10 @@ asm_memcpy_avx512 PROC
     rep movsb
     
 @done:
+
     pop rsi
-    pop rdi
-    ret
-asm_memcpy_avx512 ENDP
+    pop asm
+    pop rdi_memcpy_avx512 ENDP
 
 ;=====================================================================
 ; asm_memcpy_fast(rcx = dest, rdx = src, r8 = size) -> rax (dest)
@@ -592,9 +592,9 @@ PUBLIC asm_memcpy_fast
 ALIGN 16
 asm_memcpy_fast PROC
     push rdi
+
     push rsi
-    
-    mov rdi, rcx        ; dest
+    push mov rdi, rcx        ; dest
     mov rsi, rdx        ; src
     mov rcx, r8         ; size
     mov rax, rdi        ; save dest for return
@@ -630,9 +630,14 @@ small_copy:
     rep movsb
     
 done:
+
     pop rsi
-    pop rdi
-    ret
-asm_memcpy_fast ENDP
+    pop asm
+    pop rdi_memcpy_fast ENDP
 
 END
+
+
+
+
+

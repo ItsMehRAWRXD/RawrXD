@@ -160,6 +160,7 @@ STR_TAB_QUANTIZATION      DW 'Q','u','a','n','t','i','z','a','t','i','o','n',0
 CreateSettingsDialog PROC FRAME
     ; Save non-volatile registers
     push rbx
+
     push rsi
     push rdi
     .PUSHREG rbx
@@ -193,8 +194,10 @@ CreateSettingsDialog PROC FRAME
     mov r8d, SETTINGS_DIALOG_WIDTH
     mov r9d, SETTINGS_DIALOG_HEIGHT
     push rdi      ; user_data = SETTINGS_DIALOG pointer
-    push offset OnSettingsInit  ; on_init
-    push offset OnSettingsCommand  ; on_command
+    push offset
+    push OnSettingsInit  ; on_init
+    push offset
+    push OnSettingsCommand  ; on_command
     call CreateModalDialog
     
     ; Save dialog result
@@ -214,10 +217,11 @@ allocation_failed:
 settings_dialog_complete:
     ; Cleanup stack and return
     add rsp, 40h
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 CreateSettingsDialog ENDP
 
     ; Create Max Tokens spinner
@@ -226,6 +230,7 @@ CreateSettingsDialog ENDP
     mov r8d, 20
     mov r9d, 100
     push 100
+
     push 25
     push IDC_MAX_TOKENS
     call CreateSpinner
@@ -236,6 +241,7 @@ CreateSettingsDialog ENDP
     mov r8d, 20
     mov r9d, 140
     push 400
+
     push 100
     push IDC_SYSTEM_PROMPT
     call CreateEditControl
@@ -268,6 +274,7 @@ CreateSecurityTabControls PROC
     mov r8d, 20
     mov r9d, 20
     push 300
+
     push 25
     push IDC_API_KEY
     call CreateEditControl
@@ -278,6 +285,7 @@ CreateSecurityTabControls PROC
     mov r8d, 20
     mov r9d, 60
     push 200
+
     push 25
     push IDC_ENCRYPTION
     call CreateCheckbox
@@ -288,6 +296,7 @@ CreateSecurityTabControls PROC
     mov r8d, 20
     mov r9d, 90
     push 200
+
     push 25
     push IDC_SECURE_STORAGE
     call CreateCheckbox
@@ -347,8 +356,8 @@ CreateTrainingTabControls PROC
     call CreateEditControl
     
     add rsp, 20h
-    pop rbx
-    mov rax, 1
+    pop mov
+    pop rbx rax, 1
     ret
 CreateTrainingTabControls ENDP
 
@@ -395,8 +404,8 @@ CreateCICDTabControls PROC
     call CreateEditControl
     
     add rsp, 20h
-    pop rbx
-    mov rax, 1
+    pop mov
+    pop rbx rax, 1
     ret
 CreateCICDTabControls ENDP
 
@@ -443,8 +452,8 @@ CreateEnterpriseTabControls PROC
     call CreateStaticText
     
     add rsp, 20h
-    pop rbx
-    mov rax, 1
+    pop mov
+    pop rbx rax, 1
     ret
 CreateEnterpriseTabControls ENDP
 
@@ -551,6 +560,7 @@ CreateQuantizationTabControls ENDP
 ; ============================================================================
 SaveSettingsFromUI PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 20h
@@ -624,10 +634,11 @@ SaveSettingsFromUI PROC
     
 save_complete:
     add rsp, 20h
-    pop rdi
-    pop rsi
-    pop rbx
-    mov rax, 1
+
+    pop rsi pop rdi
+
+    pop mov
+    pop rbx rax, 1
     ret
 SaveSettingsFromUI ENDP
 
@@ -645,6 +656,7 @@ SaveSettingsFromUI ENDP
 ; ============================================================================
 OnSettingsCommand PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 20h
@@ -754,10 +766,11 @@ check_other_controls:
     
 command_done:
     add rsp, 20h
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 OnSettingsCommand ENDP
 
 ; ============================================================================
@@ -770,6 +783,7 @@ OnSettingsCommand ENDP
 ; ============================================================================
 OnTabSelectionChanged PROC
     push rbx
+
     push rsi
     push rdi
     mov rbx, rcx  ; tab_control
@@ -815,10 +829,11 @@ show_active:
     call ShowWindow
     
 done:
-    pop rdi
-    pop rsi
-    pop rbx
-    mov rax, 1
+
+    pop rsi pop rdi
+
+    pop mov
+    pop rbx rax, 1
     ret
 OnTabSelectionChanged ENDP
 
@@ -830,7 +845,7 @@ OnTabSelectionChanged ENDP
 ; ============================================================================
 CreateGeneralTabControls PROC
     push rbx
-    mov rbx, rcx ; parent_hwnd
+    push mov rbx, rcx ; parent_hwnd
     
     ; Auto-save checkbox
     mov rcx, rbx
@@ -839,8 +854,9 @@ CreateGeneralTabControls PROC
     mov r9d, 20
     push IDC_AUTO_SAVE
     push 25
+
     push 200
-    call CreateCheckbox
+    push call CreateCheckbox
     add rsp, 18h
     
     ; Startup fullscreen checkbox
@@ -850,8 +866,9 @@ CreateGeneralTabControls PROC
     mov r9d, 50
     push IDC_STARTUP_FULLSCREEN
     push 25
+
     push 200
-    call CreateCheckbox
+    push call CreateCheckbox
     add rsp, 18h
     
     ; Font size label
@@ -860,8 +877,9 @@ CreateGeneralTabControls PROC
     mov r8d, 20
     mov r9d, 85
     push 25
+
     push 100
-    call CreateStaticText
+    push call CreateStaticText
     add rsp, 10h
     
     ; Font size edit (spinner buddy)
@@ -871,12 +889,13 @@ CreateGeneralTabControls PROC
     mov r9d, 80
     push IDC_FONT_SIZE
     push 25
+
     push 50
-    call CreateEditControl
+    push call CreateEditControl
     add rsp, 18h
     
-    pop rbx
-    mov rax, 1
+    pop mov
+    pop rbx rax, 1
     ret
 CreateGeneralTabControls ENDP
 
@@ -888,7 +907,7 @@ CreateGeneralTabControls ENDP
 ; ============================================================================
 CreateModelTabControls PROC
     push rbx
-    mov rbx, rcx
+    push mov rbx, rcx
     
     ; Model path label
     mov rcx, rbx
@@ -896,8 +915,9 @@ CreateModelTabControls PROC
     mov r8d, 20
     mov r9d, 25
     push 25
+
     push 100
-    call CreateStaticText
+    push call CreateStaticText
     add rsp, 10h
     
     ; Model path edit
@@ -907,8 +927,9 @@ CreateModelTabControls PROC
     mov r9d, 20
     push IDC_MODEL_PATH
     push 25
+
     push 300
-    call CreateEditControl
+    push call CreateEditControl
     add rsp, 18h
     
     ; Browse button
@@ -918,8 +939,9 @@ CreateModelTabControls PROC
     mov r9d, 20
     push IDC_BROWSE_MODEL
     push 25
+
     push 80
-    call CreateButton
+    push call CreateButton
     add rsp, 18h
     
     ; Default model label
@@ -928,8 +950,9 @@ CreateModelTabControls PROC
     mov r8d, 20
     mov r9d, 65
     push 25
+
     push 100
-    call CreateStaticText
+    push call CreateStaticText
     add rsp, 10h
     
     ; Default model dropdown
@@ -943,8 +966,8 @@ CreateModelTabControls PROC
     call CreateDropdown
     add rsp, 18h
     
-    pop rbx
-    mov rax, 1
+    pop mov
+    pop rbx rax, 1
     ret
 CreateModelTabControls ENDP
 
@@ -956,7 +979,7 @@ CreateModelTabControls ENDP
 ; ============================================================================
 CreateChatTabControls PROC
     push rbx
-    mov rbx, rcx
+    push mov rbx, rcx
     
     ; Chat model label
     mov rcx, rbx
@@ -964,8 +987,9 @@ CreateChatTabControls PROC
     mov r8d, 20
     mov r9d, 25
     push 25
+
     push 100
-    call CreateStaticText
+    push call CreateStaticText
     add rsp, 10h
     
     ; Chat model dropdown
@@ -975,8 +999,9 @@ CreateChatTabControls PROC
     mov r9d, 20
     push IDC_CHAT_MODEL
     push 200
+
     push 200
-    call CreateDropdown
+    push call CreateDropdown
     add rsp, 18h
     
     ; Temperature label
@@ -985,8 +1010,9 @@ CreateChatTabControls PROC
     mov r8d, 20
     mov r9d, 65
     push 25
+
     push 100
-    call CreateStaticText
+    push call CreateStaticText
     add rsp, 10h
     
     ; Temperature edit
@@ -996,8 +1022,9 @@ CreateChatTabControls PROC
     mov r9d, 60
     push IDC_TEMPERATURE
     push 25
+
     push 50
-    call CreateEditControl
+    push call CreateEditControl
     add rsp, 18h
     
     ; Max tokens label
@@ -1006,8 +1033,9 @@ CreateChatTabControls PROC
     mov r8d, 20
     mov r9d, 105
     push 25
+
     push 100
-    call CreateStaticText
+    push call CreateStaticText
     add rsp, 10h
     
     ; Max tokens edit
@@ -1017,8 +1045,9 @@ CreateChatTabControls PROC
     mov r9d, 100
     push IDC_MAX_TOKENS
     push 25
+
     push 80
-    call CreateEditControl
+    push call CreateEditControl
     add rsp, 18h
     
     ; System prompt label
@@ -1027,8 +1056,9 @@ CreateChatTabControls PROC
     mov r8d, 20
     mov r9d, 145
     push 25
+
     push 100
-    call CreateStaticText
+    push call CreateStaticText
     add rsp, 10h
     
     ; System prompt edit (multiline)
@@ -1038,12 +1068,13 @@ CreateChatTabControls PROC
     mov r9d, 170
     push IDC_SYSTEM_PROMPT
     push 150
+
     push 500
-    call CreateEditControl
+    push call CreateEditControl
     add rsp, 18h
     
-    pop rbx
-    mov rax, 1
+    pop mov
+    pop rbx rax, 1
     ret
 CreateChatTabControls ENDP
 
@@ -1055,7 +1086,7 @@ CreateChatTabControls ENDP
 ; ============================================================================
 CreateSecurityTabControls PROC
     push rbx
-    mov rbx, rcx
+    push mov rbx, rcx
     
     ; API key label
     mov rcx, rbx
@@ -1063,8 +1094,9 @@ CreateSecurityTabControls PROC
     mov r8d, 20
     mov r9d, 25
     push 25
+
     push 100
-    call CreateStaticText
+    push call CreateStaticText
     add rsp, 10h
     
     ; API key edit
@@ -1074,8 +1106,9 @@ CreateSecurityTabControls PROC
     mov r9d, 20
     push IDC_API_KEY
     push 25
+
     push 300
-    call CreateEditControl
+    push call CreateEditControl
     add rsp, 18h
     
     ; Encryption checkbox
@@ -1085,8 +1118,9 @@ CreateSecurityTabControls PROC
     mov r9d, 60
     push IDC_ENCRYPTION
     push 25
+
     push 200
-    call CreateCheckbox
+    push call CreateCheckbox
     add rsp, 18h
     
     ; Secure storage checkbox
@@ -1096,12 +1130,13 @@ CreateSecurityTabControls PROC
     mov r9d, 90
     push IDC_SECURE_STORAGE
     push 25
+
     push 200
-    call CreateCheckbox
+    push call CreateCheckbox
     add rsp, 18h
     
-    pop rbx
-    mov rax, 1
+    pop mov
+    pop rbx rax, 1
     ret
 CreateSecurityTabControls ENDP
 
@@ -1113,6 +1148,7 @@ CreateSecurityTabControls ENDP
 ; ============================================================================
 LoadSettingsToUI PROC
     push rbx
+
     push rsi
     push rdi
     mov rbx, rcx  ; settings_dialog
@@ -1157,10 +1193,11 @@ next_model:
     ; ... other fields ...
     
 no_settings_data:
-    pop rdi
-    pop rsi
-    pop rbx
-    mov rax, 1
+
+    pop rsi pop rdi
+
+    pop mov
+    pop rbx rax, 1
     ret
 LoadSettingsToUI ENDP
 
@@ -1172,6 +1209,7 @@ LoadSettingsToUI ENDP
 ; ============================================================================
 SaveSettingsFromUI PROC
     push rbx
+
     push rsi
     push rdi
     mov rbx, rcx  ; settings_dialog
@@ -1309,10 +1347,11 @@ apikey_buf_ready:
     call SaveSettingsToRegistry
     
 no_save_data:
-    pop rdi
-    pop rsi
-    pop rbx
-    mov rax, 1
+
+    pop rsi pop rdi
+
+    pop mov
+    pop rbx rax, 1
     ret
 SaveSettingsFromUI ENDP
 
@@ -1325,6 +1364,7 @@ SaveSettingsFromUI ENDP
 ; ============================================================================
 HandleControlChange PROC
     push rbx
+
     push rsi
     sub rsp, 20h
     
@@ -1406,8 +1446,9 @@ tokens_invalid:
     
 done_validation:
     add rsp, 20h
-    pop rsi
-    pop rbx
+
+    pop rbx pop rsi
+
     mov rax, 1
     ret
 HandleControlChange ENDP
@@ -1583,7 +1624,8 @@ CreateProgressBar ENDP
 ; Returns: rax = 1 if success
 ; ============================================================================
 CreateQuantizationTabControls PROC
-    push rbx rdi
+    push rbx
+    push rdi
     sub rsp, 30h
     
     mov rbx, rcx  ; tab_hwnd
@@ -1671,7 +1713,8 @@ CreateQuantizationTabControls PROC
     add rsp, 18h
     
     add rsp, 30h
-    pop rdi rbx
+
+    pop rbx rdi
     mov rax, 1
     ret
 CreateQuantizationTabControls ENDP
@@ -1731,8 +1774,8 @@ CreateTrainingTabControls PROC
     add rsp, 18h
     
     add rsp, 20h
-    pop rbx
-    mov rax, 1
+    pop mov
+    pop rbx rax, 1
     ret
 CreateTrainingTabControls ENDP
 
@@ -1781,8 +1824,8 @@ CreateCICDTabControls PROC
     add rsp, 18h
     
     add rsp, 20h
-    pop rbx
-    mov rax, 1
+    pop mov
+    pop rbx rax, 1
     ret
 CreateCICDTabControls ENDP
 
@@ -1831,8 +1874,8 @@ CreateEnterpriseTabControls PROC
     add rsp, 10h
     
     add rsp, 20h
-    pop rbx
-    mov rax, 1
+    pop mov
+    pop rbx rax, 1
     ret
 CreateEnterpriseTabControls ENDP
 
@@ -1853,3 +1896,7 @@ LoadSettingsFromRegistry PROC
 LoadSettingsFromRegistry ENDP
 
 END
+
+
+
+

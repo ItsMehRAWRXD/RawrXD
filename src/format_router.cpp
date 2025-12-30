@@ -80,6 +80,12 @@ FormatDetectionResult FormatRouter::detectFormat(const std::string& input) {
         return result;
     }
 
+    // Try non-GGUF formats: SafeTensors, PyTorch, etc. (Phase 1 - MASM-based)
+    result = detectUniversalFormats(input);
+    if (result.valid && result.format != ModelFormat::UNKNOWN) {
+        return result;
+    }
+
     // Try Ollama remote (owner/model:tag pattern)
     result = detectOllamaRemote(input);
     if (result.valid && result.format != ModelFormat::UNKNOWN) {
@@ -276,6 +282,64 @@ bool FormatRouter::hasLz4Magic(const std::string& path) {
     file.close();
 
     return magic[0] == 0x04 && magic[1] == 0x22 && magic[2] == 0x4d && magic[3] == 0x18;
+}
+
+FormatDetectionResult FormatRouter::detectUniversalFormats(const std::string& path) {
+    // Use MASM-based universal detector for SafeTensors, PyTorch, TensorFlow, ONNX, etc.
+    if (!std::filesystem::exists(path)) {
+        return FormatDetectionResult{ModelFormat::UNKNOWN, CompressionType::NONE, "File does not exist", false};
+    }
+
+    std::string ext = std::filesystem::path(path).extension().string();
+    
+    // Check by extension first (faster)
+    if (ext == ".safetensors") {
+        return FormatDetectionResult{ModelFormat::UNKNOWN, CompressionType::NONE, "SafeTensors format detected", true};  // Will be handled by universal loader
+    }
+    if (ext == ".pt" || ext == ".pth") {
+        return FormatDetectionResult{ModelFormat::UNKNOWN, CompressionType::NONE, "PyTorch format detected", true};
+    }
+    if (ext == ".pb") {
+        return FormatDetectionResult{ModelFormat::UNKNOWN, CompressionType::NONE, "TensorFlow format detected", true};
+    }
+    if (ext == ".onnx") {
+        return FormatDetectionResult{ModelFormat::UNKNOWN, CompressionType::NONE, "ONNX format detected", true};
+    }
+    if (ext == ".npy" || ext == ".npz") {
+        return FormatDetectionResult{ModelFormat::UNKNOWN, CompressionType::NONE, "NumPy format detected", true};
+    }
+
+    // Read magic bytes for deeper detection
+    std::ifstream file(path, std::ios::binary);
+    if (!file.is_open()) {
+        return FormatDetectionResult{ModelFormat::UNKNOWN, CompressionType::NONE, "Cannot read file", false};
+    }
+
+    unsigned char magic[8];
+    file.read(reinterpret_cast<char*>(magic), 8);
+    file.close();
+
+    // SafeTensors: starts with metadata size (uint64 little-endian)
+    if (magic[0] < 0x80 && magic[1] == 0x00 && magic[2] == 0x00 && magic[3] == 0x00) {
+        return FormatDetectionResult{ModelFormat::UNKNOWN, CompressionType::NONE, "SafeTensors format (magic)", true};
+    }
+
+    // PyTorch ZIP: "PK\x03\x04"
+    if (magic[0] == 0x50 && magic[1] == 0x4B && magic[2] == 0x03 && magic[3] == 0x04) {
+        return FormatDetectionResult{ModelFormat::UNKNOWN, CompressionType::NONE, "PyTorch format (ZIP)", true};
+    }
+
+    // PyTorch Pickle: protocol bytes
+    if (magic[0] == 0x80 && (magic[1] == 0x02 || magic[1] == 0x03 || magic[1] == 0x04)) {
+        return FormatDetectionResult{ModelFormat::UNKNOWN, CompressionType::NONE, "PyTorch format (Pickle)", true};
+    }
+
+    // NumPy: "\x93NUMPY"
+    if (magic[0] == 0x93 && magic[1] == 0x4E && magic[2] == 0x55 && magic[3] == 0x4D) {
+        return FormatDetectionResult{ModelFormat::UNKNOWN, CompressionType::NONE, "NumPy format", true};
+    }
+
+    return FormatDetectionResult{ModelFormat::UNKNOWN, CompressionType::NONE, "Not a recognized universal format", false};
 }
 
 std::string FormatRouter::formatToString(ModelFormat fmt) {

@@ -46,10 +46,10 @@ PUBLIC rawr_cache_lookup
 rawr_cache_lookup PROC
     ; rcx = prefix string, rdx = prefix_len, r8 = cache base, r9 = cache size
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     push rbx
+
     push r12
-    
     ; Hash the prefix
     call rawr_string_hash        ; returns hash in rax
     
@@ -72,17 +72,18 @@ cache_chain_loop:
     ; Check if this matches (would need to compare prefix)
     ; For now, return found (simplified - real impl would verify)
     mov rax, [r10 + 16]         ; load results_ptr
-    pop r12
-    pop rbx
+
+    pop rbx pop r12
+
     pop rbp
-    ret
-    
+
 cache_miss:
     xor rax, rax                ; return NULL
-    pop r12
-    pop rbx
+
+    pop rbx pop r12
+
     pop rbp
-    ret
+
 rawr_cache_lookup ENDP
 
 ; ============================================================
@@ -93,8 +94,9 @@ rawr_cache_lookup ENDP
 PUBLIC rawr_bpe_encode
 rawr_bpe_encode PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     push rbx
+
     push r12
     push r13
     
@@ -149,12 +151,13 @@ token_found:
     
 encode_done:
     mov rax, r12                ; return token count
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
+
     pop rbx
-    pop rbp
-    ret
-rawr_bpe_encode ENDP
+    pop rawr
+    pop rbp_bpe_encode ENDP
 
 ; ============================================================
 ; DEFLATE COMPRESSION - Brutal Fast (MASM native)
@@ -164,7 +167,7 @@ rawr_bpe_encode ENDP
 PUBLIC rawr_deflate_compress
 rawr_deflate_compress PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     push rbx
     
     ; DEFLATE header (fixed Huffman)
@@ -228,10 +231,10 @@ deflate_finalize:
     add r10, 5                       ; space for size + checksum
     
     mov rax, r10                ; return compressed length
+
     pop rbx
-    pop rbp
-    ret
-rawr_deflate_compress ENDP
+    pop rawr
+    pop rbp_deflate_compress ENDP
 
 ; ============================================================
 ; MODEL INFERENCE DISPATCHER - Routes to GGUF or Ollama
@@ -363,3 +366,8 @@ ERR_TIMEOUT equ 4
 .code
 
 end
+
+
+
+
+

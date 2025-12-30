@@ -70,7 +70,7 @@ globalFindEngine FIND_REPLACE_ENGINE {}
 PUBLIC find_init
 find_init PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     mov [globalFindEngine.hEditor], rcx
@@ -88,11 +88,11 @@ find_init ENDP
 PUBLIC find_set_pattern
 find_set_pattern PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     push rsi
+
     push rdi
-    
     ; Copy pattern
     lea rdi, [globalFindEngine.searchPattern]
     mov rsi, rcx
@@ -121,19 +121,20 @@ compile_failed:
     xor eax, eax
     
 done:
-    pop rdi
-    pop rsi
-    leave
+
+    pop rdi leave
     ret
+    pop rsi
 find_set_pattern ENDP
 
 ; find_execute() -> resultCount (rax)
 PUBLIC find_execute
 find_execute PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 64
     push rbx
+
     push rsi
     push rdi
     
@@ -197,10 +198,11 @@ no_text:
     xor eax, eax
     
 done:
-    pop rdi
-    pop rsi
-    pop rbx
-    leave
+
+    pop rsi pop rdi
+
+
+    pop leave rbx
     ret
 find_execute ENDP
 
@@ -208,7 +210,7 @@ find_execute ENDP
 PUBLIC find_replace_next
 find_replace_next PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     ; Check if we have results
@@ -257,7 +259,7 @@ find_replace_next ENDP
 PUBLIC find_replace_all
 find_replace_all PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     mov [globalFindEngine.currentResultIndex], 0
@@ -289,9 +291,10 @@ find_replace_all ENDP
 ; find_text_plain(text: rcx, length: rdx, pattern: r8) -> count (rax)
 find_text_plain PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     push rbx
+
     push rsi
     push rdi
     
@@ -326,24 +329,27 @@ plain_search_loop:
     
     ; Found match - add to results
     push rbx
+
     push rsi
     push rdi
+
     push r9
     push r10
+
     push r11
-    
-    mov ecx, r10d
+    push mov ecx, r10d
     mov edx, r10d
     add edx, r9d
     call add_search_result
-    
-    pop r11
-    pop r10
-    pop r9
-    pop rdi
-    pop rsi
-    pop rbx
-    
+
+    pop r10 pop r11
+
+
+    pop rdi pop r9
+
+
+    pop rbx pop rsi
+
     inc r11d
     add r10, r9
     jmp plain_search_loop
@@ -355,18 +361,18 @@ plain_no_match:
 plain_done:
     mov eax, r11d
     mov [globalFindEngine.resultCount], eax
-    
-    pop rdi
-    pop rsi
-    pop rbx
-    leave
+
+    pop rsi pop rdi
+
+
+    pop leave rbx
     ret
 find_text_plain ENDP
 
 ; find_text_regex(text: rcx, length: rdx, regexState: r8) -> count (rax)
 find_text_regex PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     ; Simple regex implementation (placeholder)
@@ -384,7 +390,7 @@ find_text_regex ENDP
 ; regex_compile(pattern: rcx) -> state (rax)
 regex_compile PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     sub rsp, 32
     
     ; Allocate regex state
@@ -423,7 +429,7 @@ add_search_result ENDP
 
 string_length PROC
     push rbp
-    mov rbp, rsp
+    push mov rbp, rsp
     xor rax, rax
     
 strlen_loop:
@@ -441,16 +447,15 @@ string_length ENDP
 memory_compare PROC
     ; Compare memory regions
     push rsi
+
     push rdi
-    
-    mov rsi, rcx
+    push mov rsi, rcx
     mov rdi, rdx
     mov rcx, r8
     repe cmpsb
-    
-    pop rdi
-    pop rsi
-    
+
+    pop rsi pop rdi
+
     ; Return 0 if equal
     setz al
     movzx rax, al
@@ -459,3 +464,7 @@ memory_compare PROC
 memory_compare ENDP
 
 end
+
+
+
+

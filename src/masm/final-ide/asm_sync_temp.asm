@@ -61,7 +61,6 @@ mutex_create_fail:
 mutex_create_done:
     add rsp, 32
     pop rbx
-    ret
 
 asm_mutex_create ENDP
 
@@ -90,7 +89,6 @@ asm_mutex_lock PROC
 mutex_lock_done:
     add rsp, 32
     pop rbx
-    ret
 
 asm_mutex_lock ENDP
 
@@ -118,7 +116,6 @@ asm_mutex_unlock PROC
 mutex_unlock_done:
     add rsp, 32
     pop rbx
-    ret
 
 asm_mutex_unlock ENDP
 
@@ -148,7 +145,6 @@ asm_mutex_destroy PROC
 mutex_destroy_done:
     add rsp, 32
     pop rbx
-    ret
 
 asm_mutex_destroy ENDP
 
@@ -172,6 +168,7 @@ ALIGN 16
 asm_event_create PROC
 
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -223,11 +220,10 @@ event_create_fail:
     
 event_create_done:
     add rsp, 32
-    pop r12
-    pop rbx
-    ret
 
-asm_event_create ENDP
+    pop r12
+    pop asm
+    pop rbx_event_create ENDP
 
 ;=====================================================================
 ; asm_event_set(handle: rcx) -> void
@@ -258,7 +254,6 @@ asm_event_set PROC
 event_set_done:
     add rsp, 32
     pop rbx
-    ret
 
 asm_event_set ENDP
 
@@ -291,7 +286,6 @@ asm_event_reset PROC
 event_reset_done:
     add rsp, 32
     pop rbx
-    ret
 
 asm_event_reset ENDP
 
@@ -333,7 +327,6 @@ event_wait_fail:
 event_wait_done:
     add rsp, 32
     pop rbx
-    ret
 
 asm_event_wait ENDP
 
@@ -366,7 +359,6 @@ asm_event_destroy PROC
 event_destroy_done:
     add rsp, 32
     pop rbx
-    ret
 
 asm_event_destroy ENDP
     mov rcx, [rsp + 32 + 8]  ; Get event pointer from stack
@@ -374,7 +366,6 @@ asm_event_destroy ENDP
     
     add rsp, 32
     pop rbx
-    ret
 
 asm_event_destroy ENDP
 
@@ -560,4 +551,9 @@ asm_close_handle PROC
 asm_close_handle ENDP
 
 END
+
+
+
+
+
 

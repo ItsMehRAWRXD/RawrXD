@@ -45,13 +45,11 @@ RunAllTests PROC
     jz .anim_failed
     lea rcx, [szTestPassed]
     call OutputDebugStringA
-    jmp .test_ui
-    
-.anim_failed:
+    jmp @@test_ui
+@@anim_failed:
     lea rcx, [szTestFailed]
     call OutputDebugStringA
-    
-.test_ui:
+@@test_ui:
     ; Test UI system
     lea rcx, [szUITests]
     call OutputDebugStringA
@@ -60,13 +58,11 @@ RunAllTests PROC
     jz .ui_failed
     lea rcx, [szTestPassed]
     call OutputDebugStringA
-    jmp .test_feature
-    
-.ui_failed:
+    jmp @@test_feature
+@@ui_failed:
     lea rcx, [szTestFailed]
     call OutputDebugStringA
-    
-.test_feature:
+@@test_feature:
     ; Test feature system
     lea rcx, [szFeatureTests]
     call OutputDebugStringA
@@ -75,13 +71,11 @@ RunAllTests PROC
     jz .feature_failed
     lea rcx, [szTestPassed]
     call OutputDebugStringA
-    jmp .test_model
-    
-.feature_failed:
+    jmp @@test_model
+@@feature_failed:
     lea rcx, [szTestFailed]
     call OutputDebugStringA
-    
-.test_model:
+@@test_model:
     ; Test model system
     lea rcx, [szModelTests]
     call OutputDebugStringA
@@ -90,17 +84,15 @@ RunAllTests PROC
     jz .model_failed
     lea rcx, [szTestPassed]
     call OutputDebugStringA
-    jmp .all_done
-    
-.model_failed:
+    jmp @@all_done
+@@model_failed:
     lea rcx, [szTestFailed]
     call OutputDebugStringA
-    
-.all_done:
+@@all_done:
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
+
 RunAllTests ENDP
 
 ;==============================================================================
@@ -156,3 +148,8 @@ TestModelSystem PROC
 TestModelSystem ENDP
 
 END
+
+
+
+
+

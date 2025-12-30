@@ -157,8 +157,8 @@ ENDS
 PUBLIC detect_simd_capabilities
 detect_simd_capabilities PROC
     push rbx
+
     push r12
-    
     ; Allocate SIMD_CONTEXT
     mov rcx, SIZEOF SIMD_CONTEXT
     call malloc
@@ -175,8 +175,7 @@ detect_simd_capabilities PROC
     
     mov byte [rbx + SIMD_CONTEXT.supportsSSE], 1
     or r12d, (1 SHL SIMD_LEVEL_SSE)
-    
-.no_sse:
+@@no_sse:
     ; Check for AVX support
     mov eax, 1
     cpuid
@@ -190,12 +189,11 @@ detect_simd_capabilities PROC
     
     and eax, 0x00000006            ; Check bits 1 and 2
     cmp eax, 0x00000006
-    jne .no_avx
+    jne @@no_avx
     
     mov byte [rbx + SIMD_CONTEXT.supportsAVX], 1
     or r12d, (1 SHL SIMD_LEVEL_AVX)
-    
-.no_avx:
+@@no_avx:
     ; Check for AVX2 support
     mov eax, 7
     mov ecx, 0
@@ -206,8 +204,7 @@ detect_simd_capabilities PROC
     
     mov byte [rbx + SIMD_CONTEXT.supportsAVX2], 1
     or r12d, (1 SHL SIMD_LEVEL_AVX2)
-    
-.no_avx2:
+@@no_avx2:
     ; Check for AVX-512 (extended check required)
     ; For simplicity, return detected capabilities
     
@@ -215,45 +212,38 @@ detect_simd_capabilities PROC
     mov eax, SIMD_LEVEL_SCALAR
     
     cmp byte [rbx + SIMD_CONTEXT.supportsAVX512], 1
-    je .use_avx512
+    je @@use_avx512
     
     cmp byte [rbx + SIMD_CONTEXT.supportsAVX2], 1
-    je .use_avx2
+    je @@use_avx2
     
     cmp byte [rbx + SIMD_CONTEXT.supportsAVX], 1
-    je .use_avx
+    je @@use_avx
     
     cmp byte [rbx + SIMD_CONTEXT.supportsSSE], 1
-    je .use_sse
+    je @@use_sse
     
-    jmp .detection_done
-    
-.use_avx512:
+    jmp @@detection_done
+@@use_avx512:
     mov eax, SIMD_LEVEL_AVX512
-    jmp .set_level
-    
-.use_avx2:
+    jmp @@set_level
+@@use_avx2:
     mov eax, SIMD_LEVEL_AVX2
-    jmp .set_level
-    
-.use_avx:
+    jmp @@set_level
+@@use_avx:
     mov eax, SIMD_LEVEL_AVX
-    jmp .set_level
-    
-.use_sse:
+    jmp @@set_level
+@@use_sse:
     mov eax, SIMD_LEVEL_SSE
-    
-.set_level:
+@@set_level:
     mov [rbx + SIMD_CONTEXT.currentLevel], eax
-    
-.detection_done:
+@@detection_done:
     mov [rbx + SIMD_CONTEXT.supportedLevels], r12d
     mov rax, rbx
-    
+
     pop r12
-    pop rbx
-    ret
-detect_simd_capabilities ENDP
+    pop detect
+    pop rbx_simd_capabilities ENDP
 
 ; ============================================================================
 ; VECTOR OPERATIONS
@@ -270,8 +260,7 @@ vector_multiply_float32 PROC
     mov rax, rdx
     imul rax, 4                    ; count * sizeof(float32)
     push rax
-    
-    mov rcx, rax
+    push mov rcx, rax
     call malloc
     
     mov rbx, rax                   ; rbx = result
@@ -282,10 +271,9 @@ vector_multiply_float32 PROC
     
     ; Process array using SSE (128-bit, 4 floats at a time)
     xor r8, r8
-    
-.sse_loop:
+@@sse_loop:
     cmp r8, rdx
-    jge .sse_done
+    jge @@sse_done
     
     ; Load 4 float32 values
     movaps xmm0, [rcx + r8*4]
@@ -297,13 +285,12 @@ vector_multiply_float32 PROC
     movaps [rbx + r8*4], xmm0
     
     add r8, 4
-    jmp .sse_loop
-    
-.sse_done:
+    jmp @@sse_loop
+@@sse_done:
     mov rax, rbx
     
     pop rbx
-    ret
+
 vector_multiply_float32 ENDP
 
 ; ============================================================================
@@ -316,10 +303,9 @@ vector_dot_product_float32 PROC
     xorps xmm0, xmm0               ; sum = 0
     
     xor r9, r9
-    
-.dot_loop:
+@@dot_loop:
     cmp r9, r8
-    jge .dot_done
+    jge @@dot_done
     
     movss xmm1, [rcx + r9*4]       ; vec1[i]
     movss xmm2, [rdx + r9*4]       ; vec2[i]
@@ -328,9 +314,8 @@ vector_dot_product_float32 PROC
     addss xmm0, xmm1               ; sum += product
     
     inc r9
-    jmp .dot_loop
-    
-.dot_done:
+    jmp @@dot_loop
+@@dot_done:
     ret
 vector_dot_product_float32 ENDP
 
@@ -352,8 +337,7 @@ vector_normalize_float32 PROC
     mov rax, rdx
     imul rax, 4
     push rax
-    
-    mov r8, rax
+    push mov r8, rax
     call malloc
     
     mov r9, rax                    ; r9 = result
@@ -361,20 +345,18 @@ vector_normalize_float32 PROC
     
     ; Normalize: result[i] = vector[i] / length
     xor r10, r10
-    
-.norm_loop:
+@@norm_loop:
     imul r11, r10, 4
     cmp r11, r8
-    jge .norm_done
+    jge @@norm_done
     
     movss xmm0, [rcx + r11]
     divss xmm0, xmm1
     movss [r9 + r11], xmm0
     
     inc r10
-    jmp .norm_loop
-    
-.norm_done:
+    jmp @@norm_loop
+@@norm_done:
     mov rax, r9
     ret
 vector_normalize_float32 ENDP
@@ -389,6 +371,7 @@ vector_normalize_float32 ENDP
 PUBLIC create_batch_renderer
 create_batch_renderer PROC
     push rbx
+
     push r12
     push r13
     
@@ -432,11 +415,11 @@ create_batch_renderer PROC
     mov byte [rbx + BATCH_RENDER.batchDirty], 1
     
     mov rax, rbx
-    
-    pop r13
-    pop r12
+
+    pop r12 pop r13
+
     pop rbx
-    ret
+
 create_batch_renderer ENDP
 
 ; ============================================================================
@@ -450,7 +433,7 @@ batch_add_vertex PROC
     
     ; Check if batch is full
     cmp rax, MAX_VERTICES_PER_BATCH
-    jge .batch_full
+    jge @@batch_full
     
     ; Copy vertex data
     mov r8, [rcx + BATCH_RENDER.vertices]
@@ -467,8 +450,7 @@ batch_add_vertex PROC
     
     mov byte [rcx + BATCH_RENDER.batchDirty], 1
     ret
-    
-.batch_full:
+@@batch_full:
     mov rax, -1
     ret
 batch_add_vertex ENDP
@@ -484,7 +466,7 @@ batch_add_triangle PROC
     mov rax, [rcx + BATCH_RENDER.indexCount]
     add rax, 3
     cmp rax, MAX_INDICES_PER_BATCH
-    jge .batch_full
+    jge @@batch_full
     
     ; Add three indices
     mov r10, [rcx + BATCH_RENDER.indices]
@@ -510,8 +492,7 @@ batch_add_triangle PROC
     
     xor eax, eax                   ; Return success
     ret
-    
-.batch_full:
+@@batch_full:
     mov eax, -1
     ret
 batch_add_triangle ENDP
@@ -525,7 +506,7 @@ PUBLIC batch_sync_gpu
 batch_sync_gpu PROC
     ; Check if sync needed
     cmp byte [rcx + BATCH_RENDER.batchDirty], 1
-    jne .already_synced
+    jne @@already_synced
     
     ; Update GPU vertex buffer
     ; In production, this would call D3D11 UpdateSubresource
@@ -542,8 +523,7 @@ batch_sync_gpu PROC
     
     xor eax, eax                   ; Return success
     ret
-    
-.already_synced:
+@@already_synced:
     xor eax, eax
     ret
 batch_sync_gpu ENDP
@@ -572,29 +552,26 @@ batch_render ENDP
 PUBLIC free_batch_renderer
 free_batch_renderer PROC
     push rbx
-    
-    mov rbx, rcx
+    push mov rbx, rcx
     
     ; Free vertex array
     mov rcx, [rbx + BATCH_RENDER.vertices]
     cmp rcx, 0
-    je .skip_vert
+    je @@skip_vert
     call free
-    
-.skip_vert:
+@@skip_vert:
     ; Free index array
     mov rcx, [rbx + BATCH_RENDER.indices]
     cmp rcx, 0
-    je .skip_idx
+    je @@skip_idx
     call free
-    
-.skip_idx:
+@@skip_idx:
     ; Free batch structure
     mov rcx, rbx
     call free
     
     pop rbx
-    ret
+
 free_batch_renderer ENDP
 
 ; ============================================================================
@@ -635,8 +612,7 @@ create_gpu_device ENDP
 PUBLIC free_gpu_device
 free_gpu_device PROC
     push rbx
-    
-    mov rbx, rcx
+    push mov rbx, rcx
     
     ; Release D3D11 resources
     ; In production: Release() calls on all COM objects
@@ -646,7 +622,7 @@ free_gpu_device PROC
     call free
     
     pop rbx
-    ret
+
 free_gpu_device ENDP
 
 ; ============================================================================
@@ -665,3 +641,8 @@ present_frame ENDP
 ; ============================================================================
 
 END
+
+
+
+
+

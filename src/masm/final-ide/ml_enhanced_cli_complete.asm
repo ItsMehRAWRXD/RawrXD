@@ -238,6 +238,7 @@ PUBLIC enhanced_cli_export_history
 ;==========================================================================
 enhanced_cli_init PROC
     push rbx
+
     push rsi
     sub rsp, 64
     
@@ -281,10 +282,10 @@ enhanced_cli_init PROC
     
     mov rax, g_enhanced_cli.hMutex
     add rsp, 64
+
     pop rsi
-    pop rbx
-    ret
-enhanced_cli_init ENDP
+    pop enhanced
+    pop rbx_cli_init ENDP
 
 ;==========================================================================
 ; enhanced_cli_create_window(parent: rcx, x: edx, y: r8d, width: r9d, height: [rsp+40]) -> HWND
@@ -292,6 +293,7 @@ enhanced_cli_init ENDP
 ;==========================================================================
 enhanced_cli_create_window PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 128
@@ -329,10 +331,11 @@ enhanced_cli_create_window PROC
     
     mov rax, g_enhanced_cli.hWindow
     add rsp, 128
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 enhanced_cli_create_window ENDP
 
 ;==========================================================================
@@ -341,8 +344,10 @@ enhanced_cli_create_window ENDP
 ;==========================================================================
 enhanced_cli_execute_command PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
     sub rsp, 256
@@ -435,12 +440,14 @@ enhanced_cli_execute_command PROC
     call ReleaseMutex
     
     add rsp, 256
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 enhanced_cli_execute_command ENDP
 
 ;==========================================================================
@@ -449,6 +456,7 @@ enhanced_cli_execute_command ENDP
 ;==========================================================================
 enhanced_cli_start_repl PROC
     push rbx
+
     push rsi
     sub rsp, 128
     
@@ -493,10 +501,10 @@ enhanced_cli_start_repl PROC
     call ReleaseMutex
     
     add rsp, 128
+
     pop rsi
-    pop rbx
-    ret
-enhanced_cli_start_repl ENDP
+    pop enhanced
+    pop rbx_cli_start_repl ENDP
 
 ;==========================================================================
 ; Stub implementations for remaining functions
@@ -677,3 +685,8 @@ szCmdNotFound BYTE "Command not found", 0
 szAlreadyExecuting BYTE "Another command is already executing", 0
 
 end
+
+
+
+
+

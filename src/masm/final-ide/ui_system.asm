@@ -128,6 +128,7 @@ ALIGN 16
 ui_init PROC
 
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -221,10 +222,10 @@ ui_init_failed:
 
 ui_init_done:
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
 
 ui_init ENDP
 
@@ -244,7 +245,6 @@ ui_create_window_internal PROC
 
     add rsp, 32
     pop rbx
-    ret
 
 ui_create_window_internal ENDP
 
@@ -364,7 +364,6 @@ theme_done:
     mov eax, 1
     add rsp, 32
     pop rbx
-    ret
 
 ui_set_theme ENDP
 
@@ -376,6 +375,7 @@ ALIGN 16
 ui_render_frame PROC
 
     push rbx
+
     push rsi
     sub rsp, 32
 
@@ -402,10 +402,14 @@ ui_render_frame PROC
 
     mov eax, 1
     add rsp, 32
-    pop rsi
-    pop rbx
-    ret
 
-ui_render_frame ENDP
+    pop rsi
+    pop ui
+    pop rbx_render_frame ENDP
 
 END
+
+
+
+
+

@@ -296,21 +296,28 @@ MainWindow_Initialize proc hInstance:QWORD
     
     ; Create main window
     push 0
+
     push 0
-    push 0
+
     push hInstance
     push 0
+
     push 0
     push 600
+
     push 800
     push 100
+
     push 100
     push WS_OVERLAPPEDWINDOW
-    push offset szWindowTitle
-    push offset WND_CLASS_NAME
+    push offset
+    push szWindowTitle
+    push offset
+    push WND_CLASS_NAME
     push 0
-    call CreateWindowExA
-    mov g_mainWindow.hWnd, rax
+    push call
+    push CreateWindowExA
+    push mov g_mainWindow.hWnd, rax
     test rax, rax
     jz init_failed
     
@@ -349,7 +356,8 @@ MainWindow_Initialize proc hInstance:QWORD
     call UpdateWindow
     
     ; Set initial status
-    push offset szStatusInitializing
+    push offset
+    push szStatusInitializing
     call MainWindow_SetStatusMessage
     
     mov rax, TRUE
@@ -824,3 +832,7 @@ MainWindow_WndProc endp
     szDummyFile db "src/masm/final-ide/main_window_masm.asm",0
 
 end
+
+
+
+

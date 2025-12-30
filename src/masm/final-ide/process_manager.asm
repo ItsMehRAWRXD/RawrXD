@@ -44,8 +44,10 @@ PUBLIC CreateRedirectedProcess
 ALIGN 16
 CreateRedirectedProcess PROC
     push rbx
+
     push r12
     push r13
+
     push r14
     push r15
     sub rsp, 640  ; space for structs and shadow space
@@ -182,12 +184,14 @@ proc_fail:
     
 proc_done:
     add rsp, 640
-    pop r15
-    pop r14
-    pop r13
-    pop r12
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
     pop rbx
-    ret
+
 CreateRedirectedProcess ENDP
 
 ;==============================================================================
@@ -224,7 +228,7 @@ read_fail:
 read_done:
     add rsp, 64
     pop rbx
-    ret
+
 ReadProcessOutput ENDP
 
 ;==============================================================================
@@ -261,7 +265,12 @@ write_fail:
 write_done:
     add rsp, 64
     pop rbx
-    ret
+
 WriteProcessInput ENDP
 
 END
+
+
+
+
+

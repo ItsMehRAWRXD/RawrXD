@@ -91,8 +91,7 @@ CONTEXT_ITEM ENDS
 PUBLIC filetree_context_init
 filetree_context_init PROC
     push rbx
-    
-    mov hParentWindow, rcx
+    push mov hParentWindow, rcx
     
     ; Copy root path
     lea rax, RootPath
@@ -100,8 +99,8 @@ filetree_context_init PROC
     mov rdx, rax
     call copy_path_safe
     
-    pop rbx
-    xor eax, eax
+    pop xor
+    pop rbx eax, eax
     ret
 filetree_context_init ENDP
 
@@ -112,6 +111,7 @@ filetree_context_init ENDP
 PUBLIC filetree_show_context_menu
 filetree_show_context_menu PROC
     push rbx
+
     push rdi
     push rsi
     sub rsp, 32
@@ -180,26 +180,26 @@ filetree_show_context_menu PROC
     ; Dispatch menu command
     mov ecx, eax
     call handle_context_menu_command
-    
-.menu_cancel:
+@@menu_cancel:
     ; Destroy menu
     mov rcx, hContextMenu
     call DestroyMenu
     
     mov eax, 1                          ; Success
     add rsp, 32
-    pop rsi
-    pop rdi
+
+    pop rdi pop rsi
+
     pop rbx
-    ret
-    
-.menu_fail:
+
+@@menu_fail:
     xor eax, eax
     add rsp, 32
-    pop rsi
-    pop rdi
+
+    pop rdi pop rsi
+
     pop rbx
-    ret
+
 output_show_context_menu ENDP
 
 ;==========================================================================
@@ -214,8 +214,8 @@ append_menu_item PROC
     ; Call AppendMenu with Windows calling convention
     ; (This is pseudocode; actual Win32 API call needed)
     
-    pop rbx
-    xor eax, eax
+    pop xor
+    pop rbx eax, eax
     ret
 append_menu_item ENDP
 
@@ -230,8 +230,8 @@ get_tree_item_path PROC
     ; Walk up tree from item to root, accumulating path
     ; TODO: Implement tree traversal
     
-    pop rbx
-    xor eax, eax
+    pop xor
+    pop rbx eax, eax
     ret
 get_tree_item_path ENDP
 
@@ -241,62 +241,54 @@ get_tree_item_path ENDP
 PRIVATE handle_context_menu_command
 handle_context_menu_command PROC
     push rbx
-    
-    cmp ecx, IDM_COPY_PATH
-    je .copy_full_path
+    push cmp ecx, IDM_COPY_PATH
+    je @@copy_full_path
     
     cmp ecx, IDM_COPY_REL_PATH
-    je .copy_rel_path
+    je @@copy_rel_path
     
     cmp ecx, IDM_OPEN_TERMINAL
-    je .open_terminal
+    je @@open_terminal
     
     cmp ecx, IDM_OPEN_EXPLORER
-    je .open_explorer
+    je @@open_explorer
     
     cmp ecx, IDM_REFRESH
-    je .refresh_folder
+    je @@refresh_folder
     
     cmp ecx, IDM_PROPERTIES
-    je .show_properties
+    je @@show_properties
     
-    jmp .command_done
-    
-.copy_full_path:
+    jmp @@command_done
+@@copy_full_path:
     lea rcx, SelectedPath
     call copy_to_clipboard
-    jmp .command_done
-    
-.copy_rel_path:
+    jmp @@command_done
+@@copy_rel_path:
     lea rcx, SelectedPath
     lea rdx, RootPath
     call get_relative_path
     mov rcx, rax
     call copy_to_clipboard
-    jmp .command_done
-    
-.open_terminal:
+    jmp @@command_done
+@@open_terminal:
     lea rcx, SelectedPath
     call open_terminal_at_path
-    jmp .command_done
-    
-.open_explorer:
+    jmp @@command_done
+@@open_explorer:
     lea rcx, SelectedPath
     call open_explorer_at_path
-    jmp .command_done
-    
-.refresh_folder:
+    jmp @@command_done
+@@refresh_folder:
     mov rcx, hSelectedItem
     call refresh_tree_folder
-    jmp .command_done
-    
-.show_properties:
+    jmp @@command_done
+@@show_properties:
     lea rcx, SelectedPath
     call show_file_properties
-    
-.command_done:
+@@command_done:
     pop rbx
-    ret
+
 handle_context_menu_command ENDP
 
 ;==========================================================================
@@ -306,20 +298,19 @@ handle_context_menu_command ENDP
 PRIVATE copy_to_clipboard
 copy_to_clipboard PROC
     push rbx
+
     push rdi
     sub rsp, 32
     
     ; Calculate text length
     mov rdi, rcx
     xor eax, eax
-    
-.len_loop:
+@@len_loop:
     cmp BYTE PTR [rdi + rax], 0
-    je .len_done
+    je @@len_done
     inc eax
-    jmp .len_loop
-    
-.len_done:
+    jmp @@len_loop
+@@len_done:
     mov ebx, eax                        ; ebx = text length
     
     ; OpenClipboard
@@ -354,17 +345,16 @@ copy_to_clipboard PROC
     
     mov eax, 1                          ; Success
     add rsp, 32
+
     pop rdi
     pop rbx
-    ret
-    
-.clip_fail:
+@@clip_fail:
     xor eax, eax
     add rsp, 32
+
     pop rdi
-    pop rbx
-    ret
-copy_to_clipboard ENDP
+    pop copy
+    pop rbx_to_clipboard ENDP
 
 ;==========================================================================
 ; PRIVATE: get_relative_path(path: rcx, root: rdx) -> rax
@@ -379,7 +369,7 @@ get_relative_path PROC
     mov rax, rcx
     
     pop rbx
-    ret
+
 get_relative_path ENDP
 
 ;==========================================================================
@@ -403,7 +393,7 @@ open_terminal_at_path PROC
     
     add rsp, 32
     pop rbx
-    ret
+
 open_terminal_at_path ENDP
 
 ;==========================================================================
@@ -420,7 +410,7 @@ open_explorer_at_path PROC
     
     add rsp, 32
     pop rbx
-    ret
+
 open_explorer_at_path ENDP
 
 ;==========================================================================
@@ -449,18 +439,16 @@ show_file_properties ENDP
 PRIVATE copy_memory_safe
 copy_memory_safe PROC
     xor ecx, ecx
-    
-.copy_loop:
+@@copy_loop:
     cmp ecx, r8d
-    jge .copy_done
+    jge @@copy_done
     
     movzx ebx, BYTE PTR [rdx + rcx]
     mov BYTE PTR [rax + rcx], bl
     
     inc ecx
-    jmp .copy_loop
-    
-.copy_done:
+    jmp @@copy_loop
+@@copy_done:
     ret
 copy_memory_safe ENDP
 
@@ -470,23 +458,26 @@ copy_memory_safe ENDP
 PRIVATE copy_path_safe
 copy_path_safe PROC
     xor eax, eax
-    
-.copy_loop:
+@@copy_loop:
     cmp eax, MAX_PATH_LEN - 1
-    jge .copy_done
+    jge @@copy_done
     
     movzx ebx, BYTE PTR [rdx + rax]
     mov BYTE PTR [rcx + rax], bl
     
     test bl, bl
-    je .copy_done
+    je @@copy_done
     
     inc eax
-    jmp .copy_loop
-    
-.copy_done:
+    jmp @@copy_loop
+@@copy_done:
     mov BYTE PTR [rcx + rax], 0
     ret
 copy_path_safe ENDP
 
 END
+
+
+
+
+

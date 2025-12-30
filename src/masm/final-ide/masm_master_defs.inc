@@ -21,13 +21,21 @@ extern CreateThreadEx:proc
 extern CreateEventA:proc
 extern SetEvent:proc
 extern ResetEvent:proc
+extern InitializeCriticalSection:proc
+extern EnterCriticalSection:proc
+extern LeaveCriticalSection:proc
+extern DeleteCriticalSection:proc
 extern CloseHandle:proc
 extern CreatePipeEx:proc
 extern CreatePipe:proc
 extern SetHandleInformation:proc
+extern CreateIoCompletionPort:proc
+extern GetQueuedCompletionStatus:proc
+extern PostQueuedCompletionStatus:proc
 
 ; Process APIs
 extern CreateProcessA:proc
+extern TerminateProcess:proc
 extern WriteFile:proc
 extern ReadFile:proc
 extern PeekNamedPipe:proc
@@ -94,6 +102,16 @@ HEAP_ZERO_MEMORY equ 8
 
 ; Pipe constants
 PIPE_ACCESS_INBOUND equ 1
+
+; Synchronization Structures
+RTL_CRITICAL_SECTION struct
+    DebugInfo QWORD ?
+    LockCount DWORD ?
+    RecursionCount DWORD ?
+    OwningThread QWORD ?
+    LockSemaphore QWORD ?
+    SpinCount QWORD ?
+RTL_CRITICAL_SECTION ends
 PIPE_ACCESS_OUTBOUND equ 2
 FILE_FLAG_OVERLAPPED equ 40000000h
 HANDLE_FLAG_INHERIT equ 1
@@ -214,49 +232,7 @@ WNDCLASSEXA ENDS
 ;   si STARTUPINFOA <>
 
 ; ============================================================================
-; COMPONENT INCLUDES
+; COMPONENT INCLUDES (REMOVED TO PREVENT REDEFINITIONS)
 ; ============================================================================
 
-; Phase A: Foundation Layer
-; Settings Manager component
-include settings_manager.inc
-
-; Terminal Pool component
-include terminal_pool.inc
-
-; Hotpatch System component
-include hotpatch_system.inc
-
-; Phase B: Core IDE Layer
-; MainWindow Architecture component
-include mainwindow_masm.inc
-
-; File Browser component
-include file_browser.inc
-
-; Phase C: Backend Infrastructure
-; LSP Client component
-include lsp_client.inc
-
-; Inference Manager component
-include inference_manager.inc
-
-; Agent Coordinator component
-include agent_coordinator.inc
-
-; Server Layer component
-include server_layer.inc
-
-; Phase D: Advanced Infrastructure
-; Caching Layer component
-include caching_layer.inc
-
-; Stream Processor component
-include stream_processor.inc
-
-; Distributed Executor component
-include distributed_executor.inc
-
-; Advanced Auth component
-include advanced_auth.inc
 

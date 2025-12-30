@@ -88,9 +88,9 @@ JSON_PARSER ENDS
 ;==============================================================================
 SkipWhitespace PROC
     push rbx
+
     push rsi
-    
-    mov rbx, rcx        ; parser
+    push mov rbx, rcx        ; parser
     mov rsi, [rbx + JSON_PARSER.current_pos]
     
 skip_loop:
@@ -115,18 +115,20 @@ skip_char:
 skip_done:
     mov [rbx + JSON_PARSER.current_pos], rsi
     mov rax, rsi
+
     pop rsi
-    pop rbx
-    ret
-SkipWhitespace ENDP
+    pop SkipWhitespace
+    pop rbx ENDP
 
 ;==============================================================================
 ; INTERNAL: ParseString(parser: rcx) -> rax (string pointer or NULL)
 ;==============================================================================
 ParseString PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     sub rsp, 256
     
@@ -231,18 +233,20 @@ parse_string_fail:
     
 parse_string_done:
     add rsp, 256
-    pop r12
-    pop rdi
+
+    pop rdi pop r12
+
+
     pop rsi
-    pop rbx
-    ret
-ParseString ENDP
+    pop ParseString
+    pop rbx ENDP
 
 ;==============================================================================
 ; INTERNAL: ParseNumber(parser: rcx) -> xmm0 (number value), eax (success)
 ;==============================================================================
 ParseNumber PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 256
@@ -320,17 +324,17 @@ Manual_atof PROC
     ; Handle sign
     mov al, [rbx]
     cmp al, '-'
-    jne .positive
+    jne @@positive
     inc rbx
-.positive:
+@@positive:
     
     ; Integer part
-.int_loop:
+@@int_loop:
     movzx eax, byte ptr [rbx]
     test al, al
     jz .done
     cmp al, '.'
-    je .decimal
+    je @@decimal
     
     sub al, '0'
     cvtsi2sd xmm1, eax
@@ -340,16 +344,14 @@ Manual_atof PROC
     addsd xmm0, xmm1
     
     inc rbx
-    jmp .int_loop
-    
-.decimal:
+    jmp @@int_loop
+@@decimal:
     inc rbx
     mov rax, 10
     cvtsi2sd xmm2, rax
     mov rax, 1
     cvtsi2sd xmm3, rax ; Divisor
-    
-.dec_loop:
+@@dec_loop:
     movzx eax, byte ptr [rbx]
     test al, al
     jz .done
@@ -361,15 +363,14 @@ Manual_atof PROC
     addsd xmm0, xmm1
     
     inc rbx
-    jmp .dec_loop
-    
-.done:
+    jmp @@dec_loop
+@@done:
     ; Apply sign if needed
     ; (Simplified: assume positive for now, but logic is there)
     
     add rsp, 32
     pop rbx
-    ret
+
 Manual_atof ENDP
     
 parse_number_fail:
@@ -377,10 +378,11 @@ parse_number_fail:
     
 parse_number_done:
     add rsp, 256
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 ParseNumber ENDP
 
 ;==============================================================================
@@ -388,6 +390,7 @@ ParseNumber ENDP
 ;==============================================================================
 ParseBoolean PROC
     push rbx
+
     push rsi
     sub rsp, 32
     
@@ -425,10 +428,10 @@ found_false:
     
 parse_bool_done:
     add rsp, 32
+
     pop rsi
-    pop rbx
-    ret
-ParseBoolean ENDP
+    pop ParseBoolean
+    pop rbx ENDP
 
 ;==============================================================================
 ; PUBLIC: JsonParse(json_string: rcx) -> rax (JSON_VALUE pointer or NULL)
@@ -439,6 +442,7 @@ JsonParse PROC
     LOCAL parser:JSON_PARSER
     
     push rbx
+
     push rsi
     push rdi
     sub rsp, 512
@@ -625,10 +629,11 @@ json_parse_fail:
     
 json_parse_exit:
     add rsp, 512
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 JsonParse ENDP
 
 ;==============================================================================
@@ -638,6 +643,7 @@ PUBLIC JsonGetString
 ALIGN 16
 JsonGetString PROC
     push rbx
+
     push rsi
     sub rsp, 32
     
@@ -657,10 +663,10 @@ json_get_fail:
     
 json_get_done:
     add rsp, 32
+
     pop rsi
-    pop rbx
-    ret
-JsonGetString ENDP
+    pop JsonGetString
+    pop rbx ENDP
 
 ;==============================================================================
 ; PUBLIC: JsonFree(pValue: rcx)
@@ -692,8 +698,13 @@ json_free_value:
 json_free_done:
     add rsp, 32
     pop rbx
-    ret
+
 JsonFree ENDP
 
 END
+
+
+
+
+
 

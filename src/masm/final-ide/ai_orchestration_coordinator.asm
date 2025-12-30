@@ -67,7 +67,7 @@ ai_orchestration_install PROC
     
     ; rcx = main window handle
     push rbx
-    mov rbx, rcx                  ; Save window handle
+    push mov rbx, rcx                  ; Save window handle
     
     ; Initialize coordinator
     call ai_orchestration_coordinator_init
@@ -86,7 +86,7 @@ ai_orchestration_install PROC
     
     mov eax, 1
     pop rbx
-    ret
+
 ai_orchestration_install ENDP
 
 ; ai_orchestration_set_handles() - Set UI handles
@@ -108,3 +108,8 @@ ai_orchestration_schedule_task PROC
 ai_orchestration_schedule_task ENDP
 
 END
+
+
+
+
+

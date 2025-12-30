@@ -168,6 +168,7 @@ MenuBar ENDS
 PUBLIC MenuBar_Create
 MenuBar_Create PROC
     push rbx
+
     push rdi
     push r12
     
@@ -447,11 +448,11 @@ MenuBar_Create PROC
     call AppendMenuA
     
     mov rax, rbx  ; Return menu bar handle
-    
-    pop r12
-    pop rdi
+
+    pop rdi pop r12
+
     pop rbx
-    ret
+
 MenuBar_Create ENDP
 
 ; ============================================================================
@@ -470,8 +471,7 @@ MenuBar_Create ENDP
 PUBLIC MenuBar_EnableMenuItem
 MenuBar_EnableMenuItem PROC
     push rbx
-    
-    mov rbx, rcx  ; rbx = MenuBar*
+    push mov rbx, rcx  ; rbx = MenuBar*
     mov r9d, edx  ; r9d = command ID
     mov r10d, r8d ; r10d = enable (1) or disable (0)
     
@@ -492,7 +492,7 @@ ApplyState:
     call EnableMenuItemA
     
     pop rbx
-    ret
+
 MenuBar_EnableMenuItem ENDP
 
 ; ============================================================================
@@ -514,8 +514,7 @@ MenuBar_EnableMenuItem ENDP
 PUBLIC MenuBar_HandleCommand
 MenuBar_HandleCommand PROC
     push rbx
-    
-    mov rbx, rcx  ; rbx = MenuBar*
+    push mov rbx, rcx  ; rbx = MenuBar*
     mov r9d, edx  ; r9d = command ID
     mov r10, r8   ; r10 = handler function pointer
     
@@ -577,7 +576,7 @@ Command_ViewTheme:
     
 HandlerDone:
     pop rbx
-    ret
+
 MenuBar_HandleCommand ENDP
 
 ; ============================================================================
@@ -594,8 +593,7 @@ MenuBar_HandleCommand ENDP
 PUBLIC MenuBar_Destroy
 MenuBar_Destroy PROC
     push rbx
-    
-    mov rbx, rcx  ; rbx = MenuBar*
+    push mov rbx, rcx  ; rbx = MenuBar*
     
     ; Destroy all submenus
     mov rcx, [rbx + 0]   ; hMenuFile
@@ -636,7 +634,12 @@ SkipHelp:
     
 SkipMenuBar:
     pop rbx
-    ret
+
 MenuBar_Destroy ENDP
 
 end
+
+
+
+
+

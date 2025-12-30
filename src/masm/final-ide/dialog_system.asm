@@ -94,6 +94,7 @@ DialogSystemInit ENDP
 CreateModalDialog PROC FRAME
     ; Save non-volatile registers
     push rbx
+
     push rsi
     push rdi
     .PUSHREG rbx
@@ -166,7 +167,8 @@ no_user_data:
     test rax, rax
     jz registry_add_failed
     
-    ; Push to modal stack
+    ; push to
+    push modal stack
     mov rcx, rbx
     call PushModalDialog
     
@@ -229,10 +231,11 @@ registry_add_failed:
 dialog_complete:
     ; Cleanup stack and return
     add rsp, 40h
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 CreateModalDialog ENDP
 
 ; ============================================================================
@@ -248,10 +251,13 @@ CreateModalDialog ENDP
 ; ============================================================================
 CreateDialogWindow PROC
     push rbx
+
     push rsi
     push rdi
+
     push r12
     push r13
+
     push r14
     push r15
     sub rsp, 80         ; Local variables and shadow space (aligned)
@@ -304,14 +310,17 @@ CreateDialogWindow PROC
     
     add rsp, 64
     add rsp, 80
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 CreateDialogWindow ENDP
     lea rdx, szDialogClass ; lpClassName
     mov r8, r13         ; lpWindowName (title)
@@ -321,14 +330,17 @@ CreateDialogWindow ENDP
     
     add rsp, 8*8 + 32   ; Clean up stack
     add rsp, 64
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop rdi
-    pop rsi
+
+    pop r14 pop r15
+
+
+    pop r12 pop r13
+
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 CreateDialogWindow ENDP
 
 ; ============================================================================
@@ -639,26 +651,28 @@ cleanup_loop:
     jz skip_destroy
     
     push rcx
+
     push rdx
     push r8
     mov rcx, r10
     call DestroyWindow
-    pop r8
-    pop rdx
-    pop rcx
-    
-skip_destroy:
+
+    pop rdx pop r8
+
+    pop skip
+    pop rcx_destroy:
     ; Free dialog entry
     push rcx
+
     push rdx
     push r8
     mov rcx, [rcx+r8*8]
     call free
-    pop r8
-    pop rdx
-    pop rcx
-    
-    mov qword ptr [rcx+r8*8], 0
+
+    pop rdx pop r8
+
+    pop mov
+    pop rcx qword ptr [rcx+r8*8], 0
     
 skip_dialog:
     inc r8
@@ -671,3 +685,7 @@ cleanup_done:
 DialogSystemShutdown ENDP
 
 END
+
+
+
+

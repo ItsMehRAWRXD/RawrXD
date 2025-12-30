@@ -7,6 +7,9 @@
 #include <QProgressDialog>
 #include "ai_chat_panel.hpp"
 #include "ai_chat_panel_manager.hpp"
+#include "security_alert_widget.hpp"
+#include "optimization_panel_widget.hpp"
+#include "rich_edit_highlighter.hpp"
 
 class QAction;
 
@@ -24,15 +27,16 @@ class TodoManager;
 class TodoDock;
 class ModelLoaderThread;
 class ModelLoaderWidget;
-class MasmEditorWidget;
+class MASMEditorWidget;
 class MultiFileSearch;
 class AIChatPanelManager;
-class MASMEditorWidget;
 class InterpretabilityPanelEnhanced;
 class HotpatchPanel;
 
 namespace RawrXD {
     class MultiFileSearchWidget;
+    class LatencyMonitor;
+    class LatencyStatusPanel;
 }
 
 // Phase 2 forward declarations
@@ -90,6 +94,9 @@ private slots:
     void toggleHotpatchPanel();
     void toggleMultiFileSearch();
     void toggleToolsPanel();  // NEW: Toggle GitHub-style tools panel
+    void toggleSecurityPanel();  // Reference Widget: Security vulnerability detection
+    void toggleOptimizationPanel();  // Reference Widget: Performance optimization suggestions
+    void toggleSyntaxHighlighter();  // Reference Widget: Rich syntax highlighting demo
     
     // AI operations
     void startChat();
@@ -198,6 +205,14 @@ private:
     HotpatchPanel *m_hotpatchPanel{nullptr};
     RawrXD::MultiFileSearchWidget *m_multiFileSearch{nullptr};
     
+    // Reference Widgets (Qt/C++ proven implementations)
+    SecurityAlertWidget *m_securityPanel{nullptr};
+    OptimizationPanelWidget *m_optimizationPanel{nullptr};
+    RichEditHighlighter *m_syntaxDemo{nullptr};
+    QDockWidget *m_securityDock{nullptr};
+    QDockWidget *m_optimizationDock{nullptr};
+    QDockWidget *m_syntaxDemoDock{nullptr};
+    
     // Phase 2: Polish feature widgets
     DiffDock *m_diffPreviewDock{nullptr};  // Day 2: Simplified diff viewer
     RawrXD::GPUBackendSelector *m_backendSelector{nullptr};
@@ -206,8 +221,8 @@ private:
     QStatusBar *m_statusBar;
     
     // Latency monitoring
-    LatencyMonitor* m_latencyMonitor{nullptr};
-    LatencyStatusPanel* m_latencyPanel{nullptr};
+    RawrXD::LatencyMonitor* m_latencyMonitor{nullptr};
+    RawrXD::LatencyStatusPanel* m_latencyPanel{nullptr};
     QDockWidget* m_latencyDock{nullptr};
     
     // Theme System
@@ -223,7 +238,4 @@ private:
     QProgressBar *m_splashProgress{nullptr};
 };
 
-    // Forward declarations for latency monitoring
-    class LatencyMonitor;
-    class LatencyStatusPanel;
 }

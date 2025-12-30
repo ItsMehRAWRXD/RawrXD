@@ -142,8 +142,8 @@ WindowClass_Register PROC
     
     ; Build WNDCLASSA structure
     push rbx
+
     push rdi
-    
     ; WNDCLASSA structure on stack
     sub rsp, 48  ; WNDCLASSA is 48 bytes
     
@@ -171,10 +171,10 @@ WindowClass_Register PROC
     
     ; RAX = ATOM (success) or 0 (failure)
     add rsp, 48
+
     pop rdi
-    pop rbx
-    ret
-WindowClass_Register ENDP
+    pop WindowClass
+    pop rbx_Register ENDP
 
 ; ============================================================================
 ; PUBLIC FUNCTION: WindowClass_Create
@@ -200,6 +200,7 @@ WindowClass_Create PROC
     ; rcx = WindowClass ptr, rdx = hInstance
     
     push rbx
+
     push rdi
     push r12
     
@@ -260,11 +261,11 @@ WindowClass_Create PROC
     ; Create default font
     call CreateDefaultFont
     mov [r12 + 24], rax  ; Store hFont
-    
-    pop r12
-    pop rdi
+
+    pop rdi pop r12
+
     pop rbx
-    ret
+
 WindowClass_Create ENDP
 
 ; ============================================================================
@@ -355,6 +356,7 @@ WindowClass_ShowWindow ENDP
 PUBLIC WindowClass_MessageLoop
 WindowClass_MessageLoop PROC
     push rbx
+
     push rdi
     push r12
     
@@ -388,10 +390,11 @@ MessageLoop_Start:
     
 MessageLoop_End:
     add rsp, 32
-    pop r12
-    pop rdi
+
+    pop rdi pop r12
+
     pop rbx
-    ret
+
 WindowClass_MessageLoop ENDP
 
 ; ============================================================================
@@ -408,8 +411,7 @@ WindowClass_MessageLoop ENDP
 PUBLIC WindowClass_Destroy
 WindowClass_Destroy PROC
     push rbx
-    
-    mov rbx, rcx  ; rbx = WindowClass*
+    push mov rbx, rcx  ; rbx = WindowClass*
     
     ; Release device context
     mov rax, [rbx + 0]   ; Get HWND
@@ -448,7 +450,7 @@ Destroy_SkipFont:
     
 Destroy_SkipWindow:
     pop rbx
-    ret
+
 WindowClass_Destroy ENDP
 
 ; ============================================================================
@@ -652,8 +654,8 @@ WndProc_Main ENDP
 
 CreateMenuBar PROC
     push rbx
+
     push rdi
-    
     ; Create menu bar
     call CreateMenuA
     mov rbx, rax  ; rbx = hMenuBar
@@ -713,11 +715,10 @@ CreateMenuBar PROC
     call AppendMenuA
     
     mov rax, rbx  ; Return menu bar handle
-    
+
     pop rdi
-    pop rbx
-    ret
-CreateMenuBar ENDP
+    pop CreateMenuBar
+    pop rbx ENDP
 
 ; ============================================================================
 ; HELPER FUNCTION: DrawBackground
@@ -756,10 +757,10 @@ DrawBackground PROC
     mov rcx, rbx
     call DeleteObject
     
-    pop rbx
-    ret
-DrawBackground ENDP
+    pop ENDP
 
+
+    pop DrawBackground rbx
 ; ============================================================================
 ; HELPER FUNCTION: DrawText_Simple
 ;
@@ -774,9 +775,9 @@ DrawBackground ENDP
 
 DrawText_Simple PROC
     push rbx
+
     push rdi
-    
-    mov rbx, rcx  ; rbx = HDC
+    push mov rbx, rcx  ; rbx = HDC
     mov edi, edx  ; edi = x
     
     ; Set text color to black
@@ -798,11 +799,10 @@ DrawText_Simple PROC
     mov r9, [rsp + 16]  ; lpString
     
     ; TODO: Calculate string length and call TextOutA
-    
+
     pop rdi
-    pop rbx
-    ret
-DrawText_Simple ENDP
+    pop DrawText
+    pop rbx_Simple ENDP
 
 ; ============================================================================
 ; Entry point stub (if building standalone executable)
@@ -817,3 +817,8 @@ main PROC
 main ENDP
 
 end
+
+
+
+
+

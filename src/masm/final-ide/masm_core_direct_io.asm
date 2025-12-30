@@ -102,8 +102,10 @@ ALIGN 16
 masm_core_direct_read PROC
 
     push rbx
+
     push r12
     push r13
+
     push r14
     sub rsp, 64
     
@@ -155,13 +157,13 @@ read_fail:
 
 read_exit:
     add rsp, 64
-    pop r14
-    pop r13
-    pop r12
-    pop rbx
-    ret
 
-masm_core_direct_read ENDP
+    pop r13 pop r14
+
+
+    pop r12
+    pop masm
+    pop rbx_core_direct_read ENDP
 
 ;=====================================================================
 ; masm_core_direct_write(file_handle: rcx, offset: rdx,
@@ -176,8 +178,10 @@ ALIGN 16
 masm_core_direct_write PROC
 
     push rbx
+
     push r12
     push r13
+
     push r14
     sub rsp, 64
     
@@ -229,13 +233,13 @@ write_fail:
 
 write_exit:
     add rsp, 64
-    pop r14
-    pop r13
-    pop r12
-    pop rbx
-    ret
 
-masm_core_direct_write ENDP
+    pop r13 pop r14
+
+
+    pop r12
+    pop masm
+    pop rbx_core_direct_write ENDP
 
 ;=====================================================================
 ; masm_core_direct_fill(dest: rcx, byte_value: edx, size: r8) -> void
@@ -317,10 +321,11 @@ ALIGN 16
 masm_core_direct_xor PROC
 
     push rbx
+
     push r12
     push r13
+
     push r14
-    
     test rcx, rcx
     jz xor_exit
     test rdx, rdx
@@ -358,13 +363,13 @@ xor_done:
     lock inc [g_core_operations_total]
 
 xor_exit:
-    pop r14
-    pop r13
-    pop r12
-    pop rbx
-    ret
 
-masm_core_direct_xor ENDP
+    pop r13 pop r14
+
+
+    pop r12
+    pop masm
+    pop rbx_core_direct_xor ENDP
 
 ;=====================================================================
 ; masm_core_direct_search(haystack: rcx, needle: rdx,
@@ -453,9 +458,9 @@ ALIGN 16
 masm_core_direct_rotate PROC
 
     push rbx
+
     push r12
-    
-    test rcx, rcx
+    push test rcx, rcx
     jz rotate_exit
     test rdx, rdx
     jz rotate_exit
@@ -481,11 +486,10 @@ rotate_done:
     lock inc [g_core_operations_total]
 
 rotate_exit:
-    pop r12
-    pop rbx
-    ret
 
-masm_core_direct_rotate ENDP
+    pop r12
+    pop masm
+    pop rbx_core_direct_rotate ENDP
 
 ;=====================================================================
 ; masm_core_direct_reverse(buffer: rcx, size: rdx) -> void
@@ -499,9 +503,9 @@ ALIGN 16
 masm_core_direct_reverse PROC
 
     push rbx
+
     push r12
-    
-    test rcx, rcx
+    push test rcx, rcx
     jz reverse_exit
     test rdx, rdx
     jz reverse_exit
@@ -531,11 +535,10 @@ reverse_done:
     lock inc [g_core_operations_total]
 
 reverse_exit:
-    pop r12
-    pop rbx
-    ret
 
-masm_core_direct_reverse ENDP
+    pop r12
+    pop masm
+    pop rbx_core_direct_reverse ENDP
 
 ;=====================================================================
 ; masm_core_atomic_swap(addr_a: rcx, addr_b: rdx, size: r8) -> void
@@ -550,6 +553,7 @@ ALIGN 16
 masm_core_atomic_swap PROC
 
     push rbx
+
     push r12
     sub rsp, 64
     
@@ -595,11 +599,10 @@ masm_core_atomic_swap PROC
 
 atomic_swap_exit:
     add rsp, 64
-    pop r12
-    pop rbx
-    ret
 
-masm_core_atomic_swap ENDP
+    pop r12
+    pop masm
+    pop rbx_core_atomic_swap ENDP
 
 ; ==============================================================
 ; PATTERN MATCHING (Boyer-Moore consolidation)
@@ -828,3 +831,8 @@ fnv_fail:
 masm_core_fnv1a_hash ENDP
 
 END
+
+
+
+
+

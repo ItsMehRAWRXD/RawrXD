@@ -132,6 +132,8 @@ QByteArray GGUFLoaderQt::inflateWeight(const QString& tensorName)
 
         // Convert std::vector<uint8_t> to QByteArray safely
         // Check for buffer overflow - limit to 2GB max tensor size
+        // NOTE: QByteArray uses a signed 32-bit integer for its size (INT_MAX),
+        // which limits individual data segments to ~2.14GB.
         if (data.size() > static_cast<size_t>(std::numeric_limits<int>::max())) {
             qCritical() << "[GGUFLoaderQt] Tensor too large (>2GB):" << tensorName << "Size:" << data.size();
             return QByteArray();

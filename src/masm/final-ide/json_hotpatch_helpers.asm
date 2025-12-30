@@ -57,6 +57,7 @@ PUBLIC _append_string
 ALIGN 16
 append_string PROC
     push rsi
+
     push rdi
     push rbx
     
@@ -78,11 +79,11 @@ append_loop:
     
 append_done:
     mov rax, rbx        ; return new offset
-    
-    pop rbx
-    pop rdi
+
+    pop rdi pop rbx
+
     pop rsi
-    ret
+
 append_string ENDP
 
 ; Alias for underscore naming convention
@@ -98,8 +99,10 @@ PUBLIC _append_int
 ALIGN 16
 append_int PROC
     push rsi
+
     push rdi
     push rbx
+
     push r12
     sub rsp, 32
     
@@ -119,12 +122,13 @@ append_int PROC
     call append_string
     
     add rsp, 32
-    pop r12
-    pop rbx
+
+    pop rbx pop r12
+
+
     pop rdi
-    pop rsi
-    ret
-append_int ENDP
+    pop append
+    pop rsi_int ENDP
 
 ; Alias for underscore naming convention
 _append_int EQU append_int
@@ -139,6 +143,7 @@ PUBLIC _append_float
 ALIGN 16
 append_float PROC
     push rsi
+
     push rdi
     push rbx
     sub rsp, 32
@@ -161,10 +166,11 @@ append_float PROC
     call append_string
     
     add rsp, 32
-    pop rbx
-    pop rdi
+
+    pop rdi pop rbx
+
     pop rsi
-    ret
+
 append_float ENDP
 
 ; Alias for underscore naming convention
@@ -180,9 +186,9 @@ PUBLIC _append_bool
 ALIGN 16
 append_bool PROC
     push rsi
+
     push rdi
-    
-    mov rdi, rcx
+    push mov rdi, rcx
     mov rsi, r8
     
     test edx, edx
@@ -199,11 +205,10 @@ append_bool_str:
     mov rcx, rdi
     mov r8, rsi
     call append_string
-    
+
     pop rdi
-    pop rsi
-    ret
-append_bool ENDP
+    pop append
+    pop rsi_bool ENDP
 
 ; Alias for underscore naming convention
 _append_bool EQU append_bool
@@ -218,6 +223,7 @@ PUBLIC _write_json_to_file
 ALIGN 16
 write_json_to_file PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -263,10 +269,11 @@ write_failed:
     
 write_done:
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 write_json_to_file ENDP
 
 ; Alias for underscore naming convention
@@ -282,6 +289,7 @@ PUBLIC _read_json_from_file
 ALIGN 16
 read_json_from_file PROC
     push rbx
+
     push rsi
     push rdi
     sub rsp, 32
@@ -319,21 +327,21 @@ read_json_from_file PROC
     
     ; Close handle
     push rax
-    mov rcx, r12
+    push mov rcx, r12
     call CloseHandle
-    pop rax
-    
-    jmp read_done
+    pop jmp
+    pop rax read_done
     
 read_failed:
     xor rax, rax
     
 read_done:
     add rsp, 32
-    pop rdi
-    pop rsi
+
+    pop rsi pop rdi
+
     pop rbx
-    ret
+
 read_json_from_file ENDP
 
 ; Alias for underscore naming convention
@@ -349,6 +357,7 @@ PUBLIC _find_json_key
 ALIGN 16
 find_json_key PROC
     push rsi
+
     push rdi
     push rbx
     
@@ -426,10 +435,11 @@ key_not_found:
     xor rax, rax
     
 find_done:
-    pop rbx
-    pop rdi
+
+    pop rdi pop rbx
+
     pop rsi
-    ret
+
 find_json_key ENDP
 
 ; Alias for underscore naming convention
@@ -445,8 +455,7 @@ PUBLIC _parse_json_int
 ALIGN 16
 parse_json_int PROC
     push rsi
-    
-    mov rsi, rcx
+    push mov rsi, rcx
     xor rax, rax        ; result
     xor rdx, rdx        ; digit
     mov r8, 10          ; base
@@ -479,7 +488,7 @@ parse_done:
     
 positive:
     pop rsi
-    ret
+
 parse_json_int ENDP
 
 ; Alias for underscore naming convention
@@ -495,8 +504,7 @@ PUBLIC _parse_json_bool
 ALIGN 16
 parse_json_bool PROC
     push rsi
-    
-    mov rsi, rcx
+    push mov rsi, rcx
     mov eax, dword ptr [rsi]
     
     ; Check for "true"
@@ -512,7 +520,7 @@ return_true:
     
 bool_done:
     pop rsi
-    ret
+
 parse_json_bool ENDP
 
 ; Alias for underscore naming convention
@@ -535,9 +543,9 @@ int_to_string PROC
         ; rcx = source, rdx = destination, r8d = max length
         ; Returns: eax = bytes copied
         push rsi
+
         push rdi
-    
-        mov rsi, rcx
+    push mov rsi, rcx
         mov rdi, rdx
         xor eax, eax
     
@@ -557,11 +565,12 @@ int_to_string PROC
         mov BYTE PTR [rdi + rax], 0
     
     copy_done:
-        pop rdi
+
+    pop rdi
         pop rsi
-        ret
     _copy_string ENDP
     push rsi
+
     push rdi
     push rbx
     
@@ -608,10 +617,11 @@ reverse_loop:
     jmp reverse_loop
     
 reverse_done:
-    pop rbx
-    pop rdi
+
+    pop rdi pop rbx
+
     pop rsi
-    ret
+
 int_to_string ENDP
 
 ;==========================================================================
@@ -621,6 +631,7 @@ int_to_string ENDP
 ;==========================================================================
 int_to_string_simple PROC
     push rsi
+
     push rdi
     push rbx
     
@@ -667,10 +678,11 @@ reverse_loop:
     jmp reverse_loop
     
 reverse_done:
-    pop rbx
-    pop rdi
+
+    pop rdi pop rbx
+
     pop rsi
-    ret
+
 int_to_string_simple ENDP
 
 ;==========================================================================
@@ -717,3 +729,8 @@ EXTERN ReadFile:PROC
 EXTERN CloseHandle:PROC
 
 END
+
+
+
+
+

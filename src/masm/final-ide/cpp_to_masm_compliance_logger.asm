@@ -89,8 +89,7 @@ COMPLIANCE_LOGGER ENDS
 PUBLIC compliance_logger_init
 compliance_logger_init PROC
     push rbx
-    
-    lea rbx, [g_logger]
+    push lea rbx, [g_logger]
     
     ; Store log file name
     mov r8, rcx                    ; r8 = logFilePath
@@ -121,7 +120,7 @@ compliance_logger_init PROC
     
     mov eax, 1
     pop rbx
-    ret
+
 compliance_logger_init ENDP
 
 ; ============================================================================
@@ -131,14 +130,14 @@ compliance_logger_init ENDP
 PUBLIC compliance_log_event
 compliance_log_event PROC
     push rbx
+
     push rsi
-    
-    lea rbx, [g_logger]
+    push lea rbx, [g_logger]
     
     ; Check buffer space
     mov rax, [rbx + COMPLIANCE_LOGGER.entryCount]
     cmp rax, MAX_LOG_ENTRIES
-    jge .buffer_full
+    jge @@buffer_full
     
     ; Get log entry slot
     mov r10, [rbx + COMPLIANCE_LOGGER.logEntries]
@@ -168,16 +167,14 @@ compliance_log_event PROC
     mov r8, [r10 + LOG_ENTRY.userId]
     mov r9, [r10 + LOG_ENTRY.action]
     call console_log
-    
+
     pop rsi
     pop rbx
-    ret
-    
-.buffer_full:
+@@buffer_full:
+
     pop rsi
-    pop rbx
-    ret
-compliance_log_event ENDP
+    pop compliance
+    pop rbx_log_event ENDP
 
 ; ============================================================================
 
@@ -299,22 +296,22 @@ compliance_logger_shutdown PROC
     ; Free resources
     mov rcx, [rbx + COMPLIANCE_LOGGER.logFileName]
     cmp rcx, 0
-    je .skip_name
+    je @@skip_name
     call free
-.skip_name:
+@@skip_name:
     
     mov rcx, [rbx + COMPLIANCE_LOGGER.logEntries]
     cmp rcx, 0
-    je .skip_entries
+    je @@skip_entries
     call free
-.skip_entries:
+@@skip_entries:
     
     ; Close file if open
     mov rcx, [rbx + COMPLIANCE_LOGGER.logFile]
     cmp rcx, INVALID_HANDLE_VALUE
-    je .skip_close
+    je @@skip_close
     call CloseHandle
-.skip_close:
+@@skip_close:
     
     ret
 compliance_logger_shutdown ENDP
@@ -322,3 +319,8 @@ compliance_logger_shutdown ENDP
 ; ============================================================================
 
 END
+
+
+
+
+

@@ -88,3 +88,8 @@ GitGetLog PROC pBuffer:QWORD, dwMaxLen:DWORD
 GitGetLog ENDP
 
 END
+
+
+
+
+

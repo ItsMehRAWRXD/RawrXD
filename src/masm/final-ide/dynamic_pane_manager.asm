@@ -603,10 +603,10 @@ DragPane_CreateDockZones_v2 PROC USES rcx r12
     
 zone_loop:
     ; Get pane rectangle
-    push    rcx
-    call    GetPaneRect      ; Returns rect in rax
-    pop     rcx
-    mov     r12, rax         ; r12 = pane rect
+    push rcx
+    push call    GetPaneRect      ; Returns rect in rax
+    pop mov
+    pop rcx     r12, rax         ; r12 = pane rect
     
     ; Create 5 dock zones around this pane
     call    CreatePaneZones
@@ -722,17 +722,17 @@ AddDockZone PROC
     inc     g_zoneCount
     
     ; Clear zone
-    push    rdi
-    push    rcx
-    mov     rdi, rbx
+    push rdi
+
+    push rcx
+    push mov     rdi, rbx
     xor     eax, eax
     mov     ecx, SIZEOF DOCK_ZONE
     rep     stosb
-    pop     rcx
-    pop     rdi
-    ret
-    
-add_failed:
+
+    pop rcx
+    pop add
+    pop rdi_failed:
     xor     rbx, rbx
     ret
 AddDockZone ENDP
@@ -1082,8 +1082,8 @@ save_pane_loop:
     mov     rcx, r12
     mov     r8d, SIZEOF IDE_PANE
     lea     r9, [rsp + 32]
-    push    0
-    sub     rsp, 32
+    push 0
+    sub rsp, 32
     call    WriteFile
     add     rsp, 40
     
@@ -1174,3 +1174,7 @@ PaneSystem_RefreshLayout_alt PROC
 PaneSystem_RefreshLayout_alt ENDP
 
 END
+
+
+
+
