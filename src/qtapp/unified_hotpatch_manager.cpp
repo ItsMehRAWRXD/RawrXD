@@ -25,10 +25,11 @@ UnifiedResult UnifiedHotpatchManager::initialize()
     }
     
     try {
-        // Initialize all three hotpatch subsystems
+        // Initialize all hotpatch subsystems
         m_memoryHotpatch = std::make_unique<ModelMemoryHotpatch>(this);
         m_byteHotpatch = std::make_unique<ByteLevelHotpatcher>(this);
         m_serverHotpatch = std::make_unique<GGUFServerHotpatch>(this);
+        m_universalWrapper = std::make_unique<UniversalWrapperMASM>(UniversalWrapperMASM::WrapperMode::PURE_MASM);
         
         // Connect signals
         connectSignals();
@@ -68,6 +69,11 @@ GGUFServerHotpatch* UnifiedHotpatchManager::serverHotpatcher() const
     return m_serverHotpatch.get();
 }
 
+UniversalWrapperMASM* UnifiedHotpatchManager::universalWrapper() const
+{
+    return m_universalWrapper.get();
+}
+
 UnifiedResult UnifiedHotpatchManager::attachToModel(void* modelPtr, size_t modelSize, const QString& modelPath)
 {
     QMutexLocker lock(&m_mutex);
@@ -80,11 +86,19 @@ UnifiedResult UnifiedHotpatchManager::attachToModel(void* modelPtr, size_t model
         return UnifiedResult::failureResult("attachToModel", "Already attached to a model", PatchLayer::System);
     }
     
-    // Attach memory hotpatcher
-    if (m_memoryEnabled && m_memoryHotpatch) {
+    // Use Universal Wrapper for format detection if available
+    if (m_universalWrapper && !modelPath.isEmpty()) {
+        auto format = m_universalWrapper->detectFormat(modelPath);
+        qInfo() << "[UnifiedHotpatch] Universal Wrapper detected format:" << static_cast<int>(format);
+    }
+    
+    // Attach memory hotpatcher only if we have valid model pointer
+    if (m_memoryEnabled && m_memoryHotpatch && modelPtr && modelSize > 0) {
         if (!m_memoryHotpatch->attachToModel(modelPtr, modelSize)) {
             return UnifiedResult::failureResult("attachToModel", "Failed to attach memory hotpatcher", PatchLayer::Memory);
         }
+    } else if (m_memoryEnabled && m_memoryHotpatch) {
+        qWarning() << "[UnifiedHotpatch] Cannot attach memory hotpatcher: invalid model pointer or size";
     }
     
     // Load model for byte-level patching
@@ -103,6 +117,35 @@ UnifiedResult UnifiedHotpatchManager::attachToModel(void* modelPtr, size_t model
     
     return UnifiedResult::successResult("attachToModel", PatchLayer::System, 
         QString("Attached to %1").arg(modelPath));
+}
+
+UnifiedResult UnifiedHotpatchManager::loadModelUniversal(const QString& modelPath)
+{
+    QMutexLocker lock(&m_mutex);
+    
+    if (!m_initialized || !m_universalWrapper) {
+        return UnifiedResult::failureResult("loadModelUniversal", "Not initialized", PatchLayer::Universal);
+    }
+    
+    qInfo() << "[UnifiedHotpatch] Loading model via Universal Wrapper:" << modelPath;
+    
+    auto format = m_universalWrapper->detectFormat(modelPath);
+    if (format == UniversalWrapperMASM::Format::UNKNOWN) {
+        return UnifiedResult::failureResult("loadModelUniversal", "Unknown model format", PatchLayer::Universal);
+    }
+    
+    bool success = m_universalWrapper->loadModelAuto(modelPath);
+    if (!success) {
+        return UnifiedResult::failureResult("loadModelUniversal", 
+            QString("Failed to load model: %1").arg(m_universalWrapper->getLastError()), 
+            PatchLayer::Universal);
+    }
+    
+    QString tempGGUF = m_universalWrapper->getTempOutputPath();
+    qInfo() << "[UnifiedHotpatch] Model loaded and converted to GGUF:" << tempGGUF;
+    
+    // Now attach to the converted GGUF
+    return attachToModel(nullptr, 0, tempGGUF);
 }
 
 UnifiedResult UnifiedHotpatchManager::detachAll()
