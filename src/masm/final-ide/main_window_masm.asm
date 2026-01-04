@@ -306,8 +306,10 @@ MainWindow_Initialize proc hInstance:QWORD
     push 100
     push 100
     push WS_OVERLAPPEDWINDOW
-    push offset szWindowTitle
-    push offset WND_CLASS_NAME
+    push offset
+    push szWindowTitle
+    push offset
+    push WND_CLASS_NAME
     push 0
     call CreateWindowExA
     mov g_mainWindow.hWnd, rax
@@ -349,7 +351,8 @@ MainWindow_Initialize proc hInstance:QWORD
     call UpdateWindow
     
     ; Set initial status
-    push offset szStatusInitializing
+    push offset
+    push szStatusInitializing
     call MainWindow_SetStatusMessage
     
     mov rax, TRUE

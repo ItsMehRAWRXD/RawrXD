@@ -1156,3 +1156,4 @@ msg_full:
 add_chat_message ENDP
 
 END
+

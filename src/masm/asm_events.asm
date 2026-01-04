@@ -517,3 +517,4 @@ loop_stats_zero:
 asm_event_loop_stats ENDP
 
 END
+

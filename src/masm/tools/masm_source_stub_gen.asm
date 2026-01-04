@@ -831,4 +831,5 @@ main proc
     call ExitProcess
 main endp
 
-END main
+END
+

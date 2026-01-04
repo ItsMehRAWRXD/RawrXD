@@ -98,15 +98,15 @@ ghost_text_init PROC
     xor edx, edx
     mov r8d, MAX_SUGGESTIONS * (SIZE SUGGESTION) / 8
     
-.zero_loop:
+zero_loop_local:
     cmp r8d, 0
-    je .zero_done
+    je zero_done_local
     mov QWORD PTR [rcx + rdx], 0
     add rdx, 8
     dec r8d
-    jmp .zero_loop
+    jmp zero_loop_local
     
-.zero_done:
+zero_done_local:
     mov SuggestionCount, 0
     mov CurrentSuggestion, 0
     mov GhostTextState, GHOST_STATE_HIDDEN
@@ -144,7 +144,7 @@ ghost_text_generate_suggestions PROC
     lea rdx, szForPattern
     call string_ends_with
     test eax, eax
-    jz .check_if_pattern
+    jz check_if_pattern_local
     
     ; Generate for-loop suggestion
     lea rcx, CurrentSuggestions
@@ -154,12 +154,12 @@ ghost_text_generate_suggestions PROC
     
     inc edi
     
-.check_if_pattern:
+check_if_pattern_local:
     mov rcx, rsi
     lea rdx, szIfPattern
     call string_ends_with
     test eax, eax
-    jz .check_while_pattern
+    jz check_while_pattern_local
     
     ; Generate if-statement suggestion
     lea rcx, CurrentSuggestions
@@ -169,12 +169,12 @@ ghost_text_generate_suggestions PROC
     
     inc edi
     
-.check_while_pattern:
+check_while_pattern_local:
     mov rcx, rsi
     lea rdx, szWhilePattern
     call string_ends_with
     test eax, eax
-    jz .check_function_pattern
+    jz check_function_pattern_local
     
     ; Generate while-loop suggestion
     lea rcx, CurrentSuggestions
@@ -184,12 +184,12 @@ ghost_text_generate_suggestions PROC
     
     inc edi
     
-.check_function_pattern:
+check_function_pattern_local:
     mov rcx, rsi
     lea rdx, szFunctionPattern
     call string_ends_with
     test eax, eax
-    jz .suggestions_done
+    jz suggestions_done_local
     
     ; Generate function body suggestion
     lea rcx, CurrentSuggestions
@@ -199,7 +199,7 @@ ghost_text_generate_suggestions PROC
     
     inc edi
     
-.suggestions_done:
+suggestions_done_local:
     ; Store context for next time
     mov rcx, rsi
     lea rdx, PreviousContext
@@ -225,7 +225,7 @@ add_suggestion PROC
     
     mov rbx, SuggestionCount
     cmp rbx, MAX_SUGGESTIONS
-    jge .add_done
+    jge add_done_local
     
     ; Get suggestion entry
     imul eax, ebx, SIZE SUGGESTION
@@ -247,7 +247,7 @@ add_suggestion PROC
     
     inc SuggestionCount
     
-.add_done:
+add_done_local:
     pop rbx
     ret
 add_suggestion ENDP
@@ -259,20 +259,20 @@ PRIVATE copy_suggestion_text
 copy_suggestion_text PROC
     xor ecx, ecx
     
-.copy_loop:
+copy_loop_local:
     cmp ecx, r9d
-    jge .copy_done
+    jge copy_done_local
     
     movzx ebx, BYTE PTR [rdx + rcx]
     mov BYTE PTR [rax + rcx], bl
     
     test bl, bl
-    je .copy_done
+    je copy_done_local
     
     inc ecx
-    jmp .copy_loop
+    jmp copy_loop_local
     
-.copy_done:
+copy_done_local:
     mov BYTE PTR [rax + rcx], 0
     ret
 copy_suggestion_text ENDP
@@ -290,7 +290,7 @@ ghost_text_show PROC
     
     ; Validate index
     cmp ecx, SuggestionCount
-    jge .show_fail
+    jge show_fail_local
     
     mov CurrentSuggestion, ecx
     
@@ -325,7 +325,7 @@ ghost_text_show PROC
     pop rbx
     ret
     
-.show_fail:
+show_fail_local:
     xor eax, eax
     add rsp, 32
     pop rsi
@@ -344,7 +344,7 @@ ghost_text_accept PROC
     sub rsp, 32
     
     cmp GhostTextState, GHOST_STATE_VISIBLE
-    jne .accept_fail
+    jne accept_fail_local
     
     ; Get current suggestion text
     mov eax, CurrentSuggestion
@@ -372,7 +372,7 @@ ghost_text_accept PROC
     pop rbx
     ret
     
-.accept_fail:
+accept_fail_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -405,11 +405,11 @@ ghost_text_cycle_next PROC
     mov eax, CurrentSuggestion
     inc eax
     cmp eax, SuggestionCount
-    jl .show_next
+    jl show_next_local
     
     xor eax, eax                        ; Wrap to first
     
-.show_next:
+show_next_local:
     mov ecx, eax
     call ghost_text_show
     ret
@@ -426,29 +426,29 @@ string_ends_with PROC
     mov rsi, rcx
     xor eax, eax
     
-.len_loop:
+len_loop_local:
     cmp BYTE PTR [rsi + rax], 0
-    je .len_found
+    je len_found_local
     inc eax
-    jmp .len_loop
+    jmp len_loop_local
     
-.len_found:
+len_found_local:
     mov ebx, eax                        ; ebx = text length
     
     ; Get pattern length
     mov rsi, rdx
     xor eax, eax
     
-.pattern_len_loop:
+pattern_len_loop_local:
     cmp BYTE PTR [rsi + rax], 0
-    je .pattern_len_found
+    je pattern_len_found_local
     inc eax
-    jmp .pattern_len_loop
+    jmp pattern_len_loop_local
     
-.pattern_len_found:
+pattern_len_found_local:
     ; Check if pattern fits at end of text
     cmp eax, ebx
-    jg .no_match
+    jg no_match_local
     
     ; Compare last N characters
     mov esi, ebx
@@ -459,24 +459,24 @@ string_ends_with PROC
     
     mov rcx, 0
     
-.compare_loop:
+compare_loop_local:
     mov al, BYTE PTR [rdi + rcx]
     mov bl, BYTE PTR [rdx + rcx]
     cmp al, bl
-    jne .no_match
+    jne no_match_local
     
     test bl, bl
-    je .match_found
+    je match_found_local
     
     inc rcx
-    jmp .compare_loop
+    jmp compare_loop_local
     
-.match_found:
+match_found_local:
     mov eax, 1
     pop rbx
     ret
     
-.no_match:
+no_match_local:
     xor eax, eax
     pop rbx
     ret
@@ -489,20 +489,20 @@ PRIVATE copy_ghost_text
 copy_ghost_text PROC
     xor eax, eax
     
-.copy_loop:
+copy_loop_local:
     cmp eax, r8d
-    jge .copy_done
+    jge copy_done_local
     
     movzx ebx, BYTE PTR [rdx + rax]
     mov BYTE PTR [rcx + rax], bl
     
     test bl, bl
-    je .copy_done
+    je copy_done_local
     
     inc eax
-    jmp .copy_loop
+    jmp copy_loop_local
     
-.copy_done:
+copy_done_local:
     ret
 copy_ghost_text ENDP
 
@@ -513,20 +513,20 @@ PRIVATE copy_context_safe
 copy_context_safe PROC
     xor eax, eax
     
-.copy_loop:
+copy_loop_local:
     cmp eax, r8d
-    jge .copy_done
+    jge copy_done_local
     
     movzx ebx, BYTE PTR [rdx + rax]
     mov BYTE PTR [rcx + rax], bl
     
     test bl, bl
-    je .copy_done
+    je copy_done_local
     
     inc eax
-    jmp .copy_loop
+    jmp copy_loop_local
     
-.copy_done:
+copy_done_local:
     ret
 copy_context_safe ENDP
 
@@ -571,3 +571,4 @@ log_ghost_text_event ENDP
     szSuggestionFunctionBody BYTE "    ret",0
 
 END
+

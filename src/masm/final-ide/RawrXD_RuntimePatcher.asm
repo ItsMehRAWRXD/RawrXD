@@ -128,3 +128,4 @@ RawrXD_LogPatchEvent PROC
 RawrXD_LogPatchEvent ENDP
 
 END
+

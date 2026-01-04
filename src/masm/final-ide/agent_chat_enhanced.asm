@@ -1149,3 +1149,4 @@ agent_chat_log_reasoning ENDP
     szGenericFix            BYTE "Follow the recommendations above to resolve the issue",0
 
 END
+

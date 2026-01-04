@@ -106,7 +106,8 @@ RegisterCorePanes PROC USES rbx
     lea     rdx, szExplorer
     mov     r8, OFFSET CreateExplorerPane
     mov     r9, OFFSET UpdateExplorerPane
-    push    OFFSET DestroyExplorerPane
+    push OFFSET
+    push DestroyExplorerPane
     sub     rsp, 32
     call    PaneSystem_RegisterPane
     add     rsp, 40
@@ -116,7 +117,8 @@ RegisterCorePanes PROC USES rbx
     lea     rdx, szEditor
     mov     r8, OFFSET CreateEditorPane
     mov     r9, OFFSET UpdateEditorPane
-    push    OFFSET DestroyEditorPane
+    push OFFSET
+    push DestroyEditorPane
     sub     rsp, 32
     call    PaneSystem_RegisterPane
     add     rsp, 40
@@ -126,7 +128,8 @@ RegisterCorePanes PROC USES rbx
     lea     rdx, szTerminal
     mov     r8, OFFSET CreateTerminalPane
     mov     r9, OFFSET UpdateTerminalPane
-    push    OFFSET DestroyTerminalPane
+    push OFFSET
+    push DestroyTerminalPane
     sub     rsp, 32
     call    PaneSystem_RegisterPane
     add     rsp, 40
@@ -136,7 +139,8 @@ RegisterCorePanes PROC USES rbx
     lea     rdx, szChat
     mov     r8, OFFSET CreateChatPane
     mov     r9, OFFSET UpdateChatPane
-    push    OFFSET DestroyChatPane
+    push OFFSET
+    push DestroyChatPane
     sub     rsp, 32
     call    PaneSystem_RegisterPane
     add     rsp, 40
@@ -146,7 +150,8 @@ RegisterCorePanes PROC USES rbx
     lea     rdx, szTabs
     mov     r8, OFFSET CreateTabsPane
     mov     r9, OFFSET UpdateTabsPane
-    push    OFFSET DestroyTabsPane
+    push OFFSET
+    push DestroyTabsPane
     sub     rsp, 32
     call    PaneSystem_RegisterPane
     add     rsp, 40
@@ -156,7 +161,8 @@ RegisterCorePanes PROC USES rbx
     lea     rdx, szStatusBar
     mov     r8, OFFSET CreateStatusPane
     mov     r9, OFFSET UpdateStatusPane
-    push    OFFSET DestroyStatusPane
+    push OFFSET
+    push DestroyStatusPane
     sub     rsp, 32
     call    PaneSystem_RegisterPane
     add     rsp, 40

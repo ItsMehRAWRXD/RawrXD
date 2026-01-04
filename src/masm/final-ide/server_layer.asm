@@ -21,6 +21,17 @@
 ;   13. apply_hotpatch_to_response()   - Post-response hotpatching
 ;   14. manage_connection_pool()       - Connection lifecycle
 ;   15. throttle_requests()            - Rate limiting
+
+; External Win32 API declarations
+EXTERN HeapAlloc:PROC
+EXTERN HeapFree:PROC
+EXTERN CloseHandle:PROC
+EXTERN WaitForSingleObject:PROC
+EXTERN ReleaseMutex:PROC
+EXTERN CreateMutex:PROC
+EXTERN CreateThread:PROC
+
+includelib kernel32.lib
 ;   16. log_request()                  - Log access/errors
 ;   17. get_server_stats()             - Request counts, latency
 ;   18. validate_api_key()             - API key authentication
@@ -107,7 +118,8 @@
 server_init PROC PUBLIC
     push rbp
     mov rbp, rsp
-    push rbx r12 r13
+    push rbx
+    push r12
     
     mov r12d, ecx               ; R12D = port
     mov r13d, edx               ; R13D = max_connections
@@ -116,34 +128,34 @@ server_init PROC PUBLIC
     mov rcx, 128
     call HeapAlloc
     test rax, rax
-    jz .server_init_oom
+    jz server_init_oom_local
     
     mov rbx, rax                ; RBX = HTTP_SERVER*
     
     ; Initialize fields
     mov [rbx + 40], r12d        ; port
     mov [rbx + 44], r13d        ; max_connections
-    mov dword [rbx + 48], 0     ; current_connections = 0
-    mov dword [rbx + 52], 0     ; route_count = 0
-    mov dword [rbx + 56], 0     ; total_requests = 0
-    mov dword [rbx + 60], 0     ; error_count = 0
-    mov byte [rbx + 80], 0      ; server_running = false
-    mov byte [rbx + 81], 0      ; tls_enabled = false
+    mov dword ptr [rbx + 48], 0     ; current_connections = 0
+    mov dword ptr [rbx + 52], 0     ; route_count = 0
+    mov dword ptr [rbx + 56], 0     ; total_requests = 0
+    mov dword ptr [rbx + 60], 0     ; error_count = 0
+    mov byte ptr [rbx + 80], 0      ; server_running = false
+    mov byte ptr [rbx + 81], 0      ; tls_enabled = false
     
     ; Allocate route map (hash table for ~256 routes)
     mov rcx, 2048
     call HeapAlloc
     test rax, rax
-    jz .server_init_route_oom
+    jz server_init_route_oom_local
     
     mov [rbx + 8], rax          ; route_map
     
     ; Allocate connection pool
-    mov rcx, r13d
+    mov ecx, r13d
     imul rcx, 96                ; Each HTTP_CONNECTION is ~96 bytes
     call HeapAlloc
     test rax, rax
-    jz .server_init_conn_oom
+    jz server_init_conn_oom_local
     
     mov [rbx + 16], rax         ; connection_pool
     
@@ -151,7 +163,7 @@ server_init PROC PUBLIC
     mov rcx, 16384              ; 16 KB for log
     call HeapAlloc
     test rax, rax
-    jz .server_init_log_oom
+    jz server_init_log_oom_local
     
     mov [rbx + 24], rax         ; request_log
     
@@ -164,28 +176,29 @@ server_init PROC PUBLIC
     
     ; Create listening socket (WSASocket or WinHTTP)
     ; (Simplified: assume socket creation succeeds)
-    mov [rbx + 0], 1            ; Placeholder socket handle
+    mov dword ptr [rbx + 0], 1  ; Placeholder socket handle
     
     mov rax, rbx                ; Return HTTP_SERVER*
-    jmp .server_init_done
+    jmp server_init_done_local
     
-.server_init_log_oom:
+server_init_log_oom_local:
     mov rcx, [rbx + 16]
     call HeapFree
     
-.server_init_conn_oom:
+server_init_conn_oom_local:
     mov rcx, [rbx + 8]
     call HeapFree
     
-.server_init_route_oom:
+server_init_route_oom_local:
     mov rcx, rbx
     call HeapFree
     
-.server_init_oom:
+server_init_oom_local:
     xor rax, rax
     
-.server_init_done:
-    pop r13 r12 rbx
+server_init_done_local:
+    pop r12
+    pop r13
     pop rbp
     ret
 server_init ENDP
@@ -205,20 +218,20 @@ server_shutdown PROC PUBLIC
     
     mov rbx, rcx                ; RBX = HTTP_SERVER*
     test rbx, rbx
-    jz .server_shutdown_invalid
+    jz server_shutdown_invalid_local
     
     ; Acquire mutex
     mov rcx, [rbx + 64]
     call WaitForSingleObject
     
     ; Close listening socket
-    cmp qword [rbx + 0], 0
-    je .server_shutdown_no_socket
+    cmp qword ptr [rbx + 0], 0
+    je server_shutdown_no_socket_local
     
     mov rcx, [rbx + 0]
     call CloseHandle
     
-.server_shutdown_no_socket:
+server_shutdown_no_socket_local:
     ; Free all structures
     mov rcx, [rbx + 8]
     call HeapFree
@@ -229,13 +242,13 @@ server_shutdown PROC PUBLIC
     mov rcx, [rbx + 24]
     call HeapFree
     
-    cmp qword [rbx + 32], 0
-    je .server_shutdown_no_tls
+    cmp qword ptr [rbx + 32], 0
+    je server_shutdown_no_tls_local
     
     mov rcx, [rbx + 32]
     call HeapFree
     
-.server_shutdown_no_tls:
+server_shutdown_no_tls_local:
     ; Close and release mutex
     mov rcx, [rbx + 64]
     call ReleaseMutex
@@ -248,12 +261,12 @@ server_shutdown PROC PUBLIC
     call HeapFree
     
     xor rax, rax
-    jmp .server_shutdown_done
+    jmp server_shutdown_done_local
     
-.server_shutdown_invalid:
+server_shutdown_invalid_local:
     mov rax, 1
     
-.server_shutdown_done:
+server_shutdown_done_local:
     pop rbx
     pop rbp
     ret
@@ -313,7 +326,7 @@ server_start PROC PUBLIC
     call WaitForSingleObject
     
     ; Set server_running = true
-    mov byte [rbx + 80], 1
+    mov byte ptr [rbx + 80], 1
     
     ; Create accept thread (simplified: would call CreateThread)
     
@@ -346,7 +359,7 @@ server_stop PROC PUBLIC
     call WaitForSingleObject
     
     ; Set server_running = false
-    mov byte [rbx + 80], 0
+    mov byte ptr [rbx + 80], 0
     
     ; Close all active connections
     ; (Simplified: would iterate connection_pool)
@@ -374,7 +387,8 @@ server_stop ENDP
 register_route PROC PUBLIC
     push rbp
     mov rbp, rsp
-    push rbx r12
+    push rbx
+    push r12
     
     mov rbx, rcx                ; RBX = HTTP_SERVER*
     mov r12, r8                 ; R12 = handler_func
@@ -386,44 +400,45 @@ register_route PROC PUBLIC
     ; Check route_count < 256
     mov eax, [rbx + 52]
     cmp eax, 256
-    jge .register_route_full
+    jge register_route_full_local
     
     ; Allocate HTTP_ROUTE structure
     mov rcx, 32
     call HeapAlloc
     test rax, rax
-    jz .register_route_oom
+    jz register_route_oom_local
     
     ; Store route data
     mov [rax + 0], rdx          ; uri_pattern
     mov [rax + 8], r12          ; handler_func
     mov [rax + 16], r9d         ; method_mask
-    mov byte [rax + 20], 0      ; requires_auth = false
+    mov byte ptr [rax + 20], 0      ; requires_auth = false
     
     ; Add to route_map (simplified: linear)
     ; Increment route_count
-    inc dword [rbx + 52]
+    inc dword ptr [rbx + 52]
     
     ; Release mutex
     mov rcx, [rbx + 64]
     call ReleaseMutex
     
     xor rax, rax
-    jmp .register_route_done
+    jmp register_route_done_local
     
-.register_route_full:
+register_route_full_local:
     mov rcx, [rbx + 64]
     call ReleaseMutex
     mov rax, 1
-    jmp .register_route_done
+    jmp register_route_done_local
     
-.register_route_oom:
+register_route_oom_local:
     mov rcx, [rbx + 64]
     call ReleaseMutex
     mov rax, 2
     
-.register_route_done:
-    pop r12 rbx
+register_route_done_local:
+    pop rbx
+    pop r12
     pop rbp
     ret
 register_route ENDP
@@ -503,3 +518,9 @@ manage_sessions PROC PUBLIC
 manage_sessions ENDP
 
 END
+
+
+
+
+
+

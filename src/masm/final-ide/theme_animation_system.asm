@@ -261,15 +261,15 @@ animation_system_init PROC
     call malloc
     mov [g_animSystem.animationPool], rax
     test rax, rax
-    jz .init_failed
+    jz init_failed_local
 
     ; Initialize all animations to idle state
     mov rbx, rax
     xor r8d, r8d
 
-.init_loop:
+init_loop_local:
     cmp r8d, MAX_ANIMATIONS
-    jge .init_complete
+    jge init_complete_local
 
     mov rcx, r8d
     mov rdx, SIZEOF ANIMATION
@@ -282,9 +282,9 @@ animation_system_init PROC
     mov dword ptr [rcx + ANIMATION.droppedFrames], 0
 
     inc r8d
-    jmp .init_loop
+    jmp init_loop_local
 
-.init_complete:
+init_complete_local:
     ; Generate easing lookup tables
     call .generate_easing_tables
 
@@ -305,23 +305,23 @@ animation_system_init PROC
     pop rbx
     ret
 
-.init_failed:
+init_failed_local:
     xor eax, eax
     add rsp, 40
     pop r12
     pop rbx
     ret
 
-.generate_easing_tables:
+generate_easing_tables_local:
     ; Generate lookup tables for common easing functions
     ; Format: 256 entries of REAL4 (0.0 to 1.0)
     ; Used for fast interpolation
 
     ; Ease-in: f(x) = x^2
     xor r8d, r8d
-.gen_ease_in:
+gen_ease_in_local:
     cmp r8d, 256
-    jge .gen_ease_out
+    jge gen_ease_out_local
 
     mov eax, r8d
     cvtsi2ss xmm0, eax
@@ -331,14 +331,14 @@ animation_system_init PROC
     movss [g_easeInTable + r8d * 4], xmm1
 
     inc r8d
-    jmp .gen_ease_in
+    jmp gen_ease_in_local
 
-.gen_ease_out:
+gen_ease_out_local:
     ; Ease-out: f(x) = 1 - (1-x)^2
     xor r8d, r8d
-.gen_ease_out_loop:
+gen_ease_out_loop_local:
     cmp r8d, 256
-    jge .gen_ease_in_out
+    jge gen_ease_in_out_local
 
     mov eax, r8d
     cvtsi2ss xmm0, eax
@@ -352,30 +352,30 @@ animation_system_init PROC
     movss [g_easeOutTable + r8d * 4], xmm3
 
     inc r8d
-    jmp .gen_ease_out_loop
+    jmp gen_ease_out_loop_local
 
-.gen_ease_in_out:
+gen_ease_in_out_local:
     ; Ease-in-out: combined
     xor r8d, r8d
-.gen_ease_in_out_loop:
+gen_ease_in_out_loop_local:
     cmp r8d, 256
-    jge .tables_done
+    jge tables_done_local
 
     mov eax, r8d
     cvtsi2ss xmm0, eax
     divss xmm0, dword ptr [rel one_256]
 
     cmp r8d, 128
-    jge .ease_in_out_second_half
+    jge ease_in_out_second_half_local
 
     ; First half: ease-in
     movss xmm1, xmm0
     mulss xmm1, xmm1
     mulss xmm1, dword ptr [rel half]
     movss [g_easeInOutTable + r8d * 4], xmm1
-    jmp .continue_ease_in_out
+    jmp continue_ease_in_out_local
 
-.ease_in_out_second_half:
+ease_in_out_second_half_local:
     ; Second half: ease-out
     movss xmm1, dword ptr [rel one]
     subss xmm1, xmm0
@@ -388,11 +388,11 @@ animation_system_init PROC
     addss xmm3, xmm4
     movss [g_easeInOutTable + r8d * 4], xmm3
 
-.continue_ease_in_out:
+continue_ease_in_out_local:
     inc r8d
-    jmp .gen_ease_in_out_loop
+    jmp gen_ease_in_out_loop_local
 
-.tables_done:
+tables_done_local:
     ret
 
 animation_system_init ENDP
@@ -424,9 +424,9 @@ animation_create PROC
     mov rax, [g_animSystem.animationPool]
     xor r8d, r8d
 
-.find_free:
+find_free_local:
     cmp r8d, [g_animSystem.maxAnimations]
-    jge .create_failed
+    jge create_failed_local
 
     mov rcx, r8d
     mov rdx, SIZEOF ANIMATION
@@ -434,12 +434,12 @@ animation_create PROC
     add rcx, rax
 
     cmp byte ptr [rcx + ANIMATION.state], ANIM_STATE_IDLE
-    je .slot_free
+    je slot_free_local
 
     inc r8d
-    jmp .find_free
+    jmp find_free_local
 
-.slot_free:
+slot_free_local:
     ; Assign animation ID
     mov edx, [g_animSystem.nextAnimationId]
     mov [rcx + ANIMATION.animationId], edx
@@ -469,7 +469,7 @@ animation_create PROC
     pop rbx
     ret
 
-.create_failed:
+create_failed_local:
     mov eax, -1
     add rsp, 48
     pop r12
@@ -493,9 +493,9 @@ animation_start PROC
     mov rax, [g_animSystem.animationPool]
     xor r9d, r9d
 
-.find_start:
+find_start_local:
     cmp r9d, [g_animSystem.maxAnimations]
-    jge .start_not_found
+    jge start_not_found_local
 
     mov rcx, r9d
     mov rdx, SIZEOF ANIMATION
@@ -504,12 +504,12 @@ animation_start PROC
 
     mov edx, [rcx + ANIMATION.animationId]
     cmp edx, r8d
-    je .anim_found
+    je anim_found_local
 
     inc r9d
-    jmp .find_start
+    jmp find_start_local
 
-.anim_found:
+anim_found_local:
     ; Set state to RUNNING
     mov byte ptr [rcx + ANIMATION.state], ANIM_STATE_RUNNING
 
@@ -527,7 +527,7 @@ animation_start PROC
     pop rbx
     ret
 
-.start_not_found:
+start_not_found_local:
     xor eax, eax
     add rsp, 40
     pop rbx
@@ -549,9 +549,9 @@ animation_stop PROC
     mov rax, [g_animSystem.animationPool]
     xor r9d, r9d
 
-.find_stop:
+find_stop_local:
     cmp r9d, [g_animSystem.maxAnimations]
-    jge .stop_not_found
+    jge stop_not_found_local
 
     mov rcx, r9d
     mov rdx, SIZEOF ANIMATION
@@ -560,29 +560,29 @@ animation_stop PROC
 
     mov edx, [rcx + ANIMATION.animationId]
     cmp edx, r8d
-    je .stop_found
+    je stop_found_local
 
     inc r9d
-    jmp .find_stop
+    jmp find_stop_local
 
-.stop_found:
+stop_found_local:
     mov byte ptr [rcx + ANIMATION.state], ANIM_STATE_CANCELLED
 
     ; Call cancel callback
     mov r8, [rcx + ANIMATION.onCancelCallback]
     test r8, r8
-    jz .stop_complete
+    jz stop_complete_local
 
     mov rcx, [rcx + ANIMATION.callbackContext]
     call r8
 
-.stop_complete:
+stop_complete_local:
     mov eax, 1
     add rsp, 40
     pop rbx
     ret
 
-.stop_not_found:
+stop_not_found_local:
     xor eax, eax
     add rsp, 40
     pop rbx
@@ -613,9 +613,9 @@ animation_update PROC
     xor r8d, r8d                    ; Animation index
     xor r9d, r9d                    ; Active count
 
-.update_loop:
+update_loop_local:
     cmp r8d, [g_animSystem.maxAnimations]
-    jge .update_complete
+    jge update_complete_local
 
     mov rcx, r8d
     mov rdx, SIZEOF ANIMATION
@@ -625,10 +625,10 @@ animation_update PROC
 
     mov dl, [r13 + ANIMATION.state]
     cmp dl, ANIM_STATE_IDLE
-    je .skip_animation
+    je skip_animation_local
 
     cmp dl, ANIM_STATE_IDLE
-    je .skip_animation
+    je skip_animation_local
 
     ; Calculate elapsed time
     mov rbx, r12
@@ -638,7 +638,7 @@ animation_update PROC
     ; Check if animation complete
     mov rcx, [r13 + ANIMATION.duration_ms]
     cmp rbx, rcx
-    jl .animate_frame
+    jl animate_frame_local
 
     ; Animation complete
     mov byte ptr [r13 + ANIMATION.state], ANIM_STATE_COMPLETED
@@ -646,14 +646,14 @@ animation_update PROC
     ; Call complete callback
     mov r8, [r13 + ANIMATION.onCompleteCallback]
     test r8, r8
-    jz .skip_animation
+    jz skip_animation_local
 
     mov rcx, [r13 + ANIMATION.callbackContext]
     call r8
 
-    jmp .skip_animation
+    jmp skip_animation_local
 
-.animate_frame:
+animate_frame_local:
     ; Calculate interpolation progress (0.0 to 1.0)
     cvtsi2sd xmm0, rbx             ; elapsed time
     cvtsi2sd xmm1, rcx             ; duration
@@ -677,20 +677,20 @@ animation_update PROC
     ; Call progress callback
     mov r8, [r13 + ANIMATION.onProgressCallback]
     test r8, r8
-    jz .frame_done
+    jz frame_done_local
 
     mov rcx, [r13 + ANIMATION.callbackContext]
     call r8
 
-.frame_done:
+frame_done_local:
     inc dword ptr [r13 + ANIMATION.totalFrames]
     inc r9d
 
-.skip_animation:
+skip_animation_local:
     inc r8d
-    jmp .update_loop
+    jmp update_loop_local
 
-.update_complete:
+update_complete_local:
     mov eax, r9d
     inc qword ptr [g_totalFramesRendered]
     add rsp, 56
@@ -699,48 +699,48 @@ animation_update PROC
     pop rbx
     ret
 
-.apply_easing:
+apply_easing_local:
     ; RCX = animation context, RDX = progress (XMM0)
     ; Returns eased progress in RDX
     mov al, [rcx + ANIMATION.easingFunction]
 
     cmp al, EASING_LINEAR
-    je .easing_done
+    je easing_done_local
 
     cmp al, EASING_EASE_IN
-    je .ease_in_func
+    je ease_in_func_local
 
     cmp al, EASING_EASE_OUT
-    je .ease_out_func
+    je ease_out_func_local
 
     cmp al, EASING_EASE_IN_OUT
-    je .ease_in_out_func
+    je ease_in_out_func_local
 
     ; Default to linear
     ret
 
-.ease_in_func:
+ease_in_func_local:
     mulsd xmm0, xmm0
     ret
 
-.ease_out_func:
+ease_out_func_local:
     movsd xmm1, qword ptr [rel one]
     subsd xmm1, xmm0
     mulsd xmm1, xmm1
     subsd xmm0, xmm1
     ret
 
-.ease_in_out_func:
+ease_in_out_func_local:
     movsd xmm1, qword ptr [rel half]
     cmpsd xmm0, xmm1
-    jge .ease_in_out_second
+    jge ease_in_out_second_local
 
     ; First half
     mulsd xmm0, xmm0
     mulsd xmm0, qword ptr [rel half]
     ret
 
-.ease_in_out_second:
+ease_in_out_second_local:
     ; Second half
     movsd xmm1, qword ptr [rel one]
     subsd xmm1, xmm0
@@ -752,7 +752,7 @@ animation_update PROC
     addsd xmm0, xmm1
     ret
 
-.easing_done:
+easing_done_local:
     ret
 animation_update ENDP
 
@@ -835,9 +835,9 @@ animation_set_easing PROC
     mov rax, [g_animSystem.animationPool]
     xor r10d, r10d
 
-.find_easing:
+find_easing_local:
     cmp r10d, [g_animSystem.maxAnimations]
-    jge .easing_not_found
+    jge easing_not_found_local
 
     mov rcx, r10d
     mov rdx, SIZEOF ANIMATION
@@ -846,12 +846,12 @@ animation_set_easing PROC
 
     mov edx, [rcx + ANIMATION.animationId]
     cmp edx, r8d
-    je .easing_set
+    je easing_set_local
 
     inc r10d
-    jmp .find_easing
+    jmp find_easing_local
 
-.easing_set:
+easing_set_local:
     mov [rcx + ANIMATION.easingFunction], r9b
 
     mov eax, 1
@@ -859,7 +859,7 @@ animation_set_easing PROC
     pop rbx
     ret
 
-.easing_not_found:
+easing_not_found_local:
     xor eax, eax
     add rsp, 40
     pop rbx
@@ -891,26 +891,26 @@ animation_add_keyframe PROC
     mov rax, [g_animSystem.animationPool]
     xor r12d, r12d
 
-.find_keyframe_anim:
+find_keyframe_anim_local:
     cmp r12d, [g_animSystem.maxAnimations]
-    jge .keyframe_not_found
+    jge keyframe_not_found_local
 
-    mov rcx, r12d
+    mov ecx, r12d
     mov rdx, SIZEOF ANIMATION
     imul rcx, rdx
     add rcx, rax
 
     mov edx, [rcx + ANIMATION.animationId]
     cmp edx, r9d
-    je .keyframe_anim_found
+    je keyframe_anim_found_local
 
     inc r12d
-    jmp .find_keyframe_anim
+    jmp find_keyframe_anim_local
 
-.keyframe_anim_found:
+keyframe_anim_found_local:
     ; Allocate keyframe if needed
     cmp qword ptr [rcx + ANIMATION.keyframes], 0
-    jne .keyframes_allocated
+    jne keyframes_allocated_local
 
     mov rcx, MAX_KEYFRAMES
     mov rdx, SIZEOF KEYFRAME
@@ -918,7 +918,7 @@ animation_add_keyframe PROC
     call malloc
     mov [rcx + ANIMATION.keyframes], rax
 
-.keyframes_allocated:
+keyframes_allocated_local:
     ; Add keyframe
     mov rbx, [rcx + ANIMATION.keyframes]
     mov edx, [rcx + ANIMATION.keyframeCount]
@@ -938,7 +938,7 @@ animation_add_keyframe PROC
     pop rbx
     ret
 
-.keyframe_not_found:
+keyframe_not_found_local:
     xor eax, eax
     add rsp, 40
     pop rbx
@@ -964,9 +964,9 @@ animation_get_progress PROC
     mov rax, [g_animSystem.animationPool]
     xor r9d, r9d
 
-.find_progress:
+find_progress_local:
     cmp r9d, [g_animSystem.maxAnimations]
-    jge .progress_not_found
+    jge progress_not_found_local
 
     mov rcx, r9d
     mov rdx, SIZEOF ANIMATION
@@ -975,12 +975,12 @@ animation_get_progress PROC
 
     mov edx, [rcx + ANIMATION.animationId]
     cmp edx, r8d
-    je .progress_found
+    je progress_found_local
 
     inc r9d
-    jmp .find_progress
+    jmp find_progress_local
 
-.progress_found:
+progress_found_local:
     ; Return elapsed / duration
     cvtsi2ss xmm0, [rcx + ANIMATION.elapsedTime_ms]
     cvtsi2ss xmm1, [rcx + ANIMATION.duration_ms]
@@ -991,7 +991,7 @@ animation_get_progress PROC
     pop rbx
     ret
 
-.progress_not_found:
+progress_not_found_local:
     xorps xmm0, xmm0
     add rsp, 40
     pop rbx
@@ -1013,9 +1013,9 @@ animation_is_active PROC
     mov rax, [g_animSystem.animationPool]
     xor r9d, r9d
 
-.find_active:
+find_active_local:
     cmp r9d, [g_animSystem.maxAnimations]
-    jge .not_active
+    jge not_active_local
 
     mov rcx, r9d
     mov rdx, SIZEOF ANIMATION
@@ -1024,28 +1024,28 @@ animation_is_active PROC
 
     mov edx, [rcx + ANIMATION.animationId]
     cmp edx, r8d
-    je .check_active
+    je check_active_local
 
     inc r9d
-    jmp .find_active
+    jmp find_active_local
 
-.check_active:
+check_active_local:
     mov al, [rcx + ANIMATION.state]
     cmp al, ANIM_STATE_RUNNING
-    je .is_active
+    je is_active_local
 
     xor eax, eax
     add rsp, 40
     pop rbx
     ret
 
-.is_active:
+is_active_local:
     mov eax, 1
     add rsp, 40
     pop rbx
     ret
 
-.not_active:
+not_active_local:
     xor eax, eax
     add rsp, 40
     pop rbx
@@ -1067,9 +1067,9 @@ animation_destroy PROC
     mov rax, [g_animSystem.animationPool]
     xor r9d, r9d
 
-.find_destroy:
+find_destroy_local:
     cmp r9d, [g_animSystem.maxAnimations]
-    jge .destroy_not_found
+    jge destroy_not_found_local
 
     mov rcx, r9d
     mov rdx, SIZEOF ANIMATION
@@ -1078,42 +1078,42 @@ animation_destroy PROC
 
     mov edx, [rcx + ANIMATION.animationId]
     cmp edx, r8d
-    je .destroy_found
+    je destroy_found_local
 
     inc r9d
-    jmp .find_destroy
+    jmp find_destroy_local
 
-.destroy_found:
+destroy_found_local:
     ; Free keyframes if allocated
     mov rax, [rcx + ANIMATION.keyframes]
     test rax, rax
-    jz .no_keyframes
+    jz no_keyframes_local
 
     call free
 
-.no_keyframes:
+no_keyframes_local:
     ; Free from/to value arrays
     mov rax, [rcx + ANIMATION.fromValues]
     test rax, rax
-    jz .no_from_values
+    jz no_from_values_local
 
     call free
 
-.no_from_values:
+no_from_values_local:
     mov rax, [rcx + ANIMATION.toValues]
     test rax, rax
-    jz .no_to_values
+    jz no_to_values_local
 
     call free
 
-.no_to_values:
+no_to_values_local:
     mov rax, [rcx + ANIMATION.currentValues]
     test rax, rax
-    jz .no_current_values
+    jz no_current_values_local
 
     call free
 
-.no_current_values:
+no_current_values_local:
     ; Reset animation state
     mov byte ptr [rcx + ANIMATION.state], ANIM_STATE_IDLE
     dec dword ptr [g_animSystem.animationCount]
@@ -1123,7 +1123,7 @@ animation_destroy PROC
     pop rbx
     ret
 
-.destroy_not_found:
+destroy_not_found_local:
     xor eax, eax
     add rsp, 40
     pop rbx
@@ -1140,3 +1140,4 @@ half            REAL8 0.5
 one_256         REAL4 256.0
 
 END
+

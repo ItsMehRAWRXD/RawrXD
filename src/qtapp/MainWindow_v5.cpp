@@ -243,12 +243,16 @@ void MainWindow::initializePhase2()
         // Use QDir::appDataLocation() for persistent storage
         QString historyDbPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
         QDir().mkpath(historyDbPath);  // Ensure directory exists
-        
-        auto dbManager = std::make_shared<DatabaseManager>(historyDbPath + "/chat_history.db");
-        if (!dbManager->initialize()) {
+
+        auto dbManager = std::make_shared<RawrXD::Database::DatabaseManager>();
+        RawrXD::Database::DatabaseConfig dbConfig;
+        dbConfig.database = historyDbPath + "/chat_history.db";
+        dbConfig.host = "";  // Local SQLite
+        dbConfig.port = 0;
+        if (!dbManager->initialize("sqlite", dbConfig)) {
             qWarning() << "[MainWindow] Chat history database initialization failed, continuing without history";
         } else {
-            m_historyManager = new ChatHistoryManager(dbManager, this);
+            m_historyManager = new RawrXD::Database::ChatHistoryManager(dbManager);
             if (!m_historyManager->initialize()) {
                 qWarning() << "[MainWindow] ChatHistoryManager initialization failed";
                 delete m_historyManager;
@@ -752,8 +756,9 @@ void MainWindow::setupMenuBar()
                 auto sessions = m_historyManager->getSessions();
                 int deletedCount = 0;
             
-                for (const auto& session : sessions) {
-                    if (m_historyManager->deleteSession(session["id"].toString())) {
+                for (const auto& sessionVal : sessions) {
+                    QJsonObject session = sessionVal.toObject();
+                    if (m_historyManager->deleteSession(session[QStringLiteral("id")].toString())) {
                         deletedCount++;
                     }
                 }
@@ -1076,51 +1081,116 @@ void MainWindow::startChat()
         m_chatDock->raise();
         if (m_currentChatPanel) {
             m_currentChatPanel->setFocus();
-
-        void MainWindow::showChatSessionBrowser()
-        {
-            if (!m_historyManager) {
-                QMessageBox::information(this, "Chat History", "Chat history not initialized");
-                return;
-            }
-    
-            // Get all sessions
-            auto sessions = m_historyManager->getSessions();
-    
-            if (sessions.isEmpty()) {
-                QMessageBox::information(this, "Chat History", "No previous chat sessions found.\n\nStart a new chat to create a session.");
-                return;
-            }
-    
-            // Create session selection dialog
-            QDialog* dialog = new QDialog(this);
-            dialog->setWindowTitle("Chat History - Select Session");
-            dialog->setModal(true);
-            dialog->resize(500, 400);
-    
-            QVBoxLayout* layout = new QVBoxLayout(dialog);
-    
-            // Add label
-            QLabel* label = new QLabel("Select a previous chat session to resume:");
-            layout->addWidget(label);
-    
-            // Create list widget for sessions
-            QListWidget* sessionList = new QListWidget();
-            sessionList->setSelectionMode(QAbstractItemView::SingleSelection);
-    
-            for (const auto& session : sessions) {
-                QString sessionId = session["id"].toString();
-                QString title = session["title"].toString();
-                qint64 timestamp = session["created_at"].toVariant().toLongLong();
-                int messageCount = session["message_count"].toInt();
-        
-                // Format date for display
-                QDateTime dt = QDateTime::fromMSecsSinceEpoch(timestamp);\n        QString dateStr = dt.toString("yyyy-MM-dd hh:mm");\n        \n        QString displayText = QString("%1  [%2] (%3 messages)")
-                    .arg(title)
-                    .arg(dateStr)
-                    .arg(messageCount);\n        \n        QListWidgetItem* item = new QListWidgetItem(displayText);\n        item->setData(Qt::UserRole, sessionId);\n        sessionList->addItem(item);\n    }\n    \n    layout->addWidget(sessionList);\n    \n    // Buttons\n    QHBoxLayout* buttonLayout = new QHBoxLayout();\n    \n    QPushButton* loadBtn = new QPushButton("Load Session");\n    QPushButton* deleteBtn = new QPushButton("Delete Session");\n    QPushButton* cancelBtn = new QPushButton("Cancel");\n    \n    buttonLayout->addWidget(loadBtn);\n    buttonLayout->addWidget(deleteBtn);\n    buttonLayout->addStretch();\n    buttonLayout->addWidget(cancelBtn);\n    layout->addLayout(buttonLayout);\n    \n    // Connect buttons\n    connect(loadBtn, &QPushButton::clicked, [this, dialog, sessionList]() {\n        if (sessionList->currentItem()) {\n            QString sessionId = sessionList->currentItem()->data(Qt::UserRole).toString();\n            \n            // Load session in current panel\n            if (m_currentChatPanel) {\n                emit m_currentChatPanel->sessionSelected(sessionId.toLongLong());\n                qInfo() << \"[MainWindow] Session loaded:\" << sessionId;\n            }\n            \n            dialog->accept();\n        }\n    });\n    \n    connect(deleteBtn, &QPushButton::clicked, [this, dialog, sessionList]() {\n        if (sessionList->currentItem()) {\n            QString sessionId = sessionList->currentItem()->data(Qt::UserRole).toString();\n            \n            auto reply = QMessageBox::question(dialog, "Delete Session",\n                QString("Delete session '%1'?\\n\\nThis cannot be undone.").arg(sessionList->currentItem()->text()),\n                QMessageBox::Yes | QMessageBox::No);\n            \n            if (reply == QMessageBox::Yes) {\n                if (m_historyManager->deleteSession(sessionId)) {\n                    qInfo() << \"[MainWindow] Session deleted:\" << sessionId;\n                    delete sessionList->takeItem(sessionList->row(sessionList->currentItem()));\n                    statusBar()->showMessage(\"✓ Session deleted\", 2000);\n                } else {\n                    QMessageBox::warning(dialog, "Delete Failed", \"Could not delete session\");\n                }\n            }\n        }\n    });\n    \n    connect(cancelBtn, &QPushButton::clicked, dialog, &QDialog::reject);\n    \n    dialog->exec();\n    dialog->deleteLater();\n}
         }
     }
+}
+
+void MainWindow::showChatSessionBrowser()
+{
+    if (!m_historyManager) {
+        QMessageBox::information(this, "Chat History", "Chat history not initialized");
+        return;
+    }
+    
+    // Get all sessions
+    auto sessions = m_historyManager->getSessions();
+    
+    if (sessions.isEmpty()) {
+        QMessageBox::information(this, "Chat History", "No previous chat sessions found.\n\nStart a new chat to create a session.");
+        return;
+    }
+    
+    // Create session selection dialog
+    QDialog* dialog = new QDialog(this);
+    dialog->setWindowTitle("Chat History - Select Session");
+    dialog->setModal(true);
+    dialog->resize(500, 400);
+    
+    QVBoxLayout* layout = new QVBoxLayout(dialog);
+    
+    // Add label
+    QLabel* label = new QLabel("Select a previous chat session to resume:");
+    layout->addWidget(label);
+    
+    // Create list widget for sessions
+    QListWidget* sessionList = new QListWidget();
+    sessionList->setSelectionMode(QAbstractItemView::SingleSelection);
+    
+    for (const auto& session : sessions) {
+        QJsonObject sessionObj = session.toObject();
+        QString sessionId = sessionObj[QStringLiteral("id")].toString();
+        QString title = sessionObj[QStringLiteral("title")].toString();
+        qint64 timestamp = sessionObj[QStringLiteral("created_at")].toVariant().toLongLong();
+        int messageCount = sessionObj[QStringLiteral("message_count")].toInt();
+
+        // Format date for display
+        QDateTime dt = QDateTime::fromMSecsSinceEpoch(timestamp);
+        QString dateStr = dt.toString("yyyy-MM-dd hh:mm");
+        
+        QString displayText = QString("%1  [%2] (%3 messages)")
+            .arg(title)
+            .arg(dateStr)
+            .arg(messageCount);
+        
+        QListWidgetItem* item = new QListWidgetItem(displayText);
+        item->setData(Qt::UserRole, sessionId);
+        sessionList->addItem(item);
+    }
+    
+    layout->addWidget(sessionList);
+    
+    // Buttons
+    QHBoxLayout* buttonLayout = new QHBoxLayout();
+    
+    QPushButton* loadBtn = new QPushButton("Load Session");
+    QPushButton* deleteBtn = new QPushButton("Delete Session");
+    QPushButton* cancelBtn = new QPushButton("Cancel");
+    
+    buttonLayout->addWidget(loadBtn);
+    buttonLayout->addWidget(deleteBtn);
+    buttonLayout->addStretch();
+    buttonLayout->addWidget(cancelBtn);
+    layout->addLayout(buttonLayout);
+    
+    // Connect buttons
+    connect(loadBtn, &QPushButton::clicked, [this, dialog, sessionList]() {
+        if (sessionList->currentItem()) {
+            QString sessionId = sessionList->currentItem()->data(Qt::UserRole).toString();
+            
+            // Load session in current panel
+            if (m_currentChatPanel) {
+                emit m_currentChatPanel->sessionSelected(sessionId.toLongLong());
+                qInfo() << "[MainWindow] Session loaded:" << sessionId;
+            }
+            
+            dialog->accept();
+        }
+    });
+    
+    connect(deleteBtn, &QPushButton::clicked, [this, dialog, sessionList]() {
+        if (sessionList->currentItem()) {
+            QString sessionId = sessionList->currentItem()->data(Qt::UserRole).toString();
+            
+            auto reply = QMessageBox::question(dialog, "Delete Session",
+                QString("Delete session '%1'?\n\nThis cannot be undone.").arg(sessionList->currentItem()->text()),
+                QMessageBox::Yes | QMessageBox::No);
+            
+            if (reply == QMessageBox::Yes) {
+                if (m_historyManager->deleteSession(sessionId)) {
+                    qInfo() << "[MainWindow] Session deleted:" << sessionId;
+                    delete sessionList->takeItem(sessionList->row(sessionList->currentItem()));
+                    statusBar()->showMessage("✓ Session deleted", 2000);
+                } else {
+                    QMessageBox::warning(dialog, "Delete Failed", "Could not delete session");
+                }
+            }
+        }
+    });
+    
+    connect(cancelBtn, &QPushButton::clicked, dialog, &QDialog::reject);
+    
+    dialog->exec();
+    dialog->deleteLater();
 }
 
 void MainWindow::analyzeCode()
@@ -1370,6 +1440,9 @@ void MainWindow::onModelLoadFinished(bool loadSuccess, const std::string& errorM
     if (loadSuccess) {
             if (m_agenticEngine) {
                 m_agenticEngine->setInferenceEngine(m_inferenceEngine);
+                // Mark model as loaded so AgenticEngine uses inference instead of fallback stubs
+                m_agenticEngine->markModelAsLoaded(ggufPath);
+                qInfo() << "[MainWindow] AgenticEngine now using loaded model:" << ggufPath;
             }
 
             applyChatModelSelection(ggufPath);
@@ -1487,7 +1560,7 @@ void MainWindow::onChatMessageSent(const QString& message)
     // FULLY RE-ENABLED: Chat history persistence
     // Note: User message is already saved in createNewChatPanel's messageSubmitted lambda
     // This ensures all messages persist even if sent through different paths
-    if (m_historyManager && m_currentSessionId != -1) {
+    if (m_historyManager && !m_currentSessionId.isEmpty()) {
         qDebug() << "[MainWindow::onChatMessageSent] Message session tracking:" << m_currentSessionId;
     }
     
@@ -2011,25 +2084,42 @@ AIChatPanel* MainWindow::createNewChatPanel()
         m_currentSessionId = m_historyManager->createSession(sessionTitle);
         qInfo() << "[MainWindow] Created new chat session:" << m_currentSessionId;
         
-        // Associate session with panel for history loading
-        panel->setSessionId(m_currentSessionId);
-        // Note: Session ID is tracked in MainWindow, not in the panel
+        // Pass session ID to panel for checkpoint management
+        panel->setCurrentSessionId(m_currentSessionId);
+        
+        // Enable auto-checkpoint with 5 minute interval
+        panel->enableAutoCheckpoint(true, 5);
+        qDebug() << "[MainWindow] Auto-checkpoint enabled for session:" << m_currentSessionId;
     }
     
     qDebug() << "[MainWindow] Created new chat panel at index" << idx << "with session" << m_currentSessionId;
     
+    // If a model is already loaded, enable the chat input immediately
+    if (m_inferenceEngine && m_inferenceEngine->isModelLoaded()) {
+        QString modelPath = m_pendingModelPath;
+        if (!modelPath.isEmpty()) {
+            QString modelDisplay = QFileInfo(modelPath).fileName();
+            panel->setLocalModel(modelDisplay);
+            panel->setSelectedModel(modelDisplay);
+            panel->setInputEnabled(true);
+            qInfo() << "[MainWindow] Chat panel initialized with loaded model:" << modelDisplay;
+        }
+    }
+    
     // Wire sessionSelected signal (for history loading when available)
-    connect(panel, &AIChatPanel::sessionSelected, this, [this, panel](qint64 sessionId) {
+    connect(panel, &AIChatPanel::sessionSelected, this, [this, panel](qint64 sessionIdInt) {
         if (m_historyManager) {
+            QString sessionId = QString::number(sessionIdInt);
             // Load messages from history
             auto messages = m_historyManager->getMessages(sessionId);
             qDebug() << "[MainWindow] Loading" << messages.size() << "messages from history";
             
             // Clear current panel and restore history
-            panel->clearMessages();
-            for (const auto& msgObj : messages) {
-                QString role = msgObj["role"].toString();
-                QString content = msgObj["content"].toString();
+            panel->clear();
+            for (const auto& msgVal : messages) {
+                QJsonObject msgObj = msgVal.toObject();
+                QString role = msgObj[QStringLiteral("role")].toString();
+                QString content = msgObj[QStringLiteral("content")].toString();
                 
                 if (role == "user") {
                     panel->addUserMessage(content);
@@ -2047,13 +2137,40 @@ AIChatPanel* MainWindow::createNewChatPanel()
     connect(panel, &AIChatPanel::messageSubmitted,
         this, [this, panel](const QString& message) {
             // Save user message to history immediately
-            if (m_historyManager && m_currentSessionId != -1) {
+            if (m_historyManager && !m_currentSessionId.isEmpty()) {
                 if (!m_historyManager->addMessage(m_currentSessionId, "user", message)) {
                     qWarning() << "[MainWindow] Failed to save user message to history";
                 }
             }
             // Forward to main message handler
             onChatMessageSent(message);
+        });
+    
+    // Wire modelSelected signal so MainWindow loads model into AgenticEngine
+    connect(panel, &AIChatPanel::modelSelected,
+        this, [this](const QString& modelName) {
+            // Validate model name is not empty or placeholder
+            if (modelName.isEmpty() || 
+                modelName == "Loading models..." || 
+                modelName == "Select a model..." ||
+                modelName == "No models available" ||
+                modelName == "Error loading models") {
+                qDebug() << "[MainWindow] Ignoring invalid model selection:" << modelName;
+                return;
+            }
+            
+            qDebug() << "[MainWindow] Chat panel selected model:" << modelName;
+            // model name might be path or name - try to resolve
+            QString ggufPath = modelName;
+            if (!QFile::exists(ggufPath)) {
+                // Try to resolve as model name
+                ggufPath = QString("D:/OllamaModels/%1").arg(modelName);
+                if (!QFile::exists(ggufPath)) {
+                    qWarning() << "[MainWindow] Could not resolve model path for:" << modelName;
+                    return;
+                }
+            }
+            onModelSelected(ggufPath);
         });
     
     // Wire code insertion signal
@@ -2070,7 +2187,7 @@ AIChatPanel* MainWindow::createNewChatPanel()
         connect(m_agenticEngine, &AgenticEngine::responseReady,
             panel, [this, panel](const QString& response) {
                 // Save assistant response to history
-                if (m_historyManager && m_currentSessionId != -1) {
+                if (m_historyManager && !m_currentSessionId.isEmpty()) {
                     if (!m_historyManager->addMessage(m_currentSessionId, "assistant", response)) {
                         qWarning() << "[MainWindow] Failed to save assistant message to history";
                     }

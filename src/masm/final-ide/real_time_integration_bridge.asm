@@ -212,7 +212,7 @@ InitializeBridgeSystem PROC
     lea r8, szBridgeInitFail
     call CreateEventA
     test rax, rax
-    jz .bridge_init_failed
+    jz bridge_init_failed_local
     
     mov g_master_bridge.frame_sync_event, rax
     
@@ -221,7 +221,7 @@ InitializeBridgeSystem PROC
     lea rdx, szBridgeInitFail
     call CreateMutexA
     test rax, rax
-    jz .bridge_init_failed
+    jz bridge_init_failed_local
     
     mov g_master_bridge.master_mutex, rax
     
@@ -229,42 +229,42 @@ InitializeBridgeSystem PROC
     lea rcx, g_chat_file_br
     call InitChatFileBridge
     test eax, eax
-    jz .bridge_init_failed
+    jz bridge_init_failed_local
     mov g_master_bridge.chat_file_bridge, rcx
     
     ; Initialize Terminal ↔ Editor bridge
     lea rcx, g_term_edit_br
     call InitTermEditorBridge
     test eax, eax
-    jz .bridge_init_failed
+    jz bridge_init_failed_local
     mov g_master_bridge.term_editor_bridge, rcx
     
     ; Initialize Pane ↔ Layout bridge
     lea rcx, g_pane_layout_br
     call InitPaneLayoutBridge
     test eax, eax
-    jz .bridge_init_failed
+    jz bridge_init_failed_local
     mov g_master_bridge.pane_layout_bridge, rcx
     
     ; Initialize Animation ↔ UI bridge
     lea rcx, g_anim_ui_br
     call InitAnimUIBridge
     test eax, eax
-    jz .bridge_init_failed
+    jz bridge_init_failed_local
     mov g_master_bridge.anim_ui_bridge, rcx
     
     ; Initialize Theme ↔ Renderer bridge
     lea rcx, g_theme_render_br
     call InitThemeRenderBridge
     test eax, eax
-    jz .bridge_init_failed
+    jz bridge_init_failed_local
     mov g_master_bridge.theme_render_bridge, rcx
     
     ; Initialize CLI ↔ Shell bridge
     lea rcx, g_cli_shell_br
     call InitCLIShellBridge
     test eax, eax
-    jz .bridge_init_failed
+    jz bridge_init_failed_local
     mov g_master_bridge.cli_shell_bridge, rcx
     
     ; Initialize frame timing
@@ -287,7 +287,7 @@ InitializeBridgeSystem PROC
     pop rbx
     ret
     
-.bridge_init_failed:
+bridge_init_failed_local:
     xor eax, eax
     add rsp, 48
     pop r12
@@ -326,7 +326,7 @@ ChatFileExecuteBridge PROC
     
     ; Check if already executing
     cmp g_chat_file_br.is_executing, 0
-    jne .wait_for_execution
+    jne wait_for_execution_local
     
     ; Mark as executing
     mov g_chat_file_br.is_executing, 1
@@ -340,20 +340,20 @@ ChatFileExecuteBridge PROC
     mov rdx, rbx
     call DispatchChatCommand
     test eax, eax
-    jz .exec_failed
+    jz exec_failed_local
     
     ; Wait for completion
     mov ecx, 30000      ; 30 second timeout
     call WaitForBridgeSynchronization
     
-    jmp .exec_done
+    jmp exec_done_local
     
-.wait_for_execution:
+wait_for_execution_local:
     ; Command queued, wait for completion
     mov ecx, 30000
     call WaitForBridgeSynchronization
     
-.exec_done:
+exec_done_local:
     ; Release lock
     mov g_chat_file_br.is_executing, 0
     mov rcx, g_master_bridge.master_mutex
@@ -365,7 +365,7 @@ ChatFileExecuteBridge PROC
     pop rbx
     ret
     
-.exec_failed:
+exec_failed_local:
     mov g_chat_file_br.is_executing, 0
     mov rcx, g_master_bridge.master_mutex
     call ReleaseMutex
@@ -406,13 +406,13 @@ TermEditorExecuteBridge PROC
     mov rcx, rbx
     call ExecuteShellCommand
     test eax, eax
-    jz .term_exec_failed
+    jz term_exec_failed_local
     
     ; Capture and parse output
     mov rcx, g_term_edit_br.output_buffer
     call CaptureTerminalOutput
     test eax, eax
-    jz .term_exec_failed
+    jz term_exec_failed_local
     
     ; Parse problems from output
     mov rcx, g_term_edit_br.output_buffer
@@ -420,19 +420,19 @@ TermEditorExecuteBridge PROC
     
     ; Navigate editor to first problem if any
     cmp g_term_edit_br.problem_count, 0
-    je .term_exec_done
+    je term_exec_done_local
     
     mov edx, [g_term_edit_br.problem_list]  ; First problem
     call NavigateEditorToLocation
     
-.term_exec_done:
+term_exec_done_local:
     mov g_term_edit_br.is_terminal_busy, 0
     mov eax, 1
     add rsp, 32
     pop rbx
     ret
     
-.term_exec_failed:
+term_exec_failed_local:
     mov g_term_edit_br.is_terminal_busy, 0
     xor eax, eax
     add rsp, 32
@@ -463,7 +463,7 @@ PaneLayoutSyncBridge PROC
     
     ; Check if layout is dirty
     cmp g_pane_layout_br.dirty_layout, 0
-    je .layout_clean
+    je layout_clean_local
     
     ; Acquire synchronization
     mov rcx, g_master_bridge.master_mutex
@@ -472,22 +472,22 @@ PaneLayoutSyncBridge PROC
     ; Recalculate layout
     call RecalculateLayout
     test eax, eax
-    jz .layout_failed
+    jz layout_failed_local
     
     ; Apply new sizes
     call ApplyLayoutConstraints
     test eax, eax
-    jz .layout_failed
+    jz layout_failed_local
     
     ; Start animation if needed
     cmp g_pane_layout_br.animation_duration, 0
-    je .no_layout_animation
+    je no_layout_animation_local
     
     call GetTickCount64
     mov g_pane_layout_br.animation_start, rax
     mov g_pane_layout_br.is_animating, 1
     
-.no_layout_animation:
+no_layout_animation_local:
     ; Mark layout as clean
     mov g_pane_layout_br.dirty_layout, 0
     
@@ -495,13 +495,13 @@ PaneLayoutSyncBridge PROC
     mov rcx, g_master_bridge.master_mutex
     call ReleaseMutex
     
-.layout_clean:
+layout_clean_local:
     mov eax, 1
     add rsp, 32
     pop rbx
     ret
     
-.layout_failed:
+layout_failed_local:
     mov rcx, g_master_bridge.master_mutex
     call ReleaseMutex
     
@@ -540,46 +540,46 @@ AnimUIFrameSyncBridge PROC
     mov r8, rax         ; Current time
     
     mov rbx, 0          ; Animation index
-.animate_loop:
+animate_loop_local:
     cmp rbx, g_anim_ui_br.animation_count
-    jge .animate_done
+    jge animate_done_local
     
     ; Get animation
     mov rcx, [g_anim_ui_br.active_animations + rbx * 8]
     test rcx, rcx
-    jz .animate_next
+    jz animate_next_local
     
     ; Update animation
     mov rdx, r8         ; Current time
     call UpdateAnimation
     test eax, eax
-    jnz .animate_next
+    jnz animate_next_local
     
     ; Animation complete, remove it
     ; Shift remaining animations
     mov r9d, rbx
-.shift_anim:
+shift_anim_local:
     cmp r9d, g_anim_ui_br.animation_count
-    jge .shift_done
+    jge shift_done_local
     
     cmp r9d, g_anim_ui_br.animation_count
-    je .shift_done
+    je shift_done_local
     
     mov rax, [g_anim_ui_br.active_animations + r9 * 8 + 8]
     mov [g_anim_ui_br.active_animations + r9 * 8], rax
     
     inc r9d
-    jmp .shift_anim
+    jmp shift_anim_local
     
-.shift_done:
+shift_done_local:
     dec g_anim_ui_br.animation_count
-    jmp .animate_loop
+    jmp animate_loop_local
     
-.animate_next:
+animate_next_local:
     inc rbx
-    jmp .animate_loop
+    jmp animate_loop_local
     
-.animate_done:
+animate_done_local:
     ; Update last frame time
     mov [g_anim_ui_br.last_frame_time], r8
     
@@ -611,7 +611,7 @@ ThemeRenderBridge PROC
     
     ; Check if theme is being applied
     cmp g_theme_render_br.is_applying, 0
-    je .no_theme_pending
+    je no_theme_pending_local
     
     ; Get current time
     call GetTickCount64
@@ -623,41 +623,41 @@ ThemeRenderBridge PROC
     mov ecx, g_theme_render_br.apply_duration
     
     cmp rax, rcx
-    jl .theme_in_progress
+    jl theme_in_progress_local
     
     ; Theme animation complete
     mov g_theme_render_br.is_applying, 0
-    jmp .invalidate_windows
+    jmp invalidate_windows_local
     
-.theme_in_progress:
+theme_in_progress_local:
     ; Apply intermediate theme state (interpolated)
     
-.invalidate_windows:
+invalidate_windows_local:
     ; Invalidate all dirty windows
     mov r8d, 0
-.invalidate_loop:
+invalidate_loop_local:
     cmp r8d, g_theme_render_br.dirty_window_count
-    jge .invalidate_done
+    jge invalidate_done_local
     
     ; Get window and invalidate
     mov eax, [g_theme_render_br.dirty_windows + r8 * 4]
     test eax, eax
-    jz .invalidate_next
+    jz invalidate_next_local
     
     mov rcx, rax
     xor edx, edx
     xor r9d, r9d
     call InvalidateRect
     
-.invalidate_next:
+invalidate_next_local:
     inc r8d
-    jmp .invalidate_loop
+    jmp invalidate_loop_local
     
-.invalidate_done:
+invalidate_done_local:
     ; Clear dirty windows
     mov g_theme_render_br.dirty_window_count, 0
     
-.no_theme_pending:
+no_theme_pending_local:
     mov eax, 1
     add rsp, 32
     pop rbx
@@ -692,31 +692,31 @@ CLIShellBridge PROC
     sub rsp, 32
     
     cmp g_cli_shell_br.is_shell_ready, 0
-    je .shell_not_ready
+    je shell_not_ready_local
     
     mov rbx, 0          ; Command index
-.exec_cmd_loop:
+exec_cmd_loop_local:
     cmp rbx, g_cli_shell_br.cmd_count
-    jge .all_cmds_done
+    jge all_cmds_done_local
     
     ; Get command
     mov rcx, [g_cli_shell_br.cmd_input_queue + rbx * 8]
     test rcx, rcx
-    jz .exec_next_cmd
+    jz exec_next_cmd_local
     
     ; Execute command
     mov edx, 0          ; No special flags
     call ExecuteShellCommand
     
-.exec_next_cmd:
+exec_next_cmd_local:
     inc rbx
-    jmp .exec_cmd_loop
+    jmp exec_cmd_loop_local
     
-.all_cmds_done:
+all_cmds_done_local:
     ; Clear command queue
     mov g_cli_shell_br.cmd_count, 0
     
-.shell_not_ready:
+shell_not_ready_local:
     mov eax, 1
     add rsp, 32
     pop rbx
@@ -773,18 +773,18 @@ ProcessBridgeTick PROC
     add g_master_bridge.total_latency_ms, rax
     
     cmp eax, g_master_bridge.max_frame_time_ms
-    jle .frame_ok
+    jle frame_ok_local
     mov g_master_bridge.max_frame_time_ms, eax
     
-.frame_ok:
+frame_ok_local:
     ; Check for frame overrun
     cmp eax, g_master_bridge.frame_budget_ms
-    jle .frame_in_time
+    jle frame_in_time_local
     
     ; Frame took too long - log warning
     lea rcx, szFrameOvertime
     
-.frame_in_time:
+frame_in_time_local:
     ; Signal frame complete
     mov rcx, g_master_bridge.frame_sync_event
     call SetEvent
@@ -829,14 +829,14 @@ CaptureTerminalOutput PROC
     ; Get output from shell
     call GetShellOutput
     test eax, eax
-    jz .capture_failed
+    jz capture_failed_local
     
     mov eax, 1
     add rsp, 32
     pop rbx
     ret
     
-.capture_failed:
+capture_failed_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -887,7 +887,7 @@ ALIGN 16
 ScheduleAnimation PROC
     ; rcx = animation struct
     cmp g_anim_ui_br.animation_count, 32
-    jge .sched_anim_full
+    jge sched_anim_full_local
     
     mov eax, g_anim_ui_br.animation_count
     mov [g_anim_ui_br.active_animations + rax * 8], rcx
@@ -896,7 +896,7 @@ ScheduleAnimation PROC
     mov eax, 1
     ret
     
-.sched_anim_full:
+sched_anim_full_local:
     xor eax, eax
     ret
 ScheduleAnimation ENDP
@@ -970,16 +970,16 @@ ShutdownBridgeSystem PROC
     ; Close synchronization objects
     mov rcx, g_master_bridge.master_mutex
     test rcx, rcx
-    jz .skip_mutex_close
+    jz skip_mutex_close_local
     call CloseHandle
     
-.skip_mutex_close:
+skip_mutex_close_local:
     mov rcx, g_master_bridge.frame_sync_event
     test rcx, rcx
-    jz .skip_event_close
+    jz skip_event_close_local
     call CloseHandle
     
-.skip_event_close:
+skip_event_close_local:
     mov eax, 1
     add rsp, 32
     pop rbx
@@ -1082,3 +1082,4 @@ InitializeShell PROC
 InitializeShell ENDP
 
 END
+

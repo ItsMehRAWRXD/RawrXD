@@ -97,7 +97,7 @@ agent_integration_init PROC
     xor r9d, r9d
     call CreateMutexA
     test rax, rax
-    jz .agent_init_error
+    jz agent_init_error_local
     mov g_agent_mutex, rax
     
     ; Initialize context stack
@@ -109,7 +109,7 @@ agent_integration_init PROC
     xor edx, edx
     call HeapAlloc
     test rax, rax
-    jz .agent_init_error
+    jz agent_init_error_local
     mov g_response_buffer, rax
     
     mov eax, 1
@@ -117,7 +117,7 @@ agent_integration_init PROC
     pop rbx
     ret
     
-.agent_init_error:
+agent_init_error_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -140,17 +140,17 @@ agent_chat_send_message PROC
     
     ; Validate input
     test r12, r12
-    jz .send_error
+    jz send_error_local
     
     cmp ebx, 4
-    jg .send_error
+    jg send_error_local
     
     ; Acquire agent mutex
     mov rcx, g_agent_mutex
     mov rdx, INFINITE
     call WaitForSingleObject
     cmp eax, WAIT_OBJECT_0
-    jne .send_error
+    jne send_error_local
     
     ; Generate request ID
     inc g_current_req_id
@@ -187,7 +187,7 @@ agent_chat_send_message PROC
     pop rbx
     ret
     
-.send_error:
+send_error_local:
     xor eax, eax
     add rsp, 32
     pop r12
@@ -213,12 +213,12 @@ agent_chat_receive_response PROC
     mov rdx, INFINITE
     call WaitForSingleObject
     cmp eax, WAIT_OBJECT_0
-    jne .recv_error
+    jne recv_error_local
     
     ; Get response buffer
     mov rax, g_response_buffer
     test rax, rax
-    jz .recv_error_unlock
+    jz recv_error_unlock_local
     
     ; In real implementation:
     ; 1. Wait for response from Qt/C++ to come back
@@ -236,12 +236,12 @@ agent_chat_receive_response PROC
     pop rbx
     ret
     
-.recv_error_unlock:
+recv_error_unlock_local:
     mov rcx, g_agent_mutex
     call ReleaseMutex
-    jmp .recv_error
+    jmp recv_error_local
     
-.recv_error:
+recv_error_local:
     xor eax, eax
     add rsp, 32
     pop r12
@@ -260,7 +260,7 @@ agent_hotpatch_apply PROC
     sub rsp, 32
     
     test rcx, rcx
-    jz .hotpatch_error
+    jz hotpatch_error_local
     
     ; Acquire mutex
     mov r8, g_agent_mutex
@@ -268,7 +268,7 @@ agent_hotpatch_apply PROC
     mov rdx, INFINITE
     call WaitForSingleObject
     cmp eax, WAIT_OBJECT_0
-    jne .hotpatch_error
+    jne hotpatch_error_local
     
     ; Call Qt signal to invoke UnifiedHotpatchManager
     mov rcx, [rsp + 40]   ; Patch pointer
@@ -283,7 +283,7 @@ agent_hotpatch_apply PROC
     pop rbx
     ret
     
-.hotpatch_error:
+hotpatch_error_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -306,7 +306,7 @@ agent_plan_execute PROC
     mov rdx, INFINITE
     call WaitForSingleObject
     cmp eax, WAIT_OBJECT_0
-    jne .plan_error
+    jne plan_error_local
     
     ; Call Qt signal to invoke PlanOrchestrator
     mov ecx, [rsp + 40]   ; Plan ID
@@ -321,7 +321,7 @@ agent_plan_execute PROC
     pop rbx
     ret
     
-.plan_error:
+plan_error_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -339,7 +339,7 @@ agent_context_push PROC
     sub rsp, 32
     
     test rcx, rcx
-    jz .context_push_error
+    jz context_push_error_local
     
     ; Acquire mutex
     mov r8, g_agent_mutex
@@ -347,12 +347,12 @@ agent_context_push PROC
     mov rdx, INFINITE
     call WaitForSingleObject
     cmp eax, WAIT_OBJECT_0
-    jne .context_push_error
+    jne context_push_error_local
     
     ; Check stack depth
     mov eax, g_context_depth
     cmp eax, 16
-    jge .context_push_full
+    jge context_push_full_local
     
     ; Store context at current depth
     mov rbx, OFFSET g_contexts
@@ -363,17 +363,17 @@ agent_context_push PROC
     mov r8, [rsp + 40]  ; Get context pointer
     mov eax, SIZEOF AGENT_CONTEXT
     
-.copy_context_loop:
+copy_context_loop_local:
     test eax, eax
-    jz .context_push_done
+    jz context_push_done_local
     mov bl, BYTE PTR [r8]
     mov BYTE PTR [rbx], bl
     inc r8
     inc rbx
     dec eax
-    jmp .copy_context_loop
+    jmp copy_context_loop_local
     
-.context_push_done:
+context_push_done_local:
     inc g_context_depth
     
     mov rcx, g_agent_mutex
@@ -384,12 +384,12 @@ agent_context_push PROC
     pop rbx
     ret
     
-.context_push_full:
+context_push_full_local:
     mov rcx, g_agent_mutex
     call ReleaseMutex
-    jmp .context_push_error
+    jmp context_push_error_local
     
-.context_push_error:
+context_push_error_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -410,11 +410,11 @@ agent_context_pop PROC
     mov rdx, INFINITE
     call WaitForSingleObject
     cmp eax, WAIT_OBJECT_0
-    jne .context_pop_error
+    jne context_pop_error_local
     
     ; Check stack not empty
     cmp g_context_depth, 0
-    je .context_pop_empty
+    je context_pop_empty_local
     
     ; Pop context
     dec g_context_depth
@@ -433,12 +433,12 @@ agent_context_pop PROC
     pop rbx
     ret
     
-.context_pop_empty:
+context_pop_empty_local:
     mov rcx, g_agent_mutex
     call ReleaseMutex
-    jmp .context_pop_error
+    jmp context_pop_error_local
     
-.context_pop_error:
+context_pop_error_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -461,12 +461,12 @@ agent_get_confidence PROC
     mov rdx, INFINITE
     call WaitForSingleObject
     cmp eax, WAIT_OBJECT_0
-    jne .conf_error
+    jne conf_error_local
     
     ; Get response buffer
     mov rax, g_response_buffer
     test rax, rax
-    jz .conf_error_unlock
+    jz conf_error_unlock_local
     
     ; Extract confidence from response structure
     ; For now, return a placeholder value
@@ -487,12 +487,12 @@ agent_get_confidence PROC
     pop rbx
     ret
     
-.conf_error_unlock:
+conf_error_unlock_local:
     mov rcx, g_agent_mutex
     call ReleaseMutex
-    jmp .conf_error
+    jmp conf_error_local
     
-.conf_error:
+conf_error_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -500,3 +500,4 @@ agent_get_confidence PROC
 masm_agent_get_confidence ENDP
 
 END
+

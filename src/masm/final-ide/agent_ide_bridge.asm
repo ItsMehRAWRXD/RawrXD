@@ -57,7 +57,7 @@ agent_ide_bridge_execute_wish PROC
     call agent_planner_plan
     mov rbx, rax        ; rbx = plan
     test rbx, rbx
-    jz .fail
+    jz fail_local
     
     ; 3. Signal: Executing
     mov ecx, SIG_AGENT_EXECUTING
@@ -73,12 +73,12 @@ agent_ide_bridge_execute_wish PROC
     xor rdx, rdx
     call masm_signal_emit
     
-    jmp .exit
+    jmp exit_local
 
-.fail:
+fail_local:
     ; ...
     
-.exit:
+exit_local:
     add rsp, 32
     pop rsi
     pop rbx
@@ -86,3 +86,4 @@ agent_ide_bridge_execute_wish PROC
 agent_ide_bridge_execute_wish ENDP
 
 END
+

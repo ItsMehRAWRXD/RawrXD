@@ -632,9 +632,7 @@ training_studio_create_model PROC
     mov byte ptr [r13 + MODEL.loaded], 0
     mov byte ptr [r13 + MODEL.compiled], 0
     mov [r13 + MODEL.device], DEVICE_CPU
-    mov [r13 + MODEL.num_checkpoints], 0
-    
-    ; Record creation time
+    mov dword ptr [r13 + MODEL.num_checkpoints], 0  ; Record creation time
     call GetSystemTimeAsFileTime
     mov [r13 + MODEL.created_time], rax
     
@@ -1082,3 +1080,4 @@ strncpy PROC
 strncpy ENDP
 
 end
+

@@ -17,7 +17,12 @@
 #include "../agentic_executor.h"  // Use the one from src/
 
 class AgentChatBreadcrumb;
+
+namespace RawrXD {
+namespace Database {
 class ChatHistoryManager;
+}
+}
 
 /**
  * @brief GitHub Copilot-style AI chat panel
@@ -64,7 +69,7 @@ public:
     void setSelectedModel(const QString& modelName);
     void setRequestTimeout(int timeoutMs);
     void setAgenticExecutor(AgenticExecutor* executor);  // Connect agentic execution
-    void setHistoryManager(ChatHistoryManager* manager);
+    void setHistoryManager(RawrXD::Database::ChatHistoryManager* manager);
     AgentChatBreadcrumb* getBreadcrumb() const { return m_breadcrumb; }
     
     // Cursor-like features
@@ -78,6 +83,13 @@ public:
     void setChatMode(ChatMode mode);
     void setContextWindow(int tokens); // 4k to 1,000,000
     void setSelectedModels(const QStringList& models);
+    
+    // Checkpoint management
+    void createCheckpoint(const QString& title = "");
+    void showCheckpointsDialog();
+    void restoreCheckpoint(const QString& checkpointId);
+    void enableAutoCheckpoint(bool enabled, int intervalMinutes = 5);
+    void setCurrentSessionId(const QString& sessionId) { m_currentSessionId = sessionId; }
     
 signals:
     void messageSubmitted(const QString& message);
@@ -102,6 +114,9 @@ private slots:
     void openModelsDialog();
     void showHistory();
     void showSettings();
+    void onSaveCheckpoint();
+    void onRestoreCheckpoint();
+    void onAutoCheckpointTimer();
     
 private:
     void setupUI();
@@ -193,7 +208,13 @@ private:
     
     // Agentic execution
     AgenticExecutor* m_agenticExecutor = nullptr;
-    ChatHistoryManager* m_historyManager = nullptr;
+    RawrXD::Database::ChatHistoryManager* m_historyManager = nullptr;
+    
+    // Checkpoint management
+    QTimer* m_autoCheckpointTimer = nullptr;
+    bool m_autoCheckpointEnabled = false;
+    int m_autoCheckpointIntervalMinutes = 5;
+    QString m_currentSessionId;
     
     // Helper for local response generation
     QString generateLocalResponse(const QString& message, const QString& model);

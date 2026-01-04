@@ -677,3 +677,4 @@ szCmdNotFound BYTE "Command not found", 0
 szAlreadyExecuting BYTE "Another command is already executing", 0
 
 end
+

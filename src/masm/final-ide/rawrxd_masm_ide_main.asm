@@ -281,15 +281,11 @@ masm_ide_init_state PROC
     ; Initialize counters
     mov [globalIDEState.totalOperations], 0
     mov [globalIDEState.inferenceCount], 0
-    mov [globalIDEState.hotpatchCount], 0
-    
-    ; Set default visibility
+    mov dword ptr [globalIDEState.hotpatchCount], 0  ; Set default visibility
     mov [globalIDEState.isSidebarVisible], 1
     mov [globalIDEState.isTerminalVisible], 1
-    mov [globalIDEState.isChatVisible], 1
-    
-    ; Set default mode
-    mov [globalIDEState.currentMode], 0 ; Ask mode
+    mov dword ptr [globalIDEState.isChatVisible], 1  ; Set default mode
+    mov dword ptr [globalIDEState.currentMode], 0  ; Ask mode
     
     mov eax, 1
     ret

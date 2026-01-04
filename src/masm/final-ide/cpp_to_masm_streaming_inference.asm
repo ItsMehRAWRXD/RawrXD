@@ -128,10 +128,10 @@ streaming_create PROC
     mov [r9 + STREAM_CONTEXT.tokenCount], 0
     mov [r9 + STREAM_CONTEXT.totalCharacters], 0
     mov [r9 + STREAM_CONTEXT.outputBufferSize], 0
-    mov byte [r9 + STREAM_CONTEXT.streaming], 0
-    mov byte [r9 + STREAM_CONTEXT.done], 0
-    mov byte [r9 + STREAM_CONTEXT.cancelled], 0
-    mov byte [r9 + STREAM_CONTEXT.error], 0
+    mov byte ptr [r9 + STREAM_CONTEXT.streaming], 0
+    mov byte ptr [r9 + STREAM_CONTEXT.done], 0
+    mov byte ptr [r9 + STREAM_CONTEXT.cancelled], 0
+    mov byte ptr [r9 + STREAM_CONTEXT.error], 0
     
     ; Get stream ID
     static_stream_id QWORD ?
@@ -178,7 +178,7 @@ streaming_start PROC
     call console_log
     
     ; Mark as streaming
-    mov byte [rbx + STREAM_CONTEXT.streaming], 1
+    mov byte ptr [rbx + STREAM_CONTEXT.streaming], 1
     
     ; Create streaming thread
     mov rcx, 0                      ; lpThreadAttributes
@@ -211,7 +211,7 @@ streaming_push_token PROC
     mov rsi, r8                     ; rsi = tokenText
     
     ; Lock (simplified)
-    mov byte [rbx + STREAM_CONTEXT.dataLock], 1
+    mov byte ptr [rbx + STREAM_CONTEXT.dataLock], 1
     
     ; Check queue capacity
     mov r10d, [rbx + STREAM_CONTEXT.queueHead]
@@ -221,15 +221,15 @@ streaming_push_token PROC
     sub r10d, r11d
     js .wrap_check
     cmp r10d, r12d
-    jge .queue_full
-    jmp .queue_ok
+    jge queue_full_local
+    jmp queue_ok_local
     
-.wrap_check:
+wrap_check_local:
     add r10d, r12d
     cmp r10d, r12d
-    jge .queue_full
+    jge queue_full_local
     
-.queue_ok:
+queue_ok_local:
     ; Get queue entry
     mov r13, [rbx + STREAM_CONTEXT.tokenQueue]
     mov r14d, [rbx + STREAM_CONTEXT.queueHead]
@@ -248,15 +248,15 @@ streaming_push_token PROC
     ; Advance head
     inc r14d
     cmp r14d, r12d
-    jl .no_wrap
+    jl no_wrap_local
     xor r14d, r14d
     
-.no_wrap:
+no_wrap_local:
     mov [rbx + STREAM_CONTEXT.queueHead], r14d
     inc dword [rbx + STREAM_CONTEXT.tokenCount]
     
     ; Unlock
-    mov byte [rbx + STREAM_CONTEXT.dataLock], 0
+    mov byte ptr [rbx + STREAM_CONTEXT.dataLock], 0
     
     ; Log
     lea rcx, [szTokenStreamed]
@@ -273,9 +273,9 @@ streaming_push_token PROC
     pop rbx
     ret
     
-.queue_full:
+queue_full_local:
     ; Unlock
-    mov byte [rbx + STREAM_CONTEXT.dataLock], 0
+    mov byte ptr [rbx + STREAM_CONTEXT.dataLock], 0
     xor rax, rax
     pop rsi
     pop rbx
@@ -297,7 +297,7 @@ streaming_get_chunk PROC
     mov r12, r8                     ; r12 = maxLength
     
     ; Lock
-    mov byte [rbx + STREAM_CONTEXT.dataLock], 1
+    mov byte ptr [rbx + STREAM_CONTEXT.dataLock], 1
     
     ; Copy output buffer to result
     mov r13, [rbx + STREAM_CONTEXT.outputBuffer]
@@ -305,10 +305,10 @@ streaming_get_chunk PROC
     
     ; Check size
     cmp r14, r12
-    jle .size_ok
+    jle size_ok_local
     mov r14, r12
     
-.size_ok:
+size_ok_local:
     ; Copy data
     mov rcx, r13
     mov rdx, rsi
@@ -316,10 +316,10 @@ streaming_get_chunk PROC
     call memcpy
     
     ; Null terminate
-    mov byte [rsi + r14], 0
+    mov byte ptr [rsi + r14], 0
     
     ; Unlock
-    mov byte [rbx + STREAM_CONTEXT.dataLock], 0
+    mov byte ptr [rbx + STREAM_CONTEXT.dataLock], 0
     
     ; Log chunk
     lea rcx, [szStreamChunk]
@@ -347,7 +347,7 @@ streaming_finish PROC
     mov rbx, rcx                    ; rbx = stream
     
     ; Mark as done
-    mov byte [rbx + STREAM_CONTEXT.done], 1
+    mov byte ptr [rbx + STREAM_CONTEXT.done], 1
     
     ; Wait for thread to complete
     mov rcx, [rbx + STREAM_CONTEXT.streamThread]
@@ -372,7 +372,7 @@ streaming_finish ENDP
 ; Cancel streaming inference
 PUBLIC streaming_cancel
 streaming_cancel PROC
-    mov byte [rcx + STREAM_CONTEXT.cancelled], 1
+    mov byte ptr [rcx + STREAM_CONTEXT.cancelled], 1
     
     ; Log
     lea rcx, [szStreamCancelled]
@@ -458,31 +458,31 @@ streaming_destroy PROC
     ; Close thread handle
     mov rcx, [rbx + STREAM_CONTEXT.streamThread]
     cmp rcx, 0
-    je .skip_thread
+    je skip_thread_local
     call CloseHandle
     
-.skip_thread:
+skip_thread_local:
     ; Close data ready event
     mov rcx, [rbx + STREAM_CONTEXT.dataReady]
     cmp rcx, 0
-    je .skip_event
+    je skip_event_local
     call CloseHandle
     
-.skip_event:
+skip_event_local:
     ; Free token queue
     mov rcx, [rbx + STREAM_CONTEXT.tokenQueue]
     cmp rcx, 0
-    je .skip_queue
+    je skip_queue_local
     call free
     
-.skip_queue:
+skip_queue_local:
     ; Free output buffer
     mov rcx, [rbx + STREAM_CONTEXT.outputBuffer]
     cmp rcx, 0
-    je .skip_output
+    je skip_output_local
     call free
     
-.skip_output:
+skip_output_local:
     ; Free context
     mov rcx, rbx
     call free
@@ -503,12 +503,12 @@ streaming_thread_proc PROC
     mov rbx, rcx                    ; rbx = context
     
     ; Main streaming loop
-.stream_loop:
+stream_loop_local:
     cmp byte [rbx + STREAM_CONTEXT.done], 1
-    je .stream_exit
+    je stream_exit_local
     
     cmp byte [rbx + STREAM_CONTEXT.cancelled], 1
-    je .stream_exit
+    je stream_exit_local
     
     ; Wait for data
     mov rcx, [rbx + STREAM_CONTEXT.dataReady]
@@ -519,9 +519,9 @@ streaming_thread_proc PROC
     mov r8d, [rbx + STREAM_CONTEXT.queueTail]
     mov r9d, [rbx + STREAM_CONTEXT.queueHead]
     
-.process_loop:
+process_loop_local:
     cmp r8d, r9d
-    je .stream_loop
+    je stream_loop_local
     
     ; Get token from queue
     mov r10, [rbx + STREAM_CONTEXT.tokenQueue]
@@ -554,15 +554,15 @@ streaming_thread_proc PROC
     inc r8d
     mov r10d, [rbx + STREAM_CONTEXT.queueSize]
     cmp r8d, r10d
-    jl .no_wrap2
+    jl no_wrap_local2
     xor r8d, r8d
     
 .no_wrap2:
     mov [rbx + STREAM_CONTEXT.queueTail], r8d
     
-    jmp .process_loop
+    jmp process_loop_local
     
-.stream_exit:
+stream_exit_local:
     pop rbx
     ret
 streaming_thread_proc ENDP
@@ -574,3 +574,4 @@ streaming_thread_proc ENDP
     static_stream_id QWORD 1
 
 END
+

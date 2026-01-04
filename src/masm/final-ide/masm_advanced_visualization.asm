@@ -630,9 +630,7 @@ viz_start_realtime_stream PROC
     mov [globalChart.dataStream.bufferSize], 10000
     mov [globalChart.dataStream.writePos], 0
     mov [globalChart.dataStream.readPos], 0
-    mov [globalChart.dataStream.isActive], 1
-    
-    ; Create timer for updates
+    mov dword ptr [globalChart.dataStream.isActive], 1  ; Create timer for updates
     mov rcx, [globalChart.hWnd]
     mov rdx, 1  ; Timer ID
     mov eax, 1000

@@ -2571,7 +2571,7 @@ wm_command_palette:
     
     ; rax = selected index; -1 means no selection
     cmp rax, -1
-    je .cmd_palette_done
+    je cmd_palette_done_local
     
     ; Map index to command ID and dispatch
     add rax, 1000
@@ -2579,51 +2579,51 @@ wm_command_palette:
     
     ; Dispatch based on command ID
     cmp r8d, 1001
-    je .cmd_file_open
+    je cmd_file_open_local
     cmp r8d, 1002
-    je .cmd_file_new
+    je cmd_file_new_local
     cmp r8d, 1003
-    je .cmd_file_save
+    je cmd_file_save_local
     cmp r8d, 2001
-    je .cmd_edit_cut
+    je cmd_edit_cut_local
     cmp r8d, 2002
-    je .cmd_edit_copy
+    je cmd_edit_copy_local
     cmp r8d, 2003
-    je .cmd_edit_paste
-    jmp .cmd_palette_done
+    je cmd_edit_paste_local
+    jmp cmd_palette_done_local
     
-.cmd_file_open:
+cmd_file_open_local:
     call ui_file_open_dialog
-    jmp .cmd_palette_done
-.cmd_file_new:
+    jmp cmd_palette_done_local
+cmd_file_new_local:
     xor rcx, rcx
     call ui_editor_set_text
-    jmp .cmd_palette_done
-.cmd_file_save:
+    jmp cmd_palette_done_local
+cmd_file_save_local:
     call ui_file_save
-    jmp .cmd_palette_done
-.cmd_edit_cut:
+    jmp cmd_palette_done_local
+cmd_edit_cut_local:
     mov rcx, hwnd_editor
     mov rdx, WM_CUT
     xor r8, r8
     xor r9, r9
     call SendMessageA
-    jmp .cmd_palette_done
-.cmd_edit_copy:
+    jmp cmd_palette_done_local
+cmd_edit_copy_local:
     mov rcx, hwnd_editor
     mov rdx, WM_COPY
     xor r8, r8
     xor r9, r9
     call SendMessageA
-    jmp .cmd_palette_done
-.cmd_edit_paste:
+    jmp cmd_palette_done_local
+cmd_edit_paste_local:
     mov rcx, hwnd_editor
     mov rdx, WM_PASTE
     xor r8, r8
     xor r9, r9
     call SendMessageA
     
-.cmd_palette_done:
+cmd_palette_done_local:
     xor eax, eax
     add rsp, 40
     ret
@@ -2708,7 +2708,7 @@ file_search_recursive PROC
     
     ; Limit recursion depth to 10
     cmp r8d, 10
-    jge .search_exit
+    jge search_exit_local
     
     mov r12, rcx                        ; Save directory
     mov r13, rdx                        ; Save pattern
@@ -2731,35 +2731,35 @@ file_search_recursive PROC
     call rax
     
     cmp rax, -1
-    je .search_exit
+    je search_exit_local
     
     mov r12d, eax                       ; Save search handle
     
-.search_loop:\n    ; Check if filename matches pattern (case-insensitive)
+search_loop_local:\n    ; Check if filename matches pattern (case-insensitive)
     lea rcx, [rsp + 256 - 560 + 44]     ; cFileName field
     mov rdx, r13                        ; Pattern
     call strstr_case_insensitive
     test rax, rax
-    jz .search_next_file
+    jz search_next_file_local
     
     ; Match found - increment counter
     inc ebx
     
-.search_next_file:
+search_next_file_local:
     ; FindNextFileW
-    mov rcx, r12d                       ; Search handle
+    mov ecx, r12d                       ; Search handle
     lea rdx, [rsp + 256 - 560]          ; Find data
     mov rax, [rip + find_next_file_w_addr]
     call rax
     test eax, eax
-    jnz .search_loop
+    jnz search_loop_local
     
     ; Close search handle
-    mov rcx, r12d
+    mov ecx, r12d
     mov rax, [rip + find_close_addr]
     call rax
     
-.search_exit:
+search_exit_local:
     mov eax, ebx                        ; Return match count
     add rsp, 256
     pop r13
@@ -2775,50 +2775,50 @@ strstr_case_insensitive PROC
     xor r8, r8                          ; Position in haystack
     xor r9, r9                          ; Position in needle
     
-.search:
+search_local:
     mov al, BYTE PTR [rcx + r8]
     test al, al
-    jz .not_found
+    jz not_found_local
     
     mov r9b, BYTE PTR [rdx]
     test r9b, r9b
-    jz .found
+    jz found_local
     
     ; Lowercase comparison
     mov r10b, al
     cmp r10b, 'A'
-    jl .skip_al
+    jl skip_al_local
     cmp r10b, 'Z'
-    jg .skip_al
+    jg skip_al_local
     add r10b, 32
-.skip_al:
+skip_al_local:
     
     mov r11b, r9b
     cmp r11b, 'A'
-    jl .skip_b
+    jl skip_b_local
     cmp r11b, 'Z'
-    jg .skip_b
+    jg skip_b_local
     add r11b, 32
-.skip_b:
+skip_b_local:
     
     cmp r10b, r11b
-    jne .advance
+    jne advance_local
     
     inc r8
     inc rdx
-    jmp .search
+    jmp search_local
     
-.advance:
+advance_local:
     inc rcx
     xor r8, r8
     mov rdx, [rsp + 8]                  ; Reload needle pointer
-    jmp .search
+    jmp search_local
     
-.found:
+found_local:
     lea rax, [rcx + r8]
     ret
     
-.not_found:
+not_found_local:
     xor rax, rax
     ret
 strstr_case_insensitive ENDP
@@ -2840,7 +2840,7 @@ wm_problems_list:
     call SendMessageA
     
     cmp rax, -1
-    je .problem_done
+    je problem_done_local
     
     mov ebx, eax                        ; Save index
     
@@ -2855,27 +2855,27 @@ wm_problems_list:
     xor ecx, ecx                        ; Position counter
     xor r8d, r8d                        ; Line number
     
-.parse_colon:
+parse_colon_local:
     mov al, BYTE PTR [rsi + rcx]
     test al, al
-    jz .parse_end
+    jz parse_end_local
     cmp al, ':'
-    je .found_colon
+    je found_colon_local
     inc ecx
-    jmp .parse_colon
+    jmp parse_colon_local
     
-.found_colon:
+found_colon_local:
     ; rcx now points to first ':'
     ; Extract line number after it
     add rcx, 1
     xor r8d, r8d
     
-.parse_line:
+parse_line_local:
     mov al, BYTE PTR [rsi + rcx]
     cmp al, ':'
-    je .have_line
+    je have_line_local
     cmp al, 0
-    je .have_line
+    je have_line_local
     
     sub al, '0'
     cmp al, 9
@@ -2886,18 +2886,18 @@ wm_problems_list:
     movzx rax, al
     add r8d, eax
     inc ecx
-    jmp .parse_line
+    jmp parse_line_local
     
-.have_line:
+have_line_local:
     ; Jump to line in editor
     mov rcx, r8
     call editor_jump_to_line
     
-.parse_end:
+parse_end_local:
     lea rcx, dbg_problem_navigate
     call OutputDebugStringA
     
-.problem_done:
+problem_done_local:
     add rsp, 256
     pop rbx
     xor eax, eax
@@ -2937,7 +2937,7 @@ editor_jump_to_line PROC
     ret
 editor_jump_to_line ENDP
 
-placeholder_error db "file.asm:100:5: error",0
+placeholder_error db "fileasm_local:100:5: error",0
 
 wm_debug_console:
     ; Handle debug console input - parse and execute debug commands
@@ -2959,53 +2959,53 @@ wm_debug_console:
     mov rdx, rsi
     call strstr_masm
     test rax, rax
-    jnz .cmd_break
+    jnz cmd_break_local
     
     ; Check for "continue" command
     lea rcx, [rip + szContinueCmd]
     mov rdx, rsi
     call strstr_masm
     test rax, rax
-    jnz .cmd_continue
+    jnz cmd_continue_local
     
     ; Check for "step" command
     lea rcx, [rip + szStepCmd]
     mov rdx, rsi
     call strstr_masm
     test rax, rax
-    jnz .cmd_step
+    jnz cmd_step_local
     
     ; Check for "next" command
     lea rcx, [rip + szNextCmd]
     mov rdx, rsi
     call strstr_masm
     test rax, rax
-    jnz .cmd_next
+    jnz cmd_next_local
     
     ; Unknown command
     lea rcx, [rip + szUnknownDebugCmd]
-    jmp .cmd_output
+    jmp cmd_output_local
     
-.cmd_break:
+cmd_break_local:
     call debug_set_breakpoint
     lea rcx, [rip + szBreakpointSet]
-    jmp .cmd_output
+    jmp cmd_output_local
     
-.cmd_continue:
+cmd_continue_local:
     call debug_resume
     lea rcx, [rip + szDebugContinued]
-    jmp .cmd_output
+    jmp cmd_output_local
     
-.cmd_step:
+cmd_step_local:
     call debug_step_into
     lea rcx, [rip + szDebugStepped]
-    jmp .cmd_output
+    jmp cmd_output_local
     
-.cmd_next:
+cmd_next_local:
     call debug_step_over
     lea rcx, [rip + szDebugStepped]
     
-.cmd_output:
+cmd_output_local:
     ; Display result in debug output window
     mov rbx, rcx
     mov rcx, hwnd_debug_output
@@ -4683,3 +4683,4 @@ find_in_files ENDP
     szLogSearchStart    BYTE "UI: Starting file search...",0
 
 END
+

@@ -543,9 +543,7 @@ notebook_execute_cell PROC
     inc dword ptr [rsi + NOTEBOOK_CELL.execution_count]
     
     ; Set execution time (stub)
-    mov [rsi + NOTEBOOK_CELL.execution_time], 100
-    
-    ; Set state to completed
+    mov dword ptr [rsi + NOTEBOOK_CELL.execution_time], 100  ; Set state to completed
     mov [rsi + NOTEBOOK_CELL.state], CELL_COMPLETED
     
     ; Update UI

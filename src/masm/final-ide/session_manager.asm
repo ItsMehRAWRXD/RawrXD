@@ -645,3 +645,4 @@ EXTERN CloseHandle:PROC
 EXTERN SetTimer:PROC
 
 END
+

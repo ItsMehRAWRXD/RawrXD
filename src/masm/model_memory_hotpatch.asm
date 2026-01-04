@@ -519,3 +519,4 @@ str_fail_type       DB "Invalid patch type", 0
 str_fail_verify     DB "Verification failed", 0
 
 END
+

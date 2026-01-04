@@ -2484,9 +2484,7 @@ door_init_loop:
     mov [rdi + SLIDING_DOOR.current_offset], 0
     mov [rdi + SLIDING_DOOR.end_offset], SLIDING_DOOR_SIZE
     mov [rdi + SLIDING_DOOR.is_active], 0
-    mov [rdi + SLIDING_DOOR.is_loading], 0
-    
-    ; Generate unique encryption key for this door
+    mov dword ptr [rdi + SLIDING_DOOR.is_loading], 0  ; Generate unique encryption key for this door
     call GenerateDoorKey
     mov rsi, rax
     lea rdx, [rdi + SLIDING_DOOR.encryption_key]
@@ -3739,7 +3737,7 @@ SetupMemoryMapping PROC
     mov r8d, 04h ; PAGE_READWRITE
     xor r9, r9 ; dwMaximumSizeHigh
     mov [rsp + 32], 1000000h ; dwMaximumSizeLow (16MB)
-    mov [rsp + 40], 0 ; lpName
+    mov dword ptr [rsp + 40], 0  ; lpName
     call CreateFileMappingA
     
     test rax, rax
@@ -3750,7 +3748,7 @@ SetupMemoryMapping PROC
     mov edx, 0002h ; FILE_MAP_WRITE
     xor r8, r8 ; dwFileOffsetHigh
     xor r9, r9 ; dwFileOffsetLow
-    mov [rsp + 32], 0 ; dwNumberOfBytesToMap (all)
+    mov dword ptr [rsp + 32], 0  ; dwNumberOfBytesToMap (all)
     call MapViewOfFile
     
     test rax, rax
@@ -4922,9 +4920,7 @@ EnableDeepThinking PROC
     mov [thinking_context.search_queries], 0
     mov [thinking_context.research_sources], 0
     mov [thinking_context.analysis_steps], 0
-    mov [thinking_context.is_complete], 0
-    
-    ; Display thinking status
+    mov dword ptr [thinking_context.is_complete], 0  ; Display thinking status
     lea rcx, [szThinkingDeep]
     call DisplayMessage
     
@@ -4957,9 +4953,7 @@ PerformDeepSearch PROC
     
     ; Initialize search counters
     mov [thinking_context.search_queries], 0
-    mov [thinking_context.research_sources], 0
-    
-    ; Perform local search
+    mov dword ptr [thinking_context.research_sources], 0  ; Perform local search
     call SearchLocal
     inc [thinking_context.search_queries]
     

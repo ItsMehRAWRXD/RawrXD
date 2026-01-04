@@ -196,11 +196,11 @@ Hotpatch_ApplyMemory PROC FRAME
     ; R8 = patch data pointer
     
     test rcx, rcx
-    jz .L1_invalid_ptr
+    jz L_local1_invalid_ptr
     test rdx, rdx
-    jz .L1_invalid_size
+    jz L_local1_invalid_size
     test r8, r8
-    jz .L1_invalid_patch
+    jz L_local1_invalid_patch
     
     ; Acquire manager lock (SRW)
     lea r10, [hotpatchManager + OFFSET hotpatchManager.ManagerLock]
@@ -230,15 +230,15 @@ Hotpatch_ApplyMemory PROC FRAME
     inc QWORD PTR [hotpatchStats + OFFSET hotpatchStats.MemoryPatchesApplied]
     
     mov rax, HOTPATCH_E_SUCCESS
-    jmp .L1_exit
+    jmp L_local1_exit
     
 .L1_invalid_ptr:
     mov rax, HOTPATCH_E_MEMORY_ALLOC_FAILED
-    jmp .L1_exit
+    jmp L_local1_exit
     
 .L1_invalid_size:
     mov rax, HOTPATCH_E_PATCH_TOO_LARGE
-    jmp .L1_exit
+    jmp L_local1_exit
     
 .L1_invalid_patch:
     mov rax, HOTPATCH_E_MEMORY_ALLOC_FAILED
@@ -263,15 +263,15 @@ Hotpatch_ApplyByte PROC FRAME
     ; R9 = patch size
     
     test rcx, rcx
-    jz .L2_invalid
+    jz L_local2_invalid
     test r8, r8
-    jz .L2_invalid
+    jz L_local2_invalid
     test r9, r9
-    jz .L2_invalid
+    jz L_local2_invalid
     
     ; Validate patch size
     cmp r9, HOTPATCH_MAX_PATCH_SIZE
-    jg .L2_invalid
+    jg L_local2_invalid
     
     ; Acquire manager lock
     
@@ -297,7 +297,7 @@ Hotpatch_ApplyByte PROC FRAME
     inc QWORD PTR [hotpatchStats + OFFSET hotpatchStats.FilePatchesApplied]
     
     mov rax, r9                     ; Return bytes written
-    jmp .L2_exit
+    jmp L_local2_exit
     
 .L2_invalid:
     inc QWORD PTR [hotpatchStats + OFFSET hotpatchStats.PatchFailures]
@@ -323,15 +323,15 @@ Hotpatch_AddServerHotpatch PROC FRAME
     
     ; Validate hook type
     cmp rdx, HOOK_TYPE_STREAMCHUNK
-    jg .L3_invalid_type
+    jg L_local3_invalid_type
     cmp rdx, HOOK_TYPE_PREQUEST
-    jl .L3_invalid_type
+    jl L_local3_invalid_type
     
     ; Acquire manager lock
     
     ; Check hook count < HOTPATCH_MAX_HOOKS
     cmp DWORD PTR [hotpatchManager + OFFSET hotpatchManager.ServerHookCount], HOTPATCH_MAX_HOOKS
-    jge .L3_limit_exceeded
+    jge L_local3_limit_exceeded
     
     ; Allocate new hook ID (sequential)
     mov r9d, DWORD PTR [hotpatchManager + OFFSET hotpatchManager.ServerHookCount]
@@ -349,11 +349,11 @@ Hotpatch_AddServerHotpatch PROC FRAME
     inc QWORD PTR [hotpatchStats + OFFSET hotpatchStats.ServerHooksRegistered]
     
     mov rax, r9                     ; Return hook ID
-    jmp .L3_exit
+    jmp L_local3_exit
     
 .L3_invalid_type:
     mov rax, HOTPATCH_E_PATCH_TOO_LARGE   ; Reuse as invalid type code
-    jmp .L3_exit
+    jmp L_local3_exit
     
 .L3_limit_exceeded:
     mov rax, HOTPATCH_E_HOOK_LIMIT_EXCEEDED
@@ -378,7 +378,7 @@ Hotpatch_RemoveServerHotpatch PROC FRAME
     
     ; Validate hook ID exists
     cmp rdx, QWORD PTR [hotpatchManager + OFFSET hotpatchManager.ServerHookCount]
-    jge .L4_not_found
+    jge L_local4_not_found
     
     ; Mark hook as disabled
     ; ServerHooks[rdx].Enabled = 0
@@ -389,7 +389,7 @@ Hotpatch_RemoveServerHotpatch PROC FRAME
     ; Release manager lock
     
     mov rax, HOTPATCH_E_SUCCESS
-    jmp .L4_exit
+    jmp L_local4_exit
     
 .L4_not_found:
     mov rax, HOTPATCH_E_PATTERN_NOT_FOUND
@@ -459,3 +459,4 @@ Test_Hotpatch_File PROC FRAME
 Test_Hotpatch_File ENDP
 
 END
+

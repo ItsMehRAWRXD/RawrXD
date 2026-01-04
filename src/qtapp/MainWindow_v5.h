@@ -23,7 +23,7 @@ class FileBrowser;
 class InferenceEngine;
 class TodoManager;
 class TodoDock;
-class ChatHistoryManager;
+namespace RawrXD { namespace Database { class ChatHistoryManager; }}
 class ModelLoaderThread;
 class ModelLoaderWidget;
 class MasmEditorWidget;
@@ -190,13 +190,13 @@ private:
     FileBrowser *m_fileBrowser;
     AgenticEngine *m_agenticEngine;
     InferenceEngine *m_inferenceEngine;
-    ChatHistoryManager *m_historyManager;
+    RawrXD::Database::ChatHistoryManager *m_historyManager;
     RawrXD::PlanOrchestrator *m_planOrchestrator;
     RawrXD::LSPClient *m_lspClient;
     TodoManager *m_todoManager;
     TodoDock *m_todoDock;
     
-    qint64 m_currentSessionId = -1;
+    QString m_currentSessionId;
 
     RawrXD::TelemetryWindow *m_telemetryWindow{nullptr};
     QAction *m_telemetryAction{nullptr};

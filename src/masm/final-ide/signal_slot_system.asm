@@ -884,9 +884,7 @@ _initialize_signal PROC
     
     ; Initialize fields
     mov [rcx+SIGNAL.slot_count], 0
-    mov [rcx+SIGNAL.blocked], 0
-    
-    ; Allocate slots array
+    mov dword ptr [rcx+SIGNAL.blocked], 0  ; Allocate slots array
     mov rcx, MAX_SLOTS_PER_SIGNAL
     imul rcx, sizeof SLOT_CONNECTION
     call asm_malloc

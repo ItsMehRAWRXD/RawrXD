@@ -137,9 +137,7 @@ find_execute PROC
     push rsi
     push rdi
     
-    mov [globalFindEngine.resultCount], 0
-    
-    ; Get editor text length
+    mov dword ptr [globalFindEngine.resultCount], 0  ; Get editor text length
     mov rcx, [globalFindEngine.hEditor]
     mov rdx, WM_GETTEXTLENGTH
     xor r8, r8

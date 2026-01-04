@@ -992,3 +992,4 @@ hotpatch_main ENDP
 test_string db "Hello, MASM!", 0
 
 END
+

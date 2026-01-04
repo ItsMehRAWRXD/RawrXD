@@ -131,7 +131,7 @@ WinMain PROC
     call zero_cpp_bridge_initialize
     
     test eax, eax
-    jz .init_failed
+    jz init_failed_local
     
     lea rcx, szInitOk
     call log_message
@@ -172,7 +172,7 @@ WinMain PROC
     call RegisterClassA
     
     test rax, rax
-    jz .register_failed
+    jz register_failed_local
     
     add rsp, SIZEOF WNDCLASSA
     
@@ -210,7 +210,7 @@ WinMain PROC
     call CreateWindowExA
     
     test rax, rax
-    jz .wnd_create_failed
+    jz wnd_create_failed_local
     
     mov g_main_window, rax
     add rsp, 48
@@ -262,7 +262,7 @@ WinMain PROC
     sub rsp, SIZEOF MSG
     mov rbx, rsp
     
-.msg_loop:
+msg_loop_local:
     ; GetMessageA(&msg, NULL, 0, 0)
     mov rcx, rbx        ; lpMsg
     mov rdx, 0          ; hWnd (NULL = all windows)
@@ -271,7 +271,7 @@ WinMain PROC
     call GetMessageA
     
     test eax, eax
-    jle .msg_loop_exit  ; Exit on WM_QUIT or error
+    jle msg_loop_exit_local  ; Exit on WM_QUIT or error
     
     ; TranslateMessage(&msg)
     mov rcx, rbx
@@ -281,9 +281,9 @@ WinMain PROC
     mov rcx, rbx
     call DispatchMessageA
     
-    jmp .msg_loop
+    jmp msg_loop_local
     
-.msg_loop_exit:
+msg_loop_exit_local:
     add rsp, SIZEOF MSG
     
     ; =========================================================================
@@ -302,26 +302,26 @@ WinMain PROC
     pop rbx
     ret
     
-.init_failed:
+init_failed_local:
     lea rcx, szInitFailed
     call log_message
     mov eax, 1
-    jmp .exit_cleanup
+    jmp exit_cleanup_local
     
-.register_failed:
+register_failed_local:
     lea rcx, szCreateWndFailed
     call log_message
     add rsp, SIZEOF WNDCLASSA
     mov eax, 1
-    jmp .exit_cleanup
+    jmp exit_cleanup_local
     
-.wnd_create_failed:
+wnd_create_failed_local:
     lea rcx, szCreateWndFailed
     call log_message
     mov eax, 1
-    jmp .exit_cleanup
+    jmp exit_cleanup_local
     
-.exit_cleanup:
+exit_cleanup_local:
     call cleanup_logging
     add rsp, 64
     pop r12
@@ -347,54 +347,54 @@ MainWndProc PROC
     mov eax, edx
     
     cmp eax, WM_CREATE
-    je .handle_create
+    je handle_create_local
     
     cmp eax, WM_DESTROY
-    je .handle_destroy
+    je handle_destroy_local
     
     cmp eax, WM_CLOSE
-    je .handle_close
+    je handle_close_local
     
     cmp eax, WM_PAINT
-    je .handle_paint
+    je handle_paint_local
     
     cmp eax, WM_SIZE
-    je .handle_size
+    je handle_size_local
     
     cmp eax, WM_CUSTOM_WISH
-    je .handle_wish
+    je handle_wish_local
     
     cmp eax, WM_CUSTOM_STATUS
-    je .handle_status
+    je handle_status_local
     
     cmp eax, WM_CUSTOM_EXECUTE
-    je .handle_execute
+    je handle_execute_local
     
     ; Default message handling
     mov rcx, r9         ; lParam
     mov edx, r8         ; wParam
     mov rdx, edx
     call DefWindowProcA
-    jmp .msg_done
+    jmp msg_done_local
     
-.handle_create:
+handle_create_local:
     xor eax, eax       ; Return 0 for success
-    jmp .msg_done
+    jmp msg_done_local
     
-.handle_destroy:
+handle_destroy_local:
     xor ecx, ecx
     call PostQuitMessage  ; Send WM_QUIT
     xor eax, eax
-    jmp .msg_done
+    jmp msg_done_local
     
-.handle_close:
+handle_close_local:
     ; Gracefully close the window
     mov rcx, g_main_window
     call DestroyWindow
     xor eax, eax
-    jmp .msg_done
+    jmp msg_done_local
     
-.handle_paint:
+handle_paint_local:
     ; Forward to Qt if needed
     sub rsp, SIZEOF PAINTSTRUCT
     mov rbx, rsp
@@ -414,16 +414,16 @@ MainWndProc PROC
     
     add rsp, SIZEOF PAINTSTRUCT
     xor eax, eax
-    jmp .msg_done
+    jmp msg_done_local
     
-.handle_size:
+handle_size_local:
     ; Resize panels to fit window
     ; r8 = new width, r9 = new height
     ; TODO: Resize panels
     xor eax, eax
-    jmp .msg_done
+    jmp msg_done_local
     
-.handle_wish:
+handle_wish_local:
     ; Custom message: user submitted a wish
     ; r8 = wish text pointer
     lea rcx, szWishReceived
@@ -452,24 +452,24 @@ MainWndProc PROC
     call display_status_message
     
     xor eax, eax
-    jmp .msg_done
+    jmp msg_done_local
     
-.handle_status:
+handle_status_local:
     ; Custom message: status update from bridge
     ; r8 = status code, r9 = progress percentage
     mov edx, r9d
     lea rcx, szExecutionUpdate
     call display_status_message
     xor eax, eax
-    jmp .msg_done
+    jmp msg_done_local
     
-.handle_execute:
+handle_execute_local:
     ; Custom message: execute a task
     ; r8 = task pointer
     xor eax, eax
-    jmp .msg_done
+    jmp msg_done_local
     
-.msg_done:
+msg_done_local:
     add rsp, 32
     pop r12
     pop rbx
@@ -509,14 +509,14 @@ log_message PROC
     ; Calculate string length
     mov rsi, rcx
     xor edx, edx
-.len_loop:
+len_loop_local:
     cmp BYTE PTR [rsi], 0
-    je .len_done
+    je len_done_local
     inc edx
     inc rsi
-    jmp .len_loop
+    jmp len_loop_local
     
-.len_done:
+len_done_local:
     ; Write to stdout
     mov rcx, rbx        ; hFile
     mov rdx, rcx        ; lpBuffer (original message ptr)
@@ -582,3 +582,4 @@ WISH_CONTEXT STRUCT
 WISH_CONTEXT ENDS
 
 END
+

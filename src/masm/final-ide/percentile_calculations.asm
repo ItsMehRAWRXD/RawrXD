@@ -101,11 +101,11 @@ compare_float64 PROC
     xor eax, eax                   ; Equal
     ret
     
-.less:
+less_local:
     mov eax, -1
     ret
     
-.greater:
+greater_local:
     mov eax, 1
     ret
 compare_float64 ENDP
@@ -124,11 +124,11 @@ compare_float32 PROC
     xor eax, eax
     ret
     
-.less:
+less_local:
     mov eax, -1
     ret
     
-.greater:
+greater_local:
     mov eax, 1
     ret
 compare_float32 ENDP
@@ -142,16 +142,16 @@ compare_int64 PROC
     mov r8, [rdx]
     
     cmp rax, r8
-    jl .less
-    jg .greater
+    jl less_local
+    jg greater_local
     xor eax, eax
     ret
     
-.less:
+less_local:
     mov eax, -1
     ret
     
-.greater:
+greater_local:
     mov eax, 1
     ret
 compare_int64 ENDP
@@ -165,16 +165,16 @@ compare_int32 PROC
     mov r8d, [rdx]
     
     cmp eax, r8d
-    jl .less
-    jg .greater
+    jl less_local
+    jg greater_local
     xor eax, eax
     ret
     
-.less:
+less_local:
     mov eax, -1
     ret
     
-.greater:
+greater_local:
     mov eax, 1
     ret
 compare_int32 ENDP
@@ -208,39 +208,39 @@ sort_data PROC
     
     ; Select comparison function based on data type
     cmp r9d, DATA_TYPE_FLOAT64
-    je .use_float64_cmp
+    je use_float_local64_cmp
     cmp r9d, DATA_TYPE_FLOAT32
-    je .use_float32_cmp
+    je use_float_local32_cmp
     cmp r9d, DATA_TYPE_INT64
-    je .use_int64_cmp
+    je use_int_local64_cmp
     cmp r9d, DATA_TYPE_INT32
-    je .use_int32_cmp
+    je use_int_local32_cmp
     
     ; Default to int32
 .use_int32_cmp:
     mov rcx, rbx
     mov rdx, rsi
     call qsort
-    jmp .sort_done
+    jmp sort_done_local
     
 .use_float64_cmp:
     mov rcx, rbx
     mov rdx, rsi
     call qsort
-    jmp .sort_done
+    jmp sort_done_local
     
 .use_float32_cmp:
     mov rcx, rbx
     mov rdx, rsi
     call qsort
-    jmp .sort_done
+    jmp sort_done_local
     
 .use_int64_cmp:
     mov rcx, rbx
     mov rdx, rsi
     call qsort
     
-.sort_done:
+sort_done_local:
     xor eax, eax                   ; Return STATUS_OK
     
     pop rsi
@@ -277,13 +277,13 @@ calculate_percentile PROC
     
     ; Check bounds
     cmp rax, 0
-    jl .clamp_min
+    jl clamp_min_local
     cmp rax, rdx
-    jge .clamp_max
+    jge clamp_max_local
     
     ; Get values at index and index+1
     cmp r9d, DATA_TYPE_FLOAT64
-    je .get_float64
+    je get_float_local64
     
     ; Default: assume double
     movsd xmm1, [rcx + rax*8]      ; data[index]
@@ -305,11 +305,11 @@ calculate_percentile PROC
     movsd xmm0, xmm1
     ret
     
-.clamp_min:
+clamp_min_local:
     movsd xmm0, [rcx]              ; Return first value
     ret
     
-.clamp_max:
+clamp_max_local:
     mov rax, rdx
     dec rax
     movsd xmm0, [rcx + rax*8]      ; Return last value
@@ -387,15 +387,15 @@ calculate_statistics PROC
     xorpd xmm0, xmm0               ; sum = 0
     xor r8, r8
     
-.sum_loop:
+sum_loop_local:
     cmp r8, rdi
-    jge .mean_done
+    jge mean_done_local
     
     addsd xmm0, [rsi + r8*8]
     inc r8
-    jmp .sum_loop
+    jmp sum_loop_local
     
-.mean_done:
+mean_done_local:
     cvtsi2sd xmm1, rdi
     divsd xmm0, xmm1               ; mean = sum / count
     movsd [rbx + PERCENTILE_STATS.mean], xmm0
@@ -404,18 +404,18 @@ calculate_statistics PROC
     xorpd xmm1, xmm1               ; sum_sq_diff = 0
     xor r8, r8
     
-.variance_loop:
+variance_loop_local:
     cmp r8, rdi
-    jge .variance_done
+    jge variance_done_local
     
     movsd xmm2, [rsi + r8*8]
     subsd xmm2, xmm0               ; value - mean
     mulsd xmm2, xmm2               ; (value - mean)^2
     addsd xmm1, xmm2
     inc r8
-    jmp .variance_loop
+    jmp variance_loop_local
     
-.variance_done:
+variance_done_local:
     cvtsi2sd xmm2, rdi
     divsd xmm1, xmm2               ; variance = sum_sq_diff / count
     movsd [rbx + PERCENTILE_STATS.variance], xmm1
@@ -456,10 +456,10 @@ create_histogram PROC
     
     ; Validate bucket count
     cmp r12, MAX_BUCKET_COUNT
-    jle .bucket_ok
+    jle bucket_ok_local
     mov r12, MAX_BUCKET_COUNT
     
-.bucket_ok:
+bucket_ok_local:
     ; Store histogram properties
     mov [rbx + HISTOGRAM.bucketCount], r12
     mov [rbx + HISTOGRAM.totalCount], rdi
@@ -470,25 +470,25 @@ create_histogram PROC
     movsd xmm1, [rsi]
     xor r8, r8
     
-.minmax_loop:
+minmax_loop_local:
     cmp r8, rdi
-    jge .minmax_done
+    jge minmax_done_local
     
     movsd xmm2, [rsi + r8*8]
     comisd xmm2, xmm0
     jae .not_less
     movsd xmm0, xmm2               ; New min
     
-.not_less:
+not_less_local:
     comisd xmm2, xmm1
     jbe .not_greater
     movsd xmm1, xmm2               ; New max
     
-.not_greater:
+not_greater_local:
     inc r8
-    jmp .minmax_loop
+    jmp minmax_loop_local
     
-.minmax_done:
+minmax_done_local:
     movsd [rbx + HISTOGRAM.minValue], xmm0
     movsd [rbx + HISTOGRAM.maxValue], xmm1
     
@@ -508,9 +508,9 @@ create_histogram PROC
     ; Initialize buckets
     xor r8, r8
     
-.init_buckets:
+init_buckets_local:
     cmp r8, r12
-    jge .init_done
+    jge init_done_local
     
     mov rcx, [rbx + HISTOGRAM.buckets]
     mov rdx, rcx
@@ -534,22 +534,22 @@ create_histogram PROC
     mov [rdx + HISTOGRAM_BUCKET.bucketCount], 0
     
     inc r8
-    jmp .init_buckets
+    jmp init_buckets_local
     
-.init_done:
+init_done_local:
     ; Count values in each bucket
     xor r8, r8
     
-.count_loop:
+count_loop_local:
     cmp r8, rdi
-    jge .count_done
+    jge count_done_local
     
     movsd xmm0, [rsi + r8*8]
     
     xor r9, r9
-.find_bucket:
+find_bucket_local:
     cmp r9, r12
-    jge .find_bucket_done
+    jge find_bucket_done_local
     
     mov rcx, [rbx + HISTOGRAM.buckets]
     imul r9, SIZEOF HISTOGRAM_BUCKET
@@ -566,24 +566,24 @@ create_histogram PROC
     ; Found bucket
     add rcx, r9
     inc qword [rcx + HISTOGRAM_BUCKET.bucketCount]
-    jmp .next_value
+    jmp next_value_local
     
-.next_bucket:
+next_bucket_local:
     inc r9
-    jmp .find_bucket
+    jmp find_bucket_local
     
-.find_bucket_done:
-.next_value:
+find_bucket_done_local:
+next_value_local:
     inc r8
-    jmp .count_loop
+    jmp count_loop_local
     
-.count_done:
+count_done_local:
     ; Calculate percentages
     xor r8, r8
     
-.percent_loop:
+percent_loop_local:
     cmp r8, r12
-    jge .percent_done
+    jge percent_done_local
     
     mov rcx, [rbx + HISTOGRAM.buckets]
     imul r8, SIZEOF HISTOGRAM_BUCKET
@@ -599,9 +599,9 @@ create_histogram PROC
     movss [rcx + HISTOGRAM_BUCKET.bucketPercent], xmm2
     
     inc r8
-    jmp .percent_loop
+    jmp percent_loop_local
     
-.percent_done:
+percent_done_local:
     mov rax, rbx
     
     pop r13
@@ -625,10 +625,10 @@ free_histogram PROC
     ; Free buckets array
     mov rcx, [rbx + HISTOGRAM.buckets]
     cmp rcx, 0
-    je .skip_buckets
+    je skip_buckets_local
     call free
     
-.skip_buckets:
+skip_buckets_local:
     ; Free histogram structure
     mov rcx, rbx
     call free
@@ -660,3 +660,4 @@ get_histogram_bucket ENDP
     fOneHundred REAL8 100.0
 
 END
+

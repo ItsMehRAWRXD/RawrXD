@@ -157,17 +157,17 @@ test_harness_init PROC
     
     ; Clear test array
     mov ecx, 0
-.init_loop:
+init_loop_local:
     cmp ecx, 100
-    jge .init_done
+    jge init_done_local
     mov rax, offset test_cases
     lea rbx, [rax + rcx*sizeof(test_case)]
     mov DWORD PTR [rbx + test_case.result], 0
     mov DWORD PTR [rbx + test_case.duration_ms], 0
     inc ecx
-    jmp .init_loop
+    jmp init_loop_local
     
-.init_done:
+init_done_local:
     mov DWORD PTR test_count, 0
     mov DWORD PTR test_pass_count, 0
     mov DWORD PTR test_fail_count, 0
@@ -195,7 +195,7 @@ test_ui_window_creation PROC
     call ui_create_main_window
     
     test rax, rax
-    jnz .window_pass
+    jnz window_pass_local
     
     ; FAIL
     mov rbx, offset test_cases
@@ -205,14 +205,14 @@ test_ui_window_creation PROC
     lea rcx, window_fail_msg
     call .copy_string_to_buffer
     inc DWORD PTR test_fail_count
-    jmp .window_done
+    jmp window_done_local
     
-.window_pass:
+window_pass_local:
     mov rbx, offset test_cases
     mov DWORD PTR [rbx + 0*sizeof(test_case) + test_case.result], TEST_PASS
     inc DWORD PTR test_pass_count
     
-.window_done:
+window_done_local:
     mov eax, DWORD PTR [rbx + 0*sizeof(test_case) + test_case.result]
     add rsp, 64
     pop rbx
@@ -238,19 +238,19 @@ test_theme_application PROC
     mov ecx, 1
     call gui_apply_theme
     test eax, eax
-    jz .theme_fail_1
+    jz theme_fail__local1
     
     ; Test applying theme 2 (Light)
     mov ecx, 2
     call gui_apply_theme
     test eax, eax
-    jz .theme_fail_2
+    jz theme_fail__local2
     
     ; Test applying theme 3 (Amber)
     mov ecx, 3
     call gui_apply_theme
     test eax, eax
-    jz .theme_fail_3
+    jz theme_fail__local3
     
     ; PASS
     mov rbx, offset test_cases
@@ -260,7 +260,7 @@ test_theme_application PROC
     lea rbx, [rbx + rax]
     mov DWORD PTR [rbx + test_case.result], TEST_PASS
     inc DWORD PTR test_pass_count
-    jmp .theme_done
+    jmp theme_done_local
     
 .theme_fail_1:
 .theme_fail_2:
@@ -273,7 +273,7 @@ test_theme_application PROC
     mov DWORD PTR [rbx + test_case.result], TEST_FAIL
     inc DWORD PTR test_fail_count
     
-.theme_done:
+theme_done_local:
     add rsp, 64
     pop r12
     pop rbx
@@ -304,7 +304,7 @@ test_json_operations PROC
     mov r8d, 256
     call _write_json_to_file
     test eax, eax
-    jz .json_fail
+    jz json_fail_local
     
     ; Read back
     lea rcx, test_json_file
@@ -312,7 +312,7 @@ test_json_operations PROC
     mov r8d, 256
     call _read_json_from_file
     test eax, eax
-    jz .json_fail
+    jz json_fail_local
     
     ; Compare
     lea rcx, [rsp]
@@ -320,20 +320,20 @@ test_json_operations PROC
     mov r8d, 256
     call .compare_buffers
     test eax, eax
-    jz .json_fail
+    jz json_fail_local
     
     ; PASS
     mov rbx, offset test_cases
     mov DWORD PTR [rbx + 4*sizeof(test_case) + test_case.result], TEST_PASS
     inc DWORD PTR test_pass_count
-    jmp .json_done
+    jmp json_done_local
     
-.json_fail:
+json_fail_local:
     mov rbx, offset test_cases
     mov DWORD PTR [rbx + 4*sizeof(test_case) + test_case.result], TEST_FAIL
     inc DWORD PTR test_fail_count
     
-.json_done:
+json_done_local:
     add rsp, 512
     pop rbx
     ret
@@ -355,26 +355,26 @@ test_failure_detection PROC
     lea rcx, refusal_test_msg
     call error_detect_agentic_failure
     cmp eax, ERROR_CATEGORY_AGENTIC_FAILURE
-    jne .fail_detect_fail
+    jne fail_detect_fail_local
     
     ; Test 2: Detect timeout
     lea rcx, timeout_test_msg
     call error_detect_agentic_failure
     cmp eax, ERROR_CATEGORY_AGENTIC_FAILURE
-    jne .fail_detect_fail
+    jne fail_detect_fail_local
     
     ; PASS
     mov rbx, offset test_cases
     mov DWORD PTR [rbx + 5*sizeof(test_case) + test_case.result], TEST_PASS
     inc DWORD PTR test_pass_count
-    jmp .fail_detect_done
+    jmp fail_detect_done_local
     
-.fail_detect_fail:
+fail_detect_fail_local:
     mov rbx, offset test_cases
     mov DWORD PTR [rbx + 5*sizeof(test_case) + test_case.result], TEST_FAIL
     inc DWORD PTR test_fail_count
     
-.fail_detect_done:
+fail_detect_done_local:
     add rsp, 256
     pop rbx
     ret
@@ -410,21 +410,21 @@ test_perf_theme_switch PROC
     
     ; Check against target
     cmp eax, PERF_THEME_SWITCH
-    jg .theme_perf_fail
+    jg theme_perf_fail_local
     
     mov rbx, offset test_cases
     mov DWORD PTR [rbx + 7*sizeof(test_case) + test_case.result], TEST_PASS
     mov DWORD PTR [rbx + 7*sizeof(test_case) + test_case.duration_ms], eax
     inc DWORD PTR test_pass_count
-    jmp .theme_perf_done
+    jmp theme_perf_done_local
     
-.theme_perf_fail:
+theme_perf_fail_local:
     mov rbx, offset test_cases
     mov DWORD PTR [rbx + 7*sizeof(test_case) + test_case.result], TEST_FAIL
     mov DWORD PTR [rbx + 7*sizeof(test_case) + test_case.duration_ms], eax
     inc DWORD PTR test_fail_count
     
-.theme_perf_done:
+theme_perf_done_local:
     add rsp, 32
     pop r12
     pop rbx
@@ -450,9 +450,9 @@ generate_tap_report PROC
     
     ; For each test
     mov r12, 0
-.tap_loop:
+tap_loop_local:
     cmp r12d, DWORD PTR test_count
-    jge .tap_done
+    jge tap_done_local
     
     mov rax, offset test_cases
     mov ecx, sizeof(test_case)
@@ -465,21 +465,21 @@ generate_tap_report PROC
     
     mov eax, DWORD PTR [rbx + test_case.result]
     cmp eax, TEST_PASS
-    je .tap_ok
+    je tap_ok_local
     
     ; not ok
     lea rcx, tap_notok_format
-    jmp .tap_format
+    jmp tap_format_local
     
-.tap_ok:
+tap_ok_local:
     lea rcx, tap_ok_format
     
-.tap_format:
+tap_format_local:
     call .append_to_tap
     inc r12
-    jmp .tap_loop
+    jmp tap_loop_local
     
-.tap_done:
+tap_done_local:
     ; Summary
     lea rcx, tap_summary_format
     call .append_to_tap
@@ -513,9 +513,9 @@ generate_comparison_report PROC
     
     ; For each feature
     mov ebx, 0
-.comp_loop:
+comp_loop_local:
     cmp ebx, DWORD PTR feature_count
-    jge .comp_done
+    jge comp_done_local
     
     mov rax, offset feature_array
     mov ecx, sizeof(feature_comparison)
@@ -528,9 +528,9 @@ generate_comparison_report PROC
     call .generate_feature_row_html
     
     inc ebx
-    jmp .comp_loop
+    jmp comp_loop_local
     
-.comp_done:
+comp_done_local:
     ; Append HTML footer
     lea rcx, [rsp]
     mov edx, 512
@@ -583,15 +583,15 @@ test_harness_run_all PROC
     ; Check if all passed
     mov eax, DWORD PTR test_fail_count
     test eax, eax
-    jz .all_pass
+    jz all_pass_local
     
     xor eax, eax
-    jmp .all_done
+    jmp all_done_local
     
-.all_pass:
+all_pass_local:
     mov eax, 1
     
-.all_done:
+all_done_local:
     add rsp, 32
     pop rbx
     ret
@@ -666,28 +666,28 @@ compare_buffers PROC PRIVATE
     push rbx
     xor eax, eax
     
-.cmp_loop:
+cmp_loop_local:
     test r8d, r8d
-    jz .cmp_equal
+    jz cmp_equal_local
     
     mov al, BYTE PTR [rcx]
     mov bl, BYTE PTR [rdx]
     cmp al, bl
-    jne .cmp_not_equal
+    jne cmp_not_equal_local
     
     inc rcx
     inc rdx
     dec r8d
-    jmp .cmp_loop
+    jmp cmp_loop_local
     
-.cmp_equal:
+cmp_equal_local:
     mov eax, 1
-    jmp .cmp_done
+    jmp cmp_done_local
     
-.cmp_not_equal:
+cmp_not_equal_local:
     xor eax, eax
     
-.cmp_done:
+cmp_done_local:
     pop rbx
     ret
 compare_buffers ENDP
@@ -702,16 +702,16 @@ append_to_tap PROC PRIVATE
     push rbx
     mov rbx, QWORD PTR tap_pos
     
-.app_loop:
+app_loop_local:
     mov al, BYTE PTR [rcx]
     test al, al
-    jz .app_done
+    jz app_done_local
     mov BYTE PTR [rbx], al
     inc rcx
     inc rbx
-    jmp .app_loop
+    jmp app_loop_local
     
-.app_done:
+app_done_local:
     mov QWORD PTR tap_pos, rbx
     pop rbx
     ret
@@ -726,22 +726,23 @@ ALIGN 16
 copy_string_to_buffer PROC PRIVATE
     push rbx
     
-.cpy_loop:
+cpy_loop_local:
     test r8d, r8d
-    jz .cpy_done
+    jz cpy_done_local
     mov al, BYTE PTR [rcx]
     test al, al
-    jz .cpy_done
+    jz cpy_done_local
     mov BYTE PTR [rdx], al
     inc rcx
     inc rdx
     dec r8d
-    jmp .cpy_loop
+    jmp cpy_loop_local
     
-.cpy_done:
+cpy_done_local:
     mov BYTE PTR [rdx], 0
     pop rbx
     ret
 copy_string_to_buffer ENDP
 
 END
+

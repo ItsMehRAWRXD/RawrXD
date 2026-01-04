@@ -543,7 +543,7 @@ training_studio_create_model PROC
     call strncpy
     
     ; Set default parameters
-    mov [rdi + MODEL.parameters], 1000000  ; 1M params
+    mov dword ptr [rdi + MODEL.parameters], 1000000  ; 1M params
     mov byte ptr [rdi + MODEL.loaded], 0
     mov byte ptr [rdi + MODEL.trained], 0
     

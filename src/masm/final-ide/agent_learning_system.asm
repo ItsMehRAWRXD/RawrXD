@@ -99,15 +99,15 @@ agent_learning_init PROC
     xor edx, edx
     mov r8d, MAX_PATTERNS * (SIZE LEARNED_PATTERN) / 8
     
-.zero_patterns:
+zero_patterns_local:
     cmp r8d, 0
-    je .zero_done
+    je zero_done_local
     mov QWORD PTR [rcx + rdx], 0
     add rdx, 8
     dec r8d
-    jmp .zero_patterns
+    jmp zero_patterns_local
     
-.zero_done:
+zero_done_local:
     mov PatternCount, 0
     mov QualityCount, 0
     
@@ -138,9 +138,9 @@ agent_learning_analyze_chat PROC
     mov edi, edx                        ; edi = count
     xor ebx, ebx                        ; ebx = current message index
     
-.analyze_loop:
+analyze_loop_local:
     cmp ebx, edi
-    jge .analyze_done
+    jge analyze_done_local
     
     ; Get message at index
     imul eax, ebx, SIZE CHAT_MESSAGE    ; SIZE would be from chat_persistence.asm
@@ -152,9 +152,9 @@ agent_learning_analyze_chat PROC
     
     inc ebx
     inc TotalQuestionsAnalyzed
-    jmp .analyze_loop
+    jmp analyze_loop_local
     
-.analyze_done:
+analyze_done_local:
     mov eax, ebx                        ; Return number of messages processed
     add rsp, 32
     pop rsi
@@ -189,26 +189,26 @@ analyze_single_message PROC
     call detect_pattern
     
     test eax, eax
-    jz .check_what
+    jz check_what_local
     
     ; "How to" pattern detected
     lea rcx, LearnedPatterns
     mov edx, LEARN_QUESTION_TYPE
     call record_pattern
     
-.check_what:
+check_what_local:
     mov rcx, rdi
     lea rdx, szPatternWhatIs
     call detect_pattern
     
     test eax, eax
-    jz .check_why
+    jz check_why_local
     
     lea rcx, LearnedPatterns
     mov edx, LEARN_QUESTION_TYPE
     call record_pattern
     
-.check_why:
+check_why_local:
     mov rcx, rdi
     lea rdx, szPatternWhy
     call detect_pattern
@@ -232,9 +232,9 @@ detect_pattern PROC
     mov rsi, rcx                        ; rsi = text
     mov rdi, rdx                        ; rdi = pattern
     
-.search_loop:
+search_loop_local:
     cmp BYTE PTR [rsi], 0
-    je .pattern_not_found
+    je pattern_not_found_local
     
     ; Try to match pattern at current position
     mov rcx, rsi
@@ -242,17 +242,17 @@ detect_pattern PROC
     call string_match_case_insensitive
     
     test eax, eax
-    jnz .pattern_found
+    jnz pattern_found_local
     
     inc rsi
-    jmp .search_loop
+    jmp search_loop_local
     
-.pattern_found:
+pattern_found_local:
     mov eax, 1
     pop rbx
     ret
     
-.pattern_not_found:
+pattern_not_found_local:
     xor eax, eax
     pop rbx
     ret
@@ -266,28 +266,28 @@ string_match_case_insensitive PROC
     xor eax, eax
     xor ebx, ebx
     
-.match_loop:
+match_loop_local:
     movzx esi, BYTE PTR [rdx + rbx]
     test sil, sil
-    jz .match_complete
+    jz match_complete_local
     
     movzx edi, BYTE PTR [rcx + rbx]
     test dil, dil
-    jz .match_fail
+    jz match_fail_local
     
     ; Convert to lowercase for comparison
     ; (Simplified: just compare directly for now)
     cmp sil, dil
-    jne .match_fail
+    jne match_fail_local
     
     inc rbx
-    jmp .match_loop
+    jmp match_loop_local
     
-.match_complete:
+match_complete_local:
     mov eax, 1
     ret
     
-.match_fail:
+match_fail_local:
     xor eax, eax
     ret
 string_match_case_insensitive ENDP
@@ -304,7 +304,7 @@ record_pattern PROC
     mov ebx, PatternCount
     
     cmp ebx, MAX_PATTERNS
-    jge .no_room
+    jge no_room_local
     
     ; Add new pattern
     imul eax, ebx, SIZE LEARNED_PATTERN
@@ -317,7 +317,7 @@ record_pattern PROC
     inc PatternCount
     inc TotalPatternsFound
     
-.no_room:
+no_room_local:
     pop rbx
     ret
 record_pattern ENDP
@@ -333,14 +333,14 @@ agent_learning_rate_response PROC
     
     ; Validate rating
     cmp edx, 1
-    jl .invalid_rating
+    jl invalid_rating_local
     cmp edx, 5
-    jg .invalid_rating
+    jg invalid_rating_local
     
     ; Find existing quality entry or create new
     mov rbx, QualityCount
     cmp rbx, MAX_RESPONSES
-    jge .no_space
+    jge no_space_local
     
     ; Add quality record
     imul eax, ebx, SIZE RESPONSE_QUALITY
@@ -369,13 +369,13 @@ agent_learning_rate_response PROC
     pop rbx
     ret
     
-.invalid_rating:
+invalid_rating_local:
     xor eax, eax
     add rsp, 32
     pop rbx
     ret
     
-.no_space:
+no_space_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -397,9 +397,9 @@ agent_learning_get_suggestion PROC
     ; Find matching patterns in learning database
     mov rbx, 0
     
-.find_pattern:
+find_pattern_local:
     cmp rbx, PatternCount
-    jge .no_suggestion
+    jge no_suggestion_local
     
     ; Check if pattern context matches current context
     imul eax, ebx, SIZE LEARNED_PATTERN
@@ -407,7 +407,7 @@ agent_learning_get_suggestion PROC
     
     mov ecx, DWORD PTR [rax + MAX_PATTERN_SIZE + 4]  ; occurrence_count
     cmp ecx, PATTERN_THRESHOLD
-    jl .next_pattern
+    jl next_pattern_local
     
     ; Pattern is significant, return suggestion
     lea rax, [rax + 8]                  ; Point to pattern content
@@ -415,11 +415,11 @@ agent_learning_get_suggestion PROC
     pop rbx
     ret
     
-.next_pattern:
+next_pattern_local:
     inc rbx
-    jmp .find_pattern
+    jmp find_pattern_local
     
-.no_suggestion:
+no_suggestion_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -449,15 +449,15 @@ agent_learning_get_stats PROC
     xor eax, eax
     mov edx, QualityCount
     cmp edx, 0
-    je .no_quality
+    je no_quality_local
     
     ; Sum all effectiveness scores
     mov rbx, 0
     xor esi, esi
     
-.sum_loop:
+sum_loop_local:
     cmp ebx, edx
-    jge .avg_done
+    jge avg_done_local
     
     imul eax, ebx, SIZE RESPONSE_QUALITY
     lea rax, ResponseQualities[rax]
@@ -465,17 +465,18 @@ agent_learning_get_stats PROC
     add esi, ecx
     
     inc ebx
-    jmp .sum_loop
+    jmp sum_loop_local
     
-.avg_done:
+avg_done_local:
     ; Average = sum / count
     mov eax, esi
     cdq
     idiv edx
     
-.no_quality:
+no_quality_local:
     mov QWORD PTR [rdx], rax
     ret
 agent_learning_get_stats ENDP
 
 END
+

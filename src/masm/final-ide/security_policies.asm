@@ -220,7 +220,7 @@ Security_SavePolicies PROC FRAME
     ; RCX = policy handle
     ; Validate handle
     test rcx, rcx
-    jz .L1_invalid_handle
+    jz L_local1_invalid_handle
     
     ; Acquire mutex (critical section)
     ; EnterCriticalSection(&policy->Mutex)
@@ -236,7 +236,7 @@ Security_SavePolicies PROC FRAME
     inc QWORD PTR [securityMetrics + OFFSET securityMetrics.PoliciesSaved]
     
     mov rax, SECURITY_E_SUCCESS
-    jmp .L1_exit
+    jmp L_local1_exit
     
 .L1_invalid_handle:
     mov rax, SECURITY_E_NOT_INITIALIZED
@@ -259,11 +259,11 @@ Security_CheckCapability PROC FRAME
     ; R8D = capability ID
     
     test rcx, rcx
-    jz .L2_error
+    jz L_local2_error
     
     ; Validate role ID (0-31)
     cmp rdx, SECURITY_MAX_ROLES
-    jge .L2_error
+    jge L_local2_error
     
     ; Acquire mutex
     
@@ -277,7 +277,7 @@ Security_CheckCapability PROC FRAME
     
     xor rax, rax
     mov al, 1                       ; Return 1 (allowed) for now (placeholder)
-    jmp .L2_exit
+    jmp L_local2_exit
     
 .L2_error:
     inc QWORD PTR [securityMetrics + OFFSET securityMetrics.CapabilityDenials]
@@ -302,7 +302,7 @@ Security_Audit PROC FRAME
     ; R9D = resource ID
     
     test rcx, rcx
-    jz .L3_error
+    jz L_local3_error
     
     ; Create audit entry on stack
     ; Timestamp (QPC)
@@ -318,7 +318,7 @@ Security_Audit PROC FRAME
     inc QWORD PTR [securityMetrics + OFFSET securityMetrics.AuditEntriesLogged]
     
     mov rax, SIZE SECURITY_AUDIT_ENTRY   ; Return bytes written
-    jmp .L3_exit
+    jmp L_local3_exit
     
 .L3_error:
     xor rax, rax
@@ -342,9 +342,9 @@ Security_IssueToken PROC FRAME
     ; R9 = token buffer (64 bytes)
     
     test rcx, rcx
-    jz .L4_error
+    jz L_local4_error
     test r9, r9
-    jz .L4_error
+    jz L_local4_error
     
     ; Build token header (16 bytes)
     ; Version (1 byte)
@@ -361,7 +361,7 @@ Security_IssueToken PROC FRAME
     inc QWORD PTR [securityMetrics + OFFSET securityMetrics.TokensIssued]
     
     mov rax, SECURITY_TOKEN_SIZE    ; Return bytes written
-    jmp .L4_exit
+    jmp L_local4_exit
     
 .L4_error:
     inc QWORD PTR [securityMetrics + OFFSET securityMetrics.TokenFailures]
@@ -385,13 +385,13 @@ Security_ValidateToken PROC FRAME
     ; R8 = token size (should be 64)
     
     test rcx, rcx
-    jz .L5_invalid
+    jz L_local5_invalid
     test rdx, rdx
-    jz .L5_invalid
+    jz L_local5_invalid
     
     ; Validate token size
     cmp r8, SECURITY_TOKEN_SIZE
-    jne .L5_invalid
+    jne L_local5_invalid
     
     ; Extract token parts:
     ; Header (bytes 0-15)
@@ -406,7 +406,7 @@ Security_ValidateToken PROC FRAME
     inc QWORD PTR [securityMetrics + OFFSET securityMetrics.TokenValidations]
     
     mov rax, 1                      ; Return 1 (valid) for now (placeholder)
-    jmp .L5_exit
+    jmp L_local5_exit
     
 .L5_invalid:
     inc QWORD PTR [securityMetrics + OFFSET securityMetrics.TokenFailures]
@@ -429,15 +429,15 @@ Security_GetPolicies PROC FRAME
     ; RDX = output buffer
     
     test rcx, rcx
-    jz .L6_error
+    jz L_local6_error
     test rdx, rdx
-    jz .L6_error
+    jz L_local6_error
     
     ; Copy policy structure to buffer
     ; RtlCopyMemory(buffer, policy, SIZE SECURITY_POLICY)
     
     mov rax, SIZE SECURITY_POLICY
-    jmp .L6_exit
+    jmp L_local6_exit
     
 .L6_error:
     xor rax, rax
@@ -498,3 +498,4 @@ Security_TokenValidation PROC FRAME
 Test_Security_TokenValidation ENDP
 
 END
+

@@ -694,9 +694,7 @@ build_dependency_tree PROC
     lea rcx, [rbx.id]
     mov [rdi.pluginId], rcx
     mov [rdi.resolved], 0
-    mov [rdi.childCount], 0
-    
-    ; Recursively add dependencies
+    mov dword ptr [rdi.childCount], 0  ; Recursively add dependencies
     mov esi, [rbx.dependencyCount]
     test esi, esi
     jz build_done

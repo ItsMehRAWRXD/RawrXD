@@ -640,3 +640,4 @@ SkipMenuBar:
 MenuBar_Destroy ENDP
 
 end
+

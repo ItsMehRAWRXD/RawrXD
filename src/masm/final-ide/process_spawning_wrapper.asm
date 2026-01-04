@@ -123,7 +123,7 @@ spawn_process_with_pipes PROC
     mov rcx, SIZEOF PROCESS_CONTEXT
     call malloc
     cmp rax, 0
-    je .alloc_error
+    je alloc_error_local
     
     mov rbx, rax  ; Save context pointer
     
@@ -132,8 +132,8 @@ spawn_process_with_pipes PROC
     mov [rbx + PROCESS_CONTEXT.processId], r8
     mov [rbx + PROCESS_CONTEXT.status], PROCESS_SUCCESS
     mov [rbx + PROCESS_CONTEXT.exitCode], 0
-    mov byte [rbx + PROCESS_CONTEXT.captureOutput], 1
-    mov byte [rbx + PROCESS_CONTEXT.waitForCompletion], 1
+    mov byte ptr [rbx + PROCESS_CONTEXT.captureOutput], 1
+    mov byte ptr [rbx + PROCESS_CONTEXT.waitForCompletion], 1
     
     ; Save parameters
     mov [rbx + PROCESS_CONTEXT.commandLine], rcx  ; commandLine arg
@@ -145,14 +145,14 @@ spawn_process_with_pipes PROC
     lea rdx, [rbx + PROCESS_CONTEXT.stdoutPipe.writeHandle]
     call CreatePipeA
     cmp eax, 0
-    je .pipe_error
+    je pipe_error_local
     
     ; Create stderr pipe
     lea rcx, [rbx + PROCESS_CONTEXT.stderrPipe.readHandle]
     lea rdx, [rbx + PROCESS_CONTEXT.stderrPipe.writeHandle]
     call CreatePipeA
     cmp eax, 0
-    je .pipe_error
+    je pipe_error_local
     
     ; Allocate output buffers
     mov rcx, MAX_OUTPUT_BUFFER
@@ -186,8 +186,8 @@ spawn_process_with_pipes PROC
     sub rsp, 104  ; Space for STARTUPINFOA
     
     mov rax, rsp
-    mov dword [rax], 104              ; cb = size
-    mov dword [rax + 0x24], 0x0101    ; dwFlags = STARTF_USESTDHANDLES
+    mov dword ptr [rax], 104              ; cb = size
+    mov dword ptr [rax + 0x24], 0x0101    ; dwFlags = STARTF_USESTDHANDLES
     mov rcx, [rbx + PROCESS_CONTEXT.stdoutPipe.writeHandle]
     mov [rax + 0x28], rcx             ; hStdOutput
     mov rcx, [rbx + PROCESS_CONTEXT.stderrPipe.writeHandle]
@@ -203,7 +203,7 @@ spawn_process_with_pipes PROC
     add rsp, 104 + 32  ; Clean up stack
     
     cmp eax, 0
-    je .create_error
+    je create_error_local
     
     ; Extract process and thread handles from stack (already popped)
     ; Need to re-read from PROCESS_INFORMATION
@@ -217,23 +217,23 @@ spawn_process_with_pipes PROC
     
     ; Wait for process completion (if requested)
     cmp byte [rbx + PROCESS_CONTEXT.waitForCompletion], 1
-    jne .skip_wait
+    jne skip_wait_local
     
     mov rcx, [rbx + PROCESS_CONTEXT.processHandle]
     mov rdx, [rbx + PROCESS_CONTEXT.timeoutMs]
     call WaitForSingleObject
     
     cmp eax, 0
-    je .process_completed
+    je process_completed_local
     
     ; Timeout occurred
     mov [rbx + PROCESS_CONTEXT.status], PROCESS_TIMEOUT
     lea rcx, [szTimeoutError]
     mov rdx, [rbx + PROCESS_CONTEXT.timeoutMs]
     call console_log
-    jmp .capture_output
+    jmp capture_output_local
     
-.process_completed:
+process_completed_local:
     ; Get exit code
     mov rcx, [rbx + PROCESS_CONTEXT.processHandle]
     lea rdx, [rbx + PROCESS_CONTEXT.exitCode]
@@ -245,10 +245,10 @@ spawn_process_with_pipes PROC
     mov r8, [rbx + PROCESS_CONTEXT.executionTimeMs]
     call console_log
     
-.capture_output:
+capture_output_local:
     ; Capture stdout
     cmp byte [rbx + PROCESS_CONTEXT.captureOutput], 1
-    jne .close_handles
+    jne close_handles_local
     
     ; Close write end of stdout pipe to signal EOF to process
     mov rcx, [rbx + PROCESS_CONTEXT.stdoutPipe.writeHandle]
@@ -261,14 +261,14 @@ spawn_process_with_pipes PROC
     lea r9, [rbx + PROCESS_CONTEXT.stdoutPipe.outputSize]
     call ReadFile
     cmp eax, 0
-    je .capture_stderr
+    je capture_stderr_local
     
     ; Log output captured
     lea rcx, [szOutputCapture]
     mov rdx, [rbx + PROCESS_CONTEXT.stdoutPipe.outputSize]
     call console_log
     
-.capture_stderr:
+capture_stderr_local:
     ; Similar for stderr
     mov rcx, [rbx + PROCESS_CONTEXT.stderrPipe.writeHandle]
     call CloseHandle
@@ -279,7 +279,7 @@ spawn_process_with_pipes PROC
     lea r9, [rbx + PROCESS_CONTEXT.stderrPipe.outputSize]
     call ReadFile
     
-.close_handles:
+close_handles_local:
     ; Close remaining handles
     mov rcx, [rbx + PROCESS_CONTEXT.stdoutPipe.readHandle]
     call CloseHandle
@@ -293,12 +293,12 @@ spawn_process_with_pipes PROC
     mov rcx, [rbx + PROCESS_CONTEXT.threadHandle]
     call CloseHandle
     
-.skip_wait:
+skip_wait_local:
     ; Return context pointer
     mov rax, rbx
-    jmp .done
+    jmp done_local
     
-.pipe_error:
+pipe_error_local:
     mov [rbx + PROCESS_CONTEXT.status], PROCESS_ERROR
     mov [rbx + PROCESS_CONTEXT.lastErrorCode], 1
     lea rcx, [szPipeCreateError]
@@ -313,9 +313,9 @@ spawn_process_with_pipes PROC
     mov rcx, rbx
     call free
     xor rax, rax
-    jmp .done
+    jmp done_local
     
-.create_error:
+create_error_local:
     mov [rbx + PROCESS_CONTEXT.status], PROCESS_CREATE_ERROR
     lea rcx, [szProcessCreateError]
     mov rdx, [rbx + PROCESS_CONTEXT.commandLine]
@@ -330,12 +330,12 @@ spawn_process_with_pipes PROC
     mov rcx, rbx
     call free
     xor rax, rax
-    jmp .done
+    jmp done_local
     
-.alloc_error:
+alloc_error_local:
     xor rax, rax
     
-.done:
+done_local:
     pop r12
     pop rdi
     pop rsi
@@ -403,24 +403,24 @@ free_process_context PROC
     ; Free stdout buffer
     mov rcx, [rbx + PROCESS_CONTEXT.stdoutPipe.outputBuffer]
     cmp rcx, 0
-    je .skip_stdout
+    je skip_stdout_local
     call free
     
-.skip_stdout:
+skip_stdout_local:
     ; Free stderr buffer
     mov rcx, [rbx + PROCESS_CONTEXT.stderrPipe.outputBuffer]
     cmp rcx, 0
-    je .skip_stderr
+    je skip_stderr_local
     call free
     
-.skip_stderr:
+skip_stderr_local:
     ; Free command line if allocated
     mov rcx, [rbx + PROCESS_CONTEXT.commandLine]
     cmp rcx, 0
-    je .skip_cmd
+    je skip_cmd_local
     call free
     
-.skip_cmd:
+skip_cmd_local:
     ; Free context structure
     mov rcx, rbx
     call free
@@ -451,19 +451,19 @@ spawn_vcs_command PROC
     
     ; Log git command execution
     cmp rbx, 0
-    je .done
+    je done_local
     
     ; Verify exit code (should be 0 for success)
     mov ecx, [rbx + PROCESS_CONTEXT.exitCode]
     cmp ecx, 0
-    je .done
+    je done_local
     
     ; Log failure if exit code != 0
     lea rcx, [szProcessComplete]
     mov edx, ecx
     call console_log
     
-.done:
+done_local:
     mov rax, rbx
     pop rbx
     ret
@@ -488,18 +488,18 @@ spawn_docker_command PROC
     
     ; Check for docker command success
     cmp rbx, 0
-    je .done
+    je done_local
     
     mov ecx, [rbx + PROCESS_CONTEXT.exitCode]
     cmp ecx, 0
-    je .done
+    je done_local
     
     ; Log docker command failure
     lea rcx, [szProcessComplete]
     mov edx, ecx
     call console_log
     
-.done:
+done_local:
     mov rax, rbx
     pop rbx
     ret
@@ -525,18 +525,18 @@ spawn_kubectl_command PROC
     
     ; Check for kubectl command success
     cmp rbx, 0
-    je .done
+    je done_local
     
     mov ecx, [rbx + PROCESS_CONTEXT.exitCode]
     cmp ecx, 0
-    je .done
+    je done_local
     
     ; Log kubectl command failure
     lea rcx, [szProcessComplete]
     mov edx, ecx
     call console_log
     
-.done:
+done_local:
     mov rax, rbx
     pop rbx
     ret
@@ -545,3 +545,4 @@ spawn_kubectl_command ENDP
 ; ============================================================================
 
 END
+

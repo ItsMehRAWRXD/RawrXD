@@ -185,16 +185,16 @@ CreateSettingsDialog PROC FRAME
     
     ; Initialize structure
     mov [rdi+SETTINGS_DIALOG.settings_data], rsi
-    mov [rdi+SETTINGS_DIALOG.is_dirty], 0
-    
-    ; Create modal dialog
+    mov dword ptr [rdi+SETTINGS_DIALOG.is_dirty], 0  ; Create modal dialog
     mov rcx, rbx  ; parent_hwnd
     mov rdx, "RawrXD Settings"
     mov r8d, SETTINGS_DIALOG_WIDTH
     mov r9d, SETTINGS_DIALOG_HEIGHT
     push rdi      ; user_data = SETTINGS_DIALOG pointer
-    push offset OnSettingsInit  ; on_init
-    push offset OnSettingsCommand  ; on_command
+    push offset
+    push OnSettingsInit
+    push offset
+    push OnSettingsCommand
     call CreateModalDialog
     
     ; Save dialog result
@@ -1583,7 +1583,8 @@ CreateProgressBar ENDP
 ; Returns: rax = 1 if success
 ; ============================================================================
 CreateQuantizationTabControls PROC
-    push rbx rdi
+    push rbx
+    push rdi
     sub rsp, 30h
     
     mov rbx, rcx  ; tab_hwnd
@@ -1607,8 +1608,8 @@ CreateQuantizationTabControls PROC
     lea rdx, STR_QUANT_SELECT
     mov r8d, 170
     mov r9d, 20
-    mov [rsp], 150           ; width
-    mov [rsp+8], 25          ; height
+    mov dword ptr [rsp], 150  ; width
+    mov dword ptr [rsp+8], 25  ; height
     mov [rsp+10h], IDC_QUANT_COMBO
     call CreateComboBox
     add rsp, 18h
@@ -1643,8 +1644,8 @@ CreateQuantizationTabControls PROC
     xor rdx, rdx
     mov r8d, 170
     mov r9d, 100
-    mov [rsp], 150           ; width
-    mov [rsp+8], 20          ; height
+    mov dword ptr [rsp], 150  ; width
+    mov dword ptr [rsp+8], 20  ; height
     mov [rsp+10h], IDC_VRAM_PROGRESS
     call CreateProgressBar
     add rsp, 18h
@@ -1664,14 +1665,15 @@ CreateQuantizationTabControls PROC
     lea rdx, STR_APPLY
     mov r8d, 250
     mov r9d, 180
-    mov [rsp], 100           ; width
-    mov [rsp+8], 25          ; height
+    mov dword ptr [rsp], 100  ; width
+    mov dword ptr [rsp+8], 25  ; height
     mov [rsp+10h], IDC_APPLY_QUANT_BUTTON
     call CreateButton
     add rsp, 18h
     
     add rsp, 30h
-    pop rdi rbx
+    pop rbx
+    pop rdi
     mov rax, 1
     ret
 CreateQuantizationTabControls ENDP
@@ -1703,7 +1705,7 @@ CreateTrainingTabControls PROC
     xor rdx, rdx
     mov r8d, 120
     mov r9d, 20
-    mov [rsp], 1017  ; IDC for training path
+    mov dword ptr [rsp], 1017  ; IDC for training path
     mov [rsp+8], 25
     mov [rsp+10h], 300
     call CreateEditControl
@@ -1753,7 +1755,7 @@ CreateCICDTabControls PROC
     lea rdx, STR_PIPELINE_ENABLED
     mov r8d, 20
     mov r9d, 25
-    mov [rsp], 1019  ; IDC for pipeline enabled
+    mov dword ptr [rsp], 1019  ; IDC for pipeline enabled
     mov [rsp+8], 25
     mov [rsp+10h], 200
     call CreateCheckbox
@@ -1774,7 +1776,7 @@ CreateCICDTabControls PROC
     xor rdx, rdx
     mov r8d, 120
     mov r9d, 60
-    mov [rsp], 1020  ; IDC for github token
+    mov dword ptr [rsp], 1020  ; IDC for github token
     mov [rsp+8], 25
     mov [rsp+10h], 300
     call CreateEditControl
@@ -1803,7 +1805,7 @@ CreateEnterpriseTabControls PROC
     lea rdx, STR_COMPLIANCE_LOGGING
     mov r8d, 20
     mov r9d, 25
-    mov [rsp], 1021  ; IDC for compliance
+    mov dword ptr [rsp], 1021  ; IDC for compliance
     mov [rsp+8], 25
     mov [rsp+10h], 250
     call CreateCheckbox
@@ -1814,7 +1816,7 @@ CreateEnterpriseTabControls PROC
     lea rdx, STR_TELEMETRY_ENABLED
     mov r8d, 20
     mov r9d, 55
-    mov [rsp], 1022  ; IDC for telemetry
+    mov dword ptr [rsp], 1022  ; IDC for telemetry
     mov [rsp+8], 25
     mov [rsp+10h], 250
     call CreateCheckbox

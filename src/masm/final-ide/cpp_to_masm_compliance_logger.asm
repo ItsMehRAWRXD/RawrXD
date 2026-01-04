@@ -112,7 +112,7 @@ compliance_logger_init PROC
     ; Initialize counters
     mov [rbx + COMPLIANCE_LOGGER.entryCount], 0
     mov [rbx + COMPLIANCE_LOGGER.totalLogged], 0
-    mov [rbx + COMPLIANCE_LOGGER.retentionDays], 90  ; Default 90 day retention
+    mov dword ptr [rbx + COMPLIANCE_LOGGER.retentionDays], 90  ; Default 90 day retention
     
     ; Log startup
     lea rcx, [szLoggerStarted]
@@ -138,7 +138,7 @@ compliance_log_event PROC
     ; Check buffer space
     mov rax, [rbx + COMPLIANCE_LOGGER.entryCount]
     cmp rax, MAX_LOG_ENTRIES
-    jge .buffer_full
+    jge buffer_full_local
     
     ; Get log entry slot
     mov r10, [rbx + COMPLIANCE_LOGGER.logEntries]
@@ -173,7 +173,7 @@ compliance_log_event PROC
     pop rbx
     ret
     
-.buffer_full:
+buffer_full_local:
     pop rsi
     pop rbx
     ret
@@ -299,22 +299,22 @@ compliance_logger_shutdown PROC
     ; Free resources
     mov rcx, [rbx + COMPLIANCE_LOGGER.logFileName]
     cmp rcx, 0
-    je .skip_name
+    je skip_name_local
     call free
-.skip_name:
+skip_name_local:
     
     mov rcx, [rbx + COMPLIANCE_LOGGER.logEntries]
     cmp rcx, 0
-    je .skip_entries
+    je skip_entries_local
     call free
-.skip_entries:
+skip_entries_local:
     
     ; Close file if open
     mov rcx, [rbx + COMPLIANCE_LOGGER.logFile]
     cmp rcx, INVALID_HANDLE_VALUE
-    je .skip_close
+    je skip_close_local
     call CloseHandle
-.skip_close:
+skip_close_local:
     
     ret
 compliance_logger_shutdown ENDP
@@ -322,3 +322,4 @@ compliance_logger_shutdown ENDP
 ; ============================================================================
 
 END
+

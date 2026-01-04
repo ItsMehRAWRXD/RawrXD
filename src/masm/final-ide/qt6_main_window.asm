@@ -922,3 +922,4 @@ main_window_update_menubar ENDP
 ; - Call DefWindowProc for unhandled messages
 
 END
+

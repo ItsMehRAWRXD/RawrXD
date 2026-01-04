@@ -93,9 +93,7 @@ OllamaPullModel PROC
     lea rax, jsonBody
     mov [request.body], rax
     mov [request.body_len], r13
-    mov [request.timeout], 0
-    
-    ; Execute HTTP request
+    mov dword ptr [request.timeout], 0  ; Execute HTTP request
     lea rcx, g_HttpClient
     lea rdx, request
     call HttpClientRequest
@@ -241,3 +239,4 @@ OllamaShutdown PROC
 OllamaShutdown ENDP
 
 END
+

@@ -150,12 +150,10 @@ gguf_server_create PROC
     mov [r9 + GGUF_SERVER.port], DEFAULT_PORT
     mov [r9 + GGUF_SERVER.clientCount], 0
     mov [r9 + GGUF_SERVER.maxClients], MAX_CLIENTS
-    mov byte [r9 + GGUF_SERVER.serverRunning], 0
+    mov byte ptr [r9 + GGUF_SERVER.serverRunning], 0
     mov [r9 + GGUF_SERVER.totalRequests], 0
     mov [r9 + GGUF_SERVER.totalResponses], 0
-    mov [r9 + GGUF_SERVER.totalErrors], 0
-    
-    ; Create data ready event
+    mov dword ptr [r9 + GGUF_SERVER.totalErrors], 0  ; Create data ready event
     mov rcx, 0                      ; lpEventAttributes
     mov rdx, 0                      ; bManualReset
     mov r8, 0                       ; bInitialState
@@ -163,7 +161,7 @@ gguf_server_create PROC
     call CreateEventA
     mov [r9 + GGUF_SERVER.dataReady], rax
     
-    mov byte [r9 + GGUF_SERVER.initialized], 1
+    mov byte ptr [r9 + GGUF_SERVER.initialized], 1
     
     ; Log
     lea rcx, [szServerCreated]
@@ -188,25 +186,25 @@ gguf_server_start PROC
     
     ; Check if already running
     cmp byte [rbx + GGUF_SERVER.serverRunning], 1
-    je .already_running
+    je already_running_local
     
     ; Set port
     cmp edx, 0
-    je .use_default_port
+    je use_default_port_local
     mov [rbx + GGUF_SERVER.port], edx
     
-.use_default_port:
+use_default_port_local:
     ; Check port conflict (simplified)
     mov eax, [rbx + GGUF_SERVER.port]
     cmp eax, DEFAULT_PORT
-    jne .port_available
+    jne port_available_local
     
     ; Simulate port conflict check
     mov rax, 1                      ; Assume port available
     
-.port_available:
+port_available_local:
     test rax, rax
-    jz .port_conflict
+    jz port_conflict_local
     
     ; Create server thread
     mov rcx, 0                      ; lpThreadAttributes
@@ -219,7 +217,7 @@ gguf_server_start PROC
     ; Get thread ID
     mov [rbx + GGUF_SERVER.threadId], eax
     
-    mov byte [rbx + GGUF_SERVER.serverRunning], 1
+    mov byte ptr [rbx + GGUF_SERVER.serverRunning], 1
     
     ; Log
     lea rcx, [szServerStarted]
@@ -230,12 +228,12 @@ gguf_server_start PROC
     pop rbx
     ret
     
-.already_running:
+already_running_local:
     mov rax, 1
     pop rbx
     ret
     
-.port_conflict:
+port_conflict_local:
     lea rcx, [szPortConflict]
     mov edx, [rbx + GGUF_SERVER.port]
     call console_log
@@ -257,10 +255,10 @@ gguf_server_stop PROC
     
     ; Check if running
     cmp byte [rbx + GGUF_SERVER.serverRunning], 1
-    jne .already_stopped
+    jne already_stopped_local
     
     ; Stop server thread
-    mov byte [rbx + GGUF_SERVER.serverRunning], 0
+    mov byte ptr [rbx + GGUF_SERVER.serverRunning], 0
     
     ; Wait for thread to complete
     mov rcx, [rbx + GGUF_SERVER.serverThread]
@@ -275,7 +273,7 @@ gguf_server_stop PROC
     lea rcx, [szServerStopped]
     call console_log
     
-.already_stopped:
+already_stopped_local:
     pop rbx
     ret
 gguf_server_stop ENDP
@@ -332,7 +330,7 @@ gguf_server_handle_request PROC
     lea rdx, [API_GENERATE]
     call strstr
     cmp rax, 0
-    je .not_generate
+    je not_generate_local
     
     ; Handle /api/generate
     mov rcx, rbx
@@ -340,28 +338,28 @@ gguf_server_handle_request PROC
     mov r8, r9
     call handle_generate_request
     mov r11, rax                    ; r11 = response
-    jmp .request_handled
+    jmp request_handled_local
     
-.not_generate:
+not_generate_local:
     mov rcx, rsi
     lea rdx, [API_TAGS]
     call strstr
     cmp rax, 0
-    je .not_tags
+    je not_tags_local
     
     ; Handle /api/tags
     mov rcx, rbx
     call handle_tags_request
     mov r11, rax
-    jmp .request_handled
+    jmp request_handled_local
     
-.not_tags:
+not_tags_local:
     ; Default response
     mov rcx, rbx
     call handle_default_request
     mov r11, rax
     
-.request_handled:
+request_handled_local:
     ; Update statistics
     inc qword [rbx + GGUF_SERVER.totalRequests]
     inc qword [rbx + GGUF_SERVER.totalResponses]
@@ -503,17 +501,17 @@ gguf_server_destroy PROC
     ; Close data ready event
     mov rcx, [rbx + GGUF_SERVER.dataReady]
     cmp rcx, 0
-    je .skip_event
+    je skip_event_local
     call CloseHandle
     
-.skip_event:
+skip_event_local:
     ; Free clients array
     mov rcx, [rbx + GGUF_SERVER.clients]
     cmp rcx, 0
-    je .skip_clients
+    je skip_clients_local
     call free
     
-.skip_clients:
+skip_clients_local:
     ; Free server
     mov rcx, rbx
     call free
@@ -534,17 +532,17 @@ server_thread_proc PROC
     mov rbx, rcx                    ; rbx = server
     
     ; Main server loop
-.server_loop:
+server_loop_local:
     cmp byte [rbx + GGUF_SERVER.serverRunning], 1
-    jne .server_exit
+    jne server_exit_local
     
     ; Simulate client connection handling
     mov rcx, 1000                   ; 1 second delay
     call Sleep
     
-    jmp .server_loop
+    jmp server_loop_local
     
-.server_exit:
+server_exit_local:
     pop rbx
     ret
 server_thread_proc ENDP
@@ -557,3 +555,4 @@ server_thread_proc ENDP
     szNotFoundResponse DB "{\"error\":\"Endpoint not found\"}", 0
 
 END
+

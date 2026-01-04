@@ -503,16 +503,16 @@ agent_process_command PROC
     mov rdi, offset last_command
     mov rsi, rcx
     xor ecx, ecx
-.copy_cmd:
+copy_cmd_local:
     mov al, BYTE PTR [rsi]
     mov BYTE PTR [rdi + rcx], al
     test al, al
-    je .cmd_copied
+    je cmd_copied_local
     inc ecx
     cmp ecx, MAX_COMMAND_LEN - 1
-    jl .copy_cmd
+    jl copy_cmd_local
     
-.cmd_copied:
+cmd_copied_local:
     ; Parse command and dispatch to appropriate tool
     ; For MVP: handle basic file operations
     
@@ -521,25 +521,25 @@ agent_process_command PROC
     lea rdx, tn_read_file
     call str_compare
     test rax, rax
-    jnz .not_read_file
+    jnz not_read_file_local
     
     ; Handle read_file command
     call tool_handler_read_file_impl
-    jmp .dispatch_done
+    jmp dispatch_done_local
     
-.not_read_file:
+not_read_file_local:
     ; Check for "list_directory" command
     lea rcx, last_command
     lea rdx, tn_list_dir
     call str_compare
     test rax, rax
-    jnz .not_list_dir
+    jnz not_list_dir_local
     
     ; Handle list_directory command
     call tool_handler_list_dir_impl
-    jmp .dispatch_done
+    jmp dispatch_done_local
     
-.not_list_dir:
+not_list_dir_local:
     ; Default: return "command not found"
     lea rax, response_buffer
     mov byte ptr [rax], 'C'
@@ -560,9 +560,9 @@ agent_process_command PROC
     mov byte ptr [rax + 15], 'n'
     mov byte ptr [rax + 16], 'd'
     mov byte ptr [rax + 17], 0
-    jmp .dispatch_done
+    jmp dispatch_done_local
     
-.dispatch_done:
+dispatch_done_local:
     add rsp, 56
     pop rbx
     ret
@@ -601,3 +601,4 @@ get_tool_invalid:
 agent_get_tool ENDP
 
 END
+

@@ -288,7 +288,7 @@ search_loop:
     
     ; Compare remaining bytes
     mov rbx, rsi        ; preserve start pointer
-    mov rcx, r13d
+    mov ecx, r13d
     dec rcx
     lea rsi, [rbx+1]
     lea rdi, [r11+1]
@@ -341,7 +341,7 @@ syntax_setup_cpp_rules PROC
     ; Rule 1: Keywords
     lea rax, cppKeywords
     mov [rbx + HIGHLIGHT_RULE.pattern], rax
-    mov [rbx + HIGHLIGHT_RULE.patternLen], 0 ; 0 means use keyword list
+    mov dword ptr [rbx + HIGHLIGHT_RULE.patternLen], 0  ; 0 means use keyword list
     mov [rbx + HIGHLIGHT_RULE.color], COLOR_KEYWORD
     add rbx, sizeof HIGHLIGHT_RULE
     

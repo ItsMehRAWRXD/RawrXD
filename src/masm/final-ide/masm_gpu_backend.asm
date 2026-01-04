@@ -44,33 +44,34 @@ gpu_backend_init PROC
     lea rcx, szCudaLib
     call LoadLibraryA
     test rax, rax
-    jz .try_vulkan
+    jz try_vulkan_local
     
     lea rcx, szCudaFound
     call console_log
     mov rax, 1          ; CUDA
-    jmp .exit
+    jmp exit_local
 
-.try_vulkan:
+try_vulkan_local:
     ; 2. Try Vulkan
     lea rcx, szVulkanLib
     call LoadLibraryA
     test rax, rax
-    jz .fallback
+    jz fallback_local
     
     lea rcx, szVulkanFound
     call console_log
     mov rax, 3          ; Vulkan
-    jmp .exit
+    jmp exit_local
 
-.fallback:
+fallback_local:
     lea rcx, szCpuFallback
     call console_log
     xor rax, rax        ; CPU
 
-.exit:
+exit_local:
     add rsp, 32
     ret
 gpu_backend_init ENDP
 
 END
+

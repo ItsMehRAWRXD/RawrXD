@@ -689,3 +689,4 @@ extract_json_string ENDP
     newline_char BYTE 10, 0
 
 END
+

@@ -46,8 +46,10 @@ start:
     
     ; Display status
     push 0
-    push offset szTitle
-    push offset szMessage
+    push offset
+    push szTitle
+    push offset
+    push szMessage
     push 0
     call MessageBoxA
     

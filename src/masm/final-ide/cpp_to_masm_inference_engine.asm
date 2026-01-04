@@ -149,12 +149,10 @@ inference_engine_create PROC
     mov [rbx + INFERENCE_ENGINE.modelCount], 0
     mov [rbx + INFERENCE_ENGINE.maxModels], r8d
     mov [rbx + INFERENCE_ENGINE.activeModelId], 0xFFFFFFFF
-    mov byte [rbx + INFERENCE_ENGINE.running], 0
+    mov byte ptr [rbx + INFERENCE_ENGINE.running], 0
     mov [rbx + INFERENCE_ENGINE.totalTokensGenerated], 0
     mov [rbx + INFERENCE_ENGINE.totalInferences], 0
-    mov [rbx + INFERENCE_ENGINE.totalErrors], 0
-    
-    ; Log
+    mov dword ptr [rbx + INFERENCE_ENGINE.totalErrors], 0  ; Log
     lea rcx, [szEngineCreated]
     mov rdx, r8
     call console_log
@@ -181,7 +179,7 @@ inference_load_model PROC
     ; Check capacity
     mov r9d, [rbx + INFERENCE_ENGINE.modelCount]
     cmp r9d, [rbx + INFERENCE_ENGINE.maxModels]
-    jge .load_error
+    jge load_error_local
     
     ; Log
     lea rcx, [szModelLoading]
@@ -204,13 +202,13 @@ inference_load_model PROC
     mov [r10 + MODEL_INFO.hiddenSize], 768
     mov [r10 + MODEL_INFO.vocabSize], 50257
     mov [r10 + MODEL_INFO.maxContextLength], MAX_CONTEXT_LENGTH
-    mov [r10 + MODEL_INFO.dtype], 2     ; q8 default
+    mov dword ptr [r10 + MODEL_INFO.dtype], 2  ; q8 default
     
     ; Simulate load time
     call GetTickCount64
     mov [r10 + MODEL_INFO.loadTime], rax
     
-    mov byte [r10 + MODEL_INFO.loaded], 1
+    mov byte ptr [r10 + MODEL_INFO.loaded], 1
     
     ; Increment model count
     inc dword [rbx + INFERENCE_ENGINE.modelCount]
@@ -227,7 +225,7 @@ inference_load_model PROC
     pop rbx
     ret
     
-.load_error:
+load_error_local:
     lea rcx, [szModelFailed]
     mov rdx, rsi
     call console_log
@@ -249,9 +247,9 @@ inference_set_active_model PROC
     mov r9d, [rcx + INFERENCE_ENGINE.modelCount]
     xor r10d, r10d
     
-.find_model:
+find_model_local:
     cmp r10d, r9d
-    jge .model_not_found
+    jge model_not_found_local
     
     mov r11, r8
     mov r12, r10
@@ -259,17 +257,17 @@ inference_set_active_model PROC
     add r11, r12
     
     cmp [r11 + MODEL_INFO.modelId], edx
-    je .model_found
+    je model_found_local
     
     inc r10d
-    jmp .find_model
+    jmp find_model_local
     
-.model_found:
+model_found_local:
     mov [rcx + INFERENCE_ENGINE.activeModelId], edx
     mov rax, 1
     ret
     
-.model_not_found:
+model_not_found_local:
     xor rax, rax
     ret
 inference_set_active_model ENDP
@@ -305,8 +303,8 @@ inference_start_generation PROC
     mov [r10 + GENERATION_STATE.generatedTokens], rax
     mov [r10 + GENERATION_STATE.generatedCount], 0
     
-    mov byte [r10 + GENERATION_STATE.done], 0
-    mov byte [r10 + GENERATION_STATE.cancelled], 0
+    mov byte ptr [r10 + GENERATION_STATE.done], 0
+    mov byte ptr [r10 + GENERATION_STATE.cancelled], 0
     
     ; Increment total inferences
     inc qword [rbx + INFERENCE_ENGINE.totalInferences]
@@ -330,7 +328,7 @@ inference_generate_token PROC
     
     ; Check if generation is done
     cmp byte [r10 + GENERATION_STATE.done], 1
-    je .generation_done
+    je generation_done_local
     
     ; Simulate token generation
     ; In real implementation, would run transformer forward pass
@@ -351,13 +349,13 @@ inference_generate_token PROC
     
     ; Check if max reached
     cmp [r10 + GENERATION_STATE.generatedCount], r9d
-    jge .mark_done
+    jge mark_done_local
     
     pop rbx
     ret
     
-.mark_done:
-    mov byte [r10 + GENERATION_STATE.done], 1
+mark_done_local:
+    mov byte ptr [r10 + GENERATION_STATE.done], 1
     
     ; Log completion
     lea rcx, [szGenerationComplete]
@@ -365,7 +363,7 @@ inference_generate_token PROC
     movsd xmm0, [fTempDefault]
     call console_log
     
-.generation_done:
+generation_done_local:
     mov eax, 0xFFFFFFFF
     pop rbx
     ret
@@ -390,19 +388,19 @@ inference_finish_generation PROC
     ; Copy to output (simplified)
     xor r13, r13
     
-.copy_loop:
+copy_loop_local:
     cmp r13d, r12d
-    jge .copy_done
+    jge copy_done_local
     
     ; Get token (simplified: just copy token ID as ASCII)
     mov eax, [r11 + r13 * 4]
     mov [rdx + r13], al
     
     inc r13d
-    jmp .copy_loop
+    jmp copy_loop_local
     
-.copy_done:
-    mov byte [rdx + r13], 0         ; Null terminate
+copy_done_local:
+    mov byte ptr [rdx + r13], 0         ; Null terminate
     
     mov rax, r13
     pop rbx
@@ -428,7 +426,7 @@ inference_set_generation_params ENDP
 PUBLIC inference_cancel_generation
 inference_cancel_generation PROC
     mov r8, [rcx + INFERENCE_ENGINE.generationState]
-    mov byte [r8 + GENERATION_STATE.cancelled], 1
+    mov byte ptr [r8 + GENERATION_STATE.cancelled], 1
     ret
 inference_cancel_generation ENDP
 
@@ -443,9 +441,9 @@ inference_get_model_info PROC
     mov r9d, [rcx + INFERENCE_ENGINE.modelCount]
     xor r10d, r10d
     
-.find_info:
+find_info_local:
     cmp r10d, r9d
-    jge .info_not_found
+    jge info_not_found_local
     
     mov r11, r8
     mov r12, r10
@@ -453,16 +451,16 @@ inference_get_model_info PROC
     add r11, r12
     
     cmp [r11 + MODEL_INFO.modelId], edx
-    je .info_found
+    je info_found_local
     
     inc r10d
-    jmp .find_info
+    jmp find_info_local
     
-.info_found:
+info_found_local:
     mov rax, r11
     ret
     
-.info_not_found:
+info_not_found_local:
     xor rax, rax
     ret
 inference_get_model_info ENDP
@@ -512,24 +510,24 @@ inference_destroy PROC
     ; Free models
     mov r10, [rbx + INFERENCE_ENGINE.models]
     cmp r10, 0
-    je .skip_models
+    je skip_models_local
     call free
     
-.skip_models:
+skip_models_local:
     ; Free inference buffer
     mov rcx, [rbx + INFERENCE_ENGINE.inferenceBuffer]
     cmp rcx, 0
-    je .skip_buffer
+    je skip_buffer_local
     call free
     
-.skip_buffer:
+skip_buffer_local:
     ; Free generation state
     mov rcx, [rbx + INFERENCE_ENGINE.generationState]
     cmp rcx, 0
-    je .skip_genstate
+    je skip_genstate_local
     call free
     
-.skip_genstate:
+skip_genstate_local:
     ; Free engine
     mov rcx, rbx
     call free
@@ -545,3 +543,4 @@ inference_destroy ENDP
     GetTickCount64 LABEL QWORD
 
 END
+

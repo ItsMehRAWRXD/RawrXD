@@ -128,7 +128,7 @@ filetree_show_context_menu PROC
     ; Create popup menu
     call CreatePopupMenu
     test rax, rax
-    jz .menu_fail
+    jz menu_fail_local
     
     mov hContextMenu, rax
     
@@ -175,13 +175,13 @@ filetree_show_context_menu PROC
     
     ; Handle menu selection (result in eax)
     test eax, eax
-    jz .menu_cancel
+    jz menu_cancel_local
     
     ; Dispatch menu command
     mov ecx, eax
     call handle_context_menu_command
     
-.menu_cancel:
+menu_cancel_local:
     ; Destroy menu
     mov rcx, hContextMenu
     call DestroyMenu
@@ -193,7 +193,7 @@ filetree_show_context_menu PROC
     pop rbx
     ret
     
-.menu_fail:
+menu_fail_local:
     xor eax, eax
     add rsp, 32
     pop rsi
@@ -243,58 +243,58 @@ handle_context_menu_command PROC
     push rbx
     
     cmp ecx, IDM_COPY_PATH
-    je .copy_full_path
+    je copy_full_path_local
     
     cmp ecx, IDM_COPY_REL_PATH
-    je .copy_rel_path
+    je copy_rel_path_local
     
     cmp ecx, IDM_OPEN_TERMINAL
-    je .open_terminal
+    je open_terminal_local
     
     cmp ecx, IDM_OPEN_EXPLORER
-    je .open_explorer
+    je open_explorer_local
     
     cmp ecx, IDM_REFRESH
-    je .refresh_folder
+    je refresh_folder_local
     
     cmp ecx, IDM_PROPERTIES
-    je .show_properties
+    je show_properties_local
     
-    jmp .command_done
+    jmp command_done_local
     
-.copy_full_path:
+copy_full_path_local:
     lea rcx, SelectedPath
     call copy_to_clipboard
-    jmp .command_done
+    jmp command_done_local
     
-.copy_rel_path:
+copy_rel_path_local:
     lea rcx, SelectedPath
     lea rdx, RootPath
     call get_relative_path
     mov rcx, rax
     call copy_to_clipboard
-    jmp .command_done
+    jmp command_done_local
     
-.open_terminal:
+open_terminal_local:
     lea rcx, SelectedPath
     call open_terminal_at_path
-    jmp .command_done
+    jmp command_done_local
     
-.open_explorer:
+open_explorer_local:
     lea rcx, SelectedPath
     call open_explorer_at_path
-    jmp .command_done
+    jmp command_done_local
     
-.refresh_folder:
+refresh_folder_local:
     mov rcx, hSelectedItem
     call refresh_tree_folder
-    jmp .command_done
+    jmp command_done_local
     
-.show_properties:
+show_properties_local:
     lea rcx, SelectedPath
     call show_file_properties
     
-.command_done:
+command_done_local:
     pop rbx
     ret
 handle_context_menu_command ENDP
@@ -313,20 +313,20 @@ copy_to_clipboard PROC
     mov rdi, rcx
     xor eax, eax
     
-.len_loop:
+len_loop_local:
     cmp BYTE PTR [rdi + rax], 0
-    je .len_done
+    je len_done_local
     inc eax
-    jmp .len_loop
+    jmp len_loop_local
     
-.len_done:
+len_done_local:
     mov ebx, eax                        ; ebx = text length
     
     ; OpenClipboard
     mov rcx, 0
     call OpenClipboard
     test eax, eax
-    jz .clip_fail
+    jz clip_fail_local
     
     ; Allocate global memory for text
     mov ecx, ebx
@@ -334,7 +334,7 @@ copy_to_clipboard PROC
     mov edx, GMEM_MOVEABLE
     call GlobalAlloc
     test rax, rax
-    jz .clip_fail
+    jz clip_fail_local
     
     ; Lock and copy text
     mov rcx, rax
@@ -358,7 +358,7 @@ copy_to_clipboard PROC
     pop rbx
     ret
     
-.clip_fail:
+clip_fail_local:
     xor eax, eax
     add rsp, 32
     pop rdi
@@ -450,17 +450,17 @@ PRIVATE copy_memory_safe
 copy_memory_safe PROC
     xor ecx, ecx
     
-.copy_loop:
+copy_loop_local:
     cmp ecx, r8d
-    jge .copy_done
+    jge copy_done_local
     
     movzx ebx, BYTE PTR [rdx + rcx]
     mov BYTE PTR [rax + rcx], bl
     
     inc ecx
-    jmp .copy_loop
+    jmp copy_loop_local
     
-.copy_done:
+copy_done_local:
     ret
 copy_memory_safe ENDP
 
@@ -471,22 +471,23 @@ PRIVATE copy_path_safe
 copy_path_safe PROC
     xor eax, eax
     
-.copy_loop:
+copy_loop_local:
     cmp eax, MAX_PATH_LEN - 1
-    jge .copy_done
+    jge copy_done_local
     
     movzx ebx, BYTE PTR [rdx + rax]
     mov BYTE PTR [rcx + rax], bl
     
     test bl, bl
-    je .copy_done
+    je copy_done_local
     
     inc eax
-    jmp .copy_loop
+    jmp copy_loop_local
     
-.copy_done:
+copy_done_local:
     mov BYTE PTR [rcx + rax], 0
     ret
 copy_path_safe ENDP
 
 END
+

@@ -101,10 +101,8 @@ chat_create PROC
     ; Set capacity
     mov [rbx + CHAT_CONTEXT.maxMessages], r8
     mov [rbx + CHAT_CONTEXT.messageCount], 0
-    mov [rbx + CHAT_CONTEXT.streamingSize], 0
-    
-    ; Enable input by default
-    mov byte [rbx + CHAT_CONTEXT.inputEnabled], 1
+    mov dword ptr [rbx + CHAT_CONTEXT.streamingSize], 0  ; Enable input by default
+    mov byte ptr [rbx + CHAT_CONTEXT.inputEnabled], 1
     
     lea rcx, [szChatCreated]
     call console_log
@@ -130,7 +128,7 @@ chat_add_user_message PROC
     ; Check if room for new message
     mov rax, [rbx + CHAT_CONTEXT.messageCount]
     cmp rax, [rbx + CHAT_CONTEXT.maxMessages]
-    jge .no_room
+    jge no_room_local
     
     ; Get message slot
     mov rcx, [rbx + CHAT_CONTEXT.messages]
@@ -138,7 +136,7 @@ chat_add_user_message PROC
     add rcx, rax
     
     ; Set message properties
-    mov dword [rcx + CHAT_MESSAGE.role], MSG_ROLE_USER
+    mov dword ptr [rcx + CHAT_MESSAGE.role], MSG_ROLE_USER
     
     ; Allocate and copy content
     mov rdx, r9
@@ -171,7 +169,7 @@ chat_add_user_message PROC
     pop rbx
     ret
     
-.no_room:
+no_room_local:
     pop rsi
     pop rbx
     ret
@@ -194,7 +192,7 @@ chat_add_assistant_message PROC
     ; Check room
     mov rax, [rbx + CHAT_CONTEXT.messageCount]
     cmp rax, [rbx + CHAT_CONTEXT.maxMessages]
-    jge .no_room
+    jge no_room_local
     
     ; Get message slot
     mov rcx, [rbx + CHAT_CONTEXT.messages]
@@ -202,8 +200,8 @@ chat_add_assistant_message PROC
     add rcx, rax
     
     ; Set properties
-    mov dword [rcx + CHAT_MESSAGE.role], MSG_ROLE_ASSISTANT
-    mov byte [rcx + CHAT_MESSAGE.isStreaming], r11b
+    mov dword ptr [rcx + CHAT_MESSAGE.role], MSG_ROLE_ASSISTANT
+    mov byte ptr [rcx + CHAT_MESSAGE.isStreaming], r11b
     
     ; Allocate and copy
     mov rdx, r10
@@ -225,17 +223,17 @@ chat_add_assistant_message PROC
     inc qword [rbx + CHAT_CONTEXT.messageCount]
     
     cmp r11b, 1
-    jne .not_streaming
+    jne not_streaming_local
     
     lea rcx, [szStreamingStarted]
     call console_log
     
-.not_streaming:
+not_streaming_local:
     pop rsi
     pop rbx
     ret
     
-.no_room:
+no_room_local:
     pop rsi
     pop rbx
     ret
@@ -255,7 +253,7 @@ chat_update_streaming PROC
     mov rax, r9
     add rax, r8
     cmp rax, STREAMING_BUFFER_SIZE
-    jge .buffer_full
+    jge buffer_full_local
     
     ; Copy token
     mov rcx, r10
@@ -268,7 +266,7 @@ chat_update_streaming PROC
     
     ret
     
-.buffer_full:
+buffer_full_local:
     ret
 chat_update_streaming ENDP
 
@@ -293,7 +291,7 @@ chat_finish_streaming PROC
     imul rax, SIZEOF CHAT_MESSAGE
     add r9, rax
     
-    mov byte [r9 + CHAT_MESSAGE.isStreaming], 0
+    mov byte ptr [r9 + CHAT_MESSAGE.isStreaming], 0
     
     ret
 chat_finish_streaming ENDP
@@ -311,10 +309,10 @@ chat_set_context PROC
     ; Free old context
     mov rcx, [rbx + CHAT_CONTEXT.context]
     cmp rcx, 0
-    je .skip_free
+    je skip_free_local
     call free
     
-.skip_free:
+skip_free_local:
     ; Allocate and copy new context
     mov rcx, r8
     inc rcx
@@ -371,7 +369,7 @@ chat_set_context ENDP
 ; Enable/disable user input
 PUBLIC chat_set_input_enabled
 chat_set_input_enabled PROC
-    mov byte [rcx + CHAT_CONTEXT.inputEnabled], dl
+    mov byte ptr [rcx + CHAT_CONTEXT.inputEnabled], dl
     ret
 chat_set_input_enabled ENDP
 
@@ -385,9 +383,9 @@ chat_clear PROC
     
     ; Free all message contents
     xor r9, r9
-.clear_loop:
+clear_loop_local:
     cmp r9, r8
-    jge .clear_done
+    jge clear_done_local
     
     mov r10, [rcx + CHAT_CONTEXT.messages]
     imul r9, SIZEOF CHAT_MESSAGE
@@ -395,16 +393,16 @@ chat_clear PROC
     
     mov rdx, [r10 + CHAT_MESSAGE.content]
     cmp rdx, 0
-    je .next_msg
+    je next_msg_local
     
     mov rcx, rdx
     call free
     
-.next_msg:
+next_msg_local:
     inc r9
-    jmp .clear_loop
+    jmp clear_loop_local
     
-.clear_done:
+clear_done_local:
     mov [rcx + CHAT_CONTEXT.messageCount], 0
     
     ret
@@ -426,28 +424,28 @@ chat_destroy PROC
     ; Free message array
     mov rcx, [rbx + CHAT_CONTEXT.messages]
     cmp rcx, 0
-    je .skip_msgs
+    je skip_msgs_local
     call free
-.skip_msgs:
+skip_msgs_local:
     
     ; Free buffers
     mov rcx, [rbx + CHAT_CONTEXT.streamingBuffer]
     cmp rcx, 0
-    je .skip_stream
+    je skip_stream_local
     call free
-.skip_stream:
+skip_stream_local:
     
     mov rcx, [rbx + CHAT_CONTEXT.context]
     cmp rcx, 0
-    je .skip_ctx
+    je skip_ctx_local
     call free
-.skip_ctx:
+skip_ctx_local:
     
     mov rcx, [rbx + CHAT_CONTEXT.filePath]
     cmp rcx, 0
-    je .skip_path
+    je skip_path_local
     call free
-.skip_path:
+skip_path_local:
     
     ; Free context
     mov rcx, rbx
@@ -460,3 +458,4 @@ chat_destroy ENDP
 ; ============================================================================
 
 END
+

@@ -191,9 +191,9 @@ chat_serialize_to_json PROC
     ; Iterate through messages
     xor r8d, r8d                        ; Message index
     
-.serialize_loop:
+serialize_loop_local:
     cmp r8d, r13d
-    jge .serialize_end
+    jge serialize_end_local
     
     ; Calculate message offset
     mov rax, r8
@@ -316,7 +316,7 @@ chat_serialize_to_json PROC
     ; Add comma if not last message
     inc r8d
     cmp r8d, r13d
-    je .serialize_end
+    je serialize_end_local
     
     mov rdx, r14
     add rdx, rbx
@@ -324,9 +324,9 @@ chat_serialize_to_json PROC
     call strcpy_safe_masm
     add rbx, rax
     
-    jmp .serialize_loop
+    jmp serialize_loop_local
     
-.serialize_end:
+serialize_end_local:
     ; Write closing array bracket
     mov rdx, r14
     add rdx, rbx
@@ -382,21 +382,21 @@ chat_deserialize_from_json PROC
     lea rdx, [rip + sz_json_open_array]
     call strstr_masm
     test rax, rax
-    jz .deserialize_end
+    jz deserialize_end_local
     
     mov r12, rax
     add r12, 1                          ; Skip '['
     
-.deserialize_loop:
+deserialize_loop_local:
     cmp ebx, r15d
-    jge .deserialize_end
+    jge deserialize_end_local
     
     ; Find opening object brace
     mov rcx, r12
     lea rdx, [rip + sz_json_open_obj]
     call strstr_masm
     test rax, rax
-    jz .deserialize_end
+    jz deserialize_end_local
     
     mov r12, rax
     add r12, 1                          ; Skip '{'
@@ -434,15 +434,15 @@ chat_deserialize_from_json PROC
     lea rdx, [rip + sz_json_close_obj]
     call strstr_masm
     test rax, rax
-    jz .deserialize_end
+    jz deserialize_end_local
     
     mov r12, rax
     add r12, 1                          ; Skip '}'
     
     inc ebx
-    jmp .deserialize_loop
+    jmp deserialize_loop_local
     
-.deserialize_end:
+deserialize_end_local:
     mov eax, ebx
     add rsp, 128
     pop r15
@@ -481,10 +481,10 @@ chat_save_to_file PROC
     
     ; Use provided filename or default
     test r8, r8
-    jnz .save_use_provided
+    jnz save_use_provided_local
     lea r8, [rip + sz_chat_history_file]
     
-.save_use_provided:
+save_use_provided_local:
     mov rbx, r8                         ; Save filename
     
     ; Serialize to JSON
@@ -504,7 +504,7 @@ chat_save_to_file PROC
     call CreateFileA
     
     cmp rax, INVALID_HANDLE_VALUE
-    je .save_file_error
+    je save_file_error_local
     
     mov r13, rax                        ; Save file handle
     
@@ -525,12 +525,12 @@ chat_save_to_file PROC
     call console_log
     
     xor eax, eax                        ; Success
-    jmp .save_done
+    jmp save_done_local
     
-.save_file_error:
+save_file_error_local:
     mov eax, 1                          ; Error code
     
-.save_done:
+save_done_local:
     add rsp, 256
     pop r13
     pop r12
@@ -557,10 +557,10 @@ chat_load_from_file PROC
     
     ; Use provided filename or default
     test rcx, rcx
-    jnz .load_use_provided
+    jnz load_use_provided_local
     lea rcx, [rip + sz_chat_history_file]
     
-.load_use_provided:
+load_use_provided_local:
     mov rbx, rcx                        ; Save filename
     
     ; Open file for reading
@@ -571,7 +571,7 @@ chat_load_from_file PROC
     call CreateFileA
     
     cmp rax, INVALID_HANDLE_VALUE
-    je .load_file_error
+    je load_file_error_local
     
     mov r14, rax                        ; Save file handle
     
@@ -581,7 +581,7 @@ chat_load_from_file PROC
     call GetFileSize
     
     cmp rax, MAX_JSON_BUFFER
-    jg .load_file_too_large
+    jg load_file_too_large_local
     
     mov r13d, eax                       ; Save file size
     
@@ -608,18 +608,18 @@ chat_load_from_file PROC
     mov edx, r13d
     call console_log
     
-    jmp .load_done
+    jmp load_done_local
     
-.load_file_too_large:
+load_file_too_large_local:
     mov rcx, r14
     call CloseHandle
     xor eax, eax
-    jmp .load_done
+    jmp load_done_local
     
-.load_file_error:
+load_file_error_local:
     xor eax, eax
     
-.load_done:
+load_done_local:
     add rsp, 256
     pop r14
     pop r13
@@ -637,16 +637,16 @@ chat_load_from_file ENDP
 ; rcx = dest, rdx = src, returns eax = bytes copied
 strcpy_safe_masm PROC
     xor eax, eax
-.safe_copy_loop:
+safe_copy_loop_local:
     mov r8b, BYTE PTR [rdx]
     test r8b, r8b
-    jz .safe_copy_done
+    jz safe_copy_done_local
     mov BYTE PTR [rcx], r8b
     inc rcx
     inc rdx
     inc eax
-    jmp .safe_copy_loop
-.safe_copy_done:
+    jmp safe_copy_loop_local
+safe_copy_done_local:
     ret
 strcpy_safe_masm ENDP
 
@@ -654,36 +654,36 @@ strcpy_safe_masm ENDP
 ; eax = message type, rdx = output buffer
 write_msg_type_json PROC
     cmp eax, MSG_USER
-    je .write_user_type
+    je write_user_type_local
     cmp eax, MSG_AGENT
-    je .write_agent_type
+    je write_agent_type_local
     cmp eax, MSG_SYSTEM
-    je .write_system_type
+    je write_system_type_local
     cmp eax, MSG_REASONING
-    je .write_reasoning_type
+    je write_reasoning_type_local
     cmp eax, MSG_CORRECTION
-    je .write_correction_type
-    jmp .write_unknown_type
+    je write_correction_type_local
+    jmp write_unknown_type_local
     
-.write_user_type:
+write_user_type_local:
     lea rcx, [rip + sz_msg_user]
-    jmp .write_type_copy
-.write_agent_type:
+    jmp write_type_copy_local
+write_agent_type_local:
     lea rcx, [rip + sz_msg_agent]
-    jmp .write_type_copy
-.write_system_type:
+    jmp write_type_copy_local
+write_system_type_local:
     lea rcx, [rip + sz_msg_system]
-    jmp .write_type_copy
-.write_reasoning_type:
+    jmp write_type_copy_local
+write_reasoning_type_local:
     lea rcx, [rip + sz_msg_reasoning]
-    jmp .write_type_copy
-.write_correction_type:
+    jmp write_type_copy_local
+write_correction_type_local:
     lea rcx, [rip + sz_msg_correction]
-    jmp .write_type_copy
-.write_unknown_type:
+    jmp write_type_copy_local
+write_unknown_type_local:
     lea rcx, [rip + sz_msg_system]
     
-.write_type_copy:
+write_type_copy_local:
     call strcpy_safe_masm
     ret
 write_msg_type_json ENDP
@@ -694,21 +694,21 @@ write_int_json PROC
     ; Simple integer to string conversion
     xor ecx, ecx
     mov r8d, 10
-.int_convert_loop:
+int_convert_loop_local:
     xor edx, edx
     div r8d
     push rdx
     inc ecx
     test eax, eax
-    jnz .int_convert_loop
+    jnz int_convert_loop_local
     
-.int_write_loop:
+int_write_loop_local:
     pop rax
     add al, '0'
     mov BYTE PTR [rdx], al
     inc rdx
     dec ecx
-    jnz .int_write_loop
+    jnz int_write_loop_local
     
     mov eax, ecx
     ret
@@ -720,59 +720,59 @@ write_escaped_string_json PROC
     mov BYTE PTR [rdx], '"'
     inc rdx
     xor eax, eax
-.escape_loop:
+escape_loop_local:
     mov r8b, BYTE PTR [rcx]
     test r8b, r8b
-    jz .escape_done
+    jz escape_done_local
     
     cmp r8b, '"'
-    je .escape_quote
+    je escape_quote_local
     cmp r8b, '\'
-    je .escape_backslash
+    je escape_backslash_local
     cmp r8b, 0Ah
-    je .escape_newline
+    je escape_newline_local
     cmp r8b, 09h
-    je .escape_tab
+    je escape_tab_local
     
     mov BYTE PTR [rdx], r8b
     inc rdx
     inc eax
     inc rcx
-    jmp .escape_loop
+    jmp escape_loop_local
     
-.escape_quote:
+escape_quote_local:
     mov BYTE PTR [rdx], '\'
     mov BYTE PTR [rdx + 1], '"'
     add rdx, 2
     add eax, 2
     inc rcx
-    jmp .escape_loop
+    jmp escape_loop_local
     
-.escape_backslash:
+escape_backslash_local:
     mov BYTE PTR [rdx], '\'
     mov BYTE PTR [rdx + 1], '\'
     add rdx, 2
     add eax, 2
     inc rcx
-    jmp .escape_loop
+    jmp escape_loop_local
     
-.escape_newline:
+escape_newline_local:
     mov BYTE PTR [rdx], '\'
     mov BYTE PTR [rdx + 1], 'n'
     add rdx, 2
     add eax, 2
     inc rcx
-    jmp .escape_loop
+    jmp escape_loop_local
     
-.escape_tab:
+escape_tab_local:
     mov BYTE PTR [rdx], '\'
     mov BYTE PTR [rdx + 1], 't'
     add rdx, 2
     add eax, 2
     inc rcx
-    jmp .escape_loop
+    jmp escape_loop_local
     
-.escape_done:
+escape_done_local:
     mov BYTE PTR [rdx], '"'
     inc rdx
     inc eax
@@ -805,4 +805,5 @@ parse_json_string PROC
 parse_json_string ENDP
 
 .end
+
 

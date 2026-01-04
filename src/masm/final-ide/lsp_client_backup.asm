@@ -346,7 +346,7 @@ lsp_did_open PROC PUBLIC
     mov rcx, r8
     xor rax, rax
 did_open_strlen_local:
-    cmp byte ptr [rcx + rax], 0
+    cmp byte [rcx + rax], 0
     je did_open_strlen_done_local
     inc rax
     jmp did_open_strlen_local
@@ -356,7 +356,7 @@ did_open_strlen_done_local:
     mov [rax + 20], eax
     
     ; Increment file_count
-    inc dword ptr [rbx + 56]
+    inc dword [rbx + 56]
     
     ; Release mutex
     mov rcx, [rbx + 64]
@@ -768,6 +768,5 @@ ref_done_local:
 lsp_references ENDP
 
 END
-
 
 

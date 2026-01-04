@@ -98,9 +98,7 @@ CreateListView PROC FRAME
     mov rcx, [rsp+20h]  ; parent_hwnd
     mov [rbx+LISTVIEW_CONTROL.parent_hwnd], rcx
     mov [rbx+LISTVIEW_CONTROL.item_count], 0
-    mov [rbx+LISTVIEW_CONTROL.column_count], 0
-    
-    ; Set callbacks if provided
+    mov dword ptr [rbx+LISTVIEW_CONTROL.column_count], 0  ; Set callbacks if provided
     mov rcx, [rsp+58h]  ; on_selection_changed
     test rcx, rcx
     jz no_selection_callback
@@ -421,9 +419,7 @@ AddItem PROC
     mov [rdi+LISTVIEW_ITEM.text], rsi
     mov [rdi+LISTVIEW_ITEM.icon_index], r8d
     mov [rdi+LISTVIEW_ITEM.user_data], r9
-    mov [rdi+LISTVIEW_ITEM.is_selected], 0
-    
-    ; Add to items array
+    mov dword ptr [rdi+LISTVIEW_ITEM.is_selected], 0  ; Add to items array
     mov rcx, [rbx+LISTVIEW_CONTROL.items]
     mov edx, [rbx+LISTVIEW_CONTROL.item_count]
     mov [rcx+rdx*8], rdi
@@ -589,9 +585,7 @@ SetSelectedItem PROC
     test rdi, rdi
     jz item_not_found
     
-    mov [rdi+LISTVIEW_ITEM.is_selected], 1
-    
-    ; Call selection changed callback if provided
+    mov dword ptr [rdi+LISTVIEW_ITEM.is_selected], 1  ; Call selection changed callback if provided
     mov rcx, [rbx+LISTVIEW_CONTROL.on_selection_changed]
     test rcx, rcx
     jz no_callback

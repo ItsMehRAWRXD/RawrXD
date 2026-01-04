@@ -226,7 +226,7 @@ agent_planner_generate_tasks PROC
     
     ; Validate wish is not empty
     test r14d, r14d
-    jz .empty_wish
+    jz empty_wish_local
     
     ; =========================================================================
     ; STEP 2: INTENT CLASSIFICATION
@@ -257,7 +257,7 @@ agent_planner_generate_tasks PROC
     call allocate_memory
 
     test rax, rax
-    jz .alloc_failed
+    jz alloc_failed_local
 
     mov rbx, rax        ; Save plan pointer
 
@@ -273,7 +273,7 @@ agent_planner_generate_tasks PROC
     mov ecx, (SIZEOF TASK * 100)
     call allocate_memory
     test rax, rax
-    jz .alloc_failed
+    jz alloc_failed_local
     mov [rbx + EXECUTION_PLAN.tasks_ptr], rax
     
     ; =========================================================================
@@ -282,28 +282,28 @@ agent_planner_generate_tasks PROC
     
     ; Dispatch based on intent type
     cmp r8d, INTENT_BUILD_PROJECT
-    je .gen_build_plan
+    je gen_build_plan_local
     
     cmp r8d, INTENT_RUN_TESTS
-    je .gen_test_plan
+    je gen_test_plan_local
     
     cmp r8d, INTENT_HOTPATCH
-    je .gen_hotpatch_plan
+    je gen_hotpatch_plan_local
     
     cmp r8d, INTENT_DEBUG_ISSUE
-    je .gen_debug_plan
+    je gen_debug_plan_local
     
     cmp r8d, INTENT_ROLLBACK
-    je .gen_rollback_plan
+    je gen_rollback_plan_local
     
     ; Default: Generate basic single-task plan
-    jmp .gen_default_plan
+    jmp gen_default_plan_local
     
 ; =========================================================================
 ; PLAN GENERATORS
 ; =========================================================================
 
-.gen_build_plan:
+gen_build_plan_local:
     ; Generate: Validate -> Build -> Test
     
     ; Task 1: Validate build environment
@@ -324,9 +324,9 @@ agent_planner_generate_tasks PROC
     lea r8, szTest
     call add_task_to_plan
     
-    jmp .plan_complete
+    jmp plan_complete_local
     
-.gen_test_plan:
+gen_test_plan_local:
     ; Generate: Run unit tests -> Run integration tests
     
     ; Task 1: Unit tests
@@ -341,9 +341,9 @@ agent_planner_generate_tasks PROC
     lea r8, szTest2
     call add_task_to_plan
     
-    jmp .plan_complete
+    jmp plan_complete_local
     
-.gen_hotpatch_plan:
+gen_hotpatch_plan_local:
     ; Generate: Create hotpatch -> Apply -> Verify
     
     ; Task 1: Generate hotpatch
@@ -364,9 +364,9 @@ agent_planner_generate_tasks PROC
     lea r8, szVerify
     call add_task_to_plan
     
-    jmp .plan_complete
+    jmp plan_complete_local
     
-.gen_debug_plan:
+gen_debug_plan_local:
     ; Generate: Diagnose -> Hotfix -> Validate
     
     ; Task 1: Diagnose issue
@@ -387,9 +387,9 @@ agent_planner_generate_tasks PROC
     lea r8, szValidate
     call add_task_to_plan
     
-    jmp .plan_complete
+    jmp plan_complete_local
     
-.gen_rollback_plan:
+gen_rollback_plan_local:
     ; Generate: Rollback previous changes
     
     ; Task 1: Rollback
@@ -404,9 +404,9 @@ agent_planner_generate_tasks PROC
     lea r8, szVerify
     call add_task_to_plan
     
-    jmp .plan_complete
+    jmp plan_complete_local
     
-.gen_default_plan:
+gen_default_plan_local:
     ; Default: Single execution task
     lea rcx, szPlanEmpty
     call console_log
@@ -416,7 +416,7 @@ agent_planner_generate_tasks PROC
     lea r8, r13         ; Use original wish as command
     call add_task_to_plan
     
-.plan_complete:
+plan_complete_local:
     
     ; =========================================================================
     ; STEP 5: FINALIZE PLAN
@@ -442,7 +442,7 @@ agent_planner_generate_tasks PROC
     pop rbx
     ret
     
-.empty_wish:
+empty_wish_local:
     lea rcx, szPlanEmpty
     call console_log
     xor eax, eax
@@ -453,7 +453,7 @@ agent_planner_generate_tasks PROC
     pop rbx
     ret
     
-.alloc_failed:
+alloc_failed_local:
     xor eax, eax
     add rsp, 64
     pop r14
@@ -498,18 +498,18 @@ classify_intent PROC
     lea r8, szBuild
     call string_contains
     test eax, eax
-    jz .skip_build
+    jz skip_build_local
     add r8d, 25
-.skip_build:
+skip_build_local:
     
     mov rcx, r12
     mov edx, r13d
     lea r8, szCompile
     call string_contains
     test eax, eax
-    jz .skip_compile
+    jz skip_compile_local
     add r8d, 25
-.skip_compile:
+skip_compile_local:
     
     ; Check for TEST keywords
     mov rcx, r12
@@ -517,9 +517,9 @@ classify_intent PROC
     lea r8, szTest
     call string_contains
     test eax, eax
-    jz .skip_test
+    jz skip_test_local
     add r9d, 30
-.skip_test:
+skip_test_local:
     
     ; Check for HOTPATCH keywords
     mov rcx, r12
@@ -527,18 +527,18 @@ classify_intent PROC
     lea r8, szHotpatch
     call string_contains
     test eax, eax
-    jz .skip_hotpatch
+    jz skip_hotpatch_local
     add r10d, 40
-.skip_hotpatch:
+skip_hotpatch_local:
     
     mov rcx, r12
     mov edx, r13d
     lea r8, szFix
     call string_contains
     test eax, eax
-    jz .skip_fix
+    jz skip_fix_local
     add r10d, 20
-.skip_fix:
+skip_fix_local:
     
     ; Check for DEBUG keywords
     mov rcx, r12
@@ -546,18 +546,18 @@ classify_intent PROC
     lea r8, szDebug
     call string_contains
     test eax, eax
-    jz .skip_debug
+    jz skip_debug_local
     add r11d, 35
-.skip_debug:
+skip_debug_local:
     
     mov rcx, r12
     mov edx, r13d
     lea r8, szError
     call string_contains
     test eax, eax
-    jz .skip_error
+    jz skip_error_local
     add r11d, 20
-.skip_error:
+skip_error_local:
     
     ; Check for ROLLBACK keywords
     mov rcx, r12
@@ -565,9 +565,9 @@ classify_intent PROC
     lea r8, szRollback
     call string_contains
     test eax, eax
-    jz .skip_rollback
+    jz skip_rollback_local
     add ebx, 40
-.skip_rollback:
+skip_rollback_local:
     
     ; =========================================================================
     ; DETERMINE HIGHEST SCORING INTENT
@@ -577,36 +577,36 @@ classify_intent PROC
     mov ecx, r8d        ; confidence = build_score
     
     cmp r9d, ecx        ; if test_score > build_score
-    jle .test_not_best
+    jle test_not_best_local
     mov eax, INTENT_RUN_TESTS
     mov ecx, r9d
-.test_not_best:
+test_not_best_local:
     
     cmp r10d, ecx       ; if hotpatch_score > current_best
-    jle .hotpatch_not_best
+    jle hotpatch_not_best_local
     mov eax, INTENT_HOTPATCH
     mov ecx, r10d
-.hotpatch_not_best:
+hotpatch_not_best_local:
     
     cmp r11d, ecx       ; if debug_score > current_best
-    jle .debug_not_best
+    jle debug_not_best_local
     mov eax, INTENT_DEBUG_ISSUE
     mov ecx, r11d
-.debug_not_best:
+debug_not_best_local:
     
     cmp ebx, ecx        ; if rollback_score > current_best
-    jle .rollback_not_best
+    jle rollback_not_best_local
     mov eax, INTENT_ROLLBACK
     mov ecx, ebx
-.rollback_not_best:
+rollback_not_best_local:
     
     ; If no intent found with >0 score, return UNKNOWN
     test ecx, ecx
-    jnz .intent_found
+    jnz intent_found_local
     mov eax, INTENT_UNKNOWN
     xor ecx, ecx
     
-.intent_found:
+intent_found_local:
     mov edx, ecx        ; Return confidence in edx
     
     add rsp, 48
@@ -636,70 +636,70 @@ string_contains PROC
     
     ; Calculate substring length
     xor edx, edx
-.sub_len:
+sub_len_local:
     cmp BYTE PTR [rbx + rdx], 0
-    je .sub_len_done
+    je sub_len_done_local
     inc edx
-    jmp .sub_len
-.sub_len_done:
+    jmp sub_len_local
+sub_len_done_local:
     
     ; Sanity check
     cmp edx, ecx
-    jg .not_found       ; Substring longer than string
+    jg not_found_local       ; Substring longer than string
     
     ; Search for substring
     xor r9d, r9d        ; Current position
-.search_loop:
+search_loop_local:
     mov eax, ecx
     sub eax, r9d
     cmp eax, edx
-    jl .not_found       ; Not enough remaining bytes
+    jl not_found_local       ; Not enough remaining bytes
     
     ; Check if substring matches at current position
     mov r10d, edx       ; Compare length
     xor r11d, r11d      ; Comparison offset
     
-.compare_loop:
+compare_loop_local:
     test r10d, r10d
-    jz .found           ; All bytes matched
+    jz found_local           ; All bytes matched
     
     mov al, BYTE PTR [rsi + r9 + r11]
     mov bl, BYTE PTR [rbx + r11]
     
     ; Convert to lowercase for case-insensitive match
     cmp al, 'A'
-    jl .skip_lower1
+    jl skip_lower_local1
     cmp al, 'Z'
-    jg .skip_lower1
+    jg skip_lower_local1
     add al, 32
 .skip_lower1:
     
     cmp bl, 'A'
-    jl .skip_lower2
+    jl skip_lower_local2
     cmp bl, 'Z'
-    jg .skip_lower2
+    jg skip_lower_local2
     add bl, 32
 .skip_lower2:
     
     cmp al, bl
-    jne .no_match
+    jne no_match_local
     
     inc r11d
     dec r10d
-    jmp .compare_loop
+    jmp compare_loop_local
     
-.no_match:
+no_match_local:
     inc r9d
-    jmp .search_loop
+    jmp search_loop_local
     
-.found:
+found_local:
     mov eax, 1
-    jmp .search_exit
+    jmp search_exit_local
     
-.not_found:
+not_found_local:
     xor eax, eax
     
-.search_exit:
+search_exit_local:
     add rsp, 32
     pop rsi
     pop rbx
@@ -729,7 +729,7 @@ add_task_to_plan PROC
     
     ; Check if we have room for more tasks (max 100)
     cmp ebx, 100
-    jge .task_full
+    jge task_full_local
     
     ; Compute destination slot in preallocated TASK array
     mov rax, [r12 + EXECUTION_PLAN.tasks_ptr]
@@ -746,15 +746,15 @@ add_task_to_plan PROC
     ; Compute command length if pointer provided
     xor edx, edx
     mov rax, r8
-.len_loop:
+len_loop_local:
     test rax, rax
-    jz .len_done
+    jz len_done_local
     cmp BYTE PTR [rax], 0
-    je .len_done
+    je len_done_local
     inc edx
     inc rax
-    jmp .len_loop
-.len_done:
+    jmp len_loop_local
+len_done_local:
     mov DWORD PTR [r10 + TASK.command_length], edx
 
     ; Defaults
@@ -767,8 +767,8 @@ add_task_to_plan PROC
     inc ebx
     mov [r12 + EXECUTION_PLAN.task_count], ebx
 
-.task_full:
-.task_alloc_failed:
+task_full_local:
+task_alloc_failed_local:
     add rsp, 48
     pop r13
     pop r12
@@ -778,3 +778,4 @@ ALIGN 16
 add_task_to_plan ENDP
 
 END
+

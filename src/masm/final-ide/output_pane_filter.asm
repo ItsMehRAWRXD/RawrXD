@@ -79,11 +79,11 @@ output_filter_init PROC
     mov ecx, 0
     mov r8d, 6
     
-.clear_stats:
+clear_stats_local:
     mov DWORD PTR [rax + rcx], 0
     add rcx, 4
     dec r8d
-    jnz .clear_stats
+    jnz clear_stats_local
     
     mov FilteredEntries, 0
     xor eax, eax
@@ -110,20 +110,20 @@ output_filter_set_active ENDP
 PUBLIC output_filter_toggle
 output_filter_toggle PROC
     cmp ecx, 6
-    jge .toggle_invalid
+    jge toggle_invalid_local
     
     ; Convert source index to bitmask
     mov eax, 1
     mov edx, ecx
     
-.shift_loop:
+shift_loop_local:
     cmp edx, 0
-    je .shifted
+    je shifted_local
     shl eax, 1
     dec edx
-    jmp .shift_loop
+    jmp shift_loop_local
     
-.shifted:
+shifted_local:
     ; XOR with active filters to toggle
     xor ActiveFilters, eax
     
@@ -135,7 +135,7 @@ output_filter_toggle PROC
     movzx eax, al
     ret
     
-.toggle_invalid:
+toggle_invalid_local:
     xor eax, eax
     ret
 output_filter_toggle ENDP
@@ -147,13 +147,13 @@ output_filter_toggle ENDP
 PUBLIC output_filter_set_level
 output_filter_set_level PROC
     cmp ecx, 4
-    jge .invalid_level
+    jge invalid_level_local
     
     mov MinLogLevel, ecx
     xor eax, eax
     ret
     
-.invalid_level:
+invalid_level_local:
     mov eax, -1
     ret
 output_filter_set_level ENDP
@@ -169,19 +169,19 @@ PUBLIC output_filter_should_display
 output_filter_should_display PROC
     ; Check level first
     cmp ecx, MinLogLevel
-    jl .filter_out                      ; Level too low
+    jl filter_out_local                      ; Level too low
     
     ; Check if source is in active filters
     mov eax, ActiveFilters
     test eax, edx                       ; edx is source bitmask
-    jz .filter_out                      ; Source not in active filters
+    jz filter_out_local                      ; Source not in active filters
     
     ; Entry passes filters
     xor eax, eax
     inc eax                             ; Return 1 (display)
     ret
     
-.filter_out:
+filter_out_local:
     inc FilteredEntries                 ; Update filtered count
     xor eax, eax                        ; Return 0 (filter out)
     ret
@@ -258,3 +258,4 @@ output_filter_load_preset PROC
 output_filter_load_preset ENDP
 
 END
+

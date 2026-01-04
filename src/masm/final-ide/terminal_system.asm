@@ -89,9 +89,7 @@ terminal_system_init PROC
     call asm_malloc
     mov [g_output_buffer], rax
     mov [g_terminal_state.output_buffer], rax
-    mov [g_terminal_state.buffer_size], 1048576
-
-    ; Allocate line offset array
+    mov dword ptr [g_terminal_state.buffer_size], 1048576  ; Allocate line offset array
     mov rcx, [g_max_line_offsets]
     mov rdx, 8
     imul rcx, rdx
@@ -339,3 +337,4 @@ status_bar_init PROC
 status_bar_init ENDP
 
 END
+

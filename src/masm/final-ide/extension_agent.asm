@@ -440,3 +440,4 @@ create_and_write_file ENDP
     szScaffoldOk        BYTE "Agent: Project scaffolded successfully.", 0
 
 END
+

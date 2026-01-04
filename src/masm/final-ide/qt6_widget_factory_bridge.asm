@@ -195,9 +195,9 @@ WidgetFactory_CreateWidget PROC FRAME
     
     ; Validate class ID
     test ecx, ecx
-    jz .L0_invalid_class
+    jz L_local0_invalid_class
     cmp ecx, WIDGET_CLASS_TABWIDGET
-    jg .L0_invalid_class
+    jg L_local0_invalid_class
     
     ; Acquire lock
     lea r8, [widgetFactoryManager + OFFSET widgetFactoryManager.ManagerLock]
@@ -205,13 +205,13 @@ WidgetFactory_CreateWidget PROC FRAME
     
     ; Check widget count limit
     cmp DWORD PTR [widgetFactoryManager + OFFSET widgetFactoryManager.WidgetCount], WIDGET_FACTORY_MAX_WIDGETS
-    jge .L0_limit_exceeded
+    jge L_local0_limit_exceeded
     
     ; Allocate widget instance
     mov r9d, SIZE WIDGET_INSTANCE
     call HeapAlloc
     test rax, rax
-    jz .L0_alloc_failed
+    jz L_local0_alloc_failed
     
     ; Initialize widget instance
     mov r10, rax                    ; r10 = new widget
@@ -234,17 +234,17 @@ WidgetFactory_CreateWidget PROC FRAME
     call LeaveCriticalSection
     
     mov rax, r10                    ; Return widget pointer
-    jmp .L0_exit
+    jmp L_local0_exit
     
 .L0_invalid_class:
     mov rax, WIDGET_FACTORY_E_INVALID_CLASS
-    jmp .L0_exit
+    jmp L_local0_exit
     
 .L0_limit_exceeded:
     lea r8, [widgetFactoryManager + OFFSET widgetFactoryManager.ManagerLock]
     call LeaveCriticalSection
     mov rax, WIDGET_FACTORY_E_WIDGET_LIMIT
-    jmp .L0_exit
+    jmp L_local0_exit
     
 .L0_alloc_failed:
     lea r8, [widgetFactoryManager + OFFSET widgetFactoryManager.ManagerLock]
@@ -267,7 +267,7 @@ WidgetFactory_DestroyWidget PROC FRAME
     ; RCX = widget pointer
     
     test rcx, rcx
-    jz .L1_invalid_widget
+    jz L_local1_invalid_widget
     
     ; Acquire lock
     lea r8, [widgetFactoryManager + OFFSET widgetFactoryManager.ManagerLock]
@@ -286,7 +286,7 @@ WidgetFactory_DestroyWidget PROC FRAME
     call LeaveCriticalSection
     
     xor rax, rax
-    jmp .L1_exit
+    jmp L_local1_exit
     
 .L1_invalid_widget:
     mov rax, WIDGET_FACTORY_E_INVALID_WIDGET
@@ -310,7 +310,7 @@ WidgetFactory_CreateLayout PROC FRAME
     mov r8d, SIZE LAYOUT_DESCRIPTOR
     call HeapAlloc
     test rax, rax
-    jz .L2_alloc_failed
+    jz L_local2_alloc_failed
     
     ; Initialize layout
     mov r9, rax
@@ -318,7 +318,7 @@ WidgetFactory_CreateLayout PROC FRAME
     mov DWORD PTR [r9 + OFFSET LAYOUT_DESCRIPTOR.Spacing], 5
     mov DWORD PTR [r9 + OFFSET LAYOUT_DESCRIPTOR.Margin], 10
     
-    jmp .L2_exit
+    jmp L_local2_exit
     
 .L2_alloc_failed:
     xor rax, rax
@@ -337,9 +337,9 @@ WidgetFactory_AddWidget PROC FRAME
     ; R8D = position in layout
     
     test rcx, rcx
-    jz .L3_invalid_layout
+    jz L_local3_invalid_layout
     test rdx, rdx
-    jz .L3_invalid_widget
+    jz L_local3_invalid_widget
     
     ; Would add widget to layout's item array
     xor rax, rax
@@ -367,9 +367,9 @@ PropertyBinding_Create PROC FRAME
     ; R9D = target property ID
     
     test rcx, rcx
-    jz .L4_invalid_source
+    jz L_local4_invalid_source
     test r8, r8
-    jz .L4_invalid_target
+    jz L_local4_invalid_target
     
     ; Acquire lock
     lea r10, [widgetFactoryManager + OFFSET widgetFactoryManager.ManagerLock]
@@ -379,7 +379,7 @@ PropertyBinding_Create PROC FRAME
     mov r11d, SIZE PROPERTY_BINDING
     call HeapAlloc
     test rax, rax
-    jz .L4_alloc_failed
+    jz L_local4_alloc_failed
     
     ; Initialize binding
     mov r12, rax
@@ -402,15 +402,15 @@ PropertyBinding_Create PROC FRAME
     call LeaveCriticalSection
     
     mov rax, r10d                   ; Return binding ID
-    jmp .L4_exit
+    jmp L_local4_exit
     
 .L4_invalid_source:
     mov rax, PROPERTY_BINDING_E_INVALID_BINDING
-    jmp .L4_exit
+    jmp L_local4_exit
     
 .L4_invalid_target:
     mov rax, PROPERTY_BINDING_E_INVALID_BINDING
-    jmp .L4_exit
+    jmp L_local4_exit
     
 .L4_alloc_failed:
     lea r10, [widgetFactoryManager + OFFSET widgetFactoryManager.ManagerLock]
@@ -545,3 +545,4 @@ PropertyBinding_GetMetrics PROC FRAME
 PropertyBinding_GetMetrics ENDP
 
 END
+

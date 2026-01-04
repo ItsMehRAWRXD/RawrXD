@@ -132,15 +132,13 @@ bpe_tokenizer_create PROC
     mov [rbx + BPE_TOKENIZER.maxVocabSize], r9d
     mov [rbx + BPE_TOKENIZER.mergeRuleCount], 0
     mov [rbx + BPE_TOKENIZER.maxMergeRules], MAX_MERGE_RULES
-    mov byte [rbx + BPE_TOKENIZER.isTrained], 0
+    mov byte ptr [rbx + BPE_TOKENIZER.isTrained], 0
     
     ; Set special token IDs
     mov [rbx + BPE_TOKENIZER.padTokenId], 0
     mov [rbx + BPE_TOKENIZER.eosTokenId], 2
     mov [rbx + BPE_TOKENIZER.bosTokenId], 1
-    mov [rbx + BPE_TOKENIZER.unkTokenId], 100
-    
-    ; Log
+    mov dword ptr [rbx + BPE_TOKENIZER.unkTokenId], 100  ; Log
     lea rcx, [szTokenizerCreated]
     mov rdx, r9
     call console_log
@@ -229,9 +227,9 @@ bpe_encode PROC
     xor r11d, r11d                  ; r11d = token count
     xor r14, r14                    ; r14 = position in text
     
-.encode_loop:
+encode_loop_local:
     cmp r14, r10
-    jge .encode_done
+    jge encode_done_local
     
     ; Get character at current position
     mov al, byte [rsi + r14]
@@ -241,15 +239,15 @@ bpe_encode PROC
     
     ; Store token
     cmp r11d, r13d
-    jge .encode_done
+    jge encode_done_local
     
     mov [r12 + r11 * 4], eax        ; Store token ID
     inc r11d
     inc r14
     
-    jmp .encode_loop
+    jmp encode_loop_local
     
-.encode_done:
+encode_done_local:
     ; Log completion
     lea rcx, [szEncodeComplete]
     mov rdx, r11
@@ -289,9 +287,9 @@ bpe_decode PROC
     xor r14, r14                    ; r14 = output position
     xor r15d, r15d                  ; r15d = loop counter
     
-.decode_loop:
+decode_loop_local:
     cmp r15d, r12d
-    jge .decode_done
+    jge decode_done_local
     
     ; Get token ID
     mov r8d, [rsi + r15 * 4]
@@ -301,9 +299,9 @@ bpe_decode PROC
     mov r11d, [rbx + BPE_TOKENIZER.vocabSize]
     xor r9d, r9d
     
-.find_token:
+find_token_local:
     cmp r9d, r11d
-    jge .token_not_found
+    jge token_not_found_local
     
     mov rax, r10
     mov rcx, r9
@@ -311,12 +309,12 @@ bpe_decode PROC
     add rax, rcx
     
     cmp [rax + BPE_VOCAB.tokenId], r8d
-    je .token_found
+    je token_found_local
     
     inc r9d
-    jmp .find_token
+    jmp find_token_local
     
-.token_found:
+token_found_local:
     ; Copy token text to output
     mov rdx, [rax + BPE_VOCAB.tokenText]
     
@@ -332,13 +330,13 @@ bpe_decode PROC
     
     add r14, rax                    ; Update output position
     
-.token_not_found:
+token_not_found_local:
     inc r15d
-    jmp .decode_loop
+    jmp decode_loop_local
     
-.decode_done:
+decode_done_local:
     ; Null-terminate output
-    mov byte [r13 + r14], 0
+    mov byte ptr [r13 + r14], 0
     
     ; Log
     lea rcx, [szDecodeComplete]
@@ -375,9 +373,9 @@ bpe_get_token_text PROC
     mov r9d, [rcx + BPE_TOKENIZER.vocabSize]
     xor r10d, r10d
     
-.search_token:
+search_token_local:
     cmp r10d, r9d
-    jge .token_text_not_found
+    jge token_text_not_found_local
     
     mov r11, r8
     mov r12, r10
@@ -385,16 +383,16 @@ bpe_get_token_text PROC
     add r11, r12
     
     cmp [r11 + BPE_VOCAB.tokenId], edx
-    je .token_text_found
+    je token_text_found_local
     
     inc r10d
-    jmp .search_token
+    jmp search_token_local
     
-.token_text_found:
+token_text_found_local:
     mov rax, [r11 + BPE_VOCAB.tokenText]
     ret
     
-.token_text_not_found:
+token_text_not_found_local:
     xor rax, rax
     ret
 bpe_get_token_text ENDP
@@ -412,7 +410,7 @@ bpe_add_vocab_entry PROC
     ; Check capacity
     mov r9d, [rbx + BPE_TOKENIZER.vocabSize]
     cmp r9d, [rbx + BPE_TOKENIZER.maxVocabSize]
-    jge .vocab_full
+    jge vocab_full_local
     
     ; Get vocab entry slot
     mov r10, [rbx + BPE_TOKENIZER.vocab]
@@ -443,7 +441,7 @@ bpe_add_vocab_entry PROC
     ; Increment vocab size
     inc dword [rbx + BPE_TOKENIZER.vocabSize]
     
-.vocab_full:
+vocab_full_local:
     pop rbx
     ret
 bpe_add_vocab_entry ENDP
@@ -461,22 +459,22 @@ bpe_train PROC
     mov r8, r8                      ; r8 = numIterations
     
     ; Mark as trained
-    mov byte [rbx + BPE_TOKENIZER.isTrained], 1
+    mov byte ptr [rbx + BPE_TOKENIZER.isTrained], 1
     
     ; Run merge iterations (simplified)
     xor r9, r9
     
-.train_loop:
+train_loop_local:
     cmp r9, r8
-    jge .train_done
+    jge train_done_local
     
     ; Perform BPE merge iteration
     ; (Simplified: just increment iteration counter)
     
     inc r9
-    jmp .train_loop
+    jmp train_loop_local
     
-.train_done:
+train_done_local:
     mov eax, [rbx + BPE_TOKENIZER.vocabSize]
     pop rbx
     ret
@@ -543,9 +541,9 @@ bpe_destroy PROC
     mov r11d, [rbx + BPE_TOKENIZER.vocabSize]
     xor r12d, r12d
     
-.free_vocab_loop:
+free_vocab_loop_local:
     cmp r12d, r11d
-    jge .vocab_freed
+    jge vocab_freed_local
     
     mov r13, r10
     mov r14, r12
@@ -554,35 +552,35 @@ bpe_destroy PROC
     
     mov rcx, [r13 + BPE_VOCAB.tokenText]
     cmp rcx, 0
-    je .skip_vocab_text
+    je skip_vocab_text_local
     call free
     
-.skip_vocab_text:
+skip_vocab_text_local:
     inc r12d
-    jmp .free_vocab_loop
+    jmp free_vocab_loop_local
     
-.vocab_freed:
+vocab_freed_local:
     ; Free vocabulary array
     mov rcx, [rbx + BPE_TOKENIZER.vocab]
     cmp rcx, 0
-    je .skip_vocab_array
+    je skip_vocab_array_local
     call free
     
-.skip_vocab_array:
+skip_vocab_array_local:
     ; Free merge rules
     mov rcx, [rbx + BPE_TOKENIZER.mergeRules]
     cmp rcx, 0
-    je .skip_merges
+    je skip_merges_local
     call free
     
-.skip_merges:
+skip_merges_local:
     ; Free encoded buffer
     mov rcx, [rbx + BPE_TOKENIZER.encodedBuffer]
     cmp rcx, 0
-    je .skip_buffer
+    je skip_buffer_local
     call free
     
-.skip_buffer:
+skip_buffer_local:
     ; Free tokenizer
     mov rcx, rbx
     call free
@@ -593,3 +591,4 @@ bpe_destroy PROC
 bpe_destroy ENDP
 
 END
+

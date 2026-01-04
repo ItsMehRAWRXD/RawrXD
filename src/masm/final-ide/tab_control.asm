@@ -181,7 +181,10 @@ CreateTabControlWindow PROC
     push r9d            ; width
     push r8d            ; y
     push rdx            ; x
-    push WS_CHILD or WS_VISIBLE or WS_CLIPSIBLINGS or TCS_FIXEDWIDTH
+    push WS_CHILD
+    push or
+    push WS_VISIBLE
+    push or
     push 0              ; window name
     push WC_TABCONTROL  ; class name
     push 0              ; extended style
@@ -227,7 +230,7 @@ AddTabPage PROC
     
     mov [rdi+TAB_PAGE.hwnd], r8  ; content window
     mov [rdi+TAB_PAGE.user_data], r9  ; user_data
-    mov [rdi+TAB_PAGE.is_visible], 0  ; initially hidden
+    mov dword ptr [rdi+TAB_PAGE.is_visible], 0  ; initially hidden
     
     ; Add to pages array
     mov rcx, [rbx+TAB_CONTROL.pages]

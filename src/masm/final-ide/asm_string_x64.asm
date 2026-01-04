@@ -188,3 +188,4 @@ StringCompare proc
 StringCompare endp
 
 end
+

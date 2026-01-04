@@ -224,9 +224,7 @@ feature_harness_initialize PROC
     mov [FeatureHarness.harness_version], 00010000h  ; v1.0.0
     mov [FeatureHarness.harness_state], 1
     mov [FeatureHarness.feature_count], 32
-    mov [FeatureHarness.features_enabled], 0
-    
-    ; Initialize feature array
+    mov dword ptr [FeatureHarness.features_enabled], 0  ; Initialize feature array
     call InitializeFeatureArray
     
     ; Load default configuration
@@ -501,9 +499,7 @@ LoadDefaultFeatureConfiguration PROC
     mov [rdi + FEATURE_STATUS.feature_description], rax
     mov [rdi + FEATURE_STATUS.feature_category], FEATURE_CATEGORY_CORE
     mov [rdi + FEATURE_STATUS.feature_mandatory], 1
-    mov [rdi + FEATURE_STATUS.feature_enabled], 1
-    
-    ; Feature 1: Editor (mandatory)
+    mov dword ptr [rdi + FEATURE_STATUS.feature_enabled], 1  ; Feature 1: Editor (mandatory)
     mov eax, SIZE FEATURE_STATUS
     add rdi, rax
     mov [rdi + FEATURE_STATUS.feature_id], 1
@@ -513,9 +509,7 @@ LoadDefaultFeatureConfiguration PROC
     mov [rdi + FEATURE_STATUS.feature_description], rax
     mov [rdi + FEATURE_STATUS.feature_category], FEATURE_CATEGORY_CORE
     mov [rdi + FEATURE_STATUS.feature_mandatory], 1
-    mov [rdi + FEATURE_STATUS.feature_enabled], 1
-    
-    ; Continue for all 32 features...
+    mov dword ptr [rdi + FEATURE_STATUS.feature_enabled], 1  ; Continue for all 32 features...
     ; (Simplified for brevity)
     
     mov FeaturesEnabled, 2
@@ -1197,3 +1191,4 @@ telemetry_done:
 InitializeFeatureTelemetry ENDP
 
 END
+

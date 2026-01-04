@@ -173,32 +173,32 @@ InitializeAllStubs PROC
     ; Initialize animation system
     call InitializeAnimationSystem
     test eax, eax
-    jz .init_failed
+    jz init_failed_local
     
     ; Initialize UI system
     call InitializeUISystem
     test eax, eax
-    jz .init_failed
+    jz init_failed_local
     
     ; Initialize feature harness
     call InitializeFeatureHarness
     test eax, eax
-    jz .init_failed
+    jz init_failed_local
     
     ; Initialize model system
     call InitializeModelSystem
     test eax, eax
-    jz .init_failed
+    jz init_failed_local
     
     ; Wire up event handlers
     call WireUpEventHandlers
     test eax, eax
-    jz .init_failed
+    jz init_failed_local
     
     ; Wire up message routing
     call WireUpMessageRouting
     test eax, eax
-    jz .init_failed
+    jz init_failed_local
     
     mov eax, 1
     add rsp, 32
@@ -206,7 +206,7 @@ InitializeAllStubs PROC
     pop rbx
     ret
     
-.init_failed:
+init_failed_local:
     xor eax, eax
     add rsp, 32
     pop r12
@@ -234,7 +234,7 @@ InitializeAnimationSystem PROC
     call HeapAlloc
     mov [g_anim_queue_buffer], rax
     test eax, eax
-    jz .anim_init_error
+    jz anim_init_error_local
     
     ; Create timer for 30 FPS animation updates
     mov ecx, ANIMATION_TIMER_INTERVAL
@@ -242,7 +242,7 @@ InitializeAnimationSystem PROC
     call SetTimer
     mov [g_anim_timer_handle], rax
     test eax, eax
-    jz .anim_init_error
+    jz anim_init_error_local
     
     mov DWORD PTR [g_anim_running], 1
     
@@ -252,7 +252,7 @@ InitializeAnimationSystem PROC
     pop rbx
     ret
     
-.anim_init_error:
+anim_init_error_local:
     lea rcx, [szError]
     lea rdx, [szInitializingAnim]
     call OutputDebugStringA
@@ -317,7 +317,7 @@ InitializeFeatureHarness PROC
     call HeapAlloc
     mov [g_feature_queue_buffer], rax
     test eax, eax
-    jz .feature_init_error
+    jz feature_init_error_local
     
     ; In a real scenario, would call:
     ; lea rcx, [szFeatureConfigPath]
@@ -326,42 +326,42 @@ InitializeFeatureHarness PROC
     ; Validate configuration
     call ValidateFeatureConfiguration
     test eax, eax
-    jz .feature_init_error
+    jz feature_init_error_local
     
     ; Setup dependency resolution
     call SetupFeatureDependencyResolution
     test eax, eax
-    jz .feature_init_error
+    jz feature_init_error_local
     
     ; Setup conflict detection
     call SetupFeatureConflictDetection
     test eax, eax
-    jz .feature_init_error
+    jz feature_init_error_local
     
     ; Apply enterprise policy
     call ApplyEnterpriseFeaturePolicy
     test eax, eax
-    jz .feature_init_error
+    jz feature_init_error_local
     
     ; Initialize performance monitoring
     call InitializeFeaturePerformanceMonitoring
     test eax, eax
-    jz .feature_init_error
+    jz feature_init_error_local
     
     ; Initialize security monitoring
     call InitializeFeatureSecurityMonitoring
     test eax, eax
-    jz .feature_init_error
+    jz feature_init_error_local
     
     ; Initialize telemetry
     call InitializeFeatureTelemetry
     test eax, eax
-    jz .feature_init_error
+    jz feature_init_error_local
     
     ; Apply initial configuration
     call ApplyInitialFeatureConfiguration
     test eax, eax
-    jz .feature_init_error
+    jz feature_init_error_local
     
     ; Log completion
     call LogFeatureHarnessInitialization
@@ -373,7 +373,7 @@ InitializeFeatureHarness PROC
     pop rbx
     ret
     
-.feature_init_error:
+feature_init_error_local:
     lea rcx, [szError]
     lea rdx, [szInitializingFeatures]
     call OutputDebugStringA
@@ -404,7 +404,7 @@ InitializeModelSystem PROC
     call HeapAlloc
     mov [g_model_queue_buffer], rax
     test eax, eax
-    jz .model_init_error
+    jz model_init_error_local
     
     ; In production would initialize Rawr1024 engine here
     ; For now, mark as ready
@@ -415,7 +415,7 @@ InitializeModelSystem PROC
     pop rbx
     ret
     
-.model_init_error:
+model_init_error_local:
     lea rcx, [szError]
     lea rdx, [szInitializingModel]
     call OutputDebugStringA
@@ -624,7 +624,7 @@ LoadModel PROC
     ; Call Rawr1024 direct load
     call rawr1024_direct_load
     test eax, eax
-    jz .load_model_error
+    jz load_model_error_local
     
     mov rbx, rax            ; Save model pointer
     
@@ -633,7 +633,7 @@ LoadModel PROC
     mov edx, GGUF_DEFAULT_QUANT
     call rawr1024_quantize_model
     test eax, eax
-    jz .load_model_error
+    jz load_model_error_local
     
     ; Handle model loaded event
     mov rcx, r12
@@ -646,7 +646,7 @@ LoadModel PROC
     pop rbx
     ret
     
-.load_model_error:
+load_model_error_local:
     xor eax, eax
     add rsp, 32
     pop r12
@@ -659,3 +659,4 @@ LoadModel ENDP
 ;==============================================================================
 
 END
+

@@ -495,9 +495,7 @@ tensor_debugger_set_breakpoint PROC
     mov [r13 + BREAKPOINT.id], eax
     mov [r13 + BREAKPOINT.type], esi
     mov byte ptr [r13 + BREAKPOINT.enabled], 1
-    mov [r13 + BREAKPOINT.hit_count], 0
-    
-    ; Copy target name
+    mov dword ptr [r13 + BREAKPOINT.hit_count], 0  ; Copy target name
     mov rcx, rdi
     call strlen
     mov rcx, r13

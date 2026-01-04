@@ -67,10 +67,10 @@ PUBLIC theme_set_dark
 theme_set_dark PROC
     ; Set editor colors to dark palette
     ; editorBackground = 0x1E1E1E (dark gray)
-    mov dword [rcx], 0x1E1E1EFF
+    mov dword ptr [rcx], 0x1E1E1EFF
     
     ; editorForeground = 0xE0E0E0 (light gray)
-    mov dword [rcx + 4], 0xE0E0E0FF
+    mov dword ptr [rcx + 4], 0xE0E0E0FF
     
     ; Set default opacities to 1.0
     movss xmm0, [fOne]
@@ -100,10 +100,10 @@ PUBLIC theme_set_light
 theme_set_light PROC
     ; Set editor colors to light palette
     ; editorBackground = 0xFFFFFF (white)
-    mov dword [rcx], 0xFFFFFFFF
+    mov dword ptr [rcx], 0xFFFFFFFF
     
     ; editorForeground = 0x1E1E1E (dark gray)
-    mov dword [rcx + 4], 0x1E1E1EFF
+    mov dword ptr [rcx + 4], 0x1E1E1EFF
     
     ; Set default opacities
     mov eax, dword ptr [fOne]
@@ -172,3 +172,4 @@ theme_destroy ENDP
 ; ============================================================================
 
 END
+

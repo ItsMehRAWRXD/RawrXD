@@ -112,9 +112,7 @@ metrics_collector_create PROC
     mov [rbx + METRICS_COLLECTOR.metricCount], 0
     mov [rbx + METRICS_COLLECTOR.maxMetrics], r8
     mov [rbx + METRICS_COLLECTOR.nextRequestId], 1
-    mov [rbx + METRICS_COLLECTOR.totalDurationMs], 0
-    
-    ; Initialize aggregates to defaults
+    mov dword ptr [rbx + METRICS_COLLECTOR.totalDurationMs], 0  ; Initialize aggregates to defaults
     lea rcx, [rbx + METRICS_COLLECTOR.aggregates]
     mov edx, 0
     mov r8d, SIZEOF AGGREGATE_METRICS
@@ -184,21 +182,21 @@ metrics_end_request PROC
     mov r11, [rbx + METRICS_COLLECTOR.metricCount]
     xor r12, r12
     
-.find_loop:
+find_loop_local:
     cmp r12, r11
-    jge .not_found
+    jge not_found_local
     
     mov r13, r10
     imul r12, SIZEOF REQUEST_METRICS
     add r13, r12
     
     cmp rdx, [r13 + REQUEST_METRICS.requestId]
-    je .found
+    je found_local
     
     inc r12
-    jmp .find_loop
+    jmp find_loop_local
     
-.found:
+found_local:
     ; Get end time
     call GetTickCount64
     mov [r13 + REQUEST_METRICS.endTime], rax
@@ -214,7 +212,7 @@ metrics_end_request PROC
     
     ; Calculate tokens per second
     cmp r14, 0
-    je .skip_tokens_per_sec
+    je skip_tokens_per_sec_local
     
     cvtsi2ss xmm0, r8d             ; tokens as float
     cvtsi2ss xmm1, r14            ; ms as float
@@ -222,7 +220,7 @@ metrics_end_request PROC
     mulss xmm0, [f1000]            ; Convert to per-second
     movss [r13 + REQUEST_METRICS.tokensPerSecond], xmm0
     
-.skip_tokens_per_sec:
+skip_tokens_per_sec_local:
     ; Increment counter
     inc qword [rbx + METRICS_COLLECTOR.metricCount]
     
@@ -237,7 +235,7 @@ metrics_end_request PROC
     movss xmm0, [r13 + REQUEST_METRICS.tokensPerSecond]
     call console_log
     
-.not_found:
+not_found_local:
     pop rbx
     ret
 metrics_end_request ENDP
@@ -261,15 +259,13 @@ metrics_calculate_aggregates PROC
     xor r9, r9
     mov [rbx + METRICS_COLLECTOR.aggregates.totalRequests], r9d
     mov [rbx + METRICS_COLLECTOR.aggregates.successfulRequests], 0
-    mov [rbx + METRICS_COLLECTOR.aggregates.failedRequests], 0
-    
-    ; Iterate and aggregate
+    mov dword ptr [rbx + METRICS_COLLECTOR.aggregates.failedRequests], 0  ; Iterate and aggregate
     xor r10, r10
     xorpd xmm0, xmm0               ; Sum for average
     
-.aggregate_loop:
+aggregate_loop_local:
     cmp r10, r8
-    jge .aggregate_done
+    jge aggregate_done_local
     
     mov r11, rsi
     imul r10, SIZEOF REQUEST_METRICS
@@ -277,33 +273,33 @@ metrics_calculate_aggregates PROC
     
     ; Count successes/failures
     cmp byte [r11 + REQUEST_METRICS.success], 1
-    jne .not_success
+    jne not_success_local
     
     inc dword [rbx + METRICS_COLLECTOR.aggregates.successfulRequests]
-    jmp .next_aggregate
+    jmp next_aggregate_local
     
-.not_success:
+not_success_local:
     inc dword [rbx + METRICS_COLLECTOR.aggregates.failedRequests]
     
-.next_aggregate:
+next_aggregate_local:
     inc r10
-    jmp .aggregate_loop
+    jmp aggregate_loop_local
     
-.aggregate_done:
+aggregate_done_local:
     mov r9d, [rbx + METRICS_COLLECTOR.aggregates.successfulRequests]
     add r9d, [rbx + METRICS_COLLECTOR.aggregates.failedRequests]
     mov [rbx + METRICS_COLLECTOR.aggregates.totalRequests], r9d
     
     ; Calculate average latency
     cmp r9, 0
-    je .skip_avg
+    je skip_avg_local
     
     mov rax, [rbx + METRICS_COLLECTOR.totalDurationMs]
     cdq
     idiv r9
     mov [rbx + METRICS_COLLECTOR.aggregates.avgLatencyMs], rax
     
-.skip_avg:
+skip_avg_local:
     ; Log percentiles
     lea rcx, [szPercentiles]
     movsd xmm0, [rbx + METRICS_COLLECTOR.aggregates.p50LatencyMs]
@@ -348,9 +344,9 @@ metrics_get_aggregates ENDP
 ; Clear all collected metrics
 PUBLIC metrics_clear
 metrics_clear PROC
-    mov qword [rcx + METRICS_COLLECTOR.metricCount], 0
-    mov qword [rcx + METRICS_COLLECTOR.totalDurationMs], 0
-    mov qword [rcx + METRICS_COLLECTOR.nextRequestId], 1
+    mov qword ptr [rcx + METRICS_COLLECTOR.metricCount], 0
+    mov qword ptr [rcx + METRICS_COLLECTOR.totalDurationMs], 0
+    mov qword ptr [rcx + METRICS_COLLECTOR.nextRequestId], 1
     ret
 metrics_clear ENDP
 
@@ -367,9 +363,9 @@ metrics_destroy PROC
     ; Free metrics array
     mov rcx, [rbx + METRICS_COLLECTOR.metrics]
     cmp rcx, 0
-    je .skip_metrics
+    je skip_metrics_local
     call free
-.skip_metrics:
+skip_metrics_local:
     
     ; Free collector
     mov rcx, rbx
@@ -385,3 +381,4 @@ metrics_destroy ENDP
     f1000 REAL4 1000.0
 
 END
+

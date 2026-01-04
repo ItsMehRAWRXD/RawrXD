@@ -739,3 +739,4 @@ strncpy ENDP
 szKernelError BYTE "Kernel error: failed to execute code", 0
 
 end
+

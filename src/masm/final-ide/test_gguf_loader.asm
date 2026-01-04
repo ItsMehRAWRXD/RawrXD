@@ -577,3 +577,4 @@ fmt_null_term:
 format_string_masm ENDP
 
 END
+

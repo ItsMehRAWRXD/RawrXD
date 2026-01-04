@@ -49,7 +49,7 @@ extern  FindClose:proc
 extern  ExitProcess:proc
 
 STD_OUTPUT_HANDLE equ -11
-GENERIC_READ   equ 80000000h
+GENERIC_READ   equ 080000000h
 GENERIC_WRITE  equ 40000000h
 FILE_SHARE_READ equ 1
 OPEN_EXISTING  equ 3
@@ -60,8 +60,8 @@ INVALID_HANDLE_VALUE equ -1
 ; ---------------------------------------------
 ; Simple helpers
 ; ---------------------------------------------
-strlenA proc uses rdi rax rcx, psz:QWORD
-    mov rdi, psz
+strlenA proc psz_local:QWORD
+    mov rdi, psz_local
     xor rax, rax
 @@:
     cmp byte ptr [rdi+rax], 0
@@ -118,7 +118,7 @@ toupperA proc uses rax, cval:BYTE
 toupperA endp
 
 ; write null-terminated string to handle in rcx
-writeZ proc uses rdx r8 r9 rax, h:QWORD, psz:QWORD
+writeZ proc uses rdx r8 r9 rax, h:QWORD, psz_local:QWORD
     mov rcx, psz
     call strlenA
     mov r8, rax
@@ -133,47 +133,47 @@ writeZ endp
 
 ; compare begins-with (case-insensitive), psz line vs psz prefix
 ; returns ZF=1 if begins with
-begins_with_ci proc uses rsi rdi rax rbx rcx, psz:QWORD, pfx:QWORD
+begins_with_ci proc uses rsi rdi rax rbx rcx, psz_local:QWORD, pfx:QWORD
     mov rsi, psz
     mov rdi, pfx
-.loop:
+loop_local:
     mov bl, [rdi]
     test bl, bl
-    jz .equal     ; end of prefix reached
+    jz equal_local     ; end of prefix reached
     mov cl, [rsi]
     test cl, cl
-    jz .notequal
+    jz notequal_local
     ; toupper BL
     cmp bl, 'a'
-    jb .no_up1
+    jb no_up1_local
     cmp bl, 'z'
-    ja .no_up1
+    ja no_up1_local
     sub bl, 32
-.no_up1:
+no_up1_local:
     ; toupper CL
     cmp cl, 'a'
-    jb .no_up2
+    jb no_up2_local
     cmp cl, 'z'
-    ja .no_up2
+    ja no_up2_local
     sub cl, 32
-.no_up2:
+no_up2_local:
     cmp bl, cl
-    jne .notequal
+    jne notequal_local
     inc rdi
     inc rsi
-    jmp .loop
-.equal:
+    jmp loop_local
+equal_local:
     mov rax, 1
     ret
-.notequal:
+notequal_local:
     xor rax, rax
     ret
 begins_with_ci endp
 
 ; find substring (case-insensitive). returns offset in RAX or -1
-find_ci proc uses rsi rdi rbx rax, psz:QWORD, sub:QWORD
+find_ci proc psz_local:QWORD, sub_str:QWORD
     mov rsi, psz
-    mov rbx, sub
+    mov rbx, sub_str
     xor rax, rax
 outer:
     mov rdi, rsi
@@ -202,7 +202,7 @@ outer:
     cmp cl, 'z'
     ja @F2
     sub cl, 32
-@@F2:
+@@F2_local:
     cmp bl, cl
     jne nextpos
     inc rdx
@@ -211,7 +211,7 @@ outer:
 found:
     ; return offset = rdi - psz
     mov rax, rdi
-    sub rax, psz
+    sub rax, psz_local
     ret
 nextpos:
     inc rsi
@@ -224,7 +224,7 @@ notfound:
 find_ci endp
 
 ; add symbol to symbolsBuf if not present
-add_symbol proc uses rsi rdi rbx rax, psz:QWORD
+add_symbol proc uses rsi rdi rbx rax, psz_local:QWORD
     mov rbx, psz
     mov rsi, OFFSET symbolsBuf
 
@@ -278,7 +278,7 @@ already:
 add_symbol endp
 
 ; process a single line in lineBuf
-process_line proc uses rax rbx rcx rdx, psz:QWORD
+process_line proc uses rax rbx rcx rdx, psz_local:QWORD
     ; Check for PUBLIC
     mov rcx, psz
     mov rdx, OFFSET PUBLIC_kw
@@ -377,7 +377,7 @@ done:
 process_line endp
 
 ; read file and process lines
-process_file proc uses rax rbx rcx rdx rsi rdi, psz:QWORD
+process_file proc uses rax rbx rcx rdx rsi rdi, psz_local:QWORD
     ; open file for read
     sub rsp, 32
     mov rcx, psz
@@ -767,3 +767,7 @@ done:
 main endp
 
 end
+
+
+
+

@@ -120,9 +120,7 @@ LogInitialize PROC
     ; Initialize log context
     mov [g_LogContext.log_level], LOG_LEVEL_INFO
     mov [g_LogContext.log_targets], LOG_TARGET_ALL
-    mov [g_LogContext.log_enabled], 1
-    
-    ; Setup log file path
+    mov dword ptr [g_LogContext.log_enabled], 1  ; Setup log file path
     lea rax, szLogFile
     mov [g_LogContext.log_file_path], rax
     
@@ -134,7 +132,7 @@ LogInitialize PROC
     mov [rsp + 32], r9  ; lpSecurityAttributes
     mov [rsp + 40], OPEN_ALWAYS
     mov [rsp + 48], FILE_ATTRIBUTE_NORMAL
-    mov [rsp + 56], 0   ; hTemplateFile
+    mov dword ptr [rsp + 56], 0  ; hTemplateFile
     call CreateFileA
     
     cmp rax, INVALID_HANDLE_VALUE
@@ -449,4 +447,5 @@ shutdown_done:
 LogShutdown ENDP
 
 END
+
 

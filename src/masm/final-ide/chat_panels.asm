@@ -366,9 +366,7 @@ chat_panel_clear PROC
     
     ; Reset scroll position
     mov [rcx+CHAT_PANEL.scroll_position], 0
-    mov [rcx+CHAT_PANEL.search_position], 0
-    
-    ; Redraw panel
+    mov dword ptr [rcx+CHAT_PANEL.search_position], 0  ; Redraw panel
     call _invalidate_chat_panel
     
     mov rax, 1
@@ -408,9 +406,7 @@ chat_panel_search PROC
     ; Set search state
     mov [rcx+CHAT_PANEL.search_string], rdx
     mov [rcx+CHAT_PANEL.search_flags], r8d
-    mov [rcx+CHAT_PANEL.search_position], 0
-    
-    ; Perform search
+    mov dword ptr [rcx+CHAT_PANEL.search_position], 0  ; Perform search
     mov rcx, [rbp-8]
     mov rdx, [rbp-16]
     mov r8d, [rbp-24]
@@ -664,9 +660,7 @@ _initialize_chat_panel PROC
     mov [rcx+CHAT_PANEL.model_name], 0
     mov [rcx+CHAT_PANEL.search_string], 0
     mov [rcx+CHAT_PANEL.search_flags], 0
-    mov [rcx+CHAT_PANEL.search_position], 0
-    
-    ; Create fonts
+    mov dword ptr [rcx+CHAT_PANEL.search_position], 0  ; Create fonts
     call _create_chat_fonts
     test rax, rax
     jz initialize_panel_error
@@ -780,9 +774,7 @@ _initialize_chat_message PROC
     mov [rcx+CHAT_MESSAGE.code_language], 0
     mov [rcx+CHAT_MESSAGE.selection_start], 0
     mov [rcx+CHAT_MESSAGE.selection_end], 0
-    mov [rcx+CHAT_MESSAGE.search_highlight], 0
-    
-    ; Set avatar color based on type
+    mov dword ptr [rcx+CHAT_MESSAGE.search_highlight], 0  ; Set avatar color based on type
     cmp dword ptr [rcx+CHAT_MESSAGE.message_type], MESSAGE_TYPE_USER
     je set_user_color
     cmp dword ptr [rcx+CHAT_MESSAGE.message_type], MESSAGE_TYPE_ASSISTANT

@@ -384,7 +384,7 @@ OnExecuteChainClicked PROC
     ; Verify models are loaded
     mov eax, [rcx + DUAL_MODEL_CONTEXT.primary_model + AGENT_CHAT_MODEL.is_loaded]
     test eax, eax
-    jz .execute_no_models
+    jz execute_no_models_local
     
     ; Get input from chat
     mov rdx, [g_chat_input_buf]
@@ -400,7 +400,7 @@ OnExecuteChainClicked PROC
     pop rbx
     ret
     
-.execute_no_models:
+execute_no_models_local:
     ; Show error message
     mov ecx, 1
     lea rdx, szChainError
@@ -435,49 +435,49 @@ ExecuteDualModelChain PROC
     
     ; Dispatch to appropriate execution method
     cmp eax, CHAIN_MODE_SEQUENTIAL
-    je .dual_sequential
+    je dual_sequential_local
     cmp eax, CHAIN_MODE_PARALLEL
-    je .dual_parallel
+    je dual_parallel_local
     cmp eax, CHAIN_MODE_VOTING
-    je .dual_voting
+    je dual_voting_local
     cmp eax, CHAIN_MODE_CYCLE
-    je .dual_cycle
+    je dual_cycle_local
     cmp eax, CHAIN_MODE_FALLBACK
-    je .dual_fallback
+    je dual_fallback_local
     
-    jmp .dual_error
+    jmp dual_error_local
     
-.dual_sequential:
+dual_sequential_local:
     mov rcx, r12
     mov rdx, rcx        ; Input
     call ExecuteSequentialDual
-    jmp .dual_complete
+    jmp dual_complete_local
     
-.dual_parallel:
+dual_parallel_local:
     mov rcx, r12
     mov rdx, rcx
     call ExecuteParallelDual
-    jmp .dual_complete
+    jmp dual_complete_local
     
-.dual_voting:
+dual_voting_local:
     mov rcx, r12
     mov rdx, rcx
     call ExecuteVotingDual
-    jmp .dual_complete
+    jmp dual_complete_local
     
-.dual_cycle:
+dual_cycle_local:
     mov rcx, r12
     mov rdx, rcx
     call ExecuteCyclingDual
-    jmp .dual_complete
+    jmp dual_complete_local
     
-.dual_fallback:
+dual_fallback_local:
     mov rcx, r12
     mov rdx, rcx
     call ExecuteFallbackDual
-    jmp .dual_complete
+    jmp dual_complete_local
     
-.dual_complete:
+dual_complete_local:
     ; Calculate execution time
     call GetTickCount64
     sub rax, r8
@@ -494,7 +494,7 @@ ExecuteDualModelChain PROC
     pop rbx
     ret
     
-.dual_error:
+dual_error_local:
     inc g_dual_error_count
     xor eax, eax
     add rsp, 48
@@ -522,7 +522,7 @@ ExecuteTripleModelChain PROC
     ; Check if tertiary model loaded
     mov eax, [rcx + DUAL_MODEL_CONTEXT.tertiary_model + AGENT_CHAT_MODEL.is_loaded]
     test eax, eax
-    jz .triple_no_model
+    jz triple_no_model_local
     
     ; Execute with all 3 models
     call ExecuteDualModelChain
@@ -532,7 +532,7 @@ ExecuteTripleModelChain PROC
     pop rbx
     ret
     
-.triple_no_model:
+triple_no_model_local:
     ; Fall back to dual execution
     call ExecuteDualModelChain
     add rsp, 32
@@ -560,17 +560,17 @@ CycleModels PROC
     mov ecx, 2          ; At least 2 models
     mov edx, [rbx + DUAL_MODEL_CONTEXT.tertiary_model + AGENT_CHAT_MODEL.is_loaded]
     test edx, edx
-    jz .skip_tertiary
+    jz skip_tertiary_local
     mov ecx, 3          ; 3 models
     
-.skip_tertiary:
+skip_tertiary_local:
     ; Move to next model
     inc eax
     cmp eax, ecx
-    jl .cycle_valid
+    jl cycle_valid_local
     xor eax, eax        ; Wrap to 0
     
-.cycle_valid:
+cycle_valid_local:
     mov [rbx + DUAL_MODEL_CONTEXT.current_cycle_idx], eax
     
     ; Get model name and log
@@ -633,19 +633,19 @@ FallbackModels PROC
     xor edx, edx
     call ExecuteModelByIndex
     test eax, eax
-    jnz .fallback_success
+    jnz fallback_success_local
     
     ; Primary failed, try secondary
     mov edx, 1
     call ExecuteModelByIndex
     test eax, eax
-    jnz .fallback_success
+    jnz fallback_success_local
     
     ; Try tertiary
     mov edx, 2
     call ExecuteModelByIndex
     test eax, eax
-    jnz .fallback_success
+    jnz fallback_success_local
     
     ; All failed
     xor eax, eax
@@ -653,7 +653,7 @@ FallbackModels PROC
     pop rbx
     ret
     
-.fallback_success:
+fallback_success_local:
     add rsp, 32
     pop rbx
     ret
@@ -694,9 +694,9 @@ UpdateModelStatusDisplay PROC
     
     ; Update each model status in listbox
     mov edx, 0
-.status_loop:
+status_loop_local:
     cmp edx, 3
-    jge .status_done
+    jge status_done_local
     
     ; Get status for model[edx]
     call GetModelStatusByIndex
@@ -706,9 +706,9 @@ UpdateModelStatusDisplay PROC
     call AddStatusToListbox
     
     inc edx
-    jmp .status_loop
+    jmp status_loop_local
     
-.status_done:
+status_done_local:
     add rsp, 32
     pop rbx
     ret
@@ -1026,3 +1026,4 @@ GetSliderPosition PROC
 GetSliderPosition ENDP
 
 END
+

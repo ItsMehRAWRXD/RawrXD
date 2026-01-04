@@ -100,9 +100,7 @@ ai_orchestration_coordinator_init PROC
     call CreateEventA
     mov [rsi + 64], rax                 ; hStopEvent
     
-    mov [coordinatorInitialized], 1
-    
-    ; Log initialization
+    mov dword ptr [coordinatorInitialized], 1  ; Log initialization
     mov rcx, outputLogHandle
     mov rdx, "[AI Orchestration] Coordinator initialized and running"
     call output_pane_append
@@ -402,9 +400,7 @@ ai_orchestration_shutdown PROC
     call free
     
     mov [globalCoordinator], 0
-    mov [coordinatorInitialized], 0
-    
-    ; Log shutdown
+    mov dword ptr [coordinatorInitialized], 0  ; Log shutdown
     mov rcx, outputLogHandle
     mov rdx, "[AI Orchestration] Coordinator shutdown complete"
     call output_pane_append
@@ -656,3 +652,4 @@ temperature: REAL8 0.7                  ; Default 0.7 temperature
 ; ============================================================================
 
 .end
+

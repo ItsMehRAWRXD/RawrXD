@@ -48,12 +48,12 @@ masm_gguf_parse PROC
     mov rbx, rax        ; rbx = pData
     
     test rbx, rbx
-    jz .fail
+    jz fail_local
     
     ; 2. Check Magic "GGUF"
     mov eax, [rbx]
     cmp eax, 46554747h  ; "GGUF"
-    jne .fail_magic
+    jne fail_magic_local
     
     ; 3. Parse Header
     mov eax, [rbx+4]    ; Version
@@ -67,15 +67,15 @@ masm_gguf_parse PROC
     call console_log
     
     mov rax, rbx        ; Return base pointer as context for now
-    jmp .exit
+    jmp exit_local
 
-.fail_magic:
+fail_magic_local:
     lea rcx, szGgufError
     call console_log
-.fail:
+fail_local:
     xor rax, rax
 
-.exit:
+exit_local:
     add rsp, 64
     pop rdi
     pop rsi
@@ -84,3 +84,4 @@ masm_gguf_parse PROC
 masm_gguf_parse ENDP
 
 END
+

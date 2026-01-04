@@ -31,7 +31,7 @@ PROCESS_INFO_EX ENDS
 ;==============================================================================
 ; CONSTANTS
 ;==============================================================================
-; Already in windows.inc: STARTF_USESTDHANDLES, CREATE_NO_WINDOW
+; Already in windowsinc_local: STARTF_USESTDHANDLES, CREATE_NO_WINDOW
 
 .code
 
@@ -265,3 +265,4 @@ write_done:
 WriteProcessInput ENDP
 
 END
+

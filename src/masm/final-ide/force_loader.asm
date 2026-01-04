@@ -180,7 +180,7 @@ force_load_done:
 ForceLoadModel ENDP
 
 END
-    mov [rsp + 56], 0   ; hTemplateFile
+    mov dword ptr [rsp + 56], 0  ; hTemplateFile
     call CreateFileA
     
     cmp rax, INVALID_HANDLE_VALUE
@@ -204,7 +204,7 @@ END
     mov r8, PAGE_READONLY
     xor r9, r9
     mov [rsp + 32], fileSize
-    mov [rsp + 40], 0   ; lpName
+    mov dword ptr [rsp + 40], 0  ; lpName
     call CreateFileMappingA
     
     test rax, rax
@@ -237,7 +237,7 @@ END
     mov [rbx + FORCE_LOAD_CONTEXT.file_handle], rax
     mov rax, hMap
     mov [rbx + FORCE_LOAD_CONTEXT.map_handle], rax
-    mov [rbx + FORCE_LOAD_CONTEXT.load_flags], 1  ; FORCE_LOADED
+    mov dword ptr [rbx + FORCE_LOAD_CONTEXT.load_flags], 1  ; FORCE_LOADED
     
     lea rcx, szForceLoadSuccess
     call LogSuccess
@@ -331,3 +331,4 @@ GetForceLoadedModel PROC
 GetForceLoadedModel ENDP
 
 END
+

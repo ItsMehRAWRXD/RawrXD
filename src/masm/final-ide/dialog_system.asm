@@ -128,9 +128,7 @@ CreateModalDialog PROC FRAME
     mov rcx, [rsp+28h]  ; parent_hwnd
     mov [rbx+DIALOG_ENTRY.parent_hwnd], rcx
     mov [rbx+DIALOG_ENTRY.result], 0
-    mov [rbx+DIALOG_ENTRY.is_modal], 1
-    
-    ; Set callbacks if provided
+    mov dword ptr [rbx+DIALOG_ENTRY.is_modal], 1  ; Set callbacks if provided
     mov rcx, [rsp+68h]  ; on_command callback
     test rcx, rcx
     jz no_command_callback

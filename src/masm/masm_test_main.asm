@@ -1216,3 +1216,4 @@ str_tso_destroy         DB "[step] tso destroy", 13, 10, 0
 test_patch_data         QWORD 0AABBCCDDEEFF0011h
 
 END
+

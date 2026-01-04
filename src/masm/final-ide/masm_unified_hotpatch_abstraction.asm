@@ -7,15 +7,15 @@
 ; reimplementing functionality in each layer.
 ;
 ; Before Consolidation:
-;  - byte_level_hotpatcher.asm: 538 lines (includes Boyer-Moore, direct I/O)
-;  - model_memory_hotpatch.asm: 523 lines (includes memory ops, XOR, rotation)
-;  - gguf_server_hotpatch.asm: 543 lines (includes transform logic)
-;  - proxy_hotpatcher.asm: 543 lines (includes I/O, transforms)
+;  - byte_level_hotpatcherasm_local: 538 lines (includes Boyer-Moore, direct I/O)
+;  - model_memory_hotpatchasm_local: 523 lines (includes memory ops, XOR, rotation)
+;  - gguf_server_hotpatchasm_local: 543 lines (includes transform logic)
+;  - proxy_hotpatcherasm_local: 543 lines (includes I/O, transforms)
 ;  Total: 2,147 lines with 40-50% code duplication
 ;
 ; After Consolidation:
-;  - masm_core_direct_io.asm: Unified I/O + search (1,000 lines)
-;  - masm_core_reversible_transforms.asm: Invertible ops (900 lines)
+;  - masm_core_direct_ioasm_local: Unified I/O + search (1,000 lines)
+;  - masm_core_reversible_transformsasm_local: Invertible ops (900 lines)
 ;  - Each layer now calls shared functions instead of reimplementing
 ;  - Result: ~1,000 lines removed through deduplication
 ;
@@ -454,3 +454,4 @@ masm_unified_layer_integration_init PROC
 masm_unified_layer_integration_init ENDP
 
 END
+

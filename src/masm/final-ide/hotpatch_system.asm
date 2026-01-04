@@ -394,3 +394,4 @@ verify_not_found:
 hotpatch_verify ENDP
 
 END
+

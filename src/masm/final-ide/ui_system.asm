@@ -143,7 +143,7 @@ ui_init PROC
     movss [g_ui_state.scale_factor], xmm0
 
     ; Set default dark theme
-    mov [g_ui_state.theme_mode], 1  ; Dark
+    mov dword ptr [g_ui_state.theme_mode], 1  ; Dark
     mov eax, THEME_DARK_BG
     mov [g_ui_state.bg_color], eax
     mov eax, THEME_DARK_FG
@@ -409,3 +409,4 @@ ui_render_frame PROC
 ui_render_frame ENDP
 
 END
+

@@ -381,3 +381,4 @@ hpatch_reset_stats PROC
 hpatch_reset_stats ENDP
 
 END
+

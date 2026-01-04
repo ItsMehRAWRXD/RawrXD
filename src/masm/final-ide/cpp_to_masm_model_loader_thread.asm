@@ -74,7 +74,7 @@ model_loader_thread_function PROC FRAME
     mov rbx, rcx                   ; rbx = MODEL_LOADER_THREAD*
     
     ; Mark as running
-    mov byte [rbx + MODEL_LOADER_THREAD.running], 1
+    mov byte ptr [rbx + MODEL_LOADER_THREAD.running], 1
     
     ; Get thread ID
     call GetCurrentThreadId
@@ -89,39 +89,39 @@ model_loader_thread_function PROC FRAME
     ; This would call inference engine's loadModel() with modelPath
     
     ; Check for cancellation
-.load_loop:
+load_loop_local:
     cmp byte [rbx + MODEL_LOADER_THREAD.canceled], 1
-    je .load_canceled
+    je load_canceled_local
     
     ; Simulate progress
     mov rcx, [rbx + MODEL_LOADER_THREAD.progressCallback]
     cmp rcx, 0
-    je .skip_progress
+    je skip_progress_local
     
     lea rdx, [szLoadProgress]
     mov r8, [rbx + MODEL_LOADER_THREAD.modelPath]
     call rcx                       ; Call progress callback
     
-.skip_progress:
+skip_progress_local:
     ; Sleep a bit and loop
-    jmp .load_loop
+    jmp load_loop_local
     
-.load_canceled:
+load_canceled_local:
     lea rcx, [szThreadCanceled]
     call console_log
     
     ; Call completion callback with error
     mov rcx, [rbx + MODEL_LOADER_THREAD.completeCallback]
     cmp rcx, 0
-    je .skip_complete
+    je skip_complete_local
     
     xor edx, edx                   ; success = false
     lea r8, [szThreadCanceled]
     call rcx                       ; Call complete callback
     
-.skip_complete:
+skip_complete_local:
     ; Mark as not running
-    mov byte [rbx + MODEL_LOADER_THREAD.running], 0
+    mov byte ptr [rbx + MODEL_LOADER_THREAD.running], 0
     
     lea rcx, [szThreadCompleted]
     call console_log
@@ -215,7 +215,7 @@ model_loader_thread_start ENDP
 ; Request thread cancellation
 PUBLIC model_loader_thread_cancel
 model_loader_thread_cancel PROC
-    mov byte [rcx + MODEL_LOADER_THREAD.canceled], 1
+    mov byte ptr [rcx + MODEL_LOADER_THREAD.canceled], 1
     ret
 model_loader_thread_cancel ENDP
 
@@ -253,12 +253,12 @@ model_loader_thread_wait PROC
     call WaitForSingleObject
     
     cmp eax, 0                     ; WAIT_OBJECT_0 = success
-    jne .timeout
+    jne timeout_local
     
     mov al, 1
     ret
     
-.timeout:
+timeout_local:
     xor eax, eax
     ret
 model_loader_thread_wait ENDP
@@ -294,7 +294,7 @@ model_loader_thread_destroy PROC
     mov rbx, rcx
     
     ; Request cancellation
-    mov byte [rbx + MODEL_LOADER_THREAD.canceled], 1
+    mov byte ptr [rbx + MODEL_LOADER_THREAD.canceled], 1
     
     ; Wait for thread
     mov rcx, [rbx + MODEL_LOADER_THREAD.threadHandle]
@@ -304,16 +304,16 @@ model_loader_thread_destroy PROC
     ; Close thread handle
     mov rcx, [rbx + MODEL_LOADER_THREAD.threadHandle]
     cmp rcx, INVALID_HANDLE_VALUE
-    je .skip_close
+    je skip_close_local
     call CloseHandle
-.skip_close:
+skip_close_local:
     
     ; Free model path
     mov rcx, [rbx + MODEL_LOADER_THREAD.modelPath]
     cmp rcx, 0
-    je .skip_path
+    je skip_path_local
     call free
-.skip_path:
+skip_path_local:
     
     ; Free context
     mov rcx, rbx
@@ -326,3 +326,4 @@ model_loader_thread_destroy ENDP
 ; ============================================================================
 
 END
+

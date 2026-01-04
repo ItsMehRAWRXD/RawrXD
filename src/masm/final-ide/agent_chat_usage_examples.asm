@@ -146,7 +146,7 @@ example_optimize_mode PROC
     ;
     ; Recommended: Apply 1+2 (6x combined)
     ; [HOTPATCH GENERATED]
-    ; Applying byte-level patch to kernel.asm:156-201
+    ; Applying byte-level patch to kernelasm_local:156-201
     ; Live update: No rebuild required
     ; Verification: Compare outputs before/after
     ;
@@ -471,10 +471,10 @@ example_cross_file_impact PROC
     ; Lines affected: 45-67
     ;
     ; Direct Dependencies (12 total):
-    ;   ✓ kernel.asm:156 - quantize_float32() call
-    ;   ✓ kernel.asm:201 - quantize_float32() call
-    ;   ✓ model_loader.cpp:342 - extern reference
-    ;   ✗ test_quant.asm:78 - hardcoded call (WILL BREAK)
+    ;   ✓ kernelasm_local:156 - quantize_float32() call
+    ;   ✓ kernelasm_local:201 - quantize_float32() call
+    ;   ✓ model_loadercpp_local:342 - extern reference
+    ;   ✗ test_quantasm_local:78 - hardcoded call (WILL BREAK)
     ;   ... (8 more)
     ;
     ; Indirect Dependencies:
@@ -521,3 +521,4 @@ PUBLIC example_cross_file_impact
     full_response_buffer            BYTE 8192 DUP (?)
 
 END
+

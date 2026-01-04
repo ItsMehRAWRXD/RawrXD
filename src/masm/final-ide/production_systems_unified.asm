@@ -130,22 +130,22 @@ production_systems_init PROC
     sub rsp, 48
 
     cmp byte ptr [g_systemInitialized], 1
-    je .already_init
+    je already_init_local
 
     ; Initialize Pipeline Executor
     call pipeline_executor_init
     test eax, eax
-    jz .init_failed
+    jz init_failed_local
 
     ; Initialize Telemetry Collector
     call telemetry_collector_init
     test eax, eax
-    jz .init_failed
+    jz init_failed_local
 
     ; Initialize Animation System
     call animation_system_init
     test eax, eax
-    jz .init_failed
+    jz init_failed_local
 
     ; Mark as initialized
     mov byte ptr [g_systemInitialized], 1
@@ -163,13 +163,13 @@ production_systems_init PROC
     pop rbx
     ret
 
-.already_init:
+already_init_local:
     mov eax, 1
     add rsp, 48
     pop rbx
     ret
 
-.init_failed:
+init_failed_local:
     xor eax, eax
     add rsp, 48
     pop rbx
@@ -235,16 +235,16 @@ production_execute_pipeline_stage PROC
 
     ; Update status based on result
     test eax, eax
-    jz .stage_failed
+    jz stage_failed_local
 
     mov rbx, eax
-    jmp .stage_done
+    jmp stage_done_local
 
-.stage_failed:
+stage_failed_local:
     inc qword ptr [g_productionStatus.pipelineJobsFailed]
     mov rbx, 0
 
-.stage_done:
+stage_done_local:
     mov eax, ebx
     add rsp, 40
     pop rbx
@@ -309,14 +309,14 @@ production_track_inference_request PROC
     ; Update global metrics
     inc qword ptr [g_productionStatus.totalRequests]
     cmp r14d, 1
-    jne .track_failed
+    jne track_failed_local
     inc qword ptr [g_productionStatus.successfulRequests]
-    jmp .track_done
+    jmp track_done_local
 
-.track_failed:
+track_failed_local:
     inc qword ptr [g_productionStatus.failedRequests]
 
-.track_done:
+track_done_local:
     mov rax, rbx
     add rsp, 56
     pop r12
@@ -341,30 +341,30 @@ production_export_metrics PROC
     mov r9, rax                     ; Output buffer
 
     cmp r8d, 0
-    je .export_json
+    je export_json_local
 
     cmp r8d, 1
-    je .export_csv
+    je export_csv_local
 
     cmp r8d, 2
-    je .export_prometheus
+    je export_prometheus_local
 
-.export_json:
+export_json_local:
     mov rcx, r9
     mov edx, 1000000
     call telemetry_export_json
-    jmp .export_complete
+    jmp export_complete_local
 
-.export_csv:
+export_csv_local:
     mov rcx, r9
     call telemetry_export_csv
-    jmp .export_complete
+    jmp export_complete_local
 
-.export_prometheus:
+export_prometheus_local:
     mov rcx, r9
     call telemetry_export_prometheus
 
-.export_complete:
+export_complete_local:
     ; Log export
     lea rcx, szMetricsExport
     mov rdx, [r8d]                  ; Format name
@@ -439,9 +439,9 @@ production_animate_theme_transition PROC
     ; Create animation for each color
     xor r14d, r14d                  ; Color index
 
-.animate_colors:
+animate_colors_local:
     cmp r14d, r13d
-    jge .animation_complete
+    jge animation_complete_local
 
     ; Get color from array
     mov rax, rbx
@@ -467,9 +467,9 @@ production_animate_theme_transition PROC
     call animation_set_easing
 
     inc r14d
-    jmp .animate_colors
+    jmp animate_colors_local
 
-.animation_complete:
+animation_complete_local:
     ; Update animation count
     mov eax, r13d
     add [g_productionStatus.activeAnimations], eax
@@ -556,7 +556,7 @@ production_shutdown PROC
     sub rsp, 40
 
     cmp byte ptr [g_systemInitialized], 0
-    je .already_shutdown
+    je already_shutdown_local
 
     ; Cancel all running animations
     ; (Would iterate through animation system)
@@ -578,7 +578,7 @@ production_shutdown PROC
     pop rbx
     ret
 
-.already_shutdown:
+already_shutdown_local:
     mov eax, 0
     add rsp, 40
     pop rbx
@@ -625,3 +625,4 @@ sprintf_log:
 ;   production_shutdown()
 
 END
+

@@ -110,7 +110,7 @@ main PROC
     
     ; If help was requested, just print help and exit
     test eax, eax
-    jz .parse_ok
+    jz parse_ok_local
     
     ; Error in parsing
     lea rcx, szCmdLineUsage
@@ -118,23 +118,23 @@ main PROC
     lea rcx, szCmdLineTip
     call print_line
     mov g_exit_code, 1
-    jmp .cleanup
+    jmp cleanup_local
     
-.parse_ok:
+parse_ok_local:
     
     ; If --help was specified, print help and exit
     ; (parse_commandline returns 2 for help)
     cmp eax, 2
-    je .show_help
+    je show_help_local
     
     ; If --status was specified, show status and exit
     cmp DWORD PTR g_show_status, 1
-    jne .skip_status
+    jne skip_status_local
     
     call show_system_status
-    jmp .cleanup
+    jmp cleanup_local
     
-.skip_status:
+skip_status_local:
     
     ; =========================================================================
     ; PHASE 2: INITIALIZE ZERO C++ CORE
@@ -148,7 +148,7 @@ main PROC
     call zero_cpp_bridge_initialize
     
     test eax, eax
-    jz .init_failed
+    jz init_failed_local
     
     lea rcx, szInitOk
     call print_line
@@ -159,7 +159,7 @@ main PROC
     
     ; Check if wish was provided
     cmp QWORD PTR g_wish_text, 0
-    je .no_wish
+    je no_wish_local
     
     ; Create wish context
     sub rsp, SIZEOF WISH_CONTEXT
@@ -189,7 +189,7 @@ main PROC
     call zero_cpp_bridge_process_wish
     
     test rax, rax
-    jz .wish_failed
+    jz wish_failed_local
     
     ; Calculate execution time
     call GetTickCount64
@@ -202,19 +202,19 @@ main PROC
     call format_and_print
     
     add rsp, SIZEOF WISH_CONTEXT
-    jmp .phase4
+    jmp phase_local4
     
-.no_wish:
+no_wish_local:
     lea rcx, szErrNoWish
     call print_line
     mov g_exit_code, 1
-    jmp .phase4
+    jmp phase_local4
     
-.wish_failed:
+wish_failed_local:
     lea rcx, szWishExecError
     call print_line
     mov g_exit_code, 1
-    jmp .phase4
+    jmp phase_local4
     
 .phase4:
     
@@ -230,23 +230,23 @@ main PROC
     lea rcx, szShutdownOk
     call print_line
     
-    jmp .cleanup
+    jmp cleanup_local
     
-.show_help:
+show_help_local:
     lea rcx, szCmdLineUsage
     call print_line
     lea rcx, szCmdLineTip
     call print_line
     xor g_exit_code, g_exit_code
-    jmp .cleanup
+    jmp cleanup_local
     
-.init_failed:
+init_failed_local:
     lea rcx, szInitFailed
     call print_line
     mov g_exit_code, 1
-    jmp .cleanup
+    jmp cleanup_local
     
-.cleanup:
+cleanup_local:
     mov eax, g_exit_code
     add rsp, 64
     pop r13
@@ -274,9 +274,9 @@ parse_commandline PROC
     mov r13, rdx        ; argv
     mov ebx, 1          ; Skip program name (argv[0])
     
-.parse_loop:
+parse_loop_local:
     cmp ebx, r12d
-    jge .parse_done
+    jge parse_done_local
     
     ; Get current argument
     mov rax, r13
@@ -288,53 +288,53 @@ parse_commandline PROC
     lea rdx, szOptHelp
     call compare_strings
     test eax, eax
-    jz .show_help_msg
+    jz show_help_msg_local
     
     ; Check for --version
     lea rdx, szOptVersion
     call compare_strings
     test eax, eax
-    jz .show_version_msg
+    jz show_version_msg_local
     
     ; Check for --status
     lea rdx, szOptStatus
     call compare_strings
     test eax, eax
-    jz .set_status
+    jz set_status_local
     
     ; Check for --wish
     lea rdx, szOptWish
     call compare_strings
     test eax, eax
-    jz .get_wish
+    jz get_wish_local
     
     ; Check for --timeout
     lea rdx, szOptTimeout
     call compare_strings
     test eax, eax
-    jz .get_timeout
+    jz get_timeout_local
     
     ; Check for --priority
     lea rdx, szOptPriority
     call compare_strings
     test eax, eax
-    jz .get_priority
+    jz get_priority_local
     
     ; Unknown option
     lea rdx, szErrInvalidOpt
     call format_and_print
     mov eax, 1
-    jmp .parse_exit
+    jmp parse_exit_local
     
-.set_status:
+set_status_local:
     mov DWORD PTR g_show_status, 1
     inc ebx
-    jmp .parse_loop
+    jmp parse_loop_local
     
-.get_wish:
+get_wish_local:
     inc ebx
     cmp ebx, r12d
-    jge .missing_value
+    jge missing_value_local
     
     ; Get next argument as wish
     mov rax, r13
@@ -346,22 +346,22 @@ parse_commandline PROC
     ; Calculate wish length
     mov rsi, rax
     xor ecx, ecx
-.wish_len_loop:
+wish_len_loop_local:
     cmp BYTE PTR [rsi], 0
-    je .wish_len_done
+    je wish_len_done_local
     inc ecx
     inc rsi
-    jmp .wish_len_loop
-.wish_len_done:
+    jmp wish_len_loop_local
+wish_len_done_local:
     mov g_wish_length, ecx
     
     inc ebx
-    jmp .parse_loop
+    jmp parse_loop_local
     
-.get_timeout:
+get_timeout_local:
     inc ebx
     cmp ebx, r12d
-    jge .missing_value
+    jge missing_value_local
     
     ; Get next argument as timeout
     mov rax, r13
@@ -374,12 +374,12 @@ parse_commandline PROC
     mov g_timeout_ms, eax
     
     inc ebx
-    jmp .parse_loop
+    jmp parse_loop_local
     
-.get_priority:
+get_priority_local:
     inc ebx
     cmp ebx, r12d
-    jge .missing_value
+    jge missing_value_local
     
     ; Get next argument as priority
     mov rax, r13
@@ -392,28 +392,28 @@ parse_commandline PROC
     mov g_priority, eax
     
     inc ebx
-    jmp .parse_loop
+    jmp parse_loop_local
     
-.parse_done:
+parse_done_local:
     xor eax, eax      ; Success
-    jmp .parse_exit
+    jmp parse_exit_local
     
-.show_help_msg:
+show_help_msg_local:
     mov eax, 2        ; Help requested
-    jmp .parse_exit
+    jmp parse_exit_local
     
-.show_version_msg:
+show_version_msg_local:
     lea rcx, szAppVersion
     call print_line
     mov eax, 2
-    jmp .parse_exit
+    jmp parse_exit_local
     
-.missing_value:
+missing_value_local:
     lea rcx, szErrInvalidOpt
     call print_line
     mov eax, 1
     
-.parse_exit:
+parse_exit_local:
     add rsp, 32
     pop r13
     pop r12
@@ -431,22 +431,22 @@ compare_strings PROC
     ; rcx = string1, rdx = string2
     ; Returns: eax = 0 if equal, non-zero if not
     
-.cmp_loop:
+cmp_loop_local:
     mov al, BYTE PTR [rcx]
     mov bl, BYTE PTR [rdx]
     cmp al, bl
-    jne .cmp_fail
+    jne cmp_fail_local
     test al, al
-    jz .cmp_ok
+    jz cmp_ok_local
     inc rcx
     inc rdx
-    jmp .cmp_loop
+    jmp cmp_loop_local
     
-.cmp_ok:
+cmp_ok_local:
     xor eax, eax
     ret
     
-.cmp_fail:
+cmp_fail_local:
     mov eax, 1
     ret
 ALIGN 16
@@ -458,15 +458,15 @@ string_to_int PROC
     ; Returns: eax = integer value
     
     xor eax, eax
-.int_loop:
+int_loop_local:
     mov bl, BYTE PTR [rcx]
     test bl, bl
-    jz .int_done
+    jz int_done_local
     
     cmp bl, '0'
-    jl .int_done
+    jl int_done_local
     cmp bl, '9'
-    jg .int_done
+    jg int_done_local
     
     imul eax, 10
     movzx ebx, bl
@@ -474,9 +474,9 @@ string_to_int PROC
     add eax, ebx
     
     inc rcx
-    jmp .int_loop
+    jmp int_loop_local
     
-.int_done:
+int_done_local:
     ret
 ALIGN 16
 string_to_int ENDP
@@ -495,14 +495,14 @@ print_line PROC
     ; Get string length
     mov rsi, rcx
     xor edx, edx
-.len_loop:
+len_loop_local:
     cmp BYTE PTR [rsi], 0
-    je .len_done
+    je len_done_local
     inc edx
     inc rsi
-    jmp .len_loop
+    jmp len_loop_local
     
-.len_done:
+len_done_local:
     ; Write to stdout
     mov rsi, rcx          ; lpBuffer
     mov r8d, edx          ; nNumberOfBytesToWrite
@@ -563,3 +563,4 @@ ALIGN 16
 show_system_status ENDP
 
 END
+

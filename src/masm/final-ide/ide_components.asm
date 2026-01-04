@@ -1371,3 +1371,4 @@ ide_init_all_components ENDP
     desc_paste              BYTE "Paste text",0
 
 END
+

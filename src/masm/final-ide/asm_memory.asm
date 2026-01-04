@@ -636,3 +636,4 @@ done:
 asm_memcpy_fast ENDP
 
 END
+

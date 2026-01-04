@@ -21,17 +21,6 @@
 ;
 ; Thread Safety: All APIs use QMutex locking (kernel mutex handles)
 ; Error Handling: Returns error code (0=success, 1=invalid, 2=OOM, 3=IO)
-
-; External Win32 API declarations
-EXTERN HeapAlloc:PROC
-EXTERN HeapFree:PROC
-EXTERN CloseHandle:PROC
-EXTERN WaitForSingleObject:PROC
-EXTERN ReleaseMutex:PROC
-EXTERN TerminateProcess:PROC
-EXTERN CreateMutex:PROC
-
-includelib kernel32.lib
 ; ============================================================================
 
 .code
@@ -128,10 +117,10 @@ lsp_client_init PROC PUBLIC
     xor rax, rax                ; Return 0 (success)
     jmp init_done_local
     
-init_oom_local:
+@@init_oom:
     mov rax, 2                  ; Return 2 (OOM)
     
-init_done_local:
+@@init_done:
     pop rbx
     pop rbp
     ret
@@ -168,7 +157,7 @@ lsp_client_shutdown PROC PUBLIC
     mov rcx, [rbx + 72]
     call TerminateProcess       ; Kernel32 (0, exit code 0)
     
-shutdown_no_process_local:
+@@shutdown_no_process:
     ; Close RPC socket handle
     cmp qword ptr [rbx + 0], 0      ; rpc_handle
     je shutdown_no_rpc_local
@@ -176,7 +165,7 @@ shutdown_no_process_local:
     mov rcx, [rbx + 0]
     call CloseHandle
     
-shutdown_no_rpc_local:
+@@shutdown_no_rpc:
     ; Free workspace root string
     cmp qword ptr [rbx + 16], 0
     je shutdown_no_root_local
@@ -184,12 +173,12 @@ shutdown_no_rpc_local:
     mov rcx, [rbx + 16]
     call HeapFree
     
-shutdown_no_root_local:
+@@shutdown_no_root:
     ; Free file cache (simplified: free each entry)
     mov r12d, 0                 ; Loop counter
     mov r8d, [rbx + 56]         ; file_count
     
-shutdown_file_loop_local:
+@@shutdown_file_loop:
     cmp r12d, r8d
     jge shutdown_cache_free_local
     
@@ -198,7 +187,7 @@ shutdown_file_loop_local:
     inc r12d
     jmp shutdown_file_loop_local
     
-shutdown_cache_free_local:
+@@shutdown_cache_free:
     ; Free completion cache
     cmp qword ptr [rbx + 32], 0
     je shutdown_diag_free_local
@@ -206,7 +195,7 @@ shutdown_cache_free_local:
     mov rcx, [rbx + 32]
     call HeapFree
     
-shutdown_diag_free_local:
+@@shutdown_diag_free:
     ; Free diagnostic list
     cmp qword ptr [rbx + 40], 0
     je shutdown_mutex_release_local
@@ -214,7 +203,7 @@ shutdown_diag_free_local:
     mov rcx, [rbx + 40]
     call HeapFree
     
-shutdown_mutex_release_local:
+@@shutdown_mutex_release:
     ; Release and close mutex
     mov rcx, [rbx + 64]
     call ReleaseMutex
@@ -229,14 +218,14 @@ shutdown_mutex_release_local:
     xor rax, rax
     jmp shutdown_done_local
     
-shutdown_invalid_local:
+@@shutdown_invalid:
     mov rax, 1
     jmp shutdown_done_local
     
-shutdown_mutex_fail_local:
+@@shutdown_mutex_fail:
     mov rax, 3                  ; IO error
     
-shutdown_done_local:
+@@shutdown_done:
     pop rbx
     pop r12
     pop rbp
@@ -293,12 +282,12 @@ lsp_initialize_workspace PROC PUBLIC
     xor rax, rax
     jmp init_ws_done_local
     
-init_ws_oom_local:
+@@init_ws_oom:
     mov rcx, [rbx + 64]
     call ReleaseMutex
     mov rax, 2
     
-init_ws_done_local:
+@@init_ws_done:
     pop rbx
     pop r12
     pop rbp
@@ -345,18 +334,18 @@ lsp_did_open PROC PUBLIC
     ; Calculate content length (strlen)
     mov rcx, r8
     xor rax, rax
-did_open_strlen_local:
-    cmp byte ptr [rcx + rax], 0
+@@did_open_strlen:
+    cmp byte [rcx + rax], 0
     je did_open_strlen_done_local
     inc rax
     jmp did_open_strlen_local
     
-did_open_strlen_done_local:
+@@did_open_strlen_done:
     ; Store length in file_cache entry
     mov [rax + 20], eax
     
     ; Increment file_count
-    inc dword ptr [rbx + 56]
+    inc dword [rbx + 56]
     
     ; Release mutex
     mov rcx, [rbx + 64]
@@ -365,16 +354,16 @@ did_open_strlen_done_local:
     xor rax, rax
     jmp did_open_done_local
     
-did_open_overflow_local:
+@@did_open_overflow:
     mov rax, 1
     jmp did_open_done_local
     
-did_open_oom_local:
+@@did_open_oom:
     mov rcx, [rbx + 64]
     call ReleaseMutex
     mov rax, 2
     
-did_open_done_local:
+@@did_open_done:
     pop rbx
     pop rbp
     ret
@@ -411,7 +400,7 @@ lsp_did_change PROC PUBLIC
     mov eax, [rbx + 56]         ; file_count
     xor ecx, ecx                ; counter = 0
     
-did_change_loop_local:
+@@did_change_loop:
     cmp ecx, eax
     jge did_change_not_found_local
     
@@ -422,14 +411,14 @@ did_change_loop_local:
     inc ecx
     jmp did_change_loop_local
     
-did_change_not_found_local:
+@@did_change_not_found:
     mov rcx, [rbx + 64]
     call ReleaseMutex
     
     xor rax, rax                ; Return 0 (success)
     jmp did_change_done_local
     
-did_change_done_local:
+@@did_change_done:
     pop rbx
     pop rbp
     ret
@@ -513,12 +502,12 @@ lsp_completion PROC PUBLIC
     
     jmp completion_done_local
     
-completion_oom_local:
+@@completion_oom:
     mov rcx, [rbx + 64]
     call ReleaseMutex
     xor rax, rax
     
-completion_done_local:
+@@completion_done:
     pop rbx
     pop r12
     pop rbp
@@ -563,12 +552,12 @@ lsp_hover PROC PUBLIC
     
     jmp hover_done_local
     
-hover_oom_local:
+@@hover_oom:
     mov rcx, [rbx + 64]
     call ReleaseMutex
     xor rax, rax
     
-hover_done_local:
+@@hover_done:
     pop rbx
     pop rbp
     ret
@@ -612,12 +601,12 @@ lsp_diagnostics PROC PUBLIC
     
     jmp diag_done_local
     
-diag_oom_local:
+@@diag_oom:
     mov rcx, [rbx + 64]
     call ReleaseMutex
     xor rax, rax
     
-diag_done_local:
+@@diag_done:
     pop rbx
     pop rbp
     ret
@@ -660,12 +649,12 @@ lsp_document_symbols PROC PUBLIC
     
     jmp symbols_done_local
     
-symbols_oom_local:
+@@symbols_oom:
     mov rcx, [rbx + 64]
     call ReleaseMutex
     xor rax, rax
     
-symbols_done_local:
+@@symbols_done:
     pop rbx
     pop rbp
     ret
@@ -708,12 +697,12 @@ lsp_goto_definition PROC PUBLIC
     
     jmp def_done_local
     
-def_oom_local:
+@@def_oom:
     mov rcx, [rbx + 64]
     call ReleaseMutex
     xor rax, rax
     
-def_done_local:
+@@def_done:
     pop rbx
     pop rbp
     ret
@@ -756,18 +745,17 @@ lsp_references PROC PUBLIC
     
     jmp ref_done_local
     
-ref_oom_local:
+@@ref_oom:
     mov rcx, [rbx + 64]
     call ReleaseMutex
     xor rax, rax
     
-ref_done_local:
+@@ref_done:
     pop rbx
     pop rbp
     ret
 lsp_references ENDP
 
 END
-
 
 

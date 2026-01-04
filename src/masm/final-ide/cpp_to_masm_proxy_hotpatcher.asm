@@ -156,7 +156,7 @@ proxy_hotpatcher_create PROC
     mov [r10 + PROXY_HOTPATCHER.totalValidations], 0
     mov [r10 + PROXY_HOTPATCHER.totalErrors], 0
     
-    mov byte [r10 + PROXY_HOTPATCHER.initialized], 1
+    mov byte ptr [r10 + PROXY_HOTPATCHER.initialized], 1
     
     ; Log
     lea rcx, [szProxyCreated]
@@ -183,12 +183,12 @@ proxy_apply_correction PROC
     
     ; Check if correction enabled
     cmp byte [rsi + TOKEN_CORRECTION.enabled], 1
-    jne .correction_disabled
+    jne correction_disabled_local
     
     ; Check token bounds
     mov eax, [rsi + TOKEN_CORRECTION.tokenId]
     cmp eax, [rbx + PROXY_HOTPATCHER.tokenCount]
-    jge .token_out_of_bounds
+    jge token_out_of_bounds_local
     
     ; Get start time
     call GetSystemTimeAsFileTime
@@ -203,81 +203,79 @@ proxy_apply_correction PROC
     mov eax, [rsi + TOKEN_CORRECTION.type]
     
     cmp eax, CORRECTION_TYPE_BIAS_ADJUST
-    je .apply_bias_adjust
+    je apply_bias_adjust_local
     cmp eax, CORRECTION_TYPE_TOKEN_SWAP
-    je .apply_token_swap
+    je apply_token_swap_local
     cmp eax, CORRECTION_TYPE_RST_INJECTION
-    je .apply_rst_injection
+    je apply_rst_injection_local
     cmp eax, CORRECTION_TYPE_FORMAT_FIX
-    je .apply_format_fix
+    je apply_format_fix_local
     cmp eax, CORRECTION_TYPE_SAFETY_FILTER
-    je .apply_safety_filter
+    je apply_safety_filter_local
     cmp eax, CORRECTION_TYPE_CUSTOM
-    je .apply_custom
+    je apply_custom_local
     
-    jmp .unknown_type
+    jmp unknown_type_local
     
-.apply_bias_adjust:
+apply_bias_adjust_local:
     ; Bias adjustment
     mov rcx, rbx
     mov edx, [rsi + TOKEN_CORRECTION.tokenId]
     mov r8d, [rsi + TOKEN_CORRECTION.correctedValue]
     call apply_bias_adjustment
-    jmp .correction_applied
+    jmp correction_applied_local
     
-.apply_token_swap:
+apply_token_swap_local:
     ; Token swap
     mov rcx, rbx
     mov edx, [rsi + TOKEN_CORRECTION.tokenId]
     mov r8d, [rsi + TOKEN_CORRECTION.correctedValue]
     call apply_token_swap
-    jmp .correction_applied
+    jmp correction_applied_local
     
-.apply_rst_injection:
+apply_rst_injection_local:
     ; RST injection
     mov rcx, rbx
     mov edx, [rsi + TOKEN_CORRECTION.tokenId]
     call apply_rst_injection
-    jmp .correction_applied
+    jmp correction_applied_local
     
-.apply_format_fix:
+apply_format_fix_local:
     ; Format fix
     mov rcx, rbx
     mov edx, [rsi + TOKEN_CORRECTION.tokenId]
     mov r8d, [rsi + TOKEN_CORRECTION.correctedValue]
     call apply_format_fix
-    jmp .correction_applied
+    jmp correction_applied_local
     
-.apply_safety_filter:
+apply_safety_filter_local:
     ; Safety filter
     mov rcx, rbx
     mov edx, [rsi + TOKEN_CORRECTION.tokenId]
     mov r8d, [rsi + TOKEN_CORRECTION.correctedValue]
     call apply_safety_filter
-    jmp .correction_applied
+    jmp correction_applied_local
     
-.apply_custom:
+apply_custom_local:
     ; Custom correction
     mov rcx, rbx
     mov rdx, rsi
     call apply_custom_correction
-    jmp .correction_applied
+    jmp correction_applied_local
     
-.correction_applied:
+correction_applied_local:
     ; Get end time
     call GetSystemTimeAsFileTime
     sub rax, r8                     ; rax = elapsed time
     mov [r9 + PROXY_RESULT.elapsedMs], rax
     
     ; Set result
-    mov byte [r9 + PROXY_RESULT.success], 1
+    mov byte ptr [r9 + PROXY_RESULT.success], 1
     lea rax, [szCorrectionAppliedDetail]
     mov [r9 + PROXY_RESULT.detail], rax
     mov [r9 + PROXY_RESULT.errorCode], 0
-    mov [r9 + PROXY_RESULT.correctedBytes], 1
-    
-    ; Update correction status
-    mov byte [rsi + TOKEN_CORRECTION.applied], 1
+    mov dword ptr [r9 + PROXY_RESULT.correctedBytes], 1  ; Update correction status
+    mov byte ptr [rsi + TOKEN_CORRECTION.applied], 1
     inc dword [rsi + TOKEN_CORRECTION.timesApplied]
     
     ; Update statistics
@@ -295,17 +293,15 @@ proxy_apply_correction PROC
     pop rbx
     ret
     
-.token_out_of_bounds:
-.unknown_type:
-.correction_disabled:
+token_out_of_bounds_local:
+unknown_type_local:
+correction_disabled_local:
     ; Set error result
-    mov byte [r9 + PROXY_RESULT.success], 0
+    mov byte ptr [r9 + PROXY_RESULT.success], 0
     lea rax, [szCorrectionFailedDetail]
     mov [r9 + PROXY_RESULT.detail], rax
     mov [r9 + PROXY_RESULT.errorCode], 1
-    mov [r9 + PROXY_RESULT.correctedBytes], 0
-    
-    ; Log failure
+    mov dword ptr [r9 + PROXY_RESULT.correctedBytes], 0  ; Log failure
     lea rcx, [szCorrectionFailed]
     mov rdx, [rsi + TOKEN_CORRECTION.name]
     mov r8d, 1
@@ -337,7 +333,7 @@ proxy_add_correction PROC
     ; Check capacity
     mov r12d, [rbx + PROXY_HOTPATCHER.correctionCount]
     cmp r12d, [rbx + PROXY_HOTPATCHER.maxCorrections]
-    jge .capacity_exceeded
+    jge capacity_exceeded_local
     
     ; Get correction slot
     mov r13, [rbx + PROXY_HOTPATCHER.corrections]
@@ -369,16 +365,12 @@ proxy_add_correction PROC
     
     ; Set correction properties
     mov [r13 + TOKEN_CORRECTION.type], r11d
-    mov byte [r13 + TOKEN_CORRECTION.enabled], 1
-    mov byte [r13 + TOKEN_CORRECTION.applied], 0
-    mov [r13 + TOKEN_CORRECTION.timesApplied], 0
-    
-    ; Set default token values
+    mov byte ptr [r13 + TOKEN_CORRECTION.enabled], 1
+    mov byte ptr [r13 + TOKEN_CORRECTION.applied], 0
+    mov dword ptr [r13 + TOKEN_CORRECTION.timesApplied], 0  ; Set default token values
     mov [r13 + TOKEN_CORRECTION.tokenId], 0
     mov [r13 + TOKEN_CORRECTION.originalValue], 0
-    mov [r13 + TOKEN_CORRECTION.correctedValue], 0
-    
-    ; Increment correction count
+    mov dword ptr [r13 + TOKEN_CORRECTION.correctedValue], 0  ; Increment correction count
     inc dword [rbx + PROXY_HOTPATCHER.correctionCount]
     
     mov eax, r12d                   ; Return correction ID
@@ -386,7 +378,7 @@ proxy_add_correction PROC
     pop rbx
     ret
     
-.capacity_exceeded:
+capacity_exceeded_local:
     xor rax, rax
     pop rsi
     pop rbx
@@ -411,7 +403,7 @@ proxy_add_validator PROC
     ; Check capacity
     mov r12d, [rbx + PROXY_HOTPATCHER.validatorCount]
     cmp r12d, [rbx + PROXY_HOTPATCHER.maxValidators]
-    jge .capacity_exceeded
+    jge capacity_exceeded_local
     
     ; Get validator slot
     mov r13, [rbx + PROXY_HOTPATCHER.validators]
@@ -443,7 +435,7 @@ proxy_add_validator PROC
     
     ; Set validator properties
     mov [r13 + VALIDATOR.validatorFunc], r11
-    mov byte [r13 + VALIDATOR.enabled], 1
+    mov byte ptr [r13 + VALIDATOR.enabled], 1
     
     ; Increment validator count
     inc dword [rbx + PROXY_HOTPATCHER.validatorCount]
@@ -453,7 +445,7 @@ proxy_add_validator PROC
     pop rbx
     ret
     
-.capacity_exceeded:
+capacity_exceeded_local:
     xor rax, rax
     pop rsi
     pop rbx
@@ -480,9 +472,9 @@ proxy_validate_response PROC
     mov r9d, [rbx + PROXY_HOTPATCHER.validatorCount]
     xor r10d, r10d                  ; r10d = validator index
     
-.validation_loop:
+validation_loop_local:
     cmp r10d, r9d
-    jge .validation_complete
+    jge validation_complete_local
     
     ; Get current validator
     mov r11, r8
@@ -492,7 +484,7 @@ proxy_validate_response PROC
     
     ; Check if validator enabled
     cmp byte [r11 + VALIDATOR.enabled], 1
-    jne .skip_validator
+    jne skip_validator_local
     
     ; Call validator function
     mov rcx, rsi                    ; responseData
@@ -500,18 +492,18 @@ proxy_validate_response PROC
     call qword [r11 + VALIDATOR.validatorFunc]
     
     test rax, rax
-    jz .validation_failed
+    jz validation_failed_local
     
     ; Log validation passed
     lea rcx, [szValidationPassed]
     mov rdx, [r11 + VALIDATOR.name]
     call console_log
     
-.skip_validator:
+skip_validator_local:
     inc r10d
-    jmp .validation_loop
+    jmp validation_loop_local
     
-.validation_complete:
+validation_complete_local:
     ; Update statistics
     inc dword [rbx + PROXY_HOTPATCHER.totalValidations]
     
@@ -521,7 +513,7 @@ proxy_validate_response PROC
     pop rbx
     ret
     
-.validation_failed:
+validation_failed_local:
     ; Log validation failed
     lea rcx, [szValidationFailed]
     mov rdx, [r11 + VALIDATOR.name]
@@ -549,7 +541,7 @@ proxy_add_token PROC
     ; Check capacity
     mov r9d, [rbx + PROXY_HOTPATCHER.tokenCount]
     cmp r9d, [rbx + PROXY_HOTPATCHER.maxTokens]
-    jge .buffer_full
+    jge buffer_full_local
     
     ; Get token buffer
     mov r10, [rbx + PROXY_HOTPATCHER.tokenBuffer]
@@ -558,7 +550,7 @@ proxy_add_token PROC
     add r10, r11
     
     ; Store token
-    mov dword [r10], r8d
+    mov dword ptr [r10], r8d
     
     ; Increment token count
     inc dword [rbx + PROXY_HOTPATCHER.tokenCount]
@@ -567,7 +559,7 @@ proxy_add_token PROC
     pop rbx
     ret
     
-.buffer_full:
+buffer_full_local:
     ; Log buffer full
     lea rcx, [szTokenBufferFull]
     mov edx, r9d
@@ -590,9 +582,9 @@ proxy_get_correction PROC
     mov r9d, [rcx + PROXY_HOTPATCHER.correctionCount]
     xor r10d, r10d
     
-.find_correction:
+find_correction_local:
     cmp r10d, r9d
-    jge .correction_not_found
+    jge correction_not_found_local
     
     mov r11, r8
     mov r12, r10
@@ -600,16 +592,16 @@ proxy_get_correction PROC
     add r11, r12
     
     cmp r10d, edx
-    je .correction_found
+    je correction_found_local
     
     inc r10d
-    jmp .find_correction
+    jmp find_correction_local
     
-.correction_found:
+correction_found_local:
     mov rax, r11
     ret
     
-.correction_not_found:
+correction_not_found_local:
     xor rax, rax
     ret
 proxy_get_correction ENDP
@@ -625,9 +617,9 @@ proxy_get_validator PROC
     mov r9d, [rcx + PROXY_HOTPATCHER.validatorCount]
     xor r10d, r10d
     
-.find_validator:
+find_validator_local:
     cmp r10d, r9d
-    jge .validator_not_found
+    jge validator_not_found_local
     
     mov r11, r8
     mov r12, r10
@@ -635,16 +627,16 @@ proxy_get_validator PROC
     add r11, r12
     
     cmp r10d, edx
-    je .validator_found
+    je validator_found_local
     
     inc r10d
-    jmp .find_validator
+    jmp find_validator_local
     
-.validator_found:
+validator_found_local:
     mov rax, r11
     ret
     
-.validator_not_found:
+validator_not_found_local:
     xor rax, rax
     ret
 proxy_get_validator ENDP
@@ -677,9 +669,9 @@ proxy_destroy PROC
     mov r11d, [rbx + PROXY_HOTPATCHER.correctionCount]
     xor r12d, r12d
     
-.free_corrections:
+free_corrections_local:
     cmp r12d, r11d
-    jge .corrections_freed
+    jge corrections_freed_local
     
     mov r13, r10
     mov r14, r12
@@ -688,34 +680,34 @@ proxy_destroy PROC
     
     mov rcx, [r13 + TOKEN_CORRECTION.name]
     cmp rcx, 0
-    je .skip_correction_name
+    je skip_correction_name_local
     call free
     
-.skip_correction_name:
+skip_correction_name_local:
     mov rcx, [r13 + TOKEN_CORRECTION.description]
     cmp rcx, 0
-    je .skip_correction_desc
+    je skip_correction_desc_local
     call free
     
-.skip_correction_desc:
+skip_correction_desc_local:
     inc r12d
-    jmp .free_corrections
+    jmp free_corrections_local
     
-.corrections_freed:
+corrections_freed_local:
     mov rcx, [rbx + PROXY_HOTPATCHER.corrections]
     cmp rcx, 0
-    je .skip_corrections_array
+    je skip_corrections_array_local
     call free
     
-.skip_corrections_array:
+skip_corrections_array_local:
     ; Free validators array
     mov r10, [rbx + PROXY_HOTPATCHER.validators]
     mov r11d, [rbx + PROXY_HOTPATCHER.validatorCount]
     xor r12d, r12d
     
-.free_validators:
+free_validators_local:
     cmp r12d, r11d
-    jge .validators_freed
+    jge validators_freed_local
     
     mov r13, r10
     mov r14, r12
@@ -724,33 +716,33 @@ proxy_destroy PROC
     
     mov rcx, [r13 + VALIDATOR.name]
     cmp rcx, 0
-    je .skip_validator_name
+    je skip_validator_name_local
     call free
     
-.skip_validator_name:
+skip_validator_name_local:
     mov rcx, [r13 + VALIDATOR.description]
     cmp rcx, 0
-    je .skip_validator_desc
+    je skip_validator_desc_local
     call free
     
-.skip_validator_desc:
+skip_validator_desc_local:
     inc r12d
-    jmp .free_validators
+    jmp free_validators_local
     
-.validators_freed:
+validators_freed_local:
     mov rcx, [rbx + PROXY_HOTPATCHER.validators]
     cmp rcx, 0
-    je .skip_validators_array
+    je skip_validators_array_local
     call free
     
-.skip_validators_array:
+skip_validators_array_local:
     ; Free token buffer
     mov rcx, [rbx + PROXY_HOTPATCHER.tokenBuffer]
     cmp rcx, 0
-    je .skip_token_buffer
+    je skip_token_buffer_local
     call free
     
-.skip_token_buffer:
+skip_token_buffer_local:
     ; Free proxy
     mov rcx, rbx
     call free
@@ -779,7 +771,7 @@ apply_bias_adjustment PROC
     ; Apply bias adjustment
     mov eax, dword [r9]
     add eax, r8d
-    mov dword [r9], eax
+    mov dword ptr [r9], eax
     
     pop rbx
     ret
@@ -799,7 +791,7 @@ apply_token_swap PROC
     add r9, r10
     
     ; Swap token value
-    mov dword [r9], r8d
+    mov dword ptr [r9], r8d
     
     pop rbx
     ret
@@ -819,7 +811,7 @@ apply_rst_injection PROC
     add r9, r10
     
     ; Inject RST token
-    mov dword [r9], TOKEN_RST
+    mov dword ptr [r9], TOKEN_RST
     
     pop rbx
     ret
@@ -839,7 +831,7 @@ apply_format_fix PROC
     add r9, r10
     
     ; Apply format fix
-    mov dword [r9], r8d
+    mov dword ptr [r9], r8d
     
     pop rbx
     ret
@@ -859,7 +851,7 @@ apply_safety_filter PROC
     add r9, r10
     
     ; Apply safety filter
-    mov dword [r9], r8d
+    mov dword ptr [r9], r8d
     
     pop rbx
     ret
@@ -879,3 +871,4 @@ apply_custom_correction ENDP
     szCorrectionFailedDetail DB "Correction application failed", 0
 
 END
+

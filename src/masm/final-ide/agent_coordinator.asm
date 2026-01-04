@@ -24,6 +24,17 @@
 ;   16. set_resource_limits()          - Set per-agent limits
 ; 
 ; Thread Safety: Coordinator-wide mutex with task queue locking
+
+; External Win32 API declarations
+EXTERN HeapAlloc:PROC
+EXTERN HeapFree:PROC
+EXTERN CloseHandle:PROC
+EXTERN WaitForSingleObject:PROC
+EXTERN ReleaseMutex:PROC
+EXTERN CreateMutex:PROC
+EXTERN CreateThread:PROC
+
+includelib kernel32.lib
 ; ============================================================================
 
 .code
@@ -86,50 +97,51 @@
 coordinator_init PROC PUBLIC
     push rbp
     mov rbp, rsp
-    push rbx r12 r13
+    push rbx
+    push r12
     
     mov r12d, ecx               ; R12D = max_agents
     mov r13d, edx               ; R13D = max_queue_size
     
     cmp r12d, 256
-    jle .coord_init_max_ok
+    jle coord_init_max_ok_local
     mov r12d, 256
     
-.coord_init_max_ok:
+coord_init_max_ok_local:
     ; Allocate AGENT_COORDINATOR structure
     mov rcx, 128
     call HeapAlloc
     test rax, rax
-    jz .coord_init_oom
+    jz coord_init_oom_local
     
     mov rbx, rax                ; RBX = AGENT_COORDINATOR*
     
     ; Allocate agent pool
-    mov rcx, r12d
+    mov ecx, r12d
     imul rcx, 8                 ; Pointers to agents
     call HeapAlloc
     test rax, rax
-    jz .coord_init_pool_oom
+    jz coord_init_pool_oom_local
     
     mov [rbx + 0], rax          ; agent_pool
     mov [rbx + 44], r12d        ; max_agents
     
     ; Allocate task queue
-    mov rcx, r13d
+    mov ecx, r13d
     imul rcx, 64                ; Each TASK is ~64 bytes
     call HeapAlloc
     test rax, rax
-    jz .coord_init_queue_oom
+    jz coord_init_queue_oom_local
     
     mov [rbx + 8], rax          ; task_queue
-    mov [rbx + 48], 0           ; queue_size = 0
+    mov dword ptr [rbx + 48], 0  ; queue_size = 0
     
     ; Allocate completed tasks storage
-    mov rcx, r13d
+    mov ecx, r13d
     imul rcx, 64
     call HeapAlloc
     test rax, rax
-    jz .coord_init_completed_oom
+    jz coord_init_completed_oom_local
     
     mov [rbx + 16], rax         ; completed_tasks
     
@@ -137,7 +149,7 @@ coordinator_init PROC PUBLIC
     mov rcx, 1024               ; Space for ~16 failed tasks
     call HeapAlloc
     test rax, rax
-    jz .coord_init_failed_oom
+    jz coord_init_failed_oom_local
     
     mov [rbx + 24], rax         ; failed_tasks
     
@@ -145,7 +157,7 @@ coordinator_init PROC PUBLIC
     mov rcx, 64
     call HeapAlloc
     test rax, rax
-    jz .coord_init_metrics_oom
+    jz coord_init_metrics_oom_local
     
     mov [rbx + 32], rax         ; metrics
     
@@ -157,40 +169,41 @@ coordinator_init PROC PUBLIC
     mov [rbx + 64], rax         ; coord_mutex
     
     ; Initialize counters
-    mov dword [rbx + 40], 0     ; agent_count = 0
-    mov dword [rbx + 52], 0     ; completed_count = 0
-    mov dword [rbx + 56], 0     ; failed_count = 0
-    mov dword [rbx + 60], 1     ; task_id_counter = 1
-    mov byte [rbx + 72], 1      ; initialized = true
+    mov dword ptr [rbx + 40], 0     ; agent_count = 0
+    mov dword ptr [rbx + 52], 0     ; completed_count = 0
+    mov dword ptr [rbx + 56], 0     ; failed_count = 0
+    mov dword ptr [rbx + 60], 1     ; task_id_counter = 1
+    mov byte ptr [rbx + 72], 1      ; initialized = true
     
     mov rax, rbx                ; Return AGENT_COORDINATOR*
-    jmp .coord_init_done
+    jmp coord_init_done_local
     
-.coord_init_metrics_oom:
+coord_init_metrics_oom_local:
     mov rcx, [rbx + 24]
     call HeapFree
     
-.coord_init_failed_oom:
+coord_init_failed_oom_local:
     mov rcx, [rbx + 16]
     call HeapFree
     
-.coord_init_completed_oom:
+coord_init_completed_oom_local:
     mov rcx, [rbx + 8]
     call HeapFree
     
-.coord_init_queue_oom:
+coord_init_queue_oom_local:
     mov rcx, [rbx + 0]
     call HeapFree
     
-.coord_init_pool_oom:
+coord_init_pool_oom_local:
     mov rcx, rbx
     call HeapFree
     
-.coord_init_oom:
+coord_init_oom_local:
     xor rax, rax
     
-.coord_init_done:
-    pop r13 r12 rbx
+coord_init_done_local:
+    pop r12
+    pop r13
     pop rbp
     ret
 coordinator_init ENDP
@@ -210,7 +223,7 @@ coordinator_shutdown PROC PUBLIC
     
     mov rbx, rcx                ; RBX = AGENT_COORDINATOR*
     test rbx, rbx
-    jz .coord_shutdown_invalid
+    jz coord_shutdown_invalid_local
     
     ; Acquire mutex
     mov rcx, [rbx + 64]
@@ -245,12 +258,12 @@ coordinator_shutdown PROC PUBLIC
     call HeapFree
     
     xor rax, rax
-    jmp .coord_shutdown_done
+    jmp coord_shutdown_done_local
     
-.coord_shutdown_invalid:
+coord_shutdown_invalid_local:
     mov rax, 1
     
-.coord_shutdown_done:
+coord_shutdown_done_local:
     pop rbx
     pop rbp
     ret
@@ -268,7 +281,8 @@ coordinator_shutdown ENDP
 register_agent PROC PUBLIC
     push rbp
     mov rbp, rsp
-    push rbx r12
+    push rbx
+    push r12
     
     mov rbx, rcx                ; RBX = AGENT_COORDINATOR*
     mov r12, rdx                ; R12 = AGENT*
@@ -281,7 +295,7 @@ register_agent PROC PUBLIC
     mov eax, [rbx + 40]
     mov r8d, [rbx + 44]
     cmp eax, r8d
-    jge .register_agent_full
+    jge register_agent_full_local
     
     ; Add agent to pool
     mov rcx, [rbx + 0]          ; agent_pool
@@ -289,22 +303,23 @@ register_agent PROC PUBLIC
     mov [rcx + rax*8], r12      ; pool[agent_count] = agent
     
     ; Increment agent_count
-    inc dword [rbx + 40]
+    inc dword ptr [rbx + 40]
     
     ; Release mutex
     mov rcx, [rbx + 64]
     call ReleaseMutex
     
     xor rax, rax
-    jmp .register_agent_done
+    jmp register_agent_done_local
     
-.register_agent_full:
+register_agent_full_local:
     mov rcx, [rbx + 64]
     call ReleaseMutex
     mov rax, 1
     
-.register_agent_done:
-    pop r12 rbx
+register_agent_done_local:
+    pop rbx
+    pop r12
     pop rbp
     ret
 register_agent ENDP
@@ -366,7 +381,7 @@ create_task PROC PUBLIC
     mov rcx, 64
     call HeapAlloc
     test rax, rax
-    jz .create_task_oom
+    jz create_task_oom_local
     
     ; Initialize task
     mov r12, rax
@@ -374,9 +389,9 @@ create_task PROC PUBLIC
     mov [r12 + 0], eax          ; task_id
     
     ; Increment counter
-    inc dword [rbx + 60]
+    inc dword ptr [rbx + 60]
     
-    mov dword [r12 + 12], 0     ; status = QUEUED
+    mov dword ptr [r12 + 12], 0     ; status = QUEUED
     mov [r12 + 16], rdx         ; request_data
     mov [r12 + 32], r8d         ; request_size
     
@@ -385,14 +400,14 @@ create_task PROC PUBLIC
     mov rcx, [rbx + 64]
     call ReleaseMutex
     
-    jmp .create_task_done
+    jmp create_task_done_local
     
-.create_task_oom:
+create_task_oom_local:
     mov rcx, [rbx + 64]
     call ReleaseMutex
     mov rax, -1                 ; Error
     
-.create_task_done:
+create_task_done_local:
     pop rbx
     pop rbp
     ret
@@ -458,3 +473,8 @@ set_resource_limits PROC PUBLIC
 set_resource_limits ENDP
 
 END
+
+
+
+
+

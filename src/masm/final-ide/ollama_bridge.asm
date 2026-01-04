@@ -98,9 +98,7 @@ OllamaGenerate PROC
     lea rax, jsonBody
     mov [request.body], rax
     mov [request.body_len], rdi
-    mov [request.timeout], 0
-    
-    ; Execute request
+    mov dword ptr [request.timeout], 0  ; Execute request
     lea rcx, g_HttpClient
     lea rdx, request
     call HttpClientRequest
@@ -175,9 +173,7 @@ OllamaChat PROC
     lea rax, jsonBody
     mov [request.body], rax
     mov [request.body_len], rdi
-    mov [request.timeout], 0
-    
-    ; Execute request
+    mov dword ptr [request.timeout], 0  ; Execute request
     lea rcx, g_HttpClient
     lea rdx, request
     call HttpClientRequest
@@ -233,9 +229,7 @@ OllamaListModels PROC
     mov [request.headers], rax
     mov [request.body], rax
     mov [request.body_len], 0
-    mov [request.timeout], 0
-    
-    ; Execute request
+    mov dword ptr [request.timeout], 0  ; Execute request
     lea rcx, g_HttpClient
     lea rdx, request
     call HttpClientRequest
@@ -260,9 +254,7 @@ list_done:
 OllamaListModels ENDP
 
 END
-    mov [request.timeout], 0
-    
-    ; Execute request
+    mov dword ptr [request.timeout], 0  ; Execute request
     lea rcx, g_HttpClient
     lea rdx, request
     call HttpClientRequest
@@ -343,9 +335,7 @@ OllamaChat PROC
     lea rax, jsonBody
     mov [request.body], rax
     mov [request.body_len], rdi
-    mov [request.timeout], 0
-    
-    ; Execute request
+    mov dword ptr [request.timeout], 0  ; Execute request
     lea rcx, g_HttpClient
     lea rdx, request
     call HttpClientRequest
@@ -420,9 +410,7 @@ OllamaListModels PROC
     lea rax, jsonBody
     mov [request.body], rax
     mov [request.body_len], rdi
-    mov [request.timeout], 0
-    
-    ; Execute request
+    mov dword ptr [request.timeout], 0  ; Execute request
     lea rcx, g_HttpClient
     lea rdx, request
     call HttpClientRequest
@@ -498,9 +486,7 @@ OllamaShowModel PROC
     lea rax, jsonBody
     mov [request.body], rax
     mov [request.body_len], rdi
-    mov [request.timeout], 0
-    
-    ; Execute request
+    mov dword ptr [request.timeout], 0  ; Execute request
     lea rcx, g_HttpClient
     lea rdx, request
     call HttpClientRequest
@@ -575,9 +561,7 @@ OllamaDeleteModel PROC
     lea rax, jsonBody
     mov [request.body], rax
     mov [request.body_len], rdi
-    mov [request.timeout], 0
-    
-    ; Execute request
+    mov dword ptr [request.timeout], 0  ; Execute request
     lea rcx, g_HttpClient
     lea rdx, request
     call HttpClientRequest
@@ -612,4 +596,5 @@ delete_done:
 OllamaDeleteModel ENDP
 
 END
+
 

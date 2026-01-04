@@ -276,7 +276,7 @@ pipeline_executor_init PROC
     call malloc
     mov [g_jobRegistry], rax
     test rax, rax
-    jz .init_failed
+    jz init_failed_local
 
     ; Initialize metrics
     mov qword ptr [g_metrics.totalJobsExecuted], 0
@@ -288,7 +288,7 @@ pipeline_executor_init PROC
     call malloc
     mov [g_jobQueue], rax
     test rax, rax
-    jz .init_failed
+    jz init_failed_local
 
     ; Create thread pool (4 worker threads)
     xor r8d, r8d                    ; lpStartAddress
@@ -302,7 +302,7 @@ pipeline_executor_init PROC
     pop rbx
     ret
 
-.init_failed:
+init_failed_local:
     xor eax, eax
     add rsp, 40
     pop rbx
@@ -335,7 +335,7 @@ pipeline_create_job PROC
     ; Check capacity
     mov eax, [g_jobCount]
     cmp eax, [g_maxJobs]
-    jge .create_failed
+    jge create_failed_local
 
     ; Get next job ID
     mov rax, [g_nextJobId]
@@ -361,16 +361,16 @@ pipeline_create_job PROC
     mov rcx, r12
     lea rdx, [rbx + JOB_CONTEXT.jobName]
     mov r8d, 128
-.copy_name:
+copy_name_local:
     mov r9b, [rcx]
     mov [rdx], r9b
     test r9b, r9b
-    jz .name_done
+    jz name_done_local
     inc rcx
     inc rdx
-    jmp .copy_name
+    jmp copy_name_local
 
-.name_done:
+name_done_local:
     ; Get current timestamp
     call GetTickCount64
     mov [rbx + JOB_CONTEXT.startTime], rax
@@ -385,7 +385,7 @@ pipeline_create_job PROC
     pop rbx
     ret
 
-.create_failed:
+create_failed_local:
     xor rax, rax
     add rsp, 40
     pop r12
@@ -410,9 +410,9 @@ pipeline_queue_job PROC
     mov rbx, [g_jobCount]
     xor r9d, r9d                    ; Job index
 
-.find_job:
+find_job_local:
     cmp r9d, ebx
-    jge .queue_not_found
+    jge queue_not_found_local
 
     mov rcx, r9d
     mov rdx, SIZEOF JOB_CONTEXT
@@ -421,12 +421,12 @@ pipeline_queue_job PROC
 
     mov r10, [rcx + JOB_CONTEXT.jobId]
     cmp r10, r8
-    je .job_found
+    je job_found_local
 
     inc r9d
-    jmp .find_job
+    jmp find_job_local
 
-.job_found:
+job_found_local:
     ; Update status to QUEUED
     mov dword ptr [rcx + JOB_CONTEXT.status], JOB_STATUS_QUEUED
 
@@ -440,7 +440,7 @@ pipeline_queue_job PROC
     pop rbx
     ret
 
-.queue_not_found:
+queue_not_found_local:
     xor eax, eax
     add rsp, 40
     pop rbx
@@ -473,9 +473,9 @@ pipeline_execute_stage PROC
     mov rax, [g_jobRegistry]
     xor r8d, r8d
 
-.find_exec_job:
+find_exec_job_local:
     cmp r8d, [g_jobCount]
-    jge .exec_not_found
+    jge exec_not_found_local
 
     mov rcx, r8d
     mov rdx, SIZEOF JOB_CONTEXT
@@ -483,12 +483,12 @@ pipeline_execute_stage PROC
     add rcx, rax
     mov rbx, [rcx + JOB_CONTEXT.jobId]
     cmp rbx, r12
-    je .exec_job_found
+    je exec_job_found_local
 
     inc r8d
-    jmp .find_exec_job
+    jmp find_exec_job_local
 
-.exec_job_found:
+exec_job_found_local:
     ; Update status to RUNNING
     mov dword ptr [rcx + JOB_CONTEXT.status], JOB_STATUS_RUNNING
     call GetTickCount64
@@ -504,39 +504,39 @@ pipeline_execute_stage PROC
     ; Determine stage type and execute
     mov r8d, [rbx + PIPELINE_STAGE.stageType]
     cmp r8d, STAGE_VCS
-    je .exec_vcs_stage
+    je exec_vcs_stage_local
 
     cmp r8d, STAGE_DOCKER
-    je .exec_docker_stage
+    je exec_docker_stage_local
 
     cmp r8d, STAGE_K8S_DEPLOY
-    je .exec_k8s_stage
+    je exec_k_local8s_stage
 
     ; Generic execution
     lea r8, [rbx + PIPELINE_STAGE.command]
     mov r9, rcx                     ; Job context
     call .execute_generic_stage
-    jmp .exec_stage_complete
+    jmp exec_stage_complete_local
 
-.exec_vcs_stage:
+exec_vcs_stage_local:
     mov r8, rcx                     ; Job context
     mov r9, rbx                     ; Stage context
     call pipeline_execute_vcs_stage
-    jmp .exec_stage_complete
+    jmp exec_stage_complete_local
 
-.exec_docker_stage:
+exec_docker_stage_local:
     mov r8, rcx                     ; Job context
     mov r9, rbx                     ; Stage context
     call pipeline_execute_docker_stage
-    jmp .exec_stage_complete
+    jmp exec_stage_complete_local
 
 .exec_k8s_stage:
     mov r8, rcx                     ; Job context
     mov r9, rbx                     ; Stage context
     call pipeline_execute_k8s_deploy
-    jmp .exec_stage_complete
+    jmp exec_stage_complete_local
 
-.exec_stage_complete:
+exec_stage_complete_local:
     ; Update completion metrics
     call GetTickCount64
     mov [rcx + JOB_CONTEXT.endTime], rax
@@ -548,7 +548,7 @@ pipeline_execute_stage PROC
     pop rbx
     ret
 
-.exec_not_found:
+exec_not_found_local:
     xor eax, eax
     add rsp, 48
     pop r13
@@ -556,7 +556,7 @@ pipeline_execute_stage PROC
     pop rbx
     ret
 
-.execute_generic_stage:
+execute_generic_stage_local:
     ; R8 = command string, R9 = job context
     ; TODO: Spawn process with command
     mov eax, 1
@@ -620,7 +620,7 @@ pipeline_execute_vcs_stage PROC
     pop rbx
     ret
 
-.git_operation:
+git_operation_local:
     ; RCX = git command
     ; Execute via CreateProcess
     mov eax, 1
@@ -630,38 +630,38 @@ pipeline_execute_vcs_stage ENDP
 ;-----------------------------------------------------------------------
 ; .extract_commit_hash - Parse git log output for commit hash
 ;-----------------------------------------------------------------------
-.extract_commit_hash:
+extract_commit_hash_local:
     ; RCX = output buffer, RDX = hash destination
     ; Look for "commit " prefix
     mov al, [rcx]
     test al, al
-    jz .hash_done
+    jz hash_done_local
 
     cmp al, 'c'
-    jne .hash_next
+    jne hash_next_local
     cmp byte ptr [rcx + 1], 'o'
-    jne .hash_next
+    jne hash_next_local
     cmp byte ptr [rcx + 6], ' '
-    jne .hash_next
+    jne hash_next_local
 
     ; Found "commit ", copy next 40 bytes (SHA1)
     add rcx, 7
     mov r8d, 40
-.copy_hash:
+copy_hash_local:
     mov al, [rcx]
     mov [rdx], al
     inc rcx
     inc rdx
     dec r8d
-    jnz .copy_hash
+    jnz copy_hash_local
     mov byte ptr [rdx], 0
     ret
 
-.hash_next:
+hash_next_local:
     inc rcx
-    jmp .extract_commit_hash
+    jmp extract_commit_hash_local
 
-.hash_done:
+hash_done_local:
     ret
 
 ; ======================================================================
@@ -715,7 +715,7 @@ pipeline_execute_docker_stage PROC
 
     ; Check for push requirement
     cmp byte ptr [r13 + PIPELINE_STAGE.environmentVars], 1
-    jne .docker_complete
+    jne docker_complete_local
 
     ; Log push start
     lea rcx, [r13 + PIPELINE_STAGE.imageName]
@@ -727,7 +727,7 @@ pipeline_execute_docker_stage PROC
     ; Execute docker push
     mov eax, 1
 
-.docker_complete:
+docker_complete_local:
     mov eax, 1
     add rsp, 56
     pop r13
@@ -807,9 +807,9 @@ pipeline_get_job_status PROC
     mov rax, [g_jobRegistry]
     xor r9d, r9d
 
-.search_status:
+search_status_local:
     cmp r9d, [g_jobCount]
-    jge .status_not_found
+    jge status_not_found_local
 
     mov rcx, r9d
     mov rdx, SIZEOF JOB_CONTEXT
@@ -818,18 +818,18 @@ pipeline_get_job_status PROC
 
     mov rbx, [rcx + JOB_CONTEXT.jobId]
     cmp rbx, r8
-    je .status_found
+    je status_found_local
 
     inc r9d
-    jmp .search_status
+    jmp search_status_local
 
-.status_found:
+status_found_local:
     mov eax, [rcx + JOB_CONTEXT.status]
     add rsp, 40
     pop rbx
     ret
 
-.status_not_found:
+status_not_found_local:
     mov eax, -1
     add rsp, 40
     pop rbx
@@ -851,9 +851,9 @@ pipeline_cancel_job PROC
     mov rax, [g_jobRegistry]
     xor r9d, r9d
 
-.find_cancel:
+find_cancel_local:
     cmp r9d, [g_jobCount]
-    jge .cancel_not_found
+    jge cancel_not_found_local
 
     mov rcx, r9d
     mov rdx, SIZEOF JOB_CONTEXT
@@ -862,18 +862,18 @@ pipeline_cancel_job PROC
 
     mov rbx, [rcx + JOB_CONTEXT.jobId]
     cmp rbx, r8
-    je .cancel_found
+    je cancel_found_local
 
     inc r9d
-    jmp .find_cancel
+    jmp find_cancel_local
 
-.cancel_found:
+cancel_found_local:
     mov dword ptr [rcx + JOB_CONTEXT.status], JOB_STATUS_CANCELLED
 
     ; Kill process if running
     mov r8, [rcx + JOB_CONTEXT.processHandle]
     test r8, r8
-    jz .cancel_complete
+    jz cancel_complete_local
 
     ; TerminateProcess(handle, 1)
     mov eax, 1
@@ -881,13 +881,13 @@ pipeline_cancel_job PROC
     pop rbx
     ret
 
-.cancel_complete:
+cancel_complete_local:
     mov eax, 1
     add rsp, 40
     pop rbx
     ret
 
-.cancel_not_found:
+cancel_not_found_local:
     xor eax, eax
     add rsp, 40
     pop rbx
@@ -909,9 +909,9 @@ pipeline_retry_job PROC
     mov rax, [g_jobRegistry]
     xor r9d, r9d
 
-.find_retry:
+find_retry_local:
     cmp r9d, [g_jobCount]
-    jge .retry_not_found
+    jge retry_not_found_local
 
     mov rcx, r9d
     mov rdx, SIZEOF JOB_CONTEXT
@@ -920,12 +920,12 @@ pipeline_retry_job PROC
 
     mov rbx, [rcx + JOB_CONTEXT.jobId]
     cmp rbx, r8
-    je .retry_found
+    je retry_found_local
 
     inc r9d
-    jmp .find_retry
+    jmp find_retry_local
 
-.retry_found:
+retry_found_local:
     mov dword ptr [rcx + JOB_CONTEXT.status], JOB_STATUS_RETRYING
     mov dword ptr [rcx + JOB_CONTEXT.currentStage], 0
 
@@ -935,7 +935,7 @@ pipeline_retry_job PROC
     pop rbx
     ret
 
-.retry_not_found:
+retry_not_found_local:
     xor rax, rax
     add rsp, 40
     pop rbx
@@ -1031,3 +1031,4 @@ pipeline_get_metrics PROC
 pipeline_get_metrics ENDP
 
 END
+

@@ -160,9 +160,7 @@ init_loop:
     jmp init_loop
     
 init_done:
-    mov [autonomousExecutionEnabled], 1
-    
-    ; Log initialization
+    mov dword ptr [autonomousExecutionEnabled], 1  ; Log initialization
     mov rcx, outputLogHandle
     mov rdx, "[Autonomous] Task executor initialized"
     call output_pane_append
@@ -203,8 +201,8 @@ autonomous_task_schedule PROC
     ; Initialize fields
     call GetTickCount
     mov [rsi + 24], rax                 ; createdTime
-    mov [rsi + 32], 0                   ; startedTime = 0
-    mov [rsi + 40], 0                   ; completedTime = 0
+    mov dword ptr [rsi + 32], 0  ; startedTime = 0
+    mov dword ptr [rsi + 40], 0  ; completedTime = 0
     mov dword ptr [rsi + 48], 0         ; status = pending
     mov [rsi + 52], edx                 ; priority
     mov dword ptr [rsi + 56], 0         ; retryCount = 0
@@ -468,9 +466,7 @@ cancel_not_running:
     call free                           ; Free task state
     
     ; Remove from pool
-    mov [rax], 0
-    
-    ; Log cancellation
+    mov dword ptr [rax], 0  ; Log cancellation
     mov rcx, outputLogHandle
     mov rdx, "[Autonomous] Task cancelled"
     call output_pane_append
@@ -700,3 +696,4 @@ append_task_progress ENDP
 ; ============================================================================
 
 .end
+

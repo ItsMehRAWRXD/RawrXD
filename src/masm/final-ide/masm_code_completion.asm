@@ -89,9 +89,7 @@ intellisense_init PROC
     mov [globalEngine.hEditor], rcx
     mov [globalEngine.completionCount], 0
     mov [globalEngine.selectedIndex], 0
-    mov [globalEngine.isActive], 0
-    
-    ; Build initial symbol table from keywords
+    mov dword ptr [globalEngine.isActive], 0  ; Build initial symbol table from keywords
     call intellisense_build_symbol_table
     
     mov eax, 1
@@ -183,9 +181,7 @@ intellisense_generate_completions PROC
     push rbx
     push rsi
     
-    mov [globalEngine.completionCount], 0
-    
-    ; Get word prefix at cursor
+    mov dword ptr [globalEngine.completionCount], 0  ; Get word prefix at cursor
     lea rcx, [globalEngine.currentLine]
     mov edx, [globalEngine.cursorPos]
     call extract_word_prefix
@@ -385,9 +381,7 @@ intellisense_build_symbol_table PROC
     mov r8, 1000 * MAX_SYMBOL_LENGTH
     call HeapAlloc
     mov [globalEngine.symbolTable], rax
-    mov [globalEngine.symbolCount], 0
-    
-    ; Parse keywords into symbol table
+    mov dword ptr [globalEngine.symbolCount], 0  ; Parse keywords into symbol table
     lea rcx, cppKeywords
     call parse_keyword_list
     

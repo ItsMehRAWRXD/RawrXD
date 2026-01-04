@@ -161,14 +161,14 @@ StartAnimationTimer PROC
     ; Acquire mutex
     mov rcx, g_animation_mutex
     test rcx, rcx
-    jz .no_mutex
+    jz no_mutex_local
     mov rdx, INFINITE
     call WaitForSingleObject
     
-.no_mutex:
+no_mutex_local:
     ; Check limit
     cmp g_timer_count, MAX_ANIMATIONS
-    jge .timer_limit_error
+    jge timer_limit_error_local
     
     ; Find empty slot
     mov eax, g_timer_count
@@ -190,23 +190,23 @@ StartAnimationTimer PROC
     ; Release mutex
     mov rcx, g_animation_mutex
     test rcx, rcx
-    jz .timer_exit
+    jz timer_exit_local
     call ReleaseMutex
     
-.timer_exit:
+timer_exit_local:
     add rsp, 32
     pop r12
     pop rbx
     ret
     
-.timer_limit_error:
+timer_limit_error_local:
     mov rcx, g_animation_mutex
     test rcx, rcx
-    jz .timer_error
+    jz timer_error_local
     call ReleaseMutex
-    jmp .timer_error
+    jmp timer_error_local
     
-.timer_error:
+timer_error_local:
     xor eax, eax
     add rsp, 32
     pop r12
@@ -226,7 +226,7 @@ UpdateAnimation PROC
     
     ; Validate timer ID
     cmp ecx, MAX_ANIMATIONS
-    jge .update_error
+    jge update_error_local
     
     ; Get timer entry
     mov rbx, OFFSET g_animation_timers
@@ -236,7 +236,7 @@ UpdateAnimation PROC
     ; Check if running
     mov eax, [rbx + ANIMATION_TIMER.state]
     cmp eax, ANIM_RUNNING
-    jne .update_error
+    jne update_error_local
     
     ; Add elapsed time
     mov eax, [rbx + ANIMATION_TIMER.elapsed_ms]
@@ -246,7 +246,7 @@ UpdateAnimation PROC
     ; Calculate progress (0-100)
     mov ecx, [rbx + ANIMATION_TIMER.duration_ms]
     test ecx, ecx
-    jz .update_error
+    jz update_error_local
     
     imul eax, 100
     xor edx, edx
@@ -254,18 +254,18 @@ UpdateAnimation PROC
     
     ; Check if animation complete
     cmp eax, 100
-    jl .update_exit
+    jl update_exit_local
     
     ; Mark as stopped
     mov DWORD PTR [rbx + ANIMATION_TIMER.state], ANIM_STOPPED
     mov eax, 100
     
-.update_exit:
+update_exit_local:
     add rsp, 32
     pop rbx
     ret
     
-.update_error:
+update_error_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -284,7 +284,7 @@ ParseAnimationJson PROC
     
     ; Validate input
     test rcx, rcx
-    jz .parse_error
+    jz parse_error_local
     
     ; Simple JSON parsing for animation properties
     ; Look for: "duration": 300, "easing": "ease-in", etc.
@@ -294,29 +294,29 @@ ParseAnimationJson PROC
     xor eax, eax
     
     ; Search for "duration" key
-.search_duration:
+search_duration_local:
     mov bl, BYTE PTR [r8]
     test bl, bl
-    jz .parse_exit
+    jz parse_exit_local
     
     cmp bl, '"'
-    jne .skip_char
+    jne skip_char_local
     
     ; Check if this is "duration"
     ; Simplified: just return success for now
     mov eax, 1
-    jmp .parse_exit
+    jmp parse_exit_local
     
-.skip_char:
+skip_char_local:
     inc r8
-    jmp .search_duration
+    jmp search_duration_local
     
-.parse_exit:
+parse_exit_local:
     add rsp, 32
     pop rbx
     ret
     
-.parse_error:
+parse_error_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -338,14 +338,14 @@ StartStyleAnimation PROC
     lea rdx, style_animation_callback
     call StartAnimationTimer
     test eax, eax
-    jz .anim_error
+    jz anim_error_local
     
     mov eax, 1
     add rsp, 32
     pop rbx
     ret
     
-.anim_error:
+anim_error_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -370,7 +370,7 @@ UpdateComponentPositions PROC
     sub rsp, 40
     
     test rcx, rcx
-    jz .position_error
+    jz position_error_local
     
     ; Iterate through components and recalculate positions
     ; This would call layout engine to compute new positions
@@ -378,9 +378,9 @@ UpdateComponentPositions PROC
     mov r12, rcx
     mov rbx, 0
     
-.position_loop:
+position_loop_local:
     cmp rbx, 32         ; Max 32 components per layout
-    jge .position_done
+    jge position_done_local
     
     ; For each component:
     ; 1. Get current constraints
@@ -388,16 +388,16 @@ UpdateComponentPositions PROC
     ; 3. Send resize message
     
     inc rbx
-    jmp .position_loop
+    jmp position_loop_local
     
-.position_done:
+position_done_local:
     mov eax, 1
     add rsp, 40
     pop r12
     pop rbx
     ret
     
-.position_error:
+position_error_local:
     xor eax, eax
     add rsp, 40
     pop r12
@@ -416,7 +416,7 @@ RequestRedraw PROC
     sub rsp, 32
     
     test rcx, rcx
-    jz .redraw_exit
+    jz redraw_exit_local
     
     ; Send WM_PAINT message
     mov r8, rcx         ; hwnd
@@ -425,7 +425,7 @@ RequestRedraw PROC
     xor r10d, r10d      ; lparam
     call SendMessageA
     
-.redraw_exit:
+redraw_exit_local:
     add rsp, 32
     pop rbx
     ret
@@ -446,7 +446,7 @@ ParseLayoutJson PROC
     xor edx, edx
     call HeapAlloc
     test rax, rax
-    jz .layout_error
+    jz layout_error_local
     
     ; Parse JSON and populate layout fields
     mov r8, [rsp + 48]  ; Get JSON pointer
@@ -461,7 +461,7 @@ ParseLayoutJson PROC
     pop rbx
     ret
     
-.layout_error:
+layout_error_local:
     xor eax, eax
     add rsp, 40
     pop rbx
@@ -504,7 +504,7 @@ RecalculateLayout PROC
     sub rsp, 32
     
     test rcx, rcx
-    jz .layout_error
+    jz layout_error_local
     
     ; Perform depth-first traversal of component tree
     ; For each component, calculate layout based on parent constraints
@@ -514,7 +514,7 @@ RecalculateLayout PROC
     pop rbx
     ret
     
-.layout_error:
+layout_error_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -544,7 +544,7 @@ ui_create_mode_combo PROC
     mov edx, WS_CHILD or WS_VISIBLE or CBS_DROPDOWNLIST
     call CreateWindowExA
     test rax, rax
-    jz .combo_error
+    jz combo_error_local
     
     mov rbx, rax        ; Save combobox hwnd
     mov g_mode_combo.hwnd_combo, rax
@@ -596,7 +596,7 @@ ui_create_mode_combo PROC
     pop rbx
     ret
     
-.combo_error:
+combo_error_local:
     xor eax, eax
     add rsp, 32
     pop r12
@@ -622,14 +622,14 @@ ui_create_mode_checkboxes PROC
     mov edx, WS_CHILD or WS_VISIBLE or BS_CHECKBOX
     call CreateWindowExA
     test rax, rax
-    jz .checkbox_error
+    jz checkbox_error_local
     
     mov eax, 1
     add rsp, 32
     pop rbx
     ret
     
-.checkbox_error:
+checkbox_error_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -668,7 +668,7 @@ ui_open_file_dialog PROC
     mov rcx, rax
     call GetOpenFileNameA
     test eax, eax
-    jz .dialog_error
+    jz dialog_error_local
     
     ; Return filename buffer pointer
     mov rax, [rsp + 64 + 32 + OPENFILENAMEA.lpstrFile]
@@ -677,7 +677,7 @@ ui_open_file_dialog PROC
     pop rbx
     ret
     
-.dialog_error:
+dialog_error_local:
     xor eax, eax
     add rsp, 64 + 260
     pop r12
@@ -704,7 +704,7 @@ LoadUserFeatureConfiguration PROC
     lea rdx, szOpenFileMode
     call CreateFileA
     test rax, rax
-    jz .config_error
+    jz config_error_local
     
     ; Read file contents
     ; Parse JSON feature array
@@ -716,7 +716,7 @@ LoadUserFeatureConfiguration PROC
     pop rbx
     ret
     
-.config_error:
+config_error_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -738,9 +738,9 @@ ValidateFeatureConfiguration PROC
     
     mov rbx, 0
     
-.validate_loop:
+validate_loop_local:
     cmp rbx, g_feature_count
-    jge .validate_ok
+    jge validate_ok_local
     
     ; Check dependencies of feature rbx
     mov r8, OFFSET g_feature_configs
@@ -750,21 +750,21 @@ ValidateFeatureConfiguration PROC
     ; Verify each dependency exists
     mov ecx, [r8 + FEATURE_CONFIG.dep_count]
     
-.check_deps:
+check_deps_local:
     test ecx, ecx
-    jz .deps_ok
+    jz deps_ok_local
     
     ; Check if dependency exists
     ; ...
     
     dec ecx
-    jmp .check_deps
+    jmp check_deps_local
     
-.deps_ok:
+deps_ok_local:
     inc rbx
-    jmp .validate_loop
+    jmp validate_loop_local
     
-.validate_ok:
+validate_ok_local:
     mov eax, 1
     add rsp, 32
     pop rbx
@@ -785,9 +785,9 @@ ApplyEnterpriseFeaturePolicy PROC
     
     mov rbx, 0
     
-.policy_loop:
+policy_loop_local:
     cmp rbx, g_feature_count
-    jge .policy_ok
+    jge policy_ok_local
     
     mov r8, OFFSET g_feature_configs
     imul rbx, SIZEOF FEATURE_CONFIG
@@ -796,15 +796,15 @@ ApplyEnterpriseFeaturePolicy PROC
     ; Check policy flags and restrict if needed
     mov eax, [r8 + FEATURE_CONFIG.policy_flags]
     test eax, eax
-    jz .policy_skip
+    jz policy_skip_local
     
     ; Apply restrictions
     
-.policy_skip:
+policy_skip_local:
     inc rbx
-    jmp .policy_loop
+    jmp policy_loop_local
     
-.policy_ok:
+policy_ok_local:
     mov eax, 1
     add rsp, 32
     pop rbx
@@ -913,9 +913,9 @@ ApplyInitialFeatureConfiguration PROC
     
     mov rbx, 0
     
-.apply_loop:
+apply_loop_local:
     cmp rbx, g_feature_count
-    jge .apply_ok
+    jge apply_ok_local
     
     mov r8, OFFSET g_feature_configs
     imul rbx, SIZEOF FEATURE_CONFIG
@@ -923,15 +923,15 @@ ApplyInitialFeatureConfiguration PROC
     
     mov eax, [r8 + FEATURE_CONFIG.is_enabled]
     test eax, eax
-    jz .apply_skip
+    jz apply_skip_local
     
     ; Enable feature rbx
     
-.apply_skip:
+apply_skip_local:
     inc rbx
-    jmp .apply_loop
+    jmp apply_loop_local
     
-.apply_ok:
+apply_ok_local:
     mov eax, 1
     add rsp, 32
     pop rbx
@@ -1026,16 +1026,16 @@ ui_populate_feature_tree PROC
     ; Add feature items to tree
     mov rbx, 0
     
-.populate_loop:
+populate_loop_local:
     cmp rbx, g_feature_count
-    jge .populate_ok
+    jge populate_ok_local
     
     ; Add tree item for feature rbx
     
     inc rbx
-    jmp .populate_loop
+    jmp populate_loop_local
     
-.populate_ok:
+populate_ok_local:
     mov eax, 1
     add rsp, 32
     pop r12
@@ -1090,20 +1090,20 @@ ml_masm_get_tensor PROC
     sub rsp, 32
     
     test rcx, rcx
-    jz .tensor_error
+    jz tensor_error_local
     
     ; Search loaded model for tensor with given name
     ; Return pointer to tensor data
     
     mov rax, g_tensor_buffer
     test rax, rax
-    jz .tensor_error
+    jz tensor_error_local
     
     add rsp, 32
     pop rbx
     ret
     
-.tensor_error:
+tensor_error_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -1121,36 +1121,36 @@ ml_masm_get_arch PROC
     sub rsp, 32
     
     test rcx, rcx
-    jz .arch_error
+    jz arch_error_local
     
     ; Copy model architecture to buffer
     mov r8, g_model_arch
     test r8, r8
-    jz .arch_error
+    jz arch_error_local
     
     ; Copy architecture data
     mov rax, rcx
     mov rbx, r8
     mov ecx, 256        ; Copy size
     
-.copy_loop:
+copy_loop_local:
     test ecx, ecx
-    jz .arch_ok
+    jz arch_ok_local
     
     mov dl, BYTE PTR [rbx]
     mov BYTE PTR [rax], dl
     inc rax
     inc rbx
     dec ecx
-    jmp .copy_loop
+    jmp copy_loop_local
     
-.arch_ok:
+arch_ok_local:
     mov eax, 1
     add rsp, 32
     pop rbx
     ret
     
-.arch_error:
+arch_error_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -1172,14 +1172,14 @@ rawr1024_build_model PROC
     sub rsp, 40
     
     test rcx, rcx
-    jz .build_error
+    jz build_error_local
     
     ; Allocate model structure
     mov rcx, 2048       ; Model structure size
     xor edx, edx
     call HeapAlloc
     test rax, rax
-    jz .build_error
+    jz build_error_local
     
     ; Initialize model from config
     mov r8, [rsp + 48]  ; Get config pointer
@@ -1190,7 +1190,7 @@ rawr1024_build_model PROC
     pop rbx
     ret
     
-.build_error:
+build_error_local:
     xor eax, eax
     add rsp, 40
     pop rbx
@@ -1208,26 +1208,26 @@ rawr1024_quantize_model PROC
     sub rsp, 32
     
     test rcx, rcx
-    jz .quant_error
+    jz quant_error_local
     
     ; Validate quantization bits
     cmp edx, 4
-    je .quant_valid
+    je quant_valid_local
     cmp edx, 8
-    je .quant_valid
+    je quant_valid_local
     cmp edx, 16
-    je .quant_valid
+    je quant_valid_local
     
-    jmp .quant_error
+    jmp quant_error_local
     
-.quant_valid:
+quant_valid_local:
     ; Apply quantization to model tensors
     mov eax, 1
     add rsp, 32
     pop rbx
     ret
     
-.quant_error:
+quant_error_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -1252,7 +1252,7 @@ rawr1024_direct_load PROC
     lea rdx, szOpenFileMode
     call CreateFileA
     test rax, rax
-    jz .load_error
+    jz load_error_local
     
     mov rbx, rax        ; Save file handle
     
@@ -1264,7 +1264,7 @@ rawr1024_direct_load PROC
     xor r9d, r9d
     call ReadFile
     test eax, eax
-    jz .load_cleanup
+    jz load_cleanup_local
     
     ; Parse GGUF format
     ; Build model structure
@@ -1281,12 +1281,12 @@ rawr1024_direct_load PROC
     pop rbx
     ret
     
-.load_cleanup:
+load_cleanup_local:
     mov rcx, rbx
     call CloseHandle
     add rsp, 256
     
-.load_error:
+load_error_local:
     xor eax, eax
     add rsp, 40
     pop r12
@@ -1312,3 +1312,4 @@ rawr1024_direct_load ENDP
     szFeaturesListLabel BYTE "Feature List",0
 
 END
+

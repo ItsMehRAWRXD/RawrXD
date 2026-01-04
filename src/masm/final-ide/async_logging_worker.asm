@@ -77,25 +77,25 @@ spinlock_acquire PROC
     mov spin_count, 0
     
     ; Exponential backoff: spin up to 1000 iterations
-.spin_loop:
+spin_loop_local:
     mov eax, 1
     lock cmpxchg DWORD PTR [rcx], eax  ; Try to set spinlock=1
-    je .acquired
+    je acquired_local
     
     ; Spinlock held, backoff
     cmp spin_count, 1000
-    jge .yield_and_retry
+    jge yield_and_retry_local
     inc spin_count
     pause                               ; CPU hint for better power consumption
-    jmp .spin_loop
+    jmp spin_loop_local
     
-.yield_and_retry:
+yield_and_retry_local:
     ; If still locked after 1000 spins, yield to other threads
     call Sleep                          ; Sleep 0ms yields
     mov spin_count, 0
-    jmp .spin_loop
+    jmp spin_loop_local
     
-.acquired:
+acquired_local:
     ret
 spinlock_acquire ENDP
 
@@ -124,15 +124,15 @@ async_logging_init PROC
     xor edx, edx
     mov r8d, MAX_LOG_QUEUE_SIZE * (SIZE LOG_QUEUE_ENTRY) / 8
     
-.zero_loop:
+zero_loop_local:
     cmp r8d, 0
-    je .zero_done
+    je zero_done_local
     mov QWORD PTR [rcx + rdx], 0
     add rdx, 8
     dec r8d
-    jmp .zero_loop
+    jmp zero_loop_local
     
-.zero_done:
+zero_done_local:
     ; Initialize queue pointers
     mov LogQueueHead, 0
     mov LogQueueTail, 0
@@ -151,7 +151,7 @@ async_logging_init PROC
     
     call CreateThread
     test rax, rax
-    jz .init_fail
+    jz init_fail_local
     
     mov hWorkerThread, rax
     
@@ -165,7 +165,7 @@ async_logging_init PROC
     pop rbx
     ret
     
-.init_fail:
+init_fail_local:
     xor eax, eax                        ; Failure
     add rsp, 32
     pop rdi
@@ -194,30 +194,30 @@ async_logging_queue_entry PROC
     lea rcx, LogQueueSpinlock
     mov r8d, 0
     
-.acquire_spin:
+acquire_spin_local:
     mov eax, 1
     lock cmpxchg DWORD PTR [rcx], eax
-    je .have_lock
+    je have_lock_local
     
     inc r8d
     cmp r8d, 100                        ; Timeout after 100 attempts
-    jge .queue_full
+    jge queue_full_local
     pause
-    jmp .acquire_spin
+    jmp acquire_spin_local
     
-.have_lock:
+have_lock_local:
     ; Calculate next head position
     mov eax, LogQueueHead
     mov ecx, eax
     add ecx, 1
     cmp ecx, MAX_LOG_QUEUE_SIZE
-    jne .next_pos_ok
+    jne next_pos_ok_local
     xor ecx, ecx                        ; Wrap around
     
-.next_pos_ok:
+next_pos_ok_local:
     ; Check if queue is full
     cmp ecx, LogQueueTail
-    je .release_full
+    je release_full_local
     
     ; Get queue entry
     imul eax, SIZE LOG_QUEUE_ENTRY
@@ -248,10 +248,10 @@ async_logging_queue_entry PROC
     mov ecx, eax
     add ecx, 1
     cmp ecx, MAX_LOG_QUEUE_SIZE
-    jne .update_head
+    jne update_head_local
     xor ecx, ecx
     
-.update_head:
+update_head_local:
     mov LogQueueHead, ecx
     
     ; Update statistics
@@ -267,10 +267,10 @@ async_logging_queue_entry PROC
     pop rbx
     ret
     
-.release_full:
+release_full_local:
     mov DWORD PTR LogQueueSpinlock, 0
     
-.queue_full:
+queue_full_local:
     ; Log queue full (but don't recurse)
     inc LogQueueOverflows
     xor eax, eax                        ; Failure
@@ -290,20 +290,20 @@ copy_string_safe PROC
     push rbx
     xor eax, eax                        ; Length counter
     
-.copy_loop:
+copy_loop_local:
     cmp eax, r8d                        ; Check max length
-    jge .copy_done
+    jge copy_done_local
     
     movzx ebx, BYTE PTR [rcx + rax]
     mov BYTE PTR [rdx + rax], bl
     
     test bl, bl                         ; Check for null terminator
-    je .copy_done
+    je copy_done_local
     
     inc eax
-    jmp .copy_loop
+    jmp copy_loop_local
     
-.copy_done:
+copy_done_local:
     mov BYTE PTR [rdx + rax], 0         ; Ensure null terminator
     pop rbx
     ret
@@ -320,30 +320,30 @@ async_logging_worker PROC
     push rsi
     sub rsp, 32
     
-.worker_loop:
+worker_loop_local:
     ; Check if we should exit
     cmp bWorkerRunning, 0
-    je .worker_exit
+    je worker_exit_local
     
     ; Check if minimum flush interval has passed
     call GetTickCount64
     mov rbx, LastFlushTime
     sub rax, rbx
     cmp rax, MIN_FLUSH_INTERVAL
-    jl .sleep_and_retry
+    jl sleep_and_retry_local
     
     ; Try to acquire spinlock (non-blocking, skip if locked)
     lea rcx, LogQueueSpinlock
     mov eax, 1
     lock cmpxchg DWORD PTR [rcx], eax
-    jne .sleep_and_retry                ; If locked, skip flush
+    jne sleep_and_retry_local                ; If locked, skip flush
     
     ; Process all queued entries
     mov esi, LogQueueTail               ; esi = tail
     
-.flush_loop:
+flush_loop_local:
     cmp esi, LogQueueHead
-    je .flush_done
+    je flush_done_local
     
     ; Get queue entry
     imul eax, esi, SIZE LOG_QUEUE_ENTRY
@@ -356,11 +356,11 @@ async_logging_worker PROC
     ; Update tail
     inc esi
     cmp esi, MAX_LOG_QUEUE_SIZE
-    jne .flush_loop
+    jne flush_loop_local
     xor esi, esi                        ; Wrap around
-    jmp .flush_loop
+    jmp flush_loop_local
     
-.flush_done:
+flush_done_local:
     mov LogQueueTail, esi
     
     ; Release spinlock
@@ -370,13 +370,13 @@ async_logging_worker PROC
     call GetTickCount64
     mov LastFlushTime, rax
     
-.sleep_and_retry:
+sleep_and_retry_local:
     ; Sleep 5ms before checking again
     mov rcx, 5
     call Sleep
-    jmp .worker_loop
+    jmp worker_loop_local
     
-.worker_exit:
+worker_exit_local:
     ; Drain any remaining entries
     ; (Future: flush remaining queue before exit)
     
@@ -425,10 +425,10 @@ async_logging_get_stats PROC
     mov eax, LogQueueHead
     sub eax, LogQueueTail
     cmp eax, 0
-    jge .positive_size
+    jge positive_size_local
     add eax, MAX_LOG_QUEUE_SIZE
     
-.positive_size:
+positive_size_local:
     mov DWORD PTR [rcx], eax            ; queue_count
     mov rax, LogQueueOverflows
     mov QWORD PTR [rdx], rax            ; overflow_count
@@ -438,3 +438,4 @@ async_logging_get_stats PROC
 async_logging_get_stats ENDP
 
 END
+

@@ -84,16 +84,16 @@ thread_coordinator_init PROC
     
     ; Validate thread counts
     test r12d, r12d
-    jz .init_defaults
+    jz init_defaults_local
     
     cmp r12d, ebx
-    jle .init_valid
+    jle init_valid_local
     
-.init_defaults:
+init_defaults_local:
     mov r12d, 2
     mov ebx, 8
     
-.init_valid:
+init_valid_local:
     mov g_thread_pool.min_threads, r12d
     mov g_thread_pool.max_threads, ebx
     mov g_thread_pool.thread_count, 0
@@ -107,7 +107,7 @@ thread_coordinator_init PROC
     xor r9d, r9d
     call CreateMutexA
     test rax, rax
-    jz .init_error
+    jz init_error_local
     mov g_thread_pool.pool_mutex, rax
     
     ; Create work event (signaled when work available)
@@ -116,7 +116,7 @@ thread_coordinator_init PROC
     lea r8, szWorkEvent
     call CreateEventA
     test rax, rax
-    jz .init_error
+    jz init_error_local
     mov g_thread_pool.work_event, rax
     
     ; Allocate work queue (256 items × 40 bytes = 10.2 KB)
@@ -124,31 +124,31 @@ thread_coordinator_init PROC
     xor edx, edx
     call HeapAlloc
     test rax, rax
-    jz .init_error
+    jz init_error_local
     mov g_thread_pool.work_queue, rax
     
     ; Create minimum number of worker threads
     mov r8d, 0
     
-.create_workers:
+create_workers_local:
     cmp r8d, r12d
-    jge .init_success
+    jge init_success_local
     
     call thread_create_worker
     test rax, rax
-    jz .init_error
+    jz init_error_local
     
     inc r8d
-    jmp .create_workers
+    jmp create_workers_local
     
-.init_success:
+init_success_local:
     mov eax, 1
     add rsp, 40
     pop r12
     pop rbx
     ret
     
-.init_error:
+init_error_local:
     xor eax, eax
     add rsp, 40
     pop r12
@@ -217,12 +217,12 @@ thread_safe_queue_work PROC
     mov rdx, INFINITE
     call WaitForSingleObject
     cmp eax, WAIT_OBJECT_0
-    jne .queue_error
+    jne queue_error_local
     
     ; Check queue space
     mov eax, g_thread_pool.queue_count
     cmp eax, 256
-    jge .queue_full
+    jge queue_full_local
     
     ; Find next available slot
     mov rax, g_thread_pool.queue_count
@@ -257,12 +257,12 @@ thread_safe_queue_work PROC
     pop rbx
     ret
     
-.queue_full:
+queue_full_local:
     mov rcx, g_thread_pool.pool_mutex
     call ReleaseMutex
-    jmp .queue_error
+    jmp queue_error_local
     
-.queue_error:
+queue_error_local:
     xor eax, eax
     add rsp, 40
     pop r13
@@ -284,7 +284,7 @@ thread_wait_for_completion PROC
     mov r8d, ecx      ; Save timeout
     mov ebx, 0        ; Counter
     
-.wait_loop:
+wait_loop_local:
     ; Check if queue is empty
     mov rcx, g_thread_pool.pool_mutex
     mov rdx, INFINITE
@@ -296,25 +296,25 @@ thread_wait_for_completion PROC
     call ReleaseMutex
     
     test eax, eax
-    jz .wait_complete
+    jz wait_complete_local
     
     ; Check timeout
     inc ebx
     cmp ebx, r8d
-    jge .wait_timeout
+    jge wait_timeout_local
     
     ; Sleep 1ms and retry
     mov ecx, 1
     call Sleep
-    jmp .wait_loop
+    jmp wait_loop_local
     
-.wait_complete:
+wait_complete_local:
     mov eax, 1
     add rsp, 40
     pop rbx
     ret
     
-.wait_timeout:
+wait_timeout_local:
     xor eax, eax
     add rsp, 40
     pop rbx
@@ -344,7 +344,7 @@ thread_create_worker PROC
     mov eax, g_thread_pool.thread_count
     mov ebx, g_thread_pool.max_threads
     cmp eax, ebx
-    jge .worker_limit
+    jge worker_limit_local
     
     ; Create thread
     xor ecx, ecx
@@ -355,7 +355,7 @@ thread_create_worker PROC
     xor r11d, r11d
     call CreateThreadA
     test rax, rax
-    jz .worker_error
+    jz worker_error_local
     
     ; Increment thread count
     inc g_thread_pool.thread_count
@@ -369,8 +369,8 @@ thread_create_worker PROC
     pop rbx
     ret
     
-.worker_limit:
-.worker_error:
+worker_limit_local:
+worker_error_local:
     xor eax, eax
     add rsp, 40
     pop rbx
@@ -387,7 +387,7 @@ worker_thread_proc PROC
     push r13
     sub rsp, 40
     
-.worker_loop:
+worker_loop_local:
     ; Wait for work event
     mov rcx, g_thread_pool.work_event
     mov rdx, INFINITE
@@ -400,7 +400,7 @@ worker_thread_proc PROC
     
     ; Get work item if available
     cmp g_thread_pool.queue_count, 0
-    je .no_work
+    je no_work_local
     
     ; Get first work item
     mov rax, g_thread_pool.work_queue
@@ -411,9 +411,9 @@ worker_thread_proc PROC
     mov rcx, 0
     mov rbx, 1
     
-.shift_items:
+shift_items_local:
     cmp rbx, g_thread_pool.queue_count
-    jge .items_shifted
+    jge items_shifted_local
     
     mov rax, g_thread_pool.work_queue
     mov r8, rbx
@@ -432,9 +432,9 @@ worker_thread_proc PROC
     
     inc rcx
     inc rbx
-    jmp .shift_items
+    jmp shift_items_local
     
-.items_shifted:
+items_shifted_local:
     dec g_thread_pool.queue_count
     
     ; Release mutex
@@ -445,12 +445,12 @@ worker_thread_proc PROC
     mov rcx, r13    ; Pass parameter
     call r12
     
-    jmp .worker_loop
+    jmp worker_loop_local
     
-.no_work:
+no_work_local:
     mov rcx, g_thread_pool.pool_mutex
     call ReleaseMutex
-    jmp .worker_loop
+    jmp worker_loop_local
 masm_thread_create_worker ENDP
 
 ;==============================================================================
@@ -465,7 +465,7 @@ thread_signal_event PROC
     
     ; Validate event index
     cmp ecx, 32
-    jge .signal_error
+    jge signal_error_local
     
     ; Get event handle
     mov rax, ecx
@@ -475,19 +475,19 @@ thread_signal_event PROC
     
     mov rcx, [r8]
     test rcx, rcx
-    jz .signal_error
+    jz signal_error_local
     
     ; Signal event
     call SetEvent
     test eax, eax
-    jz .signal_error
+    jz signal_error_local
     
     mov eax, 1
     add rsp, 32
     pop rbx
     ret
     
-.signal_error:
+signal_error_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -506,7 +506,7 @@ thread_wait_event PROC
     
     ; Validate event index
     cmp ecx, 32
-    jge .wait_error
+    jge wait_error_local
     
     ; Get event handle
     mov rax, rcx
@@ -516,21 +516,21 @@ thread_wait_event PROC
     
     mov rcx, [r8]
     test rcx, rcx
-    jz .wait_error
+    jz wait_error_local
     
     ; Wait for event
     ; rcx = handle, edx = timeout_ms (already set)
     call WaitForSingleObject
     
     cmp eax, WAIT_OBJECT_0
-    jne .wait_error
+    jne wait_error_local
     
     mov eax, 1
     add rsp, 32
     pop rbx
     ret
     
-.wait_error:
+wait_error_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -538,3 +538,4 @@ thread_wait_event PROC
 masm_thread_wait_event ENDP
 
 END
+

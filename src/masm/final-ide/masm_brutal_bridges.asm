@@ -101,3 +101,4 @@ _exit:
 Bridge_GetCompletions ENDP
 
 END
+

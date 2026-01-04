@@ -220,7 +220,7 @@ InitializeRealTimeIntegration PROC
     call CreateMutexA
     mov g_rt_mutex, rax
     test rax, rax
-    jz .init_failed
+    jz init_failed_local
     
     ; Create event for queue notification
     xor ecx, ecx            ; Manual reset
@@ -229,7 +229,7 @@ InitializeRealTimeIntegration PROC
     call CreateEventA
     mov g_rt_event, rax
     test rax, rax
-    jz .init_failed
+    jz init_failed_local
     
     ; Initialize state structures
     mov g_rt_state.is_initialized, 1
@@ -240,7 +240,7 @@ InitializeRealTimeIntegration PROC
     mov eax, ecx
     call HeapAlloc
     test rax, rax
-    jz .init_failed
+    jz init_failed_local
     mov g_rt_state.message_queue, rax
     
     ; Initialize mutex for queue
@@ -265,9 +265,9 @@ InitializeRealTimeIntegration PROC
     
     ; Create worker thread pool
     mov rbx, 0
-.create_thread_loop:
+create_thread_loop_local:
     cmp rbx, THREAD_POOL_SIZE
-    jge .threads_created
+    jge threads_created_local
     
     ; Create worker thread
     lea rcx, g_rt_state.worker_thread_ids[rbx * 4]
@@ -276,21 +276,21 @@ InitializeRealTimeIntegration PROC
     mov r9d, 0          ; Run immediately
     call CreateThread
     test rax, rax
-    jz .thread_create_failed
+    jz thread_create_failed_local
     
     mov [g_rt_state.worker_threads + rbx * 8], rax
     inc rbx
-    jmp .create_thread_loop
+    jmp create_thread_loop_local
     
-.threads_created:
+threads_created_local:
     mov eax, 1          ; Success
     add rsp, 40
     pop r12
     pop rbx
     ret
     
-.thread_create_failed:
-.init_failed:
+thread_create_failed_local:
+init_failed_local:
     xor eax, eax        ; Failure
     add rsp, 40
     pop r12
@@ -307,7 +307,7 @@ WorkerThreadProc PROC
     push rbx
     sub rsp, 32
     
-.process_loop:
+process_loop_local:
     ; Wait for event or timeout
     mov rcx, g_rt_event
     mov edx, 100        ; 100ms timeout
@@ -315,13 +315,13 @@ WorkerThreadProc PROC
     
     ; Check if shutdown
     cmp g_rt_state.is_initialized, 1
-    jne .thread_exit
+    jne thread_exit_local
     
     ; Acquire queue mutex
     mov rcx, g_rt_mutex
     call WaitForSingleObject
     test eax, eax
-    jnz .unlock_and_continue
+    jnz unlock_and_continue_local
     
     ; Process one message
     call ProcessOneMessage
@@ -330,10 +330,10 @@ WorkerThreadProc PROC
     mov rcx, g_rt_mutex
     call ReleaseMutex
     
-.unlock_and_continue:
-    jmp .process_loop
+unlock_and_continue_local:
+    jmp process_loop_local
     
-.thread_exit:
+thread_exit_local:
     add rsp, 32
     pop rbx
     ret
@@ -352,7 +352,7 @@ ProcessOneMessage PROC
     ; Check if queue empty
     mov eax, g_queue_index
     cmp eax, 0
-    je .no_message
+    je no_message_local
     
     ; Get first message
     lea rbx, g_message_queue[0]
@@ -360,47 +360,47 @@ ProcessOneMessage PROC
     
     ; Dispatch based on event type
     cmp r12d, EVENT_CHAT_MESSAGE
-    je .handle_chat
+    je handle_chat_local
     cmp r12d, EVENT_EDITOR_CHANGE
-    je .handle_editor
+    je handle_editor_local
     cmp r12d, EVENT_TERMINAL_OUTPUT
-    je .handle_terminal
+    je handle_terminal_local
     cmp r12d, EVENT_PANE_RESIZE
-    je .handle_pane
+    je handle_pane_local
     cmp r12d, EVENT_THEME_CHANGE
-    je .handle_theme
+    je handle_theme_local
     
-    jmp .remove_message
+    jmp remove_message_local
     
-.handle_chat:
+handle_chat_local:
     mov rcx, [rbx + MESSAGE_QUEUE_ENTRY.data_ptr]
     mov edx, [rbx + MESSAGE_QUEUE_ENTRY.data_size]
     call ProcessChatMessage
-    jmp .remove_message
+    jmp remove_message_local
     
-.handle_editor:
+handle_editor_local:
     mov rcx, [rbx + MESSAGE_QUEUE_ENTRY.data_ptr]
     mov edx, [rbx + MESSAGE_QUEUE_ENTRY.data_size]
     call ProcessEditorChange
-    jmp .remove_message
+    jmp remove_message_local
     
-.handle_terminal:
+handle_terminal_local:
     mov rcx, [rbx + MESSAGE_QUEUE_ENTRY.data_ptr]
     mov edx, [rbx + MESSAGE_QUEUE_ENTRY.data_size]
     call ProcessTerminalOutput
-    jmp .remove_message
+    jmp remove_message_local
     
-.handle_pane:
+handle_pane_local:
     mov rcx, [rbx + MESSAGE_QUEUE_ENTRY.data_ptr]
     call ProcessPaneResize
-    jmp .remove_message
+    jmp remove_message_local
     
-.handle_theme:
+handle_theme_local:
     mov rcx, [rbx + MESSAGE_QUEUE_ENTRY.data_ptr]
     call ProcessThemeChange
-    jmp .remove_message
+    jmp remove_message_local
     
-.remove_message:
+remove_message_local:
     ; Remove message from queue
     mov eax, g_queue_index
     dec eax
@@ -408,9 +408,9 @@ ProcessOneMessage PROC
     
     ; Move remaining messages forward
     mov ecx, 0
-.shift_loop:
+shift_loop_local:
     cmp ecx, eax
-    jge .shift_done
+    jge shift_done_local
     
     ; Copy next message back
     lea rbx, g_message_queue[rcx * SIZEOF MESSAGE_QUEUE_ENTRY + SIZEOF MESSAGE_QUEUE_ENTRY]
@@ -418,23 +418,23 @@ ProcessOneMessage PROC
     mov edx, SIZEOF MESSAGE_QUEUE_ENTRY
     mov r9d, 0
     
-.copy_loop:
+copy_loop_local:
     cmp r9d, edx
-    jge .copy_done
+    jge copy_done_local
     mov bl, BYTE PTR [rbx + r9]
     mov BYTE PTR [r8 + r9], bl
     inc r9d
-    jmp .copy_loop
+    jmp copy_loop_local
     
-.copy_done:
+copy_done_local:
     inc ecx
-    jmp .shift_loop
+    jmp shift_loop_local
     
-.shift_done:
+shift_done_local:
     ; Update metrics
     inc g_messages_processed
     
-.no_message:
+no_message_local:
     add rsp, 48
     pop r12
     pop rbx
@@ -457,15 +457,15 @@ ProcessChatMessage PROC
     mov r9d, edx
     xor r10d, r10d
     
-.copy_msg:
+copy_msg_local:
     cmp r10d, r9d
-    jge .copy_done
+    jge copy_done_local
     mov al, BYTE PTR [rbx + r10]
     mov BYTE PTR [r8 + r10], al
     inc r10d
-    jmp .copy_msg
+    jmp copy_msg_local
     
-.copy_done:
+copy_done_local:
     ; Update chat state
     inc g_chat_state.message_count
     mov rax, GetTickCount64
@@ -475,14 +475,14 @@ ProcessChatMessage PROC
     ; Update display
     mov rcx, g_chat_state.hwnd_chat_window
     test rcx, rcx
-    jz .skip_display
+    jz skip_display_local
     
     mov edx, WM_PAINT
     xor r8d, r8d
     xor r9d, r9d
     call SendMessageA
     
-.skip_display:
+skip_display_local:
     add rsp, 32
     pop rbx
     ret
@@ -504,15 +504,15 @@ ProcessEditorChange PROC
     mov r9d, edx
     xor r10d, r10d
     
-.copy_edit:
+copy_edit_local:
     cmp r10d, r9d
-    jge .edit_done
+    jge edit_done_local
     mov al, BYTE PTR [rbx + r10]
     mov BYTE PTR [r8 + r10], al
     inc r10d
-    jmp .copy_edit
+    jmp copy_edit_local
     
-.edit_done:
+edit_done_local:
     ; Mark as modified
     mov eax, g_editor_state.editor_flags
     or eax, EDITOR_MODIFIED
@@ -527,14 +527,14 @@ ProcessEditorChange PROC
     ; Redraw tabs to show modified indicator
     mov rcx, g_editor_state.hwnd_tabs
     test rcx, rcx
-    jz .skip_tab_update
+    jz skip_tab_update_local
     
     mov edx, WM_PAINT
     xor r8d, r8d
     xor r9d, r9d
     call SendMessageA
     
-.skip_tab_update:
+skip_tab_update_local:
     add rsp, 32
     pop rbx
     ret
@@ -556,15 +556,15 @@ ProcessTerminalOutput PROC
     mov r9d, edx
     xor r10d, r10d
     
-.copy_term:
+copy_term_local:
     cmp r10d, r9d
-    jge .term_done
+    jge term_done_local
     mov al, BYTE PTR [rbx + r10]
     mov BYTE PTR [r8 + r10], al
     inc r10d
-    jmp .copy_term
+    jmp copy_term_local
     
-.term_done:
+term_done_local:
     ; Update terminal state
     mov rax, GetTickCount64
     call GetTickCount64
@@ -574,22 +574,22 @@ ProcessTerminalOutput PROC
     mov eax, g_terminal_state.buffer_tail
     inc eax
     cmp eax, MAX_MESSAGE_SIZE
-    jl .no_wrap
+    jl no_wrap_local
     xor eax, eax
-.no_wrap:
+no_wrap_local:
     mov g_terminal_state.buffer_tail, eax
     
     ; Update display
     mov rcx, g_terminal_state.hwnd_terminal
     test rcx, rcx
-    jz .skip_term_display
+    jz skip_term_display_local
     
     mov edx, WM_PAINT
     xor r8d, r8d
     xor r9d, r9d
     call SendMessageA
     
-.skip_term_display:
+skip_term_display_local:
     add rsp, 32
     pop rbx
     ret
@@ -630,15 +630,15 @@ ProcessThemeChange PROC
     
     ; Apply theme to all windows
     mov rbx, 0
-.theme_loop:
+theme_loop_local:
     cmp rbx, 10         ; Max 10 windows
-    jge .theme_done
+    jge theme_done_local
     
     ; Would enumerate and update each window
     inc rbx
-    jmp .theme_loop
+    jmp theme_loop_local
     
-.theme_done:
+theme_done_local:
     ; Redraw all panes
     mov ecx, WM_PAINT
     call InvalidateRect
@@ -662,12 +662,12 @@ PostChatMessage PROC
     mov r8, g_rt_mutex
     call WaitForSingleObject
     test eax, eax
-    jnz .post_failed
+    jnz post_failed_local
     
     ; Check queue space
     mov eax, g_queue_index
     cmp eax, MAX_QUEUE_SIZE
-    jge .queue_full
+    jge queue_full_local
     
     ; Add message to queue
     lea rbx, g_message_queue[rax * SIZEOF MESSAGE_QUEUE_ENTRY]
@@ -686,10 +686,10 @@ PostChatMessage PROC
     ; Check for peak
     mov eax, g_queue_index
     cmp eax, g_peak_queue_size
-    jle .no_peak_update
+    jle no_peak_update_local
     mov g_peak_queue_size, eax
     
-.no_peak_update:
+no_peak_update_local:
     ; Signal event
     mov rcx, g_rt_event
     call SetEvent
@@ -704,13 +704,13 @@ PostChatMessage PROC
     pop rbx
     ret
     
-.queue_full:
+queue_full_local:
     ; Release mutex
     mov r8, g_rt_mutex
     call ReleaseMutex
-    jmp .post_failed
+    jmp post_failed_local
     
-.post_failed:
+post_failed_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -731,11 +731,11 @@ PostEditorChange PROC
     mov r8, g_rt_mutex
     call WaitForSingleObject
     test eax, eax
-    jnz .post_editor_failed
+    jnz post_editor_failed_local
     
     mov eax, g_queue_index
     cmp eax, MAX_QUEUE_SIZE
-    jge .queue_editor_full
+    jge queue_editor_full_local
     
     lea rbx, g_message_queue[rax * SIZEOF MESSAGE_QUEUE_ENTRY]
     mov DWORD PTR [rbx + MESSAGE_QUEUE_ENTRY.event_type], EVENT_EDITOR_CHANGE
@@ -758,10 +758,10 @@ PostEditorChange PROC
     pop rbx
     ret
     
-.queue_editor_full:
+queue_editor_full_local:
     mov r8, g_rt_mutex
     call ReleaseMutex
-.post_editor_failed:
+post_editor_failed_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -781,11 +781,11 @@ PostTerminalOutput PROC
     mov r8, g_rt_mutex
     call WaitForSingleObject
     test eax, eax
-    jnz .post_term_failed
+    jnz post_term_failed_local
     
     mov eax, g_queue_index
     cmp eax, MAX_QUEUE_SIZE
-    jge .queue_term_full
+    jge queue_term_full_local
     
     lea rbx, g_message_queue[rax * SIZEOF MESSAGE_QUEUE_ENTRY]
     mov DWORD PTR [rbx + MESSAGE_QUEUE_ENTRY.event_type], EVENT_TERMINAL_OUTPUT
@@ -809,10 +809,10 @@ PostTerminalOutput PROC
     pop rbx
     ret
     
-.queue_term_full:
+queue_term_full_local:
     mov r8, g_rt_mutex
     call ReleaseMutex
-.post_term_failed:
+post_term_failed_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -832,11 +832,11 @@ PostPaneResize PROC
     mov r8, g_rt_mutex
     call WaitForSingleObject
     test eax, eax
-    jnz .post_pane_failed
+    jnz post_pane_failed_local
     
     mov eax, g_queue_index
     cmp eax, MAX_QUEUE_SIZE
-    jge .queue_pane_full
+    jge queue_pane_full_local
     
     lea rbx, g_message_queue[rax * SIZEOF MESSAGE_QUEUE_ENTRY]
     mov DWORD PTR [rbx + MESSAGE_QUEUE_ENTRY.event_type], EVENT_PANE_RESIZE
@@ -855,10 +855,10 @@ PostPaneResize PROC
     pop rbx
     ret
     
-.queue_pane_full:
+queue_pane_full_local:
     mov r8, g_rt_mutex
     call ReleaseMutex
-.post_pane_failed:
+post_pane_failed_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -878,11 +878,11 @@ PostThemeChange PROC
     mov r8, g_rt_mutex
     call WaitForSingleObject
     test eax, eax
-    jnz .post_theme_failed
+    jnz post_theme_failed_local
     
     mov eax, g_queue_index
     cmp eax, MAX_QUEUE_SIZE
-    jge .queue_theme_full
+    jge queue_theme_full_local
     
     lea rbx, g_message_queue[rax * SIZEOF MESSAGE_QUEUE_ENTRY]
     mov DWORD PTR [rbx + MESSAGE_QUEUE_ENTRY.event_type], EVENT_THEME_CHANGE
@@ -901,10 +901,10 @@ PostThemeChange PROC
     pop rbx
     ret
     
-.queue_theme_full:
+queue_theme_full_local:
     mov r8, g_rt_mutex
     call ReleaseMutex
-.post_theme_failed:
+post_theme_failed_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -923,7 +923,7 @@ RegisterEventHandler PROC
     
     ; Validate event type
     cmp ecx, 16
-    jge .handler_invalid
+    jge handler_invalid_local
     
     ; Store handler
     mov [g_rt_state.event_handlers + rcx * 8], rdx
@@ -933,7 +933,7 @@ RegisterEventHandler PROC
     pop rbx
     ret
     
-.handler_invalid:
+handler_invalid_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -1012,7 +1012,7 @@ SendMessageToAgent PROC
     ; Post message to queue
     call PostChatMessage
     test eax, eax
-    jz .send_failed
+    jz send_failed_local
     
     ; Wait for processing
     mov ecx, 5000       ; 5 second timeout
@@ -1022,7 +1022,7 @@ SendMessageToAgent PROC
     pop rbx
     ret
     
-.send_failed:
+send_failed_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -1037,7 +1037,7 @@ ALIGN 16
 UpdateEditorDisplay PROC
     mov rcx, g_editor_state.hwnd_editor
     test rcx, rcx
-    jz .no_editor
+    jz no_editor_local
     
     xor edx, edx
     xor r8d, r8d
@@ -1046,7 +1046,7 @@ UpdateEditorDisplay PROC
     mov ecx, FALSE
     call UpdateWindow
     
-.no_editor:
+no_editor_local:
     mov eax, 1
     ret
 UpdateEditorDisplay ENDP
@@ -1059,7 +1059,7 @@ ALIGN 16
 UpdateTerminalDisplay PROC
     mov rcx, g_terminal_state.hwnd_terminal
     test rcx, rcx
-    jz .no_terminal
+    jz no_terminal_local
     
     xor edx, edx
     xor r8d, r8d
@@ -1068,7 +1068,7 @@ UpdateTerminalDisplay PROC
     mov ecx, FALSE
     call UpdateWindow
     
-.no_terminal:
+no_terminal_local:
     mov eax, 1
     ret
 UpdateTerminalDisplay ENDP
@@ -1135,7 +1135,7 @@ ExecuteCommandPalette PROC
     
     ; Execute if found
     test eax, eax
-    jz .cmd_not_found
+    jz cmd_not_found_local
     
     ; Post appropriate event based on command
     mov rcx, r12
@@ -1147,7 +1147,7 @@ ExecuteCommandPalette PROC
     pop rbx
     ret
     
-.cmd_not_found:
+cmd_not_found_local:
     xor eax, eax
     add rsp, 32
     pop r12
@@ -1168,7 +1168,7 @@ PreviewGUIDesign PROC
     ; Create preview window
     call CreateWindowExA
     test rax, rax
-    jz .preview_failed
+    jz preview_failed_local
     
     mov rbx, rax
     
@@ -1181,7 +1181,7 @@ PreviewGUIDesign PROC
     pop rbx
     ret
     
-.preview_failed:
+preview_failed_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -1200,17 +1200,17 @@ SynchronizeAllPanes PROC
     ; Sync editor with chat
     mov rcx, g_editor_state.hwnd_editor
     test rcx, rcx
-    jz .skip_editor_sync
+    jz skip_editor_sync_local
     call UpdateEditorDisplay
     
-.skip_editor_sync:
+skip_editor_sync_local:
     ; Sync terminal with output pane
     mov rcx, g_terminal_state.hwnd_terminal
     test rcx, rcx
-    jz .skip_term_sync
+    jz skip_term_sync_local
     call UpdateTerminalDisplay
     
-.skip_term_sync:
+skip_term_sync_local:
     mov eax, 1
     add rsp, 32
     pop rbx
@@ -1238,42 +1238,42 @@ ShutdownRealTimeIntegration PROC
     
     ; Close thread handles
     mov rbx, 0
-.close_threads:
+close_threads_local:
     cmp rbx, THREAD_POOL_SIZE
-    jge .threads_closed
+    jge threads_closed_local
     
     mov rcx, [g_rt_state.worker_threads + rbx * 8]
     test rcx, rcx
-    jz .next_thread
+    jz next_thread_local
     
     call CloseHandle
     
-.next_thread:
+next_thread_local:
     inc rbx
-    jmp .close_threads
+    jmp close_threads_local
     
-.threads_closed:
+threads_closed_local:
     ; Close synchronization objects
     mov rcx, g_rt_mutex
     test rcx, rcx
-    jz .skip_mutex_close
+    jz skip_mutex_close_local
     call CloseHandle
     
-.skip_mutex_close:
+skip_mutex_close_local:
     mov rcx, g_rt_event
     test rcx, rcx
-    jz .skip_event_close
+    jz skip_event_close_local
     call CloseHandle
     
-.skip_event_close:
+skip_event_close_local:
     ; Free queue memory
     mov rcx, g_rt_state.message_queue
     test rcx, rcx
-    jz .skip_queue_free
+    jz skip_queue_free_local
     
     call HeapFree
     
-.skip_queue_free:
+skip_queue_free_local:
     mov eax, 1
     add rsp, 40
     pop r12
@@ -1296,31 +1296,31 @@ WaitForMessageProcessed PROC
     call GetTickCount64
     mov r9, rax         ; Start time
     
-.wait_loop:
+wait_loop_local:
     ; Check if queue is empty (message processed)
     mov eax, g_queue_index
     cmp eax, 0
-    je .message_processed
+    je message_processed_local
     
     ; Check timeout
     call GetTickCount64
     sub rax, r9
     cmp eax, r8
-    jge .timeout
+    jge timeout_local
     
     ; Small sleep to avoid spinning
     mov ecx, 10
     call Sleep
     
-    jmp .wait_loop
+    jmp wait_loop_local
     
-.message_processed:
+message_processed_local:
     mov eax, 1
     add rsp, 32
     pop rbx
     ret
     
-.timeout:
+timeout_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -1350,7 +1350,7 @@ FlushMessageQueue PROC
     mov r8, g_rt_mutex
     call WaitForSingleObject
     test eax, eax
-    jnz .flush_failed
+    jnz flush_failed_local
     
     ; Clear queue
     mov g_queue_index, 0
@@ -1367,7 +1367,7 @@ FlushMessageQueue PROC
     pop rbx
     ret
     
-.flush_failed:
+flush_failed_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -1387,3 +1387,4 @@ EnumWindowsProc PROC
 EnumWindowsProc ENDP
 
 END
+

@@ -828,3 +828,4 @@ fnv_fail:
 masm_core_fnv1a_hash ENDP
 
 END
+

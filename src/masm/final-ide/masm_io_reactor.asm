@@ -74,7 +74,7 @@ io_reactor_init PROC
     xor r9d, r9d
     call CreateMutexA
     test rax, rax
-    jz .io_init_error
+    jz io_init_error_local
     mov g_io_mutex, rax
     
     ; Initialize handle arrays
@@ -86,21 +86,21 @@ io_reactor_init PROC
     xor eax, eax
     mov ecx, 32 * SIZEOF IO_HANDLE / 4
     
-.zero_loop:
+zero_loop_local:
     test ecx, ecx
-    jz .zero_done
+    jz zero_done_local
     mov DWORD PTR [rcx], eax
     add rcx, 4
     dec ecx
-    jmp .zero_loop
+    jmp zero_loop_local
     
-.zero_done:
+zero_done_local:
     mov eax, 1
     add rsp, 32
     pop rbx
     ret
     
-.io_init_error:
+io_init_error_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -128,11 +128,11 @@ io_reactor_add PROC
     mov rdx, INFINITE
     call WaitForSingleObject
     cmp eax, WAIT_OBJECT_0
-    jne .add_error
+    jne add_error_local
     
     ; Check limit
     cmp g_handle_count, 32
-    jge .add_full
+    jge add_full_local
     
     ; Find empty slot
     mov rax, g_handle_count
@@ -164,12 +164,12 @@ io_reactor_add PROC
     pop rbx
     ret
     
-.add_full:
+add_full_local:
     mov rcx, g_io_mutex
     call ReleaseMutex
-    jmp .add_error
+    jmp add_error_local
     
-.add_error:
+add_error_local:
     xor eax, eax
     add rsp, 32
     pop r13
@@ -194,14 +194,14 @@ io_reactor_remove PROC
     mov rdx, INFINITE
     call WaitForSingleObject
     cmp eax, WAIT_OBJECT_0
-    jne .remove_error
+    jne remove_error_local
     
     ; Search for handle
     mov rbx, 0
     
-.search_remove:
+search_remove_local:
     cmp rbx, g_handle_count
-    jge .not_found
+    jge not_found_local
     
     mov rax, rbx
     imul rax, SIZEOF IO_HANDLE
@@ -210,12 +210,12 @@ io_reactor_remove PROC
     
     mov rax, [rcx + IO_HANDLE.handle]
     cmp rax, r8
-    je .found_remove
+    je found_remove_local
     
     inc rbx
-    jmp .search_remove
+    jmp search_remove_local
     
-.found_remove:
+found_remove_local:
     ; Mark as inactive
     mov DWORD PTR [rcx + IO_HANDLE.is_active], 0
     
@@ -228,12 +228,12 @@ io_reactor_remove PROC
     pop rbx
     ret
     
-.not_found:
+not_found_local:
     mov rcx, g_io_mutex
     call ReleaseMutex
-    jmp .remove_error
+    jmp remove_error_local
     
-.remove_error:
+remove_error_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -261,15 +261,15 @@ io_reactor_wait PROC
     
     ; If acquired, release immediately (just checking count)
     cmp eax, WAIT_OBJECT_0
-    jne .wait_no_lock
+    jne wait_no_lock_local
     
     mov rcx, g_io_mutex
     call ReleaseMutex
     
-.wait_no_lock:
+wait_no_lock_local:
     ; Use WaitForMultipleObjects to wait on all handles
     cmp g_handle_count, 0
-    je .wait_timeout
+    je wait_timeout_local
     
     ; Build handle array
     mov ecx, g_handle_count
@@ -287,7 +287,7 @@ io_reactor_wait PROC
     mov eax, ebx
     ret
     
-.wait_timeout:
+wait_timeout_local:
     add rsp, 40
     pop r12
     pop rbx
@@ -311,14 +311,14 @@ io_reactor_process PROC
     mov rdx, INFINITE
     call WaitForSingleObject
     cmp eax, WAIT_OBJECT_0
-    jne .process_exit
+    jne process_exit_local
     
     ; Iterate through handles
     mov r12d, 0
     
-.process_loop:
+process_loop_local:
     cmp r12d, g_handle_count
-    jge .process_done
+    jge process_done_local
     
     mov r13d, r12d
     imul r13d, SIZEOF IO_HANDLE
@@ -328,7 +328,7 @@ io_reactor_process PROC
     ; Check if active
     mov eax, [r8 + IO_HANDLE.is_active]
     test eax, eax
-    jz .process_next
+    jz process_next_local
     
     ; Check if handle is signaled
     mov rcx, [r8 + IO_HANDLE.handle]
@@ -336,26 +336,26 @@ io_reactor_process PROC
     call WaitForSingleObject
     
     cmp eax, WAIT_OBJECT_0
-    jne .process_next
+    jne process_next_local
     
     ; Handle is ready - invoke callback
     mov r9, [r8 + IO_HANDLE.callback]
     test r9, r9
-    jz .process_next
+    jz process_next_local
     
     ; Invoke callback with context
     mov rcx, [r8 + IO_HANDLE.context]
     call r9
     
-.process_next:
+process_next_local:
     inc r12d
-    jmp .process_loop
+    jmp process_loop_local
     
-.process_done:
+process_done_local:
     mov rcx, g_io_mutex
     call ReleaseMutex
     
-.process_exit:
+process_exit_local:
     add rsp, 40
     pop r13
     pop r12
@@ -379,14 +379,14 @@ io_reactor_cancel PROC
     mov rcx, r8
     call CancelIo
     test eax, eax
-    jz .cancel_error
+    jz cancel_error_local
     
     mov eax, 1
     add rsp, 32
     pop rbx
     ret
     
-.cancel_error:
+cancel_error_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -411,14 +411,15 @@ io_reactor_shutdown PROC
     ; Close reactor mutex
     mov rcx, g_io_mutex
     test rcx, rcx
-    jz .shutdown_exit
+    jz shutdown_exit_local
     call CloseHandle
     mov g_io_mutex, 0
     
-.shutdown_exit:
+shutdown_exit_local:
     add rsp, 32
     pop rbx
     ret
 masm_io_reactor_shutdown ENDP
 
 END
+

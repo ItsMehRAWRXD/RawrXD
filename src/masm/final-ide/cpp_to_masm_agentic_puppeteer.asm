@@ -144,7 +144,7 @@ agentic_puppeteer_create PROC
     movss [rbx + AGENTIC_PUPPETEER.stats.averageAttempts], xmm0
     movss [rbx + AGENTIC_PUPPETEER.stats.successRate], xmm0
     
-    mov byte [rbx + AGENTIC_PUPPETEER.initialized], 1
+    mov byte ptr [rbx + AGENTIC_PUPPETEER.initialized], 1
     
     ; Log
     lea rcx, [szPuppeteerCreated]
@@ -173,7 +173,7 @@ agentic_correct_failure PROC
     
     ; Check if failure is valid
     cmp byte [rsi + FAILURE_DETECTION.isFailure], 1
-    jne .no_failure
+    jne no_failure_local
     
     ; Log
     lea rcx, [szCorrectionStarted]
@@ -184,7 +184,7 @@ agentic_correct_failure PROC
     ; Check capacity
     mov r14d, [rbx + AGENTIC_PUPPETEER.correctionCount]
     cmp r14d, [rbx + AGENTIC_PUPPETEER.maxCorrections]
-    jge .capacity_exceeded
+    jge capacity_exceeded_local
     
     ; Get correction slot
     mov r15, [rbx + AGENTIC_PUPPETEER.corrections]
@@ -214,7 +214,7 @@ agentic_correct_failure PROC
     inc qword [rbx + AGENTIC_PUPPETEER.stats.totalCorrections]
     
     cmp byte [r15 + CORRECTION_RESULT.success], 1
-    jne .correction_failed
+    jne correction_failed_local
     
     ; Success
     inc qword [rbx + AGENTIC_PUPPETEER.stats.successfulCorrections]
@@ -225,9 +225,9 @@ agentic_correct_failure PROC
     mov r8d, [r15 + CORRECTION_RESULT.attemptsUsed]
     call console_log
     
-    jmp .correction_done
+    jmp correction_done_local
     
-.correction_failed:
+correction_failed_local:
     ; Failure
     inc qword [rbx + AGENTIC_PUPPETEER.stats.failedCorrections]
     
@@ -236,7 +236,7 @@ agentic_correct_failure PROC
     mov rdx, [r15 + CORRECTION_RESULT.errorMessage]
     call console_log
     
-.correction_done:
+correction_done_local:
     ; Update success rate
     mov rax, [rbx + AGENTIC_PUPPETEER.stats.successfulCorrections]
     cvtsi2ss xmm0, rax
@@ -254,8 +254,8 @@ agentic_correct_failure PROC
     pop rbx
     ret
     
-.no_failure:
-.capacity_exceeded:
+no_failure_local:
+capacity_exceeded_local:
     xor rax, rax
     pop r12
     pop rsi
@@ -270,29 +270,29 @@ agentic_correct_failure ENDP
 ; Returns: RAX = strategy enum
 select_strategy PROC
     cmp eax, FAILURE_TYPE_REFUSAL
-    jne .not_refusal
+    jne not_refusal_local
     mov eax, STRATEGY_REPHRASE
     ret
     
-.not_refusal:
+not_refusal_local:
     cmp eax, FAILURE_TYPE_HALLUCINATION
-    jne .not_hallucination
+    jne not_hallucination_local
     mov eax, STRATEGY_CONTEXT_ENHANCE
     ret
     
-.not_hallucination:
+not_hallucination_local:
     cmp eax, FAILURE_TYPE_FORMAT_VIOLATION
-    jne .not_format
+    jne not_format_local
     mov eax, STRATEGY_EXAMPLE_PROVIDE
     ret
     
-.not_format:
+not_format_local:
     cmp eax, FAILURE_TYPE_INFINITE_LOOP
-    jne .not_loop
+    jne not_loop_local
     mov eax, STRATEGY_FORCE_COMPLETION
     ret
     
-.not_loop:
+not_loop_local:
     mov eax, STRATEGY_DEFAULT
     ret
 select_strategy ENDP
@@ -316,37 +316,37 @@ apply_correction_strategy PROC
     
     ; Apply strategy (simplified)
     cmp eax, STRATEGY_REPHRASE
-    jne .not_rephrase
+    jne not_rephrase_local
     
     ; Rephrase strategy
     mov rcx, r11
     call rephrase_prompt
     mov [r13 + CORRECTION_RESULT.correctedResponse], rax
-    mov byte [r13 + CORRECTION_RESULT.success], 1
+    mov byte ptr [r13 + CORRECTION_RESULT.success], 1
     mov [r13 + CORRECTION_RESULT.attemptsUsed], 1
-    jmp .strategy_applied
+    jmp strategy_applied_local
     
-.not_rephrase:
+not_rephrase_local:
     cmp eax, STRATEGY_CONTEXT_ENHANCE
-    jne .not_context
+    jne not_context_local
     
     ; Context enhancement
     mov rcx, r11
     call enhance_context
     mov [r13 + CORRECTION_RESULT.correctedResponse], rax
-    mov byte [r13 + CORRECTION_RESULT.success], 1
+    mov byte ptr [r13 + CORRECTION_RESULT.success], 1
     mov [r13 + CORRECTION_RESULT.attemptsUsed], 1
-    jmp .strategy_applied
+    jmp strategy_applied_local
     
-.not_context:
+not_context_local:
     ; Default strategy
     mov rcx, r11
     call retry_with_rephrase
     mov [r13 + CORRECTION_RESULT.correctedResponse], rax
-    mov byte [r13 + CORRECTION_RESULT.success], 1
+    mov byte ptr [r13 + CORRECTION_RESULT.success], 1
     mov [r13 + CORRECTION_RESULT.attemptsUsed], 1
     
-.strategy_applied:
+strategy_applied_local:
     pop rsi
     pop rbx
     ret
@@ -414,9 +414,9 @@ agentic_get_correction_result PROC
     mov r9d, [rcx + AGENTIC_PUPPETEER.correctionCount]
     xor r10d, r10d
     
-.find_correction:
+find_correction_local:
     cmp r10d, r9d
-    jge .correction_not_found
+    jge correction_not_found_local
     
     mov r11, r8
     mov r12, r10
@@ -424,16 +424,16 @@ agentic_get_correction_result PROC
     add r11, r12
     
     cmp r10d, edx
-    je .correction_found
+    je correction_found_local
     
     inc r10d
-    jmp .find_correction
+    jmp find_correction_local
     
-.correction_found:
+correction_found_local:
     mov rax, r11
     ret
     
-.correction_not_found:
+correction_not_found_local:
     xor rax, rax
     ret
 agentic_get_correction_result ENDP
@@ -487,10 +487,10 @@ agentic_destroy PROC
     ; Free corrections array
     mov rcx, [rbx + AGENTIC_PUPPETEER.corrections]
     cmp rcx, 0
-    je .skip_corrections
+    je skip_corrections_local
     call free
     
-.skip_corrections:
+skip_corrections_local:
     ; Free puppeteer
     mov rcx, rbx
     call free
@@ -509,3 +509,4 @@ agentic_destroy ENDP
     szRetryResponse DB "Retry: Let me try that again with a different approach.", 0
 
 END
+

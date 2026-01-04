@@ -44,7 +44,7 @@ quantize_q8_0 PROC
     xorps xmm0, xmm0    ; amax = 0
     mov rcx, rbx
     mov rdx, rsi
-.find_max:
+find_max_local:
     movss xmm1, dword ptr [rdx]
     andps xmm1, xmm1    ; abs (simplified, should use mask)
     maxss xmm0, xmm1
@@ -59,7 +59,7 @@ quantize_q8_0 PROC
     mov rcx, rbx
     mov rdx, rsi
     add rdi, 4
-.quant_loop:
+quant_loop_local:
     movss xmm1, dword ptr [rdx]
     divss xmm1, xmm0    ; v = f / scale
     cvtss2si eax, xmm1  ; round to int
@@ -85,3 +85,4 @@ quantize_q8_0 PROC
 quantize_q8_0 ENDP
 
 END
+

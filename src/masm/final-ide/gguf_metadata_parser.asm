@@ -579,3 +579,4 @@ append_done:
 append_int_to_buffer ENDP
 
 END
+

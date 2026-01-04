@@ -117,7 +117,7 @@ HttpClientInitialize PROC
     mov rdx, WINHTTP_ACCESS_TYPE_DEFAULT_PROXY
     xor r8, r8
     xor r9, r9
-    mov [rsp + 32], 0   ; dwFlags
+    mov dword ptr [rsp + 32], 0  ; dwFlags
     call WinHttpOpen
     
     test rax, rax
@@ -141,9 +141,7 @@ HttpClientInitialize PROC
     mov [g_HttpClient.base_url], rbx
     
     ; Set timeout (30 seconds)
-    mov [g_HttpClient.timeout], 30000
-    
-    ; Store user agent
+    mov dword ptr [g_HttpClient.timeout], 30000  ; Store user agent
     lea rax, szUserAgent
     mov [g_HttpClient.user_agent], rax
     
@@ -231,8 +229,8 @@ method_set:
     mov rdx, rbx        ; method
     mov r8, [r13 + HTTP_REQUEST.url]
     mov r9, 0           ; version (NULL = HTTP/1.1)
-    mov [rsp + 32], 0   ; referrer
-    mov [rsp + 40], 0   ; accept types
+    mov dword ptr [rsp + 32], 0  ; referrer
+    mov dword ptr [rsp + 40], 0  ; accept types
     mov [rsp + 48], WINHTTP_NO_REFERER
     call WinHttpOpenRequest
     
@@ -270,8 +268,8 @@ skip_custom_headers:
     mov rdx, [r13 + HTTP_REQUEST.body]
     mov r8, [r13 + HTTP_REQUEST.body_len]
     mov r9, [r13 + HTTP_REQUEST.body_len]
-    mov [rsp + 32], 0   ; dwTotalLength
-    mov [rsp + 40], 0   ; dwContext
+    mov dword ptr [rsp + 32], 0  ; dwTotalLength
+    mov dword ptr [rsp + 40], 0  ; dwContext
     call WinHttpSendRequest
     
     test eax, eax
@@ -420,4 +418,5 @@ HttpClientShutdown ENDP
     szDeleteMethod  BYTE "DELETE",0
 
 END
+
 

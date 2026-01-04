@@ -28,12 +28,12 @@ wrapper_thread_pool_create PROC
     
     ; Validate inputs
     test r8, r8
-    jz .error_null_pool
+    jz error_null_pool_local
     
     cmp r9, 0
-    je .error_zero_threads
+    je error_zero_threads_local
     cmp r9, 16
-    jg .error_too_many_threads
+    jg error_too_many_threads_local
     
     ; Initialize pool state
     mov QWORD PTR [r8 + OFFSET THREAD_POOL.thread_count], 0
@@ -62,9 +62,9 @@ wrapper_thread_pool_create PROC
     ; Create worker threads
     xor r10, r10        ; thread counter
     
-.create_thread_loop:
+create_thread_loop_local:
     cmp r10, r9
-    jge .creation_done
+    jge creation_done_local
     
     ; Create worker thread
     mov rcx, r8         ; pool ptr
@@ -72,35 +72,35 @@ wrapper_thread_pool_create PROC
     call wrapper_create_worker_thread
     
     test rax, rax
-    jnz .thread_creation_failed
+    jnz thread_creation_failed_local
     
     inc r10
-    jmp .create_thread_loop
+    jmp create_thread_loop_local
     
-.thread_creation_failed:
+thread_creation_failed_local:
     ; Clean up created threads
     mov rcx, r8
     call wrapper_thread_pool_destroy
     mov rax, 1
-    jmp .cleanup_and_return
+    jmp cleanup_and_return_local
     
-.creation_done:
+creation_done_local:
     mov [r8 + OFFSET THREAD_POOL.thread_count], r9
     xor eax, eax       ; Success
-    jmp .cleanup_and_return
+    jmp cleanup_and_return_local
     
-.error_null_pool:
+error_null_pool_local:
     mov eax, 1
-    jmp .cleanup_and_return
+    jmp cleanup_and_return_local
     
-.error_zero_threads:
+error_zero_threads_local:
     mov eax, 2
-    jmp .cleanup_and_return
+    jmp cleanup_and_return_local
     
-.error_too_many_threads:
+error_too_many_threads_local:
     mov eax, 3
     
-.cleanup_and_return:
+cleanup_and_return_local:
     add rsp, 40h
     pop rbp
     ret
@@ -120,7 +120,7 @@ wrapper_thread_pool_destroy PROC
     
     ; Validate input
     test rcx, rcx
-    jz .error_null
+    jz error_null_local
     
     mov r8, rcx        ; Save pool ptr
     
@@ -133,24 +133,24 @@ wrapper_thread_pool_destroy PROC
     mov r9, [r8 + OFFSET THREAD_POOL.thread_count]
     xor r10, r10        ; thread index
     
-.wait_thread_loop:
+wait_thread_loop_local:
     cmp r10, r9
-    jge .threads_waited
+    jge threads_waited_local
     
     ; Wait for thread to finish
     mov rax, [r8 + OFFSET THREAD_POOL.worker_threads + r10 * 8]
     test rax, rax
-    jz .next_thread
+    jz next_thread_local
     
     ; Close thread handle (or join on POSIX)
     mov rcx, rax
     call wrapper_thread_wait
     
-.next_thread:
+next_thread_local:
     inc r10
-    jmp .wait_thread_loop
+    jmp wait_thread_loop_local
     
-.threads_waited:
+threads_waited_local:
     ; Cleanup synchronization objects
     lea rax, [r8 + OFFSET THREAD_POOL.queue_lock]
     mov rcx, rax
@@ -165,12 +165,12 @@ wrapper_thread_pool_destroy PROC
     call wrapper_event_destroy
     
     xor eax, eax
-    jmp .cleanup
+    jmp cleanup_local
     
-.error_null:
+error_null_local:
     mov eax, 1
     
-.cleanup:
+cleanup_local:
     add rsp, 40h
     pop rbp
     ret
@@ -191,9 +191,9 @@ wrapper_thread_pool_queue_work PROC
     
     ; Validate inputs
     test rcx, rcx
-    jz .error_null_pool
+    jz error_null_pool_local
     test rdx, rdx
-    jz .error_null_work
+    jz error_null_work_local
     
     mov r8, rcx        ; pool ptr
     mov r9, rdx        ; work item ptr
@@ -206,7 +206,7 @@ wrapper_thread_pool_queue_work PROC
     ; Check if queue is full
     mov rax, [r8 + OFFSET THREAD_POOL.queue_size]
     cmp rax, 1024      ; MAX_WORK_QUEUE_SIZE
-    jge .queue_full
+    jge queue_full_local
     
     ; Add to queue tail
     mov rax, [r8 + OFFSET THREAD_POOL.queue_tail]
@@ -237,23 +237,23 @@ wrapper_thread_pool_queue_work PROC
     call wrapper_event_set
     
     xor eax, eax       ; Success
-    jmp .cleanup
+    jmp cleanup_local
     
-.queue_full:
+queue_full_local:
     lea rax, [r8 + OFFSET THREAD_POOL.queue_lock]
     mov rcx, rax
     call wrapper_mutex_unlock
     mov eax, 5         ; ASYNC_ERR_QUEUE_FULL
-    jmp .cleanup
+    jmp cleanup_local
     
-.error_null_pool:
+error_null_pool_local:
     mov eax, 1
-    jmp .cleanup
+    jmp cleanup_local
     
-.error_null_work:
+error_null_work_local:
     mov eax, 2
     
-.cleanup:
+cleanup_local:
     add rsp, 40h
     pop rbp
     ret
@@ -275,9 +275,9 @@ wrapper_thread_pool_get_status PROC
     
     ; Validate inputs
     test rcx, rcx
-    jz .error_null_pool
+    jz error_null_pool_local
     test r8, r8
-    jz .error_null_status
+    jz error_null_status_local
     
     mov r9, rcx        ; pool ptr
     mov r10, rdx       ; work item ID
@@ -290,18 +290,18 @@ wrapper_thread_pool_get_status PROC
     ; Search for work item in queue
     mov rax, [r9 + OFFSET THREAD_POOL.queue_head]
     
-.search_loop:
+search_loop_local:
     test rax, rax
-    jz .not_found
+    jz not_found_local
     
     mov r11, [rax + OFFSET ASYNC_WORK_ITEM.work_id]
     cmp r11, r10
-    je .found
+    je found_local
     
     mov rax, [rax + OFFSET ASYNC_WORK_ITEM.next]
-    jmp .search_loop
+    jmp search_loop_local
     
-.found:
+found_local:
     ; Get status
     mov ecx, [rax + OFFSET ASYNC_WORK_ITEM.status]
     mov [r8], ecx
@@ -312,15 +312,15 @@ wrapper_thread_pool_get_status PROC
     call wrapper_mutex_unlock
     
     xor eax, eax
-    jmp .cleanup
+    jmp cleanup_local
     
-.not_found:
+not_found_local:
     lea rax, [r9 + OFFSET THREAD_POOL.queue_lock]
     mov rcx, rax
     call wrapper_mutex_unlock
     mov eax, 8         ; ASYNC_ERR_WORK_NOT_FOUND
     
-.cleanup:
+cleanup_local:
     add rsp, 40h
     pop rbp
     ret
@@ -341,7 +341,7 @@ wrapper_thread_pool_cancel_work PROC
     
     ; Validate inputs
     test rcx, rcx
-    jz .error_null_pool
+    jz error_null_pool_local
     
     mov r8, rcx        ; pool ptr
     mov r9, rdx        ; work item ID
@@ -354,41 +354,41 @@ wrapper_thread_pool_cancel_work PROC
     ; Search for work item
     mov rax, [r8 + OFFSET THREAD_POOL.queue_head]
     
-.search_loop:
+search_loop_local:
     test rax, rax
-    jz .not_found
+    jz not_found_local
     
     mov r11, [rax + OFFSET ASYNC_WORK_ITEM.work_id]
     cmp r11, r9
-    je .found
+    je found_local
     
     mov rax, [rax + OFFSET ASYNC_WORK_ITEM.next]
-    jmp .search_loop
+    jmp search_loop_local
     
-.found:
+found_local:
     ; Set cancel event
     mov r10, [rax + OFFSET ASYNC_WORK_ITEM.cancel_event]
     test r10, r10
-    jz .no_cancel_event
+    jz no_cancel_event_local
     
     mov rcx, r10
     call wrapper_event_set
     
-.no_cancel_event:
+no_cancel_event_local:
     lea rax, [r8 + OFFSET THREAD_POOL.queue_lock]
     mov rcx, rax
     call wrapper_mutex_unlock
     
     xor eax, eax
-    jmp .cleanup
+    jmp cleanup_local
     
-.not_found:
+not_found_local:
     lea rax, [r8 + OFFSET THREAD_POOL.queue_lock]
     mov rcx, rax
     call wrapper_mutex_unlock
     mov eax, 8
     
-.cleanup:
+cleanup_local:
     add rsp, 40h
     pop rbp
     ret
@@ -409,7 +409,7 @@ worker_thread_main_loop PROC
     mov r8, rcx        ; pool ptr
     mov r9, rdx        ; thread index
     
-.work_loop:
+work_loop_local:
     ; Lock queue
     lea rax, [r8 + OFFSET THREAD_POOL.queue_lock]
     mov rcx, rax
@@ -421,7 +421,7 @@ worker_thread_main_loop PROC
     
     ; Check if queue empty
     test rax, rax
-    jz .queue_empty
+    jz queue_empty_local
     
     ; Remove from queue
     mov [r8 + OFFSET THREAD_POOL.queue_head], rax
@@ -452,51 +452,51 @@ worker_thread_main_loop PROC
     
     ; Dispatch based on operation type
     cmp ecx, 0
-    je .op_read
+    je op_read_local
     cmp ecx, 1
-    je .op_write
+    je op_write_local
     cmp ecx, 2
-    je .op_copy
+    je op_copy_local
     cmp ecx, 3
-    je .op_delete
+    je op_delete_local
     
     ; Custom operation
     mov rcx, r10
     call [r10 + OFFSET ASYNC_WORK_ITEM.work_func]
-    jmp .op_done
+    jmp op_done_local
     
-.op_read:
+op_read_local:
     mov rcx, r10
     call wrapper_file_read_async
-    jmp .op_done
+    jmp op_done_local
     
-.op_write:
+op_write_local:
     mov rcx, r10
     call wrapper_file_write_async
-    jmp .op_done
+    jmp op_done_local
     
-.op_copy:
+op_copy_local:
     mov rcx, r10
     call wrapper_file_copy_async
-    jmp .op_done
+    jmp op_done_local
     
-.op_delete:
+op_delete_local:
     mov rcx, r10
     call wrapper_file_delete_async
     
-.op_done:
+op_done_local:
     ; Set status to Complete
     mov DWORD PTR [r10 + OFFSET ASYNC_WORK_ITEM.status], 3
     
     ; Signal completion event
     mov rax, [r10 + OFFSET ASYNC_WORK_ITEM.completion_event]
     test rax, rax
-    jz .no_completion_event
+    jz no_completion_event_local
     
     mov rcx, rax
     call wrapper_event_set
     
-.no_completion_event:
+no_completion_event_local:
     ; Decrement active count
     lea rax, [r8 + OFFSET THREAD_POOL.queue_lock]
     mov rcx, rax
@@ -510,9 +510,9 @@ worker_thread_main_loop PROC
     mov rcx, rax
     call wrapper_mutex_unlock
     
-    jmp .work_loop
+    jmp work_loop_local
     
-.queue_empty:
+queue_empty_local:
     ; Unlock queue
     lea rax, [r8 + OFFSET THREAD_POOL.queue_lock]
     mov rcx, rax
@@ -533,13 +533,13 @@ worker_thread_main_loop PROC
     call wrapper_event_is_set
     
     test eax, eax
-    jz .work_loop
+    jz work_loop_local
     
     ; Shutdown signal received
     xor eax, eax
-    jmp .cleanup
+    jmp cleanup_local
     
-.cleanup:
+cleanup_local:
     add rsp, 40h
     pop rbp
     ret
@@ -691,3 +691,4 @@ wrapper_thread_wait PROC
 wrapper_thread_wait ENDP
 
 END
+

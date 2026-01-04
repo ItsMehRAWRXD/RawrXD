@@ -171,18 +171,18 @@ detect_simd_capabilities PROC
     cpuid
     
     test ecx, 0x02000000           ; ECX[25] = SSE4.2
-    jz .no_sse
+    jz no_sse_local
     
-    mov byte [rbx + SIMD_CONTEXT.supportsSSE], 1
+    mov byte ptr [rbx + SIMD_CONTEXT.supportsSSE], 1
     or r12d, (1 SHL SIMD_LEVEL_SSE)
     
-.no_sse:
+no_sse_local:
     ; Check for AVX support
     mov eax, 1
     cpuid
     
     test ecx, 0x10000000           ; ECX[28] = AVX
-    jz .no_avx
+    jz no_avx_local
     
     ; Also need XCR0 to be set for AVX
     mov ecx, 0
@@ -190,21 +190,21 @@ detect_simd_capabilities PROC
     
     and eax, 0x00000006            ; Check bits 1 and 2
     cmp eax, 0x00000006
-    jne .no_avx
+    jne no_avx_local
     
-    mov byte [rbx + SIMD_CONTEXT.supportsAVX], 1
+    mov byte ptr [rbx + SIMD_CONTEXT.supportsAVX], 1
     or r12d, (1 SHL SIMD_LEVEL_AVX)
     
-.no_avx:
+no_avx_local:
     ; Check for AVX2 support
     mov eax, 7
     mov ecx, 0
     cpuid
     
     test ebx, 0x00000020           ; EBX[5] = AVX2
-    jz .no_avx2
+    jz no_avx_local2
     
-    mov byte [rbx + SIMD_CONTEXT.supportsAVX2], 1
+    mov byte ptr [rbx + SIMD_CONTEXT.supportsAVX2], 1
     or r12d, (1 SHL SIMD_LEVEL_AVX2)
     
 .no_avx2:
@@ -215,38 +215,38 @@ detect_simd_capabilities PROC
     mov eax, SIMD_LEVEL_SCALAR
     
     cmp byte [rbx + SIMD_CONTEXT.supportsAVX512], 1
-    je .use_avx512
+    je use_avx_local512
     
     cmp byte [rbx + SIMD_CONTEXT.supportsAVX2], 1
-    je .use_avx2
+    je use_avx_local2
     
     cmp byte [rbx + SIMD_CONTEXT.supportsAVX], 1
-    je .use_avx
+    je use_avx_local
     
     cmp byte [rbx + SIMD_CONTEXT.supportsSSE], 1
-    je .use_sse
+    je use_sse_local
     
-    jmp .detection_done
+    jmp detection_done_local
     
 .use_avx512:
     mov eax, SIMD_LEVEL_AVX512
-    jmp .set_level
+    jmp set_level_local
     
 .use_avx2:
     mov eax, SIMD_LEVEL_AVX2
-    jmp .set_level
+    jmp set_level_local
     
-.use_avx:
+use_avx_local:
     mov eax, SIMD_LEVEL_AVX
-    jmp .set_level
+    jmp set_level_local
     
-.use_sse:
+use_sse_local:
     mov eax, SIMD_LEVEL_SSE
     
-.set_level:
+set_level_local:
     mov [rbx + SIMD_CONTEXT.currentLevel], eax
     
-.detection_done:
+detection_done_local:
     mov [rbx + SIMD_CONTEXT.supportedLevels], r12d
     mov rax, rbx
     
@@ -283,9 +283,9 @@ vector_multiply_float32 PROC
     ; Process array using SSE (128-bit, 4 floats at a time)
     xor r8, r8
     
-.sse_loop:
+sse_loop_local:
     cmp r8, rdx
-    jge .sse_done
+    jge sse_done_local
     
     ; Load 4 float32 values
     movaps xmm0, [rcx + r8*4]
@@ -297,9 +297,9 @@ vector_multiply_float32 PROC
     movaps [rbx + r8*4], xmm0
     
     add r8, 4
-    jmp .sse_loop
+    jmp sse_loop_local
     
-.sse_done:
+sse_done_local:
     mov rax, rbx
     
     pop rbx
@@ -317,9 +317,9 @@ vector_dot_product_float32 PROC
     
     xor r9, r9
     
-.dot_loop:
+dot_loop_local:
     cmp r9, r8
-    jge .dot_done
+    jge dot_done_local
     
     movss xmm1, [rcx + r9*4]       ; vec1[i]
     movss xmm2, [rdx + r9*4]       ; vec2[i]
@@ -328,9 +328,9 @@ vector_dot_product_float32 PROC
     addss xmm0, xmm1               ; sum += product
     
     inc r9
-    jmp .dot_loop
+    jmp dot_loop_local
     
-.dot_done:
+dot_done_local:
     ret
 vector_dot_product_float32 ENDP
 
@@ -362,19 +362,19 @@ vector_normalize_float32 PROC
     ; Normalize: result[i] = vector[i] / length
     xor r10, r10
     
-.norm_loop:
+norm_loop_local:
     imul r11, r10, 4
     cmp r11, r8
-    jge .norm_done
+    jge norm_done_local
     
     movss xmm0, [rcx + r11]
     divss xmm0, xmm1
     movss [r9 + r11], xmm0
     
     inc r10
-    jmp .norm_loop
+    jmp norm_loop_local
     
-.norm_done:
+norm_done_local:
     mov rax, r9
     ret
 vector_normalize_float32 ENDP
@@ -429,7 +429,7 @@ create_batch_renderer PROC
     mov r8, 64
     call memcpy
     
-    mov byte [rbx + BATCH_RENDER.batchDirty], 1
+    mov byte ptr [rbx + BATCH_RENDER.batchDirty], 1
     
     mov rax, rbx
     
@@ -450,7 +450,7 @@ batch_add_vertex PROC
     
     ; Check if batch is full
     cmp rax, MAX_VERTICES_PER_BATCH
-    jge .batch_full
+    jge batch_full_local
     
     ; Copy vertex data
     mov r8, [rcx + BATCH_RENDER.vertices]
@@ -465,10 +465,10 @@ batch_add_vertex PROC
     mov rax, [rcx + BATCH_RENDER.vertexCount]
     inc qword [rcx + BATCH_RENDER.vertexCount]
     
-    mov byte [rcx + BATCH_RENDER.batchDirty], 1
+    mov byte ptr [rcx + BATCH_RENDER.batchDirty], 1
     ret
     
-.batch_full:
+batch_full_local:
     mov rax, -1
     ret
 batch_add_vertex ENDP
@@ -484,7 +484,7 @@ batch_add_triangle PROC
     mov rax, [rcx + BATCH_RENDER.indexCount]
     add rax, 3
     cmp rax, MAX_INDICES_PER_BATCH
-    jge .batch_full
+    jge batch_full_local
     
     ; Add three indices
     mov r10, [rcx + BATCH_RENDER.indices]
@@ -506,12 +506,12 @@ batch_add_triangle PROC
     inc rax
     
     mov [rcx + BATCH_RENDER.indexCount], rax
-    mov byte [rcx + BATCH_RENDER.batchDirty], 1
+    mov byte ptr [rcx + BATCH_RENDER.batchDirty], 1
     
     xor eax, eax                   ; Return success
     ret
     
-.batch_full:
+batch_full_local:
     mov eax, -1
     ret
 batch_add_triangle ENDP
@@ -525,14 +525,14 @@ PUBLIC batch_sync_gpu
 batch_sync_gpu PROC
     ; Check if sync needed
     cmp byte [rcx + BATCH_RENDER.batchDirty], 1
-    jne .already_synced
+    jne already_synced_local
     
     ; Update GPU vertex buffer
     ; In production, this would call D3D11 UpdateSubresource
     
     ; Update GPU index buffer
     
-    mov byte [rcx + BATCH_RENDER.batchDirty], 0
+    mov byte ptr [rcx + BATCH_RENDER.batchDirty], 0
     
     ; Log sync
     lea rax, [szBatchSync]
@@ -543,7 +543,7 @@ batch_sync_gpu PROC
     xor eax, eax                   ; Return success
     ret
     
-.already_synced:
+already_synced_local:
     xor eax, eax
     ret
 batch_sync_gpu ENDP
@@ -578,17 +578,17 @@ free_batch_renderer PROC
     ; Free vertex array
     mov rcx, [rbx + BATCH_RENDER.vertices]
     cmp rcx, 0
-    je .skip_vert
+    je skip_vert_local
     call free
     
-.skip_vert:
+skip_vert_local:
     ; Free index array
     mov rcx, [rbx + BATCH_RENDER.indices]
     cmp rcx, 0
-    je .skip_idx
+    je skip_idx_local
     call free
     
-.skip_idx:
+skip_idx_local:
     ; Free batch structure
     mov rcx, rbx
     call free
@@ -614,8 +614,8 @@ create_gpu_device PROC
     mov r10, rax
     mov [r10 + GPU_DEVICE.viewportWidth], edx
     mov [r10 + GPU_DEVICE.viewportHeight], r8d
-    mov byte [r10 + GPU_DEVICE.vsyncEnabled], 1
-    mov byte [r10 + GPU_DEVICE.hardwareAcceleration], 1
+    mov byte ptr [r10 + GPU_DEVICE.vsyncEnabled], 1
+    mov byte ptr [r10 + GPU_DEVICE.hardwareAcceleration], 1
     
     ; In production, would call D3D11CreateDeviceAndSwapChain here
     ; For now, just initialize structure
@@ -665,3 +665,4 @@ present_frame ENDP
 ; ============================================================================
 
 END
+

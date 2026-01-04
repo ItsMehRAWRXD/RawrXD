@@ -526,8 +526,7 @@ plan_failed:
     
 execution_error:
     mov DWORD PTR [rbx + EXECUTION_CONTEXT.execution_state], 4  ; ERROR
-    mov [rbx + EXECUTION_CONTEXT.rollback_needed], 1
-    ; Record error counter
+    mov dword ptr [rbx + EXECUTION_CONTEXT.rollback_needed], 1  ; Record error counter
     lea rcx, szMetricsExecError
     mov rdx, 1
     xor r8, r8
@@ -745,3 +744,4 @@ ALIGN 16
 zero_cpp_bridge_shutdown ENDP
 
 END
+

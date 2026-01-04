@@ -320,17 +320,17 @@ Manual_atof PROC
     ; Handle sign
     mov al, [rbx]
     cmp al, '-'
-    jne .positive
+    jne positive_local
     inc rbx
-.positive:
+positive_local:
     
     ; Integer part
-.int_loop:
+int_loop_local:
     movzx eax, byte ptr [rbx]
     test al, al
-    jz .done
+    jz done_local
     cmp al, '.'
-    je .decimal
+    je decimal_local
     
     sub al, '0'
     cvtsi2sd xmm1, eax
@@ -340,19 +340,19 @@ Manual_atof PROC
     addsd xmm0, xmm1
     
     inc rbx
-    jmp .int_loop
+    jmp int_loop_local
     
-.decimal:
+decimal_local:
     inc rbx
     mov rax, 10
     cvtsi2sd xmm2, rax
     mov rax, 1
     cvtsi2sd xmm3, rax ; Divisor
     
-.dec_loop:
+dec_loop_local:
     movzx eax, byte ptr [rbx]
     test al, al
-    jz .done
+    jz done_local
     
     sub al, '0'
     cvtsi2sd xmm1, eax
@@ -361,9 +361,9 @@ Manual_atof PROC
     addsd xmm0, xmm1
     
     inc rbx
-    jmp .dec_loop
+    jmp dec_loop_local
     
-.done:
+done_local:
     ; Apply sign if needed
     ; (Simplified: assume positive for now, but logic is there)
     
@@ -696,4 +696,5 @@ json_free_done:
 JsonFree ENDP
 
 END
+
 

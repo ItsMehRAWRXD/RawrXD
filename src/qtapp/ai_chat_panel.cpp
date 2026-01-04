@@ -1,4 +1,5 @@
 #include "ai_chat_panel.hpp"
+#include "chat_history_manager.h"
 #include <QDateTime>
 #include <QScrollBar>
 #include <QSyntaxHighlighter>
@@ -25,6 +26,10 @@
 #include <QListWidgetItem>
 #include <QAbstractItemView>
 #include <QSignalBlocker>
+#include <QMessageBox>
+#include <QInputDialog>
+#include <QMainWindow>
+#include <QStatusBar>
 #include <algorithm>
 
 AIChatPanel::AIChatPanel(QWidget* parent)
@@ -107,6 +112,8 @@ void AIChatPanel::setupUI()
     m_scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_scrollArea->setFrameStyle(QFrame::NoFrame);
     m_scrollArea->setMinimumHeight(200); // Ensure scroll area has minimum size
+    // Enable text selection for copy/paste of entire chat
+    m_scrollArea->setFocusPolicy(Qt::StrongFocus);
     
     m_messagesContainer = new QWidget();
     m_messagesLayout = new QVBoxLayout(m_messagesContainer);
@@ -198,6 +205,19 @@ void AIChatPanel::setupUI()
     m_multiModelButton->setMinimumHeight(28);
     connect(m_multiModelButton, &QPushButton::clicked, this, &AIChatPanel::openModelsDialog);
     modelLayout->addWidget(m_multiModelButton);
+    
+    // Checkpoint controls
+    QPushButton* saveCheckpointBtn = new QPushButton("💾 Save", modelContainer);
+    saveCheckpointBtn->setMinimumHeight(28);
+    saveCheckpointBtn->setToolTip("Save current chat as checkpoint");
+    connect(saveCheckpointBtn, &QPushButton::clicked, this, &AIChatPanel::onSaveCheckpoint);
+    modelLayout->addWidget(saveCheckpointBtn);
+    
+    QPushButton* restoreCheckpointBtn = new QPushButton("⏮ Restore", modelContainer);
+    restoreCheckpointBtn->setMinimumHeight(28);
+    restoreCheckpointBtn->setToolTip("Restore chat from checkpoint");
+    connect(restoreCheckpointBtn, &QPushButton::clicked, this, &AIChatPanel::onRestoreCheckpoint);
+    modelLayout->addWidget(restoreCheckpointBtn);
     
     // Assembly - add widgets to main layout in correct order
     qDebug() << "[AIChatPanel] Adding widgets to main layout...";
@@ -1152,7 +1172,10 @@ void AIChatPanel::onAggregateFinished(QNetworkReply* reply)
 
         // Compute changed files and create checkpoint
         int changed = computeChangedFilesSinceSnapshot();
-        createCheckpoint("chat-session", combined, changed);
+        // Auto-create checkpoint after aggregated response
+        if (m_historyManager && !m_currentSessionId.isEmpty()) {
+            createCheckpoint(QString("Aggregated response - %1 files changed").arg(changed));
+        }
         addAssistantMessage(QString("Files changed since last snapshot: %1").arg(changed), false);
     }
 
@@ -1285,6 +1308,9 @@ void AIChatPanel::onModelSelected(int index)
     setInputEnabled(true);  // Enable chat input now that model is ready
     
     qDebug() << "Model successfully selected and ready:" << model;
+    
+    // Emit signal so MainWindow can load model into AgenticEngine
+    emit modelSelected(model);
 }
 
 void AIChatPanel::setSelectedModel(const QString& modelName)
@@ -1531,8 +1557,15 @@ int AIChatPanel::computeChangedFilesSinceSnapshot()
 
 void AIChatPanel::showHistory()
 {
-    // TODO: Re-enable when ChatHistoryManager namespace issues resolved
-    /*
+    // Checkpoint history is now managed via showCheckpointsDialog()
+    // This function is deprecated but kept for compatibility
+    qDebug() << "[AIChatPanel] showHistory - use showCheckpointsDialog() instead";
+}
+
+/*
+// TODO: Re-enable when ChatHistoryManager namespace issues resolved
+void AIChatPanel::showHistoryOld()
+{
     if (!m_historyManager) return;
     
     QDialog dialog(this);
@@ -1569,7 +1602,6 @@ void AIChatPanel::showHistory()
     dialog.exec();
 }
     */
-}
 
 /*
 void AIChatPanel::showSettings()
@@ -1614,28 +1646,14 @@ void AIChatPanel::showSettings()
 }
 */
 
-void AIChatPanel::setHistoryManager(ChatHistoryManager* manager)
+void AIChatPanel::setHistoryManager(RawrXD::Database::ChatHistoryManager* manager)
 {
     m_historyManager = manager;
-}
-
-void AIChatPanel::createCheckpoint(const QString& name, const QString& combinedText, int changedFiles)
-{
-    QDir out(QDir::currentPath() + "/checkpoints");
-    if (!out.exists()) out.mkpath(".");
-    QString file = out.absoluteFilePath(QString("%1_%2.json").arg(name).arg(QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss")));
-    QJsonObject obj;
-    obj["name"] = name;
-    obj["timestamp"] = QDateTime::currentDateTimeUtc().toSecsSinceEpoch();
-    obj["changed_files"] = changedFiles;
-    obj["combined_response"] = combinedText;
-    QFile f(file);
-    if (f.open(QIODevice::WriteOnly)) {
-        f.write(QJsonDocument(obj).toJson(QJsonDocument::Indented));
-        f.close();
-        qDebug() << "Checkpoint written:" << file;
-    } else {
-        qWarning() << "Failed to write checkpoint:" << file;
+    
+    if (m_historyManager) {
+        // Enable auto-checkpoint feature
+        m_historyManager->setAutoCheckpointInterval(m_autoCheckpointIntervalMinutes);
+        qDebug() << "[AIChatPanel] History manager set with auto-checkpoint enabled";
     }
 }
 
@@ -1646,3 +1664,212 @@ void AIChatPanel::showSettings()
     // QMessageBox::information(this, "Settings", "Settings dialog not yet implemented");
 }
 
+void AIChatPanel::createCheckpoint(const QString& title)
+{
+    if (!m_historyManager || m_currentSessionId.isEmpty()) {
+        qWarning() << "[AIChatPanel] Cannot create checkpoint: no history manager or session";
+        return;
+    }
+    
+    QString checkpointTitle = title;
+    if (checkpointTitle.isEmpty()) {
+        checkpointTitle = QString("Manual checkpoint at %1").arg(
+            QDateTime::currentDateTime().toString("hh:mm:ss"));
+    }
+    
+    QString checkpointId = m_historyManager->createCheckpoint(m_currentSessionId, checkpointTitle);
+    
+    if (!checkpointId.isEmpty()) {
+        qInfo() << "[AIChatPanel] Checkpoint created:" << checkpointTitle;
+        // Show brief notification
+        if (window()) {
+            if (auto* mainWindow = qobject_cast<QMainWindow*>(window())) {
+                mainWindow->statusBar()->showMessage(
+                    QString("✓ Checkpoint saved: %1").arg(checkpointTitle), 3000);
+            }
+        }
+    } else {
+        qWarning() << "[AIChatPanel] Failed to create checkpoint";
+    }
+}
+
+void AIChatPanel::showCheckpointsDialog()
+{
+    if (!m_historyManager || m_currentSessionId.isEmpty()) {
+        QMessageBox::warning(this, "No Checkpoints", 
+            "No active session or history manager available.");
+        return;
+    }
+    
+    QJsonArray checkpoints = m_historyManager->getCheckpoints(m_currentSessionId);
+    
+    if (checkpoints.isEmpty()) {
+        QMessageBox::information(this, "No Checkpoints", 
+            "No checkpoints available for this session.\n\nCreate one using the Save button.");
+        return;
+    }
+    
+    QDialog dialog(this);
+    dialog.setWindowTitle("Restore Checkpoint");
+    dialog.setMinimumWidth(500);
+    dialog.setMinimumHeight(300);
+    
+    QVBoxLayout* layout = new QVBoxLayout(&dialog);
+    
+    QLabel* label = new QLabel("Select a checkpoint to restore:", &dialog);
+    layout->addWidget(label);
+    
+    QListWidget* list = new QListWidget(&dialog);
+    
+    for (const auto& cpVal : checkpoints) {
+        QJsonObject cp = cpVal.toObject();
+        QString id = cp["id"].toString();
+        QString title = cp["title"].toString();
+        qint64 timestamp = cp.value("created_at").toVariant().toLongLong();
+        int msgCount = cp["message_count"].toInt();
+        
+        QString displayText = QString("%1 (%2 messages) - %3")
+            .arg(title)
+            .arg(msgCount)
+            .arg(QDateTime::fromMSecsSinceEpoch(timestamp).toString("yyyy-MM-dd hh:mm:ss"));
+        
+        QListWidgetItem* item = new QListWidgetItem(displayText, list);
+        item->setData(Qt::UserRole, id);  // Store checkpoint ID
+    }
+    
+    layout->addWidget(list);
+    
+    QHBoxLayout* buttonLayout = new QHBoxLayout();
+    QPushButton* restoreBtn = new QPushButton("Restore", &dialog);
+    QPushButton* deleteBtn = new QPushButton("Delete", &dialog);
+    QPushButton* cancelBtn = new QPushButton("Cancel", &dialog);
+    
+    buttonLayout->addStretch();
+    buttonLayout->addWidget(restoreBtn);
+    buttonLayout->addWidget(deleteBtn);
+    buttonLayout->addWidget(cancelBtn);
+    layout->addLayout(buttonLayout);
+    
+    connect(restoreBtn, &QPushButton::clicked, &dialog, [&]() {
+        if (list->currentItem()) {
+            QString checkpointId = list->currentItem()->data(Qt::UserRole).toString();
+            restoreCheckpoint(checkpointId);
+            dialog.accept();
+        }
+    });
+    
+    connect(deleteBtn, &QPushButton::clicked, [&]() {
+        if (list->currentItem()) {
+            QString checkpointId = list->currentItem()->data(Qt::UserRole).toString();
+            if (QMessageBox::question(this, "Delete Checkpoint", 
+                "Are you sure you want to delete this checkpoint?") == QMessageBox::Yes) {
+                m_historyManager->deleteCheckpoint(checkpointId);
+                delete list->currentItem();
+            }
+        }
+    });
+    
+    connect(cancelBtn, &QPushButton::clicked, &dialog, &QDialog::reject);
+    
+    dialog.exec();
+}
+
+void AIChatPanel::restoreCheckpoint(const QString& checkpointId)
+{
+    if (!m_historyManager || checkpointId.isEmpty()) {
+        qWarning() << "[AIChatPanel] Cannot restore: invalid checkpoint or no manager";
+        return;
+    }
+    
+    if (m_historyManager->restoreCheckpoint(checkpointId)) {
+        // Clear current UI
+        clear();
+        
+        // Reload messages from restored state
+        QJsonArray messages = m_historyManager->getMessages(m_currentSessionId);
+        for (const auto& msgVal : messages) {
+            QJsonObject msgObj = msgVal.toObject();
+            QString role = msgObj["role"].toString();
+            QString content = msgObj["content"].toString();
+            
+            if (role == "user") {
+                addUserMessage(content);
+            } else if (role == "assistant") {
+                addAssistantMessage(content, false);
+            }
+        }
+        
+        qInfo() << "[AIChatPanel] Checkpoint restored with" << messages.size() << "messages";
+        
+        // Show notification
+        if (window()) {
+            if (auto* mainWindow = qobject_cast<QMainWindow*>(window())) {
+                mainWindow->statusBar()->showMessage(
+                    QString("✓ Checkpoint restored (%1 messages)").arg(messages.size()), 3000);
+            }
+        }
+    } else {
+        QMessageBox::warning(this, "Restore Failed", 
+            "Failed to restore checkpoint. Check console for details.");
+    }
+}
+
+void AIChatPanel::enableAutoCheckpoint(bool enabled, int intervalMinutes)
+{
+    m_autoCheckpointEnabled = enabled;
+    m_autoCheckpointIntervalMinutes = qMax(1, intervalMinutes);
+    
+    if (enabled) {
+        if (!m_autoCheckpointTimer) {
+            m_autoCheckpointTimer = new QTimer(this);
+            connect(m_autoCheckpointTimer, &QTimer::timeout, 
+                    this, &AIChatPanel::onAutoCheckpointTimer);
+        }
+        // Convert minutes to milliseconds
+        m_autoCheckpointTimer->start(m_autoCheckpointIntervalMinutes * 60 * 1000);
+        qInfo() << "[AIChatPanel] Auto-checkpoint enabled with" 
+                << m_autoCheckpointIntervalMinutes << "minute interval";
+    } else {
+        if (m_autoCheckpointTimer) {
+            m_autoCheckpointTimer->stop();
+        }
+        qInfo() << "[AIChatPanel] Auto-checkpoint disabled";
+    }
+}
+
+void AIChatPanel::onSaveCheckpoint()
+{
+    if (!m_historyManager || m_currentSessionId.isEmpty()) {
+        QMessageBox::warning(this, "Cannot Save", 
+            "No active chat session. Send a message first to create a session.");
+        return;
+    }
+    
+    bool ok;
+    QString title = QInputDialog::getText(this, "Save Checkpoint",
+        "Enter checkpoint name (optional):", QLineEdit::Normal, "", &ok);
+    
+    if (ok) {
+        createCheckpoint(title);
+    }
+}
+
+void AIChatPanel::onRestoreCheckpoint()
+{
+    showCheckpointsDialog();
+}
+
+void AIChatPanel::onAutoCheckpointTimer()
+{
+    if (!m_historyManager || m_currentSessionId.isEmpty()) {
+        return;  // No session to checkpoint
+    }
+    
+    // Check if enough time has passed and create auto-checkpoint
+    if (m_historyManager->shouldAutoCheckpoint(m_currentSessionId)) {
+        QString checkpointId = m_historyManager->autoCheckpoint(m_currentSessionId);
+        if (!checkpointId.isEmpty()) {
+            qDebug() << "[AIChatPanel] Auto-checkpoint created:" << checkpointId;
+        }
+    }
+}

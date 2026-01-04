@@ -390,3 +390,4 @@ main ENDP
 test_string_data db "Hello, MASM!", 0
 
 END
+

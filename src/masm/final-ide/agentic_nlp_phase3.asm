@@ -196,13 +196,13 @@ strstr_case_insensitive PROC
     mov rcx, 256                        ; Haystack buffer
     call asm_malloc
     test rax, rax
-    jz .case_insensitive_fail
+    jz case_insensitive_fail_local
     mov r14, rax                        ; Lowercase haystack
     
     mov rcx, 256                        ; Needle buffer
     call asm_malloc
     test rax, rax
-    jz .case_insensitive_cleanup1
+    jz case_insensitive_cleanup_local1
     mov rbx, rax                        ; Lowercase needle
     
     ; Convert haystack to lowercase
@@ -220,7 +220,7 @@ strstr_case_insensitive PROC
     mov rdx, rbx
     call strstr_masm
     test rax, rax
-    jz .case_insensitive_not_found
+    jz case_insensitive_not_found_local
     
     ; Calculate offset in lowercase copy
     mov rcx, rax
@@ -230,9 +230,9 @@ strstr_case_insensitive PROC
     mov rax, r12
     add rax, rcx
     
-    jmp .case_insensitive_cleanup2
+    jmp case_insensitive_cleanup_local2
     
-.case_insensitive_not_found:
+case_insensitive_not_found_local:
     xor eax, eax
     
 .case_insensitive_cleanup2:
@@ -243,12 +243,12 @@ strstr_case_insensitive PROC
     mov rcx, r14
     call asm_free
     
-    jmp .case_insensitive_done
+    jmp case_insensitive_done_local
     
-.case_insensitive_fail:
+case_insensitive_fail_local:
     xor eax, eax
     
-.case_insensitive_done:
+case_insensitive_done_local:
     add rsp, 512
     pop r14
     pop r13
@@ -287,73 +287,73 @@ extract_sentence PROC
     
     xor r15, r15                        ; Sentence length counter
     
-.sentence_scan_loop:
+sentence_scan_loop_local:
     mov al, BYTE PTR [r12 + r14]
     test al, al
-    jz .sentence_end_of_text
+    jz sentence_end_of_text_local
     
     ; Check for sentence delimiters
     cmp al, '.'
-    je .sentence_check_period
+    je sentence_check_period_local
     cmp al, '!'
-    je .sentence_found
+    je sentence_found_local
     cmp al, '?'
-    je .sentence_found
+    je sentence_found_local
     
     inc r14
     inc r15
-    jmp .sentence_scan_loop
+    jmp sentence_scan_loop_local
     
-.sentence_check_period:
+sentence_check_period_local:
     ; Check if it's an abbreviation by looking for pattern: "X."
     ; If previous character is uppercase letter and it's followed by space/EOL, it's likely abbr
     cmp r14, 0
-    je .sentence_check_period_is_abbr
+    je sentence_check_period_is_abbr_local
     
     mov al, BYTE PTR [r12 + r14 - 1]
     cmp al, 'A'
-    jl .sentence_period_is_end
+    jl sentence_period_is_end_local
     cmp al, 'Z'
-    jg .sentence_period_is_end
+    jg sentence_period_is_end_local
     
     ; Check next character
     mov al, BYTE PTR [r12 + r14 + 1]
     test al, al
-    jz .sentence_period_is_end
+    jz sentence_period_is_end_local
     cmp al, ' '
-    je .sentence_period_is_end
+    je sentence_period_is_end_local
     cmp al, 0Ah
-    je .sentence_period_is_end
+    je sentence_period_is_end_local
     
     ; It's likely an abbreviation, continue scanning
-    jmp .sentence_period_continue
+    jmp sentence_period_continue_local
     
-.sentence_check_period_is_abbr:
-    jmp .sentence_period_continue
+sentence_check_period_is_abbr_local:
+    jmp sentence_period_continue_local
     
-.sentence_period_is_end:
+sentence_period_is_end_local:
     inc r14                             ; Include the period
     inc r15
     
-.sentence_found:
+sentence_found_local:
     ; Extract sentence (from r13, length r15)
     mov rax, r12
     add rax, r13
     mov rcx, r15
     
-    jmp .sentence_done
+    jmp sentence_done_local
     
-.sentence_period_continue:
+sentence_period_continue_local:
     inc r14
     inc r15
-    jmp .sentence_scan_loop
+    jmp sentence_scan_loop_local
     
-.sentence_end_of_text:
+sentence_end_of_text_local:
     mov rax, r12
     add rax, r13
     mov rcx, r15
     
-.sentence_done:
+sentence_done_local:
     add rsp, 128
     pop r15
     pop r14
@@ -440,16 +440,16 @@ _extract_claims_from_text PROC
     xor ebx, ebx                        ; Claim counter
     xor r8, r8                          ; Current position in text
     
-.extract_claims_loop:
+extract_claims_loop_local:
     cmp ebx, r14d
-    jge .extract_claims_end
+    jge extract_claims_end_local
     
     ; Extract next sentence
     mov rcx, r12
     mov rdx, r8
     call extract_sentence
     test rax, rax
-    jz .extract_claims_end
+    jz extract_claims_end_local
     
     ; rax = sentence pointer, rcx = sentence length
     ; Check if sentence contains factual assertion keywords
@@ -464,25 +464,25 @@ _extract_claims_from_text PROC
     ; Copy sentence text (first MAX_CLAIM_LEN bytes)
     mov r9, rcx
     cmp r9, MAX_CLAIM_LEN
-    jl .extract_claims_copy_ok
+    jl extract_claims_copy_ok_local
     mov r9, MAX_CLAIM_LEN
     
-.extract_claims_copy_ok:
+extract_claims_copy_ok_local:
     mov r10, rax
     mov r11, r8                         ; Destination
     
     xor eax, eax
-.extract_claims_copy_loop:
+extract_claims_copy_loop_local:
     cmp eax, r9
-    jge .extract_claims_copied
+    jge extract_claims_copied_local
     mov cl, BYTE PTR [r10]
     mov BYTE PTR [r11], cl
     inc r10
     inc r11
     inc eax
-    jmp .extract_claims_copy_loop
+    jmp extract_claims_copy_loop_local
     
-.extract_claims_copied:
+extract_claims_copied_local:
     ; Set confidence (heuristic based on sentence length)
     mov rcx, r13
     mov r9, rbx
@@ -491,15 +491,15 @@ _extract_claims_from_text PROC
     mov eax, r9                         ; Use length as confidence factor
     imul eax, 100
     cmp eax, 100
-    jle .extract_claims_conf_ok
+    jle extract_claims_conf_ok_local
     mov eax, 100
-.extract_claims_conf_ok:
+extract_claims_conf_ok_local:
     mov DWORD PTR [rcx + CLAIM_STRUCT.confidence], eax
     
     inc ebx
-    jmp .extract_claims_loop
+    jmp extract_claims_loop_local
     
-.extract_claims_end:
+extract_claims_end_local:
     mov eax, ebx
     add rsp, 512
     pop r14
@@ -537,9 +537,9 @@ _verify_claims_against_db PROC
     xor ebx, ebx                        ; Aggregate score
     xor r8d, r8d                        ; Claim index
     
-.verify_claims_loop:
+verify_claims_loop_local:
     cmp r8d, r13d
-    jge .verify_claims_aggregate
+    jge verify_claims_aggregate_local
     
     ; Get claim text
     mov rax, r8
@@ -561,26 +561,26 @@ _verify_claims_against_db PROC
     add ebx, eax
     
     inc r8d
-    jmp .verify_claims_loop
+    jmp verify_claims_loop_local
     
-.verify_claims_aggregate:
+verify_claims_aggregate_local:
     ; Calculate average score
     mov eax, ebx
     cmp r13d, 0
-    je .verify_claims_done
+    je verify_claims_done_local
     cdq
     idiv r13d
     
     ; Clamp to 0-100
     cmp eax, 0
-    jge .verify_claims_clamp_high
+    jge verify_claims_clamp_high_local
     xor eax, eax
-.verify_claims_clamp_high:
+verify_claims_clamp_high_local:
     cmp eax, 100
-    jle .verify_claims_done
+    jle verify_claims_done_local
     mov eax, 100
     
-.verify_claims_done:
+verify_claims_done_local:
     add rsp, 128
     pop r13
     pop r12
@@ -625,31 +625,31 @@ _append_correction_string PROC
     
     ; Add newline if buffer not empty
     test r8, r8
-    jz .append_no_prefix_newline
+    jz append_no_prefix_newline_local
     cmp r8, r13
-    jge .append_buffer_full
+    jge append_buffer_full_local
     mov BYTE PTR [r12 + r8], 0Ah
     inc r8
     
-.append_no_prefix_newline:
+append_no_prefix_newline_local:
     ; Add prefix based on correction type
     cmp ebx, 1
-    jne .append_type_not_factual
+    jne append_type_not_factual_local
     
     lea rcx, [rip + sz_correction_factual]
-    jmp .append_type_add_prefix
+    jmp append_type_add_prefix_local
     
-.append_type_not_factual:
+append_type_not_factual_local:
     cmp ebx, 2
-    jne .append_type_not_style
+    jne append_type_not_style_local
     
     lea rcx, [rip + sz_correction_style]
-    jmp .append_type_add_prefix
+    jmp append_type_add_prefix_local
     
-.append_type_not_style:
+append_type_not_style_local:
     lea rcx, [rip + sz_correction_general]
     
-.append_type_add_prefix:
+append_type_add_prefix_local:
     mov rdx, r12
     add rdx, r8
     call strcpy_safe_append
@@ -664,10 +664,10 @@ _append_correction_string PROC
     
     ; Ensure null termination
     cmp r8, r13
-    jge .append_done
+    jge append_done_local
     mov BYTE PTR [r12 + r8], 0
     
-.append_done:
+append_done_local:
     mov rax, r8
     add rsp, 128
     pop r14
@@ -676,7 +676,7 @@ _append_correction_string PROC
     pop rbx
     ret
     
-.append_buffer_full:
+append_buffer_full_local:
     xor eax, eax
     add rsp, 128
     pop r14
@@ -694,25 +694,25 @@ _append_correction_string ENDP
 ; Copy string and convert to lowercase
 ; rcx = source, rdx = destination
 strcpy_and_lower PROC
-.copy_lower_loop:
+copy_lower_loop_local:
     mov al, BYTE PTR [rcx]
     test al, al
-    jz .copy_lower_done
+    jz copy_lower_done_local
     
     ; Convert to lowercase
     cmp al, 'A'
-    jl .copy_lower_not_upper
+    jl copy_lower_not_upper_local
     cmp al, 'Z'
-    jg .copy_lower_not_upper
+    jg copy_lower_not_upper_local
     add al, 32                          ; 'a' - 'A' = 32
     
-.copy_lower_not_upper:
+copy_lower_not_upper_local:
     mov BYTE PTR [rdx], al
     inc rcx
     inc rdx
-    jmp .copy_lower_loop
+    jmp copy_lower_loop_local
     
-.copy_lower_done:
+copy_lower_done_local:
     mov BYTE PTR [rdx], 0
     ret
 strcpy_and_lower ENDP
@@ -721,16 +721,16 @@ strcpy_and_lower ENDP
 ; rcx = source, rdx = destination, returns eax = bytes copied
 strcpy_safe_append PROC
     xor eax, eax
-.safe_append_loop:
+safe_append_loop_local:
     mov r8b, BYTE PTR [rcx]
     test r8b, r8b
-    jz .safe_append_done
+    jz safe_append_done_local
     mov BYTE PTR [rdx], r8b
     inc rcx
     inc rdx
     inc eax
-    jmp .safe_append_loop
-.safe_append_done:
+    jmp safe_append_loop_local
+safe_append_done_local:
     ret
 strcpy_safe_append ENDP
 
@@ -738,16 +738,16 @@ strcpy_safe_append ENDP
 ; rcx = text, returns eax = hash value
 hash_claim_masm PROC
     xor eax, eax
-.hash_loop:
+hash_loop_local:
     mov r8b, BYTE PTR [rcx]
     test r8b, r8b
-    jz .hash_done
+    jz hash_done_local
     imul eax, eax, 31
     movzx r8d, r8b
     add eax, r8d
     inc rcx
-    jmp .hash_loop
-.hash_done:
+    jmp hash_loop_local
+hash_done_local:
     ret
 hash_claim_masm ENDP
 
@@ -758,4 +758,5 @@ hash_claim_masm ENDP
     sz_correction_general BYTE "[CORRECTION] ", 0
 
 .end
+
 

@@ -350,3 +350,4 @@ ml_helpers_log_append ENDP
     szNewline BYTE 13, 10, 0
 
 END
+

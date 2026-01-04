@@ -104,15 +104,15 @@ tab_grouping_init PROC
     xor edx, edx
     mov r8d, MAX_TAB_GROUPS * (SIZE TAB_GROUP) / 8
     
-.zero_groups:
+zero_groups_local:
     cmp r8d, 0
-    je .zero_done
+    je zero_done_local
     mov QWORD PTR [rcx + rdx], 0
     add rdx, 8
     dec r8d
-    jmp .zero_groups
+    jmp zero_groups_local
     
-.zero_done:
+zero_done_local:
     mov GroupCount, 0
     mov TabCount, 0
     mov PinnedTabCount, 0
@@ -133,7 +133,7 @@ tab_create_group PROC
     
     mov rbx, GroupCount
     cmp rbx, MAX_TAB_GROUPS
-    jge .group_limit
+    jge group_limit_local
     
     ; Create new group
     imul eax, ebx, SIZE TAB_GROUP
@@ -162,7 +162,7 @@ tab_create_group PROC
     pop rbx
     ret
     
-.group_limit:
+group_limit_local:
     mov eax, -1                         ; Error: too many groups
     pop rbx
     ret
@@ -183,7 +183,7 @@ tab_add_to_group PROC
     
     ; Validate group_id
     cmp ebx, GroupCount
-    jge .invalid_group
+    jge invalid_group_local
     
     ; Get group structure
     imul eax, ebx, SIZE TAB_GROUP
@@ -192,12 +192,12 @@ tab_add_to_group PROC
     ; Get current tab count in group
     mov eax, DWORD PTR [rsi + MAX_PROJECT_NAME + 8]
     cmp eax, MAX_TABS_PER_GROUP
-    jge .group_full
+    jge group_full_local
     
     ; Add tab to AllTabs
     mov eax, TabCount
     cmp eax, 128
-    jge .tabs_full
+    jge tabs_full_local
     
     imul edx, eax, SIZE TAB_ENTRY
     lea rax, AllTabs[rdx]
@@ -224,21 +224,21 @@ tab_add_to_group PROC
     pop rbx
     ret
     
-.invalid_group:
+invalid_group_local:
     mov eax, -1
     add rsp, 32
     pop rdi
     pop rbx
     ret
     
-.group_full:
+group_full_local:
     mov eax, -2
     add rsp, 32
     pop rdi
     pop rbx
     ret
     
-.tabs_full:
+tabs_full_local:
     mov eax, -3
     add rsp, 32
     pop rdi
@@ -256,7 +256,7 @@ tab_pin PROC
     
     ; Validate tab index
     cmp ecx, TabCount
-    jge .invalid_tab
+    jge invalid_tab_local
     
     ; Get tab entry
     imul eax, ecx, SIZE TAB_ENTRY
@@ -275,51 +275,51 @@ tab_pin PROC
     xor eax, eax
     mov ebx, PinnedTabCount
     
-.find_and_remove:
+find_and_remove_local:
     cmp eax, ebx
-    jge .remove_done
+    jge remove_done_local
     
     cmp DWORD PTR PinnedTabIndices[rax * 4], ecx
-    je .found_to_remove
+    je found_to_remove_local
     
     inc eax
-    jmp .find_and_remove
+    jmp find_and_remove_local
     
-.found_to_remove:
+found_to_remove_local:
     ; Shift array
     mov edx, eax
     inc eax
     
-.shift_loop:
+shift_loop_local:
     cmp eax, PinnedTabCount
-    jge .remove_done
+    jge remove_done_local
     
     mov ecx, DWORD PTR PinnedTabIndices[rax * 4]
     mov DWORD PTR PinnedTabIndices[rdx * 4], ecx
     
     inc eax
     inc edx
-    jmp .shift_loop
+    jmp shift_loop_local
     
-.remove_done:
+remove_done_local:
     dec PinnedTabCount
-    jmp .pin_success
+    jmp pin_success_local
     
-.now_pinned:
+now_pinned_local:
     ; Add to pinned array
     cmp PinnedTabCount, 32
-    jge .pin_success
+    jge pin_success_local
     
     mov eax, PinnedTabCount
     mov DWORD PTR PinnedTabIndices[rax * 4], ecx
     inc PinnedTabCount
     
-.pin_success:
+pin_success_local:
     mov eax, 1
     pop rbx
     ret
     
-.invalid_tab:
+invalid_tab_local:
     xor eax, eax
     pop rbx
     ret
@@ -354,19 +354,19 @@ tab_get_pinned_list PROC
     mov edi, edx                        ; edi = max_count
     xor eax, eax
     
-.copy_loop:
+copy_loop_local:
     cmp eax, PinnedTabCount
-    jge .copy_done
+    jge copy_done_local
     cmp eax, edi
-    jge .copy_done
+    jge copy_done_local
     
     mov edx, DWORD PTR PinnedTabIndices[rax * 4]
     mov DWORD PTR [rsi + rax * 4], edx
     
     inc eax
-    jmp .copy_loop
+    jmp copy_loop_local
     
-.copy_done:
+copy_done_local:
     ret
 tab_get_pinned_list ENDP
 
@@ -377,20 +377,20 @@ PRIVATE copy_string_group
 copy_string_group PROC
     xor eax, eax
     
-.copy_loop:
+copy_loop_local:
     cmp eax, r8d
-    jge .done
+    jge done_local
     
     movzx ebx, BYTE PTR [rcx + rax]
     mov BYTE PTR [rdx + rax], bl
     
     test bl, bl
-    je .done
+    je done_local
     
     inc eax
-    jmp .copy_loop
+    jmp copy_loop_local
     
-.done:
+done_local:
     mov BYTE PTR [rdx + rax], 0
     ret
 copy_string_group ENDP
@@ -402,18 +402,19 @@ PRIVATE copy_memory_tab
 copy_memory_tab PROC
     xor edx, edx
     
-.copy_loop:
+copy_loop_local:
     cmp edx, r8d
-    jge .copy_done
+    jge copy_done_local
     
     movzx ebx, BYTE PTR [rcx + rdx]
     mov BYTE PTR [rax + rdx], bl
     
     inc edx
-    jmp .copy_loop
+    jmp copy_loop_local
     
-.copy_done:
+copy_done_local:
     ret
 copy_memory_tab ENDP
 
 END
+

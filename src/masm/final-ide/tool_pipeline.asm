@@ -264,13 +264,13 @@ ToolPipeline_Initialize PROC FRAME
     ; RDX = max models
     
     cmp ecx, 0
-    jle .L0_invalid_routers
+    jle L_local0_invalid_routers
     cmp edx, 0
-    jle .L0_invalid_models
+    jle L_local0_invalid_models
     cmp ecx, PIPELINE_MAX_ROUTERS
-    jg .L0_invalid_routers
+    jg L_local0_invalid_routers
     cmp edx, PIPELINE_MAX_MODELS
-    jg .L0_invalid_models
+    jg L_local0_invalid_models
     
     ; Acquire lock
     lea r8, [toolPipelineManager + OFFSET toolPipelineManager.ManagerLock]
@@ -286,7 +286,7 @@ ToolPipeline_Initialize PROC FRAME
     imul r9, SIZE ROUTER_DESCRIPTOR
     call HeapAlloc
     test rax, rax
-    jz .L0_alloc_failed
+    jz L_local0_alloc_failed
     mov QWORD PTR [toolPipelineManager + OFFSET toolPipelineManager.Routers], rax
     
     ; Allocate model array
@@ -294,7 +294,7 @@ ToolPipeline_Initialize PROC FRAME
     imul r9, SIZE MODEL_DESCRIPTOR
     call HeapAlloc
     test rax, rax
-    jz .L0_alloc_failed_routers
+    jz L_local0_alloc_failed_routers
     mov QWORD PTR [toolPipelineManager + OFFSET toolPipelineManager.Models], rax
     
     ; Allocate batch array
@@ -302,7 +302,7 @@ ToolPipeline_Initialize PROC FRAME
     imul r9, SIZE BATCH_DESCRIPTOR
     call HeapAlloc
     test rax, rax
-    jz .L0_alloc_failed_models
+    jz L_local0_alloc_failed_models
     mov QWORD PTR [toolPipelineManager + OFFSET toolPipelineManager.Batches], rax
     
     ; Set routing mode to balanced default
@@ -313,20 +313,20 @@ ToolPipeline_Initialize PROC FRAME
     call LeaveCriticalSection
     
     xor rax, rax
-    jmp .L0_exit
+    jmp L_local0_exit
     
 .L0_invalid_routers:
     mov rax, TOOL_PIPELINE_E_INVALID_ROUTER
-    jmp .L0_exit
+    jmp L_local0_exit
     
 .L0_invalid_models:
     mov rax, TOOL_PIPELINE_E_MODEL_LIMIT
-    jmp .L0_exit
+    jmp L_local0_exit
     
 .L0_alloc_failed_models:
     mov r8, QWORD PTR [toolPipelineManager + OFFSET toolPipelineManager.Routers]
     call HeapFree
-    jmp .L0_alloc_failed
+    jmp L_local0_alloc_failed
     
 .L0_alloc_failed_routers:
     mov r8, QWORD PTR [toolPipelineManager + OFFSET toolPipelineManager.Models]
@@ -355,14 +355,14 @@ ToolPipeline_RouteRequest PROC FRAME
     ; R8 = arguments pointer
     
     cmp BYTE PTR [toolPipelineManager + OFFSET toolPipelineManager.Initialized], 1
-    jne .L1_not_initialized
+    jne L_local1_not_initialized
     
     test ecx, ecx
-    jz .L1_invalid_request
+    jz L_local1_invalid_request
     test edx, edx
-    jle .L1_invalid_tool
+    jle L_local1_invalid_tool
     cmp edx, TOOL_TYPE_CUSTOM
-    jg .L1_invalid_tool
+    jg L_local1_invalid_tool
     
     ; Acquire lock
     lea r9, [toolPipelineManager + OFFSET toolPipelineManager.ManagerLock]
@@ -373,13 +373,13 @@ ToolPipeline_RouteRequest PROC FRAME
     mov r11d, 1                    ; Default router ID
     
     cmp r10d, ROUTING_MODE_LEAST_LOADED
-    je .L1_least_loaded
+    je L_local1_least_loaded
     cmp r10d, ROUTING_MODE_LATENCY_AWARE
-    je .L1_latency_aware
+    je L_local1_latency_aware
     
     ; Round-robin default
     mov r11d, 1
-    jmp .L1_route_assigned
+    jmp L_local1_route_assigned
     
 .L1_least_loaded:
     ; Find router with minimum load
@@ -388,16 +388,16 @@ ToolPipeline_RouteRequest PROC FRAME
     mov r13, QWORD PTR [toolPipelineManager + OFFSET toolPipelineManager.Routers]
     mov r14d, DWORD PTR [toolPipelineManager + OFFSET toolPipelineManager.RouterCount]
     test r14d, r14d
-    jz .L1_route_assigned
+    jz L_local1_route_assigned
     
     xor r15d, r15d
 .L1_load_loop:
     cmp r15d, r14d
-    jge .L1_route_assigned
+    jge L_local1_route_assigned
     
     mov eax, DWORD PTR [r13 + r15 * 8 + OFFSET ROUTER_DESCRIPTOR.CurrentLoad]
     cmp eax, r12d
-    jge .L1_load_next
+    jge L_local1_load_next
     
     mov r12d, eax
     mov r11d, r15d
@@ -405,7 +405,7 @@ ToolPipeline_RouteRequest PROC FRAME
     
 .L1_load_next:
     inc r15d
-    jmp .L1_load_loop
+    jmp L_local1_load_loop
     
 .L1_latency_aware:
     ; Find router with lowest average latency
@@ -414,18 +414,18 @@ ToolPipeline_RouteRequest PROC FRAME
     mov r13, QWORD PTR [toolPipelineManager + OFFSET toolPipelineManager.Routers]
     mov r14d, DWORD PTR [toolPipelineManager + OFFSET toolPipelineManager.RouterCount]
     test r14d, r14d
-    jz .L1_route_assigned
+    jz L_local1_route_assigned
     
     xor r15d, r15d
 .L1_latency_loop:
     cmp r15d, r14d
-    jge .L1_route_assigned
+    jge L_local1_route_assigned
     
     mov rax, QWORD PTR [r13 + r15 * 8 + OFFSET ROUTER_DESCRIPTOR.AvgLatency]
     cmp r12, -1
-    je .L1_latency_first
+    je L_local1_latency_first
     cmp rax, r12
-    jge .L1_latency_next
+    jge L_local1_latency_next
     
 .L1_latency_first:
     mov r12, rax
@@ -434,7 +434,7 @@ ToolPipeline_RouteRequest PROC FRAME
     
 .L1_latency_next:
     inc r15d
-    jmp .L1_latency_loop
+    jmp L_local1_latency_loop
     
 .L1_route_assigned:
     ; Update request count and load
@@ -455,19 +455,19 @@ ToolPipeline_RouteRequest PROC FRAME
     call LeaveCriticalSection
     
     mov rax, r11
-    jmp .L1_exit
+    jmp L_local1_exit
     
 .L1_not_initialized:
     mov rax, TOOL_PIPELINE_E_ROUTING_FAILED
-    jmp .L1_exit
+    jmp L_local1_exit
     
 .L1_invalid_request:
     mov rax, TOOL_PIPELINE_E_ROUTING_FAILED
-    jmp .L1_exit
+    jmp L_local1_exit
     
 .L1_invalid_tool:
     mov rax, TOOL_PIPELINE_E_ROUTING_FAILED
-    jmp .L1_exit
+    jmp L_local1_exit
     
 .L1_exit:
     add rsp, 48
@@ -487,7 +487,7 @@ ToolPipeline_RegisterModel PROC FRAME
     ; R8 = resource requirements pointer
     
     cmp BYTE PTR [toolPipelineManager + OFFSET toolPipelineManager.Initialized], 1
-    jne .L2_not_initialized
+    jne L_local2_not_initialized
     
     ; Acquire lock
     lea r9, [toolPipelineManager + OFFSET toolPipelineManager.ManagerLock]
@@ -495,7 +495,7 @@ ToolPipeline_RegisterModel PROC FRAME
     
     ; Check model limit
     cmp DWORD PTR [toolPipelineManager + OFFSET toolPipelineManager.ModelCount], PIPELINE_MAX_MODELS
-    jge .L2_limit_exceeded
+    jge L_local2_limit_exceeded
     
     ; Get model array and store registration
     mov r10, QWORD PTR [toolPipelineManager + OFFSET toolPipelineManager.Models]
@@ -516,11 +516,11 @@ ToolPipeline_RegisterModel PROC FRAME
     call LeaveCriticalSection
     
     xor rax, rax
-    jmp .L2_exit
+    jmp L_local2_exit
     
 .L2_not_initialized:
     mov rax, TOOL_PIPELINE_E_ROUTING_FAILED
-    jmp .L2_exit
+    jmp L_local2_exit
     
 .L2_limit_exceeded:
     lea r9, [toolPipelineManager + OFFSET toolPipelineManager.ManagerLock]
@@ -544,12 +544,12 @@ ToolPipeline_CreateBatch PROC FRAME
     ; RDX = timeout in milliseconds
     
     cmp BYTE PTR [toolPipelineManager + OFFSET toolPipelineManager.Initialized], 1
-    jne .L3_not_initialized
+    jne L_local3_not_initialized
     
     cmp ecx, 0
-    jle .L3_invalid_size
+    jle L_local3_invalid_size
     cmp ecx, PIPELINE_MAX_REQUESTS_PER_BATCH
-    jg .L3_invalid_size
+    jg L_local3_invalid_size
     
     ; Acquire lock
     lea r8, [toolPipelineManager + OFFSET toolPipelineManager.ManagerLock]
@@ -557,7 +557,7 @@ ToolPipeline_CreateBatch PROC FRAME
     
     ; Check batch limit
     cmp DWORD PTR [toolPipelineManager + OFFSET toolPipelineManager.BatchCount], PIPELINE_MAX_BATCHES
-    jge .L3_limit_exceeded
+    jge L_local3_limit_exceeded
     
     ; Get batch array and create new batch
     mov r9, QWORD PTR [toolPipelineManager + OFFSET toolPipelineManager.Batches]
@@ -587,15 +587,15 @@ ToolPipeline_CreateBatch PROC FRAME
     call LeaveCriticalSection
     
     mov rax, r11
-    jmp .L3_exit
+    jmp L_local3_exit
     
 .L3_not_initialized:
     mov rax, TOOL_PIPELINE_E_ROUTING_FAILED
-    jmp .L3_exit
+    jmp L_local3_exit
     
 .L3_invalid_size:
     mov rax, TOOL_PIPELINE_E_BATCH_FULL
-    jmp .L3_exit
+    jmp L_local3_exit
     
 .L3_limit_exceeded:
     lea r8, [toolPipelineManager + OFFSET toolPipelineManager.ManagerLock]
@@ -620,18 +620,18 @@ ToolPipeline_ScheduleResources PROC FRAME
     ; R8 = memory per node (MB)
     
     cmp BYTE PTR [toolPipelineManager + OFFSET toolPipelineManager.Initialized], 1
-    jne .L4_not_initialized
+    jne L_local4_not_initialized
     
     cmp ecx, 0
-    jle .L4_invalid_nodes
+    jle L_local4_invalid_nodes
     cmp ecx, PIPELINE_MAX_NODES
-    jg .L4_invalid_nodes
+    jg L_local4_invalid_nodes
     
     cmp edx, 0
-    jle .L4_invalid_cpu
+    jle L_local4_invalid_cpu
     
     cmp r8, 0
-    jle .L4_invalid_memory
+    jle L_local4_invalid_memory
     
     ; Acquire lock
     lea r9, [toolPipelineManager + OFFSET toolPipelineManager.ManagerLock]
@@ -640,13 +640,13 @@ ToolPipeline_ScheduleResources PROC FRAME
     ; Allocate scheduler if not exists
     mov r10, QWORD PTR [toolPipelineManager + OFFSET toolPipelineManager.Scheduler]
     test r10, r10
-    jnz .L4_scheduler_exists
+    jnz L_local4_scheduler_exists
     
     ; Allocate scheduler
     mov r9d, SIZE PIPELINE_SCHEDULER
     call HeapAlloc
     test rax, rax
-    jz .L4_alloc_failed
+    jz L_local4_alloc_failed
     
     mov r10, rax
     mov QWORD PTR [toolPipelineManager + OFFSET toolPipelineManager.Scheduler], r10
@@ -657,7 +657,7 @@ ToolPipeline_ScheduleResources PROC FRAME
     imul r11, SIZE RESOURCE_NODE
     call HeapAlloc
     test rax, rax
-    jz .L4_alloc_failed
+    jz L_local4_alloc_failed
     
     mov QWORD PTR [r10 + OFFSET PIPELINE_SCHEDULER.Nodes], rax
     mov DWORD PTR [r10 + OFFSET PIPELINE_SCHEDULER.NodeCount], ecx
@@ -667,7 +667,7 @@ ToolPipeline_ScheduleResources PROC FRAME
     xor r12d, r12d
 .L4_node_loop:
     cmp r12d, ecx
-    jge .L4_nodes_initialized
+    jge L_local4_nodes_initialized
     
     mov r13, rax
     imul r11, r12, SIZE RESOURCE_NODE
@@ -681,7 +681,7 @@ ToolPipeline_ScheduleResources PROC FRAME
     mov BYTE PTR [r13 + OFFSET RESOURCE_NODE.IsActive], 1
     
     inc r12d
-    jmp .L4_node_loop
+    jmp L_local4_node_loop
     
 .L4_nodes_initialized:
     ; Increment metrics
@@ -692,23 +692,23 @@ ToolPipeline_ScheduleResources PROC FRAME
     call LeaveCriticalSection
     
     xor rax, rax
-    jmp .L4_exit
+    jmp L_local4_exit
     
 .L4_not_initialized:
     mov rax, TOOL_PIPELINE_E_ROUTING_FAILED
-    jmp .L4_exit
+    jmp L_local4_exit
     
 .L4_invalid_nodes:
     mov rax, TOOL_PIPELINE_E_RESOURCE_EXHAUSTED
-    jmp .L4_exit
+    jmp L_local4_exit
     
 .L4_invalid_cpu:
     mov rax, TOOL_PIPELINE_E_RESOURCE_EXHAUSTED
-    jmp .L4_exit
+    jmp L_local4_exit
     
 .L4_invalid_memory:
     mov rax, TOOL_PIPELINE_E_RESOURCE_EXHAUSTED
-    jmp .L4_exit
+    jmp L_local4_exit
     
 .L4_alloc_failed:
     lea r9, [toolPipelineManager + OFFSET toolPipelineManager.ManagerLock]
@@ -774,3 +774,4 @@ ToolPipeline_Batching PROC FRAME
 ToolPipeline_Batching ENDP
 
 END
+

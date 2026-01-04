@@ -87,3 +87,4 @@ hotpatch_coord_apply PROC
 hotpatch_coord_apply ENDP
 
 END
+

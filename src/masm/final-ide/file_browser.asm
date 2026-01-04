@@ -122,7 +122,7 @@ masm_file_browser_init PROC USES rbx rsi rdi
     sub rsp, 32
 
     cmp g_initialized, 1
-    je .init_already
+    je init_already_local
 
     ; Get process heap
     call GetProcessHeap
@@ -142,12 +142,12 @@ masm_file_browser_init PROC USES rbx rsi rdi
 
     mov g_initialized, 1
     mov rax, 1
-    jmp .init_done
+    jmp init_done_local
 
-.init_already:
+init_already_local:
     mov rax, 1
 
-.init_done:
+init_done_local:
     add rsp, 32
     pop rbp
     ret
@@ -160,7 +160,7 @@ masm_file_browser_shutdown PROC USES rbx rsi rdi
     sub rsp, 32
 
     cmp g_initialized, 0
-    je .shutdown_not_init
+    je shutdown_not_init_local
 
     ; Close mutex
     mov rcx, g_fileBrowser.browserMutex
@@ -168,32 +168,32 @@ masm_file_browser_shutdown PROC USES rbx rsi rdi
 
     ; Free all nodes
     xor rbx, rbx
-.free_nodes:
+free_nodes_local:
     cmp rbx, g_fileBrowser.nodeCount
-    jge .nodes_freed
+    jge nodes_freed_local
 
     ; Free icon if allocated
     lea rax, [g_fileBrowser.nodes + rbx * (SIZEOF FILE_NODE)]
     mov rcx, [rax].FILE_NODE.icon
     cmp rcx, 0
-    je .skip_icon_free
+    je skip_icon_free_local
     mov rdx, g_fileBrowser.heapHandle
     xor r8d, r8d
     call HeapFree
-.skip_icon_free:
+skip_icon_free_local:
 
     inc rbx
-    jmp .free_nodes
+    jmp free_nodes_local
 
-.nodes_freed:
+nodes_freed_local:
     mov g_initialized, 0
     mov rax, 1
-    jmp .shutdown_done
+    jmp shutdown_done_local
 
-.shutdown_not_init:
+shutdown_not_init_local:
     xor rax, rax
 
-.shutdown_done:
+shutdown_done_local:
     add rsp, 32
     pop rbp
     ret
@@ -210,17 +210,17 @@ masm_file_browser_set_root PROC USES rbx rsi rdi
     mov rsi, rcx
     lea rdi, [rel g_fileBrowser.rootPath]
     mov ecx, 260
-.copy_root:
+copy_root_local:
     cmp ecx, 0
-    je .root_copied
+    je root_copied_local
     mov al, [rsi]
     mov [rdi], al
     inc rsi
     inc rdi
     dec ecx
-    jmp .copy_root
+    jmp copy_root_local
 
-.root_copied:
+root_copied_local:
     mov g_fileBrowser.needsRefresh, 1
     mov rax, 1
 
@@ -254,25 +254,25 @@ masm_file_browser_get_node PROC USES rbx rsi rdi
     mov r8d, ecx
 
     xor r9d, r9d
-.find_node:
+find_node_local:
     cmp r9d, g_fileBrowser.nodeCount
-    jge .node_not_found
+    jge node_not_found_local
 
     lea rax, [g_fileBrowser.nodes + r9 * (SIZEOF FILE_NODE)]
     cmp [rax].FILE_NODE.nodeId, r8d
-    je .node_found
+    je node_found_local
 
     inc r9d
-    jmp .find_node
+    jmp find_node_local
 
-.node_found:
+node_found_local:
     mov rax, [g_fileBrowser.nodes + r9 * (SIZEOF FILE_NODE)]
-    jmp .get_node_done
+    jmp get_node_done_local
 
-.node_not_found:
+node_not_found_local:
     xor rax, rax
 
-.get_node_done:
+get_node_done_local:
     add rsp, 32
     pop rbp
     ret
@@ -288,26 +288,26 @@ masm_file_browser_expand_node PROC USES rbx rsi rdi
     mov r8d, ecx
 
     xor r9d, r9d
-.find_expand:
+find_expand_local:
     cmp r9d, g_fileBrowser.nodeCount
-    jge .expand_not_found
+    jge expand_not_found_local
 
     lea rax, [g_fileBrowser.nodes + r9 * (SIZEOF FILE_NODE)]
     cmp [rax].FILE_NODE.nodeId, r8d
-    je .expand_found
+    je expand_found_local
 
     inc r9d
-    jmp .find_expand
+    jmp find_expand_local
 
-.expand_found:
+expand_found_local:
     mov [rax].FILE_NODE.isExpanded, 1
     mov rax, 1
-    jmp .expand_done
+    jmp expand_done_local
 
-.expand_not_found:
+expand_not_found_local:
     xor rax, rax
 
-.expand_done:
+expand_done_local:
     add rsp, 32
     pop rbp
     ret
@@ -323,26 +323,26 @@ masm_file_browser_collapse_node PROC USES rbx rsi rdi
     mov r8d, ecx
 
     xor r9d, r9d
-.find_collapse:
+find_collapse_local:
     cmp r9d, g_fileBrowser.nodeCount
-    jge .collapse_not_found
+    jge collapse_not_found_local
 
     lea rax, [g_fileBrowser.nodes + r9 * (SIZEOF FILE_NODE)]
     cmp [rax].FILE_NODE.nodeId, r8d
-    je .collapse_found
+    je collapse_found_local
 
     inc r9d
-    jmp .find_collapse
+    jmp find_collapse_local
 
-.collapse_found:
+collapse_found_local:
     mov [rax].FILE_NODE.isExpanded, 0
     mov rax, 1
-    jmp .collapse_done
+    jmp collapse_done_local
 
-.collapse_not_found:
+collapse_not_found_local:
     xor rax, rax
 
-.collapse_done:
+collapse_done_local:
     add rsp, 32
     pop rbp
     ret
@@ -362,26 +362,26 @@ masm_file_browser_list_children PROC USES rbx rsi rdi r12 r13
 
     ; Find all nodes with matching parent
     xor r11d, r11d ; Index
-.list_loop:
+list_loop_local:
     cmp r11d, g_fileBrowser.nodeCount
-    jge .list_done
+    jge list_done_local
 
     lea rax, [g_fileBrowser.nodes + r11 * (SIZEOF FILE_NODE)]
     cmp [rax].FILE_NODE.parentId, r12d
-    jne .skip_child
+    jne skip_child_local
 
     cmp r10d, r8d
-    jge .list_done
+    jge list_done_local
 
     mov edx, [rax].FILE_NODE.nodeId
     mov [r13 + r10 * 4], edx
     inc r10d
 
-.skip_child:
+skip_child_local:
     inc r11d
-    jmp .list_loop
+    jmp list_loop_local
 
-.list_done:
+list_done_local:
     mov rax, r10
 
     add rsp, 32
@@ -397,17 +397,17 @@ masm_file_browser_add_filter PROC USES rbx rsi rdi
     sub rsp, 32
 
     cmp g_fileBrowser.filterCount, MAX_FILTER_PATTERNS
-    jge .filter_full
+    jge filter_full_local
 
     ; TODO: Store filter pattern
     inc g_fileBrowser.filterCount
     mov rax, 1
-    jmp .add_filter_done
+    jmp add_filter_done_local
 
-.filter_full:
+filter_full_local:
     xor rax, rax
 
-.add_filter_done:
+add_filter_done_local:
     add rsp, 32
     pop rbp
     ret
@@ -499,3 +499,4 @@ masm_file_browser_refresh_tree PROC USES rbx rsi rdi
 masm_file_browser_refresh_tree ENDP
 
 END
+

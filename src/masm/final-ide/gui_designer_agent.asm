@@ -942,9 +942,7 @@ gui_add_pane_tab PROC
     mov [rsi + PANE_TAB.id], ebx
     mov [rsi + PANE_TAB.pane_id], r12d
     mov [rsi + PANE_TAB.is_active], 1
-    mov [rsi + PANE_TAB.is_closable], 1
-    
-    ; Copy label
+    mov dword ptr [rsi + PANE_TAB.is_closable], 1  ; Copy label
     mov rsi, r13
     lea rdi, [PaneTabRegistry + rcx]
     add rdi, PANE_TAB.tab_label
@@ -2203,9 +2201,7 @@ gui_animate_component PROC
     ; Initialize animation state
     mov [rdi + ANIMATION.id], eax
     mov [rdi + ANIMATION.target_component], r12d
-    mov [rdi + ANIMATION.running], 1
-    
-    ; Get current time
+    mov dword ptr [rdi + ANIMATION.running], 1  ; Get current time
     call GetTickCount
     mov [rdi + ANIMATION.start_time], eax
     
@@ -3418,7 +3414,7 @@ gui_apply_default_style PROC
     jz apply_done
     
     mov rbx, rax
-    mov [rbx + COMPONENT.style_id], 1 ; Default to style 1 (Button) if it's a button
+    mov dword ptr [rbx + COMPONENT.style_id], 1  ; Default to style 1 (Button) if it's a button
     
 apply_done:
     add rsp, 32
@@ -4444,3 +4440,4 @@ szEaseInOut_Val      BYTE "easeInOut",0
 g_animation_active_val DWORD 0
 
 END
+

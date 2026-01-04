@@ -109,18 +109,18 @@ agent_bootstrap_start PROC
     
     mov rbx, rcx        ; rbx = wish
     test rbx, rbx
-    jz .no_wish
+    jz no_wish_local
     
     ; 1. Safety Gate (Stub)
     ; call agent_safety_gate
     ; test rax, rax
-    ; jz .safety_fail
+    ; jz safety_fail_local
     
     ; 2. Plan
     mov rcx, rbx
     call agent_planner_plan
     test rax, rax
-    jz .plan_fail
+    jz plan_fail_local
     
     ; 3. Execute Plan (via Orchestrator)
     mov rcx, rax        ; json_plan
@@ -128,23 +128,24 @@ agent_bootstrap_start PROC
     mov r8d, 2          ; MODE_PLAN
     call AgenticEngine_ProcessResponse
     
-    jmp .exit
+    jmp exit_local
 
-.no_wish:
+no_wish_local:
     lea rcx, szNoWishMsg
     lea rdx, szAgentTitle
     mov r8d, MB_OK or MB_ICONWARNING
     call MessageBoxA
-    jmp .exit
+    jmp exit_local
 
-.plan_fail:
+plan_fail_local:
     ; ...
-    jmp .exit
+    jmp exit_local
 
-.exit:
+exit_local:
     add rsp, 32
     pop rbx
     ret
 agent_bootstrap_start ENDP
 
 END
+

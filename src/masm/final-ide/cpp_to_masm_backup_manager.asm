@@ -121,8 +121,8 @@ backup_manager_create PROC
     mov [rbx + BACKUP_MANAGER.baseDir], r8  ; Store base directory
     mov [rbx + BACKUP_MANAGER.rtoMs], BACKUP_RTO_MS
     mov [rbx + BACKUP_MANAGER.rpoMs], BACKUP_RPO_MS
-    mov byte [rbx + BACKUP_MANAGER.compressionEnabled], 1
-    mov byte [rbx + BACKUP_MANAGER.verificationEnabled], 1
+    mov byte ptr [rbx + BACKUP_MANAGER.compressionEnabled], 1
+    mov byte ptr [rbx + BACKUP_MANAGER.verificationEnabled], 1
     mov [rbx + BACKUP_MANAGER.currentBackupId], 1
     
     mov rax, rbx
@@ -147,7 +147,7 @@ backup_start_full PROC
     ; Check capacity
     mov r9d, [rbx + BACKUP_MANAGER.backupCount]
     cmp r9d, [rbx + BACKUP_MANAGER.maxBackups]
-    jge .capacity_exceeded
+    jge capacity_exceeded_local
     
     ; Get new backup ID
     mov r8d, [rbx + BACKUP_MANAGER.currentBackupId]
@@ -181,7 +181,7 @@ backup_start_full PROC
     pop rbx
     ret
     
-.capacity_exceeded:
+capacity_exceeded_local:
     xor rax, rax                    ; Return 0 on error
     pop rsi
     pop rbx
@@ -202,7 +202,7 @@ backup_start_incremental PROC
     ; Similar to full backup but different type
     mov r9d, [rbx + BACKUP_MANAGER.backupCount]
     cmp r9d, [rbx + BACKUP_MANAGER.maxBackups]
-    jge .inc_failed
+    jge inc_failed_local
     
     mov r10d, [rbx + BACKUP_MANAGER.currentBackupId]
     inc dword [rbx + BACKUP_MANAGER.currentBackupId]
@@ -225,7 +225,7 @@ backup_start_incremental PROC
     pop rbx
     ret
     
-.inc_failed:
+inc_failed_local:
     xor rax, rax
     pop rbx
     ret
@@ -246,9 +246,9 @@ backup_end_backup PROC
     mov r11d, [rbx + BACKUP_MANAGER.backupCount]
     xor r12, r12
     
-.find_backup:
+find_backup_local:
     cmp r12d, r11d
-    jge .backup_not_found
+    jge backup_not_found_local
     
     mov r13, r10
     mov r14, r12
@@ -256,12 +256,12 @@ backup_end_backup PROC
     add r13, r14
     
     cmp edx, [r13 + BACKUP_INFO.backupId]
-    je .backup_found
+    je backup_found_local
     
     inc r12d
-    jmp .find_backup
+    jmp find_backup_local
     
-.backup_found:
+backup_found_local:
     ; Get end time
     lea rax, [r13 + BACKUP_INFO.endTime]
     mov rdx, rax
@@ -278,14 +278,14 @@ backup_end_backup PROC
     
     ; Check RTO/RPO
     cmp rax, BACKUP_RTO_MS
-    jle .rto_ok
+    jle rto_ok_local
     
     lea rcx, [szRTOMissed]
     mov rdx, rax
     mov r8, BACKUP_RTO_MS
     call console_log
     
-.rto_ok:
+rto_ok_local:
     ; Increment backup count
     inc dword [rbx + BACKUP_MANAGER.backupCount]
     
@@ -299,7 +299,7 @@ backup_end_backup PROC
     mov r9b, [r13 + BACKUP_INFO.verified]
     call console_log
     
-.backup_not_found:
+backup_not_found_local:
     pop rbx
     ret
 backup_end_backup ENDP
@@ -325,9 +325,9 @@ backup_verify PROC
     mov r11d, [rbx + BACKUP_MANAGER.backupCount]
     xor r12d, r12d
     
-.verify_find:
+verify_find_local:
     cmp r12d, r11d
-    jge .verify_not_found
+    jge verify_not_found_local
     
     mov r13, r10
     mov r14, r12
@@ -335,14 +335,14 @@ backup_verify PROC
     add r13, r14
     
     cmp edx, [r13 + BACKUP_INFO.backupId]
-    je .verify_found
+    je verify_found_local
     
     inc r12d
-    jmp .verify_find
+    jmp verify_find_local
     
-.verify_found:
+verify_found_local:
     ; Mark as verified
-    mov byte [r13 + BACKUP_INFO.verified], 1
+    mov byte ptr [r13 + BACKUP_INFO.verified], 1
     
     ; Get verification time
     lea rax, [r13 + BACKUP_INFO.verificationTime]
@@ -358,7 +358,7 @@ backup_verify PROC
     pop rbx
     ret
     
-.verify_not_found:
+verify_not_found_local:
     xor rax, rax
     pop rbx
     ret
@@ -380,9 +380,9 @@ backup_restore PROC
     mov r11d, [rbx + BACKUP_MANAGER.backupCount]
     xor r12d, r12d
     
-.restore_find:
+restore_find_local:
     cmp r12d, r11d
-    jge .restore_not_found
+    jge restore_not_found_local
     
     mov r13, r10
     mov r14, r12
@@ -390,12 +390,12 @@ backup_restore PROC
     add r13, r14
     
     cmp edx, [r13 + BACKUP_INFO.backupId]
-    je .restore_found
+    je restore_found_local
     
     inc r12d
-    jmp .restore_find
+    jmp restore_find_local
     
-.restore_found:
+restore_found_local:
     ; Copy files from backup to restore path
     mov rcx, [r13 + BACKUP_INFO.backupDir]
     mov rdx, r8
@@ -406,7 +406,7 @@ backup_restore PROC
     pop rbx
     ret
     
-.restore_not_found:
+restore_not_found_local:
     xor rax, rax
     pop rbx
     ret
@@ -423,9 +423,9 @@ backup_get_info PROC
     mov r9d, [rcx + BACKUP_MANAGER.backupCount]
     xor r10d, r10d
     
-.info_find:
+info_find_local:
     cmp r10d, r9d
-    jge .info_not_found
+    jge info_not_found_local
     
     mov r11, r8
     mov r12, r10
@@ -433,16 +433,16 @@ backup_get_info PROC
     add r11, r12
     
     cmp edx, [r11 + BACKUP_INFO.backupId]
-    je .info_found
+    je info_found_local
     
     inc r10d
-    jmp .info_find
+    jmp info_find_local
     
-.info_found:
+info_found_local:
     mov rax, r11
     ret
     
-.info_not_found:
+info_not_found_local:
     xor rax, rax
     ret
 backup_get_info ENDP
@@ -476,9 +476,9 @@ backup_cleanup_old PROC
     mov r11d, [rbx + BACKUP_MANAGER.backupCount]
     xor r12d, r12d
     
-.cleanup_loop:
+cleanup_loop_local:
     cmp r12d, r11d
-    jge .cleanup_done
+    jge cleanup_done_local
     
     mov r13, r10
     mov r14, r12
@@ -488,9 +488,9 @@ backup_cleanup_old PROC
     ; Check age (simplified - just count)
     inc r8
     inc r12d
-    jmp .cleanup_loop
+    jmp cleanup_loop_local
     
-.cleanup_done:
+cleanup_done_local:
     mov rax, r8
     pop rsi
     pop rbx
@@ -510,17 +510,17 @@ backup_destroy PROC
     ; Free backups array
     mov rcx, [rbx + BACKUP_MANAGER.backups]
     cmp rcx, 0
-    je .skip_backups
+    je skip_backups_local
     call free
     
-.skip_backups:
+skip_backups_local:
     ; Free base directory string
     mov rcx, [rbx + BACKUP_MANAGER.baseDir]
     cmp rcx, 0
-    je .skip_basedir
+    je skip_basedir_local
     call free
     
-.skip_basedir:
+skip_basedir_local:
     ; Free manager
     mov rcx, rbx
     call free
@@ -538,3 +538,4 @@ backup_destroy ENDP
     f1M REAL8 1000000.0
 
 END
+

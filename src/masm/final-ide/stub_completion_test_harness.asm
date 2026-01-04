@@ -42,61 +42,61 @@ RunAllTests PROC
     call OutputDebugStringA
     call TestAnimationSystem
     test eax, eax
-    jz .anim_failed
+    jz anim_failed_local
     lea rcx, [szTestPassed]
     call OutputDebugStringA
-    jmp .test_ui
+    jmp test_ui_local
     
-.anim_failed:
+anim_failed_local:
     lea rcx, [szTestFailed]
     call OutputDebugStringA
     
-.test_ui:
+test_ui_local:
     ; Test UI system
     lea rcx, [szUITests]
     call OutputDebugStringA
     call TestUISystem
     test eax, eax
-    jz .ui_failed
+    jz ui_failed_local
     lea rcx, [szTestPassed]
     call OutputDebugStringA
-    jmp .test_feature
+    jmp test_feature_local
     
-.ui_failed:
+ui_failed_local:
     lea rcx, [szTestFailed]
     call OutputDebugStringA
     
-.test_feature:
+test_feature_local:
     ; Test feature system
     lea rcx, [szFeatureTests]
     call OutputDebugStringA
     call TestFeatureSystem
     test eax, eax
-    jz .feature_failed
+    jz feature_failed_local
     lea rcx, [szTestPassed]
     call OutputDebugStringA
-    jmp .test_model
+    jmp test_model_local
     
-.feature_failed:
+feature_failed_local:
     lea rcx, [szTestFailed]
     call OutputDebugStringA
     
-.test_model:
+test_model_local:
     ; Test model system
     lea rcx, [szModelTests]
     call OutputDebugStringA
     call TestModelSystem
     test eax, eax
-    jz .model_failed
+    jz model_failed_local
     lea rcx, [szTestPassed]
     call OutputDebugStringA
-    jmp .all_done
+    jmp all_done_local
     
-.model_failed:
+model_failed_local:
     lea rcx, [szTestFailed]
     call OutputDebugStringA
     
-.all_done:
+all_done_local:
     mov eax, 1
     add rsp, 32
     pop rbx
@@ -156,3 +156,4 @@ TestModelSystem PROC
 TestModelSystem ENDP
 
 END
+

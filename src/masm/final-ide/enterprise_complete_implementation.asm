@@ -339,27 +339,27 @@ AnimationTimerCallback PROC
     ; Process all active animations
     mov rbx, 0          ; Animation index
     
-.anim_process_loop:
+anim_process_loop_local:
     cmp rbx, g_animation_count
-    jge .anim_process_done
+    jge anim_process_done_local
     
     ; Get animation
     lea rcx, g_animations[rbx * SIZEOF ANIMATION]
     
     ; Check if running
     cmp DWORD PTR [rcx + ANIMATION.is_running], 0
-    je .anim_process_next
+    je anim_process_next_local
     
     ; Update animation
     mov rdx, r12        ; Current time
     mov r8, rcx         ; Animation pointer
     call UpdateAnimation
     
-.anim_process_next:
+anim_process_next_local:
     inc rbx
-    jmp .anim_process_loop
+    jmp anim_process_loop_local
     
-.anim_process_done:
+anim_process_done_local:
     inc g_total_animations
     
     add rsp, 48
@@ -386,7 +386,7 @@ UpdateAnimation PROC
     ; Check if animation duration exceeded
     mov eax, [r12 + ANIMATION.duration_ms]
     cmp r9d, eax
-    jl .still_animating
+    jl still_animating_local
     
     ; Animation complete
     mov DWORD PTR [r12 + ANIMATION.elapsed_ms], eax  ; Clamp to max
@@ -395,19 +395,19 @@ UpdateAnimation PROC
     ; Call completion callback if set
     mov rcx, [r12 + ANIMATION.completion_callback]
     test rcx, rcx
-    jz .skip_callback
+    jz skip_callback_local
     
     mov rdx, [r12 + ANIMATION.user_data]
     call rcx
     
-.skip_callback:
+skip_callback_local:
     xor eax, eax        ; Return 0 = animation done
     add rsp, 48
     pop r12
     pop rbx
     ret
     
-.still_animating:
+still_animating_local:
     ; Calculate progress (0.0 - 1.0)
     mov eax, [r12 + ANIMATION.duration_ms]
     mov ecx, [r12 + ANIMATION.elapsed_ms]
@@ -423,29 +423,29 @@ UpdateAnimation PROC
     mov ecx, r8d        ; Progress percentage
     
     cmp eax, EASING_LINEAR
-    je .linear_easing
+    je linear_easing_local
     cmp eax, EASING_EASE_IN
-    je .ease_in
+    je ease_in_local
     cmp eax, EASING_EASE_OUT
-    je .ease_out
+    je ease_out_local
     cmp eax, EASING_EASE_IN_OUT
-    je .ease_in_out
+    je ease_in_out_local
     
-.linear_easing:
+linear_easing_local:
     ; progress = t (0-100)
     mov eax, ecx
-    jmp .easing_done
+    jmp easing_done_local
     
-.ease_in:
+ease_in_local:
     ; progress = t^2
     mov eax, ecx
     imul eax, eax
     mov edx, 0
     mov r8d, 10000
     idiv r8d
-    jmp .easing_done
+    jmp easing_done_local
     
-.ease_out:
+ease_out_local:
     ; progress = 1 - (1-t)^2
     mov eax, 100
     sub eax, ecx
@@ -455,9 +455,9 @@ UpdateAnimation PROC
     idiv r8d
     mov eax, 100
     sub eax, r8d
-    jmp .easing_done
+    jmp easing_done_local
     
-.ease_in_out:
+ease_in_out_local:
     ; Cubic ease-in-out
     mov eax, ecx
     imul eax, ecx
@@ -466,7 +466,7 @@ UpdateAnimation PROC
     mov r8d, 10000
     idiv r8d
     
-.easing_done:
+easing_done_local:
     ; Interpolate between start and end values
     mov ecx, [r12 + ANIMATION.start_value]
     mov edx, [r12 + ANIMATION.end_value]
@@ -483,7 +483,7 @@ UpdateAnimation PROC
     ; Update target window
     mov rcx, [r12 + ANIMATION.target_hwnd]
     test rcx, rcx
-    jz .no_hwnd_update
+    jz no_hwnd_update_local
     
     ; Post WM_PAINT to trigger redraw
     mov edx, WM_PAINT
@@ -491,7 +491,7 @@ UpdateAnimation PROC
     xor r9d, r9d
     call SendMessageA
     
-.no_hwnd_update:
+no_hwnd_update_local:
     mov eax, 1          ; Still animating
     add rsp, 48
     pop r12
@@ -522,18 +522,18 @@ ParseAnimationJson PROC
     lea rcx, "duration"
     call FindJsonKey
     test eax, eax
-    jz .duration_not_found
+    jz duration_not_found_local
     
     ; Parse duration value (should be number)
     mov ecx, [eax]      ; Read integer value
     mov [r12 + ANIMATION.duration_ms], ecx
     
-.duration_not_found:
+duration_not_found_local:
     ; Find "easing"
     lea rcx, "easing"
     call FindJsonKey
     test eax, eax
-    jz .easing_not_found
+    jz easing_not_found_local
     
     ; Parse easing type string
     ; Compare with "linear", "ease-in", "ease-out", "ease-in-out"
@@ -541,41 +541,41 @@ ParseAnimationJson PROC
     lea rdx, "linear"
     call StringCompare
     test eax, eax
-    jz .set_linear
+    jz set_linear_local
     
     lea rdx, "ease-in"
     call StringCompare
     test eax, eax
-    jz .set_ease_in
+    jz set_ease_in_local
     
     lea rdx, "ease-out"
     call StringCompare
     test eax, eax
-    jz .set_ease_out
+    jz set_ease_out_local
     
     lea rdx, "ease-in-out"
     call StringCompare
     test eax, eax
-    jz .set_ease_in_out
+    jz set_ease_in_out_local
     
-    jmp .easing_not_found
+    jmp easing_not_found_local
     
-.set_linear:
+set_linear_local:
     mov DWORD PTR [r12 + ANIMATION.easing_type], EASING_LINEAR
-    jmp .easing_not_found
+    jmp easing_not_found_local
     
-.set_ease_in:
+set_ease_in_local:
     mov DWORD PTR [r12 + ANIMATION.easing_type], EASING_EASE_IN
-    jmp .easing_not_found
+    jmp easing_not_found_local
     
-.set_ease_out:
+set_ease_out_local:
     mov DWORD PTR [r12 + ANIMATION.easing_type], EASING_EASE_OUT
-    jmp .easing_not_found
+    jmp easing_not_found_local
     
-.set_ease_in_out:
+set_ease_in_out_local:
     mov DWORD PTR [r12 + ANIMATION.easing_type], EASING_EASE_IN_OUT
     
-.easing_not_found:
+easing_not_found_local:
     mov eax, ERR_SUCCESS
     add rsp, 48
     pop r12
@@ -591,7 +591,7 @@ StartStyleAnimation PROC
     
     ; Add animation to registry
     cmp g_animation_count, MAX_ANIMATIONS
-    jge .start_style_failed
+    jge start_style_failed_local
     
     mov eax, g_animation_count
     lea rbx, g_animations[rax * SIZEOF ANIMATION]
@@ -614,7 +614,7 @@ StartStyleAnimation PROC
     pop rbx
     ret
     
-.start_style_failed:
+start_style_failed_local:
     mov eax, ERR_NO_MEMORY
     add rsp, 32
     pop rbx
@@ -677,15 +677,15 @@ CalculateEasing PROC
     ; Returns: eax = eased progress
     
     cmp edx, EASING_LINEAR
-    je .easing_linear
+    je easing_linear_local
     cmp edx, EASING_EASE_IN
-    je .easing_ease_in
+    je easing_ease_in_local
     
-.easing_linear:
+easing_linear_local:
     mov eax, ecx        ; Return progress as-is
     ret
     
-.easing_ease_in:
+easing_ease_in_local:
     ; t^2
     mov eax, ecx
     imul eax, eax
@@ -840,14 +840,14 @@ ui_open_file_dialog PROC
     mov rcx, rsp
     call GetOpenFileNameA
     test eax, eax
-    jz .no_file_selected
+    jz no_file_selected_local
     
     mov eax, 1          ; Success
     add rsp, 64
     pop rbx
     ret
     
-.no_file_selected:
+no_file_selected_local:
     xor eax, eax
     add rsp, 64
     pop rbx
@@ -864,13 +864,13 @@ ALIGN 16
 SetCurrentUIMode PROC
     ; ecx = new mode
     cmp ecx, AGENT_MODES
-    jge .mode_invalid
+    jge mode_invalid_local
     
     mov g_current_mode, ecx
     mov eax, ERR_SUCCESS
     ret
     
-.mode_invalid:
+mode_invalid_local:
     mov eax, ERR_INVALID_PARAM
     ret
 SetCurrentUIMode ENDP
@@ -881,13 +881,13 @@ GetUIOption PROC
     ; Returns: eax = option value
     
     cmp ecx, 16
-    jge .option_invalid
+    jge option_invalid_local
     
     lea rax, g_ui_options[rcx * SIZEOF UI_OPTION]
     mov eax, [rax + UI_OPTION.current_value]
     ret
     
-.option_invalid:
+option_invalid_local:
     xor eax, eax
     ret
 GetUIOption ENDP
@@ -897,14 +897,14 @@ SetUIOption PROC
     ; rcx = option index, edx = new value
     
     cmp ecx, 16
-    jge .set_option_invalid
+    jge set_option_invalid_local
     
     lea rax, g_ui_options[rcx * SIZEOF UI_OPTION]
     mov [rax + UI_OPTION.current_value], edx
     mov eax, ERR_SUCCESS
     ret
     
-.set_option_invalid:
+set_option_invalid_local:
     mov eax, ERR_INVALID_PARAM
     ret
 SetUIOption ENDP
@@ -928,7 +928,7 @@ LoadUserFeatureConfiguration PROC
     mov r9d, OPEN_EXISTING
     call CreateFileA
     cmp rax, INVALID_HANDLE_VALUE
-    je .config_load_failed
+    je config_load_failed_local
     
     ; Read file into buffer
     mov rcx, rax
@@ -937,14 +937,14 @@ LoadUserFeatureConfiguration PROC
     lea r9, dword ptr [0]
     call ReadFile
     test eax, eax
-    jz .config_load_failed
+    jz config_load_failed_local
     
     mov eax, ERR_SUCCESS
     add rsp, 32
     pop rbx
     ret
     
-.config_load_failed:
+config_load_failed_local:
     mov eax, ERR_FILE_NOT_FOUND
     add rsp, 32
     pop rbx
@@ -962,65 +962,65 @@ ValidateFeatureConfiguration PROC
     ; Iterate through features checking dependencies
     mov rbx, 0
     
-.validate_loop:
+validate_loop_local:
     cmp rbx, g_feature_count
-    jge .validate_done
+    jge validate_done_local
     
     lea rcx, g_features[rbx * SIZEOF FEATURE_DEFINITION]
     
     ; Check dependencies
     mov eax, [rcx + FEATURE_DEFINITION.dep_count]
     test eax, eax
-    jz .check_conflicts
+    jz check_conflicts_local
     
     ; For each dependency, verify it exists and is enabled
     mov r8d, 0          ; Dependency index
     
-.validate_deps_loop:
+validate_deps_loop_local:
     cmp r8d, eax
-    jge .check_conflicts
+    jge check_conflicts_local
     
     mov edx, [rcx + FEATURE_DEFINITION.dependencies + r8 * 4]
     cmp edx, 0
-    je .validate_deps_next
+    je validate_deps_next_local
     
     ; Find feature with this ID
     mov r9d, 0
-.find_dep_loop:
+find_dep_loop_local:
     cmp r9d, g_feature_count
-    jge .dep_not_found
+    jge dep_not_found_local
     
     lea r10, g_features[r9 * SIZEOF FEATURE_DEFINITION]
     mov r10d, [r10 + FEATURE_DEFINITION.feature_id]
     cmp r10d, edx
-    je .dep_found
+    je dep_found_local
     
     inc r9d
-    jmp .find_dep_loop
+    jmp find_dep_loop_local
     
-.dep_not_found:
+dep_not_found_local:
     mov eax, ERR_INVALID_PARAM
     add rsp, 32
     pop rbx
     ret
     
-.dep_found:
-.validate_deps_next:
+dep_found_local:
+validate_deps_next_local:
     inc r8d
-    jmp .validate_deps_loop
+    jmp validate_deps_loop_local
     
-.check_conflicts:
+check_conflicts_local:
     mov eax, [rcx + FEATURE_DEFINITION.conflict_count]
     test eax, eax
-    jz .validate_next
+    jz validate_next_local
     
     ; Similar check for conflicts
     
-.validate_next:
+validate_next_local:
     inc rbx
-    jmp .validate_loop
+    jmp validate_loop_local
     
-.validate_done:
+validate_done_local:
     mov eax, ERR_SUCCESS
     add rsp, 32
     pop rbx
@@ -1039,32 +1039,32 @@ ApplyEnterpriseFeaturePolicy PROC
     
     ; Find feature
     mov r8d, 0
-.find_feat_loop:
+find_feat_loop_local:
     cmp r8d, g_feature_count
-    jge .feat_not_found
+    jge feat_not_found_local
     
     lea rcx, g_features[r8 * SIZEOF FEATURE_DEFINITION]
     cmp [rcx + FEATURE_DEFINITION.feature_id], ebx
-    je .feat_found
+    je feat_found_local
     
     inc r8d
-    jmp .find_feat_loop
+    jmp find_feat_loop_local
     
-.feat_not_found:
+feat_not_found_local:
     mov eax, ERR_NOT_FOUND
     add rsp, 32
     pop rbx
     ret
     
-.feat_found:
+feat_found_local:
     ; Check if policy restricts this feature
     mov eax, [rcx + FEATURE_DEFINITION.policy_restricted]
     test eax, eax
-    jz .policy_allowed
+    jz policy_allowed_local
     
     mov DWORD PTR [rcx + FEATURE_DEFINITION.state], FEATURE_STATE_RESTRICTED
     
-.policy_allowed:
+policy_allowed_local:
     mov eax, ERR_SUCCESS
     add rsp, 32
     pop rbx
@@ -1137,27 +1137,27 @@ IsFeatureEnabled PROC
     ; Returns: eax = 1 if enabled, 0 if not
     
     mov r8d, 0
-.find_feature:
+find_feature_local:
     cmp r8d, g_feature_count
-    jge .feature_disabled
+    jge feature_disabled_local
     
     lea rax, g_features[r8 * SIZEOF FEATURE_DEFINITION]
     cmp [rax + FEATURE_DEFINITION.feature_id], ecx
-    je .check_enabled
+    je check_enabled_local
     
     inc r8d
-    jmp .find_feature
+    jmp find_feature_local
     
-.check_enabled:
+check_enabled_local:
     mov eax, [rax + FEATURE_DEFINITION.state]
     cmp eax, FEATURE_STATE_ENABLED
-    je .feature_enabled
+    je feature_enabled_local
     
-.feature_disabled:
+feature_disabled_local:
     xor eax, eax
     ret
     
-.feature_enabled:
+feature_enabled_local:
     mov eax, 1
     ret
 IsFeatureEnabled ENDP
@@ -1168,22 +1168,22 @@ GetFeatureState PROC
     ; Returns: eax = feature state
     
     mov r8d, 0
-.find_feature_state:
+find_feature_state_local:
     cmp r8d, g_feature_count
-    jge .feature_state_not_found
+    jge feature_state_not_found_local
     
     lea rax, g_features[r8 * SIZEOF FEATURE_DEFINITION]
     cmp [rax + FEATURE_DEFINITION.feature_id], ecx
-    je .return_state
+    je return_state_local
     
     inc r8d
-    jmp .find_feature_state
+    jmp find_feature_state_local
     
-.return_state:
+return_state_local:
     mov eax, [rax + FEATURE_DEFINITION.state]
     ret
     
-.feature_state_not_found:
+feature_state_not_found_local:
     xor eax, eax
     ret
 GetFeatureState ENDP
@@ -1193,23 +1193,23 @@ SetFeatureState PROC
     ; rcx = feature id, edx = new state
     
     mov r8d, 0
-.find_feature_set:
+find_feature_set_local:
     cmp r8d, g_feature_count
-    jge .feature_not_found_set
+    jge feature_not_found_set_local
     
     lea rax, g_features[r8 * SIZEOF FEATURE_DEFINITION]
     cmp [rax + FEATURE_DEFINITION.feature_id], ecx
-    je .set_state
+    je set_state_local
     
     inc r8d
-    jmp .find_feature_set
+    jmp find_feature_set_local
     
-.set_state:
+set_state_local:
     mov [rax + FEATURE_DEFINITION.state], edx
     mov eax, ERR_SUCCESS
     ret
     
-.feature_not_found_set:
+feature_not_found_set_local:
     mov eax, ERR_NOT_FOUND
     ret
 SetFeatureState ENDP
@@ -1246,30 +1246,30 @@ ml_masm_get_tensor PROC
     mov rbx, rcx        ; Tensor name
     mov r8d, 0          ; Index
     
-.find_tensor:
+find_tensor_local:
     cmp r8d, g_tensor_count
-    jge .tensor_not_found
+    jge tensor_not_found_local
     
     mov rax, [g_tensor_registry + r8 * 8]
     test rax, rax
-    jz .tensor_not_found
+    jz tensor_not_found_local
     
     ; Compare name
     lea rcx, [rax + TENSOR_INFO.tensor_name]
     mov rdx, rbx
     call StringCompare
     test eax, eax
-    jnz .tensor_found
+    jnz tensor_found_local
     
     inc r8d
-    jmp .find_tensor
+    jmp find_tensor_local
     
-.tensor_found:
+tensor_found_local:
     add rsp, 32
     pop rbx
     ret
     
-.tensor_not_found:
+tensor_not_found_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -1306,11 +1306,11 @@ rawr1024_quantize_model PROC
     
     ; Check quantization type
     cmp edx, 4
-    je .quant_4bit
+    je quant__local4bit
     cmp edx, 8
-    je .quant_8bit
+    je quant__local8bit
     cmp edx, 16
-    je .quant_16bit
+    je quant__local16bit
     
     mov eax, ERR_INVALID_PARAM
     add rsp, 32
@@ -1319,16 +1319,16 @@ rawr1024_quantize_model PROC
     
 .quant_4bit:
     mov [rbx + MODEL_ARCH.quantization], QUANT_4BIT
-    jmp .quant_done
+    jmp quant_done_local
     
 .quant_8bit:
     mov [rbx + MODEL_ARCH.quantization], QUANT_8BIT
-    jmp .quant_done
+    jmp quant_done_local
     
 .quant_16bit:
     mov [rbx + MODEL_ARCH.quantization], QUANT_16BIT
     
-.quant_done:
+quant_done_local:
     mov eax, ERR_SUCCESS
     add rsp, 32
     pop rbx
@@ -1354,7 +1354,7 @@ rawr1024_direct_load PROC
     mov r9d, OPEN_EXISTING
     call CreateFileA
     cmp rax, INVALID_HANDLE_VALUE
-    je .load_failed
+    je load_failed_local
     
     ; Read GGUF header and data
     mov rcx, rax
@@ -1363,7 +1363,7 @@ rawr1024_direct_load PROC
     lea r9, dword ptr [0]
     call ReadFile
     test eax, eax
-    jz .load_failed
+    jz load_failed_local
     
     ; Parse GGUF structure
     mov rcx, rbx
@@ -1373,7 +1373,7 @@ rawr1024_direct_load PROC
     pop rbx
     ret
     
-.load_failed:
+load_failed_local:
     mov eax, ERR_FILE_NOT_FOUND
     add rsp, 48
     pop r12
@@ -1418,24 +1418,24 @@ StringCompare PROC
     ; Returns: eax = 1 if equal, 0 if not
     
     xor r8d, r8d
-.cmp_loop:
+cmp_loop_local:
     mov al, BYTE PTR [rcx + r8]
     mov bl, BYTE PTR [rdx + r8]
     cmp al, bl
-    jne .cmp_not_equal
+    jne cmp_not_equal_local
     
     test al, al
-    jz .cmp_equal
+    jz cmp_equal_local
     
     inc r8d
     cmp r8d, 256
-    jl .cmp_loop
+    jl cmp_loop_local
     
-.cmp_equal:
+cmp_equal_local:
     mov eax, 1
     ret
     
-.cmp_not_equal:
+cmp_not_equal_local:
     xor eax, eax
     ret
 StringCompare ENDP
@@ -1445,20 +1445,20 @@ CopyString PROC
     ; rsi = src, rdi = dst, ecx = max length
     
     xor r8d, r8d
-.copy_loop:
+copy_loop_local:
     cmp r8d, ecx
-    jge .copy_done
+    jge copy_done_local
     
     mov al, BYTE PTR [rsi + r8]
     mov BYTE PTR [rdi + r8], al
     
     test al, al
-    jz .copy_done
+    jz copy_done_local
     
     inc r8d
-    jmp .copy_loop
+    jmp copy_loop_local
     
-.copy_done:
+copy_done_local:
     ret
 CopyString ENDP
 
@@ -1472,3 +1472,4 @@ FindJsonKey PROC
 FindJsonKey ENDP
 
 END
+

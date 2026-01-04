@@ -243,9 +243,7 @@ create_process:
     mov rax, hStdErrRead
     mov [globalTerminal.hStdErrRead], rax
     
-    mov [globalTerminal.isRunning], 1
-    
-    ; Close unused handles
+    mov dword ptr [globalTerminal.isRunning], 1  ; Close unused handles
     mov rcx, hStdInRead
     call CloseHandle
     mov rcx, hStdOutWrite

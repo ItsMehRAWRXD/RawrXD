@@ -601,3 +601,4 @@ asm_close_handle PROC
 asm_close_handle ENDP
 
 END
+

@@ -153,9 +153,9 @@ output_search_find PROC
     lea rdi, SearchTerm                 ; rdi = search term
     lea rsi, TempSearchBuffer           ; rsi = pane text
     
-.search_loop:
+search_loop_local:
     cmp BYTE PTR [rsi], 0               ; End of text?
-    je .search_done
+    je search_done_local
     
     ; Try to match at current position
     mov rcx, rsi
@@ -164,12 +164,12 @@ output_search_find PROC
     call string_match_at_position
     
     test eax, eax                       ; Match found?
-    jz .no_match_here
+    jz no_match_here_local
     
     ; Record match
     mov ebx, MatchCount
     cmp ebx, MAX_OUTPUT_ENTRIES
-    jge .search_done                    ; Buffer full
+    jge search_done_local                    ; Buffer full
     
     ; Calculate offset
     mov r8d, ebx
@@ -182,11 +182,11 @@ output_search_find PROC
     
     inc MatchCount
     
-.no_match_here:
+no_match_here_local:
     inc rsi
-    jmp .search_loop
+    jmp search_loop_local
     
-.search_done:
+search_done_local:
     ; Calculate search duration
     call GetTickCount64
     sub rax, LastSearchTime
@@ -207,20 +207,20 @@ PRIVATE copy_string_safe_search
 copy_string_safe_search PROC
     xor eax, eax
     
-.copy_loop:
+copy_loop_local:
     cmp eax, r8d
-    jge .done
+    jge done_local
     
     movzx ebx, BYTE PTR [rdx + rax]
     mov BYTE PTR [rcx + rax], bl
     
     test bl, bl
-    je .done
+    je done_local
     
     inc eax
-    jmp .copy_loop
+    jmp copy_loop_local
     
-.done:
+done_local:
     mov BYTE PTR [rcx + rax], 0
     ret
 copy_string_safe_search ENDP
@@ -238,35 +238,35 @@ string_match_at_position PROC
     
     ; Simple case-insensitive/sensitive matching
     cmp r8d, 0                          ; flags
-    je .case_insensitive
+    je case_insensitive_local
     
     ; Case sensitive - direct byte comparison
     mov rsi, rcx                        ; rsi = text
     mov rbx, rdx                        ; rbx = pattern
     
-.sensitive_loop:
+sensitive_loop_local:
     movzx eax, BYTE PTR [rbx]
     test al, al
-    jz .match_found
+    jz match_found_local
     
     movzx ecx, BYTE PTR [rsi]
     cmp al, cl
-    jne .no_match
+    jne no_match_local
     
     inc rsi
     inc rbx
-    jmp .sensitive_loop
+    jmp sensitive_loop_local
     
-.case_insensitive:
+case_insensitive_local:
     ; TODO: case-insensitive matching
     mov eax, 0
-    jmp .match_exit
+    jmp match_exit_local
     
-.match_found:
+match_found_local:
     mov eax, 1
     
-.match_exit:
-.no_match:
+match_exit_local:
+no_match_local:
     pop rsi
     pop rbx
     ret
@@ -312,18 +312,18 @@ output_search_find_next PROC
     mov eax, CurrentMatchIdx
     mov edx, MatchCount
     cmp eax, edx
-    jge .not_found
+    jge not_found_local
     
     ; Move to next match
     inc CurrentMatchIdx
     cmp CurrentMatchIdx, MatchCount
-    jl .found
+    jl found_local
     
-.not_found:
+not_found_local:
     xor eax, eax
     ret
     
-.found:
+found_local:
     mov eax, 1
     ret
 output_search_find_next ENDP
@@ -335,13 +335,13 @@ output_search_find_next ENDP
 PUBLIC output_search_find_prev
 output_search_find_prev PROC
     cmp CurrentMatchIdx, 0
-    je .not_found
+    je not_found_local
     
     dec CurrentMatchIdx
     mov eax, 1
     ret
     
-.not_found:
+not_found_local:
     xor eax, eax
     ret
 output_search_find_prev ENDP
@@ -354,13 +354,13 @@ PUBLIC output_search_get_current
 output_search_get_current PROC
     mov eax, CurrentMatchIdx
     cmp eax, MatchCount
-    jge .invalid
+    jge invalid_local
     
     imul eax, SIZE SEARCH_RESULT
     lea rax, SearchMatches[rax]
     ret
     
-.invalid:
+invalid_local:
     xor eax, eax
     ret
 output_search_get_current ENDP
@@ -377,7 +377,7 @@ output_search_highlight_current PROC
     ; Get current match
     call output_search_get_current
     test rax, rax
-    jz .highlight_fail
+    jz highlight_fail_local
     
     ; Extract start/end positions
     mov ebx, DWORD PTR [rax + 12]       ; start_pos
@@ -396,7 +396,7 @@ output_search_highlight_current PROC
     pop rbx
     ret
     
-.highlight_fail:
+highlight_fail_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -418,3 +418,4 @@ SendMessage_EM_SETSEL PROC
 SendMessage_EM_SETSEL ENDP
 
 END
+

@@ -225,13 +225,13 @@ CreateModelChain PROC
     
     ; Check if we can create more chains
     cmp g_chain_count, 16
-    jge .chain_create_failed
+    jge chain_create_failed_local
     
     ; Allocate MODEL_CHAIN structure
     mov ecx, SIZEOF MODEL_CHAIN
     call HeapAlloc
     test rax, rax
-    jz .chain_create_failed
+    jz chain_create_failed_local
     
     mov rbx, rax        ; Save chain pointer
     
@@ -245,17 +245,17 @@ CreateModelChain PROC
     mov rsi, r12
     mov ecx, 64
     xor r9d, r9d
-.copy_name:
+copy_name_local:
     cmp r9d, ecx
-    jge .name_copied
+    jge name_copied_local
     mov al, BYTE PTR [rsi + r9]
     mov BYTE PTR [rdi + r9], al
     test al, al
-    jz .name_copied
+    jz name_copied_local
     inc r9d
-    jmp .copy_name
+    jmp copy_name_local
     
-.name_copied:
+name_copied_local:
     mov [rbx + MODEL_CHAIN.mode], r8d
     mov DWORD PTR [rbx + MODEL_CHAIN.model_count], 0
     mov DWORD PTR [rbx + MODEL_CHAIN.is_active], 1
@@ -283,7 +283,7 @@ CreateModelChain PROC
     pop rbx
     ret
     
-.chain_create_failed:
+chain_create_failed_local:
     xor eax, eax
     add rsp, 48
     pop r12
@@ -310,7 +310,7 @@ AddModelToChain PROC
     ; Check if we can add more models
     mov eax, [rbx + MODEL_CHAIN.model_count]
     cmp eax, MAX_CHAIN_MODELS
-    jge .add_model_failed
+    jge add_model_failed_local
     
     ; Get next model slot
     lea r9, [rbx + MODEL_CHAIN.models + rax * SIZEOF MODEL_SLOT]
@@ -321,34 +321,34 @@ AddModelToChain PROC
     mov rsi, r12
     mov ecx, 260
     xor r10d, r10d
-.copy_path:
+copy_path_local:
     cmp r10d, ecx
-    jge .path_copied
+    jge path_copied_local
     mov al, BYTE PTR [rsi + r10]
     mov BYTE PTR [rdi + r10], al
     test al, al
-    jz .path_copied
+    jz path_copied_local
     inc r10d
-    jmp .copy_path
+    jmp copy_path_local
     
-.path_copied:
+path_copied_local:
     ; Copy model name
     mov rdi, r9
     add rdi, MODEL_SLOT.model_name
     mov rsi, r8
     mov ecx, 64
     xor r10d, r10d
-.copy_model_name:
+copy_model_name_local:
     cmp r10d, ecx
-    jge .model_name_copied
+    jge model_name_copied_local
     mov al, BYTE PTR [rsi + r10]
     mov BYTE PTR [rdi + r10], al
     test al, al
-    jz .model_name_copied
+    jz model_name_copied_local
     inc r10d
-    jmp .copy_model_name
+    jmp copy_model_name_local
     
-.model_name_copied:
+model_name_copied_local:
     ; Set default values
     mov DWORD PTR [r9 + MODEL_SLOT.state], MODEL_SLOT_EMPTY
     mov DWORD PTR [r9 + MODEL_SLOT.weight], 100         ; Equal weight
@@ -366,7 +366,7 @@ AddModelToChain PROC
     pop rbx
     ret
     
-.add_model_failed:
+add_model_failed_local:
     xor eax, eax
     add rsp, 48
     pop r12
@@ -390,10 +390,10 @@ LoadChainModels PROC
     mov r12, rcx        ; Chain pointer
     mov rbx, 0          ; Model index
     
-.load_models_loop:
+load_models_loop_local:
     mov eax, [r12 + MODEL_CHAIN.model_count]
     cmp rbx, rax
-    jge .all_models_loaded
+    jge all_models_loaded_local
     
     ; Get model slot
     lea rcx, [r12 + MODEL_CHAIN.models + rbx * SIZEOF MODEL_SLOT]
@@ -402,7 +402,7 @@ LoadChainModels PROC
     lea rdx, [rcx + MODEL_SLOT.model_path]
     call LoadSingleModel
     test eax, eax
-    jz .model_load_failed
+    jz model_load_failed_local
     
     ; Mark as loaded
     mov DWORD PTR [rcx + MODEL_SLOT.state], MODEL_SLOT_LOADED
@@ -412,16 +412,16 @@ LoadChainModels PROC
     mov [rcx + MODEL_SLOT.load_time], rax
     
     inc rbx
-    jmp .load_models_loop
+    jmp load_models_loop_local
     
-.all_models_loaded:
+all_models_loaded_local:
     mov eax, 1         ; All models loaded
     add rsp, 48
     pop r12
     pop rbx
     ret
     
-.model_load_failed:
+model_load_failed_local:
     xor eax, eax
     add rsp, 48
     pop r12
@@ -448,61 +448,61 @@ ExecuteModelChain PROC
     mov eax, [r12 + MODEL_CHAIN.mode]
     
     cmp eax, CHAIN_MODE_SEQUENTIAL
-    je .exec_sequential
+    je exec_sequential_local
     cmp eax, CHAIN_MODE_PARALLEL
-    je .exec_parallel
+    je exec_parallel_local
     cmp eax, CHAIN_MODE_VOTING
-    je .exec_voting
+    je exec_voting_local
     cmp eax, CHAIN_MODE_CYCLE
-    je .exec_cycle
+    je exec_cycle_local
     cmp eax, CHAIN_MODE_FALLBACK
-    je .exec_fallback
+    je exec_fallback_local
     
-    jmp .exec_failed
+    jmp exec_failed_local
     
-.exec_sequential:
+exec_sequential_local:
     mov rcx, r12
     mov r8, rdx         ; Input
     mov r9d, r8d        ; Size
     call ExecuteChainSequential
-    jmp .exec_done
+    jmp exec_done_local
     
-.exec_parallel:
+exec_parallel_local:
     mov rcx, r12
     mov r8, rdx
     mov r9d, r8d
     call ExecuteChainParallel
-    jmp .exec_done
+    jmp exec_done_local
     
-.exec_voting:
+exec_voting_local:
     mov rcx, r12
     mov r8, rdx
     mov r9d, r8d
     call ExecuteChainVoting
-    jmp .exec_done
+    jmp exec_done_local
     
-.exec_cycle:
+exec_cycle_local:
     mov rcx, r12
     mov r8, rdx
     mov r9d, r8d
     call ExecuteChainCycle
-    jmp .exec_done
+    jmp exec_done_local
     
-.exec_fallback:
+exec_fallback_local:
     mov rcx, r12
     mov r8, rdx
     mov r9d, r8d
     call ExecuteChainFallback
-    jmp .exec_done
+    jmp exec_done_local
     
-.exec_done:
+exec_done_local:
     inc g_total_chain_exec
     add rsp, 48
     pop r12
     pop rbx
     ret
     
-.exec_failed:
+exec_failed_local:
     inc g_chain_errors
     xor eax, eax
     add rsp, 48
@@ -530,10 +530,10 @@ ExecuteChainSequential PROC
     lea r10, g_model_output_buf1
     mov r11d, r9d
     
-.seq_execute_loop:
+seq_execute_loop_local:
     mov eax, [r12 + MODEL_CHAIN.model_count]
     cmp rbx, rax
-    jge .seq_execute_done
+    jge seq_execute_done_local
     
     ; Get model slot
     lea rcx, [r12 + MODEL_CHAIN.models + rbx * SIZEOF MODEL_SLOT]
@@ -545,16 +545,16 @@ ExecuteChainSequential PROC
     
     ; Check for error
     test eax, eax
-    jz .seq_execute_error
+    jz seq_execute_error_local
     
     ; Output becomes input for next model
     mov r11d, eax       ; Output size
     mov r10, [rcx + MODEL_SLOT.last_output_ptr]  ; Output ptr
     
     inc rbx
-    jmp .seq_execute_loop
+    jmp seq_execute_loop_local
     
-.seq_execute_done:
+seq_execute_done_local:
     mov rax, r10        ; Return final output
     inc g_chain_successes
     add rsp, 48
@@ -562,7 +562,7 @@ ExecuteChainSequential PROC
     pop rbx
     ret
     
-.seq_execute_error:
+seq_execute_error_local:
     inc g_chain_errors
     xor eax, eax
     add rsp, 48
@@ -587,10 +587,10 @@ ExecuteChainParallel PROC
     ; Start all models in parallel
     mov r8d, 0          ; Model index
     
-.par_start_loop:
+par_start_loop_local:
     mov eax, [rbx + MODEL_CHAIN.model_count]
     cmp r8d, eax
-    jge .par_wait_complete
+    jge par_wait_complete_local
     
     ; Get model slot
     lea rcx, [rbx + MODEL_CHAIN.models + r8 * SIZEOF MODEL_SLOT]
@@ -601,9 +601,9 @@ ExecuteChainParallel PROC
     call ExecuteSingleModel
     
     inc r8d
-    jmp .par_start_loop
+    jmp par_start_loop_local
     
-.par_wait_complete:
+par_wait_complete_local:
     ; Wait for all models to complete
     mov ecx, 30000      ; 30 second timeout
     call WaitForMultipleObjects
@@ -630,10 +630,10 @@ ExecuteChainVoting PROC
     mov rbx, 0          ; Model index
     
     ; Execute all models in parallel
-.vote_execute_loop:
+vote_execute_loop_local:
     mov eax, [r12 + MODEL_CHAIN.model_count]
     cmp rbx, rax
-    jge .vote_voting_phase
+    jge vote_voting_phase_local
     
     lea rcx, [r12 + MODEL_CHAIN.models + rbx * SIZEOF MODEL_SLOT]
     mov rdx, r8
@@ -641,9 +641,9 @@ ExecuteChainVoting PROC
     call ExecuteSingleModel
     
     inc rbx
-    jmp .vote_execute_loop
+    jmp vote_execute_loop_local
     
-.vote_voting_phase:
+vote_voting_phase_local:
     ; Vote on best output
     mov rcx, r12
     call VoteOnOutputs
@@ -678,22 +678,22 @@ ExecuteChainCycle PROC
     mov rcx, rax
     sub rcx, g_last_cycle_time
     cmp rcx, g_cycle_rotation_ms
-    jl .no_rotation_needed
+    jl no_rotation_needed_local
     
     ; Rotate to next model
     mov eax, [rbx + MODEL_CHAIN.current_cycle_idx]
     inc eax
     mov ecx, [rbx + MODEL_CHAIN.model_count]
     cmp eax, ecx
-    jl .rotation_valid
+    jl rotation_valid_local
     xor eax, eax        ; Wrap to 0
     
-.rotation_valid:
+rotation_valid_local:
     mov [rbx + MODEL_CHAIN.current_cycle_idx], eax
     call GetTickCount64
     mov g_last_cycle_time, rax
     
-.no_rotation_needed:
+no_rotation_needed_local:
     ; Execute current model
     mov eax, [rbx + MODEL_CHAIN.current_cycle_idx]
     lea rcx, [rbx + MODEL_CHAIN.models + rax * SIZEOF MODEL_SLOT]
@@ -730,12 +730,12 @@ ExecuteChainFallback PROC
     
     ; Check for error
     test eax, eax
-    jnz .fallback_success
+    jnz fallback_success_local
     
     ; First model failed, try second
     mov eax, [rbx + MODEL_CHAIN.model_count]
     cmp eax, 2
-    jl .fallback_failed
+    jl fallback_failed_local
     
     lea rcx, [rbx + MODEL_CHAIN.models + 1 * SIZEOF MODEL_SLOT]
     mov rdx, r8
@@ -743,15 +743,15 @@ ExecuteChainFallback PROC
     call ExecuteSingleModel
     
     test eax, eax
-    jz .fallback_failed
+    jz fallback_failed_local
     
-.fallback_success:
+fallback_success_local:
     inc g_chain_successes
     add rsp, 32
     pop rbx
     ret
     
-.fallback_failed:
+fallback_failed_local:
     inc g_chain_errors
     xor eax, eax
     add rsp, 32
@@ -788,10 +788,10 @@ CycleToNextModel PROC
     inc eax
     mov edx, [rcx + MODEL_CHAIN.model_count]
     cmp eax, edx
-    jl .cycle_valid
+    jl cycle_valid_local
     xor eax, eax        ; Wrap to 0
     
-.cycle_valid:
+cycle_valid_local:
     mov [rcx + MODEL_CHAIN.current_cycle_idx], eax
     ret
 CycleToNextModel ENDP
@@ -806,7 +806,7 @@ GetModelOutput PROC
     ; Returns: eax = output size
     
     cmp edx, 3
-    jge .model_index_invalid
+    jge model_index_invalid_local
     
     lea rax, [rcx + MODEL_CHAIN.models + rdx * SIZEOF MODEL_SLOT]
     mov rax, [rax + MODEL_SLOT.last_output_ptr]
@@ -817,19 +817,19 @@ GetModelOutput PROC
     mov r9d, MAX_MODEL_OUTPUT
     xor r10d, r10d
     
-.copy_out:
+copy_out_local:
     cmp r10d, r9d
-    jge .copy_done
+    jge copy_done_local
     mov al, BYTE PTR [rcx + r10]
     mov BYTE PTR [rdx + r10], al
     inc r10d
-    jmp .copy_out
+    jmp copy_out_local
     
-.copy_done:
+copy_done_local:
     mov eax, r10d
     ret
     
-.model_index_invalid:
+model_index_invalid_local:
     xor eax, eax
     ret
 GetModelOutput ENDP
@@ -866,10 +866,10 @@ ALIGN 16
 ChainWorkerThreadProc PROC
     ; Worker thread for background chain execution
     
-.worker_loop:
+worker_loop_local:
     ; Check if there's work in queue
     cmp g_queue_count, 0
-    je .worker_sleep
+    je worker_sleep_local
     
     ; Process next item
     mov eax, g_queue_head
@@ -881,17 +881,17 @@ ChainWorkerThreadProc PROC
     ; Move head
     inc g_queue_head
     cmp g_queue_head, MAX_CHAIN_QUEUE
-    jl .head_ok
+    jl head_ok_local
     xor g_queue_head, g_queue_head
     
-.head_ok:
+head_ok_local:
     dec g_queue_count
-    jmp .worker_loop
+    jmp worker_loop_local
     
-.worker_sleep:
+worker_sleep_local:
     mov ecx, 10
     call Sleep
-    jmp .worker_loop
+    jmp worker_loop_local
     
     ret
 ChainWorkerThreadProc ENDP
@@ -906,12 +906,12 @@ StopChainWorkerThread PROC
     
     mov rax, [rcx + MODEL_CHAIN.worker_thread]
     test rax, rax
-    jz .no_thread
+    jz no_thread_local
     
     call WaitForSingleObject
     call CloseHandle
     
-.no_thread:
+no_thread_local:
     mov eax, 1
     ret
 StopChainWorkerThread ENDP
@@ -963,16 +963,16 @@ DestroyModelChain PROC
     ; Close synchronization objects
     mov rcx, [rbx + MODEL_CHAIN.chain_mutex]
     test rcx, rcx
-    jz .skip_mutex_close
+    jz skip_mutex_close_local
     call CloseHandle
     
-.skip_mutex_close:
+skip_mutex_close_local:
     mov rcx, [rbx + MODEL_CHAIN.execution_event]
     test rcx, rcx
-    jz .skip_event_close
+    jz skip_event_close_local
     call CloseHandle
     
-.skip_event_close:
+skip_event_close_local:
     ; Free chain memory
     call HeapFree
     
@@ -1000,10 +1000,10 @@ VoteOnOutputs PROC
     ; For each model, calculate confidence score
     mov rbx, 0          ; Model index
     
-.vote_calculate_loop:
+vote_calculate_loop_local:
     mov eax, [r12 + MODEL_CHAIN.model_count]
     cmp rbx, rax
-    jge .vote_tally
+    jge vote_tally_local
     
     lea rcx, [r12 + MODEL_CHAIN.models + rbx * SIZEOF MODEL_SLOT]
     
@@ -1011,9 +1011,9 @@ VoteOnOutputs PROC
     ; (simplified - in real implementation would use ML metrics)
     
     inc rbx
-    jmp .vote_calculate_loop
+    jmp vote_calculate_loop_local
     
-.vote_tally:
+vote_tally_local:
     ; Determine winner based on votes
     ; For now, use first model output
     lea rax, [r12 + MODEL_CHAIN.models + 0 * SIZEOF MODEL_SLOT]
@@ -1081,3 +1081,4 @@ ProcessChainExecution PROC
 ProcessChainExecution ENDP
 
 END
+

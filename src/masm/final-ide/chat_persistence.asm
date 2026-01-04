@@ -148,7 +148,7 @@ chat_persistence_save_session PROC
     call CreateFileA
     
     test rax, rax
-    jz .save_fail
+    jz save_fail_local
     
     mov rbx, rax                        ; rbx = file handle
     
@@ -170,7 +170,7 @@ chat_persistence_save_session PROC
     pop rbx
     ret
     
-.save_fail:
+save_fail_local:
     xor eax, eax
     add rsp, 32
     pop rsi
@@ -205,7 +205,7 @@ chat_persistence_load_session PROC
     call CreateFileA
     
     test rax, rax
-    jz .load_fail
+    jz load_fail_local
     
     mov rbx, rax                        ; rbx = file handle
     
@@ -231,7 +231,7 @@ chat_persistence_load_session PROC
     pop rbx
     ret
     
-.load_fail:
+load_fail_local:
     xor eax, eax
     add rsp, 32
     pop rsi
@@ -273,12 +273,12 @@ parse_json_session PROC
     call find_string_in_buffer
     
     test eax, eax
-    jz .parse_done
+    jz parse_done_local
     
     ; Parse each message object
-.parse_loop:
+parse_loop_local:
     cmp edi, MAX_CHAT_HISTORY
-    jge .parse_done
+    jge parse_done_local
     
     ; Find next message object {
     mov rcx, rsi
@@ -286,14 +286,14 @@ parse_json_session PROC
     call find_char_in_buffer
     
     test eax, eax
-    jz .parse_done
+    jz parse_done_local
     
     ; TODO: Extract message fields (role, timestamp, content)
     
     inc edi
-    jmp .parse_loop
+    jmp parse_loop_local
     
-.parse_done:
+parse_done_local:
     mov eax, edi
     pop rsi
     pop rdi
@@ -380,3 +380,4 @@ GetFileTime_Unix PROC
 GetFileTime_Unix ENDP
 
 END
+

@@ -157,7 +157,7 @@ SignalSlot_Initialize PROC FRAME
     
     ; Check if already initialized
     test BYTE PTR [signalSlotManager + OFFSET signalSlotManager.Initialized], 1
-    jnz .L0_already_init
+    jnz L_local0_already_init
     
     ; Initialize critical section
     lea rcx, [signalSlotManager + OFFSET signalSlotManager.ManagerLock]
@@ -171,7 +171,7 @@ SignalSlot_Initialize PROC FRAME
     
     ; Return manager address
     lea rax, [signalSlotManager]
-    jmp .L0_exit
+    jmp L_local0_exit
     
 .L0_already_init:
     lea rax, [signalSlotManager]
@@ -196,9 +196,9 @@ SignalSlot_Connect PROC FRAME
     
     ; Validate inputs
     test rcx, rcx
-    jz .L1_invalid_sender
+    jz L_local1_invalid_sender
     test r8, r8
-    jz .L1_invalid_receiver
+    jz L_local1_invalid_receiver
     
     ; Acquire manager lock
     lea r10, [signalSlotManager + OFFSET signalSlotManager.ManagerLock]
@@ -206,13 +206,13 @@ SignalSlot_Connect PROC FRAME
     
     ; Check connection count
     cmp DWORD PTR [signalSlotManager + OFFSET signalSlotManager.ConnectionCount], SIGNAL_SLOT_MAX_CONNECTIONS
-    jge .L1_limit_exceeded
+    jge L_local1_limit_exceeded
     
     ; Allocate connection structure
     mov r11d, SIZE SIGNAL_SLOT_CONNECTION
     call HeapAlloc
     test rax, rax
-    jz .L1_alloc_failed
+    jz L_local1_alloc_failed
     
     ; Fill in connection
     mov r12, rax                    ; r12 = new connection
@@ -241,21 +241,21 @@ SignalSlot_Connect PROC FRAME
     call LeaveCriticalSection
     
     mov rax, r10                    ; Return connection ID
-    jmp .L1_exit
+    jmp L_local1_exit
     
 .L1_invalid_sender:
     mov rax, SIGNAL_SLOT_E_INVALID_CONNECTION
-    jmp .L1_exit
+    jmp L_local1_exit
     
 .L1_invalid_receiver:
     mov rax, SIGNAL_SLOT_E_INVALID_CONNECTION
-    jmp .L1_exit
+    jmp L_local1_exit
     
 .L1_limit_exceeded:
     lea r10, [signalSlotManager + OFFSET signalSlotManager.ManagerLock]
     call LeaveCriticalSection
     mov rax, SIGNAL_SLOT_E_CONNECTIONS_FULL
-    jmp .L1_exit
+    jmp L_local1_exit
     
 .L1_alloc_failed:
     lea r10, [signalSlotManager + OFFSET signalSlotManager.ManagerLock]
@@ -287,22 +287,22 @@ SignalSlot_Disconnect PROC FRAME
     
 .L2_search_loop:
     test r9, r9
-    jz .L2_not_found
+    jz L_local2_not_found
     
     cmp DWORD PTR [r9 + OFFSET SIGNAL_SLOT_CONNECTION.ConnectionId], ecx
-    je .L2_found
+    je L_local2_found
     
     mov r10, r9
     mov r9, QWORD PTR [r9 + OFFSET SIGNAL_SLOT_CONNECTION.NextConnection]
-    jmp .L2_search_loop
+    jmp L_local2_search_loop
     
 .L2_found:
     ; Remove from linked list
     mov rax, QWORD PTR [r9 + OFFSET SIGNAL_SLOT_CONNECTION.NextConnection]
     test r10, r10
-    jnz .L2_not_head
+    jnz L_local2_not_head
     mov QWORD PTR [signalSlotManager + OFFSET signalSlotManager.ConnectionList], rax
-    jmp .L2_do_free
+    jmp L_local2_do_free
     
 .L2_not_head:
     mov QWORD PTR [r10 + OFFSET SIGNAL_SLOT_CONNECTION.NextConnection], rax
@@ -321,7 +321,7 @@ SignalSlot_Disconnect PROC FRAME
     call LeaveCriticalSection
     
     mov rax, SIGNAL_SLOT_E_SUCCESS
-    jmp .L2_exit
+    jmp L_local2_exit
     
 .L2_not_found:
     ; Release lock
@@ -358,17 +358,17 @@ SignalSlot_Emit PROC FRAME
     
 .L3_emit_loop:
     test r11, r11
-    jz .L3_emit_done
+    jz L_local3_emit_done
     
     ; Check if sender and signal match
     cmp QWORD PTR [r11 + OFFSET SIGNAL_SLOT_CONNECTION.SenderPtr], rcx
-    jne .L3_next_connection
+    jne L_local3_next_connection
     cmp DWORD PTR [r11 + OFFSET SIGNAL_SLOT_CONNECTION.SignalId], edx
-    jne .L3_next_connection
+    jne L_local3_next_connection
     
     ; Check if enabled
     test BYTE PTR [r11 + OFFSET SIGNAL_SLOT_CONNECTION.Enabled], 1
-    jz .L3_next_connection
+    jz L_local3_next_connection
     
     ; Invoke slot (placeholder - would call receiver's slot function)
     ; For now, just count the invocation
@@ -376,7 +376,7 @@ SignalSlot_Emit PROC FRAME
     
 .L3_next_connection:
     mov r11, QWORD PTR [r11 + OFFSET SIGNAL_SLOT_CONNECTION.NextConnection]
-    jmp .L3_emit_loop
+    jmp L_local3_emit_loop
     
 .L3_emit_done:
     ; Release lock
@@ -410,10 +410,10 @@ SignalSlot_BlockSignals PROC FRAME
     ; For stub: just increment metrics and return success
     
     test rdx, rdx
-    jz .L4_unblock
+    jz L_local4_unblock
     
     inc QWORD PTR [signalSlotMetrics + OFFSET signalSlotMetrics.SignalsBlocked]
-    jmp .L4_exit
+    jmp L_local4_exit
     
 .L4_unblock:
     ; Would decrement blocked count
@@ -442,13 +442,13 @@ SignalSlot_DestroyConnections PROC FRAME
     
 .L5_destroy_loop:
     test r9, r9
-    jz .L5_destroy_done
+    jz L_local5_destroy_done
     
     cmp QWORD PTR [r9 + OFFSET SIGNAL_SLOT_CONNECTION.SenderPtr], rcx
-    je .L5_destroy_this
+    je L_local5_destroy_this
     
     mov r9, QWORD PTR [r9 + OFFSET SIGNAL_SLOT_CONNECTION.NextConnection]
-    jmp .L5_destroy_loop
+    jmp L_local5_destroy_loop
     
 .L5_destroy_this:
     ; Remove and free
@@ -460,7 +460,7 @@ SignalSlot_DestroyConnections PROC FRAME
     dec DWORD PTR [signalSlotManager + OFFSET signalSlotManager.ConnectionCount]
     
     mov r9, rax
-    jmp .L5_destroy_loop
+    jmp L_local5_destroy_loop
     
 .L5_destroy_done:
     ; Release lock
@@ -532,12 +532,12 @@ Test_SignalSlot_Basic PROC FRAME
     ; Initialize
     call SignalSlot_Initialize
     test rax, rax
-    jz .L6_fail
+    jz L_local6_fail
     
     ; Would create mock objects and test
     ; For stub: just return success
     xor rax, rax
-    jmp .L6_exit
+    jmp L_local6_exit
     
 .L6_fail:
     mov rax, 1
@@ -569,3 +569,4 @@ Test_SignalSlot_Emit PROC FRAME
 Test_SignalSlot_Emit ENDP
 
 END
+

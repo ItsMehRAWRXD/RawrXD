@@ -323,3 +323,4 @@ destroy_exit:
 asm_thread_pool_destroy ENDP
 
 END
+

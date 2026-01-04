@@ -298,9 +298,7 @@ create_patch:
     mov [rdi + HOTPATCH_ENTRY.zone_id], r12d
     mov [rdi + HOTPATCH_ENTRY.target_addr], r13
     mov [rdi + HOTPATCH_ENTRY.patch_size], r15d
-    mov [rdi + HOTPATCH_ENTRY.is_active], 0
-    
-    ; Save original code
+    mov dword ptr [rdi + HOTPATCH_ENTRY.is_active], 0  ; Save original code
     mov rsi, r13        ; source
     lea rdi, [rdi + HOTPATCH_ENTRY.original_code]
     mov rcx, r15
@@ -442,4 +440,5 @@ HotpatchInitialize PROC
 HotpatchInitialize ENDP
 
 END
+
 

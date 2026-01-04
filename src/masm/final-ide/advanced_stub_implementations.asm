@@ -237,7 +237,7 @@ SaveThemeToRegistry PROC
     mov r9d, KEY_WRITE
     call RegCreateKeyExA
     test rax, rax
-    jnz .save_failed
+    jnz save_failed_local
     
     mov rbx, rax        ; Save key handle
     
@@ -248,7 +248,7 @@ SaveThemeToRegistry PROC
     mov r9d, THEME_DEFINITION
     call RegSetValueExA
     test eax, eax
-    jnz .save_failed
+    jnz save_failed_local
     
     ; Save to file as backup
     mov rcx, r12        ; Theme data
@@ -264,7 +264,7 @@ SaveThemeToRegistry PROC
     pop rbx
     ret
     
-.save_failed:
+save_failed_local:
     xor eax, eax
     add rsp, 48
     pop r12
@@ -289,7 +289,7 @@ LoadThemeFromRegistry PROC
     mov r9d, KEY_READ
     call RegOpenKeyExA
     test eax, eax
-    jnz .load_failed
+    jnz load_failed_local
     
     ; Read theme data
     mov rcx, rax        ; Key handle
@@ -298,7 +298,7 @@ LoadThemeFromRegistry PROC
     mov r9d, SIZEOF THEME_DEFINITION
     call RegQueryValueExA
     test eax, eax
-    jnz .load_failed
+    jnz load_failed_local
     
     ; Apply loaded theme
     mov rcx, rbx
@@ -309,7 +309,7 @@ LoadThemeFromRegistry PROC
     pop rbx
     ret
     
-.load_failed:
+load_failed_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -335,7 +335,7 @@ ImportThemeFromFile PROC
     mov r9d, OPEN_EXISTING
     call CreateFileA
     cmp rax, INVALID_HANDLE_VALUE
-    je .import_failed
+    je import_failed_local
     
     mov rbx, rax        ; Save file handle
     
@@ -359,13 +359,13 @@ ImportThemeFromFile PROC
     lea r9, dword ptr [0]  ; Bytes read
     call ReadFile
     test eax, eax
-    jz .import_failed
+    jz import_failed_local
     
     ; Parse JSON/binary theme format
     mov rcx, r12
     call ParseThemeData
     test eax, eax
-    jz .import_failed
+    jz import_failed_local
     
     ; Save to registry
     mov rcx, r12
@@ -381,13 +381,13 @@ ImportThemeFromFile PROC
     pop rbx
     ret
     
-.import_failed:
+import_failed_local:
     cmp rbx, INVALID_HANDLE_VALUE
-    je .skip_close
+    je skip_close_local
     mov rcx, rbx
     call CloseHandle
     
-.skip_close:
+skip_close_local:
     xor eax, eax
     add rsp, 48
     pop r12
@@ -416,7 +416,7 @@ ExportThemeToFile PROC
     mov r9d, CREATE_ALWAYS
     call CreateFileA
     cmp rax, INVALID_HANDLE_VALUE
-    je .export_failed
+    je export_failed_local
     
     mov rbx, rax        ; Save file handle
     
@@ -440,7 +440,7 @@ ExportThemeToFile PROC
     lea r9, dword ptr [0]  ; Bytes written
     call WriteFile
     test eax, eax
-    jz .export_failed
+    jz export_failed_local
     
     ; Close file
     mov rcx, rbx
@@ -452,13 +452,13 @@ ExportThemeToFile PROC
     pop rbx
     ret
     
-.export_failed:
+export_failed_local:
     cmp rbx, INVALID_HANDLE_VALUE
-    je .skip_export_close
+    je skip_export_close_local
     mov rcx, rbx
     call CloseHandle
     
-.skip_export_close:
+skip_export_close_local:
     xor eax, eax
     add rsp, 48
     pop r12
@@ -488,9 +488,9 @@ ApplyThemeAnimated PROC
     
     ; For each color in theme, start animation
     mov r8d, 0          ; Color index
-.animate_colors:
+animate_colors_local:
     cmp r8d, THEME_COLOR_COUNT
-    jge .animation_done
+    jge animation_done_local
     
     ; Get target color from new theme
     mov eax, [r12 + r8d * SIZEOF THEME_COLOR + THEME_COLOR.rgb_value]
@@ -500,9 +500,9 @@ ApplyThemeAnimated PROC
     mov DWORD PTR [rbx + r8d * SIZEOF THEME_COLOR + THEME_COLOR.animation_duration], THEME_ANIMATION_DURATION
     
     inc r8d
-    jmp .animate_colors
+    jmp animate_colors_local
     
-.animation_done:
+animation_done_local:
     ; Copy new theme as current
     mov rcx, r12
     mov rdx, rbx
@@ -530,32 +530,32 @@ GetThemeColor PROC
     lea rbx, g_current_theme.colors[0]
     mov r8d, 0
     
-.search_color:
+search_color_local:
     cmp r8d, THEME_COLOR_COUNT
-    jge .color_not_found
+    jge color_not_found_local
     
     ; Compare color name
     mov rsi, rcx        ; Input name
     lea rdi, [rbx + r8d * SIZEOF THEME_COLOR]
     mov ecx, 32
     
-.name_compare:
+name_compare_local:
     cmp ecx, 0
-    je .color_found
+    je color_found_local
     mov al, BYTE PTR [rsi]
     mov bl, BYTE PTR [rdi]
     cmp al, bl
-    jne .color_not_match
+    jne color_not_match_local
     inc rsi
     inc rdi
     dec ecx
-    jmp .name_compare
+    jmp name_compare_local
     
-.color_not_match:
+color_not_match_local:
     inc r8d
-    jmp .search_color
+    jmp search_color_local
     
-.color_found:
+color_found_local:
     ; Copy color value
     mov eax, [rbx + r8d * SIZEOF THEME_COLOR + THEME_COLOR.rgb_value]
     mov [rdx], eax
@@ -564,7 +564,7 @@ GetThemeColor PROC
     pop rbx
     ret
     
-.color_not_found:
+color_not_found_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -585,18 +585,18 @@ SetThemeColor PROC
     lea rbx, g_current_theme.colors[0]
     mov r8d, 0
     
-.find_color:
+find_color_local:
     cmp r8d, THEME_COLOR_COUNT
-    jge .color_not_found_set
+    jge color_not_found_set_local
     
     ; Compare name (simplified)
     lea rsi, [rbx + r8d * SIZEOF THEME_COLOR]
     mov [rsi + THEME_COLOR.rgb_value], edx
     
     inc r8d
-    jmp .find_color
+    jmp find_color_local
     
-.color_not_found_set:
+color_not_found_set_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -619,7 +619,7 @@ QueryFileAsync PROC
     ; Allocate operation
     call HeapAlloc
     test rax, rax
-    jz .query_failed
+    jz query_failed_local
     
     ; Fill operation struct
     mov [rax + FILE_OPERATION.op_type], edx
@@ -634,7 +634,7 @@ QueryFileAsync PROC
     pop rbx
     ret
     
-.query_failed:
+query_failed_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -658,15 +658,15 @@ ExecuteFileOperation PROC
     mov edx, [rcx + FILE_OPERATION.op_type]
     
     cmp edx, 0          ; Open file
-    je .open_file
+    je open_file_local
     cmp edx, 1          ; Save file
-    je .save_file
+    je save_file_local
     cmp edx, 2          ; Delete file
-    je .delete_file
+    je delete_file_local
     cmp edx, 3          ; Search files
-    je .search_files
+    je search_files_local
     
-.open_file:
+open_file_local:
     ; Open and read file
     lea rcx, [r12 + FILE_OPERATION.file_path]
     mov edx, GENERIC_READ
@@ -674,7 +674,7 @@ ExecuteFileOperation PROC
     mov r9d, OPEN_EXISTING
     call CreateFileA
     cmp rax, INVALID_HANDLE_VALUE
-    je .file_op_failed
+    je file_op_failed_local
     
     mov rbx, rax
     
@@ -688,9 +688,9 @@ ExecuteFileOperation PROC
     mov rcx, rbx
     call CloseHandle
     
-    jmp .file_op_success
+    jmp file_op_success_local
     
-.save_file:
+save_file_local:
     ; Write buffer to file
     lea rcx, [r12 + FILE_OPERATION.file_path]
     mov edx, GENERIC_WRITE
@@ -698,7 +698,7 @@ ExecuteFileOperation PROC
     mov r9d, CREATE_ALWAYS
     call CreateFileA
     cmp rax, INVALID_HANDLE_VALUE
-    je .file_op_failed
+    je file_op_failed_local
     
     mov rbx, rax
     
@@ -711,43 +711,43 @@ ExecuteFileOperation PROC
     mov rcx, rbx
     call CloseHandle
     
-    jmp .file_op_success
+    jmp file_op_success_local
     
-.delete_file:
+delete_file_local:
     ; Delete file
     lea rcx, [r12 + FILE_OPERATION.file_path]
     call DeleteFileA
     test eax, eax
-    jz .file_op_failed
+    jz file_op_failed_local
     
-    jmp .file_op_success
+    jmp file_op_success_local
     
-.search_files:
+search_files_local:
     ; Search recursively
     lea rcx, [r12 + FILE_OPERATION.file_path]
     call SearchFilesRecursive
     test eax, eax
-    jz .file_op_failed
+    jz file_op_failed_local
     
-.file_op_success:
+file_op_success_local:
     mov DWORD PTR [r12 + FILE_OPERATION.status], 2  ; Complete
     
     ; Call callback
     mov rcx, [r12 + FILE_OPERATION.completion_callback]
     test rcx, rcx
-    jz .skip_callback
+    jz skip_callback_local
     
     mov rdx, r12
     call rcx
     
-.skip_callback:
+skip_callback_local:
     mov eax, 1
     add rsp, 32
     pop r12
     pop rbx
     ret
     
-.file_op_failed:
+file_op_failed_local:
     mov DWORD PTR [r12 + FILE_OPERATION.status], 2  ; Complete with error
     mov DWORD PTR [r12 + FILE_OPERATION.result_code], 0
     
@@ -778,26 +778,26 @@ SearchFilesRecursive PROC
     mov rdx, r12
     call FindFirstFileA
     cmp rax, INVALID_HANDLE_VALUE
-    je .search_done
+    je search_done_local
     
     mov rbx, rax        ; Find handle
     
-.find_loop:
+find_loop_local:
     ; Process found file
     inc r13d
     cmp r13d, MAX_FILES_IN_SEARCH
-    jge .search_done
+    jge search_done_local
     
     ; Find next
     mov rcx, rbx
     lea rdx, WIN32_FIND_DATAA
     call FindNextFileA
     test eax, eax
-    jz .search_done
+    jz search_done_local
     
-    jmp .find_loop
+    jmp find_loop_local
     
-.search_done:
+search_done_local:
     mov rcx, rbx
     call FindClose
     
@@ -820,12 +820,12 @@ RegisterCommand PROC
     sub rsp, 32
     
     cmp g_command_count, MAX_REGISTERED_COMMANDS
-    jge .register_failed
+    jge register_failed_local
     
     ; Allocate command
     call HeapAlloc
     test rax, rax
-    jz .register_failed
+    jz register_failed_local
     
     mov rbx, rax
     
@@ -846,7 +846,7 @@ RegisterCommand PROC
     pop rbx
     ret
     
-.register_failed:
+register_failed_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -870,13 +870,13 @@ SearchCommandPalette PROC
     ; Search through registered commands
     mov r8d, 0          ; Command index
     
-.search_cmd_loop:
+search_cmd_loop_local:
     cmp r8d, g_command_count
-    jge .search_cmd_done
+    jge search_cmd_done_local
     
     mov rsi, [g_registered_commands + r8 * 8]
     test rsi, rsi
-    jz .search_cmd_next
+    jz search_cmd_next_local
     
     ; Check if command matches search
     lea rdi, [rsi + COMMAND_DEFINITION.command_name]
@@ -884,19 +884,19 @@ SearchCommandPalette PROC
     ; Simple substring match
     call StringContains
     test eax, eax
-    jz .search_cmd_next
+    jz search_cmd_next_local
     
     ; Add to results
     mov [rdx + rbx * 8], rsi
     inc rbx
     cmp rbx, 32         ; Max 32 results
-    jge .search_cmd_done
+    jge search_cmd_done_local
     
-.search_cmd_next:
+search_cmd_next_local:
     inc r8d
-    jmp .search_cmd_loop
+    jmp search_cmd_loop_local
     
-.search_cmd_done:
+search_cmd_done_local:
     mov eax, ebx        ; Return result count
     add rsp, 32
     pop r12
@@ -917,13 +917,13 @@ ExecuteCommand PROC
     ; Find command
     mov r8d, 0
     
-.find_cmd:
+find_cmd_local:
     cmp r8d, g_command_count
-    jge .cmd_not_found_exec
+    jge cmd_not_found_exec_local
     
     mov rbx, [g_registered_commands + r8 * 8]
     test rbx, rbx
-    jz .find_cmd_next
+    jz find_cmd_next_local
     
     ; Check name match
     lea rsi, [rbx + COMMAND_DEFINITION.command_name]
@@ -932,31 +932,31 @@ ExecuteCommand PROC
     ; Compare strings
     call StringCompare
     test eax, eax
-    jz .find_cmd_next
+    jz find_cmd_next_local
     
     ; Execute command
     mov rcx, [rbx + COMMAND_DEFINITION.handler_func]
     test rcx, rcx
-    jz .exec_no_handler
+    jz exec_no_handler_local
     
     ; Call handler with arguments
     mov edx, 0          ; No arguments
     call rcx
     
-    jmp .cmd_exec_done
+    jmp cmd_exec_done_local
     
-.exec_no_handler:
-.find_cmd_next:
+exec_no_handler_local:
+find_cmd_next_local:
     inc r8d
-    jmp .find_cmd
+    jmp find_cmd_local
     
-.cmd_not_found_exec:
+cmd_not_found_exec_local:
     xor eax, eax
     add rsp, 32
     pop rbx
     ret
     
-.cmd_exec_done:
+cmd_exec_done_local:
     mov eax, 1
     add rsp, 32
     pop rbx
@@ -974,13 +974,13 @@ CreateNotebookCell PROC
     sub rsp, 32
     
     cmp g_notebook_cell_count, MAX_NOTEBOOK_CELLS
-    jge .cell_create_failed
+    jge cell_create_failed_local
     
     ; Allocate cell
     mov ecx, SIZEOF NOTEBOOK_CELL
     call HeapAlloc
     test rax, rax
-    jz .cell_create_failed
+    jz cell_create_failed_local
     
     mov rbx, rax
     
@@ -1002,7 +1002,7 @@ CreateNotebookCell PROC
     pop rbx
     ret
     
-.cell_create_failed:
+cell_create_failed_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -1036,7 +1036,7 @@ ExecuteCellCode PROC
     mov r8d, [r12 + NOTEBOOK_CELL.source_size]
     call ExecuteInKernel
     test eax, eax
-    jz .exec_failed
+    jz exec_failed_local
     
     ; Get execution end time
     call GetTickCount64
@@ -1052,7 +1052,7 @@ ExecuteCellCode PROC
     pop rbx
     ret
     
-.exec_failed:
+exec_failed_local:
     mov DWORD PTR [r12 + NOTEBOOK_CELL.status], 2  ; Error
     xor eax, eax
     add rsp, 48
@@ -1077,7 +1077,7 @@ GetCellOutput PROC
     ; Copy output from cell
     mov rcx, [rbx + NOTEBOOK_CELL.output_ptr]
     test rcx, rcx
-    jz .no_output
+    jz no_output_local
     
     mov r8d, [rbx + NOTEBOOK_CELL.output_size]
     mov rdi, rsi
@@ -1085,21 +1085,21 @@ GetCellOutput PROC
     
     ; Copy memory
     xor r9d, r9d
-.copy_out:
+copy_out_local:
     cmp r9d, ecx
-    jge .copy_done
+    jge copy_done_local
     mov al, BYTE PTR [rcx + r9]
     mov BYTE PTR [rdi + r9], al
     inc r9d
-    jmp .copy_out
+    jmp copy_out_local
     
-.copy_done:
+copy_done_local:
     mov eax, r8d        ; Return size
     add rsp, 32
     pop rbx
     ret
     
-.no_output:
+no_output_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -1144,7 +1144,7 @@ CreateTensor PROC
     mov ecx, SIZEOF TENSOR_INFO
     call HeapAlloc
     test rax, rax
-    jz .tensor_create_failed
+    jz tensor_create_failed_local
     
     mov rbx, rax
     
@@ -1152,15 +1152,15 @@ CreateTensor PROC
     mov r9, 1
     mov r8d, 0
     
-.calc_elements:
+calc_elements_local:
     cmp r8d, r13d
-    jge .calc_done
+    jge calc_done_local
     mov rax, [r12 + r8 * 8]
     imul r9, rax
     inc r8d
-    jmp .calc_elements
+    jmp calc_elements_local
     
-.calc_done:
+calc_done_local:
     ; Initialize tensor
     mov rax, GetTickCount64
     call GetTickCount64
@@ -1172,57 +1172,57 @@ CreateTensor PROC
     
     ; Copy shape
     mov rcx, 0
-.copy_shape:
+copy_shape_local:
     cmp rcx, r13
-    jge .shape_copied
+    jge shape_copied_local
     mov rax, [r12 + rcx * 8]
     mov [rbx + TENSOR_INFO.shape + rcx * 8], rax
     inc rcx
-    jmp .copy_shape
+    jmp copy_shape_local
     
-.shape_copied:
+shape_copied_local:
     ; Allocate data based on dtype and size
     cmp r14d, 0         ; float32
-    je .alloc_float32
+    je alloc_float_local32
     cmp r14d, 1         ; float64
-    je .alloc_float64
+    je alloc_float_local64
     
     ; Default: 4 bytes per element
     mov ecx, 4
-    jmp .alloc_data
+    jmp alloc_data_local
     
 .alloc_float32:
     mov ecx, 4
-    jmp .alloc_data
+    jmp alloc_data_local
     
 .alloc_float64:
     mov ecx, 8
-    jmp .alloc_data
+    jmp alloc_data_local
     
-.alloc_data:
+alloc_data_local:
     imul rcx, r9
     call HeapAlloc
     test rax, rax
-    jz .tensor_create_failed
+    jz tensor_create_failed_local
     
     mov [rbx + TENSOR_INFO.data_ptr], rax
     
     ; Add to active tensors
     mov eax, g_tensor_count
     cmp eax, 100
-    jge .tensor_create_success
+    jge tensor_create_success_local
     
     mov [g_active_tensors + rax * 8], rbx
     inc g_tensor_count
     
-.tensor_create_success:
+tensor_create_success_local:
     mov eax, 1
     add rsp, 48
     pop r12
     pop rbx
     ret
     
-.tensor_create_failed:
+tensor_create_failed_local:
     xor eax, eax
     add rsp, 48
     pop r12
@@ -1242,22 +1242,22 @@ InspectTensor PROC
     
     mov r8d, 0
     
-.find_tensor:
+find_tensor_local:
     cmp r8d, g_tensor_count
-    jge .tensor_not_found
+    jge tensor_not_found_local
     
     mov rbx, [g_active_tensors + r8 * 8]
     test rbx, rbx
-    jz .find_tensor_next
+    jz find_tensor_next_local
     
     cmp [rbx + TENSOR_INFO.tensor_id], rcx
-    je .tensor_found
+    je tensor_found_local
     
-.find_tensor_next:
+find_tensor_next_local:
     inc r8d
-    jmp .find_tensor
+    jmp find_tensor_local
     
-.tensor_found:
+tensor_found_local:
     ; Copy tensor info
     mov rcx, rbx
     mov rsi, rcx
@@ -1265,21 +1265,21 @@ InspectTensor PROC
     mov ecx, SIZEOF TENSOR_INFO
     xor r9d, r9d
     
-.copy_tensor_info:
+copy_tensor_info_local:
     cmp r9d, ecx
-    jge .info_copied
+    jge info_copied_local
     mov al, BYTE PTR [rsi + r9]
     mov BYTE PTR [rdi + r9], al
     inc r9d
-    jmp .copy_tensor_info
+    jmp copy_tensor_info_local
     
-.info_copied:
+info_copied_local:
     mov eax, 1
     add rsp, 32
     pop rbx
     ret
     
-.tensor_not_found:
+tensor_not_found_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -1301,33 +1301,33 @@ VisualizeTensor PROC
     
     ; Based on format, prepare visualization
     cmp r8d, 0          ; Heatmap
-    je .prepare_heatmap
+    je prepare_heatmap_local
     cmp r8d, 1          ; 3D
-    je .prepare_3d
+    je prepare__local3d
     cmp r8d, 2          ; Graph
-    je .prepare_graph
+    je prepare_graph_local
     
-.prepare_heatmap:
+prepare_heatmap_local:
     ; Flatten tensor to 2D for heatmap display
     mov rcx, [rbx + TENSOR_INFO.data_ptr]
     mov r8, [rbx + TENSOR_INFO.element_count]
     ; Would normalize values 0-255 for visualization
-    jmp .vis_done
+    jmp vis_done_local
     
 .prepare_3d:
     ; Check if 3D or convert to 3D projection
     mov r8d, [rbx + TENSOR_INFO.shape_count]
     cmp r8d, 3
-    je .vis_done
+    je vis_done_local
     ; Would project to 3D
-    jmp .vis_done
+    jmp vis_done_local
     
-.prepare_graph:
+prepare_graph_local:
     ; Convert tensor to graph/plot coordinates
     mov rcx, [rbx + TENSOR_INFO.data_ptr]
     ; Would prepare plot points
     
-.vis_done:
+vis_done_local:
     mov eax, 1
     add rsp, 32
     pop rbx
@@ -1351,34 +1351,34 @@ InitializeShell PROC
     lea rcx, g_shell_input_pipe
     call CreatePipe
     test eax, eax
-    jz .shell_init_failed
+    jz shell_init_failed_local
     
     lea rcx, g_shell_output_pipe
     call CreatePipe
     test eax, eax
-    jz .shell_init_failed
+    jz shell_init_failed_local
     
     ; Start shell process (cmd.exe, powershell.exe, etc.)
     mov ecx, edx
     cmp ecx, 0          ; CMD
-    jne .not_cmd
+    jne not_cmd_local
     lea rcx, "cmd.exe"
-    jmp .start_shell
+    jmp start_shell_local
     
-.not_cmd:
+not_cmd_local:
     cmp ecx, 1          ; PowerShell
-    jne .not_ps
+    jne not_ps_local
     lea rcx, "powershell.exe"
-    jmp .start_shell
+    jmp start_shell_local
     
-.not_ps:
+not_ps_local:
     lea rcx, "/bin/bash"  ; Bash
     
-.start_shell:
+start_shell_local:
     ; Create process
     call CreateProcessA
     test eax, eax
-    jz .shell_init_failed
+    jz shell_init_failed_local
     
     mov g_shell_process, rax
     mov eax, 1
@@ -1386,7 +1386,7 @@ InitializeShell PROC
     pop rbx
     ret
     
-.shell_init_failed:
+shell_init_failed_local:
     xor eax, eax
     add rsp, 48
     pop rbx
@@ -1410,26 +1410,26 @@ ExecuteShellCommand PROC
     ; Write command to shell input
     mov rcx, g_shell_input_pipe
     test rcx, rcx
-    jz .shell_exec_failed
+    jz shell_exec_failed_local
     
     mov rdx, r12
     ; Get length
     mov r8d, 0
     mov r9, r12
-.cmd_len:
+cmd_len_local:
     mov al, BYTE PTR [r9]
     test al, al
-    jz .cmd_len_done
+    jz cmd_len_done_local
     inc r8d
     inc r9
-    jmp .cmd_len
+    jmp cmd_len_local
     
-.cmd_len_done:
+cmd_len_done_local:
     ; Write command + newline
     lea r9, dword ptr [0]
     call WriteFile
     test eax, eax
-    jz .shell_exec_failed
+    jz shell_exec_failed_local
     
     ; Wait for output
     mov ecx, SHELL_CMD_TIMEOUT
@@ -1442,7 +1442,7 @@ ExecuteShellCommand PROC
     lea r9, dword ptr [0]
     call ReadFile
     test eax, eax
-    jz .shell_exec_failed
+    jz shell_exec_failed_local
     
     mov eax, 1
     add rsp, 48
@@ -1450,7 +1450,7 @@ ExecuteShellCommand PROC
     pop rbx
     ret
     
-.shell_exec_failed:
+shell_exec_failed_local:
     xor eax, eax
     add rsp, 48
     pop r12
@@ -1471,7 +1471,7 @@ GetShellOutput PROC
     ; Copy from shell output buffer
     mov rcx, g_shell_output_pipe
     test rcx, rcx
-    jz .no_shell_output
+    jz no_shell_output_local
     
     ; Read pending data
     mov rdx, rcx
@@ -1479,14 +1479,14 @@ GetShellOutput PROC
     lea r9, dword ptr [0]
     call PeekNamedPipe
     test eax, eax
-    jz .no_shell_output
+    jz no_shell_output_local
     
     mov eax, 1
     add rsp, 32
     pop rbx
     ret
     
-.no_shell_output:
+no_shell_output_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -1546,19 +1546,19 @@ GetCommandHistory PROC
     
     ; Copy history entries
     mov r9d, 0
-.copy_hist:
+copy_hist_local:
     cmp r9d, r8d
-    jge .hist_copied
+    jge hist_copied_local
     cmp r9d, g_cli_history_count
-    jge .hist_copied
+    jge hist_copied_local
     
     mov rsi, [g_cli_history_ptr + r9 * 8]
     mov [rbx + r9 * 8], rsi
     
     inc r9d
-    jmp .copy_hist
+    jmp copy_hist_local
     
-.hist_copied:
+hist_copied_local:
     mov eax, r9d        ; Return count
     add rsp, 32
     pop rbx
@@ -1581,19 +1581,19 @@ SaveCommandHistory PROC
     mov r9d, CREATE_ALWAYS
     call CreateFileA
     test eax, eax
-    jz .history_save_failed
+    jz history_save_failed_local
     
     mov rbx, rax
     
     ; Write each history entry
     mov r8d, 0
-.write_hist:
+write_hist_local:
     cmp r8d, g_cli_history_count
-    jge .hist_written
+    jge hist_written_local
     
     mov rsi, [g_cli_history_ptr + r8 * 8]
     test rsi, rsi
-    jz .write_next_hist
+    jz write_next_hist_local
     
     mov rcx, rbx        ; File
     mov rdx, rsi        ; Entry
@@ -1602,11 +1602,11 @@ SaveCommandHistory PROC
     lea r9, dword ptr [0]
     call WriteFile
     
-.write_next_hist:
+write_next_hist_local:
     inc r8d
-    jmp .write_hist
+    jmp write_hist_local
     
-.hist_written:
+hist_written_local:
     mov rcx, rbx
     call CloseHandle
     
@@ -1615,7 +1615,7 @@ SaveCommandHistory PROC
     pop rbx
     ret
     
-.history_save_failed:
+history_save_failed_local:
     xor eax, eax
     add rsp, 32
     pop rbx
@@ -1641,7 +1641,7 @@ LoadCommandHistory PROC
     mov r9d, OPEN_EXISTING
     call CreateFileA
     cmp rax, INVALID_HANDLE_VALUE
-    je .history_load_failed
+    je history_load_failed_local
     
     mov rbx, rax
     
@@ -1652,23 +1652,23 @@ LoadCommandHistory PROC
     lea r9, dword ptr [0]
     call ReadFile
     test eax, eax
-    jz .history_load_failed
+    jz history_load_failed_local
     
     ; Parse entries and add to history
     lea rsi, g_search_results
     mov r9d, 0
     
-.parse_hist:
+parse_hist_local:
     ; Would parse entries separated by newlines
     ; Add to g_cli_history_ptr
     cmp r9d, MAX_CLI_HISTORY
-    jge .parse_done
+    jge parse_done_local
     
     ; ... (parsing logic)
     inc r9d
-    jmp .parse_hist
+    jmp parse_hist_local
     
-.parse_done:
+parse_done_local:
     mov g_cli_history_count, r9d
     
     mov rcx, rbx
@@ -1680,7 +1680,7 @@ LoadCommandHistory PROC
     pop rbx
     ret
     
-.history_load_failed:
+history_load_failed_local:
     xor eax, eax
     add rsp, 48
     pop r12
@@ -1700,41 +1700,41 @@ StringContains PROC
     sub rsp, 32
     
     mov rbx, 0
-.search_loop:
+search_loop_local:
     mov al, BYTE PTR [rsi + rbx]
     test al, al
-    jz .not_contains
+    jz not_contains_local
     
     mov cl, BYTE PTR [r12]
     cmp al, cl
-    jne .search_loop_next
+    jne search_loop_next_local
     
     ; Partial match found, verify full needle
     mov r8d, 0
-.verify_needle:
+verify_needle_local:
     mov al, BYTE PTR [r12 + r8]
     test al, al
-    jz .contains_found
+    jz contains_found_local
     
     mov cl, BYTE PTR [rsi + rbx + r8]
     cmp al, cl
-    jne .search_loop_next
+    jne search_loop_next_local
     
     inc r8d
-    jmp .verify_needle
+    jmp verify_needle_local
     
-.search_loop_next:
+search_loop_next_local:
     inc rbx
     cmp rbx, 256
-    jl .search_loop
+    jl search_loop_local
     
-.not_contains:
+not_contains_local:
     xor eax, eax
     add rsp, 32
     pop rbx
     ret
     
-.contains_found:
+contains_found_local:
     mov eax, 1
     add rsp, 32
     pop rbx
@@ -1746,23 +1746,23 @@ StringCompare PROC
     ; rsi = str1, rdi = str2
     ; Returns: eax = 1 if equal, 0 otherwise
     xor ecx, ecx
-.cmp_loop:
+cmp_loop_local:
     mov al, BYTE PTR [rsi + rcx]
     mov bl, BYTE PTR [rdi + rcx]
     cmp al, bl
-    jne .cmp_not_equal
+    jne cmp_not_equal_local
     
     test al, al
-    jz .cmp_equal
+    jz cmp_equal_local
     
     inc ecx
-    jmp .cmp_loop
+    jmp cmp_loop_local
     
-.cmp_equal:
+cmp_equal_local:
     mov eax, 1
     ret
     
-.cmp_not_equal:
+cmp_not_equal_local:
     xor eax, eax
     ret
 StringCompare ENDP
@@ -1772,16 +1772,16 @@ CopyStringData PROC
     ; rcx = src, rdx = dst (actually a string to copy)
     ; Simplified - just copies first 32 bytes
     xor r8d, r8d
-.copy_loop:
+copy_loop_local:
     cmp r8d, 32
-    jge .copy_done
+    jge copy_done_local
     
     mov al, BYTE PTR [rcx + r8]
     mov BYTE PTR [rcx + r8], al  ; In-place (error - just return length)
     inc r8d
-    jmp .copy_loop
+    jmp copy_loop_local
     
-.copy_done:
+copy_done_local:
     mov eax, r8d
     ret
 CopyStringData ENDP
@@ -1805,16 +1805,16 @@ CopyMemory PROC
     ; rcx = src, rdx = dst, r8d = size
     push rbx
     xor r9d, r9d
-.mem_copy:
+mem_copy_local:
     cmp r9d, r8d
-    jge .mem_copy_done
+    jge mem_copy_done_local
     
     mov al, BYTE PTR [rcx + r9]
     mov BYTE PTR [rdx + r9], al
     inc r9d
-    jmp .mem_copy
+    jmp mem_copy_local
     
-.mem_copy_done:
+mem_copy_done_local:
     pop rbx
     ret
 CopyMemory ENDP
@@ -1824,14 +1824,14 @@ EnqueueFileOperation PROC
     ; rcx = queue pointer, rax = operation
     mov eax, g_file_op_queue_idx
     cmp eax, ASYNC_OP_QUEUE_SIZE
-    jge .enqueue_full
+    jge enqueue_full_local
     
     mov [g_file_op_queue + rax * 8], rcx
     inc g_file_op_queue_idx
     mov eax, 1
     ret
     
-.enqueue_full:
+enqueue_full_local:
     xor eax, eax
     ret
 EnqueueFileOperation ENDP
@@ -1845,3 +1845,4 @@ ExecuteInKernel PROC
 ExecuteInKernel ENDP
 
 END
+

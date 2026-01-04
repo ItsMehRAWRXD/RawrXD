@@ -744,3 +744,4 @@ compare_strings ENDP
 EXTERN InvalidateRect:PROC
 
 end
+
