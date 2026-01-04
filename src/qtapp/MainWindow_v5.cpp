@@ -2096,13 +2096,24 @@ AIChatPanel* MainWindow::createNewChatPanel()
     
     // If a model is already loaded, enable the chat input immediately
     if (m_inferenceEngine && m_inferenceEngine->isModelLoaded()) {
+        // Get model path from either m_pendingModelPath or inference engine's loaded path
         QString modelPath = m_pendingModelPath;
+        if (modelPath.isEmpty() && m_inferenceEngine) {
+            // Try to get path from inference engine if pending path not available
+            modelPath = m_inferenceEngine->modelPath();
+        }
+        
         if (!modelPath.isEmpty()) {
             QString modelDisplay = QFileInfo(modelPath).fileName();
             panel->setLocalModel(modelDisplay);
             panel->setSelectedModel(modelDisplay);
             panel->setInputEnabled(true);
             qInfo() << "[MainWindow] Chat panel initialized with loaded model:" << modelDisplay;
+        } else {
+            // Model is loaded but path unknown - still enable input
+            panel->setLocalModel("custom-local-model");
+            panel->setInputEnabled(true);
+            qInfo() << "[MainWindow] Chat panel enabled with unknown model path";
         }
     }
     
