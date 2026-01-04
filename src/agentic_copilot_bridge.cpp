@@ -5,6 +5,7 @@
 #include "chat_interface.h"
 #include "multi_tab_editor.h"
 #include "terminal_pool.h"
+#include "chat_history_manager.h"
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
@@ -17,6 +18,8 @@
 
 AgenticCopilotBridge::AgenticCopilotBridge(QObject* parent)
     : QObject(parent)
+    , m_historyManager(nullptr)
+    , m_currentSessionId("")
 {
     qInfo() << "[AgenticCopilot] Initialized - Production-ready bridge with thread safety";
 }
@@ -180,6 +183,14 @@ QString AgenticCopilotBridge::askAgent(const QString& question, const QJsonObjec
     // Apply hotpatching for safety and quality
     response = hotpatchResponse(response, fullContext);
     
+    // TODO: Re-enable when ChatHistoryManager is fully integrated
+    /*
+    // Ensure we have a session
+    if (m_currentSessionId == -1 && m_historyManager) {
+        m_currentSessionId = m_historyManager->createNewSession("New Chat Session");
+    }
+    */
+    
     // Store in conversation history
     m_conversationHistory.append(QJsonObject {
         {"role", "user"},
@@ -187,11 +198,21 @@ QString AgenticCopilotBridge::askAgent(const QString& question, const QJsonObjec
         {"timestamp", QDateTime::currentDateTime().toString(Qt::ISODate)}
     });
     
+    if (m_historyManager && !m_currentSessionId.isEmpty()) {
+        // TODO: Implement message storage when ChatHistoryManager is fully integrated
+        // m_historyManager->addMessage(m_currentSessionId, "user", question);
+    }
+    
     m_conversationHistory.append(QJsonObject {
         {"role", "assistant"},
         {"content", response},
         {"timestamp", QDateTime::currentDateTime().toString(Qt::ISODate)}
     });
+    
+    if (m_historyManager && !m_currentSessionId.isEmpty()) {
+        // TODO: Implement message storage when ChatHistoryManager is fully integrated
+        // m_historyManager->addMessage(m_currentSessionId, "assistant", response);
+    }
     
     m_lastConversationContext = response;
     

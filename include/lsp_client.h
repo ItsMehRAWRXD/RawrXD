@@ -128,6 +128,16 @@ public:
     void requestDefinition(const QString& uri, int line, int character);
 
     /**
+     * Request references
+     */
+    void requestReferences(const QString& uri, int line, int character);
+
+    /**
+     * Request rename
+     */
+    void requestRename(const QString& uri, int line, int character, const QString& newName);
+
+    /**
      * Format document
      */
     void formatDocument(const QString& uri);
@@ -146,7 +156,26 @@ signals:
     /**
      * Completions received
      */
+    /**
+     * Get code actions for a position
+     */
+    void getCodeActions(const QString& uri, int line, int character);
+
+    /**
+     * Execute a code action
+     */
+    void executeCodeAction(const QJsonObject& action);
+
+signals:
+    /**
+     * Emitted when completions are received
+     */
     void completionsReceived(const QString& uri, int line, int character, const QVector<CompletionItem>& items);
+
+    /**
+     * Emitted when code actions are received
+     */
+    void codeActionsReceived(const QString& uri, int line, int character, const QJsonArray& actions);
 
     /**
      * Hover information received
@@ -157,6 +186,16 @@ signals:
      * Definition location received
      */
     void definitionReceived(const QString& uri, int line, int character);
+
+    /**
+     * References received
+     */
+    void referencesReceived(const QString& uri, const QJsonArray& locations);
+
+    /**
+     * Rename edits received
+     */
+    void renameReceived(const QString& uri, const QJsonObject& workspaceEdit);
 
     /**
      * Diagnostics updated
@@ -185,6 +224,9 @@ private:
     void handleCompletionResponse(const QJsonObject& result, int requestId);
     void handleHoverResponse(const QJsonObject& result, int requestId);
     void handleDefinitionResponse(const QJsonObject& result, int requestId);
+    void handleReferencesResponse(const QJsonObject& result, int requestId);
+    void handleRenameResponse(const QJsonObject& result, int requestId);
+    void handleCodeActionResponse(const QJsonObject& result, int requestId);
     void handleDiagnostics(const QJsonObject& params);
     
     QString buildDocumentUri(const QString& filePath) const;

@@ -41,6 +41,7 @@ public:
     ConnectionPool postgresPool;
     ConnectionPool elasticsearchPool;
     ConnectionPool redisPool;
+    ConnectionPool sqlitePool;
     
     // Query cache with TTL
     std::map<QString, CacheEntry> queryCache;
@@ -100,6 +101,15 @@ bool DatabaseManager::initialize(const QString& dbType, const DatabaseConfig& co
         // Redis connection pool
         qInfo() << "Redis cache pool initialized";
     }
+
+    // Initialize SQLite (for local chat history)
+    if (dbType == "sqlite" || dbType == "all") {
+        if (!createConnectionPool("sqlite")) {
+            qCritical() << "Failed to create SQLite connection pool";
+            return false;
+        }
+        qInfo() << "SQLite pool initialized";
+    }
     
     return true;
 }
@@ -128,96 +138,93 @@ bool DatabaseManager::createConnectionPool(const QString& dbType) {
         qInfo() << "PostgreSQL connection pool created with" << impl->postgresPool.minPoolSize << "connections";
         return true;
     }
+
+    if (dbType == "sqlite") {
+        QString connName = "sqlite_main_conn";
+        QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", connName);
+        
+        // Use a local file for SQLite
+        QString dbPath = "rawrxd_history.db";
+        db.setDatabaseName(dbPath);
+        
+        if (!db.open()) {
+            qWarning() << "Failed to open SQLite connection:" << db.lastError().text();
+            return false;
+        }
+        
+        impl->sqlitePool.availableConnections.push(connName);
+        impl->sqlitePool.connectionStatus[connName] = false;
+        
+        qInfo() << "SQLite connection created at" << dbPath;
+        return true;
+    }
     
     return false;
 }
 
-QueryResult DatabaseManager::executeQuery(const QString& sql, const QVariantList& params) {
+QueryResult DatabaseManager::executeQuery(const QString& sql, const QVariantList& params, const QString& dbType) {
     QueryResult result;
     result.success = false;
     
-    QString connName = acquireConnection("postgres");
+    QString connName = acquireConnection(dbType);
     if (connName.isEmpty()) {
-        result.errorMessage = "No available database connections";
+        result.errorMessage = "No available connections in pool for " + dbType;
         return result;
     }
     
-    try {
+    {
         QSqlDatabase db = QSqlDatabase::database(connName);
         QSqlQuery query(db);
-
-        if (!query.prepare(sql)) {
-            result.errorMessage = query.lastError().text();
-            releaseConnection(connName);
-            return result;
-        }
-
-        // Bind parameters
+        query.prepare(sql);
+        
         for (int i = 0; i < params.size(); ++i) {
-            query.addBindValue(params[i]);
+            query.bindValue(i, params[i]);
         }
-
+        
         if (!query.exec()) {
             result.errorMessage = query.lastError().text();
+            qWarning() << "Query failed:" << result.errorMessage;
             releaseConnection(connName);
             return result;
         }
-
-        // Fetch results
+        
         while (query.next()) {
             QVariantMap row;
             QSqlRecord record = query.record();
-
             for (int i = 0; i < record.count(); ++i) {
-                QString fieldName = record.fieldName(i);
-                QVariant value = query.value(i);
-                row.insert(fieldName, value);
+                row[record.fieldName(i)] = query.value(i);
             }
-
             result.rows.append(row);
         }
-
-        result.success = true;
+        
         result.rowCount = result.rows.size();
-
-    } catch (const std::exception& e) {
-        result.errorMessage = QString::fromStdString(e.what());
+        result.success = true;
     }
-
+    
     releaseConnection(connName);
     return result;
 }
 
-bool DatabaseManager::executeMutation(const QString& sql, const QVariantList& params) {
-    QString connName = acquireConnection("postgres");
+bool DatabaseManager::executeMutation(const QString& sql, const QVariantList& params, const QString& dbType) {
+    QString connName = acquireConnection(dbType);
     if (connName.isEmpty()) {
         return false;
     }
     
-    try {
+    {
         QSqlDatabase db = QSqlDatabase::database(connName);
         QSqlQuery query(db);
-        
-        if (!query.prepare(sql)) {
-            qWarning() << "Query preparation failed:" << query.lastError().text();
-            releaseConnection(connName);
-            return false;
-        }
+        query.prepare(sql);
         
         for (int i = 0; i < params.size(); ++i) {
-            query.addBindValue(params[i]);
+            query.bindValue(i, params[i]);
         }
         
         if (!query.exec()) {
-            qWarning() << "Query execution failed:" << query.lastError().text();
+            qWarning() << "Mutation failed:" << query.lastError().text();
             releaseConnection(connName);
             return false;
         }
-        
-    } catch (const std::exception& e) {
-        qWarning() << "Mutation error:" << QString::fromStdString(e.what());
-        releaseConnection(connName);
-        return false;
     }
     
     releaseConnection(connName);
@@ -325,14 +332,30 @@ QString DatabaseManager::acquireConnection(const QString& dbType) {
         
         return connName;
     }
+
+    if (dbType == "sqlite") {
+        QMutexLocker lock(&impl->sqlitePool.poolMutex);
+        if (impl->sqlitePool.availableConnections.empty()) return "";
+        
+        QString connName = impl->sqlitePool.availableConnections.front();
+        impl->sqlitePool.availableConnections.pop();
+        impl->sqlitePool.connectionStatus[connName] = true;
+        return connName;
+    }
     
     return "";
 }
 
 void DatabaseManager::releaseConnection(const QString& connName) {
-    QMutexLocker lock(&impl->postgresPool.poolMutex);
-    impl->postgresPool.connectionStatus[connName] = false;
-    impl->postgresPool.availableConnections.push(connName);
+    if (connName.startsWith("postgres")) {
+        QMutexLocker lock(&impl->postgresPool.poolMutex);
+        impl->postgresPool.connectionStatus[connName] = false;
+        impl->postgresPool.availableConnections.push(connName);
+    } else if (connName.startsWith("sqlite")) {
+        QMutexLocker lock(&impl->sqlitePool.poolMutex);
+        impl->sqlitePool.connectionStatus[connName] = false;
+        impl->sqlitePool.availableConnections.push(connName);
+    }
 }
 
 } // namespace Database

@@ -471,6 +471,8 @@ void MainWindow::createVSCodeLayout()
         "QTabBar::tab:selected { background-color: #252526; border-bottom: 2px solid #007acc; }"
         "QTabWidget::pane { border: none; }"
     );
+    editorTabs_->setTabsClosable(true);  // Enable close buttons on tabs
+    connect(editorTabs_, &QTabWidget::tabCloseRequested, this, &MainWindow::handleTabClose);
     
     // Add file path label under tabs
     m_filePathLabel_ = new QLabel(editorFrame);
@@ -736,6 +738,21 @@ void MainWindow::setupMenuBar()
     fileMenu->addAction(tr("&Open..."), this, &MainWindow::handleNewWindow, QKeySequence::Open);
     fileMenu->addAction(tr("&Save"), this, &MainWindow::handleSaveState, QKeySequence::Save);
     fileMenu->addSeparator();
+    
+    // Settings action
+    QAction* settingsAct = fileMenu->addAction(tr("&Settings..."));
+    settingsAct->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Comma));
+    connect(settingsAct, &QAction::triggered, this, [this]() {
+        if (!settingsWidget_) {
+            settingsWidget_ = new SettingsDialog(this);
+            settingsWidget_->initialize();
+        }
+        settingsWidget_->show();
+        settingsWidget_->raise();
+        settingsWidget_->activateWindow();
+    });
+    
+    fileMenu->addSeparator();
     QAction* exitAct = fileMenu->addAction(tr("E&xit"));
     exitAct->setShortcut(QKeySequence::Quit);
     connect(exitAct, &QAction::triggered, this, [this]() {
@@ -956,11 +973,24 @@ void MainWindow::setupMenuBar()
 
     // Tools menu for MASM Feature Settings and other tools
     QMenu* toolsMenu = menuBar()->addMenu(tr("&Tools"));
-    toolsMenu->addAction(tr("MASM Feature Settings..."), this, &MainWindow::openMASMFeatureSettings);
+    
+    // MASM Feature Settings
+    QAction* masmSettingsAct = toolsMenu->addAction(tr("MASM Feature Settings..."));
+    connect(masmSettingsAct, &QAction::triggered, this, &MainWindow::openMASMFeatureSettings);
+    
     toolsMenu->addSeparator();
-    toolsMenu->addAction(tr("Settings..."), this, []() {
-        // Open general settings dialog
-        qDebug() << "Settings dialog not yet implemented";
+    
+    // General Settings
+    QAction* settingsAct = toolsMenu->addAction(tr("Settings..."));
+    settingsAct->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Comma));
+    connect(settingsAct, &QAction::triggered, this, [this]() {
+        if (!settingsWidget_) {
+            settingsWidget_ = new SettingsDialog(this);
+            settingsWidget_->initialize();
+        }
+        settingsWidget_->show();
+        settingsWidget_->raise();
+        settingsWidget_->activateWindow();
     });
 
     QMenu* helpMenu = menuBar()->addMenu(tr("&Help"));
@@ -5471,6 +5501,50 @@ void MainWindow::setupCommandPalette()
     });
     
     qDebug() << "[MainWindow] Cursor-class command palette initialized with fuzzy matching";
+}
+
+void MainWindow::setupAIChatPanel()
+{
+    qDebug() << "[MainWindow] Setting up AI Chat Panel";
+    
+    try {
+        // Create AI Chat Panel widget
+        m_aiChatPanel = new AIChatPanel(this);
+        
+        // Initialize the panel (triggers lazy initialization)
+        m_aiChatPanel->initialize();
+        
+        // Add a test message to verify the panel is working
+        m_aiChatPanel->addAssistantMessage("AI Chat Panel initialized successfully. You can now ask questions!", false);
+        
+        // Create dock widget
+        m_aiChatPanelDock = new QDockWidget("AI Assistant", this);
+        m_aiChatPanelDock->setWidget(m_aiChatPanel);
+        m_aiChatPanelDock->setObjectName("AIChatPanelDock");
+        m_aiChatPanelDock->setAllowedAreas(Qt::AllDockWidgetAreas);
+        m_aiChatPanelDock->setFeatures(QDockWidget::DockWidgetMovable |
+                                        QDockWidget::DockWidgetFloatable |
+                                        QDockWidget::DockWidgetClosable);
+        
+        // Add to right dock area by default
+        addDockWidget(Qt::RightDockWidgetArea, m_aiChatPanelDock);
+        
+        // Connect AI Chat Panel signals
+        connect(m_aiChatPanel, &AIChatPanel::messageSubmitted,
+                this, &MainWindow::onAIChatMessageSubmitted);
+        connect(m_aiChatPanel, &AIChatPanel::quickActionTriggered,
+                this, &MainWindow::onAIChatQuickActionTriggered);
+        connect(m_aiChatPanel, &AIChatPanel::codeInsertRequested,
+                this, &MainWindow::onAIChatCodeInsertRequested);
+        
+        qDebug() << "[MainWindow] AI Chat Panel initialized successfully";
+        qDebug() << "[MainWindow] AI Chat Panel widget pointer:" << m_aiChatPanel;
+        qDebug() << "[MainWindow] Dock widget pointer:" << m_aiChatPanelDock;
+        qDebug() << "[MainWindow] Dock contains widget:" << m_aiChatPanelDock->widget();
+        
+    } catch (const std::exception& e) {
+        qCritical() << "[MainWindow] ERROR setting up AI Chat Panel:" << e.what();
+    }
 }
 
 void MainWindow::onExplorerItemDoubleClicked(QTreeWidgetItem* item, int column) {

@@ -8,6 +8,7 @@
 #pragma once
 
 #include <QPlainTextEdit>
+#include <QLineEdit>
 #include <QTimer>
 #include "lsp_client.h"
 #include "ghost_text_renderer.h"
@@ -101,6 +102,26 @@ public:
      */
     void setCompletionDelay(int ms);
 
+    /**
+     * Insert code at cursor position (for inline edits)
+     */
+    void insertCode(const QString& code);
+
+    /**
+     * LSP go-to-definition request
+     */
+    void goToDefinition();
+
+    /**
+     * LSP find-references request
+     */
+    void findReferences();
+
+    /**
+     * LSP rename-symbol request
+     */
+    void renameSymbol();
+
 signals:
     /**
      * Emitted when ghost text is accepted
@@ -112,8 +133,15 @@ signals:
      */
     void completionDismissed();
 
+    /**
+     * Emitted when Ctrl+K is pressed for inline edit
+     */
+    void inlineEditRequested(const QString& selectedText);
+
 protected:
     void keyPressEvent(QKeyEvent* event) override;
+    void contextMenuEvent(QContextMenuEvent* event) override;
+    void resizeEvent(QResizeEvent* event) override;
 
 private slots:
     void onTextChanged();
@@ -124,6 +152,9 @@ private slots:
     void onAICompletionError(const QString& error);
     void onGhostTextAccepted(const QString& text);
     void onGhostTextDismissed();
+    void showInlinePrompt();
+    void onInlinePromptFinished();
+    void updateInlinePromptPosition();
 
 private:
     void triggerCompletion();
@@ -134,6 +165,8 @@ private:
     LSPClient* m_lspClient{};
     AICompletionProvider* m_aiProvider{};
     GhostTextRenderer* m_ghostRenderer{};
+    QLineEdit* m_inlinePrompt{};
+    QTextCursor m_lastSelection;
     
     QString m_documentUri;
     QString m_languageId = "cpp";

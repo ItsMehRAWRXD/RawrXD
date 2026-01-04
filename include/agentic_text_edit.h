@@ -79,6 +79,11 @@ public:
      */
     void setCompletionDelay(int ms);
 
+    /**
+     * Show inline prompt (Ctrl+K)
+     */
+    void showInlinePrompt();
+
 signals:
     /**
      * Emitted when ghost text is accepted
@@ -89,9 +94,15 @@ signals:
      * Emitted when ghost text is dismissed
      */
     void completionDismissed();
+    
+    /**
+     * Emitted when inline edit is requested
+     */
+    void inlineEditRequested(const QString& prompt, const QString& selectedCode);
 
 protected:
     void keyPressEvent(QKeyEvent* event) override;
+    void resizeEvent(QResizeEvent* event) override;
 
 private slots:
     void onTextChanged();
@@ -100,15 +111,18 @@ private slots:
     void onCompletionsReceived(const QString& uri, int line, int character, const QVector<CompletionItem>& items);
     void onGhostTextAccepted(const QString& text);
     void onGhostTextDismissed();
+    void onInlinePromptFinished();
 
 private:
     void triggerCompletion();
     void syncDocumentToLSP();
+    void updateInlinePromptPosition();
     QString getCurrentLineText() const;
     bool shouldTriggerCompletion(const QString& lineText) const;
 
     LSPClient* m_lspClient{};
     GhostTextRenderer* m_ghostRenderer{};
+    QLineEdit* m_inlinePrompt = nullptr;
     
     QString m_documentUri;
     QString m_languageId = "cpp";

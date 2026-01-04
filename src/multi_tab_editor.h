@@ -35,6 +35,12 @@ public slots:
     void setLSPClient(RawrXD::LSPClient* client);
     RawrXD::LSPClient* lspClient() const { return m_lspClient; }
     RawrXD::AgenticTextEdit* getCurrentEditor() const;
+    
+    // Slot method that MainWindow calls
+    void inlineEditRequested(const QString& prompt, const QString& selectedCode);
+
+signals:
+    void inlineEditRequestedSignal(const QString& prompt, const QString& selectedCode);
 
 private:
     QTabWidget* tab_widget_;

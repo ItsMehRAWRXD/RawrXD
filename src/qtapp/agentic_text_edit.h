@@ -101,6 +101,16 @@ public:
      */
     void setCompletionDelay(int ms);
 
+    /**
+     * Replace current selection or insert at cursor
+     */
+    void insertCode(const QString& code);
+
+    // LSP UI Actions
+    void goToDefinition();
+    void findReferences();
+    void renameSymbol();
+
 signals:
     /**
      * Emitted when ghost text is accepted
@@ -112,8 +122,15 @@ signals:
      */
     void completionDismissed();
 
+    /**
+     * Emitted when an inline edit is requested (Ctrl+K)
+     */
+    void inlineEditRequested(const QString& prompt, const QString& selectedCode);
+
 protected:
     void keyPressEvent(QKeyEvent* event) override;
+    void contextMenuEvent(QContextMenuEvent* event) override;
+    void resizeEvent(QResizeEvent* event) override;
 
 private slots:
     void onTextChanged();
@@ -124,10 +141,13 @@ private slots:
     void onAICompletionError(const QString& error);
     void onGhostTextAccepted(const QString& text);
     void onGhostTextDismissed();
+    void onInlinePromptFinished();
 
 private:
     void triggerCompletion();
     void syncDocumentToLSP();
+    void showInlinePrompt();
+    void updateInlinePromptPosition();
     QString getCurrentLineText() const;
     bool shouldTriggerCompletion(const QString& lineText) const;
 
@@ -145,6 +165,8 @@ private:
     bool m_aiCompletionsEnabled = true;  // AI completions enabled by default
     
     bool m_documentOpened = false;
+    QTextCursor m_lastSelection; // NEW: Saved selection for inline edits
+    QLineEdit* m_inlinePrompt{nullptr}; // NEW: Inline prompt for AI edits
 };
 
 } // namespace RawrXD

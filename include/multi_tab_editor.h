@@ -36,6 +36,12 @@ public slots:
     RawrXD::LSPClient* lspClient() const { return m_lspClient; }
     RawrXD::AgenticTextEdit* getCurrentEditor() const;
 
+public slots:
+    void inlineEditRequested(const QString& prompt, const QString& selectedCode);
+
+signals:
+    void inlineEditRequestedSignal(const QString& prompt, const QString& selectedCode);
+
 private:
     QTabWidget* tab_widget_;
     QMap<QWidget*, QString> tab_file_paths_;  // Maps editor widget to file path

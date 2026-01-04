@@ -3,6 +3,7 @@
 #include "checkpoint_manager.h"
 #include "tokenizer_selector.h"
 #include "ci_cd_settings.h"
+#include "masm_feature_settings_panel.hpp"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QTabWidget>
@@ -51,6 +52,9 @@ void SettingsDialog::setupUI()
     
     // Training Settings Tab
     tabWidget->addTab(createTrainingTab(), "Training");
+    
+    // MASM Features Tab
+    tabWidget->addTab(createMASMTab(), "MASM Features");
     
     // CI/CD Settings Tab
     tabWidget->addTab(createCICDTab(), "CI/CD");
@@ -462,6 +466,13 @@ void SettingsDialog::configureTokenizer()
 void SettingsDialog::configureCIPipeline()
 {
     QMessageBox::information(this, "CI/CD", "CI/CD pipeline configuration is available.\n\nFeatures:\n- Training job scheduling\n- Automated deployment\n- Webhook integration\n- Performance benchmarking");
+}
+
+QWidget* SettingsDialog::createMASMTab()
+{
+    // Return the MASM Feature Settings Panel directly
+    // This panel manages 212+ MASM features with hot-swap capability
+    return new MasmFeatureSettingsPanel(this);
 }
 
 QWidget* SettingsDialog::createEnterpriseTab()

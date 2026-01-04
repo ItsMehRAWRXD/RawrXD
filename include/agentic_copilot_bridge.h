@@ -13,6 +13,7 @@ class ChatInterface;
 class MultiTabEditor;
 class TerminalPool;
 class AgenticExecutor;
+class ChatHistoryManager;
 
 /**
  * @class AgenticCopilotBridge
@@ -114,9 +115,11 @@ private:
     MultiTabEditor* m_multiTabEditor = nullptr;
     TerminalPool* m_terminalPool = nullptr;
     AgenticExecutor* m_agenticExecutor = nullptr;
+    ChatHistoryManager* m_historyManager = nullptr;
     
     QString m_lastConversationContext;
     QJsonArray m_conversationHistory;
+    qint64 m_currentSessionId = -1;
     bool m_hotpatchingEnabled = true;
     
     std::mutex m_mutex; // Mutex for thread-safe operations

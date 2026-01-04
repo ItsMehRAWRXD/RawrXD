@@ -1,5 +1,5 @@
 // Multi-Tab Editor
-#include "multi_tab_editor.h"
+#include "qtapp/multi_tab_editor.h"
 #include "agentic_text_edit.h"
 #include "lsp_client.h"
 #include <QVBoxLayout>
@@ -59,6 +59,12 @@ void MultiTabEditor::openFile(const QString& filepath) {
         editor->setLSPClient(m_lspClient);
     }
     
+    // TODO: Fix inline edit signal connection - Qt sees signature mismatch
+    // connect(editor, &RawrXD::AgenticTextEdit::inlineEditRequested, 
+    //         this, [this](const QString& prompt, const QString& selectedCode) {
+    //             this->handleInlineEditRequested(prompt, selectedCode);
+    //         });
+    
     QString filename = filepath.section('/', -1);
     tab_widget_->addTab(editor, filename);
     tab_widget_->setCurrentWidget(editor);
@@ -82,6 +88,9 @@ void MultiTabEditor::newFile() {
     if (m_lspClient) {
         editor->setLSPClient(m_lspClient);
     }
+    
+    // TODO: Fix inline edit signal connection - Qt sees signature mismatch
+    // connect(editor, &AgenticTextEdit::inlineEditRequested, this, &MultiTabEditor::inlineEditRequested);
     
     tab_widget_->addTab(editor, tabName);
     tab_widget_->setCurrentWidget(editor);
@@ -206,3 +215,12 @@ void MultiTabEditor::setLSPClient(LSPClient* client) {
 AgenticTextEdit* MultiTabEditor::getCurrentEditor() const {
     return qobject_cast<AgenticTextEdit*>(tab_widget_->currentWidget());
 }
+
+// Method that MainWindow calls directly
+void MultiTabEditor::inlineEditRequested(const QString& prompt, const QString& selectedCode)
+{
+    qDebug() << "[MultiTabEditor] inlineEditRequested method called - prompt:" << prompt;
+    // This method is called directly by MainWindow, no need to emit signal
+    // The functionality can be implemented here directly
+}
+

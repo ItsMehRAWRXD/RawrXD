@@ -97,8 +97,6 @@ int main(int argc, char *argv[])
         //     }
         // );
     });
-        );
-    });
 
     RawrXD::MainWindow mainWindow;
     mainWindow.show();

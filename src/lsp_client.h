@@ -128,6 +128,26 @@ public:
     void requestDefinition(const QString& uri, int line, int character);
 
     /**
+     * Request find-references
+     */
+    void requestReferences(const QString& uri, int line, int character);
+
+    /**
+     * Request rename symbol
+     */
+    void requestRename(const QString& uri, int line, int character, const QString& newName);
+
+    /**
+     * Request code actions
+     */
+    void getCodeActions(const QString& uri, int line, int character);
+
+    /**
+     * Execute code action
+     */
+    void executeCodeAction(const QJsonObject& action);
+
+    /**
      * Format document
      */
     void formatDocument(const QString& uri);
@@ -159,6 +179,21 @@ signals:
     void definitionReceived(const QString& uri, int line, int character);
 
     /**
+     * References received
+     */
+    void referencesReceived(const QVector<Diagnostic>& refs);
+
+    /**
+     * Rename received
+     */
+    void renameReceived(const QJsonObject& renameEdits);
+
+    /**
+     * Code actions received
+     */
+    void codeActionsReceived(const QVector<QJsonObject>& actions);
+
+    /**
      * Diagnostics updated
      */
     void diagnosticsUpdated(const QString& uri, const QVector<Diagnostic>& diagnostics);
@@ -185,6 +220,9 @@ private:
     void handleCompletionResponse(const QJsonObject& result, int requestId);
     void handleHoverResponse(const QJsonObject& result, int requestId);
     void handleDefinitionResponse(const QJsonObject& result, int requestId);
+    void handleReferencesResponse(const QJsonObject& result, int requestId);
+    void handleRenameResponse(const QJsonObject& result, int requestId);
+    void handleCodeActionResponse(const QJsonObject& result, int requestId);
     void handleDiagnostics(const QJsonObject& params);
     
     QString buildDocumentUri(const QString& filePath) const;

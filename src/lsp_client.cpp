@@ -95,6 +95,9 @@ bool LSPClient::startServer()
     // Formatting support
     textDocument["formatting"] = QJsonObject{{"dynamicRegistration", false}};
     
+    // Code Action support
+    textDocument["codeAction"] = QJsonObject{{"dynamicRegistration", false}};
+    
     capabilities["textDocument"] = textDocument;
     initializeParams["capabilities"] = capabilities;
     
@@ -207,37 +210,63 @@ void LSPClient::updateDocument(const QString& uri, const QString& text, int vers
     m_documentVersions[uri] = version;
 }
 
-void LSPClient::requestCompletions(const QString& uri, int line, int character)
+void LSPClient::getCodeActions(const QString& uri, int line, int character)
 {
-    if (!m_initialized) return;
+    if (!m_serverRunning) return;
     
     int requestId = m_nextRequestId++;
     
     QJsonObject textDocumentId;
     textDocumentId["uri"] = buildDocumentUri(uri);
     
-    QJsonObject position;
-    position["line"] = line;
-    position["character"] = character;
+    QJsonObject range;
+    QJsonObject pos;
+    pos["line"] = line;
+    pos["character"] = character;
+    range["start"] = pos;
+    range["end"] = pos;
+    
+    QJsonObject context;
+    context["diagnostics"] = QJsonArray(); // Could include diagnostics here
     
     QJsonObject params;
     params["textDocument"] = textDocumentId;
-    params["position"] = position;
+    params["range"] = range;
+    params["context"] = context;
     
     QJsonObject request;
     request["jsonrpc"] = "2.0";
     request["id"] = requestId;
-    request["method"] = "textDocument/completion";
+    request["method"] = "textDocument/codeAction";
     request["params"] = params;
     
     sendMessage(request);
     
     PendingRequest pending;
-    pending.type = "completion";
+    pending.type = "codeAction";
     pending.uri = uri;
     pending.line = line;
     pending.character = character;
     m_pendingRequests[requestId] = pending;
+}
+
+void LSPClient::executeCodeAction(const QJsonObject& action)
+{
+    if (!m_serverRunning) return;
+    
+    // Some code actions are commands, some are workspace edits
+    if (action.contains("command")) {
+        QJsonObject command = action["command"].toObject();
+        
+        int requestId = m_nextRequestId++;
+        QJsonObject request;
+        request["jsonrpc"] = "2.0";
+        request["id"] = requestId;
+        request["method"] = "workspace/executeCommand";
+        request["params"] = command;
+        
+        sendMessage(request);
+    }
 }
 
 void LSPClient::requestHover(const QString& uri, int line, int character)
@@ -300,6 +329,77 @@ void LSPClient::requestDefinition(const QString& uri, int line, int character)
     
     PendingRequest pending;
     pending.type = "definition";
+    pending.uri = uri;
+    pending.line = line;
+    pending.character = character;
+    m_pendingRequests[requestId] = pending;
+}
+
+void LSPClient::requestReferences(const QString& uri, int line, int character)
+{
+    if (!m_initialized) return;
+    
+    int requestId = m_nextRequestId++;
+    
+    QJsonObject textDocumentId;
+    textDocumentId["uri"] = buildDocumentUri(uri);
+    
+    QJsonObject position;
+    position["line"] = line;
+    position["character"] = character;
+    
+    QJsonObject context;
+    context["includeDeclaration"] = true;
+    
+    QJsonObject params;
+    params["textDocument"] = textDocumentId;
+    params["position"] = position;
+    params["context"] = context;
+    
+    QJsonObject request;
+    request["jsonrpc"] = "2.0";
+    request["id"] = requestId;
+    request["method"] = "textDocument/references";
+    request["params"] = params;
+    
+    sendMessage(request);
+    
+    PendingRequest pending;
+    pending.type = "references";
+    pending.uri = uri;
+    pending.line = line;
+    pending.character = character;
+    m_pendingRequests[requestId] = pending;
+}
+
+void LSPClient::requestRename(const QString& uri, int line, int character, const QString& newName)
+{
+    if (!m_initialized) return;
+    
+    int requestId = m_nextRequestId++;
+    
+    QJsonObject textDocumentId;
+    textDocumentId["uri"] = buildDocumentUri(uri);
+    
+    QJsonObject position;
+    position["line"] = line;
+    position["character"] = character;
+    
+    QJsonObject params;
+    params["textDocument"] = textDocumentId;
+    params["position"] = position;
+    params["newName"] = newName;
+    
+    QJsonObject request;
+    request["jsonrpc"] = "2.0";
+    request["id"] = requestId;
+    request["method"] = "textDocument/rename";
+    request["params"] = params;
+    
+    sendMessage(request);
+    
+    PendingRequest pending;
+    pending.type = "rename";
     pending.uri = uri;
     pending.line = line;
     pending.character = character;
@@ -434,6 +534,12 @@ void LSPClient::processMessage(const QJsonObject& message)
                     handleHoverResponse(result, id);
                 } else if (req.type == "definition") {
                     handleDefinitionResponse(result, id);
+                } else if (req.type == "references") {
+                    handleReferencesResponse(result, id);
+                } else if (req.type == "rename") {
+                    handleRenameResponse(result, id);
+                } else if (req.type == "codeAction") {
+                    handleCodeActionResponse(result, id);
                 }
             } else if (id == 1) {
                 // Initialize response
@@ -582,6 +688,50 @@ void LSPClient::handleDefinitionResponse(const QJsonObject& result, int requestI
     }
 }
 
+void LSPClient::handleReferencesResponse(const QJsonObject& result, int requestId)
+{
+    // Result is Location[]
+    QVector<Diagnostic> refDiags;
+    QJsonDocument doc(result);
+    if (doc.isArray()) {
+        QJsonArray locations = doc.array();
+        for (const QJsonValue& val : locations) {
+            QJsonObject loc = val.toObject();
+            QJsonObject range = loc["range"].toObject();
+            QJsonObject start = range["start"].toObject();
+            
+            Diagnostic diag;
+            diag.line = start["line"].toInt();
+            diag.column = start["character"].toInt();
+            diag.message = loc["uri"].toString();
+            refDiags.append(diag);
+        }
+    }
+    
+    emit referencesReceived(refDiags);
+}
+
+void LSPClient::handleRenameResponse(const QJsonObject& result, int requestId)
+{
+    // Result is WorkspaceEdit
+    emit renameReceived(result);
+}
+
+void LSPClient::handleCodeActionResponse(const QJsonObject& result, int requestId)
+{
+    // Result is (Command | CodeAction)[]
+    QVector<QJsonObject> actions;
+    QJsonDocument doc(result);
+    if (doc.isArray()) {
+        QJsonArray actionsArray = doc.array();
+        for (const QJsonValue& val : actionsArray) {
+            actions.append(val.toObject());
+        }
+    }
+    
+    emit codeActionsReceived(actions);
+}
+
 void LSPClient::handleDiagnostics(const QJsonObject& params)
 {
     QString uri = params["uri"].toString();
@@ -616,6 +766,36 @@ QString LSPClient::buildDocumentUri(const QString& filePath) const
         : info.absoluteFilePath();
     
     return QUrl::fromLocalFile(absolutePath).toString();
+}
+
+void LSPClient::requestCompletions(const QString& uri, int line, int character)
+{
+    if (!m_serverRunning || !m_initialized) {
+        qWarning() << "[LSPClient] Cannot request completions - server not ready";
+        return;
+    }
+    
+    QJsonObject params;
+    QJsonObject textDocument;
+    textDocument["uri"] = uri;
+    
+    QJsonObject position;
+    position["line"] = line;
+    position["character"] = character;
+    
+    params["textDocument"] = textDocument;
+    params["position"] = position;
+    
+    QJsonObject request;
+    request["jsonrpc"] = "2.0";
+    request["id"] = m_nextRequestId++;
+    request["method"] = "textDocument/completion";
+    request["params"] = params;
+    
+    m_pendingRequests[request["id"].toInt()] = {"completion", uri, line, character};
+    sendMessage(request);
+    
+    qDebug() << "[LSPClient] Sent completion request for" << uri << "at" << line << ":" << character;
 }
 
 } // namespace RawrXD

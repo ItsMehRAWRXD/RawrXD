@@ -35,14 +35,18 @@ add_custom_target(hexmag-scaffold DEPENDS ${HEXMAG_SCAFFOLD_OUTPUTS})
 
 file(GLOB HEXMAG_STUBS "${HEXMAG_STUB_DIR}/*_stubs.asm")
 file(GLOB HEXMAG_SCAFFOLD ${HEXMAG_SCAFFOLD_OUTPUTS})
-if(HEXMAG_SCAFFOLD)
-    add_library(masm_hexmag_stubs_obj OBJECT ${HEXMAG_SCAFFOLD})
-    add_dependencies(masm_hexmag_stubs_obj hexmag-scaffold)
-elseif(HEXMAG_STUBS)
-    add_library(masm_hexmag_stubs_obj OBJECT ${HEXMAG_STUBS})
-    set_source_files_properties(${HEXMAG_STUBS} PROPERTIES LANGUAGE ASM_MASM)
-    add_dependencies(masm_hexmag_stubs_obj hexmag-chain)
-endif()
+# Temporarily disable hexmag scaffolding - it causes C linkage conflicts
+# Will be re-enabled after main IDE compilation succeeds
+# if(HEXMAG_SCAFFOLD)
+#     add_library(masm_hexmag_stubs_obj OBJECT ${HEXMAG_SCAFFOLD})
+#     target_include_directories(masm_hexmag_stubs_obj PRIVATE "${CMAKE_BINARY_DIR}")
+#     target_link_libraries(masm_hexmag_stubs_obj PUBLIC Qt6::Core)
+#     add_dependencies(masm_hexmag_stubs_obj hexmag-scaffold)
+# elseif(HEXMAG_STUBS)
+#     add_library(masm_hexmag_stubs_obj OBJECT ${HEXMAG_STUBS})
+#     set_source_files_properties(${HEXMAG_STUBS} PROPERTIES LANGUAGE ASM_MASM)
+#     add_dependencies(masm_hexmag_stubs_obj hexmag-chain)
+# endif()
 
 if(TARGET RawrXD-QtShell AND TARGET masm_hexmag_stubs_obj)
     target_link_libraries(RawrXD-QtShell PRIVATE $<TARGET_OBJECTS:masm_hexmag_stubs_obj>)
@@ -61,7 +65,7 @@ project(RawrXD-ModelLoader VERSION 1.0.13)
 add_definitions(-DNOMINMAX)
 
 # Enable MASM x64 assembler for pure runtime layer
-enable_language(ASM_MASM)
+# enable_language(ASM_MASM)
 
 # Configure MASM compiler for ml64.exe
 if(MSVC)
@@ -1672,6 +1676,14 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/agentic_copilot_bridge.cpp")
         list(APPEND AGENTICIDE_SOURCES src/agentic_copilot_bridge.cpp)
     endif()
+    # External Model Client for API-based inference (OpenAI, Anthropic, etc.)
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/external_model_client.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/external_model_client.cpp)
+    endif()
+    # LSP Client for language server protocol integration
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/lsp_client.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/lsp_client.cpp)
+    endif()
     # Add agentic failure detector and puppeteer for hotpatching
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/agent/agentic_failure_detector.cpp")
         list(APPEND AGENTICIDE_SOURCES src/agent/agentic_failure_detector.cpp)
@@ -1877,6 +1889,12 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
     # if(EXISTS "${CMAKE_SOURCE_DIR}/src/inference_engine_stub.cpp")
     #     list(APPEND AGENTICIDE_SOURCES src/inference_engine_stub.cpp)
     # endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/latency_monitor.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/latency_monitor.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/latency_status_panel.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/latency_status_panel.cpp)
+    endif()
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/agentic_executor.cpp")
         list(APPEND AGENTICIDE_SOURCES src/agentic_executor.cpp)
     endif()
@@ -1952,6 +1970,14 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
     endif()
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/tokenizer_selector.cpp")
         list(APPEND AGENTICIDE_SOURCES src/qtapp/tokenizer_selector.cpp)
+    endif()
+    
+    # MASM Feature Management System - Runtime toggles for 212+ MASM implementations
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/masm_feature_manager.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/masm_feature_manager.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/masm_feature_settings_panel.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/qtapp/masm_feature_settings_panel.cpp)
     endif()
     
     # ============================================================
@@ -2213,6 +2239,10 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
     list(APPEND AGENTICIDE_SOURCES src/qtapp/ThemeConfigurationPanel.cpp)
     list(APPEND AGENTICIDE_SOURCES src/qtapp/TransparencyControlPanel.cpp)
     list(APPEND AGENTICIDE_SOURCES src/qtapp/ThemedCodeEditor.cpp)
+    
+    # Add headers for MOC generation
+    list(APPEND AGENTICIDE_SOURCES include/qt_masm_bridge.h)
+    list(APPEND AGENTICIDE_SOURCES include/external_model_client.h)
     
     add_executable(RawrXD-AgenticIDE WIN32 ${AGENTICIDE_SOURCES})
     

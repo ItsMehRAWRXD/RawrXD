@@ -25,6 +25,21 @@
 class AgenticEngine : public QObject {
     Q_OBJECT
 public:
+    // Model source enumeration
+    enum ModelSource {
+        Local = 0,      // Local GGUF model
+        External = 1    // External API (OpenAI, Anthropic, etc.)
+    };
+    Q_ENUM(ModelSource)
+
+    // External model provider
+    enum class Provider {
+        OpenAI,
+        Anthropic,
+        Groq,
+        Ollama
+    };
+
     explicit AgenticEngine(QObject* parent = nullptr);
     virtual ~AgenticEngine();
     
@@ -92,22 +107,12 @@ public:
         m_currentModelPath = modelPath.toStdString(); 
         qDebug() << "[AgenticEngine::markModelAsLoaded] Model flagged:" << modelPath;
     }
-    
-    // Generation configuration
-    struct GenerationConfig {
-        float temperature = 0.8f;
-        float topP = 0.9f;
-        int maxTokens = 512;
-    };
-    void setGenerationConfig(const GenerationConfig& config);
-    GenerationConfig generationConfig() const { return m_genConfig; }
-    
-public slots:
-    void setModel(const QString& modelPath);
-    void setModelName(const QString& modelName);
-    void processMessage(const QString& message, const QString& editorContext = QString());
-    
+
 signals:
+    // Streaming signals for external model responses
+    void streamToken(const QString& token);
+    void streamFinished();
+    void errorOccurred(const QString& error);
     void responseReady(const QString& response);
     void modelLoadingFinished(bool success, const QString& modelPath);
     void modelReady(bool success);
@@ -118,6 +123,25 @@ signals:
     // Phase 2: Streaming and refactoring signals
     void tokenGenerated(int delta);  // Emitted for each token during generation
     void refactorSuggested(const QString& original, const QString& suggested);  // Emitted when refactor is ready
+
+public:
+    // Generation configuration
+    struct GenerationConfig {
+        float temperature = 0.8f;
+        float topP = 0.9f;
+        int maxTokens = 512;
+    };
+    void setGenerationConfig(const GenerationConfig& config);
+    GenerationConfig generationConfig() const { return m_genConfig; }
+    
+    // External model configuration
+    void setModelSource(ModelSource source);
+    void configureExternalModel(Provider provider, const QString& apiKey, const QString& modelName, const QString& endpoint = "");
+    
+public slots:
+    void setModel(const QString& modelPath);
+    void setModelName(const QString& modelName);
+    void processMessage(const QString& message, const QString& editorContext = QString(), bool streaming = true);
     
 private:
     QString generateTokenizedResponse(const QString& message);
@@ -153,4 +177,12 @@ private:
     class InferenceEngine* m_inferenceEngine = nullptr;
     GenerationConfig m_genConfig;
     std::shared_ptr<ICompressionProvider> compression_provider_;
+    
+    // External model client and source selection
+    ModelSource m_modelSource = Local;
+    class ExternalModelClient* m_externalClient = nullptr;
+    Provider m_externalProvider = Provider::OpenAI;
+    QString m_externalApiKey;
+    QString m_externalEndpoint;
 };
+

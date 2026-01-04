@@ -9,6 +9,7 @@
 #include <memory>
 #include <unordered_map>
 #include "compression_interface.h"
+#include "external_model_client.h"
 
 /**
  * @class AgenticEngine
@@ -25,10 +26,20 @@
 class AgenticEngine : public QObject {
     Q_OBJECT
 public:
+    enum ModelSource {
+        Local,
+        External
+    };
+
     explicit AgenticEngine(QObject* parent = nullptr);
     virtual ~AgenticEngine();
     
     void initialize();
+    
+    // Model source management
+    void setModelSource(ModelSource source);
+    ModelSource modelSource() const { return m_modelSource; }
+    void configureExternalModel(const QString& provider, const QString& endpoint, const QString& apiKey, const QString& model);
     
     // AI Core Component 1: Code Analysis
     QString analyzeCode(const QString& code);
@@ -105,7 +116,7 @@ public:
 public slots:
     void setModel(const QString& modelPath);
     void setModelName(const QString& modelName);
-    void processMessage(const QString& message, const QString& editorContext = QString());
+    void processMessage(const QString& message, const QString& editorContext = QString(), bool streaming = true);
     
 signals:
     void responseReady(const QString& response);
@@ -117,6 +128,8 @@ signals:
     
     // Phase 2: Streaming and refactoring signals
     void tokenGenerated(int delta);  // Emitted for each token during generation
+    void streamToken(const QString& token);  // Emitted for each token string during generation
+    void streamFinished();  // Emitted when streaming generation is complete
     void refactorSuggested(const QString& original, const QString& suggested);  // Emitted when refactor is ready
     
 private:
@@ -151,6 +164,8 @@ private:
     bool m_modelLoaded = false;
     std::string m_currentModelPath;
     class InferenceEngine* m_inferenceEngine = nullptr;
+    ExternalModelClient* m_externalClient = nullptr;
+    ModelSource m_modelSource = Local;
     GenerationConfig m_genConfig;
     std::shared_ptr<ICompressionProvider> m_compressionProvider;
 };

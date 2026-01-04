@@ -15,6 +15,7 @@ class QSpinBox;
 class QDoubleSpinBox;
 class QComboBox;
 class QTextEdit;
+class MasmFeatureSettingsPanel;
 
 class SettingsDialog : public QDialog
 {
@@ -43,6 +44,7 @@ private:
     QWidget* createSecurityTab();
     QWidget* createTrainingTab();
     QWidget* createCICDTab();
+    QWidget* createMASMTab();  // NEW: MASM Feature Manager tab
     QWidget* createEnterpriseTab();
 
     SettingsManager *m_settings = nullptr;

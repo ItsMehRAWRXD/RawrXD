@@ -28,8 +28,7 @@ function Test-Feature {
             Write-Host " ✅ PASS" -ForegroundColor Green
             $script:passedTests++
             $testResults[$FeatureName] = "PASS"
-        }
-        else {
+        } else {
             Write-Host " ⚠️ PARTIAL" -ForegroundColor Yellow
             $testResults[$FeatureName] = "PARTIAL"
         }
@@ -46,9 +45,7 @@ Write-Host "══════════════════════�
 
 # Test 1: RawrXD Script Accessibility
 Test-Feature -FeatureName "RawrXD Script Accessibility" -Category "Core" -Description "Check if main script exists and is readable" -TestCode {
-    $exists = Test-Path ".\RawrXD.ps1"
-    $readable = $null -ne (Get-Content ".\RawrXD.ps1" -TotalCount 1 -ErrorAction SilentlyContinue)
-    return ($exists -and $readable)
+    Test-Path ".\RawrXD.ps1" -and (Get-Content ".\RawrXD.ps1" -TotalCount 1)
 }
 
 # Test 2: PowerShell Execution Policy
@@ -63,8 +60,7 @@ Test-Feature -FeatureName "Windows Forms Assembly" -Category "UI" -Description "
         Add-Type -AssemblyName System.Windows.Forms
         Add-Type -AssemblyName System.Drawing
         $true
-    }
-    catch { $false }
+    } catch { $false }
 }
 
 # Test 4: Ollama Service Connectivity
@@ -72,8 +68,7 @@ Test-Feature -FeatureName "Ollama Service Connectivity" -Category "AI" -Descript
     try {
         $response = Invoke-RestMethod -Uri "http://localhost:11434/api/version" -TimeoutSec 5 -ErrorAction Stop
         $response -ne $null
-    }
-    catch { $false }
+    } catch { $false }
 }
 
 # Test 5: Model Availability
@@ -81,25 +76,22 @@ Test-Feature -FeatureName "AI Models Available" -Category "AI" -Description "Che
     try {
         $models = ollama list 2>$null
         $models -ne $null -and $models.Count -gt 1
-    }
-    catch { $false }
+    } catch { $false }
 }
 
 # Test 6: Function Definitions
 Test-Feature -FeatureName "Core Functions Defined" -Category "Functions" -Description "Verify key functions exist in script" -TestCode {
     $content = Get-Content ".\RawrXD.ps1" -Raw
-    $hasAgentCommand = $content -match "function.*Process-AgentCommand"
-    $hasLoadSettings = $content -match "function.*Load-Settings"
-    $hasLogging = $content -match "function.*Write-.*Log"
-    return ($hasAgentCommand -and $hasLoadSettings -and $hasLogging)
+    $content -match "function.*Process-AgentCommand" -and 
+    $content -match "function.*Load-Settings" -and
+    $content -match "function.*Write-.*Log"
 }
 
 # Test 7: Configuration System
 Test-Feature -FeatureName "Configuration System" -Category "Config" -Description "Test settings load/save capability" -TestCode {
     $content = Get-Content ".\RawrXD.ps1" -Raw
-    $hasSettings = $content -match "Load-Settings|Save-Settings|Save-CustomizationSettings|\`$global:settings"
-    $hasConfig = $content -match "settings\.json|config|Configuration"
-    return ($hasSettings -and $hasConfig)
+    $content -match "Load-Settings|Save-Settings|\$config\." -and
+    $content -match "Get-ItemProperty|Set-ItemProperty"
 }
 
 # Test 8: Security Features
@@ -111,9 +103,8 @@ Test-Feature -FeatureName "Security Features" -Category "Security" -Description 
 # Test 9: File Operations
 Test-Feature -FeatureName "File Operations" -Category "File" -Description "Check file handling capabilities" -TestCode {
     $content = Get-Content ".\RawrXD.ps1" -Raw
-    $hasBasicOps = $content -match "Get-Content|Set-Content|Test-Path"
-    $hasDialogs = $content -match "OpenFileDialog|SaveFileDialog"
-    return ($hasBasicOps -and $hasDialogs)
+    $content -match "Get-Content|Set-Content|Test-Path" -and
+    $content -match "OpenFileDialog|SaveFileDialog"
 }
 
 # Test 10: Chat Interface
@@ -147,11 +138,9 @@ foreach ($test in $testResults.Keys) {
 
 if ($successRate -ge 80) {
     Write-Host "`n🎉 EXCELLENT: RawrXD is in great shape!" -ForegroundColor Green
-}
-elseif ($successRate -ge 60) {
+} elseif ($successRate -ge 60) {
     Write-Host "`n👍 GOOD: Most features are working well" -ForegroundColor Yellow
-}
-else {
+} else {
     Write-Host "`n⚠️ ATTENTION: Several features may need attention" -ForegroundColor Red
 }
 

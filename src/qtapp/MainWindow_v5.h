@@ -18,10 +18,12 @@ class MultiTabEditor;
 class ChatInterface;
 class TerminalPool;
 class FileBrowser;
-class AgenticEngine;
+// Forward declaration removed - full header included in .cpp
+// class AgenticEngine;
 class InferenceEngine;
 class TodoManager;
 class TodoDock;
+class ChatHistoryManager;
 class ModelLoaderThread;
 class ModelLoaderWidget;
 class MasmEditorWidget;
@@ -30,10 +32,15 @@ class AIChatPanelManager;
 class MASMEditorWidget;
 class InterpretabilityPanelEnhanced;
 class HotpatchPanel;
-
 namespace RawrXD {
+    class LatencyMonitor;
+    class LatencyStatusPanel;
     class MultiFileSearchWidget;
 }
+
+// Using declarations for convenience
+using LatencyMonitor = RawrXD::LatencyMonitor;
+using LatencyStatusPanel = RawrXD::LatencyStatusPanel;
 
 // Phase 2 forward declarations
 namespace RawrXD {
@@ -46,7 +53,6 @@ namespace RawrXD {
 }
 
 class DiffDock;  // Day 2 simplified diff viewer
-
 namespace RawrXD {
     class PlanOrchestrator;
     class LSPClient;
@@ -54,6 +60,13 @@ namespace RawrXD {
     class ThemeConfigurationPanel;
     class TransparencyControlPanel;
     class ThemedCodeEditor;
+    class DiffPreviewWidget;
+    class GPUBackendSelector;
+    class AutoModelDownloader;
+    class ModelDownloadDialog;
+    class TelemetryOptInDialog;
+    class TelemetryWindow;
+    class MultiFileSearchWidget;
 }
 
 namespace RawrXD {
@@ -93,12 +106,14 @@ private slots:
     
     // AI operations
     void startChat();
+        void showChatSessionBrowser();
     void analyzeCode();
     void generateCode();
     void refactorCode();
     void loadModel();
     void onModelSelected(const QString &ggufPath);
     void onChatMessageSent(const QString &message);
+    void onInlineEditRequested(const QString &prompt, const QString &selectedCode);
     void applyInferenceSettings();
     void showInferenceSettings();
     void showAbout();
@@ -145,6 +160,7 @@ private:
     void onModelLoadFinished(bool success, const std::string& errorMsg);
     void onModelLoadCanceled();
     void checkLoadProgress();
+    void applyChatModelSelection(const QString& modelLabel);
     
     // Initialization phases (deferred to event loop)
     void initialize();
@@ -161,6 +177,9 @@ private:
     void loadSettings();
     void saveSettings();
     
+    // Chat panel creation (extracted for reuse)
+    AIChatPanel* createNewChatPanel();
+    
     // Core components (created in phases)
     MultiTabEditor *m_multiTabEditor;
     // Replaced single ChatInterface with a tabbed container managed by AIChatPanelManager
@@ -171,10 +190,13 @@ private:
     FileBrowser *m_fileBrowser;
     AgenticEngine *m_agenticEngine;
     InferenceEngine *m_inferenceEngine;
+    ChatHistoryManager *m_historyManager;
     RawrXD::PlanOrchestrator *m_planOrchestrator;
     RawrXD::LSPClient *m_lspClient;
     TodoManager *m_todoManager;
     TodoDock *m_todoDock;
+    
+    qint64 m_currentSessionId = -1;
 
     RawrXD::TelemetryWindow *m_telemetryWindow{nullptr};
     QAction *m_telemetryAction{nullptr};
@@ -223,7 +245,5 @@ private:
     QProgressBar *m_splashProgress{nullptr};
 };
 
-    // Forward declarations for latency monitoring
-    class LatencyMonitor;
-    class LatencyStatusPanel;
-}
+} // namespace RawrXD
+

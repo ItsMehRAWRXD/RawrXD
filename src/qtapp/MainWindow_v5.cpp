@@ -15,6 +15,8 @@
 #include "lsp_client.h"
 #include "todo_dock.h"
 #include "todo_manager.h"
+#include "chat_history_manager.h"
+#include "database_manager.h"
 #include "agentic_text_edit.h"
 #include "../gui/ModelConversionDialog.h"
 #include "TelemetryWindow.h"
@@ -88,6 +90,7 @@ using RawrXD::MultiFileSearchWidget;
 #include <QFileDialog>
 #include <QSettings>
 #include <QDebug>
+#include <QStandardPaths>
 #include <QInputDialog>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -236,6 +239,26 @@ void MainWindow::initializePhase2()
         
         updateSplashProgress("✓ AI Engine initialized", 40);
         
+        // Initialize Chat History Manager with database backend
+        // Use QDir::appDataLocation() for persistent storage
+        QString historyDbPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+        QDir().mkpath(historyDbPath);  // Ensure directory exists
+        
+        auto dbManager = std::make_shared<DatabaseManager>(historyDbPath + "/chat_history.db");
+        if (!dbManager->initialize()) {
+            qWarning() << "[MainWindow] Chat history database initialization failed, continuing without history";
+        } else {
+            m_historyManager = new ChatHistoryManager(dbManager, this);
+            if (!m_historyManager->initialize()) {
+                qWarning() << "[MainWindow] ChatHistoryManager initialization failed";
+                delete m_historyManager;
+                m_historyManager = nullptr;
+            } else {
+                qInfo() << "[MainWindow] ChatHistoryManager initialized successfully";
+                updateSplashProgress("✓ Chat History initialized", 45);
+            }
+        }
+        
         // Initialize LSP client (deferred clangd startup)
         RawrXD::LSPServerConfig config;
         config.language = "cpp";
@@ -289,36 +312,19 @@ void MainWindow::initializePhase3()
             }
         });
 
-                AIChatPanel* panel = new AIChatPanel(this);
-                if (panel) {
-                    panel->initialize();  // Initialize UI immediately
-                    m_chatTabs->addTab(panel, "Chat 1");
-                    m_currentChatPanel = panel;  // Set as current active panel
-                }
-
         m_chatDock = new QDockWidget("AI Chat & Commands", this);
         m_chatDock->setWidget(m_chatTabs);
         addDockWidget(Qt::RightDockWidgetArea, m_chatDock);
+        
+        // ✨ NEW: Auto-create default chat panel on startup
+        // This ensures there's always an AI chat available without requiring user click
+        createNewChatPanel();
+        updateSplashProgress("✓ Default chat panel created", 62);
 
         // Add "New Chat" action to menu bar
         QAction* newChatAct = new QAction(tr("New Chat"), this);
         connect(newChatAct, &QAction::triggered, this, [this](){
-            AIChatPanel* panel = new AIChatPanel(this);
-            if (panel) {
-                panel->initialize();  // Ensure UI is created
-                int idx = m_chatTabs->addTab(panel, tr("Chat %1").arg(m_chatTabs->count()+1));
-                m_chatTabs->setCurrentIndex(idx);
-                m_currentChatPanel = panel;
-                // Rewire signals for new panel
-                connect(panel, &AIChatPanel::messageSubmitted,
-                    this, &MainWindow::onChatMessageSent);
-                if (m_agenticEngine) {
-                    connect(m_agenticEngine, QOverload<const QString&>::of(&AgenticEngine::responseReady),
-                        panel, [panel](const QString& response) {
-                            panel->addAssistantMessage(response, true);
-                        });
-                }
-            }
+            createNewChatPanel();
         });
         menuBar()->addAction(newChatAct);
         
@@ -328,10 +334,48 @@ void MainWindow::initializePhase3()
         if (m_currentChatPanel && m_agenticEngine) {
             connect(m_currentChatPanel, &AIChatPanel::messageSubmitted,
                 this, &MainWindow::onChatMessageSent);
+            
+            // Connect code insertion from chat to editor
+            connect(m_currentChatPanel, &AIChatPanel::codeInsertRequested,
+                this, [this](const QString& code) {
+                    if (m_multiTabEditor && m_multiTabEditor->getCurrentEditor()) {
+                        m_multiTabEditor->getCurrentEditor()->insertCode(code);
+                        statusBar()->showMessage("✓ Code inserted from AI", 3000);
+                    }
+                });
+            
+            // Legacy non-streaming response
             connect(m_agenticEngine, &AgenticEngine::responseReady,
                 this, [this](const QString& response) {
                     if (m_currentChatPanel) {
                         m_currentChatPanel->addAssistantMessage(response, false);
+                    }
+                    // TODO: Re-enable when ChatHistoryManager is fully integrated
+                    /*
+                    if (m_historyManager && m_currentSessionId != -1) {
+                        m_historyManager->addMessage(m_currentSessionId, "assistant", response);
+                    }
+                    */
+                });
+                
+            // NEW: Real-time streaming response
+            connect(m_agenticEngine, &AgenticEngine::streamToken,
+                this, [this](const QString& token) {
+                    if (m_currentChatPanel) {
+                        m_currentChatPanel->updateStreamingMessage(token);
+                    }
+                });
+                
+            connect(m_agenticEngine, &AgenticEngine::streamFinished,
+                this, [this]() {
+                    if (m_currentChatPanel) {
+                        QString fullResponse = m_currentChatPanel->finishStreaming();
+                        // TODO: Re-enable when ChatHistoryManager is fully integrated
+                        /*
+                        if (m_historyManager && m_currentSessionId != -1) {
+                            m_historyManager->addMessage(m_currentSessionId, "assistant", fullResponse);
+                        }
+                        */
                     }
                 });
         }
@@ -414,6 +458,10 @@ void MainWindow::initializePhase3()
         connect(m_fileBrowser, &FileBrowser::fileSelected,
                 m_multiTabEditor, &MultiTabEditor::openFile);
         
+        // TODO: Fix inline edit connection - MainWindow calls method directly now
+        // connect(m_multiTabEditor, &MultiTabEditor::inlineEditRequested,
+        //         this, &MainWindow::onInlineEditRequested);
+        
         updateSplashProgress("✓ File browser ready", 75);
         
         // Create terminal pool dock
@@ -453,6 +501,21 @@ void MainWindow::initializePhase3()
         m_modelTunerDock->setWidget(m_modelTuner);
         addDockWidget(Qt::RightDockWidgetArea, m_modelTunerDock);
         m_modelTunerDock->hide();  // Hidden by default
+        
+        // ✨ NEW: Wire GGUF model loader to chat panel model selection
+        // When a model is loaded via Model Tuner, update all chat panels to use it
+        if (m_modelTuner) {
+            connect(m_modelTuner, &ModelLoaderWidget::modelLoaded, this, [this](const QString& modelPath) {
+                qDebug() << "[MainWindow] Model loaded via tuner:" << modelPath;
+                applyChatModelSelection(modelPath);
+                statusBar()->showMessage("✓ Model " + QFileInfo(modelPath).fileName() + " loaded and applied to all chat panels", 3000);
+            });
+            
+            connect(m_modelTuner, &ModelLoaderWidget::errorOccurred, this, [this](const QString& error) {
+                qWarning() << "[MainWindow] Model loading error:" << error;
+                statusBar()->showMessage("⚠ Model loading failed: " + error, 5000);
+            });
+        }
         
         // Interpretability Panel (Model analysis and visualization)
         m_interpretabilityPanel = new InterpretabilityPanelEnhanced(this);
@@ -669,6 +732,38 @@ void MainWindow::setupMenuBar()
     aiMenu->addAction("&Analyze Code", this, &MainWindow::analyzeCode);
     aiMenu->addAction("&Generate Code", this, &MainWindow::generateCode);
     aiMenu->addAction("&Refactor (Multi-file)", this, &MainWindow::refactorCode);
+    
+        // Chat History submenu
+        QMenu *chatHistoryMenu = aiMenu->addMenu("Chat &History");
+        chatHistoryMenu->addAction("&Browse Sessions", this, &MainWindow::showChatSessionBrowser, QKeySequence("Ctrl+H"));
+        chatHistoryMenu->addAction("&New Chat Session", this, &MainWindow::startChat);
+        chatHistoryMenu->addSeparator();
+        chatHistoryMenu->addAction("&Clear All History", this, [this]() {
+            if (!m_historyManager) {
+                QMessageBox::information(this, "Chat History", "Chat history not initialized");
+                return;
+            }
+        
+            auto reply = QMessageBox::question(this, "Clear Chat History",
+                "Delete all chat sessions and messages?\\n\\nThis cannot be undone.",
+                QMessageBox::Yes | QMessageBox::No);
+        
+            if (reply == QMessageBox::Yes) {
+                auto sessions = m_historyManager->getSessions();
+                int deletedCount = 0;
+            
+                for (const auto& session : sessions) {
+                    if (m_historyManager->deleteSession(session["id"].toString())) {
+                        deletedCount++;
+                    }
+                }
+            
+                statusBar()->showMessage(QString("✓ Deleted %1 sessions").arg(deletedCount), 3000);
+                qInfo() << "[MainWindow] Chat history cleared:" << deletedCount << "sessions deleted";
+            }
+        });
+    
+        aiMenu->addSeparator();
     aiMenu->addSeparator();
     
     // LSP Server submenu
@@ -707,8 +802,8 @@ void MainWindow::setupStatusBar()
     statusBar()->showMessage("Initializing...");
     
     // Create latency monitor and status panel
-    m_latencyMonitor = new LatencyMonitor(this);
-    m_latencyPanel = new LatencyStatusPanel(m_latencyMonitor, this);
+    m_latencyMonitor = new RawrXD::LatencyMonitor(this);
+    m_latencyPanel = new RawrXD::LatencyStatusPanel(m_latencyMonitor, this);
     m_latencyDock = new QDockWidget("Latency & Statistics", this);
     m_latencyDock->setWidget(m_latencyPanel);
     m_latencyDock->setAllowedAreas(Qt::BottomDockWidgetArea | Qt::LeftDockWidgetArea);
@@ -981,6 +1076,49 @@ void MainWindow::startChat()
         m_chatDock->raise();
         if (m_currentChatPanel) {
             m_currentChatPanel->setFocus();
+
+        void MainWindow::showChatSessionBrowser()
+        {
+            if (!m_historyManager) {
+                QMessageBox::information(this, "Chat History", "Chat history not initialized");
+                return;
+            }
+    
+            // Get all sessions
+            auto sessions = m_historyManager->getSessions();
+    
+            if (sessions.isEmpty()) {
+                QMessageBox::information(this, "Chat History", "No previous chat sessions found.\n\nStart a new chat to create a session.");
+                return;
+            }
+    
+            // Create session selection dialog
+            QDialog* dialog = new QDialog(this);
+            dialog->setWindowTitle("Chat History - Select Session");
+            dialog->setModal(true);
+            dialog->resize(500, 400);
+    
+            QVBoxLayout* layout = new QVBoxLayout(dialog);
+    
+            // Add label
+            QLabel* label = new QLabel("Select a previous chat session to resume:");
+            layout->addWidget(label);
+    
+            // Create list widget for sessions
+            QListWidget* sessionList = new QListWidget();
+            sessionList->setSelectionMode(QAbstractItemView::SingleSelection);
+    
+            for (const auto& session : sessions) {
+                QString sessionId = session["id"].toString();
+                QString title = session["title"].toString();
+                qint64 timestamp = session["created_at"].toVariant().toLongLong();
+                int messageCount = session["message_count"].toInt();
+        
+                // Format date for display
+                QDateTime dt = QDateTime::fromMSecsSinceEpoch(timestamp);\n        QString dateStr = dt.toString("yyyy-MM-dd hh:mm");\n        \n        QString displayText = QString("%1  [%2] (%3 messages)")
+                    .arg(title)
+                    .arg(dateStr)
+                    .arg(messageCount);\n        \n        QListWidgetItem* item = new QListWidgetItem(displayText);\n        item->setData(Qt::UserRole, sessionId);\n        sessionList->addItem(item);\n    }\n    \n    layout->addWidget(sessionList);\n    \n    // Buttons\n    QHBoxLayout* buttonLayout = new QHBoxLayout();\n    \n    QPushButton* loadBtn = new QPushButton("Load Session");\n    QPushButton* deleteBtn = new QPushButton("Delete Session");\n    QPushButton* cancelBtn = new QPushButton("Cancel");\n    \n    buttonLayout->addWidget(loadBtn);\n    buttonLayout->addWidget(deleteBtn);\n    buttonLayout->addStretch();\n    buttonLayout->addWidget(cancelBtn);\n    layout->addLayout(buttonLayout);\n    \n    // Connect buttons\n    connect(loadBtn, &QPushButton::clicked, [this, dialog, sessionList]() {\n        if (sessionList->currentItem()) {\n            QString sessionId = sessionList->currentItem()->data(Qt::UserRole).toString();\n            \n            // Load session in current panel\n            if (m_currentChatPanel) {\n                emit m_currentChatPanel->sessionSelected(sessionId.toLongLong());\n                qInfo() << \"[MainWindow] Session loaded:\" << sessionId;\n            }\n            \n            dialog->accept();\n        }\n    });\n    \n    connect(deleteBtn, &QPushButton::clicked, [this, dialog, sessionList]() {\n        if (sessionList->currentItem()) {\n            QString sessionId = sessionList->currentItem()->data(Qt::UserRole).toString();\n            \n            auto reply = QMessageBox::question(dialog, "Delete Session",\n                QString("Delete session '%1'?\\n\\nThis cannot be undone.").arg(sessionList->currentItem()->text()),\n                QMessageBox::Yes | QMessageBox::No);\n            \n            if (reply == QMessageBox::Yes) {\n                if (m_historyManager->deleteSession(sessionId)) {\n                    qInfo() << \"[MainWindow] Session deleted:\" << sessionId;\n                    delete sessionList->takeItem(sessionList->row(sessionList->currentItem()));\n                    statusBar()->showMessage(\"✓ Session deleted\", 2000);\n                } else {\n                    QMessageBox::warning(dialog, "Delete Failed", \"Could not delete session\");\n                }\n            }\n        }\n    });\n    \n    connect(cancelBtn, &QPushButton::clicked, dialog, &QDialog::reject);\n    \n    dialog->exec();\n    dialog->deleteLater();\n}
         }
     }
 }
@@ -1185,6 +1323,34 @@ void MainWindow::checkLoadProgress()
     }
 }
 
+void MainWindow::applyChatModelSelection(const QString& modelIdentifier)
+{
+    const QString modelDisplay = QFileInfo(modelIdentifier).fileName().isEmpty()
+        ? modelIdentifier
+        : QFileInfo(modelIdentifier).fileName();
+
+    // Keep agentic engine in sync so downstream processing is enabled
+    if (m_agenticEngine) {
+        m_agenticEngine->setModel(modelDisplay);
+        m_agenticEngine->markModelAsLoaded(modelIdentifier);
+        qDebug() << "[MainWindow] Agentic engine model set to" << modelDisplay;
+    }
+
+    if (m_chatTabs) {
+        for (int i = 0; i < m_chatTabs->count(); ++i) {
+            if (auto* panel = qobject_cast<AIChatPanel*>(m_chatTabs->widget(i))) {
+                panel->setLocalModel(modelDisplay);
+                panel->setSelectedModel(modelDisplay);
+                panel->setInputEnabled(true);
+            }
+        }
+    }
+
+    if (m_currentChatPanel) {
+        m_currentChatPanel->setFocus();
+    }
+}
+
 void MainWindow::onModelLoadFinished(bool loadSuccess, const std::string& errorMsg)
 {
     QString ggufPath = m_pendingModelPath;
@@ -1202,13 +1368,11 @@ void MainWindow::onModelLoadFinished(bool loadSuccess, const std::string& errorM
     qInfo() << "[MainWindow::onModelLoadFinished] Result:" << (loadSuccess ? "SUCCESS" : "FAILED");
     
     if (loadSuccess) {
-            // Link to agentic engine AND sync the modelLoaded flag
             if (m_agenticEngine) {
                 m_agenticEngine->setInferenceEngine(m_inferenceEngine);
-                // CRITICAL: Sync AgenticEngine's m_modelLoaded flag so processMessage() uses real inference
-                m_agenticEngine->markModelAsLoaded(ggufPath);
-                qDebug() << "[MainWindow::onModelSelected] ✅ AgenticEngine flagged as model-loaded";
             }
+
+            applyChatModelSelection(ggufPath);
             
             // Update status bar with comprehensive info
             QString modelName = QFileInfo(ggufPath).baseName();
@@ -1224,15 +1388,10 @@ void MainWindow::onModelLoadFinished(bool loadSuccess, const std::string& errorM
                 QString("Model: %1 | GPU: %2 | LSP: %3")
                 .arg(modelName).arg(backend).arg(lspStatus));
             
-            // Enable chat after model loads
-            if (m_currentChatPanel) {
-                qDebug() << "[MainWindow] Chat panels ready";
-            }
-            
-                qInfo() << "[MainWindow] ✅ Model loaded successfully:" << modelName;
-                // Telemetry: model load succeeded
-                QJsonObject meta; meta["path"] = ggufPath; meta["status"] = QString("success");
-                GetTelemetry().recordEvent("model_load", meta);
+            qInfo() << "[MainWindow] ✅ Model loaded successfully:" << modelName;
+            // Telemetry: model load succeeded
+            QJsonObject meta; meta["path"] = ggufPath; meta["status"] = QString("success");
+            GetTelemetry().recordEvent("model_load", meta);
     } else {
         QMessageBox::critical(this, "Load Failed", 
             QString("Failed to load GGUF model: %1\n\nCheck the console for detailed error messages.").arg(ggufPath));
@@ -1264,15 +1423,20 @@ void MainWindow::onModelLoadCanceled()
 
 void MainWindow::applyInferenceSettings()
 {
-    QSettings settings("RawrXD", "AgenticIDE");
+    QSettings settings;
     
     // Read settings or use defaults
     float temperature = settings.value("AI/temperature", 0.8f).toFloat();
     float topP = settings.value("AI/topP", 0.9f).toFloat();
     int maxTokens = settings.value("AI/maxTokens", 512).toInt();
     
+    QString provider = settings.value("ai/provider", "Local (GGUF)").toString();
+    QString apiKey = settings.value("ai/apiKey", "").toString();
+    QString model = settings.value("ai/model", "").toString();
+    
     qDebug() << "[MainWindow::applyInferenceSettings] Applying:"
-             << "temp=" << temperature << "topP=" << topP << "maxTokens=" << maxTokens;
+             << "temp=" << temperature << "topP=" << topP << "maxTokens=" << maxTokens
+             << "provider=" << provider;
     
     // Forward to AgenticEngine
     if (m_agenticEngine) {
@@ -1283,9 +1447,26 @@ void MainWindow::applyInferenceSettings()
         
         m_agenticEngine->setGenerationConfig(cfg);
         
+        if (provider == "Local (GGUF)") {
+            m_agenticEngine->setModelSource(AgenticEngine::Local);
+        } else {
+            m_agenticEngine->setModelSource(AgenticEngine::External);
+            
+            // Convert provider string to enum
+            AgenticEngine::Provider providerEnum = AgenticEngine::Provider::OpenAI;
+            if (provider.contains("Anthropic", Qt::CaseInsensitive)) {
+                providerEnum = AgenticEngine::Provider::Anthropic;
+            } else if (provider.contains("Groq", Qt::CaseInsensitive)) {
+                providerEnum = AgenticEngine::Provider::Groq;
+            } else if (provider.contains("Ollama", Qt::CaseInsensitive)) {
+                providerEnum = AgenticEngine::Provider::Ollama;
+            }
+            
+            m_agenticEngine->configureExternalModel(providerEnum, apiKey, model, "");
+        }
+        
         statusBar()->showMessage(
-            QString("⚙️ Inference settings updated: Temp=%.1f, TopP=%.2f, Tokens=%1")
-            .arg(temperature).arg(topP).arg(maxTokens), 3000);
+            QString("⚙️ Inference settings updated: %1").arg(provider), 3000);
     }
 }
 
@@ -1297,16 +1478,54 @@ void MainWindow::onChatMessageSent(const QString& message)
     QString editorContext;
     if (m_multiTabEditor) {
         editorContext = m_multiTabEditor->getSelectedText();
+        if (editorContext.isEmpty() && m_multiTabEditor->getCurrentEditor()) {
+            // If no selection, use the whole file as context
+            editorContext = m_multiTabEditor->getCurrentEditor()->toPlainText();
+        }
+    }
+    
+    // FULLY RE-ENABLED: Chat history persistence
+    // Note: User message is already saved in createNewChatPanel's messageSubmitted lambda
+    // This ensures all messages persist even if sent through different paths
+    if (m_historyManager && m_currentSessionId != -1) {
+        qDebug() << "[MainWindow::onChatMessageSent] Message session tracking:" << m_currentSessionId;
     }
     
     // Forward to AgenticEngine with context
     if (m_agenticEngine) {
-        m_agenticEngine->processMessage(message, editorContext);
+        // Prepare UI for streaming response
+        if (m_currentChatPanel) {
+            m_currentChatPanel->addAssistantMessage("", true);
+        }
+        
+        m_agenticEngine->processMessage(message, editorContext, true);
         qDebug() << "[MainWindow::onChatMessageSent] Sent message with"
-                 << editorContext.length() << "chars of editor context";
+                 << editorContext.length() << "chars of editor context (streaming=true)";
     } else {
         qWarning() << "[MainWindow::onChatMessageSent] AgenticEngine not initialized";
     }
+}
+
+void MainWindow::onInlineEditRequested(const QString& prompt, const QString& selectedCode)
+{
+    if (!m_agenticEngine) return;
+    
+    // Show chat dock if hidden
+    if (m_chatDock) {
+        m_chatDock->show();
+        m_chatDock->raise();
+    }
+    
+    // Add message to chat panel to show progress
+    if (m_currentChatPanel) {
+        m_currentChatPanel->addUserMessage("@inline " + prompt);
+        m_currentChatPanel->addAssistantMessage("Processing inline edit...", true);
+    }
+    
+    // Send to engine with @inline prefix
+    m_agenticEngine->processMessage("@inline " + prompt, selectedCode, true);
+    
+    statusBar()->showMessage("Processing inline edit...", 3000);
 }
 
 void MainWindow::showInferenceSettings()
@@ -1426,108 +1645,10 @@ void MainWindow::showLSPStatus()
 
 void MainWindow::showPreferences()
 {
-    QDialog *dialog = new QDialog(this);
-    dialog->setWindowTitle("Preferences");
-    dialog->setModal(true);
-    dialog->resize(600, 400);
-    
-    QVBoxLayout *mainLayout = new QVBoxLayout(dialog);
-    QTabWidget *tabs = new QTabWidget();
-    
-    // LSP Settings Tab
-    QWidget *lspTab = new QWidget();
-    QVBoxLayout *lspLayout = new QVBoxLayout(lspTab);
-    
-    QHBoxLayout *lspCmdLayout = new QHBoxLayout();
-    lspCmdLayout->addWidget(new QLabel("LSP Command:"));
-    QLineEdit *lspCmdEdit = new QLineEdit("clangd");
-    lspCmdLayout->addWidget(lspCmdEdit);
-    lspLayout->addLayout(lspCmdLayout);
-    
-    QCheckBox *lspAutoStart = new QCheckBox("Auto-start LSP server");
-    lspAutoStart->setChecked(true);
-    lspLayout->addWidget(lspAutoStart);
-    
-    lspLayout->addStretch();
-    tabs->addTab(lspTab, "LSP");
-    
-    // AI Settings Tab
-    QWidget *aiTab = new QWidget();
-    QVBoxLayout *aiLayout = new QVBoxLayout(aiTab);
-    
-    QHBoxLayout *modelLayout = new QHBoxLayout();
-    modelLayout->addWidget(new QLabel("Default Model:"));
-    QLineEdit *modelEdit = new QLineEdit();
-    modelLayout->addWidget(modelEdit);
-    QPushButton *browseBtn = new QPushButton("Browse...");
-    connect(browseBtn, &QPushButton::clicked, [modelEdit, this]() {
-        QString path = QFileDialog::getOpenFileName(this, "Select Model", QDir::homePath(), "GGUF Models (*.gguf)");
-        if (!path.isEmpty()) modelEdit->setText(path);
-    });
-    modelLayout->addWidget(browseBtn);
-    aiLayout->addLayout(modelLayout);
-    
-    aiLayout->addStretch();
-    tabs->addTab(aiTab, "AI Model");
-    
-    // Terminal Settings Tab
-    QWidget *termTab = new QWidget();
-    QVBoxLayout *termLayout = new QVBoxLayout(termTab);
-    
-    QHBoxLayout *shellLayout = new QHBoxLayout();
-    shellLayout->addWidget(new QLabel("Shell:"));
-    QComboBox *shellCombo = new QComboBox();
-    shellCombo->addItems({"PowerShell", "Cmd", "Bash", "Custom"});
-    shellLayout->addWidget(shellCombo);
-    termLayout->addLayout(shellLayout);
-    
-    termLayout->addStretch();
-    tabs->addTab(termTab, "Terminal");
-    
-    // Editor Settings Tab
-    QWidget *editorTab = new QWidget();
-    QVBoxLayout *editorLayout = new QVBoxLayout(editorTab);
-    
-    QHBoxLayout *fontLayout = new QHBoxLayout();
-    fontLayout->addWidget(new QLabel("Font Size:"));
-    QSpinBox *fontSpin = new QSpinBox();
-    fontSpin->setRange(8, 24);
-    fontSpin->setValue(12);
-    fontLayout->addWidget(fontSpin);
-    editorLayout->addLayout(fontLayout);
-    
-    QCheckBox *lineNumbers = new QCheckBox("Show line numbers");
-    lineNumbers->setChecked(true);
-    editorLayout->addWidget(lineNumbers);
-    
-    QCheckBox *wordWrap = new QCheckBox("Word wrap");
-    editorLayout->addWidget(wordWrap);
-    
-    editorLayout->addStretch();
-    tabs->addTab(editorTab, "Editor");
-    
-    mainLayout->addWidget(tabs);
-    
-    // Buttons
-    QDialogButtonBox *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
-    connect(buttons, &QDialogButtonBox::accepted, dialog, &QDialog::accept);
-    connect(buttons, &QDialogButtonBox::rejected, dialog, &QDialog::reject);
-    mainLayout->addWidget(buttons);
-    
-    if (dialog->exec() == QDialog::Accepted) {
-        // Save preferences to QSettings
-        QSettings settings("RawrXD", "AgenticIDE");
-        settings.setValue("lsp/command", lspCmdEdit->text());
-        settings.setValue("lsp/autoStart", lspAutoStart->isChecked());
-        settings.setValue("editor/fontSize", fontSpin->value());
-        settings.setValue("editor/lineNumbers", lineNumbers->isChecked());
-        settings.setValue("editor/wordWrap", wordWrap->isChecked());
-        settings.setValue("terminal/shell", shellCombo->currentText());
-        settings.sync();
-        statusBar()->showMessage("✓ Preferences saved", 3000);
-    }
-    
-    delete dialog;
+    SettingsDialog dialog(this);
+    connect(&dialog, &SettingsDialog::settingsApplied, this, &MainWindow::settingsApplied, Qt::UniqueConnection);
+    dialog.initialize();
+    dialog.exec();
 }
 
 void MainWindow::addTodo()
@@ -1863,6 +1984,113 @@ void MainWindow::onThemeChanged() {
     }
     
     statusBar()->showMessage("🎨 Theme applied successfully", 2000);
+}
+
+AIChatPanel* MainWindow::createNewChatPanel()
+{
+    AIChatPanel* panel = new AIChatPanel(this);
+    if (!panel) {
+        qWarning() << "[MainWindow] Failed to create new AIChatPanel";
+        return nullptr;
+    }
+    
+    panel->initialize();  // Ensure UI is created
+    
+    int idx = m_chatTabs->addTab(panel, tr("Chat %1").arg(m_chatTabs->count() + 1));
+    m_chatTabs->setCurrentIndex(idx);
+    m_currentChatPanel = panel;
+    
+    // ===== FULLY RE-ENABLED: ChatHistoryManager integration =====
+    if (m_historyManager) {
+        // Set history manager on the panel
+        panel->setHistoryManager(m_historyManager);
+        qDebug() << "[MainWindow] ChatHistoryManager attached to panel";
+        
+        // Create new session for this chat panel
+        QString sessionTitle = tr("Chat %1").arg(m_chatTabs->count());
+        m_currentSessionId = m_historyManager->createSession(sessionTitle);
+        qInfo() << "[MainWindow] Created new chat session:" << m_currentSessionId;
+        
+        // Associate session with panel for history loading
+        panel->setSessionId(m_currentSessionId);
+        // Note: Session ID is tracked in MainWindow, not in the panel
+    }
+    
+    qDebug() << "[MainWindow] Created new chat panel at index" << idx << "with session" << m_currentSessionId;
+    
+    // Wire sessionSelected signal (for history loading when available)
+    connect(panel, &AIChatPanel::sessionSelected, this, [this, panel](qint64 sessionId) {
+        if (m_historyManager) {
+            // Load messages from history
+            auto messages = m_historyManager->getMessages(sessionId);
+            qDebug() << "[MainWindow] Loading" << messages.size() << "messages from history";
+            
+            // Clear current panel and restore history
+            panel->clearMessages();
+            for (const auto& msgObj : messages) {
+                QString role = msgObj["role"].toString();
+                QString content = msgObj["content"].toString();
+                
+                if (role == "user") {
+                    panel->addUserMessage(content);
+                } else if (role == "assistant") {
+                    panel->addAssistantMessage(content, false);
+                }
+            }
+            
+            m_currentSessionId = sessionId;
+            qInfo() << "[MainWindow] Session restored with" << messages.size() << "messages";
+        }
+    });
+    
+    // Wire messageSubmitted signal to route through MainWindow for persistence
+    connect(panel, &AIChatPanel::messageSubmitted,
+        this, [this, panel](const QString& message) {
+            // Save user message to history immediately
+            if (m_historyManager && m_currentSessionId != -1) {
+                if (!m_historyManager->addMessage(m_currentSessionId, "user", message)) {
+                    qWarning() << "[MainWindow] Failed to save user message to history";
+                }
+            }
+            // Forward to main message handler
+            onChatMessageSent(message);
+        });
+    
+    // Wire code insertion signal
+    connect(panel, &AIChatPanel::codeInsertRequested,
+        this, [this](const QString& code) {
+            if (m_multiTabEditor && m_multiTabEditor->getCurrentEditor()) {
+                m_multiTabEditor->getCurrentEditor()->insertCode(code);
+                statusBar()->showMessage("✓ Code inserted from AI", 3000);
+            }
+        });
+
+    // Wire agentic engine signals for responses with history persistence
+    if (m_agenticEngine) {
+        connect(m_agenticEngine, &AgenticEngine::responseReady,
+            panel, [this, panel](const QString& response) {
+                // Save assistant response to history
+                if (m_historyManager && m_currentSessionId != -1) {
+                    if (!m_historyManager->addMessage(m_currentSessionId, "assistant", response)) {
+                        qWarning() << "[MainWindow] Failed to save assistant message to history";
+                    }
+                }
+                // Display response
+                panel->addAssistantMessage(response, false);
+            });
+        
+        connect(m_agenticEngine, &AgenticEngine::streamToken,
+            panel, [panel](const QString& token) {
+                panel->updateStreamingMessage(token);
+            });
+            
+        connect(m_agenticEngine, &AgenticEngine::streamFinished,
+            panel, [this, panel]() {
+                panel->finishStreaming();
+            });
+    }
+    
+    return panel;
 }
 
 } // namespace RawrXD

@@ -24,6 +24,7 @@
 #include <QListWidget>
 #include <QListWidgetItem>
 #include <QAbstractItemView>
+#include <QSignalBlocker>
 #include <algorithm>
 
 AIChatPanel::AIChatPanel(QWidget* parent)
@@ -74,6 +75,8 @@ void AIChatPanel::setupUI()
     // Agent chat breadcrumb with mode and model selector
     m_breadcrumb = new AgentChatBreadcrumb(this);
     m_breadcrumb->initialize();
+    m_breadcrumb->setMaximumHeight(40);
+    m_breadcrumb->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     mainLayout->addWidget(m_breadcrumb);
     
     // Connect breadcrumb signals to this panel
@@ -90,22 +93,20 @@ void AIChatPanel::setupUI()
                 qDebug() << "[AIChatPanel] Model selected:" << modelName;
             });
     
-    // Header
-    QLabel* header = new QLabel("  AI Assistant", this);
-    QFont headerFont = header->font();
-    headerFont.setPointSize(11);
-    headerFont.setBold(true);
-    header->setFont(headerFont);
-    header->setMinimumHeight(35);
-    
     // Quick actions
     m_quickActionsWidget = createQuickActions();
+    m_quickActionsWidget->setMaximumHeight(35);
+    m_quickActionsWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    mainLayout->addWidget(m_quickActionsWidget);
+    
+    qDebug() << "[AIChatPanel] Quick actions widget created and added";
     
     // Messages scroll area
     m_scrollArea = new QScrollArea(this);
     m_scrollArea->setWidgetResizable(true);
     m_scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_scrollArea->setFrameStyle(QFrame::NoFrame);
+    m_scrollArea->setMinimumHeight(200); // Ensure scroll area has minimum size
     
     m_messagesContainer = new QWidget();
     m_messagesLayout = new QVBoxLayout(m_messagesContainer);
@@ -115,8 +116,12 @@ void AIChatPanel::setupUI()
     
     m_scrollArea->setWidget(m_messagesContainer);
     
+    qDebug() << "[AIChatPanel] Scroll area created with message container";
+    
     // Input area
     QWidget* inputContainer = new QWidget(this);
+    inputContainer->setMaximumHeight(50);
+    inputContainer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     QHBoxLayout* inputLayout = new QHBoxLayout(inputContainer);
     inputLayout->setContentsMargins(10, 8, 10, 8);
     inputLayout->setSpacing(8);
@@ -140,6 +145,8 @@ void AIChatPanel::setupUI()
     
     // Model selector  
     QWidget* modelContainer = new QWidget(this);
+    modelContainer->setMaximumHeight(45);
+    modelContainer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     QHBoxLayout* modelLayout = new QHBoxLayout(modelContainer);
     modelLayout->setContentsMargins(10, 5, 10, 5);
     modelLayout->setSpacing(8);
@@ -192,14 +199,20 @@ void AIChatPanel::setupUI()
     connect(m_multiModelButton, &QPushButton::clicked, this, &AIChatPanel::openModelsDialog);
     modelLayout->addWidget(m_multiModelButton);
     
-    // Assembly
-    mainLayout->addWidget(header);
+    // Assembly - add widgets to main layout in correct order
+    qDebug() << "[AIChatPanel] Adding widgets to main layout...";
     mainLayout->addWidget(m_quickActionsWidget);
-    mainLayout->addWidget(m_scrollArea, 1);
+    mainLayout->addWidget(m_scrollArea, 1);  // Stretch factor 1 = takes remaining space
     mainLayout->addWidget(modelContainer);
     mainLayout->addWidget(inputContainer);
     
+    qDebug() << "[AIChatPanel] All widgets added to main layout";
+    qDebug() << "[AIChatPanel] Main layout widget count:" << mainLayout->count();
+    
     setLayout(mainLayout);
+    
+    qDebug() << "[AIChatPanel] Layout set complete, m_widgetsCreated = true";
+    m_widgetsCreated = true;
 
     // Networking setup
     if (!m_network) {
@@ -321,11 +334,26 @@ void AIChatPanel::addAssistantMessage(const QString& message, bool streaming)
         return;
     }
     
+    // If we're already streaming, don't add a new message, just update the existing one
+    if (streaming && m_streamingBubble) {
+        updateStreamingMessage(message);
+        return;
+    }
+    
     Message msg;
     msg.role = Message::Assistant;
     msg.content = message;
     msg.timestamp = QDateTime::currentDateTime().toString("hh:mm:ss");
     msg.isStreaming = streaming;
+    
+    // Detect if this is an inline edit response by checking the previous user message
+    if (!m_messages.isEmpty()) {
+        const Message& lastMsg = m_messages.last();
+        if (lastMsg.role == Message::User && lastMsg.content.startsWith("@inline")) {
+            msg.isInline = true;
+            qDebug() << "[AIChatPanel] Detected inline edit response";
+        }
+    }
     
     m_messages.append(msg);
     
@@ -343,15 +371,33 @@ void AIChatPanel::addAssistantMessage(const QString& message, bool streaming)
 void AIChatPanel::updateStreamingMessage(const QString& content)
 {
     if (m_streamingText) {
-        m_streamingText->setPlainText(content);
+        QString current = m_streamingText->toPlainText();
+        m_streamingText->setPlainText(current + content);
+        
+        // Update message object in list
+        if (!m_messages.isEmpty() && m_messages.last().isStreaming) {
+            m_messages.last().content = current + content;
+        }
+        
         scrollToBottom();
     }
 }
 
-void AIChatPanel::finishStreaming()
+QString AIChatPanel::finishStreaming()
 {
+    QString fullContent;
+    if (m_streamingText) {
+        fullContent = m_streamingText->toPlainText();
+    }
+    
     m_streamingBubble = nullptr;
     m_streamingText = nullptr;
+    
+    if (!m_messages.isEmpty() && m_messages.last().isStreaming) {
+        m_messages.last().isStreaming = false;
+    }
+    
+    return fullContent;
 }
 
 QWidget* AIChatPanel::createMessageBubble(const Message& msg)
@@ -403,7 +449,7 @@ QWidget* AIChatPanel::createMessageBubble(const Message& msg)
     timeLabel->setStyleSheet("QLabel { background-color: transparent; color: #858585; border: none; }");
     
     // Approve/Reject code blocks (Cursor-like)
-    if (msg.role == Message::Assistant && msg.content.contains("```")) {
+    if (msg.role == Message::Assistant && (msg.content.contains("```") || msg.isInline)) {
         QWidget* approveRow = new QWidget(container);
         QHBoxLayout* approveLayout = new QHBoxLayout(approveRow);
         approveLayout->setContentsMargins(0, 0, 0, 0);
@@ -419,6 +465,10 @@ QWidget* AIChatPanel::createMessageBubble(const Message& msg)
 
         connect(approveBtn, &QPushButton::clicked, this, [this, msg]() {
             QString code = extractCodeFromMessage(msg.content);
+            if (code.isEmpty() && msg.isInline) {
+                // If it's an inline edit response without markdown, use the whole content
+                code = msg.content;
+            }
             if (!code.isEmpty()) {
                 emit codeApproved(code);
                 emit codeInsertRequested(code);
@@ -465,9 +515,8 @@ QString AIChatPanel::extractCodeFromMessage(const QString& message) {
         return match.captured(1).trimmed();
     }
     
-    // If no code blocks found, check for inline code or return the whole message
+    // If no code blocks found, check for inline code
     if (message.contains("`")) {
-        // Extract inline code
         QRegularExpression inlineCodeRegex("`([^`]+)`");
         QRegularExpressionMatchIterator it = inlineCodeRegex.globalMatch(message);
         QStringList codeParts;
@@ -479,7 +528,9 @@ QString AIChatPanel::extractCodeFromMessage(const QString& message) {
         }
     }
     
-    // Return empty if no code detected
+    // For @inline responses, if no markdown is found, the whole message might be code
+    // This is handled in the caller (createMessageBubble) by checking msg.isInline
+    
     return QString();
 }
 
@@ -500,8 +551,10 @@ void AIChatPanel::onSendClicked()
     
     emit messageSubmitted(message);
     
-    // Cursor-like behavior with multi-model aggregation
-    sendMessageTripleMultiModel(message);
+    // If we have an agentic executor or MainWindow is handling it, 
+    // we don't want to trigger the triple-model aggregation here
+    // as it would cause duplicate responses.
+    // sendMessageTripleMultiModel(message);
 }
 
 void AIChatPanel::onQuickActionClicked(const QString& action)
@@ -538,6 +591,30 @@ void AIChatPanel::setLocalConfiguration(bool enabled, const QString& endpoint) {
 
 void AIChatPanel::setLocalModel(const QString& modelName) {
     m_localModel = modelName;
+
+    if (m_modelSelector) {
+        bool found = false;
+        for (int i = 0; i < m_modelSelector->count(); ++i) {
+            const QString existing = m_modelSelector->itemData(i).toString();
+            if (existing == modelName) {
+                found = true;
+                const QSignalBlocker blocker(m_modelSelector);
+                m_modelSelector->setCurrentIndex(i);
+                break;
+            }
+        }
+
+        if (!found && !modelName.isEmpty()) {
+            // Preserve label clarity so loaded-from-disk models are obvious in the dropdown
+            const QString display = QString("%1 [loaded]").arg(modelName);
+            m_modelSelector->addItem(display, modelName);
+            const QSignalBlocker blocker(m_modelSelector);
+            m_modelSelector->setCurrentIndex(m_modelSelector->count() - 1);
+        }
+    }
+
+    // Enable chat input whenever we have a concrete model name (covers custom loads as well)
+    setInputEnabled(!modelName.isEmpty());
     qDebug() << "Local model set to:" << modelName;
 }
 
@@ -609,7 +686,9 @@ void AIChatPanel::sendMessageToBackend(const QString& message)
         
         // Simulate async processing with a small delay
         QTimer::singleShot(500, this, [this, response]() {
-            addAssistantMessage(response, false);
+            if (!m_aggregateSessionActive) {
+                addAssistantMessage(response, false);
+            }
         });
         return;
     }
@@ -1007,7 +1086,9 @@ void AIChatPanel::onNetworkFinished(QNetworkReply* reply)
     
     // Clean up tokenization artifacts and show response
     if (!responseText.isEmpty()) {
-        addAssistantMessage(responseText, false);
+        if (!m_aggregateSessionActive) {
+            addAssistantMessage(responseText, false);
+        }
         qDebug() << "Response added to chat (length:" << responseText.length() << "chars)";
     } else {
         qWarning() << "Empty response after processing";
@@ -1065,13 +1146,15 @@ void AIChatPanel::onAggregateFinished(QNetworkReply* reply)
     }
     if (combined.isEmpty()) combined = "No responses returned.";
 
-    addAssistantMessage(combined, false);
-    emit aggregatedResponseReady(combined);
+    if (m_aggregateSessionActive) {
+        addAssistantMessage(combined, false);
+        emit aggregatedResponseReady(combined);
 
-    // Compute changed files and create checkpoint
-    int changed = computeChangedFilesSinceSnapshot();
-    createCheckpoint("chat-session", combined, changed);
-    addAssistantMessage(QString("Files changed since last snapshot: %1").arg(changed), false);
+        // Compute changed files and create checkpoint
+        int changed = computeChangedFilesSinceSnapshot();
+        createCheckpoint("chat-session", combined, changed);
+        addAssistantMessage(QString("Files changed since last snapshot: %1").arg(changed), false);
+    }
 
     // Reset aggregation session
     m_aggregateSessionActive = false;
@@ -1117,14 +1200,40 @@ void AIChatPanel::fetchAvailableModels()
     m_modelSelector->blockSignals(true);
     m_modelSelector->clear();
     
-    // Built-in model list - available without any external dependencies
+    // Built-in model list - comprehensive set of models organized by capability
+    // Large models (70B+): Advanced reasoning, complex tasks, instruction following
+    // Medium models (7B-13B): Balanced performance and quality, good for most tasks
+    // Small models (3B-7B): Fast inference, resource-efficient, edge deployment
+    // Specialized models: Domain-specific optimizations (code, SQL, reasoning)
+    
     QStringList builtInModels = {
+        // Large Models (70B+) - Premium reasoning and instruction-following capability
+        "llama3.1:70b",
+        "mixtral-8x7b",
+        "neural-chat-7b-v3",
+        "gpt4all-falcon-40b",
+        
+        // Medium Models (7B-13B) - Balanced performance for most use cases
         "llama3.1",
-        "mistral",
+        "mistral-7b",
+        "dolphin-mixtral-8x7b",
         "neural-chat",
-        "dolphin-mixtral",
+        "starling-lm-7b",
+        
+        // Small Models (3B-7B) - Fast inference, lightweight deployment
+        "tinyllama",
+        "phi-2",
         "gpt4all",
-        "tinyllama"
+        "orca-mini-13b",
+        "vicuna-7b",
+        "custom-local-model",
+        
+        // Specialized Models - Domain-specific optimizations
+        "codellama-13b",        // Code generation and understanding
+        "sqlcoder-7b",          // SQL query generation
+        "zephyr-7b",            // Instruction-optimized variant
+        "openhermes-2.5",       // Reasoning-focused model
+        "deepseek-coder-6.7b"   // Programming assistant
     };
     
     // Add models with metadata format
@@ -1420,6 +1529,96 @@ int AIChatPanel::computeChangedFilesSinceSnapshot()
     return changed;
 }
 
+void AIChatPanel::showHistory()
+{
+    // TODO: Re-enable when ChatHistoryManager namespace issues resolved
+    /*
+    if (!m_historyManager) return;
+    
+    QDialog dialog(this);
+    dialog.setWindowTitle("Chat History");
+    dialog.setMinimumSize(400, 500);
+    
+    QVBoxLayout* layout = new QVBoxLayout(&dialog);
+    
+    QListWidget* list = new QListWidget(&dialog);
+    auto sessions = m_historyManager->getSessions();
+    
+    for (int i = 0; i < sessions.count(); ++i) {
+        QJsonObject session = sessions[i].toObject();
+        QListWidgetItem* item = new QListWidgetItem(
+            session.value("title").toString(),
+            list
+        );
+        item->setData(Qt::UserRole, session.value("id").toString());
+    }
+        layout->addWidget(new QLabel("Select a session to load:"));
+    layout->addWidget(list);
+    
+    QPushButton* loadBtn = new QPushButton("Load Session");
+    layout->addWidget(loadBtn);
+    
+    connect(loadBtn, &QPushButton::clicked, [&]() {
+        if (list->currentItem()) {
+            qint64 sessionId = list->currentItem()->data(Qt::UserRole).toLongLong();
+            emit sessionSelected(sessionId);
+            dialog.accept();
+        }
+    });
+    
+    dialog.exec();
+}
+    */
+}
+
+/*
+void AIChatPanel::showSettings()
+{
+    QDialog dialog(this);
+    dialog.setWindowTitle("AI Settings");
+    dialog.setMinimumSize(400, 300);
+    
+    QVBoxLayout* layout = new QVBoxLayout(&dialog);
+    
+    QComboBox* providerCombo = new QComboBox(&dialog);
+    providerCombo->addItems({"Local (GGUF)", "OpenAI", "Anthropic", "Groq", "Ollama"});
+    
+    QLineEdit* apiKeyEdit = new QLineEdit(&dialog);
+    apiKeyEdit->setPlaceholderText("API Key");
+    apiKeyEdit->setEchoMode(QLineEdit::Password);
+    
+    QLineEdit* modelEdit = new QLineEdit(&dialog);
+    modelEdit->setPlaceholderText("Model Name (e.g. gpt-4o, claude-3-5-sonnet)");
+    
+    layout->addWidget(new QLabel("Model Provider:"));
+    layout->addWidget(providerCombo);
+    layout->addWidget(new QLabel("API Key:"));
+    layout->addWidget(apiKeyEdit);
+    layout->addWidget(new QLabel("Model Name:"));
+    layout->addWidget(modelEdit);
+    
+    QPushButton* saveBtn = new QPushButton("Save Settings");
+    layout->addWidget(saveBtn);
+    
+    // Connect save button - use local copy of dialog address
+    QDialog* pDialog = &dialog;
+    QObject::connect(saveBtn, &QPushButton::clicked, [this, providerCombo, apiKeyEdit, modelEdit, pDialog]() {
+        QSettings settings;
+        settings.setValue("ai/provider", providerCombo->currentText());
+        settings.setValue("ai/apiKey", apiKeyEdit->text());
+        settings.setValue("ai/model", modelEdit->text());
+        if (pDialog) pDialog->accept();
+    });
+    
+    dialog.exec();
+}
+*/
+
+void AIChatPanel::setHistoryManager(ChatHistoryManager* manager)
+{
+    m_historyManager = manager;
+}
+
 void AIChatPanel::createCheckpoint(const QString& name, const QString& combinedText, int changedFiles)
 {
     QDir out(QDir::currentPath() + "/checkpoints");
@@ -1438,5 +1637,12 @@ void AIChatPanel::createCheckpoint(const QString& name, const QString& combinedT
     } else {
         qWarning() << "Failed to write checkpoint:" << file;
     }
+}
+
+void AIChatPanel::showSettings()
+{
+    qDebug() << "[AIChatPanel] showSettings stub - settings dialog not implemented";
+    // TODO: Implement settings dialog
+    // QMessageBox::information(this, "Settings", "Settings dialog not yet implemented");
 }
 

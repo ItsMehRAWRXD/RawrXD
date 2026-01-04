@@ -17,6 +17,7 @@
 #include "../agentic_executor.h"  // Use the one from src/
 
 class AgentChatBreadcrumb;
+class ChatHistoryManager;
 
 /**
  * @brief GitHub Copilot-style AI chat panel
@@ -38,6 +39,7 @@ public:
         QString content;
         QString timestamp;
         bool isStreaming = false;
+        bool isInline = false; // NEW: Flag for inline edit responses
     };
 
     explicit AIChatPanel(QWidget* parent = nullptr);
@@ -51,7 +53,7 @@ public:
     void addUserMessage(const QString& message);
     void addAssistantMessage(const QString& message, bool streaming = false);
     void updateStreamingMessage(const QString& content);
-    void finishStreaming();
+    QString finishStreaming();
     void clear();
     
     void setContext(const QString& code, const QString& filePath);
@@ -62,6 +64,7 @@ public:
     void setSelectedModel(const QString& modelName);
     void setRequestTimeout(int timeoutMs);
     void setAgenticExecutor(AgenticExecutor* executor);  // Connect agentic execution
+    void setHistoryManager(ChatHistoryManager* manager);
     AgentChatBreadcrumb* getBreadcrumb() const { return m_breadcrumb; }
     
     // Cursor-like features
@@ -85,6 +88,7 @@ signals:
     void codeApproved(const QString& code);
     void codeRejected(const QString& code);
     void aggregatedResponseReady(const QString& combinedText);
+    void sessionSelected(qint64 sessionId);
     
 private slots:
     void onSendClicked();
@@ -96,6 +100,8 @@ private slots:
     void fetchAvailableModels();
     void onAggregateFinished(QNetworkReply* reply);
     void openModelsDialog();
+    void showHistory();
+    void showSettings();
     
 private:
     void setupUI();
@@ -187,6 +193,7 @@ private:
     
     // Agentic execution
     AgenticExecutor* m_agenticExecutor = nullptr;
+    ChatHistoryManager* m_historyManager = nullptr;
     
     // Helper for local response generation
     QString generateLocalResponse(const QString& message, const QString& model);

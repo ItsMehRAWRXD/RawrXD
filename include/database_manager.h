@@ -42,8 +42,8 @@ public:
     bool initialize(const QString& dbType, const DatabaseConfig& config);
     
     // Query execution
-    QueryResult executeQuery(const QString& sql, const QVariantList& params = {});
-    bool executeMutation(const QString& sql, const QVariantList& params = {});
+    QueryResult executeQuery(const QString& sql, const QVariantList& params = {}, const QString& dbType = "postgres");
+    bool executeMutation(const QString& sql, const QVariantList& params = {}, const QString& dbType = "postgres");
     
     // Migrations
     bool runMigration(const QString& migrationName, const QString& sql);

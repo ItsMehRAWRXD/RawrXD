@@ -9,6 +9,10 @@
 #include <QKeyEvent>
 #include <QTextCursor>
 #include <QTextBlock>
+#include <QLineEdit>
+#include <QMenu>
+#include <QAction>
+#include <QInputDialog>
 #include <QDebug>
 
 namespace RawrXD {
@@ -91,12 +95,57 @@ void AgenticTextEdit::setDocumentUri(const QString& uri) {
     qDebug() << "[AgenticTextEdit] Document URI set:" << uri << "Language:" << m_languageId;
 }
 
-void AgenticTextEdit::setAutoCompletionsEnabled(bool enabled) {
-    m_autoCompletionsEnabled = enabled;
-    if (!enabled) {
-        m_completionTimer->stop();
-        m_ghostRenderer->clearGhostText();
+void AgenticTextEdit::showInlinePrompt()
+{
+    // Save current selection for later replacement
+    m_lastSelection = textCursor();
+    
+    if (!m_inlinePrompt) {
+        m_inlinePrompt = new QLineEdit(this);
+        m_inlinePrompt->setPlaceholderText("Edit code with AI (Ctrl+K)...");
+        m_inlinePrompt->setStyleSheet(
+            "QLineEdit { background-color: #2d2d30; color: #d4d4d4; border: 1px solid #3e3e42; border-radius: 4px; padding: 4px; }"
+        );
+        // Connect returnPressed signal (no parameters) to our finished slot
+        connect(m_inlinePrompt, &QLineEdit::returnPressed, this, [this]() {
+            onInlinePromptFinished();
+        });
     }
+    
+    updateInlinePromptPosition();
+    m_inlinePrompt->show();
+    m_inlinePrompt->setFocus();
+}
+
+void AgenticTextEdit::updateInlinePromptPosition()
+{
+    if (!m_inlinePrompt) return;
+    
+    QRect cr = cursorRect();
+    m_inlinePrompt->setGeometry(cr.left(), cr.bottom() + 5, 300, 30);
+}
+
+void AgenticTextEdit::onInlinePromptFinished()
+{
+    if (!m_inlinePrompt) return;
+    
+    QString prompt = m_inlinePrompt->text();
+    m_inlinePrompt->hide();
+    m_inlinePrompt->clear();
+    
+    // Get selected text from the saved cursor
+    QString selectedCode = m_lastSelection.selectedText();
+    
+    // Emit signal with the prompt - signal only takes one parameter
+    emit inlineEditRequested(prompt);
+    
+    setFocus();
+}
+
+void AgenticTextEdit::resizeEvent(QResizeEvent* event)
+{
+    QPlainTextEdit::resizeEvent(event);
+    updateInlinePromptPosition();
 }
 
 void AgenticTextEdit::setCompletionDelay(int ms) {
@@ -104,7 +153,84 @@ void AgenticTextEdit::setCompletionDelay(int ms) {
     m_completionTimer->setInterval(ms);
 }
 
+void AgenticTextEdit::insertCode(const QString& code)
+{
+    QTextCursor cursor = textCursor();
+    
+    // If we have a saved selection from Ctrl+K, use it
+    if (!m_lastSelection.isNull()) {
+        cursor = m_lastSelection;
+        m_lastSelection = QTextCursor(); // Clear after use
+    }
+    
+    cursor.beginEditBlock();
+    cursor.insertText(code);
+    cursor.endEditBlock();
+    
+    setTextCursor(cursor);
+    setFocus();
+}
+
+void AgenticTextEdit::goToDefinition()
+{
+    if (!m_lspClient || !m_lspClient->isRunning()) return;
+    
+    QTextCursor cursor = textCursor();
+    m_lspClient->requestDefinition(m_documentUri, cursor.blockNumber(), cursor.columnNumber());
+}
+
+void AgenticTextEdit::findReferences()
+{
+    if (!m_lspClient || !m_lspClient->isRunning()) return;
+    
+    QTextCursor cursor = textCursor();
+    m_lspClient->requestReferences(m_documentUri, cursor.blockNumber(), cursor.columnNumber());
+}
+
+void AgenticTextEdit::renameSymbol()
+{
+    if (!m_lspClient || !m_lspClient->isRunning()) return;
+    
+    bool ok;
+    QString newName = QInputDialog::getText(this, "Rename Symbol", "New name:", QLineEdit::Normal, "", &ok);
+    if (ok && !newName.isEmpty()) {
+        QTextCursor cursor = textCursor();
+        m_lspClient->requestRename(m_documentUri, cursor.blockNumber(), cursor.columnNumber(), newName);
+    }
+}
+
+void AgenticTextEdit::contextMenuEvent(QContextMenuEvent* event)
+{
+    QMenu* menu = createStandardContextMenu();
+    menu->addSeparator();
+    
+    QAction* defAction = menu->addAction("Go to Definition");
+    defAction->setEnabled(m_lspClient && m_lspClient->isRunning());
+    connect(defAction, &QAction::triggered, this, &AgenticTextEdit::goToDefinition);
+    
+    QAction* refAction = menu->addAction("Find References");
+    refAction->setEnabled(m_lspClient && m_lspClient->isRunning());
+    connect(refAction, &QAction::triggered, this, &AgenticTextEdit::findReferences);
+    
+    QAction* renameAction = menu->addAction("Rename Symbol");
+    renameAction->setEnabled(m_lspClient && m_lspClient->isRunning());
+    connect(renameAction, &QAction::triggered, this, &AgenticTextEdit::renameSymbol);
+    
+    menu->addSeparator();
+    QAction* aiAction = menu->addAction("Edit with AI (Ctrl+K)");
+    connect(aiAction, &QAction::triggered, this, &AgenticTextEdit::showInlinePrompt);
+    
+    menu->exec(event->globalPos());
+    delete menu;
+}
+
 void AgenticTextEdit::keyPressEvent(QKeyEvent* event) {
+    // Handle Ctrl+K for inline prompt
+    if (event->modifiers() & Qt::ControlModifier && event->key() == Qt::Key_K) {
+        showInlinePrompt();
+        return;
+    }
+    
     // Let ghost renderer handle Tab/Esc first
     if (m_ghostRenderer && m_ghostRenderer->hasGhostText()) {
         if (event->key() == Qt::Key_Tab && event->modifiers() == Qt::NoModifier) {

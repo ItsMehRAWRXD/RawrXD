@@ -1,5 +1,6 @@
 // Agentic Engine - Production-Ready AI Core
 #include "agentic_engine.h"
+#include "external_model_client.h"
 #include "../src/qtapp/inference_engine.hpp"
 #include "compression_interface.h"
 #include <QTimer>
@@ -68,9 +69,52 @@ void AgenticEngine::initialize() {
     
     // Create inference engine instance (deferred from constructor)
     m_inferenceEngine = new InferenceEngine(this);
-    qInfo() << "[AgenticEngine] Inference engine created";
+    
+    // Create external model client
+    m_externalClient = new ExternalModelClient(this);
+    
+    // Connect streaming signals
+    connect(m_inferenceEngine, &InferenceEngine::streamToken, this, [this](qint64 reqId, const QString& token) {
+        Q_UNUSED(reqId);
+        emit streamToken(token);
+    });
+    connect(m_inferenceEngine, &InferenceEngine::streamFinished, this, [this](qint64 reqId) {
+        Q_UNUSED(reqId);
+        emit streamFinished();
+    });
+    
+    // Connect external client signals
+    connect(m_externalClient, &ExternalModelClient::tokenReceived, this, &AgenticEngine::streamToken);
+    connect(m_externalClient, &ExternalModelClient::responseFinished, this, [this](const QString& response) {
+        emit responseReady(response);
+        emit streamFinished();
+    });
+    connect(m_externalClient, &ExternalModelClient::errorOccurred, this, &AgenticEngine::errorOccurred);
+
+    qInfo() << "[AgenticEngine] Inference engine and external client created";
     
     qDebug() << "Agentic Engine initialized - waiting for model selection";
+}
+
+void AgenticEngine::setModelSource(ModelSource source) {
+    m_modelSource = source;
+    qInfo() << "[AgenticEngine] Model source changed to:" << (source == ModelSource::Local ? "Local" : "External");
+}
+
+void AgenticEngine::configureExternalModel(Provider provider, const QString& apiKey, const QString& modelName, const QString& endpoint) {
+    m_externalProvider = provider;
+    m_externalApiKey = apiKey;
+    m_externalEndpoint = endpoint;
+    
+    if (!m_externalClient) return;
+    
+    ExternalModelClient::Provider p = ExternalModelClient::OpenAI;
+    if (provider == Provider::Anthropic) p = ExternalModelClient::Anthropic;
+    else if (provider == Provider::Groq) p = ExternalModelClient::Groq;
+    else if (provider == Provider::Ollama) p = ExternalModelClient::Ollama;
+    
+    m_externalClient->setConfiguration(p, endpoint, apiKey, modelName);
+    qInfo() << "[AgenticEngine] External model configured:" << static_cast<int>(provider) << modelName;
 }
 
 void AgenticEngine::setGenerationConfig(const GenerationConfig& config) {
@@ -241,32 +285,51 @@ bool AgenticEngine::loadModelAsync(const std::string& modelPath) {
     }
 }
 
-void AgenticEngine::processMessage(const QString& message, const QString& editorContext) {
+void AgenticEngine::processMessage(const QString& message, const QString& editorContext, bool streaming) {
     qDebug() << "[AgenticEngine] Processing message:" << message;
     if (!editorContext.isEmpty()) {
         qDebug() << "[AgenticEngine] With editor context:" << editorContext.length() << "chars";
     }
-    qDebug() << "[AgenticEngine] m_modelLoaded:" << m_modelLoaded;
-    qDebug() << "[AgenticEngine] m_inferenceEngine:" << (m_inferenceEngine ? "exists" : "null");
-    qDebug() << "[AgenticEngine] isModelLoaded:" << (m_inferenceEngine ? m_inferenceEngine->isModelLoaded() : false);
+    qDebug() << "[AgenticEngine] Model source:" << (m_modelSource == Local ? "Local" : "External");
+    qDebug() << "[AgenticEngine] Streaming mode:" << (streaming ? "ON" : "OFF");
     
     // Enhance message with editor context if provided
     QString enhancedMessage = message;
-    if (!editorContext.isEmpty()) {
+    
+    // Check for special @inline command (Ctrl+K)
+    bool isInlineEdit = message.startsWith("@inline");
+    if (isInlineEdit) {
+        QString prompt = message.mid(7).trimmed();
+        enhancedMessage = "You are an expert code editor. Modify the following code according to the instructions.\n"
+                          "Return ONLY the modified code block, no explanations, no markdown formatting unless it's part of the code.\n\n"
+                          "INSTRUCTIONS: " + prompt + "\n\n"
+                          "CODE:\n" + editorContext;
+    } else if (!editorContext.isEmpty()) {
         enhancedMessage = message + "\n\n[Context from editor]\n```\n" + editorContext + "\n```";
+    }
+    
+    if (m_modelSource == External && m_externalClient) {
+        qInfo() << "[AgenticEngine] ✓ Using external model for response generation";
+        m_externalClient->sendMessage(enhancedMessage, QJsonArray(), streaming);
+        return;
     }
     
     if (m_modelLoaded && m_inferenceEngine && m_inferenceEngine->isModelLoaded()) {
         // Use real inference engine - response will be emitted via signal
         qInfo() << "[AgenticEngine] ✓ Using loaded model for response generation";
-        generateTokenizedResponse(enhancedMessage);
-        // Response will be emitted asynchronously via responseReady signal
+        
+        if (streaming) {
+            // Use streaming generation
+            qint64 reqId = QDateTime::currentMSecsSinceEpoch();
+            m_inferenceEngine->generateStreaming(reqId, enhancedMessage, m_genConfig.maxTokens);
+        } else {
+            // Use legacy non-streaming generation
+            generateTokenizedResponse(enhancedMessage);
+        }
+        // Response will be emitted asynchronously via signals
     } else {
         // Fallback to keyword-based responses if no model loaded
         qWarning() << "[AgenticEngine] ✗ No model loaded, using fallback response";
-        qWarning() << "[AgenticEngine]   Reason: m_modelLoaded=" << m_modelLoaded 
-                   << ", engine=" << (m_inferenceEngine ? "OK" : "NULL")
-                   << ", engine.isModelLoaded=" << (m_inferenceEngine ? m_inferenceEngine->isModelLoaded() : false);
         QString response = generateResponse(enhancedMessage);
         emit responseReady(response);
     }
