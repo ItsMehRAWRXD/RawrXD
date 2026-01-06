@@ -1,0 +1,98 @@
+[
+  {
+    "Passed": true,
+    "Details": "Exe: 3369984 bytes, Modified: 01/05/2026 19:30:06",
+    "Timestamp": "2026-01-05T20:38:36.224169-05:00",
+    "TestName": "Build Verification"
+  },
+  {
+    "Passed": true,
+    "Details": "Found 191 blob files and 58 manifests",
+    "Timestamp": "2026-01-05T20:38:36.2319888-05:00",
+    "TestName": "Ollama File System Structure"
+  },
+  {
+    "Passed": true,
+    "Details": "Successfully parsed manifest and located blob: sha256-ca07b492de2cb9534482296866bcad31824907d2cb1b9407f017f5f569915b40",
+    "Timestamp": "2026-01-05T20:38:36.2392052-05:00",
+    "TestName": "Manifest Parsing"
+  },
+  {
+    "Passed": true,
+    "Details": "GGUF file accessible: 1925.83 MB",
+    "Timestamp": "2026-01-05T20:38:36.2409791-05:00",
+    "TestName": "GGUF Model Access"
+  },
+  {
+    "Passed": true,
+    "Details": "All required methods present",
+    "Timestamp": "2026-01-05T20:38:36.2429833-05:00",
+    "TestName": "InferenceEngine API"
+  },
+  {
+    "Passed": true,
+    "Details": "Key methods implemented",
+    "Timestamp": "2026-01-05T20:38:36.2440419-05:00",
+    "TestName": "InferenceEngine Implementation"
+  },
+  {
+    "Passed": true,
+    "Details": "Ollama blob detection active in fetchAvailableModels()",
+    "Timestamp": "2026-01-05T20:38:36.2460467-05:00",
+    "TestName": "AIChatPanel Blob Integration"
+  },
+  {
+    "Passed": true,
+    "Details": "Ollama blob UI label present",
+    "Timestamp": "2026-01-05T20:38:36.2467157-05:00",
+    "TestName": "AIChatPanel UI Labels"
+  },
+  {
+    "Passed": true,
+    "Details": "refreshModelList() method available",
+    "Timestamp": "2026-01-05T20:38:36.247622-05:00",
+    "TestName": "AIChatPanel API"
+  },
+  {
+    "Passed": true,
+    "Details": "Unified filter supports both GGUF and Ollama blobs",
+    "Timestamp": "2026-01-05T20:38:36.2494819-05:00",
+    "TestName": "File Dialog Filter"
+  },
+  {
+    "Passed": true,
+    "Details": "onModelSelected() checks for blob paths",
+    "Timestamp": "2026-01-05T20:38:36.2502271-05:00",
+    "TestName": "MainWindow Blob Detection"
+  },
+  {
+    "Passed": false,
+    "Details": "Incomplete blob detection API",
+    "Timestamp": "2026-01-05T20:38:36.2520168-05:00",
+    "TestName": "OllamaProxy API"
+  },
+  {
+    "Passed": false,
+    "Details": "Incomplete blob detection implementation",
+    "Timestamp": "2026-01-05T20:38:36.2529034-05:00",
+    "TestName": "OllamaProxy Implementation"
+  },
+  {
+    "Passed": true,
+    "Details": "75% of files have logging (6/8)",
+    "Timestamp": "2026-01-05T20:38:36.2554893-05:00",
+    "TestName": "Logging Coverage"
+  },
+  {
+    "Passed": false,
+    "Details": "Autonomous mode implementation not found",
+    "Timestamp": "2026-01-05T20:38:36.257803-05:00",
+    "TestName": "Autonomous Mode"
+  },
+  {
+    "Passed": false,
+    "Details": "Missing execution or validation logic",
+    "Timestamp": "2026-01-05T20:38:36.2587865-05:00",
+    "TestName": "AgenticTools"
+  }
+]

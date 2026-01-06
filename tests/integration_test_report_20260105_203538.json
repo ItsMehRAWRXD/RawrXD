@@ -1,0 +1,98 @@
+[
+  {
+    "Passed": true,
+    "Details": "Exe: 3369984 bytes, Modified: 01/05/2026 19:30:06",
+    "Timestamp": "2026-01-05T20:35:38.8443788-05:00",
+    "TestName": "Build Verification"
+  },
+  {
+    "Passed": false,
+    "Details": "Missing blob files (191) or manifests (0)",
+    "Timestamp": "2026-01-05T20:35:38.8525505-05:00",
+    "TestName": "Ollama File System Structure"
+  },
+  {
+    "Passed": false,
+    "Details": "No manifest files found to test",
+    "Timestamp": "2026-01-05T20:35:38.8544644-05:00",
+    "TestName": "Manifest Parsing"
+  },
+  {
+    "Passed": true,
+    "Details": "GGUF file accessible: 1925.83 MB",
+    "Timestamp": "2026-01-05T20:35:38.8566341-05:00",
+    "TestName": "GGUF Model Access"
+  },
+  {
+    "Passed": true,
+    "Details": "All required methods present",
+    "Timestamp": "2026-01-05T20:35:38.8620215-05:00",
+    "TestName": "InferenceEngine API"
+  },
+  {
+    "Passed": true,
+    "Details": "Key methods implemented",
+    "Timestamp": "2026-01-05T20:35:38.8633681-05:00",
+    "TestName": "InferenceEngine Implementation"
+  },
+  {
+    "Passed": true,
+    "Details": "Ollama blob detection active in fetchAvailableModels()",
+    "Timestamp": "2026-01-05T20:35:38.8658333-05:00",
+    "TestName": "AIChatPanel Blob Integration"
+  },
+  {
+    "Passed": true,
+    "Details": "Ollama blob UI label present",
+    "Timestamp": "2026-01-05T20:35:38.8666178-05:00",
+    "TestName": "AIChatPanel UI Labels"
+  },
+  {
+    "Passed": true,
+    "Details": "refreshModelList() method available",
+    "Timestamp": "2026-01-05T20:35:38.867784-05:00",
+    "TestName": "AIChatPanel API"
+  },
+  {
+    "Passed": true,
+    "Details": "Unified filter supports both GGUF and Ollama blobs",
+    "Timestamp": "2026-01-05T20:35:38.8704848-05:00",
+    "TestName": "File Dialog Filter"
+  },
+  {
+    "Passed": true,
+    "Details": "onModelSelected() checks for blob paths",
+    "Timestamp": "2026-01-05T20:35:38.8712583-05:00",
+    "TestName": "MainWindow Blob Detection"
+  },
+  {
+    "Passed": false,
+    "Details": "Header file not found",
+    "Timestamp": "2026-01-05T20:35:38.8730432-05:00",
+    "TestName": "OllamaProxy API"
+  },
+  {
+    "Passed": false,
+    "Details": "Source file not found",
+    "Timestamp": "2026-01-05T20:35:38.8739388-05:00",
+    "TestName": "OllamaProxy Implementation"
+  },
+  {
+    "Passed": true,
+    "Details": "75% of files have logging (6/8)",
+    "Timestamp": "2026-01-05T20:35:38.893819-05:00",
+    "TestName": "Logging Coverage"
+  },
+  {
+    "Passed": false,
+    "Details": "Autonomous mode implementation not found",
+    "Timestamp": "2026-01-05T20:35:38.8980639-05:00",
+    "TestName": "Autonomous Mode"
+  },
+  {
+    "Passed": false,
+    "Details": "File not found: D:\\RawrXD-production-lazy-init\\src\\qtapp\\agent_file_edit_tool.cpp",
+    "Timestamp": "2026-01-05T20:35:38.8988618-05:00",
+    "TestName": "AgentFileEditTool"
+  }
+]
