@@ -133,6 +133,28 @@ std::string AdvancedCodingAgentIntegration::buildFeaturePrompt(
 }
 
 bool AdvancedCodingAgentIntegration::validateGeneratedCode(const std::string& code) {
-    // Placeholder: would validate code syntax and logic
+    if (code.empty()) return false;
+    
+    // Check for balanced braces and parentheses
+    int braceCount = 0;
+    int parenCount = 0;
+    
+    for (char c : code) {
+        if (c == '{') braceCount++;
+        else if (c == '}') braceCount--;
+        else if (c == '(') parenCount++;
+        else if (c == ')') parenCount--;
+        
+        if (braceCount < 0 || parenCount < 0) return false;
+    }
+    
+    if (braceCount != 0 || parenCount != 0) return false;
+    
+    // Check for basic syntax patterns
+    if (code.find(";") == std::string::npos && 
+        code.find("{") == std::string::npos) {
+        return false; // No statements or blocks found
+    }
+    
     return true;
 }

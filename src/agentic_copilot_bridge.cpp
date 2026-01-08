@@ -183,13 +183,10 @@ QString AgenticCopilotBridge::askAgent(const QString& question, const QJsonObjec
     // Apply hotpatching for safety and quality
     response = hotpatchResponse(response, fullContext);
     
-    // TODO: Re-enable when ChatHistoryManager is fully integrated
-    /*
-    // Ensure we have a session
-    if (m_currentSessionId == -1 && m_historyManager) {
-        m_currentSessionId = m_historyManager->createNewSession("New Chat Session");
+    // Ensure we have a session when ChatHistoryManager is available
+    if (m_currentSessionId.isEmpty() && m_historyManager) {
+        m_currentSessionId = QString::number(m_historyManager->createNewSession("New Chat Session"));
     }
-    */
     
     // Store in conversation history
     m_conversationHistory.append(QJsonObject {
@@ -199,8 +196,7 @@ QString AgenticCopilotBridge::askAgent(const QString& question, const QJsonObjec
     });
     
     if (m_historyManager && !m_currentSessionId.isEmpty()) {
-        // TODO: Implement message storage when ChatHistoryManager is fully integrated
-        // m_historyManager->addMessage(m_currentSessionId, "user", question);
+        m_historyManager->addMessage(m_currentSessionId.toInt(), "user", question);
     }
     
     m_conversationHistory.append(QJsonObject {
@@ -210,8 +206,7 @@ QString AgenticCopilotBridge::askAgent(const QString& question, const QJsonObjec
     });
     
     if (m_historyManager && !m_currentSessionId.isEmpty()) {
-        // TODO: Implement message storage when ChatHistoryManager is fully integrated
-        // m_historyManager->addMessage(m_currentSessionId, "assistant", response);
+        m_historyManager->addMessage(m_currentSessionId.toInt(), "assistant", response);
     }
     
     m_lastConversationContext = response;

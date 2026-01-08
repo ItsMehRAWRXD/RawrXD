@@ -317,8 +317,25 @@ std::vector<Vulnerability> AdvancedCodingAgent::performStaticAnalysis(
 std::string AdvancedCodingAgent::replaceStringConcatenation(
     const std::string& code) {
     
-    // Placeholder: would actually rewrite concatenations
-    return code;
+    std::string result = code;
+    
+    // Replace C-style string concatenation with modern alternatives
+    // Pattern: char* + strcat -> std::string
+    size_t pos = 0;
+    while ((pos = result.find("strcat(", pos)) != std::string::npos) {
+        // Mark for modernization - would need full AST parsing for proper rewrite
+        result.insert(pos, "/* Consider std::string += */ ");
+        pos += 30;
+    }
+    
+    // Pattern: sprintf -> std::format or std::ostringstream
+    pos = 0;
+    while ((pos = result.find("sprintf(", pos)) != std::string::npos) {
+        result.insert(pos, "/* Consider std::format or std::ostringstream */ ");
+        pos += 50;
+    }
+    
+    return result;
 }
 
 std::vector<Vulnerability> AdvancedCodingAgent::scanSecurityIssues(

@@ -285,8 +285,38 @@ std::vector<BugReport> AIIntegrationHub::findBugs(const std::string& code) {
 
     try {
         std::vector<BugReport> bugs;
-        // Placeholder: analysis would be done by model
-        span->setAttribute("bug_count", 0);
+        
+        // Perform basic static analysis for common bugs
+        if (code.find("delete") != std::string::npos) {
+            // Check for potential double-delete or use-after-free
+            BugReport bug;
+            bug.severity = "warning";
+            bug.type = "memory";
+            bug.description = "Manual memory management detected - consider using smart pointers";
+            bug.line = 0; // Would need proper parsing for line numbers
+            bugs.push_back(bug);
+        }
+        
+        if (code.find("NULL") != std::string::npos && code.find("delete") == std::string::npos) {
+            BugReport bug;
+            bug.severity = "info";
+            bug.type = "modernization";
+            bug.description = "Use nullptr instead of NULL";
+            bug.line = 0;
+            bugs.push_back(bug);
+        }
+        
+        // Check for unchecked return values
+        if (code.find("malloc(") != std::string::npos || code.find("new ") != std::string::npos) {
+            BugReport bug;
+            bug.severity = "warning";
+            bug.type = "error_handling";
+            bug.description = "Ensure allocation success is checked";
+            bug.line = 0;
+            bugs.push_back(bug);
+        }
+        
+        span->setAttribute("bug_count", bugs.size());
         span->setStatus("ok");
         return bugs;
 
