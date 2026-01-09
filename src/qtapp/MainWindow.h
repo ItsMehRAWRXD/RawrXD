@@ -98,7 +98,12 @@ class HotpatchPanel;
 class LayerQuantWidget;
 class InterpretabilityPanelEnhanced;
 class ModelLoaderWidget;
+class ProblemsPanel;
+struct DiagnosticIssue;
 class BreadcrumbNavigation;
+class BlobConverterPanel;
+class AIDigestionPanel;
+class AIDigestionPanel;
 
 namespace RawrXD {
 class LatencyMonitor;
@@ -262,6 +267,8 @@ private slots: /* ----------  new IDE-wide slots  ---------- */
 
     // AI/GGUF/InferenceEngine slots
     void loadGGUFModel();
+    // Programmatic load given a GGUF file path
+    void loadGGUFModel(const QString& ggufPath);
     void runInference();
     void unloadGGUFModel();
     void showInferenceResult(qint64 reqId, const QString& result);
@@ -271,6 +278,8 @@ private slots: /* ----------  new IDE-wide slots  ---------- */
     void onAIChatMessageSubmitted(const QString& message);
     void onAIChatQuickActionTriggered(const QString& action, const QString& context);
     void onAIChatCodeInsertRequested(const QString& code);
+    // Notification from async model loader
+    void onModelLoadFinished(bool success, const std::string& errorMsg);
 
     // Agent integration
     void onCtrlShiftA();
@@ -331,6 +340,9 @@ private slots: /* ----------  new IDE-wide slots  ---------- */
     void toggleMASMEditor(bool visible);
     void toggleHotpatchPanel(bool visible);
     void toggleInterpretabilityPanel(bool visible);
+    void toggleBlobConverterPanel(bool visible);
+    void toggleAIDigestionPanel(bool visible);
+    void setupAIDigestionPanel();
 
 private: /* ---------------  UI creators  --------------- */
     QWidget* createGoalBar();
@@ -368,6 +380,7 @@ private: /* ---------------  UI creators  --------------- */
     void setupInterpretabilityPanel();
     void setupModelLoaderWidget();
     void setupDiagnosticsPanel();
+    void setupBlobConverterPanel();
     void restoreSession();
     void saveSession();
     
@@ -411,10 +424,13 @@ private: /* ---------------  original members  --------------- */
     QPlainTextEdit* cmdOutput_{};
     QLineEdit* pwshInput_{};
     QLineEdit* cmdInput_{};
+    QPushButton* pwshFixBtn_{};
+    QPushButton* cmdFixBtn_{};
     QProcess* pwshProcess_{};
     QProcess* cmdProcess_{};
     bool pwshCommandInFlight_{false};
     bool cmdCommandInFlight_{false};
+    bool m_autonomousMode{false}; // New: State for self-healing autonomy
 
 private: /* ---------------  new IDE members  --------------- */
     /* Core */
@@ -518,14 +534,50 @@ private: /* ---------------  new IDE members  --------------- */
     
     /* Autonomous Agent System */
     class AutoBootstrap* m_agentBootstrap{};
+
+    // UI model tooltip cache (gguf path -> HTML tooltip)
+    QMap<QString, QString> m_modelTooltipCache;
+
+public:
+    // For tests & external access
+    QComboBox* modelSelector() const;
+    void ensureTooltipForModelData(const QString& dataKey, const QString& resolvedPath = QString());
+    // Test helpers
+    void setInferenceEngineForTest(class InferenceEngine* engine);
+    bool isAIChatInputEnabled() const;
+
+    // Async model loader thread and progress UI for programmatic loads
+    class ModelLoaderThread* m_modelLoaderThread{};
+    QProgressDialog* m_loadingProgressDialog{};
+    QTimer* m_loadProgressTimer{};
+    QString m_pendingModelPath{};
     class HotReload* m_hotReload{};
     class ActionExecutor* m_actionExecutor{};  // Real agent plan executor
     class ModelInvoker* m_modelInvoker{};      // LLM invocation for wish→plan
     class MetaPlanner* m_metaPlanner{};        // Plan generator
+    class IDEAgentBridge* m_agentBridge{};     // High-level agent orchestrator
+    class RealTimeIntegrationCoordinator* m_integrationCoordinator{}; // Component sync
+    class AgenticEngine* m_agenticEngine{};    // AI Core (Analysis, Gen, NLP, Learning)
+    class AgenticCopilotBridge* m_copilotBridge{}; // Copilot/Cursor orchestrator
+    class InferenceEngine* m_inferenceEnginePtr{};  // Rename to avoid conflict if any
+    class AIChatPanel* m_aiChatPanelPtr{};
+    class TerminalPool* m_terminalPool{};
+    class MultiTabEditor* m_multiTabEditor{};
+
+    /* Terminal */
+    class TerminalWidget* m_terminalWidget{};
 
     /* MASM Text Editor */
     class MASMEditorWidget* m_masmEditor{};
     QDockWidget* m_masmEditorDock{};
+
+    /* Blob to GGUF Converter */
+    class BlobConverterPanel* m_blobConverterPanel{};
+    QDockWidget* m_blobConverterDock{};
+
+    /* AI Digestion Panel */
+    class AIDigestionPanel* m_aiDigestionPanel{};
+    QDockWidget* m_aiDigestionDock{};
 
     /* Hotpatch Panel */
     class HotpatchPanel* m_hotpatchPanel{};
@@ -561,6 +613,7 @@ private: /* ---------------  new IDE members  --------------- */
     QWidget* m_terminalPanelWidget{};
     QWidget* m_outputPanelWidget{};
     QWidget* m_problemsPanelWidget{};
+    ProblemsPanel* m_problemsPanel{};  // Real ProblemsPanel for MASM diagnostics
     QWidget* m_debugPanelWidget{};
     QPlainTextEdit* m_hexMagConsole{};
     QComboBox* m_modelSelector{};      // Model selection dropdown
@@ -580,6 +633,13 @@ private: /* ---------------  new IDE members  --------------- */
     void onAgentWishReceived(const QString& wish);
     void onAgentPlanGenerated(const QString& planSummary);
     void onAgentExecutionCompleted(bool success);
+    
+    // Command palette handlers
+    void handleNewFile();
+    void handleOpenFile();
+    void handleSaveFile();
+    void handleUndo();
+    void handleRedo();
 };
 
 

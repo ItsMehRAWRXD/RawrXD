@@ -776,10 +776,24 @@ void MasmFeatureManager::applyPreset(Preset preset) {
     
     switch (preset) {
         case PresetMinimal: {
-            // Only critical features (Runtime + Hotpatch)
+            // ULTRA-LEAN: Only absolute essentials for the IDE to function
             disableAll();
-            enableCategory(CategoryRuntime);
-            enableCategory(CategoryHotpatch);
+            
+            // Essential Runtime
+            setFeatureEnabled("asm_memory", true);
+            setFeatureEnabled("asm_sync", true);
+            setFeatureEnabled("asm_string", true);
+            setFeatureEnabled("console_log_simple", true);
+            
+            // Essential UI (just enough to show the window)
+            setFeatureEnabled("ui_system", true);
+            setFeatureEnabled("pane_manager", true);
+            setFeatureEnabled("menu_system", true);
+            
+            // Essential File Ops
+            setFeatureEnabled("file_manager", true);
+            
+            qDebug() << "Applied ULTRA-MINIMAL preset (Memory-shaving mode)";
             break;
         }
         

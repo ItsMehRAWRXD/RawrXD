@@ -136,7 +136,7 @@ signals:
     /**
      * Emitted when Ctrl+K is pressed for inline edit
      */
-    void inlineEditRequested(const QString& selectedText);
+    void inlineEditRequested(const QString& prompt, const QString& selectedText);
 
 protected:
     void keyPressEvent(QKeyEvent* event) override;

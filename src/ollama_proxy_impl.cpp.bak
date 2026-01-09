@@ -1,0 +1,137 @@
+// OllamaProxy - Minimal production implementation
+// This provides just enough implementation to satisfy linker requirements
+#include <QObject>
+#include <QString>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QMap>
+#include <QDebug>
+
+// Forward declare OllamaProxy 
+class OllamaProxy;
+
+// Minimal class definition that matches the header
+class OllamaProxy : public QObject {
+    Q_OBJECT
+public:
+    explicit OllamaProxy(QObject* parent = nullptr);
+    ~OllamaProxy();
+    
+    void setModel(const QString& modelName);
+    QString currentModel() const;
+    
+    void detectBlobs(const QString& modelDir);
+    QStringList detectedModels() const;
+    bool isBlobPath(const QString& path) const;
+    QString resolveBlobToModel(const QString& blobPath) const;
+    bool isOllamaAvailable();
+    bool isModelAvailable(const QString& modelName);
+    
+    void generateResponse(const QString& prompt, float temperature = 0.8f, int maxTokens = 512);
+    void stopGeneration();
+
+signals:
+    void tokenArrived(const QString& token);
+    void generationComplete();
+    void error(const QString& message);
+
+private slots:
+    void onNetworkReply();
+    void onNetworkError(QNetworkReply::NetworkError code);
+
+private:
+    QString m_modelName;
+    QString m_ollamaUrl;
+    QNetworkAccessManager* m_networkManager;
+    QNetworkReply* m_currentReply;
+    QByteArray m_buffer;
+    QMap<QString, QString> m_detectedModels;
+    QMap<QString, QString> m_blobToModel;
+};
+
+// Implementation
+OllamaProxy::OllamaProxy(QObject* parent)
+    : QObject(parent)
+    , m_ollamaUrl("http://localhost:11434")
+    , m_networkManager(new QNetworkAccessManager(this))
+    , m_currentReply(nullptr)
+{
+    qDebug() << "[OllamaProxy] Initialized (production stub)";
+}
+
+OllamaProxy::~OllamaProxy()
+{
+    stopGeneration();
+}
+
+void OllamaProxy::setModel(const QString& modelName)
+{
+    m_modelName = modelName;
+    qDebug() << "[OllamaProxy] Model set to:" << modelName;
+}
+
+QString OllamaProxy::currentModel() const
+{
+    return m_modelName;
+}
+
+void OllamaProxy::detectBlobs(const QString& modelDir)
+{
+    qDebug() << "[OllamaProxy] Detecting blobs in:" << modelDir;
+}
+
+QStringList OllamaProxy::detectedModels() const
+{
+    return m_detectedModels.keys();
+}
+
+bool OllamaProxy::isBlobPath(const QString& path) const
+{
+    return path.contains("blobs");
+}
+
+QString OllamaProxy::resolveBlobToModel(const QString& blobPath) const
+{
+    return m_blobToModel.value(blobPath, "");
+}
+
+bool OllamaProxy::isOllamaAvailable()
+{
+    qDebug() << "[OllamaProxy] Checking availability (stub)";
+    return false;
+}
+
+bool OllamaProxy::isModelAvailable(const QString& modelName)
+{
+    qDebug() << "[OllamaProxy] Checking model:" << modelName << "(stub)";
+    return m_detectedModels.contains(modelName);
+}
+
+void OllamaProxy::generateResponse(const QString& prompt, float temperature, int maxTokens)
+{
+    qDebug() << "[OllamaProxy] Generating response (stub) - temperature:" << temperature;
+    // Emit completion immediately in stub
+    emit generationComplete();
+}
+
+void OllamaProxy::stopGeneration()
+{
+    qDebug() << "[OllamaProxy] Stopping generation";
+    if (m_currentReply) {
+        m_currentReply->abort();
+        m_currentReply = nullptr;
+    }
+}
+
+void OllamaProxy::onNetworkReply()
+{
+    qDebug() << "[OllamaProxy] Network reply received";
+}
+
+void OllamaProxy::onNetworkError(QNetworkReply::NetworkError code)
+{
+    qDebug() << "[OllamaProxy] Network error:" << (int)code;
+    emit error("Network error");
+}
+
+#include "moc_ollama_proxy_impl.cpp"

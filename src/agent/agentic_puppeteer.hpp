@@ -10,8 +10,9 @@
 #include <QHash>
 #include <memory>
 
-// Failure types the puppeteer can correct
-enum class FailureType {
+// FailureType moved inside AgenticPuppeteer class
+
+enum class PuppeteerFailure {
     RefusalResponse,      // Model refuses to respond
     Hallucination,        // Model makes up false information
     FormatViolation,      // Output doesn't match expected format
@@ -24,14 +25,14 @@ enum class FailureType {
 struct CorrectionResult {
     bool success = false;
     QString correctedOutput;
-    FailureType detectedFailure = FailureType::None;
+    PuppeteerFailure detectedFailure = PuppeteerFailure::None;
     QString diagnosticMessage;
     
-    static CorrectionResult ok(const QString& output, FailureType failure) {
+    static CorrectionResult ok(const QString& output, PuppeteerFailure failure) {
         return CorrectionResult{true, output, failure, "Correction applied"};
     }
     
-    static CorrectionResult error(FailureType failureType, const QString& diagnostic) {
+    static CorrectionResult error(PuppeteerFailure failureType, const QString& diagnostic) {
         return CorrectionResult{false, QString(), failureType, diagnostic};
     }
 };
@@ -42,6 +43,8 @@ class AgenticPuppeteer : public QObject
     Q_OBJECT
 
 public:
+    using FailureType = PuppeteerFailure; // Backward compatibility alias
+
     explicit AgenticPuppeteer(QObject* parent = nullptr);
     ~AgenticPuppeteer() override;
 

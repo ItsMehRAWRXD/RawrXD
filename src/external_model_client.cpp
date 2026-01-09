@@ -188,3 +188,5 @@ void ExternalModelClient::onNetworkError(QNetworkReply::NetworkError code)
     qWarning() << "[ExternalModelClient] Network error:" << error;
     emit errorOccurred(error);
 }
+
+

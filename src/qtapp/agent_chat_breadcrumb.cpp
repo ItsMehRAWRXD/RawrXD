@@ -999,3 +999,33 @@ void AgentChatBreadcrumb::onOllamaModelsRetrieved() {
     populateModelDropdown();
 }
 
+AgentChatBreadcrumb::ModelInfo AgentChatBreadcrumb::getModelInfo(const QString& modelName) const
+{
+    if (m_modelMap.contains(modelName)) return m_modelMap[modelName];
+
+    // Try cache
+    ModelInfo mi = getCachedModelMetadata(modelName);
+    if (!mi.name.isEmpty()) return mi;
+
+    // Fallback minimal entry
+    ModelInfo fallback;
+    fallback.name = modelName;
+    fallback.displayName = modelName;
+    fallback.type = Ollama;
+    fallback.isLarge = false;
+    fallback.isContextModel = true;
+    fallback.maxContextTokens = 4096;
+    fallback.parameterCount = "Unknown";
+    fallback.quantization = "Unknown";
+    fallback.capabilities = "General";
+    fallback.version = "latest";
+    fallback.description = "Ollama model (metadata unavailable)";
+    return fallback;
+}
+
+QString AgentChatBreadcrumb::tooltipForModel(const QString& modelName) const
+{
+    ModelInfo mi = getModelInfo(modelName);
+    return buildTooltipText(mi);
+}
+

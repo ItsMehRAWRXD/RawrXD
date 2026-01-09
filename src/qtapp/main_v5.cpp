@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
         // );
     });
 
-    RawrXD::MainWindow mainWindow;
+    MainWindow_v5 mainWindow;
     mainWindow.show();
     
     qDebug() << "[Main] Entering event loop";

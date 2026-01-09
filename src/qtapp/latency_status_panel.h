@@ -30,7 +30,11 @@ private:
     QLabel* m_maxPingLabel;        // Shows maximum ping
     QLabel* m_avgPingLabel;        // Shows average ping
     QLabel* m_samplesLabel;        // Shows total samples
+    QLabel* m_ramLabel;            // Shows RAM usage
+    QLabel* m_cpuLabel;            // Shows CPU usage
+    QLabel* m_backendLabel;        // Shows active backend
     QProgressBar* m_latencyBar;    // Visual latency indicator
+    QProgressBar* m_cpuBar;        // Visual CPU indicator
 };
 
 } // namespace RawrXD

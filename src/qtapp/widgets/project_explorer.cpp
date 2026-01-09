@@ -21,6 +21,7 @@
 #include <QMimeData>
 #include <QDrag>
 #include <QRegularExpression>
+#include <QDir>
 
 namespace RawrXD {
 
@@ -113,8 +114,13 @@ void ProjectExplorerWidget::setupUI() {
     m_fileSystemModel = new QFileSystemModel(this);
     m_fileSystemModel->setReadOnly(false);  // Allow renames via model
     m_fileSystemModel->setFilter(QDir::AllEntries | QDir::NoDotAndDotDot);
-    
-    m_treeView->setModel(m_fileSystemModel);
+    m_fileSystemModel->setResolveSymlinks(false);
+
+    m_proxyModel = new GitignoreProxyModel(this);
+    m_proxyModel->setSourceModel(m_fileSystemModel);
+    m_proxyModel->setDirectoryManager(m_dirManager);
+    m_treeView->setModel(m_proxyModel);
+    m_treeView->setUniformRowHeights(true); // improves perf on large trees
     
     // Hide size, type, date columns (can be re-enabled)
     m_treeView->setColumnHidden(1, true);  // Size
@@ -210,7 +216,9 @@ bool ProjectExplorerWidget::openProject(const QString& projectPath) {
     
     // Set root path in file system model
     QModelIndex rootIndex = m_fileSystemModel->setRootPath(m_projectPath);
-    m_treeView->setRootIndex(rootIndex);
+    m_proxyModel->setBasePath(m_projectPath);
+    m_proxyModel->invalidate();
+    m_treeView->setRootIndex(mapFromSource(rootIndex));
     
     // Load .gitignore patterns
     loadGitignorePatterns();
@@ -242,7 +250,8 @@ void ProjectExplorerWidget::closeProject() {
         m_projectPath.clear();
         m_projectMetadata = ProjectMetadata();
         m_gitignorePatterns.clear();
-        
+        m_proxyModel->setPatterns(m_gitignorePatterns);
+        m_proxyModel->setBasePath(QString());
         m_fileSystemModel->setRootPath("");
         m_treeView->setRootIndex(QModelIndex());
         
@@ -260,6 +269,7 @@ void ProjectExplorerWidget::refresh() {
         QModelIndex root = m_treeView->rootIndex();
         m_treeView->setRootIndex(QModelIndex());
         m_treeView->setRootIndex(root);
+        m_proxyModel->invalidate();
     }
 }
 
@@ -268,44 +278,45 @@ QString ProjectExplorerWidget::selectedFilePath() const {
     if (!index.isValid()) {
         return QString();
     }
-    return m_fileSystemModel->filePath(index);
+    return m_fileSystemModel->filePath(mapToSource(index));
 }
 
 QStringList ProjectExplorerWidget::selectedFilePaths() const {
     QStringList paths;
     QModelIndexList indexes = m_treeView->selectionModel()->selectedRows();
     for (const QModelIndex& index : indexes) {
-        paths.append(m_fileSystemModel->filePath(index));
+        paths.append(m_fileSystemModel->filePath(mapToSource(index)));
     }
     return paths;
 }
 
 void ProjectExplorerWidget::selectFile(const QString& filePath) {
-    QModelIndex index = m_fileSystemModel->index(filePath);
-    if (index.isValid()) {
-        m_treeView->setCurrentIndex(index);
-        m_treeView->scrollTo(index);
+    QModelIndex sourceIndex = m_fileSystemModel->index(filePath);
+    if (sourceIndex.isValid()) {
+        QModelIndex proxyIndex = mapFromSource(sourceIndex);
+        m_treeView->setCurrentIndex(proxyIndex);
+        m_treeView->scrollTo(proxyIndex);
     }
 }
 
 void ProjectExplorerWidget::expandDirectory(const QString& dirPath) {
-    QModelIndex index = m_fileSystemModel->index(dirPath);
-    if (index.isValid()) {
-        m_treeView->expand(index);
+    QModelIndex sourceIndex = m_fileSystemModel->index(dirPath);
+    if (sourceIndex.isValid()) {
+        m_treeView->expand(mapFromSource(sourceIndex));
     }
 }
 
 void ProjectExplorerWidget::collapseDirectory(const QString& dirPath) {
-    QModelIndex index = m_fileSystemModel->index(dirPath);
-    if (index.isValid()) {
-        m_treeView->collapse(index);
+    QModelIndex sourceIndex = m_fileSystemModel->index(dirPath);
+    if (sourceIndex.isValid()) {
+        m_treeView->collapse(mapFromSource(sourceIndex));
     }
 }
 
 void ProjectExplorerWidget::setShowHiddenFiles(bool show) {
     m_showHiddenFiles = show;
     QDir::Filters filter = QDir::AllEntries | QDir::NoDotAndDotDot;
-    if (!show) {
+    if (show) {
         filter |= QDir::Hidden;
     }
     m_fileSystemModel->setFilter(filter);
@@ -331,7 +342,7 @@ void ProjectExplorerWidget::setFileFilter(const QString& pattern) {
 void ProjectExplorerWidget::onTreeDoubleClicked(const QModelIndex& index) {
     if (!index.isValid()) return;
     
-    QString filePath = m_fileSystemModel->filePath(index);
+    QString filePath = m_fileSystemModel->filePath(mapToSource(index));
     QFileInfo info(filePath);
     
     if (info.isFile()) {
@@ -346,7 +357,7 @@ void ProjectExplorerWidget::onTreeDoubleClicked(const QModelIndex& index) {
 void ProjectExplorerWidget::onTreeClicked(const QModelIndex& index) {
     if (!index.isValid()) return;
     
-    QString filePath = m_fileSystemModel->filePath(index);
+    QString filePath = m_fileSystemModel->filePath(mapToSource(index));
     emit fileClicked(filePath);
 }
 
@@ -661,6 +672,12 @@ void ProjectExplorerWidget::loadGitignorePatterns() {
     }
     
     qDebug() << "Loaded" << m_gitignorePatterns.size() << "gitignore patterns";
+
+    if (m_proxyModel) {
+        m_proxyModel->setPatterns(m_gitignorePatterns);
+        m_proxyModel->setBasePath(m_projectPath);
+        m_proxyModel->invalidate();
+    }
 }
 
 // ========== GitignoreFilter Implementation ==========
@@ -711,6 +728,78 @@ bool GitignoreFilter::matchPattern(const QString& filePath, const QString& patte
     // Simple wildcard matching (full .gitignore spec is more complex)
     QRegularExpression regex(QRegularExpression::wildcardToRegularExpression(pattern));
     return regex.match(filePath).hasMatch();
+}
+
+// ========== GitignoreProxyModel Implementation ==========
+
+GitignoreProxyModel::GitignoreProxyModel(QObject* parent)
+    : QSortFilterProxyModel(parent) {
+    setDynamicSortFilter(true);
+    setRecursiveFilteringEnabled(true);
+}
+
+void GitignoreProxyModel::setPatterns(const QSet<QString>& patterns) {
+    m_patterns = patterns;
+}
+
+void GitignoreProxyModel::setBasePath(const QString& basePath) {
+    m_basePath = basePath;
+}
+
+void GitignoreProxyModel::setDirectoryManager(IDirectoryManager* dirManager) {
+    m_dirManager = dirManager;
+}
+
+bool GitignoreProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const {
+    if (m_patterns.isEmpty()) {
+        return QSortFilterProxyModel::filterAcceptsRow(sourceRow, sourceParent);
+    }
+
+    auto* fsModel = qobject_cast<QFileSystemModel*>(sourceModel());
+    if (!fsModel) {
+        return QSortFilterProxyModel::filterAcceptsRow(sourceRow, sourceParent);
+    }
+
+    QModelIndex sourceIndex = fsModel->index(sourceRow, 0, sourceParent);
+    if (!sourceIndex.isValid()) {
+        return false;
+    }
+
+    QString absPath = fsModel->filePath(sourceIndex);
+    QString relPath;
+
+    if (m_dirManager && !m_basePath.isEmpty()) {
+        relPath = m_dirManager->toRelativePath(absPath, m_basePath);
+    } else if (!m_basePath.isEmpty()) {
+        relPath = QDir(m_basePath).relativeFilePath(absPath);
+    } else {
+        relPath = absPath;
+    }
+
+    for (const QString& pattern : m_patterns) {
+        QRegularExpression regex(QRegularExpression::wildcardToRegularExpression(pattern));
+        if (regex.match(relPath).hasMatch()) {
+            return false;
+        }
+    }
+
+    return QSortFilterProxyModel::filterAcceptsRow(sourceRow, sourceParent);
+}
+
+// ========== Mapping helpers ==========
+
+QModelIndex ProjectExplorerWidget::mapToSource(const QModelIndex& proxyIndex) const {
+    if (m_proxyModel) {
+        return m_proxyModel->mapToSource(proxyIndex);
+    }
+    return proxyIndex;
+}
+
+QModelIndex ProjectExplorerWidget::mapFromSource(const QModelIndex& sourceIndex) const {
+    if (m_proxyModel) {
+        return m_proxyModel->mapFromSource(sourceIndex);
+    }
+    return sourceIndex;
 }
 
 } // namespace RawrXD

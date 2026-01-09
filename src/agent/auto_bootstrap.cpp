@@ -170,7 +170,7 @@ void AutoBootstrap::executePlan(const QString& wish, const QJsonArray& plan) {
     }
     
     // Execute in background thread
-    QtConcurrent::run([this, plan]() {
+    QFuture<void> future = QtConcurrent::run([this, plan]() {
         SelfPatch patch;
         ReleaseAgent rel;
         MetaLearn ml;

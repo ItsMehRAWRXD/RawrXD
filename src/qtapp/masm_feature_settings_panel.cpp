@@ -1,4 +1,7 @@
 #include "masm_feature_settings_panel.hpp"
+#include "settings_manager.h"
+#include "settings.h"
+#include "masm_kernels.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QSplitter>
@@ -90,6 +93,38 @@ void MasmFeatureSettingsPanel::setupUI() {
     // Metrics Dashboard
     QGroupBox* metricsGroup = new QGroupBox("System Metrics", rightPanel);
     QVBoxLayout* metricsLayout = new QVBoxLayout(metricsGroup);
+
+    // MASM Backend Controls
+    QGroupBox* masmGroup = new QGroupBox("MASM CPU Backend", rightPanel);
+    QHBoxLayout* masmLayout = new QHBoxLayout(masmGroup);
+    m_enableMasmBackend = new QCheckBox("Enable MASM CPU Backend", masmGroup);
+    m_masmStatusLabel = new QLabel("Status: Unknown", masmGroup);
+    QPushButton* masmRefresh = new QPushButton("Refresh Status", masmGroup);
+    masmLayout->addWidget(m_enableMasmBackend);
+    masmLayout->addWidget(m_masmStatusLabel, 1);
+    masmLayout->addWidget(masmRefresh);
+    metricsLayout->addWidget(masmGroup);
+
+    // Initialize MASM checkbox from QSettings
+    bool masmEnabled = SettingsManager::instance().getValue("masm/enable", true).toBool();
+    m_enableMasmBackend->setChecked(masmEnabled);
+    extern AppState g_app_state; g_app_state.enable_masm_cpu_backend = masmEnabled;
+    auto updateMASMStatus = [this]() {
+        auto info = masm::backend_info();
+        QString status = QString("compiled=%1 cpu=%2 os_xsave=%3")
+            .arg(info.compiled_with_avx2 ? "1" : "0")
+            .arg(info.cpu_avx2 ? "1" : "0")
+            .arg(info.os_xsave_enabled ? "1" : "0");
+        QString enabled = m_enableMasmBackend->isChecked() ? "(user-enabled)" : "(user-disabled)";
+        m_masmStatusLabel->setText("Status: " + status + " " + enabled);
+    };
+    updateMASMStatus();
+    connect(masmRefresh, &QPushButton::clicked, this, updateMASMStatus);
+    connect(m_enableMasmBackend, &QCheckBox::toggled, this, [this, updateMASMStatus](bool checked) {
+        SettingsManager::instance().setValue("masm/enable", checked);
+        extern AppState g_app_state; g_app_state.enable_masm_cpu_backend = checked;
+        updateMASMStatus();
+    });
     
     m_totalFeaturesLabel = new QLabel("Total Features: 0", metricsGroup);
     m_enabledFeaturesLabel = new QLabel("Enabled: 0", metricsGroup);
@@ -280,6 +315,11 @@ void MasmFeatureSettingsPanel::updateMemoryUsage() {
 
 void MasmFeatureSettingsPanel::onPresetChanged(int index) {
     MasmFeatureManager::Preset preset = static_cast<MasmFeatureManager::Preset>(index);
+    
+    // Prevent recursive calls - if preset is already current, skip
+    if (preset == m_manager->getCurrentPreset()) {
+        return;
+    }
     
     QMessageBox::StandardButton reply = QMessageBox::question(
         this,

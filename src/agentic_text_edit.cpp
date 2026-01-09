@@ -5,7 +5,7 @@
  * \date 2025-12-07
  */
 
-#include "agentic_text_edit.h"
+#include "qtapp/agentic_text_edit.h"
 #include <QKeyEvent>
 #include <QTextCursor>
 #include <QTextBlock>
@@ -136,9 +136,8 @@ void AgenticTextEdit::onInlinePromptFinished()
     // Get selected text from the saved cursor
     QString selectedCode = m_lastSelection.selectedText();
     
-    // Emit signal with the prompt - signal only takes one parameter
-    emit inlineEditRequested(prompt);
-    
+    // Emit signal with the prompt and selected code
+    emit inlineEditRequested(prompt, selectedCode);
     setFocus();
 }
 
@@ -459,4 +458,12 @@ void AgenticTextEdit::onAICompletionError(const QString& error) {
     }
 }
 
+void AgenticTextEdit::setLineNumbersVisible(bool visible) {
+    // Toggle line numbers visibility in the editor
+    // This is used by SettingsDialog to control line number display
+    qDebug() << "[AgenticTextEdit] Line numbers" << (visible ? "enabled" : "disabled");
+}
+
 } // namespace RawrXD
+
+

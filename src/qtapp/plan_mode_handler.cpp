@@ -155,7 +155,7 @@ void PlanModeHandler::rejectPlan(const QString& feedback)
 {
     m_planReady = false;
     m_streamedPlanText.clear();
-    m_currentPlan = Plan();
+    m_currentPlan = DraftPlan();
 
     emit planRejected(feedback);
 
@@ -166,7 +166,7 @@ void PlanModeHandler::cancelPlanning()
 {
     m_planReady = false;
     m_streamedPlanText.clear();
-    m_currentPlan = Plan();
+    m_currentPlan = DraftPlan();
     m_userWish.clear();
     m_researchContext.clear();
 
@@ -179,7 +179,7 @@ void PlanModeHandler::onResearchCompleted(const QString& researchResults)
     emit researchProgress("Research complete, generating plan...");
 }
 
-void PlanModeHandler::onPlanStepGenerated(const PlanStep& step)
+void PlanModeHandler::onPlanStepGenerated(const DraftPlanStep& step)
 {
     if (m_currentPlan.steps.size() <= step.id) {
         m_currentPlan.steps.resize(step.id + 1);
@@ -188,7 +188,7 @@ void PlanModeHandler::onPlanStepGenerated(const PlanStep& step)
     emit planStepGenerated(step);
 }
 
-void PlanModeHandler::onPlanCompleted(const Plan& plan)
+void PlanModeHandler::onPlanCompleted(const DraftPlan& plan)
 {
     m_currentPlan = plan;
     if (validatePlan(m_currentPlan)) {
@@ -233,7 +233,7 @@ void PlanModeHandler::parseStreamedPlanToken(const QString& token)
         if (doc.isObject()) {
             QJsonObject obj = doc.object();
 
-            PlanStep step;
+            DraftPlanStep step;
             step.id = obj.value("id").toInt(m_currentPlan.steps.size());
             step.title = obj.value("title").toString();
             step.description = obj.value("description").toString();
@@ -278,7 +278,7 @@ void PlanModeHandler::parseStreamedPlanToken(const QString& token)
     }
 }
 
-bool PlanModeHandler::validatePlan(const Plan& plan)
+bool PlanModeHandler::validatePlan(const DraftPlan& plan)
 {
     // Validate plan structure
     if (plan.title.isEmpty()) {

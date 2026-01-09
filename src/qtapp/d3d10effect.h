@@ -3,7 +3,9 @@
 #define __d3d10effect_h__
 
 #include <d3d11.h>
+#include <d3d11shader.h>
 #include <vector>
+#include <d3d11.h>
 #include <string>
 #include <unordered_map>
 #include <cstring>
@@ -23,6 +25,8 @@ struct ID3D10EffectConstantBuffer;
 struct ID3D10EffectType;
 struct D3D10_EFFECT_VARIABLE_DESC;
 struct D3D10_TECHNIQUE_DESC;
+// struct ID3D11Device; // Forward declaration removed
+// struct ID3D10Blob;   // Forward declaration removed
 
 // COM base boiler-plate --------------------------------------------------------
 struct IUnknownImpl : public IUnknown {
@@ -51,13 +55,15 @@ struct D3D10_TECHNIQUE_DESC {
     UINT Passes;
     UINT Annotations;
 };
-    UINT Passes;
-    UINT Annotations;
-};
 
 // ------------------------------------------------------------------------------
 //  Variable / Type / Buffer  (very small subset, enough for most IDEs)
 // ------------------------------------------------------------------------------
+class D3D10EffectConstantBuffer : public IUnknownImpl {
+public:
+    // Stub implementation
+};
+
 class D3D10EffectType : public IUnknownImpl {
 public:
     D3D11_SHADER_TYPE_DESC desc;
@@ -159,7 +165,7 @@ public:
 // ------------------------------------------------------------------------------
 //  TOP-LEVEL EFFECT  (creates everything from a single blob)
 // ------------------------------------------------------------------------------
-class D3D10Effect : public IUnknownImpl {
+class ID3D10Effect : public IUnknownImpl {
 public:
     ID3D11Device*                     device = nullptr;
     std::vector<D3D10EffectTechnique*>techniques;
@@ -168,7 +174,7 @@ public:
     std::unordered_map<std::string, D3D10EffectTechnique*> techMap;
     std::unordered_map<std::string, D3D10EffectVariable*>  varMap;
 
-    ~D3D10Effect() {
+    ~ID3D10Effect() {
         for (auto t : techniques) t->Release();
         for (auto v : variables)  v->Release();
         for (auto b : constantBuffers) if (b) b->Release();
@@ -199,7 +205,7 @@ inline HRESULT D3DX10CreateEffectFromMemory(
 
     // ultra-minimal parser:  look for "technique11 Name { pass P0 { ... } }"
     // This is **NOT** a real HLSL parser – just enough for demo shaders.
-    auto* e = new D3D10Effect;
+    auto* e = new ID3D10Effect;
     e->device = device;
 
     // fake single technique / pass

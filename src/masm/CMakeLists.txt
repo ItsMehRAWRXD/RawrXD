@@ -24,6 +24,14 @@ if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
     message(FATAL_ERROR "64-bit build required for MASM x64 implementation")
 endif()
 
+# If building C++ AVX2 kernels, ensure compilation enables AVX2 on this directory.
+if(MSVC)
+    add_compile_options(/arch:AVX2)
+    add_compile_definitions(__AVX2__=1)
+else()
+    add_compile_options(-mavx2 -march=native)
+endif()
+
 # Output directories
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
@@ -275,3 +283,17 @@ add_custom_target(masm_stats
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMENT "MASM source statistics"
 )
+
+# If the C++ AVX2 kernel file exists, compile it with AVX2 enabled so
+# the runtime-backed intrinsics path is actually available on x86/x64
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/masm_kernels.cpp")
+    message(STATUS "Found masm_kernels.cpp; enabling AVX2 compile flags on that source file")
+    if(MSVC)
+        # MSVC: use /arch:AVX2 and set compile-time macro so __AVX2__ checks pass
+        set_source_files_properties(masm_kernels.cpp PROPERTIES COMPILE_FLAGS "/arch:AVX2")
+        set_source_files_properties(masm_kernels.cpp PROPERTIES COMPILE_DEFINITIONS "__AVX2__=1")
+    else()
+        # GCC/Clang
+        set_source_files_properties(masm_kernels.cpp PROPERTIES COMPILE_FLAGS "-mavx2 -march=native")
+    endif()
+endif()

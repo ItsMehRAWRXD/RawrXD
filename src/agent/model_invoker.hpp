@@ -17,6 +17,8 @@
 #include <QObject>
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
+#include <QPair>
+#include <QTimer>
 #include <memory>
 
 /**
@@ -166,6 +168,35 @@ public:
      */
     void setCachingEnabled(bool enabled) { m_cachingEnabled = enabled; }
 
+    /**
+     * @brief Set backend failover chain (ordered list of fallback backends)
+     * @param chain List of backend names to try in sequence (e.g., ["ollama", "claude", "openai"])
+     *
+     * When circuit breaker trips on one backend, automatically switch to next in chain.
+     * If not set, uses default chain: Ollama -> Claude -> OpenAI
+     */
+    void setBackendFailoverChain(const QStringList& chain) { m_backendFailoverChain = chain; }
+
+    /**
+     * @brief Get current failure count for a backend
+     * @param backend Backend name
+     * @return Number of consecutive failures (0 if none)
+     */
+    int getBackendFailureCount(const QString& backend) const {
+        return m_failureCountPerBackend.value(backend, 0);
+    }
+
+    /**
+     * @brief Manually reset circuit breaker for a backend (for testing/diagnostics)
+     * @param backend Backend name to reset
+     */
+    void manualResetCircuitBreaker(const QString& backend) {
+        m_failureCountPerBackend[backend] = 0;
+        m_circuitBreakerOpen[backend] = false;
+        m_lastFailurePerBackend.remove(backend);
+        qInfo() << "[ModelInvoker::CB] Manual reset for" << backend;
+    }
+
 signals:
     /**
      * @brief Emitted when LLM plan generation begins
@@ -194,6 +225,27 @@ signals:
      */
     void statusUpdated(const QString& message);
 
+    /**
+     * @brief Emitted when circuit breaker trips for a backend
+     * @param backend Backend name that failed
+     * @param failureCount Number of consecutive failures
+     * @param message Reason for circuit breaker activation
+     */
+    void circuitBreakerTripped(const QString& backend, int failureCount, const QString& message);
+
+    /**
+     * @brief Emitted when backend failover occurs
+     * @param fromBackend Original backend that failed
+     * @param toBackend Fallback backend to attempt
+     */
+    void backendFailover(const QString& fromBackend, const QString& toBackend);
+
+    /**
+     * @brief Emitted when circuit breaker resets (half-open state)
+     * @param backend Backend name attempting recovery
+     */
+    void circuitBreakerReset(const QString& backend);
+
 private slots:
     /**
      * @brief Handle network response from LLM backend
@@ -215,14 +267,14 @@ private:
      * @brief Build system prompt with tool descriptions
      * @return Complete system prompt for LLM
      */
-    QString buildSystemPrompt(const QStringList& tools);
+    QString buildSystemPrompt(const QStringList& tools) const;
 
     /**
      * @brief Build user message with wish and context
      * @param params Invocation parameters
      * @return User message for LLM
      */
-    QString buildUserMessage(const InvocationParams& params);
+    QString buildUserMessage(const InvocationParams& params) const;
 
     /**
      * @brief Send HTTP request to Ollama API
@@ -282,6 +334,57 @@ private:
      */
     void cacheResponse(const QString& key, const LLMResponse& response);
 
+    /**
+     * @brief Start asynchronous request with retry/backoff
+     * @param params Invocation parameters
+     * @param attempt Current attempt number (1-based)
+     */
+    void startAsyncRequest(const InvocationParams& params, int attempt);
+
+    /**
+     * @brief Build network payload for current backend (async path)
+     */
+    QPair<QNetworkRequest, QByteArray> buildRequestPayload(const InvocationParams& params) const;
+
+    /**
+     * @brief Clean up any pending reply and timers
+     */
+    void clearPending();
+
+    /**
+     * @brief Check if circuit breaker is open for a backend
+     * @param backend Backend name to check
+     * @return true if breaker is open (fail-fast mode)
+     */
+    bool isCircuitBreakerOpen(const QString& backend);
+
+    /**
+     * @brief Record a failure for a backend
+     * @param backend Backend name that failed
+     * @param emit_signal If true, emit circuitBreakerTripped when threshold reached
+     */
+    void recordBackendFailure(const QString& backend, bool emit_signal = true);
+
+    /**
+     * @brief Reset failure counter for a backend on successful response
+     * @param backend Backend name that succeeded
+     */
+    void resetBackendFailureCount(const QString& backend);
+
+    /**
+     * @brief Attempt to transition circuit breaker from open to half-open
+     * @param backend Backend name to probe
+     * @return true if enough time has passed for reset attempt
+     */
+    bool shouldAttemptCircuitReset(const QString& backend);
+
+    /**
+     * @brief Get next available backend in failover chain
+     * @param currentBackend Current (failed) backend
+     * @return Name of next backend to try, or empty string if no fallback available
+     */
+    QString getNextFailoverBackend(const QString& currentBackend);
+
     // ─────────────────────────────────────────────────────────────────────
     // Member Variables
     // ─────────────────────────────────────────────────────────────────────
@@ -294,9 +397,31 @@ private:
     bool m_isInvoking = false;              ///< Request in progress
     bool m_cachingEnabled = true;           ///< Enable response caching
 
+    // Async orchestration
+    int m_maxRetries = 3;                   ///< Max retry attempts per request
+    int m_timeoutMs = 15000;                ///< Per-request timeout
+    int m_retryDelayMs = 750;               ///< Base backoff delay (ms)
+    int m_currentAttempt = 0;               ///< Current attempt for in-flight async request
+    QNetworkReply* m_pendingReply = nullptr;///< In-flight reply (async)
+    std::unique_ptr<QTimer> m_timeoutTimer; ///< Timeout guard for async calls
+    InvocationParams m_pendingParams;       ///< Params for current async request
+    std::chrono::high_resolution_clock::time_point m_requestStartTime; ///< For latency tracking
+
     std::unique_ptr<QNetworkAccessManager> m_networkManager;
     QMap<QString, LLMResponse> m_responseCache;    ///< Response cache
 
     QString m_customSystemPrompt;           ///< Override system prompt
     QMap<QString, float> m_codebaseEmbeddings;    ///< RAG embeddings
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Circuit Breaker (Production Resilience)
+    // ─────────────────────────────────────────────────────────────────────
+    
+    static constexpr int CIRCUIT_BREAKER_THRESHOLD = 5;    ///< Consecutive failures to trip breaker
+    static constexpr int CIRCUIT_BREAKER_RESET_MS = 30000; ///< Time to attempt reset (ms)
+    
+    QMap<QString, int> m_failureCountPerBackend;    ///< Consecutive failures per backend
+    QMap<QString, QDateTime> m_lastFailurePerBackend; ///< Last failure timestamp per backend
+    QMap<QString, bool> m_circuitBreakerOpen;       ///< Circuit breaker state per backend
+    QStringList m_backendFailoverChain;             ///< Ordered list of backends to try in sequence
 };

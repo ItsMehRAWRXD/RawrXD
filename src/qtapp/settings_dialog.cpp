@@ -20,7 +20,7 @@
 
 SettingsDialog::SettingsDialog(QWidget *parent)
     : QDialog(parent)
-    , m_settings(new SettingsManager(this))
+    , m_settings(&SettingsManager::instance())
 {
     // Lightweight constructor - defer Qt widget creation
     setWindowTitle("RawrXD IDE Settings");
@@ -46,6 +46,9 @@ void SettingsDialog::setupUI()
     
     // Model Settings Tab
     tabWidget->addTab(createModelTab(), "Models");
+    
+    // AI Chat Settings Tab
+    tabWidget->addTab(createAIChatTab(), "AI Chat");
     
     // Security Settings Tab
     tabWidget->addTab(createSecurityTab(), "Security");
@@ -221,11 +224,22 @@ QWidget* SettingsDialog::createAIChatTab()
     m_apiKey->setEchoMode(QLineEdit::Password);
     m_apiKey->setPlaceholderText("API Key");
     
+    QPushButton *showKeyBtn = new QPushButton("Show", cloudGroup);
+    showKeyBtn->setCheckable(true);
+    connect(showKeyBtn, &QPushButton::toggled, this, [this, showKeyBtn](bool checked) {
+        m_apiKey->setEchoMode(checked ? QLineEdit::Normal : QLineEdit::Password);
+        showKeyBtn->setText(checked ? "Hide" : "Show");
+    });
+    
+    QHBoxLayout *apiKeyLayout = new QHBoxLayout();
+    apiKeyLayout->addWidget(m_apiKey);
+    apiKeyLayout->addWidget(showKeyBtn);
+    
     cloudLayout->addWidget(m_enableCloudAI);
     cloudLayout->addWidget(new QLabel("Cloud Endpoint:", cloudGroup));
     cloudLayout->addWidget(m_cloudEndpoint);
     cloudLayout->addWidget(new QLabel("API Key:", cloudGroup));
-    cloudLayout->addWidget(m_apiKey);
+    cloudLayout->addLayout(apiKeyLayout);
     
     // Local AI Settings
     QGroupBox *localGroup = new QGroupBox("Local AI Settings", tab);
@@ -370,6 +384,14 @@ void SettingsDialog::loadSettings()
     m_maxTokens->setValue(m_settings->getValue("inference/maxTokens", 2048).toInt());
     m_temperature->setValue(m_settings->getValue("inference/temperature", 0.7).toDouble());
     
+    // Load AI Chat Settings
+    m_enableCloudAI->setChecked(m_settings->getValue("aichat/enableCloud", false).toBool());
+    m_enableLocalAI->setChecked(m_settings->getValue("aichat/enableLocal", true).toBool());
+    m_cloudEndpoint->setText(m_settings->getValue("aichat/cloudEndpoint", "https://api.openai.com/v1/chat/completions").toString());
+    m_localEndpoint->setText(m_settings->getValue("aichat/localEndpoint", "http://localhost:11434/api/generate").toString());
+    m_apiKey->setText(m_settings->getValue("aichat/apiKey", "").toString());
+    m_requestTimeout->setValue(m_settings->getValue("aichat/requestTimeout", 30000).toInt());
+    
     // Load Enterprise Settings
     if (m_enterpriseLicenseKey) {
         m_enterpriseLicenseKey->setText(m_settings->getValue("enterprise/licenseKey", "").toString());
@@ -398,37 +420,39 @@ void SettingsDialog::applySettings()
 {
     if (!m_settings) return;
     
-    // Save to QSettings
-    m_settings->setValue("editor/autoSave", m_autoSaveCheck->isChecked());
-    m_settings->setValue("editor/autoSaveInterval", m_autoSaveInterval->value());
-    m_settings->setValue("editor/showLineNumbers", m_showLineNumbers->isChecked());
-    m_settings->setValue("editor/wordWrap", m_wordWrap->isChecked());
+    // Save to QSettings with safety checks
+    if (m_autoSaveCheck) m_settings->setValue("editor/autoSave", m_autoSaveCheck->isChecked());
+    if (m_autoSaveInterval) m_settings->setValue("editor/autoSaveInterval", m_autoSaveInterval->value());
+    if (m_showLineNumbers) m_settings->setValue("editor/showLineNumbers", m_showLineNumbers->isChecked());
+    if (m_wordWrap) m_settings->setValue("editor/wordWrap", m_wordWrap->isChecked());
     
-    m_settings->setValue("models/defaultPath", m_defaultModelPath->text());
+    if (m_defaultModelPath) m_settings->setValue("models/defaultPath", m_defaultModelPath->text());
     
-    m_settings->setValue("security/encryptApiKeys", m_encryptApiKeys->isChecked());
-    m_settings->setValue("security/enableAuditLog", m_enableAuditLog->isChecked());
-    m_settings->setValue("security/autoLockTimeout", m_autoLockTimeout->value());
+    if (m_encryptApiKeys) m_settings->setValue("security/encryptApiKeys", m_encryptApiKeys->isChecked());
+    if (m_enableAuditLog) m_settings->setValue("security/enableAuditLog", m_enableAuditLog->isChecked());
+    if (m_autoLockTimeout) m_settings->setValue("security/autoLockTimeout", m_autoLockTimeout->value());
     
-    m_settings->setValue("training/autoCheckpoint", m_autoCheckpoint->isChecked());
-    m_settings->setValue("training/checkpointInterval", m_checkpointInterval->value());
-    m_settings->setValue("training/checkpointPath", m_checkpointPath->text());
+    if (m_autoCheckpoint) m_settings->setValue("training/autoCheckpoint", m_autoCheckpoint->isChecked());
+    if (m_checkpointInterval) m_settings->setValue("training/checkpointInterval", m_checkpointInterval->value());
+    if (m_checkpointPath) m_settings->setValue("training/checkpointPath", m_checkpointPath->text());
     
-    m_settings->setValue("training/defaultTokenizer", m_defaultTokenizer->currentText());
+    if (m_defaultTokenizer) m_settings->setValue("training/defaultTokenizer", m_defaultTokenizer->currentText());
     
-    m_settings->setValue("cicd/enable", m_enableCICD->isChecked());
-    m_settings->setValue("cicd/autoDeploy", m_autoDeploy->isChecked());
-    m_settings->setValue("cicd/notificationEmail", m_notificationEmail->text());
+    if (m_enableCICD) m_settings->setValue("cicd/enable", m_enableCICD->isChecked());
+    if (m_autoDeploy) m_settings->setValue("cicd/autoDeploy", m_autoDeploy->isChecked());
+    if (m_notificationEmail) m_settings->setValue("cicd/notificationEmail", m_notificationEmail->text());
     
-    m_settings->setValue("gpu/enable", m_enableGPU->isChecked());
-    m_settings->setValue("gpu/backend", m_gpuBackend->currentText());
-    m_settings->setValue("inference/maxTokens", m_maxTokens->value());
-    m_settings->setValue("aichat/enableCloud", m_enableCloudAI->isChecked());
-    m_settings->setValue("aichat/enableLocal", m_enableLocalAI->isChecked());
-    m_settings->setValue("aichat/cloudEndpoint", m_cloudEndpoint->text());
-    m_settings->setValue("aichat/localEndpoint", m_localEndpoint->text());
-    m_settings->setValue("aichat/apiKey", m_apiKey->text());
-    m_settings->setValue("aichat/requestTimeout", m_requestTimeout->value());
+    if (m_enableGPU) m_settings->setValue("gpu/enable", m_enableGPU->isChecked());
+    if (m_gpuBackend) m_settings->setValue("gpu/backend", m_gpuBackend->currentText());
+    if (m_maxTokens) m_settings->setValue("inference/maxTokens", m_maxTokens->value());
+    if (m_temperature) m_settings->setValue("inference/temperature", m_temperature->value());
+    
+    if (m_enableCloudAI) m_settings->setValue("aichat/enableCloud", m_enableCloudAI->isChecked());
+    if (m_enableLocalAI) m_settings->setValue("aichat/enableLocal", m_enableLocalAI->isChecked());
+    if (m_cloudEndpoint) m_settings->setValue("aichat/cloudEndpoint", m_cloudEndpoint->text());
+    if (m_localEndpoint) m_settings->setValue("aichat/localEndpoint", m_localEndpoint->text());
+    if (m_apiKey) m_settings->setValue("aichat/apiKey", m_apiKey->text());
+    if (m_requestTimeout) m_settings->setValue("aichat/requestTimeout", m_requestTimeout->value());
     
     // Save Enterprise Settings
     if (m_enterpriseLicenseKey) {
@@ -446,6 +470,9 @@ void SettingsDialog::applySettings()
         m_settings->setValue("enterprise/emergencyBrickMode", m_enableEmergencyBrickMode->isChecked());
         m_settings->setValue("enterprise/dnsTunnel", m_enableDnsTunnel->isChecked());
     }
+    
+    // Sync to disk
+    m_settings->sync();
     
     // Emit signal that settings were applied
     emit settingsApplied();

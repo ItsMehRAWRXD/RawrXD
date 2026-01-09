@@ -63,6 +63,15 @@ void AgenticCopilotBridge::initialize(AgenticEngine* engine, ChatInterface* chat
     qInfo() << "[AgenticCopilot] Bridge initialized with all IDE components";
 }
 
+void AgenticCopilotBridge::setChatHistoryManager(RawrXD::Database::ChatHistoryManager* historyManager)
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_historyManager = historyManager;
+    if (m_historyManager && m_currentSessionId.isEmpty()) {
+        m_currentSessionId = m_historyManager->createSession("Agentic Session");
+    }
+}
+
 // ========== COPILOT-LIKE CODE COMPLETIONS (THREAD-SAFE) ==========
 
 QString AgenticCopilotBridge::generateCodeCompletion(const QString& context, const QString& prefix)
@@ -185,7 +194,7 @@ QString AgenticCopilotBridge::askAgent(const QString& question, const QJsonObjec
     
     // Ensure we have a session when ChatHistoryManager is available
     if (m_currentSessionId.isEmpty() && m_historyManager) {
-        m_currentSessionId = QString::number(m_historyManager->createNewSession("New Chat Session"));
+        m_currentSessionId = m_historyManager->createSession("New Chat Session");
     }
     
     // Store in conversation history
@@ -196,7 +205,7 @@ QString AgenticCopilotBridge::askAgent(const QString& question, const QJsonObjec
     });
     
     if (m_historyManager && !m_currentSessionId.isEmpty()) {
-        m_historyManager->addMessage(m_currentSessionId.toInt(), "user", question);
+        m_historyManager->addMessage(m_currentSessionId, "user", question);
     }
     
     m_conversationHistory.append(QJsonObject {
@@ -206,7 +215,7 @@ QString AgenticCopilotBridge::askAgent(const QString& question, const QJsonObjec
     });
     
     if (m_historyManager && !m_currentSessionId.isEmpty()) {
-        m_historyManager->addMessage(m_currentSessionId.toInt(), "assistant", response);
+        m_historyManager->addMessage(m_currentSessionId, "assistant", response);
     }
     
     m_lastConversationContext = response;

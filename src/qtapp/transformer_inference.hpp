@@ -89,8 +89,43 @@ public:
         m_ready = true; 
         m_ggufDirectMode = true;
     }
+
+    /**
+     * @brief Disable GGUF direct mode to force real inference
+     */
+    void disableGGUFDirectMode() {
+        m_ggufDirectMode = false;
+    }
+
+    // Add detokenization methods
+    void setVocabulary(const QHash<int32_t, QString>& tokenToText);
+    QString detokenize(const std::vector<int32_t>& tokens);
+    QString getLastResponse() const { return m_detokenizedOutput; }
+    
+    // Add proper GGUF tokenizer support
+    bool loadTokenizerFromGGUF(const QString& ggufPath);
+    QString detokenizeProper(const std::vector<int32_t>& tokens) const;
+    
+    // Tokenizer data structure (make public for external access)
+    struct TokenizerData {
+        QHash<int32_t, QString> idToToken;
+        QHash<QString, int32_t> tokenToId;
+        QString unkToken = "<unk>";
+        QString bosToken = "<s>";
+        QString eosToken = "</s>";
+        QString padToken = "<pad>";
+    };
+    
+    void setTokenizerData(const TokenizerData& data) { m_tokenizer = data; }
     
 private:
+    // Add vocabulary mapping for detokenization
+    QHash<int32_t, QString> m_tokenToText;
+    QString m_detokenizedOutput;
+
+    // Proper GGUF tokenizer data
+    TokenizerData m_tokenizer;
+
     // Model hyperparameters
     int m_nLayers{0};
     int m_nEmbd{0};

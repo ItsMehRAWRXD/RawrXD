@@ -67,3 +67,7 @@ void AutonomousModelManager::adaptCompressionSettings(const CompressionStats& st
         }
     }
 }
+
+QJsonArray AutonomousModelManager::getAvailableModels() {
+    return availableModels;
+}

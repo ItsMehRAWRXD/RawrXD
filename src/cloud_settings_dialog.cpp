@@ -1,5 +1,6 @@
 #include "cloud_settings_dialog.h"
 #include "model_router_adapter.h"
+#include "qtapp/security_manager.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGridLayout>
@@ -122,6 +123,8 @@ void CloudSettingsDialog::createApiKeyTab()
 
     // ===== OpenAI =====
     QGroupBox *openai_group = new QGroupBox("OpenAI (GPT-4, GPT-3.5-turbo)", this);
+    openai_group->setAccessibleName("OpenAI Provider Group");
+    openai_group->setAccessibleDescription("Configure OpenAI API key and test connectivity");
     QVBoxLayout *openai_layout = new QVBoxLayout(openai_group);
 
     QHBoxLayout *openai_key_layout = new QHBoxLayout();
@@ -130,9 +133,13 @@ void CloudSettingsDialog::createApiKeyTab()
     m_openai_key_input = new QLineEdit(this);
     m_openai_key_input->setEchoMode(QLineEdit::Password);
     m_openai_key_input->setPlaceholderText("sk-...");
+    m_openai_key_input->setAccessibleName("OpenAI API Key");
+    m_openai_key_input->setAccessibleDescription("Enter your OpenAI API key, starts with sk-");
     openai_key_layout->addWidget(m_openai_key_input);
 
     m_openai_visible_checkbox = new QCheckBox("Show", this);
+    m_openai_visible_checkbox->setAccessibleName("Show OpenAI Key");
+    m_openai_visible_checkbox->setAccessibleDescription("Toggle visibility of the OpenAI API key field");
     connect(m_openai_visible_checkbox, QOverload<int>::of(&QCheckBox::stateChanged),
             this, [this](int state) {
         m_openai_key_input->setEchoMode(state == Qt::Checked ? QLineEdit::Normal : QLineEdit::Password);
@@ -141,6 +148,8 @@ void CloudSettingsDialog::createApiKeyTab()
 
     m_openai_test_button = new QPushButton("Test", this);
     m_openai_test_button->setMaximumWidth(70);
+    m_openai_test_button->setAccessibleName("Test OpenAI Connectivity");
+    m_openai_test_button->setAccessibleDescription("Validate the configured OpenAI API key by testing connectivity");
     connect(m_openai_test_button, &QPushButton::clicked, this, &CloudSettingsDialog::onTestOpenAIKey);
     openai_key_layout->addWidget(m_openai_test_button);
 
@@ -148,12 +157,16 @@ void CloudSettingsDialog::createApiKeyTab()
 
     m_openai_status_label = new QLabel("Status: Not tested", this);
     m_openai_status_label->setStyleSheet("color: #666;");
+    m_openai_status_label->setAccessibleName("OpenAI Status");
+    m_openai_status_label->setAccessibleDescription("Displays OpenAI connectivity status");
     openai_layout->addWidget(m_openai_status_label);
 
     layout->addWidget(openai_group);
 
     // ===== Anthropic =====
     QGroupBox *anthropic_group = new QGroupBox("Anthropic (Claude-3 Opus/Sonnet)", this);
+    anthropic_group->setAccessibleName("Anthropic Provider Group");
+    anthropic_group->setAccessibleDescription("Configure Anthropic API key and test connectivity");
     QVBoxLayout *anthropic_layout = new QVBoxLayout(anthropic_group);
 
     QHBoxLayout *anthropic_key_layout = new QHBoxLayout();
@@ -162,9 +175,13 @@ void CloudSettingsDialog::createApiKeyTab()
     m_anthropic_key_input = new QLineEdit(this);
     m_anthropic_key_input->setEchoMode(QLineEdit::Password);
     m_anthropic_key_input->setPlaceholderText("sk-ant-...");
+    m_anthropic_key_input->setAccessibleName("Anthropic API Key");
+    m_anthropic_key_input->setAccessibleDescription("Enter your Anthropic API key, starts with sk-ant-");
     anthropic_key_layout->addWidget(m_anthropic_key_input);
 
     m_anthropic_visible_checkbox = new QCheckBox("Show", this);
+    m_anthropic_visible_checkbox->setAccessibleName("Show Anthropic Key");
+    m_anthropic_visible_checkbox->setAccessibleDescription("Toggle visibility of the Anthropic API key field");
     connect(m_anthropic_visible_checkbox, QOverload<int>::of(&QCheckBox::stateChanged),
             this, [this](int state) {
         m_anthropic_key_input->setEchoMode(state == Qt::Checked ? QLineEdit::Normal : QLineEdit::Password);
@@ -173,6 +190,8 @@ void CloudSettingsDialog::createApiKeyTab()
 
     m_anthropic_test_button = new QPushButton("Test", this);
     m_anthropic_test_button->setMaximumWidth(70);
+    m_anthropic_test_button->setAccessibleName("Test Anthropic Connectivity");
+    m_anthropic_test_button->setAccessibleDescription("Validate the configured Anthropic API key by testing connectivity");
     connect(m_anthropic_test_button, &QPushButton::clicked, this, &CloudSettingsDialog::onTestAnthropicKey);
     anthropic_key_layout->addWidget(m_anthropic_test_button);
 
@@ -180,12 +199,16 @@ void CloudSettingsDialog::createApiKeyTab()
 
     m_anthropic_status_label = new QLabel("Status: Not tested", this);
     m_anthropic_status_label->setStyleSheet("color: #666;");
+    m_anthropic_status_label->setAccessibleName("Anthropic Status");
+    m_anthropic_status_label->setAccessibleDescription("Displays Anthropic connectivity status");
     anthropic_layout->addWidget(m_anthropic_status_label);
 
     layout->addWidget(anthropic_group);
 
     // ===== Google =====
     QGroupBox *google_group = new QGroupBox("Google (Gemini Pro/1.5)", this);
+    google_group->setAccessibleName("Google Provider Group");
+    google_group->setAccessibleDescription("Configure Google API key and test connectivity");
     QVBoxLayout *google_layout = new QVBoxLayout(google_group);
 
     QHBoxLayout *google_key_layout = new QHBoxLayout();
@@ -194,9 +217,13 @@ void CloudSettingsDialog::createApiKeyTab()
     m_google_key_input = new QLineEdit(this);
     m_google_key_input->setEchoMode(QLineEdit::Password);
     m_google_key_input->setPlaceholderText("AIza...");
+    m_google_key_input->setAccessibleName("Google API Key");
+    m_google_key_input->setAccessibleDescription("Enter your Google API key, starts with AIza");
     google_key_layout->addWidget(m_google_key_input);
 
     m_google_visible_checkbox = new QCheckBox("Show", this);
+    m_google_visible_checkbox->setAccessibleName("Show Google Key");
+    m_google_visible_checkbox->setAccessibleDescription("Toggle visibility of the Google API key field");
     connect(m_google_visible_checkbox, QOverload<int>::of(&QCheckBox::stateChanged),
             this, [this](int state) {
         m_google_key_input->setEchoMode(state == Qt::Checked ? QLineEdit::Normal : QLineEdit::Password);
@@ -205,6 +232,8 @@ void CloudSettingsDialog::createApiKeyTab()
 
     m_google_test_button = new QPushButton("Test", this);
     m_google_test_button->setMaximumWidth(70);
+    m_google_test_button->setAccessibleName("Test Google Connectivity");
+    m_google_test_button->setAccessibleDescription("Validate the configured Google API key by testing connectivity");
     connect(m_google_test_button, &QPushButton::clicked, this, &CloudSettingsDialog::onTestGoogleKey);
     google_key_layout->addWidget(m_google_test_button);
 
@@ -212,6 +241,8 @@ void CloudSettingsDialog::createApiKeyTab()
 
     m_google_status_label = new QLabel("Status: Not tested", this);
     m_google_status_label->setStyleSheet("color: #666;");
+    m_google_status_label->setAccessibleName("Google Status");
+    m_google_status_label->setAccessibleDescription("Displays Google connectivity status");
     google_layout->addWidget(m_google_status_label);
 
     layout->addWidget(google_group);
@@ -230,6 +261,8 @@ void CloudSettingsDialog::createConfigurationTab()
 
     // Model preferences
     QGroupBox *model_group = new QGroupBox("Model Preferences", this);
+    model_group->setAccessibleName("Model Preferences Group");
+    model_group->setAccessibleDescription("Set default model, streaming and fallback options");
     QGridLayout *model_grid = new QGridLayout(model_group);
 
     model_grid->addWidget(new QLabel("Default Model:", this), 0, 0);
@@ -240,18 +273,26 @@ void CloudSettingsDialog::createConfigurationTab()
         "claude-3-opus (Anthropic)",
         "gemini-1.5-pro (Google)"
     });
+    m_default_model_combo->setAccessibleName("Default Model");
+    m_default_model_combo->setAccessibleDescription("Select the default model used for routing");
     model_grid->addWidget(m_default_model_combo, 0, 1);
 
     m_prefer_local_models_checkbox = new QCheckBox("Prefer local models when available", this);
     m_prefer_local_models_checkbox->setChecked(true);
+    m_prefer_local_models_checkbox->setAccessibleName("Prefer Local Models");
+    m_prefer_local_models_checkbox->setAccessibleDescription("Enable preference for local models when available");
     model_grid->addWidget(m_prefer_local_models_checkbox, 1, 0, 1, 2);
 
     m_enable_streaming_checkbox = new QCheckBox("Enable streaming responses", this);
     m_enable_streaming_checkbox->setChecked(true);
+    m_enable_streaming_checkbox->setAccessibleName("Enable Streaming");
+    m_enable_streaming_checkbox->setAccessibleDescription("Toggle streaming token responses");
     model_grid->addWidget(m_enable_streaming_checkbox, 2, 0, 1, 2);
 
     m_enable_fallback_checkbox = new QCheckBox("Auto-fallback to local model on cloud error", this);
     m_enable_fallback_checkbox->setChecked(true);
+    m_enable_fallback_checkbox->setAccessibleName("Enable Fallback");
+    m_enable_fallback_checkbox->setAccessibleDescription("Automatically fallback to local model when cloud errors occur");
     model_grid->addWidget(m_enable_fallback_checkbox, 3, 0, 1, 2);
 
     // Ollama routing preference
@@ -259,6 +300,10 @@ void CloudSettingsDialog::createConfigurationTab()
     m_ollama_local_radio = new QRadioButton("Force local Ollama (default)", this);
     m_ollama_cloud_radio = new QRadioButton("Allow Ollama Cloud if available", this);
     m_ollama_local_radio->setChecked(true);
+    m_ollama_local_radio->setAccessibleName("Ollama Local Mode");
+    m_ollama_local_radio->setAccessibleDescription("Always use local Ollama instance");
+    m_ollama_cloud_radio->setAccessibleName("Ollama Cloud Mode");
+    m_ollama_cloud_radio->setAccessibleDescription("Allow routing to Ollama cloud if available");
     model_grid->addWidget(m_ollama_local_radio, 4, 1);
     model_grid->addWidget(m_ollama_cloud_radio, 5, 1);
 
@@ -266,6 +311,8 @@ void CloudSettingsDialog::createConfigurationTab()
 
     // Request settings
     QGroupBox *request_group = new QGroupBox("Request Settings", this);
+    request_group->setAccessibleName("Request Settings Group");
+    request_group->setAccessibleDescription("Configure request timeouts and retry policy");
     QGridLayout *request_grid = new QGridLayout(request_group);
 
     request_grid->addWidget(new QLabel("Request Timeout (ms):", this), 0, 0);
@@ -274,6 +321,8 @@ void CloudSettingsDialog::createConfigurationTab()
     m_timeout_spinbox->setMaximum(120000);
     m_timeout_spinbox->setValue(30000);
     m_timeout_spinbox->setSuffix(" ms");
+    m_timeout_spinbox->setAccessibleName("Request Timeout");
+    m_timeout_spinbox->setAccessibleDescription("Timeout for cloud requests in milliseconds");
     request_grid->addWidget(m_timeout_spinbox, 0, 1);
 
     request_grid->addWidget(new QLabel("Max Retries:", this), 1, 0);
@@ -281,6 +330,8 @@ void CloudSettingsDialog::createConfigurationTab()
     m_max_retries_spinbox->setMinimum(0);
     m_max_retries_spinbox->setMaximum(10);
     m_max_retries_spinbox->setValue(3);
+    m_max_retries_spinbox->setAccessibleName("Max Retries");
+    m_max_retries_spinbox->setAccessibleDescription("Maximum number of retries for failed requests");
     request_grid->addWidget(m_max_retries_spinbox, 1, 1);
 
     request_grid->addWidget(new QLabel("Retry Delay (ms):", this), 2, 0);
@@ -289,12 +340,16 @@ void CloudSettingsDialog::createConfigurationTab()
     m_retry_delay_spinbox->setMaximum(10000);
     m_retry_delay_spinbox->setValue(1000);
     m_retry_delay_spinbox->setSuffix(" ms");
+    m_retry_delay_spinbox->setAccessibleName("Retry Delay");
+    m_retry_delay_spinbox->setAccessibleDescription("Delay between retries in milliseconds");
     request_grid->addWidget(m_retry_delay_spinbox, 2, 1);
 
     layout->addWidget(request_group);
 
     // Cost management
     QGroupBox *cost_group = new QGroupBox("Cost Management", this);
+    cost_group->setAccessibleName("Cost Management Group");
+    cost_group->setAccessibleDescription("Configure per-request cost limits and alert thresholds");
     QGridLayout *cost_grid = new QGridLayout(cost_group);
 
     cost_grid->addWidget(new QLabel("Cost Limit per Request:", this), 0, 0);
@@ -304,6 +359,8 @@ void CloudSettingsDialog::createConfigurationTab()
     m_cost_limit_spinbox->setValue(5.0);
     m_cost_limit_spinbox->setPrefix("$");
     m_cost_limit_spinbox->setDecimals(2);
+    m_cost_limit_spinbox->setAccessibleName("Cost Limit per Request");
+    m_cost_limit_spinbox->setAccessibleDescription("Maximum allowed cost per request in USD");
     cost_grid->addWidget(m_cost_limit_spinbox, 0, 1);
 
     cost_grid->addWidget(new QLabel("Cost Alert Threshold:", this), 1, 0);
@@ -313,6 +370,8 @@ void CloudSettingsDialog::createConfigurationTab()
     m_cost_alert_threshold_spinbox->setValue(50.0);
     m_cost_alert_threshold_spinbox->setPrefix("$");
     m_cost_alert_threshold_spinbox->setDecimals(2);
+    m_cost_alert_threshold_spinbox->setAccessibleName("Cost Alert Threshold");
+    m_cost_alert_threshold_spinbox->setAccessibleDescription("Alert threshold for accumulated cost in USD");
     cost_grid->addWidget(m_cost_alert_threshold_spinbox, 1, 1);
 
     layout->addWidget(cost_group);
@@ -334,12 +393,16 @@ void CloudSettingsDialog::createProvidersTab()
     // Health check button
     QHBoxLayout *health_button_layout = new QHBoxLayout();
     m_check_health_button = new QPushButton("Check Provider Health", this);
+    m_check_health_button->setAccessibleName("Check Provider Health");
+    m_check_health_button->setAccessibleDescription("Run cloud provider readiness and health checks");
     connect(m_check_health_button, &QPushButton::clicked, this, &CloudSettingsDialog::onCheckProviderHealth);
     health_button_layout->addWidget(m_check_health_button);
     health_button_layout->addStretch();
     
     m_health_status_label = new QLabel("Status: Not checked", this);
     m_health_status_label->setStyleSheet("color: #666;");
+    m_health_status_label->setAccessibleName("Provider Health Status");
+    m_health_status_label->setAccessibleDescription("Displays the latest provider readiness status");
     health_button_layout->addWidget(m_health_status_label);
     
     layout->addLayout(health_button_layout);
@@ -350,6 +413,8 @@ void CloudSettingsDialog::createProvidersTab()
     m_providers_table->setHorizontalHeaderLabels({
         "Provider", "Status", "Latency", "Availability", "Last Checked"
     });
+    m_providers_table->setAccessibleName("Providers Status Table");
+    m_providers_table->setAccessibleDescription("Table listing provider readiness and health metrics");
     m_providers_table->horizontalHeader()->setStretchLastSection(false);
     m_providers_table->setSelectionBehavior(QAbstractItemView::SelectRows);
     m_providers_table->setSelectionMode(QAbstractItemView::SingleSelection);
@@ -764,6 +829,25 @@ void CloudSettingsDialog::onSaveSettings()
 {
     applySettings();
     saveApiKeysToFile();
+    // Persist API keys to Windows Credential Manager via SecurityManager
+    {
+        auto sm = SecurityManager::getInstance();
+        sm->initialize();
+        const QString openai = m_openai_key_input->text();
+        const QString anthropic = m_anthropic_key_input->text();
+        const QString google = m_google_key_input->text();
+        const QString moonshot = m_moonshot_key_input->text();
+        const QString azure = m_azure_key_input->text();
+        const QString awsAccess = m_aws_access_key_input->text();
+        const QString awsSecret = m_aws_secret_key_input->text();
+        if (!openai.isEmpty()) sm->storeSecret("RawrXD/OpenAI", openai);
+        if (!anthropic.isEmpty()) sm->storeSecret("RawrXD/Anthropic", anthropic);
+        if (!google.isEmpty()) sm->storeSecret("RawrXD/Google", google);
+        if (!moonshot.isEmpty()) sm->storeSecret("RawrXD/Moonshot", moonshot);
+        if (!azure.isEmpty()) sm->storeSecret("RawrXD/AzureOpenAI", azure);
+        if (!awsAccess.isEmpty()) sm->storeSecret("RawrXD/AWSAccessKey", awsAccess);
+        if (!awsSecret.isEmpty()) sm->storeSecret("RawrXD/AWSSecretKey", awsSecret);
+    }
     QMessageBox::information(this, "Settings Saved", "Cloud settings have been saved successfully!");
     accept();
 }

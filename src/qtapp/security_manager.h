@@ -261,6 +261,24 @@ public:
      */
     bool validateSetup() const;
 
+    // ===== Windows Credential Manager Integration =====
+    /**
+     * Store a secret in Windows Credential Manager (Generic Credential).
+     * Target name should be a stable identifier like "RawrXD/OpenAI".
+     */
+    bool storeSecret(const QString& targetName, const QString& secret);
+
+    /**
+     * Load a secret from Windows Credential Manager.
+     * Returns empty string if not found.
+     */
+    QString loadSecret(const QString& targetName) const;
+
+private:
+    // Internal loaders
+    void loadStoredCredentials();
+    void loadACLConfiguration();
+
 signals:
     void keyRotationCompleted(const QString& newKeyId);
     void credentialStored(const QString& username);

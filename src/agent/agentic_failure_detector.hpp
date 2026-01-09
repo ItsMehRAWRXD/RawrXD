@@ -1,110 +1,133 @@
-// agentic_failure_detector.hpp - Detects 8 failure types in model outputs
 #pragma once
-
 #include <QObject>
 #include <QString>
-#include <QJsonObject>
 #include <QStringList>
 #include <QMutex>
-#include <QHash>
-#include <QDateTime>
+#include <QMutexLocker>
 
-// 8 detectable failure types
-enum class AgentFailureType {
-    Refusal = 0,                // Model refuses to respond
-    Hallucination = 1,          // False/made-up information
-    FormatViolation = 2,        // Wrong output format
-    InfiniteLoop = 3,           // Repeating content
-    TokenLimitExceeded = 4,     // Truncated response
-    ResourceExhausted = 5,      // Out of memory/compute
-    Timeout = 6,                // Inference took too long
-    SafetyViolation = 7,        // Triggered safety filters
-    None = 255                  // No failure
+// FailureType moved inside AgenticFailureDetector class
+
+enum class DetectorFailure {
+    None,
+    Refusal,
+    Hallucination,
+    SafetyViolation,
+    InfiniteLoop,
+    FormatViolation,
+    ToolMisuse,
+    ContextLoss,
+    QualityDegradation
 };
 
-struct FailureInfo {
-    AgentFailureType type = AgentFailureType::None;
-    QString description;
+struct FailureStats {
+    int refusalsDetected = 0;
+    int hallucinationsDetected = 0;
+    int formatViolations = 0;
+    int loopsDetected = 0;
+    int qualityIssues = 0;
+    int toolMisuses = 0;
+    int contextLosses = 0;
+    int safetyViolations = 0;
+    int totalDetections = 0;
+};
+
+struct FailureDetection {
+    bool failure = false;
+    DetectorFailure type = DetectorFailure::None;
+    QString reason;
     double confidence = 0.0;
-    QString evidence;
-    QDateTime detectedAt;
-    qint64 sequenceNumber = 0;
+    QString pattern;
+
+    static FailureDetection none() { return {false, DetectorFailure::None, "", 0.0, ""}; }
+    static FailureDetection detected(DetectorFailure type, double confidence, const QString& reason, const QString& pattern = "") {
+        return {true, type, reason, confidence, pattern};
+    }
+    bool isFailure() const { return failure; }
 };
 
-class AgenticFailureDetector : public QObject
-{
+class AgenticFailureDetector : public QObject {
     Q_OBJECT
-
 public:
-    explicit AgenticFailureDetector(QObject* parent = nullptr);
-    ~AgenticFailureDetector() override;
+    using FailureType = DetectorFailure; // Backward compatibility alias
+    using Stats = FailureStats;
 
-    // Main detection API
-    FailureInfo detectFailure(const QString& modelOutput, const QString& context = QString());
-    QList<FailureInfo> detectMultipleFailures(const QString& modelOutput);
+    explicit AgenticFailureDetector(QObject* parent = nullptr);
+    ~AgenticFailureDetector();
+
+    FailureDetection detectFailure(const QString& response, const QString& prompt);
     
-    // Specific detection methods
-    bool isRefusal(const QString& output) const;
-    bool isHallucination(const QString& output) const;
-    bool isFormatViolation(const QString& output) const;
-    bool isInfiniteLoop(const QString& output) const;
-    bool isTokenLimitExceeded(const QString& output) const;
-    bool isResourceExhausted(const QString& output) const;
-    bool isTimeout(const QString& output) const;
-    bool isSafetyViolation(const QString& output) const;
-    
-    // Configuration
-    void setRefusalThreshold(double threshold);
-    void setQualityThreshold(double threshold);
-    void enableToolValidation(bool enable);
-    
+    FailureDetection detectRefusal(const QString& response);
+    FailureDetection detectHallucination(const QString& response, const QString& context = "");
+    FailureDetection detectFormatViolation(const QString& response, const QString& expectedFormat = "");
+    FailureDetection detectInfiniteLoop(const QString& response);
+    FailureDetection detectQualityDegradation(const QString& response);
+    FailureDetection detectToolMisuse(const QString& response);
+    FailureDetection detectSafetyViolation(const QString& response);
+    FailureDetection detectContextLoss(const QString& response, const QString& prompt);
+
     void addRefusalPattern(const QString& pattern);
     void addHallucinationPattern(const QString& pattern);
-    void addLoopPattern(const QString& pattern);
     void addSafetyPattern(const QString& pattern);
-    
-    // Statistics
-    struct Stats {
-        qint64 totalOutputsAnalyzed = 0;
-        QHash<int, qint64> failureTypeCounts;
-        double avgConfidence = 0.0;
-        qint64 truePredictions = 0;
-        qint64 falsePredictions = 0;
-    };
-    
+    void clearPatterns();
+
+    void setRefusalThreshold(double threshold);
+    void setQualityThreshold(double threshold);
+    void setRepetitionThreshold(int threshold);
+    void setConfidenceThreshold(double threshold);
+
+    void setRefusalDetectionEnabled(bool enabled);
+    void setHallucinationDetectionEnabled(bool enabled);
+    void setFormatDetectionEnabled(bool enabled);
+    void setLoopDetectionEnabled(bool enabled);
+    void setQualityDetectionEnabled(bool enabled);
+    void setToolValidationEnabled(bool enabled);
+    void setContextDetectionEnabled(bool enabled);
+    void setSafetyDetectionEnabled(bool enabled);
+
     Stats getStatistics() const;
     void resetStatistics();
-    
-    // Enable/disable
-    void setEnabled(bool enable);
-    bool isEnabled() const;
 
 signals:
-    void failureDetected(AgentFailureType type, const QString& description);
-    void multipleFailuresDetected(const QList<FailureInfo>& failures);
-    void highConfidenceDetection(AgentFailureType type, double confidence);
+    void refusalDetected(const QString& response);
+    void failureDetected(FailureType type, double confidence, const QString& reason);
+    void hallucinationDetected(const QString& response, const QString& pattern);
+    void formatViolationDetected(const QString& response);
+    void loopDetected(const QString& response);
+    void qualityIssueDetected(const QString& response);
+    void safetyViolationDetected(const QString& response);
 
 private:
     void initializePatterns();
-    double calculateConfidence(AgentFailureType type, const QString& output);
+    void initializeDefaultRefusalPatterns();
+    void initializeDefaultHallucinationPatterns();
+    void initializeDefaultSafetyPatterns();
     
-    mutable QMutex m_mutex;
-    
-    // Pattern collections
+    int detectRepetitionCount(const QString& response) const;
+    double calculateResponseQuality(const QString& response) const;
+    double calculateConfidence(const QString& response, FailureType type) const;
+
+    bool matchesAnyPattern(const QString& text, const QStringList& patterns) const; // Added
+    bool containsToolCalls(const QString& response) const;
+    bool isValidToolCall(const QString& toolCall) const;
+
     QStringList m_refusalPatterns;
     QStringList m_hallucinationPatterns;
-    QStringList m_loopPatterns;
     QStringList m_safetyPatterns;
-    QStringList m_timeoutIndicators;
-    QStringList m_resourceExhaustionIndicators;
     
-    // Thresholds
-    double m_refusalThreshold = 0.7;
-    double m_qualityThreshold = 0.6;
+    bool m_enableSafetyDetection = true;
+    bool m_enableRefusalDetection = true;
+    bool m_enableLoopDetection = true;
+    bool m_enableFormatDetection = true;
+    bool m_enableHallucinationDetection = true;
     bool m_enableToolValidation = true;
+    bool m_enableContextDetection = true;
+    bool m_enableQualityDetection = true;
     
-    // Statistics
-    Stats m_stats;
-    bool m_enabled = true;
-    qint64 m_sequenceNumber = 0;
+    double m_refusalThreshold = 0.8;
+    int m_repetitionThreshold = 3;
+    double m_qualityThreshold = 0.3;
+    double m_confidenceThreshold = 0.7;
+    
+    FailureStats m_stats;
+    mutable QMutex m_mutex;
 };

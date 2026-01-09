@@ -380,7 +380,7 @@ bool StreamingGGUFLoader::LoadZone(const std::string& zone_name, uint64_t max_me
         if (compression_provider_->Decompress(zone.data, decompressed)) {
             zones_[zone_name].data = std::move(decompressed);
             zones_[zone_name].compressed = false;
-            compression_stats_.decompressed_bytes += zones_[zone_name].data.size();
+            compression_stats_.total_decompressed_bytes += zones_[zone_name].data.size();
             qInfo() << "[Streaming] Zone" << zone_name << "decompressed via" << compression_provider_->GetActiveKernel().c_str();
             
             // telemetry & safety
@@ -395,7 +395,10 @@ bool StreamingGGUFLoader::LoadZone(const std::string& zone_name, uint64_t max_me
 
     // legacy path: inflate in-place
     if (zone.compressed) {
-        QByteArray compressed(reinterpret_cast<const char*>(zone.data.data()), zone.data.size());
+        // QByteArray compressed(reinterpret_cast<const char*>(zone.data.data()), zone.data.size());
+        qWarning() << "[Streaming] Zone" << zone_name.c_str() << "is compressed but decompression failed or provider missing.";
+        return false;
+    }
     
     zone.is_loaded = true;
     current_zone_ = zone_name;

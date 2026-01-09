@@ -51,6 +51,7 @@ class StreamingGGUFLoader : public QObject {
     
 public:
     explicit StreamingGGUFLoader(QObject* parent = nullptr);
+    StreamingGGUFLoader();  // Zero-argument constructor for std::make_unique<StreamingGGUFLoader>()
     ~StreamingGGUFLoader();
 
     // Core operations

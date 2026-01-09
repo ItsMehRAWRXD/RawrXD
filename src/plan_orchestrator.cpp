@@ -39,6 +39,10 @@ void PlanOrchestrator::setInferenceEngine(InferenceEngine* engine) {
     m_inferenceEngine = engine;
 }
 
+void PlanOrchestrator::setAgenticEngine(AgenticEngine* engine) {
+    m_agenticEngine = engine;
+}
+
 void PlanOrchestrator::setWorkspaceRoot(const QString& root) {
     m_workspaceRoot = root;
     qDebug() << "[PlanOrchestrator] Workspace root set to:" << root;

@@ -53,6 +53,11 @@ public:
     QJsonObject exportAllSettings() const;
     bool importSettings(const QJsonObject& settings);
 
+    // LLM Configuration helpers
+    QString getDefaultProjectRoot() const;
+    void setDefaultProjectRoot(const QString& path);
+    void initializeDefaults();
+
 signals:
     void settingChanged(const QString& key, const QVariant& value);
     void agentSettingsChanged(const QString& agentId);

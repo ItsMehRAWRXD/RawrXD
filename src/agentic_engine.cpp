@@ -85,15 +85,39 @@ void AgenticEngine::initialize() {
     
     // Connect external client signals
     connect(m_externalClient, &ExternalModelClient::tokenReceived, this, &AgenticEngine::streamToken);
-    connect(m_externalClient, &ExternalModelClient::responseFinished, this, [this](const QString& response) {
-        emit responseReady(response);
-        emit streamFinished();
-    });
-    connect(m_externalClient, &ExternalModelClient::errorOccurred, this, &AgenticEngine::errorOccurred);
+          connect(m_externalClient, &ExternalModelClient::responseFinished, this, [this](const QString& response) {
+          emit responseReady(response);
+          emit streamFinished();
+      });
+  }
 
-    qInfo() << "[AgenticEngine] Inference engine and external client created";
-    
-    qDebug() << "Agentic Engine initialized - waiting for model selection";
+  bool AgenticEngine::isModelLoaded() const {
+      return m_modelLoaded || (m_inferenceEngine && m_inferenceEngine->isModelLoaded());
+  }
+
+void AgenticEngine::setInferenceEngine(InferenceEngine* engine) {
+    if (m_inferenceEngine == engine) return;
+
+    // Disconnect old engine if it exists
+    if (m_inferenceEngine) {
+        disconnect(m_inferenceEngine, &InferenceEngine::streamToken, this, nullptr);
+        disconnect(m_inferenceEngine, &InferenceEngine::streamFinished, this, nullptr);
+    }
+
+    m_inferenceEngine = engine;
+
+    // Connect new engine
+    if (m_inferenceEngine) {
+        connect(m_inferenceEngine, &InferenceEngine::streamToken, this, [this](qint64 reqId, const QString& token) {
+            Q_UNUSED(reqId);
+            emit streamToken(token);
+        });
+        connect(m_inferenceEngine, &InferenceEngine::streamFinished, this, [this](qint64 reqId) {
+            Q_UNUSED(reqId);
+            emit streamFinished();
+        });
+        qInfo() << "[AgenticEngine] Connected to new InferenceEngine instance";
+    }
 }
 
 void AgenticEngine::setModelSource(ModelSource source) {
@@ -292,11 +316,53 @@ void AgenticEngine::processMessage(const QString& message, const QString& editor
     }
     qDebug() << "[AgenticEngine] Model source:" << (m_modelSource == Local ? "Local" : "External");
     qDebug() << "[AgenticEngine] Streaming mode:" << (streaming ? "ON" : "OFF");
+    qDebug() << "[AgenticEngine] Model state - m_modelLoaded:" << m_modelLoaded 
+             << ", m_inferenceEngine:" << (m_inferenceEngine ? "set" : "null") 
+             << ", isModelLoaded:" << (m_inferenceEngine && m_inferenceEngine->isModelLoaded() ? "true" : "false");
+
+    // Simple queue to prevent concurrent inference
+    static bool inferenceInProgress = false;
+    if (inferenceInProgress) {
+        qWarning() << "[AgenticEngine] Inference already in progress, queuing request";
+        // Queue the request for later
+        QTimer::singleShot(100, this, [this, message, editorContext, streaming]() {
+            processMessage(message, editorContext, streaming);
+        });
+        return;
+    }
+    inferenceInProgress = true;
     
+    // Auto-reset flag when response is emitted
+    auto resetFlag = []() {
+        inferenceInProgress = false;
+        qDebug() << "[AgenticEngine] Inference flag reset";
+    };
+    
+    // Connect to BOTH responseReady AND streamFinished signals to reset flag
+    // streamFinished is used for streaming mode, responseReady for non-streaming
+    QMetaObject::Connection* resetConnection1 = new QMetaObject::Connection();
+    QMetaObject::Connection* resetConnection2 = new QMetaObject::Connection();
+    
+    *resetConnection1 = connect(this, &AgenticEngine::responseReady, 
+        this, [resetConnection1, resetConnection2, resetFlag]() {
+            resetFlag();
+            disconnect(*resetConnection1);
+            disconnect(*resetConnection2);
+            delete resetConnection1;
+            delete resetConnection2;
+        }, Qt::SingleShotConnection);
+    
+    *resetConnection2 = connect(this, &AgenticEngine::streamFinished, 
+        this, [resetConnection1, resetConnection2, resetFlag]() {
+            resetFlag();
+            disconnect(*resetConnection1);
+            disconnect(*resetConnection2);
+            delete resetConnection1;
+            delete resetConnection2;
+        }, Qt::SingleShotConnection);
+
     // Enhance message with editor context if provided
-    QString enhancedMessage = message;
-    
-    // Check for special @inline command (Ctrl+K)
+    QString enhancedMessage = message;    // Check for special @inline command (Ctrl+K)
     bool isInlineEdit = message.startsWith("@inline");
     if (isInlineEdit) {
         QString prompt = message.mid(7).trimmed();
@@ -314,9 +380,12 @@ void AgenticEngine::processMessage(const QString& message, const QString& editor
         return;
     }
     
-    if (m_modelLoaded && m_inferenceEngine && m_inferenceEngine->isModelLoaded()) {
+    // Check if either m_modelLoaded is true OR the inference engine itself reports a model is loaded (handles Ollama blobs)
+    bool modelReady = m_modelLoaded || (m_inferenceEngine && m_inferenceEngine->isModelLoaded());
+    
+    if (modelReady && m_inferenceEngine) {
         // Use real inference engine - response will be emitted via signal
-        qInfo() << "[AgenticEngine] ✓ Using loaded model for response generation";
+        qInfo() << "[AgenticEngine] ✓ Using loaded model/blob for response generation";
         
         if (streaming) {
             // Use streaming generation
@@ -385,38 +454,27 @@ QString AgenticEngine::generateTokenizedResponse(const QString& message) {
         // Run inference in worker thread and ALWAYS emit responseReady, even on failure
         // This prevents UI deadlock when ggml aborts inside the worker thread
         
-        auto future = QtConcurrent::run([this, message]() -> QString {
-            try {
-                // Tokenize the input message
-                auto tokens = m_inferenceEngine->tokenize(message);
-                qDebug() << "Tokenized input into" << tokens.size() << "tokens";
-                
-                // Generate response tokens (limit to reasonable length)
-                int maxTokens = 256; // Configurable response length
-                auto generatedTokens = m_inferenceEngine->generate(tokens, maxTokens);
-                qDebug() << "Generated" << generatedTokens.size() << "tokens";
-                
-                // Detokenize back to text
-                QString response = m_inferenceEngine->detokenize(generatedTokens);
-                
-                // If response is empty or too short, fall back to context-aware response
-                if (response.trimmed().length() < 10) {
-                    qWarning() << "Generated response too short, using fallback";
-                    return generateFallbackResponse(message);
-                } else {
-                    qDebug() << "Generated real model response:" << response.left(100) << "...";
-                    return response;
-                }
-            } catch (const std::exception& e) {
-                qCritical() << "Model inference aborted:" << e.what();
-                return QString("❌ Model error: %1").arg(e.what());
-            } catch (...) {
-                qCritical() << "Unknown fatal error in inference";
-                return "❌ Inference engine crashed – model file may be incompatible.";
-            }
-        });
-        
-        // When the worker finishes, emit the result
+          auto future = QtConcurrent::run([this, message]() -> QString {
+              try {
+                  // Use the unified generateSync method which handles both GGUF and Ollama
+                  QString response = m_inferenceEngine->generateSync(message, 256);
+
+                  // If response is empty or too short, fall back to context-aware response
+                  if (response.trimmed().length() < 10) {
+                      qWarning() << "Generated response too short, using fallback";
+                      return generateFallbackResponse(message);
+                  } else {
+                      qDebug() << "Generated real model response:" << response.left(100) << "...";
+                      return response;
+                  }
+              } catch (const std::exception& e) {
+                  qCritical() << "Model inference aborted:" << e.what();
+                  return QString("❌ Model error: %1").arg(e.what());
+              } catch (...) {
+                  qCritical() << "Unknown fatal error in inference";
+                  return "❌ Inference engine crashed – model file may be incompatible.";
+              }
+          });        // When the worker finishes, emit the result
         QFutureWatcher<QString> *watcher = new QFutureWatcher<QString>(this);
         connect(watcher, &QFutureWatcher<QString>::finished,
                 this, [watcher, this]() {

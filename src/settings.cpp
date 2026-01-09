@@ -60,6 +60,7 @@ bool Settings::LoadCompute(AppState& state, const std::string& path) {
         std::string val = line.substr(eq+1);
         bool b = (val=="1" || val=="true" || val=="TRUE");
         if (key=="enable_gpu_matmul") state.enable_gpu_matmul = b;
+        else if (key=="enable_masm_cpu_backend") state.enable_masm_cpu_backend = b;
         else if (key=="enable_gpu_attention") state.enable_gpu_attention = b;
         else if (key=="enable_cpu_gpu_compare") state.enable_cpu_gpu_compare = b;
         else if (key=="enable_detailed_quant") state.enable_detailed_quant = b;
@@ -74,6 +75,7 @@ bool Settings::SaveCompute(const AppState& state, const std::string& path) {
     if (!ofs.is_open()) return false;
     ofs << "# RawrXD Model Loader Compute Settings\n";
     ofs << "enable_gpu_matmul=" << (state.enable_gpu_matmul?"1":"0") << "\n";
+    ofs << "enable_masm_cpu_backend=" << (state.enable_masm_cpu_backend?"1":"0") << "\n";
     ofs << "enable_gpu_attention=" << (state.enable_gpu_attention?"1":"0") << "\n";
     ofs << "enable_cpu_gpu_compare=" << (state.enable_cpu_gpu_compare?"1":"0") << "\n";
     ofs << "enable_detailed_quant=" << (state.enable_detailed_quant?"1":"0") << "\n";

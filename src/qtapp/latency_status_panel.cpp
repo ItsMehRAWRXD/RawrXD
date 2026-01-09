@@ -86,6 +86,35 @@ void LatencyStatusPanel::setupUI()
     
     statsGroup->setLayout(statsLayout);
     mainLayout->addWidget(statsGroup);
+
+    // System Resources Panel
+    QGroupBox* sysGroup = new QGroupBox("System Resources", this);
+    QVBoxLayout* sysLayout = new QVBoxLayout();
+
+    m_backendLabel = new QLabel("Backend: Standard");
+    m_backendLabel->setStyleSheet("font-weight: bold; color: #0af;");
+    sysLayout->addWidget(m_backendLabel);
+
+    QHBoxLayout* ramCpuLayout = new QHBoxLayout();
+    m_ramLabel = new QLabel("RAM: 0.00 MB");
+    m_ramLabel->setFont(monospace);
+    m_cpuLabel = new QLabel("CPU: 0.0%");
+    m_cpuLabel->setFont(monospace);
+    ramCpuLayout->addWidget(m_ramLabel);
+    ramCpuLayout->addWidget(m_cpuLabel);
+    sysLayout->addLayout(ramCpuLayout);
+
+    m_cpuBar = new QProgressBar();
+    m_cpuBar->setMaximum(100);
+    m_cpuBar->setMaximumHeight(15);
+    m_cpuBar->setStyleSheet(
+        "QProgressBar { border: 1px solid #3c3c3c; background: #2d2d30; border-radius: 2px; }"
+        "QProgressBar::chunk { background: #0af; }"
+    );
+    sysLayout->addWidget(m_cpuBar);
+
+    sysGroup->setLayout(sysLayout);
+    mainLayout->addWidget(sysGroup);
     
     mainLayout->addStretch();
     
@@ -151,8 +180,21 @@ void LatencyStatusPanel::updateDisplay()
     if (stats.avgPing >= 0) {
         m_avgPingLabel->setText(QString("Avg: %1 ms").arg(stats.avgPing));
     }
-    if (stats.totalSamples > 0) {
-        m_samplesLabel->setText(QString("Samples: %1").arg(stats.totalSamples));
+    m_samplesLabel->setText(QString("Samples: %1").arg(stats.totalSamples));
+
+    // Update System Metrics
+    m_ramLabel->setText(QString("RAM: %1 MB").arg(stats.ramUsageMB, 0, 'f', 2));
+    m_cpuLabel->setText(QString("CPU: %1%").arg(stats.cpuUsagePercent, 0, 'f', 1));
+    m_cpuBar->setValue(static_cast<int>(stats.cpuUsagePercent));
+    m_backendLabel->setText(QString("Backend: %1").arg(stats.backendName));
+
+    // Color code CPU bar
+    if (stats.cpuUsagePercent > 80) {
+        m_cpuBar->setStyleSheet("QProgressBar::chunk { background: #f00; }");
+    } else if (stats.cpuUsagePercent > 50) {
+        m_cpuBar->setStyleSheet("QProgressBar::chunk { background: #ff0; }");
+    } else {
+        m_cpuBar->setStyleSheet("QProgressBar::chunk { background: #0af; }");
     }
 }
 

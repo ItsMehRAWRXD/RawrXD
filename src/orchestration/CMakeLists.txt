@@ -16,6 +16,7 @@ add_library(RawrXDOrchestration STATIC
     voice_processor.hpp
     voice_processor.cpp
     qt6_audio_helper.hpp
+    ../backend/agentic_tools.cpp
     TaskOrchestrator.cpp
     OrchestrationUI.cpp
     ${CMAKE_SOURCE_DIR}/include/orchestration/TaskOrchestrator.h

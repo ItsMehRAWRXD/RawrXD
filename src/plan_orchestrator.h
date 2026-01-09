@@ -13,10 +13,12 @@
 #include <QMap>
 #include <QJsonDocument>
 
+class AgenticEngine;
+
 namespace RawrXD {
 
-class LSPClient;
 class InferenceEngine;
+class LSPClient;
 
 /**
  * \brief Represents a single edit task in a multi-file refactoring plan
@@ -92,6 +94,11 @@ public:
      * Set inference engine for AI planning
      */
     void setInferenceEngine(InferenceEngine* engine);
+
+    /**
+     * Set agentic engine for reinforcement learning based planning
+     */
+    void setAgenticEngine(::AgenticEngine* engine);
 
     /**
      * Generate edit plan from user prompt
@@ -181,6 +188,7 @@ private:
 
     LSPClient* m_lspClient{};
     InferenceEngine* m_inferenceEngine{};
+    AgenticEngine* m_agenticEngine{};
     QString m_workspaceRoot;
     
     QMap<QString, QString> m_originalFileContents;  // Backup for rollback

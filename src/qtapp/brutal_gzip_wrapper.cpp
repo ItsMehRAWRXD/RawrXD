@@ -31,6 +31,7 @@ extern "C" std::uint8_t* __fastcall deflate_brutal_masm(const std::uint8_t* src,
     return static_cast<std::uint8_t*>(dst);
 }
 
+/*
 // Stub for inflate - also passthrough
 extern "C" std::uint8_t* __fastcall AsmInflate(const std::uint8_t* src,
                                                  std::uint64_t       len,
@@ -52,3 +53,4 @@ extern "C" std::uint8_t* __fastcall AsmInflate(const std::uint8_t* src,
     if (out_len) *out_len = len;
     return static_cast<std::uint8_t*>(dst);
 }
+*/

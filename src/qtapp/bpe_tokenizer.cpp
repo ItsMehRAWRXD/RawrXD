@@ -112,23 +112,46 @@ bool BPETokenizer::loadFromGGUFMetadata(const QHash<QString, QByteArray>& metada
     reverseVocab_.clear();
     
     if (metadata.contains("tokenizer.ggml.tokens")) {
-        QByteArray tokensData = metadata["tokenizer.ggml.tokens"];
-        QDataStream stream(tokensData);
-        stream.setByteOrder(QDataStream::LittleEndian);
-        
-        int32_t numTokens;
-        stream >> numTokens;
-        
-        for (int32_t i = 0; i < numTokens; ++i) {
-            quint32 len;
-            stream >> len;
-            QByteArray tokenBytes(len, Qt::Uninitialized);
-            stream.readRawData(tokenBytes.data(), len);
-            
-            QString token = QString::fromUtf8(tokenBytes);
-            m_vocab[token] = i;
-            m_reverseVocab[i] = token;
-            reverseVocab_[token.toStdString()] = static_cast<uint32_t>(i);
+        const QByteArray tokensData = metadata.value("tokenizer.ggml.tokens");
+
+        // Preferred: GGUFLoaderQt exports tokens as NUL-delimited blob.
+        QList<QByteArray> tokenList = tokensData.split('\0');
+        if (!tokenList.isEmpty() && tokenList.last().isEmpty()) {
+            tokenList.removeLast();
+        }
+
+        if (tokenList.size() > 1024) {
+            for (int i = 0; i < tokenList.size(); ++i) {
+                const QString token = QString::fromUtf8(tokenList[i]);
+                m_vocab[token] = i;
+                m_reverseVocab[i] = token;
+                reverseVocab_[token.toStdString()] = static_cast<uint32_t>(i);
+            }
+        } else {
+            // Legacy fallback: length-prefixed format
+            QDataStream stream(tokensData);
+            stream.setByteOrder(QDataStream::LittleEndian);
+
+            int32_t numTokens = 0;
+            stream >> numTokens;
+
+            // Sanity-check to avoid runaway allocations if the blob is not in this format
+            if (numTokens > 0 && numTokens < 500000) {
+                for (int32_t i = 0; i < numTokens && stream.status() == QDataStream::Ok; ++i) {
+                    quint32 len = 0;
+                    stream >> len;
+                    if (len > 1024 * 1024) {
+                        break;
+                    }
+                    QByteArray tokenBytes(static_cast<int>(len), Qt::Uninitialized);
+                    stream.readRawData(tokenBytes.data(), static_cast<int>(len));
+
+                    const QString token = QString::fromUtf8(tokenBytes);
+                    m_vocab[token] = i;
+                    m_reverseVocab[i] = token;
+                    reverseVocab_[token.toStdString()] = static_cast<uint32_t>(i);
+                }
+            }
         }
     }
     

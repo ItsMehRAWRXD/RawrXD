@@ -59,11 +59,9 @@ void MultiTabEditor::openFile(const QString& filepath) {
         editor->setLSPClient(m_lspClient);
     }
     
-    // TODO: Fix inline edit signal connection - Qt sees signature mismatch
-    // connect(editor, &RawrXD::AgenticTextEdit::inlineEditRequested, 
-    //         this, [this](const QString& prompt, const QString& selectedCode) {
-    //             this->handleInlineEditRequested(prompt, selectedCode);
-    //         });
+    // Connect inline edit signal from editor to this container
+    connect(editor, &RawrXD::AgenticTextEdit::inlineEditRequested, 
+            this, &MultiTabEditor::inlineEditRequested);
     
     QString filename = filepath.section('/', -1);
     tab_widget_->addTab(editor, filename);
@@ -89,8 +87,9 @@ void MultiTabEditor::newFile() {
         editor->setLSPClient(m_lspClient);
     }
     
-    // TODO: Fix inline edit signal connection - Qt sees signature mismatch
-    // connect(editor, &AgenticTextEdit::inlineEditRequested, this, &MultiTabEditor::inlineEditRequested);
+    // Connect inline edit signal from editor to this container
+    connect(editor, &RawrXD::AgenticTextEdit::inlineEditRequested, 
+            this, &MultiTabEditor::inlineEditRequested);
     
     tab_widget_->addTab(editor, tabName);
     tab_widget_->setCurrentWidget(editor);

@@ -10,6 +10,8 @@
 struct AppState {
     // Compute settings
     bool enable_gpu_matmul = true;
+    // Enable MASM CPU backend (AVX2 intrinsics / MASM kernels)
+    bool enable_masm_cpu_backend = true;
     bool enable_gpu_attention = true;
     bool enable_cpu_gpu_compare = false;
     bool enable_detailed_quant = false;

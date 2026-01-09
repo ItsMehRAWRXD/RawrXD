@@ -1,5 +1,6 @@
 // unified_hotpatch_manager.cpp - Implementation of unified hotpatch system coordinator
 #include "unified_hotpatch_manager.hpp"
+#include "UniversalWrapperMASM.h"
 #include <QDebug>
 #include <QJsonDocument>
 #include <QJsonArray>

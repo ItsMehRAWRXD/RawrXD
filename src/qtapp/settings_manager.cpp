@@ -3,6 +3,7 @@
 #include <QStandardPaths>
 #include <QJsonDocument>
 #include <QFile>
+#include <QDir>
 
 SettingsManager::SettingsManager(QObject *parent)
     : QObject(parent),
@@ -19,6 +20,9 @@ SettingsManager::SettingsManager(QObject *parent)
     m_compressionSettings.preferred_type = m_settings->value("compression/preferred_type", 2).toInt();
     m_compressionSettings.enable_stats = m_settings->value("compression/enable_stats", true).toBool();
     m_compressionSettings.max_decomp_bytes = m_settings->value("compression/max_bytes", 10ULL*1024*1024*1024).toULongLong();
+    
+    // Initialize defaults for first run
+    initializeDefaults();
     
     qDebug() << "[SettingsManager] Initialized with config:" << m_settings->fileName();
 }
@@ -43,6 +47,7 @@ SettingsManager::~SettingsManager()
 void SettingsManager::setValue(const QString& key, const QVariant& value)
 {
     if (m_settings) {
+        qDebug() << "[SettingsManager] Setting value for key:" << key << "to:" << (key.contains("apiKey") ? "********" : value.toString());
         m_settings->setValue(key, value);
         
         // Update internal structs
@@ -52,15 +57,19 @@ void SettingsManager::setValue(const QString& key, const QVariant& value)
         
         m_settings->sync();
         emit settingChanged(key, value);
-        qDebug() << "[SettingsManager] Set:" << key << "=" << value.toString();
+    } else {
+        qWarning() << "[SettingsManager] Cannot set value, m_settings is null! Key:" << key;
     }
 }
 
 QVariant SettingsManager::getValue(const QString& key, const QVariant& defaultValue) const
 {
     if (m_settings) {
-        return m_settings->value(key, defaultValue);
+        QVariant val = m_settings->value(key, defaultValue);
+        qDebug() << "[SettingsManager] Getting value for key:" << key << "result:" << (key.contains("apiKey") ? "********" : val.toString());
+        return val;
     }
+    qWarning() << "[SettingsManager] Cannot get value, m_settings is null! Key:" << key;
     return defaultValue;
 }
 
@@ -251,3 +260,118 @@ bool SettingsManager::importSettings(const QJsonObject& settings)
         return false;
     }
 }
+
+QString SettingsManager::getDefaultProjectRoot() const
+{
+    // Priority order:
+    // 1. Settings file
+    // 2. Environment variable
+    // 3. Smart default (E:\ or D:\RawrXD-production-lazy-init or current dir)
+    
+    QString projectRoot = getValue("project/default_root", "").toString();
+    
+    if (!projectRoot.isEmpty()) {
+        return projectRoot;
+    }
+    
+    // Check environment variable
+    projectRoot = qEnvironmentVariable("RAWRXD_PROJECT_ROOT");
+    if (!projectRoot.isEmpty()) {
+        return projectRoot;
+    }
+    
+    // Smart defaults
+    if (QFile::exists("E:\\")) {
+        return "E:\\";
+    } else if (QFile::exists("D:\\RawrXD-production-lazy-init")) {
+        return "D:\\RawrXD-production-lazy-init";
+    } else {
+        return QDir::currentPath();
+    }
+}
+
+void SettingsManager::setDefaultProjectRoot(const QString& path)
+{
+    setValue("project/default_root", path);
+    qDebug() << "[SettingsManager] Default project root set to:" << path;
+}
+
+void SettingsManager::initializeDefaults()
+{
+    qDebug() << "[SettingsManager] Initializing default configuration...";
+    
+    // LLM Endpoints
+    if (!contains("llm/ollama_endpoint")) {
+        setValue("llm/ollama_endpoint", "http://localhost:11434");
+    }
+    if (!contains("llm/claude_endpoint")) {
+        setValue("llm/claude_endpoint", "https://api.anthropic.com");
+    }
+    if (!contains("llm/openai_endpoint")) {
+        setValue("llm/openai_endpoint", "https://api.openai.com/v1");
+    }
+    
+    // GGUF Server
+    if (!contains("gguf/server_port")) {
+        setValue("gguf/server_port", 11434);
+    }
+    if (!contains("gguf/auto_start")) {
+        setValue("gguf/auto_start", true);
+    }
+    
+    // Project settings
+    if (!contains("project/default_root")) {
+        QString defaultRoot = getDefaultProjectRoot();
+        setValue("project/default_root", defaultRoot);
+        qDebug() << "[SettingsManager] Set default project root:" << defaultRoot;
+    }
+    
+    // Model cache
+    if (!contains("model/cache_dir")) {
+        QString cacheDir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + "/models";
+        setValue("model/cache_dir", cacheDir);
+        
+        // Ensure cache directory exists
+        QDir().mkpath(cacheDir);
+        qDebug() << "[SettingsManager] Model cache directory:" << cacheDir;
+    }
+    
+    // Agent settings
+    if (!contains("agent/auto_bootstrap_enabled")) {
+        setValue("agent/auto_bootstrap_enabled", true);
+    }
+    if (!contains("agent/max_concurrent_tasks")) {
+        setValue("agent/max_concurrent_tasks", 3);
+    }
+    if (!contains("agent/timeout_seconds")) {
+        setValue("agent/timeout_seconds", 300);
+    }
+    
+    // Hotpatch settings
+    if (!contains("hotpatch/enabled")) {
+        setValue("hotpatch/enabled", true);
+    }
+    if (!contains("hotpatch/auto_backup")) {
+        setValue("hotpatch/auto_backup", true);
+    }
+    
+    // UI settings
+    if (!contains("ui/theme")) {
+        setValue("ui/theme", "dark");
+    }
+    if (!contains("ui/font_size")) {
+        setValue("ui/font_size", 10);
+    }
+    
+    // Logging
+    if (!contains("log/level")) {
+        setValue("log/level", "info");
+    }
+    if (!contains("log/file_enabled")) {
+        setValue("log/file_enabled", true);
+    }
+    
+    sync();
+    qDebug() << "[SettingsManager] Default configuration initialized";
+}
+

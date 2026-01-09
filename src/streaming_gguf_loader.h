@@ -5,6 +5,7 @@
 #include <map>
 #include <memory>
 #include <cstdint>
+#include "qtapp/compression_interface.h"
 
 // ============================================================================
 // STREAMING GGUF LOADER - Memory-efficient tensor loading with zone-based
@@ -17,6 +18,7 @@ struct TensorZoneInfo {
     uint64_t total_bytes;               // Total size of all tensors in zone
     bool is_loaded;                     // Currently in RAM?
     std::vector<uint8_t> data;          // Actual tensor data (when loaded)
+    bool compressed = false;            // Is the zone data compressed?
 };
 
 struct TensorRef {
@@ -107,6 +109,10 @@ private:
     // ---- Configuration ----
     uint64_t max_zone_memory_mb_;       // How much RAM per zone? (512 MB default)
     
+    // ---- Compression ----
+    std::shared_ptr<ICompressionProvider> compression_provider_;
+    CompressionStats compression_stats_;
+
     // ---- Internal Helpers ----
     
     // Assign tensors to zones based on name patterns

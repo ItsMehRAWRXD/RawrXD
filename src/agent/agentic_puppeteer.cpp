@@ -94,7 +94,7 @@ CorrectionResult AgenticPuppeteer::correctJsonResponse(const QJsonObject& respon
     return correctResponse(jsonStr, context);
 }
 
-FailureType AgenticPuppeteer::detectFailure(const QString& response)
+PuppeteerFailure AgenticPuppeteer::detectFailure(const QString& response)
 {
     if (response.isEmpty()) {
         return FailureType::None;

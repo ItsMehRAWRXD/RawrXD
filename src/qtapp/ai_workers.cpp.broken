@@ -1,0 +1,329 @@
+#include "ai_workers.h"
+#include "ai_digestion_engine.hpp"
+#include "ai_training_pipeline.hpp"
+#include <QThread>
+#include <QApplication>
+#include <QDebug>
+#include <QDir>
+#include <QStandardPaths>
+#include <QDateTime>
+#include <algorithm>
+#include <cmath>
+#include <random>
+
+// AIDigestionWorker Implementation
+AIDigestionWorker::AIDigestionWorker(AIDigestionEngine* engine, QObject* parent)
+    : QObject(parent)
+    , m_engine(engine)
+    , m_state(State::Idle)
+    , m_shouldStop(false)
+    , m_progressTimer(new QTimer(this)) {
+    m_progressTimer->setInterval(500);
+    connect(m_progressTimer, &QTimer::timeout, this, &AIDigestionWorker::updateProgress);
+}
+
+AIDigestionWorker::~AIDigestionWorker() {
+    stopDigestion();
+}
+
+void AIDigestionWorker::startDigestion(const QStringList& filePaths) {
+    m_files = filePaths;
+    m_currentFileIndex = 0;
+    m_currentFileName.clear();
+    m_shouldStop = false;
+    setState(State::Running);
+    m_progressTimer->start();
+    
+    QMetaObject::invokeMethod(this, "processFiles", Qt::QueuedConnection);
+}
+
+void AIDigestionWorker::pauseDigestion() {
+    if (m_state == State::Running) {
+        setState(State::Paused);
+    }
+}
+
+void AIDigestionWorker::resumeDigestion() {
+    if (m_state == State::Paused) {
+        setState(State::Running);
+        QMetaObject::invokeMethod(this, "processFiles", Qt::QueuedConnection);
+    }
+}
+
+void AIDigestionWorker::stopDigestion() {
+    m_shouldStop = true;
+    setState(State::Stopping);
+    m_progressTimer->stop();
+}
+
+AIDigestionWorker::State AIDigestionWorker::currentState() const {
+    return m_state;
+}
+
+AIDigestionWorker::Progress AIDigestionWorker::currentProgress() const {
+    Progress p;
+    p.currentFile = m_currentFileIndex;
+    p.totalFiles = m_files.size();
+    p.currentFileName = m_currentFileName;
+    if (m_files.size() > 0) {
+        p.percentage = (static_cast<double>(m_currentFileIndex) / m_files.size()) * 100.0;
+    }
+    return p;
+}
+
+bool AIDigestionWorker::isRunning() const {
+    return m_state == State::Running;
+}
+
+bool AIDigestionWorker::isPaused() const {
+    return m_state == State::Paused;
+}
+
+void AIDigestionWorker::processFiles() {
+    if (m_shouldStop || m_state == State::Stopping) {
+        emit digestionCompleted(false, "Stopped by user");
+        setState(State::Idle);
+        return;
+    }
+    
+    if (m_currentFileIndex >= m_files.size()) {
+        setState(State::Finished);
+        emit digestionCompleted(true, "Digestion completed successfully");
+        setState(State::Idle);
+        return;
+    }
+    
+    if (m_state == State::Paused) {
+        return;
+    }
+    
+    QString currentFile = m_files[m_currentFileIndex];
+    m_currentFileName = currentFile;
+    emit fileStarted(currentFile);
+    
+    // Process the file (this would normally be more complex)
+    QFileInfo fileInfo(currentFile);
+    if (fileInfo.exists()) {
+        // Simulate processing
+        QThread::msleep(100);
+        
+        m_currentFileIndex++;
+        emit fileCompleted(currentFile, true);
+    } else {
+        emit errorOccurred("File not found: " + currentFile);
+        emit fileCompleted(currentFile, false);
+        m_currentFileIndex++;
+    }
+    
+    if (!m_shouldStop && m_state != State::Paused) {
+        QMetaObject::invokeMethod(this, "processFiles", Qt::QueuedConnection);
+    }
+}
+
+void AIDigestionWorker::updateProgress() {
+    emit progressChanged(currentProgress());
+}
+
+void AIDigestionWorker::setState(State newState) {
+    if (m_state != newState) {
+        m_state = newState;
+        emit stateChanged(newState);
+    }
+}
+
+// AITrainingWorker Implementation
+AITrainingWorker::AITrainingWorker(AITrainingPipeline* pipeline, QObject* parent)
+    : QObject(parent)
+    , m_pipeline(pipeline)
+    , m_state(State::Idle)
+    , m_shouldStop(false)
+    , m_progressTimer(new QTimer(this)) {
+    m_progressTimer->setInterval(1000);
+    connect(m_progressTimer, &QTimer::timeout, this, &AITrainingWorker::updateProgress);
+}
+
+AITrainingWorker::~AITrainingWorker() {
+    stopTraining();
+}
+
+void AITrainingWorker::startTraining(const QString& datasetPath) {
+    m_datasetPath = datasetPath;
+    m_currentEpoch = 0;
+    m_shouldStop = false;
+    setState(State::Running);
+    m_progressTimer->start();
+    
+    QMetaObject::invokeMethod(this, "trainEpoch", Qt::QueuedConnection);
+}
+
+void AITrainingWorker::stopTraining() {
+    m_shouldStop = true;
+    setState(State::Stopping);
+    m_progressTimer->stop();
+}
+
+AITrainingWorker::State AITrainingWorker::currentState() const {
+    return m_state;
+}
+
+AITrainingWorker::Progress AITrainingWorker::currentProgress() const {
+    Progress p;
+    p.currentEpoch = m_currentEpoch;
+    p.totalEpochs = m_totalEpochs;
+    if (m_totalEpochs > 0) {
+        p.percentage = (static_cast<double>(m_currentEpoch) / m_totalEpochs) * 100.0;
+    }
+    return p;
+}
+
+void AITrainingWorker::trainEpoch() {
+    if (m_shouldStop || m_state == State::Stopping) {
+        emit trainingCompleted(false, "Training stopped by user");
+        setState(State::Idle);
+        return;
+    }
+    
+    if (m_currentEpoch >= m_totalEpochs) {
+        setState(State::Finished);
+        emit trainingCompleted(true, "Training completed successfully");
+        setState(State::Idle);
+        return;
+    }
+    
+    if (m_state == State::Paused) {
+        return;
+    }
+    
+    m_currentEpoch++;
+    emit epochStarted(m_currentEpoch);
+    
+    // Simulate training
+    QThread::msleep(200);
+    
+    double loss = 1.0 / (1.0 + m_currentEpoch * 0.1);
+    double accuracy = std::min(0.95, 0.6 + m_currentEpoch * 0.02);
+    
+    emit epochCompleted(m_currentEpoch, loss, accuracy);
+    emit batchCompleted(m_currentEpoch * 100, loss);
+    emit validationCompleted(loss * 0.9, accuracy * 1.1);
+    
+    if (!m_shouldStop && m_state != State::Paused) {
+        QMetaObject::invokeMethod(this, "trainEpoch", Qt::QueuedConnection);
+    }
+}
+
+void AITrainingWorker::updateProgress() {
+    emit progressChanged(currentProgress());
+}
+
+void AITrainingWorker::setState(State newState) {
+    if (m_state != newState) {
+        m_state = newState;
+        emit stateChanged(newState);
+    }
+}
+
+// AIWorkerManager Implementation
+AIWorkerManager::AIWorkerManager(QObject* parent)
+    : QObject(parent) {
+}
+
+AIWorkerManager::~AIWorkerManager() {
+    // Clean up all workers
+    for (auto worker : m_digestionWorkers) {
+        worker->stopDigestion();
+        worker->deleteLater();
+    }
+    for (auto worker : m_trainingWorkers) {
+        worker->stopTraining();
+        worker->deleteLater();
+    }
+}
+
+AIDigestionWorker* AIWorkerManager::createDigestionWorker(AIDigestionEngine* engine) {
+    return new AIDigestionWorker(engine, this);
+}
+
+AITrainingWorker* AIWorkerManager::createTrainingWorker(AITrainingPipeline* pipeline) {
+    return new AITrainingWorker(pipeline, this);
+}
+
+void AIWorkerManager::startDigestionWorker(AIDigestionWorker* worker, const QStringList& files) {
+    m_digestionWorkers.append(worker);
+    worker->startDigestion(files);
+    
+    connect(worker, &AIDigestionWorker::digestionCompleted, 
+            this, &AIWorkerManager::onWorkerFinished);
+    connect(worker, &AIDigestionWorker::errorOccurred, 
+            this, &AIWorkerManager::onWorkerError);
+}
+
+void AIWorkerManager::startTrainingWorker(AITrainingWorker* worker, const QString& dataset) {
+    m_trainingWorkers.append(worker);
+    worker->startTraining(dataset);
+    
+    connect(worker, &AITrainingWorker::trainingCompleted, 
+            this, &AIWorkerManager::onWorkerFinished);
+    connect(worker, &AITrainingWorker::errorOccurred, 
+            this, &AIWorkerManager::onWorkerError);
+}
+
+void AIWorkerManager::stopAllWorkers() {
+    for (auto worker : m_digestionWorkers) {
+        worker->stopDigestion();
+    }
+    for (auto worker : m_trainingWorkers) {
+        worker->stopTraining();
+    }
+}
+
+QList<AIDigestionWorker*> AIWorkerManager::activeDigestionWorkers() const {
+    return m_digestionWorkers;
+}
+
+QList<AITrainingWorker*> AIWorkerManager::activeTrainingWorkers() const {
+    return m_trainingWorkers;
+}
+
+void AIWorkerManager::onWorkerFinished() {
+    auto worker = qobject_cast<AIDigestionWorker*>(sender());
+    if (worker) {
+        m_digestionWorkers.removeAll(worker);
+        worker->deleteLater();
+    } else {
+        auto trainingWorker = qobject_cast<AITrainingWorker*>(sender());
+        if (trainingWorker) {
+            m_trainingWorkers.removeAll(trainingWorker);
+            trainingWorker->deleteLater();
+        }
+    }
+}
+
+void AIWorkerManager::onWorkerError(const QString& error) {
+    qWarning() << "Worker error:" << error;
+    onWorkerFinished();
+}
+
+void AIWorkerManager::moveWorkerToThread(QObject* worker, QThread* thread) {
+    worker->moveToThread(thread);
+    thread->start();
+}
+// AIDigestionWorker Implementation
+AIDigestionWorker::AIDigestionWorker(AIDigestionEngine* engine, QObject* parent)
+    : QObject(parent)
+    , m_engine(engine)
+    , m_state(State::Idle)
+    , m_progress()
+    , m_mutex()
+    , m_pauseCondition()
+    , m_shouldStop(0)
+    , m_elapsedTimer()
+    , m_progressTimer(new QTimer(this))
+    , m_fileProcessingTimes()
+    , m_processedFiles()
+    , m_failedFiles()
+    , m_filePaths()
+    , m_remainingFiles() {
+    m_progressTimer->setInterval(500);
+    connect(m_progressTimer, &QTimer::timeout, this, &AIDigestionWorker::updateProgress);
+}

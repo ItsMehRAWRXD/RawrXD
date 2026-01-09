@@ -188,3 +188,21 @@ void* deflate_brutal_neon(const void* src, size_t len, size_t* out_len) {
 }
 #endif
 
+// ============================================================
+// Telemetry Stub - Required by compression_interface.cpp
+// ============================================================
+// Use the stub only when the real telemetry singleton is not linked.
+#if !defined(RAWRXD_USE_REAL_TELEMETRY)
+#include "qtapp/telemetry.h"
+
+// Global telemetry singleton instance
+static Telemetry* g_telemetry = nullptr;
+
+Telemetry& GetTelemetry() {
+    if (!g_telemetry) {
+        g_telemetry = new Telemetry();
+    }
+    return *g_telemetry;
+}
+#endif // RAWRXD_USE_REAL_TELEMETRY
+

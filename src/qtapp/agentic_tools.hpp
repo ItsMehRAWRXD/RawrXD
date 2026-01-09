@@ -65,6 +65,9 @@ public:
     ToolResult gitStatus(const QString& repoPath);
     ToolResult runTests(const QString& testPath);
     ToolResult analyzeCode(const QString& filePath);
+    ToolResult refactorCode(const QString& filePath, const QString& description);
+    ToolResult createCode(const QString& filePath, const QString& description);
+    ToolResult fixCode(const QString& filePath, const QString& description);
 
 signals:
     void toolExecuted(const QString& name, const ToolResult& result);

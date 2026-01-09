@@ -31,6 +31,12 @@ public:
      */
     bool isMinimapEnabled() const { return m_minimapEnabled; }
     
+signals:
+    /**
+     * Emitted when an inline edit is requested from any tab
+     */
+    void inlineEditRequested(const QString& prompt, const QString& selectedCode);
+
 public slots:
     void openFile(const QString& filepath);
     void newFile();
@@ -48,9 +54,6 @@ public slots:
     void setLSPClient(RawrXD::LSPClient* client);
     RawrXD::LSPClient* lspClient() const { return m_lspClient; }
     RawrXD::AgenticTextEdit* getCurrentEditor() const;
-    
-    // Method that MainWindow calls directly
-    void inlineEditRequested(const QString& prompt, const QString& selectedCode);
 
 private:
     QTabWidget* tab_widget_;

@@ -121,6 +121,10 @@ void ModelLoaderThread::threadFunction()
             if (m_progressCallback) {
                 m_progressCallback(msg.toStdString());
             }
+            // Check for cancellation during progress callback
+            if (m_canceled.load()) {
+                throw std::runtime_error("Model loading canceled by user");
+            }
         });
         
         // Call the engine's loadModel - it will handle all the heavy lifting

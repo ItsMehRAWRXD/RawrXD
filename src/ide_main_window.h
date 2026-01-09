@@ -71,6 +71,7 @@ private slots:
     void onOptimizeCode();
     void onSwitchModel();
     void onCloudSettings();
+    void onOpenSettings();
 
     // Model Router actions
     void onOpenModelRouter();
@@ -137,6 +138,7 @@ private:
     QString getCurrentFilePath() const;
     void updateStatusBar();
     void showMessage(const QString& message, int timeout = 3000);
+    void showToast(const QString& message, int timeout = 3000);
 
     // Core systems
     AutonomousModelManager* modelManager;
@@ -200,6 +202,8 @@ private:
     QString activeModelId;
     bool isAnalyzing;
     QTimer* analysisTimer;
+    // Toast state
+    QWidget* toastLayer;
 };
 
 #endif // IDE_MAIN_WINDOW_H

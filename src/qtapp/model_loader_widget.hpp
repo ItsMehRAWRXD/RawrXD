@@ -56,9 +56,13 @@ signals:
     void tensorLoaded(const QString& tensorName, const QByteArray& data);
     void compressionCompleted(const QString& tensorName, double ratio);
     void errorOccurred(const QString& error);
+    void backendChanged(const QString& backendName);
 
 private slots:
+    void onBackendSelected(int index);
     void onModelSelected(const QString& modelPath);
+    void onModelComboChanged(int index);
+    void refreshModels();
     void onLoadButtonClicked();
     void onUnloadButtonClicked();
     void onTensorSelected(int index);
@@ -68,6 +72,7 @@ private slots:
     void onClearCacheButtonClicked();
     void onModelLoadFinished();
     void onCompressionFinished();
+    void updateRamUsage();
 
 private:
     void setupUI();
@@ -75,9 +80,12 @@ private:
     void loadModelAsync(const QString& modelPath);  // async operation
     QByteArray compressTensorAsync(const QString& tensorName);  // returns compressed data
     void cacheTensorsAsync();
+    QString resolveOllamaGgufPath(const QString& modelName);
     
     // UI components
+    QComboBox* m_backendSelector;
     QComboBox* m_modelSelector;
+    QPushButton* m_refreshModelsButton;
     QPushButton* m_loadButton;
     QPushButton* m_unloadButton;
     QComboBox* m_tensorSelector;
@@ -88,6 +96,8 @@ private:
     QProgressBar* m_progressBar;
     QTextEdit* m_infoDisplay;
     QTableWidget* m_statsTable;
+    QLabel* m_ramUsageLabel;
+    QTimer* m_ramTimer;
     
     // Model loader
     std::unique_ptr<ModelLoaderWithCompression> m_modelLoader;
@@ -100,7 +110,17 @@ private:
     // Current state
     QString m_currentModelPath;
     QString m_currentTensor;
+    QString m_currentBackend;
     bool m_loading = false;
     bool m_compressing = false;
     bool m_caching = false;
+    // Tooltip cache: key -> HTML tooltip
+    QHash<QString, QString> m_modelTooltipCache;
+
+public:
+    bool isLoading() const { return m_loading; }
+    // For tests and external interactions
+    QComboBox* modelSelector() const { return m_modelSelector; }
+    // Ensure a tooltip exists for given model data key (data stored in the combo box) and optional resolved path
+    void ensureTooltipForModelData(const QString& dataKey, const QString& resolvedPath = QString());
 };

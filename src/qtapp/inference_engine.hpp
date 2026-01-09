@@ -18,6 +18,10 @@
 #include "agentic_failure_detector.hpp"
 #include "agentic_puppeteer.hpp"
 
+class AgenticFailureDetector;
+class AgenticPuppeteer;
+class OllamaProxy;
+
 class InferenceEngine : public QObject {
     Q_OBJECT
     Q_PROPERTY(QString modelPath READ modelPath CONSTANT)
@@ -33,6 +37,9 @@ public:
     explicit InferenceEngine(const QString& ggufPath = QString(), QObject* parent = nullptr);
     // Overload used by server components expecting QObject* only
     explicit InferenceEngine(QObject* parent);
+
+    // Helper to resolve the default Ollama model directory from settings or environment
+    static QString defaultModelDirectory();
     
     /**
      * @brief Destructor - cleans up GGUFLoader resources
@@ -48,6 +55,9 @@ public:
      * QMetaObject::invokeMethod(..., Qt::QueuedConnection)
      */
     Q_INVOKABLE bool loadModel(const QString& path);
+    
+    // Test helper: explicitly set which Ollama model to use and mark it loaded
+    Q_INVOKABLE void setOllamaModel(const QString& modelName);
     
     /**
      * @brief Set a progress callback for model loading
@@ -82,6 +92,14 @@ public:
      */
     double tokensPerSecond() const;
     
+    /**
+     * @brief Generate text synchronously
+     * @param prompt Input prompt
+     * @param maxTokens Maximum tokens to generate
+     * @return Generated text
+     */
+    QString generateSync(const QString& prompt, int maxTokens = 256);
+
     /**
      * @brief Get current temperature setting
      */
@@ -225,6 +243,15 @@ public slots:
      * @param streaming Whether to use streaming mode
      */
     void request(const QString& prompt, qint64 reqId, bool streaming);
+
+    // Test-friendly hook: handle an incoming request. Default implementation
+    // delegates to the existing request(...) slot. Tests can override this to
+    // implement mock behavior without changing the slot signatures.
+    virtual void handleRequest(const QString& prompt, qint64 reqId) {
+        // Default: dispatch to request slot asynchronously
+        QMetaObject::invokeMethod(this, "request", Qt::QueuedConnection,
+                                  Q_ARG(QString, prompt), Q_ARG(qint64, reqId));
+    }
     
     /**
      * @brief Unload the current model
@@ -378,7 +405,35 @@ private:
         TOKENIZER_BPE,       // BPE (GPT-2/GPT-3 style)
         TOKENIZER_SP         // SentencePiece (LLaMA/Mistral)
     } m_tokenizerMode{TOKENIZER_FALLBACK};
+
+public:
+    /**
+     * @brief Stop current inference
+     */
+    void stopInference();
+
+    /**
+     * @brief Set the directory to scan for Ollama models/blobs
+     */
+    void setModelDirectory(const QString& dir);
+
+    /**
+     * @brief Get list of detected Ollama models
+     */
+    QStringList detectedOllamaModels() const;
     
+    std::vector<std::string> detectedOllamaModelsStd() { 
+        return {}; 
+    }
+
+    /**
+     * @brief Check if a path is an Ollama blob file
+     * @param path File path to check
+     * @return true if path points to an Ollama blob
+     */
+    bool isBlobPath(const QString& path) const;
+
+private:
     // Helper methods
     QString extractModelName(const QString& path) const;
     void rebuildTensorCache();
@@ -416,4 +471,9 @@ private:
     // Agentic failure detection and correction
     AgenticFailureDetector* m_failureDetector{};
     AgenticPuppeteer* m_puppeteer{};
+
+    // Ollama integration
+    OllamaProxy* m_ollamaProxy{};
+    bool m_useOllama{false};
+    qint64 m_currentRequestId{0};
 };

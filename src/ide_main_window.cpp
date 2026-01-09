@@ -1,6 +1,8 @@
 // ide_main_window.cpp - FULLY FUNCTIONAL Main IDE Window
 #include "ide_main_window.h"
 #include "autonomous_widgets.h"
+#include "telemetry_singleton.h"
+#include "feature_toggle.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QFileDialog>
@@ -12,6 +14,9 @@
 #include <QTimer>
 #include <QAction>
 #include <QDir>
+#include <QShortcut>
+#include <QPropertyAnimation>
+#include <QGraphicsDropShadowEffect>
 #include <iostream>
 
 IDEMainWindow::IDEMainWindow(QWidget *parent)
@@ -30,6 +35,7 @@ IDEMainWindow::IDEMainWindow(QWidget *parent)
     performanceMonitor = new PerformanceMonitor(this);
     
     // Initialize Model Router systems
+    #include "ui/AppSettingsDialog.h"
     std::cout << "[IDEMainWindow] Initializing Model Router..." << std::endl;
     modelRouterAdapter = new ModelRouterAdapter(this);
     modelRouterWidget = nullptr;  // Will be created in setupDockWidgets
@@ -53,6 +59,13 @@ IDEMainWindow::IDEMainWindow(QWidget *parent)
     setupDockWidgets();
     setupStatusBar();
     setupConnections();
+
+    // Initialize toast layer (overlay container)
+    toastLayer = new QWidget(this);
+    toastLayer->setAttribute(Qt::WA_TransparentForMouseEvents);
+    toastLayer->setObjectName("toastLayer");
+    toastLayer->setGeometry(rect());
+    toastLayer->lower();
     
     // Load settings
     loadSettings();
@@ -69,6 +82,14 @@ IDEMainWindow::IDEMainWindow(QWidget *parent)
     showMessage("Welcome to RawrXD Autonomous IDE - All systems operational!", 5000);
     
     std::cout << "[IDEMainWindow] Fully initialized and ready" << std::endl;
+
+    // Prompt to persist environment-based settings if missing
+    const QString projEnv = qEnvironmentVariable("RAWRXD_PROJECT_ROOT");
+    const QString cacheEnv = qEnvironmentVariable("RAWRXD_MODEL_CACHE");
+    if (projEnv.isEmpty() || cacheEnv.isEmpty()) {
+        AppSettingsDialog dlg(this);
+        dlg.exec();
+    }
 }
 
 IDEMainWindow::~IDEMainWindow() {
@@ -161,22 +182,43 @@ void IDEMainWindow::setupMenus() {
     QAction* toggleSuggestionsAction = viewMenu->addAction("AI &Suggestions");
     toggleSuggestionsAction->setCheckable(true);
     toggleSuggestionsAction->setChecked(true);
+    toggleSuggestionsAction->setShortcut(QKeySequence("Ctrl+Shift+1"));
     connect(toggleSuggestionsAction, &QAction::triggered, this, &IDEMainWindow::onToggleSuggestions);
     
     QAction* toggleSecurityAction = viewMenu->addAction("&Security Alerts");
     toggleSecurityAction->setCheckable(true);
     toggleSecurityAction->setChecked(true);
+    toggleSecurityAction->setShortcut(QKeySequence("Ctrl+Shift+2"));
     connect(toggleSecurityAction, &QAction::triggered, this, &IDEMainWindow::onToggleSecurity);
     
     QAction* toggleOptimizationsAction = viewMenu->addAction("&Optimizations");
     toggleOptimizationsAction->setCheckable(true);
     toggleOptimizationsAction->setChecked(true);
+    toggleOptimizationsAction->setShortcut(QKeySequence("Ctrl+Shift+3"));
     connect(toggleOptimizationsAction, &QAction::triggered, this, &IDEMainWindow::onToggleOptimizations);
     
     QAction* toggleFileExplorerAction = viewMenu->addAction("&File Explorer");
     toggleFileExplorerAction->setCheckable(true);
     toggleFileExplorerAction->setChecked(true);
+    toggleFileExplorerAction->setShortcut(QKeySequence("Ctrl+Shift+4"));
     connect(toggleFileExplorerAction, &QAction::triggered, this, &IDEMainWindow::onToggleFileExplorer);
+
+    // Additional dock toggles
+    QAction* toggleOutputAction = viewMenu->addAction("&Output");
+    toggleOutputAction->setCheckable(true);
+    toggleOutputAction->setChecked(true);
+    toggleOutputAction->setShortcut(QKeySequence("Ctrl+Shift+5"));
+    connect(toggleOutputAction, &QAction::triggered, [this]() {
+        outputDock->setVisible(!outputDock->isVisible());
+    });
+
+    QAction* toggleMetricsAction = viewMenu->addAction("System &Metrics");
+    toggleMetricsAction->setCheckable(true);
+    toggleMetricsAction->setChecked(true);
+    toggleMetricsAction->setShortcut(QKeySequence("Ctrl+Shift+6"));
+    connect(toggleMetricsAction, &QAction::triggered, [this]() {
+        metricsDock->setVisible(!metricsDock->isVisible());
+    });
     
     // Tools Menu
     toolsMenu = menuBar()->addMenu("&Tools");
@@ -198,6 +240,10 @@ void IDEMainWindow::setupMenus() {
     connect(optimizeAction, &QAction::triggered, this, &IDEMainWindow::onOptimizeCode);
     
     toolsMenu->addSeparator();
+
+    QAction* settingsAction = toolsMenu->addAction("&Settings...");
+    settingsAction->setShortcut(QKeySequence("Ctrl+,"));
+    connect(settingsAction, &QAction::triggered, this, &IDEMainWindow::onOpenSettings);
     
     QAction* switchModelAction = toolsMenu->addAction("Switch AI &Model...");
     connect(switchModelAction, &QAction::triggered, this, &IDEMainWindow::onSwitchModel);
@@ -223,9 +269,11 @@ void IDEMainWindow::setupMenus() {
     modelRouterMenu->addSeparator();
     
     QAction* dashboardAction = modelRouterMenu->addAction("&Performance Dashboard");
+    dashboardAction->setShortcut(QKeySequence("Ctrl+Shift+D"));
     connect(dashboardAction, &QAction::triggered, this, &IDEMainWindow::onShowModelDashboard);
     
     QAction* consoleAction = modelRouterMenu->addAction("&Console Panel");
+    consoleAction->setShortcut(QKeySequence("Ctrl+Shift+C"));
     connect(consoleAction, &QAction::triggered, this, &IDEMainWindow::onOpenModelConsole);
     
     QAction* costMonitorAction = modelRouterMenu->addAction("&Cost Monitor");
@@ -240,6 +288,12 @@ void IDEMainWindow::setupMenus() {
     QAction* docsAction = helpMenu->addAction("&Documentation");
     docsAction->setShortcut(QKeySequence::HelpContents);
     connect(docsAction, &QAction::triggered, this, &IDEMainWindow::onDocumentation);
+}
+
+void IDEMainWindow::onOpenSettings()
+{
+    AppSettingsDialog dlg(this);
+    dlg.exec();
 }
 
 void IDEMainWindow::setupToolbars() {
@@ -914,8 +968,80 @@ void IDEMainWindow::updateStatusBar() {
 }
 
 void IDEMainWindow::showMessage(const QString& message, int timeout) {
-    statusBar()->showMessage(message, timeout);
+    // Route longer messages to non-blocking toasts if enabled
+    bool toastEnabled = RawrXD::FeatureToggle::isEnabled("Toast Notifications", true);
+    if (toastEnabled && timeout >= 3000) {
+        showToast(message, timeout);
+    } else {
+        statusBar()->showMessage(message, timeout);
+    }
+    // Structured telemetry logging
+    GetTelemetry().recordEvent("ui.message", QJsonObject{{"text", message}, {"timeout", timeout}, {"usedToast", toastEnabled && timeout >= 3000}});
     std::cout << "[IDEMainWindow] " << message.toStdString() << std::endl;
+}
+
+void IDEMainWindow::showToast(const QString& message, int timeout) {
+    if (!toastLayer) {
+        statusBar()->showMessage(message, timeout);
+        return;
+    }
+
+    // Toast container widget
+    QWidget* toast = new QWidget(toastLayer);
+    toast->setObjectName("toastWidget");
+    toast->setAttribute(Qt::WA_TransparentForMouseEvents);
+    toast->setStyleSheet(
+        "#toastWidget {"
+        "  background: rgba(30,30,30,220);"
+        "  color: white;"
+        "  border-radius: 6px;"
+        "  padding: 10px;"
+        "  font-weight: 500;"
+        "}"
+    );
+
+    auto* shadow = new QGraphicsDropShadowEffect(toast);
+    shadow->setBlurRadius(12);
+    shadow->setOffset(0, 3);
+    shadow->setColor(QColor(0,0,0,180));
+    toast->setGraphicsEffect(shadow);
+
+    auto* layout = new QHBoxLayout(toast);
+    layout->setContentsMargins(12,8,12,8);
+    layout->setSpacing(8);
+    auto* label = new QLabel(message, toast);
+    label->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    label->setAccessibleName("Toast Notification");
+    label->setAccessibleDescription("Transient notification message: " + message);
+    layout->addWidget(label);
+
+    // Position bottom-right above status bar
+    const int width = std::min(480, std::max(220, label->sizeHint().width() + 40));
+    const int height = label->sizeHint().height() + 20;
+    const int margin = 12;
+    const QRect r = this->rect();
+    toast->setGeometry(r.right() - width - margin, r.bottom() - height - statusBar()->height() - margin, width, height);
+    toast->setWindowOpacity(0.0);
+    toast->show();
+    toast->raise();
+
+    // Fade in/out animations
+    auto* animIn = new QPropertyAnimation(toast, "windowOpacity");
+    animIn->setDuration(150);
+    animIn->setStartValue(0.0);
+    animIn->setEndValue(1.0);
+    animIn->start(QAbstractAnimation::DeleteWhenStopped);
+
+    QTimer::singleShot(timeout, toast, [toast]() {
+        auto* animOut = new QPropertyAnimation(toast, "windowOpacity");
+        animOut->setDuration(200);
+        animOut->setStartValue(1.0);
+        animOut->setEndValue(0.0);
+        QObject::connect(animOut, &QPropertyAnimation::finished, toast, [toast]() {
+            toast->deleteLater();
+        });
+        animOut->start(QAbstractAnimation::DeleteWhenStopped);
+    });
 }
 
 void IDEMainWindow::loadSettings() {

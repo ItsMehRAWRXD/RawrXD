@@ -25,10 +25,11 @@ QtMasmBridge::QtMasmBridge(QObject* parent)
     , m_initialized(false)
     , m_masmInitialized(false)
 {
-    // Disable MASM bridge completely to prevent crashes
-    // m_eventTimer = new QTimer(this);
-    // m_eventTimer->setInterval(100);
-    // connect(m_eventTimer, &QTimer::timeout, this, &QtMasmBridge::pumpEvents);
+    // FULLY RE-ENABLED: MASM bridge event pump
+    m_eventTimer = new QTimer(this);
+    m_eventTimer->setInterval(100);
+    connect(m_eventTimer, &QTimer::timeout, this, &QtMasmBridge::pumpEvents);
+    
     registerWidgetFactory("masm_panel", [](QWidget* parent) {
         QWidget* panel = new QWidget(parent);
         panel->setObjectName("masm_panel");
@@ -39,10 +40,10 @@ QtMasmBridge::QtMasmBridge(QObject* parent)
 
 QtMasmBridge::~QtMasmBridge()
 {
-    // Disabled MASM bridge cleanup
-    // if (m_eventTimer && m_eventTimer->isActive()) {
-    //     m_eventTimer->stop();
-    // }
+    // FULLY RE-ENABLED: MASM bridge cleanup
+    if (m_eventTimer && m_eventTimer->isActive()) {
+        m_eventTimer->stop();
+    }
 }
 
 QtMasmBridge& QtMasmBridge::instance()

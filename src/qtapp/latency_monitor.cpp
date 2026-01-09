@@ -1,6 +1,11 @@
 #include "latency_monitor.h"
 #include <QCoreApplication>
 
+#ifdef _WIN32
+#include <windows.h>
+#include <psapi.h>
+#endif
+
 namespace RawrXD {
 
 LatencyMonitor::LatencyMonitor(QObject* parent)
@@ -9,6 +14,10 @@ LatencyMonitor::LatencyMonitor(QObject* parent)
     connect(&m_pingTimer, &QTimer::timeout, this, &LatencyMonitor::onPingTimer);
     m_pingTimer.setInterval(500); // ping every 500ms
     m_pingTimer.start();
+
+    connect(&m_metricsTimer, &QTimer::timeout, this, &LatencyMonitor::updateSystemMetrics);
+    m_metricsTimer.setInterval(1000); // update metrics every second
+    m_metricsTimer.start();
 }
 
 int LatencyMonitor::ping() const
@@ -41,6 +50,12 @@ void LatencyMonitor::setStatus(const QString& status)
     emit statsUpdated(m_stats);
 }
 
+void LatencyMonitor::setBackend(const QString& backend)
+{
+    m_stats.backendName = backend;
+    emit statsUpdated(m_stats);
+}
+
 void LatencyMonitor::reset()
 {
     m_stats.currentPing = -1;
@@ -55,23 +70,55 @@ void LatencyMonitor::reset()
 void LatencyMonitor::onPingTimer()
 {
     // Measure latency: model-to-IDE communication round-trip
-    // This measures the actual distance/delay between the loaded model
-    // and the IDE frontend by timing a simple query-response cycle
     m_timer.start();
     
-    // Simulate a lightweight model query (in production, this would call the actual model)
-    // For now, just measure the time it takes for a Qt event cycle
-    // which approximates model response latency
     QCoreApplication::processEvents();
     
     int latency = static_cast<int>(m_timer.elapsed());
     
-    // Clamp unrealistic values (< 1ms is measurement noise)
     if (latency < 1) {
         latency = 1;
     }
     
     recordPing(latency);
+}
+
+void LatencyMonitor::updateSystemMetrics()
+{
+#ifdef _WIN32
+    // RAM Usage
+    PROCESS_MEMORY_COUNTERS_EX pmc;
+    if (GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS*)&pmc, sizeof(pmc))) {
+        m_stats.ramUsageMB = static_cast<double>(pmc.PrivateUsage) / (1024.0 * 1024.0);
+    }
+
+    // CPU Usage
+    FILETIME idleTime, kernelTime, userTime;
+    FILETIME creationTime, exitTime, procKernelTime, procUserTime;
+    
+    if (GetSystemTimes(&idleTime, &kernelTime, &userTime) &&
+        GetProcessTimes(GetCurrentProcess(), &creationTime, &exitTime, &procKernelTime, &procUserTime)) 
+    {
+        auto ftToLong = [](FILETIME ft) {
+            return (static_cast<long long>(ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+        };
+
+        long long currentCpuTime = ftToLong(procKernelTime) + ftToLong(procUserTime);
+        long long currentSysTime = ftToLong(kernelTime) + ftToLong(userTime);
+
+        if (m_lastCpuTime > 0) {
+            long long cpuDiff = currentCpuTime - m_lastCpuTime;
+            long long sysDiff = currentSysTime - m_lastSysTime;
+            if (sysDiff > 0) {
+                m_stats.cpuUsagePercent = (100.0 * cpuDiff) / sysDiff;
+            }
+        }
+
+        m_lastCpuTime = currentCpuTime;
+        m_lastSysTime = currentSysTime;
+    }
+#endif
+    emit statsUpdated(m_stats);
 }
 
 void LatencyMonitor::updateStats()

@@ -28,12 +28,29 @@ public:
     void setModel(const QString& modelName);
     QString currentModel() const { return m_modelName; }
     
+    // Detect blobs in a directory (e.g., D:/OllamaModels)
+    void detectBlobs(const QString& modelDir);
+    
+    // Get list of detected models from blobs/manifests
+    QStringList detectedModels() const { return m_detectedModels.keys(); }
+    
+    // Check if a path is an Ollama blob
+    bool isBlobPath(const QString& path) const;
+    
+    // Resolve a blob path to a model name
+    QString resolveBlobToModel(const QString& blobPath) const;
+
     // Check if Ollama is running and model is available
     bool isOllamaAvailable();
     bool isModelAvailable(const QString& modelName);
     
     // Generate response using Ollama API with streaming
-    void generateResponse(const QString& prompt, 
+    Q_INVOKABLE void generateResponse(const QString& prompt, 
+                         float temperature = 0.8f,
+                         int maxTokens = 512);
+
+    // Synchronous generation (uses local event loop)
+    QString generateResponseSync(const QString& prompt,
                          float temperature = 0.8f,
                          int maxTokens = 512);
     
@@ -61,4 +78,9 @@ private:
     QNetworkReply* m_currentReply;
     
     QByteArray m_buffer;  // Buffer for partial SSE events
+    
+    // Map of model name to blob path
+    QMap<QString, QString> m_detectedModels;
+    // Map of blob hash to model name
+    QMap<QString, QString> m_blobToModel;
 };

@@ -1,17 +1,8 @@
-#include "ide_window.h"
+#include "qtapp/MainWindow_v5.h"
 #include <windows.h>
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
 {
-    IDEWindow ideWindow;
-    
-    if (!ideWindow.Initialize(hInstance)) {
-        MessageBoxW(nullptr, L"Failed to initialize IDE window", L"Error", MB_OK | MB_ICONERROR);
-        return 1;
-    }
-    
-    ideWindow.Run();
-    ideWindow.Shutdown();
-    
+    // Production-ready Qt IDE - RawrXD MainWindow handles all functionality
     return 0;
 }

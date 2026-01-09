@@ -5,12 +5,12 @@
 #include <memory>
 #include <vector>
 
+#include "format_router.h"
+
 class InferenceEngine;
 class GGUFServer;
 class HFDownloader;
 class OllamaProxy;
-
-enum class ModelFormat;
 
 class EnhancedModelLoader : public QObject {
     Q_OBJECT

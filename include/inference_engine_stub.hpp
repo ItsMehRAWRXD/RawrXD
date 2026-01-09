@@ -67,7 +67,7 @@ private:
     // State
     std::unique_ptr<GGUFLoader> m_loader;
     std::unique_ptr<TransformerBlockScalar> m_transformer;
-    // Note: Vulkan GPU support deferred - CPU inference is functional
+    std::unique_ptr<VulkanCompute> m_vulkan;
     
     std::string m_modelPath;
     bool m_initialized = false;
@@ -76,6 +76,7 @@ private:
     uint32_t m_layerCount = 0;
     uint32_t m_headCount = 32;
     uint32_t m_headDim = 128;
+    bool m_useGPU = false;
     
     std::vector<float> m_embeddingTable;
     std::vector<float> m_outputWeights;

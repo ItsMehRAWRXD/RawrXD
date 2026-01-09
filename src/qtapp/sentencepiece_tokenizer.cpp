@@ -2,6 +2,7 @@
 #include <QFile>
 #include <QDataStream>
 #include <QDebug>
+#include <QElapsedTimer>
 #include <QRegularExpression>
 #include <algorithm>
 #include <cmath>
@@ -149,52 +150,78 @@ bool SentencePieceTokenizer::loadFromFile(const QString& modelPath) {
 bool SentencePieceTokenizer::loadFromGGUFMetadata(const QHash<QString, QByteArray>& metadata) {
     // Load from GGUF tokenizer metadata
     if (metadata.contains("tokenizer.ggml.tokens")) {
-        QByteArray tokensData = metadata["tokenizer.ggml.tokens"];
-        QDataStream stream(tokensData);
-        stream.setByteOrder(QDataStream::LittleEndian);
-        
-        int32_t numTokens;
-        stream >> numTokens;
-        
-        m_pieces.reserve(numTokens);
-        
-        for (int32_t i = 0; i < numTokens; ++i) {
-            quint32 len;
-            stream >> len;
-            
-            QByteArray tokenBytes(len, Qt::Uninitialized);
-            stream.readRawData(tokenBytes.data(), len);
-            
+        const QElapsedTimer timer = [] { QElapsedTimer t; t.start(); return t; }();
+
+        const QByteArray tokensData = metadata.value("tokenizer.ggml.tokens");
+        if (tokensData.isEmpty()) {
+            return false;
+        }
+
+        // GGUFLoaderQt exports tokens as a single NUL-delimited blob.
+        // Do NOT treat it as length-prefixed; that was the source of the historical "freeze".
+        QList<QByteArray> tokenList = tokensData.split('\0');
+        if (!tokenList.isEmpty() && tokenList.last().isEmpty()) {
+            tokenList.removeLast();
+        }
+
+        if (tokenList.isEmpty()) {
+            return false;
+        }
+
+        m_pieces.clear();
+        m_pieceToId.clear();
+        m_pieces.resize(tokenList.size());
+
+        for (int i = 0; i < tokenList.size(); ++i) {
             SentencePiece piece;
-            piece.piece = QString::fromUtf8(tokenBytes);
-            piece.score = 0.0f;  // Default score if not provided
+            piece.piece = QString::fromUtf8(tokenList[i]);
+            piece.score = 0.0f;
             piece.id = i;
             piece.type = SentencePiece::NORMAL;
-            
+
             // Check for special tokens
             if (piece.piece == "<s>" || piece.piece == "<|begin_of_text|>") m_bosId = i;
             else if (piece.piece == "</s>" || piece.piece == "<|end_of_text|>") m_eosId = i;
             else if (piece.piece == "<unk>") m_unkId = i;
-            
-            m_pieces.append(piece);
+            else if (piece.piece == "<pad>") m_padId = i;
+
+            m_pieces[i] = piece;
+            // Note: duplicate piece strings can exist; last one wins.
             m_pieceToId[piece.piece] = i;
         }
-        
-        // Load scores if available
+
+        // Load scores if available (float32 LE)
         if (metadata.contains("tokenizer.ggml.scores")) {
-            QByteArray scoresData = metadata["tokenizer.ggml.scores"];
+            const QByteArray scoresData = metadata.value("tokenizer.ggml.scores");
             QDataStream scoreStream(scoresData);
             scoreStream.setByteOrder(QDataStream::LittleEndian);
-            
-            for (int i = 0; i < m_pieces.size(); ++i) {
-                float score;
+
+            const int maxScores = qMin<int>(m_pieces.size(), scoresData.size() / static_cast<int>(sizeof(float)));
+            for (int i = 0; i < maxScores && scoreStream.status() == QDataStream::Ok; ++i) {
+                float score = 0.0f;
                 scoreStream >> score;
                 m_pieces[i].score = score;
             }
         }
-        
+
+        // Load token types if available (uint32 LE)
+        if (metadata.contains("tokenizer.ggml.token_type")) {
+            const QByteArray typeData = metadata.value("tokenizer.ggml.token_type");
+            QDataStream typeStream(typeData);
+            typeStream.setByteOrder(QDataStream::LittleEndian);
+
+            const int maxTypes = qMin<int>(m_pieces.size(), typeData.size() / static_cast<int>(sizeof(uint32_t)));
+            for (int i = 0; i < maxTypes && typeStream.status() == QDataStream::Ok; ++i) {
+                uint32_t type = 0;
+                typeStream >> type;
+                if (type <= static_cast<uint32_t>(SentencePiece::BYTE)) {
+                    m_pieces[i].type = static_cast<SentencePiece::Type>(type);
+                }
+            }
+        }
+
         buildTrie();
-        qInfo() << "SentencePiece loaded from GGUF:" << m_pieces.size() << "pieces";
+        qInfo() << "SentencePiece loaded from GGUF:" << m_pieces.size() << "pieces in" << timer.elapsed() << "ms";
         return true;
     }
     

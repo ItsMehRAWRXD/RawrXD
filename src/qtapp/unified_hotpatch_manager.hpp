@@ -6,6 +6,7 @@
 #include "model_memory_hotpatch.hpp"
 #include "byte_level_hotpatcher.hpp"
 #include "gguf_server_hotpatch.hpp"
+#include "UniversalWrapperMASM.h"
 #include <QObject>
 #include <QString>
 #include <QHash>
@@ -20,7 +21,8 @@ enum class PatchLayer {
     System,
     Memory,
     Byte,
-    Server
+    Server,
+    Universal
 };
 
 struct UnifiedResult {
@@ -52,8 +54,10 @@ public:
     ModelMemoryHotpatch* memoryHotpatcher() const;
     ByteLevelHotpatcher* byteHotpatcher() const;
     GGUFServerHotpatch* serverHotpatcher() const;
+    UniversalWrapperMASM* universalWrapper() const;
     
     UnifiedResult attachToModel(void* modelPtr, size_t modelSize, const QString& modelPath);
+    UnifiedResult loadModelUniversal(const QString& modelPath);
     UnifiedResult detachAll();
     
     // Memory-level operations
@@ -117,6 +121,7 @@ private:
     std::unique_ptr<ModelMemoryHotpatch> m_memoryHotpatch;
     std::unique_ptr<ByteLevelHotpatcher> m_byteHotpatch;
     std::unique_ptr<GGUFServerHotpatch> m_serverHotpatch;
+    std::unique_ptr<UniversalWrapperMASM> m_universalWrapper;
     
     bool m_initialized = false;
     QString m_currentModelPath;

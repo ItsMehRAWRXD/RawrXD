@@ -26,6 +26,7 @@
 #include <QPushButton>
 #include <QToolBar>
 #include <QSet>
+#include <QSortFilterProxyModel>
 #include "../utils/project_detector.h"
 // Interfaces for file and directory operations (Dependency Inversion)
 #include "../interfaces/ifile_writer.h"
@@ -40,6 +41,7 @@ namespace RawrXD {
 // Forward declarations
 class ProjectExplorerModel;
 class GitignoreFilter;
+class GitignoreProxyModel;
 
 /**
  * \class ProjectExplorerWidget
@@ -229,6 +231,8 @@ private:
      * \brief Load .gitignore patterns from project
      */
     void loadGitignorePatterns();
+    QModelIndex mapToSource(const QModelIndex& proxyIndex) const;
+    QModelIndex mapFromSource(const QModelIndex& sourceIndex) const;
     
     // UI Components
     QVBoxLayout* m_mainLayout;
@@ -239,6 +243,7 @@ private:
     
     // Data model
     QFileSystemModel* m_fileSystemModel;
+    GitignoreProxyModel* m_proxyModel;
     
     // Project state
     QString m_projectPath;
@@ -274,6 +279,24 @@ private:
     
     // Settings
     bool m_showHiddenFiles;
+};
+
+class GitignoreProxyModel : public QSortFilterProxyModel {
+    Q_OBJECT
+public:
+    explicit GitignoreProxyModel(QObject* parent = nullptr);
+
+    void setPatterns(const QSet<QString>& patterns);
+    void setBasePath(const QString& basePath);
+    void setDirectoryManager(IDirectoryManager* dirManager);
+
+protected:
+    bool filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const override;
+
+private:
+    QSet<QString> m_patterns;
+    QString m_basePath;
+    IDirectoryManager* m_dirManager = nullptr;
 };
 
 /**

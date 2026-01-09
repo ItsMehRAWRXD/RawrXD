@@ -88,6 +88,10 @@ public:
     void fetchOllamaModelsAsync(const QString& endpoint = "http://localhost:11434");
     void refreshModelCache();
     bool isModelCacheValid() const;
+
+    // Accessors for external widgets to get model metadata and tooltip HTML
+    ModelInfo getModelInfo(const QString& modelName) const;
+    QString tooltipForModel(const QString& modelName) const;
     
 signals:
     void agentModeChanged(AgentMode mode);

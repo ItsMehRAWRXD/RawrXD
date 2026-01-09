@@ -28,12 +28,22 @@ public:
     bool isRunning() const;
     qint64 pid() const;
 
+    /**
+     * Agentic capability: Analyze current terminal output for errors and suggest fixes
+     */
+    void askAIToFix();
+
+signals:
+    void errorDetected(const QString& errorText);
+    void fixSuggested(const QString& fixCommand);
+
 private slots:
     void onUserCommand();
     void onOutputReady(const QByteArray& data);
     void onErrorReady(const QByteArray& data);
     void onStarted();
     void onFinished(int exitCode, QProcess::ExitStatus status);
+    void checkForErrors(const QString& text);
 
 private:
     TerminalManager* m_manager;
@@ -41,5 +51,6 @@ private:
     QLineEdit* m_input;
     QComboBox* m_shellSelect;
     QPushButton* m_startStopBtn;
+    QPushButton* m_fixBtn;
     void appendOutput(const QString& text);
 };

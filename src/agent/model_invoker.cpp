@@ -7,9 +7,11 @@
  */
 
 #include "model_invoker.hpp"
+#include "telemetry_hooks.hpp"
 
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
+#include <QNetworkReply>
 #include <QUrl>
 #include <QJsonDocument>
 #include <QJsonValue>
@@ -21,6 +23,7 @@
 #include <QFile>
 #include <QDir>
 #include <QtConcurrent>
+#include <chrono>
 
 /**
  * @brief Constructor - initializes network manager and default settings
@@ -195,10 +198,17 @@ LLMResponse ModelInvoker::invoke(const InvocationParams& params)
  */
 void ModelInvoker::invokeAsync(const InvocationParams& params)
 {
-    QtConcurrent::run([this, params]() {
-        LLMResponse response = invoke(params);
-        emit planGenerated(response);
-    });
+    if (m_isInvoking) {
+        emit invocationError("Another request is in flight", true);
+        return;
+    }
+
+    m_isInvoking = true;
+    emit planGenerationStarted(params.wish);
+
+    m_pendingParams = params;
+    m_currentAttempt = 1;
+    startAsyncRequest(params, m_currentAttempt);
 }
 
 /**
@@ -206,6 +216,10 @@ void ModelInvoker::invokeAsync(const InvocationParams& params)
  */
 void ModelInvoker::cancelPendingRequest()
 {
+    if (m_pendingReply) {
+        m_pendingReply->abort();
+    }
+    clearPending();
     m_isInvoking = false;
     qDebug() << "[ModelInvoker] Request cancelled";
 }
@@ -213,7 +227,7 @@ void ModelInvoker::cancelPendingRequest()
 /**
  * @brief Build system prompt with tool descriptions
  */
-QString ModelInvoker::buildSystemPrompt(const QStringList& tools)
+QString ModelInvoker::buildSystemPrompt(const QStringList& tools) const
 {
     QString prompt = R"(You are an intelligent IDE agent for the RawrXD code generation framework.
 
@@ -277,7 +291,7 @@ Current capabilities include: file search, text editing, project builds, test ex
 /**
  * @brief Build user message with wish and context
  */
-QString ModelInvoker::buildUserMessage(const InvocationParams& params)
+QString ModelInvoker::buildUserMessage(const InvocationParams& params) const
 {
     QString message = "User Wish: " + params.wish + "\n\n";
 
@@ -540,4 +554,442 @@ LLMResponse ModelInvoker::getCachedResponse(const QString& key) const
 void ModelInvoker::cacheResponse(const QString& key, const LLMResponse& response)
 {
     m_responseCache[key] = response;
+}
+
+/**
+ * @brief Build network request + payload for async path
+ */
+QPair<QNetworkRequest, QByteArray> ModelInvoker::buildRequestPayload(const InvocationParams& params) const
+{
+    QString systemPrompt = m_customSystemPrompt.isEmpty()
+                               ? buildSystemPrompt(params.availableTools)
+                               : m_customSystemPrompt;
+    QString userMessage = buildUserMessage(params);
+
+    QNetworkRequest req;
+    QByteArray payload;
+
+    if (m_backend == "ollama") {
+        QUrl url(m_endpoint + "/api/generate");
+        req.setUrl(url);
+        req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+
+        QJsonObject body;
+        body["model"] = m_model;
+        body["prompt"] = userMessage;
+        body["temperature"] = params.temperature;
+        body["num_predict"] = params.maxTokens;
+        body["stream"] = false;
+        payload = QJsonDocument(body).toJson();
+    } else if (m_backend == "claude") {
+        QUrl url(m_endpoint);
+        if (!url.path().contains("/v1/messages")) {
+            url.setPath("/v1/messages");
+        }
+        req.setUrl(url);
+        req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+        req.setRawHeader("x-api-key", m_apiKey.toUtf8());
+        req.setRawHeader("anthropic-version", "2023-06-01");
+
+        QJsonObject body;
+        body["model"] = m_model;
+        body["max_tokens"] = params.maxTokens;
+        body["temperature"] = params.temperature;
+
+        QJsonArray messages;
+        QJsonObject message;
+        message["role"] = "user";
+        message["content"] = userMessage;
+        messages.append(message);
+        body["messages"] = messages;
+        payload = QJsonDocument(body).toJson();
+    } else if (m_backend == "openai") {
+        QUrl url(m_endpoint);
+        if (!url.path().contains("/v1/chat/completions")) {
+            url.setPath("/v1/chat/completions");
+        }
+        req.setUrl(url);
+        req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+        req.setRawHeader("Authorization", ("Bearer " + m_apiKey).toUtf8());
+
+        QJsonObject body;
+        body["model"] = m_model;
+        body["max_tokens"] = params.maxTokens;
+        body["temperature"] = params.temperature;
+
+        QJsonArray messages;
+        QJsonObject message;
+        message["role"] = "user";
+        message["content"] = userMessage;
+        messages.append(message);
+        body["messages"] = messages;
+        payload = QJsonDocument(body).toJson();
+    }
+
+    return qMakePair(req, payload);
+}
+
+/**
+ * @brief Start async request with retries and timeout
+ */
+void ModelInvoker::startAsyncRequest(const InvocationParams& params, int attempt)
+{
+    clearPending();
+    m_pendingParams = params;
+    m_currentAttempt = attempt;
+
+    // Record request start time for latency tracking
+    m_requestStartTime = std::chrono::high_resolution_clock::now();
+
+    auto pair = buildRequestPayload(params);
+    QNetworkRequest req = pair.first;
+    QByteArray payload = pair.second;
+
+    if (!req.url().isValid()) {
+        emit invocationError("Invalid LLM endpoint URL", true);
+        m_isInvoking = false;
+        return;
+    }
+
+    qInfo() << "[ModelInvoker] Async invoke attempt" << attempt << "backend=" << m_backend << "url=" << req.url();
+
+    m_pendingReply = m_networkManager->post(req, payload);
+
+    // Timeout guard
+    if (!m_timeoutTimer) {
+        m_timeoutTimer = std::make_unique<QTimer>(this);
+    }
+    m_timeoutTimer->setSingleShot(true);
+    m_timeoutTimer->setInterval(m_timeoutMs);
+    connect(m_timeoutTimer.get(), &QTimer::timeout, this, &ModelInvoker::onRequestTimeout);
+    m_timeoutTimer->start();
+
+    // Success path
+    connect(m_pendingReply, &QNetworkReply::finished, this, [this]() {
+        if (!m_pendingReply) return;
+        if (m_timeoutTimer) m_timeoutTimer->stop();
+        QByteArray data = m_pendingReply->readAll();
+        m_pendingReply->deleteLater();
+        m_pendingReply = nullptr;
+        onLLMResponseReceived(data);
+    });
+
+    // Network errors
+    connect(m_pendingReply, &QNetworkReply::errorOccurred, this, [this](QNetworkReply::NetworkError) {
+        if (!m_pendingReply) return;
+        QString err = m_pendingReply->errorString();
+        onNetworkError(err);
+    });
+}
+
+void ModelInvoker::clearPending()
+{
+    if (m_timeoutTimer) {
+        m_timeoutTimer->stop();
+        m_timeoutTimer->disconnect();
+    }
+    if (m_pendingReply) {
+        m_pendingReply->disconnect();
+        m_pendingReply->deleteLater();
+        m_pendingReply = nullptr;
+    }
+}
+
+/**
+ * @brief Handle LLM response (async)
+ */
+void ModelInvoker::onLLMResponseReceived(const QByteArray& data)
+{
+    LLMResponse response;
+
+    if (data.isEmpty()) {
+        response.success = false;
+        response.error = "Empty response from LLM";
+        emit invocationError(response.error, true);
+        m_isInvoking = false;
+        return;
+    }
+
+    QJsonParseError jsonError;
+    QJsonDocument doc = QJsonDocument::fromJson(data, &jsonError);
+    if (jsonError.error != QJsonParseError::NoError || !doc.isObject()) {
+        response.success = false;
+        response.error = QString("Malformed JSON from LLM: %1").arg(jsonError.errorString());
+        emit invocationError(response.error, true);
+        m_isInvoking = false;
+        return;
+    }
+
+    QJsonObject llmResponse = doc.object();
+
+    if (m_backend == "ollama") {
+        response.rawOutput = llmResponse.value("response").toString();
+        response.tokensUsed = llmResponse.value("eval_count").toInt() +
+                              llmResponse.value("prompt_eval_count").toInt();
+    } else if (m_backend == "claude") {
+        auto content = llmResponse.value("content").toArray();
+        if (!content.isEmpty()) {
+            response.rawOutput = content[0].toObject().value("text").toString();
+        }
+        response.tokensUsed = llmResponse.value("usage").toObject().value("output_tokens").toInt();
+    } else if (m_backend == "openai") {
+        auto choices = llmResponse.value("choices").toArray();
+        if (!choices.isEmpty()) {
+            response.rawOutput = choices[0].toObject().value("message").toObject().value("content").toString();
+        }
+        response.tokensUsed = llmResponse.value("usage").toObject().value("completion_tokens").toInt();
+    }
+
+    if (response.rawOutput.isEmpty()) {
+        response.success = false;
+        response.error = "LLM returned empty content";
+        emit invocationError(response.error, true);
+        m_isInvoking = false;
+        return;
+    }
+
+    qDebug() << "[ModelInvoker] (async) LLM response:" << response.rawOutput.left(200);
+
+    response.parsedPlan = parsePlan(response.rawOutput);
+
+    if (!validatePlanSanity(response.parsedPlan)) {
+        response.success = false;
+        response.error = "Plan failed sanity checks";
+        emit invocationError(response.error, true);
+        m_isInvoking = false;
+        return;
+    }
+
+    response.success = true;
+    response.reasoning = llmResponse.value("reasoning").toString();
+
+    // Record telemetry for successful LLM invocation
+    auto end = std::chrono::high_resolution_clock::now();
+    qint64 latencyMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+        end - m_requestStartTime).count();
+
+    RawrXD::LLMMetrics::Request metrics;
+    metrics.backend = m_backend;
+    metrics.latencyMs = latencyMs;
+    metrics.tokensUsed = response.tokensUsed;
+    metrics.success = true;
+    metrics.retryAttempts = m_currentAttempt;
+    metrics.cacheHit = false;  // Only true if loaded from cache
+    // TODO: Enable metrics recording once LLMMetrics is fully implemented
+    // RawrXD::LLMMetrics::recordRequest(metrics);
+    (void)metrics;  // Suppress unused warning
+
+    // Success: reset circuit breaker failure counter for this backend
+    resetBackendFailureCount(m_backend);
+
+    if (m_cachingEnabled) {
+        cacheResponse(getCacheKey(m_pendingParams), response);
+    }
+
+    m_isInvoking = false;
+    emit planGenerated(response);
+    emit statusUpdated("LLM plan generated");
+}
+
+/**
+ * @brief Handle network error with retry/backoff
+ */
+void ModelInvoker::onNetworkError(const QString& error)
+{
+    if (m_timeoutTimer) m_timeoutTimer->stop();
+
+    recordBackendFailure(m_backend, true);
+
+    // Check if circuit breaker is now open
+    if (isCircuitBreakerOpen(m_backend)) {
+        QString nextBackend = getNextFailoverBackend(m_backend);
+        if (!nextBackend.isEmpty()) {
+            qWarning() << "[ModelInvoker] Circuit breaker open, switching backend from" 
+                       << m_backend << "to" << nextBackend;
+            setLLMBackend(nextBackend, m_endpoint, m_apiKey);
+            m_currentAttempt = 1;
+            QTimer::singleShot(100, this, [this]() {
+                startAsyncRequest(m_pendingParams, 1);
+            });
+            return;
+        } else {
+            qCritical() << "[ModelInvoker] Circuit breaker open and no fallback available";
+            m_isInvoking = false;
+            emit invocationError(QString("All backends failed: %1").arg(error), false);
+            return;
+        }
+    }
+
+    if (m_currentAttempt < m_maxRetries) {
+        int delay = m_retryDelayMs * (1 << (m_currentAttempt - 1));
+        qWarning() << "[ModelInvoker] Network error, retrying in" << delay << "ms:" << error;
+        QTimer::singleShot(delay, this, [this]() {
+            startAsyncRequest(m_pendingParams, m_currentAttempt + 1);
+        });
+        return;
+    }
+
+    qWarning() << "[ModelInvoker] Network error, giving up:" << error;
+    m_isInvoking = false;
+    emit invocationError(error, true);
+}
+
+/**
+ * @brief Handle request timeout with retry/backoff
+ */
+void ModelInvoker::onRequestTimeout()
+{
+    if (m_timeoutTimer) m_timeoutTimer->stop();
+    qWarning() << "[ModelInvoker] Request timeout (attempt" << m_currentAttempt << ")";
+
+    if (m_pendingReply) {
+        m_pendingReply->abort();
+    }
+
+    recordBackendFailure(m_backend, true);
+
+    if (m_currentAttempt < m_maxRetries) {
+        int delay = m_retryDelayMs * (1 << (m_currentAttempt - 1));
+        QTimer::singleShot(delay, this, [this]() {
+            startAsyncRequest(m_pendingParams, m_currentAttempt + 1);
+        });
+        return;
+    }
+
+    m_isInvoking = false;
+    emit invocationError("Request timeout", true);
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Circuit Breaker Implementation
+// ─────────────────────────────────────────────────────────────────────
+
+/**
+ * @brief Check if circuit breaker is open for a backend
+ * @param backend Backend name to check
+ * @return true if breaker is open (fail-fast mode)
+ */
+bool ModelInvoker::isCircuitBreakerOpen(const QString& backend)
+{
+    return m_circuitBreakerOpen.value(backend, false);
+}
+
+/**
+ * @brief Record a failure for a backend
+ * @param backend Backend name that failed
+ * @param emit_signal If true, emit circuitBreakerTripped when threshold reached
+ */
+void ModelInvoker::recordBackendFailure(const QString& backend, bool emit_signal)
+{
+    int& count = m_failureCountPerBackend[backend];
+    count++;
+
+    m_lastFailurePerBackend[backend] = QDateTime::currentDateTime();
+
+    qWarning() << "[ModelInvoker::CB] Failure recorded for" << backend
+               << "count=" << count << "threshold=" << CIRCUIT_BREAKER_THRESHOLD;
+
+    // Trip circuit breaker if threshold exceeded
+    if (count >= CIRCUIT_BREAKER_THRESHOLD) {
+        m_circuitBreakerOpen[backend] = true;
+        if (emit_signal) {
+            QString msg = QString("Circuit breaker tripped for %1 after %2 consecutive failures")
+                .arg(backend).arg(count);
+            emit circuitBreakerTripped(backend, count, msg);
+            qCritical() << "[ModelInvoker::CB]" << msg;
+
+            // Record circuit breaker trip event to telemetry
+            // TODO: Enable metrics recording once CircuitBreakerMetrics is fully implemented
+            // RawrXD::CircuitBreakerMetrics::Event cbEvent;
+            // cbEvent.backend = backend;
+            // cbEvent.eventType = "trip";
+            // cbEvent.failureCount = count;
+            // RawrXD::CircuitBreakerMetrics::recordEvent(cbEvent);
+        }
+    }
+}
+
+/**
+ * @brief Reset failure counter for a backend on successful response
+ * @param backend Backend name that succeeded
+ */
+void ModelInvoker::resetBackendFailureCount(const QString& backend)
+{
+    int previous = m_failureCountPerBackend.value(backend, 0);
+    m_failureCountPerBackend[backend] = 0;
+    m_circuitBreakerOpen[backend] = false;
+
+    if (previous > 0) {
+        qInfo() << "[ModelInvoker::CB] Failure count reset for" << backend
+                << "(was" << previous << ")";
+    }
+}
+
+/**
+ * @brief Attempt to transition circuit breaker from open to half-open
+ * @param backend Backend name to probe
+ * @return true if enough time has passed for reset attempt
+ */
+bool ModelInvoker::shouldAttemptCircuitReset(const QString& backend)
+{
+    if (!m_circuitBreakerOpen.value(backend, false)) {
+        return false; // Not open, no reset needed
+    }
+
+    QDateTime lastFailure = m_lastFailurePerBackend.value(backend, QDateTime());
+    if (!lastFailure.isValid()) {
+        return false;
+    }
+
+    qint64 timeSinceLastFailure = lastFailure.msecsTo(QDateTime::currentDateTime());
+    bool shouldReset = timeSinceLastFailure >= CIRCUIT_BREAKER_RESET_MS;
+
+    if (shouldReset) {
+        qInfo() << "[ModelInvoker::CB] Attempting reset for" << backend
+                << "after" << timeSinceLastFailure << "ms";
+        emit circuitBreakerReset(backend);
+    }
+
+    return shouldReset;
+}
+
+/**
+ * @brief Get next available backend in failover chain
+ * @param currentBackend Current (failed) backend
+ * @return Name of next backend to try, or empty string if no fallback available
+ */
+QString ModelInvoker::getNextFailoverBackend(const QString& currentBackend)
+{
+    if (m_backendFailoverChain.isEmpty()) {
+        // Default fallover chain if not explicitly configured
+        // Ollama -> Claude -> OpenAI
+        if (currentBackend == "ollama") {
+            return "claude";
+        } else if (currentBackend == "claude") {
+            return "openai";
+        } else if (currentBackend == "openai") {
+            // Fallback to Ollama if available
+            return "ollama";
+        }
+        return QString();
+    }
+
+    int currentIndex = m_backendFailoverChain.indexOf(currentBackend);
+    if (currentIndex < 0 || currentIndex >= m_backendFailoverChain.size() - 1) {
+        return QString(); // No next backend in chain
+    }
+
+    QString nextBackend = m_backendFailoverChain[currentIndex + 1];
+    emit backendFailover(currentBackend, nextBackend);
+    qWarning() << "[ModelInvoker::CB] Failing over from" << currentBackend << "to" << nextBackend;
+
+    // Record failover event to telemetry
+    // TODO: Enable metrics recording once CircuitBreakerMetrics is fully implemented
+    // RawrXD::CircuitBreakerMetrics::Event cbEvent;
+    // cbEvent.backend = currentBackend;
+    // cbEvent.eventType = "failover";
+    // cbEvent.failureCount = m_failureCountPerBackend.value(currentBackend, 0);
+    // RawrXD::CircuitBreakerMetrics::recordEvent(cbEvent);
+
+    return nextBackend;
 }

@@ -1,7 +1,7 @@
 #include "chat_session.hpp"
 #include <sstream>
-#include <uuid/uuid.h>
 #include <iostream>
+#include <chrono>
 
 ChatSession::ChatSession(const std::string& model_name) 
     : current_model(model_name)

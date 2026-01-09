@@ -18,6 +18,19 @@ StreamingGGUFLoader::StreamingGGUFLoader(QObject* parent)
     qInfo().noquote() << QJsonDocument(logEntry).toJson(QJsonDocument::Compact);
 }
 
+// Zero-argument constructor for std::make_unique<StreamingGGUFLoader>()
+StreamingGGUFLoader::StreamingGGUFLoader()
+    : QObject(nullptr) {
+    
+    QJsonObject logEntry;
+    logEntry["timestamp"] = QDateTime::currentDateTime().toString(Qt::ISODate);
+    logEntry["level"] = "INFO";
+    logEntry["component"] = "StreamingGGUFLoader";
+    logEntry["event"] = "initialized (zero-arg constructor)";
+    
+    qInfo().noquote() << QJsonDocument(logEntry).toJson(QJsonDocument::Compact);
+}
+
 StreamingGGUFLoader::~StreamingGGUFLoader() {
     Close();
     

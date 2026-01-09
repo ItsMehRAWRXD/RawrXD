@@ -1,0 +1,10 @@
+{
+  "version": "@RAWRXD_APP_VERSION@",
+  "semver": "@RAWRXD_BUILD_SEMVER@",
+  "commit": "@RAWRXD_BUILD_COMMIT@",
+  "branch": "@RAWRXD_BUILD_BRANCH@",
+  "build_time_utc": "@RAWRXD_BUILD_TIME_UTC@",
+  "compiler": "@RAWRXD_BUILD_COMPILER@",
+  "platform": "@RAWRXD_BUILD_PLATFORM@",
+  "target": "@RAWRXD_BUILD_TARGET@"
+}

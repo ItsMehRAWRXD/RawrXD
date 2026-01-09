@@ -13,7 +13,12 @@ class ChatInterface;
 class MultiTabEditor;
 class TerminalPool;
 class AgenticExecutor;
-class ChatHistoryManager;
+
+namespace RawrXD {
+    namespace Database {
+        class ChatHistoryManager;
+    }
+}
 
 /**
  * @class AgenticCopilotBridge
@@ -42,6 +47,8 @@ public:
     void initialize(AgenticEngine* engine, ChatInterface* chat, 
                    MultiTabEditor* editor, TerminalPool* terminals, AgenticExecutor* executor);
     
+    void setChatHistoryManager(RawrXD::Database::ChatHistoryManager* historyManager);
+
     // Core Copilot-like capabilities (thread-safe)
     QString generateCodeCompletion(const QString& context, const QString& prefix = "");
     QString analyzeActiveFile();
@@ -115,7 +122,7 @@ private:
     MultiTabEditor* m_multiTabEditor = nullptr;
     TerminalPool* m_terminalPool = nullptr;
     AgenticExecutor* m_agenticExecutor = nullptr;
-    ChatHistoryManager* m_historyManager = nullptr;
+    RawrXD::Database::ChatHistoryManager* m_historyManager = nullptr;
     QString m_currentSessionId;
     
     QString m_lastConversationContext;

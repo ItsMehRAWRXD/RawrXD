@@ -1,4 +1,5 @@
 #include "sla_manager.hpp"
+#include "alert_dispatcher.h"
 #include <QDebug>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -244,6 +245,9 @@ void SLAManager::checkSLACompliance() {
         m_violationCount++;
         
         qCritical() << "[SLAManager]" << violation;
+        
+        // DISPATCH ALERT - Production readiness: Send to alert system
+        AlertDispatcher::instance().dispatchSLAViolation(violation);
     }
     
     // Warning if approaching budget
@@ -253,6 +257,15 @@ void SLAManager::checkSLACompliance() {
         
         emit slaWarning(warning);
         qWarning() << "[SLAManager]" << warning;
+        
+        // DISPATCH WARNING ALERT - Production readiness
+        AlertDispatcher::Alert alert;
+        alert.alert_type = "SLA_WARNING";
+        alert.severity = AlertDispatcher::AlertSeverity::HIGH;
+        alert.message = warning;
+        alert.timestamp = QDateTime::currentDateTime();
+        alert.tags["component"] = "SLA";
+        AlertDispatcher::instance().dispatch(alert);
     }
 }
 

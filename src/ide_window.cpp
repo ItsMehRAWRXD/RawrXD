@@ -1,4 +1,4 @@
-#include "ide_window.h"
+#include "qtapp/MainWindow_v5.h"
 #include <richedit.h>
 #include <commctrl.h>
 #include <commdlg.h>

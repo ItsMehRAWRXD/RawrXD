@@ -63,7 +63,7 @@ int main(int argc, char* argv[]) {
         // Light transform to keep compiler from optimizing everything out
         for (int i=0;i<N;i++) C[i] = std::sin(C[i]);
 
-        telemetry::TelemetrySnapshot snap; telemetry::Poll(snap);
+        TelemetrySnapshot snap; telemetry::Poll(snap);
         if (snap.cpuTempValid && snap.cpuTempC > worstCpuTemp) worstCpuTemp = snap.cpuTempC;
         if (snap.gpuTempValid && snap.gpuTempC > worstGpuTemp) worstGpuTemp = snap.gpuTempC;
 

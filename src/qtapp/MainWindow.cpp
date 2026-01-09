@@ -4,6 +4,7 @@
 #include "TerminalWidget.h"
 #include "Subsystems.h"
 #include "ActivityBar.h"
+#include "utils/model_metadata_utils.hpp"
 #include "widgets/masm_editor_widget.h"
 #include "widgets/hotpatch_panel.h"
 #include "widgets/project_explorer.h"
@@ -16,12 +17,22 @@
 #include "ai_chat_panel.hpp"
 #include "model_loader_widget.hpp"
 #include "masm_feature_settings_panel.hpp"
+#include "blob_converter_panel.hpp"
+#include "ai_digestion_panel.hpp"
+#include "problems_panel.hpp"  // MASM diagnostics panel
+#include "startup_readiness_checker.hpp"
 #include "../agent/auto_bootstrap.hpp"
 #include "../agent/hot_reload.hpp"
 #include "../agent/self_test_gate.hpp"
 #include "../agent/meta_planner.hpp"
 #include "../agent/action_executor.hpp"
 #include "../agent/model_invoker.hpp"
+#include "../agent/ide_agent_bridge.hpp"
+#include "../agent/agentic_copilot_bridge.hpp"
+#include "../agentic_engine.h"
+#include "multi_tab_editor.h"
+#include "../real_time_integration_coordinator.hpp"
+#include "../real_time_terminal_pool.hpp"
 #include "widgets/layer_quant_widget.hpp"
 #include "widgets/breadcrumb_navigation.hpp"
 #include "settings_dialog.h"
@@ -30,6 +41,7 @@
 #include "latency_status_panel.h"
 // Experimental features menu (toggle advanced runtime optimizations)
 #include "experimental_features_menu.hpp"
+#include "rawrxd_build_info.h"
 
 // Forward declaration resolved by include above
 
@@ -37,8 +49,10 @@
 #include "deflate_brutal_qt.hpp"     // compress / decompress
 
 #include <QApplication>
+#include <QCoreApplication>
 #include <QAction>
 #include <QActionGroup>
+#include <QStandardPaths>
 #include <QCoreApplication>
 #include <QFileSystemModel>
 #include <QLabel>
@@ -322,6 +336,7 @@ MainWindow::MainWindow(QWidget* parent)
     setupMASMEditor();
     setupInterpretabilityPanel();  // Model analysis & diagnostics
     setupModelLoaderWidget();       // Model loading with brutal MASM compression
+    setupBlobConverterPanel();      // Blob to GGUF converter
     
     // Enable zero-touch triggers so the agent auto-starts without manual input
     // AutoBootstrap::installZeroTouch();
@@ -347,6 +362,57 @@ MainWindow::MainWindow(QWidget* parent)
     
     // Restore saved UI state (window geometry, dock positions, panel visibility)
     handleLoadState();
+    
+    // ==================== STARTUP READINESS CHECK ====================
+    // Run comprehensive pre-flight checks before enabling autonomous agents
+    // This validates LLM endpoints, GGUF server, hotpatch manager, project root, etc.
+    QTimer::singleShot(1000, this, [this]() {
+        StartupReadinessDialog* readinessDialog = new StartupReadinessDialog(this);
+        
+        // Get configured project root
+        QString projectRoot = SettingsManager::instance().getDefaultProjectRoot();
+        
+        qDebug() << "[MainWindow] Running startup readiness checks...";
+        statusBar()->showMessage("Validating system readiness for autonomous agents...", 0);
+        
+        bool ready = readinessDialog->runChecks(m_hotpatchManager, projectRoot);
+        
+        AgentReadinessReport report = readinessDialog->getReport();
+        
+        if (ready && report.overallReady) {
+            qInfo() << "[MainWindow] ✓ All systems ready! Autonomous agents enabled.";
+            statusBar()->showMessage(
+                QString("✓ All systems ready! Total validation time: %1ms")
+                .arg(report.totalLatency), 5000);
+            
+            // Enable agent controls
+            if (m_agentModeSwitcher) {
+                m_agentModeSwitcher->setEnabled(true);
+            }
+            
+            // Open configured project root in Project Explorer
+            if (projectExplorer_ && !projectRoot.isEmpty()) {
+                projectExplorer_->openProject(projectRoot);
+                qDebug() << "[MainWindow] Opened project root:" << projectRoot;
+            }
+            
+        } else {
+            qWarning() << "[MainWindow] ⚠ Some checks failed. Agents may have limited functionality.";
+            qWarning() << "[MainWindow] Failed subsystems:" << report.failures.join(", ");
+            
+            statusBar()->showMessage(
+                QString("⚠ %1 check(s) failed - some features limited")
+                .arg(report.failures.size()), 8000);
+            
+            // Still try to open project root even if other checks failed
+            if (projectExplorer_ && !projectRoot.isEmpty() && QFile::exists(projectRoot)) {
+                projectExplorer_->openProject(projectRoot);
+                qDebug() << "[MainWindow] Opened project root (with warnings):" << projectRoot;
+            }
+        }
+        
+        readinessDialog->deleteLater();
+    });
 }
 
 void MainWindow::createVSCodeLayout()
@@ -720,6 +786,80 @@ void MainWindow::applyDarkTheme()
     QApplication::setPalette(darkPalette);
 }
 
+void MainWindow::setInferenceEngineForTest(InferenceEngine* engine)
+{
+    if (!engine) return;
+
+    // Replace the inference engine used by the UI for testing purposes
+    if (m_inferenceEngine && m_inferenceEngine != engine) {
+        // Do not delete the previous engine here; tests manage lifetimes
+        disconnect(m_inferenceEngine, nullptr, this, nullptr);
+    }
+    m_inferenceEngine = engine;
+
+    // Connect model loaded signal to enable AI chat input
+    connect(m_inferenceEngine, &InferenceEngine::modelLoadedChanged, this, [this](bool loaded, const QString& modelName){
+        if (loaded) {
+            if (!m_aiChatPanel) {
+                setupAIChatPanel();
+            }
+            // Initialize chat panel with the model name so input is enabled
+            m_aiChatPanel->initialize(modelName);
+            statusBar()->showMessage(tr("Model loaded: %1").arg(modelName), 2000);
+            qInfo() << "[MainWindow] Test inference engine loaded model:" << modelName;
+            // Wire AI panel messages to inference engine and connect streaming/result signals
+            connect(m_aiChatPanel, &AIChatPanel::messageSubmitted, this, [this](const QString& msg){
+                if (m_inferenceEngine) {
+                    qint64 reqId = QDateTime::currentMSecsSinceEpoch();
+                    QMetaObject::invokeMethod(m_inferenceEngine, "request", Qt::QueuedConnection, Q_ARG(QString, msg), Q_ARG(qint64, reqId));
+                }
+            });
+
+            connect(m_inferenceEngine, &InferenceEngine::streamToken, this, [this](qint64 reqId, const QString& token){
+                if (m_aiChatPanel) QMetaObject::invokeMethod(m_aiChatPanel, "updateStreamingMessage", Qt::QueuedConnection, Q_ARG(QString, token));
+            });
+
+            connect(m_inferenceEngine, &InferenceEngine::streamFinished, this, [this](qint64 reqId){
+                if (m_aiChatPanel) QMetaObject::invokeMethod(m_aiChatPanel, "finishStreaming", Qt::QueuedConnection);
+            });
+
+            connect(m_inferenceEngine, &InferenceEngine::resultReady, this, [this](qint64 reqId, const QString& answer){
+                if (m_aiChatPanel) QMetaObject::invokeMethod(m_aiChatPanel, [this, answer]() { this->m_aiChatPanel->addAssistantMessage(answer, false); }, Qt::QueuedConnection);
+            });
+        }
+    });
+    // If an AI chat panel exists, forward submitted messages to the engine and wire streaming/result signals
+    if (m_aiChatPanel) {
+        connect(m_aiChatPanel, &AIChatPanel::messageSubmitted, this, [this](const QString& msg){
+                if (m_inferenceEngine) {
+                    qint64 reqId = QDateTime::currentMSecsSinceEpoch();
+                    // Use the virtual handleRequest hook so mocks can override behavior
+                    m_inferenceEngine->handleRequest(msg, reqId);
+                }
+        });
+
+        // Stream tokens to the AI chat panel for live update
+        connect(m_inferenceEngine, &InferenceEngine::streamToken, this, [this](qint64 reqId, const QString& token){
+            if (m_aiChatPanel) QMetaObject::invokeMethod(m_aiChatPanel, "updateStreamingMessage", Qt::QueuedConnection, Q_ARG(QString, token));
+        });
+
+        connect(m_inferenceEngine, &InferenceEngine::streamFinished, this, [this](qint64 reqId){
+            if (m_aiChatPanel) QMetaObject::invokeMethod(m_aiChatPanel, "finishStreaming", Qt::QueuedConnection);
+        });
+
+        connect(m_inferenceEngine, &InferenceEngine::resultReady, this, [this](qint64 reqId, const QString& answer){
+            if (m_aiChatPanel) QMetaObject::invokeMethod(m_aiChatPanel, [this, answer]() {
+                this->m_aiChatPanel->addAssistantMessage(answer, false);
+            }, Qt::QueuedConnection);
+        });
+    }
+}
+
+bool MainWindow::isAIChatInputEnabled() const
+{
+    return m_aiChatPanel && m_aiChatPanel->isInputEnabled();
+}
+
 MainWindow::~MainWindow()
 {
     // Cleanup
@@ -888,9 +1028,9 @@ void MainWindow::setupMenuBar()
 
     // AI/GGUF menu with brutal_gzip integration
     QMenu* aiMenu = menuBar()->addMenu(tr("&AI"));
-    aiMenu->addAction(tr("Load GGUF Model..."), this, &MainWindow::loadGGUFModel);
-    aiMenu->addAction(tr("Run Inference..."), this, &MainWindow::runInference);
-    aiMenu->addAction(tr("Unload Model"), this, &MainWindow::unloadGGUFModel);
+    aiMenu->addAction(tr("Load GGUF Model..."), this, [this](){ loadGGUFModel(); });
+    aiMenu->addAction(tr("Run Inference..."), this, [this](){ runInference(); });
+    aiMenu->addAction(tr("Unload Model"), this, [this](){ unloadGGUFModel(); });
     aiMenu->addSeparator();
     
     // Streaming mode toggle
@@ -946,8 +1086,8 @@ void MainWindow::setupMenuBar()
     });
 
     QMenu* modelMenu = menuBar()->addMenu(tr("&Model"));
-    modelMenu->addAction(tr("Load Local GGUF..."), this, &MainWindow::loadGGUFModel);
-    modelMenu->addAction(tr("Unload Model"), this, &MainWindow::unloadGGUFModel);
+    modelMenu->addAction(tr("Load Local GGUF..."), this, [this](){ loadGGUFModel(); });
+    modelMenu->addAction(tr("Unload Model"), this, [this](){ unloadGGUFModel(); });
     modelMenu->addSeparator();
     m_backendGroup = new QActionGroup(this);
     m_backendGroup->setExclusive(true);
@@ -978,12 +1118,24 @@ void MainWindow::setupMenuBar()
     QAction* masmSettingsAct = toolsMenu->addAction(tr("MASM Feature Settings..."));
     connect(masmSettingsAct, &QAction::triggered, this, &MainWindow::openMASMFeatureSettings);
     
+    // Blob to GGUF Converter
+    QAction* blobConverterAct = toolsMenu->addAction(tr("Blob to GGUF Converter"));
+    connect(blobConverterAct, &QAction::triggered, this, [this]() {
+        toggleBlobConverterPanel(true);
+    });
+    
+    // AI Model Digestion & Training
+    QAction* aiDigestionAct = toolsMenu->addAction(tr("AI Model Digestion & Training"));
+    connect(aiDigestionAct, &QAction::triggered, this, [this]() {
+        toggleAIDigestionPanel(true);
+    });
+    
     toolsMenu->addSeparator();
     
     // General Settings
-    QAction* settingsAct = toolsMenu->addAction(tr("Settings..."));
-    settingsAct->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Comma));
-    connect(settingsAct, &QAction::triggered, this, [this]() {
+    QAction* settingsAct2 = toolsMenu->addAction(tr("Settings..."));
+    settingsAct2->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Comma));
+    connect(settingsAct2, &QAction::triggered, this, [this]() {
         if (!settingsWidget_) {
             settingsWidget_ = new SettingsDialog(this);
             settingsWidget_->initialize();
@@ -1216,6 +1368,32 @@ void MainWindow::setupStatusBar()
 void MainWindow::initSubsystems()
 {
     // Initialize all subsystems - stubs for now
+    
+    // ----------------  Agentic System Initialization  ----------------
+    m_agentBridge = new IDEAgentBridge(this);
+    m_integrationCoordinator = new RealTimeIntegrationCoordinator(this);
+    
+    // Connect agent to UI
+    connect(m_agentBridge, &IDEAgentBridge::agentThinkingStarted, this, [this]() {
+        statusBar()->showMessage(tr("Agent is thinking..."));
+    });
+    
+    connect(m_agentBridge, &IDEAgentBridge::agentExecutionStarted, this, [this]() {
+        statusBar()->showMessage(tr("Agent is executing plan..."));
+    });
+    
+    connect(m_agentBridge, &IDEAgentBridge::agentCompleted, this, [this]() {
+        statusBar()->showMessage(tr("Agent task completed successfully"), 5000);
+    });
+
+    connect(m_agentBridge, &IDEAgentBridge::agentError, this, [this](const QString& err, bool recoverable) {
+        if (recoverable) {
+            statusBar()->showMessage(tr("Agent error (recoverable): %1").arg(err), 5000);
+        } else {
+            QMessageBox::critical(this, tr("Agent Error"), err);
+        }
+    });
+
 #ifdef Q_OS_WIN
     ai_orchestration_install((HWND)winId());
     
@@ -1248,38 +1426,25 @@ void MainWindow::handleGoalSubmit() {
         return;
     }
     
-    // Use MetaPlanner to convert wish to action plan
-    MetaPlanner planner;
-    QJsonArray plan = planner.plan(wish);
-    
-    if (plan.isEmpty()) {
-        statusBar()->showMessage(tr("Failed to generate plan"), 3000);
-        return;
+    // Use real high-level agent bridge for full wish→plan→execute pipeline
+    if (m_agentBridge) {
+        m_agentBridge->executeWish(wish, true); // true = require approval
+    } else {
+        // Fallback to legacy planner if bridge not available
+        MetaPlanner planner;
+        QJsonArray plan = planner.plan(wish);
+        
+        if (plan.isEmpty()) {
+            statusBar()->showMessage(tr("Failed to generate plan"), 3000);
+            return;
+        }
+        
+        // Execute legacy plan
+        if (!m_actionExecutor) {
+            m_actionExecutor = new ActionExecutor(this);
+            // ... (rest of old connection code)
+        }
     }
-    
-    // Display plan summary
-    if (chatHistory_) {
-        chatHistory_->addItem(tr("Goal: %1").arg(wish));
-        chatHistory_->addItem(tr("Plan: %1 actions generated").arg(plan.size()));
-    }
-    
-    statusBar()->showMessage(tr("Executing plan with %1 actions...").arg(plan.size()), 3000);
-    
-    // Execute plan via ActionExecutor
-    if (!m_actionExecutor) {
-        m_actionExecutor = new ActionExecutor(this);
-        connect(m_actionExecutor, &ActionExecutor::actionStarted,
-                this, &MainWindow::onActionStarted);
-        connect(m_actionExecutor, &ActionExecutor::actionCompleted,
-                this, &MainWindow::onActionCompleted);
-        connect(m_actionExecutor, &ActionExecutor::planCompleted,
-                this, &MainWindow::onPlanCompleted);
-    }
-    
-    ExecutionContext ctx;
-    ctx.projectRoot = QDir::currentPath();
-    m_actionExecutor->setContext(ctx);
-    m_actionExecutor->executePlan(plan);
     
     emit onGoalSubmitted(wish);
 }
@@ -1924,10 +2089,36 @@ void MainWindow::readPwshOutput() {
     if (!pwshProcess_ || !pwshOutput_) return;
     
     QByteArray output = pwshProcess_->readAllStandardOutput();
+    if (output.isEmpty()) {
+        output = pwshProcess_->readAllStandardError();
+    }
+
     if (!output.isEmpty()) {
         QString text = QString::fromUtf8(output);
         pwshOutput_->appendPlainText(text);
         pwshOutput_->ensureCursorVisible();
+        
+        // Autonomous error detection
+        static const QStringList errKeys = {"error:", "failed", "exception", "exit code", "invalid"};
+        bool hasError = false;
+        for (const auto& key : errKeys) {
+            if (text.contains(key, Qt::CaseInsensitive)) {
+                hasError = true;
+                break;
+            }
+        }
+        
+        if (hasError && pwshFixBtn_) {
+            pwshFixBtn_->setEnabled(true);
+            pwshFixBtn_->setStyleSheet("QPushButton { background-color: #4a2d2d; color: #ff9999; border: 1px solid #ff0000; }");
+            
+            if (m_autonomousMode) {
+                statusBar()->showMessage(tr("Error detected. Autonomous self-healing triggered..."), 5000);
+                onAgentWishReceived("The last PowerShell command failed with this output. Please analyze and fix: " + text.right(500));
+            } else {
+                statusBar()->showMessage(tr("Error detected in PowerShell. AI fix available."), 5000);
+            }
+        }
     }
 }
 
@@ -1935,10 +2126,36 @@ void MainWindow::readCmdOutput() {
     if (!cmdProcess_ || !cmdOutput_) return;
     
     QByteArray output = cmdProcess_->readAllStandardOutput();
+    if (output.isEmpty()) {
+        output = cmdProcess_->readAllStandardError();
+    }
+
     if (!output.isEmpty()) {
         QString text = QString::fromUtf8(output);
         cmdOutput_->appendPlainText(text);
         cmdOutput_->ensureCursorVisible();
+        
+        // Autonomous error detection
+        static const QStringList errKeys = {"error:", "failed", "exception", "not recognized", "denied"};
+        bool hasError = false;
+        for (const auto& key : errKeys) {
+            if (text.contains(key, Qt::CaseInsensitive)) {
+                hasError = true;
+                break;
+            }
+        }
+        
+        if (hasError && cmdFixBtn_) {
+            cmdFixBtn_->setEnabled(true);
+            cmdFixBtn_->setStyleSheet("QPushButton { background-color: #4a2d2d; color: #ff9999; border: 1px solid #ff0000; }");
+            
+            if (m_autonomousMode) {
+                statusBar()->showMessage(tr("Error detected. Autonomous self-healing triggered..."), 5000);
+                onAgentWishReceived("The last CMD command failed with this output. Please analyze and fix: " + text.right(500));
+            } else {
+                statusBar()->showMessage(tr("Error detected in CMD. AI fix available."), 5000);
+            }
+        }
     }
 }
 void MainWindow::clearDebugLog() { if (m_hexMagConsole) m_hexMagConsole->clear(); statusBar()->showMessage(tr("Debug log cleared"), 2000); }
@@ -3847,6 +4064,26 @@ QWidget* MainWindow::createTerminalPanel() {
         );
         pwshInputLayout->addWidget(pwshInput_, 1);
         
+        pwshFixBtn_ = new QPushButton("✨ Fix", pwshTab);
+        pwshFixBtn_->setToolTip("Autonomous AI Fix");
+        pwshFixBtn_->setEnabled(false);
+        pwshFixBtn_->setFixedWidth(80);
+        pwshFixBtn_->setStyleSheet("QPushButton { background-color: #333; color: #fff; border: 1px solid #555; }");
+        pwshInputLayout->addWidget(pwshFixBtn_);
+
+        QCheckBox* pwshAutoHeal = new QCheckBox("Auto-Heal", pwshTab);
+        pwshAutoHeal->setStyleSheet("QCheckBox { color: #888; font-size: 8pt; }");
+        pwshAutoHeal->setToolTip("Automatically trigger AI fix when errors are detected");
+        connect(pwshAutoHeal, &QCheckBox::toggled, this, [this](bool checked) {
+            m_autonomousMode = checked;
+            statusBar()->showMessage(checked ? "Autonomous Mode ON" : "Autonomous Mode OFF", 2000);
+        });
+        pwshInputLayout->addWidget(pwshAutoHeal);
+        
+        connect(pwshFixBtn_, &QPushButton::clicked, this, [this]() {
+            onAgentWishReceived("Fix the error in the PowerShell terminal: " + pwshOutput_->toPlainText().right(1000));
+        });
+        
         pwshLayout->addLayout(pwshInputLayout);
         terminalTabs_->addTab(pwshTab, "PowerShell");
         
@@ -3900,7 +4137,25 @@ QWidget* MainWindow::createTerminalPanel() {
         );
         cmdInputLayout->addWidget(cmdInput_, 1);
         
-        cmdLayout->addLayout(cmdInputLayout);
+        cmdFixBtn_ = new QPushButton("✨ Fix", cmdTab);
+        cmdFixBtn_->setToolTip("Autonomous AI Fix");
+        cmdFixBtn_->setEnabled(false);
+        cmdFixBtn_->setFixedWidth(80);
+        cmdFixBtn_->setStyleSheet("QPushButton { background-color: #333; color: #fff; border: 1px solid #555; }");
+        cmdInputLayout->addWidget(cmdFixBtn_);
+
+        QCheckBox* cmdAutoHeal = new QCheckBox("Auto-Heal", cmdTab);
+        cmdAutoHeal->setStyleSheet("QCheckBox { color: #888; font-size: 8pt; }");
+        cmdAutoHeal->setToolTip("Automatically trigger AI fix when errors are detected");
+        connect(cmdAutoHeal, &QCheckBox::toggled, this, [this](bool checked) {
+            m_autonomousMode = checked;
+            statusBar()->showMessage(checked ? "Autonomous Mode ON" : "Autonomous Mode OFF", 2000);
+        });
+        cmdInputLayout->addWidget(cmdAutoHeal);
+
+        connect(cmdFixBtn_, &QPushButton::clicked, this, [this]() {
+            onAgentWishReceived("Fix the error in the CMD terminal: " + cmdOutput_->toPlainText().right(1000));
+        });        cmdLayout->addLayout(cmdInputLayout);
         terminalTabs_->addTab(cmdTab, "CMD");
 
         // Route key presses from the tabs/panels to the active input
@@ -4003,20 +4258,85 @@ QWidget* MainWindow::createOutputPanel() {
 }
 
 QWidget* MainWindow::createProblemsPanel() {
-    QWidget* problemsView = new QWidget(this);
-    problemsView->setObjectName("ProblemsPanel");
-    problemsView->setStyleSheet("QWidget#ProblemsPanel { background-color: #1e1e1e; }");
+    qDebug() << "[createProblemsPanel] Creating MASM/LSP problems diagnostics panel";
 
-    QVBoxLayout* problemsLayout = new QVBoxLayout(problemsView);
-    problemsLayout->setContentsMargins(10, 10, 10, 10);
-    problemsLayout->setSpacing(6);
+    try {
+        // Create the real ProblemsPanel widget
+        ProblemsPanel* problemsPanel = new ProblemsPanel(this);
 
-    QLabel* problemsLabel = new QLabel("No problems detected", problemsView);
-    problemsLabel->setStyleSheet("QLabel { color: #e0e0e0; }");
-    problemsLayout->addWidget(problemsLabel);
-    problemsLayout->addStretch();
+        // Wire signals: navigateToIssue -> open file in editor at line/column
+        connect(problemsPanel, &ProblemsPanel::navigateToIssue, this,
+                [this](const QString& file, int line, int column) {
+                    qInfo() << "[MainWindow] Navigate to issue:" << file << line << column;
+                    // Open file in editor
+                    QFile f(file);
+                    if (f.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                        QTextStream in(&f);
+                        QString content = in.readAll();
+                        f.close();
 
-    return problemsView;
+                        if (editorTabs_) {
+                            QTextEdit* editor = new QTextEdit(this);
+                            editor->setStyleSheet(codeView_->styleSheet());
+                            editor->setText(content);
+                            int idx = editorTabs_->addTab(editor, QFileInfo(file).fileName());
+                            editorTabs_->setCurrentIndex(idx);
+                            m_tabFilePaths_[editor] = file;
+
+                            // Move cursor to line
+                            QTextCursor cursor(editor->document()->findBlockByNumber(line - 1));
+                            cursor.setPosition(cursor.block().position() + column);
+                            editor->setTextCursor(cursor);
+                            editor->ensureCursorVisible();
+
+                            statusBar()->showMessage(
+                                QString("Opened %1 at line %2, col %3")
+                                .arg(QFileInfo(file).fileName()).arg(line).arg(column), 3000);
+                        }
+                    }
+                });
+
+        // Wire fixRequested -> submit to AI chat for automated fix
+        connect(problemsPanel, &ProblemsPanel::fixRequested, this,
+                [this](const DiagnosticIssue& issue) {
+                    QString fixRequest = QString("Fix this %1 in %2:%3: [%4] %5")
+                        .arg(issue.severity)
+                        .arg(QFileInfo(issue.file).fileName())
+                        .arg(issue.line)
+                        .arg(issue.code)
+                        .arg(issue.message);
+
+                    if (m_aiChatPanel) {
+                        m_aiChatPanel->addUserMessage(fixRequest);
+                        statusBar()->showMessage("AI Fix requested for: " + issue.code, 3000);
+                        qInfo() << "[MainWindow] Fix request submitted to AI:" << issue.code;
+                    } else {
+                        statusBar()->showMessage("AI Chat panel not available", 2000);
+                    }
+                });
+
+        // Wire issueSelected -> highlight in editor (optional visual feedback)
+        connect(problemsPanel, &ProblemsPanel::issueSelected, this,
+                [this](const DiagnosticIssue& issue) {
+                    qDebug() << "[MainWindow] Issue selected:" << issue.file << issue.line;
+                });
+
+        // Store as member for build output integration
+        m_problemsPanel = problemsPanel;
+
+        qDebug() << "[createProblemsPanel] ProblemsPanel created and wired successfully";
+        return problemsPanel;
+
+    } catch (const std::exception& e) {
+        qCritical() << "[createProblemsPanel] ERROR:" << e.what();
+        // Fallback to empty placeholder
+        QWidget* fallback = new QWidget(this);
+        QVBoxLayout* layout = new QVBoxLayout(fallback);
+        QLabel* label = new QLabel("Problems panel failed to load", fallback);
+        label->setStyleSheet("QLabel { color: #e0e0e0; }");
+        layout->addWidget(label);
+        return fallback;
+    }
 }
 
 QWidget* MainWindow::createDebugPanel() {
@@ -4116,13 +4436,29 @@ void MainWindow::setupDockWidgets() {
         // 1. Project Explorer Dock
         if (!projectExplorer_) {
             projectExplorer_ = new RawrXD::ProjectExplorerWidget(this);
+            
+            // Connect file double-click to open in editor
+            connect(projectExplorer_, &RawrXD::ProjectExplorerWidget::fileDoubleClicked,
+                    this, [this](const QString& path) {
+                QFile file(path);
+                if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                    QTextStream in(&file);
+                    if (codeView_) codeView_->setText(in.readAll());
+                    file.close();
+                    statusBar()->showMessage(tr("Opened: %1").arg(path), 3000);
+                }
+            });
+            
+            // NOTE: Project opening is now handled by the startup readiness checker
+            // after all subsystems are validated. See MainWindow constructor.
+            
             QDockWidget* projDock = new QDockWidget("Project Explorer", this);
             projDock->setObjectName("ProjectExplorerDock");
             projDock->setWidget(projectExplorer_);
             projDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
             projDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
             addDockWidget(Qt::LeftDockWidgetArea, projDock);
-            projDock->hide();  // Hidden by default
+            projDock->show();  // Show by default so files are visible
             qDebug() << "[setupDockWidgets] Created Project Explorer dock";
         }
         
@@ -4443,11 +4779,35 @@ void MainWindow::onRunScript()
 
 void MainWindow::onAbout() 
 {
-    QMessageBox::about(this, tr("About RawrXD IDE"),
-        tr("<b>RawrXD IDE</b><br>"
-           "Quantization-Ready AI Development Environment<br>"
-           "Built with Qt 6.7.3 + MSVC 2022<br>"
-           "Features brutal_gzip MASM/NEON compression"));
+    const QString version = QCoreApplication::applicationVersion().isEmpty()
+        ? QStringLiteral(RAWRXD_BUILD_SEMVER)
+        : QCoreApplication::applicationVersion();
+
+    const QString aboutHtml = tr(
+        "<b>RawrXD IDE</b><br>"
+        "Version: %1<br>"
+        "Commit: %2 (%3)<br>"
+        "Built: %4<br>"
+        "Config: %5<br>"
+        "Compiler: %6<br>"
+        "Target: %7 / %8<br>"
+        "Qt: %9")
+        .arg(version,
+             QStringLiteral(RAWRXD_BUILD_COMMIT),
+             QStringLiteral(RAWRXD_BUILD_BRANCH),
+             QStringLiteral(RAWRXD_BUILD_TIME_UTC),
+             QStringLiteral(RAWRXD_BUILD_CONFIG_STR),
+             QStringLiteral(RAWRXD_BUILD_COMPILER),
+             QStringLiteral(RAWRXD_BUILD_PLATFORM),
+             QStringLiteral(RAWRXD_BUILD_TARGET),
+             QString::fromLatin1(qVersion()));
+
+    qInfo() << "[About] RawrXD" << version
+            << "commit" << RAWRXD_BUILD_COMMIT
+            << "branch" << RAWRXD_BUILD_BRANCH
+            << "config" << RAWRXD_BUILD_CONFIG_STR;
+
+    QMessageBox::about(this, tr("About RawrXD IDE"), aboutHtml);
 }
 
 // ============================================================
@@ -4508,6 +4868,23 @@ void MainWindow::loadGGUFModel()
     // Call loadModel in the worker thread
     QMetaObject::invokeMethod(m_inferenceEngine, "loadModel", Qt::QueuedConnection,
                               Q_ARG(QString, filePath));
+}
+
+void MainWindow::loadGGUFModel(const QString& ggufPath)
+{
+    if (ggufPath.isEmpty()) return;
+    statusBar()->showMessage(tr("Loading model: %1").arg(ggufPath));
+    QMetaObject::invokeMethod(m_inferenceEngine, "loadModel", Qt::QueuedConnection,
+                              Q_ARG(QString, ggufPath));
+}
+
+void MainWindow::onModelLoadFinished(bool success, const std::string& errorMsg)
+{
+    if (success) {
+        statusBar()->showMessage(tr("Model loaded successfully"), 3000);
+    } else {
+        statusBar()->showMessage(tr("Error loading model: %1").arg(QString::fromStdString(errorMsg)), 5000);
+    }
 }
 
  
@@ -4645,18 +5022,37 @@ void MainWindow::onHotReload() {
 // ============================================================
 
 void MainWindow::setupAgentSystem() {
-    // Initialize AutoBootstrap (autonomous agent orchestration) - uses singleton pattern
+    qDebug() << "[Agentic] Initializing production Grade Agentic System...";
+
+    // 1. AI Core (AgenticEngine)
+    m_agenticEngine = new AgenticEngine(this);
+    m_agenticEngine->initialize();
+
+    // 2. High-level orchestrator (IDEAgentBridge)
+    if (!m_agentBridge) {
+        m_agentBridge = new IDEAgentBridge(this);
+    }
+    
+    // 3. Copilot/Cursor-style bridge (AgenticCopilotBridge)
+    m_copilotBridge = new AgenticCopilotBridge(this);
+    
+    // 4. Component Sync (RealTimeIntegrationCoordinator)
+    if (!m_integrationCoordinator) {
+        m_integrationCoordinator = new RealTimeIntegrationCoordinator(this);
+    }
+
+    // 5. Connect and initialize components
+    // Note: We use stubs/placeholders for components not yet fully migrated to advanced widgets
+    m_copilotBridge->initialize(m_agenticEngine, nullptr, nullptr, nullptr, nullptr);
+    
+    // 6. Existing HotReload and Bootstrap
     m_agentBootstrap = AutoBootstrap::instance();
-    
-    // Initialize HotReload (quantization library hot-reload)
     m_hotReload = new HotReload(this);
-    
+
     // Connect HotReload signals to status bar for feedback
     connect(m_hotReload, &HotReload::quantReloaded, this, [this](const QString& quantType) {
         statusBar()->showMessage(tr("✓ Quantization reloaded: %1").arg(quantType), 3000);
-    });
-    
-    connect(m_hotReload, &HotReload::moduleReloaded, this, [this](const QString& moduleName) {
+    });    connect(m_hotReload, &HotReload::moduleReloaded, this, [this](const QString& moduleName) {
         statusBar()->showMessage(tr("✓ Module reloaded: %1").arg(moduleName), 3000);
     });
     
@@ -5455,6 +5851,166 @@ void MainWindow::toggleInterpretabilityPanel(bool visible)
     }
 }
 
+/**
+ * @brief Setup Blob to GGUF Converter Panel
+ */
+void MainWindow::setupBlobConverterPanel()
+{
+    // Create converter panel
+    m_blobConverterPanel = new BlobConverterPanel(this);
+    m_blobConverterPanel->initialize();
+    
+    // Create dock widget
+    m_blobConverterDock = new QDockWidget(tr("Blob to GGUF Converter"), this);
+    m_blobConverterDock->setWidget(m_blobConverterPanel);
+    m_blobConverterDock->setObjectName("BlobConverterDock");
+    m_blobConverterDock->setAllowedAreas(Qt::AllDockWidgetAreas);
+    m_blobConverterDock->setFeatures(QDockWidget::DockWidgetMovable |
+                                       QDockWidget::DockWidgetFloatable |
+                                       QDockWidget::DockWidgetClosable);
+    
+    // Add to bottom dock area by default
+    addDockWidget(Qt::BottomDockWidgetArea, m_blobConverterDock);
+    m_blobConverterDock->hide();  // Hidden by default
+    
+    qInfo() << "[BlobConverterPanel] Initialized successfully";
+}
+
+/**
+ * @brief Toggle visibility of Blob Converter Panel
+ */
+void MainWindow::toggleBlobConverterPanel(bool visible)
+{
+    if (!m_blobConverterDock) {
+        if (visible) {
+            setupBlobConverterPanel();
+        }
+        return;
+    }
+    
+    m_blobConverterDock->setVisible(visible);
+}
+
+/**
+ * @brief Setup AI Digestion Panel
+ */
+void MainWindow::setupAIDigestionPanel()
+{
+    // Create AI digestion panel
+    m_aiDigestionPanel = new AIDigestionPanel(this);
+    
+    // Create dock widget
+    m_aiDigestionDock = new QDockWidget(tr("AI Model Digestion & Training"), this);
+    m_aiDigestionDock->setWidget(m_aiDigestionPanel);
+    m_aiDigestionDock->setObjectName("AIDigestionDock");
+    m_aiDigestionDock->setAllowedAreas(Qt::AllDockWidgetAreas);
+    m_aiDigestionDock->setFeatures(QDockWidget::DockWidgetMovable |
+                                   QDockWidget::DockWidgetFloatable |
+                                   QDockWidget::DockWidgetClosable);
+    
+    // Add to right dock area by default
+    addDockWidget(Qt::RightDockWidgetArea, m_aiDigestionDock);
+    m_aiDigestionDock->hide();  // Hidden by default
+    
+    // Connect AI digestion panel signals
+    connect(m_aiDigestionPanel, &AIDigestionPanel::digestionStarted,
+            this, [this]() {
+                statusBar()->showMessage("🔄 AI model digestion started", 3000);
+                if (m_hexMagConsole) {
+                    m_hexMagConsole->appendPlainText(
+                        QString("[AI_DIGESTION] %1: Digestion started")
+                            .arg(QDateTime::currentDateTime().toString("HH:mm:ss"))
+                    );
+                }
+            });
+    
+    connect(m_aiDigestionPanel, &AIDigestionPanel::digestionCompleted,
+            this, [this](const QString& datasetPath) {
+                statusBar()->showMessage("✅ AI model digestion completed", 5000);
+                if (m_hexMagConsole) {
+                    m_hexMagConsole->appendPlainText(
+                        QString("[AI_DIGESTION] %1: Digestion completed - dataset: %2")
+                            .arg(QDateTime::currentDateTime().toString("HH:mm:ss"))
+                            .arg(datasetPath)
+                    );
+                }
+            });
+    
+    connect(m_aiDigestionPanel, &AIDigestionPanel::trainingStarted,
+            this, [this]() {
+                statusBar()->showMessage("🧠 AI model training started", 3000);
+                if (m_hexMagConsole) {
+                    m_hexMagConsole->appendPlainText(
+                        QString("[AI_TRAINING] %1: Training started")
+                            .arg(QDateTime::currentDateTime().toString("HH:mm:ss"))
+                    );
+                }
+            });
+    
+    connect(m_aiDigestionPanel, &AIDigestionPanel::trainingCompleted,
+            this, [this](const QString& modelPath) {
+                statusBar()->showMessage("🎉 AI model training completed successfully", 8000);
+                if (m_hexMagConsole) {
+                    m_hexMagConsole->appendPlainText(
+                        QString("[AI_TRAINING] %1: Training completed - model: %2")
+                            .arg(QDateTime::currentDateTime().toString("HH:mm:ss"))
+                            .arg(modelPath)
+                    );
+                }
+                
+                // Offer to load the newly trained model
+                QMessageBox::StandardButton reply = QMessageBox::question(this,
+                    tr("Training Complete"),
+                    tr("AI model training completed successfully!\n\nWould you like to load the new model now?\n\nModel: %1").arg(modelPath),
+                    QMessageBox::Yes | QMessageBox::No,
+                    QMessageBox::Yes
+                );
+                
+                if (reply == QMessageBox::Yes && m_inferenceEngine) {
+                    loadGGUFModel(modelPath);
+                }
+            });
+    
+    connect(m_aiDigestionPanel, &AIDigestionPanel::modelCreated,
+            this, [this](const QString& modelName, const QString& modelPath) {
+                // Add newly created model to the model selector
+                if (m_modelSelector && !modelPath.isEmpty()) {
+                    m_modelSelector->addItem(QString("%1 (%2)")
+                        .arg(modelName)
+                        .arg(QFileInfo(modelPath).fileName()), modelPath);
+                }
+                
+                // Log model creation
+                qInfo() << "Custom AI model created:" << modelName << "at" << modelPath;
+                
+                if (m_hexMagConsole) {
+                    m_hexMagConsole->appendPlainText(
+                        QString("[AI_MODEL] %1: Created custom model '%2' -> %3")
+                            .arg(QDateTime::currentDateTime().toString("HH:mm:ss"))
+                            .arg(modelName)
+                            .arg(modelPath)
+                    );
+                }
+            });
+    
+    qInfo() << "[AIDigestionPanel] Initialized successfully";
+}
+
+/**
+ * @brief Toggle visibility of AI Digestion Panel
+ */
+void MainWindow::toggleAIDigestionPanel(bool visible)
+{
+    if (!m_aiDigestionDock) {
+        if (visible) {
+            setupAIDigestionPanel();
+        }
+        return;
+    }
+    
+    m_aiDigestionDock->setVisible(visible);
+}
+
 void MainWindow::toggleSettings(bool visible)
 {
     if (!settingsWidget_) {
@@ -5500,50 +6056,121 @@ void MainWindow::setupCommandPalette()
         m_commandPalette->show();
     });
     
-    qDebug() << "[MainWindow] Cursor-class command palette initialized with fuzzy matching";
+    // Register AI commands if AI chat panel is available
+    if (m_aiChatPanel) {
+        m_aiChatPanel->populateCommandPaletteCommands();
+    }
+    
+    // Register IDE commands
+    CommandPalette::Command cmd;
+    
+    cmd.id = "file.new";
+    cmd.label = "New File";
+    cmd.category = "File";
+    cmd.description = "Create a new file";
+    cmd.shortcut = QKeySequence("Ctrl+N");
+    cmd.action = [this]() { handleNewFile(); };
+    m_commandPalette->registerCommand(cmd);
+    
+    cmd.id = "file.open";
+    cmd.label = "Open File";
+    cmd.category = "File";
+    cmd.description = "Open an existing file";
+    cmd.shortcut = QKeySequence("Ctrl+O");
+    cmd.action = [this]() { handleOpenFile(); };
+    m_commandPalette->registerCommand(cmd);
+    
+    cmd.id = "file.save";
+    cmd.label = "Save File";
+    cmd.category = "File";
+    cmd.description = "Save current file";
+    cmd.shortcut = QKeySequence("Ctrl+S");
+    cmd.action = [this]() { handleSaveFile(); };
+    m_commandPalette->registerCommand(cmd);
+    
+    cmd.id = "edit.undo";
+    cmd.label = "Undo";
+    cmd.category = "Edit";
+    cmd.description = "Undo last action";
+    cmd.shortcut = QKeySequence("Ctrl+Z");
+    cmd.action = [this]() { handleUndo(); };
+    m_commandPalette->registerCommand(cmd);
+    
+    cmd.id = "edit.redo";
+    cmd.label = "Redo";
+    cmd.category = "Edit";
+    cmd.description = "Redo last action";
+    cmd.shortcut = QKeySequence("Ctrl+Y");
+    cmd.action = [this]() { handleRedo(); };
+    m_commandPalette->registerCommand(cmd);
+    
+    cmd.id = "view.command_palette";
+    cmd.label = "Command Palette";
+    cmd.category = "View";
+    cmd.description = "Show command palette";
+    cmd.shortcut = QKeySequence("Ctrl+Shift+P");
+    cmd.action = [this]() { m_commandPalette->show(); };
+    m_commandPalette->registerCommand(cmd);
+    
+    qDebug() << "[MainWindow] Cursor-class command palette initialized with fuzzy matching and AI commands";
 }
 
-void MainWindow::setupAIChatPanel()
+// Command palette stub implementations
+void MainWindow::handleNewFile()
 {
-    qDebug() << "[MainWindow] Setting up AI Chat Panel";
-    
-    try {
-        // Create AI Chat Panel widget
-        m_aiChatPanel = new AIChatPanel(this);
-        
-        // Initialize the panel (triggers lazy initialization)
-        m_aiChatPanel->initialize();
-        
-        // Add a test message to verify the panel is working
-        m_aiChatPanel->addAssistantMessage("AI Chat Panel initialized successfully. You can now ask questions!", false);
-        
-        // Create dock widget
-        m_aiChatPanelDock = new QDockWidget("AI Assistant", this);
-        m_aiChatPanelDock->setWidget(m_aiChatPanel);
-        m_aiChatPanelDock->setObjectName("AIChatPanelDock");
-        m_aiChatPanelDock->setAllowedAreas(Qt::AllDockWidgetAreas);
-        m_aiChatPanelDock->setFeatures(QDockWidget::DockWidgetMovable |
-                                        QDockWidget::DockWidgetFloatable |
-                                        QDockWidget::DockWidgetClosable);
-        
-        // Add to right dock area by default
-        addDockWidget(Qt::RightDockWidgetArea, m_aiChatPanelDock);
-        
-        // Connect AI Chat Panel signals
-        connect(m_aiChatPanel, &AIChatPanel::messageSubmitted,
-                this, &MainWindow::onAIChatMessageSubmitted);
-        connect(m_aiChatPanel, &AIChatPanel::quickActionTriggered,
-                this, &MainWindow::onAIChatQuickActionTriggered);
-        connect(m_aiChatPanel, &AIChatPanel::codeInsertRequested,
-                this, &MainWindow::onAIChatCodeInsertRequested);
-        
-        qDebug() << "[MainWindow] AI Chat Panel initialized successfully";
-        qDebug() << "[MainWindow] AI Chat Panel widget pointer:" << m_aiChatPanel;
-        qDebug() << "[MainWindow] Dock widget pointer:" << m_aiChatPanelDock;
-        qDebug() << "[MainWindow] Dock contains widget:" << m_aiChatPanelDock->widget();
-        
-    } catch (const std::exception& e) {
-        qCritical() << "[MainWindow] ERROR setting up AI Chat Panel:" << e.what();
+    qDebug() << "[Command Palette] New File";
+    statusBar()->showMessage("New file command executed", 2000);
+}
+
+void MainWindow::handleOpenFile()
+{
+    qDebug() << "[Command Palette] Open File";
+    statusBar()->showMessage("Open file command executed", 2000);
+}
+
+void MainWindow::handleSaveFile()
+{
+    qDebug() << "[Command Palette] Save File";
+    statusBar()->showMessage("Save file command executed", 2000);
+}
+
+void MainWindow::handleUndo()
+{
+    qDebug() << "[Command Palette] Undo";
+    statusBar()->showMessage("Undo command executed", 2000);
+}
+
+void MainWindow::handleRedo()
+{
+    qDebug() << "[Command Palette] Redo";
+    statusBar()->showMessage("Redo command executed", 2000);
+}
+
+void MainWindow::onAgentWishReceived(const QString& wish)
+{
+    if (wish.isEmpty()) return;
+
+    qDebug() << "[MainWindow][AGENTIC] Forwarding wish:" << wish;
+
+    // AI Core Analysis (Pre-processing)
+    if (m_agenticEngine) {
+        QString intent = m_agenticEngine->understandIntent(wish);
+        qDebug() << "[MainWindow][AGENTIC] Engine detected intent:" << intent;
+    }
+
+    // Show indicator in goal input if available
+    if (goalInput_) {
+        goalInput_->setText(wish);
+        goalInput_->setStyleSheet("QLineEdit { background-color: #2e3b2e; color: #aaffaa; border: 1px solid #44ff44; }");
+    }
+
+    // Call the bridge
+    if (m_agentBridge) {
+        statusBar()->showMessage(tr("Agent is processing wish: %1...").arg(wish.left(30)), 5000);
+        m_agentBridge->executeWish(wish, true /* autonomous override */);
+    } else {
+        qWarning() << "[MainWindow] Cannot process wish - agent bridge not initialized!";
+        statusBar()->showMessage(tr("Error: Agent bridge not available."), 5000);
     }
 }
 

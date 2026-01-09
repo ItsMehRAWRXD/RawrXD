@@ -15,9 +15,11 @@
 #include <dpapi.h>
 #include <bcrypt.h>  // Windows CNG (Cryptography Next Generation) API
 #include <ntstatus.h>
+#include <wincred.h> // Windows Credential Manager
 
 #pragma comment(lib, "crypt32.lib")
 #pragma comment(lib, "bcrypt.lib")
+#pragma comment(lib, "Advapi32.lib")
 
 // Static singleton instance
 std::unique_ptr<SecurityManager> SecurityManager::s_instance = nullptr;
@@ -633,21 +635,21 @@ bool SecurityManager::storeCredential(const QString& username, const QString& to
     return true;
 }
 
-CredentialInfo SecurityManager::getCredential(const QString& username) const
+SecurityManager::CredentialInfo SecurityManager::getCredential(const QString& username) const
 {
     auto it = m_credentials.find(username);
     if (it == m_credentials.end()) {
         qWarning() << "[SecurityManager] Credential not found for:" << username;
-        return CredentialInfo();
+        return SecurityManager::CredentialInfo();
     }
     
-    const CredentialInfo& info = it->second;
+    const SecurityManager::CredentialInfo& info = it->second;
     
     // Check expiration
     if (info.expiresAt > 0 && QDateTime::currentSecsSinceEpoch() > info.expiresAt) {
         qWarning() << "[SecurityManager] Credential expired for:" << username;
         emit const_cast<SecurityManager*>(this)->credentialExpired(username);
-        return CredentialInfo();
+        return SecurityManager::CredentialInfo();
     }
     
     qDebug() << "[SecurityManager] Retrieved credential for:" << username;
@@ -677,7 +679,7 @@ bool SecurityManager::isTokenExpired(const QString& username) const
         return true;  // Not found = effectively expired
     }
     
-    const CredentialInfo& info = it->second;
+    const SecurityManager::CredentialInfo& info = it->second;
     if (info.expiresAt <= 0) {
         return false;  // No expiration
     }
@@ -699,7 +701,7 @@ QString SecurityManager::refreshToken(const QString& username, const QString& re
         return QString();
     }
     
-    CredentialInfo& info = it->second;
+    SecurityManager::CredentialInfo& info = it->second;
     
     if (!info.isRefreshable) {
         qCritical() << "[SecurityManager] Token is not refreshable for:" << username;
@@ -818,7 +820,7 @@ bool SecurityManager::verifyCertificatePin(const QString& domain, const QString&
         qCritical() << "[SecurityManager] Certificate pin mismatch for domain:" << domain;
         qCritical() << "  Expected:" << pinnedHash;
         qCritical() << "  Got:" << hashHex;
-        logSecurityEvent("certificate_pin_failed", "system", domain, false, "Hash mismatch");
+        const_cast<SecurityManager*>(this)->logSecurityEvent("certificate_pin_failed", "system", domain, false, "Hash mismatch");
     } else {
         qDebug() << "[SecurityManager] Certificate pin verified for:" << domain;
     }
@@ -904,7 +906,7 @@ bool SecurityManager::exportAuditLog(const QString& filePath) const
     file.close();
     
     qInfo() << "[SecurityManager] Audit log exported successfully (" << m_auditLog.size() << "entries)";
-    logSecurityEvent("audit_export", "system", filePath, true, QString("%1 entries exported").arg(m_auditLog.size()));
+    const_cast<SecurityManager*>(this)->logSecurityEvent("audit_export", "system", filePath, true, QString("%1 entries exported").arg(m_auditLog.size()));
     
     return true;
 }
@@ -951,11 +953,87 @@ QJsonObject SecurityManager::getConfiguration() const
 void SecurityManager::loadStoredCredentials()
 {
     // In production, load from secure storage (Windows Credential Manager, macOS Keychain, etc.)
-    qInfo() << "[SecurityManager] Loading stored credentials (stub)";
+    qInfo() << "[SecurityManager] Loading stored credentials (Windows Credential Manager)";
+    // Example: Preload known provider API keys into memory (masked)
+    const QString providers[] = {
+        QStringLiteral("RawrXD/OpenAI"),
+        QStringLiteral("RawrXD/Anthropic"),
+        QStringLiteral("RawrXD/Google"),
+        QStringLiteral("RawrXD/Moonshot"),
+        QStringLiteral("RawrXD/AzureOpenAI"),
+        QStringLiteral("RawrXD/AWSAccessKey"),
+        QStringLiteral("RawrXD/AWSSecretKey")
+    };
+    for (const QString& target : providers) {
+        const QString secret = loadSecret(target);
+        if (!secret.isEmpty()) {
+            qInfo() << "[SecurityManager] Loaded secret for" << target << "(len=" << secret.size() << ")";
+        }
+    }
 }
 
 void SecurityManager::loadACLConfiguration()
 {
     // In production, load from configuration file or database
     qInfo() << "[SecurityManager] Loading ACL configuration (stub)";
+}
+
+// ==================== Windows Credential Manager (Generic Credentials) ====================
+
+bool SecurityManager::storeSecret(const QString& targetName, const QString& secret)
+{
+    if (targetName.isEmpty() || secret.isEmpty()) {
+        qWarning() << "[SecurityManager] storeSecret: empty target or secret";
+        return false;
+    }
+
+    // Prepare wide strings
+    const std::wstring targetW = targetName.toStdWString();
+    const std::wstring secretW = secret.toStdWString();
+
+    CREDENTIALW cred = {};
+    cred.Flags = 0;
+    cred.Type = CRED_TYPE_GENERIC;
+    cred.TargetName = const_cast<wchar_t*>(targetW.c_str());
+    cred.Persist = CRED_PERSIST_LOCAL_MACHINE;
+    cred.UserName = nullptr;
+
+    // CredentialBlob expects bytes; we store UTF-16 string (including trailing NUL)
+    const DWORD blobSize = static_cast<DWORD>((secretW.size() + 1) * sizeof(wchar_t));
+    cred.CredentialBlobSize = blobSize;
+    cred.CredentialBlob = reinterpret_cast<LPBYTE>(const_cast<wchar_t*>(secretW.c_str()));
+
+    if (!CredWriteW(&cred, 0)) {
+        const DWORD err = GetLastError();
+        qCritical() << "[SecurityManager] CredWriteW failed:" << err;
+        logSecurityEvent("credential_store", "system", targetName, false, QString("CredWriteW error %1").arg(err));
+        return false;
+    }
+
+    qInfo() << "[SecurityManager] Stored secret in Credential Manager:" << targetName;
+    logSecurityEvent("credential_store", "system", targetName, true, "Stored in Windows Credential Manager");
+    return true;
+}
+
+QString SecurityManager::loadSecret(const QString& targetName) const
+{
+    if (targetName.isEmpty()) {
+        return QString();
+    }
+
+    const std::wstring targetW = targetName.toStdWString();
+    PCREDENTIALW pCred = nullptr;
+    if (!CredReadW(targetW.c_str(), CRED_TYPE_GENERIC, 0, &pCred)) {
+        // Not found
+        return QString();
+    }
+
+    QString secret;
+    if (pCred->CredentialBlob && pCred->CredentialBlobSize > 0) {
+        const wchar_t* wbuf = reinterpret_cast<const wchar_t*>(pCred->CredentialBlob);
+        // Data is UTF-16 string we stored
+        secret = QString::fromWCharArray(wbuf);
+    }
+    CredFree(pCred);
+    return secret;
 }

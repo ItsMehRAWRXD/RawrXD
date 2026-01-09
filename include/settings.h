@@ -46,10 +46,10 @@ public:
     QVariant getValue(const QString& key, const QVariant& default_value = QVariant());
     
     // File-based settings (for compute/overclock)
-    static bool LoadCompute(AppState& state, const std::string& path);
-    static bool SaveCompute(const AppState& state, const std::string& path);
-    static bool LoadOverclock(AppState& state, const std::string& path);
-    static bool SaveOverclock(const AppState& state, const std::string& path);
+    static bool LoadCompute(AppState& state, const std::string& path = "");
+    static bool SaveCompute(const AppState& state, const std::string& path = "");
+    static bool LoadOverclock(AppState& state, const std::string& path = "");
+    static bool SaveOverclock(const AppState& state, const std::string& path = "");
     
 private:
     QSettings* settings_;

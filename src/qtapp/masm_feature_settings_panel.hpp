@@ -45,6 +45,8 @@ private:
     
     // Widgets
     QTreeWidget* m_featureTree;
+    QCheckBox* m_enableMasmBackend;
+    QLabel* m_masmStatusLabel;
     QComboBox* m_presetCombo;
     QLabel* m_totalFeaturesLabel;
     QLabel* m_enabledFeaturesLabel;

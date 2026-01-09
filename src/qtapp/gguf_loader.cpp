@@ -42,14 +42,7 @@ void GGUFLoaderQt::initializeNativeLoader(const QString& path)
             return;
         }
 
-        // Parse header and metadata
-        if (!m_loader->ParseHeader()) {
-            qWarning() << "[GGUFLoaderQt] Failed to parse GGUF header:" << path;
-            m_loader->Close();
-            m_loader.reset();
-            return;
-        }
-
+        // Parse metadata (header is already parsed by Open())
         if (!m_loader->ParseMetadata()) {
             qWarning() << "[GGUFLoaderQt] Failed to parse GGUF metadata:" << path;
             m_loader->Close();

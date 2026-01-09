@@ -145,6 +145,8 @@ private:
     
     // UI components
     QScrollArea* m_scrollArea;
+    QWidget* m_toolsContainer;
+    QVBoxLayout* m_toolsLayout;
     QVBoxLayout* m_mainLayout;
     QLineEdit* m_searchBox;
     QTextEdit* m_statsDisplay;

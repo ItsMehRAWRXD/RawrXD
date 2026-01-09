@@ -397,6 +397,60 @@
         }
       },
       {
+        "id": 25,
+        "name": "Toast Notifications",
+        "description": "Enable non-blocking toast notifications for UI messages instead of status bar",
+        "enabled": true,
+        "category": "UI/UX",
+        "dependencies": [],
+        "conflictsWith": [],
+        "policyFlags": 0,
+        "performanceImpact": 1,
+        "securityLevel": 1,
+        "version": "1.0",
+        "telemetry": {
+          "trackUsage": true,
+          "trackErrors": false,
+          "trackPerformance": false
+        }
+      },
+      {
+        "id": 26,
+        "name": "Keyboard Shortcuts for Docks",
+        "description": "Enable keyboard shortcuts (Ctrl+Shift+1..6) to toggle all major IDE docks",
+        "enabled": true,
+        "category": "UI/UX",
+        "dependencies": [],
+        "conflictsWith": [],
+        "policyFlags": 0,
+        "performanceImpact": 0,
+        "securityLevel": 1,
+        "version": "1.0",
+        "telemetry": {
+          "trackUsage": true,
+          "trackErrors": false,
+          "trackPerformance": false
+        }
+      },
+      {
+        "id": 27,
+        "name": "Screen Reader Accessibility",
+        "description": "Enable comprehensive screen reader labels and accessible descriptions on UI controls",
+        "enabled": true,
+        "category": "Accessibility",
+        "dependencies": [],
+        "conflictsWith": [],
+        "policyFlags": 0,
+        "performanceImpact": 0,
+        "securityLevel": 1,
+        "version": "1.0",
+        "telemetry": {
+          "trackUsage": true,
+          "trackErrors": false,
+          "trackPerformance": false
+        }
+      },
+      {
         "id": 22,
         "name": "Fine-tuning Support",
         "description": "Enable model fine-tuning capabilities",

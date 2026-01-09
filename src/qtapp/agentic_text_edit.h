@@ -8,7 +8,13 @@
 #pragma once
 
 #include <QPlainTextEdit>
+#include <QObject>
+#include <QTextEdit>
+#include <QCompleter>
 #include <QTimer>
+#include <QTextCursor>
+#include <QLineEdit>
+#include <memory>
 #include "lsp_client.h"
 #include "ghost_text_renderer.h"
 #include "ai_completion_provider.h"
@@ -110,6 +116,9 @@ public:
     void goToDefinition();
     void findReferences();
     void renameSymbol();
+    void find();
+    void replace();
+    void setLineNumbersVisible(bool visible);
 
 signals:
     /**

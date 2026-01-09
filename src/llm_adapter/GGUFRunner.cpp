@@ -1,5 +1,6 @@
 #include "GGUFRunner.h"
 #include "QuantBackend.h"
+#include "masm_kernels.h"
 #include "brutal_gzip.h"
 
 #include <QByteArray>
@@ -718,8 +719,23 @@ void GGUFRunner::layerNorm(const float* x, float* y, const std::vector<float>& g
 
 void GGUFRunner::matmul(const float* A, const float* B, float* C, int N, int M, int K)
 {
+    // Prefer MASM CPU backend if the user enabled it and runtime is usable
+    extern AppState g_app_state;
+    if (g_app_state.enable_masm_cpu_backend) {
+        auto info = masm::backend_info();
+        if (info.usable()) {
+            // masm::matmul_masm expects A(m x k) * B(k x n) -> C(m x n)
+            // Map GGUFRunner(N,M,K) which uses A[NxM], B[MxK], C[NxK]
+            const std::size_t m = static_cast<std::size_t>(N);
+            const std::size_t n = static_cast<std::size_t>(K);
+            const std::size_t k = static_cast<std::size_t>(M);
+            masm::matmul_masm(A, B, C, m, n, k);
+            return;
+        }
+    }
+
 #ifdef GGUF_USE_AVX2
-    // Runtime dispatch: use AVX2 if available, otherwise fall back to scalar
+    // Runtime dispatch: use AVX2 micro-kernel when available, otherwise fall back to scalar
     if (context_.hasAVX2) {
         // Use the optimized AVX2 micro-kernel when available
         // Signature: matmul_kernel_avx2(A[NxM], B[MxK], C[NxK], N, M, K, accumulate)

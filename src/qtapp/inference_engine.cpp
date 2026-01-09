@@ -1,6 +1,7 @@
 #include "inference_engine.hpp"
 #include <QDebug>
 #include <QFileInfo>
+#include <QElapsedTimer>
 #include "EnterpriseTelemetry.h"
 #include <QMutexLocker>
 #include <QRegularExpression>
@@ -16,19 +17,40 @@
 #include <QtConcurrent/QtConcurrentRun>
 #include <cstdlib>
 #include <iostream>
+#include "ollama_proxy.h"
 
 // Agentic failure detection and correction
-#include "../agent/agentic_failure_detector.hpp"
-#include "../agent/agentic_puppeteer.hpp"
+// #include "../agent/agentic_failure_detector.hpp"
+// #include "../agent/agentic_puppeteer.hpp"
 
 // Use shared quant utilities
 #include "quant_utils.hpp"
+#include "settings_manager.h"
+#include <QProcessEnvironment>
 
 InferenceEngine::InferenceEngine(const QString& ggufPath, QObject* parent)
     : QObject(parent), m_loader(nullptr)
 {
     m_failureDetector = new AgenticFailureDetector(this);
     m_puppeteer = new AgenticPuppeteer(this);
+    m_ollamaProxy = new OllamaProxy(this);
+
+    // Connect OllamaProxy signals to InferenceEngine signals
+    connect(m_ollamaProxy, &OllamaProxy::tokenArrived, this, [this](const QString& token) {
+        emit streamToken(m_currentRequestId, token);
+    });
+    
+    connect(m_ollamaProxy, &OllamaProxy::generationComplete, this, [this]() {
+        emit streamFinished(m_currentRequestId);
+    });
+
+    connect(m_ollamaProxy, &OllamaProxy::error, this, [this](const QString& msg) {
+        qWarning() << "[InferenceEngine] Ollama error:" << msg;
+        emit streamFinished(m_currentRequestId);
+    });
+
+    // Initialize with default Ollama model directory (configurable)
+    setModelDirectory(defaultModelDirectory());
 
     // DO NOT load model in constructor - causes stack buffer overrun crashes
     // Model loading must be deferred to avoid blocking main thread
@@ -40,15 +62,89 @@ InferenceEngine::InferenceEngine(const QString& ggufPath, QObject* parent)
     }
 }
 
+void InferenceEngine::setOllamaModel(const QString& modelName)
+{
+    m_useOllama = true;
+    m_modelPath.clear();
+    if (m_ollamaProxy) {
+        m_ollamaProxy->setModel(modelName);
+    }
+    QMetaObject::invokeMethod(this, "modelLoadedChanged", Qt::QueuedConnection,
+        Q_ARG(bool, true), Q_ARG(QString, modelName));
+}
+
 InferenceEngine::InferenceEngine(QObject* parent)
     : QObject(parent), m_loader(nullptr)
 {
     m_failureDetector = new AgenticFailureDetector(this);
     m_puppeteer = new AgenticPuppeteer(this);
+    m_ollamaProxy = new OllamaProxy(this);
+    
+    connect(m_ollamaProxy, &OllamaProxy::tokenArrived, this, [this](const QString& token) {
+        emit streamToken(m_currentRequestId, token);
+    });
+    connect(m_ollamaProxy, &OllamaProxy::generationComplete, this, [this]() {
+        emit streamFinished(m_currentRequestId);
+    });
+    connect(m_ollamaProxy, &OllamaProxy::error, this, [this](const QString& msg) {
+        qWarning() << "[InferenceEngine] Ollama error:" << msg;
+        emit streamFinished(m_currentRequestId);
+    });
+
+    // Initialize with default Ollama model directory (configurable)
+    setModelDirectory(defaultModelDirectory());
+}
+
+QString InferenceEngine::generateSync(const QString& prompt, int maxTokens)
+{
+    QElapsedTimer timer;
+    timer.start();
+    qInfo() << "[InferenceEngine] Starting generateSync. Max tokens:" << maxTokens;
+
+    QString response;
+    if (m_useOllama && m_ollamaProxy) {
+        response = m_ollamaProxy->generateResponseSync(prompt, m_temperature, maxTokens);
+    } else {
+        if (!isModelLoaded()) {
+            qWarning() << "[InferenceEngine] generateSync failed: No model loaded (GGUF or Ollama)";
+            return QString();
+        }
+
+        // Local model logic
+        std::vector<int32_t> inputTokens = tokenize(prompt);
+        std::vector<int32_t> outputTokens = generate(inputTokens, maxTokens);
+        response = detokenize(outputTokens);
+    }
+
+    qInfo() << "[InferenceEngine] generateSync completed in" << timer.elapsed() << "ms. Result length:" << response.length();
+    return response;
+}
+
+QString InferenceEngine::defaultModelDirectory()
+{
+    QString configuredPath = SettingsManager::instance().getValue("models/defaultPath", "").toString().trimmed();
+    if (!configuredPath.isEmpty()) {
+        qInfo() << "[InferenceEngine] Using configured Ollama model directory:" << configuredPath;
+        return configuredPath;
+    }
+
+    QString envPath = qEnvironmentVariable("OLLAMA_MODELS").trimmed();
+    if (!envPath.isEmpty()) {
+        qInfo() << "[InferenceEngine] Using OLLAMA_MODELS environment directory:" << envPath;
+        return envPath;
+    }
+
+    const QString fallback = "D:/OllamaModels";
+    qInfo() << "[InferenceEngine] Falling back to default Ollama model directory:" << fallback;
+    return fallback;
 }
 
 InferenceEngine::~InferenceEngine()
 {
+    if (m_ollamaProxy) {
+        m_ollamaProxy->stopGeneration();
+    }
+    
     // Clean up GGUFLoader resources
     if (m_loader) {
         delete m_loader;
@@ -85,6 +181,22 @@ bool InferenceEngine::loadModel(const QString& path)
         
         qInfo() << "[InferenceEngine] Attempting to load model from:" << path;
         
+        // Check if this is an Ollama blob or model
+        if (m_ollamaProxy->isBlobPath(path)) {
+            qInfo() << "[InferenceEngine] Detected Ollama blob path, switching to OllamaProxy";
+            m_useOllama = true;
+            m_modelPath = path;
+            QString modelName = m_ollamaProxy->resolveBlobToModel(path);
+            m_ollamaProxy->setModel(modelName);
+            
+            QMetaObject::invokeMethod(this, "modelLoadedChanged", Qt::QueuedConnection,
+                Q_ARG(bool, true), Q_ARG(QString, path));
+            return true;
+        }
+
+        // Reset Ollama flag if loading a regular GGUF
+        m_useOllama = false;
+
         // Create loader with error checking and exception safety
         try {
             qInfo() << "[InferenceEngine] Creating GGUFLoaderQt for:" << path;
@@ -257,6 +369,8 @@ bool InferenceEngine::loadModel(const QString& path)
                     qInfo() << "[InferenceEngine] Transformer marked as ready for GGUF-based inference";
                 } else {
                     qInfo() << "[InferenceEngine] Transformer initialized successfully with proper quantization types";
+                    // Ensure direct mode is disabled if we successfully loaded weights
+                    m_transformer.disableGGUFDirectMode();
                 }
             } catch (const std::exception& e) {
                 qWarning() << "[InferenceEngine] Exception loading transformer weights:" << e.what() << "- continuing anyway";
@@ -351,7 +465,7 @@ QString InferenceEngine::analyzeCode(const QString& code)
 bool InferenceEngine::isModelLoaded() const
 {
     QMutexLocker lock(&m_mutex);
-    return m_loader && m_loader->isOpen();
+    return (m_loader && m_loader->isOpen()) || m_useOllama;
 }
 
 QString InferenceEngine::modelPath() const
@@ -434,6 +548,37 @@ void InferenceEngine::unloadModel()
     m_tensorCache.clear();
     
     emit modelLoadedChanged(false, QString());
+}
+
+void InferenceEngine::stopInference()
+{
+    if (m_useOllama && m_ollamaProxy) {
+        m_ollamaProxy->stopGeneration();
+    }
+    // For local GGUF, we'd need a way to interrupt the loop in streamingGenerateWorker
+}
+
+void InferenceEngine::setModelDirectory(const QString& dir)
+{
+    if (m_ollamaProxy) {
+        m_ollamaProxy->detectBlobs(dir);
+    }
+}
+
+QStringList InferenceEngine::detectedOllamaModels() const
+{
+    if (m_ollamaProxy) {
+        return m_ollamaProxy->detectedModels();
+    }
+    return QStringList();
+}
+
+bool InferenceEngine::isBlobPath(const QString& path) const
+{
+    if (m_ollamaProxy) {
+        return m_ollamaProxy->isBlobPath(path);
+    }
+    return false;
 }
 
 QString InferenceEngine::extractModelName(const QString& path) const
@@ -700,30 +845,59 @@ QString InferenceEngine::detokenize(const std::vector<int32_t>& tokens)
     // Fallback: Decode using vocabulary
     if (m_vocab.isLoaded()) {
         qDebug() << "[detokenize] Vocabulary is loaded, using it to decode tokens";
-        
+
+        // Some tokenizers use byte-fallback markers like `[control_69]` to represent raw bytes.
+        // If we emit those literally, chat output becomes unreadable and can destabilize rendering.
+        static const QRegularExpression kControlTokenRe(
+            QStringLiteral(R"(^\[control_(\d{1,3})\]$)")
+        );
+
+        QByteArray pendingBytes;
+        auto flushPendingBytes = [&]() {
+            if (pendingBytes.isEmpty()) {
+                return;
+            }
+            result += QString::fromUtf8(pendingBytes);
+            pendingBytes.clear();
+        };
+
         for (size_t i = 0; i < tokens.size(); ++i) {
             int32_t tokenId = tokens[i];
-            
+
             // Skip special tokens (BOS=1, EOS=2, PAD=0)
             if (tokenId == 0 || tokenId == 1 || tokenId == 2) {
                 qDebug() << "[detokenize] Token" << tokenId << "-> skipped (special)";
                 continue;
             }
-            
+
             // Look up in vocabulary
             VocabularyLoader::Token vocabToken = m_vocab.getToken(tokenId);
             if (vocabToken.id >= 0 && !vocabToken.text.isEmpty()) {
-                result += vocabToken.text;
-                if (!vocabToken.text.endsWith(" ") && i + 1 < tokens.size()) {
-                    result += " ";
+                const QString tokenText = vocabToken.text;
+
+                const QRegularExpressionMatch m = kControlTokenRe.match(tokenText);
+                if (m.hasMatch()) {
+                    bool ok = false;
+                    const int byteValue = m.captured(1).toInt(&ok);
+                    if (ok && byteValue >= 0 && byteValue <= 255) {
+                        pendingBytes.append(static_cast<char>(byteValue));
+                        continue;
+                    }
                 }
-                qDebug() << "[detokenize] Token" << tokenId << "-> vocab:" << vocabToken.text;
+
+                flushPendingBytes();
+                result += tokenText;
+                qDebug() << "[detokenize] Token" << tokenId << "-> vocab:" << tokenText;
             } else {
-                // Unknown token - just show as space
-                result += " ";
+                flushPendingBytes();
                 qDebug() << "[detokenize] Token" << tokenId << "-> unknown";
             }
         }
+
+        flushPendingBytes();
+
+        // SentencePiece uses U+2581 '▁' as a word-boundary marker.
+        result.replace(QChar(0x2581), QChar(' '));
     } else {
         // No vocabulary loaded - complete fallback
         qWarning() << "[detokenize] No vocabulary loaded, using character fallback";
@@ -786,6 +960,32 @@ void InferenceEngine::initializeTokenizer()
         }
         buildSystemPromptTokens();
         
+        // Populate transformer vocabulary for internal detokenization
+        if (m_vocab.isLoaded()) {
+            QHash<int32_t, QString> vocabMap;
+            TransformerInference::TokenizerData tokenizerData;
+            
+            int vocabSize = m_vocab.size();
+            for (int i = 0; i < vocabSize; ++i) {
+                VocabularyLoader::Token t = m_vocab.getToken(i);
+                if (t.id != -1) {
+                    vocabMap.insert(t.id, t.text);
+                    tokenizerData.idToToken.insert(t.id, t.text);
+                    tokenizerData.tokenToId.insert(t.text, t.id);
+                    
+                    // Store special tokens
+                    if (t.text == "<unk>") tokenizerData.unkToken = t.text;
+                    else if (t.text == "<s>") tokenizerData.bosToken = t.text;
+                    else if (t.text == "</s>") tokenizerData.eosToken = t.text;
+                    else if (t.text == "<pad>") tokenizerData.padToken = t.text;
+                }
+            }
+            m_transformer.setVocabulary(vocabMap);
+            m_transformer.setTokenizerData(tokenizerData);
+            
+            qInfo() << "[InferenceEngine] Populated transformer with" << vocabMap.size() << "tokens";
+        }
+
         qInfo() << "[InferenceEngine] Tokenizer initialized successfully";
         return;
         
@@ -1163,6 +1363,16 @@ void InferenceEngine::generateStreaming(qint64 reqId, const QString& prompt, int
 
 void InferenceEngine::streamingGenerateWorkerSignals(qint64 reqId, const QString& prompt, int maxTokens)
 {
+    m_currentRequestId = reqId;
+    if (m_useOllama) {
+        qInfo() << "[Streaming] Routing request" << reqId << "to OllamaProxy";
+        // Always invoke via the object's event loop to ensure network objects are accessed
+        // from the thread they were created in (prevents cross-thread QObject parent errors)
+        QMetaObject::invokeMethod(m_ollamaProxy, "generateResponse", Qt::QueuedConnection,
+            Q_ARG(QString, prompt), Q_ARG(float, m_temperature), Q_ARG(int, maxTokens));
+        return;
+    }
+
     try {
         qInfo() << "[Streaming] Starting signal-based generation for request" << reqId;
 
@@ -1222,9 +1432,9 @@ void InferenceEngine::streamingGenerateWorkerSignals(qint64 reqId, const QString
 
         // Agentic Failure Detection & Correction
         if (m_failureDetector && !accumulatedResponse.isEmpty()) {
-            FailureInfo failure = m_failureDetector->detectFailure(accumulatedResponse, prompt);
-            if (failure.type != AgentFailureType::None) {
-                qWarning() << "[Agentic] Failure detected:" << failure.description;
+            FailureDetection failure = m_failureDetector->detectFailure(accumulatedResponse, prompt);
+            if (failure.type != DetectorFailure::None) {
+                qWarning() << "[Agentic] Failure detected:" << failure.reason;
                 
                 if (m_puppeteer) {
                     // Attempt auto-correction
@@ -1550,12 +1760,20 @@ bool InferenceEngine::initializeTokenizerWithTimeout(int timeoutMs)
             qWarning() << "[InferenceEngine] Failed to initialize BPE tokenizer:" << e.what();
         }
     } else if (vocabType == VocabularyLoader::SENTENCEPIECE) {
-        qInfo() << "[InferenceEngine::initializeTokenizerWithTimeout] SentencePiece detected but causes freeze - skipping";
-        std::cerr << "[InferenceEngine::initializeTokenizerWithTimeout] SKIPPING m_spTokenizer.loadFromGGUFMetadata() - known freeze" << std::endl;
-        // HOTFIX: SentencePiece tokenizer initialization causes a freeze
-        // Since we already have the vocabulary loaded (32k tokens), we can use fallback mode
-        // The vocabulary-based tokenizer will work for basic chat functionality
-        return false;  // Will trigger fallback
+        try {
+            qInfo() << "[InferenceEngine::initializeTokenizerWithTimeout] Loading SentencePiece tokenizer...";
+            std::cerr << "[InferenceEngine::initializeTokenizerWithTimeout] About to call m_spTokenizer.loadFromGGUFMetadata()" << std::endl;
+
+            if (m_spTokenizer.loadFromGGUFMetadata(tokenizerMetadata)) {
+                m_tokenizerMode = TOKENIZER_SP;
+                qInfo() << "[InferenceEngine] Using SentencePiece tokenizer (LLaMA/Mistral compatible)";
+                return true;
+            }
+        } catch (const std::exception& e) {
+            qWarning() << "[InferenceEngine] Failed to initialize SentencePiece tokenizer:" << e.what();
+        } catch (...) {
+            qWarning() << "[InferenceEngine] Failed to initialize SentencePiece tokenizer: unknown exception";
+        }
     }
     
     std::cerr << "[InferenceEngine::initializeTokenizerWithTimeout] No valid tokenizer loaded, returning false" << std::endl;
@@ -1585,8 +1803,8 @@ InferenceEngine::HealthStatus InferenceEngine::getHealthStatus() const
     QMutexLocker lock(&m_mutex);
     
     HealthStatus status;
-    status.model_loaded = (m_loader != nullptr && m_loader->isOpen());
-    status.inference_ready = m_loader != nullptr && m_loader->isOpen();
+    status.model_loaded = (m_loader != nullptr && m_loader->isOpen()) || m_useOllama;
+    status.inference_ready = status.model_loaded;
     status.model_name = extractModelName(m_modelPath);
     status.quantization = m_quantMode;
     status.backend = "Vulkan";

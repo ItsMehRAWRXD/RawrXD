@@ -96,10 +96,10 @@ public:
     QString referenceSymbol(const QString& symbol);
     
     // Model management
-    bool isModelLoaded() const { return m_modelLoaded; }
+    bool isModelLoaded() const;
     QString currentModelPath() const { return QString::fromStdString(m_currentModelPath); }
     QString generateResponse(const QString& message);
-    void setInferenceEngine(class InferenceEngine* engine) { m_inferenceEngine = engine; }
+    void setInferenceEngine(class InferenceEngine* engine);
     
     // CRITICAL: Mark model as loaded after external load (for MainWindow->AgenticEngine sync)
     void markModelAsLoaded(const QString& modelPath) { 

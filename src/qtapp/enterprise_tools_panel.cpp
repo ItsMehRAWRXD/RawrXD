@@ -2,6 +2,7 @@
 #include "enterprise_tools_panel.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
+#include <QLayoutItem>
 #include <QScrollArea>
 #include <QGroupBox>
 #include <QCheckBox>
@@ -22,6 +23,8 @@ namespace RawrXD {
 
 EnterpriseToolsPanel::EnterpriseToolsPanel(QWidget* parent)
     : QWidget(parent)
+    , m_toolsContainer(nullptr)
+    , m_toolsLayout(nullptr)
     , m_initialized(false)
 {
     // Lightweight constructor - defer Qt widget creation
@@ -72,14 +75,8 @@ void EnterpriseToolsPanel::setupUI() {
     m_scrollArea->setWidgetResizable(true);
     m_scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     m_scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
-    
-    QWidget* toolsContainer = new QWidget(this);
-    QVBoxLayout* toolsLayout = new QVBoxLayout(toolsContainer);
-    
+
     createToolsSection();
-    
-    toolsLayout->addStretch();
-    m_scrollArea->setWidget(toolsContainer);
     splitter->addWidget(m_scrollArea);
     
     // Stats section
@@ -98,7 +95,12 @@ void EnterpriseToolsPanel::setupUI() {
 }
 
 void EnterpriseToolsPanel::createToolsSection() {
-    // This will be populated by registerBuiltInTools() and registerGitHubTools()
+    m_toolsContainer = new QWidget(this);
+    m_toolsLayout = new QVBoxLayout(m_toolsContainer);
+    m_toolsLayout->setSpacing(8);
+    m_toolsLayout->setContentsMargins(8, 8, 8, 8);
+    m_toolsLayout->addStretch();
+    m_scrollArea->setWidget(m_toolsContainer);
 }
 
 void EnterpriseToolsPanel::createStatsSection() {
@@ -433,10 +435,20 @@ void EnterpriseToolsPanel::registerTool(const ToolDefinition& tool) {
         QGroupBox* group = createCategoryGroup(category, categoryTitle);
         m_categoryGroups[category] = group;
         
-        // Add to scroll area
-        QWidget* container = m_scrollArea->widget();
-        if (container) {
-            container->layout()->addWidget(group);
+        // Add to scroll area layout, keeping stretch at the bottom
+        if (m_toolsLayout) {
+            int itemCount = m_toolsLayout->count();
+            if (itemCount > 0) {
+                QLayoutItem* lastItem = m_toolsLayout->itemAt(itemCount - 1);
+                if (lastItem && lastItem->spacerItem()) {
+                    m_toolsLayout->removeItem(lastItem);
+                    delete lastItem;
+                }
+            }
+            m_toolsLayout->addWidget(group);
+            m_toolsLayout->addStretch();
+        } else if (m_scrollArea->widget() && m_scrollArea->widget()->layout()) {
+            m_scrollArea->widget()->layout()->addWidget(group);
         }
     }
     

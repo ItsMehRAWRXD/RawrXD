@@ -89,7 +89,7 @@ void ActionExecutor::executePlan(const QJsonArray& actions, bool stopOnError)
     emit planStarted(actions.size());
 
     // Run on background thread
-    QtConcurrent::run([this, actions]() {
+    QFuture<void> future = QtConcurrent::run([this, actions]() {
         bool overallSuccess = true;
 
         for (int i = 0; i < actions.size() && !m_cancelled; ++i) {

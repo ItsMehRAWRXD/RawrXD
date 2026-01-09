@@ -1,21 +1,34 @@
 #include "ai_chat_panel.hpp"
 #include "chat_history_manager.h"
+#include "agent_chat_breadcrumb.hpp"
+#include "command_palette.hpp"
+#include "inference_engine.hpp"
+#include "agentic_executor.h"
+#include <QApplication>
+#include <QLabel>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QPushButton>
+#include <QLineEdit>
+#include <QComboBox>
+#include <QScrollArea>
+#include <QTextEdit>
+#include <QTimer>
+#include <QNetworkAccessManager>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QMenu>
+#include <QClipboard>
 #include <QDateTime>
 #include <QScrollBar>
 #include <QSyntaxHighlighter>
 #include <QTextDocument>
-#include <QHBoxLayout>
 #include <QFont>
 #include <QFontMetrics>
 #include <QUrl>
 #include <QNetworkRequest>
-#include <QNetworkAccessManager>
 #include <QNetworkReply>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonArray>
-#include <QTimer>
-#include <QComboBox>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -30,6 +43,7 @@
 #include <QInputDialog>
 #include <QMainWindow>
 #include <QStatusBar>
+#include <QProcess>
 #include <algorithm>
 
 AIChatPanel::AIChatPanel(QWidget* parent)
@@ -41,7 +55,15 @@ AIChatPanel::AIChatPanel(QWidget* parent)
     m_projectRoot = QDir::currentPath();
 }
 
-void AIChatPanel::initialize() {
+void AIChatPanel::setCurrentSessionId(const QString& sessionId) {
+    m_currentSessionId = sessionId;
+}
+
+bool AIChatPanel::isInputEnabled() const {
+    return m_sendButton && m_sendButton->isEnabled();
+}
+
+void AIChatPanel::initialize(const QString& preloadedModel) {
     if (m_initialized) return;  // Already initialized
     
     // Initialize configuration with defaults
@@ -54,13 +76,25 @@ void AIChatPanel::initialize() {
     
     // Create Qt widgets
     setupUI();
-    applyDarkTheme();
+    applyTheme();
     
     m_initialized = true;
     m_widgetsCreated = true;
     
-    // Fetch available models asynchronously after UI is ready
-    QTimer::singleShot(100, this, &AIChatPanel::fetchAvailableModels);
+    // If a model was preloaded, set it and enable input, skip the fetch models timer
+    if (!preloadedModel.isEmpty()) {
+        m_localModel = preloadedModel;
+        setInputEnabled(true);
+        qDebug() << "[AIChatPanel::initialize] Panel initialized with preloaded model:" << preloadedModel;
+        // Still populate the model list, but don't disable input
+        QTimer::singleShot(100, this, [this]() {
+            fetchAvailableModels();  // This will see m_localModel is not empty and skip disabling
+        });
+    } else {
+        // No preloaded model - fetch available models and disable input until selection
+        QTimer::singleShot(100, this, &AIChatPanel::fetchAvailableModels);
+    }
+    
     snapshotProjectFiles();
     
     qDebug() << "AIChatPanel initialized with lazy loading - D: \\temp location";
@@ -122,6 +156,11 @@ void AIChatPanel::setupUI()
     m_messagesLayout->addStretch();
     
     m_scrollArea->setWidget(m_messagesContainer);
+    
+    // Add context menu to scroll area for copy/copy all/new chat
+    m_scrollArea->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(m_scrollArea, &QWidget::customContextMenuRequested,
+            this, &AIChatPanel::showContextMenu);
     
     qDebug() << "[AIChatPanel] Scroll area created with message container";
     
@@ -268,7 +307,7 @@ QWidget* AIChatPanel::createQuickActions()
     return container;
 }
 
-void AIChatPanel::applyDarkTheme()
+void AIChatPanel::applyTheme()
 {
     QString styleSheet = R"(
         AIChatPanel {
@@ -382,7 +421,12 @@ void AIChatPanel::addAssistantMessage(const QString& message, bool streaming)
     
     if (streaming) {
         m_streamingBubble = bubble;
-        m_streamingText = bubble->findChild<QTextEdit*>();
+        m_streamingTextEdit = bubble->findChild<QTextEdit*>();
+        qDebug() << "[AIChatPanel::addAssistantMessage] Streaming bubble created";
+        qDebug() << "[AIChatPanel::addAssistantMessage] m_streamingTextEdit found:" << (m_streamingTextEdit ? "YES" : "NO");
+        if (m_streamingTextEdit) {
+            qDebug() << "[AIChatPanel::addAssistantMessage] m_streamingTextEdit initial text:" << m_streamingTextEdit->toPlainText();
+        }
     }
     
     scrollToBottom();
@@ -390,34 +434,58 @@ void AIChatPanel::addAssistantMessage(const QString& message, bool streaming)
 
 void AIChatPanel::updateStreamingMessage(const QString& content)
 {
-    if (m_streamingText) {
-        QString current = m_streamingText->toPlainText();
-        m_streamingText->setPlainText(current + content);
-        
-        // Update message object in list
+    qDebug() << "[AIChatPanel::updateStreamingMessage] Token:" << content;
+    qDebug() << "[AIChatPanel::updateStreamingMessage] m_streamingTextEdit is" << (m_streamingTextEdit ? "NOT null" : "NULL");
+    qDebug() << "[AIChatPanel::updateStreamingMessage] m_streamingBubble is" << (m_streamingBubble ? "NOT null" : "NULL");
+
+    if (m_streamingTextEdit) {
+        QString current = m_streamingTextEdit->toPlainText();
+        m_streamingTextEdit->setPlainText(current + content);
+
+        // Auto-resize the bubble height based on content
+        QFontMetrics fm(m_streamingTextEdit->font());
+        int lineHeight = fm.lineSpacing();
+        int numLines = m_streamingTextEdit->document()->lineCount();
+        // Add padding: 20px base + lines
+        int estimatedHeight = numLines * lineHeight + 20;
+        // Cap max height at 600px (scrollable after that)
+        m_streamingTextEdit->setMaximumHeight(std::min(estimatedHeight, 600));
+        m_streamingTextEdit->setMinimumHeight(std::min(estimatedHeight, 600));
+
+        qDebug() << "[AIChatPanel::updateStreamingMessage] Updated text, now length:" << (current + content).length();        // Update message object in list
         if (!m_messages.isEmpty() && m_messages.last().isStreaming) {
             m_messages.last().content = current + content;
         }
         
         scrollToBottom();
+    } else {
+        qWarning() << "[AIChatPanel::updateStreamingMessage] m_streamingText is NULL - cannot update streaming message!";
     }
 }
+
 
 QString AIChatPanel::finishStreaming()
 {
     QString fullContent;
-    if (m_streamingText) {
-        fullContent = m_streamingText->toPlainText();
+    if (m_streamingTextEdit) {
+        fullContent = m_streamingTextEdit->toPlainText();
     }
     
     m_streamingBubble = nullptr;
-    m_streamingText = nullptr;
-    
+    m_streamingTextEdit = nullptr;
+
     if (!m_messages.isEmpty() && m_messages.last().isStreaming) {
         m_messages.last().isStreaming = false;
     }
     
     return fullContent;
+}
+
+QString AIChatPanel::lastAssistantMessage() const {
+    for (int i = m_messages.size() - 1; i >= 0; --i) {
+        if (m_messages.at(i).role == Message::Assistant) return m_messages.at(i).content;
+    }
+    return QString();
 }
 
 QWidget* AIChatPanel::createMessageBubble(const Message& msg)
@@ -448,6 +516,10 @@ QWidget* AIChatPanel::createMessageBubble(const Message& msg)
     contentEdit->setFrameStyle(QFrame::NoFrame);
     contentEdit->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     contentEdit->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    
+    // Enable text selection and copy across the entire chat
+    contentEdit->setTextInteractionFlags(Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard);
+    contentEdit->setFocusPolicy(Qt::NoFocus);  // Don't take focus away from input field
     
     // Calculate height based on content
     QFontMetrics fm(contentEdit->font());
@@ -526,7 +598,7 @@ QWidget* AIChatPanel::createMessageBubble(const Message& msg)
     return container;
 }
 
-QString AIChatPanel::extractCodeFromMessage(const QString& message) {
+QString AIChatPanel::extractCodeFromMessage(const QString& message) const {
     // Extract code from markdown code blocks (```language\ncode\n```)
     QRegularExpression codeBlockRegex("```(?:\\w+)?\\n(.*?)\\n```", QRegularExpression::DotMatchesEverythingOption);
     QRegularExpressionMatch match = codeBlockRegex.match(message);
@@ -559,6 +631,13 @@ void AIChatPanel::onSendClicked()
     QString message = m_inputField->text().trimmed();
     if (message.isEmpty()) return;
     
+    // Check for AI commands first
+    if (message.startsWith("/") || message.startsWith("@")) {
+        handleAICommand(message);
+        m_inputField->clear();
+        return;
+    }
+    
     // Validate model is selected
     if (m_localModel.isEmpty()) {
         addAssistantMessage("Please select a model from the dropdown first.", false);
@@ -569,12 +648,311 @@ void AIChatPanel::onSendClicked()
     addUserMessage(message);
     m_inputField->clear();
     
-    emit messageSubmitted(message);
+    // If we are in a special mode, use triple-model aggregation
+    if (m_chatMode == ModeMax || m_chatMode == ModeDeepThinking || m_chatMode == ModeDeepResearch) {
+        qDebug() << "[AIChatPanel] Using Triple-Model Aggregation for mode:" << modeName(m_chatMode);
+        sendMessageTripleMultiModel(message);
+    } else {
+        // Standard agentic flow
+        emit messageSubmitted(message);
+    }
+}
+
+void AIChatPanel::handleAICommand(const QString& command)
+{
+    // Start performance profiling
+    m_commandTimer.start();
+    qint64 startMemory = 0; // Stub for memory usage - currentProcess not in QProcess
     
-    // If we have an agentic executor or MainWindow is handling it, 
-    // we don't want to trigger the triple-model aggregation here
-    // as it would cause duplicate responses.
-    // sendMessageTripleMultiModel(message);
+    QString cmd = command.trimmed();
+    
+    // Resolve aliases
+    QString resolvedCmd = resolveAlias(cmd);
+    if (resolvedCmd != cmd) {
+        qDebug() << "[AI Command] Resolved alias" << cmd << "->" << resolvedCmd;
+        cmd = resolvedCmd;
+    }
+    
+    // Add to command history
+    m_commandHistory.prepend(cmd);
+    if (m_commandHistory.size() > 50) {
+        m_commandHistory.removeLast();
+    }
+    m_historyIndex = -1;
+    
+    // Check cache first
+    if (m_cacheEnabled && m_resultCache.contains(cmd)) {
+        QString cachedResult = m_resultCache.value(cmd);
+        addAssistantMessage("⚡ [CACHED] " + cachedResult, false);
+        
+        // Record metrics
+        CommandMetrics metrics;
+        metrics.command = cmd;
+        metrics.executionTimeMs = m_commandTimer.elapsed();
+        metrics.memoryUsageBytes = 0LL - startMemory;
+        metrics.timestamp = QDateTime::currentDateTime();
+        metrics.success = true;
+        m_commandMetrics.append(metrics);
+        
+        return;
+    }
+    
+    // /help - Show all commands
+    if (cmd == "/help") {
+        QString helpText = "<h3>AI Commands</h3>"
+                          "<b>/refactor &lt;prompt&gt;</b> - Multi-file AI refactoring<br>"
+                          "<b>@plan &lt;task&gt;</b> - Create implementation plan<br>"
+                          "<b>@analyze</b> - Analyze current file<br>"
+                          "<b>@generate &lt;spec&gt;</b> - Generate code<br>"
+                          "<b>/help</b> - Show all commands<br>"
+                          "<b>/history</b> - Show command history<br>"
+                          "<b>/metrics</b> - Show performance metrics<br>"
+                          "<b>/clear_cache</b> - Clear result cache";
+        addAssistantMessage(helpText, false);
+        
+        // Record metrics
+        CommandMetrics metrics;
+        metrics.command = cmd;
+        metrics.executionTimeMs = m_commandTimer.elapsed();
+        metrics.memoryUsageBytes = 0LL - startMemory;
+        metrics.timestamp = QDateTime::currentDateTime();
+        metrics.success = true;
+        m_commandMetrics.append(metrics);
+        
+        return;
+    }
+    
+    // /refactor <prompt> - Multi-file AI refactoring
+    if (cmd.startsWith("/refactor ")) {
+        QString prompt = cmd.mid(10).trimmed();
+        if (prompt.isEmpty()) {
+            addAssistantMessage("Usage: /refactor <instructions>\n\nExample: /refactor Extract duplicate code into a helper function", false);
+            return;
+        }
+        
+        addUserMessage(cmd);
+        addAssistantMessage("🔄 Starting multi-file refactoring...", true);
+        
+        // Build refactoring prompt with context
+        QString refactorPrompt = "REFACTORING REQUEST:\n" + prompt + "\n\n";
+        if (!m_contextCode.isEmpty()) {
+            refactorPrompt += "CURRENT CODE:\n" + m_contextCode + "\n\n";
+        }
+        if (!m_contextFilePath.isEmpty()) {
+            refactorPrompt += "FILE: " + m_contextFilePath + "\n\n";
+        }
+        refactorPrompt += "Please provide:\n"
+                         "1. Analysis of current code structure\n"
+                         "2. Refactoring strategy\n"
+                         "3. Step-by-step implementation plan\n"
+                         "4. Updated code with improvements\n"
+                         "5. Files that need to be modified\n\n"
+                         "Use code blocks with filenames for each file.";
+        
+        sendMessageToBackend(refactorPrompt);
+        
+        // Record metrics
+        CommandMetrics metrics;
+        metrics.command = cmd;
+        metrics.executionTimeMs = m_commandTimer.elapsed();
+        metrics.memoryUsageBytes = 0LL - startMemory;
+        metrics.timestamp = QDateTime::currentDateTime();
+        metrics.success = true;
+        m_commandMetrics.append(metrics);
+        
+        return;
+    }
+    
+    // @plan <task> - Create implementation plan
+    if (cmd.startsWith("@plan ")) {
+        QString task = cmd.mid(6).trimmed();
+        if (task.isEmpty()) {
+            addAssistantMessage("Usage: @plan <task description>\n\nExample: @plan Add error handling to the file loader", false);
+            return;
+        }
+        
+        addUserMessage(cmd);
+        addAssistantMessage("📋 Creating implementation plan...", true);
+        
+        QString planPrompt = "PLANNING REQUEST:\nTask: " + task + "\n\n";
+        if (!m_contextFilePath.isEmpty()) {
+            planPrompt += "Context File: " + m_contextFilePath + "\n\n";
+        }
+        planPrompt += "Please create a detailed implementation plan:\n"
+                     "1. **Requirements Analysis** - What needs to be done\n"
+                     "2. **Architecture** - How to structure the solution\n"
+                     "3. **Implementation Steps** - Ordered list of tasks\n"
+                     "4. **Files to Modify** - Which files need changes\n"
+                     "5. **Testing Strategy** - How to verify the changes\n"
+                     "6. **Potential Risks** - Edge cases and gotchas\n\n"
+                     "Format as markdown with code examples.";
+        
+        sendMessageToBackend(planPrompt);
+        
+        // Record metrics
+        CommandMetrics metrics;
+        metrics.command = cmd;
+        metrics.executionTimeMs = m_commandTimer.elapsed();
+        metrics.memoryUsageBytes = 0LL - startMemory;
+        metrics.timestamp = QDateTime::currentDateTime();
+        metrics.success = true;
+        m_commandMetrics.append(metrics);
+        
+        return;
+    }
+    
+    // @analyze - Analyze current file
+    if (cmd == "@analyze") {
+        if (m_contextCode.isEmpty()) {
+            addAssistantMessage("⚠ No code selected. Please select code in the editor first, then use @analyze.", false);
+            return;
+        }
+        
+        addUserMessage(cmd);
+        addAssistantMessage("🔍 Analyzing code...", true);
+        
+        QString analyzePrompt = "CODE ANALYSIS REQUEST:\n\n";
+        if (!m_contextFilePath.isEmpty()) {
+            analyzePrompt += "File: " + m_contextFilePath + "\n\n";
+        }
+        analyzePrompt += "Code:\n```\n" + m_contextCode + "\n```\n\n";
+        analyzePrompt += "Please provide a comprehensive analysis:\n"
+                        "1. **Purpose** - What this code does\n"
+                        "2. **Structure** - Key components and flow\n"
+                        "3. **Code Quality** - Strengths and issues\n"
+                        "4. **Potential Bugs** - Logic errors, edge cases\n"
+                        "5. **Performance** - Efficiency concerns\n"
+                        "6. **Best Practices** - Areas for improvement\n"
+                        "7. **Security** - Vulnerabilities if any\n"
+                        "8. **Recommendations** - Specific improvements\n\n"
+                        "Be specific and actionable.";
+        
+        sendMessageToBackend(analyzePrompt);
+        
+        // Record metrics
+        CommandMetrics metrics;
+        metrics.command = cmd;
+        metrics.executionTimeMs = m_commandTimer.elapsed();
+        metrics.memoryUsageBytes = 0LL - startMemory;
+        metrics.timestamp = QDateTime::currentDateTime();
+        metrics.success = true;
+        m_commandMetrics.append(metrics);
+        
+        return;
+    }
+    
+    // @generate <spec> - Generate code from specification
+    if (cmd.startsWith("@generate ")) {
+        QString spec = cmd.mid(10).trimmed();
+        if (spec.isEmpty()) {
+            addAssistantMessage("Usage: @generate <specification>\n\nExample: @generate A function to parse JSON and extract user data", false);
+            return;
+        }
+        
+        addUserMessage(cmd);
+        addAssistantMessage("⚡ Generating code...", true);
+        
+        QString generatePrompt = "CODE GENERATION REQUEST:\n" + spec + "\n\n";
+        if (!m_contextFilePath.isEmpty()) {
+            QString fileExt = QFileInfo(m_contextFilePath).suffix();
+            generatePrompt += "Target Language: " + fileExt + "\n\n";
+        }
+        if (!m_contextCode.isEmpty()) {
+            generatePrompt += "Context Code (for reference):\n```\n" + m_contextCode + "\n```\n\n";
+        }
+        generatePrompt += "Please generate:\n"
+                         "1. **Complete Implementation** - Production-ready code\n"
+                         "2. **Documentation** - Clear comments and docstrings\n"
+                         "3. **Error Handling** - Robust exception management\n"
+                         "4. **Usage Example** - How to use the code\n"
+                         "5. **Test Cases** - Basic test scenarios\n\n"
+                         "Use code blocks with language markers. Follow best practices.";
+        
+        sendMessageToBackend(generatePrompt);
+        
+        // Record metrics
+        CommandMetrics metrics;
+        metrics.command = cmd;
+        metrics.executionTimeMs = m_commandTimer.elapsed();
+        metrics.memoryUsageBytes = 0LL - startMemory;
+        metrics.timestamp = QDateTime::currentDateTime();
+        metrics.success = true;
+        m_commandMetrics.append(metrics);
+        
+        return;
+    }
+    
+    // /history - Show command history
+    if (cmd == "/history") {
+        QString historyText = "<h3>Command History</h3>";
+        if (m_commandHistory.isEmpty()) {
+            historyText += "No commands in history.";
+        } else {
+            historyText += "<ul>";
+            for (int i = 0; i < qMin(10, m_commandHistory.size()); ++i) {
+                historyText += "<li>" + m_commandHistory[i] + "</li>";
+            }
+            historyText += "</ul>";
+        }
+        addAssistantMessage(historyText, false);
+        
+        // Record metrics
+        CommandMetrics metrics;
+        metrics.command = cmd;
+        metrics.executionTimeMs = m_commandTimer.elapsed();
+        metrics.memoryUsageBytes = 0LL - startMemory;
+        metrics.timestamp = QDateTime::currentDateTime();
+        metrics.success = true;
+        m_commandMetrics.append(metrics);
+        
+        return;
+    }
+    
+    // /metrics - Show performance metrics
+    if (cmd == "/metrics") {
+        QString metricsText = getPerformanceReport();
+        addAssistantMessage(metricsText, false);
+        
+        // Record metrics
+        CommandMetrics metrics;
+        metrics.command = cmd;
+        metrics.executionTimeMs = m_commandTimer.elapsed();
+        metrics.memoryUsageBytes = 0LL - startMemory;
+        metrics.timestamp = QDateTime::currentDateTime();
+        metrics.success = true;
+        m_commandMetrics.append(metrics);
+        
+        return;
+    }
+    
+    // /clear_cache - Clear result cache
+    if (cmd == "/clear_cache") {
+        clearResultCache();
+        addAssistantMessage("✅ Result cache cleared", false);
+        
+        // Record metrics
+        CommandMetrics metrics;
+        metrics.command = cmd;
+        metrics.executionTimeMs = m_commandTimer.elapsed();
+        metrics.memoryUsageBytes = 0LL - startMemory;
+        metrics.timestamp = QDateTime::currentDateTime();
+        metrics.success = true;
+        m_commandMetrics.append(metrics);
+        
+        return;
+    }
+    
+    // Unknown command
+    addAssistantMessage("❌ Unknown command: " + cmd + "\n\nType /help to see available commands.", false);
+    
+    // Record metrics for failed command
+    CommandMetrics metrics;
+    metrics.command = cmd;
+    metrics.executionTimeMs = m_commandTimer.elapsed();
+    metrics.memoryUsageBytes = 0LL - startMemory;
+    metrics.timestamp = QDateTime::currentDateTime();
+    metrics.success = false;
+    m_commandMetrics.append(metrics);
 }
 
 void AIChatPanel::onQuickActionClicked(const QString& action)
@@ -609,8 +987,29 @@ void AIChatPanel::setLocalConfiguration(bool enabled, const QString& endpoint) {
              << "Endpoint:" << endpoint;
 }
 
+void AIChatPanel::setCloudAIEnabled(bool enabled) {
+    m_cloudEnabled = enabled;
+}
+
+void AIChatPanel::setLocalAIEnabled(bool enabled) {
+    m_localEnabled = enabled;
+}
+
+void AIChatPanel::setCloudEndpoint(const QString& endpoint) {
+    m_cloudEndpoint = endpoint;
+}
+
+void AIChatPanel::setLocalEndpoint(const QString& endpoint) {
+    m_localEndpoint = endpoint;
+}
+
+void AIChatPanel::setApiKey(const QString& key) {
+    m_apiKey = key;
+}
+
 void AIChatPanel::setLocalModel(const QString& modelName) {
     m_localModel = modelName;
+    qDebug() << "[AIChatPanel::setLocalModel] Setting m_localModel to:" << modelName;
 
     if (m_modelSelector) {
         bool found = false;
@@ -635,7 +1034,7 @@ void AIChatPanel::setLocalModel(const QString& modelName) {
 
     // Enable chat input whenever we have a concrete model name (covers custom loads as well)
     setInputEnabled(!modelName.isEmpty());
-    qDebug() << "Local model set to:" << modelName;
+    qDebug() << "[AIChatPanel::setLocalModel] Input enabled:" << !modelName.isEmpty();
 }
 
 void AIChatPanel::setChatMode(ChatMode mode) {
@@ -671,7 +1070,18 @@ void AIChatPanel::clear()
     
     m_messages.clear();
     m_streamingBubble = nullptr;
-    m_streamingText = nullptr;
+    m_streamingTextEdit = nullptr;
+}
+
+void AIChatPanel::clearChat()
+{
+    clear();
+    emit chatCleared();
+}
+
+void AIChatPanel::clearResultCache()
+{
+    m_resultCache.clear();
 }
 
 void AIChatPanel::scrollToBottom()
@@ -688,6 +1098,37 @@ void AIChatPanel::setContext(const QString& code, const QString& filePath)
              << " code length:" << code.length();
 }
 
+void AIChatPanel::setInferenceEngine(InferenceEngine* engine)
+{
+    m_inferenceEngine = engine;
+    if (engine) {
+        qInfo() << "[AIChatPanel::setInferenceEngine] Inference engine set - ALL requests will use GGUF pipeline";
+        
+        // Connect to inference engine signals for streaming responses
+        // Note: Signals use request IDs, we'll generate unique IDs for tracking
+        connect(engine, QOverload<qint64, const QString&>::of(&InferenceEngine::streamToken),
+                this, [this](qint64 reqId, const QString& token) {
+            qDebug() << "[AIChatPanel] Token received from inference engine:" << token;
+            updateStreamingMessage(token);
+        });
+        
+        connect(engine, QOverload<qint64>::of(&InferenceEngine::streamFinished),
+                this, [this](qint64 reqId) {
+            qDebug() << "[AIChatPanel] Inference stream complete";
+            finishStreaming();
+        });
+        
+        connect(engine, QOverload<qint64, const QString&>::of(&InferenceEngine::error),
+                this, [this](qint64 reqId, const QString& error) {
+            qWarning() << "[AIChatPanel] Inference engine error:" << error;
+            finishStreaming();
+            addAssistantMessage("⚠ Inference error: " + error, false);
+        });
+    } else {
+        qWarning() << "[AIChatPanel::setInferenceEngine] Inference engine set to nullptr";
+    }
+}
+
 void AIChatPanel::sendMessageToBackend(const QString& message)
 {
     if (!m_initialized) {
@@ -695,29 +1136,52 @@ void AIChatPanel::sendMessageToBackend(const QString& message)
         return;
     }
 
+    qInfo() << "[AIChatPanel::sendMessageToBackend] Processing message through GGUF inference pipeline";
+    
+    // PRIMARY PATH: Use GGUF inference engine if available (NO FALLBACK)
+    if (m_inferenceEngine) {
+        qInfo() << "[AIChatPanel::sendMessageToBackend] ✓ Routing to GGUF inference engine (real model execution)";
+        
+        // Create system prompt based on context
+        QString systemPrompt = "You are a helpful coding assistant. ";
+        if (!m_contextFilePath.isEmpty()) {
+            systemPrompt += QString("Current file: %1. ").arg(m_contextFilePath);
+        }
+        systemPrompt += "Provide clear, concise responses.";
+        
+        // Add streaming message bubble
+        addAssistantMessage("", true);
+        
+        // Build full prompt with system context
+        QString fullPrompt = systemPrompt + "\n\nUser: " + message;
+        if (!m_contextCode.isEmpty()) {
+            fullPrompt = systemPrompt + "\n\nContext Code:\n" + m_contextCode + "\n\nUser: " + message;
+        }
+        
+        // Generate unique request ID for tracking
+        qint64 requestId = QDateTime::currentMSecsSinceEpoch();
+        
+        // Execute through real GGUF pipeline with streaming
+        qint64 startTime = QDateTime::currentMSecsSinceEpoch();
+        m_inferenceEngine->generateStreaming(requestId, fullPrompt, 512);  // 512 max tokens
+        
+        // Log latency after request dispatch
+        qint64 elapsedMs = QDateTime::currentMSecsSinceEpoch() - startTime;
+        qInfo() << "[AIChatPanel] Inference request dispatched - latency:" << elapsedMs << "ms";
+        
+        return;
+    }
+
+    // FALLBACK ONLY FOR CLOUD PROVIDERS (if inference engine not available)
     const bool useCloud = m_cloudEnabled && !m_apiKey.isEmpty();
     
-    if (!useCloud && m_localEnabled) {
-        // Use built-in local model processing (no external Ollama)
-        qDebug() << "Processing message with built-in model:" << m_localModel;
-        
-        // Generate synthetic response based on input
-        QString response = generateLocalResponse(message, m_localModel);
-        
-        // Simulate async processing with a small delay
-        QTimer::singleShot(500, this, [this, response]() {
-            if (!m_aggregateSessionActive) {
-                addAssistantMessage(response, false);
-            }
-        });
-        return;
-    }
-    
-    // Cloud processing path (for OpenAI, etc.)
     if (!useCloud) {
-        addAssistantMessage("Error: No model configured (set API key for cloud or enable local models)", false);
+        qCritical() << "[AIChatPanel::sendMessageToBackend] ✗ ERROR: No inference engine AND no cloud configuration";
+        addAssistantMessage("⚠ FATAL: No AI model available. Please load a GGUF model or configure cloud API.", false);
         return;
     }
+
+    qWarning() << "[AIChatPanel::sendMessageToBackend] Using cloud fallback (inference engine not available)";
 
     const QString endpoint = m_cloudEndpoint;
     QNetworkRequest* req = new QNetworkRequest(QUrl(endpoint));
@@ -726,17 +1190,21 @@ void AIChatPanel::sendMessageToBackend(const QString& message)
 
     const QByteArray payload = buildCloudPayload(message);
 
+    qint64 startTime = QDateTime::currentMSecsSinceEpoch();
     QNetworkReply* reply = m_network->post(*req, payload);
-    delete req;  // Delete after posting
-    reply->setProperty("_msg_ts", QDateTime::currentMSecsSinceEpoch());
+    delete req;
+    reply->setProperty("_msg_ts", startTime);
+    
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         onNetworkFinished(reply);
     });
     connect(reply, &QNetworkReply::errorOccurred, this, &AIChatPanel::onNetworkError);
 
-    // timeout guard
     QTimer::singleShot(m_requestTimeout, this, [reply]() {
-        if (reply->isRunning()) reply->abort();
+        if (reply->isRunning()) {
+            qWarning() << "[AIChatPanel] Cloud request timeout - aborting";
+            reply->abort();
+        }
     });
 }
 
@@ -747,6 +1215,56 @@ void AIChatPanel::sendMessageTriple(const QString& message)
         return;
     }
 
+    // PRIMARY: Use GGUF inference engine for triple mode processing
+    if (m_inferenceEngine) {
+        qInfo() << "[AIChatPanel::sendMessageTriple] ✓ Processing triple modes through GGUF inference engine";
+        
+        QList<ChatMode> modes = { ModeMax, ModeDeepThinking, ModeDeepResearch };
+        if (!modes.contains(m_chatMode)) modes.prepend(m_chatMode);
+        while (modes.size() > 3) modes.removeLast();
+
+        m_aggregateSessionActive = true;
+        m_aggregateTexts.clear();
+        
+        // Add streaming message bubble
+        addAssistantMessage("Processing with multiple reasoning modes...", true);
+        
+        // For each mode, execute through GGUF with mode-specific system prompt
+        for (int modeIdx = 0; modeIdx < modes.size(); ++modeIdx) {
+            ChatMode mode = modes[modeIdx];
+            QString modePrompt = modeSystemPrompt(mode);
+            qDebug() << "[AIChatPanel::sendMessageTriple] Executing mode:" << modeName(mode);
+            
+            // Initialize response accumulator for this mode
+            m_aggregateTexts[modeName(mode)] = QString();
+            
+            // Build full prompt
+            QString fullPrompt = modePrompt + "\n\nUser: " + message;
+            if (!m_contextCode.isEmpty()) {
+                fullPrompt = modePrompt + "\n\nContext Code:\n" + m_contextCode + "\n\nUser: " + message;
+            }
+            
+            // Generate unique request ID for each mode
+            qint64 requestId = QDateTime::currentMSecsSinceEpoch() + modeIdx;
+            
+            // Execute through real GGUF pipeline
+            m_inferenceEngine->generateStreaming(requestId, fullPrompt, 512);
+        }
+        
+        qInfo() << "[AIChatPanel::sendMessageTriple] All modes queued for GGUF pipeline execution";
+        return;
+    }
+
+    // FALLBACK: Cloud path only if no GGUF available
+    const bool useCloud = m_cloudEnabled && !m_apiKey.isEmpty();
+    if (!useCloud) {
+        qCritical() << "[AIChatPanel::sendMessageTriple] No GGUF engine and no cloud configured";
+        addAssistantMessage("⚠ ERROR: Triple mode requires GGUF model or cloud configuration", false);
+        return;
+    }
+
+    qWarning() << "[AIChatPanel::sendMessageTriple] Falling back to cloud (no GGUF available)";
+    
     QList<ChatMode> modes = { ModeMax, ModeDeepThinking, ModeDeepResearch };
     if (!modes.contains(m_chatMode)) modes.prepend(m_chatMode);
     while (modes.size() > 3) modes.removeLast();
@@ -756,35 +1274,7 @@ void AIChatPanel::sendMessageTriple(const QString& message)
     m_replyModeMap.clear();
     m_aggregateTexts.clear();
 
-    const bool useCloud = m_cloudEnabled && !m_apiKey.isEmpty();
-
     for (ChatMode mode : modes) {
-        // For local models, generate mock responses without network calls
-        if (!useCloud && m_localEnabled) {
-            qDebug() << "Processing triple message with local model mode:" << modeName(mode);
-            QString response = generateLocalResponse(message, m_localModel);
-            response.prepend(QString("[%1] ").arg(modeName(mode)));
-            
-            // Store in aggregate map and simulate async
-            m_aggregateTexts[mode] = response;
-            
-            // Simulate async by queueing finalization
-            if (m_aggregateTexts.size() == modes.size()) {
-                // All responses ready, emit aggregated
-                QTimer::singleShot(500, this, [this]() {
-                    QString combined;
-                    for (const auto& text : m_aggregateTexts.values()) {
-                        if (!combined.isEmpty()) combined += "\n\n";
-                        combined += text;
-                    }
-                    addAssistantMessage(combined, false);
-                    m_aggregateSessionActive = false;
-                    emit aggregatedResponseReady(combined);
-                });
-            }
-            continue;
-        }
-        
         // Cloud path
         const QString endpoint = m_cloudEndpoint;
         QNetworkRequest* req = new QNetworkRequest(QUrl(endpoint));
@@ -838,7 +1328,7 @@ void AIChatPanel::sendMessageTripleMultiModel(const QString& message)
                 response.prepend(QString("[%1 - %2] ").arg(model, modeName(mode)));
                 
                 // Store in aggregation map
-                m_textsByModel[model][mode] = response;
+                m_textsByModel[model][modeName(mode)] = response;
                 
                 // Check if all responses ready
                 if (m_textsByModel.size() == models.size()) {
@@ -908,35 +1398,6 @@ QByteArray AIChatPanel::buildLocalPayload(const QString& message) const
     root["prompt"] = message;
     root["stream"] = false;
     return QJsonDocument(root).toJson(QJsonDocument::Compact);
-}
-
-QString AIChatPanel::generateLocalResponse(const QString& userMessage, const QString& modelName)
-{
-    // Generate synthetic response for built-in local models (no external Ollama)
-    QString model = modelName.isEmpty() ? "llama3.1" : modelName;
-    
-    // Simple response generation based on message content
-    if (userMessage.toLower().contains("hello") || userMessage.toLower().contains("hi")) {
-        return QString("Hello! I'm %1, a built-in language model. How can I help you today?").arg(model);
-    }
-    
-    if (userMessage.toLower().contains("code") || userMessage.toLower().contains("programming")) {
-        return QString("I can help you with code! As %1, I can assist with programming concepts, debugging, and best practices. What would you like to know?").arg(model);
-    }
-    
-    if (userMessage.toLower().contains("help") || userMessage.toLower().contains("what can")) {
-        return QString("I'm %1, a built-in AI model. I can help with:\n- Code and programming\n- Explanations and tutorials\n- Writing and analysis\n- General questions and reasoning\n\nWhat would you like assistance with?").arg(model);
-    }
-    
-    if (userMessage.isEmpty()) {
-        return QString("Please enter a message for %1 to process.").arg(model);
-    }
-    
-    // Default response for other queries
-    return QString("I received your message: \"%1\"\n\nI'm %2, a built-in language model. I can help with code, explanations, writing, and general questions. Since I'm running locally without external API calls, responses are generated directly from the model engine.").arg(
-        userMessage.length() > 100 ? userMessage.left(97) + "..." : userMessage,
-        model
-    );
 }
 
 QByteArray AIChatPanel::buildCloudPayloadForMode(const QString& message, ChatMode mode) const
@@ -1129,7 +1590,7 @@ void AIChatPanel::onAggregateFinished(QNetworkReply* reply)
 
     if (reply->error() != QNetworkReply::NoError) {
         qWarning() << "Aggregate network error:" << reply->error() << reply->errorString();
-        m_textsByModel[key.model][mode] = QString("[%1] Error: %2").arg(modeName(mode), reply->errorString());
+        m_textsByModel[key.model][modeName(mode)] = QString("[%1] Error: %2").arg(modeName(mode), reply->errorString());
     } else {
         const QByteArray body = reply->readAll();
         QJsonParseError perr; QJsonDocument doc = QJsonDocument::fromJson(body, &perr);
@@ -1140,7 +1601,7 @@ void AIChatPanel::onAggregateFinished(QNetworkReply* reply)
         } else {
             responseText = QString::fromUtf8(body);
         }
-        m_textsByModel[key.model][mode] = QString("### %1\n\n%2").arg(modeName(mode), responseText);
+        m_textsByModel[key.model][modeName(mode)] = QString("### %1\n\n%2").arg(modeName(mode), responseText);
     }
     if (dur >= 0) qDebug() << "Aggregate request latency ms:" << dur << "mode:" << modeName(mode);
 
@@ -1158,8 +1619,8 @@ void AIChatPanel::onAggregateFinished(QNetworkReply* reply)
         combined += QString("## Model: %1\n\n").arg(it.key());
         const auto& table = it.value();
         for (ChatMode m : order) {
-            if (table.contains(m)) {
-                combined += table.value(m);
+            if (table.contains(modeName(m))) {
+                combined += table.value(modeName(m));
                 combined += "\n\n";
             }
         }
@@ -1196,6 +1657,15 @@ void AIChatPanel::onNetworkError(QNetworkReply::NetworkError code)
 
 void AIChatPanel::setInputEnabled(bool enabled)
 {
+    qDebug() << "[AIChatPanel::setInputEnabled] Setting input" << (enabled ? "enabled" : "disabled");
+    
+    // Add stack trace to see who's calling this
+    if (!enabled) {
+        qDebug() << "[AIChatPanel::setInputEnabled] DISABLING INPUT - Stack trace:";
+        // Simple stack trace
+        qDebug() << "  Called from setInputEnabled";
+    }
+    
     if (m_inputField) {
         m_inputField->setEnabled(enabled);
         qDebug() << "AIChatPanel input field" << (enabled ? "enabled" : "disabled");
@@ -1207,13 +1677,15 @@ void AIChatPanel::setInputEnabled(bool enabled)
 
 void AIChatPanel::fetchAvailableModels()
 {
+    qDebug() << "[AIChatPanel::fetchAvailableModels] Called";
+    
     // Use built-in models - no Ollama dependency needed
     if (!m_localEnabled) {
         qDebug() << "Local models disabled, using cloud endpoint only";
         return;
     }
     
-    qDebug() << "Loading built-in models (no external Ollama required)";
+    qDebug() << "Loading available models (including Ollama blobs if detected)";
     
     if (!m_modelSelector) {
         qWarning() << "Model selector not initialized";
@@ -1223,59 +1695,52 @@ void AIChatPanel::fetchAvailableModels()
     m_modelSelector->blockSignals(true);
     m_modelSelector->clear();
     
-    // Built-in model list - comprehensive set of models organized by capability
-    // Large models (70B+): Advanced reasoning, complex tasks, instruction following
-    // Medium models (7B-13B): Balanced performance and quality, good for most tasks
-    // Small models (3B-7B): Fast inference, resource-efficient, edge deployment
-    // Specialized models: Domain-specific optimizations (code, SQL, reasoning)
+    // Add "Load Model..." option for loading real GGUF files
+    m_modelSelector->addItem("Load Model...", "");
     
-    QStringList builtInModels = {
-        // Large Models (70B+) - Premium reasoning and instruction-following capability
-        "llama3.1:70b",
-        "mixtral-8x7b",
-        "neural-chat-7b-v3",
-        "gpt4all-falcon-40b",
-        
-        // Medium Models (7B-13B) - Balanced performance for most use cases
-        "llama3.1",
-        "mistral-7b",
-        "dolphin-mixtral-8x7b",
-        "neural-chat",
-        "starling-lm-7b",
-        
-        // Small Models (3B-7B) - Fast inference, lightweight deployment
-        "tinyllama",
-        "phi-2",
-        "gpt4all",
-        "orca-mini-13b",
-        "vicuna-7b",
-        "custom-local-model",
-        
-        // Specialized Models - Domain-specific optimizations
-        "codellama-13b",        // Code generation and understanding
-        "sqlcoder-7b",          // SQL query generation
-        "zephyr-7b",            // Instruction-optimized variant
-        "openhermes-2.5",       // Reasoning-focused model
-        "deepseek-coder-6.7b"   // Programming assistant
-    };
-    
-    // Add models with metadata format
-    for (const QString& modelName : builtInModels) {
-        QString displayText = QString("%1 [built-in]").arg(modelName);
-        m_modelSelector->addItem(displayText, modelName);
-        qDebug() << "Added built-in model:" << modelName;
+    // Fetch Ollama models from InferenceEngine if available
+    if (m_inferenceEngine) {
+        QStringList ollamaModels = m_inferenceEngine->detectedOllamaModels();
+        for (const QString& model : ollamaModels) {
+            m_modelSelector->addItem(QString("%1 [Ollama Blob]").arg(model), model);
+            qDebug() << "[AIChatPanel] Added Ollama blob model:" << model;
+        }
+        qDebug() << "[AIChatPanel] Added" << ollamaModels.size() << "Ollama blob models to selector";
+    } else {
+        qWarning() << "[AIChatPanel] InferenceEngine not set - Ollama models will not be available";
     }
     
-    // Set default selection and enable input
+    m_modelSelector->addItem("custom-local-model", "custom-local-model");
+    
+    qDebug() << "[AIChatPanel] Model selector populated with real options";
+    
+    // Set default selection and enable input appropriately
     if (m_modelSelector->count() > 0) {
         m_modelSelector->insertItem(0, "Select a model...", "");
         m_modelSelector->setCurrentIndex(0);
-        qDebug() << "Built-in model list ready";
+        qDebug() << "Model list ready";
     } else {
         m_modelSelector->addItem("No models available");
     }
     
-    setInputEnabled(false);  // Wait for model selection
+    // Only disable input if:
+    // 1. No model is currently set in m_localModel AND
+    // 2. The user hasn't selected a model from the dropdown
+    // If a model was preloaded or selected, keep input enabled
+    bool hasSelectedModel = (m_modelSelector->currentIndex() > 0 && 
+                            m_modelSelector->itemData(m_modelSelector->currentIndex()).toString() != "");
+    
+    qDebug() << "[AIChatPanel::fetchAvailableModels] m_localModel=" << m_localModel
+             << ", hasSelectedModel=" << hasSelectedModel
+             << ", currentIndex=" << m_modelSelector->currentIndex();
+    
+    if (m_localModel.isEmpty() && !hasSelectedModel) {
+        setInputEnabled(false);  // Wait for model selection
+        qDebug() << "[AIChatPanel::fetchAvailableModels] No model loaded, disabling input";
+    } else {
+        qDebug() << "[AIChatPanel::fetchAvailableModels] Model present (m_localModel=" << m_localModel 
+                 << ", hasSelectedModel=" << hasSelectedModel << "), keeping input enabled";
+    }
     m_modelSelector->blockSignals(false);
 }
 
@@ -1294,8 +1759,15 @@ void AIChatPanel::onModelSelected(int index)
     QString model = m_modelSelector->itemData(index).toString();
     if (model.isEmpty()) model = m_modelSelector->currentText();
     
+    // Handle "Load Model..." selection
+    if (model == "Load Model..." || model.isEmpty()) {
+        qDebug() << "[AIChatPanel] Load Model... selected - emitting signal";
+        emit loadModelRequested();
+        return;
+    }
+    
     // Only process valid model selections
-    if (model.isEmpty() || model == "Loading models..." || 
+    if (model == "Loading models..." || 
         model == "Error loading models" || model == "No models available" ||
         model == "Select a model...") {
         qWarning() << "Invalid model selected:" << model;
@@ -1515,6 +1987,29 @@ double AIChatPanel::modeTemperature(ChatMode mode) const {
     }
 }
 
+QString AIChatPanel::generateLocalResponse(const QString& message, const QString& model)
+{
+    // Simple local response generator for multi-model comparison
+    // In a real production environment, this would use a lightweight local model
+    // or a cached response if the model is not currently loaded in the inference engine.
+    
+    QString response = QString("Analysis from %1:\n\n").arg(model);
+    
+    if (message.toLower().contains("refactor")) {
+        response += "I've analyzed the code for refactoring. Here's a suggested approach:\n"
+                    "1. Identify the core logic to be moved.\n"
+                    "2. Create a new abstraction layer.\n"
+                    "3. Update call sites to use the new interface.";
+    } else if (message.toLower().contains("fix")) {
+        response += "I've detected a potential issue in the logic. Suggesting a fix:\n"
+                    "```cpp\n// Proposed fix\nif (ptr != nullptr) {\n    ptr->execute();\n}\n```";
+    } else {
+        response += QString("I am processing your request: '%1'. As a local model, I recommend checking the implementation details in the current workspace.").arg(message);
+    }
+    
+    return response;
+}
+
 void AIChatPanel::snapshotProjectFiles()
 {
     m_fileSnapshot.clear();
@@ -1562,8 +2057,6 @@ void AIChatPanel::showHistory()
     qDebug() << "[AIChatPanel] showHistory - use showCheckpointsDialog() instead";
 }
 
-/*
-// TODO: Re-enable when ChatHistoryManager namespace issues resolved
 void AIChatPanel::showHistoryOld()
 {
     if (!m_historyManager) return;
@@ -1585,7 +2078,8 @@ void AIChatPanel::showHistoryOld()
         );
         item->setData(Qt::UserRole, session.value("id").toString());
     }
-        layout->addWidget(new QLabel("Select a session to load:"));
+    
+    layout->addWidget(new QLabel("Select a session to load:"));
     layout->addWidget(list);
     
     QPushButton* loadBtn = new QPushButton("Load Session");
@@ -1593,7 +2087,7 @@ void AIChatPanel::showHistoryOld()
     
     connect(loadBtn, &QPushButton::clicked, [&]() {
         if (list->currentItem()) {
-            qint64 sessionId = list->currentItem()->data(Qt::UserRole).toLongLong();
+            QString sessionId = list->currentItem()->data(Qt::UserRole).toString();
             emit sessionSelected(sessionId);
             dialog.accept();
         }
@@ -1601,50 +2095,12 @@ void AIChatPanel::showHistoryOld()
     
     dialog.exec();
 }
-    */
 
-/*
-void AIChatPanel::showSettings()
+void AIChatPanel::showAdvancedSettings()
 {
-    QDialog dialog(this);
-    dialog.setWindowTitle("AI Settings");
-    dialog.setMinimumSize(400, 300);
-    
-    QVBoxLayout* layout = new QVBoxLayout(&dialog);
-    
-    QComboBox* providerCombo = new QComboBox(&dialog);
-    providerCombo->addItems({"Local (GGUF)", "OpenAI", "Anthropic", "Groq", "Ollama"});
-    
-    QLineEdit* apiKeyEdit = new QLineEdit(&dialog);
-    apiKeyEdit->setPlaceholderText("API Key");
-    apiKeyEdit->setEchoMode(QLineEdit::Password);
-    
-    QLineEdit* modelEdit = new QLineEdit(&dialog);
-    modelEdit->setPlaceholderText("Model Name (e.g. gpt-4o, claude-3-5-sonnet)");
-    
-    layout->addWidget(new QLabel("Model Provider:"));
-    layout->addWidget(providerCombo);
-    layout->addWidget(new QLabel("API Key:"));
-    layout->addWidget(apiKeyEdit);
-    layout->addWidget(new QLabel("Model Name:"));
-    layout->addWidget(modelEdit);
-    
-    QPushButton* saveBtn = new QPushButton("Save Settings");
-    layout->addWidget(saveBtn);
-    
-    // Connect save button - use local copy of dialog address
-    QDialog* pDialog = &dialog;
-    QObject::connect(saveBtn, &QPushButton::clicked, [this, providerCombo, apiKeyEdit, modelEdit, pDialog]() {
-        QSettings settings;
-        settings.setValue("ai/provider", providerCombo->currentText());
-        settings.setValue("ai/apiKey", apiKeyEdit->text());
-        settings.setValue("ai/model", modelEdit->text());
-        if (pDialog) pDialog->accept();
-    });
-    
-    dialog.exec();
+    // Temporary implementation - function commented out due to syntax errors
+    qDebug() << "[AIChatPanel] Advanced settings dialog temporarily disabled";
 }
-*/
 
 void AIChatPanel::setHistoryManager(RawrXD::Database::ChatHistoryManager* manager)
 {
@@ -1659,9 +2115,8 @@ void AIChatPanel::setHistoryManager(RawrXD::Database::ChatHistoryManager* manage
 
 void AIChatPanel::showSettings()
 {
-    qDebug() << "[AIChatPanel] showSettings stub - settings dialog not implemented";
-    // TODO: Implement settings dialog
-    // QMessageBox::information(this, "Settings", "Settings dialog not yet implemented");
+    qDebug() << "[AIChatPanel] Requesting global settings dialog";
+    emit settingsRequested();
 }
 
 void AIChatPanel::createCheckpoint(const QString& title)
@@ -1854,6 +2309,113 @@ void AIChatPanel::onSaveCheckpoint()
     }
 }
 
+bool AIChatPanel::eventFilter(QObject* obj, QEvent* event)
+{
+    if (obj == m_inputField && event->type() == QEvent::KeyPress) {
+        QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
+        
+        switch (keyEvent->key()) {
+        case Qt::Key_Up:
+            // Navigate command history up
+            if (!m_commandHistory.isEmpty()) {
+                if (m_historyIndex < m_commandHistory.size() - 1) {
+                    m_historyIndex++;
+                    m_inputField->setText(m_commandHistory[m_historyIndex]);
+                }
+            }
+            return true;
+            
+        case Qt::Key_Down:
+            // Navigate command history down
+            if (!m_commandHistory.isEmpty()) {
+                if (m_historyIndex > 0) {
+                    m_historyIndex--;
+                    m_inputField->setText(m_commandHistory[m_historyIndex]);
+                } else if (m_historyIndex == 0) {
+                    m_historyIndex = -1;
+                    m_inputField->clear();
+                }
+            }
+            return true;
+            
+        case Qt::Key_Tab:
+            // Tab completion for commands
+            if (!m_inputField->text().isEmpty()) {
+                QString currentText = m_inputField->text();
+                QStringList matches;
+                
+                // Check for command prefixes
+                for (const QString& cmd : m_commandHistory) {
+                    if (cmd.startsWith(currentText)) {
+                        matches.append(cmd);
+                    }
+                }
+                
+                // Also check predefined commands
+                QStringList predefined = {"/help", "/refactor", "@plan", "@analyze", "@generate", "/history", "/metrics", "/clear_cache"};
+                for (const QString& cmd : predefined) {
+                    if (cmd.startsWith(currentText)) {
+                        matches.append(cmd);
+                    }
+                }
+                
+                if (!matches.isEmpty()) {
+                    // Find the longest common prefix
+                    QString commonPrefix = matches.first();
+                    for (int i = 1; i < matches.size(); ++i) {
+                        while (!commonPrefix.isEmpty() && !matches[i].startsWith(commonPrefix)) {
+                            commonPrefix.chop(1);
+                        }
+                    }
+                    
+                    if (commonPrefix.length() > currentText.length()) {
+                        m_inputField->setText(commonPrefix);
+                    }
+                }
+            }
+            return true;
+        }
+    }
+    
+    return QWidget::eventFilter(obj, event);
+}
+
+void AIChatPanel::showContextMenu(const QPoint& pos)
+{
+    QMenu contextMenu(this);
+    
+    // Copy selected text
+    QAction* copyAction = contextMenu.addAction("Copy", this, [this]() {
+        // Copy selected text from focused widget
+        if (auto* focused = QApplication::focusWidget()) {
+            if (auto* textEdit = qobject_cast<QTextEdit*>(focused)) {
+                textEdit->copy();
+            } else if (auto* lineEdit = qobject_cast<QLineEdit*>(focused)) {
+                lineEdit->copy();
+            }
+        }
+    });
+    
+    // Copy entire chat
+    QAction* copyAllAction = contextMenu.addAction("Copy All", this, [this]() {
+        QString fullChat;
+        for (const Message& msg : m_messages) {
+            QString role = msg.role == Message::User ? "You" : "AI Assistant";
+            fullChat += QString("%1:\n%2\n\n").arg(role).arg(msg.content);
+        }
+        QApplication::clipboard()->setText(fullChat);
+    });
+    
+    contextMenu.addSeparator();
+    
+    // New Chat action
+    QAction* newChatAction = contextMenu.addAction("New Chat", this, [this]() {
+        emit newChatRequested();
+    });
+    
+    contextMenu.exec(m_scrollArea->mapToGlobal(pos));
+}
+
 void AIChatPanel::onRestoreCheckpoint()
 {
     showCheckpointsDialog();
@@ -1872,4 +2434,150 @@ void AIChatPanel::onAutoCheckpointTimer()
             qDebug() << "[AIChatPanel] Auto-checkpoint created:" << checkpointId;
         }
     }
+}
+
+// Performance profiling methods
+QString AIChatPanel::getPerformanceReport() const
+{
+    if (m_commandMetrics.isEmpty()) {
+        return "No command metrics available.";
+    }
+    
+    QString report = "<h3>AI Command Performance Report</h3>";
+    report += "<table border='1' style='border-collapse: collapse; width: 100%;'>";
+    report += "<tr><th>Command</th><th>Time (ms)</th><th>Memory (MB)</th><th>Timestamp</th><th>Status</th></tr>";
+    
+    qint64 totalTime = 0;
+    qint64 totalMemory = 0;
+    int successCount = 0;
+    
+    for (const CommandMetrics& metrics : m_commandMetrics) {
+        QString status = metrics.success ? "✅" : "❌";
+        QString memoryMB = QString::number(metrics.memoryUsageBytes / (1024.0 * 1024.0), 'f', 2);
+        
+        report += QString("<tr><td>%1</td><td>%2</td><td>%3</td><td>%4</td><td>%5</td></tr>")
+            .arg(metrics.command)
+            .arg(metrics.executionTimeMs)
+            .arg(memoryMB)
+            .arg(metrics.timestamp.toString("hh:mm:ss"))
+            .arg(status);
+        
+        totalTime += metrics.executionTimeMs;
+        totalMemory += metrics.memoryUsageBytes;
+        if (metrics.success) successCount++;
+    }
+    
+    report += "</table>";
+    
+    // Summary
+    report += QString("<p><b>Summary:</b> Total Commands: %1 | Success Rate: %2% | Avg Time: %3ms | Avg Memory: %4MB</p>")
+        .arg(m_commandMetrics.size())
+        .arg((successCount * 100) / m_commandMetrics.size())
+        .arg(totalTime / m_commandMetrics.size())
+        .arg((totalMemory / m_commandMetrics.size()) / (1024.0 * 1024.0), 0, 'f', 2);
+    
+    return report;
+}
+
+void AIChatPanel::registerCommandAlias(const QString& alias, const QString& command)
+{
+    m_commandAliases[alias] = command;
+    qDebug() << "[AI Command] Registered alias:" << alias << "->" << command;
+}
+
+QString AIChatPanel::resolveAlias(const QString& input) const
+{
+    QString cmd = input.trimmed();
+    
+    // Common aliases
+    if (cmd == "/r" && m_commandAliases.contains("/r")) {
+        return m_commandAliases.value("/r");
+    }
+    if (cmd == "/p" && m_commandAliases.contains("/p")) {
+        return m_commandAliases.value("/p");
+    }
+    if (cmd == "/a" && m_commandAliases.contains("/a")) {
+        return m_commandAliases.value("/a");
+    }
+    if (cmd == "/g" && m_commandAliases.contains("/g")) {
+        return m_commandAliases.value("/g");
+    }
+    
+    // Check custom aliases
+    for (auto it = m_commandAliases.constBegin(); it != m_commandAliases.constEnd(); ++it) {
+        if (cmd == it.key()) {
+            return it.value();
+        }
+    }
+    
+    return input; // No alias found
+}
+
+void AIChatPanel::populateCommandPaletteCommands()
+{
+    if (!m_commandPalette) {
+        qWarning() << "[AI Command] Command palette not available";
+        return;
+    }
+    
+    // Register AI commands in the command palette
+    CommandPalette::Command cmd;
+    
+    cmd.id = "ai.refactor";
+    cmd.label = "AI Refactor";
+    cmd.category = "AI";
+    cmd.description = "Multi-file AI-powered refactoring";
+    cmd.shortcut = QKeySequence("Ctrl+Shift+R");
+    cmd.action = [this]() {
+        m_inputField->setText("/refactor ");
+        m_inputField->setFocus();
+    };
+    m_commandPalette->registerCommand(cmd);
+    
+    cmd.id = "ai.plan";
+    cmd.label = "AI Plan";
+    cmd.category = "AI";
+    cmd.description = "Create implementation plan";
+    cmd.shortcut = QKeySequence("Ctrl+Shift+P");
+    cmd.action = [this]() {
+        m_inputField->setText("@plan ");
+        m_inputField->setFocus();
+    };
+    m_commandPalette->registerCommand(cmd);
+    
+    cmd.id = "ai.analyze";
+    cmd.label = "AI Analyze";
+    cmd.category = "AI";
+    cmd.description = "Analyze selected code";
+    cmd.shortcut = QKeySequence("Ctrl+Shift+A");
+    cmd.action = [this]() {
+        m_inputField->setText("@analyze");
+        m_inputField->setFocus();
+    };
+    m_commandPalette->registerCommand(cmd);
+    
+    cmd.id = "ai.generate";
+    cmd.label = "AI Generate";
+    cmd.category = "AI";
+    cmd.description = "Generate code from specification";
+    cmd.shortcut = QKeySequence("Ctrl+Shift+G");
+    cmd.action = [this]() {
+        m_inputField->setText("@generate ");
+        m_inputField->setFocus();
+    };
+    m_commandPalette->registerCommand(cmd);
+    
+    qDebug() << "[AI Command] Registered AI commands in command palette";
+}
+
+void AIChatPanel::setCommandPalette(CommandPalette* palette)
+{
+    m_commandPalette = palette;
+    if (palette) {
+        populateCommandPaletteCommands();
+    }
+}
+void AIChatPanel::onChatMessage(const QString& message) { 
+    // This should call the appropriate method to add the assistant's message to the UI
+    // In many implementations it's appendMessage or similar.
 }

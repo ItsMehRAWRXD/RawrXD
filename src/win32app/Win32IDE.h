@@ -1,7 +1,8 @@
 #pragma once
 
 #include <windows.h>
-#include <windowsx.h>
+#include <d3d11.h>
+// #include <windowsx.h> // Missing in some SDKs
 #include <winhttp.h>
 #include <richedit.h>
 #include <shellapi.h>
@@ -142,19 +143,19 @@
 #endif
 
 // Additional structures that might be missing
-#ifndef SETTEXTEX
-typedef struct _settextex {
-    DWORD flags;
-    UINT codepage;
-} SETTEXTEX;
-#endif
+// #ifndef SETTEXTEX
+// typedef struct _settextex {
+//     DWORD flags;
+//     UINT codepage;
+// } SETTEXTEX;
+// #endif
 
-#ifndef GETTEXTLENGTHEX
-typedef struct _gettextlengthex {
-    DWORD flags;
-    UINT codepage;
-} GETTEXTLENGTHEX;
-#endif
+// #ifndef GETTEXTLENGTHEX
+// typedef struct _gettextlengthex {
+//     DWORD flags;
+//     UINT codepage;
+// } GETTEXTLENGTHEX;
+// #endif
 #include <string>
 #include <vector>
 #include <memory>

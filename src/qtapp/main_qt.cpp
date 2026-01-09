@@ -11,6 +11,8 @@
 #include <QTimer>
 
 #include "MainWindow.h"
+#include "rawrxd_build_info.h"
+#include "startup_readiness_checker.hpp"
 
 namespace {
 void appendLifecycleLog(const QString& line) {
@@ -59,9 +61,45 @@ int main(int argc, char* argv[])
 
         appendLifecycleLog("[APP] main() start");
         QApplication app(argc, argv);
+        QCoreApplication::setApplicationVersion(QStringLiteral(RAWRXD_APP_VERSION));
+        QCoreApplication::setApplicationName(QStringLiteral("RawrXD Agentic IDE"));
         appendLifecycleLog("[APP] QApplication constructed");
+
+        // Headless readiness mode: run startup checks without launching the full UI
+        const bool headlessReadiness = qEnvironmentVariableIsSet("RAWRXD_HEADLESS_READINESS");
+        if (headlessReadiness) {
+            appendLifecycleLog("[APP] Headless readiness mode enabled (RAWRXD_HEADLESS_READINESS)");
+
+            StartupReadinessChecker checker;
+
+            QObject::connect(&checker, &StartupReadinessChecker::readinessComplete,
+                             &app, [&](const AgentReadinessReport& report) {
+                appendLifecycleLog(QString("[APP] Headless readiness complete ready=%1 failures=%2")
+                    .arg(report.overallReady)
+                    .arg(report.failures.size()));
+                if (!report.failures.isEmpty()) {
+                    appendLifecycleLog(QString("[APP] Failed subsystems: %1")
+                        .arg(report.failures.join(", ")));
+                }
+                app.quit();
+            });
+
+            QTimer::singleShot(0, [&checker]() {
+                checker.runChecks();
+            });
+
+            appendLifecycleLog("[APP] Entering event loop (headless readiness)");
+            const int rc = app.exec();
+            appendLifecycleLog(QString("[APP] app.exec() returned %1 (headless readiness)").arg(rc));
+            return rc;
+        }
         qDebug() << "Starting RawrXD-QtShell...";
         appendLifecycleLog("[APP] Starting RawrXD-QtShell...");
+        appendLifecycleLog(QString("[APP] Build info: version=%1 commit=%2 config=%3 compiler=%4")
+            .arg(QStringLiteral(RAWRXD_APP_VERSION))
+            .arg(QStringLiteral(RAWRXD_BUILD_COMMIT))
+            .arg(QStringLiteral(RAWRXD_BUILD_CONFIG_STR))
+            .arg(QStringLiteral(RAWRXD_BUILD_COMPILER)));
 
         // Disable auto-update during initial testing
         // AutoUpdate updater;

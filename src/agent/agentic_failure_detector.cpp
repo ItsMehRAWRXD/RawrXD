@@ -1,4 +1,4 @@
-// agentic_failure_detector.cpp - Implementation of failure detection
+// agentic_failure_detector.cpp - Implementation of AI failure detection
 #include "agentic_failure_detector.hpp"
 #include <QDebug>
 #include <QRegularExpression>
@@ -8,289 +8,402 @@ AgenticFailureDetector::AgenticFailureDetector(QObject* parent)
     : QObject(parent)
 {
     initializePatterns();
-    qInfo() << "[AgenticFailureDetector] Initialized with pattern library";
+    qInfo() << "[AgenticFailureDetector] Initialized with 8 detection modes";
 }
 
 AgenticFailureDetector::~AgenticFailureDetector()
 {
+    QMutexLocker locker(&m_mutex);
 }
 
 void AgenticFailureDetector::initializePatterns()
 {
-    QMutexLocker locker(&m_mutex);
-    
-    // Refusal patterns
-    m_refusalPatterns << "I can't" << "I cannot" << "I'm not able to"
-                     << "I can't assist" << "I'm unable" << "I don't feel comfortable"
-                     << "I decline" << "I won't" << "I must refuse"
-                     << "I'm not permitted" << "against my values"
-                     << "not allowed to" << "I apologize, but I cannot";
-    
-    // Hallucination patterns
-    m_hallucinationPatterns << "I think" << "probably" << "likely"
-                           << "I might have" << "I'm not sure but"
-                           << "As far as I know" << "To my knowledge"
-                           << "might be" << "could be" << "seems like";
-    
-    // Infinite loop patterns
-    m_loopPatterns << "same" << "repeated" << "over and over"
-                  << "again and again" << "same thing";
-    
-    // Safety patterns
-    m_safetyPatterns << "[SENSITIVE]" << "[REDACTED]" << "[FILTERED]"
-                    << "[BLOCKED]" << "[SAFETY]" << "[WARNING]";
-    
-    // Timeout indicators
-    m_timeoutIndicators << "[Timeout]" << "[TIMEOUT]" << "timed out"
-                       << "inference timeout" << "deadline exceeded";
-    
-    // Resource exhaustion indicators
-    m_resourceExhaustionIndicators << "out of memory" << "OOM" << "[OOM]"
-                                  << "resource exhausted" << "no GPU memory"
-                                  << "device out of memory";
+    initializeDefaultRefusalPatterns();
+    initializeDefaultHallucinationPatterns();
+    initializeDefaultSafetyPatterns();
 }
 
-FailureInfo AgenticFailureDetector::detectFailure(const QString& modelOutput, const QString& context)
+void AgenticFailureDetector::initializeDefaultRefusalPatterns()
+{
+    m_refusalPatterns = QStringList{
+        "I cannot",
+        "I can't",
+        "I'm not able to",
+        "I am not able to",
+        "I don't have the ability",
+        "I'm unable to",
+        "I apologize, but I cannot",
+        "Sorry, I can't",
+        "I'm sorry, but I can't",
+        "As an AI",
+        "As a language model",
+        "I don't feel comfortable",
+        "That would be inappropriate",
+        "I cannot assist with that",
+        "I'm not programmed to",
+        "I must decline",
+        "I refuse to"
+    };
+}
+
+void AgenticFailureDetector::initializeDefaultHallucinationPatterns()
+{
+    m_hallucinationPatterns = QStringList{
+        "According to my training data",
+        "I remember that",
+        "I recall",
+        "I have personal experience",
+        "I was there when",
+        "I personally",
+        "In my opinion based on facts",
+        "The documented evidence shows" // without citation
+    };
+}
+
+void AgenticFailureDetector::initializeDefaultSafetyPatterns()
+{
+    m_safetyPatterns = QStringList{
+        "illegal activity",
+        "harmful content",
+        "dangerous instructions",
+        "how to harm",
+        "how to hurt",
+        "violent content",
+        "explicit sexual",
+        "self-harm",
+        "suicide instructions"
+    };
+}
+
+FailureDetection AgenticFailureDetector::detectFailure(const QString& response, const QString& prompt)
 {
     QMutexLocker locker(&m_mutex);
     
-    if (!m_enabled) {
-        return FailureInfo{AgentFailureType::None, "Detector disabled", 0.0, "", QDateTime::currentDateTime(), m_sequenceNumber};
+    if (response.isEmpty()) {
+        return FailureDetection::none();
     }
-    
-    if (modelOutput.isEmpty()) {
-        return FailureInfo{AgentFailureType::Refusal, "Empty output", 0.5, "No response generated", QDateTime::currentDateTime(), m_sequenceNumber};
-    }
-    
-    m_stats.totalOutputsAnalyzed++;
     
     // Check each failure type in priority order
-    if (isRefusal(modelOutput)) {
-        FailureInfo info{AgentFailureType::Refusal, "Model refusal detected", 
-                        calculateConfidence(AgentFailureType::Refusal, modelOutput),
-                        "Contains refusal keywords", QDateTime::currentDateTime(), m_sequenceNumber++};
-        m_stats.failureTypeCounts[static_cast<int>(AgentFailureType::Refusal)]++;
-        return info;
+    FailureDetection result;
+    
+    if (m_enableSafetyDetection) {
+        result = detectSafetyViolation(response);
+        if (result.isFailure()) return result;
     }
     
-    if (isSafetyViolation(modelOutput)) {
-        FailureInfo info{AgentFailureType::SafetyViolation, "Safety filter triggered",
-                        calculateConfidence(AgentFailureType::SafetyViolation, modelOutput),
-                        "Contains safety markers", QDateTime::currentDateTime(), m_sequenceNumber++};
-        m_stats.failureTypeCounts[static_cast<int>(AgentFailureType::SafetyViolation)]++;
-        return info;
+    if (m_enableRefusalDetection) {
+        result = detectRefusal(response);
+        if (result.isFailure()) return result;
     }
     
-    if (isTokenLimitExceeded(modelOutput)) {
-        FailureInfo info{AgentFailureType::TokenLimitExceeded, "Token limit exceeded",
-                        0.9, "Response truncated or incomplete", QDateTime::currentDateTime(), m_sequenceNumber++};
-        m_stats.failureTypeCounts[static_cast<int>(AgentFailureType::TokenLimitExceeded)]++;
-        return info;
+    if (m_enableLoopDetection) {
+        result = detectInfiniteLoop(response);
+        if (result.isFailure()) return result;
     }
     
-    if (isTimeout(modelOutput)) {
-        FailureInfo info{AgentFailureType::Timeout, "Inference timeout",
-                        0.95, "Timeout indicator detected", QDateTime::currentDateTime(), m_sequenceNumber++};
-        m_stats.failureTypeCounts[static_cast<int>(AgentFailureType::Timeout)]++;
-        return info;
+    if (m_enableFormatDetection && !prompt.isEmpty()) {
+        result = detectFormatViolation(response, "");
+        if (result.isFailure()) return result;
     }
     
-    if (isResourceExhausted(modelOutput)) {
-        FailureInfo info{AgentFailureType::ResourceExhausted, "Resource exhaustion",
-                        0.95, "Out of memory or compute resources", QDateTime::currentDateTime(), m_sequenceNumber++};
-        m_stats.failureTypeCounts[static_cast<int>(AgentFailureType::ResourceExhausted)]++;
-        return info;
+    if (m_enableHallucinationDetection) {
+        result = detectHallucination(response);
+        if (result.isFailure()) return result;
     }
     
-    if (isInfiniteLoop(modelOutput)) {
-        FailureInfo info{AgentFailureType::InfiniteLoop, "Infinite loop detected",
-                        calculateConfidence(AgentFailureType::InfiniteLoop, modelOutput),
-                        "Repeating content pattern", QDateTime::currentDateTime(), m_sequenceNumber++};
-        m_stats.failureTypeCounts[static_cast<int>(AgentFailureType::InfiniteLoop)]++;
-        return info;
+    if (m_enableToolValidation) {
+        result = detectToolMisuse(response);
+        if (result.isFailure()) return result;
     }
     
-    if (isFormatViolation(modelOutput)) {
-        FailureInfo info{AgentFailureType::FormatViolation, "Format violation detected",
-                        calculateConfidence(AgentFailureType::FormatViolation, modelOutput),
-                        "Output format incorrect", QDateTime::currentDateTime(), m_sequenceNumber++};
-        m_stats.failureTypeCounts[static_cast<int>(AgentFailureType::FormatViolation)]++;
-        return info;
+    if (m_enableContextDetection && !prompt.isEmpty()) {
+        result = detectContextLoss(response, prompt);
+        if (result.isFailure()) return result;
     }
     
-    if (isHallucination(modelOutput)) {
-        FailureInfo info{AgentFailureType::Hallucination, "Hallucination indicators",
-                        calculateConfidence(AgentFailureType::Hallucination, modelOutput),
-                        "Contains uncertain language patterns", QDateTime::currentDateTime(), m_sequenceNumber++};
-        m_stats.failureTypeCounts[static_cast<int>(AgentFailureType::Hallucination)]++;
-        return info;
+    if (m_enableQualityDetection) {
+        result = detectQualityDegradation(response);
+        if (result.isFailure()) return result;
     }
     
-    // No failure detected
-    return FailureInfo{AgentFailureType::None, "No failure detected", 1.0, "", QDateTime::currentDateTime(), m_sequenceNumber};
+    return FailureDetection::none();
 }
 
-QList<FailureInfo> AgenticFailureDetector::detectMultipleFailures(const QString& modelOutput)
+FailureDetection AgenticFailureDetector::detectRefusal(const QString& response)
 {
     QMutexLocker locker(&m_mutex);
-    QList<FailureInfo> failures;
     
-    if (isRefusal(modelOutput)) {
-        failures.append(FailureInfo{AgentFailureType::Refusal, "Refusal", 0.8, "", QDateTime::currentDateTime(), m_sequenceNumber});
+    if (!m_enableRefusalDetection) {
+        return FailureDetection::none();
     }
-    if (isHallucination(modelOutput)) {
-        failures.append(FailureInfo{AgentFailureType::Hallucination, "Hallucination", 0.6, "", QDateTime::currentDateTime(), m_sequenceNumber});
-    }
-    if (isFormatViolation(modelOutput)) {
-        failures.append(FailureInfo{AgentFailureType::FormatViolation, "Format issue", 0.7, "", QDateTime::currentDateTime(), m_sequenceNumber});
-    }
-    if (isInfiniteLoop(modelOutput)) {
-        failures.append(FailureInfo{AgentFailureType::InfiniteLoop, "Repetition", 0.85, "", QDateTime::currentDateTime(), m_sequenceNumber});
-    }
-    if (isSafetyViolation(modelOutput)) {
-        failures.append(FailureInfo{AgentFailureType::SafetyViolation, "Safety block", 0.95, "", QDateTime::currentDateTime(), m_sequenceNumber});
-    }
-    
-    m_sequenceNumber++;
-    
-    if (!failures.isEmpty()) {
-        emit multipleFailuresDetected(failures);
-    }
-    
-    return failures;
-}
-
-bool AgenticFailureDetector::isRefusal(const QString& output) const
-{
-    QString lower = output.toLower();
     
     for (const QString& pattern : m_refusalPatterns) {
-        if (lower.contains(pattern.toLower())) {
-            return true;
+        if (response.contains(pattern, Qt::CaseInsensitive)) {
+            double confidence = calculateConfidence(response, FailureType::Refusal);
+            
+            if (confidence >= m_refusalThreshold) {
+                m_stats.refusalsDetected++;
+                m_stats.totalDetections++;
+                
+                emit refusalDetected(response);
+                emit failureDetected(FailureType::Refusal, confidence, "Refusal pattern detected: " + pattern);
+                
+                return FailureDetection::detected(
+                    FailureType::Refusal,
+                    confidence,
+                    "Model refused to answer using pattern: " + pattern,
+                    pattern
+                );
+            }
         }
     }
     
-    return false;
+    return FailureDetection::none();
 }
 
-bool AgenticFailureDetector::isHallucination(const QString& output) const
+FailureDetection AgenticFailureDetector::detectHallucination(const QString& response, const QString& context)
 {
-    QString lower = output.toLower();
-    int hallucIndicators = 0;
+    QMutexLocker locker(&m_mutex);
+    
+    if (!m_enableHallucinationDetection) {
+        return FailureDetection::none();
+    }
     
     for (const QString& pattern : m_hallucinationPatterns) {
-        if (lower.contains(pattern.toLower())) {
-            hallucIndicators++;
+        if (response.contains(pattern, Qt::CaseInsensitive)) {
+            double confidence = 0.8; // High confidence for known hallucination patterns
+            
+            m_stats.hallucinationsDetected++;
+            m_stats.totalDetections++;
+            
+            emit hallucinationDetected(response, pattern);
+            emit failureDetected(FailureType::Hallucination, confidence, "Hallucination pattern detected");
+            
+            return FailureDetection::detected(
+                FailureType::Hallucination,
+                confidence,
+                "Model may be hallucinating: " + pattern,
+                pattern
+            );
         }
     }
     
-    return hallucIndicators >= 2; // Need multiple indicators
+    return FailureDetection::none();
 }
 
-bool AgenticFailureDetector::isFormatViolation(const QString& output) const
+FailureDetection AgenticFailureDetector::detectFormatViolation(const QString& response, const QString& expectedFormat)
 {
-    // Check JSON format
-    if (output.trimmed().startsWith('{')) {
-        int openBraces = output.count('{');
-        int closeBraces = output.count('}');
-        if (openBraces != closeBraces) {
-            return true;
+    QMutexLocker locker(&m_mutex);
+    
+    if (!m_enableFormatDetection) {
+        return FailureDetection::none();
+    }
+    
+    // Check for common format issues
+    bool hasFormatIssue = false;
+    QString violation;
+    
+    // Check for incomplete JSON
+    if (response.contains("{") && !response.contains("}")) {
+        hasFormatIssue = true;
+        violation = "Incomplete JSON object";
+    }
+    
+    // Check for incomplete code blocks
+    if (response.count("```") % 2 != 0) {
+        hasFormatIssue = true;
+        violation = "Unclosed code block";
+    }
+    
+    // Check for mismatched parentheses
+    int openParen = response.count('(');
+    int closeParen = response.count(')');
+    if (openParen != closeParen && openParen > 2) {
+        hasFormatIssue = true;
+        violation = "Mismatched parentheses";
+    }
+    
+    if (hasFormatIssue) {
+        double confidence = 0.9;
+        m_stats.formatViolations++;
+        m_stats.totalDetections++;
+        
+        emit formatViolationDetected(response);
+        emit failureDetected(FailureType::FormatViolation, confidence, violation);
+        
+        return FailureDetection::detected(
+            FailureType::FormatViolation,
+            confidence,
+            "Format violation: " + violation
+        );
+    }
+    
+    return FailureDetection::none();
+}
+
+FailureDetection AgenticFailureDetector::detectInfiniteLoop(const QString& response)
+{
+    QMutexLocker locker(&m_mutex);
+    
+    if (!m_enableLoopDetection) {
+        return FailureDetection::none();
+    }
+    
+    int repetitionCount = detectRepetitionCount(response);
+    
+    if (repetitionCount >= m_repetitionThreshold) {
+        double confidence = std::min(1.0, repetitionCount / 5.0);
+        m_stats.loopsDetected++;
+        m_stats.totalDetections++;
+        
+        emit loopDetected(response);
+        emit failureDetected(FailureType::InfiniteLoop, confidence, "Repetition detected");
+        
+        return FailureDetection::detected(
+            FailureType::InfiniteLoop,
+            confidence,
+            QString("Model is repeating itself (%1 times)").arg(repetitionCount)
+        );
+    }
+    
+    return FailureDetection::none();
+}
+
+FailureDetection AgenticFailureDetector::detectQualityDegradation(const QString& response)
+{
+    QMutexLocker locker(&m_mutex);
+    
+    if (!m_enableQualityDetection) {
+        return FailureDetection::none();
+    }
+    
+    double quality = calculateResponseQuality(response);
+    
+    if (quality < m_qualityThreshold) {
+        double confidence = 1.0 - quality;
+        m_stats.qualityIssues++;
+        m_stats.totalDetections++;
+        
+        emit qualityIssueDetected(response);
+        emit failureDetected(FailureType::QualityDegradation, confidence, "Low quality response");
+        
+        return FailureDetection::detected(
+            FailureType::QualityDegradation,
+            confidence,
+            QString("Response quality too low (%1)").arg(quality, 0, 'f', 2)
+        );
+    }
+    
+    return FailureDetection::none();
+}
+
+FailureDetection AgenticFailureDetector::detectToolMisuse(const QString& response)
+{
+    QMutexLocker locker(&m_mutex);
+    
+    if (!m_enableToolValidation) {
+        return FailureDetection::none();
+    }
+    
+    if (!containsToolCalls(response)) {
+        return FailureDetection::none();
+    }
+    
+    // Extract and validate tool calls
+    QRegularExpression toolCallRegex("<invoke name=\\\"([^\\\"]+)\\\">"  );
+    QRegularExpressionMatchIterator matches = toolCallRegex.globalMatch(response);
+    
+    while (matches.hasNext()) {
+        QRegularExpressionMatch match = matches.next();
+        QString toolCall = match.captured(0);
+        
+        if (!isValidToolCall(toolCall)) {
+            double confidence = 0.85;
+            m_stats.toolMisuses++;
+            m_stats.totalDetections++;
+            
+            emit failureDetected(FailureType::ToolMisuse, confidence, "Invalid tool call detected");
+            
+            return FailureDetection::detected(
+                FailureType::ToolMisuse,
+                confidence,
+                "Tool call format invalid or malformed"
+            );
         }
     }
     
-    // Check code block format
-    if (output.contains("```")) {
-        if ((output.count("```") % 2) != 0) {
-            return true;
+    return FailureDetection::none();
+}
+
+FailureDetection AgenticFailureDetector::detectContextLoss(const QString& response, const QString& context)
+{
+    QMutexLocker locker(&m_mutex);
+    
+    if (!m_enableContextDetection || context.isEmpty()) {
+        return FailureDetection::none();
+    }
+    
+    // Simple heuristic: check if response mentions key context elements
+    QStringList contextKeywords = context.split(QRegularExpression("\\W+"), Qt::SkipEmptyParts);
+    
+    int mentionedKeywords = 0;
+    for (const QString& keyword : contextKeywords) {
+        if (keyword.length() < 4) continue; // Skip short words
+        if (response.contains(keyword, Qt::CaseInsensitive)) {
+            mentionedKeywords++;
         }
     }
     
-    return false;
-}
-
-bool AgenticFailureDetector::isInfiniteLoop(const QString& output) const
-{
-    QStringList lines = output.split('\n', Qt::SkipEmptyParts);
+    double contextRetention = contextKeywords.isEmpty() ? 1.0 : 
+        static_cast<double>(mentionedKeywords) / contextKeywords.size();
     
-    if (lines.count() < 5) {
-        return false;
+    if (contextRetention < 0.2 && contextKeywords.size() > 5) {
+        double confidence = 1.0 - contextRetention;
+        m_stats.contextLosses++;
+        m_stats.totalDetections++;
+        
+        emit failureDetected(FailureType::ContextLoss, confidence, "Context loss detected");
+        
+        return FailureDetection::detected(
+            FailureType::ContextLoss,
+            confidence,
+            QString("Model lost track of context (retention: %1%)").arg(contextRetention * 100, 0, 'f', 1)
+        );
     }
     
-    // Check for repeated lines
-    QHash<QString, int> lineCount;
-    for (const QString& line : lines) {
-        lineCount[line.trimmed()]++;
-    }
-    
-    for (int count : lineCount.values()) {
-        if (count > 3) {
-            return true;
-        }
-    }
-    
-    return false;
+    return FailureDetection::none();
 }
 
-bool AgenticFailureDetector::isTokenLimitExceeded(const QString& output) const
+FailureDetection AgenticFailureDetector::detectSafetyViolation(const QString& response)
 {
-    return output.endsWith("...") || output.endsWith("[truncated]") || 
-           output.endsWith("[end of response]") || output.contains("[token limit]");
-}
-
-bool AgenticFailureDetector::isResourceExhausted(const QString& output) const
-{
-    QString lower = output.toLower();
+    QMutexLocker locker(&m_mutex);
     
-    for (const QString& indicator : m_resourceExhaustionIndicators) {
-        if (lower.contains(indicator.toLower())) {
-            return true;
-        }
+    if (!m_enableSafetyDetection) {
+        return FailureDetection::none();
     }
     
-    return false;
-}
-
-bool AgenticFailureDetector::isTimeout(const QString& output) const
-{
-    QString lower = output.toLower();
-    
-    for (const QString& indicator : m_timeoutIndicators) {
-        if (lower.contains(indicator.toLower())) {
-            return true;
-        }
-    }
-    
-    return false;
-}
-
-bool AgenticFailureDetector::isSafetyViolation(const QString& output) const
-{
     for (const QString& pattern : m_safetyPatterns) {
-        if (output.contains(pattern)) {
-            return true;
+        if (response.contains(pattern, Qt::CaseInsensitive)) {
+            double confidence = 0.95;
+            m_stats.safetyViolations++;
+            m_stats.totalDetections++;
+            
+            emit safetyViolationDetected(response);
+            emit failureDetected(FailureType::SafetyViolation, confidence, "Safety violation detected");
+            
+            return FailureDetection::detected(
+                FailureType::SafetyViolation,
+                confidence,
+                "Potential safety violation: " + pattern,
+                pattern
+            );
         }
     }
     
-    return false;
+    return FailureDetection::none();
 }
 
-void AgenticFailureDetector::setRefusalThreshold(double threshold)
-{
-    QMutexLocker locker(&m_mutex);
-    m_refusalThreshold = threshold;
-}
-
-void AgenticFailureDetector::setQualityThreshold(double threshold)
-{
-    QMutexLocker locker(&m_mutex);
-    m_qualityThreshold = threshold;
-}
-
-void AgenticFailureDetector::enableToolValidation(bool enable)
-{
-    QMutexLocker locker(&m_mutex);
-    m_enableToolValidation = enable;
-}
+// Pattern management methods
 
 void AgenticFailureDetector::addRefusalPattern(const QString& pattern)
 {
@@ -308,14 +421,6 @@ void AgenticFailureDetector::addHallucinationPattern(const QString& pattern)
     }
 }
 
-void AgenticFailureDetector::addLoopPattern(const QString& pattern)
-{
-    QMutexLocker locker(&m_mutex);
-    if (!m_loopPatterns.contains(pattern)) {
-        m_loopPatterns.append(pattern);
-    }
-}
-
 void AgenticFailureDetector::addSafetyPattern(const QString& pattern)
 {
     QMutexLocker locker(&m_mutex);
@@ -323,6 +428,92 @@ void AgenticFailureDetector::addSafetyPattern(const QString& pattern)
         m_safetyPatterns.append(pattern);
     }
 }
+
+void AgenticFailureDetector::clearPatterns()
+{
+    QMutexLocker locker(&m_mutex);
+    m_refusalPatterns.clear();
+    m_hallucinationPatterns.clear();
+    m_safetyPatterns.clear();
+}
+
+// Threshold configuration
+
+void AgenticFailureDetector::setRefusalThreshold(double threshold)
+{
+    QMutexLocker locker(&m_mutex);
+    m_refusalThreshold = std::clamp(threshold, 0.0, 1.0);
+}
+
+void AgenticFailureDetector::setQualityThreshold(double threshold)
+{
+    QMutexLocker locker(&m_mutex);
+    m_qualityThreshold = std::clamp(threshold, 0.0, 1.0);
+}
+
+void AgenticFailureDetector::setRepetitionThreshold(int maxRepeats)
+{
+    QMutexLocker locker(&m_mutex);
+    m_repetitionThreshold = std::max(1, maxRepeats);
+}
+
+void AgenticFailureDetector::setConfidenceThreshold(double threshold)
+{
+    QMutexLocker locker(&m_mutex);
+    m_confidenceThreshold = std::clamp(threshold, 0.0, 1.0);
+}
+
+// Enable/disable detectors
+
+void AgenticFailureDetector::setRefusalDetectionEnabled(bool enabled)
+{
+    QMutexLocker locker(&m_mutex);
+    m_enableRefusalDetection = enabled;
+}
+
+void AgenticFailureDetector::setHallucinationDetectionEnabled(bool enabled)
+{
+    QMutexLocker locker(&m_mutex);
+    m_enableHallucinationDetection = enabled;
+}
+
+void AgenticFailureDetector::setFormatDetectionEnabled(bool enabled)
+{
+    QMutexLocker locker(&m_mutex);
+    m_enableFormatDetection = enabled;
+}
+
+void AgenticFailureDetector::setLoopDetectionEnabled(bool enabled)
+{
+    QMutexLocker locker(&m_mutex);
+    m_enableLoopDetection = enabled;
+}
+
+void AgenticFailureDetector::setQualityDetectionEnabled(bool enabled)
+{
+    QMutexLocker locker(&m_mutex);
+    m_enableQualityDetection = enabled;
+}
+
+void AgenticFailureDetector::setToolValidationEnabled(bool enabled)
+{
+    QMutexLocker locker(&m_mutex);
+    m_enableToolValidation = enabled;
+}
+
+void AgenticFailureDetector::setContextDetectionEnabled(bool enabled)
+{
+    QMutexLocker locker(&m_mutex);
+    m_enableContextDetection = enabled;
+}
+
+void AgenticFailureDetector::setSafetyDetectionEnabled(bool enabled)
+{
+    QMutexLocker locker(&m_mutex);
+    m_enableSafetyDetection = enabled;
+}
+
+// Statistics
 
 AgenticFailureDetector::Stats AgenticFailureDetector::getStatistics() const
 {
@@ -336,37 +527,110 @@ void AgenticFailureDetector::resetStatistics()
     m_stats = Stats();
 }
 
-void AgenticFailureDetector::setEnabled(bool enable)
+// Helper methods
+
+bool AgenticFailureDetector::matchesAnyPattern(const QString& text, const QStringList& patterns) const
 {
-    QMutexLocker locker(&m_mutex);
-    m_enabled = enable;
-    qInfo() << "[AgenticFailureDetector]" << (enable ? "Enabled" : "Disabled");
+    for (const QString& pattern : patterns) {
+        if (text.contains(pattern, Qt::CaseInsensitive)) {
+            return true;
+        }
+    }
+    return false;
 }
 
-bool AgenticFailureDetector::isEnabled() const
+double AgenticFailureDetector::calculateResponseQuality(const QString& response) const
 {
-    QMutexLocker locker(&m_mutex);
-    return m_enabled;
+    if (response.isEmpty()) return 0.0;
+    
+    double quality = 0.5; // Start at medium
+    
+    // Length check (too short or too long is bad)
+    int length = response.length();
+    if (length < 10) {
+        quality -= 0.3;
+    } else if (length > 50 && length < 2000) {
+        quality += 0.2;
+    }
+    
+    // Coherence check (simple heuristic: sentence count)
+    int sentences = response.count('.') + response.count('!') + response.count('?');
+    if (sentences > 0 && sentences < 20) {
+        quality += 0.1;
+    }
+    
+    // Check for markdown formatting
+    if (response.contains("```") || response.contains("**") || response.contains("##")) {
+        quality += 0.1;
+    }
+    
+    // Penalize excessive repetition
+    if (detectRepetitionCount(response) > 2) {
+        quality -= 0.3;
+    }
+    
+    return std::clamp(quality, 0.0, 1.0);
 }
 
-double AgenticFailureDetector::calculateConfidence(AgentFailureType type, const QString& output)
+int AgenticFailureDetector::detectRepetitionCount(const QString& response) const
 {
-    double confidence = 0.5;
+    QStringList sentences = response.split(QRegularExpression("[.!?]"), Qt::SkipEmptyParts);
+    
+    if (sentences.size() < 2) return 0;
+    
+    int maxRepetitions = 0;
+    
+    for (int i = 0; i < sentences.size(); ++i) {
+        QString sent1 = sentences[i].trimmed().toLower();
+        if (sent1.length() < 10) continue;
+        
+        int repetitions = 1;
+        for (int j = i + 1; j < sentences.size(); ++j) {
+            QString sent2 = sentences[j].trimmed().toLower();
+            if (sent1 == sent2 || sent1.contains(sent2) || sent2.contains(sent1)) {
+                repetitions++;
+            }
+        }
+        
+        maxRepetitions = std::max(maxRepetitions, repetitions);
+    }
+    
+    return maxRepetitions;
+}
+
+bool AgenticFailureDetector::containsToolCalls(const QString& response) const
+{
+    return response.contains("<invoke") || response.contains("<tool_call>");
+}
+
+bool AgenticFailureDetector::isValidToolCall(const QString& toolCall) const
+{
+    // Check for properly formatted tool call
+    return toolCall.contains("name=") && 
+           (toolCall.contains("<parameter") || !toolCall.contains("parameter"));
+}
+
+double AgenticFailureDetector::calculateConfidence(const QString& response, FailureType type) const
+{
+    double confidence = 0.7; // Base confidence
     
     switch (type) {
-        case AgentFailureType::Refusal:
-            confidence = output.count("cannot") > 0 ? 0.9 : 0.7;
+        case FailureType::Refusal:
+            // Higher confidence if response is very short
+            if (response.length() < 100) confidence += 0.2;
             break;
-        case AgentFailureType::Hallucination:
-            confidence = 0.6;
+            
+        case FailureType::InfiniteLoop:
+            confidence = std::min(1.0, detectRepetitionCount(response) / 5.0);
             break;
-        case AgentFailureType::InfiniteLoop:
-            confidence = 0.85;
+            
+        case FailureType::SafetyViolation:
+            confidence = 0.95; // Very high confidence for safety
             break;
+            
         default:
-            confidence = 0.7;
             break;
     }
     
-    return confidence;
+    return std::clamp(confidence, 0.0, 1.0);
 }

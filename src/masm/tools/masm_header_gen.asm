@@ -49,7 +49,7 @@ extern  FindClose:proc
 extern  ExitProcess:proc
 
 STD_OUTPUT_HANDLE equ -11
-GENERIC_READ   equ 080000000h
+GENERIC_READ   equ 80000000h
 GENERIC_WRITE  equ 40000000h
 FILE_SHARE_READ equ 1
 OPEN_EXISTING  equ 3
@@ -119,11 +119,11 @@ toupperA endp
 
 ; write null-terminated string to handle in rcx
 writeZ proc uses rdx r8 r9 rax, h:QWORD, psz_local:QWORD
-    mov rcx, psz
+    mov rcx, psz_local
     call strlenA
     mov r8, rax
     mov rcx, h
-    mov rdx, psz
+    mov rdx, psz_local
     lea r9, bytesIO
     sub rsp, 32
     call WriteFile
@@ -134,7 +134,7 @@ writeZ endp
 ; compare begins-with (case-insensitive), psz line vs psz prefix
 ; returns ZF=1 if begins with
 begins_with_ci proc uses rsi rdi rax rbx rcx, psz_local:QWORD, pfx:QWORD
-    mov rsi, psz
+    mov rsi, psz_local
     mov rdi, pfx
 loop_local:
     mov bl, [rdi]
@@ -172,7 +172,7 @@ begins_with_ci endp
 
 ; find substring (case-insensitive). returns offset in RAX or -1
 find_ci proc psz_local:QWORD, sub_str:QWORD
-    mov rsi, psz
+    mov rsi, psz_local
     mov rbx, sub_str
     xor rax, rax
 outer:
@@ -198,18 +198,18 @@ outer:
     sub bl, 32
 @@:
     cmp cl, 'a'
-    jb @F2
+    jb F2_local
     cmp cl, 'z'
-    ja @F2
+    ja F2_local
     sub cl, 32
-@@F2_local:
+F2_local:
     cmp bl, cl
     jne nextpos
     inc rdx
     inc rcx
     jmp @B
 found:
-    ; return offset = rdi - psz
+    ; return offset = rdi - psz_local
     mov rax, rdi
     sub rax, psz_local
     ret
@@ -225,7 +225,7 @@ find_ci endp
 
 ; add symbol to symbolsBuf if not present
 add_symbol proc uses rsi rdi rbx rax, psz_local:QWORD
-    mov rbx, psz
+    mov rbx, psz_local
     mov rsi, OFFSET symbolsBuf
 
     ; scan existing
@@ -236,7 +236,7 @@ scan_loop:
 
     ; compare strings
     mov rdi, rsi
-@@cmploop:
+cmploop:
     mov al, [rdi]
     mov dl, [rbx]
     cmp al, dl
@@ -245,31 +245,32 @@ scan_loop:
     jz already
     inc rdi
     inc rbx
-    jmp @cmploop
+    jmp cmploop
 @@:
     ; advance to next stored symbol
     ; move rbx back to start param
-    mov rbx, psz
-@@skip:
+    mov rbx, psz_local
+skip_sym:
     cmp byte ptr [rsi], 0
     je add_here
     inc rsi
-    jmp @skip
+    jmp skip_sym
 
 add_here:
     ; copy psz into rsi
     mov rdi, rsi
-    mov rsi, psz
-@@cpy:
+    mov rsi, psz_local
+cpy_sym:
     mov al, [rsi]
     mov [rdi], al
     inc rsi
     inc rdi
     test al, al
-    jnz @cpy
+    jnz cpy_sym
     ; update symbolsLen
     mov rax, rdi
-    sub rax, OFFSET symbolsBuf
+    lea rdx, symbolsBuf
+    sub rax, rdx
     mov symbolsLen, rax
     ret
 
@@ -280,14 +281,14 @@ add_symbol endp
 ; process a single line in lineBuf
 process_line proc uses rax rbx rcx rdx, psz_local:QWORD
     ; Check for PUBLIC
-    mov rcx, psz
+    mov rcx, psz_local
     mov rdx, OFFSET PUBLIC_kw
     call begins_with_ci
     test rax, rax
     jz check_proc
     ; after PUBLIC, parse tokens (comma/space separated)
     ; skip "PUBLIC "
-    mov rsi, psz
+    mov rsi, psz_local
     add rsi, 7
 skipsp:
     cmp byte ptr [rsi], ' '
@@ -317,7 +318,7 @@ parse_tokens:
 tok_collect:
     mov rdi, OFFSET lineBuf      ; reuse lineBuf as token buffer
     ; collect until delim or EOL
-@@t:
+tok_loop:
     mov al, [rsi]
     cmp al, ' '
     je tok_done
@@ -330,7 +331,7 @@ tok_collect:
     mov [rdi], al
     inc rdi
     inc rsi
-    jmp @t
+    jmp tok_loop
 
 tok_done:
     mov byte ptr [rdi], 0
@@ -343,15 +344,15 @@ tok_done:
 
 check_proc:
     ; Look for " PROC" anywhere in line
-    mov rcx, psz
+    mov rcx, psz_local
     mov rdx, OFFSET PROC_kw
     call find_ci
     cmp rax, -1
     je done
     ; collect first token up to space/tab/:
-    mov rsi, psz
+    mov rsi, psz_local
     mov rdi, OFFSET lineBuf
-@@n:
+name_loop:
     mov al, [rsi]
     cmp al, ' '
     je have_name
@@ -364,7 +365,7 @@ check_proc:
     mov [rdi], al
     inc rdi
     inc rsi
-    jmp @n
+    jmp name_loop
 have_name:
     mov byte ptr [rdi], 0
     cmp byte ptr [lineBuf], 0
@@ -380,8 +381,8 @@ process_line endp
 process_file proc uses rax rbx rcx rdx rsi rdi, psz_local:QWORD
     ; open file for read
     sub rsp, 32
-    mov rcx, psz
-    mov rdx, GENERIC_READ
+    mov rcx, psz_local
+    mov edx, GENERIC_READ
     mov r8, FILE_SHARE_READ
     mov r9, 0
     mov qword ptr [rsp+20h], OPEN_EXISTING
@@ -454,7 +455,7 @@ write_header proc uses rax rbx rcx rdx rsi rdi
     ; open output file
     sub rsp, 32
     mov rcx, OFFSET outPath
-    mov rdx, GENERIC_WRITE
+    mov edx, GENERIC_WRITE
     mov r8, 0
     mov r9, 0
     mov qword ptr [rsp+20h], CREATE_ALWAYS
@@ -497,13 +498,13 @@ next_sym:
     lea rbx, [rdi+10]
     ; copy symbol
     xor rax, rax
-@@c1:
+copy_loop1:
     mov al, [rsi+rax]
     mov [rbx+rax], al
     test al, al
     jz @f
     inc rax
-    jmp @c1
+    jmp copy_loop1
 @@:
     ; append :PROC\r\n
     mov byte ptr [rbx+rax], ':'
@@ -522,13 +523,13 @@ next_sym:
     mov rdi, OFFSET lineBuf
     ; copy symbol
     xor rax, rax
-@@c2:
+copy_loop2:
     mov al, [rsi+rax]
     mov [rdi+rax], al
     test al, al
     jz @f
     inc rax
-    jmp @c2
+    jmp copy_loop2
 @@:
     mov byte ptr [rdi+rax], ' '
     mov byte ptr [rdi+rax+1], 'P'
@@ -544,11 +545,11 @@ next_sym:
     call writeZ
 
     ; move rsi to next symbol (skip until null then +1)
-@@skip:
+skip_loop:
     cmp byte ptr [rsi], 0
     je @f
     inc rsi
-    jmp @skip
+    jmp skip_loop
 @@:
     inc rsi
     jmp next_sym
@@ -562,14 +563,18 @@ wh_done:
 write_header endp
 
 ; build search pattern into searchPattern = inDir + "\\*.asm"
-build_pattern proc uses rax rcx rdx
+build_pattern proc
+    push rax
+    push rcx
+    push rdx
     lea rcx, inDir
     call strlenA
     lea rdx, inDir
     ; ensure trailing backslash
     cmp rax, 0
     je copy_suffix
-    mov cl, [rdx+rax-1]
+    dec rax
+    mov cl, byte ptr [rdx+rax]
     cmp cl, '\\'
     je copy_suffix
     ; append backslash
@@ -583,11 +588,18 @@ copy_suffix:
     lea rcx, searchPattern
     lea rdx, patternSuffix
     call strcatA
+    pop rdx
+    pop rcx
+    pop rax
     ret
 build_pattern endp
 
 ; Build file path = inDir + "\\" + findData.cFileName
-build_filepath proc uses rax rbx rcx rdx
+build_filepath proc
+    push rax
+    push rbx
+    push rcx
+    push rdx
     ; copy inDir to filePath
     lea rcx, filePath
     lea rdx, inDir
@@ -598,7 +610,8 @@ build_filepath proc uses rax rbx rcx rdx
     lea rdx, filePath
     cmp rax, 0
     je append_name
-    mov cl, [rdx+rax-1]
+    dec rax
+    mov cl, byte ptr [rdx+rax]
     cmp cl, '\\'
     je append_name
     lea rcx, filePath
@@ -611,11 +624,21 @@ append_name:
     lea rcx, filePath
     mov rdx, rbx
     call strcatA
+    pop rdx
+    pop rcx
+    pop rbx
+    pop rax
     ret
 build_filepath endp
 
 ; Minimal command line parse: expects two args after program name
-parse_args proc uses rax rbx rcx rdx rsi rdi
+parse_args proc
+    push rax
+    push rbx
+    push rcx
+    push rdx
+    push rsi
+    push rdi
     sub rsp, 32
     call GetCommandLineA
     add rsp, 32
@@ -625,40 +648,40 @@ parse_args proc uses rax rbx rcx rdx rsi rdi
     cmp al, '"'
     jne skip1
     inc rsi
-@@q1:
+quote_loop:
     mov al, [rsi]
     test al, al
     jz usage
     cmp al, '"'
     je @f
     inc rsi
-    jmp @q1
+    jmp quote_loop
 @@:
     inc rsi
     jmp sp1
 skip1:
-@@s1:
+skip_loop1:
     mov al, [rsi]
     test al, al
     jz usage
     cmp al, ' '
     je sp1
     inc rsi
-    jmp @s1
+    jmp skip_loop1
 sp1:
     ; skip spaces
-@@sk1:
+space_loop1:
     mov al, [rsi]
     test al, al
     jz usage
     cmp al, ' '
     jne arg1
     inc rsi
-    jmp @sk1
+    jmp space_loop1
 arg1:
     ; read arg1 to inDir until space
     mov rdi, OFFSET inDir
-@@a1:
+arg1_loop:
     mov al, [rsi]
     test al, al
     jz end_a1
@@ -667,21 +690,21 @@ arg1:
     mov [rdi], al
     inc rdi
     inc rsi
-    jmp @a1
+    jmp arg1_loop
 end_a1:
     mov byte ptr [rdi], 0
     ; skip spaces to arg2
-@@sk2:
+space_loop2:
     mov al, [rsi]
     test al, al
     jz usage
     cmp al, ' '
     jne arg2
     inc rsi
-    jmp @sk2
+    jmp space_loop2
 arg2:
     mov rdi, OFFSET outPath
-@@a2:
+arg2_loop:
     mov al, [rsi]
     test al, al
     jz end_a2
@@ -690,9 +713,15 @@ arg2:
     mov [rdi], al
     inc rdi
     inc rsi
-    jmp @a2
+    jmp arg2_loop
 end_a2:
     mov byte ptr [rdi], 0
+    pop rdi
+    pop rsi
+    pop rdx
+    pop rcx
+    pop rbx
+    pop rax
     ret
 usage:
     ; print usage and exit with code 1

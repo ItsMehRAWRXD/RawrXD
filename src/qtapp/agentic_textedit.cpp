@@ -62,7 +62,7 @@ public:
     }
 };
 
-AgenticTextEdit::AgenticTextEdit(QWidget* parent)
+AgenticTextEditLegacy::AgenticTextEditLegacy(QWidget* parent)
     : QTextEdit(parent)
     , m_lspClient(nullptr)
     , m_highlighter(nullptr)
@@ -71,7 +71,7 @@ AgenticTextEdit::AgenticTextEdit(QWidget* parent)
     setTabStopDistance(40);  // 4 spaces
 }
 
-void AgenticTextEdit::initialize()
+void AgenticTextEditLegacy::initialize()
 {
     // Set up syntax highlighting
     if (!m_highlighter) {
@@ -84,7 +84,7 @@ void AgenticTextEdit::initialize()
     });
 }
 
-void AgenticTextEdit::setLSPClient(LSPClient* client)
+void AgenticTextEditLegacy::setLSPClient(LSPClient* client)
 {
     m_lspClient = client;
     if (m_lspClient) {
@@ -93,7 +93,7 @@ void AgenticTextEdit::setLSPClient(LSPClient* client)
     }
 }
 
-void AgenticTextEdit::setDocumentUri(const QString& uri)
+void AgenticTextEditLegacy::setDocumentUri(const QString& uri)
 {
     m_documentUri = uri;
     if (m_lspClient) {
@@ -102,7 +102,7 @@ void AgenticTextEdit::setDocumentUri(const QString& uri)
     }
 }
 
-void AgenticTextEdit::applyCompletion(const QString& completion)
+void AgenticTextEditLegacy::applyCompletion(const QString& completion)
 {
     QTextCursor cursor = textCursor();
     
@@ -114,34 +114,34 @@ void AgenticTextEdit::applyCompletion(const QString& completion)
     setTextCursor(cursor);
 }
 
-void AgenticTextEdit::applySyntaxFix(const QString& fixedCode)
+void AgenticTextEditLegacy::applySyntaxFix(const QString& fixedCode)
 {
     setPlainText(fixedCode);
     emit syntaxFixed();
 }
 
-void AgenticTextEdit::showCodeLens(const QString& hint)
+void AgenticTextEditLegacy::showCodeLens(const QString& hint)
 {
     // Display code lens hint above current line
     emit codeLensUpdated(hint);
 }
 
-QString AgenticTextEdit::getSelectedText() const
+QString AgenticTextEditLegacy::getSelectedText() const
 {
     return textCursor().selectedText();
 }
 
-int AgenticTextEdit::getCurrentLineNumber() const
+int AgenticTextEditLegacy::getCurrentLineNumber() const
 {
     return textCursor().blockNumber() + 1;
 }
 
-int AgenticTextEdit::getCurrentColumnNumber() const
+int AgenticTextEditLegacy::getCurrentColumnNumber() const
 {
     return textCursor().positionInBlock() + 1;
 }
 
-QString AgenticTextEdit::getLineText(int lineNumber) const
+QString AgenticTextEditLegacy::getLineText(int lineNumber) const
 {
     if (lineNumber < 1) return "";
     
@@ -150,7 +150,7 @@ QString AgenticTextEdit::getLineText(int lineNumber) const
     return block.text();
 }
 
-void AgenticTextEdit::insertAtLine(int lineNumber, const QString& text)
+void AgenticTextEditLegacy::insertAtLine(int lineNumber, const QString& text)
 {
     QTextDocument* doc = document();
     QTextBlock block = doc->findBlockByLineNumber(lineNumber - 1);
@@ -162,7 +162,7 @@ void AgenticTextEdit::insertAtLine(int lineNumber, const QString& text)
     }
 }
 
-void AgenticTextEdit::replaceLine(int lineNumber, const QString& text)
+void AgenticTextEditLegacy::replaceLine(int lineNumber, const QString& text)
 {
     QTextDocument* doc = document();
     QTextBlock block = doc->findBlockByLineNumber(lineNumber - 1);
@@ -174,7 +174,7 @@ void AgenticTextEdit::replaceLine(int lineNumber, const QString& text)
     }
 }
 
-void AgenticTextEdit::deleteRange(int startLine, int startCol, int endLine, int endCol)
+void AgenticTextEditLegacy::deleteRange(int startLine, int startCol, int endLine, int endCol)
 {
     QTextDocument* doc = document();
     

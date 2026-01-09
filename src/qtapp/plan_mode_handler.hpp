@@ -22,10 +22,10 @@ class MetaPlanner;
 class QPlainTextEdit;
 
 /**
- * @struct PlanStep
+ * @struct DraftPlanStep
  * @brief Represents a single step in the generated plan
  */
-struct PlanStep {
+struct DraftPlanStep {
     int id;                        ///< Step ID (1-based)
     QString title;                 ///< Short step description
     QString description;           ///< Detailed description
@@ -36,13 +36,13 @@ struct PlanStep {
 };
 
 /**
- * @struct Plan
+ * @struct DraftPlan
  * @brief Represents the complete generated plan
  */
-struct Plan {
+struct DraftPlan {
     QString title;                 ///< Plan title
     QString description;           ///< Overall description
-    QVector<PlanStep> steps;       ///< Ordered steps
+    QVector<DraftPlanStep> steps;       ///< Ordered steps
     QString estimatedTotalTime;    ///< Total time estimate
     float confidence;              ///< Plan confidence score (0-100)
     QString assumptions;           ///< Assumptions the plan makes
@@ -71,7 +71,7 @@ public:
      * @brief Get the current plan being reviewed
      * @return Reference to current plan
      */
-    const Plan& getCurrentPlan() const { return m_currentPlan; }
+    const DraftPlan& getCurrentPlan() const { return m_currentPlan; }
 
     /**
      * @brief Check if plan is complete and ready for execution
@@ -115,10 +115,10 @@ signals:
     void planGenerationStarted();
 
     /// Plan step generated (streamed)
-    void planStepGenerated(const PlanStep& step);
+    void planStepGenerated(const DraftPlanStep& step);
 
     /// Plan generation completed
-    void planGenerationCompleted(const Plan& plan);
+    void planGenerationCompleted(const DraftPlan& plan);
 
     /// Plan displayed and waiting for user approval
     void planWaitingForApproval();
@@ -140,10 +140,10 @@ private slots:
     void onResearchCompleted(const QString& researchResults);
 
     /// Handle planner generating a plan step
-    void onPlanStepGenerated(const PlanStep& step);
+    void onPlanStepGenerated(const DraftPlanStep& step);
 
     /// Handle planner completing plan generation
-    void onPlanCompleted(const Plan& plan);
+    void onPlanCompleted(const DraftPlan& plan);
 
     /// Handle AI backend streaming a plan line
     void onStreamToken(qint64 reqId, const QString& token);
@@ -162,12 +162,12 @@ private:
      * @brief Validate plan structure
      * @return True if plan is well-formed
      */
-    bool validatePlan(const Plan& plan);
+    bool validatePlan(const DraftPlan& plan);
 
     // Members
     UnifiedBackend* m_backend;          ///< AI backend for planning
     MetaPlanner* m_planner;             ///< Planning engine
-    Plan m_currentPlan;                 ///< Currently generated plan
+    DraftPlan m_currentPlan;                 ///< Currently generated plan
     bool m_planReady;                   ///< Plan approved and ready
     QString m_userWish;                 ///< Original user request
     QString m_researchContext;          ///< Context from workspace research
