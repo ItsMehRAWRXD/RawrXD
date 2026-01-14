@@ -4,6 +4,8 @@
 #include "tokenizer_selector.h"
 #include "ci_cd_settings.h"
 #include "masm_feature_settings_panel.hpp"
+#include "integration/ProdIntegration.h"
+#include "integration/InitializationTracker.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QTabWidget>
@@ -28,6 +30,7 @@ SettingsDialog::SettingsDialog(QWidget *parent)
 }
 
 void SettingsDialog::initialize() {
+    RAWRXD_INIT_TIMED("SettingsDialog");
     if (m_autoSaveCheck) return;  // Already initialized
     
     setupUI();
@@ -36,6 +39,7 @@ void SettingsDialog::initialize() {
 
 void SettingsDialog::setupUI()
 {
+    RAWRXD_TIMED_FUNC();
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     
     // Create tab widget
@@ -64,6 +68,9 @@ void SettingsDialog::setupUI()
     
     // Enterprise Settings Tab
     tabWidget->addTab(createEnterpriseTab(), "Enterprise");
+    
+    // Theme Settings Tab
+    tabWidget->addTab(createThemeTab(), "Appearance");
     
     mainLayout->addWidget(tabWidget);
     
@@ -355,6 +362,7 @@ QWidget* SettingsDialog::createCICDTab()
 
 void SettingsDialog::loadSettings()
 {
+    RAWRXD_TIMED_FUNC();
     if (!m_settings) return;
     
     // Load from QSettings or default values
@@ -418,6 +426,7 @@ void SettingsDialog::saveSettings()
 
 void SettingsDialog::applySettings()
 {
+    RAWRXD_TIMED_FUNC();
     if (!m_settings) return;
     
     // Save to QSettings with safety checks
@@ -567,4 +576,10 @@ QWidget* SettingsDialog::createEnterpriseTab()
     layout->addStretch();
     
     return tab;
+}
+
+QWidget* SettingsDialog::createThemeTab()
+{
+    m_themePanel = new RawrXD::ThemeConfigurationPanel(this);
+    return m_themePanel;
 }

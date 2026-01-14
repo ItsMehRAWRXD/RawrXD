@@ -17,9 +17,9 @@
 option casemap:none
 
 ; External memory functions (provided by malloc_wrapper.asm)
-EXTERN malloc:PROC
-EXTERN free:PROC
-EXTERN realloc:PROC
+extern masm_malloc : proc
+extern masm_free : proc
+extern masm_realloc : proc
 
 ; Include Qt compatibility layer definitions
 include windows.inc
@@ -347,7 +347,6 @@ CHAT_HISTORY ENDS
 ;==========================================================================
 ; INITIALIZATION & CLEANUP
 ;==========================================================================
-
 PUBLIC qt_foundation_init
 qt_foundation_init PROC
     ; Initialize memory pools, event queue, window classes, default theme
@@ -402,7 +401,6 @@ qt_foundation_init PROC
     pop rbx
     ret
 qt_foundation_init ENDP
-
 PUBLIC qt_foundation_cleanup
 qt_foundation_cleanup PROC
     ; Clean up all objects, free pools, cleanup queues
@@ -445,7 +443,6 @@ qt_foundation_cleanup ENDP
 ;==========================================================================
 ; OBJECT CREATION/DESTRUCTION
 ;==========================================================================
-
 PUBLIC object_create
 object_create PROC
     ; Create a new object
@@ -466,7 +463,7 @@ object_create PROC
     
     ; Allocate WIDGET from widget pool (256 bytes typical)
     mov rax, 256
-    call malloc                 ; RCX = size_val → RAX = ptr or 0
+    call masm_malloc                 ; RCX = size_val → RAX = ptr or 0
     test rax, rax
     jz create_error
     
@@ -486,7 +483,7 @@ try_dialog:
     
     ; Allocate DIALOG (320 bytes typical)
     mov rax, 320
-    call malloc
+    call masm_malloc
     test rax, rax
     jz create_error
     
@@ -501,7 +498,7 @@ try_menu:
     
     ; Allocate MENU (256 bytes typical)
     mov rax, 256
-    call malloc
+    call masm_malloc
     test rax, rax
     jz create_error
     
@@ -531,7 +528,6 @@ create_error:
     pop rbx
     ret
 object_create ENDP
-
 PUBLIC object_destroy
 object_destroy PROC
     ; Destroy an object and its children
@@ -573,7 +569,7 @@ destroy_self:
 free_memory:
     ; Free object memory
     mov rcx, r12
-    call free
+    call masm_free
     
 destroy_ok:
     xor eax, eax
@@ -586,7 +582,6 @@ object_destroy ENDP
 ;==========================================================================
 ; EVENT HANDLING
 ;==========================================================================
-
 PUBLIC post_event
 post_event PROC
     ; Post event to queue for deferred processing
@@ -602,7 +597,7 @@ post_event PROC
     
     ; Allocate EVENT_ITEM structure (64 bytes)
     mov rax, 64
-    call malloc
+    call masm_malloc
     test rax, rax
     jz post_error
     
@@ -653,7 +648,6 @@ post_error:
     pop rbx
     ret
 post_event ENDP
-
 PUBLIC process_events
 process_events PROC
     ; Process all queued events
@@ -708,7 +702,7 @@ process_loop:
     
 skip_dispatch:
     mov rcx, rbx
-    call free                   ; Free event item
+    call masm_free                   ; Free event item
     inc r13                      ; Increment counter
     jmp process_loop
     
@@ -724,7 +718,6 @@ process_events ENDP
 ;==========================================================================
 ; SIGNAL/SLOT BINDING
 ;==========================================================================
-
 PUBLIC connect_signal
 connect_signal PROC
     ; Connect a signal to a slot
@@ -739,7 +732,7 @@ connect_signal PROC
     
     ; Allocate SLOT_BINDING structure (64 bytes)
     mov rax, 64
-    call malloc
+    call masm_malloc
     test rax, rax
     jz connect_error
     
@@ -765,7 +758,6 @@ connect_error:
     pop rbx
     ret
 connect_signal ENDP
-
 PUBLIC emit_signal
 emit_signal PROC
     ; Emit a signal and call all connected slots
@@ -827,7 +819,6 @@ emit_signal ENDP
 ;==========================================================================
 ; WIDGET GEOMETRY MANAGEMENT
 ;==========================================================================
-
 PUBLIC widget_set_geometry
 widget_set_geometry PROC
     ; Set widget position and size_val
@@ -858,7 +849,6 @@ widget_set_geometry PROC
     pop rbx
     ret
 widget_set_geometry ENDP
-
 PUBLIC widget_get_geometry
 widget_get_geometry PROC
     ; Get widget geometry
@@ -886,7 +876,6 @@ widget_get_geometry ENDP
 ;==========================================================================
 ; THEME/COLOR MANAGEMENT
 ;==========================================================================
-
 PUBLIC set_color_scheme
 set_color_scheme PROC
     ; Set global color scheme
@@ -924,7 +913,6 @@ set_color_scheme PROC
     pop rbx
     ret
 set_color_scheme ENDP
-
 PUBLIC get_color_scheme
 get_color_scheme PROC
     ; Get current color scheme
@@ -937,7 +925,6 @@ get_color_scheme ENDP
 ;==========================================================================
 ; FILE OPERATIONS - Support for file browser
 ;==========================================================================
-
 PUBLIC enumerate_files
 enumerate_files PROC
     ; Enumerate files in_val directory
@@ -973,7 +960,6 @@ enumerate_files ENDP
 ;==========================================================================
 ; THREADING UTILITIES
 ;==========================================================================
-
 PUBLIC create_thread
 create_thread PROC
     ; Create a new thread
@@ -986,7 +972,7 @@ create_thread PROC
     
     ; Allocate THREAD_CONTEXT structure (96 bytes)
     mov rax, 96
-    call malloc
+    call masm_malloc
     test rax, rax
     jz thread_error
     
@@ -1019,7 +1005,6 @@ thread_error:
     pop rbx
     ret
 create_thread ENDP
-
 PUBLIC wait_thread
 wait_thread PROC
     ; Wait for thread to complete
@@ -1046,7 +1031,6 @@ wait_thread ENDP
 ;==========================================================================
 ; CHAT INTEGRATION
 ;==========================================================================
-
 PUBLIC create_chat_history
 create_chat_history PROC
     ; Create new chat history
@@ -1058,7 +1042,7 @@ create_chat_history PROC
     
     ; Allocate CHAT_HISTORY structure (96 bytes)
     mov rax, 96
-    call malloc
+    call masm_malloc
     test rax, rax
     jz chat_alloc_error
     
@@ -1066,7 +1050,7 @@ create_chat_history PROC
     
     ; Allocate message array (100 messages * 64 bytes = 6400 bytes)
     mov rcx, 6400
-    call malloc
+    call masm_malloc
     test rax, rax
     jz chat_array_error
     
@@ -1088,7 +1072,7 @@ create_chat_history PROC
 chat_array_error:
     ; Free history if array allocation failed
     mov rcx, r12
-    call free
+    call masm_free
     
 chat_alloc_error:
     xor eax, eax
@@ -1097,7 +1081,6 @@ chat_alloc_error:
     pop rbx
     ret
 create_chat_history ENDP
-
 PUBLIC add_chat_message
 add_chat_message PROC
     ; Add message to chat history
@@ -1156,4 +1139,8 @@ msg_full:
 add_chat_message ENDP
 
 END
+
+
+
+
 

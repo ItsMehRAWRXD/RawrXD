@@ -1,5 +1,6 @@
 ; autonomous_task_executor_clean.asm - Complete production-ready task executor
 ; Provides autonomous task scheduling with full queue management, threading, and retry logic
+; NOTE: Exports use _impl suffix to avoid conflicts with stubs in autonomous_task_executor.asm
 
 option casemap:none
 
@@ -31,7 +32,7 @@ EXTERN masm_detect_failure:PROC
 EXTERN masm_puppeteer_correct_response:PROC
 
 ; Task structure (64 bytes)
-TASK_ENTRY STRUCT
+TASK_ENTRY_IMPL STRUCT
     task_id         QWORD ?     ; Unique task ID
     goal_ptr        QWORD ?     ; Pointer to goal string
     priority        DWORD ?     ; Task priority (0-10)
@@ -41,30 +42,30 @@ TASK_ENTRY STRUCT
     status          DWORD ?     ; 0=pending, 1=running, 2=complete, 3=failed
     created_time    QWORD ?     ; Creation timestamp
     next_task       QWORD ?     ; Pointer to next task
-TASK_ENTRY ENDS
+TASK_ENTRY_IMPL ENDS
 
 ; Task queue structure
-TASK_QUEUE STRUCT
+TASK_QUEUE_IMPL STRUCT
     head            QWORD ?     ; Head of queue
     tail            QWORD ?     ; Tail of queue
     count           DWORD ?     ; Number of tasks
     max_tasks       DWORD ?     ; Maximum tasks
     queue_mutex     QWORD ?     ; Mutex for thread safety
-TASK_QUEUE ENDS
+TASK_QUEUE_IMPL ENDS
 
 .data?
-g_task_queue        TASK_QUEUE <>
-g_worker_thread     QWORD ?
-g_shutdown_event    QWORD ?
-g_task_event        QWORD ?
-g_next_task_id      QWORD ?
+g_task_queue_impl        TASK_QUEUE_IMPL <>
+g_worker_thread_impl     QWORD ?
+g_shutdown_event_impl    QWORD ?
+g_task_event_impl        QWORD ?
+g_next_task_id_impl      QWORD ?
 
 .code
 
-; autonomous_task_schedule(goal: LPCSTR, priority: DWORD, autoRetry: BYTE)
-; Schedule a task for autonomous execution
-PUBLIC autonomous_task_schedule
-autonomous_task_schedule PROC
+; autonomous_task_schedule_impl(goal: LPCSTR, priority: DWORD, autoRetry: BYTE)
+; Schedule a task for autonomous execution - full implementation
+PUBLIC autonomous_task_schedule_impl
+autonomous_task_schedule_impl PROC
     push rbx
     push rsi
     push rdi
@@ -75,7 +76,7 @@ autonomous_task_schedule PROC
     mov edi, r8d        ; auto retry
     
     ; Allocate task entry
-    mov rcx, SIZEOF TASK_ENTRY
+    mov rcx, SIZEOF TASK_ENTRY_IMPL
     call asm_malloc
     test rax, rax
     jz schedule_fail
@@ -83,65 +84,65 @@ autonomous_task_schedule PROC
     mov r9, rax         ; task entry
     
     ; Generate unique task ID
-    mov rcx, [g_next_task_id]
+    mov rcx, [g_next_task_id_impl]
     inc rcx
-    mov [g_next_task_id], rcx
-    mov [r9 + TASK_ENTRY.task_id], rcx
+    mov [g_next_task_id_impl], rcx
+    mov [r9 + TASK_ENTRY_IMPL.task_id], rcx
     
     ; Fill task entry
-    mov [r9 + TASK_ENTRY.goal_ptr], rbx
-    mov [r9 + TASK_ENTRY.priority], esi
-    mov [r9 + TASK_ENTRY.auto_retry], edi
-    mov DWORD PTR [r9 + TASK_ENTRY.retry_count], 0
-    mov DWORD PTR [r9 + TASK_ENTRY.max_retries], 3
-    mov DWORD PTR [r9 + TASK_ENTRY.status], 0  ; pending
-    mov QWORD PTR [r9 + TASK_ENTRY.next_task], 0
+    mov [r9 + TASK_ENTRY_IMPL.goal_ptr], rbx
+    mov [r9 + TASK_ENTRY_IMPL.priority], esi
+    mov [r9 + TASK_ENTRY_IMPL.auto_retry], edi
+    mov DWORD PTR [r9 + TASK_ENTRY_IMPL.retry_count], 0
+    mov DWORD PTR [r9 + TASK_ENTRY_IMPL.max_retries], 3
+    mov DWORD PTR [r9 + TASK_ENTRY_IMPL.status], 0  ; pending
+    mov QWORD PTR [r9 + TASK_ENTRY_IMPL.next_task], 0
     
     ; Get timestamp
     sub rsp, 20h
     call GetTickCount
     add rsp, 20h
-    mov [r9 + TASK_ENTRY.created_time], rax
+    mov [r9 + TASK_ENTRY_IMPL.created_time], rax
     
     ; Add to queue (thread-safe)
-    mov rcx, [g_task_queue.queue_mutex]
+    mov rcx, [g_task_queue_impl.queue_mutex]
     call asm_mutex_lock
     
     ; Add to tail of queue
-    mov rax, [g_task_queue.tail]
+    mov rax, [g_task_queue_impl.tail]
     test rax, rax
     jz queue_empty
     
     ; Queue not empty, add to tail
-    mov [rax + TASK_ENTRY.next_task], r9
-    mov [g_task_queue.tail], r9
+    mov [rax + TASK_ENTRY_IMPL.next_task], r9
+    mov [g_task_queue_impl.tail], r9
     jmp queue_added
     
 queue_empty:
     ; Queue empty, set as head and tail
-    mov [g_task_queue.head], r9
-    mov [g_task_queue.tail], r9
+    mov [g_task_queue_impl.head], r9
+    mov [g_task_queue_impl.tail], r9
     
 queue_added:
-    inc [g_task_queue.count]
+    inc [g_task_queue_impl.count]
     
-    mov rcx, [g_task_queue.queue_mutex]
+    mov rcx, [g_task_queue_impl.queue_mutex]
     call asm_mutex_unlock
     
     ; Signal worker thread
-    mov rcx, [g_task_event]
+    mov rcx, [g_task_event_impl]
     sub rsp, 20h
     call SetEvent
     add rsp, 20h
     
     ; Log the scheduling request
-    lea rcx, szTaskScheduled
+    lea rcx, szTaskScheduled_impl
     sub rsp, 20h
     call console_log
     add rsp, 20h
     
     ; Return task ID
-    mov rax, [r9 + TASK_ENTRY.task_id]
+    mov rax, [r9 + TASK_ENTRY_IMPL.task_id]
     jmp schedule_done
     
 schedule_fail:
@@ -153,7 +154,7 @@ schedule_done:
     pop rsi
     pop rbx
     ret
-autonomous_task_schedule ENDP
+autonomous_task_schedule_impl ENDP
 
 ; task_worker_thread() - Main worker thread function
 ALIGN 16
@@ -165,9 +166,9 @@ task_worker_thread PROC
 worker_loop:
     ; Wait for task event or shutdown event - build handles array
     sub rsp, 40h            ; local space + shadow
-    mov rax, [g_task_event]
+    mov rax, [g_task_event_impl]
     mov [rsp+20h], rax      ; handles[0] = task_event
-    mov rax, [g_shutdown_event]
+    mov rax, [g_shutdown_event_impl]
     mov [rsp+28h], rax      ; handles[1] = shutdown_event
     
     mov ecx, 2              ; nCount = 2
@@ -186,26 +187,26 @@ worker_loop:
     ; Process tasks
 process_tasks:
     ; Get next task from queue
-    mov rcx, [g_task_queue.queue_mutex]
+    mov rcx, [g_task_queue_impl.queue_mutex]
     call asm_mutex_lock
     
-    mov rbx, [g_task_queue.head]
+    mov rbx, [g_task_queue_impl.head]
     test rbx, rbx
     jz no_tasks
     
     ; Remove from head
-    mov rax, [rbx + TASK_ENTRY.next_task]
-    mov [g_task_queue.head], rax
+    mov rax, [rbx + TASK_ENTRY_IMPL.next_task]
+    mov [g_task_queue_impl.head], rax
     
     ; If queue now empty, clear tail
     test rax, rax
     jnz queue_not_empty
-    mov QWORD PTR [g_task_queue.tail], 0
+    mov QWORD PTR [g_task_queue_impl.tail], 0
     
 queue_not_empty:
-    dec [g_task_queue.count]
+    dec [g_task_queue_impl.count]
     
-    mov rcx, [g_task_queue.queue_mutex]
+    mov rcx, [g_task_queue_impl.queue_mutex]
     call asm_mutex_unlock
     
     ; Execute task
@@ -219,7 +220,7 @@ queue_not_empty:
     jmp process_tasks       ; Check for more tasks
     
 no_tasks:
-    mov rcx, [g_task_queue.queue_mutex]
+    mov rcx, [g_task_queue_impl.queue_mutex]
     call asm_mutex_unlock
     jmp worker_loop
     
@@ -246,7 +247,7 @@ execute_task PROC
     mov rbx, rcx            ; task entry
     
     ; Mark as running
-    mov DWORD PTR [rbx + TASK_ENTRY.status], 1
+    mov DWORD PTR [rbx + TASK_ENTRY_IMPL.status], 1
     
     ; Log task execution
     lea rcx, szTaskExecuting
@@ -255,7 +256,7 @@ execute_task PROC
     add rsp, 20h
     
     ; Execute task via AgenticEngine (real implementation)
-    mov rcx, [rbx + TASK_ENTRY.goal_ptr]
+    mov rcx, [rbx + TASK_ENTRY_IMPL.goal_ptr]
     sub rsp, 20h
     call AgenticEngine_ExecuteTask
     add rsp, 20h
@@ -270,7 +271,7 @@ execute_task PROC
     jnz task_failed         ; Non-zero = failure detected
     
     ; Task succeeded
-    mov DWORD PTR [rbx + TASK_ENTRY.status], 2  ; complete
+    mov DWORD PTR [rbx + TASK_ENTRY_IMPL.status], 2  ; complete
     lea rcx, szTaskComplete
     sub rsp, 20h
     call console_log
@@ -279,15 +280,15 @@ execute_task PROC
     
 task_failed:
     ; Task failed, check retry
-    mov eax, [rbx + TASK_ENTRY.retry_count]
+    mov eax, [rbx + TASK_ENTRY_IMPL.retry_count]
     inc eax
-    mov [rbx + TASK_ENTRY.retry_count], eax
+    mov [rbx + TASK_ENTRY_IMPL.retry_count], eax
     
-    cmp eax, [rbx + TASK_ENTRY.max_retries]
+    cmp eax, [rbx + TASK_ENTRY_IMPL.max_retries]
     jge task_max_retries
     
     ; Check auto retry flag
-    cmp DWORD PTR [rbx + TASK_ENTRY.auto_retry], 0
+    cmp DWORD PTR [rbx + TASK_ENTRY_IMPL.auto_retry], 0
     je task_no_retry
     
     ; Reschedule task
@@ -298,7 +299,7 @@ task_failed:
     
     ; Exponential backoff: 2^retry_count * 100ms
     mov ecx, 1
-    mov edx, [rbx + TASK_ENTRY.retry_count]
+    mov edx, [rbx + TASK_ENTRY_IMPL.retry_count]
     shl ecx, cl             ; 2^retry_count
     imul ecx, 100           ; * 100ms
     sub rsp, 20h
@@ -306,25 +307,25 @@ task_failed:
     add rsp, 20h
     
     ; Reset status to pending and re-queue
-    mov DWORD PTR [rbx + TASK_ENTRY.status], 0
+    mov DWORD PTR [rbx + TASK_ENTRY_IMPL.status], 0
     
     ; Re-add to queue (simplified - add to head for immediate retry)
-    mov rcx, [g_task_queue.queue_mutex]
+    mov rcx, [g_task_queue_impl.queue_mutex]
     call asm_mutex_lock
     
-    mov rax, [g_task_queue.head]
-    mov [rbx + TASK_ENTRY.next_task], rax
-    mov [g_task_queue.head], rbx
+    mov rax, [g_task_queue_impl.head]
+    mov [rbx + TASK_ENTRY_IMPL.next_task], rax
+    mov [g_task_queue_impl.head], rbx
     
     ; If queue was empty, set as tail too
-    cmp QWORD PTR [g_task_queue.tail], 0
+    cmp QWORD PTR [g_task_queue_impl.tail], 0
     jne retry_queue_done
-    mov [g_task_queue.tail], rbx
+    mov [g_task_queue_impl.tail], rbx
     
 retry_queue_done:
-    inc [g_task_queue.count]
+    inc [g_task_queue_impl.count]
     
-    mov rcx, [g_task_queue.queue_mutex]
+    mov rcx, [g_task_queue_impl.queue_mutex]
     call asm_mutex_unlock
     
     jmp execute_done
@@ -332,7 +333,7 @@ retry_queue_done:
 task_max_retries:
 task_no_retry:
     ; Task permanently failed
-    mov DWORD PTR [rbx + TASK_ENTRY.status], 3  ; failed
+    mov DWORD PTR [rbx + TASK_ENTRY_IMPL.status], 3  ; failed
     lea rcx, szTaskFailed
     sub rsp, 20h
     call console_log
@@ -345,8 +346,8 @@ execute_done:
 execute_task ENDP
 
 ; ai_orchestration_coordinator_init() - Initialize coordinator
-PUBLIC ai_orchestration_coordinator_init
-ai_orchestration_coordinator_init PROC
+PUBLIC ai_orchestration_coordinator_init_impl
+ai_orchestration_coordinator_init_impl PROC
     push rbx
     sub rsp, 32
     
@@ -354,13 +355,13 @@ ai_orchestration_coordinator_init PROC
     call asm_mutex_create
     test rax, rax
     jz init_fail
-    mov [g_task_queue.queue_mutex], rax
+    mov [g_task_queue_impl.queue_mutex], rax
     
     ; Initialize queue
-    mov QWORD PTR [g_task_queue.head], 0
-    mov QWORD PTR [g_task_queue.tail], 0
-    mov DWORD PTR [g_task_queue.count], 0
-    mov DWORD PTR [g_task_queue.max_tasks], 100
+    mov QWORD PTR [g_task_queue_impl.head], 0
+    mov QWORD PTR [g_task_queue_impl.tail], 0
+    mov DWORD PTR [g_task_queue_impl.count], 0
+    mov DWORD PTR [g_task_queue_impl.max_tasks], 100
     
     ; Create task event (auto-reset, initially nonsignaled)
     xor rcx, rcx                    ; lpSecurityAttributes = NULL
@@ -372,7 +373,7 @@ ai_orchestration_coordinator_init PROC
     add rsp, 20h
     test rax, rax
     jz init_fail
-    mov [g_task_event], rax
+    mov [g_task_event_impl], rax
     
     ; Create shutdown event (manual-reset, initially nonsignaled)
     xor rcx, rcx                    ; lpSecurityAttributes = NULL
@@ -384,7 +385,7 @@ ai_orchestration_coordinator_init PROC
     add rsp, 20h
     test rax, rax
     jz init_fail
-    mov [g_shutdown_event], rax
+    mov [g_shutdown_event_impl], rax
     
     ; Create worker thread
     ; HANDLE CreateThread(lpAttr, dwStackSize, lpStartAddr, lpParam, dwFlags, lpThreadId)
@@ -399,10 +400,10 @@ ai_orchestration_coordinator_init PROC
     add rsp, 30h
     test rax, rax
     jz init_fail
-    mov [g_worker_thread], rax
+    mov [g_worker_thread_impl], rax
     
     ; Initialize task ID counter
-    mov qword ptr [g_next_task_id], 1000
+    mov qword ptr [g_next_task_id_impl], 1000
     
     ; Log initialization
     lea rcx, szInitComplete
@@ -420,7 +421,7 @@ init_done:
     add rsp, 32
     pop rbx
     ret
-ai_orchestration_coordinator_init ENDP
+ai_orchestration_coordinator_init_impl ENDP
 
 ; ai_orchestration_coordinator_shutdown() - Cleanup coordinator
 PUBLIC ai_orchestration_coordinator_shutdown
@@ -429,7 +430,7 @@ ai_orchestration_coordinator_shutdown PROC
     sub rsp, 32
     
     ; Signal shutdown
-    mov rcx, [g_shutdown_event]
+    mov rcx, [g_shutdown_event_impl]
     test rcx, rcx
     jz shutdown_no_event
     sub rsp, 20h
@@ -438,7 +439,7 @@ ai_orchestration_coordinator_shutdown PROC
     
 shutdown_no_event:
     ; Wait for worker thread to finish
-    mov rcx, [g_worker_thread]
+    mov rcx, [g_worker_thread_impl]
     test rcx, rcx
     jz shutdown_no_thread
     
@@ -447,14 +448,14 @@ shutdown_no_event:
     call WaitForSingleObject
     add rsp, 20h
     
-    mov rcx, [g_worker_thread]
+    mov rcx, [g_worker_thread_impl]
     sub rsp, 20h
     call CloseHandle
     add rsp, 20h
     
 shutdown_no_thread:
     ; Close events
-    mov rcx, [g_task_event]
+    mov rcx, [g_task_event_impl]
     test rcx, rcx
     jz shutdown_no_task_event
     sub rsp, 20h
@@ -462,7 +463,7 @@ shutdown_no_thread:
     add rsp, 20h
     
 shutdown_no_task_event:
-    mov rcx, [g_shutdown_event]
+    mov rcx, [g_shutdown_event_impl]
     test rcx, rcx
     jz shutdown_no_shutdown_event
     sub rsp, 20h
@@ -471,7 +472,7 @@ shutdown_no_task_event:
     
 shutdown_no_shutdown_event:
     ; Clean up remaining tasks
-    mov rcx, [g_task_queue.queue_mutex]
+    mov rcx, [g_task_queue_impl.queue_mutex]
     test rcx, rcx
     jz shutdown_done
     
@@ -479,12 +480,12 @@ shutdown_no_shutdown_event:
     
     ; Free all remaining tasks
 cleanup_tasks:
-    mov rbx, [g_task_queue.head]
+    mov rbx, [g_task_queue_impl.head]
     test rbx, rbx
     jz cleanup_done
     
-    mov rax, [rbx + TASK_ENTRY.next_task]
-    mov [g_task_queue.head], rax
+    mov rax, [rbx + TASK_ENTRY_IMPL.next_task]
+    mov [g_task_queue_impl.head], rax
     
     mov rcx, rbx
     call asm_free
@@ -492,14 +493,14 @@ cleanup_tasks:
     jmp cleanup_tasks
     
 cleanup_done:
-    mov qword ptr [g_task_queue.tail], 0
-    mov dword ptr [g_task_queue.count], 0
+    mov qword ptr [g_task_queue_impl.tail], 0
+    mov dword ptr [g_task_queue_impl.count], 0
     
-    mov rcx, [g_task_queue.queue_mutex]
+    mov rcx, [g_task_queue_impl.queue_mutex]
     call asm_mutex_unlock
     
     ; Destroy mutex
-    mov rcx, [g_task_queue.queue_mutex]
+    mov rcx, [g_task_queue_impl.queue_mutex]
     call asm_mutex_destroy
     
     lea rcx, szShutdownComplete
@@ -526,20 +527,20 @@ get_task_queue_status PROC
     mov rbx, rcx
     
     ; Lock queue for reading
-    mov rcx, [g_task_queue.queue_mutex]
+    mov rcx, [g_task_queue_impl.queue_mutex]
     call asm_mutex_lock
     
     ; Copy queue status
-    mov eax, [g_task_queue.count]
+    mov eax, [g_task_queue_impl.count]
     mov [rbx], eax              ; current count
     
-    mov eax, [g_task_queue.max_tasks]
+    mov eax, [g_task_queue_impl.max_tasks]
     mov [rbx + 4], eax          ; max tasks
     
-    mov rax, [g_next_task_id]
+    mov rax, [g_next_task_id_impl]
     mov [rbx + 8], rax          ; next task ID
     
-    mov rcx, [g_task_queue.queue_mutex]
+    mov rcx, [g_task_queue_impl.queue_mutex]
     call asm_mutex_unlock
     
 status_done:
@@ -558,24 +559,24 @@ get_task_status PROC
     mov rsi, rcx                    ; task_id
     
     ; Lock queue for search
-    mov rcx, [g_task_queue.queue_mutex]
+    mov rcx, [g_task_queue_impl.queue_mutex]
     call asm_mutex_lock
     
     ; Search for task
-    mov rbx, [g_task_queue.head]
+    mov rbx, [g_task_queue_impl.head]
     
 search_loop:
     test rbx, rbx
     jz task_not_found
     
-    cmp [rbx + TASK_ENTRY.task_id], rsi
+    cmp [rbx + TASK_ENTRY_IMPL.task_id], rsi
     je task_found
     
-    mov rbx, [rbx + TASK_ENTRY.next_task]
+    mov rbx, [rbx + TASK_ENTRY_IMPL.next_task]
     jmp search_loop
     
 task_found:
-    mov eax, [rbx + TASK_ENTRY.status]
+    mov eax, [rbx + TASK_ENTRY_IMPL.status]
     jmp status_done
     
 task_not_found:
@@ -583,7 +584,7 @@ task_not_found:
     
 status_done:
     push rax
-    mov rcx, [g_task_queue.queue_mutex]
+    mov rcx, [g_task_queue_impl.queue_mutex]
     call asm_mutex_unlock
     pop rax
     
@@ -596,20 +597,20 @@ get_task_status ENDP
 ; get_queue_stats() -> eax (returns count)
 PUBLIC get_queue_stats
 get_queue_stats PROC
-    mov eax, [g_task_queue.count]
+    mov eax, [g_task_queue_impl.count]
     ret
 get_queue_stats ENDP
 
 ; output_pane_init() - Stub for compatibility
-PUBLIC output_pane_init
-output_pane_init PROC
+PUBLIC output_pane_init_impl
+output_pane_init_impl PROC
     mov eax, 1
     ret
-output_pane_init ENDP
+output_pane_init_impl ENDP
 
 .data
 ; String constants
-szTaskScheduled     DB "Task scheduled for autonomous execution", 0
+szTaskScheduled_impl     DB "Task scheduled for autonomous execution", 0
 szTaskExecuting     DB "Executing autonomous task", 0
 szTaskComplete      DB "Task completed successfully", 0
 szTaskFailed        DB "Task failed permanently", 0
@@ -619,4 +620,10 @@ szInitComplete      DB "AI Orchestration Coordinator initialized successfully", 
 szShutdownComplete  DB "AI Orchestration Coordinator shutdown complete", 0
 
 END
+
+
+
+
+
+
 

@@ -7,13 +7,16 @@
 
 option casemap:none
 
-include windows.inc
+; No windows.inc - define externals directly
 
 ;==========================================================================
 ; EXTERNAL DECLARATIONS
 ;==========================================================================
 EXTERN console_log:PROC
 EXTERN masm_signal_emit:PROC
+EXTERN CreateProcessA:PROC
+EXTERN WaitForSingleObject:PROC
+EXTERN CloseHandle:PROC
 
 ;==========================================================================
 ; DATA SECTION
@@ -84,4 +87,8 @@ agent_telemetry_init PROC
 agent_telemetry_init ENDP
 
 END
+
+
+
+
 

@@ -443,7 +443,7 @@ ui_get_input_text PROC
     
     ; Allocate buffer
     mov ecx, r12d
-    call malloc
+    call masm_malloc
     test rax, rax
     jz get_text_fail
     
@@ -660,3 +660,7 @@ szSaveFileTitle db "Save File",0
 ; ============================================================================
 
 END
+
+
+
+

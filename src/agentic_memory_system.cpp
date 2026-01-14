@@ -3,6 +3,9 @@
 #include <QDebug>
 #include <QUuid>
 #include <QCryptographicHash>
+#include <QJsonDocument>
+#include <QJsonArray>
+#include <QFile>
 #include <algorithm>
 
 AgenticMemorySystem::AgenticMemorySystem(QObject* parent)

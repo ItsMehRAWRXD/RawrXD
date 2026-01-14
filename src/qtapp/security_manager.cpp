@@ -173,6 +173,14 @@ bool SecurityManager::removeCredential(const QString& username)
     return false;
 }
 
+bool SecurityManager::storeSecret(const QString& secretName, const QString& secretValue)
+{
+    qDebug() << "[SecurityManager] Storing secret:" << secretName;
+    
+    // Store as API key credential (no expiration by default)
+    return storeCredential(secretName, secretValue, "api_key", 0);
+}
+
 bool SecurityManager::isTokenExpired(const QString& username) const
 {
     auto it = m_credentials.find(username);

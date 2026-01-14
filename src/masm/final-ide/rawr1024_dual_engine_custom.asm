@@ -685,25 +685,21 @@ rawr1024_build_model PROC
     xor rax, rax
     ret
 rawr1024_build_model ENDP
-
 PUBLIC rawr1024_quantize_model
 rawr1024_quantize_model PROC
     xor rax, rax
     ret
 rawr1024_quantize_model ENDP
-
 PUBLIC rawr1024_encrypt_model
 rawr1024_encrypt_model PROC
     xor rax, rax
     ret
 rawr1024_encrypt_model ENDP
-
 PUBLIC rawr1024_direct_load
 rawr1024_direct_load PROC
     xor rax, rax
     ret
 rawr1024_direct_load ENDP
-
 PUBLIC rawr1024_beacon_sync
 rawr1024_beacon_sync PROC
     xor rax, rax
@@ -757,4 +753,8 @@ main_exit:
 rawr1024_engine_main_demo ENDP
 
 END
+
+
+
+
 

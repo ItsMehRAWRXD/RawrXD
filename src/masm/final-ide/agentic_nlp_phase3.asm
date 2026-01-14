@@ -22,9 +22,7 @@
 
 option casemap:none
 
-include windows.inc
-includelib kernel32.lib
-includelib user32.lib
+; No windows.inc - define externals directly
 
 ;==========================================================================
 ; EXTERNAL DECLARATIONS
@@ -165,7 +163,7 @@ EXTRACTION_RESULT ENDS
     sz_nlp_correction   BYTE "[NLP] Correction appended: %s", 0
 
 .data?
-    g_temp_claims       CLAIM_STRUCT MAX_CLAIMS_PER_TEXT DUP (?)
+    g_temp_claims       CLAIM_STRUCT MAX_CLAIMS_PER_TEXT DUP (<>)
     g_temp_claim_count  DWORD ?
 
 ;==========================================================================
@@ -176,7 +174,6 @@ EXTRACTION_RESULT ENDS
 ; - Safe memory handling
 ; - Offset calculation in original strings
 ;==========================================================================
-
 PUBLIC strstr_case_insensitive
 strstr_case_insensitive PROC
     ; rcx = haystack string
@@ -235,11 +232,11 @@ strstr_case_insensitive PROC
 case_insensitive_not_found_local:
     xor eax, eax
     
-.case_insensitive_cleanup2:
+case_insensitive_cleanup_local2:
     mov rcx, rbx
     call asm_free
     
-.case_insensitive_cleanup1:
+case_insensitive_cleanup_local1:
     mov rcx, r14
     call asm_free
     
@@ -267,7 +264,6 @@ strstr_case_insensitive ENDP
 ; - Offset tracking
 ; - Context preservation
 ;==========================================================================
-
 PUBLIC extract_sentence
 extract_sentence PROC
     ; rcx = full text buffer
@@ -372,7 +368,6 @@ extract_sentence ENDP
 ; - HTTP API hooks for external database
 ; - Fallback to "unknown" for network issues
 ;==========================================================================
-
 PUBLIC db_search_claim
 db_search_claim PROC
     ; rcx = claim text to verify
@@ -399,7 +394,7 @@ db_search_claim PROC
     mov eax, CLAIM_UNKNOWN
     
     ; Log the query for monitoring
-    lea rcx, [rip + sz_nlp_db_query]
+    lea rcx, sz_nlp_db_query
     mov rdx, r12
     call console_log
     
@@ -419,7 +414,6 @@ db_search_claim ENDP
 ; - Factual assertion detection
 ; - Subject/object noun extraction
 ;==========================================================================
-
 PUBLIC _extract_claims_from_text
 _extract_claims_from_text PROC
     ; rcx = full text buffer
@@ -473,13 +467,13 @@ extract_claims_copy_ok_local:
     
     xor eax, eax
 extract_claims_copy_loop_local:
-    cmp eax, r9
+    cmp rax, r9
     jge extract_claims_copied_local
     mov cl, BYTE PTR [r10]
     mov BYTE PTR [r11], cl
     inc r10
     inc r11
-    inc eax
+    inc rax
     jmp extract_claims_copy_loop_local
     
 extract_claims_copied_local:
@@ -488,9 +482,9 @@ extract_claims_copied_local:
     mov r9, rbx
     imul r9, SIZEOF CLAIM_STRUCT
     add rcx, r9
-    mov eax, r9                         ; Use length as confidence factor
-    imul eax, 100
-    cmp eax, 100
+    mov rax, r9                         ; Use length as confidence factor
+    imul rax, 100
+    cmp rax, 100
     jle extract_claims_conf_ok_local
     mov eax, 100
 extract_claims_conf_ok_local:
@@ -518,7 +512,6 @@ _extract_claims_from_text ENDP
 ; - Overall score aggregation
 ; - Correction flagging
 ;==========================================================================
-
 PUBLIC _verify_claims_against_db
 _verify_claims_against_db PROC
     ; rcx = claims array
@@ -598,7 +591,6 @@ _verify_claims_against_db ENDP
 ; - Newline handling
 ; - Buffer boundary safety
 ;==========================================================================
-
 PUBLIC _append_correction_string
 _append_correction_string PROC
     ; rcx = destination buffer pointer
@@ -636,18 +628,18 @@ append_no_prefix_newline_local:
     cmp ebx, 1
     jne append_type_not_factual_local
     
-    lea rcx, [rip + sz_correction_factual]
+    lea rcx, sz_correction_factual
     jmp append_type_add_prefix_local
     
 append_type_not_factual_local:
     cmp ebx, 2
     jne append_type_not_style_local
     
-    lea rcx, [rip + sz_correction_style]
+    lea rcx, sz_correction_style
     jmp append_type_add_prefix_local
     
 append_type_not_style_local:
-    lea rcx, [rip + sz_correction_general]
+    lea rcx, sz_correction_general
     
 append_type_add_prefix_local:
     mov rdx, r12
@@ -757,6 +749,11 @@ hash_claim_masm ENDP
     sz_correction_style   BYTE "[STYLE] ", 0
     sz_correction_general BYTE "[CORRECTION] ", 0
 
-.end
+END
+
+
+
+
+
 
 

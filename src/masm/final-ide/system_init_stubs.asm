@@ -24,7 +24,6 @@ EXTERN console_log:PROC
     szLspInit  BYTE "[stubs] lsp_init invoked", 0
 
 .code
-
 PUBLIC run_diagnostics
 run_diagnostics PROC
     lea rcx, szRunDiag
@@ -32,7 +31,6 @@ run_diagnostics PROC
     mov rax, 1
     ret
 run_diagnostics ENDP
-
 PUBLIC git_is_available
 git_is_available PROC
     lea rcx, szGitAvail
@@ -40,7 +38,6 @@ git_is_available PROC
     mov rax, 1
     ret
 git_is_available ENDP
-
 PUBLIC semantic_init
 semantic_init PROC
     lea rcx, szSemantic
@@ -48,7 +45,6 @@ semantic_init PROC
     mov rax, 1
     ret
 semantic_init ENDP
-
 PUBLIC session_init
 session_init PROC
     lea rcx, szSession
@@ -56,7 +52,6 @@ session_init PROC
     mov rax, 1
     ret
 session_init ENDP
-
 PUBLIC agentic_extensions_init
 agentic_extensions_init PROC
     lea rcx, szAgentExt
@@ -64,7 +59,6 @@ agentic_extensions_init PROC
     mov rax, 1
     ret
 agentic_extensions_init ENDP
-
 PUBLIC ai_routing_init
 ai_routing_init PROC
     lea rcx, szAIRoute
@@ -72,7 +66,6 @@ ai_routing_init PROC
     mov rax, 1
     ret
 ai_routing_init ENDP
-
 PUBLIC autonomous_core_init
 autonomous_core_init PROC
     lea rcx, szAutoCore
@@ -80,7 +73,6 @@ autonomous_core_init PROC
     mov rax, 1
     ret
 autonomous_core_init ENDP
-
 PUBLIC ide_features_init
 ide_features_init PROC
     lea rcx, szIDEFeat
@@ -88,7 +80,6 @@ ide_features_init PROC
     mov rax, 1
     ret
 ide_features_init ENDP
-
 PUBLIC cloud_api_init
 cloud_api_init PROC
     lea rcx, szCloudAPI
@@ -96,48 +87,38 @@ cloud_api_init PROC
     mov rax, 1
     ret
 cloud_api_init ENDP
-
 PUBLIC performance_engine_init
 performance_engine_init PROC
     mov rax, 1
     ret
 performance_engine_init ENDP
-
 PUBLIC agent_rollback_check
 agent_rollback_check PROC
     mov rax, 1
     ret
 agent_rollback_check ENDP
-
 PUBLIC sla_manager_check
 sla_manager_check PROC
     mov rax, 1
     ret
 sla_manager_check ENDP
-
 PUBLIC migrate_memory_db
 migrate_memory_db PROC
     mov rax, 1
     ret
 migrate_memory_db ENDP
-
 PUBLIC activity_bar_init
 activity_bar_init PROC
     mov rax, 1
     ret
 activity_bar_init ENDP
-
 PUBLIC ai_chat_panel_init
 ai_chat_panel_init PROC
     mov rax, 1
     ret
 ai_chat_panel_init ENDP
 
-PUBLIC agent_auto_update_check
-agent_auto_update_check PROC
-    mov rax, 1
-    ret
-agent_auto_update_check ENDP
+EXTERN agent_auto_update_check:PROC
 
 END
 performance_engine_init PROC
@@ -146,7 +127,6 @@ performance_engine_init PROC
     mov rax, 1
     ret
 performance_engine_init ENDP
-
 PUBLIC ggml_core_init
 ggml_core_init PROC
     lea rcx, szGGMLInit
@@ -154,7 +134,6 @@ ggml_core_init PROC
     mov rax, 1
     ret
 ggml_core_init ENDP
-
 PUBLIC lsp_init
 lsp_init PROC
     lea rcx, szLspInit
@@ -164,3 +143,7 @@ lsp_init PROC
 lsp_init ENDP
 
 END
+
+
+
+

@@ -40,6 +40,8 @@ public:
     void show();
     void hide();
     
+    int commandCount() const { return m_commands.size(); }
+    
 signals:
     void commandExecuted(const QString& commandId);
     

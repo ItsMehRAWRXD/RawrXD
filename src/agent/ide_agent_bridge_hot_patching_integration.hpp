@@ -114,7 +114,7 @@ public:
      * @note Changing this requires stopping and restarting the proxy
      */
     QString ggufEndpoint() const { return m_ggufEndpoint; }
-    void setGgufEndpoint(const QString& endpoint) {
+    void setGGUFEndpoint(const QString& endpoint) {
         if (endpoint != m_ggufEndpoint) {
             m_ggufEndpoint = endpoint;
             emit ggufEndpointChanged();
@@ -122,31 +122,24 @@ public:
     }
 
     /**
-     * Guard against ModelInvoker replacement
-     * Re-wires proxy endpoint if ModelInvoker is recreated
+     * Set debug logging enabled
      */
-    void onModelInvokerReplaced();
-
-public slots:
-    /**
-     * Handle hallucination detected signal
-     */
-    void onHallucinationDetected(const HallucinationDetection& detection);
+    void setDebugLoggingEnabled(bool enabled);
 
     /**
-     * Handle hallucination corrected signal
+     * Get the model invoker instance
      */
-    void onHallucinationCorrected(const HallucinationDetection& correction);
+    ModelInvoker* getModelInvoker() const;
 
     /**
-     * Handle navigation error fixed signal
+     * Log a correction to the central dashboard
      */
-    void onNavigationErrorFixed(const NavigationFix& fix);
+    void logCorrection(const HallucinationDetection& correction);
 
     /**
-     * Handle behavior patch applied signal
+     * Log a navigation fix to the central dashboard
      */
-    void onBehaviorPatchApplied(const BehaviorPatch& patch);
+    void logNavigationFix(const NavigationFix& fix);
 
 signals:
     /**
@@ -159,6 +152,57 @@ signals:
      */
     void ggufEndpointChanged();
 
+    /**
+     * Emitted when hot patching status changes
+     */
+    void hotPatchingStatusChanged(bool active);
+
+    /**
+     * Emitted when a hallucination is detected
+     */
+    void hallucinationDetected(const HallucinationDetection& detection);
+
+    /**
+     * Emitted when a navigation error is fixed
+     */
+    void navigationErrorFixed(const NavigationFix& fix);
+
+    /**
+     * Emitted when a behavior patch is applied
+     */
+    void behaviorPatchApplied(const BehaviorPatch& patch);
+
+private slots:
+    /**
+     * Handle hallucination detected signal
+     */
+    void onHallucinationDetected(const HallucinationDetection& detection);
+
+    /**
+     * Handle hallucination corrected signal
+     */
+    void onHallucinationCorrected(const HallucinationDetection& detection);
+
+    /**
+     * Handle navigation error fixed signal
+     */
+    void onNavigationErrorFixed(const NavigationFix& fix);
+
+    /**
+     * Handle behavior patch applied signal
+     */
+    void onBehaviorPatchApplied(const BehaviorPatch& patch);
+
+    // Reserved handlers for future expansion (kept for API stability)
+    void onNavigationFixed(const NavigationFix& fix);
+    void onBehaviorPatchUpdated(const BehaviorPatch& patch);
+
+    /**
+     * Guard against ModelInvoker replacement
+     * Re-wires proxy endpoint if ModelInvoker is recreated
+     */
+    void onModelInvokerReplaced();
+
 private:
     // Hot patching components
     std::unique_ptr<AgentHotPatcher> m_hotPatcher;
@@ -168,10 +212,7 @@ private:
     bool m_hotPatchingEnabled = false;
     QString m_proxyPort = "11435";
     QString m_ggufEndpoint = "localhost:11434";
-
-    // Logging
-    void logCorrection(const HallucinationDetection& correction);
-    void logNavigationFix(const NavigationFix& fix);
 };
 
-#endif // IDE_AGENT_BRIDGE_HOT_PATCHING_INTEGRATION_HPP
+
+

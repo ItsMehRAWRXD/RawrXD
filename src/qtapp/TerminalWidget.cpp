@@ -94,6 +94,14 @@ qint64 TerminalWidget::pid() const
     return m_manager->pid();
 }
 
+QString TerminalWidget::getTitle() const
+{
+    if (m_manager->isRunning()) {
+        return m_shellSelect->currentText() + " (PID: " + QString::number(m_manager->pid()) + ")";
+    }
+    return m_shellSelect->currentText() + " (stopped)";
+}
+
 void TerminalWidget::onUserCommand()
 {
     QString cmd = m_input->text();

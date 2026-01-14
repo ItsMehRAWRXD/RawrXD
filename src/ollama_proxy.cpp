@@ -187,6 +187,14 @@ QString OllamaProxy::resolveBlobToModel(const QString& blobPath) const
     return name;
 }
 
+QString OllamaProxy::blobPathForModel(const QString& modelName) const
+{
+    if (m_detectedModels.contains(modelName)) {
+        return m_detectedModels.value(modelName);
+    }
+    return QString();
+}
+
 void OllamaProxy::generateResponse(const QString& prompt, float temperature, int maxTokens)
 {
     if (m_modelName.isEmpty()) {

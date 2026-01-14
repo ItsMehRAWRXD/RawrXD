@@ -88,7 +88,7 @@ public:
         int limit = 100,
         LogLevel minLevel = LogLevel::DEBUG,
         const QString& component = ""
-    );
+    ) const;
     std::vector<LogEntry> getLogsByTimeRange(
         const QDateTime& start,
         const QDateTime& end,
@@ -135,7 +135,7 @@ public:
     std::unique_ptr<TimingGuard> measureDuration(const QString& metricName);
 
     // Get metrics
-    std::vector<MetricPoint> getMetrics(const QString& pattern = "", int limit = 100);
+    std::vector<MetricPoint> getMetrics(const QString& pattern = "", int limit = 100) const;
     QJsonObject getMetricsSummary() const;
     QJsonObject getPercentiles(const QString& metricName) const;
 
@@ -159,8 +159,8 @@ public:
 
     // Get trace information
     TraceSpan* getSpan(const QString& spanId);
-    std::vector<TraceSpan> getTraceSpans(const QString& traceId);
-    QJsonObject getTraceVisualization(const QString& traceId);
+    std::vector<TraceSpan> getTraceSpans(const QString& traceId) const;
+    QJsonObject getTraceVisualization(const QString& traceId) const;
 
     // ===== DIAGNOSTICS =====
     

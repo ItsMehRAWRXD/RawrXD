@@ -29,8 +29,8 @@ INCLUDELIB user32.lib
 INCLUDELIB gdi32.lib
 INCLUDELIB msvcrt.lib
 
-EXTERN malloc:PROC
-EXTERN free:PROC
+extern masm_malloc : proc
+extern masm_free : proc
 EXTERN memset:PROC
 EXTERN memcpy:PROC
 EXTERN strlen:PROC
@@ -39,7 +39,6 @@ EXTERN sprintf:PROC
 EXTERN GetTickCount64:PROC
 EXTERN GetSystemInfo:PROC
 EXTERN GlobalMemoryStatusEx:PROC
-
 PUBLIC telemetry_collector_init
 PUBLIC telemetry_start_request
 PUBLIC telemetry_end_request
@@ -285,7 +284,7 @@ telemetry_collector_init PROC
     mov rcx, MAX_TIMESERIES_POINTS
     mov rdx, SIZEOF TIMESERIES_POINT
     imul rcx, rdx
-    call malloc
+    call masm_malloc
     mov [g_telemetry.latencyBuffer], rax
     test rax, rax
     jz init_failed_local
@@ -294,7 +293,7 @@ telemetry_collector_init PROC
     mov rcx, MAX_TIMESERIES_POINTS
     mov rdx, SIZEOF TIMESERIES_POINT
     imul rcx, rdx
-    call malloc
+    call masm_malloc
     mov [g_telemetry.tokenBuffer], rax
     test rax, rax
     jz init_failed_local
@@ -303,7 +302,7 @@ telemetry_collector_init PROC
     mov rcx, MAX_TIMESERIES_POINTS
     mov rdx, SIZEOF TIMESERIES_POINT
     imul rcx, rdx
-    call malloc
+    call masm_malloc
     mov [g_telemetry.memoryBuffer], rax
     test rax, rax
     jz init_failed_local
@@ -312,7 +311,7 @@ telemetry_collector_init PROC
     mov rcx, MAX_TIMESERIES_POINTS
     mov rdx, SIZEOF TIMESERIES_POINT
     imul rcx, rdx
-    call malloc
+    call masm_malloc
     mov [g_telemetry.gpuBuffer], rax
     test rax, rax
     jz init_failed_local
@@ -321,7 +320,7 @@ telemetry_collector_init PROC
     mov rcx, 10000
     mov rdx, SIZEOF REQUEST_METRICS
     imul rcx, rdx
-    call malloc
+    call masm_malloc
     mov [g_telemetry.requestLog], rax
     test rax, rax
     jz init_failed_local
@@ -330,7 +329,7 @@ telemetry_collector_init PROC
     mov rcx, MAX_MODELS
     mov rdx, SIZEOF MODEL_PERFORMANCE
     imul rcx, rdx
-    call malloc
+    call masm_malloc
     mov [g_telemetry.modelMetrics], rax
     test rax, rax
     jz init_failed_local
@@ -339,7 +338,7 @@ telemetry_collector_init PROC
     mov rcx, MAX_ALERTS
     mov rdx, SIZEOF ALERT_TRIGGER
     imul rcx, rdx
-    call malloc
+    call masm_malloc
     mov [g_telemetry.alertTriggers], rax
     test rax, rax
     jz init_failed_local
@@ -348,7 +347,7 @@ telemetry_collector_init PROC
     mov rcx, HISTOGRAM_BUCKETS
     mov rdx, 8
     imul rcx, rdx
-    call malloc
+    call masm_malloc
     mov [g_telemetry.latencyHistogram], rax
     test rax, rax
     jz init_failed_local
@@ -997,4 +996,8 @@ telemetry_reset PROC
 telemetry_reset ENDP
 
 END
+
+
+
+
 

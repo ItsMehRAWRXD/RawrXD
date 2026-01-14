@@ -118,20 +118,8 @@ ModelLoaderWidget::ModelLoaderWidget(QWidget* parent)
 ModelLoaderWidget::~ModelLoaderWidget() {}
 
 // ============================================================================
-// AgenticExecutor
+// AgenticExecutor stub REMOVED - real implementation in src/agentic_executor.cpp
 // ============================================================================
-
-class AgenticExecutor {
-public:
-    QJsonObject executeUserRequest(const QString& request);
-};
-
-// **EXPLICIT OUT-OF-LINE IMPLEMENTATION** for AgenticExecutor
-
-QJsonObject AgenticExecutor::executeUserRequest(const QString& request) {
-    Q_UNUSED(request);
-    return QJsonObject();
-}
 
 // ============================================================================
 // Extern "C" brutal_gzip function stub

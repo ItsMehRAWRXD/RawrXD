@@ -13,14 +13,39 @@
 ; - Custom menu command handlers
 ; ============================================================================
 
-; x64 MASM - includes first, then sections
+; x64 MASM - no includes, define externals directly
+option casemap:none
 
-include windows.inc
-include user32.inc
-include kernel32.inc
+; Win32 API externals
+EXTERN CreateMenuA:PROC
+EXTERN DestroyMenu:PROC
+EXTERN AppendMenuA:PROC
+EXTERN SetMenu:PROC
+EXTERN DrawMenuBar:PROC
+EXTERN EnableMenuItem:PROC
+EXTERN CheckMenuItem:PROC
+EXTERN GetMenu:PROC
+EXTERN GetSubMenu:PROC
+EXTERN CreateAcceleratorTableA:PROC
+EXTERN DestroyAcceleratorTable:PROC
+EXTERN TranslateAcceleratorA:PROC
 
-INCLUDELIB user32.lib
-INCLUDELIB kernel32.lib
+; Windows constants
+MF_BYCOMMAND            EQU 0000h
+MF_ENABLED              EQU 0000h
+MF_GRAYED               EQU 0001h
+MF_DISABLED             EQU 0002h
+MF_CHECKED              EQU 0008h
+MF_UNCHECKED            EQU 0000h
+MF_POPUP                EQU 0010h
+MF_STRING               EQU 0000h
+MF_SEPARATOR            EQU 0800h
+MFT_STRING              EQU 0000h
+
+; Type definitions
+HMENU                   TEXTEQU <QWORD>
+HACCEL                  TEXTEQU <QWORD>
+BOOL                    TEXTEQU <DWORD>
 
 ; ============================================================================
 ; CONSTANTS - Menu Command IDs
@@ -65,33 +90,31 @@ IDM_HELP_DOCS             = 5001
 IDM_HELP_ABOUT            = 5002
 IDM_HELP_CHECK_UPDATE     = 5003
 
+; Menu item types (additional)
+MFT_SEPARATOR             EQU 0800h
+MFT_GRAYED                EQU 0001h
+
+; External for EnableMenuItemA
+EXTERN EnableMenuItemA:PROC
+
 ; ============================================================================
 ; DATA STRUCTURES
 ; ============================================================================
 
-ALIGN 16
-MenuBar STRUCT
-    hMenuFile       HMENU ?         ; File menu
-    hMenuEdit       HMENU ?         ; Edit menu
-    hMenuView       HMENU ?         ; View menu
-    hMenuTools      HMENU ?         ; Tools menu
-    hMenuHelp       HMENU ?         ; Help menu
-    hMenuBar        HMENU ?         ; Main menu bar
-    hAccel          HACCEL ?        ; Accelerator table
-    fileMenuEnabled BOOL ?          ; Track enabled/disabled state
-    editMenuEnabled BOOL ?
-    viewMenuEnabled BOOL ?
-    toolsMenuEnabled BOOL ?
-MenuBar ENDS
-
-; ============================================================================
-; GLOBAL DATA
-; ============================================================================
-
 .data
 
-    ; Global menu bar instance
-    gMenuBar MenuBar <0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1>
+ALIGN 16
+MenuBar_hMenuFile       QWORD 0         ; File menu
+MenuBar_hMenuEdit       QWORD 0         ; Edit menu
+MenuBar_hMenuView       QWORD 0         ; View menu
+MenuBar_hMenuTools      QWORD 0         ; Tools menu
+MenuBar_hMenuHelp       QWORD 0         ; Help menu
+MenuBar_hMenuBar        QWORD 0         ; Main menu bar
+MenuBar_hAccel          QWORD 0         ; Accelerator table
+MenuBar_fileMenuEnabled DWORD 1         ; Track enabled/disabled state
+MenuBar_editMenuEnabled DWORD 1
+MenuBar_viewMenuEnabled DWORD 1
+MenuBar_toolsMenuEnabled DWORD 1
     
     ; Menu strings
     szFileMenu          BYTE "&File", 0
@@ -101,46 +124,46 @@ MenuBar ENDS
     szHelpMenu          BYTE "&Help", 0
     
     ; File menu items
-    szFileNew           BYTE "New Project", 0x09, "Ctrl+N", 0
-    szFileOpen          BYTE "Open File", 0x09, "Ctrl+O", 0
-    szFileSave          BYTE "Save", 0x09, "Ctrl+S", 0
-    szFileSaveAs        BYTE "Save As...", 0x09, "Ctrl+Shift+S", 0
-    szFileClose         BYTE "Close Tab", 0x09, "Ctrl+W", 0
-    szFileSeparator     BYTE "", 0
-    szFileExit          BYTE "Exit", 0x09, "Alt+F4", 0
+    szFileNew           BYTE "New Project", 09h, "Ctrl+N", 0
+    szFileOpen          BYTE "Open File", 09h, "Ctrl+O", 0
+    szFileSave          BYTE "Save", 09h, "Ctrl+S", 0
+    szFileSaveAs        BYTE "Save As...", 09h, "Ctrl+Shift+S", 0
+    szFileClose         BYTE "Close Tab", 09h, "Ctrl+W", 0
+    szFileSeparator     BYTE 0
+    szFileExit          BYTE "Exit", 09h, "Alt+F4", 0
     
     ; Edit menu items
-    szEditUndo          BYTE "Undo", 0x09, "Ctrl+Z", 0
-    szEditRedo          BYTE "Redo", 0x09, "Ctrl+Y", 0
-    szEditSeparator1    BYTE "", 0
-    szEditCut           BYTE "Cut", 0x09, "Ctrl+X", 0
-    szEditCopy          BYTE "Copy", 0x09, "Ctrl+C", 0
-    szEditPaste         BYTE "Paste", 0x09, "Ctrl+V", 0
-    szEditSelectAll     BYTE "Select All", 0x09, "Ctrl+A", 0
-    szEditSeparator2    BYTE "", 0
-    szEditFind          BYTE "Find", 0x09, "Ctrl+F", 0
-    szEditReplace       BYTE "Find & Replace", 0x09, "Ctrl+H", 0
+    szEditUndo          BYTE "Undo", 09h, "Ctrl+Z", 0
+    szEditRedo          BYTE "Redo", 09h, "Ctrl+Y", 0
+    szEditSeparator1    BYTE 0
+    szEditCut           BYTE "Cut", 09h, "Ctrl+X", 0
+    szEditCopy          BYTE "Copy", 09h, "Ctrl+C", 0
+    szEditPaste         BYTE "Paste", 09h, "Ctrl+V", 0
+    szEditSelectAll     BYTE "Select All", 09h, "Ctrl+A", 0
+    szEditSeparator2    BYTE 0
+    szEditFind          BYTE "Find", 09h, "Ctrl+F", 0
+    szEditReplace       BYTE "Find & Replace", 09h, "Ctrl+H", 0
     
     ; View menu items
-    szViewExplorer      BYTE "Show Explorer", 0x09, "Ctrl+B", 0
-    szViewOutput        BYTE "Show Output", 0x09, "Ctrl+Alt+O", 0
-    szViewTerminal      BYTE "Show Terminal", 0x09, "Ctrl+`", 0
-    szViewChat          BYTE "Show Chat Panel", 0x09, "Ctrl+Shift+C", 0
-    szViewSeparator1    BYTE "", 0
+    szViewExplorer      BYTE "Show Explorer", 09h, "Ctrl+B", 0
+    szViewOutput        BYTE "Show Output", 09h, "Ctrl+Alt+O", 0
+    szViewTerminal      BYTE "Show Terminal", 09h, "Ctrl+`", 0
+    szViewChat          BYTE "Show Chat Panel", 09h, "Ctrl+Shift+C", 0
+    szViewSeparator1    BYTE 0
     szViewTheme         BYTE "Toggle Dark Mode", 0
-    szViewFullscreen    BYTE "Full Screen", 0x09, "F11", 0
-    szViewSeparator2    BYTE "", 0
-    szViewZoomIn        BYTE "Zoom In", 0x09, "Ctrl++", 0
-    szViewZoomOut       BYTE "Zoom Out", 0x09, "Ctrl+-", 0
+    szViewFullscreen    BYTE "Full Screen", 09h, "F11", 0
+    szViewSeparator2    BYTE 0
+    szViewZoomIn        BYTE "Zoom In", 09h, "Ctrl++", 0
+    szViewZoomOut       BYTE "Zoom Out", 09h, "Ctrl+-", 0
     
     ; Tools menu items
-    szToolsSettings     BYTE "Settings", 0x09, "Ctrl+,", 0
+    szToolsSettings     BYTE "Settings", 09h, "Ctrl+,", 0
     szToolsModelMgr     BYTE "Model Manager", 0
     szToolsGit          BYTE "Git Integration", 0
-    szToolsTerminal     BYTE "Terminal", 0x09, "Ctrl+`", 0
+    szToolsTerminal     BYTE "Terminal", 09h, "Ctrl+`", 0
     
     ; Help menu items
-    szHelpDocs          BYTE "Documentation", 0x09, "F1", 0
+    szHelpDocs          BYTE "Documentation", 09h, "F1", 0
     szHelpAbout         BYTE "About RawrXD", 0
     szHelpUpdate        BYTE "Check for Updates", 0
 
@@ -164,7 +187,6 @@ MenuBar ENDS
 ; 4. Tools (Settings, Model Manager, Git, Terminal)
 ; 5. Help (Documentation, About, Check Update)
 ; ============================================================================
-
 PUBLIC MenuBar_Create
 MenuBar_Create PROC
     push rbx
@@ -466,7 +488,6 @@ MenuBar_Create ENDP
 ;
 ; Returns: None
 ; ============================================================================
-
 PUBLIC MenuBar_EnableMenuItem
 MenuBar_EnableMenuItem PROC
     push rbx
@@ -510,7 +531,6 @@ MenuBar_EnableMenuItem ENDP
 ;
 ; This function dispatches menu commands to appropriate handlers
 ; ============================================================================
-
 PUBLIC MenuBar_HandleCommand
 MenuBar_HandleCommand PROC
     push rbx
@@ -523,7 +543,7 @@ MenuBar_HandleCommand PROC
     test r10, r10
     jz UseDefaultHandler
     
-    mov rcx, r9d  ; Pass command ID as parameter
+    mov ecx, r9d  ; Pass command ID as parameter
     call r10      ; Call custom handler
     jmp HandlerDone
     
@@ -590,7 +610,6 @@ MenuBar_HandleCommand ENDP
 ;
 ; Returns: None
 ; ============================================================================
-
 PUBLIC MenuBar_Destroy
 MenuBar_Destroy PROC
     push rbx
@@ -640,4 +659,10 @@ SkipMenuBar:
 MenuBar_Destroy ENDP
 
 end
+
+
+
+
+
+
 

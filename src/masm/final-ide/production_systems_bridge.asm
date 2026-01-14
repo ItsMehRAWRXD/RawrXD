@@ -11,8 +11,8 @@
 option casemap:none
 
 ; External C runtime functions
-EXTERN malloc:PROC
-EXTERN free:PROC
+extern masm_malloc : proc
+extern masm_free : proc
 EXTERN sprintf:PROC
 EXTERN strcpy:PROC
 EXTERN strlen:PROC
@@ -600,7 +600,7 @@ bridge_export_metrics PROC
     
     ; Allocate export buffer
     mov rcx, MAX_BUFFER_SIZE
-    call malloc
+    call masm_malloc
     cmp rax, 0
     je export_error_local
     
@@ -637,7 +637,7 @@ export_prometheus_local:
     
 format_error_local:
     mov rcx, rsi
-    call free
+    call masm_free
     mov rax, 0
     jmp export_done_local
     
@@ -697,7 +697,7 @@ bridge_get_system_status PROC
     
     ; Allocate status buffer
     mov rcx, STATUS_BUFFER_SIZE
-    call malloc
+    call masm_malloc
     cmp rax, 0
     je status_error_local
     
@@ -780,7 +780,7 @@ bridge_free_buffer PROC
     push rbx
     
     ; Free the buffer
-    call free
+    call masm_free
     
     xor rax, rax  ; Return STATUS_OK
     pop rbx
@@ -841,4 +841,8 @@ bridge_get_animation_metrics ENDP
 ; ============================================================================
 
 END
+
+
+
+
 

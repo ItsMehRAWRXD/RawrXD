@@ -10,6 +10,7 @@
 struct AppState {
     // Compute settings
     bool enable_gpu_matmul = true;
+    bool enable_masm_cpu_backend = false;  // Enable MASM-optimized CPU backend
     bool enable_gpu_attention = true;
     bool enable_cpu_gpu_compare = false;
     bool enable_detailed_quant = false;

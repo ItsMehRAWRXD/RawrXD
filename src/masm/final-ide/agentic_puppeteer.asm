@@ -25,6 +25,7 @@ EXTERN asm_str_create:PROC
 EXTERN asm_str_concat:PROC
 EXTERN asm_str_length:PROC
 EXTERN asm_str_create_from_cstr:PROC
+EXTERN strstr_case_insensitive:PROC
 
 ; AgenticMode Enum:
 ;   0 = Plan (planning/reasoning mode)
@@ -754,7 +755,6 @@ strlen_done:
     pop rdi
     ret
 strlen_custom ENDP
-
 strstr_custom PROC
     ; Simple substring search - returns pointer or NULL
     push rbx
@@ -795,25 +795,17 @@ strstr_found:
     pop rbx
     ret
 strstr_custom ENDP
-
-strstr_case_insensitive PROC
-    ; Case insensitive search stub
-    call strstr_custom
-    ret
-strstr_case_insensitive ENDP
-
+; strstr_case_insensitive moved to ui_masm.asm - use EXTERN declaration
 extract_sentence PROC
     ; Extract sentence containing claim - stub implementation
     mov rax, rcx    ; Return input pointer as sentence
     ret
 extract_sentence ENDP
-
 db_search_claim PROC
     ; Database search stub - always returns "unknown"
     mov rax, 2      ; 2 = unknown
     ret
 db_search_claim ENDP
-
 append_str_safe PROC
     ; Safe string append stub
     push rsi
@@ -836,7 +828,6 @@ append_str_done:
     pop rsi
     ret
 append_str_safe ENDP
-
 _extract_claims_from_text PROC
     ; Simplified claim extraction
     push rbx
@@ -863,13 +854,11 @@ extract_claims_done:
     pop rbx
     ret
 _extract_claims_from_text ENDP
-
 _verify_claims_against_db PROC
     ; Simplified verification - always return "verified"
     mov rax, 1
     ret
 _verify_claims_against_db ENDP
-
 _append_correction_string PROC
     ; Simplified correction append
     push rsi
@@ -897,13 +886,11 @@ append_corr_done:
     pop rsi
     ret
 _append_correction_string ENDP
-
 _check_dangerous_keyword PROC
     ; Always return safe for simplicity
     xor rax, rax
     ret
 _check_dangerous_keyword ENDP
-
 _detect_html_tag PROC
     ; Simple HTML tag detection
     test rcx, rcx
@@ -920,7 +907,6 @@ found_html_tag:
     mov rax, 1
     ret
 _detect_html_tag ENDP
-
 _skip_until_close_bracket PROC
     ; Skip to closing bracket
     test rcx, rcx
@@ -945,7 +931,6 @@ found_close_bracket:
 skip_bracket_done:
     ret
 _skip_until_close_bracket ENDP
-
 _is_command_separator PROC
     ; Check for command separators
     cmp cl, ';'
@@ -972,3 +957,7 @@ szCorrectionPrefix      DB " [CORRECTION: ", 0
 g_reversals_applied     QWORD ?
 
 END
+
+
+
+

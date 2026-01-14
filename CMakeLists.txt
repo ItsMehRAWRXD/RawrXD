@@ -323,9 +323,9 @@ else()
 endif()
 
 # Build options
-option(ENABLE_COPILOT "Enable Copilot streaming integration for Win32 IDE" OFF)
+option(ENABLE_COPILOT "Enable Copilot streaming integration for Win32 IDE" ON)
 option(ENABLE_VULKAN "Enable Vulkan GPU acceleration" ON)
-option(ENABLE_MASM_INTEGRATION "Include MASM hotpatch files in QtShell build" OFF)
+option(ENABLE_MASM_INTEGRATION "Include MASM hotpatch files in QtShell build" ON)
 option(TEST_BRUTAL "Enable Brutal codec test harness" ON)
 
 # Force Windows SDK version that ships all required headers
@@ -958,8 +958,6 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
             src/qtapp/intelligent_error_analysis.cpp
             src/qtapp/real_time_refactoring.h
             src/qtapp/real_time_refactoring.cpp
-            src/qtapp/discovery_dashboard.h
-            src/qtapp/discovery_dashboard.cpp
             src/qtapp/memory_persistence_system.h
             src/qtapp/memory_persistence_system.cpp
             # src/qtapp/test_generation_automation.hpp  # Implementation pending
@@ -1014,8 +1012,8 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
             src/qtapp/metrics_collector.cpp
               src/qtapp/backup_manager.hpp
               src/qtapp/backup_manager.cpp
-              # src/qtapp/compliance_logger.hpp  # TEMPORARILY DISABLED - Windows header enum conflicts
-              # src/qtapp/compliance_logger.cpp  # MOC issue RESOLVED but case expression errors remain
+              src/qtapp/compliance_logger.hpp
+              src/qtapp/compliance_logger.cpp
               src/qtapp/sla_manager.hpp
               src/qtapp/sla_manager.cpp
               # PRODUCTION READINESS: Multi-channel alert dispatcher with auto-remediation
@@ -1024,10 +1022,10 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
             # ============================================================
             # Phase 3: Production Enhancement Components (5,280 LOC)
             # ============================================================
-            # src/qtapp/security_manager.cpp
-            # src/qtapp/security_manager.h
-            # src/qtapp/distributed_trainer.cpp    # Temporarily disabled due to compilation issues
-            # src/qtapp/distributed_trainer.h      # Temporarily disabled due to compilation issues
+            src/qtapp/security_manager.cpp
+            src/qtapp/security_manager.h
+            src/qtapp/distributed_trainer.cpp
+            src/qtapp/distributed_trainer.h
             # ENHANCED Interpretability Panel - Production Ready (1,500+ LOC)
             src/qtapp/interpretability_panel_enhanced.hpp
             src/qtapp/interpretability_panel_enhanced.cpp
@@ -1083,28 +1081,24 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
             # ============================================================
             # Hot-Patching System: Real-time hallucination detection & correction
             # ============================================================
-            # src/agent/agent_hot_patcher.cpp
-            # src/agent/gguf_proxy_server.cpp
-            # src/agent/ide_agent_bridge_hot_patching_integration.cpp
+            src/agent/agent_hot_patcher.cpp
+            src/agent/gguf_proxy_server.cpp
+            src/agent/ide_agent_bridge_hot_patching_integration.cpp
             src/llm_adapter/QuantBackend.cpp
             src/llm_adapter/QuantBackend.h
             src/agent/auto_bootstrap.cpp
             src/qtapp/widgets/masm_editor_widget.cpp
             src/qtapp/widgets/hotpatch_panel.cpp
             src/qtapp/widgets/layer_quant_widget.cpp
-            # src/agent/zero_touch.cpp
+            src/agent/zero_touch.cpp
             # kernels/quant_ladder_avx2.cpp  # Conflicts with ggml quantization functions
-            # src/agent/planner.cpp
-            # src/agent/self_patch.cpp
-            # src/agent/sign_binary.cpp
-            # src/agent/release_agent.cpp
+            src/agent/planner.cpp
+            src/agent/self_patch.cpp
+            src/agent/sign_binary.cpp
+            src/agent/release_agent.cpp
             src/agent/meta_learn.cpp
             src/agent/hot_reload.cpp
             src/agent/auto_update.cpp
-            src/agent/planner.cpp
-            src/agent/self_patch.cpp
-            src/agent/release_agent.cpp
-            src/agent/zero_touch.cpp
             src/agent/sentry_integration.hpp
             src/agent/sentry_integration.cpp
             src/agent/code_signer.hpp
@@ -1148,9 +1142,8 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
             src/crypto/rawrxd_crypto_rsa_ecc.cpp
             src/crypto/rawrxd_crypto_aes.cpp
             # Full Utility Tool Registry with Production Readiness
-            # TODO: Fix Windows RPC macro conflicts with nlohmann::json in tool_registry.cpp
-            # include/tool_registry.hpp
-            # src/tool_registry.cpp
+            include/tool_registry.hpp
+            src/tool_registry.cpp
             # ============================================================
             # GitHub-Style Enterprise Tools Panel (44 Tools)
             # Production-ready tool management with toggle controls
@@ -1180,8 +1173,12 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
             src/agentic_error_handler.cpp
             include/agentic_memory_system.h
             src/agentic_memory_system.cpp
-            include/agentic_learning_system.h
+            src/agentic_learning_system.h
             src/agentic_learning_system.cpp
+            src/execution_visualizer.h
+            src/execution_visualizer.cpp
+            src/proactive_alert_system.h
+            src/proactive_alert_system.cpp
             include/agentic_iterative_reasoning.h
             src/agentic_iterative_reasoning.cpp
             include/agentic_loop_state.h
@@ -1208,10 +1205,10 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
                 # Pure MASM core + brutal bridges
                 src/masm/final-ide/rawr_core_masm.asm
                 src/masm/final-ide/masm_brutal_bridges.asm
-                # Disabled: ai_orchestration_coordinator.asm - multiplydefined with ai_orchestration_glue
-                # src/masm/final-ide/ai_orchestration_coordinator.asm
-                # Disabled: autonomous_task_executor_clean.asm - duplicate of original
-                # src/masm/final-ide/autonomous_task_executor_clean.asm
+                # FIXED: Symbols renamed to _core suffix to avoid conflicts
+                src/masm/final-ide/ai_orchestration_coordinator.asm
+                # FIXED: Symbols renamed to _impl suffix to avoid conflicts  
+                src/masm/final-ide/autonomous_task_executor_clean.asm
                 # Disabled: output_pane_logger_clean.asm - duplicate of original
                 # src/masm/final-ide/output_pane_logger_clean.asm
                 # Disabled: masm_gpu_backend_clean.asm - duplicate of original
@@ -1221,14 +1218,32 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
                 src/masm/final-ide/masm_inference_engine.asm
                 src/masm/final-ide/agentic_copilot_bridge.asm
                 src/masm/final-ide/agentic_masm_system.asm
-                # Disabled: agent_utility_agents.asm - multiply defined with system_init_stubs
-                # src/masm/final-ide/agent_utility_agents.asm
+                # FIXED: Removed windows.inc
+                src/masm/final-ide/agent_utility_agents.asm
                 src/masm/final-ide/agent_meta_learn.asm
                 src/masm/final-ide/masm_metrics_collector.asm
                 src/masm/final-ide/masm_tokenizer.asm
                 src/masm/final-ide/masm_proxy_server.asm
                 src/masm/final-ide/console_log_simple.asm
-                # src/masm/final-ide/agent_chat_hotpatch_bridge.asm  # invalid instruction operands
+                # Missing feature implementations
+                src/masm/final-ide/settings_manager.asm
+                src/masm/final-ide/terminal_pool.asm
+                src/masm/final-ide/file_browser.asm
+                src/masm/final-ide/mainwindow_masm.asm
+                src/masm/final-ide/lsp_client_fixed.asm
+                src/masm/final-ide/inference_manager_fixed.asm
+                src/masm/final-ide/server_layer.asm
+                src/masm/final-ide/caching_layer.asm
+                src/masm/final-ide/stream_processor.asm
+                src/masm/final-ide/distributed_executor.asm
+                src/masm/final-ide/advanced_auth.asm
+                src/masm/final-ide/agent_coordinator.asm
+                src/masm/final-ide/string_compat.asm
+                src/masm/final-ide/malloc_wrapper.asm
+                src/masm/final-ide/memory_manager.asm
+                src/masm/final-ide/unified_masm_hotpatch.asm
+                # FIXED: Removed windows.inc and added helper implementations
+                src/masm/final-ide/agent_chat_hotpatch_bridge.asm
                 src/masm/final-ide/masm_qt_bridge.asm
                 src/masm/final-ide/missing_stubs_minimal.asm
                 # Disabled: ai_orchestration_glue_clean.asm - duplicate of original
@@ -1236,18 +1251,18 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
                 # Disabled: system_init_stubs_clean.asm - duplicate of original
                 # src/masm/final-ide/system_init_stubs_clean.asm
                 src/masm/final-ide/ui_phase1_implementations_fixed.asm
-                # Disabled: chat_persistence_phase2.asm - rip usage and undefined labels
-                # src/masm/final-ide/chat_persistence_phase2.asm
-                # Disabled: agentic_nlp_phase3.asm - complex syntax issues
-                # src/masm/final-ide/agentic_nlp_phase3.asm
-                # Disabled: menu_system.asm - needs review
-                # src/masm/final-ide/menu_system.asm
-                # Disabled: masm_theme_system_complete.asm - needs review
-                # src/masm/final-ide/masm_theme_system_complete.asm
-                # Disabled: masm_file_browser_complete.asm - needs review
-                # src/masm/final-ide/masm_file_browser_complete.asm
-                # Disabled: phase2_integration.asm - needs review
-                # src/masm/final-ide/phase2_integration.asm
+                # FIXED: Removed [rip + label] syntax and windows.inc
+                src/masm/final-ide/chat_persistence_phase2.asm
+                # FIXED: Removed windows.inc
+                src/masm/final-ide/agentic_nlp_phase3.asm
+                # FIXED: Removed includes and added externals
+                src/masm/final-ide/menu_system.asm
+                # FIXED: Removed includes and added externals
+                src/masm/final-ide/masm_theme_system_complete.asm
+                # FIXED: Removed includes and added externals
+                src/masm/final-ide/masm_file_browser_complete.asm
+                # FIXED: Removed includes and added externals
+                src/masm/final-ide/phase2_integration.asm
             )
             # Set MASM-specific properties on all sources
             set_target_properties(masm_ide_orchestration_obj PROPERTIES
@@ -1271,6 +1286,30 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         add_library(quant_utils STATIC src/qtapp/quant_utils.cpp)
         target_include_directories(quant_utils PUBLIC ${CMAKE_SOURCE_DIR}/src/qtapp ${CMAKE_SOURCE_DIR}/include)
         target_link_libraries(quant_utils PUBLIC Qt6::Core)
+        
+        # Shared Dashboard Components Library (used by RawrXD-QtShell, RawrXD-AgenticIDE, RawrXD-Win32IDE)
+        # This prevents MOC conflicts from multiple targets including the same Q_OBJECT class
+        add_library(dashboard_components STATIC
+            src/qtapp/discovery_dashboard.h
+            src/qtapp/discovery_dashboard.cpp
+            include/external_model_client.h
+            src/external_model_client.cpp
+        )
+        target_include_directories(dashboard_components PUBLIC 
+            ${CMAKE_SOURCE_DIR}/src/qtapp 
+            ${CMAKE_SOURCE_DIR}/include
+            ${CMAKE_CURRENT_BINARY_DIR}
+        )
+        target_link_libraries(dashboard_components PUBLIC 
+            Qt6::Core 
+            Qt6::Gui 
+            Qt6::Widgets
+            Qt6::WebSockets
+        )
+        set_target_properties(dashboard_components PROPERTIES
+            AUTOMOC ON
+            AUTORCC ON
+        )
         
         # RawrXD Cryptographic Library - No external dependencies needed
         # All cryptographic operations use our from-scratch implementation
@@ -1303,6 +1342,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
             brutal_gzip
             self_test_gate
             quant_utils
+            dashboard_components
             $<$<BOOL:${ENABLE_MASM_INTEGRATION}>:$<TARGET_OBJECTS:masm_ide_orchestration_obj>>
             Psapi
             dwmapi
@@ -1380,6 +1420,33 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         )
 
         # ------------------------------------------------------------
+        # Enterprise framework sources required by AgenticExecutor
+        # (Win32IDE already includes these; QtShell needs them too)
+        # ------------------------------------------------------------
+        target_sources(RawrXD-QtShell PRIVATE
+            src/enterprise_production_framework.h
+            src/enterprise_production_framework.cpp
+            src/refactoring_engine.h
+            src/refactoring_engine.cpp
+            src/test_generation_engine.h
+            src/test_generation_engine.cpp
+            src/cloud_integration_platform.h
+            src/cloud_integration_platform.cpp
+            src/enterprise_monitoring_platform.h
+            src/enterprise_monitoring_platform.cpp
+            src/team_collaboration_platform.h
+            src/team_collaboration_platform.cpp
+            src/production_deployment_infrastructure.h
+            src/production_deployment_infrastructure.cpp
+        )
+
+        # Ensure Qt MOC runs for dashboard Q_OBJECT widgets used by MainWindow
+        target_sources(RawrXD-QtShell PRIVATE
+            src/qtapp/chat_metrics_dashboard.hpp
+            src/qtapp/chat_metrics_dashboard.cpp
+        )
+
+        # ------------------------------------------------------------
         # OPTIONAL UI PANELS – compiled but not shown on startup
         # ------------------------------------------------------------
         # MASM editor widget (assembly editing with brutal_gzip compression)
@@ -1420,8 +1487,6 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
             src/agent/model_invoker.cpp
             src/agentic_engine.h
             src/agentic_engine.cpp
-            include/external_model_client.h
-            src/external_model_client.cpp
         )
         
         # AI Worker implementations
@@ -1442,9 +1507,8 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         
         # AI Toolkit Advanced Features - Enterprise-grade intelligent systems
         target_sources(RawrXD-QtShell PRIVATE
-            # Advanced Planning Engine - Recursive task decomposition
-            # src/ai/advanced_planning_engine.h
-            # src/ai/advanced_planning_engine.cpp
+            # Note: Advanced Planning Engine uses qtapp version in Win32IDE target
+            # Removed src/ai/advanced_planning_engine.* to avoid MOC conflicts
             
             # Tool Composition Framework - Dynamic function calling
             src/ai/tool_composition_framework.h
@@ -1889,6 +1953,15 @@ if(MSVC) # Re-enabled to test
         src/autonomous_resource_manager.cpp
         src/agentic_learning_system.cpp
         src/compression_interface.cpp
+        src/execution_visualizer.h
+        src/execution_visualizer.cpp
+        src/proactive_alert_system.h
+        src/proactive_alert_system.cpp
+        src/qtapp/security_manager.h
+        src/qtapp/security_manager.cpp
+        src/ui/AppSettingsDialog.h
+        src/ui/AppSettingsDialog.cpp
+        src/feature_toggle.cpp
         src/autonomous_feature_engine.h
         src/autonomous_feature_engine.cpp
         src/autonomous_intelligence_orchestrator.h
@@ -1902,6 +1975,27 @@ if(MSVC) # Re-enabled to test
         src/agentic_observability.cpp
         # Agentic Executor header for Q_OBJECT
         src/agentic_executor.h
+        # AgenticEngine already implemented in agentic_engine.cpp - removed stubs
+        # Enterprise Production Framework
+        src/enterprise_production_framework.h
+        src/enterprise_production_framework.cpp
+        src/test_generation_engine.h
+        src/test_generation_engine.cpp
+        src/cloud_integration_platform.h
+        src/cloud_integration_platform.cpp
+        src/enterprise_monitoring_platform.h
+        src/enterprise_monitoring_platform.cpp
+        src/team_collaboration_platform.h
+        src/team_collaboration_platform.cpp
+        src/production_deployment_infrastructure.h
+        src/production_deployment_infrastructure.cpp
+        src/refactoring_engine.h
+        src/refactoring_engine.cpp
+        src/config_manager.cpp
+        src/production_config_manager.h
+        src/production_config_manager.cpp
+        include/model_trainer.h
+        src/model_trainer.cpp
         # Real-time completion and inference
         src/real_time_completion_engine.cpp
         src/qtapp/inference_engine.cpp
@@ -1929,6 +2023,8 @@ if(MSVC) # Re-enabled to test
         src/qtapp/unified_backend.cpp
         src/agent/agentic_failure_detector.cpp
         src/agent/agentic_puppeteer.cpp
+        # Core AI Engine - required for AgenticEngine::generateCode, compressData, etc.
+        src/agentic_engine.cpp
 
         # Headers requiring MOC processing for Q_OBJECT
         src/qtapp/health_check_server.hpp
@@ -1939,7 +2035,8 @@ if(MSVC) # Re-enabled to test
         src/qtapp/StreamingGGUFLoader.hpp
         include/autonomous_resource_manager.h
         src/autonomous_model_manager.h
-        include/agentic_learning_system.h
+        src/agentic_learning_system.h
+        # discovery_dashboard.h excluded - processed via discovery_dashboard.cpp instead
 
         src/qtapp/agentic_tools.hpp
         src/qtapp/win32_autonomous_api.hpp
@@ -1969,6 +2066,7 @@ if(MSVC) # Re-enabled to test
         RawrXDTerminal
         brutal_gzip
         quant_utils
+        dashboard_components
         Qt6::Core
         Qt6::Network
         Qt6::Widgets
@@ -2315,9 +2413,8 @@ target_compile_definitions(RawrXD-Chromatic PRIVATE _CRT_SECURE_NO_WARNINGS NOMI
       # Check for required source files - FULL IDE WITH ALL FEATURES
       set(AGENTICIDE_SOURCES
           include/qt_masm_bridge.h
-          include/agentic_learning_system.h
+          src/agentic_learning_system.h
           include/autonomous_resource_manager.h
-          include/external_model_client.h
           src/qtapp/ai_chat_panel.hpp
           src/qtapp/chat_production_infrastructure.hpp
           src/qtapp/ai_digestion_panel.hpp
@@ -2342,7 +2439,6 @@ target_compile_definitions(RawrXD-Chromatic PRIVATE _CRT_SECURE_NO_WARNINGS NOMI
           src/qtapp/advanced_planning_engine.cpp
           src/qtapp/intelligent_error_analysis.cpp
           src/qtapp/real_time_refactoring.cpp
-          src/qtapp/discovery_dashboard.cpp
           src/qtapp/memory_persistence_system.cpp
           src/qtapp/inference_engine.cpp
           src/agentic_copilot_bridge.cpp
@@ -2490,7 +2586,7 @@ target_compile_definitions(RawrXD-Chromatic PRIVATE _CRT_SECURE_NO_WARNINGS NOMI
           src/qtapp/model_memory_hotpatch.cpp
           src/qtapp/byte_level_hotpatcher.cpp
           src/qtapp/gguf_server_hotpatch.cpp
-          src/qtapp/masm_orchestration_stubs.cpp
+          $<$<NOT:$<BOOL:${ENABLE_MASM_INTEGRATION}>>:src/qtapp/masm_orchestration_stubs.cpp>
           src/real_time_integration_coordinator.cpp
           src/real_time_terminal_pool.cpp
           # Missing dependencies for ProjectExplorer
@@ -2517,9 +2613,6 @@ target_compile_definitions(RawrXD-Chromatic PRIVATE _CRT_SECURE_NO_WARNINGS NOMI
       endif()
       if(EXISTS "${CMAKE_SOURCE_DIR}/src/chat_workspace.cpp")
           list(APPEND AGENTICIDE_SOURCES src/chat_workspace.cpp)
-      endif()
-      if(EXISTS "${CMAKE_SOURCE_DIR}/src/external_model_client.cpp")
-          list(APPEND AGENTICIDE_SOURCES src/external_model_client.cpp)
       endif()
       if(EXISTS "${CMAKE_SOURCE_DIR}/src/qtapp/ai_code_assistant_panel.cpp")
           list(APPEND AGENTICIDE_SOURCES src/qtapp/ai_code_assistant_panel.cpp)
@@ -2970,8 +3063,8 @@ target_compile_definitions(RawrXD-Chromatic PRIVATE _CRT_SECURE_NO_WARNINGS NOMI
           # Use unique compile PDB per target to avoid parallel write conflicts
           COMPILE_PDB_NAME "RawrXD-AgenticIDE_Compile"
           COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/pdb"
-          # Link with manifest for administrator access
-          LINK_FLAGS "/MANIFESTINPUT:${MANIFEST_FILE}"
+          # Disable automatic manifest generation and embed our custom one
+          LINK_FLAGS "/MANIFEST:EMBED /MANIFESTINPUT:${MANIFEST_FILE} /MANIFESTUAC:level='requireAdministrator'"
       )
       
       # Fix PDB file access conflicts in parallel builds
@@ -3002,6 +3095,11 @@ target_compile_definitions(RawrXD-Chromatic PRIVATE _CRT_SECURE_NO_WARNINGS NOMI
         d3d11
         dxgi
         d3dcompiler
+        dwmapi
+        uxtheme
+        d2d1
+        dwrite
+        shlwapi
         Qt6::Core
         Qt6::Gui
         Qt6::Widgets
@@ -3009,7 +3107,13 @@ target_compile_definitions(RawrXD-Chromatic PRIVATE _CRT_SECURE_NO_WARNINGS NOMI
         Qt6::Sql
         brutal_gzip
         quant_utils
+        dashboard_components
         ggml_interface
+        $<$<BOOL:${ENABLE_MASM_INTEGRATION}>:$<TARGET_OBJECTS:masm_ide_orchestration_obj>>
+        masm_orchestration
+        masm_hotpatch_unified
+        masm_runtime
+        masm_qt6_foundation
     )
     
     # Link masm_kernels if it's being built
@@ -3021,6 +3125,10 @@ target_compile_definitions(RawrXD-Chromatic PRIVATE _CRT_SECURE_NO_WARNINGS NOMI
     if(TEST_BRUTAL)
         target_compile_definitions(RawrXD-AgenticIDE PRIVATE TEST_BRUTAL=1)
         message(STATUS "TEST_BRUTAL enabled: ModelLoaderWidget will run codec round-trip test")
+    endif()
+
+    if(ENABLE_MASM_INTEGRATION)
+        target_compile_definitions(RawrXD-AgenticIDE PRIVATE ENABLE_MASM_INTEGRATION=1)
     endif()
 
     if(CURL_FOUND)
@@ -3126,10 +3234,8 @@ add_executable(test_ide_main WIN32
     src/db/database_manager.cpp
     src/ghost_text_renderer.cpp
     src/qtapp/ai_completion_provider.cpp
-    src/external_model_client.cpp
     src/ollama_proxy.cpp
     src/qtapp/settings_manager.cpp
-    include/external_model_client.h
     src/agentic_text_edit.h
     src/telemetry.cpp
 )
@@ -3142,6 +3248,7 @@ target_link_libraries(test_ide_main PRIVATE
     Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Network Qt6::Sql Qt6::Concurrent Qt6::Test
     user32 gdi32 wbemuuid pdh winhttp ws2_32 comctl32 d3d11 dxgi d3dcompiler
     RawrXDOrchestration RawrXDGit RawrXDTerminal brutal_gzip
+    dashboard_components
 )
 
 # Link ggml if available
@@ -3342,6 +3449,7 @@ if(MSVC)
 
     # Brutal MASM benchmark
     if(EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_deflate_brutal.cpp")
+        set_source_files_properties(kernels/deflate_brutal_masm.asm PROPERTIES LANGUAGE ASM_MASM)
         add_executable(bench_deflate_brutal tests/bench_deflate_brutal.cpp kernels/deflate_brutal_masm.asm)
         set_target_properties(bench_deflate_brutal PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
     endif()

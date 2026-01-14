@@ -33,6 +33,9 @@ public:
     
     // Get list of detected models from blobs/manifests
     QStringList detectedModels() const { return m_detectedModels.keys(); }
+
+    // Get blob path for a detected model name (empty if not found)
+    QString blobPathForModel(const QString& modelName) const;
     
     // Check if a path is an Ollama blob
     bool isBlobPath(const QString& path) const;

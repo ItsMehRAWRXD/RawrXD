@@ -16,8 +16,8 @@ includelib msvcrt.lib
 ; ============================================================================
 ; EXTERNAL C RUNTIME FUNCTIONS
 ; ============================================================================
-EXTERN malloc:PROC
-EXTERN free:PROC
+extern masm_malloc : proc
+extern masm_free : proc
 EXTERN strcpy:PROC
 EXTERN strcat:PROC
 EXTERN strstr:PROC
@@ -102,7 +102,7 @@ agentic_failure_detector_init PROC
     
     ; Allocate failure detector
     mov rcx, SIZE FAILURE_DETECTION * 100 ; Space for 100 detections
-    call malloc
+    call masm_malloc
     test rax, rax
     jz detector_init_fail
     
@@ -128,7 +128,7 @@ agentic_puppeteer_init PROC
     
     ; Allocate correction engine
     mov rcx, 1024 ; Buffer size
-    call malloc
+    call masm_malloc
     test rax, rax
     jz puppeteer_init_fail
     
@@ -287,7 +287,7 @@ CorrectRefusal PROC original:QWORD, mode:BYTE
     
     ; Create corrected response
     mov rcx, 1024 ; Buffer size
-    call malloc
+    call masm_malloc
     test rax, rax
     jz correction_alloc_fail
     
@@ -356,7 +356,7 @@ CorrectHallucination PROC original:QWORD, mode:BYTE
     
     ; Create corrected response
     mov rcx, 1024 ; Buffer size
-    call malloc
+    call masm_malloc
     test rax, rax
     jz correction_alloc_fail
     
@@ -481,3 +481,7 @@ szHallucinationDisclaimer db " (Note: This response may contain speculative info
 ; ============================================================================
 
 END
+
+
+
+

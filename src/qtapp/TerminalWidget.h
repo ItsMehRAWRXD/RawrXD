@@ -27,6 +27,7 @@ public:
     void stopShell();
     bool isRunning() const;
     qint64 pid() const;
+    QString getTitle() const;
 
     /**
      * Agentic capability: Analyze current terminal output for errors and suggest fixes
@@ -45,6 +46,9 @@ private slots:
     void onFinished(int exitCode, QProcess::ExitStatus status);
     void checkForErrors(const QString& text);
 
+public:
+    void appendOutput(const QString& text);
+
 private:
     TerminalManager* m_manager;
     QPlainTextEdit* m_output;
@@ -52,5 +56,4 @@ private:
     QComboBox* m_shellSelect;
     QPushButton* m_startStopBtn;
     QPushButton* m_fixBtn;
-    void appendOutput(const QString& text);
 };

@@ -14,8 +14,13 @@ StreamingGGUFLoader::StreamingGGUFLoader()
     : current_zone_(nullptr)
     , is_open_(false)
 {
-    compression_provider_ = CompressionFactory::Create(2);
+    // Read compression preference from settings (default to 2 = BRUTAL_GZIP)
+    uint32_t pref = static_cast<uint32_t>(SettingsManager::instance().compressionSettings().preferred_type);
+    compression_provider_ = CompressionFactory::Create(pref);
     if (!compression_provider_) qWarning() << "[Streaming] No compression provider";
+    else {
+        qInfo() << "[Streaming] Compression provider active kernel:" << QString::fromStdString(compression_provider_->GetActiveKernel());
+    }
 }
 
 StreamingGGUFLoader::~StreamingGGUFLoader() {
@@ -59,6 +64,13 @@ bool StreamingGGUFLoader::Open(const std::string& filepath) {
     std::cout << "   Zones: " << zones_.size() << std::endl;
     std::cout << "   Memory (header+index): ~" << ((tensor_index_.size() * 100) / (1024*1024)) << " MB" << std::endl;
     
+    // Telemetry: record open event
+    QJsonObject meta;
+    meta["file"] = QString::fromStdString(filepath);
+    meta["tensor_count"] = static_cast<double>(tensor_index_.size());
+    meta["zone_count"] = static_cast<double>(zones_.size());
+    GetTelemetry().recordEvent("gguf_open_streaming", meta);
+
     return true;
 }
 
@@ -80,26 +92,39 @@ bool StreamingGGUFLoader::ParseHeader() {
     file_.seekg(0);
     
     // Read magic
-    if (!ReadValue(header_.magic)) return false;
+    if (!ReadValue(header_.magic)) {
+        qWarning() << "[GGUFStream] Failed to read GGUF magic";
+        return false;
+    }
     if (header_.magic != GGUFConstants::GGUF_MAGIC) {
-        std::cerr << "❌ Invalid GGUF magic: 0x" << std::hex << header_.magic << std::endl;
+        qCritical() << "[GGUFStream] Invalid GGUF magic: 0x" << QString::number(header_.magic, 16);
         Diagnostics::error("Invalid GGUF magic number", "StreamingGGUFLoader");
         return false;
     }
     
     // Read version
-    if (!ReadValue(header_.version)) return false;
+    if (!ReadValue(header_.version)) {
+        qWarning() << "[GGUFStream] Failed to read GGUF version";
+        return false;
+    }
     if (header_.version != GGUFConstants::GGUF_VERSION) {
-        std::cerr << "❌ Unsupported GGUF version: " << header_.version << std::endl;
+        qCritical() << "[GGUFStream] Unsupported GGUF version:" << header_.version;
         Diagnostics::error("Unsupported GGUF version: " + std::to_string(header_.version), "StreamingGGUFLoader");
         return false;
     }
     
     // Read tensor count
-    if (!ReadValue(header_.tensor_count)) return false;
+    if (!ReadValue(header_.tensor_count)) {
+        qWarning() << "[GGUFStream] Failed to read tensor count";
+        return false;
+    }
+    qInfo() << "[GGUFStream] Tensor count:" << header_.tensor_count;
     
     // Read metadata KV count
-    if (!ReadValue(header_.metadata_kv_count)) return false;
+    if (!ReadValue(header_.metadata_kv_count)) {
+        qWarning() << "[GGUFStream] Failed to read metadata KV count";
+        return false;
+    }
     
     // Calculate metadata offset
     header_.metadata_offset = file_.tellg();
@@ -315,7 +340,7 @@ std::string StreamingGGUFLoader::GetTensorZone(const std::string& tensor_name) c
 bool StreamingGGUFLoader::LoadZone(const std::string& zone_name, uint64_t max_memory_mb) {
     auto zone_it = zones_.find(zone_name);
     if (zone_it == zones_.end()) {
-        std::cerr << "❌ Zone not found: " << zone_name << std::endl;
+        qWarning() << "[GGUFStream] Zone not found:" << QString::fromStdString(zone_name);
         return false;
     }
     
@@ -323,7 +348,7 @@ bool StreamingGGUFLoader::LoadZone(const std::string& zone_name, uint64_t max_me
     
     // Already loaded?
     if (zone.is_loaded) {
-        std::cout << "✓ Zone already loaded: " << zone_name << std::endl;
+        qInfo() << "[GGUFStream] Zone already loaded:" << QString::fromStdString(zone_name);
         return true;
     }
     
@@ -334,7 +359,7 @@ bool StreamingGGUFLoader::LoadZone(const std::string& zone_name, uint64_t max_me
     
     // Check file is open
     if (!is_open_ || !file_.is_open()) {
-        std::cerr << "❌ File not open for streaming" << std::endl;
+        qWarning() << "[GGUFStream] File not open for streaming";
         return false;
     }
     
@@ -344,13 +369,13 @@ bool StreamingGGUFLoader::LoadZone(const std::string& zone_name, uint64_t max_me
     
     uint64_t total_loaded = 0;
     
-    std::cout << "📥 Loading zone: " << zone_name << " (" << (zone.total_bytes / (1024.0*1024.0)) << " MB)..." << std::endl;
+    qInfo() << "[GGUFStream] Loading zone:" << QString::fromStdString(zone_name) 
+            << "(" << (zone.total_bytes / (1024.0*1024.0)) << "MB)...";
     
     for (const auto& tensor_name : zone.tensors) {
-        // Get tensor metadata from index
         auto tensor_it = tensor_index_.find(tensor_name);
         if (tensor_it == tensor_index_.end()) {
-            std::cerr << "❌ Tensor not in index: " << tensor_name << std::endl;
+            qWarning() << "[GGUFStream] Tensor not in index:" << QString::fromStdString(tensor_name);
             return false;
         }
         
@@ -366,7 +391,7 @@ bool StreamingGGUFLoader::LoadZone(const std::string& zone_name, uint64_t max_me
         file_.read(reinterpret_cast<char*>(zone.data.data() + old_size), ref.size);
         
         if (!file_.good()) {
-            std::cerr << "❌ Failed to read tensor: " << tensor_name << std::endl;
+            qWarning() << "[GGUFStream] Failed to read tensor:" << QString::fromStdString(tensor_name);
             zone.data.resize(old_size);
             return false;
         }
@@ -381,12 +406,14 @@ bool StreamingGGUFLoader::LoadZone(const std::string& zone_name, uint64_t max_me
             zones_[zone_name].data = std::move(decompressed);
             zones_[zone_name].compressed = false;
             compression_stats_.total_decompressed_bytes += zones_[zone_name].data.size();
-            qInfo() << "[Streaming] Zone" << zone_name << "decompressed via" << compression_provider_->GetActiveKernel().c_str();
+            qInfo() << "[Streaming] Zone" << QString::fromStdString(zone_name) 
+                     << "decompressed via" << QString::fromStdString(compression_provider_->GetActiveKernel());
             
             // telemetry & safety
             GetTelemetry().recordEvent("gguf_zone_decompress", QJsonObject{{"zone", QString::fromStdString(zone_name)}});
             if (zones_[zone_name].data.size() > SettingsManager::instance().compressionSettings().max_decomp_bytes) {
-                qWarning() << "[Streaming] Zone" << zone_name.c_str() << "exceeds max decompression size";
+                qWarning() << "[Streaming] Zone" << QString::fromStdString(zone_name).c_str() 
+                           << "exceeds max decompression size";
                 return false;
             }
             return true;
@@ -395,16 +422,37 @@ bool StreamingGGUFLoader::LoadZone(const std::string& zone_name, uint64_t max_me
 
     // legacy path: inflate in-place
     if (zone.compressed) {
-        // QByteArray compressed(reinterpret_cast<const char*>(zone.data.data()), zone.data.size());
-        qWarning() << "[Streaming] Zone" << zone_name.c_str() << "is compressed but decompression failed or provider missing.";
+        qWarning() << "[Streaming] Zone" << QString::fromStdString(zone_name).c_str() 
+                   << "is compressed but decompression failed or provider missing.";
         return false;
+    }
+    
+    // IMPORTANT: For Ollama blobs, detect and auto-decompress using MASM kernels
+    // This ensures brutal MASM compression is used throughout the Ollama pipeline
+    std::vector<uint8_t> decompressed;
+    if (compression_provider_ && compression_provider_->Decompress(zone.data, decompressed)) {
+        zones_[zone_name].data = std::move(decompressed);
+        compression_stats_.total_decompressed_bytes += zones_[zone_name].data.size();
+        qInfo() << "[Streaming] Ollama zone auto-decompressed via" 
+                 << QString::fromStdString(compression_provider_->GetActiveKernel());
+        GetTelemetry().recordEvent("ollama_zone_autodecompress", QJsonObject{
+            {"zone", QString::fromStdString(zone_name)},
+            {"kernel", QString::fromStdString(compression_provider_->GetActiveKernel())}
+        });
     }
     
     zone.is_loaded = true;
     current_zone_ = zone_name;
     current_zone_memory_ = total_loaded;
     
-    std::cout << "✅ Zone loaded: " << zone_name << " (" << (total_loaded / (1024.0*1024.0)) << " MB)" << std::endl;
+    qInfo() << "[GGUFStream] Zone loaded:" << QString::fromStdString(zone_name) 
+            << "(" << (total_loaded / (1024.0*1024.0)) << "MB)";
+    
+    // Telemetry: zone memory
+    GetTelemetry().recordEvent("gguf_zone_loaded", QJsonObject{
+        {"zone", QString::fromStdString(zone_name)},
+        {"bytes", static_cast<double>(total_loaded)}
+    });
     
     return true;
 }

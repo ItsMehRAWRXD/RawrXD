@@ -23,54 +23,6 @@
 #include <QFileInfo>
 #include <QDir>
 
-/**
- * @struct MultiFileSearchResult
- * @brief Represents a single search match within a file.
- *
- * Encapsulates all information needed to display and navigate to a search result,
- * including file location, position within the file, and surrounding context.
- *
- * @par Usage Example:
- * @code
- * MultiFileSearchResult result("main.cpp", 42, 15, "int main(int argc, char** argv)", "main");
- * emit resultFound(result);
- * @endcode
- */
-struct MultiFileSearchResult {
-    QString file;        ///< Absolute or relative path to the file containing the match
-    int line;            ///< 1-based line number where the match was found
-    int column;          ///< 0-based column offset within the line
-    QString lineText;    ///< Full text of the line containing the match (for preview)
-    QString matchedText; ///< The actual text that matched the search query
-
-    /**
-     * @brief Default constructor - creates an empty/invalid result.
-     */
-    MultiFileSearchResult() : line(0), column(0) {}
-
-    /**
-     * @brief Parameterized constructor for creating a fully populated result.
-     * @param file_       Path to the file containing the match
-     * @param line_       1-based line number of the match
-     * @param column_     0-based column offset of the match
-     * @param lineText_   Full line text for context display
-     * @param matchedText_ The matched substring
-     */
-    MultiFileSearchResult(const QString& file_, int line_, int column_,
-                          const QString& lineText_, const QString& matchedText_)
-        : file(file_)
-        , line(line_)
-        , column(column_)
-        , lineText(lineText_)
-        , matchedText(matchedText_)
-    {}
-
-    /**
-     * @brief Check if this result represents a valid match.
-     * @return true if the result has a valid file path and line number
-     */
-    bool isValid() const { return !file.isEmpty() && line > 0; }
-};
 
 /**
  * @class FileManager

@@ -464,16 +464,6 @@ std::map<int, int> DistributedTrainer::getLoadBalancingSuggestions() const
 }
 
 // ===== Performance Monitoring =====
-void DistributedTrainer::recordCommunicationLatency(float latencyMs)
-{
-    m_communicationLatencies.push_back(latencyMs);
-    
-    // Keep only recent 100 samples
-    if (m_communicationLatencies.size() > 100) {
-        m_communicationLatencies.erase(m_communicationLatencies.begin());
-    }
-}
-
 float DistributedTrainer::getAvgCommunicationLatency() const
 {
     if (m_communicationLatencies.empty()) {

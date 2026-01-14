@@ -382,16 +382,13 @@ AddDockZone_stub PROC
     mov eax, 1
     ret
 AddDockZone_stub ENDP
-
 FindDockZone_stub PROC
     mov eax, -1
     ret
 FindDockZone_stub ENDP
-
 PerformDocking_stub PROC
     ret
 PerformDocking_stub ENDP
-
 CreateGhostWindow_stub PROC
     xor rax, rax
     ret
@@ -400,20 +397,16 @@ CreateGhostWindow_stub ENDP
 ClearAllHighlights_stub PROC
     ret
 ClearAllHighlights_stub ENDP
-
 CreateTabGroup_stub PROC
     ret
 CreateTabGroup_stub ENDP
-
 RestoreOriginalPosition_stub PROC
     ret
 RestoreOriginalPosition_stub ENDP
-
 DragPane_SaveLayout_stub PROC
     mov eax, 1
     ret
 DragPane_SaveLayout_stub ENDP
-
 DragPane_LoadLayout_stub PROC
     mov eax, 1
     ret
@@ -1139,12 +1132,10 @@ DragPane_LoadLayout ENDP
 ;==============================================================================
 ; HELPER FUNCTIONS (Stubs for now)
 ;==============================================================================
-
 CreateGhostWindow PROC
     mov     eax, 12345h     ; Dummy window handle
     ret
 CreateGhostWindow ENDP
-
 FindDockZone_alt PROC
     mov     eax, -1         ; No zone found
     ret
@@ -1153,24 +1144,22 @@ FindDockZone_alt ENDP
 ClearAllHighlights_alt PROC
     ret
 ClearAllHighlights_alt ENDP
-
 PerformDocking_alt PROC
     ; rcx = source pane, rdx = target pane, r8d = dock type
     ret
 PerformDocking_alt ENDP
-
 CreateTabGroup_alt PROC
     ; rcx = source pane, rdx = target pane
     ret
 CreateTabGroup_alt ENDP
-
 RestoreOriginalPosition_alt PROC
     ; rcx = pane
     ret
 RestoreOriginalPosition_alt ENDP
-
 PaneSystem_RefreshLayout_alt PROC
     ret
 PaneSystem_RefreshLayout_alt ENDP
 
 END
+
+

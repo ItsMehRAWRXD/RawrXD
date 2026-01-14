@@ -37,3 +37,5 @@ REG_SYSTEM_PROMPT      EQU "SystemPrompt"
 REG_API_KEY            EQU "ApiKey"
 REG_ENCRYPTION         EQU "Encryption"
 REG_SECURE_STORAGE     EQU "SecureStorage"
+
+

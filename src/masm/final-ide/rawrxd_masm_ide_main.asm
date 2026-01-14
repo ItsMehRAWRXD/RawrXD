@@ -474,7 +474,6 @@ MainWindowProc ENDP
 ; ============================================================================
 ; EVENT HANDLERS
 ; ============================================================================
-
 OnWindowCreate PROC
     
     ; Create menu bar
@@ -501,13 +500,11 @@ OnWindowCreate PROC
     ret
 
 OnWindowCreate ENDP
-
 OnWindowDestroy PROC
     ; Cleanup resources
     ret
 
 OnWindowDestroy ENDP
-
 OnMenuCommand PROC
     ; Handle menu commands
     mov rax, wParam
@@ -579,7 +576,6 @@ OnFileExit:
 ; ============================================================================
 ; FILE OPERATIONS
 ; ============================================================================
-
 FileNew PROC
     ; Create new file
     mov rcx, offset szNewFileCreated
@@ -587,7 +583,6 @@ FileNew PROC
     ret
 
 FileNew ENDP
-
 FileOpen PROC
     ; Open file dialog
     call ui_open_text_file_dialog
@@ -608,7 +603,6 @@ file_open_fail:
     ret
 
 FileOpen ENDP
-
 FileSave PROC
     ; Save current file
     call SaveFileContent
@@ -629,7 +623,6 @@ FileSave ENDP
 ; ============================================================================
 ; HOTPATCH OPERATIONS
 ; ============================================================================
-
 ApplyMemoryHotpatch PROC patchData:QWORD, patchSize:QWORD
     
     mov rcx, [globalIDEState.hMemoryHotpatch]
@@ -657,7 +650,6 @@ ApplyMemoryHotpatch ENDP
 ; ============================================================================
 ; AGENTIC OPERATIONS
 ; ============================================================================
-
 ProcessAgenticCommand PROC command:QWORD
     
     mov rcx, [globalIDEState.hAgenticEngine]
@@ -684,7 +676,6 @@ ProcessAgenticCommand ENDP
 ; ============================================================================
 ; MESSAGE LOOP AND CLEANUP
 ; ============================================================================
-
 masm_ide_message_loop PROC
     
     LOCAL msg:MSG
@@ -760,3 +751,7 @@ szRawrXDTitle db "RawrXD MASM IDE",0
 ; ============================================================================
 
 END
+
+
+
+

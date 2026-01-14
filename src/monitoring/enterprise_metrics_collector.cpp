@@ -4,6 +4,9 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QUrl>
+#include <QNetworkRequest>
+#include <QNetworkReply>
+#include <QRegularExpression>
 #include <numeric>
 #include <sstream>
 #include <iomanip>
@@ -107,11 +110,12 @@ void EnterpriseMetricsCollector::reportMetrics() {
     }
     
     // Create HTTP request
-    QNetworkRequest request(QUrl(metrics_endpoint));
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-protobuf");
+    QNetworkRequest request{QUrl{metrics_endpoint}};
+    request.setRawHeader("Content-Type", "application/x-protobuf");
     
     if (!auth_token.isEmpty()) {
-        request.setRawHeader(createAuthenticationHeader());
+        QString headerValue = QString("%1 %2").arg(auth_type, auth_token);
+        request.setRawHeader("Authorization", headerValue.toLatin1());
     }
     
     // Send metrics asynchronously
@@ -124,8 +128,11 @@ void EnterpriseMetricsCollector::reportMetrics() {
     reporting_active = false;
 }
 
-void EnterpriseMetricsCollector::handleBackendResponse(QNetworkReply* reply) {
-    reply->deleteLater();
+void EnterpriseMetricsCollector::handleBackendResponse() {
+    QNetworkReply* reply = qobject_cast<QNetworkReply*>(sender());
+    if (reply) {
+        reply->deleteLater();
+    }
 }
 
 void EnterpriseMetricsCollector::checkBackendHealth() {
@@ -355,12 +362,14 @@ void EnterpriseMetricsCollector::buildInfluxDBMetric(QByteArray& output, const Q
 
 QString EnterpriseMetricsCollector::escapeLabel(const QString& label) const {
     // Escape special characters for Prometheus labels
-    return label.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n");
+    QString result = label;
+    return result.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n");
 }
 
 QString EnterpriseMetricsCollector::escapeMeasurement(const QString& measurement) const {
     // Escape special characters for InfluxDB measurements
-    return measurement.replace(" ", "\\ ").replace(",", "\\,");
+    QString result = measurement;
+    return result.replace(" ", "\\ ").replace(",", "\\,");
 }
 
 QByteArray EnterpriseMetricsCollector::createAuthenticationHeader() const {
@@ -370,13 +379,11 @@ QByteArray EnterpriseMetricsCollector::createAuthenticationHeader() const {
 
 bool EnterpriseMetricsCollector::validateMetricName(const QString& name) const {
     // Must be non-empty, alphanumeric with underscores
-    return !name.isEmpty() && name.matches(QRegExp("^[a-zA-Z_:][a-zA-Z0-9_:]*$"));
+    QRegularExpression regex("^[a-zA-Z_:][a-zA-Z0-9_:]*$");
+    return !name.isEmpty() && regex.match(name).hasMatch();
 }
 
 bool EnterpriseMetricsCollector::validateTagName(const QString& name) const {
     // Same as metric name
     return validateMetricName(name);
-void EnterpriseMetricsCollector::checkCustomBackendHealth() {}
-double EnterpriseMetricsCollector::calculateHistogramPercentile(const std::vector<double>& values, double percentile) { return 0.0; }
-void EnterpriseMetricsCollector::aggregateMetrics() {}
-void EnterpriseMetricsCollector::clearExpiredMetrics() {}
+}

@@ -4,6 +4,107 @@
 ; PURPOSE: Wire inference streaming, autonomous execution, failure recovery
 ; LINES: 480 (Production MASM)
 ; ============================================================================
+option casemap:none
+
+include windows.inc
+includelib kernel32.lib
+includelib user32.lib
+includelib gdi32.lib
+
+; Win32 / CRT imports used by this module
+extern masm_malloc : proc
+extern masm_free : proc
+EXTERN wsprintfA:PROC
+EXTERN CreateThread:PROC
+EXTERN CreateEventA:PROC
+EXTERN SetEvent:PROC
+EXTERN WaitForSingleObject:PROC
+EXTERN CloseHandle:PROC
+EXTERN Sleep:PROC
+EXTERN SendMessageA:PROC
+EXTERN SetTimer:PROC
+
+; MASM UI integration
+EXTERN output_pane_append:PROC
+
+; Agentic / orchestration subsystems
+EXTERN agentic_inference_stream_init:PROC
+EXTERN agentic_inference_stream_start:PROC
+EXTERN autonomous_task_executor_init:PROC
+EXTERN autonomous_task_schedule:PROC
+EXTERN autonomous_task_execute_pending:PROC
+EXTERN autonomous_task_status:PROC
+EXTERN agentic_failure_recovery_init:PROC
+EXTERN agentic_failure_detect:PROC
+EXTERN get_stream_result:PROC
+
+; External UI handles
+EXTERN outputLogHandle:QWORD
+EXTERN agenticChatHandle:QWORD
+
+WAIT_OBJECT_0          EQU 0
+EM_REPLACESEL          EQU 00C2h
+
+.data
+COORDINATOR_STATE_SIZE EQU 180
+COORDINATOR_IDLE       EQU 0
+COORDINATOR_INFERRING  EQU 1
+COORDINATOR_EXECUTING  EQU 2
+COORDINATOR_RECOVERING EQU 3
+
+MAX_ACTIVE_STREAMS     EQU 16
+
+; Local stream pool fallback (keeps this unit self-contained for MASM builds)
+streamPool             DQ 16 DUP(0)
+
+; Single global coordinator instance
+globalCoordinator      DQ 0               ; Singleton coordinator
+coordinatorInitialized DB 0               ; Init flag
+
+; Performance metrics
+coordinationLatency    DQ 0               ; Average coordination time (microseconds)
+totalOperations        DQ 0               ; Total coordinated operations
+inferenceCount         DQ 0               ; Total inferences started
+autonomousTaskCount    DQ 0               ; Total tasks executed
+failureRecoveryCount   DQ 0               ; Total recovery attempts
+
+; Real-time state
+currentlyInferring     DB 0
+currentlyExecuting     DB 0
+currentlyRecovering    DB 0
+
+; Coordinator state (mirrors struct field for status reporting)
+coordState             DD 0
+
+; Temperature parameter storage (for inference)
+temperature            REAL8 0.7
+
+TIMER_POLL_ID          EQU 1001
+
+; Log/status strings
+szCoordInitMsg         DB "[AI Orchestration] Coordinator initialized and running",0
+szInferStartMsg        DB "[AI Orchestration] Inference starting: ",0
+szTaskStartMsg         DB "[AI Orchestration] Task execution starting: ",0
+szFailureDetectedMsg   DB "[AI Orchestration] Failure detected, initiating recovery",0
+szInferCompleteMsg     DB "[AI Orchestration] Inference completed successfully",0
+szTaskFailedMsg        DB "[AI Orchestration] Task failed, checking auto-retry",0
+szTaskCompletedMsg     DB "[AI Orchestration] Task completed successfully",0
+szCoordShutdownMsg     DB "[AI Orchestration] Coordinator shutdown complete",0
+szPollTickMsg          DB "[AI Orchestration] Poll tick",0
+szInstalledMsg         DB "[AI Orchestration] Installed in main loop",0
+
+; JSON fragments (avoid backslash-escaped literals)
+szJsonOpen             DB '{',0
+szJsonStateKey         DB 34,'s','t','a','t','e',34,':',0
+szJsonTotalOpsKey      DB ',',34,'t','o','t','a','l','O','p','e','r','a','t','i','o','n','s',34,':',0
+szJsonInferencesKey    DB ',',34,'i','n','f','e','r','e','n','c','e','s',34,':',0
+szJsonTasksKey         DB ',',34,'t','a','s','k','s',34,':',0
+szJsonRecoveriesKey    DB ',',34,'r','e','c','o','v','e','r','i','e','s',34,':',0
+szJsonLatencyKey       DB ',',34,'l','a','t','e','n','c','y','_','u','s',34,':',0
+szJsonInferringKey     DB ',',34,'i','n','f','e','r','r','i','n','g',34,':',0
+szJsonExecutingKey     DB ',',34,'e','x','e','c','u','t','i','n','g',34,':',0
+szJsonRecoveringKey    DB ',',34,'r','e','c','o','v','e','r','i','n','g',34,':',0
+szJsonClose            DB '}',0
 
 .code
 
@@ -26,39 +127,6 @@
 ;   64     8    hStopEvent (shutdown signal)
 ;   72    100   operationLog (recent operations)
 
-COORDINATOR_STATE_SIZE = 180
-COORDINATOR_IDLE = 0
-COORDINATOR_INFERRING = 1
-COORDINATOR_EXECUTING = 2
-COORDINATOR_RECOVERING = 3
-
-; ============================================================================
-; GLOBAL STATE
-; ============================================================================
-
-EXTERN outputLogHandle: QWORD
-EXTERN agenticChatHandle: QWORD
-
-; Single global coordinator instance
-globalCoordinator: QWORD 0              ; Singleton coordinator
-coordinatorInitialized: BYTE 0          ; Init flag
-
-; Performance metrics
-coordinationLatency: QWORD 0            ; Average coordination time (microseconds)
-totalOperations: QWORD 0                ; Total coordinated operations
-inferenceCount: QWORD 0                 ; Total inferences started
-autonomousTaskCount: QWORD 0            ; Total tasks executed
-failureRecoveryCount: QWORD 0           ; Total recovery attempts
-
-; Real-time state
-currentlyInferring: BYTE 0              ; Is inference active?
-currentlyExecuting: BYTE 0              ; Is task executing?
-currentlyRecovering: BYTE 0             ; Is recovery in progress?
-
-; ============================================================================
-; PUBLIC API
-; ============================================================================
-
 ; ai_orchestration_coordinator_init(hWindow: QWORD)
 ; Initialize the AI orchestration coordinator
 ; rcx = main window handle
@@ -68,15 +136,15 @@ ai_orchestration_coordinator_init PROC
 
     ; Allocate coordinator state
     mov rcx, COORDINATOR_STATE_SIZE
-    call malloc
+    call masm_malloc
     test rax, rax
     jz coord_init_fail
     
-    mov [globalCoordinator], rax
+    mov qword ptr [globalCoordinator], rax
     mov rsi, rax                        ; rsi = coordinator state
     
     ; Store main window handle
-    mov [rsi + 24], rcx
+    mov qword ptr [rsi + 24], rcx
     
     ; Initialize subsystems
     call agentic_inference_stream_init
@@ -94,15 +162,15 @@ ai_orchestration_coordinator_init PROC
     ; Create coordination worker thread
     mov rcx, rsi
     call CreateThread
-    mov [rsi + 56], rax                 ; hWorkerThread
+    mov qword ptr [rsi + 56], rax       ; hWorkerThread
     
     ; Create stop event
     call CreateEventA
-    mov [rsi + 64], rax                 ; hStopEvent
+    mov qword ptr [rsi + 64], rax       ; hStopEvent
     
-    mov dword ptr [coordinatorInitialized], 1  ; Log initialization
-    mov rcx, outputLogHandle
-    mov rdx, "[AI Orchestration] Coordinator initialized and running"
+    mov byte ptr [coordinatorInitialized], 1  ; Log initialization
+    mov rcx, qword ptr [outputLogHandle]
+    lea rdx, [szCoordInitMsg]
     call output_pane_append
     
     mov eax, 1
@@ -134,8 +202,8 @@ ai_orchestration_infer_async PROC
     mov byte ptr [currentlyInferring], 1
     
     ; Log inference start
-    mov rcx, outputLogHandle
-    mov rdx, "[AI Orchestration] Inference starting: "
+    mov rcx, qword ptr [outputLogHandle]
+    lea rdx, [szInferStartMsg]
     call output_pane_append
     
     ; Increment operation count
@@ -170,8 +238,8 @@ ai_orchestration_execute_task_async PROC
     mov byte ptr [currentlyExecuting], 1
     
     ; Log task start
-    mov rcx, outputLogHandle
-    mov rdx, "[AI Orchestration] Task execution starting: "
+    mov rcx, qword ptr [outputLogHandle]
+    lea rdx, [szTaskStartMsg]
     call output_pane_append
     
     ; Increment counters
@@ -217,8 +285,8 @@ ai_orchestration_handle_inference_result PROC
     inc [failureRecoveryCount]
     
     ; Log failure
-    mov rcx, outputLogHandle
-    mov rdx, "[AI Orchestration] Failure detected, initiating recovery"
+    mov rcx, qword ptr [outputLogHandle]
+    lea rdx, [szFailureDetectedMsg]
     call output_pane_append
     
     mov eax, 1                          ; Signal recovery needed
@@ -232,8 +300,8 @@ result_success:
     mov byte ptr [currentlyInferring], 0
     
     ; Log success
-    mov rcx, outputLogHandle
-    mov rdx, "[AI Orchestration] Inference completed successfully"
+    mov rcx, qword ptr [outputLogHandle]
+    lea rdx, [szInferCompleteMsg]
     call output_pane_append
     
     xor eax, eax                        ; No recovery needed
@@ -261,8 +329,8 @@ ai_orchestration_handle_task_result PROC
     je task_completed
     
     ; Task failed - mark for retry
-    mov rcx, outputLogHandle
-    mov rdx, "[AI Orchestration] Task failed, checking auto-retry"
+    mov rcx, qword ptr [outputLogHandle]
+    lea rdx, [szTaskFailedMsg]
     call output_pane_append
     
     xor eax, eax
@@ -270,7 +338,7 @@ ai_orchestration_handle_task_result PROC
     
 task_completed:
     ; Update chat with result
-    mov rcx, agenticChatHandle
+    mov rcx, qword ptr [agenticChatHandle]
     mov rdx, r13                        ; result
     call append_task_result_to_chat
     
@@ -278,8 +346,8 @@ task_completed:
     mov byte ptr [currentlyExecuting], 0
     
     ; Log completion
-    mov rcx, outputLogHandle
-    mov rdx, "[AI Orchestration] Task completed successfully"
+    mov rcx, qword ptr [outputLogHandle]
+    lea rdx, [szTaskCompletedMsg]
     call output_pane_append
     
     mov eax, 1
@@ -297,69 +365,69 @@ ai_orchestration_get_status PROC
 
     ; Allocate JSON status object
     mov rcx, 2048
-    call malloc
+    call masm_malloc
     mov r8, rax
     
     ; Build JSON
     mov rcx, r8
-    mov rdx, "{"
+    lea rdx, [szJsonOpen]
     call wsprintfA
     
     ; Add state
     mov rcx, r8
-    mov rdx, "\"state\":"
+    lea rdx, [szJsonStateKey]
     mov r8d, [coordState]
     call wsprintfA
     
     ; Add metrics
     mov rcx, r8
-    mov rdx, ",\"totalOperations\":"
+    lea rdx, [szJsonTotalOpsKey]
     mov r8, [totalOperations]
     call wsprintfA
     
     ; Add inference count
     mov rcx, r8
-    mov rdx, ",\"inferences\":"
+    lea rdx, [szJsonInferencesKey]
     mov r8, [inferenceCount]
     call wsprintfA
     
     ; Add task count
     mov rcx, r8
-    mov rdx, ",\"tasks\":"
+    lea rdx, [szJsonTasksKey]
     mov r8, [autonomousTaskCount]
     call wsprintfA
     
     ; Add recovery count
     mov rcx, r8
-    mov rdx, ",\"recoveries\":"
+    lea rdx, [szJsonRecoveriesKey]
     mov r8, [failureRecoveryCount]
     call wsprintfA
     
     ; Add latency
     mov rcx, r8
-    mov rdx, ",\"latency_us\":"
+    lea rdx, [szJsonLatencyKey]
     mov r8, [coordinationLatency]
     call wsprintfA
     
     ; Add current state
     mov rcx, r8
-    mov rdx, ",\"inferring\":"
+    lea rdx, [szJsonInferringKey]
     movzx r8d, byte ptr [currentlyInferring]
     call wsprintfA
     
     mov rcx, r8
-    mov rdx, ",\"executing\":"
+    lea rdx, [szJsonExecutingKey]
     movzx r8d, byte ptr [currentlyExecuting]
     call wsprintfA
     
     mov rcx, r8
-    mov rdx, ",\"recovering\":"
+    lea rdx, [szJsonRecoveringKey]
     movzx r8d, byte ptr [currentlyRecovering]
     call wsprintfA
     
     ; Close JSON
     mov rcx, r8
-    mov rdx, "}"
+    lea rdx, [szJsonClose]
     call wsprintfA
     
     mov rax, r8
@@ -375,7 +443,7 @@ ai_orchestration_get_status ENDP
 PUBLIC ai_orchestration_shutdown
 ai_orchestration_shutdown PROC
 
-    mov rsi, [globalCoordinator]
+    mov rsi, qword ptr [globalCoordinator]
     test rsi, rsi
     jz shutdown_done
     
@@ -397,12 +465,12 @@ ai_orchestration_shutdown PROC
     
     ; Free coordinator
     mov rcx, rsi
-    call free
+    call masm_free
     
-    mov [globalCoordinator], 0
-    mov dword ptr [coordinatorInitialized], 0  ; Log shutdown
-    mov rcx, outputLogHandle
-    mov rdx, "[AI Orchestration] Coordinator shutdown complete"
+    mov qword ptr [globalCoordinator], 0
+    mov byte ptr [coordinatorInitialized], 0  ; Log shutdown
+    mov rcx, qword ptr [outputLogHandle]
+    lea rdx, [szCoordShutdownMsg]
     call output_pane_append
     
 shutdown_done:
@@ -579,8 +647,8 @@ ai_orchestration_poll PROC
     
 check_no_result:
     ; Update UI status
-    mov rcx, outputLogHandle
-    mov rdx, "[AI Orchestration] Poll tick"
+    mov rcx, qword ptr [outputLogHandle]
+    lea rdx, [szPollTickMsg]
     call output_pane_append
     
 poll_done:
@@ -614,8 +682,8 @@ ai_orchestration_install PROC
     call SetTimer
     
     ; Log installation
-    mov rcx, outputLogHandle
-    mov rdx, "[AI Orchestration] Installed in main loop"
+    mov rcx, qword ptr [outputLogHandle]
+    lea rdx, [szInstalledMsg]
     call output_pane_append
     
     ret
@@ -626,8 +694,8 @@ ai_orchestration_install ENDP
 ; Set UI handles for logging and chat
 PUBLIC ai_orchestration_set_handles
 ai_orchestration_set_handles PROC
-    mov [outputLogHandle], rcx
-    mov [chatHandle], rdx
+    mov qword ptr [outputLogHandle], rcx
+    mov qword ptr [agenticChatHandle], rdx
     ret
 ai_orchestration_set_handles ENDP
 
@@ -642,14 +710,5 @@ ai_orchestration_schedule_task PROC
     ret
 ai_orchestration_schedule_task ENDP
 
-TIMER_POLL_ID = 1001
-
-; ============================================================================
-
-; Temperature parameter storage (for inference)
-temperature: REAL8 0.7                  ; Default 0.7 temperature
-
-; ============================================================================
-
-.end
+END
 

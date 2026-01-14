@@ -644,47 +644,38 @@ tensor_debugger_inspect_tensor ENDP
 ;==========================================================================
 ; Helper functions
 ;==========================================================================
-
 create_tensor_list PROC
     ; Create tensor list UI
     ret
 create_tensor_list ENDP
-
 create_tensor_viewer PROC
     ; Create tensor viewer UI
     ret
 create_tensor_viewer ENDP
-
 create_graph_viewer PROC
     ; Create graph viewer UI
     ret
 create_graph_viewer ENDP
-
 create_memory_chart PROC
     ; Create memory chart UI
     ret
 create_memory_chart ENDP
-
 create_breakpoint_list PROC
     ; Create breakpoint list UI
     ret
 create_breakpoint_list ENDP
-
 update_tensor_list PROC
     ; Update tensor list UI
     ret
 update_tensor_list ENDP
-
 update_breakpoint_list PROC
     ; Update breakpoint list UI
     ret
 update_breakpoint_list ENDP
-
 take_memory_snapshot PROC
     ; Take memory usage snapshot
     ret
 take_memory_snapshot ENDP
-
 find_breakpoint_by_id PROC
     ; rcx = bp_id -> rax = breakpoint_ptr
     xor rax, rax
@@ -713,7 +704,6 @@ find_breakpoint_by_id PROC
     xor rax, rax
     ret
 find_breakpoint_by_id ENDP
-
 strlen PROC
     ; rcx = string -> rax = length
     xor rax, rax
@@ -725,7 +715,6 @@ strlen PROC
 @done:
     ret
 strlen ENDP
-
 strncpy PROC
     ; rcx = dest, rdx = src, r8d = max_len
     xor rax, rax
@@ -745,25 +734,21 @@ strncpy ENDP
 ;==========================================================================
 ; Window procedures
 ;==========================================================================
-
 tensor_debugger_wnd_proc PROC
     ; Main window procedure
     call DefWindowProcA
     ret
 tensor_debugger_wnd_proc ENDP
-
 tensor_viewer_wnd_proc PROC
     ; Tensor viewer procedure
     call DefWindowProcA
     ret
 tensor_viewer_wnd_proc ENDP
-
 graph_viewer_wnd_proc PROC
     ; Graph viewer procedure
     call DefWindowProcA
     ret
 graph_viewer_wnd_proc ENDP
-
 memory_chart_wnd_proc PROC
     ; Memory chart procedure
     call DefWindowProcA
@@ -774,21 +759,21 @@ memory_chart_wnd_proc ENDP
 tensor_debugger_get_gradients PROC
     ret
 tensor_debugger_get_gradients ENDP
-
 tensor_debugger_profile_memory PROC
     ret
 tensor_debugger_profile_memory ENDP
-
 tensor_debugger_compare_tensors PROC
     ret
 tensor_debugger_compare_tensors ENDP
-
 tensor_debugger_pause PROC
     ret
 tensor_debugger_pause ENDP
-
 tensor_debugger_resume PROC
     ret
 tensor_debugger_resume ENDP
 
 end
+
+
+
+

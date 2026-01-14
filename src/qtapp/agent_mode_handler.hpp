@@ -59,10 +59,10 @@ struct Plan {
 };
 
 /**
- * @struct ExecutionStep
+ * @struct AgentExecutionStep
  * @brief Execution state for a single step
  */
-struct ExecutionStep {
+struct AgentExecutionStep {
     int stepId;
     QString title;
     enum Status {
@@ -119,7 +119,7 @@ public:
     /**
      * @brief Get all execution steps with current status
      */
-    const QVector<ExecutionStep>& getExecutionSteps() const { return m_executionSteps; }
+    const QVector<AgentExecutionStep>& getExecutionSteps() const { return m_executionSteps; }
 
     /**
      * @brief Get current step being executed
@@ -141,7 +141,7 @@ signals:
     void executionStarted();
 
     /// About to execute a step
-    void stepStarting(int stepIndex, const ExecutionStep& step);
+    void stepStarting(int stepIndex, const AgentExecutionStep& step);
 
     /// Step is executing (tool invocation started)
     void stepExecuting(int stepIndex, const QString& toolName);
@@ -150,7 +150,7 @@ signals:
     void stepProgress(int stepIndex, const QString& message);
 
     /// Step completed successfully
-    void stepCompleted(int stepIndex, const ExecutionStep& step);
+    void stepCompleted(int stepIndex, const AgentExecutionStep& step);
 
     /// Step failed
     void stepFailed(int stepIndex, const QString& errorMessage);
@@ -165,7 +165,7 @@ signals:
     void executionResumed();
 
     /// Execution completed successfully
-    void executionCompleted(const QVector<ExecutionStep>& steps);
+    void executionCompleted(const QVector<AgentExecutionStep>& steps);
 
     /// Execution failed
     void executionFailed(int stepIndex, const QString& errorMessage);
@@ -199,7 +199,7 @@ private:
      * @brief Execute a single step
      * @param step The plan step to execute
      */
-    void executeSingleStep(const ExecutionStep& step);
+    void executeSingleStep(const AgentExecutionStep& step);
 
     /**
      * @brief Try to recover from a step failure
@@ -224,7 +224,7 @@ private:
     std::unique_ptr<AgenticToolExecutor> m_toolExecutor;
 
     Plan m_executionPlan;
-    QVector<ExecutionStep> m_executionSteps;
+    QVector<AgentExecutionStep> m_executionSteps;
     int m_currentStepIndex = -1;
     bool m_executionComplete = false;
     bool m_executionPaused = false;

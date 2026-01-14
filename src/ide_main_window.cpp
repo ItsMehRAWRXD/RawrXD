@@ -3,6 +3,8 @@
 #include "autonomous_widgets.h"
 #include "telemetry_singleton.h"
 #include "feature_toggle.h"
+#include "agentic_executor.h"
+#include "ui/AppSettingsDialog.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QFileDialog>
@@ -17,6 +19,8 @@
 #include <QShortcut>
 #include <QPropertyAnimation>
 #include <QGraphicsDropShadowEffect>
+#include <QDateTime>
+#include <QJsonDocument>
 #include <iostream>
 
 IDEMainWindow::IDEMainWindow(QWidget *parent)
@@ -34,8 +38,21 @@ IDEMainWindow::IDEMainWindow(QWidget *parent)
     errorRecovery = new ErrorRecoverySystem(this);
     performanceMonitor = new PerformanceMonitor(this);
     
+    // Initialize Advanced Dashboards & Systems
+    std::cout << "[IDEMainWindow] Initializing performance & discovery systems..." << std::endl;
+    discoveryDashboard = new DiscoveryDashboard(this);
+    executionVisualizer = new ExecutionVisualizer(this);
+    alertSystem = new ProactiveAlertSystem(this);
+    learningSystem = new AgenticLearningSystem(this);
+    
+    discoveryDashboard->initialize();
+    executionVisualizer->initialize();
+    alertSystem->initialize();
+    learningSystem->initialize();
+    agenticExecutor = new AgenticExecutor(this);
+    agenticExecutor->initialize(nullptr, nullptr); // Real engines would be passed here
+    
     // Initialize Model Router systems
-    #include "ui/AppSettingsDialog.h"
     std::cout << "[IDEMainWindow] Initializing Model Router..." << std::endl;
     modelRouterAdapter = new ModelRouterAdapter(this);
     modelRouterWidget = nullptr;  // Will be created in setupDockWidgets
@@ -278,6 +295,16 @@ void IDEMainWindow::setupMenus() {
     
     QAction* costMonitorAction = modelRouterMenu->addAction("&Cost Monitor");
     connect(costMonitorAction, &QAction::triggered, this, &IDEMainWindow::onMonitorModelCost);
+
+    // ===== Discovery & Execution Menu Items =====
+    toolsMenu->addSeparator();
+    QAction* discoveryAction = toolsMenu->addAction("Discovery &Dashboard");
+    discoveryAction->setShortcut(QKeySequence("Ctrl+Shift+F1"));
+    connect(discoveryAction, &QAction::triggered, this, &IDEMainWindow::onOpenDiscoveryDashboard);
+
+    QAction* executionAction = toolsMenu->addAction("Execution &Visualizer");
+    executionAction->setShortcut(QKeySequence("Ctrl+Shift+F2"));
+    connect(executionAction, &QAction::triggered, this, &IDEMainWindow::onOpenExecutionVisualizer);
     
     // Help Menu
     helpMenu = menuBar()->addMenu("&Help");
@@ -347,6 +374,18 @@ void IDEMainWindow::setupDockWidgets() {
     modelRouterConsoleDock->setWidget(modelRouterConsole);
     addDockWidget(Qt::BottomDockWidgetArea, modelRouterConsoleDock);
     modelRouterConsoleDock->hide();  // Hidden by default
+
+    // Discovery Dashboard Dock
+    QDockWidget* discoveryDock = new QDockWidget("System Discovery Dashboard", this);
+    discoveryDock->setWidget(discoveryDashboard);
+    addDockWidget(Qt::RightDockWidgetArea, discoveryDock);
+    discoveryDock->hide(); // Hidden by default
+
+    // Execution Visualizer Dock
+    QDockWidget* executionDock = new QDockWidget("Agent Execution Visualizer", this);
+    executionDock->setWidget(executionVisualizer);
+    addDockWidget(Qt::BottomDockWidgetArea, executionDock);
+    executionDock->hide(); // Hidden by default
     
     // AI Suggestions Dock (RIGHT)
     suggestionsDock = new QDockWidget("AI Suggestions", this);
@@ -443,7 +482,104 @@ void IDEMainWindow::setupConnections() {
             this, &IDEMainWindow::onThresholdViolation);
     connect(performanceMonitor, &PerformanceMonitor::snapshotCaptured,
             this, &IDEMainWindow::onSnapshotCaptured);
+            
+    // Intelligent System Inter-connections
+    connect(performanceMonitor, &PerformanceMonitor::metricRecorded, this, [this](const MetricData& metric) {
+        // Update Alert System
+        if (metric.operation == "cpu_usage") alertSystem->checkCpuUsage(metric.value);
+        else if (metric.operation == "memory_usage") alertSystem->checkMemoryUsage(metric.value);
+        else if (metric.operation == "gpu_usage") alertSystem->checkGpuUsage(metric.value);
+        else if (metric.operation.contains("latency")) alertSystem->checkLatency(metric.component, metric.value);
+        
+        // Update Learning System
+        if (metric.operation == "inference") {
+            int tokens = metric.tags.value("tokens").toInt();
+            learningSystem->recordInferenceEfficiency(metric.component, tokens, (qint64)metric.value, true);
+        } else if (metric.operation == "compression") {
+            size_t in = (size_t)metric.tags.value("input_size").toDouble();
+            size_t out = (size_t)metric.tags.value("output_size").toDouble();
+            learningSystem->recordCompressionPerformance(metric.component, in, out, (qint64)metric.value);
+        }
+    });
     
+    // Connect Learning System to capture successes/failures
+    if (learningSystem && featureEngine) {
+        connect(featureEngine, &AutonomousFeatureEngine::analysisComplete, this, [this](const QString& filePath) {
+            learningSystem->recordUserFeedback(QStringLiteral("analysis:%1").arg(filePath), true);
+        });
+        connect(featureEngine, &AutonomousFeatureEngine::errorOccurred, this, [this](const QString& error) {
+            learningSystem->recordUserFeedback(error, false);
+        });
+    }
+
+    // Agentic Executor Connections for Workflow Visualization
+    if (agenticExecutor && executionVisualizer) {
+        connect(agenticExecutor, &AgenticExecutor::stepStarted,
+                executionVisualizer, &ExecutionVisualizer::onStepStarted);
+        connect(agenticExecutor, &AgenticExecutor::stepCompleted,
+                executionVisualizer, &ExecutionVisualizer::onStepCompleted);
+        connect(agenticExecutor, &AgenticExecutor::taskProgress,
+                executionVisualizer, &ExecutionVisualizer::onTaskProgress);
+        connect(agenticExecutor, &AgenticExecutor::executionPhaseChanged,
+                executionVisualizer, &ExecutionVisualizer::onExecutionPhaseChanged);
+        connect(agenticExecutor, &AgenticExecutor::logMessage,
+                executionVisualizer, &ExecutionVisualizer::onLogMessage);
+        connect(agenticExecutor, &AgenticExecutor::errorOccurred,
+                executionVisualizer, &ExecutionVisualizer::onErrorOccurred);
+        connect(agenticExecutor, &AgenticExecutor::errorOccurred,
+                this, &IDEMainWindow::onSystemError);
+    }
+    
+    // Connect suggestions widget to learning system (using lambda to adapt parameter count)
+    connect(suggestionsWidget, &AutonomousSuggestionWidget::suggestionAccepted,
+            [this](const QString& suggestionId) {
+                learningSystem->onSuggestionAccepted(suggestionId, 1.0);  // Default confidence
+            });
+    
+    // Advanced system signals
+    if (alertSystem) {
+        connect(alertSystem, &ProactiveAlertSystem::thresholdBreached,
+                this, &IDEMainWindow::onThresholdBreached);
+    }
+    
+    if (learningSystem) {
+        connect(learningSystem, &AgenticLearningSystem::anomalyDetected,
+                [this](const QString& anomaly, const QJsonObject& details) {
+                    QString detailsStr = QString::fromUtf8(QJsonDocument(details).toJson(QJsonDocument::Compact));
+                    onAnomalyDetected(anomaly, detailsStr);
+                });
+        connect(learningSystem, &AgenticLearningSystem::optimizationSuggested,
+                this, &IDEMainWindow::onLearningOptimizationSuggested);
+    }
+    
+    if (discoveryDashboard) {
+        connect(discoveryDashboard, &DiscoveryDashboard::errorOccurred,
+                this, &IDEMainWindow::onSystemError);
+        connect(discoveryDashboard, &DiscoveryDashboard::systemHealthChanged, this, [this](double score){
+            healthLabel->setText(QString("Health: %1%").arg(score * 100.0, 0, 'f', 1));
+        });
+    }
+    
+    // Error recovery complex wiring
+    connect(errorRecovery, &ErrorRecoverySystem::fallbackToLocalRequested, 
+            cloudManager, [this](){ cloudManager->switchToLocal("Auto-healing requirement"); });
+    connect(errorRecovery, &ErrorRecoverySystem::networkReconnectRequested, 
+            cloudManager, &HybridCloudManager::checkAllProvidersHealth);
+            
+    // Cloud manager extra signals
+    connect(cloudManager, &HybridCloudManager::errorOccurred, this, &IDEMainWindow::onSystemError);
+    connect(cloudManager, &HybridCloudManager::costLimitReached, this, [this](const QString& limit){
+        showMessage("CRITICAL: Cloud cost limit reached for " + limit, 10000);
+    });
+
+    // Agentic Activity Monitoring
+    connect(agenticExecutor, &AgenticExecutor::stepStarted, this, [this](const QString& desc){
+        statusBar()->showMessage("Agent working: " + desc, 5000);
+        if (executionVisualizer && executionVisualizer->parentWidget()) {
+            executionVisualizer->parentWidget()->show();
+        }
+    });
+
     // Model manager signals
     connect(modelManager, &AutonomousModelManager::downloadProgress,
             this, &IDEMainWindow::onModelDownloadProgress);
@@ -648,6 +784,17 @@ void IDEMainWindow::onToggleFileExplorer() {
 }
 
 // Tools Menu Implementations
+void IDEMainWindow::onOpenDiscoveryDashboard() {
+    discoveryDashboard->parentWidget()->show();
+    discoveryDashboard->parentWidget()->raise();
+    discoveryDashboard->refresh();
+}
+
+void IDEMainWindow::onOpenExecutionVisualizer() {
+    executionVisualizer->parentWidget()->show();
+    executionVisualizer->parentWidget()->raise();
+}
+
 void IDEMainWindow::onAnalyzeCodebase() {
     showMessage("Analyzing codebase...");
     
@@ -867,8 +1014,40 @@ void IDEMainWindow::onModelLoaded(const QString& modelId) {
 }
 
 void IDEMainWindow::onHealthCheckCompleted() {
-    QVector<CloudProvider> providers = cloudManager->getHealthyProviders();
+    const auto providers = cloudManager->getHealthyProviders();
     std::cout << "[IDEMainWindow] Healthy providers: " << providers.size() << std::endl;
+}
+
+// ============================================================================
+// Advanced System Slot Implementations
+// ============================================================================
+
+void IDEMainWindow::onThresholdBreached(const QString& metric, double value, AlertDispatcher::AlertSeverity severity) {
+    const bool isCritical = severity == AlertDispatcher::AlertSeverity::CRITICAL;
+    QString sevStr = isCritical ? "CRITICAL" : "WARNING";
+    QString message = QString("[%1] %2 threshold breached: %3").arg(sevStr).arg(metric).arg(value);
+    
+    if (isCritical) {
+        showMessage(message, 5000);
+        // Could also pop up a dialog for critical alerts
+    } else {
+        showMessage(message, 3000);
+    }
+    
+    metricsWidget->addItem(QString("[%1] ALERT: %2 = %3").arg(QDateTime::currentDateTime().toString("HH:mm:ss")).arg(metric).arg(value));
+}
+
+void IDEMainWindow::onAnomalyDetected(const QString& operation, const QString& reason) {
+    showMessage(QString("Anomaly detected in %1: %2").arg(operation).arg(reason), 5000);
+}
+
+void IDEMainWindow::onLearningOptimizationSuggested(const QString& change, double improvement) {
+    outputWidget->append(QString("[Learning System] Suggested optimization: %1 (Expected improvement: %2%)")
+        .arg(change).arg(improvement * 100.0, 0, 'f', 1));
+}
+
+void IDEMainWindow::onSystemError(const QString& error) {
+    showMessage("System Error: " + error, 5000);
 }
 
 // ============================================================================

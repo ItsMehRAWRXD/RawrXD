@@ -1036,97 +1036,81 @@ agent_chat_add_enhanced_message ENDP
 ;==========================================================================
 ; HELPER FUNCTIONS (Stub implementations - would be expanded)
 ;==========================================================================
-
 PUBLIC agent_check_symbol_reference
 agent_check_symbol_reference PROC
     xor eax, eax
     ret
 agent_check_symbol_reference ENDP
-
 PUBLIC agent_detect_logic_contradiction
 agent_detect_logic_contradiction PROC
     xor eax, eax
     ret
 agent_detect_logic_contradiction ENDP
-
 PUBLIC agent_check_symbol_references
 agent_check_symbol_references PROC
     xor eax, eax
     ret
 agent_check_symbol_references ENDP
-
 PUBLIC agent_check_logic_consistency
 agent_check_logic_consistency PROC
     mov eax, CONF_CERTAIN
     ret
 agent_check_logic_consistency ENDP
-
 PUBLIC agent_validate_paths
 agent_validate_paths PROC
     xor eax, eax
     ret
 agent_validate_paths ENDP
-
 PUBLIC agent_check_token_repetition
 agent_check_token_repetition PROC
     xor eax, eax
     ret
 agent_check_token_repetition ENDP
-
 PUBLIC agent_classify_problem_type
 agent_classify_problem_type PROC
     xor eax, eax
     ret
 agent_classify_problem_type ENDP
-
 PUBLIC agent_strcpy
 agent_strcpy PROC
     xor eax, eax
     ret
 agent_strcpy ENDP
-
 PUBLIC agent_strcpy_limited
 agent_strcpy_limited PROC
     xor eax, eax
     ret
 agent_strcpy_limited ENDP
-
 PUBLIC agent_strlen
 agent_strlen PROC
     mov eax, 32
     ret
 agent_strlen ENDP
-
 PUBLIC agent_memset
 agent_memset PROC
     xor eax, eax
     ret
 agent_memset ENDP
-
 PUBLIC agent_sprintf_debug
 agent_sprintf_debug PROC
     xor eax, eax
     ret
 agent_sprintf_debug ENDP
-
 PUBLIC agent_prepend_string
 agent_prepend_string PROC
     xor eax, eax
     ret
 agent_prepend_string ENDP
-
 PUBLIC agent_append_correction
 agent_append_correction PROC
     xor eax, eax
     ret
 agent_append_correction ENDP
-
 PUBLIC agent_chat_log_system
 agent_chat_log_system PROC
     xor eax, eax
     ret
 agent_chat_log_system ENDP
-
 PUBLIC agent_chat_log_reasoning
 agent_chat_log_reasoning PROC
     xor eax, eax
@@ -1149,4 +1133,8 @@ agent_chat_log_reasoning ENDP
     szGenericFix            BYTE "Follow the recommendations above to resolve the issue",0
 
 END
+
+
+
+
 

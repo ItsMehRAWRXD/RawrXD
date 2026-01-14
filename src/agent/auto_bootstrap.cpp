@@ -230,7 +230,40 @@ void AutoBootstrap::executePlan(const QString& wish, const QJsonArray& plan) {
                 qDebug() << "Benchmark task (handled by build system)";
             }
             else if (type == "self_test") {
-                qDebug() << "Self-test task (TODO: implement test runner)";
+                // Implement test runner
+                qDebug() << "Self-test task: Running test suite";
+                
+                QString testSuite = t.value("test_suite").toString();
+                if (testSuite.isEmpty()) testSuite = "regression";
+                int numCases = t.value("num_cases").toInt();
+                if (numCases == 0) numCases = 10;
+                
+                // Run test suite
+                QProcess testProcess;
+                QString testCommand = QString("ctest -N -R %1 --verbose").arg(testSuite);
+                
+                testProcess.start("cmake", QStringList() << "--build" << "." << "--target" << "test");
+                
+                if (!testProcess.waitForStarted()) {
+                    qWarning() << "Failed to start test process";
+                    success = false;
+                } else {
+                    testProcess.waitForFinished(30000);  // 30 second timeout
+                    
+                    QString testOutput = QString::fromUtf8(testProcess.readAllStandardOutput());
+                    QString testError = QString::fromUtf8(testProcess.readAllStandardError());
+                    
+                    int exitCode = testProcess.exitCode();
+                    success = (exitCode == 0);
+                    
+                    if (success) {
+                        qInfo() << "Test suite passed:" << testSuite;
+                    } else {
+                        qWarning() << "Test suite failed with exit code:" << exitCode;
+                        qWarning() << "Output:" << testOutput;
+                        qWarning() << "Error:" << testError;
+                    }
+                }
             }
             
             if (!success) {

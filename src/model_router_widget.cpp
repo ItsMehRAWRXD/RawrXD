@@ -587,5 +587,3 @@ void ModelRouterWidget::showTemporaryStatus(const QString& message, int duration
         setStatusMessage(original_status);
     });
 }
-
-#include "model_router_widget.moc"

@@ -30,10 +30,17 @@
 #include "cloud_settings_dialog.h"
 #include "metrics_dashboard.h"
 #include "model_router_console.h"
+#include "discovery_dashboard.h"
+#include "execution_visualizer.h"
+#include "proactive_alert_system.h"
+#include "agentic_learning_system.h"
+#include "../include/alert_dispatcher.h"
 
 class AutonomousSuggestionWidget;
+
 class SecurityAlertWidget;
 class OptimizationPanelWidget;
+class AgenticExecutor;
 
 class IDEMainWindow : public QMainWindow {
     Q_OBJECT
@@ -81,6 +88,11 @@ private slots:
     void onConfigureApiKeys();
     void onMonitorModelCost();
 
+    // Discovery & Execution actions
+    void onOpenDiscoveryDashboard();
+    void onOpenExecutionVisualizer();
+
+
     // Help menu actions
     void onAbout();
     void onDocumentation();
@@ -112,6 +124,12 @@ private slots:
 
     // Cloud execution slots
     void onHealthCheckCompleted();
+
+    // Advanced system slots
+    void onThresholdBreached(const QString& metric, double value, AlertDispatcher::AlertSeverity severity);
+    void onAnomalyDetected(const QString& operation, const QString& reason);
+    void onLearningOptimizationSuggested(const QString& change, double improvement);
+    void onSystemError(const QString& error);
 
     // Model Router widget signals
     void onModelRouterGenerationRequested(const QString& prompt, const QString& model);
@@ -147,15 +165,25 @@ private:
     HybridCloudManager* cloudManager;
     ErrorRecoverySystem* errorRecovery;
     PerformanceMonitor* performanceMonitor;
+    
+    // Advanced Dashboards & Systems
+    DiscoveryDashboard* discoveryDashboard = nullptr;
+    ExecutionVisualizer* executionVisualizer = nullptr;
+    ProactiveAlertSystem* alertSystem = nullptr;
+    AgenticLearningSystem* learningSystem = nullptr;
+    AgenticExecutor* agenticExecutor = nullptr;
+
 
     // Model Router systems
     ModelRouterAdapter* modelRouterAdapter;
     ModelRouterWidget* modelRouterWidget;
     QDockWidget* modelRouterDock;
     CloudSettingsDialog* cloudSettingsDialog;
+      
+      
     MetricsDashboard* metricsDashboard;
     QDockWidget* metricsDashboardDock;
-    ModelRouterConsole* modelRouterConsole;
+      ModelRouterConsole* modelRouterConsole;
     QDockWidget* modelRouterConsoleDock;
 
     // UI components

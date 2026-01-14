@@ -4,8 +4,8 @@
 
 option casemap:none
 
-EXTERN malloc:PROC
-EXTERN free:PROC
+extern masm_malloc : proc
+extern masm_free : proc
 EXTERN memset:PROC
 EXTERN memcpy:PROC
 EXTERN strlen:PROC
@@ -105,18 +105,18 @@ streaming_create PROC
     
     ; Allocate context
     mov rcx, SIZEOF STREAM_CONTEXT
-    call malloc
+    call masm_malloc
     mov r9, rax
     
     ; Allocate token queue
     mov rcx, r8
     imul rcx, SIZEOF STREAM_TOKEN_ENTRY
-    call malloc
+    call masm_malloc
     mov [r9 + STREAM_CONTEXT.tokenQueue], rax
     
     ; Allocate output buffer (8 MB)
     mov rcx, 8388608
-    call malloc
+    call masm_malloc
     mov [r9 + STREAM_CONTEXT.outputBuffer], rax
     mov [r9 + STREAM_CONTEXT.maxOutputBufferSize], rcx
     
@@ -473,19 +473,19 @@ skip_event_local:
     mov rcx, [rbx + STREAM_CONTEXT.tokenQueue]
     cmp rcx, 0
     je skip_queue_local
-    call free
+    call masm_free
     
 skip_queue_local:
     ; Free output buffer
     mov rcx, [rbx + STREAM_CONTEXT.outputBuffer]
     cmp rcx, 0
     je skip_output_local
-    call free
+    call masm_free
     
 skip_output_local:
     ; Free context
     mov rcx, rbx
-    call free
+    call masm_free
     
     pop rbx
     ret
@@ -574,4 +574,8 @@ streaming_thread_proc ENDP
     static_stream_id QWORD 1
 
 END
+
+
+
+
 

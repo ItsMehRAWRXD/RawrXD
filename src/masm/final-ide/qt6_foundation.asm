@@ -9,15 +9,26 @@
 option casemap:none
 
 ; External memory functions (provided by malloc_wrapper.asm)
-EXTERN malloc:PROC
-EXTERN free:PROC
-EXTERN realloc:PROC
+extern masm_malloc : proc
+extern masm_free : proc
+extern masm_realloc : proc
 
 ; Include Qt compatibility layer definitions
 include windows.inc
 includelib kernel32.lib
 includelib user32.lib
 includelib gdi32.lib
+
+; Win32 APIs used by object_show/object_hide
+EXTERN ShowWindow:PROC
+EXTERN UpdateWindow:PROC
+
+IFNDEF SW_SHOW
+    SW_SHOW EQU 5
+ENDIF
+IFNDEF SW_HIDE
+    SW_HIDE EQU 0
+ENDIF
 
 ;==========================================================================
 ; SIMPLE STRUCT DEFINITIONS (All fields have unique names)
@@ -133,7 +144,6 @@ EVENT_CUSTOM         EQU 0100h
 ;==========================================================================
 ; INITIALIZATION & CLEANUP
 ;==========================================================================
-
 PUBLIC qt_foundation_init
 qt_foundation_init PROC
     ; Initialize memory pools, event queue, default theme
@@ -188,7 +198,6 @@ qt_foundation_init PROC
     pop rbx
     ret
 qt_foundation_init ENDP
-
 PUBLIC qt_foundation_cleanup
 qt_foundation_cleanup PROC
     ; Clean up all objects, free pools
@@ -230,7 +239,6 @@ qt_foundation_cleanup ENDP
 ;==========================================================================
 ; OBJECT OPERATIONS
 ;==========================================================================
-
 PUBLIC object_create
 object_create PROC
     ; Create a new object
@@ -247,7 +255,7 @@ object_create PROC
     
     ; Allocate memory (256 bytes for basic object)
     mov rax, 256
-    call malloc
+    call masm_malloc
     test rax, rax
     jz create_error
     
@@ -277,7 +285,6 @@ create_error:
     pop rbx
     ret
 object_create ENDP
-
 PUBLIC object_destroy
 object_destroy PROC
     ; Destroy an object and its children
@@ -312,7 +319,7 @@ destroy_self:
 destroy_free:
     ; Free object memory
     mov rcx, r12
-    call free
+    call masm_free
     
 destroy_ok:
     xor eax, eax
@@ -323,9 +330,97 @@ destroy_ok:
 object_destroy ENDP
 
 ;==========================================================================
+; OBJECT VISIBILITY / PROPERTY OPERATIONS
+;==========================================================================
+PUBLIC object_show
+object_show PROC
+    ; RCX = object pointer
+    ; Return: RAX = 0
+
+    test rcx, rcx
+    jz object_show_done
+
+    ; Set visible flag
+    or dword ptr [rcx + OBJECT_BASE.obj_flags], FLAG_VISIBLE
+
+    ; If HWND present, show it
+    mov rax, [rcx + OBJECT_BASE.obj_hwnd]
+    test rax, rax
+    jz object_show_done
+
+    sub rsp, 32
+    mov rdx, SW_SHOW
+    mov rcx, rax
+    call ShowWindow
+    mov rcx, rax
+    call UpdateWindow
+    add rsp, 32
+
+object_show_done:
+    xor eax, eax
+    ret
+object_show ENDP
+PUBLIC object_hide
+object_hide PROC
+    ; RCX = object pointer
+    ; Return: RAX = 0
+
+    test rcx, rcx
+    jz object_hide_done
+
+    ; Clear visible flag
+    and dword ptr [rcx + OBJECT_BASE.obj_flags], (NOT FLAG_VISIBLE)
+
+    ; If HWND present, hide it
+    mov rax, [rcx + OBJECT_BASE.obj_hwnd]
+    test rax, rax
+    jz object_hide_done
+
+    sub rsp, 32
+    mov rdx, SW_HIDE
+    mov rcx, rax
+    call ShowWindow
+    add rsp, 32
+
+object_hide_done:
+    xor eax, eax
+    ret
+object_hide ENDP
+PUBLIC object_set_property
+object_set_property PROC
+    ; RCX = object pointer
+    ; RDX = property id / key (caller-defined)
+    ; R8  = property value (caller-defined)
+    ; Return: RAX = 0
+
+    ; Minimal implementation: store last property value in obj_user_data
+    test rcx, rcx
+    jz object_set_prop_done
+    mov [rcx + OBJECT_BASE.obj_user_data], r8
+
+object_set_prop_done:
+    xor eax, eax
+    ret
+object_set_property ENDP
+PUBLIC object_get_property
+object_get_property PROC
+    ; RCX = object pointer
+    ; RDX = property id / key (caller-defined)
+    ; Return: RAX = property value (caller-defined), 0 if missing
+
+    test rcx, rcx
+    jz object_get_prop_missing
+    mov rax, [rcx + OBJECT_BASE.obj_user_data]
+    ret
+
+object_get_prop_missing:
+    xor eax, eax
+    ret
+object_get_property ENDP
+
+;==========================================================================
 ; EVENT OPERATIONS
 ;==========================================================================
-
 PUBLIC post_event
 post_event PROC
     ; Post event to queue
@@ -341,7 +436,7 @@ post_event PROC
     
     ; Allocate EVENT_ITEM
     mov rax, 64
-    call malloc
+    call masm_malloc
     test rax, rax
     jz post_error
     
@@ -384,7 +479,6 @@ post_error:
     pop rbx
     ret
 post_event ENDP
-
 PUBLIC process_events
 process_events PROC
     ; Process all queued events
@@ -419,7 +513,7 @@ process_loop:
     
 skip_dispatch:
     mov rcx, rbx
-    call free
+    call masm_free
     inc r13
     jmp process_loop
     
@@ -435,7 +529,6 @@ process_events ENDP
 ;==========================================================================
 ; SIGNAL/SLOT OPERATIONS
 ;==========================================================================
-
 PUBLIC connect_signal
 connect_signal PROC
     ; Connect signal to slot
@@ -450,7 +543,7 @@ connect_signal PROC
     
     ; Allocate SLOT_BINDING
     mov rax, 64
-    call malloc
+    call masm_malloc
     test rax, rax
     jz connect_error
     
@@ -476,7 +569,6 @@ connect_error:
     pop rbx
     ret
 connect_signal ENDP
-
 PUBLIC emit_signal
 emit_signal PROC
     ; Emit signal (call all connected slots)
@@ -538,7 +630,6 @@ emit_signal ENDP
 ;==========================================================================
 ; THEME OPERATIONS
 ;==========================================================================
-
 PUBLIC get_color_scheme
 get_color_scheme PROC
     ; Get current color scheme
@@ -547,7 +638,6 @@ get_color_scheme PROC
     lea rax, [g_default_theme]
     ret
 get_color_scheme ENDP
-
 PUBLIC set_color_scheme
 set_color_scheme PROC
     ; Set global color scheme
@@ -587,4 +677,8 @@ set_color_scheme PROC
 set_color_scheme ENDP
 
 END
+
+
+
+
 

@@ -78,7 +78,7 @@ void StructuredLogger::log(LogLevel level, const QString& message, const QJsonOb
     logEntry["timestamp"] = QDateTime::currentDateTimeUtc().toString(Qt::ISODate);
     logEntry["level"] = levelToString(level);
     logEntry["message"] = message;
-    logEntry["thread_id"] = reinterpret_cast<quint64>(QThread::currentThreadId());
+    logEntry["thread_id"] = QString::number(reinterpret_cast<quintptr>(QThread::currentThreadId()));
     
     if (!context.isEmpty()) {
         logEntry["context"] = context;

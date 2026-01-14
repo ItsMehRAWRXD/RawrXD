@@ -495,7 +495,6 @@ EXTERN asm_memcpy_fast:PROC
 ;==========================================================================
 ; Unified Manager Functions (high-level API for coordinating all three layers)
 ;==========================================================================
-
 PUBLIC masm_unified_manager_create
 ALIGN 16
 masm_unified_manager_create PROC
@@ -504,7 +503,6 @@ masm_unified_manager_create PROC
     mov eax, 1  ; Return simple handle
     ret
 masm_unified_manager_create ENDP
-
 PUBLIC masm_unified_apply_memory_patch
 ALIGN 16
 masm_unified_apply_memory_patch PROC
@@ -516,7 +514,6 @@ masm_unified_apply_memory_patch PROC
     call masm_hotpatch_apply_memory
     ret
 masm_unified_apply_memory_patch ENDP
-
 PUBLIC masm_unified_apply_byte_patch
 ALIGN 16
 masm_unified_apply_byte_patch PROC
@@ -525,7 +522,6 @@ masm_unified_apply_byte_patch PROC
     mov eax, 1  ; success
     ret
 masm_unified_apply_byte_patch ENDP
-
 PUBLIC masm_unified_add_server_hotpatch
 ALIGN 16
 masm_unified_add_server_hotpatch PROC
@@ -534,7 +530,6 @@ masm_unified_add_server_hotpatch PROC
     mov eax, 1  ; success
     ret
 masm_unified_add_server_hotpatch ENDP
-
 PUBLIC masm_unified_process_events
 ALIGN 16
 masm_unified_process_events PROC
@@ -543,7 +538,6 @@ masm_unified_process_events PROC
     xor eax, eax  ; 0 events processed
     ret
 masm_unified_process_events ENDP
-
 PUBLIC masm_unified_get_stats
 ALIGN 16
 masm_unified_get_stats PROC
@@ -552,7 +546,6 @@ masm_unified_get_stats PROC
     call masm_hotpatch_get_stats
     ret
 masm_unified_get_stats ENDP
-
 PUBLIC masm_unified_destroy
 ALIGN 16
 masm_unified_destroy PROC
@@ -563,4 +556,8 @@ masm_unified_destroy PROC
 masm_unified_destroy ENDP
 
 END
+
+
+
+
 

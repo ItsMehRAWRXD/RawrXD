@@ -122,7 +122,7 @@ void AIDigestionPanel::onFileProcessed(const QString& filePath, int processedCou
     }
 }
 
-void AIDigestionPanel::onDigestionDatasetReady(const TrainingDataset& dataset) {
+void AIDigestionPanel::onDigestionDatasetReady(const AIDigestionDataset& dataset) {
     m_lastDataset = dataset;
     
     m_isDigesting = false;
@@ -448,7 +448,7 @@ void AIDigestionPanel::validateInputs() {
     }
 }
 
-void AIDigestionPanel::showDigestionResults(const TrainingDataset& dataset) {
+void AIDigestionPanel::showDigestionResults(const AIDigestionDataset& dataset) {
     QMessageBox msgBox(this);
     msgBox.setWindowTitle("Digestion Completed");
     msgBox.setIcon(QMessageBox::Information);
@@ -613,7 +613,7 @@ void AIDigestionPanel::importTrainingData() {
     if (fileName.isEmpty()) return;
     
     if (m_digestionEngine->loadDataset(fileName)) {
-        m_lastDataset = m_digestionEngine->getTrainingDataset();
+        m_lastDataset = m_digestionEngine->getAIDigestionDataset();
         m_startTrainingButton->setEnabled(true);
         
         showSuccessMessage("Import Successful", 

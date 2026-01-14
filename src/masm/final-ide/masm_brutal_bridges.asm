@@ -2,7 +2,6 @@ OPTION casemap:none
 
 ; Pure MASM bridges that expose brutal compression and core helpers
 ; Windows x64 calling convention (RCX, RDX, R8, R9)
-
 PUBLIC Bridge_DeflateBrutal
 PUBLIC Bridge_InflateBrutal
 PUBLIC Bridge_StringHash
@@ -101,4 +100,8 @@ _exit:
 Bridge_GetCompletions ENDP
 
 END
+
+
+
+
 

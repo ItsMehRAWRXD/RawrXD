@@ -220,7 +220,6 @@ asm_suggest_optimizations ENDP
 ;==========================================================================
 ; Helper Functions
 ;==========================================================================
-
 is_asm_instruction PROC
     ; rcx = text pointer
     ; Returns: eax = 1 if instruction, 0 if not
@@ -231,7 +230,6 @@ is_asm_instruction PROC
     
     ret
 is_asm_instruction ENDP
-
 is_asm_register PROC
     ; rcx = text pointer  
     ; Returns: eax = 1 if register, 0 if not
@@ -241,7 +239,6 @@ is_asm_register PROC
     
     ret
 is_asm_register ENDP
-
 format_hex_qword PROC
     ; rax = value, rdx = output buffer
     
@@ -284,3 +281,5 @@ masm_cmdline           db 512 dup(0)
 link_cmdline           db 512 dup(0)
 
 END
+
+

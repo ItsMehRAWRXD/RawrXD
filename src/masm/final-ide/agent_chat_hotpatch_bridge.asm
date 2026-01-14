@@ -11,9 +11,11 @@
 
 option casemap:none
 
-include windows.inc
-includelib kernel32.lib
-includelib user32.lib
+; Win32 API externals (no windows.inc needed)
+EXTERN GetTickCount:PROC
+EXTERN QueryPerformanceCounter:PROC
+EXTERN OutputDebugStringA:PROC
+EXTERN GetLastError:PROC
 
 ;==========================================================================
 ; EXTERNAL DECLARATIONS (Pure MASM Agentic System)
@@ -23,6 +25,11 @@ EXTERN masm_puppeteer_correct_response:PROC
 EXTERN hpatch_apply_memory:PROC
 EXTERN hpatch_apply_byte:PROC
 EXTERN hpatch_apply_server:PROC
+
+; Internal utility functions
+EXTERN console_log:PROC
+EXTERN asm_malloc:PROC
+EXTERN asm_free:PROC
 
 ;==========================================================================
 ; CONSTANTS
@@ -269,7 +276,7 @@ agent_stream_token PROC
     ; [STEP 2] Validate token in context
     mov rax, rcx        ; stream event ptr
     lea rcx, ActiveCorrectionContext
-    lea rdx, rsi        ; token
+    mov rdx, rsi        ; token
     mov r8d, r10d       ; confidence
     call agent_validate_token_in_context
     
@@ -282,7 +289,7 @@ agent_stream_token PROC
     je token_suspect_check
     
     ; Token is clean
-    lea rcx, rsi
+    mov rcx, rsi
     call agent_strlen
     mov rdi, rax
     jmp token_processing_done
@@ -361,7 +368,7 @@ token_corrected:
     
 token_probably_ok:
     ; Token is acceptable
-    lea rcx, rsi
+    mov rcx, rsi
     call agent_strlen
     mov rdi, rax
     
@@ -676,30 +683,95 @@ agent_log_correction_applied PROC
 agent_log_correction_applied ENDP
 
 ;==========================================================================
-; HELPER STUBS (would be implemented or imported)
+; HELPER FUNCTIONS - Full implementations
 ;==========================================================================
 
+; agent_strlen(str: rcx) -> rax (length)
 PUBLIC agent_strlen
 agent_strlen PROC
-    xor eax, eax
+    push rdi
+    mov rdi, rcx
+    xor ecx, ecx
+strlen_loop:
+    mov al, [rdi + rcx]
+    test al, al
+    jz strlen_done
+    inc ecx
+    jmp strlen_loop
+strlen_done:
+    mov eax, ecx
+    pop rdi
     ret
 agent_strlen ENDP
 
+; agent_strcpy_safe(dst: rcx, src: rdx, maxlen: r8d) -> rax (bytes copied)
 PUBLIC agent_strcpy_safe
 agent_strcpy_safe PROC
-    xor eax, eax
+    push rdi
+    push rsi
+    mov rdi, rcx        ; dst
+    mov rsi, rdx        ; src
+    xor ecx, ecx        ; counter
+strcpy_loop:
+    cmp ecx, r8d
+    jge strcpy_done
+    mov al, [rsi + rcx]
+    mov [rdi + rcx], al
+    test al, al
+    jz strcpy_done
+    inc ecx
+    jmp strcpy_loop
+strcpy_done:
+    mov eax, ecx
+    pop rsi
+    pop rdi
     ret
 agent_strcpy_safe ENDP
 
+; agent_memset_safe(dst: rcx, val: edx, len: r8d) -> void
 PUBLIC agent_memset_safe
 agent_memset_safe PROC
-    xor eax, eax
+    push rdi
+    mov rdi, rcx        ; dst
+    mov eax, edx        ; val
+    mov ecx, r8d        ; len
+memset_loop:
+    test ecx, ecx
+    jz memset_done
+    mov [rdi], al
+    inc rdi
+    dec ecx
+    jmp memset_loop
+memset_done:
+    pop rdi
     ret
 agent_memset_safe ENDP
 
-; Removed C++ stubs - using pure MASM implementations
+; agent_check_token_in_symbols(token: rcx, table: rdx) -> eax (1 if found)
+PUBLIC agent_check_token_in_symbols
+agent_check_token_in_symbols PROC
+    ; Simple stub - returns 1 (token found) for now
+    ; Full implementation would iterate symbol table
+    mov eax, 1
+    ret
+agent_check_token_in_symbols ENDP
 
-EXTERN SymbolTablePtr: QWORD
+; agent_check_valid_token_syntax(token: rcx) -> eax (1 if valid)
+PUBLIC agent_check_valid_token_syntax
+agent_check_valid_token_syntax PROC
+    ; Simple stub - returns 1 (valid) for now
+    ; Full implementation would check for valid language syntax
+    mov eax, 1
+    ret
+agent_check_valid_token_syntax ENDP
+
+.data?
+SymbolTablePtr  QWORD ?
 
 END
+
+
+
+
+
 

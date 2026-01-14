@@ -674,136 +674,114 @@ agent_analyze_cross_file_impact ENDP
 ;==========================================================================
 ; HELPER FUNCTION STUBS
 ;==========================================================================
-
 PUBLIC agent_decompose_objective
 agent_decompose_objective PROC
     mov eax, 3          ; Return 3 steps
     ret
 agent_decompose_objective ENDP
-
 PUBLIC agent_assess_step_risk
 agent_assess_step_risk PROC
     mov eax, 100        ; Risk level
     mov edx, 180        ; Confidence
     ret
 agent_assess_step_risk ENDP
-
 PUBLIC agent_compute_plan_confidence
 agent_compute_plan_confidence PROC
     mov eax, 180
     ret
 agent_compute_plan_confidence ENDP
-
 PUBLIC agent_memset
 agent_memset PROC
     xor eax, eax
     ret
 agent_memset ENDP
-
 PUBLIC agent_strcpy_limited
 agent_strcpy_limited PROC
     xor eax, eax
     ret
 agent_strcpy_limited ENDP
-
 PUBLIC agent_log_step_execute
 agent_log_step_execute PROC
     xor eax, eax
     ret
 agent_log_step_execute ENDP
-
 PUBLIC agent_execute_step_action
 agent_execute_step_action PROC
     mov eax, 1          ; Success
     mov edx, 200        ; Confidence
     ret
 agent_execute_step_action ENDP
-
 PUBLIC agent_log_step_result
 agent_log_step_result PROC
     xor eax, eax
     ret
 agent_log_step_result ENDP
-
 PUBLIC agent_log_step_failed
 agent_log_step_failed PROC
     xor eax, eax
     ret
 agent_log_step_failed ENDP
-
 PUBLIC agent_pivot_step_strategy
 agent_pivot_step_strategy PROC
     xor eax, eax
     ret
 agent_pivot_step_strategy ENDP
-
 PUBLIC agent_classify_step_failure
 agent_classify_step_failure PROC
     xor eax, eax
     ret
 agent_classify_step_failure ENDP
-
 PUBLIC agent_find_learned_correction
 agent_find_learned_correction PROC
     mov eax, -1         ; Not found
     ret
 agent_find_learned_correction ENDP
-
 PUBLIC agent_apply_learned_correction
 agent_apply_learned_correction PROC
     xor eax, eax
     ret
 agent_apply_learned_correction ENDP
-
 PUBLIC agent_generate_correction_options
 agent_generate_correction_options PROC
     xor eax, eax
     ret
 agent_generate_correction_options ENDP
-
 PUBLIC agent_apply_correction_option
 agent_apply_correction_option PROC
     mov eax, 1          ; Success
     ret
 agent_apply_correction_option ENDP
-
 PUBLIC agent_save_learned_correction
 agent_save_learned_correction PROC
     xor eax, eax
     ret
 agent_save_learned_correction ENDP
-
 PUBLIC agent_extract_symbols_in_range
 agent_extract_symbols_in_range PROC
     mov edx, 2          ; Return 2 symbols
     xor eax, eax
     ret
 agent_extract_symbols_in_range ENDP
-
 PUBLIC agent_find_symbol_references
 agent_find_symbol_references PROC
     xor eax, eax
     ret
 agent_find_symbol_references ENDP
-
 PUBLIC agent_assess_dependent_files
 agent_assess_dependent_files PROC
     xor eax, eax
     ret
 agent_assess_dependent_files ENDP
-
 PUBLIC agent_compute_breaking_change_risk
 agent_compute_breaking_change_risk PROC
     mov eax, 120
     ret
 agent_compute_breaking_change_risk ENDP
-
 PUBLIC agent_recommend_hotpatch_strategy
 agent_recommend_hotpatch_strategy PROC
     mov eax, 1          ; Recommend byte-level hotpatch
     ret
 agent_recommend_hotpatch_strategy ENDP
-
 PUBLIC agent_log_format
 agent_log_format PROC
     xor eax, eax
@@ -813,4 +791,8 @@ agent_log_format ENDP
 EXTERN QueryPerformanceCounter:PROC
 
 END
+
+
+
+
 

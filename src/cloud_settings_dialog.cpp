@@ -1006,5 +1006,3 @@ void CloudSettingsDialog::loadApiKeyFromEnvironment(const QString& provider)
         m_google_key_input->setText(key);
     }
 }
-
-#include "cloud_settings_dialog.moc"

@@ -4,8 +4,8 @@
 
 option casemap:none
 
-EXTERN malloc:PROC
-EXTERN free:PROC
+extern masm_malloc : proc
+extern masm_free : proc
 EXTERN memset:PROC
 EXTERN memcpy:PROC
 EXTERN memcmp:PROC
@@ -124,24 +124,24 @@ proxy_hotpatcher_create PROC
     
     ; Allocate proxy
     mov rcx, SIZEOF PROXY_HOTPATCHER
-    call malloc
+    call masm_malloc
     mov r10, rax
     
     ; Allocate corrections array
     mov rcx, MAX_CORRECTIONS
     imul rcx, SIZEOF TOKEN_CORRECTION
-    call malloc
+    call masm_malloc
     mov [r10 + PROXY_HOTPATCHER.corrections], rax
     
     ; Allocate validators array
     mov rcx, MAX_VALIDATORS
     imul rcx, SIZEOF VALIDATOR
-    call malloc
+    call masm_malloc
     mov [r10 + PROXY_HOTPATCHER.validators], rax
     
     ; Allocate token buffer
     mov rcx, TOKEN_BUFFER_SIZE
-    call malloc
+    call masm_malloc
     mov [r10 + PROXY_HOTPATCHER.tokenBuffer], rax
     
     ; Initialize
@@ -196,7 +196,7 @@ proxy_apply_correction PROC
     
     ; Allocate result
     mov rcx, SIZEOF PROXY_RESULT
-    call malloc
+    call masm_malloc
     mov r9, rax                     ; r9 = result
     
     ; Apply correction based on type
@@ -345,7 +345,7 @@ proxy_add_correction PROC
     mov rcx, rsi
     call strlen
     inc rax
-    call malloc
+    call masm_malloc
     mov [r13 + TOKEN_CORRECTION.name], rax
     
     mov rcx, rsi
@@ -356,7 +356,7 @@ proxy_add_correction PROC
     mov rcx, r10
     call strlen
     inc rax
-    call malloc
+    call masm_malloc
     mov [r13 + TOKEN_CORRECTION.description], rax
     
     mov rcx, r10
@@ -415,7 +415,7 @@ proxy_add_validator PROC
     mov rcx, rsi
     call strlen
     inc rax
-    call malloc
+    call masm_malloc
     mov [r13 + VALIDATOR.name], rax
     
     mov rcx, rsi
@@ -426,7 +426,7 @@ proxy_add_validator PROC
     mov rcx, r10
     call strlen
     inc rax
-    call malloc
+    call masm_malloc
     mov [r13 + VALIDATOR.description], rax
     
     mov rcx, r10
@@ -681,13 +681,13 @@ free_corrections_local:
     mov rcx, [r13 + TOKEN_CORRECTION.name]
     cmp rcx, 0
     je skip_correction_name_local
-    call free
+    call masm_free
     
 skip_correction_name_local:
     mov rcx, [r13 + TOKEN_CORRECTION.description]
     cmp rcx, 0
     je skip_correction_desc_local
-    call free
+    call masm_free
     
 skip_correction_desc_local:
     inc r12d
@@ -697,7 +697,7 @@ corrections_freed_local:
     mov rcx, [rbx + PROXY_HOTPATCHER.corrections]
     cmp rcx, 0
     je skip_corrections_array_local
-    call free
+    call masm_free
     
 skip_corrections_array_local:
     ; Free validators array
@@ -717,13 +717,13 @@ free_validators_local:
     mov rcx, [r13 + VALIDATOR.name]
     cmp rcx, 0
     je skip_validator_name_local
-    call free
+    call masm_free
     
 skip_validator_name_local:
     mov rcx, [r13 + VALIDATOR.description]
     cmp rcx, 0
     je skip_validator_desc_local
-    call free
+    call masm_free
     
 skip_validator_desc_local:
     inc r12d
@@ -733,19 +733,19 @@ validators_freed_local:
     mov rcx, [rbx + PROXY_HOTPATCHER.validators]
     cmp rcx, 0
     je skip_validators_array_local
-    call free
+    call masm_free
     
 skip_validators_array_local:
     ; Free token buffer
     mov rcx, [rbx + PROXY_HOTPATCHER.tokenBuffer]
     cmp rcx, 0
     je skip_token_buffer_local
-    call free
+    call masm_free
     
 skip_token_buffer_local:
     ; Free proxy
     mov rcx, rbx
-    call free
+    call masm_free
     
     pop rbx
     ret
@@ -871,4 +871,8 @@ apply_custom_correction ENDP
     szCorrectionFailedDetail DB "Correction application failed", 0
 
 END
+
+
+
+
 

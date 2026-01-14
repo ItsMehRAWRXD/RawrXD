@@ -362,7 +362,6 @@ iDefaultEpochs DWORD 100
 ;==========================================================================
 ; PUBLIC API FUNCTIONS
 ;==========================================================================
-
 PUBLIC training_studio_init
 PUBLIC training_studio_create_window
 PUBLIC training_studio_load_dataset
@@ -815,7 +814,6 @@ training_studio_stop_training ENDP
 ;==========================================================================
 ; Helper functions for core functionality
 ;==========================================================================
-
 find_model_by_id PROC
     ; ecx = model_id -> rax = model_ptr
     push rbx
@@ -845,7 +843,6 @@ find_model_by_id PROC
     pop rbx
     ret
 find_model_by_id ENDP
-
 find_dataset_by_id PROC
     ; ecx = dataset_id -> rax = dataset_ptr
     push rbx
@@ -875,7 +872,6 @@ find_dataset_by_id PROC
     pop rbx
     ret
 find_dataset_by_id ENDP
-
 find_experiment_by_id PROC
     ; ecx = experiment_id -> rax = experiment_ptr
     push rbx
@@ -909,21 +905,18 @@ find_experiment_by_id ENDP
 ;==========================================================================
 ; Stub implementations for remaining functions
 ;==========================================================================
-
 detect_dataset_format PROC
     ; rcx = path -> rax = format string
     ; Simplified: returns format type
     xor rax, rax
     ret
 detect_dataset_format ENDP
-
 detect_dataset_type PROC
     ; rcx = dataset ptr -> eax = type
     ; Returns DATASET_IMAGES, DATASET_TEXT, etc
     mov eax, DATASET_TABULAR
     ret
 detect_dataset_type ENDP
-
 load_dataset_file PROC
     ; rcx = dataset ptr
     ; Sets loaded flag, computes basic stats
@@ -933,14 +926,12 @@ load_dataset_file PROC
     mov [rcx + DATASET.num_classes], 10
     ret
 load_dataset_file ENDP
-
 compute_dataset_statistics PROC
     ; rcx = dataset ptr
     ; Computes mean, std, min, max for all features
     mov eax, [rcx + DATASET.num_samples]
     ret
 compute_dataset_statistics ENDP
-
 parse_architecture PROC
     ; rcx = model ptr, rdx = architecture string
     ; Parses architecture and sets input/output shapes
@@ -948,13 +939,11 @@ parse_architecture PROC
     mov dword ptr [rcx + MODEL.output_shape], 0
     ret
 parse_architecture ENDP
-
 count_model_parameters PROC
     ; rcx = model ptr -> rax = total_params
     mov rax, 1000000  ; 1M params default
     ret
 count_model_parameters ENDP
-
 parse_training_config PROC
     ; rcx = experiment ptr, rdx = config JSON
     ; Parse learning rate, epochs, batch size, optimizer
@@ -964,48 +953,39 @@ parse_training_config PROC
     movss [rcx + EXPERIMENT.learning_rate], xmm0
     ret
 parse_training_config ENDP
-
 start_training_thread PROC
     ; rcx = experiment ptr
     ; Starts background training thread
     ret
 start_training_thread ENDP
-
 create_dataset_list_control PROC
     ; rcx = parent hwnd
     ret
 create_dataset_list_control ENDP
-
 create_model_list_control PROC
     ; rcx = parent hwnd
     ret
 create_model_list_control ENDP
-
 create_experiment_list_control PROC
     ; rcx = parent hwnd
     ret
 create_experiment_list_control ENDP
-
 create_metrics_display PROC
     ; rcx = parent hwnd
     ret
 create_metrics_display ENDP
-
 create_resource_monitor PROC
     ; rcx = parent hwnd
     ret
 create_resource_monitor ENDP
-
 create_hyperparam_grid_control PROC
     ; rcx = parent hwnd
     ret
 create_hyperparam_grid_control ENDP
-
 register_training_studio_class PROC
     ; rcx = class name
     ret
 register_training_studio_class ENDP
-
 training_studio_wnd_proc PROC
     mov rax, 0
     ret
@@ -1014,44 +994,37 @@ training_studio_wnd_proc ENDP
 ;==========================================================================
 ; Public API stub implementations
 ;==========================================================================
-
 training_studio_get_metrics PROC
     ; rcx = experiment_id -> rax = metrics_ptr
     mov ecx, ecx
     call find_experiment_by_id
     ret
 training_studio_get_metrics ENDP
-
 training_studio_export_checkpoint PROC
     ; rcx = experiment_id, rdx = path
     mov eax, 1
     ret
 training_studio_export_checkpoint ENDP
-
 training_studio_compare_experiments PROC
     ; rcx = exp_id1, rdx = exp_id2 -> rax = comparison_result
     xor eax, eax
     ret
 training_studio_compare_experiments ENDP
-
 training_studio_tune_hyperparameters PROC
     ; rcx = experiment_id, rdx = search_config -> rax = search_id
     xor eax, eax
     ret
 training_studio_tune_hyperparameters ENDP
-
 training_studio_list_datasets PROC
     ; -> rax = count
     mov eax, g_training_studio.dataset_count
     ret
 training_studio_list_datasets ENDP
-
 training_studio_list_models PROC
     ; -> rax = count
     mov eax, g_training_studio.model_count
     ret
 training_studio_list_models ENDP
-
 training_studio_get_experiment_results PROC
     ; rcx = experiment_id -> rax = results_ptr
     mov ecx, ecx
@@ -1062,7 +1035,6 @@ training_studio_get_experiment_results ENDP
 ;==========================================================================
 ; Utility functions
 ;==========================================================================
-
 strncpy PROC
     ; rcx = dest, rdx = src, r8d = max_len
     xor rax, rax
@@ -1080,4 +1052,8 @@ strncpy PROC
 strncpy ENDP
 
 end
+
+
+
+
 

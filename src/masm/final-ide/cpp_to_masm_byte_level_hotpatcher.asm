@@ -4,8 +4,8 @@
 
 option casemap:none
 
-EXTERN malloc:PROC
-EXTERN free:PROC
+extern masm_malloc : proc
+extern masm_free : proc
 EXTERN memset:PROC
 EXTERN memcpy:PROC
 EXTERN memcmp:PROC
@@ -121,19 +121,19 @@ byte_level_hotpatcher_create PROC
     
     ; Allocate hotpatcher
     mov rcx, SIZEOF BYTE_LEVEL_HOTPATCHER
-    call malloc
+    call masm_malloc
     mov r10, rax
     
     ; Allocate patches array
     mov rcx, MAX_PATCHES
     imul rcx, SIZEOF BYTE_PATCH
-    call malloc
+    call masm_malloc
     mov [r10 + BYTE_LEVEL_HOTPATCHER.patches], rax
     
     ; Allocate patterns array
     mov rcx, MAX_PATTERNS
     imul rcx, 256                   ; Max pattern size
-    call malloc
+    call masm_malloc
     mov [r10 + BYTE_LEVEL_HOTPATCHER.patterns], rax
     
     ; Initialize
@@ -192,7 +192,7 @@ byte_hotpatcher_apply_patch PROC
     
     ; Allocate result
     mov rcx, SIZEOF PATCH_RESULT
-    call malloc
+    call masm_malloc
     mov r9, rax                     ; r9 = result
     
     ; Apply patch based on type
@@ -364,7 +364,7 @@ byte_hotpatcher_add_patch PROC
     mov rcx, rsi
     call strlen
     inc rax
-    call malloc
+    call masm_malloc
     mov [r13 + BYTE_PATCH.name], rax
     
     mov rcx, rsi
@@ -375,7 +375,7 @@ byte_hotpatcher_add_patch PROC
     mov rcx, r10
     call strlen
     inc rax
-    call malloc
+    call masm_malloc
     mov [r13 + BYTE_PATCH.description], rax
     
     mov rcx, r10
@@ -390,12 +390,12 @@ byte_hotpatcher_add_patch PROC
     mov [r13 + BYTE_PATCH.offset], 0
     mov dword ptr [r13 + BYTE_PATCH.size], 1024  ; Allocate patch data buffer
     mov rcx, 1024
-    call malloc
+    call masm_malloc
     mov [r13 + BYTE_PATCH.patchData], rax
     
     ; Allocate original data buffer
     mov rcx, 1024
-    call malloc
+    call masm_malloc
     mov [r13 + BYTE_PATCH.originalData], rax
     
     ; Increment patch count
@@ -620,25 +620,25 @@ free_patches_local:
     mov rcx, [r13 + BYTE_PATCH.name]
     cmp rcx, 0
     je skip_patch_name_local
-    call free
+    call masm_free
     
 skip_patch_name_local:
     mov rcx, [r13 + BYTE_PATCH.description]
     cmp rcx, 0
     je skip_patch_desc_local
-    call free
+    call masm_free
     
 skip_patch_desc_local:
     mov rcx, [r13 + BYTE_PATCH.originalData]
     cmp rcx, 0
     je skip_original_local
-    call free
+    call masm_free
     
 skip_original_local:
     mov rcx, [r13 + BYTE_PATCH.patchData]
     cmp rcx, 0
     je skip_patch_local
-    call free
+    call masm_free
     
 skip_patch_local:
     inc r12d
@@ -648,19 +648,19 @@ patches_freed_local:
     mov rcx, [rbx + BYTE_LEVEL_HOTPATCHER.patches]
     cmp rcx, 0
     je skip_patches_array_local
-    call free
+    call masm_free
     
 skip_patches_array_local:
     ; Free patterns array
     mov rcx, [rbx + BYTE_LEVEL_HOTPATCHER.patterns]
     cmp rcx, 0
     je skip_patterns_local
-    call free
+    call masm_free
     
 skip_patterns_local:
     ; Free hotpatcher
     mov rcx, rbx
-    call free
+    call masm_free
     
     pop rbx
     ret
@@ -867,4 +867,8 @@ apply_delete_operation ENDP
     szPatchFailedDetail DB "Patch application failed", 0
 
 END
+
+
+
+
 

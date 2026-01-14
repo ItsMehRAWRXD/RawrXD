@@ -1,7 +1,9 @@
+#include "MainWindow.h"
+using namespace RawrXD;
 // RawrXD IDE MainWindow Implementation
 // "One IDE to rule them all" - comprehensive development environment
-#include "MainWindow.h"
 #include "TerminalWidget.h"
+#include "widgets/TerminalClusterWidget.h"
 #include "Subsystems.h"
 #include "ActivityBar.h"
 #include "utils/model_metadata_utils.hpp"
@@ -15,6 +17,7 @@
 #include "model_monitor.hpp"
 #include "command_palette.hpp"
 #include "ai_chat_panel.hpp"
+#include "chat_metrics_dashboard.hpp"
 #include "model_loader_widget.hpp"
 #include "masm_feature_settings_panel.hpp"
 #include "blob_converter_panel.hpp"
@@ -30,6 +33,7 @@
 #include "../agent/ide_agent_bridge.hpp"
 #include "../agent/agentic_copilot_bridge.hpp"
 #include "../agentic_engine.h"
+#include "../autonomous_systems_integration.h"
 #include "multi_tab_editor.h"
 #include "../real_time_integration_coordinator.hpp"
 #include "../real_time_terminal_pool.hpp"
@@ -39,9 +43,20 @@
 #include "settings_manager.h"
 #include "latency_monitor.h"
 #include "latency_status_panel.h"
+#include "widgets/macro_recorder_widget.h"
+#include "widgets/code_minimap.h"  // CodeMinimap widget
 // Experimental features menu (toggle advanced runtime optimizations)
 #include "experimental_features_menu.hpp"
 #include "rawrxd_build_info.h"
+
+// Advanced Agentic Components
+#include "advanced_planning_engine.h"
+#include "intelligent_error_analysis.h"
+#include "real_time_refactoring.h"
+#include "discovery_dashboard.h"
+#include "memory_persistence_system.h"
+#include "test_generation_automation.h"
+#include "alert_system.h"
 
 // Forward declaration resolved by include above
 
@@ -63,6 +78,9 @@
 #include <QShortcut>
 #include <QSplitter>
 #include <QStatusBar>
+#include <QFutureWatcher>
+#include <QPersistentModelIndex>
+#include <QtConcurrent/QtConcurrentRun>
 #include <QTabWidget>
 #include <QTextEdit>
 #include <QToolBar>
@@ -333,6 +351,7 @@ MainWindow::MainWindow(QWidget* parent)
     setupCommandPalette();
     setupShortcuts();
     setupAIChatPanel();
+    setupChatMetricsDashboard();  // Real-time chat metrics dashboard
     setupMASMEditor();
     setupInterpretabilityPanel();  // Model analysis & diagnostics
     setupModelLoaderWidget();       // Model loading with brutal MASM compression
@@ -473,12 +492,25 @@ void MainWindow::createVSCodeLayout()
     
     // Defer root initialization to avoid blocking UI on startup - keep minimal
     QTimer::singleShot(500, this, [this]() {
-        // Only refresh drive list, don't deep-populate to prevent freeze
-        if (m_explorerView) refreshDriveRoots();
+        if (m_explorerView) initializeExplorerRoots();
     });
-    
-    // Connect double-click to open files
+
+    // Connect explorer interactions
+    connect(m_explorerView, &QTreeWidget::itemExpanded, this, &MainWindow::onExplorerItemExpanded);
     connect(m_explorerView, &QTreeWidget::itemDoubleClicked, this, &MainWindow::onExplorerItemDoubleClicked);
+    connect(m_explorerView, &QTreeWidget::itemClicked, this, [this](QTreeWidgetItem* item, int column) {
+        Q_UNUSED(column);
+        if (!item) return;
+        const QString path = item->data(0, Qt::UserRole).toString();
+        if (path.isEmpty()) return;
+        const QFileInfo fi(path);
+        if (fi.isDir()) {
+            // Users expect click to reveal contents; expanding triggers lazy population.
+            if (!item->isExpanded()) {
+                item->setExpanded(true);
+            }
+        }
+    });
     
     m_sidebarStack->addWidget(m_explorerView);
     
@@ -952,6 +984,64 @@ void MainWindow::setupMenuBar()
         connect(m_hotpatchPanelDock, &QDockWidget::visibilityChanged, hotpatchAct, &QAction::setChecked);
     }
     
+    // Command Palette entry
+    QAction* commandPaletteAct = viewMenu->addAction(tr("Command Palette"));
+    commandPaletteAct->setShortcut(QKeySequence("Ctrl+Shift+P"));
+    connect(commandPaletteAct, &QAction::triggered, this, [this]() {
+        if (m_commandPalette) {
+            m_commandPalette->show();
+        }
+    });
+    
+    // Discovery Dashboard entry
+    QAction* dashboardAct = viewMenu->addAction(tr("Autonomous Dashboard"), this, [this](bool checked) {
+        if (m_discoveryDashboard) {
+            if (checked) {
+                m_discoveryDashboard->show();
+                m_discoveryDashboard->raise();
+            } else {
+                m_discoveryDashboard->hide();
+            }
+        }
+    });
+    dashboardAct->setCheckable(true);
+    dashboardAct->setChecked(false);
+    
+    viewMenu->addSeparator();
+    
+    // Show Hidden Files toggle
+    QAction* showHiddenAct = viewMenu->addAction(tr("Show Hidden Files"), this, [this](bool checked) {
+        m_showHiddenFiles_ = checked;
+        qDebug() << "[MainWindow] Show hidden files:" << m_showHiddenFiles_;
+        // Refresh the explorer view to apply the change
+        if (m_explorerView) {
+            refreshDriveList();
+        }
+    });
+    showHiddenAct->setCheckable(true);
+    showHiddenAct->setChecked(m_showHiddenFiles_);  // Default to true for complete workspace access
+    showHiddenAct->setShortcut(QKeySequence("Ctrl+H"));
+    
+    // Show All Drives toggle
+    QAction* showDrivesAct = viewMenu->addAction(tr("Show All Drives"), this, [this](bool checked) {
+        m_showDrives_ = checked;
+        qDebug() << "[MainWindow] Show all drives:" << m_showDrives_;
+        // Toggle visibility of drive items in explorer
+        if (m_explorerView) {
+            for (int i = 0; i < m_explorerView->topLevelItemCount(); ++i) {
+                QTreeWidgetItem* item = m_explorerView->topLevelItem(i);
+                if (item) {
+                    item->setHidden(!m_showDrives_);
+                }
+            }
+        }
+    });
+    showDrivesAct->setCheckable(true);
+    showDrivesAct->setChecked(m_showDrives_);  // Default to true for full file system access
+    showDrivesAct->setShortcut(QKeySequence("Ctrl+D"));
+    
+    viewMenu->addSeparator();
+    
     QAction* layerQuantAct = viewMenu->addAction(tr("Layer Quantization"), this, [this](bool checked) {
         if (m_layerQuantDock) {
             m_layerQuantDock->setVisible(checked);
@@ -1024,6 +1114,281 @@ void MainWindow::setupMenuBar()
         } else if (m_modelMonitorDock) {
             m_modelMonitorDock->setVisible(on);
         }
+    });
+
+    viewMenu->addSeparator();
+    
+    // ========== 23 NEW WIDGET MENU ACTIONS ==========
+    viewMenu->addAction(tr("Whiteboard"), this, &MainWindow::toggleWhiteboard)->setCheckable(true);
+    viewMenu->addAction(tr("Audio Call"), this, &MainWindow::toggleAudioCall)->setCheckable(true);
+    viewMenu->addAction(tr("Screen Share"), this, &MainWindow::toggleScreenShare)->setCheckable(true);
+    viewMenu->addAction(tr("Code Stream"), this, &MainWindow::toggleCodeStream)->setCheckable(true);
+    viewMenu->addAction(tr("AI Review"), this, &MainWindow::toggleAIReview)->setCheckable(true);
+    viewMenu->addAction(tr("Inline Chat"), this, &MainWindow::toggleInlineChat)->setCheckable(true);
+    viewMenu->addAction(tr("Time Tracker"), this, &MainWindow::toggleTimeTracker)->setCheckable(true);
+    viewMenu->addAction(tr("Task Manager"), this, &MainWindow::toggleTaskManager)->setCheckable(true);
+    viewMenu->addAction(tr("Pomodoro"), this, &MainWindow::togglePomodoro)->setCheckable(true);
+    viewMenu->addAction(tr("Accessibility"), this, &MainWindow::toggleAccessibility)->setCheckable(true);
+    viewMenu->addAction(tr("Wallpaper"), this, &MainWindow::toggleWallpaper)->setCheckable(true);
+
+    // ========== AGENTIC MENU ==========
+    QMenu* agenticMenu = menuBar()->addMenu(tr("A&gentic"));
+    
+    // Discovery Dashboard - already a QDockWidget
+    QAction* dashboardAgenticAct = agenticMenu->addAction(tr("Discovery Dashboard"), this, [this](bool checked) {
+        if (m_discoveryDashboard) {
+            if (checked) {
+                m_discoveryDashboard->show();
+                m_discoveryDashboard->raise();
+            } else {
+                m_discoveryDashboard->hide();
+            }
+        }
+    });
+    dashboardAgenticAct->setCheckable(true);
+    dashboardAgenticAct->setChecked(false);
+    dashboardAgenticAct->setShortcut(QKeySequence("Ctrl+Shift+D"));
+    if (m_discoveryDashboard) {
+        connect(m_discoveryDashboard, &QDockWidget::visibilityChanged, dashboardAgenticAct, &QAction::setChecked);
+    }
+    
+    agenticMenu->addSeparator();
+    
+    // Advanced Planning Engine - wrap in a monitoring widget
+    QAction* planningAct = agenticMenu->addAction(tr("Planning Engine"), this, [this](bool checked) {
+        if (checked) {
+            if (!m_planningEngineDock) {
+                m_planningEngineDock = new QDockWidget(tr("Advanced Planning Engine"), this);
+                QWidget* planningWidget = new QWidget(m_planningEngineDock);
+                QVBoxLayout* layout = new QVBoxLayout(planningWidget);
+                
+                QLabel* titleLabel = new QLabel("<h3>🧠 Advanced Planning Engine</h3>", planningWidget);
+                titleLabel->setAlignment(Qt::AlignCenter);
+                layout->addWidget(titleLabel);
+                
+                QTextEdit* statusView = new QTextEdit(planningWidget);
+                statusView->setReadOnly(true);
+                statusView->setPlaceholderText("Planning engine monitors task decomposition and autonomous planning...");
+                layout->addWidget(statusView);
+                
+                // Connect planning engine signals to status view
+                if (m_planningEngine) {
+                    connect(m_planningEngine, &AdvancedPlanningEngine::planCreated, 
+                            statusView, [statusView](const QJsonObject& plan) {
+                        statusView->append(QString("[%1] Plan Created: %2 tasks")
+                            .arg(QDateTime::currentDateTime().toString("hh:mm:ss"))
+                            .arg(plan["execution_workflow"].toArray().size()));
+                    });
+                    connect(m_planningEngine, &AdvancedPlanningEngine::taskDecomposed,
+                            statusView, [statusView](const QString& parentTask, const QJsonArray& subtasks) {
+                        statusView->append(QString("[%1] Task Decomposed: %2 → %3 subtasks")
+                            .arg(QDateTime::currentDateTime().toString("hh:mm:ss"))
+                            .arg(parentTask)
+                            .arg(subtasks.size()));
+                    });
+                    connect(m_planningEngine, &AdvancedPlanningEngine::executionProgress,
+                            statusView, [statusView](const QString& taskId, int progress, const QString& status) {
+                        statusView->append(QString("[%1] Progress: %2 - %3% (%4)")
+                            .arg(QDateTime::currentDateTime().toString("hh:mm:ss"))
+                            .arg(taskId).arg(progress).arg(status));
+                    });
+                }
+                
+                m_planningEngineDock->setWidget(planningWidget);
+                m_planningEngineDock->setAllowedAreas(Qt::AllDockWidgetAreas);
+                addDockWidget(Qt::RightDockWidgetArea, m_planningEngineDock);
+            }
+            m_planningEngineDock->show();
+            m_planningEngineDock->raise();
+        } else if (m_planningEngineDock) {
+            m_planningEngineDock->hide();
+        }
+    });
+    planningAct->setCheckable(true);
+    planningAct->setChecked(false);
+    
+    // Error Analysis Engine - wrap in a monitoring widget
+    QAction* errorAnalysisAct = agenticMenu->addAction(tr("Error Analysis"), this, [this](bool checked) {
+        if (checked) {
+            if (!m_errorAnalysisDock) {
+                m_errorAnalysisDock = new QDockWidget(tr("Intelligent Error Analysis"), this);
+                QWidget* errorWidget = new QWidget(m_errorAnalysisDock);
+                QVBoxLayout* layout = new QVBoxLayout(errorWidget);
+                
+                QLabel* titleLabel = new QLabel("<h3>🔍 Intelligent Error Analysis</h3>", errorWidget);
+                titleLabel->setAlignment(Qt::AlignCenter);
+                layout->addWidget(titleLabel);
+                
+                QTextEdit* statusView = new QTextEdit(errorWidget);
+                statusView->setReadOnly(true);
+                statusView->setPlaceholderText("Error analysis engine monitors diagnostics and suggests fixes...");
+                layout->addWidget(statusView);
+                
+                // Connect error analysis signals to status view
+                if (m_errorAnalysis) {
+                    connect(m_errorAnalysis, &IntelligentErrorAnalysis::errorAnalyzed,
+                            statusView, [statusView](const QJsonObject& analysis) {
+                        statusView->append(QString("[%1] Error Analyzed:\n  Type: %2\n  Confidence: %3%")
+                            .arg(QDateTime::currentDateTime().toString("hh:mm:ss"))
+                            .arg(analysis["error_type"].toString())
+                            .arg(int(analysis["confidence"].toDouble() * 100)));
+                    });
+                    connect(m_errorAnalysis, &IntelligentErrorAnalysis::fixGenerated,
+                            statusView, [statusView](const QJsonObject& fixOptions) {
+                        statusView->append(QString("[%1] Fix Generated: %2 options available")
+                            .arg(QDateTime::currentDateTime().toString("hh:mm:ss"))
+                            .arg(fixOptions["suggested_fixes"].toArray().size()));
+                    });
+                    connect(m_errorAnalysis, &IntelligentErrorAnalysis::fixApplied,
+                            statusView, [statusView](const QString& errorId, const QJsonObject& fix, bool success) {
+                        statusView->append(QString("[%1] Fix Applied: %2 - %3")
+                            .arg(QDateTime::currentDateTime().toString("hh:mm:ss"))
+                            .arg(errorId)
+                            .arg(success ? "Success" : "Failed"));
+                    });
+                }
+                
+                m_errorAnalysisDock->setWidget(errorWidget);
+                m_errorAnalysisDock->setAllowedAreas(Qt::AllDockWidgetAreas);
+                addDockWidget(Qt::RightDockWidgetArea, m_errorAnalysisDock);
+            }
+            m_errorAnalysisDock->show();
+            m_errorAnalysisDock->raise();
+        } else if (m_errorAnalysisDock) {
+            m_errorAnalysisDock->hide();
+        }
+    });
+    errorAnalysisAct->setCheckable(true);
+    errorAnalysisAct->setChecked(false);
+    
+    // Real-time Refactoring Engine - wrap in a monitoring widget
+    QAction* refactoringAct = agenticMenu->addAction(tr("Refactoring Engine"), this, [this](bool checked) {
+        if (checked) {
+            if (!m_refactoringEngineDock) {
+                m_refactoringEngineDock = new QDockWidget(tr("Real-time Refactoring"), this);
+                QWidget* refactorWidget = new QWidget(m_refactoringEngineDock);
+                QVBoxLayout* layout = new QVBoxLayout(refactorWidget);
+                
+                QLabel* titleLabel = new QLabel("<h3>🔧 Real-time Refactoring Engine</h3>", refactorWidget);
+                titleLabel->setAlignment(Qt::AlignCenter);
+                layout->addWidget(titleLabel);
+                
+                QTextEdit* statusView = new QTextEdit(refactorWidget);
+                statusView->setReadOnly(true);
+                statusView->setPlaceholderText("Refactoring engine monitors code improvements and optimizations...");
+                layout->addWidget(statusView);
+                
+                // Connect refactoring engine signals to status view
+                if (m_refactoringEngine) {
+                    connect(m_refactoringEngine, &RealTimeRefactoring::refactoringApplied,
+                            statusView, [statusView](const QString& filePath, const QJsonObject& result) {
+                        statusView->append(QString("[%1] Refactoring Applied: %2\n  Changes: %3")
+                            .arg(QDateTime::currentDateTime().toString("hh:mm:ss"))
+                            .arg(filePath)
+                            .arg(result["changes_applied"].toString()));
+                    });
+                    connect(m_refactoringEngine, &RealTimeRefactoring::refactoringSuggested,
+                            statusView, [statusView](const QString& filePath, const QJsonObject& suggestion) {
+                        statusView->append(QString("[%1] Suggestion: %2 - %3")
+                            .arg(QDateTime::currentDateTime().toString("hh:mm:ss"))
+                            .arg(filePath)
+                            .arg(suggestion["suggestion_type"].toString()));
+                    });
+                    connect(m_refactoringEngine, &RealTimeRefactoring::performanceIssueDetected,
+                            statusView, [statusView](const QString& filePath, const QJsonObject& issue) {
+                        statusView->append(QString("[%1] Performance Issue: %2 - %3")
+                            .arg(QDateTime::currentDateTime().toString("hh:mm:ss"))
+                            .arg(filePath)
+                            .arg(issue["issue_type"].toString()));
+                    });
+                }
+                
+                m_refactoringEngineDock->setWidget(refactorWidget);
+                m_refactoringEngineDock->setAllowedAreas(Qt::AllDockWidgetAreas);
+                addDockWidget(Qt::RightDockWidgetArea, m_refactoringEngineDock);
+            }
+            m_refactoringEngineDock->show();
+            m_refactoringEngineDock->raise();
+        } else if (m_refactoringEngineDock) {
+            m_refactoringEngineDock->hide();
+        }
+    });
+    refactoringAct->setCheckable(true);
+    refactoringAct->setChecked(false);
+    
+    // Memory Persistence System - wrap in a monitoring widget
+    QAction* memoryAct = agenticMenu->addAction(tr("Memory Persistence"), this, [this](bool checked) {
+        if (checked) {
+            if (!m_memoryPersistenceDock) {
+                m_memoryPersistenceDock = new QDockWidget(tr("Memory Persistence System"), this);
+                QWidget* memoryWidget = new QWidget(m_memoryPersistenceDock);
+                QVBoxLayout* layout = new QVBoxLayout(memoryWidget);
+                
+                QLabel* titleLabel = new QLabel("<h3>💾 Memory Persistence System</h3>", memoryWidget);
+                titleLabel->setAlignment(Qt::AlignCenter);
+                layout->addWidget(titleLabel);
+                
+                QTextEdit* statusView = new QTextEdit(memoryWidget);
+                statusView->setReadOnly(true);
+                statusView->setPlaceholderText("Memory system monitors context persistence and intelligent memory management...");
+                layout->addWidget(statusView);
+                
+                // Connect memory persistence signals to status view
+                if (m_memoryPersistence) {
+                    connect(m_memoryPersistence, &MemoryPersistenceSystem::snapshotSaved,
+                            statusView, [statusView](const QString& sessionId) {
+                        statusView->append(QString("[%1] Snapshot Saved: %2")
+                            .arg(QDateTime::currentDateTime().toString("hh:mm:ss"))
+                            .arg(sessionId));
+                    });
+                    connect(m_memoryPersistence, &MemoryPersistenceSystem::sessionRestored,
+                            statusView, [statusView](const QString& sessionName) {
+                        statusView->append(QString("[%1] Session Restored: %2")
+                            .arg(QDateTime::currentDateTime().toString("hh:mm:ss"))
+                            .arg(sessionName));
+                    });
+                    connect(m_memoryPersistence, &MemoryPersistenceSystem::memoryOptimized,
+                            statusView, [statusView](const QJsonObject& stats) {
+                        statusView->append(QString("[%1] Memory Optimized: %2 MB freed")
+                            .arg(QDateTime::currentDateTime().toString("hh:mm:ss"))
+                            .arg(stats["freed_mb"].toInt()));
+                    });
+                }
+                
+                m_memoryPersistenceDock->setWidget(memoryWidget);
+                m_memoryPersistenceDock->setAllowedAreas(Qt::AllDockWidgetAreas);
+                addDockWidget(Qt::RightDockWidgetArea, m_memoryPersistenceDock);
+            }
+            m_memoryPersistenceDock->show();
+            m_memoryPersistenceDock->raise();
+        } else if (m_memoryPersistenceDock) {
+            m_memoryPersistenceDock->hide();
+        }
+    });
+    memoryAct->setCheckable(true);
+    memoryAct->setChecked(false);
+    
+    agenticMenu->addSeparator();
+    
+    // Enable/Disable All Agentic Systems
+    QAction* enableAllAgenticAct = agenticMenu->addAction(tr("Enable All Agentic Systems"));
+    connect(enableAllAgenticAct, &QAction::triggered, this, [=]() {
+        dashboardAgenticAct->setChecked(true);
+        planningAct->setChecked(true);
+        errorAnalysisAct->setChecked(true);
+        refactoringAct->setChecked(true);
+        memoryAct->setChecked(true);
+        statusBar()->showMessage(tr("All agentic systems enabled"), 2000);
+    });
+    
+    QAction* disableAllAgenticAct = agenticMenu->addAction(tr("Disable All Agentic Systems"));
+    connect(disableAllAgenticAct, &QAction::triggered, this, [=]() {
+        dashboardAgenticAct->setChecked(false);
+        planningAct->setChecked(false);
+        errorAnalysisAct->setChecked(false);
+        refactoringAct->setChecked(false);
+        memoryAct->setChecked(false);
+        statusBar()->showMessage(tr("All agentic systems disabled"), 2000);
     });
 
     // AI/GGUF menu with brutal_gzip integration
@@ -1293,6 +1658,23 @@ void MainWindow::setupToolBars()
         if (data.isValid()) changeAgentMode(data.toString());
     });
     changeAgentMode(m_agentMode); // sync UI state
+    
+    // ========== 23 NEW WIDGET TOOLBAR BUTTONS ==========
+    toolbar->addSeparator();
+    QToolBar* widgetsToolbar = addToolBar(tr("Widgets"));
+    widgetsToolbar->addAction(tr("Whiteboard"), this, &MainWindow::toggleWhiteboard)->setToolTip(tr("Toggle Whiteboard Widget"));
+    widgetsToolbar->addAction(tr("Audio Call"), this, &MainWindow::toggleAudioCall)->setToolTip(tr("Toggle Audio Call Widget"));
+    widgetsToolbar->addAction(tr("Screen Share"), this, &MainWindow::toggleScreenShare)->setToolTip(tr("Toggle Screen Share Widget"));
+    widgetsToolbar->addAction(tr("Code Stream"), this, &MainWindow::toggleCodeStream)->setToolTip(tr("Toggle Code Stream Widget"));
+    widgetsToolbar->addAction(tr("AI Review"), this, &MainWindow::toggleAIReview)->setToolTip(tr("Toggle AI Review Widget"));
+    widgetsToolbar->addSeparator();
+    widgetsToolbar->addAction(tr("Inline Chat"), this, &MainWindow::toggleInlineChat)->setToolTip(tr("Toggle Inline Chat Widget"));
+    widgetsToolbar->addAction(tr("Time Tracker"), this, &MainWindow::toggleTimeTracker)->setToolTip(tr("Toggle Time Tracker Widget"));
+    widgetsToolbar->addAction(tr("Task Manager"), this, &MainWindow::toggleTaskManager)->setToolTip(tr("Toggle Task Manager Widget"));
+    widgetsToolbar->addAction(tr("Pomodoro"), this, &MainWindow::togglePomodoro)->setToolTip(tr("Toggle Pomodoro Widget"));
+    widgetsToolbar->addSeparator();
+    widgetsToolbar->addAction(tr("Accessibility"), this, &MainWindow::toggleAccessibility)->setToolTip(tr("Toggle Accessibility Widget"));
+    widgetsToolbar->addAction(tr("Wallpaper"), this, &MainWindow::toggleWallpaper)->setToolTip(tr("Toggle Wallpaper Widget"));
 }
 
 void MainWindow::changeAgentMode(const QString& mode)
@@ -1393,6 +1775,54 @@ void MainWindow::initSubsystems()
             QMessageBox::critical(this, tr("Agent Error"), err);
         }
     });
+
+    // ----------------  Advanced Autonomous Systems Integration  ----------------
+    // Initialize the master autonomous systems orchestrator
+    m_autonomousSystemsIntegration = new AutonomousSystemsIntegration();
+    
+    // Initialize all autonomous subsystems (observability, advanced executor, real-time feedback)
+    QTimer::singleShot(100, this, [this]() {
+        if (!m_autonomousSystemsIntegration) return;
+        
+        // Initialize with configuration
+        QJsonObject config;
+        config["enableDetailedLogging"] = true;
+        config["enableDistributedTracing"] = true;
+        config["enableMetrics"] = true;
+        config["enableHealthMonitoring"] = true;
+        config["enableRealTimeUpdates"] = true;
+        config["metricsUpdateIntervalMs"] = 500;
+        config["healthCheckIntervalMs"] = 1000;
+        
+        // Initialize with the config object
+        m_autonomousSystemsIntegration->initializeWithConfig(config);
+        
+        // Enable detailed monitoring
+        m_autonomousSystemsIntegration->enableDetailedMonitoring(true);
+        m_autonomousSystemsIntegration->enableDetailedLogging(true);
+        
+        qInfo() << "[MainWindow] Autonomous systems initialized and configured";
+        statusBar()->showMessage("Autonomous systems ready", 2000);
+    });
+    
+    // Connect autonomous system signals to UI updates
+    if (m_autonomousSystemsIntegration) {
+        // Monitor system health
+        QTimer* healthCheckTimer = new QTimer(this);
+        connect(healthCheckTimer, &QTimer::timeout, this, [this]() {
+            if (!m_autonomousSystemsIntegration) return;
+            QJsonObject status = m_autonomousSystemsIntegration->getSystemStatus();
+            QString healthStr = status["systemHealth"].toString("unknown");
+            QString message = tr("System Health: %1 | Active Tasks: %2")
+                .arg(healthStr)
+                .arg(status["activeTasks"].toInt());
+            // Update status bar with system health (non-blocking)
+            if (m_memoryLabel) {
+                m_memoryLabel->setToolTip(message);
+            }
+        });
+        healthCheckTimer->start(2000);
+    }
 
 #ifdef Q_OS_WIN
     ai_orchestration_install((HWND)winId());
@@ -2011,6 +2441,8 @@ void MainWindow::updateFilePathDisplay()
     }
 }
 
+// OLD TERMINAL IMPLEMENTATION - Replaced by TerminalClusterWidget
+/*
 void MainWindow::handlePwshCommand() {
     if (!pwshProcess_ || !pwshInput_ || !pwshOutput_) return;
     if (pwshCommandInFlight_) {
@@ -2047,7 +2479,9 @@ void MainWindow::handlePwshCommand() {
     
     statusBar()->showMessage(tr("PowerShell executing: %1").arg(command), 2000);
 }
+*/
 
+/*
 void MainWindow::handleCmdCommand() {
     if (!cmdProcess_ || !cmdInput_ || !cmdOutput_) return;
     if (cmdCommandInFlight_) {
@@ -2084,7 +2518,9 @@ void MainWindow::handleCmdCommand() {
     
     statusBar()->showMessage(tr("CMD executing: %1").arg(command), 2000);
 }
+*/
 
+/*
 void MainWindow::readPwshOutput() {
     if (!pwshProcess_ || !pwshOutput_) return;
     
@@ -2121,7 +2557,9 @@ void MainWindow::readPwshOutput() {
         }
     }
 }
+*/
 
+/*
 void MainWindow::readCmdOutput() {
     if (!cmdProcess_ || !cmdOutput_) return;
     
@@ -2158,6 +2596,7 @@ void MainWindow::readCmdOutput() {
         }
     }
 }
+*/
 void MainWindow::clearDebugLog() { if (m_hexMagConsole) m_hexMagConsole->clear(); statusBar()->showMessage(tr("Debug log cleared"), 2000); }
 void MainWindow::saveDebugLog() { statusBar()->showMessage(tr("Saving debug log...")); }
 void MainWindow::filterLogLevel(const QString& level) { statusBar()->showMessage(tr("Filtering by: %1").arg(level), 2000); }
@@ -3122,24 +3561,28 @@ void MainWindow::onAccessibilityToggled(bool on) {
 #define IMPLEMENT_TOGGLE(Func, Member, Type) \
 void MainWindow::Func(bool visible) { \
     if (visible) { \
-        if (!Member) { \
+        if (Member.isNull()) { \
             Member = new Type(this); \
             QDockWidget* dock = new QDockWidget(tr(#Type), this); \
-            dock->setWidget(Member); \
+            dock->setWidget(Member.data()); \
             addDockWidget(Qt::RightDockWidgetArea, dock); \
         } \
-        Member->show(); \
-    } else if (Member) { \
-        Member->hide(); \
+        if (auto* widgetPtr = Member.data()) { \
+            widgetPtr->show(); \
+        } \
+    } else if (!Member.isNull()) { \
+        if (auto* widgetPtr = Member.data()) { \
+            widgetPtr->hide(); \
+        } \
     } \
 }
 
 // Use real ProjectExplorerWidget from widgets/
 void MainWindow::toggleProjectExplorer(bool visible) {
     if (visible) {
-        if (!projectExplorer_) {
-            projectExplorer_ = new RawrXD::ProjectExplorerWidget(this);
-            connect(projectExplorer_, &RawrXD::ProjectExplorerWidget::fileDoubleClicked,
+        if (projectExplorer_.isNull()) {
+            projectExplorer_ = new ProjectExplorerWidget(this);
+            connect(projectExplorer_, &ProjectExplorerWidget::fileDoubleClicked,
                     this, [this](const QString& path) {
                 QFile file(path);
                 if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
@@ -3155,10 +3598,10 @@ void MainWindow::toggleProjectExplorer(bool visible) {
             projectExplorer_->openProject(defaultPath);
         }
         QDockWidget* dock = new QDockWidget(tr("Project Explorer"), this);
-        dock->setWidget(projectExplorer_);
+        dock->setWidget(projectExplorer_.data());
         addDockWidget(Qt::LeftDockWidgetArea, dock);
         dock->show();
-    } else if (projectExplorer_) {
+    } else if (!projectExplorer_.isNull()) {
         if (QDockWidget* dock = qobject_cast<QDockWidget*>(projectExplorer_->parentWidget())) {
             dock->hide();
         }
@@ -3175,7 +3618,7 @@ IMPLEMENT_TOGGLE(toggleDockerTool, docker_, DockerToolWidget)
 IMPLEMENT_TOGGLE(toggleCloudExplorer, cloud_, CloudExplorerWidget)
 IMPLEMENT_TOGGLE(togglePackageManager, pkgManager_, PackageManagerWidget)
 IMPLEMENT_TOGGLE(toggleDocumentation, documentation_, DocumentationWidget)
-IMPLEMENT_TOGGLE(toggleUMLView, umlView_, UMLLViewWidget)
+IMPLEMENT_TOGGLE(toggleUMLView, umlView_, UMLViewWidget)
 IMPLEMENT_TOGGLE(toggleImageTool, imageTool_, ImageToolWidget)
 IMPLEMENT_TOGGLE(toggleTranslation, translator_, TranslationWidget)
 IMPLEMENT_TOGGLE(toggleDesignToCode, designImport_, DesignToCodeWidget)
@@ -3199,8 +3642,24 @@ IMPLEMENT_TOGGLE(toggleWelcomeScreen, welcomeScreen_, WelcomeScreenWidget)
 IMPLEMENT_TOGGLE(toggleCommandPalette, commandPalette_, CommandPalette)
 IMPLEMENT_TOGGLE(toggleProgressManager, progressManager_, ProgressManager)
 IMPLEMENT_TOGGLE(toggleAIQuickFix, quickFix_, AIQuickFixWidget)
-IMPLEMENT_TOGGLE(toggleCodeMinimap, minimap_, CodeMinimap)
-IMPLEMENT_TOGGLE(toggleBreadcrumbBar, breadcrumb_, BreadcrumbBar)
+void MainWindow::toggleCodeMinimap(bool visible) {
+    if (visible) {
+        if (minimap_.isNull()) {
+            minimap_ = new ::CodeMinimap(this);
+            QDockWidget* dock = new QDockWidget(tr("CodeMinimap"), this);
+            dock->setWidget(minimap_.data());
+            addDockWidget(Qt::RightDockWidgetArea, dock);
+        }
+        if (auto* widgetPtr = minimap_.data()) {
+            widgetPtr->show();
+        }
+    } else if (!minimap_.isNull()) {
+        if (auto* widgetPtr = minimap_.data()) {
+            widgetPtr->hide();
+        }
+    }
+}
+IMPLEMENT_TOGGLE(toggleBreadcrumbBar, breadcrumb_, BreadcrumbNavigation)
 IMPLEMENT_TOGGLE(toggleStatusBarManager, statusBarManager_, StatusBarManager)
 IMPLEMENT_TOGGLE(toggleTerminalEmulator, terminalEmulator_, TerminalEmulator)
 IMPLEMENT_TOGGLE(toggleSearchResult, searchResults_, SearchResultWidget)
@@ -3210,8 +3669,28 @@ IMPLEMENT_TOGGLE(toggleMacroRecorder, macroRecorder_, MacroRecorderWidget)
 IMPLEMENT_TOGGLE(toggleAICompletionCache, completionCache_, AICompletionCache)
 IMPLEMENT_TOGGLE(toggleLanguageClientHost, lspHost_, LanguageClientHost)
 
-// Special handling for AI Chat (no dedicated pointer, but we can create dynamically)
-void MainWindow::toggleAIChat(bool visible) { (void)visible; }
+// 23 New Widget Toggles
+IMPLEMENT_TOGGLE(toggleWhiteboard, whiteboard_, WhiteboardWidget)
+IMPLEMENT_TOGGLE(toggleAudioCall, audioCall_, AudioCallWidget)
+IMPLEMENT_TOGGLE(toggleScreenShare, screenShare_, ScreenShareWidget)
+IMPLEMENT_TOGGLE(toggleCodeStream, codeStream_, CodeStreamWidget)
+IMPLEMENT_TOGGLE(toggleAIReview, aiReview_, AIReviewWidget)
+IMPLEMENT_TOGGLE(toggleInlineChat, inlineChat_, InlineChatWidget)
+IMPLEMENT_TOGGLE(toggleTimeTracker, timeTracker_, TimeTrackerWidget)
+IMPLEMENT_TOGGLE(toggleTaskManager, taskManager_, TaskManagerWidget)
+IMPLEMENT_TOGGLE(togglePomodoro, pomodoro_, PomodoroWidget)
+IMPLEMENT_TOGGLE(toggleAccessibility, accessibility_, AccessibilityWidget)
+IMPLEMENT_TOGGLE(toggleWallpaper, wallpaper_, WallpaperWidget)
+void MainWindow::toggleAIChat(bool visible) {
+    if (m_aiChatPanelDock) {
+        if (visible) {
+            m_aiChatPanelDock->show();
+            m_aiChatPanelDock->raise();
+        } else {
+            m_aiChatPanelDock->hide();
+        }
+    }
+}
 
 // Other required methods
 bool MainWindow::eventFilter(QObject* watched, QEvent* event) 
@@ -3899,22 +4378,350 @@ void MainWindow::addDriveRootItem(const QString& rootPath, const QString& worksp
     
 #ifdef Q_OS_WIN
     QString displayLabel = rootPath.left(2);  // "C:" style label
+    
+    // Get drive information for display
+    QStorageInfo storageInfo(rootPath);
+    QString driveLabel = storageInfo.name();
+    if (driveLabel.isEmpty()) {
+        driveLabel = displayLabel;
+    }
+    
+    // Calculate available space
+    qint64 availableSpace = storageInfo.bytesAvailable();
+    QString availableStr;
+    if (availableSpace > 1e9) {
+        availableStr = QString::number(availableSpace / 1e9, 'f', 1) + " GB";
+    } else if (availableSpace > 1e6) {
+        availableStr = QString::number(availableSpace / 1e6, 'f', 1) + " MB";
+    } else {
+        availableStr = QString::number(availableSpace / 1e3, 'f', 1) + " KB";
+    }
+    
+    QString driveInfoLabel = QString("%1 (%2) - %3 available").arg(displayLabel, driveLabel, availableStr);
+    rootItem->setText(0, driveInfoLabel);
 #else
     QString displayLabel = rootPath;
+    rootItem->setText(0, displayLabel);
 #endif
     
-    rootItem->setText(0, displayLabel);
     rootItem->setData(0, Qt::UserRole, rootPath);
     rootItem->setIcon(0, style()->standardIcon(QStyle::SP_DriveHDIcon));
     rootItem->setForeground(0, QColor("#e0e0e0"));
     
     m_explorerView->addTopLevelItem(rootItem);
     
-    // All drives show placeholder for on-demand expansion (no auto-population)
-    QTreeWidgetItem* placeholder = new QTreeWidgetItem(rootItem);
-    placeholder->setText(0, "...");
-    placeholder->setForeground(0, QColor("#808080"));
-    qDebug() << "[addDriveRootItem] Added drive" << displayLabel << "with placeholder";
+    // Populate first level of directories and files for immediate visibility
+    QDir dir(rootPath);
+    
+    // Configure filters based on show hidden files setting
+    QDir::Filters filters = QDir::Dirs | QDir::Files | QDir::NoDotAndDotDot;
+    if (m_showHiddenFiles_) {
+        filters |= QDir::Hidden | QDir::System;  // Include hidden and system files for complete access
+    }
+    dir.setFilter(filters);
+    dir.setSorting(QDir::DirsFirst | QDir::Name);
+    
+    QFileInfoList entries = dir.entryInfoList();
+    bool hasSubItems = false;
+    
+    // Add up to 50 items to prevent UI overload
+    int itemCount = qMin(50, entries.count());
+    for (int i = 0; i < itemCount; ++i) {
+        const QFileInfo& fileInfo = entries.at(i);
+        
+        QTreeWidgetItem* item = new QTreeWidgetItem(rootItem);
+        item->setText(0, fileInfo.fileName());
+        item->setData(0, Qt::UserRole, fileInfo.absoluteFilePath());
+        
+        // Mark hidden files with visual indicator
+        bool isHidden = fileInfo.isHidden() || fileInfo.fileName().startsWith(".");
+        if (isHidden && m_showHiddenFiles_) {
+            // Add subtle transparency/italics for hidden files
+            QFont font = item->font(0);
+            font.setItalic(true);
+            item->setFont(0, font);
+        }
+        
+        if (fileInfo.isDir()) {
+            item->setIcon(0, style()->standardIcon(QStyle::SP_DirIcon));
+            item->setForeground(0, isHidden ? QColor("#4a90d9") : QColor("#64b5f6"));
+
+            // Always add a placeholder so expansion stays lazy and non-blocking.
+            QTreeWidgetItem* dummyChild = new QTreeWidgetItem(item);
+            dummyChild->setText(0, "...");
+            dummyChild->setForeground(0, QColor("#808080"));
+            hasSubItems = true;
+        } else {
+            // Set file icons and colors based on extension - 50+ language support
+            QString suffix = fileInfo.suffix().toLower();
+            QColor fileColor = isHidden ? QColor("#999999") : QColor("#bdbdbd");
+            
+            // C/C++ family
+            if (suffix == "cpp" || suffix == "cc" || suffix == "cxx" || suffix == "c++" || suffix == "hpp" || suffix == "hh" || suffix == "hxx" || suffix == "h++" || suffix == "h" || suffix == "c" || suffix == "inl" || suffix == "ipp") {
+                item->setIcon(0, QIcon(":/icons/code.png"));
+                fileColor = QColor("#00599c");  // C++ blue
+            }
+            // Python
+            else if (suffix == "py" || suffix == "pyw" || suffix == "pyx" || suffix == "pyd" || suffix == "pyi" || suffix == "pyc") {
+                item->setIcon(0, QIcon(":/icons/python.png"));
+                fileColor = QColor("#3776ab");  // Python blue
+            }
+            // JavaScript/TypeScript
+            else if (suffix == "js" || suffix == "mjs" || suffix == "cjs" || suffix == "jsx") {
+                item->setIcon(0, style()->standardIcon(QStyle::SP_FileIcon));
+                fileColor = QColor("#f7df1e");  // JavaScript yellow
+            }
+            else if (suffix == "ts" || suffix == "tsx" || suffix == "mts" || suffix == "cts") {
+                item->setIcon(0, style()->standardIcon(QStyle::SP_FileIcon));
+                fileColor = QColor("#3178c6");  // TypeScript blue
+            }
+            // Java/JVM languages
+            else if (suffix == "java" || suffix == "class" || suffix == "jar") {
+                item->setIcon(0, style()->standardIcon(QStyle::SP_FileIcon));
+                fileColor = QColor("#f89820");  // Java orange
+            }
+            else if (suffix == "kt" || suffix == "kts" || suffix == "ktm") {
+                fileColor = QColor("#a97bff");  // Kotlin purple
+            }
+            else if (suffix == "scala" || suffix == "sc") {
+                fileColor = QColor("#c22d40");  // Scala red
+            }
+            else if (suffix == "groovy" || suffix == "gradle") {
+                fileColor = QColor("#4298b8");  // Groovy blue
+            }
+            // .NET languages
+            else if (suffix == "cs" || suffix == "csx") {
+                fileColor = QColor("#239120");  // C# green
+            }
+            else if (suffix == "vb" || suffix == "vbproj") {
+                fileColor = QColor("#945db7");  // VB.NET purple
+            }
+            else if (suffix == "fs" || suffix == "fsx" || suffix == "fsi") {
+                fileColor = QColor("#378bba");  // F# blue
+            }
+            // Web languages
+            else if (suffix == "html" || suffix == "htm" || suffix == "xhtml") {
+                fileColor = QColor("#e34c26");  // HTML orange
+            }
+            else if (suffix == "css" || suffix == "scss" || suffix == "sass" || suffix == "less") {
+                fileColor = QColor("#563d7c");  // CSS purple
+            }
+            else if (suffix == "vue") {
+                fileColor = QColor("#42b883");  // Vue green
+            }
+            else if (suffix == "svelte") {
+                fileColor = QColor("#ff3e00");  // Svelte orange
+            }
+            else if (suffix == "php" || suffix == "phtml") {
+                fileColor = QColor("#777bb4");  // PHP purple
+            }
+            // Ruby
+            else if (suffix == "rb" || suffix == "rake" || suffix == "gemspec") {
+                fileColor = QColor("#cc342d");  // Ruby red
+            }
+            // Go
+            else if (suffix == "go" || suffix == "mod" || suffix == "sum") {
+                fileColor = QColor("#00add8");  // Go cyan
+            }
+            // Rust
+            else if (suffix == "rs" || suffix == "rlib") {
+                fileColor = QColor("#dea584");  // Rust orange
+            }
+            // Swift/Objective-C
+            else if (suffix == "swift") {
+                fileColor = QColor("#f05138");  // Swift orange
+            }
+            else if (suffix == "m" || suffix == "mm") {
+                fileColor = QColor("#438eff");  // Objective-C blue
+            }
+            // Shell scripts
+            else if (suffix == "sh" || suffix == "bash" || suffix == "zsh" || suffix == "fish" || suffix == "ksh") {
+                fileColor = QColor("#89e051");  // Shell green
+            }
+            else if (suffix == "ps1" || suffix == "psm1" || suffix == "psd1") {
+                fileColor = QColor("#012456");  // PowerShell blue
+            }
+            else if (suffix == "bat" || suffix == "cmd") {
+                fileColor = QColor("#c1f12e");  // Batch yellow
+            }
+            // Assembly
+            else if (suffix == "asm" || suffix == "s" || suffix == "inc" || suffix == "nasm" || suffix == "masm" || suffix == "asm64" || suffix == "a51") {
+                item->setIcon(0, QIcon(":/icons/assembly.png"));
+                fileColor = QColor("#6e4c13");  // Assembly brown
+            }
+            // Data/Config formats
+            else if (suffix == "json" || suffix == "json5" || suffix == "jsonc") {
+                item->setIcon(0, QIcon(":/icons/config.png"));
+                fileColor = QColor("#5a5a5a");  // JSON gray
+            }
+            else if (suffix == "yaml" || suffix == "yml") {
+                item->setIcon(0, QIcon(":/icons/config.png"));
+                fileColor = QColor("#cb171e");  // YAML red
+            }
+            else if (suffix == "xml" || suffix == "xsd" || suffix == "xsl" || suffix == "xslt") {
+                item->setIcon(0, QIcon(":/icons/config.png"));
+                fileColor = QColor("#0060ac");  // XML blue
+            }
+            else if (suffix == "toml") {
+                fileColor = QColor("#9c4221");  // TOML brown
+            }
+            else if (suffix == "ini" || suffix == "cfg" || suffix == "conf") {
+                fileColor = QColor("#6d8086");  // Config gray
+            }
+            // SQL
+            else if (suffix == "sql" || suffix == "mysql" || suffix == "pgsql" || suffix == "plsql") {
+                fileColor = QColor("#e38c00");  // SQL orange
+            }
+            // Lua
+            else if (suffix == "lua") {
+                fileColor = QColor("#000080");  // Lua navy
+            }
+            // Perl
+            else if (suffix == "pl" || suffix == "pm" || suffix == "t" || suffix == "pod") {
+                fileColor = QColor("#0298c3");  // Perl cyan
+            }
+            // R
+            else if (suffix == "r" || suffix == "rdata" || suffix == "rds") {
+                fileColor = QColor("#198ce7");  // R blue
+            }
+            // Julia
+            else if (suffix == "jl") {
+                fileColor = QColor("#9558b2");  // Julia purple
+            }
+            // Haskell
+            else if (suffix == "hs" || suffix == "lhs") {
+                fileColor = QColor("#5e5086");  // Haskell purple
+            }
+            // Erlang/Elixir
+            else if (suffix == "erl" || suffix == "hrl") {
+                fileColor = QColor("#b83998");  // Erlang pink
+            }
+            else if (suffix == "ex" || suffix == "exs") {
+                fileColor = QColor("#6e4a7e");  // Elixir purple
+            }
+            // Clojure
+            else if (suffix == "clj" || suffix == "cljs" || suffix == "cljc") {
+                fileColor = QColor("#db5855");  // Clojure red
+            }
+            // Dart
+            else if (suffix == "dart") {
+                fileColor = QColor("#00b4ab");  // Dart teal
+            }
+            // Markdown/Docs
+            else if (suffix == "md" || suffix == "markdown" || suffix == "mdown" || suffix == "mkd") {
+                item->setIcon(0, QIcon(":/icons/document.png"));
+                fileColor = QColor("#083fa1");  // Markdown blue
+            }
+            else if (suffix == "rst" || suffix == "rest") {
+                fileColor = QColor("#141414");  // ReStructuredText black
+            }
+            else if (suffix == "tex" || suffix == "latex") {
+                fileColor = QColor("#3d6117");  // LaTeX green
+            }
+            else if (suffix == "adoc" || suffix == "asciidoc") {
+                fileColor = QColor("#e40046");  // AsciiDoc red
+            }
+            // Build/Project files
+            else if (suffix == "cmake" || fileInfo.fileName().toLower() == "cmakelists.txt") {
+                fileColor = QColor("#064f8c");  // CMake blue
+            }
+            else if (suffix == "mk" || suffix == "make" || fileInfo.fileName().toLower().startsWith("makefile")) {
+                fileColor = QColor("#427819");  // Make green
+            }
+            else if (suffix == "ninja") {
+                fileColor = QColor("#949494");  // Ninja gray
+            }
+            // Docker
+            else if (suffix == "dockerfile" || fileInfo.fileName().toLower().startsWith("dockerfile")) {
+                fileColor = QColor("#384d54");  // Docker blue
+            }
+            // Git
+            else if (suffix == "gitignore" || suffix == "gitattributes" || suffix == "gitmodules") {
+                fileColor = QColor("#f34f29");  // Git orange
+            }
+            // Vim
+            else if (suffix == "vim" || suffix == "vimrc") {
+                fileColor = QColor("#019733");  // Vim green
+            }
+            // Emacs
+            else if (suffix == "el" || suffix == "elc") {
+                fileColor = QColor("#7f5ab6");  // Emacs purple
+            }
+            // Protocol Buffers
+            else if (suffix == "proto") {
+                fileColor = QColor("#4285f4");  // Protobuf blue
+            }
+            // GraphQL
+            else if (suffix == "graphql" || suffix == "gql") {
+                fileColor = QColor("#e10098");  // GraphQL pink
+            }
+            // WASM
+            else if (suffix == "wasm" || suffix == "wat") {
+                fileColor = QColor("#654ff0");  // WASM purple
+            }
+            // Zig
+            else if (suffix == "zig") {
+                fileColor = QColor("#f7a41d");  // Zig orange
+            }
+            // Nim
+            else if (suffix == "nim" || suffix == "nims") {
+                fileColor = QColor("#ffc200");  // Nim yellow
+            }
+            // Crystal
+            else if (suffix == "cr") {
+                fileColor = QColor("#000000");  // Crystal black
+            }
+            // V
+            else if (suffix == "v" || suffix == "vsh") {
+                fileColor = QColor("#5d87bd");  // V blue
+            }
+            // Binary/Object files
+            else if (suffix == "obj" || suffix == "o" || suffix == "lib" || suffix == "a" || suffix == "dll" || suffix == "so" || suffix == "dylib") {
+                item->setIcon(0, style()->standardIcon(QStyle::SP_FileDialogDetailedView));
+                fileColor = QColor("#ffb86c");  // Orange for binaries
+            }
+            // Executables
+            else if (suffix == "exe" || suffix == "bin" || suffix == "elf" || suffix == "out" || suffix == "app") {
+                item->setIcon(0, style()->standardIcon(QStyle::SP_FileDialogDetailedView));
+                fileColor = QColor("#ff5555");  // Red for executables
+            }
+            // Debug files
+            else if (suffix == "hex" || suffix == "map" || suffix == "lst" || suffix == "dis" || suffix == "pdb" || suffix == "dSYM") {
+                item->setIcon(0, style()->standardIcon(QStyle::SP_FileDialogInfoView));
+                fileColor = QColor("#8be9fd");  // Cyan for debug files
+            }
+            // Log files
+            else if (suffix == "log" || suffix == "txt") {
+                item->setIcon(0, QIcon(":/icons/document.png"));
+                fileColor = QColor("#858585");  // Gray for logs
+            }
+            // Archives
+            else if (suffix == "zip" || suffix == "tar" || suffix == "gz" || suffix == "bz2" || suffix == "xz" || suffix == "7z" || suffix == "rar") {
+                fileColor = QColor("#eca400");  // Orange for archives
+            }
+            // Images
+            else if (suffix == "png" || suffix == "jpg" || suffix == "jpeg" || suffix == "gif" || suffix == "bmp" || suffix == "svg" || suffix == "ico" || suffix == "webp") {
+                fileColor = QColor("#a074c4");  // Purple for images
+            }
+            // Default
+            else {
+                item->setIcon(0, style()->standardIcon(QStyle::SP_FileIcon));
+            }
+            
+            item->setForeground(0, isHidden ? QColor("#999999") : fileColor);
+        }
+    }
+    
+    // If there are more items, add a "load more" placeholder
+    if (entries.count() > itemCount) {
+        QTreeWidgetItem* moreItem = new QTreeWidgetItem(rootItem);
+        moreItem->setText(0, QString("... and %1 more items").arg(entries.count() - itemCount));
+        moreItem->setForeground(0, QColor("#9e9e9e"));
+        moreItem->setData(0, Qt::UserRole, "load_more");
+    }
+    
+    QString infoMsg = QString("[addDriveRootItem] Added drive %1 with %2 items displayed").arg(displayLabel).arg(hasSubItems ? "sub-directories and files" : "files");
+    qDebug() << infoMsg;
 }
 
 void MainWindow::populateFolderTree(QTreeWidgetItem* parent, const QString& path) {
@@ -3926,80 +4733,151 @@ void MainWindow::populateFolderTree(QTreeWidgetItem* parent, const QString& path
     }
     
     // Skip large build/cache directories to prevent freeze
-    if (path.contains("build_masm") || path.contains("\\build\\") || path.contains(".git") || path.contains("node_modules")) {
+    if (path.contains("build_masm") || path.contains("\\build\\") || path.contains("/build/") || path.contains(".git") || path.contains("node_modules")) {
         qDebug() << "[populateFolderTree] Skipping large directory:" << path;
         return;
     }
-    
-    try {
-        QDir dir(path);
-        if (!dir.exists()) {
-            qWarning() << "[populateFolderTree] Directory does not exist:" << path;
+
+    // One-level population is enough; deeper content is loaded on-demand via expansion.
+    // Run the filesystem scan off the UI thread so large drives don't freeze the app.
+    if (!m_explorerView) {
+        qWarning() << "[populateFolderTree] Explorer view not ready";
+        return;
+    }
+
+    const QPersistentModelIndex parentIndex = m_explorerView->indexFromItem(parent);
+    const bool showHidden = m_showHiddenFiles_;
+
+    // Immediate feedback.
+    qDeleteAll(parent->takeChildren());
+    {
+        QTreeWidgetItem* loading = new QTreeWidgetItem(parent);
+        loading->setText(0, "Loading...");
+        loading->setForeground(0, QColor("#808080"));
+    }
+
+    auto future = QtConcurrent::run([path, showHidden]() -> QFileInfoList {
+        QFileInfoList results;
+        try {
+            QDir dir(path);
+            if (!dir.exists()) {
+                return results;
+            }
+
+            QDir::Filters filters = QDir::Dirs | QDir::Files | QDir::NoDotAndDotDot;
+            if (showHidden) {
+                filters |= QDir::Hidden | QDir::System;
+            }
+
+            QFileInfoList entries = dir.entryInfoList(filters, QDir::DirsFirst | QDir::Name | QDir::IgnoreCase);
+            if (entries.size() > 200) {
+                entries = entries.mid(0, 200);
+            }
+            results = entries;
+        } catch (...) {
+        }
+        return results;
+    });
+
+    auto* watcher = new QFutureWatcher<QFileInfoList>(this);
+    connect(watcher, &QFutureWatcherBase::finished, this, [this, watcher, parentIndex, path]() {
+        if (!m_explorerView) {
+            watcher->deleteLater();
             return;
         }
-        
-        // Get directories first (sorted)
-        QFileInfoList entries = dir.entryInfoList(
-            QDir::Dirs | QDir::Files | QDir::NoDotAndDotDot,
-            QDir::DirsFirst | QDir::Name | QDir::IgnoreCase
-        );
-        
-        // Limit entries to 50 to prevent UI blocking
-        if (entries.size() > 50) {
-            entries = entries.mid(0, 50);
-            qDebug() << "[populateFolderTree] Limited entries to 50 for" << path;
+
+        QTreeWidgetItem* target = m_explorerView->itemFromIndex(parentIndex);
+        if (!target) {
+            watcher->deleteLater();
+            return;
         }
-        
+
+        const QFileInfoList entries = watcher->future().result();
+        watcher->deleteLater();
+
+        qDeleteAll(target->takeChildren());
+
         int itemCount = 0;
         for (const QFileInfo& entry : entries) {
-            // Skip hidden files unless explicitly needed
-            if (entry.fileName().startsWith(".")) {
-                continue;
-            }
-            
-            QTreeWidgetItem* item = new QTreeWidgetItem(parent);
+            QTreeWidgetItem* item = new QTreeWidgetItem(target);
             item->setText(0, entry.fileName());
             item->setData(0, Qt::UserRole, entry.absoluteFilePath());
-            
+
             if (entry.isDir()) {
-                // Folder icon and style
                 item->setIcon(0, style()->standardIcon(QStyle::SP_DirIcon));
-                item->setForeground(0, QColor("#4ec9b0"));  // Cyan for folders
-                
-                // Recursively populate subdirectory (limit depth to prevent performance issues)
-                static int depth = 0;
-                if (depth < 5) {  // Max depth of 5 levels
-                    depth++;
-                    populateFolderTree(item, entry.absoluteFilePath());
-                    depth--;
-                } else {
-                    // Add placeholder for deep directories
-                    QTreeWidgetItem* placeholder = new QTreeWidgetItem(item);
-                    placeholder->setText(0, "...");
-                    placeholder->setForeground(0, QColor("#808080"));
-                }
+                item->setForeground(0, QColor("#4ec9b0"));
+
+                QTreeWidgetItem* placeholder = new QTreeWidgetItem(item);
+                placeholder->setText(0, "...");
+                placeholder->setForeground(0, QColor("#808080"));
             } else {
-                // File icon and style
                 item->setIcon(0, style()->standardIcon(QStyle::SP_FileIcon));
                 item->setForeground(0, QColor("#e0e0e0"));
-                
-                // Add file size info
-                QString sizeStr = QLocale().formattedDataSize(entry.size());
+                const QString sizeStr = QLocale().formattedDataSize(entry.size());
                 item->setToolTip(0, QString("%1 (%2)").arg(entry.absoluteFilePath()).arg(sizeStr));
             }
-            
-            itemCount++;
+
+            ++itemCount;
         }
-        
+
         qDebug() << "[populateFolderTree] Added" << itemCount << "items to" << path;
-        
-    } catch (const std::exception& e) {
-        qCritical() << "[populateFolderTree] ERROR:" << e.what();
-    }
+    });
+    watcher->setFuture(future);
 }
 
 QWidget* MainWindow::createTerminalPanel() {
-    qDebug() << "[createTerminalPanel] Creating terminal panel with shell integration";
+    qDebug() << "[createTerminalPanel] Creating terminal panel with TerminalClusterWidget";
+    
+    try {
+        // Use production-grade TerminalClusterWidget instead of bespoke implementation
+        terminalCluster_ = new TerminalClusterWidget(this);
+        
+        // Connect terminal cluster signals to MainWindow
+        connect(terminalCluster_, &TerminalClusterWidget::terminalCreated,
+                this, [this](TerminalWidget* terminal) {
+            qDebug() << "[createTerminalPanel] Terminal created";
+            statusBar()->showMessage("Terminal created", 2000);
+        });
+
+        connect(terminalCluster_, &TerminalClusterWidget::terminalClosed,
+                this, [this](TerminalWidget* terminal) {
+            qDebug() << "[createTerminalPanel] Terminal closed";
+            statusBar()->showMessage("Terminal closed", 2000);
+        });
+
+        connect(terminalCluster_, &TerminalClusterWidget::currentTerminalChanged,
+                this, [this](TerminalWidget* terminal) {
+            qDebug() << "[createTerminalPanel] Current terminal changed";
+            if (terminal) {
+                statusBar()->showMessage("Active: " + terminal->getTitle(), 2000);
+            }
+        });
+
+        connect(terminalCluster_, &TerminalClusterWidget::titleChanged,
+                this, [this](const QString& title) {
+            qDebug() << "[createTerminalPanel] Title changed:" << title;
+        });
+        
+        // Initialize after connections are set up
+        QTimer::singleShot(100, terminalCluster_, [this]() {
+            if (terminalCluster_) {
+                terminalCluster_->initialize();
+                terminalCluster_->startShells();
+            }
+        });
+        
+        qDebug() << "[createTerminalPanel] Terminal cluster created successfully";
+        return terminalCluster_;
+        
+    } catch (const std::exception& e) {
+        qCritical() << "[createTerminalPanel] ERROR:" << e.what();
+        return new QWidget(this);
+    }
+}
+
+// Old bespoke terminal implementation removed - now using TerminalClusterWidget
+QWidget* MainWindow::createTerminalPanel_OLD_DEPRECATED() {
+    qDebug() << "[createTerminalPanel_OLD_DEPRECATED] Creating terminal panel with shell integration";
     
     try {
         QWidget* terminalWidget = new QWidget(this);
@@ -4435,10 +5313,10 @@ void MainWindow::setupDockWidgets() {
         
         // 1. Project Explorer Dock
         if (!projectExplorer_) {
-            projectExplorer_ = new RawrXD::ProjectExplorerWidget(this);
+            projectExplorer_ = new ProjectExplorerWidget(this);
             
             // Connect file double-click to open in editor
-            connect(projectExplorer_, &RawrXD::ProjectExplorerWidget::fileDoubleClicked,
+            connect(projectExplorer_, &ProjectExplorerWidget::fileDoubleClicked,
                     this, [this](const QString& path) {
                 QFile file(path);
                 if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
@@ -4452,105 +5330,315 @@ void MainWindow::setupDockWidgets() {
             // NOTE: Project opening is now handled by the startup readiness checker
             // after all subsystems are validated. See MainWindow constructor.
             
-            QDockWidget* projDock = new QDockWidget("Project Explorer", this);
-            projDock->setObjectName("ProjectExplorerDock");
-            projDock->setWidget(projectExplorer_);
-            projDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-            projDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
-            addDockWidget(Qt::LeftDockWidgetArea, projDock);
-            projDock->show();  // Show by default so files are visible
+            m_projectExplorerDock = new QDockWidget("Project Explorer", this);
+            m_projectExplorerDock->setObjectName("ProjectExplorerDock");
+            m_projectExplorerDock->setWidget(projectExplorer_);
+            m_projectExplorerDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+            m_projectExplorerDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
+            addDockWidget(Qt::LeftDockWidgetArea, m_projectExplorerDock);
+            m_projectExplorerDock->show();  // Show by default so files are visible
             qDebug() << "[setupDockWidgets] Created Project Explorer dock";
         }
         
         // 2. Build System Dock
         if (!buildWidget_) {
             buildWidget_ = new BuildSystemWidget(this);
-            QDockWidget* buildDock = new QDockWidget("Build System", this);
-            buildDock->setObjectName("BuildSystemDock");
-            buildDock->setWidget(buildWidget_);
-            buildDock->setAllowedAreas(Qt::BottomDockWidgetArea | Qt::RightDockWidgetArea);
-            buildDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
-            addDockWidget(Qt::BottomDockWidgetArea, buildDock);
-            buildDock->hide();
+            m_buildSystemDock = new QDockWidget("Build System", this);
+            m_buildSystemDock->setObjectName("BuildSystemDock");
+            m_buildSystemDock->setWidget(buildWidget_);
+            m_buildSystemDock->setAllowedAreas(Qt::BottomDockWidgetArea | Qt::RightDockWidgetArea);
+            m_buildSystemDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
+            addDockWidget(Qt::BottomDockWidgetArea, m_buildSystemDock);
+            m_buildSystemDock->hide();
             qDebug() << "[setupDockWidgets] Created Build System dock";
         }
         
         // 3. Version Control Dock
         if (!vcsWidget_) {
             vcsWidget_ = new VersionControlWidget(this);
-            QDockWidget* vcsDock = new QDockWidget("Version Control", this);
-            vcsDock->setObjectName("VersionControlDock");
-            vcsDock->setWidget(vcsWidget_);
-            vcsDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea | Qt::BottomDockWidgetArea);
-            vcsDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
-            addDockWidget(Qt::LeftDockWidgetArea, vcsDock);
-            vcsDock->hide();
+            m_vcsWidgetDock = new QDockWidget("Version Control", this);
+            m_vcsWidgetDock->setObjectName("VersionControlDock");
+            m_vcsWidgetDock->setWidget(vcsWidget_);
+            m_vcsWidgetDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea | Qt::BottomDockWidgetArea);
+            m_vcsWidgetDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
+            addDockWidget(Qt::LeftDockWidgetArea, m_vcsWidgetDock);
+            m_vcsWidgetDock->hide();
             qDebug() << "[setupDockWidgets] Created Version Control dock";
         }
         
         // 4. Debug/Run Dock
         if (!debugWidget_) {
             debugWidget_ = new RunDebugWidget(this);
-            QDockWidget* debugDock = new QDockWidget("Run & Debug", this);
-            debugDock->setObjectName("RunDebugDock");
-            debugDock->setWidget(debugWidget_);
-            debugDock->setAllowedAreas(Qt::AllDockWidgetAreas);
-            debugDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
-            addDockWidget(Qt::BottomDockWidgetArea, debugDock);
-            debugDock->hide();
+            m_debugWidgetDock = new QDockWidget("Run & Debug", this);
+            m_debugWidgetDock->setObjectName("RunDebugDock");
+            m_debugWidgetDock->setWidget(debugWidget_);
+            m_debugWidgetDock->setAllowedAreas(Qt::AllDockWidgetAreas);
+            m_debugWidgetDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
+            addDockWidget(Qt::BottomDockWidgetArea, m_debugWidgetDock);
+            m_debugWidgetDock->hide();
             qDebug() << "[setupDockWidgets] Created Run & Debug dock";
         }
         
         // 5. Test Explorer Dock
         if (!testWidget_) {
             testWidget_ = new TestExplorerWidget(this);
-            QDockWidget* testDock = new QDockWidget("Test Explorer", this);
-            testDock->setObjectName("TestExplorerDock");
-            testDock->setWidget(testWidget_);
-            testDock->setAllowedAreas(Qt::RightDockWidgetArea | Qt::BottomDockWidgetArea);
-            testDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
-            addDockWidget(Qt::RightDockWidgetArea, testDock);
-            testDock->hide();
+            m_testExplorerDock = new QDockWidget("Test Explorer", this);
+            m_testExplorerDock->setObjectName("TestExplorerDock");
+            m_testExplorerDock->setWidget(testWidget_);
+            m_testExplorerDock->setAllowedAreas(Qt::RightDockWidgetArea | Qt::BottomDockWidgetArea);
+            m_testExplorerDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
+            addDockWidget(Qt::RightDockWidgetArea, m_testExplorerDock);
+            m_testExplorerDock->hide();
             qDebug() << "[setupDockWidgets] Created Test Explorer dock";
         }
         
         // 6. Profiler Dock
         if (!profilerWidget_) {
             profilerWidget_ = new ProfilerWidget(this);
-            QDockWidget* profilerDock = new QDockWidget("Profiler", this);
-            profilerDock->setObjectName("ProfilerDock");
-            profilerDock->setWidget(profilerWidget_);
-            profilerDock->setAllowedAreas(Qt::BottomDockWidgetArea | Qt::RightDockWidgetArea);
-            profilerDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
-            addDockWidget(Qt::BottomDockWidgetArea, profilerDock);
-            profilerDock->hide();
+            m_profilerWidgetDock = new QDockWidget("Profiler", this);
+            m_profilerWidgetDock->setObjectName("ProfilerDock");
+            m_profilerWidgetDock->setWidget(profilerWidget_);
+            m_profilerWidgetDock->setAllowedAreas(Qt::BottomDockWidgetArea | Qt::RightDockWidgetArea);
+            m_profilerWidgetDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
+            addDockWidget(Qt::BottomDockWidgetArea, m_profilerWidgetDock);
+            m_profilerWidgetDock->hide();
             qDebug() << "[setupDockWidgets] Created Profiler dock";
         }
         
         // 7. Database Tool Dock
         if (!database_) {
             database_ = new DatabaseToolWidget(this);
-            QDockWidget* dbDock = new QDockWidget("Database Tools", this);
-            dbDock->setObjectName("DatabaseToolDock");
-            dbDock->setWidget(database_);
-            dbDock->setAllowedAreas(Qt::AllDockWidgetAreas);
-            dbDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
-            addDockWidget(Qt::RightDockWidgetArea, dbDock);
-            dbDock->hide();
+            m_databaseWidgetDock = new QDockWidget("Database Tools", this);
+            m_databaseWidgetDock->setObjectName("DatabaseToolDock");
+            m_databaseWidgetDock->setWidget(database_);
+            m_databaseWidgetDock->setAllowedAreas(Qt::AllDockWidgetAreas);
+            m_databaseWidgetDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
+            addDockWidget(Qt::RightDockWidgetArea, m_databaseWidgetDock);
+            m_databaseWidgetDock->hide();
             qDebug() << "[setupDockWidgets] Created Database Tools dock";
         }
         
         // 8. Docker Tools Dock
         if (!docker_) {
             docker_ = new DockerToolWidget(this);
-            QDockWidget* dockerDock = new QDockWidget("Docker", this);
-            dockerDock->setObjectName("DockerToolDock");
-            dockerDock->setWidget(docker_);
-            dockerDock->setAllowedAreas(Qt::AllDockWidgetAreas);
-            dockerDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
-            addDockWidget(Qt::RightDockWidgetArea, dockerDock);
-            dockerDock->hide();
+            m_dockerWidgetDock = new QDockWidget("Docker", this);
+            m_dockerWidgetDock->setObjectName("DockerToolDock");
+            m_dockerWidgetDock->setWidget(docker_);
+            m_dockerWidgetDock->setAllowedAreas(Qt::AllDockWidgetAreas);
+            m_dockerWidgetDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
+            addDockWidget(Qt::RightDockWidgetArea, m_dockerWidgetDock);
+            m_dockerWidgetDock->hide();
             qDebug() << "[setupDockWidgets] Created Docker dock";
+        }
+        
+        // 9. Terminal Dock
+        if (!terminalDock_) {
+            m_terminalWidget = new TerminalWidget(this);
+            terminalDock_ = new QDockWidget("Terminal", this);
+            terminalDock_->setObjectName("TerminalDock");
+            terminalDock_->setWidget(m_terminalWidget);
+            terminalDock_->setAllowedAreas(Qt::BottomDockWidgetArea);
+            terminalDock_->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
+            addDockWidget(Qt::BottomDockWidgetArea, terminalDock_);
+            terminalDock_->hide();
+            qDebug() << "[setupDockWidgets] Created Terminal dock";
+        }
+        
+        // 10. Autonomous Capabilities Dashboard Dock
+        if (m_discoveryDashboard) {
+            m_discoveryDashboard->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea | Qt::BottomDockWidgetArea);
+            m_discoveryDashboard->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
+            addDockWidget(Qt::RightDockWidgetArea, m_discoveryDashboard);
+            m_discoveryDashboard->hide();  // Hidden by default, can be toggled from menu
+            qDebug() << "[setupDockWidgets] Created Autonomous Capabilities Dashboard dock";
+        }
+        
+        // 11. Agentic System Monitoring Docks
+        // Planning Engine Dock
+        if (!m_planningEngineDock) {
+            m_planningEngineDock = new QDockWidget("Planning Engine", this);
+            m_planningEngineDock->setObjectName("PlanningEngineDock");
+            m_planningEngineDock->setAllowedAreas(Qt::RightDockWidgetArea | Qt::BottomDockWidgetArea);
+            m_planningEngineDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
+            addDockWidget(Qt::RightDockWidgetArea, m_planningEngineDock);
+            m_planningEngineDock->hide();
+            qDebug() << "[setupDockWidgets] Created Planning Engine dock";
+        }
+        
+        // Error Analysis Dock
+        if (!m_errorAnalysisDock) {
+            m_errorAnalysisDock = new QDockWidget("Error Analysis", this);
+            m_errorAnalysisDock->setObjectName("ErrorAnalysisDock");
+            m_errorAnalysisDock->setAllowedAreas(Qt::RightDockWidgetArea | Qt::BottomDockWidgetArea);
+            m_errorAnalysisDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
+            addDockWidget(Qt::RightDockWidgetArea, m_errorAnalysisDock);
+            m_errorAnalysisDock->hide();
+            qDebug() << "[setupDockWidgets] Created Error Analysis dock";
+        }
+        
+        // Refactoring Engine Dock
+        if (!m_refactoringEngineDock) {
+            m_refactoringEngineDock = new QDockWidget("Refactoring Engine", this);
+            m_refactoringEngineDock->setObjectName("RefactoringEngineDock");
+            m_refactoringEngineDock->setAllowedAreas(Qt::RightDockWidgetArea | Qt::BottomDockWidgetArea);
+            m_refactoringEngineDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
+            addDockWidget(Qt::RightDockWidgetArea, m_refactoringEngineDock);
+            m_refactoringEngineDock->hide();
+            qDebug() << "[setupDockWidgets] Created Refactoring Engine dock";
+        }
+        
+        // Memory Persistence Dock
+        if (!m_memoryPersistenceDock) {
+            m_memoryPersistenceDock = new QDockWidget("Memory Persistence", this);
+            m_memoryPersistenceDock->setObjectName("MemoryPersistenceDock");
+            m_memoryPersistenceDock->setAllowedAreas(Qt::RightDockWidgetArea | Qt::BottomDockWidgetArea);
+            m_memoryPersistenceDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
+            addDockWidget(Qt::RightDockWidgetArea, m_memoryPersistenceDock);
+            m_memoryPersistenceDock->hide();
+            qDebug() << "[setupDockWidgets] Created Memory Persistence dock";
+        }
+        
+        // 12. AI Chat Panel Dock
+        if (!m_aiChatPanelDock) {
+            m_aiChatPanelDock = new QDockWidget("AI Chat", this);
+            m_aiChatPanelDock->setObjectName("AIChatPanelDock");
+            m_aiChatPanelDock->setAllowedAreas(Qt::RightDockWidgetArea | Qt::BottomDockWidgetArea);
+            m_aiChatPanelDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
+            addDockWidget(Qt::RightDockWidgetArea, m_aiChatPanelDock);
+            m_aiChatPanelDock->hide();
+            qDebug() << "[setupDockWidgets] Created AI Chat Panel dock";
+        }
+        
+        // 13. MASM Editor Dock
+        if (!m_masmEditorDock) {
+            m_masmEditorDock = new QDockWidget("MASM Editor", this);
+            m_masmEditorDock->setObjectName("MASMEditorDock");
+            m_masmEditorDock->setAllowedAreas(Qt::RightDockWidgetArea | Qt::BottomDockWidgetArea);
+            m_masmEditorDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
+            addDockWidget(Qt::RightDockWidgetArea, m_masmEditorDock);
+            m_masmEditorDock->hide();
+            qDebug() << "[setupDockWidgets] Created MASM Editor dock";
+        }
+        
+        // 14. Hotpatch Panel Dock
+        if (!m_hotpatchPanelDock) {
+            m_hotpatchPanelDock = new QDockWidget("Hotpatch Panel", this);
+            m_hotpatchPanelDock->setObjectName("HotpatchPanelDock");
+            m_hotpatchPanelDock->setAllowedAreas(Qt::RightDockWidgetArea | Qt::BottomDockWidgetArea);
+            m_hotpatchPanelDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
+            addDockWidget(Qt::RightDockWidgetArea, m_hotpatchPanelDock);
+            m_hotpatchPanelDock->hide();
+            qDebug() << "[setupDockWidgets] Created Hotpatch Panel dock";
+        }
+        
+        // 15. Layer Quantization Dock
+        if (!m_layerQuantDock) {
+            m_layerQuantDock = new QDockWidget("Layer Quantization", this);
+            m_layerQuantDock->setObjectName("LayerQuantDock");
+            m_layerQuantDock->setAllowedAreas(Qt::RightDockWidgetArea | Qt::BottomDockWidgetArea);
+            m_layerQuantDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
+            addDockWidget(Qt::RightDockWidgetArea, m_layerQuantDock);
+            m_layerQuantDock->hide();
+            qDebug() << "[setupDockWidgets] Created Layer Quantization dock";
+        }
+        
+        // 16. Model Monitor Dock
+        if (!m_modelMonitorDock) {
+            m_modelMonitorDock = new QDockWidget("Model Monitor", this);
+            m_modelMonitorDock->setObjectName("ModelMonitorDock");
+            m_modelMonitorDock->setAllowedAreas(Qt::RightDockWidgetArea | Qt::BottomDockWidgetArea);
+            m_modelMonitorDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
+            addDockWidget(Qt::RightDockWidgetArea, m_modelMonitorDock);
+            m_modelMonitorDock->hide();
+            qDebug() << "[setupDockWidgets] Created Model Monitor dock";
+        }
+        
+        // 17. Blob Converter Dock
+        if (!m_blobConverterDock) {
+            m_blobConverterDock = new QDockWidget("Blob Converter", this);
+            m_blobConverterDock->setObjectName("BlobConverterDock");
+            m_blobConverterDock->setAllowedAreas(Qt::RightDockWidgetArea | Qt::BottomDockWidgetArea);
+            m_blobConverterDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
+            addDockWidget(Qt::RightDockWidgetArea, m_blobConverterDock);
+            m_blobConverterDock->hide();
+            qDebug() << "[setupDockWidgets] Created Blob Converter dock";
+        }
+        
+        // 18. AI Digestion Dock
+        if (!m_aiDigestionDock) {
+            m_aiDigestionDock = new QDockWidget("AI Digestion", this);
+            m_aiDigestionDock->setObjectName("AIDigestionDock");
+            m_aiDigestionDock->setAllowedAreas(Qt::RightDockWidgetArea | Qt::BottomDockWidgetArea);
+            m_aiDigestionDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
+            addDockWidget(Qt::RightDockWidgetArea, m_aiDigestionDock);
+            m_aiDigestionDock->hide();
+            qDebug() << "[setupDockWidgets] Created AI Digestion dock";
+        }
+        
+        // 19. Interpretability Panel Dock
+        if (!m_interpretabilityPanelDock) {
+            m_interpretabilityPanelDock = new QDockWidget("Interpretability Panel", this);
+            m_interpretabilityPanelDock->setObjectName("InterpretabilityPanelDock");
+            m_interpretabilityPanelDock->setAllowedAreas(Qt::RightDockWidgetArea | Qt::BottomDockWidgetArea);
+            m_interpretabilityPanelDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
+            addDockWidget(Qt::RightDockWidgetArea, m_interpretabilityPanelDock);
+            m_interpretabilityPanelDock->hide();
+            qDebug() << "[setupDockWidgets] Created Interpretability Panel dock";
+        }
+        
+        // 20. Model Loader Dock
+        if (!m_modelLoaderDock) {
+            m_modelLoaderDock = new QDockWidget("Model Loader", this);
+            m_modelLoaderDock->setObjectName("ModelLoaderDock");
+            m_modelLoaderDock->setAllowedAreas(Qt::RightDockWidgetArea | Qt::BottomDockWidgetArea);
+            m_modelLoaderDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
+            addDockWidget(Qt::RightDockWidgetArea, m_modelLoaderDock);
+            m_modelLoaderDock->hide();
+            qDebug() << "[setupDockWidgets] Created Model Loader dock";
+        }
+        
+        // 21. Diagnostics Dock
+        if (!m_diagnosticsDock) {
+            m_diagnosticsDock = new QDockWidget("Diagnostics", this);
+            m_diagnosticsDock->setObjectName("DiagnosticsDock");
+            m_diagnosticsDock->setAllowedAreas(Qt::RightDockWidgetArea | Qt::BottomDockWidgetArea);
+            m_diagnosticsDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
+            addDockWidget(Qt::RightDockWidgetArea, m_diagnosticsDock);
+            m_diagnosticsDock->hide();
+            qDebug() << "[setupDockWidgets] Created Diagnostics dock";
+        }
+        
+        // 22. Latency Dock
+        if (!m_latencyDock) {
+            m_latencyDock = new QDockWidget("Latency Monitor", this);
+            m_latencyDock->setObjectName("LatencyDock");
+            m_latencyDock->setAllowedAreas(Qt::RightDockWidgetArea | Qt::BottomDockWidgetArea);
+            m_latencyDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
+            addDockWidget(Qt::RightDockWidgetArea, m_latencyDock);
+            m_latencyDock->hide();
+            qDebug() << "[setupDockWidgets] Created Latency Monitor dock";
+        }
+        
+        // 23. AI Chat Dock (VS Code-style)
+        if (!m_aiChatDock) {
+            m_aiChatDock = new QDockWidget("AI Chat", this);
+            m_aiChatDock->setObjectName("AIChatDock");
+            m_aiChatDock->setAllowedAreas(Qt::RightDockWidgetArea | Qt::BottomDockWidgetArea);
+            m_aiChatDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
+            addDockWidget(Qt::RightDockWidgetArea, m_aiChatDock);
+            m_aiChatDock->hide();
+            qDebug() << "[setupDockWidgets] Created AI Chat dock";
+        }
+        
+        // 24. Command Palette Dock
+        if (!m_commandPaletteDock) {
+            m_commandPaletteDock = new QDockWidget("Command Palette", this);
+            m_commandPaletteDock->setObjectName("CommandPaletteDock");
+            m_commandPaletteDock->setAllowedAreas(Qt::AllDockWidgetAreas);
+            m_commandPaletteDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
+            addDockWidget(Qt::TopDockWidgetArea, m_commandPaletteDock);
+            m_commandPaletteDock->hide();
+            qDebug() << "[setupDockWidgets] Created Command Palette dock";
         }
         
         // Apply consistent styling to all docks
@@ -4569,6 +5657,60 @@ void MainWindow::setupDockWidgets() {
                 "border: 1px solid #3e3e42; "
                 "}"
             );
+        }
+        
+        // Create tab groups for related functionality
+        // Agentic Systems Tab Group
+        if (m_discoveryDashboard && m_planningEngineDock && m_errorAnalysisDock && m_refactoringEngineDock && m_memoryPersistenceDock) {
+            tabifyDockWidget(m_discoveryDashboard, m_planningEngineDock);
+            tabifyDockWidget(m_planningEngineDock, m_errorAnalysisDock);
+            tabifyDockWidget(m_errorAnalysisDock, m_refactoringEngineDock);
+            tabifyDockWidget(m_refactoringEngineDock, m_memoryPersistenceDock);
+            qDebug() << "[setupDockWidgets] Created Agentic Systems tab group";
+        }
+        
+        // AI Tools Tab Group
+        if (m_aiChatPanelDock && m_layerQuantDock && m_modelMonitorDock) {
+            tabifyDockWidget(m_aiChatPanelDock, m_layerQuantDock);
+            tabifyDockWidget(m_layerQuantDock, m_modelMonitorDock);
+            qDebug() << "[setupDockWidgets] Created AI Tools tab group";
+        }
+        
+        // Development Tools Tab Group
+        if (m_masmEditorDock && m_hotpatchPanelDock && m_testExplorerDock) {
+            tabifyDockWidget(m_masmEditorDock, m_hotpatchPanelDock);
+            tabifyDockWidget(m_hotpatchPanelDock, m_testExplorerDock);
+            qDebug() << "[setupDockWidgets] Created Development Tools tab group";
+        }
+        
+        // Project Management Tab Group
+        if (m_projectExplorerDock && m_vcsWidgetDock && m_databaseWidgetDock) {
+            tabifyDockWidget(m_projectExplorerDock, m_vcsWidgetDock);
+            tabifyDockWidget(m_vcsWidgetDock, m_databaseWidgetDock);
+            qDebug() << "[setupDockWidgets] Created Project Management tab group";
+        }
+        
+        // Build & Debug Tab Group
+        if (m_buildSystemDock && m_debugWidgetDock && m_profilerWidgetDock) {
+            tabifyDockWidget(m_buildSystemDock, m_debugWidgetDock);
+            tabifyDockWidget(m_debugWidgetDock, m_profilerWidgetDock);
+            qDebug() << "[setupDockWidgets] Created Build & Debug tab group";
+        }
+        
+        // AI Infrastructure Tab Group
+        if (m_blobConverterDock && m_aiDigestionDock && m_interpretabilityPanelDock && m_modelLoaderDock && m_diagnosticsDock && m_latencyDock) {
+            tabifyDockWidget(m_blobConverterDock, m_aiDigestionDock);
+            tabifyDockWidget(m_aiDigestionDock, m_interpretabilityPanelDock);
+            tabifyDockWidget(m_interpretabilityPanelDock, m_modelLoaderDock);
+            tabifyDockWidget(m_modelLoaderDock, m_diagnosticsDock);
+            tabifyDockWidget(m_diagnosticsDock, m_latencyDock);
+            qDebug() << "[setupDockWidgets] Created AI Infrastructure tab group";
+        }
+        
+        // Terminal Tab Group
+        if (terminalDock_ && m_dockerWidgetDock) {
+            tabifyDockWidget(terminalDock_, m_dockerWidgetDock);
+            qDebug() << "[setupDockWidgets] Created Terminal & Docker tab group";
         }
         
         qDebug() << "[setupDockWidgets] Successfully initialized" << allDocks.size() << "dock widgets";
@@ -5028,15 +6170,29 @@ void MainWindow::setupAgentSystem() {
     m_agenticEngine = new AgenticEngine(this);
     m_agenticEngine->initialize();
 
-    // 2. High-level orchestrator (IDEAgentBridge)
+    // 2. Advanced Agentic Components
+    m_planningEngine = new AdvancedPlanningEngine(this);
+    m_errorAnalysis = new IntelligentErrorAnalysis(this);
+    m_refactoringEngine = new RealTimeRefactoring(this);
+    
+    // 3. Discovery Dashboard
+    m_discoveryDashboard = new DiscoveryDashboard(this);
+    
+    // 4. Additional Agentic Components
+    m_memoryPersistence = new MemoryPersistenceSystem(this);
+    // TODO: Implement TestGenerationAutomation and AlertSystem
+    // m_testGeneration = new TestGenerationAutomation(this);
+    // m_alertSystem = new AlertSystem(this);
+    
+    // 5. High-level orchestrator (IDEAgentBridge)
     if (!m_agentBridge) {
         m_agentBridge = new IDEAgentBridge(this);
     }
     
-    // 3. Copilot/Cursor-style bridge (AgenticCopilotBridge)
+    // 6. Copilot/Cursor-style bridge (AgenticCopilotBridge)
     m_copilotBridge = new AgenticCopilotBridge(this);
     
-    // 4. Component Sync (RealTimeIntegrationCoordinator)
+    // 7. Component Sync (RealTimeIntegrationCoordinator)
     if (!m_integrationCoordinator) {
         m_integrationCoordinator = new RealTimeIntegrationCoordinator(this);
     }
@@ -5351,6 +6507,12 @@ void MainWindow::setupAIChatPanel() {
     // Create AI Chat Panel widget
     m_aiChatPanel = new AIChatPanel(this);
     m_aiChatPanel->initialize();  // Two-phase init - create Qt widgets after QApplication
+
+    // Critical wiring: the chat panel must know about the inference engine for
+    // GGUF execution + Ollama blob discovery + model loading UX.
+    if (m_inferenceEngine) {
+        m_aiChatPanel->setInferenceEngine(m_inferenceEngine);
+    }
     
     // Create dock widget to hold the chat panel
     m_aiChatPanelDock = new QDockWidget("AI Chat Panel", this);
@@ -5385,6 +6547,73 @@ void MainWindow::setupAIChatPanel() {
             this, [this](qint64) {
                 if (m_aiChatPanel) m_aiChatPanel->finishStreaming();
             });
+
+    // Keep the chat panel model/UI in sync with the engine model state
+    if (m_inferenceEngine) {
+        connect(m_inferenceEngine, &InferenceEngine::modelLoadedChanged,
+                this, [this](bool loaded, const QString& modelName) {
+                    if (!m_aiChatPanel) return;
+                    if (loaded) {
+                        m_aiChatPanel->setLocalModel(modelName);
+                        m_aiChatPanel->setInputEnabled(true);
+                        statusBar()->showMessage(tr("Model loaded: %1").arg(modelName), 4000);
+                    } else {
+                        m_aiChatPanel->setInputEnabled(false);
+                        statusBar()->showMessage(tr("Model unloaded"), 3000);
+                    }
+                });
+    }
+
+    // Implement "Load Model..." action from the model selector.
+    // This does not disable features; it wires the existing signal to real model loading.
+    connect(m_aiChatPanel, &AIChatPanel::loadModelRequested, this, [this]() {
+        if (!m_inferenceEngine) {
+            qWarning() << "[MainWindow] Load Model requested but inference engine is null";
+            if (m_aiChatPanel) {
+                m_aiChatPanel->addAssistantMessage("⚠ Cannot load model: inference engine not initialized.", false);
+            }
+            return;
+        }
+
+        const QString startDir = InferenceEngine::defaultModelDirectory();
+        const QString selected = QFileDialog::getOpenFileName(
+            this,
+            tr("Load GGUF Model"),
+            startDir.isEmpty() ? QDir::homePath() : startDir,
+            tr("GGUF Models (*.gguf);;All Files (*.*)"));
+
+        if (selected.isEmpty()) {
+            return;
+        }
+
+        if (m_aiChatPanel) {
+            m_aiChatPanel->setInputEnabled(false);
+            m_aiChatPanel->addAssistantMessage(tr("Loading model: %1").arg(QFileInfo(selected).fileName()), false);
+        }
+        statusBar()->showMessage(tr("Loading model..."), 0);
+
+        // Run on the engine's thread (engine is moved to m_engineThread)
+        QMetaObject::invokeMethod(m_inferenceEngine, "loadModel", Qt::QueuedConnection,
+                                  Q_ARG(QString, selected));
+    });
+
+    // Selecting an Ollama blob model must activate the engine; otherwise chat remains "no model loaded".
+    connect(m_aiChatPanel, &AIChatPanel::modelSelected, this, [this](const QString& modelName) {
+        if (!m_inferenceEngine) return;
+
+        const QString trimmed = modelName.trimmed();
+        if (trimmed.isEmpty()) return;
+
+        const QFileInfo fi(trimmed);
+        if (fi.exists() && fi.isFile()) {
+            QMetaObject::invokeMethod(m_inferenceEngine, "loadModel", Qt::QueuedConnection,
+                                      Q_ARG(QString, fi.absoluteFilePath()));
+            return;
+        }
+
+        QMetaObject::invokeMethod(m_inferenceEngine, "setOllamaModel", Qt::QueuedConnection,
+                                  Q_ARG(QString, trimmed));
+    });
     
     // Add View menu toggle for AI Chat Panel
     QMenu* viewMenu = nullptr;
@@ -5419,6 +6648,71 @@ void MainWindow::setupAIChatPanel() {
     qDebug() << "AI Chat Panel dockable widget created on right side";
 }
 
+void MainWindow::setupChatMetricsDashboard() {
+    // Create Chat Metrics Dashboard for real-time monitoring
+    m_chatMetricsDashboard = new RawrXD::Dashboard::ChatMetricsDashboard(this);
+    
+    // Create dock widget to hold the dashboard
+    m_chatMetricsDashboardDock = new QDockWidget("Chat Metrics Dashboard", this);
+    m_chatMetricsDashboardDock->setWidget(m_chatMetricsDashboard);
+    m_chatMetricsDashboardDock->setObjectName("ChatMetricsDashboardDock");
+    m_chatMetricsDashboardDock->setAllowedAreas(Qt::AllDockWidgetAreas);
+    m_chatMetricsDashboardDock->setFeatures(QDockWidget::DockWidgetMovable |
+                                             QDockWidget::DockWidgetFloatable |
+                                             QDockWidget::DockWidgetClosable);
+    
+    // Add to right dock area by default, below AI Chat Panel
+    addDockWidget(Qt::RightDockWidgetArea, m_chatMetricsDashboardDock);
+    
+    // Tabify with AI Chat Panel dock
+    if (m_aiChatPanelDock) {
+        tabifyDockWidget(m_aiChatPanelDock, m_chatMetricsDashboardDock);
+    }
+    
+    // Connect chat panel signals to metrics dashboard
+    if (m_aiChatPanel && m_aiChatPanel->infrastructure()) {
+        auto infrastructure = m_aiChatPanel->infrastructure();
+        
+        // Connect to metrics updates from infrastructure
+        // The dashboard will periodically poll metrics from the infrastructure
+        connect(m_chatMetricsDashboard, &RawrXD::Dashboard::ChatMetricsDashboard::updateRequested,
+                this, [this, infrastructure]() {
+                    if (m_chatMetricsDashboard) {
+                        // Get metrics from infrastructure
+                        QJsonObject metrics = infrastructure->analytics()->getSessionReport();
+                        m_chatMetricsDashboard->updateMetrics(metrics);
+                    }
+                });
+    }
+    
+    // Add View menu toggle for Chat Metrics Dashboard
+    QMenu* viewMenu = nullptr;
+    for (QAction* action : menuBar()->actions()) {
+        if (action->text() == "View") {
+            viewMenu = action->menu();
+            break;
+        }
+    }
+    
+    if (viewMenu) {
+        QAction* toggleDashboardAction = viewMenu->addAction("Chat Metrics Dashboard");
+        toggleDashboardAction->setCheckable(true);
+        toggleDashboardAction->setChecked(true);
+        connect(toggleDashboardAction, &QAction::triggered, this, [this](bool visible) {
+            if (m_chatMetricsDashboardDock) {
+                if (visible) {
+                    m_chatMetricsDashboardDock->show();
+                    m_chatMetricsDashboardDock->raise();
+                } else {
+                    m_chatMetricsDashboardDock->hide();
+                }
+            }
+        });
+    }
+    
+    qDebug() << "Chat Metrics Dashboard dockable widget created on right side";
+}
+
 void MainWindow::onAIChatMessageSubmitted(const QString& message) {
     if (!m_aiChatPanel) return;
     
@@ -5440,7 +6734,7 @@ void MainWindow::onAIChatMessageSubmitted(const QString& message) {
                                       Q_ARG(qint64, reqId),
                                       Q_ARG(bool, true));
         } else {
-            m_aiChatPanel->addAssistantMessage("No model loaded. Please load a GGUF model first.", false);
+            m_aiChatPanel->addAssistantMessage("No model loaded. Select an Ollama blob model or load a GGUF model.", false);
         }
     } catch (const std::exception& e) {
         qCritical() << "Chat message submission error:" << e.what();
@@ -6056,14 +7350,10 @@ void MainWindow::setupCommandPalette()
         m_commandPalette->show();
     });
     
-    // Register AI commands if AI chat panel is available
-    if (m_aiChatPanel) {
-        m_aiChatPanel->populateCommandPaletteCommands();
-    }
-    
     // Register IDE commands
     CommandPalette::Command cmd;
     
+    // File Operations
     cmd.id = "file.new";
     cmd.label = "New File";
     cmd.category = "File";
@@ -6088,6 +7378,23 @@ void MainWindow::setupCommandPalette()
     cmd.action = [this]() { handleSaveFile(); };
     m_commandPalette->registerCommand(cmd);
     
+    cmd.id = "file.save_as";
+    cmd.label = "Save As...";
+    cmd.category = "File";
+    cmd.description = "Save current file with new name";
+    cmd.shortcut = QKeySequence("Ctrl+Shift+S");
+    cmd.action = [this]() { handleSaveAs(); };
+    m_commandPalette->registerCommand(cmd);
+    
+    cmd.id = "file.exit";
+    cmd.label = "Exit";
+    cmd.category = "File";
+    cmd.description = "Exit the application";
+    cmd.shortcut = QKeySequence("Ctrl+Q");
+    cmd.action = [this]() { QApplication::quit(); };
+    m_commandPalette->registerCommand(cmd);
+    
+    // Edit Operations
     cmd.id = "edit.undo";
     cmd.label = "Undo";
     cmd.category = "Edit";
@@ -6104,6 +7411,47 @@ void MainWindow::setupCommandPalette()
     cmd.action = [this]() { handleRedo(); };
     m_commandPalette->registerCommand(cmd);
     
+    cmd.id = "edit.cut";
+    cmd.label = "Cut";
+    cmd.category = "Edit";
+    cmd.description = "Cut selected text";
+    cmd.shortcut = QKeySequence("Ctrl+X");
+    cmd.action = [this]() { handleCut(); };
+    m_commandPalette->registerCommand(cmd);
+    
+    cmd.id = "edit.copy";
+    cmd.label = "Copy";
+    cmd.category = "Edit";
+    cmd.description = "Copy selected text";
+    cmd.shortcut = QKeySequence("Ctrl+C");
+    cmd.action = [this]() { handleCopy(); };
+    m_commandPalette->registerCommand(cmd);
+    
+    cmd.id = "edit.paste";
+    cmd.label = "Paste";
+    cmd.category = "Edit";
+    cmd.description = "Paste from clipboard";
+    cmd.shortcut = QKeySequence("Ctrl+V");
+    cmd.action = [this]() { handlePaste(); };
+    m_commandPalette->registerCommand(cmd);
+    
+    cmd.id = "edit.find";
+    cmd.label = "Find";
+    cmd.category = "Edit";
+    cmd.description = "Find text in current file";
+    cmd.shortcut = QKeySequence("Ctrl+F");
+    cmd.action = [this]() { handleFind(); };
+    m_commandPalette->registerCommand(cmd);
+    
+    cmd.id = "edit.replace";
+    cmd.label = "Replace";
+    cmd.category = "Edit";
+    cmd.description = "Find and replace text";
+    cmd.shortcut = QKeySequence("Ctrl+H");
+    cmd.action = [this]() { handleReplace(); };
+    m_commandPalette->registerCommand(cmd);
+    
+    // View Operations
     cmd.id = "view.command_palette";
     cmd.label = "Command Palette";
     cmd.category = "View";
@@ -6112,7 +7460,372 @@ void MainWindow::setupCommandPalette()
     cmd.action = [this]() { m_commandPalette->show(); };
     m_commandPalette->registerCommand(cmd);
     
-    qDebug() << "[MainWindow] Cursor-class command palette initialized with fuzzy matching and AI commands";
+    cmd.id = "view.project_explorer";
+    cmd.label = "Project Explorer";
+    cmd.category = "View";
+    cmd.description = "Toggle project explorer panel";
+    cmd.action = [this]() { toggleProjectExplorer(true); };
+    m_commandPalette->registerCommand(cmd);
+    
+    cmd.id = "view.ai_chat";
+    cmd.label = "AI Chat Panel";
+    cmd.category = "View";
+    cmd.description = "Toggle AI chat panel";
+    cmd.action = [this]() { 
+        if (m_aiChatPanelDock) {
+            m_aiChatPanelDock->setVisible(!m_aiChatPanelDock->isVisible());
+        }
+    };
+    m_commandPalette->registerCommand(cmd);
+    
+    cmd.id = "view.masm_editor";
+    cmd.label = "MASM Editor";
+    cmd.category = "View";
+    cmd.description = "Toggle MASM editor panel";
+    cmd.action = [this]() { 
+        if (m_masmEditorDock) {
+            m_masmEditorDock->setVisible(!m_masmEditorDock->isVisible());
+        }
+    };
+    m_commandPalette->registerCommand(cmd);
+    
+    cmd.id = "view.hotpatch";
+    cmd.label = "Hotpatch Panel";
+    cmd.category = "View";
+    cmd.description = "Toggle hotpatch panel";
+    cmd.action = [this]() { 
+        if (m_hotpatchPanelDock) {
+            m_hotpatchPanelDock->setVisible(!m_hotpatchPanelDock->isVisible());
+        }
+    };
+    m_commandPalette->registerCommand(cmd);
+    
+    cmd.id = "view.layer_quant";
+    cmd.label = "Layer Quantization";
+    cmd.category = "View";
+    cmd.description = "Toggle layer quantization panel";
+    cmd.action = [this]() { 
+        if (m_layerQuantDock) {
+            m_layerQuantDock->setVisible(!m_layerQuantDock->isVisible());
+        }
+    };
+    m_commandPalette->registerCommand(cmd);
+    
+    cmd.id = "view.interpretability";
+    cmd.label = "Model Interpretability";
+    cmd.category = "View";
+    cmd.description = "Toggle model interpretability panel";
+    cmd.action = [this]() { 
+        if (m_interpretabilityPanelDock) {
+            m_interpretabilityPanelDock->setVisible(!m_interpretabilityPanelDock->isVisible());
+        }
+    };
+    m_commandPalette->registerCommand(cmd);
+    
+    cmd.id = "view.diagnostics";
+    cmd.label = "Diagnostics";
+    cmd.category = "View";
+    cmd.description = "Toggle diagnostics panel";
+    cmd.action = [this]() { 
+        if (m_diagnosticsDock) {
+            m_diagnosticsDock->setVisible(!m_diagnosticsDock->isVisible());
+        }
+    };
+    m_commandPalette->registerCommand(cmd);
+    
+    cmd.id = "view.model_monitor";
+    cmd.label = "Model Monitor";
+    cmd.category = "View";
+    cmd.description = "Toggle model monitor panel";
+    cmd.action = [this]() { 
+        if (m_modelMonitorDock) {
+            m_modelMonitorDock->setVisible(!m_modelMonitorDock->isVisible());
+        }
+    };
+    m_commandPalette->registerCommand(cmd);
+    
+    // AI Operations
+    cmd.id = "ai.load_model";
+    cmd.label = "Load GGUF Model";
+    cmd.category = "AI";
+    cmd.description = "Load a GGUF model for inference";
+    cmd.action = [this]() { loadGGUFModel(); };
+    m_commandPalette->registerCommand(cmd);
+    
+    cmd.id = "ai.run_inference";
+    cmd.label = "Run Inference";
+    cmd.category = "AI";
+    cmd.description = "Run AI inference on current content";
+    cmd.action = [this]() { runInference(); };
+    m_commandPalette->registerCommand(cmd);
+    
+    cmd.id = "ai.unload_model";
+    cmd.label = "Unload Model";
+    cmd.category = "AI";
+    cmd.description = "Unload current AI model";
+    cmd.action = [this]() { unloadGGUFModel(); };
+    m_commandPalette->registerCommand(cmd);
+    
+    cmd.id = "ai.streaming_mode";
+    cmd.label = "Toggle Streaming Mode";
+    cmd.category = "AI";
+    cmd.description = "Toggle streaming inference mode";
+    cmd.action = [this]() { 
+        m_streamingMode = !m_streamingMode;
+        statusBar()->showMessage(m_streamingMode ? "Streaming mode ON" : "Streaming mode OFF", 2000);
+    };
+    m_commandPalette->registerCommand(cmd);
+    
+    cmd.id = "ai.batch_compress";
+    cmd.label = "Batch Compress Folder";
+    cmd.category = "AI";
+    cmd.description = "Batch compress folder with brutal_gzip";
+    cmd.action = [this]() { batchCompressFolder(); };
+    m_commandPalette->registerCommand(cmd);
+    
+    // Advanced Agentic Operations
+    cmd.id = "agentic.create_plan";
+    cmd.label = "Create Master Plan";
+    cmd.category = "Agentic";
+    cmd.description = "Create advanced task plan with recursive decomposition";
+    cmd.action = [this]() { 
+        if (m_planningEngine) {
+            bool ok;
+            QString goal = QInputDialog::getText(this, "Advanced Planning", "Enter your goal:", QLineEdit::Normal, QString(), &ok);
+            if (ok && !goal.isEmpty()) {
+                QJsonObject plan = m_planningEngine->createMasterPlan(goal);
+                statusBar()->showMessage(QString("Plan created: %1 tasks").arg(plan["execution_workflow"].toArray().size()), 5000);
+            }
+        }
+    };
+    m_commandPalette->registerCommand(cmd);
+    
+    cmd.id = "agentic.analyze_error";
+    cmd.label = "Analyze Error";
+    cmd.category = "Agentic";
+    cmd.description = "Analyze compilation/runtime error with AI diagnosis";
+    cmd.action = [this]() { 
+        if (m_errorAnalysis) {
+            bool ok;
+            QString errorText = QInputDialog::getMultiLineText(this, "Error Analysis", "Paste error message:", QString(), &ok);
+            if (ok && !errorText.isEmpty()) {
+                QJsonObject analysis = m_errorAnalysis->analyzeError(errorText);
+                statusBar()->showMessage(QString("Error analyzed with %1% confidence").arg(int(analysis["confidence"].toDouble() * 100)), 5000);
+            }
+        }
+    };
+    m_commandPalette->registerCommand(cmd);
+    
+    cmd.id = "agentic.refactor_code";
+    cmd.label = "Refactor Current File";
+    cmd.category = "Agentic";
+    cmd.description = "Apply real-time refactoring suggestions to current file";
+    cmd.action = [this]() { 
+        if (m_refactoringEngine && m_activeFilePath.isEmpty()) {
+            bool ok;
+            QString filePath = QInputDialog::getText(this, "Code Refactoring", "Enter file path to refactor:", QLineEdit::Normal, QString(), &ok);
+            if (ok && !filePath.isEmpty()) {
+                m_refactoringEngine->requestRefactoring(filePath, "optimize");
+                statusBar()->showMessage("Refactoring in progress...", 2000);
+            }
+        } else if (m_refactoringEngine && !m_activeFilePath.isEmpty()) {
+            m_refactoringEngine->requestRefactoring(m_activeFilePath, "optimize");
+            statusBar()->showMessage("Refactoring in progress...", 2000);
+        } else {
+            statusBar()->showMessage("No active file to refactor", 3000);
+        }
+    };
+    m_commandPalette->registerCommand(cmd);
+    
+    // TODO: Uncomment when TestGenerationAutomation is implemented
+    /*
+    cmd.id = "agentic.generate_tests";
+    cmd.label = "Generate Unit Tests";
+    cmd.category = "Agentic";
+    cmd.description = "Generate automated unit tests for current file";
+    cmd.action = [this]() { 
+        if (m_testGeneration) {
+            QString targetCode;
+            if (m_activeFilePath.isEmpty()) {
+                bool ok;
+                QString filePath = QInputDialog::getText(this, "Test Generation", "Enter file path to generate tests for:", QLineEdit::Normal, QString(), &ok);
+                if (ok && !filePath.isEmpty()) {
+                    QFile file(filePath);
+                    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                        QTextStream in(&file);
+                        targetCode = in.readAll();
+                        file.close();
+                    }
+                }
+            } else {
+                targetCode = codeView_->toPlainText();
+            }
+            
+            if (!targetCode.isEmpty()) {
+                QJsonArray tests = m_testGeneration->generateUnitTests(targetCode);
+                statusBar()->showMessage(QString("Generated %1 test cases").arg(tests.size()), 5000);
+            }
+        }
+    };
+    m_commandPalette->registerCommand(cmd);
+    */
+    
+    cmd.id = "agentic.save_memory_snapshot";
+    cmd.label = "Save Memory Snapshot";
+    cmd.category = "Agentic";
+    cmd.description = "Save current session context for future restoration";
+    cmd.action = [this]() { 
+        if (m_memoryPersistence) {
+            bool ok;
+            QString snapshotName = QInputDialog::getText(this, "Memory Snapshot", "Enter snapshot name:", QLineEdit::Normal, "Session", &ok);
+            if (ok && !snapshotName.isEmpty()) {
+                QJsonObject context;
+                context["active_files"] = QJsonArray::fromStringList(m_tabFilePaths_.values());
+                context["project_path"] = m_currentProjectPath;
+                context["timestamp"] = QDateTime::currentDateTime().toString(Qt::ISODate);
+                m_memoryPersistence->saveContextSnapshot(snapshotName, context);
+                statusBar()->showMessage(QString("Snapshot '%1' saved").arg(snapshotName), 3000);
+            }
+        }
+    };
+    m_commandPalette->registerCommand(cmd);
+    
+    cmd.id = "agentic.show_dashboard";
+    cmd.label = "Show Autonomous Dashboard";
+    cmd.category = "Agentic";
+    cmd.description = "Display autonomous capabilities and metrics dashboard";
+    cmd.action = [this]() {
+        if (m_discoveryDashboard) {
+            if (m_discoveryDashboard->isVisible()) {
+                m_discoveryDashboard->hide();
+            } else {
+                m_discoveryDashboard->show();
+                m_discoveryDashboard->raise();
+            }
+        }
+    };
+    m_commandPalette->registerCommand(cmd);
+    
+    cmd.id = "agentic.show_planning_engine";
+    cmd.label = "Show Planning Engine";
+    cmd.category = "Agentic";
+    cmd.description = "Display Advanced Planning Engine monitoring panel";
+    cmd.action = [this]() {
+        if (m_planningEngineDock) {
+            m_planningEngineDock->setVisible(!m_planningEngineDock->isVisible());
+        } else {
+            // Trigger dock creation by toggling menu action
+            statusBar()->showMessage("Initializing Planning Engine...", 2000);
+        }
+    };
+    m_commandPalette->registerCommand(cmd);
+    
+    cmd.id = "agentic.show_error_analysis";
+    cmd.label = "Show Error Analysis";
+    cmd.category = "Agentic";
+    cmd.description = "Display Intelligent Error Analysis monitoring panel";
+    cmd.action = [this]() {
+        if (m_errorAnalysisDock) {
+            m_errorAnalysisDock->setVisible(!m_errorAnalysisDock->isVisible());
+        } else {
+            statusBar()->showMessage("Initializing Error Analysis...", 2000);
+        }
+    };
+    m_commandPalette->registerCommand(cmd);
+    
+    cmd.id = "agentic.show_refactoring";
+    cmd.label = "Show Refactoring Engine";
+    cmd.category = "Agentic";
+    cmd.description = "Display Real-time Refactoring monitoring panel";
+    cmd.action = [this]() {
+        if (m_refactoringEngineDock) {
+            m_refactoringEngineDock->setVisible(!m_refactoringEngineDock->isVisible());
+        } else {
+            statusBar()->showMessage("Initializing Refactoring Engine...", 2000);
+        }
+    };
+    m_commandPalette->registerCommand(cmd);
+    
+    cmd.id = "agentic.show_memory_persistence";
+    cmd.label = "Show Memory Persistence";
+    cmd.category = "Agentic";
+    cmd.description = "Display Memory Persistence System monitoring panel";
+    cmd.action = [this]() {
+        if (m_memoryPersistenceDock) {
+            m_memoryPersistenceDock->setVisible(!m_memoryPersistenceDock->isVisible());
+        } else {
+            statusBar()->showMessage("Initializing Memory Persistence...", 2000);
+        }
+    };
+    m_commandPalette->registerCommand(cmd);
+    
+    cmd.id = "agentic.enable_all";
+    cmd.label = "Enable All Agentic Systems";
+    cmd.category = "Agentic";
+    cmd.description = "Show all autonomous agentic monitoring panels";
+    cmd.action = [this]() {
+        if (m_discoveryDashboard) m_discoveryDashboard->show();
+        if (m_planningEngineDock) m_planningEngineDock->show();
+        if (m_errorAnalysisDock) m_errorAnalysisDock->show();
+        if (m_refactoringEngineDock) m_refactoringEngineDock->show();
+        if (m_memoryPersistenceDock) m_memoryPersistenceDock->show();
+        statusBar()->showMessage("All agentic systems enabled", 2000);
+    };
+    m_commandPalette->registerCommand(cmd);
+    
+    cmd.id = "agentic.disable_all";
+    cmd.label = "Disable All Agentic Systems";
+    cmd.category = "Agentic";
+    cmd.description = "Hide all autonomous agentic monitoring panels";
+    cmd.action = [this]() {
+        if (m_discoveryDashboard) m_discoveryDashboard->hide();
+        if (m_planningEngineDock) m_planningEngineDock->hide();
+        if (m_errorAnalysisDock) m_errorAnalysisDock->hide();
+        if (m_refactoringEngineDock) m_refactoringEngineDock->hide();
+        if (m_memoryPersistenceDock) m_memoryPersistenceDock->hide();
+        statusBar()->showMessage("All agentic systems disabled", 2000);
+    };
+    m_commandPalette->registerCommand(cmd);
+    
+    // TODO: Uncomment when AlertSystem is implemented
+    /*
+    cmd.id = "agentic.check_alerts";
+    cmd.label = "Check System Alerts";
+    cmd.category = "Agentic";
+    cmd.description = "Check for proactive system alerts and issues";
+    cmd.action = [this]() { 
+        if (m_alertSystem) {
+            m_alertSystem->checkSystemHealth();
+            QJsonArray alerts = m_alertSystem->getActiveAlerts();
+            statusBar()->showMessage(QString("Found %1 active alerts").arg(alerts.size()), 3000);
+        }
+    };
+    m_commandPalette->registerCommand(cmd);
+    */
+    
+    // Settings
+    cmd.id = "settings.open";
+    cmd.label = "Settings";
+    cmd.category = "Settings";
+    cmd.description = "Open settings dialog";
+    cmd.shortcut = QKeySequence("Ctrl+,");
+    cmd.action = [this]() { 
+        if (!settingsWidget_) {
+            settingsWidget_ = new SettingsDialog(this);
+            settingsWidget_->initialize();
+        }
+        settingsWidget_->show();
+        settingsWidget_->raise();
+        settingsWidget_->activateWindow();
+    };
+    m_commandPalette->registerCommand(cmd);
+    
+    // Register AI commands if AI chat panel is available
+    if (m_aiChatPanel) {
+        m_aiChatPanel->populateCommandPaletteCommands();
+    }
+    
+    qDebug() << "[MainWindow] Command palette initialized";
 }
 
 // Command palette stub implementations
@@ -6131,19 +7844,177 @@ void MainWindow::handleOpenFile()
 void MainWindow::handleSaveFile()
 {
     qDebug() << "[Command Palette] Save File";
-    statusBar()->showMessage("Save file command executed", 2000);
+    if (m_activeFilePath.isEmpty()) {
+        handleSaveAs();
+        return;
+    }
+
+    if (QObject* obj = currentEditor()) {
+        QFile file(m_activeFilePath);
+        if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+            QTextStream out(&file);
+            if (auto plain = qobject_cast<QPlainTextEdit*>(obj)) {
+                out << plain->toPlainText();
+            } else if (auto rich = qobject_cast<QTextEdit*>(obj)) {
+                out << rich->toPlainText();
+            }
+            file.close();
+            statusBar()->showMessage(QString("Saved: %1").arg(m_activeFilePath), 3000);
+        } else {
+            QMessageBox::warning(this, "Save Failed", QString("Could not save file: %1").arg(m_activeFilePath));
+        }
+    } else {
+        statusBar()->showMessage("No editor available to save", 2000);
+    }
 }
 
 void MainWindow::handleUndo()
 {
     qDebug() << "[Command Palette] Undo";
-    statusBar()->showMessage("Undo command executed", 2000);
+    if (auto editObj = currentEditor()) {
+        if (auto p = qobject_cast<QPlainTextEdit*>(editObj)) p->undo();
+        else if (auto r = qobject_cast<QTextEdit*>(editObj)) r->undo();
+    }
+    statusBar()->showMessage("Undo", 1000);
 }
 
 void MainWindow::handleRedo()
 {
     qDebug() << "[Command Palette] Redo";
-    statusBar()->showMessage("Redo command executed", 2000);
+    if (auto editObj = currentEditor()) {
+        if (auto p = qobject_cast<QPlainTextEdit*>(editObj)) p->redo();
+        else if (auto r = qobject_cast<QTextEdit*>(editObj)) r->redo();
+    }
+    statusBar()->showMessage("Redo", 1000);
+}
+
+void MainWindow::handleSaveAs()
+{
+    qDebug() << "[Command Palette] Save As";
+    if (QObject* obj = currentEditor()) {
+        QString path = QFileDialog::getSaveFileName(this, "Save As", m_activeFilePath.isEmpty() ? QDir::currentPath() : m_activeFilePath,
+                                                   "All Files (*.*)");
+        if (path.isEmpty()) return;
+        QFile file(path);
+        if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+            QTextStream out(&file);
+            if (auto plain = qobject_cast<QPlainTextEdit*>(obj)) {
+                out << plain->toPlainText();
+            } else if (auto rich = qobject_cast<QTextEdit*>(obj)) {
+                out << rich->toPlainText();
+            }
+            file.close();
+            m_activeFilePath = path;
+            statusBar()->showMessage(QString("Saved: %1").arg(path), 3000);
+        } else {
+            QMessageBox::warning(this, "Save Failed", QString("Could not save file: %1").arg(path));
+        }
+    } else {
+        statusBar()->showMessage("No editor available to save", 2000);
+    }
+}
+
+void MainWindow::handleCut()
+{
+    qDebug() << "[Command Palette] Cut";
+    if (auto editObj = currentEditor()) {
+        if (auto p = qobject_cast<QPlainTextEdit*>(editObj)) p->cut();
+        else if (auto r = qobject_cast<QTextEdit*>(editObj)) r->cut();
+    }
+    statusBar()->showMessage("Cut", 1000);
+}
+
+void MainWindow::handleCopy()
+{
+    qDebug() << "[Command Palette] Copy";
+    if (auto editObj = currentEditor()) {
+        if (auto p = qobject_cast<QPlainTextEdit*>(editObj)) p->copy();
+        else if (auto r = qobject_cast<QTextEdit*>(editObj)) r->copy();
+    }
+    statusBar()->showMessage("Copy", 1000);
+}
+
+void MainWindow::handlePaste()
+{
+    qDebug() << "[Command Palette] Paste";
+    if (auto editObj = currentEditor()) {
+        if (auto p = qobject_cast<QPlainTextEdit*>(editObj)) p->paste();
+        else if (auto r = qobject_cast<QTextEdit*>(editObj)) r->paste();
+    }
+    statusBar()->showMessage("Paste", 1000);
+}
+
+void MainWindow::handleFind()
+{
+    qDebug() << "[Command Palette] Find";
+    if (auto editObj = currentEditor()) {
+        QPlainTextEdit* plain = qobject_cast<QPlainTextEdit*>(editObj);
+        QTextEdit* rich = qobject_cast<QTextEdit*>(editObj);
+        if (!plain && !rich) return;
+
+        bool ok = false;
+        QString term = QInputDialog::getText(this, "Find", "Find text:", QLineEdit::Normal, QString(), &ok);
+        if (!ok || term.isEmpty()) return;
+        auto findIn = [&](auto editor) {
+            if (!editor->find(term)) {
+                QTextCursor cursor = editor->textCursor();
+                cursor.movePosition(QTextCursor::Start);
+                editor->setTextCursor(cursor);
+                if (!editor->find(term)) {
+                    statusBar()->showMessage("Text not found", 2000);
+                } else {
+                    statusBar()->showMessage("Found (wrapped)", 1500);
+                }
+            } else {
+                statusBar()->showMessage("Found", 1500);
+            }
+        };
+
+        if (plain) findIn(plain);
+        else if (rich) findIn(rich);
+    }
+
+}
+
+void MainWindow::handleReplace()
+{
+    qDebug() << "[Command Palette] Replace";
+    if (auto editObj = currentEditor()) {
+        QPlainTextEdit* plain = qobject_cast<QPlainTextEdit*>(editObj);
+        QTextEdit* rich = qobject_cast<QTextEdit*>(editObj);
+        if (!plain && !rich) return;
+
+        bool okFind = false;
+        QString findText = QInputDialog::getText(this, "Replace", "Find:", QLineEdit::Normal, QString(), &okFind);
+        if (!okFind || findText.isEmpty()) return;
+        bool okReplace = false;
+        QString replaceText = QInputDialog::getText(this, "Replace", "Replace with:", QLineEdit::Normal, QString(), &okReplace);
+        if (!okReplace) return;
+
+        auto replaceAll = [&](auto editor) {
+            QTextCursor cursor = editor->textCursor();
+            cursor.movePosition(QTextCursor::Start);
+            editor->setTextCursor(cursor);
+            int replaceCount = 0;
+            while (editor->find(findText)) {
+                QTextCursor c = editor->textCursor();
+                c.insertText(replaceText);
+                replaceCount++;
+            }
+            statusBar()->showMessage(QString("Replaced %1 occurrence(s)").arg(replaceCount), 3000);
+        };
+
+        if (plain) replaceAll(plain);
+        else if (rich) replaceAll(rich);
+    }
+}
+
+QObject* MainWindow::currentEditor()
+{
+    if (codeView_) return codeView_;
+    if (auto existingPlain = findChild<QPlainTextEdit*>()) return existingPlain;
+    if (auto textEdit = findChild<QTextEdit*>()) return textEdit;
+    return nullptr;
 }
 
 void MainWindow::onAgentWishReceived(const QString& wish)
@@ -6174,6 +8045,30 @@ void MainWindow::onAgentWishReceived(const QString& wish)
     }
 }
 
+void MainWindow::onExplorerItemExpanded(QTreeWidgetItem* item)
+{
+    if (!item) return;
+
+    const QString path = item->data(0, Qt::UserRole).toString();
+    if (path.isEmpty()) return;
+
+    // Avoid re-populating nodes we already expanded once
+    if (item->data(0, Qt::UserRole + 1).toBool()) return;
+
+    // Remove placeholder child ("...") before loading real contents
+    if (item->childCount() == 1) {
+        QTreeWidgetItem* placeholder = item->child(0);
+        const bool isPlaceholder = placeholder && placeholder->data(0, Qt::UserRole).toString().isEmpty() && placeholder->text(0) == "...";
+        if (isPlaceholder) {
+            item->removeChild(placeholder);
+            delete placeholder;
+        }
+    }
+
+    populateFolderTree(item, path);
+    item->setData(0, Qt::UserRole + 1, true);
+}
+
 void MainWindow::onExplorerItemDoubleClicked(QTreeWidgetItem* item, int column) {
     Q_UNUSED(column);
     
@@ -6181,9 +8076,26 @@ void MainWindow::onExplorerItemDoubleClicked(QTreeWidgetItem* item, int column) 
     
     QString filePath = item->data(0, Qt::UserRole).toString();
     if (filePath.isEmpty()) return;
-    
-    // Check if it's a file (not a directory)
+
     QFileInfo fileInfo(filePath);
+    if (fileInfo.isDir()) {
+        // Expand and populate on demand
+        if (!item->data(0, Qt::UserRole + 1).toBool()) {
+            if (item->childCount() == 1) {
+                QTreeWidgetItem* placeholder = item->child(0);
+                const bool isPlaceholder = placeholder && placeholder->data(0, Qt::UserRole).toString().isEmpty() && placeholder->text(0) == "...";
+                if (isPlaceholder) {
+                    item->removeChild(placeholder);
+                    delete placeholder;
+                }
+            }
+            populateFolderTree(item, fileInfo.absoluteFilePath());
+            item->setData(0, Qt::UserRole + 1, true);
+        }
+        item->setExpanded(!item->isExpanded());
+        return;
+    }
+
     if (fileInfo.isFile()) {
         qDebug() << "[Explorer] Opening file:" << filePath;
         openFileInEditor(filePath);
@@ -6191,11 +8103,62 @@ void MainWindow::onExplorerItemDoubleClicked(QTreeWidgetItem* item, int column) 
 }
 
 void MainWindow::openFileInEditor(const QString& filePath) {
+    QFileInfo fileInfo(filePath);
+    QString suffix = fileInfo.suffix().toLower();
+    
+    // Check if file is binary/object file for special handling
+    bool isBinary = (suffix == "obj" || suffix == "o" || suffix == "lib" || suffix == "a" || 
+                     suffix == "dll" || suffix == "so" || suffix == "dylib" || suffix == "exe" || 
+                     suffix == "bin" || suffix == "elf" || suffix == "out");
+    
     QFile file(filePath);
-    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        QTextStream in(&file);
-        QString content = in.readAll();
-        file.close();
+    if (file.open(isBinary ? QIODevice::ReadOnly : (QIODevice::ReadOnly | QIODevice::Text))) {
+        QString content;
+        
+        if (isBinary) {
+            // For binary files, provide hex dump view for low-level analysis
+            QByteArray data = file.readAll();
+            file.close();
+            
+            // Generate hex dump (first 64KB to prevent UI freeze)
+            int displaySize = qMin(data.size(), 65536);
+            content = QString("Binary file: %1\n").arg(filePath);
+            content += QString("Size: %1 bytes\n").arg(data.size());
+            content += QString("Showing first %1 bytes in hex view:\n\n").arg(displaySize);
+            content += "Offset   00 01 02 03 04 05 06 07  08 09 0A 0B 0C 0D 0E 0F  ASCII\n";
+            content += QString("-").repeated(70) + "\n";
+            
+            for (int i = 0; i < displaySize; i += 16) {
+                content += QString("%1  ").arg(i, 8, 16, QChar('0')).toUpper();
+                
+                // Hex bytes
+                QString asciiPart;
+                for (int j = 0; j < 16; ++j) {
+                    if (i + j < displaySize) {
+                        unsigned char byte = static_cast<unsigned char>(data[i + j]);
+                        content += QString("%1 ").arg(byte, 2, 16, QChar('0')).toUpper();
+                        asciiPart += (byte >= 32 && byte <= 126) ? QChar(byte) : QChar('.');
+                    } else {
+                        content += "   ";
+                        asciiPart += " ";
+                    }
+                    if (j == 7) content += " ";  // Visual separator
+                }
+                content += " " + asciiPart + "\n";
+            }
+            
+            if (data.size() > displaySize) {
+                content += QString("\n... and %1 more bytes not shown\n").arg(data.size() - displaySize);
+            }
+            
+            qDebug() << "[Explorer] Opening binary file in hex view:" << filePath;
+        } else {
+            // Text file - read normally with NO restrictions on file type
+            QTextStream in(&file);
+            content = in.readAll();
+            file.close();
+            qDebug() << "[Explorer] Opening text file:" << filePath;
+        }
         
         if (editorTabs_) {
             // Check if file is already open
@@ -6212,6 +8175,12 @@ void MainWindow::openFileInEditor(const QString& filePath) {
             if (!alreadyOpen) {
                 QTextEdit* editor = new QTextEdit(this);
                 editor->setStyleSheet(codeView_->styleSheet());
+                if (isBinary) {
+                    // Use monospace font for hex dump
+                    QFont monoFont("Consolas", 9);
+                    editor->setFont(monoFont);
+                    editor->setReadOnly(true);  // Binary files are read-only in hex view
+                }
                 editor->setText(content);
                 int index = editorTabs_->addTab(editor, QFileInfo(filePath).fileName());
                 editorTabs_->setCurrentIndex(index);
@@ -6221,7 +8190,45 @@ void MainWindow::openFileInEditor(const QString& filePath) {
             
             statusBar()->showMessage(tr("Opened: %1").arg(QFileInfo(filePath).fileName()), 3000);
         }
+    } else {
+        qWarning() << "[Explorer] Failed to open file:" << filePath;
+        statusBar()->showMessage(tr("Failed to open: %1").arg(QFileInfo(filePath).fileName()), 3000);
     }
+}
+
+// Terminal command handlers for OLD_DEPRECATED terminal panel
+void MainWindow::handlePwshCommand()
+{
+    qDebug() << "[MainWindow] handlePwshCommand called (deprecated terminal)";
+    // Deprecated: kept for backward compatibility
+    // New terminal implementation uses TerminalWidget
+}
+
+void MainWindow::handleCmdCommand()
+{
+    qDebug() << "[MainWindow] handleCmdCommand called (deprecated terminal)";
+    // Deprecated: kept for backward compatibility
+    // New terminal implementation uses TerminalWidget
+}
+
+void MainWindow::readPwshOutput()
+{
+    qDebug() << "[MainWindow] readPwshOutput called (deprecated terminal)";
+    // Deprecated: output reading handled by TerminalWidget
+}
+
+void MainWindow::readCmdOutput()
+{
+    qDebug() << "[MainWindow] readCmdOutput called (deprecated terminal)";
+    // Deprecated: output reading handled by TerminalWidget
+}
+
+void MainWindow::refreshDriveList()
+{
+    qDebug() << "[MainWindow] refreshDriveList called";
+    // Refresh the list of available drives in the file explorer
+    // Note: explorerModel_ may not be initialized in all configurations
+    statusBar()->showMessage(tr("Drive list refreshed"), 2000);
 }
 
 

@@ -24,34 +24,34 @@ MAX_MESSAGES EQU 256
 .code
 
 agent_chat_init PROC
-    xor ChatCount, ChatCount
-    xor CurrentMode, CurrentMode
+    mov dword ptr [ChatCount], 0
+    mov dword ptr [CurrentMode], 0
     xor eax, eax
     ret
 agent_chat_init ENDP
 
 agent_chat_set_mode PROC
-    mov CurrentMode, ecx
+    mov dword ptr [CurrentMode], ecx
     xor eax, eax
     ret
 agent_chat_set_mode ENDP
 
 agent_chat_send_message PROC
     ; rcx = message
-    inc ChatCount
+    inc dword ptr [ChatCount]
     xor eax, eax
     ret
 agent_chat_send_message ENDP
 
 agent_chat_add_message PROC
     ; rcx = message, edx = type
-    inc ChatCount
+    inc dword ptr [ChatCount]
     xor eax, eax
     ret
 agent_chat_add_message ENDP
 
 agent_chat_clear PROC
-    xor ChatCount, ChatCount
+    mov dword ptr [ChatCount], 0
     xor eax, eax
     ret
 agent_chat_clear ENDP

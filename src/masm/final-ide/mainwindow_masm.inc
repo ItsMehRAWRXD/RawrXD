@@ -31,27 +31,73 @@ MENU_TYPE_TOOLS             EQU 3
 MENU_TYPE_HELP              EQU 4
 
 ; Function prototypes
+IFNDEF @masm_mainwindow_init
 EXTERN masm_mainwindow_init:PROC
+ENDIF
+IFNDEF @masm_mainwindow_shutdown
 EXTERN masm_mainwindow_shutdown:PROC
+ENDIF
+IFNDEF @masm_mainwindow_create
 EXTERN masm_mainwindow_create:PROC
+ENDIF
+IFNDEF @masm_mainwindow_show
 EXTERN masm_mainwindow_show:PROC
+ENDIF
+IFNDEF @masm_mainwindow_hide
 EXTERN masm_mainwindow_hide:PROC
+ENDIF
+IFNDEF @masm_mainwindow_close
 EXTERN masm_mainwindow_close:PROC
+ENDIF
+IFNDEF @masm_mainwindow_resize
 EXTERN masm_mainwindow_resize:PROC
+ENDIF
+IFNDEF @masm_mainwindow_set_title
 EXTERN masm_mainwindow_set_title:PROC
+ENDIF
+IFNDEF @masm_mainwindow_add_dock
 EXTERN masm_mainwindow_add_dock:PROC
+ENDIF
+IFNDEF @masm_mainwindow_remove_dock
 EXTERN masm_mainwindow_remove_dock:PROC
+ENDIF
+IFNDEF @masm_mainwindow_show_dock
 EXTERN masm_mainwindow_show_dock:PROC
+ENDIF
+IFNDEF @masm_mainwindow_hide_dock
 EXTERN masm_mainwindow_hide_dock:PROC
+ENDIF
+IFNDEF @masm_mainwindow_add_menu_item
 EXTERN masm_mainwindow_add_menu_item:PROC
+ENDIF
+IFNDEF @masm_mainwindow_remove_menu_item
 EXTERN masm_mainwindow_remove_menu_item:PROC
+ENDIF
+IFNDEF @masm_mainwindow_set_status
 EXTERN masm_mainwindow_set_status:PROC
+ENDIF
+IFNDEF @masm_mainwindow_get_status
 EXTERN masm_mainwindow_get_status:PROC
+ENDIF
+IFNDEF @masm_mainwindow_set_theme
 EXTERN masm_mainwindow_set_theme:PROC
+ENDIF
+IFNDEF @masm_mainwindow_get_theme
 EXTERN masm_mainwindow_get_theme:PROC
+ENDIF
+IFNDEF @masm_mainwindow_dispatch_signal
 EXTERN masm_mainwindow_dispatch_signal:PROC
+ENDIF
+IFNDEF @masm_mainwindow_list_docks
 EXTERN masm_mainwindow_list_docks:PROC
+ENDIF
+IFNDEF @masm_mainwindow_save_layout
 EXTERN masm_mainwindow_save_layout:PROC
+ENDIF
+IFNDEF @masm_mainwindow_load_layout
 EXTERN masm_mainwindow_load_layout:PROC
+ENDIF
 
 ENDIF
+
+

@@ -14,8 +14,8 @@ EXTERN GetExitCodeProcess:PROC
 EXTERN ReadFile:PROC
 EXTERN SetHandleInformation:PROC
 EXTERN GetStdHandle:PROC
-EXTERN malloc:PROC
-EXTERN free:PROC
+extern masm_malloc : proc
+extern masm_free : proc
 EXTERN memcpy:PROC
 EXTERN strlen:PROC
 EXTERN console_log:PROC
@@ -121,7 +121,7 @@ spawn_process_with_pipes PROC
     
     ; Allocate PROCESS_CONTEXT structure
     mov rcx, SIZEOF PROCESS_CONTEXT
-    call malloc
+    call masm_malloc
     cmp rax, 0
     je alloc_error_local
     
@@ -156,12 +156,12 @@ spawn_process_with_pipes PROC
     
     ; Allocate output buffers
     mov rcx, MAX_OUTPUT_BUFFER
-    call malloc
+    call masm_malloc
     mov [rbx + PROCESS_CONTEXT.stdoutPipe.outputBuffer], rax
     mov [rbx + PROCESS_CONTEXT.stdoutPipe.maxSize], MAX_OUTPUT_BUFFER
     
     mov rcx, MAX_ERROR_BUFFER
-    call malloc
+    call masm_malloc
     mov [rbx + PROCESS_CONTEXT.stderrPipe.outputBuffer], rax
     mov [rbx + PROCESS_CONTEXT.stderrPipe.maxSize], MAX_ERROR_BUFFER
     
@@ -306,12 +306,12 @@ pipe_error_local:
     
     ; Free buffers
     mov rcx, [rbx + PROCESS_CONTEXT.stdoutPipe.outputBuffer]
-    call free
+    call masm_free
     mov rcx, [rbx + PROCESS_CONTEXT.stderrPipe.outputBuffer]
-    call free
+    call masm_free
     
     mov rcx, rbx
-    call free
+    call masm_free
     xor rax, rax
     jmp done_local
     
@@ -323,12 +323,12 @@ create_error_local:
     
     ; Free buffers and context
     mov rcx, [rbx + PROCESS_CONTEXT.stdoutPipe.outputBuffer]
-    call free
+    call masm_free
     mov rcx, [rbx + PROCESS_CONTEXT.stderrPipe.outputBuffer]
-    call free
+    call masm_free
     
     mov rcx, rbx
-    call free
+    call masm_free
     xor rax, rax
     jmp done_local
     
@@ -404,26 +404,26 @@ free_process_context PROC
     mov rcx, [rbx + PROCESS_CONTEXT.stdoutPipe.outputBuffer]
     cmp rcx, 0
     je skip_stdout_local
-    call free
+    call masm_free
     
 skip_stdout_local:
     ; Free stderr buffer
     mov rcx, [rbx + PROCESS_CONTEXT.stderrPipe.outputBuffer]
     cmp rcx, 0
     je skip_stderr_local
-    call free
+    call masm_free
     
 skip_stderr_local:
     ; Free command line if allocated
     mov rcx, [rbx + PROCESS_CONTEXT.commandLine]
     cmp rcx, 0
     je skip_cmd_local
-    call free
+    call masm_free
     
 skip_cmd_local:
     ; Free context structure
     mov rcx, rbx
-    call free
+    call masm_free
     
     xor eax, eax
     pop rbx
@@ -545,4 +545,8 @@ spawn_kubectl_command ENDP
 ; ============================================================================
 
 END
+
+
+
+
 

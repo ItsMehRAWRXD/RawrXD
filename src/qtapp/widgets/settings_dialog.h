@@ -22,8 +22,6 @@
 #include <QTableWidget>
 #include <QKeySequenceEdit>
 
-namespace RawrXD {
-
 /**
  * \brief General settings tab
  */
@@ -213,6 +211,8 @@ public:
     
 signals:
     void settingsApplied();
+    void onSettingChanged(const QString& key, const QVariant& value);
+    void settingRequested(const QString& key);
     
 private slots:
     void onApplyClicked();
@@ -240,7 +240,5 @@ private:
     QPushButton* m_cancelButton;
     QPushButton* m_resetButton;
 };
-
-} // namespace RawrXD
 
 #endif // RAWRXD_SETTINGS_DIALOG_H

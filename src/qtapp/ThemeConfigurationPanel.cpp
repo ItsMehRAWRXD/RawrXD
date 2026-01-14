@@ -20,6 +20,7 @@
 #include <QMessageBox>
 #include <QScrollArea>
 #include <QDebug>
+#include <QVector>
 #include <chrono>
 
 namespace RawrXD {
@@ -137,6 +138,10 @@ void ThemeConfigurationPanel::setupUI() {
     QWidget* syntaxColorsTab = new QWidget();
     createSyntaxColorsTab(syntaxColorsTab);
     m_tabWidget->addTab(syntaxColorsTab, "Syntax");
+
+    QWidget* languageColorsTab = new QWidget();
+    createLanguageTab(languageColorsTab);
+    m_tabWidget->addTab(languageColorsTab, "Languages");
     
     QWidget* chatColorsTab = new QWidget();
     createChatColorsTab(chatColorsTab);
@@ -462,6 +467,69 @@ void ThemeConfigurationPanel::createTransparencyTab(QWidget* parent) {
     layout->addStretch();
 }
 
+void ThemeConfigurationPanel::createLanguageTab(QWidget* parent) {
+    QVBoxLayout* layout = new QVBoxLayout(parent);
+    layout->setSpacing(10);
+
+    struct LangInfo { QString key; QString label; };
+    const QVector<LangInfo> languages = {
+        {"cpp", "C/C++"},
+        {"python", "Python"},
+        {"javascript", "JavaScript"},
+        {"typescript", "TypeScript"},
+        {"json", "JSON"},
+        {"xml", "XML"},
+        {"markdown", "Markdown"}
+    };
+
+    for (const auto& lang : languages) {
+        QGroupBox* group = new QGroupBox(lang.label + " Syntax");
+        QVBoxLayout* gLayout = new QVBoxLayout(group);
+
+        gLayout->addWidget(createColorRow("Keywords", QString("lang.%1.keywordColor").arg(lang.key), group));
+        gLayout->addWidget(createColorRow("Strings", QString("lang.%1.stringColor").arg(lang.key), group));
+        gLayout->addWidget(createColorRow("Comments", QString("lang.%1.commentColor").arg(lang.key), group));
+        gLayout->addWidget(createColorRow("Numbers", QString("lang.%1.numberColor").arg(lang.key), group));
+        gLayout->addWidget(createColorRow("Functions", QString("lang.%1.functionColor").arg(lang.key), group));
+        gLayout->addWidget(createColorRow("Classes", QString("lang.%1.classColor").arg(lang.key), group));
+        gLayout->addWidget(createColorRow("Operators", QString("lang.%1.operatorColor").arg(lang.key), group));
+        gLayout->addWidget(createColorRow("Preprocessor", QString("lang.%1.preprocessorColor").arg(lang.key), group));
+
+        // Opacity row for the language (syntax alpha)
+        QWidget* opacityRow = new QWidget(group);
+        QHBoxLayout* oLayout = new QHBoxLayout(opacityRow);
+        oLayout->setContentsMargins(0, 4, 0, 4);
+        QLabel* opacityLabel = new QLabel("Highlight Opacity:", opacityRow);
+        opacityLabel->setMinimumWidth(140);
+        oLayout->addWidget(opacityLabel);
+
+        QSlider* slider = new QSlider(Qt::Horizontal, opacityRow);
+        slider->setRange(20, 100);
+        slider->setValue(100);
+        slider->setTickPosition(QSlider::TicksBelow);
+        slider->setTickInterval(10);
+        oLayout->addWidget(slider, 1);
+
+        QDoubleSpinBox* spin = new QDoubleSpinBox(opacityRow);
+        spin->setRange(0.2, 1.0);
+        spin->setSingleStep(0.05);
+        spin->setDecimals(2);
+        spin->setValue(1.0);
+        spin->setFixedWidth(70);
+        oLayout->addWidget(spin);
+
+        QLabel* percentLabel = new QLabel("%", opacityRow);
+        oLayout->addWidget(percentLabel);
+
+        gLayout->addWidget(opacityRow);
+
+        m_languageOpacity[lang.key] = {slider, spin};
+        layout->addWidget(group);
+    }
+
+    layout->addStretch();
+}
+
 void ThemeConfigurationPanel::connectSignals() {
     // Theme selection
     connect(m_themeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
@@ -499,6 +567,29 @@ void ThemeConfigurationPanel::connectSignals() {
     connectOpacityControls(m_dockOpacitySlider, m_dockOpacitySpin, "dock");
     connectOpacityControls(m_chatOpacitySlider, m_chatOpacitySpin, "chat");
     connectOpacityControls(m_editorOpacitySlider, m_editorOpacitySpin, "editor");
+
+    // Per-language opacity controls
+    for (auto it = m_languageOpacity.begin(); it != m_languageOpacity.end(); ++it) {
+        const QString langKey = it.key();
+        QSlider* slider = it.value().slider;
+        QDoubleSpinBox* spin = it.value().spin;
+        if (!slider || !spin) continue;
+
+        connect(slider, &QSlider::valueChanged, [this, spin, langKey](int value) {
+            double opacity = value / 100.0;
+            spin->blockSignals(true);
+            spin->setValue(opacity);
+            spin->blockSignals(false);
+            ThemeManager::instance().updateLanguageOpacity(langKey, opacity);
+        });
+
+        connect(spin, QOverload<double>::of(&QDoubleSpinBox::valueChanged), [this, slider, langKey](double value) {
+            slider->blockSignals(true);
+            slider->setValue(static_cast<int>(value * 100));
+            slider->blockSignals(false);
+            ThemeManager::instance().updateLanguageOpacity(langKey, value);
+        });
+    }
     
     // Transparency controls
     connect(m_transparencyEnabled, &QCheckBox::toggled,
@@ -680,6 +771,22 @@ void ThemeConfigurationPanel::loadCurrentTheme() {
     m_editorOpacitySpin->setValue(colors.editorOpacity);
     m_editorOpacitySlider->blockSignals(false);
     m_editorOpacitySpin->blockSignals(false);
+
+    // Per-language opacity controls
+    for (auto it = m_languageOpacity.begin(); it != m_languageOpacity.end(); ++it) {
+        const QString langKey = it.key();
+        double opacity = ThemeManager::instance().languageOpacity(langKey);
+        QSlider* slider = it.value().slider;
+        QDoubleSpinBox* spin = it.value().spin;
+        if (!slider || !spin) continue;
+
+        slider->blockSignals(true);
+        spin->blockSignals(true);
+        slider->setValue(static_cast<int>(opacity * 100));
+        spin->setValue(opacity);
+        slider->blockSignals(false);
+        spin->blockSignals(false);
+    }
     
     // Update transparency controls
     m_transparencyEnabled->blockSignals(true);

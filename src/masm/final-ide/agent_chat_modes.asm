@@ -585,7 +585,6 @@ strcpy_rdi ENDP
 ;==========================================================================
 ; RESPONSE GENERATORS (Non-simplified)
 ;==========================================================================
-
 agent_ask_response PROC
     push rbp
     mov rbp, rsp
@@ -627,7 +626,6 @@ done:
     leave
     ret
 agent_ask_response ENDP
-
 agent_edit_response PROC
     push rbp
     mov rbp, rsp
@@ -638,7 +636,6 @@ agent_edit_response PROC
     leave
     ret
 agent_edit_response ENDP
-
 agent_plan_response PROC
     push rbp
     mov rbp, rsp
@@ -649,7 +646,6 @@ agent_plan_response PROC
     leave
     ret
 agent_plan_response ENDP
-
 agent_config_response PROC
     push rbp
     mov rbp, rsp
@@ -674,7 +670,6 @@ strcpy_simple PROC
 @done:
     ret
 strcpy_simple ENDP
-
 strstr_simple PROC
     ; Very basic strstr for keywords
 @outer:
@@ -737,5 +732,9 @@ EXTERN GetTickCount:PROC
 EXTERN wsprintfA:PROC
 EXTERN ml_masm_inference:PROC
 EXTERN ml_masm_get_response:PROC
+
+
+
+
 
 

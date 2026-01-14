@@ -7,6 +7,7 @@
 
 #include "multi_file_search.h"
 #include <QDir>
+#include <QDirIterator>
 #include <QFileInfo>
 #include <QFile>
 #include <QTextStream>
@@ -17,7 +18,7 @@
 #include <QDebug>
 #include <QtConcurrent>
 
-namespace RawrXD {
+// Implementation not wrapped in namespace to match header
 
 MultiFileSearchWidget::MultiFileSearchWidget(QWidget* parent)
     : QWidget(parent)
@@ -445,7 +446,7 @@ void MultiFileSearchWidget::updateResultsTree() {
         
         // File node
         QTreeWidgetItem* fileItem = new QTreeWidgetItem(m_resultsTree);
-        QString relPath = FileManager::toRelativePath(filePath, m_projectPath);
+        QString relPath = QDir(m_projectPath).relativeFilePath(filePath);
         fileItem->setText(0, QString("%1 (%2 matches)").arg(relPath).arg(fileResults.size()));
         fileItem->setExpanded(true);
         
@@ -468,10 +469,15 @@ void MultiFileSearchWidget::updateResultsTree() {
 }
 
 void MultiFileSearchWidget::searchInFile(const QString& filePath, QList<MultiFileSearchResult>& results) {
-    FileManager fm;
-    QString content;
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        return;
+    }
+    QTextStream stream(&file);
+    QString content = stream.readAll();
+    file.close();
     
-    if (!fm.readFile(filePath, content)) {
+    if (content.isEmpty()) {
         return;
     }
     
@@ -569,7 +575,7 @@ bool MultiFileSearchWidget::shouldSkipFile(const QString& filePath) const {
     
     // Check .gitignore if enabled
     if (m_respectGitignore) {
-        QString relativePath = FileManager::toRelativePath(filePath, m_projectPath);
+        QString relativePath = QDir(m_projectPath).relativeFilePath(filePath);
         
         // Common patterns to always skip
         if (relativePath.contains("/.git/") ||
@@ -592,4 +598,4 @@ bool MultiFileSearchWidget::shouldSkipFile(const QString& filePath) const {
     return false;
 }
 
-} // namespace RawrXD
+// End of MultiFileSearchWidget implementation

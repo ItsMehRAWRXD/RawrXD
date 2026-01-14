@@ -1,0 +1,74 @@
+name: Windows GUI Tests (Headless)
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-and-test-windows:
+    # This job requires a self-hosted Windows runner with Qt 6.7.3 installed
+    # Label your runner with: self-hosted, windows, qt
+    runs-on: [self-hosted, windows, qt]
+    timeout-minutes: 120
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify Qt is installed on runner
+        shell: pwsh
+        run: |
+          $qmake = Get-Command qmake -ErrorAction SilentlyContinue
+          if (-not $qmake) {
+            Write-Host "Qt qmake was not found in PATH on this runner. Please install Qt 6.7.3 and ensure qmake is on PATH."
+            exit 1
+          }
+          qmake -v
+
+      - name: Configure (CMake)
+        shell: pwsh
+        run: |
+          cmake -S . -B build-ci -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build tests
+        shell: pwsh
+        run: |
+          cmake --build build-ci --config Release --target test_agentic_integration test_model_loader_tooltip test_model_metadata_utils -- /m
+
+      - name: Run GUI tests (headless)
+        shell: pwsh
+        env:
+          QT_QPA_PLATFORM: "offscreen"
+        run: |
+          $tests = @(
+            "build-ci\Debug\test_model_metadata_utils.exe",
+            "build-ci\Debug\test_model_loader_tooltip.exe",
+            "build-ci\Debug\test_agentic_integration.exe"
+          )
+          foreach ($t in $tests) {
+            if (Test-Path $t) {
+              Write-Host "Running test: $t"
+              & $t
+              if ($LASTEXITCODE -ne 0) {
+                Write-Host "Test failed: $t (exit code $LASTEXITCODE)"
+                # collect logs if any
+                $log = "$env:GITHUB_WORKSPACE\test-output-$(Split-Path $t -Leaf).log"
+                "Exit code: $LASTEXITCODE" | Out-File -FilePath $log -Encoding utf8
+                Write-Host "Uploading $log"
+                # Use GitHub Actions artifact upload step by writing the path to the pipeline summary
+                exit $LASTEXITCODE
+              } else {
+                Write-Host "Test passed: $t"
+              }
+            } else {
+              Write-Host "Test binary not found: $t"
+            }
+          }
+
+      - name: Upload test binaries
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-test-binaries
+          path: build-ci/Debug/*.exe

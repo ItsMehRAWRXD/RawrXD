@@ -453,7 +453,6 @@ feature_get_all_states ENDP
 ;==========================================================================
 ; INTERNAL HELPER FUNCTIONS
 ;==========================================================================
-
 InitializeFeatureArray PROC
     push rbx
     push rsi
@@ -520,7 +519,6 @@ LoadDefaultFeatureConfiguration PROC
     pop rbx
     ret
 LoadDefaultFeatureConfiguration ENDP
-
 ApplyMinimalPreset PROC
     push rbx
     push rsi
@@ -558,7 +556,6 @@ minimal_done:
     pop rbx
     ret
 ApplyMinimalPreset ENDP
-
 ApplyStandardPreset PROC
     push rbx
     push rsi
@@ -588,7 +585,6 @@ ApplyStandardPreset PROC
     pop rbx
     ret
 ApplyStandardPreset ENDP
-
 ApplyCompletePreset PROC
     push rbx
     push rsi
@@ -1191,4 +1187,8 @@ telemetry_done:
 InitializeFeatureTelemetry ENDP
 
 END
+
+
+
+
 

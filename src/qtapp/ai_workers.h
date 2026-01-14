@@ -21,7 +21,7 @@ class AIMetricsCollector;
 // Forward declarations
 struct DigestionConfig;
 struct KnowledgeRepresentation;
-struct TrainingDataset;
+struct AIDigestionDataset;
 
 // Agent type enumeration
 enum class AgentType {
@@ -185,7 +185,7 @@ public:
     ~AITrainingWorker();
 
     // Control methods
-    void startTraining(const TrainingDataset& dataset, 
+    void startTraining(const AIDigestionDataset& dataset, 
                       const QString& modelName,
                       const QString& outputPath,
                       const TrainingConfig& config);
@@ -241,7 +241,7 @@ private:
     QString agentStatusMessage() const;
     
     AITrainingPipeline* m_pipeline;
-    TrainingDataset m_dataset;
+    AIDigestionDataset m_dataset;
     QString m_modelName;
     QString m_outputPath;
     TrainingConfig m_config;
@@ -300,7 +300,7 @@ public:
     // Worker control
     void startDigestionWorker(AIDigestionWorker* worker, const QStringList& files);
     void startTrainingWorker(AITrainingWorker* worker, 
-                           const TrainingDataset& dataset,
+                           const AIDigestionDataset& dataset,
                            const QString& modelName,
                            const QString& outputPath,
                            const AITrainingWorker::TrainingConfig& config);

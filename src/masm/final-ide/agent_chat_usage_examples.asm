@@ -19,7 +19,6 @@ includelib user32.lib
 ;   "What's the best way to organize the quantization kernels?"
 
 ; MASM Processing:
-
 example_ask_mode PROC
     push rbx
     sub rsp, 48
@@ -57,7 +56,6 @@ example_ask_mode ENDP
 ;   "Debug: Why does model loading fail with CUDA error at line 342?"
 
 ; MASM Processing:
-
 example_debug_mode PROC
     push rbx
     sub rsp, 48
@@ -107,7 +105,6 @@ example_debug_mode ENDP
 ;   "Optimize the matrix multiplication in kernel.asm for AVX-512"
 
 ; MASM Processing:
-
 example_optimize_mode PROC
     push rbx
     push rsi
@@ -169,7 +166,6 @@ example_optimize_mode ENDP
 ;   "Plan the migration from GGUF to a custom quantization format"
 
 ; MASM Processing:
-
 example_plan_mode PROC
     push rbx
     push rsi
@@ -268,7 +264,6 @@ example_plan_mode ENDP
 ;   "Teach me about AVX-512 vector instructions for quantization"
 
 ; MASM Processing:
-
 example_teach_mode PROC
     push rbx
     sub rsp, 48
@@ -338,7 +333,6 @@ example_teach_mode ENDP
 ; Scenario: Model generates incorrect function name
 
 ; MASM Processing:
-
 example_hallucination_correction PROC
     push rbx
     sub rsp, 96
@@ -407,7 +401,6 @@ example_hallucination_correction ENDP
 ; Scenario: Multi-step plan fails at step 3, automatic recovery
 
 ; MASM Processing:
-
 example_self_correction PROC
     push rbx
     push rsi
@@ -452,7 +445,6 @@ example_self_correction ENDP
 ; Scenario: Renaming a function, analyze impact
 
 ; MASM Processing:
-
 example_cross_file_impact PROC
     push rbx
     sub rsp, 96
@@ -499,7 +491,6 @@ example_cross_file_impact ENDP
 ;==========================================================================
 ; HELPER PROCEDURES (Stubs)
 ;==========================================================================
-
 PUBLIC example_ask_mode
 PUBLIC example_debug_mode
 PUBLIC example_optimize_mode
@@ -521,4 +512,8 @@ PUBLIC example_cross_file_impact
     full_response_buffer            BYTE 8192 DUP (?)
 
 END
+
+
+
+
 

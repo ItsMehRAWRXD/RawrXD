@@ -151,19 +151,15 @@ EmbedAsmFeature PROC
     ; rcx = pane, rdx = handler
     ret
 EmbedAsmFeature ENDP
-
 UpdateEditorPanes PROC
     ret
 UpdateEditorPanes ENDP
-
 UpdateTerminalPanes PROC
     ret
 UpdateTerminalPanes ENDP
-
 UpdateChatPanes PROC
     ret
 UpdateChatPanes ENDP
-
 UpdateDebugPanes PROC
     ret
 UpdateDebugPanes ENDP
@@ -180,3 +176,5 @@ asm_chat_handler PROC
 asm_chat_handler ENDP
 
 END
+
+

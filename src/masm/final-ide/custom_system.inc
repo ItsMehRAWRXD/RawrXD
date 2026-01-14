@@ -9,8 +9,8 @@
 ;--------------------------------------------------------------------------
 BYTE    TYPEDEF BYTE
 WORD    TYPEDEF WORD  
-DWORD   TYPEDEF DWORD
-QWORD   TYPEDEF QWORD
+DWORD   typedef DWORD
+QWORD   typedef QWORD
 REAL4   TYPEDEF REAL4
 REAL8   TYPEDEF REAL8
 
@@ -305,3 +305,5 @@ custom_socket_connect PROTO
 custom_socket_send  PROTO
 custom_socket_recv  PROTO
 custom_socket_close PROTO
+
+

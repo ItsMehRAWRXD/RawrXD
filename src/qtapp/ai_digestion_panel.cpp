@@ -1,6 +1,8 @@
 #include "ai_digestion_panel.hpp"
 #include "ai_digestion_engine.hpp"
 #include "ai_workers.h"
+#include "integration/ProdIntegration.h"
+#include "integration/InitializationTracker.h"
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QFileDialog>
@@ -33,6 +35,7 @@ AIDigestionPanel::AIDigestionPanel(QWidget* parent)
     , m_progressUpdateTimer(nullptr)
     , m_statusUpdateTimer(nullptr)
 {
+    RAWRXD_INIT_TIMED("AIDigestionPanel");
     setupUI();
     
     // Initialize engines
@@ -67,6 +70,7 @@ AIDigestionPanel::~AIDigestionPanel() {
 }
 
 void AIDigestionPanel::setupUI() {
+    RAWRXD_TIMED_FUNC();
     // Main layout
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(8, 8, 8, 8);

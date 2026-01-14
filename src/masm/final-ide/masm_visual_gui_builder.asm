@@ -767,20 +767,17 @@ generate_python_code ENDP
 ;==========================================================================
 ; WINDOW PROCEDURES
 ;==========================================================================
-
 canvas_wnd_proc PROC
     ; Canvas window procedure (handles mouse drag, selection, etc.)
     ; Stub: returns DefWindowProcA
     call DefWindowProcA
     ret
 canvas_wnd_proc ENDP
-
 inspector_wnd_proc PROC
     ; Property inspector window procedure
     call DefWindowProcA
     ret
 inspector_wnd_proc ENDP
-
 palette_wnd_proc PROC
     ; Widget palette window procedure
     call DefWindowProcA
@@ -790,7 +787,6 @@ palette_wnd_proc ENDP
 ;==========================================================================
 ; HELPER FUNCTIONS
 ;==========================================================================
-
 find_widget_by_id PROC
     ; rcx = widget ID
     ; Returns: rax = pointer to WIDGET_DEF or 0
@@ -825,7 +821,6 @@ find_widget_by_id PROC
     pop rbx
     ret
 find_widget_by_id ENDP
-
 repaint_canvas PROC
     mov rcx, g_builder.canvas.hWindow
     xor rdx, rdx
@@ -838,35 +833,27 @@ repaint_canvas ENDP
 gui_builder_set_property PROC
     ret
 gui_builder_set_property ENDP
-
 gui_builder_save_project PROC
     ret
 gui_builder_save_project ENDP
-
 gui_builder_load_project PROC
     ret
 gui_builder_load_project ENDP
-
 gui_builder_show_preview PROC
     ret
 gui_builder_show_preview ENDP
-
 gui_builder_undo PROC
     ret
 gui_builder_undo ENDP
-
 gui_builder_redo PROC
     ret
 gui_builder_redo ENDP
-
 gui_builder_cut PROC
     ret
 gui_builder_cut ENDP
-
 gui_builder_copy PROC
     ret
 gui_builder_copy ENDP
-
 gui_builder_paste PROC
     ret
 gui_builder_paste ENDP
@@ -874,10 +861,13 @@ gui_builder_paste ENDP
 gui_builder_align_widgets PROC
     ret
 gui_builder_align_widgets ENDP
-
 gui_builder_distribute_widgets PROC
     ret
 gui_builder_distribute_widgets ENDP
 
 end
+
+
+
+
 

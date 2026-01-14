@@ -62,7 +62,6 @@ WINDOW_TITLE       EQU "Phase 2 Integration Test - Menu + Theme + FileBrowser"
 ; Window Procedure
 ; x64 calling convention: rcx=hWnd, edx=uMsg, r8=wParam, r9=lParam
 ; ============================================================================
-
 WndProc PROC
     
     cmp edx, WM_CREATE
@@ -151,7 +150,6 @@ WndProc ENDP
 ; WinMain - Application Entry Point
 ; x64: Stack space allocated manually for WNDCLASSEXA and MSG
 ; ============================================================================
-
 WinMain PROC
     ; Allocate stack space: WNDCLASSEXA (80 bytes) + MSG (48 bytes) + alignment
     sub rsp, 168
@@ -263,7 +261,6 @@ WinMain ENDP
 ; ============================================================================
 ; Entry Point
 ; ============================================================================
-
 mainCRTStartup PROC
     call WinMain
     
@@ -274,3 +271,5 @@ mainCRTStartup PROC
 mainCRTStartup ENDP
 
 END mainCRTStartup
+
+

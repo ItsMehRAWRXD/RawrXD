@@ -23,7 +23,7 @@
 // Forward declarations
 struct DigestionConfig;
 struct KnowledgeRepresentation;
-struct TrainingDataset;
+struct AIDigestionDataset;
 
 // Enumeration for supported file types
 enum class FileType {
@@ -121,7 +121,7 @@ struct KnowledgeRepresentation {
 };
 
 // Structure for training dataset
-struct TrainingDataset {
+struct AIDigestionDataset {
     QString name;
     QVector<KnowledgeRepresentation> samples;
     QJsonObject statistics;
@@ -134,7 +134,7 @@ struct TrainingDataset {
     
     // Serialization methods
     QJsonObject toJson() const;
-    static TrainingDataset fromJson(const QJsonObject& obj);
+    static AIDigestionDataset fromJson(const QJsonObject& obj);
 };
 
 // Main AI Digestion Engine class
@@ -161,7 +161,7 @@ public:
     int getTotalFiles() const;
     
     // Knowledge base management
-    TrainingDataset getTrainingDataset() const;
+    AIDigestionDataset getAIDigestionDataset() const;
     bool saveDataset(const QString& filePath) const;
     bool loadDataset(const QString& filePath);
     
@@ -181,7 +181,7 @@ signals:
     void fileProcessed(const QString& filePath, int processedCount, int totalCount);
     
     // Completion signals
-    void digestionCompleted(const TrainingDataset& dataset);
+    void digestionCompleted(const AIDigestionDataset& dataset);
     void digestionFailed(const QString& error);
     void trainingCompleted(const QString& modelPath);
     void trainingFailed(const QString& error);
@@ -236,7 +236,7 @@ private:
     
     // Model training methods
     void executeTraining();
-    bool createModelArchitecture();
+    bool createAITrainingArchitecture();
     bool trainModelFromDataset();
     bool quantizeModel(const QString& inputPath, const QString& outputPath);
     
@@ -248,7 +248,7 @@ private:
 
 private:
     DigestionConfig m_config;
-    TrainingDataset m_dataset;
+    AIDigestionDataset m_dataset;
     
     // Threading and control
     std::unique_ptr<QThread> m_digestionThread;
@@ -316,7 +316,7 @@ public:
     explicit TrainingWorker(AIDigestionEngine* engine, QObject* parent = nullptr);
     
 public slots:
-    void startTraining(const TrainingDataset& dataset, const DigestionConfig& config);
+    void startTraining(const AIDigestionDataset& dataset, const DigestionConfig& config);
 
 signals:
     void trainingProgress(double progress);

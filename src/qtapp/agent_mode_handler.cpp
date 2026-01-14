@@ -67,7 +67,7 @@ void AgentModeHandler::resumeExecution()
 void AgentModeHandler::skipCurrentStep()
 {
     if (m_currentStepIndex >= 0 && m_currentStepIndex < m_executionSteps.size()) {
-        m_executionSteps[m_currentStepIndex].status = ExecutionStep::Skipped;
+        m_executionSteps[m_currentStepIndex].status = AgentExecutionStep::Skipped;
         emit stepProgress(m_currentStepIndex, "Step skipped by user");
         m_currentStepIndex++;
         executeNextStep();
@@ -95,7 +95,7 @@ float AgentModeHandler::getProgressPercentage() const
 
     int completedCount = 0;
     for (const auto& step : m_executionSteps) {
-        if (step.status == ExecutionStep::Completed || step.status == ExecutionStep::Skipped) {
+        if (step.status == AgentExecutionStep::Completed || step.status == AgentExecutionStep::Skipped) {
             completedCount++;
         }
     }
@@ -111,7 +111,7 @@ void AgentModeHandler::onToolExecutionCompleted(const QString& toolName, const Q
 
     auto& step = m_executionSteps[m_currentStepIndex];
     step.output = output;
-    step.status = ExecutionStep::Completed;
+    step.status = AgentExecutionStep::Completed;
 
     emit stepCompleted(m_currentStepIndex, step);
     emit stepOutput(m_currentStepIndex, output);
@@ -127,7 +127,7 @@ void AgentModeHandler::onToolExecutionError(const QString& toolName, const QStri
     }
 
     auto& step = m_executionSteps[m_currentStepIndex];
-    step.status = ExecutionStep::Failed;
+    step.status = AgentExecutionStep::Failed;
     step.errorMessage = error;
 
     emit stepFailed(m_currentStepIndex, error);
@@ -168,15 +168,15 @@ void AgentModeHandler::executeNextStep()
         return;
     }
 
-    ExecutionStep& step = m_executionSteps[m_currentStepIndex];
+    AgentExecutionStep& step = m_executionSteps[m_currentStepIndex];
 
-    if (step.status != ExecutionStep::Pending) {
+    if (step.status != AgentExecutionStep::Pending) {
         m_currentStepIndex++;
         executeNextStep();
         return;
     }
 
-    step.status = ExecutionStep::InProgress;
+    step.status = AgentExecutionStep::InProgress;
     emit stepStarting(m_currentStepIndex, step);
     emit progressUpdated(getProgressPercentage(), QString("Executing step %1: %2")
         .arg(m_currentStepIndex + 1).arg(step.title));
@@ -184,7 +184,7 @@ void AgentModeHandler::executeNextStep()
     executeSingleStep(step);
 }
 
-void AgentModeHandler::executeSingleStep(const ExecutionStep& step)
+void AgentModeHandler::executeSingleStep(const AgentExecutionStep& step)
 {
     if (!m_toolExecutor) {
         onToolExecutionError("executor", "Tool executor not initialized");
@@ -222,7 +222,7 @@ bool AgentModeHandler::attemptRecovery(int stepIndex)
     // In production, AI would determine recovery strategy
     if (stepIndex < m_executionSteps.size() - 1) {
         emit errorOccurred(QString("Skipping failed step %1 and continuing...").arg(stepIndex));
-        m_executionSteps[stepIndex].status = ExecutionStep::Skipped;
+        m_executionSteps[stepIndex].status = AgentExecutionStep::Skipped;
         return true;
     }
 
@@ -246,11 +246,11 @@ void AgentModeHandler::mapPlanToExecutionSteps(const Plan& plan)
     for (int i = 0; i < plan.steps.size(); ++i) {
         const auto& planStep = plan.steps[i];
 
-        ExecutionStep execStep;
+        AgentExecutionStep execStep;
         execStep.stepId = planStep.id;
         execStep.title = planStep.title;
         execStep.filesModified = planStep.requiredFiles;  // Will be populated during execution
-        execStep.status = ExecutionStep::Pending;
+        execStep.status = AgentExecutionStep::Pending;
 
         m_executionSteps.append(execStep);
     }

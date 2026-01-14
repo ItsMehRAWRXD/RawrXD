@@ -4,8 +4,8 @@
 
 option casemap:none
 
-EXTERN malloc:PROC
-EXTERN free:PROC
+extern masm_malloc : proc
+extern masm_free : proc
 EXTERN memset:PROC
 EXTERN sprintf:PROC
 EXTERN console_log:PROC
@@ -99,13 +99,13 @@ metrics_collector_create PROC
     
     ; Allocate collector
     mov rcx, SIZEOF METRICS_COLLECTOR
-    call malloc
+    call masm_malloc
     mov rbx, rax
     
     ; Allocate metrics array
     mov rcx, r8
     imul rcx, SIZEOF REQUEST_METRICS
-    call malloc
+    call masm_malloc
     mov [rbx + METRICS_COLLECTOR.metrics], rax
     
     ; Initialize
@@ -321,7 +321,7 @@ PUBLIC metrics_export_json
 metrics_export_json PROC
     ; Allocate output buffer
     mov rcx, 65536                 ; 64 KB
-    call malloc
+    call masm_malloc
     
     ; Format JSON (simplified)
     ret
@@ -364,12 +364,12 @@ metrics_destroy PROC
     mov rcx, [rbx + METRICS_COLLECTOR.metrics]
     cmp rcx, 0
     je skip_metrics_local
-    call free
+    call masm_free
 skip_metrics_local:
     
     ; Free collector
     mov rcx, rbx
-    call free
+    call masm_free
     
     pop rbx
     ret
@@ -381,4 +381,8 @@ metrics_destroy ENDP
     f1000 REAL4 1000.0
 
 END
+
+
+
+
 

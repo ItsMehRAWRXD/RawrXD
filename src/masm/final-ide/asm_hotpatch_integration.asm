@@ -616,7 +616,7 @@ asm_str_length ENDP
 ;=====================================================================
 
 ALIGN 16
-asm_event_loop_create PROC
+; DUPLICATE - DISABLED: asm_event_loop_create PROC
 
     push rbx
     push r12
@@ -680,7 +680,7 @@ loop_create_done:
     pop rbx
     ret
 
-asm_event_loop_create ENDP
+; DUPLICATE - DISABLED: asm_event_loop_create ENDP
 
 ;=====================================================================
 ; asm_event_loop_emit(loop: rcx, signal_id: rdx, p1: r8, p2: r9, p3: [rsp+40]) -> void
@@ -1012,4 +1012,8 @@ hotpatch_main ENDP
 test_string db "Hello, MASM!", 0
 
 END
+
+
+
+
 

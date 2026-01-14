@@ -90,7 +90,7 @@ agentic_inference_stream_start PROC
 
     ; Allocate stream state structure
     mov rcx, INFERENCE_STREAM_SIZE
-    call malloc                         ; Allocate memory
+    call masm_malloc                         ; Allocate memory
     test rax, rax
     jz stream_start_fail
     
@@ -204,7 +204,7 @@ stream_found:
     call CloseHandle                    ; Close thread handle
     
     mov rcx, rdx
-    call free                           ; Free stream state
+    call masm_free                           ; Free stream state
     
     ; Remove from pool
     mov [rax], 0                        ; Clear pool entry
@@ -334,7 +334,7 @@ agentic_inference_stream_metrics PROC
 
     ; Allocate JSON object (1024 bytes)
     mov rcx, 1024
-    call malloc
+    call masm_malloc
     mov r8, rax                         ; r8 = json buffer
     
     ; Build JSON metrics
@@ -447,7 +447,7 @@ create_token_queue PROC
     mov rax, rcx
     mov rcx, 16                         ; Allocate 16-byte header + capacity
     add rcx, rax
-    call malloc
+    call masm_malloc
     ret
 create_token_queue ENDP
 
@@ -455,7 +455,7 @@ create_token_queue ENDP
 ; Free token queue
 ; rcx = queue handle
 free_token_queue PROC
-    call free
+    call masm_free
     ret
 free_token_queue ENDP
 
@@ -557,3 +557,7 @@ calculate_token_latency ENDP
 ; ============================================================================
 
 .end
+
+
+
+

@@ -253,7 +253,6 @@ szBreakpointFmt BYTE "BP#%d: Tensor %lld | Type: %d | Hits: %d", 0
 ;==========================================================================
 ; PUBLIC API
 ;==========================================================================
-
 PUBLIC tensor_debugger_init
 PUBLIC tensor_debugger_create_window
 PUBLIC tensor_debugger_attach_model
@@ -595,44 +594,37 @@ tensor_debugger_inspect_tensor ENDP
 ;==========================================================================
 ; Stub implementations for remaining functions
 ;==========================================================================
-
 tensor_debugger_get_gradients PROC
     ; rcx = tensor_id -> rax = gradient_tensor_ptr
     mov ecx, ecx
     call find_tensor_by_id
     ret
 tensor_debugger_get_gradients ENDP
-
 tensor_debugger_profile_memory PROC
     ; -> rax = memory_snapshot_ptr
     call take_memory_snapshot
     ret
 tensor_debugger_profile_memory ENDP
-
 tensor_debugger_compare_tensors PROC
     ; rcx = tensor_id1, rdx = tensor_id2 -> eax = similarity_score
     mov eax, 100  ; 100% similarity (dummy)
     ret
 tensor_debugger_compare_tensors ENDP
-
 tensor_debugger_pause_execution PROC
     mov byte ptr g_tensor_debugger.is_paused, 1
     mov eax, 1
     ret
 tensor_debugger_pause_execution ENDP
-
 tensor_debugger_resume_execution PROC
     mov byte ptr g_tensor_debugger.is_paused, 0
     mov eax, 1
     ret
 tensor_debugger_resume_execution ENDP
-
 tensor_debugger_watch_tensor PROC
     ; rcx = tensor_id, rdx = watch_expr
     mov eax, 1
     ret
 tensor_debugger_watch_tensor ENDP
-
 tensor_debugger_unwatch_tensor PROC
     ; rcx = tensor_id
     mov eax, 1
@@ -642,7 +634,6 @@ tensor_debugger_unwatch_tensor ENDP
 ;==========================================================================
 ; Helper functions
 ;==========================================================================
-
 find_tensor_by_id PROC
     ; ecx = tensor_id -> rax = tensor_ptr
     push rbx
@@ -671,13 +662,11 @@ find_tensor_by_id PROC
     pop rbx
     ret
 find_tensor_by_id ENDP
-
 compute_tensor_statistics PROC
     ; rcx = tensor ptr
     ; Compute min, max, mean, std from tensor data
     ret
 compute_tensor_statistics ENDP
-
 take_memory_snapshot PROC
     ; Create snapshot of current memory state
     mov eax, g_tensor_debugger.snapshot_count
@@ -697,52 +686,42 @@ take_memory_snapshot PROC
 @limit:
     ret
 take_memory_snapshot ENDP
-
 register_tensor_debugger_class PROC
     ; rcx = class name
     ret
 register_tensor_debugger_class ENDP
-
 register_tensor_listview_class PROC
     ; rcx = class name
     ret
 register_tensor_listview_class ENDP
-
 register_graph_view_class PROC
     ; rcx = class name
     ret
 register_graph_view_class ENDP
-
 register_memory_chart_class PROC
     ; rcx = class name
     ret
 register_memory_chart_class ENDP
-
 create_tensor_listview PROC
     ; rcx = parent hwnd
     ret
 create_tensor_listview ENDP
-
 create_graph_visualizer PROC
     ; rcx = parent hwnd
     ret
 create_graph_visualizer ENDP
-
 create_memory_monitor PROC
     ; rcx = parent hwnd
     ret
 create_memory_monitor ENDP
-
 create_detail_panel PROC
     ; rcx = parent hwnd
     ret
 create_detail_panel ENDP
-
 create_execution_log PROC
     ; rcx = parent hwnd
     ret
 create_execution_log ENDP
-
 strncpy PROC
     ; rcx = dest, rdx = src, r8d = max_len
     xor rax, rax
@@ -760,4 +739,8 @@ strncpy PROC
 strncpy ENDP
 
 end
+
+
+
+
 

@@ -335,6 +335,27 @@ void OllamaHotpatchProxy::clearResponseCache()
     qInfo() << "[OllamaHotpatchProxy] Response cache cleared";
 }
 
+QString OllamaHotpatchProxy::hashPrompt(const QString& prompt) const
+{
+    QMutexLocker locker(&m_mutex);
+    QCryptographicHash hash(QCryptographicHash::Sha256);
+    hash.addData(prompt.toUtf8());
+    return QString::fromUtf8(hash.result().toHex());
+}
+
+void OllamaHotpatchProxy::enableDiagnostics(bool enable)
+{
+    QMutexLocker locker(&m_mutex);
+    m_diagnosticsEnabled = enable;
+    qInfo() << "[OllamaHotpatchProxy] Diagnostics" << (enable ? "enabled" : "disabled");
+}
+
+bool OllamaHotpatchProxy::diagnosticsEnabled() const
+{
+    QMutexLocker locker(&m_mutex);
+    return m_diagnosticsEnabled;
+}
+
 OllamaHotpatchProxy::Stats OllamaHotpatchProxy::getStatistics() const
 {
     QMutexLocker locker(&m_mutex);

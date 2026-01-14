@@ -572,3 +572,7 @@ log_ghost_text_event ENDP
 
 END
 
+
+
+
+

@@ -391,7 +391,6 @@ intellisense_build_symbol_table PROC
     leave
     ret
 intellisense_build_symbol_table ENDP
-
 parse_keyword_list PROC
     push rbp
     mov rbp, rsp
@@ -451,7 +450,6 @@ parse_done:
     leave
     ret
 parse_keyword_list ENDP
-
 extract_word_prefix PROC
     ; rcx = line, edx = cursor pos
     ; Returns pointer to prefix in static buffer
@@ -534,7 +532,6 @@ exit:
 szPrefixBuffer db MAX_SYMBOL_LENGTH dup(0)
 .code
 extract_word_prefix ENDP
-
 string_starts_with PROC
     ; rcx = string, rdx = prefix
     push rsi
@@ -587,7 +584,6 @@ add_completion_item PROC
 exit:
     ret
 add_completion_item ENDP
-
 sort_completions PROC
     ; Simple bubble sort by score
     ret
@@ -637,3 +633,7 @@ CompletionPopupProc PROC
 CompletionPopupProc ENDP
 
 end
+
+
+
+

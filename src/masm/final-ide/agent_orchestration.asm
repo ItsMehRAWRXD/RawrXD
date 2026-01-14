@@ -116,7 +116,6 @@ metricTotalDispatches  DB "agent_dispatches_total",0
 ; ============================================================================
 ; Agent Pool Management
 ; ============================================================================
-
 PUBLIC AgentPool_Create
 AgentPool_Create PROC FRAME USES rbx rsi rdi
     LOCAL maxSessions:DWORD
@@ -217,7 +216,6 @@ pool_create_fail:
     xor rax, rax
     ret
 AgentPool_Create ENDP
-
 PUBLIC AgentPool_Destroy
 AgentPool_Destroy PROC FRAME USES rbx rsi
     mov rsi, rcx
@@ -246,7 +244,6 @@ destroy_done:
     mov rax, 1
     ret
 AgentPool_Destroy ENDP
-
 PUBLIC AgentPool_AcquireSession
 AgentPool_AcquireSession PROC FRAME USES rbx rsi
     LOCAL timeoutQPC:QWORD
@@ -337,7 +334,6 @@ acquire_fail:
     xor rax, rax
     ret
 AgentPool_AcquireSession ENDP
-
 PUBLIC AgentPool_ReleaseSession
 AgentPool_ReleaseSession PROC FRAME USES rbx rsi
     LOCAL currentQPC:QWORD
@@ -412,7 +408,6 @@ AgentPool_ReleaseSession ENDP
 ; ============================================================================
 ; Agent Router
 ; ============================================================================
-
 PUBLIC AgentRouter_Dispatch
 AgentRouter_Dispatch PROC FRAME USES rbx rsi rdi
     LOCAL startQPC:QWORD
@@ -492,7 +487,6 @@ AgentRouter_Dispatch ENDP
 ; ============================================================================
 ; Agent State Management
 ; ============================================================================
-
 PUBLIC AgentState_Snapshot
 AgentState_Snapshot PROC FRAME USES rbx rsi
     mov esi, ecx  ; session_id
@@ -530,7 +524,6 @@ snapshot_fail:
     xor rax, rax
     ret
 AgentState_Snapshot ENDP
-
 PUBLIC AgentState_Restore
 AgentState_Restore PROC FRAME USES rbx rsi
     mov esi, ecx  ; session_id
@@ -597,13 +590,11 @@ memcpy ENDP
 ; ============================================================================
 ; Metrics and Observability
 ; ============================================================================
-
 PUBLIC AgentPool_GetMetrics
 AgentPool_GetMetrics PROC FRAME
     mov rax, OFFSET agentMetrics
     ret
 AgentPool_GetMetrics ENDP
-
 PUBLIC AgentPool_ResetMetrics
 AgentPool_ResetMetrics PROC FRAME
     mov DWORD PTR [agentMetrics + AGENT_METRICS.PoolInUse], 0
@@ -618,7 +609,6 @@ AgentPool_ResetMetrics ENDP
 ; ============================================================================
 ; Phase 5 Test Integration
 ; ============================================================================
-
 PUBLIC Test_AgentPool_BasicOperations
 Test_AgentPool_BasicOperations PROC FRAME
     ; Create pool
@@ -653,7 +643,6 @@ test_fail:
     xor rax, rax
     ret
 Test_AgentPool_BasicOperations ENDP
-
 PUBLIC Test_AgentRouter_Dispatch
 Test_AgentRouter_Dispatch PROC FRAME
     ; Create pool
@@ -684,3 +673,7 @@ test_fail:
 Test_AgentRouter_Dispatch ENDP
 
 END
+
+
+
+

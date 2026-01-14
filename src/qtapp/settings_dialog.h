@@ -2,6 +2,7 @@
 
 #include <QDialog>
 #include "settings_manager.h"
+#include "ThemeConfigurationPanel.h"
 
 class QVBoxLayout;
 class QHBoxLayout;
@@ -46,6 +47,7 @@ private:
     QWidget* createCICDTab();
     QWidget* createMASMTab();  // NEW: MASM Feature Manager tab
     QWidget* createEnterpriseTab();
+    QWidget* createThemeTab();
 
     SettingsManager *m_settings = nullptr;
     
@@ -103,5 +105,8 @@ private:
     QCheckBox *m_enableDnsTunnel = nullptr;
     QLineEdit *m_enterpriseLicenseKey = nullptr;
     QSpinBox *m_shadowContextSize = nullptr;
+
+    // Theme Tab
+    RawrXD::ThemeConfigurationPanel* m_themePanel = nullptr;
     QSpinBox *m_telemetryInterval = nullptr;
 };

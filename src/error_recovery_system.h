@@ -27,7 +27,7 @@ enum class ErrorCategory {
     FileIO,
     Database,
     AIModel,
-    CloudProvider,
+    CloudProviderType,
     Security,
     Performance,
     UserInput,

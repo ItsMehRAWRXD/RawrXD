@@ -14,9 +14,10 @@
 #include <QTimer>
 #include <QElapsedTimer>
 #include <QEventLoop>
+#include "cloud_config.h"
 
 // Cloud provider information
-struct CloudProvider {
+struct CloudProviderInfo {
     QString providerId;        // aws, azure, gcp, huggingface, ollama
     QString name;
     QString endpoint;
@@ -96,7 +97,7 @@ struct CostMetrics {
 };
 
 // Performance metrics
-struct PerformanceMetrics {
+struct HybridCloudPerformanceMetrics {
     double averageLatency = 0.0;
     double p95Latency = 0.0;
     double p99Latency = 0.0;
@@ -122,15 +123,16 @@ public:
     ~HybridCloudManager();
 
     // Provider management
-    bool addProvider(const CloudProvider& provider);
+    bool addProvider(const CloudProviderInfo& provider);
     bool removeProvider(const QString& providerId);
     bool configureProvider(const QString& providerId, const QString& apiKey, 
                           const QString& endpoint, const QString& region);
-    void updateProvider(const CloudProvider& provider);
-    QVector<CloudProvider> getProviders() const;
-    QVector<CloudProvider> getAllProviders() const;
-    CloudProvider getProvider(const QString& providerId) const;
-    QVector<CloudProvider> getHealthyProviders() const;
+    void updateProvider(const CloudProviderInfo& provider);
+    bool joinTeam(const QString& teamId);
+    QVector<CloudProviderInfo> getProviders() const;
+    QVector<CloudProviderInfo> getAllProviders() const;
+    CloudProviderInfo getProvider(const QString& providerId) const;
+    QVector<CloudProviderInfo> getHealthyProviders() const;
     
     // Provider health
     void checkProviderHealth(const QString& providerId);
@@ -190,7 +192,7 @@ public:
     void resetCostMetrics();
     
     // Performance monitoring
-    PerformanceMetrics getPerformanceMetrics() const;
+    HybridCloudPerformanceMetrics getPerformanceMetrics() const;
     double getAverageLatency(const QString& providerId = "") const;
     int getSuccessRate() const;
     
@@ -211,6 +213,9 @@ public:
     // Cloud switching
     bool switchToCloud(const QString& reason);
     bool switchToLocal(const QString& reason);
+    bool switchToCloudModel(const QString& reason);
+    bool switchToLocalModel(const QString& reason);
+    bool enableHybridMode();
     bool isUsingCloud() const;
     
     // API key management
@@ -233,6 +238,7 @@ signals:
     void costLimitReached(const QString& limitType);
     void failoverTriggered(const QString& fromProvider, const QString& toProvider);
     void cloudSwitched(bool usingCloud);
+    void modeChanged(const QString& mode);
     void errorOccurred(const QString& error);
     void healthCheckCompleted();
 
@@ -254,12 +260,12 @@ private:
                                       const QString& providerId);
     
     // Routing algorithms
-    double calculateProviderScore(const CloudProvider& provider,
+    double calculateProviderScore(const CloudProviderInfo& provider,
                                  const ExecutionRequest& request);
-    double calculateCostEfficiency(const CloudProvider& provider,
+    double calculateCostEfficiency(const CloudProviderInfo& provider,
                                    int estimatedTokens);
-    double calculateLatencyScore(const CloudProvider& provider);
-    double calculateReliabilityScore(const CloudProvider& provider);
+    double calculateLatencyScore(const CloudProviderInfo& provider);
+    double calculateReliabilityScore(const CloudProviderInfo& provider);
     
     // Health monitoring
     bool validateCloudHealth(const QString& providerId);
@@ -280,13 +286,13 @@ private:
     bool shouldRetry(int attemptNumber, const QString& errorType);
     
     // Data members - SYNCHRONIZED with cpp
-    QHash<QString, CloudProvider> providers;
+    QHash<QString, CloudProviderInfo> providers;
     QVector<CloudModel> cloudModels;
     QVector<ExecutionResult> executionHistory;  // Changed to QVector from QHash
     QVector<ExecutionRequest> requestQueue;
     
     CostMetrics costMetrics;
-    PerformanceMetrics performanceMetrics;
+    HybridCloudPerformanceMetrics performanceMetrics;
     FailoverConfig failoverConfig;
     
     QNetworkAccessManager* networkManager;

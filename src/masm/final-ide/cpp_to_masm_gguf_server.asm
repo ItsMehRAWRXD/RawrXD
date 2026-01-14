@@ -4,8 +4,8 @@
 
 option casemap:none
 
-EXTERN malloc:PROC
-EXTERN free:PROC
+extern masm_malloc : proc
+extern masm_free : proc
 EXTERN memset:PROC
 EXTERN memcpy:PROC
 EXTERN strlen:PROC
@@ -136,13 +136,13 @@ gguf_server_create PROC
     
     ; Allocate server
     mov rcx, SIZEOF GGUF_SERVER
-    call malloc
+    call masm_malloc
     mov r9, rax
     
     ; Allocate clients array
     mov rcx, MAX_CLIENTS
     imul rcx, SIZEOF CLIENT_CONNECTION
-    call malloc
+    call masm_malloc
     mov [r9 + GGUF_SERVER.clients], rax
     
     ; Initialize
@@ -322,7 +322,7 @@ gguf_server_handle_request PROC
     
     ; Parse request (simplified)
     mov rcx, 1024                   ; Allocate response
-    call malloc
+    call masm_malloc
     mov r10, rax                    ; r10 = response
     
     ; Handle different endpoints
@@ -388,7 +388,7 @@ handle_generate_request PROC
     
     ; Allocate response
     mov rcx, SIZEOF SERVER_RESPONSE
-    call malloc
+    call masm_malloc
     mov r9, rax
     
     ; Set response
@@ -396,7 +396,7 @@ handle_generate_request PROC
     
     ; Create response body (simplified)
     mov rcx, 1024
-    call malloc
+    call masm_malloc
     mov [r9 + SERVER_RESPONSE.body], rax
     
     lea rdx, [szGenerateResponse]
@@ -420,7 +420,7 @@ handle_tags_request PROC
     
     ; Allocate response
     mov rcx, SIZEOF SERVER_RESPONSE
-    call malloc
+    call masm_malloc
     mov r9, rax
     
     ; Set response
@@ -428,7 +428,7 @@ handle_tags_request PROC
     
     ; Create response body (simplified)
     mov rcx, 512
-    call malloc
+    call masm_malloc
     mov [r9 + SERVER_RESPONSE.body], rax
     
     lea rdx, [szTagsResponse]
@@ -452,7 +452,7 @@ handle_default_request PROC
     
     ; Allocate response
     mov rcx, SIZEOF SERVER_RESPONSE
-    call malloc
+    call masm_malloc
     mov r9, rax
     
     ; Set response
@@ -460,7 +460,7 @@ handle_default_request PROC
     
     ; Create response body
     mov rcx, 256
-    call malloc
+    call masm_malloc
     mov [r9 + SERVER_RESPONSE.body], rax
     
     lea rdx, [szNotFoundResponse]
@@ -509,12 +509,12 @@ skip_event_local:
     mov rcx, [rbx + GGUF_SERVER.clients]
     cmp rcx, 0
     je skip_clients_local
-    call free
+    call masm_free
     
 skip_clients_local:
     ; Free server
     mov rcx, rbx
-    call free
+    call masm_free
     
     pop rbx
     ret
@@ -555,4 +555,8 @@ server_thread_proc ENDP
     szNotFoundResponse DB "{\"error\":\"Endpoint not found\"}", 0
 
 END
+
+
+
+
 

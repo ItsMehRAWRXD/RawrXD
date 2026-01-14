@@ -12,54 +12,54 @@ DISTRIBUTED_ERROR_OFFLINE equ 6
 DISTRIBUTED_ERROR_NETWORK equ 7
 
 ; Distributed executor structure
-DISTRIBUTED_EXECUTOR struct
-    executor_mutex dword ?
-    node_count dword ?
-    max_nodes dword ?
-    job_count dword ?
-    max_jobs dword ?
-    nodes_ptr dword ?
-    jobs_ptr dword ?
-    allocator_ptr dword ?
-    deallocator_ptr dword ?
-    stats_enabled dword ?
-    reserved dword 16 dup(?)
-DISTRIBUTED_EXECUTOR ends
+DISTRIBUTED_EXECUTOR STRUCT
+    executor_mutex DWORD ?
+    node_count DWORD ?
+    max_nodes DWORD ?
+    job_count DWORD ?
+    max_jobs DWORD ?
+    nodes_ptr DWORD ?
+    jobs_ptr DWORD ?
+    allocator_ptr DWORD ?
+    deallocator_ptr DWORD ?
+    stats_enabled DWORD ?
+    reserved BYTE 16*4 dup(?)
+DISTRIBUTED_EXECUTOR ENDS
 
 ; Node structure
-NODE struct
-    node_id dword ?
-    name_ptr dword ?
-    name_len dword ?
-    address_ptr dword ?
-    address_len dword ?
-    port dword ?
-    status dword ?
-    capacity dword ?
-    current_jobs dword ?
-    last_heartbeat dword ?
-    flags dword ?
-    reserved dword 4 dup(?)
-NODE ends
+NODE STRUCT
+    node_id DWORD ?
+    name_ptr DWORD ?
+    name_len DWORD ?
+    address_ptr DWORD ?
+    address_len DWORD ?
+    port DWORD ?
+    status DWORD ?
+    capacity DWORD ?
+    current_jobs DWORD ?
+    last_heartbeat DWORD ?
+    flags DWORD ?
+    reserved BYTE 4*4 dup(?)
+NODE ENDS
 
 ; Job structure
-JOB struct
-    job_id dword ?
-    node_id dword ?
-    command_ptr dword ?
-    command_len dword ?
-    input_ptr dword ?
-    input_len dword ?
-    output_ptr dword ?
-    output_len dword ?
-    status dword ?
-    exit_code dword ?
-    created_at dword ?
-    started_at dword ?
-    completed_at dword ?
-    flags dword ?
-    reserved dword 4 dup(?)
-JOB ends
+JOB STRUCT
+    job_id DWORD ?
+    node_id DWORD ?
+    command_ptr DWORD ?
+    command_len DWORD ?
+    input_ptr DWORD ?
+    input_len DWORD ?
+    output_ptr DWORD ?
+    output_len DWORD ?
+    status DWORD ?
+    exit_code DWORD ?
+    created_at DWORD ?
+    started_at DWORD ?
+    completed_at DWORD ?
+    flags DWORD ?
+    reserved BYTE 4*4 dup(?)
+JOB ENDS
 
 ; Constants
 NODE_MAX_NAME_LEN equ 256
@@ -75,3 +75,7 @@ EXTERN distributed_register_node:proc
 EXTERN distributed_submit_job:proc
 EXTERN distributed_get_status:proc
 EXTERN distributed_cancel_job:proc
+
+
+
+

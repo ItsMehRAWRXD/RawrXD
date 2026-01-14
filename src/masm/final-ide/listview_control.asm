@@ -88,7 +88,7 @@ CreateListView PROC FRAME
     
     ; Allocate LISTVIEW_CONTROL structure
     mov rcx, sizeof(LISTVIEW_CONTROL)
-    call malloc
+    call masm_malloc
     test rax, rax
     jz allocation_failed
     
@@ -113,7 +113,7 @@ no_selection_callback:
 no_user_data:
     ; Allocate items array
     mov rcx, MAX_LISTVIEW_ITEMS * 8  ; QWORD pointers
-    call malloc
+    call masm_malloc
     test rax, rax
     jz items_allocation_failed
     
@@ -127,7 +127,7 @@ no_user_data:
     
     ; Allocate columns array
     mov rcx, MAX_LISTVIEW_COLUMNS * 8  ; QWORD pointers
-    call malloc
+    call masm_malloc
     test rax, rax
     jz columns_allocation_failed
     
@@ -161,25 +161,25 @@ allocation_failed:
     
 items_allocation_failed:
     mov rcx, rbx
-    call free
+    call masm_free
     xor rax, rax
     jmp listview_created
     
 columns_allocation_failed:
     mov rcx, [rbx+LISTVIEW_CONTROL.items]
-    call free
+    call masm_free
     mov rcx, rbx
-    call free
+    call masm_free
     xor rax, rax
     jmp listview_created
     
 window_creation_failed:
     mov rcx, [rbx+LISTVIEW_CONTROL.items]
-    call free
+    call masm_free
     mov rcx, [rbx+LISTVIEW_CONTROL.columns]
-    call free
+    call masm_free
     mov rcx, rbx
-    call free
+    call masm_free
     xor rax, rax
     
 listview_created:
@@ -274,7 +274,7 @@ AddColumn PROC FRAME
     
     ; Allocate LISTVIEW_COLUMN structure
     mov rcx, sizeof(LISTVIEW_COLUMN)
-    call malloc
+    call masm_malloc
     test rax, rax
     jz column_allocation_failed
     
@@ -330,7 +330,7 @@ add_column_failed:
     dec [rbx+LISTVIEW_CONTROL.column_count]
     
     mov rcx, rdi
-    call free
+    call masm_free
     mov eax, -1
     
 add_column_success:
@@ -409,7 +409,7 @@ AddItem PROC
     
     ; Allocate LISTVIEW_ITEM structure
     mov rcx, sizeof(LISTVIEW_ITEM)
-    call malloc
+    call masm_malloc
     test rax, rax
     jz item_allocation_failed
     
@@ -456,7 +456,7 @@ add_item_failed:
     dec [rbx+LISTVIEW_CONTROL.item_count]
     
     mov rcx, rdi
-    call free
+    call masm_free
     mov eax, -1
     
 add_item_success:
@@ -640,7 +640,7 @@ RemoveItem PROC
     
     ; Free item structure
     mov rcx, rdi
-    call free
+    call masm_free
     
     ; Shift items array
     mov rcx, [rbx+LISTVIEW_CONTROL.items]
@@ -710,7 +710,7 @@ free_items_loop:
     push rcx
     push rsi
     mov rcx, rdi
-    call free
+    call masm_free
     pop rsi
     pop rcx
     
@@ -782,7 +782,7 @@ no_window:
     test rcx, rcx
     jz no_items_array
     
-    call free
+    call masm_free
     
 no_items_array:
     ; Free columns array
@@ -790,15 +790,17 @@ no_items_array:
     test rcx, rcx
     jz no_columns_array
     
-    call free
+    call masm_free
     
 no_columns_array:
     ; Free list view structure
     mov rcx, rbx
-    call free
+    call masm_free
     
     mov rax, 1
     ret
 DestroyListView ENDP
 
 END
+
+

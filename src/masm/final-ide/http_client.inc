@@ -43,3 +43,7 @@ EXTERN HttpClientShutdown:PROC
 ; Global client instance
 EXTERN g_HttpClient:HTTP_CLIENT
 
+
+
+
+

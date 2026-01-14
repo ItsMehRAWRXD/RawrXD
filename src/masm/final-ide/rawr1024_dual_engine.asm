@@ -1142,7 +1142,6 @@ Kyber_KeyGen PROC
     pop rbx
     ret
 Kyber_KeyGen ENDP
-
 Dilithium_KeyGen PROC
     push rbx
     sub rsp, 32
@@ -1168,7 +1167,6 @@ Dilithium_KeyGen PROC
     pop rbx
     ret
 Dilithium_KeyGen ENDP
-
 CheckAVX512Support PROC
     push rbx
     
@@ -4998,28 +4996,23 @@ InitializeModelConfigs PROC
     ; (Implementation would set up API endpoints, keys, etc.)
     ret
 InitializeModelConfigs ENDP
-
 DisplayMessage PROC
     ; Display message to console/UI
     ; (Implementation would handle actual display)
     ret
 DisplayMessage ENDP
-
 SearchLocal PROC
     ; Search local knowledge base
     ret
 SearchLocal ENDP
-
 SearchWeb PROC
     ; Search web sources
     ret
 SearchWeb ENDP
-
 SearchAcademic PROC
     ; Search academic databases
     ret
 SearchAcademic ENDP
-
 SearchDeepWeb PROC
     ; Search deep web sources
     ret
@@ -5054,3 +5047,7 @@ main PROC
 main ENDP
 
 END main
+
+
+
+

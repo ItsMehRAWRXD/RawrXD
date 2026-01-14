@@ -18,9 +18,7 @@
 
 option casemap:none
 
-include windows.inc
-includelib kernel32.lib
-includelib user32.lib
+; No windows.inc - define externals directly
 
 ;==========================================================================
 ; EXTERNAL DECLARATIONS
@@ -33,6 +31,7 @@ EXTERN ReadFile:PROC
 EXTERN CloseHandle:PROC
 EXTERN GetFileSize:PROC
 EXTERN OutputDebugStringA:PROC
+EXTERN GetTickCount:PROC
 
 ; Internal utilities
 EXTERN asm_malloc:PROC
@@ -158,7 +157,6 @@ PERSISTENCE_STATE ENDS
 ; - Metadata (type, mode, confidence)
 ; - Array structure with objects
 ;==========================================================================
-
 PUBLIC chat_serialize_to_json
 chat_serialize_to_json PROC
     ; rcx = message array pointer
@@ -184,7 +182,7 @@ chat_serialize_to_json PROC
     ; Write opening array bracket
     mov rcx, r14
     add rcx, rbx
-    lea rdx, [rip + sz_json_open_array]
+    lea rdx, sz_json_open_array
     call strcpy_safe_masm
     add rbx, rax
     
@@ -204,20 +202,20 @@ serialize_loop_local:
     ; Write opening object brace
     mov rdx, r14
     add rdx, rbx
-    lea rax, [rip + sz_json_open_obj]
+    lea rax, sz_json_open_obj
     call strcpy_safe_masm
     add rbx, rax
     
     ; Write "type" field
     mov rdx, r14
     add rdx, rbx
-    lea rax, [rip + sz_json_type]
+    lea rax, sz_json_type
     call strcpy_safe_masm
     add rbx, rax
     
     mov rdx, r14
     add rdx, rbx
-    lea rax, [rip + sz_json_colon]
+    lea rax, sz_json_colon
     call strcpy_safe_masm
     add rbx, rax
     
@@ -230,20 +228,20 @@ serialize_loop_local:
     
     mov rdx, r14
     add rdx, rbx
-    lea rax, [rip + sz_json_comma]
+    lea rax, sz_json_comma
     call strcpy_safe_masm
     add rbx, rax
     
     ; Write "timestamp" field
     mov rdx, r14
     add rdx, rbx
-    lea rax, [rip + sz_json_timestamp]
+    lea rax, sz_json_timestamp
     call strcpy_safe_masm
     add rbx, rax
     
     mov rdx, r14
     add rdx, rbx
-    lea rax, [rip + sz_json_colon]
+    lea rax, sz_json_colon
     call strcpy_safe_masm
     add rbx, rax
     
@@ -256,20 +254,20 @@ serialize_loop_local:
     
     mov rdx, r14
     add rdx, rbx
-    lea rax, [rip + sz_json_comma]
+    lea rax, sz_json_comma
     call strcpy_safe_masm
     add rbx, rax
     
     ; Write "sender" field
     mov rdx, r14
     add rdx, rbx
-    lea rax, [rip + sz_json_sender]
+    lea rax, sz_json_sender
     call strcpy_safe_masm
     add rbx, rax
     
     mov rdx, r14
     add rdx, rbx
-    lea rax, [rip + sz_json_colon]
+    lea rax, sz_json_colon
     call strcpy_safe_masm
     add rbx, rax
     
@@ -282,20 +280,20 @@ serialize_loop_local:
     
     mov rdx, r14
     add rdx, rbx
-    lea rax, [rip + sz_json_comma]
+    lea rax, sz_json_comma
     call strcpy_safe_masm
     add rbx, rax
     
     ; Write "content" field
     mov rdx, r14
     add rdx, rbx
-    lea rax, [rip + sz_json_content]
+    lea rax, sz_json_content
     call strcpy_safe_masm
     add rbx, rax
     
     mov rdx, r14
     add rdx, rbx
-    lea rax, [rip + sz_json_colon]
+    lea rax, sz_json_colon
     call strcpy_safe_masm
     add rbx, rax
     
@@ -309,7 +307,7 @@ serialize_loop_local:
     ; Write closing object brace
     mov rdx, r14
     add rdx, rbx
-    lea rax, [rip + sz_json_close_obj]
+    lea rax, sz_json_close_obj
     call strcpy_safe_masm
     add rbx, rax
     
@@ -320,7 +318,7 @@ serialize_loop_local:
     
     mov rdx, r14
     add rdx, rbx
-    lea rax, [rip + sz_json_comma]
+    lea rax, sz_json_comma
     call strcpy_safe_masm
     add rbx, rax
     
@@ -330,7 +328,7 @@ serialize_end_local:
     ; Write closing array bracket
     mov rdx, r14
     add rdx, rbx
-    lea rax, [rip + sz_json_close_array]
+    lea rax, sz_json_close_array
     call strcpy_safe_masm
     add rbx, rax
     
@@ -354,7 +352,6 @@ chat_serialize_to_json ENDP
 ; - Timestamp recovery
 ; - Error handling with fallback
 ;==========================================================================
-
 PUBLIC chat_deserialize_from_json
 chat_deserialize_from_json PROC
     ; rcx = JSON buffer pointer
@@ -379,7 +376,7 @@ chat_deserialize_from_json PROC
     
     ; Find opening array bracket
     mov rcx, r12
-    lea rdx, [rip + sz_json_open_array]
+    lea rdx, sz_json_open_array
     call strstr_masm
     test rax, rax
     jz deserialize_end_local
@@ -393,7 +390,7 @@ deserialize_loop_local:
     
     ; Find opening object brace
     mov rcx, r12
-    lea rdx, [rip + sz_json_open_obj]
+    lea rdx, sz_json_open_obj
     call strstr_masm
     test rax, rax
     jz deserialize_end_local
@@ -431,7 +428,7 @@ deserialize_loop_local:
     
     ; Find closing object brace
     mov rcx, r12
-    lea rdx, [rip + sz_json_close_obj]
+    lea rdx, sz_json_close_obj
     call strstr_masm
     test rax, rax
     jz deserialize_end_local
@@ -463,7 +460,6 @@ chat_deserialize_from_json ENDP
 ; - File locking
 ; - Timestamp preservation
 ;==========================================================================
-
 PUBLIC chat_save_to_file
 chat_save_to_file PROC
     ; rcx = chat history array pointer
@@ -482,7 +478,7 @@ chat_save_to_file PROC
     ; Use provided filename or default
     test r8, r8
     jnz save_use_provided_local
-    lea r8, [rip + sz_chat_history_file]
+    lea r8, sz_chat_history_file
     
 save_use_provided_local:
     mov rbx, r8                         ; Save filename
@@ -520,7 +516,7 @@ save_use_provided_local:
     call CloseHandle
     
     ; Log success
-    lea rcx, [rip + sz_file_write_ok]
+    lea rcx, sz_file_write_ok
     mov edx, r12d
     call console_log
     
@@ -538,7 +534,6 @@ save_done_local:
     ret
     
 chat_save_to_file ENDP
-
 PUBLIC chat_load_from_file
 chat_load_from_file PROC
     ; rcx = filename (optional, uses default if NULL)
@@ -558,7 +553,7 @@ chat_load_from_file PROC
     ; Use provided filename or default
     test rcx, rcx
     jnz load_use_provided_local
-    lea rcx, [rip + sz_chat_history_file]
+    lea rcx, sz_chat_history_file
     
 load_use_provided_local:
     mov rbx, rcx                        ; Save filename
@@ -604,7 +599,7 @@ load_use_provided_local:
     call chat_deserialize_from_json
     
     ; Log success
-    lea rcx, [rip + sz_file_read_ok]
+    lea rcx, sz_file_read_ok
     mov edx, r13d
     call console_log
     
@@ -666,22 +661,22 @@ write_msg_type_json PROC
     jmp write_unknown_type_local
     
 write_user_type_local:
-    lea rcx, [rip + sz_msg_user]
+    lea rcx, sz_msg_user
     jmp write_type_copy_local
 write_agent_type_local:
-    lea rcx, [rip + sz_msg_agent]
+    lea rcx, sz_msg_agent
     jmp write_type_copy_local
 write_system_type_local:
-    lea rcx, [rip + sz_msg_system]
+    lea rcx, sz_msg_system
     jmp write_type_copy_local
 write_reasoning_type_local:
-    lea rcx, [rip + sz_msg_reasoning]
+    lea rcx, sz_msg_reasoning
     jmp write_type_copy_local
 write_correction_type_local:
-    lea rcx, [rip + sz_msg_correction]
+    lea rcx, sz_msg_correction
     jmp write_type_copy_local
 write_unknown_type_local:
-    lea rcx, [rip + sz_msg_system]
+    lea rcx, sz_msg_system
     
 write_type_copy_local:
     call strcpy_safe_masm
@@ -804,6 +799,10 @@ parse_json_string PROC
     ret
 parse_json_string ENDP
 
-.end
+END
+
+
+
+
 
 

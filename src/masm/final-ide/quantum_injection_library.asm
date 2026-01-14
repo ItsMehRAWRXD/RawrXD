@@ -32,7 +32,6 @@
 ;==============================================================================
 
 .code
-
 PUBLIC InitializeQuantumLibrary
 PUBLIC AttachQuantumLibrary
 PUBLIC DetachQuantumLibrary
@@ -2080,47 +2079,38 @@ masm_quantum_library_init PROC
     INVOKE InitializeQuantumLibrary, rcx, rdx, r8, r9
     ret
 masm_quantum_library_init ENDP
-
 masm_quantum_library_attach_model PROC
     mov rax, 1
     ret
 masm_quantum_library_attach_model ENDP
-
 masm_quantum_library_detach_model PROC
     mov rax, 1
     ret
 masm_quantum_library_detach_model ENDP
-
 masm_quantum_library_expand_context PROC
     mov rax, 1
     ret
 masm_quantum_library_expand_context ENDP
-
 masm_quantum_library_expand_vocabulary PROC
     mov rax, 1
     ret
 masm_quantum_library_expand_vocabulary ENDP
-
 masm_quantum_library_inject_features PROC
     mov rax, 1
     ret
 masm_quantum_library_inject_features ENDP
-
 masm_quantum_library_get_bridge_size PROC
     mov rax, COMPRESSED_TOTAL
     ret
 masm_quantum_library_get_bridge_size ENDP
-
 masm_quantum_library_double_reverse_load PROC
     mov rax, 1
     ret
 masm_quantum_library_double_reverse_load ENDP
-
 AttachQuantumLibrary PROC
     mov rax, 1
     ret
 AttachQuantumLibrary ENDP
-
 DetachQuantumLibrary PROC
     mov rax, 1
     ret
@@ -2877,4 +2867,8 @@ PUBLIC DecompressWithHardwareDictionary
 PUBLIC UpdateDictionaryFromRuntimeFeedback
 
 END
+
+
+
+
 

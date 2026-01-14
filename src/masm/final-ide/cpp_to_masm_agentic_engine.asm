@@ -4,8 +4,8 @@
 
 option casemap:none
 
-EXTERN malloc:PROC
-EXTERN free:PROC
+extern masm_malloc : proc
+extern masm_free : proc
 EXTERN memset:PROC
 EXTERN memcpy:PROC
 EXTERN strlen:PROC
@@ -154,37 +154,37 @@ agentic_engine_create PROC
     
     ; Allocate engine
     mov rcx, SIZEOF AGENTIC_ENGINE
-    call malloc
+    call masm_malloc
     mov rbx, rax
     
     ; Allocate analysis results
     mov rcx, MAX_ANALYSIS_RESULTS
     imul rcx, SIZEOF ANALYSIS_RESULT
-    call malloc
+    call masm_malloc
     mov [rbx + AGENTIC_ENGINE.analysisResults], rax
     
     ; Allocate generation results
     mov rcx, MAX_GENERATION_OUTPUT
     imul rcx, SIZEOF GENERATION_RESULT
-    call malloc
+    call masm_malloc
     mov [rbx + AGENTIC_ENGINE.generationResults], rax
     
     ; Allocate planning results
     mov rcx, MAX_PLANNING_STEPS
     imul rcx, SIZEOF PLANNING_RESULT
-    call malloc
+    call masm_malloc
     mov [rbx + AGENTIC_ENGINE.planningResults], rax
     
     ; Allocate NLP results
     mov rcx, MAX_ENTITIES
     imul rcx, SIZEOF NLP_RESULT
-    call malloc
+    call masm_malloc
     mov [rbx + AGENTIC_ENGINE.nlpResults], rax
     
     ; Allocate feedback entries
     mov rcx, MAX_FEEDBACK_ENTRIES
     imul rcx, 64                    ; Approx size per feedback entry
-    call malloc
+    call masm_malloc
     mov [rbx + AGENTIC_ENGINE.feedbackEntries], rax
     
     ; Initialize
@@ -321,7 +321,7 @@ agentic_generate_code PROC
     
     ; Generate code (simplified)
     mov rcx, 1024                   ; Allocate 1 KB for generated code
-    call malloc
+    call masm_malloc
     mov [r11 + GENERATION_RESULT.generatedCode], rax
     
     ; Copy placeholder code
@@ -647,40 +647,40 @@ agentic_destroy PROC
     mov rcx, [rbx + AGENTIC_ENGINE.analysisResults]
     cmp rcx, 0
     je skip_analysis_local
-    call free
+    call masm_free
     
 skip_analysis_local:
     ; Free generation results
     mov rcx, [rbx + AGENTIC_ENGINE.generationResults]
     cmp rcx, 0
     je skip_generation_local
-    call free
+    call masm_free
     
 skip_generation_local:
     ; Free planning results
     mov rcx, [rbx + AGENTIC_ENGINE.planningResults]
     cmp rcx, 0
     je skip_planning_local
-    call free
+    call masm_free
     
 skip_planning_local:
     ; Free NLP results
     mov rcx, [rbx + AGENTIC_ENGINE.nlpResults]
     cmp rcx, 0
     je skip_nlp_local
-    call free
+    call masm_free
     
 skip_nlp_local:
     ; Free feedback entries
     mov rcx, [rbx + AGENTIC_ENGINE.feedbackEntries]
     cmp rcx, 0
     je skip_feedback_local
-    call free
+    call masm_free
     
 skip_feedback_local:
     ; Free engine
     mov rcx, rbx
-    call free
+    call masm_free
     
     pop rbx
     ret
@@ -698,4 +698,8 @@ agentic_destroy ENDP
     szGeneratedCode DB "// Generated code placeholder", 0
 
 END
+
+
+
+
 

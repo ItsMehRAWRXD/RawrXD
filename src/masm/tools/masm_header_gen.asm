@@ -316,7 +316,7 @@ parse_tokens:
     jmp parse_tokens
 
 tok_collect:
-    mov rdi, OFFSET lineBuf      ; reuse lineBuf as token buffer
+    lea rdi, lineBuf      ; reuse lineBuf as token buffer
     ; collect until delim or EOL
 tok_loop:
     mov al, [rsi]
@@ -351,7 +351,7 @@ check_proc:
     je done
     ; collect first token up to space/tab/:
     mov rsi, psz_local
-    mov rdi, OFFSET lineBuf
+    lea rdi, lineBuf
 name_loop:
     mov al, [rsi]
     cmp al, ' '
@@ -378,7 +378,7 @@ done:
 process_line endp
 
 ; read file and process lines
-process_file proc uses rax rbx rcx rdx rsi rdi, psz_local:QWORD
+process_file proc uses rax rbx rcx rdx rsi rdi r12 r13, psz_local:QWORD
     ; open file for read
     sub rsp, 32
     mov rcx, psz_local
@@ -415,25 +415,29 @@ read_chunk:
     cmp rbx, 0
     je close_file
 
+    ; Base pointers for indexed addressing (avoid ADDR32 relocations in x64)
+    lea r12, readBuf
+    lea r13, lineBuf
+
     ; process rbx bytes from readBuf
     xor rdi, rdi
 process_bytes:
     cmp rdi, rbx
     jae read_chunk
-    mov al, [readBuf+rdi]
+    mov al, [r12+rdi]
     inc rdi
     cmp al, 13
     je newline
     cmp al, 10
     je newline
     ; accumulate
-    mov [lineBuf+rsi], al
+    mov [r13+rsi], al
     inc rsi
     cmp rsi, 4094
     jb process_bytes
     ; flush long line
 newline:
-    mov byte ptr [lineBuf+rsi], 0
+    mov byte ptr [r13+rsi], 0
     cmp rsi, 0
     je reset_line
     lea rcx, lineBuf
@@ -483,7 +487,7 @@ next_sym:
     je close_out
     ; write EXTERNDEF <sym>:PROC\r\n
     ; build line in lineBuf
-    mov rdi, OFFSET lineBuf
+    lea rdi, lineBuf
     ; EXTERNDEF 
     mov byte ptr [rdi+0], 'E'
     mov byte ptr [rdi+1], 'X'
@@ -516,11 +520,11 @@ copy_loop1:
     mov byte ptr [rbx+rax+6], 10
     mov byte ptr [rbx+rax+7], 0
     mov rcx, hOut
-    mov rdx, OFFSET lineBuf
+    lea rdx, lineBuf
     call writeZ
 
     ; PROTO line: <sym> PROTO\r\n
-    mov rdi, OFFSET lineBuf
+    lea rdi, lineBuf
     ; copy symbol
     xor rax, rax
 copy_loop2:
@@ -541,7 +545,7 @@ copy_loop2:
     mov byte ptr [rdi+rax+7], 10
     mov byte ptr [rdi+rax+8], 0
     mov rcx, hOut
-    mov rdx, OFFSET lineBuf
+    lea rdx, lineBuf
     call writeZ
 
     ; move rsi to next symbol (skip until null then +1)
@@ -575,7 +579,7 @@ build_pattern proc
     je copy_suffix
     dec rax
     mov cl, byte ptr [rdx+rax]
-    cmp cl, '\\'
+    cmp cl, 5Ch
     je copy_suffix
     ; append backslash
     lea rcx, inDir
@@ -612,7 +616,7 @@ build_filepath proc
     je append_name
     dec rax
     mov cl, byte ptr [rdx+rax]
-    cmp cl, '\\'
+    cmp cl, 5Ch
     je append_name
     lea rcx, filePath
     lea rdx, backslash

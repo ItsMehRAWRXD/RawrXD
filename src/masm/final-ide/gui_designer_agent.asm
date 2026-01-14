@@ -1975,7 +1975,6 @@ parse_hex_color PROC
     or eax, 0FF000000h  ; Set alpha to FF
     ret
 parse_hex_color ENDP
-
 parse_int PROC
     ; rcx = string -> returns DWORD
     xor eax, eax
@@ -1999,7 +1998,6 @@ parse_int PROC
 @done:
     ret
 parse_int ENDP
-
 parse_float PROC
     ; rcx = string -> returns REAL4
     ; Simple implementation: parse as int then convert
@@ -2007,7 +2005,6 @@ parse_float PROC
     cvtsi2ss xmm0, eax
     ret
 parse_float ENDP
-
 parse_easing_type PROC
     ; rcx = string -> returns easing type enum
     lea rdx, szEaseIn
@@ -2037,7 +2034,6 @@ parse_easing_type PROC
     mov eax, EASING_LINEAR  ; Default
     ret
 parse_easing_type ENDP
-
 parse_pane_json PROC
     ; rcx = component_ptr, rdx = json_string -> returns eax (0=success)
     push rbx
@@ -2664,7 +2660,6 @@ CreateDefaultThemes PROC
     pop rbx
     ret
 CreateDefaultThemes ENDP
-
 StartAnimationTimer PROC
     push rbx
     push rsi
@@ -3403,7 +3398,6 @@ class_found:
     pop rbx
     ret
 CreateComponentWindow ENDP
-
 gui_apply_default_style PROC
     ; ecx = component_id
     push rbx
@@ -3695,7 +3689,6 @@ parse_int_done:
     pop rbx
     ret
 ParseIntValue ENDP
-
 FindComponent PROC
     ; ecx = component_id
     ; Returns rax = pointer to component or 0
@@ -3736,7 +3729,6 @@ find_done:
     pop rbx
     ret
 FindComponent ENDP
-
 UpdateComponentPositions PROC
     push rbx
     push rsi
@@ -3785,7 +3777,6 @@ pos_done:
     pop rbx
     ret
 UpdateComponentPositions ENDP
-
 FindThemeByName PROC
     ; rcx = theme_name (string)
     ; Returns rax = theme_id or 0
@@ -3832,7 +3823,6 @@ theme_search_done:
     pop rbx
     ret
 FindThemeByName ENDP
-
 ApplyThemeToComponent PROC
     ; ecx = component_id, edx = theme_id
     push rbx
@@ -3900,7 +3890,6 @@ apply_theme_done:
     pop rbx
     ret
 ApplyThemeToComponent ENDP
-
 StringCopy PROC
     ; rcx = dest, rsi = src
     push rsi
@@ -3914,7 +3903,6 @@ copy_loop:
     pop rsi
     ret
 StringCopy ENDP
-
 StringCopySafe PROC
     ; rdi = dest, rsi = src
     push rsi
@@ -4040,7 +4028,6 @@ first_comp:
     pop rbx
     ret
 AddComponentToJson ENDP
-
 strlen PROC
     ; rcx = str
     xor rax, rax
@@ -4440,4 +4427,8 @@ szEaseInOut_Val      BYTE "easeInOut",0
 g_animation_active_val DWORD 0
 
 END
+
+
+
+
 

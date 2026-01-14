@@ -28,9 +28,9 @@
 option casemap:none
 
 ; External memory functions (provided by malloc_wrapper.asm)
-EXTERN malloc:PROC
-EXTERN free:PROC
-EXTERN realloc:PROC
+extern masm_malloc : proc
+extern masm_free : proc
+extern masm_realloc : proc
 EXTERN memset:PROC
 
 ; External object functions (provided by qt6_foundation.asm)
@@ -575,7 +575,7 @@ no_hwnd:
     
     ; Free MAIN_WINDOW structure itself
     mov rcx, rbx
-    call free
+    call masm_free
     
     ; Clear globals
     mov qword ptr [g_main_window_global], 0
@@ -712,7 +712,7 @@ main_window_add_menu PROC
     ; Allocate MENU_BAR_ITEM structure (96 bytes)
     mov rcx, 96
     sub rsp, 32
-    call malloc
+    call masm_malloc
     add rsp, 32
     test rax, rax
     jz add_menu_fail
@@ -775,7 +775,7 @@ main_window_add_menu_item PROC
     ; Allocate MENU_ITEM structure (80 bytes)
     mov rcx, 80
     sub rsp, 32
-    call malloc
+    call masm_malloc
     add rsp, 32
     test rax, rax
     jz add_item_fail
@@ -922,4 +922,8 @@ main_window_update_menubar ENDP
 ; - Call DefWindowProc for unhandled messages
 
 END
+
+
+
+
 

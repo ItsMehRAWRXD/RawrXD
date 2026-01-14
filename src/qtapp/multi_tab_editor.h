@@ -9,9 +9,10 @@ class QTabWidget;
 namespace RawrXD {
     class LSPClient;
     class AgenticTextEdit;
-    class CodeMinimap;
-    class EditorWithMinimap;
 }
+
+class CodeMinimap;
+class EditorWithMinimap;
 
 class MultiTabEditor : public QWidget {
     Q_OBJECT

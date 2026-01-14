@@ -1,7 +1,21 @@
+cmake_minimum_required(VERSION 3.20)
+project(ggml_backend VERSION 1.0.0)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Allow subdirectories to link to targets defined in parent scope
+cmake_policy(SET CMP0079 NEW)
+
+find_package(Threads REQUIRED)
+
 include(CheckCXXCompilerFlag)
 include("../cmake/common.cmake")
 
+set(GGML_SCHED_MAX_COPIES 4)
+set(GGML_SCHED_MAX_BACKENDS 16)
 add_compile_definitions(GGML_SCHED_MAX_COPIES=${GGML_SCHED_MAX_COPIES})
+add_compile_definitions(GGML_SCHED_MAX_BACKENDS=${GGML_SCHED_MAX_BACKENDS})
 
 # enable libstdc++ assertions for debug builds
 if (CMAKE_SYSTEM_NAME MATCHES "Linux")
@@ -447,6 +461,10 @@ foreach (target ggml-base ggml)
 endforeach()
 
 target_link_libraries(ggml-base PRIVATE Threads::Threads)
+target_compile_definitions(ggml-base PRIVATE
+    GGML_VERSION="1.0.0"
+    GGML_COMMIT="unknown"
+)
 
 find_library(MATH_LIBRARY m)
 if (MATH_LIBRARY)

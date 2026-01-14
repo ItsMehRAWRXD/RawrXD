@@ -1,3 +1,25 @@
+@masm_mainwindow_init EQU 1
+@masm_mainwindow_shutdown EQU 1
+@masm_mainwindow_create EQU 1
+@masm_mainwindow_show EQU 1
+@masm_mainwindow_hide EQU 1
+@masm_mainwindow_close EQU 1
+@masm_mainwindow_resize EQU 1
+@masm_mainwindow_set_title EQU 1
+@masm_mainwindow_add_dock EQU 1
+@masm_mainwindow_remove_dock EQU 1
+@masm_mainwindow_show_dock EQU 1
+@masm_mainwindow_hide_dock EQU 1
+@masm_mainwindow_add_menu_item EQU 1
+@masm_mainwindow_remove_menu_item EQU 1
+@masm_mainwindow_set_status EQU 1
+@masm_mainwindow_get_status EQU 1
+@masm_mainwindow_set_theme EQU 1
+@masm_mainwindow_get_theme EQU 1
+@masm_mainwindow_dispatch_signal EQU 1
+@masm_mainwindow_list_docks EQU 1
+@masm_mainwindow_save_layout EQU 1
+@masm_mainwindow_load_layout EQU 1
 ;==============================================================================
 ; mainwindow_masm.asm - MASM MainWindow Architecture & Qt Widget Bridge
 ; Purpose: Core IDE window management, menu system, dock management, signals
@@ -59,8 +81,8 @@ DOCK_WIDGET STRUCT
     position                DWORD ?     ; DOCK_POS_*
     isVisible               DWORD ?     ; BOOL
     isFloating              DWORD ?     ; BOOL
-    width                   DWORD ?
-    height                  DWORD ?
+    nWidth                   DWORD ?
+    nHeight                  DWORD ?
     hDockWidget             QWORD ?     ; Qt widget pointer
     contentWidget           QWORD ?     ; Main content
     titleBar                QWORD ?     ; Title widget
@@ -82,8 +104,8 @@ MENU_ITEM ENDS
 MAINWINDOW STRUCT
     hMainWindow             QWORD ?     ; Qt QMainWindow pointer
     windowState             DWORD ?     ; WINDOW_STATE_*
-    width                   DWORD ?     ; Window dimensions
-    height                  DWORD ?
+    nWidth                   DWORD ?     ; Window dimensions
+    nHeight                  DWORD ?
     posX                    DWORD ?     ; Window position
     posY                    DWORD ?
     
@@ -128,7 +150,7 @@ MAINWINDOW ENDS
 ; GLOBAL DATA
 ;==============================================================================
 
-.data?
+.data
     g_mainWindow            MAINWINDOW <>
     g_initialized           DWORD 0
     g_heapHandle            QWORD 0
@@ -158,41 +180,17 @@ MAINWINDOW ENDS
 ; EXPORTED FUNCTIONS
 ;==============================================================================
 
-PUBLIC masm_mainwindow_init
-PUBLIC masm_mainwindow_shutdown
-PUBLIC masm_mainwindow_create
-PUBLIC masm_mainwindow_show
-PUBLIC masm_mainwindow_hide
-PUBLIC masm_mainwindow_close
-PUBLIC masm_mainwindow_resize
-PUBLIC masm_mainwindow_set_title
-PUBLIC masm_mainwindow_add_dock
-PUBLIC masm_mainwindow_remove_dock
-PUBLIC masm_mainwindow_show_dock
-PUBLIC masm_mainwindow_hide_dock
-PUBLIC masm_mainwindow_add_menu_item
-PUBLIC masm_mainwindow_remove_menu_item
-PUBLIC masm_mainwindow_set_status
-PUBLIC masm_mainwindow_get_status
-PUBLIC masm_mainwindow_set_theme
-PUBLIC masm_mainwindow_get_theme
-PUBLIC masm_mainwindow_dispatch_signal
-PUBLIC masm_mainwindow_list_docks
-PUBLIC masm_mainwindow_save_layout
-PUBLIC masm_mainwindow_load_layout
 
 ;==============================================================================
 ; FUNCTION IMPLEMENTATIONS
 ;==============================================================================
 
-; masm_mainwindow_init - Initialize the MainWindow system
 ; Returns: 1 = success, 0 = failure
-masm_mainwindow_init PROC USES rbx rsi rdi
     push rbp
     sub rsp, 32
 
     cmp g_initialized, 1
-    je init_already_local
+    je init_already_local_1
 
     ; Get process heap
     call GetProcessHeap
@@ -209,31 +207,33 @@ masm_mainwindow_init PROC USES rbx rsi rdi
     mov g_mainWindow.MAINWINDOW.fontSize, 11
     
     ; Create window mutex
-    lea rcx, [rel g_mainWindow.MAINWINDOW.windowMutex]
+    lea rcx, [g_mainWindow.MAINWINDOW.windowMutex]
     xor rdx, rdx
     call CreateMutexA
     
     mov g_mainWindow.MAINWINDOW.windowState, WINDOW_STATE_CLOSED
     mov g_initialized, 1
     mov rax, 1
-    jmp init_done_local
+    jmp init_done_local_1
 
-init_already_local:
+init_already_local_1:
     mov rax, 1
 
-init_done_local:
+init_done_local_1:
     add rsp, 32
     pop rbp
     ret
-masm_mainwindow_init ENDP
 
 ; masm_mainwindow_shutdown - Shutdown the MainWindow system
 ; Returns: 1 = success, 0 = failure
+
+PUBLIC masm_mainwindow_shutdown
 masm_mainwindow_shutdown PROC USES rbx rsi rdi
     push rbp
     sub rsp, 32
 
-    cmp g_initialized, 0
+    mov eax, g_initialized
+    test eax, eax
     je shutdown_not_init_local
 
     ; Close window if open
@@ -250,10 +250,12 @@ skip_close_window_local:
     ; Free all dock resources
     xor rbx, rbx
 free_docks_local:
-    cmp rbx, g_mainWindow.MAINWINDOW.dockCount
+    mov eax, g_mainWindow.MAINWINDOW.dockCount
+    cmp rbx, rax
     jge docks_freed_local
-
-    lea rax, [g_mainWindow.MAINWINDOW.docks + rbx * (SIZEOF DOCK_WIDGET)]
+    mov rax, 48
+    imul rax, rbx
+    lea rax, [g_mainWindow.MAINWINDOW.docks + rax]
     
     ; Free dock name string if allocated
     mov rcx, [rax].DOCK_WIDGET.contentWidget
@@ -286,6 +288,8 @@ masm_mainwindow_shutdown ENDP
 ; masm_mainwindow_create - Create the main window
 ; Args: RCX = width, RDX = height, R8 = window title pointer
 ; Returns: 1 = success, 0 = failure
+
+PUBLIC masm_mainwindow_create
 masm_mainwindow_create PROC USES rbx rsi rdi r12 r13 r14
     push rbp
     sub rsp, 32
@@ -294,12 +298,13 @@ masm_mainwindow_create PROC USES rbx rsi rdi r12 r13 r14
     mov r13d, edx  ; Height
     mov r14, r8    ; Title
 
-    cmp g_initialized, 0
+    mov eax, g_initialized
+    test eax, eax
     je create_not_init_local
 
     ; Store dimensions
-    mov g_mainWindow.MAINWINDOW.width, r12d
-    mov g_mainWindow.MAINWINDOW.height, r13d
+    mov g_mainWindow.MAINWINDOW.nWidth, r12d
+    mov g_mainWindow.MAINWINDOW.nHeight, r13d
 
     ; TODO: Create Qt QMainWindow via bridge
     ; For now, mark as created
@@ -325,6 +330,8 @@ masm_mainwindow_create ENDP
 
 ; masm_mainwindow_show - Show the main window
 ; Returns: 1 = success, 0 = failure
+
+PUBLIC masm_mainwindow_show
 masm_mainwindow_show PROC USES rbx rsi rdi
     push rbp
     sub rsp, 32
@@ -349,6 +356,8 @@ masm_mainwindow_show ENDP
 
 ; masm_mainwindow_hide - Hide the main window
 ; Returns: 1 = success, 0 = failure
+
+PUBLIC masm_mainwindow_hide
 masm_mainwindow_hide PROC USES rbx rsi rdi
     push rbp
     sub rsp, 32
@@ -363,6 +372,8 @@ masm_mainwindow_hide ENDP
 
 ; masm_mainwindow_close - Close the main window
 ; Returns: 1 = success, 0 = failure
+
+PUBLIC masm_mainwindow_close
 masm_mainwindow_close PROC USES rbx rsi rdi
     push rbp
     sub rsp, 32
@@ -378,12 +389,14 @@ masm_mainwindow_close ENDP
 ; masm_mainwindow_resize - Resize the window
 ; Args: RCX = new width, RDX = new height
 ; Returns: 1 = success, 0 = failure
+
+PUBLIC masm_mainwindow_resize
 masm_mainwindow_resize PROC USES rbx rsi rdi
     push rbp
     sub rsp, 32
 
-    mov g_mainWindow.MAINWINDOW.width, ecx
-    mov g_mainWindow.MAINWINDOW.height, edx
+    mov g_mainWindow.MAINWINDOW.nWidth, ecx
+    mov g_mainWindow.MAINWINDOW.nHeight, edx
     mov rax, 1
 
     add rsp, 32
@@ -394,6 +407,8 @@ masm_mainwindow_resize ENDP
 ; masm_mainwindow_set_title - Set window title
 ; Args: RCX = title string pointer
 ; Returns: 1 = success, 0 = failure
+
+PUBLIC masm_mainwindow_set_title
 masm_mainwindow_set_title PROC USES rbx rsi rdi
     push rbp
     sub rsp, 32
@@ -409,6 +424,8 @@ masm_mainwindow_set_title ENDP
 ; masm_mainwindow_add_dock - Add a dock widget
 ; Args: RCX = dock name, RDX = position (DOCK_POS_*), R8 = content widget pointer
 ; Returns: dock ID or 0 if failure
+
+PUBLIC masm_mainwindow_add_dock
 masm_mainwindow_add_dock PROC USES rbx rsi rdi r12 r13 r14
     push rbp
     sub rsp, 32
@@ -421,7 +438,10 @@ masm_mainwindow_add_dock PROC USES rbx rsi rdi r12 r13 r14
     jge add_dock_full_local
 
     mov eax, g_mainWindow.MAINWINDOW.dockCount
-    lea rbx, [g_mainWindow.MAINWINDOW.docks + rax * (SIZEOF DOCK_WIDGET)]
+    
+    mov rax, 48
+    imul rax, rax
+    lea rbx, [g_mainWindow.MAINWINDOW.docks + rax]
 
     ; Initialize dock
     mov [rbx].DOCK_WIDGET.dockId, eax
@@ -432,7 +452,8 @@ masm_mainwindow_add_dock PROC USES rbx rsi rdi r12 r13 r14
 
     ; Copy name
     mov rsi, r12
-    lea rdi, [rbx + OFFSET DOCK_WIDGET.name]
+    lea rdi, [rbx]
+    add rdi, 4
     mov ecx, 256
 copy_dock_name_local:
     cmp ecx, 0
@@ -461,6 +482,8 @@ masm_mainwindow_add_dock ENDP
 ; masm_mainwindow_remove_dock - Remove a dock widget
 ; Args: RCX = dock ID
 ; Returns: 1 = success, 0 = failure
+
+PUBLIC masm_mainwindow_remove_dock
 masm_mainwindow_remove_dock PROC USES rbx rsi rdi
     push rbp
     sub rsp, 32
@@ -472,8 +495,9 @@ masm_mainwindow_remove_dock PROC USES rbx rsi rdi
 find_dock_local:
     cmp r9d, g_mainWindow.MAINWINDOW.dockCount
     jge dock_not_found_local
-
-    lea rax, [g_mainWindow.MAINWINDOW.docks + r9 * (SIZEOF DOCK_WIDGET)]
+    mov rax, 48
+    imul rax, r9
+    lea rax, [g_mainWindow.MAINWINDOW.docks + rax]
     cmp [rax].DOCK_WIDGET.dockId, r8d
     je dock_found_local
 
@@ -481,7 +505,9 @@ find_dock_local:
     jmp find_dock_local
 
 dock_found_local:
-    lea rax, [g_mainWindow.MAINWINDOW.docks + r9 * (SIZEOF DOCK_WIDGET)]
+    mov rax, 48
+    imul rax, r9
+    lea rax, [g_mainWindow.MAINWINDOW.docks + rax]
     mov [rax].DOCK_WIDGET.isVisible, 0
     mov rax, 1
     jmp remove_dock_done_local
@@ -498,6 +524,8 @@ masm_mainwindow_remove_dock ENDP
 ; masm_mainwindow_show_dock - Show a dock widget
 ; Args: RCX = dock ID
 ; Returns: 1 = success, 0 = failure
+
+PUBLIC masm_mainwindow_show_dock
 masm_mainwindow_show_dock PROC USES rbx rsi rdi
     push rbp
     sub rsp, 32
@@ -508,8 +536,9 @@ masm_mainwindow_show_dock PROC USES rbx rsi rdi
 find_show_local:
     cmp r9d, g_mainWindow.MAINWINDOW.dockCount
     jge show_not_found_local
-
-    lea rax, [g_mainWindow.MAINWINDOW.docks + r9 * (SIZEOF DOCK_WIDGET)]
+    mov rax, 48
+    imul rax, r9
+    lea rax, [g_mainWindow.MAINWINDOW.docks + rax]
     cmp [rax].DOCK_WIDGET.dockId, r8d
     je show_found_local
 
@@ -533,6 +562,8 @@ masm_mainwindow_show_dock ENDP
 ; masm_mainwindow_hide_dock - Hide a dock widget
 ; Args: RCX = dock ID
 ; Returns: 1 = success, 0 = failure
+
+PUBLIC masm_mainwindow_hide_dock
 masm_mainwindow_hide_dock PROC USES rbx rsi rdi
     push rbp
     sub rsp, 32
@@ -543,8 +574,9 @@ masm_mainwindow_hide_dock PROC USES rbx rsi rdi
 find_hide_local:
     cmp r9d, g_mainWindow.MAINWINDOW.dockCount
     jge hide_not_found_local
-
-    lea rax, [g_mainWindow.MAINWINDOW.docks + r9 * (SIZEOF DOCK_WIDGET)]
+    mov rax, 48
+    imul rax, r9
+    lea rax, [g_mainWindow.MAINWINDOW.docks + rax]
     cmp [rax].DOCK_WIDGET.dockId, r8d
     je hide_found_local
 
@@ -568,6 +600,8 @@ masm_mainwindow_hide_dock ENDP
 ; masm_mainwindow_add_menu_item - Add a menu item
 ; Args: RCX = menu type, RDX = item text, R8 = callback function
 ; Returns: menu item ID or 0 if failure
+
+PUBLIC masm_mainwindow_add_menu_item
 masm_mainwindow_add_menu_item PROC USES rbx rsi rdi
     push rbp
     sub rsp, 32
@@ -576,7 +610,10 @@ masm_mainwindow_add_menu_item PROC USES rbx rsi rdi
     jge menu_full_local
 
     mov eax, g_mainWindow.MAINWINDOW.menuCount
-    lea rbx, [g_mainWindow.MAINWINDOW.menus + rax * (SIZEOF MENU_ITEM)]
+    
+    mov rax, 296
+    imul rax, rax
+    lea rbx, [g_mainWindow.MAINWINDOW.menus + rax]
 
     mov [rbx].MENU_ITEM.itemId, eax
     mov [rbx].MENU_ITEM.menuType, ecx
@@ -598,6 +635,8 @@ masm_mainwindow_add_menu_item ENDP
 ; masm_mainwindow_remove_menu_item - Remove a menu item
 ; Args: RCX = menu item ID
 ; Returns: 1 = success, 0 = failure
+
+PUBLIC masm_mainwindow_remove_menu_item
 masm_mainwindow_remove_menu_item PROC USES rbx rsi rdi
     push rbp
     sub rsp, 32
@@ -609,7 +648,10 @@ find_menu_local:
     cmp r9d, g_mainWindow.MAINWINDOW.menuCount
     jge menu_not_found_local
 
-    lea rax, [g_mainWindow.MAINWINDOW.menus + r9 * (SIZEOF MENU_ITEM)]
+    
+    mov rax, 296
+    imul rax, r9
+    lea rax, [g_mainWindow.MAINWINDOW.menus + rax]
     cmp [rax].MENU_ITEM.itemId, r8d
     je menu_found_local
 
@@ -633,13 +675,15 @@ masm_mainwindow_remove_menu_item ENDP
 ; masm_mainwindow_set_status - Set status bar text
 ; Args: RCX = status text pointer
 ; Returns: 1 = success, 0 = failure
+
+PUBLIC masm_mainwindow_set_status
 masm_mainwindow_set_status PROC USES rbx rsi rdi
     push rbp
     sub rsp, 32
 
     ; Copy status text
     mov rsi, rcx
-    lea rdi, [rel g_mainWindow.MAINWINDOW.statusText]
+    lea rdi, [g_mainWindow.MAINWINDOW.statusText]
     mov ecx, 512
 copy_status_local:
     cmp ecx, 0
@@ -661,13 +705,15 @@ masm_mainwindow_set_status ENDP
 ; masm_mainwindow_get_status - Get status bar text
 ; Args: RCX = output buffer pointer, RDX = buffer size
 ; Returns: 1 = success, 0 = failure
+
+PUBLIC masm_mainwindow_get_status
 masm_mainwindow_get_status PROC USES rbx rsi rdi
     push rbp
     sub rsp, 32
 
     mov rdi, rcx
     mov esi, edx
-    lea rsi, [rel g_mainWindow.MAINWINDOW.statusText]
+    lea rsi, [g_mainWindow.MAINWINDOW.statusText]
 
 copy_get_status_local:
     cmp esi, 0
@@ -689,6 +735,8 @@ masm_mainwindow_get_status ENDP
 ; masm_mainwindow_set_theme - Set window theme
 ; Args: RCX = theme ID (0=light, 1=dark, 2=custom)
 ; Returns: 1 = success, 0 = failure
+
+PUBLIC masm_mainwindow_set_theme
 masm_mainwindow_set_theme PROC USES rbx rsi rdi
     push rbp
     sub rsp, 32
@@ -703,6 +751,8 @@ masm_mainwindow_set_theme ENDP
 
 ; masm_mainwindow_get_theme - Get current theme
 ; Returns: theme ID (0=light, 1=dark, 2=custom)
+
+PUBLIC masm_mainwindow_get_theme
 masm_mainwindow_get_theme PROC
     mov eax, g_mainWindow.MAINWINDOW.themeId
     ret
@@ -711,6 +761,8 @@ masm_mainwindow_get_theme ENDP
 ; masm_mainwindow_dispatch_signal - Dispatch a Qt signal
 ; Args: RCX = signal name, RDX = signal data pointer
 ; Returns: 1 = success, 0 = failure
+
+PUBLIC masm_mainwindow_dispatch_signal
 masm_mainwindow_dispatch_signal PROC USES rbx rsi rdi
     push rbp
     sub rsp, 32
@@ -726,6 +778,8 @@ masm_mainwindow_dispatch_signal ENDP
 ; masm_mainwindow_list_docks - List all docks
 ; Args: RCX = output buffer (DWORD array), RDX = max count
 ; Returns: actual count filled
+
+PUBLIC masm_mainwindow_list_docks
 masm_mainwindow_list_docks PROC USES rbx rsi rdi
     push rbp
     sub rsp, 32
@@ -740,8 +794,9 @@ list_loop_local:
 
     cmp r10d, r9d
     jge list_done_local
-
-    lea rax, [g_mainWindow.MAINWINDOW.docks + r10 * (SIZEOF DOCK_WIDGET)]
+    mov rax, 48
+    imul rax, r10
+    lea rax, [g_mainWindow.MAINWINDOW.docks + rax]
     mov edx, [rax].DOCK_WIDGET.dockId
     mov [r8 + r10 * 4], edx
 
@@ -758,6 +813,8 @@ masm_mainwindow_list_docks ENDP
 ; masm_mainwindow_save_layout - Save window layout to file
 ; Args: RCX = file path pointer
 ; Returns: 1 = success, 0 = failure
+
+PUBLIC masm_mainwindow_save_layout
 masm_mainwindow_save_layout PROC USES rbx rsi rdi
     push rbp
     sub rsp, 32
@@ -773,6 +830,8 @@ masm_mainwindow_save_layout ENDP
 ; masm_mainwindow_load_layout - Load window layout from file
 ; Args: RCX = file path pointer
 ; Returns: 1 = success, 0 = failure
+
+PUBLIC masm_mainwindow_load_layout
 masm_mainwindow_load_layout PROC USES rbx rsi rdi
     push rbp
     sub rsp, 32
@@ -791,37 +850,37 @@ masm_setup_default_docks PROC USES rbx rsi rdi
     sub rsp, 32
 
     ; Activity Bar - Left
-    lea rcx, [rel szActivityBar]
+    lea rcx, [szActivityBar]
     mov edx, DOCK_POS_LEFT
     xor r8, r8
     call masm_mainwindow_add_dock
 
     ; File Explorer - Left
-    lea rcx, [rel szFileExplorer]
+    lea rcx, [szFileExplorer]
     mov edx, DOCK_POS_LEFT
     xor r8, r8
     call masm_mainwindow_add_dock
 
     ; Terminal - Bottom
-    lea rcx, [rel szTerminal]
+    lea rcx, [szTerminal]
     mov edx, DOCK_POS_BOTTOM
     xor r8, r8
     call masm_mainwindow_add_dock
 
     ; Output - Bottom
-    lea rcx, [rel szOutput]
+    lea rcx, [szOutput]
     mov edx, DOCK_POS_BOTTOM
     xor r8, r8
     call masm_mainwindow_add_dock
 
     ; Problems - Bottom
-    lea rcx, [rel szProblems]
+    lea rcx, [szProblems]
     mov edx, DOCK_POS_BOTTOM
     xor r8, r8
     call masm_mainwindow_add_dock
 
     ; Debug - Right
-    lea rcx, [rel szDebug]
+    lea rcx, [szDebug]
     mov edx, DOCK_POS_RIGHT
     xor r8, r8
     call masm_mainwindow_add_dock
@@ -837,31 +896,31 @@ masm_setup_default_menus PROC USES rbx rsi rdi
     sub rsp, 32
 
     ; File menu
-    lea rcx, [rel szFileMenu]
+    lea rcx, [szFileMenu]
     mov edx, MENU_TYPE_FILE
     xor r8, r8
     call masm_mainwindow_add_menu_item
 
     ; Edit menu
-    lea rcx, [rel szEditMenu]
+    lea rcx, [szEditMenu]
     mov edx, MENU_TYPE_EDIT
     xor r8, r8
     call masm_mainwindow_add_menu_item
 
     ; View menu
-    lea rcx, [rel szViewMenu]
+    lea rcx, [szViewMenu]
     mov edx, MENU_TYPE_VIEW
     xor r8, r8
     call masm_mainwindow_add_menu_item
 
     ; Tools menu
-    lea rcx, [rel szToolsMenu]
+    lea rcx, [szToolsMenu]
     mov edx, MENU_TYPE_TOOLS
     xor r8, r8
     call masm_mainwindow_add_menu_item
 
     ; Help menu
-    lea rcx, [rel szHelpMenu]
+    lea rcx, [szHelpMenu]
     mov edx, MENU_TYPE_HELP
     xor r8, r8
     call masm_mainwindow_add_menu_item
@@ -872,4 +931,8 @@ masm_setup_default_menus PROC USES rbx rsi rdi
 masm_setup_default_menus ENDP
 
 END
+
+
+
+
 

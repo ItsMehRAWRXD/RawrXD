@@ -4,8 +4,8 @@
 
 option casemap:none
 
-EXTERN malloc:PROC
-EXTERN free:PROC
+extern masm_malloc : proc
+extern masm_free : proc
 EXTERN memset:PROC
 EXTERN memcpy:PROC
 EXTERN strlen:PROC
@@ -110,19 +110,19 @@ ai_code_assistant_create PROC
     
     ; Allocate assistant
     mov rcx, SIZEOF AI_CODE_ASSISTANT
-    call malloc
+    call masm_malloc
     mov r11, rax
     
     ; Allocate suggestions array
     mov rcx, MAX_SUGGESTIONS
     imul rcx, SIZEOF CODE_SUGGESTION
-    call malloc
+    call masm_malloc
     mov [r11 + AI_CODE_ASSISTANT.suggestions], rax
     
     ; Allocate search results array
     mov rcx, MAX_SEARCH_RESULTS
     imul rcx, SIZEOF SEARCH_RESULT
-    call malloc
+    call masm_malloc
     mov [r11 + AI_CODE_ASSISTANT.searchResults], rax
     
     ; Initialize
@@ -185,7 +185,7 @@ ai_get_code_completion PROC
     ; Store code context
     mov rcx, r10
     inc rcx                         ; +1 for null terminator
-    call malloc
+    call masm_malloc
     mov [r12 + CODE_SUGGESTION.context], rax
     
     mov rcx, r9
@@ -329,7 +329,7 @@ ai_search_files PROC
     mov rcx, r9
     call strlen
     inc rax
-    call malloc
+    call masm_malloc
     mov [r12 + SEARCH_RESULT.matchText], rax
     
     mov rcx, r9
@@ -340,7 +340,7 @@ ai_search_files PROC
     mov rcx, r10
     call strlen
     inc rax
-    call malloc
+    call masm_malloc
     mov [r12 + SEARCH_RESULT.filePath], rax
     
     mov rcx, r10
@@ -557,13 +557,13 @@ free_suggestions_local:
     mov rcx, [r13 + CODE_SUGGESTION.text]
     cmp rcx, 0
     je skip_suggestion_text_local
-    call free
+    call masm_free
     
 skip_suggestion_text_local:
     mov rcx, [r13 + CODE_SUGGESTION.context]
     cmp rcx, 0
     je skip_suggestion_context_local
-    call free
+    call masm_free
     
 skip_suggestion_context_local:
     inc r12d
@@ -573,38 +573,38 @@ suggestions_freed_local:
     mov rcx, [rbx + AI_CODE_ASSISTANT.suggestions]
     cmp rcx, 0
     je skip_suggestions_array_local
-    call free
+    call masm_free
     
 skip_suggestions_array_local:
     ; Free search results array
     mov rcx, [rbx + AI_CODE_ASSISTANT.searchResults]
     cmp rcx, 0
     je skip_search_array_local
-    call free
+    call masm_free
     
 skip_search_array_local:
     ; Free strings
     mov rcx, [rbx + AI_CODE_ASSISTANT.ollamaUrl]
     cmp rcx, 0
     je skip_url_local
-    call free
+    call masm_free
     
 skip_url_local:
     mov rcx, [rbx + AI_CODE_ASSISTANT.modelName]
     cmp rcx, 0
     je skip_model_local
-    call free
+    call masm_free
     
 skip_model_local:
     mov rcx, [rbx + AI_CODE_ASSISTANT.workspaceRoot]
     cmp rcx, 0
     je skip_workspace_local
-    call free
+    call masm_free
     
 skip_workspace_local:
     ; Free assistant
     mov rcx, rbx
-    call free
+    call masm_free
     
     pop rbx
     ret
@@ -621,4 +621,8 @@ ai_destroy ENDP
     szOptimization DB "optimization", 0
 
 END
+
+
+
+
 

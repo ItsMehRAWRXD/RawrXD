@@ -6,6 +6,13 @@
 #include <QJsonArray>
 #include <QDateTime>
 #include <QStandardPaths>
+#include <QThread>
+#include <limits>
+
+// Optional zlib support - compile-time detection
+#ifdef HAVE_ZLIB
+#include <zlib.h>
+#endif
 
 CheckpointManager::CheckpointManager(QObject* parent)
     : QObject(parent),
@@ -310,8 +317,82 @@ std::map<QString, bool> CheckpointManager::validateAllCheckpoints() const
 bool CheckpointManager::repairCheckpoint(const QString& checkpointId)
 {
     qDebug() << "[CheckpointManager] Repairing checkpoint:" << checkpointId;
-    // Placeholder for repair logic
-    return validateCheckpoint(checkpointId);
+    
+    // Real repair logic implementation
+    QString filePath = m_checkpointDir + "/" + checkpointId + ".ckpt";
+    QFile file(filePath);
+    
+    if (!file.exists()) {
+        qWarning() << "[CheckpointManager] Checkpoint file does not exist:" << checkpointId;
+        return false;
+    }
+    
+    // Step 1: Verify file can be opened
+    if (!file.open(QIODevice::ReadWrite)) {
+        qWarning() << "[CheckpointManager] Cannot open checkpoint file for repair:" << file.errorString();
+        return false;
+    }
+    
+    // Step 2: Check file size is reasonable
+    qint64 fileSize = file.size();
+    if (fileSize == 0) {
+        qWarning() << "[CheckpointManager] Checkpoint file is empty - cannot repair";
+        file.close();
+        return false;
+    }
+    
+    // Step 3: Read file content to verify integrity
+    QByteArray content = file.readAll();
+    file.close();
+    
+    // Step 4: Attempt to parse the checkpoint structure
+    // Checkpoints have: modelWeights + optimizerState + schedulerState + trainingState + configJson
+    // We'll verify the JSON config at the end is valid
+    
+    bool repairNeeded = false;
+    
+    // Try to find valid JSON at the end (config data)
+    int jsonStart = content.lastIndexOf('{');
+    int jsonEnd = content.lastIndexOf('}');
+    
+    if (jsonStart >= 0 && jsonEnd > jsonStart) {
+        QByteArray jsonPart = content.mid(jsonStart, jsonEnd - jsonStart + 1);
+        QJsonParseError parseError;
+        QJsonDocument doc = QJsonDocument::fromJson(jsonPart, &parseError);
+        
+        if (doc.isNull()) {
+            qWarning() << "[CheckpointManager] Config JSON is corrupted:" << parseError.errorString();
+            // Attempt repair by creating minimal valid config
+            QJsonObject minimalConfig;
+            minimalConfig["epoch"] = 0;
+            minimalConfig["step"] = 0;
+            minimalConfig["repaired"] = true;
+            minimalConfig["repair_timestamp"] = QDateTime::currentDateTime().toString(Qt::ISODate);
+            
+            QJsonDocument newDoc(minimalConfig);
+            QByteArray newJson = newDoc.toJson(QJsonDocument::Compact);
+            
+            // Write repaired checkpoint
+            if (file.open(QIODevice::WriteOnly)) {
+                file.write(content.left(jsonStart));
+                file.write(newJson);
+                file.close();
+                repairNeeded = true;
+                qInfo() << "[CheckpointManager] Repaired corrupted config in checkpoint:" << checkpointId;
+            }
+        }
+    }
+    
+    // Step 5: Validate the repaired checkpoint
+    bool isValid = validateCheckpoint(checkpointId);
+    
+    if (isValid) {
+        qInfo() << "[CheckpointManager] Checkpoint repair successful:" << checkpointId;
+    } else {
+        qWarning() << "[CheckpointManager] Checkpoint repair failed - file may be severely corrupted";
+    }
+    
+    return isValid;
 }
 
 uint64_t CheckpointManager::getTotalCheckpointSize() const
@@ -392,8 +473,93 @@ void CheckpointManager::setDistributedInfo(int rank, int worldSize)
 
 bool CheckpointManager::synchronizeDistributedCheckpoints()
 {
-    qDebug() << "[CheckpointManager] Synchronizing distributed checkpoints";
-    // Placeholder for distributed sync logic
+    qDebug() << "[CheckpointManager] Synchronizing distributed checkpoints - rank" 
+             << m_rank << "of" << m_worldSize;
+    
+    // Real distributed synchronization implementation
+    // This handles multi-GPU/multi-node checkpoint consistency
+    
+    if (m_worldSize <= 1) {
+        // Single node - no sync needed
+        qDebug() << "[CheckpointManager] Single node mode - no sync required";
+        return true;
+    }
+    
+    // Step 1: Collect all checkpoint IDs from this rank
+    QStringList localCheckpoints;
+    for (const auto& index : m_checkpointIndex) {
+        localCheckpoints.append(index.checkpointId);
+    }
+    
+    // Step 2: In distributed mode, we need to ensure all ranks have same checkpoints
+    // For now, implement file-based synchronization (shared filesystem assumed)
+    
+    QString syncDir = m_checkpointDir + "/sync";
+    QDir().mkpath(syncDir);
+    
+    // Write this rank's checkpoint list
+    QString myListFile = syncDir + QString("/rank_%1_checkpoints.json").arg(m_rank);
+    QFile listFile(myListFile);
+    if (listFile.open(QIODevice::WriteOnly)) {
+        QJsonObject myData;
+        myData["rank"] = m_rank;
+        myData["timestamp"] = QDateTime::currentDateTime().toString(Qt::ISODate);
+        myData["checkpoints"] = QJsonArray::fromStringList(localCheckpoints);
+        myData["best_checkpoint"] = m_bestCheckpointId;
+        
+        QJsonDocument doc(myData);
+        listFile.write(doc.toJson());
+        listFile.close();
+    }
+    
+    // Step 3: Wait briefly for other ranks (simple barrier)
+    // In production, use MPI_Barrier or NCCL barrier
+    QThread::msleep(100 * m_worldSize);
+    
+    // Step 4: Read other ranks' checkpoint lists
+    QSet<QString> allCheckpoints;
+    QString globalBestCheckpoint;
+    double bestValidationLoss = std::numeric_limits<double>::max();
+    
+    for (int rank = 0; rank < m_worldSize; ++rank) {
+        QString rankFile = syncDir + QString("/rank_%1_checkpoints.json").arg(rank);
+        QFile rankData(rankFile);
+        if (rankData.open(QIODevice::ReadOnly)) {
+            QJsonDocument doc = QJsonDocument::fromJson(rankData.readAll());
+            QJsonObject obj = doc.object();
+            
+            QJsonArray checkpoints = obj["checkpoints"].toArray();
+            for (const auto& cp : checkpoints) {
+                allCheckpoints.insert(cp.toString());
+            }
+            
+            // Track best checkpoint across all ranks
+            QString rankBest = obj["best_checkpoint"].toString();
+            if (!rankBest.isEmpty()) {
+                auto meta = getCheckpointMetadata(rankBest);
+                if (meta.validationLoss < bestValidationLoss) {
+                    bestValidationLoss = meta.validationLoss;
+                    globalBestCheckpoint = rankBest;
+                }
+            }
+            
+            rankData.close();
+        }
+    }
+    
+    // Step 5: Update this rank's best checkpoint to global best
+    if (!globalBestCheckpoint.isEmpty() && globalBestCheckpoint != m_bestCheckpointId) {
+        qInfo() << "[CheckpointManager] Updating best checkpoint from rank sync:" 
+                << globalBestCheckpoint << "with loss" << bestValidationLoss;
+        m_bestCheckpointId = globalBestCheckpoint;
+    }
+    
+    // Step 6: Log synchronization results
+    qInfo() << "[CheckpointManager] Distributed sync complete:"
+            << "local=" << localCheckpoints.size()
+            << "global=" << allCheckpoints.size()
+            << "best=" << globalBestCheckpoint;
+    
     return true;
 }
 
@@ -459,15 +625,70 @@ QByteArray CheckpointManager::compressState(const QByteArray& data, CompressionL
         return data;
     }
     
-    // Placeholder for zlib compression
-    // In production, use zlib or similar
-    return data;
+    // Real compression implementation using Qt's built-in qCompress
+    // This uses zlib internally when available
+    int compressionLevel = 6; // Default balanced compression
+    
+    // Map CompressionLevel enum to zlib compression level
+    // Assume: None=0, Low=1-3, Medium=4-6, High=7-9
+    int levelInt = static_cast<int>(level);
+    if (levelInt <= 0) {
+        return data; // No compression
+    } else if (levelInt <= 3) {
+        compressionLevel = 1; // Fast/Low compression
+    } else if (levelInt <= 6) {
+        compressionLevel = 6; // Medium/Normal compression  
+    } else {
+        compressionLevel = 9; // Best/High compression
+    }
+    
+    // Qt's qCompress uses zlib deflate format
+    QByteArray compressed = qCompress(data, compressionLevel);
+    
+    if (compressed.isEmpty()) {
+        qWarning() << "[CheckpointManager] Compression failed, returning uncompressed data";
+        return data;
+    }
+    
+    // Log compression ratio for observability
+    double ratio = 100.0 * (1.0 - (double)compressed.size() / data.size());
+    qDebug() << "[CheckpointManager] Compressed checkpoint:"
+             << "original=" << data.size() << "bytes"
+             << "compressed=" << compressed.size() << "bytes"
+             << "ratio=" << QString::number(ratio, 'f', 1) << "%";
+    
+    return compressed;
 }
 
 QByteArray CheckpointManager::decompressState(const QByteArray& data)
 {
-    // Placeholder for decompression
-    return data;
+    if (data.isEmpty()) {
+        return data;
+    }
+    
+    // Qt's qUncompress handles zlib-compressed data
+    // It also handles uncompressed data gracefully
+    
+    // Check if data looks compressed (Qt's qCompress adds a 4-byte size header)
+    if (data.size() < 4) {
+        return data; // Too small to be compressed
+    }
+    
+    // Try to decompress
+    QByteArray decompressed = qUncompress(data);
+    
+    if (decompressed.isEmpty()) {
+        // Decompression failed - data might not be compressed
+        // or might be corrupted. Return original data.
+        qDebug() << "[CheckpointManager] Decompression returned empty - data may not be compressed";
+        return data;
+    }
+    
+    qDebug() << "[CheckpointManager] Decompressed checkpoint:"
+             << "compressed=" << data.size() << "bytes"
+             << "decompressed=" << decompressed.size() << "bytes";
+    
+    return decompressed;
 }
 
 bool CheckpointManager::writeCheckpointToDisk(const QString& checkpointId,
@@ -502,14 +723,85 @@ bool CheckpointManager::readCheckpointFromDisk(const QString& checkpointId,
     QFile file(filePath);
     
     if (!file.open(QIODevice::ReadOnly)) {
+        qWarning() << "[CheckpointManager] Failed to open checkpoint file:" << filePath;
         return false;
     }
     
     QByteArray data = file.readAll();
     file.close();
     
-    // Placeholder: in production, properly deserialize
-    state.modelWeights = data;
+    if (data.isEmpty()) {
+        qWarning() << "[CheckpointManager] Checkpoint file is empty:" << filePath;
+        return false;
+    }
+    
+    // Real deserialization implementation
+    // Checkpoint format: [modelWeights][optimizerState][schedulerState][trainingState][configJson]
+    // Each section is prefixed with a 8-byte size header
+    
+    qint64 offset = 0;
+    
+    auto readSection = [&data, &offset]() -> QByteArray {
+        if (offset + 8 > data.size()) return QByteArray();
+        
+        qint64 sectionSize = *reinterpret_cast<const qint64*>(data.constData() + offset);
+        offset += 8;
+        
+        if (sectionSize <= 0 || offset + sectionSize > data.size()) {
+            // Fall back to reading remaining data as single section
+            return data.mid(offset);
+        }
+        
+        QByteArray section = data.mid(offset, sectionSize);
+        offset += sectionSize;
+        return section;
+    };
+    
+    // Try structured format first
+    state.modelWeights = readSection();
+    
+    if (state.modelWeights.isEmpty()) {
+        // Fallback: treat entire file as model weights (legacy format)
+        qDebug() << "[CheckpointManager] Using legacy checkpoint format";
+        
+        // Try to extract JSON config from the end
+        int jsonStart = data.lastIndexOf('{');
+        int jsonEnd = data.lastIndexOf('}');
+        
+        if (jsonStart >= 0 && jsonEnd > jsonStart) {
+            QByteArray jsonPart = data.mid(jsonStart, jsonEnd - jsonStart + 1);
+            QJsonDocument doc = QJsonDocument::fromJson(jsonPart);
+            if (!doc.isNull()) {
+                state.config = doc.object();
+                state.modelWeights = data.left(jsonStart);
+            } else {
+                state.modelWeights = data;
+            }
+        } else {
+            state.modelWeights = data;
+        }
+        
+        return true;
+    }
+    
+    // Continue reading structured sections
+    state.optimizerState = readSection();
+    state.schedulerState = readSection();
+    state.trainingState = readSection();
+    
+    // Read config JSON
+    QByteArray configData = readSection();
+    if (!configData.isEmpty()) {
+        QJsonDocument doc = QJsonDocument::fromJson(configData);
+        if (!doc.isNull()) {
+            state.config = doc.object();
+        }
+    }
+    
+    qDebug() << "[CheckpointManager] Loaded checkpoint:" << checkpointId
+             << "weights=" << state.modelWeights.size()
+             << "optimizer=" << state.optimizerState.size();
+    
     return true;
 }
 

@@ -108,6 +108,15 @@ public:
                        const QString& apiKey = QString());
 
     /**
+     * @brief Set the endpoint URL for the LLM service
+     * @param endpoint New endpoint URL
+     *
+     * This allows dynamic switching of the endpoint, for example
+     * during hot patching. The backend type remains unchanged.
+     */
+    void setEndpoint(const QString& endpoint) { setLLMBackend(m_backend, endpoint, m_apiKey); }
+
+    /**
      * @brief Get current LLM backend type
      * @return Backend name ("ollama", "claude", "openai")
      */

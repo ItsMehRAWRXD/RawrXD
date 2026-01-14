@@ -98,6 +98,9 @@ EXTERN WriteFile:PROC
 EXTERN CloseHandle:PROC
 EXTERN GetFileSize:PROC
 EXTERN lstrcpyA:PROC
+EXTERN lstrcatA:PROC
+EXTERN ui_file_open_dialog:PROC
+EXTERN ui_file_save:PROC
 EXTERN OutputDebugStringA:PROC
 EXTERN LoadLibraryA:PROC
 EXTERN ShowWindow:PROC
@@ -445,7 +448,30 @@ OPENFILENAMEA ends
     str_agent_enabled   BYTE "Agent mode enabled",0
     str_agent_disabled  BYTE "Agent mode disabled",0
     szAllFilesFilter    BYTE "All Files",0,"*.*",0,0
-    
+
+    ; Debug command strings
+    szBreakCmd       BYTE "break",0
+    szContinueCmd    BYTE "continue",0
+    szStepCmd        BYTE "step",0
+    szNextCmd        BYTE "next",0
+    szUnknownDebugCmd BYTE "Unknown debug command",0
+    szBreakpointSet  BYTE "Breakpoint set",0
+    szDebugContinued BYTE "Execution resumed",0
+    szDebugStepped   BYTE "Stepped",0
+    szEmptyString    BYTE 0
+
+    ; File API function pointers
+    find_first_file_w_addr QWORD 0
+    find_next_file_w_addr QWORD 0
+    find_close_addr QWORD 0
+
+    ; Debug window handles
+    hwnd_debug_output QWORD 0
+
+    ; Search constants
+    search_wildcard BYTE "\*.*",0
+    current_dir     BYTE ".",0
+
     dbg_ui_start        BYTE "UI: Starting...",13,10,0
     dbg_ui_reg_fail     BYTE "UI: RegisterClassExA failed",13,10,0
     dbg_ui_create_fail  BYTE "UI: CreateWindowExA failed",13,10,0
@@ -1860,7 +1886,6 @@ ui_create_terminal PROC
     add rsp, 40
     ret
 ui_create_terminal ENDP
-
 PUBLIC ui_create_chat
 ALIGN 16
 ui_create_chat PROC
@@ -2681,7 +2706,7 @@ wm_search_box:
     call SendMessageA
     
     ; Start recursive search from current directory
-    lea rcx, [rip + current_dir]        ; Start at "."
+    lea rcx, current_dir                ; Start at "."
     lea rdx, [rsp + 48]                 ; Pattern buffer
     xor r8d, r8d                        ; Depth counter = 0
     call file_search_recursive
@@ -2721,13 +2746,13 @@ file_search_recursive PROC
     
     ; Add \*.* to path
     lea rcx, [rsp + 8]
-    lea rdx, [rip + search_wildcard]
+    lea rdx, search_wildcard
     call strcat_masm
     
     ; FindFirstFileW
     lea rcx, [rsp + 256 - 560]          ; WIN32_FIND_DATA buffer
     mov rdx, [rsp + 8]                  ; Search path
-    mov rax, [rip + find_first_file_w_addr]
+    mov rax, find_first_file_w_addr
     call rax
     
     cmp rax, -1
@@ -2735,8 +2760,10 @@ file_search_recursive PROC
     
     mov r12d, eax                       ; Save search handle
     
-search_loop_local:\n    ; Check if filename matches pattern (case-insensitive)
+search_loop_local:
+    ; Check if filename matches pattern (case-insensitive)
     lea rcx, [rsp + 256 - 560 + 44]     ; cFileName field
+
     mov rdx, r13                        ; Pattern
     call strstr_case_insensitive
     test rax, rax
@@ -2749,14 +2776,14 @@ search_next_file_local:
     ; FindNextFileW
     mov ecx, r12d                       ; Search handle
     lea rdx, [rsp + 256 - 560]          ; Find data
-    mov rax, [rip + find_next_file_w_addr]
+    mov rax, find_next_file_w_addr
     call rax
     test eax, eax
     jnz search_loop_local
     
     ; Close search handle
     mov ecx, r12d
-    mov rax, [rip + find_close_addr]
+    mov rax, find_close_addr
     call rax
     
 search_exit_local:
@@ -2769,6 +2796,8 @@ search_exit_local:
 file_search_recursive ENDP
 
 ; Case-insensitive string search helper
+; PUBLIC: strstr_case_insensitive(haystack: rcx, needle: rdx) -> rax (pointer to match or NULL)
+PUBLIC strstr_case_insensitive
 strstr_case_insensitive PROC
     ; rcx = haystack, rdx = needle
     ; Returns rax = pointer to match or NULL
@@ -2823,10 +2852,6 @@ not_found_local:
     ret
 strstr_case_insensitive ENDP
 
-; String constants for search
-search_wildcard db "\*.*",0
-current_dir     db ".",0
-
 wm_problems_list:
     ; Handle problems list selection - parse error and navigate
     push rbx
@@ -2879,7 +2904,7 @@ parse_line_local:
     
     sub al, '0'
     cmp al, 9
-    ja .have_line
+    ja have_line_local
     
     ; Accumulate digit
     imul r8d, 10
@@ -2909,7 +2934,7 @@ get_problem_text PROC
     ; rcx = buffer, rdx = buffer size, r8d = problem index
     ; Returns text in buffer
     ; Simplified: just copy placeholder
-    lea rax, [rip + placeholder_error]
+    lea rax, placeholder_error
     mov rsi, rax
     mov rdi, rcx
     mov ecx, 256
@@ -2955,55 +2980,55 @@ wm_debug_console:
     lea rsi, [rsp + 8]
     
     ; Check for "break" command
-    lea rcx, [rip + szBreakCmd]
+    lea rcx, szBreakCmd
     mov rdx, rsi
     call strstr_masm
     test rax, rax
     jnz cmd_break_local
     
     ; Check for "continue" command
-    lea rcx, [rip + szContinueCmd]
+    lea rcx, szContinueCmd
     mov rdx, rsi
     call strstr_masm
     test rax, rax
     jnz cmd_continue_local
     
     ; Check for "step" command
-    lea rcx, [rip + szStepCmd]
+    lea rcx, szStepCmd
     mov rdx, rsi
     call strstr_masm
     test rax, rax
     jnz cmd_step_local
     
     ; Check for "next" command
-    lea rcx, [rip + szNextCmd]
+    lea rcx, szNextCmd
     mov rdx, rsi
     call strstr_masm
     test rax, rax
     jnz cmd_next_local
     
     ; Unknown command
-    lea rcx, [rip + szUnknownDebugCmd]
+    lea rcx, szUnknownDebugCmd
     jmp cmd_output_local
     
 cmd_break_local:
     call debug_set_breakpoint
-    lea rcx, [rip + szBreakpointSet]
+    lea rcx, szBreakpointSet
     jmp cmd_output_local
     
 cmd_continue_local:
     call debug_resume
-    lea rcx, [rip + szDebugContinued]
+    lea rcx, szDebugContinued
     jmp cmd_output_local
     
 cmd_step_local:
     call debug_step_into
-    lea rcx, [rip + szDebugStepped]
+    lea rcx, szDebugStepped
     jmp cmd_output_local
     
 cmd_next_local:
     call debug_step_over
-    lea rcx, [rip + szDebugStepped]
+    lea rcx, szDebugStepped
     
 cmd_output_local:
     ; Display result in debug output window
@@ -3018,7 +3043,7 @@ cmd_output_local:
     mov rcx, hwnd_debug_console
     mov rdx, WM_SETTEXT
     xor r8, r8
-    lea r9, [rip + szEmptyString]
+    lea r9, szEmptyString
     call SendMessageA
     
     lea rcx, dbg_debug_cmd_executed
@@ -3034,29 +3059,107 @@ cmd_output_local:
 debug_set_breakpoint PROC
     ret
 debug_set_breakpoint ENDP
-
 debug_resume PROC
     ret
 debug_resume ENDP
-
 debug_step_into PROC
     ret
 debug_step_into ENDP
-
 debug_step_over PROC
     ret
 debug_step_over ENDP
 
-; Debug command strings
-szBreakCmd       db "break",0
-szContinueCmd    db "continue",0
-szStepCmd        db "step",0
-szNextCmd        db "next",0
-szUnknownDebugCmd db "Unknown debug command",0
-szBreakpointSet  db "Breakpoint set",0
-szDebugContinued db "Execution resumed",0
-szDebugStepped   db "Stepped",0
-szEmptyString    db 0
+; Implement missing string functions
+strcpy_masm PROC
+    ; rcx = dest, rdx = src
+    push rsi
+    push rdi
+    mov rsi, rdx
+    mov rdi, rcx
+strcpy_loop:
+    mov al, byte ptr [rsi]
+    mov byte ptr [rdi], al
+    test al, al
+    jz strcpy_done
+    inc rsi
+    inc rdi
+    jmp strcpy_loop
+strcpy_done:
+    mov rax, rcx
+    pop rdi
+    pop rsi
+    ret
+strcpy_masm ENDP
+
+strcat_masm PROC
+    ; rcx = dest, rdx = src
+    push rsi
+    push rdi
+    mov rdi, rcx
+    ; Find end of dest
+strcat_find_end:
+    cmp byte ptr [rdi], 0
+    je strcat_copy
+    inc rdi
+    jmp strcat_find_end
+strcat_copy:
+    mov rsi, rdx
+strcat_loop:
+    mov al, byte ptr [rsi]
+    mov byte ptr [rdi], al
+    test al, al
+    jz strcat_done
+    inc rsi
+    inc rdi
+    jmp strcat_loop
+strcat_done:
+    mov rax, rcx
+    pop rdi
+    pop rsi
+    ret
+strcat_masm ENDP
+
+strstr_masm PROC
+    ; rcx = haystack, rdx = needle
+    push rsi
+    push rdi
+    push rbx
+    mov rsi, rcx
+    mov rdi, rdx
+    ; Check if needle is empty
+    cmp byte ptr [rdi], 0
+    je strstr_empty
+strstr_outer:
+    mov rbx, rsi
+    mov rdx, rdi
+strstr_inner:
+    mov al, byte ptr [rdx]
+    test al, al
+    jz strstr_found
+    cmp byte ptr [rbx], al
+    jne strstr_next
+    inc rbx
+    inc rdx
+    jmp strstr_inner
+strstr_next:
+    cmp byte ptr [rsi], 0
+    je strstr_not_found
+    inc rsi
+    jmp strstr_outer
+strstr_found:
+    mov rax, rsi
+    jmp strstr_done
+strstr_empty:
+    mov rax, rcx
+    jmp strstr_done
+strstr_not_found:
+    xor rax, rax
+strstr_done:
+    pop rbx
+    pop rdi
+    pop rsi
+    ret
+strstr_masm ENDP
 
 wm_chat_clear:
     ; Clear chat history
@@ -4510,7 +4613,6 @@ on_close_mem:
     mov rax, 1
     ret
 hotpatch_memory_dialog_proc ENDP
-
 PUBLIC hotpatch_byte_dialog_proc
 ALIGN 16
 hotpatch_byte_dialog_proc PROC USES rbx rsi rdi, hwnd:QWORD, msg:DWORD, wparam:QWORD, lparam:QWORD
@@ -4550,7 +4652,6 @@ on_close_byte:
     mov rax, 1
     ret
 hotpatch_byte_dialog_proc ENDP
-
 PUBLIC hotpatch_server_dialog_proc
 ALIGN 16
 hotpatch_server_dialog_proc PROC USES rbx rsi rdi, hwnd:QWORD, msg:DWORD, wparam:QWORD, lparam:QWORD
@@ -4683,4 +4784,8 @@ find_in_files ENDP
     szLogSearchStart    BYTE "UI: Starting file search...",0
 
 END
+
+
+
+
 

@@ -1,0 +1,30 @@
+global:
+  scrape_interval: 30s
+  evaluation_interval: 30s
+  external_labels:
+    cluster: 'rawrxd-production'
+    environment: 'production'
+
+scrape_configs:
+  - job_name: 'rawrxd-agentic-ide'
+    static_configs:
+      - targets: ['rawrxd-agentic-ide:9090']
+        labels:
+          service: 'agentic-ide'
+          tier: 'application'
+    
+    metric_relabel_configs:
+      # Drop high-cardinality metrics in production
+      - source_labels: [__name__]
+        regex: 'rawrxd_(request|inference)_duration_bucket'
+        action: drop
+      
+      # Rename metrics for consistency
+      - source_labels: [__name__]
+        regex: 'rawrxd_(.+)'
+        target_label: __name__
+        replacement: 'app_${1}'
+
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

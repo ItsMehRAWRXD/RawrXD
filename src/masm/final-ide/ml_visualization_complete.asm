@@ -219,7 +219,6 @@ szChartTypeNames:
 ;==========================================================================
 ; PUBLIC API
 ;==========================================================================
-
 PUBLIC visualization_init
 PUBLIC visualization_create_window
 PUBLIC visualization_render_confusion
@@ -416,56 +415,47 @@ visualization_render_roc ENDP
 ;==========================================================================
 ; Stub implementations for remaining visualization functions
 ;==========================================================================
-
 visualization_render_pr PROC
     ; rcx = pr_curve_ptr
     mov eax, 1
     ret
 visualization_render_pr ENDP
-
 visualization_render_feature_importance PROC
     ; rcx = feature_importance_ptr
     mov eax, 1
     ret
 visualization_render_feature_importance ENDP
-
 visualization_render_embedding PROC
     ; rcx = embedding_ptr
     mov eax, 1
     ret
 visualization_render_embedding ENDP
-
 visualization_render_attention PROC
     ; rcx = attention_heatmap_ptr
     mov eax, 1
     ret
 visualization_render_attention ENDP
-
 visualization_render_loss_curve PROC
     ; rcx = loss_array_ptr, rdx = point_count
     mov eax, 1
     ret
 visualization_render_loss_curve ENDP
-
 visualization_export_chart PROC
     ; rcx = output_path, edx = format (PNG/SVG/PDF)
     mov eax, 1
     ret
 visualization_export_chart ENDP
-
 visualization_set_color_scheme PROC
     ; ecx = scheme (COLOR_VIRIDIS, etc)
     mov g_visualization_studio.color_scheme, ecx
     mov eax, 1
     ret
 visualization_set_color_scheme ENDP
-
 visualization_zoom PROC
     ; rcx = zoom_factor (1.1 for 10% zoom in)
     mov eax, 1
     ret
 visualization_zoom ENDP
-
 visualization_pan PROC
     ; ecx = dx, edx = dy
     mov eax, 1
@@ -475,54 +465,49 @@ visualization_pan ENDP
 ;==========================================================================
 ; Helper functions
 ;==========================================================================
-
 normalize_confusion_matrix PROC
     ; rcx = confusion_matrix_ptr
     ; Normalize each row to sum to 1
     ret
 normalize_confusion_matrix ENDP
-
 compute_confusion_metrics PROC
     ; rcx = confusion_matrix_ptr
     ; Calculate precision, recall, f1 for each class
     ret
 compute_confusion_metrics ENDP
-
 compute_roc_auc PROC
     ; rcx = roc_curve_ptr
     ; Calculate area under ROC curve
     ret
 compute_roc_auc ENDP
-
 register_visualization_class PROC
     ; rcx = class name
     ret
 register_visualization_class ENDP
-
 register_canvas_class PROC
     ; rcx = class name
     ret
 register_canvas_class ENDP
-
 create_canvas_area PROC
     ; rcx = parent hwnd
     ret
 create_canvas_area ENDP
-
 create_control_panel PROC
     ; rcx = parent hwnd
     ret
 create_control_panel ENDP
-
 create_legend_panel PROC
     ; rcx = parent hwnd
     ret
 create_legend_panel ENDP
-
 create_toolbar PROC
     ; rcx = parent hwnd
     ret
 create_toolbar ENDP
 
 end
+
+
+
+
 

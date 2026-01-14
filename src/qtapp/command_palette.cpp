@@ -1,4 +1,5 @@
 #include "command_palette.hpp"
+#include "integration/ProdIntegration.h"
 #include <QApplication>
 #include <QScreen>
 #include <QVBoxLayout>
@@ -16,6 +17,7 @@ CommandPalette::CommandPalette(QWidget* parent)
 }
 
 void CommandPalette::setupUI() {
+    RAWRXD_TIMED_FUNC();
     auto* layout = new QVBoxLayout(this);
     layout->setContentsMargins(10, 10, 10, 10);
     layout->setSpacing(10);
@@ -42,10 +44,12 @@ void CommandPalette::registerCommand(const Command& cmd) {
 }
 
 void CommandPalette::show() {
-    QWidget::show();
+    updateResults("");
     m_searchBox->clear();
     m_searchBox->setFocus();
-    
+
+    // Size and position before showing to avoid a zero-sized popup
+    adjustSize();
     if (parentWidget()) {
         auto parentCenter = parentWidget()->geometry().center();
         move(parentCenter.x() - width() / 2, parentCenter.y() - height() / 2);
@@ -53,8 +57,10 @@ void CommandPalette::show() {
         auto screenCenter = QApplication::primaryScreen()->geometry().center();
         move(screenCenter.x() - width() / 2, screenCenter.y() - height() / 2);
     }
-    
-    updateResults("");
+
+    QWidget::show();
+    raise();
+    activateWindow();
 }
 
 void CommandPalette::hide() {
@@ -71,6 +77,7 @@ void CommandPalette::onItemActivated(QListWidgetItem* item) {
 }
 
 void CommandPalette::executeSelectedCommand() {
+    RAWRXD_TIMED_FUNC();
     auto* item = m_resultsList->currentItem();
     if (!item) return;
     
@@ -85,6 +92,7 @@ void CommandPalette::executeSelectedCommand() {
 }
 
 void CommandPalette::updateResults(const QString& filter) {
+    RAWRXD_TIMED_FUNC();
     QElapsedTimer timer;
     timer.start();
     
@@ -109,11 +117,12 @@ void CommandPalette::updateResults(const QString& filter) {
 
 void CommandPalette::applyDarkTheme() {
     setStyleSheet(
-        "QWidget { background-color: #252526; color: #cccccc; border: 1px solid #454545; }"
-        "QLineEdit { background-color: #3c3c3c; border: 1px solid #007acc; padding: 5px; color: white; selection-background-color: #007acc; }"
-        "QListWidget { background-color: #252526; border: none; outline: none; }"
-        "QListWidget::item { padding: 8px; border-bottom: 1px solid #333; }"
-        "QListWidget::item:selected { background-color: #094771; color: white; }"
+        "QWidget { background-color: #1e1e1e; color: #d4d4d4; border: 1px solid #3a3a3a; font-family: 'Consolas', 'Cascadia Code', monospace; font-size: 12px; }"
+        "QLineEdit { background-color: #2d2d30; border: 1px solid #007acc; padding: 6px 8px; color: #ffffff; selection-background-color: #007acc; border-radius: 4px; }"
+        "QListWidget { background-color: #1e1e1e; border: 1px solid #2b2b2b; outline: none; }"
+        "QListWidget::item { padding: 8px 10px; border-bottom: 1px solid #2b2b2b; }"
+        "QListWidget::item:selected { background-color: #094771; color: #ffffff; }"
+        "QLabel { color: #9e9e9e; }"
     );
 }
 

@@ -38,6 +38,8 @@ extern ReleaseDC : proc
 extern InvalidateRect : proc
 extern BeginPaint : proc
 extern EndPaint : proc
+extern SetTimer : proc
+extern KillTimer : proc
 extern FillRect : proc
 extern DrawTextW : proc
 extern malloc : proc

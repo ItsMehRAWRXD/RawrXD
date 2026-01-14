@@ -14,8 +14,8 @@ EXTERN asm_free:PROC
 EXTERN asm_realloc:PROC
 
 ; Standard malloc(size: rcx)
-PUBLIC malloc
-malloc PROC
+PUBLIC masm_malloc
+masm_malloc PROC
     push rdx
     sub rsp, 32
     
@@ -25,20 +25,20 @@ malloc PROC
     add rsp, 32
     pop rdx
     ret
-malloc ENDP
+masm_malloc ENDP
 
 ; Standard free(ptr: rcx)
-PUBLIC free
-free PROC
+PUBLIC masm_free
+masm_free PROC
     sub rsp, 32
     call asm_free
     add rsp, 32
     ret
-free ENDP
+masm_free ENDP
 
 ; Standard realloc(ptr: rcx, size: rdx)
-PUBLIC realloc
-realloc PROC
+PUBLIC masm_realloc
+masm_realloc PROC
     push r8
     sub rsp, 32
     
@@ -48,7 +48,11 @@ realloc PROC
     add rsp, 32
     pop r8
     ret
-realloc ENDP
+masm_realloc ENDP
 
 END
+
+
+
+
 

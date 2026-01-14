@@ -836,3 +836,4 @@ float ModelTrainer::calculatePerplexity()
     
     return perplexity;
 }
+#include "moc_model_trainer.cpp"

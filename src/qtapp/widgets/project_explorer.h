@@ -36,7 +36,13 @@
 #include "../utils/qt_directory_manager.h"
 #include <memory>
 
-namespace RawrXD {
+// Bring RawrXD types into global scope for this header
+using RawrXD::ProjectMetadata;
+using RawrXD::ProjectDetector;
+using RawrXD::ProjectType;
+using RawrXD::IFileWriter;
+using RawrXD::IDirectoryManager;
+using RawrXD::FileOperationResult;
 
 // Forward declarations
 class ProjectExplorerModel;
@@ -162,6 +168,12 @@ signals:
      * \param filePath Absolute path to file
      */
     void fileClicked(const QString& filePath);
+
+    /**
+     * \brief Emitted when file is selected
+     * \param filePath Absolute path to file
+     */
+    void fileSelected(const QString& filePath);
     
     /**
      * \brief Emitted when file is created
@@ -344,4 +356,3 @@ private:
     static bool matchPattern(const QString& filePath, const QString& pattern);
 };
 
-} // namespace RawrXD

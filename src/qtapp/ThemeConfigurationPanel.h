@@ -86,6 +86,7 @@ private:
     void createUIColorsTab(QWidget* parent);
     void createOpacityTab(QWidget* parent);
     void createTransparencyTab(QWidget* parent);
+    void createLanguageTab(QWidget* parent);
     void connectSignals();
     void loadCurrentTheme();
     void updatePreview();
@@ -126,6 +127,12 @@ private:
     // Preview Widget
     QWidget* m_previewWidget;
     QLabel* m_previewLabel;
+
+    struct LanguageOpacityControl {
+        QSlider* slider = nullptr;
+        QDoubleSpinBox* spin = nullptr;
+    };
+    QMap<QString, LanguageOpacityControl> m_languageOpacity;
 };
 
 } // namespace RawrXD

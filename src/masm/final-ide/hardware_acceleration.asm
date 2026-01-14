@@ -5,8 +5,8 @@
 
 option casemap:none
 
-EXTERN malloc:PROC
-EXTERN free:PROC
+extern masm_malloc : proc
+extern masm_free : proc
 EXTERN memset:PROC
 EXTERN console_log:PROC
 
@@ -161,7 +161,7 @@ detect_simd_capabilities PROC
     
     ; Allocate SIMD_CONTEXT
     mov rcx, SIZEOF SIMD_CONTEXT
-    call malloc
+    call masm_malloc
     
     mov rbx, rax                   ; rbx = context
     mov r12, 0                     ; r12 = supported levels
@@ -272,7 +272,7 @@ vector_multiply_float32 PROC
     push rax
     
     mov rcx, rax
-    call malloc
+    call masm_malloc
     
     mov rbx, rax                   ; rbx = result
     pop r9                         ; r9 = total bytes
@@ -354,7 +354,7 @@ vector_normalize_float32 PROC
     push rax
     
     mov r8, rax
-    call malloc
+    call masm_malloc
     
     mov r9, rax                    ; r9 = result
     pop r8
@@ -397,20 +397,20 @@ create_batch_renderer PROC
     mov r13, rdx                   ; r13 = maxIndices
     
     mov rcx, SIZEOF BATCH_RENDER
-    call malloc
+    call masm_malloc
     
     mov rbx, rax                   ; rbx = batch
     
     ; Allocate vertex array
     mov rcx, r12
     imul rcx, SIZEOF VERTEX_DATA
-    call malloc
+    call masm_malloc
     mov [rbx + BATCH_RENDER.vertices], rax
     
     ; Allocate index array
     mov rcx, r13
     imul rcx, 4                    ; sizeof(DWORD)
-    call malloc
+    call masm_malloc
     mov [rbx + BATCH_RENDER.indices], rax
     
     ; Initialize matrices to identity
@@ -579,19 +579,19 @@ free_batch_renderer PROC
     mov rcx, [rbx + BATCH_RENDER.vertices]
     cmp rcx, 0
     je skip_vert_local
-    call free
+    call masm_free
     
 skip_vert_local:
     ; Free index array
     mov rcx, [rbx + BATCH_RENDER.indices]
     cmp rcx, 0
     je skip_idx_local
-    call free
+    call masm_free
     
 skip_idx_local:
     ; Free batch structure
     mov rcx, rbx
-    call free
+    call masm_free
     
     pop rbx
     ret
@@ -608,7 +608,7 @@ PUBLIC create_gpu_device
 create_gpu_device PROC
     ; Allocate GPU_DEVICE
     mov r9, SIZEOF GPU_DEVICE
-    call malloc
+    call masm_malloc
     
     ; Store parameters
     mov r10, rax
@@ -643,7 +643,7 @@ free_gpu_device PROC
     
     ; Free device structure
     mov rcx, rbx
-    call free
+    call masm_free
     
     pop rbx
     ret
@@ -665,4 +665,8 @@ present_frame ENDP
 ; ============================================================================
 
 END
+
+
+
+
 

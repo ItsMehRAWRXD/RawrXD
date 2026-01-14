@@ -14,7 +14,6 @@ include kernel32.inc
 ; ============================================================================
 
 .CODE
-
 PUBLIC PerformanceDashboard_NotifyConfigChange
 PerformanceDashboard_NotifyConfigChange PROC FRAME USES rbx
     ; RCX = config change type (PERF_CHANGE_QUANTIZATION = 1, etc.)
@@ -28,3 +27,7 @@ PerformanceDashboard_NotifyConfigChange PROC FRAME USES rbx
 PerformanceDashboard_NotifyConfigChange ENDP
 
 END
+
+
+
+

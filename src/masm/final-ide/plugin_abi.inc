@@ -91,3 +91,4 @@ IDE_CALLBACKS STRUCT
     GetFileTree     QWORD   ?       ; HWND get_file_tree()
     ExecuteCommand  QWORD   ?       ; int execute_command(char* cmd)
 IDE_CALLBACKS ENDS
+

@@ -24,7 +24,6 @@ EXTERN SetFilePointerEx:PROC
 EXTERN GetLastError:PROC
 EXTERN MessageBoxA:PROC
 EXTERN FlushFileBuffers:PROC
-
 PUBLIC triage_once
 
 .data
@@ -41,7 +40,6 @@ PUBLIC triage_once
     szMsgTitle      BYTE "console_log_init",0
 
 .code
-
 PUBLIC console_log_init
 console_log_init PROC
     sub rsp, 40
@@ -239,7 +237,6 @@ utoa_rev_loop:
     pop rbx
     ret
 utoa32_inline ENDP
-
 PUBLIC console_log
 console_log PROC
     ; rcx = string pointer
@@ -273,4 +270,8 @@ log_done:
 console_log ENDP
 
 END
+
+
+
+
 

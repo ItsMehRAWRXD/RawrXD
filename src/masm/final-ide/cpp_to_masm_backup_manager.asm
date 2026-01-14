@@ -4,8 +4,8 @@
 
 option casemap:none
 
-EXTERN malloc:PROC
-EXTERN free:PROC
+extern masm_malloc : proc
+extern masm_free : proc
 EXTERN memset:PROC
 EXTERN strcpy:PROC
 EXTERN strlen:PROC
@@ -105,13 +105,13 @@ backup_manager_create PROC
     
     ; Allocate manager
     mov rcx, SIZEOF BACKUP_MANAGER
-    call malloc
+    call masm_malloc
     
     ; Allocate backups array
     mov rcx, r8
     imul rcx, SIZEOF BACKUP_INFO
     push rax
-    call malloc
+    call masm_malloc
     pop rbx
     mov [rbx + BACKUP_MANAGER.backups], rax
     
@@ -511,19 +511,19 @@ backup_destroy PROC
     mov rcx, [rbx + BACKUP_MANAGER.backups]
     cmp rcx, 0
     je skip_backups_local
-    call free
+    call masm_free
     
 skip_backups_local:
     ; Free base directory string
     mov rcx, [rbx + BACKUP_MANAGER.baseDir]
     cmp rcx, 0
     je skip_basedir_local
-    call free
+    call masm_free
     
 skip_basedir_local:
     ; Free manager
     mov rcx, rbx
-    call free
+    call masm_free
     
     pop rbx
     ret
@@ -538,4 +538,8 @@ backup_destroy ENDP
     f1M REAL8 1000000.0
 
 END
+
+
+
+
 

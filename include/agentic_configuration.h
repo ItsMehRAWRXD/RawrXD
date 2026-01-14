@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QFileSystemWatcher>
 #include <memory>
 #include <unordered_map>
 
@@ -215,7 +216,6 @@ private:
     // Secrets list (for masking)
     std::vector<QString> m_secretKeys;
 
-    // File watchers (for hot reload)
-    class ConfigFileWatcher;
-    std::unique_ptr<ConfigFileWatcher> m_fileWatcher;
+    // File watchers (for hot reload) - use Qt's built-in watcher
+    std::unique_ptr<QFileSystemWatcher> m_fileWatcher;
 };

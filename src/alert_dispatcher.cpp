@@ -452,3 +452,5 @@ AlertDispatcher::AlertStats AlertDispatcher::getAlertStats() const {
     
     return stats;
 }
+
+#include "moc_alert_dispatcher.cpp"

@@ -16,21 +16,58 @@
 
 #include <QObject>
 #include <QString>
-#include <QJsonArray>
 #include <QJsonObject>
-#include <QFuture>
-#include <memory>
+#include <QJsonArray>
+#include <QVector>
+#include <QPointer>
+#include <QStringList>
+
+class DiscoveryDashboard;
 
 /**
  * @struct ExecutionPlan
  * @brief High-level execution plan with metadata
  */
 struct ExecutionPlan {
-    QString wish;                           ///< Original user wish
-    QJsonArray actions;                     ///< Parsed actions
-    QString reasoning;                      ///< Agent's reasoning
-    int estimatedTimeMs = 0;                ///< Estimated execution time
-    QString status;                         ///< Current status
+    QString planId;
+    QString wish;
+    QString status;
+    qint64 estimatedTimeMs = 0;
+
+    struct Step {
+        QString action;
+        QString target;
+        QJsonObject params;
+        QJsonObject toObject() const {
+            QJsonObject obj;
+            obj["action"] = action;
+            obj["target"] = target;
+            obj["params"] = params;
+            return obj;
+        }
+    };
+    QList<Step> actions;
+    int currentStepIndex = 0;
+
+    QJsonArray actionsToJson() const {
+        QJsonArray arr;
+        for (const auto& step : actions) {
+            arr.append(step.toObject());
+        }
+        return arr;
+    }
+
+    void actionsFromJson(const QJsonArray& arr) {
+        actions.clear();
+        for (const auto& val : arr) {
+            QJsonObject obj = val.toObject();
+            Step step;
+            step.action = obj["action"].toString();
+            step.target = obj["target"].toString();
+            step.params = obj["params"].toObject();
+            actions.append(step);
+        }
+    }
 };
 
 /**
@@ -92,7 +129,7 @@ public:
      *
      * @note Must be called before executeWish()
      */
-    void initialize(const QString& endpoint,
+    virtual void initialize(const QString& endpoint,
                    const QString& backend = "ollama",
                    const QString& apiKey = QString());
 
@@ -251,6 +288,8 @@ signals:
      */
     void executionCancelled();
 
+    void modelInvokerCreated(QObject* invoker);
+
 private slots:
     /**
      * @brief Handle plan generation completion
@@ -325,3 +364,6 @@ private:
     bool m_requireApproval = true;
     bool m_stopOnError = true;
 };
+
+#include "ide_agent_bridge_hot_patching_integration.hpp"
+

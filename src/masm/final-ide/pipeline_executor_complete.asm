@@ -30,8 +30,8 @@ INCLUDELIB user32.lib
 INCLUDELIB advapi32.lib
 INCLUDELIB msvcrt.lib
 
-EXTERN malloc:PROC
-EXTERN free:PROC
+extern masm_malloc : proc
+extern masm_free : proc
 EXTERN strlen:PROC
 EXTERN strcpy:PROC
 EXTERN sprintf:PROC
@@ -46,7 +46,6 @@ EXTERN RegQueryValueExA:PROC
 EXTERN RegCloseKey:PROC
 EXTERN CreateThreadA:PROC
 EXTERN GetCurrentProcessId:PROC
-
 PUBLIC pipeline_executor_init
 PUBLIC pipeline_create_job
 PUBLIC pipeline_queue_job
@@ -273,7 +272,7 @@ pipeline_executor_init PROC
     mov rcx, 1000
     mov rdx, SIZEOF JOB_CONTEXT
     imul rcx, rdx
-    call malloc
+    call masm_malloc
     mov [g_jobRegistry], rax
     test rax, rax
     jz init_failed_local
@@ -285,7 +284,7 @@ pipeline_executor_init PROC
 
     ; Create job queue
     mov rcx, 4096
-    call malloc
+    call masm_malloc
     mov [g_jobQueue], rax
     test rax, rax
     jz init_failed_local
@@ -294,7 +293,7 @@ pipeline_executor_init PROC
     xor r8d, r8d                    ; lpStartAddress
     xor r9d, r9d                    ; lpParameter
     mov rcx, SIZEOF QWORD * 4       ; Allocate 4 thread handles
-    call malloc
+    call masm_malloc
     mov [g_executorThreads], rax
 
     mov eax, 1
@@ -1031,4 +1030,8 @@ pipeline_get_metrics PROC
 pipeline_get_metrics ENDP
 
 END
+
+
+
+
 

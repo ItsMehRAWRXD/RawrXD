@@ -13,6 +13,8 @@ extern GetExitCodeProcess : proc
 extern CreatePipeA : proc
 extern GetTickCount64 : proc
 extern GetSystemTimeAsFileTime : proc
+extern CreateMutexA : proc
+extern ReleaseMutex : proc
 extern CreateThreadA : proc
 extern TerminateThread : proc
 extern GetCurrentThreadId : proc

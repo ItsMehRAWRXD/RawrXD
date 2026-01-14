@@ -103,6 +103,13 @@ IDM_EDIT_SELECT_ALL     EQU 3006
 IDM_EDIT_FIND           EQU 3007
 IDM_EDIT_REPLACE        EQU 3008
 
+; Window messages (fallbacks if windows.inc does not define them)
+WM_CUT                  EQU 0300h
+WM_COPY                 EQU 0301h
+WM_PASTE                EQU 0302h
+WM_UNDO                 EQU 0304h
+WM_REDO                 EQU 0454h ; RichEdit: EM_REDO
+
 ; View Menu
 IDM_VIEW_EXPLORER       EQU 4001
 IDM_VIEW_OUTPUT         EQU 4002
@@ -225,7 +232,13 @@ FILE_DIALOG ENDS
     
     ; Default paths
     szDocumentsPath     BYTE "C:\Users\%USERNAME%\Documents",0
-    szProjectPath       BYTE "",512 DUP (0)
+    szProjectPath       BYTE 512 DUP (0)
+
+    ; Common dialog strings
+    szInitialDir        BYTE ".",0
+    szOpenTitle         BYTE "Open File",0
+    szSaveTitle         BYTE "Save File",0
+    szDefExt            BYTE "cpp",0
     
     ; Window titles
     szUntitled          BYTE "Untitled",0
@@ -444,9 +457,9 @@ file_new:
     call tab_create_editor
     
     ; Update editor state
-    mov [current_editor_state.tab_count], eax
-    xor [current_editor_state.is_modified], [current_editor_state.is_modified]
-    mov [current_editor_state.is_modified], 1
+    mov dword ptr [current_editor_state.tab_count], eax
+    mov dword ptr [current_editor_state.is_modified], 0
+    mov dword ptr [current_editor_state.is_modified], 1
     
     lea rcx, [szTabCreated]
     lea rdx, [open_file_path]

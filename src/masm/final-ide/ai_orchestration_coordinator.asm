@@ -1,5 +1,6 @@
 ; ai_orchestration_coordinator.asm - Clean, working MASM coordinator
 ; Provides C-callable entry points for orchestration
+; NOTE: Symbols renamed with _core suffix to avoid conflicts with ai_orchestration_glue.asm
 
 option casemap:none
 
@@ -29,7 +30,7 @@ szCoordinatorInstall    BYTE "[coordinator] Installed in main loop", 13, 10, 0
 
 .code
 
-; ai_orchestration_coordinator_init() - Initialize coordinator
+; ai_orchestration_coordinator_init() - Initialize coordinator (CORE implementation)
 PUBLIC ai_orchestration_coordinator_init
 ai_orchestration_coordinator_init PROC
     
@@ -44,9 +45,9 @@ ai_orchestration_coordinator_init PROC
     ret
 ai_orchestration_coordinator_init ENDP
 
-; ai_orchestration_poll() - Poll for updates
-PUBLIC ai_orchestration_poll
-ai_orchestration_poll PROC
+; ai_orchestration_poll_core() - Poll for updates (renamed to avoid conflict)
+PUBLIC ai_orchestration_poll_core
+ai_orchestration_poll_core PROC
     
     ; Check if initialized
     cmp DWORD PTR [coordinatorInitialized], 0
@@ -59,11 +60,11 @@ ai_orchestration_poll PROC
 poll_done:
     mov eax, 1
     ret
-ai_orchestration_poll ENDP
+ai_orchestration_poll_core ENDP
 
-; ai_orchestration_install() - Install in main window
-PUBLIC ai_orchestration_install
-ai_orchestration_install PROC
+; ai_orchestration_install_core() - Install in main window (renamed to avoid conflict)
+PUBLIC ai_orchestration_install_core
+ai_orchestration_install_core PROC
     
     ; rcx = main window handle
     push rbx
@@ -87,25 +88,29 @@ ai_orchestration_install PROC
     mov eax, 1
     pop rbx
     ret
-ai_orchestration_install ENDP
+ai_orchestration_install_core ENDP
 
-; ai_orchestration_set_handles() - Set UI handles
-PUBLIC ai_orchestration_set_handles
-ai_orchestration_set_handles PROC
+; ai_orchestration_set_handles_core() - Set UI handles (renamed to avoid conflict)
+PUBLIC ai_orchestration_set_handles_core
+ai_orchestration_set_handles_core PROC
     ; rcx = output handle, rdx = chat handle
     ; Store handles if needed (currently no-op)
     mov eax, 1
     ret
-ai_orchestration_set_handles ENDP
+ai_orchestration_set_handles_core ENDP
 
-; ai_orchestration_schedule_task() - Schedule autonomous task
-PUBLIC ai_orchestration_schedule_task
-ai_orchestration_schedule_task PROC
+; ai_orchestration_schedule_task_core() - Schedule autonomous task (renamed to avoid conflict)
+PUBLIC ai_orchestration_schedule_task_core
+ai_orchestration_schedule_task_core PROC
     ; rcx = goal string, edx = priority, r8b = auto-retry
     ; Forward to autonomous task scheduler
     call autonomous_task_schedule
     ret
-ai_orchestration_schedule_task ENDP
+ai_orchestration_schedule_task_core ENDP
 
 END
+
+
+
+
 

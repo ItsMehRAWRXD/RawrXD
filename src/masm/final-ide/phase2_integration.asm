@@ -28,21 +28,32 @@
 ;   └─→ IDM_VIEW_EXPLORER → Show/Hide FileBrowser
 ; ============================================================================
 
-; x64 MASM - includes first, then code section
+; x64 MASM - no includes, define externals directly
+option casemap:none
 
-; ============================================================================
-; INCLUDE HEADERS
-; ============================================================================
-include windows.inc
-include kernel32.inc
-include user32.inc
-include gdi32.inc
-include comctl32.inc
+; Type aliases
+HWND            TEXTEQU <QWORD>
+HMENU           TEXTEQU <QWORD>
 
-INCLUDELIB kernel32.lib
-INCLUDELIB user32.lib
-INCLUDELIB gdi32.lib
-INCLUDELIB comctl32.lib
+; Win32 API externals
+EXTERN SendMessageA:PROC
+EXTERN PostMessageA:PROC
+EXTERN GetClientRect:PROC
+EXTERN MoveWindow:PROC
+EXTERN ShowWindow:PROC
+EXTERN InvalidateRect:PROC
+EXTERN UpdateWindow:PROC
+EXTERN SetMenu:PROC
+EXTERN BeginPaint:PROC
+EXTERN EndPaint:PROC
+EXTERN FillRect:PROC
+EXTERN CreateSolidBrush:PROC
+EXTERN DeleteObject:PROC
+
+; Window messages
+WM_SIZE         EQU 0005h
+WM_PAINT        EQU 000Fh
+WM_COMMAND      EQU 0111h
 
 ; ============================================================================
 ; EXTERNAL DECLARATIONS - Menu System
@@ -98,29 +109,18 @@ THEME_LIGHT               EQU 1
 THEME_HIGH_CONTRAST       EQU 2
 
 ; ============================================================================
-; DATA STRUCTURES
-; ============================================================================
-
-; Integration state structure
-ALIGN 16
-Phase2State STRUCT
-    hMainWindow         HWND ?          ; Main window handle
-    hMenuBar            HMENU ?         ; Menu bar handle
-    hFileBrowser        HWND ?          ; File browser window handle
-    browserVisible      DWORD ?         ; 1=visible, 0=hidden
-    currentTheme        DWORD ?         ; Current theme ID (0=Dark, 1=Light)
-    initialized         DWORD ?         ; 1=all systems initialized
-    padding             QWORD ?         ; Align to 16 bytes
-Phase2State ENDS
-
-; ============================================================================
 ; GLOBAL DATA
 ; ============================================================================
 
 .data
 
-    ; Global Phase 2 state
-    gPhase2State    Phase2State <0, 0, 0, 1, 0, 0, 0>
+    ; Global Phase 2 state - using flat variables instead of struct
+    hMainWindow         QWORD 0          ; Main window handle
+    hMenuBar            QWORD 0          ; Menu bar handle
+    hFileBrowser        QWORD 0          ; File browser window handle
+    browserVisible      DWORD 1          ; 1=visible, 0=hidden
+    currentTheme        DWORD 0          ; Current theme ID (0=Dark, 1=Light)
+    initialized         DWORD 0          ; 1=all systems initialized
     
     ; String resources
     szThemeChanged  BYTE "Theme changed successfully", 0
@@ -146,7 +146,6 @@ Phase2State ENDS
 ;
 ; Call from main window WM_CREATE handler
 ; ============================================================================
-
 PUBLIC Phase2_Initialize
 Phase2_Initialize PROC
     push rbx
@@ -157,7 +156,7 @@ Phase2_Initialize PROC
     mov rbx, rcx  ; Save hWnd
     
     ; Store main window handle
-    mov gPhase2State.hMainWindow, rcx
+    mov hMainWindow, rcx
     
     ; 1. Initialize Theme Manager
     call ThemeManager_Init
@@ -170,7 +169,7 @@ Phase2_Initialize PROC
     test rax, rax
     jz Phase2_Init_Failed
     
-    mov gPhase2State.currentTheme, THEME_DARK
+    mov currentTheme, THEME_DARK
     
     ; 3. Create menu bar
     mov rcx, rbx  ; hWnd
@@ -178,7 +177,7 @@ Phase2_Initialize PROC
     test rax, rax
     jz Phase2_Init_Failed
     
-    mov gPhase2State.hMenuBar, rax
+    mov hMenuBar, rax
     
     ; Set menu bar to main window
     mov rcx, rbx  ; hWnd
@@ -198,7 +197,7 @@ Phase2_Initialize PROC
     test rax, rax
     jz Phase2_Init_Failed
     
-    mov gPhase2State.hFileBrowser, rax
+    mov hFileBrowser, rax
     
     ; 5. Load system drives in file browser
     mov rcx, rax  ; File browser handle
@@ -208,14 +207,14 @@ Phase2_Initialize PROC
     mov rcx, rbx  ; Main window
     call ThemeManager_ApplyTheme
     
-    mov rcx, gPhase2State.hFileBrowser
+    mov rcx, hFileBrowser
     test rcx, rcx
     jz Phase2_Init_SkipBrowser
     call ThemeManager_ApplyTheme
     
 Phase2_Init_SkipBrowser:
     ; Mark as initialized
-    mov gPhase2State.initialized, 1
+    mov initialized, 1
     
     ; Success
     mov eax, 1
@@ -248,33 +247,32 @@ Phase2_Initialize ENDP
 ;
 ; Call from main window WM_DESTROY handler
 ; ============================================================================
-
 PUBLIC Phase2_Cleanup
 Phase2_Cleanup PROC
     push rbx
     sub rsp, 32
     
     ; 1. Destroy file browser
-    mov rcx, gPhase2State.hFileBrowser
+    mov rcx, hFileBrowser
     test rcx, rcx
     jz Phase2_Cleanup_SkipBrowser
     call FileBrowser_Destroy
-    mov gPhase2State.hFileBrowser, 0
+    mov hFileBrowser, 0
     
 Phase2_Cleanup_SkipBrowser:
     ; 2. Destroy menu bar
-    mov rcx, gPhase2State.hMenuBar
+    mov rcx, hMenuBar
     test rcx, rcx
     jz Phase2_Cleanup_SkipMenu
     call MenuBar_Destroy
-    mov gPhase2State.hMenuBar, 0
+    mov hMenuBar, 0
     
 Phase2_Cleanup_SkipMenu:
     ; 3. Cleanup theme manager
     call ThemeManager_Cleanup
     
     ; Mark as not initialized
-    mov gPhase2State.initialized, 0
+    mov initialized, 0
     
     add rsp, 32
     pop rbx
@@ -294,7 +292,6 @@ Phase2_Cleanup ENDP
 ;
 ; Call from main window WM_COMMAND handler
 ; ============================================================================
-
 PUBLIC Phase2_HandleCommand
 Phase2_HandleCommand PROC
     push rbx
@@ -304,7 +301,7 @@ Phase2_HandleCommand PROC
     mov ebx, ecx  ; Save command ID
     
     ; Check if initialized
-    cmp gPhase2State.initialized, 0
+    cmp initialized, 0
     je Phase2_Cmd_NotHandled
     
     ; Switch on command ID
@@ -325,35 +322,35 @@ Phase2_HandleCommand PROC
     
 Phase2_Cmd_ToggleTheme:
     ; Toggle between Dark and Light themes
-    mov eax, gPhase2State.currentTheme
+    mov eax, currentTheme
     test eax, eax  ; Is it Dark (0)?
     jz Phase2_Cmd_SetLight
     
     ; Currently Light, switch to Dark
     mov ecx, THEME_DARK
     call ThemeManager_SetTheme
-    mov gPhase2State.currentTheme, THEME_DARK
+    mov currentTheme, THEME_DARK
     jmp Phase2_Cmd_ApplyTheme
     
 Phase2_Cmd_SetLight:
     ; Currently Dark, switch to Light
     mov ecx, THEME_LIGHT
     call ThemeManager_SetTheme
-    mov gPhase2State.currentTheme, THEME_LIGHT
+    mov currentTheme, THEME_LIGHT
     
 Phase2_Cmd_ApplyTheme:
     ; Apply theme to all windows
-    mov rcx, gPhase2State.hMainWindow
+    mov rcx, hMainWindow
     call ThemeManager_ApplyTheme
     
-    mov rcx, gPhase2State.hFileBrowser
+    mov rcx, hFileBrowser
     test rcx, rcx
     jz Phase2_Cmd_ThemeApplied
     call ThemeManager_ApplyTheme
     
 Phase2_Cmd_ThemeApplied:
     ; Force redraw
-    mov rcx, gPhase2State.hMainWindow
+    mov rcx, hMainWindow
     mov edx, 1  ; bErase = TRUE
     call InvalidateRect
     
@@ -365,27 +362,27 @@ Phase2_Cmd_ThemeApplied:
     
 Phase2_Cmd_ToggleExplorer:
     ; Toggle file browser visibility
-    mov eax, gPhase2State.browserVisible
+    mov eax, browserVisible
     test eax, eax
     jz Phase2_Cmd_ShowBrowser
     
     ; Currently visible, hide it
-    mov rcx, gPhase2State.hFileBrowser
+    mov rcx, hFileBrowser
     mov edx, 0  ; SW_HIDE
     call ShowWindow
-    mov gPhase2State.browserVisible, 0
+    mov browserVisible, 0
     jmp Phase2_Cmd_ExplorerToggled
     
 Phase2_Cmd_ShowBrowser:
     ; Currently hidden, show it
-    mov rcx, gPhase2State.hFileBrowser
+    mov rcx, hFileBrowser
     mov edx, 5  ; SW_SHOW
     call ShowWindow
-    mov gPhase2State.browserVisible, 1
+    mov browserVisible, 1
     
 Phase2_Cmd_ExplorerToggled:
     ; Trigger WM_SIZE to reposition browser
-    mov rcx, gPhase2State.hMainWindow
+    mov rcx, hMainWindow
     mov edx, 0  ; SIZE_RESTORED
     ; Get client rect
     lea r8, [rsp+32]  ; &RECT
@@ -412,7 +409,7 @@ Phase2_Cmd_ExplorerToggled:
     
 Phase2_Cmd_FileNew:
     ; Handle File->New (clear file browser selection)
-    mov rcx, gPhase2State.hFileBrowser
+    mov rcx, hFileBrowser
     test rcx, rcx
     jz Phase2_Cmd_NotHandled
     
@@ -427,7 +424,7 @@ Phase2_Cmd_FileNew:
     
 Phase2_Cmd_FileOpen:
     ; Handle File->Open (get selected file from browser)
-    mov rcx, gPhase2State.hFileBrowser
+    mov rcx, hFileBrowser
     test rcx, rcx
     jz Phase2_Cmd_NotHandled
     
@@ -465,7 +462,6 @@ Phase2_HandleCommand ENDP
 ;
 ; Call from main window WM_SIZE handler
 ; ============================================================================
-
 PUBLIC Phase2_HandleSize
 Phase2_HandleSize PROC
     push rbx
@@ -476,10 +472,10 @@ Phase2_HandleSize PROC
     mov edi, edx  ; height
     
     ; Check if initialized and browser visible
-    cmp gPhase2State.initialized, 0
+    cmp initialized, 0
     je Phase2_Size_Done
     
-    cmp gPhase2State.browserVisible, 0
+    cmp browserVisible, 0
     je Phase2_Size_Done
     
     ; Position file browser on left side
@@ -494,7 +490,7 @@ Phase2_HandleSize PROC
     div ecx  ; eax = width * 30 / 100
     
     ; Move file browser window
-    mov rcx, gPhase2State.hFileBrowser
+    mov rcx, hFileBrowser
     mov edx, 0         ; x = 0
     mov r8d, 0         ; y = 0
     mov r9d, eax       ; width = 30%
@@ -523,7 +519,6 @@ Phase2_HandleSize ENDP
 ;
 ; Call from main window WM_PAINT handler (optional)
 ; ============================================================================
-
 PUBLIC Phase2_HandlePaint
 Phase2_HandlePaint PROC
     push rbx
@@ -584,10 +579,9 @@ Phase2_HandlePaint ENDP
 ; Returns:
 ;   rax = file browser HWND (or NULL if not created)
 ; ============================================================================
-
 PUBLIC Phase2_GetFileBrowserHandle
 Phase2_GetFileBrowserHandle PROC
-    mov rax, gPhase2State.hFileBrowser
+    mov rax, hFileBrowser
     ret
 Phase2_GetFileBrowserHandle ENDP
 
@@ -601,10 +595,9 @@ Phase2_GetFileBrowserHandle ENDP
 ; Returns:
 ;   rax = menu bar HMENU (or NULL if not created)
 ; ============================================================================
-
 PUBLIC Phase2_GetMenuBarHandle
 Phase2_GetMenuBarHandle PROC
-    mov rax, gPhase2State.hMenuBar
+    mov rax, hMenuBar
     ret
 Phase2_GetMenuBarHandle ENDP
 
@@ -618,13 +611,17 @@ Phase2_GetMenuBarHandle ENDP
 ; Returns:
 ;   rax = 1 if initialized, 0 otherwise
 ; ============================================================================
-
 PUBLIC Phase2_IsInitialized
 Phase2_IsInitialized PROC
     xor eax, eax
-    mov al, BYTE PTR gPhase2State.initialized
+    mov al, BYTE PTR initialized
     ret
 Phase2_IsInitialized ENDP
 
 END
+
+
+
+
+
 

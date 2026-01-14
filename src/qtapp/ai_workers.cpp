@@ -70,7 +70,7 @@ TrainingWorker::TrainingWorker(AIDigestionEngine* engine, QObject* parent)
     , m_engine(engine) {
 }
 
-void TrainingWorker::startTraining(const TrainingDataset& dataset, const DigestionConfig& config) {
+void TrainingWorker::startTraining(const AIDigestionDataset& dataset, const DigestionConfig& config) {
     if (!m_engine) {
         emit error("Engine is null");
         return;
@@ -541,7 +541,7 @@ AITrainingWorker::~AITrainingWorker() {
     }
 }
 
-void AITrainingWorker::startTraining(const TrainingDataset& dataset, 
+void AITrainingWorker::startTraining(const AIDigestionDataset& dataset, 
                                     const QString& modelName,
                                     const QString& outputPath,
                                     const TrainingConfig& config) {
@@ -1396,7 +1396,7 @@ void AIWorkerManager::startDigestionWorker(AIDigestionWorker* worker, const QStr
 }
 
 void AIWorkerManager::startTrainingWorker(AITrainingWorker* worker, 
-                                        const TrainingDataset& dataset,
+                                        const AIDigestionDataset& dataset,
                                         const QString& modelName,
                                         const QString& outputPath,
                                         const AITrainingWorker::TrainingConfig& config) {

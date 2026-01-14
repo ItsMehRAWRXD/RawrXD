@@ -219,7 +219,6 @@ szCategoryNames:
 ;==========================================================================
 ; PUBLIC API
 ;==========================================================================
-
 PUBLIC enhanced_cli_init
 PUBLIC enhanced_cli_create_window
 PUBLIC enhanced_cli_execute_command
@@ -501,31 +500,26 @@ enhanced_cli_start_repl ENDP
 ;==========================================================================
 ; Stub implementations for remaining functions
 ;==========================================================================
-
 enhanced_cli_stop_repl PROC
     ; ecx = repl_id
     mov eax, 1
     ret
 enhanced_cli_stop_repl ENDP
-
 enhanced_cli_send_to_repl PROC
     ; ecx = repl_id, rdx = command
     mov eax, 1
     ret
 enhanced_cli_send_to_repl ENDP
-
 enhanced_cli_execute_batch PROC
     ; rcx = script_path
     mov eax, 1
     ret
 enhanced_cli_execute_batch ENDP
-
 enhanced_cli_autocomplete PROC
     ; rcx = partial_command -> suggests completions
     mov eax, 1
     ret
 enhanced_cli_autocomplete ENDP
-
 enhanced_cli_search_history PROC
     ; rcx = search_query -> returns matching commands
     mov eax, 1
@@ -537,7 +531,6 @@ enhanced_cli_clear_history PROC
     mov eax, 1
     ret
 enhanced_cli_clear_history ENDP
-
 enhanced_cli_export_history PROC
     ; rcx = output_path
     mov eax, 1
@@ -547,115 +540,93 @@ enhanced_cli_export_history ENDP
 ;==========================================================================
 ; Helper functions
 ;==========================================================================
-
 parse_command PROC
     ; rcx = command string -> eax = category
     mov eax, CMD_CAT_MODEL
     ret
 parse_command ENDP
-
 find_command_handler PROC
     ; rcx = command -> rax = handler_ptr
     xor rax, rax
     ret
 find_command_handler ENDP
-
 execute_command_impl PROC
     ; rcx = command, rdx = handler_ptr -> eax = result
     mov eax, 1
     ret
 execute_command_impl ENDP
-
 register_model_commands PROC
     ; ecx = category
     ret
 register_model_commands ENDP
-
 register_dataset_commands PROC
     ; ecx = category
     ret
 register_dataset_commands ENDP
-
 register_training_commands PROC
     ; ecx = category
     ret
 register_training_commands ENDP
-
 register_tensor_commands PROC
     ; ecx = category
     ret
 register_tensor_commands ENDP
-
 register_visualization_commands PROC
     ; ecx = category
     ret
 register_visualization_commands ENDP
-
 register_notebook_commands PROC
     ; ecx = category
     ret
 register_notebook_commands ENDP
-
 register_gui_commands PROC
     ; ecx = category
     ret
 register_gui_commands ENDP
-
 register_system_commands PROC
     ; ecx = category
     ret
 register_system_commands ENDP
-
 start_repl_process PROC
     ; ecx = language, rdx = repl_session_ptr
     ret
 start_repl_process ENDP
-
 output_error PROC
     ; rcx = error message
     ret
 output_error ENDP
-
 register_cli_class PROC
     ; rcx = class name
     ret
 register_cli_class ENDP
-
 register_input_box_class PROC
     ; rcx = class name
     ret
 register_input_box_class ENDP
-
 register_output_display_class PROC
     ; rcx = class name
     ret
 register_output_display_class ENDP
-
 create_cli_input_box PROC
     ; rcx = parent hwnd
     ret
 create_cli_input_box ENDP
-
 create_cli_output_display PROC
     ; rcx = parent hwnd
     ret
 create_cli_output_display ENDP
-
 create_history_panel PROC
     ; rcx = parent hwnd
     ret
 create_history_panel ENDP
-
 create_autocomplete_list PROC
     ; rcx = parent hwnd
     ret
 create_autocomplete_list ENDP
-
 create_command_toolbar PROC
     ; rcx = parent hwnd
     ret
 create_command_toolbar ENDP
-
 strncpy PROC
     ; rcx = dest, rdx = src, r9d = max_len
     xor rax, rax
@@ -677,4 +648,8 @@ szCmdNotFound BYTE "Command not found", 0
 szAlreadyExecuting BYTE "Another command is already executing", 0
 
 end
+
+
+
+
 

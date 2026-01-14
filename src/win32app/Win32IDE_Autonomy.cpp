@@ -1,5 +1,23 @@
 #include "Win32IDE_Autonomy.h"
+#include "Win32NativeAgentAPI.h"
 #include <sstream>
+
+namespace {
+std::string NarrowFromWide(const std::wstring& input) {
+    if (input.empty()) {
+        return {};
+    }
+
+    const int required = WideCharToMultiByte(CP_UTF8, 0, input.data(), static_cast<int>(input.size()), nullptr, 0, nullptr, nullptr);
+    if (required <= 0) {
+        return std::string(input.begin(), input.end());
+    }
+
+    std::string output(static_cast<size_t>(required), '\0');
+    WideCharToMultiByte(CP_UTF8, 0, input.data(), static_cast<int>(input.size()), output.data(), required, nullptr, nullptr);
+    return output;
+}
+}
 
 AutonomyManager::AutonomyManager(AgenticBridge* bridge)
     : m_bridge(bridge), m_running(false), m_autoLoop(false),
@@ -118,10 +136,20 @@ void AutonomyManager::executeAction(const std::string& action) {
         LOG_DEBUG("Planner produced NOOP");
         return;
     }
+    
+    // Try native Win32 tools first
+    if (action.rfind("win32:", 0) == 0) {
+        std::string toolCall = action.substr(6);
+        executeWin32Tool(toolCall);
+        return;
+    }
+    
+    // Fall back to agentic bridge for other actions
     if (!m_bridge || !m_bridge->IsInitialized()) {
         LOG_WARNING("Bridge not initialized; cannot execute action: " + action);
         return;
     }
+    
     // Differentiate tool vs prompt
     if (action.rfind("tool:", 0) == 0) {
         std::string toolCall = action.substr(5);
@@ -136,6 +164,91 @@ void AutonomyManager::executeAction(const std::string& action) {
         addObservation("RAW:" + resp.content);
     }
     LOG_INFO("Executed autonomy action: " + action);
+}
+
+void AutonomyManager::executeWin32Tool(const std::string& toolCall) {
+    auto& win32API = RawrXD::Win32Agent::GetWin32AgentAPI();
+    std::string result;
+    
+    // Parse tool name and arguments
+    size_t colonPos = toolCall.find(':');
+    if (colonPos == std::string::npos) {
+        addObservation("WIN32_TOOL:" + toolCall + " => ERROR: Invalid format");
+        return;
+    }
+    
+    std::string toolName = toolCall.substr(0, colonPos);
+    std::string args = toolCall.substr(colonPos + 1);
+    
+    try {
+        if (toolName == "process") {
+            // Parse arguments: action:pid or name:cmd
+            size_t actionPos = args.find(':');
+            if (actionPos != std::string::npos) {
+                std::string action = args.substr(0, actionPos);
+                std::string target = args.substr(actionPos + 1);
+                
+                if (action == "list") {
+                    auto processes = win32API.GetProcessManager().EnumerateProcesses();
+                    std::stringstream ss;
+                    ss << "Running processes (" << processes.size() << "):\n";
+                    for (const auto& proc : processes) {
+                        std::string nameUtf8(proc.processName.begin(), proc.processName.end());
+                        ss << "- " << nameUtf8 << " (PID: " << proc.processId << ")\n";
+                    }
+                    result = ss.str();
+                } else if (action == "kill") {
+                    bool success = win32API.KillProcess(std::wstring(target.begin(), target.end()));
+                    result = std::string("Process kill: ") + (success ? "SUCCESS" : "FAILED");
+                }
+            }
+        } else if (toolName == "memory") {
+            auto memInfo = win32API.GetMemoryManager().GetSystemMemoryInfo();
+            std::stringstream ss;
+            ss << "System Memory:\n";
+            ss << "Total: " << memInfo.totalPhysical / (1024*1024) << " MB\n";
+            ss << "Available: " << memInfo.availablePhysical / (1024*1024) << " MB\n";
+            ss << "Load: " << memInfo.memoryLoad << "%\n";
+            result = ss.str();
+        } else if (toolName == "file") {
+            // Parse: read:path or list:directory
+            size_t actionPos = args.find(':');
+            if (actionPos != std::string::npos) {
+                std::string action = args.substr(0, actionPos);
+                std::string target = args.substr(actionPos + 1);
+                
+                if (action == "read") {
+                    std::wstring wtarget(target.begin(), target.end());
+                    std::wstring wideResult = win32API.ReadTextFile(wtarget);
+                    result = NarrowFromWide(wideResult);
+                } else if (action == "list") {
+                    std::wstring wtarget(target.begin(), target.end());
+                    auto files = win32API.ListFiles(wtarget);
+                    std::stringstream ss;
+                    ss << "Files in " << target << ":\n";
+                    for (const auto& file : files) {
+                        ss << "- " << std::string(file.begin(), file.end()) << "\n";
+                    }
+                    result = ss.str();
+                }
+            }
+        } else if (toolName == "system") {
+            auto info = win32API.GetSystemInfoManager().GetSystemInfo();
+            std::stringstream ss;
+            ss << "System Info:\n";
+            ss << "OS: " << std::string(info.osVersion.begin(), info.osVersion.end()) << "\n";
+            ss << "CPU Cores: " << info.processorCount << "\n";
+            ss << "Memory: " << info.totalPhysicalMemory / (1024*1024*1024) << " GB\n";
+            result = ss.str();
+        } else {
+            result = "Unknown Win32 tool: " + toolName;
+        }
+    } catch (const std::exception& e) {
+        result = std::string("Win32 tool error: ") + e.what();
+    }
+    
+    addObservation("WIN32_TOOL:" + toolCall + " => " + result);
+    LOG_INFO("Executed Win32 tool: " + toolName);
 }
 
 bool AutonomyManager::rateLimitAllow() {

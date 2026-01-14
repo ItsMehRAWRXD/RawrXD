@@ -13,8 +13,8 @@ EXTERN GetExitCodeProcess:PROC
 EXTERN CreatePipeA:PROC
 EXTERN ReadFile:PROC
 EXTERN WriteFile:PROC
-EXTERN malloc:PROC
-EXTERN free:PROC
+extern masm_malloc : proc
+extern masm_free : proc
 EXTERN memcpy:PROC
 EXTERN strlen:PROC
 EXTERN console_log:PROC
@@ -88,7 +88,7 @@ TERMINAL_CONTEXT ENDS
 PUBLIC terminal_create
 terminal_create PROC
     mov rcx, SIZEOF TERMINAL_CONTEXT
-    call malloc
+    call masm_malloc
     
     ; Initialize structure
     xor edx, edx
@@ -146,11 +146,11 @@ terminal_start PROC
     
     ; Allocate output buffers
     mov rcx, PIPE_BUFFER_SIZE
-    call malloc
+    call masm_malloc
     mov [rbx].TERMINAL_CONTEXT.outputBuffer, rax
     
     mov rcx, PIPE_BUFFER_SIZE
-    call malloc
+    call masm_malloc
     mov [rbx].TERMINAL_CONTEXT.errorBuffer, rax
     
     ; Get shell executable name
@@ -436,18 +436,18 @@ skip_stderr_write:
     mov rcx, [rbx].TERMINAL_CONTEXT.outputBuffer
     cmp rcx, 0
     je skip_out_buf
-    call free
+    call masm_free
 skip_out_buf:
     
     mov rcx, [rbx].TERMINAL_CONTEXT.errorBuffer
     cmp rcx, 0
     je skip_err_buf
-    call free
+    call masm_free
 skip_err_buf:
     
     ; Free context
     mov rcx, rbx
-    call free
+    call masm_free
     
     pop rbx
     ret
@@ -456,4 +456,8 @@ terminal_destroy ENDP
 ; ============================================================================
 
 END
+
+
+
+
 

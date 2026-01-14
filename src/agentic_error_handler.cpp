@@ -4,7 +4,9 @@
 #include "agentic_loop_state.h"
 #include <QDebug>
 #include <QDateTime>
+#include <QThread>
 #include <exception>
+#include <deque>
 
 AgenticErrorHandler::AgenticErrorHandler(QObject* parent)
     : QObject(parent)
@@ -65,8 +67,10 @@ void AgenticErrorHandler::initialize(AgenticObservability* obs, AgenticLoopState
     m_state = state;
 
     if (m_observability) {
+        QJsonObject initContext;
+        initContext["event"] = "Initialized";
         m_observability->logInfo("AgenticErrorHandler", 
-            "Initialized with observability and state management");
+            "Initialized with observability and state management", initContext);
     }
 }
 
@@ -77,6 +81,16 @@ QJsonObject AgenticErrorHandler::handleError(
     const QString& component,
     const QJsonObject& context)
 {
+    QJsonObject logContext;
+    logContext["component"] = component;
+    logContext["error_type"] = "InternalError";
+    logContext["error_message"] = QString::fromStdString(e.what());
+    for (auto it = context.begin(); it != context.end(); ++it) {
+        logContext.insert(it.key(), it.value());
+    }
+    
+    m_observability->logInfo("AgenticErrorHandler", "Handling internal error", logContext);
+
     QString errorId = recordError(
         ErrorType::InternalError,
         QString::fromStdString(e.what()),
@@ -125,13 +139,15 @@ QString AgenticErrorHandler::recordError(
 
     // Keep bounded
     if (m_errorHistory.size() > m_maxErrorMemory) {
-        m_errorHistory.pop_front();
+        m_errorHistory.erase(m_errorHistory.begin());
     }
 
     if (m_observability) {
         QJsonObject logContext = context;
         logContext["error_id"] = errorContext.errorId;
         logContext["error_type"] = QString::number(static_cast<int>(type));
+        logContext["stack_trace"] = stackTrace;
+        logContext["event"] = "ErrorRecorded";
 
         m_observability->logError(component, message, logContext);
     }

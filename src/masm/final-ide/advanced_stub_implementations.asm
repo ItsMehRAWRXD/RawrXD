@@ -184,7 +184,6 @@ TENSOR_INFO ENDS
 ;==============================================================================
 ; PUBLIC EXPORTS
 ;==============================================================================
-
 PUBLIC SaveThemeToRegistry
 PUBLIC LoadThemeFromRegistry
 PUBLIC ImportThemeFromFile
@@ -1845,4 +1844,8 @@ ExecuteInKernel PROC
 ExecuteInKernel ENDP
 
 END
+
+
+
+
 

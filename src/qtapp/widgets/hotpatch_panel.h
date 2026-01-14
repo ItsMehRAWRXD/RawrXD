@@ -64,3 +64,4 @@ private:
     int m_failureCount{0};
     QDateTime m_sessionStart{};
 };
+

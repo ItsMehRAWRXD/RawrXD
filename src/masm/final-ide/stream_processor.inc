@@ -12,67 +12,67 @@ STREAM_ERROR_EMPTY equ 6
 STREAM_ERROR_OFFSET equ 7
 
 ; Stream processor structure
-STREAM_PROCESSOR struct
-    processor_mutex dword ?
-    stream_count dword ?
-    max_streams dword ?
-    consumer_count dword ?
-    max_consumers dword ?
-    total_messages dword ?
-    total_bytes dword ?
-    streams_ptr dword ?
-    consumers_ptr dword ?
-    allocator_ptr dword ?
-    deallocator_ptr dword ?
-    stats_enabled dword ?
-    reserved dword 16 dup(?)
-STREAM_PROCESSOR ends
+STREAM_PROCESSOR STRUCT
+    processor_mutex DWORD ?
+    stream_count DWORD ?
+    max_streams DWORD ?
+    consumer_count DWORD ?
+    max_consumers DWORD ?
+    total_messages DWORD ?
+    total_bytes DWORD ?
+    streams_ptr DWORD ?
+    consumers_ptr DWORD ?
+    allocator_ptr DWORD ?
+    deallocator_ptr DWORD ?
+    stats_enabled DWORD ?
+    reserved BYTE 16*4 dup(?)
+STREAM_PROCESSOR ENDS
 
 ; Stream structure
-STREAM struct
-    stream_id dword ?
-    name_ptr dword ?
-    name_len dword ?
-    message_count dword ?
-    first_message_ptr dword ?
-    last_message_ptr dword ?
-    consumer_count dword ?
-    max_messages dword ?
-    retention_ms dword ?
-    created_at dword ?
-    flags dword ?
-    reserved dword 6 dup(?)
-STREAM ends
+STREAM STRUCT
+    stream_id DWORD ?
+    name_ptr DWORD ?
+    name_len DWORD ?
+    message_count DWORD ?
+    first_message_ptr DWORD ?
+    last_message_ptr DWORD ?
+    consumer_count DWORD ?
+    max_messages DWORD ?
+    retention_ms DWORD ?
+    created_at DWORD ?
+    flags DWORD ?
+    reserved BYTE 6*4 dup(?)
+STREAM ENDS
 
 ; Message structure
-MESSAGE struct
-    message_id dword ?
-    stream_id dword ?
-    timestamp dword ?
-    data_ptr dword ?
-    data_len dword ?
-    next_ptr dword ?
-    prev_ptr dword ?
-    ack_count dword ?
-    nack_count dword ?
-    flags dword ?
-    reserved dword 4 dup(?)
-MESSAGE ends
+MESSAGE STRUCT
+    message_id DWORD ?
+    stream_id DWORD ?
+    timestamp DWORD ?
+    data_ptr DWORD ?
+    data_len DWORD ?
+    next_ptr DWORD ?
+    prev_ptr DWORD ?
+    ack_count DWORD ?
+    nack_count DWORD ?
+    flags DWORD ?
+    reserved BYTE 4*4 dup(?)
+MESSAGE ENDS
 
 ; Consumer structure
-CONSUMER struct
-    consumer_id dword ?
-    stream_id dword ?
-    name_ptr dword ?
-    name_len dword ?
-    current_offset dword ?
-    last_message_id dword ?
-    ack_count dword ?
-    nack_count dword ?
-    created_at dword ?
-    flags dword ?
-    reserved dword 6 dup(?)
-CONSUMER ends
+CONSUMER STRUCT
+    consumer_id DWORD ?
+    stream_id DWORD ?
+    name_ptr DWORD ?
+    name_len DWORD ?
+    current_offset DWORD ?
+    last_message_id DWORD ?
+    ack_count DWORD ?
+    nack_count DWORD ?
+    created_at DWORD ?
+    flags DWORD ?
+    reserved BYTE 6*4 dup(?)
+CONSUMER ENDS
 
 ; Constants
 STREAM_MAX_NAME_LEN equ 256
@@ -93,3 +93,7 @@ EXTERN stream_get_offset:proc
 EXTERN stream_seek:proc
 EXTERN stream_stats:proc
 EXTERN stream_list:proc
+
+
+
+

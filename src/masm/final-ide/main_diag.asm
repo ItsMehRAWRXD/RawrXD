@@ -17,7 +17,6 @@ EXTERN ui_create_main_window:PROC
     h_instance      QWORD 0
 
 .code
-
 PUBLIC main
 main PROC
     ; rcx = hInstance
@@ -48,8 +47,11 @@ main PROC
     add rsp, 32
     ret
 main ENDP
-
 PUBLIC RawrMain
 RawrMain EQU main
 
 END
+
+
+
+

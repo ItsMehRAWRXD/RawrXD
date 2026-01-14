@@ -420,7 +420,7 @@ QJsonArray AgenticIterativeReasoning::extractStructuredResponse(const QString& m
     return result;
 }
 
-bool AgenticIterativeReasoning::hasConverged(const std::vector<QString>& recentResults)
+bool AgenticIterativeReasoning::hasConverged(const QStringList& recentResults)
 {
     if (recentResults.size() < 3) return false;
 
@@ -491,7 +491,7 @@ QJsonObject AgenticIterativeReasoning::getMetrics() const
     metrics["duration_ms"] = static_cast<int>(
         m_loopStartTime.msecsTo(QDateTime::currentDateTime())
     );
-    metrics["strategy_count"] = m_failedStrategies.size();
+    metrics["strategy_count"] = static_cast<qint64>(m_failedStrategies.size());
 
     return metrics;
 }

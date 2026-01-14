@@ -1,6 +1,8 @@
 // RawrXD Agentic IDE - v5.0 Entry Point
 #include "MainWindow_v5.h"
 #include "qt_masm_bridge.h"
+#include "integration/ProdIntegration.h"
+#include "integration/InitializationTracker.h"
 #include <QApplication>
 #include <QDebug>
 #include <QFile>
@@ -8,6 +10,7 @@
 #include <QDateTime>
 #include <QFileInfo>
 #include <QTimer>
+#include <QThreadPool>
 
 // Global file for real-time logging
 static QFile* g_logFile = nullptr;
@@ -81,6 +84,14 @@ int main(int argc, char *argv[])
     qDebug() << "[Main] Creating QApplication";
     
     QApplication app(argc, argv);
+
+    // FIX CORESET OPTIMIZATION: Ensure we have enough threads for aggressive multi-window
+    // scenarios (Cloud + Local inference + Analysis + Training all at once)
+    // Default is usually logic cores, but for I/O bound tasks we want more.
+    int idealThreads = QThread::idealThreadCount();
+    int targetThreads = std::max(idealThreads * 2, 32); // At least 32, or 2x cores
+    QThreadPool::globalInstance()->setMaxThreadCount(targetThreads);
+    qInfo() << "[Main] Scaled thread pool to" << targetThreads << "threads for concurrency";
     
     qDebug() << "[Main] QApplication created";
 
@@ -110,6 +121,9 @@ int main(int argc, char *argv[])
     
     int result = app.exec();
     
+    // Print initialization summary for diagnostic purposes
+    RawrXD::InitializationTracker::instance().printSummary();
+
     // Cleanup logging
     qInfo() << "=== RawrXD AgenticIDE Shutting Down ===";
     if (g_logStream) {

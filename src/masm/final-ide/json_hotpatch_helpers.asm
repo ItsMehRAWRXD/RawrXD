@@ -529,9 +529,9 @@ int_to_string PROC
     ; INPUT: rcx = buffer, edx = value
     ; OUTPUT: none
     ;==========================================================================
-    PUBLIC _copy_string
+PUBLIC _copy_string
     ALIGN 16
-    _copy_string PROC
+_copy_string PROC
         ; rcx = source, rdx = destination, r8d = max length
         ; Returns: eax = bytes copied
         push rsi
@@ -717,4 +717,8 @@ EXTERN ReadFile:PROC
 EXTERN CloseHandle:PROC
 
 END
+
+
+
+
 

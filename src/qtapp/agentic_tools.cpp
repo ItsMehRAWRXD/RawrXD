@@ -1,9 +1,13 @@
 /**
  * @file agentic_tools.cpp
  * @brief Complete implementation of AgenticToolExecutor
+ * 
+ * Now with full Win32 API integration for production-grade autonomous
+ * workload execution alongside Qt abstractions for compatibility.
  */
 
 #include "agentic_tools.hpp"
+#include "win32_autonomous_api.hpp"
 #include <QProcess>
 #include <QFile>
 #include <QDir>
@@ -12,6 +16,7 @@
 #include <QElapsedTimer>
 #include <QDebug>
 #include <algorithm>
+#include <windows.h>
 
 AgenticToolExecutor::AgenticToolExecutor(QObject* parent)
     : QObject(parent)
@@ -118,7 +123,7 @@ ToolResult AgenticToolExecutor::executeTool(const QString& toolName, const QStri
     
     // Execute the tool
     ToolResult result = it.value()(arguments);
-    result.executionTimeMs = timer.elapsed();
+    result.executionTimeMs = static_cast<double>(timer.elapsed());
     
     // Emit appropriate signal
     if (result.success) {
@@ -134,30 +139,71 @@ ToolResult AgenticToolExecutor::executeTool(const QString& toolName, const QStri
 
 ToolResult AgenticToolExecutor::readFile(const QString& filePath)
 {
+    QElapsedTimer timer;
+    timer.start();
+    
+    // Use Win32 native file I/O for superior performance
+    HANDLE fileHandle = Win32AutonomousAPI::instance().createFile(
+        filePath,
+        GENERIC_READ,
+        OPEN_EXISTING);
+    
+    if (fileHandle != INVALID_HANDLE_VALUE) {
+        QString content = Win32AutonomousAPI::instance().readFile(fileHandle, 10485760); // 10MB max
+        Win32AutonomousAPI::instance().closeFile(fileHandle);
+        
+        if (!content.isEmpty() || GetLastError() == NO_ERROR) {
+            return ToolResult{true, content, "", 0, static_cast<double>(timer.elapsed())};
+        }
+    }
+    
+    // Win32 failed, fall back to Qt QFile
+    qWarning() << "Win32 file read failed for" << filePath << ", falling back to Qt QFile";
+    
     QFile file(filePath);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        return ToolResult{false, "", "Cannot open file: " + filePath, 1, 0.0};
+        return ToolResult{false, "", "Cannot open file: " + filePath, 1, static_cast<double>(timer.elapsed())};
     }
     
     QTextStream in(&file);
     QString content = in.readAll();
     file.close();
     
-    return ToolResult{true, content, "", 0, 0.0};
+    return ToolResult{true, content, "", 0, static_cast<double>(timer.elapsed())};
 }
 
 ToolResult AgenticToolExecutor::writeFile(const QString& filePath, const QString& content)
 {
+    QElapsedTimer timer;
+    timer.start();
+    
+    // Use Win32 native file I/O for superior performance and control
+    HANDLE fileHandle = Win32AutonomousAPI::instance().createFile(
+        filePath,
+        GENERIC_READ | GENERIC_WRITE,
+        CREATE_ALWAYS);
+    
+    if (fileHandle != INVALID_HANDLE_VALUE) {
+        if (Win32AutonomousAPI::instance().writeFile(fileHandle, content)) {
+            Win32AutonomousAPI::instance().closeFile(fileHandle);
+            return ToolResult{true, "File written successfully: " + filePath, "", 0, static_cast<double>(timer.elapsed())};
+        }
+        Win32AutonomousAPI::instance().closeFile(fileHandle);
+    }
+    
+    // Win32 failed, fall back to Qt QFile
+    qWarning() << "Win32 file write failed for" << filePath << ", falling back to Qt QFile";
+    
     QFile file(filePath);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        return ToolResult{false, "", "Cannot open file for writing: " + filePath, 1, 0.0};
+        return ToolResult{false, "", "Cannot open file for writing: " + filePath, 1, static_cast<double>(timer.elapsed())};
     }
     
     QTextStream out(&file);
     out << content;
     file.close();
     
-    return ToolResult{true, "File written successfully: " + filePath, "", 0, 0.0};
+    return ToolResult{true, "File written successfully: " + filePath, "", 0, static_cast<double>(timer.elapsed())};
 }
 
 ToolResult AgenticToolExecutor::listDirectory(const QString& dirPath)
@@ -179,12 +225,45 @@ ToolResult AgenticToolExecutor::listDirectory(const QString& dirPath)
 
 ToolResult AgenticToolExecutor::executeCommand(const QString& program, const QStringList& args)
 {
+    QElapsedTimer timer;
+    timer.start();
+    
+    // Use Win32 native process execution for superior performance and control
+    // Falls back to Qt QProcess if Win32 execution fails
+    
+    ProcessExecutionResult win32Result = Win32AutonomousAPI::instance().createProcess(
+        program,
+        args,
+        QString(),           // workingDirectory
+        true,               // waitForCompletion
+        true,               // captureOutput
+        QMap<QString, QString>(),  // environmentVars
+        NORMAL_PRIORITY_CLASS,     // priority
+        false,              // createWindow
+        false               // runAsAdmin
+    );
+    
+    if (win32Result.success) {
+        // Win32 execution succeeded - return native result with full output
+        return ToolResult{
+            true,
+            win32Result.stdOutput.isEmpty() ? win32Result.stdError : win32Result.stdOutput,
+            win32Result.errorMessage,
+            win32Result.exitCode,
+            static_cast<double>(timer.elapsed())
+        };
+    }
+    
+    // Win32 execution failed, fall back to Qt QProcess
+    // This maintains backward compatibility with Qt-only environments
+    qWarning() << "Win32 execution failed:" << win32Result.errorMessage << ", falling back to Qt QProcess";
+    
     QProcess process;
     process.start(program, args);
     
     if (!process.waitForFinished(30000)) {  // 30 second timeout
         process.kill();
-        return ToolResult{false, "", "Command timeout or failed to execute", 1, 0.0};
+        return ToolResult{false, "", "Command timeout or failed to execute", 1, static_cast<double>(timer.elapsed())};
     }
     
     QString output = QString::fromUtf8(process.readAllStandardOutput());
@@ -192,9 +271,9 @@ ToolResult AgenticToolExecutor::executeCommand(const QString& program, const QSt
     int exitCode = process.exitCode();
     
     if (exitCode == 0) {
-        return ToolResult{true, output, "", exitCode, 0.0};
+        return ToolResult{true, output, "", exitCode, static_cast<double>(timer.elapsed())};
     } else {
-        return ToolResult{false, output, error.isEmpty() ? "Exit code: " + QString::number(exitCode) : error, exitCode, 0.0};
+        return ToolResult{false, output, error.isEmpty() ? "Exit code: " + QString::number(exitCode) : error, exitCode, static_cast<double>(timer.elapsed())};
     }
 }
 

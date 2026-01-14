@@ -5,8 +5,8 @@
 
 option casemap:none
 
-EXTERN malloc:PROC
-EXTERN free:PROC
+extern masm_malloc : proc
+extern masm_free : proc
 EXTERN memcpy:PROC
 EXTERN memmove:PROC
 EXTERN console_log:PROC
@@ -329,7 +329,7 @@ calculate_statistics PROC
     
     ; Allocate PERCENTILE_STATS
     mov rcx, SIZEOF PERCENTILE_STATS
-    call malloc
+    call masm_malloc
     
     mov rbx, rax                   ; rbx = stats pointer
     mov rsi, rcx                   ; rsi = data pointer (1st arg)
@@ -446,7 +446,7 @@ create_histogram PROC
     
     ; Allocate HISTOGRAM structure
     mov rcx, SIZEOF HISTOGRAM
-    call malloc
+    call masm_malloc
     
     mov rbx, rax                   ; rbx = histogram pointer
     mov rsi, rcx                   ; rsi = data
@@ -502,7 +502,7 @@ minmax_done_local:
     ; Allocate buckets array
     mov rcx, r12
     imul rcx, SIZEOF HISTOGRAM_BUCKET
-    call malloc
+    call masm_malloc
     mov [rbx + HISTOGRAM.buckets], rax
     
     ; Initialize buckets
@@ -626,12 +626,12 @@ free_histogram PROC
     mov rcx, [rbx + HISTOGRAM.buckets]
     cmp rcx, 0
     je skip_buckets_local
-    call free
+    call masm_free
     
 skip_buckets_local:
     ; Free histogram structure
     mov rcx, rbx
-    call free
+    call masm_free
     
     pop rbx
     ret
@@ -660,4 +660,8 @@ get_histogram_bucket ENDP
     fOneHundred REAL8 100.0
 
 END
+
+
+
+
 

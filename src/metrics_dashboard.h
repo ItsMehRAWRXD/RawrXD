@@ -95,6 +95,8 @@ private:
     void updateCostChart();
     void updateLatencyChart();
     void updateSuccessRateChart();
+    void updateLatencyPercentiles();
+    void updateThroughputChart();
     void updateRequestCountTable();
     void updateErrorLog();
     void updateSummaryLabels();
@@ -111,6 +113,7 @@ private:
     QLabel *m_total_requests_label;
     QLabel *m_avg_latency_label;
     QLabel *m_avg_success_rate_label;
+    QLabel *m_p95_latency_label;
     QLabel *m_active_model_label;
 
     // Charts
@@ -126,6 +129,10 @@ private:
     QChart *m_success_rate_chart;
     QLineSeries *m_success_rate_line_series;
 
+    QChartView *m_throughput_chart_view;
+    QChart *m_throughput_chart;
+    QLineSeries *m_throughput_tokens_series;
+
     // Tables
     QTableWidget *m_request_count_table;
     QTableWidget *m_error_log_table;
@@ -133,7 +140,9 @@ private:
 
     // Historical data for trend charts
     QVector<double> m_success_rate_history;
+    QVector<double> m_throughput_history;
     QVector<qint64> m_timestamp_history;
+
 
     // State
     QMap<QString, double> m_cost_by_model;

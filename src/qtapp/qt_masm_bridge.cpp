@@ -331,13 +331,12 @@ void QtMasmBridge::pumpEvents()
 
 extern "C" void qt_masm_signal_callback(uint32_t signalId, uint32_t paramCount, const RawrXD::QtParam* params)
 {
-    // TODO: Fix access to private member - either make dispatchSignal public or add friend declaration
-    // For now, comment out to allow compilation
-    // RawrXD::QtMasmBridge::instance().dispatchSignal(signalId, paramCount, params);
-    qWarning() << "[qt_masm_signal_callback] TEMPORARY: dispatchSignal access disabled - needs architecture fix";
+    // Use public wrapper method to access dispatchSignal
+    RawrXD::QtMasmBridge::instance().dispatchSignalFromCallback(signalId, paramCount, params);
 }
 
 // MASM function stubs - these will be replaced with real MASM implementations when MASM compiler is available
+#ifndef ENABLE_MASM_INTEGRATION
 extern "C" bool masm_qt_bridge_init() {
     qDebug() << "[MASM] masm_qt_bridge_init stub - MASM disabled";
     return true; // Return success to allow QtMasmBridge to initialize
@@ -362,3 +361,4 @@ extern "C" uint32_t masm_event_pump() {
     qDebug() << "[MASM] masm_event_pump stub";
     return 0; // No events processed
 }
+#endif

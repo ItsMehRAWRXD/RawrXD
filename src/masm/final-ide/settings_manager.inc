@@ -29,58 +29,88 @@ MAX_SETTINGS_KEYS    EQU 256
 
 ; Initialize the settings manager system
 ; Returns: 1 = success, 0 = failure
-EXTERN masm_settings_init:PROC
+IFNDEF @masm_settings_init
+  EXTERN masm_settings_init:PROC
+ENDIF
 
 ; Load settings from registry
 ; Returns: 1 = success, 0 = failure
-EXTERN masm_settings_load:PROC
+IFNDEF @masm_settings_load
+  EXTERN masm_settings_load:PROC
+ENDIF
 
 ; Save settings to registry
 ; Returns: 1 = success, 0 = failure
-EXTERN masm_settings_save:PROC
+IFNDEF @masm_settings_save
+  EXTERN masm_settings_save:PROC
+ENDIF
 
 ; Get integer setting value
 ; Args: RCX = keyName pointer
 ; Returns: integer value or 0 if not found
-EXTERN masm_settings_get_int:PROC
+IFNDEF @masm_settings_get_int
+  EXTERN masm_settings_get_int:PROC
+ENDIF
 
 ; Set integer setting value
 ; Args: RCX = keyName pointer, RDX = value
 ; Returns: 1 = success, 0 = failure
-EXTERN masm_settings_set_int:PROC
+IFNDEF @masm_settings_set_int
+  EXTERN masm_settings_set_int:PROC
+ENDIF
 
 ; Get string setting value
 ; Args: RCX = keyName pointer, RDX = buffer pointer, R8 = buffer size
 ; Returns: 1 = success, 0 = failure
-EXTERN masm_settings_get_string:PROC
+IFNDEF @masm_settings_get_string
+  EXTERN masm_settings_get_string:PROC
+ENDIF
 
 ; Set string setting value
 ; Args: RCX = keyName pointer, RDX = value pointer
 ; Returns: 1 = success, 0 = failure
-EXTERN masm_settings_set_string:PROC
+IFNDEF @masm_settings_set_string
+  EXTERN masm_settings_set_string:PROC
+ENDIF
 
 ; Get boolean setting value
 ; Args: RCX = keyName pointer
 ; Returns: boolean value or FALSE if not found
-EXTERN masm_settings_get_bool:PROC
+IFNDEF @masm_settings_get_bool
+  EXTERN masm_settings_get_bool:PROC
+ENDIF
 
 ; Set boolean setting value
 ; Args: RCX = keyName pointer, RDX = value
 ; Returns: 1 = success, 0 = failure
-EXTERN masm_settings_set_bool:PROC
+IFNDEF @masm_settings_set_bool
+  EXTERN masm_settings_set_bool:PROC
+ENDIF
 
 ; Get float setting value
 ; Args: RCX = keyName pointer
 ; Returns: float value in xmm0 or 0.0 if not found
-EXTERN masm_settings_get_float:PROC
+IFNDEF @masm_settings_get_float
+  EXTERN masm_settings_get_float:PROC
+ENDIF
 
 ; Set float setting value
 ; Args: RCX = keyName pointer, XMM1 = value
 ; Returns: 1 = success, 0 = failure
-EXTERN masm_settings_set_float:PROC
+IFNDEF @masm_settings_set_float
+  EXTERN masm_settings_set_float:PROC
+ENDIF
 
 ; Reset all settings to default values
 ; Returns: 1 = success, 0 = failure
-EXTERN masm_settings_reset_to_defaults:PROC
+IFNDEF @masm_settings_reset_to_defaults
+  EXTERN masm_settings_reset_to_defaults:PROC
+ENDIF
 
 ENDIF
+
+
+
+
+
+

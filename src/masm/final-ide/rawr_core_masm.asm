@@ -41,7 +41,6 @@ rawr_string_hash ENDP
 ; ============================================================
 ; Structure: [hash(8) | prefix_len(4) | results_ptr(8) | next_ptr(8) | prefix_data... | results_data...]
 ; Cache size: 4MB (65536 slots * 64 bytes/slot)
-
 PUBLIC rawr_cache_lookup
 rawr_cache_lookup PROC
     ; rcx = prefix string, rdx = prefix_len, r8 = cache base, r9 = cache size
@@ -305,7 +304,6 @@ rawr_atomic_increment PROC
     mov rax, rdx                ; return old value
     ret
 rawr_atomic_increment ENDP
-
 PUBLIC rawr_atomic_compare_swap
 rawr_atomic_compare_swap PROC
     ; rcx = pointer, rdx = expected, r8 = new_value
@@ -363,4 +361,8 @@ ERR_TIMEOUT equ 4
 .code
 
 end
+
+
+
+
 

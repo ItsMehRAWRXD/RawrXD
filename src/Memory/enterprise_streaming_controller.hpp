@@ -17,7 +17,7 @@
 #include "large_model_optimizer.hpp"
 #include "../monitoring/enterprise_metrics_collector.hpp"
 #include "fault_tolerance_manager.hpp"
-#include "performance_monitor.h"
+#include "../performance_monitor.h"
 
 // Enterprise configuration
 struct EnterpriseStreamingConfig {

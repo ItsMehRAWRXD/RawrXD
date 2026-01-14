@@ -28,6 +28,7 @@ extern SetHandleInformation:proc
 
 ; Process APIs
 extern CreateProcessA:proc
+extern TerminateProcess:proc
 extern WriteFile:proc
 extern ReadFile:proc
 extern PeekNamedPipe:proc
@@ -259,4 +260,8 @@ include distributed_executor.inc
 
 ; Advanced Auth component
 include advanced_auth.inc
+
+
+
+
 

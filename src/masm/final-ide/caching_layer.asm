@@ -1,933 +1,854 @@
-; Caching Layer - Redis-compatible in-memory cache
-; Phase D Component 1: 1,200 MASM LOC, 8 functions
-; Author: RawrXD-QtShell MASM Conversion Project
-; Date: December 29, 2025
+; Caching Layer - Redis-compatible in-memory cache (x64)
+; Ported from 32-bit MASM to ML64 with hash table + LRU semantics intact.
 
-.686
-.model flat, C
-option casemap:none
+CACHING_LAYER_IMPLEMENTATION equ 1
 
-include \masm32\include\kernel32.inc
-include \masm32\include\user32.inc
-include \masm32\include\msvcrt.inc
-includelib \masm32\lib\kernel32.lib
-includelib \masm32\lib\user32.lib
-includelib \masm32\lib\msvcrt.lib
-
+include windows.inc
 include masm_master_defs.inc
+include caching_layer.inc
 
-.data
-; Cache structure (128 bytes)
-CACHE_STRUCT struct
-    cache_mutex dword ?          ; Mutex for thread safety
-    cache_size dword ?           ; Current cache size in bytes
-    max_size dword ?             ; Maximum cache size (default 64MB)
-    item_count dword ?           ; Number of items in cache
-    head_ptr dword ?             ; Pointer to first cache item (LRU)
-    tail_ptr dword ?             ; Pointer to last cache item
-    hit_count dword ?            ; Cache hits
-    miss_count dword ?           ; Cache misses
-    eviction_count dword ?       ; Items evicted
-    stats_enabled dword ?        ; Statistics enabled flag
-    hash_table_ptr dword ?       ; Pointer to hash table
-    hash_table_size dword ?      ; Hash table size (prime number)
-    allocator_ptr dword ?        ; Memory allocator function
-    deallocator_ptr dword ?      ; Memory deallocator function
-    reserved dword 16 dup(?)     ; Reserved for future use
-CACHE_STRUCT ends
+CACHE_STRUCT_size equ SIZEOF CACHE_STRUCT
+CACHE_ITEM_size   equ SIZEOF CACHE_ITEM
 
-; Cache item structure (64 bytes)
-CACHE_ITEM struct
-    key_ptr dword ?              ; Pointer to key string
-    key_len dword ?              ; Key length
-    value_ptr dword ?            ; Pointer to value data
-    value_len dword ?            ; Value length
-    expires_at dword ?           ; Expiration timestamp (0 = never)
-    access_count dword ?         ; Number of accesses
-    last_access dword ?          ; Last access timestamp
-    prev_ptr dword ?             ; Previous item in LRU list
-    next_ptr dword ?             ; Next item in LRU list
-    hash_next_ptr dword ?        ; Next item in hash bucket
-    flags dword ?                ; Item flags
-    reserved dword 4 dup(?)      ; Reserved
-CACHE_ITEM ends
-
-; Constants
-CACHE_MAX_KEY_SIZE equ 1024      ; Maximum key size (1KB)
-CACHE_MAX_VALUE_SIZE equ 1048576 ; Maximum value size (1MB)
-CACHE_DEFAULT_SIZE equ 67108864  ; Default cache size (64MB)
-CACHE_HASH_TABLE_SIZE equ 8191   ; Hash table size (prime)
-
-; Error codes
-CACHE_SUCCESS equ 0
-CACHE_ERROR_INVALID equ 1
-CACHE_ERROR_OOM equ 2
-CACHE_ERROR_NOT_FOUND equ 3
-CACHE_ERROR_EXISTS equ 4
-CACHE_ERROR_EXPIRED equ 5
-CACHE_ERROR_SIZE equ 6
+OPTION PROLOGUE:PrologueDef
+OPTION EPILOGUE:EpilogueDef
 
 .code
 
-; Initialize cache system
-cache_init proc uses ebx esi edi, max_size:dword, stats:dword
-    local cache_ptr:dword
-    
-    ; Validate parameters
-    mov eax, max_size
-    test eax, eax
-    jnz size_ok
-    mov eax, CACHE_DEFAULT_SIZE
-    
-size_ok:
-    ; Allocate cache structure
-    invoke crt_malloc, sizeof CACHE_STRUCT
-    test eax, eax
-    jz error_oom
-    mov cache_ptr, eax
-    
-    ; Initialize cache structure
-    mov ebx, cache_ptr
-    assume ebx:ptr CACHE_STRUCT
-    
-    ; Create mutex for thread safety
-    invoke CreateMutex, NULL, FALSE, NULL
-    test eax, eax
-    jz cleanup_error
-    mov [ebx].cache_mutex, eax
-    
-    ; Initialize cache fields
-    mov [ebx].cache_size, 0
-    mov eax, max_size
-    test eax, eax
-    jnz set_max_size
-    mov eax, CACHE_DEFAULT_SIZE
-set_max_size:
-    mov [ebx].max_size, eax
-    mov [ebx].item_count, 0
-    mov [ebx].head_ptr, 0
-    mov [ebx].tail_ptr, 0
-    mov [ebx].hit_count, 0
-    mov [ebx].miss_count, 0
-    mov [ebx].eviction_count, 0
-    mov eax, stats
-    mov [ebx].stats_enabled, eax
-    
-    ; Allocate hash table
-    invoke crt_malloc, CACHE_HASH_TABLE_SIZE * 4
-    test eax, eax
-    jz cleanup_mutex
-    mov [ebx].hash_table_ptr, eax
-    mov [ebx].hash_table_size, CACHE_HASH_TABLE_SIZE
-    
-    ; Initialize hash table to zeros
-    mov edi, eax
-    mov ecx, CACHE_HASH_TABLE_SIZE
-    xor eax, eax
-    rep stosd
-    
-    ; Set default allocators
-    mov [ebx].allocator_ptr, offset crt_malloc
-    mov [ebx].deallocator_ptr, offset crt_free
-    
-    assume ebx:nothing
-    mov eax, cache_ptr
+; ---------------------------------------------------------------------------
+; Local helpers
+; allocate_zero(size: rcx) -> rax
+allocate_zero PROC PRIVATE
+    push rbx
+    sub rsp, 32
+    mov rbx, rcx
+    call GetProcessHeap
+    mov rcx, rax
+    mov rdx, HEAP_ZERO_MEMORY
+    mov r8, rbx
+    call HeapAlloc
+    add rsp, 32
+    pop rbx
     ret
-    
-cleanup_mutex:
-    invoke CloseHandle, [ebx].cache_mutex
-cleanup_error:
-    invoke crt_free, cache_ptr
-error_oom:
-    xor eax, eax
-    ret
-cache_init endp
+allocate_zero ENDP
 
-; Shutdown cache system
-cache_shutdown proc uses ebx esi edi, cache_ptr:dword
-    local item_ptr:dword, next_ptr:dword
-    
-    mov ebx, cache_ptr
-    test ebx, ebx
-    jz done
-    assume ebx:ptr CACHE_STRUCT
-    
-    ; Lock cache
-    invoke WaitForSingleObject, [ebx].cache_mutex, INFINITE
-    
-    ; Free all cache items
-    mov esi, [ebx].head_ptr
-free_loop:
-    test esi, esi
-    jz free_done
-    mov edi, esi
-    assume edi:ptr CACHE_ITEM
-    mov esi, [edi].next_ptr
-    
-    ; Free key and value
-    invoke crt_free, [edi].key_ptr
-    invoke crt_free, [edi].value_ptr
-    invoke crt_free, edi
-    jmp free_loop
-    
-free_done:
-    assume edi:nothing
-    
-    ; Free hash table
-    invoke crt_free, [ebx].hash_table_ptr
-    
-    ; Release mutex and close handle
-    invoke ReleaseMutex, [ebx].cache_mutex
-    invoke CloseHandle, [ebx].cache_mutex
-    
-    ; Free cache structure
-    invoke crt_free, ebx
-    
-    assume ebx:nothing
-done:
-    mov eax, CACHE_SUCCESS
+; free_heap(ptr: rcx)
+free_heap PROC PRIVATE
+    push rbx
+    sub rsp, 32
+    mov rbx, rcx
+    test rbx, rbx
+    jz short fh_done
+    call GetProcessHeap
+    mov rcx, rax
+    xor rdx, rdx
+    mov r8, rbx
+    call HeapFree
+fh_done:
+    add rsp, 32
+    pop rbx
     ret
-cache_shutdown endp
+free_heap ENDP
 
-; Hash function for keys (djb2 algorithm)
-hash_key proc uses ebx esi edi, key_ptr:dword, key_len:dword
-    mov esi, key_ptr
-    mov ecx, key_len
+; djb2 hash (key_ptr: rcx, key_len: rdx) -> rax (bucket index)
+hash_key PROC PUBLIC
+    push rsi
+    push rdi
+    sub rsp, 40
+    mov rsi, rcx
+    mov rdi, rdx
     xor eax, eax
     xor edx, edx
-    
-hash_loop:
-    test ecx, ecx
-    jz hash_done
-    mov dl, byte ptr [esi]
+hk_loop:
+    test rdi, rdi
+    jz hk_mod
+    mov dl, byte ptr [rsi]
     imul eax, eax, 33
     add eax, edx
-    inc esi
-    dec ecx
-    jmp hash_loop
-    
-hash_done:
-    ; Modulo hash table size
+    inc rsi
+    dec rdi
+    jmp hk_loop
+hk_mod:
     xor edx, edx
     mov ecx, CACHE_HASH_TABLE_SIZE
     div ecx
     mov eax, edx
+    add rsp, 40
+    pop rdi
+    pop rsi
     ret
-hash_key endp
+hash_key ENDP
 
-; Get item from cache
-cache_get proc uses ebx esi edi, cache_ptr:dword, key_ptr:dword, key_len:dword
-    local value_ptr:dword, value_len:dword
-    
-    mov ebx, cache_ptr
-    test ebx, ebx
-    jz error_invalid
-    assume ebx:ptr CACHE_STRUCT
-    
-    ; Validate key
-    mov eax, key_ptr
-    test eax, eax
-    jz error_invalid
-    mov eax, key_len
-    test eax, eax
-    jz error_invalid
-    cmp eax, CACHE_MAX_KEY_SIZE
-    ja error_size
-    
-    ; Lock cache
-    invoke WaitForSingleObject, [ebx].cache_mutex, INFINITE
-    
-    ; Calculate hash
-    invoke hash_key, key_ptr, key_len
-    mov edx, eax
-    
-    ; Search hash bucket
-    mov esi, [ebx].hash_table_ptr
-    mov esi, [esi + edx * 4]
-    
-search_loop:
-    test esi, esi
-    jz not_found
-    assume esi:ptr CACHE_ITEM
-    
-    ; Check key match
-    mov edi, [esi].key_len
-    cmp edi, key_len
-    jne next_item
-    
-    ; Compare keys
-    push esi
-    mov esi, [esi].key_ptr
-    mov edi, key_ptr
-    mov ecx, key_len
-    repe cmpsb
-    pop esi
-    jne next_item
-    
-    ; Check expiration
-    mov eax, [esi].expires_at
-    test eax, eax
-    jz item_valid
-    
-    ; Get current time
-    invoke GetTickCount
-    cmp eax, [esi].expires_at
-    jae expired
-    
-item_valid:
-    ; Update access statistics
-    inc [esi].access_count
-    mov [esi].last_access, eax
-    
-    ; Update cache statistics
-    inc [ebx].hit_count
-    
-    ; Move to front of LRU list
-    call update_lru
-    
-    ; Return value
-    mov eax, [esi].value_ptr
-    mov value_ptr, eax
-    mov eax, [esi].value_len
-    mov value_len, eax
-    
-    ; Release mutex
-    invoke ReleaseMutex, [ebx].cache_mutex
-    
-    mov eax, CACHE_SUCCESS
-    ret
-    
-next_item:
-    mov esi, [esi].hash_next_ptr
-    jmp search_loop
-    
-not_found:
-    inc [ebx].miss_count
-    invoke ReleaseMutex, [ebx].cache_mutex
-    mov eax, CACHE_ERROR_NOT_FOUND
-    ret
-    
-expired:
-    ; Remove expired item
-    call remove_item
-    inc [ebx].miss_count
-    invoke ReleaseMutex, [ebx].cache_mutex
-    mov eax, CACHE_ERROR_EXPIRED
-    ret
-    
-error_invalid:
-    mov eax, CACHE_ERROR_INVALID
-    ret
-    
-error_size:
-    mov eax, CACHE_ERROR_SIZE
-    ret
-    
-update_lru:
-    ; If already at head, nothing to do
-    mov eax, [ebx].head_ptr
-    cmp esi, eax
-    je lru_done
-    
-    ; Remove from current position
-    mov edi, [esi].prev_ptr
-    mov edx, [esi].next_ptr
-    test edi, edi
-    jz no_prev
-    mov [edi].next_ptr, edx
-no_prev:
-    test edx, edx
-    jz no_next
-    mov [edx].prev_ptr, edi
-no_next:
-    
-    ; Update tail if necessary
-    cmp esi, [ebx].tail_ptr
-    jne not_tail
-    mov [ebx].tail_ptr, edi
-not_tail:
-    
-    ; Move to head
-    mov eax, [ebx].head_ptr
-    mov [esi].prev_ptr, 0
-    mov [esi].next_ptr, eax
-    test eax, eax
-    jz no_old_head
-    mov [eax].prev_ptr, esi
-no_old_head:
-    mov [ebx].head_ptr, esi
-    
-lru_done:
-    ret
-    
-remove_item:
-    ; Remove from hash table
-    invoke hash_key, [esi].key_ptr, [esi].key_len
-    mov edx, eax
-    mov edi, [ebx].hash_table_ptr
-    mov edi, [edi + edx * 4]
-    
-    ; Find and remove from hash chain
-    test edi, edi
-    jz hash_remove_done
-    cmp edi, esi
-    jne hash_search
-    mov eax, [esi].hash_next_ptr
-    mov [ebx].hash_table_ptr[edx * 4], eax
-    jmp hash_remove_done
-    
-hash_search:
-    mov eax, [edi].hash_next_ptr
-    test eax, eax
-    jz hash_remove_done
-    cmp eax, esi
-    jne next_hash
-    mov eax, [esi].hash_next_ptr
-    mov [edi].hash_next_ptr, eax
-    jmp hash_remove_done
-next_hash:
-    mov edi, eax
-    jmp hash_search
-    
-hash_remove_done:
-    
-    ; Remove from LRU list
-    mov edi, [esi].prev_ptr
-    mov edx, [esi].next_ptr
-    test edi, edi
-    jz lru_no_prev
-    mov [edi].next_ptr, edx
-lru_no_prev:
-    test edx, edx
-    jz lru_no_next
-    mov [edx].prev_ptr, edi
-lru_no_next:
-    
-    ; Update head/tail pointers
-    cmp esi, [ebx].head_ptr
-    jne not_head
-    mov [ebx].head_ptr, edx
-not_head:
-    cmp esi, [ebx].tail_ptr
-    jne not_tail2
-    mov [ebx].tail_ptr, edi
-not_tail2:
-    
-    ; Update cache statistics
-    mov eax, [esi].value_len
-    sub [ebx].cache_size, eax
-    dec [ebx].item_count
-    inc [ebx].eviction_count
-    
-    ; Free memory
-    invoke crt_free, [esi].key_ptr
-    invoke crt_free, [esi].value_ptr
-    invoke crt_free, esi
-    
-    ret
-    
-    assume esi:nothing
-    assume ebx:nothing
-cache_get endp
+; Move item to head of LRU: rcx=cache*, rdx=item*
+update_lru PROC PRIVATE
+    push rbx
+    mov rbx, rcx
+    mov rcx, rdx
+    cmp rcx, [rbx + CACHE_STRUCT.head_ptr]
+    je  ul_done
 
-; Set item in cache
-cache_set proc uses ebx esi edi, cache_ptr:dword, key_ptr:dword, key_len:dword, 
-          value_ptr:dword, value_len:dword, ttl:dword
-    local item_ptr:dword, hash_index:dword, new_size:dword
-    
-    mov ebx, cache_ptr
-    test ebx, ebx
-    jz error_invalid
-    assume ebx:ptr CACHE_STRUCT
-    
-    ; Validate parameters
-    mov eax, key_ptr
-    test eax, eax
-    jz error_invalid
-    mov eax, key_len
-    test eax, eax
-    jz error_invalid
-    cmp eax, CACHE_MAX_KEY_SIZE
-    ja error_size
-    mov eax, value_ptr
-    test eax, eax
-    jz error_invalid
-    mov eax, value_len
-    test eax, eax
-    jz error_invalid
-    cmp eax, CACHE_MAX_VALUE_SIZE
-    ja error_size
-    
-    ; Lock cache
-    invoke WaitForSingleObject, [ebx].cache_mutex, INFINITE
-    
-    ; Calculate new total size
-    mov eax, value_len
-    add eax, key_len
-    add eax, sizeof CACHE_ITEM
-    mov new_size, eax
-    
-    ; Check if we need to evict
-    mov eax, [ebx].cache_size
-    add eax, new_size
-    cmp eax, [ebx].max_size
-    jbe size_ok
-    
-    ; Evict until we have enough space
-    call evict_for_space
-    
-size_ok:
-    ; Check if key already exists
-    invoke hash_key, key_ptr, key_len
-    mov hash_index, eax
-    
-    mov esi, [ebx].hash_table_ptr
-    mov esi, [esi + eax * 4]
-    
-search_existing:
-    test esi, esi
-    jz create_new
-    assume esi:ptr CACHE_ITEM
-    
-    ; Check key match
-    mov edi, [esi].key_len
-    cmp edi, key_len
-    jne next_existing
-    
-    push esi
-    mov esi, [esi].key_ptr
-    mov edi, key_ptr
-    mov ecx, key_len
-    repe cmpsb
-    pop esi
-    jne next_existing
-    
-    ; Update existing item
-    mov eax, value_len
-    cmp eax, [esi].value_len
-    je size_same
-    
-    ; Size changed, update cache size
-    mov edx, [esi].value_len
-    sub [ebx].cache_size, edx
-    add [ebx].cache_size, eax
-    
-    ; Reallocate value
-    invoke crt_free, [esi].value_ptr
-    invoke crt_malloc, value_len
-    test eax, eax
-    jz error_oom_locked
-    mov [esi].value_ptr, eax
-    
-size_same:
-    ; Copy new value
-    mov edi, [esi].value_ptr
-    mov esi, value_ptr
-    mov ecx, value_len
-    rep movsb
-    
-    ; Update expiration
-    mov eax, ttl
-    test eax, eax
-    jz no_expiration
-    invoke GetTickCount
-    add eax, ttl
-    mov [esi].expires_at, eax
-    jmp expiration_set
-no_expiration:
-    mov [esi].expires_at, 0
-expiration_set:
-    
-    ; Update access time
-    invoke GetTickCount
-    mov [esi].last_access, eax
-    
-    ; Move to front of LRU
-    call update_lru
-    
-    invoke ReleaseMutex, [ebx].cache_mutex
-    mov eax, CACHE_SUCCESS
-    ret
-    
-next_existing:
-    mov esi, [esi].hash_next_ptr
-    jmp search_existing
-    
-create_new:
-    ; Allocate new cache item
-    invoke crt_malloc, sizeof CACHE_ITEM
-    test eax, eax
-    jz error_oom_locked
-    mov item_ptr, eax
-    
-    ; Allocate and copy key
-    invoke crt_malloc, key_len
-    test eax, eax
-    jz free_item_error
-    mov edi, eax
-    mov esi, key_ptr
-    mov ecx, key_len
-    rep movsb
-    mov ebx, cache_ptr
-    assume ebx:ptr CACHE_STRUCT
-    mov esi, item_ptr
-    assume esi:ptr CACHE_ITEM
-    mov [esi].key_ptr, eax
-    mov [esi].key_len, key_len
-    
-    ; Allocate and copy value
-    invoke crt_malloc, value_len
-    test eax, eax
-    jz free_key_error
-    mov edi, eax
-    mov esi, value_ptr
-    mov ecx, value_len
-    rep movsb
-    mov [esi].value_ptr, eax
-    mov [esi].value_len, value_len
-    
-    ; Set expiration
-    mov eax, ttl
-    test eax, eax
-    jz new_no_expiration
-    invoke GetTickCount
-    add eax, ttl
-    mov [esi].expires_at, eax
-    jmp new_expiration_set
-new_no_expiration:
-    mov [esi].expires_at, 0
-new_expiration_set:
-    
-    ; Initialize other fields
-    mov [esi].access_count, 1
-    invoke GetTickCount
-    mov [esi].last_access, eax
-    mov [esi].prev_ptr, 0
-    mov [esi].next_ptr, 0
-    mov [esi].hash_next_ptr, 0
-    mov [esi].flags, 0
-    
-    ; Add to hash table
-    mov eax, hash_index
-    mov edi, [ebx].hash_table_ptr
-    mov edx, [edi + eax * 4]
-    mov [esi].hash_next_ptr, edx
-    mov [edi + eax * 4], esi
-    
-    ; Add to LRU list (at head)
-    mov eax, [ebx].head_ptr
-    mov [esi].next_ptr, eax
-    test eax, eax
-    jz no_old_head2
-    mov [eax].prev_ptr, esi
-no_old_head2:
-    mov [ebx].head_ptr, esi
-    
-    ; Update tail if this is first item
-    cmp [ebx].tail_ptr, 0
-    jne tail_ok
-    mov [ebx].tail_ptr, esi
-tail_ok:
-    
-    ; Update cache statistics
-    mov eax, value_len
-    add [ebx].cache_size, eax
-    inc [ebx].item_count
-    
-    invoke ReleaseMutex, [ebx].cache_mutex
-    mov eax, CACHE_SUCCESS
-    ret
-    
-free_key_error:
-    invoke crt_free, [esi].key_ptr
-free_item_error:
-    invoke crt_free, item_ptr
-error_oom_locked:
-    invoke ReleaseMutex, [ebx].cache_mutex
-error_oom:
-    mov eax, CACHE_ERROR_OOM
-    ret
-    
-error_invalid:
-    mov eax, CACHE_ERROR_INVALID
-    ret
-    
-error_size:
-    mov eax, CACHE_ERROR_SIZE
-    ret
-    
-evict_for_space:
-    ; Evict least recently used items until we have enough space
-    mov eax, new_size
-    add eax, [ebx].cache_size
-    cmp eax, [ebx].max_size
-    jbe evict_done
-    
-    mov esi, [ebx].tail_ptr
-    test esi, esi
-    jz evict_done
-    
-    assume esi:ptr CACHE_ITEM
-    
-evict_loop:
-    call remove_item
-    
-    ; Check if we have enough space now
-    mov eax, new_size
-    add eax, [ebx].cache_size
-    cmp eax, [ebx].max_size
-    jbe evict_done
-    
-    mov esi, [ebx].tail_ptr
-    test esi, esi
-    jnz evict_loop
-    
-evict_done:
-    ret
-    
-    assume esi:nothing
-    assume ebx:nothing
-cache_set endp
+    mov r8, [rcx + CACHE_ITEM.prev_ptr]
+    mov r9, [rcx + CACHE_ITEM.next_ptr]
+    test r8, r8
+    jz  ul_no_prev
+    mov [r8 + CACHE_ITEM.next_ptr], r9
+ul_no_prev:
+    test r9, r9
+    jz  ul_no_next
+    mov [r9 + CACHE_ITEM.prev_ptr], r8
+ul_no_next:
 
-; Delete item from cache
-cache_delete proc uses ebx esi edi, cache_ptr:dword, key_ptr:dword, key_len:dword
-    mov ebx, cache_ptr
-    test ebx, ebx
-    jz error_invalid
-    assume ebx:ptr CACHE_STRUCT
-    
-    ; Validate key
-    mov eax, key_ptr
-    test eax, eax
-    jz error_invalid
-    mov eax, key_len
-    test eax, eax
-    jz error_invalid
-    
-    ; Lock cache
-    invoke WaitForSingleObject, [ebx].cache_mutex, INFINITE
-    
-    ; Calculate hash
-    invoke hash_key, key_ptr, key_len
-    mov edx, eax
-    
-    ; Search hash bucket
-    mov esi, [ebx].hash_table_ptr
-    mov esi, [esi + edx * 4]
-    
-search_delete:
-    test esi, esi
-    jz not_found_delete
-    assume esi:ptr CACHE_ITEM
-    
-    ; Check key match
-    mov edi, [esi].key_len
-    cmp edi, key_len
-    jne next_delete
-    
-    push esi
-    mov esi, [esi].key_ptr
-    mov edi, key_ptr
-    mov ecx, key_len
-    repe cmpsb
-    pop esi
-    jne next_delete
-    
-    ; Found item, remove it
-    call remove_item
-    invoke ReleaseMutex, [ebx].cache_mutex
-    mov eax, CACHE_SUCCESS
-    ret
-    
-next_delete:
-    mov esi, [esi].hash_next_ptr
-    jmp search_delete
-    
-not_found_delete:
-    invoke ReleaseMutex, [ebx].cache_mutex
-    mov eax, CACHE_ERROR_NOT_FOUND
-    ret
-    
-error_invalid:
-    mov eax, CACHE_ERROR_INVALID
-    ret
-    
-    assume esi:nothing
-    assume ebx:nothing
-cache_delete endp
+    cmp rcx, [rbx + CACHE_STRUCT.tail_ptr]
+    jne ul_not_tail
+    mov [rbx + CACHE_STRUCT.tail_ptr], r8
+ul_not_tail:
 
-; Check if item exists in cache
-cache_exists proc uses ebx esi edi, cache_ptr:dword, key_ptr:dword, key_len:dword
-    mov ebx, cache_ptr
-    test ebx, ebx
-    jz error_invalid
-    assume ebx:ptr CACHE_STRUCT
-    
-    ; Validate key
-    mov eax, key_ptr
-    test eax, eax
-    jz error_invalid
-    mov eax, key_len
-    test eax, eax
-    jz error_invalid
-    
-    ; Lock cache
-    invoke WaitForSingleObject, [ebx].cache_mutex, INFINITE
-    
-    ; Calculate hash
-    invoke hash_key, key_ptr, key_len
-    mov edx, eax
-    
-    ; Search hash bucket
-    mov esi, [ebx].hash_table_ptr
-    mov esi, [esi + edx * 4]
-    
-search_exists:
-    test esi, esi
-    jz not_found_exists
-    assume esi:ptr CACHE_ITEM
-    
-    ; Check key match
-    mov edi, [esi].key_len
-    cmp edi, key_len
-    jne next_exists
-    
-    push esi
-    mov esi, [esi].key_ptr
-    mov edi, key_ptr
-    mov ecx, key_len
-    repe cmpsb
-    pop esi
-    jne next_exists
-    
-    ; Check expiration
-    mov eax, [esi].expires_at
-    test eax, eax
-    jz exists_valid
-    
-    invoke GetTickCount
-    cmp eax, [esi].expires_at
-    jae expired_exists
-    
-exists_valid:
-    invoke ReleaseMutex, [ebx].cache_mutex
-    mov eax, CACHE_SUCCESS
+    mov r8, [rbx + CACHE_STRUCT.head_ptr]
+    mov [rcx + CACHE_ITEM.prev_ptr], 0
+    mov [rcx + CACHE_ITEM.next_ptr], r8
+    test r8, r8
+    jz  ul_no_old_head
+    mov [r8 + CACHE_ITEM.prev_ptr], rcx
+ul_no_old_head:
+    mov [rbx + CACHE_STRUCT.head_ptr], rcx
+ul_done:
+    pop rbx
     ret
-    
-next_exists:
-    mov esi, [esi].hash_next_ptr
-    jmp search_exists
-    
-not_found_exists:
-    invoke ReleaseMutex, [ebx].cache_mutex
-    mov eax, CACHE_ERROR_NOT_FOUND
-    ret
-    
-expired_exists:
-    ; Remove expired item
-    call remove_item
-    invoke ReleaseMutex, [ebx].cache_mutex
-    mov eax, CACHE_ERROR_EXPIRED
-    ret
-    
-error_invalid:
-    mov eax, CACHE_ERROR_INVALID
-    ret
-    
-    assume esi:nothing
-    assume ebx:nothing
-cache_exists endp
+update_lru ENDP
 
-; Clear all items from cache
-cache_clear proc uses ebx esi edi, cache_ptr:dword
-    local item_ptr:dword, next_ptr:dword
+; Remove item: rcx=cache*, rdx=item*
+remove_item PROC PRIVATE
+    push rbx
+    push rsi
+    push rdi
+    sub rsp, 32
+    mov rbx, rcx
+    mov rsi, rdx
+
+    mov rcx, [rsi + CACHE_ITEM.key_ptr]
+    mov rdx, [rsi + CACHE_ITEM.key_len]
+    call hash_key
+    mov r8, rax
+    mov r9, [rbx + CACHE_STRUCT.hash_table_ptr]
+    lea r9, [r9 + r8*8]
+    mov r10, [r9]
+    test r10, r10
+    jz  ri_hash_done
+    cmp r10, rsi
+    jne ri_hash_seek
+    mov r10, [rsi + CACHE_ITEM.hash_next_ptr]
+    mov [r9], r10
+    jmp ri_hash_done
+ri_hash_seek:
+    mov r11, r10
+ri_hash_loop:
+    mov r10, [r11 + CACHE_ITEM.hash_next_ptr]
+    test r10, r10
+    jz  ri_hash_done
+    cmp r10, rsi
+    jne ri_hash_next
+    mov r10, [r10 + CACHE_ITEM.hash_next_ptr]
+    mov [r11 + CACHE_ITEM.hash_next_ptr], r10
+    jmp ri_hash_done
+ri_hash_next:
+    mov r11, r10
+    jmp ri_hash_loop
+ri_hash_done:
+
+    mov r8, [rsi + CACHE_ITEM.prev_ptr]
+    mov r9, [rsi + CACHE_ITEM.next_ptr]
+    test r8, r8
+    jz  ri_no_prev
+    mov [r8 + CACHE_ITEM.next_ptr], r9
+ri_no_prev:
+    test r9, r9
+    jz  ri_no_next
+    mov [r9 + CACHE_ITEM.prev_ptr], r8
+ri_no_next:
+    cmp rsi, [rbx + CACHE_STRUCT.head_ptr]
+    jne ri_not_head
+    mov [rbx + CACHE_STRUCT.head_ptr], r9
+ri_not_head:
+    cmp rsi, [rbx + CACHE_STRUCT.tail_ptr]
+    jne ri_not_tail
+    mov [rbx + CACHE_STRUCT.tail_ptr], r8
+ri_not_tail:
+
+    mov r8, [rsi + CACHE_ITEM.value_len]
+    sub [rbx + CACHE_STRUCT.cache_size], r8
+    dec qword ptr [rbx + CACHE_STRUCT.item_count]
+    inc qword ptr [rbx + CACHE_STRUCT.eviction_count]
+
+    mov rcx, [rsi + CACHE_ITEM.key_ptr]
+    call free_heap
+    mov rcx, [rsi + CACHE_ITEM.value_ptr]
+    call free_heap
+    mov rcx, rsi
+    call free_heap
+
+    add rsp, 32
+    pop rdi
+    pop rsi
+    pop rbx
+    ret
+remove_item ENDP
+
+; ---------------------------------------------------------------------------
+; cache_init(max_size: rcx, stats_enabled: rdx) -> rax (cache* or 0)
+cache_init PROC PUBLIC
+    push rbx
+    push rsi
+    sub rsp, 40
+
+    mov rbx, rcx
+    test rbx, rbx
+    jnz ci_has_size
+    mov rbx, CACHE_DEFAULT_SIZE
+ci_has_size:
+
+    mov rcx, CACHE_STRUCT_size
+    call allocate_zero
+    test rax, rax
+    jz  ci_fail
+    mov rsi, rax
+
+    mov rcx, 0
+    mov rdx, 0
+    mov r8, 0
+    call CreateMutexA
+    test rax, rax
+    jz  ci_free_struct
+    mov [rsi + CACHE_STRUCT.cache_mutex], rax
+
+    mov rcx, CACHE_HASH_TABLE_SIZE*8
+    call allocate_zero
+    test rax, rax
+    jz  ci_free_mutex
+    mov [rsi + CACHE_STRUCT.hash_table_ptr], rax
+    mov qword ptr [rsi + CACHE_STRUCT.hash_table_size], CACHE_HASH_TABLE_SIZE
+
+    mov [rsi + CACHE_STRUCT.max_size], rbx
+    mov [rsi + CACHE_STRUCT.stats_enabled], rdx
     
-    mov ebx, cache_ptr
-    test ebx, ebx
-    jz error_invalid
-    assume ebx:ptr CACHE_STRUCT
-    
-    ; Lock cache
-    invoke WaitForSingleObject, [ebx].cache_mutex, INFINITE
-    
-    ; Free all cache items
-    mov esi, [ebx].head_ptr
-clear_loop:
-    test esi, esi
-    jz clear_done
-    mov edi, esi
-    assume edi:ptr CACHE_ITEM
-    mov esi, [edi].next_ptr
-    
-    ; Free key and value
-    invoke crt_free, [edi].key_ptr
-    invoke crt_free, [edi].value_ptr
-    invoke crt_free, edi
-    jmp clear_loop
-    
-clear_done:
-    assume edi:nothing
-    
-    ; Reset cache state
-    mov [ebx].cache_size, 0
-    mov [ebx].item_count, 0
-    mov [ebx].head_ptr, 0
-    mov [ebx].tail_ptr, 0
-    
-    ; Clear hash table
-    mov edi, [ebx].hash_table_ptr
-    mov ecx, [ebx].hash_table_size
+    lea rax, HeapAlloc
+    mov [rsi + CACHE_STRUCT.allocator_ptr], rax
+    lea rax, HeapFree
+    mov [rsi + CACHE_STRUCT.deallocator_ptr], rax
+
+    mov rax, rsi
+    add rsp, 40
+    pop rsi
+    pop rbx
+    ret
+
+ci_free_mutex:
+    mov rcx, [rsi + CACHE_STRUCT.cache_mutex]
+    call CloseHandle
+ci_free_struct:
+    mov rcx, rsi
+    call free_heap
+ci_fail:
+    xor rax, rax
+    add rsp, 40
+    pop rsi
+    pop rbx
+    ret
+cache_init ENDP
+
+; cache_shutdown(cache*: rcx) -> eax
+cache_shutdown PROC PUBLIC
+    push rbx
+    push rsi
+    push rdi
+    sub rsp, 32
+
+    mov rsi, rcx
+    test rsi, rsi
+    jz cs_done
+
+    mov rcx, [rsi + CACHE_STRUCT.cache_mutex]
+    mov rdx, INFINITE
+    call WaitForSingleObject
+
+    mov rbx, [rsi + CACHE_STRUCT.head_ptr]
+cs_loop:
+    test rbx, rbx
+    jz cs_items_done
+    mov rdi, [rbx + CACHE_ITEM.next_ptr]
+    mov rcx, [rbx + CACHE_ITEM.key_ptr]
+    call free_heap
+    mov rcx, [rbx + CACHE_ITEM.value_ptr]
+    call free_heap
+    mov rcx, rbx
+    call free_heap
+    mov rbx, rdi
+    jmp cs_loop
+cs_items_done:
+    mov rcx, [rsi + CACHE_STRUCT.hash_table_ptr]
+    call free_heap
+
+    mov rcx, [rsi + CACHE_STRUCT.cache_mutex]
+    call ReleaseMutex
+    mov rcx, [rsi + CACHE_STRUCT.cache_mutex]
+    call CloseHandle
+    mov rcx, rsi
+    call free_heap
+cs_done:
     xor eax, eax
-    rep stosd
-    
-    invoke ReleaseMutex, [ebx].cache_mutex
-    mov eax, CACHE_SUCCESS
+    add rsp, 32
+    pop rdi
+    pop rsi
+    pop rbx
     ret
-    
-error_invalid:
-    mov eax, CACHE_ERROR_INVALID
-    ret
-    
-    assume ebx:nothing
-cache_clear endp
+cache_shutdown ENDP
 
-; Get cache statistics
-cache_stats proc uses ebx esi edi, cache_ptr:dword, stats_ptr:dword
-    mov ebx, cache_ptr
-    test ebx, ebx
-    jz error_invalid
-    assume ebx:ptr CACHE_STRUCT
-    
-    mov esi, stats_ptr
-    test esi, esi
-    jz error_invalid
-    
-    ; Lock cache
-    invoke WaitForSingleObject, [ebx].cache_mutex, INFINITE
-    
-    ; Copy statistics
-    mov eax, [ebx].cache_size
-    mov [esi], eax
-    mov eax, [ebx].max_size
-    mov [esi+4], eax
-    mov eax, [ebx].item_count
-    mov [esi+8], eax
-    mov eax, [ebx].hit_count
-    mov [esi+12], eax
-    mov eax, [ebx].miss_count
-    mov [esi+16], eax
-    mov eax, [ebx].eviction_count
-    mov [esi+20], eax
-    
-    invoke ReleaseMutex, [ebx].cache_mutex
-    mov eax, CACHE_SUCCESS
-    ret
-    
-error_invalid:
-    mov eax, CACHE_ERROR_INVALID
-    ret
-    
-    assume ebx:nothing
-cache_stats endp
+; cache_get(cache*, key_ptr, key_len) -> eax
+cache_get PROC PUBLIC
+    push rbx
+    push rsi
+    push rdi
+    push r14
+    sub rsp, 40
 
-end
+    mov r14, rcx              ; cache
+    mov rbx, rdx              ; key_ptr
+    mov rdi, r8               ; key_len
+
+    test r14, r14
+    jz cg_invalid
+    test rbx, rbx
+    jz cg_invalid
+    test rdi, rdi
+    jz cg_invalid
+    cmp rdi, CACHE_MAX_KEY_SIZE
+    ja cg_size
+
+    mov rcx, [r14 + CACHE_STRUCT.cache_mutex]
+    mov rdx, INFINITE
+    call WaitForSingleObject
+
+    mov rcx, rbx
+    mov rdx, rdi
+    call hash_key
+    mov r10, rax
+    mov r11, [r14 + CACHE_STRUCT.hash_table_ptr]
+    mov r11, [r11 + r10*8]
+
+cg_search:
+    test r11, r11
+    jz cg_not_found
+    mov rax, [r11 + CACHE_ITEM.key_len]
+    cmp rax, rdi
+    jne cg_next
+    mov rcx, rax
+    mov rsi, [r11 + CACHE_ITEM.key_ptr]
+    mov rdi, rbx
+    repe cmpsb
+    jnz cg_next
+
+    mov rax, [r11 + CACHE_ITEM.expires_at]
+    test rax, rax
+    jz cg_valid
+    call GetTickCount
+    cmp eax, dword ptr [r11 + CACHE_ITEM.expires_at]
+    jae cg_expired
+cg_valid:
+    inc qword ptr [r11 + CACHE_ITEM.access_count]
+    call GetTickCount
+    mov [r11 + CACHE_ITEM.last_access], rax
+    inc qword ptr [r14 + CACHE_STRUCT.hit_count]
+    mov rcx, r14
+    mov rdx, r11
+    call update_lru
+    mov rcx, [r14 + CACHE_STRUCT.cache_mutex]
+    call ReleaseMutex
+    xor eax, eax
+    jmp cg_exit
+
+cg_expired:
+    mov rcx, r14
+    mov rdx, r11
+    call remove_item
+    inc qword ptr [r14 + CACHE_STRUCT.miss_count]
+    mov rcx, [r14 + CACHE_STRUCT.cache_mutex]
+    call ReleaseMutex
+    mov eax, CACHE_ERROR_EXPIRED
+    jmp cg_exit
+
+cg_next:
+    mov r11, [r11 + CACHE_ITEM.hash_next_ptr]
+    jmp cg_search
+
+cg_not_found:
+    inc qword ptr [r14 + CACHE_STRUCT.miss_count]
+    mov rcx, [r14 + CACHE_STRUCT.cache_mutex]
+    call ReleaseMutex
+    mov eax, CACHE_ERROR_NOT_FOUND
+    jmp cg_exit
+cg_invalid:
+    mov eax, CACHE_ERROR_INVALID
+    jmp cg_exit
+cg_size:
+    mov eax, CACHE_ERROR_SIZE
+cg_exit:
+    add rsp, 40
+    pop r14
+    pop rdi
+    pop rsi
+    pop rbx
+    ret
+cache_get ENDP
+
+; cache_set(cache*, key_ptr, key_len, value_ptr, value_len, ttl_ms) -> eax
+cache_set PROC PUBLIC
+    mov r13, [rsp + 40]       ; value_len (5th arg)
+    mov r15, [rsp + 48]       ; ttl_ms  (6th arg)
+    push rbx
+    push rsi
+    push rdi
+    push r12
+    push r13
+    push r14
+    push r15
+    sub rsp, 32
+
+    mov r14, rcx              ; cache
+    mov rbx, rdx              ; key_ptr
+    mov rdi, r8               ; key_len
+    mov r12, r9               ; value_ptr
+    mov [rsp + 16], rdi       ; stash key_len
+
+    test r14, r14
+    jz cs_invalid
+    test rbx, rbx
+    jz cs_invalid
+    test rdi, rdi
+    jz cs_invalid
+    test r12, r12
+    jz cs_invalid
+    test r13, r13
+    jz cs_invalid
+    cmp rdi, CACHE_MAX_KEY_SIZE
+    ja cs_size
+    cmp r13, CACHE_MAX_VALUE_SIZE
+    ja cs_size
+
+    mov rcx, [r14 + CACHE_STRUCT.cache_mutex]
+    mov rdx, INFINITE
+    call WaitForSingleObject
+
+    mov rax, r13
+    add rax, rdi
+    add rax, CACHE_ITEM_size
+    mov [rsp + 8], rax            ; spill new_size
+
+cs_evict:
+    mov rax, [rsp + 8]
+    add rax, [r14 + CACHE_STRUCT.cache_size]
+    cmp rax, [r14 + CACHE_STRUCT.max_size]
+    jbe cs_evict_done
+    mov rdx, [r14 + CACHE_STRUCT.tail_ptr]
+    test rdx, rdx
+    jz cs_evict_done
+    mov rcx, r14
+    call remove_item
+    jmp cs_evict
+cs_evict_done:
+
+    mov rcx, rbx
+    mov rdx, rdi
+    call hash_key
+    mov r10, rax
+    mov r11, [r14 + CACHE_STRUCT.hash_table_ptr]
+    lea r11, [r11 + r10*8]
+    mov r9, [r11]
+
+cs_search:
+    test r9, r9
+    jz cs_new
+    mov rax, [r9 + CACHE_ITEM.key_len]
+    cmp rax, rdi
+    jne cs_next
+    mov rcx, rax
+    mov rsi, [r9 + CACHE_ITEM.key_ptr]
+    mov rdi, rbx
+    repe cmpsb
+    jnz cs_next
+
+    mov rax, [r9 + CACHE_ITEM.value_len]
+    cmp rax, r13
+    je cs_same_size
+    sub [r14 + CACHE_STRUCT.cache_size], rax
+    add [r14 + CACHE_STRUCT.cache_size], r13
+    mov rcx, [r9 + CACHE_ITEM.value_ptr]
+    call free_heap
+    mov rcx, r13
+    call allocate_zero
+    test rax, rax
+    jz cs_oom_locked
+    mov [r9 + CACHE_ITEM.value_ptr], rax
+cs_same_size:
+    mov rdi, [r9 + CACHE_ITEM.value_ptr]
+    mov rsi, r12
+    mov rcx, r13
+    rep movsb
+    mov eax, r15d
+    test eax, eax
+    jz cs_no_exp
+    call GetTickCount
+    add eax, r15d
+    mov [r9 + CACHE_ITEM.expires_at], rax
+    jmp cs_exp_set
+cs_no_exp:
+    mov qword ptr [r9 + CACHE_ITEM.expires_at], 0
+cs_exp_set:
+    call GetTickCount
+    mov [r9 + CACHE_ITEM.last_access], rax
+    mov rcx, r14
+    mov rdx, r9
+    call update_lru
+    mov rcx, [r14 + CACHE_STRUCT.cache_mutex]
+    call ReleaseMutex
+    xor eax, eax
+    jmp cs_exit
+cs_next:
+    mov r9, [r9 + CACHE_ITEM.hash_next_ptr]
+    jmp cs_search
+
+cs_new:
+    mov rcx, CACHE_ITEM_size
+    call allocate_zero
+    test rax, rax
+    jz cs_oom_locked
+    mov r9, rax
+
+    mov rcx, [rsp + 16]        ; key_len
+    call allocate_zero
+    test rax, rax
+    jz cs_oom_free_item
+    mov [r9 + CACHE_ITEM.key_ptr], rax
+    mov rax, [rsp + 16]
+    mov [r9 + CACHE_ITEM.key_len], rax
+    mov rdi, [r9 + CACHE_ITEM.key_ptr]
+    mov rsi, rbx
+    mov rcx, [rsp + 16]
+    rep movsb
+
+    mov rcx, r13
+    call allocate_zero
+    test rax, rax
+    jz cs_oom_free_key
+    mov [r9 + CACHE_ITEM.value_ptr], rax
+    mov [r9 + CACHE_ITEM.value_len], r13
+    mov rdi, rax
+    mov rsi, r12
+    mov rcx, r13
+    rep movsb
+
+    mov eax, r15d
+    test eax, eax
+    jz cs_new_no_exp
+    call GetTickCount
+    add eax, r15d
+    mov [r9 + CACHE_ITEM.expires_at], rax
+    jmp cs_new_exp_set
+cs_new_no_exp:
+    mov qword ptr [r9 + CACHE_ITEM.expires_at], 0
+cs_new_exp_set:
+    mov qword ptr [r9 + CACHE_ITEM.access_count], 1
+    call GetTickCount
+    mov [r9 + CACHE_ITEM.last_access], rax
+
+    mov rax, [r11]
+    mov [r9 + CACHE_ITEM.hash_next_ptr], rax
+    mov [r11], r9
+
+    mov rax, [r14 + CACHE_STRUCT.head_ptr]
+    mov [r9 + CACHE_ITEM.next_ptr], rax
+    mov qword ptr [r9 + CACHE_ITEM.prev_ptr], 0
+    test rax, rax
+    jz cs_no_old_head
+    mov [rax + CACHE_ITEM.prev_ptr], r9
+cs_no_old_head:
+    mov [r14 + CACHE_STRUCT.head_ptr], r9
+    cmp qword ptr [r14 + CACHE_STRUCT.tail_ptr], 0
+    jne cs_tail_ok
+    mov [r14 + CACHE_STRUCT.tail_ptr], r9
+cs_tail_ok:
+    add [r14 + CACHE_STRUCT.cache_size], r13
+    inc qword ptr [r14 + CACHE_STRUCT.item_count]
+    mov rcx, [r14 + CACHE_STRUCT.cache_mutex]
+    call ReleaseMutex
+    xor eax, eax
+    jmp cs_exit
+
+cs_oom_free_key:
+    mov rcx, [r9 + CACHE_ITEM.key_ptr]
+    call free_heap
+cs_oom_free_item:
+    mov rcx, r9
+    call free_heap
+cs_oom_locked:
+    mov rcx, [r14 + CACHE_STRUCT.cache_mutex]
+    call ReleaseMutex
+    mov eax, CACHE_ERROR_OOM
+    jmp cs_exit
+cs_invalid:
+    mov eax, CACHE_ERROR_INVALID
+    jmp cs_exit
+cs_size:
+    mov eax, CACHE_ERROR_SIZE
+cs_exit:
+    add rsp, 32
+    pop r15
+    pop r14
+    pop r13
+    pop r12
+    pop rdi
+    pop rsi
+    pop rbx
+    ret
+cache_set ENDP
+
+; cache_delete(cache*, key_ptr, key_len)
+cache_delete PROC PUBLIC
+    push rbx
+    push rsi
+    push rdi
+    push r14
+    sub rsp, 40
+
+    mov r14, rcx
+    mov rbx, rdx
+    mov rdi, r8
+
+    test r14, r14
+    jz cd_invalid
+    test rbx, rbx
+    jz cd_invalid
+    test rdi, rdi
+    jz cd_invalid
+
+    mov rcx, [r14 + CACHE_STRUCT.cache_mutex]
+    mov rdx, INFINITE
+    call WaitForSingleObject
+
+    mov rcx, rbx
+    mov rdx, rdi
+    call hash_key
+    mov r10, rax
+    mov r11, [r14 + CACHE_STRUCT.hash_table_ptr]
+    lea r11, [r11 + r10*8]
+    mov r9, [r11]
+cd_search:
+    test r9, r9
+    jz cd_not_found
+    mov rax, [r9 + CACHE_ITEM.key_len]
+    cmp rax, rdi
+    jne cd_next
+    mov rcx, rax
+    mov rsi, [r9 + CACHE_ITEM.key_ptr]
+    mov rdi, rbx
+    repe cmpsb
+    jnz cd_next
+    mov rcx, r14
+    mov rdx, r9
+    call remove_item
+    mov rcx, [r14 + CACHE_STRUCT.cache_mutex]
+    call ReleaseMutex
+    xor eax, eax
+    jmp cd_exit
+cd_next:
+    mov r9, [r9 + CACHE_ITEM.hash_next_ptr]
+    jmp cd_search
+cd_not_found:
+    mov rcx, [r14 + CACHE_STRUCT.cache_mutex]
+    call ReleaseMutex
+    mov eax, CACHE_ERROR_NOT_FOUND
+    jmp cd_exit
+cd_invalid:
+    mov eax, CACHE_ERROR_INVALID
+cd_exit:
+    add rsp, 40
+    pop r14
+    pop rdi
+    pop rsi
+    pop rbx
+    ret
+cache_delete ENDP
+
+; cache_exists(cache*, key_ptr, key_len)
+cache_exists PROC PUBLIC
+    push rbx
+    push rsi
+    push rdi
+    push r14
+    sub rsp, 40
+
+    mov r14, rcx
+    mov rbx, rdx
+    mov rdi, r8
+    test r14, r14
+    jz ce_invalid
+    test rbx, rbx
+    jz ce_invalid
+    test rdi, rdi
+    jz ce_invalid
+
+    mov rcx, [r14 + CACHE_STRUCT.cache_mutex]
+    mov rdx, INFINITE
+    call WaitForSingleObject
+
+    mov rcx, rbx
+    mov rdx, rdi
+    call hash_key
+    mov r10, rax
+    mov r11, [r14 + CACHE_STRUCT.hash_table_ptr]
+    lea r11, [r11 + r10*8]
+    mov r9, [r11]
+ce_search:
+    test r9, r9
+    jz ce_not_found
+    mov rax, [r9 + CACHE_ITEM.key_len]
+    cmp rax, rdi
+    jne ce_next
+    mov rcx, rax
+    mov rsi, [r9 + CACHE_ITEM.key_ptr]
+    mov rdi, rbx
+    repe cmpsb
+    jnz ce_next
+    mov rax, [r9 + CACHE_ITEM.expires_at]
+    test rax, rax
+    jz ce_valid
+    call GetTickCount
+    cmp eax, dword ptr [r9 + CACHE_ITEM.expires_at]
+    jae ce_expired
+ce_valid:
+    mov rcx, [r14 + CACHE_STRUCT.cache_mutex]
+    call ReleaseMutex
+    xor eax, eax
+    jmp ce_exit
+ce_next:
+    mov r9, [r9 + CACHE_ITEM.hash_next_ptr]
+    jmp ce_search
+ce_not_found:
+    mov rcx, [r14 + CACHE_STRUCT.cache_mutex]
+    call ReleaseMutex
+    mov eax, CACHE_ERROR_NOT_FOUND
+    jmp ce_exit
+ce_expired:
+    mov rcx, r14
+    mov rdx, r9
+    call remove_item
+    mov rcx, [r14 + CACHE_STRUCT.cache_mutex]
+    call ReleaseMutex
+    mov eax, CACHE_ERROR_EXPIRED
+    jmp ce_exit
+ce_invalid:
+    mov eax, CACHE_ERROR_INVALID
+ce_exit:
+    add rsp, 40
+    pop r14
+    pop rdi
+    pop rsi
+    pop rbx
+    ret
+cache_exists ENDP
+
+; cache_clear(cache*)
+cache_clear PROC PUBLIC
+    push rbx
+    push rsi
+    push rdi
+    sub rsp, 32
+
+    mov rsi, rcx
+    test rsi, rsi
+    jz cc_invalid
+
+    mov rcx, [rsi + CACHE_STRUCT.cache_mutex]
+    mov rdx, INFINITE
+    call WaitForSingleObject
+
+    mov rbx, [rsi + CACHE_STRUCT.head_ptr]
+cc_loop:
+    test rbx, rbx
+    jz cc_done_clear
+    mov rdi, [rbx + CACHE_ITEM.next_ptr]
+    mov rcx, [rbx + CACHE_ITEM.key_ptr]
+    call free_heap
+    mov rcx, [rbx + CACHE_ITEM.value_ptr]
+    call free_heap
+    mov rcx, rbx
+    call free_heap
+    mov rbx, rdi
+    jmp cc_loop
+cc_done_clear:
+    mov qword ptr [rsi + CACHE_STRUCT.cache_size], 0
+    mov qword ptr [rsi + CACHE_STRUCT.item_count], 0
+    mov qword ptr [rsi + CACHE_STRUCT.head_ptr], 0
+    mov qword ptr [rsi + CACHE_STRUCT.tail_ptr], 0
+    mov rcx, [rsi + CACHE_STRUCT.hash_table_ptr]
+    mov rdx, CACHE_HASH_TABLE_SIZE*8
+    mov rdi, rcx
+    mov rcx, rdx
+    xor eax, eax
+    rep stosb
+    mov rcx, [rsi + CACHE_STRUCT.cache_mutex]
+    call ReleaseMutex
+    xor eax, eax
+    jmp cc_exit
+cc_invalid:
+    mov eax, CACHE_ERROR_INVALID
+cc_exit:
+    add rsp, 32
+    pop rdi
+    pop rsi
+    pop rbx
+    ret
+cache_clear ENDP
+
+; cache_stats(cache*, stats_ptr)
+cache_stats PROC PUBLIC
+    push rbx
+    push rsi
+    sub rsp, 40
+
+    mov rsi, rcx
+    mov rbx, rdx
+    test rsi, rsi
+    jz cst_invalid
+    test rbx, rbx
+    jz cst_invalid
+
+    mov rcx, [rsi + CACHE_STRUCT.cache_mutex]
+    mov rdx, INFINITE
+    call WaitForSingleObject
+
+    mov rax, [rsi + CACHE_STRUCT.cache_size]
+    mov [rbx + 0], rax
+    mov rax, [rsi + CACHE_STRUCT.max_size]
+    mov [rbx + 8], rax
+    mov rax, [rsi + CACHE_STRUCT.item_count]
+    mov [rbx + 16], rax
+    mov rax, [rsi + CACHE_STRUCT.hit_count]
+    mov [rbx + 24], rax
+    mov rax, [rsi + CACHE_STRUCT.miss_count]
+    mov [rbx + 32], rax
+    mov rax, [rsi + CACHE_STRUCT.eviction_count]
+    mov [rbx + 40], rax
+
+    mov rcx, [rsi + CACHE_STRUCT.cache_mutex]
+    call ReleaseMutex
+    xor eax, eax
+    jmp cst_exit
+cst_invalid:
+    mov eax, CACHE_ERROR_INVALID
+cst_exit:
+    add rsp, 40
+    pop rsi
+    pop rbx
+    ret
+cache_stats ENDP
+
+END

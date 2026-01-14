@@ -23,7 +23,6 @@ ENGINE_QUANTIZED EQU 1
 CHUNK_SIZE EQU 16777216
 
 .code
-
 RawrXD_DualEngineStreamInit PROC FRAME
     push rbx
     .pushreg rbx
@@ -56,7 +55,6 @@ INIT_EXIT:
     pop rbx
     ret
 RawrXD_DualEngineStreamInit ENDP
-
 RawrXD_DualEngineStreamChunk PROC FRAME
     push rbx
     push rbp
@@ -125,4 +123,6 @@ SET_QUANTIZED:
 RawrXD_DetectModelFormat ENDP
 
 END
+
+
 

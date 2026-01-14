@@ -1398,7 +1398,6 @@ _cleanup_chat_panel ENDP
 ;==============================================================================
 ; EXPORTED FUNCTION TABLE
 ;==============================================================================
-
 PUBLIC chat_panel_create
 PUBLIC chat_panel_destroy
 PUBLIC chat_panel_add_message
@@ -1422,3 +1421,7 @@ szChatWindowClass db "ChatPanelClass",0
 client_rect RECT {}
 
 .end
+
+
+
+

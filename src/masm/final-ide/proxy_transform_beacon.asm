@@ -18,7 +18,6 @@
 ;=====================================================================
 
 .code
-
 PUBLIC masm_proxy_beacon_init
 PUBLIC masm_proxy_beacon_intercept_request
 PUBLIC masm_proxy_beacon_intercept_response
@@ -850,4 +849,8 @@ indicator_extended_vocab    DB "technical terms", 0
 indicator_code_request      DB "code", 0
 
 END
+
+
+
+
 

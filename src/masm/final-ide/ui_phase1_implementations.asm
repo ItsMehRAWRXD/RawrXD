@@ -197,7 +197,6 @@ ERROR_LOCATION ENDS
 ; - Result reporting
 ; - Error handling
 ;==========================================================================
-
 PUBLIC command_palette_execute
 command_palette_execute PROC
     ; rcx = command string pointer
@@ -447,7 +446,6 @@ command_palette_execute ENDP
 ; - Case-insensitive option
 ; - Result collection and display
 ;==========================================================================
-
 PUBLIC file_search_recursive
 file_search_recursive PROC
     ; rcx = directory path
@@ -570,7 +568,6 @@ file_search_recursive ENDP
 ; - Editor jump to location
 ; - Range highlighting
 ;==========================================================================
-
 PUBLIC problem_navigate_to_error
 problem_navigate_to_error PROC
     ; rcx = error string pointer (format: "file.cpp(10,5): undefined symbol")
@@ -661,7 +658,6 @@ problem_navigate_to_error ENDP
 ; - Continue execution
 ; - State display
 ;==========================================================================
-
 PUBLIC debug_handle_command
 debug_handle_command PROC
     ; rcx = debug command string
@@ -831,4 +827,8 @@ strncpy_masm ENDP
     sz_test_action       BYTE "Test", 0
 
 END
+
+
+
+
 

@@ -10,6 +10,7 @@
 #include <QComboBox>
 #include <QLabel>
 #include <memory>
+#include <QJsonObject>
 
 class BlobToGGUFConverter;
 struct ConversionProgress;
@@ -68,6 +69,12 @@ private slots:
     void onBlobFileChanged(const QString& path);
     void onEstimateSize();
 
+    // Ollama blob scanning
+    void onScanBlobs();
+    void onDetectedModelSelected(int index);
+    void onMetadataPreview(const QJsonObject& preview);
+    void onModelSelected(int index);
+
 private:
     /**
      * @brief Create UI layout
@@ -103,6 +110,9 @@ private:
     // File selection
     QLineEdit* m_blobPathEdit;
     QPushButton* m_selectBlobBtn;
+    QLineEdit* m_blobDirEdit;
+    QPushButton* m_scanBlobsBtn;
+    QComboBox* m_detectedModelsCombo;
     QLineEdit* m_outputPathEdit;
     QPushButton* m_selectOutputBtn;
     QLabel* m_blobInfoLabel;
@@ -135,11 +145,14 @@ private:
 
     // Logging
     QTextEdit* m_logOutput;
+    QLabel* m_recommendedTypeLabel;
 
     // Backend
     std::unique_ptr<BlobToGGUFConverter> m_converter;
+    std::unique_ptr<class OllamaProxy> m_ollamaProxy;
 
     // State
     bool m_isConverting = false;
     QString m_lastBlobPath;
+    QString m_lastBlobDir;
 };

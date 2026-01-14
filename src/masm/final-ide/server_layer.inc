@@ -1,7 +1,6 @@
 ; ============================================================================
 ; SERVER_LAYER.INC - HTTP Server & Routing Header
 ; ============================================================================
-
 EXTERN server_init:PROC
 EXTERN server_shutdown:PROC
 EXTERN server_bind_port:PROC
@@ -24,31 +23,36 @@ EXTERN enable_tls:PROC
 EXTERN manage_sessions:PROC
 
 HTTP_REQUEST STRUCT
-    method qword
-    uri qword
-    query_string qword
-    headers qword
-    body qword
-    method_type dword
-    content_length dword
-    body_size dword
+    method QWORD ?
+    uri QWORD ?
+    query_string QWORD ?
+    headers QWORD ?
+    body QWORD ?
+    method_type DWORD ?
+    content_length DWORD ?
+    body_size DWORD ?
 HTTP_REQUEST ENDS
 
 HTTP_RESPONSE STRUCT
-    status_code dword
-    headers qword
-    body qword
-    body_size dword
-    content_type qword
+    status_code DWORD ?
+    headers QWORD ?
+    body QWORD ?
+    body_size DWORD ?
+    content_type QWORD ?
 HTTP_RESPONSE ENDS
 
 HTTP_CONNECTION STRUCT
-    client_socket qword
-    request_buffer qword
-    response_buffer qword
-    request_parsed qword
-    request_size dword
-    response_size dword
-    connection_id dword
-    state byte
+    client_socket QWORD ?
+    request_buffer QWORD ?
+    response_buffer QWORD ?
+    request_parsed QWORD ?
+    request_size DWORD ?
+    response_size DWORD ?
+    connection_id DWORD ?
+    state BYTE ?
 HTTP_CONNECTION ENDS
+
+
+
+
+

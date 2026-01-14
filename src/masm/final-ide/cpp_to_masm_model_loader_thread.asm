@@ -9,8 +9,8 @@ EXTERN TerminateThread:PROC
 EXTERN WaitForSingleObject:PROC
 EXTERN CloseHandle:PROC
 EXTERN GetCurrentThreadId:PROC
-EXTERN malloc:PROC
-EXTERN free:PROC
+extern masm_malloc : proc
+extern masm_free : proc
 EXTERN memcpy:PROC
 EXTERN strlen:PROC
 EXTERN console_log:PROC
@@ -150,7 +150,7 @@ model_loader_thread_create PROC
     
     ; Allocate thread context
     mov rcx, SIZEOF MODEL_LOADER_THREAD
-    call malloc
+    call masm_malloc
     
     ; Store engine pointer
     mov [rax + MODEL_LOADER_THREAD.enginePtr], rbx
@@ -164,7 +164,7 @@ model_loader_thread_create PROC
     
     push rax
     mov rcx, rdx
-    call malloc
+    call masm_malloc
     pop rdx
     
     mov [rax + MODEL_LOADER_THREAD.modelPath], rax
@@ -312,12 +312,12 @@ skip_close_local:
     mov rcx, [rbx + MODEL_LOADER_THREAD.modelPath]
     cmp rcx, 0
     je skip_path_local
-    call free
+    call masm_free
 skip_path_local:
     
     ; Free context
     mov rcx, rbx
-    call free
+    call masm_free
     
     pop rbx
     ret
@@ -326,4 +326,8 @@ model_loader_thread_destroy ENDP
 ; ============================================================================
 
 END
+
+
+
+
 

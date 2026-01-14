@@ -29,7 +29,7 @@ SETTINGS_DATA STRUCT
     
     ; AI Chat Tab
     chat_model             QWORD ?
-    temperature            DWORD ? ; Using DWORD for fixed-point or integer representation
+    temperature            DWORD ? ; Using DWORD ? for fixed-point or integer representation
     max_tokens             DWORD ?
     system_prompt          QWORD ?
     
@@ -107,3 +107,6 @@ REG_SECURITY_PATH  EQU "Security"
 REG_TRAINING_PATH  EQU "Training"
 REG_CICD_PATH      EQU "CI_CD"
 REG_ENTERPRISE_PATH EQU "Enterprise"
+
+
+

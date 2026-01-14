@@ -719,7 +719,6 @@ handle_wheel ENDP
 ;==========================================================================
 ; HELPER DRAWING FUNCTIONS
 ;==========================================================================
-
 fill_rect_solid PROC
     ; rcx = hdc, rdx = rect, r8d = color
     push rbx
@@ -748,16 +747,18 @@ fill_rect_solid PROC
     pop rbx
     ret
 fill_rect_solid ENDP
-
 draw_rect_filled PROC
     ; Stub: draws a filled rectangle
     ret
 draw_rect_filled ENDP
-
 draw_rect_outline PROC
     ; Stub: draws rectangle outline
     ret
 draw_rect_outline ENDP
 
 end
+
+
+
+
 

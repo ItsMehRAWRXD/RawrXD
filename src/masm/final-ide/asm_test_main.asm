@@ -17,7 +17,6 @@ EXTERN GetStdHandle:PROC
 EXTERN WriteFile:PROC
 EXTERN ExitProcess:PROC
 EXTERN GetLastError:PROC
-
 PUBLIC main
 
 .data
@@ -390,4 +389,8 @@ main ENDP
 test_string_data db "Hello, MASM!", 0
 
 END
+
+
+
+
 

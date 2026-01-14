@@ -554,57 +554,46 @@ visualization_render_loss_curve ENDP
 ;==========================================================================
 ; Helper functions
 ;==========================================================================
-
 create_chart_area PROC
     ; Create chart area window
     ret
 create_chart_area ENDP
-
 create_control_panel PROC
     ; Create control panel window
     ret
 create_control_panel ENDP
-
 create_legend PROC
     ; Create legend window
     ret
 create_legend ENDP
-
 create_back_buffer PROC
     ; Create back buffer for flicker-free drawing
     ret
 create_back_buffer ENDP
-
 render_confusion_matrix PROC
     ; Render confusion matrix
     ret
 render_confusion_matrix ENDP
-
 render_roc_curve PROC
     ; Render ROC curve
     ret
 render_roc_curve ENDP
-
 render_pr_curve PROC
     ; Render PR curve
     ret
 render_pr_curve ENDP
-
 render_feature_importance PROC
     ; Render feature importance
     ret
 render_feature_importance ENDP
-
 render_embedding PROC
     ; Render embedding
     ret
 render_embedding ENDP
-
 render_attention_heatmap PROC
     ; Render attention heatmap
     ret
 render_attention_heatmap ENDP
-
 render_loss_curve PROC
     ; Render loss curve
     ret
@@ -613,13 +602,11 @@ render_loss_curve ENDP
 ;==========================================================================
 ; Window procedures
 ;==========================================================================
-
 visualization_wnd_proc PROC
     ; Main window procedure
     call DefWindowProcA
     ret
 visualization_wnd_proc ENDP
-
 chart_area_wnd_proc PROC
     ; Chart area procedure
     call DefWindowProcA
@@ -630,17 +617,18 @@ chart_area_wnd_proc ENDP
 visualization_export_chart PROC
     ret
 visualization_export_chart ENDP
-
 visualization_set_color_scheme PROC
     ret
 visualization_set_color_scheme ENDP
-
 visualization_zoom PROC
     ret
 visualization_zoom ENDP
-
 visualization_pan PROC
     ret
 visualization_pan ENDP
 
 end
+
+
+
+

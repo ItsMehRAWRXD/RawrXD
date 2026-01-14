@@ -54,89 +54,182 @@ bool LSPClient::startServer()
     
     qInfo() << "[LSPClient] Starting" << m_config.language << "server:" << m_config.command;
     
-    m_serverProcess->setProgram(m_config.command);
-    m_serverProcess->setArguments(m_config.arguments);
-    m_serverProcess->setWorkingDirectory(m_config.workspaceRoot);
-    m_serverProcess->start();
-    
-    if (!m_serverProcess->waitForStarted(5000)) {
-        qCritical() << "[LSPClient] Failed to start server";
-        emit serverError("Failed to start LSP server");
+    try {
+        m_serverProcess->setProgram(m_config.command);
+        m_serverProcess->setArguments(m_config.arguments);
+        m_serverProcess->setWorkingDirectory(m_config.workspaceRoot);
+        
+        // Set environment variables
+        QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+        env.insert("RUST_BACKTRACE", "1");  // For better error reporting
+        m_serverProcess->setProcessEnvironment(env);
+        
+        m_serverProcess->start();
+        
+        if (!m_serverProcess->waitForStarted(5000)) {
+            QString errorMsg = QString("Failed to start %1 server: %2")
+                .arg(m_config.language)
+                .arg(m_serverProcess->errorString());
+            qCritical() << "[LSPClient]" << errorMsg;
+            emit serverError(errorMsg);
+            return false;
+        }
+        
+        m_serverRunning = true;
+        qInfo() << "[LSPClient] Server process started (PID:" << m_serverProcess->processId() << ")";
+        
+        // Send initialize request
+        QJsonObject initializeParams;
+        initializeParams["processId"] = static_cast<qint64>(QCoreApplication::applicationPid());
+        initializeParams["rootUri"] = buildDocumentUri(m_config.workspaceRoot);
+        
+        QJsonObject capabilities;
+        QJsonObject textDocument;
+        
+        // Completion support with snippet support
+        QJsonObject completion;
+        completion["dynamicRegistration"] = false;
+        QJsonObject completionItem;
+        completionItem["snippetSupport"] = true;
+        completionItem["commitCharactersSupport"] = true;
+        completionItem["tagSupport"] = QJsonObject{{"valueSet", QJsonArray({1})}};  // Deprecated tag
+        completion["completionItem"] = completionItem;
+        textDocument["completion"] = completion;
+        
+        // Hover support
+        QJsonObject hover;
+        hover["dynamicRegistration"] = false;
+        hover["contentFormat"] = QJsonArray({"markdown", "plaintext"});
+        textDocument["hover"] = hover;
+        
+        // Signature help support
+        QJsonObject signatureHelp;
+        signatureHelp["dynamicRegistration"] = false;
+        QJsonObject signatureHelpItem;
+        signatureHelpItem["labelOffsetSupport"] = true;
+        signatureHelp["signatureInformation"] = signatureHelpItem;
+        textDocument["signatureHelp"] = signatureHelp;
+        
+        // Definition support
+        QJsonObject definition;
+        definition["dynamicRegistration"] = false;
+        definition["linkSupport"] = true;
+        textDocument["definition"] = definition;
+        
+        // References support
+        QJsonObject references;
+        references["dynamicRegistration"] = false;
+        textDocument["references"] = references;
+        
+        // Rename support
+        QJsonObject rename;
+        rename["dynamicRegistration"] = false;
+        rename["prepareSupport"] = true;
+        rename["prepareSupportDefaultBehavior"] = 1;
+        textDocument["rename"] = rename;
+        
+        // Diagnostics support
+        QJsonObject publishDiagnostics;
+        publishDiagnostics["relatedInformation"] = true;
+        publishDiagnostics["tagSupport"] = QJsonObject{{"valueSet", QJsonArray({1, 2})}};
+        textDocument["publishDiagnostics"] = publishDiagnostics;
+        
+        // Formatting support
+        QJsonObject formatting;
+        formatting["dynamicRegistration"] = false;
+        textDocument["formatting"] = formatting;
+        
+        // Code action support
+        QJsonObject codeAction;
+        codeAction["dynamicRegistration"] = false;
+        QJsonObject codeActionLiteralSupport;
+        codeActionLiteralSupport["codeActionKind"] = QJsonObject{{"valueSet", 
+            QJsonArray({"quickfix", "refactor", "refactor.extract", "source.organizeImports"})}};
+        codeAction["codeActionLiteralSupport"] = codeActionLiteralSupport;
+        textDocument["codeAction"] = codeAction;
+        
+        capabilities["textDocument"] = textDocument;
+        
+        // Workspace capabilities
+        QJsonObject workspace;
+        QJsonObject workspaceEdit;
+        workspaceEdit["documentChanges"] = true;
+        workspaceEdit["resourceOperations"] = QJsonArray({"create", "rename", "delete"});
+        workspace["workspaceEdit"] = workspaceEdit;
+        capabilities["workspace"] = workspace;
+        
+        initializeParams["capabilities"] = capabilities;
+        
+        QJsonObject initRequest;
+        initRequest["jsonrpc"] = "2.0";
+        initRequest["id"] = m_nextRequestId++;
+        initRequest["method"] = "initialize";
+        initRequest["params"] = initializeParams;
+        
+        sendMessage(initRequest);
+        
+        qInfo() << "[LSPClient] Initialize request sent with full capabilities";
+        return true;
+    } catch (const std::exception& e) {
+        QString errorMsg = QString("Exception starting %1 server: %2")
+            .arg(m_config.language)
+            .arg(e.what());
+        qCritical() << "[LSPClient]" << errorMsg;
+        emit serverError(errorMsg);
+        m_serverRunning = false;
         return false;
     }
-    
-    m_serverRunning = true;
-    
-    // Send initialize request
-    QJsonObject initializeParams;
-    initializeParams["processId"] = static_cast<qint64>(QCoreApplication::applicationPid());
-    initializeParams["rootUri"] = buildDocumentUri(m_config.workspaceRoot);
-    
-    QJsonObject capabilities;
-    QJsonObject textDocument;
-    
-    // Completion support
-    QJsonObject completion;
-    completion["dynamicRegistration"] = false;
-    QJsonObject completionItem;
-    completionItem["snippetSupport"] = false;
-    completion["completionItem"] = completionItem;
-    textDocument["completion"] = completion;
-    
-    // Hover support
-    textDocument["hover"] = QJsonObject{{"dynamicRegistration", false}};
-    
-    // Definition support
-    textDocument["definition"] = QJsonObject{{"dynamicRegistration", false}};
-    
-    // Diagnostics support
-    textDocument["publishDiagnostics"] = QJsonObject{{"relatedInformation", true}};
-    
-    // Formatting support
-    textDocument["formatting"] = QJsonObject{{"dynamicRegistration", false}};
-    
-    // Code Action support
-    textDocument["codeAction"] = QJsonObject{{"dynamicRegistration", false}};
-    
-    capabilities["textDocument"] = textDocument;
-    initializeParams["capabilities"] = capabilities;
-    
-    QJsonObject initRequest;
-    initRequest["jsonrpc"] = "2.0";
-    initRequest["id"] = m_nextRequestId++;
-    initRequest["method"] = "initialize";
-    initRequest["params"] = initializeParams;
-    
-    sendMessage(initRequest);
-    
-    qInfo() << "[LSPClient] Initialize request sent";
-    return true;
 }
 
 void LSPClient::stopServer()
 {
     if (!m_serverRunning) return;
     
-    // Send shutdown request
-    QJsonObject shutdownRequest;
-    shutdownRequest["jsonrpc"] = "2.0";
-    shutdownRequest["id"] = m_nextRequestId++;
-    shutdownRequest["method"] = "shutdown";
-    sendMessage(shutdownRequest);
+    qInfo() << "[LSPClient] Stopping server for" << m_config.language;
     
-    // Send exit notification
-    QJsonObject exitNotification;
-    exitNotification["jsonrpc"] = "2.0";
-    exitNotification["method"] = "exit";
-    sendMessage(exitNotification);
-    
-    m_serverProcess->waitForFinished(2000);
-    m_serverProcess->kill();
+    try {
+        // Send shutdown request
+        QJsonObject shutdownRequest;
+        shutdownRequest["jsonrpc"] = "2.0";
+        shutdownRequest["id"] = m_nextRequestId++;
+        shutdownRequest["method"] = "shutdown";
+        shutdownRequest["params"] = QJsonObject();
+        sendMessage(shutdownRequest);
+        
+        // Send exit notification
+        QJsonObject exitNotification;
+        exitNotification["jsonrpc"] = "2.0";
+        exitNotification["method"] = "exit";
+        sendMessage(exitNotification);
+        
+        // Wait gracefully for shutdown
+        if (!m_serverProcess->waitForFinished(2000)) {
+            qWarning() << "[LSPClient] Server did not shut down gracefully, terminating";
+            m_serverProcess->terminate();
+            if (!m_serverProcess->waitForFinished(1000)) {
+                qCritical() << "[LSPClient] Server did not terminate, killing";
+                m_serverProcess->kill();
+                m_serverProcess->waitForFinished(500);
+            }
+        }
+    } catch (const std::exception& e) {
+        qCritical() << "[LSPClient] Exception during shutdown:" << e.what();
+        if (m_serverProcess && m_serverProcess->state() == QProcess::Running) {
+            m_serverProcess->kill();
+        }
+    }
     
     m_serverRunning = false;
     m_initialized = false;
     
-    qInfo() << "[LSPClient] Server stopped";
+    // Clear all resources
+    m_receiveBuffer.clear();
+    m_pendingRequests.clear();
+    m_diagnostics.clear();
+    m_completionCache.clear();
+    m_documentVersions.clear();
+    
+    qInfo() << "[LSPClient] Server stopped and resources cleared";
 }
 
 void LSPClient::openDocument(const QString& uri, const QString& languageId, const QString& text)
@@ -374,7 +467,10 @@ void LSPClient::requestReferences(const QString& uri, int line, int character)
 
 void LSPClient::requestRename(const QString& uri, int line, int character, const QString& newName)
 {
-    if (!m_initialized) return;
+    if (!m_initialized) {
+        qWarning() << "[LSPClient] Cannot request rename - server not initialized";
+        return;
+    }
     
     int requestId = m_nextRequestId++;
     
@@ -396,14 +492,16 @@ void LSPClient::requestRename(const QString& uri, int line, int character, const
     request["method"] = "textDocument/rename";
     request["params"] = params;
     
-    sendMessage(request);
-    
     PendingRequest pending;
     pending.type = "rename";
     pending.uri = uri;
     pending.line = line;
     pending.character = character;
+    pending.metadata = newName;
     m_pendingRequests[requestId] = pending;
+    
+    sendMessage(request);
+    qDebug() << "[LSPClient] Sent rename request to" << newName;
 }
 
 void LSPClient::formatDocument(const QString& uri)
@@ -482,18 +580,37 @@ void LSPClient::onServerError(QProcess::ProcessError error)
     QString errorStr;
     switch (error) {
         case QProcess::FailedToStart:
-            errorStr = "Failed to start LSP server";
+            errorStr = QString("Failed to start %1 server: %2")
+                .arg(m_config.language)
+                .arg(m_serverProcess->errorString());
             break;
         case QProcess::Crashed:
-            errorStr = "LSP server crashed";
+            errorStr = QString("%1 server crashed").arg(m_config.language);
+            break;
+        case QProcess::Timedout:
+            errorStr = QString("%1 server communication timeout").arg(m_config.language);
+            break;
+        case QProcess::WriteError:
+            errorStr = "LSP server write error";
+            break;
+        case QProcess::ReadError:
+            errorStr = "LSP server read error";
             break;
         default:
-            errorStr = "LSP server error";
+            errorStr = QString("LSP server error: %1").arg(m_serverProcess->errorString());
     }
     
     qCritical() << "[LSPClient]" << errorStr;
+    
+    // Log stderr if available
+    QString stdErrLog = QString::fromUtf8(m_serverProcess->readAllStandardError());
+    if (!stdErrLog.isEmpty()) {
+        qCritical() << "[LSPClient] Server stderr:" << stdErrLog;
+    }
+    
     emit serverError(errorStr);
     m_serverRunning = false;
+    m_initialized = false;
 }
 
 void LSPClient::onServerFinished(int exitCode, QProcess::ExitStatus status)
@@ -505,14 +622,48 @@ void LSPClient::onServerFinished(int exitCode, QProcess::ExitStatus status)
 
 void LSPClient::sendMessage(const QJsonObject& message)
 {
-    QJsonDocument doc(message);
-    QByteArray json = doc.toJson(QJsonDocument::Compact);
+    if (!m_serverProcess || !m_serverRunning) {
+        qWarning() << "[LSPClient] Cannot send message - server not running";
+        return;
+    }
     
-    QString header = QString("Content-Length: %1\r\n\r\n").arg(json.size());
-    
-    m_serverProcess->write(header.toUtf8());
-    m_serverProcess->write(json);
-    m_serverProcess->waitForBytesWritten();
+    try {
+        QJsonDocument doc(message);
+        QByteArray json = doc.toJson(QJsonDocument::Compact);
+        
+        if (json.isEmpty()) {
+            qWarning() << "[LSPClient] Failed to serialize JSON message";
+            return;
+        }
+        
+        QString header = QString("Content-Length: %1\r\n\r\n").arg(json.size());
+        QByteArray headerBytes = header.toUtf8();
+        
+        // Write header
+        qint64 headerWritten = m_serverProcess->write(headerBytes);
+        if (headerWritten != headerBytes.size()) {
+            qWarning() << "[LSPClient] Failed to write complete header";
+            return;
+        }
+        
+        // Write message body
+        qint64 bodyWritten = m_serverProcess->write(json);
+        if (bodyWritten != json.size()) {
+            qWarning() << "[LSPClient] Failed to write complete message body";
+            return;
+        }
+        
+        if (!m_serverProcess->waitForBytesWritten(1000)) {
+            qWarning() << "[LSPClient] Timeout waiting for bytes to be written";
+            return;
+        }
+        
+        qDebug() << "[LSPClient] Sent message:" << message["method"].toString() 
+                 << "(size:" << (headerBytes.size() + json.size()) << "bytes)";
+    } catch (const std::exception& e) {
+        qCritical() << "[LSPClient] Exception sending message:" << e.what();
+        emit serverError(QString("Failed to send message: %1").arg(e.what()));
+    }
 }
 
 void LSPClient::processMessage(const QJsonObject& message)
@@ -523,7 +674,7 @@ void LSPClient::processMessage(const QJsonObject& message)
         int id = message["id"].toInt();
         
         if (message.contains("result")) {
-            QJsonObject result = message["result"].toObject();
+            QJsonValue result = message["result"];
             
             if (m_pendingRequests.contains(id)) {
                 PendingRequest req = m_pendingRequests.take(id);
@@ -532,6 +683,8 @@ void LSPClient::processMessage(const QJsonObject& message)
                     handleCompletionResponse(result, id);
                 } else if (req.type == "hover") {
                     handleHoverResponse(result, id);
+                } else if (req.type == "signatureHelp") {
+                    handleSignatureHelpResponse(result, id);
                 } else if (req.type == "definition") {
                     handleDefinitionResponse(result, id);
                 } else if (req.type == "references") {
@@ -539,6 +692,8 @@ void LSPClient::processMessage(const QJsonObject& message)
                 } else if (req.type == "rename") {
                     handleRenameResponse(result, id);
                 } else if (req.type == "codeAction") {
+                    handleCodeActionResponse(result, id);
+                } else if (req.type == "organizeImports") {
                     handleCodeActionResponse(result, id);
                 }
             } else if (id == 1) {
@@ -560,7 +715,7 @@ void LSPClient::processMessage(const QJsonObject& message)
     }
 }
 
-void LSPClient::handleInitializeResponse(const QJsonObject& result)
+void LSPClient::handleInitializeResponse(const QJsonValue& result)
 {
     qInfo() << "[LSPClient] Server initialized successfully";
     m_initialized = true;
@@ -575,7 +730,7 @@ void LSPClient::handleInitializeResponse(const QJsonObject& result)
     emit serverReady();
 }
 
-void LSPClient::handleCompletionResponse(const QJsonObject& result, int requestId)
+void LSPClient::handleCompletionResponse(const QJsonValue& result, int requestId)
 {
     if (!m_pendingRequests.contains(requestId)) return;
     
@@ -584,25 +739,30 @@ void LSPClient::handleCompletionResponse(const QJsonObject& result, int requestI
     
     // Result can be CompletionList or CompletionItem[]
     QJsonArray itemsArray;
-    if (result.contains("items")) {
-        QJsonValue itemsValue = result.value("items");
-        if (itemsValue.isArray()) {
-            itemsArray = itemsValue.toArray();
+    if (result.isObject()) {
+        QJsonObject obj = result.toObject();
+        if (obj.contains("items")) {
+            QJsonValue itemsValue = obj.value("items");
+            if (itemsValue.isArray()) {
+                itemsArray = itemsValue.toArray();
+            }
         }
-    } else {
-        // Result itself might be an array (not wrapped in CompletionList)
-        // In this case, convert the entire object to a document and check
-        QJsonDocument doc(result);
-        if (doc.isArray()) {
-            itemsArray = doc.array();
-        }
+    } else if (result.isArray()) {
+        itemsArray = result.toArray();
     }
+    
+    QSet<QString> seen;  // Deduplication
     
     for (const QJsonValue& val : itemsArray) {
         QJsonObject itemObj = val.toObject();
         
         CompletionItem item;
         item.label = itemObj["label"].toString();
+        
+        // Skip duplicates
+        if (seen.contains(item.label)) continue;
+        seen.insert(item.label);
+        
         item.insertText = itemObj.contains("insertText") 
             ? itemObj["insertText"].toString() 
             : item.label;
@@ -620,22 +780,37 @@ void LSPClient::handleCompletionResponse(const QJsonObject& result, int requestI
             }
         }
         
+        // Compute relevance score
+        item.score = computeCompletionScore(item, item.filterText);
+        
         items.append(item);
     }
     
-    qDebug() << "[LSPClient] Received" << items.size() << "completions";
+    // Sort by score (higher scores first)
+    std::sort(items.begin(), items.end(), 
+        [](const CompletionItem& a, const CompletionItem& b) {
+            return a.score > b.score;
+        });
+    
+    // Cache results
+    QString cacheKey = QString("%1:%2:%3").arg(req.uri).arg(req.line).arg(req.character);
+    m_completionCache[cacheKey] = items;
+    
+    qDebug() << "[LSPClient] Received" << items.size() << "completions (deduplicated and scored)";
     emit completionsReceived(req.uri, req.line, req.character, items);
 }
 
-void LSPClient::handleHoverResponse(const QJsonObject& result, int requestId)
+void LSPClient::handleHoverResponse(const QJsonValue& result, int requestId)
 {
     if (!m_pendingRequests.contains(requestId)) return;
     
     PendingRequest req = m_pendingRequests[requestId];
     QString markdown;
     
-    if (result.contains("contents")) {
-        QJsonValue contents = result["contents"];
+    if (result.isObject()) {
+        QJsonObject obj = result.toObject();
+        if (obj.contains("contents")) {
+            QJsonValue contents = obj["contents"];
         if (contents.isString()) {
             markdown = contents.toString();
         } else if (contents.isObject()) {
@@ -651,11 +826,60 @@ void LSPClient::handleHoverResponse(const QJsonObject& result, int requestId)
             }
         }
     }
+    }
     
+    // Truncate very large hover content
+    if (markdown.length() > 5000) {
+        markdown = markdown.left(5000) + "\n... (truncated)";
+    }
+    
+    qDebug() << "[LSPClient] Hover info received:" << markdown.length() << "chars";
     emit hoverReceived(req.uri, markdown);
 }
 
-void LSPClient::handleDefinitionResponse(const QJsonObject& result, int requestId)
+void LSPClient::handleSignatureHelpResponse(const QJsonValue& result, int requestId)
+{
+    if (!m_pendingRequests.contains(requestId)) return;
+    
+    PendingRequest req = m_pendingRequests[requestId];
+    SignatureHelp help;
+    
+    if (result.isObject()) {
+        QJsonObject obj = result.toObject();
+        if (obj.contains("signatures")) {
+            QJsonArray signatures = obj["signatures"].toArray();
+        for (const QJsonValue& sig : signatures) {
+            QJsonObject sigObj = sig.toObject();
+            QString label = sigObj["label"].toString();
+            help.signatures.append(label);
+            
+            // Extract parameters
+            if (sigObj.contains("parameters")) {
+                QJsonArray params = sigObj["parameters"].toArray();
+                for (const QJsonValue& param : params) {
+                    QJsonObject paramObj = param.toObject();
+                    ParameterInfo pinfo;
+                    pinfo.label = paramObj["label"].toString();
+                    
+                    if (paramObj.contains("documentation")) {
+                        pinfo.documentation = paramObj["documentation"].toString();
+                    }
+                    
+                    help.parameters.append(pinfo);
+                }
+            }
+        }
+        
+        help.activeSignature = obj["activeSignature"].toInt(0);
+        help.activeParameter = obj["activeParameter"].toInt(0);
+    }
+    }
+    
+    qDebug() << "[LSPClient] Signature help received:" << help.signatures.size() << "signatures";
+    emit signatureHelpReceived(req.uri, help);
+}
+
+void LSPClient::handleDefinitionResponse(const QJsonValue& result, int requestId)
 {
     if (!m_pendingRequests.contains(requestId)) return;
     
@@ -663,16 +887,17 @@ void LSPClient::handleDefinitionResponse(const QJsonObject& result, int requestI
     
     // Result can be Location or Location[]
     QJsonObject location;
-    if (result.contains("uri")) {
-        location = result;
-    } else {
-        // Result might be an array of locations
-        QJsonDocument doc(result);
-        if (doc.isArray()) {
-            QJsonArray arr = doc.array();
-            if (!arr.isEmpty()) {
-                location = arr.first().toObject();
-            }
+    if (result.isObject()) {
+        QJsonObject obj = result.toObject();
+        if (obj.contains("uri")) {
+            location = obj;
+        }
+    }
+    
+    if (location.isEmpty() && result.isArray()) {
+        QJsonArray arr = result.toArray();
+        if (!arr.isEmpty()) {
+            location = arr.first().toObject();
         }
     }
     
@@ -688,13 +913,12 @@ void LSPClient::handleDefinitionResponse(const QJsonObject& result, int requestI
     }
 }
 
-void LSPClient::handleReferencesResponse(const QJsonObject& result, int requestId)
+void LSPClient::handleReferencesResponse(const QJsonValue& result, int requestId)
 {
     // Result is Location[]
     QVector<Diagnostic> refDiags;
-    QJsonDocument doc(result);
-    if (doc.isArray()) {
-        QJsonArray locations = doc.array();
+    if (result.isArray()) {
+        QJsonArray locations = result.toArray();
         for (const QJsonValue& val : locations) {
             QJsonObject loc = val.toObject();
             QJsonObject range = loc["range"].toObject();
@@ -711,19 +935,52 @@ void LSPClient::handleReferencesResponse(const QJsonObject& result, int requestI
     emit referencesReceived(refDiags);
 }
 
-void LSPClient::handleRenameResponse(const QJsonObject& result, int requestId)
+void LSPClient::handleRenameResponse(const QJsonValue& result, int requestId)
 {
     // Result is WorkspaceEdit
-    emit renameReceived(result);
+    // Structure: { changes: { uri: [{ range, newText }, ...], ... } }
+    
+    if (result.isObject()) {
+        QJsonObject obj = result.toObject();
+        if (obj.contains("changes")) {
+            QJsonObject changes = obj["changes"].toObject();
+        
+        qDebug() << "[LSPClient] Rename affects" << changes.size() << "files";
+        
+        // Validate all edits before applying
+        for (auto it = changes.begin(); it != changes.end(); ++it) {
+            QString fileUri = it.key();
+            QJsonArray edits = it.value().toArray();
+            
+            qDebug() << "[LSPClient] File" << fileUri << ":" << edits.size() << "edits";
+            
+            // Check for conflicts (overlapping edits on same line)
+            QMap<int, int> lineRanges;
+            for (const QJsonValue& edit : edits) {
+                QJsonObject editObj = edit.toObject();
+                QJsonObject range = editObj["range"].toObject();
+                QJsonObject start = range["start"].toObject();
+                int line = start["line"].toInt();
+                
+                if (lineRanges.contains(line)) {
+                    qWarning() << "[LSPClient] Potential rename conflict on line" << line;
+                }
+                lineRanges[line]++;
+            }
+        }
+    }
+    }
+    
+    qDebug() << "[LSPClient] Rename workspace edit received";
+    emit renameReceived(result.toObject());
 }
 
-void LSPClient::handleCodeActionResponse(const QJsonObject& result, int requestId)
+void LSPClient::handleCodeActionResponse(const QJsonValue& result, int requestId)
 {
     // Result is (Command | CodeAction)[]
     QVector<QJsonObject> actions;
-    QJsonDocument doc(result);
-    if (doc.isArray()) {
-        QJsonArray actionsArray = doc.array();
+    if (result.isArray()) {
+        QJsonArray actionsArray = result.toArray();
         for (const QJsonValue& val : actionsArray) {
             actions.append(val.toObject());
         }
@@ -738,6 +995,8 @@ void LSPClient::handleDiagnostics(const QJsonObject& params)
     QJsonArray diagnosticsArray = params["diagnostics"].toArray();
     
     QVector<Diagnostic> diagnostics;
+    QMap<QString, int> lineErrors;  // Track error count per line for optimization
+    
     for (const QJsonValue& val : diagnosticsArray) {
         QJsonObject diagObj = val.toObject();
         
@@ -749,12 +1008,37 @@ void LSPClient::handleDiagnostics(const QJsonObject& params)
         diag.column = start["character"].toInt();
         diag.severity = diagObj["severity"].toInt();
         diag.message = diagObj["message"].toString();
-        diag.source = diagObj["source"].toString();
+        diag.source = diagObj.contains("source") ? diagObj["source"].toString() : "LSP";
+        diag.code = diagObj.contains("code") ? diagObj["code"].toString() : "";
         
+        // Truncate long messages for performance
+        if (diag.message.length() > 500) {
+            diag.message = diag.message.left(497) + "...";
+        }
+        
+        diagnostics.append(diag);
+        lineErrors[QString::number(diag.line)]++;
+    }
+    
+    // Filter out duplicate errors on same line (keep most severe)
+    QMap<int, Diagnostic> filteredDiags;
+    for (const Diagnostic& diag : diagnostics) {
+        int key = diag.line * 10000 + diag.column;
+        if (!filteredDiags.contains(key) || diag.severity < filteredDiags[key].severity) {
+            filteredDiags[key] = diag;
+        }
+    }
+    
+    diagnostics.clear();
+    for (const Diagnostic& diag : filteredDiags.values()) {
         diagnostics.append(diag);
     }
     
     m_diagnostics[uri] = diagnostics;
+    
+    qDebug() << "[LSPClient] Diagnostics updated for" << uri 
+             << ":" << diagnostics.size() << "issues";
+    
     emit diagnosticsUpdated(uri, diagnostics);
 }
 
@@ -768,6 +1052,33 @@ QString LSPClient::buildDocumentUri(const QString& filePath) const
     return QUrl::fromLocalFile(absolutePath).toString();
 }
 
+int LSPClient::computeCompletionScore(const CompletionItem& item, const QString& filter) const
+{
+    int score = 100;  // Base score
+    
+    // Prioritize by kind
+    if (item.kind == 3) score += 50;  // Function
+    if (item.kind == 2) score += 40;  // Method
+    if (item.kind == 13) score += 30; // Variable
+    
+    // Boost exact prefix matches
+    if (item.label.startsWith(filter, Qt::CaseInsensitive)) {
+        score += 100;
+    }
+    
+    // Boost exact matches
+    if (item.label == filter) {
+        score += 200;
+    }
+    
+    // Penalize lower case labels (prefer camelCase/PascalCase)
+    if (!item.label.isEmpty() && item.label[0].isLower()) {
+        score -= 10;
+    }
+    
+    return score;
+}
+
 void LSPClient::requestCompletions(const QString& uri, int line, int character)
 {
     if (!m_serverRunning || !m_initialized) {
@@ -775,27 +1086,197 @@ void LSPClient::requestCompletions(const QString& uri, int line, int character)
         return;
     }
     
-    QJsonObject params;
-    QJsonObject textDocument;
-    textDocument["uri"] = uri;
+    // Check cache first
+    QString cacheKey = QString("%1:%2:%3").arg(uri).arg(line).arg(character);
+    if (m_completionCache.contains(cacheKey)) {
+        emit completionsReceived(uri, line, character, m_completionCache[cacheKey]);
+        return;
+    }
+    
+    int requestId = m_nextRequestId++;
+    
+    QJsonObject textDocumentId;
+    textDocumentId["uri"] = buildDocumentUri(uri);
     
     QJsonObject position;
     position["line"] = line;
     position["character"] = character;
     
-    params["textDocument"] = textDocument;
+    // Add completion context
+    QJsonObject context;
+    context["triggerKind"] = 1;  // Invoked
+    
+    QJsonObject params;
+    params["textDocument"] = textDocumentId;
+    params["position"] = position;
+    params["context"] = context;
+    
+    QJsonObject request;
+    request["jsonrpc"] = "2.0";
+    request["id"] = requestId;
+    request["method"] = "textDocument/completion";
+    request["params"] = params;
+    
+    PendingRequest pending;
+    pending.type = "completion";
+    pending.uri = uri;
+    pending.line = line;
+    pending.character = character;
+    m_pendingRequests[requestId] = pending;
+    
+    sendMessage(request);
+    qDebug() << "[LSPClient] Sent completion request for" << uri << "at" << line << ":" << character;
+}
+
+void LSPClient::requestSignatureHelp(const QString& uri, int line, int character)
+{
+    if (!m_serverRunning || !m_initialized) {
+        qWarning() << "[LSPClient] Cannot request signature help - server not ready";
+        return;
+    }
+    
+    int requestId = m_nextRequestId++;
+    
+    QJsonObject textDocumentId;
+    textDocumentId["uri"] = buildDocumentUri(uri);
+    
+    QJsonObject position;
+    position["line"] = line;
+    position["character"] = character;
+    
+    QJsonObject params;
+    params["textDocument"] = textDocumentId;
     params["position"] = position;
     
     QJsonObject request;
     request["jsonrpc"] = "2.0";
-    request["id"] = m_nextRequestId++;
-    request["method"] = "textDocument/completion";
+    request["id"] = requestId;
+    request["method"] = "textDocument/signatureHelp";
     request["params"] = params;
     
-    m_pendingRequests[request["id"].toInt()] = {"completion", uri, line, character};
-    sendMessage(request);
+    PendingRequest pending;
+    pending.type = "signatureHelp";
+    pending.uri = uri;
+    pending.line = line;
+    pending.character = character;
+    m_pendingRequests[requestId] = pending;
     
-    qDebug() << "[LSPClient] Sent completion request for" << uri << "at" << line << ":" << character;
+    sendMessage(request);
+    qDebug() << "[LSPClient] Sent signature help request for" << uri;
+}
+
+void LSPClient::requestExtractMethod(const QString& uri, int startLine, int endLine, const QString& methodName)
+{
+    if (!m_serverRunning || !m_initialized) return;
+    
+    int requestId = m_nextRequestId++;
+    
+    QJsonObject textDocumentId;
+    textDocumentId["uri"] = buildDocumentUri(uri);
+    
+    QJsonObject range;
+    QJsonObject startPos, endPos;
+    startPos["line"] = startLine;
+    startPos["character"] = 0;
+    endPos["line"] = endLine;
+    endPos["character"] = 0;
+    range["start"] = startPos;
+    range["end"] = endPos;
+    
+    QJsonObject params;
+    params["textDocument"] = textDocumentId;
+    params["range"] = range;
+    
+    QJsonObject request;
+    request["jsonrpc"] = "2.0";
+    request["id"] = requestId;
+    request["method"] = "codeAction";
+    request["params"] = params;
+    
+    PendingRequest pending;
+    pending.type = "extractMethod";
+    pending.uri = uri;
+    pending.line = startLine;
+    pending.character = 0;
+    pending.metadata = methodName;
+    m_pendingRequests[requestId] = pending;
+    
+    sendMessage(request);
+    qDebug() << "[LSPClient] Sent extract method request";
+}
+
+void LSPClient::requestExtractVariable(const QString& uri, int line, int startChar, int endChar, const QString& varName)
+{
+    if (!m_serverRunning || !m_initialized) return;
+    
+    int requestId = m_nextRequestId++;
+    
+    QJsonObject textDocumentId;
+    textDocumentId["uri"] = buildDocumentUri(uri);
+    
+    QJsonObject range;
+    QJsonObject startPos, endPos;
+    startPos["line"] = line;
+    startPos["character"] = startChar;
+    endPos["line"] = line;
+    endPos["character"] = endChar;
+    range["start"] = startPos;
+    range["end"] = endPos;
+    
+    QJsonObject params;
+    params["textDocument"] = textDocumentId;
+    params["range"] = range;
+    
+    QJsonObject request;
+    request["jsonrpc"] = "2.0";
+    request["id"] = requestId;
+    request["method"] = "codeAction";
+    request["params"] = params;
+    
+    PendingRequest pending;
+    pending.type = "extractVariable";
+    pending.uri = uri;
+    pending.line = line;
+    pending.character = startChar;
+    pending.metadata = varName;
+    m_pendingRequests[requestId] = pending;
+    
+    sendMessage(request);
+    qDebug() << "[LSPClient] Sent extract variable request";
+}
+
+void LSPClient::requestOrganizeImports(const QString& uri)
+{
+    if (!m_serverRunning || !m_initialized) return;
+    
+    int requestId = m_nextRequestId++;
+    
+    QJsonObject textDocumentId;
+    textDocumentId["uri"] = buildDocumentUri(uri);
+    
+    QJsonObject params;
+    params["textDocument"] = textDocumentId;
+    
+    QJsonObject request;
+    request["jsonrpc"] = "2.0";
+    request["id"] = requestId;
+    request["method"] = "codeAction";
+    request["params"] = params;
+    
+    // Add filter for organize imports command
+    QJsonObject command;
+    command["title"] = "Organize Imports";
+    command["command"] = "editor.action.organizeImport";
+    
+    PendingRequest pending;
+    pending.type = "organizeImports";
+    pending.uri = uri;
+    pending.line = 0;
+    pending.character = 0;
+    m_pendingRequests[requestId] = pending;
+    
+    sendMessage(request);
+    qDebug() << "[LSPClient] Sent organize imports request";
 }
 
 } // namespace RawrXD

@@ -6,6 +6,8 @@
  */
 
 #include "project_explorer.h"
+#include "integration/ProdIntegration.h"
+#include "integration/InitializationTracker.h"
 // Default implementations (used when nullptr is passed to constructor)
 #include "../utils/qt_file_writer.h"
 #include "../utils/qt_directory_manager.h"
@@ -23,9 +25,7 @@
 #include <QRegularExpression>
 #include <QDir>
 
-namespace RawrXD {
-
-// ========== ProjectExplorerWidget Implementation ==========
+// ========== ProjectExplorerWidget Implementation ========== 
 
 ProjectExplorerWidget::ProjectExplorerWidget(QWidget* parent,
                                            IFileWriter* fileWriter,
@@ -45,13 +45,14 @@ ProjectExplorerWidget::ProjectExplorerWidget(QWidget* parent,
     , m_ownsFileWriter(false)
     , m_ownsDirManager(false)
 {
+    RAWRXD_INIT_TIMED("ProjectExplorerWidget");
     // If no concrete implementations are provided, create default Qt ones
     if (!m_fileWriter) {
-        m_fileWriter = new QtFileWriter(this);
+        m_fileWriter = new RawrXD::QtFileWriter(this);
         m_ownsFileWriter = true;
     }
     if (!m_dirManager) {
-        m_dirManager = new QtDirectoryManager(this);
+        m_dirManager = new RawrXD::QtDirectoryManager(this);
         m_ownsDirManager = true;
     }
 
@@ -60,6 +61,7 @@ ProjectExplorerWidget::ProjectExplorerWidget(QWidget* parent,
 }
 
 ProjectExplorerWidget::~ProjectExplorerWidget() {
+    RAWRXD_TIMED_FUNC();
     if (!m_projectPath.isEmpty()) {
         saveProjectMetadata();
     }
@@ -73,6 +75,7 @@ ProjectExplorerWidget::~ProjectExplorerWidget() {
 }
 
 void ProjectExplorerWidget::setupUI() {
+    RAWRXD_TIMED_FUNC();
     m_mainLayout = new QVBoxLayout(this);
     m_mainLayout->setContentsMargins(0, 0, 0, 0);
     m_mainLayout->setSpacing(0);
@@ -199,6 +202,7 @@ void ProjectExplorerWidget::setupContextMenu() {
 }
 
 bool ProjectExplorerWidget::openProject(const QString& projectPath) {
+    RAWRXD_TIMED_FUNC();
     if (projectPath.isEmpty() || !QFileInfo(projectPath).isDir()) {
         qWarning() << "Invalid project path:" << projectPath;
         return false;
@@ -245,6 +249,7 @@ ProjectMetadata ProjectExplorerWidget::currentProjectMetadata() const {
 }
 
 void ProjectExplorerWidget::closeProject() {
+    RAWRXD_TIMED_FUNC();
     if (!m_projectPath.isEmpty()) {
         saveProjectMetadata();
         m_projectPath.clear();
@@ -261,6 +266,7 @@ void ProjectExplorerWidget::closeProject() {
 }
 
 void ProjectExplorerWidget::refresh() {
+    RAWRXD_TIMED_FUNC();
     if (!m_projectPath.isEmpty()) {
         // Reload gitignore
         loadGitignorePatterns();
@@ -356,12 +362,11 @@ void ProjectExplorerWidget::onTreeDoubleClicked(const QModelIndex& index) {
 
 void ProjectExplorerWidget::onTreeClicked(const QModelIndex& index) {
     if (!index.isValid()) return;
-    
+
     QString filePath = m_fileSystemModel->filePath(mapToSource(index));
     emit fileClicked(filePath);
-}
-
-void ProjectExplorerWidget::onContextMenuRequested(const QPoint& pos) {
+    emit fileSelected(filePath);
+}void ProjectExplorerWidget::onContextMenuRequested(const QPoint& pos) {
     QModelIndex index = m_treeView->indexAt(pos);
     
     // Enable/disable actions based on selection
@@ -385,6 +390,7 @@ void ProjectExplorerWidget::onFilterTextChanged(const QString& text) {
 // ========== Context Menu Actions ==========
 
 void ProjectExplorerWidget::actionNewFile() {
+    RAWRXD_TIMED_FUNC();
     QString parentDir = m_projectPath;
     QModelIndex index = m_treeView->currentIndex();
     if (index.isValid()) {
@@ -415,6 +421,7 @@ void ProjectExplorerWidget::actionNewFile() {
 }
 
 void ProjectExplorerWidget::actionNewFolder() {
+    RAWRXD_TIMED_FUNC();
     QString parentDir = m_projectPath;
     QModelIndex index = m_treeView->currentIndex();
     if (index.isValid()) {
@@ -444,6 +451,7 @@ void ProjectExplorerWidget::actionNewFolder() {
 }
 
 void ProjectExplorerWidget::actionRename() {
+    RAWRXD_TIMED_FUNC();
     QString oldPath = selectedFilePath();
     if (oldPath.isEmpty()) return;
     
@@ -472,6 +480,7 @@ void ProjectExplorerWidget::actionRename() {
 }
 
 void ProjectExplorerWidget::actionDelete() {
+    RAWRXD_TIMED_FUNC();
     QStringList paths = selectedFilePaths();
     if (paths.isEmpty()) return;
     
@@ -490,8 +499,10 @@ void ProjectExplorerWidget::actionDelete() {
     for (const QString& path : paths) {
         FileOperationResult result;
         if (QFileInfo(path).isDir()) {
+            RAWRXD_TIMED_NAMED("deleteDir");
             result = m_dirManager->deleteDirectory(path, true);
         } else {
+            RAWRXD_TIMED_NAMED("deleteFile");
             result = m_fileWriter->deleteFile(path, true);
         }
         
@@ -801,5 +812,3 @@ QModelIndex ProjectExplorerWidget::mapFromSource(const QModelIndex& sourceIndex)
     }
     return sourceIndex;
 }
-
-} // namespace RawrXD

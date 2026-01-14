@@ -173,7 +173,6 @@ RT_INTEGRATION_STATE ENDS
 ;==============================================================================
 ; PUBLIC EXPORTS
 ;==============================================================================
-
 PUBLIC InitializeRealTimeIntegration
 PUBLIC ProcessMessageQueue
 PUBLIC PostChatMessage
@@ -1387,4 +1386,8 @@ EnumWindowsProc PROC
 EnumWindowsProc ENDP
 
 END
+
+
+
+
 

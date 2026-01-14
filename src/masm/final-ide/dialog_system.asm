@@ -118,7 +118,7 @@ CreateModalDialog PROC FRAME
     
     ; Allocate DIALOG_ENTRY structure
     mov rcx, sizeof(DIALOG_ENTRY)
-    call malloc
+    call masm_malloc
     test rax, rax
     jz allocation_failed
     
@@ -192,7 +192,7 @@ no_user_data:
     
     ; Free dialog entry
     mov rcx, rbx
-    call free
+    call masm_free
     
     ; Restore parent window
     mov rcx, [rsp+28h]  ; parent_hwnd
@@ -213,7 +213,7 @@ allocation_failed:
     
 dialog_creation_failed:
     mov rcx, rbx
-    call free
+    call masm_free
     xor eax, eax
     jmp dialog_complete
     
@@ -221,7 +221,7 @@ registry_add_failed:
     mov rcx, [rbx+DIALOG_ENTRY.hwnd]
     call DestroyWindow
     mov rcx, rbx
-    call free
+    call masm_free
     xor eax, eax
     
 dialog_complete:
@@ -651,7 +651,7 @@ skip_destroy:
     push rdx
     push r8
     mov rcx, [rcx+r8*8]
-    call free
+    call masm_free
     pop r8
     pop rdx
     pop rcx
@@ -669,3 +669,5 @@ cleanup_done:
 DialogSystemShutdown ENDP
 
 END
+
+

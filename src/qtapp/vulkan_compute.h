@@ -72,6 +72,13 @@ public:
                              uint32_t M,
                              uint32_t K,
                              uint32_t N);
+
+    // Additional Vulkan Dispatchers for full LLM support
+    bool DispatchRoPE(uint32_t input_idx, uint32_t output_idx, uint32_t dim, uint32_t seq_pos, uint32_t rotation_dim);
+    bool DispatchRMSNorm(uint32_t input_idx, uint32_t output_idx, uint32_t size, float epsilon);
+    bool DispatchSiLU(uint32_t input_idx, uint32_t output_idx, uint32_t size);
+    bool DispatchSoftmax(uint32_t input_idx, uint32_t output_idx, uint32_t size);
+    bool DispatchAttention(uint32_t q_idx, uint32_t k_idx, uint32_t v_idx, uint32_t out_idx, uint32_t seq_len, uint32_t head_dim);
     
     VulkanDeviceInfo GetDeviceInfo() const { return device_info_; }
     bool IsAMDDevice() const { return device_info_.vendor_id == 0x1002; }

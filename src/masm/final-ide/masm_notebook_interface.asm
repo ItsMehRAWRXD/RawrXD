@@ -607,7 +607,6 @@ notebook_execute_all ENDP
 ;==========================================================================
 ; Helper functions
 ;==========================================================================
-
 setup_default_kernels PROC
     ; Setup default kernels (Python, Julia, R, Lua)
     
@@ -647,32 +646,26 @@ setup_default_kernels PROC
 szPythonExePath db "python.exe",0
 .code
 setup_default_kernels ENDP
-
 create_cell_list PROC
     ; Create cell list UI
     ret
 create_cell_list ENDP
-
 create_output_display PROC
     ; Create output display UI
     ret
 create_output_display ENDP
-
 create_kernel_selector PROC
     ; Create kernel selector UI
     ret
 create_kernel_selector ENDP
-
 update_cell_list PROC
     ; Update cell list UI
     ret
 update_cell_list ENDP
-
 update_cell_output PROC
     ; Update cell output display
     ret
 update_cell_output ENDP
-
 find_cell_by_id PROC
     ; rcx = cell_id -> rax = cell_ptr
     xor rax, rax
@@ -701,7 +694,6 @@ find_cell_by_id PROC
     xor rax, rax
     ret
 find_cell_by_id ENDP
-
 send_to_kernel PROC
     push rbp
     mov rbp, rsp
@@ -761,7 +753,6 @@ send_to_kernel PROC
 szNewline db 0Dh, 0Ah, 0
 .code
 send_to_kernel ENDP
-
 receive_from_kernel PROC
     push rbp
     mov rbp, rsp
@@ -823,7 +814,6 @@ receive_from_kernel PROC
     leave
     ret
 receive_from_kernel ENDP
-
 start_kernel_process PROC
     push rbp
     mov rbp, rsp
@@ -900,7 +890,6 @@ start_kernel_process PROC
     leave
     ret
 start_kernel_process ENDP
-
 strlen PROC
     ; rcx = string -> rax = length
     xor rax, rax
@@ -912,7 +901,6 @@ strlen PROC
 @done:
     ret
 strlen ENDP
-
 strncpy PROC
     ; rcx = dest, rdx = src, r8d = max_len
     xor rax, rax
@@ -928,7 +916,6 @@ strncpy PROC
 @done:
     ret
 strncpy ENDP
-
 memcpy PROC
     ; rcx = dest, rdx = src, r8d = len
     xor rax, rax
@@ -946,19 +933,16 @@ memcpy ENDP
 ;==========================================================================
 ; Window procedures
 ;==========================================================================
-
 notebook_wnd_proc PROC
     ; Notebook window procedure
     call DefWindowProcA
     ret
 notebook_wnd_proc ENDP
-
 cell_editor_wnd_proc PROC
     ; Cell editor procedure
     call DefWindowProcA
     ret
 cell_editor_wnd_proc ENDP
-
 output_display_wnd_proc PROC
     ; Output display procedure
     call DefWindowProcA
@@ -969,21 +953,21 @@ output_display_wnd_proc ENDP
 notebook_clear_output PROC
     ret
 notebook_clear_output ENDP
-
 notebook_save PROC
     ret
 notebook_save ENDP
-
 notebook_load PROC
     ret
 notebook_load ENDP
-
 notebook_export_ipynb PROC
     ret
 notebook_export_ipynb ENDP
-
 notebook_set_kernel PROC
     ret
 notebook_set_kernel ENDP
 
 end
+
+
+
+

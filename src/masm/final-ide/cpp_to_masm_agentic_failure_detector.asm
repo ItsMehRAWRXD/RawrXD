@@ -4,8 +4,8 @@
 
 option casemap:none
 
-EXTERN malloc:PROC
-EXTERN free:PROC
+extern masm_malloc : proc
+extern masm_free : proc
 EXTERN memset:PROC
 EXTERN memcpy:PROC
 EXTERN strlen:PROC
@@ -117,19 +117,19 @@ agentic_failure_detector_create PROC
     
     ; Allocate detector
     mov rcx, SIZEOF AGENTIC_FAILURE_DETECTOR
-    call malloc
+    call masm_malloc
     mov rbx, rax
     
     ; Allocate patterns array
     mov rcx, MAX_PATTERNS
     imul rcx, SIZEOF FAILURE_PATTERN
-    call malloc
+    call masm_malloc
     mov [rbx + AGENTIC_FAILURE_DETECTOR.patterns], rax
     
     ; Allocate detections array
     mov rcx, MAX_DETECTIONS
     imul rcx, SIZEOF FAILURE_DETECTION
-    call malloc
+    call masm_malloc
     mov [rbx + AGENTIC_FAILURE_DETECTOR.detections], rax
     
     ; Initialize
@@ -228,7 +228,7 @@ add_pattern PROC
     mov rcx, r9
     call strlen
     inc rax
-    call malloc
+    call masm_malloc
     mov [r12 + FAILURE_PATTERN.pattern], rax
     
     mov rcx, r9
@@ -556,7 +556,7 @@ free_patterns_local:
     mov rcx, [r13 + FAILURE_PATTERN.pattern]
     cmp rcx, 0
     je skip_pattern_local
-    call free
+    call masm_free
     
 skip_pattern_local:
     inc r12d
@@ -566,19 +566,19 @@ patterns_freed_local:
     mov rcx, [rbx + AGENTIC_FAILURE_DETECTOR.patterns]
     cmp rcx, 0
     je skip_patterns_array_local
-    call free
+    call masm_free
     
 skip_patterns_array_local:
     ; Free detections array
     mov rcx, [rbx + AGENTIC_FAILURE_DETECTOR.detections]
     cmp rcx, 0
     je skip_detections_array_local
-    call free
+    call masm_free
     
 skip_detections_array_local:
     ; Free detector
     mov rcx, rbx
-    call free
+    call masm_free
     
     pop rbx
     ret
@@ -606,4 +606,8 @@ agentic_destroy ENDP
     szUnknownFailureDescription DB "Unknown failure type", 0
 
 END
+
+
+
+
 

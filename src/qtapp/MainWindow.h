@@ -78,9 +78,9 @@ class QProgressBar;
 class QSystemTrayIcon;
 QT_END_NAMESPACE
 
-namespace RawrXD {
 class ProjectExplorerWidget;
-}
+class UMLViewWidget;
+class SnippetManagerWidget;
 
 /* ---------------  Our own forward decls  --------------- */
 class SettingsDialog;
@@ -90,6 +90,7 @@ class AISuggestionOverlay;
 class TaskProposalWidget;
 class PowerShellHighlighter;
 class TerminalWidget;
+class TerminalClusterWidget;
 class ActivityBar;
 class CommandPalette;
 class AIChatPanel;
@@ -104,11 +105,30 @@ class BreadcrumbNavigation;
 class BlobConverterPanel;
 class AIDigestionPanel;
 class AIDigestionPanel;
+namespace RawrXD { namespace Dashboard { class ChatMetricsDashboard; } }  // Real-time chat metrics dashboard
+class AutonomousSystemsIntegration;  // Master autonomous orchestrator
+
+    // Advanced Agentic Components
+    class AdvancedPlanningEngine;
+    class IntelligentErrorAnalysis;
+    class RealTimeRefactoring;
+    class DiscoveryDashboard;
+    class MemoryPersistenceSystem;
+    class TestGenerationAutomation;
+    class AlertSystem;
 
 namespace RawrXD {
-class LatencyMonitor;
-class LatencyStatusPanel;
+    class LatencyMonitor;
+    class LatencyStatusPanel;
 }
+
+class ProfilerWidget;
+class RunDebugWidget;
+class DatabaseToolWidget;
+class BookmarkWidget;
+class TodoWidget;
+class MacroRecorderWidget;
+class AICompletionCache;
 
 /* ============================================================ */
 /**
@@ -262,6 +282,7 @@ private slots: /* ----------  new IDE-wide slots  ---------- */
     void onKanbanMoved(const QString& taskId);
     void onPomodoroTick(int remaining);
     void onWallpaperChanged(const QString& path);
+    void onExplorerItemExpanded(QTreeWidgetItem* item);
     void onExplorerItemDoubleClicked(QTreeWidgetItem* item, int column);
     void onAccessibilityToggled(bool on);
 
@@ -319,6 +340,17 @@ private slots: /* ----------  new IDE-wide slots  ---------- */
     void toggleIconFont(bool visible);
     void togglePluginManager(bool visible);
     void toggleSettings(bool visible);
+    void toggleWhiteboard(bool visible);
+    void toggleAudioCall(bool visible);
+    void toggleScreenShare(bool visible);
+    void toggleCodeStream(bool visible);
+    void toggleAIReview(bool visible);
+    void toggleInlineChat(bool visible);
+    void toggleTimeTracker(bool visible);
+    void toggleTaskManager(bool visible);
+    void togglePomodoro(bool visible);
+    void toggleAccessibility(bool visible);
+    void toggleWallpaper(bool visible);
     void toggleNotificationCenter(bool visible);
     void toggleShortcutsConfigurator(bool visible);
     void toggleTelemetry(bool visible);
@@ -350,10 +382,12 @@ private: /* ---------------  UI creators  --------------- */
     QWidget* createProposalReview();
     QWidget* createEditorArea();
     QWidget* createQShellTab();
+    QWidget* createTerminalPanel_OLD_DEPRECATED();
     QJsonDocument getMockArchitectJson() const;
     void populateFolderTree(QTreeWidgetItem* parent, const QString& path);
     void initializeExplorerRoots();
     void refreshDriveRoots();
+    void refreshDriveList();
     void addDriveRootItem(const QString& rootPath, const QString& workspaceRoot);
     QWidget* createTerminalPanel();
     QWidget* createOutputPanel();
@@ -375,6 +409,7 @@ private: /* ---------------  UI creators  --------------- */
     void setupAgentSystem();
     void setupCommandPalette();
     void setupAIChatPanel();
+    void setupChatMetricsDashboard();
     void setupMASMEditor();
     void setupHotpatchPanel();
     void setupInterpretabilityPanel();
@@ -419,6 +454,7 @@ private: /* ---------------  original members  --------------- */
     QUrl streamerUrl_{QStringLiteral("http://localhost:11434")};
     AgentOrchestrator* orchestrator_{};
     QDockWidget* terminalDock_{};
+    // Old terminal implementation - still in use alongside TerminalClusterWidget
     QTabWidget* terminalTabs_{};
     QPlainTextEdit* pwshOutput_{};
     QPlainTextEdit* cmdOutput_{};
@@ -431,6 +467,8 @@ private: /* ---------------  original members  --------------- */
     bool pwshCommandInFlight_{false};
     bool cmdCommandInFlight_{false};
     bool m_autonomousMode{false}; // New: State for self-healing autonomy
+    bool m_showHiddenFiles_{false};
+    bool m_showDrives_{false};
 
 private: /* ---------------  new IDE members  --------------- */
     /* Core */
@@ -446,7 +484,7 @@ private: /* ---------------  new IDE members  --------------- */
     QPointer<QSystemTrayIcon> trayIcon_{};
 
     /* Project & Build */
-    QPointer<RawrXD::ProjectExplorerWidget> projectExplorer_{};  // Real file browser!
+    QPointer<ProjectExplorerWidget> projectExplorer_{};  // Real file browser!
     QPointer<BuildSystemWidget> buildWidget_{};
     QPointer<VersionControlWidget> vcsWidget_{};
     QPointer<RunDebugWidget> debugWidget_{};
@@ -459,7 +497,7 @@ private: /* ---------------  new IDE members  --------------- */
     QPointer<InlayHintProvider> inlay_{};
     QPointer<SemanticHighlighter> semantic_{};
     QPointer<CodeMinimap> minimap_{};
-    QPointer<BreadcrumbBar> breadcrumb_{};
+    QPointer<BreadcrumbNavigation> breadcrumb_{};
     QPointer<SearchResultWidget> searchResults_{};
     QPointer<BookmarkWidget> bookmarks_{};
     QPointer<TodoWidget> todos_{};
@@ -468,7 +506,7 @@ private: /* ---------------  new IDE members  --------------- */
     QPointer<InlineChatWidget> inlineChat_{};
     QPointer<AIQuickFixWidget> quickFix_{};
     QPointer<DiffViewerWidget> diffViewer_{};
-    QPointer<UMLLViewWidget> umlView_{};
+    QPointer<UMLViewWidget> umlView_{};
 
     /* Docs & Notes */
     QPointer<DocumentationWidget> documentation_{};
@@ -534,6 +572,35 @@ private: /* ---------------  new IDE members  --------------- */
     
     /* Autonomous Agent System */
     class AutoBootstrap* m_agentBootstrap{};
+    /* Advanced Autonomous Systems Integration (Master Orchestrator) */
+    class AutonomousSystemsIntegration* m_autonomousSystemsIntegration{};
+    
+    // Advanced Agentic Components
+      class AdvancedPlanningEngine* m_planningEngine{};
+      class IntelligentErrorAnalysis* m_errorAnalysis{};
+      class RealTimeRefactoring* m_refactoringEngine{};
+      class DiscoveryDashboard* m_discoveryDashboard{};
+      class MemoryPersistenceSystem* m_memoryPersistence{};
+      class TestGenerationAutomation* m_testGeneration{};
+      class AlertSystem* m_alertSystem{};
+      
+      // Agentic dock widgets for monitoring
+      QDockWidget* m_planningEngineDock{};
+      QDockWidget* m_errorAnalysisDock{};
+      QDockWidget* m_refactoringEngineDock{};
+      QDockWidget* m_memoryPersistenceDock{};    // Project state
+    QString m_currentProjectPath;
+    
+    // Missing dock widgets for various subsystems
+    QDockWidget* m_commandPaletteDock{};
+    QDockWidget* m_testExplorerDock{};
+    QDockWidget* m_projectExplorerDock{};
+    QDockWidget* m_vcsWidgetDock{};
+    QDockWidget* m_databaseWidgetDock{};
+    QDockWidget* m_buildSystemDock{};
+    QDockWidget* m_debugWidgetDock{};
+    QDockWidget* m_profilerWidgetDock{};
+    QDockWidget* m_dockerWidgetDock{};
 
     // UI model tooltip cache (gguf path -> HTML tooltip)
     QMap<QString, QString> m_modelTooltipCache;
@@ -601,6 +668,8 @@ public:
     class ActivityBar* m_activityBar{};
     class CommandPalette* m_commandPalette{};
     class AIChatPanel* m_aiChatPanel{};
+    RawrXD::Dashboard::ChatMetricsDashboard* m_chatMetricsDashboard{};
+    QDockWidget* m_chatMetricsDashboardDock{};
     QDockWidget* m_aiChatDock{};
     QFrame* m_primarySidebar{};
     QStackedWidget* m_sidebarStack{};
@@ -640,6 +709,16 @@ public:
     void handleSaveFile();
     void handleUndo();
     void handleRedo();
+    void handleSaveAs();
+    void handleCut();
+    void handleCopy();
+    void handlePaste();
+    void handleFind();
+    void handleReplace();
+
+private:
+    QObject* currentEditor();
+    QString m_activeFilePath{};
 };
 
 

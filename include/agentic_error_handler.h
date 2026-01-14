@@ -58,6 +58,8 @@ public:
         QJsonObject systemState;
         int retryCount;
         RecoveryStrategy strategy;
+        bool recoverySucceeded = false;
+        QDateTime timestamp;
     };
 
     struct RecoveryPolicy {

@@ -46,9 +46,9 @@ PUBLIC output_pane_clear
 .code
 
 output_pane_init PROC
-    mov hOutputPane, rcx
-    xor LogPos, LogPos
-    xor LogCount, LogCount
+    mov qword ptr [hOutputPane], rcx
+    mov qword ptr [LogPos], 0
+    mov dword ptr [LogCount], 0
     xor eax, eax
     ret
 output_pane_init ENDP
@@ -99,8 +99,8 @@ output_log_filetree PROC
 output_log_filetree ENDP
 
 output_pane_clear PROC
-    xor LogPos, LogPos
-    xor LogCount, LogCount
+    mov qword ptr [LogPos], 0
+    mov dword ptr [LogCount], 0
     xor eax, eax
     ret
 output_pane_clear ENDP

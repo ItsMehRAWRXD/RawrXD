@@ -10,6 +10,8 @@
 #include <QCoreApplication>
 #include <QThread>
 #include <QDebug>
+#include <QFile>
+#include <QFileInfo>
 
 GGUFServer::GGUFServer(InferenceEngine* engine, QObject* parent)
     : QObject(parent)
@@ -662,9 +664,18 @@ void GGUFServer::handleTagsRequest(HttpResponse& response) {
     
     if (m_engine && m_engine->isModelLoaded()) {
         QJsonObject model;
-        model["name"] = m_engine->modelPath();
+        QString modelPath = m_engine->modelPath();
+        model["name"] = modelPath;
         model["modified_at"] = getCurrentTimestamp();
-        model["size"] = 0; // TODO: Get actual model size
+        
+        // Get actual model size from file system
+        QFileInfo fileInfo(modelPath);
+        if (fileInfo.exists()) {
+            model["size"] = static_cast<qint64>(fileInfo.size());
+        } else {
+            model["size"] = 0;
+        }
+        
         models.append(model);
     }
     

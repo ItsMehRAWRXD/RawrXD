@@ -79,7 +79,6 @@ metrics_collector_init PROC
     ; Initialize metrics collector (shim)
     jmp metrics_init
 metrics_collector_init ENDP
-
 PUBLIC metrics_collector_record
 metrics_collector_record PROC
     ; rcx = metric name (char*), rdx = value1 (QWORD), r8 = value2 (QWORD)
@@ -99,4 +98,8 @@ metrics_collector_record PROC
 metrics_collector_record ENDP
 
 END
+
+
+
+
 

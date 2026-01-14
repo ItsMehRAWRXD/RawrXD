@@ -1,7 +1,6 @@
 ; ============================================================================
 ; AGENT_COORDINATOR.INC - Multi-Agent Orchestration Header
 ; ============================================================================
-
 EXTERN coordinator_init:PROC
 EXTERN coordinator_shutdown:PROC
 EXTERN register_agent:PROC
@@ -20,26 +19,31 @@ EXTERN requeue_failed_task:PROC
 EXTERN set_resource_limits:PROC
 
 TASK STRUCT
-    task_id dword
-    agent_id dword
-    priority dword
-    status dword
-    request_data qword
-    result_data qword
-    request_size dword
-    result_size dword
-    error_message qword
-    created_at dword
-    started_at dword
-    completed_at dword
-    auto_retry byte
+    task_id DWORD ?
+    agent_id DWORD ?
+    priority DWORD ?
+    status DWORD ?
+    request_data QWORD ?
+    result_data QWORD ?
+    request_size DWORD ?
+    result_size DWORD ?
+    error_message QWORD ?
+    created_at DWORD ?
+    started_at DWORD ?
+    completed_at DWORD ?
+    auto_retry BYTE ?
 TASK ENDS
 
 METRICS STRUCT
-    total_tasks_processed qword
-    total_latency_ms qword
-    avg_queue_depth dword
-    agents_idle dword
-    agents_busy dword
-    failure_rate_percent dword
+    total_tasks_processed QWORD ?
+    total_latency_ms QWORD ?
+    avg_queue_depth DWORD ?
+    agents_idle DWORD ?
+    agents_busy DWORD ?
+    failure_rate_percent DWORD ?
 METRICS ENDS
+
+
+
+
+

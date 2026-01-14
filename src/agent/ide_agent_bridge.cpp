@@ -305,7 +305,7 @@ QString IDEAgentBridge::buildExecutionContext() const
 ExecutionPlan IDEAgentBridge::convertToExecutionPlan(const QJsonArray& llmPlan)
 {
     ExecutionPlan plan;
-    plan.actions = llmPlan;
+    plan.actionsFromJson(llmPlan);
     plan.status = "Ready for execution";
 
     // Estimate time based on number of actions
@@ -333,7 +333,7 @@ void IDEAgentBridge::executeCurrentPlan()
     ctx.timeoutMs = 30000;
 
     m_executor->setContext(ctx);
-    m_executor->executePlan(m_currentPlan.actions, m_stopOnError);
+    m_executor->executePlan(m_currentPlan.actionsToJson(), true);
 
     qDebug() << "[IDEAgentBridge] Plan execution started with" 
              << m_currentPlan.actions.size() << "actions";

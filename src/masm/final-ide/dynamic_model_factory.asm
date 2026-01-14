@@ -67,7 +67,6 @@
 ;=====================================================================
 
 .code
-
 PUBLIC masm_factory_init
 PUBLIC masm_factory_create_from_description
 PUBLIC masm_factory_resize_model
@@ -1041,4 +1040,8 @@ uint64_to_hex_string PROC
 uint64_to_hex_string ENDP
 
 END
+
+
+
+
 

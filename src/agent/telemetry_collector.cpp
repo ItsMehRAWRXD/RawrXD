@@ -1,4 +1,6 @@
 #include "telemetry_collector.hpp"
+#include "../qtapp/integration/ProdIntegration.h"
+#include "../qtapp/integration/InitializationTracker.h"
 #include <QSettings>
 #include <QUuid>
 #include <QDateTime>
@@ -26,6 +28,7 @@ TelemetryCollector::TelemetryCollector(QObject* parent)
     , m_enabled(false)
     , m_sessionStartTime(QDateTime::currentMSecsSinceEpoch())
 {
+    RawrXD::Integration::ScopedInitTimer initTimer("TelemetryCollector");
     // PRODUCTION-READY: Generate anonymous session ID (not stored, regenerated each session)
     m_sessionId = QUuid::createUuid().toString(QUuid::WithoutBraces);
 }
@@ -38,6 +41,7 @@ TelemetryCollector::~TelemetryCollector() {
 }
 
 bool TelemetryCollector::initialize() {
+    RawrXD::Integration::ScopedTimer timer("TelemetryCollector", "initialize", "init_op");
     // PRODUCTION-READY: Check user consent first
     m_enabled = loadUserConsent();
     
@@ -82,6 +86,9 @@ void TelemetryCollector::disableTelemetry() {
 }
 
 void TelemetryCollector::trackFeatureUsage(const QString& featureName, const QJsonObject& metadata) {
+    RawrXD::Integration::recordMetric("feature_usage_tracked");
+    RawrXD::Integration::traceEvent("Telemetry", "trackFeatureUsage");
+    
     if (!m_enabled) {
         return;
     }

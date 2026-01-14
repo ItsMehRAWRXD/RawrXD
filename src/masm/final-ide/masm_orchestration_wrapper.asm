@@ -94,6 +94,8 @@ SERVICE_SLOT ENDS
     err_invalid_wish    BYTE "Invalid wish format or parameters", 0
     err_no_resources    BYTE "No available service slots", 0
     err_not_initialized BYTE "Orchestration not initialized", 0
+
+    status_prefix       BYTE "; Status: ", 0
     
     version_string      BYTE "RawrXD MASM Orchestration v1.0", 0
 
@@ -283,7 +285,7 @@ orchestration_get_status PROC
     
     ; Use format string: "ORCH: {wishes} processed, {errors} errors, {services} active"
     mov rcx, rbx
-    mov rdx, "; Status: "
+    lea rdx, status_prefix
     call strcat_internal
     
     ; Append wish count
@@ -453,7 +455,9 @@ copy_err_loop:
     jz copy_err_done
     inc rsi
     inc rdi
-    cmp rdi, g_orchestration_state.last_error_msg + 256
+    lea rax, g_orchestration_state.last_error_msg
+    add rax, 256
+    cmp rdi, rax
     jl copy_err_loop
     
 copy_err_done:
@@ -603,5 +607,9 @@ append_number ENDP
 EXTERN OutputDebugStringA:PROC
 
 END
+
+
+
+
 
 

@@ -42,16 +42,16 @@ SECURITY_ATTRIBUTES_SIZE equ 12
 ; ============================================================
 
 ; SECURITY_ATTRIBUTES structure
-SECURITY_ATTRIBUTES struct
+SECURITY_ATTRIBUTES STRUCT
     nLength DWORD ?
     lpSecurityDescriptor QWORD ?
     bInheritHandle DWORD ?
-SECURITY_ATTRIBUTES ends
+SECURITY_ATTRIBUTES ENDS
 
 sa SECURITY_ATTRIBUTES <>
 
 ; STARTUPINFOA structure
-STARTUPINFOA struct
+STARTUPINFOA STRUCT
     cb DWORD ?
     lpReserved QWORD ?
     lpDesktop QWORD ?
@@ -70,18 +70,18 @@ STARTUPINFOA struct
     hStdInput QWORD ?
     hStdOutput QWORD ?
     hStdError QWORD ?
-STARTUPINFOA ends
+STARTUPINFOA ENDS
 
 ; PROCESS_INFORMATION structure
-PROCESS_INFORMATION struct
+PROCESS_INFORMATION STRUCT
     hProcess QWORD ?
     hThread QWORD ?
     dwProcessId DWORD ?
     dwThreadId DWORD ?
-PROCESS_INFORMATION ends
+PROCESS_INFORMATION ENDS
 
 ; PAINTSTRUCT structure
-PAINTSTRUCT struct
+PAINTSTRUCT STRUCT
     hdc QWORD ?
     fErase DWORD ?
     rcPaint_left DWORD ?
@@ -91,7 +91,7 @@ PAINTSTRUCT struct
     fRestore DWORD ?
     fIncUpdate DWORD ?
     rgbReserved BYTE 32 dup(?)
-PAINTSTRUCT ends
+PAINTSTRUCT ENDS
 
 ps PAINTSTRUCT <>
 
@@ -116,3 +116,8 @@ ps PAINTSTRUCT <>
     wptr QWORD ?
     dwFlags DWORD ?
     cb DWORD ?
+
+
+
+
+

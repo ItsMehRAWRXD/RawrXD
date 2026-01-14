@@ -80,7 +80,7 @@ CreateTabControl PROC FRAME
     
     ; Allocate TAB_CONTROL structure
     mov rcx, sizeof(TAB_CONTROL)
-    call malloc
+    call masm_malloc
     test rax, rax
     jz allocation_failed
     
@@ -107,7 +107,7 @@ no_selection_callback:
 no_user_data:
     ; Allocate pages array
     mov rcx, MAX_TAB_PAGES * 8  ; QWORD pointers
-    call malloc
+    call masm_malloc
     test rax, rax
     jz pages_allocation_failed
     
@@ -141,15 +141,15 @@ allocation_failed:
     
 pages_allocation_failed:
     mov rcx, rbx
-    call free
+    call masm_free
     xor rax, rax
     jmp tab_control_created
     
 window_creation_failed:
     mov rcx, [rbx+TAB_CONTROL.pages]
-    call free
+    call masm_free
     mov rcx, rbx
-    call free
+    call masm_free
     xor rax, rax
     
 tab_control_created:
@@ -214,7 +214,7 @@ AddTabPage PROC
     
     ; Allocate TAB_PAGE structure
     mov rcx, sizeof(TAB_PAGE)
-    call malloc
+    call masm_malloc
     test rax, rax
     jz page_allocation_failed
     
@@ -278,7 +278,7 @@ add_tab_failed:
     dec [rbx+TAB_CONTROL.page_count]
     
     mov rcx, rdi
-    call free
+    call masm_free
     mov eax, -1
     
 add_page_success:
@@ -567,7 +567,7 @@ page_activated:
 no_window_to_destroy:
     ; Free page structure
     mov rcx, rdi
-    call free
+    call masm_free
     
     ; Shift pages array
     mov rcx, [rbx+TAB_CONTROL.pages]
@@ -683,15 +683,17 @@ no_window:
     test rcx, rcx
     jz no_pages_array
     
-    call free
+    call masm_free
     
 no_pages_array:
     ; Free tab control structure
     mov rcx, rbx
-    call free
+    call masm_free
     
     mov rax, 1
     ret
 DestroyTabControl ENDP
 
 END
+
+

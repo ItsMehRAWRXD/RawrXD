@@ -414,7 +414,8 @@ void ModelLoaderWidget::onModelLoadFinished()
     m_loading = false;
     m_progressBar->setVisible(false);
     
-    bool success = m_modelLoader != nullptr;
+    // Check if model loader is allocated AND successfully loaded
+    bool success = (m_modelLoader != nullptr && m_modelLoader->isLoaded());
     
     if (success) {
         m_loadButton->setEnabled(false);

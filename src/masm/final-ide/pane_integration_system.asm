@@ -186,27 +186,21 @@ asm_profile_handler ENDP
 highlight_registers PROC
     ret
 highlight_registers ENDP
-
 highlight_instructions PROC  
     ret
 highlight_instructions ENDP
-
 highlight_directives PROC
     ret
 highlight_directives ENDP
-
 set_asm_breakpoint PROC
     ret
 set_asm_breakpoint ENDP
-
 update_register_view PROC
     ret
 update_register_view ENDP
-
 analyze_instruction_timing PROC
     ret
 analyze_instruction_timing ENDP
-
 show_hotspots PROC
     ret
 show_hotspots ENDP
@@ -217,3 +211,5 @@ str_debug   db "ASM_DEBUG", 0
 str_profile db "ASM_PROFILE", 0
 
 END
+
+

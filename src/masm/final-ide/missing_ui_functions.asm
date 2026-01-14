@@ -568,18 +568,8 @@ ui_save_file_dialog PROC
 ui_save_file_dialog ENDP
 
 ;==========================================================================
-; Stub functions for missing IDE components
+; Stub functions for missing IDE components (removed duplicates)
 ;==========================================================================
-
-PUBLIC ide_init_all_components
-ide_init_all_components PROC
-    sub rsp, 40
-    lea rcx, szLogMsg
-    call console_log
-    add rsp, 40
-    ret
-ide_init_all_components ENDP
-
 PUBLIC PaneSystem_Init
 PaneSystem_Init PROC
     sub rsp, 40
@@ -588,7 +578,6 @@ PaneSystem_Init PROC
     add rsp, 40
     ret
 PaneSystem_Init ENDP
-
 PUBLIC PaneSystem_CreateLayout
 PaneSystem_CreateLayout PROC
     sub rsp, 40
@@ -597,7 +586,6 @@ PaneSystem_CreateLayout PROC
     add rsp, 40
     ret
 PaneSystem_CreateLayout ENDP
-
 PUBLIC PaneSystem_HandleResize
 PaneSystem_HandleResize PROC
     sub rsp, 40
@@ -617,3 +605,7 @@ CBS_DROPDOWN        equ 2h
 SB_SETTEXT          equ 401h
 
 END
+
+
+
+

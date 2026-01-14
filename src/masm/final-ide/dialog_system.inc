@@ -23,3 +23,6 @@ DIALOG_ENTRY ENDS
 
 ; Dialog Constants
 MAX_DIALOGS       EQU 32
+
+
+

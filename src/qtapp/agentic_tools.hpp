@@ -1,6 +1,8 @@
 /**
  * @file agentic_tools.hpp
  * @brief Complete tool definitions for agentic execution
+ * 
+ * Full Win32 API integration for native autonomous workload execution.
  */
 
 #ifndef AGENTIC_TOOLS_HPP_INCLUDED
@@ -15,6 +17,7 @@
 #include <QJsonObject>
 #include <functional>
 #include <memory>
+#include <windows.h>
 
 /**
  * @struct ToolResult

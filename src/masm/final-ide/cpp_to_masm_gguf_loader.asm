@@ -4,8 +4,8 @@
 
 option casemap:none
 
-EXTERN malloc:PROC
-EXTERN free:PROC
+extern masm_malloc : proc
+extern masm_free : proc
 EXTERN memset:PROC
 EXTERN memcpy:PROC
 EXTERN strlen:PROC
@@ -116,25 +116,25 @@ gguf_loader_create PROC
     
     ; Allocate loader
     mov rcx, SIZEOF GGUF_LOADER
-    call malloc
+    call masm_malloc
     mov r9, rax
     
     ; Allocate tensors array
     mov rcx, MAX_TENSORS
     imul rcx, SIZEOF GGUF_TENSOR
-    call malloc
+    call masm_malloc
     mov [r9 + GGUF_LOADER.tensors], rax
     
     ; Allocate metadata array
     mov rcx, MAX_METADATA_KEYS
     imul rcx, SIZEOF GGUF_METADATA
-    call malloc
+    call masm_malloc
     mov [r9 + GGUF_LOADER.metadata], rax
     
     ; Allocate tokenizer metadata
     mov rcx, MAX_TOKENIZER_METADATA
     imul rcx, SIZEOF GGUF_METADATA
-    call malloc
+    call masm_malloc
     mov [r9 + GGUF_LOADER.tokenizerMetadata], rax
     
     ; Initialize
@@ -345,7 +345,7 @@ find_tensor_local:
 tensor_found_local:
     ; Allocate buffer for tensor data
     mov rcx, [r11 + GGUF_TENSOR.size]
-    call malloc
+    call masm_malloc
     mov r13, rax                    ; r13 = data buffer
     
     ; Read tensor data
@@ -534,7 +534,7 @@ free_tensors_local:
     mov rcx, [r13 + GGUF_TENSOR.name]
     cmp rcx, 0
     je skip_tensor_name_local
-    call free
+    call masm_free
     
 skip_tensor_name_local:
     inc r12d
@@ -544,33 +544,33 @@ tensors_freed_local:
     mov rcx, [rbx + GGUF_LOADER.tensors]
     cmp rcx, 0
     je skip_tensors_array_local
-    call free
+    call masm_free
     
 skip_tensors_array_local:
     ; Free metadata array
     mov rcx, [rbx + GGUF_LOADER.metadata]
     cmp rcx, 0
     je skip_metadata_local
-    call free
+    call masm_free
     
 skip_metadata_local:
     ; Free tokenizer metadata
     mov rcx, [rbx + GGUF_LOADER.tokenizerMetadata]
     cmp rcx, 0
     je skip_tokenizer_local
-    call free
+    call masm_free
     
 skip_tokenizer_local:
     ; Free file path
     mov rcx, [rbx + GGUF_LOADER.filePath]
     cmp rcx, 0
     je skip_filepath_local
-    call free
+    call masm_free
     
 skip_filepath_local:
     ; Free loader
     mov rcx, rbx
-    call free
+    call masm_free
     
     pop rbx
     ret
@@ -582,4 +582,8 @@ gguf_loader_destroy ENDP
     magicBuffer DWORD ?
 
 END
+
+
+
+
 

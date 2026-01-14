@@ -2,6 +2,7 @@
 // Connects Win32IDE to PowerShell-based agentic framework
 
 #include "Win32IDE_AgenticBridge.h"
+#include "Win32NativeAgentAPI.h"
 #include "IDELogger.h"
 #include "Win32IDE.h"
 #include <sstream>
@@ -19,8 +20,9 @@ AgenticBridge::AgenticBridge(Win32IDE* ide)
     , m_hStdoutWrite(nullptr)
     , m_hStdinRead(nullptr)
     , m_hStdinWrite(nullptr)
+    , m_win32API(std::make_unique<RawrXD::Win32Agent::Win32AgentAPI>())
 {
-    LOG_INFO("AgenticBridge constructed");
+    LOG_INFO("AgenticBridge constructed with Win32 Native API");
 }
 
 AgenticBridge::~AgenticBridge() {
@@ -143,10 +145,16 @@ void AgenticBridge::StopAgentLoop() {
 }
 
 std::vector<std::string> AgenticBridge::GetAvailableTools() {
-    // Return default tool list
+    // Return enhanced tool list with native Win32 capabilities
     return {
+        // PowerShell tools (existing)
         "shell", "powershell", "read_file", "write_file", 
-        "web_search", "list_dir", "git_status", "task_orchestrator"
+        "web_search", "list_dir", "git_status", "task_orchestrator",
+        
+        // Native Win32 tools (NEW)
+        "win32_process", "win32_thread", "win32_memory", "win32_filesystem",
+        "win32_registry", "win32_service", "win32_system", "win32_window",
+        "win32_network", "win32_pipe", "win32_security"
     };
 }
 

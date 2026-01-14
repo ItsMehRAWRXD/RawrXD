@@ -29,66 +29,51 @@ PUBLIC SendMessageA
 ai_orchestration_schedule_task PROC
     ret
 ai_orchestration_schedule_task ENDP
-
 ai_orchestration_set_handles PROC
     ret
 ai_orchestration_set_handles ENDP
-
 ai_orchestration_poll PROC
     ret
 ai_orchestration_poll ENDP
-
 ai_orchestration_init PROC
     ret
 ai_orchestration_init ENDP
-
 ai_orchestration_install PROC
     ret
 ai_orchestration_install ENDP
-
 output_pane_append PROC
     ret
 output_pane_append ENDP
-
 malloc PROC
     xor rax, rax
     ret
 malloc ENDP
-
 GetTickCount PROC
     xor eax, eax
     ret
 GetTickCount ENDP
-
 copy_string PROC
     ret
 copy_string ENDP
-
 free PROC
     ret
 free ENDP
-
 TerminateThread PROC
     xor eax, eax
     ret
 TerminateThread ENDP
-
 generate_inference_prompt PROC
     ret
 generate_inference_prompt ENDP
-
 invoke_inference_engine PROC
     ret
 invoke_inference_engine ENDP
-
 parse_json_array PROC
     ret
 parse_json_array ENDP
-
 get_step_at_index PROC
     ret
 get_step_at_index ENDP
-
 analyze_failure PROC
     ret
 analyze_failure ENDP
@@ -183,7 +168,7 @@ autonomous_task_schedule PROC
 
     ; Allocate task state
     mov rcx, TASK_STATE_SIZE
-    call malloc
+    call masm_malloc
     test rax, rax
     jz schedule_fail
     
@@ -237,7 +222,7 @@ found_slot:
     
 schedule_full:
     mov rcx, rsi
-    call free
+    call masm_free
     
 schedule_fail:
     xor eax, eax
@@ -454,16 +439,16 @@ cancel_task_found:
 cancel_not_running:
     ; Clean up task
     mov rcx, [rdx + 8]
-    call free                           ; Free goal string
+    call masm_free                           ; Free goal string
     
     mov rcx, [rdx + 64]
-    call free                           ; Free error string
+    call masm_free                           ; Free error string
     
     mov rcx, [rdx + 72]
-    call free                           ; Free result string
+    call masm_free                           ; Free result string
     
     mov rcx, rdx
-    call free                           ; Free task state
+    call masm_free                           ; Free task state
     
     ; Remove from pool
     mov dword ptr [rax], 0  ; Log cancellation
@@ -696,4 +681,8 @@ append_task_progress ENDP
 ; ============================================================================
 
 .end
+
+
+
+
 

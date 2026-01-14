@@ -10,6 +10,13 @@
 #include "IDELogger.h"
 #include "Win32IDE_AgenticBridge.h"
 
+// Forward declare Win32AgentAPI
+namespace RawrXD {
+namespace Win32Agent {
+    class Win32AgentAPI;
+}
+}
+
 // AutonomyManager: high-level autonomous orchestration layer.
 // Responsibilities:
 //  - Maintain goal & working memory
@@ -45,6 +52,7 @@ private:
     void loop();
     std::string planNextAction();
     void executeAction(const std::string& action);
+    void executeWin32Tool(const std::string& toolCall);
     bool rateLimitAllow();
 
     AgenticBridge* m_bridge;

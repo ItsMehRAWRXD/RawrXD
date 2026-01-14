@@ -4,8 +4,8 @@
 
 option casemap:none
 
-EXTERN malloc:PROC
-EXTERN free:PROC
+extern masm_malloc : proc
+extern masm_free : proc
 EXTERN memset:PROC
 EXTERN memcpy:PROC
 EXTERN strlen:PROC
@@ -125,24 +125,24 @@ inference_engine_create PROC
     
     ; Allocate engine
     mov rcx, SIZEOF INFERENCE_ENGINE
-    call malloc
+    call masm_malloc
     mov rbx, rax
     
     ; Allocate models array
     mov rcx, r8
     imul rcx, SIZEOF MODEL_INFO
-    call malloc
+    call masm_malloc
     mov [rbx + INFERENCE_ENGINE.models], rax
     
     ; Allocate inference buffer
     mov rcx, INFERENCE_BUFFER_SIZE
-    call malloc
+    call masm_malloc
     mov [rbx + INFERENCE_ENGINE.inferenceBuffer], rax
     mov [rbx + INFERENCE_ENGINE.bufferSize], INFERENCE_BUFFER_SIZE
     
     ; Allocate generation state
     mov rcx, SIZEOF GENERATION_STATE
-    call malloc
+    call masm_malloc
     mov [rbx + INFERENCE_ENGINE.generationState], rax
     
     ; Initialize
@@ -299,7 +299,7 @@ inference_start_generation PROC
     ; Allocate output buffer
     mov rcx, r9
     imul rcx, 4
-    call malloc
+    call masm_malloc
     mov [r10 + GENERATION_STATE.generatedTokens], rax
     mov [r10 + GENERATION_STATE.generatedCount], 0
     
@@ -511,26 +511,26 @@ inference_destroy PROC
     mov r10, [rbx + INFERENCE_ENGINE.models]
     cmp r10, 0
     je skip_models_local
-    call free
+    call masm_free
     
 skip_models_local:
     ; Free inference buffer
     mov rcx, [rbx + INFERENCE_ENGINE.inferenceBuffer]
     cmp rcx, 0
     je skip_buffer_local
-    call free
+    call masm_free
     
 skip_buffer_local:
     ; Free generation state
     mov rcx, [rbx + INFERENCE_ENGINE.generationState]
     cmp rcx, 0
     je skip_genstate_local
-    call free
+    call masm_free
     
 skip_genstate_local:
     ; Free engine
     mov rcx, rbx
-    call free
+    call masm_free
     
     pop rbx
     ret
@@ -543,4 +543,8 @@ inference_destroy ENDP
     GetTickCount64 LABEL QWORD
 
 END
+
+
+
+
 

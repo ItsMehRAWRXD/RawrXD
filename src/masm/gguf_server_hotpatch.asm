@@ -50,6 +50,17 @@ EXTERN asm_mutex_unlock:PROC
 EXTERN asm_memcpy_fast:PROC
 EXTERN asm_log:PROC
 
+; Win32 API
+EXTERN GetTickCount64:PROC
+
+; Cache configuration
+; NOTE: These defaults are required for standalone assembly in this subproject.
+; They define the layout expected by masm_server_cache_get/put.
+CACHE_SIZE         EQU 1024
+ENTRIES_PER_BUCKET EQU 4
+CACHE_ENTRY_SIZE   EQU 40
+CACHE_BUCKET_SIZE  EQU (CACHE_ENTRY_SIZE * ENTRIES_PER_BUCKET)
+
 .data
 
 ; Global server hotpatch registry
@@ -61,6 +72,10 @@ g_server_hotpatch_mutex     QWORD 0
 g_server_transforms_applied QWORD 0
 g_server_cache_hits         QWORD 0
 g_server_cache_misses       QWORD 0
+
+; Simple fixed-size cache storage
+g_server_cache_entries      QWORD 0
+g_server_cache              BYTE (CACHE_SIZE * CACHE_BUCKET_SIZE) DUP(0)
 
 ; Logging messages
 msg_server_apply_enter      DB "SERVERPATCH apply enter",0

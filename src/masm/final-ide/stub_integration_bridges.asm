@@ -14,6 +14,10 @@ includelib kernel32.lib
 includelib user32.lib
 includelib gdi32.lib
 
+; Win32 APIs used directly in this integration layer
+EXTERN SetTimer:PROC
+EXTERN KillTimer:PROC
+
 ;==============================================================================
 ; EXTERNAL DECLARATIONS
 ;==============================================================================
@@ -56,7 +60,6 @@ EXTERN rawr1024_direct_load:PROC
 ;==============================================================================
 ; PUBLIC EXPORTS (Integration Entry Points)
 ;==============================================================================
-
 PUBLIC InitializeAllStubs
 PUBLIC InitializeAnimationSystem
 PUBLIC InitializeUISystem
@@ -659,4 +662,8 @@ LoadModel ENDP
 ;==============================================================================
 
 END
+
+
+
+
 

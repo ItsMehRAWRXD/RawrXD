@@ -799,5 +799,3 @@ void AdvancedPlanningEngine::executionCompleted(const QJsonObject& result) {
 void AdvancedPlanningEngine::bottleneckDetected(const QString& taskId) {
     qWarning() << "[AdvancedPlanningEngine] Bottleneck detected in task:" << taskId;
 }
-
-#include "advanced_planning_engine.moc"

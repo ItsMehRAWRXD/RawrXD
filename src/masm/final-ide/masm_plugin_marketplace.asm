@@ -386,7 +386,6 @@ verify_plugin_signature ENDP
 ; ============================================================================
 ; HELPER FUNCTIONS
 ; ============================================================================
-
 marketplace_find_entry PROC
     push rbp
     mov rbp, rsp
@@ -430,7 +429,6 @@ find_done:
     leave
     ret
 marketplace_find_entry ENDP
-
 marketplace_parse_catalog PROC
     push rbp
     mov rbp, rsp
@@ -515,7 +513,6 @@ szUrlField db "\"downloadUrl\":",0
 
 .code
 marketplace_parse_catalog ENDP
-
 find_json_field PROC
     ; Find field name in JSON string
     ; rcx = buffer, rdx = field name
@@ -576,7 +573,6 @@ find_field_exit:
     pop rsi
     ret
 find_json_field ENDP
-
 extract_json_string PROC
     ; Extract string value until next quote
     ; rcx = destination, rdx = source
@@ -604,7 +600,6 @@ extract_done:
     pop rsi
     ret
 extract_json_string ENDP
-
 download_plugin_file PROC
     push rbp
     mov rbp, rsp
@@ -673,7 +668,6 @@ szPrefix db "PLG",0
 
 .code
 download_plugin_file ENDP
-
 build_dependency_tree PROC
     push rbp
     mov rbp, rsp
@@ -734,7 +728,6 @@ build_exit:
     leave
     ret
 build_dependency_tree ENDP
-
 check_circular_dependencies PROC
     push rbp
     mov rbp, rsp
@@ -746,7 +739,6 @@ check_circular_dependencies PROC
     leave
     ret
 check_circular_dependencies ENDP
-
 install_dependency_tree PROC
     push rbp
     mov rbp, rsp
@@ -797,7 +789,6 @@ marketplace_install_plugin_internal:
     mov eax, 1
     ret
 install_dependency_tree ENDP
-
 string_compare PROC
     ; Compare two null-terminated strings
     push rsi
@@ -831,3 +822,7 @@ cmp_done:
 string_compare ENDP
 
 end
+
+
+
+

@@ -103,6 +103,11 @@ public:
     bool isResponseCachingEnabled() const;
     void clearResponseCache();
     
+    // Helper utilities
+    QString hashPrompt(const QString& prompt) const;
+    void enableDiagnostics(bool enable);
+    bool diagnosticsEnabled() const;
+    
     // Statistics
     struct Stats {
         qint64 requestsProcessed = 0;

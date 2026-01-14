@@ -6,6 +6,7 @@
 #include <windows.h>
 #endif
 
+#ifndef ENABLE_MASM_INTEGRATION
 extern "C" {
     // Stub implementations - no-ops when MASM is not available
     
@@ -35,3 +36,4 @@ extern "C" {
         (void)autoRetry;  // Suppress unused parameter warning
     }
 }
+#endif

@@ -694,7 +694,6 @@ training_studio_stop_training ENDP
 ;==========================================================================
 ; Helper functions
 ;==========================================================================
-
 create_dataset_list PROC
     push rbx
     sub rsp, 48
@@ -717,7 +716,6 @@ create_dataset_list PROC
     pop rbx
     ret
 create_dataset_list ENDP
-
 create_model_list PROC
     push rbx
     sub rsp, 48
@@ -740,7 +738,6 @@ create_model_list PROC
     pop rbx
     ret
 create_model_list ENDP
-
 create_experiment_list PROC
     push rbx
     sub rsp, 48
@@ -763,7 +760,6 @@ create_experiment_list PROC
     pop rbx
     ret
 create_experiment_list ENDP
-
 create_metrics_chart PROC
     push rbx
     sub rsp, 48
@@ -786,7 +782,6 @@ create_metrics_chart PROC
     pop rbx
     ret
 create_metrics_chart ENDP
-
 create_resource_chart PROC
     push rbx
     sub rsp, 48
@@ -809,7 +804,6 @@ create_resource_chart PROC
     pop rbx
     ret
 create_resource_chart ENDP
-
 create_hyperparam_grid PROC
     push rbx
     sub rsp, 48
@@ -832,7 +826,6 @@ create_hyperparam_grid PROC
     pop rbx
     ret
 create_hyperparam_grid ENDP
-
 update_dataset_list PROC
     ; Update dataset list UI
     ; Simplified: Invalidate the list window to trigger repaint
@@ -842,7 +835,6 @@ update_dataset_list PROC
     call InvalidateRect
     ret
 update_dataset_list ENDP
-
 update_model_list PROC
     ; Update model list UI
     mov rcx, g_training_studio.hModelList
@@ -851,7 +843,6 @@ update_model_list PROC
     call InvalidateRect
     ret
 update_model_list ENDP
-
 update_experiment_list PROC
     ; Update experiment list UI
     mov rcx, g_training_studio.hExperimentList
@@ -860,7 +851,6 @@ update_experiment_list PROC
     call InvalidateRect
     ret
 update_experiment_list ENDP
-
 start_training_thread PROC
     push rbx
     sub rsp, 32
@@ -878,13 +868,11 @@ start_training_thread PROC
     pop rbx
     ret
 start_training_thread ENDP
-
 stop_training_thread PROC
     ; Stop training thread
     ; Implementation would involve setting a stop flag
     ret
 stop_training_thread ENDP
-
 find_experiment_by_id PROC
     ; rcx = experiment_id -> rax = experiment_ptr
     push rbx
@@ -913,7 +901,6 @@ find_experiment_by_id PROC
     pop rbx
     ret
 find_experiment_by_id ENDP
-
 generate_dataset_name PROC
     ; Generate dataset name from path
     ; rcx = dataset ptr
@@ -947,7 +934,6 @@ generate_dataset_name PROC
     pop rbx
     ret
 generate_dataset_name ENDP
-
 load_dataset_stats PROC
     ; Load dataset statistics
     ; Simplified: Set some dummy stats
@@ -958,7 +944,6 @@ load_dataset_stats PROC
     mov byte ptr [rcx + DATASET.loaded], 1
     ret
 load_dataset_stats ENDP
-
 training_worker_thread PROC
     ; Background training logic
     ; This simulates training by updating metrics in the current experiment
@@ -1034,7 +1019,6 @@ float_100 REAL4 100.0
 float_1   REAL4 1.0
 .code
 training_worker_thread ENDP
-
 strlen PROC
     ; rcx = string -> rax = length
     xor rax, rax
@@ -1046,7 +1030,6 @@ strlen PROC
 @done:
     ret
 strlen ENDP
-
 strncpy PROC
     ; rcx = dest, rdx = src, r8d = max_len
     xor rax, rax
@@ -1062,7 +1045,6 @@ strncpy PROC
 @done:
     ret
 strncpy ENDP
-
 memcpy PROC
     ; rcx = dest, rdx = src, r8d = len
     xor rax, rax
@@ -1084,7 +1066,6 @@ memcpy ENDP
 ;==========================================================================
 ; Window procedures
 ;==========================================================================
-
 training_studio_wnd_proc PROC hWnd:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
     push rbx
     sub rsp, 32
@@ -1175,7 +1156,6 @@ training_studio_wnd_proc PROC hWnd:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
     pop rbx
     ret
 training_studio_wnd_proc ENDP
-
 metrics_chart_wnd_proc PROC hWnd:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
     push rbx
     push rsi
@@ -1286,7 +1266,6 @@ metrics_chart_wnd_proc PROC hWnd:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
     pop rbx
     ret
 metrics_chart_wnd_proc ENDP
-
 resource_chart_wnd_proc PROC
     push rbx
     sub rsp, 32
@@ -1312,17 +1291,18 @@ resource_chart_wnd_proc ENDP
 training_studio_get_metrics PROC
     ret
 training_studio_get_metrics ENDP
-
 training_studio_export_checkpoint PROC
     ret
 training_studio_export_checkpoint ENDP
-
 training_studio_compare_experiments PROC
     ret
 training_studio_compare_experiments ENDP
-
 training_studio_tune_hyperparameters PROC
     ret
 training_studio_tune_hyperparameters ENDP
 
 end
+
+
+
+

@@ -418,7 +418,6 @@ add_search_result PROC
 result_full:
     ret
 add_search_result ENDP
-
 string_length PROC
     push rbp
     mov rbp, rsp
@@ -435,7 +434,6 @@ strlen_done:
     leave
     ret
 string_length ENDP
-
 memory_compare PROC
     ; Compare memory regions
     push rsi
@@ -457,3 +455,7 @@ memory_compare PROC
 memory_compare ENDP
 
 end
+
+
+
+

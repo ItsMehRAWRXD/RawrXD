@@ -416,63 +416,54 @@ create_task ENDP
 ; ============================================================================
 ; FUNCTION 6-16: Additional coordinator functions (stub implementations)
 ; ============================================================================
-
 queue_task PROC PUBLIC
     xor rax, rax
     ret
 queue_task ENDP
-
 delegate_to_agent PROC PUBLIC
     xor rax, rax
     ret
 delegate_to_agent ENDP
-
 auto_delegate PROC PUBLIC
     xor rax, rax
     ret
 auto_delegate ENDP
-
 monitor_execution PROC PUBLIC
     xor rax, rax
     ret
 monitor_execution ENDP
-
 collect_results PROC PUBLIC
     xor rax, rax
     ret
 collect_results ENDP
-
 handle_failure PROC PUBLIC
     xor rax, rax
     ret
 handle_failure ENDP
-
 sync_agents PROC PUBLIC
     xor rax, rax
     ret
 sync_agents ENDP
-
 get_coordinator_stats PROC PUBLIC
     xor rax, rax
     ret
 get_coordinator_stats ENDP
-
 cancel_task PROC PUBLIC
     xor rax, rax
     ret
 cancel_task ENDP
-
 requeue_failed_task PROC PUBLIC
     xor rax, rax
     ret
 requeue_failed_task ENDP
-
 set_resource_limits PROC PUBLIC
     xor rax, rax
     ret
 set_resource_limits ENDP
 
 END
+
+
 
 
 

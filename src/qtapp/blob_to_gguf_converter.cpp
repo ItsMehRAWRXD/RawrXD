@@ -1,9 +1,13 @@
 #include "blob_to_gguf_converter.hpp"
+#include "deflate_brutal_qt.hpp"
 #include <QFile>
 #include <QFileInfo>
 #include <QDebug>
 #include <QThread>
 #include <QtConcurrent/QtConcurrentRun>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
 #include <cmath>
 #include <cstring>
 #include <algorithm>
@@ -33,7 +37,7 @@ enum class ggml_type : int32_t {
 BlobToGGUFConverter::BlobToGGUFConverter(QObject* parent)
     : QObject(parent), m_isConverting(false), m_cancelRequested(false)
 {
-    m_metadata.modelArchitecture = "unknown";
+    m_metadata.AITrainingArchitecture = "unknown";
 }
 
 BlobToGGUFConverter::~BlobToGGUFConverter()
@@ -88,7 +92,10 @@ bool BlobToGGUFConverter::parseBlob(int estTensorCount)
         m_progress.totalTensors = m_tensors.size();
         m_progress.totalBytes = m_totalBlobSize;
 
-        qInfo() << "[BlobConverter] Detected" << m_tensors.size() << "tensors";
+        qInfo() << "[BlobConverter] Detected" << m_tensors.size() << "tensors (" << m_tensors.size() << " chunks)";
+
+        // Emit a metadata preview signal for UI
+        emit conversionMetadataPreview(generateMetadataPreview());
 
         return !m_tensors.isEmpty();
     } catch (const std::exception& e) {
@@ -252,7 +259,16 @@ bool BlobToGGUFConverter::writeGGUFHeader(QIODevice* file)
         // Architecture
         writeString("general.architecture");
         file->write(reinterpret_cast<const char*>(&type), sizeof(type));
-        writeString(m_metadata.modelArchitecture);
+        writeString(m_metadata.AITrainingArchitecture);
+
+        // BRUTAL MASM COMPRESSION METADATA
+        writeString("rawrxd.brutal_masm_compression");
+        file->write(reinterpret_cast<const char*>(&type), sizeof(type));
+        writeString("enabled");
+
+        writeString("rawrxd.brutal_kernel");
+        file->write(reinterpret_cast<const char*>(&type), sizeof(type));
+        writeString("deflate_brutal_masm");
 
         // Model parameters
         writeString("llama.embedding_length");
@@ -319,7 +335,20 @@ bool BlobToGGUFConverter::writeTensorData(QIODevice* file)
             file->write(reinterpret_cast<const char*>(&offset), sizeof(offset));
 
             // Write tensor data
-            file->write(tensor.data);
+            // Compress using brutal MASM for maximum efficiency
+            QByteArray compressed = brutal::compress(tensor.data);
+            if (!compressed.isEmpty()) {
+                qDebug() << "[BlobConverter] Compressed" << tensor.name 
+                         << "from" << tensor.data.size() << "to" << compressed.size() << "bytes";
+                file->write(compressed);
+                // Track compression ratio
+                double ratio = 100.0 * (1.0 - static_cast<double>(compressed.size()) / tensor.data.size());
+                m_progress.lastCompressionRatio = ratio;
+            } else {
+                // Fallback to uncompressed if compression fails
+                qWarning() << "[BlobConverter] Compression failed for" << tensor.name << ", writing uncompressed";
+                file->write(tensor.data);
+            }
 
             // Update progress
             updateProgress(i + 1, file->pos(), tensor.name, "Writing tensors...");
@@ -355,6 +384,20 @@ qint64 BlobToGGUFConverter::getEstimatedGGUFSize() const
     }
 
     return headerSize + metadataSize + tensorDataSize;
+}
+
+QJsonObject BlobToGGUFConverter::generateMetadataPreview() const
+{
+    QJsonObject preview;
+    preview["tensors"] = m_tensors.size();
+    preview["tensor_bytes"] = m_blobData.size();
+    // First tensor sample
+    if (!m_tensors.isEmpty()) {
+        preview["first_tensor"] = m_tensors.first().name;
+        preview["first_tensor_bytes"] = m_tensors.first().data.size();
+        preview["first_ggml_type"] = m_tensors.first().ggmlType;
+    }
+    return preview;
 }
 
 void BlobToGGUFConverter::updateProgress(int processedTensors, qint64 bytesProcessed,

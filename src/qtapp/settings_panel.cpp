@@ -21,9 +21,15 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QFile>
+#include <QFileInfo>
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QDebug>
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
+#include <QTimer>
+#include <QUrl>
 
 #ifdef Q_OS_WIN
 #include <windows.h>
@@ -599,15 +605,147 @@ void SettingsPanel::onLLMBackendChanged(int index)
 void SettingsPanel::onTestLLMConnection()
 {
     m_llmStatusLabel->setText("Testing...");
-    // TODO: Implement actual connection test
-    m_llmStatusLabel->setText("✓ Connection OK");
+    m_llmStatusLabel->setStyleSheet("color: orange;");
+    
+    // Real LLM connection test implementation
+    QString endpoint = m_llmEndpointEdit->text().trimmed();
+    if (endpoint.isEmpty()) {
+        m_llmStatusLabel->setText("✗ No endpoint configured");
+        m_llmStatusLabel->setStyleSheet("color: red;");
+        return;
+    }
+    
+    // Create network manager for async request
+    QNetworkAccessManager* manager = new QNetworkAccessManager(this);
+    
+    // Determine endpoint type and adjust URL
+    QUrl url(endpoint);
+    QString testPath;
+    QByteArray testData;
+    
+    if (endpoint.contains("ollama") || endpoint.contains("11434")) {
+        // Ollama-style endpoint
+        testPath = url.path().isEmpty() ? "/api/tags" : url.path();
+        url.setPath(testPath);
+    } else if (endpoint.contains("openai") || endpoint.contains("api.")) {
+        // OpenAI-style endpoint - test with models list
+        testPath = "/v1/models";
+        url.setPath(testPath);
+    } else {
+        // Generic endpoint - try a simple GET request
+        testPath = url.path().isEmpty() ? "/" : url.path();
+        url.setPath(testPath);
+    }
+    
+    QNetworkRequest request(url);
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    
+    // Add API key if configured
+    QString apiKey = m_llmApiKeyEdit ? m_llmApiKeyEdit->text().trimmed() : QString();
+    if (!apiKey.isEmpty()) {
+        request.setRawHeader("Authorization", QString("Bearer %1").arg(apiKey).toUtf8());
+    }
+    
+    QNetworkReply* reply = manager->get(request);
+    
+    // Set timeout
+    QTimer* timer = new QTimer(this);
+    timer->setSingleShot(true);
+    
+    connect(timer, &QTimer::timeout, this, [this, reply, manager, timer]() {
+        reply->abort();
+        m_llmStatusLabel->setText("✗ Connection timeout");
+        m_llmStatusLabel->setStyleSheet("color: red;");
+        reply->deleteLater();
+        manager->deleteLater();
+        timer->deleteLater();
+    });
+    
+    connect(reply, &QNetworkReply::finished, this, [this, reply, manager, timer]() {
+        timer->stop();
+        
+        if (reply->error() == QNetworkReply::NoError) {
+            int statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+            if (statusCode >= 200 && statusCode < 300) {
+                m_llmStatusLabel->setText(QString("✓ Connected (HTTP %1)").arg(statusCode));
+                m_llmStatusLabel->setStyleSheet("color: green;");
+            } else {
+                m_llmStatusLabel->setText(QString("⚠ HTTP %1").arg(statusCode));
+                m_llmStatusLabel->setStyleSheet("color: orange;");
+            }
+        } else {
+            QString error = reply->errorString();
+            if (error.length() > 30) error = error.left(27) + "...";
+            m_llmStatusLabel->setText(QString("✗ %1").arg(error));
+            m_llmStatusLabel->setStyleSheet("color: red;");
+        }
+        
+        reply->deleteLater();
+        manager->deleteLater();
+        timer->deleteLater();
+    });
+    
+    timer->start(10000); // 10 second timeout
 }
 
 void SettingsPanel::onTestGGUFConnection()
 {
     m_ggufStatusLabel->setText("Testing...");
-    // TODO: Implement actual connection test
-    m_ggufStatusLabel->setText("✓ Connection OK");
+    m_ggufStatusLabel->setStyleSheet("color: orange;");
+    
+    // Real GGUF file validation implementation
+    QString modelPath = m_ggufModelPathEdit ? m_ggufModelPathEdit->text().trimmed() : QString();
+    
+    if (modelPath.isEmpty()) {
+        m_ggufStatusLabel->setText("✗ No model path configured");
+        m_ggufStatusLabel->setStyleSheet("color: red;");
+        return;
+    }
+    
+    QFileInfo fileInfo(modelPath);
+    
+    if (!fileInfo.exists()) {
+        m_ggufStatusLabel->setText("✗ File not found");
+        m_ggufStatusLabel->setStyleSheet("color: red;");
+        return;
+    }
+    
+    if (!fileInfo.isReadable()) {
+        m_ggufStatusLabel->setText("✗ File not readable");
+        m_ggufStatusLabel->setStyleSheet("color: red;");
+        return;
+    }
+    
+    // Validate GGUF magic bytes
+    QFile file(modelPath);
+    if (!file.open(QIODevice::ReadOnly)) {
+        m_ggufStatusLabel->setText("✗ Cannot open file");
+        m_ggufStatusLabel->setStyleSheet("color: red;");
+        return;
+    }
+    
+    QByteArray magic = file.read(4);
+    file.close();
+    
+    if (magic != "GGUF") {
+        m_ggufStatusLabel->setText("✗ Invalid GGUF format");
+        m_ggufStatusLabel->setStyleSheet("color: red;");
+        return;
+    }
+    
+    // File is valid - show size info
+    double sizeMB = fileInfo.size() / (1024.0 * 1024.0);
+    double sizeGB = sizeMB / 1024.0;
+    
+    QString sizeStr;
+    if (sizeGB >= 1.0) {
+        sizeStr = QString::number(sizeGB, 'f', 2) + " GB";
+    } else {
+        sizeStr = QString::number(sizeMB, 'f', 0) + " MB";
+    }
+    
+    m_ggufStatusLabel->setText(QString("✓ Valid GGUF (%1)").arg(sizeStr));
+    m_ggufStatusLabel->setStyleSheet("color: green;");
 }
 
 void SettingsPanel::onBrowseCMakePath()

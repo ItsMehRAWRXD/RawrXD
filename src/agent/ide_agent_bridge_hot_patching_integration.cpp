@@ -10,6 +10,7 @@
 #include "ide_agent_bridge_hot_patching_integration.hpp"
 #include "model_invoker.hpp"
 
+#include <stdexcept>
 #include <QDebug>
 #include <QDateTime>
 #include <QFile>
@@ -198,7 +199,7 @@ void IDEAgentBridgeWithHotPatching::initializeWithHotPatching()
         ensureLogDirectory();
 
         // Initialize parent class first
-        this->initialize();
+        IDEAgentBridge::initialize("http://localhost:11435");
 
         // Create hot patcher instance
         m_hotPatcher = std::make_unique<AgentHotPatcher>();
@@ -330,6 +331,13 @@ AgentHotPatcher* IDEAgentBridgeWithHotPatching::getHotPatcher() const
 GGUFProxyServer* IDEAgentBridgeWithHotPatching::getProxyServer() const
 {
     return m_proxyServer.get();
+}
+
+ModelInvoker* IDEAgentBridgeWithHotPatching::getModelInvoker() const
+{
+    // ModelInvoker is parented to IDEAgentBridge (this) in the base constructor.
+    // Use QObject child discovery to avoid changing base-class encapsulation.
+    return this->findChild<ModelInvoker*>();
 }
 
 bool IDEAgentBridgeWithHotPatching::isHotPatchingActive() const
@@ -476,15 +484,21 @@ void IDEAgentBridgeWithHotPatching::onHallucinationDetected(
 }
 
 void IDEAgentBridgeWithHotPatching::onHallucinationCorrected(
-    const HallucinationDetection& correction)
+    const HallucinationDetection& detection)
 {
-    qDebug() << "[IDEAgentBridge] Hallucination corrected:"
-             << "Type:" << correction.hallucationType
-             << "Original:" << correction.detectedContent
-             << "Corrected:" << correction.expectedContent;
+    // Stub
+}
 
-    // Log the correction
-    logCorrection(correction);
+void IDEAgentBridgeWithHotPatching::onNavigationFixed(const NavigationFix& fix)
+{
+    Q_UNUSED(fix);
+    // Reserved for future expansion
+}
+
+void IDEAgentBridgeWithHotPatching::onBehaviorPatchUpdated(const BehaviorPatch& patch)
+{
+    Q_UNUSED(patch);
+    // Reserved for future expansion
 }
 
 void IDEAgentBridgeWithHotPatching::onNavigationErrorFixed(

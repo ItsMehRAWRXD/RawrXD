@@ -1,12 +1,12 @@
--IC:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/include
--IC:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/include
+-ID:/RawrXD-production-lazy-init/include
+-IC:/Program Files (x86)/Windows Kits/10/Include/10.0.22621.0/um
+-ID:/RawrXD-production-lazy-init/include
 -DNOMINMAX
 -DHAVE_QT_CORE
--DQT_NO_OPENGL
 -DHAVE_VULKAN=1
 -DHAVE_RAWRXD_CRYPTO=1
 -DWIN32
 --compiler-flavor=msvc
 -o
-C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/include/moc_zero_day_agentic_engine.cpp
-C:/Users/HiH8e/Downloads/RawrXD-production-lazy-init/include/zero_day_agentic_engine.hpp
+D:/RawrXD-production-lazy-init/include/moc_zero_day_agentic_engine.cpp
+D:/RawrXD-production-lazy-init/include/zero_day_agentic_engine.hpp

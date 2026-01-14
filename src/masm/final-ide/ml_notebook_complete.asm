@@ -192,7 +192,6 @@ fZoomStep REAL4 0.1
 ;==========================================================================
 ; PUBLIC API
 ;==========================================================================
-
 PUBLIC notebook_init
 PUBLIC notebook_create_window
 PUBLIC notebook_add_cell
@@ -605,36 +604,30 @@ notebook_clear_output PROC
     mov eax, 1
     ret
 notebook_clear_output ENDP
-
 notebook_save PROC
     ; rcx = file_path
     mov eax, 1
     ret
 notebook_save ENDP
-
 notebook_load PROC
     ; rcx = file_path
     mov eax, 1
     ret
 notebook_load ENDP
-
 notebook_export_ipynb PROC
     ; rcx = output_path
     mov eax, 1
     ret
 notebook_export_ipynb ENDP
-
 notebook_set_kernel PROC
     ; ecx = kernel_type (KERNEL_PYTHON, etc)
     mov eax, 1
     ret
 notebook_set_kernel ENDP
-
 notebook_restart_kernel PROC
     mov eax, 1
     ret
 notebook_restart_kernel ENDP
-
 notebook_interrupt_execution PROC
     mov byte ptr g_notebook_doc.cancel_requested, 1
     mov eax, 1
@@ -644,81 +637,66 @@ notebook_interrupt_execution ENDP
 ;==========================================================================
 ; Helper functions
 ;==========================================================================
-
 register_notebook_class PROC
     ; rcx = class name
     ret
 register_notebook_class ENDP
-
 register_cell_editor_class PROC
     ; rcx = class name
     ret
 register_cell_editor_class ENDP
-
 register_output_display_class PROC
     ; rcx = class name
     ret
 register_output_display_class ENDP
-
 create_notebook_toolbar PROC
     ; rcx = parent hwnd
     ret
 create_notebook_toolbar ENDP
-
 create_cell_editor_area PROC
     ; rcx = parent hwnd
     ret
 create_cell_editor_area ENDP
-
 create_output_display_area PROC
     ; rcx = parent hwnd
     ret
 create_output_display_area ENDP
-
 create_kernel_selector PROC
     ; rcx = parent hwnd
     ret
 create_kernel_selector ENDP
-
 create_execution_controls PROC
     ; rcx = parent hwnd
     ret
 create_execution_controls ENDP
-
 setup_kernel PROC
     ; ecx = kernel_type
     mov eax, 1
     ret
 setup_kernel ENDP
-
 get_kernel_by_index PROC
     ; ecx = index -> rax = kernel_ptr
     xor rax, rax
     ret
 get_kernel_by_index ENDP
-
 send_code_to_kernel PROC
     ; rcx = kernel ptr, rdx = cell ptr -> eax = success
     mov eax, 1
     ret
 send_code_to_kernel ENDP
-
 wait_for_kernel_output PROC
     ; rcx = kernel ptr, edx = timeout_ms -> eax = success
     mov eax, 1
     ret
 wait_for_kernel_output ENDP
-
 capture_kernel_output PROC
     ; rcx = cell ptr, rdx = kernel ptr
     ret
 capture_kernel_output ENDP
-
 memcpy_cells PROC
     ; rax = size, rdx = dest, r8 = src
     ret
 memcpy_cells ENDP
-
 strncpy PROC
     ; rcx = dest, rdx = src, r8d = max_len
     xor rax, rax
@@ -739,4 +717,8 @@ strncpy ENDP
 szKernelError BYTE "Kernel error: failed to execute code", 0
 
 end
+
+
+
+
 

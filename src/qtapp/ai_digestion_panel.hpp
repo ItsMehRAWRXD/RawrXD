@@ -109,7 +109,7 @@ private slots:
     void onDigestionFinished(bool success, const QString& message);
     void onDigestionError(const QString& error);
     void onDigestionStateChanged(AIDigestionWorker::State state);
-    void onDigestionDatasetReady(const TrainingDataset& dataset);
+    void onDigestionDatasetReady(const AIDigestionDataset& dataset);
     
     // Worker events - Training
     void onTrainingProgressChanged(const AITrainingWorker::Progress& progress);
@@ -180,7 +180,7 @@ private:
     void deletePreset(const QString& presetName);
     void logMessage(const QString& message);
     
-    void showDigestionResults(const TrainingDataset& dataset);
+    void showDigestionResults(const AIDigestionDataset& dataset);
     void showTrainingResults(const QString& modelPath);
     void showErrorMessage(const QString& title, const QString& message);
     void showSuccessMessage(const QString& title, const QString& message);
@@ -200,7 +200,7 @@ private:
     AITrainingWorker* m_trainingWorker;
     
     // Current dataset and configuration
-    TrainingDataset m_currentDataset;
+    AIDigestionDataset m_currentDataset;
     AITrainingWorker::TrainingConfig m_trainingConfig;
     
     // UI Layout
@@ -351,7 +351,7 @@ private:
     double m_digestionProgressValue;
     double m_trainingProgressValue;
     QString m_currentModelPath;
-    TrainingDataset m_lastDataset;
+    AIDigestionDataset m_lastDataset;
     
     // Settings
     QJsonObject m_currentSettings;

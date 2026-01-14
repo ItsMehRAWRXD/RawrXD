@@ -208,8 +208,16 @@ bool ModelLoaderWithCompression::cacheTensor(const QString& tensorName, const QB
         return false;
     }
     
+    // Ensure cache directory exists
+    if (!ensureCacheDir()) {
+        qWarning() << "[ModelLoaderWithCompression] Failed to create cache directory";
+        return false;
+    }
+
     // Compress before caching
-    QByteArray compressed = compressTensor(tensorName);
+    QByteArray compressed;
+    // Prefer direct compression of provided data
+    compressed = brutal::compress(data);
     if (compressed.isEmpty()) {
         qWarning() << "[ModelLoaderWithCompression] Compression failed for caching";
         return false;

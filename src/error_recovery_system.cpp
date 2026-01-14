@@ -42,7 +42,7 @@ void ErrorRecoverySystem::setupDefaultStrategies() {
     RecoveryStrategy retryStrategy;
     retryStrategy.strategyId = "retry_exponential";
     retryStrategy.name = "Retry with Exponential Backoff";
-    retryStrategy.applicableCategories << ErrorCategory::Network << ErrorCategory::CloudProvider;
+    retryStrategy.applicableCategories << ErrorCategory::Network << ErrorCategory::CloudProviderType;
     retryStrategy.maxRetries = 5;
     retryStrategy.retryDelayMs = 1000;
     retryStrategy.successRate = 0.85;
@@ -54,7 +54,7 @@ void ErrorRecoverySystem::setupDefaultStrategies() {
     RecoveryStrategy fallbackLocal;
     fallbackLocal.strategyId = "fallback_local";
     fallbackLocal.name = "Fallback to Local Model";
-    fallbackLocal.applicableCategories << ErrorCategory::AIModel << ErrorCategory::CloudProvider;
+    fallbackLocal.applicableCategories << ErrorCategory::AIModel << ErrorCategory::CloudProviderType;
     fallbackLocal.maxRetries = 1;
     fallbackLocal.retryDelayMs = 0;
     fallbackLocal.successRate = 0.95;
@@ -150,7 +150,7 @@ void ErrorRecoverySystem::setupDefaultStrategies() {
     RecoveryStrategy switchEndpoint;
     switchEndpoint.strategyId = "switch_endpoint";
     switchEndpoint.name = "Switch to Backup Endpoint";
-    switchEndpoint.applicableCategories << ErrorCategory::Network << ErrorCategory::CloudProvider;
+    switchEndpoint.applicableCategories << ErrorCategory::Network << ErrorCategory::CloudProviderType;
     switchEndpoint.maxRetries = 3;
     switchEndpoint.retryDelayMs = 2000;
     switchEndpoint.successRate = 0.91;
@@ -174,7 +174,7 @@ void ErrorRecoverySystem::setupDefaultStrategies() {
     RecoveryStrategy reauth;
     reauth.strategyId = "reauthenticate";
     reauth.name = "Re-authenticate Credentials";
-    reauth.applicableCategories << ErrorCategory::Security << ErrorCategory::CloudProvider;
+    reauth.applicableCategories << ErrorCategory::Security << ErrorCategory::CloudProviderType;
     reauth.maxRetries = 2;
     reauth.retryDelayMs = 3000;
     reauth.successRate = 0.89;
@@ -635,7 +635,7 @@ QString ErrorRecoverySystem::errorCategoryToString(ErrorCategory category) const
         case ErrorCategory::FileIO: return "FileIO";
         case ErrorCategory::Database: return "Database";
         case ErrorCategory::AIModel: return "AIModel";
-        case ErrorCategory::CloudProvider: return "CloudProvider";
+        case ErrorCategory::CloudProviderType: return "CloudProviderType";
         case ErrorCategory::Security: return "Security";
         case ErrorCategory::Performance: return "Performance";
         case ErrorCategory::UserInput: return "UserInput";

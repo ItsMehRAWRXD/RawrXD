@@ -4,8 +4,8 @@
 
 option casemap:none
 
-EXTERN malloc:PROC
-EXTERN free:PROC
+extern masm_malloc : proc
+extern masm_free : proc
 EXTERN memcpy:PROC
 EXTERN strlen:PROC
 EXTERN strcpy:PROC
@@ -96,7 +96,7 @@ compliance_logger_init PROC
     mov r8, rcx                    ; r8 = logFilePath
     
     mov rcx, 256                   ; Max filename length
-    call malloc
+    call masm_malloc
     mov [rbx + COMPLIANCE_LOGGER.logFileName], rax
     
     mov rcx, rax
@@ -106,7 +106,7 @@ compliance_logger_init PROC
     ; Allocate log entry array
     mov rcx, MAX_LOG_ENTRIES
     imul rcx, SIZEOF LOG_ENTRY
-    call malloc
+    call masm_malloc
     mov [rbx + COMPLIANCE_LOGGER.logEntries], rax
     
     ; Initialize counters
@@ -267,7 +267,7 @@ compliance_export_audit_log PROC
     
     ; Allocate output buffer
     mov rcx, 65536                 ; 64 KB for export
-    call malloc
+    call masm_malloc
     
     ret
 compliance_export_audit_log ENDP
@@ -300,13 +300,13 @@ compliance_logger_shutdown PROC
     mov rcx, [rbx + COMPLIANCE_LOGGER.logFileName]
     cmp rcx, 0
     je skip_name_local
-    call free
+    call masm_free
 skip_name_local:
     
     mov rcx, [rbx + COMPLIANCE_LOGGER.logEntries]
     cmp rcx, 0
     je skip_entries_local
-    call free
+    call masm_free
 skip_entries_local:
     
     ; Close file if open
@@ -322,4 +322,8 @@ compliance_logger_shutdown ENDP
 ; ============================================================================
 
 END
+
+
+
+
 

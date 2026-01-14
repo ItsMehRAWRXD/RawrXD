@@ -37,6 +37,24 @@ struct ThemeColors {
     QColor classColor;
     QColor operatorColor;
     QColor preprocessorColor;
+
+    struct LanguageSyntaxColors {
+        QColor keyword;
+        QColor string;
+        QColor comment;
+        QColor number;
+        QColor function;
+        QColor classColor;
+        QColor operatorColor;
+        QColor preprocessor;
+        double syntaxOpacity = 1.0;
+
+        QJsonObject toJson() const;
+        static LanguageSyntaxColors fromJson(const QJsonObject& json, const ThemeColors& fallback);
+    };
+
+    // Per-language overrides (e.g., "cpp", "python", "javascript")
+    QMap<QString, LanguageSyntaxColors> languageSyntax; // key: language slug
     
     // Chat Colors
     QColor chatUserBackground;
@@ -104,6 +122,12 @@ public:
     // Color Access
     const ThemeColors& currentColors() const { return m_currentColors; }
     QColor getColor(const QString& colorName) const;
+
+    // Per-language syntax accessors
+    ThemeColors::LanguageSyntaxColors languageColors(const QString& langKey) const;
+    void updateLanguageColor(const QString& langKey, const QString& role, const QColor& color);
+    void updateLanguageOpacity(const QString& langKey, double opacity);
+    double languageOpacity(const QString& langKey) const;
     
     // Real-time Updates
     void updateColor(const QString& colorName, const QColor& color);

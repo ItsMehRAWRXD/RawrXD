@@ -1,6 +1,10 @@
 #include "autonomous_intelligence_orchestrator.h"
+#include "hybrid_cloud_manager.h"
+#include "agentic_executor.h"
 #include <QTimer>
 #include <QJsonDocument>
+#include <QDir>
+#include <QJsonArray>
 #include <QFile>
 #include <QStandardPaths>
 #include <iostream>
@@ -11,7 +15,8 @@ AutonomousIntelligenceOrchestrator::AutonomousIntelligenceOrchestrator(QObject* 
     // Initialize all autonomous systems
     modelManager = std::make_unique<AutonomousModelManager>(this);
     codebaseEngine = std::make_unique<IntelligentCodebaseEngine>(this);
-    featureEngine = std::make_unique<AutonomousFeatureEngine>(codebaseEngine.get(), this);
+    featureEngine = std::make_unique<AutonomousFeatureEngine>(this);
+    featureEngine->setCodebaseEngine(codebaseEngine.get());
     cloudManager = std::make_unique<HybridCloudManager>(this);
     
     setupConnections();
@@ -23,6 +28,10 @@ AutonomousIntelligenceOrchestrator::AutonomousIntelligenceOrchestrator(QObject* 
     intelligentModelSwitchingEnabled = true;
     
     std::cout << "[AutonomousOrchestrator] Initialized successfully" << std::endl;
+}
+
+void AutonomousIntelligenceOrchestrator::setAgenticExecutor(AgenticExecutor* executor) {
+    agenticExecutor = executor;
 }
 
 AutonomousIntelligenceOrchestrator::~AutonomousIntelligenceOrchestrator() {
@@ -84,6 +93,10 @@ bool AutonomousIntelligenceOrchestrator::initialize(const QString& projectPath) 
     
     // Analyze system capabilities
     modelManager->analyzeSystemCapabilities();
+
+    // Run discovery to surface available compilers/providers/models
+    QJsonObject discovery = runSystemDiscovery();
+    emit systemDiscoveryReady(discovery);
     
     // Load configuration if exists
     QString configPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/orchestrator_config.json";
@@ -95,6 +108,31 @@ bool AutonomousIntelligenceOrchestrator::initialize(const QString& projectPath) 
     }
     
     return true;
+}
+
+QJsonObject AutonomousIntelligenceOrchestrator::runSystemDiscovery() {
+    QJsonObject capabilities;
+    capabilities["operation_mode"] = operationMode;
+
+    // Compiler catalog via AgenticExecutor
+    if (agenticExecutor) {
+        QStringList compilers = agenticExecutor->listAvailableCompilers();
+        capabilities["compilers"] = QJsonArray::fromStringList(compilers);
+    }
+
+    // Models via model manager
+    if (modelManager) {
+        QJsonArray models;
+        for (const auto& rec : modelManager->getAvailableModels()) {
+            models.append(rec);
+        }
+        capabilities["models"] = models;
+    }
+
+    // Cloud state
+    capabilities["cloud_mode"] = operationMode;
+
+    return capabilities;
 }
 
 bool AutonomousIntelligenceOrchestrator::loadConfiguration(const QJsonObject& config) {
@@ -401,7 +439,8 @@ bool AutonomousIntelligenceOrchestrator::autoSelectBestModel(const QString& task
     return false;
 }
 
-bool AutonomousIntelligenceOrchestrator::autoGenerateTests() {
+bool AutonomousIntelligenceOrchestrator::autoGenerateTests()
+{
     std::cout << "[AutonomousOrchestrator] Auto-generating tests" << std::endl;
     
     if (!autoTestGenerationEnabled) {
@@ -409,14 +448,45 @@ bool AutonomousIntelligenceOrchestrator::autoGenerateTests() {
         return false;
     }
     
+    if (!featureEngine) {
+        std::cout << "[AutonomousOrchestrator] Feature engine not available" << std::endl;
+        return false;
+    }
+    
     QVector<QJsonObject> tests = featureEngine->generateTestsForProject(currentProjectPath);
     
-    std::cout << "[AutonomousOrchestrator] Generated " << tests.size() << " tests" << std::endl;
+    if (tests.isEmpty()) {
+        std::cout << "[AutonomousOrchestrator] No tests generated" << std::endl;
+        return false;
+    }
     
-    return !tests.isEmpty();
+    std::cout << "[AutonomousOrchestrator] Generated " << tests.size() << " tests" << std::endl;
+    emit testsGenerated(tests.size());
+    
+    // Save tests to files
+    int savedCount = 0;
+    for (const auto& test : tests) {
+        QString testName = test["testName"].toString();
+        QString testCode = test["testCode"].toString();
+        QString filePath = currentProjectPath + "/tests/" + testName + ".cpp";
+        
+        // Create tests directory if it doesn't exist
+        QDir().mkpath(currentProjectPath + "/tests");
+        
+        QFile file(filePath);
+        if (file.open(QIODevice::WriteOnly)) {
+            file.write(testCode.toUtf8());
+            file.close();
+            savedCount++;
+            std::cout << "[AutonomousOrchestrator] Saved test: " << filePath.toStdString() << std::endl;
+        }
+    }
+    
+    return savedCount > 0;
 }
 
-bool AutonomousIntelligenceOrchestrator::autoFixBugs() {
+bool AutonomousIntelligenceOrchestrator::autoFixBugs()
+{
     std::cout << "[AutonomousOrchestrator] Auto-fixing bugs" << std::endl;
     
     if (!autoBugFixEnabled) {
@@ -424,12 +494,38 @@ bool AutonomousIntelligenceOrchestrator::autoFixBugs() {
         return false;
     }
     
+    if (!featureEngine) {
+        std::cout << "[AutonomousOrchestrator] Feature engine not available" << std::endl;
+        return false;
+    }
+    
     QVector<QJsonObject> fixes = featureEngine->suggestFixesForAllBugs();
     
-    // In production, would apply fixes automatically with user confirmation
+    if (fixes.isEmpty()) {
+        std::cout << "[AutonomousOrchestrator] No bugs detected or no fixes generated" << std::endl;
+        return false;
+    }
+    
     std::cout << "[AutonomousOrchestrator] Generated " << fixes.size() << " fixes" << std::endl;
     
-    return !fixes.isEmpty();
+    // Apply fixes automatically
+    int appliedCount = 0;
+    for (const auto& fix : fixes) {
+        QString filePath = fix["file"].toString();
+        QString fixCode = fix["fixedCode"].toString();
+        
+        if (!filePath.isEmpty() && !fixCode.isEmpty()) {
+            QFile file(filePath);
+            if (file.open(QIODevice::WriteOnly)) {
+                file.write(fixCode.toUtf8());
+                file.close();
+                appliedCount++;
+                std::cout << "[AutonomousOrchestrator] Applied fix to: " << filePath.toStdString() << std::endl;
+            }
+        }
+    }
+    
+    return appliedCount > 0;
 }
 
 bool AutonomousIntelligenceOrchestrator::autoOptimizeCode() {
@@ -469,31 +565,70 @@ QJsonArray AutonomousIntelligenceOrchestrator::getAvailableModels() {
     return modelManager->getAvailableModels();
 }
 
-bool AutonomousIntelligenceOrchestrator::enableCloudMode() {
+bool AutonomousIntelligenceOrchestrator::enableCloudMode()
+{
     std::cout << "[AutonomousOrchestrator] Enabling cloud mode" << std::endl;
     
-    cloudManager->switchToCloudModel("User request");
+    if (!cloudManager) {
+        std::cout << "[AutonomousOrchestrator] Cloud manager not available" << std::endl;
+        return false;
+    }
+    
     operationMode = "cloud";
     
-    return true;
+    bool success = cloudManager->switchToCloudModel("User request");
+    
+    if (success) {
+        std::cout << "[AutonomousOrchestrator] Cloud mode enabled successfully" << std::endl;
+        emit modelSwitched("cloud");
+    } else {
+        std::cout << "[AutonomousOrchestrator] Failed to enable cloud mode" << std::endl;
+        operationMode = "local"; // Fallback to local
+    }
+    
+    return success;
 }
 
-bool AutonomousIntelligenceOrchestrator::enableLocalMode() {
+bool AutonomousIntelligenceOrchestrator::enableLocalMode()
+{
     std::cout << "[AutonomousOrchestrator] Enabling local mode" << std::endl;
     
-    cloudManager->switchToLocalModel("User request");
+    if (!cloudManager) {
+        std::cout << "[AutonomousOrchestrator] Cloud manager not available" << std::endl;
+        return false;
+    }
+    
     operationMode = "local";
     
-    return true;
+    bool success = cloudManager->switchToLocalModel("User request");
+    
+    if (success) {
+        std::cout << "[AutonomousOrchestrator] Local mode enabled successfully" << std::endl;
+        emit modelSwitched("local");
+    }
+    
+    return success;
 }
 
-bool AutonomousIntelligenceOrchestrator::enableHybridMode() {
+bool AutonomousIntelligenceOrchestrator::enableHybridMode()
+{
     std::cout << "[AutonomousOrchestrator] Enabling hybrid mode" << std::endl;
     
-    cloudManager->enableHybridMode();
+    if (!cloudManager) {
+        std::cout << "[AutonomousOrchestrator] Cloud manager not available" << std::endl;
+        return false;
+    }
+    
     operationMode = "hybrid";
     
-    return true;
+    bool success = cloudManager->enableHybridMode();
+    
+    if (success) {
+        std::cout << "[AutonomousOrchestrator] Hybrid mode enabled successfully" << std::endl;
+        emit modelSwitched("hybrid");
+    }
+    
+    return success;
 }
 
 QString AutonomousIntelligenceOrchestrator::getCurrentMode() {

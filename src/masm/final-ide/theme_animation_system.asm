@@ -29,14 +29,13 @@ INCLUDELIB user32.lib
 INCLUDELIB gdi32.lib
 INCLUDELIB msvcrt.lib
 
-EXTERN malloc:PROC
-EXTERN free:PROC
+extern masm_malloc : proc
+extern masm_free : proc
 EXTERN memset:PROC
 EXTERN GetTickCount64:PROC
 EXTERN GetSystemInfo:PROC
 EXTERN QueryPerformanceCounter:PROC
 EXTERN QueryPerformanceFrequency:PROC
-
 PUBLIC animation_system_init
 PUBLIC animation_create
 PUBLIC animation_start
@@ -258,7 +257,7 @@ animation_system_init PROC
     mov rcx, MAX_ANIMATIONS
     mov rdx, SIZEOF ANIMATION
     imul rcx, rdx
-    call malloc
+    call masm_malloc
     mov [g_animSystem.animationPool], rax
     test rax, rax
     jz init_failed_local
@@ -915,7 +914,7 @@ keyframe_anim_found_local:
     mov rcx, MAX_KEYFRAMES
     mov rdx, SIZEOF KEYFRAME
     imul rcx, rdx
-    call malloc
+    call masm_malloc
     mov [rcx + ANIMATION.keyframes], rax
 
 keyframes_allocated_local:
@@ -1089,7 +1088,7 @@ destroy_found_local:
     test rax, rax
     jz no_keyframes_local
 
-    call free
+    call masm_free
 
 no_keyframes_local:
     ; Free from/to value arrays
@@ -1097,21 +1096,21 @@ no_keyframes_local:
     test rax, rax
     jz no_from_values_local
 
-    call free
+    call masm_free
 
 no_from_values_local:
     mov rax, [rcx + ANIMATION.toValues]
     test rax, rax
     jz no_to_values_local
 
-    call free
+    call masm_free
 
 no_to_values_local:
     mov rax, [rcx + ANIMATION.currentValues]
     test rax, rax
     jz no_current_values_local
 
-    call free
+    call masm_free
 
 no_current_values_local:
     ; Reset animation state
@@ -1140,4 +1139,8 @@ half            REAL8 0.5
 one_256         REAL4 256.0
 
 END
+
+
+
+
 

@@ -485,80 +485,171 @@ asm_atomic_xchg PROC
 asm_atomic_xchg ENDP
 
 ;=====================================================================
-; INTERNAL PLACEHOLDER WRAPPERS FOR WIN32 API CALLS
-; In production, these would be resolved at link time or via IAT
+; EXTERNAL WIN32 API IMPORTS
+; These are resolved at link time via kernel32.lib
+;=====================================================================
+EXTERN InitializeCriticalSection:PROC
+EXTERN EnterCriticalSection:PROC
+EXTERN LeaveCriticalSection:PROC
+EXTERN DeleteCriticalSection:PROC
+EXTERN CreateEventExW:PROC
+EXTERN SetEvent:PROC
+EXTERN ResetEvent:PROC
+EXTERN WaitForSingleObject:PROC
+EXTERN CloseHandle:PROC
+
+;=====================================================================
+; WIN32 API WRAPPER IMPLEMENTATIONS
+; Direct calls to kernel32 functions with proper ABI compliance
 ;=====================================================================
 
 ALIGN 16
 asm_initialize_critical_section PROC
-    ; Placeholder: In real code, call kernel32!InitializeCriticalSection
-    ; For MVP, initialize fields manually
+    ; Direct call to InitializeCriticalSection
+    ; RCX already contains pointer to CRITICAL_SECTION
+    ; No additional setup needed - just call Win32 API
+    push rbx
+    sub rsp, 32
     
-    ; Zero out structure
-    mov qword ptr [rcx], 0
-    mov qword ptr [rcx + 8], 0
-    mov qword ptr [rcx + 16], 0
-    mov qword ptr [rcx + 24], 0
-    mov qword ptr [rcx + 32], 0
+    call InitializeCriticalSection
     
+    add rsp, 32
+    pop rbx
     ret
 asm_initialize_critical_section ENDP
 
 ALIGN 16
 asm_enter_critical_section PROC
-    ; Placeholder: kernel32!EnterCriticalSection
-    ; For MVP, busy-wait or fallback
+    ; Direct call to EnterCriticalSection
+    ; RCX already contains pointer to CRITICAL_SECTION
+    push rbx
+    sub rsp, 32
+    
+    call EnterCriticalSection
+    
+    add rsp, 32
+    pop rbx
     ret
 asm_enter_critical_section ENDP
 
 ALIGN 16
 asm_leave_critical_section PROC
-    ; Placeholder: kernel32!LeaveCriticalSection
+    ; Direct call to LeaveCriticalSection
+    ; RCX already contains pointer to CRITICAL_SECTION
+    push rbx
+    sub rsp, 32
+    
+    call LeaveCriticalSection
+    
+    add rsp, 32
+    pop rbx
     ret
 asm_leave_critical_section ENDP
 
 ALIGN 16
 asm_delete_critical_section PROC
-    ; Placeholder: kernel32!DeleteCriticalSection
+    ; Direct call to DeleteCriticalSection
+    ; RCX already contains pointer to CRITICAL_SECTION
+    push rbx
+    sub rsp, 32
+    
+    call DeleteCriticalSection
+    
+    add rsp, 32
+    pop rbx
     ret
 asm_delete_critical_section ENDP
 
 ALIGN 16
 asm_create_event PROC
-    ; Placeholder: kernel32!CreateEventExW
-    ; Returns NULL for MVP
-    xor rax, rax
+    ; Direct call to CreateEventExW
+    ; RCX = lpEventAttributes (NULL for default)
+    ; RDX = dwInitialState
+    ; R8 = CREATE_EVENT_MANUAL_RESET or 0
+    ; R9 = dwDesiredAccess (EVENT_ALL_ACCESS)
+    ; Note: Stack space already allocated by caller
+    
+    push rbx
+    push r10
+    sub rsp, 32
+    
+    ; Prepare stack for CreateEventExW call
+    ; CreateEventExW(lpEventAttributes, lpName, dwFlags, dwDesiredAccess)
+    ; R9 must be set before call
+    mov r9d, 0x1F0003      ; EVENT_ALL_ACCESS | EVENT_MODIFY_STATE
+    
+    call CreateEventExW
+    ; rax contains event handle or NULL
+    
+    add rsp, 32
+    pop r10
+    pop rbx
     ret
 asm_create_event ENDP
 
 ALIGN 16
 asm_set_event PROC
-    ; Placeholder: kernel32!SetEvent
-    mov rax, 1              ; Return TRUE
+    ; Direct call to SetEvent
+    ; RCX already contains event handle
+    push rbx
+    sub rsp, 32
+    
+    call SetEvent
+    ; rax contains TRUE if successful
+    
+    add rsp, 32
+    pop rbx
     ret
 asm_set_event ENDP
 
 ALIGN 16
 asm_reset_event PROC
-    ; Placeholder: kernel32!ResetEvent
-    mov rax, 1              ; Return TRUE
+    ; Direct call to ResetEvent
+    ; RCX already contains event handle
+    push rbx
+    sub rsp, 32
+    
+    call ResetEvent
+    ; rax contains TRUE if successful
+    
+    add rsp, 32
+    pop rbx
     ret
 asm_reset_event ENDP
 
 ALIGN 16
 asm_wait_for_event PROC
-    ; Placeholder: kernel32!WaitForSingleObject
-    mov rax, 0              ; Return WAIT_OBJECT_0 (signaled)
+    ; Direct call to WaitForSingleObject
+    ; RCX = handle
+    ; RDX = dwMilliseconds (timeout)
+    push rbx
+    sub rsp, 32
+    
+    call WaitForSingleObject
+    ; rax contains WAIT_OBJECT_0, WAIT_TIMEOUT, or WAIT_FAILED
+    
+    add rsp, 32
+    pop rbx
     ret
 asm_wait_for_event ENDP
 
 ALIGN 16
 asm_close_handle PROC
-    ; Placeholder: kernel32!CloseHandle
-    mov rax, 1              ; Return TRUE
+    ; Direct call to CloseHandle
+    ; RCX already contains handle
+    push rbx
+    sub rsp, 32
+    
+    call CloseHandle
+    ; rax contains TRUE if successful
+    
+    add rsp, 32
+    pop rbx
     ret
 asm_close_handle ENDP
 
 END
+
+
 
 

@@ -88,7 +88,6 @@ asm_syntax_handler PROC
     call asm_validate_syntax
     ret
 asm_syntax_handler ENDP
-
 asm_intellisense_handler PROC
     ; rcx = cursor position, rdx = context
     call asm_get_completions
@@ -103,7 +102,6 @@ asm_register_viewer PROC
     call pane_update_display
     ret
 asm_register_viewer ENDP
-
 asm_memory_inspector PROC
     ; rcx = memory address, rdx = size
     call asm_read_memory
@@ -120,7 +118,6 @@ asm_build_system PROC
     call pane_show_results
     ret
 asm_build_system ENDP
-
 asm_linker_interface PROC
     ; rcx = object files, rdx = output path
     call asm_invoke_linker
@@ -137,7 +134,6 @@ asm_profiler PROC
     call pane_show_profile_data
     ret
 asm_profiler ENDP
-
 asm_optimizer PROC
     ; rcx = asm code buffer
     call asm_analyze_performance
@@ -197,7 +193,6 @@ integrate_with_main PROC
     
     ret
 integrate_with_main ENDP
-
 connect_editor_pane PROC
     ; Link editor pane to existing ui_create_* functions
     call ui_get_editor_handle
@@ -210,7 +205,6 @@ connect_editor_pane PROC
     
     ret
 connect_editor_pane ENDP
-
 connect_debugger_pane PROC
     ; Create debugger pane in existing split pane system
     mov rcx, PANE_TYPE_DEBUGGER
@@ -247,3 +241,5 @@ PANE_TYPE_ASSEMBLER   equ 102
 PANE_TYPE_PERFORMANCE equ 103
 
 END
+
+

@@ -27,7 +27,7 @@ MAX_DRIVES EQU 26
 
 file_tree_init PROC
     ; rcx = hParent, edx = x, r8d = y, r9d = width, [rsp+32] = height
-    xor DriveCount, DriveCount
+    mov dword ptr [DriveCount], 0
     xor eax, eax
     ret
 file_tree_init ENDP

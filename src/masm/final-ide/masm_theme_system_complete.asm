@@ -22,18 +22,34 @@
 
 option casemap:none
 
-INCLUDELIB kernel32.lib
-INCLUDELIB user32.lib
-INCLUDELIB gdi32.lib
-INCLUDELIB msvcrt.lib
-
-; External functions
-EXTERN malloc:PROC
-EXTERN free:PROC
+; Win32 API externals - no includes needed
+extern masm_malloc : proc
+extern masm_free : proc
 EXTERN strcpy:PROC
 EXTERN strlen:PROC
 EXTERN sprintf:PROC
+EXTERN InitializeCriticalSection:PROC
+EXTERN EnterCriticalSection:PROC
+EXTERN LeaveCriticalSection:PROC
+EXTERN DeleteCriticalSection:PROC
+EXTERN RegCreateKeyExA:PROC
+EXTERN RegSetValueExA:PROC
+EXTERN RegQueryValueExA:PROC
+EXTERN RegCloseKey:PROC
+EXTERN RegOpenKeyExA:PROC
+EXTERN CreateSolidBrush:PROC
+EXTERN SetClassLongPtrA:PROC
+EXTERN InvalidateRect:PROC
 
+; Registry constants
+KEY_READ                    EQU 20019h
+KEY_WRITE                   EQU 20006h
+REG_OPTION_NON_VOLATILE     EQU 0
+REG_DWORD                   EQU 4
+HKEY_CURRENT_USER           EQU 80000001h
+
+; Window class constants
+GCLP_HBRBACKGROUND          EQU -10
 PUBLIC ThemeManager_Init
 PUBLIC ThemeManager_Cleanup
 PUBLIC ThemeManager_SetTheme
@@ -171,7 +187,7 @@ ThemeManager_Init PROC
     
     ; Allocate memory for THEME_COLORS structure
     mov rcx, SIZEOF THEME_COLORS
-    call malloc
+    call masm_malloc
     test rax, rax
     jz InitFailed
     
@@ -819,7 +835,7 @@ ThemeManager_Cleanup PROC
     mov rcx, gThemeManager.pColors
     test rcx, rcx
     jz SkipFree
-    call free
+    call masm_free
     mov gThemeManager.pColors, 0
     
 SkipFree:
@@ -834,4 +850,8 @@ SkipFree:
 ThemeManager_Cleanup ENDP
 
 END
+
+
+
+
 

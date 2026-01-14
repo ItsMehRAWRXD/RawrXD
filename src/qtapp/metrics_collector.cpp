@@ -3,21 +3,23 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QDebug>
+#include <QMutexLocker>
+#include <QVariant>
 #include <algorithm>
 #include <cmath>
 
-MetricsCollector& MetricsCollector::instance() {
+MetricsCollector& MetricsCollector::instance()
+{
     static MetricsCollector instance;
     return instance;
 }
 
-MetricsCollector::MetricsCollector()
-    : QObject(nullptr)
+MetricsCollector::MetricsCollector(QObject* parent)
+    : QObject(parent)
 {
 }
 
-MetricsCollector::~MetricsCollector() {
-}
+MetricsCollector::~MetricsCollector() = default;
 
 void MetricsCollector::startRequest(qint64 requestId, const QString& modelName, int promptTokens) {
     if (!m_enabled) return;
@@ -286,3 +288,5 @@ bool MetricsCollector::isEnabled() const {
 void MetricsCollector::calculatePercentiles() {
     // Already calculated in getAggregateMetrics()
 }
+
+#include "moc_metrics_collector.cpp"

@@ -5,8 +5,8 @@
 
 option casemap:none
 
-EXTERN malloc:PROC
-EXTERN free:PROC
+extern masm_malloc : proc
+extern masm_free : proc
 EXTERN console_log:PROC
 EXTERN memmove:PROC
 
@@ -604,4 +604,8 @@ color_distance_euclidean ENDP
 ; ============================================================================
 
 END
+
+
+
+
 

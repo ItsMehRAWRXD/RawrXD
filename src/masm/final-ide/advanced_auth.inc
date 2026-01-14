@@ -13,66 +13,66 @@ AUTH_ERROR_EXPIRED equ 7
 AUTH_ERROR_INSUFFICIENT_PERMISSIONS equ 8
 
 ; Authentication system structure
-AUTH_SYSTEM struct
-    auth_mutex dword ?
-    user_count dword ?
-    max_users dword ?
-    token_count dword ?
-    max_tokens dword ?
-    users_ptr dword ?
-    tokens_ptr dword ?
-    secret_key_ptr dword ?
-    secret_key_len dword ?
-    oauth_providers_ptr dword ?
-    allocator_ptr dword ?
-    deallocator_ptr dword ?
-    stats_enabled dword ?
-    reserved dword 12 dup(?)
-AUTH_SYSTEM ends
+AUTH_SYSTEM STRUCT
+    auth_mutex DWORD ?
+    user_count DWORD ?
+    max_users DWORD ?
+    token_count DWORD ?
+    max_tokens DWORD ?
+    users_ptr DWORD ?
+    tokens_ptr DWORD ?
+    secret_key_ptr DWORD ?
+    secret_key_len DWORD ?
+    oauth_providers_ptr DWORD ?
+    allocator_ptr DWORD ?
+    deallocator_ptr DWORD ?
+    stats_enabled DWORD ?
+    reserved BYTE 12*4 dup(?)
+AUTH_SYSTEM ENDS
 
 ; User structure
-USER struct
-    user_id dword ?
-    username_ptr dword ?
-    username_len dword ?
-    password_hash_ptr dword ?
-    password_hash_len dword ?
-    roles_ptr dword ?
-    roles_count dword ?
-    created_at dword ?
-    last_login dword ?
-    flags dword ?
-    reserved dword 4 dup(?)
-USER ends
+USER STRUCT
+    user_id DWORD ?
+    username_ptr DWORD ?
+    username_len DWORD ?
+    password_hash_ptr DWORD ?
+    password_hash_len DWORD ?
+    roles_ptr DWORD ?
+    roles_count DWORD ?
+    created_at DWORD ?
+    last_login DWORD ?
+    flags DWORD ?
+    reserved BYTE 4*4 dup(?)
+USER ENDS
 
 ; Token structure
-TOKEN struct
-    token_id dword ?
-    user_id dword ?
-    token_ptr dword ?
-    token_len dword ?
-    token_type dword ?
-    expires_at dword ?
-    scopes_ptr dword ?
-    scopes_count dword ?
-    created_at dword ?
-    flags dword ?
-    reserved dword 2 dup(?)
-TOKEN ends
+TOKEN STRUCT
+    token_id DWORD ?
+    user_id DWORD ?
+    token_ptr DWORD ?
+    token_len DWORD ?
+    token_type DWORD ?
+    expires_at DWORD ?
+    scopes_ptr DWORD ?
+    scopes_count DWORD ?
+    created_at DWORD ?
+    flags DWORD ?
+    reserved BYTE 2*4 dup(?)
+TOKEN ENDS
 
 ; OAuth provider structure
-OAUTH_PROVIDER struct
-    provider_id dword ?
-    name_ptr dword ?
-    name_len dword ?
-    client_id_ptr dword ?
-    client_id_len dword ?
-    client_secret_ptr dword ?
-    client_secret_len dword ?
-    auth_url_ptr dword ?
-    token_url_ptr dword ?
-    reserved dword 4 dup(?)
-OAUTH_PROVIDER ends
+OAUTH_PROVIDER STRUCT
+    provider_id DWORD ?
+    name_ptr DWORD ?
+    name_len DWORD ?
+    client_id_ptr DWORD ?
+    client_id_len DWORD ?
+    client_secret_ptr DWORD ?
+    client_secret_len DWORD ?
+    auth_url_ptr DWORD ?
+    token_url_ptr DWORD ?
+    reserved BYTE 4*4 dup(?)
+OAUTH_PROVIDER ENDS
 
 ; Constants
 USER_MAX_USERNAME_LEN equ 256
@@ -88,3 +88,7 @@ EXTERN auth_init:proc
 EXTERN auth_shutdown:proc
 EXTERN auth_authenticate:proc
 EXTERN auth_authorize:proc
+
+
+
+

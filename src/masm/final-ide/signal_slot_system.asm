@@ -1314,7 +1314,6 @@ _release_mutex ENDP
 ;==============================================================================
 ; EXPORTED FUNCTION TABLE
 ;==============================================================================
-
 PUBLIC signal_system_init
 PUBLIC signal_system_cleanup
 PUBLIC signal_register
@@ -1329,3 +1328,7 @@ PUBLIC unblock_signals
 PUBLIC is_signal_blocked
 
 .end
+
+
+
+

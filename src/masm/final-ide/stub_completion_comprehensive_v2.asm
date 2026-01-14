@@ -17,6 +17,49 @@ includelib gdi32.lib
 includelib comdlg32.lib
 includelib shell32.lib
 
+; Additional Win32 APIs/structs/constants not covered by our minimal *.inc set
+EXTERN GetSystemTimeAsFileTime:PROC
+EXTERN CreateMutexA:PROC
+EXTERN ReleaseMutex:PROC
+extern GetOpenFileNameA : proc
+
+CBS_DROPDOWNLIST   EQU 0003h
+CB_SETCURSEL       EQU 014Eh
+BS_AUTOCHECKBOX    EQU 0003h
+TVS_HASBUTTONS     EQU 0001h
+
+WM_PAINT           EQU 000Fh
+
+OFN_PATHMUSTEXIST  EQU 0800h
+OFN_FILEMUSTEXIST  EQU 1000h
+
+; Minimal OPENFILENAMEA definition (fields used by this module)
+OPENFILENAMEA STRUCT
+    lStructSize        DWORD ?
+    hwndOwner          QWORD ?
+    hInstance          QWORD ?
+    lpstrFilter        QWORD ?
+    lpstrCustomFilter  QWORD ?
+    nMaxCustFilter     DWORD ?
+    nFilterIndex       DWORD ?
+    lpstrFile          QWORD ?
+    nMaxFile           DWORD ?
+    lpstrFileTitle     QWORD ?
+    nMaxFileTitle      DWORD ?
+    lpstrInitialDir    QWORD ?
+    lpstrTitle         QWORD ?
+    Flags              DWORD ?
+    nFileOffset        WORD  ?
+    nFileExtension     WORD  ?
+    lpstrDefExt        QWORD ?
+    lCustData          QWORD ?
+    lpfnHook           QWORD ?
+    lpTemplateName     QWORD ?
+    pvReserved         QWORD ?
+    dwReserved         DWORD ?
+    FlagsEx            DWORD ?
+OPENFILENAMEA ENDS
+
 ;==============================================================================
 ; CONSTANTS & LIMITS
 ;==============================================================================
@@ -53,10 +96,10 @@ FEATURE_DISABLED        EQU 0
 FEATURE_LOCKED          EQU 2
 
 ; Policy types
-POLICY_LICENSE_BASED    EQU 0x0001
-POLICY_DEPARTMENT_CTRL  EQU 0x0002
-POLICY_SECURITY_LEVEL   EQU 0x0004
-POLICY_COMPLIANCE       EQU 0x0008
+POLICY_LICENSE_BASED    EQU 0001h
+POLICY_DEPARTMENT_CTRL  EQU 0002h
+POLICY_SECURITY_LEVEL   EQU 0004h
+POLICY_COMPLIANCE       EQU 0008h
 
 ;==============================================================================
 ; STRUCTURES
@@ -104,7 +147,7 @@ LAYOUT_COMPONENT STRUCT
     component_id        DWORD ?         ; Component identifier
     x                   DWORD ?         ; X position
     y                   DWORD ?         ; Y position
-    width               DWORD ?         ; Width
+    width_px            DWORD ?         ; Width
     height              DWORD ?         ; Height
     parent_id           DWORD ?         ; Parent component ID
     flags               DWORD ?         ; Layout flags
@@ -151,7 +194,6 @@ MODEL_ARCH ENDS
 ;==============================================================================
 ; PUBLIC FUNCTION DECLARATIONS
 ;==============================================================================
-
 PUBLIC StartAnimationTimer
 PUBLIC UpdateAnimation
 PUBLIC ParseAnimationJson
@@ -439,7 +481,7 @@ ParseAnimationJson PROC
     mov rsi, r12
     lea rdi, [rsp + 8]      ; Local buffer for search
     mov ecx, 256
-    call .find_json_field   ; Find "duration"
+    call find_json_field_local   ; Find "duration"        
     
     ; Parse duration value
     test eax, eax
@@ -500,7 +542,7 @@ StartStyleAnimation PROC
     
     ; Start animation with 300ms default duration
     mov ecx, 300
-    lea rdx, [.animation_callback]
+    lea rdx, [animation_callback_local]
     call StartAnimationTimer
     
     test eax, eax
@@ -558,7 +600,7 @@ update_component_loop_local:
     ; Calculate component offset
     mov ecx, ebx
     imul ecx, SIZEOF LAYOUT_COMPONENT
-    add ecx, OFFSET LAYOUT_STRUCT.components
+    add ecx, LAYOUT_STRUCT.components
     
     ; Update position constraints
     ; (Simplified: in production would evaluate constraint expressions)
@@ -651,7 +693,7 @@ ALIGN 16
 ApplyLayoutProperties PROC
     ; rcx = component window handle, rdx = layout pointer
     push rbx
-    sub rsp, 32
+    sub rsp, 64
     
     ; Validate inputs
     test rcx, rcx
@@ -662,26 +704,27 @@ ApplyLayoutProperties PROC
     mov rbx, rdx
     
     ; Get layout dimensions
-    mov eax, [rbx + LAYOUT_STRUCT.total_width]
-    mov ecx, [rbx + LAYOUT_STRUCT.total_height]
-    
-    ; Set window size
-    mov rdx, rcx            ; hWnd
-    mov r8d, 0              ; x
-    mov r9d, 0              ; y
-    ; Additional parameters on stack
-    mov rax, [rbx + LAYOUT_STRUCT.total_width]
-    mov ecx, [rbx + LAYOUT_STRUCT.total_height]
+    mov r10d, DWORD PTR [rbx + LAYOUT_STRUCT.total_width]
+    mov r11d, DWORD PTR [rbx + LAYOUT_STRUCT.total_height]
+
+    ; SetWindowPos(hWnd, hWndInsertAfter, X, Y, cx, cy, uFlags)
+    ; rcx already = hWnd
+    xor edx, edx            ; hWndInsertAfter = NULL
+    xor r8d, r8d            ; X = 0
+    xor r9d, r9d            ; Y = 0
+    mov DWORD PTR [rsp + 20h], r10d  ; cx
+    mov DWORD PTR [rsp + 28h], r11d  ; cy
+    mov DWORD PTR [rsp + 30h], 0     ; uFlags
     call SetWindowPos
     
     mov eax, 1
-    add rsp, 32
+    add rsp, 64
     pop rbx
     ret
     
 apply_layout_error_local:
     xor eax, eax
-    add rsp, 32
+    add rsp, 64
     pop rbx
     ret
 ApplyLayoutProperties ENDP
@@ -959,9 +1002,10 @@ validate_feature_loop_local:
     jge validate_config_success_local
     
     ; Get feature entry
-    mov ecx, ebx
-    imul ecx, SIZEOF FEATURE_CONFIG
-    add ecx, OFFSET g_feature_configs
+    mov rax, rbx
+    imul rax, SIZEOF FEATURE_CONFIG
+    lea rcx, g_feature_configs
+    add rcx, rax
     
     ; Check dependencies exist
     ; (Simplified validation)
@@ -995,9 +1039,10 @@ apply_policy_loop_local:
     jge apply_policy_success_local
     
     ; Get feature
-    mov ecx, ebx
-    imul ecx, SIZEOF FEATURE_CONFIG
-    add ecx, OFFSET g_feature_configs
+    mov rax, rbx
+    imul rax, SIZEOF FEATURE_CONFIG
+    lea rcx, g_feature_configs
+    add rcx, rax
     mov r8, rcx
     
     ; Check policy flags
@@ -1621,4 +1666,8 @@ rawr1024_direct_load ENDP
 ;==============================================================================
 
 END
+
+
+
+
 

@@ -6,6 +6,22 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
+# Add Windows SDK OpenGL include path for QtCharts/QtOpenGL compatibility
+# Use the cache variable from parent project if available
+if(WIN32)
+    if(DEFINED OPENGL_INCLUDE_PATH AND EXISTS "${OPENGL_INCLUDE_PATH}/GL.h")
+        include_directories(BEFORE SYSTEM "${OPENGL_INCLUDE_PATH}")
+    else()
+        foreach(_SDK_VER "10.0.26100.0" "10.0.22621.0" "10.0.19041.0")
+            set(_GL_PATH "C:/Program Files (x86)/Windows Kits/10/Include/${_SDK_VER}/um/gl")
+            if(EXISTS "${_GL_PATH}/GL.h")
+                include_directories(BEFORE SYSTEM "${_GL_PATH}")
+                break()
+            endif()
+        endforeach()
+    endif()
+endif()
+
 find_package(Qt6 COMPONENTS Core Network Sql Multimedia Widgets REQUIRED)
 
 add_library(RawrXDOrchestration STATIC

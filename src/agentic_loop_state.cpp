@@ -265,11 +265,6 @@ const std::deque<AgenticLoopState::ErrorRecord>& AgenticLoopState::getErrorHisto
     return m_errorHistory;
 }
 
-int AgenticLoopState::getTotalErrorCount() const
-{
-    return m_errorHistory.size();
-}
-
 float AgenticLoopState::getErrorRate() const
 {
     if (m_iterations.empty()) return 0.0f;
@@ -457,7 +452,7 @@ void AgenticLoopState::addConstraint(const QString& key, const QString& constrai
 
 void AgenticLoopState::removeConstraint(const QString& key)
 {
-    m_constraints.erase(key);
+    m_constraints.remove(key);
 }
 
 bool AgenticLoopState::validateAgainstConstraints(const QJsonObject& action) const

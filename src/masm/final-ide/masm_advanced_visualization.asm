@@ -221,7 +221,7 @@ viz_add_data_point PROC
     
     ; First allocation
     mov rcx, 100 * sizeof DATA_POINT
-    call malloc
+    call masm_malloc
     mov [rdi.dataPoints], rax
     
 add_point:
@@ -561,7 +561,7 @@ handle_destroy:
     mov rcx, [globalChart.dataPoints]
     test rcx, rcx
     jz destroy_done
-    call free
+    call masm_free
     
 destroy_done:
     xor eax, eax
@@ -625,7 +625,7 @@ viz_start_realtime_stream PROC
     
     ; Allocate circular buffer
     mov rcx, 10000 * SIZEOF DATA_POINT
-    call malloc
+    call masm_malloc
     mov [globalChart.dataStream.buffer], rax
     mov [globalChart.dataStream.bufferSize], 10000
     mov [globalChart.dataStream.writePos], 0
@@ -806,23 +806,19 @@ viz_draw_3d_chart ENDP
 ; ============================================================================
 ; 3D MATH HELPERS
 ; ============================================================================
-
 build_rotation_matrix PROC
     ; Build rotation matrix from angles
     ; (Simplified - would calculate sin/cos)
     ret
 build_rotation_matrix ENDP
-
 transform_3d_point PROC
     ; Apply rotation matrix to point
     ret
 transform_3d_point ENDP
-
 project_to_2d PROC
     ; Project 3D point to 2D screen coordinates
     ret
 project_to_2d ENDP
-
 draw_circle PROC
     ; Draw circle at position
     mov rcx, rcx
@@ -833,19 +829,16 @@ draw_circle ENDP
 ; ============================================================================
 ; EXPORT HELPERS
 ; ============================================================================
-
 export_to_png PROC
     ; Export chart as PNG image
     mov eax, 1
     ret
 export_to_png ENDP
-
 export_to_svg PROC
     ; Export chart as SVG vector
     mov eax, 1
     ret
 export_to_svg ENDP
-
 export_to_csv PROC
     ; Export data as CSV
     push rbp
@@ -933,18 +926,15 @@ bytes_written DWORD ?
 
 .code
 export_to_csv ENDP
-
 export_to_json PROC
     ; Export data as JSON
     mov eax, 1
     ret
 export_to_json ENDP
-
 format_csv_line PROC
     ; Format data point as CSV line
     ret
 format_csv_line ENDP
-
 string_length PROC
     push rbp
     mov rbp, rsp
@@ -963,3 +953,7 @@ len_done:
 string_length ENDP
 
 end
+
+
+
+

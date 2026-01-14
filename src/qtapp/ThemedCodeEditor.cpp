@@ -2,6 +2,9 @@
 // Enterprise-grade code editor with theme integration
 #include "ThemedCodeEditor.h"
 #include "ThemeManager.h"
+#include "integration/ProdIntegration.h"
+#include "integration/InitializationTracker.h"
+#include <algorithm>
 #include <QPainter>
 #include <QTextBlock>
 #include <QFontDatabase>
@@ -77,29 +80,53 @@ void ThemedSyntaxHighlighter::setLanguage(Language lang) {
 }
 
 void ThemedSyntaxHighlighter::updateThemeColors() {
-    const ThemeColors& colors = ThemeManager::instance().currentColors();
-    
-    m_keywordFormat.setForeground(colors.keywordColor);
+    QString langKey;
+    switch (m_language) {
+        case Cpp: langKey = "cpp"; break;
+        case Python: langKey = "python"; break;
+        case JavaScript: langKey = "javascript"; break;
+        case TypeScript: langKey = "typescript"; break;
+        case JSON: langKey = "json"; break;
+        case XML: langKey = "xml"; break;
+        case Markdown: langKey = "markdown"; break;
+        default: langKey.clear(); break;
+    }
+
+    const auto languagePalette = langKey.isEmpty()
+        ? ThemeColors::LanguageSyntaxColors{}
+        : ThemeManager::instance().languageColors(langKey);
+
+    const ThemeColors& base = ThemeManager::instance().currentColors();
+    auto withOpacity = [alpha = languagePalette.syntaxOpacity](QColor c) {
+        double clamped = std::clamp(alpha, 0.2, 1.0);
+        c.setAlphaF(clamped);
+        return c;
+    };
+    auto choose = [&](const QColor& overrideColor, const QColor& fallback) {
+        return overrideColor.isValid() ? withOpacity(overrideColor) : withOpacity(fallback);
+    };
+
+    m_keywordFormat.setForeground(choose(languagePalette.keyword, base.keywordColor));
     m_keywordFormat.setFontWeight(QFont::Bold);
     
-    m_classFormat.setForeground(colors.classColor);
+    m_classFormat.setForeground(choose(languagePalette.classColor, base.classColor));
     m_classFormat.setFontWeight(QFont::Bold);
     
-    m_singleLineCommentFormat.setForeground(colors.commentColor);
+    m_singleLineCommentFormat.setForeground(choose(languagePalette.comment, base.commentColor));
     m_singleLineCommentFormat.setFontItalic(true);
     
-    m_multiLineCommentFormat.setForeground(colors.commentColor);
+    m_multiLineCommentFormat.setForeground(choose(languagePalette.comment, base.commentColor));
     m_multiLineCommentFormat.setFontItalic(true);
     
-    m_quotationFormat.setForeground(colors.stringColor);
+    m_quotationFormat.setForeground(choose(languagePalette.string, base.stringColor));
     
-    m_functionFormat.setForeground(colors.functionColor);
+    m_functionFormat.setForeground(choose(languagePalette.function, base.functionColor));
     
-    m_numberFormat.setForeground(colors.numberColor);
+    m_numberFormat.setForeground(choose(languagePalette.number, base.numberColor));
     
-    m_operatorFormat.setForeground(colors.operatorColor);
+    m_operatorFormat.setForeground(choose(languagePalette.operatorColor, base.operatorColor));
     
-    m_preprocessorFormat.setForeground(colors.preprocessorColor);
+    m_preprocessorFormat.setForeground(choose(languagePalette.preprocessor, base.preprocessorColor));
     
     // Rebuild rules with new colors
     Language currentLang = m_language;
@@ -453,6 +480,7 @@ ThemedCodeEditor::ThemedCodeEditor(QWidget* parent)
     , m_lineNumberArea(new LineNumberArea(this))
     , m_highlighter(new ThemedSyntaxHighlighter(document())) {
     
+    RAWRXD_INIT_TIMED("ThemedCodeEditor");
     qDebug() << "[ThemedCodeEditor] Initializing...";
     
     setupEditor();
@@ -479,6 +507,7 @@ ThemedCodeEditor::ThemedCodeEditor(QWidget* parent)
 }
 
 void ThemedCodeEditor::setupEditor() {
+    RAWRXD_TIMED_FUNC();
     // Set monospace font
     QFont font = QFontDatabase::systemFont(QFontDatabase::FixedFont);
     font.setPointSize(10);
@@ -497,6 +526,7 @@ void ThemedCodeEditor::setupEditor() {
 }
 
 void ThemedCodeEditor::applyTheme() {
+    RAWRXD_TIMED_FUNC();
     qDebug() << "[ThemedCodeEditor] Applying theme...";
     auto startTime = std::chrono::steady_clock::now();
     
@@ -571,6 +601,7 @@ void ThemedCodeEditor::applyTheme() {
 }
 
 void ThemedCodeEditor::setSyntaxLanguage(ThemedSyntaxHighlighter::Language lang) {
+    RAWRXD_TIMED_FUNC();
     m_highlighter->setLanguage(lang);
 }
 
@@ -614,6 +645,7 @@ void ThemedCodeEditor::resizeEvent(QResizeEvent* event) {
 }
 
 void ThemedCodeEditor::highlightCurrentLine() {
+    RAWRXD_TIMED_FUNC();
     QList<QTextEdit::ExtraSelection> extraSelections;
     
     if (!isReadOnly()) {
@@ -631,6 +663,7 @@ void ThemedCodeEditor::highlightCurrentLine() {
 }
 
 void ThemedCodeEditor::lineNumberAreaPaintEvent(QPaintEvent* event) {
+    RAWRXD_TIMED_FUNC();
     QPainter painter(m_lineNumberArea);
     
     const ThemeColors& colors = ThemeManager::instance().currentColors();
@@ -672,6 +705,7 @@ void ThemedCodeEditor::lineNumberAreaPaintEvent(QPaintEvent* event) {
 }
 
 void ThemedCodeEditor::keyPressEvent(QKeyEvent* event) {
+    RAWRXD_TIMED_FUNC();
     // Auto-indent on Enter
     if (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) {
         QString currentLine = textCursor().block().text();

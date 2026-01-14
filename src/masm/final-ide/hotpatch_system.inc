@@ -100,3 +100,5 @@ EXTERN masm_hotpatch_protect_memory:PROC
 EXTERN masm_hotpatch_unprotect_memory:PROC
 
 ENDIF
+
+

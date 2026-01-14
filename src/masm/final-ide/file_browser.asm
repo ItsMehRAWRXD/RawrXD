@@ -1,3 +1,18 @@
+@masm_file_browser_init EQU 1
+@masm_file_browser_shutdown EQU 1
+@masm_file_browser_set_root EQU 1
+@masm_file_browser_scan_directory EQU 1
+@masm_file_browser_get_node EQU 1
+@masm_file_browser_expand_node EQU 1
+@masm_file_browser_collapse_node EQU 1
+@masm_file_browser_list_children EQU 1
+@masm_file_browser_add_filter EQU 1
+@masm_file_browser_remove_filter EQU 1
+@masm_file_browser_detect_project EQU 1
+@masm_file_browser_get_project_type EQU 1
+@masm_file_browser_search_files EQU 1
+@masm_file_browser_watch_changes EQU 1
+@masm_file_browser_refresh_tree EQU 1
 ;==============================================================================
 ; file_browser.asm - MASM File Browser & Project Explorer
 ; Purpose: Directory tree traversal, filtering, caching, project detection
@@ -80,7 +95,7 @@ FILE_BROWSER ENDS
 ; GLOBAL DATA
 ;==============================================================================
 
-.data?
+.data
     g_fileBrowser           FILE_BROWSER <>
     g_initialized           DWORD 0
 
@@ -94,22 +109,21 @@ FILE_BROWSER ENDS
 ;==============================================================================
 ; EXPORTED FUNCTIONS
 ;==============================================================================
-
-PUBLIC masm_file_browser_init
-PUBLIC masm_file_browser_shutdown
-PUBLIC masm_file_browser_set_root
-PUBLIC masm_file_browser_scan_directory
-PUBLIC masm_file_browser_get_node
-PUBLIC masm_file_browser_expand_node
-PUBLIC masm_file_browser_collapse_node
-PUBLIC masm_file_browser_list_children
-PUBLIC masm_file_browser_add_filter
-PUBLIC masm_file_browser_remove_filter
-PUBLIC masm_file_browser_detect_project
-PUBLIC masm_file_browser_get_project_type
-PUBLIC masm_file_browser_search_files
-PUBLIC masm_file_browser_watch_changes
-PUBLIC masm_file_browser_refresh_tree
+; PUBLIC masm_file_browser_init
+; PUBLIC masm_file_browser_shutdown
+; PUBLIC masm_file_browser_set_root
+; PUBLIC masm_file_browser_scan_directory
+; PUBLIC masm_file_browser_get_node
+; PUBLIC masm_file_browser_expand_node
+; PUBLIC masm_file_browser_collapse_node
+; PUBLIC masm_file_browser_list_children
+; PUBLIC masm_file_browser_add_filter
+; PUBLIC masm_file_browser_remove_filter
+; PUBLIC masm_file_browser_detect_project
+; PUBLIC masm_file_browser_get_project_type
+; PUBLIC masm_file_browser_search_files
+; PUBLIC masm_file_browser_watch_changes
+; PUBLIC masm_file_browser_refresh_tree
 
 ;==============================================================================
 ; FUNCTION IMPLEMENTATIONS
@@ -117,6 +131,7 @@ PUBLIC masm_file_browser_refresh_tree
 
 ; masm_file_browser_init - Initialize file browser
 ; Returns: 1 = success, 0 = failure
+PUBLIC masm_file_browser_init
 masm_file_browser_init PROC USES rbx rsi rdi
     push rbp
     sub rsp, 32
@@ -136,7 +151,7 @@ masm_file_browser_init PROC USES rbx rsi rdi
     mov g_fileBrowser.needsRefresh, 1
 
     ; Create mutex
-    lea rcx, [rel g_fileBrowser.browserMutex]
+    lea rcx, [g_fileBrowser.browserMutex]
     xor rdx, rdx
     call CreateMutexA
 
@@ -155,6 +170,7 @@ masm_file_browser_init ENDP
 
 ; masm_file_browser_shutdown - Shutdown file browser
 ; Returns: 1 = success, 0 = failure
+PUBLIC masm_file_browser_shutdown
 masm_file_browser_shutdown PROC USES rbx rsi rdi
     push rbp
     sub rsp, 32
@@ -169,11 +185,15 @@ masm_file_browser_shutdown PROC USES rbx rsi rdi
     ; Free all nodes
     xor rbx, rbx
 free_nodes_local:
-    cmp rbx, g_fileBrowser.nodeCount
+    mov eax, g_fileBrowser.nodeCount
+    cmp rbx, rax
     jge nodes_freed_local
 
     ; Free icon if allocated
-    lea rax, [g_fileBrowser.nodes + rbx * (SIZEOF FILE_NODE)]
+    
+    mov rax, 560
+    imul rax, rbx
+    lea rax, [g_fileBrowser.nodes + rax]
     mov rcx, [rax].FILE_NODE.icon
     cmp rcx, 0
     je skip_icon_free_local
@@ -202,13 +222,14 @@ masm_file_browser_shutdown ENDP
 ; masm_file_browser_set_root - Set root directory for browsing
 ; Args: RCX = root path pointer
 ; Returns: 1 = success, 0 = failure
+PUBLIC masm_file_browser_set_root
 masm_file_browser_set_root PROC USES rbx rsi rdi
     push rbp
     sub rsp, 32
 
     ; Copy root path
     mov rsi, rcx
-    lea rdi, [rel g_fileBrowser.rootPath]
+    lea rdi, g_fileBrowser.rootPath
     mov ecx, 260
 copy_root_local:
     cmp ecx, 0
@@ -231,6 +252,7 @@ masm_file_browser_set_root ENDP
 
 ; masm_file_browser_scan_directory - Scan directory and build tree
 ; Returns: number of items found, or 0 if error
+PUBLIC masm_file_browser_scan_directory
 masm_file_browser_scan_directory PROC USES rbx rsi rdi r12 r13 r14 r15
     push rbp
     sub rsp, 32
@@ -247,26 +269,34 @@ masm_file_browser_scan_directory ENDP
 ; masm_file_browser_get_node - Get file node by ID
 ; Args: RCX = node ID
 ; Returns: node pointer, or 0 if not found
+PUBLIC masm_file_browser_get_node
 masm_file_browser_get_node PROC USES rbx rsi rdi
     push rbp
     sub rsp, 32
 
     mov r8d, ecx
 
-    xor r9d, r9d
+    xor r9, r9
 find_node_local:
-    cmp r9d, g_fileBrowser.nodeCount
+    mov eax, g_fileBrowser.nodeCount
+    cmp r9, rax
     jge node_not_found_local
 
-    lea rax, [g_fileBrowser.nodes + r9 * (SIZEOF FILE_NODE)]
+    
+    mov rax, 560
+    imul rax, r9
+    lea rax, [g_fileBrowser.nodes + rax]
     cmp [rax].FILE_NODE.nodeId, r8d
     je node_found_local
 
-    inc r9d
+    inc r9
     jmp find_node_local
 
 node_found_local:
-    mov rax, [g_fileBrowser.nodes + r9 * (SIZEOF FILE_NODE)]
+    
+    mov rax, 560
+    imul rax, r9
+    lea rax, [g_fileBrowser.nodes + rax]
     jmp get_node_done_local
 
 node_not_found_local:
@@ -281,22 +311,27 @@ masm_file_browser_get_node ENDP
 ; masm_file_browser_expand_node - Expand tree node
 ; Args: RCX = node ID
 ; Returns: 1 = success, 0 = failure
+PUBLIC masm_file_browser_expand_node
 masm_file_browser_expand_node PROC USES rbx rsi rdi
     push rbp
     sub rsp, 32
 
     mov r8d, ecx
 
-    xor r9d, r9d
+    xor r9, r9
 find_expand_local:
-    cmp r9d, g_fileBrowser.nodeCount
+    mov eax, g_fileBrowser.nodeCount
+    cmp r9, rax
     jge expand_not_found_local
 
-    lea rax, [g_fileBrowser.nodes + r9 * (SIZEOF FILE_NODE)]
+    
+    mov rax, 560
+    imul rax, r9
+    lea rax, [g_fileBrowser.nodes + rax]
     cmp [rax].FILE_NODE.nodeId, r8d
     je expand_found_local
 
-    inc r9d
+    inc r9
     jmp find_expand_local
 
 expand_found_local:
@@ -316,22 +351,27 @@ masm_file_browser_expand_node ENDP
 ; masm_file_browser_collapse_node - Collapse tree node
 ; Args: RCX = node ID
 ; Returns: 1 = success, 0 = failure
+PUBLIC masm_file_browser_collapse_node
 masm_file_browser_collapse_node PROC USES rbx rsi rdi
     push rbp
     sub rsp, 32
 
     mov r8d, ecx
 
-    xor r9d, r9d
+    xor r9, r9
 find_collapse_local:
-    cmp r9d, g_fileBrowser.nodeCount
+    mov eax, g_fileBrowser.nodeCount
+    cmp r9, rax
     jge collapse_not_found_local
 
-    lea rax, [g_fileBrowser.nodes + r9 * (SIZEOF FILE_NODE)]
+    
+    mov rax, 560
+    imul rax, r9
+    lea rax, [g_fileBrowser.nodes + rax]
     cmp [rax].FILE_NODE.nodeId, r8d
     je collapse_found_local
 
-    inc r9d
+    inc r9
     jmp find_collapse_local
 
 collapse_found_local:
@@ -351,6 +391,7 @@ masm_file_browser_collapse_node ENDP
 ; masm_file_browser_list_children - List children of a node
 ; Args: RCX = parent node ID, RDX = output buffer (DWORD array), R8 = max count
 ; Returns: actual count filled
+PUBLIC masm_file_browser_list_children
 masm_file_browser_list_children PROC USES rbx rsi rdi r12 r13
     push rbp
     sub rsp, 32
@@ -361,12 +402,16 @@ masm_file_browser_list_children PROC USES rbx rsi rdi r12 r13
     xor r10d, r10d ; Result count
 
     ; Find all nodes with matching parent
-    xor r11d, r11d ; Index
+    xor r11, r11 ; Index
 list_loop_local:
-    cmp r11d, g_fileBrowser.nodeCount
+    mov eax, g_fileBrowser.nodeCount
+    cmp r11, rax
     jge list_done_local
 
-    lea rax, [g_fileBrowser.nodes + r11 * (SIZEOF FILE_NODE)]
+    
+    mov rax, 560
+    imul rax, r11
+    lea rax, [g_fileBrowser.nodes + rax]
     cmp [rax].FILE_NODE.parentId, r12d
     jne skip_child_local
 
@@ -378,7 +423,7 @@ list_loop_local:
     inc r10d
 
 skip_child_local:
-    inc r11d
+    inc r11
     jmp list_loop_local
 
 list_done_local:
@@ -392,6 +437,7 @@ masm_file_browser_list_children ENDP
 ; masm_file_browser_add_filter - Add file filter pattern
 ; Args: RCX = pattern string (e.g., "*.o", "*.tmp")
 ; Returns: 1 = success, 0 = failure
+PUBLIC masm_file_browser_add_filter
 masm_file_browser_add_filter PROC USES rbx rsi rdi
     push rbp
     sub rsp, 32
@@ -416,6 +462,7 @@ masm_file_browser_add_filter ENDP
 ; masm_file_browser_remove_filter - Remove file filter pattern
 ; Args: RCX = pattern string
 ; Returns: 1 = success, 0 = failure
+PUBLIC masm_file_browser_remove_filter
 masm_file_browser_remove_filter PROC USES rbx rsi rdi
     push rbp
     sub rsp, 32
@@ -430,6 +477,7 @@ masm_file_browser_remove_filter ENDP
 
 ; masm_file_browser_detect_project - Detect project type
 ; Returns: PROJECT_TYPE_*
+PUBLIC masm_file_browser_detect_project
 masm_file_browser_detect_project PROC USES rbx rsi rdi
     push rbp
     sub rsp, 32
@@ -444,6 +492,7 @@ masm_file_browser_detect_project ENDP
 
 ; masm_file_browser_get_project_type - Get detected project type
 ; Returns: PROJECT_TYPE_*
+PUBLIC masm_file_browser_get_project_type
 masm_file_browser_get_project_type PROC
     mov eax, g_fileBrowser.projectType
     ret
@@ -452,6 +501,7 @@ masm_file_browser_get_project_type ENDP
 ; masm_file_browser_search_files - Search for files matching pattern
 ; Args: RCX = search pattern, RDX = output buffer, R8 = max count
 ; Returns: number of matches found
+PUBLIC masm_file_browser_search_files
 masm_file_browser_search_files PROC USES rbx rsi rdi
     push rbp
     sub rsp, 32
@@ -466,6 +516,7 @@ masm_file_browser_search_files ENDP
 
 ; masm_file_browser_watch_changes - Watch for directory changes
 ; Returns: 1 = success, 0 = failure
+PUBLIC masm_file_browser_watch_changes
 masm_file_browser_watch_changes PROC USES rbx rsi rdi
     push rbp
     sub rsp, 32
@@ -480,6 +531,7 @@ masm_file_browser_watch_changes ENDP
 
 ; masm_file_browser_refresh_tree - Refresh file tree
 ; Returns: 1 = success, 0 = failure
+PUBLIC masm_file_browser_refresh_tree
 masm_file_browser_refresh_tree PROC USES rbx rsi rdi
     push rbp
     sub rsp, 32
@@ -499,4 +551,8 @@ masm_file_browser_refresh_tree PROC USES rbx rsi rdi
 masm_file_browser_refresh_tree ENDP
 
 END
+
+
+
+
 

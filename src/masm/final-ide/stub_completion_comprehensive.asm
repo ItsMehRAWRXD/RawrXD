@@ -68,7 +68,6 @@ MODE_COMBO ENDS
 ;==============================================================================
 ; PUBLIC EXPORTS
 ;==============================================================================
-
 PUBLIC StartAnimationTimer
 PUBLIC UpdateAnimation
 PUBLIC ParseAnimationJson
@@ -1312,4 +1311,8 @@ rawr1024_direct_load ENDP
     szFeaturesListLabel BYTE "Feature List",0
 
 END
+
+
+
+
 

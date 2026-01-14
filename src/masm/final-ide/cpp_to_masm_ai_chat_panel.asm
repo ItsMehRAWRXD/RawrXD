@@ -4,8 +4,8 @@
 
 option casemap:none
 
-EXTERN malloc:PROC
-EXTERN free:PROC
+extern masm_malloc : proc
+extern masm_free : proc
 EXTERN memcpy:PROC
 EXTERN strlen:PROC
 EXTERN strcpy:PROC
@@ -84,18 +84,18 @@ chat_create PROC
     ; Allocate context structure
     mov r8, rcx                    ; r8 = maxMessages
     mov rcx, SIZEOF CHAT_CONTEXT
-    call malloc
+    call masm_malloc
     mov rbx, rax
     
     ; Allocate message array
     mov rcx, r8
     imul rcx, SIZEOF CHAT_MESSAGE
-    call malloc
+    call masm_malloc
     mov [rbx + CHAT_CONTEXT.messages], rax
     
     ; Allocate streaming buffer
     mov rcx, STREAMING_BUFFER_SIZE
-    call malloc
+    call masm_malloc
     mov [rbx + CHAT_CONTEXT.streamingBuffer], rax
     
     ; Set capacity
@@ -144,7 +144,7 @@ chat_add_user_message PROC
     
     push rcx
     mov rcx, rdx
-    call malloc
+    call masm_malloc
     pop rcx
     
     mov [rcx + CHAT_MESSAGE.content], rax
@@ -209,7 +209,7 @@ chat_add_assistant_message PROC
     
     push rcx
     mov rcx, rdx
-    call malloc
+    call masm_malloc
     pop rcx
     
     mov [rcx + CHAT_MESSAGE.content], rax
@@ -310,7 +310,7 @@ chat_set_context PROC
     mov rcx, [rbx + CHAT_CONTEXT.context]
     cmp rcx, 0
     je skip_free_local
-    call free
+    call masm_free
     
 skip_free_local:
     ; Allocate and copy new context
@@ -320,7 +320,7 @@ skip_free_local:
     push r8
     push r9
     
-    call malloc
+    call masm_malloc
     
     pop r9
     pop r8
@@ -342,7 +342,7 @@ skip_free_local:
     push r9
     
     mov rcx, rax
-    call malloc
+    call masm_malloc
     
     pop r9
     pop r8
@@ -396,7 +396,7 @@ clear_loop_local:
     je next_msg_local
     
     mov rcx, rdx
-    call free
+    call masm_free
     
 next_msg_local:
     inc r9
@@ -425,31 +425,31 @@ chat_destroy PROC
     mov rcx, [rbx + CHAT_CONTEXT.messages]
     cmp rcx, 0
     je skip_msgs_local
-    call free
+    call masm_free
 skip_msgs_local:
     
     ; Free buffers
     mov rcx, [rbx + CHAT_CONTEXT.streamingBuffer]
     cmp rcx, 0
     je skip_stream_local
-    call free
+    call masm_free
 skip_stream_local:
     
     mov rcx, [rbx + CHAT_CONTEXT.context]
     cmp rcx, 0
     je skip_ctx_local
-    call free
+    call masm_free
 skip_ctx_local:
     
     mov rcx, [rbx + CHAT_CONTEXT.filePath]
     cmp rcx, 0
     je skip_path_local
-    call free
+    call masm_free
 skip_path_local:
     
     ; Free context
     mov rcx, rbx
-    call free
+    call masm_free
     
     pop rbx
     ret
@@ -458,4 +458,8 @@ chat_destroy ENDP
 ; ============================================================================
 
 END
+
+
+
+
 

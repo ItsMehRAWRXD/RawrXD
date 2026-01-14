@@ -4,8 +4,8 @@
 
 option casemap:none
 
-EXTERN malloc:PROC
-EXTERN free:PROC
+extern masm_malloc : proc
+extern masm_free : proc
 EXTERN memset:PROC
 EXTERN memcpy:PROC
 EXTERN strlen:PROC
@@ -106,24 +106,24 @@ bpe_tokenizer_create PROC
     
     ; Allocate tokenizer
     mov rcx, SIZEOF BPE_TOKENIZER
-    call malloc
+    call masm_malloc
     mov rbx, rax
     
     ; Allocate vocabulary
     mov rcx, r9d
     imul rcx, SIZEOF BPE_VOCAB
-    call malloc
+    call masm_malloc
     mov [rbx + BPE_TOKENIZER.vocab], rax
     
     ; Allocate merge rules
     mov rcx, MAX_MERGE_RULES
     imul rcx, SIZEOF BPE_MERGE_RULE
-    call malloc
+    call masm_malloc
     mov [rbx + BPE_TOKENIZER.mergeRules], rax
     
     ; Allocate encoded buffer (4 MB)
     mov rcx, 4194304
-    call malloc
+    call masm_malloc
     mov [rbx + BPE_TOKENIZER.encodedBuffer], rax
     
     ; Initialize
@@ -427,7 +427,7 @@ bpe_add_vocab_entry PROC
     inc rax                         ; +1 for null terminator
     
     mov rcx, rax
-    call malloc
+    call masm_malloc
     
     mov [r10 + BPE_VOCAB.tokenText], rax
     mov rcx, rdx
@@ -553,7 +553,7 @@ free_vocab_loop_local:
     mov rcx, [r13 + BPE_VOCAB.tokenText]
     cmp rcx, 0
     je skip_vocab_text_local
-    call free
+    call masm_free
     
 skip_vocab_text_local:
     inc r12d
@@ -564,26 +564,26 @@ vocab_freed_local:
     mov rcx, [rbx + BPE_TOKENIZER.vocab]
     cmp rcx, 0
     je skip_vocab_array_local
-    call free
+    call masm_free
     
 skip_vocab_array_local:
     ; Free merge rules
     mov rcx, [rbx + BPE_TOKENIZER.mergeRules]
     cmp rcx, 0
     je skip_merges_local
-    call free
+    call masm_free
     
 skip_merges_local:
     ; Free encoded buffer
     mov rcx, [rbx + BPE_TOKENIZER.encodedBuffer]
     cmp rcx, 0
     je skip_buffer_local
-    call free
+    call masm_free
     
 skip_buffer_local:
     ; Free tokenizer
     mov rcx, rbx
-    call free
+    call masm_free
     
     pop rsi
     pop rbx
@@ -591,4 +591,8 @@ skip_buffer_local:
 bpe_destroy ENDP
 
 END
+
+
+
+
 

@@ -531,3 +531,5 @@ save_done:
     pop rbx
     ret
 SaveSettingsToRegistry ENDP
+
+

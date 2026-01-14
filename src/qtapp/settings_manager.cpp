@@ -29,11 +29,8 @@ SettingsManager::SettingsManager(QObject *parent)
 
 SettingsManager& SettingsManager::instance()
 {
-    static SettingsManager* s_instance = nullptr;
-    if (!s_instance) {
-        s_instance = new SettingsManager();
-    }
-    return *s_instance;
+    static SettingsManager s_instance;
+    return s_instance;
 }
 
 SettingsManager::~SettingsManager()

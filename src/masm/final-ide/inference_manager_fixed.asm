@@ -386,54 +386,47 @@ tokenize_input ENDP
 ; ============================================================================
 ; FUNCTIONS 6-14: Additional inference functions (simplified stubs)
 ; ============================================================================
-
 prepare_batch PROC PUBLIC
     xor rax, rax
     ret
 prepare_batch ENDP
-
 run_inference PROC PUBLIC
     xor rax, rax
     ret
 run_inference ENDP
-
 get_logits PROC PUBLIC
     xor rax, rax
     ret
 get_logits ENDP
-
 sample_token PROC PUBLIC
     ; Return random token ID for now
     mov rax, 42
     ret
 sample_token ENDP
-
 manage_kv_cache PROC PUBLIC
     xor rax, rax
     ret
 manage_kv_cache ENDP
-
 set_sampling_params PROC PUBLIC
     xor rax, rax
     ret
 set_sampling_params ENDP
-
 get_inference_stats PROC PUBLIC
     xor rax, rax
     ret
 get_inference_stats ENDP
-
 cache_embeddings PROC PUBLIC
     xor rax, rax
     ret
 cache_embeddings ENDP
-
 optimize_memory PROC PUBLIC
     xor rax, rax
     ret
 optimize_memory ENDP
 
 END
+
+
 
 
 

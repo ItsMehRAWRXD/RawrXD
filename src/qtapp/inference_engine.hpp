@@ -390,6 +390,7 @@ private:
     // FIX 6: Add request queue and processing state
     QQueue<InferenceRequest> m_requestQueue;
     bool m_isProcessingInference{false};
+    QMutex m_generationMutex; // Protects generation state across threads
     
     // Performance tracking for health monitoring
     mutable std::atomic<int> m_totalRequests{0};

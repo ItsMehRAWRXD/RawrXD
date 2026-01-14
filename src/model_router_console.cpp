@@ -319,5 +319,3 @@ void ModelRouterConsole::onAutoScrollChanged(bool checked)
 {
     m_auto_scroll = checked;
 }
-
-#include "model_router_console.moc"

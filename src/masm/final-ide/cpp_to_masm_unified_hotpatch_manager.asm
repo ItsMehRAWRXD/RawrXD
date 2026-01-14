@@ -4,8 +4,8 @@
 
 option casemap:none
 
-EXTERN malloc:PROC
-EXTERN free:PROC
+extern masm_malloc : proc
+extern masm_free : proc
 EXTERN memset:PROC
 EXTERN memcpy:PROC
 EXTERN strlen:PROC
@@ -116,25 +116,25 @@ unified_hotpatch_manager_create PROC
     
     ; Allocate manager
     mov rcx, SIZEOF UNIFIED_HOTPATCH_MANAGER
-    call malloc
+    call masm_malloc
     mov r11, rax
     
     ; Allocate hotpatches array
     mov rcx, MAX_HOTPATCHES
     imul rcx, SIZEOF UNIFIED_HOTPATCH
-    call malloc
+    call masm_malloc
     mov [r11 + UNIFIED_HOTPATCH_MANAGER.hotpatches], rax
     
     ; Allocate presets array
     mov rcx, MAX_PRESETS
     imul rcx, SIZEOF HOTPATCH_PRESET
-    call malloc
+    call masm_malloc
     mov [r11 + UNIFIED_HOTPATCH_MANAGER.presets], rax
     
     ; Allocate callbacks array
     mov rcx, MAX_CALLBACKS
     imul rcx, 8                     ; Function pointers
-    call malloc
+    call masm_malloc
     mov [r11 + UNIFIED_HOTPATCH_MANAGER.callbacks], rax
     
     ; Initialize
@@ -182,7 +182,7 @@ unified_manager_apply_memory_patch PROC
     
     ; Allocate result
     mov rcx, SIZEOF UNIFIED_RESULT
-    call malloc
+    call masm_malloc
     mov r11, rax                    ; r11 = result
     
     ; Check if memory hotpatch exists
@@ -241,7 +241,7 @@ unified_manager_apply_memory_patch PROC
     
     ; Free patch result
     mov rcx, r14
-    call free
+    call masm_free
     
     mov rax, r11                    ; Return result
     pop rsi
@@ -293,7 +293,7 @@ unified_manager_apply_byte_patch PROC
     
     ; Allocate result
     mov rcx, SIZEOF UNIFIED_RESULT
-    call malloc
+    call masm_malloc
     mov r11, rax                    ; r11 = result
     
     ; Check if byte hotpatcher exists
@@ -352,7 +352,7 @@ unified_manager_apply_byte_patch PROC
     
     ; Free patch result
     mov rcx, r14
-    call free
+    call masm_free
     
     mov rax, r11                    ; Return result
     pop rsi
@@ -404,7 +404,7 @@ unified_manager_add_server_hotpatch PROC
     
     ; Allocate result
     mov rcx, SIZEOF UNIFIED_RESULT
-    call malloc
+    call masm_malloc
     mov r11, rax                    ; r11 = result
     
     ; Check if server hotpatch exists
@@ -494,7 +494,7 @@ unified_manager_add_hotpatch PROC
     mov rcx, rsi
     call strlen
     inc rax
-    call malloc
+    call masm_malloc
     mov [r13 + UNIFIED_HOTPATCH.name], rax
     
     mov rcx, rsi
@@ -505,7 +505,7 @@ unified_manager_add_hotpatch PROC
     mov rcx, r10
     call strlen
     inc rax
-    call malloc
+    call masm_malloc
     mov [r13 + UNIFIED_HOTPATCH.description], rax
     
     mov rcx, r10
@@ -560,7 +560,7 @@ unified_manager_add_preset PROC
     mov rcx, rsi
     call strlen
     inc rax
-    call malloc
+    call masm_malloc
     mov [r12 + HOTPATCH_PRESET.name], rax
     
     mov rcx, rsi
@@ -571,7 +571,7 @@ unified_manager_add_preset PROC
     mov rcx, r10
     call strlen
     inc rax
-    call malloc
+    call masm_malloc
     mov [r12 + HOTPATCH_PRESET.description], rax
     
     mov rcx, r10
@@ -582,7 +582,7 @@ unified_manager_add_preset PROC
     mov dword ptr [r12 + HOTPATCH_PRESET.hotpatchCount], 0  ; Allocate hotpatches array
     mov rcx, MAX_HOTPATCHES
     imul rcx, 4                     ; DWORD IDs
-    call malloc
+    call masm_malloc
     mov [r12 + HOTPATCH_PRESET.hotpatches], rax
     
     ; Increment preset count
@@ -619,7 +619,7 @@ unified_manager_apply_preset PROC
     
     ; Allocate result
     mov rcx, SIZEOF UNIFIED_RESULT
-    call malloc
+    call masm_malloc
     mov r9, rax                     ; r9 = result
     
     ; Get preset
@@ -697,7 +697,7 @@ check_result_local:
     
 hotpatch_failed_local:
     mov rcx, r14
-    call free
+    call masm_free
     
 skip_hotpatch_local:
     inc r13d
@@ -854,13 +854,13 @@ free_hotpatches_local:
     mov rcx, [r13 + UNIFIED_HOTPATCH.name]
     cmp rcx, 0
     je skip_hotpatch_name_local
-    call free
+    call masm_free
     
 skip_hotpatch_name_local:
     mov rcx, [r13 + UNIFIED_HOTPATCH.description]
     cmp rcx, 0
     je skip_hotpatch_desc_local
-    call free
+    call masm_free
     
 skip_hotpatch_desc_local:
     inc r12d
@@ -870,7 +870,7 @@ hotpatches_freed_local:
     mov rcx, [rbx + UNIFIED_HOTPATCH_MANAGER.hotpatches]
     cmp rcx, 0
     je skip_hotpatches_array_local
-    call free
+    call masm_free
     
 skip_hotpatches_array_local:
     ; Free presets array
@@ -890,19 +890,19 @@ free_presets_local:
     mov rcx, [r13 + HOTPATCH_PRESET.name]
     cmp rcx, 0
     je skip_preset_name_local
-    call free
+    call masm_free
     
 skip_preset_name_local:
     mov rcx, [r13 + HOTPATCH_PRESET.description]
     cmp rcx, 0
     je skip_preset_desc_local
-    call free
+    call masm_free
     
 skip_preset_desc_local:
     mov rcx, [r13 + HOTPATCH_PRESET.hotpatches]
     cmp rcx, 0
     je skip_preset_hotpatches_local
-    call free
+    call masm_free
     
 skip_preset_hotpatches_local:
     inc r12d
@@ -912,19 +912,19 @@ presets_freed_local:
     mov rcx, [rbx + UNIFIED_HOTPATCH_MANAGER.presets]
     cmp rcx, 0
     je skip_presets_array_local
-    call free
+    call masm_free
     
 skip_presets_array_local:
     ; Free callbacks array
     mov rcx, [rbx + UNIFIED_HOTPATCH_MANAGER.callbacks]
     cmp rcx, 0
     je skip_callbacks_local
-    call free
+    call masm_free
     
 skip_callbacks_local:
     ; Free manager
     mov rcx, rbx
-    call free
+    call masm_free
     
     pop rbx
     ret
@@ -939,4 +939,8 @@ unified_manager_destroy ENDP
     szPresetFailedDetail DB "Preset application failed", 0
 
 END
+
+
+
+
 

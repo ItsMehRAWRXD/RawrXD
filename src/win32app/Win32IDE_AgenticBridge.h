@@ -12,6 +12,13 @@
 #include <functional>
 #include <memory>
 
+// Forward declare Win32AgentAPI
+namespace RawrXD {
+namespace Win32Agent {
+    class Win32AgentAPI;
+}
+}
+
 // Forward declaration
 class Win32IDE;
 
@@ -76,6 +83,9 @@ private:
     // Path resolution
     std::string ResolveFrameworkPath();
     std::string ResolveToolsModulePath();
+    
+    // Native Win32 API integration
+    std::unique_ptr<RawrXD::Win32Agent::Win32AgentAPI> m_win32API;
     
     Win32IDE* m_ide;
     bool m_initialized;

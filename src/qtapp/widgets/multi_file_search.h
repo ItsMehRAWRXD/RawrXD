@@ -31,8 +31,6 @@
 #include <QFutureWatcher>
 #include "../utils/file_operations.h"
 
-namespace RawrXD {
-
 /**
  * \struct MultiFileSearchResult
  * \brief Single match in multi-file search
@@ -275,4 +273,3 @@ private:
     bool m_respectGitignore;
 };
 
-} // namespace RawrXD

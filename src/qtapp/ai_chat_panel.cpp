@@ -1,9 +1,12 @@
 #include "ai_chat_panel.hpp"
+#include "chat_production_infrastructure.hpp"
 #include "chat_history_manager.h"
 #include "agent_chat_breadcrumb.hpp"
 #include "command_palette.hpp"
 #include "inference_engine.hpp"
 #include "agentic_executor.h"
+#include "integration/ProdIntegration.h"
+#include "integration/InitializationTracker.h"
 #include <QApplication>
 #include <QLabel>
 #include <QVBoxLayout>
@@ -49,10 +52,21 @@
 AIChatPanel::AIChatPanel(QWidget* parent)
     : QWidget(parent)
 {
+    RAWRXD_INIT_TIMED("AIChatPanel");
     // Lazy initialization - defer all Qt widget creation
     // Configuration will be set up when initialize() is called
     qDebug() << "AIChatPanel created with lazy initialization - D: \\temp location";
     m_projectRoot = QDir::currentPath();
+    
+    // Initialize production infrastructure
+    m_infrastructure = new RawrXD::Chat::ChatProductionInfrastructure(this);
+    m_infrastructure->initialize();
+    
+    // Connect infrastructure alerts
+    connect(m_infrastructure, &RawrXD::Chat::ChatProductionInfrastructure::infrastructureAlert,
+            this, [this](const QString& component, const QString& message) {
+        qWarning() << "[AIChatPanel] Infrastructure alert:" << component << "-" << message;
+    });
 }
 
 void AIChatPanel::setCurrentSessionId(const QString& sessionId) {
@@ -64,6 +78,7 @@ bool AIChatPanel::isInputEnabled() const {
 }
 
 void AIChatPanel::initialize(const QString& preloadedModel) {
+    RAWRXD_TIMED_FUNC();
     if (m_initialized) return;  // Already initialized
     
     // Initialize configuration with defaults
@@ -102,6 +117,7 @@ void AIChatPanel::initialize(const QString& preloadedModel) {
 
 void AIChatPanel::setupUI()
 {
+    RAWRXD_TIMED_FUNC();
     if (m_widgetsCreated) {
         qWarning() << "UI already setup - skipping";
         return;
@@ -373,10 +389,9 @@ void AIChatPanel::addUserMessage(const QString& message)
         return;
     }
     
-    Message msg;
-    msg.role = Message::User;
-    msg.content = message;
-    msg.timestamp = QDateTime::currentDateTime().toString("hh:mm:ss");
+    ChatMessage msg(ChatMessage::User, message, "User");
+    msg.setMetadata("intent", classifyMessageIntent(message));
+    msg.setMetadata("timestamp_ms", QDateTime::currentMSecsSinceEpoch());
     
     m_messages.append(msg);
     
@@ -388,6 +403,7 @@ void AIChatPanel::addUserMessage(const QString& message)
 
 void AIChatPanel::addAssistantMessage(const QString& message, bool streaming)
 {
+    RAWRXD_TIMED_FUNC();
     if (!m_initialized) {
         qWarning() << "AIChatPanel not initialized - cannot add assistant message";
         return;
@@ -399,17 +415,17 @@ void AIChatPanel::addAssistantMessage(const QString& message, bool streaming)
         return;
     }
     
-    Message msg;
-    msg.role = Message::Assistant;
-    msg.content = message;
-    msg.timestamp = QDateTime::currentDateTime().toString("hh:mm:ss");
+    ChatMessage msg(ChatMessage::Assistant, message, "InferenceEngine");
+    msg.setMetadata("timestamp_ms", QDateTime::currentMSecsSinceEpoch());
+    msg.setMetadata("is_streaming", streaming);
     msg.isStreaming = streaming;
     
     // Detect if this is an inline edit response by checking the previous user message
     if (!m_messages.isEmpty()) {
-        const Message& lastMsg = m_messages.last();
-        if (lastMsg.role == Message::User && lastMsg.content.startsWith("@inline")) {
+        const ChatMessage& lastMsg = m_messages.last();
+        if (lastMsg.role == ChatMessage::User && lastMsg.content.startsWith("@inline")) {
             msg.isInline = true;
+            msg.setMetadata("is_inline", true);
             qDebug() << "[AIChatPanel] Detected inline edit response";
         }
     }
@@ -434,6 +450,7 @@ void AIChatPanel::addAssistantMessage(const QString& message, bool streaming)
 
 void AIChatPanel::updateStreamingMessage(const QString& content)
 {
+    RAWRXD_TIMED_FUNC();
     qDebug() << "[AIChatPanel::updateStreamingMessage] Token:" << content;
     qDebug() << "[AIChatPanel::updateStreamingMessage] m_streamingTextEdit is" << (m_streamingTextEdit ? "NOT null" : "NULL");
     qDebug() << "[AIChatPanel::updateStreamingMessage] m_streamingBubble is" << (m_streamingBubble ? "NOT null" : "NULL");
@@ -463,6 +480,25 @@ void AIChatPanel::updateStreamingMessage(const QString& content)
     }
 }
 
+void AIChatPanel::addErrorMessage(const QString& error, const QString& details, bool retryable)
+{
+    if (!m_initialized) {
+        qWarning() << "AIChatPanel not initialized - cannot add error message";
+        return;
+    }
+    
+    ChatMessage msg(ChatMessage::System, error, "ErrorHandler");
+    msg.setError(error, details);
+    msg.setMetadata("retryable", retryable);
+    msg.setMetadata("timestamp_ms", QDateTime::currentMSecsSinceEpoch());
+    
+    m_messages.append(msg);
+    
+    QWidget* bubble = createMessageBubble(msg);
+    m_messagesLayout->insertWidget(m_messagesLayout->count() - 1, bubble);
+    
+    scrollToBottom();
+}
 
 QString AIChatPanel::finishStreaming()
 {
@@ -483,22 +519,21 @@ QString AIChatPanel::finishStreaming()
 
 QString AIChatPanel::lastAssistantMessage() const {
     for (int i = m_messages.size() - 1; i >= 0; --i) {
-        if (m_messages.at(i).role == Message::Assistant) return m_messages.at(i).content;
+        if (m_messages.at(i).role == ChatMessage::Assistant) return m_messages.at(i).content;
     }
     return QString();
 }
 
-QWidget* AIChatPanel::createMessageBubble(const Message& msg)
+QWidget* AIChatPanel::createMessageBubble(const ChatMessage& msg)
 {
     QWidget* container = new QWidget();
     QVBoxLayout* layout = new QVBoxLayout(container);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(4);
     
-    // Role label
-    QLabel* roleLabel = new QLabel(
-        msg.role == Message::User ? "You" : "AI Assistant"
-    );
+    // Role label with source information
+    QString roleText = msg.role == ChatMessage::User ? "You" : QString("AI Assistant (%1)").arg(msg.source);
+    QLabel* roleLabel = new QLabel(roleText);
     QFont roleFont = roleLabel->font();
     roleFont.setPointSize(9);
     roleFont.setBold(true);
@@ -506,8 +541,26 @@ QWidget* AIChatPanel::createMessageBubble(const Message& msg)
     
     QString roleLabelStyle = QString(
         "QLabel { background-color: transparent; color: %1; border: none; }"
-    ).arg(msg.role == Message::User ? "#569cd6" : "#4ec9b0");
+    ).arg(msg.role == ChatMessage::User ? "#569cd6" : "#4ec9b0");
     roleLabel->setStyleSheet(roleLabelStyle);
+    
+    // Metadata display (latency, requestId, etc.)
+    QString metadataText;
+    if (msg.metadata.contains("latency_ms")) {
+        metadataText += QString("Latency: %1ms ").arg(msg.metadata["latency_ms"].toVariant().toLongLong());
+    }
+    if (msg.metadata.contains("requestId")) {
+        metadataText += QString("Request: %1 ").arg(msg.metadata["requestId"].toString().left(8));
+    }
+    
+    QLabel* metadataLabel = nullptr;
+    if (!metadataText.isEmpty()) {
+        metadataLabel = new QLabel(metadataText);
+        QFont metadataFont = metadataLabel->font();
+        metadataFont.setPointSize(7);
+        metadataLabel->setFont(metadataFont);
+        metadataLabel->setStyleSheet("QLabel { background-color: transparent; color: #858585; border: none; font-style: italic; }");
+    }
     
     // Message content
     QTextEdit* contentEdit = new QTextEdit();
@@ -530,7 +583,7 @@ QWidget* AIChatPanel::createMessageBubble(const Message& msg)
     
     QString bubbleStyle = QString(
         "QTextEdit { background-color: %1; border-radius: 8px; padding: 8px; }"
-    ).arg(msg.role == Message::User ? "#2d2d30" : "#1a1a1a");
+    ).arg(msg.role == ChatMessage::User ? "#2d2d30" : "#1a1a1a");
     contentEdit->setStyleSheet(bubbleStyle);
     
     // Timestamp
@@ -540,8 +593,59 @@ QWidget* AIChatPanel::createMessageBubble(const Message& msg)
     timeLabel->setFont(timeFont);
     timeLabel->setStyleSheet("QLabel { background-color: transparent; color: #858585; border: none; }");
     
-    // Approve/Reject code blocks (Cursor-like)
-    if (msg.role == Message::Assistant && (msg.content.contains("```") || msg.isInline)) {
+    // Layout organization
+    layout->addWidget(roleLabel);
+    if (metadataLabel) {
+        layout->addWidget(metadataLabel);
+    }
+    layout->addWidget(contentEdit);
+    
+    // Error handling buttons for retryable errors
+    if (msg.isError && msg.getMetadata("retryable").toBool()) {
+        QWidget* errorActions = new QWidget(container);
+        QHBoxLayout* errorLayout = new QHBoxLayout(errorActions);
+        errorLayout->setContentsMargins(0, 0, 0, 0);
+        errorLayout->setSpacing(6);
+        
+        QPushButton* retryBtn = new QPushButton("🔄 Retry", errorActions);
+        retryBtn->setMaximumHeight(24);
+        retryBtn->setStyleSheet("QPushButton { background-color: #d73a49; color: white; border: none; border-radius: 3px; padding: 2px 8px; font-size: 9px; }");
+        
+        QPushButton* detailsBtn = new QPushButton("🔍 Details", errorActions);
+        detailsBtn->setMaximumHeight(24);
+        detailsBtn->setStyleSheet("QPushButton { background-color: #6f42c1; color: white; border: none; border-radius: 3px; padding: 2px 8px; font-size: 9px; }");
+        
+        errorLayout->addWidget(retryBtn);
+        errorLayout->addWidget(detailsBtn);
+        errorLayout->addStretch();
+        
+        layout->addWidget(errorActions);
+        
+        // Connect retry button - retry the last user message
+        connect(retryBtn, &QPushButton::clicked, this, [this]() {
+            // Find the last user message and retry it
+            for (int i = m_messages.size() - 1; i >= 0; --i) {
+                if (m_messages[i].role == ChatMessage::User) {
+                    emit messageSubmitted(m_messages[i].content);
+                    break;
+                }
+            }
+        });
+        
+        // Connect details button
+        connect(detailsBtn, &QPushButton::clicked, this, [this, msg]() {
+            QString details = msg.errorDetails;
+            if (details.isEmpty()) {
+                details = msg.content;
+            }
+            QMessageBox::information(const_cast<AIChatPanel*>(this), "Error Details", details);
+        });
+    }
+    
+    layout->addWidget(timeLabel, 0, msg.role == ChatMessage::User ? Qt::AlignRight : Qt::AlignLeft);
+    
+    // Add approve/reject buttons for code-containing messages
+    if (msg.role == ChatMessage::Assistant && (msg.content.contains("```") || msg.isInline)) {
         QWidget* approveRow = new QWidget(container);
         QHBoxLayout* approveLayout = new QHBoxLayout(approveRow);
         approveLayout->setContentsMargins(0, 0, 0, 0);
@@ -580,7 +684,7 @@ QWidget* AIChatPanel::createMessageBubble(const Message& msg)
     }
 
     // Show created file note if present
-    if (msg.role == Message::Assistant && msg.content.contains("Created file:")) {
+    if (msg.role == ChatMessage::Assistant && msg.content.contains("Created file:")) {
         QRegularExpression rx("Created file:\\s*(.+)");
         auto m = rx.match(msg.content);
         if (m.hasMatch()) {
@@ -590,10 +694,6 @@ QWidget* AIChatPanel::createMessageBubble(const Message& msg)
             layout->addWidget(createdLabel, 0, Qt::AlignLeft);
         }
     }
-    
-    layout->addWidget(roleLabel);
-    layout->addWidget(contentEdit);
-    layout->addWidget(timeLabel, 0, msg.role == Message::User ? Qt::AlignRight : Qt::AlignLeft);
     
     return container;
 }
@@ -628,6 +728,7 @@ QString AIChatPanel::extractCodeFromMessage(const QString& message) const {
 
 void AIChatPanel::onSendClicked()
 {
+    RAWRXD_TIMED_FUNC();
     QString message = m_inputField->text().trimmed();
     if (message.isEmpty()) return;
     
@@ -660,6 +761,7 @@ void AIChatPanel::onSendClicked()
 
 void AIChatPanel::handleAICommand(const QString& command)
 {
+    RAWRXD_TIMED_FUNC();
     // Start performance profiling
     m_commandTimer.start();
     qint64 startMemory = 0; // Stub for memory usage - currentProcess not in QProcess
@@ -1057,6 +1159,34 @@ void AIChatPanel::setRequestTimeout(int timeoutMs) {
     qDebug() << "Request timeout set to:" << timeoutMs << "ms";
 }
 
+QJsonObject AIChatPanel::getHealthStatus() const {
+    if (m_infrastructure) {
+        return m_infrastructure->healthMonitor()->getFullHealthReport();
+    }
+    return QJsonObject{{"error", "Infrastructure not initialized"}};
+}
+
+QJsonObject AIChatPanel::getMetrics() const {
+    if (m_infrastructure) {
+        return m_infrastructure->metrics()->getFullMetricsReport();
+    }
+    return QJsonObject{{"error", "Infrastructure not initialized"}};
+}
+
+QJsonObject AIChatPanel::getCacheStats() const {
+    if (m_infrastructure) {
+        return m_infrastructure->responseCache()->getStats();
+    }
+    return QJsonObject{{"error", "Infrastructure not initialized"}};
+}
+
+QJsonObject AIChatPanel::getAnalyticsReport() const {
+    if (m_infrastructure) {
+        return m_infrastructure->analytics()->getSessionReport();
+    }
+    return QJsonObject{{"error", "Infrastructure not initialized"}};
+}
+
 void AIChatPanel::clear()
 {
     // Remove all message widgets except the stretch
@@ -1137,6 +1267,37 @@ void AIChatPanel::sendMessageToBackend(const QString& message)
     }
 
     qInfo() << "[AIChatPanel::sendMessageToBackend] Processing message through GGUF inference pipeline";
+    
+    // Track analytics
+    if (m_infrastructure) {
+        m_infrastructure->analytics()->trackMessage(
+            QString::number(classifyMessageIntent(message)), 
+            m_localModel
+        );
+    }
+    
+    // Check circuit breaker
+    if (m_infrastructure && !m_infrastructure->circuitBreaker()->allowRequest()) {
+        qWarning() << "[AIChatPanel] Circuit breaker OPEN - failing fast";
+        addErrorMessage("Service temporarily unavailable. Please try again in a few seconds.",
+                       "The inference service has experienced multiple failures and is in recovery mode.",
+                       true);
+        return;
+    }
+    
+    // Check cache first
+    if (m_infrastructure && m_cacheEnabled) {
+        QString cacheKey = RawrXD::Chat::ResponseCache::generateKey(message, m_localModel, m_contextCode);
+        QString cachedResponse;
+        if (m_infrastructure->responseCache()->get(cacheKey, cachedResponse)) {
+            qInfo() << "[AIChatPanel] Cache HIT - returning cached response";
+            addAssistantMessage(cachedResponse, false);
+            if (m_infrastructure) {
+                m_infrastructure->metrics()->recordMessage("assistant", 0);
+            }
+            return;
+        }
+    }
     
     // PRIMARY PATH: Use GGUF inference engine if available (NO FALLBACK)
     if (m_inferenceEngine) {
@@ -1528,9 +1689,25 @@ void AIChatPanel::onNetworkFinished(QNetworkReply* reply)
     
     if (reply->error() != QNetworkReply::NoError) {
         qWarning() << "AIChatPanel network error on finish:" << reply->error() << reply->errorString();
-        addAssistantMessage(QString("Error: %1").arg(reply->errorString()), false);
+        
+        // Record failure in circuit breaker
+        if (m_infrastructure) {
+            m_infrastructure->circuitBreaker()->recordFailure();
+            m_infrastructure->metrics()->recordMessage("error", dur);
+            m_infrastructure->analytics()->trackError(reply->errorString());
+        }
+        
+        // Add error message with retry option
+        addErrorMessage(QString("Network error: %1").arg(reply->errorString()),
+                       QString("Error code: %1\nURL: %2").arg(reply->error()).arg(reply->url().toString()),
+                       true);
         reply->deleteLater();
         return;
+    }
+    
+    // Record success in circuit breaker
+    if (m_infrastructure) {
+        m_infrastructure->circuitBreaker()->recordSuccess();
     }
     
     const QByteArray body = reply->readAll();
@@ -1569,6 +1746,22 @@ void AIChatPanel::onNetworkFinished(QNetworkReply* reply)
     if (!responseText.isEmpty()) {
         if (!m_aggregateSessionActive) {
             addAssistantMessage(responseText, false);
+            
+            // Cache the response for future queries
+            if (m_infrastructure && m_cacheEnabled) {
+                QString originalMessage = reply->property("_original_message").toString();
+                if (!originalMessage.isEmpty()) {
+                    QString cacheKey = RawrXD::Chat::ResponseCache::generateKey(
+                        originalMessage, m_localModel, m_contextCode);
+                    m_infrastructure->responseCache()->put(cacheKey, responseText);
+                }
+            }
+            
+            // Record metrics
+            if (m_infrastructure) {
+                m_infrastructure->metrics()->recordMessage("assistant", dur);
+                m_infrastructure->metrics()->recordTokens(responseText.length() / 4); // Rough token estimate
+            }
         }
         qDebug() << "Response added to chat (length:" << responseText.length() << "chars)";
     } else {
@@ -2399,8 +2592,8 @@ void AIChatPanel::showContextMenu(const QPoint& pos)
     // Copy entire chat
     QAction* copyAllAction = contextMenu.addAction("Copy All", this, [this]() {
         QString fullChat;
-        for (const Message& msg : m_messages) {
-            QString role = msg.role == Message::User ? "You" : "AI Assistant";
+        for (const ChatMessage& msg : m_messages) {
+            QString role = msg.role == ChatMessage::User ? "You" : "AI Assistant";
             fullChat += QString("%1:\n%2\n\n").arg(role).arg(msg.content);
         }
         QApplication::clipboard()->setText(fullChat);

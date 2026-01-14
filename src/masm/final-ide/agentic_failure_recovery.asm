@@ -65,15 +65,15 @@ agentic_failure_recovery_init PROC
 
     ; Initialize pattern arrays
     mov rcx, 32                         ; Allocate 32 patterns
-    call malloc
+    call masm_malloc
     mov [hallucPatterns], rax
     
     mov rcx, 32
-    call malloc
+    call masm_malloc
     mov [refusalPatterns], rax
     
     mov rcx, 32
-    call malloc
+    call masm_malloc
     mov [timeoutPatterns], rax
     
     ; Load predefined patterns
@@ -114,7 +114,7 @@ agentic_failure_detect PROC
     
     ; Allocate failure signature
     mov rcx, FAILURE_SIGNATURE_SIZE
-    call malloc
+    call masm_malloc
     mov r13, rax                        ; r13 = failure signature
     
     ; Copy response text
@@ -182,7 +182,7 @@ agentic_failure_detect PROC
     
 detection_done:
     mov rcx, r13
-    call free
+    call masm_free
     
     mov eax, [r13 + 28]                 ; Return max confidence
     ret
@@ -751,3 +751,7 @@ pattern_incomplete:      DB "...", 0
 ; ============================================================================
 
 .end
+
+
+
+

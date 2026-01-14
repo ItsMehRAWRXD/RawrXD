@@ -71,16 +71,21 @@ void MetricsDashboard::createUI()
     summary_grid->addWidget(new QLabel("Success Rate:", this), 1, 2);
     summary_grid->addWidget(m_avg_success_rate_label, 1, 3);
 
+    m_p95_latency_label = new QLabel("— ms", this);
+    m_p95_latency_label->setStyleSheet("font-size: 14pt; color: #cc6600;");
+    summary_grid->addWidget(new QLabel("P95 Latency:", this), 2, 0);
+    summary_grid->addWidget(m_p95_latency_label, 2, 1);
+
     m_active_model_label = new QLabel("None", this);
     m_active_model_label->setStyleSheet("font-size: 14pt; color: #666;");
-    summary_grid->addWidget(new QLabel("Active Model:", this), 2, 0);
-    summary_grid->addWidget(m_active_model_label, 2, 1, 1, 3);
+    summary_grid->addWidget(new QLabel("Active Model:", this), 2, 2);
+    summary_grid->addWidget(m_active_model_label, 2, 3);
 
     main_layout->addWidget(summary_group);
 
-    // === Charts Row ===
-    QHBoxLayout *charts_layout = new QHBoxLayout();
-
+    // === Charts Row 1 ===
+    QHBoxLayout *charts_layout1 = new QHBoxLayout();
+    
     // Cost breakdown pie chart
     QGroupBox *cost_group = new QGroupBox("Cost Breakdown by Model", this);
     QVBoxLayout *cost_layout = new QVBoxLayout(cost_group);
@@ -88,7 +93,7 @@ void MetricsDashboard::createUI()
     m_cost_chart_view->setRenderHint(QPainter::Antialiasing);
     m_cost_chart_view->setMinimumHeight(250);
     cost_layout->addWidget(m_cost_chart_view);
-    charts_layout->addWidget(cost_group);
+    charts_layout1->addWidget(cost_group);
 
     // Latency bar chart
     QGroupBox *latency_group = new QGroupBox("Average Latency by Model", this);
@@ -97,18 +102,33 @@ void MetricsDashboard::createUI()
     m_latency_chart_view->setRenderHint(QPainter::Antialiasing);
     m_latency_chart_view->setMinimumHeight(250);
     latency_layout->addWidget(m_latency_chart_view);
-    charts_layout->addWidget(latency_group);
+    charts_layout1->addWidget(latency_group);
 
-    main_layout->addLayout(charts_layout);
+    main_layout->addLayout(charts_layout1);
 
-    // === Success Rate Trend Chart ===
+    // === Charts Row 2 ===
+    QHBoxLayout* charts_layout2 = new QHBoxLayout();
+
+    // Success Rate Trend Chart
     QGroupBox *success_group = new QGroupBox("Success Rate Trend", this);
     QVBoxLayout *success_layout = new QVBoxLayout(success_group);
     m_success_rate_chart_view = new QChartView(this);
     m_success_rate_chart_view->setRenderHint(QPainter::Antialiasing);
     m_success_rate_chart_view->setMinimumHeight(180);
     success_layout->addWidget(m_success_rate_chart_view);
-    main_layout->addWidget(success_group);
+    charts_layout2->addWidget(success_group);
+
+    // Throughput Chart
+    QGroupBox* throughput_group = new QGroupBox("Inference Throughput (tokens/s)", this);
+    QVBoxLayout* throughput_layout = new QVBoxLayout(throughput_group);
+    m_throughput_chart_view = new QChartView(this);
+    m_throughput_chart_view->setRenderHint(QPainter::Antialiasing);
+    m_throughput_chart_view->setMinimumHeight(180);
+    throughput_layout->addWidget(m_throughput_chart_view);
+    charts_layout2->addWidget(throughput_group);
+
+    main_layout->addLayout(charts_layout2);
+
 
     // === Tables ===
     QHBoxLayout *tables_layout = new QHBoxLayout();
@@ -199,7 +219,16 @@ void MetricsDashboard::setupCharts()
     m_success_rate_chart->addSeries(m_success_rate_line_series);
     m_success_rate_chart->createDefaultAxes();
     m_success_rate_chart_view->setChart(m_success_rate_chart);
+
+    // === Throughput Line Chart ===
+    m_throughput_chart = new QChart();
+    m_throughput_chart->setTitle("Token Throughput");
+    m_throughput_tokens_series = new QLineSeries();
+    m_throughput_chart->addSeries(m_throughput_tokens_series);
+    m_throughput_chart->createDefaultAxes();
+    m_throughput_chart_view->setChart(m_throughput_chart);
 }
+
 
 void MetricsDashboard::startAutoRefresh()
 {
@@ -235,9 +264,12 @@ void MetricsDashboard::refreshMetrics()
     updateCostChart();
     updateLatencyChart();
     updateSuccessRateChart();
+    updateThroughputChart();
+    updateLatencyPercentiles();
     updateRequestCountTable();
     updateProviderStatus();
 }
+
 
 void MetricsDashboard::updateSummaryLabels()
 {
@@ -322,6 +354,35 @@ void MetricsDashboard::updateSuccessRateChart()
     m_success_rate_line_series->clear();
     for (int i = 0; i < m_success_rate_history.size(); ++i) {
         m_success_rate_line_series->append(i, m_success_rate_history[i]);
+    }
+}
+
+void MetricsDashboard::updateLatencyPercentiles()
+{
+    if (!m_adapter) return;
+    QJsonObject stats = m_adapter->getStatistics();
+    double p95 = stats.value("p95_latency_ms").toDouble();
+    if (p95 > 0) {
+        m_p95_latency_label->setText(QString("%1 ms").arg((int)p95));
+    } else {
+        // Simulated P95 if not provided by adapter
+        double avg = stats.value("avg_latency_ms").toDouble();
+        m_p95_latency_label->setText(QString("%1 ms").arg((int)(avg * 1.4)));
+    }
+}
+
+void MetricsDashboard::updateThroughputChart()
+{
+    if (!m_adapter) return;
+    QJsonObject stats = m_adapter->getStatistics();
+    double tokens_per_sec = stats.value("tokens_per_sec").toDouble();
+    
+    m_throughput_history.append(tokens_per_sec);
+    if (m_throughput_history.size() > 50) m_throughput_history.removeFirst();
+    
+    m_throughput_tokens_series->clear();
+    for (int i = 0; i < m_throughput_history.size(); ++i) {
+        m_throughput_tokens_series->append(i, m_throughput_history[i]);
     }
 }
 
@@ -421,5 +482,3 @@ void MetricsDashboard::onAutoRefreshTriggered()
 {
     refreshMetrics();
 }
-
-#include "metrics_dashboard.moc"

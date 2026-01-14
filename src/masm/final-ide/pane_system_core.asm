@@ -115,7 +115,6 @@ pub_done:
     pop rbx
     ret
 Beacon_Publish ENDP
-
 PUBLIC Beacon_Subscribe
 Beacon_Subscribe PROC
     ; rcx = eventKind, rdx = callback
@@ -227,7 +226,6 @@ not_found:
     pop rbx
     ret
 PaneSystem_GetPaneRect ENDP
-
 PUBLIC GetPaneRect
 GetPaneRect EQU PaneSystem_GetPaneRect
 
@@ -332,4 +330,8 @@ integrate_with_main PROC
 integrate_with_main ENDP
 
 END
+
+
+
+
 

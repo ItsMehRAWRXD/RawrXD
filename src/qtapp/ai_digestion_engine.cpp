@@ -118,8 +118,8 @@ KnowledgeRepresentation KnowledgeRepresentation::fromJson(const QJsonObject& obj
     return kr;
 }
 
-// TrainingDataset implementation
-QJsonObject TrainingDataset::toJson() const {
+// AIDigestionDataset implementation
+QJsonObject AIDigestionDataset::toJson() const {
     QJsonObject obj;
     obj["name"] = name;
     obj["description"] = description;
@@ -149,8 +149,8 @@ QJsonObject TrainingDataset::toJson() const {
     return obj;
 }
 
-TrainingDataset TrainingDataset::fromJson(const QJsonObject& obj) {
-    TrainingDataset td;
+AIDigestionDataset AIDigestionDataset::fromJson(const QJsonObject& obj) {
+    AIDigestionDataset td;
     td.name = obj["name"].toString();
     td.description = obj["description"].toString();
     td.created = QDateTime::fromString(obj["created"].toString(), Qt::ISODate);
@@ -331,7 +331,7 @@ int AIDigestionEngine::getTotalFiles() const {
     return m_totalFiles;
 }
 
-TrainingDataset AIDigestionEngine::getTrainingDataset() const {
+AIDigestionDataset AIDigestionEngine::getAIDigestionDataset() const {
     QMutexLocker locker(&m_mutex);
     return m_dataset;
 }
@@ -368,7 +368,7 @@ bool AIDigestionEngine::loadDataset(const QString& filePath) {
     }
     
     QMutexLocker locker(&m_mutex);
-    m_dataset = TrainingDataset::fromJson(doc.object());
+    m_dataset = AIDigestionDataset::fromJson(doc.object());
     
     return true;
 }
@@ -952,7 +952,7 @@ QJsonObject AIDigestionEngine::generateStatistics() {
 }
 
 void AIDigestionEngine::prepareTrainingData() {
-    m_dataset = TrainingDataset();
+    m_dataset = AIDigestionDataset();
     m_dataset.samples.clear();
     
     for (const KnowledgeRepresentation& knowledge : m_knowledgeBase) {
@@ -1312,7 +1312,7 @@ void AIDigestionEngine::initialize() {
     
     // Clear any existing data
     m_knowledgeBase.clear();
-    m_dataset = TrainingDataset();
+    m_dataset = AIDigestionDataset();
     
     // Set up default configuration
     m_config.maxFileSize = 10 * 1024 * 1024; // 10MB

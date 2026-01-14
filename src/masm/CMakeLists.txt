@@ -24,12 +24,13 @@ if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
     message(FATAL_ERROR "64-bit build required for MASM x64 implementation")
 endif()
 
-# If building C++ AVX2 kernels, ensure compilation enables AVX2 on this directory.
+# If building C++ AVX2 kernels, ensure compilation enables AVX2.
+# IMPORTANT: This subproject is primarily ASM_MASM; do not pass /arch:AVX2 to ml64.exe.
 if(MSVC)
-    add_compile_options(/arch:AVX2)
-    add_compile_definitions(__AVX2__=1)
+    add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:/arch:AVX2>)
+    add_compile_definitions($<$<COMPILE_LANGUAGE:C,CXX>:__AVX2__=1>)
 else()
-    add_compile_options(-mavx2 -march=native)
+    add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-mavx2> $<$<COMPILE_LANGUAGE:C,CXX>:-march=native>)
 endif()
 
 # Output directories
@@ -44,7 +45,13 @@ set(MASM_RUNTIME_SOURCES
     asm_string.asm
     asm_events.asm
     asm_log.asm
+    final-ide/malloc_wrapper.asm
+    final-ide/cstring_wrappers.asm
+    final-ide/rawrxd_dualengine_support.asm
 )
+
+# Ensure Visual Studio treats these as MASM sources (not <None>)
+set_source_files_properties(${MASM_RUNTIME_SOURCES} PROPERTIES LANGUAGE ASM_MASM)
 
 # ==== Qt6 Foundation Layer (NEW) ====
 # Pure MASM implementation of Qt6 foundation abstractions
@@ -57,13 +64,9 @@ set(MASM_QT6_FOUNDATION_SOURCES
     final-ide/qt6_statusbar.asm
 )
 
-option(ENABLE_MASM_EXPERIMENTAL_OPS "Build experimental MASM tensor/logging modules" OFF)
-if(ENABLE_MASM_EXPERIMENTAL_OPS)
-    list(APPEND MASM_RUNTIME_SOURCES
-        asm_logging_prod.asm
-        asm_tensor_ops.asm
-    )
-endif()
+# Ensure Visual Studio treats these as MASM sources (not <None>)
+set_source_files_properties(${MASM_QT6_FOUNDATION_SOURCES} PROPERTIES LANGUAGE ASM_MASM)
+
 
 # Check qt6_foundation.asm exists
 foreach(src ${MASM_QT6_FOUNDATION_SOURCES})
@@ -100,8 +103,13 @@ set(MASM_HOTPATCH_SOURCES
     RawrXD_DualEngineManager.asm
     RawrXD_AgenticPatchOrchestrator.asm
     RawrXD_MathHotpatchEntry.asm
-    stub_completion_comprehensive_v2.asm
-    stub_integration_bridges.asm
+    final-ide/masm_core_direct_io.asm
+    final-ide/masm_core_reversible_transforms.asm
+    final-ide/byte_level_hotpatcher_refactored.asm
+    gguf_server_hotpatch.asm
+    unified_hotpatch_manager.asm
+    final-ide/stub_completion_comprehensive_v2.asm
+    final-ide/stub_integration_bridges.asm
 )
 
 # Check which files exist and only include existing ones
@@ -111,6 +119,10 @@ foreach(src ${MASM_HOTPATCH_SOURCES})
         list(REMOVE_ITEM MASM_HOTPATCH_SOURCES ${src})
     endif()
 endforeach()
+
+if(MASM_HOTPATCH_SOURCES)
+    set_source_files_properties(${MASM_HOTPATCH_SOURCES} PROPERTIES LANGUAGE ASM_MASM)
+endif()
 
 add_library(masm_hotpatch_core_obj OBJECT ${MASM_HOTPATCH_SOURCES})
 add_library(masm_hotpatch_core STATIC $<TARGET_OBJECTS:masm_hotpatch_core_obj>)
@@ -128,6 +140,7 @@ foreach(src proxy_hotpatcher.asm agentic_failure_detector.asm agentic_puppeteer.
 endforeach()
 
 if(MASM_AGENTIC_SOURCES)
+    set_source_files_properties(${MASM_AGENTIC_SOURCES} PROPERTIES LANGUAGE ASM_MASM)
     add_library(masm_agentic_obj OBJECT ${MASM_AGENTIC_SOURCES})
     add_library(masm_agentic STATIC $<TARGET_OBJECTS:masm_agentic_obj>)
     set_target_properties(masm_agentic PROPERTIES
@@ -136,8 +149,9 @@ if(MASM_AGENTIC_SOURCES)
 endif()
 
 # ==== MASM AI Orchestration System (NEW) ====
+# All orchestration subsystems now permanently included - no feature gating
 set(MASM_ORCHESTRATION_SOURCES
-    masm_orchestration_wrapper.asm
+    final-ide/masm_orchestration_wrapper.asm
     simple_orchestration.asm
     ai_orchestration_coordinator.asm
     agentic_inference_stream.asm
@@ -152,6 +166,10 @@ foreach(src ${MASM_ORCHESTRATION_SOURCES})
         list(REMOVE_ITEM MASM_ORCHESTRATION_SOURCES ${src})
     endif()
 endforeach()
+
+if(MASM_ORCHESTRATION_SOURCES)
+    set_source_files_properties(${MASM_ORCHESTRATION_SOURCES} PROPERTIES LANGUAGE ASM_MASM)
+endif()
 
 add_library(masm_orchestration_obj OBJECT ${MASM_ORCHESTRATION_SOURCES})
 add_library(masm_orchestration STATIC $<TARGET_OBJECTS:masm_orchestration_obj>)
@@ -169,6 +187,7 @@ foreach(src output_pane_logger.asm tab_manager.asm file_tree_driver.asm agent_ch
 endforeach()
 
 if(MASM_UI_SOURCES)
+    set_source_files_properties(${MASM_UI_SOURCES} PROPERTIES LANGUAGE ASM_MASM)
     add_library(masm_ui_obj OBJECT ${MASM_UI_SOURCES})
     add_library(masm_ui STATIC $<TARGET_OBJECTS:masm_ui_obj>)
     set_target_properties(masm_ui PROPERTIES
@@ -194,6 +213,7 @@ set_target_properties(masm_hotpatch_unified PROPERTIES
 option(BUILD_MASM_TESTS "Build pure MASM hotpatch tests" ON)
 
 if(BUILD_MASM_TESTS AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/masm_test_main.asm")
+    set_source_files_properties(masm_test_main.asm PROPERTIES LANGUAGE ASM_MASM)
     # Pure MASM x64 test harness - ZERO C/C++ dependencies
     add_executable(masm_hotpatch_test
         masm_test_main.asm
@@ -202,7 +222,7 @@ if(BUILD_MASM_TESTS AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/masm_test_main.asm")
     
     set_target_properties(masm_hotpatch_test PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/tests"
-        LINK_FLAGS "/SUBSYSTEM:CONSOLE /ENTRY:main kernel32.lib user32.lib"
+        LINK_FLAGS "/SUBSYSTEM:CONSOLE /ENTRY:main kernel32.lib user32.lib gdi32.lib dwmapi.lib uxtheme.lib d2d1.lib dwrite.lib"
     )
     
     # Add test

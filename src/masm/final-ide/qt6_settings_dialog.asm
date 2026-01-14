@@ -177,7 +177,7 @@ CreateSettingsDialog PROC FRAME
     
     ; Allocate SETTINGS_DIALOG structure
     mov rcx, sizeof(SETTINGS_DIALOG)
-    call malloc
+    call masm_malloc
     test rax, rax
     jz allocation_failed
     
@@ -202,7 +202,7 @@ CreateSettingsDialog PROC FRAME
     
     ; Free settings_dialog structure
     mov rcx, rdi
-    call free
+    call masm_free
     
     ; Return result
     mov eax, [rsp+20h]
@@ -1210,7 +1210,7 @@ SaveSettingsFromUI PROC
     test rax, rax
     jnz model_buf_ready
     mov rcx, SETTINGS_PATH_CHARS*2
-    call malloc
+    call masm_malloc
     mov [rsi+SETTINGS_DATA.model_path], rax
 model_buf_ready:
     mov rcx, rdi
@@ -1224,7 +1224,7 @@ model_buf_ready:
     test rax, rax
     jnz default_buf_ready
     mov rcx, SETTINGS_PATH_CHARS*2
-    call malloc
+    call masm_malloc
     mov [rsi+SETTINGS_DATA.default_model], rax
 default_buf_ready:
     mov rcx, rdi
@@ -1239,7 +1239,7 @@ default_buf_ready:
     test rax, rax
     jnz chat_buf_ready
     mov rcx, SETTINGS_PATH_CHARS*2
-    call malloc
+    call masm_malloc
     mov [rsi+SETTINGS_DATA.chat_model], rax
 chat_buf_ready:
     mov rcx, rdi
@@ -1269,7 +1269,7 @@ chat_buf_ready:
     test rax, rax
     jnz prompt_buf_ready
     mov rcx, SETTINGS_PROMPT_CHARS*2
-    call malloc
+    call masm_malloc
     mov [rsi+SETTINGS_DATA.system_prompt], rax
 prompt_buf_ready:
     mov rcx, rdi
@@ -1283,7 +1283,7 @@ prompt_buf_ready:
     test rax, rax
     jnz apikey_buf_ready
     mov rcx, SETTINGS_APIKEY_CHARS*2
-    call malloc
+    call masm_malloc
     mov [rsi+SETTINGS_DATA.api_key], rax
 apikey_buf_ready:
     mov rcx, rdi
@@ -1841,13 +1841,11 @@ CreateEnterpriseTabControls ENDP
 ; ============================================================================
 ; Registry Persistence Functions
 ; ============================================================================
-
 SaveSettingsToRegistry PROC
     ; Implementation in registry_persistence.asm
     mov rax, 1
     ret
 SaveSettingsToRegistry ENDP
-
 LoadSettingsFromRegistry PROC
     ; Implementation in registry_persistence.asm
     mov rax, 1
@@ -1855,3 +1853,5 @@ LoadSettingsFromRegistry PROC
 LoadSettingsFromRegistry ENDP
 
 END
+
+

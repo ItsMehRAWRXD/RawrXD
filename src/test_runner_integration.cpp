@@ -1,6 +1,7 @@
 #include "test_runner_integration.h"
 #include "logging/structured_logger.h"
 #include "error_handler.h"
+#include "config_manager.h"
 #include <QHeaderView>
 #include <QTreeWidgetItem>
 #include <QTextCursor>
@@ -17,6 +18,10 @@ void TestRunnerIntegration::initialize(QTabWidget* outputTabs, QTreeWidget* test
     outputTabs_ = outputTabs;
     testTree_ = testTree;
     outputConsole_ = outputConsole;
+    
+    // Load config
+    timeoutSeconds_ = ConfigManager::instance().getInt("testing.timeout_seconds", 300);
+    autoScrollOutput_ = ConfigManager::instance().getBool("testing.auto_scroll", true);
     
     if (outputTabs_) {
         createTestTab();
@@ -43,6 +48,8 @@ void TestRunnerIntegration::shutdown() {
 }
 
 bool TestRunnerIntegration::runTestSuite(const QString& suiteName, const QString& executable, const QString& workingDir) {
+    START_SPAN("test_suite_run");
+    
     if (!testSuites_.contains(suiteName)) {
         addTestSuite(suiteName, executable, workingDir);
     }
@@ -331,6 +338,12 @@ void TestRunnerIntegration::onTestProcessFinished(int exitCode, QProcess::ExitSt
             {"passed", currentSuite_->passedTests},
             {"failed", currentSuite_->failedTests},
             {"total", currentSuite_->totalTests}
+        });
+
+        END_SPAN("test_suite_run", {
+            {"suite", currentSuite_->name},
+            {"passed", currentSuite_->passedTests},
+            {"failed", currentSuite_->failedTests}
         });
         
         currentSuite_ = nullptr;

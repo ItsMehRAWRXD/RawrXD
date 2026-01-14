@@ -25,9 +25,9 @@
 option casemap:none
 
 ; External memory functions (provided by malloc_wrapper.asm)
-EXTERN malloc:PROC
-EXTERN free:PROC
-EXTERN realloc:PROC
+extern masm_malloc : proc
+extern masm_free : proc
+extern masm_realloc : proc
 EXTERN memset:PROC
 EXTERN memcpy:PROC
 
@@ -204,7 +204,6 @@ COLOR_COMMENT       EQU 808080h    ; Dark gray
 ;==========================================================================
 ; PUBLIC FUNCTIONS
 ;==========================================================================
-
 PUBLIC text_editor_create
 PUBLIC text_editor_destroy
 PUBLIC text_editor_load_file
@@ -254,7 +253,7 @@ text_editor_create PROC
     
     ; Allocate TEXT_EDITOR structure (~512 bytes)
     mov rcx, sizeof TEXT_EDITOR
-    call malloc                         ; rax = editor ptr
+    call masm_malloc                         ; rax = editor ptr
     test rax, rax
     jz error
     
@@ -300,7 +299,7 @@ text_editor_create PROC
     ; Allocate file path buffer (512 bytes)
     mov r8, rcx                        ; save editor ptr
     mov rcx, 512
-    call malloc                        ; rax = path buffer
+    call masm_malloc                        ; rax = path buffer
     mov rcx, r8                        ; restore editor
     test rax, rax
     jz error_with_editor
@@ -325,7 +324,7 @@ text_editor_create PROC
 error_with_editor:
     ; Free editor structure on buffer allocation failure
     mov rcx, r8
-    call free
+    call masm_free
     xor rax, rax
     add rsp, 32
     pop rbp
@@ -362,14 +361,14 @@ free_lines:
     test rdx, rdx
     jz skip_free_text
     mov rcx, rdx
-    call free
+    call masm_free
 skip_free_text:
     
     ; Free TEXT_LINE structure
     mov rcx, rsi                       ; rsi still has editor ptr
     mov rdx, [rsi + TEXT_EDITOR.first_line]
     mov rcx, rdx
-    call free
+    call masm_free
     
     mov rcx, rax                       ; rcx = next line
     jmp free_lines
@@ -379,26 +378,26 @@ lines_freed:
     mov rcx, [rsi + TEXT_EDITOR.undo_stack]
     test rcx, rcx
     jz undo_freed
-    call free
+    call masm_free
 undo_freed:
     
     ; Free redo stack
     mov rcx, [rsi + TEXT_EDITOR.redo_stack]
     test rcx, rcx
     jz redo_freed
-    call free
+    call masm_free
 redo_freed:
     
     ; Free file path buffer
     mov rcx, [rsi + TEXT_EDITOR.file_path]
     test rcx, rcx
     jz path_freed
-    call free
+    call masm_free
 path_freed:
     
     ; Free editor structure
     mov rcx, rsi
-    call free
+    call masm_free
     
     mov rax, 1                         ; success
     add rsp, 32
@@ -457,7 +456,7 @@ text_editor_load_file PROC
     ; Allocate buffer for file contents
     mov rcx, r13                       ; rcx = file size_val
     add rcx, 1                         ; Add 1 for null terminator
-    call malloc                        ; rax = file buffer
+    call masm_malloc                        ; rax = file buffer
     test rax, rax
     jz close_file
     mov r14, rax                       ; r14 = file buffer
@@ -513,7 +512,7 @@ skip_one:
 create_line:
     ; Allocate TEXT_LINE structure
     mov rcx, sizeof TEXT_LINE
-    call malloc
+    call masm_malloc
     test rax, rax
     jz parse_done
     
@@ -523,7 +522,7 @@ create_line:
     push rdx                           ; Save line length
     mov rcx, rdx
     inc rcx
-    call malloc
+    call masm_malloc
     pop rdx                            ; Restore line length
     test rax, rax
     jz parse_done
@@ -601,7 +600,7 @@ parse_done:
     
     ; Free file buffer
     mov rcx, r14
-    call free
+    call masm_free
     
     ; Close file
     mov rcx, r12
@@ -614,7 +613,7 @@ parse_done:
 
 free_buffer:
     mov rcx, r14
-    call free
+    call masm_free
     
 close_file:
     mov rcx, r12
@@ -805,7 +804,7 @@ no_newline:
     add ecx, 256                       ; Extra space for future edits
     mov [r14 + TEXT_LINE.max_capacity], ecx
     
-    call malloc                    ; rax = new buffer
+    call masm_malloc                    ; rax = new buffer
     test rax, rax
     jz error
     
@@ -816,7 +815,7 @@ no_newline:
     
     ; Free old buffer
     mov rcx, [r14 + TEXT_LINE.text_ptr]
-    call free
+    call masm_free
     
     mov rdi, rax                       ; rdi = new buffer
     mov [r14 + TEXT_LINE.text_ptr], rdi
@@ -1021,7 +1020,7 @@ alloc_buffer:
     ; Allocate buffer for concatenated text
     inc r12d                           ; Add 1 for null terminator
     mov rcx, r12
-    call malloc
+    call masm_malloc
     
     test rax, rax
     jz error
@@ -1456,7 +1455,7 @@ alloc_global:
     
     ; Free text buffer from get_text
     mov rcx, r12
-    call free
+    call masm_free
     
     mov rax, 1
     add rsp, 32
@@ -1468,7 +1467,7 @@ close_and_error:
     
 free_and_error:
     mov rcx, r12
-    call free
+    call masm_free
     
 error:
     xor rax, rax
@@ -1858,30 +1857,25 @@ text_editor_on_mouse ENDP
 ;==========================================================================
 ; VMT TABLE IMPLEMENTATIONS (Stub Methods)
 ;==========================================================================
-
 text_editor_destroy_vmt PROC
     ret
 text_editor_destroy_vmt ENDP
-
 text_editor_get_size_vmt PROC
     mov eax, [rcx + TEXT_EDITOR.char_width]
     mov edx, [rcx + TEXT_EDITOR.line_height]
     ret
 text_editor_get_size_vmt ENDP
-
 text_editor_set_size_vmt PROC
     mov [rcx + TEXT_EDITOR.char_width], edx
     mov [rcx + TEXT_EDITOR.line_height], r8d
     ret
 text_editor_set_size_vmt ENDP
-
 text_editor_show_vmt PROC
     mov eax, [rcx + TEXT_EDITOR.flags]
     or eax, FLAG_VISIBLE
     mov [rcx + TEXT_EDITOR.flags], eax
     ret
 text_editor_show_vmt ENDP
-
 text_editor_hide_vmt PROC
     mov eax, [rcx + TEXT_EDITOR.flags]
     and eax, NOT FLAG_VISIBLE
@@ -1905,4 +1899,8 @@ text_editor_vmt:
     dq text_editor_hide_vmt
 
 END
+
+
+
+
 

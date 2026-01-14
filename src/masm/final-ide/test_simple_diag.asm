@@ -13,7 +13,6 @@ EXTERN ExitProcess:PROC
 EXTERN GetProcessHeap:PROC
 EXTERN HeapAlloc:PROC
 EXTERN HeapFree:PROC
-
 PUBLIC mainCRTStartup
 
 ALIGN 16
@@ -100,3 +99,7 @@ msg_heap_fail DB "FAIL: GetProcessHeap", 13, 10, 0
 msg_alloc_fail DB "FAIL: HeapAlloc returned NULL", 13, 10, 0
 
 END
+
+
+
+

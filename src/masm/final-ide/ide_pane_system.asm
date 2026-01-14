@@ -424,7 +424,6 @@ EXTERN hwnd_editor:QWORD
 EXTERN hwnd_terminal:QWORD
 EXTERN hwnd_chat:QWORD
 EXTERN hwnd_status:QWORD
-
 CreateExplorerPane PROC
     push    rbp
     mov     rbp, rsp
@@ -434,12 +433,10 @@ CreateExplorerPane PROC
     leave
     ret
 CreateExplorerPane ENDP
-
 CreateEditorPane PROC
     mov     rax, hwnd_editor
     ret
 CreateEditorPane ENDP
-
 CreateTerminalPane PROC
     push    rbp
     mov     rbp, rsp
@@ -450,7 +447,6 @@ CreateTerminalPane PROC
     leave
     ret
 CreateTerminalPane ENDP
-
 CreateChatPane PROC
     push    rbp
     mov     rbp, rsp
@@ -460,7 +456,6 @@ CreateChatPane PROC
     leave
     ret
 CreateChatPane ENDP
-
 CreateTabsPane PROC
     ; Tabs are currently integrated into editor host in ui_masm.asm
     xor     rax, rax
@@ -476,19 +471,15 @@ CreateStatusPane ENDP
 UpdateExplorerPane PROC
     ret
 UpdateExplorerPane ENDP
-
 UpdateEditorPane PROC
     ret
 UpdateEditorPane ENDP
-
 UpdateTerminalPane PROC
     ret
 UpdateTerminalPane ENDP
-
 UpdateChatPane PROC
     ret
 UpdateChatPane ENDP
-
 UpdateTabsPane PROC
     ret
 UpdateTabsPane ENDP
@@ -496,27 +487,21 @@ UpdateTabsPane ENDP
 UpdateStatusPane PROC
     ret
 UpdateStatusPane ENDP
-
 DestroyExplorerPane PROC
     ret
 DestroyExplorerPane ENDP
-
 DestroyEditorPane PROC
     ret
 DestroyEditorPane ENDP
-
 DestroyTerminalPane PROC
     ret
 DestroyTerminalPane ENDP
-
 DestroyChatPane PROC
     ret
 DestroyChatPane ENDP
-
 DestroyTabsPane PROC
     ret
 DestroyTabsPane ENDP
-
 DestroyStatusPane PROC
     ret
 DestroyStatusPane ENDP
@@ -554,3 +539,5 @@ pane_not_found:
 PaneSystem_GetPane ENDP
 
 END
+
+

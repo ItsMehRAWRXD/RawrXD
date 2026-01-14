@@ -31,7 +31,7 @@ HybridCloudManager::~HybridCloudManager() {
 
 void HybridCloudManager::setupDefaultProviders() {
     // Ollama - Local or Cloud
-    CloudProvider ollama;
+    CloudProviderInfo ollama;
     ollama.providerId = "ollama";
     ollama.name = "Ollama";
     ollama.endpoint = "http://localhost:11434"; // Default local
@@ -52,7 +52,7 @@ void HybridCloudManager::setupDefaultProviders() {
     providers["ollama"] = ollama;
     
     // HuggingFace Inference API
-    CloudProvider huggingface;
+    CloudProviderInfo huggingface;
     huggingface.providerId = "huggingface";
     huggingface.name = "HuggingFace Inference";
     huggingface.endpoint = "https://api-inference.huggingface.co";
@@ -72,7 +72,7 @@ void HybridCloudManager::setupDefaultProviders() {
     providers["huggingface"] = huggingface;
     
     // AWS SageMaker
-    CloudProvider aws;
+    CloudProviderInfo aws;
     aws.providerId = "aws";
     aws.name = "AWS SageMaker";
     aws.endpoint = "https://runtime.sagemaker.us-east-1.amazonaws.com";
@@ -85,7 +85,7 @@ void HybridCloudManager::setupDefaultProviders() {
     providers["aws"] = aws;
     
     // Azure Machine Learning
-    CloudProvider azure;
+    CloudProviderInfo azure;
     azure.providerId = "azure";
     azure.name = "Azure ML";
     azure.endpoint = "https://api.azureml.ms";
@@ -98,7 +98,7 @@ void HybridCloudManager::setupDefaultProviders() {
     providers["azure"] = azure;
     
     // Google Cloud Vertex AI
-    CloudProvider gcp;
+    CloudProviderInfo gcp;
     gcp.providerId = "gcp";
     gcp.name = "GCP Vertex AI";
     gcp.endpoint = "https://us-central1-aiplatform.googleapis.com";
@@ -113,7 +113,7 @@ void HybridCloudManager::setupDefaultProviders() {
     std::cout << "[HybridCloudManager] Configured 5 providers (Ollama, HuggingFace, AWS, Azure, GCP)" << std::endl;
 }
 
-bool HybridCloudManager::addProvider(const CloudProvider& provider) {
+bool HybridCloudManager::addProvider(const CloudProviderInfo& provider) {
     if (providers.contains(provider.providerId)) {
         std::cout << "[HybridCloudManager] Provider already exists: " << provider.providerId.toStdString() << std::endl;
         return false;
@@ -134,6 +134,12 @@ bool HybridCloudManager::removeProvider(const QString& providerId) {
     return true;
 }
 
+bool HybridCloudManager::joinTeam(const QString& teamId) {
+    std::cout << "[HybridCloudManager] Joining team: " << teamId.toStdString() << std::endl;
+    // In production, would fetch team configuration and API keys from central server
+    return true;
+}
+
 bool HybridCloudManager::configureProvider(const QString& providerId, const QString& apiKey, 
                                           const QString& endpoint, const QString& region) {
     if (!providers.contains(providerId)) {
@@ -141,7 +147,7 @@ bool HybridCloudManager::configureProvider(const QString& providerId, const QStr
         return false;
     }
     
-    CloudProvider& provider = providers[providerId];
+    CloudProviderInfo& provider = providers[providerId];
     
     if (!apiKey.isEmpty()) provider.apiKey = apiKey;
     if (!endpoint.isEmpty()) provider.endpoint = endpoint;
@@ -155,17 +161,17 @@ bool HybridCloudManager::configureProvider(const QString& providerId, const QStr
     return true;
 }
 
-CloudProvider HybridCloudManager::getProvider(const QString& providerId) const {
+CloudProviderInfo HybridCloudManager::getProvider(const QString& providerId) const {
     return providers.value(providerId);
 }
 
-QVector<CloudProvider> HybridCloudManager::getAllProviders() const {
+QVector<CloudProviderInfo> HybridCloudManager::getAllProviders() const {
     return providers.values().toVector();
 }
 
-QVector<CloudProvider> HybridCloudManager::getHealthyProviders() const {
-    QVector<CloudProvider> healthy;
-    for (const CloudProvider& provider : providers.values()) {
+QVector<CloudProviderInfo> HybridCloudManager::getHealthyProviders() const {
+    QVector<CloudProviderInfo> healthy;
+    for (const CloudProviderInfo& provider : providers.values()) {
         if (provider.isHealthy && provider.isEnabled) {
             healthy.append(provider);
         }
@@ -196,7 +202,7 @@ HybridExecution HybridCloudManager::planExecution(const ExecutionRequest& reques
     }
     
     // Find best cloud provider based on cost, latency, and health
-    QVector<CloudProvider> healthyProviders = getHealthyProviders();
+    QVector<CloudProviderInfo> healthyProviders = getHealthyProviders();
     
     if (healthyProviders.isEmpty()) {
         plan.reasoning = "No healthy providers available";
@@ -205,10 +211,10 @@ HybridExecution HybridCloudManager::planExecution(const ExecutionRequest& reques
     }
     
     // Score each provider
-    CloudProvider bestProvider;
+    CloudProviderInfo bestProvider;
     double bestScore = -1.0;
     
-    for (const CloudProvider& provider : healthyProviders) {
+    for (const CloudProviderInfo& provider : healthyProviders) {
         double score = 0.0;
         
         // Cost factor (40%)
@@ -263,7 +269,7 @@ ExecutionResult HybridCloudManager::executeWithFailover(const ExecutionRequest& 
     HybridExecution plan = planExecution(request, "balanced");
     
     int attempt = 0;
-    QVector<CloudProvider> healthyProviders = getHealthyProviders();
+    QVector<CloudProviderInfo> healthyProviders = getHealthyProviders();
     
     // Try primary provider first
     if (plan.useCloud && !plan.selectedProvider.isEmpty()) {
@@ -279,7 +285,7 @@ ExecutionResult HybridCloudManager::executeWithFailover(const ExecutionRequest& 
     
     // Failover to other providers
     while (attempt < maxRetries && !result.success) {
-        for (const CloudProvider& provider : healthyProviders) {
+        for (const CloudProviderInfo& provider : healthyProviders) {
             if (provider.providerId == plan.selectedProvider) {
                 continue; // Already tried
             }
@@ -322,7 +328,7 @@ ExecutionResult HybridCloudManager::executeOnCloud(const ExecutionRequest& reque
         return result;
     }
     
-    CloudProvider provider = providers[providerId];
+    CloudProviderInfo provider = providers[providerId];
     
     // Route to appropriate provider
     if (providerId == "ollama") {
@@ -347,7 +353,7 @@ ExecutionResult HybridCloudManager::executeOnOllama(const ExecutionRequest& requ
     result.executionLocation = "ollama";
     result.success = false;
     
-    CloudProvider ollama = providers["ollama"];
+    CloudProviderInfo ollama = providers["ollama"];
     
     // Build Ollama API request
     QJsonObject requestBody;
@@ -413,7 +419,7 @@ ExecutionResult HybridCloudManager::executeOnHuggingFace(const ExecutionRequest&
     result.modelUsed = modelId.isEmpty() ? "bigcode/starcoder" : modelId;
     result.success = false;
     
-    CloudProvider hf = providers["huggingface"];
+    CloudProviderInfo hf = providers["huggingface"];
     
     if (hf.apiKey.isEmpty()) {
         result.errorMessage = "HuggingFace API key not configured";
@@ -435,7 +441,7 @@ ExecutionResult HybridCloudManager::executeOnHuggingFace(const ExecutionRequest&
     QUrl requestUrl(apiUrl);
     QNetworkRequest netRequest(requestUrl);
     netRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    netRequest.setRawHeader("Authorization", ("Bearer " + hf.apiKey).toUtf8());
+    netRequest.setRawHeader("Authorization", ("Bearer " + hf.apiKey).toLatin1());
     
     QByteArray requestData = QJsonDocument(requestBody).toJson();
     
@@ -560,7 +566,7 @@ void HybridCloudManager::recordExecution(const ExecutionResult& result) {
         
         // Update provider metrics
         if (providers.contains(result.executionLocation)) {
-            CloudProvider& provider = providers[result.executionLocation];
+            CloudProviderInfo& provider = providers[result.executionLocation];
             
             // Update average latency (moving average)
             provider.averageLatency = (provider.averageLatency * 0.9) + (result.latencyMs * 0.1);
@@ -571,6 +577,9 @@ void HybridCloudManager::recordExecution(const ExecutionResult& result) {
     if (executionHistory.size() > 1000) {
         executionHistory.removeFirst();
     }
+
+    // SC: Proper signal emission for flow tracking
+    emit executionComplete(result);
 }
 
 void HybridCloudManager::checkProviderHealth(const QString& providerId) {
@@ -578,7 +587,7 @@ void HybridCloudManager::checkProviderHealth(const QString& providerId) {
         return;
     }
     
-    CloudProvider& provider = providers[providerId];
+    CloudProviderInfo& provider = providers[providerId];
     
     // Special handling for Ollama - check /api/tags endpoint
     if (providerId == "ollama") {
@@ -607,6 +616,7 @@ void HybridCloudManager::checkProviderHealth(const QString& providerId) {
         
         reply->deleteLater();
         provider.lastHealthCheck = QDateTime::currentDateTime();
+        emit providerHealthChanged(providerId, provider.isHealthy);
         return;
     }
     
@@ -637,6 +647,8 @@ void HybridCloudManager::checkProviderHealth(const QString& providerId) {
     
     std::cout << "[HybridCloudManager] " << provider.name.toStdString() 
               << " health check: " << (provider.isHealthy ? "HEALTHY" : "FAILED") << std::endl;
+              
+    emit providerHealthChanged(providerId, provider.isHealthy);
 }
 
 void HybridCloudManager::checkAllProvidersHealth() {
@@ -710,6 +722,40 @@ void HybridCloudManager::setHealthCheckInterval(int milliseconds) {
 
 void HybridCloudManager::setMaxRetries(int retries) {
     maxRetries = retries;
+}
+
+bool HybridCloudManager::switchToCloud(const QString& reason) {
+    std::cout << "[HybridCloudManager] Switching to cloud mode. Reason: " << reason.toStdString() << std::endl;
+    currentlyUsingCloud = true;
+    localExecutionEnabled = false;
+    emit modeChanged("cloud");
+    emit cloudSwitched(true);
+    return true;
+}
+
+bool HybridCloudManager::switchToLocal(const QString& reason) {
+    std::cout << "[HybridCloudManager] Switching to local mode. Reason: " << reason.toStdString() << std::endl;
+    currentlyUsingCloud = false;
+    localExecutionEnabled = true;
+    emit modeChanged("local");
+    emit cloudSwitched(false);
+    return true;
+}
+
+bool HybridCloudManager::switchToCloudModel(const QString& reason) {
+    return switchToCloud(reason);
+}
+
+bool HybridCloudManager::switchToLocalModel(const QString& reason) {
+    return switchToLocal(reason);
+}
+
+bool HybridCloudManager::enableHybridMode() {
+    std::cout << "[HybridCloudManager] Enabling hybrid mode" << std::endl;
+    currentlyUsingCloud = false;
+    localExecutionEnabled = true;
+    emit modeChanged("hybrid");
+    return true;
 }
 
 double HybridCloudManager::getTotalCost() const {

@@ -135,7 +135,6 @@ WindowClass ENDS
 ;   - Sets up window procedure callback
 ;   - Defines background color and cursor
 ; ============================================================================
-
 PUBLIC WindowClass_Register
 WindowClass_Register PROC
     ; rcx = Window class ptr, rdx = hInstance
@@ -194,7 +193,6 @@ WindowClass_Register ENDP
 ;   - GetDC to obtain device context
 ;   - Sets up initial window properties
 ; ============================================================================
-
 PUBLIC WindowClass_Create
 WindowClass_Create PROC
     ; rcx = WindowClass ptr, rdx = hInstance
@@ -275,7 +273,6 @@ WindowClass_Create ENDP
 ; Returns:
 ;   rax = font handle (HFONT)
 ; ============================================================================
-
 CreateDefaultFont PROC
     sub rsp, 32  ; Scratch space
     
@@ -325,7 +322,6 @@ CreateDefaultFont ENDP
 ;
 ; Returns: None
 ; ============================================================================
-
 PUBLIC WindowClass_ShowWindow
 WindowClass_ShowWindow PROC
     mov rax, [rcx]  ; Get HWND from WindowClass
@@ -351,7 +347,6 @@ WindowClass_ShowWindow ENDP
 ; - Calls DispatchMessage to send to WndProc
 ; - Loops until WM_QUIT
 ; ============================================================================
-
 PUBLIC WindowClass_MessageLoop
 WindowClass_MessageLoop PROC
     push rbx
@@ -404,7 +399,6 @@ WindowClass_MessageLoop ENDP
 ;
 ; Returns: None
 ; ============================================================================
-
 PUBLIC WindowClass_Destroy
 WindowClass_Destroy PROC
     push rbx
@@ -475,7 +469,6 @@ WindowClass_Destroy ENDP
 ; - WM_TIMER: Timer events
 ; - WM_KEYDOWN: Keyboard input
 ; ============================================================================
-
 WndProc_Main PROC hWnd:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM
     
     ; Switch on uMsg
@@ -649,7 +642,6 @@ WndProc_Main ENDP
 ; Returns:
 ;   rax = HMENU (menu bar handle)
 ; ============================================================================
-
 CreateMenuBar PROC
     push rbx
     push rdi
@@ -728,7 +720,6 @@ CreateMenuBar ENDP
 ;   rcx = HDC
 ;   edx = color (RGB)
 ; ============================================================================
-
 DrawBackground PROC
     push rbx
     
@@ -771,7 +762,6 @@ DrawBackground ENDP
 ;   r8d = y
 ;   r9 = text string
 ; ============================================================================
-
 DrawText_Simple PROC
     push rbx
     push rdi
@@ -807,7 +797,6 @@ DrawText_Simple ENDP
 ; ============================================================================
 ; Entry point stub (if building standalone executable)
 ; ============================================================================
-
 PUBLIC main
 main PROC
     ; This would be the entry point for a standalone executable
@@ -817,4 +806,8 @@ main PROC
 main ENDP
 
 end
+
+
+
+
 

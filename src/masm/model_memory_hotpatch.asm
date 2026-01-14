@@ -35,6 +35,7 @@ EXTERN asm_malloc:PROC
 EXTERN asm_free:PROC
 EXTERN asm_str_length:PROC
 EXTERN asm_str_create:PROC
+EXTERN asm_str_create_from_cstr:PROC
 EXTERN VirtualProtect:PROC
 EXTERN asm_log:PROC
 
@@ -470,40 +471,6 @@ cmp_not_equal:
     ret
 
 asm_memcmp ENDP
-
-;=====================================================================
-; Helper: asm_str_create_from_cstr(cstr: rcx) -> rax (string handle)
-; Wraps existing asm_str_create for C-string input
-;=====================================================================
-
-ALIGN 16
-asm_str_create_from_cstr PROC
-
-    push rbx
-    sub rsp, 32
-    
-    mov rbx, rcx            ; Save cstr ptr
-    
-    ; Calculate length
-    xor rdx, rdx
-    
-strlen_loop:
-    cmp byte ptr [rbx + rdx], 0
-    je strlen_done
-    inc rdx
-    jmp strlen_loop
-
-strlen_done:
-    ; rdx = length, rbx = cstr
-    mov rcx, rbx
-    ; rdx already has length
-    call asm_str_create
-    
-    add rsp, 32
-    pop rbx
-    ret
-
-asm_str_create_from_cstr ENDP
 
 ;=====================================================================
 ; String constants

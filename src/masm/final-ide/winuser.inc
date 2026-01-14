@@ -7,11 +7,21 @@
 
 ; Clipboard functions (already defined in windows.inc but repeated for clarity)
 ; These are EXTERN declarations typically used with:
-; EXTERN GetClipboardData:PROC
-; EXTERN OpenClipboard:PROC
-; EXTERN CloseClipboard:PROC
-; EXTERN GlobalLock:PROC
-; EXTERN GlobalUnlock:PROC
+IFNDEF GetClipboardData
+    ; EXTERN GetClipboardData:PROC
+ENDIF
+IFNDEF OpenClipboard
+    ; EXTERN OpenClipboard:PROC
+ENDIF
+IFNDEF CloseClipboard
+    ; EXTERN CloseClipboard:PROC
+ENDIF
+IFNDEF GlobalLock
+    ; EXTERN GlobalLock:PROC
+ENDIF
+IFNDEF GlobalUnlock
+    ; EXTERN GlobalUnlock:PROC
+ENDIF
 
 ; Message Box constants
 MB_OK             EQU 0h
@@ -46,3 +56,4 @@ VK_RETURN         EQU 000Dh
 VK_TAB            EQU 0009h
 
 ; End of winuser.inc
+

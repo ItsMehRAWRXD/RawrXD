@@ -69,7 +69,11 @@ private:
     void dispatchSignal(uint32_t signalId, uint32_t paramCount, const QtParam* params);
     void pumpEvents();
 
-    friend void qt_masm_signal_callback(uint32_t signalId, uint32_t paramCount, const QtParam* params);
+public:
+    void dispatchSignalFromCallback(uint32_t signalId, uint32_t paramCount, const QtParam* params) {
+        dispatchSignal(signalId, paramCount, params);
+    }
+private:
 
     bool m_initialized = false;
     bool m_masmInitialized = false;

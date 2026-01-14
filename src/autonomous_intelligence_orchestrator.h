@@ -4,6 +4,8 @@
 #include <QString>
 #include <QJsonObject>
 #include <QJsonArray>
+
+class AgenticExecutor; // forward declaration for dependency injection
 #include <memory>
 #include "autonomous_model_manager.h"
 #include "intelligent_codebase_engine.h"
@@ -22,6 +24,9 @@ class AutonomousIntelligenceOrchestrator : public QObject {
 private:
     // Core autonomous systems
     std::unique_ptr<AutonomousModelManager> modelManager;
+
+    // External agent/executor
+    AgenticExecutor* agenticExecutor = nullptr;
     std::unique_ptr<IntelligentCodebaseEngine> codebaseEngine;
     std::unique_ptr<AutonomousFeatureEngine> featureEngine;
     std::unique_ptr<HybridCloudManager> cloudManager;
@@ -78,6 +83,10 @@ public:
     bool autoFixBugs();
     bool autoOptimizeCode();
     bool autoRefactor();
+
+    // Discovery and dependency wiring
+    void setAgenticExecutor(AgenticExecutor* executor);
+    QJsonObject runSystemDiscovery();
     
     // Model intelligence
     ModelRecommendation getModelRecommendation(const QString& taskType);
@@ -100,8 +109,15 @@ public:
     bool enableEnterpriseMode();
     bool setupTeamCollaboration(const QString& teamId);
     QJsonObject getEnterpriseReport();
+
+    // Accessors
+    AutonomousFeatureEngine* getFeatureEngine() const { return featureEngine.get(); }
+    IntelligentCodebaseEngine* getCodebaseEngine() const { return codebaseEngine.get(); }
+    AutonomousModelManager* getModelManager() const { return modelManager.get(); }
+    HybridCloudManager* getCloudManager() const { return cloudManager.get(); }
     
 signals:
+    void systemDiscoveryReady(const QJsonObject& capabilities);
     void autonomousModeStarted();
     void autonomousModeStopped();
     void analysisCompleted(const QJsonObject& results);

@@ -555,7 +555,6 @@ add_to_history PROC
     ; Add command to history
     ret
 add_to_history ENDP
-
 parse_command PROC
     ; rcx = command -> eax = command type
     ; Parse command prefix to determine type
@@ -628,87 +627,70 @@ parse_command PROC
     mov eax, CMD_GUI
     ret
 parse_command ENDP
-
 execute_model_command PROC
     ; Execute model-related command
     ret
 execute_model_command ENDP
-
 execute_dataset_command PROC
     ; Execute dataset-related command
     ret
 execute_dataset_command ENDP
-
 execute_training_command PROC
     ; Execute training-related command
     ret
 execute_training_command ENDP
-
 execute_tensor_command PROC
     ; Execute tensor-related command
     ret
 execute_tensor_command ENDP
-
 execute_viz_command PROC
     ; Execute visualization command
     ret
 execute_viz_command ENDP
-
 execute_notebook_command PROC
     ; Execute notebook command
     ret
 execute_notebook_command ENDP
-
 execute_gui_command PROC
     ; Execute GUI command
     ret
 execute_gui_command ENDP
-
 execute_system_command PROC
     ; Execute system command
     ret
 execute_system_command ENDP
-
 create_input_box PROC
     ; Create input box UI
     ret
 create_input_box ENDP
-
 create_output_display PROC
     ; Create output display UI
     ret
 create_output_display ENDP
-
 create_history_list PROC
     ; Create history list UI
     ret
 create_history_list ENDP
-
 create_autocomplete PROC
     ; Create autocomplete UI
     ret
 create_autocomplete ENDP
-
 update_output_display PROC
     ; Update output display
     ret
 update_output_display ENDP
-
 update_repl_status PROC
     ; Update REPL status display
     ret
 update_repl_status ENDP
-
 start_repl_process PROC
     ; Start REPL process
     ret
 start_repl_process ENDP
-
 stop_repl_process PROC
     ; Stop REPL process
     ret
 stop_repl_process ENDP
-
 strstr_masm PROC
     ; rcx = haystack, rdx = needle -> rax = pointer or 0
     ; Simple string search
@@ -719,19 +701,16 @@ strstr_masm ENDP
 ;==========================================================================
 ; Window procedures
 ;==========================================================================
-
 enhanced_cli_wnd_proc PROC
     ; Main window procedure
     call DefWindowProcA
     ret
 enhanced_cli_wnd_proc ENDP
-
 input_box_wnd_proc PROC
     ; Input box procedure
     call DefWindowProcA
     ret
 input_box_wnd_proc ENDP
-
 output_display_wnd_proc PROC
     ; Output display procedure
     call DefWindowProcA
@@ -742,11 +721,9 @@ output_display_wnd_proc ENDP
 enhanced_cli_send_to_repl PROC
     ret
 enhanced_cli_send_to_repl ENDP
-
 enhanced_cli_autocomplete PROC
     ret
 enhanced_cli_autocomplete ENDP
-
 enhanced_cli_search_history PROC
     ret
 enhanced_cli_search_history ENDP
@@ -754,9 +731,12 @@ enhanced_cli_search_history ENDP
 enhanced_cli_clear_history PROC
     ret
 enhanced_cli_clear_history ENDP
-
 enhanced_cli_export_history PROC
     ret
 enhanced_cli_export_history ENDP
 
 end
+
+
+
+

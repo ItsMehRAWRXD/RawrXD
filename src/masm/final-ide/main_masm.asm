@@ -447,7 +447,6 @@ print_stdout ENDP
 ALIGN 16
 ; Probe logging (persistent handle): writes stage markers to dbg_probe_path
     sub rsp, 64
-
 probe_open PROC
     sub rsp, 72
 
@@ -845,7 +844,6 @@ mool_done:
     add rsp, 48
     ret
 main_on_open_file ENDP
-
 PUBLIC main_on_save_file
 main_on_save_file PROC
     sub rsp, 48
@@ -862,7 +860,6 @@ do_save:
     add rsp, 48
     ret
 main_on_save_file ENDP
-
 PUBLIC main_on_save_file_as
 main_on_save_file_as PROC
     sub rsp, 48
@@ -1210,7 +1207,6 @@ main ENDP
 ;==========================================================================
 ; Startup Code: Bare entry point that calls WinMain
 ;==========================================================================
-
 PUBLIC _start
 _start PROC
     ; For CONSOLE subsystem, just call main directly.
@@ -1229,24 +1225,21 @@ _start ENDP
 ;==========================================================================
 ; Alias for backward compatibility
 ;==========================================================================
-    PUBLIC RawrMain
+PUBLIC RawrMain
 RawrMain EQU main
 ;==========================================================================
-
 PUBLIC RawrXD_GetSystemLoad
 RawrXD_GetSystemLoad PROC
     ; Returns system load percentage (0-100)
     mov eax, 50  ; Return 50% as default
     ret
 RawrXD_GetSystemLoad ENDP
-
 PUBLIC RawrXD_HotPatchEnginePath
 RawrXD_HotPatchEnginePath PROC
     ; Returns pointer to hotpatch engine path string
     lea rax, szHotPatchPath
     ret
 RawrXD_HotPatchEnginePath ENDP
-
 PUBLIC RawrXD_ProcessStreamingChunk
 RawrXD_ProcessStreamingChunk PROC
     ; rcx = chunk data, rdx = chunk size
@@ -1254,7 +1247,6 @@ RawrXD_ProcessStreamingChunk PROC
     mov eax, 1
     ret
 RawrXD_ProcessStreamingChunk ENDP
-
 PUBLIC RawrXD_PerformanceLogMetrics
 RawrXD_PerformanceLogMetrics PROC
     ; rcx = metric name, rdx = metric value
@@ -1268,4 +1260,8 @@ RawrXD_PerformanceLogMetrics ENDP
 ;==========================================================================
 
 END
+
+
+
+
 

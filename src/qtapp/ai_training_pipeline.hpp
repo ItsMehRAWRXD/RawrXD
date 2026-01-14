@@ -26,7 +26,7 @@ enum class TrainingBackend {
 };
 
 // Structure for model architecture configuration
-struct ModelArchitecture {
+struct AITrainingArchitecture {
     QString baseModel;          // Base model to fine-tune from
     int vocabularySize;
     int hiddenSize;
@@ -39,7 +39,7 @@ struct ModelArchitecture {
     double attentionDropout;
     QString normalizationType;
     
-    ModelArchitecture() 
+    AITrainingArchitecture() 
         : vocabularySize(32000)
         , hiddenSize(4096)
         , numLayers(32)
@@ -104,14 +104,14 @@ public:
     void setBackend(TrainingBackend backend);
     TrainingBackend getBackend() const;
     
-    void setArchitecture(const ModelArchitecture& arch);
-    ModelArchitecture getArchitecture() const;
+    void setArchitecture(const AITrainingArchitecture& arch);
+    AITrainingArchitecture getArchitecture() const;
     
     void setHyperparameters(const TrainingHyperparameters& params);
     TrainingHyperparameters getHyperparameters() const;
 
     // Training methods
-    bool prepareTraining(const TrainingDataset& dataset, const DigestionConfig& config);
+    bool prepareTraining(const AIDigestionDataset& dataset, const DigestionConfig& config);
     void startTraining();
     void stopTraining();
     void pauseTraining();
@@ -161,7 +161,7 @@ private slots:
 private:
     // Core training methods
     bool setupTrainingEnvironment();
-    bool prepareTrainingData(const TrainingDataset& dataset);
+    bool prepareTrainingData(const AIDigestionDataset& dataset);
     bool generateTrainingScript();
     bool executeTraining();
     void cleanupTraining();
@@ -173,7 +173,7 @@ private:
     bool setupOllamaTraining();
     
     // Data preparation methods
-    bool createDatasetFiles(const TrainingDataset& dataset);
+    bool createDatasetFiles(const AIDigestionDataset& dataset);
     bool generateTokenizerFiles();
     bool createConfigFiles();
     
@@ -196,7 +196,7 @@ private:
 
 private:
     TrainingBackend m_backend;
-    ModelArchitecture m_architecture;
+    AITrainingArchitecture m_architecture;
     TrainingHyperparameters m_hyperparameters;
     
     // Training state
@@ -219,7 +219,7 @@ private:
     QTimer* m_checkpointTimer;
     
     // Training data
-    TrainingDataset m_dataset;
+    AIDigestionDataset m_dataset;
     DigestionConfig m_config;
     
     // Network for downloading models/dependencies
@@ -253,7 +253,7 @@ class LlamaTrainer : public QObject {
 public:
     explicit LlamaTrainer(QObject* parent = nullptr);
     
-    bool prepareTraining(const QString& datasetPath, const ModelArchitecture& arch);
+    bool prepareTraining(const QString& datasetPath, const AITrainingArchitecture& arch);
     bool startTraining(const TrainingHyperparameters& params);
     bool quantizeModel(const QString& inputPath, const QString& outputPath, const QString& quantization);
     

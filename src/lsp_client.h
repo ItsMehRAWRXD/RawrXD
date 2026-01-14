@@ -44,6 +44,26 @@ struct CompletionItem {
 };
 
 /**
+ * \brief Parameter information for function signatures
+ */
+struct ParameterInfo {
+    QString label;             // Parameter label
+    QString documentation;     // Parameter documentation
+    int start = 0;            // Start offset in signature
+    int end = 0;              // End offset in signature
+};
+
+/**
+ * \brief Signature help for function/method calls
+ */
+struct SignatureHelp {
+    QVector<QString> signatures;     // Function signatures
+    int activeSignature = 0;         // Current signature index
+    int activeParameter = 0;         // Current parameter index
+    QVector<ParameterInfo> parameters; // Parameter details
+};
+
+/**
  * \brief LSP diagnostic message
  */
 struct Diagnostic {
@@ -52,6 +72,7 @@ struct Diagnostic {
     int severity;              // 1=Error, 2=Warning, 3=Info, 4=Hint
     QString message;           // Diagnostic message
     QString source;            // Source (e.g., "clangd")
+    QString code;              // Diagnostic code
 };
 
 /**
@@ -148,6 +169,26 @@ public:
     void executeCodeAction(const QJsonObject& action);
 
     /**
+     * Request parameter hints/signature help
+     */
+    void requestSignatureHelp(const QString& uri, int line, int character);
+
+    /**
+     * Request extract method refactoring
+     */
+    void requestExtractMethod(const QString& uri, int startLine, int endLine, const QString& methodName);
+
+    /**
+     * Request extract variable refactoring
+     */
+    void requestExtractVariable(const QString& uri, int line, int startChar, int endChar, const QString& varName);
+
+    /**
+     * Organize imports for document
+     */
+    void requestOrganizeImports(const QString& uri);
+
+    /**
      * Format document
      */
     void formatDocument(const QString& uri);
@@ -172,6 +213,11 @@ signals:
      * Hover information received
      */
     void hoverReceived(const QString& uri, const QString& markdown);
+
+    /**
+     * Signature help received
+     */
+    void signatureHelpReceived(const QString& uri, const SignatureHelp& help);
 
     /**
      * Definition location received
@@ -216,16 +262,18 @@ private slots:
 private:
     void sendMessage(const QJsonObject& message);
     void processMessage(const QJsonObject& message);
-    void handleInitializeResponse(const QJsonObject& result);
-    void handleCompletionResponse(const QJsonObject& result, int requestId);
-    void handleHoverResponse(const QJsonObject& result, int requestId);
-    void handleDefinitionResponse(const QJsonObject& result, int requestId);
-    void handleReferencesResponse(const QJsonObject& result, int requestId);
-    void handleRenameResponse(const QJsonObject& result, int requestId);
-    void handleCodeActionResponse(const QJsonObject& result, int requestId);
+    void handleInitializeResponse(const QJsonValue& result);
+    void handleCompletionResponse(const QJsonValue& result, int requestId);
+    void handleHoverResponse(const QJsonValue& result, int requestId);
+    void handleSignatureHelpResponse(const QJsonValue& result, int requestId);
+    void handleDefinitionResponse(const QJsonValue& result, int requestId);
+    void handleReferencesResponse(const QJsonValue& result, int requestId);
+    void handleRenameResponse(const QJsonValue& result, int requestId);
+    void handleCodeActionResponse(const QJsonValue& result, int requestId);
     void handleDiagnostics(const QJsonObject& params);
     
     QString buildDocumentUri(const QString& filePath) const;
+    int computeCompletionScore(const CompletionItem& item, const QString& filter) const;
     
     LSPServerConfig m_config;
     QProcess* m_serverProcess{};
@@ -236,6 +284,7 @@ private:
     QByteArray m_receiveBuffer;
     QMap<QString, int> m_documentVersions;  // uri -> version
     QMap<QString, QVector<Diagnostic>> m_diagnostics;  // uri -> diagnostics
+    QMap<QString, QVector<CompletionItem>> m_completionCache;  // uri:position -> items
     
     // Request tracking
     struct PendingRequest {
@@ -243,6 +292,7 @@ private:
         QString uri;
         int line;
         int character;
+        QString metadata;  // Extra data like new name for rename
     };
     QMap<int, PendingRequest> m_pendingRequests;
 };

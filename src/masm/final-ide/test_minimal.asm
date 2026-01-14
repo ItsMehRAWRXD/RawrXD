@@ -10,7 +10,6 @@ includelib user32.lib
     class_name BYTE "TestClass",0
 
 .code
-
 WndProc PROC
     cmp edx, WM_DESTROY
     je destroy
@@ -22,7 +21,6 @@ destroy:
     xor eax, eax
     ret
 WndProc ENDP
-
 main PROC
     sub rsp, 40
     
@@ -99,3 +97,5 @@ exit_fail:
 main ENDP
 
 END
+
+

@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <cmath>
 #include <iomanip>
+#include <cstdint>
 
 namespace nlohmann {
 
@@ -55,6 +56,20 @@ public:
     json(const std::initializer_list<json>& init) : m_type(array) {
         for (const auto& item : init) {
             m_array.push_back(item);
+        }
+    }
+
+    // std::vector<std::string> constructor
+    json(const std::vector<std::string>& vec) : m_type(array) {
+        for (const auto& s : vec) {
+            m_array.emplace_back(s);
+        }
+    }
+
+    // std::map<std::string, std::string> constructor
+    json(const std::map<std::string, std::string>& m) : m_type(object) {
+        for (const auto& [k, v] : m) {
+            m_object[k] = json(v);
         }
     }
 
@@ -157,6 +172,20 @@ public:
         throw std::runtime_error("Cannot get int from this JSON type");
     }
 
+    // get<int64_t>
+    template<>
+    int64_t get<int64_t>() const {
+        if (m_type == number) return static_cast<int64_t>(m_number);
+        throw std::runtime_error("Cannot get int64_t from this JSON type");
+    }
+
+    // get<uint64_t>
+    template<>
+    uint64_t get<uint64_t>() const {
+        if (m_type == number) return static_cast<uint64_t>(m_number);
+        throw std::runtime_error("Cannot get uint64_t from this JSON type");
+    }
+
     // get<double>
     template<>
     double get<double>() const {
@@ -205,24 +234,45 @@ public:
         return m_type == null;
     }
 
-    // Iteration for objects
+    // Iteration for arrays - use index-based access or these iterators
+    std::vector<json>::iterator array_begin() {
+        if (m_type != array) throw std::runtime_error("Cannot iterate non-array");
+        return m_array.begin();
+    }
+
+    std::vector<json>::iterator array_end() {
+        if (m_type != array) throw std::runtime_error("Cannot iterate non-array");
+        return m_array.end();
+    }
+
+    std::vector<json>::const_iterator array_begin() const {
+        if (m_type != array) throw std::runtime_error("Cannot iterate non-array");
+        return m_array.begin();
+    }
+
+    std::vector<json>::const_iterator array_end() const {
+        if (m_type != array) throw std::runtime_error("Cannot iterate non-array");
+        return m_array.end();
+    }
+
+    // For object iteration (range-for loops over object returns key-value pairs)
     auto begin() {
-        if (m_type != object) throw std::runtime_error("Cannot iterate non-object");
+        if (m_type != object) throw std::runtime_error("Cannot iterate non-object with begin()");
         return m_object.begin();
     }
 
     auto end() {
-        if (m_type != object) throw std::runtime_error("Cannot iterate non-object");
+        if (m_type != object) throw std::runtime_error("Cannot iterate non-object with end()");
         return m_object.end();
     }
 
     auto begin() const {
-        if (m_type != object) throw std::runtime_error("Cannot iterate non-object");
+        if (m_type != object) throw std::runtime_error("Cannot iterate non-object with begin()");
         return m_object.begin();
     }
 
     auto end() const {
-        if (m_type != object) throw std::runtime_error("Cannot iterate non-object");
+        if (m_type != object) throw std::runtime_error("Cannot iterate non-object with end()");
         return m_object.end();
     }
 

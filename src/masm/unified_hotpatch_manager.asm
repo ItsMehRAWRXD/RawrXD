@@ -76,6 +76,18 @@ msg_unified_byte_enter  DB "UNIFIED byte apply enter",0
 msg_unified_byte_fail   DB "UNIFIED byte apply fail",0
 msg_unified_byte_exit   DB "UNIFIED byte apply exit",0
 
+; Event handler log format strings
+szLogPatchApplied       DB "PATCH applied",0
+szLogPatchFailed        DB "PATCH failed",0
+
+; Simple metrics block used by handlers
+; [0] patches_applied (qword)
+; [8] patches_failed  (qword)
+g_hotpatch_metrics      QWORD 0, 0
+
+; Error recovery feature toggle (0=off, nonzero=on)
+g_error_recovery_enabled DWORD 0
+
 ; Signal IDs for event coordination
 SIGNAL_PATCH_APPLIED        EQU 1000
 SIGNAL_PATCH_FAILED         EQU 1001
@@ -581,6 +593,18 @@ skip_recovery:
     ret
 
 unified_handler_patch_failed ENDP
+
+;=====================================================================
+; Recovery hook used by unified_handler_patch_failed
+;=====================================================================
+
+ALIGN 16
+unified_attempt_patch_recovery PROC
+    ; rcx = patch name, rdx = layer
+    ; Minimal recovery hook: currently no-op, returns success
+    mov eax, 1
+    ret
+unified_attempt_patch_recovery ENDP
 
 ;=====================================================================
 ; masm_unified_destroy(manager: rcx) -> void

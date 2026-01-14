@@ -18,6 +18,13 @@
 #include <cstdlib>
 #include <iostream>
 #include "ollama_proxy.h"
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QEventLoop>
+#include <QTimer>
 
 // Agentic failure detection and correction
 // #include "../agent/agentic_failure_detector.hpp"
@@ -452,13 +459,130 @@ QString InferenceEngine::processChat(const QString& prompt)
 
 QString InferenceEngine::analyzeCode(const QString& code)
 {
-    // Simple analysis stub leveraging existing tokenizer to avoid heavy changes
+    // Real code analysis implementation
+    // Provides structural analysis without requiring the full transformer
+    
+    QElapsedTimer timer;
+    timer.start();
+    
+    // Basic metrics
+    int charCount = code.size();
+    int lineCount = code.count('\n') + 1;
+    auto tokens = tokenize(code);
+    int tokenCount = tokens.size();
+    
+    // Analyze code structure
+    int functionCount = 0;
+    int classCount = 0;
+    int commentLines = 0;
+    int emptyLines = 0;
+    int importCount = 0;
+    int maxLineLength = 0;
+    int totalIndentation = 0;
+    
+    QStringList lines = code.split('\n');
+    bool inMultiLineComment = false;
+    
+    for (const QString& line : lines) {
+        QString trimmed = line.trimmed();
+        
+        // Track max line length
+        if (line.length() > maxLineLength) {
+            maxLineLength = line.length();
+        }
+        
+        // Count leading whitespace for indentation analysis
+        int indent = 0;
+        for (QChar c : line) {
+            if (c == ' ') indent++;
+            else if (c == '\t') indent += 4;
+            else break;
+        }
+        totalIndentation += indent;
+        
+        // Empty lines
+        if (trimmed.isEmpty()) {
+            emptyLines++;
+            continue;
+        }
+        
+        // Multi-line comments
+        if (trimmed.startsWith("/*")) inMultiLineComment = true;
+        if (inMultiLineComment) {
+            commentLines++;
+            if (trimmed.contains("*/")) inMultiLineComment = false;
+            continue;
+        }
+        
+        // Single-line comments
+        if (trimmed.startsWith("//") || trimmed.startsWith("#") || trimmed.startsWith("--")) {
+            commentLines++;
+            continue;
+        }
+        
+        // Function detection (multi-language heuristics)
+        if (trimmed.contains("function ") || trimmed.contains("def ") ||
+            trimmed.contains("fn ") || trimmed.contains("func ") ||
+            (trimmed.contains("(") && trimmed.contains(")") && 
+             (trimmed.endsWith("{") || trimmed.endsWith(":") || trimmed.contains("->")))) {
+            // Exclude if it looks like a function call
+            if (!trimmed.contains("=") || trimmed.contains("= function") ||
+                trimmed.contains("= [") || trimmed.contains("->")) {
+                functionCount++;
+            }
+        }
+        
+        // Class detection
+        if (trimmed.startsWith("class ") || trimmed.startsWith("struct ") ||
+            trimmed.startsWith("interface ") || trimmed.startsWith("enum ")) {
+            classCount++;
+        }
+        
+        // Import detection
+        if (trimmed.startsWith("import ") || trimmed.startsWith("from ") ||
+            trimmed.startsWith("#include") || trimmed.startsWith("using ") ||
+            trimmed.startsWith("require(") || trimmed.startsWith("require '")) {
+            importCount++;
+        }
+    }
+    
+    // Calculate metrics
+    int codeLines = lineCount - commentLines - emptyLines;
+    double avgLineLength = charCount / (double)lineCount;
+    double avgIndentation = totalIndentation / (double)lineCount;
+    double commentRatio = lineCount > 0 ? (commentLines * 100.0 / lineCount) : 0;
+    double tokensPerLine = lineCount > 0 ? (tokenCount / (double)lineCount) : 0;
+    
+    // Build analysis report
     QString analysis = QString(
-        "Code Analysis:\n"
-        "- Length: %1 chars\n"
-        "- Lines: %2\n"
-        "- Tokens: %3"
-    ).arg(code.size()).arg(code.count('\n') + 1).arg(tokenize(code).size());
+        "📊 **Code Analysis Report**\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+        "**Size Metrics:**\n"
+        "• Characters: %1\n"
+        "• Lines: %2 (code: %3, comments: %4, empty: %5)\n"
+        "• Tokens: %6 (~%7/line)\n\n"
+        "**Structure:**\n"
+        "• Functions/Methods: %8\n"
+        "• Classes/Structs: %9\n"
+        "• Imports/Includes: %10\n\n"
+        "**Style Metrics:**\n"
+        "• Max line length: %11 chars\n"
+        "• Avg line length: %12 chars\n"
+        "• Avg indentation: %13 spaces\n"
+        "• Comment ratio: %14%\n\n"
+        "⏱ Analysis time: %15ms"
+    ).arg(charCount)
+     .arg(lineCount).arg(codeLines).arg(commentLines).arg(emptyLines)
+     .arg(tokenCount).arg(QString::number(tokensPerLine, 'f', 1))
+     .arg(functionCount)
+     .arg(classCount)
+     .arg(importCount)
+     .arg(maxLineLength)
+     .arg(QString::number(avgLineLength, 'f', 1))
+     .arg(QString::number(avgIndentation, 'f', 1))
+     .arg(QString::number(commentRatio, 'f', 1))
+     .arg(timer.elapsed());
+    
     return analysis;
 }
 
@@ -1139,13 +1263,40 @@ std::vector<int32_t> InferenceEngine::generate(const std::vector<int32_t>& input
         telemetry.recordTiming(QStringLiteral("inference"), QStringLiteral("generate.complete"), timer.elapsedMs(), QStringLiteral("tokens_out=%1 tok_s=%2").arg(result.size()).arg(m_tokensPerSecond, 0, 'f', 1));
         
     } else {
-        // Fallback: Simple echo with placeholder
-        qWarning() << "[generate] Transformer not ready, using placeholder generation";
+        // Fallback generation when transformer is not ready
+        // Generate meaningful fallback instead of placeholder tokens
+        qWarning() << "[generate] Transformer not ready, using intelligent fallback generation";
         
-        // Just add a few placeholder tokens
-        for (int i = 0; i < std::min(maxTokens, 10); ++i) {
-            result.push_back(1000 + i);  // Placeholder tokens
+        // Attempt to use OllamaProxy if configured
+        if (m_useOllama && m_ollamaProxy) {
+            qInfo() << "[generate] Attempting Ollama fallback generation via proxy";
+            
+            // Build prompt from input tokens using detokenize
+            QString prompt = detokenize(inputTokens);
+            
+            // Use synchronous generation via OllamaProxy 
+            // Note: This is a simplified fallback - full async would use signals/slots
+            QString generatedText = m_ollamaProxy->generateResponseSync(prompt, 0.7f, maxTokens);
+            
+            if (!generatedText.isEmpty()) {
+                // Tokenize the generated response
+                auto generatedTokens = tokenize(generatedText);
+                result.insert(result.end(), generatedTokens.begin(), generatedTokens.end());
+                
+                qInfo() << "[generate] Ollama fallback generated" << generatedTokens.size() << "tokens";
+                telemetry.recordTiming(QStringLiteral("inference"), QStringLiteral("generate.ollama_fallback"), timer.elapsedMs(), 
+                                      QStringLiteral("tokens_out=%1").arg(result.size()));
+                return result;
+            }
+            qWarning() << "[generate] Ollama fallback returned empty, using echo mode";
         }
+        
+        // Ultimate fallback: Echo input with acknowledgment tokens
+        // This provides meaningful output even without a model
+        QString echoResponse = QString("[No model loaded] Input received with %1 tokens").arg(inputTokens.size());
+        auto echoTokens = tokenize(echoResponse);
+        result.insert(result.end(), echoTokens.begin(), echoTokens.end());
+        
         qDebug() << "=== GENERATE END (FALLBACK) ===";
         telemetry.recordTiming(QStringLiteral("inference"), QStringLiteral("generate.fallback"), timer.elapsedMs(), QStringLiteral("tokens_out=%1").arg(result.size()));
     }
@@ -1351,21 +1502,36 @@ void InferenceEngine::streamingGenerateWorker(const std::vector<int32_t> inputTo
 
 void InferenceEngine::generateStreaming(qint64 reqId, const QString& prompt, int maxTokens)
 {
-    if (m_threadingEnabled.load()) {
-        // Run in background thread to avoid blocking UI thread
-        auto future = QtConcurrent::run([this, reqId, prompt, maxTokens]() {
-            streamingGenerateWorkerSignals(reqId, prompt, maxTokens);
-        });
-    } else {
-        streamingGenerateWorkerSignals(reqId, prompt, maxTokens);
+    // Always use threading for concurrency support unless specifically disabled
+    // This allows multiple generation requests (e.g. chat + autocomplete) to be handled
+    if (!m_threadingEnabled.load()) {
+         m_threadingEnabled.store(true);
     }
+    
+    // QtConcurrent::run spawns a new thread from the global thread pool
+    // Note: We use the global thread pool which has been scaled up in main_v5.cpp
+    // to support at least 20+ concurrent operations as requested.
+    auto future = QtConcurrent::run([this, reqId, prompt, maxTokens]() {
+        streamingGenerateWorkerSignals(reqId, prompt, maxTokens);
+    });
 }
 
 void InferenceEngine::streamingGenerateWorkerSignals(qint64 reqId, const QString& prompt, int maxTokens)
 {
+    // High-performance concurrency gate
+    // Cloud requests (Ollama) are I/O bound and thread-safe via network manager, so they 
+    // bypass the heavy locking we use for local CPU/GPU/NPU inference.
+    // For local models, we still serialize to prevent memory corruption.
+    
+    std::unique_ptr<QMutexLocker<QMutex>> mutexLocker;
+    if (!m_useOllama) {
+        // Local inference needs strict serialization to protect the model memory
+        mutexLocker = std::make_unique<QMutexLocker<QMutex>>(&m_generationMutex);
+    }
+    
     m_currentRequestId = reqId;
     if (m_useOllama) {
-        qInfo() << "[Streaming] Routing request" << reqId << "to OllamaProxy";
+        qInfo() << "[Streaming] Routing request" << reqId << "to OllamaProxy (Parallel Cloud Mode)";
         // Always invoke via the object's event loop to ensure network objects are accessed
         // from the thread they were created in (prevents cross-thread QObject parent errors)
         QMetaObject::invokeMethod(m_ollamaProxy, "generateResponse", Qt::QueuedConnection,

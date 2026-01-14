@@ -9,10 +9,10 @@
 #include <QJsonObject>
 #include <QDateTime>
 #include <QTimer>
+#include "intelligent_codebase_engine.h"  // For BugReport struct
 
 // Forward declarations
 class HybridCloudManager;
-class IntelligentCodebaseEngine;
 
 // Autonomous suggestion types
 struct AutonomousSuggestion {
@@ -187,6 +187,15 @@ public:
     void enableAutomaticSuggestions(bool enable);
     void setMaxConcurrentAnalyses(int max);
     double getConfidenceThreshold() const;
+    
+    // Extended methods for orchestrator integration
+    QVector<QJsonObject> discoverMissingFeatures();
+    QJsonObject suggestFixForBug(const BugReport& bug);
+    QVector<QJsonObject> generateTestsForProject(const QString& projectPath);
+    QVector<QJsonObject> suggestFixesForAllBugs();
+    double calculateTestCoverage(const QString& projectPath);
+    bool applyRefactoring(const RefactoringOpportunity& opportunity);
+    bool applyOptimization(const Optimization& optimization);
 
 signals:
     void suggestionGenerated(const AutonomousSuggestion& suggestion);
@@ -194,6 +203,7 @@ signals:
     void optimizationFound(const PerformanceOptimization& optimization);
     void documentationGapFound(const DocumentationGap& gap);
     void testGenerated(const GeneratedTest& test);
+    void testsGenerated(const QVector<QJsonObject>& tests);
     void codeQualityAssessed(const CodeQualityMetrics& metrics);
     void analysisComplete(const QString& filePath);
     void errorOccurred(const QString& error);

@@ -17,7 +17,6 @@
 ;=====================================================================
 
 .code
-
 PUBLIC masm_core_transform_xor
 PUBLIC masm_core_transform_rotate
 PUBLIC masm_core_transform_reverse
@@ -669,4 +668,8 @@ dispatch_swap:
 masm_core_transform_dispatch ENDP
 
 END
+
+
+
+
 

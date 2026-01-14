@@ -168,7 +168,6 @@ MASTER_BRIDGE_STATE ENDS
 ;==============================================================================
 ; PUBLIC EXPORTS
 ;==============================================================================
-
 PUBLIC InitializeBridgeSystem
 PUBLIC ChatFileExecuteBridge
 PUBLIC TermEditorExecuteBridge
@@ -1082,4 +1081,8 @@ InitializeShell PROC
 InitializeShell ENDP
 
 END
+
+
+
+
 

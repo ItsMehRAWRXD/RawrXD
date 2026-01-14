@@ -445,3 +445,7 @@ output_pane_clear ENDP
     szRichEditClass  BYTE "RichEdit20W",0
 
 
+
+
+
+

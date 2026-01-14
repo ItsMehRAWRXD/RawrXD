@@ -119,7 +119,7 @@ std::string OllamaClient::createGenerateRequestJson(const OllamaGenerateRequest&
 std::string OllamaClient::createChatRequestJson(const OllamaChatRequest& req) {
     json j;
     j["model"] = req.model;
-    j["messages"] = json::array();
+    j["messages"] = json::array_type();  // Create empty JSON array
     for (const auto& msg : req.messages) {
         json m;
         m["role"] = msg.role;
@@ -172,7 +172,9 @@ std::vector<OllamaModel> OllamaClient::parseModels(const std::string& json_str) 
         
         // Extract models array
         if (j.contains("models") && j["models"].is_array()) {
-            for (const auto& model_json : j["models"]) {
+            const json& models_arr = j["models"];
+            for (size_t i = 0; i < models_arr.size(); ++i) {
+                const json& model_json = models_arr[i];
                 OllamaModel model;
                 
                 // Extract model fields with safe access
@@ -183,7 +185,7 @@ std::vector<OllamaModel> OllamaClient::parseModels(const std::string& json_str) 
                 
                 // Extract details if present
                 if (model_json.contains("details")) {
-                    const auto& details_json = model_json["details"];
+                    const json& details_json = model_json["details"];
                     if (details_json.contains("format") && details_json["format"].is_string()) model.format = details_json["format"].get<std::string>();
                     if (details_json.contains("family") && details_json["family"].is_string()) model.family = details_json["family"].get<std::string>();
                     if (details_json.contains("parameter_size") && details_json["parameter_size"].is_string()) model.parameter_size = details_json["parameter_size"].get<std::string>();

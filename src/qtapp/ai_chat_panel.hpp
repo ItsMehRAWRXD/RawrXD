@@ -14,12 +14,19 @@
 #include <QElapsedTimer>
 #include <QDateTime>
 #include <QMap>
+#include <QVariant>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <memory>
 
+// Forward declarations
 class AgentChatBreadcrumb;
 namespace RawrXD {
     namespace Database {
         class ChatHistoryManager;
+    }
+    namespace Chat {
+        class ChatProductionInfrastructure;
     }
 }
 class CommandPalette;
@@ -46,13 +53,98 @@ public:
         Planning
     };
 
-    struct Message {
+    struct ChatMessage {
         enum Role { User, Assistant, System };
         Role role;
         QString content;
         QString timestamp;
+        QString source;  // "AgenticEngine" | "AutonomousEngine" | "Win32Bridge" | "InferenceEngine"
+        QJsonObject metadata;  // operation details, latency, requestId, etc.
+        QString requestId;  // trace back to original request
         bool isStreaming = false;
         bool isInline = false;
+        bool isError = false;
+        QString errorDetails;
+        
+        ChatMessage(Role r, const QString& c, const QString& src = "InferenceEngine") 
+            : role(r), content(c), source(src) {
+            timestamp = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss.zzz");
+            requestId = QString::number(QDateTime::currentMSecsSinceEpoch());
+        }
+        
+        ChatMessage(Role r, const QString& c, const QString& src, const QJsonObject& meta) 
+            : role(r), content(c), source(src), metadata(meta) {
+            timestamp = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss.zzz");
+            requestId = QString::number(QDateTime::currentMSecsSinceEpoch());
+        }
+        
+        void setMetadata(const QString& key, const QVariant& value) {
+            if (value.type() == QVariant::String) {
+                metadata.insert(key, value.toString());
+            } else if (value.type() == QVariant::Int || value.type() == QVariant::LongLong) {
+                metadata.insert(key, value.toLongLong());
+            } else if (value.type() == QVariant::Double) {
+                metadata.insert(key, value.toDouble());
+            } else if (value.type() == QVariant::Bool) {
+                metadata.insert(key, value.toBool());
+            }
+        }
+        
+        QVariant getMetadata(const QString& key, const QVariant& defaultValue = QVariant()) const {
+            return metadata.contains(key) ? metadata.value(key).toVariant() : defaultValue;
+        }
+        
+        void setLatency(qint64 latencyMs) {
+            setMetadata("latency_ms", latencyMs);
+        }
+        
+        void setEngineSource(const QString& engine) {
+            source = engine;
+            setMetadata("engine", engine);
+        }
+        
+        void setRequestContext(const QString& context) {
+            setMetadata("request_context", context);
+        }
+        
+        void setError(const QString& error, const QString& details = "") {
+            isError = true;
+            errorDetails = details;
+            setMetadata("error", error);
+            setMetadata("error_details", details);
+        }
+        
+        QString toJson() const {
+            QJsonObject obj;
+            obj.insert("role", role == User ? "user" : (role == Assistant ? "assistant" : "system"));
+            obj.insert("content", content);
+            obj.insert("timestamp", timestamp);
+            obj.insert("source", source);
+            obj.insert("metadata", metadata);
+            obj.insert("requestId", requestId);
+            obj.insert("isStreaming", isStreaming);
+            obj.insert("isInline", isInline);
+            obj.insert("isError", isError);
+            obj.insert("errorDetails", errorDetails);
+            return QString::fromUtf8(QJsonDocument(obj).toJson(QJsonDocument::Compact));
+        }
+        
+        static ChatMessage fromJson(const QString& jsonStr) {
+            QJsonDocument doc = QJsonDocument::fromJson(jsonStr.toUtf8());
+            QJsonObject obj = doc.object();
+            ChatMessage msg(User, "");
+            msg.role = obj["role"].toString() == "user" ? User : (obj["role"].toString() == "assistant" ? Assistant : System);
+            msg.content = obj["content"].toString();
+            msg.timestamp = obj["timestamp"].toString();
+            msg.source = obj["source"].toString();
+            msg.metadata = obj["metadata"].toObject();
+            msg.requestId = obj["requestId"].toString();
+            msg.isStreaming = obj["isStreaming"].toBool();
+            msg.isInline = obj["isInline"].toBool();
+            msg.isError = obj["isError"].toBool();
+            msg.errorDetails = obj["errorDetails"].toString();
+            return msg;
+        }
     };
 
     struct CommandMetrics {
@@ -95,6 +187,13 @@ public:
     void setRequestTimeout(int ms);
     void setInferenceEngine(InferenceEngine* engine);
     
+    // Production infrastructure access
+    RawrXD::Chat::ChatProductionInfrastructure* infrastructure() const { return m_infrastructure; }
+    QJsonObject getHealthStatus() const;
+    QJsonObject getMetrics() const;
+    QJsonObject getCacheStats() const;
+    QJsonObject getAnalyticsReport() const;
+    
     // Context management
     void setContext(const QString& code, const QString& filePath);
     
@@ -117,6 +216,7 @@ public:
     void appendMessage(const QString& role, const QString& message);
     void addUserMessage(const QString& message);
     void addAssistantMessage(const QString& message, bool streaming = false);
+    void addErrorMessage(const QString& error, const QString& details = "", bool retryable = false);
     void updateStreamingMessage(const QString& fragment);
     QString finishStreaming();
     QString lastAssistantMessage() const;
@@ -163,7 +263,7 @@ private:
     void setupUI();
     QWidget* createQuickActions();
     void processModelResponse(const QString& response);
-    QWidget* createMessageBubble(const Message& msg);
+    QWidget* createMessageBubble(const ChatMessage& msg);
     QString modeName(ChatMode mode) const;
     QString extractCodeFromMessage(const QString& message) const;
     void handleAICommand(const QString& command);
@@ -195,7 +295,7 @@ private:
     // State
     bool m_initialized = false;
     bool m_widgetsCreated = false;
-    QList<Message> m_messages;
+    QList<ChatMessage> m_messages;
     QStringList m_commandHistory;
     int m_historyIndex = -1;
     bool m_cacheEnabled = true;
@@ -214,6 +314,7 @@ private:
 
     // Production-ready AI state
     InferenceEngine* m_inferenceEngine = nullptr;
+    RawrXD::Chat::ChatProductionInfrastructure* m_infrastructure = nullptr;
     bool m_cloudEnabled = true;
     bool m_localEnabled = true;
     QString m_apiKey;

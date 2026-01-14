@@ -1,145 +1,91 @@
-#pragma once
+#ifndef METRICS_COLLECTOR_HPP
+#define METRICS_COLLECTOR_HPP
 
-#include <QObject>
 #include <QString>
-#include <QHash>
-#include <QElapsedTimer>
+#include <QObject>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QMap>
+#include <QVector>
 #include <QDateTime>
+#include <QElapsedTimer>
+#include <QVariant>
 #include <QMutex>
+#include <limits>
 
-/**
- * @brief Performance metrics collector for telemetry and monitoring
- * 
- * Features:
- * - Real-time performance tracking
- * - Token generation metrics (tokens/sec, latency)
- * - Memory usage monitoring
- * - Request/response timing
- * - Statistical aggregation (min, max, avg, p50, p95, p99)
- * - Export to JSON/CSV
- */
-class MetricsCollector : public QObject {
+class MetricsCollector : public QObject
+{
     Q_OBJECT
 
 public:
+    static MetricsCollector& instance();
+
+    explicit MetricsCollector(QObject* parent = nullptr);
+    ~MetricsCollector() override;
+
+    void startRequest(qint64 requestId, const QString& modelName, int promptTokens);
+    void endRequest(qint64 requestId, int tokensGenerated, bool success, const QString& error = QString());
+    void recordToken(qint64 requestId);
+    void recordEvent(const QString& eventName, const QMap<QString, QVariant>& properties = {});
+    void recordMemoryUsage(size_t bytes);
+
     struct RequestMetrics {
-        qint64 requestId;
+        qint64 requestId = 0;
         QDateTime startTime;
         QDateTime endTime;
-        qint64 durationMs;
-        int tokensGenerated;
-        int promptTokens;
-        float tokensPerSecond;
-        size_t memoryUsed;
         QString modelName;
-        bool success;
+        int promptTokens = 0;
+        int tokensGenerated = 0;
+        bool success = false;
         QString errorMessage;
+        size_t memoryUsed = 0;
+        qint64 durationMs = 0;
+        float tokensPerSecond = 0.0f;
     };
 
     struct AggregateMetrics {
         int totalRequests = 0;
         int successfulRequests = 0;
         int failedRequests = 0;
-        
-        qint64 minLatencyMs = INT64_MAX;
+        QDateTime firstRequest;
+        QDateTime lastRequest;
+        qint64 minLatencyMs = std::numeric_limits<qint64>::max();
         qint64 maxLatencyMs = 0;
         qint64 avgLatencyMs = 0;
         qint64 p50LatencyMs = 0;
         qint64 p95LatencyMs = 0;
         qint64 p99LatencyMs = 0;
-        
-        float minTokensPerSec = FLT_MAX;
-        float maxTokensPerSec = 0;
-        float avgTokensPerSec = 0;
-        
+        float minTokensPerSec = std::numeric_limits<float>::max();
+        float maxTokensPerSec = 0.0f;
+        float avgTokensPerSec = 0.0f;
         size_t peakMemoryUsage = 0;
         size_t avgMemoryUsage = 0;
-        
-        QDateTime firstRequest;
-        QDateTime lastRequest;
     };
 
-    static MetricsCollector& instance();
-    ~MetricsCollector();
-
-    /**
-     * @brief Start tracking a request
-     */
-    void startRequest(qint64 requestId, const QString& modelName, int promptTokens);
-
-    /**
-     * @brief End tracking a request
-     */
-    void endRequest(qint64 requestId, int tokensGenerated, bool success, const QString& error = QString());
-
-    /**
-     * @brief Record token generation event
-     */
-    void recordToken(qint64 requestId);
-
-    /**
-     * @brief Record custom event with properties
-     */
-    void recordEvent(const QString& eventName, const QMap<QString, QVariant>& properties = QMap<QString, QVariant>());
-
-    /**
-     * @brief Record memory usage
-     */
-    void recordMemoryUsage(size_t bytes);
-
-    /**
-     * @brief Get metrics for specific request
-     */
     RequestMetrics getRequestMetrics(qint64 requestId) const;
-
-    /**
-     * @brief Get aggregate metrics
-     */
     AggregateMetrics getAggregateMetrics() const;
 
-    /**
-     * @brief Export metrics to JSON
-     */
     QString exportToJson() const;
-
-    /**
-     * @brief Export metrics to CSV
-     */
     QString exportToCsv() const;
 
-    /**
-     * @brief Reset all metrics
-     */
     void reset();
-
-    /**
-     * @brief Enable/disable metrics collection
-     */
     void setEnabled(bool enabled);
-
-    /**
-     * @brief Check if metrics collection is enabled
-     */
     bool isEnabled() const;
+    void calculatePercentiles();
 
 signals:
     void requestStarted(qint64 requestId);
     void requestCompleted(qint64 requestId, const RequestMetrics& metrics);
-    void performanceWarning(const QString& message);
     void metricsUpdated();
+    void performanceWarning(QString warning);
 
 private:
-    MetricsCollector();  // Singleton
-    MetricsCollector(const MetricsCollector&) = delete;
-    MetricsCollector& operator=(const MetricsCollector&) = delete;
-
-    void calculatePercentiles();
-
-    mutable QMutex m_mutex;
-    QHash<qint64, RequestMetrics> m_activeRequests;
-    QHash<qint64, QElapsedTimer> m_timers;
-    QList<RequestMetrics> m_completedRequests;
-    
-    size_t m_currentMemoryUsage = 0;
     bool m_enabled = true;
+    size_t m_currentMemoryUsage = 0;
+    QMap<qint64, RequestMetrics> m_activeRequests;
+    QMap<qint64, QElapsedTimer> m_timers;
+    QVector<RequestMetrics> m_completedRequests;
+    mutable QMutex m_mutex;
 };
+
+#endif // METRICS_COLLECTOR_HPP

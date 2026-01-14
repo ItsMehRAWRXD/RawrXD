@@ -41,6 +41,7 @@ public:
         QString result;
         QString reasoning;
         QJsonArray decisionTrace;
+        QJsonArray reasoningTrace;  // Full trace of reasoning steps
         float confidence;
         int iterationCount;
         int totalTime; // milliseconds
@@ -123,7 +124,7 @@ private:
     Strategy pickBestStrategy(const std::vector<Strategy>& strategies);
     std::vector<QString> generateAlternativeApproaches(const QString& goal);
     QJsonObject buildIterationContext(int iteration, const QString& goal);
-    bool hasConverged(const std::vector<QString>& recentResults);
+    bool hasConverged(const QStringList& recentResults);
     bool shouldRetry(const QString& error) const;
 
     // Model-based reasoning

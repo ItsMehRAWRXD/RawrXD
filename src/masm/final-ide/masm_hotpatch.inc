@@ -68,12 +68,10 @@ EXTERN asm_mutex_create:PROC
 EXTERN asm_mutex_lock:PROC
 EXTERN asm_mutex_unlock:PROC
 EXTERN asm_mutex_destroy:PROC
-
 EXTERN asm_event_create:PROC
 EXTERN asm_event_set:PROC
 EXTERN asm_event_wait:PROC
 EXTERN asm_event_destroy:PROC
-
 EXTERN asm_atomic_increment:PROC
 EXTERN asm_atomic_decrement:PROC
 EXTERN asm_atomic_cmpxchg:PROC
@@ -194,7 +192,7 @@ EMIT_SIGNAL MACRO event_loop, signal_id, p1, p2, p3
     mov edx, signal_id
     mov r8, p1
     mov r9, p2
-    mov qword ptr [rsp + 40], p3
+    mov QWORD ? ptr [rsp + 40], p3
     call asm_event_loop_emit
 ENDM
 
@@ -214,3 +212,7 @@ ENDM
 ;=====================================================================
 ; End of masm_hotpatch.inc
 ;=====================================================================
+
+
+
+

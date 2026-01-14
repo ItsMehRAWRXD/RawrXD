@@ -19,6 +19,9 @@
 
 namespace RawrXD {
 
+// Forward declaration for language palette syncing
+static void syncLanguagePaletteToBase(ThemeColors& theme);
+
 // ============================================================
 // ThemeColors Implementation
 // ============================================================
@@ -66,6 +69,8 @@ void ThemeColors::setDefaultDarkTheme() {
     dockOpacity = 1.0;
     chatOpacity = 1.0;
     editorOpacity = 1.0;
+
+    syncLanguagePaletteToBase(*this);
 }
 
 void ThemeColors::setDefaultLightTheme() {
@@ -111,6 +116,8 @@ void ThemeColors::setDefaultLightTheme() {
     dockOpacity = 1.0;
     chatOpacity = 1.0;
     editorOpacity = 1.0;
+
+    syncLanguagePaletteToBase(*this);
 }
 
 void ThemeColors::setCustomTheme(const QJsonObject& theme) {
@@ -176,6 +183,16 @@ void ThemeColors::setCustomTheme(const QJsonObject& theme) {
     dockOpacity = readDouble("dockOpacity", dockOpacity);
     chatOpacity = readDouble("chatOpacity", chatOpacity);
     editorOpacity = readDouble("editorOpacity", editorOpacity);
+
+    // Per-language syntax overrides
+    if (theme.contains("languageSyntax") && theme["languageSyntax"].isObject()) {
+        QJsonObject langObj = theme["languageSyntax"].toObject();
+        for (auto it = langObj.begin(); it != langObj.end(); ++it) {
+            if (it.value().isObject()) {
+                languageSyntax[it.key()] = ThemeColors::LanguageSyntaxColors::fromJson(it.value().toObject(), *this);
+            }
+        }
+    }
 }
 
 QJsonObject ThemeColors::toJson() const {
@@ -227,6 +244,13 @@ QJsonObject ThemeColors::toJson() const {
     json["dockOpacity"] = dockOpacity;
     json["chatOpacity"] = chatOpacity;
     json["editorOpacity"] = editorOpacity;
+
+    // Per-language syntax overrides
+    QJsonObject langObj;
+    for (auto it = languageSyntax.constBegin(); it != languageSyntax.constEnd(); ++it) {
+        langObj[it.key()] = it.value().toJson();
+    }
+    json["languageSyntax"] = langObj;
     
     return json;
 }
@@ -235,6 +259,66 @@ ThemeColors ThemeColors::fromJson(const QJsonObject& json) {
     ThemeColors colors;
     colors.setCustomTheme(json);
     return colors;
+}
+
+// Helper to propagate base syntax colors into per-language overrides
+static void syncLanguagePaletteToBase(ThemeColors& theme) {
+    auto mk = [&theme](double opacity = 1.0) {
+        ThemeColors::LanguageSyntaxColors lang;
+        lang.keyword = theme.keywordColor;
+        lang.string = theme.stringColor;
+        lang.comment = theme.commentColor;
+        lang.number = theme.numberColor;
+        lang.function = theme.functionColor;
+        lang.classColor = theme.classColor;
+        lang.operatorColor = theme.operatorColor;
+        lang.preprocessor = theme.preprocessorColor;
+        lang.syntaxOpacity = opacity;
+        return lang;
+    };
+    theme.languageSyntax.clear();
+    theme.languageSyntax.insert("cpp", mk());
+    theme.languageSyntax.insert("python", mk());
+    theme.languageSyntax.insert("javascript", mk());
+    theme.languageSyntax.insert("typescript", mk());
+    theme.languageSyntax.insert("json", mk());
+    theme.languageSyntax.insert("xml", mk());
+    theme.languageSyntax.insert("markdown", mk(0.9));
+}
+
+QJsonObject ThemeColors::LanguageSyntaxColors::toJson() const {
+    QJsonObject obj;
+    obj["keyword"] = keyword.name(QColor::HexArgb);
+    obj["string"] = string.name(QColor::HexArgb);
+    obj["comment"] = comment.name(QColor::HexArgb);
+    obj["number"] = number.name(QColor::HexArgb);
+    obj["function"] = function.name(QColor::HexArgb);
+    obj["class"] = classColor.name(QColor::HexArgb);
+    obj["operator"] = operatorColor.name(QColor::HexArgb);
+    obj["preprocessor"] = preprocessor.name(QColor::HexArgb);
+    obj["syntaxOpacity"] = syntaxOpacity;
+    return obj;
+}
+
+ThemeColors::LanguageSyntaxColors ThemeColors::LanguageSyntaxColors::fromJson(const QJsonObject& json, const ThemeColors& fallback) {
+    ThemeColors::LanguageSyntaxColors lang;
+    auto readColor = [&json](const QString& key, const QColor& def) {
+        if (json.contains(key)) {
+            QColor c(json[key].toString());
+            if (c.isValid()) return c;
+        }
+        return def;
+    };
+    lang.keyword = readColor("keyword", fallback.keywordColor);
+    lang.string = readColor("string", fallback.stringColor);
+    lang.comment = readColor("comment", fallback.commentColor);
+    lang.number = readColor("number", fallback.numberColor);
+    lang.function = readColor("function", fallback.functionColor);
+    lang.classColor = readColor("class", fallback.classColor);
+    lang.operatorColor = readColor("operator", fallback.operatorColor);
+    lang.preprocessor = readColor("preprocessor", fallback.preprocessorColor);
+    lang.syntaxOpacity = json.value("syntaxOpacity").toDouble(1.0);
+    return lang;
 }
 
 // ============================================================
@@ -315,6 +399,7 @@ void ThemeManager::initializeDefaultThemes() {
     highContrast.dockOpacity = 1.0;
     highContrast.chatOpacity = 1.0;
     highContrast.editorOpacity = 1.0;
+    syncLanguagePaletteToBase(highContrast);
     m_themes["High Contrast"] = highContrast;
     
     // Glass Theme (transparency-focused)
@@ -360,6 +445,7 @@ void ThemeManager::initializeDefaultThemes() {
     glassTheme.dockOpacity = 0.90;
     glassTheme.chatOpacity = 0.92;
     glassTheme.editorOpacity = 0.88;
+    syncLanguagePaletteToBase(glassTheme);
     m_themes["Glass"] = glassTheme;
     
     // Monokai Theme (popular programmer theme)
@@ -405,6 +491,7 @@ void ThemeManager::initializeDefaultThemes() {
     monokaiTheme.dockOpacity = 1.0;
     monokaiTheme.chatOpacity = 1.0;
     monokaiTheme.editorOpacity = 1.0;
+    syncLanguagePaletteToBase(monokaiTheme);
     m_themes["Monokai"] = monokaiTheme;
     
     qDebug() << "[ThemeManager] Created" << m_themes.size() << "default themes";
@@ -473,6 +560,34 @@ QStringList ThemeManager::availableThemes() const {
 
 QColor ThemeManager::getColor(const QString& colorName) const {
     QMutexLocker locker(&m_mutex);
+
+    // Language-specific syntax colors (lang.<key>.<role>)
+    QString langKey;
+    QString role;
+    auto parseLanguage = [&langKey, &role](const QString& name) {
+        const QString prefix = "lang.";
+        if (!name.startsWith(prefix)) return false;
+        QString remaining = name.mid(prefix.size());
+        const int dot = remaining.indexOf('.');
+        if (dot <= 0) return false;
+        langKey = remaining.left(dot);
+        role = remaining.mid(dot + 1);
+        return true;
+    };
+    if (parseLanguage(colorName)) {
+        auto it = m_currentColors.languageSyntax.constFind(langKey);
+        const auto base = m_currentColors;
+        ThemeColors::LanguageSyntaxColors lang = (it != m_currentColors.languageSyntax.constEnd()) ? it.value() : ThemeColors::LanguageSyntaxColors{base.keywordColor, base.stringColor, base.commentColor, base.numberColor, base.functionColor, base.classColor, base.operatorColor, base.preprocessorColor, 1.0};
+        if (role == "keywordColor" || role == "keyword") return lang.keyword;
+        if (role == "stringColor" || role == "string") return lang.string;
+        if (role == "commentColor" || role == "comment") return lang.comment;
+        if (role == "numberColor" || role == "number") return lang.number;
+        if (role == "functionColor" || role == "function") return lang.function;
+        if (role == "classColor" || role == "class") return lang.classColor;
+        if (role == "operatorColor" || role == "operator") return lang.operatorColor;
+        if (role == "preprocessorColor" || role == "preprocessor") return lang.preprocessor;
+        return QColor();
+    }
     
     // Editor colors
     if (colorName == "editorBackground") return m_currentColors.editorBackground;
@@ -523,6 +638,36 @@ void ThemeManager::updateColor(const QString& colorName, const QColor& color) {
     QMutexLocker locker(&m_mutex);
     
     qDebug() << "[ThemeManager] Updating color:" << colorName << "to" << color.name();
+
+    // Language-specific syntax colors (lang.<key>.<role>)
+    QString langKey;
+    QString role;
+    auto parseLanguage = [&langKey, &role](const QString& name) {
+        const QString prefix = "lang.";
+        if (!name.startsWith(prefix)) return false;
+        QString remaining = name.mid(prefix.size());
+        const int dot = remaining.indexOf('.');
+        if (dot <= 0) return false;
+        langKey = remaining.left(dot);
+        role = remaining.mid(dot + 1);
+        return true;
+    };
+    if (parseLanguage(colorName)) {
+        auto &lang = m_currentColors.languageSyntax[langKey];
+        if (role == "keywordColor" || role == "keyword") lang.keyword = color;
+        else if (role == "stringColor" || role == "string") lang.string = color;
+        else if (role == "commentColor" || role == "comment") lang.comment = color;
+        else if (role == "numberColor" || role == "number") lang.number = color;
+        else if (role == "functionColor" || role == "function") lang.function = color;
+        else if (role == "classColor" || role == "class") lang.classColor = color;
+        else if (role == "operatorColor" || role == "operator") lang.operatorColor = color;
+        else if (role == "preprocessorColor" || role == "preprocessor") lang.preprocessor = color;
+        else return;
+
+        locker.unlock();
+        emit colorsUpdated();
+        return;
+    }
     
     // Editor colors
     if (colorName == "editorBackground") m_currentColors.editorBackground = color;
@@ -599,6 +744,49 @@ void ThemeManager::updateOpacity(const QString& element, double opacity) {
     
     updateWindowTransparency();
     emit opacityChanged(element, opacity);
+}
+
+ThemeColors::LanguageSyntaxColors ThemeManager::languageColors(const QString& langKey) const {
+    QMutexLocker locker(&m_mutex);
+    auto it = m_currentColors.languageSyntax.constFind(langKey);
+    if (it != m_currentColors.languageSyntax.constEnd()) {
+        return it.value();
+    }
+
+    ThemeColors::LanguageSyntaxColors fallback;
+    fallback.keyword = m_currentColors.keywordColor;
+    fallback.string = m_currentColors.stringColor;
+    fallback.comment = m_currentColors.commentColor;
+    fallback.number = m_currentColors.numberColor;
+    fallback.function = m_currentColors.functionColor;
+    fallback.classColor = m_currentColors.classColor;
+    fallback.operatorColor = m_currentColors.operatorColor;
+    fallback.preprocessor = m_currentColors.preprocessorColor;
+    fallback.syntaxOpacity = 1.0;
+    return fallback;
+}
+
+void ThemeManager::updateLanguageColor(const QString& langKey, const QString& role, const QColor& color) {
+    QString composite = QString("lang.%1.%2").arg(langKey, role);
+    updateColor(composite, color);
+}
+
+void ThemeManager::updateLanguageOpacity(const QString& langKey, double opacity) {
+    QMutexLocker locker(&m_mutex);
+    opacity = qBound(0.2, opacity, 1.0);
+    auto &lang = m_currentColors.languageSyntax[langKey];
+    lang.syntaxOpacity = opacity;
+    locker.unlock();
+    emit opacityChanged(QStringLiteral("lang.%1.syntax").arg(langKey), opacity);
+}
+
+double ThemeManager::languageOpacity(const QString& langKey) const {
+    QMutexLocker locker(&m_mutex);
+    auto it = m_currentColors.languageSyntax.constFind(langKey);
+    if (it != m_currentColors.languageSyntax.constEnd()) {
+        return it.value().syntaxOpacity;
+    }
+    return 1.0;
 }
 
 void ThemeManager::setWindowOpacity(double opacity) {

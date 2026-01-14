@@ -109,7 +109,8 @@ private:
     QString             m_ggufEndpoint;               ///< e.g. "localhost:11434"
     AgentHotPatcher*    m_hotPatcher  = nullptr;       ///< non‑owning – created elsewhere
 
-    QMap<qintptr, std::unique_ptr<ClientConnection>> m_connections;
+    QMap<qintptr, ClientConnection*> m_connections; // Use raw pointers to avoid move/copy issues in QMap with unique_ptr
+
     int                 m_connectionPoolSize = 10;    ///< for future thread‑pool upgrades
     int                 m_connectionTimeout  = 5000;  ///< ms for socket::connectToHost
 
@@ -121,4 +122,5 @@ private:
     int                 m_activeConnections         = 0;
 };
 
-#endif // GGUF_PROXY_SERVER_HPP
+
+

@@ -83,11 +83,11 @@ TrainingBackend AITrainingPipeline::getBackend() const {
     return m_backend;
 }
 
-void AITrainingPipeline::setArchitecture(const ModelArchitecture& arch) {
+void AITrainingPipeline::setArchitecture(const AITrainingArchitecture& arch) {
     m_architecture = arch;
 }
 
-ModelArchitecture AITrainingPipeline::getArchitecture() const {
+AITrainingArchitecture AITrainingPipeline::getArchitecture() const {
     return m_architecture;
 }
 
@@ -99,7 +99,7 @@ TrainingHyperparameters AITrainingPipeline::getHyperparameters() const {
     return m_hyperparameters;
 }
 
-bool AITrainingPipeline::prepareTraining(const TrainingDataset& dataset, const DigestionConfig& config) {
+bool AITrainingPipeline::prepareTraining(const AIDigestionDataset& dataset, const DigestionConfig& config) {
     if (m_isTraining) {
         qWarning() << "Training already in progress";
         return false;
@@ -334,7 +334,7 @@ bool AITrainingPipeline::setupTrainingEnvironment() {
     return true;
 }
 
-bool AITrainingPipeline::prepareTrainingData(const TrainingDataset& dataset) {
+bool AITrainingPipeline::prepareTrainingData(const AIDigestionDataset& dataset) {
     QFile dataFile(m_datasetPath);
     if (!dataFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
         qWarning() << "Cannot create training data file:" << m_datasetPath;
@@ -811,7 +811,7 @@ void AITrainingPipeline::cleanupTraining() {
 LlamaTrainer::LlamaTrainer(QObject* parent) : QObject(parent) {
 }
 
-bool LlamaTrainer::prepareTraining(const QString& datasetPath, const ModelArchitecture& arch) {
+bool LlamaTrainer::prepareTraining(const QString& datasetPath, const AITrainingArchitecture& arch) {
     // Prepare llama.cpp training
     // This would download and build llama.cpp if needed
     return true;

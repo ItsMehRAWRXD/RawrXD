@@ -98,7 +98,7 @@ signals:
 
 private slots:
     void reportMetrics();
-    void handleBackendResponse(QNetworkReply* reply);
+    void handleBackendResponse();
     void checkBackendHealth();
 
 private:

@@ -4,8 +4,8 @@
 
 option casemap:none
 
-EXTERN malloc:PROC
-EXTERN free:PROC
+extern masm_malloc : proc
+extern masm_free : proc
 EXTERN memset:PROC
 EXTERN memcpy:PROC
 EXTERN strlen:PROC
@@ -119,13 +119,13 @@ agentic_puppeteer_create PROC
     
     ; Allocate puppeteer
     mov rcx, SIZEOF AGENTIC_PUPPETEER
-    call malloc
+    call masm_malloc
     mov rbx, rax
     
     ; Allocate corrections array
     mov rcx, MAX_CORRECTIONS
     imul rcx, SIZEOF CORRECTION_RESULT
-    call malloc
+    call masm_malloc
     mov [rbx + AGENTIC_PUPPETEER.corrections], rax
     
     ; Initialize
@@ -360,7 +360,7 @@ apply_correction_strategy ENDP
 rephrase_prompt PROC
     ; Allocate response buffer
     mov rcx, 1024
-    call malloc
+    call masm_malloc
     
     ; Create rephrased response
     lea rdx, [szRephrasedResponse]
@@ -377,7 +377,7 @@ rephrase_prompt ENDP
 enhance_context PROC
     ; Allocate response buffer
     mov rcx, 1024
-    call malloc
+    call masm_malloc
     
     ; Create enhanced response
     lea rdx, [szEnhancedResponse]
@@ -394,7 +394,7 @@ enhance_context ENDP
 retry_with_rephrase PROC
     ; Allocate response buffer
     mov rcx, 1024
-    call malloc
+    call masm_malloc
     
     ; Create retry response
     lea rdx, [szRetryResponse]
@@ -488,12 +488,12 @@ agentic_destroy PROC
     mov rcx, [rbx + AGENTIC_PUPPETEER.corrections]
     cmp rcx, 0
     je skip_corrections_local
-    call free
+    call masm_free
     
 skip_corrections_local:
     ; Free puppeteer
     mov rcx, rbx
-    call free
+    call masm_free
     
     pop rbx
     ret
@@ -509,4 +509,8 @@ agentic_destroy ENDP
     szRetryResponse DB "Retry: Let me try that again with a different approach.", 0
 
 END
+
+
+
+
 

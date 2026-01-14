@@ -43,6 +43,15 @@ public:
     bool saveTelemetry(const QString& filepath);
     void enableTelemetry(bool enable);
     
+    // Accessors for telemetry widgets and monitoring
+    int getEventCount() const { return events_.size(); }
+    QJsonArray getEvents() const { return events_; }
+    QString getLastEventName() const {
+        if (events_.isEmpty()) return QString();
+        QJsonObject lastEvent = events_.last().toObject();
+        return lastEvent["event"].toString();
+    }
+    
 private:
     bool is_enabled_;
     QJsonArray events_;

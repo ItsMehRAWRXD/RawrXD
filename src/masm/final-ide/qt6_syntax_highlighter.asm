@@ -22,9 +22,9 @@
 option casemap:none
 
 ; External memory functions (provided by malloc_wrapper.asm)
-EXTERN malloc:PROC
-EXTERN free:PROC
-EXTERN realloc:PROC
+extern masm_malloc : proc
+extern masm_free : proc
+extern masm_realloc : proc
 EXTERN memset:PROC
 
 include windows.inc
@@ -183,7 +183,6 @@ C_KEYWORDS:
 ;==========================================================================
 ; PUBLIC FUNCTIONS
 ;==========================================================================
-
 PUBLIC syntax_highlighter_create
 PUBLIC syntax_highlighter_destroy
 PUBLIC syntax_highlighter_tokenize
@@ -372,4 +371,8 @@ notalpha:
 is_alpha ENDP
 
 END
+
+
+
+
 

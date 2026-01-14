@@ -1,10 +1,12 @@
 #pragma once
 
 #include <QString>
+#include <QStringList>
 #include <QByteArray>
 #include <QVector>
 #include <QHash>
 #include <QObject>
+#include <QJsonObject>
 #include <memory>
 #include <cstdint>
 
@@ -24,7 +26,7 @@ struct ConversionTensor {
  */
 struct BlobGGUFMetadata {
     QString modelName;
-    QString modelArchitecture;
+    QString AITrainingArchitecture;
     int32_t nEmbed = 0;
     int32_t nLayer = 0;
     int32_t nVocab = 0;
@@ -47,6 +49,7 @@ struct ConversionProgress {
     QString currentTensor;
     double percentComplete = 0.0;
     QString statusMessage;
+    double lastCompressionRatio = 0.0; // Track compression performance
 };
 
 /**
@@ -146,6 +149,11 @@ signals:
      */
     void conversionCancelled();
 
+    /**
+     * @brief Emitted when metadata preview is available after parse
+     */
+    void conversionMetadataPreview(const QJsonObject& preview);
+
 private:
     /**
      * @brief Write GGUF header and KV pairs
@@ -172,6 +180,11 @@ private:
      */
     void updateProgress(int processedTensors, qint64 bytesProcessed, 
                        const QString& tensorName, const QString& message);
+
+    /**
+     * @brief Generate metadata preview from parsed blob
+     */
+    QJsonObject generateMetadataPreview() const;
 
     // Member variables
     QString m_blobPath;

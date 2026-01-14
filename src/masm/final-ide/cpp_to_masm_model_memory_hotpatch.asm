@@ -4,8 +4,8 @@
 
 option casemap:none
 
-EXTERN malloc:PROC
-EXTERN free:PROC
+extern masm_malloc : proc
+extern masm_free : proc
 EXTERN memset:PROC
 EXTERN memcpy:PROC
 EXTERN strlen:PROC
@@ -124,19 +124,19 @@ model_memory_hotpatch_create PROC
     
     ; Allocate hotpatch
     mov rcx, SIZEOF MODEL_MEMORY_HOTPATCH
-    call malloc
+    call masm_malloc
     mov r10, rax
     
     ; Allocate patches array
     mov rcx, MAX_PATCHES
     imul rcx, SIZEOF MEMORY_PATCH
-    call malloc
+    call masm_malloc
     mov [r10 + MODEL_MEMORY_HOTPATCH.patches], rax
     
     ; Allocate regions array
     mov rcx, MAX_MEMORY_REGIONS
     imul rcx, SIZEOF MEMORY_REGION
-    call malloc
+    call masm_malloc
     mov [r10 + MODEL_MEMORY_HOTPATCH.regions], rax
     
     ; Initialize
@@ -186,7 +186,7 @@ memory_hotpatch_apply_patch PROC
     
     ; Allocate result
     mov rcx, SIZEOF PATCH_RESULT
-    call malloc
+    call masm_malloc
     mov r9, rax                     ; r9 = result
     
     ; Change memory protection to writable
@@ -309,7 +309,7 @@ memory_hotpatch_add_patch PROC
     mov rcx, rsi
     call strlen
     inc rax
-    call malloc
+    call masm_malloc
     mov [r13 + MEMORY_PATCH.name], rax
     
     mov rcx, rsi
@@ -320,7 +320,7 @@ memory_hotpatch_add_patch PROC
     mov rcx, r10
     call strlen
     inc rax
-    call malloc
+    call masm_malloc
     mov [r13 + MEMORY_PATCH.description], rax
     
     mov rcx, r10
@@ -336,12 +336,12 @@ memory_hotpatch_add_patch PROC
     mov [r13 + MEMORY_PATCH.address], rax
     mov dword ptr [r13 + MEMORY_PATCH.size], 1024  ; Allocate patch data buffer
     mov rcx, 1024
-    call malloc
+    call masm_malloc
     mov [r13 + MEMORY_PATCH.patchData], rax
     
     ; Allocate original data buffer
     mov rcx, 1024
-    call malloc
+    call masm_malloc
     mov [r13 + MEMORY_PATCH.originalData], rax
     
     ; Increment patch count
@@ -395,7 +395,7 @@ memory_hotpatch_add_region PROC
     mov rcx, r11
     call strlen
     inc rax
-    call malloc
+    call masm_malloc
     mov [r13 + MEMORY_REGION.description], rax
     
     mov rcx, r11
@@ -532,25 +532,25 @@ free_patches_local:
     mov rcx, [r13 + MEMORY_PATCH.name]
     cmp rcx, 0
     je skip_patch_name_local
-    call free
+    call masm_free
     
 skip_patch_name_local:
     mov rcx, [r13 + MEMORY_PATCH.description]
     cmp rcx, 0
     je skip_patch_desc_local
-    call free
+    call masm_free
     
 skip_patch_desc_local:
     mov rcx, [r13 + MEMORY_PATCH.originalData]
     cmp rcx, 0
     je skip_original_local
-    call free
+    call masm_free
     
 skip_original_local:
     mov rcx, [r13 + MEMORY_PATCH.patchData]
     cmp rcx, 0
     je skip_patch_local
-    call free
+    call masm_free
     
 skip_patch_local:
     inc r12d
@@ -560,19 +560,19 @@ patches_freed_local:
     mov rcx, [rbx + MODEL_MEMORY_HOTPATCH.patches]
     cmp rcx, 0
     je skip_patches_array_local
-    call free
+    call masm_free
     
 skip_patches_array_local:
     ; Free regions array
     mov rcx, [rbx + MODEL_MEMORY_HOTPATCH.regions]
     cmp rcx, 0
     je skip_regions_local
-    call free
+    call masm_free
     
 skip_regions_local:
     ; Free hotpatch
     mov rcx, rbx
-    call free
+    call masm_free
     
     pop rbx
     ret
@@ -585,4 +585,8 @@ memory_hotpatch_destroy ENDP
     szPatchFailedDetail DB "Patch application failed", 0
 
 END
+
+
+
+
 

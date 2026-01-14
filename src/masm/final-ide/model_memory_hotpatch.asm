@@ -38,6 +38,10 @@ EXTERN asm_str_create:PROC
 EXTERN VirtualProtect:PROC
 EXTERN asm_log:PROC
 
+; Use existing implementations from other modules
+EXTERN asm_memcpy_fast:PROC
+EXTERN asm_str_create_from_cstr:PROC
+
 ; Consolidated Core Libraries (NEW - Phase 2)
 EXTERN masm_core_direct_copy:PROC
 EXTERN masm_core_transform_dispatch:PROC
@@ -76,7 +80,6 @@ EXTERN GetSystemInfo:PROC
 
 ; Public exports
 PUBLIC masm_hotpatch_apply_memory
-PUBLIC masm_hotpatch_rollback
 PUBLIC masm_hotpatch_get_stats
 
 ; Model Selection Hooks (NEW - Auto Transform)
@@ -294,13 +297,14 @@ patch_exit:
 masm_hotpatch_apply_memory ENDP
 
 ;=====================================================================
-; masm_hotpatch_rollback(patch_ptr: rcx) -> rax (1=success, 0=fail)
+; masm_memory_patch_rollback(patch_ptr: rcx) -> rax (1=success, 0=fail)
 ;
 ; Rolls back a previously applied patch using backed-up data.
+; (Internal implementation - used by masm_hotpatch_apply_memory)
 ;=====================================================================
 
 ALIGN 16
-masm_hotpatch_rollback PROC
+masm_memory_patch_rollback PROC
 
     push rbx
     push r12
@@ -363,7 +367,7 @@ rollback_exit:
     pop rbx
     ret
 
-masm_hotpatch_rollback ENDP
+masm_memory_patch_rollback ENDP
 
 ;=====================================================================
 ; masm_hotpatch_get_stats(stats_ptr: rcx) -> void
@@ -395,30 +399,13 @@ stats_exit:
 masm_hotpatch_get_stats ENDP
 
 ;=====================================================================
-; Helper: asm_memcpy_fast(dest: rcx, src: rdx, size: r8) -> void
-; Fast memory copy using SIMD when aligned
+; asm_memcpy_fast and asm_str_create_from_cstr are now EXTERN
+; defined in asm_memory.asm and asm_string.asm respectively
 ;=====================================================================
-
-ALIGN 16
-asm_memcpy_fast PROC
-
-    push rsi
-    push rdi
-    
-    mov rdi, rcx            ; dest
-    mov rsi, rdx            ; src
-    mov rcx, r8             ; size
-    
-    rep movsb               ; Simple byte copy for now
-    
-    pop rdi
-    pop rsi
-    ret
-
-asm_memcpy_fast ENDP
 
 ;=====================================================================
 ; Helper: asm_memcmp(ptr1: rcx, ptr2: rdx, size: r8) -> rax (0=equal)
+; This is a local helper not defined elsewhere
 ;=====================================================================
 
 ALIGN 16
@@ -451,38 +438,8 @@ cmp_not_equal:
 asm_memcmp ENDP
 
 ;=====================================================================
-; Helper: asm_str_create_from_cstr(cstr: rcx) -> rax (string handle)
-; Wraps existing asm_str_create for C-string input
+; asm_str_create_from_cstr is now EXTERN - defined in asm_string.asm
 ;=====================================================================
-
-ALIGN 16
-asm_str_create_from_cstr PROC
-
-    push rbx
-    sub rsp, 32
-    
-    mov rbx, rcx            ; Save cstr ptr
-    
-    ; Calculate length
-    xor rdx, rdx
-    
-strlen_loop:
-    cmp byte ptr [rbx + rdx], 0
-    je strlen_done
-    inc rdx
-    jmp strlen_loop
-
-strlen_done:
-    ; rdx = length, rbx = cstr
-    mov rcx, rbx
-    ; rdx already has length
-    call asm_str_create
-    
-    add rsp, 32
-    pop rbx
-    ret
-
-asm_str_create_from_cstr ENDP
 
 ;=====================================================================
 ; String constants
@@ -598,4 +555,8 @@ str_fail_type       DB "Invalid patch type", 0
 str_fail_verify     DB "Verification failed", 0
 
 END
+
+
+
+
 

@@ -128,7 +128,7 @@ plugin_load PROC
     
     ; Allocate plugin structure
     mov rcx, sizeof PLUGIN
-    call malloc
+    call masm_malloc
     test rax, rax
     jz alloc_failed
     
@@ -184,7 +184,7 @@ init_failed:
     mov rcx, rbx
     call FreeLibrary
     mov rcx, rdi
-    call free
+    call masm_free
     xor rax, rax
     jmp done
     
@@ -234,7 +234,7 @@ skip_shutdown:
     
     ; Free plugin structure
     mov rcx, rdi
-    call free
+    call masm_free
     
     mov eax, 1
     jmp done
@@ -535,3 +535,7 @@ searchPattern BYTE 260 DUP(?)
 fullPath BYTE 520 DUP(?)
 
 end
+
+
+
+

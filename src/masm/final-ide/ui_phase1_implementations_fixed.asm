@@ -22,7 +22,6 @@ EXTERN Sleep:PROC
 ;==========================================================================
 ; EXPORTED FUNCTIONS (Stubs)
 ;==========================================================================
-
 PUBLIC command_palette_execute
 PUBLIC file_search_recursive
 PUBLIC error_location_navigator
@@ -123,3 +122,7 @@ handle_debug_command PROC
 handle_debug_command ENDP
 
 END
+
+
+
+

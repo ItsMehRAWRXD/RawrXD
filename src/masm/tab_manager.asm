@@ -27,40 +27,40 @@ MAX_TABS EQU 64
 
 tab_manager_init PROC
     ; rcx = hParent, edx = tabtype
-    xor EditorTabCount, EditorTabCount
-    xor ChatMode, ChatMode
-    xor CurrentPanelTab, CurrentPanelTab
+    mov dword ptr [EditorTabCount], 0
+    mov dword ptr [ChatMode], 0
+    mov dword ptr [CurrentPanelTab], 0
     xor eax, eax
     ret
 tab_manager_init ENDP
 
 tab_create_editor PROC
     ; rcx = filename, rdx = filepath
-    inc EditorTabCount
-    mov eax, EditorTabCount
+    inc dword ptr [EditorTabCount]
+    mov eax, dword ptr [EditorTabCount]
     ret
 tab_create_editor ENDP
 
 tab_close_editor PROC
     ; ecx = tab_id
-    dec EditorTabCount
+    dec dword ptr [EditorTabCount]
     xor eax, eax
     ret
 tab_close_editor ENDP
 
 tab_set_agent_mode PROC
-    mov ChatMode, ecx
+    mov dword ptr [ChatMode], ecx
     xor eax, eax
     ret
 tab_set_agent_mode ENDP
 
 tab_get_agent_mode PROC
-    mov eax, ChatMode
+    mov eax, dword ptr [ChatMode]
     ret
 tab_get_agent_mode ENDP
 
 tab_set_panel_tab PROC
-    mov CurrentPanelTab, ecx
+    mov dword ptr [CurrentPanelTab], ecx
     xor eax, eax
     ret
 tab_set_panel_tab ENDP

@@ -25,23 +25,106 @@
 
 option casemap:none
 
-INCLUDELIB kernel32.lib
-INCLUDELIB user32.lib
-INCLUDELIB gdi32.lib
-INCLUDELIB shell32.lib
-INCLUDELIB comctl32.lib
-INCLUDELIB shlwapi.lib
-INCLUDELIB ole32.lib
+; Win32 API externals
+EXTERN CreateWindowExA:PROC
+EXTERN DestroyWindow:PROC
+EXTERN SendMessageA:PROC
+EXTERN FindFirstFileA:PROC
+EXTERN FindNextFileA:PROC
+EXTERN FindClose:PROC
+EXTERN GetLogicalDrives:PROC
+EXTERN GetDriveTypeA:PROC
+EXTERN PathCombineA:PROC
+EXTERN CreateThread:PROC
+EXTERN GetFileSizeEx:PROC
+EXTERN GetFileAttributesA:PROC
+EXTERN InitializeCriticalSection:PROC
+EXTERN EnterCriticalSection:PROC
+EXTERN LeaveCriticalSection:PROC
+EXTERN DeleteCriticalSection:PROC
+EXTERN GetModuleHandleA:PROC
+EXTERN ImageList_Create:PROC
+EXTERN GetLogicalDriveStringsA:PROC
+EXTERN ImageList_Destroy:PROC
+EXTERN _stricmp:PROC
 
 ; External CRT functions
-EXTERN malloc:PROC
-EXTERN free:PROC
+extern masm_malloc : proc
+extern masm_free : proc
 EXTERN strcpy:PROC
 EXTERN strcmp:PROC
 EXTERN strlen:PROC
 EXTERN memset:PROC
 EXTERN qsort:PROC
 
+; Type aliases (MASM doesn't have these built-in)
+HWND            TEXTEQU <QWORD>
+HICON           TEXTEQU <QWORD>
+HIMAGELIST      TEXTEQU <QWORD>
+HANDLE          TEXTEQU <QWORD>
+HTREEITEM       TEXTEQU <QWORD>
+
+; Windows style constants
+WS_VISIBLE      EQU 10000000h
+WS_CHILD        EQU 40000000h
+WS_BORDER       EQU 00800000h
+
+; ImageList constants
+ILC_COLOR32     EQU 20h
+
+; TreeView constants
+TVI_ROOT        EQU 0FFFF0000h
+TVI_LAST        EQU 0FFFF0002h
+TVM_INSERTITEMA EQU 1100h
+TVSIL_NORMAL    EQU 0
+
+; ListView constants
+LVM_SETIMAGELIST    EQU 1003h
+LVM_INSERTCOLUMNA   EQU 101Bh
+LVM_INSERTITEMA     EQU 1007h
+LVM_SETITEMA        EQU 1006h
+LVM_DELETEALLITEMS  EQU 1009h
+LVSIL_SMALL         EQU 1
+LVCF_TEXT           EQU 4
+LVCF_WIDTH          EQU 2
+LVCFMT_LEFT         EQU 0
+
+; Invalid handle
+INVALID_HANDLE_VALUE EQU 0FFFFFFFFFFFFFFFFh
+
+; TreeView styles
+TVS_HASLINES        EQU 0002h
+TVS_HASBUTTONS      EQU 0001h
+TVS_LINESATROOT     EQU 0004h
+
+; ListView styles
+LVS_REPORT          EQU 0001h
+LVS_SINGLESEL       EQU 0004h
+LVS_SHOWSELALWAYS   EQU 0008h
+
+; ImageList flags
+ILC_MASK            EQU 0001h
+
+; ListView column flags
+LVCF_FMT            EQU 0001h
+
+; File attributes
+FILE_ATTRIBUTE_DIRECTORY EQU 10h
+
+; ListView item flags  
+LVIF_TEXT           EQU 0001h
+LVIF_IMAGE          EQU 0002h
+LVIF_PARAM          EQU 0004h
+
+; ListView messages
+LVM_GETNEXTITEM     EQU 100Ch
+LVNI_SELECTED       EQU 0002h
+
+; FILETIME structure
+FILETIME STRUCT
+    dwLowDateTime   DWORD ?
+    dwHighDateTime  DWORD ?
+FILETIME ENDS
 PUBLIC FileBrowser_Create
 PUBLIC FileBrowser_Destroy
 PUBLIC FileBrowser_LoadDirectory
@@ -101,9 +184,9 @@ FILE_INFO STRUCT
     fileName        BYTE MAX_PATH_LENGTH DUP(?)
     filePath        BYTE MAX_PATH_LENGTH DUP(?)
     fileSize        QWORD ?
-    fileDate        FILETIME <>
+    fileDateTime    FILETIME <>
     isDirectory     DWORD ?
-    fileIcon        HICON ?
+    fileIconHandle  QWORD ?
     fileType        BYTE 64 DUP(?)
 FILE_INFO ENDS
 
@@ -117,10 +200,10 @@ DIR_ENTRY ENDS
 
 ; File browser state
 FILE_BROWSER STRUCT
-    hWndTree        HWND ?       ; TreeView control
-    hWndList        HWND ?       ; ListView control
-    hWndParent      HWND ?       ; Parent window
-    hImageList      HIMAGELIST ? ; Icon image list
+    hWndTree        QWORD ?       ; TreeView control
+    hWndList        QWORD ?       ; ListView control
+    hWndParent      QWORD ?       ; Parent window
+    hImageListPtr   QWORD ?       ; Icon image list
     
     currentPath     BYTE MAX_PATH_LENGTH DUP(?)
     currentFilter   DWORD ?
@@ -139,7 +222,7 @@ FILE_BROWSER STRUCT
     historyCount    DWORD ?
     
     hCritSection    QWORD ?      ; Thread safety
-    hLoadThread     HANDLE ?     ; Async loading thread
+    hLoadThreadHandle QWORD ?    ; Async loading thread
     loadThreadId    DWORD ?
     
     searchActive    DWORD ?
@@ -233,7 +316,7 @@ FileBrowser_Create PROC
     
     ; Allocate FILE_BROWSER structure
     mov rcx, SIZEOF FILE_BROWSER
-    call malloc
+    call masm_malloc
     test rax, rax
     jz CreateFailed
     mov rdi, rax        ; rdi = FILE_BROWSER*
@@ -323,18 +406,18 @@ FileBrowser_Create PROC
     
     ; Allocate file list array
     mov rcx, 100 * SIZEOF FILE_INFO
-    call malloc
+    call masm_malloc
     mov [rdi + 56], rax ; pFileList
     mov DWORD PTR [rdi + 64], 100 ; fileCapacity
     
     ; Allocate bookmarks array
     mov rcx, MAX_BOOKMARKS * MAX_PATH_LENGTH
-    call malloc
+    call masm_malloc
     mov [rdi + 68], rax ; pBookmarks
     
     ; Allocate history array
     mov rcx, MAX_HISTORY * MAX_PATH_LENGTH
-    call malloc
+    call masm_malloc
     mov [rdi + 72], rax ; pHistory
     
     ; Initialize default settings
@@ -599,7 +682,8 @@ FileBrowser_LoadDirectory PROC
     lea rcx, [rsp + 32]
     call strlen
     lea r8, [rsp + 32 + rax]
-    mov WORD PTR [r8], '\*'
+    mov BYTE PTR [r8], '\'
+    mov BYTE PTR [r8 + 1], '*'
     mov BYTE PTR [r8 + 2], 0
     
     ; WIN32_FIND_DATA structure at [rsp + 320]
@@ -651,7 +735,7 @@ SkipDotEntry:
     call LeaveCriticalSection
     
     mov eax, [rbx + 60]  ; Return fileCount
-    movzx rax, eax
+    mov eax, eax
     add rsp, 640
     pop r13
     pop r12
@@ -699,7 +783,7 @@ AddFileToList PROC
     
     ; Get pointer to new FILE_INFO entry
     mov rcx, [rbx + 56]  ; pFileList
-    movzx rax, DWORD PTR [rbx + 60]
+    mov eax, DWORD PTR [rbx + 60]
     imul rax, SIZEOF FILE_INFO
     add rcx, rax
     mov rdi, rcx        ; rdi = FILE_INFO*
@@ -787,7 +871,7 @@ UseSortByDate:
     
 DoSort:
     mov rcx, [rbx + 56]  ; pFileList
-    movzx rdx, DWORD PTR [rbx + 60]  ; fileCount
+    mov edx, DWORD PTR [rbx + 60]  ; fileCount
     mov r9, SIZEOF FILE_INFO
     ; r8 already contains comparison function
     call qsort
@@ -1039,21 +1123,21 @@ SkipImageList:
     mov rcx, [rbx + 56]
     test rcx, rcx
     jz SkipFileList
-    call free
+    call masm_free
     
 SkipFileList:
     ; Free bookmarks
     mov rcx, [rbx + 68]
     test rcx, rcx
     jz SkipBookmarks
-    call free
+    call masm_free
     
 SkipBookmarks:
     ; Free history
     mov rcx, [rbx + 72]
     test rcx, rcx
     jz SkipHistory
-    call free
+    call masm_free
     
 SkipHistory:
     ; Delete critical section
@@ -1062,7 +1146,7 @@ SkipHistory:
     
     ; Free FILE_BROWSER structure
     mov rcx, rbx
-    call free
+    call masm_free
     
     add rsp, 32
     pop rbx
@@ -1072,7 +1156,6 @@ FileBrowser_Destroy ENDP
 ;==========================================================================
 ; Stub functions for additional features
 ;==========================================================================
-
 FileBrowser_Search PROC
     xor rax, rax
     ret
@@ -1082,26 +1165,28 @@ FileBrowser_AddBookmark PROC
     xor rax, rax
     ret
 FileBrowser_AddBookmark ENDP
-
 FileBrowser_NavigateUp PROC
     xor rax, rax
     ret
 FileBrowser_NavigateUp ENDP
-
 FileBrowser_NavigateBack PROC
     xor rax, rax
     ret
 FileBrowser_NavigateBack ENDP
-
 FileBrowser_NavigateForward PROC
     xor rax, rax
     ret
 FileBrowser_NavigateForward ENDP
-
 CompareFilesByDate PROC
     xor eax, eax
     ret
 CompareFilesByDate ENDP
 
 END
+
+
+
+
+
+
 

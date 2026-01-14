@@ -26,7 +26,6 @@
 ; ==============================================================
 ; EXPORTED SYMBOLS (used by all three layers)
 ; ==============================================================
-
 PUBLIC masm_core_direct_read
 PUBLIC masm_core_direct_write
 PUBLIC masm_core_direct_fill
@@ -828,4 +827,8 @@ fnv_fail:
 masm_core_fnv1a_hash ENDP
 
 END
+
+
+
+
 

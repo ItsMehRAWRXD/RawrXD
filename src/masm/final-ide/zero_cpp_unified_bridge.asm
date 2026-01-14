@@ -216,7 +216,6 @@ SERVICE_STATUS ENDS
 ;==============================================================================
 ; PUBLIC EXPORTS
 ;==============================================================================
-
 PUBLIC zero_cpp_bridge_initialize
 PUBLIC zero_cpp_bridge_shutdown
 PUBLIC zero_cpp_bridge_process_wish
@@ -744,4 +743,8 @@ ALIGN 16
 zero_cpp_bridge_shutdown ENDP
 
 END
+
+
+
+
 

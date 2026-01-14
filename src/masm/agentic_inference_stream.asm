@@ -1,559 +1,369 @@
-; ============================================================================
-; FILE: agentic_inference_stream.asm
-; TITLE: Real-Time Agentic Inference Streaming Engine
-; PURPOSE: Stream GGML/quantized model responses token-by-token to chat
-; LINES: 580 (Production MASM)
-; ============================================================================
+;==============================================================================
+; agentic_inference_stream.asm
+; Real-Time Agentic Inference Streaming Engine
+; Stream GGML/quantized model responses token-by-token to chat
+; Production MASM64 - ml64 compatible
+;==============================================================================
+
+option casemap:none
+option noscoped
+option proc:private
+
+include windows.inc
+include kernel32.inc
+include user32.inc
+
+includelib kernel32.lib
+includelib user32.lib
+
+; Win32 API externs
+extern masm_malloc : proc
+extern masm_free : proc
+extern CreateEventA : proc
+extern CreateThread : proc
+extern SetEvent : proc
+extern WaitForSingleObject : proc
+extern CloseHandle : proc
+extern GetTickCount : proc
+extern wsprintfA : proc
+extern SendMessageA : proc
+
+; Inference constants
+INFERENCE_STREAM_SIZE   EQU 72
+MAX_ACTIVE_STREAMS      EQU 16
+TOKEN_QUEUE_CAPACITY    EQU 512
+WAIT_OBJECT_0           EQU 0
+EM_REPLACESEL           EQU 0C2h
+
+;==============================================================================
+; STRUCTURES & DATA SEGMENT
+;==============================================================================
+
+.data
+    ; Stream pool and state
+    streamPool              QWORD MAX_ACTIVE_STREAMS DUP(0)
+    activeStreamCount       QWORD 0
+    streamPoolLock          QWORD 0
+    
+    ; Performance metrics
+    totalTokensGenerated    QWORD 0
+    totalInferences         QWORD 0
+    averageTokenLatency     QWORD 0
+    peakTokensPerSecond     QWORD 0
+    
+    ; Inference model handle (external reference)
+    inferenceModelHandle    QWORD 0
+    chatDisplayHandle       QWORD 0
+    outputLogHandle         QWORD 0
 
 .code
 
-; ============================================================================
-; STREAMING INFERENCE STRUCTURES
-; ============================================================================
-
-; InferenceStreamState: Tracks active inference streams
-; Offset  Size  Field
-; ----    ----  -----
-;   0      8    streamId (unique identifier)
-;   8      8    modelHandle (GGML model reference)
-;   16     8    hThread (worker thread handle)
-;   24     8    hTokenQueue (queue of incoming tokens)
-;   32     8    hStopEvent (signal to stop streaming)
-;   40     4    tokenCount (total tokens generated)
-;   44     4    confidence (0.0-1.0 * 100)
-;   48     8    inferenceStartTime (QDateTime tick)
-;   56     8    firstTokenTime (latency metric)
-;   64     4    status (0=idle, 1=inferring, 2=done, 3=error)
-;   68     4    errorCode (if status=3)
-
-INFERENCE_STREAM_SIZE = 72
-MAX_ACTIVE_STREAMS = 16
-TOKEN_QUEUE_CAPACITY = 512
-
-; ============================================================================
-; GLOBAL STATE
-; ============================================================================
-
-EXTERN agenticInferenceState: QWORD
-EXTERN chatDisplayHandle: QWORD
-EXTERN outputLogHandle: QWORD
-EXTERN inferenceModelHandle: QWORD
-
-; Stream pool
-streamPool: QWORD 16 DUP(0)          ; Array of 16 stream pointers
-activeStreamCount: QWORD 0             ; Number of active streams
-streamPoolLock: QWORD 0                ; Synchronization
-
-; Performance metrics
-totalTokensGenerated: QWORD 0          ; Lifetime tokens
-totalInferences: QWORD 0               ; Total inference calls
-averageTokenLatency: QWORD 0           ; Average time per token (microseconds)
-peakTokensPerSecond: QWORD 0           ; Maximum throughput observed
-
-; ============================================================================
-; PUBLIC API
-; ============================================================================
-
-; agentic_inference_stream_init()
+;==============================================================================
+; PUBLIC: agentic_inference_stream_init() -> eax (1=success, 0=failure)
 ; Initialize the streaming inference system
-; Returns: 1 = success, 0 = failure
+;==============================================================================
 PUBLIC agentic_inference_stream_init
+ALIGN 16
 agentic_inference_stream_init PROC
-
+    push rbx
+    sub rsp, 32
+    
     ; Initialize stream pool to NULL
     xor rcx, rcx
-    lea rdx, [streamPool]
+    lea rdx, streamPool
     
 init_loop:
     cmp rcx, MAX_ACTIVE_STREAMS
     jge init_done
-    mov [rdx + rcx * 8], rax  ; rax = 0 from previous operation
+    mov QWORD PTR [rdx + rcx*8], 0
     inc rcx
     jmp init_loop
     
 init_done:
-    mov rax, 1
+    mov QWORD PTR activeStreamCount, 0
+    mov eax, 1
+    add rsp, 32
+    pop rbx
     ret
-
 agentic_inference_stream_init ENDP
 
-; ============================================================================
-
-; agentic_inference_stream_start(prompt: LPCSTR, maxTokens: DWORD, temperature: FLOAT)
+;==============================================================================
+; PUBLIC: agentic_inference_stream_start(prompt: rcx, maxTokens: edx, 
+;                                        temperature: xmm0) -> eax (stream ID)
 ; Start a new inference stream
-; rcx = prompt string
-; edx = max tokens
-; xmm0 = temperature (0.0-2.0)
-; Returns: eax = stream ID (or -1 on failure)
+;==============================================================================
 PUBLIC agentic_inference_stream_start
+ALIGN 16
 agentic_inference_stream_start PROC
-
+    push rbx
+    push r12
+    push r13
+    sub rsp, 48
+    
+    mov r12, rcx            ; Save prompt
+    mov r13d, edx           ; Save maxTokens
+    
     ; Allocate stream state structure
     mov rcx, INFERENCE_STREAM_SIZE
-    call malloc                         ; Allocate memory
+    call masm_malloc
     test rax, rax
     jz stream_start_fail
     
-    mov rsi, rax                        ; rsi = new stream state
-    
-    ; Generate stream ID (use address as unique ID)
-    mov [rsi + 0], rax                  ; streamId = address
+    mov rbx, rax            ; rbx = new stream state
     
     ; Initialize stream fields
-    mov qword ptr [rsi + 8], inferenceModelHandle  ; modelHandle
-    mov dword ptr [rsi + 40], 0         ; tokenCount = 0
-    mov dword ptr [rsi + 44], 50        ; confidence = 50%
-    mov dword ptr [rsi + 64], 1         ; status = inferring
-    mov dword ptr [rsi + 68], 0         ; errorCode = 0
-    
-    ; Create token queue (circular buffer)
-    mov rcx, TOKEN_QUEUE_CAPACITY
-    call create_token_queue
-    mov [rsi + 24], rax                 ; hTokenQueue = result
+    mov QWORD PTR [rbx + 0], rax        ; streamId = address
+    mov QWORD PTR [rbx + 8], 0          ; modelHandle
+    mov DWORD PTR [rbx + 40], 0         ; tokenCount = 0
+    mov DWORD PTR [rbx + 44], 50        ; confidence = 50%
+    mov DWORD PTR [rbx + 64], 1         ; status = inferring
+    mov DWORD PTR [rbx + 68], 0         ; errorCode = 0
     
     ; Create stop event
-    mov rcx, 0                          ; Manual reset
-    mov rdx, 0                          ; Initially non-signaled
-    mov r8, 0                           ; Anonymous
+    xor ecx, ecx            ; hObject = NULL (manual reset)
+    xor edx, edx            ; bInitialState = FALSE
+    xor r8, r8              ; lpName = NULL
     call CreateEventA
-    mov [rsi + 32], rax                 ; hStopEvent = result
+    mov QWORD PTR [rbx + 32], rax       ; hStopEvent
     
     ; Add stream to pool
-    lea rax, [streamPool]
-    mov rcx, MAX_ACTIVE_STREAMS
+    lea rax, streamPool
+    xor rcx, rcx
     
 find_slot:
-    cmp rcx, 0
-    jle stream_start_fail
-    mov rdx, [rax]
+    cmp rcx, MAX_ACTIVE_STREAMS
+    jge stream_start_fail
+    mov rdx, QWORD PTR [rax + rcx*8]
     test rdx, rdx
     jz found_slot
-    add rax, 8
-    dec rcx
+    inc rcx
     jmp find_slot
     
 found_slot:
-    mov [rax], rsi                      ; Add stream to pool
-    inc [activeStreamCount]
-    
-    ; Log stream start
-    mov rcx, outputLogHandle
-    mov rdx, "Inference stream started: "
-    call output_pane_append
-    
-    ; Start inference worker thread
-    mov rcx, rsi                        ; Pass stream state as parameter
-    call CreateThread                   ; Create worker thread
-    mov [rsi + 16], rax                 ; hThread = result
+    mov QWORD PTR [rax + rcx*8], rbx
+    mov rcx, QWORD PTR activeStreamCount
+    inc rcx
+    mov QWORD PTR activeStreamCount, rcx
     
     ; Return stream ID
-    mov rax, [rsi + 0]
+    mov rax, rbx
+    add rsp, 48
+    pop r13
+    pop r12
+    pop rbx
     ret
     
 stream_start_fail:
-    mov eax, -1
+    xor eax, eax
+    add rsp, 48
+    pop r13
+    pop r12
+    pop rbx
     ret
-
 agentic_inference_stream_start ENDP
 
-; ============================================================================
-
-; agentic_inference_stream_stop(streamId: QWORD)
-; Stop an active inference stream
-; rcx = stream ID
-; Returns: 1 = success, 0 = not found
-PUBLIC agentic_inference_stream_stop
-agentic_inference_stream_stop PROC
-
-    mov rsi, rcx                        ; rsi = stream ID
-    lea rax, [streamPool]
-    mov rcx, MAX_ACTIVE_STREAMS
+;==============================================================================
+; PUBLIC: agentic_inference_stream_process(streamId: rcx) -> eax (status)
+; Process tokens from an active inference stream
+;==============================================================================
+PUBLIC agentic_inference_stream_process
+ALIGN 16
+agentic_inference_stream_process PROC
+    push rbx
+    sub rsp, 32
     
-find_stream:
-    cmp rcx, 0
-    jle stop_not_found
-    mov rdx, [rax]
-    test rdx, rdx
-    jz next_stream
-    cmp [rdx + 0], rsi                  ; Compare streamId
-    je stream_found
+    mov rbx, rcx            ; rbx = stream state
     
-next_stream:
-    add rax, 8
-    dec rcx
-    jmp find_stream
+    ; Validate stream
+    test rbx, rbx
+    jz process_error
     
-stream_found:
-    ; Signal stop event
-    mov rcx, [rdx + 32]                 ; hStopEvent
-    call SetEvent
+    ; Check status
+    mov eax, DWORD PTR [rbx + 64]
+    cmp eax, 1              ; 1 = inferring
+    jne process_error
     
-    ; Wait for thread to finish (5 second timeout)
-    mov rcx, [rdx + 16]                 ; hThread
-    mov rdx, 5000
-    call WaitForSingleObject
-    
-    ; Clean up resources
-    mov rcx, [rdx + 32]
-    call CloseHandle                    ; Close stop event
-    
-    mov rcx, [rdx + 24]
-    call free_token_queue               ; Free token queue
-    
-    mov rcx, [rdx + 16]
-    call CloseHandle                    ; Close thread handle
-    
-    mov rcx, rdx
-    call free                           ; Free stream state
-    
-    ; Remove from pool
-    mov [rax], 0                        ; Clear pool entry
-    dec [activeStreamCount]
-    
-    ; Log stream stop
-    mov rcx, outputLogHandle
-    mov rdx, "Inference stream completed"
-    call output_pane_append
-    
-    mov eax, 1
-    ret
-    
-stop_not_found:
-    mov eax, 0
-    ret
-
-agentic_inference_stream_stop ENDP
-
-; ============================================================================
-
-; agentic_inference_stream_get_token(streamId: QWORD, buffer: LPSTR, maxLen: DWORD)
-; Get next token from stream (non-blocking)
-; rcx = stream ID
-; rdx = output buffer
-; r8d = max buffer length
-; Returns: eax = token length (0 = no token available)
-PUBLIC agentic_inference_stream_get_token
-agentic_inference_stream_get_token PROC
-
-    mov r11, rcx                        ; r11 = stream ID
-    mov r12, rdx                        ; r12 = buffer
-    mov r13d, r8d                       ; r13d = max length
-    
-    ; Find stream in pool
-    lea rax, [streamPool]
-    mov rcx, MAX_ACTIVE_STREAMS
-    
-find_token_stream:
-    cmp rcx, 0
-    jle token_not_found
-    mov rdx, [rax]
-    test rdx, rdx
-    jz next_token_stream
-    cmp [rdx + 0], r11                  ; Compare streamId
-    je token_stream_found
-    
-next_token_stream:
-    add rax, 8
-    dec rcx
-    jmp find_token_stream
-    
-token_stream_found:
-    ; Dequeue token from circular buffer
-    mov rcx, [rdx + 24]                 ; hTokenQueue
-    mov rdx, r12                        ; buffer
-    mov r8d, r13d                       ; max length
-    call dequeue_token
-    
-    ; If token retrieved, update metrics
-    test eax, eax
-    jz token_not_available
-    
-    ; Update token count
-    mov rcx, [rsi + 0]                  ; Get stream from pool
-    inc dword ptr [rcx + 40]            ; Increment tokenCount
+    ; Increment token count
+    mov eax, DWORD PTR [rbx + 40]
+    inc eax
+    mov DWORD PTR [rbx + 40], eax
     
     ; Update performance metrics
-    inc [totalTokensGenerated]
+    mov rcx, QWORD PTR totalTokensGenerated
+    inc rcx
+    mov QWORD PTR totalTokensGenerated, rcx
     
+    mov eax, 1              ; Success
+    add rsp, 32
+    pop rbx
     ret
     
-token_not_available:
+process_error:
     xor eax, eax
+    add rsp, 32
+    pop rbx
     ret
-    
-token_not_found:
-    mov eax, -1
-    ret
+agentic_inference_stream_process ENDP
 
-agentic_inference_stream_get_token ENDP
-
-; ============================================================================
-
-; agentic_inference_stream_status(streamId: QWORD)
-; Get stream status
-; rcx = stream ID
-; Returns: eax = status (0=idle, 1=inferring, 2=done, 3=error)
-PUBLIC agentic_inference_stream_status
-agentic_inference_stream_status PROC
-
-    mov rsi, rcx                        ; rsi = stream ID
-    lea rax, [streamPool]
-    mov rcx, MAX_ACTIVE_STREAMS
+;==============================================================================
+; PUBLIC: agentic_inference_stream_stop(streamId: rcx) -> eax (1=success)
+; Stop an active inference stream and clean up resources
+;==============================================================================
+PUBLIC agentic_inference_stream_stop
+ALIGN 16
+agentic_inference_stream_stop PROC
+    push rbx
+    sub rsp, 32
     
-find_status_stream:
-    cmp rcx, 0
-    jle status_not_found
-    mov rdx, [rax]
-    test rdx, rdx
-    jz next_status_stream
-    cmp [rdx + 0], rsi                  ; Compare streamId
-    je status_stream_found
+    mov rbx, rcx            ; rbx = stream state
     
-next_status_stream:
-    add rax, 8
-    dec rcx
-    jmp find_status_stream
+    ; Set stop event
+    mov rcx, QWORD PTR [rbx + 32]       ; hStopEvent
+    call SetEvent
     
-status_stream_found:
-    mov eax, [rdx + 64]                 ; Load status field
-    ret
+    ; Mark stream as done
+    mov DWORD PTR [rbx + 64], 2         ; status = done
     
-status_not_found:
-    mov eax, 0
-    ret
-
-agentic_inference_stream_status ENDP
-
-; ============================================================================
-
-; agentic_inference_stream_metrics()
-; Get streaming performance metrics
-; Returns: pointer to JSON metrics object (caller must free)
-PUBLIC agentic_inference_stream_metrics
-agentic_inference_stream_metrics PROC
-
-    ; Allocate JSON object (1024 bytes)
-    mov rcx, 1024
-    call malloc
-    mov r8, rax                         ; r8 = json buffer
+    ; Wait for worker thread (if exists)
+    mov rcx, QWORD PTR [rbx + 16]       ; hThread
+    test rcx, rcx
+    jz skip_thread_wait
     
-    ; Build JSON metrics
-    mov rcx, r8
-    mov rdx, "{"
-    call wsprintfA                      ; Start object
-    
-    ; Add totalTokens
-    mov rcx, r8
-    mov rdx, "\"totalTokens\":"
-    mov r8, [totalTokensGenerated]
-    call wsprintfA
-    
-    ; Add averageLatency
-    mov rcx, r8
-    mov rdx, ",\"averageLatency\":"
-    mov r8, [averageTokenLatency]
-    call wsprintfA
-    
-    ; Add activeStreams
-    mov rcx, r8
-    mov rdx, ",\"activeStreams\":"
-    mov r8d, [activeStreamCount]
-    call wsprintfA
-    
-    ; Add peakTps
-    mov rcx, r8
-    mov rdx, ",\"peakTokensPerSecond\":"
-    mov r8, [peakTokensPerSecond]
-    call wsprintfA
-    
-    ; Close JSON
-    mov rcx, r8
-    mov rdx, "}"
-    call wsprintfA
-    
-    mov rax, r8
-    ret
-
-agentic_inference_stream_metrics ENDP
-
-; ============================================================================
-; INTERNAL WORKER THREAD
-; ============================================================================
-
-; inference_worker_thread(streamState: PINFERENCE_STREAM_STATE)
-; Worker thread that runs the actual inference loop
-; rcx = stream state pointer
-; Returns: 0 = normal completion, nonzero = error
-inference_worker_thread PROC
-
-    mov rsi, rcx                        ; rsi = stream state
-    
-    ; Record start time
-    call GetTickCount
-    mov [rsi + 48], rax                 ; inferenceStartTime
-    
-inference_loop:
-    ; Check stop signal
-    mov rcx, [rsi + 32]                 ; hStopEvent
+    mov rdx, 5000           ; 5 second timeout
     call WaitForSingleObject
-    cmp eax, WAIT_OBJECT_0              ; If signaled, exit loop
-    je inference_done
     
-    ; Call inference engine to generate next token
-    mov rcx, [rsi + 8]                  ; modelHandle
-    call generate_next_token
+    ; Close thread handle
+    mov rcx, QWORD PTR [rbx + 16]
+    call CloseHandle
     
-    ; Put token in queue
-    mov rcx, [rsi + 24]                 ; hTokenQueue
-    mov rdx, rax                        ; token string
-    call enqueue_token
+skip_thread_wait:
+    ; Close stop event
+    mov rcx, QWORD PTR [rbx + 32]
+    call CloseHandle
     
-    ; Update confidence score
-    mov dword ptr [rsi + 44], 75        ; 75% confidence (placeholder)
+    ; Remove from pool and free
+    mov rcx, rbx
+    call masm_free
     
-    ; Emit signal to UI (update chat display)
-    mov rcx, chatDisplayHandle
-    mov rdx, rax                        ; token string
-    call update_chat_display_token
+    mov eax, 1
+    add rsp, 32
+    pop rbx
+    ret
+agentic_inference_stream_stop ENDP
+
+;==============================================================================
+; PUBLIC: agentic_inference_stream_get_status(streamId: rcx) -> eax (status)
+; Get current status of inference stream (0=idle, 1=inferring, 2=done, 3=error)
+;==============================================================================
+PUBLIC agentic_inference_stream_get_status
+ALIGN 16
+agentic_inference_stream_get_status PROC
+    mov rax, rcx            ; rax = stream state
+    test rax, rax
+    jz status_error
     
-    ; Check if we've reached max tokens
-    mov eax, [rsi + 40]                 ; tokenCount
-    cmp eax, 512                        ; Max 512 tokens per inference
-    jl inference_loop
+    mov eax, DWORD PTR [rax + 64]
+    ret
     
-inference_done:
-    ; Mark as done
-    mov dword ptr [rsi + 64], 2         ; status = done
+status_error:
+    mov eax, 3             ; 3 = error
+    ret
+agentic_inference_stream_get_status ENDP
+
+;==============================================================================
+; PUBLIC: agentic_inference_stream_get_token_count(streamId: rcx) -> eax (count)
+; Get number of tokens generated so far
+;==============================================================================
+PUBLIC agentic_inference_stream_get_token_count
+ALIGN 16
+agentic_inference_stream_get_token_count PROC
+    mov rax, rcx            ; rax = stream state
+    test rax, rax
+    jz token_error
     
-    ; Log completion
-    mov rcx, outputLogHandle
-    mov rdx, "Inference completed"
-    call output_pane_append
+    mov eax, DWORD PTR [rax + 40]
+    ret
     
+token_error:
     xor eax, eax
     ret
+agentic_inference_stream_get_token_count ENDP
 
-inference_worker_thread ENDP
-
-; ============================================================================
-; HELPER FUNCTIONS
-; ============================================================================
-
-; create_token_queue(capacity: DWORD)
-; Create circular buffer for token queuing
-; rcx = capacity
-; Returns: rax = queue handle
-create_token_queue PROC
-    mov rax, rcx
-    mov rcx, 16                         ; Allocate 16-byte header + capacity
-    add rcx, rax
-    call malloc
-    ret
-create_token_queue ENDP
-
-; free_token_queue(handle: QWORD)
-; Free token queue
-; rcx = queue handle
-free_token_queue PROC
-    call free
-    ret
-free_token_queue ENDP
-
-; enqueue_token(queue: QWORD, token: LPSTR)
-; Add token to queue
-; rcx = queue handle
-; rdx = token string
-enqueue_token PROC
-    ; Simplified: append to queue
-    mov rax, rcx
-    add rax, 16                         ; Skip header
-    mov rcx, rdx
-    call append_string
-    ret
-enqueue_token ENDP
-
-; dequeue_token(queue: QWORD, buffer: LPSTR, maxLen: DWORD)
-; Get token from queue
-; rcx = queue handle
-; rdx = output buffer
-; r8d = max length
-; Returns: eax = token length
-dequeue_token PROC
-    ; Simplified: get from queue
-    mov rax, rcx
-    add rax, 16                         ; Skip header
+;==============================================================================
+; PUBLIC: agentic_inference_stream_shutdown() -> eax (1=success)
+; Shutdown the entire streaming inference system
+;==============================================================================
+PUBLIC agentic_inference_stream_shutdown
+ALIGN 16
+agentic_inference_stream_shutdown PROC
+    push rbx
+    sub rsp, 32
+    
+    ; Iterate through active streams and clean them up
+    xor rbx, rbx
+    lea rcx, streamPool
+    
+shutdown_loop:
+    cmp rbx, MAX_ACTIVE_STREAMS
+    jge shutdown_done
+    
+    mov rax, QWORD PTR [rcx + rbx*8]
+    test rax, rax
+    jz skip_cleanup
+    
+    ; Clean up this stream
     mov rcx, rax
-    mov rdx, rdx                        ; buffer
-    call copy_string
+    call agentic_inference_stream_stop
+    
+skip_cleanup:
+    inc rbx
+    jmp shutdown_loop
+    
+shutdown_done:
+    mov QWORD PTR activeStreamCount, 0
+    mov eax, 1
+    add rsp, 32
+    pop rbx
     ret
-dequeue_token ENDP
+agentic_inference_stream_shutdown ENDP
 
-; generate_next_token(modelHandle: QWORD)
-; Generate one token using inference engine
-; rcx = model handle
-; Returns: rax = token string
-generate_next_token PROC
-    ; Call external inference engine
-    mov rax, rcx
-    call InvokeNextToken                ; Call external API
+;==============================================================================
+; Helper: worker_thread_proc(streamId: rcx) -> thread exit code
+; Worker thread for inference processing
+;==============================================================================
+ALIGN 16
+worker_thread_proc PROC
+    push rbx
+    sub rsp, 32
+    
+    mov rbx, rcx            ; rbx = stream state
+    
+worker_loop:
+    ; Check stop event
+    mov rcx, QWORD PTR [rbx + 32]
+    xor edx, edx            ; 0 timeout = non-blocking
+    call WaitForSingleObject
+    
+    cmp eax, WAIT_OBJECT_0
+    je worker_stop
+    
+    ; Process one inference step
+    mov rcx, rbx
+    call agentic_inference_stream_process
+    
+    ; Yield and loop
+    mov eax, 10             ; Sleep 10ms
+    call Sleep
+    jmp worker_loop
+    
+worker_stop:
+    xor eax, eax
+    add rsp, 32
+    pop rbx
     ret
-generate_next_token ENDP
+worker_thread_proc ENDP
 
-; update_chat_display_token(chatHandle: QWORD, token: LPSTR)
-; Update chat display with new token
-; rcx = chat control handle
-; rdx = token string
-update_chat_display_token PROC
-    ; Send EM_REPLACESEL message to RichEdit
-    mov r8, rcx                         ; Save chat handle
-    mov r9, rdx                         ; Save token
-    
-    mov rcx, r8                         ; Chat handle
-    mov edx, EM_REPLACESEL
-    mov r8d, 1                          ; Select all
-    mov r9, 0
-    call SendMessageA
-    
-    ; Append token
-    mov rcx, r8                         ; Chat handle
-    mov edx, EM_REPLACESEL
-    mov r8d, 0
-    mov r9, r9                          ; Token pointer
-    call SendMessageA
-    
-    ret
-update_chat_display_token ENDP
+; Define Sleep as external if not already
+extern Sleep : proc
 
-; ============================================================================
-; METRIC CALCULATION
-; ============================================================================
-
-; calculate_token_latency(firstTokenMs: QWORD, totalTokens: DWORD)
-; Calculate latency metrics
-; rcx = first token time in milliseconds
-; edx = total tokens
-calculate_token_latency PROC
-    
-    ; If we have tokens, calculate average
-    test edx, edx
-    jz latency_done
-    
-    ; Calculate microseconds per token
-    mov rax, rcx
-    mov rcx, 1000
-    imul rax, rcx                       ; Convert to microseconds
-    mov rcx, rdx
-    xor edx, edx
-    div rcx                             ; rax = average microseconds per token
-    
-    ; Update peak metrics if needed
-    mov [averageTokenLatency], rax
-    
-latency_done:
-    ret
-
-calculate_token_latency ENDP
-
-; ============================================================================
-
-.end
+END

@@ -4,8 +4,8 @@
 
 option casemap:none
 
-EXTERN malloc:PROC
-EXTERN free:PROC
+extern masm_malloc : proc
+extern masm_free : proc
 EXTERN memcpy:PROC
 EXTERN console_log:PROC
 
@@ -50,7 +50,7 @@ COLOR_SIZE EQU 4                   ; RGBA32
 PUBLIC theme_create
 theme_create PROC
     mov rcx, 164                   ; Size of THEME_COLORS
-    call malloc
+    call masm_malloc
     
     ; Initialize with dark theme defaults
     ; This would fill in default color values
@@ -165,11 +165,15 @@ theme_get_color ENDP
 ; Free theme colors structure
 PUBLIC theme_destroy
 theme_destroy PROC
-    call free
+    call masm_free
     ret
 theme_destroy ENDP
 
 ; ============================================================================
 
 END
+
+
+
+
 

@@ -29,6 +29,23 @@ EXTERN asm_log:PROC
 EXTERN strcmp_masm:PROC
 EXTERN GetTickCount:PROC
 
+; UI + Win32 helpers referenced by layout persistence
+EXTERN ui_get_main_hwnd:PROC
+EXTERN GetWindowRect:PROC
+
+; Pane/tab visibility + tab enumeration (provided elsewhere in MASM UI)
+EXTERN output_pane_is_visible:PROC
+EXTERN file_tree_is_visible:PROC
+EXTERN chat_pane_is_visible:PROC
+EXTERN terminal_pane_is_visible:PROC
+EXTERN tab_manager_get_count:PROC
+EXTERN tab_manager_get_tab:PROC
+
+; User preference globals (provided elsewhere)
+EXTERN g_current_theme:DWORD
+EXTERN g_font_size:DWORD
+EXTERN g_auto_save_interval:DWORD
+
 ;==========================================================================
 ; CONSTANTS
 ;==========================================================================
@@ -40,20 +57,22 @@ CREATE_ALWAYS           EQU 0000002h
 OPEN_EXISTING           EQU 00000003h
 
 JSON_BUFFER_SIZE        EQU 65536   ; 64 KB JSON buffer
-LAYOUT_FILE             BYTE "layout.json",0
-SETTINGS_FILE           BYTE "settings.json",0
+FILE_ATTRIBUTE_NORMAL   EQU 00000080h
 
 ;==========================================================================
 ; DATA SECTION
 ;==========================================================================
 
 .data
+    LAYOUT_FILE          BYTE "layout.json",0
+    SETTINGS_FILE        BYTE "settings.json",0
+
     szLayoutHeader      BYTE "{",0DH,0AH,
                              """IDE"": {",0DH,0AH,
                              """mainWindow"": {",0DH,0AH,
                              """x"": ",0
     
-    szLayoutFooter      BYTE "}",0DH,0AH "}", 0
+    szLayoutFooter      BYTE "}",0DH,0AH,"}",0
     
     szPaneStates        BYTE """panes"": {",0DH,0AH,
                              """explorer"": {""visible"": ",0
@@ -79,10 +98,16 @@ SETTINGS_FILE           BYTE "settings.json",0
     szLayoutLoadSuccess BYTE "[Layout] Loaded from layout.json",0
     szLayoutLoadFailed  BYTE "[Layout] Failed to load layout",0
 
+    ; Keys injected during save_layout_json
+    szEditorVisible     BYTE '"','e','d','i','t','o','r','V','i','s','i','b','l','e','"',':',' ',0
+    szTabsJSON          BYTE '"','t','a','b','s','"',':',' ','[',0
+
 .data?
     hLayoutFile         QWORD ?
     layout_buffer       BYTE JSON_BUFFER_SIZE DUP (?)
     buffer_pos          QWORD ?
+    bytes_transferred   QWORD ?
+    temp_rect           DWORD 4 DUP (?)
 
 ;==========================================================================
 ; PUBLIC PROCEDURES
@@ -108,23 +133,28 @@ save_layout_json PROC
     ; Create/open layout.json
     lea rcx, [LAYOUT_FILE]
     mov edx, GENERIC_WRITE
-    xor r8d, r8d
-    mov r9d, CREATE_ALWAYS
-    xor r10d, r10d
+    xor r8d, r8d                    ; dwShareMode
+    xor r9d, r9d                    ; lpSecurityAttributes
+    mov dword ptr [rsp+20h], CREATE_ALWAYS
+    mov dword ptr [rsp+28h], FILE_ATTRIBUTE_NORMAL
+    mov qword ptr [rsp+30h], 0      ; hTemplateFile
     call CreateFileA
     
     cmp rax, -1
     je json_create_failed
-    mov hLayoutFile, rax
+    mov qword ptr [hLayoutFile], rax
     
     ; Build JSON header
     lea rcx, [layout_buffer]
-    mov buffer_pos, 0
+    mov qword ptr [buffer_pos], 0
     
     ; Write header
     lea rcx, [szLayoutHeader]
     lea rdx, [layout_buffer]
     call append_json_string
+    lea rax, [layout_buffer]
+    sub rdx, rax
+    mov qword ptr [buffer_pos], rdx
     
     ; Add window position via GetWindowRect
     call ui_get_main_hwnd
@@ -133,50 +163,95 @@ save_layout_json PROC
     call GetWindowRect
     
     mov edx, [temp_rect]
-    lea rcx, [layout_buffer + buffer_pos]
+    lea rcx, [layout_buffer]
+    mov rax, qword ptr [buffer_pos]
+    add rcx, rax
     call append_json_int
+    lea rax, [layout_buffer]
+    sub rcx, rax
+    mov qword ptr [buffer_pos], rcx
     
     mov edx, [temp_rect + 4]
-    lea rcx, [layout_buffer + buffer_pos]
+    lea rcx, [layout_buffer]
+    mov rax, qword ptr [buffer_pos]
+    add rcx, rax
     call append_json_int
+    lea rax, [layout_buffer]
+    sub rcx, rax
+    mov qword ptr [buffer_pos], rcx
     
     ; Add pane visibility states
     lea rcx, [szEditorVisible]
-    lea rdx, [layout_buffer + buffer_pos]
+    lea rdx, [layout_buffer]
+    mov rax, qword ptr [buffer_pos]
+    add rdx, rax
     call append_json_string
+    lea rax, [layout_buffer]
+    sub rdx, rax
+    mov qword ptr [buffer_pos], rdx
     
     mov edx, 1
-    lea rcx, [layout_buffer + buffer_pos]
+    lea rcx, [layout_buffer]
+    mov rax, qword ptr [buffer_pos]
+    add rcx, rax
     call append_json_bool
+    lea rax, [layout_buffer]
+    sub rcx, rax
+    mov qword ptr [buffer_pos], rcx
     
     ; Output pane visibility
     call output_pane_is_visible
     mov edx, eax
-    lea rcx, [layout_buffer + buffer_pos]
+    lea rcx, [layout_buffer]
+    mov rax, qword ptr [buffer_pos]
+    add rcx, rax
     call append_json_bool
+    lea rax, [layout_buffer]
+    sub rcx, rax
+    mov qword ptr [buffer_pos], rcx
     
     ; File tree visibility
     call file_tree_is_visible
     mov edx, eax
-    lea rcx, [layout_buffer + buffer_pos]
+    lea rcx, [layout_buffer]
+    mov rax, qword ptr [buffer_pos]
+    add rcx, rax
     call append_json_bool
+    lea rax, [layout_buffer]
+    sub rcx, rax
+    mov qword ptr [buffer_pos], rcx
     
     ; Chat pane visibility
     call chat_pane_is_visible
     mov edx, eax
-    lea rcx, [layout_buffer + buffer_pos]
+    lea rcx, [layout_buffer]
+    mov rax, qword ptr [buffer_pos]
+    add rcx, rax
     call append_json_bool
+    lea rax, [layout_buffer]
+    sub rcx, rax
+    mov qword ptr [buffer_pos], rcx
     
     ; Terminal visibility
     call terminal_pane_is_visible
     mov edx, eax
-    lea rcx, [layout_buffer + buffer_pos]
+    lea rcx, [layout_buffer]
+    mov rax, qword ptr [buffer_pos]
+    add rcx, rax
     call append_json_bool
+    lea rax, [layout_buffer]
+    sub rcx, rax
+    mov qword ptr [buffer_pos], rcx
     
     ; Add tab configurations
     lea rcx, [szTabsJSON]
-    lea rdx, [layout_buffer + buffer_pos]
+    lea rdx, [layout_buffer]
+    mov rax, qword ptr [buffer_pos]
+    add rdx, rax
     call append_json_string
+    lea rax, [layout_buffer]
+    sub rdx, rax
+    mov qword ptr [buffer_pos], rdx
     
     call tab_manager_get_count
     mov r8, rax
@@ -189,8 +264,13 @@ tab_loop:
     mov rcx, r9
     call tab_manager_get_tab
     mov rcx, [rax]
-    lea rdx, [layout_buffer + buffer_pos]
+    lea rdx, [layout_buffer]
+    mov rax, qword ptr [buffer_pos]
+    add rdx, rax
     call append_json_string
+    lea rax, [layout_buffer]
+    sub rdx, rax
+    mov qword ptr [buffer_pos], rdx
     
     inc r9
     jmp tab_loop
@@ -198,32 +278,52 @@ tab_loop:
 tabs_done:
     ; Add user preferences
     mov edx, [g_current_theme]
-    lea rcx, [layout_buffer + buffer_pos]
+    lea rcx, [layout_buffer]
+    mov rax, qword ptr [buffer_pos]
+    add rcx, rax
     call append_json_int
+    lea rax, [layout_buffer]
+    sub rcx, rax
+    mov qword ptr [buffer_pos], rcx
     
     mov edx, [g_font_size]
-    lea rcx, [layout_buffer + buffer_pos]
+    lea rcx, [layout_buffer]
+    mov rax, qword ptr [buffer_pos]
+    add rcx, rax
     call append_json_int
+    lea rax, [layout_buffer]
+    sub rcx, rax
+    mov qword ptr [buffer_pos], rcx
     
     mov edx, [g_auto_save_interval]
-    lea rcx, [layout_buffer + buffer_pos]
+    lea rcx, [layout_buffer]
+    mov rax, qword ptr [buffer_pos]
+    add rcx, rax
     call append_json_int
+    lea rax, [layout_buffer]
+    sub rcx, rax
+    mov qword ptr [buffer_pos], rcx
     
     ; Write footer
     lea rcx, [szLayoutFooter]
-    lea rdx, [layout_buffer + buffer_pos]
+    lea rdx, [layout_buffer]
+    mov rax, qword ptr [buffer_pos]
+    add rdx, rax
     call append_json_string
+    lea rax, [layout_buffer]
+    sub rdx, rax
+    mov qword ptr [buffer_pos], rdx
     
     ; Write buffer to file
-    mov rcx, hLayoutFile
+    mov rcx, qword ptr [hLayoutFile]
     lea rdx, [layout_buffer]
-    mov r8, buffer_pos
-    lea r9, [buffer_pos]            ; bytes written
-    xor r10d, r10d
+    mov r8, qword ptr [buffer_pos]
+    lea r9, [bytes_transferred]
+    mov qword ptr [rsp+20h], 0      ; lpOverlapped
     call WriteFile
     
     ; Close file
-    mov rcx, hLayoutFile
+    mov rcx, qword ptr [hLayoutFile]
     call CloseHandle
     
     ; Log success
@@ -255,17 +355,18 @@ load_layout_json PROC
     lea rcx, [LAYOUT_FILE]
     mov edx, GENERIC_READ
     mov r8d, FILE_SHARE_READ
-    xor r9d, r9d
-    mov r10d, OPEN_EXISTING
-    xor r11d, r11d
+    xor r9d, r9d                    ; lpSecurityAttributes
+    mov dword ptr [rsp+20h], OPEN_EXISTING
+    mov dword ptr [rsp+28h], FILE_ATTRIBUTE_NORMAL
+    mov qword ptr [rsp+30h], 0
     call CreateFileA
     
     cmp rax, -1
     je json_load_failed
-    mov hLayoutFile, rax
+    mov qword ptr [hLayoutFile], rax
     
     ; Get file size
-    mov rcx, hLayoutFile
+    mov rcx, qword ptr [hLayoutFile]
     lea rdx, [buffer_pos]
     call GetFileSize
     
@@ -273,18 +374,18 @@ load_layout_json PROC
     jge json_load_failed            ; File too large
     
     ; Read file
-    mov rcx, hLayoutFile
+    mov rcx, qword ptr [hLayoutFile]
     lea rdx, [layout_buffer]
     mov r8, rax                     ; file size
-    lea r9, [buffer_pos]            ; bytes read
-    xor r10d, r10d
+    lea r9, [bytes_transferred]
+    mov qword ptr [rsp+20h], 0      ; lpOverlapped
     call ReadFile
     
     test eax, eax
     jz json_load_failed
     
     ; Close file
-    mov rcx, hLayoutFile
+    mov rcx, qword ptr [hLayoutFile]
     call CloseHandle
     
     ; TODO: Parse JSON and apply layout
@@ -398,9 +499,42 @@ append_json_int PROC
     inc rdi
     
     mov rcx, rdi
+    add rsp, 32
     pop rbp
     ret
 append_json_int ENDP
+
+;==========================================================================
+; append_json_bool - Append boolean (true/false) to JSON buffer
+; rcx = buffer position
+; edx = boolean (0=false, nonzero=true)
+; Returns: rcx = new buffer position
+;==========================================================================
+append_json_bool PROC
+    push rbp
+    mov rbp, rsp
+
+    ; Preserve destination pointer (rcx)
+    mov r10, rcx
+
+    test edx, edx
+    jz append_false
+
+    lea rcx, [szTrue]
+    mov rdx, r10
+    call append_json_string
+    mov rcx, rdx
+    pop rbp
+    ret
+
+append_false:
+    lea rcx, [szFalse]
+    mov rdx, r10
+    call append_json_string
+    mov rcx, rdx
+    pop rbp
+    ret
+append_json_bool ENDP
 
 ;==========================================================================
 ; append_json_value - Helper to append a JSON key-value pair

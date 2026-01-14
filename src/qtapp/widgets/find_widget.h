@@ -26,8 +26,6 @@
 #include <QRegularExpression>
 #include <QStringList>
 
-namespace RawrXD {
-
 /**
  * \struct SearchResult
  * \brief Single search match result
@@ -261,4 +259,3 @@ private:
     QList<QTextEdit::ExtraSelection> m_highlightSelections;
 };
 
-} // namespace RawrXD

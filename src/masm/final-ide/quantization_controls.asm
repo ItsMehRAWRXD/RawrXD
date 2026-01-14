@@ -149,7 +149,6 @@ hQuantizationChangeEvent  DQ ?
 ; CODE
 ; ============================================================================
 .CODE
-
 PUBLIC QuantizationControls_Create
 QuantizationControls_Create PROC FRAME USES rbx
 	invoke GetProcessHeap
@@ -192,7 +191,6 @@ qc_create_fail:
 	xor rax, rax
 	ret
 QuantizationControls_Create ENDP
-
 PUBLIC QuantizationControls_LoadSettings
 QuantizationControls_LoadSettings PROC FRAME USES rbx rdi
 	mov rbx, rcx
@@ -221,7 +219,6 @@ qc_load_fail:
 	xor rax, rax
 	ret
 QuantizationControls_LoadSettings ENDP
-
 PUBLIC QuantizationControls_SaveSettings
 QuantizationControls_SaveSettings PROC FRAME USES rbx rdi
 	mov rbx, rcx
@@ -250,7 +247,6 @@ qc_save_fail:
 	xor rax, rax
 	ret
 QuantizationControls_SaveSettings ENDP
-
 PUBLIC QuantizationControls_RefreshHardwareInfo
 QuantizationControls_RefreshHardwareInfo PROC FRAME USES rbx
 	LOCAL vinfo:VRAM_INFO
@@ -286,7 +282,6 @@ qc_hwinfo_fail:
 	xor rax, rax
 	ret
 QuantizationControls_RefreshHardwareInfo ENDP
-
 PUBLIC QuantizationControls_GetRecommendedQuantization
 QuantizationControls_GetRecommendedQuantization PROC FRAME USES rbx rsi rdi
 	LOCAL modelGB:REAL8
@@ -350,7 +345,6 @@ qc_rec_default:
 	mov currentRecommendedQuant, eax
 	ret
 QuantizationControls_GetRecommendedQuantization ENDP
-
 PUBLIC QuantizationControls_ApplyQuantization
 QuantizationControls_ApplyQuantization PROC FRAME USES rbx
 	mov ebx, ecx                        ; target quant type
@@ -389,7 +383,6 @@ qc_apply_fail:
 	xor rax, rax
 	ret
 QuantizationControls_ApplyQuantization ENDP
-
 PUBLIC QuantizationControls_PopulateComboBox
 QuantizationControls_PopulateComboBox PROC FRAME USES rbx rsi rdi
 	mov rbx, rcx
@@ -423,7 +416,6 @@ qc_combo_select:
 qc_combo_done:
 	ret
 QuantizationControls_PopulateComboBox ENDP
-
 PUBLIC QuantizationControls_UpdateVRAMDisplay
 QuantizationControls_UpdateVRAMDisplay PROC FRAME USES rbx rsi rdi
 	mov rbx, rcx                      ; progress bar
@@ -471,7 +463,6 @@ QuantizationControls_UpdateVRAMDisplay ENDP
 ; ============================================================================
 ; INTERNAL HELPERS
 ; ============================================================================
-
 QuantizationControls_HashString PROC FRAME USES rbx rsi
 	mov rbx, rcx
 	mov eax, 2166136261
@@ -488,7 +479,6 @@ qc_hash_loop:
 qc_hash_done:
 	ret
 QuantizationControls_HashString ENDP
-
 QuantizationControls_GenerateModelKey PROC FRAME USES rbx rsi
 	mov rsi, rdx                     ; output buffer
 	invoke QuantizationControls_HashString, rcx
@@ -528,7 +518,6 @@ hash_empty:
 hash_done:
 	ret
 HashString ENDP
-
 PUBLIC QuantizationControls_GenerateModelKey
 QuantizationControls_GenerateModelKey PROC FRAME USES rbx rsi rdi
 	; RCX = model path (string)
@@ -555,7 +544,6 @@ qc_gen_key_fail:
 	xor rax, rax
 	ret
 QuantizationControls_GenerateModelKey ENDP
-
 PUBLIC QuantizationControls_LoadModelProfile
 QuantizationControls_LoadModelProfile PROC FRAME USES rbx rsi rdi
 	LOCAL profileKey[260]:BYTE
@@ -579,7 +567,6 @@ qc_profile_none:
 	mov eax, -1
 	ret
 QuantizationControls_LoadModelProfile ENDP
-
 PUBLIC QuantizationControls_SaveModelProfile
 QuantizationControls_SaveModelProfile PROC FRAME USES rbx rsi rdi
 	LOCAL profileKey[260]:BYTE
@@ -612,7 +599,6 @@ QuantizationControls_SaveModelProfile ENDP
 ; ============================================================================
 ; Phase 5 Test Integration
 ; ============================================================================
-
 PUBLIC QuantizationControls_Destroy
 QuantizationControls_Destroy PROC FRAME USES rbx
 	mov rbx, pQuantizationState
@@ -639,7 +625,6 @@ QuantizationControls_Destroy ENDP
 ; ============================================================================
 ; Phase 5 Test Integration
 ; ============================================================================
-
 PUBLIC Test_QuantizationControls_ValidateVRAMCalculations
 Test_QuantizationControls_ValidateVRAMCalculations PROC FRAME USES rbx
 	; Ensure state exists
@@ -664,7 +649,6 @@ qc_test_fail:
 	xor rax, rax
 	ret
 Test_QuantizationControls_ValidateVRAMCalculations ENDP
-
 PUBLIC Test_QuantizationControls_HashFunctionality
 Test_QuantizationControls_HashFunctionality PROC FRAME
 	; Test FNV-1a hashing
@@ -686,3 +670,7 @@ Test_QuantizationControls_HashFunctionality ENDP
 testModelPath DB "test-model.gguf",0
 
 END
+
+
+
+

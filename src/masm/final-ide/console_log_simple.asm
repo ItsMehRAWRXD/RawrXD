@@ -12,8 +12,8 @@ EXTERN lstrlenA:PROC
 
 ; Simple console output function
 .data?
-hStdOut QWORD 0
-bytesWritten DWORD 0
+hStdOut QWORD ?
+bytesWritten DWORD ?
 
 .code
 
@@ -66,4 +66,8 @@ newline BYTE 13, 10
 .code
 
 END
+
+
+
+
 

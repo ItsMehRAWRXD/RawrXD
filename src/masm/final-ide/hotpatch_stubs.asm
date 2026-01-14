@@ -3,7 +3,6 @@
 ;==========================================================================
 
 .code
-
 PUBLIC masm_hotpatch_apply_memory
 PUBLIC masm_hotpatch_rollback
 PUBLIC masm_hotpatch_get_stats
@@ -46,3 +45,7 @@ stats_exit:
 masm_hotpatch_get_stats ENDP
 
 END
+
+
+
+

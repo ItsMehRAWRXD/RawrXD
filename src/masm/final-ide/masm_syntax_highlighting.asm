@@ -334,7 +334,7 @@ syntax_setup_cpp_rules PROC
     
     ; Allocate memory for rules
     mov rcx, 50 * sizeof HIGHLIGHT_RULE
-    call malloc
+    call masm_malloc
     mov [globalHighlighter.rules], rax
     mov rbx, rax
     
@@ -378,7 +378,7 @@ syntax_setup_masm_rules PROC
     push rbx
     
     mov rcx, 50 * sizeof HIGHLIGHT_RULE
-    call malloc
+    call masm_malloc
     mov [globalHighlighter.rules], rax
     mov rbx, rax
     
@@ -439,3 +439,7 @@ free PROC
 free ENDP
 
 end
+
+
+
+

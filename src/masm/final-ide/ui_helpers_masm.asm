@@ -396,3 +396,5 @@ ui_editor_get_text proc hEditor:QWORD
 ui_editor_get_text endp
 
 end
+
+

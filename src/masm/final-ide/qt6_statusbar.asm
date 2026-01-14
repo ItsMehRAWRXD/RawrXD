@@ -22,9 +22,9 @@
 option casemap:none
 
 ; External memory functions (provided by malloc_wrapper.asm)
-EXTERN malloc:PROC
-EXTERN free:PROC
-EXTERN realloc:PROC
+extern masm_malloc : proc
+extern masm_free : proc
+extern masm_realloc : proc
 EXTERN memset:PROC
 
 ; Win32 API
@@ -160,16 +160,24 @@ ENC_ASCII           EQU 0
 ENC_UTF8            EQU 1
 
 ; Colors
-COLOR_STATUSBAR_BG  EQU 0xF0F0F0    ; Light gray
-COLOR_STATUSBAR_TX  EQU 0x000000    ; Black
-COLOR_MODIFIED_TX   EQU 0xFF0000    ; Red (for *)
+COLOR_STATUSBAR_BG  EQU 0F0F0F0h    ; Light gray
+COLOR_STATUSBAR_TX  EQU 0000000h    ; Black
+COLOR_MODIFIED_TX   EQU 0FF0000h    ; Red (for *)
+
+; WinGDI constants (fallbacks if windows.inc does not define them)
+FW_NORMAL           EQU 400
+ANSI_CHARSET        EQU 0
+OUT_DEFAULT_PRECIS  EQU 0
+CLIP_DEFAULT_PRECIS EQU 0
+DEFAULT_QUALITY     EQU 0
+DEFAULT_PITCH       EQU 0
+FF_DONTCARE         EQU 0
 ; Flags
 ; FLAG_VISIBLE and FLAG_DIRTY already defined in OBJECT_BASE section above
 
 ;==========================================================================
 ; PUBLIC FUNCTIONS
 ;===========================================================================
-
 PUBLIC statusbar_create
 PUBLIC statusbar_destroy
 PUBLIC statusbar_update_cursor
@@ -193,31 +201,36 @@ statusbar_create PROC
     push rbp
     mov rbp, rsp
     sub rsp, 32
+
+    ; Preserve incoming parameters before clobbering rcx
+    mov r12, rcx   ; hwnd
+    mov r13, rdx   ; y position
+    mov r14, r8    ; width
     
     ; Allocate STATUS_BAR structure
     mov rcx, sizeof(STATUS_BAR)
-    call malloc
+    call masm_malloc
     test rax, rax
     jz create_failed
     mov rbx, rax  ; rbx = STATUS_BAR ptr
     
     ; Initialize OBJECT_BASE fields
-    mov [rbx+STATUS_BAR.obj_hwnd], rcx
-    mov [rbx+STATUS_BAR.obj_parent], rcx
-    mov [rbx+STATUS_BAR.obj_children], 0
-    mov [rbx+STATUS_BAR.obj_child_count], 0
-    mov [rbx+STATUS_BAR.obj_flags], FLAG_VISIBLE
-    mov [rbx+STATUS_BAR.obj_user_data], 0
+    mov qword ptr [rbx+STATUS_BAR.obj_hwnd], r12
+    mov qword ptr [rbx+STATUS_BAR.obj_parent], r12
+    mov qword ptr [rbx+STATUS_BAR.obj_children], 0
+    mov dword ptr [rbx+STATUS_BAR.obj_child_count], 0
+    mov dword ptr [rbx+STATUS_BAR.obj_flags], FLAG_VISIBLE
+    mov qword ptr [rbx+STATUS_BAR.obj_user_data], 0
     
     ; Set dimensions
-    mov [rbx+STATUS_BAR.hwnd], rcx
-    mov [rbx+STATUS_BAR.x], 0
-    mov [rbx+STATUS_BAR.y], rdx
-    mov [rbx+STATUS_BAR.width_val], r8d
-    mov [rbx+STATUS_BAR.height], 24
+    mov qword ptr [rbx+STATUS_BAR.hwnd], r12
+    mov dword ptr [rbx+STATUS_BAR.x], 0
+    mov dword ptr [rbx+STATUS_BAR.y], r13d
+    mov dword ptr [rbx+STATUS_BAR.width_val], r14d
+    mov dword ptr [rbx+STATUS_BAR.height], 24
     
     ; Initialize segments with proportional widths
-    mov eax, r8d
+    mov eax, r14d
     mov ecx, eax
     shr ecx, 2  ; 25%
     mov edx, eax
@@ -232,7 +245,7 @@ statusbar_create PROC
     mov [rbx+STATUS_BAR.left_segment.color_text], COLOR_STATUSBAR_TX
     mov [rbx+STATUS_BAR.left_segment.alignment], ALIGN_LEFT
     lea rax, [rbx+STATUS_BAR.left_text]
-    mov [rbx+STATUS_BAR.left_segment.text_ptr], rax
+    mov qword ptr [rbx+STATUS_BAR.left_segment.text_ptr], rax
     
     ; Center segment (cursor/mode)
     mov [rbx+STATUS_BAR.center_segment.x], ecx
@@ -241,7 +254,7 @@ statusbar_create PROC
     mov [rbx+STATUS_BAR.center_segment.color_text], COLOR_STATUSBAR_TX
     mov [rbx+STATUS_BAR.center_segment.alignment], ALIGN_CENTER
     lea rax, [rbx+STATUS_BAR.center_text]
-    mov [rbx+STATUS_BAR.center_segment.text_ptr], rax
+    mov qword ptr [rbx+STATUS_BAR.center_segment.text_ptr], rax
     
     ; Right segment (zoom/encoding)
     mov eax, ecx
@@ -254,7 +267,7 @@ statusbar_create PROC
     mov [rbx+STATUS_BAR.right_segment.color_text], COLOR_STATUSBAR_TX
     mov [rbx+STATUS_BAR.right_segment.alignment], ALIGN_RIGHT
     lea rax, [rbx+STATUS_BAR.right_text]
-    mov [rbx+STATUS_BAR.right_segment.text_ptr], rax
+    mov qword ptr [rbx+STATUS_BAR.right_segment.text_ptr], rax
     
     ; Create font (Segoe UI, 10pt)
     mov rcx, -10  ; height
@@ -355,12 +368,12 @@ skip_text_brush:
     mov rcx, [rbx+STATUS_BAR.file_name_ptr]
     test rcx, rcx
     jz skip_file_free
-    call free
+    call masm_free
 skip_file_free:
     
     ; Free STATUS_BAR structure
     mov rcx, rbx
-    call free
+    call masm_free
     
     mov rax, 1
     pop rbp
@@ -452,7 +465,7 @@ statusbar_update_file PROC
     mov rcx, [rbx+STATUS_BAR.file_name_ptr]
     test rcx, rcx
     jz alloc_new_name
-    call free
+    call masm_free
     
 alloc_new_name:
     ; Allocate and copy file name
@@ -460,7 +473,7 @@ alloc_new_name:
     call lstrlenA
     inc rax  ; Include null terminator
     mov rcx, rax
-    call malloc
+    call masm_malloc
     test rax, rax
     jz update_failed
     mov [rbx+STATUS_BAR.file_name_ptr], rax
@@ -922,6 +935,7 @@ format_file_size PROC
     jae check_kb
     
     lea rdx, STR_SIZE_BYTES_FORMAT
+    mov rcx, rbx
     mov r8, rcx
     call wsprintfA
     jmp done
@@ -929,24 +943,23 @@ format_file_size PROC
 check_kb:
     ; If size_val < 1024*1024: format as "12.3 KB"
     mov rax, rcx
-    mov rdx, 1024
-    xor rdx, rdx
-    div rdx
+    xor edx, edx
+    mov r11, 1024
+    div r11
     mov r8, rax  ; KB value
     
     mov rax, rcx
-    mov rdx, 1024
-    xor rdx, rdx
-    div rdx
+    xor edx, edx
+    mov r11, 1024
+    div r11
     mov r9, rdx  ; remainder
     
     ; Calculate decimal: remainder * 10 / 1024
     mov rax, r9
-    mov rdx, 10
-    mul rdx
-    mov rdx, 1024
-    xor rdx, rdx
-    div rdx
+    imul rax, rax, 10
+    xor edx, edx
+    mov r11, 1024
+    div r11
     mov r10, rax  ; decimal part
     
     cmp rcx, 1024*1024
@@ -962,24 +975,23 @@ check_kb:
 check_mb:
     ; If size_val < 1024*1024*1024: format as "123.4 MB"
     mov rax, rcx
-    mov rdx, 1024*1024
-    xor rdx, rdx
-    div rdx
+    xor edx, edx
+    mov r11, 1024*1024
+    div r11
     mov r8, rax  ; MB value
     
     mov rax, rcx
-    mov rdx, 1024*1024
-    xor rdx, rdx
-    div rdx
+    xor edx, edx
+    mov r11, 1024*1024
+    div r11
     mov r9, rdx  ; remainder
     
     ; Calculate decimal: remainder * 10 / (1024*1024)
     mov rax, r9
-    mov rdx, 10
-    mul rdx
-    mov rdx, 1024*1024
-    xor rdx, rdx
-    div rdx
+    imul rax, rax, 10
+    xor edx, edx
+    mov r11, 1024*1024
+    div r11
     mov r10, rax  ; decimal part
     
     cmp rcx, 1024*1024*1024
@@ -995,24 +1007,23 @@ check_mb:
 format_gb:
     ; Format as "1.2 GB"
     mov rax, rcx
-    mov rdx, 1024*1024*1024
-    xor rdx, rdx
-    div rdx
+    xor edx, edx
+    mov r11, 1024*1024*1024
+    div r11
     mov r8, rax  ; GB value
     
     mov rax, rcx
-    mov rdx, 1024*1024*1024
-    xor rdx, rdx
-    div rdx
+    xor edx, edx
+    mov r11, 1024*1024*1024
+    div r11
     mov r9, rdx  ; remainder
     
     ; Calculate decimal: remainder * 10 / (1024*1024*1024)
     mov rax, r9
-    mov rdx, 10
-    mul rdx
-    mov rdx, 1024*1024*1024
-    xor rdx, rdx
-    div rdx
+    imul rax, rax, 10
+    xor edx, edx
+    mov r11, 1024*1024*1024
+    div r11
     mov r10, rax  ; decimal part
     
     lea rdx, STR_SIZE_GB_FORMAT
@@ -1022,8 +1033,11 @@ format_gb:
     call wsprintfA
     
 done:
-    mov rax, rcx
+    mov rcx, rbx
     call lstrlenA
+    mov rax, rax
+
+format_file_size ENDP
     
 ; =============== Helper: extract_filename ===============
 ; Extract file name from full path (last part after \)
@@ -1040,10 +1054,9 @@ find_last_backslash:
     mov cl, [rdx]
     test cl, cl
     jz done
-    cmp cl, '\\'
+    cmp cl, 5Ch
     jne next_char
-    lea rax, rdx
-    inc rax
+    lea rax, [rdx+1]
 next_char:
     inc rdx
     jmp find_last_backslash
@@ -1080,4 +1093,8 @@ STR_SIZE_MB_FORMAT      DB "%d.%d MB",0
 STR_SIZE_GB_FORMAT      DB "%d.%d GB",0
 
 END
+
+
+
+
 
