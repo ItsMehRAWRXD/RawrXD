@@ -11,6 +11,7 @@
 #include "gguf_loader.hpp"
 #include "plan_orchestrator.h"
 #include "lsp_client.h"
+#include "ai_completion_provider.h"
 #include "todo_dock.h"
 #include "todo_manager.h"
 #include "agentic_text_edit.h"
@@ -107,6 +108,25 @@ MainWindow::MainWindow(QWidget *parent)
 {
     qDebug() << "[MainWindow] Lightweight constructor - deferring all initialization";
     
+    // Setup file logging for debugging white screen issue
+    static QFile logFile("D:/ide_startup.log");
+    if (!logFile.isOpen()) {
+        logFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append);
+        QTextStream log(&logFile);
+        log << "===== IDE Startup =====\n";
+        logFile.flush();
+    }
+    auto writeLog = [](const QString& msg) {
+        QFile f("D:/ide_startup.log");
+        if (f.open(QIODevice::Append | QIODevice::Text)) {
+            QTextStream ts(&f);
+            ts << msg << "\n";
+            f.flush();
+            f.close();
+        }
+    };
+    writeLog("[MainWindow] Constructor start");
+    
     // Basic window setup only
     setWindowTitle("RawrXD Agentic IDE v5.0 - Production Ready");
     resize(1400, 900);
@@ -151,13 +171,20 @@ MainWindow::~MainWindow()
 void MainWindow::initialize()
 {
     qDebug() << "[MainWindow] Phase 1: Initializing core components";
+    qDebug() << "[MainWindow] MainWindow parent:" << parent() << "size:" << size();
     updateSplashProgress("⏳ Phase 1/4: Initializing core editor...", 10);
     
     try {
-        // Create central editor (lightweight - just QTabWidget wrapper)
+        qDebug() << "[MainWindow] Creating MultiTabEditor...";
         m_multiTabEditor = new MultiTabEditor(this);
-        m_multiTabEditor->initialize();  // Deferred widget creation
-        m_multiTabEditor->hide();  // Keep hidden until splash is done
+        if (!m_multiTabEditor) {
+            qCritical() << "[MainWindow] FAILED: MultiTabEditor is nullptr";
+            throw std::runtime_error("MultiTabEditor construction failed");
+        }
+        qDebug() << "[MainWindow] MultiTabEditor created. Calling initialize()...";
+        m_multiTabEditor->initialize();
+        qDebug() << "[MainWindow] MultiTabEditor initialized. Size:" << m_multiTabEditor->size();
+        m_multiTabEditor->hide();
         
         updateSplashProgress("✓ Editor initialized", 25);
         
@@ -196,6 +223,21 @@ void MainWindow::initializePhase2()
         m_lspClient->initialize();
         
         updateSplashProgress("✓ LSP Client initialized", 50);
+        
+        // Wire LSP to editor
+        m_multiTabEditor->setLSPClient(m_lspClient);
+        
+        // Initialize AI completion provider (for real-time suggestions)
+        m_aiCompletionProvider = new RawrXD::AICompletionProvider(this);
+        m_aiCompletionProvider->setModel("mistral");  // Default model
+        m_aiCompletionProvider->setModelEndpoint("http://localhost:11434");
+        m_aiCompletionProvider->setRequestTimeout(5000);
+        m_aiCompletionProvider->setMaxSuggestions(5);
+        
+        // Wire AI provider to editor
+        m_multiTabEditor->setAICompletionProvider(m_aiCompletionProvider);
+        
+        updateSplashProgress("✓ AI Completion Provider initialized", 52);
         
         // Initialize PlanOrchestrator (for /refactor commands)
         m_planOrchestrator = new RawrXD::PlanOrchestrator(this);
@@ -334,18 +376,51 @@ void MainWindow::initializePhase4()
         
         // Replace splash with actual editor
         QTimer::singleShot(500, [this]() {
+            qDebug() << "\n[MainWindow] === CRITICAL CHECKPOINT: Splash Replacement ===";
+            qDebug() << "[MainWindow] m_multiTabEditor:" << m_multiTabEditor;
+            qDebug() << "[MainWindow] MainWindow size:" << size() << "rect:" << rect();
+            
             if (m_splashWidget) {
+                qDebug() << "[MainWindow] Deleting splash widget";
                 m_splashWidget->deleteLater();
                 m_splashWidget = nullptr;
             }
+            
+            // Set the editor as central widget (should always exist at this point)
             if (m_multiTabEditor) {
+                qDebug() << "[MainWindow] Before setCentralWidget - Editor size:" << m_multiTabEditor->size();
                 setCentralWidget(m_multiTabEditor);
+                qDebug() << "[MainWindow] After setCentralWidget - Editor size:" << m_multiTabEditor->size();
                 m_multiTabEditor->show();
+                qDebug() << "[MainWindow] Editor shown. Visible:" << m_multiTabEditor->isVisible();
+                qDebug() << "[MainWindow] MainWindow centralWidget:" << centralWidget();
+                
+                // Initialize Phase 2 Polish Features
+                initializePhase2Polish();
+            } else {
+                qCritical() << "[MainWindow] *** CRITICAL: m_multiTabEditor is nullptr ***";
+                // This should not happen - log it prominently
+                QWidget *fallback = new QWidget(this);
+                QVBoxLayout *layout = new QVBoxLayout(fallback);
+                QLabel *msg = new QLabel(
+                    "<h2 style='color: #f44336;'>Editor Failed to Initialize</h2>"
+                    "<p>The multi-tab editor could not be created.</p>"
+                    "<p>Please check the console output for error details.</p>"
+                    "<p><b>Possible causes:</b></p>"
+                    "<ul>"
+                    "<li>Qt widget creation failed</li>"
+                    "<li>Insufficient system resources</li>"
+                    "<li>Missing dependencies</li>"
+                    "</ul>", 
+                    fallback);
+                msg->setAlignment(Qt::AlignCenter);
+                msg->setWordWrap(true);
+                layout->addWidget(msg);
+                fallback->setLayout(layout);
+                setCentralWidget(fallback);
             }
-            
-            // Initialize Phase 2 Polish Features
-            initializePhase2Polish();
-            
+
+            qDebug() << "[MainWindow] === END CRITICAL CHECKPOINT ===\n";
             statusBar()->showMessage("Ready - Type /refactor <prompt> in chat to start", 5000);
         });
         

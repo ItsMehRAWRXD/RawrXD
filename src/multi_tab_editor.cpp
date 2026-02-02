@@ -2,6 +2,7 @@
 #include "multi_tab_editor.h"
 #include "agentic_text_edit.h"
 #include "lsp_client.h"
+#include "ai_completion_provider.h"
 #include <QVBoxLayout>
 #include <QTabWidget>
 #include <QTextEdit>
@@ -59,6 +60,11 @@ void MultiTabEditor::openFile(const QString& filepath) {
         editor->setLSPClient(m_lspClient);
     }
     
+    // Wire AI completion provider
+    if (m_aiProvider) {
+        editor->setAICompletionProvider(m_aiProvider);
+    }
+    
     QString filename = filepath.section('/', -1);
     tab_widget_->addTab(editor, filename);
     tab_widget_->setCurrentWidget(editor);
@@ -81,6 +87,11 @@ void MultiTabEditor::newFile() {
     editor->setDocumentUri(tempUri);
     if (m_lspClient) {
         editor->setLSPClient(m_lspClient);
+    }
+    
+    // Wire AI completion provider
+    if (m_aiProvider) {
+        editor->setAICompletionProvider(m_aiProvider);
     }
     
     tab_widget_->addTab(editor, tabName);
@@ -201,6 +212,20 @@ void MultiTabEditor::setLSPClient(LSPClient* client) {
             editor->setLSPClient(client);
         }
     }
+}
+
+void MultiTabEditor::setAICompletionProvider(AICompletionProvider* provider) {
+    m_aiProvider = provider;
+    
+    // Wire AI provider to all existing editors
+    for (int i = 0; i < tab_widget_->count(); ++i) {
+        AgenticTextEdit* editor = qobject_cast<AgenticTextEdit*>(tab_widget_->widget(i));
+        if (editor) {
+            editor->setAICompletionProvider(provider);
+        }
+    }
+    
+    qDebug() << "AI completion provider wired to all editors";
 }
 
 AgenticTextEdit* MultiTabEditor::getCurrentEditor() const {

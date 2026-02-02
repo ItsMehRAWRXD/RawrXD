@@ -15,6 +15,8 @@ class QSpinBox;
 class QDoubleSpinBox;
 class QComboBox;
 class QTextEdit;
+class QListWidget;
+class QSlider;
 
 class SettingsDialog : public QDialog
 {
@@ -24,6 +26,9 @@ public:
     explicit SettingsDialog(QWidget *parent = nullptr);
     void initialize();
 
+signals:
+    void visualSettingsChanged();
+
 private slots:
     void saveSettings();
     void applySettings();
@@ -31,14 +36,19 @@ private slots:
     void manageEncryptionKeys();
     void configureTokenizer();
     void configureCIPipeline();
+    void applyVisualSettings();
+    void resetVisualSettings();
 
 private:
     void setupUI();
     QWidget* createGeneralTab();
-    QWidget* createModelTab();
     QWidget* createSecurityTab();
     QWidget* createTrainingTab();
     QWidget* createCICDTab();
+    QWidget* createVisualTab();
+    QWidget* createModelTab();
+    void refreshMemoryList();
+    void deleteSelectedMemory();
 
     SettingsManager *m_settings = nullptr;
     
@@ -70,4 +80,29 @@ private:
     QComboBox *m_gpuBackend = nullptr;
     QSpinBox *m_maxTokens = nullptr;
     QDoubleSpinBox *m_temperature = nullptr;
+
+    // Visual Tab
+    QSlider *m_transparencySlider = nullptr;
+    QSlider *m_brightnessSlider = nullptr;
+    QSlider *m_contrastSlider = nullptr;
+    QSlider *m_hueRotationSlider = nullptr;
+    QLabel *m_transparencyValue = nullptr;
+    QLabel *m_brightnessValue = nullptr;
+    QLabel *m_contrastValue = nullptr;
+    QLabel *m_hueRotationValue = nullptr;
+    QPushButton *m_applyVisualBtn = nullptr;
+
+    // Memory Tab
+    QCheckBox *m_enableMemorySpace = nullptr;
+    QDoubleSpinBox *m_memoryLimitValue = nullptr;
+    QComboBox *m_memoryLimitUnit = nullptr;
+    QLabel *m_memoryUsageLabel = nullptr;
+    QListWidget *m_memoryList = nullptr;
+    QPushButton *m_deleteMemoryBtn = nullptr;
+
+    // Training Tab (additional)
+    QCheckBox *m_enableTraining = nullptr;
+    QLineEdit *m_trainingDataPath = nullptr;
+    QSpinBox *m_epochs = nullptr;
+    QDoubleSpinBox *m_learningRate = nullptr;
 };

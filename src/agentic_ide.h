@@ -9,6 +9,7 @@ class AgenticEngine;
 class ZeroDayAgenticEngine;
 class UniversalModelRouter;
 class ToolRegistry;
+class AgenticFileOperations;
 
 namespace RawrXD {
     class LSPClient;
@@ -36,6 +37,9 @@ private:
     ZeroDayAgenticEngine *m_zeroDayAgent = nullptr;
     UniversalModelRouter *m_modelRouter = nullptr;
     ToolRegistry *m_toolRegistry = nullptr;
+    
+    // File operations with Keep/Undo
+    AgenticFileOperations *m_fileOperations = nullptr;
     
     // Multi-file orchestration
     RawrXD::PlanOrchestrator *m_planOrchestrator = nullptr;

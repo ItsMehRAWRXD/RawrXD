@@ -13,6 +13,7 @@
 // Forward declarations
 class HybridCloudManager;
 class IntelligentCodebaseEngine;
+namespace CPUInference { class CPUInferenceEngine; }
 
 // Autonomous suggestion types
 struct AutonomousSuggestion {
@@ -121,6 +122,7 @@ public:
     // Initialize dependencies
     void setHybridCloudManager(HybridCloudManager* manager);
     void setCodebaseEngine(IntelligentCodebaseEngine* engine);
+    void setInferenceEngine(CPUInference::CPUInferenceEngine* engine);
 
     // Real-time code analysis
     void analyzeCode(const QString& code, const QString& filePath, const QString& language);
@@ -257,6 +259,7 @@ private:
     // Data members
     HybridCloudManager* hybridCloudManager;
     IntelligentCodebaseEngine* codebaseEngine;
+    CPUInference::CPUInferenceEngine* inferenceEngine;
     
     QVector<AutonomousSuggestion> activeSuggestions;
     QVector<SecurityIssue> detectedSecurityIssues;

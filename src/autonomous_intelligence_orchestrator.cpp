@@ -1,4 +1,5 @@
 #include "autonomous_intelligence_orchestrator.h"
+#include "cpu_inference_engine.h"
 #include <QTimer>
 #include <QJsonDocument>
 #include <QFile>
@@ -13,6 +14,9 @@ AutonomousIntelligenceOrchestrator::AutonomousIntelligenceOrchestrator(QObject* 
     codebaseEngine = std::make_unique<IntelligentCodebaseEngine>(this);
     featureEngine = std::make_unique<AutonomousFeatureEngine>(codebaseEngine.get(), this);
     cloudManager = std::make_unique<HybridCloudManager>(this);
+    
+    inferenceEngine = std::make_unique<CPUInference::CPUInferenceEngine>();
+    featureEngine->setInferenceEngine(inferenceEngine.get());
     
     setupConnections();
     

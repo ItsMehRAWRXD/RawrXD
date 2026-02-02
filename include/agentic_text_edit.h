@@ -13,6 +13,7 @@
 #include "ghost_text_renderer.h"
 
 namespace RawrXD {
+class AICompletionProvider;
 
 /**
  * \brief Enhanced text editor with LSP integration and ghost text
@@ -48,6 +49,16 @@ public:
      * Get current LSP client
      */
     LSPClient* lspClient() const { return m_lspClient; }
+
+    /**
+     * Set AI completion provider
+     */
+    void setAICompletionProvider(AICompletionProvider* provider);
+
+    /**
+     * Get AI completion provider
+     */
+    AICompletionProvider* aiCompletionProvider() const { return m_aiProvider; }
 
     /**
      * Get ghost text renderer
@@ -92,13 +103,14 @@ signals:
 
 protected:
     void keyPressEvent(QKeyEvent* event) override;
+    void triggerCompletion();
+    void syncDocumentToLSP();
+    QString getCurrentLineText() const;
+    bool shouldTriggerCompletion(const QString& lineText) const;
 
-private slots:
-    void onTextChanged();
-    void onCursorPositionChanged();
-    void onCompletionTimeout();
-    void onCompletionsReceived(const QString& uri, int line, int character, const QVector<CompletionItem>& items);
-    void onGhostTextAccepted(const QString& text);
+    LSPClient* m_lspClient{};
+    AICompletionProvider* m_aiProvider{};
+    GhostTextRenderer* m_ghostRenderer{};g& text);
     void onGhostTextDismissed();
 
 private:

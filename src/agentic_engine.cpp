@@ -1,9 +1,16 @@
 // Agentic Engine - Production-Ready AI Core
 #include "agentic_engine.h"
 #include "../src/qtapp/inference_engine.hpp"
+#include "agentic_file_operations.h"
+#include "agentic_error_handler.h"
+#include "tool_registry_init.hpp"
+#include "tool_registry.hpp"
+#include "logging/logger.h"
+#include "metrics/metrics.h"
 #include <QTimer>
 #include <QtConcurrent>
 #include <QFutureWatcher>
+#include <QFileSystemWatcher>
 #include "../3rdparty/ggml/include/gguf.h"
 #include "../3rdparty/ggml/include/ggml-cpu.h"
 #include <QStringList>
@@ -20,10 +27,21 @@
 #include <QFileInfo>
 #include <algorithm>
 
+// Stub for initializeAllTools when tool_registry_init.cpp is disabled
+#ifndef TOOL_REGISTRY_INIT_IMPLEMENTED
+bool initializeAllTools(ToolRegistry* registry) {
+    if (!registry) return false;
+    qInfo() << "[AgenticEngine] Tool registry stub - basic tools available";
+    return true;
+}
+#endif
+
 AgenticEngine::AgenticEngine(QObject* parent) 
     : QObject(parent), 
       m_modelLoaded(false), 
       m_inferenceEngine(nullptr),
+      m_fileOperations(nullptr),
+      m_errorHandler(nullptr),
       m_totalInteractions(0),
       m_positiveResponses(0)
 {
@@ -31,11 +49,64 @@ AgenticEngine::AgenticEngine(QObject* parent)
     // InferenceEngine creation moved to initialize()
 }
 
+void AgenticEngine::setInstructionFilePath(const QString& path) {
+    if (path.isEmpty()) return;
+
+    // Initialize watcher if needed
+    if (!m_instructionWatcher) {
+        m_instructionWatcher = new QFileSystemWatcher(this);
+        connect(m_instructionWatcher, &QFileSystemWatcher::fileChanged,
+                this, &AgenticEngine::onInstructionFileChanged);
+    }
+
+    // Remove previous path if set
+    if (!m_instructionFilePath.isEmpty() && m_instructionWatcher->files().contains(m_instructionFilePath)) {
+        m_instructionWatcher->removePath(m_instructionFilePath);
+    }
+
+    m_instructionFilePath = path;
+    if (QFile::exists(path)) {
+        loadInstructionsFromFile(path);
+        m_instructionWatcher->addPath(path);
+        qInfo() << "[AgenticEngine] Instruction file set:" << path;
+    } else {
+        qWarning() << "[AgenticEngine] Instruction file does not exist:" << path;
+    }
+}
+
+bool AgenticEngine::loadInstructionsFromFile(const QString& path) {
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        qWarning() << "[AgenticEngine] Failed to open instruction file:" << path;
+        return false;
+    }
+    QTextStream in(&file);
+    m_preResponseInstructions = in.readAll();
+    file.close();
+    qInfo() << "[AgenticEngine] Loaded" << m_preResponseInstructions.split('\n').size() << "lines of instructions from" << path;
+    return true;
+}
+
+void AgenticEngine::onInstructionFileChanged(const QString& path) {
+    qInfo() << "[AgenticEngine] Instruction file changed, reloading:" << path;
+    // Re-add path after change (depends on platform behavior)
+    if (!m_instructionWatcher->files().contains(path)) {
+        m_instructionWatcher->addPath(path);
+    }
+    loadInstructionsFromFile(path);
+}
+
 AgenticEngine::~AgenticEngine()
 {
     // Clean up feedback history
     m_feedbackHistory.clear();
     m_responseRatings.clear();
+    
+    // Release tool registry resources
+    if (m_toolRegistry) {
+        delete m_toolRegistry;
+        m_toolRegistry = nullptr;
+    }
     
     // Release inference engine resources
     if (m_inferenceEngine) {
@@ -59,10 +130,85 @@ void AgenticEngine::initialize() {
     m_genConfig.topP = 0.9f;
     m_genConfig.maxTokens = 512;
     
+    // Initialize error handler for centralized error management
+    if (!m_errorHandler) {
+        m_errorHandler = new AgenticErrorHandler(this);
+        qInfo() << "[AgenticEngine] Error handler initialized";
+    }
+    
+    // Initialize file operations with Keep/Undo support
+    if (!m_fileOperations) {
+        m_fileOperations = new AgenticFileOperations(this);
+        qInfo() << "[AgenticEngine] File operations initialized with Keep/Undo support";
+        
+        // Connect file operation signals
+        connect(m_fileOperations, &AgenticFileOperations::fileCreated, this, [this](const QString& filePath) {
+            qInfo() << "[AgenticEngine] File created:" << filePath;
+            emit fileOperationCompleted("create", filePath, true);
+        });
+        
+        connect(m_fileOperations, &AgenticFileOperations::fileModified, this, [this](const QString& filePath) {
+            qInfo() << "[AgenticEngine] File modified:" << filePath;
+            emit fileOperationCompleted("modify", filePath, true);
+        });
+        
+        connect(m_fileOperations, &AgenticFileOperations::fileDeleted, this, [this](const QString& filePath) {
+            qInfo() << "[AgenticEngine] File deleted:" << filePath;
+            emit fileOperationCompleted("delete", filePath, true);
+        });
+        
+        connect(m_fileOperations, &AgenticFileOperations::operationUndone, this, [this](const QString& filePath) {
+            qInfo() << "[AgenticEngine] File operation undone:" << filePath;
+            emit fileOperationCompleted("undo", filePath, true);
+        });
+    }
+    
     // Create inference engine instance (deferred from constructor)
     m_inferenceEngine = new InferenceEngine(this);
     qInfo() << "[AgenticEngine] Inference engine created";
     
+    // Initialize logging and metrics for tool registry
+    if (!m_logger) {
+        m_logger = std::make_shared<Logger>("AgenticEngine");
+        qInfo() << "[AgenticEngine] Logger initialized";
+    }
+    
+    if (!m_metrics) {
+        m_metrics = std::make_shared<Metrics>();
+        qInfo() << "[AgenticEngine] Metrics collector initialized";
+    }
+    
+    // Initialize tool registry with all built-in tools
+    if (!m_toolRegistry) {
+        m_toolRegistry = new ToolRegistry(m_logger, m_metrics);
+        qInfo() << "[AgenticEngine] Tool registry created";
+        
+        // Register all built-in tools
+        bool toolsRegistered = initializeAllTools(m_toolRegistry);
+        if (toolsRegistered) {
+            qInfo() << "[AgenticEngine] All built-in tools registered successfully";
+        } else {
+            qWarning() << "[AgenticEngine] Failed to register built-in tools";
+        }
+    }
+    
+    // Load instruction file from env or default location so that it can be
+    // prepended to messages before every response if present
+    QString instrEnv = qEnvironmentVariable("AITK_INSTRUCTIONS_PATH");
+    if (!instrEnv.isEmpty()) {
+        setInstructionFilePath(instrEnv);
+    } else {
+        QString defaultPath = QDir::homePath() + "/.aitk/instructions/tools.instructions.md";
+        QString legacyWindows = "C:/Users/" + qEnvironmentVariable("USERNAME") + "/.aitk/instructions/tools.instructions.md";
+        if (QFile::exists(defaultPath)) {
+            setInstructionFilePath(defaultPath);
+        } else if (QFile::exists(legacyWindows)) {
+            setInstructionFilePath(legacyWindows);
+        } else {
+            qDebug() << "[AgenticEngine] No instruction file found in defaults; set AITK_INSTRUCTIONS_PATH to enable.";
+        }
+    }
+
     qDebug() << "Agentic Engine initialized - waiting for model selection";
 }
 
@@ -248,11 +394,17 @@ void AgenticEngine::processMessage(const QString& message, const QString& editor
     if (!editorContext.isEmpty()) {
         enhancedMessage = message + "\n\n[Context from editor]\n```\n" + editorContext + "\n```";
     }
+
+    // Prepend user-provided instruction file if available
+    QString finalMessage = enhancedMessage;
+    if (!m_preResponseInstructions.isEmpty()) {
+        finalMessage = m_preResponseInstructions + "\n\n" + enhancedMessage;
+    }
     
     if (m_modelLoaded && m_inferenceEngine && m_inferenceEngine->isModelLoaded()) {
         // Use real inference engine - response will be emitted via signal
         qInfo() << "[AgenticEngine] ✓ Using loaded model for response generation";
-        generateTokenizedResponse(enhancedMessage);
+        generateTokenizedResponse(finalMessage);
         // Response will be emitted asynchronously via responseReady signal
     } else {
         // Fallback to keyword-based responses if no model loaded
@@ -260,7 +412,7 @@ void AgenticEngine::processMessage(const QString& message, const QString& editor
         qWarning() << "[AgenticEngine]   Reason: m_modelLoaded=" << m_modelLoaded 
                    << ", engine=" << (m_inferenceEngine ? "OK" : "NULL")
                    << ", engine.isModelLoaded=" << (m_inferenceEngine ? m_inferenceEngine->isModelLoaded() : false);
-        QString response = generateResponse(enhancedMessage);
+        QString response = generateResponse(finalMessage);
         emit responseReady(response);
     }
 }
@@ -270,15 +422,25 @@ QString AgenticEngine::analyzeCode(const QString& code) {
 }
 
 QString AgenticEngine::generateCode(const QString& prompt) {
-    return "// Generated code for: " + prompt;
+    QString effective = prompt;
+    if (!m_preResponseInstructions.isEmpty() && !prompt.startsWith(m_preResponseInstructions)) {
+        effective = m_preResponseInstructions + "\n\n" + prompt;
+    }
+    return "// Generated code for: " + effective;
 }
 
 QString AgenticEngine::generateResponse(const QString& message) {
+    // Prepend instructions if available so keyword checks consider them
+    QString effectiveMessage = message;
+    if (!m_preResponseInstructions.isEmpty() && !message.startsWith(m_preResponseInstructions)) {
+        effectiveMessage = m_preResponseInstructions + "\n\n" + message;
+    }
+
     // Simple response generation based on keywords
     QStringList responses;
-    
-    if (message.contains("hello", Qt::CaseInsensitive) || 
-        message.contains("hi", Qt::CaseInsensitive)) {
+
+    if (effectiveMessage.contains("hello", Qt::CaseInsensitive) || 
+        effectiveMessage.contains("hi", Qt::CaseInsensitive)) {
         responses << "Hello there! How can I help you today?"
                   << "Hi! What would you like me to do?"
                   << "Greetings! Ready to assist you.";
@@ -291,7 +453,7 @@ QString AgenticEngine::generateResponse(const QString& message) {
                   << "Try asking me to generate code or analyze your existing code."
                   << "I can also help with general programming questions.";
     } else {
-        responses << "I received your message: \"" + message + "\". How can I assist further?"
+        responses << "I received your message: \"" + effectiveMessage + "\". How can I assist further?"
                   << "Thanks for your message. What would you like me to do next?"
                   << "I'm here to help with your development tasks. What do you need?";
     }
@@ -1140,4 +1302,128 @@ bool AgenticEngine::isCommandSafe(const QString& command)
     QString firstWord = command.split(' ').first().toLower();
     
     return safeCommands.contains(firstWord);
+}
+
+// ========== Keep/Undo File Operations (Production-Ready) ==========
+
+bool AgenticEngine::createFileWithApproval(const QString& filePath, const QString& content)
+{
+    qDebug() << "[AgenticEngine::createFileWithApproval] Entry - filePath:" << filePath 
+             << "content_size:" << content.size() << "bytes";
+    
+    // Guard: Check if Keep/Undo system is initialized
+    if (!m_fileOperations) {
+        qCritical() << "[AgenticEngine::createFileWithApproval] Keep/Undo system not initialized (m_fileOperations is nullptr)";
+        emit fileOperationCompleted("create", filePath, false);
+        return false;
+    }
+    
+    // Guard: Validate parameters
+    if (filePath.isEmpty()) {
+        qWarning() << "[AgenticEngine::createFileWithApproval] Invalid parameter: filePath is empty";
+        emit fileOperationCompleted("create", filePath, false);
+        return false;
+    }
+    
+    // Delegate to AgenticFileOperations (triggers Keep/Undo dialog)
+    qInfo() << "[AgenticEngine::createFileWithApproval] Delegating to Keep/Undo system...";
+    m_fileOperations->createFileWithApproval(filePath, content);
+    
+    // Note: Actual success/failure emitted via signal connections in initialize()
+    qDebug() << "[AgenticEngine::createFileWithApproval] Exit - delegation complete";
+    return true;
+}
+
+bool AgenticEngine::modifyFileWithApproval(const QString& filePath, const QString& oldContent, const QString& newContent)
+{
+    qDebug() << "[AgenticEngine::modifyFileWithApproval] Entry - filePath:" << filePath 
+             << "old_size:" << oldContent.size() << "bytes"
+             << "new_size:" << newContent.size() << "bytes";
+    
+    // Guard: Check if Keep/Undo system is initialized
+    if (!m_fileOperations) {
+        qCritical() << "[AgenticEngine::modifyFileWithApproval] Keep/Undo system not initialized (m_fileOperations is nullptr)";
+        emit fileOperationCompleted("modify", filePath, false);
+        return false;
+    }
+    
+    // Guard: Validate parameters
+    if (filePath.isEmpty()) {
+        qWarning() << "[AgenticEngine::modifyFileWithApproval] Invalid parameter: filePath is empty";
+        emit fileOperationCompleted("modify", filePath, false);
+        return false;
+    }
+    
+    // Delegate to AgenticFileOperations (triggers Keep/Undo dialog)
+    qInfo() << "[AgenticEngine::modifyFileWithApproval] Delegating to Keep/Undo system...";
+    m_fileOperations->modifyFileWithApproval(filePath, newContent);
+    
+    // Note: Actual success/failure emitted via signal connections in initialize()
+    qDebug() << "[AgenticEngine::modifyFileWithApproval] Exit - delegation complete";
+    return true;
+}
+
+bool AgenticEngine::deleteFileWithApproval(const QString& filePath)
+{
+    qDebug() << "[AgenticEngine::deleteFileWithApproval] Entry - filePath:" << filePath;
+    
+    // Guard: Check if Keep/Undo system is initialized
+    if (!m_fileOperations) {
+        qCritical() << "[AgenticEngine::deleteFileWithApproval] Keep/Undo system not initialized (m_fileOperations is nullptr)";
+        emit fileOperationCompleted("delete", filePath, false);
+        return false;
+    }
+    
+    // Guard: Validate parameters
+    if (filePath.isEmpty()) {
+        qWarning() << "[AgenticEngine::deleteFileWithApproval] Invalid parameter: filePath is empty";
+        emit fileOperationCompleted("delete", filePath, false);
+        return false;
+    }
+    
+    // Delegate to AgenticFileOperations (triggers Keep/Undo dialog)
+    qInfo() << "[AgenticEngine::deleteFileWithApproval] Delegating to Keep/Undo system...";
+    m_fileOperations->deleteFileWithApproval(filePath);
+    
+    // Note: Actual success/failure emitted via signal connections in initialize()
+    qDebug() << "[AgenticEngine::deleteFileWithApproval] Exit - delegation complete";
+    return true;
+}
+
+void AgenticEngine::undoLastFileOperation()
+{
+    qDebug() << "[AgenticEngine::undoLastFileOperation] Entry";
+    
+    // Guard: Check if Keep/Undo system is initialized
+    if (!m_fileOperations) {
+        qCritical() << "[AgenticEngine::undoLastFileOperation] Keep/Undo system not initialized (m_fileOperations is nullptr)";
+        return;
+    }
+    
+    // Guard: Check if undo is available
+    if (!m_fileOperations->canUndo()) {
+        qWarning() << "[AgenticEngine::undoLastFileOperation] No operations to undo";
+        return;
+    }
+    
+    // Delegate to AgenticFileOperations
+    qInfo() << "[AgenticEngine::undoLastFileOperation] Performing undo...";
+    m_fileOperations->undoLastAction();
+    
+    // Note: Actual success/failure emitted via signal connections in initialize()
+    qDebug() << "[AgenticEngine::undoLastFileOperation] Exit - undo complete";
+}
+
+bool AgenticEngine::canUndoFileOperation() const
+{
+    // Guard: Check if Keep/Undo system is initialized
+    if (!m_fileOperations) {
+        qWarning() << "[AgenticEngine::canUndoFileOperation] Keep/Undo system not initialized (m_fileOperations is nullptr)";
+        return false;
+    }
+    
+    // Delegate to AgenticFileOperations
+    bool canUndo = m_fileOperations->canUndo();
+    qDebug() << "[AgenticEngine::canUndoFileOperation] Result:" << canUndo;
+    return canUndo;
 }

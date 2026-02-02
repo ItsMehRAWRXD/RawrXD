@@ -58,6 +58,7 @@ public:
         QJsonObject systemState;
         int retryCount;
         RecoveryStrategy strategy;
+        bool recoverySucceeded = false;
     };
 
     struct RecoveryPolicy {

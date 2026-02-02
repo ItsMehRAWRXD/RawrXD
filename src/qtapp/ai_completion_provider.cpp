@@ -11,6 +11,16 @@
 
 namespace RawrXD {
 
+// Simple constructor - creates a standalone provider without engine
+AICompletionProvider::AICompletionProvider(QObject* parent)
+    : QObject(parent)
+    , m_engine(nullptr)
+    , m_logger(nullptr)
+    , m_ownsEngine(false)
+{
+    qDebug() << "AICompletionProvider: Initialized in standalone mode";
+}
+
 AICompletionProvider::AICompletionProvider(
     RealTimeCompletionEngine* engine,
     std::shared_ptr<Logger> logger,
@@ -18,6 +28,7 @@ AICompletionProvider::AICompletionProvider(
     : QObject(parent)
     , m_engine(engine)
     , m_logger(logger)
+    , m_ownsEngine(false)
 {
     if (!m_engine) {
         qWarning() << "AICompletionProvider: No completion engine provided!";
@@ -25,6 +36,30 @@ AICompletionProvider::AICompletionProvider(
     if (m_logger) {
         m_logger->info("AICompletionProvider initialized");
     }
+}
+
+void AICompletionProvider::setModel(const QString& modelName)
+{
+    m_modelName = modelName;
+    qDebug() << "AICompletionProvider: Model set to" << modelName;
+}
+
+void AICompletionProvider::setModelEndpoint(const QString& endpoint)
+{
+    m_modelEndpoint = endpoint;
+    qDebug() << "AICompletionProvider: Endpoint set to" << endpoint;
+}
+
+void AICompletionProvider::setRequestTimeout(int timeoutMs)
+{
+    m_requestTimeout = timeoutMs;
+    qDebug() << "AICompletionProvider: Timeout set to" << timeoutMs << "ms";
+}
+
+void AICompletionProvider::setMaxSuggestions(int count)
+{
+    m_maxSuggestions = count;
+    qDebug() << "AICompletionProvider: Max suggestions set to" << count;
 }
 
 void AICompletionProvider::requestCompletions(

@@ -2,12 +2,14 @@
 
 #include <QWidget>
 #include <QString>
+#include <memory>
 
 class QTabWidget;
 
 namespace RawrXD {
     class LSPClient;
     class AgenticTextEdit;
+    class AICompletionProvider;
 }
 
 class MultiTabEditor : public QWidget {
@@ -34,10 +36,16 @@ public slots:
     // LSP integration
     void setLSPClient(RawrXD::LSPClient* client);
     RawrXD::LSPClient* lspClient() const { return m_lspClient; }
+    
+    // AI completion integration
+    void setAICompletionProvider(RawrXD::AICompletionProvider* provider);
+    RawrXD::AICompletionProvider* aiCompletionProvider() const { return m_aiProvider; }
+    
     RawrXD::AgenticTextEdit* getCurrentEditor() const;
 
 private:
     QTabWidget* tab_widget_;
     QMap<QWidget*, QString> tab_file_paths_;  // Maps editor widget to file path
     RawrXD::LSPClient* m_lspClient{};  // Shared LSP client for all tabs
+    RawrXD::AICompletionProvider* m_aiProvider{};  // Shared AI provider for all tabs
 };

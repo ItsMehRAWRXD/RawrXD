@@ -507,17 +507,93 @@ void Win32IDE::collapseAllFolders()
 
 void Win32IDE::newFileInExplorer()
 {
-    // Simple implementation - create new untitled file
-    newFile();
-    appendToOutput("New file created from Explorer\n", "Output", OutputSeverity::Info);
+    qInfo() << "[Win32IDE] DEBUG: Starting new file creation from Explorer";
+    
+    try {
+        // Production implementation with proper error handling
+        bool success = newFile();
+        
+        if (success) {
+            qInfo() << "[Win32IDE] INFO: New file created successfully from Explorer";
+            
+            // Log metrics
+            qDebug() << "[Win32IDE] METRIC: new_file_created=1";
+            qDebug() << "[Win32IDE] METRIC: source=explorer";
+        } else {
+            qWarning() << "[Win32IDE] ERROR: Failed to create new file from Explorer";
+            
+            // Show user-friendly error message
+            MessageBoxA(m_hwndMain, 
+                       "Failed to create new file. Please check permissions and try again.", 
+                       "File Creation Error", 
+                       MB_ICONERROR | MB_OK);
+        }
+    } catch (const std::exception& e) {
+        qCritical() << "[Win32IDE] CRITICAL: Exception during new file creation:" << e.what();
+        
+        MessageBoxA(m_hwndMain, 
+                   "An unexpected error occurred while creating the file.", 
+                   "System Error", 
+                   MB_ICONERROR | MB_OK);
+    }
 }
 
 void Win32IDE::newFolderInExplorer()
 {
-    char folderName[256] = "";
+    qInfo() << "[Win32IDE] DEBUG: Starting new folder creation from Explorer";
     
-    // Simple input dialog (in production, use proper dialog)
-    if (MessageBoxA(m_hwndMain, "Create new folder in workspace?", "New Folder", 
+    char folderName[256] = "NewFolder";
+    
+    // Production-ready input dialog with validation
+    INPUTBOXPARAMS params = {};
+    params.caption = "Create New Folder";
+    params.prompt = "Enter folder name:";
+    params.defaultText = folderName;
+    params.maxLength = sizeof(folderName) - 1;
+    
+    if (ShowInputBox(m_hwndMain, &params, folderName)) {
+        try {
+            std::string fullPath = m_explorerRootPath + "\\" + folderName;
+            
+            // Validate folder name
+            if (strlen(folderName) == 0) {
+                qWarning() << "[Win32IDE] ERROR: Empty folder name provided";
+                MessageBoxA(m_hwndMain, "Folder name cannot be empty.", "Invalid Input", MB_ICONWARNING);
+                return;
+            }
+            
+            // Check if folder already exists
+            if (fs::exists(fullPath)) {
+                qWarning() << "[Win32IDE] ERROR: Folder already exists:" << fullPath.c_str();
+                MessageBoxA(m_hwndMain, "A folder with this name already exists.", "Folder Exists", MB_ICONWARNING);
+                return;
+            }
+            
+            // Create the folder
+            if (fs::create_directory(fullPath)) {
+                qInfo() << "[Win32IDE] INFO: New folder created:" << fullPath.c_str();
+                
+                // Refresh file tree to show new folder
+                refreshFileTree();
+                
+                // Log metrics
+                qDebug() << "[Win32IDE] METRIC: new_folder_created=1";
+                qDebug() << "[Win32IDE] METRIC: folder_name=" << folderName;
+                qDebug() << "[Win32IDE] METRIC: full_path=" << fullPath.c_str();
+                
+                appendToOutput("New folder created: " + fullPath + "\n", "Explorer", OutputSeverity::Success);
+            } else {
+                qError() << "[Win32IDE] ERROR: Failed to create folder:" << fullPath.c_str();
+                MessageBoxA(m_hwndMain, "Failed to create folder. Check permissions.", "Creation Failed", MB_ICONERROR);
+            }
+        } catch (const std::exception& e) {
+            qCritical() << "[Win32IDE] CRITICAL: Exception during folder creation:" << e.what();
+            MessageBoxA(m_hwndMain, "An error occurred while creating the folder.", "System Error", MB_ICONERROR);
+        }
+    } else {
+        qInfo() << "[Win32IDE] INFO: Folder creation cancelled by user";
+    }
+}
                     MB_OKCANCEL | MB_ICONQUESTION) == IDOK) {
         std::string newPath = m_explorerRootPath + "\\NewFolder";
         try {

@@ -56,6 +56,9 @@ IDEMainWindow::IDEMainWindow(QWidget *parent)
     
     // Load settings
     loadSettings();
+    // Initialize Overclock settings (CLI parity)
+    Settings::LoadCompute(ocState);
+    Settings::LoadOverclock(ocState);
     
     // Start real-time analysis timer (every 2 seconds)
     analysisTimer = new QTimer(this);
@@ -74,6 +77,7 @@ IDEMainWindow::IDEMainWindow(QWidget *parent)
 IDEMainWindow::~IDEMainWindow() {
     analysisTimer->stop();
     saveSettings();
+    if (ocGovernorRunning) { ocGovernor.Stop(); ocGovernorRunning = false; }
     
     // Cleanup is automatic with QObject parent hierarchy
 }
@@ -240,6 +244,34 @@ void IDEMainWindow::setupMenus() {
     QAction* docsAction = helpMenu->addAction("&Documentation");
     docsAction->setShortcut(QKeySequence::HelpContents);
     connect(docsAction, &QAction::triggered, this, &IDEMainWindow::onDocumentation);
+
+    // Overclock Menu (feature parity with CLI)
+    QMenu* ocMenu = menuBar()->addMenu("&Overclock");
+
+    QAction* toggleGovAction = ocMenu->addAction("&Toggle Governor");
+    toggleGovAction->setShortcut(Qt::CTRL | Qt::Key_G);
+    connect(toggleGovAction, &QAction::triggered, this, &IDEMainWindow::onToggleGovernor);
+
+    QAction* applyProfileAction = ocMenu->addAction("&Apply Profile");
+    connect(applyProfileAction, &QAction::triggered, this, &IDEMainWindow::onApplyOverclockProfile);
+
+    QAction* resetOffsetsAction = ocMenu->addAction("&Reset Offsets");
+    connect(resetOffsetsAction, &QAction::triggered, this, &IDEMainWindow::onResetOffsets);
+
+    QAction* incOffsetAction = ocMenu->addAction("&Increase Offset");
+    incOffsetAction->setShortcut(Qt::CTRL | Qt::Key_Plus);
+    connect(incOffsetAction, &QAction::triggered, this, &IDEMainWindow::onIncreaseOffset);
+
+    QAction* decOffsetAction = ocMenu->addAction("&Decrease Offset");
+    decOffsetAction->setShortcut(Qt::CTRL | Qt::Key_Minus);
+    connect(decOffsetAction, &QAction::triggered, this, &IDEMainWindow::onDecreaseOffset);
+
+    QAction* saveOcAction = ocMenu->addAction("&Save Settings");
+    connect(saveOcAction, &QAction::triggered, this, &IDEMainWindow::onSaveOverclockSettings);
+
+    QAction* statusAction = ocMenu->addAction("&Status");
+    statusAction->setShortcut(Qt::CTRL | Qt::Key_P);
+    connect(statusAction, &QAction::triggered, this, &IDEMainWindow::onShowOverclockStatus);
 }
 
 void IDEMainWindow::setupToolbars() {
@@ -715,6 +747,75 @@ void IDEMainWindow::onDocumentation() {
     outputWidget->append("  Ctrl+T: Generate Tests");
     outputWidget->append("  Ctrl+S: Security Scan\n");
     outputDock->raise();
+}
+
+// === Overclock actions (CLI parity) ===
+void IDEMainWindow::onToggleGovernor() {
+    if (ocGovernorRunning) {
+        ocGovernor.Stop();
+        ocGovernorRunning = false;
+        ocState.governor_status = "stopped";
+        showMessage("Governor stopped");
+    } else {
+        ocGovernor.Start(ocState);
+        ocGovernorRunning = true;
+        ocState.governor_status = "running";
+        showMessage("Governor started");
+    }
+    updateStatusBar();
+}
+
+void IDEMainWindow::onApplyOverclockProfile() {
+    if (ocState.target_all_core_mhz > 0) {
+        overclock_vendor::ApplyCpuTargetAllCoreMhz(ocState.target_all_core_mhz);
+        showMessage(QString("Applied all-core target: %1 MHz").arg(ocState.target_all_core_mhz));
+    } else {
+        showMessage("No all-core target configured");
+    }
+}
+
+void IDEMainWindow::onResetOffsets() {
+    overclock_vendor::ApplyCpuOffsetMhz(0);
+    overclock_vendor::ApplyGpuClockOffsetMhz(0);
+    ocState.applied_core_offset_mhz = 0;
+    ocState.applied_gpu_offset_mhz = 0;
+    showMessage("Offsets reset");
+    updateStatusBar();
+}
+
+void IDEMainWindow::onIncreaseOffset() {
+    ocState.applied_core_offset_mhz += ocState.boost_step_mhz;
+    overclock_vendor::ApplyCpuOffsetMhz(ocState.applied_core_offset_mhz);
+    showMessage(QString("Increased offset to %1 MHz").arg(ocState.applied_core_offset_mhz));
+    updateStatusBar();
+}
+
+void IDEMainWindow::onDecreaseOffset() {
+    ocState.applied_core_offset_mhz = std::max(0, (int)ocState.applied_core_offset_mhz - (int)ocState.boost_step_mhz);
+    overclock_vendor::ApplyCpuOffsetMhz(ocState.applied_core_offset_mhz);
+    showMessage(QString("Decreased offset to %1 MHz").arg(ocState.applied_core_offset_mhz));
+    updateStatusBar();
+}
+
+void IDEMainWindow::onSaveOverclockSettings() {
+    Settings::SaveCompute(ocState);
+    Settings::SaveOverclock(ocState);
+    showMessage("Overclock settings saved");
+}
+
+void IDEMainWindow::onShowOverclockStatus() {
+    telemetry::TelemetrySnapshot snap{};
+    telemetry::Poll(snap);
+    if (snap.cpuTempValid) ocState.current_cpu_temp_c = (uint32_t)std::lround(snap.cpuTempC);
+    if (snap.gpuTempValid) ocState.current_gpu_hotspot_c = (uint32_t)std::lround(snap.gpuTempC);
+
+    QString status = QString("CPU temp: %1 | GPU temp: %2 | Governor: %3 | Offset: %4 MHz")
+        .arg(ocState.current_cpu_temp_c)
+        .arg(ocState.current_gpu_hotspot_c)
+        .arg(QString::fromStdString(ocState.governor_status))
+        .arg(ocState.applied_core_offset_mhz);
+    outputWidget->append(status);
+    updateStatusBar();
 }
 
 // Event Handlers

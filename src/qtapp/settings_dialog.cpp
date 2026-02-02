@@ -12,10 +12,19 @@
 #include <QPushButton>
 #include <QCheckBox>
 #include <QSpinBox>
+#include <QDoubleSpinBox>
 #include <QComboBox>
 #include <QTextEdit>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QSlider>
+#include <QGridLayout>
+#include "memory_space_manager.h"
+#include <QListWidget>
+#include <QSlider>
+#include <QGridLayout>
+#include <QStyle>
+#include "memory_space_manager.h"
 
 SettingsDialog::SettingsDialog(QWidget *parent)
     : QDialog(parent)
@@ -43,6 +52,9 @@ void SettingsDialog::setupUI()
     // General Settings Tab
     tabWidget->addTab(createGeneralTab(), "General");
     
+    // Visual Settings Tab
+    tabWidget->addTab(createVisualTab(), "Visual");
+
     // Model Settings Tab
     tabWidget->addTab(createModelTab(), "Models");
     
@@ -119,6 +131,7 @@ QWidget* SettingsDialog::createGeneralTab()
     
     return tab;
 }
+
 
 QWidget* SettingsDialog::createSecurityTab()
 {
@@ -226,6 +239,84 @@ QWidget* SettingsDialog::createCICDTab()
     return tab;
 }
 
+QWidget* SettingsDialog::createVisualTab()
+{
+    QWidget *tab = new QWidget(this);
+    QVBoxLayout *layout = new QVBoxLayout(tab);
+    
+    // Visual Effects Group
+    QGroupBox *visualGroup = new QGroupBox("Visual Effects", tab);
+    QGridLayout *visualLayout = new QGridLayout(visualGroup);
+    
+    // Transparency slider
+    visualLayout->addWidget(new QLabel("Transparency:"), 0, 0);
+    m_transparencySlider = new QSlider(Qt::Horizontal, visualGroup);
+    m_transparencySlider->setRange(50, 100);
+    m_transparencySlider->setValue(100);
+    visualLayout->addWidget(m_transparencySlider, 0, 1);
+    m_transparencyValue = new QLabel("100%", visualGroup);
+    visualLayout->addWidget(m_transparencyValue, 0, 2);
+    
+    // Brightness slider
+    visualLayout->addWidget(new QLabel("Brightness:"), 1, 0);
+    m_brightnessSlider = new QSlider(Qt::Horizontal, visualGroup);
+    m_brightnessSlider->setRange(50, 150);
+    m_brightnessSlider->setValue(100);
+    visualLayout->addWidget(m_brightnessSlider, 1, 1);
+    m_brightnessValue = new QLabel("100%", visualGroup);
+    visualLayout->addWidget(m_brightnessValue, 1, 2);
+    
+    // Contrast slider
+    visualLayout->addWidget(new QLabel("Contrast:"), 2, 0);
+    m_contrastSlider = new QSlider(Qt::Horizontal, visualGroup);
+    m_contrastSlider->setRange(50, 150);
+    m_contrastSlider->setValue(100);
+    visualLayout->addWidget(m_contrastSlider, 2, 1);
+    m_contrastValue = new QLabel("100%", visualGroup);
+    visualLayout->addWidget(m_contrastValue, 2, 2);
+    
+    // Hue rotation slider
+    visualLayout->addWidget(new QLabel("Hue Rotation:"), 3, 0);
+    m_hueRotationSlider = new QSlider(Qt::Horizontal, visualGroup);
+    m_hueRotationSlider->setRange(0, 360);
+    m_hueRotationSlider->setValue(0);
+    visualLayout->addWidget(m_hueRotationSlider, 3, 1);
+    m_hueRotationValue = new QLabel("0°", visualGroup);
+    visualLayout->addWidget(m_hueRotationValue, 3, 2);
+    
+    // Connect sliders to update labels
+    connect(m_transparencySlider, &QSlider::valueChanged, this, [this](int value) {
+        m_transparencyValue->setText(QString("%1%").arg(value));
+    });
+    connect(m_brightnessSlider, &QSlider::valueChanged, this, [this](int value) {
+        m_brightnessValue->setText(QString("%1%").arg(value));
+    });
+    connect(m_contrastSlider, &QSlider::valueChanged, this, [this](int value) {
+        m_contrastValue->setText(QString("%1%").arg(value));
+    });
+    connect(m_hueRotationSlider, &QSlider::valueChanged, this, [this](int value) {
+        m_hueRotationValue->setText(QString("%1°").arg(value));
+    });
+    
+    layout->addWidget(visualGroup);
+    
+    // Buttons
+    QHBoxLayout *buttonLayout = new QHBoxLayout();
+    m_applyVisualBtn = new QPushButton("Apply Visual Settings", tab);
+    QPushButton *resetBtn = new QPushButton("Reset to Defaults", tab);
+    
+    connect(m_applyVisualBtn, &QPushButton::clicked, this, &SettingsDialog::applyVisualSettings);
+    connect(resetBtn, &QPushButton::clicked, this, &SettingsDialog::resetVisualSettings);
+    
+    buttonLayout->addWidget(m_applyVisualBtn);
+    buttonLayout->addWidget(resetBtn);
+    layout->addLayout(buttonLayout);
+    
+    layout->addStretch();
+    
+    return tab;
+}
+
 QWidget* SettingsDialog::createModelTab()
 {
     QWidget *tab = new QWidget(this);
@@ -297,6 +388,13 @@ void SettingsDialog::loadSettings()
     m_gpuBackend->setCurrentText(m_settings->getValue("gpu/backend", "Vulkan").toString());
     m_maxTokens->setValue(m_settings->getValue("inference/maxTokens", 2048).toInt());
     m_temperature->setValue(m_settings->getValue("inference/temperature", 0.7).toDouble());
+
+    // Visual Settings (memory settings removed)
+    m_transparencySlider->setValue(m_settings->getValue("visual/transparency", 100).toInt());
+    m_brightnessSlider->setValue(m_settings->getValue("visual/brightness", 100).toInt());
+    m_contrastSlider->setValue(m_settings->getValue("visual/contrast", 100).toInt());
+    m_hueRotationSlider->setValue(m_settings->getValue("visual/hueRotation", 0).toInt());
+
 }
 
 void SettingsDialog::saveSettings()
@@ -335,6 +433,13 @@ void SettingsDialog::applySettings()
     m_settings->setValue("gpu/backend", m_gpuBackend->currentText());
     m_settings->setValue("inference/maxTokens", m_maxTokens->value());
     m_settings->setValue("inference/temperature", m_temperature->value());
+
+    // Visual Settings (memory settings removed)
+    m_settings->setValue("visual/transparency", m_transparencySlider->value());
+    m_settings->setValue("visual/brightness", m_brightnessSlider->value());
+    m_settings->setValue("visual/contrast", m_contrastSlider->value());
+    m_settings->setValue("visual/hueRotation", m_hueRotationSlider->value());
+
     
     QMessageBox::information(this, "Settings", "Settings saved successfully!");
 }
@@ -352,4 +457,34 @@ void SettingsDialog::configureTokenizer()
 void SettingsDialog::configureCIPipeline()
 {
     QMessageBox::information(this, "CI/CD", "CI/CD pipeline configuration is available.\n\nFeatures:\n- Training job scheduling\n- Automated deployment\n- Webhook integration\n- Performance benchmarking");
+}
+
+void SettingsDialog::applyVisualSettings()
+{
+    // Apply visual settings to the application
+    m_settings->setValue("visual/transparency", m_transparencySlider->value());
+    m_settings->setValue("visual/brightness", m_brightnessSlider->value());
+    m_settings->setValue("visual/contrast", m_contrastSlider->value());
+    m_settings->setValue("visual/hueRotation", m_hueRotationSlider->value());
+    
+    qDebug() << "[SettingsDialog] Applied visual settings:"
+             << "transparency=" << m_transparencySlider->value()
+             << "brightness=" << m_brightnessSlider->value()
+             << "contrast=" << m_contrastSlider->value()
+             << "hueRotation=" << m_hueRotationSlider->value();
+    
+    emit visualSettingsChanged();
+    QMessageBox::information(this, "Visual Settings", "Visual settings applied successfully!");
+}
+
+void SettingsDialog::resetVisualSettings()
+{
+    // Reset to default values
+    m_transparencySlider->setValue(100);
+    m_brightnessSlider->setValue(100);
+    m_contrastSlider->setValue(100);
+    m_hueRotationSlider->setValue(0);
+    
+    qDebug() << "[SettingsDialog] Reset visual settings to defaults";
+    QMessageBox::information(this, "Visual Settings", "Visual settings reset to defaults.");
 }

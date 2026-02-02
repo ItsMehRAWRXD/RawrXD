@@ -1,6 +1,6 @@
-^D:\TEMP\RAWRXD-Q8-WIRE\RAWRXD-MODELLOADER\BUILD\CMAKEFILES\5E70602B29E07425171159C04BE95AAB\GENERATE.STAMP.RULE
+^E:\RAWRXD\RAWRXD-MODELLOADER\BUILD\CMAKEFILES\5598E50043F8835E5C1FD7CFB0C6A2BB\GENERATE.STAMP.RULE
 setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -SD:/temp/RawrXD-q8-wire/RawrXD-ModelLoader -BD:/temp/RawrXD-q8-wire/RawrXD-ModelLoader/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file D:/temp/RawrXD-q8-wire/RawrXD-ModelLoader/build/RawrXD-ModelLoader.sln
+"C:\Program Files\CMake\bin\cmake.exe" -SE:/RawrXD/RawrXD-ModelLoader -BE:/RawrXD/RawrXD-ModelLoader/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file E:/RawrXD/RawrXD-ModelLoader/build/RawrXD-ModelLoader.sln
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone

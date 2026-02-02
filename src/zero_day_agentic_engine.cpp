@@ -2,6 +2,7 @@
 
 #include "plan_orchestrator.h"
 #include "tool_registry.hpp"
+#include "tool_registry_init.hpp"
 #include "universal_model_router.h"
 #include "logging/logger.h"
 #include "metrics/metrics.h"
@@ -50,6 +51,20 @@ ZeroDayAgenticEngine::ZeroDayAgenticEngine(UniversalModelRouter* r,
     d->router = r;
     d->tools = t;
     d->planner = p;
+    
+    // Initialize all built-in tools if tool registry is provided
+    if (d->tools) {
+        bool toolsRegistered = initializeAllTools(d->tools);
+        if (toolsRegistered) {
+            if (d->logger) {
+                d->logger->info("ZeroDayAgenticEngine: All built-in tools registered");
+            }
+        } else {
+            if (d->logger) {
+                d->logger->warn("ZeroDayAgenticEngine: Failed to register some tools");
+            }
+        }
+    }
 }
 
 ZeroDayAgenticEngine::~ZeroDayAgenticEngine() = default;

@@ -4,6 +4,7 @@
 #include <QJsonArray>
 #include <QDebug>
 #include <QUrlQuery>
+#include <QThread>
 
 OllamaProxy::OllamaProxy(QObject* parent)
     : QObject(parent)
@@ -89,6 +90,9 @@ void OllamaProxy::generateResponse(const QString& prompt, float temperature, int
     stopGeneration();
     
     qInfo() << "[OllamaProxy] Generating response for prompt:" << prompt.left(50) << "...";
+    // Debug: report thread affinity to help diagnose cross-thread network issues
+    qDebug() << "[OllamaProxy] generateResponse threads - this thread:" << QThread::currentThread()
+             << "network manager thread:" << (m_networkManager ? m_networkManager->thread() : nullptr);
     
     // Build JSON request for Ollama API
     QJsonObject request;

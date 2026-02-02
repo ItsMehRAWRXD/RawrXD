@@ -33,7 +33,7 @@ public:
     bool isModelAvailable(const QString& modelName);
     
     // Generate response using Ollama API with streaming
-    void generateResponse(const QString& prompt, 
+    Q_INVOKABLE void generateResponse(const QString& prompt, 
                          float temperature = 0.8f,
                          int maxTokens = 512);
     

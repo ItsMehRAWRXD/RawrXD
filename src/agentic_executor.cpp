@@ -3,6 +3,8 @@
 #include "agentic_engine.h"
 #include "qtapp/inference_engine.hpp"
 #include "model_trainer.h"
+#include "qtapp/settings_manager.h"
+#include "memory_space_manager.h"
 #include <QFile>
 #include <QTextStream>
 #include <QFileInfo>
@@ -16,6 +18,9 @@ AgenticExecutor::AgenticExecutor(QObject* parent)
     , m_currentWorkingDirectory(QDir::currentPath())
 {
     qInfo() << "[AgenticExecutor] Initialized - Real execution engine ready";
+
+    m_settingsManager = std::make_unique<SettingsManager>(this);
+    loadMemorySettings();
 }
 
 AgenticExecutor::~AgenticExecutor()
@@ -58,7 +63,12 @@ QJsonObject AgenticExecutor::executeUserRequest(const QString& request)
 
     QJsonObject result;
     result["request"] = request;
-    result["timestamp"] = QDateTime::currentDateTime().toString(Qt::ISODate);
+    QString timestamp = QDateTime::currentDateTime().toString(Qt::ISODate);
+    result["timestamp"] = timestamp;
+
+    // Store request in memory for context
+    addToMemory("last_user_request", request);
+    addToMemory("last_request_timestamp", timestamp);
 
     try {
         // Step 1: Decompose the task using the model
@@ -630,6 +640,9 @@ void AgenticExecutor::addToMemory(const QString& key, const QVariant& value)
 {
     m_memory[key] = value;
     qDebug() << "[AgenticExecutor] Memory updated:" << key;
+
+    enforceMemoryLimit();
+    persistMemoryToDisk();
 }
 
 QVariant AgenticExecutor::getFromMemory(const QString& key)
@@ -641,6 +654,11 @@ void AgenticExecutor::clearMemory()
 {
     m_memory.clear();
     m_executionHistory = QJsonArray();
+
+    if (m_memoryEnabled) {
+        MemorySpaceManager::instance().clearAll();
+        qDebug() << "[AgenticExecutor] Memory cleared";
+    }
 }
 
 QString AgenticExecutor::getFullContext()
@@ -657,6 +675,16 @@ QString AgenticExecutor::getFullContext()
     }
     
     return context;
+}
+
+void AgenticExecutor::removeMemoryItem(const QString& key)
+{
+    if (m_memory.contains(key)) {
+        m_memory.remove(key);
+    }
+    MemorySpaceManager::instance().deleteKey(key);
+    enforceMemoryLimit();
+    qDebug() << "[AgenticExecutor] Removed memory item:" << key;
 }
 
 // ========== SELF-CORRECTION ==========
@@ -693,6 +721,66 @@ QString AgenticExecutor::generateCorrectionPlan(const QString& failureReason)
     ).arg(failureReason);
 
     return m_agenticEngine->generateResponse(prompt);
+}
+
+// ========== MEMORY SETTINGS & PERSISTENCE ==========
+
+void AgenticExecutor::loadMemorySettings()
+{
+    if (!m_settingsManager) return;
+
+    m_memoryEnabled = m_settingsManager->getValue("memory/enabled", false).toBool();
+    m_memoryLimitBytes = m_settingsManager->getValue("memory/limitBytes", m_memoryLimitBytes).toLongLong();
+
+    MemorySpaceManager::instance().setEnabled(m_memoryEnabled);
+    MemorySpaceManager::instance().setLimitBytes(m_memoryLimitBytes);
+
+    if (m_memoryEnabled) {
+        loadMemoryFromDisk();
+    } else {
+        clearMemory();
+    }
+}
+
+void AgenticExecutor::loadMemoryFromDisk()
+{
+    auto stored = MemorySpaceManager::instance().loadMemory();
+    m_memory.clear();
+    for (auto it = stored.constBegin(); it != stored.constEnd(); ++it) {
+        m_memory[it.key()] = it.value();
+    }
+    qDebug() << "[AgenticExecutor] Loaded" << m_memory.size() << "memory entries from disk";
+}
+
+void AgenticExecutor::persistMemoryToDisk()
+{
+    if (!m_memoryEnabled) return;
+    MemorySpaceManager::instance().setEnabled(true);
+    MemorySpaceManager::instance().setLimitBytes(m_memoryLimitBytes);
+    MemorySpaceManager::instance().persist(m_memory);
+    qDebug() << "[AgenticExecutor] Persisted" << m_memory.size() << "memory entries to disk";
+}
+
+void AgenticExecutor::enforceMemoryLimit()
+{
+    if (!m_memoryEnabled) return;
+    
+    // Simplified: just track size
+    qint64 currentSize = 0;
+    for (auto it = m_memory.begin(); it != m_memory.end(); ++it) {
+        currentSize += it.key().size() + it.value().toString().size();
+    }
+    
+    if (currentSize > m_memoryLimitBytes) {
+        // Remove oldest entries until under limit
+        while (currentSize > m_memoryLimitBytes && !m_memory.isEmpty()) {
+            QString firstKey = m_memory.firstKey();
+            QVariant firstValue = m_memory.first();
+            currentSize -= firstKey.size() + firstValue.toString().size();
+            m_memory.remove(firstKey);
+        }
+        qDebug() << "[AgenticExecutor] Memory limit enforced, current size:" << currentSize;
+    }
 }
 
 QJsonObject AgenticExecutor::retryWithCorrection(const QJsonObject& failedStep)

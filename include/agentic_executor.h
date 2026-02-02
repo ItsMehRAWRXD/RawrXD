@@ -12,6 +12,10 @@
 class AgenticEngine;
 class InferenceEngine;
 class ModelTrainer;
+class SettingsManager;
+
+// Forward declaration to avoid heavy include
+class MemorySpaceManager;
 
 /**
  * @class AgenticExecutor
@@ -69,6 +73,7 @@ public:
     QVariant getFromMemory(const QString& key);
     void clearMemory();
     QString getFullContext();
+    void removeMemoryItem(const QString& key);
 
     // Self-correction
     bool detectFailure(const QString& output);
@@ -92,6 +97,11 @@ private:
     QString analyzeError(const QString& errorOutput);
     QString improveCode(const QString& code, const QString& issue);
 
+    void loadMemorySettings();
+    void loadMemoryFromDisk();
+    void persistMemoryToDisk();
+    void enforceMemoryLimit();
+
     // Internal helpers
     QJsonObject buildToolCallPrompt(const QString& goal, const QJsonArray& tools);
     QString extractCodeFromResponse(const QString& response);
@@ -100,10 +110,14 @@ private:
     AgenticEngine* m_agenticEngine = nullptr;
     InferenceEngine* m_inferenceEngine = nullptr;
     std::unique_ptr<ModelTrainer> m_modelTrainer;
+    SettingsManager* m_settingsManager = nullptr;  // Forward declared, used via pointer
     
     QMap<QString, QVariant> m_memory;
     QJsonArray m_executionHistory;
     QString m_currentWorkingDirectory;
+
+    bool m_memoryEnabled = false;
+    qint64 m_memoryLimitBytes = 134217728; // 128 MB default
     
     int m_maxRetries = 3;
     int m_currentRetryCount = 0;

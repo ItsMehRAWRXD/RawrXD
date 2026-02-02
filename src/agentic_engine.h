@@ -3,11 +3,16 @@
 #include <QObject>
 #include <QString>
 #include <QJsonObject>
+#include <QFileSystemWatcher>
 #include <QJsonArray>
 #include <vector>
 #include <string>
 #include <memory>
 #include <unordered_map>
+
+// Forward declarations for Keep/Undo functionality
+class AgenticFileOperations;
+class AgenticErrorHandler;
 
 /**
  * @class AgenticEngine
@@ -99,6 +104,15 @@ public slots:
     void setModel(const QString& modelPath);
     void setModelName(const QString& modelName);
     void processMessage(const QString& message, const QString& editorContext = QString());
+    void setInstructionFilePath(const QString& path);
+    QString loadedInstructions() const { return m_preResponseInstructions; }
+    
+    // Keep/Undo file operations with user approval
+    bool createFileWithApproval(const QString& filePath, const QString& content);
+    bool modifyFileWithApproval(const QString& filePath, const QString& oldContent, const QString& newContent);
+    bool deleteFileWithApproval(const QString& filePath);
+    void undoLastFileOperation();
+    bool canUndoFileOperation() const;
     
 signals:
     void responseReady(const QString& response);
@@ -107,6 +121,7 @@ signals:
     void feedbackCollected(const QString& responseId);
     void learningCompleted();
     void securityWarning(const QString& warning);
+    void fileOperationCompleted(const QString& operation, const QString& filePath, bool success);
     
     // Phase 2: Streaming and refactoring signals
     void tokenGenerated(int delta);  // Emitted for each token during generation
@@ -116,12 +131,26 @@ private:
     QString generateTokenizedResponse(const QString& message);
     QString generateFallbackResponse(const QString& message);
     bool loadModelAsync(const std::string& modelPath);
+    bool loadInstructionsFromFile(const QString& path);
+    void onInstructionFileChanged(const QString& path);
+    QString m_instructionFilePath;
+    QString m_preResponseInstructions;
+    QFileSystemWatcher* m_instructionWatcher = nullptr;
     QString resolveGgufPath(const QString& modelName);
     
     // Internal AI processing
     QString processWithContext(const QString& input, const QJsonObject& context);
     QJsonObject buildCodeContext(const QString& code);
     QString applyTemplate(const QString& templateName, const QJsonObject& params);
+    
+    // Keep/Undo file operations
+    AgenticFileOperations* m_fileOperations;
+    AgenticErrorHandler* m_errorHandler;
+    
+    // Tool registry for agent capabilities
+    class ToolRegistry* m_toolRegistry = nullptr;
+    std::shared_ptr<class Logger> m_logger;
+    std::shared_ptr<class Metrics> m_metrics;
     
     // Learning data structures
     struct FeedbackEntry {

@@ -26,11 +26,9 @@ AICodeAssistant::AICodeAssistant(QObject *parent)
 
 AICodeAssistant::~AICodeAssistant()
 {
-    // Clean up any running processes
-    if (m_process && m_process->state() != QProcess::NotRunning) {
-        m_process->kill();
-        m_process->waitForFinished(5000);
-    }
+    // Qt parent-child relationship handles cleanup automatically
+    // m_networkManager and m_process are owned by this QObject
+    // No manual cleanup needed - Qt will delete them when this object is destroyed
 }
 
 void AICodeAssistant::setOllamaUrl(const QString &url)
@@ -160,7 +158,11 @@ void AICodeAssistant::grepFiles(const QString &pattern, const QString &directory
         args << "-n" << "-H" << "-i" << pattern << searchDir + "/*";
     }
     
-    m_process->start("grep", args);
+    if (m_process) {
+        m_process->start("grep", args);
+    } else {
+        emit errorOccurred("Process initialization failed");
+    }
 }
 
 void AICodeAssistant::executePowerShellCommand(const QString &command)
@@ -178,7 +180,11 @@ void AICodeAssistant::executePowerShellCommand(const QString &command)
     QStringList args;
     args << "-Command" << command;
     
-    m_process->start("powershell", args);
+    if (m_process) {
+        m_process->start("powershell", args);
+    } else {
+        emit errorOccurred("Process initialization failed");
+    }
     emit commandProgress("Executing PowerShell command...");
 }
 
@@ -255,6 +261,11 @@ void AICodeAssistant::onProcessFinished(int exitCode, QProcess::ExitStatus exitS
 {
     Q_UNUSED(exitStatus)
     
+    if (!m_process) {
+        emit errorOccurred("Process not initialized");
+        return;
+    }
+    
     QString output = m_process->readAllStandardOutput();
     QString error = m_process->readAllStandardError();
     
@@ -299,6 +310,10 @@ void AICodeAssistant::onProcessError(QProcess::ProcessError error)
 
 void AICodeAssistant::onProcessOutput()
 {
+    if (!m_process) {
+        return;
+    }
+    
     QString output = m_process->readAllStandardOutput();
     if (!output.isEmpty()) {
         emit commandOutputReceived(output);

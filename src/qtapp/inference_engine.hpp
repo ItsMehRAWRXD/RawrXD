@@ -278,6 +278,69 @@ signals:
      * @brief Emitted when the transformer is fully ready for inference
      */
     void transformerReady();
+    
+    // ========== INTERPRETABILITY SIGNALS ==========
+    
+    /**
+     * @brief Emitted when attention weights are available after inference
+     * @param attentionData JSON array containing multi-head attention weights
+     * 
+     * JSON format:
+     * [
+     *   {
+     *     "layer": 0, "head": 0,
+     *     "weights": [[0.1, 0.2, ...], ...],
+     *     "mean": 0.05, "max": 0.9, "entropy": 2.3
+     *   },
+     *   ...
+     * ]
+     */
+    void attentionDataAvailable(const QJsonArray& attentionData);
+    
+    /**
+     * @brief Emitted when gradient flow metrics are available
+     * @param gradientData JSON array containing per-layer gradient metrics
+     * 
+     * JSON format:
+     * [
+     *   {
+     *     "layer": 0, "norm": 0.05, "variance": 0.001,
+     *     "min": -0.1, "max": 0.1, "dead_ratio": 0.01,
+     *     "is_vanishing": false, "is_exploding": false
+     *   },
+     *   ...
+     * ]
+     */
+    void gradientDataAvailable(const QJsonArray& gradientData);
+    
+    /**
+     * @brief Emitted when activation statistics are available
+     * @param activationData JSON array containing per-layer activation stats
+     * 
+     * JSON format:
+     * [
+     *   {
+     *     "layer": 0, "mean": 0.5, "variance": 0.1,
+     *     "min": -1.0, "max": 1.0, "sparsity": 0.3,
+     *     "dead_neurons": 5, "distribution": [0.1, 0.2, ...]
+     *   },
+     *   ...
+     * ]
+     */
+    void activationDataAvailable(const QJsonArray& activationData);
+    
+    /**
+     * @brief Emitted when layer contribution data is available
+     * @param layerData JSON array containing per-layer contribution metrics
+     */
+    void layerContributionAvailable(const QJsonArray& layerData);
+    
+    /**
+     * @brief Emitted when token logits are available during generation
+     * @param tokenIdx Token position in sequence
+     * @param logits JSON array of logit values
+     */
+    void tokenLogitsAvailable(int tokenIdx, const QJsonArray& logits);
 
 private:
     GGUFLoaderQt* m_loader;

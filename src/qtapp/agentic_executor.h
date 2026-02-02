@@ -12,6 +12,7 @@
 class AgenticEngine;
 class InferenceEngine;
 class ModelTrainer;
+class SettingsManager;
 
 /**
  * @class AgenticExecutor
@@ -92,6 +93,13 @@ private:
     QString analyzeError(const QString& errorOutput);
     QString improveCode(const QString& code, const QString& issue);
 
+    // Memory settings management
+    void loadMemorySettings();
+    void loadMemoryFromDisk();
+    void persistMemoryToDisk();
+    void enforceMemoryLimit();
+    void removeMemoryItem(const QString& key);
+
     // Internal helpers
     QJsonObject buildToolCallPrompt(const QString& goal, const QJsonArray& tools);
     QString extractCodeFromResponse(const QString& response);
@@ -100,10 +108,14 @@ private:
     AgenticEngine* m_agenticEngine = nullptr;
     InferenceEngine* m_inferenceEngine = nullptr;
     std::unique_ptr<ModelTrainer> m_modelTrainer;
+    SettingsManager* m_settingsManager = nullptr;
     
     QMap<QString, QVariant> m_memory;
     QJsonArray m_executionHistory;
     QString m_currentWorkingDirectory;
+    
+    bool m_memoryEnabled = false;
+    qint64 m_memoryLimitBytes = 134217728; // 128 MB default
     
     int m_maxRetries = 3;
     int m_currentRetryCount = 0;

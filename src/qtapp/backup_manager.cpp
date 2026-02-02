@@ -7,12 +7,17 @@
 #include <QDebug>
 #include <QStandardPaths>
 
-// Production-ready compression using zlib
+// Production-ready compression using zlib (optional)
+#ifdef HAVE_ZLIB
 #ifdef _WIN32
 #include <zlib.h>
 #pragma comment(lib, "zlib.lib")
 #else
 #include <zlib.h>
+#endif
+#else
+// zlib not available - compression disabled, backups stored uncompressed
+#warning "zlib not found - BackupManager will store uncompressed backups"
 #endif
 
 BackupManager& BackupManager::instance() {

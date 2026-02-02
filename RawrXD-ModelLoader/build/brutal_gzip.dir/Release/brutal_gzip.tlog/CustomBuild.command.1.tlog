@@ -1,6 +1,6 @@
-^D:\TEMP\RAWRXD-Q8-WIRE\RAWRXD-MODELLOADER\CMAKELISTS.TXT
+^E:\RAWRXD\RAWRXD-MODELLOADER\CMAKELISTS.TXT
 setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -SD:/temp/RawrXD-q8-wire/RawrXD-ModelLoader -BD:/temp/RawrXD-q8-wire/RawrXD-ModelLoader/build --check-stamp-file D:/temp/RawrXD-q8-wire/RawrXD-ModelLoader/build/CMakeFiles/generate.stamp
+"C:\Program Files\CMake\bin\cmake.exe" -SE:/RawrXD/RawrXD-ModelLoader -BE:/RawrXD/RawrXD-ModelLoader/build --check-stamp-file E:/RawrXD/RawrXD-ModelLoader/build/CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone

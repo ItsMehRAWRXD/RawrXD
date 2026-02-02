@@ -1,9 +1,16 @@
 cmake_minimum_required(VERSION 3.20)
 project(RawrXD-ModelLoader VERSION 1.0.13)
-add_definitions(-DNOMINMAX)
+add_definitions(-DNOMINMAX -D_WIN32_WINNT=0x0A00)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# ============================================================
+# ENABLE MASM FOR CUSTOM ZLIB IMPLEMENTATION
+# ============================================================
+enable_language(ASM_MASM)
+set(CMAKE_ASM_MASM_FLAGS "/nologo /W3 /Cx /Zi")
+message(STATUS "✓ MASM assembler enabled for custom ZLIB compression")
 
 # ============================================================
 # 64-BIT ARCHITECTURE ENFORCEMENT
@@ -49,6 +56,9 @@ else()
 endif()
 
 # Build options
+option(RAWRXD_BUILD_WIN32IDE "Build the legacy Win32IDE target" OFF)
+option(RAWRXD_BUILD_BENCHMARKS "Build benchmark executables" OFF)
+option(RAWRXD_BUILD_TESTS "Build unit-test harnesses" OFF)
 option(ENABLE_COPILOT "Enable Copilot streaming integration for Win32 IDE" OFF)
 option(ENABLE_VULKAN "Enable Vulkan GPU acceleration" ON)
 
@@ -74,6 +84,69 @@ list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.7.3/msvc2022_64")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Network Sql Concurrent Test Charts)
 
+# ============================================================
+# TEST INFRASTRUCTURE CONFIGURATION
+# ============================================================
+if(RAWRXD_BUILD_TESTS)
+    enable_testing()
+    include(CTest)
+    message(STATUS "✓ CTest infrastructure enabled - tests will be discoverable")
+endif()
+
+# ZLIB Configuration - optional compression library
+option(USE_ZLIB_FETCHCONTENT "Auto-download and build zlib if not found" OFF)
+
+# ZLIB is optional - only needed for CheckpointManager compression
+# Try to find ZLIB in common installation paths first
+find_package(ZLIB QUIET HINTS C:/zlib C:/Program\ Files/zlib "C:/Program Files (x86)/zlib" /usr/local /usr)
+
+if(ZLIB_FOUND)
+    message(STATUS "✓ ZLIB found at ${ZLIB_INCLUDE_DIR} - Native compression enabled")
+    set(HAVE_ZLIB 1)
+    set(HAVE_COMPRESSION 1)
+elseif(USE_ZLIB_FETCHCONTENT)
+    # Auto-fetch zlib if not found on system
+    include(FetchContent)
+    message(STATUS "ℹ ZLIB not found - attempting to auto-download from GitHub...")
+    
+    FetchContent_Declare(zlib
+        URL https://github.com/madler/zlib/archive/refs/tags/v1.3.tar.gz
+        URL_HASH SHA256=b5b06d60ce49c8ba700e0ba517fa07de80b5d4628a037f4be8ad16955be7a7c0
+    )
+    
+    FetchContent_MakeAvailable(zlib)
+    set(ZLIB_FOUND TRUE)
+    set(HAVE_ZLIB 1)
+    set(HAVE_COMPRESSION 1)
+    message(STATUS "✓ ZLIB auto-downloaded and built successfully")
+else()
+    # Auto-fetch zlib if not found on system (optional - can be disabled with FETCHCONTENT_ZLIB=OFF)
+    option(FETCHCONTENT_ZLIB "Auto-download and build zlib if not found" ON)
+    
+    if(FETCHCONTENT_ZLIB)
+        include(FetchContent)
+        message(STATUS "ℹ ZLIB not found - attempting to auto-download from GitHub...")
+        
+        FetchContent_Declare(zlib
+            URL https://github.com/madler/zlib/archive/refs/tags/v1.3.tar.gz
+        )
+        
+        FetchContent_MakeAvailable(zlib)
+        set(ZLIB_FOUND TRUE)
+        set(HAVE_ZLIB 1)
+        set(HAVE_COMPRESSION 1)
+        message(STATUS "✓ ZLIB auto-downloaded and built successfully")
+    else()
+        message(STATUS "ℹ ZLIB not installed - Using built-in MASM-based compression (BrutalGzip/Deflate)")
+        message(STATUS "  MASM Compression Engines: BrutalGzip (MASM optimized), Deflate (fallback)")
+        message(STATUS "  To use native zlib compression:")
+        message(STATUS "    Option 1: vcpkg install zlib:x64-windows")
+        message(STATUS "    Option 2: Enable auto-download with -DFETCHCONTENT_ZLIB=ON")
+        set(HAVE_ZLIB 0)
+        set(HAVE_COMPRESSION 1)
+    endif()
+endif()
+
 find_package(CURL QUIET)
 if(CURL_FOUND)
     message(STATUS "CURL found: ${CURL_VERSION_STRING}")
@@ -97,6 +170,15 @@ if(Qt6_FOUND)
     add_definitions(-DHAVE_QT_CORE -DQT_NO_OPENGL)
     include_directories(${Qt6_INCLUDE_DIRS})
     link_libraries(Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Network Qt6::Sql Qt6::Concurrent Qt6::Test Qt6::Charts)
+    
+    # Add compression definitions globally
+    add_compile_definitions(HAVE_COMPRESSION=1)
+    if(HAVE_ZLIB)
+        add_compile_definitions(HAVE_ZLIB=1)
+    endif()
+    if(HAVE_ZSTD)
+        add_compile_definitions(HAVE_ZSTD=1)
+    endif()
     
     # ============================================================
     # AUTOMATIC DLL DEPLOYMENT - Deploy ALL dependencies automatically
@@ -271,6 +353,7 @@ message(STATUS "Adding advanced orchestration modules for AI-native IDE")
 add_subdirectory(src/orchestration)
 add_subdirectory(src/git)
 add_subdirectory(src/terminal)
+add_subdirectory(src/paint)
 
 # Qt-based IDE shell (separate executable, no Vulkan)
 if(MSVC)
@@ -313,6 +396,7 @@ if(MSVC)
             src/qtapp/gguf_server.hpp
             src/qtapp/gguf_server.cpp
             src/qtapp/inflate_deflate_cpp.cpp
+            src/qtapp/deflate_brutal_stub.cpp
             src/qtapp/ai_switcher.hpp
             src/qtapp/ai_switcher.cpp
             src/qtapp/unified_backend.hpp
@@ -462,6 +546,15 @@ if(MSVC)
         target_include_directories(quant_utils PUBLIC ${CMAKE_SOURCE_DIR}/src/qtapp ${CMAKE_SOURCE_DIR}/include)
         target_link_libraries(quant_utils PUBLIC Qt6::Core)
         
+        # CPU inference engine library (replaces GPU dependencies)
+        add_library(cpu_inference_engine STATIC 
+            src/cpu_inference_engine.cpp
+        )
+        target_include_directories(cpu_inference_engine PUBLIC ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include)
+        if(MSVC)
+            target_compile_options(cpu_inference_engine PRIVATE /arch:AVX2)
+        endif()
+        
         # Find OpenSSL for SecurityManager encryption/HMAC (optional, with fallback)
         find_package(OpenSSL QUIET)
         if(OpenSSL_FOUND)
@@ -481,19 +574,20 @@ if(MSVC)
         endif()
 
         # Link Qt modules including WebSockets for swarm collaboration
-target_link_libraries(RawrXD-QtShell PRIVATE
+        target_link_libraries(RawrXD-QtShell PRIVATE
             Qt6::Core
             Qt6::Gui
             Qt6::Widgets
             Qt6::Network
             Qt6::Sql
             Qt6::Concurrent
-            brutal_gzip
+            RawrXDOrchestration
+            brutal_compression_lib
             self_test_gate
             quant_utils
-        )
-        
-        # Add include directories for QtShell to access both qtapp and main source headers
+            masm_compiler_qt_lib
+            cpu_inference_engine
+        )        # Add include directories for QtShell to access both qtapp and main source headers
         target_include_directories(RawrXD-QtShell PRIVATE 
             ${CMAKE_SOURCE_DIR}/src
             ${CMAKE_SOURCE_DIR}/src/qtapp
@@ -544,15 +638,6 @@ target_link_libraries(RawrXD-QtShell PRIVATE
             AUTOMOC_MOC_OPTIONS "-I${CMAKE_SOURCE_DIR}/include;-I${CMAKE_CURRENT_SOURCE_DIR}/src/qtapp"
         )
 
-        # Explicitly wrap canonical headers so AUTOMOC generates moc sources for Q_OBJECT classes in include/
-        qt_wrap_cpp(QTSHELL_EXPLICIT_MOC_SOURCES
-            ${CMAKE_SOURCE_DIR}/include/checkpoint_manager.h
-            ${CMAKE_SOURCE_DIR}/include/ci_cd_settings.h
-            ${CMAKE_SOURCE_DIR}/include/tokenizer_selector.h
-            TARGET RawrXD-QtShell
-        )
-        target_sources(RawrXD-QtShell PRIVATE ${QTSHELL_EXPLICIT_MOC_SOURCES})
-
         if(MSVC)
             target_compile_options(RawrXD-QtShell PRIVATE /EHsc $<$<CONFIG:Release>:/O2>)
         else()
@@ -563,11 +648,12 @@ target_link_libraries(RawrXD-QtShell PRIVATE
         deploy_runtime_dependencies(RawrXD-QtShell)
         
         # ---------- Production Feature Test: Real component testing ----------
+        if(RAWRXD_BUILD_TESTS)
         add_executable(production_feature_test
             src/qtapp/production_feature_test.cpp
             src/qtapp/gpu_backend.cpp
             src/qtapp/metrics_collector.cpp
-            src/qtapp/backup_manager.cpp
+            # src/qtapp/backup_manager.cpp  # Disabled - requires zlib
             src/qtapp/sla_manager.cpp
         )
         
@@ -604,6 +690,9 @@ target_link_libraries(RawrXD-QtShell PRIVATE
         set_target_properties(production_feature_test PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
         )
+        endif() # RAWRXD_BUILD_TESTS
+
+        # (instruction_loader_test removed - keep test file for future integration)
         
         # ---------- Simple GPU Test: Quick Vulkan verification ----------
         add_executable(simple_gpu_test
@@ -666,7 +755,7 @@ target_link_libraries(RawrXD-QtShell PRIVATE
         
         target_link_libraries(gpu_inference_benchmark PRIVATE
             Qt6::Core
-            brutal_gzip
+            brutal_compression_lib
             ${GPU_BACKEND_LIBS}
         )
         
@@ -730,7 +819,7 @@ target_link_libraries(RawrXD-QtShell PRIVATE
         
         target_link_libraries(gguf_hotpatch_tester PRIVATE
             Qt6::Core
-            brutal_gzip
+            brutal_compression_lib
             ${GPU_BACKEND_LIBS}
         )
         
@@ -774,7 +863,7 @@ target_link_libraries(RawrXD-QtShell PRIVATE
             Qt6::Core
             Qt6::Gui
             Qt6::Widgets
-            brutal_gzip
+            brutal_compression_lib
             ${GPU_BACKEND_LIBS}
         )
         
@@ -838,7 +927,77 @@ target_link_libraries(RawrXD-QtShell PRIVATE
         endif()
         
         message(STATUS "RawrXD-Agent: Autonomous coding agent enabled")
+
+        # ============================================================
+        # RawrXD-Compiler: Full CLI Compiler Tool
+        # Compiles Eon/ASM source code to native executables
+        # Supports: x86-64, x86-32, ARM64, WASM targets
+        # Output: exe, dll, lib, obj, asm, ir formats
+        # ============================================================
+        add_executable(RawrXD-Compiler
+            src/cli/rawrxd_cli_compiler.cpp
+        )
         
+        target_link_libraries(RawrXD-Compiler PRIVATE 
+            Qt6::Core 
+            Qt6::Concurrent
+        )
+        
+        target_include_directories(RawrXD-Compiler PRIVATE 
+            include 
+            ${CMAKE_SOURCE_DIR}/src 
+            ${CMAKE_SOURCE_DIR}/src/compiler
+        )
+        
+        set_target_properties(RawrXD-Compiler PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+            WIN32_EXECUTABLE FALSE
+            OUTPUT_NAME "rawrxd"
+        )
+        
+        if(MSVC)
+            target_compile_options(RawrXD-Compiler PRIVATE /EHsc $<$<CONFIG:Release>:/O2>)
+        else()
+            target_compile_options(RawrXD-Compiler PRIVATE -fexceptions $<$<CONFIG:Release>:-O2>)
+        endif()
+        
+        message(STATUS "✓ RawrXD-Compiler: CLI compiler tool enabled (output: rawrxd.exe)")
+
+        # ============================================================
+        # RawrXD Compiler Library: Qt-integrated compiler for IDE use
+        # ============================================================
+        add_library(rawrxd_compiler_qt STATIC
+            src/compiler/rawrxd_compiler_qt.cpp
+        )
+        
+        target_link_libraries(rawrxd_compiler_qt PUBLIC 
+            Qt6::Core 
+            Qt6::Widgets
+            Qt6::Concurrent
+        )
+        
+        target_include_directories(rawrxd_compiler_qt PUBLIC 
+            ${CMAKE_SOURCE_DIR}/src/compiler
+            ${CMAKE_SOURCE_DIR}/include
+        )
+        
+        if(MSVC)
+            target_compile_options(rawrxd_compiler_qt PRIVATE /EHsc $<$<CONFIG:Release>:/O2>)
+        else()
+            target_compile_options(rawrxd_compiler_qt PRIVATE -fexceptions $<$<CONFIG:Release>:-O2>)
+        endif()
+        
+        set_target_properties(rawrxd_compiler_qt PROPERTIES
+            AUTOMOC ON
+        )
+        
+        message(STATUS "✓ rawrxd_compiler_qt: Qt compiler library enabled")
+        
+        # Add the MASM writers
+        add_subdirectory(src/masm)
+        target_link_libraries(rawrxd_compiler_qt PRIVATE masm_writers)
+        target_link_libraries(RawrXD-Compiler PRIVATE masm_writers)
+
     else()
         message(STATUS "Qt6 not found, skipping RawrXD-QtShell")
     endif()
@@ -847,7 +1006,7 @@ else()
 endif()
 
 # Win32-based IDE (MSVC only to match Qt)
-if(MSVC) # Re-enabled to test
+if(MSVC AND RAWRXD_BUILD_WIN32IDE)
     add_executable(RawrXD-Win32IDE 
         src/win32app/main_win32.cpp
         src/win32app/Win32IDE.cpp
@@ -943,7 +1102,7 @@ if(MSVC) # Re-enabled to test
         RawrXDOrchestration
         RawrXDGit
         RawrXDTerminal
-        brutal_gzip
+        brutal_compression_lib
         quant_utils
         Qt6::Core
         Qt6::Network
@@ -985,7 +1144,7 @@ if(MSVC) # Re-enabled to test
         target_compile_definitions(RawrXD-Win32IDE PRIVATE ENABLE_COPILOT=1)
         message(STATUS "Copilot integration enabled for Win32 IDE")
     endif()
-endif() # End MSVC-only Win32IDE block
+endif() # End RAWRXD_BUILD_WIN32IDE block
 
 # Terminal test executable (MSVC only, placed in bin-msvc)
 if(FALSE AND MSVC AND EXISTS "${CMAKE_SOURCE_DIR}/src/win32app/test_terminal.cpp") # Disabled until headers exist
@@ -1086,7 +1245,6 @@ set_target_properties(RawrXD-CLI PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BI
 if(Qt6Widgets_FOUND)
     message(STATUS "Qt6Widgets already configured above")
 endif()
-
 # Link libraries
 target_link_libraries(RawrXD-ModelLoader PRIVATE
     ws2_32
@@ -1101,6 +1259,7 @@ target_link_libraries(RawrXD-ModelLoader PRIVATE
     gdi32
     wbemuuid
     pdh
+    cpu_inference_engine
 )
 
 if(Vulkan_FOUND)
@@ -1287,6 +1446,15 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/agentic_ide.cpp")
         list(APPEND AGENTICIDE_SOURCES src/agentic_ide.cpp)
     endif()
+
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/production_agentic_ide.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/production_agentic_ide.cpp)
+    endif()
+
+    if(EXISTS "${CMAKE_SOURCE_DIR}/include/production_agentic_ide.h")
+        list(APPEND AGENTICIDE_SOURCES include/production_agentic_ide.h)
+        set_source_files_properties(include/production_agentic_ide.h PROPERTIES SKIP_AUTOMOC OFF)
+    endif()
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/scalar_server.cpp")
         list(APPEND AGENTICIDE_SOURCES src/scalar_server.cpp)
     endif()
@@ -1307,6 +1475,15 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
         list(APPEND AGENTICIDE_SOURCES src/zero_day_agentic_engine.cpp)
         if(EXISTS "${CMAKE_SOURCE_DIR}/include/zero_day_agentic_engine.hpp")
             list(APPEND AGENTICIDE_SOURCES include/zero_day_agentic_engine.hpp)
+        endif()
+        # Add tool registry initialization for agent system
+        # NOTE: tool_registry_init.cpp has JSON initialization issues with MSVC
+        # Temporarily disabled until fixed
+        # if(EXISTS "${CMAKE_SOURCE_DIR}/src/tool_registry_init.cpp")
+        #     list(APPEND AGENTICIDE_SOURCES src/tool_registry_init.cpp)
+        # endif()
+        if(EXISTS "${CMAKE_SOURCE_DIR}/include/tool_registry_init.hpp")
+            list(APPEND AGENTICIDE_SOURCES include/tool_registry_init.hpp)
         endif()
     endif()
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/chat_interface.cpp")
@@ -1466,6 +1643,10 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/todo_dock.cpp")
         list(APPEND AGENTICIDE_SOURCES src/todo_dock.cpp)
     endif()
+    # NOTE: test_agentic_executor.cpp is excluded - it has its own main() for standalone testing
+    # if(EXISTS "${CMAKE_SOURCE_DIR}/src/test_agentic_executor.cpp")
+    #     list(APPEND AGENTICIDE_SOURCES src/test_agentic_executor.cpp)
+    # endif()
     # NOTE: inference_engine_stub.cpp is excluded because src/qtapp/inference_engine.cpp is the primary implementation
     # if(EXISTS "${CMAKE_SOURCE_DIR}/src/inference_engine_stub.cpp")
     #     list(APPEND AGENTICIDE_SOURCES src/inference_engine_stub.cpp)
@@ -1473,8 +1654,53 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/agentic_executor.cpp")
         list(APPEND AGENTICIDE_SOURCES src/agentic_executor.cpp)
     endif()
+    # Add marketplace components - include headers for MOC processing
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/marketplace/extension_marketplace_manager.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/marketplace/extension_marketplace_manager.cpp)
+        list(APPEND AGENTICIDE_SOURCES include/marketplace/extension_marketplace_manager.h)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/marketplace/vsix_installer.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/marketplace/vsix_installer.cpp)
+        list(APPEND AGENTICIDE_SOURCES include/marketplace/vsix_installer.h)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/marketplace/enterprise_policy_engine.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/marketplace/enterprise_policy_engine.cpp)
+        list(APPEND AGENTICIDE_SOURCES include/marketplace/enterprise_policy_engine.h)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/marketplace/offline_cache_store.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/marketplace/offline_cache_store.cpp)
+        list(APPEND AGENTICIDE_SOURCES include/marketplace/offline_cache_store.h)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/marketplace/marketplace_ui_view.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/marketplace/marketplace_ui_view.cpp)
+        list(APPEND AGENTICIDE_SOURCES include/marketplace/marketplace_ui_view.h)
+    endif()
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/model_trainer.cpp")
         list(APPEND AGENTICIDE_SOURCES src/model_trainer.cpp)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/agentic_file_operations.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/agentic_file_operations.cpp)
+        list(APPEND AGENTICIDE_SOURCES include/agentic_file_operations.h)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/memory_space_manager.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/memory_space_manager.cpp)
+        list(APPEND AGENTICIDE_SOURCES include/memory_space_manager.h)
+    endif()
+    
+    # Error handler (used by AgenticEngine)
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/agentic_error_handler.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/agentic_error_handler.cpp)
+        list(APPEND AGENTICIDE_SOURCES include/agentic_error_handler.h)
+    endif()
+    
+    # Observability and Loop State (used by AgenticErrorHandler)
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/agentic_observability.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/agentic_observability.cpp)
+        list(APPEND AGENTICIDE_SOURCES include/agentic_observability.h)
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/src/agentic_loop_state.cpp")
+        list(APPEND AGENTICIDE_SOURCES src/agentic_loop_state.cpp)
+        list(APPEND AGENTICIDE_SOURCES include/agentic_loop_state.h)
     endif()
     
     # Phase 1: ModelTrainer UI Components
@@ -1562,14 +1788,39 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/streaming_engine.cpp")
         list(APPEND AGENTICIDE_SOURCES src/streaming_engine.cpp)
     endif()
+
+    # ========================================
+    # Main Application Target: RawrXD-AgenticIDE
+    # ========================================
+    add_library(brutal_compression_lib STATIC kernels/deflate_brutal_masm.asm)
+    set_target_properties(brutal_compression_lib PROPERTIES LINKER_LANGUAGE ASM_MASM)
+
+    add_executable(RawrXD-AgenticIDE ${AGENTICIDE_SOURCES})
     
-    add_executable(RawrXD-AgenticIDE WIN32 ${AGENTICIDE_SOURCES})
-    
-    # Enable Qt MOC for QObject-derived classes - must be set BEFORE any other properties
-    set_target_properties(RawrXD-AgenticIDE PROPERTIES 
-        AUTOMOC ON
-        AUTOMOC_MOC_OPTIONS "-I${CMAKE_SOURCE_DIR}/include;-I${CMAKE_CURRENT_SOURCE_DIR}/src/qtapp;-I${CMAKE_CURRENT_SOURCE_DIR}/src/ui;-I${CMAKE_CURRENT_SOURCE_DIR}/src/utils;-I${CMAKE_CURRENT_SOURCE_DIR}/src/gui"
+    target_link_libraries(RawrXD-AgenticIDE
+        PRIVATE
+        Qt6::Core
+        Qt6::Gui
+        Qt6::Widgets
+        Qt6::Concurrent
+        Qt6::Network
+        Qt6::WebSockets
+        brutal_compression_lib
     )
+
+    # Link ggml library if it was built
+    if(TARGET ggml)
+        target_link_libraries(RawrXD-AgenticIDE PRIVATE ggml)
+        target_compile_definitions(RawrXD-AgenticIDE PRIVATE HAVE_GGML=1)
+    endif()
+
+    # Enable Qt MOC for QObject-derived classes - must be set BEFORE any other properties
+    if(TARGET RawrXD-AgenticIDE)
+        set_target_properties(RawrXD-AgenticIDE PROPERTIES 
+            AUTOMOC ON
+            AUTOMOC_MOC_OPTIONS "-I${CMAKE_SOURCE_DIR}/include;-I${CMAKE_CURRENT_SOURCE_DIR}/src/qtapp;-I${CMAKE_CURRENT_SOURCE_DIR}/src/ui;-I${CMAKE_CURRENT_SOURCE_DIR}/src/utils;-I${CMAKE_CURRENT_SOURCE_DIR}/src/gui"
+        )
+    endif()
 
     # MOC wrapping for checkpoint_manager, ci_cd_settings, tokenizer_selector is handled
     # by RawrXD-QtShell target via qt_wrap_cpp to avoid duplicate generation
@@ -1598,7 +1849,7 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
         Qt6::Widgets
         Qt6::Network
         Qt6::Sql
-        brutal_gzip
+        brutal_compression_lib
         quant_utils
         ggml_interface
     )
@@ -1758,7 +2009,7 @@ target_compile_definitions(RawrXD-TestRunner PRIVATE _CRT_SECURE_NO_WARNINGS NOM
 endif()
 
 # Q8_0 AVX2 end-to-end bench
-if(EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_q8_0_end2end.cpp")
+if(RAWRXD_BUILD_BENCHMARKS AND EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_q8_0_end2end.cpp")
     add_executable(bench_q8_0_end2end
         tests/bench_q8_0_end2end.cpp
         kernels/q8_0_avx2.cc
@@ -1773,7 +2024,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_q8_0_end2end.cpp")
 endif()
 
 # Flash-Attention AVX2 bench
-if(EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_flash_attn.cpp")
+if(RAWRXD_BUILD_BENCHMARKS AND EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_flash_attn.cpp")
     add_executable(bench_flash_attn
         tests/bench_flash_attn.cpp
         kernels/flash_attn_avx2.cc
@@ -1787,7 +2038,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_flash_attn.cpp")
     )
 endif()
 # Flash-Attention All-Quant bench
-if(EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_flash_all_quant.cpp")
+if(RAWRXD_BUILD_BENCHMARKS AND EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_flash_all_quant.cpp")
     add_executable(bench_flash_all_quant
         tests/bench_flash_all_quant.cpp
         kernels/flash_attn_avx2.cc
@@ -1802,7 +2053,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_flash_all_quant.cpp")
 endif()
 
 # Flash-Attention ASM Puppeteer (Phase 4 Final Form)
-if(EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_flash_asm_puppeteer.cpp")
+if(RAWRXD_BUILD_BENCHMARKS AND EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_flash_asm_puppeteer.cpp")
     if(MSVC)
         # Assemble NASM file via custom command to avoid MSBuild flags leakage
         set(FLASH_ASM_SRC ${CMAKE_SOURCE_DIR}/kernels/flash_attn_asm_avx2.asm)
@@ -1843,7 +2094,7 @@ if(MSVC)
     endif()
 
     # Brutal MASM benchmark
-    if(EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_deflate_brutal.cpp")
+    if(RAWRXD_BUILD_BENCHMARKS AND EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_deflate_brutal.cpp")
         add_executable(bench_deflate_brutal tests/bench_deflate_brutal.cpp kernels/deflate_brutal_masm.asm)
         set_target_properties(bench_deflate_brutal PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
     endif()
@@ -1870,9 +2121,9 @@ if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|ARM64")
 endif()
 
 # Add benchmark for 50MB payload
-if(EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_deflate_50mb.cpp")
+if(RAWRXD_BUILD_BENCHMARKS AND EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_deflate_50mb.cpp")
     add_executable(bench_deflate_50mb tests/bench_deflate_50mb.cpp)
-    target_link_libraries(bench_deflate_50mb PRIVATE brutal_gzip)
+    target_link_libraries(bench_deflate_50mb PRIVATE brutal_compression_lib)
     set_target_properties(bench_deflate_50mb PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 endif()
 
@@ -1884,17 +2135,12 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/quant_engine_smoke.cpp")
     set_target_properties(quant_engine_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 endif()
 
-
-
-
-
- 
- # Simple scalar quantization smoke test (Q5/Q6 bit-packers)
- add_executable(quant_scalar_smoke tests/quant_scalar_smoke.cpp)
- set_target_properties(quant_scalar_smoke PROPERTIES
-     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
+# Simple scalar quantization smoke test (Q5/Q6 bit-packers)
+add_executable(quant_scalar_smoke tests/quant_scalar_smoke.cpp)
+set_target_properties(quant_scalar_smoke PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
     AUTOMOC OFF
- )
+)
 
 # Comprehensive quantization correctness tests (pack/unpack, error bounds)
 add_executable(quant_correctness_tests tests/quant_correctness_tests.cpp)
@@ -1934,7 +2180,7 @@ target_link_libraries(test_agent_coordinator_integration PRIVATE
     Qt6::Test
     Qt6::Network
     RawrXDOrchestration
-    brutal_gzip
+    brutal_compression_lib
 )
 target_include_directories(test_agent_coordinator_integration PRIVATE 
     ${CMAKE_SOURCE_DIR}
@@ -1972,7 +2218,7 @@ add_executable(test_gguf_loader
 )
 target_link_libraries(test_gguf_loader PRIVATE 
     Qt6::Core
-    brutal_gzip  # Supplies codec::deflate, codec::inflate, deflate_brutal_masm
+    brutal_compression_lib  # Supplies codec::deflate, codec::inflate, deflate_brutal_masm
 )
 target_include_directories(test_gguf_loader PRIVATE 
     ${CMAKE_SOURCE_DIR}/include
@@ -1991,7 +2237,7 @@ add_executable(test_gguf_loader_simple
 )
 target_link_libraries(test_gguf_loader_simple PRIVATE 
     Qt6::Core
-    brutal_gzip  # Supplies codec::deflate, codec::inflate, deflate_brutal_masm
+    brutal_compression_lib  # Supplies codec::deflate, codec::inflate, deflate_brutal_masm
 )
 target_include_directories(test_gguf_loader_simple PRIVATE 
     ${CMAKE_SOURCE_DIR}/include
@@ -2002,470 +2248,36 @@ set_target_properties(test_gguf_loader_simple PROPERTIES
     AUTOMOC ON
 )
 
-# Brutal Gzip Library auto-selects MASM on x64 and NEON on ARM64
-add_library(brutal_gzip STATIC)
-target_include_directories(brutal_gzip PUBLIC include)
-# Architecture-specific kernels get added below (MASM on x64, NEON on ARM64).
-
-if(MSVC AND CMAKE_SYSTEM_PROCESSOR MATCHES "AMD64")
-    enable_language(ASM_MASM)
-    target_sources(brutal_gzip PRIVATE kernels/deflate_brutal_masm.asm)
-    target_compile_definitions(brutal_gzip PUBLIC HAS_BRUTAL_GZIP_MASM=1)
-elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|ARM64")
-    enable_language(ASM)
-    target_sources(brutal_gzip PRIVATE kernels/deflate_neon.S)
-    target_compile_definitions(brutal_gzip PUBLIC HAS_BRUTAL_GZIP_NEON=1)
-endif()
-
-# brutal-gzip implementation file (tiny C++ wrapper)
-target_sources(brutal_gzip PRIVATE src/qtapp/inflate_deflate_cpp.cpp)
-
-# Production-ready hotpatch libraries (using only existing files)
-# Memory hotpatch - header only for now until full implementation
-# add_library(memory_hotpatch STATIC src/qtapp/model_memory_hotpatch.cpp)
-# Compiled into main target for now
-
-option(BUILD_SHARED_LIBS           "ggml: build shared libraries" ${BUILD_SHARED_LIBS_DEFAULT})
-option(GGML_BACKEND_DL             "ggml: build backends as dynamic libraries (requires BUILD_SHARED_LIBS)" OFF)
-set(GGML_BACKEND_DIR "" CACHE PATH "ggml: directory to load dynamic backends from (requires GGML_BACKEND_DL")
-
-#
-# option list
-#
-
-# TODO: mark all options as advanced when not GGML_STANDALONE
-
-if (APPLE)
-    set(GGML_METAL_DEFAULT ON)
-    set(GGML_BLAS_DEFAULT ON)
-    set(GGML_BLAS_VENDOR_DEFAULT "Apple")
-else()
-    set(GGML_METAL_DEFAULT OFF)
-    set(GGML_BLAS_DEFAULT OFF)
-    set(GGML_BLAS_VENDOR_DEFAULT "Generic")
-endif()
-
-if (CMAKE_CROSSCOMPILING OR DEFINED ENV{SOURCE_DATE_EPOCH})
-    message(STATUS "Setting GGML_NATIVE_DEFAULT to OFF")
-    set(GGML_NATIVE_DEFAULT OFF)
-else()
-    set(GGML_NATIVE_DEFAULT ON)
-endif()
-
-# defaults
-if (NOT GGML_LLAMAFILE_DEFAULT)
-    set(GGML_LLAMAFILE_DEFAULT OFF)
-endif()
-
-if (NOT GGML_CUDA_GRAPHS_DEFAULT)
-    set(GGML_CUDA_GRAPHS_DEFAULT OFF)
-endif()
-
-# general
-option(GGML_STATIC "ggml: static link libraries"                     OFF)
-option(GGML_NATIVE "ggml: optimize the build for the current system" ${GGML_NATIVE_DEFAULT})
-option(GGML_LTO    "ggml: enable link time optimization"             OFF)
-option(GGML_CCACHE "ggml: use ccache if available"                   ON)
-
-# debug
-option(GGML_ALL_WARNINGS           "ggml: enable all compiler warnings"                   ON)
-option(GGML_ALL_WARNINGS_3RD_PARTY "ggml: enable all compiler warnings in 3rd party libs" OFF)
-option(GGML_GPROF                  "ggml: enable gprof"                                   OFF)
-
-# build
-option(GGML_FATAL_WARNINGS    "ggml: enable -Werror flag"    OFF)
-
-# sanitizers
-option(GGML_SANITIZE_THREAD    "ggml: enable thread sanitizer"    OFF)
-option(GGML_SANITIZE_ADDRESS   "ggml: enable address sanitizer"   OFF)
-option(GGML_SANITIZE_UNDEFINED "ggml: enable undefined sanitizer" OFF)
-
-# instruction set specific
-if (GGML_NATIVE OR NOT GGML_NATIVE_DEFAULT)
-    set(INS_ENB OFF)
-else()
-    set(INS_ENB ON)
-endif()
-
-message(DEBUG "GGML_NATIVE         : ${GGML_NATIVE}")
-message(DEBUG "GGML_NATIVE_DEFAULT : ${GGML_NATIVE_DEFAULT}")
-message(DEBUG "INS_ENB             : ${INS_ENB}")
-
-option(GGML_CPU_HBM          "ggml: use memkind for CPU HBM" OFF)
-option(GGML_CPU_REPACK       "ggml: use runtime weight conversion of Q4_0 to Q4_X_X" ON)
-option(GGML_CPU_KLEIDIAI     "ggml: use KleidiAI optimized kernels if applicable" OFF)
-option(GGML_SSE42            "ggml: enable SSE 4.2"          ${INS_ENB})
-option(GGML_AVX              "ggml: enable AVX"              ${INS_ENB})
-option(GGML_AVX_VNNI         "ggml: enable AVX-VNNI"         OFF)
-option(GGML_AVX2             "ggml: enable AVX2"             ${INS_ENB})
-option(GGML_BMI2             "ggml: enable BMI2"             ${INS_ENB})
-option(GGML_AVX512           "ggml: enable AVX512F"          OFF)
-option(GGML_AVX512_VBMI      "ggml: enable AVX512-VBMI"      OFF)
-option(GGML_AVX512_VNNI      "ggml: enable AVX512-VNNI"      OFF)
-option(GGML_AVX512_BF16      "ggml: enable AVX512-BF16"      OFF)
-if (NOT MSVC)
-    # in MSVC F16C and FMA is implied with AVX2/AVX512
-    option(GGML_FMA          "ggml: enable FMA"              ${INS_ENB})
-    option(GGML_F16C         "ggml: enable F16C"             ${INS_ENB})
-    # MSVC does not seem to support AMX
-    option(GGML_AMX_TILE     "ggml: enable AMX-TILE"         OFF)
-    option(GGML_AMX_INT8     "ggml: enable AMX-INT8"         OFF)
-    option(GGML_AMX_BF16     "ggml: enable AMX-BF16"         OFF)
-endif()
-option(GGML_LASX             "ggml: enable lasx"             ON)
-option(GGML_LSX              "ggml: enable lsx"              ON)
-option(GGML_RVV              "ggml: enable rvv"              ON)
-option(GGML_RV_ZFH           "ggml: enable riscv zfh"        ON)
-option(GGML_RV_ZVFH          "ggml: enable riscv zvfh"       ON)
-option(GGML_RV_ZICBOP        "ggml: enable riscv zicbop"     ON)
-option(GGML_XTHEADVECTOR     "ggml: enable xtheadvector"     OFF)
-option(GGML_VXE              "ggml: enable vxe"              ${GGML_NATIVE})
-
-option(GGML_CPU_ALL_VARIANTS "ggml: build all variants of the CPU backend (requires GGML_BACKEND_DL)" OFF)
-set(GGML_CPU_ARM_ARCH        "" CACHE STRING "ggml: CPU architecture for ARM")
-set(GGML_CPU_POWERPC_CPUTYPE "" CACHE STRING "ggml: CPU type for PowerPC")
-
-
-if (MINGW)
-    set(GGML_WIN_VER "0xA00" CACHE STRING   "ggml: Windows version")
-endif()
-
-# ggml core
-set(GGML_SCHED_MAX_COPIES  "4" CACHE STRING "ggml: max input copies for pipeline parallelism")
-option(GGML_CPU                             "ggml: enable CPU backend"                        ON)
-
-# 3rd party libs / backends
-option(GGML_ACCELERATE                      "ggml: enable Accelerate framework"               ON)
-option(GGML_BLAS                            "ggml: use BLAS"                                  ${GGML_BLAS_DEFAULT})
-set(GGML_BLAS_VENDOR ${GGML_BLAS_VENDOR_DEFAULT} CACHE STRING
-                                            "ggml: BLAS library vendor")
-option(GGML_LLAMAFILE                       "ggml: use LLAMAFILE"                             ${GGML_LLAMAFILE_DEFAULT})
-
-option(GGML_CUDA                            "ggml: use CUDA"                                  OFF)
-option(GGML_MUSA                            "ggml: use MUSA"                                  OFF)
-option(GGML_CUDA_FORCE_MMQ                  "ggml: use mmq kernels instead of cuBLAS"         OFF)
-option(GGML_CUDA_FORCE_CUBLAS               "ggml: always use cuBLAS instead of mmq kernels"  OFF)
-set   (GGML_CUDA_PEER_MAX_BATCH_SIZE "128" CACHE STRING
-                                            "ggml: max. batch size for using peer access")
-option(GGML_CUDA_NO_PEER_COPY               "ggml: do not use peer to peer copies"            OFF)
-option(GGML_CUDA_NO_VMM                     "ggml: do not try to use CUDA VMM"                OFF)
-option(GGML_CUDA_FA                         "ggml: compile ggml FlashAttention CUDA kernels"  ON)
-option(GGML_CUDA_FA_ALL_QUANTS              "ggml: compile all quants for FlashAttention"     OFF)
-option(GGML_CUDA_GRAPHS                     "ggml: use CUDA graphs (llama.cpp only)"          ${GGML_CUDA_GRAPHS_DEFAULT})
-set   (GGML_CUDA_COMPRESSION_MODE "size" CACHE STRING
-                                            "ggml: cuda link binary compression mode; requires cuda 12.8+")
-set_property(CACHE GGML_CUDA_COMPRESSION_MODE PROPERTY STRINGS "none;speed;balance;size")
-
-option(GGML_HIP                             "ggml: use HIP"                                   OFF)
-option(GGML_HIP_GRAPHS                      "ggml: use HIP graph, experimental, slow"         OFF)
-option(GGML_HIP_NO_VMM                      "ggml: do not try to use HIP VMM"                 ON)
-option(GGML_HIP_ROCWMMA_FATTN               "ggml: enable rocWMMA for FlashAttention"         OFF)
-option(GGML_HIP_MMQ_MFMA                    "ggml: enable MFMA MMA for CDNA in MMQ"           ON)
-option(GGML_HIP_EXPORT_METRICS              "ggml: enable kernel perf metrics output"         OFF)
-option(GGML_MUSA_GRAPHS                     "ggml: use MUSA graph, experimental, unstable"    OFF)
-option(GGML_MUSA_MUDNN_COPY                 "ggml: enable muDNN for accelerated copy"         OFF)
-option(GGML_VULKAN                          "ggml: use Vulkan"                                OFF)
-option(GGML_VULKAN_CHECK_RESULTS            "ggml: run Vulkan op checks"                      OFF)
-option(GGML_VULKAN_DEBUG                    "ggml: enable Vulkan debug output"                OFF)
-option(GGML_VULKAN_MEMORY_DEBUG             "ggml: enable Vulkan memory debug output"         OFF)
-option(GGML_VULKAN_SHADER_DEBUG_INFO        "ggml: enable Vulkan shader debug info"           OFF)
-option(GGML_VULKAN_VALIDATE                 "ggml: enable Vulkan validation"                  OFF)
-option(GGML_VULKAN_RUN_TESTS                "ggml: run Vulkan tests"                          OFF)
-option(GGML_WEBGPU                          "ggml: use WebGPU"                                OFF)
-option(GGML_WEBGPU_DEBUG                    "ggml: enable WebGPU debug output"                OFF)
-option(GGML_WEBGPU_CPU_PROFILE              "ggml: enable WebGPU profiling (CPU)"             OFF)
-option(GGML_WEBGPU_GPU_PROFILE              "ggml: enable WebGPU profiling (GPU)"             OFF)
-
-option(GGML_ZDNN                            "ggml: use zDNN"                                  OFF)
-option(GGML_METAL                           "ggml: use Metal"                                 ${GGML_METAL_DEFAULT})
-option(GGML_METAL_NDEBUG                    "ggml: disable Metal debugging"                   OFF)
-option(GGML_METAL_SHADER_DEBUG              "ggml: compile Metal with -fno-fast-math"         OFF)
-option(GGML_METAL_EMBED_LIBRARY             "ggml: embed Metal library"                       ${GGML_METAL})
-set   (GGML_METAL_MACOSX_VERSION_MIN "" CACHE STRING
-                                            "ggml: metal minimum macOS version")
-set   (GGML_METAL_STD "" CACHE STRING       "ggml: metal standard version (-std flag)")
-option(GGML_OPENMP                          "ggml: use OpenMP"                                ON)
-option(GGML_RPC                             "ggml: use RPC"                                   OFF)
-option(GGML_SYCL                            "ggml: use SYCL"                                  OFF)
-option(GGML_SYCL_F16                        "ggml: use 16 bit floats for sycl calculations"   OFF)
-option(GGML_SYCL_GRAPH                      "ggml: enable graphs in the SYCL backend"         ON)
-option(GGML_SYCL_DNN                        "ggml: enable oneDNN in the SYCL backend"         ON)
-set   (GGML_SYCL_TARGET "INTEL" CACHE STRING
-                                            "ggml: sycl target device")
-set   (GGML_SYCL_DEVICE_ARCH "" CACHE STRING
-                                            "ggml: sycl device architecture")
-
-option(GGML_OPENCL                          "ggml: use OpenCL"                                OFF)
-option(GGML_OPENCL_PROFILING                "ggml: use OpenCL profiling (increases overhead)" OFF)
-option(GGML_OPENCL_EMBED_KERNELS            "ggml: embed kernels"                             ON)
-option(GGML_OPENCL_USE_ADRENO_KERNELS       "ggml: use optimized kernels for Adreno"          ON)
-set   (GGML_OPENCL_TARGET_VERSION "300" CACHE STRING
-                                            "gmml: OpenCL API version to target")
-
-option(GGML_HEXAGON                         "ggml: enable Hexagon backend"                    OFF)
-
-# toolchain for vulkan-shaders-gen
-set   (GGML_VULKAN_SHADERS_GEN_TOOLCHAIN "" CACHE FILEPATH "ggml: toolchain file for vulkan-shaders-gen")
-
-# extra artifacts
-option(GGML_BUILD_TESTS    "ggml: build tests"    ${GGML_STANDALONE})
-option(GGML_BUILD_EXAMPLES "ggml: build examples" ${GGML_STANDALONE})
-
-#
-# dependencies
-#
-
-set(CMAKE_C_STANDARD 11)
-set(CMAKE_C_STANDARD_REQUIRED true)
-
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED true)
-
-set(THREADS_PREFER_PTHREAD_FLAG ON)
-
-find_package(Threads REQUIRED)
-
-include(GNUInstallDirs)
-
-#
-# build the library
-#
-
-add_subdirectory(src)
-
-#
-# Benchmark executables
-#
-
-# AI Completion Benchmark - FULL PRODUCTION VERSION (with comprehensive tests)
-if(EXISTS "${CMAKE_SOURCE_DIR}/tests/benchmark_completions_full.cpp")
-    add_executable(benchmark_completions
-        tests/benchmark_completions_full.cpp
-        src/real_time_completion_engine.cpp
-        src/qtapp/inference_engine.cpp
-        src/qtapp/gguf_loader.cpp
-        src/qtapp/quant_utils.cpp
-        src/qtapp/transformer_inference.cpp
-        src/qtapp/bpe_tokenizer.cpp
-        src/qtapp/sentencepiece_tokenizer.cpp
-        src/qtapp/vocabulary_loader.cpp
-        src/qtapp/inflate_deflate_cpp.cpp
-        src/gguf_loader.cpp
-        src/gguf_vocab_resolver.cpp  # Universal vocab size detection for all GGUF models
-        # Memory-mapped streaming GGUF loader for 3-70GB models
-        src/ai/memory_mapped_file.cpp
-        src/ai/streaming_gguf_loader_qt.cpp
-    )
-    
-    target_link_libraries(benchmark_completions PRIVATE
-        ${ALL_LIBS}
-        brutal_gzip
-        ggml
-        ggml-cpu
-        ggml-vulkan
-    )
-    
-    target_include_directories(benchmark_completions PRIVATE
-        ${CMAKE_SOURCE_DIR}/include
-        ${CMAKE_SOURCE_DIR}/src
-        ${CMAKE_SOURCE_DIR}/src/ai
-        ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
-        ${CMAKE_SOURCE_DIR}/3rdparty/ggml/src
-        ${Qt6_INCLUDE_DIRS}
-    )
-    
-    target_compile_options(benchmark_completions PRIVATE /EHsc /std:c++latest)
-    
-    set_target_properties(benchmark_completions PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/Release"
-    )
-    
-    # Automatic DLL deployment for benchmark_completions
-    deploy_runtime_dependencies(benchmark_completions)
-    
-    message(STATUS "✓ Building benchmark_completions (FULL PRODUCTION VERSION)")
-endif()
-
-#
-# tests and examples
-#
-
-if (GGML_BUILD_TESTS)
-    enable_testing()
-    add_subdirectory(tests)
-endif ()
-
-if (GGML_BUILD_EXAMPLES)
-    add_subdirectory(examples)
-endif ()
-
-#
-# install
-#
-
-include(CMakePackageConfigHelpers)
-
-# all public headers
-set(GGML_PUBLIC_HEADERS
-    include/ggml.h
-    include/ggml-cpu.h
-    include/ggml-alloc.h
-    include/ggml-backend.h
-    include/ggml-blas.h
-    include/ggml-cann.h
-    include/ggml-cpp.h
-    include/ggml-cuda.h
-    include/ggml-opt.h
-    include/ggml-metal.h
-    include/ggml-rpc.h
-    include/ggml-sycl.h
-    include/ggml-vulkan.h
-    include/ggml-webgpu.h
-    include/gguf.h)
-
-set_target_properties(ggml PROPERTIES PUBLIC_HEADER "${GGML_PUBLIC_HEADERS}")
-#if (GGML_METAL)
-#    set_target_properties(ggml PROPERTIES RESOURCE "${CMAKE_CURRENT_SOURCE_DIR}/src/ggml-metal.metal")
 #endif()
-install(TARGETS ggml LIBRARY PUBLIC_HEADER)
-install(TARGETS ggml-base LIBRARY)
 
-if (GGML_STANDALONE)
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/ggml.pc.in
-        ${CMAKE_CURRENT_BINARY_DIR}/ggml.pc
-        @ONLY)
-
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/ggml.pc
-        DESTINATION share/pkgconfig)
+# ========================================
+# MASM Compiler Suite
+# ========================================
+# Custom command to assemble MASM files for the compiler suite
+if(MSVC)
+    enable_language(ASM_MASM)
+    
+    # ========================================
+    # MASM Self-Compiling Compiler Suite Integration
+    # ========================================
+    include(cmake/MASMCompiler.cmake)
 endif()
 
-#
-# Create CMake package
-#
-
-
-
-# Capture variables prefixed with GGML_.
-
-set(variable_set_statements
-"
-####### Expanded from @GGML_VARIABLES_EXPANED@ by configure_package_config_file() #######
-####### Any changes to this file will be overwritten by the next CMake run        #######
-
-")
-
-set(GGML_SHARED_LIB ${BUILD_SHARED_LIBS})
-
-get_cmake_property(all_variables VARIABLES)
-foreach(variable_name IN LISTS all_variables)
-    if(variable_name MATCHES "^GGML_")
-        string(REPLACE ";" "\\;"
-               variable_value "${${variable_name}}")
-
-        set(variable_set_statements
-            "${variable_set_statements}set(${variable_name} \"${variable_value}\")\n")
-    endif()
-endforeach()
-
-set(GGML_VARIABLES_EXPANDED ${variable_set_statements})
-
-# Create the CMake package and set install location.
-
-set(GGML_INSTALL_VERSION ${GGML_VERSION})
-set(GGML_INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_INCLUDEDIR} CACHE PATH "Location of header  files")
-set(GGML_LIB_INSTALL_DIR     ${CMAKE_INSTALL_LIBDIR}     CACHE PATH "Location of library files")
-set(GGML_BIN_INSTALL_DIR     ${CMAKE_INSTALL_BINDIR}     CACHE PATH "Location of binary  files")
-
-configure_package_config_file(
-        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/ggml-config.cmake.in
-        ${CMAKE_CURRENT_BINARY_DIR}/ggml-config.cmake
-    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/ggml
-    PATH_VARS GGML_INCLUDE_INSTALL_DIR
-              GGML_LIB_INSTALL_DIR
-              GGML_BIN_INSTALL_DIR)
-
-write_basic_package_version_file(
-        ${CMAKE_CURRENT_BINARY_DIR}/ggml-version.cmake
-    VERSION ${GGML_INSTALL_VERSION}
-    COMPATIBILITY SameMajorVersion)
-
-target_compile_definitions(ggml-base PRIVATE
-    GGML_VERSION="${GGML_INSTALL_VERSION}"
-    GGML_COMMIT="${GGML_BUILD_COMMIT}"
-)
-message(STATUS "ggml version: ${GGML_INSTALL_VERSION}")
-message(STATUS "ggml commit:  ${GGML_BUILD_COMMIT}")
-
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/ggml-config.cmake
-              ${CMAKE_CURRENT_BINARY_DIR}/ggml-version.cmake
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/ggml)
-
-if (MSVC)
-    set(MSVC_WARNING_FLAGS
-        /wd4005  # Macro redefinition
-        /wd4244  # Conversion from one type to another type, possible loss of data
-        /wd4267  # Conversion from 'size_t' to a smaller type, possible loss of data
-        /wd4305  # Conversion from 'type1' to 'type2', possible loss of data
-        /wd4566  # Conversion from 'char' to 'wchar_t', possible loss of data
-        /wd4996  # Disable POSIX deprecation warnings
-        /wd4702  # Unreachable code warnings
-    )
-    function(disable_msvc_warnings target_name)
-        if(TARGET ${target_name})
-            target_compile_options(${target_name} PRIVATE ${MSVC_WARNING_FLAGS})
-        endif()
-    endfunction()
-
-    disable_msvc_warnings(ggml-base)
-    disable_msvc_warnings(ggml)
-    disable_msvc_warnings(ggml-cpu)
-    disable_msvc_warnings(ggml-cpu-x64)
-    disable_msvc_warnings(ggml-cpu-sse42)
-    disable_msvc_warnings(ggml-cpu-sandybridge)
-    disable_msvc_warnings(ggml-cpu-haswell)
-    disable_msvc_warnings(ggml-cpu-skylakex)
-    disable_msvc_warnings(ggml-cpu-icelake)
-    disable_msvc_warnings(ggml-cpu-alderlake)
-
-    if (GGML_BUILD_EXAMPLES)
-        disable_msvc_warnings(common-ggml)
-        disable_msvc_warnings(common)
-
-        disable_msvc_warnings(mnist-common)
-        disable_msvc_warnings(mnist-eval)
-        disable_msvc_warnings(mnist-train)
-
-        disable_msvc_warnings(gpt-2-ctx)
-        disable_msvc_warnings(gpt-2-alloc)
-        disable_msvc_warnings(gpt-2-backend)
-        disable_msvc_warnings(gpt-2-sched)
-        disable_msvc_warnings(gpt-2-quantize)
-        disable_msvc_warnings(gpt-2-batched)
-
-        disable_msvc_warnings(gpt-j)
-        disable_msvc_warnings(gpt-j-quantize)
-
-        disable_msvc_warnings(magika)
-        disable_msvc_warnings(yolov3-tiny)
-        disable_msvc_warnings(sam)
-
-        disable_msvc_warnings(simple-ctx)
-        disable_msvc_warnings(simple-backend)
-    endif()
-
-    if (GGML_BUILD_TESTS)
-        disable_msvc_warnings(test-mul-mat)
-        disable_msvc_warnings(test-arange)
-        disable_msvc_warnings(test-backend-ops)
-        disable_msvc_warnings(test-cont)
-        disable_msvc_warnings(test-conv-transpose)
-        disable_msvc_warnings(test-conv-transpose-1d)
-        disable_msvc_warnings(test-conv1d)
-        disable_msvc_warnings(test-conv2d)
-        disable_msvc_warnings(test-conv2d-dw)
-        disable_msvc_warnings(test-customop)
-        disable_msvc_warnings(test-dup)
-        disable_msvc_warnings(test-opt)
-        disable_msvc_warnings(test-pool)
-    endif ()
+# ========================================
+# TEST SUITE INTEGRATION
+# ========================================
+if(RAWRXD_BUILD_TESTS)
+    message(STATUS "========================================")
+    message(STATUS "Building Test Suite")
+    message(STATUS "========================================")
+    add_subdirectory(tests)
+    message(STATUS "✓ Test executables configured - run 'ctest' to execute")
 endif()
+
+# ============================================================================
+# Final Project Summary
+# ============================================================================
+message(STATUS "========================================")
+message(STATUS "RawrXD Project Configuration Summary")
+message(STATUS "========================================")
+# ... (summary messages)

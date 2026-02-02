@@ -16,8 +16,10 @@ public: \
 
 // Subsystems
 // ProjectExplorerWidget has real implementation in widgets/project_explorer.h
-DEFINE_STUB_WIDGET(BuildSystemWidget)
-DEFINE_STUB_WIDGET(VersionControlWidget)
+// BuildSystemWidget has REAL implementation in widgets/build_system_widget.h
+// VersionControlWidget has REAL implementation in widgets/version_control_widget.h
+#include "widgets/build_system_widget.h"
+#include "widgets/version_control_widget.h"
 DEFINE_STUB_WIDGET(RunDebugWidget)
 DEFINE_STUB_WIDGET(ProfilerWidget)
 DEFINE_STUB_WIDGET(TestExplorerWidget)

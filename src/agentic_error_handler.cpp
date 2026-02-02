@@ -4,6 +4,7 @@
 #include "agentic_loop_state.h"
 #include <QDebug>
 #include <QDateTime>
+#include <QThread>
 #include <exception>
 
 AgenticErrorHandler::AgenticErrorHandler(QObject* parent)
@@ -123,9 +124,9 @@ QString AgenticErrorHandler::recordError(
     m_errorHistory.push_back(errorContext);
     m_totalErrors++;
 
-    // Keep bounded
+    // Keep bounded - vector doesn't have pop_front, so erase from beginning
     if (m_errorHistory.size() > m_maxErrorMemory) {
-        m_errorHistory.pop_front();
+        m_errorHistory.erase(m_errorHistory.begin());
     }
 
     if (m_observability) {

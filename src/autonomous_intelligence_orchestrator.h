@@ -8,6 +8,7 @@
 #include "autonomous_model_manager.h"
 #include "intelligent_codebase_engine.h"
 #include "autonomous_feature_engine.h"
+#include "cpu_inference_engine.h" // Include the header for CPUInferenceEngine
 
 /**
  * @brief Master Autonomous Intelligence Orchestrator
@@ -25,6 +26,7 @@ private:
     std::unique_ptr<IntelligentCodebaseEngine> codebaseEngine;
     std::unique_ptr<AutonomousFeatureEngine> featureEngine;
     std::unique_ptr<HybridCloudManager> cloudManager;
+    std::unique_ptr<CPUInference::CPUInferenceEngine> inferenceEngine; // Added
     
     // Current state
     QString currentProjectPath;

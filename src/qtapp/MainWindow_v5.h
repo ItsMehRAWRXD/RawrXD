@@ -30,6 +30,7 @@ namespace RawrXD {
     class ModelDownloadDialog;
     class TelemetryOptInDialog;
     class TelemetryWindow;
+    class AICompletionProvider;
 }
 
 class DiffDock;  // Day 2 simplified diff viewer
@@ -137,6 +138,7 @@ private:
     InferenceEngine *m_inferenceEngine;
     RawrXD::PlanOrchestrator *m_planOrchestrator;
     RawrXD::LSPClient *m_lspClient;
+    RawrXD::AICompletionProvider *m_aiCompletionProvider;
     TodoManager *m_todoManager;
     TodoDock *m_todoDock;
 

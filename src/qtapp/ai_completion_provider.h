@@ -45,11 +45,39 @@ class AICompletionProvider : public QObject
     Q_OBJECT
 
 public:
+    /**
+     * Simple constructor for standalone usage (creates internal engine)
+     */
+    explicit AICompletionProvider(QObject* parent = nullptr);
+    
+    /**
+     * Full constructor with external engine and logger
+     */
     explicit AICompletionProvider(
         RealTimeCompletionEngine* engine,
         std::shared_ptr<Logger> logger,
         QObject* parent = nullptr
     );
+    
+    /**
+     * Set model name for completions (e.g., "mistral", "llama2")
+     */
+    void setModel(const QString& modelName);
+    
+    /**
+     * Set model endpoint URL (e.g., "http://localhost:11434")
+     */
+    void setModelEndpoint(const QString& endpoint);
+    
+    /**
+     * Set request timeout in milliseconds
+     */
+    void setRequestTimeout(int timeoutMs);
+    
+    /**
+     * Set maximum number of suggestions to return
+     */
+    void setMaxSuggestions(int count);
 
     /**
      * Request completions for current cursor position
@@ -131,6 +159,11 @@ private:
     RealTimeCompletionEngine* m_engine;
     std::shared_ptr<Logger> m_logger;
     bool m_requestPending{false};
+    bool m_ownsEngine{false};  // True if we created the engine ourselves
+    QString m_modelName{"mistral"};
+    QString m_modelEndpoint{"http://localhost:11434"};
+    int m_requestTimeout{5000};
+    int m_maxSuggestions{5};
 };
 
 } // namespace RawrXD

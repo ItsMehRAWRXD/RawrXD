@@ -9,9 +9,12 @@
 #include <memory>
 #include <vector>
 
+#include "settings_manager.h"
+
 class AgenticEngine;
 class InferenceEngine;
 class ModelTrainer;
+class SettingsManager;
 
 /**
  * @class AgenticExecutor
@@ -74,6 +77,13 @@ public:
     bool detectFailure(const QString& output);
     QString generateCorrectionPlan(const QString& failureReason);
     QJsonObject retryWithCorrection(const QJsonObject& failedStep);
+    
+    // Memory persistence
+    void loadMemorySettings();
+    void removeMemoryItem(const QString& key);
+    void loadMemoryFromDisk();
+    void persistMemoryToDisk();
+    void enforceMemoryLimit();
 
 signals:
     void stepStarted(const QString& description);
@@ -100,10 +110,17 @@ private:
     AgenticEngine* m_agenticEngine = nullptr;
     InferenceEngine* m_inferenceEngine = nullptr;
     std::unique_ptr<ModelTrainer> m_modelTrainer;
+    std::unique_ptr<SettingsManager> m_settingsManager;
     
     QMap<QString, QVariant> m_memory;
     QJsonArray m_executionHistory;
     QString m_currentWorkingDirectory;
+    
+    bool m_memoryEnabled = true;
+    qint64 m_memoryLimitBytes = 100 * 1024 * 1024; // 100MB default
+    bool m_blockDeleteCommands = true; // Block rm/del/rmdir by default
+    void loadSafetySettings();
+    bool isDestructiveCommand(const QString& program, const QStringList& args) const;
     
     int m_maxRetries = 3;
     int m_currentRetryCount = 0;

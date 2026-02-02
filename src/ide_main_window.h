@@ -30,6 +30,11 @@
 #include "cloud_settings_dialog.h"
 #include "metrics_dashboard.h"
 #include "model_router_console.h"
+// Overclock and telemetry integration (CLI parity)
+#include "overclock_governor.h"
+#include "overclock_vendor.h"
+#include "telemetry.h"
+#include "settings.h"
 
 class AutonomousSuggestionWidget;
 class SecurityAlertWidget;
@@ -123,6 +128,15 @@ private slots:
     // Real-time code analysis
     void analyzeCurrentCode();
 
+    // Overclock menu actions (parity with CLI)
+    void onToggleGovernor();
+    void onApplyOverclockProfile();
+    void onResetOffsets();
+    void onIncreaseOffset();
+    void onDecreaseOffset();
+    void onSaveOverclockSettings();
+    void onShowOverclockStatus();
+
 private:
     void setupUI();
     void setupMenus();
@@ -200,6 +214,11 @@ private:
     QString activeModelId;
     bool isAnalyzing;
     QTimer* analysisTimer;
+
+    // === Overclock Governor State (CLI feature parity) ===
+    AppState ocState;
+    OverclockGovernor ocGovernor;
+    bool ocGovernorRunning{false};
 };
 
 #endif // IDE_MAIN_WINDOW_H

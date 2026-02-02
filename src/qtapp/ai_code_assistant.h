@@ -126,8 +126,8 @@ private:
                       const QJsonObject &metadata = QJsonObject());
 
     // Members
-    QNetworkAccessManager *m_networkManager;
-    QProcess *m_process;
+    QNetworkAccessManager *m_networkManager;  // Owned by Qt parent-child relationship
+    QProcess *m_process;                      // Owned by Qt parent-child, lazy-initialized
     QString m_ollamaUrl;
     QString m_model;
     float m_temperature;

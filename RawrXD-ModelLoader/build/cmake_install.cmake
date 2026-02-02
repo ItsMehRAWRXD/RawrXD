@@ -1,8 +1,8 @@
-# Install script for directory: D:/temp/RawrXD-q8-wire/RawrXD-ModelLoader
+# Install script for directory: E:/RawrXD/RawrXD-ModelLoader
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "C:/Program Files (x86)/RawrXD-ModelLoader")
+  set(CMAKE_INSTALL_PREFIX "C:/Program Files/RawrXD-ModelLoader")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -35,7 +35,7 @@ endif()
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
 if(CMAKE_INSTALL_LOCAL_ONLY)
-  file(WRITE "D:/temp/RawrXD-q8-wire/RawrXD-ModelLoader/build/install_local_manifest.txt"
+  file(WRITE "E:/RawrXD/RawrXD-ModelLoader/build/install_local_manifest.txt"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
 endif()
 if(CMAKE_INSTALL_COMPONENT)
@@ -51,6 +51,6 @@ else()
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
-  file(WRITE "D:/temp/RawrXD-q8-wire/RawrXD-ModelLoader/build/${CMAKE_INSTALL_MANIFEST}"
+  file(WRITE "E:/RawrXD/RawrXD-ModelLoader/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
 endif()

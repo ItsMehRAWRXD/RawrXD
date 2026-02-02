@@ -1,8 +1,21 @@
 // Minimal Vulkan stub implementations to satisfy linker when Vulkan library is unavailable.
-// These functions provide no‑op behavior and return success codes where applicable.
-// They are placed in the global namespace with C linkage to match the Vulkan API.
 
 #include <vulkan/vulkan.h>
+#include <cstdio>
+
+// ============================================================================
+// VULKAN STUB IMPLEMENTATIONS - FALLBACK / CPU INFERENCE MODE
+// ============================================================================
+// These functions provide fallback behavior when Vulkan GPU is unavailable.
+// They are placed in the global namespace with C linkage to match the Vulkan API.
+// 
+// PRODUCTION NOTE: For GPU acceleration, either:
+// 1. Link against actual Vulkan SDK libraries
+// 2. Use MASM 64 GPU implementation (src/gpu_masm/)
+// 3. Implement actual GPU compute kernels
+//
+// In production, the CPU inference engine will be used as fallback.
+// ============================================================================
 
 extern "C" {
     // Buffer management

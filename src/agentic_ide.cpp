@@ -12,6 +12,8 @@
 #include "tool_registry.hpp"
 #include "logging/logger.h"
 #include "metrics/metrics.h"
+#include "agentic_file_operations.h"
+#include "agentic_error_handler.h"
 #include <QTimer>
 #include <QShowEvent>
 #include <QDockWidget>
@@ -43,6 +45,16 @@ void AgenticIDE::showEvent(QShowEvent *ev) {
             // Initialize settings (QSettings registry/file access)
             static Settings settings;
             settings.initialize();
+            
+            // Initialize agentic error handler for centralized error management
+            static AgenticErrorHandler errorHandler;
+            
+            // Initialize file operations with Keep/Undo support
+            if (!m_fileOperations) {
+                // Note: AgenticFileOperations constructor takes QObject* parent only
+                m_fileOperations = new AgenticFileOperations(this);
+                qDebug() << "[AgenticIDE] AgenticFileOperations initialized with Keep/Undo support";
+            }
             
             // Initialize multi-tab editor (Qt widgets creation)
             if (!m_multiTabEditor) {

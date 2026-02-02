@@ -34,6 +34,11 @@
 #include <QListWidgetItem>
 #include "Subsystems.h" // Include the stubs/definitions
 
+#include "masm/MASMCompilerWidget.h"
+#include "masm/pe_writer.h"
+#include "masm/elf_writer.h"
+#include "masm/mach_o_writer.h"
+
 QT_BEGIN_NAMESPACE
 /* ---------------  Qt primitives  --------------- */
 class QLineEdit;
@@ -160,6 +165,37 @@ private slots: /* ----------  original slots  ---------- */
     void handleTaskStreaming(const QString& taskId, const QString& chunk, const QString& agentType);
     void handleSaveState();
     void handleLoadState();
+    
+    // ============================================================
+    // Phase C: Data Persistence Methods
+    // ============================================================
+    
+    // Editor State Persistence
+    void saveEditorState();
+    void restoreEditorState();
+    void saveTabState();
+    void restoreTabState();
+    void trackEditorCursorPosition();
+    void trackEditorScrollPosition();
+    
+    // Recent Files Management
+    void addRecentFile(const QString& filePath);
+    QStringList getRecentFiles() const;
+    void clearRecentFiles();
+    void populateRecentFilesMenu(QMenu* recentMenu);
+    
+    // Command History Tracking
+    void addCommandToHistory(const QString& command);
+    QStringList getCommandHistory() const;
+    void clearCommandHistory();
+    int getCommandHistoryLimit() const { return 1000; }
+    
+    // Helper Methods for Persistence
+    void persistEditorContent();
+    void restoreEditorContent();
+    void persistEditorMetadata();
+    void restoreEditorMetadata();
+    
     void handleNewChat();
     void handleNewEditor();
     void handleNewWindow();
@@ -221,6 +257,8 @@ private slots: /* ----------  new IDE-wide slots  ---------- */
     void onTelemetryReady();
     void onUpdateAvailable(const QString& version);
     void onWelcomeProjectChosen(const QString& path);
+    // Refresh the main model selector to include Ollama, cloud, and local GGUF models
+    void refreshModelSelector();
     void onCommandPaletteTriggered(const QString& cmd);
     void onProgressCancelled(const QString& taskId);
     void onQuickFixApplied(const QString& fix);
@@ -315,6 +353,103 @@ private slots: /* ----------  new IDE-wide slots  ---------- */
     void toggleMASMEditor(bool visible);
     void toggleHotpatchPanel(bool visible);
     void toggleInterpretabilityPanel(bool visible);
+    
+    // ============================================================
+    // Eon/ASM Compiler Slots
+    // ============================================================
+    void toggleCompileCurrentFile();
+    void toggleBuildProject();
+    void toggleCleanBuild();
+    void toggleCompilerSettings();
+    void toggleCompilerOutput();
+
+    // ============================================================
+    // File Menu Slots
+    // ============================================================
+    void handleSaveAs();
+    void handleSaveAll();
+    void toggleAutoSave(bool enabled);
+    void handleCloseEditor();
+    void handleCloseAllEditors();
+    void handleCloseFolder();
+    void handlePrint();
+    void handleExport();
+    
+    // ============================================================
+    // Edit Menu Slots
+    // ============================================================
+    void handleUndo();
+    void handleRedo();
+    void handleCut();
+    void handleCopy();
+    void handlePaste();
+    void handleDelete();
+    void handleSelectAll();
+    void handleFind();
+    void handleFindReplace();
+    void handleFindInFiles();
+    void handleGoToLine();
+    void handleGoToSymbol();
+    void handleGoToDefinition();
+    void handleGoToReferences();
+    void handleToggleComment();
+    void handleFormatDocument();
+    void handleFormatSelection();
+    void handleFoldAll();
+    void handleUnfoldAll();
+    
+    // ============================================================
+    // Run/Debug Menu Slots
+    // ============================================================
+    void handleStartDebug();
+    void handleRunNoDebug();
+    void handleStopDebug();
+    void handleRestartDebug();
+    void handleStepOver();
+    void handleStepInto();
+    void handleStepOut();
+    void handleToggleBreakpoint();
+    void handleAddRunConfig();
+    
+    // ============================================================
+    // Terminal Menu Slots
+    // ============================================================
+    void handleNewTerminal();
+    void handleSplitTerminal();
+    void handleKillTerminal();
+    void handleClearTerminal();
+    void handleRunActiveFile();
+    void handleRunSelection();
+    
+    // ============================================================
+    // Window Menu Slots
+    // ============================================================
+    void handleSplitRight();
+    void handleSplitDown();
+    void handleSingleGroup();
+    void handleFullScreen();
+    void handleZenMode();
+    void handleToggleSidebar();
+    void handleResetLayout();
+    void handleSaveLayout();
+    
+    // ============================================================
+    // Tools Menu Slots
+    // ============================================================
+    void handleExternalTools();
+    
+    // ============================================================
+    // Help Menu Slots
+    // ============================================================
+    void handleOpenDocs();
+    void handlePlayground();
+    void handleShowShortcuts();
+    void handleCheckUpdates();
+    void handleReleaseNotes();
+    void handleReportIssue();
+    void handleJoinCommunity();
+    void handleViewLicense();
+    void handleDevTools();
 
 private: /* ---------------  UI creators  --------------- */
     QWidget* createGoalBar();
@@ -500,8 +635,12 @@ private: /* ---------------  new IDE members  --------------- */
     QDockWidget* m_hotpatchPanelDock{};
     
     /* Interpretability Panel - Model Analysis & Diagnostics */
-    class InterpretabilityPanelEnhanced* m_interpretabilityPanel{};
+    QPointer<InterpretabilityPanelEnhanced> m_interpretabilityPanel{};
     QDockWidget* m_interpretabilityPanelDock{};
+
+    // MASM Compiler Integration
+    std::unique_ptr<MASMCompilerWidget> m_masmCompiler;
+    QDockWidget* m_masmDock;
 
     /* VS Code-like Layout Components */
     class ActivityBar* m_activityBar{};
@@ -518,6 +657,31 @@ private: /* ---------------  new IDE members  --------------- */
     QString m_agentMode{"Plan"};
     QActionGroup* m_agentModeGroup{};
     QActionGroup* m_backendGroup{};
+    
+    /* ============================================================
+     * Phase C: Data Persistence Members
+     * ============================================================ */
+    QStringList m_recentFiles;          // List of recent file paths (20 max)
+    QStringList m_commandHistory;       // Circular buffer of executed commands (1000 max)
+    
+    // Editor state tracking
+    struct EditorState {
+        QString filePath;               // Current file path
+        int cursorLine = 0;             // Cursor line number
+        int cursorColumn = 0;           // Cursor column number
+        int scrollPosition = 0;         // Scroll offset
+        QByteArray selectionStart;      // Selection start position
+        QByteArray selectionEnd;        // Selection end position
+    };
+    QMap<int, EditorState> m_editorStates;  // State per tab (tab index -> state)
+    int m_activeTabIndex = -1;          // Currently active tab index
+    
+    // Metrics for observability
+    qint64 m_lastSaveTime = 0;          // Timestamp of last save
+    qint64 m_lastRestoreTime = 0;       // Timestamp of last restore
+    qint64 m_persistenceSaveMs = 0;     // Duration of save operation in ms
+    qint64 m_persistenceRestoreMs = 0;  // Duration of restore operation in ms
+    qint64 m_persistenceDataSize = 0;   // Total data persisted in bytes
     
     void createVSCodeLayout();
     void applyDarkTheme();

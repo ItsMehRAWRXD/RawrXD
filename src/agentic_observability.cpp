@@ -3,6 +3,7 @@
 #include <QDebug>
 #include <QUuid>
 #include <QJsonDocument>
+#include <QRandomGenerator>
 #include <algorithm>
 #include <cmath>
 
@@ -98,7 +99,7 @@ void AgenticObservability::logCritical(
 std::vector<AgenticObservability::LogEntry> AgenticObservability::getLogs(
     int limit,
     LogLevel minLevel,
-    const QString& component)
+    const QString& component) const
 {
     std::vector<LogEntry> filtered;
 
@@ -118,7 +119,7 @@ std::vector<AgenticObservability::LogEntry> AgenticObservability::getLogs(
 std::vector<AgenticObservability::LogEntry> AgenticObservability::getLogsByTimeRange(
     const QDateTime& start,
     const QDateTime& end,
-    LogLevel minLevel)
+    LogLevel minLevel) const
 {
     std::vector<LogEntry> filtered;
 
@@ -268,7 +269,7 @@ std::unique_ptr<AgenticObservability::TimingGuard> AgenticObservability::measure
 
 std::vector<AgenticObservability::MetricPoint> AgenticObservability::getMetrics(
     const QString& pattern,
-    int limit)
+    int limit) const
 {
     std::vector<MetricPoint> filtered;
 
@@ -279,7 +280,7 @@ std::vector<AgenticObservability::MetricPoint> AgenticObservability::getMetrics(
         filtered.push_back(metric);
     }
 
-    if (limit > 0 && filtered.size() > limit) {
+    if (limit > 0 && static_cast<int>(filtered.size()) > limit) {
         filtered.erase(filtered.begin(), filtered.end() - limit);
     }
 
@@ -428,7 +429,7 @@ AgenticObservability::TraceSpan* AgenticObservability::getSpan(const QString& sp
 }
 
 std::vector<AgenticObservability::TraceSpan> AgenticObservability::getTraceSpans(
-    const QString& traceId)
+    const QString& traceId) const
 {
     std::vector<TraceSpan> spans;
 
@@ -445,7 +446,7 @@ std::vector<AgenticObservability::TraceSpan> AgenticObservability::getTraceSpans
     return spans;
 }
 
-QJsonObject AgenticObservability::getTraceVisualization(const QString& traceId)
+QJsonObject AgenticObservability::getTraceVisualization(const QString& traceId) const
 {
     QJsonObject visualization;
 
@@ -506,7 +507,9 @@ QJsonObject AgenticObservability::getPerformanceSummary() const
     // Find latency-related metrics
     for (const auto& metric : m_metrics) {
         if (metric.metricName.contains("duration")) {
-            auto stats = getHistogramStats(metric.metricName.replace("_duration", ""));
+            QString histogramName = metric.metricName;
+            histogramName.replace("_duration", "");
+            auto stats = getHistogramStats(histogramName);
             summary[metric.metricName] = stats;
         }
     }
