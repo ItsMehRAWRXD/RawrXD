@@ -392,6 +392,33 @@ int main(int argc, char** argv) {
                 }
                 break;
             }
+            // [FEATURE] Interactive Agent Mode
+            case 'i': { 
+                std::cout << "\n=== Interactive Agent Mode (Full Agentic) ===\n";
+                std::cout << "Type /help for commands.\n";
+                // Ensure engine is ready
+                if (!RawrXD::AIIntegrationHub::getInstance().isInitialized()) {
+                    RawrXD::AIIntegrationHub::getInstance().initialize("models/model.gguf");
+                }
+                auto agent = RawrXD::AIIntegrationHub::getInstance().getAgenticEngine();
+                
+                std::string input;
+                bool agentLoop = true;
+                while(agentLoop) {
+                    std::cout << "\nRawrXD> ";
+                    std::getline(std::cin, input);
+                    if (input == "exit" || input == "quit") { agentLoop = false; break; }
+                    
+                    if (input.empty()) continue;
+                    
+                    // Direct pass to AgenticEngine::processQuery for handling:
+                    // /plan, /react-server, /bugreport, /research, etc.
+                    std::string response = agent->processQuery(input);
+                    std::cout << "\n[Agent]: " << response << "\n";
+                }
+                std::cout << "Exiting Agent Mode.\n";
+                break;
+            }
             case 'q':
                 running = false; break;
             default:
