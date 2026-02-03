@@ -294,6 +294,10 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
     } catch (...) {
         OutputDebugStringA("FATAL: Logger initialization failed with unknown exception\n");
     }
+
+    // Initialize Agentic Bridge (Native)
+    initializeAgenticBridge();
+
     
     // DIAGNOSTIC: After logger section
     {
@@ -5370,48 +5374,27 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
     m_currentInferencePrompt = prompt;
     m_inferenceCallback = callback;
     
-    // Launch dedicated inference thread
+    // Launch dedicated inference thread using Native Agentic Bridge
     m_inferenceThread = std::thread([this, prompt]() {
-        // 1. Try Native CPU Engine with Streaming
-        if (m_nativeEngine) {
-             RawrXD::CPUInferenceEngine* engine = static_cast<RawrXD::CPUInferenceEngine*>(m_nativeEngine);
-             if (engine->isModelLoaded()) {
-                 // Configure sampling (ensure thread-safe access if needed)
-                 engine->setSampling(
-                     m_inferenceConfig.temperature,
-                     m_inferenceConfig.topP,
-                     m_inferenceConfig.topK,
-                     m_inferenceConfig.repetitionPenalty
-                 );
-                 
-                 // Run generation with per-token callback
-                 bool success = engine->generate(prompt, [this](const std::string& token) {
-                     if (m_inferenceStopRequested) return false;
-                     
-                     // Send token to UI
-                     if (m_inferenceCallback) {
-                         m_inferenceCallback(token, false);
-                     }
-                     return true;
-                 });
-                 
-                 m_inferenceRunning = false;
-                 if (m_inferenceCallback) {
-                     m_inferenceCallback("", true); // Finalize
-                 }
-                 return;
-             }
+        if (!m_agenticBridge) {
+             if (m_inferenceCallback) m_inferenceCallback("Error: Agentic Bridge not initialized.", true);
+             m_inferenceRunning = false;
+             return;
         }
 
-        // 2. Fallback: Synchronous Blocking Call (Ollama/Legacy)
-        // If native engine failed or wasn't loaded, we fall back to the blocking method
-        // but execute it in this background thread so UI doesn't freeze.
-        std::string response = generateResponse(prompt);
-        
+        // Set callback to route NativeAgent stream to the UI
+        m_agenticBridge->SetOutputCallback([this](const std::string& type, const std::string& msg) {
+             if (m_inferenceStopRequested) return;
+             // "stream" type is what we send to chat UI
+             if (m_inferenceCallback) m_inferenceCallback(msg, false);
+        });
+
+        // Execute via parity bridge (supports /edit, /think, etc.)
+        m_agenticBridge->ExecuteAgentCommand(prompt);
+
         m_inferenceRunning = false;
         if (m_inferenceCallback) {
-            // Send full response as one chunk if fallback was used
-            m_inferenceCallback(response, true);
+            m_inferenceCallback("", true); // Finalize
         }
     });
     
