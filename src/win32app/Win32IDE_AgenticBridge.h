@@ -11,6 +11,7 @@
 #include <vector>
 #include <functional>
 #include <memory>
+#include "../native_agent.hpp"
 
 // Forward declaration
 class Win32IDE;
@@ -63,6 +64,10 @@ public:
     void SetOutputCallback(OutputCallback callback);
 
 private:
+   // Native Integration
+    std::unique_ptr<CPUInference::CPUInferenceEngine> m_nativeEngine;
+    std::unique_ptr<RawrXD::NativeAgent> m_nativeAgent;
+
     // PowerShell process management
     bool SpawnPowerShellProcess(const std::string& scriptPath, const std::string& arguments);
     bool ReadProcessOutput(std::string& output, DWORD timeoutMs = 5000);

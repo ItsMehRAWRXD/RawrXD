@@ -4,6 +4,7 @@
 #include "Win32IDE_AgenticBridge.h"
 #include "IDELogger.h"
 #include "Win32IDE.h"
+#include "../advanced_agent_features.hpp"
 #include <sstream>
 #include <algorithm>
 #include <regex>
@@ -57,7 +58,25 @@ bool AgenticBridge::Initialize(const std::string& frameworkPath, const std::stri
     if (!modelName.empty()) {
         m_modelName = modelName;
     }
+
+    // Initialize Native Engine
+    m_nativeEngine = std::make_unique<CPUInference::CPUInferenceEngine>();
+    // Try to load model immediately if known
+    if (!m_modelName.empty()) {
+        if (m_nativeEngine->LoadModel("D:/OllamaModels/" + m_modelName + ".gguf")) { // Simplified path assumption
+             LOG_INFO("Native Engine loaded model: " + m_modelName);
+        } else {
+             // Fallback search or just init
+             LOG_WARNING("Native Engine could not autoload model. User must load.");
+        }
+    }
+    m_nativeAgent = std::make_unique<RawrXD::NativeAgent>(m_nativeEngine.get());
     
+    // Wire output
+    m_nativeAgent->SetOutputCallback([this](const std::string& chunk) {
+         if (m_outputCallback) m_outputCallback("", chunk);
+    });
+
     m_initialized = true;
     LOG_INFO("AgenticBridge initialized successfully with model: " + m_modelName);
     
@@ -68,6 +87,108 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt) {
     LOG_INFO("ExecuteAgentCommand: " + prompt);
     
     AgentResponse response;
+    
+    if (m_nativeAgent && m_nativeEngine && m_nativeEngine->IsModelLoaded()) {
+        response.type = AgentResponseType::ANSWER;
+        LOG_INFO("Using Native Agent for inference");
+        
+        // Handle Slash Commands
+        std::string finalPrompt = prompt;
+        if (prompt.find("/bugreport ") == 0) {
+             std::string path = prompt.substr(11);
+             m_nativeAgent->BugReport(path); 
+             return response; // Output goes to streaming callback
+        }
+        else if (prompt.find("/edit ") == 0) {
+             // Syntax: /edit file path instructions...
+             // Simplified parsing
+             std::string rest = prompt.substr(6);
+             size_t spacePos = rest.find(' ');
+             if (spacePos != std::string::npos) {
+                 std::string path = rest.substr(0, spacePos);
+                 std::string inst = rest.substr(spacePos + 1);
+                 m_nativeAgent->Edit(path, inst);
+             } else {
+                 m_outputCallback("", "Usage: /edit <file> <instructions>");
+             }
+             return response;
+        }
+        else if (prompt.find("/suggest ") == 0) {
+             std::string path = prompt.substr(9);
+             m_nativeAgent->Suggest(path);
+             return response;
+        }
+        else if (prompt.find("/plan ") == 0) {
+             std::string task = prompt.substr(6);
+             m_nativeAgent->Plan(task);
+             return response;
+        }
+        else if (prompt.find("/patch ") == 0) {
+             std::string path = prompt.substr(7);
+             m_nativeAgent->HotPatch(path);
+             return response;
+        }
+        else if (prompt.find("/edit ") == 0) {
+             // simplified parsing: /edit file instructions...
+             std::string rest = prompt.substr(6);
+             size_t space = rest.find(' ');
+             if (space != std::string::npos) {
+                 std::string file = rest.substr(0, space);
+                 std::string inst = rest.substr(space + 1);
+                 m_nativeAgent->Edit(file, inst);
+             }
+             return response; 
+        }
+        else if (prompt == "/max") {
+             m_nativeAgent->SetMaxMode(true);
+             m_outputCallback("", "Max Mode Enabled (Native Threads)");
+             return response;
+        }
+        else if (prompt == "/think") {
+             static bool t = false; t = !t;
+             m_nativeAgent->SetDeepThink(t);
+             m_outputCallback("", std::string("Deep Thinking ") + (t ? "Enabled" : "Disabled"));
+             return response;
+        }
+        else if (prompt == "/research") {
+             static bool r = false; r = !r;
+             m_nativeAgent->SetDeepResearch(r);
+             m_outputCallback("", std::string("Deep Research ") + (r ? "Enabled" : "Disabled"));
+             return response;
+        }
+        else if (prompt == "/norefusal") {
+             static bool n = false; n = !n;
+             m_nativeAgent->SetNoRefusal(n);
+             m_outputCallback("", std::string("No Refusal Mode ") + (n ? "Enabled" : "Disabled"));
+             return response;
+        }
+        else if (prompt == "/react-server") {
+             m_outputCallback("", "Generating React Server Architecture...");
+             if (RawrXD::ReactServerGenerator::Generate("react-server", "rawrxd-app")) {
+                 m_outputCallback("", "React Server generated in ./react-server");
+                 response.content = "React Server Generated.";
+             } else {
+                 m_outputCallback("", "Failed to generate React Server.");
+                 response.type = AgentResponseType::AGENT_ERROR;
+             }
+             return response;
+        }
+        
+        // Accumulate output into response.content for return, though callback handles streaming
+        std::string fullAccumulator;
+        m_nativeAgent->SetOutputCallback([&](const std::string& s) {
+             fullAccumulator += s;
+             if (m_outputCallback) m_outputCallback("", s);
+        });
+
+        // Trigger generation
+        m_nativeAgent->Ask(prompt);
+        
+        response.content = fullAccumulator;
+        return response;
+    }
+
+    // Fallback to legacy PowerShell if native not ready
     response.type = AgentResponseType::AGENT_ERROR;
     
     if (!m_initialized) {
@@ -98,6 +219,7 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt) {
         response.rawOutput = output;
         LOG_DEBUG("Agent response received: " + std::to_string(output.length()) + " bytes");
     } else {
+
         response.content = "Failed to read agent output";
         LOG_ERROR(response.content);
     }

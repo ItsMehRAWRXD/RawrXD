@@ -4,6 +4,8 @@
 #include "settings.h"
 #include "overclock_governor.h"
 #include "overclock_vendor.h"
+#include "native_agent.hpp"
+#include "cpu_inference_engine.h"
 #include <iostream>
 #include <thread>
 #include <atomic>
@@ -152,8 +154,14 @@ int main(int argc, char** argv) {
         governor_running = true;
     }
 
+    // Initialize Inference Engine and Agent
+    std::cout << "Initializing Native Inference Engine..." << std::endl;
+    static CPUInference::CPUInferenceEngine engine;
+    static RawrXD::NativeAgent agent(&engine);
+
     std::cout << "Commands: h=help, p=status, g=toggle governor, a=apply profile, r=reset offsets, +=inc offset, -=dec offset, s=save settings" << std::endl;
     std::cout << "          x=analyze file, t=generate tests, y=security scan, o=optimize scan, q=quit" << std::endl;
+    std::cout << "          /=enter command mode (load, agent, etc.)" << std::endl;
 
     std::string lastFilePath;  // Track last used file for convenience
     bool running = true;
@@ -162,6 +170,104 @@ int main(int argc, char** argv) {
         if (_kbhit()) {
             int c = _getch();
             switch (c) {
+            case '/': // Command Mode
+            case 'c': {
+                std::cout << "\nRawrXD> ";
+                std::string cmd;
+                std::getline(std::cin, cmd);
+                
+                std::stringstream ss(cmd);
+                std::string action;
+                ss >> action;
+                
+                if (action == "/load") {
+                    std::string path;
+                    std::getline(ss, path);
+                    if (!path.empty()) path = path.substr(1); // remove leading space
+                    if (engine.LoadModel(path)) {
+                        std::cout << "Model loaded successfully: " << path << std::endl;
+                    } else {
+                        std::cout << "Failed to load model." << std::endl;
+                    }
+                }
+                else if (action == "/agent") {
+                    std::string query;
+                    std::getline(ss, query);
+                    if (!query.empty()) agent.Ask(query.substr(1));
+                }
+                else if (action == "/plan") {
+                    std::string task;
+                    std::getline(ss, task);
+                    if (!task.empty()) agent.Plan(task.substr(1));
+                }
+                else if (action == "/bugreport") {
+                    std::cout << "Target File: ";
+                    std::string f;
+                    std::getline(std::cin, f);
+                    if (!f.empty()) agent.BugReport(f);
+                }
+                else if (action == "/edit") {
+                     std::cout << "Target File: ";
+                     std::string f;
+                     std::getline(std::cin, f);
+                     std::cout << "Instructions: ";
+                     std::string i;
+                     std::getline(std::cin, i);
+                     if (!f.empty()) agent.Edit(f, i);
+                }
+                else if (action == "/suggest") {
+                    std::cout << "Target File: ";
+                    std::string f;
+                    std::getline(std::cin, f);
+                    agent.Suggest(f);
+                }
+                else if (action == "/edit") {
+                    std::cout << "Target File: ";
+                    std::string f;
+                    std::getline(std::cin, f);
+                    std::cout << "Instructions: ";
+                    std::string i;
+                    std::getline(std::cin, i);
+                    agent.Edit(f, i);
+                }
+                else if (action == "/patch") {
+                     std::cout << "Target File: ";
+                     std::string f;
+                     std::getline(std::cin, f);
+                     agent.HotPatch(f);
+                }
+                else if (action == "/react_server") {
+                    agent.CreateReactServerPlan();
+                }
+                else if (action == "/max") {
+                    static bool maxMode = false;
+                    maxMode = !maxMode;
+                    agent.SetMaxMode(maxMode);
+                    std::cout << "Max Mode: " << (maxMode ? "ON" : "OFF") << std::endl;
+                }
+                else if (action == "/think") {
+                    static bool think = false;
+                    think = !think;
+                    agent.SetDeepThink(think);
+                    std::cout << "Deep Thinking: " << (think ? "ON" : "OFF") << std::endl;
+                }
+                else if (action == "/research") {
+                    static bool res = false;
+                    res = !res;
+                    agent.SetDeepResearch(res);
+                    std::cout << "Deep Research: " << (res ? "ON" : "OFF") << std::endl;
+                }
+                else if (action == "/norefusal") {
+                    static bool nr = false;
+                    nr = !nr;
+                    agent.SetNoRefusal(nr);
+                    std::cout << "No Refusal: " << (nr ? "ON" : "OFF") << std::endl;
+                }
+                else {
+                    std::cout << "Unknown command. Try /load, /agent, /plan, /bugreport, /max, /think" << std::endl;
+                }
+                break;
+            }
             case 'h':
                 std::cout << "h=help, p=status, g=toggle governor, a=apply profile, r=reset, +=inc, -=dec, s=save" << std::endl;
                 std::cout << "x=analyze file, t=generate tests, y=security scan, o=optimize scan, q=quit" << std::endl;
