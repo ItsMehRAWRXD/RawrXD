@@ -9,12 +9,12 @@
 ; ============================================================
 
 ; Assembler directives
-.686p
-.xmm
-.model flat, stdcall
-.option casemap:none
-.option frame:auto
-.option win64:3
+; .686p
+; .xmm
+; .model flat, stdcall
+; .option casemap:none
+; .option frame:auto
+; .option win64:3
 
 ; ============================================================
 ; EXTERNAL IMPORTS
@@ -58,9 +58,9 @@ DMA_TYPE_VULKAN             EQU 1
 DMA_TYPE_DIRECTSTORAGE      EQU 2
 
 ; Kernel types
-KERNEL_NF4                  EQU 0
-KERNEL_PREFETCH             EQU 1
-KERNEL_COPY                 EQU 2
+KERNEL_TYPE_NF4                  EQU 0
+KERNEL_TYPE_PREFETCH             EQU 1
+KERNEL_TYPE_COPY                 EQU 2
 
 ; Thresholds
 COPY_SMALL_THRESHOLD        EQU 256
@@ -87,7 +87,7 @@ FLAG_PREFETCH_L2            EQU 00000800h
 
 ; NF4 Lookup Table (16 float values for 4-bit dequantization)
 ; Values from QLoRA paper: Normal Float 4-bit quantization
-align 64
+ALIGN 16
 NF4_Lookup_Table REAL4 16 DUP(0.0)
 ; Initialized in Titan_InitializeDMA
 
@@ -248,7 +248,7 @@ UpdateStats ENDP
 ;   RAX = bytes processed
 ; Clobbers: zmm0-zmm7, rax, rbx, rcx, rdx, rsi, rdi
 ; ============================================================
-Kernel_NF4_Decompress PROC PRIVATE FRAME
+KERNEL_TYPE_NF4_Decompress PROC PRIVATE FRAME
     push rbx
     .PUSHREG RBX
     push rsi
@@ -362,7 +362,7 @@ Kernel_NF4_Decompress PROC PRIVATE FRAME
     pop rbx
     pop rbp
     ret
-Kernel_NF4_Decompress ENDP
+KERNEL_TYPE_NF4_Decompress ENDP
 
 ; ============================================================
 ; KERNEL: Prefetch (Private)
@@ -372,7 +372,7 @@ Kernel_NF4_Decompress ENDP
 ;   RDX = size in bytes
 ;   R8 = prefetch level (0=L1, 1=L2, 2=L3)
 ; ============================================================
-Kernel_Prefetch PROC PRIVATE FRAME
+RawrXD_Kernel_Prefetch PROC PRIVATE FRAME
     push rsi
     .PUSHREG RSI
     push rdi
@@ -425,7 +425,7 @@ Kernel_Prefetch PROC PRIVATE FRAME
     pop rdi
     pop rsi
     ret
-Kernel_Prefetch ENDP
+RawrXD_Kernel_Prefetch ENDP
 
 ; ============================================================
 ; KERNEL: Copy Optimized (Private)
@@ -436,7 +436,7 @@ Kernel_Prefetch ENDP
 ;   R8 = size
 ;   R9 = flags (non-temporal hint)
 ; ============================================================
-Kernel_Copy PROC PRIVATE FRAME
+RawrXD_Kernel_Copy PROC PRIVATE FRAME
     push rbx
     .PUSHREG RBX
     push rsi
@@ -520,7 +520,7 @@ Kernel_Copy PROC PRIVATE FRAME
     pop rsi
     pop rbx
     ret
-Kernel_Copy ENDP
+RawrXD_Kernel_Copy ENDP
 
 ; ============================================================
 ; PUBLIC: Titan_ExecuteComputeKernel
@@ -568,11 +568,11 @@ Titan_ExecuteComputeKernel PROC FRAME
     mov r15, rax                            ; Start time
     
     ; Dispatch based on kernel type
-    cmp r12d, KERNEL_NF4
+    cmp r12d, KERNEL_TYPE_NF4
     je @@do_nf4
-    cmp r12d, KERNEL_PREFETCH
+    cmp r12d, KERNEL_TYPE_PREFETCH
     je @@do_prefetch
-    cmp r12d, KERNEL_COPY
+    cmp r12d, KERNEL_TYPE_COPY
     je @@do_copy
     jmp @@invalid_kernel
     
@@ -581,7 +581,7 @@ Titan_ExecuteComputeKernel PROC FRAME
     mov rcx, QWORD PTR [r13]                ; srcAddr
     mov rdx, QWORD PTR [r13+8]              ; dstAddr
     mov r8, QWORD PTR [r13+16]              ; size
-    call Kernel_NF4_Decompress
+    call RawrXD_Kernel_NF4_Decompress
     jmp @@success
     
 @@do_prefetch:
@@ -589,7 +589,7 @@ Titan_ExecuteComputeKernel PROC FRAME
     mov rcx, QWORD PTR [r13]                ; address
     mov rdx, QWORD PTR [r13+16]             ; size
     mov r8, QWORD PTR [r13+24]              ; level (param1)
-    call Kernel_Prefetch
+    call RawrXD_Kernel_Prefetch
     jmp @@success
     
 @@do_copy:
@@ -598,7 +598,7 @@ Titan_ExecuteComputeKernel PROC FRAME
     mov rdx, QWORD PTR [r13+8]              ; dst
     mov r8, QWORD PTR [r13+16]              ; size
     mov r9d, DWORD PTR [r13+48]             ; flags
-    call Kernel_Copy
+    call RawrXD_Kernel_Copy
     jmp @@success
     
 @@invalid_kernel:
@@ -696,7 +696,7 @@ Titan_PerformCopy PROC FRAME
     mov rdx, r14
     mov r8, r15
     mov r9, rbx
-    call Kernel_Copy
+    call RawrXD_Kernel_Copy
     
     ; Calculate timing
     call GetTimestampUs
@@ -972,7 +972,7 @@ Titan_GetDMAStats ENDP
 ; DATA: Helper masks
 ; ============================================================
 .data
-align 64
+ALIGN 16
 low_nibble_mask DWORD 16 DUP(0Fh)           ; 64 bytes of 0x0F
 
 ; ============================================================
@@ -1124,21 +1124,21 @@ PERF_COUNTERS ENDS
 .DATA
 
 ; NF4 Dequantization Lookup Table (16 float values, 64-byte aligned)
-ALIGN 64
+ALIGN 16
 nf4_lookup_table REAL4 -1.0, -0.6961928, -0.5250731, -0.3949175
                  REAL4 -0.2844414, -0.1847734, -0.0910500, 0.0
                  REAL4 0.0795803, 0.1609302, 0.2461123, 0.3379152
                  REAL4 0.4407098, 0.5626170, 0.7229568, 1.0
 
 ; Nibble mask for NF4 extraction
-ALIGN 64
+ALIGN 16
 nf4_mask_low     DWORD 16 DUP(0Fh)
 
 ; Kernel dispatch table
 ALIGN 8
-kernel_dispatch_table QWORD OFFSET Kernel_NF4_Decompress
-                      QWORD OFFSET Kernel_Prefetch
-                      QWORD OFFSET Kernel_Copy
+kernel_dispatch_table QWORD OFFSET KERNEL_TYPE_NF4_Decompress
+                      QWORD OFFSET RawrXD_Kernel_Prefetch
+                      QWORD OFFSET KERNEL_TYPE_COPY
 
 ; Copy strategy table [direction]
 copy_strategy_table BYTE DMA_TYPE_DIRECTSTORAGE  ; H2D
@@ -1275,11 +1275,11 @@ AtomicIncrement64 ENDP
 ;=============================================================================
 
 ;-----------------------------------------------------------------------------
-; Kernel_NF4_Decompress - AVX-512 NF4 Decompression Kernel
+; KERNEL_TYPE_NF4_Decompress - AVX-512 NF4 Decompression Kernel
 ; RCX = KERNEL_PARAMS*
 ; Returns: EAX = status
 ;-----------------------------------------------------------------------------
-Kernel_NF4_Decompress PROC
+KERNEL_TYPE_NF4_Decompress PROC
     push rbx
     push rsi
     push rdi
@@ -1393,14 +1393,14 @@ nf4_cleanup:
     pop rsi
     pop rbx
     ret
-Kernel_NF4_Decompress ENDP
+KERNEL_TYPE_NF4_Decompress ENDP
 
 ;-----------------------------------------------------------------------------
-; Kernel_Prefetch - Memory Prefetch Kernel
+; KERNEL_TYPE_PREFETCH - Memory Prefetch Kernel
 ; RCX = KERNEL_PARAMS*
 ; Returns: EAX = status
 ;-----------------------------------------------------------------------------
-Kernel_Prefetch PROC
+RawrXD_Kernel_Prefetch_2 PROC
     push rbx
     push r12
     push r13
@@ -1470,14 +1470,14 @@ prefetch_cleanup:
     pop r12
     pop rbx
     ret
-Kernel_Prefetch ENDP
+RawrXD_Kernel_Prefetch_2 ENDP
 
 ;-----------------------------------------------------------------------------
-; Kernel_Copy - Optimized Memory Copy Kernel
+; KERNEL_TYPE_COPY - Optimized Memory Copy Kernel
 ; RCX = KERNEL_PARAMS*
 ; Returns: EAX = status
 ;-----------------------------------------------------------------------------
-Kernel_Copy PROC
+RawrXD_Kernel_Copy_2 PROC
     push rbx
     push rsi
     push rdi
@@ -1582,7 +1582,7 @@ copy_cleanup:
     pop rsi
     pop rbx
     ret
-Kernel_Copy ENDP
+RawrXD_Kernel_Copy_2 ENDP
 
 ;=============================================================================
 ; MAIN EXPORTED FUNCTIONS
@@ -2002,9 +2002,9 @@ END
 ; Features: AVX-512, NF4 Decompression, DirectStorage, Vulkan DMA
 ;=============================================================================
 
-.686P
-.XMM
-.model flat, c
+; .686P
+; .XMM
+; .model flat, c
 OPTION CASEMAP:NONE
 
 ;=============================================================================
@@ -2127,14 +2127,14 @@ DMA_STATS ENDS
 .DATA
 
 ; NF4 Dequantization Lookup Table (16 float values)
-ALIGN 64
+ALIGN 16
 nf4_lookup_table REAL4 -1.0, -0.6961928, -0.5250731, -0.3949175
                  REAL4 -0.2844414, -0.1847734, -0.09105004, 0.0
                  REAL4 0.0795803, 0.1609302, 0.2461123, 0.3379152
                  REAL4 0.4407098, 0.562617, 0.7229568, 1.0
 
 ; NF4 nibble mask for extraction
-ALIGN 64
+ALIGN 16
 nf4_mask_low DWORD 16 DUP(0Fh)
 
 ; Statistics
@@ -2295,11 +2295,11 @@ ValidateMemoryRange ENDP
 ;=============================================================================
 
 ;-----------------------------------------------------------------------------
-; Kernel_NF4_Decompress - AVX-512 NF4 Decompression Kernel
+; KERNEL_TYPE_NF4_Decompress - AVX-512 NF4 Decompression Kernel
 ;-----------------------------------------------------------------------------
 ; Parameters: RCX = KERNEL_PARAMS ptr
 ; Returns: EAX = status
-Kernel_NF4_Decompress PROC FRAME
+KERNEL_TYPE_NF4_Decompress PROC FRAME
     LOCAL local_src:QWORD
     LOCAL local_dst:QWORD
     LOCAL local_size:QWORD
@@ -2406,14 +2406,14 @@ nf4_cleanup:
     pop r14
     pop r15
     ret
-Kernel_NF4_Decompress ENDP
+KERNEL_TYPE_NF4_Decompress ENDP
 
 ;-----------------------------------------------------------------------------
-; Kernel_Prefetch - Memory Prefetch Kernel
+; KERNEL_TYPE_PREFETCH - Memory Prefetch Kernel
 ;-----------------------------------------------------------------------------
 ; Parameters: RCX = KERNEL_PARAMS ptr
 ; Prefetches memory range into specified cache level
-Kernel_Prefetch PROC FRAME
+RawrXD_Kernel_Prefetch_3 PROC FRAME
     push r12
     .pushreg r12
     push r13
@@ -2471,14 +2471,14 @@ prefetch_cleanup:
     pop r13
     pop r12
     ret
-Kernel_Prefetch ENDP
+RawrXD_Kernel_Prefetch_3 ENDP
 
 ;-----------------------------------------------------------------------------
-; Kernel_Copy - Optimized Memory Copy Kernel
+; KERNEL_TYPE_COPY - Optimized Memory Copy Kernel
 ;-----------------------------------------------------------------------------
 ; Parameters: RCX = KERNEL_PARAMS ptr
 ;-----------------------------------------------------------------------------
-Kernel_Copy PROC FRAME
+RawrXD_Kernel_Copy_3 PROC FRAME
     push r15
     .pushreg r15
     push r14
@@ -2575,7 +2575,7 @@ copy_cleanup:
     pop r14
     pop r15
     ret
-Kernel_Copy ENDP
+RawrXD_Kernel_Copy_3 ENDP
 
 ;=============================================================================
 ; MAIN EXPORTED FUNCTIONS
@@ -2626,17 +2626,17 @@ Titan_ExecuteComputeKernel PROC EXPORT FRAME
     
 exec_copy:
     mov rcx, r13
-    call Kernel_Copy
+    call RawrXD_Kernel_Copy
     jmp exec_done
     
 exec_nf4:
     mov rcx, r13
-    call Kernel_NF4_Decompress
+    call RawrXD_Kernel_NF4_Decompress
     jmp exec_done
     
 exec_prefetch:
     mov rcx, r13
-    call Kernel_Prefetch
+    call RawrXD_Kernel_Prefetch
     
 exec_done:
     mov ebx, eax
@@ -2751,7 +2751,7 @@ Titan_PerformCopy PROC EXPORT FRAME
     
     ; Execute copy
     mov rcx, rdi
-    call Kernel_Copy
+    call RawrXD_Kernel_Copy
     mov r12d, eax
     
     ; Calculate timing
@@ -2884,7 +2884,7 @@ dma_execute:
     mov DWORD PTR [rdi+56], r9d
     
     mov rcx, rdi
-    call Kernel_Copy
+    call RawrXD_Kernel_Copy
     mov ebx, eax
     
     ; Update request status
@@ -3006,9 +3006,9 @@ END
 ; Features: AVX-512, NF4 Decompression, DirectStorage, Vulkan DMA
 ;=============================================================================
 
-.686P
-.XMM
-.model flat, c
+; .686P
+; .XMM
+; .model flat, c
 OPTION CASEMAP:NONE
 
 ;=============================================================================
@@ -3131,14 +3131,14 @@ DMA_STATS ENDS
 .DATA
 
 ; NF4 Dequantization Lookup Table (16 float values)
-ALIGN 64
+ALIGN 16
 nf4_lookup_table REAL4 -1.0, -0.6961928, -0.5250731, -0.3949175
                  REAL4 -0.2844414, -0.1847734, -0.09105004, 0.0
                  REAL4 0.0795803, 0.1609302, 0.2461123, 0.3379152
                  REAL4 0.4407098, 0.562617, 0.7229568, 1.0
 
 ; NF4 nibble mask for extraction
-ALIGN 64
+ALIGN 16
 nf4_mask_low DWORD 16 DUP(0Fh)
 
 ; Statistics
@@ -3299,11 +3299,11 @@ ValidateMemoryRange ENDP
 ;=============================================================================
 
 ;-----------------------------------------------------------------------------
-; Kernel_NF4_Decompress - AVX-512 NF4 Decompression Kernel
+; KERNEL_TYPE_NF4_Decompress - AVX-512 NF4 Decompression Kernel
 ;-----------------------------------------------------------------------------
 ; Parameters: RCX = KERNEL_PARAMS ptr
 ; Returns: EAX = status
-Kernel_NF4_Decompress PROC FRAME
+KERNEL_TYPE_NF4_Decompress PROC FRAME
     LOCAL local_src:QWORD
     LOCAL local_dst:QWORD
     LOCAL local_size:QWORD
@@ -3433,14 +3433,14 @@ nf4_cleanup:
     pop r14
     pop r15
     ret
-Kernel_NF4_Decompress ENDP
+KERNEL_TYPE_NF4_Decompress ENDP
 
 ;-----------------------------------------------------------------------------
-; Kernel_Prefetch - Memory Prefetch Kernel
+; KERNEL_TYPE_PREFETCH - Memory Prefetch Kernel
 ;-----------------------------------------------------------------------------
 ; Parameters: RCX = KERNEL_PARAMS ptr
 ; Prefetches memory range into specified cache level
-Kernel_Prefetch PROC FRAME
+RawrXD_Kernel_Prefetch_4 PROC FRAME
     push r12
     .pushreg r12
     push r13
@@ -3513,14 +3513,14 @@ prefetch_cleanup:
     pop r13
     pop r12
     ret
-Kernel_Prefetch ENDP
+RawrXD_Kernel_Prefetch_4 ENDP
 
 ;-----------------------------------------------------------------------------
-; Kernel_Copy - Optimized Memory Copy Kernel
+; KERNEL_TYPE_COPY - Optimized Memory Copy Kernel
 ;-----------------------------------------------------------------------------
 ; Parameters: RCX = KERNEL_PARAMS ptr
 ; Uses non-temporal stores for large copies
-Kernel_Copy PROC FRAME
+RawrXD_Kernel_Copy_4 PROC FRAME
     LOCAL local_src:QWORD
     LOCAL local_dst:QWORD
     LOCAL local_size:QWORD
@@ -3666,7 +3666,7 @@ copy_cleanup:
     pop r14
     pop r15
     ret
-Kernel_Copy ENDP
+RawrXD_Kernel_Copy_4 ENDP
 
 ;=============================================================================
 ; MAIN EXPORTED FUNCTIONS
@@ -3717,17 +3717,17 @@ Titan_ExecuteComputeKernel PROC EXPORT FRAME
     
 exec_copy:
     mov rcx, r13
-    call Kernel_Copy
+    call RawrXD_Kernel_Copy
     jmp exec_done
     
 exec_nf4:
     mov rcx, r13
-    call Kernel_NF4_Decompress
+    call RawrXD_Kernel_NF4_Decompress
     jmp exec_done
     
 exec_prefetch:
     mov rcx, r13
-    call Kernel_Prefetch
+    call RawrXD_Kernel_Prefetch
     
 exec_done:
     mov ebx, eax
@@ -3842,7 +3842,7 @@ Titan_PerformCopy PROC EXPORT FRAME
     
     ; Execute copy
     mov rcx, rdi
-    call Kernel_Copy
+    call RawrXD_Kernel_Copy
     mov r12d, eax
     
     ; Calculate timing
@@ -3975,7 +3975,7 @@ dma_execute:
     mov DWORD PTR [rdi+56], r9d
     
     mov rcx, rdi
-    call Kernel_Copy
+    call RawrXD_Kernel_Copy
     mov ebx, eax
     
     ; Update request status
@@ -4161,7 +4161,7 @@ PERFORMANCE_COUNTERS ENDS
 .DATA
 
 ; Global state
-ALIGN 64
+ALIGN 16
 g_PerformanceCounters   PERFORMANCE_COUNTERS <>
 g_QPFrequency           QWORD 0
 g_SystemPageSize        DWORD 4096
@@ -4169,14 +4169,14 @@ g_CpuCount              DWORD 0
 g_IsInitialized         DWORD 0
 
 ; NF4 lookup table (16 x float32)
-ALIGN 64
+ALIGN 16
 g_NF4Table              REAL4 1.0, 0.7229568, 0.562617, 0.4407098
                         REAL4 0.3379152, 0.2461123, 0.1609302, 0.0795803
                         REAL4 0.0, -0.09105004, -0.1847734, -0.2844414
                         REAL4 -0.3949175, -0.5250731, -0.6961928, -1.0
 
 ; Nibble mask
-ALIGN 64
+ALIGN 16
 g_NibbleMask            BYTE 64 DUP (0Fh)
 
 ; Temp buffer for operations
@@ -4372,10 +4372,10 @@ Kernel_DoNF4:
     mov rax, r14
     shr rax, 8
     test rax, rax
-    jz Kernel_NF4_Remainder
+    jz KERNEL_TYPE_NF4_Remainder
     mov rcx, rax
     
-Kernel_NF4_Loop:
+KERNEL_TYPE_NF4_Loop:
     vmovdqu8 zmm0, [rbx]
     vmovdqu8 zmm1, [rbx+64]
     vmovdqu8 zmm2, [rbx+128]
@@ -4411,17 +4411,17 @@ Kernel_NF4_Loop:
     add rbx, 256
     add rdi, 512
     dec rcx
-    jnz Kernel_NF4_Loop
+    jnz KERNEL_TYPE_NF4_Loop
     sfence
     
-Kernel_NF4_Remainder:
+KERNEL_TYPE_NF4_Remainder:
     mov rax, r14
     and rax, 255
     test rax, rax
-    jz Kernel_NF4_Done
+    jz KERNEL_TYPE_NF4_Done
     mov rcx, rax
     
-Kernel_NF4_Scalar:
+KERNEL_TYPE_NF4_Scalar:
     movzx eax, BYTE PTR [rbx]
     mov edx, eax
     and eax, 0Fh
@@ -4433,9 +4433,9 @@ Kernel_NF4_Scalar:
     inc rbx
     add rdi, 8
     dec rcx
-    jnz Kernel_NF4_Scalar
+    jnz KERNEL_TYPE_NF4_Scalar
     
-Kernel_NF4_Done:
+KERNEL_TYPE_NF4_Done:
     call GetTimestamp
     mov [r13+OFFSET MEMORY_PATCH.EndTime], rax
     sub rax, rsi
@@ -4471,10 +4471,10 @@ Kernel_DoPrefetch:
     mov rax, r14
     shr rax, 6
     test rax, rax
-    jz Kernel_Prefetch_Small
+    jz KERNEL_TYPE_PREFETCH_Small
     mov rcx, rax
     
-Kernel_Prefetch_Loop:
+KERNEL_TYPE_PREFETCH_Loop:
     prefetcht0 [rbx]
     prefetcht0 [rbx+64]
     prefetcht0 [rbx+128]
@@ -4483,9 +4483,9 @@ Kernel_Prefetch_Loop:
     prefetcht2 [rbx+65536]
     add rbx, 256
     dec rcx
-    jnz Kernel_Prefetch_Loop
+    jnz KERNEL_TYPE_PREFETCH_Loop
     
-Kernel_Prefetch_Small:
+KERNEL_TYPE_PREFETCH_Small:
     jmp Kernel_Success
     
 Kernel_DoStandardCopy:
@@ -5785,7 +5785,7 @@ END
 ; Addresses: L3 cache, file handles, DS requests, GGML context cleanup
 
 .386
-.MODEL FLAT, STDCALL
+; .MODEL FLAT, STDCALL
 OPTION CASEMAP:NONE
 
 INCLUDE windows.inc
@@ -7615,79 +7615,79 @@ align 4096
 ; Page-aligned global data
 g_PageAlignedData       DB  4096 DUP(0)
 
-align 64
+ALIGN 16
 g_CPUFeatures           CPU_FEATURES <>
 
-align 64
+ALIGN 16
 g_CacheInfo             CACHE_INFO 16 DUP(<>)
 g_CacheCount            DD  0
 
-align 64
+ALIGN 16
 g_TLBInfo               TLB_INFO 32 DUP(<>)
 g_TLBCount              DD  0
 
-align 64
+ALIGN 16
 g_NumaNodes             NUMA_NODE_INFO 64 DUP(<>)
 g_NumaNodeCount         DD  0
 g_CurrentNumaNode       DD  0
 
-align 64
+ALIGN 16
 g_ProcessorTopology     PROCESSOR_TOPOLOGY 256 DUP(<>)
 g_ProcessorCount        DD  0
 g_CoreCount             DD  0
 g_PackageCount          DD  0
 
-align 64
+ALIGN 16
 g_MemoryMap             MEMORY_RANGE 256 DUP(<>)
 g_MemoryMapCount        DD  0
 
-align 64
+ALIGN 16
 g_BootTimeTSC           DQ  0
 g_BootTimeQPC           DQ  0
 
-align 64
+ALIGN 16
 g_TSCFrequencyHz        DQ  0           ; Calculated TSC frequency
 g_TSCPeriodNs           DQ  0           ; Period in nanoseconds
 
-align 64
+ALIGN 16
 g_InvariantTSC          DB  0
 g_RDTSCPSupported       DB  0
 g_TSCDeadlineSupported  DB  0
 
-align 64
+ALIGN 16
 g_CoreCrystalClock      DQ  0           ; Atom cores crystal clock
 
-align 64
+ALIGN 16
 g_MaximumProcessorFrequency DD 0        ; In MHz
 g_BusFrequency              DD 0        ; In MHz
 
-align 64
+ALIGN 16
 g_APICFrequency         DQ  0
 
-align 64
+ALIGN 16
 g_PerfCounterWidth      DD  0           ; 40, 48, or 64 bits
 
-align 64
+ALIGN 16
 g_PhysicalAddressBits   DB  0
 g_VirtualAddressBits    DB  0
 g_GuestPhysicalAddressBits DB 0
 
-align 64
+ALIGN 16
 g_BrandString           DB  49 DUP(0)
 g_VendorID              DB  13 DUP(0)
 
-align 64
+ALIGN 16
 g_SerialNumber          DQ  2 DUP(0)
 
-align 64
+ALIGN 16
 g_MicrocodeVersion      DD  0
 
-align 64
+ALIGN 16
 g_LogicalProcessorsPerPackage   DD  0
 g_CoresPerPackage               DD  0
 g_ThreadsPerCore                DD  0
 
-align 64
+ALIGN 16
 g_APICIDShiftPackage    DB  0
 g_APICIDShiftCore       DB  0
 g_APICIDShiftThread     DB  0
@@ -7695,16 +7695,16 @@ g_APICIDMaskPackage     DB  0
 g_APICIDMaskCore        DB  0
 g_APICIDMaskThread      DB  0
 
-align 64
+ALIGN 16
 g_HasLeaf0B             DB  0   ; Extended topology
 g_HasLeaf1F             DB  0   ; V2 extended topology
 
-align 64
+ALIGN 16
 g_SMXSupported          DB  0
 g_SGXSupported          DB  0
 g_TMESupported          DB  0
 
-align 64
+ALIGN 16
 g_TotalPhysicalMemory   DQ  0
 g_AvailablePhysicalMemory DQ 0
 g_TotalPageFile         DQ  0
@@ -7712,159 +7712,159 @@ g_AvailablePageFile     DQ  0
 g_TotalVirtual          DQ  0
 g_AvailableVirtual      DQ  0
 
-align 64
+ALIGN 16
 g_ProcessAffinityMask   DQ  0
 g_SystemAffinityMask    DQ  0
 
-align 64
+ALIGN 16
 g_PriorityClass         DD  0
 
-align 64
+ALIGN 16
 g_ErrorMode             DD  0
 
-align 64
+ALIGN 16
 g_LastErrorCode         DD  0
 
-align 64
+ALIGN 16
 g_ExceptionHandler      DQ  0
 
-align 64
+ALIGN 16
 g_VectoredHandler       DQ  0
 
-align 64
+ALIGN 16
 g_TimerResolution       DQ  0           ; In 100ns units
 
-align 64
+ALIGN 16
 g_Granularity           DD  0           ; Allocation granularity
 
-align 64
+ALIGN 16
 g_MinimumAppAddress     DQ  0
 g_MaximumAppAddress     DQ  0
 
-align 64
+ALIGN 16
 g_OperatingSystemVersion DD 0
 g_ServicePackMajor      DW  0
 g_ServicePackMinor      DW  0
 g_SuiteMask             DW  0
 g_ProductType           DB  0
 
-align 64
+ALIGN 16
 g_NativeSystemInfo      SYSTEM_INFO <>
 
-align 64
+ALIGN 16
 g_MemoryStatus          MEMORYSTATUSEX <>
 
-align 64
+ALIGN 16
 g_SystemDirectory       DW  260 DUP(0)
 g_WindowsDirectory      DW  260 DUP(0)
 
-align 64
+ALIGN 16
 g_ComputerName          DW  32 DUP(0)
 g_UserName              DW  256 DUP(0)
 
-align 64
+ALIGN 16
 g_CommandLine           DQ  0
 
-align 64
+ALIGN 16
 g_EnvironmentStrings    DQ  0
 
-align 64
+ALIGN 16
 g_StdInput              DQ  0
 g_StdOutput             DQ  0
 g_StdError              DQ  0
 
-align 64
+ALIGN 16
 g_ProcessHeap           DQ  0
 g_ProcessHandle         DQ  0
 
-align 64
+ALIGN 16
 g_ModuleList            DQ  0
 
-align 64
+ALIGN 16
 g_TLSIndex              DD  0
 
-align 64
+ALIGN 16
 g_StartTime             FILETIME <>
 g_UserTime              FILETIME <>
 g_KernelTime            FILETIME <>
 
-align 64
+ALIGN 16
 g_IOPriority            DD  0
 g_MemoryPriority        DD  0
 
-align 64
+ALIGN 16
 g_ThreadPoolFlags       DD  0
 
-align 64
+ALIGN 16
 g_ProcessorGroupCount   DW  0
 g_ActiveProcessorGroup  DW  0
 
-align 64
+ALIGN 16
 g_GroupAffinity         DQ  64 DUP(0)   ; Per-group masks
 
-align 64
+ALIGN 16
 g_IdleSensitivity       DD  0
 
-align 64
+ALIGN 16
 g_SchedulingClass       DD  0
 
-align 64
+ALIGN 16
 g_RateControl           DD  0
 
-align 64
+ALIGN 16
 g_HardErrorMode         DD  0
 
-align 64
+ALIGN 16
 g_GlobalFlag            DD  0
 
-align 64
+ALIGN 16
 g_HeapDecommitThreshold DQ  0
 g_HeapCommitThreshold   DQ  0
 
-align 64
+ALIGN 16
 g_GDIHandleCount        DD  0
 g_USERHandleCount       DD  0
 
-align 64
+ALIGN 16
 g_PeakGDIUsage          DD  0
 g_PeakUSERUsage         DD  0
 
-align 64
+ALIGN 16
 g_CodePage              DD  0
 g_OEMCodePage           DD  0
 
-align 64
+ALIGN 16
 g_Locale                DD  0
 
-align 64
+ALIGN 16
 g_KeyboardLayout        DQ  0
 
-align 64
+ALIGN 16
 g_DesktopHandle         DQ  0
 g_WindowStationHandle   DQ  0
 
-align 64
+ALIGN 16
 g_ImpersonationToken    DQ  0
 
-align 64
+ALIGN 16
 g_DebugPort             DQ  0
 
-align 64
+ALIGN 16
 g_Wow64Information      DQ  0
 
-align 64
+ALIGN 16
 g_UpdateTime            DQ  0           ; Last update tick
 
-align 64
+ALIGN 16
 g_Initialized           DD  0           ; Initialization flag
 
-align 64
+ALIGN 16
 g_QPCFrequency          DQ  0           ; QueryPerformanceCounter frequency
 
-align 64
+ALIGN 16
 g_TempBuffer            DB  1024 DUP(0) ; Temporary work buffer
 
-align 64
+ALIGN 16
 g_HasRDPID              DB  0           ; RDPID instruction support
 
 ; =============================================================================
@@ -9197,8 +9197,8 @@ END
 ; COMPILER DIRECTIVES
 ;------------------------------------------------------------------------------
 .686
-.xmm
-.model flat, c
+; .xmm
+; .model flat, c
 OPTION CASEMAP:NONE
 OPTION ALIGN:64
 
@@ -9436,7 +9436,7 @@ JOB_ENTRY ENDS
 ; GLOBAL DATA
 ;------------------------------------------------------------------------------
 .data
-align 64
+ALIGN 16
 
 g_pCompilerEngine   QWORD 0
 g_pTelemetry        QWORD 0
@@ -10312,8 +10312,8 @@ END
 ; COMPILER DIRECTIVES
 ;------------------------------------------------------------------------------
 .686
-.xmm
-.model flat, c
+; .xmm
+; .model flat, c
 OPTION CASEMAP:NONE
 OPTION ALIGN:64
 
@@ -10551,7 +10551,7 @@ JOB_ENTRY ENDS
 ; GLOBAL DATA
 ;------------------------------------------------------------------------------
 .data
-align 64
+ALIGN 16
 
 g_pCompilerEngine   QWORD 0
 g_pTelemetry        QWORD 0
@@ -14133,21 +14133,21 @@ IOCP_PACKET ENDS
 align 4096                              ; Page alignment for TLB efficiency
 g_KUserShared   DQ  KUSER_SHARED_DATA_ADDR
 
-align 64                                ; Cache line alignment
+ALIGN 16                                ; Cache line alignment
 g_CacheLinePad  DB  64 DUP(0FFh)        ; Prevent false sharing
 
-align 64
+ALIGN 16
 g_InfinityState INFINITY_STREAM_FULL <>
 
 ; Hidden: Pre-fetched hot data replicated across cache lines
-align 64
+ALIGN 16
 g_HotDataReplica0:
     g_CurrentSlot0      DD  -1
     g_CurrentLayer0     DD  -1
     g_TickCache0        DQ  0
     DB  48 DUP(0)                       ; Pad to 64 bytes
 
-align 64
+ALIGN 16
 g_HotDataReplica1:
     g_CurrentSlot1      DD  -1
     g_CurrentLayer1     DD  -1
@@ -14155,18 +14155,18 @@ g_HotDataReplica1:
     DB  48 DUP(0)
 
 ; Hidden: Branch prediction hints
-align 64
+ALIGN 16
 g_LikelyTaken       DD  1
 g_UnlikelyTaken     DD  0
 
 ; Hidden: Memory prefetch control
-align 64
+ALIGN 16
 g_PrefetchCtrl:
     g_PrefetchRead      DD  0           ; PREFETCHT0/T1/T2/NTA
     g_PrefetchWrite     DD  1           ; PREFETCHW (AMD)
 
 ; Hidden: CPU feature cache
-align 64
+ALIGN 16
 g_CPUFeatures:
     g_HasAVX512         DB  0
     g_HasCLWB           DB  0           ; Cache line write back
@@ -14180,7 +14180,7 @@ g_CPUFeatures:
     DB  55 DUP(0)
 
 ; Hidden: NUMA topology cache
-align 64
+ALIGN 16
 g_NumaTopology:
     g_NumNodes          DD  0
     g_CurrentNode       DD  0
@@ -14190,7 +14190,7 @@ g_NumaTopology:
     DD  0
 
 ; Hidden: TSC calibration
-align 64
+ALIGN 16
 g_TSCCalibration:
     g_TSCFrequency      DQ  0           ; Cycles per second
     g_TSCOverhead       DQ  0           ; Measurement overhead
@@ -14198,7 +14198,7 @@ g_TSCCalibration:
     g_TSCSkew           DQ  0           ; Skew between cores
 
 ; Hidden: Performance counter state
-align 64
+ALIGN 16
 g_PerfCounters:
     g_L3CacheMisses     DQ  0
     g_L3CacheHits       DQ  0
@@ -14206,7 +14206,7 @@ g_PerfCounters:
     g_StalledCycles     DQ  0
 
 ; Hidden: NF4 lookup table (16 values for 4-bit indices)
-align 64
+ALIGN 16
 g_NF4Table:
     REAL4 -1.0, -0.6961928009986877, -0.5250730514526367, -0.39491748809814453
     REAL4 -0.28444138169288635, -0.18477343022823334, -0.09105003625154495, 0.0
@@ -21695,8 +21695,8 @@ END
 ; COMPILER DIRECTIVES
 ;------------------------------------------------------------------------------
 .686
-.xmm
-.model flat, c
+; .xmm
+; .model flat, c
 OPTION CASEMAP:NONE
 OPTION ALIGN:64
 
@@ -22116,7 +22116,7 @@ Week1Infrastructure ENDS
 ; GLOBAL DATA
 ;------------------------------------------------------------------------------
 .data
-align 64
+ALIGN 16
 
 ; RawrXD global instance
 g_pRawrXD           QWORD 0
@@ -23342,7 +23342,7 @@ QuadBuffer_IOCPWorker ENDP
 ;------------------------------------------------------------------------------
 ; QuadBuffer_CopyToGPU - AVX-512 streaming copy to GPU BAR memory
 ;------------------------------------------------------------------------------
-align 64
+ALIGN 16
 QuadBuffer_CopyToGPU PROC FRAME
     ; RCX = pDest (GPU BAR address)
     ; RDX = pSrc (host address)
@@ -29085,9 +29085,9 @@ END
 ;=============================================================================
 ; Assembler Directives
 ;=============================================================================
-.686p
-.xmm
-.model flat, stdcall
+; .686p
+; .xmm
+; .model flat, stdcall
 option casemap:none
 option frame:auto
 option win64:3
@@ -29152,7 +29152,7 @@ includelib \masm64\lib64\dstorage.lib
 ;=============================================================================
 ; AVX-512 Enable
 ;=============================================================================
-.xmm
+; .xmm
 option arch:AVX512
 
 ;=============================================================================
@@ -29473,7 +29473,7 @@ GLOBAL_STATE ends
 .data
 
 ; NF4 lookup table (16 values for 4-bit quantization)
-align 64
+ALIGN 16
 g_nf4Table real4 -1.0, -0.6961928009986877, -0.5250730514526367, \
                  -0.39491748809814453, -0.28444138169288635, -0.18477343022823334, \
                  -0.09105003625154495, 0.0, 0.07958029955625534, 0.16093020141124725, \
@@ -29531,7 +29531,7 @@ szModelFilter db "GGUF Models (*.gguf)\0*.gguf\0All Files (*.*)\0*.*\0\0", 0
 ; Uninitialized Global Data
 ;=============================================================================
 .data?
-align 64
+ALIGN 16
 g_globalState GLOBAL_STATE <>
 g_hErrorMutex dq ?
 g_lastErrorCode dd ?
@@ -37637,26 +37637,26 @@ DSTORAGE_REQUEST ENDS
 ; =============================================================================
 
 .DATA
-    ALIGN 64
+    ALIGN 16
     g_Slots             TITAN_SLOT_STATE GHOST_SLOTS DUP(<>)
     
-    ALIGN 64
+    ALIGN 16
     g_Layers            TITAN_LAYER_DESCRIPTOR 2048 DUP(<>)
     
-    ALIGN 64
+    ALIGN 16
     g_Config            CONFIG_BLOCK <0461Ah, 1, 1, 1, 1, 1, GHOST_SLOTS, 0, 785, 128, 2048, 1, 08733333h>
     
-    ALIGN 64
+    ALIGN 16
     g_LayerMap          dq 2048 dup(0)      ; Sieve-generated offset table
     
-    ALIGN 64
+    ALIGN 16
     g_L3_Buffer         dq 0                ; 7800X3D L3 Scratchpad pointer
     g_L3_Buffer_Size    dq L3_SCRATCH_SIZE
     
-    ALIGN 64
+    ALIGN 16
     g_Predictor         TITAN_PREDICTOR_STATE <>
     
-    ALIGN 64
+    ALIGN 16
     g_EntropyThreshold  dq 128              ; Variance threshold for prefetch
     
     ; Vulkan Handles (Populated by HAL_Init)
@@ -38740,7 +38740,7 @@ HEARTBEAT_STATE ENDS
 ; ============================================================
 
 .DATA
-ALIGN 64
+ALIGN 16
 
 ; Locks
 g_LockConflictDetector  SRWLOCK <>
@@ -38764,15 +38764,15 @@ g_RingBufferCount       DWORD 0
 g_PerfFrequency         QWORD 0
 
 ; Conflict table (4096 entries)
-ALIGN 64
+ALIGN 16
 g_ConflictTable         CONFLICT_ENTRY 4096 DUP(<-1, 0, 0, 0, 0>)
 
 ; Ring buffer slots
-ALIGN 64
+ALIGN 16
 g_RingBufferSlots       RING_BUFFER_ENTRY 32 DUP(<>)
 
 ; Heartbeat state
-ALIGN 64
+ALIGN 16
 g_HeartbeatState        HEARTBEAT_STATE <>
 
 ; Error strings
@@ -41616,7 +41616,7 @@ OrchestratorState ENDS
 ; DATA SECTION
 ;------------------------------------------------------------------------------
 .DATA
-ALIGN 64
+ALIGN 16
 
 ; Global orchestrator instance
 g_pOrchestrator     QWORD 0
@@ -44244,7 +44244,7 @@ MAX_PATTERN_DEPTH EQU 16
 ; Data Section
 ; ================================================
 .data
-align 64
+ALIGN 16
 cognitive_scratchpad DB COGNITIVE_BUFFER_SIZE DUP(0)
 pattern_vector_table DQ MAX_PATTERN_DEPTH DUP(0)
 cognitive_depth_counter DD 0
@@ -46595,7 +46595,7 @@ EMBEDDING_DIM EQU 4096
 ; Data Section
 ; ================================================
 .data
-align 64
+ALIGN 16
 completion_token_buffer DQ 0
 completion_logits REAL4 VOCAB_SIZE DUP(0.0)
 temperature_scalar REAL4 0.7
@@ -47155,7 +47155,7 @@ PUBLIC asm_quantum_safe_search
 ; =============================================================================
 .data
 ; AI model and performance counters (aligned for atomic operations)
-ALIGN 64
+ALIGN 16
 g_SearchCounters      DQ  0, 0, 0, 0, 0, 0, 0, 0    ; 8 performance counters
 g_AIModelLoaded       DD  0                           ; AI model status
 g_PatternClassifier   DQ  0                           ; AI classifier function pointer
@@ -99760,14 +99760,14 @@ PUBLIC asm_kquant_cpuid_check
 _DATA64 SEGMENT ALIGN(64) 'DATA'
 
 ; Nibble isolation mask: 0x0F repeated (for AVX2 = 32 bytes, AVX-512 = 64 bytes)
-ALIGN 64
+ALIGN 16
 kq_mask_0F_ymm:
     DB  0Fh, 0Fh, 0Fh, 0Fh, 0Fh, 0Fh, 0Fh, 0Fh
     DB  0Fh, 0Fh, 0Fh, 0Fh, 0Fh, 0Fh, 0Fh, 0Fh
     DB  0Fh, 0Fh, 0Fh, 0Fh, 0Fh, 0Fh, 0Fh, 0Fh
     DB  0Fh, 0Fh, 0Fh, 0Fh, 0Fh, 0Fh, 0Fh, 0Fh
 
-ALIGN 64
+ALIGN 16
 kq_mask_0F_zmm:
     DB  0Fh, 0Fh, 0Fh, 0Fh, 0Fh, 0Fh, 0Fh, 0Fh
     DB  0Fh, 0Fh, 0Fh, 0Fh, 0Fh, 0Fh, 0Fh, 0Fh
@@ -101296,7 +101296,7 @@ ELSE
     x86 equ 1
     PTR_S equ 4
     .386
-    .model flat, stdcall
+; .model flat, stdcall
     includelib kernel32.lib
     REG_AX equ eax
     REG_BX equ ebx
@@ -140395,8 +140395,8 @@ EXTERNDEF VulkanKernel_Init:PROC
 EXTERNDEF VulkanKernel_LoadShader:PROC
 EXTERNDEF VulkanKernel_CreatePipeline:PROC
 EXTERNDEF VulkanKernel_AllocBuffer:PROC
-EXTERNDEF VulkanKernel_CopyToDevice:PROC
-EXTERNDEF VulkanKernel_CopyToHost:PROC
+EXTERNDEF VulkanKERNEL_TYPE_COPYToDevice:PROC
+EXTERNDEF VulkanKERNEL_TYPE_COPYToHost:PROC
 EXTERNDEF VulkanKernel_DispatchMatMul:PROC
 EXTERNDEF VulkanKernel_DispatchFlashAttn:PROC
 EXTERNDEF VulkanKernel_HotswapShader:PROC
@@ -140556,7 +140556,7 @@ VkBridge_CopyToDevice PROC
     cmp  qword ptr [g_VkReady], 0
     je   vcd_fail
 
-    jmp  VulkanKernel_CopyToDevice
+    jmp  VulkanKERNEL_TYPE_COPYToDevice
 
 vcd_fail:
     xor  eax, eax
@@ -140575,7 +140575,7 @@ VkBridge_CopyToHost PROC
     cmp  qword ptr [g_VkReady], 0
     je   vch_fail
 
-    jmp  VulkanKernel_CopyToHost
+    jmp  VulkanKERNEL_TYPE_COPYToHost
 
 vch_fail:
     xor  eax, eax
@@ -155275,8 +155275,8 @@ END
 ; - Source mapping (MASM <-> source files)
 ;==============================================================================
 .686
-.xmm
-.model flat, c
+; .xmm
+; .model flat, c
 option casemap:none
 option frame:auto
 
@@ -157048,8 +157048,8 @@ end
 ; - Hardware-assisted capability sandboxing
 ;==============================================================================
 .686
-.xmm
-.model flat, c
+; .xmm
+; .model flat, c
 option casemap:none
 option frame:auto
 
@@ -159249,8 +159249,8 @@ end
 ; - Signature verification (optional)
 ;==============================================================================
 .686
-.xmm
-.model flat, c
+; .xmm
+; .model flat, c
 option casemap:none
 option frame:auto
 
@@ -160680,8 +160680,8 @@ end
 ; - Developer tools integration
 ;==============================================================================
 .686
-.xmm
-.model flat, c
+; .xmm
+; .model flat, c
 option casemap:none
 option frame:auto
 
@@ -161204,7 +161204,7 @@ g_Phase1Initialized     dd 0
 ; CODE SECTION
 ;================================================================================
 .CODE
-ALIGN 64
+ALIGN 16
 
 ;================================================================================
 ; PHASE 1: INITIALIZATION
@@ -164354,8 +164354,8 @@ global ResetGPUPerformanceCounters
 ;=============================================================================
 
 .686
-.XMM
-.MODEL FLAT, C
+; .XMM
+; .MODEL FLAT, C
 
 ;=============================================================================
 ; Include Files
@@ -165578,7 +165578,7 @@ OLLAMA_API_CONTEXT ENDS
 ; DATA SECTION
 ;================================================================================
 .DATA
-ALIGN 64
+ALIGN 16
 
 ; Format signatures for detection
 sig_gguf            db "GGUF", 0
@@ -165665,7 +165665,7 @@ ENDM
 ; CODE SECTION
 ;================================================================================
 .CODE
-ALIGN 64
+ALIGN 16
 
 ;================================================================================
 ; PHASE 2: INITIALIZATION
@@ -173674,7 +173674,7 @@ action_scale_down           db "SCALE_DOWN", 0
 action_rebalance            db "REBALANCE", 0
 
 ; Reed-Solomon Galois field tables
-ALIGN 64
+ALIGN 16
 gf_log_table                db 256 DUP(0)
 gf_exp_table                db 512 DUP(0)
 
@@ -173687,7 +173687,7 @@ http_ok_header              db "HTTP/1.1 200 OK", 0Dh, 0Ah
 ; CODE SECTION
 ;================================================================================
 .CODE
-ALIGN 64
+ALIGN 16
 
 ;================================================================================
 ; ORCHESTRATOR LIFECYCLE
@@ -174541,7 +174541,7 @@ INFINITY_STREAM ENDS
 
 .DATA
 
-align 64
+ALIGN 16
 g_infinity_stream   INFINITY_STREAM <>
 
 ; Pre-calculated masks for modulo 4 (bitwise AND)
@@ -174549,7 +174549,7 @@ align 16
 g_mod4_mask         DQ 03h, 03h, 03h, 03h
 
 ; AVX-512 index scale for gather operations
-align 64
+ALIGN 16
 g_vramptr_indices   DQ 0, 8, 16, 24, 32, 40, 48, 56
 
 ; Phase integration constants
@@ -175253,14 +175253,14 @@ BENCHMARK_STATS ENDS
 
 .DATA
 
-align 64
+ALIGN 16
 g_validation_results    VALIDATION_RESULT 10 DUP(<>)
 g_result_count          DD 0
 
-align 64
+ALIGN 16
 g_benchmark_stats       BENCHMARK_STATS <>
 
-align 64
+ALIGN 16
 g_perf_frequency        DQ 0
 
 ; Test strings
@@ -175971,7 +175971,7 @@ align 128
 g_titan_engine      TITAN_ENGINE <>
 
 ; NF4 Dequantization Lookup Table (16 values)
-align 64
+ALIGN 16
 nf4_lut             REAL4 -1.0, -0.6962, -0.5251, -0.3949, \
                           -0.2844, -0.1848, -0.0911, 0.0, \
                           0.0796, 0.1609, 0.2461, 0.3379, \
