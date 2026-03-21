@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <nlohmann/json.hpp>
 
 namespace RawrXD {
 
@@ -80,8 +81,8 @@ public:
     void load();
     
     // Export/Import
-    void* exportToJSON() const;
-    void importFromJSON(const void*& json);
+    nlohmann::json exportToJSON() const;
+    void importFromJSON(const nlohmann::json& json);
 
 
     void settingsChanged();
