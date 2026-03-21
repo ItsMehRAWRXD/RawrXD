@@ -38,6 +38,7 @@
 #define RAWRXD_NO_QT
 #endif
 
+#ifdef _WIN32
 #include <windows.h>
 
 // Undefine Helpers
@@ -46,6 +47,33 @@
 #endif
 #ifdef max
 #undef max
+#endif
+#else
+// POSIX fallback types
+#include <cstddef>
+typedef void* HANDLE;
+typedef void* HWND;
+typedef void* HDC;
+typedef void* HINSTANCE;
+typedef unsigned long DWORD;
+typedef int BOOL;
+typedef unsigned int UINT;
+typedef long LONG;
+typedef long long LONGLONG;
+typedef unsigned short WORD;
+typedef unsigned char BYTE;
+typedef wchar_t WCHAR;
+typedef const wchar_t* LPCWSTR;
+typedef const char* LPCSTR;
+typedef char* LPSTR;
+typedef wchar_t* LPWSTR;
+typedef void* LPVOID;
+typedef size_t SIZE_T;
+struct RECT { long left, top, right, bottom; };
+struct POINT { long x, y; };
+struct SIZE { long cx, cy; };
+#define INVALID_HANDLE_VALUE ((HANDLE)(long long)-1)
+#define MAX_PATH 260
 #endif
 
 namespace RawrXD {
@@ -58,22 +86,38 @@ inline std::wstring Utf8ToWide(const char* utf8, int len = -1) {
     if (!utf8) return {};
     if (len < 0) len = static_cast<int>(strlen(utf8));
     if (len == 0) return {};
+#ifdef _WIN32
     int wlen = MultiByteToWideChar(CP_UTF8, 0, utf8, len, nullptr, 0);
     if (wlen <= 0) return {};
     std::wstring result(wlen, 0);
     MultiByteToWideChar(CP_UTF8, 0, utf8, len, result.data(), wlen);
     return result;
+#else
+    std::wstring result;
+    result.reserve(len);
+    for (int i = 0; i < len; ++i)
+        result.push_back(static_cast<wchar_t>(static_cast<unsigned char>(utf8[i])));
+    return result;
+#endif
 }
 
 inline std::string WideToUtf8(const wchar_t* wide, int len = -1) {
     if (!wide) return {};
     if (len < 0) len = static_cast<int>(wcslen(wide));
     if (len == 0) return {};
+#ifdef _WIN32
     int ulen = WideCharToMultiByte(CP_UTF8, 0, wide, len, nullptr, 0, nullptr, nullptr);
     if (ulen <= 0) return {};
     std::string result(ulen, 0);
     WideCharToMultiByte(CP_UTF8, 0, wide, len, result.data(), ulen, nullptr, nullptr);
     return result;
+#else
+    std::string result;
+    result.reserve(len);
+    for (int i = 0; i < len; ++i)
+        result.push_back(static_cast<char>(wide[i] & 0x7F));
+    return result;
+#endif
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -258,11 +302,15 @@ public:
         if (!s) return String();
         if (len < 0) len = static_cast<int>(strlen(s));
         if (len == 0) return String();
+#ifdef _WIN32
         int wlen = MultiByteToWideChar(CP_ACP, 0, s, len, nullptr, 0);
         if (wlen <= 0) return String();
         std::wstring result(wlen, 0);
         MultiByteToWideChar(CP_ACP, 0, s, len, result.data(), wlen);
         return String(result.c_str());
+#else
+        return String(std::string(s, len));
+#endif
     }
     static String fromRawData(const wchar_t* s, int len) { 
         return String(std::wstring(s, len)); 
@@ -756,7 +804,11 @@ struct Color {
 // ═════════════════════════════════════════════════════════════════════════════
 
 class DateTime {
+#ifdef _WIN32
     FILETIME ft;
+#else
+    std::chrono::system_clock::time_point tp;
+#endif
     
 public:
     DateTime();

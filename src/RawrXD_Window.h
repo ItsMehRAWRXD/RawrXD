@@ -6,11 +6,11 @@ namespace RawrXD {
 class Window {
 protected:
     HWND hwnd = nullptr;
+#ifdef _WIN32
     static LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
-    
-    // Event handlers - mapped from Windows messages
     virtual LRESULT handleMessage(UINT msg, WPARAM wParam, LPARAM lParam);
     virtual void paintEvent(PAINTSTRUCT& ps);
+#endif
     virtual void resizeEvent(int w, int h);
     virtual void mousePressEvent(int x, int y, int button);
     virtual void mouseReleaseEvent(int x, int y, int button);
@@ -27,7 +27,11 @@ public:
     Window(Window* p) : parent(p) {}
     virtual ~Window();
     
+#ifdef _WIN32
     void create(Window* parent, const String& title, DWORD style = WS_OVERLAPPEDWINDOW, DWORD exStyle = 0);
+#else
+    void create(Window* parent, const String& title, unsigned long style = 0, unsigned long exStyle = 0);
+#endif
     
     void show();
     void hide();
@@ -39,7 +43,7 @@ public:
     String title() const;
     
     HWND nativeHandle() const { return hwnd; }
-    void update(); // InvalidateRect
+    void update();
     
     int width() const;
     int height() const;

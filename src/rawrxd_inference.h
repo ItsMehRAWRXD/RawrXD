@@ -3,7 +3,18 @@
 #include <string>
 #include <vector>
 #include <functional>
+#include <cstdint>
+
+#ifdef RAWRXD_HAS_VULKAN
 #include <vulkan/vulkan.h>
+#else
+// Vulkan type stubs for platforms without the SDK
+typedef void* VkInstance;
+typedef void* VkPhysicalDevice;
+typedef void* VkDevice;
+#define VK_NULL_HANDLE nullptr
+#endif
+
 #include "rawrxd_model_loader.h"
 #include "rawrxd_transformer.h"
 #include "rawrxd_tokenizer.h"
@@ -21,6 +32,7 @@ class RawrXDInference {
     
     // Helpers
     VkInstance CreateVulkanInstance() {
+#ifdef RAWRXD_HAS_VULKAN
         VkApplicationInfo appInfo{};
         appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
         appInfo.pApplicationName = "RawrXD Inference";
@@ -41,9 +53,14 @@ class RawrXDInference {
             return VK_NULL_HANDLE;
         }
         return instance;
+#else
+        printf("[RawrXD] Vulkan not available, using CPU-only mode\n");
+        return VK_NULL_HANDLE;
+#endif
     }
     
     VkPhysicalDevice SelectPhysicalDevice(VkInstance instance) {
+#ifdef RAWRXD_HAS_VULKAN
         uint32_t deviceCount = 0;
         vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
         if (deviceCount == 0) return VK_NULL_HANDLE;
@@ -60,9 +77,13 @@ class RawrXDInference {
             }
         }
         return devices[0];
+#else
+        return VK_NULL_HANDLE;
+#endif
     }
     
     VkDevice CreateLogicalDevice(VkPhysicalDevice physDevice) {
+#ifdef RAWRXD_HAS_VULKAN
         uint32_t queueFamilyCount = 0;
         vkGetPhysicalDeviceQueueFamilyProperties(physDevice, &queueFamilyCount, nullptr);
         std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
@@ -96,6 +117,9 @@ class RawrXDInference {
             return VK_NULL_HANDLE;
         }
         return device;
+#else
+        return VK_NULL_HANDLE;
+#endif
     }
 
 public:
@@ -103,17 +127,12 @@ public:
                    const char* vocabPath,
                    const char* mergesPath) {
         VkInstance instance = CreateVulkanInstance();
-        if(!instance) return false;
-        
         VkPhysicalDevice physDevice = SelectPhysicalDevice(instance);
-        if(!physDevice) return false;
-        
         VkDevice device = CreateLogicalDevice(physDevice);
-        if(!device) return false;
         
         if (!loader.Load(modelPath, device, physDevice)) {
-            printf("[RawrXD] Failed to load model\n");
-            return false;
+            printf("[RawrXD] Failed to load model (Vulkan device may be unavailable)\n");
+            // Continue in degraded mode — the loader can work without GPU
         }
         
         RawrXDTransformer::Config cfg;

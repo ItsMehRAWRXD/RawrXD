@@ -2,8 +2,25 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <cstdint>
+
+#ifdef RAWRXD_HAS_VULKAN
 #include <vulkan/vulkan.h>
+#else
+typedef void* VkBuffer;
+typedef void* VkDeviceMemory;
+typedef void* VkDevice;
+typedef void* VkPhysicalDevice;
+typedef unsigned int VkMemoryPropertyFlags;
+#define VK_NULL_HANDLE nullptr
+#endif
+
+#ifdef _WIN32
 #include <windows.h>
+#else
+typedef void* HANDLE;
+#define INVALID_HANDLE_VALUE ((HANDLE)(long long)-1)
+#endif
 
 struct Tensor {
     std::string name;
@@ -40,11 +57,14 @@ public:
     float* GetTensor(const std::string& name);
     
 private:
-    VkDevice device;
-    VkPhysicalDeviceMemoryProperties memProps;
-    HANDLE hFile, hMapping;
-    void* mappedView;
-    uint64_t fileSize;
+    VkDevice device = VK_NULL_HANDLE;
+#ifdef RAWRXD_HAS_VULKAN
+    VkPhysicalDeviceMemoryProperties memProps{};
+#endif
+    HANDLE hFile = INVALID_HANDLE_VALUE;
+    HANDLE hMapping = INVALID_HANDLE_VALUE;
+    void* mappedView = nullptr;
+    uint64_t fileSize = 0;
     
     // Metadata
     int n_embd = 4096;

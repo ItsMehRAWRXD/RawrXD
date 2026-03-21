@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include <vulkan/vulkan.h>
+#include <cstdint>
 #include "rawrxd_model_loader.h"
 
 class RawrXDTransformer {

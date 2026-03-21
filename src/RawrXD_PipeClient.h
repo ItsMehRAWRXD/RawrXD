@@ -4,7 +4,13 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
+
+#ifdef _WIN32
 #include <windows.h>
+#else
+typedef void* HANDLE;
+#define INVALID_HANDLE_VALUE ((HANDLE)(long long)-1)
+#endif
 
 namespace RawrXD {
     struct PatternResult {

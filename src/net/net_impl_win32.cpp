@@ -1,4 +1,8 @@
 #include "net_impl_win32.h"
+
+#ifdef _WIN32
+// Original Win32 implementation follows
+
 #include <sstream>
 #include <iomanip>
 #include <iostream>
@@ -1368,3 +1372,80 @@ long long WebSocketRecv(void* socket_handle, char* buffer, long long buffer_size
 }
 
 } // extern "C"
+
+#else
+// Non-Windows stub implementations
+
+namespace RawrXD::Net {
+
+// ConnectionPool stubs
+ConnectionPool::ConnectionPool(const NetworkConfig&) {}
+ConnectionPool::~ConnectionPool() {}
+RawrXD::Expected<void, NetError> ConnectionPool::initialize() { return {}; }
+void ConnectionPool::shutdown() {}
+RawrXD::Expected<void*, NetError> ConnectionPool::acquireConnection(const std::string&, int, bool) { return RawrXD::unexpected(NetError::InitializationFailed); }
+void ConnectionPool::releaseConnection(void*) {}
+void ConnectionPool::invalidateConnection(void*) {}
+size_t ConnectionPool::getActiveConnections() const { return 0; }
+size_t ConnectionPool::getIdleConnections() const { return 0; }
+nlohmann::json ConnectionPool::getStatus() const { return {}; }
+RawrXD::Expected<void*, NetError> ConnectionPool::createConnection(const std::string&, int, bool) { return RawrXD::unexpected(NetError::InitializationFailed); }
+void ConnectionPool::cleanupInvalidConnections() {}
+std::string ConnectionPool::makeConnectionKey(const std::string& h, int p, bool s) { return h + ":" + std::to_string(p); }
+
+// HttpClient stubs
+HttpClient::HttpClient(const NetworkConfig& config) : m_config(config), m_connectionPool(std::make_unique<ConnectionPool>(config)) {}
+HttpClient::~HttpClient() = default;
+RawrXD::Expected<HttpResponse, NetError> HttpClient::get(const std::string&, const std::unordered_map<std::string, std::string>&) { return RawrXD::unexpected(NetError::InitializationFailed); }
+RawrXD::Expected<HttpResponse, NetError> HttpClient::post(const std::string&, const std::string&, const std::unordered_map<std::string, std::string>&) { return RawrXD::unexpected(NetError::InitializationFailed); }
+RawrXD::Expected<HttpResponse, NetError> HttpClient::postJson(const std::string&, const nlohmann::json&, const std::unordered_map<std::string, std::string>&) { return RawrXD::unexpected(NetError::InitializationFailed); }
+RawrXD::Expected<void, NetError> HttpClient::streamGet(const std::string&, std::function<void(const std::vector<unsigned char>&)>, const std::unordered_map<std::string, std::string>&) { return RawrXD::unexpected(NetError::InitializationFailed); }
+void HttpClient::setApiKey(const std::string&) {}
+void HttpClient::setBearerToken(const std::string&) {}
+void HttpClient::setBasicAuth(const std::string&, const std::string&) {}
+nlohmann::json HttpClient::getMetrics() const { return {}; }
+void HttpClient::resetMetrics() {}
+RawrXD::Expected<HttpResponse, NetError> HttpClient::executeRequest(const std::string&, const std::string&, const std::string&, const std::unordered_map<std::string, std::string>&) { return RawrXD::unexpected(NetError::InitializationFailed); }
+RawrXD::Expected<void, NetError> HttpClient::addAuthHeaders(std::unordered_map<std::string, std::string>&) { return {}; }
+RawrXD::Expected<void, NetError> HttpClient::handleCompression(HttpResponse&) { return {}; }
+RawrXD::Expected<void, NetError> HttpClient::handleRedirects(HttpResponse&, const std::string&, int) { return {}; }
+RawrXD::Expected<HttpResponse, NetError> HttpClient::executeWithRetry(std::function<RawrXD::Expected<HttpResponse, NetError>()>, int) { return RawrXD::unexpected(NetError::InitializationFailed); }
+std::string HttpClient::base64Encode(const std::string& input) { return input; }
+
+// WebSocketClient stubs  
+WebSocketClient::WebSocketClient(const NetworkConfig& config) : m_config(config) {}
+WebSocketClient::~WebSocketClient() { disconnect(); }
+RawrXD::Expected<void, NetError> WebSocketClient::connect(const std::string&, const std::unordered_map<std::string, std::string>&) { return RawrXD::unexpected(NetError::InitializationFailed); }
+void WebSocketClient::disconnect() { m_connected = false; }
+void WebSocketClient::setMessageHandler(std::function<void(const WebSocketFrame&)> handler) { m_messageHandler = handler; }
+RawrXD::Expected<void, NetError> WebSocketClient::sendText(const std::string&) { return RawrXD::unexpected(NetError::InitializationFailed); }
+RawrXD::Expected<void, NetError> WebSocketClient::sendBinary(const std::vector<uint8_t>&) { return RawrXD::unexpected(NetError::InitializationFailed); }
+RawrXD::Expected<WebSocketFrame, NetError> WebSocketClient::receiveFrame(std::chrono::milliseconds) { return RawrXD::unexpected(NetError::InitializationFailed); }
+RawrXD::Expected<void, NetError> WebSocketClient::ping() { return RawrXD::unexpected(NetError::InitializationFailed); }
+RawrXD::Expected<void, NetError> WebSocketClient::pong() { return RawrXD::unexpected(NetError::InitializationFailed); }
+RawrXD::Expected<void, NetError> WebSocketClient::performHandshake(const std::string&, const std::unordered_map<std::string, std::string>&) { return RawrXD::unexpected(NetError::InitializationFailed); }
+RawrXD::Expected<void, NetError> WebSocketClient::sendFrame(WebSocketFrame::Opcode, const std::vector<uint8_t>&, bool) { return RawrXD::unexpected(NetError::InitializationFailed); }
+RawrXD::Expected<WebSocketFrame, NetError> WebSocketClient::parseFrame(const std::vector<uint8_t>&) { return RawrXD::unexpected(NetError::InitializationFailed); }
+void WebSocketClient::receiveLoop() {}
+std::vector<uint8_t> WebSocketClient::constructFrame(WebSocketFrame::Opcode, const std::vector<uint8_t>&, bool) { return {}; }
+std::string WebSocketClient::generateWebSocketKey() { return ""; }
+
+// NetworkManager stubs
+NetworkManager& NetworkManager::instance() { static NetworkManager nm; return nm; }
+RawrXD::Expected<void, NetError> NetworkManager::initialize(const NetworkConfig& config) {
+    m_config = config;
+    m_httpClient = std::make_unique<HttpClient>(config);
+    m_websocketClient = std::make_unique<WebSocketClient>(config);
+    m_connectionPool = std::make_unique<ConnectionPool>(config);
+    m_initialized = true;
+    return {};
+}
+void NetworkManager::shutdown() { m_initialized = false; }
+HttpClient& NetworkManager::getHttpClient() { return *m_httpClient; }
+WebSocketClient& NetworkManager::getWebSocketClient() { return *m_websocketClient; }
+ConnectionPool& NetworkManager::getConnectionPool() { return *m_connectionPool; }
+nlohmann::json NetworkManager::getNetworkStatus() const { return {{"initialized", m_initialized.load()}}; }
+
+} // namespace RawrXD::Net
+
+#endif // _WIN32

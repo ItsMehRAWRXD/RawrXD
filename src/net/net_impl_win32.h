@@ -1,8 +1,19 @@
 #pragma once
+
+#ifdef _WIN32
 #include <windows.h>
 #include <wininet.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#else
+// POSIX networking stubs
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <unistd.h>
+#endif
+
 #include <string>
 #include <vector>
 #include <memory>

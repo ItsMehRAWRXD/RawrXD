@@ -1,6 +1,9 @@
-<<<<<<< HEAD
 # Build artifacts
 build/
+build-*/
+build_prod/
+out/
+tmp/
 *.obj
 *.o
 *.lib
@@ -9,14 +12,15 @@ build/
 *.pdb
 *.ilk
 *.log
+*.d
+*.dot
 
 # CMake
 CMakeCache.txt
 CMakeFiles/
+CMakeSettings.json
 cmake_install.cmake
-*.vcxproj
-*.vcxproj.filters
-*.sln
+compile_commands.json
 
 # Qt
 *_autogen/
@@ -30,55 +34,39 @@ moc_*.cpp.d
 *.suo
 *.sdf
 *.opensdf
+*.vcxproj
+*.vcxproj.filters
+*.sln
 
 # IDE
 .vscode/
 .idea/
+.clangd
+
+# Python
+__pycache__/
+.venv/
+ggml_env/
 
 # OS
 .DS_Store
 Thumbs.db
-=======
-build/
-build-*/
-out/
-tmp/
-models/
-models-mnt
-
-compile_commands.json
-CMakeSettings.json
-.vs/
-.vscode/
-.idea/
-.clangd
-
-.venv/
-ggml_env/
 .exrc
 .cache
-.DS_Store
-.stablelm
-.gpt-2
+*.sw?
 
-src/arm_neon.h
-tests/arm_neon.h
-
+# Zig
 zig-out/
 zig-cache/
 
-*.o
-*.d
-*.dot
-
-*.sw?
-
-__pycache__/
-
-# Model files
+# Models
+models/
+models-mnt
 ggml-model-f16.bin
-*.bat
->>>>>>> upstream/master
-build_prod/
-
 *.gguf
+
+# Misc
+.stablelm
+.gpt-2
+src/arm_neon.h
+tests/arm_neon.h

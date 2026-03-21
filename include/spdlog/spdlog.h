@@ -3,7 +3,6 @@
 #include <string>
 #include <memory>
 #include <vector>
-#include <format> // Require C++20, but MinGW might struggle. Let's use simple cout.
 
 namespace spdlog {
     namespace level {
@@ -19,9 +18,60 @@ namespace spdlog {
         inline level_enum from_str(const std::string&) { return info; }
     }
 
+    // Forward declare logger for sink_ptr
+    class logger;
+    
+    // Sink types (stubs)
+    namespace sinks {
+        class sink {
+        public:
+            virtual ~sink() = default;
+        };
+        
+        class basic_file_sink_mt : public sink {
+        public:
+            basic_file_sink_mt(const std::string& /*filename*/, bool /*truncate*/ = false) {}
+        };
+        
+        class stdout_color_sink_mt : public sink {
+        public:
+            stdout_color_sink_mt() {}
+        };
+    }
+    
+    using sink_ptr = std::shared_ptr<sinks::sink>;
+
+    class logger {
+    public:
+        logger() = default;
+        logger(const std::string& /*name*/, 
+               std::vector<sink_ptr>::iterator /*begin*/, 
+               std::vector<sink_ptr>::iterator /*end*/) {}
+               
+        template<typename... Args>
+        void info(const std::string& fmt, Args&&... args) {
+            std::cout << "[INFO] " << fmt << std::endl;
+        }
+        template<typename... Args>
+        void error(const std::string& fmt, Args&&... args) {
+            std::cerr << "[ERROR] " << fmt << std::endl;
+        }
+        
+        template<typename... Args>
+        void log(level::level_enum lvl, const std::string& fmt, Args&&... args) {
+             std::cout << "[LOG] " << fmt << std::endl;
+        }
+        
+        void set_level(level::level_enum) {}
+    };
+    
+    // Global functions
+    inline void set_default_logger(std::shared_ptr<logger>) {}
+    inline void set_level(level::level_enum) {}
+    inline void set_pattern(const std::string&) {}
+
     template<typename... Args>
     void info(const std::string& fmt, Args&&... args) {
-        // Simple mock implementation
         std::cout << "[INFO] " << fmt << std::endl; 
     }
     
@@ -46,28 +96,8 @@ namespace spdlog {
         std::cout << "[DEBUG] " << fmt << std::endl;
         #endif
     }
-}
-namespace spdlog {
-    class logger {
-    public:
-        template<typename... Args>
-        void info(const std::string& fmt, Args&&... args) {}
-        template<typename... Args>
-        void error(const std::string& fmt, Args&&... args) {}
-        
-        template<typename... Args>
-        void log(level::level_enum lvl, const std::string& fmt, Args&&... args) {
-             std::cout << "[LOG] " << fmt << std::endl;
-        }
-    };
 
-    static std::shared_ptr<logger> stderr_color_mt(const std::string& name) {
+    inline std::shared_ptr<logger> stderr_color_mt(const std::string& name) {
         return std::make_shared<logger>();
     }
-
-    static void set_level(level::level_enum log_level) {}
-    static void set_pattern(const std::string& pattern) {}
-    
-    template<typename... Args>
-    static void info(const char* fmt, const Args&... args) {}
 }

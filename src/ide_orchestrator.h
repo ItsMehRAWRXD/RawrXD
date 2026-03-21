@@ -84,6 +84,24 @@ private:
     std::mutex m_taskMutex;
     std::condition_variable m_taskCondition;
     
+    // Additional queues and sync for inference/render loops
+    std::queue<std::function<void()>> m_inferenceQueue;
+    std::mutex m_inferenceMutex;
+    std::condition_variable m_inferenceCondition;
+    
+    std::queue<std::function<void()>> m_renderQueue;
+    std::mutex m_renderMutex;
+    std::condition_variable m_renderCondition;
+    
+    // Metrics counters
+    std::atomic<size_t> m_totalRequests{0};
+    std::atomic<size_t> m_successfulRequests{0};
+    std::atomic<size_t> m_failedRequests{0};
+    std::atomic<size_t> m_tokensGenerated{0};
+    std::atomic<size_t> m_cacheHits{0};
+    std::atomic<size_t> m_cacheMisses{0};
+    std::atomic<long long> m_totalProcessingTimeMs{0};
+    
     // Private implementation methods
     RawrXD::Expected<void, IDEError> initializeComponents();
     RawrXD::Expected<void, IDEError> setupNetworking();

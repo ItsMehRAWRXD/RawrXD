@@ -1,5 +1,7 @@
 #pragma once
 #include "RawrXD_Win32_Foundation.h"
+
+#ifdef _WIN32
 #include <d2d1.h>
 #include <dwrite.h>
 
@@ -98,3 +100,29 @@ private:
 };
 
 } // namespace RawrXD
+
+#else
+// Non-Windows stub: provide minimal types so headers compile
+namespace RawrXD {
+
+class Font {
+public:
+    Font() = default;
+    ~Font() = default;
+};
+
+struct TextRun {
+    int start = 0;
+    int length = 0;
+    bool bold = false;
+    bool italic = false;
+};
+
+class Renderer2D {
+public:
+    Renderer2D() = default;
+    ~Renderer2D() = default;
+};
+
+} // namespace RawrXD
+#endif

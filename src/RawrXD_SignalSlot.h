@@ -222,15 +222,18 @@ public:
 
 // Timer replacement (no QTimer)
 class Timer {
+#ifdef _WIN32
     HWND hwnd = nullptr;
     UINT_PTR id = 0;
     UINT interval = 0;
+    static std::unordered_map<UINT_PTR, Timer*> timers;
+    static void CALLBACK TimerProc(HWND, UINT, UINT_PTR id, DWORD);
+#else
+    unsigned int interval = 0;
+#endif
     bool m_singleShot = false;
     bool active = false;
     std::function<void()> callback;
-    static std::unordered_map<UINT_PTR, Timer*> timers;
-    
-    static void CALLBACK TimerProc(HWND, UINT, UINT_PTR id, DWORD);
     
 public:
     Timer() = default;
@@ -239,7 +242,7 @@ public:
     Timer(const Timer&) = delete;
     Timer& operator=(const Timer&) = delete;
     
-    void setInterval(int msec) { interval = (UINT)msec; }
+    void setInterval(int msec) { interval = static_cast<unsigned int>(msec); }
     void setSingleShot(bool ss) { m_singleShot = ss; }
     
     void start();
@@ -279,7 +282,9 @@ private:
     std::atomic<bool> m_running;
     HANDLE m_hDir;
     String watchPath;
+#ifdef _WIN32
     OVERLAPPED m_overlapped;
+#endif
     std::vector<uint8_t> buffer;
     std::thread watcherThread;
 };
