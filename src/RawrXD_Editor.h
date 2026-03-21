@@ -46,7 +46,9 @@ public:
     UndoStack* undoStack() { return &stack; }
     
 protected:
+#ifdef _WIN32
     void paintEvent(PAINTSTRUCT& ps) override;
+#endif
     void resizeEvent(int w, int h) override;
     
     void keyPressEvent(int key, int mods) override;

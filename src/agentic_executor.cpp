@@ -9,6 +9,11 @@
 #include <regex>
 #include <chrono>
 
+#ifndef _WIN32
+#define _popen popen
+#define _pclose pclose
+#endif
+
 #include "agentic_executor.h"
 #include "agentic_engine.h"
 #include "cpu_inference_engine.h" 

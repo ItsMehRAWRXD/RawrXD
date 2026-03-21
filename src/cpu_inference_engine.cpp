@@ -33,12 +33,16 @@ RawrXD::Expected<void, InferenceError> CPUInferenceEngine::loadModel(const std::
     std::wstring wpath;
     try {
         if (!path.empty()) {
+#ifdef _WIN32
             int len = MultiByteToWideChar(CP_UTF8, 0, path.c_str(), -1, NULL, 0);
             if (len > 0) {
                 wpath.resize(len);
                 MultiByteToWideChar(CP_UTF8, 0, path.c_str(), -1, &wpath[0], len);
                 if (wpath.back() == L'\0') wpath.pop_back();
             }
+#else
+            wpath = std::wstring(path.begin(), path.end());
+#endif
         }
     } catch(...) {}
 

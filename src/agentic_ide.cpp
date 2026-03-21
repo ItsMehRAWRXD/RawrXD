@@ -1,5 +1,6 @@
 #include <thread>
 #include <atomic>
+#include <shared_mutex>
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN
 #include <compare>
@@ -281,7 +282,7 @@ void AgenticIDE::setEditor(RawrXD::Editor* editor) {
 }
 
 json AgenticIDE::getStatus() const {
-    std::shared_lock lock(m_mutex);
+    std::lock_guard lock(m_mutex);
     
     return {
         {"running", m_running.load()},

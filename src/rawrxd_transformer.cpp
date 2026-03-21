@@ -3,6 +3,7 @@
 #include <cmath>
 #include <algorithm>
 #include <iostream>
+#include <cstring>
 #include <immintrin.h>
 
 // C++ Implementations of Kernels (Ensuring Real Logic Execution)

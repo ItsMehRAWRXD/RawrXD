@@ -3,10 +3,22 @@
 #include <cmath>
 #include <algorithm>
 #include <thread>
-#include <windows.h>
 #include <iostream>
-#include <intrin.h>
 #include <cstdint>
+#include <cstring>
+
+#ifdef _WIN32
+#include <windows.h>
+#include <intrin.h>
+#else
+#if defined(__x86_64__) || defined(__i386__)
+#include <cpuid.h>
+#endif
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#endif
 
 // MASM64 kernel declarations - these link to rawrxd_kernels.asm
 // Since rawrxd_kernels.asm was confirmed present, we can link these.
@@ -15,16 +27,28 @@ extern "C" void DequantQ4_0_AVX2(void* src, uint16_t* dst, size_t blocks);
 
 // Helper for CPUID
 static bool hasAVX512() {
+#ifdef _WIN32
     int cpuInfo[4];
     __cpuid(cpuInfo, 7);
     return (cpuInfo[1] & (1 << 16)) != 0;
+#elif defined(__x86_64__) || defined(__i386__)
+    unsigned int eax, ebx, ecx, edx;
+    if (__get_cpuid_count(7, 0, &eax, &ebx, &ecx, &edx))
+        return (ebx & (1 << 16)) != 0;
+    return false;
+#else
+    return false;
+#endif
 }
 
 bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalDevice physDevice) {
     device = vkDevice;
+#ifdef RAWRXD_HAS_VULKAN
     vkGetPhysicalDeviceMemoryProperties(physDevice, &memProps);
+#endif
     
-    // 1. Memory-mapped file (zero copy from disk)
+#ifdef _WIN32
+    // Memory-mapped file (zero copy from disk) — Win32 path
     hFile = CreateFileW(path, GENERIC_READ, FILE_SHARE_READ, nullptr, 
                        OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, nullptr);
     if (hFile == INVALID_HANDLE_VALUE) {
@@ -43,6 +67,34 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
         CloseHandle(hFile);
         return false;
     }
+#else
+    // POSIX memory-mapped file path
+    
+    // Convert wide path to narrow
+    std::string narrowPath;
+    if (path) {
+        const wchar_t* p = path;
+        while (*p) { narrowPath.push_back(static_cast<char>(*p & 0x7F)); ++p; }
+    }
+    
+    int fd = open(narrowPath.c_str(), O_RDONLY);
+    if (fd < 0) {
+        printf("[RawrXD] Could not open model file\n");
+        return false;
+    }
+    
+    struct stat st;
+    fstat(fd, &st);
+    fileSize = st.st_size;
+    
+    mappedView = mmap(nullptr, fileSize, PROT_READ, MAP_PRIVATE, fd, 0);
+    close(fd);
+    if (mappedView == MAP_FAILED) {
+        printf("[RawrXD] Memory mapping failed\n");
+        mappedView = nullptr;
+        return false;
+    }
+#endif
     
     // 2. Parse GGUF structure
     uint8_t* ptr = (uint8_t*)mappedView;
@@ -84,9 +136,15 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
     printf("[RawrXD] Loading %zu tensors from GGUF...\n", tensorInfos.size());
     printf("[RawrXD] Data starts at offset %llu\n", dataStart);
 
+    size_t numThreads;
+#ifdef _WIN32
     SYSTEM_INFO sysInfo;
     GetSystemInfo(&sysInfo);
-    size_t numThreads = sysInfo.dwNumberOfProcessors;
+    numThreads = sysInfo.dwNumberOfProcessors;
+#else
+    numThreads = std::thread::hardware_concurrency();
+    if (numThreads == 0) numThreads = 4;
+#endif
     if (numThreads > 32) numThreads = 32; // basic clamp
     
     std::vector<std::vector<Tensor*>> chunks(numThreads);
@@ -261,6 +319,7 @@ void RawrXDModelLoader::UploadF32(Tensor& t, void* data, size_t N) {
     t.onGPU = true;
 }
 
+#ifdef RAWRXD_HAS_VULKAN
 void RawrXDModelLoader::CreateGPUBuffer(Tensor& t, void* data, size_t size) {
     VkBufferCreateInfo bufferInfo{};
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -386,6 +445,12 @@ uint32_t RawrXDModelLoader::FindMemoryType(uint32_t typeFilter, VkMemoryProperty
     }
     return 0; // Failure
 }
+#else
+// Vulkan stubs for non-Vulkan builds
+void RawrXDModelLoader::CreateGPUBuffer(Tensor&, void*, size_t) {}
+void RawrXDModelLoader::UploadViaStaging(void*, size_t, VkBuffer) {}
+uint32_t RawrXDModelLoader::FindMemoryType(uint32_t, VkMemoryPropertyFlags) { return 0; }
+#endif
 
 int64_t RawrXDModelLoader::CalculateVRAMUsage() {
     // Sum up allocated GPU buffers
