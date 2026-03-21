@@ -50,6 +50,18 @@ set(MAIN_SOURCES
     src/utils/Diagnostics.cpp
     src/utils/ErrorReporter.cpp
     src/utils/InferenceSettingsManager.cpp
+    src/chain_of_thought.cpp
+    src/swarm_orchestrator.cpp
+    src/model_trainer.cpp
+    src/plan_orchestrator.cpp
+    src/chat_interface.cpp
+    src/multi_tab_editor.cpp
+    src/terminal_pool.cpp
+    src/lsp_client.cpp
+    src/autonomous_model_manager.cpp
+    src/autonomous_intelligence_orchestrator.cpp
+    src/zero_day_agentic_engine.cpp
+    src/net/net_impl_win32.cpp
     ${COMMON_SOURCES}
 )
 

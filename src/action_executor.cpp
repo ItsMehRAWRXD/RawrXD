@@ -5,8 +5,10 @@
 #include <filesystem>
 #include <thread>
 #include <regex>
+#ifdef _WIN32
 #include <windows.h>
-#include "RawrXD_Win32_Foundation.h" // Assuming this exists based on previous context
+#endif
+#include "RawrXD_Win32_Foundation.h"
 
 namespace fs = std::filesystem;
 using json = nlohmann::json;
@@ -322,6 +324,7 @@ json ActionExecutor::executeCommand(const std::string& command, const std::vecto
     std::string fullCmd = command;
     for(const auto& arg : args) fullCmd += " " + arg;
     
+#ifdef _WIN32
     // Windows Process Creation
     SECURITY_ATTRIBUTES saAttr;
     saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
@@ -346,9 +349,8 @@ json ActionExecutor::executeCommand(const std::string& command, const std::vecto
 
     ZeroMemory(&pi, sizeof(pi));
 
-    // Create the child process.
     std::string cmdLine = "cmd.exe /C " + fullCmd;
-    char* szCmdLine = _strdup(cmdLine.c_str()); // Writable buffer
+    char* szCmdLine = _strdup(cmdLine.c_str());
 
     if (!CreateProcessA(NULL, szCmdLine, NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi)) {
         free(szCmdLine);
@@ -358,9 +360,8 @@ json ActionExecutor::executeCommand(const std::string& command, const std::vecto
     }
 
     free(szCmdLine);
-    CloseHandle(hChildStd_OUT_Wr); // Close write end in parent
+    CloseHandle(hChildStd_OUT_Wr);
 
-    // Read output
     std::string output;
     DWORD dwRead, dwAvail;
     char chBuf[4096];
@@ -369,7 +370,6 @@ json ActionExecutor::executeCommand(const std::string& command, const std::vecto
     auto startTime = std::chrono::high_resolution_clock::now();
 
     while (true) {
-        // Check timeout
         auto now = std::chrono::high_resolution_clock::now();
         if (std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime).count() > timeoutMs) {
             TerminateProcess(pi.hProcess, 1);
@@ -377,10 +377,8 @@ json ActionExecutor::executeCommand(const std::string& command, const std::vecto
             break;
         }
 
-        // Check if process exited
         DWORD exitCode;
         if (GetExitCodeProcess(pi.hProcess, &exitCode) && exitCode != STILL_ACTIVE) {
-            // Read remaining bytes
             while(ReadFile(hChildStd_OUT_Rd, chBuf, sizeof(chBuf)-1, &dwRead, NULL) && dwRead != 0) {
                  chBuf[dwRead] = 0;
                  output += chBuf;
@@ -388,7 +386,6 @@ json ActionExecutor::executeCommand(const std::string& command, const std::vecto
             break;
         }
         
-        // Peek pipe
         if (PeekNamedPipe(hChildStd_OUT_Rd, NULL, 0, NULL, &dwAvail, NULL)) {
             if (dwAvail > 0) {
                  if (ReadFile(hChildStd_OUT_Rd, chBuf, sizeof(chBuf)-1, &dwRead, NULL) && dwRead != 0) {
@@ -405,7 +402,23 @@ json ActionExecutor::executeCommand(const std::string& command, const std::vecto
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
 
-    return {{"output", output}, {"exitCode", 0}}; // Exit code simplified
+    return {{"output", output}, {"exitCode", 0}};
+#else
+    // POSIX process execution via popen
+    std::string output;
+    FILE* pipe = popen(fullCmd.c_str(), "r");
+    if (!pipe) {
+        return {{"error", "popen failed"}};
+    }
+    
+    char buffer[4096];
+    while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
+        output += buffer;
+    }
+    
+    int exitCode = pclose(pipe);
+    return {{"output", output}, {"exitCode", exitCode}};
+#endif
 }
 
 bool ActionExecutor::handleRunBuild(Action& action) {

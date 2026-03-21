@@ -743,3 +743,11 @@ bool AgenticExecutor::isTrainingModel() const
 }
 
 
+
+// Signal stubs — these were Qt signals, now simple no-ops
+void AgenticExecutor::logMessage(const std::string&) {}
+void AgenticExecutor::errorOccurred(const std::string&) {}
+void AgenticExecutor::executionComplete(const nlohmann::json&) {}
+void AgenticExecutor::stepStarted(const std::string&) {}
+void AgenticExecutor::stepCompleted(const std::string&, bool) {}
+void AgenticExecutor::taskProgress(int, int) {}

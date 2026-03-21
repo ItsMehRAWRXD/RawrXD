@@ -98,14 +98,14 @@ Source-Level Audits
 ### Build (after fixing Phase 1)
 
 ```bash
-cmake --build . --target RawrXD-AgenticIDE --config Release -j8
+cmake --build . --target RawrXD --config Release -j8
 ```
 
 ### Run the IDE
 
 ```bash
-./build/bin/Release/RawrXD-QtShell      # Windows
-./build/bin/Release/RawrXD-AgenticIDE   # Linux/macOS
+.\build\Release\RawrXD.exe    # Windows
+./build/RawrXD                 # Linux/macOS
 ```
 
 ### Verify a fix

@@ -1,11 +1,12 @@
 #include "cloud_api_client.h"
 #include <iostream>
 #include <sstream>
-#include <windows.h>
-#include <winhttp.h>
 #include <thread>
 #include <mutex>
 
+#ifdef _WIN32
+#include <windows.h>
+#include <winhttp.h>
 #pragma comment(lib, "winhttp.lib")
 
 namespace RawrXD {
@@ -243,3 +244,31 @@ int CloudApiClient::getSuccessRate() const {
 }
 
 } // namespace RawrXD
+
+#else
+// Non-Windows stub
+namespace RawrXD {
+
+CloudApiClient::CloudApiClient(UniversalModelRouter*) {}
+CloudApiClient::~CloudApiClient() = default;
+
+std::string CloudApiClient::generate(const std::string&, const CloudModelConfig&) { return ""; }
+void CloudApiClient::generateAsync(const std::string&, const CloudModelConfig&, std::function<void(std::string)>) {}
+void CloudApiClient::generateStream(const std::string&, const CloudModelConfig&, std::function<void(const std::string&)>, std::function<void(const std::string&)>) {}
+bool CloudApiClient::checkProviderHealth(const CloudModelConfig&) { return false; }
+void CloudApiClient::checkProviderHealthAsync(const CloudModelConfig&, std::function<void(bool)> cb) { if (cb) cb(false); }
+std::vector<std::string> CloudApiClient::listModels(const CloudModelConfig&) { return {}; }
+void CloudApiClient::listModelsAsync(const CloudModelConfig&, std::function<void(const std::vector<std::string>&)> cb) { if (cb) cb({}); }
+nlohmann::json CloudApiClient::buildRequestBody(const std::string& prompt, const CloudModelConfig& config) { return {}; }
+ApiResponse CloudApiClient::performRequest(const std::string&, const nlohmann::json&, const CloudModelConfig&, std::function<void(const std::string&)>) {
+    return {false, "", 0, "", 0, "Platform not supported", {}};
+}
+std::vector<ApiCallLog> CloudApiClient::getCallHistory() const { return {}; }
+void CloudApiClient::clearCallHistory() {}
+ApiCallLog CloudApiClient::getLastCall() const { return {}; }
+double CloudApiClient::getAverageLatency() const { return 0.0; }
+int CloudApiClient::getSuccessRate() const { return 0; }
+
+} // namespace RawrXD
+
+#endif // _WIN32

@@ -2,12 +2,15 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#ifdef _WIN32
 #include <windows.h>
+#endif
 
 // Minimal JSON parser helper (or use nlohmann/json in production)
 // This is a specialized parser for the known response format:
 // {"Pattern":"BUG","Confidence":1.00,"Line":1,"Priority":10}
 
+#ifdef _WIN32
 namespace RawrXD {
 
     PipeClient::PipeClient(const std::string& name) 
@@ -141,3 +144,17 @@ namespace RawrXD {
     }
 }
 
+
+#else
+// POSIX stub — named pipes are Windows-specific
+namespace RawrXD {
+    PipeClient::PipeClient(const std::string& name) : pipeName(name), pipeHandle(INVALID_HANDLE_VALUE) {}
+    PipeClient::~PipeClient() {}
+    bool PipeClient::Connect(int) { return false; }
+    void PipeClient::Disconnect() {}
+    PatternResult PipeClient::Classify(const std::string&) { return {}; }
+    bool PipeClient::Ping() { return false; }
+    void PipeClient::SendCommand(const std::string&, const std::string&) {}
+    std::string PipeClient::ReadResponse() { return ""; }
+}
+#endif // _WIN32
