@@ -59,6 +59,10 @@ public:
     QJsonObject executeAgentTask(const QJsonObject& task);
     QJsonArray planMultiStepTask(const QString& goal);
 
+    // RAWRXD AGENTHOST - Autonomous Multi-Agent Coordination
+    QJsonObject executeAgenticLoop(const QString& goal, int cycleMultiplier = 1, int agentCount = 3);
+    bool selfHealSymbolResolution(const QString& symbol, void** address);
+    
     // Code Transformation
     QJsonObject transformCode(const QString& code, const QString& transformation);
     QString explainCode(const QString& code);

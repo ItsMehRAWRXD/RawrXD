@@ -14,11 +14,18 @@
 #include "../native_agent.hpp"
 
 // Forward declaration
+// DLL export/import macro for proper symbol visibility
+#ifdef AGENTIC_BRIDGE_EXPORTS
+    #define AGENTIC_BRIDGE_API __declspec(dllexport)
+#else
+    #define AGENTIC_BRIDGE_API __declspec(dllimport)
+#endif
+
 class Win32IDE;
 
 // Agent response types
 enum class AgentResponseType {
-    TOOL_CALL,
+enum class AGENTIC_BRIDGE_API AgentResponseType {
     ANSWER,
     AGENT_ERROR,
     THINKING
@@ -36,31 +43,31 @@ struct AgentResponse {
 class AgenticBridge {
 public:
     AgenticBridge(Win32IDE* ide);
-    ~AgenticBridge();
+class AGENTIC_BRIDGE_API AgenticBridge {
 
     // Core agent operations
     bool Initialize(const std::string& frameworkPath, const std::string& modelName = "");
     bool IsInitialized() const { return m_initialized; }
     
-    // Execute single agent command
-    AgentResponse ExecuteAgentCommand(const std::string& prompt);
+    bool __stdcall Initialize(const std::string& frameworkPath, const std::string& modelName = "");
+    bool __stdcall IsInitialized() const { return m_initialized; }
     
     // Start multi-turn agent loop
-    bool StartAgentLoop(const std::string& initialPrompt, int maxIterations = 10);
+    AgentResponse __stdcall ExecuteAgentCommand(const std::string& prompt);
     void StopAgentLoop();
     bool IsAgentLoopRunning() const { return m_agentLoopRunning; }
-    
-    // Get agent capabilities
-    std::vector<std::string> GetAvailableTools();
+    bool __stdcall StartAgentLoop(const std::string& initialPrompt, int maxIterations = 10);
+    void __stdcall StopAgentLoop();
+    bool __stdcall IsAgentLoopRunning() const { return m_agentLoopRunning; }
     std::string GetAgentStatus();
     
-    // Configuration
-    void SetModel(const std::string& modelName);
+    std::vector<std::string> __stdcall GetAvailableTools();
+    std::string __stdcall GetAgentStatus();
     void SetOllamaServer(const std::string& serverUrl);
     std::string GetCurrentModel() const { return m_modelName; }
-    
-    // Output callback
-    using OutputCallback = std::function<void(const std::string&, const std::string&)>;
+    void __stdcall SetModel(const std::string& modelName);
+    void __stdcall SetOllamaServer(const std::string& serverUrl);
+    std::string __stdcall GetCurrentModel() const { return m_modelName; }
     void SetOutputCallback(OutputCallback callback);
 
 private:

@@ -30,10 +30,6 @@
 #ifndef LOG_FUNCTION
 #define LOG_FUNCTION() LOG_DEBUG(std::string("ENTER ") + __FUNCTION__)
 #endif
-#include "Win32TerminalManager.h"
-#include "TransparentRenderer.h"
-#include "gguf_loader.h"
-#include "streaming_gguf_loader.h"
 
 // Theme and customization structures
 struct IDETheme {
@@ -49,6 +45,353 @@ struct IDETheme {
     std::string fontName;
     int fontSize;
     bool darkMode;
+};
+
+struct CaretPosition {
+    int line;
+    int column;
+    int charPos;  // Absolute character position in editor
+    bool isPrimary;
+};
+
+struct PeekItem {
+    std::string title;
+    std::string content;
+    std::string file;
+    int line;
+    int column;
+    PeekItemType type;
+};
+
+enum class PeekItemType {
+    Definition,
+    Reference,
+    Hover
+};
+
+enum class ContextMenuType {
+    Editor,
+    FileExplorer,
+    TabBar,
+    Terminal,
+    StatusBar,
+    Sidebar,
+    OutputPanel
+};
+
+class HotpatchManager;
+
+namespace RawrXD {
+class LayerEvictionManager;
+}
+
+class Governor;
+
+class QuantumTimeManager;
+
+class QuantumAgentOrchestrator;
+
+class QuantumSystem;
+
+class ModelRouter;
+
+class RouterUI;
+
+class SyntaxHighlighter;
+
+class CodeFoldingManager;
+
+class CompletionEngine;
+
+class CompletionUI;
+
+class ContextMenuManager;
+
+class CodeIntelligenceEngine;
+
+class FindReplaceManager;
+
+class SearchUI;
+
+enum class TaskType {
+    CodeCompletion,
+    CodeGeneration,
+    ChatConversation,
+    CodeReview,
+    Documentation,
+    Debugging,
+    Refactoring,
+    MathReasoning,
+    GeneralQA
+};
+
+enum class AgentRole {
+    Planner,
+    Executor,
+    Reviewer,
+    Debugger,
+    Optimizer,
+    Researcher,
+    Coordinator
+};
+
+enum class TaskStatus {
+    Pending,
+    InProgress,
+    Completed,
+    Failed,
+    Cancelled
+};
+
+enum class TaskPriority {
+    Low,
+    Medium,
+    High,
+    Critical
+};
+
+enum class FoldType {
+    Function,
+    Class,
+    Struct,
+    Namespace,
+    Block,
+    Region,
+    Comment,
+    Custom
+};
+
+struct FoldRegion {
+    int startLine;
+    int endLine;
+    int level;
+    FoldType type;
+    std::string title;
+    bool collapsed;
+    bool canCollapse;
+
+    FoldRegion() : startLine(0), endLine(0), level(0), type(FoldType::Block),
+                   collapsed(false), canCollapse(true) {}
+};
+
+struct FoldingTheme {
+    COLORREF foldMarginColor;
+    COLORREF foldIndicatorColor;
+    COLORREF collapsedIndicatorColor;
+    COLORREF expandedIndicatorColor;
+    int foldMarginWidth;
+    std::string collapsedSymbol;
+    std::string expandedSymbol;
+
+    FoldingTheme() : foldMarginColor(RGB(240,240,240)), foldIndicatorColor(RGB(128,128,128)),
+                     collapsedIndicatorColor(RGB(0,0,0)), expandedIndicatorColor(RGB(0,0,0)),
+                     foldMarginWidth(20), collapsedSymbol("+"), expandedSymbol("-") {}
+};
+
+enum class SymbolType {
+    Variable,
+    Function,
+    Class,
+    Struct,
+    Enum,
+    Namespace,
+    Macro,
+    TypeAlias,
+    Method,
+    Property,
+    Field,
+    Parameter,
+    LocalVariable
+};
+
+enum class SymbolScope {
+    Global,
+    File,
+    Class,
+    Function,
+    Block
+};
+
+enum class DiagnosticSeverity {
+    Error,
+    Warning,
+    Info,
+    Hint
+};
+
+struct SourceLocation {
+    std::string file;
+    int line;
+    int column;
+    int length;
+
+    SourceLocation() : line(0), column(0), length(0) {}
+    SourceLocation(const std::string& f, int l, int c, int len = 0)
+        : file(f), line(l), column(c), length(len) {}
+};
+
+struct SymbolDefinition {
+    std::string name;
+    SymbolType type;
+    SymbolScope scope;
+    SourceLocation location;
+    std::string signature;
+    std::string documentation;
+    std::vector<std::string> modifiers;  // const, static, virtual, etc.
+    std::string parentSymbol;  // for nested symbols
+
+    SymbolDefinition() : type(SymbolType::Variable), scope(SymbolScope::Global) {}
+};
+
+struct SymbolReference {
+    std::string symbolName;
+    SourceLocation location;
+    bool isDefinition;
+    std::string context;  // surrounding code context
+
+    SymbolReference() : isDefinition(false) {}
+};
+
+struct CompletionItem {
+    std::string label;
+    std::string detail;
+    std::string documentation;
+    std::string insertText;
+    std::string kind;
+    int priority;
+    SourceLocation location;
+
+    CompletionItem() : priority(0) {}
+};
+
+struct Diagnostic {
+    std::string message;
+    DiagnosticSeverity severity;
+    SourceLocation location;
+    std::string source;
+    std::string code;
+    std::vector<std::string> relatedInformation;
+
+    Diagnostic() : severity(DiagnosticSeverity::Error) {}
+};
+
+struct ModelProfile {
+    std::string id;
+    std::string name;
+    std::string description;
+    std::string path;
+    size_t parameterCount;  // in billions
+    size_t contextLength;
+    std::vector<std::string> capabilities;  // e.g., "code", "chat", "math"
+    double performanceScore;  // 0.0-1.0
+    double memoryUsage;  // in GB
+    double inferenceSpeed;  // tokens/sec
+    bool isLoaded;
+    std::chrono::steady_clock::time_point lastUsed;
+    int useCount;
+
+    ModelProfile() : parameterCount(0), contextLength(0), performanceScore(0.0),
+                     memoryUsage(0.0), inferenceSpeed(0.0), isLoaded(false), useCount(0) {}
+};
+
+struct AgentCapability {
+    std::string name;
+    std::string description;
+    std::vector<std::string> tools;
+    double proficiency;  // 0.0-1.0
+};
+
+struct AgentProfile {
+    std::string id;
+    std::string name;
+    AgentRole role;
+    std::vector<AgentCapability> capabilities;
+    double overallProficiency;
+    bool isActive;
+    int taskCount;
+    std::chrono::steady_clock::time_point lastActive;
+};
+
+struct Task {
+    std::string id;
+    std::string description;
+    TaskType type;
+    TaskPriority priority;
+    TaskStatus status;
+    std::string assignedAgentId;
+    std::vector<std::string> subtasks;
+    std::map<std::string, std::string> parameters;
+    std::string result;
+    std::string error;
+    std::chrono::steady_clock::time_point created;
+    std::chrono::steady_clock::time_point completed;
+};
+
+struct Tool {
+    std::string name;
+    std::string description;
+    std::function<std::string(const std::map<std::string, std::string>&)> execute;
+    std::vector<std::string> requiredParameters;
+    std::vector<std::string> optionalParameters;
+};
+
+enum class CompletionTrigger {
+    Character,
+    Manual,
+    IntelliSense
+};
+
+enum class CompletionItemKind {
+    Text,
+    Method,
+    Function,
+    Constructor,
+    Field,
+    Variable,
+    Class,
+    Interface,
+    Module,
+    Property,
+    Unit,
+    Value,
+    Enum,
+    Keyword,
+    Snippet,
+    Color,
+    File,
+    Reference,
+    Folder,
+    EnumMember,
+    Constant,
+    Struct,
+    Event,
+    Operator,
+    TypeParameter
+};
+
+struct CompletionItem {
+    std::string label;
+    std::string detail;
+    std::string documentation;
+    CompletionItemKind kind;
+    std::string insertText;
+    std::string filterText;
+    int sortText;
+    bool preselect;
+    std::string commitCharacters;
+
+    CompletionItem() : kind(CompletionItemKind::Text), sortText(0), preselect(false) {}
+};
+
+struct CompletionContext {
+    std::string currentWord;
+    std::string lineContent;
+    int lineNumber;
+    int column;
+    std::string filePath;
+    std::string languageId;
+    CompletionTrigger trigger;
+    std::unordered_set<std::string> availableSymbols;
 };
 
 struct CodeSnippet {
@@ -156,6 +499,7 @@ public:
 
     // Test agent access
     HWND getMainWindow() const { return m_hwndMain; }
+    HWND getHWND() const { return m_hwndMain; }
 
     // Agentic Framework
     std::unique_ptr<AgenticBridge> m_agenticBridge;
@@ -188,6 +532,15 @@ public:
     void logWindowDestroy(const std::string& windowName, HWND hwnd);
     void logFileOperation(const std::string& operation, const std::string& filePath, bool success);
     void logUIEvent(const std::string& event, const std::string& details);
+
+    // New Component Methods
+    void handlePluginSignature();
+    void handleEnterpriseStressTests();
+    void handleSQLite3Core();
+    void handleTelemetryExport();
+    void handleRefactoringPlugin();
+    void handleLanguagePlugin();
+    void handleResourceGenerator();
 
 private:
     // Window procedure
@@ -1257,6 +1610,282 @@ private:
     void highlightDebuggerLine(const std::string& file, int line);
     void clearDebuggerHighlight();
 
+    // ========================================================================
+    // GHOST TEXT / INLINE COMPLETIONS
+    // ========================================================================
+
+    // Ghost Text State
+    bool m_ghostTextEnabled;
+    bool m_ghostTextVisible;
+    bool m_ghostTextAccepted;
+    bool m_ghostTextPending;
+    std::string m_ghostTextContent;
+    int m_ghostTextLine;
+    int m_ghostTextColumn;
+    HFONT m_ghostTextFont;
+
+    // Ghost Text Provider
+    std::unique_ptr<RawrXD::Prediction::OllamaProvider> m_predictionProvider;
+
+    // Ghost Text Methods
+    void initGhostText();
+    void shutdownGhostText();
+    void triggerGhostTextCompletion();
+    void onGhostTextTimer();
+    std::string requestGhostTextCompletion(const std::string& context, const std::string& language);
+    std::string requestGhostTextCompletion(const std::string& context, const std::string& language,
+                                           const std::string& suffix, const std::string& filePath,
+                                           int cursorLine, int cursorCol);
+    void onGhostTextReady(int requestedCursorPos, const char* completionText);
+    void dismissGhostText();
+    void acceptGhostText();
+    void renderGhostText(HDC hdc);
+    bool handleGhostTextKey(UINT vk);
+    void toggleGhostText();
+    std::string trimGhostText(const std::string& raw);
+
+    // ========================================================================
+    // MULTI-CURSOR VISUALS
+    // ========================================================================
+
+    // Multi-Cursor Methods
+    void initMultiCursor();
+    void shutdownMultiCursor();
+    void addCaretAtPosition(int line, int column);
+    void removeCaretAtIndex(size_t index);
+    void clearSecondaryCarets();
+    void selectNextOccurrence();
+    void synchronizeCaretsForEdit(const std::string& text, bool isInsertion);
+    void moveAllCarets(int deltaLines, int deltaColumns);
+    void renderMultiCursors(HDC hdc);
+    void renderCaretAtPosition(HDC hdc, const CaretPosition& caret);
+    int getPrimaryCaretPosition() const;
+    int getCharPosFromLineColumn(int line, int column);
+    void getLineColumnFromCharPos(int charPos, int& line, int& column);
+    void sortCaretsByPosition();
+    void updateEditorSelection();
+    std::string getSelectedText();
+    void selectTextRange(int start, int end);
+    void selectWordUnderCursor();
+    int findNextOccurrence(const std::string& text, int startPos);
+    bool handleMultiCursorKey(UINT vk, bool ctrl, bool alt, bool shift);
+    void handleMultiCursorMouse(int x, int y, bool altPressed);
+    void toggleMultiCursor();
+
+    // Multi-cursor access for testing
+    size_t getCursorCount() const { return m_caretPositions.size(); }
+
+    // ========================================================================
+    // PEEK OVERLAY
+    // ========================================================================
+
+    // Peek Overlay Methods
+    void initPeekOverlay();
+    void shutdownPeekOverlay();
+    void showPeekDefinition(int x, int y);
+    void showPeekReferences(int x, int y);
+    void showPeekHover(int x, int y);
+    void hidePeekOverlay();
+    bool isPeekOverlayVisible() const;
+    std::string getWordUnderCursor();
+    std::vector<PeekItem> findSymbolDefinitions(const std::string& symbol);
+    std::vector<PeekItem> findSymbolReferences(const std::string& symbol);
+    std::vector<PeekItem> getSymbolHoverInfo(const std::string& symbol);
+    bool handlePeekKey(UINT vk, bool ctrl, bool alt, bool shift);
+    void handlePeekMouse(int x, int y, bool ctrlPressed);
+    void togglePeekOverlay();
+
+    // ========================================================================
+    // CARET ANIMATION
+    // ========================================================================
+
+    // Caret Animation Methods
+    void initCaretAnimation();
+    void shutdownCaretAnimation();
+    void startCaretBlink();
+    void stopCaretBlink();
+    void setCaretBlinkRate(int milliseconds);
+    void animateCaretToPosition(int line, int column);
+    bool isCaretAnimationEnabled() const;
+    void toggleCaretAnimation();
+
+    // ========================================================================
+    // TIER2/TIER3 COSMETICS
+    // ========================================================================
+
+    // Cosmetics Methods
+    void initTierCosmetics();
+    void shutdownTierCosmetics();
+    void applyTier2Cosmetics();
+    void applyTier3Cosmetics();
+    bool hasSmoothScroll() const;
+    void setSmoothScroll(bool enabled);
+    void setWindowShadows(bool enabled);
+    void setRoundedCorners(bool enabled);
+    void updateCosmeticTheme();
+
+    // ========================================================================
+    // AGENT OLLAMA CLIENT
+    // ========================================================================
+
+    // Agent Ollama Client Methods
+    void initAgentOllamaClient();
+    void shutdownAgentOllamaClient();
+    bool testOllamaConnection();
+    bool isOllamaConnected() const;
+    std::string getOllamaStatus() const;
+    void setOllamaEndpoint(const std::string& endpoint);
+    std::string getOllamaEndpoint() const;
+
+    // ========================================================================
+    // MODEL DISCOVERY
+    // ========================================================================
+
+    // Model Discovery Methods
+    void initModelDiscovery();
+    void shutdownModelDiscovery();
+    void scanForModels();
+    std::vector<std::string> getAvailableModels() const;
+    std::vector<std::string> getModelPaths() const;
+    bool isModelDiscoveryEnabled() const;
+    void setModelDiscoveryPaths(const std::vector<std::string>& paths);
+    std::vector<std::string> getModelDiscoveryPaths() const;
+
+    // ========================================================================
+    // 70B GGUF HOTPATCH
+    // ========================================================================
+
+    // Hotpatch Methods
+    void init70BHotpatch();
+    void shutdown70BHotpatch();
+    bool loadModelForHotpatch(const std::string& modelPath);
+    bool applyModelHotpatch();
+    bool rollbackModelHotpatch();
+    void showHotpatchStatus();
+    bool isHotpatchInProgress() const;
+    void showHotpatchDialog();
+    bool handleHotpatchKey(UINT vk, bool ctrl, bool alt, bool shift);
+
+    // Layer Eviction Methods
+    void initLayerEviction();
+    void shutdownLayerEviction();
+    bool registerModelLayer(int layerId, size_t layerSize, void* layerData);
+    bool accessModelLayer(int layerId);
+    void* getModelLayerData(int layerId);
+    void showLayerEvictionStatus();
+    void setLayerEvictionPolicy(const std::string& policy);
+    void setLayerEvictionThreshold(float threshold);
+    bool ensureLayerLoaded(int layerId);
+    void onLayerAccessPattern(int layerId);
+    bool handleLayerEvictionKey(UINT vk, bool ctrl, bool alt, bool shift);
+
+    // Model Router Methods
+    void initModelRouter();
+    void shutdownModelRouter();
+    bool registerModelInRouter(const ModelProfile& profile);
+    std::string selectModelForCurrentTask(TaskType taskType);
+    void showModelRouterUI();
+    void updateModelStatusInRouter(const std::string& modelId, bool isLoaded);
+    void showModelRecommendations(TaskType taskType);
+    bool handleModelRouterKey(UINT vk, bool ctrl, bool alt, bool shift);
+
+    // Advanced Agentic Framework Methods
+    void initAdvancedAgentic();
+    void shutdownAdvancedAgentic();
+    std::string submitAgenticTask(const std::string& description, TaskType type);
+    void showAgenticStatus();
+    void toggleAutonomousMode();
+    void registerSampleModels();
+    ToolExecutor* getToolExecutor();
+    bool handleAgenticKey(UINT vk, bool ctrl, bool alt, bool shift);
+
+    // Context Menu Methods
+    void initContextMenu();
+    void shutdownContextMenu();
+    bool showContextMenu(ContextMenuType type, POINT pt, void* contextData = nullptr);
+    ContextMenuType determineContextMenuType(int x, int y, HWND hwnd);
+    bool handleContextMenu(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+    // Code Completion Engine Methods
+    void initCodeCompletion();
+    void shutdownCodeCompletion();
+    void triggerCodeCompletion();
+    void hideCodeCompletion();
+    CompletionContext getCurrentCompletionContext();
+    std::string getLanguageFromFilePath(const std::string& filePath);
+    void onCompletionSelected(const CompletionItem& item);
+    void showCompletionStats();
+    bool handleCodeCompletionKey(UINT vk, bool ctrl, bool alt, bool shift);
+
+    // Syntax Highlighting System Methods
+    void initSyntaxHighlighting();
+    void shutdownSyntaxHighlighting();
+    void highlightCurrentDocument();
+    void highlightCurrentLine();
+    void setSyntaxTheme(const std::string& themeName);
+    void showSyntaxHighlightingStats();
+    void toggleSyntaxHighlighting();
+    void clearSyntaxCache();
+    bool handleSyntaxHighlightingKey(UINT vk, bool ctrl, bool alt, bool shift);
+
+    // Code Folding System Methods
+    void initCodeFolding();
+    void shutdownCodeFolding();
+    void analyzeDocumentFolds();
+    void toggleFoldAtLine(int line);
+    void collapseAllFolds();
+    void expandAllFolds();
+    void showFoldingStatus();
+    void setFoldingTheme(const FoldingTheme& theme);
+    bool handleCodeFoldingKey(UINT vk, bool ctrl, bool alt, bool shift);
+
+    // Find & Replace System Methods
+    void initFindReplace();
+    void shutdownFindReplace();
+    void showFindReplaceDialog();
+    void findNext();
+    void findPrevious();
+    void replaceCurrent();
+    void replaceAll();
+    void showFindReplaceStats();
+    bool handleFindReplaceKey(UINT vk, bool ctrl, bool alt, bool shift);
+
+    // Advanced Debugging System
+    void initAdvancedDebugging();
+    void shutdownAdvancedDebugging();
+    void startDebugSession(const std::string& executable);
+    void stopDebugSession();
+    void toggleBreakpoint(int line, int column);
+    void addWatchExpression(const std::string& expression);
+    void stepOver();
+    void stepInto();
+    void stepOut();
+    void continueExecution();
+    void pauseExecution();
+    void showDebugStatus();
+    void updateDebugUI();
+    void updateBreakpointDisplay();
+    void updateWatchDisplay();
+    void updateCallStackDisplay();
+    void updateVariableDisplay();
+    void runDebugSelfTest();
+    bool handleDebugKey(UINT vk, bool ctrl, bool alt, bool shift);
+    void showBreakpointManager();
+    void showWatchManager();
+    void togglePerformanceProfiling();
+
+    // Code Intelligence Methods
+    void initCodeIntelligence();
+    void shutdownCodeIntelligence();
+    void analyzeCurrentFile();
+    std::vector<CompletionItem> getCodeCompletions(int line, int column, const std::string& prefix);
+    void showIntelligenceStatus();
+    void updateDiagnosticsDisplay();
+    void gotoDefinition(int line, int column);
+    void findAllReferences(int line, int column);
+    void runIntelligenceSelfTest();
+    bool handleIntelligenceKey(UINT vk, bool ctrl, bool alt, bool shift);
+
 private:
     // Debugger UI Components
     HWND m_hwndDebuggerContainer;
@@ -1302,4 +1931,105 @@ private:
     // Debugger History
     std::vector<std::string> m_debuggerCommandHistory;
     size_t m_debuggerHistoryIndex;
+
+    // Ghost Text / Inline Completion
+    bool m_ghostTextEnabled;
+    bool m_ghostTextVisible;
+    bool m_ghostTextAccepted;
+    bool m_ghostTextPending;
+    std::string m_ghostTextContent;
+    int m_ghostTextLine;
+    int m_ghostTextColumn;
+    HFONT m_ghostTextFont;
+    std::unique_ptr<RawrXD::Prediction::OllamaProvider> m_predictionProvider;
+    WNDPROC m_originalEditorProc;
+
+    // Multi-Cursor Visuals
+    bool m_multiCursorEnabled;
+    std::vector<CaretPosition> m_caretPositions;
+
+    // Peek Overlay
+    std::unique_ptr<PeekWindow> m_peekOverlay;
+
+    // Caret Animation
+    bool m_caretAnimationEnabled;
+    bool m_caretBlinking;
+    int m_caretBlinkRate;
+    UINT_PTR m_caretBlinkTimer;
+
+    // Tier2/Tier3 Cosmetics
+    bool m_smoothScrollEnabled;
+    bool m_windowShadowsEnabled;
+    bool m_roundedCornersEnabled;
+
+    // Agent Ollama Client
+    bool m_ollamaClientInitialized;
+    bool m_ollamaConnected;
+    std::string m_ollamaEndpoint;
+    std::string m_ollamaStatus;
+
+    // Model Discovery
+    bool m_modelDiscoveryEnabled;
+    std::vector<std::string> m_modelDiscoveryPaths;
+    std::vector<std::string> m_availableModels;
+    std::vector<std::string> m_modelPaths;
+
+    // 70B GGUF Hotpatch
+    std::unique_ptr<HotpatchManager> m_hotpatchManager;
+
+    // Layer Eviction System
+    std::unique_ptr<RawrXD::LayerEvictionManager> m_layerEvictionManager;
+    std::thread m_memoryMonitorThread;
+    std::atomic<bool> m_memoryMonitorRunning;
+
+    // System Governor
+    std::unique_ptr<Governor> m_governor;
+
+    // Quantum Dynamic Time Manager
+    std::unique_ptr<QuantumTimeManager> m_quantumTimeManager;
+
+    // Quantum Agent Orchestrator
+    std::unique_ptr<QuantumAgentOrchestrator> m_quantumAgentOrchestrator;
+
+    // Complete Quantum System
+    std::unique_ptr<QuantumSystem> m_quantumSystem;
+
+    // Model Router UI
+    std::unique_ptr<ModelRouter> m_modelRouter;
+    std::unique_ptr<RouterUI> m_routerUI;
+
+    // Advanced Agentic Framework
+    std::unique_ptr<AgentOrchestrator> m_agentOrchestrator;
+
+    // Drag & Drop System
+    std::unique_ptr<ContextMenuManager> m_contextMenuManager;
+
+    // Code Completion Engine
+    std::unique_ptr<CompletionEngine> m_completionEngine;
+    std::unique_ptr<CompletionUI> m_completionUI;
+
+    // Syntax Highlighting System
+    std::unique_ptr<SyntaxHighlighter> m_syntaxHighlighter;
+
+    // Code Folding System
+    std::unique_ptr<CodeFoldingManager> m_codeFoldingManager;
+
+    // Find & Replace System
+    std::unique_ptr<FindReplaceManager> m_findReplaceManager;
+    std::unique_ptr<SearchUI> m_searchUI;
+
+    // Advanced Debugging System
+    std::unique_ptr<DebugEngine> m_debugEngine;
+
+    // Code Intelligence Engine
+    std::unique_ptr<CodeIntelligenceEngine> m_codeIntelligence;
+
+    // New Component Member Variables
+    std::unique_ptr<PluginSignatureManager> m_pluginSignatureManager;
+    std::unique_ptr<EnterpriseStressTestManager> m_enterpriseStressTestManager;
+    std::unique_ptr<SQLite3CoreManager> m_sqlite3CoreManager;
+    std::unique_ptr<TelemetryExportManager> m_telemetryExportManager;
+    std::unique_ptr<RefactoringPluginManager> m_refactoringPluginManager;
+    std::unique_ptr<LanguagePluginManager> m_languagePluginManager;
+    std::unique_ptr<ResourceGeneratorManager> m_resourceGeneratorManager;
 };

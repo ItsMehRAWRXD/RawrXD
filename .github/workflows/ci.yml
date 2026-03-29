@@ -50,6 +50,10 @@ jobs:
       - name: Build Win32 IDE
         run: .\scripts\build.ps1 -Config Release -A x64
 
+      - name: Build MASM Components
+        run: .\MASM-AutoPatch-Builder.ps1
+        shell: pwsh
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:

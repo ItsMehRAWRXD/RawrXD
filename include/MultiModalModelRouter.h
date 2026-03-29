@@ -3,23 +3,24 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <chrono>
 
 namespace RawrXD {
 namespace IDE {
 
 // Task types for model routing
 enum class TaskType {
-    COMPLETION,      // Quick inline suggestions (fast, small model)
-    CHAT,            // Interactive conversation (reasoning, large model)
-    EDIT,            // Code transformation (precise, medium model)
-    EMBEDDING,       // Semantic search (specialized embedding model)
-    DEBUG,           // Debugging assistance (analytical, large model)
-    OPTIMIZATION,    // Performance optimization (specialized)
-    SECURITY,        // Security analysis (specialized)
-    DOCUMENTATION,   // Doc generation (varied)
+    CodeCompletion,  // Quick inline suggestions (fast, small model)
+    Chat,            // Interactive conversation (reasoning, large model)
+    CodeEdit,        // Code transformation (precise, medium model)
+    Embedding,       // Semantic search (specialized embedding model)
+    Debugging,       // Debugging assistance (analytical, large model)
+    Optimization,    // Performance optimization (specialized)
+    Security,        // Security analysis (specialized)
+    Documentation,   // Doc generation (varied)
 };
 
-// Model selection strategy
+// Model selection strategy with enhanced capabilities
 struct ModelSelection {
     std::string modelName;
     std::string modelUrl;
@@ -27,6 +28,14 @@ struct ModelSelection {
     int contextWindow;         // tokens
     bool supportsStreaming;
     std::vector<TaskType> optimalFor;
+    bool isEnsemble = false;   // Multi-model ensemble
+    std::vector<std::string> ensembleModels;
+    float confidence = 0.8f;   // Selection confidence
+    bool isAvailable = true;
+    int estimatedLatencyMs = 150;
+    bool isABTest = false;     // A/B testing variant
+    std::string testVariant;   // A/B test variant identifier
+    bool needsReview = false;  // Model needs performance review
 };
 
 // Multi-modal model router
@@ -74,6 +83,9 @@ public:
 
     // Get documentation model
     ModelSelection getDocumentationModel();
+
+    // Enhanced capability-based routing with 7 optimizations
+    ModelSelection selectModelWithCapabilities(TaskType task);
 
     // Register custom model
     void registerModel(
@@ -126,6 +138,17 @@ private:
         int contextSize
     );
 
+    // Enhanced routing helper methods (Batch 1 - 7 optimizations)
+    std::vector<std::pair<std::string, double>> scoreModelsForTask(TaskType task);
+    void filterByCostOptimization(std::vector<std::pair<std::string, double>>& candidates, TaskType task);
+    std::string predictLatencyAndSelect(const std::vector<std::pair<std::string, double>>& candidates);
+    bool shouldUseEnsemble(TaskType task);
+    ModelSelection createEnsembleSelection(const std::string& primaryModel, TaskType task);
+    void updatePerformanceMetrics(const std::string& model);
+    bool shouldRunABTest(TaskType task);
+    ModelSelection selectABTestVariant(const std::string& primaryModel, TaskType task);
+    ModelSelection selectWithHealthChecks(const std::string& model, TaskType task);
+
     // Load models from Ollama
     bool loadModelsFromOllama();
 
@@ -135,6 +158,31 @@ private:
     float m_speedWeight;
     float m_qualityWeight;
     int m_memoryLimit;
+
+    // Enhanced routing data structures (Batch 1 optimizations)
+    struct ModelCapabilities {
+        double reasoning = 0.0;    // Logical analysis and problem solving
+        double coding = 0.0;       // Code generation and understanding
+        double creativity = 0.0;   // Creative tasks and generation
+        double speed = 0.0;        // Inference speed score
+        double cost = 0.0;         // Cost per token (normalized)
+    };
+
+    struct ModelPerformance {
+        double avgLatencyMs = 0.0;
+        double successRate = 1.0;
+        int totalRequests = 0;
+        std::chrono::steady_clock::time_point lastUsed;
+    };
+
+    std::unordered_map<std::string, ModelCapabilities> m_modelCapabilities;
+    std::unordered_map<std::string, ModelPerformance> m_modelPerformance;
+    std::unordered_map<std::string, ModelInfo> m_availableModels;
+
+    // Legacy latency tracking (maintained for compatibility)
+    int m_completionModelLatency;
+    int m_chatModelLatency;
+    int m_editModelLatency;
 };
 
 } // namespace IDE

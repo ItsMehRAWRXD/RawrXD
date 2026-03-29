@@ -194,6 +194,15 @@ if(NOT TARGET test_gguf_integration AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test
     message(STATUS "  ✓ Added test_gguf_integration")
 endif()
 
+# PE Writer Test
+if(NOT TARGET pe_writer_test AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/pe_writer_test.cpp")
+    add_executable(pe_writer_test pe_writer_test.cpp)
+    target_include_directories(pe_writer_test PRIVATE ${CMAKE_SOURCE_DIR})
+    set_target_properties(pe_writer_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+    add_test(NAME pe_writer_test COMMAND pe_writer_test)
+    message(STATUS "  ✓ Added pe_writer_test")
+endif()
+
 # ============================================================
 # Test Summary
 # ============================================================

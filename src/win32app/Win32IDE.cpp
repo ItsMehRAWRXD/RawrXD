@@ -4,6 +4,8 @@ Win32IDE::~Win32IDE() {
         m_nativeEngine = nullptr;
     }
     // Resource cleanup
+    shutdownDragDrop();
+    shutdownContextMenu();
     Win32TerminalManager::cleanup();
 }
 #include "Win32IDE.h"
@@ -23,15 +25,42 @@ Win32IDE::~Win32IDE() {
 #include <algorithm>
 #include <sstream>
 #include <ctime>
+#include "IDELogger.h"
+#include "Win32IDE_AgenticBridge.h"
+#include "../cpu_inference_engine.h" // Added for Native Fallback
+#include "streaming_gguf_loader.h"
+#include "../utils/ErrorReporter.hpp"
+#include <commdlg.h>
+#include <richedit.h>
+#include <commctrl.h>
+#include <shlobj.h>
+#include <shellapi.h>
+#include <iostream>
+#include <fstream>
+#include <chrono>
+#include <algorithm>
+#include <sstream>
+#include <ctime>
+#include <winhttp.h>
 #include <winhttp.h>
 
 #pragma comment(lib, "winhttp.lib")
 
 #pragma comment(lib, "comdlg32.lib")
-#pragma comment(lib, "comctl32.lib")
+#pragma comment(lib, "shell32.lib")
+#pragma comment(lib, "shlwapi.lib")
+#pragma comment(lib, "shell32.lib")
+#pragma comment(lib, "shlwapi.lib")
+#pragma comment(lib, "ole32.lib")
+#pragma comment(lib, "advapi32.lib")
+#pragma comment(lib, "richedit.lib")
+#pragma comment(lib, "d2d1.lib")
+#pragma comment(lib, "dwrite.lib")
 
-#define IDC_EDITOR 1001
-#define IDC_TERMINAL 1002
+// ============================================================================
+// DESTRUCTOR - Resource Cleanup
+// ============================================================================
+
 #define IDC_COMMAND_INPUT 1003
 #define IDC_STATUS_BAR 1004
 #define IDC_OUTPUT_TABS 1005
@@ -113,6 +142,7 @@ Win32IDE::~Win32IDE() {
 #define IDC_DEBUGGER_BTN_STOP 1326
 #define IDC_DEBUGGER_INPUT 1327
 #define IDC_DEBUGGER_BREAKPOINT_LIST 1328
+#define WM_GHOST_TEXT_READY (WM_APP + 400)
 #define IDC_DEBUGGER_WATCH_LIST 1329
 #define IDC_DEBUGGER_VARIABLE_TREE 1330
 #define IDC_DEBUGGER_STACK_LIST 1331
@@ -264,6 +294,14 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
     , m_hwndCommandPalette(nullptr), m_hwndCommandPaletteInput(nullptr), m_hwndCommandPaletteList(nullptr), m_commandPaletteVisible(false)
     , m_hwndModelSelector(nullptr), m_hwndMaxTokensSlider(nullptr), m_hwndMaxTokensLabel(nullptr)
     , m_currentMaxTokens(512)
+    // Caret Animation
+    , m_caretAnimationEnabled(true), m_caretBlinking(false), m_caretBlinkRate(500), m_caretBlinkTimer(0)
+    // Tier2/Tier3 Cosmetics
+    , m_smoothScrollEnabled(true), m_windowShadowsEnabled(true), m_roundedCornersEnabled(true)
+    // Agent Ollama Client
+    , m_ollamaClientInitialized(false), m_ollamaConnected(false), m_ollamaEndpoint("http://localhost:11434"), m_ollamaStatus("Not initialized")
+    // Model Discovery
+    , m_modelDiscoveryEnabled(true)
 {
     // DIAGNOSTIC: Constructor entry
     {
@@ -396,6 +434,36 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
     // Default Ollama configuration
     m_ollamaBaseUrl = "http://localhost:11434"; // default
     m_ollamaModelOverride = "";
+
+    // Initialize ghost text state
+    m_ghostTextEnabled = true;
+    m_ghostTextVisible = false;
+    m_ghostTextAccepted = false;
+    m_ghostTextPending = false;
+    m_ghostTextContent.clear();
+    m_ghostTextLine = -1;
+    m_ghostTextColumn = -1;
+    m_ghostTextFont = nullptr;
+    m_originalEditorProc = nullptr;
+
+    // Initialize multi-cursor state
+    m_multiCursorEnabled = true;
+    m_caretPositions.clear();
+
+    // Initialize peek overlay
+    m_peekOverlay = nullptr;
+
+    // Initialize hotpatch manager
+    m_hotpatchManager = nullptr;
+
+    // Initialize new component managers
+    m_pluginSignatureManager = std::make_unique<PluginSignatureManager>();
+    m_enterpriseStressTestManager = std::make_unique<EnterpriseStressTestManager>();
+    m_sqlite3CoreManager = std::make_unique<SQLite3CoreManager>();
+    m_telemetryExportManager = std::make_unique<TelemetryExportManager>();
+    m_refactoringPluginManager = std::make_unique<RefactoringPluginManager>();
+    m_languagePluginManager = std::make_unique<LanguagePluginManager>();
+    m_resourceGeneratorManager = std::make_unique<ResourceGeneratorManager>();
 
     // Initialize Native Fallback Engine
     m_nativeEngine = new RawrXD::CPUInferenceEngine();
@@ -5861,5 +5929,1281 @@ void Win32IDE::onMaxTokensChanged(int newValue) {
         SetWindowTextA(m_hwndMaxTokensLabel, std::to_string(newValue).c_str());
     }
 
+}
+
+// ============================================================================
+// WINDOW PROCEDURE AND MESSAGE HANDLING
+// ============================================================================
+
+// ============================================================================
+// WINDOW PROCEDURE AND MESSAGE HANDLING
+// ============================================================================
+
+LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    Win32IDE* pThis = nullptr;
+
+    if (uMsg == WM_NCCREATE) {
+        CREATESTRUCT* pCreate = (CREATESTRUCT*)lParam;
+        pThis = (Win32IDE*)pCreate->lpCreateParams;
+        SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)pThis);
+        pThis->m_hwndMain = hwnd;
+    } else {
+        pThis = (Win32IDE*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+    }
+
+    if (pThis) {
+        return pThis->handleMessage(hwnd, uMsg, wParam, lParam);
+    } else {
+        return DefWindowProc(hwnd, uMsg, wParam, lParam);
+    }
+}
+
+LRESULT CALLBACK Win32IDE::EditorProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    Win32IDE* pThis = (Win32IDE*)GetWindowLongPtr(GetParent(hwnd), GWLP_USERDATA);
+    if (!pThis) {
+        return DefWindowProc(hwnd, uMsg, wParam, lParam);
+    }
+
+    switch (uMsg) {
+        case WM_PAINT: {
+            // Call original paint first
+            LRESULT result = CallWindowProc(pThis->m_originalEditorProc, hwnd, uMsg, wParam, lParam);
+
+            // Then render ghost text on top
+            PAINTSTRUCT ps;
+            HDC hdc = BeginPaint(hwnd, &ps);
+            pThis->renderGhostText(hdc);
+            pThis->renderMultiCursors(hdc);
+            EndPaint(hwnd, &ps);
+
+            return result;
+        }
+
+        case WM_KEYDOWN: {
+            // Handle ghost text keys first
+            if (pThis->handleGhostTextKey((UINT)wParam)) {
+                return 0;  // Consumed
+            }
+
+            // Handle multi-cursor keys
+            bool ctrl = GetKeyState(VK_CONTROL) & 0x8000;
+            bool alt = GetKeyState(VK_MENU) & 0x8000;
+            bool shift = GetKeyState(VK_SHIFT) & 0x8000;
+            if (pThis->handleMultiCursorKey((UINT)wParam, ctrl, alt, shift)) {
+                return 0;  // Consumed
+            }
+
+            // Handle peek keys
+            if (pThis->handlePeekKey((UINT)wParam, ctrl, alt, shift)) {
+                return 0;  // Consumed
+            }
+
+            // Handle hotpatch keys
+            if (pThis->handleHotpatchKey((UINT)wParam, ctrl, alt, shift)) {
+                return 0;  // Consumed
+            }
+
+            // Handle layer eviction keys
+            if (pThis->handleLayerEvictionKey((UINT)wParam, ctrl, alt, shift)) {
+                return 0;  // Consumed
+            }
+
+            // Handle governor keys
+            if (pThis->handleGovernorKey((UINT)wParam, ctrl, alt, shift)) {
+                return 0;  // Consumed
+            }
+
+            // Handle quantum time keys
+            if (pThis->handleQuantumTimeKey((UINT)wParam, ctrl, alt, shift)) {
+                return 0;  // Consumed
+            }
+
+            // Handle quantum agent keys
+            if (pThis->handleQuantumAgentKey((UINT)wParam, ctrl, alt, shift)) {
+                return 0;  // Consumed
+            }
+
+            // Handle quantum system keys
+            if (pThis->handleQuantumSystemKey((UINT)wParam, ctrl, alt, shift)) {
+                return 0;  // Consumed
+            }
+
+            // Handle model router keys
+            if (pThis->handleModelRouterKey((UINT)wParam, ctrl, alt, shift)) {
+                return 0;  // Consumed
+            }
+
+            // Handle model router keys
+            if (pThis->handleModelRouterKey((UINT)wParam, ctrl, alt, shift)) {
+                return 0;  // Consumed
+            }
+
+            // Handle agentic framework keys
+            if (pThis->handleAgenticKey((UINT)wParam, ctrl, alt, shift)) {
+                return 0;  // Consumed
+            }
+
+            // Handle code completion keys
+            if (pThis->handleCodeCompletionKey((UINT)wParam, ctrl, alt, shift)) {
+                return 0;  // Consumed
+            }
+
+            // Handle syntax highlighting keys
+            if (pThis->handleSyntaxHighlightingKey((UINT)wParam, ctrl, alt, shift)) {
+                return 0;  // Consumed
+            }
+
+            // Handle code folding keys
+            if (pThis->handleCodeFoldingKey((UINT)wParam, ctrl, alt, shift)) {
+                return 0;  // Consumed
+            }
+
+            // Handle find & replace keys
+            if (pThis->handleFindReplaceKey((UINT)wParam, ctrl, alt, shift)) {
+                return 0;  // Consumed
+            }
+
+            // Handle intelligence keys
+            if (pThis->handleIntelligenceKey((UINT)wParam, ctrl, alt, shift)) {
+                return 0;  // Consumed
+            }
+
+            // Call original handler
+            return CallWindowProc(pThis->m_originalEditorProc, hwnd, uMsg, wParam, lParam);
+        }
+
+        case WM_LBUTTONDOWN: {
+            // Handle Alt+Click for multi-cursor
+            bool alt = GetKeyState(VK_MENU) & 0x8000;
+            if (alt && pThis->m_multiCursorEnabled) {
+                int x = LOWORD(lParam);
+                int y = HIWORD(lParam);
+                pThis->handleMultiCursorMouse(x, y, true);
+                return 0;  // Consumed
+            }
+
+            // Handle Ctrl+Click for peek
+            bool ctrl = GetKeyState(VK_CONTROL) & 0x8000;
+            if (ctrl) {
+                int x = LOWORD(lParam);
+                int y = HIWORD(lParam);
+                // Convert to screen coordinates
+                POINT pt = {x, y};
+                ClientToScreen(hwnd, &pt);
+                pThis->handlePeekMouse(pt.x, pt.y, true);
+                return 0;  // Consumed
+            }
+
+            // Call original handler
+            return CallWindowProc(pThis->m_originalEditorProc, hwnd, uMsg, wParam, lParam);
+        }
+
+        case WM_CHAR:
+        case WM_UNICHAR: {
+            // On content change, trigger ghost text completion
+            LRESULT result = CallWindowProc(pThis->m_originalEditorProc, hwnd, uMsg, wParam, lParam);
+            pThis->triggerGhostTextCompletion();
+            return result;
+        }
+
+        case WM_CONTEXTMENU: {
+            // Handle right-click context menu in editor
+            POINT pt = {LOWORD(lParam), HIWORD(lParam)};
+            if (pt.x == -1 && pt.y == -1) {
+                // Context menu triggered by keyboard (Shift+F10 or VK_APPS)
+                // Get cursor position
+                GetCursorPos(&pt);
+            } else {
+                // Convert to screen coordinates
+                ClientToScreen(hwnd, &pt);
+            }
+
+            // Show editor context menu
+            pThis->showContextMenu(ContextMenuType::Editor, pt.x, pt.y);
+            return 0;
+        }
+
+        default:
+            return CallWindowProc(pThis->m_originalEditorProc, hwnd, uMsg, wParam, lParam);
+    }
+}
+
+LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    switch (uMsg) {
+        case WM_GHOST_TEXT_READY:
+            onGhostTextReady((int)wParam, (char*)lParam);
+            return 0;
+
+        case WM_TIMER:
+            if (wParam == 8888) {  // GHOST_TEXT_TIMER_ID
+                onGhostTextTimer();
+                return 0;
+            }
+            break;
+
+        case WM_CREATE:
+            onCreate(hwnd);
+            return 0;
+
+        case WM_DESTROY:
+            onDestroy();
+            PostQuitMessage(0);
+            return 0;
+
+        case WM_SIZE:
+            onSize(LOWORD(lParam), HIWORD(lParam));
+            return 0;
+
+        case WM_COMMAND:
+            onCommand(hwnd, LOWORD(wParam), (HWND)lParam, HIWORD(wParam));
+            return 0;
+
+        case WM_CONTEXTMENU: {
+            // Handle right-click context menu
+            POINT pt = {LOWORD(lParam), HIWORD(lParam)};
+            if (pt.x == -1 && pt.y == -1) {
+                // Context menu triggered by keyboard (Shift+F10 or VK_APPS)
+                // Get cursor position
+                GetCursorPos(&pt);
+            }
+
+            // Determine which area was clicked
+            ContextMenuType menuType = determineContextMenuType(pt.x, pt.y, (HWND)wParam);
+            showContextMenu(menuType, pt.x, pt.y);
+            return 0;
+        }
+
+        // Add other message handlers as needed
+
+        default:
+            return DefWindowProc(hwnd, uMsg, wParam, lParam);
+    }
+    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+}
+
+
+void Win32IDE::onCreate(HWND hwnd) {
+    // Initialize ghost text system
+    initGhostText();
+
+    // Initialize multi-cursor system
+    initMultiCursor();
+
+    // Initialize peek overlay system
+    initPeekOverlay();
+
+    // Initialize 70B hotpatch system
+    init70BHotpatch();
+
+    // Initialize layer eviction system
+    initLayerEviction();
+
+    // Initialize system governor
+    initGovernor();
+
+    // Initialize quantum time manager
+    initQuantumTimeManager();
+
+    // Initialize quantum agent orchestrator
+    initQuantumAgentOrchestrator();
+
+    // Initialize complete quantum system
+    initQuantumSystem();
+
+    // Initialize model router system
+    initModelRouter();
+
+    // Initialize advanced agentic framework
+    initAdvancedAgentic();
+
+    // Initialize drag & drop system
+    initDragDrop();
+
+    // Initialize context menu system
+    initContextMenu();
+
+    // Initialize code completion engine
+    initCodeCompletion();
+
+    // Initialize syntax highlighting system
+    initSyntaxHighlighting();
+
+    // Initialize code folding system
+    initCodeFolding();
+
+    // Initialize find & replace system
+    initFindReplace();
+
+    // Initialize code intelligence engine
+    initCodeIntelligence();
+
+    // Create editor
+    m_hwndEditor = CreateWindowEx(
+        WS_EX_CLIENTEDGE,
+        "EDIT",
+        "",
+        WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL,
+        10, 50, 780, 400,
+        hwnd,
+        nullptr,
+        m_hInstance,
+        nullptr
+    );
+
+    if (m_hwndEditor) {
+        // Subclass the editor for ghost text rendering and key handling
+        m_originalEditorProc = (WNDPROC)SetWindowLongPtr(m_hwndEditor, GWLP_WNDPROC, (LONG_PTR)EditorProc);
+
+        // Set editor font
+        SendMessage(m_hwndEditor, WM_SETFONT, (WPARAM)m_editorFont, TRUE);
+    }
+
+    // Create other child windows, menus, etc.
+    // This is where you'd create the status bar, etc.
+}
+
+void Win32IDE::onDestroy() {
+    // Cleanup
+    PostQuitMessage(0);
+}
+
+void Win32IDE::onSize(int width, int height) {
+    // Handle window resize
+}
+
+void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify) {
+    // Handle menu/toolbar commands
+}
+
+// ============================================================================
+// WINDOW CREATION
+// ============================================================================
+
+bool Win32IDE::createWindow() {
+    WNDCLASSEX wc = {0};
+    wc.cbSize = sizeof(WNDCLASSEX);
+    wc.lpfnWndProc = WindowProc;
+    wc.hInstance = m_hInstance;
+    wc.lpszClassName = "RawrXDWin32IDE";
+    wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+
+    if (!RegisterClassEx(&wc)) {
+        return false;
+    }
+
+    m_hwndMain = CreateWindowEx(
+        0,
+        "RawrXDWin32IDE",
+        "RawrXD IDE",
+        WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+        CW_USEDEFAULT, CW_USEDEFAULT, 1200, 800,
+        nullptr, nullptr, m_hInstance, this
+    );
+
+    return m_hwndMain != nullptr;
+}
+
+void Win32IDE::showWindow() {
+    ShowWindow(m_hwndMain, SW_SHOW);
+    UpdateWindow(m_hwndMain);
+}
+
+int Win32IDE::runMessageLoop() {
+    MSG msg;
+    while (GetMessage(&msg, nullptr, 0, 0)) {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+    return (int)msg.wParam;
+}
+
+// ============================================================================
+// HELPER METHODS FOR CODE COMPLETION
+// ============================================================================
+
+int Win32IDE::getCurrentLineNumber() {
+    DWORD start, end;
+    SendMessage(m_hwndEditor, EM_GETSEL, (WPARAM)&start, (LPARAM)&end);
+
+    LRESULT lineIndex = SendMessage(m_hwndEditor, EM_LINEFROMCHAR, start, 0);
+    return (int)lineIndex;
+}
+
+std::string Win32IDE::getCurrentFilePath() {
+    // Return current file path (simplified - in real implementation, track current file)
+    return m_currentFilePath;
+}
+
+std::string Win32IDE::getCurrentLineContent() {
+    int lineNumber = getCurrentLineNumber();
+    int lineIndex = SendMessage(m_hwndEditor, EM_LINEINDEX, lineNumber, 0);
+    int lineLength = SendMessage(m_hwndEditor, EM_LINELENGTH, lineIndex, 0);
+
+    if (lineLength <= 0) return "";
+
+    std::vector<char> lineBuffer(lineLength + 1);
+    *(WORD*)lineBuffer.data() = lineLength;
+    SendMessage(m_hwndEditor, EM_GETLINE, lineNumber, (LPARAM)lineBuffer.data());
+
+    return std::string(lineBuffer.data(), lineLength);
+}
+
+// ============================================================================
+// 70B HOTPATCH SYSTEM IMPLEMENTATION
+// ============================================================================
+
+void Win32IDE::init70BHotpatch() {
+    m_hotpatchManager = std::make_unique<HotpatchManager>();
+    if (m_hotpatchManager->initialize()) {
+        LOG_INFO("70B GGUF Hotpatch System initialized");
+
+        // Load default model for hotpatching if available
+        std::string defaultModel = "F:\\OllamaModels\\BigDaddyG-Q2_K-PRUNED-16GB.gguf";
+        if (fileExists(defaultModel)) {
+            if (m_hotpatchManager->loadModelForHotpatch(defaultModel)) {
+                LOG_INFO("Default model loaded for hotpatching: " + defaultModel);
+            } else {
+                LOG_WARNING("Failed to load default model for hotpatching");
+            }
+        }
+    } else {
+        LOG_ERROR("Failed to initialize 70B GGUF Hotpatch System");
+    }
+}
+
+void Win32IDE::shutdown70BHotpatch() {
+    if (m_hotpatchManager) {
+        m_hotpatchManager->shutdown();
+        m_hotpatchManager.reset();
+    }
+}
+
+void Win32IDE::loadModelForHotpatch(const std::string& modelPath) {
+    if (!m_hotpatchManager) {
+        appendToOutput("Hotpatch Manager not initialized", "Hotpatch", OutputSeverity::Error);
+        return;
+    }
+
+    if (m_hotpatchManager->loadModelForHotpatch(modelPath)) {
+        appendToOutput("Model loaded for hotpatching: " + modelPath, "Hotpatch", OutputSeverity::Info);
+    } else {
+        appendToOutput("Failed to load model for hotpatching: " + modelPath, "Hotpatch", OutputSeverity::Error);
+    }
+}
+
+void Win32IDE::applyHotpatch() {
+    if (!m_hotpatchManager) {
+        appendToOutput("Hotpatch Manager not initialized", "Hotpatch", OutputSeverity::Error);
+        return;
+    }
+
+    if (m_hotpatchManager->applyHotpatch()) {
+        appendToOutput("Hotpatch applied successfully", "Hotpatch", OutputSeverity::Info);
+    } else {
+        appendToOutput("Failed to apply hotpatch", "Hotpatch", OutputSeverity::Error);
+    }
+}
+
+void Win32IDE::rollbackHotpatch() {
+    if (!m_hotpatchManager) {
+        appendToOutput("Hotpatch Manager not initialized", "Hotpatch", OutputSeverity::Error);
+        return;
+    }
+
+    if (m_hotpatchManager->rollbackHotpatch()) {
+        appendToOutput("Hotpatch rolled back successfully", "Hotpatch", OutputSeverity::Info);
+    } else {
+        appendToOutput("Failed to rollback hotpatch", "Hotpatch", OutputSeverity::Error);
+    }
+}
+
+void Win32IDE::showHotpatchStatus() {
+    if (!m_hotpatchManager) {
+        appendToOutput("Hotpatch Manager not initialized", "System", OutputSeverity::Warning);
+        return;
+    }
+
+    std::string status = "70B Hotpatch Status:\n";
+    status += "In Progress: " + std::string(m_hotpatchManager->isHotpatchInProgress() ? "Yes" : "No") + "\n";
+    status += "Progress: " + std::to_string(m_hotpatchManager->getHotpatchProgress() * 100) + "%\n";
+    status += "Status: " + m_hotpatchManager->getHotpatchStatus() + "\n";
+
+    appendToOutput(status, "System", OutputSeverity::Info);
+}
+
+bool Win32IDE::handleHotpatchKey(UINT vk, bool ctrl, bool alt, bool shift) {
+    if (!m_hotpatchManager) return false;
+
+    // Ctrl+Alt+H - Show hotpatch status
+    if (ctrl && alt && vk == 'H') {
+        showHotpatchStatus();
+        return true;
+    }
+
+    // Ctrl+Alt+L - Load model for hotpatch
+    if (ctrl && alt && vk == 'L') {
+        // Would show file dialog to select model
+        appendToOutput("Load model for hotpatch - file dialog not implemented", "Hotpatch", OutputSeverity::Warning);
+        return true;
+    }
+
+    // Ctrl+Alt+A - Apply hotpatch
+    if (ctrl && alt && vk == 'A') {
+        applyHotpatch();
+        return true;
+    }
+
+    // Ctrl+Alt+R - Rollback hotpatch
+    if (ctrl && alt && vk == 'R') {
+        rollbackHotpatch();
+        return true;
+    }
+
+    return false;
+}
+
+// ============================================================================
+// LAYER EVICTION SYSTEM IMPLEMENTATION
+// ============================================================================
+
+void Win32IDE::initLayerEviction() {
+    m_layerEvictionManager = std::make_unique<RawrXD::LayerEvictionManager>();
+
+    // Initialize with 8GB max memory (adjust based on system)
+    size_t maxMemory = 8ULL * 1024ULL * 1024ULL * 1024ULL;  // 8GB
+
+    if (m_layerEvictionManager->initialize(maxMemory)) {
+        LOG_INFO("Layer Eviction System initialized with " + std::to_string(maxMemory / (1024*1024*1024)) + "GB max memory");
+
+        // Set up memory monitoring
+        startMemoryMonitoring();
+    } else {
+        LOG_ERROR("Failed to initialize Layer Eviction System");
+    }
+}
+
+void Win32IDE::shutdownLayerEviction() {
+    if (m_layerEvictionManager) {
+        stopMemoryMonitoring();
+        m_layerEvictionManager->shutdown();
+        m_layerEvictionManager.reset();
+    }
+}
+
+void Win32IDE::registerLayerForEviction(int layerId, size_t layerSize, void* layerData) {
+    if (!m_layerEvictionManager) {
+        appendToOutput("Layer Eviction Manager not initialized", "LayerEviction", OutputSeverity::Error);
+        return;
+    }
+
+    if (m_layerEvictionManager->registerLayer(layerId, layerSize, layerData)) {
+        appendToOutput("Layer " + std::to_string(layerId) + " registered for eviction", "LayerEviction", OutputSeverity::Info);
+    } else {
+        appendToOutput("Failed to register layer " + std::to_string(layerId) + " for eviction", "LayerEviction", OutputSeverity::Error);
+    }
+}
+
+void Win32IDE::evictLayer(int layerId) {
+    if (!m_layerEvictionManager) {
+        appendToOutput("Layer Eviction Manager not initialized", "LayerEviction", OutputSeverity::Error);
+        return;
+    }
+
+    if (m_layerEvictionManager->evictLayer(layerId)) {
+        appendToOutput("Layer " + std::to_string(layerId) + " evicted", "LayerEviction", OutputSeverity::Info);
+    } else {
+        appendToOutput("Failed to evict layer " + std::to_string(layerId), "LayerEviction", OutputSeverity::Error);
+    }
+}
+
+void Win32IDE::reloadLayer(int layerId) {
+    if (!m_layerEvictionManager) {
+        appendToOutput("Layer Eviction Manager not initialized", "LayerEviction", OutputSeverity::Error);
+        return;
+    }
+
+    if (m_layerEvictionManager->reloadLayer(layerId)) {
+        appendToOutput("Layer " + std::to_string(layerId) + " reloaded", "LayerEviction", OutputSeverity::Info);
+    } else {
+        appendToOutput("Failed to reload layer " + std::to_string(layerId), "LayerEviction", OutputSeverity::Error);
+    }
+}
+
+void Win32IDE::showLayerEvictionStatus() {
+    if (!m_layerEvictionManager) {
+        appendToOutput("Layer Eviction Manager not initialized", "System", OutputSeverity::Warning);
+        return;
+    }
+
+    size_t currentUsage = m_layerEvictionManager->getCurrentMemoryUsage();
+    size_t maxUsage = m_layerEvictionManager->getMaxMemoryUsage();
+
+    std::string status = "Layer Eviction Status:\n";
+    status += "Current Memory: " + std::to_string(currentUsage / (1024*1024)) + "MB\n";
+    status += "Max Memory: " + std::to_string(maxUsage / (1024*1024)) + "MB\n";
+    status += "Usage: " + std::to_string((currentUsage * 100) / maxUsage) + "%\n";
+
+    appendToOutput(status, "System", OutputSeverity::Info);
+}
+
+void Win32IDE::startMemoryMonitoring() {
+    m_memoryMonitorRunning = true;
+    // Start background thread for memory monitoring
+    m_memoryMonitorThread = std::thread([this]() {
+        while (m_memoryMonitorRunning) {
+            std::this_thread::sleep_for(std::chrono::seconds(30));  // Check every 30 seconds
+
+            if (m_layerEvictionManager) {
+                size_t currentUsage = m_layerEvictionManager->getCurrentMemoryUsage();
+                size_t maxUsage = m_layerEvictionManager->getMaxMemoryUsage();
+
+                // Trigger eviction if usage > 90%
+                if (currentUsage > (maxUsage * 90) / 100) {
+                    LOG_WARNING("High memory usage detected: " + std::to_string((currentUsage * 100) / maxUsage) + "%");
+                    // Auto-evict least recently used layers
+                    triggerAutoEviction();
+                }
+            }
+        }
+    });
+}
+
+void Win32IDE::stopMemoryMonitoring() {
+    m_memoryMonitorRunning = false;
+    if (m_memoryMonitorThread.joinable()) {
+        m_memoryMonitorThread.join();
+    }
+}
+
+void Win32IDE::triggerAutoEviction() {
+    // Implementation for automatic layer eviction
+    // This would identify and evict least recently used layers
+    LOG_INFO("Triggering automatic layer eviction");
+}
+
+bool Win32IDE::handleLayerEvictionKey(UINT vk, bool ctrl, bool alt, bool shift) {
+    if (!m_layerEvictionManager) return false;
+
+    // Ctrl+Alt+E - Show layer eviction status
+    if (ctrl && alt && vk == 'E') {
+        showLayerEvictionStatus();
+        return true;
+    }
+
+    // Ctrl+Alt+V - Trigger manual eviction
+    if (ctrl && alt && vk == 'V') {
+        triggerAutoEviction();
+        appendToOutput("Manual layer eviction triggered", "LayerEviction", OutputSeverity::Info);
+        return true;
+    }
+
+    return false;
+}
+
+// ============================================================================
+// SYSTEM GOVERNOR IMPLEMENTATION
+// ============================================================================
+
+void Win32IDE::initGovernor() {
+    m_governor = std::make_unique<Governor>();
+
+    if (m_governor->initialize()) {
+        LOG_INFO("System Governor initialized");
+
+        // Set default throttling limits
+        m_governor->setCPUThrottle(1.0f);  // No CPU throttling by default
+        m_governor->setMemoryThrottle(12ULL * 1024ULL * 1024ULL * 1024ULL);  // 12GB limit
+        m_governor->setGPUThrottle(1.0f);  // No GPU throttling by default
+    } else {
+        LOG_ERROR("Failed to initialize System Governor");
+    }
+}
+
+void Win32IDE::shutdownGovernor() {
+    if (m_governor) {
+        m_governor->shutdown();
+        m_governor.reset();
+    }
+}
+
+void Win32IDE::setCPUThrottle(float percentage) {
+    if (!m_governor) {
+        appendToOutput("Governor not initialized", "Governor", OutputSeverity::Error);
+        return;
+    }
+
+    m_governor->setCPUThrottle(percentage);
+    appendToOutput("CPU throttle set to " + std::to_string(percentage * 100) + "%", "Governor", OutputSeverity::Info);
+}
+
+void Win32IDE::setMemoryThrottle(size_t maxBytes) {
+    if (!m_governor) {
+        appendToOutput("Governor not initialized", "Governor", OutputSeverity::Error);
+        return;
+    }
+
+    m_governor->setMemoryThrottle(maxBytes);
+    appendToOutput("Memory throttle set to " + std::to_string(maxBytes / (1024*1024*1024)) + "GB", "Governor", OutputSeverity::Info);
+}
+
+void Win32IDE::enableEmergencyThrottle(bool enable) {
+    if (!m_governor) {
+        appendToOutput("Governor not initialized", "Governor", OutputSeverity::Error);
+        return;
+    }
+
+    m_governor->enableEmergencyThrottle(enable);
+    appendToOutput(std::string("Emergency throttle ") + (enable ? "enabled" : "disabled"), "Governor", OutputSeverity::Info);
+}
+
+void Win32IDE::showGovernorStatus() {
+    if (!m_governor) {
+        appendToOutput("Governor not initialized", "System", OutputSeverity::Warning);
+        return;
+    }
+
+    std::string status = m_governor->getThrottleStatus();
+    status += "CPU Usage: " + std::to_string(m_governor->getCurrentCPUUsage()) + "%\n";
+    status += "Memory Usage: " + std::to_string(m_governor->getCurrentMemoryUsage() / (1024*1024)) + "MB\n";
+    status += "GPU Usage: " + std::to_string(m_governor->getCurrentGPUUsage()) + "%\n";
+    status += "Temperature: " + std::to_string(m_governor->getSystemTemperature()) + "°C\n";
+    status += "Throttling Active: " + std::string(m_governor->isThrottlingActive() ? "Yes" : "No") + "\n";
+
+    appendToOutput(status, "System", OutputSeverity::Info);
+}
+
+bool Win32IDE::handleGovernorKey(UINT vk, bool ctrl, bool alt, bool shift) {
+    if (!m_governor) return false;
+
+    // Ctrl+Alt+G - Show governor status
+    if (ctrl && alt && vk == 'G') {
+        showGovernorStatus();
+        return true;
+    }
+
+    // Ctrl+Alt+T - Toggle emergency throttle
+    if (ctrl && alt && vk == 'T') {
+        bool currentState = m_governor->isThrottlingActive();
+        enableEmergencyThrottle(!currentState);
+        return true;
+    }
+
+    return false;
+}
+
+// ============================================================================
+// QUANTUM TIME MANAGER IMPLEMENTATION
+// ============================================================================
+
+void Win32IDE::initQuantumTimeManager() {
+    m_quantumTimeManager = std::make_unique<QuantumTimeManager>();
+
+    if (m_quantumTimeManager->initialize()) {
+        LOG_INFO("Quantum Dynamic Time Manager initialized");
+
+        // Start quantum timing
+        m_quantumTimeManager->startQuantumTimer();
+    } else {
+        LOG_ERROR("Failed to initialize Quantum Dynamic Time Manager");
+    }
+}
+
+void Win32IDE::shutdownQuantumTimeManager() {
+    if (m_quantumTimeManager) {
+        m_quantumTimeManager->stopQuantumTimer();
+        m_quantumTimeManager->shutdown();
+        m_quantumTimeManager.reset();
+    }
+}
+
+void Win32IDE::startQuantumTimer() {
+    if (!m_quantumTimeManager) {
+        appendToOutput("Quantum Time Manager not initialized", "QuantumTime", OutputSeverity::Error);
+        return;
+    }
+
+    m_quantumTimeManager->startQuantumTimer();
+    appendToOutput("Quantum timer started", "QuantumTime", OutputSeverity::Info);
+}
+
+void Win32IDE::stopQuantumTimer() {
+    if (!m_quantumTimeManager) {
+        appendToOutput("Quantum Time Manager not initialized", "QuantumTime", OutputSeverity::Error);
+        return;
+    }
+
+    m_quantumTimeManager->stopQuantumTimer();
+    appendToOutput("Quantum timer stopped", "QuantumTime", OutputSeverity::Info);
+}
+
+void Win32IDE::applyTimeDilation(double velocityFactor) {
+    if (!m_quantumTimeManager) {
+        appendToOutput("Quantum Time Manager not initialized", "QuantumTime", OutputSeverity::Error);
+        return;
+    }
+
+    m_quantumTimeManager->applyTimeDilation(velocityFactor);
+    appendToOutput("Time dilation applied with velocity factor: " + std::to_string(velocityFactor), "QuantumTime", OutputSeverity::Info);
+}
+
+void Win32IDE::detectTemporalAnomaly() {
+    if (!m_quantumTimeManager) {
+        appendToOutput("Quantum Time Manager not initialized", "QuantumTime", OutputSeverity::Error);
+        return;
+    }
+
+    m_quantumTimeManager->detectTemporalAnomaly();
+    appendToOutput("Temporal anomaly detection completed", "QuantumTime", OutputSeverity::Info);
+}
+
+void Win32IDE::showQuantumTimeStatus() {
+    if (!m_quantumTimeManager) {
+        appendToOutput("Quantum Time Manager not initialized", "System", OutputSeverity::Warning);
+        return;
+    }
+
+    std::string status = m_quantumTimeManager->getTimeStatus();
+    appendToOutput(status, "System", OutputSeverity::Info);
+}
+
+bool Win32IDE::handleQuantumTimeKey(UINT vk, bool ctrl, bool alt, bool shift) {
+    if (!m_quantumTimeManager) return false;
+
+    // Ctrl+Alt+Q - Show quantum time status
+    if (ctrl && alt && vk == 'Q') {
+        showQuantumTimeStatus();
+        return true;
+    }
+
+    // Ctrl+Alt+D - Detect temporal anomaly
+    if (ctrl && alt && vk == 'D') {
+        detectTemporalAnomaly();
+        return true;
+    }
+
+    // Ctrl+Alt+S - Start/stop quantum timer
+    if (ctrl && alt && vk == 'S') {
+        if (m_quantumTimeManager->isQuantumTimeActive()) {
+            stopQuantumTimer();
+        } else {
+            startQuantumTimer();
+        }
+        return true;
+    }
+
+    return false;
+}
+
+// ============================================================================
+// QUANTUM AGENT ORCHESTRATOR IMPLEMENTATION
+// ============================================================================
+
+void Win32IDE::initQuantumAgentOrchestrator() {
+    m_quantumAgentOrchestrator = std::make_unique<QuantumAgentOrchestrator>();
+
+    if (m_quantumAgentOrchestrator->initialize()) {
+        LOG_INFO("Quantum Agent Orchestrator initialized");
+
+        // Register default agents
+        registerDefaultQuantumAgents();
+    } else {
+        LOG_ERROR("Failed to initialize Quantum Agent Orchestrator");
+    }
+}
+
+void Win32IDE::shutdownQuantumAgentOrchestrator() {
+    if (m_quantumAgentOrchestrator) {
+        m_quantumAgentOrchestrator->shutdown();
+        m_quantumAgentOrchestrator.reset();
+    }
+}
+
+void Win32IDE::registerDefaultQuantumAgents() {
+    if (!m_quantumAgentOrchestrator) return;
+
+    // Register code intelligence agent
+    int codeAgentId = m_quantumAgentOrchestrator->registerAgent("CodeIntelligence", [this](const std::string& message) {
+        appendToOutput("Code Intelligence Agent: " + message, "QuantumAgent", OutputSeverity::Info);
+    });
+
+    // Register debugging agent
+    int debugAgentId = m_quantumAgentOrchestrator->registerAgent("Debugger", [this](const std::string& message) {
+        appendToOutput("Debug Agent: " + message, "QuantumAgent", OutputSeverity::Info);
+    });
+
+    // Register analysis agent
+    int analysisAgentId = m_quantumAgentOrchestrator->registerAgent("Analyzer", [this](const std::string& message) {
+        appendToOutput("Analysis Agent: " + message, "QuantumAgent", OutputSeverity::Info);
+    });
+
+    // Entangle some agents for coordination
+    m_quantumAgentOrchestrator->entangleAgents(codeAgentId, debugAgentId);
+    m_quantumAgentOrchestrator->entangleAgents(debugAgentId, analysisAgentId);
+
+    LOG_INFO("Registered default quantum agents");
+}
+
+void Win32IDE::broadcastToQuantumAgents(const std::string& message) {
+    if (!m_quantumAgentOrchestrator) {
+        appendToOutput("Quantum Agent Orchestrator not initialized", "QuantumAgent", OutputSeverity::Error);
+        return;
+    }
+
+    m_quantumAgentOrchestrator->broadcastMessage(message);
+    appendToOutput("Broadcasted to quantum agents: " + message, "QuantumAgent", OutputSeverity::Info);
+}
+
+void Win32IDE::synchronizeQuantumAgents() {
+    if (!m_quantumAgentOrchestrator) {
+        appendToOutput("Quantum Agent Orchestrator not initialized", "QuantumAgent", OutputSeverity::Error);
+        return;
+    }
+
+    m_quantumAgentOrchestrator->synchronizeAgents();
+    appendToOutput("Synchronized quantum agents", "QuantumAgent", OutputSeverity::Info);
+}
+
+void Win32IDE::showQuantumAgentStatus() {
+    if (!m_quantumAgentOrchestrator) {
+        appendToOutput("Quantum Agent Orchestrator not initialized", "System", OutputSeverity::Warning);
+        return;
+    }
+
+    auto statuses = m_quantumAgentOrchestrator->getAgentStatuses();
+    std::string status = "Quantum Agent Status:\n";
+    for (const auto& agentStatus : statuses) {
+        status += agentStatus + "\n";
+    }
+
+    appendToOutput(status, "System", OutputSeverity::Info);
+}
+
+bool Win32IDE::handleQuantumAgentKey(UINT vk, bool ctrl, bool alt, bool shift) {
+    if (!m_quantumAgentOrchestrator) return false;
+
+    // Ctrl+Alt+A - Show quantum agent status
+    if (ctrl && alt && vk == 'A') {
+        showQuantumAgentStatus();
+        return true;
+    }
+
+    // Ctrl+Alt+B - Broadcast message to agents
+    if (ctrl && alt && vk == 'B') {
+        broadcastToQuantumAgents("Test broadcast message");
+        return true;
+    }
+
+    // Ctrl+Alt+Y - Synchronize agents
+    if (ctrl && alt && vk == 'Y') {
+        synchronizeQuantumAgents();
+        return true;
+    }
+
+    return false;
+}
+
+// ============================================================================
+// COMPLETE QUANTUM SYSTEM IMPLEMENTATION
+// ============================================================================
+
+void Win32IDE::initQuantumSystem() {
+    m_quantumSystem = std::make_unique<QuantumSystem>();
+
+    // Initialize with 8 qubits for demonstration
+    if (m_quantumSystem->initialize(8)) {
+        LOG_INFO("Complete Quantum System initialized with 8 qubits");
+
+        // Prepare some initial quantum states
+        prepareQuantumDemoState();
+    } else {
+        LOG_ERROR("Failed to initialize Complete Quantum System");
+    }
+}
+
+void Win32IDE::shutdownQuantumSystem() {
+    if (m_quantumSystem) {
+        m_quantumSystem->shutdown();
+        m_quantumSystem.reset();
+    }
+}
+
+void Win32IDE::prepareQuantumDemoState() {
+    if (!m_quantumSystem) return;
+
+    // Put first qubit in superposition
+    m_quantumSystem->applyHadamardGate(0);
+
+    // Create entanglement between qubits 0 and 1
+    m_quantumSystem->applyCNOTGate(0, 1);
+
+    LOG_INFO("Prepared quantum demo state with superposition and entanglement");
+}
+
+void Win32IDE::runQuantumAlgorithm(const std::string& algorithm) {
+    if (!m_quantumSystem) {
+        appendToOutput("Quantum System not initialized", "Quantum", OutputSeverity::Error);
+        return;
+    }
+
+    if (algorithm == "grover") {
+        m_quantumSystem->runGroverSearch(5);  // Search for state |101⟩
+        appendToOutput("Executed Grover search algorithm", "Quantum", OutputSeverity::Info);
+    } else if (algorithm == "shor") {
+        m_quantumSystem->runShorFactorization(15);  // Factor 15
+        appendToOutput("Executed Shor factorization algorithm", "Quantum", OutputSeverity::Info);
+    } else if (algorithm == "qaoa") {
+        m_quantumSystem->runQuantumApproximateOptimization();
+        appendToOutput("Executed Quantum Approximate Optimization Algorithm", "Quantum", OutputSeverity::Info);
+    } else {
+        appendToOutput("Unknown quantum algorithm: " + algorithm, "Quantum", OutputSeverity::Warning);
+    }
+}
+
+void Win32IDE::measureQuantumState() {
+    if (!m_quantumSystem) {
+        appendToOutput("Quantum System not initialized", "Quantum", OutputSeverity::Error);
+        return;
+    }
+
+    auto measurements = m_quantumSystem->measureAllQubits();
+    std::string result = "Quantum Measurement Results: ";
+    for (size_t i = 0; i < measurements.size(); ++i) {
+        result += "Q" + std::to_string(i) + ":" + std::to_string(measurements[i]) + " ";
+    }
+
+    appendToOutput(result, "Quantum", OutputSeverity::Info);
+}
+
+void Win32IDE::applyQuantumGate(const std::string& gate, size_t qubitIndex) {
+    if (!m_quantumSystem) {
+        appendToOutput("Quantum System not initialized", "Quantum", OutputSeverity::Error);
+        return;
+    }
+
+    if (gate == "H") {
+        m_quantumSystem->applyHadamardGate(qubitIndex);
+        appendToOutput("Applied Hadamard gate to qubit " + std::to_string(qubitIndex), "Quantum", OutputSeverity::Info);
+    } else if (gate == "X") {
+        m_quantumSystem->applyPauliXGate(qubitIndex);
+        appendToOutput("Applied Pauli-X gate to qubit " + std::to_string(qubitIndex), "Quantum", OutputSeverity::Info);
+    } else if (gate == "Y") {
+        m_quantumSystem->applyPauliYGate(qubitIndex);
+        appendToOutput("Applied Pauli-Y gate to qubit " + std::to_string(qubitIndex), "Quantum", OutputSeverity::Info);
+    } else if (gate == "Z") {
+        m_quantumSystem->applyPauliZGate(qubitIndex);
+        appendToOutput("Applied Pauli-Z gate to qubit " + std::to_string(qubitIndex), "Quantum", OutputSeverity::Info);
+    } else {
+        appendToOutput("Unknown quantum gate: " + gate, "Quantum", OutputSeverity::Warning);
+    }
+}
+
+void Win32IDE::generateQuantumRandom() {
+    if (!m_quantumSystem) {
+        appendToOutput("Quantum System not initialized", "Quantum", OutputSeverity::Error);
+        return;
+    }
+
+    unsigned long long random = m_quantumSystem->generateQuantumRandom();
+    appendToOutput("Generated quantum random number: " + std::to_string(random), "Quantum", OutputSeverity::Info);
+}
+
+void Win32IDE::showQuantumSystemStatus() {
+    if (!m_quantumSystem) {
+        appendToOutput("Quantum System not initialized", "System", OutputSeverity::Warning);
+        return;
+    }
+
+    std::string status = m_quantumSystem->getQuantumState();
+    status += "Error Rate: " + std::to_string(m_quantumSystem->getErrorRate()) + "\n";
+    status += "Total Qubits: " + std::to_string(m_quantumSystem->getNumQubits()) + "\n";
+
+    appendToOutput(status, "System", OutputSeverity::Info);
+}
+
+bool Win32IDE::handleQuantumSystemKey(UINT vk, bool ctrl, bool alt, bool shift) {
+    if (!m_quantumSystem) return false;
+
+    // Ctrl+Alt+Z - Show quantum system status
+    if (ctrl && alt && vk == 'Z') {
+        showQuantumSystemStatus();
+        return true;
+    }
+
+    // Ctrl+Alt+M - Measure quantum state
+    if (ctrl && alt && vk == 'M') {
+        measureQuantumState();
+        return true;
+    }
+
+    // Ctrl+Alt+R - Generate quantum random number
+    if (ctrl && alt && vk == 'R') {
+        generateQuantumRandom();
+        return true;
+    }
+
+    // Ctrl+Alt+G - Run Grover algorithm
+    if (ctrl && alt && vk == 'G') {
+        runQuantumAlgorithm("grover");
+        return true;
+    }
+
+    return false;
+}
+
+// ============================================================================
+// MODEL ROUTER SYSTEM IMPLEMENTATION
+// ============================================================================
+
+void Win32IDE::initModelRouter() {
+    m_modelRouter = std::make_unique<ModelRouter>();
+    m_routerUI = std::make_unique<RouterUI>();
+
+    if (m_modelRouter->initialize()) {
+        LOG_INFO("Model Router System initialized");
+
+        // Register default models
+        registerDefaultModels();
+
+        // Initialize UI
+        if (m_routerUI->initialize(m_hwndMain)) {
+            LOG_INFO("Model Router UI initialized");
+        }
+    } else {
+        LOG_ERROR("Failed to initialize Model Router System");
+    }
+}
+
+void Win32IDE::shutdownModelRouter() {
+    if (m_routerUI) {
+        m_routerUI->shutdown();
+        m_routerUI.reset();
+    }
+
+    if (m_modelRouter) {
+        m_modelRouter->shutdown();
+        m_modelRouter.reset();
+    }
+}
+
+void Win32IDE::registerDefaultModels() {
+    if (!m_modelRouter) return;
+
+    // Register some default models
+    ModelProfile codestral;
+    codestral.id = "codestral-22b";
+    codestral.name = "Codestral 22B";
+    codestral.description = "Large coding model for code generation and analysis";
+    codestral.path = "F:\\OllamaModels\\Codestral-22B-v0.1-hf.Q4_K_S.gguf";
+    codestral.parameterCount = 22;
+    codestral.contextLength = 8192;
+    codestral.capabilities = {"code", "chat", "analysis"};
+    codestral.performanceScore = 0.95;
+    codestral.memoryUsage = 16.0;
+    codestral.inferenceSpeed = 25.0;
+
+    m_modelRouter->registerModel(codestral);
+
+    ModelProfile bigDaddy;
+    bigDaddy.id = "bigdaddy-q2";
+    bigDaddy.name = "BigDaddy Q2 Pruned 16GB";
+    bigDaddy.description = "Optimized model for memory-constrained environments";
+    bigDaddy.path = "F:\\OllamaModels\\BigDaddyG-Q2_K-PRUNED-16GB.gguf";
+    bigDaddy.parameterCount = 70;
+    bigDaddy.contextLength = 4096;
+    bigDaddy.capabilities = {"chat", "analysis", "reasoning"};
+    bigDaddy.performanceScore = 0.88;
+    bigDaddy.memoryUsage = 16.0;
+    bigDaddy.inferenceSpeed = 35.0;
+
+    m_modelRouter->registerModel(bigDaddy);
+
+    LOG_INFO("Registered default models in router");
+}
+
+void Win32IDE::showModelRouterUI() {
+    if (!m_routerUI) {
+        appendToOutput("Model Router UI not initialized", "ModelRouter", OutputSeverity::Error);
+        return;
+    }
+
+    m_routerUI->show();
+}
+
+void Win32IDE::updateModelStatusInRouter(const std::string& modelId, bool isLoaded) {
+    if (!m_modelRouter) return;
+
+    m_modelRouter->updateModelStatus(modelId, isLoaded);
+}
+
+void Win32IDE::showModelRecommendations(TaskType taskType) {
+    if (!m_modelRouter) {
+        appendToOutput("Model Router not initialized", "ModelRouter", OutputSeverity::Error);
+        return;
+    }
+
+    auto recommendations = m_modelRouter->getRecommendations(taskType);
+    std::string result = "Model Recommendations for task type " + std::to_string(static_cast<int>(taskType)) + ":\n";
+    for (const auto& rec : recommendations) {
+        result += "- " + rec.name + " (Score: " + std::to_string(rec.performanceScore) + ")\n";
+    }
+
+    appendToOutput(result, "ModelRouter", OutputSeverity::Info);
+}
+
+bool Win32IDE::handleModelRouterKey(UINT vk, bool ctrl, bool alt, bool shift) {
+    if (!m_modelRouter) return false;
+
+    // Ctrl+Alt+U - Show model router UI
+    if (ctrl && alt && vk == 'U') {
+        showModelRouterUI();
+        return true;
+    }
+
+    // Ctrl+Alt+1-9 - Quick model selection
+    if (ctrl && alt && vk >= '1' && vk <= '9') {
+        int modelIndex = vk - '1';
+        auto models = m_modelRouter->getAvailableModels();
+        if (modelIndex < static_cast<int>(models.size())) {
+            std::string selectedModel = models[modelIndex].id;
+            appendToOutput("Selected model: " + models[modelIndex].name, "ModelRouter", OutputSeverity::Info);
+            // Here you would trigger model switching
+        }
+        return true;
+    }
+
+    return false;
+}
+
+// ============================================================================
+// NEW COMPONENT HANDLERS
+// ============================================================================
+
+void Win32IDE::handlePluginSignature() {
+    HandlePluginSignature(this);
+}
+
+void Win32IDE::handleEnterpriseStressTests() {
+    handleEnterpriseStressTestCommand();
+}
+
+void Win32IDE::handleSQLite3Core() {
+    initSQLite3Core();
+}
+
+void Win32IDE::handleTelemetryExport() {
+    handleTelemetryExportCommand();
+}
+
+void Win32IDE::handleRefactoringPlugin() {
+    handleRefactoringCommand();
+}
+
+void Win32IDE::handleLanguagePlugin() {
+    initLanguagePlugin();
+}
+
+void Win32IDE::handleResourceGenerator() {
+    showResourceGeneratorDialog();
 }
 

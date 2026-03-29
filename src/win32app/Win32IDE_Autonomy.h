@@ -7,6 +7,7 @@
 #include <mutex>
 #include <chrono>
 #include <functional>
+#include <cstdint>
 #include "IDELogger.h"
 #include "Win32IDE_AgenticBridge.h"
 
@@ -40,8 +41,11 @@ public:
 
     // Hook for external status surface
     std::string getStatus() const;
+    bool hasDefinedCriteria() const { return m_criteriaDefined; }
 
 private:
+    bool loadAutonomyCriteria();
+    static std::string sanitizeGoal(const std::string& goal);
     void loop();
     std::string planNextAction();
     void executeAction(const std::string& action);
@@ -61,4 +65,15 @@ private:
     int m_maxActionsPerMinute;
     int m_actionsThisWindow;
     std::chrono::steady_clock::time_point m_windowStart;
+
+    // Criteria-aware maturity gating + runtime health telemetry
+    bool m_criteriaLoaded = false;
+    bool m_criteriaDefined = false;
+    std::string m_criteriaPath;
+    uint64_t m_totalTicks = 0;
+    uint64_t m_skippedTicks = 0;
+    uint64_t m_failedActions = 0;
+    std::string m_lastAction;
+    std::string m_lastError;
+    std::chrono::steady_clock::time_point m_lastActionTs;
 };

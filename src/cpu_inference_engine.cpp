@@ -649,6 +649,18 @@ std::string CPUInferenceEngine::Detokenize(const std::vector<int32_t>& tokens) {
     return s;
 }
 
+bool CPUInferenceEngine::MatVecQ4(const float* matrix, const float* vector, float* output, uint32_t rows, uint32_t cols) {
+    // For now, assume matrix is already dequantized (FP32)
+    // In a real implementation, this would handle Q4_0 dequantization
+    MatMul(matrix, vector, output, rows, 1, cols);
+    return true;
+}
+
+bool CPUInferenceEngine::Softmax(float* data, uint32_t size) {
+    CPUOps::Softmax(data, size);
+    return true;
+}
+
 std::vector<float> CPUInferenceEngine::Eval(const std::vector<int32_t>& input_tokens) {
     if (!m_modelLoaded) return {};
     

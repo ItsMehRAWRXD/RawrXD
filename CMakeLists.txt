@@ -8,9 +8,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # ============================================================
 # ENABLE MASM FOR CUSTOM ZLIB IMPLEMENTATION
 # ============================================================
-enable_language(ASM_MASM)
-set(CMAKE_ASM_MASM_FLAGS "/nologo /W3 /Cx /Zi")
-message(STATUS "✓ MASM assembler enabled for custom ZLIB compression")
+# enable_language(ASM_MASM)  # Temporarily disabled for Ninja/MinGW compatibility
+# set(CMAKE_ASM_MASM_FLAGS "/nologo /W3 /Cx /Zi")
+# message(STATUS "✓ MASM assembler enabled for custom ZLIB compression")
 
 # ============================================================
 # 64-BIT ARCHITECTURE ENFORCEMENT
@@ -255,6 +255,38 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/3rdparty/ggml/CMakeLists.txt")
     
     add_subdirectory(3rdparty/ggml EXCLUDE_FROM_ALL)
     
+    # Add llama.cpp for high-level inference API
+    if(EXISTS "d:/llama.cpp/CMakeLists.txt")
+        message(STATUS "Adding llama.cpp submodule for inference API")
+        
+        # llama build options - disable unnecessary components
+        set(LLAMA_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+        set(LLAMA_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+        set(LLAMA_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
+        set(LLAMA_BUILD_SERVER OFF CACHE BOOL "" FORCE)
+        set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+        
+        # Enable GPU backends to match ggml
+        set(LLAMA_VULKAN ON CACHE BOOL "" FORCE)
+        set(LLAMA_CUDA OFF CACHE BOOL "" FORCE)
+        set(LLAMA_METAL OFF CACHE BOOL "" FORCE)
+        set(LLAMA_HIP OFF CACHE BOOL "" FORCE)
+        
+        add_subdirectory(d:/llama.cpp EXCLUDE_FROM_ALL)
+        
+        # Create llama interface library for clean linking
+        if(TARGET llama)
+            add_library(llama_interface INTERFACE)
+            target_link_libraries(llama_interface INTERFACE llama)
+            target_include_directories(llama_interface INTERFACE 
+                d:/llama.cpp/include
+                d:/llama.cpp/src
+            )
+        endif()
+    else()
+        message(WARNING "llama.cpp submodule not found - high-level inference API will use fallback")
+    endif()
+    
     # Create ggml interface library for clean linking
     add_library(ggml_interface INTERFACE)
     target_link_libraries(ggml_interface INTERFACE ggml)
@@ -353,7 +385,7 @@ message(STATUS "Adding advanced orchestration modules for AI-native IDE")
 add_subdirectory(src/orchestration)
 add_subdirectory(src/git)
 add_subdirectory(src/terminal)
-add_subdirectory(src/paint)
+# add_subdirectory(src/paint)  # Directory does not exist
 
 # Qt-based IDE shell (separate executable, no Vulkan)
 if(MSVC)
@@ -1028,11 +1060,16 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_AgentCommands.cpp
         src/win32app/Win32IDE_Autonomy.h
         src/win32app/Win32IDE_Autonomy.cpp
+        src/win32app/Win32IDE_VisionEncoder.cpp
+        src/win32app/Win32IDE_SemanticIndex.cpp
         src/gguf_loader.cpp
         src/gguf_vocab_resolver.cpp
         src/streaming_gguf_loader.cpp
         src/utils/ErrorReporter.cpp
         src/utils/Diagnostics.cpp
+        # Heap corruption diagnostics
+        src/diagnostics/uaf_detector.cpp
+        src/diagnostics/init_order.cpp
         # Benchmark menu integration (headers required for Q_OBJECT moc)
         include/benchmark_menu_widget.hpp
         include/benchmark_runner.hpp
@@ -1119,12 +1156,20 @@ if(MSVC AND RAWRXD_BUILD_WIN32IDE)
         ${CMAKE_SOURCE_DIR}/src/qtapp
         ${CMAKE_SOURCE_DIR}/3rdparty/ggml/include
         ${CMAKE_SOURCE_DIR}/3rdparty/ggml/src
+        d:/llama.cpp/include
+        d:/llama.cpp/src
     )
     
     # Link ggml if available
     if(TARGET ggml)
         target_link_libraries(RawrXD-Win32IDE PRIVATE ggml)
         target_compile_definitions(RawrXD-Win32IDE PRIVATE HAVE_GGML=1)
+    endif()
+    
+    # Link llama if available
+    if(TARGET llama)
+        target_link_libraries(RawrXD-Win32IDE PRIVATE llama)
+        target_compile_definitions(RawrXD-Win32IDE PRIVATE HAVE_LLAMA=1)
     endif()
     
     # Compiler options - MSVC only now
@@ -1804,7 +1849,7 @@ if(Qt6_FOUND AND Qt6_VERSION VERSION_GREATER_EQUAL 6.7.2)
         Qt6::Widgets
         Qt6::Concurrent
         Qt6::Network
-        Qt6::WebSockets
+        $<$<TARGET_EXISTS:Qt6::WebSockets>:Qt6::WebSockets>
         brutal_compression_lib
     )
 

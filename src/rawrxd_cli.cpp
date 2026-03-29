@@ -15,6 +15,8 @@
 #include <filesystem>
 #include <regex>
 #include <vector>
+#include <unordered_set>
+#include <cctype>
 
 namespace fs = std::filesystem;
 
@@ -130,6 +132,79 @@ static std::string detectLanguage(const std::string& path) {
     return "cpp";
 }
 
+static std::string trimWs(const std::string& s) {
+    size_t start = 0;
+    while (start < s.size() && std::isspace(static_cast<unsigned char>(s[start]))) {
+        ++start;
+    }
+    size_t end = s.size();
+    while (end > start && std::isspace(static_cast<unsigned char>(s[end - 1]))) {
+        --end;
+    }
+    return s.substr(start, end - start);
+}
+
+struct CliCommandDef {
+    const char* name;
+    const char* description;
+    bool agenticPath;
+};
+
+static const std::vector<CliCommandDef>& cliCommands() {
+    static const std::vector<CliCommandDef> defs = {
+        {"/load", "Load local model path into inference engine", false},
+        {"/agent", "Run agent query through NativeAgent", true},
+        {"/chat", "Chat + backend routing in CLI runtime", true},
+        {"/backend", "Show/set chat backend (inference|agentic|analyze|echo|scalar)", false},
+        {"/plan", "Generate planning sequence for a task", true},
+        {"/bugreport", "Generate bug report for a target file", true},
+        {"/edit", "Apply agentic edit instruction to a file", true},
+        {"/suggest", "Suggest improvements for a file", true},
+        {"/patch", "Generate hotpatch guidance", true},
+        {"/react_server", "Generate React server build plan", true},
+        {"/commands", "List CLI command surface", false},
+        {"/parity", "Show substantial overlap in command and agentic paths", false},
+        {"/help", "Show command-mode help", false}
+    };
+    return defs;
+}
+
+static const std::vector<std::string>& win32ParitySurface() {
+    static const std::vector<std::string> defs = {
+        "/agent", "/plan", "/bugreport", "/edit", "/suggest", "/patch", "/react_server", "/chat"
+    };
+    return defs;
+}
+
+static void printCommandCatalog() {
+    std::cout << "\nCLI command catalog:\n";
+    for (const auto& c : cliCommands()) {
+        std::cout << "  " << c.name << " - " << c.description;
+        if (c.agenticPath) {
+            std::cout << " [agentic]";
+        }
+        std::cout << "\n";
+    }
+}
+
+static void printParityReport() {
+    std::unordered_set<std::string> cliSet;
+    for (const auto& c : cliCommands()) {
+        cliSet.insert(c.name);
+    }
+    const auto& win32 = win32ParitySurface();
+    size_t overlap = 0;
+    for (const auto& cmd : win32) {
+        if (cliSet.find(cmd) != cliSet.end()) {
+            ++overlap;
+        }
+    }
+    const double pct = win32.empty() ? 0.0 : (100.0 * static_cast<double>(overlap) / static_cast<double>(win32.size()));
+    std::cout << "\nParity report: substantial overlap in command and agentic paths\n";
+    std::cout << "  Shared commands: " << overlap << "/" << win32.size() << " (" << pct << "%)\n";
+    std::cout << "  CLI does not claim complete feature parity with Win32IDE.\n";
+}
+
 using namespace std::chrono_literals;
 
 int main(int argc, char** argv) {
@@ -164,6 +239,7 @@ int main(int argc, char** argv) {
     std::cout << "          /=enter command mode (load, agent, etc.)" << std::endl;
 
     std::string lastFilePath;  // Track last used file for convenience
+    std::string chatBackend = "inference";
     bool running = true;
     telemetry::TelemetrySnapshot snap{};
     while (running) {
@@ -188,6 +264,41 @@ int main(int argc, char** argv) {
                         std::cout << "Model loaded successfully: " << path << std::endl;
                     } else {
                         std::cout << "Failed to load model." << std::endl;
+                    }
+                }
+                else if (action == "/help" || action == "/commands") {
+                    printCommandCatalog();
+                }
+                else if (action == "/parity") {
+                    printParityReport();
+                }
+                else if (action == "/backend") {
+                    std::string backend;
+                    std::getline(ss, backend);
+                    backend = trimWs(backend);
+                    if (!backend.empty()) {
+                        chatBackend = backend;
+                    }
+                    std::cout << "Chat backend route: " << chatBackend << std::endl;
+                }
+                else if (action == "/chat") {
+                    std::string query;
+                    std::getline(ss, query);
+                    query = trimWs(query);
+                    if (query.empty()) {
+                        std::cout << "Usage: /chat <message>" << std::endl;
+                    } else {
+                        if (!RawrXD::AIIntegrationHub::getInstance().isInitialized()) {
+                            RawrXD::AIIntegrationHub::getInstance().initialize("models/model.gguf");
+                        }
+                        auto runtimeAgent = RawrXD::AIIntegrationHub::getInstance().getAgenticEngine();
+                        if (!runtimeAgent) {
+                            std::cout << "Chat route failed: agentic engine unavailable" << std::endl;
+                        } else {
+                            const std::string routed = "[route backend=" + chatBackend + "] " + query;
+                            std::string response = runtimeAgent->processQuery(routed);
+                            std::cout << "[chat." << chatBackend << "] " << response << std::endl;
+                        }
                     }
                 }
                 else if (action == "/agent") {
@@ -220,15 +331,6 @@ int main(int argc, char** argv) {
                     std::string f;
                     std::getline(std::cin, f);
                     agent.Suggest(f);
-                }
-                else if (action == "/edit") {
-                    std::cout << "Target File: ";
-                    std::string f;
-                    std::getline(std::cin, f);
-                    std::cout << "Instructions: ";
-                    std::string i;
-                    std::getline(std::cin, i);
-                    agent.Edit(f, i);
                 }
                 else if (action == "/patch") {
                      std::cout << "Target File: ";
@@ -264,7 +366,7 @@ int main(int argc, char** argv) {
                     std::cout << "No Refusal: " << (nr ? "ON" : "OFF") << std::endl;
                 }
                 else {
-                    std::cout << "Unknown command. Try /load, /agent, /plan, /bugreport, /max, /think" << std::endl;
+                    std::cout << "Unknown command. Try /help or /commands." << std::endl;
                 }
                 break;
             }

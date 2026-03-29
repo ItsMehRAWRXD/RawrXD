@@ -123,21 +123,19 @@ void Win32IDE::onAgentExecuteCommand() {
         std::string command(input);
         appendToOutput("⚡ Executing Agent Command: " + command + "\n", "Output", OutputSeverity::Info);
         
-        // Execute in background
-        std::thread([this, command]() {
-            AgentResponse response = m_agenticBridge->ExecuteAgentCommand(command);
-            
-            std::string output = "Agent Response:\n";
-            output += "Type: " + std::to_string((int)response.type) + "\n";
-            output += "Content: " + response.content + "\n";
-            
-            if (!response.toolName.empty()) {
-                output += "Tool: " + response.toolName + "\n";
-                output += "Args: " + response.toolArgs + "\n";
-            }
-            
-            appendToOutput(output, "Output", OutputSeverity::Info);
-        }).detach();
+        // Execute synchronously on the UI thread to avoid cross-thread UI access
+        AgentResponse response = m_agenticBridge->ExecuteAgentCommand(command);
+        
+        std::string output = "Agent Response:\n";
+        output += "Type: " + std::to_string((int)response.type) + "\n";
+        output += "Content: " + response.content + "\n";
+        
+        if (!response.toolName.empty()) {
+            output += "Tool: " + response.toolName + "\n";
+            output += "Args: " + response.toolArgs + "\n";
+        }
+        
+        appendToOutput(output, "Output", OutputSeverity::Info);
         
         // Clear input
         SetWindowTextA(m_hwndCopilotChatInput, "");
@@ -234,7 +232,7 @@ void Win32IDE::onAgentConfigureModel() {
             const WORD cmdCode = HIWORD(msg.wParam);
             HWND sender = (HWND)msg.hwnd;
 
-            if (cmdId == IDOK && cmdCode == BN_CLICKED) {
+
                 int sel = (int)SendMessageA(hwndCombo, CB_GETCURSEL, 0, 0);
                 if (sel != CB_ERR) {
                     char buffer[256] = {0};

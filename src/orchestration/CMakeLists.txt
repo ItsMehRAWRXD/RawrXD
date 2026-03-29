@@ -16,6 +16,34 @@ add_library(RawrXDOrchestration STATIC
     voice_processor.hpp
     voice_processor.cpp
     qt6_audio_helper.hpp
+    shard_router_metadata.hpp
+    swarm_load_balancer.cpp
+    k_replica_manager.hpp
+    quadbuffer_pipeline.hpp
+    dynamic_quantization_engine.hpp
+)
+
+# Adaptive Loading & Quantization
+add_library(RawrXDQuantization STATIC
+    ../loading/adaptive_model_loader.cpp
+)
+target_include_directories(RawrXDQuantization PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/..)
+
+# Testing & Benchmarking
+add_executable(rawrxd_800b_benchmark ../testing/benchmark_800b_swarm.cpp)
+add_executable(rawrxd_120b_benchmark ../testing/benchmark_120b_local.cpp)
+
+target_link_libraries(rawrxd_800b_benchmark PRIVATE RawrXDOrchestration)
+target_link_libraries(rawrxd_120b_benchmark PRIVATE RawrXDOrchestration RawrXDQuantization)
+
+# MASM64 Sources
+set(ASM_SOURCES
+    ../asm/agentic_deep_thinking_kernels.asm
+    ../asm/node_heartbeat.asm
+    ../asm/p2p_shard_replicate.asm
+    ../asm/quadbuffer_prefetch.asm
+    ../asm/vram_pressure_monitor.asm
+    ../asm/rawrxd_ui_dispatcher.asm
 )
 
 target_link_libraries(RawrXDOrchestration
