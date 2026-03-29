@@ -1,0 +1,128 @@
+{
+  "name": "RawrZ Security Platform",
+  "version": "2.0.0",
+  "description": "Complete Standalone Security Platform with multiple frontend panels",
+  "panels": [
+    {
+      "name": "RawrZ Advanced Features Panel",
+      "file": "advanced-features-panel.html",
+      "description": "🚀 RawrZ Advanced Features"
+    },
+    {
+      "name": "RawrZ Beaconism DLL Sideloading Panel",
+      "file": "beaconism-panel.html",
+      "description": "RawrZ Beaconism DLL Sideloading Panel"
+    },
+    {
+      "name": "RawrZ Bot Manager - Real Bot Management System",
+      "file": "bot-manager.html",
+      "description": "🤖 RawrZ Security Platform - Bot Manager"
+    },
+    {
+      "name": "RawrZ CVE Analysis Panel - Real Vulnerability Detection",
+      "file": "cve-analysis-panel.html",
+      "description": "🔍 RawrZ Security Platform - CVE Analysis Panel"
+    },
+    {
+      "name": "RawrZ Encryption Panel - File Upload & Encryption",
+      "file": "encryption-panel.html",
+      "description": "🔐 RawrZ Security Platform - File Encryption Panel"
+    },
+    {
+      "name": "RawrZ Enhanced Payload Panel",
+      "file": "enhanced-payload-panel.html",
+      "description": "🚀 RawrZ Enhanced Payload Panel"
+    },
+    {
+      "name": "RawrZ EV Certificate Encryption Panel",
+      "file": "ev-cert-panel.html",
+      "description": "RawrZ EV Certificate Encryption Panel"
+    },
+    {
+      "name": "RawrZ Health Dashboard - Real System Monitoring",
+      "file": "health-dashboard.html",
+      "description": "🏥 RawrZ Security Platform - Health Dashboard"
+    },
+    {
+      "name": "RawrZ HTTP Bot Panel",
+      "file": "http-bot-panel.html",
+      "description": "RawrZ HTTP Bot Panel"
+    },
+    {
+      "name": "RawrZ IRC Bot Builder",
+      "file": "irc-bot-builder.html",
+      "description": "RawrZ IRC Bot Builder"
+    },
+    {
+      "name": "RawrZ Payload Panel",
+      "file": "payload-panel.html",
+      "description": "RawrZ Payload Panel"
+    },
+    {
+      "name": "RawrZ PowerShell One-Liner Panels",
+      "file": "one-liner-panels.html",
+      "description": "RawrZ PowerShell One-Liner Panels"
+    },
+    {
+      "name": "RawrZ PowerShell Utilities Panel",
+      "file": "powershell-panels.html",
+      "description": "RawrZ PowerShell Utilities Panel"
+    },
+    {
+      "name": "RawrZ Red Killer Panel",
+      "file": "red-killer-panel.html",
+      "description": "RawrZ Red Killer Panel"
+    },
+    {
+      "name": "RawrZ Security Platform - Advanced CLI",
+      "file": "index.html",
+      "description": "RawrZ Security Platform - Advanced CLI"
+    },
+    {
+      "name": "RawrZ Security Platform - Comprehensive Panel",
+      "file": "comprehensive-unified-panel.html",
+      "description": "RawrZ Security Platform - Comprehensive Panel"
+    },
+    {
+      "name": "RawrZ Security Platform - Main Dashboard",
+      "file": "panel.html",
+      "description": "RawrZ Security Platform - Main Dashboard"
+    },
+    {
+      "name": "RawrZ Security Platform - Main Hub",
+      "file": "advanced-cli-terminal.html",
+      "description": "RawrZ Security Platform - Main Hub interface"
+    },
+    {
+      "name": "RawrZ Security Platform - Main Hub",
+      "file": "rawrz-advanced-cli.html",
+      "description": "RawrZ Security Platform - Main Hub interface"
+    },
+    {
+      "name": "RawrZ Security Platform - Main Hub",
+      "file": "rawrz-cli-with-file-processing.html",
+      "description": "RawrZ Security Platform - Main Hub interface"
+    },
+    {
+      "name": "RawrZ Security Platform - Real CLI",
+      "file": "advanced-encryption-panel.html",
+      "description": "RawrZ Security Platform - Real CLI Interface"
+    },
+    {
+      "name": "RawrZ Security Platform - Unified Dashboard",
+      "file": "unified-panel.html",
+      "description": "RawrZ Security Platform - Unified Dashboard"
+    },
+    {
+      "name": "RawrZ Stub Generator Panel",
+      "file": "stub-generator-panel.html",
+      "description": "RawrZ Stub Generator Panel"
+    }
+  ],
+  "backend": {
+    "main": "api-server.js",
+    "standalone": "rawrz-standalone.js",
+    "port": 3000
+  },
+  "dependencies": "package.json"
+}

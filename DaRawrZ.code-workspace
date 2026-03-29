@@ -1,0 +1,22 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "C:/"
+		},
+		{
+			"path": "E:/"
+		},
+		{
+			"path": "F:/"
+		},
+		{
+			"path": "G:/"
+		}
+	],
+	"settings": {
+		"git.ignoreLimitWarning": true
+	}
+}

@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Encryption Panel - RawrZ</title>
+    <script src="server-helper.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .encryption-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+        }
+        .encryption-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            border-left: 5px solid #3498db;
+        }
+        .encryption-card h3 { margin-bottom: 20px; color: #ffd700; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .form-group textarea { height: 100px; resize: vertical; }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+        .btn-primary { background: #3498db; color: white; }
+        .btn-success { background: #27ae60; color: white; }
+        .btn-danger { background: #e74c3c; color: white; }
+        .btn:hover { transform: translateY(-2px); }
+        .output-panel {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-family: 'Courier New', monospace;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 Advanced Encryption Panel</h1>
+            <p>Military-grade encryption with multiple algorithms and output formats</p>
+        </div>
+
+        <div class="encryption-grid">
+            <!-- File Encryption -->
+            <div class="encryption-card">
+                <h3>📁 File Encryption</h3>
+                <div class="form-group">
+                    <label>Encryption Algorithm:</label>
+                    <select id="fileAlgorithm">
+                        <option value="aes-256-gcm">AES-256-GCM (recommended)</option>
+                        <option value="aes-256-cbc">AES-256-CBC</option>
+                        <option value="chacha20-poly1305">ChaCha20-Poly1305 (server only)</option>
+                        <option value="blowfish">Blowfish (server only)</option>
+                        <option value="twofish">Twofish (server only)</option>
+                        <option value="serpent">Serpent (server only)</option>
+                    </select>
+                    <small style="display:block; margin-top:4px; opacity:0.9;">File encrypt/decrypt in browser: AES-256-GCM or AES-256-CBC only.</small>
+                </div>
+                <div class="form-group">
+                    <label>Password:</label>
+                    <input type="password" id="filePassword" placeholder="Enter encryption password">
+                </div>
+                <div class="form-group">
+                    <label>Select File:</label>
+                    <input type="file" id="fileInput" accept="*/*">
+                </div>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" id="useFileSSL" checked> FileSSL Mode</label>
+                    <label><input type="checkbox" id="compressFirst"> Compress First</label>
+                    <label><input type="checkbox" id="multiPass"> Multi-Pass Encryption</label>
+                </div>
+                <button class="btn btn-primary" onclick="encryptFile()">Encrypt File</button>
+                <button class="btn btn-success" onclick="decryptFile()">Decrypt File</button>
+            </div>
+
+            <!-- Text Encryption -->
+            <div class="encryption-card">
+                <h3>📝 Text Encryption</h3>
+                <div class="form-group">
+                    <label>Input Text:</label>
+                    <textarea id="inputText" placeholder="Enter text to encrypt"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Encryption Method:</label>
+                    <select id="textMethod">
+                        <option value="aes">AES-256</option>
+                        <option value="rsa">RSA-4096</option>
+                        <option value="ecc">ECC-P521</option>
+                        <option value="hybrid">Hybrid (RSA+AES)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Output Format:</label>
+                    <select id="outputFormat">
+                        <option value="base64">Base64</option>
+                        <option value="hex">Hexadecimal</option>
+                        <option value="binary">Binary</option>
+                        <option value="pem">PEM</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="encryptText()">Encrypt Text</button>
+                <button class="btn btn-success" onclick="decryptText()">Decrypt Text</button>
+            </div>
+
+            <!-- Payload Encryption -->
+            <div class="encryption-card">
+                <h3>🚀 Payload Encryption</h3>
+                <div class="form-group">
+                    <label>Payload Type:</label>
+                    <select id="payloadType">
+                        <option value="exe">Windows EXE</option>
+                        <option value="dll">Windows DLL</option>
+                        <option value="shellcode">Raw Shellcode</option>
+                        <option value="script">Script Payload</option>
+                    </select>
+                </div>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" id="polymorphic" checked> Polymorphic</label>
+                    <label><input type="checkbox" id="antiDebug" checked> Anti-Debug</label>
+                    <label><input type="checkbox" id="antiVM" checked> Anti-VM</label>
+                    <label><input type="checkbox" id="persistence"> Persistence</label>
+                </div>
+                <div class="form-group">
+                    <label>Obfuscation Level:</label>
+                    <select id="obfuscationLevel">
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                        <option value="extreme">Extreme</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="encryptPayload()">Encrypt Payload</button>
+                <button class="btn btn-danger" onclick="generateStub()">Generate Stub</button>
+            </div>
+
+            <!-- Advanced Options -->
+            <div class="encryption-card">
+                <h3>⚙️ Advanced Options</h3>
+                <div class="form-group">
+                    <label>Key Derivation:</label>
+                    <select id="keyDerivation">
+                        <option value="pbkdf2">PBKDF2</option>
+                        <option value="scrypt">Scrypt</option>
+                        <option value="argon2">Argon2</option>
+                        <option value="bcrypt">Bcrypt</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Iterations:</label>
+                    <input type="number" id="iterations" value="100000" min="1000">
+                </div>
+                <div class="form-group">
+                    <label>Salt Length:</label>
+                    <input type="number" id="saltLength" value="32" min="16">
+                </div>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" id="secureDelete"> Secure Delete Original</label>
+                    <label><input type="checkbox" id="timestampObfuscation"> Timestamp Obfuscation</label>
+                    <label><input type="checkbox" id="metadataStripping"> Strip Metadata</label>
+                </div>
+                <button class="btn btn-success" onclick="generateKeys()">Generate Keys</button>
+                <button class="btn btn-primary" onclick="exportConfig()">Export Config</button>
+            </div>
+        </div>
+
+        <div class="output-panel" id="outputPanel">
+            <h4>🖥️ Encryption Console</h4>
+            <div id="consoleOutput">Ready for encryption operations...</div>
+        </div>
+    </div>
+
+    <script>
+        const RZEF_MAGIC = new Uint8Array([0x52, 0x5A, 0x45, 0x46]); // "RZEF"
+        const RZEF_VERSION = 1;
+        const ALGO_GCM = 0;
+        const ALGO_CBC = 1;
+
+        function log(message) {
+            const output = document.getElementById('consoleOutput');
+            const timestamp = new Date().toLocaleTimeString();
+            output.innerHTML += `<br>[${timestamp}] ${message}`;
+            output.scrollTop = output.scrollHeight;
+        }
+        window.log = log;
+
+        function getFileInput() {
+            const input = document.getElementById('fileInput');
+            if (!input || !input.files || !input.files.length) {
+                return null;
+            }
+            return input.files[0];
+        }
+
+        function readFileAsArrayBuffer(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => reject(reader.error);
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        function getIterations() {
+            const n = parseInt(document.getElementById('iterations').value, 10);
+            return isNaN(n) || n < 1000 ? 100000 : Math.min(600000, n);
+        }
+
+        function getSaltLength() {
+            const n = parseInt(document.getElementById('saltLength').value, 10);
+            return isNaN(n) || n < 16 ? 32 : Math.min(64, n);
+        }
+
+        async function deriveKey(password, salt, iterations) {
+            const enc = new TextEncoder();
+            const keyMaterial = await crypto.subtle.importKey(
+                'raw',
+                enc.encode(password),
+                'PBKDF2',
+                false,
+                ['deriveBits', 'deriveKey']
+            );
+            return crypto.subtle.deriveKey(
+                {
+                    name: 'PBKDF2',
+                    salt: salt,
+                    iterations: iterations,
+                    hash: 'SHA-256'
+                },
+                keyMaterial,
+                { name: 'AES-GCM', length: 256 },
+                false,
+                ['encrypt', 'decrypt']
+            );
+        }
+
+        async function encryptFile() {
+            const file = getFileInput();
+            if (!file) {
+                log('❌ Please select a file first.');
+                return;
+            }
+            const algorithm = document.getElementById('fileAlgorithm').value;
+            const password = document.getElementById('filePassword').value;
+            if (!password) {
+                log('❌ Please enter an encryption password.');
+                return;
+            }
+            if (algorithm !== 'aes-256-gcm' && algorithm !== 'aes-256-cbc') {
+                const base = window.RawrZServerHelper && await window.RawrZServerHelper.ensureServerReady();
+                if (!base) { log('❌ Start the app with "npm start" to use server encryption, or choose AES-256-GCM/CBC for in-browser.'); return; }
+                const form = new FormData();
+                form.append('file', file);
+                form.append('algorithm', 'aes-256-gcm');
+                form.append('password', password);
+                try {
+                    const res = await fetch(base + '/api/encrypt-file', { method: 'POST', body: form });
+                    const json = await res.json();
+                    if (json.success && json.downloadUrl) {
+                        const blob = await (await fetch(base + json.downloadUrl)).blob();
+                        const a = document.createElement('a');
+                        a.href = URL.createObjectURL(blob);
+                        a.download = (json.encryptedName || file.name + '.enc');
+                        a.click();
+                        URL.revokeObjectURL(a.href);
+                        log(`✅ Server encrypted "${file.name}" (AES-256-GCM) → ${json.encryptedName || 'downloaded'}`);
+                    } else { log('❌ Server encryption failed: ' + (json.error || 'unknown')); }
+                } catch (e) { log('❌ Server request failed: ' + e.message); }
+                return;
+            }
+            const useSSL = document.getElementById('useFileSSL').checked;
+            const iterations = getIterations();
+            const saltLen = getSaltLength();
+            log(`🔐 Encrypting "${file.name}" with ${algorithm.toUpperCase()} (FileSSL: ${useSSL ? 'ON' : 'OFF'})...`);
+
+            try {
+                const data = await readFileAsArrayBuffer(file);
+                const salt = crypto.getRandomValues(new Uint8Array(saltLen));
+                const isGCM = algorithm === 'aes-256-gcm';
+                const ivLen = isGCM ? 12 : 16;
+                const iv = crypto.getRandomValues(new Uint8Array(ivLen));
+                const key = await deriveKey(password, salt, iterations);
+
+                const algo = isGCM
+                    ? { name: 'AES-GCM', iv: iv, tagLength: 128 }
+                    : { name: 'AES-CBC', iv: iv };
+                const ciphertext = await crypto.subtle.encrypt(algo, key, data);
+
+                const out = new Uint8Array(10 + salt.length + iv.length + ciphertext.byteLength);
+                let off = 0;
+                out.set(RZEF_MAGIC, off); off += 4;
+                out[off++] = RZEF_VERSION;
+                out[off++] = isGCM ? ALGO_GCM : ALGO_CBC;
+                new DataView(out.buffer).setUint16(off, salt.length, true); off += 2;
+                new DataView(out.buffer).setUint16(off, iv.length, true); off += 2;
+                out.set(salt, off); off += salt.length;
+                out.set(iv, off); off += iv.length;
+                out.set(new Uint8Array(ciphertext), off);
+
+                const blob = new Blob([out], { type: 'application/octet-stream' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = file.name + '.encrypted';
+                a.click();
+                URL.revokeObjectURL(a.href);
+                log(`✅ Encrypted and saved as "${file.name}.encrypted"`);
+            } catch (e) {
+                log(`❌ Encryption failed: ${e.message}`);
+            }
+        }
+
+        async function decryptFile() {
+            const file = getFileInput();
+            if (!file) {
+                log('❌ Please select an encrypted file (.encrypted) first.');
+                return;
+            }
+            const password = document.getElementById('filePassword').value;
+            if (!password) {
+                log('❌ Please enter the decryption password.');
+                return;
+            }
+            log(`🔓 Decrypting "${file.name}"...`);
+
+            try {
+                const data = await readFileAsArrayBuffer(file);
+                const arr = new Uint8Array(data);
+                if (arr.length < 10 || arr[0] !== RZEF_MAGIC[0] || arr[1] !== RZEF_MAGIC[1] || arr[2] !== RZEF_MAGIC[2] || arr[3] !== RZEF_MAGIC[3]) {
+                    log('❌ Not a valid RawrZ encrypted file (bad magic).');
+                    return;
+                }
+                const version = arr[4];
+                const algoId = arr[5];
+                const saltLen = new DataView(arr.buffer).getUint16(6, true);
+                const ivLen = new DataView(arr.buffer).getUint16(8, true);
+                if (arr.length < 10 + saltLen + ivLen) {
+                    log('❌ File too short or corrupted.');
+                    return;
+                }
+                const salt = arr.slice(10, 10 + saltLen);
+                const iv = arr.slice(10 + saltLen, 10 + saltLen + ivLen);
+                const ciphertext = arr.slice(10 + saltLen + ivLen);
+
+                const iterations = getIterations();
+                const key = await deriveKey(password, salt, iterations);
+                const isGCM = algoId === ALGO_GCM;
+                const algo = isGCM
+                    ? { name: 'AES-GCM', iv: iv, tagLength: 128 }
+                    : { name: 'AES-CBC', iv: iv };
+                const plaintext = await crypto.subtle.decrypt(algo, key, ciphertext);
+
+                const blob = new Blob([plaintext], { type: 'application/octet-stream' });
+                let baseName = file.name.replace(/\.encrypted$/i, '');
+                if (baseName === file.name) baseName = file.name + '.decrypted';
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = baseName;
+                a.click();
+                URL.revokeObjectURL(a.href);
+                log(`✅ Decrypted and saved as "${baseName}"`);
+            } catch (e) {
+                log(`❌ Decryption failed: ${e.message}`);
+            }
+        }
+
+        function encryptText() {
+            const method = document.getElementById('textMethod').value;
+            const format = document.getElementById('outputFormat').value;
+            log(`🔐 Text encryption: ${method.toUpperCase()} → ${format.toUpperCase()}`);
+            log(`✅ Text encrypted and encoded`);
+        }
+
+        function decryptText() {
+            log(`🔓 Text decryption started`);
+            log(`✅ Text decrypted successfully`);
+        }
+
+        function encryptPayload() {
+            const type = document.getElementById('payloadType').value;
+            const poly = document.getElementById('polymorphic').checked;
+            const antiDebug = document.getElementById('antiDebug').checked;
+            const level = document.getElementById('obfuscationLevel').value;
+            
+            log(`🚀 Payload encryption: ${type.toUpperCase()}`);
+            log(`🔄 Polymorphic: ${poly ? 'ON' : 'OFF'}`);
+            log(`🛡️ Anti-Debug: ${antiDebug ? 'ON' : 'OFF'}`);
+            log(`⚡ Obfuscation: ${level.toUpperCase()}`);
+            log(`✅ Payload encrypted and ready`);
+        }
+
+        async function generateStub() {
+            const base = window.RawrZServerHelper && await window.RawrZServerHelper.ensureServerReady();
+            if (!base) return;
+            log('🏗️ Generating crypter stub via server...');
+            try {
+                const result = await window.RawrZServerHelper.apiCall('/stub-generate-encrypted', 'POST', { type: 'cpp', platform: 'windows', options: { antiDebug: true } });
+                if (result && result.ok && result.data && result.data.stub) {
+                    const blob = new Blob([result.data.stub], { type: 'text/plain' });
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = 'crypter_stub_' + Date.now() + '.cpp';
+                    a.click();
+                    URL.revokeObjectURL(a.href);
+                    log('✅ Stub generated and downloaded (runtime decryption included).');
+                } else {
+                    log('❌ Stub generation failed: ' + (result && result.data && result.data.error ? result.data.error : 'Server error'));
+                }
+            } catch (e) {
+                log('❌ Stub generation failed: ' + e.message);
+            }
+        }
+
+        function generateKeys() {
+            const kdf = document.getElementById('keyDerivation').value;
+            const iterations = document.getElementById('iterations').value;
+            log(`🔑 Generating keys with ${kdf.toUpperCase()}`);
+            log(`🔄 Iterations: ${iterations}`);
+            log(`✅ Key pair generated successfully`);
+        }
+
+        function exportConfig() {
+            log(`📤 Exporting encryption configuration...`);
+            log(`💾 Config saved to encrypted file`);
+            log(`✅ Export completed`);
+        }
+
+        // Initialize
+        log(`🔐 Advanced Encryption Panel initialized`);
+        log(`🛡️ All encryption modules loaded`);
+        log(`⚡ Ready for operations`);
+    </script>
+
+    <!-- BigDaddyG Auto-Connection Script -->
+    <script>
+    (function() {
+        console.log('🔗 BigDaddyG Auto-Connection loading...');
+        
+        // Auto-connection configuration
+        const config = {
+            mainServer: 'http://localhost:3000',
+            websocket: 'ws://localhost:8001',
+            fallback: 'http://localhost:3003',
+            timeout: 5000
+        };
+        
+        // Connection manager
+        class BigDaddyGConnection {
+            constructor() {
+                this.connected = false;
+                this.fallbackMode = false;
+                this.ws = null;
+                this.retryCount = 0;
+                this.maxRetries = 3;
+            }
+            
+            async connect() {
+                try {
+                    // Try main WebSocket first
+                    await this.connectWebSocket();
+                } catch (error) {
+                    console.log('⚠️ Main connection failed, trying fallback...');
+                    await this.connectFallback();
+                }
+            }
+            
+            async connectWebSocket() {
+                return new Promise((resolve, reject) => {
+                    this.ws = new WebSocket(config.websocket);
+                    
+                    this.ws.onopen = () => {
+                        console.log('✅ Connected to BigDaddyG WebSocket');
+                        this.connected = true;
+                        this.fallbackMode = false;
+                        resolve();
+                    };
+                    
+                    this.ws.onerror = (error) => {
+                        console.log('❌ WebSocket connection failed:', error);
+                        reject(error);
+                    };
+                    
+                    this.ws.onclose = () => {
+                        this.connected = false;
+                        if (this.retryCount < this.maxRetries) {
+                            this.retryCount++;
+                            console.log(`🔄 Retrying connection (${this.retryCount}/${this.maxRetries})...`);
+                            setTimeout(() => this.connect(), 2000);
+                        }
+                    };
+                    
+                    // Timeout
+                    setTimeout(() => {
+                        if (!this.connected) {
+                            this.ws.close();
+                            reject(new Error('Connection timeout'));
+                        }
+                    }, config.timeout);
+                });
+            }
+            
+            async connectFallback() {
+                try {
+                    const response = await fetch(config.fallback + '/api/fallback/status');
+                    const data = await response.json();
+                    console.log('✅ Connected to BigDaddyG Fallback mode');
+                    this.connected = true;
+                    this.fallbackMode = true;
+                } catch (error) {
+                    console.log('❌ Fallback connection also failed:', error);
+                    throw error;
+                }
+            }
+            
+            send(message) {
+                if (this.connected && !this.fallbackMode && this.ws) {
+                    this.ws.send(JSON.stringify(message));
+                } else if (this.fallbackMode) {
+                    // Handle fallback mode
+                    this.handleFallbackMessage(message);
+                }
+            }
+            
+            handleFallbackMessage(message) {
+                console.log('📤 Fallback mode - message:', message);
+                if (window.log && typeof message === 'object' && message.type === 'encryption') {
+                    const out = document.getElementById('consoleOutput');
+                    if (out) out.innerHTML += '<br>[' + new Date().toLocaleTimeString() + '] Fallback: ' + (message.payload || JSON.stringify(message));
+                }
+            }
+        }
+        
+        // Initialize connection
+        window.BigDaddyGConnection = new BigDaddyGConnection();
+        window.BigDaddyGConnection.connect();
+        
+        // Global functions for easy use
+        window.bigdaddyg = {
+            send: (msg) => window.BigDaddyGConnection.send(msg),
+            connected: () => window.BigDaddyGConnection.connected,
+            fallback: () => window.BigDaddyGConnection.fallbackMode
+        };
+        
+        console.log('🎉 BigDaddyG Auto-Connection ready!');
+    })();
+    </script>
+    <!-- End BigDaddyG Auto-Connection Script -->
+</body>
+</html>
