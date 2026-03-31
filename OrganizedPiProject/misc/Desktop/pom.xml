@@ -20,12 +20,12 @@
         
         <!-- Dependency versions -->
         <graalvm.version>23.0.1</graalvm.version>
-        <pf4j.version>3.9.0</pf4j.version>
-        <jackson.version>2.15.2</jackson.version>
+        <pf4j.version>3.14.1</pf4j.version>
+        <jackson.version>2.18.6</jackson.version>
         <opentelemetry.version>1.28.0</opentelemetry.version>
         <junit.version>5.10.0</junit.version>
         <mockito.version>5.5.0</mockito.version>
-        <logback.version>1.4.11</logback.version>
+        <logback.version>1.4.12</logback.version>
         <slf4j.version>2.0.7</slf4j.version>
     </properties>
 
