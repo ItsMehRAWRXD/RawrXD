@@ -9,8 +9,40 @@
 #include <memory>
 #include <cstdint>
 #include <functional>
+#include <type_traits>
 
 namespace RawrXD {
+
+    // =========================================================================
+    // Sovereign Node — SFINAE-gated agent dispatch
+    // Template constraint: SovereignNode::dispatch<T> should only bind for
+    // types that provide a ::CycleResult nested type.  BUG: missing typename
+    // on dependent type + circular default argument referencing incomplete self.
+    // =========================================================================
+    struct SovereignNode {
+        using StatusFlags = uint64_t;
+
+        // Trait: does T have a nested CycleResult?
+        template<typename T, typename = void>
+        struct has_cycle_result : std::false_type {};
+
+        template<typename T>
+        struct has_cycle_result<T, std::void_t<typename T::CycleResult>>
+            : std::true_type {};
+
+        // Fix: Added typename for dependent type and fixed signature
+        template<typename T,
+                 typename std::enable_if<has_cycle_result<T>::value, int>::type = 0>
+        static StatusFlags dispatch(const T& agent) {
+            return static_cast<StatusFlags>(sizeof(T));
+        }
+
+        // Fix: Constant moved down to after struct definition to avoid C2027
+        static constexpr size_t kNodeSize();
+        };
+
+    inline constexpr size_t SovereignNode::kNodeSize() { return sizeof(SovereignNode); }
+    // =========================================================================
 
     // --- Inference Engine Interface ---
     class InferenceEngine {
