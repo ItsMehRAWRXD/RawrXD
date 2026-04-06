@@ -95,6 +95,7 @@ static double   g_baselineTps = 0.0;
 static double   g_baselineLatencyMs = 0.0;
 static uint64_t g_baselineColdLoadMs = 0.0;
 static bool     g_sentinelArmed = false;
+static int      g_rollbackCooldown = 0; // Lockout cycles
 
 // Windowing for smoothing
 static double   g_tpsWindow[8]{};
@@ -128,6 +129,11 @@ static void LoadSovereignManifest()
 static void VerifyTpsSentinel(double currentTps, double currentLatencyMs)
 {
     if (!g_sentinelArmed) return;
+    if (g_rollbackCooldown > 0)
+    {
+        g_rollbackCooldown--;
+        return; 
+    }
 
     // Update moving average window
     g_tpsWindow[g_tpsWindowIdx] = currentTps;
@@ -163,7 +169,8 @@ static void VerifyTpsSentinel(double currentTps, double currentLatencyMs)
             // For the shim, we simulate the rollback by flagging the failure.
             g_rawrHotpatchStats.swapsRolledBack++;
             g_rawrHotpatchStats.swapsApplied = 0;
-            RawrXD_Native_Log("[SENTINEL] ROLLBACK COMPLETE. SYSTEM RETURNED TO BASELINE.");
+            g_rollbackCooldown = 100; // Lockout for 100 cycles to stabilize
+            RawrXD_Native_Log("[SENTINEL] ROLLBACK COMPLETE. SYSTEM RETURNED TO BASELINE (Lockout: 100 cycles).");
         }
     }
     else
