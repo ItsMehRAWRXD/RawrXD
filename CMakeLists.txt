@@ -362,7 +362,7 @@ if(RAWR_HAS_MASM)
         src/asm/gui_dispatch_bridge.asm
         src/asm/VulkanKernel_DispatchRaw.asm
         # src/asm/RawrXD_CopilotGapCloser.asm   # excluded: scaffold/invalid ml64 syntax (__real@*, missing .ENDPROLOG)
-        # src/asm/native_speed_kernels.asm      # excluded: scaffold/invalid ml64 syntax (__real@*, missing .ENDPROLOG)
+        # src/asm/native_speed_kernels.asm      # Excluded from ASM_KERNEL_SOURCES: handled by custom command (MASM_OBJECTS) to avoid LNK2005 duplicate symbol with native_speed_kernels.obj
         # src/asm/DirectML_Bridge.asm           # excluded: scaffold/invalid ml64 syntax (__real@*, missing .ENDPROLOG)
         # src/asm/RawrXD_Hotpatch_Kernel.asm    # excluded: scaffold/invalid ml64 syntax (__real@*, missing .ENDPROLOG)
         # src/asm/RawrXD_Snapshot.asm           # excluded: scaffold/invalid ml64 syntax (__real@*, missing .ENDPROLOG)
@@ -377,10 +377,19 @@ if(RAWR_HAS_MASM)
         src/asm/RawrXD_StubSweepBridge.asm
         src/asm/RawrXD_AuditSystem_Pure.asm
         src/asm/Advanced_Code_Deobfuscator.asm
+        src/asm/ai_agent_masm_core.asm
         src/asm/Code_Pattern_Reconstructor.asm
         src/asm/agentic_deep_thinking_kernels.asm
         src/kernels/RawrXD_Omega_Singularity.asm
         src/kernels/RawrXD_Omega_Agentic.asm
+        # Sovereign agentic runtime: terminal capture, context buffer, JSON plan parser
+        src/asm/RawrXD_TerminalCapture.asm
+        src/asm/RawrXD_ContextBuffer.asm
+        src/asm/RawrXD_JsonPlanParser.asm
+        # KV-Cache Aperture Memory Bypass (non-temporal streaming + rolling buffer)
+        src/asm/RAWRXD_KV_APERTURE.asm
+        src/asm/RawrXD_KVCache_Rolling.asm
+        src/asm/Titan_MoE_SparseGather.asm
         # Previously broken MASM64 syntax now portable C++20 with extern "C" ABI compatibility.
 
         
@@ -393,6 +402,7 @@ if(RAWR_HAS_MASM)
     list(REMOVE_DUPLICATES ASM_KERNEL_SOURCES)
     # Mark ASM files with MASM language property
     set_source_files_properties(${ASM_KERNEL_SOURCES} PROPERTIES LANGUAGE ASM_MASM)
+    add_compile_definitions(RAWRXD_MASM_CORE_NATIVE_BRIDGE=1)
 else()
     set(ASM_KERNEL_SOURCES "")
 endif()
@@ -2855,6 +2865,13 @@ set(SCHEDULER_BRIDGE src/render/SchedulerBridge.cpp)
         ${TITAN_GGML_BRIDGE_OBJECTS}
     )
 
+    # Combined export table link
+    if(MSVC)
+        target_link_options(RawrXD_Titan PRIVATE
+            "/DEF:${CMAKE_CURRENT_SOURCE_DIR}/src/titan_infer.def"
+        )
+    endif()
+
     if(_RAWRXD_OMEGA_HIP_ENABLED)
         # Fail-safe default: keep AUTO lane compile-stable and only attach
         # the known attention kernel bridge by default.
@@ -2895,6 +2912,8 @@ set(SCHEDULER_BRIDGE src/render/SchedulerBridge.cpp)
         )
     endif()
 
+    target_sources(RawrXD_Titan PRIVATE src/titan_infer_dll.cpp)
+
     set_target_properties(RawrXD_Titan PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY bin
         LIBRARY_OUTPUT_DIRECTORY bin
@@ -2902,11 +2921,12 @@ set(SCHEDULER_BRIDGE src/render/SchedulerBridge.cpp)
         OUTPUT_NAME RawrXD_Titan
     )
 
-    if(MSVC)
-        target_link_options(RawrXD_Titan PRIVATE
-            "/DEF:${CMAKE_CURRENT_SOURCE_DIR}/src/titan_infer.def"
-        )
-    endif()
+    # Remove the second (redundant and conflicting) DEF link option
+    # if(MSVC)
+    #    target_link_options(RawrXD_Titan PRIVATE
+    #        "/DEF:${CMAKE_CURRENT_SOURCE_DIR}/src/titan_infer.def"
+    #    )
+    # endif()
 
     target_link_libraries(RawrXD_Titan PRIVATE
         user32
@@ -4175,7 +4195,6 @@ if(WIN32)
     # only providers for several Win32IDE/RawrEngine symbols in the strict lane.
     set(_RAWRXD_REQUIRED_WIN32IDE_PROVIDER_SOURCES
         src/core/ai_agent_masm_stubs.cpp
-        src/core/rawr_engine_link_shims.cpp
         src/core/model_loader_fallbacks.cpp
         src/core/rawrxd_native_log_fallback.cpp
         src/core/native_gguf_loader_link_stub.cpp
@@ -4535,6 +4554,10 @@ if(WIN32)
     # Link RE library into Win32IDE
     target_link_libraries(RawrXD-Win32IDE PRIVATE RawrXD-RE-Library)
     
+    # Singularity Core (Pure MASM layer - Final Link)
+    target_link_libraries(RawrXD-Win32IDE PRIVATE "d:/rawrxd/build/asm_obj/singularity_core.lib")
+    target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWR_SINGULARITY_LINKED=1)
+
     # Link MultiWindow Kernel into Win32IDE
     if(TARGET RawrXD_MultiWindow_Kernel)
         target_link_libraries(RawrXD-Win32IDE PRIVATE RawrXD_MultiWindow_Kernel)
@@ -4549,7 +4572,7 @@ if(WIN32)
     
     # Link RawrXD_Titan DLL import library (Phase 15.2 aperture utilization APIs)
     if(TARGET RawrXD_Titan)
-        target_link_libraries(RawrXD-Win32IDE PRIVATE RawrXD_Titan)
+        target_link_libraries(RawrXD-Win32IDE PRIVATE "d:/rawrxd/build/bin/RawrXD_Titan.lib")
         target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWRXD_HAS_TITAN_KERNEL=1)
         add_dependencies(RawrXD-Win32IDE RawrXD_Titan)
     endif()
