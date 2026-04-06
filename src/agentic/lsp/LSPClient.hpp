@@ -713,6 +713,7 @@ private:
     }
 
     // Send a request with callback
+public:
     void sendRequest(const std::string& method, const JsonValue& params,
                     std::function<void(const JsonValue&)> callback) {
         auto msg = createRequest(method, params);

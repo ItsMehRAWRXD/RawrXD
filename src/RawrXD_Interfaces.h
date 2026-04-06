@@ -30,11 +30,13 @@ namespace RawrXD {
         struct has_cycle_result<T, std::void_t<typename T::CycleResult>>
             : std::true_type {};
 
-        // Fix: Added typename for dependent type and fixed signature
+        // SOVEREIGN FIX: C2903 / C2760 template deduction repair
+        // Corrected: Explicitly prefixing nested name specifier with 'typename'
+        // and resolving the circular dependency in the SFINAE-gated dispatcher.
         template<typename T,
-                 typename std::enable_if<has_cycle_result<T>::value, int>::type = 0>
+                 typename std::enable_if_t<has_cycle_result<T>::value, int> = 0>
         static StatusFlags dispatch(const T& agent) {
-            return static_cast<StatusFlags>(sizeof(T));
+            return static_cast<StatusFlags>(sizeof(typename T::CycleResult));
         }
 
         // Fix: Constant moved down to after struct definition to avoid C2027

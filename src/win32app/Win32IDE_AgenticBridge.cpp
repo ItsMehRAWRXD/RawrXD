@@ -274,6 +274,12 @@ bool AgenticBridge::postLogToMainWindow(UILogSeverity severity, const std::strin
 // E5: autoCorrect puppeteer only runs when response exceeds quality threshold
 // E6: performance monitor records per-call latency
 // E7: consecutive failure counter increments m_consecutiveFailures for router
+std::string AgenticBridge::GenerateResponse(const std::string& prompt)
+{
+    AgentResponse response = ExecuteAgentCommand(prompt);
+    return response.content;
+}
+
 AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt)
 {
     SCOPED_METRIC("agentic.execute_command");
@@ -449,6 +455,7 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt)
 
     // When no local model is loaded, route through active backend (Ollama/cloud) so agentic
     // work can use the same backend as chat (see docs/AGENTIC_AND_MODEL_LOADING_AUDIT.md).
+    const auto inferenceStart = std::chrono::steady_clock::now();
     std::string response;
     bool localReady = SharedCpuEngine()->IsModelLoaded();
     if (!localReady)
@@ -517,8 +524,12 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt)
     if (response.size() > kMaxResponseBytes)
         response = response.substr(0, kMaxResponseBytes) + "\n[truncated]";
 
-    // E6: record per-call latency via performance monitor
-    // TODO: add recordLatency to PerformanceMonitor when timing infra lands
+    // E6: record per-call inference latency
+    {
+        const auto inferenceUs = std::chrono::duration_cast<std::chrono::microseconds>(
+            std::chrono::steady_clock::now() - inferenceStart).count();
+        perf.recordLatency("agentic.bridge.inference", inferenceUs);
+    }
 
     // CRITICAL: Stream response through callback so UI actually displays real inference output
     if (m_outputCallback && !response.empty())
@@ -1823,6 +1834,9 @@ bool AgenticBridge::DispatchModelToolCalls(const std::string& modelOutput, std::
     // Every tool result flows through here, regardless of caller (Autonomy, Bridge, etc.)
     if (dispatched && m_ide)
     {
+        // Add visual feedback to terminal if tool executed
+        m_ide->appendToOutput("[AgenticBridge] Executing tool: " + modelOutput + "\n", "Output", Win32IDE::OutputSeverity::Info);
+        
         // Extract tool name from the model output (first tool: directive)
         std::string toolName = "unknown";
         auto toolPos = modelOutput.find("tool:");
@@ -1844,6 +1858,7 @@ bool AgenticBridge::DispatchModelToolCalls(const std::string& modelOutput, std::
             LOG_WARNING("[Phase4B] Tool '" + toolName +
                         "' failure at dispatch: " + m_ide->failureTypeString(toolFailure.reason) +
                         " (confidence=" + std::to_string(toolFailure.confidence) + ")");
+            m_ide->appendToOutput("[AgenticBridge] Tool failure: " + m_ide->failureTypeString(toolFailure.reason) + "\n", "Errors", Win32IDE::OutputSeverity::Error);
         }
     }
 

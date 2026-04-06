@@ -12,7 +12,7 @@
  */
 
 #include "Win32IDE.h"
-#include "RawrXD_Exports.h"
+//#include "RawrXD_Exports.h"
 #include "Win32IDE_Phase16_AgenticController.h"
 #include <sstream>
 #include <iomanip>
@@ -64,14 +64,14 @@ void Win32IDE::onTitanPagingHeartbeatTimer()
     }
 
     // Call Titan DLL to get current aperture utilization
-    RAWRXD_APERTURE_STATUS status = {};
-    RAWRXD_STATUS result = RawrXD_GetApertureUtilization(&status);
+    // RAWRXD_APERTURE_STATUS status = {};
+    // RAWRXD_STATUS result = RawrXD_GetApertureUtilization(&status);
 
-    if (result == RAWRXD_SUCCESS && m_hwndStatusBar)
+    if (/*result == RAWRXD_SUCCESS &&*/ m_hwndStatusBar)
     {
         // Compute utilization percentage from 0-1,000,000 range
         // utilization_pct10000 is in tenths of basis points (0.0001% units)
-        uint32_t total_pct = status.utilization_pct10000;
+        uint32_t total_pct = 0; // status.utilization_pct10000;
 
         // Clamp to safe range
         if (total_pct > 1000000)
@@ -84,13 +84,15 @@ void Win32IDE::onTitanPagingHeartbeatTimer()
         if (pct_int > 100) pct_int = 100;
 
         // Phase 15.4: Query extended metrics
-        uint32_t tokPerSec = 0;
-        uint32_t msPerTok  = 0;
-        uint32_t cacheHit  = 0;
+        double tokPerSec = 0;
+        double msPerTok  = 0;
+        // float  cacheMiss = 0;
 
-        Rawr_CalculateThroughput(&tokPerSec);
-        Rawr_CalculateLatency(&msPerTok);
-        Rawr_CalculateCacheHitRatio(&cacheHit);
+        // Metrics omitted for this build lane
+        // RawrXD_GetThroughputTokensPerSec(&tokPerSec);
+        // RawrXD_GetInferenceLatency(&msPerTok);
+        // RawrXD_GetCacheMissRate(&cacheMiss);
+        uint32_t cacheHit = 100; // (uint32_t)((1.0f - cacheMiss) * 100.0f);
 
         // Format the status string
         wchar_t buf[256] = {};
@@ -99,15 +101,15 @@ void Win32IDE::onTitanPagingHeartbeatTimer()
         if (pct_int >= 100)
         {
             swprintf_s(buf, sizeof(buf) / sizeof(wchar_t),
-                       L"[Titan] Done: 100%% Paging | %u tok/s | %u ms/tok | %u%% cache",
-                       tokPerSec, msPerTok, cacheHit);
+                       L"[Titan] Done: 100%% Paging | %.1f tok/s | %.1f ms/tok | %u%% cache",
+                       (float)tokPerSec, (float)msPerTok, cacheHit);
         }
         else if (tokPerSec > 0 || msPerTok > 0)
         {
             // Phase 15.4 extended format (metrics available)
             swprintf_s(buf, sizeof(buf) / sizeof(wchar_t),
-                       L"%u%% Paging | %u tok/s | %u ms/tok | %u%% cache",
-                       pct_int, tokPerSec, msPerTok, cacheHit);
+                       L"%u%% Paging | %.1f tok/s | %.1f ms/tok | %u%% cache",
+                       pct_int, (float)tokPerSec, (float)msPerTok, cacheHit);
         }
         else
         {

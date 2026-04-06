@@ -750,19 +750,16 @@ QString InferenceEngine::detokenize(const std::vector<int32_t>& tokens)
             VocabularyLoader::Token vocabToken = m_vocab.getToken(tokenId);
             if (vocabToken.id >= 0 && !vocabToken.text.isEmpty()) {
                 result += vocabToken.text;
-                if (!vocabToken.text.endsWith(" ") && i + 1 < tokens.size()) {
-                    result += " ";
-                }
                 qDebug() << "[detokenize] Token" << tokenId << "-> vocab:" << vocabToken.text;
             } else {
-                // Unknown token - just show as space
-                result += " ";
-                qDebug() << "[detokenize] Token" << tokenId << "-> unknown";
+                // Unknown token - show ID for debugging instead of space
+                result += QString("[ID:%1]").arg(tokenId);
+                qDebug() << "[detokenize] Token" << tokenId << "-> unknown (ID shown)";
             }
         }
     } else {
         // No vocabulary loaded - complete fallback
-        qWarning() << "[detokenize] No vocabulary loaded, using character fallback";
+        qWarning() << "[detokenize] No vocabulary loaded, using ID fallback to prevent glyph flood";
         
         for (size_t i = 0; i < tokens.size(); ++i) {
             int32_t token = tokens[i];
@@ -773,11 +770,9 @@ QString InferenceEngine::detokenize(const std::vector<int32_t>& tokens)
             // Try ASCII range first
             if (token >= 32 && token < 127) {
                 result += QChar(token);
-            } else if (token < 256) {
-                result += QChar(token);
             } else {
-                // Unknown - show as space
-                result += " ";
+                // Not standard ASCII - show the raw ID
+                result += QString("[ID:%1]").arg(token);
             }
         }
     }

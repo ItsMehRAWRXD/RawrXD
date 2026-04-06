@@ -76,9 +76,10 @@ using PFN_SubmitInference = bool(__stdcall*)(const char*, uint64_t*);
 using PFN_GetResult = bool(__stdcall*)(uint64_t, char*, uint32_t);
 using PFN_CreateInferenceEngine = void*(__stdcall*)();
 using PFN_DestroyInferenceEngine = void(__stdcall*)(void*);
-using PFN_InferenceEngineLoadModel = bool(__stdcall*)(void*, const char*);
-using PFN_InferenceEngineSubmitInference = bool(__stdcall*)(void*, const char*, uint64_t*);
-using PFN_InferenceEngineGetResult = bool(__stdcall*)(void*, uint64_t, char*, uint32_t);
+using PFN_InferenceEngineLoadModel = uint32_t(__stdcall*)(void*, const wchar_t*);
+using PFN_InferenceEngineSubmitInference = uint32_t(__stdcall*)(void*, const char*, size_t);
+using PFN_InferenceEngineGetResult = bool(__stdcall*)(void*, uint32_t, char*, size_t);
+using PFN_InferenceEngineGetLastError = const char*(__stdcall*)();
 
 PFN_VirtualAlloc2 GetVirtualAlloc2Ptr() {
     static PFN_VirtualAlloc2 fn = []() -> PFN_VirtualAlloc2 {
@@ -340,6 +341,7 @@ struct NativeInferenceApi {
     PFN_InferenceEngineLoadModel loadModel = nullptr;
     PFN_InferenceEngineSubmitInference submitEngine = nullptr;
     PFN_InferenceEngineGetResult getResultEngine = nullptr;
+    PFN_InferenceEngineGetLastError getLastError = nullptr;
     void* engineHandle = nullptr;
     bool modelLoaded = false;
     bool sawWin32Symbols = false;
@@ -354,15 +356,70 @@ NativeInferenceApi& GetNativeInferenceApi() {
     }
 
     const wchar_t* kCandidates[] = {
-        L"RawrXD_InferenceEngine.dll",
-        L"RawrXD_InferenceEngine_Win32.dll"
+        L"RawrXD_Titan.dll",
+        L"RawrXD_InferenceEngine_Win32.dll",
+        L"RawrXD_InferenceEngine.dll"
+    };
+
+    auto loadCandidate = [](const wchar_t* candidate) -> HMODULE {
+        HMODULE module = LoadLibraryW(candidate);
+        if (module) {
+            return module;
+        }
+
+        // Fallback: resolve next to the running EXE (common for packaged runs).
+        wchar_t exePath[MAX_PATH] = {};
+        const DWORD len = GetModuleFileNameW(nullptr, exePath, static_cast<DWORD>(std::size(exePath)));
+        if (len == 0 || len >= std::size(exePath)) {
+            return nullptr;
+        }
+
+        wchar_t* slash = wcsrchr(exePath, L'\\');
+        if (!slash) {
+            slash = wcsrchr(exePath, L'/');
+        }
+        if (!slash) {
+            return nullptr;
+        }
+        *(slash + 1) = L'\0';
+
+        std::wstring exeDir(exePath);
+        std::vector<std::wstring> probePaths;
+        probePaths.emplace_back(exeDir + candidate);
+
+        // Dev fallback lanes when DLLs are produced in sibling build trees.
+        try {
+            namespace fs = std::filesystem;
+            fs::path dir(exeDir);
+            fs::path repoRoot = dir;
+            if (repoRoot.filename() == L"bin") repoRoot = repoRoot.parent_path();
+            if (repoRoot.filename() == L"build") repoRoot = repoRoot.parent_path();
+
+            probePaths.emplace_back((repoRoot / L"build" / L"bin" / candidate).wstring());
+            probePaths.emplace_back((repoRoot / L"build-ninja" / L"bin" / candidate).wstring());
+            probePaths.emplace_back((repoRoot / L"build_ninja3" / L"bin" / candidate).wstring());
+            probePaths.emplace_back((repoRoot / L"Ship" / candidate).wstring());
+        } catch (...) {
+            // Path probing is best-effort; continue with whatever paths we have.
+        }
+
+        for (const auto& path : probePaths) {
+            module = LoadLibraryW(path.c_str());
+            if (module) {
+                return module;
+            }
+        }
+        return nullptr;
     };
 
     for (const wchar_t* candidate : kCandidates) {
-        HMODULE module = LoadLibraryW(candidate);
+        printf("[BackendOrchestrator] Probing native candidate: %ls\n", candidate);
+        HMODULE module = loadCandidate(candidate);
         if (!module) {
+            printf("[BackendOrchestrator] Candidate %ls not found or load failed\n", candidate);
             continue;
         }
+        printf("[BackendOrchestrator] Loaded %ls successfully at %p\n", candidate, (void*)module);
 
         PFN_SubmitInference legacySubmit = reinterpret_cast<PFN_SubmitInference>(
             GetProcAddress(module, "SubmitInference"));
@@ -376,32 +433,25 @@ NativeInferenceApi& GetNativeInferenceApi() {
             break;
         }
 
-        PFN_CreateInferenceEngine createEngine = reinterpret_cast<PFN_CreateInferenceEngine>(
-            GetProcAddress(module, "CreateInferenceEngine"));
-        PFN_DestroyInferenceEngine destroyEngine = reinterpret_cast<PFN_DestroyInferenceEngine>(
-            GetProcAddress(module, "DestroyInferenceEngine"));
         PFN_InferenceEngineLoadModel loadModel = reinterpret_cast<PFN_InferenceEngineLoadModel>(
             GetProcAddress(module, "InferenceEngine_LoadModel"));
         PFN_InferenceEngineSubmitInference submitEngine = reinterpret_cast<PFN_InferenceEngineSubmitInference>(
             GetProcAddress(module, "InferenceEngine_SubmitInference"));
         PFN_InferenceEngineGetResult getResultEngine = reinterpret_cast<PFN_InferenceEngineGetResult>(
             GetProcAddress(module, "InferenceEngine_GetResult"));
+        PFN_InferenceEngineGetLastError getLastError = reinterpret_cast<PFN_InferenceEngineGetLastError>(
+            GetProcAddress(module, "InferenceEngine_GetLastError"));
 
-        if (createEngine && submitEngine && getResultEngine) {
+        if (loadModel && submitEngine && getResultEngine) {
             api.sawWin32Symbols = true;
-            void* engineHandle = createEngine();
-            if (engineHandle) {
-                api.module = module;
-                api.createEngine = createEngine;
-                api.destroyEngine = destroyEngine;
-                api.loadModel = loadModel;
-                api.submitEngine = submitEngine;
-                api.getResultEngine = getResultEngine;
-                api.engineHandle = engineHandle;
-                break;
-            } else {
-                api.engineCreateFailed = true;
-            }
+            api.module = module;
+            api.loadModel = loadModel;
+            api.submitEngine = submitEngine;
+            api.getResultEngine = getResultEngine;
+            api.getLastError = getLastError;
+            api.createEngine = reinterpret_cast<PFN_CreateInferenceEngine>(
+                GetProcAddress(module, "CreateInferenceEngine"));
+            break;
         }
 
         FreeLibrary(module);
@@ -409,6 +459,45 @@ NativeInferenceApi& GetNativeInferenceApi() {
 
     api.initialized = true;
     return api;
+}
+
+bool looksLikeBinaryInferencePayload(const std::string& text) {
+    if (text.empty()) {
+        return false;
+    }
+
+    size_t controlCount = 0;
+    size_t highByteCount = 0;
+    size_t replacementTriples = 0;
+
+    for (size_t i = 0; i < text.size(); ++i) {
+        const unsigned char c = static_cast<unsigned char>(text[i]);
+        if (c < 0x20 && c != '\n' && c != '\r' && c != '\t') {
+            ++controlCount;
+        }
+        if (c >= 0x80) {
+            ++highByteCount;
+        }
+        if (i + 2 < text.size() &&
+            static_cast<unsigned char>(text[i]) == 0xEF &&
+            static_cast<unsigned char>(text[i + 1]) == 0xBF &&
+            static_cast<unsigned char>(text[i + 2]) == 0xBD) {
+            ++replacementTriples;
+            i += 2;
+        }
+    }
+
+    // Heuristics: high control-byte density, high non-ASCII density, or replacement-char flood.
+    if (controlCount * 20 > text.size()) {
+        return true;
+    }
+    if (highByteCount * 2 > text.size()) {
+        return true;
+    }
+    if (replacementTriples > 0 && replacementTriples * 6 > text.size()) {
+        return true;
+    }
+    return false;
 }
 
 bool RunNativeInferenceSync(const std::string& prompt,
@@ -430,10 +519,20 @@ bool RunNativeInferenceSync(const std::string& prompt,
     }
 
     if (win32ApiReady && api.loadModel && !api.modelLoaded) {
-        char modelPath[2048] = {};
-        const DWORD len = GetEnvironmentVariableA("RAWRXD_NATIVE_MODEL_PATH", modelPath, static_cast<DWORD>(sizeof(modelPath)));
+        wchar_t modelPath[2048] = {};
+        const DWORD len = GetEnvironmentVariableW(L"RAWRXD_NATIVE_MODEL_PATH", modelPath, static_cast<DWORD>(sizeof(modelPath)));
         if (len > 0 && len < sizeof(modelPath)) {
-            api.modelLoaded = api.loadModel(api.engineHandle, modelPath);
+            api.modelLoaded = (api.loadModel(api.engineHandle, modelPath) == 0); // RAWRXD_SUCCESS = 0
+        }
+        if (len > 0 && !api.modelLoaded) {
+            error = "InferenceEngine_LoadModel failed for RAWRXD_NATIVE_MODEL_PATH";
+            if (api.getLastError) {
+                const char* detail = api.getLastError();
+                if (detail && detail[0]) {
+                    error += std::string(": ") + detail;
+                }
+            }
+            return false;
         }
     }
 
@@ -444,8 +543,9 @@ bool RunNativeInferenceSync(const std::string& prompt,
             return false;
         }
     } else {
-        if (!api.submitEngine(api.engineHandle, prompt.c_str(), &requestId)) {
-            error = "InferenceEngine_SubmitInference failed";
+        requestId = api.submitEngine(api.engineHandle, prompt.c_str(), static_cast<size_t>(256)); // Using 256 max tokens for this bridge
+        if (requestId == 0) {
+            error = "InferenceEngine_SubmitInference failed (returned 0)";
             return false;
         }
     }
@@ -454,12 +554,20 @@ bool RunNativeInferenceSync(const std::string& prompt,
     std::vector<char> buffer(1024 * 1024, 0);
 
     while (true) {
-        const bool gotResult = legacyApiReady
-            ? api.getResult(requestId, buffer.data(), static_cast<uint32_t>(buffer.size()))
-            : api.getResultEngine(api.engineHandle, requestId, buffer.data(), static_cast<uint32_t>(buffer.size()));
+        bool gotResult = false;
+        if (legacyApiReady) {
+            gotResult = api.getResult(requestId, buffer.data(), static_cast<uint32_t>(buffer.size()));
+        } else {
+            gotResult = api.getResultEngine(api.engineHandle, static_cast<uint32_t>(requestId), buffer.data(), buffer.size());
+        }
 
         if (gotResult) {
             completion = std::string(buffer.data());
+            if (looksLikeBinaryInferencePayload(completion)) {
+                error = "InferenceEngine_GetResult returned non-text payload (likely token IDs or undecoded bytes)";
+                completion.clear();
+                return false;
+            }
             const auto elapsedNs = std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::steady_clock::now() - start).count();
             std::ostringstream oss;

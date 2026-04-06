@@ -121,6 +121,7 @@ MasmOperationResult masm_memory_atomic_exchange(void* target, uint64_t new_val, 
     return MasmOperationResult::ok(s_ok);
 }
 
+#ifndef RAWRXD_MASM_CORE_NATIVE_BRIDGE
 uint64_t masm_memory_scan_pattern_avx512(const void* memory, size_t memory_size, const MasmBytePattern* pattern) {
     if (!memory || !pattern || pattern->pattern_length == 0 || memory_size < pattern->pattern_length) {
         return 0;
@@ -212,6 +213,8 @@ uint64_t masm_memory_scan_pattern_avx512(const void* memory, size_t memory_size,
     return scalar_scan();
 #endif
 }
+
+#endif
 
 MasmOperationResult masm_byte_pattern_search_boyer_moore(const void* haystack, size_t haystack_size,
     const MasmBytePattern* pattern, uint64_t* match_offsets,
@@ -1542,6 +1545,7 @@ MasmOperationResult masm_ai_completion_stream_transform(const void* raw_completi
     return MasmOperationResult::ok("Completion stream transformation complete");
 }
 
+#ifndef RAWRXD_MASM_CORE_NATIVE_BRIDGE
 uint64_t masm_get_performance_counter(void) {
 #ifdef _WIN32
     LARGE_INTEGER li;
@@ -1553,7 +1557,9 @@ uint64_t masm_get_performance_counter(void) {
     );
 #endif
 }
+#endif
 
+#ifndef RAWRXD_MASM_CORE_NATIVE_BRIDGE
 uint64_t masm_get_cpu_features(void) {
 #ifdef _WIN32
     int regs[4];
@@ -1578,6 +1584,7 @@ uint64_t masm_get_cpu_features(void) {
     return f;
 #endif
 }
+#endif
 
 MasmOperationResult masm_validate_memory_integrity(const void* memory, size_t size, uint64_t expected_checksum) {
     if (!memory || size == 0) {

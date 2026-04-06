@@ -92,6 +92,17 @@ private:
     ToolResult HandleBuildProject(const nlohmann::json& args, std::string& output);
     ToolResult HandleStaticAnalysis(const nlohmann::json& args, std::string& output);
     ToolResult HandleGitOperation(const nlohmann::json& args, std::string& output);
+    ToolResult HandleReadFile(const nlohmann::json& args, std::string& output);
+    ToolResult HandleWriteFile(const nlohmann::json& args, std::string& output);
+    ToolResult HandleSearchFiles(const nlohmann::json& args, std::string& output);
+    ToolResult HandleExecuteCommand(const nlohmann::json& args, std::string& output);
+    ToolResult HandleListDirectory(const nlohmann::json& args, std::string& output);
+    ToolResult HandleGetFileInfo(const nlohmann::json& args, std::string& output);
+    ToolResult HandleGetWorkspaceInfo(const nlohmann::json& args, std::string& output);
+    ToolResult HandleApplyEdit(const nlohmann::json& args, std::string& output);
+    ToolResult HandleGetSymbols(const nlohmann::json& args, std::string& output);
+    ToolResult HandleGetCompletions(const nlohmann::json& args, std::string& output);
+    ToolResult HandleGetDiagnostics(const nlohmann::json& args, std::string& output);
 
     mutable std::mutex m_mutex;
     std::unordered_map<std::string, ToolDefinition> m_tools;

@@ -57,6 +57,9 @@ class AgenticBridge
     /// True when local weights are mapped or a remote/orchestrator path is configured (stricter than IsInitialized).
     bool HasUsableBackend() const;
 
+    // Support for InferenceEngine interface
+    std::string GenerateResponse(const std::string& prompt);
+
     // Execute single agent command
     AgentResponse ExecuteAgentCommand(const std::string& prompt);
 

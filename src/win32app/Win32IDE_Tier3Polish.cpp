@@ -549,7 +549,13 @@ void Win32IDE::stopWatchingFile() {
 }
 
 void Win32IDE::onExternalFileChange(const std::string& changedFile) {
-    // Check if the changed file matches our watched file
+    // FILE SYSTEM WATCHER INTEGRATION: Notify Plan Orchestrator of workspace changes
+    // This triggers for any file change when watching workspace directory
+    if (m_planOrchestrator) {
+        m_planOrchestrator->notifyWorkspaceChanged();
+    }
+
+    // Check if the changed file matches our watched file (for single file watching)
     if (m_watchedFilePath.empty()) return;
 
     // Extract just the filename for comparison  

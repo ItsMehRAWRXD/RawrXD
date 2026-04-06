@@ -584,6 +584,152 @@ static std::string wideToUtf8(const wchar_t* wide)
     return out;
 }
 
+static std::string wideToUtf8N(const wchar_t* wide, int wideLen)
+{
+    if (!wide || wideLen <= 0)
+        return {};
+    const int len = WideCharToMultiByte(CP_UTF8, 0, wide, wideLen, nullptr, 0, nullptr, nullptr);
+    if (len <= 0)
+        return {};
+    std::string out(static_cast<size_t>(len), '\0');
+    if (WideCharToMultiByte(CP_UTF8, 0, wide, wideLen, out.data(), len, nullptr, nullptr) == 0)
+        return {};
+    return out;
+}
+
+static bool looksLikeUtf16LEBytes(const std::string& s)
+{
+    if (s.size() < 4 || (s.size() % 2) != 0)
+        return false;
+
+    size_t oddNul = 0;
+    for (size_t i = 1; i < s.size(); i += 2)
+    {
+        if (s[i] == '\0')
+            ++oddNul;
+    }
+    const size_t oddCount = s.size() / 2;
+    return oddCount > 0 && (oddNul * 100 / oddCount) >= 40;
+}
+
+static std::string sanitizeForChatUi(const std::string& input)
+{
+    if (input.empty())
+        return {};
+
+    std::string text = input;
+
+    // Some backends leak UTF-16LE byte strings into narrow channels.
+    if (looksLikeUtf16LEBytes(text))
+    {
+        std::wstring w;
+        w.reserve(text.size() / 2);
+        for (size_t i = 0; i + 1 < text.size(); i += 2)
+        {
+            const unsigned char lo = static_cast<unsigned char>(text[i]);
+            const unsigned char hi = static_cast<unsigned char>(text[i + 1]);
+            w.push_back(static_cast<wchar_t>((static_cast<unsigned int>(hi) << 8u) | lo));
+        }
+        while (!w.empty() && w.back() == L'\0')
+            w.pop_back();
+        const std::string converted = wideToUtf8N(w.data(), static_cast<int>(w.size()));
+        if (!converted.empty())
+            text = converted;
+    }
+
+    // Validate UTF-8 strictly; fall back to ANSI decode if bytes are malformed.
+    const int wLenUtf8 = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, text.data(),
+                                             static_cast<int>(text.size()), nullptr, 0);
+    if (wLenUtf8 <= 0)
+    {
+        const int wLenAcp = MultiByteToWideChar(CP_ACP, 0, text.data(), static_cast<int>(text.size()), nullptr, 0);
+        if (wLenAcp > 0)
+        {
+            std::wstring w(static_cast<size_t>(wLenAcp), L'\0');
+            if (MultiByteToWideChar(CP_ACP, 0, text.data(), static_cast<int>(text.size()), w.data(), wLenAcp) > 0)
+            {
+                const std::string converted = wideToUtf8N(w.data(), wLenAcp);
+                if (!converted.empty())
+                    text = converted;
+            }
+        }
+    }
+
+    // Strip non-printable control chars that can poison RichEdit rendering.
+    std::string cleaned;
+    cleaned.reserve(text.size());
+    size_t highByteCount = 0;
+    size_t printableAsciiCount = 0;
+    for (unsigned char c : text)
+    {
+        if (c == '\n' || c == '\r' || c == '\t')
+        {
+            cleaned.push_back(static_cast<char>(c));
+            continue;
+        }
+
+        if (c >= 0x20 && c <= 0x7E)
+        {
+            cleaned.push_back(static_cast<char>(c));
+            ++printableAsciiCount;
+            continue;
+        }
+
+        if (c >= 0x80)
+        {
+            ++highByteCount;
+            cleaned.push_back(' ');
+        }
+    }
+
+    // If payload is mostly high-byte noise, suppress it with a deterministic marker.
+    if (!text.empty() && highByteCount * 2 > text.size())
+        return "[non-text backend payload suppressed]";
+
+    // Collapse repeated spaces introduced by sanitization.
+    std::string compact;
+    compact.reserve(cleaned.size());
+    bool lastSpace = false;
+    for (char ch : cleaned)
+    {
+        const bool isSpace = (ch == ' ');
+        if (isSpace && lastSpace)
+            continue;
+        compact.push_back(ch);
+        lastSpace = isSpace;
+    }
+
+    if (compact.empty())
+        return "[non-text backend payload suppressed]";
+    return compact;
+}
+
+static void logRawResponseHexPreview(const std::string& response)
+{
+    if (response.empty())
+        return;
+
+    const size_t previewLen = response.size() < 32 ? response.size() : 32;
+    char line[512] = {0};
+    int offset = 0;
+    offset += _snprintf_s(line + offset, sizeof(line) - static_cast<size_t>(offset), _TRUNCATE,
+                          "[CopilotRawHex] len=%zu bytes: ", response.size());
+
+    for (size_t i = 0; i < previewLen && offset > 0 && static_cast<size_t>(offset) < sizeof(line); ++i)
+    {
+        const unsigned char b = static_cast<unsigned char>(response[i]);
+        offset += _snprintf_s(line + offset, sizeof(line) - static_cast<size_t>(offset), _TRUNCATE, "%02X ", b);
+    }
+
+    if (offset > 0 && static_cast<size_t>(offset) < sizeof(line) - 2)
+    {
+        line[offset++] = '\n';
+        line[offset] = '\0';
+    }
+
+    OutputDebugStringA(line);
+}
+
 #define IDC_EDITOR 1001
 #define IDC_TERMINAL 1002
 #define IDC_COMMAND_INPUT 1003
@@ -631,10 +777,20 @@ static std::string wideToUtf8(const wchar_t* wide)
 #define IDC_COPILOT_CHAT_OUTPUT 1203
 #define IDC_COPILOT_SEND_BTN 1204
 #define IDC_COPILOT_CLEAR_BTN 1205
-#define IDC_AI_CONTEXT_SLIDER 1206
-#define IDC_AI_CONTEXT_LABEL 1207
+
+// Redeclare IDs to avoid header duplication or linkage issues
+#ifndef IDC_MODEL_SELECTOR
 #define IDC_MODEL_SELECTOR 1208
+#endif
+#ifndef IDC_MODEL_BROWSE_BTN
 #define IDC_MODEL_BROWSE_BTN 1209
+#endif
+#ifndef IDC_AI_MAX_TOKENS_SLIDER
+#define IDC_AI_MAX_TOKENS_SLIDER 5005
+#endif
+#ifndef IDC_AI_CONTEXT_SLIDER
+#define IDC_AI_CONTEXT_SLIDER 5006
+#endif
 
 // Panel (Bottom) - Terminal, Output, Problems, Debug Console
 #define IDC_PANEL_CONTAINER 1300
@@ -767,6 +923,10 @@ static std::string wideToUtf8(const wchar_t* wide)
 #define IDM_AGENT_VIEW_TOOLS 4103
 #define IDM_AGENT_VIEW_STATUS 4104
 #define IDM_AGENT_AUTONOMOUS_COMMUNICATOR 4163  // free slot; 4106=IDM_AGENT_MEMORY, 4110=IDM_SUBAGENT_CHAIN
+#define IDM_PLAN_ORCHESTRATOR_START 4164
+#define IDM_PLAN_ORCHESTRATOR_STOP 4165
+#define IDM_PLAN_ORCHESTRATOR_VIEW_STATUS 4166
+#define IDM_PLAN_ORCHESTRATOR_VIEW_PLAN 4167
 #define IDM_TELEMETRY_UNIFIED_CORE 4164         // free slot; 4300=IDM_REVENG_ANALYZE
 // Constants moved to Win32IDE.h
 // #define IDM_AGENT_STOP 4105
@@ -1206,6 +1366,18 @@ void Win32IDE::createMenuBar(HWND hwnd)
         AppendMenuW(hAutonomyMenu, MF_STRING, IDM_AUTONOMY_STATUS, L"Show &Status");
         AppendMenuW(hAutonomyMenu, MF_STRING, IDM_AUTONOMY_MEMORY, L"Show &Memory Snapshot");
         AppendMenuW(hAgentMenu, MF_POPUP, (UINT_PTR)hAutonomyMenu, L"&Autonomy");
+        AppendMenuW(hAgentMenu, MF_SEPARATOR, 0, nullptr);
+    }
+
+    // Plan Orchestrator submenu
+    {
+        HMENU hPlanOrchestratorMenu = CreatePopupMenu();
+        AppendMenuW(hPlanOrchestratorMenu, MF_STRING, IDM_PLAN_ORCHESTRATOR_START, L"&Start Plan && Execute...");
+        AppendMenuW(hPlanOrchestratorMenu, MF_STRING, IDM_PLAN_ORCHESTRATOR_STOP, L"&Stop Plan Orchestrator");
+        AppendMenuW(hPlanOrchestratorMenu, MF_SEPARATOR, 0, nullptr);
+        AppendMenuW(hPlanOrchestratorMenu, MF_STRING, IDM_PLAN_ORCHESTRATOR_VIEW_STATUS, L"View &Status");
+        AppendMenuW(hPlanOrchestratorMenu, MF_STRING, IDM_PLAN_ORCHESTRATOR_VIEW_PLAN, L"View &Current Plan");
+        AppendMenuW(hAgentMenu, MF_POPUP, (UINT_PTR)hPlanOrchestratorMenu, L"&Plan Orchestrator");
         AppendMenuW(hAgentMenu, MF_SEPARATOR, 0, nullptr);
     }
 
@@ -2503,6 +2675,11 @@ void Win32IDE::onTerminalOutput(int paneId, const std::string& output)
 {
     if (isShuttingDown())
         return;
+
+    if (m_planOrchestrator) {
+        m_planOrchestrator->observeTerminalOutput("pane " + std::to_string(paneId), output, false);
+    }
+
     TerminalPane* pane = findTerminalPane(paneId);
     if (!pane || !pane->hwnd)
         return;
@@ -2514,6 +2691,11 @@ void Win32IDE::onTerminalError(int paneId, const std::string& error)
 {
     if (isShuttingDown())
         return;
+
+    if (m_planOrchestrator) {
+        m_planOrchestrator->observeTerminalOutput("pane " + std::to_string(paneId), error, true);
+    }
+
     TerminalPane* pane = findTerminalPane(paneId);
     if (!pane || !pane->hwnd)
         return;
@@ -2946,6 +3128,19 @@ void Win32IDE::appendToOutput(const std::string& text, const std::string& tabNam
 {
     if (isShuttingDown())
         return;  // Window handles may be destroyed
+
+    // Thread-safety: if called from a non-UI thread, marshal via PostMessage so the caller
+    // is never blocked waiting for the UI thread to process each progress line.  This is
+    // essential for the async model loader (loadModelFromPathAsync) where loadGGUFModel
+    // emits ~10 status lines; blocking on each would unnecessarily couple worker progress
+    // to UI-thread scheduling.  tabName / severity context is dropped (routes to "Output"
+    // as Info), which is acceptable for background progress messages.
+    if (m_hwndMain && GetWindowThreadProcessId(m_hwndMain, nullptr) != GetCurrentThreadId())
+    {
+        postOutputPanelSafe(text);
+        return;
+    }
+
     if (static_cast<int>(severity) < m_severityFilterLevel)
         return;
 
@@ -4915,6 +5110,52 @@ void Win32IDE::loadModelFromPath(const std::string& filepath)
     }
 }
 
+void Win32IDE::loadModelFromPathAsync(const std::string& filepath)
+{
+    if (filepath.empty())
+        return;
+
+    {
+        std::lock_guard<std::mutex> lock(m_asyncModelLoadMutex);
+        if (m_asyncModelLoadRunning)
+        {
+            appendToOutput("Model load already in progress.\n", "Output", OutputSeverity::Warning);
+            return;
+        }
+        m_asyncModelLoadRunning = true;
+    }
+
+    appendToOutput("Starting background model load: " + filepath + "\n", "Output", OutputSeverity::Info);
+
+    std::thread([this, filepath]() {
+        DetachedThreadGuard _guard(m_activeDetachedThreads, m_shuttingDown);
+        if (_guard.cancelled)
+        {
+            std::lock_guard<std::mutex> lock(m_asyncModelLoadMutex);
+            m_asyncModelLoadRunning = false;
+            return;
+        }
+
+        auto result = std::make_unique<AsyncModelLoadResult>();
+        result->filepath = filepath;
+        result->ggufOk = loadGGUFModel(filepath);
+        if (result->ggufOk)
+        {
+            initializeInference();
+            initBackendManager();
+            initLLMRouter();
+        }
+        result->bridgeOk = loadModelForInference(filepath);
+
+        if (!m_hwndMain || !IsWindow(m_hwndMain) ||
+            !PostMessage(m_hwndMain, WM_MODEL_LOAD_DONE, 0, reinterpret_cast<LPARAM>(result.release())))
+        {
+            std::lock_guard<std::mutex> lock(m_asyncModelLoadMutex);
+            m_asyncModelLoadRunning = false;
+        }
+    }).detach();
+}
+
 // ============================================================================
 // GGUF Model Loading Implementation
 // ============================================================================
@@ -6177,7 +6418,7 @@ void Win32IDE::openModel()
 
     if (GetOpenFileNameW(&ofn))
     {
-        loadModelForInference(wideToUtf8(filename));
+        loadModelFromPathAsync(wideToUtf8(filename));
     }
 }
 
@@ -6311,6 +6552,7 @@ bool Win32IDE::initializeInference()
 
     // Set up inference config from model metadata
     m_inferenceConfig.maxTokens = 512;
+    m_inferenceConfig.contextWindow = 4096;
     m_inferenceConfig.temperature = 0.7f;
     m_inferenceConfig.topP = 0.9f;
     m_inferenceConfig.topK = 40;
@@ -6832,14 +7074,10 @@ void Win32IDE::toggleTerminal()
 void Win32IDE::showAbout()
 {
     std::string aboutText = RAWRXD_VERSION_FULL "\n\n"
-                                                "Build: " RAWRXD_BUILD_DATE " " RAWRXD_BUILD_TIME "\n"
-                                                "Channel: " RAWRXD_CHANNEL "\n"
-                                                "Units: " +
-                            std::to_string(RAWRXD_COMPILE_UNITS) +
-                            " compilation units\n"
-                            "MASM64: " +
-                            std::to_string(RAWRXD_MASM_KERNELS) +
-                            " ASM kernels\n\n"
+                            "Build: " RAWRXD_BUILD_DATE " " RAWRXD_BUILD_TIME "\n"
+                            "Channel: " RAWRXD_CHANNEL "\n"
+                            "Units: " + std::to_string(RAWRXD_COMPILE_UNITS) + " compilation units\n"
+                            "MASM64: " + std::to_string(RAWRXD_MASM_KERNELS) + " ASM kernels\n\n"
                             "Engine:\n"
                             "• Native Win32 C++20 (no Qt, no Electron)\n"
                             "• GGUF Model Loader + AVX-512 Inference\n"
@@ -6849,7 +7087,10 @@ void Win32IDE::showAbout()
                             "• Voice Chat (waveIn/Out + VAD + STT/TTS)\n"
                             "• Unified GPU Accelerator Router\n"
                             "• Embedded LSP Server (JSON-RPC 2.0)\n"
-                            "• Distributed Swarm Inference\n\n" RAWRXD_COPYRIGHT "\n" RAWRXD_LICENSE "\n" RAWRXD_GITHUB;
+                            "• Distributed Swarm Inference\n\n"
+                            RAWRXD_COPYRIGHT "\n"
+                            RAWRXD_LICENSE "\n"
+                            RAWRXD_GITHUB;
 
     MessageBoxW(m_hwndMain, utf8ToWide(aboutText).c_str(), L"About RawrXD IDE", MB_OK | MB_ICONINFORMATION);
 }
@@ -6995,7 +7236,7 @@ void Win32IDE::createChatPanel()
 
     m_hwndMaxTokensSlider =
         CreateWindowExW(0, TRACKBAR_CLASSW, L"", WS_CHILD | WS_VISIBLE | TBS_HORZ | TBS_NOTICKS, 5, 80, 290, 25,
-                        m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_CLEAR_BTN, m_hInstance, nullptr);
+                        m_hwndSecondarySidebar, (HMENU)IDC_AI_MAX_TOKENS_SLIDER, m_hInstance, nullptr);
 
     CreateWindowExW(0, L"STATIC", L"Context:", WS_CHILD | WS_VISIBLE | SS_LEFT, 5, 110, 80, 18, m_hwndSecondarySidebar,
                     nullptr, m_hInstance, nullptr);
@@ -7014,7 +7255,7 @@ void Win32IDE::createChatPanel()
         m_currentContextSize = 4096;
     }
     // Update Chat Output Y position to accommodate new slider
-    int chatY = 160;
+    int chatY_base = 160;
 
     if (m_hwndMaxTokensSlider)
     {
@@ -7024,28 +7265,10 @@ void Win32IDE::createChatPanel()
         m_currentMaxTokens = 512;
     }
 
-    CreateWindowExW(0, L"STATIC", L"Context (Mem):", WS_CHILD | WS_VISIBLE | SS_LEFT, 5, 110, 100, 18,
-                    m_hwndSecondarySidebar, nullptr, m_hInstance, nullptr);
-
-    HWND hContextCombo = CreateWindowExW(0, L"COMBOBOX", L"", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, 110, 108, 185,
-                                         300, m_hwndSecondarySidebar, (HMENU)4200, m_hInstance, nullptr);
-
-    if (hContextCombo)
-    {
-        SendMessage(hContextCombo, WM_SETFONT, (WPARAM)hFont, TRUE);
-        SendMessageW(hContextCombo, CB_ADDSTRING, 0, (LPARAM)L"2048 (Standard)");
-        SendMessageW(hContextCombo, CB_ADDSTRING, 0, (LPARAM)L"4096 (4k)");
-        SendMessageW(hContextCombo, CB_ADDSTRING, 0, (LPARAM)L"32768 (32k)");
-        SendMessageW(hContextCombo, CB_ADDSTRING, 0, (LPARAM)L"65536 (64k)");
-        SendMessageW(hContextCombo, CB_ADDSTRING, 0, (LPARAM)L"131072 (128k)");
-        SendMessageW(hContextCombo, CB_ADDSTRING, 0, (LPARAM)L"262144 (256k)");
-        SendMessageW(hContextCombo, CB_ADDSTRING, 0, (LPARAM)L"524288 (512k)");
-        SendMessageW(hContextCombo, CB_ADDSTRING, 0, (LPARAM)L"1048576 (1M)");
-        SendMessage(hContextCombo, CB_SETCURSEL, 0, 0);
-    }
-
-    int toggleY = 140;
+    // Adjust Y for chat pane and toggles to prevent overlap
+    int toggleY = 170;
     int toggleX = 5;
+    int chatY = 230;
 
     m_hwndChkMaxMode =
         CreateWindowExW(0, L"BUTTON", L"Max Mode", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, toggleX, toggleY, 140, 20,
@@ -7073,8 +7296,8 @@ void Win32IDE::createChatPanel()
 
     m_hwndCopilotChatOutput =
         CreateWindowExW(WS_EX_CLIENTEDGE, L"EDIT", L"",
-                        WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | WS_VSCROLL, 5, 200, 290,
-                        210, m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_CHAT_OUTPUT, m_hInstance, nullptr);
+                        WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | WS_VSCROLL, 5, chatY, 290, 180,
+                        m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_CHAT_OUTPUT, m_hInstance, nullptr);
 
     if (m_hwndCopilotChatOutput)
     {
@@ -7570,7 +7793,10 @@ void Win32IDE::HandleCopilotSend()
             return;
         }
 
-        std::string displayResp = "AI: " + response + (complete ? "\n" : "");
+        logRawResponseHexPreview(response);
+        const std::string safe = sanitizeForChatUi(response);
+        std::string displayResp = "AI: " + (safe.empty() ? std::string("[non-text backend payload]") : safe) +
+                                  (complete ? "\n" : "");
         int len = GetWindowTextLengthW(m_hwndCopilotChatOutput);
         if (len > 0)
         {
@@ -7601,7 +7827,12 @@ void Win32IDE::HandleCopilotClear()
 // ============================================================================
 LRESULT CALLBACK Win32IDE::CopilotChatInputProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    Win32IDE* pThis = (Win32IDE*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+    Win32IDE* pThis = (Win32IDE*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
+
+    if (pThis && (uMsg == WM_SETFOCUS || uMsg == WM_LBUTTONDOWN))
+    {
+        OutputDebugStringA("[CopilotChatInputProc] Focus/Click detected\n");
+    }
 
     if (pThis && uMsg == WM_KEYDOWN && wParam == VK_RETURN)
     {
@@ -7623,7 +7854,7 @@ LRESULT CALLBACK Win32IDE::CopilotChatInputProc(HWND hwnd, UINT uMsg, WPARAM wPa
 
 LRESULT CALLBACK Win32IDE::CopilotButtonProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    Win32IDE* pThis = (Win32IDE*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+    Win32IDE* pThis = (Win32IDE*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
     const int controlId = GetDlgCtrlID(hwnd);
 
     if (pThis && (uMsg == BM_CLICK || uMsg == WM_LBUTTONUP))
@@ -7673,6 +7904,10 @@ void Win32IDE::HandleCopilotStreamUpdate(const char* token, size_t length)
     if (chunk.empty())
         return;
 
+    chunk = sanitizeForChatUi(chunk);
+    if (chunk.empty())
+        return;
+
     int currentLen = GetWindowTextLengthW(m_hwndCopilotChatOutput);
     SendMessage(m_hwndCopilotChatOutput, EM_SETSEL, currentLen, currentLen);
     SendMessageW(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE, (LPARAM)utf8ToWide(chunk).c_str());
@@ -7685,6 +7920,17 @@ void Win32IDE::onModelSelectionChanged()
     if (idx >= 0 && idx < (int)m_availableModels.size())
     {
         m_ollamaModelOverride = m_availableModels[idx];
+        
+        // --- SOVEREIGN BRIDGE: Auto-load on selection ---
+        if (getenv("RAWRXD_USE_NATIVE_KERNELS"))
+        {
+            // If it's a GGUF file or a local path, trigger the real load logic
+            if (m_ollamaModelOverride.find(".gguf") != std::string::npos ||
+                m_ollamaModelOverride.find(":\\") != std::string::npos)
+            {
+                loadModelForInference(m_ollamaModelOverride);
+            }
+        }
     }
 }
 
@@ -7696,8 +7942,30 @@ void Win32IDE::onMaxTokensChanged(int newValue)
     // Update label
     if (m_hwndMaxTokensLabel)
     {
-        SetWindowTextW(m_hwndMaxTokensLabel, utf8ToWide(std::to_string(newValue)).c_str());
+        wchar_t buf[64];
+        swprintf_s(buf, L"%d", newValue);
+        SetWindowTextW(m_hwndMaxTokensLabel, buf);
     }
+}
+
+void Win32IDE::onContextSizeChanged(int newValue)
+{
+    static const int contextSizes[] = { 4096, 32768, 65536, 131072, 262144, 524288, 1048576 };
+    if (newValue < 0 || newValue > 6) newValue = 0;
+
+    m_currentContextSize = contextSizes[newValue];
+    m_inferenceConfig.contextWindow = m_currentContextSize;
+
+    // Phase 20: Propagation to status and sidebar
+    if (m_hwndContextLabel)
+    {
+        static const wchar_t* labels[] = { L"4K", L"32K", L"64K", L"128K", L"256K", L"512K", L"1M" };
+        SetWindowTextW(m_hwndContextLabel, labels[newValue]);
+    }
+    
+    updateContextWindowDisplay();
+    
+    appendToOutput("Context window updated to: " + std::to_string(m_currentContextSize) + " tokens\n", "Output", OutputSeverity::Info);
 }
 
 void Win32IDE::handleModelBrowse()
@@ -9601,21 +9869,102 @@ LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wPara
 
             case WM_PAINT:
             {
-                // Let the RichEdit control paint itself first
                 if (oldProc)
                 {
-                    LRESULT result = CallWindowProcW(oldProc, hwnd, uMsg, wParam, lParam);
-                    // Overlay ghost text on top of the editor content
-                    if (pThis->m_ghostTextVisible)
+                    // When ghost text or the Titan paging spinner is active, use a back-buffer
+                    // to composite RichEdit content + overlay in one atomic BitBlt.
+                    // The previous GetDC-after-CallWindowProc pattern caused visible flicker because:
+                    //  1. RichEdit calls BeginPaint/EndPaint internally — update region is validated.
+                    //  2. Our GetDC overlay writes outside any BeginPaint context.
+                    //  3. UpdateWindow() calls from the streaming token path immediately trigger
+                    //     another WM_PAINT that erases and redraws — ~67ms cycle = perceptible flicker.
+                    const bool titanActive = pThis && pThis->m_titanAgentRunning;
+                    const bool ghostActive = pThis && pThis->m_ghostTextVisible;
+                    if (ghostActive || titanActive)
                     {
-                        HDC hdc = GetDC(hwnd);
-                        if (hdc)
+                        static uint64_t s_overlayPaintCount = 0;
+                        static double   s_overlayPaintMsSum = 0.0;
+                        static double   s_overlayPaintMsMax = 0.0;
+                        static LARGE_INTEGER s_overlayQpcFreq = {};
+                        // Cached back-buffer — reallocated only when the editor is resized.
+                        // Avoids ~4MB GDI heap churn per overlay frame at 1080p.
+                        static HBITMAP s_cachedBackBuf  = nullptr;
+                        static int     s_cachedBackBufW = 0;
+                        static int     s_cachedBackBufH = 0;
+                        if (s_overlayQpcFreq.QuadPart == 0)
                         {
-                            pThis->renderGhostText(hdc);
-                            ReleaseDC(hwnd, hdc);
+                            QueryPerformanceFrequency(&s_overlayQpcFreq);
                         }
+
+                        LARGE_INTEGER paintStart{};
+                        QueryPerformanceCounter(&paintStart);
+
+                        PAINTSTRUCT ps;
+                        HDC hdcScreen = BeginPaint(hwnd, &ps);
+                        RECT rc;
+                        GetClientRect(hwnd, &rc);
+                        const int w = rc.right - rc.left;
+                        const int h = rc.bottom - rc.top;
+                        if (hdcScreen && w > 0 && h > 0)
+                        {
+                            // Reallocate cached back-buffer only on dimension change.
+                            if (w != s_cachedBackBufW || h != s_cachedBackBufH || !s_cachedBackBuf)
+                            {
+                                if (s_cachedBackBuf)
+                                {
+                                    DeleteObject(s_cachedBackBuf);
+                                    s_cachedBackBuf = nullptr;
+                                }
+                                s_cachedBackBuf  = CreateCompatibleBitmap(hdcScreen, w, h);
+                                s_cachedBackBufW = w;
+                                s_cachedBackBufH = h;
+                            }
+                            HDC hdcMem = CreateCompatibleDC(hdcScreen);
+                            if (hdcMem && s_cachedBackBuf)
+                            {
+                                HBITMAP hbmOld = (HBITMAP)SelectObject(hdcMem, s_cachedBackBuf);
+                                // RichEdit renders its full client area into the off-screen buffer.
+                                // WM_PRINTCLIENT is the correct message for this — it does not go
+                                // through BeginPaint/EndPaint so we own the DC lifecycle here.
+                                CallWindowProcW(oldProc, hwnd, WM_PRINTCLIENT, (WPARAM)hdcMem, PRF_CLIENT);
+                                // Ghost text / Titan paging spinner composited off-screen — zero flicker.
+                                pThis->renderGhostText(hdcMem);
+                                // Single atomic blt: screen never sees an intermediate state.
+                                BitBlt(hdcScreen, 0, 0, w, h, hdcMem, 0, 0, SRCCOPY);
+                                SelectObject(hdcMem, hbmOld);
+                                // hbmOld is restored; s_cachedBackBuf stays alive for next frame.
+                            }
+                            if (hdcMem)
+                                DeleteDC(hdcMem);
+                        }
+                        EndPaint(hwnd, &ps);
+
+                        LARGE_INTEGER paintEnd{};
+                        QueryPerformanceCounter(&paintEnd);
+                        if (s_overlayQpcFreq.QuadPart > 0)
+                        {
+                            const double frameMs =
+                                (double)(paintEnd.QuadPart - paintStart.QuadPart) * 1000.0 /
+                                (double)s_overlayQpcFreq.QuadPart;
+                            ++s_overlayPaintCount;
+                            s_overlayPaintMsSum += frameMs;
+                            if (frameMs > s_overlayPaintMsMax)
+                                s_overlayPaintMsMax = frameMs;
+
+                            if ((s_overlayPaintCount % 240ull) == 0ull)
+                            {
+                                const double avgMs = s_overlayPaintMsSum / (double)s_overlayPaintCount;
+                                char perfBuf[256] = {};
+                                sprintf_s(perfBuf,
+                                          "[GhostOverlayPerf] frames=%llu avg_ms=%.3f max_ms=%.3f\n",
+                                          (unsigned long long)s_overlayPaintCount, avgMs, s_overlayPaintMsMax);
+                                OutputDebugStringA(perfBuf);
+                            }
+                        }
+                        return 0;
                     }
-                    return result;
+                    // No overlay needed — let RichEdit handle WM_PAINT normally.
+                    return CallWindowProcW(oldProc, hwnd, uMsg, wParam, lParam);
                 }
                 break;
             }
@@ -9652,7 +10001,7 @@ LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wPara
 // ============================================================================
 LRESULT CALLBACK Win32IDE::SidebarProcImpl(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    Win32IDE* pThis = (Win32IDE*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
+    Win32IDE* pThis = (Win32IDE*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
 
     switch (uMsg)
     {
@@ -9672,14 +10021,13 @@ LRESULT CALLBACK Win32IDE::SidebarProcImpl(HWND hwnd, UINT uMsg, WPARAM wParam, 
 
         case WM_SETFOCUS:
         {
-            if (pThis)
+            if (pThis && pThis->m_hwndModelSelector)
             {
-                pThis->populateModelSelector();
-                const int cnt = (pThis->m_hwndModelSelector && IsWindow(pThis->m_hwndModelSelector))
-                                    ? (int)SendMessage(pThis->m_hwndModelSelector, CB_GETCOUNT, 0, 0)
-                                    : -1;
-                std::string dbg = "[SidebarProcImpl] WM_SETFOCUS repopulate model count=" + std::to_string(cnt) + "\n";
-                OutputDebugStringA(dbg.c_str());
+                const int cnt = (int)SendMessage(pThis->m_hwndModelSelector, CB_GETCOUNT, 0, 0);
+                if (cnt <= 0)
+                {
+                    pThis->populateModelSelector();
+                }
             }
             break;
         }
@@ -9765,6 +10113,26 @@ LRESULT CALLBACK Win32IDE::SidebarProcImpl(HWND hwnd, UINT uMsg, WPARAM wParam, 
                 else if (controlId == IDC_AI_NO_REFUSAL && notifyCode == BN_CLICKED)
                 {
                     pThis->onAIModeNoRefusal();
+                }
+            }
+            return 0;
+        }
+
+        case WM_HSCROLL:
+        {
+            if (pThis)
+            {
+                HWND hwndTrack = (HWND)lParam;
+                int controlId = GetWindowLong(hwndTrack, GWL_ID);
+                int pos = (int)SendMessage(hwndTrack, TBM_GETPOS, 0, 0);
+
+                if (controlId == IDC_AI_MAX_TOKENS_SLIDER)
+                {
+                    pThis->onMaxTokensChanged(pos);
+                }
+                else if (controlId == IDC_AI_CONTEXT_SLIDER)
+                {
+                    pThis->onContextSizeChanged(pos);
                 }
             }
             return 0;

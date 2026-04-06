@@ -56,6 +56,7 @@
 #include "../modules/engine_manager.h"
 #include "../modules/game_engine_manager.h"
 #include "../streaming_gguf_loader.h"
+#include "../plan_orchestrator.h"
 #include "IDELogger.h"
 #include "TransparentRenderer.h"
 #include "Win32IDE_AgenticBridge.h"
@@ -283,6 +284,7 @@ class Win32IDE
     static DWORD WINAPI VisibilityWatchdogThread(LPVOID param);
     void openModel();
     bool loadModelForInference(const std::string& filepath);
+    void loadModelFromPathAsync(const std::string& filepath);
 
     // Test agent access
     HWND getMainWindow() const { return m_hwndMain; }
@@ -298,6 +300,7 @@ class Win32IDE
     // Agentic Framework — Full Agentic IDE owns the bridge (single entry point: src/full_agentic_ide/)
     std::unique_ptr<full_agentic_ide::FullAgenticIDE> m_fullAgenticIDE;
     AgenticBridge* m_agenticBridge = nullptr;  // Non-owning; set from m_fullAgenticIDE->getBridge()
+    std::unique_ptr<RawrXD::PlanOrchestrator> m_planOrchestrator;  // Autonomous task planning and execution
     bool m_multiAgentEnabled = false;          // Multi-agent orchestration toggle
     void initializeAgenticBridge();
     bool ensureAgenticBridgeHasModel(const std::string& path);
@@ -308,6 +311,14 @@ class Win32IDE
     void onAgentViewTools();
     void onAgentViewStatus();
     void onAgentStop();
+
+    // Plan Orchestrator Controls — Autonomous task planning and execution
+    void initializePlanOrchestrator();
+    void onPlanOrchestratorStart();
+    void onPlanOrchestratorStop();
+    void onPlanOrchestratorExecutePrompt(const std::string& prompt);
+    void onPlanOrchestratorViewStatus();
+    void onPlanOrchestratorViewPlan();
 
     // Autonomy Framework Controls
     std::unique_ptr<AutonomyManager> m_autonomyManager;  // high-level autonomous orchestrator
@@ -1609,6 +1620,17 @@ class Win32IDE
     static const UINT_PTR MODEL_PROGRESS_TIMER_ID = 9902;
     static const UINT WM_MODEL_PROGRESS_UPDATE = WM_APP + 300;
     static const UINT WM_MODEL_PROGRESS_DONE = WM_APP + 301;
+    static const UINT WM_MODEL_LOAD_DONE = WM_APP + 302;
+
+    struct AsyncModelLoadResult
+    {
+        std::string filepath;
+        bool ggufOk = false;
+        bool bridgeOk = false;
+    };
+
+    std::mutex m_asyncModelLoadMutex;
+    bool m_asyncModelLoadRunning = false;
 
     // AI Inference State
     InferenceConfig m_inferenceConfig;
@@ -2291,6 +2313,7 @@ class Win32IDE
     void unloadRawrXDModule();
     void executeRawrXDCommand(const std::string& command);
     void quickLoadGGUFModel();
+    void listAvailableModels();
     void quickInference();
     // PowerShell Panel Helpers
     void initializePowerShellPanel();

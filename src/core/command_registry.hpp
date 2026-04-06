@@ -216,6 +216,16 @@ enum CmdFlags : uint32_t
     X(4154, AUTONOMY_STATUS, "autonomy.status", "!autonomy_status", BOTH, "Autonomy", handleAutonomyStatus, CMD_NONE)  \
     X(4155, AUTONOMY_MEMORY, "autonomy.memory", "!autonomy_memory", BOTH, "Autonomy", handleAutonomyMemory, CMD_NONE)  \
                                                                                                                        \
+    /* ═══════════════════ PLAN ORCHESTRATOR (4164-4167) ═══════════════════ */                                       \
+    X(4164, PLAN_ORCHESTRATOR_START, "planOrchestrator.start", "!plan_start", BOTH, "PlanOrchestrator",                \
+      handlePlanOrchestratorStart, CMD_ASYNC)                                                                          \
+    X(4165, PLAN_ORCHESTRATOR_STOP, "planOrchestrator.stop", "!plan_stop", BOTH, "PlanOrchestrator",                   \
+      handlePlanOrchestratorStop, CMD_NONE)                                                                            \
+    X(4166, PLAN_ORCHESTRATOR_VIEW_STATUS, "planOrchestrator.status", "!plan_status", BOTH, "PlanOrchestrator",        \
+      handlePlanOrchestratorViewStatus, CMD_NONE)                                                                      \
+    X(4167, PLAN_ORCHESTRATOR_VIEW_PLAN, "planOrchestrator.viewPlan", "!plan_view", BOTH, "PlanOrchestrator",          \
+      handlePlanOrchestratorViewPlan, CMD_NONE)                                                                        \
+                                                                                                                       \
     /* ═══════════════════ AI MODE (4200-4203) ═══════════════════ */                                                  \
     X(4200, AI_MODE_MAX, "ai.maxMode", "!max", BOTH, "AIMode", handleAIMaxMode, CMD_NONE)                              \
     X(4201, AI_MODE_DEEP_THINK, "ai.deepThinking", "!deep", BOTH, "AIMode", handleAIDeepThinking, CMD_NONE)            \
@@ -290,37 +300,38 @@ enum CmdFlags : uint32_t
     X(5047, BACKEND_SAVE_CFG, "backend.saveConfigs", "!backend save", BOTH, "Backend", handleBackendSaveConfigs,       \
       CMD_NONE)                                                                                                        \
                                                                                                                        \
-    /* ═══════════════════ ROUTER (5048-5081) ═══════════════════ */                                                   \
-    X(5048, ROUTER_ENABLE, "router.enable", "!router enable", BOTH, "Router", handleRouterEnable, CMD_NONE)            \
-    X(5049, ROUTER_DISABLE, "router.disable", "!router disable", BOTH, "Router", handleRouterDisable, CMD_NONE)        \
-    X(5050, ROUTER_STATUS, "router.status", "!router status", BOTH, "Router", handleRouterStatus, CMD_NONE)            \
-    X(5051, ROUTER_DECISION, "router.decision", "!router decision", BOTH, "Router", handleRouterDecision, CMD_NONE)    \
-    X(5052, ROUTER_SET_POLICY, "router.setPolicy", "!router policy", BOTH, "Router", handleRouterSetPolicy, CMD_NONE)  \
-    X(5053, ROUTER_CAPABILITIES, "router.capabilities", "!router caps", BOTH, "Router", handleRouterCapabilities,      \
+    /* ═══════════════════ ROUTER (6101-6134) ═══════════════════ */                                                   \
+    X(6101, ROUTER_ENABLE, "router.enable", "!router enable", BOTH, "Router", handleRouterEnable, CMD_NONE)            \
+    X(6102, ROUTER_DISABLE, "router.disable", "!router disable", BOTH, "Router", handleRouterDisable, CMD_NONE)        \
+    X(6103, ROUTER_STATUS, "router.status", "!router status", BOTH, "Router", handleRouterStatus, CMD_NONE)            \
+    X(6104, ROUTER_DECISION, "router.decision", "!router decision", BOTH, "Router", handleRouterDecision, CMD_NONE)    \
+    X(6105, ROUTER_SET_POLICY, "router.setPolicy", "!router policy", BOTH, "Router", handleRouterSetPolicy, CMD_NONE)  \
+    X(6106, ROUTER_CAPABILITIES, "router.capabilities", "!router caps", BOTH, "Router", handleRouterCapabilities,      \
       CMD_NONE)                                                                                                        \
-    X(5054, ROUTER_FALLBACKS, "router.fallbacks", "!router fallbacks", BOTH, "Router", handleRouterFallbacks,          \
+    X(6107, ROUTER_FALLBACKS, "router.fallbacks", "!router fallbacks", BOTH, "Router", handleRouterFallbacks,          \
       CMD_NONE)                                                                                                        \
-    X(5055, ROUTER_SAVE_CONFIG, "router.saveConfig", "!router save", BOTH, "Router", handleRouterSaveConfig, CMD_NONE) \
-    X(5056, ROUTER_ROUTE_PROMPT, "router.routePrompt", "!router route", BOTH, "Router", handleRouterRoutePrompt,       \
+    X(6108, ROUTER_SAVE_CONFIG, "router.saveConfig", "!router save", BOTH, "Router", handleRouterSaveConfig, CMD_NONE) \
+    X(6109, ROUTER_ROUTE_PROMPT, "router.routePrompt", "!router route", BOTH, "Router", handleRouterRoutePrompt,       \
       CMD_ASYNC)                                                                                                       \
-    X(5057, ROUTER_RESET_STATS, "router.resetStats", "!router reset", BOTH, "Router", handleRouterResetStats,          \
+    X(6110, ROUTER_RESET_STATS, "router.resetStats", "!router reset", BOTH, "Router", handleRouterResetStats,          \
       CMD_CONFIRM)                                                                                                     \
-    X(5071, ROUTER_WHY_BACKEND, "router.whyBackend", "!router why", BOTH, "Router", handleRouterWhyBackend, CMD_NONE)  \
-    X(5072, ROUTER_PIN_TASK, "router.pinTask", "!router pin", BOTH, "Router", handleRouterPinTask, CMD_NONE)           \
-    X(5073, ROUTER_UNPIN_TASK, "router.unpinTask", "!router unpin", BOTH, "Router", handleRouterUnpinTask, CMD_NONE)   \
-    X(5074, ROUTER_SHOW_PINS, "router.showPins", "!router pins", BOTH, "Router", handleRouterShowPins, CMD_NONE)       \
-    X(5075, ROUTER_HEATMAP, "router.heatmap", "!router heatmap", BOTH, "Router", handleRouterShowHeatmap, CMD_NONE)    \
-    X(5076, ROUTER_ENSEMBLE_ON, "router.ensembleEnable", "!router ensemble", BOTH, "Router",                           \
+    X(6111, ROUTER_WHY_BACKEND, "router.whyBackend", "!router why", BOTH, "Router", handleRouterWhyBackend, CMD_NONE)  \
+    X(6112, ROUTER_PIN_TASK, "router.pinTask", "!router pin", BOTH, "Router", handleRouterPinTask, CMD_NONE)           \
+    X(6113, ROUTER_UNPIN_TASK, "router.unpinTask", "!router unpin", BOTH, "Router", handleRouterUnpinTask, CMD_NONE)   \
+    X(6114, ROUTER_SHOW_PINS, "router.showPins", "!router pins", BOTH, "Router", handleRouterShowPins, CMD_NONE)       \
+    X(6115, ROUTER_HEATMAP, "router.heatmap", "!router heatmap", BOTH, "Router", handleRouterShowHeatmap, CMD_NONE)    \
+    X(6116, ROUTER_ENSEMBLE_ON, "router.ensembleEnable", "!router ensemble", BOTH, "Router",                           \
       handleRouterEnsembleEnable, CMD_NONE)                                                                            \
-    X(5077, ROUTER_ENSEMBLE_OFF, "router.ensembleDisable", "!router noensemble", BOTH, "Router",                       \
+    X(6117, ROUTER_ENSEMBLE_OFF, "router.ensembleDisable", "!router noensemble", BOTH, "Router",                       \
       handleRouterEnsembleDisable, CMD_NONE)                                                                           \
-    X(5078, ROUTER_ENSEMBLE_STAT, "router.ensembleStatus", "!router ens_stat", BOTH, "Router",                         \
+    X(6118, ROUTER_ENSEMBLE_STAT, "router.ensembleStatus", "!router ens_stat", BOTH, "Router",                         \
       handleRouterEnsembleStatus, CMD_NONE)                                                                            \
-    X(5079, ROUTER_SIMULATE, "router.simulate", "!router simulate", BOTH, "Router", handleRouterSimulate, CMD_ASYNC)   \
-    X(5080, ROUTER_SIMULATE_LAST, "router.simulateLast", "!router sim_last", BOTH, "Router", handleRouterSimulateLast, \
+    X(6119, ROUTER_SIMULATE, "router.simulate", "!router simulate", BOTH, "Router", handleRouterSimulate, CMD_ASYNC)   \
+    X(6120, ROUTER_SIMULATE_LAST, "router.simulateLast", "!router sim_last", BOTH, "Router", handleRouterSimulateLast, \
       CMD_NONE)                                                                                                        \
-    X(5081, ROUTER_COST_STATS, "router.costStats", "!router cost", BOTH, "Router", handleRouterShowCostStats,          \
+    X(6121, ROUTER_COST_STATS, "router.costStats", "!router cost", BOTH, "Router", handleRouterShowCostStats,          \
       CMD_NONE)                                                                                                        \
+    X(6130, IDM_BENCHMARK_MOE, "moe.benchmark", "!moe_bench", BOTH, "Performance", handleMoeBenchmark, CMD_ASYNC)      \
                                                                                                                        \
     /* ═══════════════════ LSP CLIENT (5058-5070) ═══════════════════ */                                               \
     X(5058, LSP_START_ALL, "lsp.startAll", "!lsp start", BOTH, "LSP", handleLspStartAll, CMD_ASYNC)                    \

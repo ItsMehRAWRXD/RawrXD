@@ -765,6 +765,14 @@ void Win32IDE::loadSession() {
 // ============================================================================
 void Win32IDE::restoreSession() {
     LOG_INFO("Restoring IDE session...");
+
+    char disableRestore[16] = {};
+    const DWORD disableRestoreLen =
+        GetEnvironmentVariableA("RAWRXD_DISABLE_SESSION_RESTORE", disableRestore, static_cast<DWORD>(sizeof(disableRestore)));
+    if (disableRestoreLen > 0 && disableRestore[0] == '1') {
+        LOG_INFO("Session restore disabled by RAWRXD_DISABLE_SESSION_RESTORE=1");
+        return;
+    }
     
     try {
         std::string path = getSessionFilePath();
@@ -930,6 +938,8 @@ void Win32IDE::restoreSessionPanelState(const nlohmann::json& session) {
     m_panelVisible = panel.value("visible", true);
     m_panelHeight = panel.value("height", 200);
     m_panelMaximized = panel.value("maximized", false);
+    if (m_panelVisible && m_panelHeight <= 0)
+        m_panelHeight = 200;
     
     int tabIdx = panel.value("activeTab", 0);
     if (tabIdx >= 0 && tabIdx <= 3) {
@@ -1110,6 +1120,7 @@ void Win32IDE::restoreSessionTheme(const nlohmann::json& session) {
     std::string savedName = theme.value("name", "");
     int savedId           = theme.value("themeId", (int)IDM_THEME_DARK_PLUS);
     int savedAlpha        = theme.value("alpha", 255);
+    bool savedTransparency = theme.value("transparency", savedAlpha < 255);
 
     // Validate theme ID is in valid range; fallback to Dark+ if not
     if (savedId < IDM_THEME_DARK_PLUS || savedId > IDM_THEME_ABYSS) {
@@ -1135,11 +1146,10 @@ void Win32IDE::restoreSessionTheme(const nlohmann::json& session) {
     applyTheme();
     applyThemeToAllControls();
 
-    // Restore transparency (clamp to 30-255 for safety)
-    BYTE alpha = (BYTE)std::clamp(savedAlpha, 30, 255);
-    if (alpha < 255) {
-        setWindowTransparency(alpha);
-    }
+    // Restore transparency only when explicitly enabled, and never below the
+    // lowest supported preset so startup cannot make the IDE effectively invisible.
+    BYTE alpha = savedTransparency ? (BYTE)std::clamp(savedAlpha, 102, 255) : 255;
+    setWindowTransparency(alpha);
 
     // Re-trigger syntax coloring with restored theme palette
     if (m_syntaxColoringEnabled) {

@@ -27,6 +27,9 @@
 
 namespace RawrXD {
 
+// Using declarations to avoid scope errors
+using namespace LocalAI;
+
 // ============================================================================
 // Win32 message IDs for streaming tokens to the IDE
 // ============================================================================
@@ -161,7 +164,7 @@ public:
     // ---- Diagnostics --------------------------------------------------------
 
     /// Get the underlying LocalAICore
-    LocalAI::LocalAICore& GetCore() { return m_core; }
+    LocalAICore& GetCore() { return m_core; }
 
     /// Get performance diagnostics string
     void GetDiagnostics(char* buf, size_t bufLen) const;
@@ -178,13 +181,13 @@ private:
                                          const char* text, uint32_t textLen);
     bool OnToken(uint32_t tokenId, const char* text, uint32_t textLen);
     void InferenceWorker(const char* prompt, uint32_t promptLen,
-                         LocalAI::SamplerConfig sampler);
+                         SamplerConfig sampler);
     void PostTokenMessage(const TokenStreamEntry& entry);
 
     // ---- State --------------------------------------------------------------
     std::atomic<PipelineState>  m_state{PipelineState::Idle};
     PipelineConfig              m_config;
-    LocalAI::LocalAICore        m_core;
+    LocalAICore                 m_core;
 
     // Worker thread
     std::thread                 m_workerThread;

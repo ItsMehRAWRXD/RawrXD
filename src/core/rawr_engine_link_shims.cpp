@@ -331,7 +331,7 @@ static int closeFileHandle(intptr_t handle)
 {
     if (handle <= 0)
     {
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     FILE* file = reinterpret_cast<FILE*>(handle);
     return std::fclose(file) == 0 ? 1 : 0;
@@ -350,7 +350,7 @@ static uint32_t crc32Bytes(const uint8_t* data, size_t size)
 {
     if (!data || size == 0)
     {
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     uint32_t crc = 0xFFFFFFFFu;
     for (size_t i = 0; i < size; ++i)
@@ -453,7 +453,7 @@ static int transformFileWithKey(const char* inputPath, const char* outputPath, c
 
     std::fclose(in);
     std::fclose(out);
-    std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+    return 0;
 }
 
 static int transformBufferWithKey(const uint8_t* src, uint64_t srcLen, uint8_t* dst, uint64_t dstLen)
@@ -470,7 +470,7 @@ static int transformBufferWithKey(const uint8_t* src, uint64_t srcLen, uint8_t* 
         const uint8_t k = kDefaultKey[i % kKeyLen];
         dst[i] = static_cast<uint8_t>(src[i] ^ static_cast<uint8_t>(k + (i & 0xFFu)));
     }
-    std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+    return 0;
 }
 }  // namespace
 
@@ -538,14 +538,14 @@ extern "C"
         {
             c[i] = a[i] * b[i];
         }
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int ConflictDetector_LockResource(uint32_t resourceId)
     {
         std::lock_guard<std::mutex> lock(g_runtimeShimMutex);
         if (g_conflictLocked.find(resourceId) != g_conflictLocked.end())
         {
-            std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+            return 0;
         }
         g_conflictLocked.insert(resourceId);
         return 1;
@@ -556,7 +556,7 @@ extern "C"
         auto it = g_dmaPendingTickets.find(ticketId);
         if (it == g_dmaPendingTickets.end())
         {
-            std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+            return 0;
         }
         g_dmaPendingTickets.erase(it);
         return 1;
@@ -584,7 +584,7 @@ extern "C"
                 c[m * N + n] = static_cast<float>(sum);
             }
         }
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_pyre_rmsnorm(void* outOrInout, const void* input, int count)
     {
@@ -606,7 +606,7 @@ extern "C"
         {
             out[i] = in[i] * invRms;
         }
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_pyre_silu(void* outOrInout, const void* input, int count)
     {
@@ -621,7 +621,7 @@ extern "C"
             const float x = in[i];
             out[i] = x / (1.0f + std::exp(-x));
         }
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_pyre_rope(void* outOrInout, const void* input, int count)
     {
@@ -646,7 +646,7 @@ extern "C"
         {
             out[i] = in[i];
         }
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_pyre_embedding_lookup(const void* table, const void* indices, void* out, int count, int dim)
     {
@@ -668,7 +668,7 @@ extern "C"
             std::memcpy(dst + static_cast<size_t>(t) * static_cast<size_t>(dim), src,
                         static_cast<size_t>(dim) * sizeof(float));
         }
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_pyre_gemv_fp32(const void* A, const void* x, void* y, int M, int K)
     {
@@ -688,7 +688,7 @@ extern "C"
             }
             out[m] = static_cast<float>(sum);
         }
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_pyre_add_fp32(void* out, const void* a, const void* b, int count)
     {
@@ -703,7 +703,7 @@ extern "C"
         {
             dst[i] = lhs[i] + rhs[i];
         }
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
 
     // Batch 3: scheduler/clock + conflict/dma
@@ -764,7 +764,7 @@ extern "C"
         auto it = g_schedulerTasks.find(taskId);
         if (it == g_schedulerTasks.end())
         {
-            std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+            return 0;
         }
         it->second.completed = true;
         return 1;
@@ -784,7 +784,7 @@ extern "C"
         {
             dst[i] = lhs[i] * rhs[i];
         }
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_pyre_softmax(void* outOrInout, const void* input, int count)
     {
@@ -819,7 +819,7 @@ extern "C"
         {
             out[i] *= inv;
         }
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int find_pattern_asm(const uint8_t* data, uint64_t dataLen, const uint8_t* pattern, uint64_t patternLen,
                          uint64_t* outOffset)
@@ -836,7 +836,7 @@ extern "C"
                 return 1;
             }
         }
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_hotpatch_restore_prologue(void* funcAddr)
     {
@@ -848,7 +848,7 @@ extern "C"
         }
         std::memcpy(funcAddr, entry->backup, kRawrPatchBytes);
         g_rawrHotpatchStats.swapsRolledBack++;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_hotpatch_backup_prologue(void* funcAddr)
     {
@@ -860,7 +860,7 @@ extern "C"
         }
         std::memcpy(entry->backup, funcAddr, kRawrPatchBytes);
         entry->hasBackup = true;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_hotpatch_flush_icache(void* base, uint64_t size)
     {
@@ -878,7 +878,7 @@ extern "C"
         }
 #endif
         g_rawrHotpatchStats.icacheFlushes++;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     void* asm_hotpatch_alloc_shadow(uint64_t size)
     {
@@ -911,7 +911,7 @@ extern "C"
             g_rawrHotpatchStats.crcMismatches++;
             return -1;
         }
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_hotpatch_install_trampoline(void* originalFn, void* trampolineBuffer)
     {
@@ -921,7 +921,7 @@ extern "C"
             return -1;
         }
         std::memcpy(trampolineBuffer, originalFn, kRawrPatchBytes);
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_hotpatch_free_shadow(void* shadowPtr)
     {
@@ -931,7 +931,7 @@ extern "C"
         }
         std::free(shadowPtr);
         g_rawrHotpatchStats.shadowPagesFreed++;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_snapshot_capture(void* funcAddr)
     {
@@ -945,7 +945,7 @@ extern "C"
         entry->hasSnapshot = true;
         g_rawrSnapshotStats.captured++;
         g_rawrSnapshotStats.bytesStored += entry->snapshotSize;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_hotpatch_atomic_swap(void* targetFn, void* newFn)
     {
@@ -955,7 +955,7 @@ extern "C"
             return -1;
         }
         g_rawrHotpatchStats.swapsApplied++;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_hotpatch_get_stats(void* outStats)
     {
@@ -972,7 +972,7 @@ extern "C"
         out[5] = g_rawrHotpatchStats.icacheFlushes;
         out[6] = g_rawrHotpatchStats.crcChecks;
         out[7] = g_rawrHotpatchStats.crcMismatches;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_snapshot_get_stats(void* outStats)
     {
@@ -987,7 +987,7 @@ extern "C"
         out[3] = g_rawrSnapshotStats.verifyPassed;
         out[4] = g_rawrSnapshotStats.verifyFailed;
         out[5] = g_rawrSnapshotStats.bytesStored;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
 
     // Batch 6: snapshot/camellia/log/enterprise
@@ -1001,7 +1001,7 @@ extern "C"
         }
         std::memcpy(funcAddr, entry->snapshot, entry->snapshotSize);
         g_rawrSnapshotStats.restored++;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_snapshot_discard(void* funcAddr)
     {
@@ -1013,7 +1013,7 @@ extern "C"
         entry->hasSnapshot = false;
         entry->snapshotSize = 0;
         g_rawrSnapshotStats.discarded++;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_snapshot_verify(void* funcAddr)
     {
@@ -1031,7 +1031,7 @@ extern "C"
             return -1;
         }
         g_rawrSnapshotStats.verifyPassed++;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_camellia256_auth_decrypt_file(const char* inputPath, const char* outputPath, const uint8_t* key,
                                           uint32_t keyLen)
@@ -1091,27 +1091,27 @@ extern "C"
         FILE* file = fileFromHandle(fileHandle);
         if (!header || !file)
         {
-            std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+            return 0;
         }
 
         if (std::fseek(file, 0, SEEK_SET) != 0)
         {
-            std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+            return 0;
         }
         if (std::fread(header, sizeof(AD_GGUFHeader), 1, file) != 1)
         {
-            std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+            return 0;
         }
 
         constexpr uint32_t GGUF_MAGIC_LE = 0x46554747u;  // "GGUF"
         const uint32_t lowMagic = static_cast<uint32_t>(header->magic & 0xFFFFFFFFu);
         if (lowMagic != GGUF_MAGIC_LE)
         {
-            std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+            return 0;
         }
         if (header->version == 0)
         {
-            std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+            return 0;
         }
         return 1;
     }
@@ -1121,7 +1121,7 @@ extern "C"
         FILE* file = fileFromHandle(fileHandle);
         if (!file)
         {
-            std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+            return 0;
         }
 
         for (uint64_t i = 0; i < kvCount; ++i)
@@ -1130,15 +1130,15 @@ extern "C"
             uint32_t type = 0;
             if (std::fread(&keyLen, sizeof(keyLen), 1, file) != 1)
             {
-                std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+                return 0;
             }
             if (std::fseek(file, static_cast<long>(keyLen), SEEK_CUR) != 0)
             {
-                std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+                return 0;
             }
             if (std::fread(&type, sizeof(type), 1, file) != 1)
             {
-                std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+                return 0;
             }
 
             // Minimal parser: handle string-like metadata values, otherwise fail fast.
@@ -1147,16 +1147,16 @@ extern "C"
                 uint64_t valueLen = 0;
                 if (std::fread(&valueLen, sizeof(valueLen), 1, file) != 1)
                 {
-                    std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+                    return 0;
                 }
                 if (std::fseek(file, static_cast<long>(valueLen), SEEK_CUR) != 0)
                 {
-                    std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+                    return 0;
                 }
             }
             else
             {
-                std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+                return 0;
             }
         }
         return 1;
@@ -1205,7 +1205,7 @@ extern "C"
     {
         if (!tensorInfo || tensorInfo->shape_rank == 0)
         {
-            std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+            return 0;
         }
         uint64_t count = 1;
         const uint64_t rank = std::min<uint64_t>(tensorInfo->shape_rank, 4);
@@ -1213,7 +1213,7 @@ extern "C"
         {
             if (tensorInfo->shape[i] == 0)
             {
-                std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+                return 0;
             }
             count *= tensorInfo->shape[i];
         }
@@ -1247,11 +1247,11 @@ extern "C"
         FILE* file = fileFromHandle(fileHandle);
         if (!analysis || !file)
         {
-            std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+            return 0;
         }
         if (!tensorTable)
         {
-            std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+            return 0;
         }
         // Best-effort fallback: leave table zeroed; callers can still analyze the header.
         std::memset(tensorTable, 0, sizeof(AD_TensorInfo));
@@ -1264,7 +1264,7 @@ extern "C"
     {
         if (!tensorTable || !analysis)
         {
-            std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+            return 0;
         }
         analysis->layer_count = 0;
         analysis->total_params = AD_CountParameters(tensorTable);
@@ -1281,12 +1281,12 @@ extern "C"
     {
         if (!outputPath || !analysis)
         {
-            std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+            return 0;
         }
         FILE* out = std::fopen(outputPath, "wb");
         if (!out)
         {
-            std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+            return 0;
         }
         const size_t wrote = std::fwrite(analysis, sizeof(AD_AnalysisResult), 1, out);
         std::fclose(out);
@@ -1304,7 +1304,7 @@ extern "C"
         intptr_t handle = AD_OpenGGUFFile(inputPath);
         if (handle <= 0)
         {
-            std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+            return 0;
         }
 
         AD_GGUFHeader header{};
@@ -1381,7 +1381,7 @@ extern "C"
     {
         if (!filePath)
         {
-            std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+            return 0;
         }
         if (g_soState.execFile)
         {
@@ -1472,7 +1472,7 @@ extern "C"
         (void)layerTable;
         if (!g_soState.streamingReady)
         {
-            std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+            return 0;
         }
         g_soState.metrics.layers_loaded += layerCount;
         g_soState.metrics.prefetch_hits += (layerCount > 0 ? layerCount - 1 : 0);
@@ -1546,7 +1546,7 @@ extern "C"
     {
         if (semaphore <= 0)
         {
-            std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+            return 0;
         }
         g_soState.timelineValue = std::max(g_soState.timelineValue, value);
         return 1;
@@ -1555,7 +1555,7 @@ extern "C"
     {
         if (semaphore <= 0)
         {
-            std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+            return 0;
         }
         return g_soState.timelineValue >= value ? 1 : 0;
     }
@@ -1585,7 +1585,7 @@ extern "C"
     {
         if (!src || !dest || compressedSize == 0)
         {
-            std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+            return 0;
         }
         std::memcpy(dest, src, static_cast<size_t>(compressedSize));
         g_soState.metrics.bytes_decompressed += compressedSize;
@@ -1679,13 +1679,13 @@ extern "C"
         g_perfSlots[static_cast<size_t>(slot)].lastDurationNs = durationNs;
         g_perfSlots[static_cast<size_t>(slot)].invocationCount += 1;
         g_perfSlots[static_cast<size_t>(slot)].totalDurationNs += durationNs;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_watchdog_init()
     {
         g_watchdogBaselineNs.store(monotonicTickNowNs(), std::memory_order_relaxed);
         g_watchdogStatus.store(1, std::memory_order_relaxed);
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_watchdog_verify()
     {
@@ -1699,7 +1699,7 @@ extern "C"
         if (baseline == 0 || now < baseline)
         {
             g_watchdogStatus.store(2, std::memory_order_relaxed);
-            std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+            return 0;
         }
         const uint64_t elapsedMs = (now - baseline) / 1000000ULL;
         g_watchdogStatus.store(elapsedMs > 60000ULL ? 2 : 1, std::memory_order_relaxed);
@@ -1722,7 +1722,7 @@ extern "C"
     {
         g_watchdogStatus.store(0, std::memory_order_relaxed);
         g_watchdogBaselineNs.store(0, std::memory_order_relaxed);
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
 
     // Batch 12: perf counters + camellia buffer ops
@@ -1735,7 +1735,7 @@ extern "C"
         {
             slot = {};
         }
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_perf_read_slot(int slotIndex, uint64_t* outValue)
     {
@@ -1745,7 +1745,7 @@ extern "C"
         }
         std::lock_guard<std::mutex> lock(g_runtimeShimMutex);
         *outValue = g_perfSlots[static_cast<size_t>(slotIndex)].lastDurationNs;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_perf_reset_slot(int slotIndex)
     {
@@ -1755,7 +1755,7 @@ extern "C"
         }
         std::lock_guard<std::mutex> lock(g_runtimeShimMutex);
         g_perfSlots[static_cast<size_t>(slotIndex)] = {};
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_perf_get_slot_count()
     {
@@ -1782,7 +1782,7 @@ extern "C"
             return -1;
         }
         std::memcpy(target, patchData, static_cast<size_t>(patchBytes));
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_lsp_bridge_set_weights(const void* weights, uint64_t weightBytes)
     {
@@ -1794,7 +1794,7 @@ extern "C"
         g_lspBridgeState.initialized = true;
         g_lspBridgeState.weightBytes = weightBytes;
         g_lspBridgeState.weightCrc = crc32Bytes(static_cast<const uint8_t*>(weights), static_cast<size_t>(weightBytes));
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_gguf_loader_init(const void* initConfig)
     {
@@ -1805,7 +1805,7 @@ extern "C"
         std::lock_guard<std::mutex> lock(g_runtimeShimMutex);
         g_ggufLoaderState.initialized = true;
         g_ggufLoaderState.initCrc = crc32Bytes(static_cast<const uint8_t*>(initConfig), 64);
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_quadbuf_push_token(const void* tokenData, uint32_t tokenType)
     {
@@ -1832,7 +1832,7 @@ extern "C"
         }
         g_spengineState.initialized = true;
         g_spengineState.quantLevel = 4;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_spengine_quant_switch_adaptive(int targetLevel)
     {
@@ -1859,7 +1859,7 @@ extern "C"
         g_lspBridgeState.initialized = true;
         g_lspBridgeState.weightBytes = 0;
         g_lspBridgeState.weightCrc = initConfig ? crc32Bytes(static_cast<const uint8_t*>(initConfig), 64) : 0;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
 
     // Batch 14: MASM bridges continued
@@ -1869,7 +1869,7 @@ extern "C"
         std::lock_guard<std::mutex> lock(g_runtimeShimMutex);
         if (g_quadbufState.tokenStream.empty())
         {
-            std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+            return 0;
         }
         g_quadbufState.renderedFrames += 1;
         g_soState.metrics.bytes_streamed += static_cast<uint64_t>(g_quadbufState.tokenStream.size() * sizeof(uint32_t));
@@ -1880,7 +1880,7 @@ extern "C"
     {
         std::lock_guard<std::mutex> lock(g_runtimeShimMutex);
         g_quadbufState = {};
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     #endif
     int asm_gguf_loader_lookup(const char* symbolName)
@@ -1915,7 +1915,7 @@ extern "C"
     {
         std::lock_guard<std::mutex> lock(g_runtimeShimMutex);
         g_lspBridgeState = {};
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_spengine_register(const char* moduleName, const void* moduleHandle)
     {
@@ -1945,7 +1945,7 @@ extern "C"
         out[2] = static_cast<uint64_t>(g_spengineState.quantLevel);
         out[3] = g_spengineState.rollbackCount;
         out[4] = static_cast<uint64_t>(g_spengineState.modules.size());
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
 
     // Batch 15: loader/quadbuf stats
@@ -1963,13 +1963,13 @@ extern "C"
         out[2] = static_cast<uint64_t>(g_ggufLoaderState.configuredGpu);
         out[3] = g_ggufLoaderState.lookupCount;
         out[4] = static_cast<uint64_t>(g_ggufLoaderState.lastLookupCrc);
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_quadbuf_set_flags(uint32_t flags)
     {
         std::lock_guard<std::mutex> lock(g_runtimeShimMutex);
         g_quadbufState.flags = flags;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_quadbuf_resize(uint32_t capacity)
     {
@@ -1999,20 +1999,20 @@ extern "C"
             return -1;
         }
         g_ggufLoaderState.configuredGpu = gpuOrdinal;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_gguf_loader_close()
     {
         std::lock_guard<std::mutex> lock(g_runtimeShimMutex);
         g_ggufLoaderState = {};
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     #ifndef RAWRXD_DISABLE_DUPLICATE_SHIMS
     int asm_spengine_shutdown()
     {
         std::lock_guard<std::mutex> lock(g_runtimeShimMutex);
         g_spengineState = {};
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     #endif
     int asm_lsp_bridge_get_stats(void* outStats)
@@ -2029,7 +2029,7 @@ extern "C"
         out[3] = static_cast<uint64_t>(g_lspBridgeState.weightCrc);
         out[4] = g_lspBridgeState.queryCount;
         out[5] = static_cast<uint64_t>(g_lspBridgeState.lastQueryCrc);
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
 
     // Batch 16: loader/apply/sync
@@ -2067,7 +2067,7 @@ extern "C"
             g_lspBridgeState.lastQueryCrc = 0;
             return 1;
         }
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_quadbuf_get_stats(void* outStats)
     {
@@ -2081,7 +2081,7 @@ extern "C"
         out[1] = static_cast<uint64_t>(g_quadbufState.maxTokens);
         out[2] = static_cast<uint64_t>(g_quadbufState.tokenStream.size());
         out[3] = g_quadbufState.renderedFrames;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_gguf_loader_parse(const void* buffer, uint64_t payloadBytes)
     {
@@ -2098,7 +2098,7 @@ extern "C"
         g_ggufLoaderState.parseCrc = crc32Bytes(static_cast<const uint8_t*>(buffer), crcWindow);
         g_ggufLoaderState.parseCount += 1;
         g_ggufLoaderState.parsedBytes += payloadBytes;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_spengine_apply(const void* patchBlob, uint64_t patchBytes)
     {
@@ -2112,7 +2112,7 @@ extern "C"
             return -1;
         }
         g_spengineState.appliedBytes += patchBytes;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_lsp_bridge_sync()
     {
@@ -2122,7 +2122,7 @@ extern "C"
             return -1;
         }
         g_lspBridgeState.synced = true;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_spengine_quant_switch(int targetLevel)
     {
@@ -2155,7 +2155,7 @@ extern "C"
         std::lock_guard<std::mutex> lock(g_runtimeShimMutex);
         g_quadbufState = {};
         g_quadbufState.maxTokens = capacity;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_gguf_loader_get_stats(void* outStats)
     {
@@ -2171,7 +2171,7 @@ extern "C"
         out[3] = g_ggufLoaderState.parsedBytes;
         out[4] = static_cast<uint64_t>(g_ggufLoaderState.parseCrc);
         out[5] = static_cast<uint64_t>(g_ggufLoaderState.configuredGpu);
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_spengine_cpu_optimize(const void* optimizeProfile)
     {
@@ -2185,7 +2185,7 @@ extern "C"
             return -1;
         }
         g_spengineState.optimizeProfileCrc = crc32Bytes(static_cast<const uint8_t*>(optimizeProfile), 64);
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
 
     int asm_hwsynth_est_resources(const void* workloadSpec, void* outEstimate)
@@ -2202,7 +2202,7 @@ extern "C"
         out[0] = g_hwsynthState.lastResourceScore;
         out[1] = 1 + (g_hwsynthState.lastResourceScore / 64u);
         out[2] = 1 + (g_hwsynthState.lastResourceScore / 128u);
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_hwsynth_predict_perf(const void* modelSpec, void* outPrediction)
     {
@@ -2218,7 +2218,7 @@ extern "C"
         auto* out = static_cast<uint64_t*>(outPrediction);
         out[0] = g_hwsynthState.lastLatencyUs;
         out[1] = g_hwsynthState.lastThroughput;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_hwsynth_get_stats(void* outStats)
     {
@@ -2233,7 +2233,7 @@ extern "C"
         out[2] = g_hwsynthState.lastResourceScore;
         out[3] = g_hwsynthState.lastLatencyUs;
         out[4] = g_hwsynthState.lastThroughput;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_hwsynth_gen_gemm_spec(const void* workloadSpec, void* outSpec)
     {
@@ -2253,7 +2253,7 @@ extern "C"
         out[1] = 64 + (crc % 256u);
         out[2] = 64 + ((crc >> 8u) % 256u);
         out[3] = 64 + ((crc >> 16u) % 256u);
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
 
     // Batch 18: hwsynth + mesh basics
@@ -2274,7 +2274,7 @@ extern "C"
         out[0] = 0x4A544147ULL;  // "JTAG"
         out[1] = static_cast<uint64_t>(crc);
         out[2] = g_hwsynthState.lastResourceScore;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_hwsynth_analyze_memhier(const void* memSpec, void* outAnalysis)
     {
@@ -2293,7 +2293,7 @@ extern "C"
         out[0] = 1 + (crc % 16u);            // cache levels estimate
         out[1] = 64 + ((crc >> 8u) % 512u);  // bandwidth score
         out[2] = 1 + ((crc >> 16u) % 64u);   // channel count estimate
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_hwsynth_profile_dataflow(const void* graphSpec, void* outProfile)
     {
@@ -2312,13 +2312,13 @@ extern "C"
         out[0] = 1 + (crc % 1024u);           // nodes
         out[1] = 1 + ((crc >> 10u) % 4096u);  // edges
         out[2] = 1 + ((crc >> 22u) % 100u);   // pipeline stages
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_hwsynth_shutdown()
     {
         std::lock_guard<std::mutex> lock(g_runtimeShimMutex);
         g_hwsynthState = {};
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_hwsynth_init(const void* initSpec)
     {
@@ -2331,7 +2331,7 @@ extern "C"
         g_hwsynthState.initialized = true;
         g_hwsynthState.lastResourceScore =
             static_cast<uint64_t>(crc32Bytes(static_cast<const uint8_t*>(initSpec), 64) % 10000u);
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
 #endif // 0
 
@@ -2351,7 +2351,7 @@ extern "C"
         auto* out = static_cast<uint64_t*>(outDelta);
         out[0] = static_cast<uint64_t>(crc);
         out[1] = g_meshState.deltaOps;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_mesh_get_stats(void* outStats)
     {
@@ -2369,7 +2369,7 @@ extern "C"
         out[5] = g_meshState.closestLookups;
         out[6] = g_meshState.verifyCalls;
         out[7] = g_meshState.verifyPass;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
 
     // Batch 19: mesh orchestration
@@ -2393,7 +2393,7 @@ extern "C"
     {
         std::lock_guard<std::mutex> lock(g_runtimeShimMutex);
         g_meshState = {};
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_mesh_fedavg_aggregate(const void* lhs, const void* rhs, void* out)
     {
@@ -2414,7 +2414,7 @@ extern "C"
             dst[i] = 0.5f * (a[i] + b[i]);
         }
         g_meshState.aggregateOps += 1;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_mesh_crdt_merge(const void* lhs, const void* rhs, void* out)
     {
@@ -2435,7 +2435,7 @@ extern "C"
             dst[i] = (a[i] > b[i]) ? a[i] : b[i];
         }
         g_meshState.mergeOps += 1;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_mesh_dht_xor_distance(const void* lhs, const void* rhs, void* out)
     {
@@ -2456,7 +2456,7 @@ extern "C"
             dst[i] = a[i] ^ b[i];
         }
         g_meshState.xorOps += 1;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_mesh_init(const void* configBlob)
     {
@@ -2468,7 +2468,7 @@ extern "C"
         g_meshState = {};
         g_meshState.initialized = true;
         g_meshState.initCrc = crc32Bytes(static_cast<const uint8_t*>(configBlob), 64);
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_mesh_zkp_verify(const void* proofBlob, const void* publicBlob)
     {
@@ -2563,7 +2563,7 @@ extern "C"
         auto* out = static_cast<uint64_t*>(outProofBlob);
         out[0] = proof;
         out[1] = g_meshState.initCrc;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_mesh_topology_active_count()
     {
@@ -2596,7 +2596,7 @@ extern "C"
         }
         g_meshState.lastBitfield = bitfield;
         *static_cast<uint64_t*>(outBitfield) = bitfield;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_mesh_gossip_disseminate(const void* gossipPayload)
     {
@@ -2632,13 +2632,13 @@ extern "C"
             dst[i] = static_cast<uint8_t>(src[i] ^ static_cast<uint8_t>((i * 37u) & 0xFFu));
         }
         g_speciatorState.mutations += 1;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_speciator_shutdown()
     {
         std::lock_guard<std::mutex> lock(g_runtimeShimMutex);
         g_speciatorState = {};
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_speciator_gen_variant(const void* parentGenome, void* outVariant)
     {
@@ -2653,7 +2653,7 @@ extern "C"
         }
         std::lock_guard<std::mutex> lock(g_runtimeShimMutex);
         g_speciatorState.variantsCreated += 1;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_speciator_get_stats(void* outStats)
     {
@@ -2672,7 +2672,7 @@ extern "C"
         out[6] = g_speciatorState.crossovers;
         out[7] = g_speciatorState.evaluations;
         out[8] = g_speciatorState.lastScore;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_speciator_create_genome(const void* seedData, void* outGenome)
     {
@@ -2689,7 +2689,7 @@ extern "C"
             out[i] = static_cast<uint8_t>(seed[i] + static_cast<uint8_t>(i));
         }
         g_speciatorState.genomesCreated += 1;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_speciator_crossover(const void* genomeA, const void* genomeB, void* outGenome)
     {
@@ -2710,7 +2710,7 @@ extern "C"
             out[i] = (i % 2 == 0) ? a[i] : b[i];
         }
         g_speciatorState.crossovers += 1;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_speciator_speciate(const void* populationBlob, void* outSpecies)
     {
@@ -2724,7 +2724,7 @@ extern "C"
         g_speciatorState.generation += 1;
         g_speciatorState.speciesCount = 1u + (crc % 12u);
         *static_cast<uint64_t*>(outSpecies) = g_speciatorState.speciesCount;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
 
     // Batch 22: speciator/neural bridge
@@ -2743,7 +2743,7 @@ extern "C"
         g_speciatorState.evaluations += 1;
         g_speciatorState.lastScore = static_cast<uint64_t>(crc % 100000u);
         *static_cast<uint64_t*>(outScore) = g_speciatorState.lastScore;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_speciator_compete(const void* candidateSet, void* outWinnerScore)
     {
@@ -2760,7 +2760,7 @@ extern "C"
         g_speciatorState.competitions += 1;
         g_speciatorState.lastScore = static_cast<uint64_t>(50000u + (crc % 50000u));
         *static_cast<uint64_t*>(outWinnerScore) = g_speciatorState.lastScore;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_speciator_migrate(const void* migrationBlob, void* outMigrationResult)
     {
@@ -2780,7 +2780,7 @@ extern "C"
         auto* out = static_cast<uint64_t*>(outMigrationResult);
         out[0] = moved;
         out[1] = g_speciatorState.speciesCount;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_speciator_init(const void* initBlob)
     {
@@ -2795,7 +2795,7 @@ extern "C"
         g_speciatorState.generation = 1;
         g_speciatorState.speciesCount = 1u + (crc % 8u);
         g_speciatorState.lastScore = crc % 100000u;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_speciator_select(const void* populationBlob, void* outSelection)
     {
@@ -2814,7 +2814,7 @@ extern "C"
         auto* out = static_cast<uint64_t*>(outSelection);
         out[0] = selectedIndex;
         out[1] = g_speciatorState.selections;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_neural_classify_intent(const void* featureBlob, uint32_t featureCount, void* outIntent)
     {
@@ -2832,7 +2832,7 @@ extern "C"
         g_neuralState.classifyCalls += 1;
         g_neuralState.lastIntent = crc % 12u;
         *static_cast<uint32_t*>(outIntent) = static_cast<uint32_t>(g_neuralState.lastIntent);
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_neural_haptic_pulse(uint32_t durationMs, uint32_t intensity)
     {
@@ -2871,7 +2871,7 @@ extern "C"
         out[1] = static_cast<uint8_t>((crc >> 8u) & 0xFFu);
         out[2] = static_cast<uint8_t>((crc >> 16u) & 0xFFu);
         out[3] = static_cast<uint8_t>((crc >> 24u) & 0xFFu);
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_neural_acquire_eeg(void* outSamples, uint32_t sampleCount)
     {
@@ -2891,7 +2891,7 @@ extern "C"
             samples[i] = std::sin(2.0f * 3.1415926f * 10.0f * t) * 0.5f;
         }
         g_neuralState.eegSamplesCaptured += sampleCount;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_neural_adapt(const void* feedbackBlob, void* outAdaptedState)
     {
@@ -2910,7 +2910,7 @@ extern "C"
         auto* out = static_cast<uint64_t*>(outAdaptedState);
         out[0] = g_neuralState.adaptCalls;
         out[1] = g_neuralState.lastEventScore;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_neural_fft_decompose(const void* signalBlob, uint32_t sampleCount, void* outSpectrum)
     {
@@ -2936,7 +2936,7 @@ extern "C"
             return -1;
         }
         g_neuralState.fftCalls += 1;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_neural_init(const void* initBlob)
     {
@@ -2949,7 +2949,7 @@ extern "C"
         g_neuralState = {};
         g_neuralState.initialized = true;
         g_neuralState.sampleRateHz = 128u + (crc % 384u);
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_neural_calibrate(const void* calibrationBlob, uint32_t sampleCount)
     {
@@ -2966,7 +2966,7 @@ extern "C"
         }
         g_neuralState.calibrations += 1;
         g_neuralState.lastEventScore = crc % 2048u;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_neural_detect_event(const void* signalBlob, uint32_t sampleCount)
     {
@@ -3003,7 +3003,7 @@ extern "C"
         {
             out[i] = static_cast<uint8_t>((seed + i * 17u) & 0xFFu);
         }
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_neural_extract_csp(const void* eegBlob, uint32_t sampleCount, void* outFeatures)
     {
@@ -3026,13 +3026,13 @@ extern "C"
         out[1] = static_cast<float>(energy / static_cast<double>(sampleCount));
         out[2] = static_cast<float>(std::sqrt(varProxy));
         out[3] = static_cast<float>(sampleCount);
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_neural_shutdown()
     {
         std::lock_guard<std::mutex> lock(g_runtimeShimMutex);
         g_neuralState = {};
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_neural_get_stats(void* outStats)
     {
@@ -3055,7 +3055,7 @@ extern "C"
         out[10] = g_neuralState.lastCommandCrc;
         out[11] = g_neuralState.lastEventScore;
         out[12] = g_neuralState.sampleRateHz;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
 
     #ifndef RAWRXD_DISABLE_DUPLICATE_SHIMS
@@ -3076,7 +3076,7 @@ extern "C"
         auto* out = static_cast<uint64_t*>(outArtifact);
         out[0] = g_omegaState.generatedArtifacts;
         out[1] = crc;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_omega_agent_step(const void* stateBlob, void* outState)
     {
@@ -3095,13 +3095,13 @@ extern "C"
         auto* out = static_cast<uint64_t*>(outState);
         out[0] = g_omegaState.steps;
         out[1] = crc;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_omega_shutdown()
     {
         std::lock_guard<std::mutex> lock(g_runtimeShimMutex);
         g_omegaState = {};
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
 
     // Batch 25: omega orchestrator continued
@@ -3122,7 +3122,7 @@ extern "C"
         out[0] = g_omegaState.plans;
         out[1] = 1u + (crc % 64u);
         out[2] = crc;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_omega_evolve_improve(const void* baselineBlob, void* outCandidate)
     {
@@ -3141,7 +3141,7 @@ extern "C"
         auto* out = static_cast<uint64_t*>(outCandidate);
         out[0] = g_omegaState.lastScore;
         out[1] = g_omegaState.evolutions;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_omega_init(const void* initBlob)
     {
@@ -3154,7 +3154,7 @@ extern "C"
         g_omegaState = {};
         g_omegaState.initialized = true;
         g_omegaState.lastStateCrc = crc;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_omega_get_stats(void* outStats)
     {
@@ -3178,7 +3178,7 @@ extern "C"
         out[11] = g_omegaState.pipelineRuns;
         out[12] = g_omegaState.lastScore;
         out[13] = g_omegaState.lastStateCrc;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_omega_verify_test(const void* candidateBlob, void* outResult)
     {
@@ -3220,7 +3220,7 @@ extern "C"
         auto* out = static_cast<uint64_t*>(outChoice);
         out[0] = choice;
         out[1] = g_omegaState.architectureChoices;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_omega_agent_spawn(const void* agentSpec, void* outAgentHandle)
     {
@@ -3238,7 +3238,7 @@ extern "C"
         auto* out = static_cast<uint64_t*>(outAgentHandle);
         out[0] = g_omegaState.agentsSpawned;
         out[1] = crc;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
 
     // Batch 26: omega pipeline + entry stub
@@ -3258,7 +3258,7 @@ extern "C"
         auto* out = static_cast<uint64_t*>(outSummary);
         out[0] = g_omegaState.monitorEvents;
         out[1] = crc % 1000u;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_omega_deploy_distribute(const void* artifactBlob, void* outDeployment)
     {
@@ -3276,7 +3276,7 @@ extern "C"
         auto* out = static_cast<uint64_t*>(outDeployment);
         out[0] = g_omegaState.deployOps;
         out[1] = 1u + (crc % 8u);  // deployment target count
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_omega_execute_pipeline(const void* planBlob, void* outExecStats)
     {
@@ -3296,7 +3296,7 @@ extern "C"
         out[0] = g_omegaState.pipelineRuns;
         out[1] = g_omegaState.lastScore;
         out[2] = 1u + (crc % 16u);  // stage count
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_omega_ingest_requirement(const void* requirementBlob, void* outSummary)
     {
@@ -3315,7 +3315,7 @@ extern "C"
         auto* out = static_cast<uint64_t*>(outSummary);
         out[0] = g_omegaState.generatedArtifacts;
         out[1] = crc;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     int asm_omega_world_model_update(const void* worldBlob, void* outState)
     {
@@ -3334,13 +3334,13 @@ extern "C"
         auto* out = static_cast<uint64_t*>(outState);
         out[0] = g_omegaState.steps;
         out[1] = crc;
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0;
+        return 0;
     }
     #endif
 
     int asm_perf_get_slot_count_v2()
     {
-        std::cout << "DEBUG: ArgCount: " << argc << std::endl; return 0; // Stub
+        return 0; // Stub
     }
 
     // Batch 28: deflate + masm agent failure

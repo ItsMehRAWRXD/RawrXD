@@ -8,7 +8,7 @@ MOECONFIG_TOP_K        EQU 4   ; DWORD @  +4
 MOECONFIG_HIDDEN_DIM   EQU 8   ; DWORD @  +8
 MOECONFIG_EXPERT_BYTES EQU 24  ; QWORD @ +24  (+4 pad after weight_dtype)
 MOECONFIG_WEIGHTS_BASE EQU 32  ; QWORD @ +32
-
+.code
 ; ============================================================================
 ; SparseGather_Initialize
 ;   In:  RCX = MoeConfig* config,  RDX = telemetry_handle (unused)

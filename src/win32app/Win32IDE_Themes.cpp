@@ -1304,6 +1304,13 @@ void Win32IDE::applyThemeToAllControls() {
 void Win32IDE::setWindowTransparency(BYTE alpha) {
     if (!m_hwndMain) return;
 
+    // A zero alpha on the top-level window makes the IDE effectively disappear.
+    // Treat corrupted or invalid startup values as fully opaque recovery.
+    if (alpha == 0) {
+        alpha = 255;
+        LOG_WARNING("Invalid window alpha 0 detected; restoring fully opaque main window");
+    }
+
     m_windowAlpha = alpha;
     m_currentTheme.windowAlpha = alpha;
 

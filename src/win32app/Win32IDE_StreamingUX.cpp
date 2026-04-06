@@ -431,45 +431,6 @@ void Win32IDE::updateContextSliderLabel() {
 }
 
 // ============================================================================
-// onContextSizeChanged — Handler for context slider value changes
-// Maps slider position (0-6) to token count and propagates to engine.
-// ============================================================================
-void Win32IDE::onContextSizeChanged(int newValue) {
-    static const size_t contextSizes[] = { 4096, 32768, 65536, 131072, 262144, 524288, 1048576 };
-    
-    if (newValue < 0 || newValue > 6) {
-        newValue = 0;
-    }
-    
-    m_currentContextSize = contextSizes[newValue];
-    m_inferenceConfig.contextWindow = static_cast<int>(m_currentContextSize);
-
-    if (m_nativeEngine) {
-        m_nativeEngine->SetContextSize(m_currentContextSize);
-    }
-    if (m_agenticBridge) {
-        std::string label;
-        switch (newValue) {
-            case 0: label = "4k"; break;
-            case 1: label = "32k"; break;
-            case 2: label = "64k"; break;
-            case 3: label = "128k"; break;
-            case 4: label = "256k"; break;
-            case 5: label = "512k"; break;
-            case 6: label = "1m"; break;
-            default: label = "4k"; break;
-        }
-        m_agenticBridge->SetContextSize(label);
-    }
-
-    updateContextSliderLabel();
-    appendToOutput("Context size changed to " + std::to_string(m_currentContextSize) + " tokens\n", "Output", OutputSeverity::Info);
-
-    // Update context window display with new max
-    setContextWindowMax(static_cast<int>(m_currentContextSize));
-}
-
-// ============================================================================
 // CONTEXT WINDOW TOKEN USAGE DISPLAY
 // ============================================================================
 // Shows a live breakdown of token budget consumption in the status bar:

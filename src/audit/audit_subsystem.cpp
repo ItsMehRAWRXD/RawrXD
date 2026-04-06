@@ -398,10 +398,12 @@ public:
         while (count < max_events && std::getline(in, line)) {
             try {
                 json j = json::parse(line);
-                const auto seq_no = j.at("chain").at("sequence_number").get<uint64_t>();
-                const auto prev_hex = j.at("chain").at("previous_hash").get<std::string>();
-                const auto event_hex = j.at("chain").at("event_hash").get<std::string>();
-                const auto recompute_hex = j.at("_verify").at("recompute_hash").get<std::string>();
+                const auto& chain = j.at("chain");
+                const auto& verify = j.at("_verify");
+                const auto seq_no = chain.at("sequence_number").get<uint64_t>();
+                const auto prev_hex = chain.at("previous_hash").get<std::string>();
+                const auto event_hex = chain.at("event_hash").get<std::string>();
+                const auto recompute_hex = verify.at("recompute_hash").get<std::string>();
 
                 if (seq_no != expected_seq || prev_hex != expected_prev.to_hex() || event_hex != recompute_hex) {
                     ok = false;
@@ -453,10 +455,13 @@ public:
                 ev.timestamp = std::chrono::system_clock::now();
                 ev.severity = sev;
                 ev.category = cat;
-                ev.action.endpoint = j.at("action").at("endpoint").get<std::string>();
-                ev.outcome.success = j.at("outcome").at("success").get<bool>();
-                ev.outcome.state_changed = j.at("outcome").at("state_changed").get<bool>();
-                ev.chain.sequence_number = j.at("chain").at("sequence_number").get<uint64_t>();
+                const auto& action = j.at("action");
+                const auto& outcome = j.at("outcome");
+                const auto& chain = j.at("chain");
+                ev.action.endpoint = action.at("endpoint").get<std::string>();
+                ev.outcome.success = outcome.at("success").get<bool>();
+                ev.outcome.state_changed = outcome.at("state_changed").get<bool>();
+                ev.chain.sequence_number = chain.at("sequence_number").get<uint64_t>();
 
                 (void)start;
                 (void)end;

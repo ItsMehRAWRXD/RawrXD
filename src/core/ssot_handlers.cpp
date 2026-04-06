@@ -4368,7 +4368,7 @@ CommandResult handleModelFinetune(const CommandContext& ctx)
 CommandResult handleModelList(const CommandContext& ctx)
 {
     if (ctx.isGui && ctx.idePtr)
-        return routeToIde(ctx, 11001, "model.list");
+        return routeToIde(ctx, 1036, "model.list");
     const std::vector<std::string> discovered = discoverModelArtifacts();
     std::string active;
     std::string lastQuantized;

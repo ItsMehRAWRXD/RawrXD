@@ -80,6 +80,12 @@
 #define IDM_EDIT_REPLACE 2017
 #endif
 
+// Plan Orchestrator command IDs
+#define IDM_PLAN_ORCHESTRATOR_START 4164
+#define IDM_PLAN_ORCHESTRATOR_STOP 4165
+#define IDM_PLAN_ORCHESTRATOR_VIEW_STATUS 4166
+#define IDM_PLAN_ORCHESTRATOR_VIEW_PLAN 4167
+
 // ============================================================================
 // Window Class Name
 // ============================================================================
@@ -148,9 +154,10 @@ Win32IDE::~Win32IDE()
     }
 }
 
-// ============================================================================
+extern "C" void Layout_CalculateAndApply(HWND hwnd, void* pIDE, int w, int h);
+extern "C" void Layout_GDI_Blit_Debug(HWND hwnd, void* pIDE);
+
 // WindowProc - Static callback that routes to instance handleMessage
-// ============================================================================
 LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     Win32IDE* pThis = nullptr;
@@ -179,6 +186,25 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 static void forceWindowToForeground(HWND hwnd);
 static void runWindowVisibilityWatchdog(HWND hwnd);
 static void drawLayoutDebugOverlay(HWND hwnd, HDC hdc);
+
+static void restoreWindowOpacityIfNeeded(HWND hwnd)
+{
+    if (!hwnd || !IsWindow(hwnd))
+        return;
+
+    const LONG_PTR exStyle = GetWindowLongPtr(hwnd, GWL_EXSTYLE);
+    if ((exStyle & WS_EX_LAYERED) == 0)
+        return;
+
+    COLORREF colorKey = 0;
+    BYTE alpha = 255;
+    DWORD flags = 0;
+    if (GetLayeredWindowAttributes(hwnd, &colorKey, &alpha, &flags) && (flags & LWA_ALPHA) && alpha == 0)
+    {
+        SetLayeredWindowAttributes(hwnd, 0, 255, LWA_ALPHA);
+        OutputDebugStringA("[Win32IDE] Recovered main window from zero-alpha transparency\n");
+    }
+}
 
 static constexpr UINT_PTR IDT_VISIBILITY_WATCHDOG = 0x7D11;
 static constexpr UINT_PTR IDT_GPU_TELEMETRY = 0x7D12;  // 2-second backend/GPU status refresh
@@ -227,6 +253,8 @@ static void runWindowVisibilityWatchdog(HWND hwnd)
 {
     if (!hwnd || !IsWindow(hwnd))
         return;
+
+    restoreWindowOpacityIfNeeded(hwnd);
 
     if (IsIconic(hwnd))
     {
@@ -584,6 +612,10 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
+            
+            // Invoke Pure MASM GDI Debug Overlay (Batch 1/8)
+            // Layout_GDI_Blit_Debug(hwnd, this); // [STUBBED to fix LNK2001]
+
             if (!m_backgroundBrush)
             {
                 m_backgroundBrush = CreateSolidBrush(RGB(30, 30, 30));
@@ -968,11 +1000,60 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             return 0;
         }
 
+        // Async model-load completion from background worker
+        case WM_APP + 302:
+        {  // WM_MODEL_LOAD_DONE
+            std::unique_ptr<AsyncModelLoadResult> result(reinterpret_cast<AsyncModelLoadResult*>(lParam));
+            if (!result)
+            {
+                return 0;
+            }
+
+            {
+                std::lock_guard<std::mutex> lock(m_asyncModelLoadMutex);
+                m_asyncModelLoadRunning = false;
+            }
+
+            if (result->bridgeOk && !result->ggufOk)
+            {
+                appendToOutput("Model loaded into Agentic Bridge (streaming GGUF skipped).\n", "Output",
+                               OutputSeverity::Info);
+            }
+
+            if (result->ggufOk || result->bridgeOk)
+            {
+                std::string msg = "✅ Model loaded and ready for inference!\r\n\r\n"
+                                  "You can now ask questions and use agentic tasks in the chat panel.\r\n"
+                                  "Try: 'hello', 'model info', or request a task (Agent mode allows tool execution).";
+                appendCopilotResponse(msg);
+            }
+            else
+            {
+                appendToOutput("❌ Failed to load model: " + result->filepath +
+                                   " (not a valid GGUF and native load failed).",
+                               "Errors", OutputSeverity::Error);
+            }
+
+            if (m_hwndMain && IsWindow(m_hwndMain))
+            {
+                RECT rc = {};
+                if (GetClientRect(m_hwndMain, &rc))
+                {
+                    onSize(rc.right, rc.bottom);
+                }
+                ShowWindow(m_hwndMain, SW_SHOW);
+                InvalidateRect(m_hwndMain, nullptr, TRUE);
+                UpdateWindow(m_hwndMain);
+            }
+            return 0;
+        }
+
         // Visibility watchdog request (posted from watchdog worker thread)
         case WM_APP + 1:
         {
             if (m_hwndMain && IsWindow(m_hwndMain))
             {
+                restoreWindowOpacityIfNeeded(m_hwndMain);
                 ShowWindow(m_hwndMain, (int)wParam);
                 SetForegroundWindow(m_hwndMain);
             }
@@ -1030,6 +1111,7 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             {
                 if (m_hwndMain && IsWindow(m_hwndMain))
                 {
+                    restoreWindowOpacityIfNeeded(m_hwndMain);
                     if (IsIconic(m_hwndMain))
                         ShowWindow(m_hwndMain, SW_RESTORE);
                     ShowWindow(m_hwndMain, SW_SHOW);
@@ -1415,6 +1497,7 @@ void Win32IDE::showMainWindowSafe()
         return;
 
     logWindowPlacementSnapshot(m_hwndMain, "showMainWindowSafe:before");
+    restoreWindowOpacityIfNeeded(m_hwndMain);
 
     if (IsIconic(m_hwndMain))
         ShowWindow(m_hwndMain, SW_RESTORE);
@@ -1427,6 +1510,7 @@ void Win32IDE::showMainWindowSafe()
     SetForegroundWindow(m_hwndMain);
     SetActiveWindow(m_hwndMain);
     forceWindowToForeground(m_hwndMain);
+    restoreWindowOpacityIfNeeded(m_hwndMain);
     SetTimer(m_hwndMain, IDT_VISIBILITY_WATCHDOG, 1000, nullptr);
     SetTimer(m_hwndMain, IDT_GPU_TELEMETRY, 2000, nullptr);
     FLASHWINFO fwi = {sizeof(FLASHWINFO), m_hwndMain, FLASHW_ALL | FLASHW_TIMERNOFG, 3, 0};
@@ -1824,6 +1908,7 @@ void Win32IDE::onSize(int width, int height)
 
     // Line number gutter (left of editor)
     int gutterWidth = m_hwndLineNumbers ? m_lineNumberWidth : 0;
+    int editorW = 0;
     if (m_hwndLineNumbers)
     {
         moveChild(m_hwndLineNumbers, editorLeft, breadcrumbBottom, gutterWidth, editorContentHeight, TRUE);
@@ -1834,7 +1919,7 @@ void Win32IDE::onSize(int width, int height)
     {
         int minimapW = (m_minimapVisible && m_hwndMinimap) ? m_minimapWidth : 0;
         int editorX = editorLeft + gutterWidth;
-        int editorW = editorWidth - gutterWidth - minimapW;
+        editorW = editorWidth - gutterWidth - minimapW;
         editorW = (std::max)(0, editorW);
         moveChild(m_hwndEditor, editorX, breadcrumbBottom, editorW, editorContentHeight, TRUE);
 
@@ -1909,6 +1994,36 @@ void Win32IDE::onSize(int width, int height)
     {
         EndDeferWindowPos(hdwp);
         hdwp = nullptr;
+    }
+
+    // Eyes fix: after a WM_SIZE pass, explicitly restore visibility of key panes when they have valid bounds.
+    if (m_hwndEditor && editorW > 0 && editorContentHeight > 0)
+    {
+        ShowWindow(m_hwndEditor, SW_SHOWNA);
+    }
+    if (m_hwndLineNumbers && gutterWidth > 0 && editorContentHeight > 0)
+    {
+        ShowWindow(m_hwndLineNumbers, SW_SHOWNA);
+    }
+    if (m_hwndTabBar)
+    {
+        ShowWindow(m_hwndTabBar, SW_SHOWNA);
+    }
+    if (m_hwndSidebar)
+    {
+        ShowWindow(m_hwndSidebar, m_sidebarVisible ? SW_SHOWNA : SW_HIDE);
+    }
+    if (m_hwndSecondarySidebar)
+    {
+        ShowWindow(m_hwndSecondarySidebar, m_secondarySidebarVisible ? SW_SHOWNA : SW_HIDE);
+    }
+    if (m_hwndOutputTabs)
+    {
+        ShowWindow(m_hwndOutputTabs, panelHeight > 0 ? SW_SHOWNA : SW_HIDE);
+    }
+    if (m_hwndPowerShellPanel)
+    {
+        ShowWindow(m_hwndPowerShellPanel, (m_powerShellPanelVisible && powerShellHeight > 0) ? SW_SHOWNA : SW_HIDE);
     }
 
     // Also layout internal PowerShell controls
@@ -3797,6 +3912,87 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
             return;
         case IDM_BUILD_CLEAN:
             runBuildInBackground(m_gitRepoPath, "--target clean");
+            return;
+        case IDM_PLAN_ORCHESTRATOR_START:
+            if (m_planOrchestrator)
+            {
+                // Prompt user for goal
+                std::string goal = "Implement a hello world function in C++";
+                // For now, use a fixed goal. In future, show a dialog to input goal.
+                std::string workspaceRoot = m_projectRoot;
+                if (workspaceRoot.empty())
+                    workspaceRoot = m_explorerRootPath;
+                if (workspaceRoot.empty())
+                    workspaceRoot = m_currentDirectory;
+                if (workspaceRoot.empty() && !m_currentFile.empty())
+                {
+                    size_t lastSlash = m_currentFile.find_last_of("\\/");
+                    if (lastSlash != std::string::npos)
+                        workspaceRoot = m_currentFile.substr(0, lastSlash);
+                }
+                if (workspaceRoot.empty())
+                    workspaceRoot = ".";
+
+                // Run planning and execution asynchronously
+                std::thread([this, goal, workspaceRoot]() {
+                    auto result = m_planOrchestrator->planAndExecute(goal, workspaceRoot, false);
+                    if (result.success) {
+                        appendToOutput("✅ Plan Orchestrator: Task completed successfully\n", "Output", OutputSeverity::Info);
+                    } else {
+                        appendToOutput("❌ Plan Orchestrator: Task failed - " + result.errorMessage + "\n", "Errors", OutputSeverity::Error);
+                    }
+                }).detach();
+
+                if (m_hwndStatusBar)
+                    SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)L"Plan Orchestrator started");
+            }
+            else
+            {
+                MessageBoxW(m_hwndMain, L"Plan Orchestrator not initialized", L"Error", MB_OK | MB_ICONERROR);
+            }
+            return;
+        case IDM_PLAN_ORCHESTRATOR_STOP:
+            // For now, just show a message. Stopping is not implemented yet.
+            MessageBoxW(m_hwndMain, L"Stop functionality not yet implemented", L"Plan Orchestrator", MB_OK | MB_ICONINFORMATION);
+            return;
+        case IDM_PLAN_ORCHESTRATOR_VIEW_STATUS:
+            if (m_planOrchestrator)
+            {
+                auto steps = m_planOrchestrator->getPlan();
+                std::string status = "Plan Status:\n";
+                status += "Total steps: " + std::to_string(steps.size()) + "\n";
+                status += "Completed: " + std::to_string(std::count_if(steps.begin(), steps.end(), [](const auto& s){ return s.isComplete; })) + "\n";
+                status += std::string("Complete: ") + (m_planOrchestrator->isComplete() ? "Yes" : "No") + "\n";
+                MessageBoxA(m_hwndMain, status.c_str(), "Plan Orchestrator Status", MB_OK | MB_ICONINFORMATION);
+            }
+            else
+            {
+                MessageBoxW(m_hwndMain, L"Plan Orchestrator not initialized", L"Error", MB_OK | MB_ICONERROR);
+            }
+            return;
+        case IDM_PLAN_ORCHESTRATOR_VIEW_PLAN:
+            if (m_planOrchestrator)
+            {
+                auto steps = m_planOrchestrator->getPlan();
+                std::string current_plan;
+                current_plan = "Current Plan:\n";
+                for (size_t i = 0; i < steps.size(); ++i) {
+                    current_plan += std::to_string(i + 1) + ". " + steps[i].description;
+                    current_plan += (steps[i].isComplete ? " [Done]" : " [Pending]");
+                    current_plan += "\n";
+                    if (!steps[i].result.empty()) {
+                        current_plan += "   Result: " + steps[i].result + "\n";
+                    }
+                }
+                if (current_plan == "Current Plan:\n") {
+                    current_plan = "No current plan available";
+                }
+                MessageBoxA(m_hwndMain, current_plan.c_str(), "Current Plan", MB_OK | MB_ICONINFORMATION);
+            }
+            else
+            {
+                MessageBoxW(m_hwndMain, L"Plan Orchestrator not initialized", L"Error", MB_OK | MB_ICONERROR);
+            }
             return;
         default:
             break;

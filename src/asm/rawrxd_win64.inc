@@ -4,7 +4,7 @@
 ; Provides:
 ;   1. invoke macro for x64 calling convention (up to 6 args)
 
-NIFNDEF RAWRXD_WIN64_INC
+IFNDEF RAWRXD_WIN64_INC
 RAWRXD_WIN64_INC EQU 1
 ;   2. EXTERN declarations for kernel32/ntdll APIs used by modules
 ;   3. Common constants (NULL, TRUE, FALSE, INVALID_HANDLE_VALUE)

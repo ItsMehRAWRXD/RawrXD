@@ -1523,6 +1523,9 @@ static bool FindGGUFMetadataArrayCount(const uint8_t* base, uint64_t nKV,
 
         if (KeyMatches(key, keyName) && vtype == GGUF_TYPE_ARRAY) {
             ptr += 4;
+            // The array header in GGUF is: [subtype(u32)][count(u64)]
+            // ptr now points to subtype. Skip it to get to count.
+            ptr += 4;
             *outCount = *(const uint64_t*)ptr;
             return true;
         }
@@ -1530,6 +1533,27 @@ static bool FindGGUFMetadataArrayCount(const uint8_t* base, uint64_t nKV,
         ptr = SkipGGUFValue(ptr, vtype);
     }
     return false;
+}
+
+static const uint8_t* FindGGUFMetadataArrayPtr(const uint8_t* base, uint64_t nKV,
+                                              const char* keyName, uint32_t* outType) {
+    if (!base || !keyName) return nullptr;
+    const uint8_t* ptr = base + sizeof(GGUFHeader);
+
+    for (uint64_t i = 0; i < nKV; i++) {
+        char key[256] = {0};
+        ptr = ReadGGUFString(ptr, key, 256);
+        uint32_t vtype = *(const uint32_t*)ptr;
+        ptr += 4;
+
+        if (KeyMatches(key, keyName) && vtype == GGUF_TYPE_ARRAY) {
+            if (outType) *outType = *(const uint32_t*)ptr;
+            return ptr + 4; // Points to count(u64)
+        }
+
+        ptr = SkipGGUFValue(ptr, vtype);
+    }
+    return nullptr;
 }
 
 // ============================================================================
@@ -4381,21 +4405,69 @@ static uint32_t SimpleTokenize(const char* text, int32_t* out_tokens, size_t max
     return count;
 }
 
-static uint32_t SimpleDetokenize(const int32_t* tokens, uint32_t token_count,
-                                  char* out_text, size_t max_size) {
+// ============================================================================
+// Tokenizer/Detokenizer Exports (Phase 5: Real Implementation)
+// ============================================================================
+
+extern "C" __declspec(dllexport) uint32_t __stdcall SimpleDetokenize(const int32_t* tokens, uint32_t token_count,
+                                                                    char* out_text, size_t max_size) {
     if (!tokens || !out_text || max_size == 0) return 0;
     
+    // Safety: ensure we have a model context before scanning
+    if (!g_mappedBase) {
+        uint32_t out_pos = 0;
+        for (uint32_t i = 0; i < token_count && out_pos < max_size - 16; i++) {
+            // EMERGENCY FALLBACK: If vocab isn't found, convert token IDs to printable tags
+            out_pos += sprintf_s(out_text + out_pos, max_size - out_pos, "[T%d]", tokens[i]);
+        }
+        out_text[out_pos] = 0;
+        return out_pos;
+    }
+
     uint32_t out_pos = 0;
     
+    // Look up vocab tokens array in metadata
+    uint32_t atype = 0;
+    const uint8_t* arrayPtr = FindGGUFMetadataArrayPtr(g_mappedBase, g_nKV, "tokenizer.ggml.tokens", &atype);
+
+    if (!arrayPtr) {
+        // EMERGENCY FALLBACK: If vocab isn't found, convert token IDs to printable tags
+        for (uint32_t i = 0; i < token_count && out_pos < max_size - 16; i++) {
+            out_pos += sprintf_s(out_text + out_pos, max_size - out_pos, "[T%d]", tokens[i]);
+        }
+        out_text[out_pos] = 0;
+        return out_pos;
+    }
+
     for (uint32_t i = 0; i < token_count && out_pos < max_size - 1; i++) {
         int32_t token = tokens[i];
         
         // Skip special/control tokens.
-        if (token < 0 || token == g_rawrxd_bos_token_id || token == g_rawrxd_eos_token_id) {
+        if (token < 0 || token == (int32_t)g_rawrxd_bos_token_id || token == (int32_t)g_rawrxd_eos_token_id) {
             continue;
         }
 
-        // Reconstruct byte stream from byte-mapped tokens.
+        // Try metadata lookup if available
+        if (arrayPtr && atype == GGUF_TYPE_STRING && token < (int32_t)g_modelVocabSize) {
+            // GGUF strings in an array are packed: [u64 length][data...]
+            const uint8_t* sptr = arrayPtr + 8; // skip array count (u64)
+            
+            // Advance to the target token index
+            for (int32_t j = 0; j < token; j++) {
+                uint64_t slen = *(const uint64_t*)sptr;
+                sptr += 8 + slen;
+            }
+            
+            uint64_t slen = *(const uint64_t*)sptr;
+            const char* sdata = (const char*)(sptr + 8);
+            
+            for (uint64_t j = 0; j < slen && out_pos < max_size - 1; j++) {
+                out_text[out_pos++] = sdata[j];
+            }
+            continue;
+        }
+
+        // Reconstruct byte stream from byte-mapped tokens (fallback for missing vocab or byte-level tokens)
         if (token >= 256 && token <= 511) {
             out_text[out_pos++] = (char)(token - 256);
         } else if (token >= 0 && token <= 255) {
@@ -4406,10 +4478,6 @@ static uint32_t SimpleDetokenize(const int32_t* tokens, uint32_t token_count,
     out_text[out_pos] = 0;
     return out_pos;
 }
-
-// ============================================================================
-// Tokenizer/Detokenizer Exports (Phase 5: Real Implementation)
-// ============================================================================
 
 extern "C" __declspec(dllexport) RAWRXD_STATUS __stdcall RawrXD_TokenizeInput(const char* prompt, int32_t* tokens, size_t max_tokens, uint32_t* token_count) {
     if (!token_count) return RAWRXD_ERROR_INVALID_PARAM;

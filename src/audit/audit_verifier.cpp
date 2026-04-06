@@ -106,14 +106,18 @@ VerificationReport AuditVerifier::verify(const Config& cfg) {
         ++report.total_events;
         try {
             const json j = json::parse(line);
+            const auto& chain = j.at("chain");
+            const auto& verify = j.at("_verify");
+            const auto& action = j.at("action");
+            const auto& outcome = j.at("outcome");
 
-            const auto seq_no = j.at("chain").at("sequence_number").get<uint64_t>();
-            const auto prev_hex = j.at("chain").at("previous_hash").get<std::string>();
-            const auto event_hex = j.at("chain").at("event_hash").get<std::string>();
-            const auto recompute_hex = j.at("_verify").at("recompute_hash").get<std::string>();
-            const auto endpoint = j.at("action").at("endpoint").get<std::string>();
-            const bool success = j.at("outcome").at("success").get<bool>();
-            const bool state_changed = j.at("outcome").at("state_changed").get<bool>();
+            const auto seq_no = chain.at("sequence_number").get<uint64_t>();
+            const auto prev_hex = chain.at("previous_hash").get<std::string>();
+            const auto event_hex = chain.at("event_hash").get<std::string>();
+            const auto recompute_hex = verify.at("recompute_hash").get<std::string>();
+            const auto endpoint = action.at("endpoint").get<std::string>();
+            const bool success = outcome.at("success").get<bool>();
+            const bool state_changed = outcome.at("state_changed").get<bool>();
 
             if (cfg.verify_chain_hash) {
                 if (seq_no != expected_seq || prev_hex != expected_prev.to_hex() || event_hex != recompute_hex) {

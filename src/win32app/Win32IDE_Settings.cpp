@@ -187,7 +187,8 @@ void from_json(const nlohmann::json& j, SovereignConfig& config)
     }
 
     config.keybindings.clear();
-    for (auto it = j.at("keybindings").begin(); it != j.at("keybindings").end(); ++it)
+    const auto& keybindings = j.at("keybindings");
+    for (auto it = keybindings.begin(); it != keybindings.end(); ++it)
     {
         std::string k = it.key();
         std::string v = it.value().get<std::string>();

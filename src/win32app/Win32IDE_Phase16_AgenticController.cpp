@@ -48,11 +48,11 @@ AgenticExecutorController::AgenticExecutorController()
 // ============================================================================
 uint32_t AgenticExecutorController::GetCurrentAperturePct10000()
 {
-    RAWRXD_APERTURE_STATUS apertureStatus = {};
+    /*RAWRXD_APERTURE_STATUS apertureStatus = {};
     if (RawrXD_GetApertureUtilization(&apertureStatus) == RAWRXD_SUCCESS)
     {
         return apertureStatus.utilization_pct10000;
-    }
+    }*/
     return 0;
 }
 

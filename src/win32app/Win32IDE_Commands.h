@@ -292,6 +292,8 @@
 #define IDC_AI_DEEP_THINK           5002
 #define IDC_AI_DEEP_RESEARCH        5003
 #define IDC_AI_NO_REFUSAL           5004
+#define IDC_AI_MAX_TOKENS_SLIDER    5005
+#define IDC_AI_CONTEXT_SLIDER       5006
 
 // ---- AI Backend Switcher (5037–5047) ----------------------------------------
 #define IDM_BACKEND_SWITCH_LOCAL    5037

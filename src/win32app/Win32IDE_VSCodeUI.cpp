@@ -49,6 +49,44 @@ void TitanDiagnosticForwarder(const char* text)
         free(heapCopy);
     }
 }
+
+std::string sanitizeChatText(const std::string& input)
+{
+    if (input.empty())
+        return input;
+
+    std::string out;
+    out.reserve(input.size());
+
+    for (unsigned char ch : input)
+    {
+        if (ch == '\r' || ch == '\n' || ch == '\t')
+        {
+            out.push_back(static_cast<char>(ch));
+            continue;
+        }
+
+        if (ch >= 32 && ch <= 126)
+            out.push_back(static_cast<char>(ch));
+        else
+            out.push_back(' ');
+    }
+
+    // Collapse repeated spaces for readability in the chat pane.
+    std::string compact;
+    compact.reserve(out.size());
+    bool lastSpace = false;
+    for (char c : out)
+    {
+        const bool isSpace = (c == ' ');
+        if (isSpace && lastSpace)
+            continue;
+        compact.push_back(c);
+        lastSpace = isSpace;
+    }
+
+    return compact;
+}
 }
 
 // SCAFFOLD_270: Status bar and Copilot status
@@ -393,7 +431,7 @@ void Win32IDE::updateSecondarySidebarContent()
                 chatText += "\r\n";
             }
 
-            chatText += "Copilot: " + msg.second + "\r\n\r\n";
+            chatText += "Copilot: " + sanitizeChatText(msg.second) + "\r\n\r\n";
         }
     }
     SetWindowTextA(m_hwndCopilotChatOutput, chatText.c_str());
@@ -434,11 +472,12 @@ void Win32IDE::sendCopilotMessage(const std::string& message)
         // Create callback that appends tokens directly to chat output
         auto tokenCallback = [this](const std::string& token, bool done) {
             if (!token.empty() && m_hwndCopilotChatOutput) {
-                appendStreamingToken(token);
+                const std::string safeToken = sanitizeChatText(token);
+                appendStreamingToken(safeToken);
 
                 // Append token to chat output
                 SendMessage(m_hwndCopilotChatOutput, EM_SETSEL, -1, -1);
-                SendMessage(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE, (LPARAM)token.c_str());
+                SendMessage(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE, (LPARAM)safeToken.c_str());
                 
                 // Auto-scroll to bottom
                 SendMessage(m_hwndCopilotChatOutput, EM_SCROLLCARET, 0, 0);
@@ -474,6 +513,7 @@ void Win32IDE::sendCopilotMessage(const std::string& message)
             RAWRXD_LOG_INFO("Win32IDE_VSCodeUI") << "[sendCopilotMessage] Model is loaded, calling generateResponse...";
             // Use the loaded GGUF model for inference
             response = generateResponse(message);
+            response = sanitizeChatText(response);
             RAWRXD_LOG_INFO("Win32IDE_VSCodeUI") << "[sendCopilotMessage] Inference response: " << response;
             
             // Append local model response to chat
@@ -500,7 +540,7 @@ void Win32IDE::sendCopilotMessage(const std::string& message)
         }
     }
     
-    m_chatHistory.push_back({"assistant", response});
+    m_chatHistory.push_back({"assistant", sanitizeChatText(response)});
 
     // Store accumulated tool actions for this response
     if (m_currentToolActions.totalActions() > 0) {
@@ -530,7 +570,7 @@ void Win32IDE::clearCopilotChat()
 
 void Win32IDE::appendCopilotResponse(const std::string& response)
 {
-    m_chatHistory.push_back({"assistant", response});
+    m_chatHistory.push_back({"assistant", sanitizeChatText(response)});
     updateSecondarySidebarContent();
 }
 

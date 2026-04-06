@@ -5,6 +5,9 @@
 #include <sstream>
 #include <filesystem>
 #include <regex>
+#include <set>
+#include <vector>
+#include <string>
 
 using RawrXD::Agent::ToolRegistry;
 using RawrXD::Agent::ToolResult;
@@ -354,7 +357,8 @@ RawrXD::Agent::ToolDefinition ToolRegistry::BuildDefinition(const json& toolJson
 
     if (toolJson.contains("params")) {
         def.params_schema = toolJson.at("params");
-        for (auto it = toolJson.at("params").begin(); it != toolJson.at("params").end(); ++it) {
+        const auto& params = toolJson.at("params");
+        for (auto it = params.begin(); it != params.end(); ++it) {
             ToolParam param;
             param.name = it.key();
             const json& paramJson = it.value();
@@ -363,10 +367,13 @@ RawrXD::Agent::ToolDefinition ToolRegistry::BuildDefinition(const json& toolJson
             if (paramJson.contains("default")) {
                 param.default_value = paramJson.at("default").dump();
             }
-            if (paramJson.contains("enum") && paramJson.at("enum").is_array()) {
-                for (const auto& val : paramJson.at("enum")) {
+            if (paramJson.contains("enum")) {
+                const auto& enumArray = paramJson.at("enum");
+                if (enumArray.is_array()) {
+                    for (const auto& val : enumArray) {
                     if (val.is_string()) param.enum_values.push_back(val.get<std::string>());
                 }
+            }
             }
             param.max_length = paramJson.value("max_length", 0);
             param.min_int = paramJson.value("min", 0);
@@ -376,27 +383,28 @@ RawrXD::Agent::ToolDefinition ToolRegistry::BuildDefinition(const json& toolJson
     }
 
     if (toolJson.contains("sandbox")) {
-        def.sandbox_schema = toolJson.at("sandbox");
-        if (toolJson.at("sandbox").contains("allow_paths")) {
-            for (const auto& p : toolJson.at("sandbox")["allow_paths"]) {
+        const auto& sandbox = toolJson.at("sandbox");
+        def.sandbox_schema = sandbox;
+        if (sandbox.contains("allow_paths")) {
+            for (const auto& p : sandbox["allow_paths"]) {
                 def.sandbox.allowed_paths.push_back(ExpandPathToken(ToWide(p.get<std::string>())));
             }
         }
-        if (toolJson.at("sandbox").contains("deny_patterns")) {
-            for (const auto& p : toolJson.at("sandbox")["deny_patterns"]) {
+        if (sandbox.contains("deny_patterns")) {
+            for (const auto& p : sandbox["deny_patterns"]) {
                 def.sandbox.deny_patterns.push_back(ToWide(p.get<std::string>()));
             }
         }
-        def.sandbox.max_file_size = toolJson.at("sandbox").value("max_file_size", 0);
-        def.sandbox.timeout_ms = toolJson.at("sandbox").value("timeout_ms", kDefaultTimeoutMs);
-        def.sandbox.memory_limit = static_cast<SIZE_T>(toolJson.at("sandbox").value("memory_limit_mb", 0)) * 1024 * 1024;
-        def.sandbox.capture_output = toolJson.at("sandbox").value("capture_output", true);
-        if (toolJson.at("sandbox").contains("deny_commands")) {
-            for (const auto& p : toolJson.at("sandbox")["deny_commands"]) {
+        def.sandbox.max_file_size = sandbox.value("max_file_size", 0);
+        def.sandbox.timeout_ms = sandbox.value("timeout_ms", kDefaultTimeoutMs);
+        def.sandbox.memory_limit = static_cast<SIZE_T>(sandbox.value("memory_limit_mb", 0)) * 1024 * 1024;
+        def.sandbox.capture_output = sandbox.value("capture_output", true);
+        if (sandbox.contains("deny_commands")) {
+            for (const auto& p : sandbox["deny_commands"]) {
                 def.sandbox.deny_commands.push_back(p.get<std::string>());
             }
         }
-        def.sandbox.require_confirmation = toolJson.at("sandbox").value("require_confirmation", false);
+        def.sandbox.require_confirmation = sandbox.value("require_confirmation", false);
     }
 
     if (def.name == "CodeEdit") {
@@ -407,6 +415,28 @@ RawrXD::Agent::ToolDefinition ToolRegistry::BuildDefinition(const json& toolJson
         def.handler = [this](const json& args, std::string& output) { return HandleStaticAnalysis(args, output); };
     } else if (def.name == "GitOperation") {
         def.handler = [this](const json& args, std::string& output) { return HandleGitOperation(args, output); };
+    } else if (def.name == "read_file") {
+        def.handler = [this](const json& args, std::string& output) { return HandleReadFile(args, output); };
+    } else if (def.name == "write_file") {
+        def.handler = [this](const json& args, std::string& output) { return HandleWriteFile(args, output); };
+    } else if (def.name == "search_files") {
+        def.handler = [this](const json& args, std::string& output) { return HandleSearchFiles(args, output); };
+    } else if (def.name == "execute_command") {
+        def.handler = [this](const json& args, std::string& output) { return HandleExecuteCommand(args, output); };
+    } else if (def.name == "list_directory") {
+        def.handler = [this](const json& args, std::string& output) { return HandleListDirectory(args, output); };
+    } else if (def.name == "get_file_info") {
+        def.handler = [this](const json& args, std::string& output) { return HandleGetFileInfo(args, output); };
+    } else if (def.name == "get_workspace_info") {
+        def.handler = [this](const json& args, std::string& output) { return HandleGetWorkspaceInfo(args, output); };
+    } else if (def.name == "apply_edit") {
+        def.handler = [this](const json& args, std::string& output) { return HandleApplyEdit(args, output); };
+    } else if (def.name == "get_symbols") {
+        def.handler = [this](const json& args, std::string& output) { return HandleGetSymbols(args, output); };
+    } else if (def.name == "get_completions") {
+        def.handler = [this](const json& args, std::string& output) { return HandleGetCompletions(args, output); };
+    } else if (def.name == "get_diagnostics") {
+        def.handler = [this](const json& args, std::string& output) { return HandleGetDiagnostics(args, output); };
     }
 
     return def;
@@ -725,5 +755,641 @@ ToolResult ToolRegistry::HandleGitOperation(const json& args, std::string& outpu
 
     output = procOutput;
     return exitCode == 0 ? ToolResult::Success : ToolResult::ExecutionError;
+}
+
+ToolResult ToolRegistry::HandleReadFile(const json& args, std::string& output) {
+    if (!args.contains("path") || !args.at("path").is_string()) {
+        output = "read_file missing path parameter";
+        return ToolResult::ValidationFailed;
+    }
+
+    std::string path = args.at("path").get<std::string>();
+    int startLine = args.value("startLine", 1);
+    int endLine = args.value("endLine", 0);
+
+    std::ifstream file(path, std::ios::binary);
+    if (!file.is_open()) {
+        output = "Cannot open file: " + path;
+        return ToolResult::ExecutionError;
+    }
+
+    std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    file.close();
+
+    if (startLine > 1 || endLine > 0) {
+        std::stringstream ss(content);
+        std::string line;
+        std::vector<std::string> lines;
+        while (std::getline(ss, line)) {
+            lines.push_back(line);
+        }
+
+        if (endLine == 0) endLine = static_cast<int>(lines.size());
+        if (startLine < 1) startLine = 1;
+        if (endLine > static_cast<int>(lines.size())) endLine = static_cast<int>(lines.size());
+
+        content.clear();
+        for (int i = startLine - 1; i < endLine; ++i) {
+            if (i > startLine - 1) content += "\n";
+            content += lines[i];
+        }
+    }
+
+    output = content;
+    return ToolResult::Success;
+}
+
+ToolResult ToolRegistry::HandleWriteFile(const json& args, std::string& output) {
+    if (!args.contains("path") || !args.at("path").is_string()) {
+        output = "write_file missing path parameter";
+        return ToolResult::ValidationFailed;
+    }
+    if (!args.contains("content") || !args.at("content").is_string()) {
+        output = "write_file missing content parameter";
+        return ToolResult::ValidationFailed;
+    }
+
+    std::string path = args.at("path").get<std::string>();
+    std::string content = args.at("content").get<std::string>();
+
+    std::ofstream file(path, std::ios::binary);
+    if (!file.is_open()) {
+        output = "Cannot write to file: " + path;
+        return ToolResult::ExecutionError;
+    }
+
+    file << content;
+    file.close();
+
+    output = "{\"written\":" + std::to_string(content.size()) + "}";
+    return ToolResult::Success;
+}
+
+ToolResult ToolRegistry::HandleSearchFiles(const json& args, std::string& output) {
+    if (!args.contains("pattern") || !args.at("pattern").is_string()) {
+        output = "search_files missing pattern parameter";
+        return ToolResult::ValidationFailed;
+    }
+
+    std::string pattern = args.at("pattern").get<std::string>();
+    std::string path = args.value("path", ".");
+
+    std::ostringstream results;
+    results << "{\"matches\":[";
+    size_t matchCount = 0;
+    const size_t MAX_MATCHES = 500;
+
+    auto isTextFile = [](const std::string& ext) -> bool {
+        static const char* textExts[] = {
+            ".cpp", ".c", ".h", ".hpp", ".hxx", ".cxx", ".cc",
+            ".py", ".js", ".ts", ".jsx", ".tsx", ".json",
+            ".rs", ".go", ".java", ".cs", ".rb", ".lua",
+            ".md", ".txt", ".xml", ".html", ".css", ".scss",
+            ".yaml", ".yml", ".toml", ".ini", ".cfg", ".conf",
+            ".cmake", ".bat", ".ps1", ".sh", ".asm", ".sql",
+            nullptr
+        };
+        for (int i = 0; textExts[i]; ++i) {
+            if (ext == textExts[i]) return true;
+        }
+        return false;
+    };
+
+    try {
+        namespace fs = std::filesystem;
+        for (auto it = fs::recursive_directory_iterator(path,
+                 fs::directory_options::skip_permission_denied);
+             it != fs::recursive_directory_iterator() && matchCount < MAX_MATCHES;
+             ++it) {
+            if (!it->is_regular_file()) continue;
+            std::string ext = it->path().extension().string();
+            std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+            if (!isTextFile(ext)) continue;
+
+            std::ifstream file(it->path(), std::ios::binary);
+            if (!file.is_open()) continue;
+
+            std::string line;
+            int lineNum = 0;
+            while (std::getline(file, line) && matchCount < MAX_MATCHES) {
+                lineNum++;
+                if (line.find(pattern) != std::string::npos) {
+                    if (matchCount > 0) results << ",";
+                    results << "{" << "\"file\":\"" << it->path().string() << "\","
+                            << "\"line\":" << lineNum << ","
+                            << "\"text\":\"" << line.substr(0, 256) << "\""
+                            << "}";
+                    matchCount++;
+                }
+            }
+        }
+    } catch (...) {
+        // Filesystem errors are non-fatal
+    }
+    results << "],\"count\":" << matchCount << "}";
+    output = results.str();
+    return ToolResult::Success;
+}
+
+ToolResult ToolRegistry::HandleExecuteCommand(const json& args, std::string& output) {
+    if (!args.contains("command") || !args.at("command").is_string()) {
+        output = "execute_command missing command parameter";
+        return ToolResult::ValidationFailed;
+    }
+
+    std::string command = args.at("command").get<std::string>();
+    std::string cwd = args.value("cwd", ".");
+
+    std::wstring cmdLine = L"cmd.exe /c " + ToWide(command);
+    DWORD exitCode = 0;
+    std::string procOutput;
+    const ToolSandbox* sandbox = g_activeTool ? &g_activeTool->sandbox : nullptr;
+    ToolSandbox effective = sandbox ? *sandbox : ToolSandbox{};
+
+    if (!CreateSandboxedProcess(cmdLine, effective, procOutput, exitCode)) {
+        output = procOutput;
+        return exitCode == WAIT_TIMEOUT ? ToolResult::Timeout : ToolResult::ExecutionError;
+    }
+
+    output = "{\"exitCode\":" + std::to_string(exitCode) + ",\"output\":\"" + procOutput + "\"}";
+    return exitCode == 0 ? ToolResult::Success : ToolResult::ExecutionError;
+}
+
+ToolResult ToolRegistry::HandleListDirectory(const json& args, std::string& output) {
+    if (!args.contains("path") || !args.at("path").is_string()) {
+        output = "list_directory missing path parameter";
+        return ToolResult::ValidationFailed;
+    }
+
+    std::string path = args.at("path").get<std::string>();
+    bool recursive = args.value("recursive", false);
+
+    std::ostringstream json;
+    json << "{\"entries\":[";
+
+    try {
+        namespace fs = std::filesystem;
+        auto options = fs::directory_options::skip_permission_denied;
+        bool first = true;
+        if (recursive) {
+            for (const auto& entry : fs::recursive_directory_iterator(path, options)) {
+                if (!first) json << ","; first = false;
+                std::string name = entry.path().filename().string();
+                bool isDir = entry.is_directory();
+                uint64_t size = 0;
+                if (!isDir) { try { size = entry.file_size(); } catch (...) {} }
+                json << "{" << "\"name\":\"" << name << "\"," << "\"is_directory\":" << (isDir ? "true" : "false") << "," << "\"size\":" << size << "}";
+            }
+        } else {
+            for (const auto& entry : fs::directory_iterator(path, options)) {
+                if (!first) json << ","; first = false;
+                std::string name = entry.path().filename().string();
+                bool isDir = entry.is_directory();
+                uint64_t size = 0;
+                if (!isDir) { try { size = entry.file_size(); } catch (...) {} }
+                json << "{" << "\"name\":\"" << name << "\"," << "\"is_directory\":" << (isDir ? "true" : "false") << "," << "\"size\":" << size << "}";
+            }
+        }
+    } catch (const std::exception& ex) {
+        output = "Cannot list directory: " + std::string(ex.what());
+        return ToolResult::ExecutionError;
+    }
+
+    json << "]}";
+    output = json.str();
+    return ToolResult::Success;
+}
+
+ToolResult ToolRegistry::HandleGetFileInfo(const json& args, std::string& output) {
+    if (!args.contains("path") || !args.at("path").is_string()) {
+        output = "get_file_info missing path parameter";
+        return ToolResult::ValidationFailed;
+    }
+
+    std::string path = args.at("path").get<std::string>();
+
+    namespace fs = std::filesystem;
+    std::error_code ec;
+    auto status = fs::status(path, ec);
+    if (ec) {
+        output = "Cannot stat file: " + path + " (" + ec.message() + ")";
+        return ToolResult::ExecutionError;
+    }
+
+    auto fileSize = fs::file_size(path, ec);
+    auto lastWrite = fs::last_write_time(path, ec);
+    bool isDir = fs::is_directory(status);
+    bool isFile = fs::is_regular_file(status);
+    bool isSymlink = fs::is_symlink(path, ec);
+
+    // Convert last_write_time to epoch seconds
+    auto fileTime = lastWrite.time_since_epoch();
+    auto now_file = fs::file_time_type::clock::now();
+    auto now_sys = std::chrono::system_clock::now();
+    auto delta = std::chrono::duration_cast<std::chrono::seconds>(now_file.time_since_epoch()) -
+                 std::chrono::duration_cast<std::chrono::seconds>(now_sys.time_since_epoch());
+    int64_t epochSec = std::chrono::duration_cast<std::chrono::seconds>(fileTime).count() - delta.count();
+
+    std::ostringstream json;
+    json << "{" << "\"path\":\"" << path << "\","
+         << "\"size\":" << (isFile ? (int64_t)fileSize : 0) << ","
+         << "\"lastModified\":" << epochSec << ","
+         << "\"isDirectory\":" << (isDir ? "true" : "false") << ","
+         << "\"isFile\":" << (isFile ? "true" : "false") << ","
+         << "\"isSymlink\":" << (isSymlink ? "true" : "false") << "}";
+    output = json.str();
+    return ToolResult::Success;
+}
+
+ToolResult ToolRegistry::HandleGetWorkspaceInfo(const json& /*args*/, std::string& output) {
+    namespace fs = std::filesystem;
+    std::string cwd = fs::current_path().string();
+
+    // Detect project type
+    std::string projectType = "unknown";
+    if (fs::exists(cwd + "/CMakeLists.txt")) projectType = "cmake/cpp";
+    else if (fs::exists(cwd + "/Cargo.toml")) projectType = "rust";
+    else if (fs::exists(cwd + "/package.json")) projectType = "node/javascript";
+    else if (fs::exists(cwd + "/pyproject.toml") || fs::exists(cwd + "/setup.py")) projectType = "python";
+    else if (fs::exists(cwd + "/go.mod")) projectType = "go";
+    else if (fs::exists(cwd + "/Makefile")) projectType = "makefile";
+
+    // Count files by extension
+    size_t cppCount = 0, pyCount = 0, jsCount = 0, rsCount = 0, asmCount = 0, otherCount = 0;
+    try {
+        for (auto& entry : fs::recursive_directory_iterator(cwd,
+                 fs::directory_options::skip_permission_denied)) {
+            if (!entry.is_regular_file()) continue;
+            std::string ext = entry.path().extension().string();
+            if (ext == ".cpp" || ext == ".c" || ext == ".h" || ext == ".hpp") cppCount++;
+            else if (ext == ".py") pyCount++;
+            else if (ext == ".js" || ext == ".ts") jsCount++;
+            else if (ext == ".rs") rsCount++;
+            else if (ext == ".asm") asmCount++;
+            else otherCount++;
+            // Safety cap
+            if (cppCount + pyCount + jsCount + rsCount + asmCount + otherCount > 50000) break;
+        }
+    } catch (...) {}
+
+    std::ostringstream json;
+    json << "{" << "\"workspaceRoot\":\"" << cwd << "\","
+         << "\"projectType\":\"" << projectType << "\","
+         << "\"fileCounts\":{"
+         << "\"cpp\":" << cppCount << ","
+         << "\"python\":" << pyCount << ","
+         << "\"javascript\":" << jsCount << ","
+         << "\"rust\":" << rsCount << ","
+         << "\"asm\":" << asmCount << ","
+         << "\"other\":" << otherCount
+         << "}}";
+    output = json.str();
+    return ToolResult::Success;
+}
+
+ToolResult ToolRegistry::HandleApplyEdit(const json& args, std::string& output) {
+    if (!args.contains("path") || !args.at("path").is_string()) {
+        output = "apply_edit missing path parameter";
+        return ToolResult::ValidationFailed;
+    }
+    if (!args.contains("oldText") || !args.at("oldText").is_string()) {
+        output = "apply_edit missing oldText parameter";
+        return ToolResult::ValidationFailed;
+    }
+    if (!args.contains("newText") || !args.at("newText").is_string()) {
+        output = "apply_edit missing newText parameter";
+        return ToolResult::ValidationFailed;
+    }
+
+    std::string path = args.at("path").get<std::string>();
+    std::string oldText = args.at("oldText").get<std::string>();
+    std::string newText = args.at("newText").get<std::string>();
+
+    // Read the file
+    std::ifstream inFile(path, std::ios::binary);
+    if (!inFile.is_open()) {
+        output = "Cannot open file: " + path;
+        return ToolResult::ExecutionError;
+    }
+    std::string content((std::istreambuf_iterator<char>(inFile)), std::istreambuf_iterator<char>());
+    inFile.close();
+
+    // Find and replace
+    size_t pos = content.find(oldText);
+    if (pos == std::string::npos) {
+        output = "oldText not found in file";
+        return ToolResult::ExecutionError;
+    }
+
+    // Check for multiple matches
+    size_t secondPos = content.find(oldText, pos + oldText.size());
+    bool multipleMatches = (secondPos != std::string::npos);
+
+    content.replace(pos, oldText.size(), newText);
+
+    // Write back
+    std::ofstream outFile(path, std::ios::binary);
+    if (!outFile.is_open()) {
+        output = "Cannot write to: " + path;
+        return ToolResult::ExecutionError;
+    }
+    outFile << content;
+    outFile.close();
+
+    std::ostringstream json;
+    json << "{" << "\"success\":true,"
+         << "\"offset\":" << pos << ","
+         << "\"replacedLength\":" << oldText.size() << ","
+         << "\"newLength\":" << newText.size() << ","
+         << "\"multipleMatches\":" << (multipleMatches ? "true" : "false") << "}";
+    output = json.str();
+    return ToolResult::Success;
+}
+
+ToolResult ToolRegistry::HandleGetSymbols(const json& args, std::string& output) {
+    if (!args.contains("path") || !args.at("path").is_string()) {
+        output = "get_symbols missing path parameter";
+        return ToolResult::ValidationFailed;
+    }
+
+    std::string path = args.at("path").get<std::string>();
+
+    std::ifstream file(path);
+    if (!file.is_open()) {
+        output = "Cannot open file: " + path;
+        return ToolResult::ExecutionError;
+    }
+
+    std::ostringstream json;
+    json << "{\"symbols\":[";
+    bool firstSym = true;
+    int lineNum = 0;
+    std::string line;
+
+    // Simple heuristic symbol detection for C/C++
+    while (std::getline(file, line)) {
+        lineNum++;
+        // Skip empty lines and preprocessor directives
+        size_t nonSpace = line.find_first_not_of(" \t");
+        if (nonSpace == std::string::npos) continue;
+        if (line[nonSpace] == '#' || line[nonSpace] == '/') continue;
+
+        // Detect class/struct definitions
+        bool isClass = false;
+        bool isStruct = false;
+        bool isEnum = false;
+        bool isFunction = false;
+        std::string symbolName;
+        std::string symbolKind;
+
+        if (line.find("class ") != std::string::npos && line.find(';') == std::string::npos) {
+            size_t p = line.find("class ");
+            p += 6;
+            while (p < line.size() && line[p] == ' ') p++;
+            size_t end = p;
+            while (end < line.size() && (isalnum(line[end]) || line[end] == '_')) end++;
+            if (end > p) { symbolName = line.substr(p, end - p); symbolKind = "class"; isClass = true; }
+        }
+        else if (line.find("struct ") != std::string::npos && line.find(';') == std::string::npos) {
+            size_t p = line.find("struct ");
+            p += 7;
+            while (p < line.size() && line[p] == ' ') p++;
+            size_t end = p;
+            while (end < line.size() && (isalnum(line[end]) || line[end] == '_')) end++;
+            if (end > p) { symbolName = line.substr(p, end - p); symbolKind = "struct"; isStruct = true; }
+        }
+        else if (line.find("enum ") != std::string::npos) {
+            size_t p = line.find("enum ");
+            p += 5;
+            if (p < line.size() && line.substr(p, 6) == "class ") p += 6;
+            while (p < line.size() && line[p] == ' ') p++;
+            size_t end = p;
+            while (end < line.size() && (isalnum(line[end]) || line[end] == '_')) end++;
+            if (end > p) { symbolName = line.substr(p, end - p); symbolKind = "enum"; isEnum = true; }
+        }
+        else if (line.find('(') != std::string::npos && line.find(';') == std::string::npos
+                 && line.find("if") == std::string::npos && line.find("while") == std::string::npos
+                 && line.find("for") == std::string::npos && line.find("switch") == std::string::npos
+                 && line.find("return") == std::string::npos) {
+            // Likely a function definition
+            size_t parenPos = line.find('(');
+            if (parenPos > 0) {
+                size_t end = parenPos;
+                while (end > 0 && line[end - 1] == ' ') end--;
+                size_t start = end;
+                while (start > 0 && (isalnum(line[start - 1]) || line[start - 1] == '_' || line[start - 1] == ':')) start--;
+                if (end > start) {
+                    symbolName = line.substr(start, end - start);
+                    if (symbolName != "if" && symbolName != "for" && symbolName != "while"
+                        && symbolName != "switch" && symbolName != "catch" && symbolName != "sizeof"
+                        && symbolName != "decltype" && symbolName != "static_cast"
+                        && symbolName != "dynamic_cast" && symbolName != "reinterpret_cast"
+                        && !symbolName.empty()) {
+                        symbolKind = "function";
+                        isFunction = true;
+                    }
+                }
+            }
+        }
+
+        if (!symbolName.empty() && !symbolKind.empty()) {
+            if (!firstSym) json << ",";
+            firstSym = false;
+            json << "{" << "\"name\":\"" << symbolName << "\","
+                 << "\"kind\":\"" << symbolKind << "\","
+                 << "\"line\":" << lineNum << ","
+                 << "\"file\":\"" << path << "\"}";
+        }
+    }
+
+    json << "]}";
+    output = json.str();
+    return ToolResult::Success;
+}
+
+ToolResult ToolRegistry::HandleGetCompletions(const json& args, std::string& output) {
+    if (!args.contains("path") || !args.at("path").is_string()) {
+        output = "get_completions missing path parameter";
+        return ToolResult::ValidationFailed;
+    }
+
+    std::string path = args.at("path").get<std::string>();
+    std::string prefix = args.value("prefix", "");
+    int line = args.value("line", 1);
+    int column = args.value("column", 1);
+
+    // Read file and extract identifiers
+    std::ifstream file(path);
+    if (!file.is_open()) {
+        output = "Cannot open file: " + path;
+        return ToolResult::ExecutionError;
+    }
+
+    std::set<std::string> identifiers;
+    std::string fileLine;
+    while (std::getline(file, fileLine)) {
+        // Extract C/C++ identifiers
+        size_t i = 0;
+        while (i < fileLine.size()) {
+            if (isalpha(fileLine[i]) || fileLine[i] == '_') {
+                size_t start = i;
+                while (i < fileLine.size() && (isalnum(fileLine[i]) || fileLine[i] == '_')) i++;
+                std::string ident = fileLine.substr(start, i - start);
+                if (ident.size() >= 2) identifiers.insert(ident);
+            } else {
+                i++;
+            }
+        }
+    }
+
+    // Filter by prefix
+    std::ostringstream json;
+    json << "{\"completions\":[";
+    bool first = true;
+    size_t count = 0;
+    const size_t MAX_COMPLETIONS = 50;
+    for (const auto& id : identifiers) {
+        if (count >= MAX_COMPLETIONS) break;
+        if (!prefix.empty() && id.find(prefix) != 0) continue;
+        if (id == prefix) continue; // Don't suggest exact match
+        if (!first) json << ",";
+        first = false;
+        json << "{" << "\"label\":\"" << id << "\","
+             << "\"kind\":\"identifier\"}";
+        count++;
+    }
+    json << "]," << "\"line\":" << line << ","
+         << "\"column\":" << column << "}";
+    output = json.str();
+    return ToolResult::Success;
+}
+
+ToolResult ToolRegistry::HandleGetDiagnostics(const json& args, std::string& output) {
+    if (!args.contains("path") || !args.at("path").is_string()) {
+        output = "get_diagnostics missing path parameter";
+        return ToolResult::ValidationFailed;
+    }
+
+    std::string path = args.at("path").get<std::string>();
+
+    std::ifstream file(path);
+    if (!file.is_open()) {
+        output = "Cannot open file: " + path;
+        return ToolResult::ExecutionError;
+    }
+
+    std::ostringstream json;
+    json << "{\"diagnostics\":[";
+    bool firstDiag = true;
+    int lineNum = 0;
+    std::string line;
+
+    // Track bracket balance
+    int braceDepth = 0;
+    int parenDepth = 0;
+    int bracketDepth = 0;
+    bool inString = false;
+    bool inLineComment = false;
+    bool inBlockComment = false;
+    int totalLines = 0;
+    int blankLines = 0;
+
+    while (std::getline(file, line)) {
+        lineNum++;
+        totalLines++;
+        if (line.find_first_not_of(" \t\r\n") == std::string::npos) { blankLines++; continue; }
+
+        inLineComment = false;
+        for (size_t i = 0; i < line.size(); i++) {
+            char c = line[i];
+            char next = (i + 1 < line.size()) ? line[i + 1] : '\0';
+
+            if (inBlockComment) {
+                if (c == '*' && next == '/') { inBlockComment = false; i++; }
+                continue;
+            }
+            if (inLineComment) continue;
+
+            if (inString) {
+                if (c == '"' && (i == 0 || line[i - 1] != '\\')) inString = false;
+                continue;
+            }
+
+            if (c == '"') {
+                inString = true;
+            } else if (c == '/' && next == '/') {
+                inLineComment = true;
+            } else if (c == '/' && next == '*') {
+                inBlockComment = true;
+                i++;
+            } else if (c == '{') {
+                braceDepth++;
+            } else if (c == '}') {
+                braceDepth--;
+                if (braceDepth < 0) {
+                    if (!firstDiag) json << ",";
+                    firstDiag = false;
+                    json << "{" << "\"line\":" << lineNum << ","
+                         << "\"column\":" << (i + 1) << ","
+                         << "\"message\":\"Unexpected closing brace\","
+                         << "\"severity\":\"error\"}";
+                }
+            } else if (c == '(') {
+                parenDepth++;
+            } else if (c == ')') {
+                parenDepth--;
+                if (parenDepth < 0) {
+                    if (!firstDiag) json << ",";
+                    firstDiag = false;
+                    json << "{" << "\"line\":" << lineNum << ","
+                         << "\"column\":" << (i + 1) << ","
+                         << "\"message\":\"Unexpected closing parenthesis\","
+                         << "\"severity\":\"error\"}";
+                }
+            } else if (c == '[') {
+                bracketDepth++;
+            } else if (c == ']') {
+                bracketDepth--;
+                if (bracketDepth < 0) {
+                    if (!firstDiag) json << ",";
+                    firstDiag = false;
+                    json << "{" << "\"line\":" << lineNum << ","
+                         << "\"column\":" << (i + 1) << ","
+                         << "\"message\":\"Unexpected closing bracket\","
+                         << "\"severity\":\"error\"}";
+                }
+            }
+        }
+    }
+
+    // Check for unclosed brackets
+    if (braceDepth > 0) {
+        if (!firstDiag) json << ",";
+        firstDiag = false;
+        json << "{" << "\"line\":" << totalLines << ","
+             << "\"column\":" << 1 << ","
+             << "\"message\":\"Unclosed braces\","
+             << "\"severity\":\"error\"}";
+    }
+    if (parenDepth > 0) {
+        if (!firstDiag) json << ",";
+        firstDiag = false;
+        json << "{" << "\"line\":" << totalLines << ","
+             << "\"column\":" << 1 << ","
+             << "\"message\":\"Unclosed parentheses\","
+             << "\"severity\":\"error\"}";
+    }
+    if (bracketDepth > 0) {
+        if (!firstDiag) json << ",";
+        firstDiag = false;
+        json << "{" << "\"line\":" << totalLines << ","
+             << "\"column\":" << 1 << ","
+             << "\"message\":\"Unclosed brackets\","
+             << "\"severity\":\"error\"}";
+    }
+
+    json << "]}";
+    output = json.str();
+    return ToolResult::Success;
 }
 

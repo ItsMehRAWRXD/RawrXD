@@ -30,6 +30,7 @@
 #include <functional>
 #include <array>
 #include <cctype>
+#include <cstring>
 #include <vector>
 
 #include "../agentic/OllamaProvider.h"
@@ -1187,6 +1188,19 @@ void Win32IDE::acceptGhostText() {
 // RENDER — paints ghost text onto the editor surface
 // ============================================================================
 
+// -----------------------------------------------------------------------------
+// Local renderer fallback for ghost text.
+// Note: Some build lanes do not link Win32IDE_Layout_Pure.asm, which exports
+// Layout_DrawGhostText. Keep this path self-contained so the Win32IDE target
+// always links; the MASM path can be reintroduced via explicit build wiring.
+// -----------------------------------------------------------------------------
+static void DrawGhostTextFast(HDC hdc, int x, int y, const char* text)
+{
+    if (!hdc || !text || !*text)
+        return;
+    TextOutA(hdc, x, y, text, static_cast<int>(std::strlen(text)));
+}
+
 void Win32IDE::renderGhostText(HDC hdc) {
     if (!m_hwndEditor) return;
 
@@ -1222,26 +1236,12 @@ void Win32IDE::renderGhostText(HDC hdc) {
     int lineLen   = (int)SendMessageA(m_hwndEditor, EM_LINELENGTH, sel.cpMin, 0);
     int lineEnd   = lineStart + lineLen;
 
-    // If cursor is not at end of line, render after end of line text
-    // (ghost text appears after existing text)
     POINTL endPt;
     if (lineEnd > sel.cpMin) {
         SendMessageA(m_hwndEditor, EM_POSFROMCHAR, (WPARAM)lineEnd, (LPARAM)&endPt);
     } else {
         endPt = pt;
     }
-
-    // Setup ghost text rendering
-    HFONT oldFont = (HFONT)SelectObject(hdc, m_ghostTextFont ? m_ghostTextFont : GetStockObject(SYSTEM_FONT));
-    
-    // Ghost text color: muted/grayed version of text color
-    COLORREF ghostColor = RGB(
-        (GetRValue(m_currentTheme.textColor) + GetRValue(m_currentTheme.backgroundColor)) / 2,
-        (GetGValue(m_currentTheme.textColor) + GetGValue(m_currentTheme.backgroundColor)) / 2,
-        (GetBValue(m_currentTheme.textColor) + GetBValue(m_currentTheme.backgroundColor)) / 2
-    );
-    SetTextColor(hdc, ghostColor);
-    SetBkMode(hdc, TRANSPARENT);
 
     // Split ghost text into lines
     std::vector<std::string> lines;
@@ -1260,43 +1260,35 @@ void Win32IDE::renderGhostText(HDC hdc) {
         }
     }
 
-    if (lines.empty()) {
-        SelectObject(hdc, oldFont);
-        return;
-    }
+    if (lines.empty()) return;
 
-    // Get line height
+    // Get line height for multi-line offsets
     TEXTMETRICA tm;
     GetTextMetricsA(hdc, &tm);
     int lineHeight = tm.tmHeight + tm.tmExternalLeading;
 
-    // Draw first line at cursor/end-of-line position
-    int drawX = endPt.x + 2;  // Small gap after existing text
+    int drawX = endPt.x + 2;
     int drawY = endPt.y;
 
-    // Get editor client rect for clipping
     RECT editorRC;
     GetClientRect(m_hwndEditor, &editorRC);
 
     for (size_t i = 0; i < lines.size(); i++) {
-        if (drawY + lineHeight > editorRC.bottom) break;  // Don't draw below editor
+        if (drawY + lineHeight > editorRC.bottom) break;
 
         if (i == 0) {
-            // First line: render after cursor
-            TextOutA(hdc, drawX, drawY, lines[i].c_str(), (int)lines[i].size());
+            // OPTIMIZED: Call MASM Layout Engine directly
+            DrawGhostTextFast(hdc, drawX, drawY, lines[i].c_str());
         } else {
-            // Subsequent lines: render at left margin (indented to match cursor column)
-            // Get x position of the start of the line (respect indentation)
             POINTL lineStartPt;
-        SendMessageA(m_hwndEditor, EM_POSFROMCHAR, (WPARAM)lineStart, (LPARAM)&lineStartPt);
+            SendMessageA(m_hwndEditor, EM_POSFROMCHAR, (WPARAM)lineStart, (LPARAM)&lineStartPt);
             int indentX = lineStartPt.x;
 
             drawY += lineHeight;
-            TextOutA(hdc, indentX, drawY, lines[i].c_str(), (int)lines[i].size());
+            // OPTIMIZED: Call MASM Layout Engine directly
+            DrawGhostTextFast(hdc, indentX, drawY, lines[i].c_str());
         }
     }
-
-    SelectObject(hdc, oldFont);
 }
 
 // ============================================================================

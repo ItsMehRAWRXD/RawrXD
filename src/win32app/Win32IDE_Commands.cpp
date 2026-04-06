@@ -198,6 +198,9 @@ static constexpr size_t MAX_AGENT_CHECKPOINTS = 32;
 #ifndef IDM_FILE_MODEL_QUICK_LOAD
 #define IDM_FILE_MODEL_QUICK_LOAD 1035
 #endif
+#ifndef IDM_FILE_MODEL_LIST
+#define IDM_FILE_MODEL_LIST 1036
+#endif
 #ifndef IDM_FILE_EXIT
 #define IDM_FILE_EXIT 2005
 #endif
@@ -894,6 +897,10 @@ void Win32IDE::handleFileCommand(int commandId)
 
         case IDM_FILE_MODEL_QUICK_LOAD:
             quickLoadGGUFModel();
+            break;
+
+        case IDM_FILE_MODEL_LIST:
+            listAvailableModels();
             break;
 
         case IDM_FILE_EXIT:

@@ -108,7 +108,11 @@ Result<void> AgenticIDE::initializeComponents() {
         m_planOrchestrator = std::make_shared<RawrXD::PlanOrchestrator>();
         m_chatInterface = std::make_shared<RawrXD::ChatInterface>();
         m_modelRouter = std::make_shared<RawrXD::UniversalModelRouter>();
-        m_zeroDayAgent = std::make_shared<RawrXD::ZeroDayAgenticEngine>();
+        m_zeroDayAgent = std::make_shared<RawrXD::ZeroDayAgenticEngine>(
+            m_modelRouter.get(),
+            m_toolRegistry.get(),
+            m_planOrchestrator.get(),
+            nullptr);
         m_multiTabEditor = std::make_shared<RawrXD::MultiTabEditor>();
         m_modelManager = std::make_shared<RawrXD::AutonomousModelManager>();
         m_terminalPool = std::make_shared<RawrXD::TerminalPool>();
@@ -138,20 +142,16 @@ Result<void> AgenticIDE::wireComponents() {
     
     // Plan orchestrator dependencies
     if (m_planOrchestrator) {
-        /*
         m_planOrchestrator->setInferenceEngine(m_inferenceEngine.get());
         m_planOrchestrator->setLSPClient(m_lspClient.get());
         m_planOrchestrator->setModelRouter(m_modelRouter.get());
+        m_planOrchestrator->setWorkspaceRoot(m_workspaceRoot);
         m_planOrchestrator->initialize();
-        */
     }
     
     // Chat interface dependencies
     if (m_chatInterface) {
-        /*
         m_chatInterface->setPlanOrchestrator(m_planOrchestrator.get());
-        m_chatInterface->setZeroDayAgent(m_zeroDayAgent.get());
-        */
     }
     
     // Add cleanup guards

@@ -24,6 +24,7 @@
 #include "execution_governor.h"
 #include "gpu_backend_bridge.h"
 #include "../agentic/AgentOllamaClient.h"
+#include "../win32app/Win32IDE.h"
 #include <windows.h>
 #include <shellapi.h>
 #include <winhttp.h>
@@ -939,6 +940,74 @@ CommandResult handleAutonomyToggle(const CommandContext& ctx) {
         ctx.output("[Autonomy] Paused.\n");
     }
     return CommandResult::ok("autonomy.toggle");
+}
+
+// Removed to prevent linkage collision with ssot_handlers.cpp
+#if 0
+CommandResult handleAutonomyStatus(const CommandContext& ctx) {
+    auto& orchestrator = AutoRepairOrchestrator::instance();
+    auto stats = orchestrator.getStats();
+    std::ostringstream oss;
+    oss << "[Autonomy] Status: " << (orchestrator.isRunning() ? "Running" : "Stopped")
+        << ", Anomalies: " << stats.anomaliesDetected
+        << ", Repairs: " << stats.repairsAttempted << "\n";
+    ctx.output(oss.str().c_str());
+    return CommandResult::ok("autonomy.status");
+}
+
+CommandResult handleAutonomyMemory(const CommandContext& ctx) {
+    auto& orchestrator = AutoRepairOrchestrator::instance();
+    // Use getStats for a basic memory-usage or count if snapshot is missing
+    auto stats = orchestrator.getStats();
+    std::ostringstream oss;
+    oss << "[Autonomy] Stats Memory: " << (stats.anomaliesDetected + stats.repairsAttempted) << " events tracked\n";
+    ctx.output(oss.str().c_str());
+    return CommandResult::ok("autonomy.memory");
+}
+#endif
+
+// ============================================================================
+// PLAN ORCHESTRATOR
+// ============================================================================
+
+CommandResult handlePlanOrchestratorStart(const CommandContext& ctx) {
+    if (!ctx.idePtr) {
+        return CommandResult::error("planOrchestrator.start: no IDE context");
+    }
+    
+    Win32IDE* ide = static_cast<Win32IDE*>(ctx.idePtr);
+    ide->onPlanOrchestratorStart();
+    return CommandResult::ok("planOrchestrator.start");
+}
+
+CommandResult handlePlanOrchestratorStop(const CommandContext& ctx) {
+    if (!ctx.idePtr) {
+        return CommandResult::error("planOrchestrator.stop: no IDE context");
+    }
+    
+    Win32IDE* ide = static_cast<Win32IDE*>(ctx.idePtr);
+    ide->onPlanOrchestratorStop();
+    return CommandResult::ok("planOrchestrator.stop");
+}
+
+CommandResult handlePlanOrchestratorViewStatus(const CommandContext& ctx) {
+    if (!ctx.idePtr) {
+        return CommandResult::error("planOrchestrator.status: no IDE context");
+    }
+    
+    Win32IDE* ide = static_cast<Win32IDE*>(ctx.idePtr);
+    ide->onPlanOrchestratorViewStatus();
+    return CommandResult::ok("planOrchestrator.status");
+}
+
+CommandResult handlePlanOrchestratorViewPlan(const CommandContext& ctx) {
+    if (!ctx.idePtr) {
+        return CommandResult::error("planOrchestrator.viewPlan: no IDE context");
+    }
+    
+    Win32IDE* ide = static_cast<Win32IDE*>(ctx.idePtr);
+    ide->onPlanOrchestratorViewPlan();
+    return CommandResult::ok("planOrchestrator.viewPlan");
 }
 
 // ============================================================================

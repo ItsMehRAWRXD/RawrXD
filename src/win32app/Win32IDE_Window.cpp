@@ -3,6 +3,10 @@
 #include <cassert>
 #include <commctrl.h>
 #include <cstring>
+
+extern "C" void Layout_CalculateAndApply(HWND hwnd, void* pIDE, int w, int h);
+extern "C" void Layout_GDI_Blit_Debug(HWND hwnd, void* pIDE);
+
 #include <shellscalingapi.h>  // GetDpiForWindow
 #include <windowsx.h>
 
@@ -381,7 +385,10 @@ void Win32IDE::onSize(int width, int height)
 
     int currentX = 0;
 
-    // 1. Activity Bar (Far Left)
+    // 1. MASM Pure Layout Recovery (Forcing the middle visibility)
+    Layout_CalculateAndApply(m_hwndMain, this, width, height);
+
+    // 2. Activity Bar (Far Left)
     int workspaceX = 0;
     int workspaceWidth = width;
 
