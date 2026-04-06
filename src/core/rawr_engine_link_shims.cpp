@@ -132,6 +132,10 @@ static void VerifyTpsSentinel(double currentTps, double currentLatencyMs)
     if (g_rollbackCooldown > 0)
     {
         g_rollbackCooldown--;
+        if (g_rollbackCooldown % 25 == 0 && g_rollbackCooldown > 0)
+        {
+            RawrXD_Native_Log("[SENTINEL] COOLDOWN ACTIVE: %d cycles remaining...", g_rollbackCooldown);
+        }
         return; 
     }
 
@@ -165,12 +169,17 @@ static void VerifyTpsSentinel(double currentTps, double currentLatencyMs)
         if (g_rawrHotpatchStats.swapsApplied > 0)
         {
             RawrXD_Native_Log("[SENTINEL] ACTION: PERFORMANCE REGRESSION DETECTED. INITIATING AUTO-ROLLBACK...");
-            // In a real scenario, this would iterate g_rawrPatchEntries and restore backups.
-            // For the shim, we simulate the rollback by flagging the failure.
+            // Adaptive cooldown based on classification severity
+            if (std::strcmp(classification, "CRITICAL_PIPELINE_COLLAPSE") == 0)
+                g_rollbackCooldown = 150;
+            else if (std::strcmp(classification, "LATENCY_STALL_OR_IO_CONTENTION") == 0)
+                g_rollbackCooldown = 80;
+            else
+                g_rollbackCooldown = 100;
+
             g_rawrHotpatchStats.swapsRolledBack++;
             g_rawrHotpatchStats.swapsApplied = 0;
-            g_rollbackCooldown = 100; // Lockout for 100 cycles to stabilize
-            RawrXD_Native_Log("[SENTINEL] ROLLBACK COMPLETE. SYSTEM RETURNED TO BASELINE (Lockout: 100 cycles).");
+            RawrXD_Native_Log("[SENTINEL] ROLLBACK COMPLETE. SYSTEM RETURNED TO BASELINE (Lockout: %d cycles).", g_rollbackCooldown);
         }
     }
     else
