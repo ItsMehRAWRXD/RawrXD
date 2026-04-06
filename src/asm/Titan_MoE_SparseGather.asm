@@ -93,10 +93,29 @@ SparseGather_Execute PROC EXPORT
     vpxord  zmm5, zmm5, zmm5
     xor     eax, eax
 SG_zero:
+    mov     r8d, r14d
+    sub     r8d, eax
+    cmp     r8d, 16
+    jge     SG_zero_full
+
+    ; Tail zeroing with mask
+    xor     r9d, r9d
+    mov     r10d, 1
+    shl     r10d, cl    ; cl is from eax loop? No, use r8d
+    mov     ecx, r8d
+    mov     r10d, 1
+    shl     r10d, cl
+    dec     r10d
+    kmovw   k1, r10d
+    vmovups ZMMWORD PTR [r12 + rax*4]{k1}, zmm5
+    jmp     SG_zero_done
+
+SG_zero_full:
     vmovups ZMMWORD PTR [r12 + rax*4], zmm5
     add     eax, 16
     cmp     eax, r14d
     jl      SG_zero
+SG_zero_done:
 
     ; ── outer loop: k = 0..top_k-1 ─────────────────────────────────────
     xor     ecx, ecx
@@ -115,6 +134,27 @@ SG_k_loop:
     ; ── inner loop: i = 0..hidden-1, step 16 ───────────────────────────
     xor     edx, edx
 SG_i_loop:
+    mov     r8d, r14d
+    sub     r8d, edx
+    cmp     r8d, 16
+    jge     SG_i_full
+
+    ; Tail processing with mask
+    mov     ecx, r8d
+    mov     r10d, 1
+    shl     r10d, cl
+    dec     r10d
+    kmovw   k1, r10d
+    
+    vmovups zmm0{k1}{z}, ZMMWORD PTR [rax + rdx*4]
+    vmovups zmm1{k1}{z}, ZMMWORD PTR [rdi + rdx*4]
+    vmovups zmm2{k1}{z}, ZMMWORD PTR [r12 + rdx*4]
+    vmulps  zmm3, zmm0, zmm1
+    vfmadd231ps zmm2, zmm3, zmm4
+    vmovups ZMMWORD PTR [r12 + rdx*4]{k1}, zmm2
+    jmp     SG_i_next_k
+
+SG_i_full:
     vmovups zmm0, ZMMWORD PTR [rax + rdx*4]    ; weights[k][i:+16]
     vmovups zmm1, ZMMWORD PTR [rdi + rdx*4]    ; input[i:+16]
     vmovups zmm2, ZMMWORD PTR [r12 + rdx*4]    ; output[i:+16]
@@ -125,6 +165,7 @@ SG_i_loop:
     cmp     edx, r14d
     jl      SG_i_loop
 
+SG_i_next_k:
     inc     ecx
     jmp     SG_k_loop
 
