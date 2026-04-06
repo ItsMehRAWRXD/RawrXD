@@ -90,6 +90,46 @@ static RawrPatchEntry g_rawrPatchEntries[kRawrPatchSlots]{};
 static RawrHotpatchStats g_rawrHotpatchStats{};
 static RawrSnapshotStats g_rawrSnapshotStats{};
 
+// ═══════════════════ TPS SENTINEL (Guardrail) ═══════════════════
+static double g_baselineTps = 0.0;
+static bool g_sentinelArmed = false;
+
+static void LoadSovereignManifest()
+{
+    FILE* f = std::fopen("deploy/sovereign_manifest.json", "rt");
+    if (!f) return;
+    char line[512];
+    while (std::fgets(line, sizeof(line), f))
+    {
+        if (std::strstr(line, "\"moe_sparse_gather_tps\":"))
+        {
+            char* val = std::strchr(line, ':');
+            if (val) g_baselineTps = std::atof(val + 1);
+        }
+    }
+    std::fclose(f);
+    if (g_baselineTps > 0.1)
+    {
+        g_sentinelArmed = true;
+        RawrXD_Native_Log("[SENTINEL] Armed with baseline TPS: %.2f", g_baselineTps);
+    }
+}
+
+static void VerifyTpsSentinel(double currentTps)
+{
+    if (!g_sentinelArmed) return;
+    const double threshold = g_baselineTps * 0.90; // 10% tolerance
+    if (currentTps < threshold)
+    {
+        RawrXD_Native_Log("[SENTINEL] ALERT: TPS REGRESSION DETECTED! Baseline: %.2f | Current: %.2f", g_baselineTps, currentTps);
+    }
+    else
+    {
+        RawrXD_Native_Log("[SENTINEL] Verify passed: %.2f TPS", currentTps);
+    }
+}
+// ══════════════════════════════════════════════════════════════
+
 struct SchedulerTaskInfo
 {
     uint8_t priority = 0;
@@ -3467,6 +3507,7 @@ extern "C"
 #ifndef RAWRXD_DISABLE_DUPLICATE_SHIMS
     int main(int argc, char** argv)
     {
+        LoadSovereignManifest();
         for (int i = 0; i < argc; ++i) {
             if (std::string(argv[i]) == "--moe-bench") {
                 uint32_t    experts     = 8;
@@ -3557,6 +3598,8 @@ extern "C"
                 double elapsed_ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
                 if (elapsed_ms < 0.001) elapsed_ms = 0.001;
                 double tps = static_cast<double>(iter) / (elapsed_ms / 1000.0);
+
+                VerifyTpsSentinel(tps);
 
                 std::cout << "\n[MoE Benchmark Result]\n";
                 std::cout << "Zen 4 AVX-512 Throughput: " << tps              << " TPS\n";
