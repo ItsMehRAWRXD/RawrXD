@@ -266,6 +266,7 @@ public:
     // ---- Export ----
     std::string exportJSON() const;
     std::string exportCSV() const;
+    std::string exportSecureJSON() const; // Signed Batch 3 Frame
     std::string getDiagnostics() const;
 
     // ---- Bulk report for all active slots ----

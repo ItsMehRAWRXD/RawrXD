@@ -85,6 +85,19 @@ std::string sanitizeChatText(const std::string& input)
         lastSpace = isSpace;
     }
 
+    // Detect '?' flood: detokenization failure causes the model to emit ASCII '?'
+    // (0x3F) for every unknown token.  Since '?' is printable it passes the
+    // range filter above, so we catch it here before it poisons the chat pane.
+    if (compact.size() > 20)
+    {
+        int qCount = 0;
+        for (char c : compact)
+            if (c == '?') ++qCount;
+        if (qCount > static_cast<int>(compact.size()) * 2 / 5)
+            return "[Model output error: detokenization failure (" +
+                   std::to_string(qCount) + " replacement tokens — check model compatibility)]";
+    }
+
     return compact;
 }
 }

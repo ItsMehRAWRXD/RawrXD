@@ -398,6 +398,7 @@ struct ExpertHeatmapCell
     std::uint32_t layerEnd = 0;
     std::uint32_t expertIndex = 0xFFFFFFFFu;
     std::uint32_t planSpanOrdinal = 0;
+    std::uint32_t deviceOrdinal = 0;
     bool resident = false;
     bool prefetchInFlight = false;
     std::uint32_t holdCount = 0;

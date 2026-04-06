@@ -22,6 +22,7 @@ namespace
 {
 constexpr UINT_PTR kHeatmapTimerId = 1;
 constexpr UINT WM_RAWR_HEATMAP_FRAME = WM_APP + 107;
+constexpr UINT WM_RAWR_HEATMAP_REFRESH = WM_APP + 108;
 constexpr int kCellPx = 8;
 constexpr int kHudTopH = 56;
 constexpr int kSparkH = 24;
@@ -56,17 +57,22 @@ struct AggCell
     std::uint64_t touchMax = 0;
     std::uint32_t layerEnd = 0;
     std::size_t planRowIndex = 0;
+    std::uint32_t deviceOrdinal = 0; // v1.3 Cluster Affinity
+    std::uint64_t lastUpdateEpoch = 0;
+    float inUseIntensity = 0.0f;
 };
 
 struct FrameSnapshot
 {
     std::uint64_t snapshotId = 0;
     std::uint64_t planGeneration = 0;
+    std::uint64_t captureTime = 0;
     bool stale = true;
     RawrXD::Swarm::SwarmRuntimeStats stats{};
     std::map<CellKey, AggCell> aggs;
     std::vector<std::uint32_t> layerOrder;
     std::vector<std::uint32_t> expertOrder;
+    std::vector<float> gpuUtilization;
 };
 
 struct HeatmapPanelCtx
@@ -84,9 +90,12 @@ struct HeatmapPanelCtx
     int scrollY = 0;
     int hoverRow = -1;
     int hoverCol = -1;
+    bool combinedView = true;
     std::array<std::uint16_t, 64> sparkInUse{};
     std::array<std::uint16_t, 64> sparkPinMs{};
     std::size_t sparkIdx = 0;
+    HBITMAP hbmBack = nullptr;
+    std::atomic<std::uint32_t> activeCaptures{0};
 };
 
 static const wchar_t kHeatmapClass[] = L"RawrXDExpertHeatmapPanel";
@@ -146,6 +155,7 @@ static void aggregateSnapshot(const RawrXD::Swarm::ExpertHeatmapSnapshot& snap, 
             a.touchMax = std::max(a.touchMax, c.lastTouchSequence);
         a.layerEnd = c.layerEnd;
         a.planRowIndex = c.planRowIndex;
+        a.deviceOrdinal = c.deviceOrdinal; // v1.3 cluster tracking
     }
     std::unordered_map<std::uint32_t, bool> seenL;
     std::unordered_map<std::uint32_t, bool> seenE;
@@ -174,8 +184,13 @@ static void aggregateSnapshot(const RawrXD::Swarm::ExpertHeatmapSnapshot& snap, 
 
 static void runHeatmapCapture(HWND hwnd, HeatmapPanelCtx* ctx)
 {
-    if (!ctx || ctx->destroyed.load(std::memory_order_acquire))
+    if (!ctx)
         return;
+    if (ctx->destroyed.load(std::memory_order_acquire))
+    {
+        ctx->captureBusy.store(false, std::memory_order_release);
+        return;
+    }
     auto eng = RawrXD::CPUInferenceEngine::GetSharedInstance();
     FrameSnapshot frame;
     frame.stale = true;
@@ -183,7 +198,8 @@ static void runHeatmapCapture(HWND hwnd, HeatmapPanelCtx* ctx)
     {
         std::lock_guard<std::mutex> lk(ctx->frameMu);
         ctx->shown = frame;
-        PostMessageW(hwnd, WM_RAWR_HEATMAP_FRAME, 0, 0);
+        if (!ctx->destroyed.load(std::memory_order_acquire))
+            PostMessageW(hwnd, WM_RAWR_HEATMAP_FRAME, 0, 0);
         ctx->captureBusy.store(false, std::memory_order_release);
         return;
     }
@@ -197,13 +213,30 @@ static void runHeatmapCapture(HWND hwnd, HeatmapPanelCtx* ctx)
     {
         std::lock_guard<std::mutex> lk(ctx->frameMu);
         ctx->shown = frame;
-        PostMessageW(hwnd, WM_RAWR_HEATMAP_FRAME, 0, 0);
+        if (!ctx->destroyed.load(std::memory_order_acquire))
+            PostMessageW(hwnd, WM_RAWR_HEATMAP_FRAME, 0, 0);
         ctx->captureBusy.store(false, std::memory_order_release);
         return;
     }
     const std::uint64_t liveGen = eng->SwarmPlanGeneration();
     aggregateSnapshot(snap, frame);
     frame.stale = (snap.planGeneration != liveGen);
+    frame.captureTime = GetTickCount64();
+    
+    // Calculate per-GPU utilization
+    frame.gpuUtilization.resize(4, 0.0f); // cap at 4 GPUs for HUD
+    std::vector<uint32_t> gpuInUse(4, 0);
+    std::vector<uint32_t> gpuTotal(4, 0);
+    for (const auto& kv : frame.aggs) {
+        if (kv.second.deviceOrdinal < 4) {
+            gpuTotal[kv.second.deviceOrdinal]++;
+            if (kv.second.resident) gpuInUse[kv.second.deviceOrdinal]++;
+        }
+    }
+    for (int i=0; i<4; ++i) {
+        if (gpuTotal[i] > 0) frame.gpuUtilization[i] = (float)gpuInUse[i] / (float)gpuTotal[i];
+    }
+
     {
         std::lock_guard<std::mutex> lk(ctx->frameMu);
         ctx->shown = std::move(frame);
@@ -217,7 +250,8 @@ static void runHeatmapCapture(HWND hwnd, HeatmapPanelCtx* ctx)
         ctx->sparkPinMs[ctx->sparkIdx % ctx->sparkPinMs.size()] = pinAvg;
         ++ctx->sparkIdx;
     }
-    PostMessageW(hwnd, WM_RAWR_HEATMAP_FRAME, 0, 0);
+    if (!ctx->destroyed.load(std::memory_order_acquire))
+        PostMessageW(hwnd, WM_RAWR_HEATMAP_FRAME, 0, 0);
     ctx->captureBusy.store(false, std::memory_order_release);
 }
 
@@ -233,6 +267,30 @@ static bool filterPass(const AggCell& a, std::uint32_t expert, bool fStarve, boo
     if (fDense && expert == 0xFFFFFFFFu)
         ok = true;
     return ok;
+}
+
+static void launchHeatmapCapture(HWND hwnd, HeatmapPanelCtx* ctx)
+{
+    if (!ctx)
+        return;
+    if (ctx->destroyed.load(std::memory_order_acquire))
+        return;
+    if (ctx->captureBusy.exchange(true, std::memory_order_acq_rel))
+        return;
+
+    ctx->activeCaptures.fetch_add(1, std::memory_order_acq_rel);
+    std::thread([hwnd, ctx]() {
+        try
+        {
+            runHeatmapCapture(hwnd, ctx);
+        }
+        catch (...)
+        {
+            // Keep capture state recoverable if a background capture throws unexpectedly.
+            ctx->captureBusy.store(false, std::memory_order_release);
+        }
+        ctx->activeCaptures.fetch_sub(1, std::memory_order_acq_rel);
+    }).detach();
 }
 
 static LRESULT CALLBACK HeatmapPanelProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -265,20 +323,33 @@ static LRESULT CALLBACK HeatmapPanelProc(HWND hwnd, UINT msg, WPARAM wParam, LPA
             SetTimer(hwnd, kHeatmapTimerId, 1000, nullptr);
             return 0;
         }
+        case WM_RAWR_HEATMAP_REFRESH:
+            launchHeatmapCapture(hwnd, ctx);
+            return 0;
         case WM_DESTROY:
             if (ctx)
             {
                 ctx->destroyed.store(true, std::memory_order_release);
                 KillTimer(hwnd, kHeatmapTimerId);
+                for (int i = 0; i < 5000 && ctx->activeCaptures.load(std::memory_order_acquire) != 0; ++i)
+                    Sleep(1);
+                if (ctx->activeCaptures.load(std::memory_order_acquire) != 0)
+                {
+                    // Avoid use-after-free if a capture thread is still touching ctx during teardown.
+                    SetWindowLongPtrW(hwnd, GWLP_USERDATA, 0);
+                    return 0;
+                }
+                if (ctx->hbmBack) {
+                    DeleteObject(ctx->hbmBack);
+                    ctx->hbmBack = nullptr;
+                }
                 SetWindowLongPtrW(hwnd, GWLP_USERDATA, 0);
                 delete ctx;
             }
             return 0;
         case WM_TIMER:
-            if (wParam == kHeatmapTimerId && ctx && !ctx->captureBusy.exchange(true, std::memory_order_acq_rel))
-            {
-                std::thread([hwnd, ctx]() { runHeatmapCapture(hwnd, ctx); }).detach();
-            }
+            if (wParam == kHeatmapTimerId)
+                launchHeatmapCapture(hwnd, ctx);
             return 0;
         case WM_RAWR_HEATMAP_FRAME:
             if (ctx)
@@ -374,7 +445,7 @@ static LRESULT CALLBACK HeatmapPanelProc(HWND hwnd, UINT msg, WPARAM wParam, LPA
         case WM_PAINT:
         {
             PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(hwnd, &ps);
+            HDC hdcWindow = BeginPaint(hwnd, &ps);
             if (!ctx)
             {
                 EndPaint(hwnd, &ps);
@@ -382,6 +453,21 @@ static LRESULT CALLBACK HeatmapPanelProc(HWND hwnd, UINT msg, WPARAM wParam, LPA
             }
             RECT cr;
             GetClientRect(hwnd, &cr);
+
+            // Double buffering
+            HDC hdc = CreateCompatibleDC(hdcWindow);
+            if (!ctx->hbmBack) {
+                ctx->hbmBack = CreateCompatibleBitmap(hdcWindow, cr.right, cr.bottom);
+            } else {
+                BITMAP bm;
+                GetObject(ctx->hbmBack, sizeof(bm), &bm);
+                if (bm.bmWidth != cr.right || bm.bmHeight != cr.bottom) {
+                    DeleteObject(ctx->hbmBack);
+                    ctx->hbmBack = CreateCompatibleBitmap(hdcWindow, cr.right, cr.bottom);
+                }
+            }
+            HGDIOBJ oldHbm = SelectObject(hdc, ctx->hbmBack);
+
             const COLORREF bg = RGB(0x19, 0x17, 0x24);
             const COLORREF cellCold = RGB(0x26, 0x23, 0x3a);
             const COLORREF cellRes = RGB(0x31, 0x74, 0x8f);
@@ -427,6 +513,15 @@ static LRESULT CALLBACK HeatmapPanelProc(HWND hwnd, UINT msg, WPARAM wParam, LPA
             SetTextColor(hdc, RGB(0xe0, 0xde, 0xf4));
             RECT hudRc{4, 4, cr.right - 4, kHudTopH};
             DrawTextW(hdc, hud, -1, &hudRc, DT_LEFT | DT_WORDBREAK);
+
+            // Per-GPU Utilization HUD
+            wchar_t gpuStats[256];
+            swprintf_s(gpuStats, L"GPU0: %.1f%%  GPU1: %.1f%%  %ls", 
+                local.gpuUtilization.size() > 0 ? local.gpuUtilization[0] * 100.0f : 0.0f,
+                local.gpuUtilization.size() > 1 ? local.gpuUtilization[1] * 100.0f : 0.0f,
+                ctx->combinedView ? L"[COMBINED VIEW]" : L"[SEPARATED]");
+            RECT gpuRc{cr.right - 280, 4, cr.right - 4, 30};
+            DrawTextW(hdc, gpuStats, -1, &gpuRc, DT_RIGHT);
 
             HPEN penGold = CreatePen(PS_SOLID, 1, gold);
             HPEN penLove = CreatePen(PS_SOLID, 2, love);
@@ -480,7 +575,8 @@ static LRESULT CALLBACK HeatmapPanelProc(HWND hwnd, UINT msg, WPARAM wParam, LPA
             const int nrows = static_cast<int>(local.layerOrder.size());
             const int gridW = ncols * kCellPx;
             const int gridH = nrows * kCellPx;
-            SetWindowOrgEx(hdc, -ctx->scrollX, -ctx->scrollY - gridTop, nullptr);
+            POINT oldOrg;
+            SetWindowOrgEx(hdc, -ctx->scrollX, -ctx->scrollY - gridTop, &oldOrg);
 
             for (const auto& kv : local.aggs)
             {
@@ -491,14 +587,43 @@ static LRESULT CALLBACK HeatmapPanelProc(HWND hwnd, UINT msg, WPARAM wParam, LPA
                 const AggCell& ac = kv.second;
                 if (!filterPass(ac, kv.first.expertIndex, fStarve, fCold, fDense))
                     continue;
+                
+                // v1.3 Cluster: Stale check (was its generation the current?)
+                bool isStale = local.stale; 
+
                 RECT rc{ec->second * kCellPx, lr->second * kCellPx, (ec->second + 1) * kCellPx,
                         (lr->second + 1) * kCellPx};
                 COLORREF fill = ac.resident ? cellRes : cellCold;
+                
+                // Dynamic Gradient per GPU
+                if (ac.resident) {
+                   if (ac.deviceOrdinal == 0) {
+                       // GPU0 Gold Gradient (based on inUseIntensity if available, else static)
+                       fill = gold; 
+                   } else {
+                       // GPU1 Love/Iris Gradient
+                       fill = (ac.deviceOrdinal == 1) ? love : RGB(0x9c, 0xc3, 0xbe);
+                   }
+                }
+
                 if (kv.first.expertIndex == 0xFFFFFFFFu)
                     fill = cellDense;
+
                 HBRUSH br = CreateSolidBrush(fill);
                 FillRect(hdc, &rc, br);
                 DeleteObject(br);
+                
+                // HUD: Stale indicator border
+                if (isStale) {
+                    HPEN stalePen = CreatePen(PS_SOLID, 1, RGB(0x44, 0x41, 0x5a));
+                    HGDIOBJ old = SelectObject(hdc, stalePen);
+                    HGDIOBJ oldBr = SelectObject(hdc, GetStockObject(NULL_BRUSH));
+                    Rectangle(hdc, rc.left, rc.top, rc.right, rc.bottom);
+                    SelectObject(hdc, old);
+                    SelectObject(hdc, oldBr);
+                    DeleteObject(stalePen);
+                }
+
                 if (ac.prefetchInFlight)
                 {
                     HBRUSH bnull = static_cast<HBRUSH>(GetStockObject(NULL_BRUSH));
@@ -517,7 +642,7 @@ static LRESULT CALLBACK HeatmapPanelProc(HWND hwnd, UINT msg, WPARAM wParam, LPA
                     DeleteObject(brL);
                 }
             }
-            SetWindowOrgEx(hdc, 0, 0, nullptr);
+            SetWindowOrgEx(hdc, oldOrg.x, oldOrg.y, nullptr);
 
             if (ctx && ctx->hoverRow >= 0 && ctx->hoverCol >= 0 && ctx->hoverRow < nrows && ctx->hoverCol < ncols)
             {
@@ -530,17 +655,19 @@ static LRESULT CALLBACK HeatmapPanelProc(HWND hwnd, UINT msg, WPARAM wParam, LPA
                     const AggCell& ac = it->second;
                     wchar_t tip[384];
                     swprintf_s(tip,
-                               L"L%u-%u expert=%u row=%zu  res=%d hold=%u pf=%d bytes=%llu touch=%llu  "
-                               L"planGen=%llu snap=%llu",
-                               lay, ac.layerEnd, exp, ac.planRowIndex, ac.resident ? 1 : 0, ac.holdMax,
+                               L"L%u-%u expert=%u dev=%u row=%zu  res=%d hold=%u pf=%d bytes=%llu touch=%llu",
+                               lay, ac.layerEnd, exp, ac.deviceOrdinal, ac.planRowIndex, ac.resident ? 1 : 0, ac.holdMax,
                                ac.prefetchInFlight ? 1 : 0, static_cast<unsigned long long>(ac.bytesMax),
-                               static_cast<unsigned long long>(ac.touchMax),
-                               static_cast<unsigned long long>(local.planGeneration),
-                               static_cast<unsigned long long>(local.snapshotId));
+                               static_cast<unsigned long long>(ac.touchMax));
                     RECT tr{4, cr.bottom - 22, cr.right - 4, cr.bottom - 2};
                     DrawTextW(hdc, tip, -1, &tr, DT_LEFT | DT_SINGLELINE | DT_END_ELLIPSIS);
                 }
             }
+
+            // Blit to window
+            BitBlt(hdcWindow, 0, 0, cr.right, cr.bottom, hdc, 0, 0, SRCCOPY);
+            SelectObject(hdc, oldHbm);
+            DeleteDC(hdc);
 
             EndPaint(hwnd, &ps);
             return 0;

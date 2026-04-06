@@ -16,6 +16,10 @@
 #include <string>
 #include <vector>
 
+#ifndef RAWRXD_SUBSYS_MODES_D_INTEGRATED
+#define RAWRXD_SUBSYS_MODES_D_INTEGRATED
+#endif
+
 // Forward declaration
 class Win32IDE;
 

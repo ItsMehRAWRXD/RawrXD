@@ -331,7 +331,7 @@ enum CmdFlags : uint32_t
       CMD_NONE)                                                                                                        \
     X(6121, ROUTER_COST_STATS, "router.costStats", "!router cost", BOTH, "Router", handleRouterShowCostStats,          \
       CMD_NONE)                                                                                                        \
-    X(6130, IDM_BENCHMARK_MOE, "moe.benchmark", "!moe_bench", BOTH, "Performance", handleMoeBenchmark, CMD_ASYNC)      \
+    X(6130, IDM_BENCHMARK_MOE, "moe.benchmark", "!moe_bench", BOTH, "Performance", handleRouterStatus, CMD_ASYNC)      \
                                                                                                                        \
     /* ═══════════════════ LSP CLIENT (5058-5070) ═══════════════════ */                                               \
     X(5058, LSP_START_ALL, "lsp.startAll", "!lsp start", BOTH, "LSP", handleLspStartAll, CMD_ASYNC)                    \

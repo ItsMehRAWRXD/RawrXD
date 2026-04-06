@@ -204,6 +204,7 @@ void Win32IDE::onSubAgentStatus() {
 // ============================================================================
 // AGENT MEMORY HANDLERS (Phase 19B)
 // ============================================================================
+#if 0
 void Win32IDE::onAgentMemoryView() {
     LOG_INFO("onAgentMemoryView called");
     if (!m_agenticBridge) {
@@ -274,10 +275,12 @@ void Win32IDE::onAgentMemoryExport() {
         appendToOutput("❌ Failed to export agent memory\n", "Errors", OutputSeverity::Error);
     }
 }
+#endif
 
 // ============================================================================
 // AUTONOMY HANDLERS
 // ============================================================================
+#if 0
 void Win32IDE::onAutonomyToggle() {
     LOG_INFO("onAutonomyToggle called");
     if (!m_agenticBridge) {
@@ -390,6 +393,7 @@ void Win32IDE::onAutonomyViewMemory() {
     std::string memory = m_autonomyManager->ExportMemory();
     appendToOutput("=== Autonomy Memory ===\n" + memory + "\n", "Output", OutputSeverity::Info);
 }
+#endif
 
 // ----------------------------------------------------------------------------
 // Autonomous Agentic Pipeline (Task 1: Wire + Build)
@@ -398,6 +402,7 @@ void Win32IDE::onAutonomyViewMemory() {
 // Note: Implementation is below (after the old #if 0 block) to avoid duplicate definitions.
 // This comment block is intentionally left here for documentation
 
+#if 0
 void Win32IDE::onBoundedAgentLoop() {
     LOG_INFO("onBoundedAgentLoop called");
     if (!m_agenticBridge) {
@@ -461,6 +466,7 @@ void Win32IDE::onBoundedAgentLoop() {
         m_agenticBridge->ExecuteBoundedAgentLoop(taskStr, maxIter);
     }).detach();
 }
+#endif
 
 #endif
 

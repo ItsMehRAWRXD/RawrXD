@@ -741,8 +741,10 @@ set(SOURCES
     # Support tier manager (SupportTierManager::Instance, GenerateStatusReport) — required by main, complete_server
     src/core/support_tier.cpp
 
-    # Subsystem mode stubs (CompileMode, EncryptMode, InjectMode, etc.) — required by rawrxd_subsystem_api
-    # removed stub unit
+    # Subsystem mode exports (CompileMode, EncryptMode, InjectMode, etc.) — required by rawrxd_subsystem_api
+    src/core/rawrxd_subsys_modes_a.cpp
+    src/core/rawrxd_subsys_modes_b.cpp
+    src/core/rawrxd_subsys_modes_c.cpp
 
     # Feature registry (FeatureRegistry::instance, registerFeature) — required by enterprise_feature_manager
     src/core/feature_registry.cpp
@@ -3087,6 +3089,9 @@ if(WIN32)
         src/win32app/Win32IDE_AgentHistory.cpp
         src/win32app/Win32IDE_AgentPanel.cpp
         src/win32app/Win32IDE_DiskRecovery.cpp
+        src/win32app/Win32IDE_Mnemosyne.cpp
+    src/win32app/Win32IDE_FabricBridge.cpp
+        src/win32app/Win32IDE_SettingsEvents.cpp
         src/win32app/Win32TerminalManager.cpp
         src/win32app/TransparentRenderer.cpp
 
@@ -3134,6 +3139,10 @@ if(WIN32)
         
         src/agentic_observability.cpp
         src/core/rawrxd_subsystem_api.cpp
+        src/core/rawrxd_subsys_modes_a.cpp
+        src/core/rawrxd_subsys_modes_b.cpp
+        src/core/rawrxd_subsys_modes_c.cpp
+        src/core/rawrxd_subsys_modes_d.cpp
         src/runtime_core.cpp
         src/tool_registry.cpp
         src/agent/telemetry_collector.cpp

@@ -76,6 +76,65 @@ std::mutex g_pendingInferenceMutex;
 std::unordered_map<Win32IDE*, std::deque<PendingInferenceRequest>> g_pendingInferenceByIde;
 constexpr size_t kMaxPendingInferenceRequestsPerIde = 16;
 
+std::mutex g_chatUtf8CarryMutex;
+std::unordered_map<Win32IDE*, std::string> g_chatUtf8CarryByIde;
+
+inline bool IsUtf8ContinuationByte(unsigned char b)
+{
+    return (b & 0xC0u) == 0x80u;
+}
+
+inline int Utf8ExpectedLen(unsigned char lead)
+{
+    if (lead <= 0x7Fu)
+        return 1;
+    if (lead >= 0xC2u && lead <= 0xDFu)
+        return 2;
+    if (lead >= 0xE0u && lead <= 0xEFu)
+        return 3;
+    if (lead >= 0xF0u && lead <= 0xF4u)
+        return 4;
+    return 0;
+}
+
+size_t FindUtf8PendingStart(const std::string& text)
+{
+    const size_t n = text.size();
+    if (n == 0)
+        return 0;
+
+    size_t i = n;
+    while (i > 0 && IsUtf8ContinuationByte(static_cast<unsigned char>(text[i - 1])))
+    {
+        --i;
+    }
+
+    if (i == n)
+    {
+        const int exp = Utf8ExpectedLen(static_cast<unsigned char>(text[n - 1]));
+        if (exp > 1)
+            return n - 1;
+        return n;
+    }
+
+    if (i == 0)
+        return n;
+
+    const size_t leadPos = i - 1;
+    const int exp = Utf8ExpectedLen(static_cast<unsigned char>(text[leadPos]));
+    if (exp <= 0)
+        return n;
+
+    const size_t avail = n - leadPos;
+    return (avail < static_cast<size_t>(exp)) ? leadPos : n;
+}
+
+void ClearChatUtf8Carry(Win32IDE* ide)
+{
+    std::lock_guard<std::mutex> lock(g_chatUtf8CarryMutex);
+    g_chatUtf8CarryByIde.erase(ide);
+}
+
 size_t EnqueuePendingInference(Win32IDE* ide, PendingInferenceRequest&& req)
 {
     std::lock_guard<std::mutex> lock(g_pendingInferenceMutex);
@@ -556,11 +615,20 @@ static std::wstring utf8ToWide(const std::string& utf8)
 {
     if (utf8.empty())
         return {};
-    const int len = MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), static_cast<int>(utf8.size()), nullptr, 0);
+    int len = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, utf8.c_str(), static_cast<int>(utf8.size()), nullptr,
+                                  0);
+    UINT cp = CP_UTF8;
+    DWORD flags = MB_ERR_INVALID_CHARS;
+    if (len <= 0)
+    {
+        len = MultiByteToWideChar(CP_ACP, 0, utf8.c_str(), static_cast<int>(utf8.size()), nullptr, 0);
+        cp = CP_ACP;
+        flags = 0;
+    }
     if (len <= 0)
         return {};
     std::wstring out(static_cast<size_t>(len), L'\0');
-    if (MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), static_cast<int>(utf8.size()), out.data(), len) == 0)
+    if (MultiByteToWideChar(cp, flags, utf8.c_str(), static_cast<int>(utf8.size()), out.data(), len) == 0)
         return {};
     return out;
 }
@@ -702,6 +770,34 @@ static std::string sanitizeForChatUi(const std::string& input)
     if (compact.empty())
         return "[non-text backend payload suppressed]";
     return compact;
+}
+
+static std::string normalizeChatUtf8Chunk(Win32IDE* ide, const std::string& chunk, bool flush)
+{
+    if (!ide)
+        return sanitizeForChatUi(chunk);
+
+    std::string combined;
+    {
+        std::lock_guard<std::mutex> lock(g_chatUtf8CarryMutex);
+        auto& carry = g_chatUtf8CarryByIde[ide];
+        combined.reserve(carry.size() + chunk.size());
+        combined.append(carry);
+        combined.append(chunk);
+
+        if (!flush)
+        {
+            const size_t pendingStart = FindUtf8PendingStart(combined);
+            carry.assign(combined.data() + pendingStart, combined.size() - pendingStart);
+            combined.resize(pendingStart);
+        }
+        else
+        {
+            carry.clear();
+        }
+    }
+
+    return sanitizeForChatUi(combined);
 }
 
 static void logRawResponseHexPreview(const std::string& response)
@@ -6768,7 +6864,21 @@ std::string Win32IDE::generateResponse(const std::string& prompt)
             // Use Generate method for inference
             std::vector<int32_t> tokens = engine->Tokenize(prompt);
             std::vector<int32_t> output = engine->Generate(tokens, 100);
-            return engine->Detokenize(output);
+            std::string decoded = engine->Detokenize(output);
+            // Guard: if the output is mostly '?' (unknown-token placeholder emitted by
+            // the detokenizer for OOV token IDs), surface a diagnostic instead of
+            // flooding the chat pane with unintelligible question marks.
+            if (!decoded.empty())
+            {
+                int qCount = 0;
+                for (char c : decoded)
+                    if (c == '?') ++qCount;
+                if (decoded.size() > 20 && qCount > static_cast<int>(decoded.size()) * 2 / 5)
+                    return "[Inference error: detokenization failed — " +
+                           std::to_string(qCount) + "/" + std::to_string(decoded.size()) +
+                           " tokens unresolved. Verify model/vocab compatibility.]";
+            }
+            return decoded;
         }
         else
         {
@@ -7739,6 +7849,8 @@ void Win32IDE::HandleCopilotSend()
         return;
     }
 
+    ClearChatUtf8Carry(this);
+
     if (!m_hwndModelSelector || !IsWindow(m_hwndModelSelector))
     {
         appendToOutput("\n[Error] Model selector unavailable. Please reopen AI Chat pane.\n", "Output", OutputSeverity::Error);
@@ -7794,7 +7906,7 @@ void Win32IDE::HandleCopilotSend()
         }
 
         logRawResponseHexPreview(response);
-        const std::string safe = sanitizeForChatUi(response);
+        const std::string safe = normalizeChatUtf8Chunk(this, response, complete);
         std::string displayResp = "AI: " + (safe.empty() ? std::string("[non-text backend payload]") : safe) +
                                   (complete ? "\n" : "");
         int len = GetWindowTextLengthW(m_hwndCopilotChatOutput);
@@ -7819,6 +7931,7 @@ void Win32IDE::HandleCopilotClear()
 
     clearCopilotChat();
     m_chatHistory.clear();
+    ClearChatUtf8Carry(this);
 }
 
 // ============================================================================
@@ -7904,7 +8017,7 @@ void Win32IDE::HandleCopilotStreamUpdate(const char* token, size_t length)
     if (chunk.empty())
         return;
 
-    chunk = sanitizeForChatUi(chunk);
+    chunk = normalizeChatUtf8Chunk(this, chunk, false);
     if (chunk.empty())
         return;
 

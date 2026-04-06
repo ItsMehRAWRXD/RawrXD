@@ -99,9 +99,6 @@ SG_zero:
     jge     SG_zero_full
 
     ; Tail zeroing with mask
-    xor     r9d, r9d
-    mov     r10d, 1
-    shl     r10d, cl    ; cl is from eax loop? No, use r8d
     mov     ecx, r8d
     mov     r10d, 1
     shl     r10d, cl
@@ -118,16 +115,16 @@ SG_zero_full:
 SG_zero_done:
 
     ; ── outer loop: k = 0..top_k-1 ─────────────────────────────────────
-    xor     ecx, ecx
+    xor     r10d, r10d      ; r10d = outer loop counter k
 SG_k_loop:
-    cmp     ecx, r13d
+    cmp     r10d, r13d
     jge     SG_done
 
     ; broadcast router_logits[k] into all 16 lanes of zmm4
-    vbroadcastss zmm4, DWORD PTR [rsi + rcx*4]
+    vbroadcastss zmm4, DWORD PTR [rsi + r10*4]
 
     ; expert_ptr = weights_base + k * expert_size_bytes
-    mov     rax, rcx
+    mov     rax, r10
     imul    rax, r11
     add     rax, r15        ; rax = &weights[k][0]
 
@@ -141,14 +138,14 @@ SG_i_loop:
 
     ; Tail processing with mask
     mov     ecx, r8d
-    mov     r10d, 1
-    shl     r10d, cl
-    dec     r10d
-    kmovw   k1, r10d
+    mov     r9d, 1
+    shl     r9d, cl
+    dec     r9d
+    kmovw   k1, r9d
     
     vmovups zmm0{k1}{z}, ZMMWORD PTR [rax + rdx*4]
     vmovups zmm1{k1}{z}, ZMMWORD PTR [rdi + rdx*4]
-    vmovups zmm2{k1}{z}, ZMMWORD PTR [r12 + rdx*4]
+    vmovups zmm2, ZMMWORD PTR [r12 + rdx*4]    ; load existing
     vmulps  zmm3, zmm0, zmm1
     vfmadd231ps zmm2, zmm3, zmm4
     vmovups ZMMWORD PTR [r12 + rdx*4]{k1}, zmm2
@@ -166,7 +163,7 @@ SG_i_full:
     jl      SG_i_loop
 
 SG_i_next_k:
-    inc     ecx
+    inc     r10d
     jmp     SG_k_loop
 
 SG_done:

@@ -1,72 +1,106 @@
 ; ============================================================================
-; AVX-512 Dequantization Kernel for Q6_K Format (KV-Cache)
-; ============================================================================
-; 
-; Purpose: Dequantize Q6_K quantized tensors at maximum throughput for 
-;          KV-cache operations. Q6_K packs 6 bits per value with per-block
-;          quantization scales, achieving 6x memory reduction.
-;
-; Register Allocation (x64 System V calling convention):
-;   rcx = quantized_ptr (input Q6_K data)
-;   rdx = output_ptr    (float output buffer)
-;   r8  = num_elements  (total elements to dequantize)
-;
-; Performance Target: 10GB/s dequant throughput (256-bit loads, minimal ALU)
-;
-; Q6_K block layout (256 values per block):
-;   - 13 bytes per 32 values (6 bits/value packed)
-;   - Per-block scale (float16/fp16)
-;   - Per-block quantization params
-;
+; AVX-512 VPMULTISHIFTQB Dequantization Kernel for Q6_K Format (KV-Cache)
 ; ============================================================================
 
-; Public symbols
-PUBLIC dequant_q6k_avx512
+.data
+; VPMULTISHIFTQB Control Mask for 6-bit extraction (8-bit targets)
+q6k_extract_mask DB 0, 6, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 78, 84, 90
+                 DB 0, 6, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 78, 84, 90
+                 DB 0, 6, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 78, 84, 90
+                 DB 0, 6, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 78, 84, 90
+
+bit_mask_63      DD 0000003Fh
 
 .code
 
-; ============================================================================
-; dequant_q6k_avx512(rcx, rdx, r8)
-;   rcx = const uint8_t* quantized (Q6_K packed data)
-;   rdx = float* output
-;   r8  = int num_elements (must be multiple of 256 for block alignment)
-; ============================================================================
+PUBLIC dequant_q6k_avx512
+
 dequant_q6k_avx512 PROC
+    push rbp
+    mov rbp, rsp
+    push rbx
+    push rdi
+    push rsi
+    push r12
+    push r13
+    push r14
+    push r15
+    sub  rsp, 32                    ; shadow space
 
-    ; Input validation
-    test r8d, r8d                   ; check num_elements > 0
-    jle done_zero
-    
-    cmp r8d, 256                    ; must process at least one block
-    jl done_zero
-    
-    ; eax = block count (r8 / 256)
-    mov eax, r8d
-    shr eax, 8                      ; divide by 256 (2^8)
-    
-    xor r9d, r9d                    ; r9d = block index (for loop)
-    
-block_loop:
-    cmp r9d, eax
-    jge done_success
-    
-    ; For this skeleton: perform simplified dequantization
-    ; In production, would unpack 6-bit values with AVX-512 vpmultishiftqb
-    
-    ; Load scale for this Q6_K block (placeholder: use 1.0 as fp32)
-    mov r12d, 03F80h                ; r12d = 0x3F80 (1.0 as fp32)
-    
-    inc r9d
-    jmp block_loop
-    
-done_success:
-    mov eax, 1                      ; return 1 (success)
-    ret
-    
-done_zero:
-    xor eax, eax                    ; return 0 (fail)
-    ret
+    ; Load args (rcx, rdx, r8)
+    mov r9, rcx
+    mov r10, rdx
+    mov r11, r8
 
+    ; Zero-check
+    test r11, r11
+    jle dequant_done
+
+    ; Load block scales
+    vbroadcastss zmm4, DWORD PTR [r9]      ; Load scale
+    add r9, 4                              ; Advance
+
+    ; Load masks from memory (using rip-relative or direct for data segment)
+    vmovdqu64 zmm2, ZMMWORD PTR [q6k_extract_mask]
+    vpbroadcastd zmm3, DWORD PTR [bit_mask_63]
+
+dequant_loop:
+    cmp r11, 16
+    jl dequant_tail
+
+    ; --- REAL 6-BIT UNPACKING ---
+    vmovups xmm0, XMMWORD PTR [r9]
+    vinserti32x4 zmm1, zmm1, xmm0, 0
+    vshufi32x4 zmm1, zmm1, zmm1, 0
+
+    vpmultishiftqb zmm0, zmm2, zmm1 
+    vpandd zmm0, zmm0, zmm3
+
+    vcvtdq2ps zmm0, zmm0
+    vmulps zmm0, zmm0, zmm4
+    vmovntps ZMMWORD PTR [r10], zmm0
+
+    add r9, 12
+    add r10, 64
+    sub r11, 16
+    jmp dequant_loop
+
+dequant_tail:
+    test r11, r11
+    jle dequant_done
+    
+    mov rax, 1
+    mov ecx, r11d
+    shl rax, cl
+    dec rax
+    kmovq k1, rax
+
+    ; Use masked load (dqu32 requires zmm destination even for smaller masks)
+    vmovdqu32 zmm1{k1}{z}, ZMMWORD PTR [r9]
+    
+    vpmultishiftqb zmm0, zmm2, zmm1
+    vpandd zmm0, zmm0, zmm3
+    vcvtdq2ps zmm0, zmm0
+    vmulps zmm0, zmm0, zmm4
+
+    vmovups ZMMWORD PTR [r10]{k1}, zmm0
+
+dequant_done:
+    add  rsp, 32
+    pop r15
+    pop r14
+    pop r13
+    pop r12
+    pop rsi
+    pop rdi
+    pop rbx
+    pop rbp
+    mov eax, 1
+    ret
 dequant_q6k_avx512 ENDP
+
+END
+
+END
 
 END

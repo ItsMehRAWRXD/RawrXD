@@ -2383,7 +2383,16 @@ void Win32IDE::handleToolsCommand(int commandId)
             break;
 
         case IDM_ROUTER_SHOW_HEATMAP:  // 5075
-            appendToOutput(getCostLatencyHeatmapString(), "General", OutputSeverity::Info);
+            if (m_hwndExpertHeatmapPanel && IsWindow(m_hwndExpertHeatmapPanel))
+            {
+                // Refresh expert heatmap instead of text dump
+                SendMessageW(m_hwndExpertHeatmapPanel, WM_APP + 108, 0, 0); // WM_RAWR_HEATMAP_REFRESH
+                SetForegroundWindow(m_hwndExpertHeatmapPanel);
+            }
+            else
+            {
+                toggleExpertHeatmapPanel();
+            }
             break;
 
         case IDM_ROUTER_ENSEMBLE_ENABLE:  // 5076

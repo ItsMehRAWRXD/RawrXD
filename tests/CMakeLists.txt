@@ -145,6 +145,18 @@ if(NOT TARGET test_ai_merge_resolver AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tes
     message(STATUS "  ✓ Added test_ai_merge_resolver")
 endif()
 
+# IDE-Linked Autonomy Smoke Test
+if(NOT TARGET test_ide_model_autonomy AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/smoke/test_ide_model_autonomy.cpp")
+    add_executable(test_ide_model_autonomy smoke/test_ide_model_autonomy.cpp d:/rawrxd/src/core/feature_handlers.cpp)
+    target_include_directories(test_ide_model_autonomy PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
+    set_target_properties(test_ide_model_autonomy PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests" CXX_STANDARD 20)
+    if(WIN32)
+       target_link_libraries(test_ide_model_autonomy PRIVATE ws2_32 winhttp psapi)
+    endif()
+    add_test(NAME test_ide_model_autonomy COMMAND test_ide_model_autonomy)
+    message(STATUS "  ✓ Added test_ide_model_autonomy")
+endif()
+
 # Sandboxed Terminal Test
 if(NOT TARGET test_sandboxed_terminal AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_sandboxed_terminal.cpp")
     add_executable(test_sandboxed_terminal test_sandboxed_terminal.cpp)

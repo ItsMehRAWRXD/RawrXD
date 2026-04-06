@@ -9228,3 +9228,9 @@ CommandResult handleTier1UpdateDismiss(const CommandContext& ctx)
 {
     return routeToIde(ctx, 12091, "tier1.updateDismiss");
 }
+
+CommandResult handleMoeBenchmark(const CommandContext& ctx)
+{
+    return routeToIde(ctx, 6130, "moe.benchmark");
+}
+
