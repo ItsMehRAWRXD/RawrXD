@@ -91,8 +91,15 @@ static RawrHotpatchStats g_rawrHotpatchStats{};
 static RawrSnapshotStats g_rawrSnapshotStats{};
 
 // ═══════════════════ TPS SENTINEL (Guardrail) ═══════════════════
-static double g_baselineTps = 0.0;
-static bool g_sentinelArmed = false;
+static double   g_baselineTps = 0.0;
+static double   g_baselineLatencyMs = 0.0;
+static uint64_t g_baselineColdLoadMs = 0.0;
+static bool     g_sentinelArmed = false;
+
+// Windowing for smoothing
+static double   g_tpsWindow[8]{};
+static int      g_tpsWindowIdx = 0;
+static int      g_tpsWindowCount = 0;
 
 static void LoadSovereignManifest()
 {
@@ -101,31 +108,52 @@ static void LoadSovereignManifest()
     char line[512];
     while (std::fgets(line, sizeof(line), f))
     {
-        if (std::strstr(line, "\"moe_sparse_gather_tps\":"))
-        {
+        if (std::strstr(line, "\"moe_sparse_gather_tps\":")) {
             char* val = std::strchr(line, ':');
             if (val) g_baselineTps = std::atof(val + 1);
+        }
+        else if (std::strstr(line, "\"latency_ms\":")) {
+            char* val = std::strchr(line, ':');
+            if (val) g_baselineLatencyMs = std::atof(val + 1);
         }
     }
     std::fclose(f);
     if (g_baselineTps > 0.1)
     {
         g_sentinelArmed = true;
-        RawrXD_Native_Log("[SENTINEL] Armed with baseline TPS: %.2f", g_baselineTps);
+        RawrXD_Native_Log("[SENTINEL] Armed | Baseline TPS: %.2f | Latency: %.3f ms", g_baselineTps, g_baselineLatencyMs);
     }
 }
 
-static void VerifyTpsSentinel(double currentTps)
+static void VerifyTpsSentinel(double currentTps, double currentLatencyMs)
 {
     if (!g_sentinelArmed) return;
-    const double threshold = g_baselineTps * 0.90; // 10% tolerance
-    if (currentTps < threshold)
-    {
-        RawrXD_Native_Log("[SENTINEL] ALERT: TPS REGRESSION DETECTED! Baseline: %.2f | Current: %.2f", g_baselineTps, currentTps);
+
+    // Update moving average window
+    g_tpsWindow[g_tpsWindowIdx] = currentTps;
+    g_tpsWindowIdx = (g_tpsWindowIdx + 1) % 8;
+    if (g_tpsWindowCount < 8) g_tpsWindowCount++;
+
+    double avgTps = 0.0;
+    for (int i = 0; i < g_tpsWindowCount; ++i) avgTps += g_tpsWindow[i];
+    avgTps /= g_tpsWindowCount;
+
+    const double tpsThreshold = g_baselineTps * 0.90; // 10% tolerance
+    const double latThreshold = g_baselineLatencyMs * 1.25; // 25% tolerance for latency spikes
+
+    bool regression = false;
+    if (avgTps < tpsThreshold) {
+        RawrXD_Native_Log("[SENTINEL] ALERT: TPS REGRESSION! Avg: %.2f | Baseline: %.2f", avgTps, g_baselineTps);
+        regression = true;
     }
-    else
-    {
-        RawrXD_Native_Log("[SENTINEL] Verify passed: %.2f TPS", currentTps);
+    
+    if (currentLatencyMs > latThreshold && g_baselineLatencyMs > 0.0001) {
+        RawrXD_Native_Log("[SENTINEL] ALERT: LATENCY REGRESSION! Current: %.3f ms | Baseline: %.3f ms", currentLatencyMs, g_baselineLatencyMs);
+        regression = true;
+    }
+
+    if (!regression) {
+        RawrXD_Native_Log("[SENTINEL] Verify passed | Avg TPS: %.2f | Latency: %.3f ms", avgTps, currentLatencyMs);
     }
 }
 // ══════════════════════════════════════════════════════════════
@@ -3598,12 +3626,13 @@ extern "C"
                 double elapsed_ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
                 if (elapsed_ms < 0.001) elapsed_ms = 0.001;
                 double tps = static_cast<double>(iter) / (elapsed_ms / 1000.0);
+                double avgLat = elapsed_ms / iter;
 
-                VerifyTpsSentinel(tps);
+                VerifyTpsSentinel(tps, avgLat);
 
                 std::cout << "\n[MoE Benchmark Result]\n";
                 std::cout << "Zen 4 AVX-512 Throughput: " << tps              << " TPS\n";
-                std::cout << "Avg Latency:              " << elapsed_ms / iter << " ms\n";
+                std::cout << "Avg Latency:              " << avgLat << " ms\n";
                 std::cout << "Total Elapsed:            " << elapsed_ms        << " ms (" << iter << " iterations)\n";
 
                 // Cleanup
