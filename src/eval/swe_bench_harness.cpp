@@ -42,6 +42,22 @@
 #include <unordered_set>
 #include <vector>
 
+// E79: Abort flag — set by CTRL-C/CTRL-BREAK console handler, checked after each task
+static std::atomic<bool> g_abort_requested{false};
+
+static BOOL WINAPI console_ctrl_handler(DWORD event)
+{
+    if (event == CTRL_C_EVENT  || event == CTRL_BREAK_EVENT ||
+        event == CTRL_CLOSE_EVENT || event == CTRL_LOGOFF_EVENT ||
+        event == CTRL_SHUTDOWN_EVENT) {
+        g_abort_requested.store(true, std::memory_order_relaxed);
+        fprintf(stdout, "\n[ABORT] Signal received — completing current task then flushing...\n");
+        fflush(stdout);
+        return TRUE;
+    }
+    return FALSE;
+}
+
 // Phase 2 context integration
 #include "context_config.h"
 
@@ -131,6 +147,15 @@ struct TaskResult {
     int          gold_patch_lines    = 0;           // line count of gold patch
     double       patch_jaccard_similarity = 0.0;    // Jaccard line-set overlap vs gold [0,1]
     std::string  wall_clock_ts;                     // ISO UTC timestamp at task start
+    // Enhancement batch 4 telemetry
+    uint64_t     response_token_estimate = 0;       // raw_response.size()/4 token estimate
+    double       ws_fuzzy_patch_score    = 0.0;     // whitespace-normalized Levenshtein ratio [0,1]
+    double       patch_size_ratio        = 0.0;     // emitted_patch_lines / max(1, gold_patch_lines)
+    // E80: Hunk-level insertion/deletion line counts
+    int          hunk_ins_lines = 0;                // '+' body lines in emitted patch (excl. +++ header)
+    int          hunk_del_lines = 0;                // '-' body lines in emitted patch (excl. --- header)
+    // F3: Prompt fingerprint (FNV-1a 64-bit hash of prompt bytes)
+    uint64_t     prompt_hash    = 0;                // reproducibility/dedup fingerprint
 };
 
 struct HarnessReport {
@@ -639,6 +664,39 @@ static bool validate_unified_diff_structure(const std::string& value, std::strin
         return false;
     }
 
+    // E83: Validate @@ hunk header number format: @@ -N[,M] +N[,M] @@
+    {
+        std::istringstream hdr_check(value);
+        std::string hdr_line;
+        while (std::getline(hdr_check, hdr_line)) {
+            if (!hdr_line.empty() && hdr_line.back() == '\r') hdr_line.pop_back();
+            if (hdr_line.rfind("@@", 0) != 0) continue;
+            size_t p = 2;
+            while (p < hdr_line.size() && hdr_line[p] == ' ') ++p;
+            bool has_minus = false, has_plus = false;
+            if (p < hdr_line.size() && hdr_line[p] == '-') {
+                ++p;
+                if (p < hdr_line.size() && std::isdigit(static_cast<unsigned char>(hdr_line[p]))) {
+                    has_minus = true;
+                    while (p < hdr_line.size() &&
+                           (std::isdigit(static_cast<unsigned char>(hdr_line[p])) || hdr_line[p] == ','))
+                        ++p;
+                }
+            }
+            while (p < hdr_line.size() && hdr_line[p] == ' ') ++p;
+            if (p < hdr_line.size() && hdr_line[p] == '+') {
+                ++p;
+                if (p < hdr_line.size() && std::isdigit(static_cast<unsigned char>(hdr_line[p])))
+                    has_plus = true;
+            }
+            if (!has_minus || !has_plus) {
+                error = "malformed @@ hunk header: " +
+                        hdr_line.substr(0, std::min(hdr_line.size(), static_cast<size_t>(80)));
+                return false;
+            }
+        }
+    }
+
     error.clear();
     return true;
 }
@@ -844,6 +902,146 @@ static void populate_context_telemetry(const Instance& inst, TaskResult& result)
     result.pressure_ratio = decision.pressure_ratio;
 }
 
+// E82: Normalize model alias to lowercase trimmed form for consistent telemetry.
+static std::string normalize_model_alias(const std::string& raw)
+{
+    std::string out;
+    out.reserve(raw.size());
+    for (char c : raw) {
+        out.push_back(static_cast<char>(std::tolower(static_cast<unsigned char>(c))));
+    }
+    size_t s = 0;
+    while (s < out.size() && std::isspace(static_cast<unsigned char>(out[s]))) ++s;
+    size_t e = out.size();
+    while (e > s && std::isspace(static_cast<unsigned char>(out[e - 1]))) --e;
+    return out.substr(s, e - s);
+}
+
+// E80: Count insertion and deletion body lines in a unified diff patch.
+// Excludes +++ and --- file headers from the counts.
+static void compute_hunk_ins_del(const std::string& patch, int& ins, int& del)
+{
+    ins = del = 0;
+    if (patch.empty()) return;
+    std::istringstream in(patch);
+    std::string line;
+    while (std::getline(in, line)) {
+        if (!line.empty() && line.back() == '\r') line.pop_back();
+        if (line.empty()) continue;
+        if (line[0] == '+' && !(line.size() >= 3 && line.substr(0, 3) == "+++")) ++ins;
+        else if (line[0] == '-' && !(line.size() >= 3 && line.substr(0, 3) == "---")) ++del;
+    }
+}
+
+// F3: FNV-1a 64-bit hash for prompt fingerprinting (reproducibility tracking).
+static uint64_t fnv1a_64(const std::string& data)
+{
+    uint64_t h = 14695981039346656037ULL;
+    for (unsigned char c : data) {
+        h ^= static_cast<uint64_t>(c);
+        h *= 1099511628211ULL;
+    }
+    return h;
+}
+
+// E78: Emit a schema version header as the very first JSONL record.
+// Enables post-processing tools to detect harness version and available fields.
+static void write_jsonl_schema_header(FILE* jsonl_out)
+{
+    if (!jsonl_out) return;
+    const long long ts = static_cast<long long>(
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch()).count());
+    fprintf(jsonl_out,
+        "{\"type\":\"schema\",\"version\":\"3.2\",\"harness\":\"RawrXD-SWEBench\","
+        "\"ts\":%lld,\"fields\":[\"sample_id\",\"tokens_requested\",\"tokens_effective\","
+        "\"elapsed_ms\",\"fuzzy_patch_score\",\"ws_fuzzy_patch_score\","
+        "\"patch_jaccard_similarity\",\"patch_size_ratio\","
+        "\"hunk_ins_lines\",\"hunk_del_lines\",\"prompt_hash\","
+        "\"api_error_class\",\"wall_clock_ts\",\"success\"]}\n",
+        ts);
+    fflush(jsonl_out);
+}
+
+// E84: Emit a sweep completion sentinel as the last JSONL record.
+// Allows post-processors to verify the JSONL was not truncated by a crash.
+static void write_jsonl_sweep_sentinel(FILE* jsonl_out, const HarnessReport& r)
+{
+    if (!jsonl_out) return;
+    const long long ts = static_cast<long long>(
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch()).count());
+    fprintf(jsonl_out,
+        "{\"type\":\"sweep_complete\",\"ts\":%lld,\"total\":%d,\"completed\":%d,"
+        "\"patch_correct\":%d,\"overall_score\":%.4f,\"pass@1\":%.4f}\n",
+        ts, r.total, r.completed, r.patch_correct, r.overall_score, r.overall_score);
+    fflush(jsonl_out);
+}
+
+// F1 (Todo #73): PID-based lockfile to prevent concurrent sweep processes
+// writing to the same JSONL.  Lock file path = jsonl_path + ".lock".
+// Returns the lock file path on success (caller deletes on exit), empty on skip.
+static std::string acquire_jsonl_pid_lock(const char* jsonl_path)
+{
+    if (!jsonl_path || !jsonl_path[0]) return {};
+    std::string lock_path = std::string(jsonl_path) + ".lock";
+    // Check for existing lock
+    FILE* existing = nullptr;
+    if (fopen_s(&existing, lock_path.c_str(), "r") == 0 && existing) {
+        char pid_buf[32] = {};
+        if (fgets(pid_buf, sizeof(pid_buf), existing)) {
+            fclose(existing);
+            const int owner_pid = atoi(pid_buf);
+            if (owner_pid > 0) {
+                HANDLE proc = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE,
+                                         static_cast<DWORD>(owner_pid));
+                if (proc) {
+                    CloseHandle(proc);
+                    fprintf(stderr,
+                        "[LOCK] Another sweep process (PID %d) is already writing to %s\n"
+                        "       Delete %s to override.\n",
+                        owner_pid, jsonl_path, lock_path.c_str());
+                    return {};  // lock held by live process
+                }
+            }
+        } else {
+            fclose(existing);
+        }
+    }
+    // Write our PID
+    FILE* lf = nullptr;
+    if (fopen_s(&lf, lock_path.c_str(), "w") != 0 || !lf) return {};
+    fprintf(lf, "%lu\n", static_cast<unsigned long>(GetCurrentProcessId()));
+    fclose(lf);
+    return lock_path;
+}
+
+// F2 (Todo #8): Emit run manifest JSONL record capturing CLI arguments and PID.
+static void write_jsonl_run_manifest(FILE* jsonl_out, int argc, char** argv)
+{
+    if (!jsonl_out) return;
+    const long long ts = static_cast<long long>(
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch()).count());
+    auto json_esc = [](const std::string& s) {
+        std::string out; out.reserve(s.size() + 8);
+        for (char c : s) {
+            if (c == '\\') out += "\\\\";
+            else if (c == '"') out += "\\\"";
+            else out.push_back(c);
+        }
+        return out;
+    };
+    fprintf(jsonl_out, "{\"type\":\"run_manifest\",\"ts\":%lld,\"pid\":%lu,\"args\":[",
+            ts, static_cast<unsigned long>(GetCurrentProcessId()));
+    for (int i = 0; i < argc; ++i) {
+        if (i > 0) fputc(',', jsonl_out);
+        fprintf(jsonl_out, "\"%s\"", json_esc(argv[i]).c_str());
+    }
+    fprintf(jsonl_out, "]}\n");
+    fflush(jsonl_out);
+}
+
 static void write_jsonl_model_fingerprint(
     FILE* jsonl_out,
     const std::string& model,
@@ -1041,6 +1239,24 @@ static std::string get_wall_clock_ts()
     return buf;
 }
 
+static std::string ws_normalize_patch(const std::string& patch)
+{
+    std::ostringstream out;
+    std::istringstream in(patch);
+    std::string ln;
+    while (std::getline(in, ln)) {
+        while (!ln.empty() && (ln.back() == ' ' || ln.back() == '\t' || ln.back() == '\r'))
+            ln.pop_back();
+        out << ln << '\n';
+    }
+    return out.str();
+}
+
+static double compute_ws_fuzzy_patch_score(const std::string& a, const std::string& b)
+{
+    return compute_fuzzy_patch_score(ws_normalize_patch(a), ws_normalize_patch(b));
+}
+
 static void write_jsonl_sample(FILE* jsonl_out, const TaskResult& result, size_t response_length)
 {
     if (!jsonl_out) {
@@ -1084,6 +1300,9 @@ static void write_jsonl_sample(FILE* jsonl_out, const TaskResult& result, size_t
         "\"api_error_class\": \"%s\", "
         "\"emitted_patch_lines\": %d, \"gold_patch_lines\": %d, "
         "\"patch_jaccard_similarity\": %.4f, \"wall_clock_ts\": \"%s\", "
+        "\"response_token_estimate\": %llu, "
+        "\"ws_fuzzy_patch_score\": %.4f, \"patch_size_ratio\": %.4f, "
+        "\"hunk_ins_lines\": %d, \"hunk_del_lines\": %d, \"prompt_hash\": \"%016llx\", "
         "\"success\": %s}\n",
         result.task_id.c_str(),
         result.tokens_requested,
@@ -1122,6 +1341,12 @@ static void write_jsonl_sample(FILE* jsonl_out, const TaskResult& result, size_t
         result.gold_patch_lines,
         result.patch_jaccard_similarity,
         json_escape(result.wall_clock_ts).c_str(),
+        result.response_token_estimate,
+        result.ws_fuzzy_patch_score,
+        result.patch_size_ratio,
+        result.hunk_ins_lines,
+        result.hunk_del_lines,
+        static_cast<unsigned long long>(result.prompt_hash),
         (result.status == TaskStatus::FAILED) ? "false" : "true");
     fflush(jsonl_out);
 }
@@ -1208,6 +1433,12 @@ public:
         report.total = static_cast<int>(m_instances.size());
 
         for (const auto& inst : m_instances) {
+            // E79: Check for CTRL-C / CTRL-BREAK abort before starting each task
+            if (g_abort_requested.load(std::memory_order_relaxed)) {
+                fprintf(stdout, "[ABORT] Sweep aborted before task: %s\n", inst.task_id.c_str());
+                fflush(stdout);
+                break;
+            }
             // Skip tasks already completed in a prior run
             if (!skip_ids.empty() && skip_ids.count(inst.task_id)) {
                 fprintf(stdout, "[RESUME] Skipping task: %s\n", inst.task_id.c_str());
@@ -1270,8 +1501,17 @@ public:
                 // Jaccard line-set overlap + gold line count
                 res.patch_jaccard_similarity = compute_jaccard_patch_score(res.emitted_patch, inst.gold_patch);
                 res.gold_patch_lines = compute_patch_line_count(inst.gold_patch);
+                // Whitespace-normalized fuzzy score
+                res.ws_fuzzy_patch_score = compute_ws_fuzzy_patch_score(res.emitted_patch, inst.gold_patch);
+                // Patch size ratio: emitted lines / gold lines
+                res.patch_size_ratio = static_cast<double>(compute_patch_line_count(res.emitted_patch))
+                                     / static_cast<double>(std::max(1, compute_patch_line_count(inst.gold_patch)));
             }
             res.emitted_patch_lines = compute_patch_line_count(res.emitted_patch);
+            // E80: Count insertion/deletion body lines in emitted patch
+            compute_hunk_ins_del(res.emitted_patch, res.hunk_ins_lines, res.hunk_del_lines);
+            // Response token estimate
+            res.response_token_estimate = static_cast<uint64_t>(res.raw_response.size() / 4);
 
             // Optionally run tests
             if (m_run_tests && !inst.test_cmds.empty()) {
@@ -1366,8 +1606,9 @@ private:
         if (res.status == TaskStatus::COMPLETED)     status_str = "DONE";
         if (res.status == TaskStatus::PATCH_CORRECT)  status_str = "PATCH_OK";
         if (res.status == TaskStatus::TESTS_PASSED)   status_str = "TESTS_OK";
-        fprintf(stdout, "[PROGRESS] [%zu/%d] %-40s  %-9s  %.0f ms\n",
-                task_num, task_total, res.task_id.c_str(), status_str, res.elapsed_ms);
+        fprintf(stdout, "[PROGRESS] [%zu/%d] %-40s  %-9s  %.0f ms  %s\n",
+                task_num, task_total, res.task_id.c_str(), status_str, res.elapsed_ms,
+                res.wall_clock_ts.empty() ? "-" : res.wall_clock_ts.c_str());
         if (res.status == TaskStatus::FAILED && !res.failure_reason.empty()) {
             fprintf(stdout, "           reason: %s\n", res.failure_reason.c_str());
         }
@@ -1483,7 +1724,9 @@ static bool write_json_report(const HarnessReport& r, const char* path)
             "\"kv_budget_bytes\": %llu, \"adapted\": %s, "
             "\"pressure_ratio\": %.4f, "
             "\"emitted_patch_lines\": %d, \"gold_patch_lines\": %d, "
-            "\"patch_jaccard_similarity\": %.4f, \"wall_clock_ts\": \"%s\"}%s\n",
+            "\"patch_jaccard_similarity\": %.4f, \"wall_clock_ts\": \"%s\", "
+            "\"response_token_estimate\": %llu, "
+            "\"ws_fuzzy_patch_score\": %.4f, \"patch_size_ratio\": %.4f}%s\n",
             t.task_id.c_str(),
             static_cast<int>(t.status),
             t.patch_match  ? "true" : "false",
@@ -1520,6 +1763,9 @@ static bool write_json_report(const HarnessReport& r, const char* path)
             t.gold_patch_lines,
             t.patch_jaccard_similarity,
             json_escape(t.wall_clock_ts).c_str(),
+            t.response_token_estimate,
+            t.ws_fuzzy_patch_score,
+            t.patch_size_ratio,
             comma);
     }
     fprintf(f, "  ]\n");
@@ -1580,10 +1826,39 @@ static bool write_jsonl_summary_report(const HarnessReport& r, const char* path)
     const double avg_fuzzy   = n_results > 0 ? sum_fuzzy   / n_results : 0.0;
     const double avg_jaccard = n_results > 0 ? sum_jaccard / n_results : 0.0;
     const double avg_elapsed = n_results > 0 ? sum_elapsed / n_results : 0.0;
+
+    // F4: Latency percentiles (p50 / p90 / p95)
+    double p50_elapsed = 0.0, p90_elapsed = 0.0, p95_elapsed = 0.0;
+    if (!r.results.empty()) {
+        std::vector<double> el_sorted;
+        el_sorted.reserve(r.results.size());
+        for (const auto& t : r.results) el_sorted.push_back(t.elapsed_ms);
+        std::sort(el_sorted.begin(), el_sorted.end());
+        const size_t n = el_sorted.size();
+        p50_elapsed = el_sorted[std::min(n - 1, static_cast<size_t>(n * 50 / 100))];
+        p90_elapsed = el_sorted[std::min(n - 1, static_cast<size_t>(n * 90 / 100))];
+        p95_elapsed = el_sorted[std::min(n - 1, static_cast<size_t>(n * 95 / 100))];
+    }
+
+    // F7: Multi-hunk vs single-hunk patch accuracy split
+    int single_hunk_total = 0, single_hunk_pass = 0;
+    int multi_hunk_total  = 0, multi_hunk_pass  = 0;
+    for (const auto& t : r.results) {
+        if (t.gold_hunk_count <= 1) { ++single_hunk_total; if (t.patch_match) ++single_hunk_pass; }
+        else                        { ++multi_hunk_total;  if (t.patch_match) ++multi_hunk_pass;  }
+    }
+
     fprintf(f, "  \"responses_with_hunks\": %d,\n", responses_with_hunks);
     fprintf(f, "  \"avg_fuzzy_score\": %.4f,\n", avg_fuzzy);
     fprintf(f, "  \"avg_jaccard_score\": %.4f,\n", avg_jaccard);
-    fprintf(f, "  \"avg_elapsed_ms\": %.2f\n", avg_elapsed);
+    fprintf(f, "  \"avg_elapsed_ms\": %.2f,\n", avg_elapsed);
+    fprintf(f, "  \"p50_elapsed_ms\": %.2f,\n", p50_elapsed);
+    fprintf(f, "  \"p90_elapsed_ms\": %.2f,\n", p90_elapsed);
+    fprintf(f, "  \"p95_elapsed_ms\": %.2f,\n", p95_elapsed);
+    fprintf(f, "  \"single_hunk_total\": %d,\n", single_hunk_total);
+    fprintf(f, "  \"single_hunk_pass\": %d,\n", single_hunk_pass);
+    fprintf(f, "  \"multi_hunk_total\": %d,\n", multi_hunk_total);
+    fprintf(f, "  \"multi_hunk_pass\": %d\n", multi_hunk_pass);
     fprintf(f, "}\n");
     fclose(f);
     return true;
@@ -1594,9 +1869,10 @@ static bool write_csv_report(const HarnessReport& r, const char* path)
     if (!path || !path[0]) return false;
     FILE* f = nullptr;
     if (fopen_s(&f, path, "w") != 0 || !f) return false;
-    fprintf(f, "task_id,status,elapsed_ms,fuzzy_patch_score,patch_jaccard_similarity,"
-               "emitted_patch_lines,gold_patch_lines,context_bytes_injected,"
-               "gold_hunk_count,retry_attempts,api_error_class\n");
+    fprintf(f, "task_id,status,elapsed_ms,fuzzy_patch_score,ws_fuzzy_patch_score,patch_jaccard_similarity,"
+               "patch_size_ratio,emitted_patch_lines,gold_patch_lines,context_bytes_injected,"
+               "gold_hunk_count,response_token_estimate,retry_attempts,api_error_class,"
+               "prompt_byte_count,wall_clock_ts\n");
     for (const auto& t : r.results) {
         const char* st = "NOT_RUN";
         switch (t.status) {
@@ -1606,13 +1882,78 @@ static bool write_csv_report(const HarnessReport& r, const char* path)
         case TaskStatus::FAILED:        st = "FAILED";        break;
         default: break;
         }
-        fprintf(f, "%s,%s,%.2f,%.4f,%.4f,%d,%d,%zu,%d,%d,%s\n",
+        fprintf(f, "%s,%s,%.2f,%.4f,%.4f,%.4f,%.4f,%d,%d,%zu,%d,%llu,%d,%s,%llu,%s\n",
             t.task_id.c_str(), st, t.elapsed_ms,
-            t.fuzzy_patch_score, t.patch_jaccard_similarity,
+            t.fuzzy_patch_score, t.ws_fuzzy_patch_score,
+            t.patch_jaccard_similarity, t.patch_size_ratio,
             t.emitted_patch_lines, t.gold_patch_lines,
             t.context_bytes_injected, t.gold_hunk_count,
-            t.retry_attempts,
-            t.api_error_class.empty() ? "none" : t.api_error_class.c_str());
+            t.response_token_estimate, t.retry_attempts,
+            t.api_error_class.empty() ? "none" : t.api_error_class.c_str(),
+            t.prompt_byte_count,
+            t.wall_clock_ts.empty() ? "-" : t.wall_clock_ts.c_str());
+    }
+    fclose(f);
+    return true;
+}
+
+static bool write_markdown_report(const HarnessReport& r, const char* path)
+{
+    if (!path || !path[0]) return false;
+    FILE* f = nullptr;
+    if (fopen_s(&f, path, "w") != 0 || !f) return false;
+    fprintf(f, "# RawrXD SWE-bench Evaluation Report\n\n");
+    fprintf(f, "| Metric | Value |\n");
+    fprintf(f, "|--------|-------|\n");
+    fprintf(f, "| Total instances | %d |\n", r.total);
+    fprintf(f, "| Completed | %d (%.1f%%) |\n", r.completed, r.task_completion_rate * 100.0);
+    fprintf(f, "| Patch correct | %d (%.1f%%) |\n", r.patch_correct, r.patch_correctness * 100.0);
+    fprintf(f, "| Tests passed | %d (%.1f%%) |\n", r.tests_passed, r.test_pass_rate * 100.0);
+    fprintf(f, "| **pass@1** | **%.4f** |\n", r.overall_score);
+    fprintf(f, "\n## Per-task Results\n\n");
+    fprintf(f, "| task_id | status | elapsed_ms | fuzzy | ws_fuzzy | jaccard | size_ratio | lines_emitted | lines_gold |\n");
+    fprintf(f, "|---------|--------|------------|-------|----------|---------|------------|---------------|------------|\n");
+    for (const auto& t : r.results) {
+        const char* st = "NOT_RUN";
+        switch (t.status) {
+        case TaskStatus::COMPLETED:     st = "COMPLETED";     break;
+        case TaskStatus::PATCH_CORRECT: st = "PATCH_CORRECT"; break;
+        case TaskStatus::TESTS_PASSED:  st = "TESTS_PASSED";  break;
+        case TaskStatus::FAILED:        st = "FAILED";        break;
+        default: break;
+        }
+        fprintf(f, "| %s | %s | %.0f | %.4f | %.4f | %.4f | %.4f | %d | %d |\n",
+            t.task_id.c_str(), st, t.elapsed_ms,
+            t.fuzzy_patch_score, t.ws_fuzzy_patch_score,
+            t.patch_jaccard_similarity, t.patch_size_ratio,
+            t.emitted_patch_lines, t.gold_patch_lines);
+    }
+    fclose(f);
+    return true;
+}
+
+static bool export_instances_jsonl(const std::vector<Instance>& instances, const char* path)
+{
+    if (!path || !path[0]) return false;
+    FILE* f = nullptr;
+    if (fopen_s(&f, path, "w") != 0 || !f) return false;
+    auto esc = [](const std::string& s) {
+        std::string o; o.reserve(s.size() + 8);
+        for (char c : s) {
+            if (c == '\\') o += "\\\\";
+            else if (c == '"') o += "\\\"";
+            else if (c == '\n') o += "\\n";
+            else if (c == '\r') o += "\\r";
+            else o.push_back(c);
+        }
+        return o;
+    };
+    for (const auto& inst : instances) {
+        fprintf(f, "{\"task_id\":\"%s\",\"repo\":\"%s\",\"base_commit\":\"%s\","
+                   "\"problem_statement\":\"%s\",\"patch\":\"%s\",\"hints\":\"%s\"}\n",
+            esc(inst.task_id).c_str(), esc(inst.repo).c_str(),
+            esc(inst.base_commit).c_str(), esc(inst.problem_stmt).c_str(),
+            esc(inst.gold_patch).c_str(), esc(inst.hints_text).c_str());
     }
     fclose(f);
     return true;
@@ -1755,7 +2096,8 @@ struct MinimalOllamaClient {
     int port;
     std::string model;
     bool debug_http = false;
-    int seed = -1;  // -1 = unset (random); set via --seed for reproducibility
+    int seed = -1;        // -1 = unset (random); set via --seed for reproducibility
+    double temperature = -1.0; // -1.0 = unset; passed to Ollama options.temperature if >= 0
 
     static void NormalizeHostAndPortLocal(const std::string& input, std::string& out_host, WORD& out_port)
     {
@@ -1973,6 +2315,10 @@ struct MinimalOllamaClient {
             ",\"options\":{\"num_predict\":" + std::to_string(request_max_tokens);
         if (seed >= 0) {
             body += ",\"seed\":" + std::to_string(seed);
+        }
+        if (temperature >= 0.0) {
+            char tempbuf[32]; snprintf(tempbuf, sizeof(tempbuf), "%.4f", temperature);
+            body += std::string(",\"temperature\":") + tempbuf;
         }
         body += "}}";
 
@@ -2314,6 +2660,8 @@ struct RealAgentContext {
     bool strict_mode = false; // reject is_fenced responses even when patch was extracted
     bool hints_enabled = true;    // if false, hints_text stripped from prompt
     size_t max_prompt_bytes = 0;  // if >0, trim context when prompt exceeds this limit
+    double temperature = -1.0;    // if >= 0, passed to Ollama options.temperature
+    int max_task_wall_ms = 0;     // E81: per-task wall-time budget cap in ms (0 = disabled)
 };
 
 static std::string invoke_real_agent(
@@ -2388,12 +2736,13 @@ static std::string invoke_real_agent(
         }
 
         result_out.prompt_byte_count = static_cast<uint64_t>(prompt.size());
-        result_out.model_alias = ctx->model_alias.empty()
-            ? ctx->ollama_client->model
-            : ctx->model_alias;
+        result_out.prompt_hash = SWEBench::fnv1a_64(prompt);  // F3: prompt fingerprint
+        result_out.model_alias = SWEBench::normalize_model_alias(  // E82: normalized alias
+            ctx->model_alias.empty() ? ctx->ollama_client->model : ctx->model_alias);
 
-        // Apply reproducibility seed to Ollama client before each call
-        ctx->ollama_client->seed = ctx->seed;
+        // Apply reproducibility seed and temperature to Ollama client before each call
+        ctx->ollama_client->seed        = ctx->seed;
+        ctx->ollama_client->temperature = ctx->temperature;
 
         if (!ctx->prompt_dump_dir.empty()) {
             std::filesystem::path dump_dir(ctx->prompt_dump_dir);
@@ -2405,6 +2754,9 @@ static std::string invoke_real_agent(
                 SWEBench::write_text_file(dump_file, prompt);
             }
         }
+
+        // E81: per-task wall-time budget — record start time before retry loop
+        const auto task_wall_t0 = std::chrono::steady_clock::now();
 
         const int max_attempts = 1 + std::max(0, ctx->retry_count);
         for (int attempt = 0; attempt < max_attempts; ++attempt) {
@@ -2450,6 +2802,19 @@ static std::string invoke_real_agent(
             }
 
             return patch;
+        }
+
+        // E81: Check per-task wall-time budget after exhausting all retries
+        if (ctx->max_task_wall_ms > 0) {
+            const auto wall_elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::steady_clock::now() - task_wall_t0).count();
+            if (wall_elapsed_ms >= ctx->max_task_wall_ms &&
+                result_out.failure_reason.find("wall_time") == std::string::npos) {
+                result_out.failure_reason = "wall_time_budget_exceeded (" +
+                    std::to_string(wall_elapsed_ms) + " ms >= " +
+                    std::to_string(ctx->max_task_wall_ms) + " ms limit)";
+                result_out.api_error_class = "timeout";
+            }
         }
 
         return {};
@@ -2502,9 +2867,14 @@ static std::string invoke_real_agent(
 // --model-alias    Friendly model label emitted in JSONL telemetry (default: raw model name)
 // --resume-checkpoint  Path to line-delimited checkpoint file; completed task IDs are appended
 //                      and skipped on subsequent runs for resumable sweeps
+// --resume-jsonl   Optional JSONL source of prior sample_ids for skip-list recovery
 // --no-hints           Strip hints_text from prompt (ablation: evaluate without guidance)
 // --max-prompt-bytes   If prompt exceeds this byte limit, rebuild without context (0 = off)
 // --csv                Write a compact CSV report with per-task metrics to this path
+// --markdown           Write a Markdown table report to this path
+// --instance-filter    Comma-separated list of task_ids to evaluate (skips all others)
+// --export-instances   Write loaded instance set to JSONL at this path before evaluation
+// --temperature        Ollama generation temperature (e.g. 0.2); -1 = unset (model default)
 //
 // Without --real-agent, runs null agent on built-in instances for self-test.
 
@@ -2538,9 +2908,14 @@ int main(int argc, char** argv)
     size_t      context_max_bytes = 2500;
     size_t      context_max_total_bytes = 5000;
     size_t      context_max_files = 2;
-    const char* csv_out        = nullptr;    // --csv <path>
-    bool        hints_enabled  = true;       // --no-hints: strip hints from prompt
-    size_t      max_prompt_bytes = 0;        // --max-prompt-bytes: trim context if exceeded
+    const char* csv_out           = nullptr;  // --csv <path>
+    const char* markdown_out       = nullptr;  // --markdown <path>
+    const char* instance_filter    = nullptr;  // --instance-filter <id,...>
+    const char* export_instances   = nullptr;  // --export-instances <path>
+    bool        hints_enabled      = true;     // --no-hints: strip hints from prompt
+    size_t      max_prompt_bytes   = 0;        // --max-prompt-bytes: trim context if exceeded
+    double      temperature        = -1.0;     // --temperature <float>
+    int         max_task_wall_ms   = 0;        // E81: --max-task-wall-ms per-task wall-time cap
 
     const char* env_context_max_bytes = getenv("RAWRXD_SWEBENCH_CONTEXT_MAX_BYTES");
     if (env_context_max_bytes && env_context_max_bytes[0]) {
@@ -2644,11 +3019,23 @@ int main(int argc, char** argv)
             if (retry_count > 10) retry_count = 10;  // cap to avoid runaway loops
         } else if (strcmp(argv[i], "--csv") == 0 && i + 1 < argc) {
             csv_out = argv[++i];
+        } else if (strcmp(argv[i], "--markdown") == 0 && i + 1 < argc) {
+            markdown_out = argv[++i];
+        } else if (strcmp(argv[i], "--instance-filter") == 0 && i + 1 < argc) {
+            instance_filter = argv[++i];
+        } else if (strcmp(argv[i], "--export-instances") == 0 && i + 1 < argc) {
+            export_instances = argv[++i];
         } else if (strcmp(argv[i], "--no-hints") == 0) {
             hints_enabled = false;
         } else if (strcmp(argv[i], "--max-prompt-bytes") == 0 && i + 1 < argc) {
             const int parsed = atoi(argv[++i]);
             if (parsed > 0) max_prompt_bytes = static_cast<size_t>(parsed);
+        } else if (strcmp(argv[i], "--temperature") == 0 && i + 1 < argc) {
+            temperature = atof(argv[++i]);
+            if (temperature < 0.0) temperature = -1.0;
+        } else if (strcmp(argv[i], "--max-task-wall-ms") == 0 && i + 1 < argc) {
+            max_task_wall_ms = atoi(argv[++i]);
+            if (max_task_wall_ms < 0) max_task_wall_ms = 0;
         }
     }
 
@@ -2669,6 +3056,9 @@ int main(int argc, char** argv)
         "║    Purpose: Validate Phase 2 Adaptation       ║\n"
         "╚════════════════════════════════════════════════╝\n\n");
 
+    // E79: Install CTRL-C / CTRL-BREAK handler for clean sweep abort
+    SetConsoleCtrlHandler(console_ctrl_handler, TRUE);
+
     // Load instances
     std::vector<SWEBench::Instance> instances;
     if (dataset_path) {
@@ -2682,18 +3072,57 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    // Apply --instance-filter: keep only matching task_ids
+    if (instance_filter && instance_filter[0]) {
+        std::unordered_set<std::string> filter_ids;
+        const char* p = instance_filter;
+        while (*p) {
+            const char* end = strchr(p, ',');
+            if (!end) end = p + strlen(p);
+            if (end > p) filter_ids.insert(std::string(p, static_cast<size_t>(end - p)));
+            p = (*end == ',') ? end + 1 : end;
+        }
+        const size_t before = instances.size();
+        instances.erase(std::remove_if(instances.begin(), instances.end(),
+            [&](const SWEBench::Instance& inst) {
+                return filter_ids.find(inst.task_id) == filter_ids.end();
+            }), instances.end());
+        fprintf(stdout, "Instance filter applied: %zu -> %zu instance(s)\n", before, instances.size());
+    }
+
     if (max_tasks > 0 && static_cast<size_t>(max_tasks) < instances.size()) {
         instances.resize(static_cast<size_t>(max_tasks));
         fprintf(stdout, "Limiting evaluation to %d instance(s) via --max-tasks\n", max_tasks);
+    }
+
+    // Export instance set to JSONL if requested (before evaluation)
+    if (export_instances && export_instances[0]) {
+        if (SWEBench::export_instances_jsonl(instances, export_instances)) {
+            fprintf(stdout, "Instances exported to: %s\n", export_instances);
+        } else {
+            fprintf(stderr, "Warning: failed to export instances to: %s\n", export_instances);
+        }
     }
 
     fprintf(stdout, "Loaded %zu instances\n", instances.size());
 
     // Open telemetry JSONL if requested
     FILE* jsonl_file = nullptr;
+    std::string jsonl_pid_lock_path;  // F1: path of .lock file we created
     if (jsonl_out) {
         if (fopen_s(&jsonl_file, jsonl_out, "w") == 0 && jsonl_file) {
             fprintf(stdout, "Telemetry will be written to: %s\n", jsonl_out);
+            // F1 (Todo #73): Acquire PID lockfile to prevent concurrent processes
+            jsonl_pid_lock_path = SWEBench::acquire_jsonl_pid_lock(jsonl_out);
+            if (jsonl_pid_lock_path.empty()) {
+                // Lock held by another live process — abort
+                fclose(jsonl_file);
+                return 1;
+            }
+            // E78: Schema version header — first record in every JSONL
+            SWEBench::write_jsonl_schema_header(jsonl_file);
+            // F2 (Todo #8): Run manifest — captures CLI args and PID
+            SWEBench::write_jsonl_run_manifest(jsonl_file, argc, argv);
         } else {
             fprintf(stderr, "Warning: could not open JSONL telemetry file: %s\n", jsonl_out);
         }
@@ -2795,6 +3224,14 @@ int main(int argc, char** argv)
             ctx.strict_mode = strict_mode;
             ctx.hints_enabled = hints_enabled;
             ctx.max_prompt_bytes = max_prompt_bytes;
+            ctx.temperature = temperature;
+            ctx.max_task_wall_ms = max_task_wall_ms;  // E81
+            if (max_task_wall_ms > 0) {
+                fprintf(stdout, "[INFO] Per-task wall-time cap: %d ms\n", max_task_wall_ms);
+            }
+            if (temperature >= 0.0) {
+                fprintf(stdout, "[INFO] Temperature: %.4f\n", temperature);
+            }
             if (model_alias && model_alias[0]) {
                 ctx.model_alias = model_alias;
             }
@@ -2856,6 +3293,10 @@ int main(int argc, char** argv)
         fprintf(stdout, "      (Use --real-agent flag for live inference evaluation)\n\n");
 
         SWEBench::Harness harness(run_tests, jsonl_file, json_out, raw_dump_dir, fail_fast, strict_mode);
+        if (resume_jsonl && resume_jsonl[0]) {
+            harness.set_resume_jsonl(resume_jsonl);
+            fprintf(stdout, "[INFO] Resume JSONL source: %s\n", resume_jsonl);
+        }
         for (auto& inst : instances) {
             harness.add_instance(std::move(inst));
         }
@@ -2895,11 +3336,25 @@ int main(int argc, char** argv)
         }
     }
 
+    if (markdown_out) {
+        if (SWEBench::write_markdown_report(report, markdown_out)) {
+            fprintf(stdout, "Markdown report written to: %s\n", markdown_out);
+        } else {
+            fprintf(stderr, "Warning: failed to write Markdown report to: %s\n", markdown_out);
+        }
+    }
+
     SWEBench::print_report(report);
 
     if (jsonl_file) {
+        // E84: Emit sweep completion sentinel as last JSONL record
+        SWEBench::write_jsonl_sweep_sentinel(jsonl_file, report);
         fclose(jsonl_file);
         fprintf(stdout, "Telemetry JSONL closed: %s\n", jsonl_out);
+        // F1: Release PID lockfile
+        if (!jsonl_pid_lock_path.empty()) {
+            DeleteFileA(jsonl_pid_lock_path.c_str());
+        }
     }
 
     // Return 0 even when score is zero (harness validates the framework plumbing)
