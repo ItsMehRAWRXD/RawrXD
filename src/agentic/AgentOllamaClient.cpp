@@ -16,6 +16,56 @@ constexpr int kMaxRetries = 3;
 constexpr int kRetryBaseDelayMs = 100;
 
 extern "C" unsigned int rawr_cpu_has_avx2();
+
+int parseContextMetadataInt(const nlohmann::json& metadata, const char* key)
+{
+    if (!metadata.contains(key)) {
+        return 0;
+    }
+    if (metadata[key].is_number_integer()) {
+        return metadata[key].get<int>();
+    }
+    if (metadata[key].is_number()) {
+        return static_cast<int>(metadata[key].get<double>());
+    }
+    return 0;
+}
+
+void logBackendContextObservation(const nlohmann::json& metadata, int requestedContext)
+{
+    if (requestedContext <= 0) {
+        return;
+    }
+
+    int effective = parseContextMetadataInt(metadata, "effective_ctx");
+    if (effective <= 0) {
+        effective = parseContextMetadataInt(metadata, "num_ctx");
+    }
+    if (effective <= 0) {
+        effective = parseContextMetadataInt(metadata, "n_ctx");
+    }
+    if (effective <= 0) {
+        return;
+    }
+
+    if (effective < requestedContext) {
+        const int64_t requestedBytes = RawrXD::ContextLimits::estimateKVBytes(requestedContext);
+        const int64_t effectiveBytes = RawrXD::ContextLimits::estimateKVBytes(effective);
+        const double requestedPerToken = requestedContext > 0
+                                             ? static_cast<double>(requestedBytes) / static_cast<double>(requestedContext)
+                                             : 0.0;
+        const double effectivePerToken = effective > 0
+                                             ? static_cast<double>(effectiveBytes) / static_cast<double>(effective)
+                                             : 0.0;
+        std::cerr << "[AgentOllamaClient] Backend context clamp detected requested="
+                  << requestedContext
+                  << " effective=" << effective
+                  << " requested_kv_bytes=" << requestedBytes
+                  << " effective_kv_bytes=" << effectiveBytes
+                  << " requested_kv_per_token=" << requestedPerToken
+                  << " effective_kv_per_token=" << effectivePerToken << "\n";
+    }
+}
 }
 
 AgentOllamaClient::AgentOllamaClient(const OllamaConfig& config)
@@ -23,6 +73,22 @@ AgentOllamaClient::AgentOllamaClient(const OllamaConfig& config)
     if (!RawrXD::BackendOrchestrator::Instance().IsInitialized()) {
         RawrXD::BackendOrchestrator::Instance().Initialize();
     }
+
+    const RawrXD::ContextDecision ctxDecision =
+        RawrXD::ResolveContextDecision(m_config.num_ctx > 0 ? m_config.num_ctx : RawrXD::ContextLimits::DEFAULT);
+    m_config.num_ctx = ctxDecision.effective;
+    std::cerr << "[AgentOllamaClient] Context decision requested=" << ctxDecision.requested
+              << " env=" << (ctxDecision.env_override_applied ? ctxDecision.env_override_value : 0)
+              << " system_max=" << ctxDecision.system_safe_max
+              << " kv_max=" << ctxDecision.kv_safe_max
+              << " effective=" << ctxDecision.effective
+              << " kv_bytes=" << ctxDecision.estimated_kv_bytes
+              << " kv_per_token=" << ctxDecision.kv_bytes_per_token
+              << " vram_budget=" << ctxDecision.vram_budget_bytes
+              << " kv_budget=" << ctxDecision.kv_budget_bytes
+              << " pressure_ratio=" << ctxDecision.pressure_ratio
+              << " pressure=" << (ctxDecision.pressure_detected ? 1 : 0)
+              << " adapted=" << (ctxDecision.adapted ? 1 : 0) << "\n";
 
     RawrXD::Agentic::Hotpatch::Engine::instance().setModelTemperature(m_config.temperature);
 
@@ -169,6 +235,7 @@ InferenceResult AgentOllamaClient::ChatSync(const std::vector<ChatMessage>& mess
     try {
         std::string metadata = metadata_promise.get_future().get();
         nlohmann::json j = nlohmann::json::parse(metadata);
+        logBackendContextObservation(j, m_config.num_ctx);
         if (j.contains("prompt_eval_count")) {
             result.prompt_tokens = j["prompt_eval_count"].get<uint64_t>();
         }
@@ -249,6 +316,7 @@ bool AgentOllamaClient::ChatStream(const std::vector<ChatMessage>& messages,
 
         try {
             nlohmann::json j = nlohmann::json::parse(metadata);
+            logBackendContextObservation(j, m_config.num_ctx);
             if (j.contains("prompt_eval_count")) {
                 *prompt_tokens = j["prompt_eval_count"].get<uint64_t>();
             }
@@ -387,6 +455,7 @@ bool AgentOllamaClient::FIMStream(const std::string& prefix,
 
         try {
             nlohmann::json j = nlohmann::json::parse(metadata);
+            logBackendContextObservation(j, m_config.num_ctx);
             if (j.contains("eval_count")) {
                 *completion_tokens = j["eval_count"].get<uint64_t>();
             }
@@ -473,6 +542,21 @@ bool AgentOllamaClient::ShouldEmitError(const std::string& msg) {
 void AgentOllamaClient::SetConfig(const OllamaConfig& config) {
     std::lock_guard<std::mutex> lock(m_mutex);
     m_config = config;
+    const RawrXD::ContextDecision ctxDecision =
+        RawrXD::ResolveContextDecision(m_config.num_ctx > 0 ? m_config.num_ctx : RawrXD::ContextLimits::DEFAULT);
+    m_config.num_ctx = ctxDecision.effective;
+    std::cerr << "[AgentOllamaClient] SetConfig context requested=" << ctxDecision.requested
+              << " env=" << (ctxDecision.env_override_applied ? ctxDecision.env_override_value : 0)
+              << " system_max=" << ctxDecision.system_safe_max
+              << " kv_max=" << ctxDecision.kv_safe_max
+              << " effective=" << ctxDecision.effective
+              << " kv_bytes=" << ctxDecision.estimated_kv_bytes
+              << " kv_per_token=" << ctxDecision.kv_bytes_per_token
+              << " vram_budget=" << ctxDecision.vram_budget_bytes
+              << " kv_budget=" << ctxDecision.kv_budget_bytes
+              << " pressure_ratio=" << ctxDecision.pressure_ratio
+              << " pressure=" << (ctxDecision.pressure_detected ? 1 : 0)
+              << " adapted=" << (ctxDecision.adapted ? 1 : 0) << "\n";
     RawrXD::Agentic::Hotpatch::Engine::instance().setModelTemperature(m_config.temperature);
 }
 

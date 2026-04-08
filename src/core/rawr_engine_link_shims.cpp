@@ -937,7 +937,7 @@ extern "C"
         }
         return 0;
     }
-    int asm_hotpatch_restore_prologue_Internal(void* funcAddr)
+    int asm_hotpatch_restore_prologue_Internal_Stub(void* funcAddr)
     {
         RawrPatchEntry* entry = findPatchEntry(funcAddr);
         if (!entry || !entry->hasBackup || !funcAddr)
@@ -949,7 +949,7 @@ extern "C"
         g_rawrHotpatchStats.swapsRolledBack++;
         return 0;
     }
-    int asm_hotpatch_backup_prologue_Internal(void* funcAddr)
+    int asm_hotpatch_backup_prologue_Internal_Stub(void* funcAddr)
     {
         RawrPatchEntry* entry = findOrCreatePatchEntry(funcAddr);
         if (!entry || !funcAddr)
@@ -961,7 +961,7 @@ extern "C"
         entry->hasBackup = true;
         return 0;
     }
-    int asm_hotpatch_flush_icache_Internal(void* base, uint64_t size)
+    int asm_hotpatch_flush_icache_Internal_Stub(void* base, uint64_t size)
     {
         if (!base || size == 0)
         {
@@ -979,7 +979,7 @@ extern "C"
         g_rawrHotpatchStats.icacheFlushes++;
         return 0;
     }
-    void* asm_hotpatch_alloc_shadow_Internal(uint64_t size)
+    void* asm_hotpatch_alloc_shadow_Internal_Stub(uint64_t size)
     {
         if (size == 0)
         {
@@ -994,7 +994,7 @@ extern "C"
     }
 
     // Batch 5: hotpatch/snapshot stats + prologue/trampoline/free
-    int asm_hotpatch_verify_prologue_Internal(void* funcAddr)
+    int asm_hotpatch_verify_prologue_Internal_Stub(void* funcAddr)
     {
         RawrPatchEntry* entry = findPatchEntry(funcAddr);
         if (!entry || !entry->hasBackup || !funcAddr)
@@ -1012,7 +1012,7 @@ extern "C"
         }
         return 0;
     }
-    int asm_hotpatch_install_trampoline_Internal(void* originalFn, void* trampolineBuffer)
+    int asm_hotpatch_install_trampoline_Internal_Stub(void* originalFn, void* trampolineBuffer)
     {
         if (!originalFn || !trampolineBuffer)
         {
@@ -1022,7 +1022,7 @@ extern "C"
         std::memcpy(trampolineBuffer, originalFn, kRawrPatchBytes);
         return 0;
     }
-    int asm_hotpatch_free_shadow_Internal(void* shadowPtr)
+    int asm_hotpatch_free_shadow_Internal_Stub(void* shadowPtr)
     {
         if (!shadowPtr)
         {
@@ -1032,7 +1032,7 @@ extern "C"
         g_rawrHotpatchStats.shadowPagesFreed++;
         return 0;
     }
-    int asm_snapshot_capture_Internal(void* funcAddr)
+    int asm_snapshot_capture_Internal_Stub(void* funcAddr)
     {
         RawrPatchEntry* entry = findOrCreatePatchEntry(funcAddr);
         if (!entry || !funcAddr)
@@ -1046,7 +1046,7 @@ extern "C"
         g_rawrSnapshotStats.bytesStored += entry->snapshotSize;
         return 0;
     }
-    int asm_hotpatch_atomic_swap_Internal(void* targetFn, void* newFn)
+    int asm_hotpatch_atomic_swap_Internal_Stub(void* targetFn, void* newFn)
     {
         if (!targetFn || !newFn)
         {

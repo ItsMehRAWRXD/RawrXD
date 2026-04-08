@@ -1,6 +1,8 @@
 ; RawrXD_Enhancement1_ZMMQuadrant.asm
 ; ZMM quadrant-style fused accumulation lane.
 
+EXTERN rawrxd_emit_heartbeat:PROC
+
 .CODE
 Enhancement1_ZMMQuadrantFMA PROC FRAME
     ; rcx = a
@@ -11,12 +13,19 @@ Enhancement1_ZMMQuadrantFMA PROC FRAME
     .pushreg rsi
     push    rdi
     .pushreg rdi
+    push    rbx ; save rbx for metadata
+    .pushreg rbx
+    sub     rsp, 32 ; shadow space
+    .allocstack 32
     .endprolog
 
     mov     rsi, rcx
     mov     rdi, rdx
     xor     r10, r10
     vxorps  zmm0, zmm0, zmm0
+
+    ; Emit entry heartbeat
+    call    rawrxd_emit_heartbeat
 
 L1_loop:
     cmp     r10, r9
@@ -31,7 +40,13 @@ L1_loop:
 
 L1_done:
     vmovups zmmword ptr [r8], zmm0
+    
+    ; Emit exit heartbeat
+    call    rawrxd_emit_heartbeat
+
     vzeroupper
+    add     rsp, 32
+    pop     rbx
     pop     rdi
     pop     rsi
     ret

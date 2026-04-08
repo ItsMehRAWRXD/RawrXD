@@ -1,5 +1,5 @@
-#include "llm_http_client.h"
-#include "llm_production_utilities.h"
+#include "llm_adapter/llm_http_client.h"
+#include "llm_adapter/llm_production_utilities.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>

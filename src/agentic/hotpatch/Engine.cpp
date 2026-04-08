@@ -1,8 +1,10 @@
 #include "Engine.hpp"
+#include "../observability/Telemetry.hpp"
 #include <vector>
 #include <algorithm>
 #include <memory>
 #include <cstdint>
+#include <sstream>
 
 namespace {
 double Clamp01(double v) {
@@ -108,6 +110,12 @@ bool Detour::install() {
     }
     
     installed_ = true;
+
+    std::stringstream ss;
+    ss << "Hotpatch installed at " << target_ << " -> " << replacement_;
+    RawrXD::Agentic::Observability::Telemetry::instance().logInfo(ss.str());
+    RawrXD::Agentic::Observability::Telemetry::instance().metric("hotpatch.installed");
+
     return true;
 }
 
@@ -124,6 +132,12 @@ bool Detour::remove() {
     
     memcpy(target_, originalCode_.data(), originalCode_.size());
     installed_ = false;
+
+    std::stringstream ss;
+    ss << "Hotpatch removed from " << target_;
+    RawrXD::Agentic::Observability::Telemetry::instance().logInfo(ss.str());
+    RawrXD::Agentic::Observability::Telemetry::instance().metric("hotpatch.removed");
+
     return true;
 }
 

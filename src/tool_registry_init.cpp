@@ -1,6 +1,7 @@
 #include "tool_registry_init.hpp"
 #include "tool_registry.h"
 #include "engine_iface.h"
+#include "GitMCPBridge.h"
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -37,6 +38,38 @@ void register_rawr_inference() {
     });
 
     std::cout << "[REGISTRY] Registered RAWR inference tool (routes to EngineRegistry)\n";
+}
+
+void register_git_mcp_tools() {
+    static RawrXD::GitIntegrator::GitMCPBridge bridge;
+
+    ToolRegistry::register_tool("git_pr_review", [](const std::string& input) -> std::string {
+        // Input format: "prNumber owner repo"
+        std::stringstream ss(input);
+        uint32_t pr;
+        std::string owner, repo;
+        if (!(ss >> pr >> owner >> repo)) return "Invalid input: expected 'prNumber owner repo'";
+        
+        auto review = bridge.reviewPullRequest(pr, owner, repo);
+        return review.summary + "\nConfidence: " + std::to_string(review.confidence);
+    });
+
+    ToolRegistry::register_tool("git_commit_smart", [](const std::string& diff) -> std::string {
+        auto proposal = bridge.proposeCommitFromDiff(diff);
+        return proposal.commitMessage;
+    });
+
+    ToolRegistry::register_tool("git_blame_insight", [](const std::string& input) -> std::string {
+        // Input format: "filePath startLine endLine"
+        std::stringstream ss(input);
+        std::string path;
+        uint32_t start, end;
+        if (!(ss >> path >> start >> end)) return "Invalid input: expected 'path start end'";
+        
+        return bridge.analyzeBlameRisk(path, start, end);
+    });
+
+    std::cout << "[REGISTRY] Registered Git MCP Bridge tools\n";
 }
 
 // ============================================================================

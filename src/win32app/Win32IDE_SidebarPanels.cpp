@@ -188,8 +188,8 @@ void Win32IDE::refreshGitStatus() {
     sa.nLength = sizeof(sa);
     sa.bInheritHandle = TRUE;
     
-    HANDLE hReadPipe, hWritePipe;
-    CreatePipe(&hReadPipe, &hWritePipe, &sa, 0);
+    HANDLE hReadPipe = nullptr, hWritePipe = nullptr;
+    if (!CreatePipe(&hReadPipe, &hWritePipe, &sa, 0)) return;
     
     STARTUPINFOA si = {};
     si.cb = sizeof(si);

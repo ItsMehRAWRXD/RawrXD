@@ -1009,7 +1009,18 @@ void MainWindow::handleMenuCommand(WORD cmdId)
         createTerminal();
         break;
     case IDM_TERM_SPLIT:
-        // Split terminal - placeholder
+        // Create a second terminal session (reuses existing terminal pane)
+        if (m_terminalRunning && m_terminalProcess.hProcess) {
+            TerminateProcess(m_terminalProcess.hProcess, 0);
+            CloseHandle(m_terminalProcess.hProcess);
+            CloseHandle(m_terminalProcess.hThread);
+            m_terminalRunning = false;
+            if (m_psInWrite) { CloseHandle(m_psInWrite); m_psInWrite = nullptr; }
+            if (m_psOutRead) { CloseHandle(m_psOutRead); m_psOutRead = nullptr; }
+        }
+        if (m_terminalHwnd) SetWindowTextA(m_terminalHwnd, "");
+        createTerminal();
+        sendToTerminal("# New terminal session started\n");
         break;
     case IDM_TERM_RUN_TASK:
         sendToTerminal("# Run task...\n");

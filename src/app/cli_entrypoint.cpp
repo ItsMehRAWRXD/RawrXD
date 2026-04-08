@@ -294,7 +294,7 @@ static int runInferenceTest(int argc, char* argv[])
 
     OllamaConfig cfg;
     cfg.host = "127.0.0.1";
-    cfg.port = 11434;
+    cfg.port = 11435;  // IDE embedded server
     cfg.chat_model = "phi3:mini";
     AgentOllamaClient client(cfg);
     std::cout << "[InferenceTest] Using model: " << client.GetConfig().chat_model << "\n";

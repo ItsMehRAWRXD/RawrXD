@@ -220,6 +220,10 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             initGhostText();
             LOG_INFO("Ghost text subsystem initialized");
 
+            // Initialize Neural Heatmap (Phase 2)
+            m_neuralHeatmap = std::make_unique<RawrXD::IDE::NeuralHeatmapRenderer>(hwnd);
+            m_neuralHeatmap->setVisible(true);
+
             // Refresh explorer contents after the app is already visible.
             PostMessage(hwnd, WM_APP + 201, 0, 0);
             return 0;
@@ -271,6 +275,13 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                 RECT rcClient;
                 GetClientRect(hwnd, &rcClient);
                 FillRect(hdc, &rcClient, (HBRUSH)GetStockObject(BLACK_BRUSH));
+
+                // Render Phase 2 Neural Heatmap overlay
+                if (m_neuralHeatmap && m_neuralHeatmap->isVisible())
+                {
+                    m_neuralHeatmap->render(hdc, rcClient);
+                }
+
                 EndPaint(hwnd, &ps);
             }
             return 0;

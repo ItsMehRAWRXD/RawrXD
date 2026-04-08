@@ -959,6 +959,7 @@ RawrXDModelLoader::RawrXDModelLoader()
 
 RawrXDModelLoader::~RawrXDModelLoader()
 {
+    FlushIncidentalCache();
     CleanupSlidingWindow();
     if (m_mappedView)
     {
@@ -1460,8 +1461,14 @@ bool RawrXDModelLoader::mapNewViewIntoComputeSlotLocked_(std::size_t slotIndex, 
             }
         }
 
-        printf("[RawrXD] Legacy Window %llu-%llu GB: Mapped %zu MB\n", windowStart / (1024ULL * 1024ULL * 1024ULL),
-               (windowStart + mapSize) / (1024ULL * 1024ULL * 1024ULL), mapSize / (1024 * 1024));
+        {
+            static size_t s_legacyWindowCount = 0;
+            ++s_legacyWindowCount;
+            if (s_legacyWindowCount <= 3 || s_legacyWindowCount % 500 == 0) {
+                printf("[RawrXD] Legacy Window %llu-%llu GB: Mapped %zu MB (call #%zu)\n", windowStart / (1024ULL * 1024ULL * 1024ULL),
+                       (windowStart + mapSize) / (1024ULL * 1024ULL * 1024ULL), mapSize / (1024 * 1024), s_legacyWindowCount);
+            }
+        }
 
         if (m_streamingActive && m_streamingLockedWindowSize == 0)
         {
@@ -1735,8 +1742,10 @@ void* RawrXDModelLoader::MapWindow(uint64_t offset, size_t size)
 
     if (size > mapSize || reqEnd > mappedEnd)
     {
-        printf("[RawrXD] Requested range %llu..%llu exceeds mapped window %llu..%llu\n", offset, reqEnd,
-               windowStart, mappedEnd);
+        static size_t s_rangeExceedCount = 0;
+        if (++s_rangeExceedCount <= 5)
+            printf("[RawrXD] Requested range %llu..%llu exceeds mapped window %llu..%llu (count=%zu)\n", offset, reqEnd,
+                   windowStart, mappedEnd, s_rangeExceedCount);
         return nullptr;
     }
 
@@ -2080,44 +2089,104 @@ bool RawrXDModelLoader::MapIncidentalWindow(uint64_t offset, size_t size, void*&
     dataPtr = nullptr;
 
     if (!m_mapping || size == 0)
+    {
+        printf("[MapIncidentalWindow] FAIL: m_mapping=%p size=%zu\n", m_mapping, size);
         return false;
+    }
     uint64_t reqEnd = 0;
     if (!TryAddU64(offset, static_cast<uint64_t>(size), &reqEnd))
+    {
+        printf("[MapIncidentalWindow] FAIL: overflow offset=%llu size=%zu\n",
+               static_cast<unsigned long long>(offset), size);
         return false;
+    }
     if (offset >= m_fileSize || reqEnd > m_fileSize)
+    {
+        printf("[MapIncidentalWindow] FAIL: OOB offset=%llu reqEnd=%llu fileSize=%llu\n",
+               static_cast<unsigned long long>(offset), static_cast<unsigned long long>(reqEnd),
+               static_cast<unsigned long long>(m_fileSize));
         return false;
+    }
+
+    // Check if the requested range is within the cached window
+    if (m_incCache && offset >= m_incCacheStart &&
+        reqEnd <= m_incCacheStart + static_cast<uint64_t>(m_incCacheSize))
+    {
+        viewBase = m_incCache;  // sentinel: caller must NOT unmap this
+        dataPtr = static_cast<uint8_t*>(m_incCache) + static_cast<size_t>(offset - m_incCacheStart);
+        return true;
+    }
 
     SYSTEM_INFO si{};
     GetSystemInfo(&si);
     const uint64_t granularity = static_cast<uint64_t>(si.dwAllocationGranularity ? si.dwAllocationGranularity : 65536);
 
     const uint64_t mapStart = (offset / granularity) * granularity;
-    const uint64_t delta = offset - mapStart;
-    uint64_t mapSize64 = 0;
-    if (!TryAddU64(delta, static_cast<uint64_t>(size), &mapSize64))
-        return false;
-    if (mapSize64 > static_cast<uint64_t>(std::numeric_limits<SIZE_T>::max()))
-    {
-        return false;
-    }
-    const SIZE_T mapSize = static_cast<SIZE_T>(mapSize64);
+    const size_t minMapSize = static_cast<size_t>(reqEnd - mapStart);
 
-    viewBase = MapViewOfFile(m_mapping, FILE_MAP_READ, static_cast<DWORD>(mapStart >> 32),
-                             static_cast<DWORD>(mapStart & 0xFFFFFFFF), mapSize);
-    if (!viewBase)
+    // Free old cache first to reclaim resources before allocating new view
+    if (m_incCache)
     {
-        return false;
+        UnmapViewOfFile(m_incCache);
+        m_incCache = nullptr;
+        m_incCacheStart = 0;
+        m_incCacheSize = 0;
     }
 
-    dataPtr = static_cast<uint8_t*>(viewBase) + static_cast<size_t>(delta);
+    // Try progressively smaller cache windows: 64 MB -> 16 MB -> 4 MB -> 1 MB -> exact
+    static constexpr size_t kCacheTiers[] = {64u * 1024u * 1024u, 16u * 1024u * 1024u,
+                                              4u * 1024u * 1024u, 1u * 1024u * 1024u, 0};
+    void* newView = nullptr;
+    SIZE_T mapSize = 0;
+
+    for (size_t tier : kCacheTiers)
+    {
+        size_t windowSize = (tier > 0) ? tier : minMapSize;
+        if (windowSize < minMapSize) windowSize = minMapSize;
+        uint64_t mapEnd = mapStart + windowSize;
+        if (mapEnd > m_fileSize) mapEnd = m_fileSize;
+        if (mapEnd < reqEnd) mapEnd = reqEnd;
+        mapSize = static_cast<SIZE_T>(mapEnd - mapStart);
+
+        newView = MapViewOfFile(m_mapping, FILE_MAP_READ, static_cast<DWORD>(mapStart >> 32),
+                                static_cast<DWORD>(mapStart & 0xFFFFFFFF), mapSize);
+        if (newView) break;
+    }
+
+    if (!newView)
+    {
+        printf("[MapIncidentalWindow] FAIL: all MapViewOfFile tiers failed start=%llu minSize=%zu err=%lu\n",
+               static_cast<unsigned long long>(mapStart), minMapSize, GetLastError());
+        return false;
+    }
+
+    m_incCache = newView;
+    m_incCacheStart = mapStart;
+    m_incCacheSize = mapSize;
+
+    viewBase = m_incCache;
+    dataPtr = static_cast<uint8_t*>(m_incCache) + static_cast<size_t>(offset - mapStart);
     return true;
 }
 
 void RawrXDModelLoader::UnmapIncidentalWindow(void* viewBase)
 {
-    if (viewBase)
+    // Don't unmap the cached window — it stays alive for reuse.
+    // Only unmap if it's a non-cached view (shouldn't happen with current code).
+    if (viewBase && viewBase != m_incCache)
     {
         UnmapViewOfFile(viewBase);
+    }
+}
+
+void RawrXDModelLoader::FlushIncidentalCache()
+{
+    if (m_incCache)
+    {
+        UnmapViewOfFile(m_incCache);
+        m_incCache = nullptr;
+        m_incCacheStart = 0;
+        m_incCacheSize = 0;
     }
 }
 
@@ -2944,43 +3013,59 @@ uint8_t* RawrXDModelLoader::ParseMetadata(uint8_t* ptr, uint64_t count)
                         m_metadataFileType = val;
                     }
 
-                    if (endsWith(key, ".embedding_length"))
-                    {
-                        n_embd = static_cast<int>(val);
+                    // Architecture-aware key matching: use exact arch-prefixed keys
+                    // to avoid .vision.* / .audio.* sub-component keys overwriting
+                    // the text model config (e.g., mistral3.vision.embedding_length
+                    // was incorrectly overwriting mistral3.embedding_length).
+                    if (!m_metadataArchitecture.empty()) {
+                        const std::string& arch = m_metadataArchitecture;
+                        if (key == arch + ".embedding_length")
+                            n_embd = static_cast<int>(val);
+                        else if (key == arch + ".block_count")
+                            n_layers = static_cast<int>(val);
+                        else if (key == arch + ".attention.head_count_kv")
+                            n_heads_kv = static_cast<int>(val);
+                        else if (key == arch + ".attention.head_count")
+                            n_heads = static_cast<int>(val);
+                        else if (key == arch + ".context_length")
+                            n_ctx = static_cast<int>(val);
+                        else if (key == arch + ".feed_forward_length")
+                            n_ffn = static_cast<int>(val);
+                        else if (key == arch + ".expert_count" || key == arch + ".moe.expert_count")
+                            n_experts = static_cast<int>(val);
+                        else if (key == arch + ".expert_used_count" || key == arch + ".moe.expert_used_count")
+                            n_experts_used = static_cast<int>(val);
+                    } else {
+                        // Fallback: architecture unknown — use endsWith but reject sub-components
+                        if (key.find(".vision.") == std::string::npos &&
+                            key.find(".audio.") == std::string::npos) {
+                            if (endsWith(key, ".embedding_length"))
+                                n_embd = static_cast<int>(val);
+                            else if (endsWith(key, ".block_count"))
+                                n_layers = static_cast<int>(val);
+                            else if (endsWith(key, ".attention.head_count_kv"))
+                                n_heads_kv = static_cast<int>(val);
+                            else if (endsWith(key, ".attention.head_count"))
+                                n_heads = static_cast<int>(val);
+                            else if (endsWith(key, ".context_length"))
+                                n_ctx = static_cast<int>(val);
+                            else if (endsWith(key, ".feed_forward_length"))
+                                n_ffn = static_cast<int>(val);
+                            else if (endsWith(key, ".expert_count") || endsWith(key, ".moe.expert_count"))
+                                n_experts = static_cast<int>(val);
+                            else if (endsWith(key, ".expert_used_count") || endsWith(key, ".moe.expert_used_count"))
+                                n_experts_used = static_cast<int>(val);
+                        }
                     }
-                    else if (endsWith(key, ".block_count"))
-                    {
-                        n_layers = static_cast<int>(val);
-                    }
-                    else if (endsWith(key, ".attention.head_count_kv"))
-                    {
-                        n_heads_kv = static_cast<int>(val);
-                    }
-                    else if (endsWith(key, ".attention.head_count"))
-                    {
-                        n_heads = static_cast<int>(val);
-                    }
-                    else if (endsWith(key, ".context_length"))
-                    {
-                        n_ctx = static_cast<int>(val);
-                    }
-                    else if (endsWith(key, ".feed_forward_length"))
-                    {
-                        n_ffn = static_cast<int>(val);
-                    }
-                    else if (endsWith(key, ".expert_count") || endsWith(key, ".moe.expert_count"))
-                    {
-                        n_experts = static_cast<int>(val);
-                    }
-                    else if (endsWith(key, ".expert_used_count") || endsWith(key, ".moe.expert_used_count"))
-                    {
-                        n_experts_used = static_cast<int>(val);
-                    }
-                    else if (key == "tokenizer.ggml.vocab_size")
+                    if (key == "tokenizer.ggml.vocab_size")
                     {
                         // Don't set vocab_size from scalar, use vocab.size() instead
                         printf("[DEBUG] Ignoring tokenizer.ggml.vocab_size scalar: %u\n", val);
                     }
+                        if (key == "tokenizer.ggml.eos_token_id")
+                            eos_token_id = static_cast<int>(val);
+                        if (key == "tokenizer.ggml.bos_token_id")
+                            bos_token_id = static_cast<int>(val);
                 }
 
                 const uint64_t scalarBytes = ggufScalarSize(type);
@@ -4575,37 +4660,68 @@ float* RawrXDModelLoader::GetTensor(const std::string& name)
 bool RawrXDModelLoader::GetTensorRow(const std::string& name, size_t rowIndex, float* out, size_t cols)
 {
     if (!out)
+    {
+        printf("[GetTensorRow] FAIL: out==null for '%s'\n", name.c_str());
         return false;
+    }
 
     auto it = m_tensors.find(name);
     if (it == m_tensors.end())
+    {
+        printf("[GetTensorRow] FAIL: tensor '%s' not found in m_tensors (size=%zu)\n", name.c_str(), m_tensors.size());
         return false;
+    }
 
     Tensor& t = it->second;
     if (t.dims.size() < 2)
+    {
+        printf("[GetTensorRow] FAIL: tensor '%s' has %zu dims (need >=2)\n", name.c_str(), t.dims.size());
         return false;
+    }
 
     const size_t rowWidth = static_cast<size_t>(t.dims[0]);
     const size_t rowCount = static_cast<size_t>(t.dims[1]);
     if (cols != rowWidth || rowIndex >= rowCount)
+    {
+        printf("[GetTensorRow] FAIL: tensor '%s' cols=%zu rowWidth=%zu rowIndex=%zu rowCount=%zu\n",
+               name.c_str(), cols, rowWidth, rowIndex, rowCount);
         return false;
+    }
 
     auto mapTensorRow = [&](size_t rowBytes, uint64_t* outRowOffset, void** outIncidentalBase,
                             uint8_t** outPtr) -> bool
     {
         if (!outRowOffset || !outIncidentalBase || !outPtr || rowBytes == 0)
+        {
+            printf("[mapTensorRow] FAIL: null ptrs or rowBytes=0 for '%s'\n", name.c_str());
             return false;
+        }
 
         uint64_t rowByteOffset = 0;
         if (!TryMulU64(static_cast<uint64_t>(rowIndex), static_cast<uint64_t>(rowBytes), &rowByteOffset) ||
             !TryAddU64(t.offset, rowByteOffset, outRowOffset))
+        {
+            printf("[mapTensorRow] FAIL: arithmetic overflow for '%s' rowIndex=%zu rowBytes=%zu offset=%llu\n",
+                   name.c_str(), rowIndex, rowBytes, static_cast<unsigned long long>(t.offset));
             return false;
+        }
         if (*outRowOffset > m_fileSize || rowBytes > (m_fileSize - *outRowOffset))
+        {
+            printf("[mapTensorRow] FAIL: out-of-bounds for '%s' rowOffset=%llu fileSize=%llu rowBytes=%zu\n",
+                   name.c_str(), static_cast<unsigned long long>(*outRowOffset),
+                   static_cast<unsigned long long>(m_fileSize), rowBytes);
             return false;
+        }
 
         *outIncidentalBase = nullptr;
         *outPtr = nullptr;
-        return MapIncidentalWindow(*outRowOffset, rowBytes, *outIncidentalBase, *outPtr);
+        bool mapOk = MapIncidentalWindow(*outRowOffset, rowBytes, *outIncidentalBase, *outPtr);
+        if (!mapOk)
+        {
+            printf("[mapTensorRow] FAIL: MapIncidentalWindow failed for '%s' offset=%llu size=%zu\n",
+                   name.c_str(), static_cast<unsigned long long>(*outRowOffset), rowBytes);
+        }
+        return mapOk;
     };
 
     if (t.type == 0)

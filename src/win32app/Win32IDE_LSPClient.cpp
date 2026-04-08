@@ -223,6 +223,9 @@ bool Win32IDE::startLSPServer(LSPLanguage lang)
 
     if (!CreatePipe(&hStdinRead, &hStdinWrite, &sa, 0) || !CreatePipe(&hStdoutRead, &hStdoutWrite, &sa, 0))
     {
+        // If the second CreatePipe failed, close the first pair
+        if (hStdinRead)  CloseHandle(hStdinRead);
+        if (hStdinWrite) CloseHandle(hStdinWrite);
         status.state = LSPServerState::Error;
         status.lastError = "Failed to create pipes: " + std::to_string(GetLastError());
         logError("startLSPServer", status.lastError);
@@ -669,7 +672,25 @@ void Win32IDE::lspReaderThread(LSPLanguage lang)
                             m_lspStats.totalDiagnosticsReceived += diags.size();
                         }
                     }
-                    // Other notifications silently ignored for now
+                    else if (method == "window/logMessage" || method == "window/showMessage")
+                    {
+                        // Route LSP log/show messages to output panel
+                        if (msg.contains("params"))
+                        {
+                            int type = msg["params"].value("type", 4); // 1=Error,2=Warning,3=Info,4=Log
+                            std::string lspMsg = msg["params"].value("message", "");
+                            if (!lspMsg.empty())
+                            {
+                                OutputSeverity sev = OutputSeverity::Info;
+                                if (type == 1) sev = OutputSeverity::Error;
+                                else if (type == 2) sev = OutputSeverity::Warning;
+                                appendToOutput("[LSP/" + cfg.name + "] " + lspMsg + "\n",
+                                               "LSP", sev);
+                                status.notificationCount++;
+                            }
+                        }
+                    }
+                    // Other notifications silently dropped
                 }
             }
             catch (const std::exception& e)

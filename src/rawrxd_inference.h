@@ -927,7 +927,10 @@ class RawrXDInference
             // Prepare for next iteration
             currentTrace.record_t0();
 
-            if (nextToken == 2)
+            // Stop on EOS: ID=2, tokenizer EOS_ID (e.g. Phi-3 uses 32000), or GGUF metadata eos_token_id
+            if (nextToken == 2 ||
+                (tokenizer.EOS_ID != std::numeric_limits<uint32_t>::max() && nextToken == tokenizer.EOS_ID) ||
+                (static_cast<int>(nextToken) == loader.getEOSTokenId() && loader.getEOSTokenId() != 2))
                 break;
 
             std::vector<uint32_t> nextTokVec = {nextToken};

@@ -127,6 +127,11 @@ class RawrXDModelLoader
     bool m_workingSetLocked = false;
     bool m_silencePrivilegeWarnings = false;
 
+    // Cached incidental window: avoids repeated MapViewOfFile/UnmapViewOfFile
+    void*    m_incCache       = nullptr;  // MapViewOfFile base
+    uint64_t m_incCacheStart  = 0;        // file offset of cached map start
+    size_t   m_incCacheSize   = 0;        // size of cached region
+
     // Sliding window memory mapping for large files
     void* virtualBase;    // Reserved virtual address space
     uint64_t windowSize;  // Size of each mapping window (2GB default)
@@ -196,6 +201,8 @@ class RawrXDModelLoader
     int n_ffn = 0;  // feed_forward_length (0 = infer from dim*4)
     int n_experts = 0;
     int n_experts_used = 0;
+      int eos_token_id = 2;    // from tokenizer.ggml.eos_token_id
+      int bos_token_id = 1;    // from tokenizer.ggml.bos_token_id
     std::string m_metadataArchitecture;
     std::string m_metadataTokenizerModel;
     uint32_t m_metadataFileType = 0xFFFFFFFFu;  // GGUF file_type identifier
@@ -226,6 +233,8 @@ class RawrXDModelLoader
     int getExperts() const { return n_experts; }
     /// MoE metadata (`expert_used_count`); 0 if unset — callers may fall back to a small default.
     int getExpertsUsedCount() const { return n_experts_used; }
+      int getEOSTokenId() const { return eos_token_id; }
+      int getBOSTokenId() const { return bos_token_id; }
     /// True if \p name appears in the loaded tensor map (does not materialize weights).
     [[nodiscard]] bool hasTensorNamed(const std::string& name) const;
 
@@ -287,6 +296,7 @@ class RawrXDModelLoader
     void recordSwarmPinBackoffCycle() const;
     bool MapIncidentalWindow(uint64_t offset, size_t size, void*& viewBase, uint8_t*& dataPtr);
     void UnmapIncidentalWindow(void* viewBase);
+    void FlushIncidentalCache();
     void BeginStreamingRange(uint64_t offset, size_t size);
     void EndStreamingRange();
     // Internal demonstration / self-test helper

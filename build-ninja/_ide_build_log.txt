@@ -1,0 +1,2 @@
+ninja: Entering directory `d:\rawrxd\build-ninja'
+ninja: no work to do.

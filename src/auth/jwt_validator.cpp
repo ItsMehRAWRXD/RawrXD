@@ -1,4 +1,4 @@
-// JWT validator — native (no Qt). HS256 via BCrypt; RS256 stub.
+// JWT validator — native (no Qt). HS256 via BCrypt; RS256 via CNG.
 #include "auth/jwt_validator.h"
 #include <nlohmann/json.hpp>
 #include <algorithm>
@@ -8,9 +8,11 @@
 #include <limits>
 #include <sstream>
 #ifdef _WIN32
-#include <bcrypt.h>
 #include <windows.h>
+#include <bcrypt.h>
+#include <wincrypt.h>
 #pragma comment(lib, "bcrypt.lib")
+#pragma comment(lib, "crypt32.lib")
 #endif
 
 namespace
@@ -418,7 +420,108 @@ bool JWTValidator::validateHS256(const std::string& token)
 
 bool JWTValidator::validateRS256(const std::string& token)
 {
+#ifdef _WIN32
+    if (m_rs256PublicKey.empty())
+        return false;
+    if (token.empty() || token.size() > kMaxJwtTokenBytes)
+        return false;
+
+    // Parse token segments
+    size_t d1 = token.find('.');
+    if (d1 == std::string::npos) return false;
+    size_t d2 = token.find('.', d1 + 1);
+    if (d2 == std::string::npos) return false;
+    if (token.find('.', d2 + 1) != std::string::npos) return false;
+
+    std::string sig_b64 = token.substr(d2 + 1);
+    std::string sig;
+    if (!base64url_decode_strict(sig_b64, sig))
+        return false;
+    std::string message = token.substr(0, d2);
+
+    // Strip PEM armor from public key
+    std::string pemBody;
+    {
+        std::istringstream ss(m_rs256PublicKey);
+        std::string line;
+        while (std::getline(ss, line)) {
+            if (line.find("-----") != std::string::npos) continue;
+            while (!line.empty() && (line.back() == '\r' || line.back() == '\n'))
+                line.pop_back();
+            pemBody += line;
+        }
+    }
+    if (pemBody.empty())
+        return false;
+
+    // Standard base64 decode PEM body → DER
+    DWORD derSize = 0;
+    if (!CryptStringToBinaryA(pemBody.c_str(), (DWORD)pemBody.size(),
+                              CRYPT_STRING_BASE64, nullptr, &derSize, nullptr, nullptr))
+        return false;
+    std::vector<BYTE> der(derSize);
+    if (!CryptStringToBinaryA(pemBody.c_str(), (DWORD)pemBody.size(),
+                              CRYPT_STRING_BASE64, der.data(), &derSize, nullptr, nullptr))
+        return false;
+
+    // Decode SubjectPublicKeyInfo from DER
+    CERT_PUBLIC_KEY_INFO* pKeyInfo = nullptr;
+    DWORD cbKeyInfo = 0;
+    if (!CryptDecodeObjectEx(X509_ASN_ENCODING, X509_PUBLIC_KEY_INFO,
+                             der.data(), derSize,
+                             CRYPT_DECODE_ALLOC_FLAG, nullptr,
+                             &pKeyInfo, &cbKeyInfo))
+        return false;
+
+    // Import CNG key from public key info
+    BCRYPT_KEY_HANDLE hKey = nullptr;
+    BOOL ok = CryptImportPublicKeyInfoEx2(X509_ASN_ENCODING, pKeyInfo, 0, nullptr, &hKey);
+    LocalFree(pKeyInfo);
+    if (!ok || !hKey)
+        return false;
+
+    // Hash the message (header.payload) with SHA-256
+    BCRYPT_ALG_HANDLE hAlg = nullptr;
+    NTSTATUS st = BCryptOpenAlgorithmProvider(&hAlg, BCRYPT_SHA256_ALGORITHM, nullptr, 0);
+    if (!BCRYPT_SUCCESS(st) || !hAlg) {
+        BCryptDestroyKey(hKey);
+        return false;
+    }
+    UCHAR hash[32];
+    ULONG hashLen = sizeof(hash);
+    BCRYPT_HASH_HANDLE hHash = nullptr;
+    st = BCryptCreateHash(hAlg, &hHash, nullptr, 0, nullptr, 0, 0);
+    if (!BCRYPT_SUCCESS(st) || !hHash) {
+        BCryptCloseAlgorithmProvider(hAlg, 0);
+        BCryptDestroyKey(hKey);
+        return false;
+    }
+    st = BCryptHashData(hHash, reinterpret_cast<PUCHAR>(const_cast<char*>(message.data())),
+                        static_cast<ULONG>(message.size()), 0);
+    if (!BCRYPT_SUCCESS(st)) {
+        BCryptDestroyHash(hHash);
+        BCryptCloseAlgorithmProvider(hAlg, 0);
+        BCryptDestroyKey(hKey);
+        return false;
+    }
+    st = BCryptFinishHash(hHash, hash, hashLen, 0);
+    BCryptDestroyHash(hHash);
+    BCryptCloseAlgorithmProvider(hAlg, 0);
+    if (!BCRYPT_SUCCESS(st)) {
+        BCryptDestroyKey(hKey);
+        return false;
+    }
+
+    // Verify PKCS#1 v1.5 signature
+    BCRYPT_PKCS1_PADDING_INFO paddingInfo;
+    paddingInfo.pszAlgId = BCRYPT_SHA256_ALGORITHM;
+    st = BCryptVerifySignature(hKey, &paddingInfo, hash, hashLen,
+                               reinterpret_cast<PUCHAR>(const_cast<char*>(sig.data())),
+                               static_cast<ULONG>(sig.size()), BCRYPT_PAD_PKCS1);
+    BCryptDestroyKey(hKey);
+    return BCRYPT_SUCCESS(st);
+#else
     (void)token;
-    // RS256: would need PEM parse + BCryptVerifySignature. Stub.
     return false;
+#endif
 }

@@ -13,7 +13,16 @@ namespace RawrXD::Models::Bridge {
 
 // Resolves: Loader_OnProgressUpdate
 extern "C" void Loader_OnProgressUpdate(float percent) {
-    // Routes to the UI Progress bar in the Speciator Panel.
+    // Clamp to valid range
+    if (percent < 0.0f) percent = 0.0f;
+    if (percent > 100.0f) percent = 100.0f;
+    int pct = static_cast<int>(percent);
+    LOG_INFO("[Loader] Progress: %d%%", pct);
+    // Post to the main UI thread — WM_APP+50 is the model-load progress message
+    HWND hwndMain = FindWindowA("RawrXDMainWindow", nullptr);
+    if (hwndMain) {
+        PostMessageA(hwndMain, WM_APP + 50, static_cast<WPARAM>(pct), 0);
+    }
 }
 
 // Resolves: Loader_OnFatalError

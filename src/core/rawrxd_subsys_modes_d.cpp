@@ -26,31 +26,31 @@ inline void noteModeCall(const char* modeName) {
 }
 }
 
-extern "C" int asm_hotpatch_flush_icache(...) { noteModeCall("asm_hotpatch_flush_icache"); return 0; }
-extern "C" int asm_hotpatch_atomic_swap(...) { noteModeCall("asm_hotpatch_atomic_swap"); return 0; }
-extern "C" int asm_hotpatch_install_trampoline(...) { noteModeCall("asm_hotpatch_install_trampoline"); return 0; }
-extern "C" void* asm_hotpatch_alloc_shadow(...) { noteModeCall("asm_hotpatch_alloc_shadow"); return nullptr; }
-extern "C" int asm_hotpatch_free_shadow(...) { noteModeCall("asm_hotpatch_free_shadow"); return 0; }
-extern "C" int asm_hotpatch_backup_prologue(...) { noteModeCall("asm_hotpatch_backup_prologue"); return 0; }
-extern "C" int asm_hotpatch_restore_prologue(...) { noteModeCall("asm_hotpatch_restore_prologue"); return 0; }
-extern "C" int asm_hotpatch_verify_prologue(...) { noteModeCall("asm_hotpatch_verify_prologue"); return 0; }
-extern "C" int asm_hotpatch_get_stats(...) { noteModeCall("asm_hotpatch_get_stats"); return 0; }
+__declspec(selectany) // extern "C" int asm_hotpatch_flush_icache(...) { noteModeCall("asm_hotpatch_flush_icache"); return 0; }
+__declspec(selectany) // extern "C" int asm_hotpatch_atomic_swap(...) { noteModeCall("asm_hotpatch_atomic_swap"); return 0; }
+__declspec(selectany) // extern "C" int asm_hotpatch_install_trampoline(...) { noteModeCall("asm_hotpatch_install_trampoline"); return 0; }
+__declspec(selectany) // extern "C" void* asm_hotpatch_alloc_shadow(...) { noteModeCall("asm_hotpatch_alloc_shadow"); return nullptr; }
+__declspec(selectany) // extern "C" int asm_hotpatch_free_shadow(...) { noteModeCall("asm_hotpatch_free_shadow"); return 0; }
+__declspec(selectany) // extern "C" int asm_hotpatch_backup_prologue(...) { noteModeCall("asm_hotpatch_backup_prologue"); return 0; }
+__declspec(selectany) // extern "C" int asm_hotpatch_restore_prologue(...) { noteModeCall("asm_hotpatch_restore_prologue"); return 0; }
+__declspec(selectany) // extern "C" int asm_hotpatch_verify_prologue(...) { noteModeCall("asm_hotpatch_verify_prologue"); return 0; }
+__declspec(selectany) // extern "C" int asm_hotpatch_get_stats(...) { noteModeCall("asm_hotpatch_get_stats"); return 0; }
 
-extern "C" int asm_snapshot_capture(...) { noteModeCall("asm_snapshot_capture"); return 0; }
-extern "C" int asm_snapshot_restore(...) { noteModeCall("asm_snapshot_restore"); return 0; }
-extern "C" int asm_snapshot_verify(...) { noteModeCall("asm_snapshot_verify"); return 0; }
-extern "C" int asm_snapshot_discard(...) { noteModeCall("asm_snapshot_discard"); return 0; }
-extern "C" int asm_snapshot_get_stats(...) { noteModeCall("asm_snapshot_get_stats"); return 0; }
+// extern "C" int asm_snapshot_capture(...) { noteModeCall("asm_snapshot_capture"); return 0; }
+// extern "C" int asm_snapshot_restore(...) { noteModeCall("asm_snapshot_restore"); return 0; }
+// extern "C" int asm_snapshot_verify(...) { noteModeCall("asm_snapshot_verify"); return 0; }
+// extern "C" int asm_snapshot_discard(...) { noteModeCall("asm_snapshot_discard"); return 0; }
+// extern "C" int asm_snapshot_get_stats(...) { noteModeCall("asm_snapshot_get_stats"); return 0; }
 
-extern "C" void asm_pyre_gemm_fp32(...) { noteModeCall("asm_pyre_gemm_fp32"); }
-extern "C" void asm_pyre_gemv_fp32(...) { noteModeCall("asm_pyre_gemv_fp32"); }
-extern "C" void asm_pyre_rmsnorm(...) { noteModeCall("asm_pyre_rmsnorm"); }
-extern "C" void asm_pyre_silu(...) { noteModeCall("asm_pyre_silu"); }
-extern "C" void asm_pyre_softmax(...) { noteModeCall("asm_pyre_softmax"); }
-extern "C" void asm_pyre_rope(...) { noteModeCall("asm_pyre_rope"); }
-extern "C" void asm_pyre_add_fp32(...) { noteModeCall("asm_pyre_add_fp32"); }
-extern "C" void asm_pyre_mul_fp32(...) { noteModeCall("asm_pyre_mul_fp32"); }
-extern "C" void asm_pyre_embedding_lookup(...) { noteModeCall("asm_pyre_embedding_lookup"); }
+// // extern "C" void asm_pyre_gemm_fp32(...) { noteModeCall("asm_pyre_gemm_fp32"); }
+// extern "C" void asm_pyre_gemv_fp32(...) { noteModeCall("asm_pyre_gemv_fp32"); }
+// extern "C" void asm_pyre_rmsnorm(...) { noteModeCall("asm_pyre_rmsnorm"); }
+// extern "C" void asm_pyre_silu(...) { noteModeCall("asm_pyre_silu"); }
+// extern "C" void asm_pyre_softmax(...) { noteModeCall("asm_pyre_softmax"); }
+// extern "C" void asm_pyre_rope(...) { noteModeCall("asm_pyre_rope"); }
+// extern "C" void asm_pyre_add_fp32(...) { noteModeCall("asm_pyre_add_fp32"); }
+// extern "C" void asm_pyre_mul_fp32(...) { noteModeCall("asm_pyre_mul_fp32"); }
+// extern "C" void asm_pyre_embedding_lookup(...) { noteModeCall("asm_pyre_embedding_lookup"); }
 
 extern "C" int asm_camellia256_auth_encrypt_file(...) { noteModeCall("asm_camellia256_auth_encrypt_file"); return 0; }
 extern "C" int asm_camellia256_auth_decrypt_file(...) { noteModeCall("asm_camellia256_auth_decrypt_file"); return 0; }
@@ -141,3 +141,20 @@ extern "C" int asm_spengine_cpu_optimize(...) { noteModeCall("asm_spengine_cpu_o
 extern "C" int asm_apply_memory_patch(...) { noteModeCall("asm_apply_memory_patch"); return 0; }
 
 #endif // RAWRXD_SUBSYS_MODES_D_INTEGRATED
+
+extern "C" {
+int asm_snapshot_capture(...) { return 0; }
+int asm_snapshot_restore(...) { return 0; }
+int asm_snapshot_verify(...) { return 0; }
+int asm_snapshot_discard(...) { return 0; }
+int asm_snapshot_get_stats(...) { return 0; }
+// int asm_pyre_gemv_fp32(...) { return 0; }
+// int asm_pyre_rmsnorm(...) { return 0; }
+// int asm_pyre_silu(...) { return 0; }
+// int asm_pyre_softmax(...) { return 0; }
+// int asm_pyre_rope(...) { return 0; }
+// int asm_pyre_add_fp32(...) { return 0; }
+// int asm_pyre_mul_fp32(...) { return 0; }
+// int asm_pyre_embedding_lookup(...) { return 0; }
+}
+

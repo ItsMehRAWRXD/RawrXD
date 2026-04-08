@@ -20,6 +20,7 @@
 #include "Win32IDE.h"
 #include "../RawrXD_Exports.h"
 #include "../../include/ghost_text_renderer.h"
+#include "../../include/PredictiveGhostText.h"
 #include "IDELogger.h"
 #include <richedit.h>
 #include <algorithm>
@@ -586,6 +587,9 @@ std::string getEditorRangeUtf8(HWND editor, LONG cpMin, LONG cpMax) {
 // ============================================================================
 
 void Win32IDE::initGhostText() {
+    // Predictive Engine Init
+    m_predictiveGhostText = std::make_unique<RawrXD::IDE::PredictiveGhostText>();
+
     // Ghost text enabled by default (heap corruption fixed in render path).
     m_ghostTextEnabled        = true;
     m_ghostTextVisible        = false;
@@ -1167,6 +1171,11 @@ void Win32IDE::dismissGhostText() {
 
 void Win32IDE::acceptGhostText() {
     if (!m_ghostTextVisible || m_ghostTextContent.empty() || !m_hwndEditor) return;
+
+    // Bridge to Predictive Engine
+    if (m_predictiveGhostText) {
+        m_predictiveGhostText->acceptSuggestion();
+    }
 
     std::string textToInsert = m_ghostTextContent;
     m_ghostTextAccepted = true;

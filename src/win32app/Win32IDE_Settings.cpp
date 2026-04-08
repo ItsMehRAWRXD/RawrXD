@@ -75,10 +75,77 @@ struct SovereignConfig
 
 // Forward declarations
 bool LoadSettingsSovereign(SovereignConfig& config);
+void to_json(nlohmann::json& j, const SovereignConfig& config);
+void from_json(const nlohmann::json& j, SovereignConfig& config);
+
+namespace {
+thread_local int g_settings_save_depth = 0;
+thread_local int g_settings_load_depth = 0;
+
+struct DepthGuard {
+    explicit DepthGuard(int& depth_ref) : depth(depth_ref) { ++depth; }
+    ~DepthGuard() { --depth; }
+    int& depth;
+};
+} // namespace
 
 // Sovereign Settings Schema
 static SovereignConfig g_sovereign_config;
 static const std::filesystem::path SETTINGS_FILE = L"RawrXD_Settings.sovereign";
+
+static bool WriteSettingsFileRaw(const SovereignConfig& config)
+{
+    // Serialize to JSON
+    nlohmann::json j;
+    to_json(j, config);
+    std::string json_str = j.dump();
+
+    // Atomic write (temp + rename)
+    std::filesystem::path temp_file = SETTINGS_FILE;
+    temp_file += L".tmp";
+
+    std::ofstream file(temp_file, std::ios::binary);
+    if (!file) {
+        return false;
+    }
+
+    file.write(reinterpret_cast<const char*>(&config.zmm_signature), 64);
+    file.write(json_str.c_str(), json_str.size());
+    file.close();
+
+    std::filesystem::rename(temp_file, SETTINGS_FILE);
+    return true;
+}
+
+static bool ReadSettingsFileRaw(SovereignConfig& config)
+{
+    if (!std::filesystem::exists(SETTINGS_FILE)) {
+        return false;
+    }
+
+    const auto file_size = std::filesystem::file_size(SETTINGS_FILE);
+    if (file_size < 64) {
+        return false;
+    }
+
+    std::ifstream file(SETTINGS_FILE, std::ios::binary);
+    if (!file) {
+        return false;
+    }
+
+    std::vector<char> buffer(static_cast<size_t>(file_size));
+    file.read(buffer.data(), static_cast<std::streamsize>(buffer.size()));
+    if (!file || file.gcount() != static_cast<std::streamsize>(buffer.size())) {
+        return false;
+    }
+
+    memcpy(&config.zmm_signature, buffer.data(), 64);
+
+    std::string json_str(buffer.data() + 64, buffer.size() - 64);
+    nlohmann::json j = nlohmann::json::parse(json_str);
+    from_json(j, config);
+    return true;
+}
 
 // ZMM Signature Generation (Vector 4 hardware attestation)
 __m512i GenerateZMMSignature(const SovereignConfig& config)
@@ -222,37 +289,24 @@ void from_json(const nlohmann::json& j, SovereignConfig& config)
 // Persistence with Sovereign Integrity
 bool SaveSettingsSovereign(const SovereignConfig& config)
 {
+    if (g_settings_save_depth > 0) {
+        return false;
+    }
+    DepthGuard save_guard(g_settings_save_depth);
+
     try
     {
-        // Serialize to JSON
-        nlohmann::json j;
-        to_json(j, config);
-        std::string json_str = j.dump();
+        SovereignConfig signed_config = config;
+        signed_config.zmm_signature = GenerateZMMSignature(signed_config);
 
-        // Generate ZMM signature (hardware-rooted)
-        __m512i signature = GenerateZMMSignature(config);
-
-        // Atomic write (temp + rename)
-        std::filesystem::path temp_file = SETTINGS_FILE;
-        temp_file += L".tmp";
-
-        std::ofstream file(temp_file, std::ios::binary);
-        if (!file)
+        if (!WriteSettingsFileRaw(signed_config)) {
             return false;
+        }
 
-        // Write signature first
-        file.write(reinterpret_cast<const char*>(&signature), 64);
-        // Write JSON payload
-        file.write(json_str.c_str(), json_str.size());
-        file.close();
-
-        // Atomic rename
-        std::filesystem::rename(temp_file, SETTINGS_FILE);
-
-        // Verify written signature
         SovereignConfig verify_config;
-        if (!LoadSettingsSovereign(verify_config))
+        if (!ReadSettingsFileRaw(verify_config)) {
             return false;
+        }
 
         return VerifyZMMSignature(verify_config);
     }
@@ -264,46 +318,24 @@ bool SaveSettingsSovereign(const SovereignConfig& config)
 
 bool LoadSettingsSovereign(SovereignConfig& config)
 {
+    if (g_settings_load_depth > 0) {
+        return false;
+    }
+    DepthGuard load_guard(g_settings_load_depth);
+
     try
     {
-        if (!std::filesystem::exists(SETTINGS_FILE))
-        {
-            // First run: initialize sovereign defaults
-            WSSR_ConfigRecovery(config);
-            return SaveSettingsSovereign(config);
+        if (ReadSettingsFileRaw(config) && VerifyZMMSignature(config)) {
+            return true;
         }
 
-        // Read raw bytes
-        std::ifstream file(SETTINGS_FILE, std::ios::binary);
-        if (!file)
-            return false;
-
-        std::vector<char> buffer(std::filesystem::file_size(SETTINGS_FILE));
-        file.read(buffer.data(), buffer.size());
-
-        // Extract ZMM signature (first 64 bytes)
-        memcpy(&config.zmm_signature, buffer.data(), 64);
-
-        // Parse JSON payload
-        std::string json_str(buffer.data() + 64, buffer.size() - 64);
-        nlohmann::json j = nlohmann::json::parse(json_str);
-        from_json(j, config);
-
-        // Verify ZMM signature (Vector 4 attestation)
-        if (!VerifyZMMSignature(config))
-        {
-            // Tamper detected: WSSR recovery
-            WSSR_ConfigRecovery(config);
-            return SaveSettingsSovereign(config);
-        }
-
-        return true;
+        WSSR_ConfigRecovery(config);
+        return WriteSettingsFileRaw(config);
     }
     catch (const std::exception&)
     {
-        // Any error triggers WSSR
         WSSR_ConfigRecovery(config);
-        return SaveSettingsSovereign(config);
+        return WriteSettingsFileRaw(config);
     }
 }
 
@@ -416,13 +448,139 @@ void Win32IDE::applyDefaultSettings()
 
 void Win32IDE::applySettings()
 {
-    // Apply settings to UI components
-    // TODO: Implement UI updates based on m_settings
-    // For example: update font, theme, etc.
+    // --- Font ---
+    if (m_editorFont) {
+        DeleteObject(m_editorFont);
+        m_editorFont = nullptr;
+    }
+    m_editorFont = CreateFontA(
+        -MulDiv(m_settings.fontSize, GetDpiForWindow(m_hwndMain), 72),
+        0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN,
+        m_settings.fontName.c_str());
+    if (m_hwndEditor && m_editorFont)
+        SendMessage(m_hwndEditor, WM_SETFONT, (WPARAM)m_editorFont, TRUE);
+
+    // --- Theme ---
+    applyThemeById(m_settings.themeId);
+
+    // --- Word wrap ---\n    // Word wrap state stored in m_settings; editor reflow handled by layout.
+
+    // --- Tab size (stored for syntax / indent engine) ---
+    // Propagated through m_settings; no Win32 API needed.
+
+    // --- Persist ---
+    saveSettings();
+    InvalidateRect(m_hwndMain, nullptr, TRUE);
 }
 
 void Win32IDE::showSettingsDialog()
 {
-    // TODO: Implement settings dialog
-    // For now, stub
+    // Build a simple property-sheet-style dialog for IDE settings
+    const int DLG_W = 480, DLG_H = 400;
+    RECT rc;
+    GetClientRect(m_hwndMain, &rc);
+    int x = rc.left + (rc.right - rc.left - DLG_W) / 2;
+    int y = rc.top  + (rc.bottom - rc.top - DLG_H) / 2;
+
+    HWND hDlg = CreateWindowExW(
+        WS_EX_DLGMODALFRAME | WS_EX_TOPMOST,
+        L"STATIC", L"RawrXD Settings",
+        WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,
+        x, y, DLG_W, DLG_H,
+        m_hwndMain, nullptr, GetModuleHandle(nullptr), nullptr);
+    if (!hDlg) return;
+
+    // Font size label + edit
+    CreateWindowExW(0, L"STATIC", L"Font Size:",
+        WS_CHILD | WS_VISIBLE, 20, 20, 100, 22, hDlg, nullptr, nullptr, nullptr);
+    HWND hFontSize = CreateWindowExW(WS_EX_CLIENTEDGE, L"EDIT",
+        std::to_wstring(m_settings.fontSize).c_str(),
+        WS_CHILD | WS_VISIBLE | ES_NUMBER, 130, 18, 60, 24, hDlg,
+        (HMENU)2001, nullptr, nullptr);
+
+    // Font name label + edit
+    CreateWindowExW(0, L"STATIC", L"Font:",
+        WS_CHILD | WS_VISIBLE, 20, 54, 100, 22, hDlg, nullptr, nullptr, nullptr);
+    HWND hFontName = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT",
+        m_settings.fontName.c_str(),
+        WS_CHILD | WS_VISIBLE, 130, 52, 180, 24, hDlg,
+        (HMENU)2002, nullptr, nullptr);
+
+    // Word wrap checkbox
+    HWND hWrap = CreateWindowExW(0, L"BUTTON", L"Word Wrap",
+        WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
+        20, 90, 140, 22, hDlg, (HMENU)2003, nullptr, nullptr);
+    SendMessage(hWrap, BM_SETCHECK, m_settings.wordWrapEnabled ? BST_CHECKED : BST_UNCHECKED, 0);
+
+    // Line numbers checkbox
+    HWND hLineNums = CreateWindowExW(0, L"BUTTON", L"Show Line Numbers",
+        WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
+        20, 118, 180, 22, hDlg, (HMENU)2004, nullptr, nullptr);
+    SendMessage(hLineNums, BM_SETCHECK, m_settings.lineNumbersVisible ? BST_CHECKED : BST_UNCHECKED, 0);
+
+    // Ghost text checkbox
+    HWND hGhost = CreateWindowExW(0, L"BUTTON", L"Ghost Text (AI Autocomplete)",
+        WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
+        20, 146, 260, 22, hDlg, (HMENU)2005, nullptr, nullptr);
+    SendMessage(hGhost, BM_SETCHECK, m_settings.ghostTextEnabled ? BST_CHECKED : BST_UNCHECKED, 0);
+
+    // Minimap checkbox
+    HWND hMinimap = CreateWindowExW(0, L"BUTTON", L"Minimap",
+        WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
+        20, 174, 140, 22, hDlg, (HMENU)2006, nullptr, nullptr);
+    SendMessage(hMinimap, BM_SETCHECK, m_settings.minimapEnabled ? BST_CHECKED : BST_UNCHECKED, 0);
+
+    // OK / Cancel buttons
+    HWND hOK = CreateWindowExW(0, L"BUTTON", L"OK",
+        WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,
+        DLG_W - 190, DLG_H - 70, 80, 30, hDlg, (HMENU)IDOK, nullptr, nullptr);
+    HWND hCancel = CreateWindowExW(0, L"BUTTON", L"Cancel",
+        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        DLG_W - 100, DLG_H - 70, 80, 30, hDlg, (HMENU)IDCANCEL, nullptr, nullptr);
+
+    // Store IDE pointer for the dialog's message pump
+    SetPropW(hDlg, L"IDE_PTR", (HANDLE)this);
+
+    // Run a modal-style message loop for this dialog
+    EnableWindow(m_hwndMain, FALSE);
+    MSG msg;
+    bool running = true;
+    while (running && GetMessage(&msg, nullptr, 0, 0)) {
+        if (msg.hwnd == hDlg || IsChild(hDlg, msg.hwnd)) {
+            if (msg.message == WM_COMMAND) {
+                WORD id = LOWORD(msg.wParam);
+                if (id == IDOK) {
+                    // Harvest values
+                    wchar_t buf[64];
+                    GetWindowTextW(hFontSize, buf, 64);
+                    int fs = _wtoi(buf);
+                    if (fs >= 6 && fs <= 72) m_settings.fontSize = fs;
+
+                    char nameBuf[128];
+                    GetWindowTextA(hFontName, nameBuf, 128);
+                    if (nameBuf[0]) m_settings.fontName = nameBuf;
+
+                    m_settings.wordWrapEnabled    = (SendMessage(hWrap, BM_GETCHECK, 0, 0) == BST_CHECKED);
+                    m_settings.lineNumbersVisible = (SendMessage(hLineNums, BM_GETCHECK, 0, 0) == BST_CHECKED);
+                    m_settings.ghostTextEnabled   = (SendMessage(hGhost, BM_GETCHECK, 0, 0) == BST_CHECKED);
+                    m_settings.minimapEnabled     = (SendMessage(hMinimap, BM_GETCHECK, 0, 0) == BST_CHECKED);
+
+                    applySettings();
+                    running = false;
+                } else if (id == IDCANCEL) {
+                    running = false;
+                }
+            }
+            if (msg.message == WM_CLOSE || msg.message == WM_DESTROY) {
+                running = false;
+            }
+        }
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+    EnableWindow(m_hwndMain, TRUE);
+    SetForegroundWindow(m_hwndMain);
+    DestroyWindow(hDlg);
 }

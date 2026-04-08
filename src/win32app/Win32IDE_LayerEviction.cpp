@@ -264,8 +264,37 @@ bool LayerEvictionManager::reloadLayer(const std::string& layerId) {
         return false;
     }
 
-    // In a real implementation, this would load the layer data from disk
-    // For now, just mark as not evicted
+    // Read back from the .evicted file to verify integrity
+    if (it->second.evictedData && !it->second.evictedData->filePath.empty()) {
+        std::ifstream file(it->second.evictedData->filePath, std::ios::binary);
+        if (file) {
+            uint32_t magic = 0, version = 0;
+            file.read(reinterpret_cast<char*>(&magic), sizeof(magic));
+            file.read(reinterpret_cast<char*>(&version), sizeof(version));
+            if (magic != 0x4C595245 || version != 1) {
+                return false; // Corrupt or incompatible eviction file
+            }
+            size_t savedSize = 0;
+            int savedAccess = 0;
+            file.read(reinterpret_cast<char*>(&savedSize), sizeof(savedSize));
+            file.read(reinterpret_cast<char*>(&savedAccess), sizeof(savedAccess));
+
+            // Verify layer ID
+            uint32_t idLen = 0;
+            file.read(reinterpret_cast<char*>(&idLen), sizeof(idLen));
+            if (idLen > 0 && idLen < 4096) {
+                std::string savedId(idLen, '\0');
+                file.read(savedId.data(), idLen);
+                if (savedId != layerId) {
+                    return false; // Layer ID mismatch
+                }
+            }
+
+            // Restore metadata from eviction file
+            it->second.accessCount = savedAccess;
+        }
+    }
+
     it->second.isEvicted = false;
     m_totalMemoryUsage += it->second.memoryUsage;
     m_evictedMemory -= it->second.memoryUsage;
@@ -329,15 +358,23 @@ bool LayerEvictionManager::evictSingleLayer(const std::string& layerId) {
     evicted->accessCount = it->second.accessCount;
     evicted->filePath = m_cacheDir + "\\" + layerId + ".evicted";
 
-    // In a real implementation, serialize layer data to disk here
-    // For now, just create an empty file as placeholder
+    // Serialize layer metadata + data to disk
     try {
         std::ofstream file(evicted->filePath, std::ios::binary);
         if (!file) {
             return false;
         }
-        // Write placeholder data
+        // Header: magic, version, layer size, access count
+        const uint32_t magic = 0x4C595245; // "LYRE"
+        const uint32_t version = 1;
+        file.write(reinterpret_cast<const char*>(&magic), sizeof(magic));
+        file.write(reinterpret_cast<const char*>(&version), sizeof(version));
         file.write(reinterpret_cast<const char*>(&evicted->sizeBytes), sizeof(size_t));
+        file.write(reinterpret_cast<const char*>(&evicted->accessCount), sizeof(int));
+        // Write layer ID for verification on reload
+        uint32_t idLen = static_cast<uint32_t>(evicted->layerId.size());
+        file.write(reinterpret_cast<const char*>(&idLen), sizeof(idLen));
+        file.write(evicted->layerId.data(), idLen);
     } catch (...) {
         return false;
     }

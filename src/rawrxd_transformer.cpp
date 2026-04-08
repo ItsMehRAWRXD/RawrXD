@@ -1234,7 +1234,7 @@ namespace
 }
 }  // namespace
 
-void RawrXDTransformer::Initialize(VkDevice device, VkPhysicalDevice physDevice, Config cfg, RawrXDModelLoader* loader)
+bool RawrXDTransformer::Initialize(VkDevice device, VkPhysicalDevice physDevice, Config cfg, RawrXDModelLoader* loader)
 {
     this->device = device;
     this->config = cfg;
@@ -1247,7 +1247,7 @@ void RawrXDTransformer::Initialize(VkDevice device, VkPhysicalDevice physDevice,
         kv_cache_k.clear();
         kv_cache_v.clear();
         kv_cache_pos.clear();
-        return;
+        return false;
     }
     if (config.dim % config.n_heads != 0)
     {
@@ -1255,7 +1255,7 @@ void RawrXDTransformer::Initialize(VkDevice device, VkPhysicalDevice physDevice,
         kv_cache_k.clear();
         kv_cache_v.clear();
         kv_cache_pos.clear();
-        return;
+        return false;
     }
 
     // Initialize KV Cache — use seq_len if n_ctx wasn't set
@@ -1268,7 +1268,7 @@ void RawrXDTransformer::Initialize(VkDevice device, VkPhysicalDevice physDevice,
         kv_cache_k.clear();
         kv_cache_v.clear();
         kv_cache_pos.clear();
-        return;
+        return false;
     }
 
     std::size_t kv_size = 0;
@@ -1281,11 +1281,11 @@ void RawrXDTransformer::Initialize(VkDevice device, VkPhysicalDevice physDevice,
         kv_cache_k.clear();
         kv_cache_v.clear();
         kv_cache_pos.clear();
-        return;
+        return false;
     }
-    // Hard cap: never allocate more than 256 MB per K/V buffer to stay within
-    // process memory budgets on systems with aperture reservation constraints.
-    constexpr std::size_t kMaxKvBytesPerBuffer = 256ull * 1024 * 1024;
+    // Hard cap: limit per K/V buffer.  VAllocBuffer uses VirtualAlloc which can
+    // handle multi-GB allocations, but keep a sane upper bound.
+    constexpr std::size_t kMaxKvBytesPerBuffer = 2ull * 1024 * 1024 * 1024; // 2 GB
     const std::size_t kMaxKvFloatsPerBuffer = kMaxKvBytesPerBuffer / sizeof(float);
     if (kv_size > kMaxKvFloatsPerBuffer)
     {
@@ -1296,7 +1296,7 @@ void RawrXDTransformer::Initialize(VkDevice device, VkPhysicalDevice physDevice,
         kv_size = static_cast<std::size_t>(config.n_layers) * static_cast<std::size_t>(ctx) * static_cast<std::size_t>(kv_dim);
     }
     printf("[RawrXD] KV cache: %zu floats (%.1f MB per cache)\n", kv_size, kv_size * 4.0 / 1e6);
-    // Diagnose available memory before heap probe
+    // Diagnose available memory before allocation
     {
         MEMORYSTATUSEX ms{};
         ms.dwLength = sizeof(ms);
@@ -1305,37 +1305,37 @@ void RawrXDTransformer::Initialize(VkDevice device, VkPhysicalDevice physDevice,
                ms.ullAvailPhys >> 20, ms.ullAvailVirtual >> 20,
                (ms.ullTotalPageFile - ms.ullTotalPhys + ms.ullAvailPhys) >> 20);
     }
-    // Heap probe: validate both K+V allocations are feasible before vector resize
+    // KV cache allocation — VAllocBuffer uses VirtualAlloc directly, which
+    // bypasses the debug CRT heap and its allocation limits.  Retry with
+    // halved ctx on failure.
     {
-        // We need TWO allocations of kv_size*sizeof(float) for K and V caches
-        while (ctx >= 32) {
+        bool allocated = false;
+        while (ctx >= 8 && !allocated) {
             kv_size = static_cast<std::size_t>(config.n_layers) * static_cast<std::size_t>(ctx) * static_cast<std::size_t>(kv_dim);
-            const std::size_t probeBytes = kv_size * sizeof(float);
-            void* probeK = malloc(probeBytes);
-            void* probeV = probeK ? malloc(probeBytes) : nullptr;
-            const bool ok = (probeK != nullptr && probeV != nullptr);
-            if (probeK) free(probeK);
-            if (probeV) free(probeV);
-            if (ok) {
-                printf("[RawrXD] HEAP PROBE OK: ctx=%d (2x %.0f MB = %.0f MB available)\n",
-                       ctx, probeBytes / 1048576.0, 2.0 * probeBytes / 1048576.0);
-                break;
+            printf("[RawrXD] KV cache attempt: ctx=%d, %zu floats (%.1f MB per cache)\n",
+                   ctx, kv_size, kv_size * 4.0 / 1e6);
+            try {
+                kv_cache_k.resize(kv_size, 0.0f);
+                kv_cache_v.resize(kv_size, 0.0f);
+                kv_cache_pos.assign(static_cast<size_t>(config.n_layers) * static_cast<size_t>(ctx), -1);
+                allocated = true;
+            } catch (const std::bad_alloc&) {
+                printf("[RawrXD] KV resize failed at ctx=%d (%.1f MB per cache)\n", ctx, kv_size * 4.0 / 1e6);
+                kv_cache_k.clear(); kv_cache_k.shrink_to_fit();
+                kv_cache_v.clear(); kv_cache_v.shrink_to_fit();
+                kv_cache_pos.clear(); kv_cache_pos.shrink_to_fit();
+                ctx /= 2;
             }
-            printf("[RawrXD] HEAP PROBE FAIL at ctx=%d (2x %.0f MB), halving\n", ctx, probeBytes / 1048576.0);
-            ctx /= 2;
         }
-        if (ctx < 32) { printf("[RawrXD] FATAL: KV cache heap exhausted even at minimum ctx\n"); return; }
+        if (!allocated) {
+            printf("[RawrXD] FATAL: KV cache allocation exhausted (min ctx=8)\n");
+            return false;
+        }
     }
-    kv_size = static_cast<std::size_t>(config.n_layers) * static_cast<std::size_t>(ctx) * static_cast<std::size_t>(kv_dim);
     printf("[RawrXD] KV cache final: ctx=%d, %zu floats (%.1f MB per cache)\n", ctx, kv_size, kv_size * 4.0 / 1e6);
 
     // Keep runtime config synchronized with the probed cache geometry.
-    // Forward-path cache indexing derives from config.n_ctx.
     config.n_ctx = ctx;
-
-    kv_cache_k.resize(kv_size, 0.0f);
-    kv_cache_v.resize(kv_size, 0.0f);
-    kv_cache_pos.assign(static_cast<size_t>(config.n_layers) * static_cast<size_t>(ctx), -1);
 
     const std::size_t nLay = static_cast<std::size_t>(std::max(1, config.n_layers));
     m_moeReuseResidentRatioEma.assign(nLay, 0.0);
@@ -1375,6 +1375,7 @@ void RawrXDTransformer::Initialize(VkDevice device, VkPhysicalDevice physDevice,
 
     // Precompute RoPE tables if needed (usually just done on fly in kernels)
     printf("[RawrXD] Transformer Initialized. AVX-512 Kernels Linked.\n");
+    return true;
 }
 
 bool RawrXDTransformer::tryMoeSyncPackMixtureIntoCache(const std::uint32_t layer, const std::string& blkPrefix,

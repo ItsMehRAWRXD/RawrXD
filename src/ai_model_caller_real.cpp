@@ -19,6 +19,8 @@
 #include <algorithm>
 #include <cstdio>
 
+#include "context_config.h"
+
 // Forward declarations for GGML types (include ggml.h in production)
 struct ggml_context;
 struct ggml_tensor;
@@ -120,7 +122,7 @@ struct InferenceContext {
     
     // Hyperparameters
     int n_vocab = 32000;
-    int n_ctx = 4096;
+    int n_ctx = RawrXD::ContextLimits::DEFAULT;
     int n_embd = 4096;
     int n_head = 32;
     int n_layer = 32;
@@ -367,11 +369,28 @@ bool AIModelCaller_Initialize(const ModelConfig& config) {
     
     // Store hyperparameters
     g_ctx.n_vocab = config.n_vocab > 0 ? config.n_vocab : 32000;
-    g_ctx.n_ctx = config.n_ctx > 0 ? config.n_ctx : 4096;
+    const RawrXD::ContextDecision contextDecision =
+        RawrXD::ResolveContextDecision(config.n_ctx > 0 ? config.n_ctx : RawrXD::ContextLimits::DEFAULT);
+    g_ctx.n_ctx = contextDecision.effective;
     g_ctx.n_embd = config.n_embd > 0 ? config.n_embd : 4096;
     g_ctx.n_head = config.n_head > 0 ? config.n_head : 32;
     g_ctx.n_layer = config.n_layer > 0 ? config.n_layer : 32;
     g_ctx.n_rot = config.n_rot > 0 ? config.n_rot : 128;
+
+    LogMessage(LOG_INFO,
+               "Context decision: requested=%d env=%d system_max=%d kv_max=%d effective=%d kv_bytes=%lld kv_per_token=%.2f vram_budget=%lld kv_budget=%lld pressure_ratio=%.4f pressure=%d adapted=%d",
+               contextDecision.requested,
+               contextDecision.env_override_applied ? contextDecision.env_override_value : 0,
+               contextDecision.system_safe_max,
+               contextDecision.kv_safe_max,
+               contextDecision.effective,
+               static_cast<long long>(contextDecision.estimated_kv_bytes),
+               contextDecision.kv_bytes_per_token,
+               static_cast<long long>(contextDecision.vram_budget_bytes),
+               static_cast<long long>(contextDecision.kv_budget_bytes),
+               contextDecision.pressure_ratio,
+               contextDecision.pressure_detected ? 1 : 0,
+               contextDecision.adapted ? 1 : 0);
     
     // Allocate KV cache - REAL IMPLEMENTATION
     // Shape: [n_embd/n_head, n_head, n_ctx, n_layer] for K and V

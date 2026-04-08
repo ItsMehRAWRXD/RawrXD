@@ -107,6 +107,9 @@ using json = nlohmann::json;
 #include "IocpFileWatcher.h"
 
 #include "../../include/agentic/agentic_composer_ux.h"
+#include "../../include/PredictiveGhostText.h"
+#include "../../include/AgenticComposer.h"
+#include "../../include/NeuralHeatmapRenderer.h"
 #include "../agent/agentic_failure_detector.hpp"
 #include "../agentic/OllamaProvider.h"
 #include "agentic_mode_switcher.hpp"
@@ -2449,6 +2452,7 @@ class Win32IDE
     // Ghost Text state
     friend void Win32IDE_HandleTitanGhostStreamMessage(Win32IDE* ide);
     RawrXD::GhostTextRenderer* m_ghostTextRendererOverlay = nullptr;
+    std::unique_ptr<RawrXD::IDE::PredictiveGhostText> m_predictiveGhostText;
     bool m_ghostTextEnabled = false;
     bool m_ghostTextVisible = false;
     bool m_ghostTextAccepted = false;
@@ -2492,6 +2496,12 @@ class Win32IDE
     bool m_titanPagingHeartbeatActive = false;
     uint64_t m_titanPagingHeartbeatStartTime = 0;
     uint32_t m_titanPagingHeartbeatTimeoutMs = 0;
+
+    // Agentic Composer state
+    std::unique_ptr<RawrXD::IDE::AgenticComposer> m_agenticComposer;
+    std::unique_ptr<RawrXD::IDE::NeuralHeatmapRenderer> m_neuralHeatmap;
+    bool m_neuralHeatmapEnabled = false;
+    bool m_neuralHeatmapVisible = false;
 
     // ========================================================================
     // Peek Overlay — Definition/References Overlay (Win32IDE_PeekOverlay.cpp)
@@ -6591,7 +6601,7 @@ class Win32IDE
     // Agent Ollama Client
     bool m_ollamaClientInitialized = false;
     bool m_ollamaConnected = false;
-    std::string m_ollamaEndpoint = "http://localhost:11434";
+    std::string m_ollamaEndpoint = "http://localhost:11435";
     std::string m_ollamaStatus = "Not connected";
     uint64_t m_ollamaLastConnectedMs = 0;
 

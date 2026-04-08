@@ -271,17 +271,39 @@ std::shared_ptr<AgentTask> AdvancedAgentCoordinator::getNextTask() {
 void AdvancedAgentCoordinator::reprioritizeTask(const std::string& taskId, TaskPriority newPriority) {
     std::lock_guard<std::mutex> lock(m_mutex);
 
-    // This is a simplified implementation - in practice, we'd need to rebuild the priority queue
-    std::cout << "[TaskScheduler] Reprioritized task " << taskId
-              << " to priority " << static_cast<int>(newPriority) << std::endl;
+    // Rebuild the priority queue with the target task's priority changed
+    std::priority_queue<PrioritizedTask> rebuilt;
+    bool found = false;
+    auto copy = m_taskQueue;
+    while (!copy.empty()) {
+        auto pt = copy.top();
+        copy.pop();
+        if (pt.task && pt.task->id == taskId) {
+            pt.priority = newPriority;
+            found = true;
+        }
+        rebuilt.push(pt);
+    }
+    if (found) {
+        m_taskQueue = std::move(rebuilt);
+        std::cout << "[TaskScheduler] Reprioritized task " << taskId
+                  << " to priority " << static_cast<int>(newPriority) << std::endl;
+    }
 }
 
 std::vector<std::shared_ptr<AgentTask>> AdvancedAgentCoordinator::getTasksByPriority(TaskPriority priority) const {
     std::lock_guard<std::mutex> lock(m_mutex);
 
     std::vector<std::shared_ptr<AgentTask>> tasks;
-    // This would require iterating through the priority queue, which is complex
-    // For now, return empty vector as this is a demonstration
+    // Copy the queue and pop all items to find matches — priority_queue has no iterator
+    auto copy = m_taskQueue;
+    while (!copy.empty()) {
+        const auto& pt = copy.top();
+        if (pt.priority == priority) {
+            tasks.push_back(pt.task);
+        }
+        copy.pop();
+    }
     return tasks;
 }
 

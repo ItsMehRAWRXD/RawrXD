@@ -9,8 +9,7 @@
 #include <sstream>
 #include <chrono>
 #include <algorithm>
-#include <openssl/rand.h>
-#include <openssl/evp.h>
+#include <random>
 
 namespace {
     // Simple Base64 encoder (production would use robust library)
@@ -553,5 +552,3 @@ public:
         const std::map<LLMBackend, HTTPConfig>& configs
     );
 };
-
-#endif // LLM_PRODUCTION_UTILITIES_H

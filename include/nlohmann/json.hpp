@@ -90,18 +90,135 @@ namespace nlohmann {
         json& operator=(json&& other) = default;
 
         static json parse(const std::string& str) { 
-            // Very naive parser for simple values or empty object checking
-            if (str == "{}") return json::object();
-            if (str == "[]") return json::array();
-            return json(str); // For now just wrap content
+            size_t pos = 0;
+            return parse_value(str, pos);
         }
         // 3-arg overload: parse(str, callback, allow_exceptions)
-        static json parse(const std::string& str, void* /*cb*/, bool allow_exceptions) {
-            json result = parse(str);
-            if (!allow_exceptions) { /* never throws in our mini impl */ }
-            return result;
+        static json parse(const std::string& str, void* /*cb*/, bool /*allow_exceptions*/) {
+            return parse(str);
         }
+
+    private:
+        static void skip_ws(const std::string& s, size_t& pos) {
+            while (pos < s.size() && (s[pos] == ' ' || s[pos] == '\t' || s[pos] == '\r' || s[pos] == '\n'))
+                ++pos;
+        }
+
+        static json parse_value(const std::string& s, size_t& pos) {
+            skip_ws(s, pos);
+            if (pos >= s.size()) return json();
+            char c = s[pos];
+            if (c == '{') return parse_object(s, pos);
+            if (c == '[') return parse_array(s, pos);
+            if (c == '"') return parse_string_value(s, pos);
+            if (c == 't' || c == 'f') return parse_bool(s, pos);
+            if (c == 'n') return parse_null(s, pos);
+            return parse_number(s, pos);
+        }
+
+        static std::string parse_string_raw(const std::string& s, size_t& pos) {
+            if (pos >= s.size() || s[pos] != '"') return "";
+            ++pos; // skip opening quote
+            std::string out;
+            while (pos < s.size()) {
+                char c = s[pos++];
+                if (c == '"') return out;
+                if (c == '\\' && pos < s.size()) {
+                    char e = s[pos++];
+                    switch (e) {
+                        case '"': out += '"'; break;
+                        case '\\': out += '\\'; break;
+                        case '/': out += '/'; break;
+                        case 'b': out += '\b'; break;
+                        case 'f': out += '\f'; break;
+                        case 'n': out += '\n'; break;
+                        case 'r': out += '\r'; break;
+                        case 't': out += '\t'; break;
+                        case 'u': {
+                            // consume 4 hex digits, emit '?'
+                            for (int i = 0; i < 4 && pos < s.size(); ++i) ++pos;
+                            out += '?';
+                            break;
+                        }
+                        default: out += e; break;
+                    }
+                } else {
+                    out += c;
+                }
+            }
+            return out;
+        }
+
+        static json parse_string_value(const std::string& s, size_t& pos) {
+            return json(parse_string_raw(s, pos));
+        }
+
+        static json parse_number(const std::string& s, size_t& pos) {
+            size_t start = pos;
+            bool is_float = false;
+            if (pos < s.size() && s[pos] == '-') ++pos;
+            while (pos < s.size() && s[pos] >= '0' && s[pos] <= '9') ++pos;
+            if (pos < s.size() && s[pos] == '.') { is_float = true; ++pos; while (pos < s.size() && s[pos] >= '0' && s[pos] <= '9') ++pos; }
+            if (pos < s.size() && (s[pos] == 'e' || s[pos] == 'E')) { is_float = true; ++pos; if (pos < s.size() && (s[pos] == '+' || s[pos] == '-')) ++pos; while (pos < s.size() && s[pos] >= '0' && s[pos] <= '9') ++pos; }
+            std::string numStr = s.substr(start, pos - start);
+            json j;
+            j.type_ = 2;
+            j.value_ = std::make_shared<std::string>(numStr);
+            return j;
+        }
+
+        static json parse_bool(const std::string& s, size_t& pos) {
+            if (s.compare(pos, 4, "true") == 0) { pos += 4; return json(true); }
+            if (s.compare(pos, 5, "false") == 0) { pos += 5; return json(false); }
+            return json();
+        }
+
+        static json parse_null(const std::string& s, size_t& pos) {
+            if (s.compare(pos, 4, "null") == 0) { pos += 4; }
+            return json();
+        }
+
+        static json parse_object(const std::string& s, size_t& pos) {
+            json j = json::object();
+            ++pos; // skip '{'
+            skip_ws(s, pos);
+            if (pos < s.size() && s[pos] == '}') { ++pos; return j; }
+            while (pos < s.size()) {
+                skip_ws(s, pos);
+                std::string key = parse_string_raw(s, pos);
+                skip_ws(s, pos);
+                if (pos < s.size() && s[pos] == ':') ++pos;
+                json val = parse_value(s, pos);
+                (*j.object_)[key] = std::move(val);
+                skip_ws(s, pos);
+                if (pos < s.size() && s[pos] == ',') { ++pos; continue; }
+                if (pos < s.size() && s[pos] == '}') { ++pos; break; }
+                break; // malformed
+            }
+            return j;
+        }
+
+        static json parse_array(const std::string& s, size_t& pos) {
+            json j = json::array();
+            ++pos; // skip '['
+            skip_ws(s, pos);
+            if (pos < s.size() && s[pos] == ']') { ++pos; return j; }
+            while (pos < s.size()) {
+                json val = parse_value(s, pos);
+                j.array_->push_back(std::move(val));
+                skip_ws(s, pos);
+                if (pos < s.size() && s[pos] == ',') { ++pos; continue; }
+                if (pos < s.size() && s[pos] == ']') { ++pos; break; }
+                break; // malformed
+            }
+            return j;
+        }
+
+    public:
         bool is_discarded() const { return type_ == 0 && !value_ && !object_ && !array_; }
+        static bool accept(const std::string& str) {
+            try { size_t pos = 0; parse_value(str, pos); return true; } catch (...) { return false; }
+        }
         static json object() { json j; j.type_ = 4; j.object_ = std::make_shared<std::map<std::string, json>>(); return j; }
         static json object(std::initializer_list<std::pair<const std::string, json>> init) {
             json j = object();
@@ -263,9 +380,27 @@ namespace nlohmann {
             return 0;
         }
 
+        static std::string escape_json(const std::string& s) {
+            std::string out;
+            out.reserve(s.size());
+            for (char c : s) {
+                switch (c) {
+                    case '"': out += "\\\""; break;
+                    case '\\': out += "\\\\"; break;
+                    case '\b': out += "\\b"; break;
+                    case '\f': out += "\\f"; break;
+                    case '\n': out += "\\n"; break;
+                    case '\r': out += "\\r"; break;
+                    case '\t': out += "\\t"; break;
+                    default: out += c; break;
+                }
+            }
+            return out;
+        }
+
         std::string dump(int indent = -1) const {
             if (type_ == 0) return "null";
-            if (type_ == 1) return "\"" + (value_ ? *value_ : "") + "\"";
+            if (type_ == 1) return "\"" + escape_json(value_ ? *value_ : "") + "\"";
             if (type_ == 2) return value_ ? *value_ : "0";
             if (type_ == 3) return value_ ? *value_ : "false";
             

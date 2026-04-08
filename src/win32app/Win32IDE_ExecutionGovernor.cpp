@@ -197,30 +197,22 @@ void Win32IDE::cmdGovernorStatus() {
 }
 
 void Win32IDE::cmdGovernorSubmitCommand() {
-    // Show input dialog for command using Win32 simple input
-    char buf[1024] = {0};
-    // Use command palette if available, otherwise a simple prompt
+    // Input dialog for command
+    wchar_t buf[1024] = {};
+    if (!DialogBoxWithInput(L"Governor: Submit Command",
+                            L"Enter command to execute:", buf, 1024))
+        return;
+
     std::string command;
     {
-        // Prompt user via MessageBox with clipboard-based input
-        // In a real scenario this would use the command palette; for now use a simple approach
-        int result = MessageBoxA(m_hwndMain,
-            "Enter command in the editor's command input area, then press OK.\n"
-            "Or type command in the output panel.",
-            "Governor: Submit Command", MB_OKCANCEL | MB_ICONQUESTION);
-        if (result != IDOK) return;
-        // Read from clipboard as a simple workaround
-        if (OpenClipboard(m_hwndMain)) {
-            HANDLE hData = GetClipboardData(CF_TEXT);
-            if (hData) {
-                char* text = static_cast<char*>(GlobalLock(hData));
-                if (text) { command = text; GlobalUnlock(hData); }
-            }
-            CloseClipboard();
+        int len = WideCharToMultiByte(CP_UTF8, 0, buf, -1, nullptr, 0, nullptr, nullptr);
+        if (len > 1) {
+            command.resize(len - 1);
+            WideCharToMultiByte(CP_UTF8, 0, buf, -1, command.data(), len, nullptr, nullptr);
         }
     }
     if (command.empty()) {
-        appendToOutput("[Governor] No command provided (copy command to clipboard first)");
+        appendToOutput("[Governor] No command provided.");
         return;
     }
 

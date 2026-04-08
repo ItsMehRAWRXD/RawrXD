@@ -18,7 +18,7 @@
 // ============================================================================
 // CONSTANTS
 // ============================================================================
-static const std::string DEFAULT_OLLAMA_ENDPOINT = "http://localhost:11434";
+static const std::string DEFAULT_OLLAMA_ENDPOINT = "http://localhost:11435";
 
 // ============================================================================
 // AGENT OLLAMA CLIENT METHODS
@@ -27,7 +27,15 @@ static const std::string DEFAULT_OLLAMA_ENDPOINT = "http://localhost:11434";
 void Win32IDE::initAgentOllamaClient() {
     m_ollamaClientInitialized = true;
     m_ollamaConnected = false;
-    m_ollamaEndpoint = DEFAULT_OLLAMA_ENDPOINT;
+
+    // Prefer IDE's own embedded server when running
+    if (m_localServerRunning.load()) {
+        m_ollamaEndpoint = "http://localhost:" + std::to_string(m_settings.localServerPort);
+        LOG_INFO("Agent Ollama client targeting IDE embedded server on port " +
+                 std::to_string(m_settings.localServerPort));
+    } else {
+        m_ollamaEndpoint = DEFAULT_OLLAMA_ENDPOINT;
+    }
     m_ollamaStatus = "Not connected";
 
     // Test initial connection

@@ -128,6 +128,8 @@ void RawrXDTokenizer::refreshSpecialTokenIds()
     assignIfPresent("<|begin_of_text|>", BOS_ID);
     assignIfPresent("</s>", EOS_ID);
     assignIfPresent("<|end_of_text|>", EOS_ID);
+        assignIfPresent("<|end|>", EOS_ID);
+        assignIfPresent("<|endoftext|>", EOS_ID);
     assignIfPresent("<unk>", UNK_ID);
     assignIfPresent("<pad>", PAD_ID);
 }
@@ -247,13 +249,9 @@ bool RawrXDTokenizer::LoadFromGGUF(const std::string& ggufPath)
         return false;
     }
 
-    const bool parsed = loader.ParseHeader() && loader.ParseMetadata();
-    if (!parsed)
-    {
-        std::cerr << "[Tokenizer] Failed to parse GGUF tokenizer metadata: " << ggufPath << std::endl;
-        loader.Close();
-        return false;
-    }
+    // Open() already calls ParseHeader() + ParseMetadata() internally.
+    // Do NOT call them again — ParseMetadata appends to metadata_.tokens
+    // without clearing, which would double the vocab (32064 → 64128).
 
     const RawrXD::GGUFMetadata metadata = loader.GetMetadata();
     loader.Close();
@@ -292,27 +290,64 @@ std::vector<uint32_t> RawrXDTokenizer::Encode(const std::string& text) {
     if (BOS_ID != INVALID_TOKEN_ID)
         tokens.push_back(BOS_ID);
     
-    size_t pos = 0;
-    size_t len = text.length();
+    // SentencePiece-style normalization: prepend ▁ (U+2581) and replace
+    // spaces with ▁ so that greedy matching finds vocab entries like "▁Hello".
+    std::string normalized;
+    normalized.reserve(text.size() + 4);
+    // Prepend ▁ to mark start-of-sentence / word boundary
+    normalized += "\xE2\x96\x81";
+    for (size_t i = 0; i < text.size(); ++i) {
+        if (text[i] == ' ') {
+            normalized += "\xE2\x96\x81";
+        } else {
+            normalized += text[i];
+        }
+    }
     
-    // Byte-level tokenization — greedy longest-prefix matching
+    // Compute maximum token length in vocab for search bound
+    size_t maxTokenLen = 0;
+    for (const auto& kv : vocab) {
+        if (kv.first.size() > maxTokenLen)
+            maxTokenLen = kv.first.size();
+    }
+    if (maxTokenLen == 0) maxTokenLen = 1;
+    if (maxTokenLen > 128) maxTokenLen = 128;
+    
+    // Greedy longest-prefix matching
+    size_t pos = 0;
+    const size_t len = normalized.size();
+    
     while (pos < len) {
-        // Check token limit before adding (defensive; input should have been rejected)
         if (tokens.size() >= MAX_TOKENS_PER_TEXT) {
             std::cerr << "[Tokenizer] ERROR: Encode token limit reached mid-stream at pos=" << pos 
                       << " (input length=" << len << "), stopping encode" << std::endl;
             break;
         }
         
-        uint8_t c = (uint8_t)text[pos];
-        std::string s(1, (char)c);
-
-        auto it = vocab.find(s);
-        if (it != vocab.end())
-            tokens.push_back(static_cast<uint32_t>(it->second));
-        else
-            tokens.push_back(static_cast<uint32_t>(c));
-        pos++;
+        size_t bestLen = 0;
+        int bestId = -1;
+        
+        const size_t remaining = len - pos;
+        const size_t tryMax = std::min(remaining, maxTokenLen);
+        
+        for (size_t tryLen = tryMax; tryLen >= 1; tryLen--) {
+            std::string candidate(normalized, pos, tryLen);
+            auto it = vocab.find(candidate);
+            if (it != vocab.end()) {
+                bestLen = tryLen;
+                bestId = it->second;
+                break;
+            }
+        }
+        
+        if (bestLen > 0) {
+            tokens.push_back(static_cast<uint32_t>(bestId));
+            pos += bestLen;
+        } else {
+            // Byte fallback: use raw byte value
+            tokens.push_back(static_cast<uint32_t>(static_cast<uint8_t>(normalized[pos])));
+            pos++;
+        }
     }
     
     return tokens;

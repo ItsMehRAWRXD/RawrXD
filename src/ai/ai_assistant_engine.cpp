@@ -375,7 +375,7 @@ std::vector<std::string> AIAssistantEngine::ListAvailableModels() const {
 
     if (m_current_config.provider == ModelProvider::Ollama) {
         std::string endpoint = m_current_config.api_endpoint.empty()
-            ? "http://localhost:11434/api/tags"
+            ? "http://localhost:11435/api/tags"
             : m_current_config.api_endpoint;
 
         auto queryOllama = [&](const std::string& url) {
@@ -1290,7 +1290,7 @@ void GGUFBackend::Shutdown() {
 // ============================================================================
 
 bool OllamaBackend::Initialize(const ModelConfig& config) {
-    m_endpoint = config.api_endpoint.empty() ? "http://localhost:11434/api/generate" : config.api_endpoint;
+    m_endpoint = config.api_endpoint.empty() ? "http://localhost:11435/api/generate" : config.api_endpoint;
     m_model_name = config.model_name;
 
     const bool allowRemote = IsTruthy(config.custom_params.count("allow_remote_endpoint")

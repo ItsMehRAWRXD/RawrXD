@@ -162,7 +162,7 @@ IDEAgentBridgeWithHotPatching::IDEAgentBridgeWithHotPatching()
     , m_proxyServer(nullptr)
     , m_hotPatchingEnabled(false)
     , m_proxyPort("11435")
-    , m_ggufEndpoint("localhost:11434")
+    , m_ggufEndpoint("localhost:11435")
 {
     fprintf(stderr, "[INFO] [IDEAgentBridge] Creating extended bridge with hot patching\n");
 }

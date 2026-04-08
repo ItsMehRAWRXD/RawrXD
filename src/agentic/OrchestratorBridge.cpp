@@ -9,6 +9,7 @@
 #include "../inference/PerformanceMonitor.h"
 #include "ErrorRecoveryManager.h"
 #include "../agent/agentic_hotpatch_orchestrator.hpp"
+#include "context_config.h"
 #include <algorithm>
 #include <cctype>
 #include <chrono>
@@ -147,7 +148,7 @@ bool OrchestratorBridge::Initialize(const std::string& workingDir,
     m_ollamaConfig.fim_model  = "";
     m_ollamaConfig.timeout_ms = 120000;
     m_ollamaConfig.temperature = 0.1f;
-    m_ollamaConfig.num_ctx = 8192;
+    m_ollamaConfig.num_ctx = RawrXD::ContextLimits::DEFAULT;
 
     // Parse URL if provided
     if (!ollamaUrl.empty()) {

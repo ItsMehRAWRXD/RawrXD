@@ -3916,9 +3916,16 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         case IDM_PLAN_ORCHESTRATOR_START:
             if (m_planOrchestrator)
             {
-                // Prompt user for goal
-                std::string goal = "Implement a hello world function in C++";
-                // For now, use a fixed goal. In future, show a dialog to input goal.
+                // Prompt user for goal via input dialog
+                wchar_t goalBuf[512] = {};
+                std::string goal;
+                if (DialogBoxWithInput(L"Plan Orchestrator", L"Enter your goal:", goalBuf, 512) && goalBuf[0]) {
+                    int len = WideCharToMultiByte(CP_UTF8, 0, goalBuf, -1, nullptr, 0, nullptr, nullptr);
+                    goal.resize(len > 0 ? len - 1 : 0);
+                    WideCharToMultiByte(CP_UTF8, 0, goalBuf, -1, goal.data(), len, nullptr, nullptr);
+                } else {
+                    goal = "Implement a hello world function in C++";
+                }
                 std::string workspaceRoot = m_projectRoot;
                 if (workspaceRoot.empty())
                     workspaceRoot = m_explorerRootPath;
@@ -3952,8 +3959,14 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
             }
             return;
         case IDM_PLAN_ORCHESTRATOR_STOP:
-            // For now, just show a message. Stopping is not implemented yet.
-            MessageBoxW(m_hwndMain, L"Stop functionality not yet implemented", L"Plan Orchestrator", MB_OK | MB_ICONINFORMATION);
+            if (m_planOrchestrator) {
+                m_planOrchestrator->requestStop();
+                appendToOutput("\xE2\x9B\x94 Plan Orchestrator: Stop requested\n", "Output", OutputSeverity::Warning);
+                if (m_hwndStatusBar)
+                    SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)L"Plan Orchestrator stopped");
+            } else {
+                MessageBoxW(m_hwndMain, L"Plan Orchestrator not initialized", L"Error", MB_OK | MB_ICONERROR);
+            }
             return;
         case IDM_PLAN_ORCHESTRATOR_VIEW_STATUS:
             if (m_planOrchestrator)

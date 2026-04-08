@@ -850,5 +850,6 @@ void Win32IDE::filterSettings(const std::string& query)
 
 void Win32IDE::populateSettingsTree()
 {
-    // Currently handled by tab control in createSettingsControls
+    // Settings navigation is handled by the tab control (m_hwndSettingsTabs)
+    // in createSettingsControls(). This is a no-op kept for API compatibility.
 }

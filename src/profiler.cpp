@@ -22,7 +22,7 @@ Profiler::Profiler()
       m_totalSamplesProcessed(0),
       m_totalTokensProcessed(0),
       m_lastGpuUsagePercent(0.0f),
-      m_lastGpuMemoryMB(0.0f),finished isnt a choice now complete everything that only instructs and properly form it
+      m_lastGpuMemoryMB(0.0f),
       m_cpuThresholdPercent(95.0f),
       m_memoryThresholdPercent(85.0f),
       m_gpuThresholdPercent(95.0f),

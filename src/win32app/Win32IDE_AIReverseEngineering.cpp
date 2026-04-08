@@ -236,8 +236,8 @@ static std::string aiSuggestSymbolName(const std::string& originalName,
     // LLM path: send disassembly context for semantic name inference
     RawrXD::Agent::OllamaConfig cfg;
     cfg.host = "127.0.0.1";
-    cfg.port = 11434;
-    // chat_model left empty — auto-detected from Ollama /api/tags
+    cfg.port = 11435;  // IDE embedded server
+    // chat_model left empty — auto-detected from /api/tags
     cfg.temperature = 0.1f;  // Low temperature for deterministic naming
     cfg.max_tokens = 64;
     cfg.timeout_ms = 10000;  // Quick timeout for RE workflow
@@ -299,8 +299,8 @@ static std::string aiSuggestType(const std::string& originalType, const std::str
     if (originalType == "int" || originalType == "void*" || originalType == "char*") {
         RawrXD::Agent::OllamaConfig cfg;
         cfg.host = "127.0.0.1";
-        cfg.port = 11434;
-        // chat_model left empty — auto-detected from Ollama /api/tags
+        cfg.port = 11435;  // IDE embedded server
+        // chat_model left empty — auto-detected from /api/tags
         cfg.temperature = 0.1f;
         cfg.max_tokens = 32;
         cfg.timeout_ms = 8000;

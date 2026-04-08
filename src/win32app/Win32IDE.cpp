@@ -8440,7 +8440,9 @@ void Win32IDE::onTabChanged()
             auto [line, col] = getCursorPosition();
             m_editorTabs[m_activeTabIndex].cursorLine = line;
             m_editorTabs[m_activeTabIndex].cursorCol = col;
-            // TODO: save scroll pos, multi-cursors, folds
+            // Save scroll position
+            m_editorTabs[m_activeTabIndex].scrollPos =
+                (int)SendMessageW(m_hwndEditor, EM_GETFIRSTVISIBLELINE, 0, 0);
         }
 
         // Stash annotations for the outgoing tab
@@ -8457,6 +8459,13 @@ void Win32IDE::onTabChanged()
         int lineIndex = (int)SendMessageW(m_hwndEditor, EM_LINEINDEX, tab.cursorLine - 1, 0);
         int charPos = lineIndex + tab.cursorCol - 1;
         SendMessageW(m_hwndEditor, EM_SETSEL, charPos, charPos);
+
+        // Restore scroll position
+        int currentFirst = (int)SendMessageW(m_hwndEditor, EM_GETFIRSTVISIBLELINE, 0, 0);
+        if (tab.scrollPos > currentFirst)
+            SendMessageW(m_hwndEditor, EM_LINESCROLL, 0, tab.scrollPos - currentFirst);
+        else if (tab.scrollPos < currentFirst)
+            SendMessageW(m_hwndEditor, EM_LINESCROLL, 0, -(currentFirst - tab.scrollPos));
 
         // Restore stashed annotations for the incoming tab
         restoreAnnotationsForTab();
@@ -8483,7 +8492,21 @@ void Win32IDE::onTabClosing(int index)
         // Check if tab is modified and prompt to save
         if (m_editorTabs[index].modified)
         {
-            // TODO: Show save dialog
+            std::wstring prompt = L"Save changes to '";
+            prompt += utf8ToWide(m_editorTabs[index].displayName);
+            prompt += L"'?";
+            int result = MessageBoxW(m_hwndMain, prompt.c_str(),
+                                     L"RawrXD", MB_YESNOCANCEL | MB_ICONQUESTION);
+            if (result == IDYES) {
+                // Save before closing
+                int prev = m_activeTabIndex;
+                m_activeTabIndex = index;
+                saveCurrentFile();
+                m_activeTabIndex = prev;
+            } else if (result == IDCANCEL) {
+                return; // Abort close
+            }
+            // IDNO falls through to remove without saving
         }
         // Remove the tab
         removeTab(index);

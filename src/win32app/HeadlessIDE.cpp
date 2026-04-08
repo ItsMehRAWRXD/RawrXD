@@ -2973,6 +2973,9 @@ std::string HeadlessIDE::routeInferenceRequest(const std::string& prompt) {
                                   [&](const std::string& piece) {
                                       if (!piece.empty() && completion.size() < kMaxHeadlessInferenceResponseBytes) {
                                           completion += piece;
+                                          // Stream each piece to stdout immediately
+                                          printf("%s", piece.c_str());
+                                          fflush(stdout);
                                       }
                                   },
                                   []() {});

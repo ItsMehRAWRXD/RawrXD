@@ -135,30 +135,14 @@ void Win32IDE::cmdDbgLaunch() {
 }
 
 void Win32IDE::cmdDbgAttach() {
-    // Simple input dialog for PID
-    char pidBuf[32] = {};
-    // Use a basic prompt via InputBox pattern
-    int result = 0;
-    // For simplicity, prompt the user in the output panel
-    appendToOutput("[Debug] Enter PID to attach to (use debug console):\n");
+    // Input dialog for PID
+    wchar_t pidBuf[32] = {};
+    if (!DialogBoxWithInput(L"Attach to Process", L"Enter Process ID (PID):", pidBuf, 32))
+        return;
 
-    // In a real implementation, this would show a dialog.
-    // For now, we'll try to get PID from clipboard or last entered value.
-    if (IsClipboardFormatAvailable(CF_TEXT) && OpenClipboard(m_hwndMain)) {
-        HANDLE hData = GetClipboardData(CF_TEXT);
-        if (hData) {
-            char* pText = static_cast<char*>(GlobalLock(hData));
-            if (pText) {
-                strncpy(pidBuf, pText, sizeof(pidBuf) - 1);
-                GlobalUnlock(hData);
-            }
-        }
-        CloseClipboard();
-    }
-
-    uint32_t pid = static_cast<uint32_t>(atoi(pidBuf));
+    uint32_t pid = static_cast<uint32_t>(_wtoi(pidBuf));
     if (pid == 0) {
-        appendToOutput("[Debug] Invalid PID. Copy a valid PID to clipboard and try again.\n");
+        appendToOutput("[Debug] Invalid PID.\n");
         return;
     }
 

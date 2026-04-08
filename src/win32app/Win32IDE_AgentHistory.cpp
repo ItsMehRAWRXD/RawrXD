@@ -939,11 +939,21 @@ void Win32IDE::showAgentReplayDialog() {
     }
 
     // Show session list
-    MessageBoxA(m_hwndMain, sessionList.c_str(), "Select Session to Replay", MB_OK | MB_ICONINFORMATION);
+    MessageBoxA(m_hwndMain, sessionList.c_str(), "Available Sessions", MB_OK | MB_ICONINFORMATION);
 
-    // For production use, implement a proper selection dialog
-    // For now, use the first available session as a basic implementation
-    std::string selectedSessionId = validSessions[0];
+    // Prompt user to select a session by number
+    wchar_t selBuf[32] = {};
+    std::wstring prompt = L"Enter session number to replay (1-" +
+                          std::to_wstring(validSessionCount) + L"):";
+    if (!DialogBoxWithInput(L"Replay Agent Session", prompt.c_str(), selBuf, 32)) {
+        return;
+    }
+    int selIdx = _wtoi(selBuf);
+    if (selIdx < 1 || selIdx > validSessionCount) {
+        appendToOutput("[History] Invalid selection.\n", "General", OutputSeverity::Warning);
+        return;
+    }
+    std::string selectedSessionId = validSessions[selIdx - 1];
 
     int choice = MessageBoxA(m_hwndMain,
         ("Replay session: " + selectedSessionId + "?\r\n\r\n"

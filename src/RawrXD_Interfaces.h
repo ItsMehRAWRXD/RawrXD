@@ -166,11 +166,11 @@ namespace RawrXD {
         std::string name;
         std::string architecture;
         std::string architecture_type;
-        uint64_t parameterCount;
-        uint32_t vocabSize;
-        uint32_t vocab_size;
-        uint32_t contextLength;
-        uint32_t context_length;
+        uint64_t parameterCount = 0;
+        uint32_t vocabSize = 0;
+        uint32_t vocab_size = 0;
+        uint32_t contextLength = 0;
+        uint32_t context_length = 0;
         std::map<std::string, std::string> properties;
         std::map<std::string, std::string> kv_pairs; // Alias for properties
         

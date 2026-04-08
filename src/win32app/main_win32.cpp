@@ -30,6 +30,7 @@
 #include "Win32IDE.h"
 #include "Win32IDE_AgenticBrowser.h"
 #include "WindowVisibilityHelpers.h"
+#include "../cpu_inference_engine.h"
 #include "../../include/RawrXD_ApertureManager.h"
 #include <commctrl.h>
 #include <dbghelp.h>
@@ -46,6 +47,7 @@
 #include "rawrxd/runtime/RuntimeSurfaceBootstrap.hpp"
 #include <algorithm>
 #include <chrono>
+#include <csignal>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -1268,14 +1270,14 @@ static bool headlessInitializeSafely(HeadlessIDE& headless, int argc, char** arg
                                      DWORD& sehCode)
 {
     sehCode = 0;
-    (void)sehCode;
-    try
+    __try
     {
         result = headless.initialize(argc, argv);
         return true;
     }
-    catch (...)
+    __except (sehCode = GetExceptionCode(), EXCEPTION_EXECUTE_HANDLER)
     {
+        fprintf(stderr, "[headless] SEH exception in initialize: 0x%08lX\n", sehCode);
         return false;
     }
 }
@@ -1283,14 +1285,14 @@ static bool headlessInitializeSafely(HeadlessIDE& headless, int argc, char** arg
 static bool headlessRunSafely(HeadlessIDE& headless, int& exitCode, DWORD& sehCode)
 {
     sehCode = 0;
-    (void)sehCode;
-    try
+    __try
     {
         exitCode = headless.run();
         return true;
     }
-    catch (...)
+    __except (sehCode = GetExceptionCode(), EXCEPTION_EXECUTE_HANDLER)
     {
+        fprintf(stderr, "[headless] SEH exception in run: 0x%08lX\n", sehCode);
         return false;
     }
 }
@@ -1585,6 +1587,139 @@ static bool getArgValue(int argc, char** argv, const char* key, std::string& out
         }
     }
     return false;
+}
+
+static int getArgInt(int argc, char** argv, const char* key, int fallback)
+{
+    std::string value;
+    if (!getArgValue(argc, argv, key, value))
+        return fallback;
+    try
+    {
+        return std::stoi(value);
+    }
+    catch (...)
+    {
+        return fallback;
+    }
+}
+
+static int runFastInferenceCLI(LPSTR lpCmdLine)
+{
+    int argc = 0;
+    char** argv = nullptr;
+    parseCmdLine(lpCmdLine, argc, argv);
+
+    std::string modelPath;
+    std::ofstream resultLog("inference_fast_result.txt", std::ios::out | std::ios::trunc);
+
+    if (!getArgValue(argc, argv, "--test-model", modelPath) || modelPath.empty())
+    {
+        fprintf(stderr, "FAIL FAST_INVALID_ARGS missing --test-model\n");
+        if (resultLog)
+            resultLog << "FAIL FAST_INVALID_ARGS missing --test-model\n";
+        return 2;
+    }
+
+    const int maxTokens = std::max(1, getArgInt(argc, argv, "--test-max-tokens", 1));
+    const std::string prompt = [&]() {
+        std::string p;
+        if (getArgValue(argc, argv, "--test-prompt", p) && !p.empty())
+            return p;
+        return std::string("Hello");
+    }();
+
+    RawrXD::CPUInferenceEngine engine;
+    engine.SetUseTitanAssembly(false);
+    if (!engine.LoadModel(modelPath))
+    {
+        fprintf(stderr, "FAIL FAST_ENGINE_LOAD\n");
+        if (resultLog)
+            resultLog << "FAIL FAST_ENGINE_LOAD\n";
+        const std::string err = engine.GetLastLoadErrorMessage();
+        if (!err.empty())
+        {
+            fprintf(stderr, "[ENGINE] %s\n", err.c_str());
+            if (resultLog)
+                resultLog << "[ENGINE] " << err << "\n";
+        }
+        return 3;
+    }
+
+    std::vector<int32_t> inputTokens = engine.Tokenize(prompt);
+    if (inputTokens.empty())
+    {
+        fprintf(stderr, "FAIL FAST_INVALID_PROMPT\n");
+        if (resultLog)
+            resultLog << "FAIL FAST_INVALID_PROMPT\n";
+        return 4;
+    }
+
+    int32_t eosToken = 2;
+    const std::vector<int32_t> eosProbe = engine.Tokenize("<|endoftext|>");
+    if (eosProbe.size() == 1)
+        eosToken = eosProbe[0];
+
+    auto t0 = std::chrono::high_resolution_clock::now();
+    std::vector<int32_t> generated = engine.Generate(inputTokens, maxTokens);
+    auto t1 = std::chrono::high_resolution_clock::now();
+    const auto elapsedMs =
+        (long long)std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
+
+    if (generated.empty())
+    {
+        fprintf(stderr, "FAIL FAST_NO_TOKENS\n");
+        if (resultLog)
+            resultLog << "FAIL FAST_NO_TOKENS\n";
+        return 5;
+    }
+
+    bool hitEos = false;
+    for (int32_t tid : generated)
+    {
+        if (tid == eosToken)
+        {
+            hitEos = true;
+            break;
+        }
+    }
+
+    if (generated.size() == 1)
+    {
+        fprintf(stdout, "PASS FAST_GENERATE token=%d time=%lldms\n", generated[0], elapsedMs);
+        if (resultLog)
+            resultLog << "PASS FAST_GENERATE token=" << generated[0] << " time=" << elapsedMs << "ms\n";
+    }
+    else
+    {
+        fprintf(stdout, "PASS FAST_GENERATE tokens=%llu time=%lldms\n",
+                static_cast<unsigned long long>(generated.size()), elapsedMs);
+        if (resultLog)
+            resultLog << "PASS FAST_GENERATE tokens=" << generated.size() << " time=" << elapsedMs << "ms\n";
+    }
+
+    std::string detok = engine.Detokenize(generated);
+    fprintf(stdout, "[DETOK] Text: \"%s\"\n", detok.c_str());
+    if (resultLog)
+        resultLog << "[DETOK] Text: \"" << detok << "\"\n";
+    fprintf(stdout, "[TOKENS] IDs:");
+    if (resultLog)
+        resultLog << "[TOKENS] IDs:";
+    for (size_t i = 0; i < generated.size(); ++i)
+    {
+        fprintf(stdout, "%s%d", (i == 0 ? " " : ","), generated[i]);
+        if (resultLog)
+            resultLog << (i == 0 ? " " : ",") << generated[i];
+    }
+    fprintf(stdout, "\n");
+    if (resultLog)
+        resultLog << "\n";
+    fprintf(stdout, "[EOS] token=%d hit=%d\n", eosToken, hitEos ? 1 : 0);
+    if (resultLog)
+        resultLog << "[EOS] token=" << eosToken << " hit=" << (hitEos ? 1 : 0) << "\n";
+    fflush(stdout);
+
+    return 0;
 }
 
 static bool initIdeForFeatureProbe(Win32IDE& ide, HINSTANCE hInstance, LPSTR lpCmdLine)
@@ -1951,6 +2086,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
         return 0;
     }
 
+    if (lpCmdLine && strstr(lpCmdLine, "--test-inference-fast"))
+    {
+        ensureConsoleAttached(true);
+        int rc = runFastInferenceCLI(lpCmdLine);
+        FreeConsole();
+        return rc;
+    }
+
     if (hasFeatureProbeFlag(lpCmdLine))
     {
         ensureConsoleAttached(true);
@@ -2135,6 +2278,24 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
 
         HeadlessIDE headless;
         HeadlessResult r{};
+
+        // Catch abort() from CRT assertions in Debug builds
+        _set_abort_behavior(0, _WRITE_ABORT_MSG | _CALL_REPORTFAULT);
+        signal(SIGABRT, [](int) {
+            const char msg[] = "[headless] SIGABRT caught — CRT abort()\n";
+            DWORD wr = 0;
+            WriteFile(GetStdHandle(STD_ERROR_HANDLE), msg, sizeof(msg) - 1, &wr, nullptr);
+            _exit(99);
+        });
+        SetUnhandledExceptionFilter([](EXCEPTION_POINTERS* ep) -> LONG {
+            char buf[256];
+            snprintf(buf, sizeof(buf), "[headless] UNHANDLED EXCEPTION: 0x%08lX addr=%p\n",
+                     ep->ExceptionRecord->ExceptionCode, ep->ExceptionRecord->ExceptionAddress);
+            DWORD wr = 0;
+            WriteFile(GetStdHandle(STD_ERROR_HANDLE), buf, (DWORD)strlen(buf), &wr, nullptr);
+            return EXCEPTION_EXECUTE_HANDLER;
+        });
+
         try
         {
             logHeadlessDiag("initialize_begin");

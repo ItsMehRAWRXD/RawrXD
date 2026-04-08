@@ -219,11 +219,11 @@ bool StreamingGGUFLoader::ParseMetadata() {
                 // Parse important string metadata
                 if (key == GGUFConstants::META_GENERAL_ARCHITECTURE) {
                     if (value == "llama") metadata_.architecture_type = 1;
-                    else if (value == "mistral") metadata_.architecture_type = 2;
-                    else if (value == "phi") metadata_.architecture_type = 3;
-                    else if (value == "gemma") metadata_.architecture_type = 4;
-                    else if (value == "qwen2") metadata_.architecture_type = 5;
-                    else if (value == "starcoder") metadata_.architecture_type = 6;
+                    else if (value == "mistral" || value == "mistral3") metadata_.architecture_type = 2;
+                    else if (value == "phi" || value == "phi3") metadata_.architecture_type = 3;
+                    else if (value == "gemma" || value == "gemma2") metadata_.architecture_type = 4;
+                    else if (value == "qwen2" || value == "qwen3") metadata_.architecture_type = 5;
+                    else if (value == "starcoder" || value == "starcoder2") metadata_.architecture_type = 6;
                 }
                 break;
             }
@@ -340,6 +340,36 @@ bool StreamingGGUFLoader::ParseMetadata() {
                 return false;
             }
         }
+    }
+    
+    // ================================================================
+    // Post-loop architecture-aware metadata resolution
+    // In-loop matching only catches "llama.*" keys. For other architectures
+    // (phi3, mistral, gemma, qwen2, etc.), resolve from kv_pairs using
+    // the actual architecture name from general.architecture.
+    // ================================================================
+    auto archIt = metadata_.kv_pairs.find("general.architecture");
+    if (archIt != metadata_.kv_pairs.end()) {
+        const std::string& arch = archIt->second;
+        // Only do post-loop resolution if the in-loop llama.* keys didn't match
+        auto tryResolveU32 = [&](const std::string& suffix, uint32_t& target) {
+            if (target != 0) return; // already set by in-loop llama.* match
+            auto it = metadata_.kv_pairs.find(arch + "." + suffix);
+            if (it != metadata_.kv_pairs.end()) {
+                try { target = static_cast<uint32_t>(std::stoul(it->second)); } catch (...) {}
+            }
+        };
+        tryResolveU32("block_count",             metadata_.layer_count);
+        tryResolveU32("context_length",          metadata_.context_length);
+        tryResolveU32("embedding_length",        metadata_.embedding_dim);
+        tryResolveU32("vocab_size",              metadata_.vocab_size);
+        // Fallback: derive vocab_size from token array if no scalar key exists
+        if (metadata_.vocab_size == 0 && !metadata_.tokens.empty()) {
+            metadata_.vocab_size = static_cast<uint32_t>(metadata_.tokens.size());
+        }
+        tryResolveU32("attention.head_count",    metadata_.head_count);
+        tryResolveU32("attention.head_count_kv", metadata_.head_count_kv);
+        tryResolveU32("feed_forward_length",     metadata_.feed_forward_length);
     }
     
     return true;
@@ -670,7 +700,11 @@ bool StreamingGGUFLoader::GetTensorData(const std::string& tensor_name, std::vec
         if (other_name == tensor_name) {
             break;
         }
-        offset_in_zone += tensor_index_[other_name].size;
+        auto other_it = tensor_index_.find(other_name);
+        if (other_it == tensor_index_.end()) {
+            return false;
+        }
+        offset_in_zone += other_it->second.size;
     }
     
     // Copy tensor data
@@ -877,7 +911,11 @@ bool StreamingGGUFLoader::LoadTensorRange(size_t start_idx, size_t count, std::v
     
     // Sort by offset to get consistent ordering
     std::sort(tensor_names.begin(), tensor_names.end(), [this](const std::string& a, const std::string& b) {
-        return tensor_index_.at(a).offset < tensor_index_.at(b).offset;
+        auto ia = tensor_index_.find(a);
+        auto ib = tensor_index_.find(b);
+        uint64_t oa = (ia != tensor_index_.end()) ? ia->second.offset : UINT64_MAX;
+        uint64_t ob = (ib != tensor_index_.end()) ? ib->second.offset : UINT64_MAX;
+        return oa < ob;
     });
     
     if (start_idx >= tensor_names.size()) {

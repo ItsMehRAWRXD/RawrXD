@@ -473,6 +473,6 @@ void Win32IDE_TabManager::authenticateSiliconIntegrity()
     bool auth_result = RDNA3_Silicon_Authenticate(puf_sig);
 
     if (!auth_result) {
-        // Handle authentication failure
+        LOG_ERROR("[Silicon] PUF authentication failed");
     }
 }

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+﻿cmake_minimum_required(VERSION 3.20)
 
 # =============================================================================
 # Windows SDK & MSVC CRT Path Resolution (Phase 41 Build Fix)
@@ -386,10 +386,13 @@ if(RAWR_HAS_MASM)
         src/asm/RawrXD_TerminalCapture.asm
         src/asm/RawrXD_ContextBuffer.asm
         src/asm/RawrXD_JsonPlanParser.asm
+        src/asm/node_heartbeat.asm
         # KV-Cache Aperture Memory Bypass (non-temporal streaming + rolling buffer)
         src/asm/RAWRXD_KV_APERTURE.asm
         src/asm/RawrXD_KVCache_Rolling.asm
         src/asm/Titan_MoE_SparseGather.asm
+        # P0 Gaps: Vector Indexing & Search
+        src/asm/RawrXD_AVX512_VectorSearch.asm
         # Previously broken MASM64 syntax now portable C++20 with extern "C" ABI compatibility.
 
         
@@ -590,6 +593,13 @@ set(SOURCES
     src/marketplace/extension_marketplace.cpp
     src/auth/rbac_engine.cpp
 
+    # P0 Gaps: Vector Indexing & Multi-file editing
+    src/CodebaseVectorIndex.cpp
+    src/MultiFileRewriteEngine.cpp
+    src/SpeculativeDecoder.cpp
+    src/GitMCPBridge.cpp
+    src/PredictiveEditEngine.cpp
+
     # Shadow-Page Detour + Sentinel Watchdog (Layer 6)
     src/core/shadow_page_detour.cpp
     src/core/sentinel_watchdog.cpp
@@ -669,6 +679,9 @@ set(SOURCES
     # Phase 30: Unified Accelerator Router
     src/core/accelerator_router.cpp
     
+    # Phase 31: NVIDIA CUDA Backend (Driver API)
+    src/core/nvidia_cuda_accelerator.cpp
+    
     # Phase 29.2: GSI Hash Table + TPI Type Parser
     src/core/pdb_gsi_hash.cpp
     
@@ -685,6 +698,7 @@ set(SOURCES
     src/core/swarm_coordinator.cpp
     src/core/swarm_worker.cpp
     src/tool_registry.cpp
+    src/tool_registry_init.cpp
 
     # License enforcement + feature manifest (LicenseEnforcer, g_FeatureManifest, featureName) — required by complete_server, hotpatch, perf_telemetry, enterprise_licensev2_impl
     src/license_enforcement.cpp
@@ -3143,8 +3157,11 @@ if(WIN32)
         src/core/rawrxd_subsys_modes_b.cpp
         src/core/rawrxd_subsys_modes_c.cpp
         src/core/rawrxd_subsys_modes_d.cpp
+        src/core/context_config.cpp
+        src/core/vram_probe.cpp
         src/runtime_core.cpp
         src/tool_registry.cpp
+        src/tool_registry_init.cpp
         src/agent/telemetry_collector.cpp
 
         # T6: Autonomous Repair Orchestrator + Agent Memory Indexer
@@ -3336,6 +3353,9 @@ if(WIN32)
         
         # Phase 30: Unified Accelerator Router
         src/core/accelerator_router.cpp
+        
+        # Phase 31: NVIDIA CUDA Backend (Driver API)
+        src/core/nvidia_cuda_accelerator.cpp
         
         # Phase 29.2: GSI Hash Table + TPI Type Parser
         src/core/pdb_gsi_hash.cpp
@@ -4318,6 +4338,18 @@ if(WIN32)
         src/BackendOrchestrator.cpp
     )
 
+    # Phases 49-55 runtime: WebSearch / Snapshot / CRDT / Fuzz / EvolutionLoop / Replay / Replication
+    list(APPEND WIN32IDE_SOURCES
+        src/agentic/observability/Telemetry.cpp
+        src/runtime/SovereignWebSearch.cpp
+        src/runtime/SovereignSnapshot.cpp
+        src/runtime/SovereignCRDTSync.cpp
+        src/runtime/SovereignFuzzEngine.cpp
+        src/runtime/SovereignEvolutionLoop.cpp
+        src/runtime/SovereignDeterministicReplay.cpp
+        src/runtime/SovereignReplication.cpp
+    )
+
     # ── SDMA GPU Scheduler (C++ replacement for MASM) ───────────────────────
     # Replaced broken MASM syntax with portable C++ implementations
     # sdma_scheduler: GPU DMA event loop, burst coalescing, TSC-based scheduling
@@ -4325,6 +4357,42 @@ if(WIN32)
     list(APPEND WIN32IDE_SOURCES
         src/core/sdma/sdma_scheduler.cpp
         src/core/sdma/sdma_ring_allocator.cpp
+        src/core/kv_cache_calculator.cpp
+    )
+
+    # Batch 33: NLShell + VectorIndex ASM kernels (Phases 46-48)
+    list(APPEND WIN32IDE_EXTRA_ASM
+        src/asm/RawrXD_VectorIndex.asm
+        src/asm/RawrXD_NLShell.asm
+        src/asm/RawrXD_AVX512_VectorSearch.asm
+    )
+    # Ensure Batch 33 ASM files get LANGUAGE ASM_MASM (set_source_files_properties
+    # on line ~4045 only covers the initial WIN32IDE_EXTRA_ASM before this append).
+    if(RAWR_HAS_MASM)
+        set_source_files_properties(
+            src/asm/RawrXD_VectorIndex.asm
+            src/asm/RawrXD_NLShell.asm
+            src/asm/RawrXD_AVX512_VectorSearch.asm
+            PROPERTIES LANGUAGE ASM_MASM
+        )
+    endif()
+
+    # Roadmap: Surpass the Top 4 (P0/P1 Implementation)
+    list(APPEND WIN32IDE_SOURCES
+        src/CodebaseVectorIndex.cpp
+        src/MultiFileRewriteEngine.cpp
+        src/SpeculativeDecoder.cpp
+        src/GitMCPBridge.cpp
+        src/PredictiveEditEngine.cpp
+        src/PredictiveGhostText.cpp
+        src/VisionEncoder.cpp
+        src/AgenticComposer.cpp
+        src/NeuralHeatmapRenderer.cpp
+    )
+
+    # Ensure Git/MCP tool initialization is always linked into Win32IDE.
+    list(APPEND WIN32IDE_SOURCES
+        src/tool_registry_init.cpp
     )
 
     add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${ASM_KERNEL_SOURCES} ${WIN32IDE_EXTRA_ASM})
@@ -4391,7 +4459,7 @@ if(WIN32)
         set(_IDE_MAP_PATH "${CMAKE_BINARY_DIR}/bin/RawrXD-Win32IDE.map")
         set(_IDE_MAP_AUDIT_PATH "${CMAKE_BINARY_DIR}/RawrXD-Win32IDE.map")
         target_link_options(RawrXD-Win32IDE PRIVATE
-            /LARGEADDRESSAWARE:NO
+            /LARGEADDRESSAWARE
             /DEBUG:FULL
             "/MAP:${_IDE_MAP_PATH}"
             /MAPINFO:EXPORTS
@@ -4581,7 +4649,7 @@ if(WIN32)
     
     # Link RawrXD_Titan DLL import library (Phase 15.2 aperture utilization APIs)
     if(TARGET RawrXD_Titan)
-        target_link_libraries(RawrXD-Win32IDE PRIVATE "d:/rawrxd/build/bin/RawrXD_Titan.lib")
+        target_link_libraries(RawrXD-Win32IDE PRIVATE RawrXD_Titan)
         target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWRXD_HAS_TITAN_KERNEL=1)
         add_dependencies(RawrXD-Win32IDE RawrXD_Titan)
     endif()
@@ -4994,6 +5062,49 @@ if(WIN32)
     message(STATUS "[Phase C] GPU Benchmark target: RawrXD-Benchmark")
 
     # ═══════════════════════════════════════════════════════════════════
+    # Router Benchmark Runner — benchmark_generation + benchmark_long_context
+    # ═══════════════════════════════════════════════════════════════════
+    add_executable(RawrXD-RouterBenchRunner EXCLUDE_FROM_ALL
+        src/tools/router_benchmark_runner.cpp
+        src/core/accelerator_router.cpp
+        src/core/amd_gpu_accelerator.cpp
+        src/core/intel_gpu_accelerator.cpp
+        src/core/arm64_gpu_accelerator.cpp
+        src/core/cerebras_wse_accelerator.cpp
+        src/core/nvidia_cuda_accelerator.cpp
+        src/core/flash_attention.cpp
+    )
+    target_include_directories(RawrXD-RouterBenchRunner PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    target_compile_definitions(RawrXD-RouterBenchRunner PRIVATE
+        RAWR_BENCHMARK=1
+        RAWR_HAS_SOVEREIGN_ENGINES=0
+        RAWR_HAS_RAWR_INFERENCE=0
+    )
+    if(MSVC)
+        target_compile_options(RawrXD-RouterBenchRunner PRIVATE /EHsc /W0)
+    endif()
+    target_link_libraries(RawrXD-RouterBenchRunner PRIVATE
+        kernel32
+        user32
+        ws2_32
+        winhttp
+        bcrypt
+        advapi32
+        crypt32
+        psapi
+        shlwapi
+        dbghelp
+    )
+    set_target_properties(RawrXD-RouterBenchRunner PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME RawrXD-RouterBenchRunner
+    )
+    message(STATUS "[Phase 31.8] Router benchmark runner target: RawrXD-RouterBenchRunner")
+
+    # ═══════════════════════════════════════════════════════════════════
     # Fused Layer Benchmark — v16.3 Phase D Layer Fusion
     # ═══════════════════════════════════════════════════════════════════
     add_executable(RawrXD-FusedBenchmark EXCLUDE_FROM_ALL
@@ -5193,6 +5304,95 @@ else()
     message(STATUS "SwarmSmokeTest skipped in strict production strip mode (uses swarm_smoke_stubs.cpp)")
 endif()
 
+# Runtime truth probe (manual): validates MCP stdio transport, NL shell scoring,
+# and vector kernel behavior with direct in-process calls.
+if(MSVC AND RAWR_HAS_MASM)
+    set(MCP_SERVER_ASM_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/asm/RawrXD_MCPServer.asm)
+    set(MCP_SERVER_ASM_OBJ ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/RawrXD-MCPServer.dir/RawrXD_MCPServer.obj)
+    set(MCP_SERVER_EXE ${CMAKE_BINARY_DIR}/bin/RawrXD-MCPServer.exe)
+    set(MCP_SERVER_KERNEL32_LIB "kernel32.lib")
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+        set(_MCP_KERNEL32_CANDIDATE "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/kernel32.lib")
+        if(EXISTS "${_MCP_KERNEL32_CANDIDATE}")
+            set(MCP_SERVER_KERNEL32_LIB "${_MCP_KERNEL32_CANDIDATE}")
+        endif()
+    endif()
+    set(MCP_SERVER_LINK_LIBPATH_ARGS "")
+    foreach(_lp IN LISTS _RAWR_MSVC_LIBPATHS)
+        list(APPEND MCP_SERVER_LINK_LIBPATH_ARGS "/LIBPATH:${_lp}")
+    endforeach()
+
+    add_custom_command(
+        OUTPUT ${MCP_SERVER_ASM_OBJ}
+        COMMAND ${CMAKE_ASM_MASM_COMPILER} /c /Zi /Zd /Fo${MCP_SERVER_ASM_OBJ} ${MCP_SERVER_ASM_SRC}
+        DEPENDS ${MCP_SERVER_ASM_SRC}
+        COMMENT "[MASM] Assembling RawrXD_MCPServer.asm (stdio JSON-RPC MCP host)"
+        VERBATIM
+    )
+
+    add_custom_command(
+        OUTPUT ${MCP_SERVER_EXE}
+        COMMAND ${CMAKE_LINKER} /SUBSYSTEM:CONSOLE /ENTRY:RawrXD_MCPServer_Entry /OUT:${MCP_SERVER_EXE} ${MCP_SERVER_ASM_OBJ} ${MCP_SERVER_LINK_LIBPATH_ARGS} ${MCP_SERVER_KERNEL32_LIB}
+        DEPENDS ${MCP_SERVER_ASM_OBJ}
+        COMMENT "[LINK] Linking RawrXD-MCPServer.exe"
+        VERBATIM
+    )
+
+    add_custom_target(RawrXD-MCPServer DEPENDS ${MCP_SERVER_EXE})
+
+    add_executable(RawrXD-RuntimeTruthProbe EXCLUDE_FROM_ALL
+        src/tests/runtime_truth_probe.cpp
+        src/runtime/SovereignMCPBridge.cpp
+        src/runtime/RawrXDNLShell.cpp
+        src/runtime/RawrXDVectorIndex.cpp
+        src/asm/RawrXD_NLShell.asm
+        src/asm/RawrXD_VectorIndex.asm
+    )
+    target_include_directories(RawrXD-RuntimeTruthProbe PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    target_compile_definitions(RawrXD-RuntimeTruthProbe PRIVATE
+        RAWRXD_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+    )
+    if(MSVC)
+        target_compile_options(RawrXD-RuntimeTruthProbe PRIVATE /EHsc /W2)
+    endif()
+    target_link_libraries(RawrXD-RuntimeTruthProbe PRIVATE kernel32)
+    add_dependencies(RawrXD-RuntimeTruthProbe RawrXD-MCPServer)
+    set_target_properties(RawrXD-RuntimeTruthProbe PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME RawrXD-RuntimeTruthProbe-v6
+        CXX_STANDARD 23
+        CXX_STANDARD_REQUIRED ON
+    )
+    message(STATUS "[RuntimeTruth] Target: RawrXD-RuntimeTruthProbe")
+endif()
+
+# MCP + Model integration smoke test (manual)
+add_executable(MCP-ModelSmoke EXCLUDE_FROM_ALL
+    src/tests/mcp_model_smoke_test.cpp
+    src/runtime/SovereignMCPBridge.cpp
+)
+target_include_directories(MCP-ModelSmoke PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+)
+if(MSVC)
+    target_compile_options(MCP-ModelSmoke PRIVATE /EHsc /W2)
+endif()
+target_link_libraries(MCP-ModelSmoke PRIVATE kernel32 winhttp)
+add_dependencies(MCP-ModelSmoke RawrXD-MCPServer)
+set_target_properties(MCP-ModelSmoke PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME MCP-ModelSmoke
+    CXX_STANDARD 23
+    CXX_STANDARD_REQUIRED ON
+)
+message(STATUS "[MCPSmoke] Target: MCP-ModelSmoke")
+
 # BackendOrchestrator model sharding smoke test (manual)
 add_executable(BackendOrchestratorShardSmoke EXCLUDE_FROM_ALL
     src/tests/backend_orchestrator_shard_smoke.cpp
@@ -5211,6 +5411,34 @@ if(WIN32)
     target_link_libraries(BackendOrchestratorShardSmoke PRIVATE kernel32 psapi)
 endif()
 message(STATUS "[BackendOrchestrator] Smoke test target: BackendOrchestratorShardSmoke")
+
+# Context decision policy harness (manual + optional ctest)
+add_executable(RawrXD-ContextDecisionHarness EXCLUDE_FROM_ALL
+    tests/test_context_decision_harness.cpp
+    src/core/context_config.cpp
+    src/core/vram_probe.cpp
+)
+target_include_directories(RawrXD-ContextDecisionHarness PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+)
+if(MSVC)
+    target_compile_options(RawrXD-ContextDecisionHarness PRIVATE /EHsc /W2)
+endif()
+if(WIN32)
+    target_link_libraries(RawrXD-ContextDecisionHarness PRIVATE kernel32 dxgi)
+endif()
+set_target_properties(RawrXD-ContextDecisionHarness PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME RawrXD-ContextDecisionHarness
+    CXX_STANDARD 23
+    CXX_STANDARD_REQUIRED ON
+)
+if(BUILD_TESTING)
+    add_test(NAME context_decision_harness COMMAND $<TARGET_FILE:RawrXD-ContextDecisionHarness>)
+endif()
+message(STATUS "[ContextDecision] Harness target: RawrXD-ContextDecisionHarness")
 
 # ============================================================================
 # Agentic Planning Orchestrator Smoke Tests
@@ -5339,4 +5567,33 @@ endif()
 
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/tools/CMakeLists.txt")
     add_subdirectory(src/tools)
+
+# ════════════════════════════════════════════════════════════════════
+# SWE-bench evaluation harness (Gate 5)
+# Build: cmake --build build-ninja --target RawrXD-SWEBench
+# Run:   bin/RawrXD-SWEBench.exe [--json report.json] [--run-tests]
+# ════════════════════════════════════════════════════════════════════
+add_executable(RawrXD-SWEBench EXCLUDE_FROM_ALL
+    src/eval/swe_bench_harness.cpp
+    src/core/context_config.cpp
+)
+target_include_directories(RawrXD-SWEBench PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+)
+if(MSVC)
+    target_compile_options(RawrXD-SWEBench PRIVATE /EHsc /W3)
+    target_compile_options(RawrXD-SWEBench PRIVATE
+        $<$<CONFIG:Release>:/O2>
+        $<$<CONFIG:RelWithDebInfo>:/O2>
+    )
+endif()
+target_link_libraries(RawrXD-SWEBench PRIVATE kernel32 winhttp)
+set_target_properties(RawrXD-SWEBench PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME RawrXD-SWEBench
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+message(STATUS "[Eval] RawrXD-SWEBench target added (Gate 5 — pass@1 benchmark harness)")
 endif()

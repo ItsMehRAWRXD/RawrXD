@@ -33,7 +33,7 @@ class ModelTester;
 //=============================================================================
 struct LLMConfig {
     std::string backend = "ollama";         // "ollama", "openai", "anthropic", "local"
-    std::string endpoint = "http://localhost:11434";
+    std::string endpoint = "http://localhost:11435";
     std::string modelName = "llama2";
     std::string apiKey;
     std::string localBackendMode = "auto-with-verified-fallback"; // "cpu-only", "gpu-only", "auto-with-verified-fallback"

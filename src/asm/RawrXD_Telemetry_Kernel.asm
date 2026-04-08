@@ -276,7 +276,8 @@ UTC_LogEvent PROC FRAME
     ; 2. Calculate destination address: g_EventBuffer + ((slot & MASK) << SHIFT)
     and  rax, EVENT_BUFFER_MASK
     shl  rax, EVENT_STRUCT_SHIFT
-    lea  rdi, [g_EventBuffer + rax]
+    lea  rdi, [g_EventBuffer]
+    add  rdi, rax
 
     ; 3. Write timestamp prefix: [HH:MM:SS]
     mov  rcx, rdi
@@ -292,7 +293,8 @@ UTC_LogEvent PROC FRAME
     push rax                    ; Keep on stack for return
     and  rax, EVENT_BUFFER_MASK
     shl  rax, EVENT_STRUCT_SHIFT
-    lea  rdx, [g_EventBuffer + rax]
+    lea  rdx, [g_EventBuffer]
+    add  rdx, rax
     add  rdx, EVENT_STRUCT_SIZE
     sub  rdx, 2                 ; Leave room for CRLF terminator
 
@@ -362,7 +364,8 @@ UTC_FlushToDisk PROC FRAME
     mov  rax, rsi
     and  rax, EVENT_BUFFER_MASK
     shl  rax, EVENT_STRUCT_SHIFT
-    lea  rbx, [g_EventBuffer + rax]
+    lea  rbx, [g_EventBuffer]
+    add  rbx, rax
 
     ; Find string length (up to EVENT_STRUCT_SIZE)
     mov  rcx, rbx

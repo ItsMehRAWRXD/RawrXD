@@ -20,6 +20,7 @@
 #include <thread>
 #include <deque>
 #include <nlohmann/json.hpp>
+#include "context_config.h"
 
 using json = nlohmann::json;
 
@@ -31,7 +32,7 @@ namespace Agent {
 // ---------------------------------------------------------------------------
 struct OllamaConfig {
     std::string host = "127.0.0.1";
-    uint16_t port = 11434;
+    uint16_t port = 11435;  // IDE embedded server (avoid conflict with external Ollama 11434)
     std::string chat_model;                         // Active chat model tag
     std::string fim_model;                          // Active FIM model tag
     int timeout_ms = 120000;
@@ -39,7 +40,7 @@ struct OllamaConfig {
     float top_p = 0.9f;
     int max_tokens = 4096;
     int fim_max_tokens = 256;                       // Short for ghost text
-    int num_ctx = 8192;                             // Context window
+    int num_ctx = RawrXD::ContextLimits::DEFAULT;   // Unified context window
     bool use_gpu = true;
     int num_gpu = 99;                               // All layers on GPU
 };

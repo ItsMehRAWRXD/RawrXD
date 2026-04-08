@@ -18,6 +18,7 @@
 #include "ggml.h"
 #include "ggml-alloc.h"
 #include "ai_model_caller_internal.h"
+#include "context_config.h"
 #include <windows.h>
 #include <cmath>
 #include <cstring>
@@ -86,7 +87,7 @@ struct InferenceContext {
     
     // Hyperparameters
     int n_vocab = 32000;
-    int n_ctx = 4096;
+    int n_ctx = RawrXD::ContextLimits::DEFAULT;
     int n_embd = 4096;
     int n_head = 32;
     int n_layer = 32;

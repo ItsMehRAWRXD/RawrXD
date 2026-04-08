@@ -462,7 +462,9 @@ void Win32IDE::cmdTestExplorerRun() {
             sa.nLength = sizeof(sa);
             sa.bInheritHandle = TRUE;
             HANDLE hRead = nullptr, hWrite = nullptr;
-            CreatePipe(&hRead, &hWrite, &sa, 0);
+            if (!CreatePipe(&hRead, &hWrite, &sa, 0)) {
+                combinedOutput << "[FAIL] CTest -> CreatePipe failed (error " << GetLastError() << ")\n";
+            } else {
             SetHandleInformation(hRead, HANDLE_FLAG_INHERIT, 0);
 
             STARTUPINFOA si = { sizeof(si) };
@@ -488,6 +490,7 @@ void Win32IDE::cmdTestExplorerRun() {
                 CloseHandle(pi.hProcess);
                 CloseHandle(pi.hThread);
             }
+            }
             if (hWrite) CloseHandle(hWrite);
             if (hRead) CloseHandle(hRead);
         }
@@ -501,7 +504,9 @@ void Win32IDE::cmdTestExplorerRun() {
             sa.nLength = sizeof(sa);
             sa.bInheritHandle = TRUE;
             HANDLE hRead = nullptr, hWrite = nullptr;
-            CreatePipe(&hRead, &hWrite, &sa, 0);
+            if (!CreatePipe(&hRead, &hWrite, &sa, 0)) {
+                combinedOutput << "[FAIL] pytest -> CreatePipe failed (error " << GetLastError() << ")\n";
+            } else {
             SetHandleInformation(hRead, HANDLE_FLAG_INHERIT, 0);
 
             STARTUPINFOA si = { sizeof(si) };
@@ -527,6 +532,7 @@ void Win32IDE::cmdTestExplorerRun() {
                 CloseHandle(pi.hProcess);
                 CloseHandle(pi.hThread);
             }
+            }
             if (hWrite) CloseHandle(hWrite);
             if (hRead) CloseHandle(hRead);
         }
@@ -539,7 +545,11 @@ void Win32IDE::cmdTestExplorerRun() {
             sa.nLength = sizeof(sa);
             sa.bInheritHandle = TRUE;
             HANDLE hRead = nullptr, hWrite = nullptr;
-            CreatePipe(&hRead, &hWrite, &sa, 0);
+            if (!CreatePipe(&hRead, &hWrite, &sa, 0)) {
+                combinedOutput << "[FAIL] " << std::filesystem::path(exe).filename().string()
+                               << " -> CreatePipe failed (error " << GetLastError() << ")\n";
+                continue;
+            }
             SetHandleInformation(hRead, HANDLE_FLAG_INHERIT, 0);
 
             STARTUPINFOA si = { sizeof(si) };

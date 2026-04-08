@@ -11,6 +11,7 @@
 #include <fstream>
 #include <map>
 #include <sstream>
+#include <unordered_set>
 
 namespace RawrXD {
 namespace {
@@ -19,6 +20,12 @@ constexpr std::size_t kMaxExecutionObservations = 20;
 constexpr std::size_t kMaxLoopMemoryEntries = 10;
 constexpr std::size_t kMaxObservationLength = 1200;
 constexpr std::size_t kTerminalBufferFlushThreshold = 512;
+
+enum class OperationSafety {
+    Safe,
+    RequiresConfirmation,
+    Unsupported
+};
 
 std::string toLower(std::string value)
 {
@@ -38,6 +45,55 @@ std::string trim(std::string value)
 bool startsWith(const std::string& text, const std::string& prefix)
 {
     return text.size() >= prefix.size() && text.compare(0, prefix.size(), prefix) == 0;
+}
+
+bool commandLooksDestructive(const std::string& command)
+{
+    const std::string cmd = toLower(command);
+    return cmd.find("rm ") != std::string::npos ||
+           cmd.find("del ") != std::string::npos ||
+           cmd.find("rmdir") != std::string::npos ||
+           cmd.find("format ") != std::string::npos ||
+           cmd.find("fdisk") != std::string::npos ||
+           cmd.find("diskpart") != std::string::npos ||
+           cmd.find("dd ") != std::string::npos;
+}
+
+OperationSafety classifyOperation(const std::string& operation,
+                                  const EditTask& task,
+                                  std::string* reason = nullptr)
+{
+    static const std::unordered_set<std::string> safeOps = {
+        "analyze", "read_file", "list_directory", "list_dir", "search_code", "search_files"
+    };
+
+    static const std::unordered_set<std::string> confirmOps = {
+        "write_file", "replace", "insert", "delete", "rename", "execute_command", "run_command", "command"
+    };
+
+    if (safeOps.find(operation) != safeOps.end()) {
+        return OperationSafety::Safe;
+    }
+
+    if (confirmOps.find(operation) != confirmOps.end()) {
+        if ((operation == "execute_command" || operation == "run_command" || operation == "command") &&
+            commandLooksDestructive(!task.newText.empty() ? task.newText : task.description)) {
+            if (reason) {
+                *reason = "Command contains potentially destructive operations";
+            }
+            return OperationSafety::RequiresConfirmation;
+        }
+
+        if (reason) {
+            *reason = "Operation modifies workspace or executes commands";
+        }
+        return OperationSafety::RequiresConfirmation;
+    }
+
+    if (reason) {
+        *reason = "Unsupported operation";
+    }
+    return OperationSafety::Unsupported;
 }
 
 void configureToolGuardrails(const std::string& workspaceRoot)
@@ -966,45 +1022,50 @@ ExecutionResult PlanOrchestrator::runExecutionLoop(const std::string& userGoal,
 
 bool PlanOrchestrator::executeTask(const EditTask& task, bool dryRun)
 {
-    // SECURITY GATEKEEPER: Check if task requires user approval
-    if (!dryRun && onTaskApprovalRequired) {
-        // Check for high-risk operations
+    try {
         const std::string op = toLower(task.operation);
-        bool isHighRisk = false;
-        std::string riskReason;
-
-        if (op == "execute_command" || op == "run_command" || op == "command") {
-            // Check for dangerous commands
-            std::string cmd = toLower(task.newText);
-            if (cmd.find("rm ") != std::string::npos || cmd.find("del ") != std::string::npos ||
-                cmd.find("delete ") != std::string::npos || cmd.find("format ") != std::string::npos ||
-                cmd.find("fdisk") != std::string::npos || cmd.find("dd ") != std::string::npos) {
-                isHighRisk = true;
-                riskReason = "Command contains potentially destructive operations";
+        if (op.empty()) {
+            const std::string message = "Task rejected: empty operation is not allowed";
+            recordExecutionObservation(message + " | Task: " + task.description);
+            if (onErrorOccurred) {
+                onErrorOccurred(message);
             }
-        } else if (op == "delete" || op == "replace") {
-            // File modifications are medium risk
-            isHighRisk = true;
-            riskReason = "File modification operation";
-        } else if (op == "rename") {
-            // Renames can be risky if moving important files
-            isHighRisk = true;
-            riskReason = "File rename operation";
+            return false;
         }
 
-        if (isHighRisk) {
-            if (!onTaskApprovalRequired(task)) {
-                recordExecutionObservation("Task rejected by user approval gate: " + task.description);
+        std::string safetyReason;
+        const OperationSafety safety = classifyOperation(op, task, &safetyReason);
+
+        if (safety == OperationSafety::Unsupported) {
+            const std::string message = "Task rejected by safety gate: unsupported operation '" + op + "'";
+            recordExecutionObservation(message + " | Task: " + task.description);
+            if (onErrorOccurred) {
+                onErrorOccurred(message);
+            }
+            return false;
+        }
+
+        // Fail-closed: risky operations require explicit approval callback unless running in dry-run mode.
+        if (!dryRun && safety == OperationSafety::RequiresConfirmation) {
+            if (!onTaskApprovalRequired) {
+                const std::string message = "Task rejected by safety gate: approval callback unavailable for '" + op + "'";
+                recordExecutionObservation(message + " | Reason: " + safetyReason + " | Task: " + task.description);
                 if (onErrorOccurred) {
-                    onErrorOccurred("Task rejected by user: " + riskReason);
+                    onErrorOccurred(message);
+                }
+                return false;
+            }
+
+            if (!onTaskApprovalRequired(task)) {
+                const std::string message = "Task rejected by approval gate for operation '" + op + "'";
+                recordExecutionObservation(message + " | Reason: " + safetyReason + " | Task: " + task.description);
+                if (onErrorOccurred) {
+                    onErrorOccurred(message);
                 }
                 return false;
             }
         }
-    }
 
-    try {
-        const std::string op = toLower(task.operation);
         if (op == "execute_command" || op == "run_command" || op == "command") {
             return executeCommandTask(task, dryRun);
         }
@@ -1032,7 +1093,12 @@ bool PlanOrchestrator::executeTask(const EditTask& task, bool dryRun)
         if (op == "rename") {
             return applyRename(task, dryRun);
         }
-        return true;
+        const std::string message = "Task rejected by safety gate: operation dispatch unavailable for '" + op + "'";
+        recordExecutionObservation(message + " | Task: " + task.description);
+        if (onErrorOccurred) {
+            onErrorOccurred(message);
+        }
+        return false;
     } catch (const std::exception& e) {
         if (onErrorOccurred) {
             onErrorOccurred(std::string("Task execution failed: ") + e.what());

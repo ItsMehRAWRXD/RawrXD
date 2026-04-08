@@ -1,0 +1,4 @@
+{"sample_id": "rawrxd-001", "tokens_requested": 41, "tokens_effective": 4096, "kv_budget_bytes": 1024, "adapted": true, "pressure_ratio": 327680.000000, "response_length": 0, "success": false}
+{"sample_id": "rawrxd-002", "tokens_requested": 49, "tokens_effective": 4096, "kv_budget_bytes": 1024, "adapted": true, "pressure_ratio": 327680.000000, "response_length": 0, "success": false}
+{"sample_id": "rawrxd-003", "tokens_requested": 44, "tokens_effective": 4096, "kv_budget_bytes": 1024, "adapted": true, "pressure_ratio": 327680.000000, "response_length": 0, "success": false}
+{"sample_id": "rawrxd-004", "tokens_requested": 39, "tokens_effective": 4096, "kv_budget_bytes": 1024, "adapted": true, "pressure_ratio": 327680.000000, "response_length": 0, "success": false}

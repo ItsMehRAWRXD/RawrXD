@@ -296,10 +296,18 @@ endif()
 
 # Production Regression Test Suite (Qt-free, no external deps)
 if(NOT TARGET test_production_regression AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_production_regression.cpp")
-    add_executable(test_production_regression test_production_regression.cpp)
+    add_executable(test_production_regression
+        test_production_regression.cpp
+        ${CMAKE_SOURCE_DIR}/src/agentic_observability.cpp
+        ${CMAKE_SOURCE_DIR}/src/agentic_error_handler.cpp
+        ${CMAKE_SOURCE_DIR}/src/agentic_loop_state.cpp
+        ${CMAKE_SOURCE_DIR}/src/error_recovery_system.cpp
+        ${CMAKE_SOURCE_DIR}/src/centralized_exception_handler.cpp
+        ${CMAKE_SOURCE_DIR}/src/production_config_manager.cpp
+    )
     target_include_directories(test_production_regression PRIVATE
-        ${CMAKE_SOURCE_DIR}/include
         ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
         ${CMAKE_SOURCE_DIR}/3rdparty
     )
     # Link against the core library when RawrEngine is built as a library target.

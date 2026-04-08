@@ -418,7 +418,7 @@ LLMChatResponse BoundedAgentLoop::NativeChat(const LLMChatRequest& request,
         try {
             cfg.port = static_cast<uint16_t>(std::stoi(hostPort.substr(colonPos + 1)));
         } catch (...) {
-            cfg.port = 11434;
+            cfg.port = 11435;  // IDE embedded server default
         }
     } else if (!hostPort.empty()) {
         cfg.host = hostPort;

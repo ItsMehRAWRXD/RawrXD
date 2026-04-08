@@ -1471,7 +1471,7 @@ void Win32IDE::onAgentConfigureModel()
                                   "\n\nNo models available. Please ensure:\n"
                                   "1. Ollama is installed and running (ollama serve)\n"
                                   "2. At least one model is pulled (ollama pull <model>)\n"
-                                  "3. Ollama is accessible at http://localhost:11434\n\n"
+                                  "3. IDE inference server is accessible at http://localhost:11435\n\n"
                                   "Common models: llama2, mistral, neural-chat, deepseek-coder";
 
         MessageBoxA(m_hwndMain, detailedMsg.c_str(), "Agent Model Configuration", MB_OK | MB_ICONWARNING);

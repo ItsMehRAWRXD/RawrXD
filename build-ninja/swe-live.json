@@ -1,0 +1,16 @@
+{
+  "total": 4,
+  "completed": 0,
+  "patch_correct": 0,
+  "tests_passed": 0,
+  "task_completion_rate": 0.0000,
+  "patch_correctness": 0.0000,
+  "test_pass_rate": 0.0000,
+  "overall_score": 0.0000,
+  "results": [
+    {"task_id": "rawrxd-001", "status": 4, "patch_match": false, "tests_passed": false, "elapsed_ms": 16.58, "tokens_requested": 41, "tokens_effective": 4096, "kv_budget_bytes": 1024, "adapted": true, "pressure_ratio": 327680.0000},
+    {"task_id": "rawrxd-002", "status": 4, "patch_match": false, "tests_passed": false, "elapsed_ms": 6.43, "tokens_requested": 49, "tokens_effective": 4096, "kv_budget_bytes": 1024, "adapted": true, "pressure_ratio": 327680.0000},
+    {"task_id": "rawrxd-003", "status": 4, "patch_match": false, "tests_passed": false, "elapsed_ms": 8.56, "tokens_requested": 44, "tokens_effective": 4096, "kv_budget_bytes": 1024, "adapted": true, "pressure_ratio": 327680.0000},
+    {"task_id": "rawrxd-004", "status": 4, "patch_match": false, "tests_passed": false, "elapsed_ms": 6.27, "tokens_requested": 39, "tokens_effective": 4096, "kv_budget_bytes": 1024, "adapted": true, "pressure_ratio": 327680.0000}
+  ]
+}

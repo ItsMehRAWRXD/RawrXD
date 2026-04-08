@@ -97,10 +97,9 @@ bool GGUFLoader::ParseMetadata() {
         if (t == GGUF_TYPE_UINT32 || t == GGUF_TYPE_UINT64) {
             uint64_t v = 0; if (t == GGUF_TYPE_UINT32) { uint32_t v32; ReadValue(v32); v = v32; } else ReadValue(v);
             metadata_.kv_pairs[key] = std::to_string(v);
-            if (key.find("block_count") != std::string::npos) metadata_.layer_count = (uint32_t)v;
-            else if (key.find("context_length") != std::string::npos) metadata_.context_length = (uint32_t)v;
-            else if (key.find("embedding_length") != std::string::npos) metadata_.embedding_dim = (uint32_t)v;
-            else if (key.find("vocab_size") != std::string::npos) metadata_.vocab_size = (uint32_t)v;
+            // NOTE: Architecture-aware field resolution happens after the loop.
+            // Do NOT assign metadata_ fields here via substring matching —
+            // that incorrectly picks up .vision.* / .audio.* sub-component keys.
         } else if (t == GGUF_TYPE_STRING) {
             std::string val; ReadString(val); metadata_.kv_pairs[key] = val;
             if (key == "general.architecture") metadata_.architecture = val;
@@ -150,6 +149,47 @@ bool GGUFLoader::ParseMetadata() {
             }
         }
     }
+
+    // --- Architecture-aware field resolution ---
+    // Resolve config fields using exact architecture-prefixed keys from kv_pairs.
+    // This avoids the old substring-matching bug that picked up .vision.* sub-component keys
+    // (e.g., mistral3.vision.embedding_length overwriting mistral3.embedding_length).
+    {
+        const auto tryResolveU32 = [&](const std::string& exactKey, uint32_t& field) {
+            auto it = metadata_.kv_pairs.find(exactKey);
+            if (it != metadata_.kv_pairs.end()) {
+                try { field = static_cast<uint32_t>(std::stoull(it->second)); } catch (...) {}
+            }
+        };
+
+        if (!metadata_.architecture.empty()) {
+            const std::string& arch = metadata_.architecture;
+            tryResolveU32(arch + ".block_count",    metadata_.layer_count);
+            tryResolveU32(arch + ".context_length",  metadata_.context_length);
+            tryResolveU32(arch + ".embedding_length", metadata_.embedding_dim);
+            tryResolveU32(arch + ".vocab_size",      metadata_.vocab_size);
+            tryResolveU32(arch + ".attention.head_count", metadata_.head_count);
+        } else {
+            // Fallback: no architecture key — scan kv_pairs for suffix matches,
+            // but reject keys with .vision. / .audio. sub-components.
+            for (const auto& kv : metadata_.kv_pairs) {
+                const std::string& k = kv.first;
+                if (k.find(".vision.") != std::string::npos || k.find(".audio.") != std::string::npos)
+                    continue;
+                uint32_t val = 0;
+                try { val = static_cast<uint32_t>(std::stoull(kv.second)); } catch (...) { continue; }
+                if (k.size() > 12 && k.compare(k.size() - 12, 12, ".block_count") == 0)
+                    metadata_.layer_count = val;
+                else if (k.size() > 15 && k.compare(k.size() - 15, 15, ".context_length") == 0)
+                    metadata_.context_length = val;
+                else if (k.size() > 17 && k.compare(k.size() - 17, 17, ".embedding_length") == 0)
+                    metadata_.embedding_dim = val;
+                else if (k.size() > 11 && k.compare(k.size() - 11, 11, ".vocab_size") == 0)
+                    metadata_.vocab_size = val;
+            }
+        }
+    }
+
     return true;
 }
 
