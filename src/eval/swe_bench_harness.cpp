@@ -655,7 +655,7 @@ static void write_jsonl_sample(FILE* jsonl_out, const TaskResult& result, size_t
         result.tokens_effective,
         result.kv_budget_bytes,
         result.adapted ? "true" : "false",
-        prompt << "7. CRITICAL: Modify ONLY the file: " << target_files[0] << "\n";
+        result.pressure_ratio,
         result.has_header ? "true" : "false",
         result.has_hunks ? "true" : "false",
         result.is_fenced ? "true" : "false",
@@ -683,8 +683,7 @@ public:
           m_jsonl_out(jsonl_out),
           m_progress_json_path(progress_json_path),
           m_raw_dump_dir(raw_dump_dir) {}
-        prompt << "Copy the structure of the valid examples, but use the real file paths and hunks for the task below.\n";
-        prompt << "If the correct fix needs multiple files, include all of them in one unified diff response.\n\n";
+
     void add_instance(Instance inst) { m_instances.push_back(std::move(inst)); }
 
     HarnessReport run(AgentFn agent)
