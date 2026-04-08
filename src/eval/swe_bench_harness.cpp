@@ -422,7 +422,8 @@ static std::string fetch_target_context(
     const std::filesystem::path& repo_root,
     const std::string& rel_path,
     const std::string& hints_text,
-    size_t max_bytes)
+    size_t max_bytes,
+    int aperture_radius = 20)
 {
     if (max_bytes == 0 || rel_path.empty()) {
         return {};
@@ -456,8 +457,8 @@ static std::string fetch_target_context(
     size_t start_line = 1;
     size_t end_line = lines.size();
     if (has_hints && anchor_line > 0) {
-        // Aperture window: +/- 20 lines around suspected location.
-        const int win = 20;
+        // Aperture window around suspected location; expanded in Phase 4 RAG-lite mode.
+        const int win = std::max(1, aperture_radius);
         start_line = static_cast<size_t>(std::max(1, anchor_line - win));
         end_line = static_cast<size_t>(std::min(static_cast<int>(lines.size()), anchor_line + win));
     }
@@ -491,7 +492,8 @@ static std::string build_source_context(
     const std::string& hints_text,
     size_t max_context_bytes_per_file,
     size_t max_context_total_bytes,
-    size_t max_context_files)
+    size_t max_context_files,
+    int aperture_radius = 20)
 {
     if (target_files.empty()) {
         return {};
@@ -513,7 +515,7 @@ static std::string build_source_context(
 
         const size_t remaining = max_context_total_bytes - injected_bytes;
         const size_t fetch_limit = std::min(max_context_bytes_per_file, remaining);
-        std::string file_body = fetch_target_context(repo_root, rel, hints_text, fetch_limit);
+        std::string file_body = fetch_target_context(repo_root, rel, hints_text, fetch_limit, aperture_radius);
         if (fetch_limit == 0 || file_body.empty()) {
             continue;
         }
@@ -534,7 +536,9 @@ static std::string build_patch_only_prompt(
     size_t max_context_total_bytes = 5000,
     size_t max_context_files = 2,
     size_t* context_bytes_out = nullptr,
-    bool hints_enabled = true)
+    bool hints_enabled = true,
+    bool phase4_rag_lite = false,
+    int phase4_aperture_lines = 80)
 {
     std::ostringstream prompt;
     prompt << "You are an expert software engineering evaluation agent.\n";
@@ -551,6 +555,11 @@ static std::string build_patch_only_prompt(
     prompt << "6. Do not output prose before or after the patch.\n";
     prompt << "7. If the fix spans multiple files, emit one contiguous unified diff containing every changed file.\n";
     prompt << "8. In multi-file output, each file must start with its own --- a/ and +++ b/ headers before its @@ hunks.\n";
+    if (phase4_rag_lite) {
+        prompt << "9. Phase 4 RAG-lite is enabled: prioritize retrieved reference lines over guessed context.\n";
+        prompt << "10. Do not invent neighboring lines/hunks that are not present in retrieved reference.\n";
+        prompt << "11. If required context is missing, output NO_PATCH instead of speculative edits.\n";
+    }
     
     // Inject file-lock constraint if exactly one target file is specified
     if (target_files.size() == 1) {
@@ -597,12 +606,14 @@ static std::string build_patch_only_prompt(
         prompt << "Hints:\n" << inst.hints_text << "\n\n";
     }
 
+    const int aperture = phase4_rag_lite ? std::max(20, phase4_aperture_lines) : 20;
     const std::string source_context = context_enabled
         ? build_source_context(target_files,
-                       hints_enabled ? inst.hints_text : std::string(),
+                               hints_enabled ? inst.hints_text : std::string(),
                                max_context_bytes_per_file,
                                max_context_total_bytes,
-                               max_context_files)
+                               max_context_files,
+                               aperture)
         : std::string();
     if (context_bytes_out) {
         *context_bytes_out = source_context.size();
@@ -610,6 +621,12 @@ static std::string build_patch_only_prompt(
     if (!source_context.empty()) {
         prompt << "Relevant source context (read-only reference, each line prefixed as L<N>):\n";
         prompt << source_context << "\n\n";
+    }
+    if (phase4_rag_lite) {
+        prompt << "Phase 4 RAG-lite verification checklist:\n";
+        prompt << "- Align each hunk to retrieved L<N> references before emitting.\n";
+        prompt << "- Prefer exact local repairs near anchor lines over broad rewrites.\n";
+        prompt << "- Preserve unrelated surrounding code and file structure.\n\n";
     }
 
     prompt << "Output ONLY the unified diff now. Start immediately with --- a/ or output NO_PATCH.\n";
@@ -1926,6 +1943,7 @@ static bool write_jsonl_summary_report(const HarnessReport& r, const char* path)
     int    timeout_count        = 0;  // F9: timeout errors
     uint64_t total_prompt_bytes = 0;  // #97: cumulative prompt bytes
     std::map<std::string, std::pair<int,int>> repo_pass;  // E94: repo -> (total, pass)
+    std::map<std::string, std::vector<double>> repo_fuzzy_scores;  // #96: repo -> fuzzy score samples
     for (const auto& t : r.results) {
         if (!t.strict_validation_error.empty()) { ++strict_failures; }
         if (t.no_patch_exact)    { ++no_patch_exact; }
@@ -1940,6 +1958,7 @@ static bool write_jsonl_summary_report(const HarnessReport& r, const char* path)
             auto& entry = repo_pass[t.repo];
             entry.first++;
             if (t.patch_match) entry.second++;
+            repo_fuzzy_scores[t.repo].push_back(t.fuzzy_patch_score);
         }
     }
 
@@ -2031,8 +2050,20 @@ static bool write_jsonl_summary_report(const HarnessReport& r, const char* path)
         for (const auto& kv : repo_pass) {
             const double rrate = kv.second.first > 0
                 ? static_cast<double>(kv.second.second) / kv.second.first : 0.0;
-            fprintf(f, "    {\"repo\": \"%s\", \"total\": %d, \"pass\": %d, \"rate\": %.4f}%s\n",
-                kv.first.c_str(), kv.second.first, kv.second.second, rrate,
+            double median_fuzzy = 0.0;
+            auto it_fuzzy = repo_fuzzy_scores.find(kv.first);
+            if (it_fuzzy != repo_fuzzy_scores.end() && !it_fuzzy->second.empty()) {
+                auto vals = it_fuzzy->second;
+                std::sort(vals.begin(), vals.end());
+                const size_t n = vals.size();
+                if ((n % 2) == 1) {
+                    median_fuzzy = vals[n / 2];
+                } else {
+                    median_fuzzy = 0.5 * (vals[n / 2 - 1] + vals[n / 2]);
+                }
+            }
+            fprintf(f, "    {\"repo\": \"%s\", \"total\": %d, \"pass\": %d, \"rate\": %.4f, \"median_fuzzy_score\": %.4f}%s\n",
+                kv.first.c_str(), kv.second.first, kv.second.second, rrate, median_fuzzy,
                 (++repo_i < repo_n) ? "," : "");
         }
     }
