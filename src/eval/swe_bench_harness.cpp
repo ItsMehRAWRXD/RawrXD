@@ -357,19 +357,15 @@ static std::filesystem::path resolve_repo_root()
     return std::filesystem::path("D:/rawrxd");
 }
 
-static bool read_file_limited(const std::filesystem::path& file_path, size_t max_bytes, std::string& out)
+static bool read_text_file(const std::filesystem::path& file_path, std::string& out)
 {
     std::ifstream in(file_path, std::ios::binary);
     if (!in.is_open()) {
         return false;
     }
-
-    out.clear();
-    out.reserve(max_bytes);
-    char ch = 0;
-    while (out.size() < max_bytes && in.get(ch)) {
-        out.push_back(ch);
-    }
+    std::ostringstream ss;
+    ss << in.rdbuf();
+    out = ss.str();
     return !out.empty();
 }
 
@@ -383,8 +379,116 @@ static bool write_text_file(const std::filesystem::path& path, const std::string
     return out.good();
 }
 
+static int extract_anchor_line_from_hints(const std::string& hints_text)
+{
+    if (hints_text.empty()) {
+        return -1;
+    }
+
+    // Parse the first plausible anchor such as "L42" or "line 42".
+    for (size_t i = 0; i < hints_text.size(); ++i) {
+        if (!std::isdigit(static_cast<unsigned char>(hints_text[i]))) {
+            continue;
+        }
+
+        size_t j = i;
+        while (j < hints_text.size() && std::isdigit(static_cast<unsigned char>(hints_text[j]))) {
+            ++j;
+        }
+        const std::string num_s = hints_text.substr(i, j - i);
+        const int line_n = atoi(num_s.c_str());
+        if (line_n <= 0) {
+            i = j;
+            continue;
+        }
+
+        const char prev = (i > 0) ? hints_text[i - 1] : '\0';
+        const size_t k = (i >= 4) ? i - 4 : 0;
+        const std::string left = hints_text.substr(k, i - k);
+        if (prev == 'L' || prev == 'l' || left.find("line") != std::string::npos || left.find("Line") != std::string::npos) {
+            return line_n;
+        }
+
+        // Fallback: allow any moderate integer token if explicit marker not present.
+        if (line_n <= 200000) {
+            return line_n;
+        }
+        i = j;
+    }
+    return -1;
+}
+
+static std::string fetch_target_context(
+    const std::filesystem::path& repo_root,
+    const std::string& rel_path,
+    const std::string& hints_text,
+    size_t max_bytes)
+{
+    if (max_bytes == 0 || rel_path.empty()) {
+        return {};
+    }
+
+    const std::filesystem::path full = repo_root / rel_path;
+    if (!std::filesystem::exists(full) || !std::filesystem::is_regular_file(full)) {
+        return {};
+    }
+
+    std::string body;
+    if (!read_text_file(full, body)) {
+        return {};
+    }
+
+    std::vector<std::string> lines;
+    lines.reserve(512);
+    std::istringstream in(body);
+    std::string line;
+    while (std::getline(in, line)) {
+        if (!line.empty() && line.back() == '\r') line.pop_back();
+        lines.push_back(line);
+    }
+    if (lines.empty()) {
+        return {};
+    }
+
+    const bool has_hints = !hints_text.empty();
+    const int anchor_line = has_hints ? extract_anchor_line_from_hints(hints_text) : -1;
+
+    size_t start_line = 1;
+    size_t end_line = lines.size();
+    if (has_hints && anchor_line > 0) {
+        // Aperture window: +/- 20 lines around suspected location.
+        const int win = 20;
+        start_line = static_cast<size_t>(std::max(1, anchor_line - win));
+        end_line = static_cast<size_t>(std::min(static_cast<int>(lines.size()), anchor_line + win));
+    }
+
+    std::ostringstream out;
+    out << "[REFERENCE CONTENT FOR " << rel_path << "]\n";
+    if (has_hints && anchor_line > 0) {
+        out << "[WINDOW L" << start_line << "-L" << end_line << "]\n";
+    } else {
+        out << "[FULL/HEAD FILE VIEW]\n";
+    }
+
+    size_t emitted = 0;
+    const size_t begin_idx = start_line - 1;
+    for (size_t i = begin_idx; i < lines.size() && (i + 1) <= end_line; ++i) {
+        std::ostringstream row;
+        row << "L" << (i + 1) << ": " << lines[i] << "\n";
+        const std::string row_s = row.str();
+        if (emitted + row_s.size() > max_bytes) {
+            break;
+        }
+        out << row_s;
+        emitted += row_s.size();
+    }
+    out << "[END REFERENCE]\n";
+    return trim_copy(out.str());
+}
+
 static std::string build_source_context(
     const std::vector<std::string>& target_files,
+    const std::string& hints_text,
     size_t max_context_bytes_per_file,
     size_t max_context_total_bytes,
     size_t max_context_files)
@@ -407,21 +511,14 @@ static std::string build_source_context(
             break;
         }
 
-        std::filesystem::path full = repo_root / rel;
-        if (!std::filesystem::exists(full) || !std::filesystem::is_regular_file(full)) {
-            continue;
-        }
-
-        std::string file_body;
         const size_t remaining = max_context_total_bytes - injected_bytes;
-        const size_t read_limit = std::min(max_context_bytes_per_file, remaining);
-        if (read_limit == 0 || !read_file_limited(full, read_limit, file_body)) {
+        const size_t fetch_limit = std::min(max_context_bytes_per_file, remaining);
+        std::string file_body = fetch_target_context(repo_root, rel, hints_text, fetch_limit);
+        if (fetch_limit == 0 || file_body.empty()) {
             continue;
         }
 
-        context << "[FILE] " << rel << "\n";
-        context << file_body << "\n";
-        context << "[END FILE]\n\n";
+        context << file_body << "\n\n";
         ++injected_files;
         injected_bytes += file_body.size();
     }
@@ -502,6 +599,7 @@ static std::string build_patch_only_prompt(
 
     const std::string source_context = context_enabled
         ? build_source_context(target_files,
+                       hints_enabled ? inst.hints_text : std::string(),
                                max_context_bytes_per_file,
                                max_context_total_bytes,
                                max_context_files)
@@ -510,7 +608,7 @@ static std::string build_patch_only_prompt(
         *context_bytes_out = source_context.size();
     }
     if (!source_context.empty()) {
-        prompt << "Relevant source context (read-only reference):\n";
+        prompt << "Relevant source context (read-only reference, each line prefixed as L<N>):\n";
         prompt << source_context << "\n\n";
     }
 
