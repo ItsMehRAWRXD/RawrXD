@@ -34,10 +34,12 @@
 #include <cstdio>
 #include <cstring>
 #include <fstream>
+#include <filesystem>
 #include <functional>
 #include <limits>
 #include <sstream>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 // Phase 2 context integration
@@ -94,6 +96,20 @@ struct TaskResult {
     bool         has_hunks    = false;
     bool         is_fenced    = false;
     bool         prose_detected = false;
+    bool         starts_with_header = false;
+    bool         contains_no_patch = false;
+    bool         no_patch_exact = false;
+    bool         is_multifile = false;
+    int          header_count = 0;
+    int          hunk_count = 0;
+    int          target_file_count = 0;
+    bool         single_file_lock = false;
+    bool         strict_compliance = true;   // false: fenced response rejected in strict mode
+    double       patch_similarity  = 0.0;   // Jaccard line-overlap vs gold patch [0..1]
+    int          retry_attempts    = 0;      // model retries consumed before result
+    int          gold_hunk_count = 0;
+    size_t       context_bytes_injected = 0;
+    std::string  strict_validation_error;
     bool         patch_match  = false;
     bool         tests_passed = false;
     double       elapsed_ms   = 0.0;
@@ -104,6 +120,12 @@ struct TaskResult {
     uint64_t     kv_budget_bytes    = 0;  // KV cache budget
     bool         adapted            = false;  // pressure-driven adaptation
     double       pressure_ratio     = 0.0;  // kv_bytes / kv_budget
+    // Phase 3 telemetry
+    std::string  model_alias;                       // friendly model label for telemetry
+    uint64_t     prompt_byte_count  = 0;            // raw prompt size in bytes
+    double       fuzzy_patch_score  = 0.0;          // edit-distance ratio to gold patch [0,1]
+    // E68: API error classification
+    std::string  api_error_class;                   // timeout|context_exceeded|empty_body|http_error|oom_kill|malformed_json|model_refused|format_error|network|unknown|none
 };
 
 struct HarnessReport {
@@ -305,7 +327,95 @@ static std::vector<std::string> extract_target_files_from_patch(const std::strin
     return targets;
 }
 
-static std::string build_patch_only_prompt(const Instance& inst, const std::vector<std::string>& target_files = {})
+static std::filesystem::path resolve_repo_root()
+{
+    const char* env_root = getenv("RAWRXD_SWEBENCH_REPO_ROOT");
+    if (env_root && env_root[0]) {
+        return std::filesystem::path(env_root);
+    }
+    return std::filesystem::path("D:/rawrxd");
+}
+
+static bool read_file_limited(const std::filesystem::path& file_path, size_t max_bytes, std::string& out)
+{
+    std::ifstream in(file_path, std::ios::binary);
+    if (!in.is_open()) {
+        return false;
+    }
+
+    out.clear();
+    out.reserve(max_bytes);
+    char ch = 0;
+    while (out.size() < max_bytes && in.get(ch)) {
+        out.push_back(ch);
+    }
+    return !out.empty();
+}
+
+static bool write_text_file(const std::filesystem::path& path, const std::string& body)
+{
+    std::ofstream out(path, std::ios::binary);
+    if (!out.is_open()) {
+        return false;
+    }
+    out.write(body.data(), static_cast<std::streamsize>(body.size()));
+    return out.good();
+}
+
+static std::string build_source_context(
+    const std::vector<std::string>& target_files,
+    size_t max_context_bytes_per_file,
+    size_t max_context_total_bytes,
+    size_t max_context_files)
+{
+    if (target_files.empty()) {
+        return {};
+    }
+
+    const std::filesystem::path repo_root = resolve_repo_root();
+    std::ostringstream context;
+    size_t injected_files = 0;
+    size_t injected_bytes = 0;
+
+    if (max_context_files == 0 || max_context_total_bytes == 0) {
+        return {};
+    }
+
+    for (const auto& rel : target_files) {
+        if (injected_files >= max_context_files || injected_bytes >= max_context_total_bytes) {
+            break;
+        }
+
+        std::filesystem::path full = repo_root / rel;
+        if (!std::filesystem::exists(full) || !std::filesystem::is_regular_file(full)) {
+            continue;
+        }
+
+        std::string file_body;
+        const size_t remaining = max_context_total_bytes - injected_bytes;
+        const size_t read_limit = std::min(max_context_bytes_per_file, remaining);
+        if (read_limit == 0 || !read_file_limited(full, read_limit, file_body)) {
+            continue;
+        }
+
+        context << "[FILE] " << rel << "\n";
+        context << file_body << "\n";
+        context << "[END FILE]\n\n";
+        ++injected_files;
+        injected_bytes += file_body.size();
+    }
+
+    return trim_copy(context.str());
+}
+
+static std::string build_patch_only_prompt(
+    const Instance& inst,
+    const std::vector<std::string>& target_files = {},
+    bool context_enabled = true,
+    size_t max_context_bytes_per_file = 2500,
+    size_t max_context_total_bytes = 5000,
+    size_t max_context_files = 2,
+    size_t* context_bytes_out = nullptr)
 {
     std::ostringstream prompt;
     prompt << "You are an expert software engineering evaluation agent.\n";
@@ -366,6 +476,20 @@ static std::string build_patch_only_prompt(const Instance& inst, const std::vect
 
     if (!inst.hints_text.empty()) {
         prompt << "Hints:\n" << inst.hints_text << "\n\n";
+    }
+
+    const std::string source_context = context_enabled
+        ? build_source_context(target_files,
+                               max_context_bytes_per_file,
+                               max_context_total_bytes,
+                               max_context_files)
+        : std::string();
+    if (context_bytes_out) {
+        *context_bytes_out = source_context.size();
+    }
+    if (!source_context.empty()) {
+        prompt << "Relevant source context (read-only reference):\n";
+        prompt << source_context << "\n\n";
     }
 
     prompt << "Output ONLY the unified diff now. Start immediately with --- a/ or output NO_PATCH.\n";
@@ -474,14 +598,75 @@ static bool is_strict_unified_diff(const std::string& value)
            value.find("\n@@") != std::string::npos;
 }
 
+static bool validate_unified_diff_structure(const std::string& value, std::string& error)
+{
+    if (!is_strict_unified_diff(value)) {
+        error = "missing required unified diff header/hunk structure";
+        return false;
+    }
+
+    std::istringstream in(value);
+    std::string line;
+    int file_headers = 0;
+    int b_headers = 0;
+    int hunks = 0;
+
+    while (std::getline(in, line)) {
+        if (!line.empty() && line.back() == '\r') {
+            line.pop_back();
+        }
+        if (line.rfind("--- a/", 0) == 0) {
+            ++file_headers;
+        } else if (line.rfind("+++ b/", 0) == 0) {
+            ++b_headers;
+        } else if (line.rfind("@@", 0) == 0) {
+            ++hunks;
+        }
+    }
+
+    if (file_headers <= 0 || b_headers <= 0 || hunks <= 0) {
+        error = "diff missing file headers or hunks";
+        return false;
+    }
+    if (file_headers != b_headers) {
+        error = "mismatched --- a/ and +++ b/ header counts";
+        return false;
+    }
+
+    error.clear();
+    return true;
+}
+
 static bool raw_has_diff_headers(const std::string& value)
 {
     return value.find("--- a/") != std::string::npos && value.find("+++ b/") != std::string::npos;
 }
 
+static int raw_count_file_headers(const std::string& value)
+{
+    int count = 0;
+    size_t pos = 0;
+    while ((pos = value.find("--- a/", pos)) != std::string::npos) {
+        ++count;
+        pos += 6;
+    }
+    return count;
+}
+
 static bool raw_has_diff_hunks(const std::string& value)
 {
     return value.find("@@ ") != std::string::npos || value.find("\n@@") != std::string::npos;
+}
+
+static int raw_count_hunks(const std::string& value)
+{
+    int count = 0;
+    size_t pos = 0;
+    while ((pos = value.find("@@", pos)) != std::string::npos) {
+        ++count;
+        pos += 2;
+    }
+    return count;
 }
 
 static bool raw_contains_fence(const std::string& value)
@@ -504,12 +689,29 @@ static bool raw_starts_with_prose(const std::string& value)
     return true;
 }
 
+static bool raw_starts_with_header(const std::string& value)
+{
+    const std::string trimmed = trim_copy(value);
+    return trimmed.rfind("--- a/", 0) == 0;
+}
+
+static bool raw_contains_no_patch_token(const std::string& value)
+{
+    return value.find("NO_PATCH") != std::string::npos;
+}
+
 static void populate_response_compliance(TaskResult& result)
 {
     result.has_header = raw_has_diff_headers(result.raw_response);
     result.has_hunks = raw_has_diff_hunks(result.raw_response);
     result.is_fenced = raw_contains_fence(result.raw_response);
     result.prose_detected = raw_starts_with_prose(result.raw_response);
+    result.starts_with_header = raw_starts_with_header(result.raw_response);
+    result.contains_no_patch = raw_contains_no_patch_token(result.raw_response);
+    result.no_patch_exact = looks_like_no_patch(result.raw_response);
+    result.header_count = raw_count_file_headers(result.raw_response);
+    result.hunk_count = raw_count_hunks(result.raw_response);
+    result.is_multifile = result.header_count > 1;
 }
 
 static std::string normalize_agent_patch_response(const std::string& raw, std::string* error_out = nullptr)
@@ -532,26 +734,43 @@ static std::string normalize_agent_patch_response(const std::string& raw, std::s
     std::string tagged = extract_tagged_patch(trimmed);
     if (!tagged.empty()) {
         std::string diff = strip_to_unified_diff(tagged);
-        if (is_strict_unified_diff(diff)) {
+        std::string strict_error;
+        if (validate_unified_diff_structure(diff, strict_error)) {
             return diff;
+        }
+        if (error_out) {
+            *error_out = "tagged patch rejected: " + strict_error;
         }
     }
 
     std::string fenced = extract_fenced_diff(trimmed);
     if (!fenced.empty()) {
         std::string diff = strip_to_unified_diff(fenced);
-        if (is_strict_unified_diff(diff)) {
+        std::string strict_error;
+        if (validate_unified_diff_structure(diff, strict_error)) {
             return diff;
+        }
+        if (error_out) {
+            *error_out = "fenced patch rejected: " + strict_error;
         }
     }
 
     std::string diff = strip_to_unified_diff(trimmed);
-    if (is_strict_unified_diff(diff)) {
+    std::string strict_error;
+    if (validate_unified_diff_structure(diff, strict_error)) {
+        if (diff.size() < 10) {
+            if (error_out) {
+                *error_out = "extracted patch too short (" + std::to_string(diff.size()) + " bytes)";
+            }
+            return {};
+        }
         return diff;
     }
 
     if (error_out) {
-        *error_out = "model did not emit a strict unified diff";
+        *error_out = strict_error.empty()
+            ? "model did not emit a strict unified diff"
+            : strict_error;
     }
     return {};
 }
@@ -619,6 +838,138 @@ static void populate_context_telemetry(const Instance& inst, TaskResult& result)
     result.pressure_ratio = decision.pressure_ratio;
 }
 
+static void write_jsonl_model_fingerprint(FILE* jsonl_out, const std::string& model, const std::string& host, int port)
+{
+    if (!jsonl_out) {
+        return;
+    }
+    auto json_esc = [](const std::string& s) {
+        std::string out; out.reserve(s.size() + 8);
+        for (char c : s) {
+            if (c == '\\') out += "\\\\";
+            else if (c == '"') out += "\\""";
+            else out.push_back(c);
+        }
+        return out;
+    };
+    fprintf(jsonl_out,
+        "{\"type\":\"model_info\",\"model\":\"%s\",\"host\":\"%s\",\"port\":%d}\n",
+        json_esc(model).c_str(), json_esc(host).c_str(), port);
+    fflush(jsonl_out);
+}
+
+// E68: Classify a failure_reason string into a coarse infrastructure/model error category.
+// Returns a stable ASCII token suitable for JSONL telemetry filtering.
+static std::string classify_api_error(const std::string& failure_reason)
+{
+    if (failure_reason.empty()) {
+        return "none";
+    }
+    const std::string& r = failure_reason;
+    // Timeout: WinHTTP error codes 12002 (timeout), 12029 (connection failed), or text hints
+    if (r.find("12002") != std::string::npos ||
+        r.find("12029") != std::string::npos ||
+        r.find("12030") != std::string::npos ||
+        r.find("timeout") != std::string::npos ||
+        r.find("recv failed") != std::string::npos ||
+        r.find("Timeout") != std::string::npos) {
+        return "timeout";
+    }
+    // Empty body from server (typically model crash/OOM at response layer)
+    if (r.find("empty HTTP response") != std::string::npos ||
+        r.find("empty response") != std::string::npos ||
+        r.find("empty_body") != std::string::npos) {
+        return "empty_body";
+    }
+    // HTTP status codes — decode meaning
+    const size_t status_pos = r.find("HTTP status=");
+    if (status_pos != std::string::npos) {
+        const int code = atoi(r.c_str() + status_pos + 12);
+        if (code == 400 || code == 413) return "context_exceeded";
+        if (code == 500 || code == 503) return "oom_kill";
+        return "http_error";
+    }
+    // Model explicitly refused to emit a patch
+    if (r.find("model returned NO_PATCH") != std::string::npos) {
+        return "model_refused";
+    }
+    // Normalization / format failures (model produced text, not a valid diff)
+    if (r.find("unified diff") != std::string::npos ||
+        r.find("validation error") != std::string::npos ||
+        r.find("missing required") != std::string::npos ||
+        r.find("patch rejected") != std::string::npos ||
+        r.find("patch too short") != std::string::npos ||
+        r.find("did not emit") != std::string::npos) {
+        return "format_error";
+    }
+    // Malformed JSON in response body
+    if (r.find("could not parse") != std::string::npos ||
+        r.find("parse") != std::string::npos) {
+        return "malformed_json";
+    }
+    // WinHTTP transport-layer failures (not timeout)
+    if (r.find("WinHttp") != std::string::npos ||
+        r.find("WinHTTP") != std::string::npos ||
+        r.find("connect") != std::string::npos) {
+        return "network";
+    }
+    return "unknown";
+}
+
+// E66: Load already-scored task_ids from an existing partial JSONL file.
+// Used by --resume mode to skip tasks that survived a previous crash.
+static std::set<std::string> load_completed_task_ids_from_jsonl(const char* jsonl_path)
+{
+    std::set<std::string> done;
+    if (!jsonl_path || !jsonl_path[0]) {
+        return done;
+    }
+    std::ifstream f(jsonl_path);
+    if (!f.is_open()) {
+        return done;
+    }
+    std::string line;
+    const std::string key = "\"sample_id\": \"";
+    while (std::getline(f, line)) {
+        if (line.empty()) continue;
+        const size_t pos = line.find(key);
+        if (pos == std::string::npos) continue;  // model_info record
+        const size_t start = pos + key.size();
+        const size_t end_q = line.find('"', start);
+        if (end_q == std::string::npos || end_q <= start) continue;
+        done.insert(line.substr(start, end_q - start));
+    }
+    return done;
+}
+
+// Compute a normalized edit-distance similarity score in [0.0, 1.0] between
+// two strings.  Caps both strings at 4096 chars to keep O(n*m) bounded.
+static double compute_fuzzy_patch_score(const std::string& a, const std::string& b)
+{
+    constexpr size_t kMaxLen = 4096;
+    const std::string sa = a.size() > kMaxLen ? a.substr(0, kMaxLen) : a;
+    const std::string sb = b.size() > kMaxLen ? b.substr(0, kMaxLen) : b;
+    const size_t na = sa.size();
+    const size_t nb = sb.size();
+    if (na == 0 && nb == 0) return 1.0;
+    if (na == 0 || nb == 0) return 0.0;
+
+    // Rolling two-row DP for Levenshtein distance
+    std::vector<size_t> prev(nb + 1), curr(nb + 1);
+    for (size_t j = 0; j <= nb; ++j) prev[j] = j;
+    for (size_t i = 1; i <= na; ++i) {
+        curr[0] = i;
+        for (size_t j = 1; j <= nb; ++j) {
+            const size_t cost = (sa[i - 1] == sb[j - 1]) ? 0 : 1;
+            curr[j] = std::min({prev[j] + 1, curr[j - 1] + 1, prev[j - 1] + cost});
+        }
+        std::swap(prev, curr);
+    }
+    const size_t dist = prev[nb];
+    const size_t max_len = std::max(na, nb);
+    return 1.0 - static_cast<double>(dist) / static_cast<double>(max_len);
+}
+
 static void write_jsonl_sample(FILE* jsonl_out, const TaskResult& result, size_t response_length)
 {
     if (!jsonl_out) {
@@ -647,8 +998,17 @@ static void write_jsonl_sample(FILE* jsonl_out, const TaskResult& result, size_t
         "\"adapted\": %s, \"pressure_ratio\": %.6f, "
         "\"has_header\": %s, \"has_hunks\": %s, "
         "\"is_fenced\": %s, \"prose_detected\": %s, "
+        "\"starts_with_header\": %s, \"contains_no_patch\": %s, "
+        "\"no_patch_exact\": %s, "
+        "\"is_multifile\": %s, \"header_count\": %d, \"hunk_count\": %d, "
+        "\"target_file_count\": %d, \"single_file_lock\": %s, "
+        "\"gold_hunk_count\": %d, \"context_bytes_injected\": %zu, "
+        "\"elapsed_ms\": %.2f, "
         "\"response_length\": %zu, \"raw_response\": \"%s\", "
         "\"extracted_patch\": \"%s\", \"failure_reason\": \"%s\", "
+        "\"strict_validation_error\": \"%s\", "
+        "\"model_alias\": \"%s\", \"prompt_byte_count\": %llu, "
+        "\"fuzzy_patch_score\": %.4f, "
         "\"success\": %s}\n",
         result.task_id.c_str(),
         result.tokens_requested,
@@ -660,10 +1020,26 @@ static void write_jsonl_sample(FILE* jsonl_out, const TaskResult& result, size_t
         result.has_hunks ? "true" : "false",
         result.is_fenced ? "true" : "false",
         result.prose_detected ? "true" : "false",
+        result.starts_with_header ? "true" : "false",
+        result.contains_no_patch ? "true" : "false",
+        result.no_patch_exact ? "true" : "false",
+        result.is_multifile ? "true" : "false",
+        result.header_count,
+        result.hunk_count,
+        result.target_file_count,
+        result.single_file_lock ? "true" : "false",
+        result.gold_hunk_count,
+        result.context_bytes_injected,
+        result.elapsed_ms,
         response_length,
         json_escape(result.raw_response).c_str(),
         json_escape(result.emitted_patch).c_str(),
         json_escape(result.failure_reason).c_str(),
+        json_escape(result.strict_validation_error).c_str(),
+        json_escape(result.model_alias).c_str(),
+        result.prompt_byte_count,
+        result.fuzzy_patch_score,
+        json_escape(result.api_error_class).c_str(),
         (result.status == TaskStatus::FAILED) ? "false" : "true");
     fflush(jsonl_out);
 }
@@ -678,20 +1054,60 @@ public:
         bool run_tests = false,
         FILE* jsonl_out = nullptr,
         const char* progress_json_path = nullptr,
-        const char* raw_dump_dir = nullptr)
+        const char* raw_dump_dir = nullptr,
+        bool fail_fast = false,
+        bool strict_mode = false)
         : m_run_tests(run_tests),
           m_jsonl_out(jsonl_out),
           m_progress_json_path(progress_json_path),
-          m_raw_dump_dir(raw_dump_dir) {}
+          m_raw_dump_dir(raw_dump_dir),
+          m_fail_fast(fail_fast),
+          m_strict_mode(strict_mode) {}
 
     void add_instance(Instance inst) { m_instances.push_back(std::move(inst)); }
 
+    // Set a checkpoint file path for resumable sweeps.  On run() start the
+    // file (one task_id per line) is read; those task IDs are skipped.  After
+    // each completed task the task_id is appended so the next run can resume.
+    void set_resume_checkpoint(const char* path)
+    {
+        if (path && path[0]) {
+            m_resume_checkpoint_path = path;
+        }
+    }
+
     HarnessReport run(AgentFn agent)
     {
+        // Load already-completed task IDs from checkpoint file (if any)
+        std::unordered_set<std::string> skip_ids;
+        if (!m_resume_checkpoint_path.empty()) {
+            FILE* ckf = nullptr;
+            if (fopen_s(&ckf, m_resume_checkpoint_path.c_str(), "r") == 0 && ckf) {
+                char line[1024];
+                while (fgets(line, sizeof(line), ckf)) {
+                    std::string id = line;
+                    while (!id.empty() && (id.back() == '\n' || id.back() == '\r' || id.back() == ' '))
+                        id.pop_back();
+                    if (!id.empty()) skip_ids.insert(id);
+                }
+                fclose(ckf);
+                if (!skip_ids.empty()) {
+                    fprintf(stdout, "[RESUME] Skipping %zu already-completed task(s) from checkpoint\n",
+                            skip_ids.size());
+                }
+            }
+        }
+
         HarnessReport report;
         report.total = static_cast<int>(m_instances.size());
 
         for (const auto& inst : m_instances) {
+            // Skip tasks already completed in a prior run
+            if (!skip_ids.empty() && skip_ids.count(inst.task_id)) {
+                fprintf(stdout, "[RESUME] Skipping task: %s\n", inst.task_id.c_str());
+                continue;
+            }
+
             TaskResult res;
             res.task_id = inst.task_id;
             populate_context_telemetry(inst, res);
@@ -702,11 +1118,14 @@ public:
             } catch (const std::exception& ex) {
                 res.status = TaskStatus::FAILED;
                 res.failure_reason = ex.what();
+                res.api_error_class = classify_api_error(res.failure_reason);  // E68
                 maybe_dump_raw_response(res);
                 write_jsonl_sample(m_jsonl_out, res, res.raw_response.empty() ? 0 : res.raw_response.size());
                 report.results.push_back(res);
                 recompute_report_metrics(report, m_run_tests);
                 checkpoint_report(report);
+                emit_task_progress(res, report.results.size(), report.total);
+                if (m_fail_fast) { fprintf(stdout, "[FAIL-FAST] Stopping on first failure: %s\n", res.task_id.c_str()); fflush(stdout); break; }
                 continue;
             }
             auto t1 = std::chrono::steady_clock::now();
@@ -718,24 +1137,30 @@ public:
                 if (res.failure_reason.empty()) {
                     res.failure_reason = "agent returned empty patch";
                 }
+                res.api_error_class = classify_api_error(res.failure_reason);  // E68
                 maybe_dump_raw_response(res);
                 write_jsonl_sample(m_jsonl_out, res, res.raw_response.empty() ? 0 : res.raw_response.size());
                 report.results.push_back(res);
                 recompute_report_metrics(report, m_run_tests);
                 checkpoint_report(report);
+                emit_task_progress(res, report.results.size(), report.total);
+                if (m_fail_fast) { fprintf(stdout, "[FAIL-FAST] Stopping on first failure: %s\n", res.task_id.c_str()); fflush(stdout); break; }
                 continue;
             }
 
-            report.completed++;
+            report.completed++
             res.status = TaskStatus::COMPLETED;
 
-            // Patch correctness check
+            // Patch correctness check + fuzzy similarity score
             if (!inst.gold_patch.empty()) {
                 res.patch_match = patches_equivalent(res.emitted_patch, inst.gold_patch);
                 if (res.patch_match) {
                     report.patch_correct++;
                     res.status = TaskStatus::PATCH_CORRECT;
                 }
+                // Fuzzy score irrespective of exact match
+                res.fuzzy_patch_score = compute_fuzzy_patch_score(res.emitted_patch, inst.gold_patch);
+                res.patch_similarity  = res.fuzzy_patch_score;  // convenience alias
             }
 
             // Optionally run tests
@@ -758,6 +1183,13 @@ public:
             report.results.push_back(res);
             recompute_report_metrics(report, m_run_tests);
             checkpoint_report(report);
+            append_resume_checkpoint(res.task_id);
+            emit_task_progress(res, report.results.size(), report.total);
+            if (m_fail_fast && res.status == TaskStatus::FAILED) {
+                fprintf(stdout, "[FAIL-FAST] Stopping on first failure: %s\n", res.task_id.c_str());
+                fflush(stdout);
+                break;
+            }
         }
 
         recompute_report_metrics(report, m_run_tests);
@@ -803,11 +1235,38 @@ private:
         }
     }
 
+    void append_resume_checkpoint(const std::string& task_id) const
+    {
+        if (m_resume_checkpoint_path.empty()) return;
+        FILE* f = nullptr;
+        if (fopen_s(&f, m_resume_checkpoint_path.c_str(), "a") == 0 && f) {
+            fprintf(f, "%s\n", task_id.c_str());
+            fclose(f);
+        }
+    }
+
+    static void emit_task_progress(const TaskResult& res, size_t task_num, int task_total)
+    {
+        const char* status_str = "FAILED";
+        if (res.status == TaskStatus::COMPLETED)     status_str = "DONE";
+        if (res.status == TaskStatus::PATCH_CORRECT)  status_str = "PATCH_OK";
+        if (res.status == TaskStatus::TESTS_PASSED)   status_str = "TESTS_OK";
+        fprintf(stdout, "[PROGRESS] [%zu/%d] %-40s  %-9s  %.0f ms\n",
+                task_num, task_total, res.task_id.c_str(), status_str, res.elapsed_ms);
+        if (res.status == TaskStatus::FAILED && !res.failure_reason.empty()) {
+            fprintf(stdout, "           reason: %s\n", res.failure_reason.c_str());
+        }
+        fflush(stdout);
+    }
+
     std::vector<Instance> m_instances;
     bool                  m_run_tests;
     FILE*                 m_jsonl_out;
     const char*           m_progress_json_path;
     const char*           m_raw_dump_dir;
+    std::string           m_resume_checkpoint_path;
+    bool                  m_fail_fast   = false;
+    bool                  m_strict_mode = false;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -896,6 +1355,12 @@ static bool write_json_report(const HarnessReport& r, const char* path)
             "\"raw_response\": \"%s\", "
             "\"has_header\": %s, \"has_hunks\": %s, "
             "\"is_fenced\": %s, \"prose_detected\": %s, "
+            "\"starts_with_header\": %s, \"contains_no_patch\": %s, "
+            "\"no_patch_exact\": %s, "
+            "\"is_multifile\": %s, \"header_count\": %d, \"hunk_count\": %d, "
+            "\"target_file_count\": %d, \"single_file_lock\": %s, "
+            "\"gold_hunk_count\": %d, \"context_bytes_injected\": %zu, "
+            "\"strict_validation_error\": \"%s\", "
             "\"tokens_requested\": %llu, \"tokens_effective\": %llu, "
             "\"kv_budget_bytes\": %llu, \"adapted\": %s, "
             "\"pressure_ratio\": %.4f}%s\n",
@@ -911,6 +1376,17 @@ static bool write_json_report(const HarnessReport& r, const char* path)
             t.has_hunks ? "true" : "false",
             t.is_fenced ? "true" : "false",
             t.prose_detected ? "true" : "false",
+            t.starts_with_header ? "true" : "false",
+            t.contains_no_patch ? "true" : "false",
+            t.no_patch_exact ? "true" : "false",
+            t.is_multifile ? "true" : "false",
+            t.header_count,
+            t.hunk_count,
+            t.target_file_count,
+            t.single_file_lock ? "true" : "false",
+            t.gold_hunk_count,
+            t.context_bytes_injected,
+            json_escape(t.strict_validation_error).c_str(),
             t.tokens_requested,
             t.tokens_effective,
             t.kv_budget_bytes,
@@ -919,6 +1395,54 @@ static bool write_json_report(const HarnessReport& r, const char* path)
             comma);
     }
     fprintf(f, "  ]\n");
+    fprintf(f, "}\n");
+    fclose(f);
+    return true;
+}
+
+static bool write_jsonl_summary_report(const HarnessReport& r, const char* path)
+{
+    if (!path || !path[0]) {
+        return false;
+    }
+
+    FILE* f = nullptr;
+    if (fopen_s(&f, path, "w") != 0 || !f) {
+        return false;
+    }
+
+    int strict_failures = 0;
+    int no_patch_exact = 0;
+    int responses_with_headers = 0;
+    int responses_with_hunks = 0;
+    for (const auto& t : r.results) {
+        if (!t.strict_validation_error.empty()) {
+            ++strict_failures;
+        }
+        if (t.no_patch_exact) {
+            ++no_patch_exact;
+        }
+        if (t.has_header) {
+            ++responses_with_headers;
+        }
+        if (t.has_hunks) {
+            ++responses_with_hunks;
+        }
+    }
+
+    fprintf(f, "{\n");
+    fprintf(f, "  \"total\": %d,\n", r.total);
+    fprintf(f, "  \"completed\": %d,\n", r.completed);
+    fprintf(f, "  \"patch_correct\": %d,\n", r.patch_correct);
+    fprintf(f, "  \"tests_passed\": %d,\n", r.tests_passed);
+    fprintf(f, "  \"pass@1\": %.4f,\n", r.overall_score);
+    fprintf(f, "  \"task_completion_rate\": %.4f,\n", r.task_completion_rate);
+    fprintf(f, "  \"patch_correctness\": %.4f,\n", r.patch_correctness);
+    fprintf(f, "  \"test_pass_rate\": %.4f,\n", r.test_pass_rate);
+    fprintf(f, "  \"strict_validation_failures\": %d,\n", strict_failures);
+    fprintf(f, "  \"no_patch_exact\": %d,\n", no_patch_exact);
+    fprintf(f, "  \"responses_with_headers\": %d,\n", responses_with_headers);
+    fprintf(f, "  \"responses_with_hunks\": %d\n", responses_with_hunks);
     fprintf(f, "}\n");
     fclose(f);
     return true;
@@ -1061,6 +1585,7 @@ struct MinimalOllamaClient {
     int port;
     std::string model;
     bool debug_http = false;
+    int seed = -1;  // -1 = unset (random); set via --seed for reproducibility
 
     static void NormalizeHostAndPortLocal(const std::string& input, std::string& out_host, WORD& out_port)
     {
@@ -1275,7 +1800,11 @@ struct MinimalOllamaClient {
             "\",\"prompt\":\"" + escape_json(prompt) +
             "\",\"stream\":false,\"max_tokens\":" + std::to_string(request_max_tokens) +
             ",\"num_predict\":" + std::to_string(request_max_tokens) +
-            ",\"options\":{\"num_predict\":" + std::to_string(request_max_tokens) + "}}";
+            ",\"options\":{\"num_predict\":" + std::to_string(request_max_tokens);
+        if (seed >= 0) {
+            body += ",\"seed\":" + std::to_string(seed);
+        }
+        body += "}}";
 
         std::wstring whost = utf8_to_wide(host);
         if (whost.empty()) {
@@ -1604,6 +2133,13 @@ struct RealAgentContext {
     MinimalOllamaClient* ollama_client = nullptr;
     bool debug_runtime = false;
     int max_output_tokens = 0;
+    bool source_context_enabled = true;
+    size_t source_context_max_bytes_per_file = 2500;
+    size_t source_context_max_total_bytes = 5000;
+    size_t source_context_max_files = 2;
+    std::string prompt_dump_dir;
+    std::string model_alias;  // telemetry label (overrides raw model string)
+    int seed = -1;            // reproducibility seed; -1 = unset
 };
 
 static std::string invoke_real_agent(
@@ -1643,9 +2179,55 @@ static std::string invoke_real_agent(
         // Extract target files from gold patch to enable file-lock constraint
         const std::vector<std::string> target_files =
             SWEBench::extract_target_files_from_patch(inst.gold_patch);
+        result_out.target_file_count = static_cast<int>(target_files.size());
+        result_out.single_file_lock = target_files.size() == 1;
+        result_out.gold_hunk_count = SWEBench::raw_count_hunks(inst.gold_patch);
+
+        size_t context_bytes_injected = 0;
+        const std::string prompt = SWEBench::build_patch_only_prompt(
+            inst,
+            target_files,
+            ctx->source_context_enabled,
+            ctx->source_context_max_bytes_per_file,
+            ctx->source_context_max_total_bytes,
+            ctx->source_context_max_files,
+            &context_bytes_injected);
+        result_out.context_bytes_injected = context_bytes_injected;
+
+        result_out.prompt_byte_count = static_cast<uint64_t>(prompt.size());
+        result_out.model_alias = ctx->model_alias.empty()
+            ? ctx->ollama_client->model
+            : ctx->model_alias;
+
+        // Apply reproducibility seed to Ollama client before each call
+        ctx->ollama_client->seed = ctx->seed;
+
+        if (!ctx->prompt_dump_dir.empty()) {
+            std::filesystem::path dump_dir(ctx->prompt_dump_dir);
+            std::error_code ec;
+            std::filesystem::create_directories(dump_dir, ec);
+            if (!ec) {
+                const std::string safe_task = SWEBench::sanitize_task_id_for_path(inst.task_id);
+                const std::filesystem::path dump_file = dump_dir / (safe_task + ".prompt.txt");
+                SWEBench::write_text_file(dump_file, prompt);
+            }
+        }
 
         std::string response =
-            ctx->ollama_client->Generate(SWEBench::build_patch_only_prompt(inst, target_files), max_tokens, &transport_error);
+            ctx->ollama_client->Generate(
+                prompt,
+                max_tokens,
+                &transport_error);
+        if (response.empty()) {
+            // Retry once on transient transport fault
+            if (ctx->debug_runtime) {
+                fprintf(stdout,
+                    "[SWE][RETRY] task=%s - empty response, retrying once\n",
+                    inst.task_id.c_str());
+                fflush(stdout);
+            }
+            response = ctx->ollama_client->Generate(prompt, max_tokens, &transport_error);
+        }
         if (response.empty()) {
             result_out.failure_reason = transport_error.empty() ? "empty response from Ollama" : transport_error;
             return {};
@@ -1656,6 +2238,7 @@ static std::string invoke_real_agent(
         std::string normalization_error;
         std::string patch = SWEBench::normalize_agent_patch_response(response, &normalization_error);
         if (patch.empty()) {
+            result_out.strict_validation_error = normalization_error;
             result_out.failure_reason = normalization_error.empty()
                 ? "model did not emit a strict unified diff"
                 : normalization_error;
@@ -1679,6 +2262,9 @@ static std::string invoke_real_agent(
 //                 [--host <host>] [--port <num>] [--list-models] [--debug-http]
 //                 [--verbose] [--max-tasks <N>] [--max-output-tokens <N>]
 //                 [--dump-raw-responses <dir>] [--raw-dump-dir <dir>]
+//                 [--context-max-bytes <N>] [--context-max-total-bytes <N>]
+//                 [--context-max-files <N>] [--no-context]
+//                 [--dump-prompts <dir>] [--jsonl-summary <path>]
 //
 // --real-agent     Use live Ollama HTTP endpoint (requires Ollama running)
 // --list-models    Print installed Ollama models and exit
@@ -1691,10 +2277,21 @@ static std::string invoke_real_agent(
 // --max-output-tokens  Cap generated completion tokens for bounded smoke tests
 // --dump-raw-responses  Write per-task raw model responses into <dir>
 // --raw-dump-dir        Alias for --dump-raw-responses
+// --context-max-bytes  Max bytes per context file injected into prompt (default: 2500)
+// --context-max-total-bytes  Max total bytes injected across all context files (default: 5000)
+// --context-max-files  Max number of context files injected (default: 2)
+// --no-context         Disable source-context injection entirely
+// --dump-prompts       Write per-task generated prompts into <dir>
+// --jsonl-summary      Write a compact summary JSON next to JSONL for long runs
 // --run-tests      Run task test commands when available
 // --json           Output JSON report to this file
 // --jsonl          Output per-sample telemetry to this file
 // --dataset        Load instances from JSON/JSONL file instead of built-in set
+// --timeout-ms     Override per-task receive timeout in milliseconds (default: 240000)
+// --seed           Reproducibility seed passed to Ollama options.seed (-1 = random/default)
+// --model-alias    Friendly model label emitted in JSONL telemetry (default: raw model name)
+// --resume-checkpoint  Path to line-delimited checkpoint file; completed task IDs are appended
+//                      and skipped on subsequent runs for resumable sweeps
 //
 // Without --real-agent, runs null agent on built-in instances for self-test.
 
@@ -1711,9 +2308,48 @@ int main(int argc, char** argv)
     const char* model_name    = nullptr;
     const char* host_name     = nullptr;
     const char* raw_dump_dir  = nullptr;
+    const char* prompt_dump_dir = nullptr;
+    const char* jsonl_summary_path = nullptr;
+    const char* model_alias   = nullptr;
+    const char* resume_checkpoint = nullptr;
     int         ollama_port   = 11434;
     int         max_tasks     = -1;
     int         max_output_tokens = 0;
+    int         cli_timeout_ms = 0;
+    int         seed          = -1;
+    bool        context_enabled = true;
+    size_t      context_max_bytes = 2500;
+    size_t      context_max_total_bytes = 5000;
+    size_t      context_max_files = 2;
+
+    const char* env_context_max_bytes = getenv("RAWRXD_SWEBENCH_CONTEXT_MAX_BYTES");
+    if (env_context_max_bytes && env_context_max_bytes[0]) {
+        const int parsed = atoi(env_context_max_bytes);
+        if (parsed > 0 && parsed <= 65536) {
+            context_max_bytes = static_cast<size_t>(parsed);
+        }
+    }
+
+    const char* env_context_max_total = getenv("RAWRXD_SWEBENCH_CONTEXT_MAX_TOTAL_BYTES");
+    if (env_context_max_total && env_context_max_total[0]) {
+        const int parsed = atoi(env_context_max_total);
+        if (parsed > 0 && parsed <= 262144) {
+            context_max_total_bytes = static_cast<size_t>(parsed);
+        }
+    }
+
+    const char* env_context_max_files = getenv("RAWRXD_SWEBENCH_CONTEXT_MAX_FILES");
+    if (env_context_max_files && env_context_max_files[0]) {
+        const int parsed = atoi(env_context_max_files);
+        if (parsed > 0 && parsed <= 32) {
+            context_max_files = static_cast<size_t>(parsed);
+        }
+    }
+
+    const char* env_disable_context = getenv("RAWRXD_SWEBENCH_DISABLE_CONTEXT");
+    if (env_disable_context && env_disable_context[0] && strcmp(env_disable_context, "0") != 0) {
+        context_enabled = false;
+    }
 
     for (int i = 1; i < argc; ++i) {
         if (strcmp(argv[i], "--real-agent") == 0) {
@@ -1743,11 +2379,47 @@ int main(int argc, char** argv)
             max_tasks = atoi(argv[++i]);
         } else if (strcmp(argv[i], "--max-output-tokens") == 0 && i + 1 < argc) {
             max_output_tokens = atoi(argv[++i]);
+        } else if (strcmp(argv[i], "--context-max-bytes") == 0 && i + 1 < argc) {
+            const int parsed = atoi(argv[++i]);
+            if (parsed > 0 && parsed <= 65536) {
+                context_max_bytes = static_cast<size_t>(parsed);
+            }
+        } else if (strcmp(argv[i], "--context-max-total-bytes") == 0 && i + 1 < argc) {
+            const int parsed = atoi(argv[++i]);
+            if (parsed > 0 && parsed <= 262144) {
+                context_max_total_bytes = static_cast<size_t>(parsed);
+            }
+        } else if (strcmp(argv[i], "--context-max-files") == 0 && i + 1 < argc) {
+            const int parsed = atoi(argv[++i]);
+            if (parsed > 0 && parsed <= 32) {
+                context_max_files = static_cast<size_t>(parsed);
+            }
+        } else if (strcmp(argv[i], "--no-context") == 0) {
+            context_enabled = false;
         } else if ((strcmp(argv[i], "--dump-raw-responses") == 0 ||
                     strcmp(argv[i], "--raw-dump-dir") == 0) &&
                    i + 1 < argc) {
             raw_dump_dir = argv[++i];
+        } else if (strcmp(argv[i], "--dump-prompts") == 0 && i + 1 < argc) {
+            prompt_dump_dir = argv[++i];
+        } else if (strcmp(argv[i], "--jsonl-summary") == 0 && i + 1 < argc) {
+            jsonl_summary_path = argv[++i];
+        } else if (strcmp(argv[i], "--timeout-ms") == 0 && i + 1 < argc) {
+            cli_timeout_ms = atoi(argv[++i]);
+        } else if (strcmp(argv[i], "--seed") == 0 && i + 1 < argc) {
+            seed = atoi(argv[++i]);
+        } else if (strcmp(argv[i], "--model-alias") == 0 && i + 1 < argc) {
+            model_alias = argv[++i];
+        } else if (strcmp(argv[i], "--resume-checkpoint") == 0 && i + 1 < argc) {
+            resume_checkpoint = argv[++i];
         }
+    }
+
+    // Propagate CLI timeout override as env var so MinimalOllamaClient picks it up
+    if (cli_timeout_ms > 0) {
+        char timeout_buf[32];
+        snprintf(timeout_buf, sizeof(timeout_buf), "%d", cli_timeout_ms);
+        SetEnvironmentVariableA("RAWRXD_SWEBENCH_RECV_TIMEOUT_MS", timeout_buf);
     }
 
     if (verbose) {
@@ -1861,12 +2533,47 @@ int main(int argc, char** argv)
             }
 
             fprintf(stdout, "[INFO] Using Ollama model: %s on port %d\n", chosen_model.c_str(), ollama_port);
+
+            // Emit model fingerprint as first JSONL record
+            SWEBench::write_jsonl_model_fingerprint(jsonl_file, chosen_model, ollama.host, ollama_port);
+
             RealAgentContext ctx;
             ctx.ollama_client = &ollama;
             ctx.debug_runtime = debug_http;
             ctx.max_output_tokens = max_output_tokens;
+            ctx.source_context_enabled = context_enabled;
+            ctx.source_context_max_bytes_per_file = context_max_bytes;
+            ctx.source_context_max_total_bytes = context_max_total_bytes;
+            ctx.source_context_max_files = context_max_files;
+            ctx.seed = seed;
+            if (model_alias && model_alias[0]) {
+                ctx.model_alias = model_alias;
+            }
+            if (prompt_dump_dir && prompt_dump_dir[0]) {
+                ctx.prompt_dump_dir = prompt_dump_dir;
+            }
+
+            fprintf(stdout,
+                "[INFO] Context injection: %s (max_files=%zu, max_per_file=%zu, max_total=%zu)\n",
+                ctx.source_context_enabled ? "enabled" : "disabled",
+                ctx.source_context_max_files,
+                ctx.source_context_max_bytes_per_file,
+                ctx.source_context_max_total_bytes);
+            if (seed >= 0) {
+                fprintf(stdout, "[INFO] Reproducibility seed: %d\n", seed);
+            }
+            if (!ctx.model_alias.empty()) {
+                fprintf(stdout, "[INFO] Model alias: %s\n", ctx.model_alias.c_str());
+            }
+            if (!ctx.prompt_dump_dir.empty()) {
+                fprintf(stdout, "[INFO] Prompt dumps enabled: %s\n", ctx.prompt_dump_dir.c_str());
+            }
 
             SWEBench::Harness harness(run_tests, jsonl_file, json_out, raw_dump_dir);
+            if (resume_checkpoint && resume_checkpoint[0]) {
+                harness.set_resume_checkpoint(resume_checkpoint);
+                fprintf(stdout, "[INFO] Resume checkpoint: %s\n", resume_checkpoint);
+            }
             for (auto& inst : instances) {
                 harness.add_instance(std::move(inst));
             }
@@ -1907,6 +2614,14 @@ int main(int argc, char** argv)
             fprintf(stdout, "JSON report written to: %s\n", json_out);
         } else {
             fprintf(stderr, "Warning: failed to write JSON report to: %s\n", json_out);
+        }
+    }
+
+    if (jsonl_summary_path) {
+        if (SWEBench::write_jsonl_summary_report(report, jsonl_summary_path)) {
+            fprintf(stdout, "JSONL summary written to: %s\n", jsonl_summary_path);
+        } else {
+            fprintf(stderr, "Warning: failed to write JSONL summary to: %s\n", jsonl_summary_path);
         }
     }
 
