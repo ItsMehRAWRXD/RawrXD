@@ -39,6 +39,8 @@
 #include <limits>
 #include <sstream>
 #include <string>
+#include <cmath>
+#include <map>
 #include <unordered_set>
 #include <vector>
 
@@ -156,6 +158,19 @@ struct TaskResult {
     int          hunk_del_lines = 0;                // '-' body lines in emitted patch (excl. --- header)
     // F3: Prompt fingerprint (FNV-1a 64-bit hash of prompt bytes)
     uint64_t     prompt_hash    = 0;                // reproducibility/dedup fingerprint
+    // E92-E98 / F11-F14 / #93-#95 telemetry batch
+    std::string  repo;                              // E94: repo identifier (from Instance)
+    bool         response_truncated    = false;     // E92: token estimate >= effective*0.9
+    double       kv_headroom_ratio     = 0.0;       // E95: 1 - pressure_ratio
+    bool         context_pressure_high = false;     // E95: pressure_ratio > 0.85
+    double       diff_token_efficiency = 0.0;       // E96: emitted_patch_lines / response_token_estimate
+    bool         patch_bloat           = false;     // E97: emitted_patch_lines > gold_patch_lines*2
+    double       verbosity_ratio       = 0.0;       // F14: raw_response.size() / max(1,emitted_patch_lines)
+    bool         retry_succeeded       = false;     // #95: patch_match && retry_attempts > 0
+    uint64_t     problem_stmt_bytes    = 0;         // F11: problem statement bytes in prompt
+    uint64_t     hints_bytes           = 0;         // F11: hints_text bytes in prompt
+    double       patch_line_delta      = 0.0;       // #93: hunk_ins_lines - hunk_del_lines
+    double       ms_per_token          = 0.0;       // #94: elapsed_ms / response_token_estimate
 };
 
 struct HarnessReport {
@@ -207,17 +222,18 @@ static void recompute_report_metrics(HarnessReport& report, bool run_tests)
 
 static bool normalize_patch(const std::string& raw, std::string& out)
 {
-    // Strip trailing whitespace per line; normalise CRLF → LF
+    // Strip trailing whitespace per line; normalise CRLF -> LF
     std::ostringstream ss;
     std::istringstream in(raw);
     std::string line;
     while (std::getline(in, line)) {
-        while (!line.empty() && (line.back() == '\r' || line.back() == ' '))
+        while (!line.empty() && (line.back() == '\r' || line.back() == ' ')) {
             line.pop_back();
+        }
         ss << line << '\n';
     }
     out = ss.str();
-    return !out.empty();
+    return true;
 }
 
 static bool patches_equivalent(const std::string& a, const std::string& b)
@@ -242,9 +258,7 @@ static std::string sanitize_task_id_for_path(const std::string& value)
             out.push_back('_');
         }
     }
-    if (out.empty()) {
-        out = "task";
-    }
+    if (out.empty()) out = "task";
     return out;
 }
 
@@ -285,12 +299,13 @@ static void NormalizeHostAndPort(const std::string& input, std::string& out_host
                 } catch (...) {
                 }
             }
+            if (out_host.empty()) out_host = value;
             return;
         }
     }
 
     const size_t colon_pos = value.rfind(':');
-    if (colon_pos != std::string::npos && value.find(':') == colon_pos) {
+    if (colon_pos != std::string::npos && colon_pos + 1 < value.size()) {
         out_host = value.substr(0, colon_pos);
         try {
             const int parsed_port = std::stoi(value.substr(colon_pos + 1));
@@ -299,61 +314,37 @@ static void NormalizeHostAndPort(const std::string& input, std::string& out_host
             }
         } catch (...) {
         }
-    } else {
-        out_host = value;
+        if (out_host.empty()) out_host = value;
+        return;
     }
 
-    while (!out_host.empty() && out_host.back() == '/') {
-        out_host.pop_back();
-    }
+    out_host = value;
 }
+
 static std::string trim_copy(const std::string& value)
 {
     size_t start = 0;
-    while (start < value.size() && std::isspace(static_cast<unsigned char>(value[start]))) {
-        ++start;
-    }
-
     size_t end = value.size();
-    while (end > start && std::isspace(static_cast<unsigned char>(value[end - 1]))) {
-        --end;
-    }
-
+    while (start < end && std::isspace(static_cast<unsigned char>(value[start]))) ++start;
+    while (end > start && std::isspace(static_cast<unsigned char>(value[end - 1]))) --end;
     return value.substr(start, end - start);
 }
 
-// Extract unique target files from a gold patch.
-// Parses lines starting with "--- a/" to identify files being modified.
 static std::vector<std::string> extract_target_files_from_patch(const std::string& patch)
 {
     std::vector<std::string> targets;
-    if (patch.empty()) {
-        return targets;
-    }
-
     std::istringstream in(patch);
     std::string line;
     while (std::getline(in, line)) {
-        if (line.empty()) continue;
-        if (line.back() == '\r') line.pop_back();
-
-        // Lines starting with "--- a/" indicate file paths being modified
-        if (line.rfind("--- a/", 0) == 0) {
-            std::string file_path = line.substr(6);  // skip "--- a/"
-            
-            // Remove any trailing content (e.g., timestamps)
-            const size_t tab_pos = file_path.find('\t');
-            if (tab_pos != std::string::npos) {
-                file_path = file_path.substr(0, tab_pos);
-            }
-            
-            // Avoid duplicates
-            if (std::find(targets.begin(), targets.end(), file_path) == targets.end()) {
+        if (!line.empty() && line.back() == '\r') line.pop_back();
+        if (line.rfind("+++ b/", 0) == 0) {
+            std::string file_path = trim_copy(line.substr(6));
+            if (!file_path.empty() &&
+                std::find(targets.begin(), targets.end(), file_path) == targets.end()) {
                 targets.push_back(file_path);
             }
         }
     }
-
     return targets;
 }
 
@@ -1303,6 +1294,11 @@ static void write_jsonl_sample(FILE* jsonl_out, const TaskResult& result, size_t
         "\"response_token_estimate\": %llu, "
         "\"ws_fuzzy_patch_score\": %.4f, \"patch_size_ratio\": %.4f, "
         "\"hunk_ins_lines\": %d, \"hunk_del_lines\": %d, \"prompt_hash\": \"%016llx\", "
+        "\"response_truncated\": %s, \"kv_headroom_ratio\": %.4f, "
+        "\"context_pressure_high\": %s, \"diff_token_efficiency\": %.4f, "
+        "\"patch_bloat\": %s, \"verbosity_ratio\": %.2f, "
+        "\"retry_succeeded\": %s, \"problem_stmt_bytes\": %llu, \"hints_bytes\": %llu, "
+        "\"patch_line_delta\": %.1f, \"ms_per_token\": %.3f, "
         "\"success\": %s}\n",
         result.task_id.c_str(),
         result.tokens_requested,
@@ -1347,6 +1343,17 @@ static void write_jsonl_sample(FILE* jsonl_out, const TaskResult& result, size_t
         result.hunk_ins_lines,
         result.hunk_del_lines,
         static_cast<unsigned long long>(result.prompt_hash),
+        result.response_truncated ? "true" : "false",
+        result.kv_headroom_ratio,
+        result.context_pressure_high ? "true" : "false",
+        result.diff_token_efficiency,
+        result.patch_bloat ? "true" : "false",
+        result.verbosity_ratio,
+        result.retry_succeeded ? "true" : "false",
+        static_cast<unsigned long long>(result.problem_stmt_bytes),
+        static_cast<unsigned long long>(result.hints_bytes),
+        result.patch_line_delta,
+        result.ms_per_token,
         (result.status == TaskStatus::FAILED) ? "false" : "true");
     fflush(jsonl_out);
 }
@@ -1447,6 +1454,7 @@ public:
 
             TaskResult res;
             res.task_id = inst.task_id;
+            res.repo    = inst.repo;           // E94: repo for per-repo summary breakdown
             populate_context_telemetry(inst, res);
 
             auto t0 = std::chrono::steady_clock::now();
@@ -1512,6 +1520,28 @@ public:
             compute_hunk_ins_del(res.emitted_patch, res.hunk_ins_lines, res.hunk_del_lines);
             // Response token estimate
             res.response_token_estimate = static_cast<uint64_t>(res.raw_response.size() / 4);
+            // E92-E98 / F14 / #93-#95: derived telemetry fields
+            if (res.tokens_effective > 0) {
+                res.response_truncated =
+                    res.response_token_estimate >= res.tokens_effective * 9 / 10;
+            }
+            res.kv_headroom_ratio     = 1.0 - res.pressure_ratio;
+            res.context_pressure_high = res.pressure_ratio > 0.85;
+            res.diff_token_efficiency = res.response_token_estimate > 0
+                ? static_cast<double>(res.emitted_patch_lines)
+                  / static_cast<double>(res.response_token_estimate)
+                : 0.0;
+            res.patch_bloat = (res.gold_patch_lines > 0)
+                && (res.emitted_patch_lines > res.gold_patch_lines * 2);
+            res.verbosity_ratio = res.emitted_patch_lines > 0
+                ? static_cast<double>(res.raw_response.size())
+                  / static_cast<double>(res.emitted_patch_lines)
+                : 0.0;
+            res.retry_succeeded  = res.patch_match && res.retry_attempts > 0;
+            res.patch_line_delta = static_cast<double>(res.hunk_ins_lines - res.hunk_del_lines);
+            res.ms_per_token     = res.response_token_estimate > 0
+                ? res.elapsed_ms / static_cast<double>(res.response_token_estimate)
+                : 0.0;
 
             // Optionally run tests
             if (m_run_tests && !inst.test_cmds.empty()) {
@@ -1606,9 +1636,12 @@ private:
         if (res.status == TaskStatus::COMPLETED)     status_str = "DONE";
         if (res.status == TaskStatus::PATCH_CORRECT)  status_str = "PATCH_OK";
         if (res.status == TaskStatus::TESTS_PASSED)   status_str = "TESTS_OK";
-        fprintf(stdout, "[PROGRESS] [%zu/%d] %-40s  %-9s  %.0f ms  %s\n",
-                task_num, task_total, res.task_id.c_str(), status_str, res.elapsed_ms,
-                res.wall_clock_ts.empty() ? "-" : res.wall_clock_ts.c_str());
+        const double pct_done = task_total > 0
+            ? 100.0 * static_cast<double>(task_num) / static_cast<double>(task_total) : 0.0;
+        fprintf(stdout, "[PROGRESS] [%zu/%d] (%.0f%%) %-40s  %-9s  %.0f ms  %s\n",  // F-Fin7
+            task_num, task_total, pct_done,
+            res.task_id.c_str(), status_str, res.elapsed_ms,
+            res.wall_clock_ts.empty() ? "-" : res.wall_clock_ts.c_str());
         if (res.status == TaskStatus::FAILED && !res.failure_reason.empty()) {
             fprintf(stdout, "           reason: %s\n", res.failure_reason.c_str());
         }
@@ -1785,22 +1818,30 @@ static bool write_jsonl_summary_report(const HarnessReport& r, const char* path)
         return false;
     }
 
-    int strict_failures = 0;
-    int no_patch_exact = 0;
-    int responses_with_headers = 0;
-    int responses_with_hunks = 0;
+    int    strict_failures      = 0;
+    int    no_patch_exact       = 0;
+    int    responses_with_headers = 0;
+    int    responses_with_hunks = 0;
+    int    truncated_count      = 0;  // F10: response truncation events
+    int    refusal_count        = 0;  // F9/F13: model_refused errors
+    int    format_err_count     = 0;  // F9: format_error class
+    int    timeout_count        = 0;  // F9: timeout errors
+    uint64_t total_prompt_bytes = 0;  // #97: cumulative prompt bytes
+    std::map<std::string, std::pair<int,int>> repo_pass;  // E94: repo -> (total, pass)
     for (const auto& t : r.results) {
-        if (!t.strict_validation_error.empty()) {
-            ++strict_failures;
-        }
-        if (t.no_patch_exact) {
-            ++no_patch_exact;
-        }
-        if (t.has_header) {
-            ++responses_with_headers;
-        }
-        if (t.has_hunks) {
-            ++responses_with_hunks;
+        if (!t.strict_validation_error.empty()) { ++strict_failures; }
+        if (t.no_patch_exact)    { ++no_patch_exact; }
+        if (t.has_header)        { ++responses_with_headers; }
+        if (t.has_hunks)         { ++responses_with_hunks; }
+        if (t.response_truncated) { ++truncated_count; }
+        if (t.api_error_class == "model_refused")  ++refusal_count;
+        else if (t.api_error_class == "format_error") ++format_err_count;
+        else if (t.api_error_class == "timeout")   ++timeout_count;
+        total_prompt_bytes += t.prompt_byte_count;
+        if (!t.repo.empty()) {
+            auto& entry = repo_pass[t.repo];
+            entry.first++;
+            if (t.patch_match) entry.second++;
         }
     }
 
@@ -1826,6 +1867,19 @@ static bool write_jsonl_summary_report(const HarnessReport& r, const char* path)
     const double avg_fuzzy   = n_results > 0 ? sum_fuzzy   / n_results : 0.0;
     const double avg_jaccard = n_results > 0 ? sum_jaccard / n_results : 0.0;
     const double avg_elapsed = n_results > 0 ? sum_elapsed / n_results : 0.0;
+
+    // E93: Wilson score confidence interval for patch_correctness (95%)
+    double ci_lower = 0.0, ci_upper = 0.0;
+    if (n_results > 0) {
+        const double z     = 1.96;
+        const double p     = r.patch_correctness;
+        const double n     = static_cast<double>(n_results);
+        const double denom  = 1.0 + z * z / n;
+        const double center = p + z * z / (2.0 * n);
+        const double spread = z * std::sqrt(p * (1.0 - p) / n + z * z / (4.0 * n * n));
+        ci_lower = std::max(0.0, (center - spread) / denom);
+        ci_upper = std::min(1.0, (center + spread) / denom);
+    }
 
     // F4: Latency percentiles (p50 / p90 / p95)
     double p50_elapsed = 0.0, p90_elapsed = 0.0, p95_elapsed = 0.0;
@@ -1858,7 +1912,33 @@ static bool write_jsonl_summary_report(const HarnessReport& r, const char* path)
     fprintf(f, "  \"single_hunk_total\": %d,\n", single_hunk_total);
     fprintf(f, "  \"single_hunk_pass\": %d,\n", single_hunk_pass);
     fprintf(f, "  \"multi_hunk_total\": %d,\n", multi_hunk_total);
-    fprintf(f, "  \"multi_hunk_pass\": %d\n", multi_hunk_pass);
+    fprintf(f, "  \"multi_hunk_pass\": %d,\n", multi_hunk_pass);
+    // E93: Wilson score CI
+    fprintf(f, "  \"patch_correctness_ci_lower\": %.4f,\n", ci_lower);
+    fprintf(f, "  \"patch_correctness_ci_upper\": %.4f,\n", ci_upper);
+    // F10: truncation count; F9: error class breakdown; F13: refusal rate; #97: total prompt bytes
+    fprintf(f, "  \"truncated_count\": %d,\n", truncated_count);
+    fprintf(f, "  \"refusal_count\": %d,\n", refusal_count);
+    fprintf(f, "  \"format_error_count\": %d,\n", format_err_count);
+    fprintf(f, "  \"timeout_count\": %d,\n", timeout_count);
+    fprintf(f, "  \"refusal_rate\": %.4f,\n",
+        n_results > 0 ? static_cast<double>(refusal_count) / n_results : 0.0);
+    fprintf(f, "  \"total_prompt_bytes\": %llu,\n",
+        static_cast<unsigned long long>(total_prompt_bytes));
+    // E94: Per-repo pass rate breakdown array
+    fprintf(f, "  \"repo_breakdown\": [\n");
+    {
+        size_t repo_i = 0;
+        const size_t repo_n = repo_pass.size();
+        for (const auto& kv : repo_pass) {
+            const double rrate = kv.second.first > 0
+                ? static_cast<double>(kv.second.second) / kv.second.first : 0.0;
+            fprintf(f, "    {\"repo\": \"%s\", \"total\": %d, \"pass\": %d, \"rate\": %.4f}%s\n",
+                kv.first.c_str(), kv.second.first, kv.second.second, rrate,
+                (++repo_i < repo_n) ? "," : "");
+        }
+    }
+    fprintf(f, "  ]\n");
     fprintf(f, "}\n");
     fclose(f);
     return true;
@@ -2739,6 +2819,10 @@ static std::string invoke_real_agent(
         result_out.prompt_hash = SWEBench::fnv1a_64(prompt);  // F3: prompt fingerprint
         result_out.model_alias = SWEBench::normalize_model_alias(  // E82: normalized alias
             ctx->model_alias.empty() ? ctx->ollama_client->model : ctx->model_alias);
+        // F11: Prompt composition breakdown (approximate sizes from source data)
+        result_out.problem_stmt_bytes = static_cast<uint64_t>(inst.problem_stmt.size());
+        result_out.hints_bytes        = ctx->hints_enabled
+            ? static_cast<uint64_t>(inst.hints_text.size()) : 0;
 
         // Apply reproducibility seed and temperature to Ollama client before each call
         ctx->ollama_client->seed        = ctx->seed;
@@ -2875,6 +2959,8 @@ static std::string invoke_real_agent(
 // --instance-filter    Comma-separated list of task_ids to evaluate (skips all others)
 // --export-instances   Write loaded instance set to JSONL at this path before evaluation
 // --temperature        Ollama generation temperature (e.g. 0.2); -1 = unset (model default)
+// --deterministic      Force seed=42, temperature=0.0 for fully reproducible sweeps (F8)
+// --no-summary-json    Suppress writing the --jsonl-summary file even if path is set (#98)
 //
 // Without --real-agent, runs null agent on built-in instances for self-test.
 
@@ -2918,6 +3004,8 @@ int main(int argc, char** argv)
     int         max_task_wall_ms   = 0;        // E81: --max-task-wall-ms per-task wall-time cap
 
     const char* env_context_max_bytes = getenv("RAWRXD_SWEBENCH_CONTEXT_MAX_BYTES");
+    bool        deterministic      = false;    // F8: --deterministic (seed=42, temperature=0.0)
+    bool        no_summary_json    = false;    // #98: --no-summary-json (suppress jsonl-summary)
     if (env_context_max_bytes && env_context_max_bytes[0]) {
         const int parsed = atoi(env_context_max_bytes);
         if (parsed > 0 && parsed <= 65536) {
@@ -3036,9 +3124,18 @@ int main(int argc, char** argv)
         } else if (strcmp(argv[i], "--max-task-wall-ms") == 0 && i + 1 < argc) {
             max_task_wall_ms = atoi(argv[++i]);
             if (max_task_wall_ms < 0) max_task_wall_ms = 0;
+        } else if (strcmp(argv[i], "--deterministic") == 0) {
+            deterministic = true;              // F8
+        } else if (strcmp(argv[i], "--no-summary-json") == 0) {
+            no_summary_json = true;            // #98
         }
     }
 
+    // F8: --deterministic forces seed=42, temperature=0.0 for reproducible sweeps
+    if (deterministic) {
+        seed        = 42;
+        temperature = 0.0;
+    }
     // Propagate CLI timeout override as env var so MinimalOllamaClient picks it up
     if (cli_timeout_ms > 0) {
         char timeout_buf[32];
@@ -3200,6 +3297,21 @@ int main(int argc, char** argv)
 
             fprintf(stdout, "[INFO] Using Ollama model: %s on port %d\n", chosen_model.c_str(), ollama_port);
 
+            // F12: Ollama reachability preflight — verify service is responding before sweep
+            {
+                std::string pf_err;
+                const auto pf_models = ollama.ListModels(&pf_err);
+                if (pf_models.empty() && !pf_err.empty()) {
+                    fprintf(stderr, "[ERROR] Ollama preflight failed: %s\n", pf_err.c_str());
+                    fprintf(stderr, "        Ensure Ollama is running on %s:%d\n",
+                        chosen_host.c_str(), ollama_port);
+                    if (jsonl_file) { fclose(jsonl_file); }
+                    return 1;
+                }
+                fprintf(stdout, "[INFO] Ollama preflight: OK (%zu model(s) available)\n",
+                    pf_models.size());
+            }
+
             // Emit model fingerprint as first JSONL record
             SWEBench::write_jsonl_model_fingerprint(
                 jsonl_file,
@@ -3231,6 +3343,9 @@ int main(int argc, char** argv)
             }
             if (temperature >= 0.0) {
                 fprintf(stdout, "[INFO] Temperature: %.4f\n", temperature);
+            }
+            if (deterministic) {
+                fprintf(stdout, "[INFO] Deterministic mode: seed=42, temperature=0.0\n");
             }
             if (model_alias && model_alias[0]) {
                 ctx.model_alias = model_alias;
@@ -3320,7 +3435,7 @@ int main(int argc, char** argv)
         }
     }
 
-    if (jsonl_summary_path) {
+    if (jsonl_summary_path && !no_summary_json) {
         if (SWEBench::write_jsonl_summary_report(report, jsonl_summary_path)) {
             fprintf(stdout, "JSONL summary written to: %s\n", jsonl_summary_path);
         } else {
