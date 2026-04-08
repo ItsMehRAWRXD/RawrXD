@@ -29,6 +29,7 @@
 #include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <cctype>
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
@@ -88,6 +89,11 @@ struct TaskResult {
     std::string  task_id;
     TaskStatus   status       = TaskStatus::NOT_RUN;
     std::string  emitted_patch;
+    std::string  raw_response;
+    bool         has_header   = false;
+    bool         has_hunks    = false;
+    bool         is_fenced    = false;
+    bool         prose_detected = false;
     bool         patch_match  = false;
     bool         tests_passed = false;
     double       elapsed_ms   = 0.0;
@@ -111,6 +117,37 @@ struct HarnessReport {
     double overall_score        = 0.0;   // harmonic mean
     std::vector<TaskResult> results;
 };
+
+static bool write_json_report(const HarnessReport& r, const char* path);
+
+static void recompute_report_metrics(HarnessReport& report, bool run_tests)
+{
+    if (report.total <= 0) {
+        report.task_completion_rate = 0.0;
+        report.patch_correctness = 0.0;
+        report.test_pass_rate = 0.0;
+        report.overall_score = 0.0;
+        return;
+    }
+
+    report.task_completion_rate =
+        static_cast<double>(report.completed) / report.total;
+    report.patch_correctness = (report.completed > 0)
+        ? static_cast<double>(report.patch_correct) / report.total
+        : 0.0;
+    report.test_pass_rate = run_tests
+        ? static_cast<double>(report.tests_passed) / report.total
+        : report.patch_correctness;
+
+    const double comp = report.task_completion_rate;
+    const double patch = report.patch_correctness;
+    const double test = report.test_pass_rate;
+    if (comp > 0.0 && patch > 0.0 && test > 0.0) {
+        report.overall_score = 3.0 / (1.0 / comp + 1.0 / patch + 1.0 / test);
+    } else {
+        report.overall_score = (comp + patch + test) / 3.0;
+    }
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Utility helpers
@@ -137,6 +174,386 @@ static bool patches_equivalent(const std::string& a, const std::string& b)
     normalize_patch(a, na);
     normalize_patch(b, nb);
     return na == nb;
+}
+
+static std::string sanitize_task_id_for_path(const std::string& value)
+{
+    std::string out;
+    out.reserve(value.size());
+    for (char c : value) {
+        if ((c >= 'a' && c <= 'z') ||
+            (c >= 'A' && c <= 'Z') ||
+            (c >= '0' && c <= '9') ||
+            c == '-' || c == '_' || c == '.') {
+            out.push_back(c);
+        } else {
+            out.push_back('_');
+        }
+    }
+    if (out.empty()) {
+        out = "task";
+    }
+    return out;
+}
+
+static void NormalizeHostAndPort(const std::string& input, std::string& out_host, WORD& out_port)
+{
+    out_host.clear();
+    out_port = 11434;
+
+    std::string value = input;
+    const size_t scheme_pos = value.find("://");
+    if (scheme_pos != std::string::npos) {
+        value = value.substr(scheme_pos + 3);
+    }
+
+    const size_t path_pos = value.find('/');
+    if (path_pos != std::string::npos) {
+        value = value.substr(0, path_pos);
+    }
+
+    while (!value.empty() && value.back() == '/') {
+        value.pop_back();
+    }
+
+    if (value.empty()) {
+        return;
+    }
+
+    if (value.front() == '[') {
+        const size_t closing = value.find(']');
+        if (closing != std::string::npos) {
+            out_host = value.substr(1, closing - 1);
+            if (closing + 1 < value.size() && value[closing + 1] == ':') {
+                try {
+                    const int parsed_port = std::stoi(value.substr(closing + 2));
+                    if (parsed_port > 0 && parsed_port <= 65535) {
+                        out_port = static_cast<WORD>(parsed_port);
+                    }
+                } catch (...) {
+                }
+            }
+            return;
+        }
+    }
+
+    const size_t colon_pos = value.rfind(':');
+    if (colon_pos != std::string::npos && value.find(':') == colon_pos) {
+        out_host = value.substr(0, colon_pos);
+        try {
+            const int parsed_port = std::stoi(value.substr(colon_pos + 1));
+            if (parsed_port > 0 && parsed_port <= 65535) {
+                out_port = static_cast<WORD>(parsed_port);
+            }
+        } catch (...) {
+        }
+    } else {
+        out_host = value;
+    }
+
+    while (!out_host.empty() && out_host.back() == '/') {
+        out_host.pop_back();
+    }
+}
+static std::string trim_copy(const std::string& value)
+{
+    size_t start = 0;
+    while (start < value.size() && std::isspace(static_cast<unsigned char>(value[start]))) {
+        ++start;
+    }
+
+    size_t end = value.size();
+    while (end > start && std::isspace(static_cast<unsigned char>(value[end - 1]))) {
+        --end;
+    }
+
+    return value.substr(start, end - start);
+}
+
+// Extract unique target files from a gold patch.
+// Parses lines starting with "--- a/" to identify files being modified.
+static std::vector<std::string> extract_target_files_from_patch(const std::string& patch)
+{
+    std::vector<std::string> targets;
+    if (patch.empty()) {
+        return targets;
+    }
+
+    std::istringstream in(patch);
+    std::string line;
+    while (std::getline(in, line)) {
+        if (line.empty()) continue;
+        if (line.back() == '\r') line.pop_back();
+
+        // Lines starting with "--- a/" indicate file paths being modified
+        if (line.rfind("--- a/", 0) == 0) {
+            std::string file_path = line.substr(6);  // skip "--- a/"
+            
+            // Remove any trailing content (e.g., timestamps)
+            const size_t tab_pos = file_path.find('\t');
+            if (tab_pos != std::string::npos) {
+                file_path = file_path.substr(0, tab_pos);
+            }
+            
+            // Avoid duplicates
+            if (std::find(targets.begin(), targets.end(), file_path) == targets.end()) {
+                targets.push_back(file_path);
+            }
+        }
+    }
+
+    return targets;
+}
+
+static std::string build_patch_only_prompt(const Instance& inst, const std::vector<std::string>& target_files = {})
+{
+    std::ostringstream prompt;
+    prompt << "You are an expert software engineering evaluation agent.\n";
+    prompt << "A machine will score your output.\n";
+    prompt << "Return ONLY a valid unified diff patch that fixes the task.\n";
+    prompt << "Do NOT include explanation, commentary, analysis, markdown fences, XML tags, or extra text.\n";
+    prompt << "If you cannot produce a valid unified diff, output exactly: NO_PATCH\n\n";
+    prompt << "Output requirements:\n";
+    prompt << "1. The first diff line must start with --- a/\n";
+    prompt << "2. The second diff line must start with +++ b/\n";
+    prompt << "3. Every file modification must include at least one @@ hunk header.\n";
+    prompt << "4. Emit only the minimal files and hunks required to solve the task.\n";
+    prompt << "5. Do not wrap the diff in backticks.\n";
+    prompt << "6. Do not output prose before or after the patch.\n";
+    prompt << "7. If the fix spans multiple files, emit one contiguous unified diff containing every changed file.\n";
+    prompt << "8. In multi-file output, each file must start with its own --- a/ and +++ b/ headers before its @@ hunks.\n";
+    
+    // Inject file-lock constraint if exactly one target file is specified
+    if (target_files.size() == 1) {
+        prompt << "9. CRITICAL: Modify ONLY the file: " << target_files[0] << "\n";
+        prompt << "   Do NOT modify any other files, helpers, or dependencies.\n";
+    }
+    
+    prompt << "\nValid single-file output example:\n";
+    prompt << "--- a/src/example.cpp\n";
+    prompt << "+++ b/src/example.cpp\n";
+    prompt << "@@ -10,2 +10,2 @@\n";
+    prompt << "-    return false;\n";
+    prompt << "+    return true;\n\n";
+    prompt << "Valid multi-file output example:\n";
+    prompt << "--- a/src/core.cpp\n";
+    prompt << "+++ b/src/core.cpp\n";
+    prompt << "@@ -10,2 +10,2 @@\n";
+    prompt << "-    old_logic();\n";
+    prompt << "+    new_logic();\n";
+    prompt << "--- a/include/core.h\n";
+    prompt << "+++ b/include/core.h\n";
+    prompt << "@@ -2,2 +2,2 @@\n";
+    prompt << "-void old_logic();\n";
+    prompt << "+void new_logic();\n\n";
+    prompt << "Invalid output examples:\n";
+    prompt << "- Here is the fix:\n";
+    prompt << "- ```diff\n";
+    prompt << "- <patch>...</patch>\n";
+    prompt << "- Any explanation before or after the diff\n";
+    prompt << "- Mixing edits for multiple files under one header pair\n";
+    prompt << "- Returning separate patches or sections instead of one contiguous unified diff\n";
+    if (target_files.size() == 1) {
+        prompt << "- Modifying files other than: " << target_files[0] << "\n";
+    }
+    prompt << "\nThe first character of your reply must be '-' from the leading --- a/ header, unless you reply with NO_PATCH.\n";
+    prompt << "Copy the structure of the valid examples, but use the real file paths and hunks for the task below.\n";
+    prompt << "If the correct fix needs multiple files, include all of them in one unified diff response.\n\n";
+    prompt << "Task ID: " << inst.task_id << "\n";
+    prompt << "Repository: " << inst.repo << "\n";
+    prompt << "Base commit: " << inst.base_commit << "\n\n";
+    prompt << "Problem statement:\n" << inst.problem_stmt << "\n\n";
+
+    if (!inst.hints_text.empty()) {
+        prompt << "Hints:\n" << inst.hints_text << "\n\n";
+    }
+
+    prompt << "Output ONLY the unified diff now. Start immediately with --- a/ or output NO_PATCH.\n";
+    return prompt.str();
+}
+
+static std::string strip_to_unified_diff(const std::string& value)
+{
+    const std::string trimmed = trim_copy(value);
+    const size_t diff_pos = trimmed.find("--- ");
+    if (diff_pos == std::string::npos) {
+        return {};
+    }
+
+    std::istringstream in(trimmed.substr(diff_pos));
+    std::ostringstream out;
+    std::string line;
+    bool saw_hunk = false;
+
+    while (std::getline(in, line)) {
+        if (!line.empty() && line.back() == '\r') {
+            line.pop_back();
+        }
+
+        if (line.rfind("--- ", 0) == 0 || line.rfind("+++ ", 0) == 0) {
+            out << line << '\n';
+            continue;
+        }
+
+        if (line.rfind("@@", 0) == 0) {
+            saw_hunk = true;
+            out << line << '\n';
+            continue;
+        }
+
+        if (saw_hunk) {
+            if (!line.empty()) {
+                const char c = line[0];
+                if (c == ' ' || c == '+' || c == '-' || c == '\\') {
+                    out << line << '\n';
+                    continue;
+                }
+            }
+            break;
+        }
+    }
+
+    return trim_copy(out.str());
+}
+
+static std::string extract_tagged_patch(const std::string& value)
+{
+    const std::string open_tag = "<patch>";
+    const std::string close_tag = "</patch>";
+    const size_t open_pos = value.find(open_tag);
+    if (open_pos == std::string::npos) {
+        return {};
+    }
+
+    const size_t content_start = open_pos + open_tag.size();
+    const size_t close_pos = value.find(close_tag, content_start);
+    if (close_pos == std::string::npos) {
+        return {};
+    }
+
+    return trim_copy(value.substr(content_start, close_pos - content_start));
+}
+
+static std::string extract_fenced_diff(const std::string& value)
+{
+    const size_t fence_start = value.find("```");
+    if (fence_start == std::string::npos) {
+        return {};
+    }
+
+    size_t content_start = fence_start + 3;
+    if (value.compare(content_start, 4, "diff") == 0) {
+        content_start += 4;
+    } else if (value.compare(content_start, 5, "patch") == 0) {
+        content_start += 5;
+    }
+    if (content_start < value.size() && (value[content_start] == '\r' || value[content_start] == '\n')) {
+        while (content_start < value.size() && (value[content_start] == '\r' || value[content_start] == '\n')) {
+            ++content_start;
+        }
+    }
+
+    const size_t fence_end = value.find("```", content_start);
+    if (fence_end == std::string::npos) {
+        return {};
+    }
+
+    return trim_copy(value.substr(content_start, fence_end - content_start));
+}
+
+static bool looks_like_no_patch(const std::string& raw)
+{
+    const std::string trimmed = trim_copy(raw);
+    return trimmed == "NO_PATCH";
+}
+
+static bool is_strict_unified_diff(const std::string& value)
+{
+    return value.rfind("--- a/", 0) == 0 &&
+           value.find("\n+++ b/") != std::string::npos &&
+           value.find("\n@@") != std::string::npos;
+}
+
+static bool raw_has_diff_headers(const std::string& value)
+{
+    return value.find("--- a/") != std::string::npos && value.find("+++ b/") != std::string::npos;
+}
+
+static bool raw_has_diff_hunks(const std::string& value)
+{
+    return value.find("@@ ") != std::string::npos || value.find("\n@@") != std::string::npos;
+}
+
+static bool raw_contains_fence(const std::string& value)
+{
+    return value.find("```") != std::string::npos;
+}
+
+static bool raw_starts_with_prose(const std::string& value)
+{
+    const std::string trimmed = trim_copy(value);
+    if (trimmed.empty()) {
+        return false;
+    }
+    if (trimmed.rfind("--- a/", 0) == 0 ||
+        trimmed.rfind("```", 0) == 0 ||
+        trimmed.rfind("<patch>", 0) == 0 ||
+        trimmed == "NO_PATCH") {
+        return false;
+    }
+    return true;
+}
+
+static void populate_response_compliance(TaskResult& result)
+{
+    result.has_header = raw_has_diff_headers(result.raw_response);
+    result.has_hunks = raw_has_diff_hunks(result.raw_response);
+    result.is_fenced = raw_contains_fence(result.raw_response);
+    result.prose_detected = raw_starts_with_prose(result.raw_response);
+}
+
+static std::string normalize_agent_patch_response(const std::string& raw, std::string* error_out = nullptr)
+{
+    const std::string trimmed = trim_copy(raw);
+    if (trimmed.empty()) {
+        if (error_out) {
+            *error_out = "empty model response";
+        }
+        return {};
+    }
+
+    if (looks_like_no_patch(trimmed)) {
+        if (error_out) {
+            *error_out = "model returned NO_PATCH";
+        }
+        return {};
+    }
+
+    std::string tagged = extract_tagged_patch(trimmed);
+    if (!tagged.empty()) {
+        std::string diff = strip_to_unified_diff(tagged);
+        if (is_strict_unified_diff(diff)) {
+            return diff;
+        }
+    }
+
+    std::string fenced = extract_fenced_diff(trimmed);
+    if (!fenced.empty()) {
+        std::string diff = strip_to_unified_diff(fenced);
+        if (is_strict_unified_diff(diff)) {
+            return diff;
+        }
+    }
+
+    std::string diff = strip_to_unified_diff(trimmed);
+    if (is_strict_unified_diff(diff)) {
+        return diff;
+    }
+
+    if (error_out) {
+        *error_out = "model did not emit a strict unified diff";
+    }
+    return {};
 }
 
 // Run a command in a subprocess and return exit code.
@@ -208,19 +625,47 @@ static void write_jsonl_sample(FILE* jsonl_out, const TaskResult& result, size_t
         return;
     }
 
+    auto json_escape = [](const std::string& s) {
+        std::string out;
+        out.reserve(s.size() + 16);
+        for (char c : s) {
+            switch (c) {
+            case '\\': out += "\\\\"; break;
+            case '"': out += "\\\""; break;
+            case '\n': out += "\\n"; break;
+            case '\r': out += "\\r"; break;
+            case '\t': out += "\\t"; break;
+            default: out.push_back(c); break;
+            }
+        }
+        return out;
+    };
+
     fprintf(jsonl_out,
         "{\"sample_id\": \"%s\", \"tokens_requested\": %llu, "
         "\"tokens_effective\": %llu, \"kv_budget_bytes\": %llu, "
         "\"adapted\": %s, \"pressure_ratio\": %.6f, "
-        "\"response_length\": %zu, \"success\": %s}\n",
+        "\"has_header\": %s, \"has_hunks\": %s, "
+        "\"is_fenced\": %s, \"prose_detected\": %s, "
+        "\"response_length\": %zu, \"raw_response\": \"%s\", "
+        "\"extracted_patch\": \"%s\", \"failure_reason\": \"%s\", "
+        "\"success\": %s}\n",
         result.task_id.c_str(),
         result.tokens_requested,
         result.tokens_effective,
         result.kv_budget_bytes,
         result.adapted ? "true" : "false",
-        result.pressure_ratio,
+        prompt << "7. CRITICAL: Modify ONLY the file: " << target_files[0] << "\n";
+        result.has_header ? "true" : "false",
+        result.has_hunks ? "true" : "false",
+        result.is_fenced ? "true" : "false",
+        result.prose_detected ? "true" : "false",
         response_length,
+        json_escape(result.raw_response).c_str(),
+        json_escape(result.emitted_patch).c_str(),
+        json_escape(result.failure_reason).c_str(),
         (result.status == TaskStatus::FAILED) ? "false" : "true");
+    fflush(jsonl_out);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -229,9 +674,17 @@ static void write_jsonl_sample(FILE* jsonl_out, const TaskResult& result, size_t
 
 class Harness {
 public:
-    explicit Harness(bool run_tests = false, FILE* jsonl_out = nullptr)
-        : m_run_tests(run_tests), m_jsonl_out(jsonl_out) {}
-
+    explicit Harness(
+        bool run_tests = false,
+        FILE* jsonl_out = nullptr,
+        const char* progress_json_path = nullptr,
+        const char* raw_dump_dir = nullptr)
+        : m_run_tests(run_tests),
+          m_jsonl_out(jsonl_out),
+          m_progress_json_path(progress_json_path),
+          m_raw_dump_dir(raw_dump_dir) {}
+        prompt << "Copy the structure of the valid examples, but use the real file paths and hunks for the task below.\n";
+        prompt << "If the correct fix needs multiple files, include all of them in one unified diff response.\n\n";
     void add_instance(Instance inst) { m_instances.push_back(std::move(inst)); }
 
     HarnessReport run(AgentFn agent)
@@ -250,8 +703,11 @@ public:
             } catch (const std::exception& ex) {
                 res.status = TaskStatus::FAILED;
                 res.failure_reason = ex.what();
-                write_jsonl_sample(m_jsonl_out, res, 0);
+                maybe_dump_raw_response(res);
+                write_jsonl_sample(m_jsonl_out, res, res.raw_response.empty() ? 0 : res.raw_response.size());
                 report.results.push_back(res);
+                recompute_report_metrics(report, m_run_tests);
+                checkpoint_report(report);
                 continue;
             }
             auto t1 = std::chrono::steady_clock::now();
@@ -263,8 +719,11 @@ public:
                 if (res.failure_reason.empty()) {
                     res.failure_reason = "agent returned empty patch";
                 }
-                write_jsonl_sample(m_jsonl_out, res, 0);
+                maybe_dump_raw_response(res);
+                write_jsonl_sample(m_jsonl_out, res, res.raw_response.empty() ? 0 : res.raw_response.size());
                 report.results.push_back(res);
+                recompute_report_metrics(report, m_run_tests);
+                checkpoint_report(report);
                 continue;
             }
 
@@ -294,39 +753,62 @@ public:
                 }
             }
 
-            write_jsonl_sample(m_jsonl_out, res, res.emitted_patch.size());
+            maybe_dump_raw_response(res);
+            write_jsonl_sample(m_jsonl_out, res,
+                res.raw_response.empty() ? res.emitted_patch.size() : res.raw_response.size());
             report.results.push_back(res);
+            recompute_report_metrics(report, m_run_tests);
+            checkpoint_report(report);
         }
 
-        // Compute rates
-        if (report.total > 0) {
-            report.task_completion_rate =
-                static_cast<double>(report.completed) / report.total;
-            report.patch_correctness = (report.completed > 0)
-                ? static_cast<double>(report.patch_correct) / report.total
-                : 0.0;
-            report.test_pass_rate = (m_run_tests && !m_instances.empty())
-                ? static_cast<double>(report.tests_passed) / report.total
-                : report.patch_correctness; // fallback: use patch score
-        }
-
-        // Harmonic mean of the three non-zero metrics
-        double comp  = report.task_completion_rate;
-        double patch = report.patch_correctness;
-        double test  = report.test_pass_rate;
-        if (comp > 0.0 && patch > 0.0 && test > 0.0) {
-            report.overall_score = 3.0 / (1.0 / comp + 1.0 / patch + 1.0 / test);
-        } else {
-            report.overall_score = (comp + patch + test) / 3.0;
-        }
+        recompute_report_metrics(report, m_run_tests);
+        checkpoint_report(report);
 
         return report;
     }
 
 private:
+    void maybe_dump_raw_response(const TaskResult& result) const
+    {
+        if (!m_raw_dump_dir || !m_raw_dump_dir[0] || result.raw_response.empty()) {
+            return;
+        }
+
+        const std::string dir = m_raw_dump_dir;
+        if (!CreateDirectoryA(dir.c_str(), nullptr)) {
+            const DWORD err = GetLastError();
+            if (err != ERROR_ALREADY_EXISTS) {
+                return;
+            }
+        }
+
+        std::string path = dir;
+        if (!path.empty() && path.back() != '\\' && path.back() != '/') {
+            path.push_back('\\');
+        }
+        path += sanitize_task_id_for_path(result.task_id);
+        path += ".raw.txt";
+
+        FILE* f = nullptr;
+        if (fopen_s(&f, path.c_str(), "wb") != 0 || !f) {
+            return;
+        }
+        fwrite(result.raw_response.data(), 1, result.raw_response.size(), f);
+        fclose(f);
+    }
+
+    void checkpoint_report(const HarnessReport& report) const
+    {
+        if (m_progress_json_path && m_progress_json_path[0]) {
+            write_json_report(report, m_progress_json_path);
+        }
+    }
+
     std::vector<Instance> m_instances;
     bool                  m_run_tests;
     FILE*                 m_jsonl_out;
+    const char*           m_progress_json_path;
+    const char*           m_raw_dump_dir;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -403,6 +885,7 @@ static bool write_json_report(const HarnessReport& r, const char* path)
     fprintf(f, "  \"patch_correctness\": %.4f,\n",    r.patch_correctness);
     fprintf(f, "  \"test_pass_rate\": %.4f,\n",       r.test_pass_rate);
     fprintf(f, "  \"overall_score\": %.4f,\n",        r.overall_score);
+    fprintf(f, "  \"pass@1\": %.4f,\n",               r.overall_score);
     fprintf(f, "  \"results\": [\n");
     for (size_t i = 0; i < r.results.size(); ++i) {
         const auto& t = r.results[i];
@@ -410,6 +893,10 @@ static bool write_json_report(const HarnessReport& r, const char* path)
         fprintf(f,
             "    {\"task_id\": \"%s\", \"status\": %d, \"patch_match\": %s, "
             "\"tests_passed\": %s, \"elapsed_ms\": %.2f, \"failure_reason\": \"%s\", "
+            "\"response\": \"%s\", "
+            "\"raw_response\": \"%s\", "
+            "\"has_header\": %s, \"has_hunks\": %s, "
+            "\"is_fenced\": %s, \"prose_detected\": %s, "
             "\"tokens_requested\": %llu, \"tokens_effective\": %llu, "
             "\"kv_budget_bytes\": %llu, \"adapted\": %s, "
             "\"pressure_ratio\": %.4f}%s\n",
@@ -419,6 +906,12 @@ static bool write_json_report(const HarnessReport& r, const char* path)
             t.tests_passed ? "true" : "false",
             t.elapsed_ms,
             json_escape(t.failure_reason).c_str(),
+            json_escape(t.emitted_patch).c_str(),
+            json_escape(t.raw_response).c_str(),
+            t.has_header ? "true" : "false",
+            t.has_hunks ? "true" : "false",
+            t.is_fenced ? "true" : "false",
+            t.prose_detected ? "true" : "false",
             t.tokens_requested,
             t.tokens_effective,
             t.kv_budget_bytes,
@@ -568,9 +1061,66 @@ struct MinimalOllamaClient {
     std::string host;
     int port;
     std::string model;
+    bool debug_http = false;
 
-    explicit MinimalOllamaClient(const std::string& h = "127.0.0.1", int p = 11435, const std::string& m = "mistral")
-        : host(h), port(p), model(m) {}
+    static void NormalizeHostAndPortLocal(const std::string& input, std::string& out_host, WORD& out_port)
+    {
+        out_host.clear();
+        out_port = 11434;
+
+        std::string value = input;
+        const size_t scheme_pos = value.find("://");
+        if (scheme_pos != std::string::npos) {
+            value = value.substr(scheme_pos + 3);
+        }
+
+        const size_t path_pos = value.find('/');
+        if (path_pos != std::string::npos) {
+            value = value.substr(0, path_pos);
+        }
+
+        while (!value.empty() && value.back() == '/') {
+            value.pop_back();
+        }
+
+        if (value.empty()) {
+            return;
+        }
+
+        const size_t colon_pos = value.rfind(':');
+        if (colon_pos != std::string::npos && colon_pos + 1 < value.size()) {
+            out_host = value.substr(0, colon_pos);
+            try {
+                const int parsed_port = std::stoi(value.substr(colon_pos + 1));
+                if (parsed_port > 0 && parsed_port <= 65535) {
+                    out_port = static_cast<WORD>(parsed_port);
+                }
+            } catch (...) {
+            }
+            if (out_host.empty()) {
+                out_host = value;
+            }
+            return;
+        }
+
+        out_host = value;
+    }
+
+    explicit MinimalOllamaClient(const std::string& h = "127.0.0.1", int p = 11434, const std::string& m = "mistral")
+        : port(11434), model(m)
+    {
+        WORD normalized_port = 11434;
+        NormalizeHostAndPortLocal(h, host, normalized_port);
+        if (host.empty()) {
+            host = "127.0.0.1";
+        }
+
+        if (p > 0 && p <= 65535) {
+            port = p;
+        } else {
+            port = static_cast<int>(normalized_port);
+        }
+    }
 
     static std::string escape_json(const std::string& s)
     {
@@ -602,6 +1152,20 @@ struct MinimalOllamaClient {
                 case 't': out.push_back('\t'); break;
                 case '\\': out.push_back('\\'); break;
                 case '"': out.push_back('"'); break;
+                case 'u': {
+                    if (i + 4 < s.size()) {
+                        const std::string hex = s.substr(i + 1, 4);
+                        char* end_ptr = nullptr;
+                        const long codepoint = std::strtol(hex.c_str(), &end_ptr, 16);
+                        if (end_ptr && *end_ptr == '\0' && codepoint >= 0 && codepoint <= 0x7F) {
+                            out.push_back(static_cast<char>(codepoint));
+                            i += 4;
+                            break;
+                        }
+                    }
+                    out.push_back('u');
+                    break;
+                }
                 default: out.push_back(n); break;
                 }
             } else {
@@ -609,6 +1173,68 @@ struct MinimalOllamaClient {
             }
         }
         return out;
+    }
+
+    static bool extract_json_string(const std::string& raw, const std::string& key, std::string& out)
+    {
+        std::string needle = "\"" + key + "\":\"";
+        size_t pos = raw.find(needle);
+        if (pos == std::string::npos) {
+            return false;
+        }
+
+        size_t start = pos + needle.size();
+        size_t end = start;
+        while (end < raw.size()) {
+            if (raw[end] == '\\' && end + 1 < raw.size()) {
+                end += 2;
+                continue;
+            }
+            if (raw[end] == '"') {
+                break;
+            }
+            ++end;
+        }
+
+        out = unescape_json(raw.substr(start, end - start));
+        return true;
+    }
+
+    static std::string parse_ollama_response(const std::string& raw, std::string* error_out = nullptr)
+    {
+        std::string value;
+        if (extract_json_string(raw, "error", value)) {
+            if (error_out) {
+                *error_out = value;
+            }
+            return {};
+        }
+
+        if (extract_json_string(raw, "response", value)) {
+            return value;
+        }
+
+        size_t resultsPos = raw.find("\"results\"");
+        if (resultsPos != std::string::npos) {
+            std::string suffix = raw.substr(resultsPos);
+            if (extract_json_string(suffix, "response", value)) {
+                return value;
+            }
+            if (extract_json_string(suffix, "content", value)) {
+                return value;
+            }
+        }
+
+        size_t choicesPos = raw.find("\"choices\"");
+        if (choicesPos != std::string::npos) {
+            std::string suffix = raw.substr(choicesPos);
+            if (extract_json_string(suffix, "content", value)) {
+                return value;
+            }
+        }
+
+        // Fallback: return raw body so harness can still treat non-empty output as a response.
+        return raw;
     }
 
     static std::wstring utf8_to_wide(const std::string& s)
@@ -641,10 +1267,16 @@ struct MinimalOllamaClient {
 
     std::string Generate(const std::string& prompt, int max_tokens = 2048, std::string* error_out = nullptr) const
     {
+        const int request_max_tokens = (max_tokens > 0)
+        ? std::min(max_tokens, 8192)
+        : 2048;
+
         std::string body =
             "{\"model\":\"" + escape_json(model) +
             "\",\"prompt\":\"" + escape_json(prompt) +
-            "\",\"stream\":false,\"options\":{\"num_predict\":" + std::to_string(max_tokens) + "}}";
+            "\",\"stream\":false,\"max_tokens\":" + std::to_string(request_max_tokens) +
+            ",\"num_predict\":" + std::to_string(request_max_tokens) +
+            ",\"options\":{\"num_predict\":" + std::to_string(request_max_tokens) + "}}";
 
         std::wstring whost = utf8_to_wide(host);
         if (whost.empty()) {
@@ -665,7 +1297,15 @@ struct MinimalOllamaClient {
             return {};
         }
 
-        WinHttpSetTimeouts(session, 5000, 5000, 10000, 120000);
+        int recv_timeout_ms = 240000;
+        const char* env_recv_timeout = getenv("RAWRXD_SWEBENCH_RECV_TIMEOUT_MS");
+        if (env_recv_timeout && env_recv_timeout[0]) {
+            const int parsed = atoi(env_recv_timeout);
+            if (parsed > 0) {
+                recv_timeout_ms = parsed;
+            }
+        }
+        WinHttpSetTimeouts(session, 5000, 5000, 10000, recv_timeout_ms);
 
         HINTERNET connection = WinHttpConnect(session, whost.c_str(), static_cast<INTERNET_PORT>(port), 0);
         if (!connection) {
@@ -713,6 +1353,35 @@ struct MinimalOllamaClient {
             return {};
         }
 
+        DWORD status_code = 0;
+        DWORD status_size = sizeof(status_code);
+        if (WinHttpQueryHeaders(request,
+                                 WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
+                                 WINHTTP_HEADER_NAME_BY_INDEX,
+                                 &status_code,
+                                 &status_size,
+                                 WINHTTP_NO_HEADER_INDEX)) {
+            if (debug_http) {
+                fprintf(stdout,
+                    "[SWE][HTTP] POST /api/generate host=%s port=%d status=%lu num_predict=%d recv_timeout_ms=%d\n",
+                    host.c_str(),
+                    port,
+                    static_cast<unsigned long>(status_code),
+                    request_max_tokens,
+                    recv_timeout_ms);
+                fflush(stdout);
+            }
+            if (status_code != 200) {
+                if (error_out) {
+                    *error_out = "HTTP status=" + std::to_string(status_code);
+                }
+                WinHttpCloseHandle(request);
+                WinHttpCloseHandle(connection);
+                WinHttpCloseHandle(session);
+                return {};
+            }
+        }
+
         for (;;) {
             DWORD available = 0;
             if (!WinHttpQueryDataAvailable(request, &available) || available == 0) {
@@ -739,41 +1408,23 @@ struct MinimalOllamaClient {
             return {};
         }
 
-        const std::string error_key = "\"error\":\"";
-        size_t error_pos = raw.find(error_key);
-        if (error_pos != std::string::npos) {
-            size_t start = error_pos + error_key.size();
-            std::string encoded_error;
-            for (size_t i = start; i < raw.size(); ++i) {
-                if (raw[i] == '"' && (i == start || raw[i - 1] != '\\')) {
-                    break;
-                }
-                encoded_error.push_back(raw[i]);
-            }
-            if (error_out) {
-                *error_out = unescape_json(encoded_error);
-            }
-            return {};
+        if (debug_http) {
+            fprintf(stdout,
+                "[SWE][HTTP] response_bytes=%zu\n",
+                raw.size());
+            fprintf(stdout,
+                "[SWE][HTTP] raw_generate_body=%s\n",
+                raw.c_str());
+            fflush(stdout);
         }
 
-        const std::string key = "\"response\":\"";
-        size_t pos = raw.find(key);
-        if (pos == std::string::npos) {
-            if (error_out) {
-                *error_out = "response field missing";
-            }
+        std::string parsed = parse_ollama_response(raw, error_out);
+        if (parsed.empty() && error_out && !raw.empty()) {
+            // preserve raw response when parsing fails, but signal the issue
+            *error_out = "could not parse response; raw body returned";
             return raw;
         }
-
-        size_t start = pos + key.size();
-        std::string encoded;
-        for (size_t i = start; i < raw.size(); ++i) {
-            if (raw[i] == '"' && (i == start || raw[i - 1] != '\\')) {
-                break;
-            }
-            encoded.push_back(raw[i]);
-        }
-        return unescape_json(encoded);
+        return parsed;
     }
 
     std::string HttpGet(const std::string& path, std::string* error_out = nullptr) const
@@ -788,7 +1439,7 @@ struct MinimalOllamaClient {
 
         std::string raw;
         HINTERNET session = WinHttpOpen(L"RawrXD-SWEBench/1.0",
-                                        WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
+                                        WINHTTP_ACCESS_TYPE_NO_PROXY,
                                         WINHTTP_NO_PROXY_NAME,
                                         WINHTTP_NO_PROXY_BYPASS,
                                         0);
@@ -799,7 +1450,15 @@ struct MinimalOllamaClient {
             return {};
         }
 
-        WinHttpSetTimeouts(session, 5000, 5000, 10000, 120000);
+        int recv_timeout_ms = 240000;
+        const char* env_recv_timeout = getenv("RAWRXD_SWEBENCH_RECV_TIMEOUT_MS");
+        if (env_recv_timeout && env_recv_timeout[0]) {
+            const int parsed = atoi(env_recv_timeout);
+            if (parsed > 0) {
+                recv_timeout_ms = parsed;
+            }
+        }
+        WinHttpSetTimeouts(session, 5000, 5000, 10000, recv_timeout_ms);
 
         HINTERNET connection = WinHttpConnect(session, whost.c_str(), static_cast<INTERNET_PORT>(port), 0);
         if (!connection) {
@@ -895,6 +1554,17 @@ struct MinimalOllamaClient {
         if (raw.empty() && error_out) {
             *error_out = "empty HTTP response body";
         }
+
+        if (debug_http && !raw.empty()) {
+            fprintf(stdout,
+                "[SWE][HTTP] GET %s host=%s port=%d raw_body=%s\n",
+                path.c_str(),
+                host.c_str(),
+                port,
+                raw.c_str());
+            fflush(stdout);
+        }
+
         return raw;
     }
 
@@ -933,6 +1603,8 @@ struct MinimalOllamaClient {
 
 struct RealAgentContext {
     MinimalOllamaClient* ollama_client = nullptr;
+    bool debug_runtime = false;
+    int max_output_tokens = 0;
 };
 
 static std::string invoke_real_agent(
@@ -947,18 +1619,51 @@ static std::string invoke_real_agent(
 
     try {
         std::string transport_error;
-        const int max_tokens = result_out.tokens_effective > 0
+        int max_tokens = result_out.tokens_effective > 0
             ? static_cast<int>(std::min<uint64_t>(
                 result_out.tokens_effective,
                 static_cast<uint64_t>(std::numeric_limits<int>::max())))
             : 2048;
+
+        if (ctx->max_output_tokens > 0) {
+            max_tokens = std::min(max_tokens, ctx->max_output_tokens);
+        }
+
+        if (ctx->debug_runtime) {
+            fprintf(stdout,
+                "[SWE][BUDGET] task=%s requested=%llu effective=%llu adapted=%s pressure=%.4f max_tokens=%d\n",
+                inst.task_id.c_str(),
+                static_cast<unsigned long long>(result_out.tokens_requested),
+                static_cast<unsigned long long>(result_out.tokens_effective),
+                result_out.adapted ? "true" : "false",
+                result_out.pressure_ratio,
+                max_tokens);
+            fflush(stdout);
+        }
+
+        // Extract target files from gold patch to enable file-lock constraint
+        const std::vector<std::string> target_files =
+            SWEBench::extract_target_files_from_patch(inst.gold_patch);
+
         std::string response =
-            ctx->ollama_client->Generate(inst.problem_stmt, max_tokens, &transport_error);
+            ctx->ollama_client->Generate(SWEBench::build_patch_only_prompt(inst, target_files), max_tokens, &transport_error);
         if (response.empty()) {
             result_out.failure_reason = transport_error.empty() ? "empty response from Ollama" : transport_error;
             return {};
         }
-        return response;
+        result_out.raw_response = response;
+        SWEBench::populate_response_compliance(result_out);
+
+        std::string normalization_error;
+        std::string patch = SWEBench::normalize_agent_patch_response(response, &normalization_error);
+        if (patch.empty()) {
+            result_out.failure_reason = normalization_error.empty()
+                ? "model did not emit a strict unified diff"
+                : normalization_error;
+            return {};
+        }
+
+        return patch;
     } catch (const std::exception& ex) {
         result_out.failure_reason = std::string("inference exception: ") + ex.what();
         return {};
@@ -972,12 +1677,21 @@ static std::string invoke_real_agent(
 // Usage:
 //   swe_bench.exe [--json <output.json>] [--jsonl <telemetry.jsonl>] [--run-tests]
 //                 [--dataset <instances.jsonl>] [--real-agent] [--model <name>]
-//                 [--port <num>] [--list-models]
+//                 [--host <host>] [--port <num>] [--list-models] [--debug-http]
+//                 [--verbose] [--max-tasks <N>] [--max-output-tokens <N>]
+//                 [--dump-raw-responses <dir>] [--raw-dump-dir <dir>]
 //
 // --real-agent     Use live Ollama HTTP endpoint (requires Ollama running)
 // --list-models    Print installed Ollama models and exit
 // --model          Use the specified Ollama model name
+// --host           Connect to Ollama at this hostname or IP
 // --port           Connect to Ollama on this HTTP port
+// --debug-http     Emit HTTP status/budget debug lines to stdout
+// --verbose        Alias for --debug-http plus raw JSON body dumps
+// --max-tasks      Limit number of evaluation instances processed
+// --max-output-tokens  Cap generated completion tokens for bounded smoke tests
+// --dump-raw-responses  Write per-task raw model responses into <dir>
+// --raw-dump-dir        Alias for --dump-raw-responses
 // --run-tests      Run task test commands when available
 // --json           Output JSON report to this file
 // --jsonl          Output per-sample telemetry to this file
@@ -990,17 +1704,24 @@ int main(int argc, char** argv)
     bool        use_real_agent = false;
     bool        run_tests     = false;
     bool        list_models   = false;
+    bool        debug_http    = false;
+    bool        verbose       = false;
     const char* json_out      = nullptr;
     const char* jsonl_out     = nullptr;
     const char* dataset_path  = nullptr;
     const char* model_name    = nullptr;
+    const char* host_name     = nullptr;
+    const char* raw_dump_dir  = nullptr;
     int         ollama_port   = 11434;
+    int         max_tasks     = -1;
+    int         max_output_tokens = 0;
 
     for (int i = 1; i < argc; ++i) {
         if (strcmp(argv[i], "--real-agent") == 0) {
             use_real_agent = true;
         } else if (strcmp(argv[i], "--list-models") == 0) {
             list_models = true;
+            use_real_agent = true;
         } else if (strcmp(argv[i], "--run-tests") == 0) {
             run_tests = true;
         } else if (strcmp(argv[i], "--json") == 0 && i + 1 < argc) {
@@ -1013,7 +1734,25 @@ int main(int argc, char** argv)
             model_name = argv[++i];
         } else if (strcmp(argv[i], "--port") == 0 && i + 1 < argc) {
             ollama_port = atoi(argv[++i]);
+        } else if (strcmp(argv[i], "--host") == 0 && i + 1 < argc) {
+            host_name = argv[++i];
+        } else if (strcmp(argv[i], "--debug-http") == 0) {
+            debug_http = true;
+        } else if (strcmp(argv[i], "--verbose") == 0) {
+            verbose = true;
+        } else if (strcmp(argv[i], "--max-tasks") == 0 && i + 1 < argc) {
+            max_tasks = atoi(argv[++i]);
+        } else if (strcmp(argv[i], "--max-output-tokens") == 0 && i + 1 < argc) {
+            max_output_tokens = atoi(argv[++i]);
+        } else if ((strcmp(argv[i], "--dump-raw-responses") == 0 ||
+                    strcmp(argv[i], "--raw-dump-dir") == 0) &&
+                   i + 1 < argc) {
+            raw_dump_dir = argv[++i];
         }
+    }
+
+    if (verbose) {
+        debug_http = true;
     }
 
     fprintf(stdout,
@@ -1033,6 +1772,11 @@ int main(int argc, char** argv)
     if (instances.empty()) {
         fprintf(stderr, "Error: no instances to evaluate\n");
         return 1;
+    }
+
+    if (max_tasks > 0 && static_cast<size_t>(max_tasks) < instances.size()) {
+        instances.resize(static_cast<size_t>(max_tasks));
+        fprintf(stdout, "Limiting evaluation to %d instance(s) via --max-tasks\n", max_tasks);
     }
 
     fprintf(stdout, "Loaded %zu instances\n", instances.size());
@@ -1061,6 +1805,19 @@ int main(int argc, char** argv)
             if (env_port && env_port[0]) {
                 ollama_port = atoi(env_port);
             }
+            const char* env_host = getenv("RAWRXD_SWEBENCH_HOST");
+            if (!env_host || !env_host[0]) {
+                env_host = getenv("OLLAMA_HOST");
+            }
+            const char* env_debug = getenv("RAWRXD_SWEBENCH_DEBUG_HTTP");
+            if (env_debug && env_debug[0] && strcmp(env_debug, "0") != 0) {
+                debug_http = true;
+            }
+
+            std::string chosen_host = host_name && host_name[0] ? host_name : "127.0.0.1";
+            if (env_host && env_host[0]) {
+                chosen_host = env_host;
+            }
 
             std::string chosen_model;
             if (model_name && model_name[0]) {
@@ -1069,7 +1826,8 @@ int main(int argc, char** argv)
                 chosen_model = env_model;
             }
 
-            MinimalOllamaClient ollama("127.0.0.1", ollama_port, chosen_model);
+            MinimalOllamaClient ollama(chosen_host, ollama_port, chosen_model);
+            ollama.debug_http = debug_http;
 
             if (list_models) {
                 std::string discover_error;
@@ -1106,8 +1864,10 @@ int main(int argc, char** argv)
             fprintf(stdout, "[INFO] Using Ollama model: %s on port %d\n", chosen_model.c_str(), ollama_port);
             RealAgentContext ctx;
             ctx.ollama_client = &ollama;
+            ctx.debug_runtime = debug_http;
+            ctx.max_output_tokens = max_output_tokens;
 
-            SWEBench::Harness harness(run_tests, jsonl_file);
+            SWEBench::Harness harness(run_tests, jsonl_file, json_out, raw_dump_dir);
             for (auto& inst : instances) {
                 harness.add_instance(std::move(inst));
             }
@@ -1127,7 +1887,7 @@ int main(int argc, char** argv)
         fprintf(stdout, "\n[INFO] Running self-test with null agent...\n");
         fprintf(stdout, "      (Use --real-agent flag for live inference evaluation)\n\n");
 
-        SWEBench::Harness harness(run_tests, jsonl_file);
+        SWEBench::Harness harness(run_tests, jsonl_file, json_out, raw_dump_dir);
         for (auto& inst : instances) {
             harness.add_instance(std::move(inst));
         }
@@ -1139,7 +1899,9 @@ int main(int argc, char** argv)
         report = harness.run(null_agent);
     }
 
-    SWEBench::print_report(report);
+    if (jsonl_file) {
+        fflush(jsonl_file);
+    }
 
     if (json_out) {
         if (SWEBench::write_json_report(report, json_out)) {
@@ -1148,6 +1910,8 @@ int main(int argc, char** argv)
             fprintf(stderr, "Warning: failed to write JSON report to: %s\n", json_out);
         }
     }
+
+    SWEBench::print_report(report);
 
     if (jsonl_file) {
         fclose(jsonl_file);
