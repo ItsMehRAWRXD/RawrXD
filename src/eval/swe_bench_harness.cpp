@@ -126,6 +126,11 @@ struct TaskResult {
     double       fuzzy_patch_score  = 0.0;          // edit-distance ratio to gold patch [0,1]
     // E68: API error classification
     std::string  api_error_class;                   // timeout|context_exceeded|empty_body|http_error|oom_kill|malformed_json|model_refused|format_error|network|unknown|none
+    // Enhancement batch 3 telemetry
+    int          emitted_patch_lines = 0;           // line count of emitted patch
+    int          gold_patch_lines    = 0;           // line count of gold patch
+    double       patch_jaccard_similarity = 0.0;    // Jaccard line-set overlap vs gold [0,1]
+    std::string  wall_clock_ts;                     // ISO UTC timestamp at task start
 };
 
 struct HarnessReport {
@@ -415,7 +420,8 @@ static std::string build_patch_only_prompt(
     size_t max_context_bytes_per_file = 2500,
     size_t max_context_total_bytes = 5000,
     size_t max_context_files = 2,
-    size_t* context_bytes_out = nullptr)
+    size_t* context_bytes_out = nullptr,
+    bool hints_enabled = true)
 {
     std::ostringstream prompt;
     prompt << "You are an expert software engineering evaluation agent.\n";
@@ -474,7 +480,7 @@ static std::string build_patch_only_prompt(
     prompt << "Base commit: " << inst.base_commit << "\n\n";
     prompt << "Problem statement:\n" << inst.problem_stmt << "\n\n";
 
-    if (!inst.hints_text.empty()) {
+    if (hints_enabled && !inst.hints_text.empty()) {
         prompt << "Hints:\n" << inst.hints_text << "\n\n";
     }
 
@@ -838,7 +844,15 @@ static void populate_context_telemetry(const Instance& inst, TaskResult& result)
     result.pressure_ratio = decision.pressure_ratio;
 }
 
-static void write_jsonl_model_fingerprint(FILE* jsonl_out, const std::string& model, const std::string& host, int port)
+static void write_jsonl_model_fingerprint(
+    FILE* jsonl_out,
+    const std::string& model,
+    const std::string& host,
+    int port,
+    const std::string& model_alias,
+    int seed,
+    int retry_count,
+    bool strict_mode)
 {
     if (!jsonl_out) {
         return;
@@ -847,14 +861,25 @@ static void write_jsonl_model_fingerprint(FILE* jsonl_out, const std::string& mo
         std::string out; out.reserve(s.size() + 8);
         for (char c : s) {
             if (c == '\\') out += "\\\\";
-            else if (c == '"') out += "\\""";
+            else if (c == '"') out += "\\\"";
             else out.push_back(c);
         }
         return out;
     };
+    const long long run_id = static_cast<long long>(
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch()).count());
     fprintf(jsonl_out,
-        "{\"type\":\"model_info\",\"model\":\"%s\",\"host\":\"%s\",\"port\":%d}\n",
-        json_esc(model).c_str(), json_esc(host).c_str(), port);
+        "{\"type\":\"model_info\",\"run_id\":%lld,\"model\":\"%s\",\"model_alias\":\"%s\","
+        "\"host\":\"%s\",\"port\":%d,\"seed\":%d,\"retry_count\":%d,\"strict_mode\":%s}\n",
+        run_id,
+        json_esc(model).c_str(),
+        json_esc(model_alias).c_str(),
+        json_esc(host).c_str(),
+        port,
+        seed,
+        retry_count,
+        strict_mode ? "true" : "false");
     fflush(jsonl_out);
 }
 
@@ -918,9 +943,9 @@ static std::string classify_api_error(const std::string& failure_reason)
 
 // E66: Load already-scored task_ids from an existing partial JSONL file.
 // Used by --resume mode to skip tasks that survived a previous crash.
-static std::set<std::string> load_completed_task_ids_from_jsonl(const char* jsonl_path)
+static std::unordered_set<std::string> load_completed_task_ids_from_jsonl(const char* jsonl_path)
 {
-    std::set<std::string> done;
+    std::unordered_set<std::string> done;
     if (!jsonl_path || !jsonl_path[0]) {
         return done;
     }
@@ -970,6 +995,52 @@ static double compute_fuzzy_patch_score(const std::string& a, const std::string&
     return 1.0 - static_cast<double>(dist) / static_cast<double>(max_len);
 }
 
+static int compute_patch_line_count(const std::string& patch)
+{
+    if (patch.empty()) return 0;
+    int count = 0;
+    for (char c : patch) { if (c == '\n') ++count; }
+    if (!patch.empty() && patch.back() != '\n') ++count;
+    return count;
+}
+
+static double compute_jaccard_patch_score(const std::string& a, const std::string& b)
+{
+    if (a.empty() && b.empty()) return 1.0;
+    if (a.empty() || b.empty()) return 0.0;
+    auto build_line_set = [](const std::string& s) {
+        std::unordered_set<std::string> lines;
+        std::istringstream in(s);
+        std::string ln;
+        while (std::getline(in, ln)) {
+            if (!ln.empty() && ln.back() == '\r') ln.pop_back();
+            if (!ln.empty()) lines.insert(ln);
+        }
+        return lines;
+    };
+    const auto sa = build_line_set(a);
+    const auto sb = build_line_set(b);
+    size_t intersect = 0;
+    for (const auto& ln : sa) {
+        if (sb.count(ln)) ++intersect;
+    }
+    const size_t union_size = sa.size() + sb.size() - intersect;
+    if (union_size == 0) return 1.0;
+    return static_cast<double>(intersect) / static_cast<double>(union_size);
+}
+
+static std::string get_wall_clock_ts()
+{
+    SYSTEMTIME st = {};
+    GetSystemTime(&st);
+    char buf[32];
+    snprintf(buf, sizeof(buf), "%04u-%02u-%02u %02u:%02u:%02u",
+        static_cast<unsigned>(st.wYear),  static_cast<unsigned>(st.wMonth),
+        static_cast<unsigned>(st.wDay),   static_cast<unsigned>(st.wHour),
+        static_cast<unsigned>(st.wMinute), static_cast<unsigned>(st.wSecond));
+    return buf;
+}
+
 static void write_jsonl_sample(FILE* jsonl_out, const TaskResult& result, size_t response_length)
 {
     if (!jsonl_out) {
@@ -1008,7 +1079,11 @@ static void write_jsonl_sample(FILE* jsonl_out, const TaskResult& result, size_t
         "\"extracted_patch\": \"%s\", \"failure_reason\": \"%s\", "
         "\"strict_validation_error\": \"%s\", "
         "\"model_alias\": \"%s\", \"prompt_byte_count\": %llu, "
-        "\"fuzzy_patch_score\": %.4f, "
+        "\"fuzzy_patch_score\": %.4f, \"patch_similarity\": %.4f, "
+        "\"strict_compliance\": %s, \"retry_attempts\": %d, "
+        "\"api_error_class\": \"%s\", "
+        "\"emitted_patch_lines\": %d, \"gold_patch_lines\": %d, "
+        "\"patch_jaccard_similarity\": %.4f, \"wall_clock_ts\": \"%s\", "
         "\"success\": %s}\n",
         result.task_id.c_str(),
         result.tokens_requested,
@@ -1039,7 +1114,14 @@ static void write_jsonl_sample(FILE* jsonl_out, const TaskResult& result, size_t
         json_escape(result.model_alias).c_str(),
         result.prompt_byte_count,
         result.fuzzy_patch_score,
+        result.patch_similarity,
+        result.strict_compliance ? "true" : "false",
+        result.retry_attempts,
         json_escape(result.api_error_class).c_str(),
+        result.emitted_patch_lines,
+        result.gold_patch_lines,
+        result.patch_jaccard_similarity,
+        json_escape(result.wall_clock_ts).c_str(),
         (result.status == TaskStatus::FAILED) ? "false" : "true");
     fflush(jsonl_out);
 }
@@ -1076,6 +1158,15 @@ public:
         }
     }
 
+    // Optional JSONL source of completed sample_ids for resume recovery.
+    // Useful when checkpoint file was not written but telemetry JSONL exists.
+    void set_resume_jsonl(const char* path)
+    {
+        if (path && path[0]) {
+            m_resume_jsonl_path = path;
+        }
+    }
+
     HarnessReport run(AgentFn agent)
     {
         // Load already-completed task IDs from checkpoint file (if any)
@@ -1094,6 +1185,21 @@ public:
                 if (!skip_ids.empty()) {
                     fprintf(stdout, "[RESUME] Skipping %zu already-completed task(s) from checkpoint\n",
                             skip_ids.size());
+                }
+            }
+        }
+        if (!m_resume_jsonl_path.empty()) {
+            std::unordered_set<std::string> from_jsonl =
+                load_completed_task_ids_from_jsonl(m_resume_jsonl_path.c_str());
+            if (!from_jsonl.empty()) {
+                size_t before = skip_ids.size();
+                skip_ids.insert(from_jsonl.begin(), from_jsonl.end());
+                size_t added = skip_ids.size() - before;
+                if (added > 0) {
+                    fprintf(stdout,
+                            "[RESUME] Added %zu task(s) from JSONL resume source: %s\n",
+                            added,
+                            m_resume_jsonl_path.c_str());
                 }
             }
         }
@@ -1148,7 +1254,7 @@ public:
                 continue;
             }
 
-            report.completed++
+            report.completed++;
             res.status = TaskStatus::COMPLETED;
 
             // Patch correctness check + fuzzy similarity score
@@ -1161,7 +1267,11 @@ public:
                 // Fuzzy score irrespective of exact match
                 res.fuzzy_patch_score = compute_fuzzy_patch_score(res.emitted_patch, inst.gold_patch);
                 res.patch_similarity  = res.fuzzy_patch_score;  // convenience alias
+                // Jaccard line-set overlap + gold line count
+                res.patch_jaccard_similarity = compute_jaccard_patch_score(res.emitted_patch, inst.gold_patch);
+                res.gold_patch_lines = compute_patch_line_count(inst.gold_patch);
             }
+            res.emitted_patch_lines = compute_patch_line_count(res.emitted_patch);
 
             // Optionally run tests
             if (m_run_tests && !inst.test_cmds.empty()) {
@@ -1183,7 +1293,7 @@ public:
             report.results.push_back(res);
             recompute_report_metrics(report, m_run_tests);
             checkpoint_report(report);
-            append_resume_checkpoint(res.task_id);
+            append_resume_checkpoint(res.task_id, skip_ids);
             emit_task_progress(res, report.results.size(), report.total);
             if (m_fail_fast && res.status == TaskStatus::FAILED) {
                 fprintf(stdout, "[FAIL-FAST] Stopping on first failure: %s\n", res.task_id.c_str());
@@ -1235,8 +1345,13 @@ private:
         }
     }
 
-    void append_resume_checkpoint(const std::string& task_id) const
+    void append_resume_checkpoint(
+        const std::string& task_id,
+        std::unordered_set<std::string>& seen_ids) const
     {
+        if (!seen_ids.insert(task_id).second) {
+            return;  // already recorded, avoid duplicate lines
+        }
         if (m_resume_checkpoint_path.empty()) return;
         FILE* f = nullptr;
         if (fopen_s(&f, m_resume_checkpoint_path.c_str(), "a") == 0 && f) {
@@ -1265,6 +1380,7 @@ private:
     const char*           m_progress_json_path;
     const char*           m_raw_dump_dir;
     std::string           m_resume_checkpoint_path;
+    std::string           m_resume_jsonl_path;
     bool                  m_fail_fast   = false;
     bool                  m_strict_mode = false;
 };
@@ -1361,9 +1477,13 @@ static bool write_json_report(const HarnessReport& r, const char* path)
             "\"target_file_count\": %d, \"single_file_lock\": %s, "
             "\"gold_hunk_count\": %d, \"context_bytes_injected\": %zu, "
             "\"strict_validation_error\": \"%s\", "
+            "\"fuzzy_patch_score\": %.4f, \"patch_similarity\": %.4f, "
+            "\"strict_compliance\": %s, \"retry_attempts\": %d, "
             "\"tokens_requested\": %llu, \"tokens_effective\": %llu, "
             "\"kv_budget_bytes\": %llu, \"adapted\": %s, "
-            "\"pressure_ratio\": %.4f}%s\n",
+            "\"pressure_ratio\": %.4f, "
+            "\"emitted_patch_lines\": %d, \"gold_patch_lines\": %d, "
+            "\"patch_jaccard_similarity\": %.4f, \"wall_clock_ts\": \"%s\"}%s\n",
             t.task_id.c_str(),
             static_cast<int>(t.status),
             t.patch_match  ? "true" : "false",
@@ -1387,11 +1507,19 @@ static bool write_json_report(const HarnessReport& r, const char* path)
             t.gold_hunk_count,
             t.context_bytes_injected,
             json_escape(t.strict_validation_error).c_str(),
+            t.fuzzy_patch_score,
+            t.patch_similarity,
+            t.strict_compliance ? "true" : "false",
+            t.retry_attempts,
             t.tokens_requested,
             t.tokens_effective,
             t.kv_budget_bytes,
             t.adapted ? "true" : "false",
             t.pressure_ratio,
+            t.emitted_patch_lines,
+            t.gold_patch_lines,
+            t.patch_jaccard_similarity,
+            json_escape(t.wall_clock_ts).c_str(),
             comma);
     }
     fprintf(f, "  ]\n");
@@ -1442,8 +1570,50 @@ static bool write_jsonl_summary_report(const HarnessReport& r, const char* path)
     fprintf(f, "  \"strict_validation_failures\": %d,\n", strict_failures);
     fprintf(f, "  \"no_patch_exact\": %d,\n", no_patch_exact);
     fprintf(f, "  \"responses_with_headers\": %d,\n", responses_with_headers);
-    fprintf(f, "  \"responses_with_hunks\": %d\n", responses_with_hunks);
+    double sum_fuzzy = 0.0, sum_jaccard = 0.0, sum_elapsed = 0.0;
+    for (const auto& t : r.results) {
+        sum_fuzzy   += t.fuzzy_patch_score;
+        sum_jaccard += t.patch_jaccard_similarity;
+        sum_elapsed += t.elapsed_ms;
+    }
+    const int n_results   = static_cast<int>(r.results.size());
+    const double avg_fuzzy   = n_results > 0 ? sum_fuzzy   / n_results : 0.0;
+    const double avg_jaccard = n_results > 0 ? sum_jaccard / n_results : 0.0;
+    const double avg_elapsed = n_results > 0 ? sum_elapsed / n_results : 0.0;
+    fprintf(f, "  \"responses_with_hunks\": %d,\n", responses_with_hunks);
+    fprintf(f, "  \"avg_fuzzy_score\": %.4f,\n", avg_fuzzy);
+    fprintf(f, "  \"avg_jaccard_score\": %.4f,\n", avg_jaccard);
+    fprintf(f, "  \"avg_elapsed_ms\": %.2f\n", avg_elapsed);
     fprintf(f, "}\n");
+    fclose(f);
+    return true;
+}
+
+static bool write_csv_report(const HarnessReport& r, const char* path)
+{
+    if (!path || !path[0]) return false;
+    FILE* f = nullptr;
+    if (fopen_s(&f, path, "w") != 0 || !f) return false;
+    fprintf(f, "task_id,status,elapsed_ms,fuzzy_patch_score,patch_jaccard_similarity,"
+               "emitted_patch_lines,gold_patch_lines,context_bytes_injected,"
+               "gold_hunk_count,retry_attempts,api_error_class\n");
+    for (const auto& t : r.results) {
+        const char* st = "NOT_RUN";
+        switch (t.status) {
+        case TaskStatus::COMPLETED:     st = "COMPLETED";     break;
+        case TaskStatus::PATCH_CORRECT: st = "PATCH_CORRECT"; break;
+        case TaskStatus::TESTS_PASSED:  st = "TESTS_PASSED";  break;
+        case TaskStatus::FAILED:        st = "FAILED";        break;
+        default: break;
+        }
+        fprintf(f, "%s,%s,%.2f,%.4f,%.4f,%d,%d,%zu,%d,%d,%s\n",
+            t.task_id.c_str(), st, t.elapsed_ms,
+            t.fuzzy_patch_score, t.patch_jaccard_similarity,
+            t.emitted_patch_lines, t.gold_patch_lines,
+            t.context_bytes_injected, t.gold_hunk_count,
+            t.retry_attempts,
+            t.api_error_class.empty() ? "none" : t.api_error_class.c_str());
+    }
     fclose(f);
     return true;
 }
@@ -2140,6 +2310,10 @@ struct RealAgentContext {
     std::string prompt_dump_dir;
     std::string model_alias;  // telemetry label (overrides raw model string)
     int seed = -1;            // reproducibility seed; -1 = unset
+    int retry_count = 0;      // extra attempts on empty/NO_PATCH response (0 = one attempt total)
+    bool strict_mode = false; // reject is_fenced responses even when patch was extracted
+    bool hints_enabled = true;    // if false, hints_text stripped from prompt
+    size_t max_prompt_bytes = 0;  // if >0, trim context when prompt exceeds this limit
 };
 
 static std::string invoke_real_agent(
@@ -2183,16 +2357,35 @@ static std::string invoke_real_agent(
         result_out.single_file_lock = target_files.size() == 1;
         result_out.gold_hunk_count = SWEBench::raw_count_hunks(inst.gold_patch);
 
+        result_out.wall_clock_ts = SWEBench::get_wall_clock_ts();
+
         size_t context_bytes_injected = 0;
-        const std::string prompt = SWEBench::build_patch_only_prompt(
+        std::string prompt = SWEBench::build_patch_only_prompt(
             inst,
             target_files,
             ctx->source_context_enabled,
             ctx->source_context_max_bytes_per_file,
             ctx->source_context_max_total_bytes,
             ctx->source_context_max_files,
-            &context_bytes_injected);
+            &context_bytes_injected,
+            ctx->hints_enabled);
         result_out.context_bytes_injected = context_bytes_injected;
+
+        // Max-prompt-bytes guard: rebuild without context if prompt exceeds limit
+        if (ctx->max_prompt_bytes > 0 && prompt.size() > ctx->max_prompt_bytes) {
+            size_t bytes_trim = 0;
+            std::string prompt_trim = SWEBench::build_patch_only_prompt(
+                inst, target_files, false, 0, 0, 0, &bytes_trim, ctx->hints_enabled);
+            if (ctx->debug_runtime) {
+                fprintf(stdout,
+                    "[SWE][TRIM] task=%s prompt=%zu > max_prompt=%zu; context stripped\n",
+                    inst.task_id.c_str(), prompt.size(), ctx->max_prompt_bytes);
+                fflush(stdout);
+            }
+            prompt = std::move(prompt_trim);
+            context_bytes_injected = bytes_trim;
+            result_out.context_bytes_injected = bytes_trim;
+        }
 
         result_out.prompt_byte_count = static_cast<uint64_t>(prompt.size());
         result_out.model_alias = ctx->model_alias.empty()
@@ -2213,39 +2406,53 @@ static std::string invoke_real_agent(
             }
         }
 
-        std::string response =
-            ctx->ollama_client->Generate(
-                prompt,
-                max_tokens,
-                &transport_error);
-        if (response.empty()) {
-            // Retry once on transient transport fault
-            if (ctx->debug_runtime) {
+        const int max_attempts = 1 + std::max(0, ctx->retry_count);
+        for (int attempt = 0; attempt < max_attempts; ++attempt) {
+            if (attempt > 0 && ctx->debug_runtime) {
                 fprintf(stdout,
-                    "[SWE][RETRY] task=%s - empty response, retrying once\n",
-                    inst.task_id.c_str());
+                    "[SWE][RETRY] task=%s attempt=%d/%d reason=%s\n",
+                    inst.task_id.c_str(), attempt + 1, max_attempts,
+                    result_out.failure_reason.c_str());
                 fflush(stdout);
             }
-            response = ctx->ollama_client->Generate(prompt, max_tokens, &transport_error);
-        }
-        if (response.empty()) {
-            result_out.failure_reason = transport_error.empty() ? "empty response from Ollama" : transport_error;
-            return {};
-        }
-        result_out.raw_response = response;
-        SWEBench::populate_response_compliance(result_out);
 
-        std::string normalization_error;
-        std::string patch = SWEBench::normalize_agent_patch_response(response, &normalization_error);
-        if (patch.empty()) {
-            result_out.strict_validation_error = normalization_error;
-            result_out.failure_reason = normalization_error.empty()
-                ? "model did not emit a strict unified diff"
-                : normalization_error;
-            return {};
+            std::string response =
+                ctx->ollama_client->Generate(
+                    prompt,
+                    max_tokens,
+                    &transport_error);
+            if (response.empty()) {
+                result_out.failure_reason = transport_error.empty()
+                    ? "empty response from Ollama"
+                    : transport_error;
+                result_out.retry_attempts = attempt;
+                continue;
+            }
+
+            result_out.raw_response = response;
+            result_out.retry_attempts = attempt;
+            SWEBench::populate_response_compliance(result_out);
+
+            if (ctx->strict_mode && result_out.is_fenced) {
+                result_out.strict_compliance = false;
+                result_out.failure_reason = "strict_mode: fenced response rejected (is_fenced=true)";
+                continue;
+            }
+
+            std::string normalization_error;
+            std::string patch = SWEBench::normalize_agent_patch_response(response, &normalization_error);
+            if (patch.empty()) {
+                result_out.strict_validation_error = normalization_error;
+                result_out.failure_reason = normalization_error.empty()
+                    ? "model did not emit a strict unified diff"
+                    : normalization_error;
+                continue;
+            }
+
+            return patch;
         }
 
-        return patch;
+        return {};
     } catch (const std::exception& ex) {
         result_out.failure_reason = std::string("inference exception: ") + ex.what();
         return {};
@@ -2289,9 +2496,15 @@ static std::string invoke_real_agent(
 // --dataset        Load instances from JSON/JSONL file instead of built-in set
 // --timeout-ms     Override per-task receive timeout in milliseconds (default: 240000)
 // --seed           Reproducibility seed passed to Ollama options.seed (-1 = random/default)
+// --retry <N>      Retry up to N extra times on empty/NO_PATCH before marking FAILED (default: 0)
+// --fail-fast      Stop evaluation on first FAILED task
+// --strict-mode    Reject fenced (is_fenced=true) responses even when a patch was extractable
 // --model-alias    Friendly model label emitted in JSONL telemetry (default: raw model name)
 // --resume-checkpoint  Path to line-delimited checkpoint file; completed task IDs are appended
 //                      and skipped on subsequent runs for resumable sweeps
+// --no-hints           Strip hints_text from prompt (ablation: evaluate without guidance)
+// --max-prompt-bytes   If prompt exceeds this byte limit, rebuild without context (0 = off)
+// --csv                Write a compact CSV report with per-task metrics to this path
 //
 // Without --real-agent, runs null agent on built-in instances for self-test.
 
@@ -2312,15 +2525,22 @@ int main(int argc, char** argv)
     const char* jsonl_summary_path = nullptr;
     const char* model_alias   = nullptr;
     const char* resume_checkpoint = nullptr;
+    const char* resume_jsonl = nullptr;
     int         ollama_port   = 11434;
     int         max_tasks     = -1;
     int         max_output_tokens = 0;
     int         cli_timeout_ms = 0;
     int         seed          = -1;
+    int         retry_count   = 0;     // extra retries on empty/NO_PATCH (--retry N)
+    bool        fail_fast     = false; // stop sweep on first failure (--fail-fast)
+    bool        strict_mode   = false; // reject fenced responses (--strict-mode)
     bool        context_enabled = true;
     size_t      context_max_bytes = 2500;
     size_t      context_max_total_bytes = 5000;
     size_t      context_max_files = 2;
+    const char* csv_out        = nullptr;    // --csv <path>
+    bool        hints_enabled  = true;       // --no-hints: strip hints from prompt
+    size_t      max_prompt_bytes = 0;        // --max-prompt-bytes: trim context if exceeded
 
     const char* env_context_max_bytes = getenv("RAWRXD_SWEBENCH_CONTEXT_MAX_BYTES");
     if (env_context_max_bytes && env_context_max_bytes[0]) {
@@ -2412,6 +2632,23 @@ int main(int argc, char** argv)
             model_alias = argv[++i];
         } else if (strcmp(argv[i], "--resume-checkpoint") == 0 && i + 1 < argc) {
             resume_checkpoint = argv[++i];
+        } else if (strcmp(argv[i], "--resume-jsonl") == 0 && i + 1 < argc) {
+            resume_jsonl = argv[++i];
+        } else if (strcmp(argv[i], "--fail-fast") == 0) {
+            fail_fast = true;
+        } else if (strcmp(argv[i], "--strict-mode") == 0) {
+            strict_mode = true;
+        } else if (strcmp(argv[i], "--retry") == 0 && i + 1 < argc) {
+            retry_count = atoi(argv[++i]);
+            if (retry_count < 0) retry_count = 0;
+            if (retry_count > 10) retry_count = 10;  // cap to avoid runaway loops
+        } else if (strcmp(argv[i], "--csv") == 0 && i + 1 < argc) {
+            csv_out = argv[++i];
+        } else if (strcmp(argv[i], "--no-hints") == 0) {
+            hints_enabled = false;
+        } else if (strcmp(argv[i], "--max-prompt-bytes") == 0 && i + 1 < argc) {
+            const int parsed = atoi(argv[++i]);
+            if (parsed > 0) max_prompt_bytes = static_cast<size_t>(parsed);
         }
     }
 
@@ -2535,7 +2772,15 @@ int main(int argc, char** argv)
             fprintf(stdout, "[INFO] Using Ollama model: %s on port %d\n", chosen_model.c_str(), ollama_port);
 
             // Emit model fingerprint as first JSONL record
-            SWEBench::write_jsonl_model_fingerprint(jsonl_file, chosen_model, ollama.host, ollama_port);
+            SWEBench::write_jsonl_model_fingerprint(
+                jsonl_file,
+                chosen_model,
+                ollama.host,
+                ollama_port,
+                (model_alias && model_alias[0]) ? model_alias : chosen_model,
+                seed,
+                retry_count,
+                strict_mode);
 
             RealAgentContext ctx;
             ctx.ollama_client = &ollama;
@@ -2546,6 +2791,10 @@ int main(int argc, char** argv)
             ctx.source_context_max_total_bytes = context_max_total_bytes;
             ctx.source_context_max_files = context_max_files;
             ctx.seed = seed;
+            ctx.retry_count = retry_count;
+            ctx.strict_mode = strict_mode;
+            ctx.hints_enabled = hints_enabled;
+            ctx.max_prompt_bytes = max_prompt_bytes;
             if (model_alias && model_alias[0]) {
                 ctx.model_alias = model_alias;
             }
@@ -2562,6 +2811,15 @@ int main(int argc, char** argv)
             if (seed >= 0) {
                 fprintf(stdout, "[INFO] Reproducibility seed: %d\n", seed);
             }
+            if (retry_count > 0) {
+                fprintf(stdout, "[INFO] Retry count: %d extra attempt(s) on failure\n", retry_count);
+            }
+            if (fail_fast) {
+                fprintf(stdout, "[INFO] Fail-fast mode: sweep stops on first task failure\n");
+            }
+            if (strict_mode) {
+                fprintf(stdout, "[INFO] Strict mode: fenced responses will be rejected even if extractable\n");
+            }
             if (!ctx.model_alias.empty()) {
                 fprintf(stdout, "[INFO] Model alias: %s\n", ctx.model_alias.c_str());
             }
@@ -2569,10 +2827,14 @@ int main(int argc, char** argv)
                 fprintf(stdout, "[INFO] Prompt dumps enabled: %s\n", ctx.prompt_dump_dir.c_str());
             }
 
-            SWEBench::Harness harness(run_tests, jsonl_file, json_out, raw_dump_dir);
+            SWEBench::Harness harness(run_tests, jsonl_file, json_out, raw_dump_dir, fail_fast, strict_mode);
             if (resume_checkpoint && resume_checkpoint[0]) {
                 harness.set_resume_checkpoint(resume_checkpoint);
                 fprintf(stdout, "[INFO] Resume checkpoint: %s\n", resume_checkpoint);
+            }
+            if (resume_jsonl && resume_jsonl[0]) {
+                harness.set_resume_jsonl(resume_jsonl);
+                fprintf(stdout, "[INFO] Resume JSONL source: %s\n", resume_jsonl);
             }
             for (auto& inst : instances) {
                 harness.add_instance(std::move(inst));
@@ -2593,7 +2855,7 @@ int main(int argc, char** argv)
         fprintf(stdout, "\n[INFO] Running self-test with null agent...\n");
         fprintf(stdout, "      (Use --real-agent flag for live inference evaluation)\n\n");
 
-        SWEBench::Harness harness(run_tests, jsonl_file, json_out, raw_dump_dir);
+        SWEBench::Harness harness(run_tests, jsonl_file, json_out, raw_dump_dir, fail_fast, strict_mode);
         for (auto& inst : instances) {
             harness.add_instance(std::move(inst));
         }
@@ -2622,6 +2884,14 @@ int main(int argc, char** argv)
             fprintf(stdout, "JSONL summary written to: %s\n", jsonl_summary_path);
         } else {
             fprintf(stderr, "Warning: failed to write JSONL summary to: %s\n", jsonl_summary_path);
+        }
+    }
+
+    if (csv_out) {
+        if (SWEBench::write_csv_report(report, csv_out)) {
+            fprintf(stdout, "CSV report written to: %s\n", csv_out);
+        } else {
+            fprintf(stderr, "Warning: failed to write CSV report to: %s\n", csv_out);
         }
     }
 
