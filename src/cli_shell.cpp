@@ -14,6 +14,7 @@
 #include "runtime_core.h"
 #include "modules/react_generator.h"
 #include "agentic_engine.h"
+#include "agentic/AgenticSubmitInference_Fix.h"  // TOOL-AWARE INFERENCE BRIDGE
 #include "subagent_core.h"
 #include "cli/agentic_decision_tree.h"
 #include "cli/cli_autonomy_loop.h"
@@ -635,22 +636,49 @@ void cmd_agent_execute(const std::string& args) {
         return;
     }
     
-    if (g_state.agenticEngine && g_state.agenticEngine->isModelLoaded()) {
-        std::cout << "🤖 Agent executing: " << args << "\n";
-        std::string response = g_state.agenticEngine->chat(args);
-        std::cout << response << "\n";
+    // ========== NEW: Use AgenticInferenceBridge for tool-aware inference ==========
+    using AgenticBridge = RawrXD::Agentic::AgenticInferenceBridge;
+    
+    auto bridgeResult = AgenticBridge::SubmitInferenceWithTools(
+        args,         // User prompt
+        "codestral",  // Default model
+        4096);        // Max tokens
+    
+    if (bridgeResult.success) {
+        std::cout << "🤖 Agent Response:\n" << bridgeResult.response << "\n";
         
-        // Auto-dispatch tool calls in response
-        if (g_state.subAgentMgr) {
-            std::string toolResult;
-            if (g_state.subAgentMgr->dispatchToolCall("cli-agent", response, toolResult)) {
-                std::cout << "\n[Tool Result]\n" << toolResult << "\n";
+        if (bridgeResult.usedTools) {
+            std::cout << "\n[Tool Execution Trace]\n";
+            std::cout << "Iterations: " << bridgeResult.toolIterations << "\n";
+            if (!bridgeResult.toolTrace.empty()) {
+                for (const auto& record : bridgeResult.toolTrace) {
+                    std::cout << "- " << record.toolName << " ["
+                              << (record.success ? "ok" : "error") << "]\n";
+                }
             }
+            std::cout << "✅ Tools executed successfully\n";
         }
     } else {
-        std::cout << "🤖 Agent executing: " << args << "\n";
-        std::string out = process_prompt(args);
-        std::cout << out << "\n";
+        // Fall back to legacy engine if available
+        std::cout << "⚠️ Bridge error: " << bridgeResult.error << "\n";
+        std::cout << "Falling back to legacy agent engine...\n";
+        
+        if (g_state.agenticEngine && g_state.agenticEngine->isModelLoaded()) {
+            std::cout << "🤖 Agent executing: " << args << "\n";
+            std::string response = g_state.agenticEngine->chat(args);
+            std::cout << response << "\n";
+            
+            // Auto-dispatch tool calls in response
+            if (g_state.subAgentMgr) {
+                std::string toolResult;
+                if (g_state.subAgentMgr->dispatchToolCall("cli-agent", response, toolResult)) {
+                    std::cout << "\n[Tool Result]\n" << toolResult << "\n";
+                }
+            }
+        } else {
+            std::string out = process_prompt(args);
+            std::cout << out << "\n";
+        }
     }
 }
 
@@ -680,25 +708,44 @@ void cmd_agent_loop(const std::string& args) {
     SubAgentManager* mgr = g_state.subAgentMgr;
     
     std::thread([prompt, iterations, eng, mgr]() {
+        using AgenticBridge = RawrXD::Agentic::AgenticInferenceBridge;
+        
         for (int i = 0; i < iterations; i++) {
             std::cout << "[Agent Iter " << (i+1) << "/" << iterations << "] Processing...\n";
             
-            if (eng && eng->isModelLoaded()) {
-                std::string response = eng->chat(
-                    "Iteration " + std::to_string(i + 1) + "/" + std::to_string(iterations) +
-                    ". Goal: " + prompt + "\nPrevious context available. Continue working toward the goal.");
-                std::cout << response << "\n";
-                
-                // Dispatch tool calls
-                if (mgr) {
-                    std::string toolResult;
-                    if (mgr->dispatchToolCall("cli-loop", response, toolResult)) {
-                        std::cout << "[Tool Result] " << toolResult << "\n";
-                    }
+            // ========== NEW: Tool-aware inference for each iteration ==========
+            std::string iteration_prompt = 
+                "Iteration " + std::to_string(i + 1) + "/" + std::to_string(iterations) +
+                ". Goal: " + prompt + "\nContinue working toward the goal. Use available tools directly.";
+            
+            auto bridgeResult = AgenticBridge::SubmitInferenceWithTools(
+                iteration_prompt,
+                "codestral",
+                4096);
+            
+            if (bridgeResult.success) {
+                std::cout << bridgeResult.response << "\n";
+                if (bridgeResult.usedTools) {
+                    std::cout << "[Iteration " << (i+1) << "] " 
+                              << bridgeResult.toolIterations << " tool calls executed\n";
                 }
             } else {
-                std::string out = process_prompt(prompt);
-                std::cout << out << "\n";
+                // Fallback to legacy engine
+                if (eng && eng->isModelLoaded()) {
+                    std::string response = eng->chat(iteration_prompt);
+                    std::cout << response << "\n";
+                    
+                    // Dispatch tool calls
+                    if (mgr) {
+                        std::string toolResult;
+                        if (mgr->dispatchToolCall("cli-loop", response, toolResult)) {
+                            std::cout << "[Tool Result] " << toolResult << "\n";
+                        }
+                    }
+                } else {
+                    std::string out = process_prompt(prompt);
+                    std::cout << out << "\n";
+                }
             }
         }
         std::cout << "✅ Agent loop completed\n";

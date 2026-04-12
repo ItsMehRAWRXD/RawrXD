@@ -208,6 +208,7 @@ if(RAWRXD_BUILD_CLI)
         src/res/Resource.rc
         # Agentic components for CLI Ollama testing
         src/agentic/OrchestratorBridge.cpp
+        src/agentic/AgenticSubmitInference_Fix.cpp
         src/agentic/AgentOllamaClient.cpp
         src/agentic/FIMPromptBuilder.cpp
         src/agentic/RobustOllamaParser.cpp
@@ -685,6 +686,7 @@ set(SOURCES
     # T5: Agent Orchestrator + Bridge + Navigation (agentic brain wiring)
     src/agentic/AgentOrchestrator.cpp
     src/agentic/OrchestratorBridge.cpp
+    src/agentic/AgenticSubmitInference_Fix.cpp
     src/agentic/AgenticNavigator.cpp
     src/agentic/RawrXD_ToolRegistry.cpp
     src/agentic/ToolRegistry.cpp
@@ -3270,6 +3272,7 @@ if(WIN32)
         # T5: Agent Orchestrator + Bridge + Navigation (agentic brain wiring)
         src/agentic/AgentOrchestrator.cpp
         src/agentic/OrchestratorBridge.cpp
+        src/agentic/AgenticSubmitInference_Fix.cpp
         src/agentic/AgenticNavigator.cpp
         src/agentic/ToolRegistry.cpp
         src/agentic/SovereignAssembler.cpp
@@ -3866,6 +3869,7 @@ if(WIN32)
         src/ui/monaco_settings_dialog.cpp
         src/thermal/RAWRXD_ThermalDashboard.cpp
         src/win32app/VSCodeMarketplaceAPI.cpp
+        src/marketplace/extension_auto_installer.cpp
         # Multi-file search (real implementation; replaces earlier IDE stub)
         src/multi_file_search.cpp
         # Legacy support unit wiring removed from production lane.
@@ -4568,6 +4572,18 @@ if(WIN32)
     list(APPEND WIN32IDE_SOURCES
         src/tool_registry_init.cpp
         src/core/system_integrity_audit_trail.cpp
+    )
+
+    # Model Puller subsystem
+    list(APPEND WIN32IDE_SOURCES
+        src/model_puller/download_manager.cpp
+        src/model_puller/hf_client.cpp
+        src/model_puller/ollama_registry.cpp
+        src/model_puller/model_index.cpp
+        src/model_puller/model_puller.cpp
+        src/model_puller/model_puller_cli.cpp
+        src/win32app/Win32IDE_ModelManager.cpp
+        src/win32app/Win32IDE_ModelManagerBridge.cpp
     )
 
     add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${ASM_KERNEL_SOURCES} ${WIN32IDE_EXTRA_ASM})

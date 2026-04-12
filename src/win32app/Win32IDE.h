@@ -48,6 +48,7 @@
 
 #include "../../include/RawrOllamaBridge.hpp"
 #include "../../include/editor_engine.h"
+#include "../../include/model_puller/download_manager.h"
 #include "../../include/plugin_system/win32_plugin_loader.h"
 #include "../agentic/agent_controller_minimal.h"
 #include "../full_agentic_ide/FullAgenticIDE.h"
@@ -105,6 +106,7 @@ struct Win32IDEAgenticCopilotFinalEnvelope
 #include "../../include/mcp_integration.h"
 #include "../core/70b_gguf_hotpatch.h"
 #include "../core/governor_throttling.h"
+#include "../core/layer_offload_manager.hpp"
 #include "../core/native_inference_pipeline.hpp"
 #include "../core/problems_aggregator.hpp"
 #include "../modules/ExtensionLoader.hpp"
@@ -1399,6 +1401,11 @@ class Win32IDE
     void importModule();
     void exportModule();
 
+    // Model Manager (unified model puller dialog)
+    void showModelManager();
+    void updateDownloadProgress(const RawrXD::DownloadProgress& progress);
+    void clearDownloadProgress();
+
     // Command Palette (Ctrl+Shift+P)
     struct CommandPaletteItem
     {
@@ -1718,6 +1725,7 @@ class Win32IDE
     std::unique_ptr<RawrXD::IGGUFLoader> m_ggufLoader;
     std::string m_loadedModelPath;
     RawrXD::GGUFMetadata m_currentModelMetadata;
+    RawrXD::GPULayerSplit m_lastGPULayerSplit{};  // Empirical NGL optimizer result
     std::vector<RawrXD::TensorInfo> m_modelTensors;
     bool m_useStreamingLoader;     // preference to use streaming loader to minimize memory
     bool m_useVulkanRenderer;      // preference to use Vulkan renderer if enabled

@@ -1,0 +1,156 @@
+#include "AgenticSubmitInference_Fix.h"
+
+#include "AgentOllamaClient.h"
+#include "AgentToolHandlers.h"
+#include "ToolCallResult.h"
+
+#include <algorithm>
+#include <limits>
+
+namespace RawrXD {
+namespace Agentic {
+
+using json = nlohmann::json;
+
+namespace {
+
+std::string BuildToolMessageContent(const RawrXD::Agent::ToolCallResult& result) {
+    if (result.isSuccess()) {
+        return result.output.empty() ? "Tool completed successfully." : result.output;
+    }
+
+    if (!result.error.empty()) {
+        return "Error: " + result.error;
+    }
+
+    if (!result.output.empty()) {
+        return "Error: " + result.output;
+    }
+
+    return "Error: Tool execution failed.";
+}
+
+int ClampMaxTokens(size_t maxTokens) {
+    if (maxTokens == 0) {
+        return 4096;
+    }
+
+    if (maxTokens > static_cast<size_t>(std::numeric_limits<int>::max())) {
+        return std::numeric_limits<int>::max();
+    }
+
+    return static_cast<int>(maxTokens);
+}
+
+} // namespace
+
+AgenticInferenceBridge::InferenceResult AgenticInferenceBridge::SubmitInferenceWithTools(
+    const std::string& userMessage,
+    const std::string& modelName,
+    size_t max_tokens,
+    const RuntimeConfig& runtime)
+{
+    InferenceResult bridgeResult;
+
+    Agent::OllamaConfig clientConfig;
+    clientConfig.host = runtime.host.empty() ? "127.0.0.1" : runtime.host;
+    clientConfig.port = runtime.port == 0 ? 11434 : runtime.port;
+    clientConfig.chat_model = modelName.empty() ? "phi3:mini" : modelName;
+    clientConfig.temperature = runtime.temperature;
+    clientConfig.max_tokens = ClampMaxTokens(max_tokens);
+
+    Agent::AgentOllamaClient client(clientConfig);
+
+    std::vector<Agent::ChatMessage> messages;
+    messages.push_back({"system",
+                        Agent::AgentToolHandlers::GetSystemPrompt(
+                            runtime.workingDirectory.empty() ? "." : runtime.workingDirectory,
+                            {}),
+                        "",
+                        json()});
+    messages.push_back({"user", userMessage, "", json()});
+
+    const json tools = Agent::AgentToolHandlers::GetAllSchemas();
+    const int maxIterations = std::max(1, runtime.maxToolIterations);
+    std::string latestResponse;
+
+    for (int step = 0; step < maxIterations; ++step) {
+        bridgeResult.toolIterations = step + 1;
+
+        Agent::InferenceResult llmResult = client.ChatSync(messages, tools);
+        if (!llmResult.success) {
+            bridgeResult.error = llmResult.error_message.empty() ? "agentic inference failed"
+                                                                 : llmResult.error_message;
+            return bridgeResult;
+        }
+
+        if (!llmResult.response.empty()) {
+            latestResponse = llmResult.response;
+            bridgeResult.response = llmResult.response;
+        }
+
+        if (!llmResult.has_tool_calls || llmResult.tool_calls.empty()) {
+            bridgeResult.success = true;
+            if (bridgeResult.response.empty()) {
+                bridgeResult.response = latestResponse;
+            }
+            return bridgeResult;
+        }
+
+        bridgeResult.usedTools = true;
+
+        Agent::ChatMessage assistantMessage;
+        assistantMessage.role = "assistant";
+        assistantMessage.content = llmResult.response;
+        assistantMessage.tool_calls = json::array();
+
+        for (size_t i = 0; i < llmResult.tool_calls.size(); ++i) {
+            const auto& toolCall = llmResult.tool_calls[i];
+            const std::string callId = "call_" + std::to_string(step) + "_" + std::to_string(i);
+
+            json toolCallJson;
+            toolCallJson["id"] = callId;
+            toolCallJson["type"] = "function";
+            toolCallJson["function"] = {{"name", toolCall.first}, {"arguments", toolCall.second}};
+            assistantMessage.tool_calls.push_back(toolCallJson);
+        }
+
+        messages.push_back(std::move(assistantMessage));
+
+        for (size_t i = 0; i < llmResult.tool_calls.size(); ++i) {
+            const auto& toolCall = llmResult.tool_calls[i];
+            const std::string callId = "call_" + std::to_string(step) + "_" + std::to_string(i);
+
+            Agent::ToolCallResult toolResult =
+                Agent::AgentToolHandlers::Instance().Execute(toolCall.first, toolCall.second);
+
+            InferenceResult::ToolCallRecord record;
+            record.toolName = toolCall.first;
+            record.callId = callId;
+            record.success = toolResult.isSuccess();
+            record.output = toolResult.isSuccess()
+                                ? (toolResult.output.empty() ? "Tool completed successfully." : toolResult.output)
+                                : (toolResult.error.empty() ? toolResult.output : toolResult.error);
+            bridgeResult.toolTrace.push_back(std::move(record));
+
+            Agent::ChatMessage toolMessage;
+            toolMessage.role = "tool";
+            toolMessage.content = BuildToolMessageContent(toolResult);
+            toolMessage.tool_call_id = callId;
+            toolMessage.tool_calls = json();
+            messages.push_back(std::move(toolMessage));
+        }
+    }
+
+    if (!latestResponse.empty()) {
+        bridgeResult.success = true;
+        bridgeResult.response = latestResponse + "\n\n[INFO] Agent step limit reached.";
+        return bridgeResult;
+    }
+
+    bridgeResult.error = "agent step limit reached without a final response";
+    return bridgeResult;
+}
+
+} // namespace Agentic
+} // namespace RawrXD

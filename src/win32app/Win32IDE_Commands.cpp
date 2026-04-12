@@ -10690,6 +10690,14 @@ void Win32IDE::handleToolsCommand(int commandId)
                            releaseReady ? OutputSeverity::Info : OutputSeverity::Warning);
         }
         break;
+
+        // ================================================================
+        // Model Manager — unified model puller dialog
+        // ================================================================
+        case 6001:  // Model Manager
+            showModelManager();
+            break;
+
         default:
             appendToOutput("[Tools] Unhandled command ID: " + std::to_string(commandId) + "\n", "Output",
                            OutputSeverity::Info);
@@ -11252,6 +11260,7 @@ void Win32IDE::buildCommandRegistry()
     m_commandRegistry.push_back({5996, "Tools: Git Panel Command Dispatch Probe", "", "Tools"});
     m_commandRegistry.push_back({5997, "Tools: LSP Ghost Unification Pack Export", "", "Tools"});
     m_commandRegistry.push_back({5998, "Tools: Batch 13 Integration Scorecard", "", "Tools"});
+    m_commandRegistry.push_back({6001, "Tools: Model Manager", "Ctrl+Shift+P", "Tools"});
     m_commandRegistry.push_back({3015, "Tools: License Creator", "Ctrl+Shift+L", "Tools"});
     m_commandRegistry.push_back({3016, "Tools: Feature Registry", "Ctrl+Shift+F", "Tools"});
 

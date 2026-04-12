@@ -157,6 +157,76 @@ struct OffloadStats {
 };
 
 // ============================================================================
+// Inference Tier — Empirical performance classification
+// ============================================================================
+// Derived from llama-bench results on RX 7800 XT (16GB VRAM, Vulkan):
+//   Tier A: Model fits in VRAM → full GPU offload (ngl=99)
+//           Codestral 22B Q4_K_M: pp512=210 t/s, tg128=15 t/s
+//   Tier B: Model exceeds VRAM → optimal GPU+CPU split
+//           Qwen2.5-32B Q4_K_M @ ngl=49: pp512=71 t/s, tg128=4.1 t/s
+//   Tier C: Model far exceeds VRAM → CPU-dominant, GPU assist
+//           70B models: prompt works, generation unstable (KV cache OOM)
+//   Tier D: Pure CPU / RAM-only inference
+enum class InferenceTier : uint8_t {
+    FullGPU       = 0,  // Weights + KV cache fit in VRAM
+    HybridSplit   = 1,  // Weights partially on GPU, rest on CPU
+    CPUDominant   = 2,  // GPU assists but CPU handles majority
+    PureCPU       = 3   // No GPU offload
+};
+
+// ============================================================================
+// GPU Layer Split Result — Output of computeOptimalGPULayers()
+// ============================================================================
+struct GPULayerSplit {
+    uint32_t        gpuLayers;          // Optimal ngl value
+    uint32_t        totalLayers;        // Total layers in model
+    InferenceTier   tier;               // Performance tier classification
+    uint64_t        estimatedVRAMBytes; // Estimated VRAM usage for weights
+    uint64_t        kvCacheHeadroom;    // Bytes reserved for KV cache
+    bool            stable;             // true if decode is expected to be stable
+
+    // Estimated performance (based on empirical regression)
+    float           estPromptTps;       // Estimated pp512 tokens/sec
+    float           estGenerateTps;     // Estimated tg128 tokens/sec
+};
+
+// ============================================================================
+// computeOptimalGPULayers — Empirical NGL Optimizer
+// ============================================================================
+// Given a model's file size, layer count, architecture, and available VRAM,
+// compute the optimal GPU layer split that maximizes throughput while
+// avoiding KV cache OOM and Vulkan BAR overflow.
+//
+// Empirical basis (RX 7800 XT, 16GB VRAM, Vulkan + KHR_coopmat):
+//   - 11.79 GiB (22B Q4_K_M): ngl=99 → pp512=210, tg128=15 (full GPU)
+//   - 18.48 GiB (32B Q4_K_M): ngl=49 → pp512=71, tg128=4.1 (optimal split)
+//   - 18.48 GiB (32B Q4_K_M): ngl=65 → pp512=35, tg128=2.9 (BAR overflow — WORSE)
+//   - 15.80 GiB (46B Q2_K):   ngl=99 → pp512=27, tg128=4.0 (fits but Q2_K slow)
+//   - 36.20 GiB (70B Q4_0):   ngl=35 → pp512=70, tg128=CRASH (KV cache OOM)
+//
+// Key insight: explicit CPU split beats "fake" full GPU (BAR overflow).
+// The function computes: ngl = floor((vramBudget - kvHeadroom - margin) / perLayerBytes)
+// and clamps to avoid the BAR overflow trap.
+//
+GPULayerSplit computeOptimalGPULayers(
+    uint64_t modelFileSizeBytes,        // GGUF file size on disk
+    uint32_t totalLayers,               // Number of transformer layers
+    uint32_t numKVHeads,                // KV head count (for KV cache estimation)
+    uint32_t headDim,                   // Per-head dimension
+    uint32_t contextLength,             // Target context length (tokens)
+    uint64_t vramBytes,                 // Available dedicated VRAM (bytes)
+    uint64_t systemRAMBytes = 0         // Available system RAM (0 = unknown)
+);
+
+// Convenience overload using PyreLayerConfig
+GPULayerSplit computeOptimalGPULayers(
+    uint64_t modelFileSizeBytes,
+    const PyreLayerConfig& config,
+    uint64_t vramBytes,
+    uint64_t systemRAMBytes = 0
+);
+
+// ============================================================================
 // Offload Configuration
 // ============================================================================
 struct OffloadConfig {
@@ -197,6 +267,17 @@ struct OffloadConfig {
         c.prefetchAhead = 4;
         c.maxResidentLayers = 8;  // Keep up to 8 layers warm
         c.ioThreadCount = 4;
+        return c;
+    }
+
+    // Build from GPULayerSplit result (auto-tuned)
+    static OffloadConfig fromGPULayerSplit(const GPULayerSplit& split, uint64_t vramBytes) {
+        OffloadConfig c = defaultConfig();
+        c.vramBudgetBytes = vramBytes - split.kvCacheHeadroom;
+        if (split.tier == InferenceTier::PureCPU) {
+            c.prefetchAhead = 4;
+            c.ioThreadCount = 4;
+        }
         return c;
     }
 };

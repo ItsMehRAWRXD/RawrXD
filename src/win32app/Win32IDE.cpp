@@ -8,7 +8,10 @@
 #include "../agentic/AgenticChatSession.h"
 #include "../agentic/agentic_controller_wiring.h"
 #include "../agentic/slash_command_parser.hpp"
+#include "../agentic/AgenticSubmitInference_Fix.h"  // TOOL-AWARE INFERENCE BRIDGE
 #include "../core/command_registry.hpp"
+#include "../core/layer_offload_manager.hpp"
+#include "../core/gpu_backend_bridge.h"
 #include "../cpu_inference_engine.h"
 #include "../inference/speculative_execution_engine.h"  // Full type for unique_ptr<SpeculativeExecutionEngine> dtor
 #include "../model_source_resolver.h"
@@ -6944,6 +6947,90 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
 
     appendToOutput(info, "Output", OutputSeverity::Info);
 
+    // ---- GPU Layer Split Optimizer ----
+    // Compute optimal ngl based on model metadata and detected VRAM.
+    // Uses empirical bench data (RX 7800 XT, Vulkan, KHR_coopmat).
+    {
+        uint64_t fileSize = 0;
+        {
+            std::error_code fsec;
+            fileSize = static_cast<uint64_t>(std::filesystem::file_size(resolvedPath, fsec));
+            if (fsec) fileSize = 0;
+        }
+
+        const uint32_t layers     = m_currentModelMetadata.layer_count;
+        const uint32_t kvHeads    = m_currentModelMetadata.head_count_kv > 0
+                                    ? m_currentModelMetadata.head_count_kv
+                                    : m_currentModelMetadata.head_count;
+        const uint32_t headDim    = (m_currentModelMetadata.embedding_dim > 0 && m_currentModelMetadata.head_count > 0)
+                                    ? m_currentModelMetadata.embedding_dim / m_currentModelMetadata.head_count
+                                    : 128;  // safe default
+        const uint32_t ctxLen     = m_currentModelMetadata.context_length > 0
+                                    ? m_currentModelMetadata.context_length
+                                    : 4096; // safe default
+
+        // Detect VRAM via GPU backend bridge (if initialized)
+        uint64_t vramBytes = 16ULL * 1024 * 1024 * 1024;  // fallback: 16 GB
+        {
+            auto& gpuBridge = RawrXD::GPU::getGPUBackendBridge();
+            if (gpuBridge.isInitialized()) {
+                auto caps = gpuBridge.getCapabilities();
+                if (caps.dedicatedVRAM > 0)
+                    vramBytes = caps.dedicatedVRAM;
+            }
+        }
+
+        // Get system RAM
+        MEMORYSTATUSEX memstat{};
+        memstat.dwLength = sizeof(memstat);
+        uint64_t sysRAM = 0;
+        if (GlobalMemoryStatusEx(&memstat))
+            sysRAM = memstat.ullTotalPhys;
+
+        if (fileSize > 0 && layers > 0) {
+            auto split = RawrXD::computeOptimalGPULayers(
+                fileSize, layers, kvHeads, headDim, ctxLen, vramBytes, sysRAM);
+
+            const char* tierNames[] = { "FullGPU", "HybridSplit", "CPUDominant", "PureCPU" };
+            const char* tierName = (static_cast<int>(split.tier) < 4) ? tierNames[static_cast<int>(split.tier)] : "Unknown";
+
+            char splitInfo[1024];
+            snprintf(splitInfo, sizeof(splitInfo),
+                "\n[NGL Optimizer] Model: %.2f GiB, %u layers\n"
+                "  Tier: %s | Optimal GPU layers: %u/%u\n"
+                "  Est. VRAM: %.1f GB (of %.1f GB available)\n"
+                "  KV headroom: %.0f MB | Stable: %s\n"
+                "  Est. perf: pp512 ~ %.0f t/s, tg128 ~ %.1f t/s\n",
+                static_cast<double>(fileSize) / (1024.0 * 1024.0 * 1024.0),
+                layers, tierName,
+                split.gpuLayers, split.totalLayers,
+                static_cast<double>(split.estimatedVRAMBytes) / (1024.0 * 1024.0 * 1024.0),
+                static_cast<double>(vramBytes) / (1024.0 * 1024.0 * 1024.0),
+                static_cast<double>(split.kvCacheHeadroom) / (1024.0 * 1024.0),
+                split.stable ? "YES" : "NO",
+                split.estPromptTps, split.estGenerateTps);
+
+            appendToOutput(splitInfo, "Output", OutputSeverity::Info);
+
+            // Store the result for downstream consumers
+            m_lastGPULayerSplit = split;
+
+            // Update LocalGGUF backend capability based on empirical tier
+            {
+                auto cap = getBackendCapability(AIBackendType::LocalGGUF);
+                cap.maxContextTokens = ctxLen;
+                // Quality score: FullGPU models run well → 0.7, split → 0.5, CPU-dominant → 0.3
+                switch (split.tier) {
+                    case RawrXD::InferenceTier::FullGPU:      cap.qualityScore = 0.7f; break;
+                    case RawrXD::InferenceTier::HybridSplit:   cap.qualityScore = 0.5f; break;
+                    case RawrXD::InferenceTier::CPUDominant:   cap.qualityScore = 0.35f; break;
+                    case RawrXD::InferenceTier::PureCPU:       cap.qualityScore = 0.2f; break;
+                }
+                setBackendCapability(AIBackendType::LocalGGUF, cap);
+            }
+        }
+    }
+
     // Update status bar
     SendMessageW(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)utf8ToWide("Model: " + std::string(resolvedPath)).c_str());
 
@@ -8704,70 +8791,110 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
                          ", layerAvailable=" + std::to_string(layerAvailable ? 1 : 0) + "\n")
                             .c_str());
 
-                    // Route C parity with Route B: try minimal agentic path before legacy SubmitInference fallback.
+                    // Route C parity with Route B: try tool-aware agentic bridge before legacy SubmitInference fallback.
                     if (wantsAgentic && layerAvailable)
                     {
-                        const std::string strippedPrompt = StripAgenticPrefixForRouteParity(prompt);
-                        rawrxd::MinimalAgenticRequest req;
-                        req.message = strippedPrompt.empty() ? prompt : strippedPrompt;
-                        if (m_agenticBridge)
-                        {
-                            std::string sid = m_agenticBridge->GetAgenticSessionId();
-                            if (sid.empty())
-                            {
-                                sid = "win32ide-routec";
-                                m_agenticBridge->SetAgenticSessionId(sid);
+                        // ========== NEW: Use AgenticInferenceBridge for tool-aware inference ==========
+                        using AgenticBridge = RawrXD::Agentic::AgenticInferenceBridge;
+                        
+                        auto bridgeResult = AgenticBridge::SubmitInferenceWithTools(
+                            prompt,           // User message
+                            "codestral",      // Default model
+                            4096);            // Max tokens
+                        
+                        if (bridgeResult.success) {
+                            // Tool-aware inference succeeded
+                            std::string response = bridgeResult.response;
+                            
+                            if (bridgeResult.usedTools) {
+                                // Format tool execution trace for display
+                                std::string toolTrace = "\n\n[Tool Execution Trace]\n";
+                                toolTrace += "Iterations: " + std::to_string(bridgeResult.toolIterations) + "\n";
+                                if (!bridgeResult.toolTrace.empty()) {
+                                    for (const auto& record : bridgeResult.toolTrace) {
+                                        toolTrace += "- " + record.toolName + " [" +
+                                                     std::string(record.success ? "ok" : "error") + "]\n";
+                                    }
+                                }
+                                response += toolTrace;
                             }
-                            req.session_id = sid;
-
-                            req.model_path = m_agenticBridge->GetCurrentModel();
-                            if (req.model_path.empty())
-                                req.model_path = m_loadedModelPath;
-                        }
-                        else
-                        {
-                            req.session_id = "win32ide-routec";
-                            req.model_path = m_loadedModelPath;
-                        }
-                        req.enable_tools = true;
-                        req.max_iterations = 10;
-                        req.workspace_root = workspaceDirectoryForChatPersistence();
-
-                        const auto miniResp = rawrxd::processAgenticRequest(req);
-                        if (miniResp.success)
-                        {
-                            std::string routed = FormatMinimalAgenticResponseForChat(miniResp);
-                            if (m_inferenceCallback)
-                            {
-                                m_currentInferenceResponse += routed;
-                                m_inferenceCallback(routed, false);
+                            
+                            if (m_inferenceCallback) {
+                                m_currentInferenceResponse += response;
+                                m_inferenceCallback(response, false);
                             }
                             routeCHandledByMinimalAgent = true;
                             OutputDebugStringA(
-                                "ROUTE_CHECK: route=C-main-fallback resolved via minimal agentic path\n");
-                        }
-                        else
-                        {
-                            if (strictLocalSwarm)
+                                ("ROUTE_CHECK: route=C-main-fallback resolved via bridge; tools=" + 
+                                 std::to_string(bridgeResult.usedTools ? 1 : 0) + 
+                                 " iterations=" + std::to_string(bridgeResult.toolIterations) + "\n").c_str());
+                        } else {
+                            // Bridge failed try minimal agent fallback (preserves backward compat)
+                            OutputDebugStringA(
+                                ("ROUTE_CHECK: bridge failed (" + bridgeResult.error + "), trying minimal agent\n").c_str());
+                            
+                            const std::string strippedPrompt = StripAgenticPrefixForRouteParity(prompt);
+                            rawrxd::MinimalAgenticRequest req;
+                            req.message = strippedPrompt.empty() ? prompt : strippedPrompt;
+                            if (m_agenticBridge)
                             {
-                                const std::string failClosed =
-                                    miniResp.error.empty()
-                                        ? "Error: Strict local swarm mode blocked Route C legacy fallback"
-                                        : miniResp.error;
+                                std::string sid = m_agenticBridge->GetAgenticSessionId();
+                                if (sid.empty())
+                                {
+                                    sid = "win32ide-routec";
+                                    m_agenticBridge->SetAgenticSessionId(sid);
+                                }
+                                req.session_id = sid;
+
+                                req.model_path = m_agenticBridge->GetCurrentModel();
+                                if (req.model_path.empty())
+                                    req.model_path = m_loadedModelPath;
+                            }
+                            else
+                            {
+                                req.session_id = "win32ide-routec";
+                                req.model_path = m_loadedModelPath;
+                            }
+                            req.enable_tools = true;
+                            req.max_iterations = 10;
+                            req.workspace_root = workspaceDirectoryForChatPersistence();
+
+                            const auto miniResp = rawrxd::processAgenticRequest(req);
+                            if (miniResp.success)
+                            {
+                                std::string routed = FormatMinimalAgenticResponseForChat(miniResp);
                                 if (m_inferenceCallback)
                                 {
-                                    m_currentInferenceResponse += failClosed;
-                                    m_inferenceCallback(failClosed, false);
+                                    m_currentInferenceResponse += routed;
+                                    m_inferenceCallback(routed, false);
                                 }
                                 routeCHandledByMinimalAgent = true;
                                 OutputDebugStringA(
-                                    ("ROUTE_CHECK: route=C-main-fallback fail-closed under strict local swarm: " +
-                                     failClosed + "\n")
+                                    "ROUTE_CHECK: route=C-main-fallback resolved via minimal agent fallback\n");
+                            }
+                            else
+                            {
+                                if (strictLocalSwarm)
+                                {
+                                    const std::string failClosed =
+                                        miniResp.error.empty()
+                                            ? "Error: Strict local swarm mode blocked Route C legacy fallback"
+                                            : miniResp.error;
+                                    if (m_inferenceCallback)
+                                    {
+                                        m_currentInferenceResponse += failClosed;
+                                        m_inferenceCallback(failClosed, false);
+                                    }
+                                    routeCHandledByMinimalAgent = true;
+                                    OutputDebugStringA(
+                                        ("ROUTE_CHECK: route=C-main-fallback fail-closed under strict local swarm: " +
+                                         failClosed + "\n")
+                                            .c_str());
+                                }
+                                OutputDebugStringA(
+                                    ("ROUTE_CHECK: route=C-main-fallback minimal agent failed: " + miniResp.error + "\n")
                                         .c_str());
                             }
-                            OutputDebugStringA(
-                                ("ROUTE_CHECK: route=C-main-fallback minimal agent failed: " + miniResp.error + "\n")
-                                    .c_str());
                         }
                     }
 

@@ -48,6 +48,166 @@ const char* layerStateName(LayerState state) {
 }
 
 // ============================================================================
+// computeOptimalGPULayers — Empirical NGL Optimizer
+// ============================================================================
+// Uses empirical bench data from RX 7800 XT (Vulkan, KHR_coopmat, warp 64)
+// to compute the optimal GPU layer split for a given model + hardware combo.
+//
+// The core formula:
+//   perLayerBytes = (modelFileSize - overhead) / totalLayers
+//   kvCacheBytes  = 2 * numKVHeads * headDim * contextLength * 2 (fp16/layer)
+//                   × gpuLayers  (KV only for GPU-resident layers)
+//   gpuLayers     = floor((vramBudget - safetyMargin) / (perLayerBytes + kvPerLayer))
+//
+// Critical constraint: gpuLayers × perLayerBytes MUST be < ~87% of VRAM
+// to avoid Vulkan BAR overflow trap (observed: 2× slowdown when overflowed).
+// ============================================================================
+
+GPULayerSplit computeOptimalGPULayers(
+    uint64_t modelFileSizeBytes,
+    uint32_t totalLayers,
+    uint32_t numKVHeads,
+    uint32_t headDim,
+    uint32_t contextLength,
+    uint64_t vramBytes,
+    uint64_t systemRAMBytes)
+{
+    GPULayerSplit result{};
+    result.totalLayers = totalLayers;
+
+    if (totalLayers == 0 || vramBytes == 0) {
+        result.tier = InferenceTier::PureCPU;
+        result.stable = false;
+        return result;
+    }
+
+    // -- Estimate per-layer weight bytes from file size --
+    // GGUF overhead (header + metadata + tensor index) is typically 1-5 MB.
+    // Embedding and output head are ~2 layers worth. Account for both.
+    const uint64_t metadataOverhead = 8ULL * 1024 * 1024;  // ~8 MB conservative
+    const uint64_t embeddingEstimate = (totalLayers > 0)
+        ? (modelFileSizeBytes - metadataOverhead) / (totalLayers + 2)  // +2 for embed + output
+        : 0;
+    const uint64_t perLayerBytes = (modelFileSizeBytes - metadataOverhead) / totalLayers;
+
+    // -- Estimate KV cache per GPU-resident layer --
+    // KV cache: 2 (K+V) × numKVHeads × headDim × contextLength × sizeof(fp16)
+    const uint64_t kvPerLayerBytes = 2ULL * numKVHeads * headDim * contextLength * sizeof(uint16_t);
+
+    // -- Safety margin: 512 MB for Vulkan allocator overhead, descriptors, etc. --
+    const uint64_t safetyMargin = 512ULL * 1024 * 1024;
+
+    // -- Compute maximum GPU layers that fit without BAR overflow --
+    // The BAR overflow trap: when GPU allocation exceeds DEVICE_LOCAL heap,
+    // Vulkan spills to HOST_VISIBLE heap via PCIe — causes 2× slowdown.
+    // We cap at 87% of VRAM to leave room for KV cache growth and avoid
+    // the threshold where spillover begins.
+    const uint64_t vramUsable = (vramBytes * 87) / 100;  // 87% anti-overflow cap
+    const uint64_t budgetForLayers = (vramUsable > safetyMargin)
+        ? (vramUsable - safetyMargin)
+        : 0;
+
+    // Per-layer VRAM cost = weight data + KV cache for that layer
+    const uint64_t perLayerVRAMCost = perLayerBytes + kvPerLayerBytes;
+
+    uint32_t maxGPULayers = 0;
+    if (perLayerVRAMCost > 0) {
+        maxGPULayers = static_cast<uint32_t>(budgetForLayers / perLayerVRAMCost);
+    }
+
+    // Clamp to actual layer count (+1 for output head treated as a "layer" by llama.cpp)
+    const uint32_t effectiveTotal = totalLayers + 1;
+    if (maxGPULayers > effectiveTotal) {
+        maxGPULayers = effectiveTotal;
+    }
+
+    result.gpuLayers = maxGPULayers;
+    result.estimatedVRAMBytes = static_cast<uint64_t>(maxGPULayers) * perLayerBytes + embeddingEstimate;
+    result.kvCacheHeadroom = static_cast<uint64_t>(maxGPULayers) * kvPerLayerBytes;
+
+    // -- Classify tier based on how many layers fit --
+    const float gpuFraction = static_cast<float>(maxGPULayers) / static_cast<float>(effectiveTotal);
+
+    if (gpuFraction >= 0.95f) {
+        // Full GPU offload — all layers fit comfortably
+        result.tier = InferenceTier::FullGPU;
+        result.gpuLayers = effectiveTotal;  // Use ngl=99 equivalent
+        result.stable = true;
+    } else if (gpuFraction >= 0.50f) {
+        // Hybrid split — GPU handles majority, CPU assists
+        result.tier = InferenceTier::HybridSplit;
+        result.stable = true;
+    } else if (gpuFraction >= 0.20f) {
+        // CPU-dominant — GPU assists but can't hold enough for stable decode
+        result.tier = InferenceTier::CPUDominant;
+        // Empirically: 70B at ngl=35 crashes during tg128 (KV cache OOM)
+        // Only stable if total model fits in VRAM+RAM combined
+        result.stable = (systemRAMBytes > 0 &&
+                         (modelFileSizeBytes + totalLayers * kvPerLayerBytes) <
+                         (vramBytes + systemRAMBytes));
+    } else {
+        // Pure CPU
+        result.tier = InferenceTier::PureCPU;
+        result.gpuLayers = 0;
+        result.stable = (systemRAMBytes > 0 && modelFileSizeBytes < systemRAMBytes);
+    }
+
+    // -- Empirical performance estimation --
+    // Regression from bench data (RX 7800 XT, Vulkan):
+    //   Full GPU 22B:  pp512=210, tg128=15
+    //   Split   32B:  pp512=71,  tg128=4.1
+    //   Full GPU 46B:  pp512=27,  tg128=4.0 (Q2_K — quantization penalty)
+    //   CPU-only:      pp512~5-10, tg128~2-5 (Zen4 AVX-512)
+    switch (result.tier) {
+        case InferenceTier::FullGPU:
+            // Throughput scales roughly inversely with model size
+            // Base: 22B → 210 pp, 15 tg. Scale: pp ~ 4700/B_params, tg ~ 330/B_params
+            {
+                const double estBillionParams = static_cast<double>(modelFileSizeBytes) / (1024.0 * 1024.0 * 1024.0) * 1.77;  // Q4_K_M → ~1.77B per GiB
+                result.estPromptTps = static_cast<float>(4700.0 / estBillionParams);
+                result.estGenerateTps = static_cast<float>(330.0 / estBillionParams);
+            }
+            break;
+        case InferenceTier::HybridSplit:
+            // Split models: CPU layers throttle generation heavily
+            // Base: 32B ngl=49 → pp=71, tg=4.1
+            {
+                const double estBillionParams = static_cast<double>(modelFileSizeBytes) / (1024.0 * 1024.0 * 1024.0) * 1.77;
+                result.estPromptTps = static_cast<float>(2300.0 / estBillionParams);  // ~2.3x slower than full GPU
+                result.estGenerateTps = static_cast<float>(135.0 / estBillionParams); // Generation bottlenecked by CPU layers
+            }
+            break;
+        case InferenceTier::CPUDominant:
+            result.estPromptTps = 8.0f;   // Zen4 AVX-512 baseline
+            result.estGenerateTps = 3.0f;
+            break;
+        case InferenceTier::PureCPU:
+            result.estPromptTps = 5.0f;
+            result.estGenerateTps = 2.0f;
+            break;
+    }
+
+    return result;
+}
+
+// Convenience overload
+GPULayerSplit computeOptimalGPULayers(
+    uint64_t modelFileSizeBytes,
+    const PyreLayerConfig& config,
+    uint64_t vramBytes,
+    uint64_t systemRAMBytes)
+{
+    return computeOptimalGPULayers(
+        modelFileSizeBytes,
+        config.numLayers,
+        config.numKVHeads,
+        config.headDim,
+        config.maxSeqLen,
+        vramBytes,
+        systemRAMBytes);
+}
+
+// ============================================================================
 // High-resolution timer
 // ============================================================================
 static double getTimeMs() {

@@ -25,6 +25,7 @@
 #include "../core/model_memory_hotpatch.hpp"
 #include "../core/rawrxd_state_mmf.hpp"
 #include "../core/unified_command_dispatch.hpp"
+#include "../marketplace/extension_auto_installer.hpp"
 #include "../cpu_inference_engine.h"
 #include "../modules/codex_ultimate.h"
 #include "../modules/engine_manager.h"
@@ -1111,6 +1112,84 @@ static bool runPhase(const std::string& name, Win32IDE& ide, HINSTANCE, LPSTR lp
         else
             OutputDebugStringA("[main_win32] Plugin Signature Verifier: init failed (non-fatal)\n");
         startupTrace("plugin_signature");
+        return true;
+    }
+    if (name == "extension_bootstrap")
+    {
+        startupTrace("extension_bootstrap_start");
+
+        const char* safeMode = std::getenv("RAWRXD_SAFE_MODE");
+        if (safeMode && safeMode[0] == '1')
+        {
+            startupTrace("extension_bootstrap_skipped", "safe_mode");
+            return true;
+        }
+
+        const char* disableBootstrap = std::getenv("RAWRXD_DISABLE_STARTUP_EXTENSION_BOOTSTRAP");
+        if (disableBootstrap && disableBootstrap[0] == '1')
+        {
+            startupTrace("extension_bootstrap_skipped", "disabled_by_env");
+            return true;
+        }
+
+        std::thread(
+            []()
+            {
+                using RawrXD::Extensions::ExtensionAutoInstaller;
+                using RawrXD::Extensions::InstallProgress;
+
+                auto& installer = ExtensionAutoInstaller::instance();
+                if (!installer.needsFirstRunInstall())
+                {
+                    startupTrace("extension_bootstrap_skipped", "already_completed");
+                    return;
+                }
+
+                auto progressCallback = [](const InstallProgress& progress)
+                {
+                    const char* stage = "unknown";
+                    switch (progress.stage)
+                    {
+                    case InstallProgress::Stage::Querying:
+                        stage = "querying";
+                        break;
+                    case InstallProgress::Stage::Downloading:
+                        stage = "downloading";
+                        break;
+                    case InstallProgress::Stage::Installing:
+                        stage = "installing";
+                        break;
+                    case InstallProgress::Stage::Verifying:
+                        stage = "verifying";
+                        break;
+                    case InstallProgress::Stage::Complete:
+                        stage = "complete";
+                        break;
+                    case InstallProgress::Stage::Failed:
+                        stage = "failed";
+                        break;
+                    }
+
+                    std::ostringstream oss;
+                    oss << stage << " [" << (progress.currentIndex + 1) << "/" << progress.totalExtensions << "] ";
+                    if (progress.extensionId)
+                        oss << progress.extensionId;
+                    if (progress.detail && progress.detail[0] != '\0')
+                        oss << " - " << progress.detail;
+                    startupTrace("extension_bootstrap_progress", oss.str().c_str());
+                };
+
+                const auto result = installer.installPriorityExtensions(progressCallback);
+                std::ostringstream oss;
+                oss << "installed=" << result.installedCount << ", failed=" << result.failedCount;
+                if (!result.detail.empty())
+                    oss << ", detail=" << result.detail;
+
+                startupTrace(result.success ? "extension_bootstrap_done" : "extension_bootstrap_failed",
+                             oss.str().c_str());
+            })
+            .detach();
+
         return true;
     }
     if (name == "creating_ide_instance")
@@ -2373,6 +2452,28 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
     // ========================================================================
     setCwdToExeDirectory();
 
+    // ========================================================================
+    // UI INITIALIZATION HARDENING — Load critical system libraries FIRST
+    // Must happen BEFORE any window creation or control initialization.
+    // This fixes crashes when msftedit.dll or common controls are not available.
+    // ========================================================================
+    {
+        // Load RichEdit 2.0 control library (used by editor)
+        HMODULE msftedit = LoadLibraryW(L"Msftedit.dll");
+        if (!msftedit) {
+            OutputDebugStringA("[WinMain Init] WARNING: Failed to load Msftedit.dll; RichEdit controls may fail\n");
+        }
+        
+        // Initialize common controls v6 (required for themed buttons, comboboxes, etc.)
+        INITCOMMONCONTROLSEX icex = {};
+        icex.dwSize = sizeof(icex);
+        icex.dwICC = ICC_WIN95_CLASSES;  // Button, static, edit, listbox, combobox, scrollbar
+        
+        if (!InitCommonControlsEx(&icex)) {
+            OutputDebugStringA("[WinMain Init] WARNING: InitCommonControlsEx failed\n");
+        }
+    }
+
     // Fast smoke: must run before bootstrapRuntimeSurface / integrity / GUI — same tool registry as agent chat.
     if (hasAgenticSmokeFlag(lpCmdLine))
     {
@@ -2787,8 +2888,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
     // Now that window is visible, run heavy subsystem phases
     // (These are now mostly deferred to async via modified phase funcs above)
     // Transcendence coordinator (E→Ω); respects RAWRXD_SKIP_INTEGRATED_RUNTIME=1 inside boot().
-    const std::vector<std::string> heavyPhases = {
-        "integrated_runtime", "enterprise_license", "camellia_init", "swarm", "auto_update", "layout"};
+    const std::vector<std::string> heavyPhases = {"extension_bootstrap", "integrated_runtime", "enterprise_license",
+                                                  "camellia_init",      "swarm",              "auto_update",
+                                                  "layout"};
     for (const std::string& name : heavyPhases)
     {
         if (RawrXD::Startup::isPhaseLazy(name))

@@ -6,6 +6,7 @@
 #endif
 #include <windows.h>
 #include "OrchestratorBridge.h"
+#include "AgenticSubmitInference_Fix.h"
 #include "ToolCallResult.h"
 #include "../logging/Logger.h"
 #include "../security/InputSanitizer.h"
@@ -215,103 +216,33 @@ std::string OrchestratorBridge::RunAgent(const std::string& userPrompt) {
         logger.warning("OrchestratorBridge", "Prompt sanitized before dispatch");
     }
 
-    std::vector<ChatMessage> messages;
-    messages.push_back({"system", RawrXD::Agent::AgentToolHandlers::GetSystemPrompt(m_workingDir, {}), "", json()});
-    messages.push_back({"user", sanitizedPrompt.sanitized, "", json()});
-
-    const json tools = RawrXD::Agent::AgentToolHandlers::GetAllSchemas();
-    const int stepLimit = std::max(1, m_maxSteps);
-    std::string latestResponse;
-    std::unordered_set<std::string> seenToolCalls;
-    auto& perf = RawrXD::Inference::PerformanceMonitor::instance();
-    auto& recovery = RawrXD::Agentic::ErrorRecoveryManager::instance();
-    RawrXD::Agentic::ErrorRecoveryManager::RecoveryConfig recoveryCfg{};
-    recoveryCfg.maxRetries = 3;
-    recoveryCfg.baseDelay = std::chrono::milliseconds(500);
-    recoveryCfg.maxDelay = std::chrono::milliseconds(5000);
-
-    for (int step = 0; step < stepLimit; ++step) {
-        perf.startOperation("ollama.chat");
-        InferenceResult result;
-        try {
-            result = recovery.executeWithRecovery([&]() {
-                InferenceResult r = m_ollamaClient->ChatSync(messages, tools);
-                if (!r.success) {
-                    throw std::runtime_error(r.error_message);
-                }
-                return r;
-            }, recoveryCfg);
-            perf.endOperation("ollama.chat");
-        } catch (const std::exception& ex) {
-            perf.recordError("ollama.chat");
-            perf.endOperation("ollama.chat");
-            logger.error("OrchestratorBridge", std::string("ChatSync failed: ") + ex.what());
-            return "[ERROR] " + std::string(ex.what());
-        }
-
-        if (!result.response.empty()) {
-            latestResponse = result.response;
-        }
-
-        // PROBE-E: Ollama ChatSync result
-        {
-            std::string probe = "[PROBE-E] OrchestratorBridge step=" + std::to_string(step) +
-                " response_len=" + std::to_string(result.response.size()) +
-                " has_tool_calls=" + (result.has_tool_calls ? "1" : "0") +
-                " preview=" + result.response.substr(0, std::min(result.response.size(), (size_t)80)) + "\n";
-            OutputDebugStringA(probe.c_str());
-        }
-
-        if (!result.has_tool_calls || result.tool_calls.empty()) {
-            return latestResponse;
-        }
-
-        ChatMessage assistantMessage;
-        assistantMessage.role = "assistant";
-        assistantMessage.content = result.response;
-        assistantMessage.tool_calls = json::array();
-
-        for (size_t i = 0; i < result.tool_calls.size(); ++i) {
-            const auto& toolCall = result.tool_calls[i];
-            const std::string callId = "call_" + std::to_string(step) + "_" + std::to_string(i);
-
-            if (!seenToolCalls.insert(callId).second) {
-                logger.warning("OrchestratorBridge", "Duplicate tool call suppressed: " + callId);
-                continue;
-            }
-
-            json toolCallJson;
-            toolCallJson["id"] = callId;
-            toolCallJson["type"] = "function";
-            toolCallJson["function"] = {
-                {"name", toolCall.first},
-                {"arguments", toolCall.second}
-            };
-            assistantMessage.tool_calls.push_back(toolCallJson);
-        }
-
-        messages.push_back(std::move(assistantMessage));
-
-        for (size_t i = 0; i < result.tool_calls.size(); ++i) {
-            const auto& toolCall = result.tool_calls[i];
-            const std::string callId = "call_" + std::to_string(step) + "_" + std::to_string(i);
-
-            ToolCallResult toolResult = RawrXD::Agent::AgentToolHandlers::Instance().Execute(toolCall.first, toolCall.second);
-
-            ChatMessage toolMessage;
-            toolMessage.role = "tool";
-            toolMessage.content = BuildToolMessageContent(toolResult);
-            toolMessage.tool_call_id = callId;
-            toolMessage.tool_calls = json();
-            messages.push_back(std::move(toolMessage));
-        }
+    std::string selectedModel = m_ollamaConfig.chat_model;
+    if (selectedModel.empty()) {
+        selectedModel = SelectPreferredModel(true);
+    }
+    if (selectedModel.empty()) {
+        selectedModel = "phi3:mini";
     }
 
-    if (latestResponse.empty()) {
-        return "[ERROR] Agent stopped after reaching the step limit without a final answer";
+    RawrXD::Agentic::AgenticInferenceBridge::RuntimeConfig bridgeCfg;
+    bridgeCfg.workingDirectory = m_workingDir.empty() ? "." : m_workingDir;
+    bridgeCfg.host = m_ollamaConfig.host;
+    bridgeCfg.port = m_ollamaConfig.port;
+    bridgeCfg.temperature = m_ollamaConfig.temperature;
+    bridgeCfg.maxToolIterations = std::max(1, m_maxSteps);
+
+    auto bridgeResult = RawrXD::Agentic::AgenticInferenceBridge::SubmitInferenceWithTools(
+        sanitizedPrompt.sanitized,
+        selectedModel,
+        static_cast<size_t>(std::max(1, m_ollamaConfig.max_tokens)),
+        bridgeCfg);
+
+    if (!bridgeResult.success) {
+        logger.error("OrchestratorBridge", "AgenticInferenceBridge failed: " + bridgeResult.error);
+        return "[ERROR] " + bridgeResult.error;
     }
 
-    return latestResponse + "\n\n[INFO] Agent step limit reached.";
+    return bridgeResult.response;
 }
 
 void OrchestratorBridge::RunAgentAsync(const std::string& userPrompt) {

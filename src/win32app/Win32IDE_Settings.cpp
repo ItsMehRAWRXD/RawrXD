@@ -73,6 +73,9 @@ struct SovereignConfig
     bool model_prefetch_enabled = true;
     bool model_workingset_lock_enabled = false;
     bool silence_privilege_warnings = true;
+    // Model Puller settings
+    std::string huggingface_token;
+    std::string models_base_path;
     __m512i zmm_signature;
 };
 
@@ -234,7 +237,9 @@ void to_json(nlohmann::json& j, const SovereignConfig& config)
                        {"enable_vector7_autogen", config.enable_vector7_autogen},
                        {"model_prefetch_enabled", config.model_prefetch_enabled},
                        {"model_workingset_lock_enabled", config.model_workingset_lock_enabled},
-                       {"silence_privilege_warnings", config.silence_privilege_warnings}};
+                       {"silence_privilege_warnings", config.silence_privilege_warnings},
+                       {"huggingface_token", config.huggingface_token},
+                       {"models_base_path", config.models_base_path}};
 
     for (const auto& rf : config.recent_files)
     {
@@ -294,6 +299,10 @@ void from_json(const nlohmann::json& j, SovereignConfig& config)
         config.model_workingset_lock_enabled = j.at("model_workingset_lock_enabled").get<bool>();
     if (j.contains("silence_privilege_warnings"))
         config.silence_privilege_warnings = j.at("silence_privilege_warnings").get<bool>();
+    if (j.contains("huggingface_token"))
+        config.huggingface_token = j.at("huggingface_token").get<std::string>();
+    if (j.contains("models_base_path"))
+        config.models_base_path = j.at("models_base_path").get<std::string>();
 }
 
 // Persistence with Sovereign Integrity

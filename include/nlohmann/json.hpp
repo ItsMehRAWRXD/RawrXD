@@ -439,20 +439,20 @@ namespace nlohmann {
             using vec_it = std::vector<json>::iterator;
             using map_it = std::map<std::string, json>::iterator;
             bool is_arr;
-            vec_it vi; map_it mi;
+            vec_it vi; map_it mi, mi_end;
             // Proxy for ->first / ->second access on object iterators
             std::string first;   // key (valid for objects only)
             json* second_ptr_ = nullptr;
             json& second() { return *second_ptr_; }
 
-            json_iterator(vec_it a, vec_it) : is_arr(true), vi(a), mi() {}
-            json_iterator(map_it a, map_it) : is_arr(false), vi(), mi(a) { sync(); }
+            json_iterator(vec_it a, vec_it) : is_arr(true), vi(a), mi(), mi_end() {}
+            json_iterator(map_it a, map_it b) : is_arr(false), vi(), mi(a), mi_end(b) { if (mi != mi_end) sync(); }
             void sync() { if (!is_arr) { first = mi->first; second_ptr_ = &mi->second; } }
             const std::string& key() const { return first; }
             json& value() { return *second_ptr_; }
             json& operator*() { return is_arr ? *vi : mi->second; }
             json* operator->() { return is_arr ? &(*vi) : &(mi->second); }
-            json_iterator& operator++() { if (is_arr) ++vi; else { ++mi; sync(); } return *this; }
+            json_iterator& operator++() { if (is_arr) ++vi; else { ++mi; if (mi != mi_end) sync(); } return *this; }
             bool operator!=(const json_iterator& o) const { return is_arr ? vi != o.vi : mi != o.mi; }
             bool operator==(const json_iterator& o) const { return !(*this != o); }
         };
@@ -460,19 +460,19 @@ namespace nlohmann {
             using vec_it = std::vector<json>::const_iterator;
             using map_it = std::map<std::string, json>::const_iterator;
             bool is_arr;
-            vec_it vi; map_it mi;
+            vec_it vi; map_it mi, mi_end;
             std::string first;
             const json* second_ptr_ = nullptr;
             const json& second() const { return *second_ptr_; }
 
-            const_json_iterator(vec_it a, vec_it) : is_arr(true), vi(a), mi() {}
-            const_json_iterator(map_it a, map_it) : is_arr(false), vi(), mi(a) { sync(); }
+            const_json_iterator(vec_it a, vec_it) : is_arr(true), vi(a), mi(), mi_end() {}
+            const_json_iterator(map_it a, map_it b) : is_arr(false), vi(), mi(a), mi_end(b) { if (mi != mi_end) sync(); }
             void sync() { if (!is_arr) { first = mi->first; second_ptr_ = &mi->second; } }
             const std::string& key() const { return first; }
             const json& value() const { return *second_ptr_; }
             const json& operator*() const { return is_arr ? *vi : mi->second; }
             const json* operator->() const { return is_arr ? &(*vi) : &(mi->second); }
-            const_json_iterator& operator++() { if (is_arr) ++vi; else { ++mi; sync(); } return *this; }
+            const_json_iterator& operator++() { if (is_arr) ++vi; else { ++mi; if (mi != mi_end) sync(); } return *this; }
             bool operator!=(const const_json_iterator& o) const { return is_arr ? vi != o.vi : mi != o.mi; }
             bool operator==(const const_json_iterator& o) const { return !(*this != o); }
         };

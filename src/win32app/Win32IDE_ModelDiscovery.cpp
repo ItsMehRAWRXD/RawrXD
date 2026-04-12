@@ -9,6 +9,7 @@
 // ============================================================================
 
 #include "Win32IDE.h"
+#include "model_puller/model_puller.h"
 #include <filesystem>
 #include <algorithm>
 #include <thread>
@@ -70,6 +71,17 @@ void Win32IDE::initModelDiscovery() {
     const char* ollamaModelsPath = std::getenv("OLLAMA_MODELS");
     if (ollamaModelsPath && strlen(ollamaModelsPath) > 0 && strlen(ollamaModelsPath) <= 2048) {
         m_modelDiscoveryPaths.insert(m_modelDiscoveryPaths.begin(), normalizeModelPath(ollamaModelsPath));
+    }
+
+    // Add Model Puller's managed models directory
+    try {
+        auto& puller = RawrXD::ModelPuller::Instance();
+        std::string pullerBase = puller.GetIndex().GetModelsBasePath();
+        if (!pullerBase.empty()) {
+            m_modelDiscoveryPaths.insert(m_modelDiscoveryPaths.begin(), normalizeModelPath(pullerBase));
+        }
+    } catch (...) {
+        // Model Puller not initialized yet — skip
     }
 
     // Initial scan

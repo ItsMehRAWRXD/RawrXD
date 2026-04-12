@@ -7,6 +7,8 @@
 #include "agentic_executor.h"
 #include "../agentic_engine.h"
 #include "file_manager.h"
+#include "AgenticSubmitInference_Fix.h"  // TOOL EXECUTION BRIDGE
+#include <nlohmann/json.hpp>
 #include <filesystem>
 #include <fstream>
 #include <sstream>
@@ -19,6 +21,24 @@
 #ifdef _WIN32
 #include <vector>
 #include <windows.h>
+
+namespace {
+
+nlohmann::json SerializeToolTrace(
+    const std::vector<RawrXD::Agentic::AgenticInferenceBridge::InferenceResult::ToolCallRecord>& trace) {
+    nlohmann::json arr = nlohmann::json::array();
+    for (const auto& record : trace) {
+        arr.push_back({
+            {"toolName", record.toolName},
+            {"callId", record.callId},
+            {"output", record.output},
+            {"success", record.success}
+        });
+    }
+    return arr;
+}
+
+} // namespace
 
 AgenticExecutor::AgenticExecutor() = default;
 AgenticExecutor::~AgenticExecutor() = default;
@@ -60,8 +80,56 @@ std::string AgenticExecutor::executeUserRequest(const std::string& request) {
             }
             result = m_agenticEngine->executeCommand(command, powershell);
         } else {
-            const std::string context = getFullContext();
-            result = m_agenticEngine->generateNaturalResponse(request, context);
+            // ========== NEW: Use AgenticInferenceBridge for tool-aware inference ==========
+            using AgenticBridge = RawrXD::Agentic::AgenticInferenceBridge;
+            
+            auto bridgeResult = AgenticBridge::SubmitInferenceWithTools(
+                request,           // User request
+                "codestral",       // Default model (can be made configurable)
+                4096);             // Max tokens
+
+            if (bridgeResult.success) {
+                // Build successful response
+                nlohmann::json respJson = nlohmann::json::object();
+                respJson["status"] = "success";
+                respJson["taskId"] = task_id;
+                respJson["response"] = bridgeResult.response;
+                
+                if (bridgeResult.usedTools) {
+                    respJson["usedTools"] = true;
+                    respJson["toolIterations"] = static_cast<int>(bridgeResult.toolIterations);
+                }
+                
+                if (!bridgeResult.toolTrace.empty()) {
+                    respJson["toolTrace"] = SerializeToolTrace(bridgeResult.toolTrace);
+                }
+                
+                result = respJson.dump();
+                if (m_onLogMessage) {
+                    m_onLogMessage(("[AgenticExecutor] Bridge completed with " + 
+                        std::to_string(bridgeResult.toolIterations) + " tool iterations").c_str(), 
+                        m_callbackContext);
+                }
+            } else {
+                // Bridge failed - fall back to legacy engine if available
+                if (m_onLogMessage) {
+                    m_onLogMessage(("[AgenticExecutor] Bridge error: " + bridgeResult.error).c_str(),
+                        m_callbackContext);
+                }
+                
+                // Try legacy path as fallback
+                const std::string context = getFullContext();
+                std::string legacyResult = m_agenticEngine->generateNaturalResponse(request, context);
+                
+                nlohmann::json respJson = nlohmann::json::object();
+                respJson["status"] = "warning";
+                respJson["taskId"] = task_id;
+                respJson["response"] = legacyResult;
+                respJson["fallbackUsed"] = true;
+                respJson["bridgeError"] = bridgeResult.error;
+                
+                result = respJson.dump();
+            }
         }
     } else {
         if (m_onLogMessage) {
