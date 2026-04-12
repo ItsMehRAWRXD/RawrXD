@@ -513,9 +513,7 @@ void AgenticLoopState::addConstraint(const std::string& key, const std::string& 
 
 void AgenticLoopState::removeConstraint(const std::string& key)
 {
-    // The current minimal json.hpp stub lacks erase().
-    // TODO: Implement erase in json.hpp or replace with std::map for constraints.
-    // m_constraints.erase(key);
+    m_constraints.erase(key);
 }
 
 bool AgenticLoopState::validateAgainstConstraints(const nlohmann::json& action) const

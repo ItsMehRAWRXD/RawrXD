@@ -12,6 +12,7 @@
 #include "Win32IDE_IELabels.h"
 #include <sstream>
 #include <algorithm>
+#include <vector>
 
 // SCAFFOLD_028: Breadcrumbs and navigation
 
@@ -25,6 +26,75 @@ static const COLORREF BC_ICON_FILE    = RGB(204, 204, 204);
 static const COLORREF BC_ICON_CLASS   = RGB(206, 145, 120);
 static const COLORREF BC_ICON_METHOD  = RGB(86, 156, 214);
 static const COLORREF BC_ICON_FUNC    = RGB(220, 220, 170);
+static const COLORREF BC_ICON_FOLDER  = RGB(197, 134, 192);
+
+namespace {
+int g_breadcrumbHoverIndex = -1;
+
+struct PathBreadcrumbItem {
+    std::string label;
+    std::string symbolKind;
+    int line = 0;
+    int column = 0;
+};
+
+void appendPathBreadcrumbs(const std::string& currentFile, std::vector<PathBreadcrumbItem>& out)
+{
+    if (currentFile.empty())
+        return;
+
+    // Keep path separators normalized for breadcrumb slicing.
+    std::string normalized = currentFile;
+    for (char& c : normalized)
+    {
+        if (c == '\\')
+            c = '/';
+    }
+
+    // Optional root crumb (e.g., "D:")
+    if (normalized.size() >= 2 && normalized[1] == ':')
+    {
+        PathBreadcrumbItem root;
+        root.label = normalized.substr(0, 2);
+        root.symbolKind = "root";
+        root.line = 0;
+        root.column = 0;
+        out.push_back(root);
+    }
+
+    std::vector<std::string> parts;
+    size_t start = 0;
+    while (start <= normalized.size())
+    {
+        size_t pos = normalized.find('/', start);
+        std::string part = (pos == std::string::npos) ? normalized.substr(start) : normalized.substr(start, pos - start);
+        if (!part.empty() && part != ".")
+            parts.push_back(part);
+        if (pos == std::string::npos)
+            break;
+        start = pos + 1;
+    }
+
+    if (parts.empty())
+        return;
+
+    size_t firstPart = 0;
+    if (normalized.size() >= 2 && normalized[1] == ':' && !parts.empty() && parts[0].size() >= 2 && parts[0][1] == ':')
+    {
+        firstPart = 1;
+    }
+
+    for (size_t i = firstPart; i < parts.size(); ++i)
+    {
+        PathBreadcrumbItem item;
+        item.label = parts[i];
+        item.symbolKind = (i + 1 == parts.size()) ? "file" : "folder";
+        item.line = 0;
+        item.column = 0;
+        out.push_back(item);
+    }
+}
+} // namespace
 
 // ============================================================================
 // BREADCRUMB BAR CREATION
@@ -76,19 +146,20 @@ void Win32IDE::updateBreadcrumbs()
 {
     m_breadcrumbPath.clear();
 
-    // Always add file as first breadcrumb
-    if (!m_currentFile.empty()) {
-        BreadcrumbItem fileItem;
-        // Extract filename from path
-        size_t lastSlash = m_currentFile.find_last_of("\\/");
-        fileItem.label = (lastSlash != std::string::npos)
-            ? m_currentFile.substr(lastSlash + 1)
-            : m_currentFile;
-        fileItem.symbolKind = "file";
-        fileItem.line = 0;
-        fileItem.column = 0;
-        m_breadcrumbPath.push_back(fileItem);
-    } else {
+    // Render full file path (root > folders > file) for aperture-like navigation context.
+    std::vector<PathBreadcrumbItem> pathItems;
+    appendPathBreadcrumbs(m_currentFile, pathItems);
+    for (const auto& item : pathItems)
+    {
+        BreadcrumbItem crumb;
+        crumb.label = item.label;
+        crumb.symbolKind = item.symbolKind;
+        crumb.line = item.line;
+        crumb.column = item.column;
+        m_breadcrumbPath.push_back(std::move(crumb));
+    }
+
+    if (m_breadcrumbPath.empty()) {
         BreadcrumbItem untitled;
         untitled.label = "Untitled";
         untitled.symbolKind = "file";
@@ -112,17 +183,25 @@ void Win32IDE::updateBreadcrumbsForCursor(int line, int column)
 
     m_breadcrumbPath.clear();
 
-    // File breadcrumb (always first)
+    // File path breadcrumbs (root > folders > file) are always first.
+    std::vector<PathBreadcrumbItem> pathItems;
+    appendPathBreadcrumbs(m_currentFile, pathItems);
+    for (const auto& item : pathItems)
     {
-        BreadcrumbItem fileItem;
-        size_t lastSlash = m_currentFile.find_last_of("\\/");
-        fileItem.label = (!m_currentFile.empty() && lastSlash != std::string::npos)
-            ? m_currentFile.substr(lastSlash + 1)
-            : (m_currentFile.empty() ? "Untitled" : m_currentFile);
-        fileItem.symbolKind = "file";
-        fileItem.line = 0;
-        fileItem.column = 0;
-        m_breadcrumbPath.push_back(fileItem);
+        BreadcrumbItem crumb;
+        crumb.label = item.label;
+        crumb.symbolKind = item.symbolKind;
+        crumb.line = item.line;
+        crumb.column = item.column;
+        m_breadcrumbPath.push_back(std::move(crumb));
+    }
+    if (m_breadcrumbPath.empty()) {
+        BreadcrumbItem untitled;
+        untitled.label = "Untitled";
+        untitled.symbolKind = "file";
+        untitled.line = 0;
+        untitled.column = 0;
+        m_breadcrumbPath.push_back(untitled);
     }
 
     // Parse editor text to find enclosing symbols at cursor line
@@ -339,6 +418,9 @@ void Win32IDE::paintBreadcrumbs(HDC hdc, RECT& rc)
         } else if (item.symbolKind == "namespace") {
             iconColor = BC_ICON_FUNC;
             icon = "N ";
+        } else if (item.symbolKind == "folder" || item.symbolKind == "root") {
+            iconColor = BC_ICON_FOLDER;
+            icon = "D ";
         } else if (item.symbolKind == "file") {
             icon = "";
         }
@@ -361,6 +443,21 @@ void Win32IDE::paintBreadcrumbs(HDC hdc, RECT& rc)
         xPos += textSize.cx + 4;
 
         RECT hitRect = { itemLeft, rc.top, xPos, rc.bottom };
+        if (static_cast<int>(i) == g_breadcrumbHoverIndex) {
+            RECT hoverRect = { hitRect.left - 2, rc.top + 2, hitRect.right + 2, rc.bottom - 2 };
+            HBRUSH hHover = CreateSolidBrush(BC_HOVER);
+            FillRect(hdc, &hoverRect, hHover);
+            DeleteObject(hHover);
+
+            // Re-draw text/icon above hover fill.
+            if (icon[0] != '\0') {
+                SetTextColor(hdc, iconColor);
+                RECT iconRect = { itemLeft + ((i > 0) ? 22 : 0), rc.top, itemLeft + ((i > 0) ? 22 : 0) + 16, rc.bottom };
+                DrawTextA(hdc, icon, -1, &iconRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+            }
+            SetTextColor(hdc, (i == m_breadcrumbPath.size() - 1) ? BC_ACTIVE_TEXT : BC_TEXT);
+            DrawTextA(hdc, item.label.c_str(), -1, &textRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+        }
         m_breadcrumbRects.push_back(hitRect);
     }
 
@@ -417,6 +514,35 @@ LRESULT CALLBACK Win32IDE::BreadcrumbProc(HWND hwnd, UINT uMsg, WPARAM wParam, L
         }
         return 0;
     }
+
+    case WM_MOUSEMOVE:
+    {
+        if (pThis) {
+            TRACKMOUSEEVENT tme = { sizeof(TRACKMOUSEEVENT), TME_LEAVE, hwnd, 0 };
+            TrackMouseEvent(&tme);
+
+            POINT pt = { LOWORD(lParam), HIWORD(lParam) };
+            int hoverIndex = -1;
+            for (size_t i = 0; i < pThis->m_breadcrumbRects.size(); i++) {
+                if (PtInRect(&pThis->m_breadcrumbRects[i], pt)) {
+                    hoverIndex = static_cast<int>(i);
+                    break;
+                }
+            }
+            if (hoverIndex != g_breadcrumbHoverIndex) {
+                g_breadcrumbHoverIndex = hoverIndex;
+                InvalidateRect(hwnd, nullptr, FALSE);
+            }
+        }
+        return 0;
+    }
+
+    case WM_MOUSELEAVE:
+        if (g_breadcrumbHoverIndex != -1) {
+            g_breadcrumbHoverIndex = -1;
+            InvalidateRect(hwnd, nullptr, FALSE);
+        }
+        return 0;
 
     case WM_ERASEBKGND:
         return 1;

@@ -169,14 +169,14 @@ enum CmdFlags : uint32_t
     X(3211, TRANS_TOGGLE, "view.transparencyToggle", "!opacity toggle", BOTH, "Transparency", handleTransToggle,       \
       CMD_NONE)                                                                                                        \
                                                                                                                        \
-    /* ═══════════════════ HELP (legacy 4001-4004) ═══════════════════ */                                              \
-    X(4001, HELP_ABOUT, "help.about", "!about", BOTH, "Help", handleHelpAbout, CMD_NONE)                               \
-    X(4002, HELP_CMDREF, "help.cmdref", "!cmdref", BOTH, "Help", handleHelpCmdRef, CMD_NONE)                           \
-    X(4003, HELP_PSDOCS, "help.psdocs", "!psdocs", BOTH, "Help", handleHelpPsDocs, CMD_NONE)                           \
-    X(4004, HELP_SEARCH, "help.search", "!help_search", BOTH, "Help", handleHelpSearch, CMD_NONE)                      \
+    /* ═══════════════════ HELP (7901-7904; Win32 menu + palette; NOT 4000-4099 terminal band) ═══════════════════ */  \
+    X(7901, HELP_CMDREF, "help.cmdref", "!cmdref", BOTH, "Help", handleHelpCmdRef, CMD_NONE)                           \
+    X(7902, HELP_PSDOCS, "help.psdocs", "!psdocs", BOTH, "Help", handleHelpPsDocs, CMD_NONE)                           \
+    X(7903, HELP_SEARCH, "help.search", "!help_search", BOTH, "Help", handleHelpSearch, CMD_NONE)                      \
+    X(7904, HELP_ABOUT, "help.about", "!about", BOTH, "Help", handleHelpAbout, CMD_NONE)                               \
                                                                                                                        \
     /* ═══════════════════ TERMINAL (4006-4010) ═══════════════════ */                                                 \
-    X(4005, TERMINAL_NEW, "terminal.new", "!terminal_new", BOTH, "Terminal", handleTerminalNew, CMD_NONE)            \
+    X(4005, TERMINAL_NEW, "terminal.new", "!terminal_new", BOTH, "Terminal", handleTerminalNew, CMD_NONE)              \
     X(4006, TERMINAL_KILL, "terminal.kill", "!terminal_kill", BOTH, "Terminal", handleTerminalKill, CMD_NONE)          \
     X(4007, TERMINAL_SPLIT_H, "terminal.splitH", "!terminal_split", BOTH, "Terminal", handleTerminalSplitH, CMD_NONE)  \
     X(4008, TERMINAL_SPLIT_V, "terminal.splitV", "!terminal_split_v", BOTH, "Terminal", handleTerminalSplitV,          \
@@ -216,7 +216,7 @@ enum CmdFlags : uint32_t
     X(4154, AUTONOMY_STATUS, "autonomy.status", "!autonomy_status", BOTH, "Autonomy", handleAutonomyStatus, CMD_NONE)  \
     X(4155, AUTONOMY_MEMORY, "autonomy.memory", "!autonomy_memory", BOTH, "Autonomy", handleAutonomyMemory, CMD_NONE)  \
                                                                                                                        \
-    /* ═══════════════════ PLAN ORCHESTRATOR (4164-4167) ═══════════════════ */                                       \
+    /* ═══════════════════ PLAN ORCHESTRATOR (4164-4167) ═══════════════════ */                                        \
     X(4164, PLAN_ORCHESTRATOR_START, "planOrchestrator.start", "!plan_start", BOTH, "PlanOrchestrator",                \
       handlePlanOrchestratorStart, CMD_ASYNC)                                                                          \
     X(4165, PLAN_ORCHESTRATOR_STOP, "planOrchestrator.stop", "!plan_stop", BOTH, "PlanOrchestrator",                   \

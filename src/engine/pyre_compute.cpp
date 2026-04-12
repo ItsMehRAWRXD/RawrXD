@@ -499,10 +499,61 @@ PatchResult PyreGraph::loadModel(const char* filepath) {
     return PatchResult::ok(msg);
 }
 
-PatchResult PyreGraph::loadFromGGUF(const char* /*ggufPath*/) {
-    // Future: convert GGUF tensors into Pyre tensor layout on-the-fly
-    // For now, use the dedicated .pyre format or StreamingGGUFLoader
-    return PatchResult::error("GGUF-to-Pyre bridge not implemented — use .pyre format or StreamingGGUFLoader", -1);
+PatchResult PyreGraph::loadFromGGUF(const char* ggufPath) {
+    if (!ggufPath || ggufPath[0] == '\0') {
+        return PatchResult::error("Empty GGUF path", -1);
+    }
+
+    // If caller already passed a .pyre path, load directly.
+    std::string inPath(ggufPath);
+    std::string lower = inPath;
+    std::transform(lower.begin(), lower.end(), lower.begin(), [](unsigned char c) {
+        return static_cast<char>(std::tolower(c));
+    });
+    auto fileExists = [](const std::string& p) {
+        const DWORD attrs = GetFileAttributesA(p.c_str());
+        return (attrs != INVALID_FILE_ATTRIBUTES) && ((attrs & FILE_ATTRIBUTE_DIRECTORY) == 0);
+    };
+    if (lower.size() >= 5 && lower.substr(lower.size() - 5) == ".pyre") {
+        return loadModel(inPath.c_str());
+    }
+
+    // Resolution order:
+    //   1) replace .gguf -> .pyre
+    //   2) append .pyre
+    //   3) sidecar directory via RAWRXD_PYRE_SIDECAR_DIR/<basename>.pyre
+    std::string candidate1 = inPath;
+    if (lower.size() >= 5 && lower.substr(lower.size() - 5) == ".gguf") {
+        candidate1 = inPath.substr(0, inPath.size() - 5) + ".pyre";
+    } else {
+        candidate1 = inPath + ".pyre";
+    }
+    if (fileExists(candidate1)) {
+        return loadModel(candidate1.c_str());
+    }
+
+    std::string candidate2 = inPath + ".pyre";
+    if (candidate2 != candidate1 && fileExists(candidate2)) {
+        return loadModel(candidate2.c_str());
+    }
+
+    const char* sidecarDir = std::getenv("RAWRXD_PYRE_SIDECAR_DIR");
+    if (sidecarDir && sidecarDir[0] != '\0') {
+        size_t slash = inPath.find_last_of("\\/");
+        std::string base = (slash == std::string::npos) ? inPath : inPath.substr(slash + 1);
+        size_t dot = base.find_last_of('.');
+        if (dot != std::string::npos) {
+            base = base.substr(0, dot);
+        }
+        std::string candidate3 = std::string(sidecarDir) + "\\" + base + ".pyre";
+        if (fileExists(candidate3)) {
+            return loadModel(candidate3.c_str());
+        }
+    }
+
+    std::string msg = "Pyre sidecar model not found for GGUF input: " + inPath +
+                      " (tried replace-ext, append-ext, and RAWRXD_PYRE_SIDECAR_DIR)";
+    return PatchResult::error(msg.c_str(), -1);
 }
 
 bool PyreGraph::isModelLoaded() const { return m_modelLoaded; }

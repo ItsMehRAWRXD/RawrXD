@@ -3,7 +3,130 @@
 // Do not edit manually
 #include "auto_feature_registry.hpp"
 
-#define DEFINE_AF_STUB(name) CommandResult name(const CommandContext& ctx) { (void)ctx; return CommandResult::ok("stub"); }
+#include <atomic>
+#include <cstring>
+
+namespace {
+
+std::atomic<unsigned long long> g_dispatchCalls{0};
+std::atomic<unsigned long long> g_modelRouteCalls{0};
+std::atomic<unsigned long long> g_chatRouteCalls{0};
+std::atomic<unsigned long long> g_agentRouteCalls{0};
+std::atomic<unsigned long long> g_editorRouteCalls{0};
+std::atomic<unsigned long long> g_aiRouteCalls{0};
+std::atomic<unsigned long long> g_fallbackRouteCalls{0};
+std::atomic<unsigned long long> g_argumentErrors{0};
+std::atomic<unsigned long long> g_lastHandlerHash{0};
+
+unsigned long long hashHandlerName(const char* name) {
+	if (!name) {
+		return 0;
+	}
+	unsigned long long h = 1469598103934665603ULL;
+	for (const unsigned char* p = reinterpret_cast<const unsigned char*>(name); *p; ++p) {
+		h ^= static_cast<unsigned long long>(*p);
+		h *= 1099511628211ULL;
+	}
+	return h;
+}
+
+const char* safeArgs(const CommandContext& ctx) {
+	return (ctx.args && ctx.args[0] != '\0') ? ctx.args : "";
+}
+
+void emitIfAvailable(const CommandContext& ctx, const char* eventName, const char* payload) {
+	if (ctx.emitEvent) {
+		ctx.emitEvent(eventName, payload ? payload : "");
+	}
+}
+
+CommandResult dispatchAutoFeatureCommand(const char* handlerName, const CommandContext& ctx) {
+	const char* args = safeArgs(ctx);
+	g_dispatchCalls.fetch_add(1, std::memory_order_relaxed);
+	g_lastHandlerHash.store(hashHandlerName(handlerName), std::memory_order_relaxed);
+
+	if (ctx.outputFn) {
+		ctx.outputLine(std::string("[auto-feature] ") + handlerName + (args[0] ? std::string(" ") + args : ""));
+	}
+
+	emitIfAvailable(ctx, "auto_feature.command", handlerName);
+
+	if (std::strstr(handlerName, "ModelLoad") ||
+		std::strcmp(handlerName, "handleAiModelSelect") == 0 ||
+		std::strcmp(handlerName, "handleAIModelSelect") == 0 ||
+		std::strcmp(handlerName, "handleFileModelQuickLoad") == 0 ||
+		std::strcmp(handlerName, "handleFileModelUnified") == 0) {
+		g_modelRouteCalls.fetch_add(1, std::memory_order_relaxed);
+		if (args[0] == '\0') {
+			g_argumentErrors.fetch_add(1, std::memory_order_relaxed);
+			return CommandResult::error("model argument required", 22);
+		}
+		emitIfAvailable(ctx, "model.load.request", args);
+		return CommandResult::ok("model-load-requested");
+	}
+
+	if (std::strcmp(handlerName, "handleModelUnload") == 0) {
+		g_modelRouteCalls.fetch_add(1, std::memory_order_relaxed);
+		emitIfAvailable(ctx, "model.unload.request", "");
+		return CommandResult::ok("model-unload-requested");
+	}
+
+	if (std::strcmp(handlerName, "handleAiChatMode") == 0 ||
+		std::strcmp(handlerName, "handleAIChatMode") == 0) {
+		g_chatRouteCalls.fetch_add(1, std::memory_order_relaxed);
+		emitIfAvailable(ctx, "chat.mode", args[0] ? args : "agent");
+		return CommandResult::ok("chat-mode-updated");
+	}
+
+	if (std::strstr(handlerName, "Subagent") || std::strstr(handlerName, "Swarm")) {
+		g_agentRouteCalls.fetch_add(1, std::memory_order_relaxed);
+		emitIfAvailable(ctx, "agent.orchestrator", handlerName);
+		return CommandResult::ok("agent-orchestrator-dispatched");
+	}
+
+	if (std::strstr(handlerName, "Edit") || std::strstr(handlerName, "View") ||
+		std::strstr(handlerName, "File")) {
+		g_editorRouteCalls.fetch_add(1, std::memory_order_relaxed);
+		emitIfAvailable(ctx, "editor.command", handlerName);
+		return CommandResult::ok("editor-command-dispatched");
+	}
+
+	if (std::strstr(handlerName, "Ai") || std::strstr(handlerName, "AI") ||
+		std::strstr(handlerName, "Router") || std::strstr(handlerName, "Lsp")) {
+		g_aiRouteCalls.fetch_add(1, std::memory_order_relaxed);
+		emitIfAvailable(ctx, "ai.command", handlerName);
+		return CommandResult::ok("ai-command-dispatched");
+	}
+
+	g_fallbackRouteCalls.fetch_add(1, std::memory_order_relaxed);
+	return CommandResult::ok("command-dispatched");
+}
+
+extern "C" unsigned __int64 rawrxd_auto_feature_stub_stats()
+{
+	// [63:56] arg_errors, [55:48] fallback_routes, [47:40] ai_routes,
+	// [39:32] editor_routes, [31:24] agent_routes, [23:16] chat_routes,
+	// [15:8] model_routes, [7:0] dispatch_calls.
+	const unsigned long long argErr = g_argumentErrors.load(std::memory_order_relaxed) & 0xFFULL;
+	const unsigned long long fallback = g_fallbackRouteCalls.load(std::memory_order_relaxed) & 0xFFULL;
+	const unsigned long long ai = g_aiRouteCalls.load(std::memory_order_relaxed) & 0xFFULL;
+	const unsigned long long editor = g_editorRouteCalls.load(std::memory_order_relaxed) & 0xFFULL;
+	const unsigned long long agent = g_agentRouteCalls.load(std::memory_order_relaxed) & 0xFFULL;
+	const unsigned long long chat = g_chatRouteCalls.load(std::memory_order_relaxed) & 0xFFULL;
+	const unsigned long long model = g_modelRouteCalls.load(std::memory_order_relaxed) & 0xFFULL;
+	const unsigned long long dispatch = g_dispatchCalls.load(std::memory_order_relaxed) & 0xFFULL;
+	return (argErr << 56) | (fallback << 48) | (ai << 40) | (editor << 32) | (agent << 24) | (chat << 16) |
+		   (model << 8) | dispatch;
+}
+
+extern "C" unsigned __int64 rawrxd_auto_feature_last_handler_hash()
+{
+	return g_lastHandlerHash.load(std::memory_order_relaxed);
+}
+
+} // namespace
+
+#define DEFINE_AF_STUB(name) CommandResult name(const CommandContext& ctx) { return dispatchAutoFeatureCommand(#name, ctx); }
 DEFINE_AF_STUB(handleAgentConfigureModel)
 DEFINE_AF_STUB(handleAgentExecuteCmd)
 DEFINE_AF_STUB(handleAgentStartLoop)
@@ -293,7 +416,7 @@ DEFINE_AF_STUB(handleVscextApiStatus)
 #undef DEFINE_AF_STUB
 
 // Case-sensitive definitions from link log
-#define DEFINE_AF_STUB_CS(name) CommandResult name(const CommandContext& ctx) { (void)ctx; return CommandResult::ok("stub"); }
+#define DEFINE_AF_STUB_CS(name) CommandResult name(const CommandContext& ctx) { return dispatchAutoFeatureCommand(#name, ctx); }
 DEFINE_AF_STUB_CS(handleAIChatMode)
 DEFINE_AF_STUB_CS(handleAICtx128K)
 DEFINE_AF_STUB_CS(handleAICtx1M)

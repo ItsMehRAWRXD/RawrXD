@@ -1281,11 +1281,7 @@ ToolResult ToolRegistry::HandleSentinelAudit(const json& args, std::string& outp
     return ToolResult::Success;
 }
 
-ToolResult ToolRegistry::HandleApplyEdit(const json& args, std::string& output) {
-    // ============================================================
-    // Phase 46: NL Shell Validation
-    // ============================================================
-    ToolResult ToolRegistry::HandleNLShellValidate(const json& args, std::string& output) {
+ToolResult ToolRegistry::HandleNLShellValidate(const json& args, std::string& output) {
         if (!args.contains("command") || !args["command"].is_string()) {
             output = "nlshell_validate: missing 'command'";
             return ToolResult::ValidationFailed;

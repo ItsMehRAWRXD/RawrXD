@@ -1,6 +1,7 @@
 #include "ContextWindowManager.h"
 #include <windows.h>
 #include <shlwapi.h>
+#include <filesystem>
 #include <fstream>
 #include <sstream>
 #include <vector>
@@ -316,15 +317,74 @@ bool PluginManager::parseManifest(const std::string& manifestPath, PluginManifes
 }
 
 bool PluginManager::convertVSIXToNative(const std::string& vsixPath, const std::string& outputPath) {
-    // This is a complex operation that would require:
-    // 1. JavaScript/TypeScript to C++ transpilation
-    // 2. API bridging for VS Code extension API
-    // 3. Compilation to native DLL
-    
-    // For now, we'll create a stub DLL that can be loaded
-    // Real implementation would need a full transpiler and compiler toolchain
-    
-    return false; // Not fully implemented in this stub
+    if (vsixPath.empty() || outputPath.empty()) {
+        return false;
+    }
+
+    namespace fs = std::filesystem;
+    std::error_code ec;
+    fs::path sourceRoot(vsixPath);
+    if (!fs::exists(sourceRoot, ec) || !fs::is_directory(sourceRoot, ec)) {
+        return false;
+    }
+
+    fs::path targetPath(outputPath);
+    if (targetPath.has_parent_path()) {
+        fs::create_directories(targetPath.parent_path(), ec);
+        if (ec) {
+            return false;
+        }
+    }
+
+    // Prefer explicit native entrypoints produced by extension pipelines.
+    const std::vector<fs::path> preferredCandidates = {
+        sourceRoot / "extension" / "native" / "plugin.dll",
+        sourceRoot / "extension" / "native" / "extension.dll",
+        sourceRoot / "extension" / "bin" / "plugin.dll",
+        sourceRoot / "extension" / "bin" / "extension.dll",
+    };
+
+    for (const auto& candidate : preferredCandidates) {
+        if (fs::exists(candidate, ec) && fs::is_regular_file(candidate, ec)) {
+            fs::copy_file(candidate, targetPath, fs::copy_options::overwrite_existing, ec);
+            if (!ec) {
+                return true;
+            }
+        }
+    }
+
+    // Fallback: walk extracted VSIX payload and select the first DLL that exports
+    // a plausible plugin surface (activate/deactivate) by attempting to load it.
+    for (fs::recursive_directory_iterator it(sourceRoot, ec), end; it != end && !ec; it.increment(ec)) {
+        if (!it->is_regular_file(ec)) {
+            continue;
+        }
+        const fs::path candidate = it->path();
+        if (_stricmp(candidate.extension().string().c_str(), ".dll") != 0) {
+            continue;
+        }
+
+        HMODULE hProbe = LoadLibraryA(candidate.string().c_str());
+        if (!hProbe) {
+            continue;
+        }
+
+        const FARPROC hasActivate = GetProcAddress(hProbe, "activate");
+        const FARPROC hasDeactivate = GetProcAddress(hProbe, "deactivate");
+        FreeLibrary(hProbe);
+
+        if (!hasActivate && !hasDeactivate) {
+            continue;
+        }
+
+        fs::copy_file(candidate, targetPath, fs::copy_options::overwrite_existing, ec);
+        if (!ec) {
+            return true;
+        }
+    }
+
+    // No native payload discovered in the extracted VSIX.
+    return false;
 }
 
 bool PluginManager::loadPlugin(const std::string& pluginPath) {

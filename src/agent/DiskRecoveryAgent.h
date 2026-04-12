@@ -273,6 +273,12 @@ public:
     std::vector<uint64_t> GetBadSectorList() const;
     PatchResult ExportBadSectorMap(const std::string& path) const;
 
+    // -- Signature Carving --
+    // First-pass file carving for common signatures in recovered raw images.
+    PatchResult CarveKnownSignatures(const std::string& imagePath,
+                                     const std::string& outputDir,
+                                     size_t maxFiles = 256);
+
 private:
     // Internal helpers
     HANDLE OpenDriveHandle(int driveNumber);

@@ -124,7 +124,6 @@ private:
     ToolResult HandleMeshStatus(const nlohmann::json& args, std::string& output);
     ToolResult HandleMeshBootstrapVerify(const nlohmann::json& args, std::string& output);
     
-    mutable std::mutex m_mutex;
         // Phase 46: NL Shell Guard
         ToolResult HandleNLShellValidate(const nlohmann::json& args, std::string& output);
 

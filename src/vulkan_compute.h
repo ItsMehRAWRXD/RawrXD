@@ -43,6 +43,7 @@ typedef struct VkPipelineLayout_T*  VkPipelineLayout;
 typedef struct VkDescriptorSetLayout_T* VkDescriptorSetLayout;
 typedef struct VkDescriptorPool_T*  VkDescriptorPool;
 typedef struct VkDescriptorSet_T*   VkDescriptorSet;
+typedef struct VkSemaphore_T*       VkSemaphore;
 typedef uint32_t VkMemoryPropertyFlags;
 
 // Minimal struct stubs for compilation without Vulkan SDK

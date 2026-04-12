@@ -1453,23 +1453,133 @@ void DequantizeQ8_0(const uint8_t* quantized, float* output, int size)
 
 void DequantizeQ4_K(const uint8_t* quantized, float* output, int num_elements)
 {
-    // K-quant super-blocks (256 elements). Simplified dequant.
-    int nblocks = num_elements / 256;
+    // Q4_K: 256-element super-blocks. Layout per block:
+    //   [0..1]   d    (ggml_half / f16): super-block scale multiplier
+    //   [2..3]   dmin (ggml_half / f16): super-block min multiplier
+    //   [4..15]  scales[12]: 8 sub-blocks × (6-bit scale + 6-bit min), packed
+    //   [16..143] qs[128]: 256 packed 4-bit quantized values
+    // Total: 144 bytes per block.
+    static constexpr int BLOCK_BYTES = 144;
+    static constexpr int NUM_SUB  = 8;
+    static constexpr int SUB_ELEMS = 32;
+
+    auto f16_to_f32 = [](uint16_t h) -> float {
+        int exp  = (h >> 10) & 0x1F;
+        int frac = h & 0x3FF;
+        float v  = (exp == 0) ? (frac / 1024.0f / 16384.0f)
+                              : std::ldexp(1.0f + frac / 1024.0f, exp - 15);
+        return (h & 0x8000) ? -v : v;
+    };
+
+    // Unpack 6-bit scale and min for sub-block j from the 12-byte scales field.
+    // Mirrors GGML get_scale_min_k4().
+    auto get_scale_min = [](const uint8_t* sc, int j,
+                             uint8_t& scale_out, uint8_t& min_out) {
+        if (j < 4) {
+            scale_out = sc[j]   & 0x3F;
+            min_out   = sc[j+4] & 0x3F;
+        } else {
+            scale_out = static_cast<uint8_t>((sc[j+4] & 0x0F) | ((sc[j-4] >> 6) << 4));
+            min_out   = static_cast<uint8_t>((sc[j+4] >> 4)   | ((sc[j]   >> 6) << 4));
+        }
+    };
+
+    const int nblocks = num_elements / 256;
     for (int b = 0; b < nblocks; b++)
     {
-        for (int i = 0; i < 256; i++)
+        const uint8_t* blk = quantized + b * BLOCK_BYTES;
+        uint16_t raw_d, raw_dmin;
+        std::memcpy(&raw_d,    blk,     2);
+        std::memcpy(&raw_dmin, blk + 2, 2);
+        const float d    = f16_to_f32(raw_d);
+        const float dmin = f16_to_f32(raw_dmin);
+        const uint8_t* scales = blk + 4;
+        const uint8_t* qs     = blk + 16;
+
+        for (int j = 0; j < NUM_SUB; j++)
         {
-            output[b * 256 + i] = 0.0f;  // Placeholder — full K-quant decode is complex
+            uint8_t sc, mn;
+            get_scale_min(scales, j, sc, mn);
+            const float d_sc   = d    * static_cast<float>(sc);
+            const float dmin_m = dmin * static_cast<float>(mn);
+            const uint8_t* qs_sub = qs + j * 16;  // 16 bytes → 32 nibbles
+            float* out_sub = output + b * 256 + j * SUB_ELEMS;
+            for (int i = 0; i < 16; i++)
+            {
+                const uint8_t byte = qs_sub[i];
+                out_sub[i * 2]     = static_cast<float>(byte & 0x0F) * d_sc - dmin_m;
+                out_sub[i * 2 + 1] = static_cast<float>((byte >> 4) & 0x0F) * d_sc - dmin_m;
+            }
         }
     }
 }
 
 void DequantizeQ5_K(const uint8_t* quantized, float* output, int num_elements)
 {
-    int nblocks = num_elements / 256;
+    // Q5_K: 256-element super-blocks. Layout per block:
+    //   [0..1]   d    (f16)
+    //   [2..3]   dmin (f16)
+    //   [4..15]  scales[12]: same 6-bit encoding as Q4_K
+    //   [16..47] qh[32]: one high bit per element (256 bits)
+    //   [48..175] qs[128]: low 4 bits per element
+    // Total: 176 bytes per block.
+    static constexpr int BLOCK_BYTES = 176;
+    static constexpr int NUM_SUB  = 8;
+    static constexpr int SUB_ELEMS = 32;
+
+    auto f16_to_f32 = [](uint16_t h) -> float {
+        int exp  = (h >> 10) & 0x1F;
+        int frac = h & 0x3FF;
+        float v  = (exp == 0) ? (frac / 1024.0f / 16384.0f)
+                              : std::ldexp(1.0f + frac / 1024.0f, exp - 15);
+        return (h & 0x8000) ? -v : v;
+    };
+
+    auto get_scale_min = [](const uint8_t* sc, int j,
+                             uint8_t& scale_out, uint8_t& min_out) {
+        if (j < 4) {
+            scale_out = sc[j]   & 0x3F;
+            min_out   = sc[j+4] & 0x3F;
+        } else {
+            scale_out = static_cast<uint8_t>((sc[j+4] & 0x0F) | ((sc[j-4] >> 6) << 4));
+            min_out   = static_cast<uint8_t>((sc[j+4] >> 4)   | ((sc[j]   >> 6) << 4));
+        }
+    };
+
+    const int nblocks = num_elements / 256;
     for (int b = 0; b < nblocks; b++)
-        for (int i = 0; i < 256; i++)
-            output[b * 256 + i] = 0.0f;
+    {
+        const uint8_t* blk = quantized + b * BLOCK_BYTES;
+        uint16_t raw_d, raw_dmin;
+        std::memcpy(&raw_d,    blk,     2);
+        std::memcpy(&raw_dmin, blk + 2, 2);
+        const float d    = f16_to_f32(raw_d);
+        const float dmin = f16_to_f32(raw_dmin);
+        const uint8_t* scales = blk + 4;
+        const uint8_t* qh     = blk + 16;  // 32 bytes of high bits
+        const uint8_t* qs     = blk + 48;  // 128 bytes of low nibbles
+
+        for (int j = 0; j < NUM_SUB; j++)
+        {
+            uint8_t sc, mn;
+            get_scale_min(scales, j, sc, mn);
+            const float d_sc   = d    * static_cast<float>(sc);
+            const float dmin_m = dmin * static_cast<float>(mn);
+            const uint8_t* qs_sub = qs + j * 16;
+            // qh provides bit (b*256 + j*32 + i) / 8 for element offset (j*32 + i)
+            const int base_elem = j * SUB_ELEMS;
+            float* out_sub = output + b * 256 + base_elem;
+            for (int i = 0; i < SUB_ELEMS; i++)
+            {
+                const int abs_i    = base_elem + i;
+                const int qh_bit   = (qh[abs_i / 8] >> (abs_i % 8)) & 1;
+                const uint8_t byte = qs_sub[i / 2];
+                const int lo4 = (i % 2 == 0) ? (byte & 0x0F) : ((byte >> 4) & 0x0F);
+                const int q5  = lo4 | (qh_bit << 4);  // 0..31
+                out_sub[i] = static_cast<float>(q5) * d_sc - dmin_m;
+            }
+        }
+    }
 }
 
 void DequantizeQ6_K(const uint8_t* quantized, float* output, int num_elements)
@@ -1480,18 +1590,108 @@ void DequantizeQ6_K(const uint8_t* quantized, float* output, int num_elements)
 
 void DequantizeQ2_K(const uint8_t* quantized, float* output, int num_elements)
 {
-    int nblocks = num_elements / 256;
+    // Q2_K: 256-element super-blocks. Layout per block:
+    //   [0..15]  scales[16]: low nibble = scale, high nibble = min, per 16-element sub-block
+    //   [16..79] qs[64]: 2-bit quantized values (4 per byte, 256 total)
+    //   [80..81] d    (f16)
+    //   [82..83] dmin (f16)
+    // Total: 84 bytes per block.
+    static constexpr int BLOCK_BYTES = 84;
+    static constexpr int NUM_SUB  = 16;
+    static constexpr int SUB_ELEMS = 16;
+
+    auto f16_to_f32 = [](uint16_t h) -> float {
+        int exp  = (h >> 10) & 0x1F;
+        int frac = h & 0x3FF;
+        float v  = (exp == 0) ? (frac / 1024.0f / 16384.0f)
+                              : std::ldexp(1.0f + frac / 1024.0f, exp - 15);
+        return (h & 0x8000) ? -v : v;
+    };
+
+    const int nblocks = num_elements / 256;
     for (int b = 0; b < nblocks; b++)
-        for (int i = 0; i < 256; i++)
-            output[b * 256 + i] = 0.0f;
+    {
+        const uint8_t* blk    = quantized + b * BLOCK_BYTES;
+        const uint8_t* scales = blk;         // 16 bytes
+        const uint8_t* qs     = blk + 16;    // 64 bytes
+        uint16_t raw_d, raw_dmin;
+        std::memcpy(&raw_d,    blk + 80, 2);
+        std::memcpy(&raw_dmin, blk + 82, 2);
+        const float d    = f16_to_f32(raw_d);
+        const float dmin = f16_to_f32(raw_dmin);
+
+        for (int s = 0; s < NUM_SUB; s++)
+        {
+            const float sc  = d    * static_cast<float>(scales[s] & 0x0F);
+            const float mn  = dmin * static_cast<float>(scales[s] >> 4);
+            float* out_sub  = output + b * 256 + s * SUB_ELEMS;
+            // 4 elements packed per byte (2 bits each)
+            for (int i = 0; i < SUB_ELEMS; i++)
+            {
+                const int abs_i  = s * SUB_ELEMS + i;
+                const uint8_t qb = qs[abs_i / 4];
+                const int q2     = (qb >> (2 * (i % 4))) & 3;  // 0..3
+                out_sub[i] = static_cast<float>(q2) * sc - mn;
+            }
+        }
+    }
 }
 
 void DequantizeQ3_K(const uint8_t* quantized, float* output, int num_elements)
 {
-    int nblocks = num_elements / 256;
+    // Q3_K: 256-element super-blocks. Layout per block:
+    //   [0..31]  hmask[32]: high bits (1 bit per element, for 3-bit total)
+    //   [32..95] qs[64]:    low 2 bits per element (packed 4/byte)
+    //   [96..107] scales[12]: 6-bit packed, same layout as Q4_K
+    //   [108..109] d (f16)
+    // Total: 110 bytes per block.
+    static constexpr int BLOCK_BYTES = 110;
+    static constexpr int NUM_SUB  = 8;
+    static constexpr int SUB_ELEMS = 32;
+
+    auto f16_to_f32 = [](uint16_t h) -> float {
+        int exp  = (h >> 10) & 0x1F;
+        int frac = h & 0x3FF;
+        float v  = (exp == 0) ? (frac / 1024.0f / 16384.0f)
+                              : std::ldexp(1.0f + frac / 1024.0f, exp - 15);
+        return (h & 0x8000) ? -v : v;
+    };
+
+    const int nblocks = num_elements / 256;
     for (int b = 0; b < nblocks; b++)
-        for (int i = 0; i < 256; i++)
-            output[b * 256 + i] = 0.0f;
+    {
+        const uint8_t* blk    = quantized + b * BLOCK_BYTES;
+        const uint8_t* hmask  = blk;         // 32 bytes (1 bit per elem)
+        const uint8_t* qs     = blk + 32;    // 64 bytes (2 bits per elem)
+        const uint8_t* scales = blk + 96;    // 12 bytes (6-bit per sub-block)
+        uint16_t raw_d;
+        std::memcpy(&raw_d, blk + 108, 2);
+        const float d = f16_to_f32(raw_d);
+
+        for (int s = 0; s < NUM_SUB; s++)
+        {
+            // Q3_K uses only a scale (no min): sc = scales[s] & 0x1F (5-bit signed)
+            // The sign is encoded as bit 5 of scales[s]
+            const int8_t sc_raw = static_cast<int8_t>(
+                (scales[s] & 0x0F) | ((scales[s / 4 + 8] >> (2 * (s % 4))) << 4));
+            // Reinterpret 4-bit signed: bit 3 is sign
+            const int sc_signed = (sc_raw > 7) ? (sc_raw - 16) : sc_raw;
+            const float sc = d * static_cast<float>(sc_signed);
+            float* out_sub = output + b * 256 + s * SUB_ELEMS;
+            const int base = s * SUB_ELEMS;
+            for (int i = 0; i < SUB_ELEMS; i++)
+            {
+                const int abs_i  = base + i;
+                // 3-bit value: high bit from hmask, low 2 bits from qs
+                const int hb    = (hmask[abs_i / 8] >> (abs_i % 8)) & 1;
+                const uint8_t qb = qs[abs_i / 4];
+                const int q2    = (qb >> (2 * (abs_i % 4))) & 3;
+                // Reconstruct 3-bit signed (0..7 → -4..3 after bias of 4)
+                const int q3 = q2 | (hb << 2);
+                out_sub[i]   = static_cast<float>(q3 - 4) * sc;
+            }
+        }
+    }
 }
 
 void DequantizeF16(const uint8_t* quantized, float* output, int num_elements)

@@ -1,15 +1,17 @@
 #pragma once
 
-#include <windows.h>
-#include <string>
-#include <functional>
-#include <thread>
 #include <atomic>
+#include <functional>
+#include <mutex>
+#include <string>
+#include <thread>
+#include <windows.h>
 
 class Win32TerminalManager
 {
-public:
-    enum ShellType {
+  public:
+    enum ShellType
+    {
         PowerShell,
         CommandPrompt
     };
@@ -17,7 +19,9 @@ public:
     Win32TerminalManager();
     ~Win32TerminalManager();
 
-    bool start(ShellType shell);
+    /// Optional UTF-8 working directory for the child shell (CreateProcess lpCurrentDirectory).
+    /// Pass nullptr to inherit the IDE process current directory.
+    bool start(ShellType shell, const char* workingDirectoryUtf8 = nullptr);
     void stop();
     DWORD pid() const;
     bool isRunning() const;
@@ -29,10 +33,12 @@ public:
     std::function<void()> onStarted;
     std::function<void(int)> onFinished;
 
-private:
+  private:
     void readOutputThread();
     void readErrorThread();
     void monitorProcessThread();
+    /// After natural exit, threads are done but handles may still be open — release before a new start().
+    void resetStaleStateFromExitedProcess();
 
     HANDLE m_hProcess;
     HANDLE m_hThread;
@@ -51,4 +57,5 @@ private:
 
     std::atomic<bool> m_running;
     ShellType m_shellType;
+    std::mutex m_stdinWriteMutex;
 };

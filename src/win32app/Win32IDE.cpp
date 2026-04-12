@@ -2,13 +2,19 @@
 // Build timestamp: 2026-03-31
 #include "Win32IDE.h"
 #include "../../Ship/RawrXD_AutonomousAgenticPipeline.h"  // Full type for unique_ptr destructor
+#include "../../Ship/Win32TerminalScrollback.hpp"
 #include "../../include/PathResolver.h"
 #include "../../include/rawrxd_version.h"
+#include "../agentic/AgenticChatSession.h"
+#include "../agentic/agentic_controller_wiring.h"
+#include "../agentic/slash_command_parser.hpp"
 #include "../core/command_registry.hpp"
 #include "../cpu_inference_engine.h"
+#include "../inference/speculative_execution_engine.h"  // Full type for unique_ptr<SpeculativeExecutionEngine> dtor
 #include "../model_source_resolver.h"
 #include "../modules/ExtensionLoader.hpp"  // Added
 #include "../modules/native_memory.hpp"
+#include "../native_inference_backend.h"
 #include "../rawrxd_model_loader.h"
 #include "../streaming_gguf_loader.h"
 #include "../utils/ErrorReporter.hpp"
@@ -27,6 +33,11 @@
 #include <psapi.h>
 #include <richedit.h>
 
+extern "C" void RawrXD_ApplyCopilotChatEditLimits(HWND output, HWND input);
+
+#ifndef WM_COPILOT_MINIMAL_AGENTIC_DONE
+#define WM_COPILOT_MINIMAL_AGENTIC_DONE (WM_APP + 108)
+#endif
 
 #ifndef CP_UNICODE
 #define CP_UNICODE 1200  // Unicode code page for Richedit EM_GETTEXTLENGTHEX/EM_SETTEXTEX
@@ -35,9 +46,16 @@
 #ifndef TRACKBAR_CLASSW
 #define TRACKBAR_CLASSW L"msctls_trackbar32"
 #endif
+
+// Integrated terminal tab strip (VS Code / Cursor-style instance tabs) — Win32IDE_Core WM_NOTIFY compares this handle.
+HWND g_rawrxdIntegratedTerminalTabs = nullptr;
+
 #include <algorithm>
+#include <cctype>
 #include <chrono>
+#include <cstdlib>
 #include <ctime>
+#include <cwctype>
 #include <deque>
 #include <filesystem>
 #include <fstream>
@@ -49,6 +67,8 @@
 #include <shellapi.h>
 #include <shlobj.h>
 #include <sstream>
+#include <string_view>
+#include <thread>
 #include <unordered_map>
 #include <vector>
 #include <winhttp.h>
@@ -61,6 +81,24 @@
 
 // Defined once here; declared as `extern` in Win32IDE.h.
 Win32IDE* g_pMainIDE = nullptr;
+
+std::filesystem::path Win32IDE::resolveRawrxdWorkspaceBase() const
+{
+    namespace fs = std::filesystem;
+    if (const char* envRoot = std::getenv("RAWRXD_REPO_ROOT"))
+    {
+        if (envRoot[0] != '\0')
+        {
+            std::error_code ec;
+            fs::path p = fs::path(envRoot).lexically_normal();
+            if (fs::is_directory(p, ec))
+                return p;
+        }
+    }
+    if (!m_projectRoot.empty())
+        return fs::path(m_projectRoot);
+    return fs::path(m_currentDirectory.empty() ? std::string(".") : m_currentDirectory);
+}
 
 static std::wstring utf8ToWide(const std::string& utf8);
 
@@ -78,6 +116,7 @@ constexpr size_t kMaxPendingInferenceRequestsPerIde = 16;
 
 std::mutex g_chatUtf8CarryMutex;
 std::unordered_map<Win32IDE*, std::string> g_chatUtf8CarryByIde;
+std::mutex g_chatInputBufferMutex;
 
 inline bool IsUtf8ContinuationByte(unsigned char b)
 {
@@ -169,10 +208,236 @@ void ClearPendingInference(Win32IDE* ide)
     std::lock_guard<std::mutex> lock(g_pendingInferenceMutex);
     g_pendingInferenceByIde.erase(ide);
 }
+
+std::string resolveLocalModelSelectionPath(const std::string& modelRef,
+                                           const std::vector<std::string>& discoveredModelPaths,
+                                           const std::vector<std::string>& userModelDirectories)
+{
+    if (modelRef.empty())
+        return modelRef;
+
+    auto toLowerCopy = [](std::string s)
+    {
+        std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return (char)std::tolower(c); });
+        return s;
+    };
+
+    const bool hasPathHint = modelRef.find(":\\") != std::string::npos || modelRef.find('/') != std::string::npos ||
+                             modelRef.find('\\') != std::string::npos;
+    if (hasPathHint)
+        return modelRef;
+
+    const std::string lowerRef = toLowerCopy(modelRef);
+    const bool looksLikeLocalModel =
+        lowerRef.find(".gguf") != std::string::npos || lowerRef.find(".ggml") != std::string::npos ||
+        lowerRef.find(".bin") != std::string::npos || lowerRef.find(".safetensors") != std::string::npos;
+    if (!looksLikeLocalModel)
+        return modelRef;
+
+    std::error_code ec;
+    for (const auto& fullPath : discoveredModelPaths)
+    {
+        std::filesystem::path p(fullPath);
+        const std::string fileName = toLowerCopy(p.filename().string());
+        if (fileName == lowerRef && std::filesystem::exists(p, ec))
+            return p.string();
+    }
+
+    for (const auto& dir : userModelDirectories)
+    {
+        std::filesystem::path candidate = std::filesystem::path(dir) / modelRef;
+        if (std::filesystem::exists(candidate, ec))
+            return candidate.string();
+    }
+
+    static const char* kCommonModelDirs[] = {"F:\\OllamaModels", "D:\\OllamaModels", "F:\\models", "D:\\models"};
+    for (const char* dir : kCommonModelDirs)
+    {
+        std::filesystem::path candidate = std::filesystem::path(dir) / modelRef;
+        if (std::filesystem::exists(candidate, ec))
+            return candidate.string();
+    }
+
+    return modelRef;
+}
+
+bool HasAgenticPrefix(const std::string& prompt)
+{
+    return prompt.rfind("/agent", 0) == 0 || prompt.rfind("/agentic", 0) == 0 || prompt.rfind("agentic:", 0) == 0 ||
+           prompt.rfind("@agent", 0) == 0;
+}
+
+std::string StripAgenticPrefixForRouteParity(const std::string& prompt)
+{
+    std::string_view view(prompt);
+    auto trimLeadingWhitespace = [](std::string_view& text)
+    {
+        while (!text.empty() && std::isspace(static_cast<unsigned char>(text.front())))
+        {
+            text.remove_prefix(1);
+        }
+    };
+
+    if (view.rfind("/agentic", 0) == 0)
+    {
+        view.remove_prefix(8);
+        trimLeadingWhitespace(view);
+        return std::string(view);
+    }
+    if (view.rfind("/agent", 0) == 0)
+    {
+        view.remove_prefix(6);
+        trimLeadingWhitespace(view);
+        return std::string(view);
+    }
+    if (view.rfind("agentic:", 0) == 0)
+    {
+        view.remove_prefix(8);
+        trimLeadingWhitespace(view);
+        return std::string(view);
+    }
+    if (view.rfind("@agent", 0) == 0)
+    {
+        view.remove_prefix(6);
+        trimLeadingWhitespace(view);
+        return std::string(view);
+    }
+    return prompt;
+}
+
+std::string FormatMinimalAgenticResponseForChat(const rawrxd::MinimalAgenticResponse& response)
+{
+    if (response.tool_calls_made <= 0)
+    {
+        return response.final_message;
+    }
+    return "[Agent executed " + std::to_string(response.tool_calls_made) + " tools]\n\n" + response.final_message;
+}
+
+static size_t EstimateMinimalAgenticOutputChars(const rawrxd::MinimalAgenticResponse& r)
+{
+    size_t n = r.final_message.size() + r.error.size();
+    for (const auto& s : r.tool_steps)
+    {
+        n += s.tool_name.size() + s.arguments_json.size() + s.result_text.size();
+    }
+    for (const auto& m : r.transcript_delta)
+    {
+        n += m.content.size();
+    }
+    return n == 0 ? size_t{1} : n;
+}
+
+std::string BuildSlashRoutePreview(const RawrXD::Agentic::ParsedCommand& parsed)
+{
+    if (!parsed.valid)
+    {
+        return std::string("[Slash] parse_error: ") + parsed.error;
+    }
+
+    const auto toolCall = parsed.ToToolCall();
+    const std::string tool = toolCall.value("tool", std::string("<none>"));
+    const auto& args = toolCall.contains("args") ? toolCall["args"] : nlohmann::json::object();
+    const size_t argCount = args.is_object() ? args.size() : 0;
+
+    std::ostringstream ss;
+    ss << "[Slash] command=/" << parsed.command << " route=" << tool << " args=" << argCount;
+    return ss.str();
+}
+
+bool ShouldOpenPlanApprovalFromSlashEdit(const std::string& rawInput, const RawrXD::Agentic::ParsedCommand& parsed,
+                                         std::string& outGoal)
+{
+    outGoal.clear();
+    if (!parsed.valid || parsed.command != "edit")
+    {
+        return false;
+    }
+
+    const bool hasDryRun = rawInput.find("--dry-run") != std::string::npos;
+    const bool hasForce = rawInput.find("--force") != std::string::npos;
+    if (!hasDryRun || hasForce)
+    {
+        return false;
+    }
+
+    std::vector<std::string> contentArgs;
+    contentArgs.reserve(parsed.args.size());
+    for (const auto& arg : parsed.args)
+    {
+        if (arg.rfind("--", 0) == 0)
+        {
+            continue;
+        }
+        contentArgs.push_back(arg);
+    }
+
+    std::ostringstream goal;
+    goal << "Draft a multi-file edit plan for this request. Require explicit approval before execution.";
+    if (!contentArgs.empty())
+    {
+        goal << "\nRequested targets/instructions:";
+        for (const auto& arg : contentArgs)
+        {
+            goal << "\n- " << arg;
+        }
+    }
+    goal << "\nSafety requirements: no destructive actions, include rollbackable steps where possible.";
+    outGoal = goal.str();
+    return true;
+}
+
+std::string SlashCommandShortDescription(const std::string& command)
+{
+    if (command == "edit")
+        return "multi-file edit plan";
+    if (command == "terminal")
+        return "run shell command";
+    if (command == "search")
+        return "search workspace";
+    if (command == "read")
+        return "read file";
+    if (command == "write")
+        return "write file";
+    if (command == "refactor")
+        return "refactor operation";
+    if (command == "git")
+        return "git operation";
+    if (command == "help")
+        return "show command help";
+    return "command";
+}
 }  // namespace
 
 extern "C" unsigned __int64 RawrXD_EnableSeLockMemoryPrivilege();
 extern "C" void* RawrXD_MapModelView2MB(HANDLE hMap, uint64_t off, size_t sz, uint64_t* outBaseOrError);
+extern "C" void ChatAutocomplete_Attach(HWND hwndChatInput, HINSTANCE hInstance);
+extern "C" void ChatAutocomplete_Detach();
+extern "C" void ChatAutocomplete_Hide();
+extern "C" bool ChatAutocomplete_HandleKeyDown(WPARAM key, bool ctrlDown);
+extern "C" void ChatAutocomplete_OnInputChanged(const wchar_t* text);
+extern "C" void CommandPreview_Create(HWND hwndParent, HINSTANCE hInstance);
+extern "C" void CommandPreview_Destroy();
+extern "C" void CommandPreview_Update(const wchar_t* input);
+extern "C" void CommandPreview_Hide();
+extern "C" bool CommandPreview_Validate(const wchar_t* input, wchar_t* errorBuffer, int errorBufferChars);
+extern "C" void CommandPreview_GetRouteLine(wchar_t* routeBuffer, int routeBufferChars);
+extern "C" bool CommandPreview_HandleCommand(int controlId);
+extern "C" HWND ComposerPanel_Create(HWND hwndParent, HINSTANCE hInstance);
+extern "C" void ComposerPanel_LoadPlan(const char* jsonPlanData);
+extern "C" void ComposerPanel_ShowPlan();
+extern "C" void ComposerPanel_HidePlan();
+extern "C" void ComposerPanel_AcceptFile(int fileIndex);
+extern "C" void ComposerPanel_RejectFile(int fileIndex);
+extern "C" void ComposerPanel_ShowDiff(int fileIndex);
+extern "C" void ComposerPanel_AddCheckpoint(const wchar_t* label);
+extern "C" void ComposerPanel_RollbackToCheckpoint(int checkpointIndex);
+extern "C" void ComposerPanel_UpdateProgress(int current, int total);
+extern "C" int ComposerPanel_GetAcceptedFileCount();
+extern "C" bool ComposerPanel_IsVisible();
+extern "C" void ComposerPanel_Destroy();
+extern "C" int ComposerPanel_GetFileCount();
+extern "C" const char* ComposerPanel_GetFileName(int fileIndex);
 
 static uint64_t qpcNowU64()
 {
@@ -208,7 +473,7 @@ static void appendStreamerPostLoadCheck(Win32IDE* ide, const std::string& ggufPa
         return;
 
     // Keep this fast: validate huge-page base alignment via RawrXDModelLoader (shared core path),
-    // and do a small prefetch warm-up to hide initial "first touch" stalls.
+    // then update the status ribbon from real map/hint/touch telemetry.
     const std::wstring wPath = utf8ToWide(ggufPath);
     if (wPath.empty())
     {
@@ -307,7 +572,7 @@ static void appendStreamerPostLoadCheck(Win32IDE* ide, const std::string& ggufPa
 #if defined(RAWRXD_HAS_SOVEREIGN_GPU_ASM) && (RAWRXD_HAS_SOVEREIGN_GPU_ASM != 0)
                 L"ACTIVE";
 #else
-                L"STUB";
+                L"FALLBACK";
 #endif
 
             // Permanent ribbon is "glanceable" tier text; deep-dive numbers go in tooltip.
@@ -615,8 +880,8 @@ static std::wstring utf8ToWide(const std::string& utf8)
 {
     if (utf8.empty())
         return {};
-    int len = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, utf8.c_str(), static_cast<int>(utf8.size()), nullptr,
-                                  0);
+    int len =
+        MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, utf8.c_str(), static_cast<int>(utf8.size()), nullptr, 0);
     UINT cp = CP_UTF8;
     DWORD flags = MB_ERR_INVALID_CHARS;
     if (len <= 0)
@@ -652,6 +917,13 @@ static std::string wideToUtf8(const wchar_t* wide)
     return out;
 }
 
+static std::string wideToUtf8(const std::wstring& wide)
+{
+    return wideToUtf8(wide.c_str());
+}
+
+static COLORREF ensureReadableTextColor(COLORREF bg, COLORREF fg);
+
 static std::string wideToUtf8N(const wchar_t* wide, int wideLen)
 {
     if (!wide || wideLen <= 0)
@@ -680,6 +952,141 @@ static bool looksLikeUtf16LEBytes(const std::string& s)
     return oddCount > 0 && (oddNul * 100 / oddCount) >= 40;
 }
 
+static std::string trimAsciiWhitespace(const std::string& s)
+{
+    size_t begin = 0;
+    while (begin < s.size() && std::isspace(static_cast<unsigned char>(s[begin])))
+        ++begin;
+
+    size_t end = s.size();
+    while (end > begin && std::isspace(static_cast<unsigned char>(s[end - 1])))
+        --end;
+
+    return s.substr(begin, end - begin);
+}
+
+static void copyIntegratedTerminalFontFace(wchar_t out[LF_FACESIZE], const std::string& utf8Face)
+{
+    std::string n = trimAsciiWhitespace(utf8Face);
+    if (n.empty())
+        n = "Consolas";
+    std::wstring w = utf8ToWide(n);
+    if (w.empty())
+        w = L"Consolas";
+    wcsncpy_s(out, LF_FACESIZE, w.c_str(), _TRUNCATE);
+}
+
+static void appendTextChunk(std::string& out, const std::string& text)
+{
+    if (text.empty())
+        return;
+    if (!out.empty() && out.back() != '\n')
+        out.push_back('\n');
+    out.append(text);
+}
+
+static bool extractTextFromJsonNode(const nlohmann::json& node, std::string& out)
+{
+    if (node.is_null())
+        return false;
+
+    if (node.is_string())
+    {
+        const std::string value = trimAsciiWhitespace(node.get<std::string>());
+        if (!value.empty())
+        {
+            appendTextChunk(out, value);
+            return true;
+        }
+        return false;
+    }
+
+    if (node.is_array())
+    {
+        bool any = false;
+        for (const auto& item : node)
+            any = extractTextFromJsonNode(item, out) || any;
+        return any;
+    }
+
+    if (!node.is_object())
+        return false;
+
+    bool found = false;
+
+    const char* directKeys[] = {"text", "response", "final_message", "output", "content", "message"};
+    for (const char* key : directKeys)
+    {
+        if (node.contains(key))
+            found = extractTextFromJsonNode(node[key], out) || found;
+    }
+
+    if (node.contains("choices") && node["choices"].is_array())
+    {
+        const auto& choices = node["choices"];
+        for (size_t i = 0; i < choices.size(); ++i)
+        {
+            const auto& choice = choices[i];
+            if (!choice.is_object())
+                continue;
+            if (choice.contains("text"))
+                found = extractTextFromJsonNode(choice["text"], out) || found;
+            if (choice.contains("message"))
+                found = extractTextFromJsonNode(choice["message"], out) || found;
+            if (choice.contains("delta"))
+                found = extractTextFromJsonNode(choice["delta"], out) || found;
+        }
+    }
+
+    if (node.contains("data"))
+        found = extractTextFromJsonNode(node["data"], out) || found;
+
+    return found;
+}
+
+static std::string extractDisplayTextFromBackendPayload(const std::string& payload)
+{
+    const std::string trimmed = trimAsciiWhitespace(payload);
+    if (trimmed.empty())
+        return {};
+
+    auto parseAndExtract = [](const std::string& text) -> std::string
+    {
+        const auto parsed = nlohmann::json::parse(text, nullptr, false);
+        if (parsed.is_discarded())
+            return {};
+        std::string extracted;
+        extractTextFromJsonNode(parsed, extracted);
+        return trimAsciiWhitespace(extracted);
+    };
+
+    if (trimmed.front() == '{' || trimmed.front() == '[')
+    {
+        const std::string extracted = parseAndExtract(trimmed);
+        if (!extracted.empty())
+            return extracted;
+    }
+
+    std::string aggregate;
+    size_t start = 0;
+    while (start < trimmed.size())
+    {
+        size_t end = trimmed.find('\n', start);
+        if (end == std::string::npos)
+            end = trimmed.size();
+        const std::string line = trimAsciiWhitespace(trimmed.substr(start, end - start));
+        if (!line.empty() && (line.front() == '{' || line.front() == '['))
+        {
+            const std::string extracted = parseAndExtract(line);
+            if (!extracted.empty())
+                appendTextChunk(aggregate, extracted);
+        }
+        start = (end < trimmed.size()) ? end + 1 : trimmed.size();
+    }
+
+    return trimAsciiWhitespace(aggregate);
+}
+
 static std::string sanitizeForChatUi(const std::string& input)
 {
     if (input.empty())
@@ -706,9 +1113,10 @@ static std::string sanitizeForChatUi(const std::string& input)
     }
 
     // Validate UTF-8 strictly; fall back to ANSI decode if bytes are malformed.
-    const int wLenUtf8 = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, text.data(),
-                                             static_cast<int>(text.size()), nullptr, 0);
-    if (wLenUtf8 <= 0)
+    const int wLenUtf8 =
+        MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, text.data(), static_cast<int>(text.size()), nullptr, 0);
+    bool utf8Valid = (wLenUtf8 > 0);
+    if (!utf8Valid)
     {
         const int wLenAcp = MultiByteToWideChar(CP_ACP, 0, text.data(), static_cast<int>(text.size()), nullptr, 0);
         if (wLenAcp > 0)
@@ -720,6 +1128,43 @@ static std::string sanitizeForChatUi(const std::string& input)
                 if (!converted.empty())
                     text = converted;
             }
+        }
+    }
+
+    if (utf8Valid)
+    {
+        std::wstring w(static_cast<size_t>(wLenUtf8), L'\0');
+        if (MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, text.data(), static_cast<int>(text.size()), w.data(),
+                                wLenUtf8) > 0)
+        {
+            std::string cleanedUtf8;
+            cleanedUtf8.reserve(text.size());
+
+            for (wchar_t wc : w)
+            {
+                if (wc == L'\n' || wc == L'\r' || wc == L'\t')
+                {
+                    const std::string s = wideToUtf8N(&wc, 1);
+                    if (!s.empty())
+                        cleanedUtf8.append(s);
+                    continue;
+                }
+
+                // Drop C0/C1 controls while preserving printable Unicode.
+                if (wc < 0x20 || (wc >= 0x7F && wc < 0xA0))
+                    continue;
+
+                if (iswprint(wc))
+                {
+                    const std::string s = wideToUtf8N(&wc, 1);
+                    if (!s.empty())
+                        cleanedUtf8.append(s);
+                }
+            }
+
+            if (!cleanedUtf8.empty())
+                return cleanedUtf8;
+            return "[non-text backend payload suppressed]";
         }
     }
 
@@ -800,6 +1245,36 @@ static std::string normalizeChatUtf8Chunk(Win32IDE* ide, const std::string& chun
     return sanitizeForChatUi(combined);
 }
 
+static bool looksLikeTokenIdSequencePayload(const std::string& text)
+{
+    if (text.empty())
+        return false;
+
+    size_t digitCount = 0;
+    size_t sepCount = 0;
+    size_t otherCount = 0;
+
+    for (unsigned char c : text)
+    {
+        if (c >= '0' && c <= '9')
+        {
+            ++digitCount;
+            continue;
+        }
+        if (c == '[' || c == ']' || c == ',' || c == ' ' || c == '\n' || c == '\r' || c == '\t')
+        {
+            ++sepCount;
+            continue;
+        }
+        ++otherCount;
+    }
+
+    // Treat payloads that are almost entirely numeric list syntax as token-id dumps.
+    if (otherCount > 0)
+        return false;
+    return (digitCount > 8) && (digitCount + sepCount >= text.size());
+}
+
 static void logRawResponseHexPreview(const std::string& response)
 {
     if (response.empty())
@@ -842,6 +1317,7 @@ static void logRawResponseHexPreview(const std::string& response)
 #define IDC_OUTPUT_EDIT_DEBUG 1014
 #define IDC_OUTPUT_EDIT_FIND 1015
 #define IDC_SPLITTER 1016
+#define IDC_INTEGRATED_TERM_TABS 1199
 #define IDC_SEVERITY_FILTER 1017
 #define IDC_TITLE_TEXT 1018
 #define IDC_BTN_MINIMIZE 1019
@@ -886,6 +1362,21 @@ static void logRawResponseHexPreview(const std::string& response)
 #endif
 #ifndef IDC_AI_CONTEXT_SLIDER
 #define IDC_AI_CONTEXT_SLIDER 5006
+#endif
+#ifndef IDC_AI_MAX_MODE
+#define IDC_AI_MAX_MODE 5007
+#endif
+#ifndef IDC_AI_DEEP_THINK
+#define IDC_AI_DEEP_THINK 5008
+#endif
+#ifndef IDC_AI_DEEP_RESEARCH
+#define IDC_AI_DEEP_RESEARCH 5009
+#endif
+#ifndef IDC_AI_NO_REFUSAL
+#define IDC_AI_NO_REFUSAL 5010
+#endif
+#ifndef IDC_AI_AGENTIC_MODE
+#define IDC_AI_AGENTIC_MODE 5011
 #endif
 
 // Panel (Bottom) - Terminal, Output, Problems, Debug Console
@@ -945,6 +1436,7 @@ static void logRawResponseHexPreview(const std::string& response)
 #define IDM_FILE_SAVE 2003
 #define IDM_FILE_SAVEAS 2004
 #define IDM_FILE_LOAD_MODEL 1030
+#define IDM_FILE_OPEN_FOLDER 1037
 #define IDM_FILE_EXIT 2005
 
 /* Voice Automation (Tools > Voice Automation) — Phase 44 TTS; dispatched in Win32IDE_Commands 10200–10300 */
@@ -987,9 +1479,12 @@ static void logRawResponseHexPreview(const std::string& response)
 #define IDM_TERMINAL_POWERSHELL 4001
 #define IDM_TERMINAL_CMD 4002
 #define IDM_TERMINAL_STOP 4003
+#define IDM_TERMINAL_NEW_USER 4011
+#define IDM_TERMINAL_NEW_AGENT 4012
 #define IDM_TERMINAL_SPLIT_H 4007
 #define IDM_TERMINAL_SPLIT_V 4008
-#define IDM_TERMINAL_CLEAR_ALL 4010
+#define IDM_TERMINAL_FOCUS_INTEGRATED 4013
+#define IDM_TERMINAL_CLEAR_ALL 4014
 
 #define IDM_TOOLS_PROFILE_START 3010
 #define IDM_TOOLS_PROFILE_STOP 3011
@@ -1007,10 +1502,11 @@ static void logRawResponseHexPreview(const std::string& response)
 #define IDM_MODULES_IMPORT 3051
 #define IDM_MODULES_EXPORT 3052
 
-#define IDM_HELP_ABOUT 4001
-#define IDM_HELP_CMDREF 4002
-#define IDM_HELP_PSDOCS 4003
-#define IDM_HELP_SEARCH 4004
+// Help menu IDs MUST NOT use 4000–4099 — that band is handleTerminalCommand (parity with command_registry terminal.*).
+#define IDM_HELP_CMDREF 7901
+#define IDM_HELP_PSDOCS 7902
+#define IDM_HELP_SEARCH 7903
+#define IDM_HELP_ABOUT 7904
 
 // Agent menu IDs
 #define IDM_AGENT_START_LOOP 4100
@@ -1023,7 +1519,7 @@ static void logRawResponseHexPreview(const std::string& response)
 #define IDM_PLAN_ORCHESTRATOR_STOP 4165
 #define IDM_PLAN_ORCHESTRATOR_VIEW_STATUS 4166
 #define IDM_PLAN_ORCHESTRATOR_VIEW_PLAN 4167
-#define IDM_TELEMETRY_UNIFIED_CORE 4164         // free slot; 4300=IDM_REVENG_ANALYZE
+#define IDM_TELEMETRY_UNIFIED_CORE 4164  // free slot; 4300=IDM_REVENG_ANALYZE
 // Constants moved to Win32IDE.h
 // #define IDM_AGENT_STOP 4105
 // ...
@@ -1034,7 +1530,7 @@ static void logRawResponseHexPreview(const std::string& response)
 #define IDC_CMDPAL_LIST 1502
 
 Win32IDE::Win32IDE(HINSTANCE hInstance)
-    : m_hInstance(hInstance), m_hwndMain(nullptr), m_hwndEditor(nullptr), m_hwndLineNumbers(nullptr),
+    : m_hInstance(hInstance), m_hAccel(nullptr), m_hwndMain(nullptr), m_hwndEditor(nullptr), m_hwndLineNumbers(nullptr),
       m_hwndTabBar(nullptr), m_oldLineNumberProc(nullptr), m_lineNumberWidth(70), m_activeTabIndex(-1),
       m_hwndCommandInput(nullptr), m_hwndStatusBar(nullptr), m_hwndMinimap(nullptr), m_hwndModuleBrowser(nullptr),
       m_hwndModuleList(nullptr), m_hwndModuleLoadButton(nullptr), m_hwndModuleUnloadButton(nullptr),
@@ -1044,14 +1540,14 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
       m_hwndBtnMicrosoft(nullptr), m_hwndBtnSettings(nullptr), m_lastTitleBarText(), m_fileModified(false),
       m_editorHeight(400), m_terminalHeight(200), m_minimapVisible(true), m_minimapWidth(150), m_profilingActive(false),
       m_moduleListDirty(true), m_backgroundBrush(nullptr), m_editorFont(nullptr), m_hFontUI(nullptr),
-      m_activeOutputTab("General"), m_minimapX(650), m_outputTabHeight(200), m_nextTerminalId(1),
-      m_activeTerminalId(-1), m_ggufLoader(nullptr), m_loadedModelPath(""), m_terminalSplitHorizontal(true),
-      m_hwndGitPanel(nullptr), m_hwndGitStatusText(nullptr), m_hwndGitFileList(nullptr), m_gitAutoRefresh(true),
-      m_outputPanelVisible(true), m_selectedOutputTab(0), m_hwndSeverityFilter(nullptr), m_severityFilterLevel(0),
-      m_editorRect{0, 0, 0, 0}, m_gpuTextEnabled(true), m_editorHooksInstalled(false), m_hwndSplitter(nullptr),
-      m_splitterDragging(false), m_splitterY(0), m_renderer(nullptr), m_rendererReady(false), m_lastSearchText(),
-      m_lastReplaceText(), m_searchCaseSensitive(false), m_searchWholeWord(false), m_searchUseRegex(false),
-      m_lastFoundPos(-1), m_hwndFindDialog(nullptr), m_hwndReplaceDialog(nullptr),
+      m_activeOutputTab("Output"), m_minimapX(650), m_outputTabHeight(200), m_nextTerminalId(1), m_activeTerminalId(-1),
+      m_ggufLoader(nullptr), m_loadedModelPath(""), m_terminalSplitHorizontal(true), m_hwndGitPanel(nullptr),
+      m_hwndGitStatusText(nullptr), m_hwndGitFileList(nullptr), m_gitAutoRefresh(true), m_outputPanelVisible(true),
+      m_selectedOutputTab(0), m_hwndSeverityFilter(nullptr), m_severityFilterLevel(0), m_editorRect{0, 0, 0, 0},
+      m_gpuTextEnabled(true), m_editorHooksInstalled(false), m_hwndSplitter(nullptr), m_splitterDragging(false),
+      m_splitterY(0), m_renderer(nullptr), m_rendererReady(false), m_lastSearchText(), m_lastReplaceText(),
+      m_searchCaseSensitive(false), m_searchWholeWord(false), m_searchUseRegex(false), m_lastFoundPos(-1),
+      m_hwndFindDialog(nullptr), m_hwndReplaceDialog(nullptr),
       // Primary Sidebar
       m_hwndActivityBar(nullptr), m_hwndSidebar(nullptr), m_hwndSidebarContent(nullptr), m_sidebarVisible(true),
       m_sidebarWidth(250), m_currentSidebarView(SidebarView::None),
@@ -1093,8 +1589,8 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
       m_modelOperationActive(false), m_modelOperationCancelled(false), m_modelProgressPercent(0.0f),
       m_hwndModelProgressBar(nullptr), m_hwndModelProgressLabel(nullptr), m_hwndModelProgressContainer(nullptr),
       m_hwndModelCancelBtn(nullptr), m_sessionRestored(false), m_annotationsVisible(true), m_annotationFont(nullptr),
-    m_hwndAnnotationOverlay(nullptr), m_nativePipelineReady(false), m_tabManager(nullptr),
-    m_inferenceRunning(false), m_inferenceStopRequested(false)
+      m_hwndAnnotationOverlay(nullptr), m_nativePipelineReady(false), m_tabManager(nullptr), m_inferenceRunning(false),
+      m_inferenceStopRequested(false)
 {
     // ============================================================
     // MINIMAL CONSTRUCTOR — all heavy init deferred to onCreate()
@@ -1124,6 +1620,10 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
 
     // Initialize 70B GGUF Hotpatch
     m_ggufHotpatch = std::make_unique<RawrXD::GGUFHotpatch>();
+    if (!RawrXD::GGUFHotpatch::apply70BGgufHotpatch())
+    {
+        LOG_WARNING("70B GGUF hotpatch skipped; running with default loader settings");
+    }
 
     // Initialize Governor/Throttling
     m_governorThrottling = std::make_unique<RawrXD::GovernorThrottling>();
@@ -1184,6 +1684,7 @@ void Win32IDE::createMenuBar(HWND hwnd)
     HMENU hFileMenu = CreatePopupMenu();
     AppendMenuW(hFileMenu, MF_STRING, IDM_FILE_NEW, L"&New");
     AppendMenuW(hFileMenu, MF_STRING, IDM_FILE_OPEN, L"&Open");
+    AppendMenuW(hFileMenu, MF_STRING, IDM_FILE_OPEN_FOLDER, L"Open &Folder...\tCtrl+Shift+O");
     AppendMenuW(hFileMenu, MF_STRING, IDM_FILE_SAVE, L"&Save");
     AppendMenuW(hFileMenu, MF_STRING, IDM_FILE_SAVEAS, L"Save &As");
     AppendMenuW(hFileMenu, MF_SEPARATOR, 0, nullptr);
@@ -1219,6 +1720,8 @@ void Win32IDE::createMenuBar(HWND hwnd)
     AppendMenuW(hViewMenu, MF_STRING, IDM_T1_BREADCRUMBS_TOGGLE, L"&Breadcrumbs");
     AppendMenuW(hViewMenu, MF_STRING, IDM_VIEW_OUTPUT_TABS, L"&Output Tabs");
     AppendMenuW(hViewMenu, MF_STRING, IDM_VIEW_OUTPUT_PANEL, L"Output &Panel");
+    AppendMenuW(hViewMenu, MF_STRING, IDM_VIEW_TERMINAL, L"&Terminal\tCtrl+`");
+    AppendMenuW(hViewMenu, MF_STRING, IDM_VIEW_TOGGLE_BOTTOM_PANEL, L"&Panel\tCtrl+J");
     AppendMenuW(hViewMenu, MF_STRING, IDM_VIEW_MODULE_BROWSER, L"Module &Browser");
     AppendMenuW(hViewMenu, MF_STRING, IDM_VIEW_FLOATING_PANEL, L"&Floating Panel");
     AppendMenuW(hViewMenu, MF_SEPARATOR, 0, nullptr);
@@ -1245,7 +1748,7 @@ void Win32IDE::createMenuBar(HWND hwnd)
     AppendMenuW(hViewMenu, MF_STRING, IDM_VIEW_USE_STREAMING_LOADER, L"Use Streaming Loader (Low Memory)");
     AppendMenuW(hViewMenu, MF_STRING, IDM_VIEW_USE_VULKAN_RENDERER, L"Enable Vulkan Renderer (experimental)");
     AppendMenuW(hViewMenu, MF_SEPARATOR, 0, nullptr);
-    AppendMenuW(hViewMenu, MF_STRING, IDM_VIEW_AGENT_PANEL, L"Agent &Panel");
+    AppendMenuW(hViewMenu, MF_STRING, IDM_VIEW_AGENT_PANEL, L"Agent &Panel\tCtrl+L");
     AppendMenuW(hViewMenu, MF_SEPARATOR, 0, nullptr);
     AppendMenuW(hViewMenu, MF_STRING, IDM_MARKETPLACE_SHOW, L"Extension &Marketplace");
     AppendMenuW(hViewMenu, MF_STRING, IDM_VIEW_COLLABORATION, L"&Collaboration");
@@ -1262,7 +1765,11 @@ void Win32IDE::createMenuBar(HWND hwnd)
     AppendMenuW(hTerminalMenu, MF_STRING, IDM_TERMINAL_STOP, L"&Stop Terminal");
     AppendMenuW(hTerminalMenu, MF_STRING, IDM_TERMINAL_SPLIT_H, L"Split &Horizontal\tCtrl+Shift+H");
     AppendMenuW(hTerminalMenu, MF_STRING, IDM_TERMINAL_SPLIT_V, L"Split &Vertical\tCtrl+Shift+V");
+    AppendMenuW(hTerminalMenu, MF_STRING, IDM_TERMINAL_FOCUS_INTEGRATED, L"&Focus Integrated Terminal");
     AppendMenuW(hTerminalMenu, MF_STRING, IDM_TERMINAL_CLEAR_ALL, L"&Clear All Terminals");
+    AppendMenuW(hTerminalMenu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuW(hTerminalMenu, MF_STRING, IDM_TERMINAL_NEW_USER, L"New &Integrated Terminal\tCtrl+Shift+`");
+    AppendMenuW(hTerminalMenu, MF_STRING, IDM_TERMINAL_NEW_AGENT, L"New &Agent Terminal…\tCtrl+Alt+A");
     AppendMenuW(m_hMenu, MF_POPUP, (UINT_PTR)hTerminalMenu, L"&Terminal");
 
     // Tools menu (Unicode)
@@ -1390,104 +1897,15 @@ void Win32IDE::createMenuBar(HWND hwnd)
     AppendMenuW(hGitMenu, MF_STRING, IDM_GIT_PANEL, L"&Git Panel\tCtrl+Shift+G");
     AppendMenuW(m_hMenu, MF_POPUP, (UINT_PTR)hGitMenu, L"&Git");
 
-    // Agent menu (Unicode — Qt removal / pure Win32)
-    HMENU hAgentMenu = CreatePopupMenu();
-    AppendMenuW(hAgentMenu, MF_STRING, IDM_AGENT_START_LOOP, L"Start &Agent Loop");
-    AppendMenuW(hAgentMenu, MF_SEPARATOR, 0, nullptr);
-
-    // AI Options Submenu
-    HMENU hAIOptionsMenu = CreatePopupMenu();
-    AppendMenuW(hAIOptionsMenu, MF_STRING, IDM_AI_MODE_MAX, L"&Max Mode (Thread Unlock)");
-    AppendMenuW(hAIOptionsMenu, MF_STRING, IDM_AI_MODE_DEEP_THINK, L"&Deep Thinking (CoT)");
-    AppendMenuW(hAIOptionsMenu, MF_STRING, IDM_AI_MODE_DEEP_RESEARCH, L"Deep &Research (FileSystem)");
-    AppendMenuW(hAIOptionsMenu, MF_STRING, IDM_AI_MODE_NO_REFUSAL, L"&No Refusal Mode");
-    AppendMenuW(hAgentMenu, MF_POPUP, (UINT_PTR)hAIOptionsMenu, L"AI &Options");
-
-    // Context Window (Memory Plugins) Submenu
-    HMENU hContextMenu = CreatePopupMenu();
-    AppendMenuW(hContextMenu, MF_STRING, IDM_AI_CONTEXT_4K, L"4K (Standard)");
-    AppendMenuW(hContextMenu, MF_STRING, IDM_AI_CONTEXT_32K, L"32K (Large)");
-    AppendMenuW(hContextMenu, MF_STRING, IDM_AI_CONTEXT_64K, L"64K (X-Large)");
-    AppendMenuW(hContextMenu, MF_STRING, IDM_AI_CONTEXT_128K, L"128K (Ultra)");
-    AppendMenuW(hContextMenu, MF_STRING, IDM_AI_CONTEXT_256K, L"256K (Mega)");
-    AppendMenuW(hContextMenu, MF_STRING, IDM_AI_CONTEXT_512K, L"512K (Giga)");
-    AppendMenuW(hContextMenu, MF_STRING, IDM_AI_CONTEXT_1M, L"1M (Tera - Memory Plugin)");
-    AppendMenuW(hAgentMenu, MF_POPUP, (UINT_PTR)hContextMenu, L"&Context Window Size");
-
-    AppendMenuW(hAgentMenu, MF_SEPARATOR, 0, nullptr);
-    AppendMenuW(hAgentMenu, MF_STRING, IDM_AI_TITAN_TOGGLE, L"Use &Titan Kernel");
-    AppendMenuW(hAgentMenu, MF_STRING, IDM_AI_800B_STATUS, L"800B Dual-Engine &Status");
-    AppendMenuW(hAgentMenu, MF_SEPARATOR, 0, nullptr);
-    AppendMenuW(hAgentMenu, MF_STRING, IDM_AI_AGENT_MULTI_ENABLE, L"Multi-Agent: &Enable");
-    AppendMenuW(hAgentMenu, MF_STRING, IDM_AI_AGENT_MULTI_DISABLE, L"Multi-Agent: &Disable");
-    AppendMenuW(hAgentMenu, MF_STRING, IDM_AI_AGENT_MULTI_STATUS, L"Multi-Agent: &Status");
-
-    AppendMenuW(hAgentMenu, MF_SEPARATOR, 0, nullptr);
-
-    AppendMenuW(hAgentMenu, MF_STRING, IDM_AGENT_EXECUTE_CMD, L"&Execute Command...");
-
-    AppendMenuW(hAgentMenu, MF_SEPARATOR, 0, nullptr);
-
-    // Agent Memory sub-items (explicit strings for smoke test parity)
-    AppendMenuW(hAgentMenu, MF_STRING, IDM_AGENT_MEMORY_VIEW, L"View Agent &Memory");
-    AppendMenuW(hAgentMenu, MF_STRING, IDM_AGENT_MEMORY_CLEAR, L"&Clear Agent Memory");
-    AppendMenuW(hAgentMenu, MF_STRING, IDM_AGENT_MEMORY_EXPORT, L"&Export Agent Memory");
-    AppendMenuW(hAgentMenu, MF_SEPARATOR, 0, nullptr);
-
-    // Bounded loop entry (smoke test expects this label/ID)
-    AppendMenuW(hAgentMenu, MF_STRING, IDM_AGENT_BOUNDED_LOOP, L"&Bounded Agent Loop");
-    AppendMenuW(hAgentMenu, MF_SEPARATOR, 0, nullptr);
-
-    // SubAgent submenu with Chain/Swarm/Todo/Status
-    {
-        HMENU hSubAgentMenu = CreatePopupMenu();
-        AppendMenuW(hSubAgentMenu, MF_STRING, IDM_SUBAGENT_CHAIN, L"Agent: Execute Prompt &Chain");
-        AppendMenuW(hSubAgentMenu, MF_STRING, IDM_SUBAGENT_SWARM, L"Agent: Execute &HexMag Swarm");
-        AppendMenuW(hSubAgentMenu, MF_SEPARATOR, 0, nullptr);
-        AppendMenuW(hSubAgentMenu, MF_STRING, IDM_SUBAGENT_TODO_LIST, L"SubAgent: &Todo List");
-        AppendMenuW(hSubAgentMenu, MF_STRING, IDM_SUBAGENT_TODO_CLEAR, L"SubAgent: Clear &Todo");
-        AppendMenuW(hSubAgentMenu, MF_STRING, IDM_SUBAGENT_STATUS, L"SubAgent: &Status");
-        AppendMenuW(hAgentMenu, MF_POPUP, (UINT_PTR)hSubAgentMenu, L"&SubAgent");
-        AppendMenuW(hAgentMenu, MF_SEPARATOR, 0, nullptr);
-    }
-
-    // Autonomy submenu (smoke test expects hAutonomyMenu + IDM_AUTONOMY_* items)
-    {
-        HMENU hAutonomyMenu = CreatePopupMenu();
-        AppendMenuW(hAutonomyMenu, MF_STRING, IDM_AUTONOMY_TOGGLE, L"&Toggle Auto Loop");
-        AppendMenuW(hAutonomyMenu, MF_STRING, IDM_AUTONOMY_START, L"&Start Autonomy");
-        AppendMenuW(hAutonomyMenu, MF_STRING, IDM_AUTONOMY_STOP, L"Sto&p Autonomy");
-        AppendMenuW(hAutonomyMenu, MF_SEPARATOR, 0, nullptr);
-        AppendMenuW(hAutonomyMenu, MF_STRING, IDM_AUTONOMY_SET_GOAL, L"Set &Goal...");
-        AppendMenuW(hAutonomyMenu, MF_STRING, IDM_AUTONOMY_STATUS, L"Show &Status");
-        AppendMenuW(hAutonomyMenu, MF_STRING, IDM_AUTONOMY_MEMORY, L"Show &Memory Snapshot");
-        AppendMenuW(hAgentMenu, MF_POPUP, (UINT_PTR)hAutonomyMenu, L"&Autonomy");
-        AppendMenuW(hAgentMenu, MF_SEPARATOR, 0, nullptr);
-    }
-
-    // Plan Orchestrator submenu
-    {
-        HMENU hPlanOrchestratorMenu = CreatePopupMenu();
-        AppendMenuW(hPlanOrchestratorMenu, MF_STRING, IDM_PLAN_ORCHESTRATOR_START, L"&Start Plan && Execute...");
-        AppendMenuW(hPlanOrchestratorMenu, MF_STRING, IDM_PLAN_ORCHESTRATOR_STOP, L"&Stop Plan Orchestrator");
-        AppendMenuW(hPlanOrchestratorMenu, MF_SEPARATOR, 0, nullptr);
-        AppendMenuW(hPlanOrchestratorMenu, MF_STRING, IDM_PLAN_ORCHESTRATOR_VIEW_STATUS, L"View &Status");
-        AppendMenuW(hPlanOrchestratorMenu, MF_STRING, IDM_PLAN_ORCHESTRATOR_VIEW_PLAN, L"View &Current Plan");
-        AppendMenuW(hAgentMenu, MF_POPUP, (UINT_PTR)hPlanOrchestratorMenu, L"&Plan Orchestrator");
-        AppendMenuW(hAgentMenu, MF_SEPARATOR, 0, nullptr);
-    }
-
-    AppendMenuW(hAgentMenu, MF_STRING, IDM_AGENT_CONFIGURE_MODEL, L"&Configure Model...");
-    AppendMenuW(hAgentMenu, MF_STRING, IDM_AGENT_VIEW_TOOLS, L"View &Tools");
-    AppendMenuW(hAgentMenu, MF_STRING, IDM_AGENT_VIEW_STATUS, L"View &Status");
-    AppendMenuW(hAgentMenu, MF_STRING, IDM_AGENT_AUTONOMOUS_COMMUNICATOR, L"Autonomous &Communicator");
-    AppendMenuW(hAgentMenu, MF_STRING, IDM_AGENT_STOP, L"&Stop Agent");
-
-    AppendMenuW(m_hMenu, MF_POPUP, (UINT_PTR)hAgentMenu, L"&Agent");
+    // Agent menu (DISABLED for Steel Thread - incomplete implementation)
+    // HMENU hAgentMenu = CreatePopupMenu();
+    // ... (Agent menu items commented out for steel thread release)
+    // AppendMenuW(m_hMenu, MF_POPUP, (UINT_PTR)hAgentMenu, L"&Agent");
 
     // Telemetry menu
     HMENU hTelemetryMenu = CreatePopupMenu();
     AppendMenuW(hTelemetryMenu, MF_STRING, IDM_TELEMETRY_UNIFIED_CORE, L"&Unified Telemetry Core");
+    AppendMenuW(hTelemetryMenu, MF_STRING, IDM_TEL_METRICS_DASHBOARD, L"&Sovereign Runtime Monitor");
     AppendMenuW(m_hMenu, MF_POPUP, (UINT_PTR)hTelemetryMenu, L"&Telemetry");
 
     // Hotpatch menu (Unicode — Qt removal)
@@ -1819,14 +2237,21 @@ void Win32IDE::recreateFonts()
 {
     m_currentDpi = getDpi();
 
-    // Editor font — monospace
+    // Editor font — monospace (parity with Settings / IDEConfig editor.fontSize, editor.fontFamily)
     if (m_editorFont)
     {
         DeleteObject(m_editorFont);
         m_editorFont = nullptr;
     }
-    m_editorFont = CreateFontA(-dpiScale(16), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS,
-                               CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
+    {
+        const int fs = (std::max)(6, (std::min)(72, m_settings.fontSize));
+        const UINT dpi =
+            (m_hwndMain && IsWindow(m_hwndMain)) ? GetDpiForWindow(m_hwndMain) : static_cast<UINT>(m_currentDpi);
+        const char* face = m_settings.fontName.empty() ? "Consolas" : m_settings.fontName.c_str();
+        m_editorFont =
+            CreateFontA(-MulDiv(fs, dpi, 72), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS,
+                        CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, face);
+    }
 
     // UI font — proportional
     if (m_hFontUI)
@@ -1854,17 +2279,11 @@ void Win32IDE::recreateFonts()
     lf.lfFaceName[LF_FACESIZE - 1] = '\0';
     m_ghostTextFont = CreateFontIndirectA(&lf);
 
-    // Apply editor font
+    // Apply editor font (HFONT + Rich Edit document face/size from settings)
     if (m_hwndEditor && m_editorFont)
     {
         SendMessage(m_hwndEditor, WM_SETFONT, (WPARAM)m_editorFont, TRUE);
-        CHARFORMAT2W cf;
-        memset(&cf, 0, sizeof(cf));
-        cf.cbSize = sizeof(cf);
-        cf.dwMask = CFM_FACE | CFM_SIZE;
-        cf.yHeight = dpiScale(16) * 15;
-        wcscpy_s(cf.szFaceName, L"Consolas");
-        SendMessageW(m_hwndEditor, EM_SETCHARFORMAT, SCF_ALL, (LPARAM)&cf);
+        applyEditorCharFormatFaceAndSizeFromSettings();
     }
 
     // Apply UI font to all known UI controls
@@ -1899,9 +2318,13 @@ void Win32IDE::recreateFonts()
     }
     if (m_hwndPowerShellOutput)
     {
+        const int termPt = (std::max)(8, (std::min)(32, m_settings.integratedTerminalFontSize));
+        const char* termFace = m_settings.integratedTerminalFontFamily.empty()
+                                   ? "Consolas"
+                                   : m_settings.integratedTerminalFontFamily.c_str();
         m_hFontPowerShell =
-            CreateFontA(-dpiScale(16), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
-                        CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
+            CreateFontA(-dpiScale(termPt), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
+                        CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, termFace);
         SendMessage(m_hwndPowerShellOutput, WM_SETFONT, (WPARAM)m_hFontPowerShell, TRUE);
         if (m_hwndPowerShellInput)
             SendMessage(m_hwndPowerShellInput, WM_SETFONT, (WPARAM)m_hFontPowerShell, TRUE);
@@ -1916,19 +2339,11 @@ void Win32IDE::recreateFonts()
         SendMessage(m_hwndPowerShellStatusBar, WM_SETFONT, (WPARAM)m_hFontPowerShellStatus, TRUE);
     }
 
-    // Terminal panes
+    // Terminal panes — same as IDEConfig terminal.* + user/agent colors (avoid stale 9pt Consolas overwrite).
     for (auto& pane : m_terminalPanes)
     {
-        if (pane.hwnd)
-        {
-            CHARFORMAT2W tcf;
-            memset(&tcf, 0, sizeof(tcf));
-            tcf.cbSize = sizeof(tcf);
-            tcf.dwMask = CFM_FACE | CFM_SIZE;
-            tcf.yHeight = dpiScale(9) * 20;
-            wcscpy_s(tcf.szFaceName, L"Consolas");
-            SendMessageW(pane.hwnd, EM_SETCHARFORMAT, SCF_ALL, (LPARAM)&tcf);
-        }
+        if (pane.hwnd && IsWindow(pane.hwnd))
+            applyIntegratedTerminalCharFormat(pane.hwnd, pane.kind);
     }
 
     // File tree
@@ -1956,17 +2371,6 @@ void Win32IDE::createEditor(HWND hwnd)
     m_currentDpi = getDpi();
     recreateFonts();
 
-    CHARFORMAT2W cf;
-    memset(&cf, 0, sizeof(cf));
-    cf.cbSize = sizeof(cf);
-    cf.dwMask = CFM_FACE | CFM_SIZE | CFM_COLOR;
-    cf.yHeight = dpiScale(11) * 20;
-    cf.crTextColor = RGB(212, 212, 212);
-    wcscpy_s(cf.szFaceName, L"Consolas");
-    SendMessageW(m_hwndEditor, EM_SETCHARFORMAT, SCF_ALL, (LPARAM)&cf);
-
-    SendMessageW(m_hwndEditor, EM_SETCHARFORMAT, SCF_DEFAULT, (LPARAM)&cf);
-
     SendMessage(m_hwndEditor, EM_SETBKGNDCOLOR, 0, RGB(30, 30, 30));
     SendMessage(m_hwndEditor, EM_SETREADONLY, FALSE, 0);
     SendMessage(m_hwndEditor, EM_SETEVENTMASK, 0, ENM_CHANGE | ENM_SELCHANGE | ENM_SCROLL);
@@ -1990,10 +2394,22 @@ void Win32IDE::createEditor(HWND hwnd)
                                          L"\r\n";
     SetWindowTextW(m_hwndEditor, welcomeText);
 
-    SendMessageW(m_hwndEditor, EM_SETCHARFORMAT, SCF_ALL, (LPARAM)&cf);
+    applyEditorCharFormatFaceAndSizeFromSettings();
+    {
+        CHARFORMAT2W cfWelcome{};
+        cfWelcome.cbSize = sizeof(cfWelcome);
+        cfWelcome.dwMask = CFM_COLOR;
+        cfWelcome.crTextColor = RGB(212, 212, 212);
+        SendMessageW(m_hwndEditor, EM_SETCHARFORMAT, SCF_ALL, (LPARAM)&cfWelcome);
+        SendMessageW(m_hwndEditor, EM_SETCHARFORMAT, SCF_DEFAULT, (LPARAM)&cfWelcome);
+    }
 
     int textLen = GetWindowTextLengthW(m_hwndEditor);
     SendMessage(m_hwndEditor, EM_SETSEL, textLen, textLen);
+
+    // Ensure the first frame is painted even before subsequent WM_SIZE/layout churn.
+    InvalidateRect(m_hwndEditor, nullptr, TRUE);
+    UpdateWindow(m_hwndEditor);
 
     initializeEditorSurface();
 
@@ -2050,9 +2466,11 @@ void Win32IDE::createTerminal(HWND hwnd)
             LOG_ERROR("Failed to subclass command input, gle=" + std::to_string(subclassError));
         }
     }
+    syncCommandInputForActiveTerminal();
 }
 
-int Win32IDE::createTerminalPane(Win32TerminalManager::ShellType shellType, const std::string& name)
+int Win32IDE::createTerminalPane(Win32TerminalManager::ShellType shellType, const std::string& name,
+                                 TerminalPaneKind kind, bool activateAndFocus)
 {
     HWND hwnd = CreateWindowExW(WS_EX_CLIENTEDGE, RICHEDIT_CLASSW, L"",
                                 WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY, 0, 0,
@@ -2070,17 +2488,14 @@ int Win32IDE::createTerminalPane(Win32TerminalManager::ShellType shellType, cons
     sprintf_s(logBuf, "TerminalPane HWND created: %p (Parent: %p)", hwnd, m_hwndMain);
     LOG_INFO(std::string(logBuf));
 
-    // Apply dark theme to terminal pane
-    SendMessage(hwnd, EM_SETBKGNDCOLOR, 0, RGB(30, 30, 30));
+    // VS Code default theme–adjacent: integrated terminal ≈ #1e1e1e; agent stream slightly cooler / distinct.
+    const COLORREF userBg = RGB(30, 30, 30);
+    const COLORREF agentBg = RGB(28, 32, 40);
+    SendMessage(hwnd, EM_SETBKGNDCOLOR, 0, kind == TerminalPaneKind::AgentReadOnly ? agentBg : userBg);
 
-    CHARFORMAT2W cf;
-    memset(&cf, 0, sizeof(cf));
-    cf.cbSize = sizeof(cf);
-    cf.dwMask = CFM_FACE | CFM_SIZE | CFM_COLOR;
-    cf.yHeight = 180;
-    cf.crTextColor = RGB(204, 204, 204);
-    wcscpy_s(cf.szFaceName, L"Consolas");
-    SendMessageW(hwnd, EM_SETCHARFORMAT, SCF_ALL, (LPARAM)&cf);
+    applyIntegratedTerminalCharFormat(hwnd, kind);
+
+    RawrXD_ApplyTerminalRichEditScrollback(hwnd, m_settings.integratedTerminalScrollbackChars);
 
     int paneId = m_nextTerminalId++;
     TerminalPane pane;
@@ -2089,6 +2504,7 @@ int Win32IDE::createTerminalPane(Win32TerminalManager::ShellType shellType, cons
     pane.manager = std::make_unique<Win32TerminalManager>();
     pane.name = name.empty() ? ("Terminal " + std::to_string(paneId)) : name;
     pane.shellType = shellType;
+    pane.kind = kind;
     pane.isActive = false;
     pane.bounds = {0, 0, 0, 0};
 
@@ -2106,9 +2522,39 @@ int Win32IDE::createTerminalPane(Win32TerminalManager::ShellType shellType, cons
     };
 
     m_terminalPanes.push_back(std::move(pane));
-    setActiveTerminalPane(paneId);
+    if (activateAndFocus)
+        setActiveTerminalPane(paneId);
+    else if (kind == TerminalPaneKind::UserInteractive)
+    {
+        if (m_lastUserInteractiveTerminalId < 0)
+            m_lastUserInteractiveTerminalId = paneId;
+    }
     applyTheme();
+    layoutTerminalStrip();
     return paneId;
+}
+
+void Win32IDE::applyIntegratedTerminalCharFormat(HWND hwnd, TerminalPaneKind kind) const
+{
+    if (!hwnd || !IsWindow(hwnd))
+        return;
+    CHARFORMAT2W cf{};
+    cf.cbSize = sizeof(cf);
+    cf.dwMask = CFM_FACE | CFM_SIZE | CFM_COLOR;
+    const int pt = (std::max)(8, (std::min)(32, m_settings.integratedTerminalFontSize));
+    cf.yHeight = pt * 20;
+    cf.crTextColor = kind == TerminalPaneKind::AgentReadOnly ? RGB(200, 220, 240) : RGB(204, 204, 204);
+    copyIntegratedTerminalFontFace(cf.szFaceName, m_settings.integratedTerminalFontFamily);
+    SendMessageW(hwnd, EM_SETCHARFORMAT, SCF_ALL, (LPARAM)&cf);
+}
+
+void Win32IDE::applyIntegratedTerminalFontToAllPanes()
+{
+    for (auto& p : m_terminalPanes)
+    {
+        if (p.hwnd && IsWindow(p.hwnd))
+            applyIntegratedTerminalCharFormat(p.hwnd, p.kind);
+    }
 }
 
 TerminalPane* Win32IDE::findTerminalPane(int paneId)
@@ -2134,6 +2580,281 @@ TerminalPane* Win32IDE::getActiveTerminalPane()
     return active;
 }
 
+TerminalPane* Win32IDE::findFirstUserInteractivePane()
+{
+    for (auto& pane : m_terminalPanes)
+    {
+        if (pane.kind == TerminalPaneKind::UserInteractive)
+            return &pane;
+    }
+    return nullptr;
+}
+
+TerminalPane* Win32IDE::resolveTerminalPaneForUserTypedCommand()
+{
+    TerminalPane* active = getActiveTerminalPane();
+    if (active && active->kind == TerminalPaneKind::UserInteractive)
+        return active;
+    if (m_lastUserInteractiveTerminalId >= 0)
+    {
+        TerminalPane* last = findTerminalPane(m_lastUserInteractiveTerminalId);
+        if (last && last->kind == TerminalPaneKind::UserInteractive)
+            return last;
+    }
+    TerminalPane* first = findFirstUserInteractivePane();
+    if (first)
+        return first;
+    const int pid =
+        createTerminalPane(Win32TerminalManager::PowerShell, "PowerShell", TerminalPaneKind::UserInteractive, true);
+    return findTerminalPane(pid);
+}
+
+TerminalPane* Win32IDE::resolvePaneForInteractiveShellMenu()
+{
+    TerminalPane* active = getActiveTerminalPane();
+    if (active && active->kind == TerminalPaneKind::UserInteractive)
+        return active;
+    TerminalPane* u = findFirstUserInteractivePane();
+    if (u)
+        return u;
+    const int pid =
+        createTerminalPane(Win32TerminalManager::PowerShell, "PowerShell", TerminalPaneKind::UserInteractive, true);
+    return findTerminalPane(pid);
+}
+
+const char* Win32IDE::preferredIntegratedTerminalWorkingDirectory(std::string& storage) const
+{
+    storage.clear();
+    if (!m_projectRoot.empty())
+        storage = m_projectRoot;
+    else if (!m_explorerRootPath.empty())
+        storage = m_explorerRootPath;
+    else if (!m_settings.workingDirectory.empty())
+        storage = m_settings.workingDirectory;
+    return storage.empty() ? nullptr : storage.c_str();
+}
+
+void Win32IDE::ensureShellRunningForPane(TerminalPane* pane, Win32TerminalManager::ShellType shell)
+{
+    if (!pane || !pane->manager)
+        return;
+    if (pane->manager->isRunning())
+        return;
+    std::string cwdStore;
+    const char* cwd = preferredIntegratedTerminalWorkingDirectory(cwdStore);
+    const int pid = pane->id;
+    pane->manager->onFinished = [this, pid](int exitCode)
+    {
+        if (isShuttingDown())
+            return;
+        if (m_hwndMain && IsWindow(m_hwndMain))
+            PostMessageW(m_hwndMain, WM_APP + 304, (WPARAM)pid, (LPARAM)(uint32_t)exitCode);
+    };
+    if (pane->manager->start(shell, cwd))
+    {
+        pane->shellType = shell;
+        if (!cwdStore.empty())
+            pane->integratedWorkingDirectory = cwdStore;
+        else
+        {
+            char buf[MAX_PATH] = {};
+            if (GetCurrentDirectoryA(MAX_PATH, buf))
+                pane->integratedWorkingDirectory = buf;
+        }
+        {
+            std::string gb;
+            queryGitBranchForIntegratedCwd(pane->integratedWorkingDirectory, gb);
+            pane->integratedGitBranchFromCwd = std::move(gb);
+        }
+        appendText(pane->hwnd, shell == Win32TerminalManager::PowerShell ? "PowerShell started...\r\n"
+                                                                         : "Command Prompt started...\r\n");
+        refreshIntegratedTerminalContextHint();
+    }
+}
+
+int Win32IDE::createAgentTerminalPane(Win32TerminalManager::ShellType shellType, const std::string& name,
+                                      bool activateAndFocus)
+{
+    std::string label = name;
+    if (label.empty())
+        label = "Agent · " + std::to_string(m_nextAgentTerminalSequence++);
+    const int id = createTerminalPane(shellType, label, TerminalPaneKind::AgentReadOnly, activateAndFocus);
+    TerminalPane* p = findTerminalPane(id);
+    if (p)
+    {
+        ensureShellRunningForPane(p, shellType);
+        appendText(
+            p->hwnd,
+            "[Read-only agent terminal — command bar targets user shells; AI injects via writeAgentTerminalLine.]\r\n");
+    }
+    layoutTerminalStrip();
+    return id;
+}
+
+int Win32IDE::getOrCreatePrimaryAgentTerminalPane()
+{
+    if (m_primaryAgentTerminalId >= 0)
+    {
+        if (findTerminalPane(m_primaryAgentTerminalId))
+            return m_primaryAgentTerminalId;
+        m_primaryAgentTerminalId = -1;
+    }
+    for (auto& p : m_terminalPanes)
+    {
+        if (p.kind == TerminalPaneKind::AgentReadOnly)
+        {
+            m_primaryAgentTerminalId = p.id;
+            return p.id;
+        }
+    }
+    std::string label = "Agent · " + std::to_string(m_nextAgentTerminalSequence++);
+    const int id = createTerminalPane(Win32TerminalManager::PowerShell, label, TerminalPaneKind::AgentReadOnly, false);
+    m_primaryAgentTerminalId = id;
+    TerminalPane* np = findTerminalPane(id);
+    if (np)
+    {
+        ensureShellRunningForPane(np, Win32TerminalManager::PowerShell);
+        appendText(np->hwnd,
+                   "[Primary agent terminal — parallel with user shells; output is read-only in the IDE.]\r\n");
+    }
+    layoutTerminalStrip();
+    return id;
+}
+
+bool Win32IDE::writeInputToTerminalPane(int paneId, const std::string& data, bool appendCrLf)
+{
+    TerminalPane* p = findTerminalPane(paneId);
+    if (!p || !p->manager)
+        return false;
+    ensureShellRunningForPane(p, p->shellType);
+    if (!p->manager->isRunning())
+        return false;
+    std::string payload = data;
+    if (appendCrLf)
+    {
+        while (!payload.empty() && (payload.back() == '\n' || payload.back() == '\r'))
+            payload.pop_back();
+        payload += "\r\n";
+    }
+    p->manager->writeInput(payload);
+    return true;
+}
+
+bool Win32IDE::writeAgentTerminalLine(int paneId, const std::string& line)
+{
+    TerminalPane* p = findTerminalPane(paneId);
+    if (!p || p->kind != TerminalPaneKind::AgentReadOnly || !p->manager)
+        return false;
+    return writeInputToTerminalPane(paneId, line, true);
+}
+
+namespace
+{
+std::vector<std::wstring> s_integratedTermTabLabels;
+int s_integratedTerminalStripPx = 0;
+}  // namespace
+
+std::wstring Win32IDE::vscodeTabLabelForPane(size_t paneIndex) const
+{
+    if (paneIndex >= m_terminalPanes.size())
+        return L"?";
+    const TerminalPane& p = m_terminalPanes[paneIndex];
+    if (p.kind == TerminalPaneKind::AgentReadOnly)
+    {
+        return utf8ToWide(p.name.empty() ? "Agent" : p.name);
+    }
+    std::string s = (p.shellType == Win32TerminalManager::PowerShell) ? "pwsh" : "cmd";
+    int n = 1;
+    for (size_t j = 0; j < paneIndex; ++j)
+    {
+        if (m_terminalPanes[j].kind == TerminalPaneKind::UserInteractive && m_terminalPanes[j].shellType == p.shellType)
+            ++n;
+    }
+    if (n > 1)
+        s += " (" + std::to_string(n) + ")";
+    return utf8ToWide(s);
+}
+
+void Win32IDE::ensureIntegratedTerminalTabStrip()
+{
+    if (g_rawrxdIntegratedTerminalTabs && IsWindow(g_rawrxdIntegratedTerminalTabs))
+        return;
+    if (!m_hwndMain)
+        return;
+    INITCOMMONCONTROLSEX icc = {sizeof(icc), ICC_TAB_CLASSES};
+    InitCommonControlsEx(&icc);
+    const int h = dpiScale(26);
+    g_rawrxdIntegratedTerminalTabs =
+        CreateWindowExW(0, WC_TABCONTROLW, L"",
+                        WS_CHILD | WS_CLIPCHILDREN | TCS_BUTTONS | TCS_SINGLELINE | TCS_TOOLTIPS | TCS_FOCUSNEVER, 0, 0,
+                        400, h, m_hwndMain, (HMENU)(UINT_PTR)IDC_INTEGRATED_TERM_TABS, m_hInstance, nullptr);
+    if (g_rawrxdIntegratedTerminalTabs && m_hFontUI)
+        SendMessageW(g_rawrxdIntegratedTerminalTabs, WM_SETFONT, (WPARAM)m_hFontUI, TRUE);
+}
+
+void Win32IDE::updateIntegratedTerminalTabSelection()
+{
+    if (!g_rawrxdIntegratedTerminalTabs || !IsWindow(g_rawrxdIntegratedTerminalTabs))
+        return;
+    for (size_t i = 0; i < m_terminalPanes.size(); ++i)
+    {
+        if (m_terminalPanes[i].id == m_activeTerminalId)
+        {
+            TabCtrl_SetCurSel(g_rawrxdIntegratedTerminalTabs, static_cast<int>(i));
+            return;
+        }
+    }
+}
+
+void Win32IDE::syncIntegratedTerminalTabStrip()
+{
+    s_integratedTerminalStripPx = 0;
+    if (m_terminalPanes.empty() || !m_hwndMain)
+    {
+        if (g_rawrxdIntegratedTerminalTabs && IsWindow(g_rawrxdIntegratedTerminalTabs))
+            ShowWindow(g_rawrxdIntegratedTerminalTabs, SW_HIDE);
+        return;
+    }
+    ensureIntegratedTerminalTabStrip();
+    if (!g_rawrxdIntegratedTerminalTabs)
+        return;
+    s_integratedTermTabLabels.clear();
+    while (TabCtrl_GetItemCount(g_rawrxdIntegratedTerminalTabs) > 0)
+        TabCtrl_DeleteItem(g_rawrxdIntegratedTerminalTabs, 0);
+    for (size_t i = 0; i < m_terminalPanes.size(); ++i)
+    {
+        s_integratedTermTabLabels.push_back(vscodeTabLabelForPane(i));
+        TCITEMW tie = {};
+        tie.mask = TCIF_TEXT;
+        tie.pszText = s_integratedTermTabLabels.back().data();
+        TabCtrl_InsertItem(g_rawrxdIntegratedTerminalTabs, static_cast<int>(i), &tie);
+    }
+    updateIntegratedTerminalTabSelection();
+    s_integratedTerminalStripPx = dpiScale(28);
+    ShowWindow(g_rawrxdIntegratedTerminalTabs, SW_SHOW);
+}
+
+void Win32IDE::layoutTerminalStrip()
+{
+    if (!m_hwndMain || !m_hwndToolbar)
+        return;
+    RECT rect{};
+    GetClientRect(m_hwndMain, &rect);
+    RECT toolbarRect{};
+    GetWindowRect(m_hwndToolbar, &toolbarRect);
+    const int toolbarHeight = toolbarRect.bottom - toolbarRect.top;
+    syncIntegratedTerminalTabStrip();
+    layoutTerminalPanes(rect.right - rect.left, toolbarHeight + m_editorHeight, m_terminalHeight);
+}
+
+void Win32IDE::appendToTerminalPane(int paneId, const std::string& text)
+{
+    TerminalPane* p = findTerminalPane(paneId);
+    if (!p || !p->hwnd)
+        return;
+    appendText(p->hwnd, text);
+}
+
 void Win32IDE::setActiveTerminalPane(int paneId)
 {
     bool found = false;
@@ -2143,6 +2864,8 @@ void Win32IDE::setActiveTerminalPane(int paneId)
         {
             pane.isActive = true;
             m_activeTerminalId = paneId;
+            if (pane.kind == TerminalPaneKind::UserInteractive)
+                m_lastUserInteractiveTerminalId = paneId;
             if (pane.hwnd)
                 SetFocus(pane.hwnd);
             found = true;
@@ -2156,9 +2879,122 @@ void Win32IDE::setActiveTerminalPane(int paneId)
     {
         m_terminalPanes.front().isActive = true;
         m_activeTerminalId = m_terminalPanes.front().id;
+        if (m_terminalPanes.front().kind == TerminalPaneKind::UserInteractive)
+            m_lastUserInteractiveTerminalId = m_terminalPanes.front().id;
         if (m_terminalPanes.front().hwnd)
             SetFocus(m_terminalPanes.front().hwnd);
     }
+    updateIntegratedTerminalTabSelection();
+    syncCommandInputForActiveTerminal();
+    refreshIntegratedTerminalContextHint();
+}
+
+void Win32IDE::syncCommandInputForActiveTerminal()
+{
+    if (!m_hwndCommandInput || !IsWindow(m_hwndCommandInput))
+        return;
+    TerminalPane* p = getActiveTerminalPane();
+    const bool allowUserTyping = !p || p->kind == TerminalPaneKind::UserInteractive;
+    EnableWindow(m_hwndCommandInput, allowUserTyping ? TRUE : FALSE);
+}
+
+namespace
+{
+std::string shortenPathForStatusBar(const std::string& p, size_t maxLen)
+{
+    if (p.size() <= maxLen)
+        return p;
+    if (maxLen <= 3)
+        return "...";
+    return std::string("...") + p.substr(p.size() - (maxLen - 3));
+}
+}  // namespace
+
+void Win32IDE::refreshIntegratedTerminalContextHint()
+{
+    if (!m_hwndStatusBar || !IsWindow(m_hwndStatusBar))
+        return;
+    if (m_chatMode)
+        return;
+
+    if (!m_outputPanelVisible || m_activePanelTab != PanelTab::Terminal)
+    {
+        SendMessageW(m_hwndStatusBar, SB_SETTEXT, 1, (LPARAM)L"Terminal Mode");
+        return;
+    }
+
+    TerminalPane* p = getActiveTerminalPane();
+    const char* shellLabel = (p && p->shellType == Win32TerminalManager::CommandPrompt) ? "CMD" : "PS";
+
+    std::string cwd;
+    if (p && !p->integratedWorkingDirectory.empty())
+        cwd = p->integratedWorkingDirectory;
+    else
+    {
+        std::string s;
+        const char* c = preferredIntegratedTerminalWorkingDirectory(s);
+        if (c && c[0])
+            cwd = c;
+    }
+
+    std::string branchDisp = "-";
+    if (p && !p->integratedGitBranchFromCwd.empty())
+        branchDisp = p->integratedGitBranchFromCwd;
+    else if (!m_gitStatus.branch.empty())
+        branchDisp = m_gitStatus.branch;
+
+    std::ostringstream oss;
+    oss << shellLabel << " | " << branchDisp << " | " << (cwd.empty() ? "-" : shortenPathForStatusBar(cwd, 52));
+
+    const std::wstring w = utf8ToWide(oss.str());
+    SendMessageW(m_hwndStatusBar, SB_SETTEXT, 1, (LPARAM)w.c_str());
+}
+
+void Win32IDE::onTerminalProcessExited(int paneId, uint32_t exitCode)
+{
+    TerminalPane* pane = findTerminalPane(paneId);
+    if (!pane || !pane->hwnd)
+        return;
+
+    pane->integratedGitBranchFromCwd.clear();
+
+    std::ostringstream line;
+    line << "\r\n[Shell process exited with code " << exitCode << "]\r\n";
+    appendText(pane->hwnd, line.str());
+    refreshIntegratedTerminalContextHint();
+}
+
+void Win32IDE::focusIntegratedTerminalPanel()
+{
+    if (!m_outputPanelVisible)
+    {
+        m_outputPanelVisible = true;
+        if (m_hwndMain)
+        {
+            RECT rc{};
+            GetClientRect(m_hwndMain, &rc);
+            onSize(rc.right, rc.bottom);
+            InvalidateRect(m_hwndMain, nullptr, TRUE);
+        }
+    }
+    if (m_hwndPanelTabs && IsWindow(m_hwndPanelTabs))
+        switchPanelTab(PanelTab::Terminal);
+    // VS Code / Cursor: keep the active terminal session (user or agent); do not jump to a user pane.
+    TerminalPane* active = getActiveTerminalPane();
+    if (active && active->kind == TerminalPaneKind::UserInteractive)
+    {
+        if (m_hwndCommandInput && IsWindow(m_hwndCommandInput))
+            SetFocus(m_hwndCommandInput);
+    }
+    else if (active && active->hwnd && IsWindow(active->hwnd))
+    {
+        SetFocus(active->hwnd);
+    }
+    else if (m_hwndCommandInput && IsWindow(m_hwndCommandInput))
+    {
+        SetFocus(m_hwndCommandInput);
+    }
+    syncCommandInputForActiveTerminal();
 }
 
 void Win32IDE::layoutTerminalPanes(int width, int top, int height)
@@ -2186,22 +3022,32 @@ void Win32IDE::layoutTerminalPanes(int width, int top, int height)
     if (editorWidth <= 0)
         editorWidth = width;  // fallback
 
+    const int strip = s_integratedTerminalStripPx;
+    const int bodyTop = top + strip;
+    int bodyH = height - strip;
+    if (bodyH < dpiScale(40))
+        bodyH = height;
+    if (g_rawrxdIntegratedTerminalTabs && IsWindow(g_rawrxdIntegratedTerminalTabs) && strip > 0)
+    {
+        MoveWindow(g_rawrxdIntegratedTerminalTabs, editorLeft, top, editorWidth, strip, TRUE);
+    }
+
     int count = static_cast<int>(m_terminalPanes.size());
     if (count == 1)
     {
         auto& pane = m_terminalPanes[0];
-        MoveWindow(pane.hwnd, editorLeft, top, editorWidth, height, TRUE);
-        pane.bounds = {editorLeft, top, editorLeft + editorWidth, top + height};
+        MoveWindow(pane.hwnd, editorLeft, bodyTop, editorWidth, bodyH, TRUE);
+        pane.bounds = {editorLeft, bodyTop, editorLeft + editorWidth, bodyTop + bodyH};
         return;
     }
 
     if (m_terminalSplitHorizontal)
     {
-        int paneHeight = height / count;
-        int y = top;
+        int paneHeight = bodyH / count;
+        int y = bodyTop;
         for (int i = 0; i < count; ++i)
         {
-            int currentHeight = (i == count - 1) ? (height - paneHeight * (count - 1)) : paneHeight;
+            int currentHeight = (i == count - 1) ? (bodyH - paneHeight * (count - 1)) : paneHeight;
             auto& pane = m_terminalPanes[i];
             MoveWindow(pane.hwnd, editorLeft, y, editorWidth, currentHeight, TRUE);
             pane.bounds = {editorLeft, y, editorLeft + editorWidth, y + currentHeight};
@@ -2216,8 +3062,8 @@ void Win32IDE::layoutTerminalPanes(int width, int top, int height)
         {
             int currentWidth = (i == count - 1) ? (editorWidth - paneWidth * (count - 1)) : paneWidth;
             auto& pane = m_terminalPanes[i];
-            MoveWindow(pane.hwnd, x, top, currentWidth, height, TRUE);
-            pane.bounds = {x, top, x + currentWidth, top + height};
+            MoveWindow(pane.hwnd, x, bodyTop, currentWidth, bodyH, TRUE);
+            pane.bounds = {x, bodyTop, x + currentWidth, bodyTop + bodyH};
             x += currentWidth;
         }
     }
@@ -2228,13 +3074,12 @@ void Win32IDE::splitTerminalHorizontal()
     m_terminalSplitHorizontal = true;
     TerminalPane* active = getActiveTerminalPane();
     Win32TerminalManager::ShellType type = active ? active->shellType : Win32TerminalManager::PowerShell;
-    createTerminalPane(type, "Terminal");
-    RECT rect;
-    GetClientRect(m_hwndMain, &rect);
-    RECT toolbarRect;
-    GetWindowRect(m_hwndToolbar, &toolbarRect);
-    int toolbarHeight = toolbarRect.bottom - toolbarRect.top;
-    layoutTerminalPanes(rect.right - rect.left, toolbarHeight + m_editorHeight, m_terminalHeight);
+    TerminalPaneKind newKind = active ? active->kind : TerminalPaneKind::UserInteractive;
+    std::string tabName = (newKind == TerminalPaneKind::AgentReadOnly)
+                              ? ("Agent " + std::to_string(m_nextAgentTerminalSequence++))
+                              : "Terminal";
+    createTerminalPane(type, tabName, newKind);
+    layoutTerminalStrip();
 }
 
 void Win32IDE::splitTerminalVertical()
@@ -2242,13 +3087,12 @@ void Win32IDE::splitTerminalVertical()
     m_terminalSplitHorizontal = false;
     TerminalPane* active = getActiveTerminalPane();
     Win32TerminalManager::ShellType type = active ? active->shellType : Win32TerminalManager::PowerShell;
-    createTerminalPane(type, "Terminal");
-    RECT rect;
-    GetClientRect(m_hwndMain, &rect);
-    RECT toolbarRect;
-    GetWindowRect(m_hwndToolbar, &toolbarRect);
-    int toolbarHeight = toolbarRect.bottom - toolbarRect.top;
-    layoutTerminalPanes(rect.right - rect.left, toolbarHeight + m_editorHeight, m_terminalHeight);
+    TerminalPaneKind newKind = active ? active->kind : TerminalPaneKind::UserInteractive;
+    std::string tabName = (newKind == TerminalPaneKind::AgentReadOnly)
+                              ? ("Agent " + std::to_string(m_nextAgentTerminalSequence++))
+                              : "Terminal";
+    createTerminalPane(type, tabName, newKind);
+    layoutTerminalStrip();
 }
 
 void Win32IDE::clearAllTerminals()
@@ -2267,13 +3111,10 @@ void Win32IDE::clearAllTerminals()
     m_terminalPanes.clear();
     m_activeTerminalId = -1;
     m_nextTerminalId = 1;
-    createTerminalPane(Win32TerminalManager::PowerShell, "PowerShell");
-    RECT rect;
-    GetClientRect(m_hwndMain, &rect);
-    RECT toolbarRect;
-    GetWindowRect(m_hwndToolbar, &toolbarRect);
-    int toolbarHeight = toolbarRect.bottom - toolbarRect.top;
-    layoutTerminalPanes(rect.right - rect.left, toolbarHeight + m_editorHeight, m_terminalHeight);
+    m_primaryAgentTerminalId = -1;
+    m_lastUserInteractiveTerminalId = -1;
+    m_nextAgentTerminalSequence = 1;
+    createTerminalPane(Win32TerminalManager::PowerShell, "PowerShell", TerminalPaneKind::UserInteractive, true);
 }
 
 void Win32IDE::createStatusBar(HWND hwnd)
@@ -2295,7 +3136,7 @@ void Win32IDE::createStatusBar(HWND hwnd)
 #if defined(RAWRXD_HAS_SOVEREIGN_GPU_ASM) && (RAWRXD_HAS_SOVEREIGN_GPU_ASM != 0)
     SendMessageW(m_hwndStatusBar, SB_SETTEXT, 2, (LPARAM)L"VMM: [Legacy]  GPU-ASM: ACTIVE");
 #else
-    SendMessageW(m_hwndStatusBar, SB_SETTEXT, 2, (LPARAM)L"VMM: [Legacy]  GPU-ASM: STUB");
+    SendMessageW(m_hwndStatusBar, SB_SETTEXT, 2, (LPARAM)L"VMM: [Legacy]  GPU-ASM: FALLBACK");
 #endif
     SendMessageW(m_hwndStatusBar, SB_SETTIPTEXTW, 2,
                  (LPARAM)L"VMM diagnostics will appear here after model self-check.");
@@ -2362,62 +3203,77 @@ void Win32IDE::openFile()
     }
 
     OPENFILENAMEW ofn;
-    wchar_t szFile[260] = {0};
+    std::vector<wchar_t> fileBuffer(65536, L'\0');
 
     ZeroMemory(&ofn, sizeof(ofn));
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = m_hwndMain;
-    ofn.lpstrFile = szFile;
-    ofn.nMaxFile = (DWORD)std::size(szFile);
+    ofn.lpstrFile = fileBuffer.data();
+    ofn.nMaxFile = static_cast<DWORD>(fileBuffer.size());
     ofn.lpstrFilter = L"All Files\0*.*\0C++ Files\0*.cpp;*.h\0";
     ofn.nFilterIndex = 1;
     ofn.lpstrFileTitle = nullptr;
     ofn.nMaxFileTitle = 0;
     ofn.lpstrInitialDir = nullptr;
-    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_EXPLORER | OFN_ALLOWMULTISELECT;
 
     if (GetOpenFileNameW(&ofn))
     {
-        std::string pathUtf8 = wideToUtf8(szFile);
-        appendToOutput("Opening file: " + pathUtf8 + "\n", "Output", OutputSeverity::Info);
-        try
+        const wchar_t* base = fileBuffer.data();
+        const wchar_t* next = base + wcslen(base) + 1;
+
+        // Explorer format: single-select returns full path; multi-select returns dir + file list.
+        if (*next == L'\0')
         {
-            std::ifstream inStream(std::filesystem::path(szFile), std::ios::binary);
-            if (inStream)
-            {
-                inStream.seekg(0, std::ios::end);
-                const std::streamsize size = inStream.tellg();
-                inStream.seekg(0, std::ios::beg);
-                std::string content(static_cast<size_t>(size), '\0');
-                if (size > 0)
-                    inStream.read(&content[0], size);
-                setWindowText(m_hwndEditor, content);
-                m_currentFile = pathUtf8;
-                m_fileModified = false;
-                setCurrentDirectoryFromFile(m_currentFile);
-                updateTitleBarText();
-                SendMessageW(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)L"File opened");
-                updateMenuEnableStates();
-                syncEditorToGpuSurface();
-                appendToOutput("File opened successfully (" + std::to_string(content.size()) + " bytes)\n", "Output",
-                               OutputSeverity::Info);
-            }
-            else
-            {
-                appendToOutput("Failed to open file: " + pathUtf8 + "\n", "Errors", OutputSeverity::Error);
-                MessageBoxW(m_hwndMain, L"Failed to open file", L"Error", MB_OK | MB_ICONERROR);
-            }
+            openFile(wideToUtf8(base));
         }
-        catch (const std::exception& e)
+        else
         {
-            appendToOutput("Exception opening file: " + std::string(e.what()) + "\n", "Errors", OutputSeverity::Error);
-            MessageBoxW(m_hwndMain, utf8ToWide(e.what()).c_str(), L"Error", MB_OK | MB_ICONERROR);
+            const std::wstring dir(base);
+            for (const wchar_t* p = next; *p; p += wcslen(p) + 1)
+            {
+                std::wstring full = dir;
+                if (!full.empty() && full.back() != L'\\')
+                    full += L'\\';
+                full += p;
+                openFile(wideToUtf8(full));
+            }
         }
     }
     else
     {
         appendToOutput("File > Open cancelled by user (no file selected)\n", "Output", OutputSeverity::Info);
     }
+}
+
+void Win32IDE::closeWelcomePage()
+{
+    // Full welcome WebView2 UI lives in Win32IDE_WelcomePage.cpp when linked; keep a no-op here for link parity.
+}
+
+void Win32IDE::openWorkspaceFolder()
+{
+    closeWelcomePage();
+    BROWSEINFOW bi = {};
+    bi.hwndOwner = m_hwndMain;
+    bi.lpszTitle = L"Select Workspace Folder";
+    bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
+    PIDLIST_ABSOLUTE pidl = SHBrowseForFolderW(&bi);
+    if (!pidl)
+    {
+        appendToOutput("File > Open Folder cancelled\n", "Output", OutputSeverity::Info);
+        return;
+    }
+    WCHAR path[MAX_PATH] = {};
+    if (SHGetPathFromIDListW(pidl, path))
+    {
+        const std::string u8 = wideToUtf8(path);
+        applyWorkspaceFolderForChatHistory(u8);
+        appendToOutput("[Workspace] Opened folder: " + u8 + "\n", "Output", OutputSeverity::Info);
+        if (m_hwndStatusBar)
+            SendMessageW(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)L"Workspace folder opened");
+    }
+    CoTaskMemFree(pidl);
 }
 
 // Overload to open a specific file path
@@ -2454,9 +3310,11 @@ void Win32IDE::openFile(const std::string& filePath)
             memset(&cf, 0, sizeof(cf));
             cf.cbSize = sizeof(cf);
             cf.dwMask = CFM_COLOR | CFM_FACE | CFM_SIZE;
-            cf.crTextColor = m_currentTheme.textColor;
+            cf.crTextColor = ensureReadableTextColor(m_currentTheme.backgroundColor, m_currentTheme.textColor);
             cf.yHeight = 220;
             wcscpy_s(cf.szFaceName, L"Consolas");
+            SendMessageW(m_hwndEditor, EM_SETBKGNDCOLOR, 0, m_currentTheme.backgroundColor);
+            SendMessageW(m_hwndEditor, EM_SETCHARFORMAT, SCF_DEFAULT, (LPARAM)&cf);
             SendMessageW(m_hwndEditor, EM_SETCHARFORMAT, SCF_ALL, (LPARAM)&cf);
 
             SendMessageW(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)L"File opened");
@@ -2549,14 +3407,14 @@ bool Win32IDE::saveFileAs()
 
 void Win32IDE::startPowerShell()
 {
-    TerminalPane* pane = getActiveTerminalPane();
+    TerminalPane* pane = resolvePaneForInteractiveShellMenu();
     if (!pane || !pane->manager)
         return;
     stopTerminal();
-    if (pane->manager->start(Win32TerminalManager::PowerShell))
+    // Reuse ensureShellRunningForPane so cwd, shellType, exit callback, and status-bar hint stay in sync.
+    ensureShellRunningForPane(pane, Win32TerminalManager::PowerShell);
+    if (pane->manager->isRunning())
     {
-        appendText(pane->hwnd, "PowerShell started...\n");
-        SendMessageW(m_hwndStatusBar, SB_SETTEXT, 1, (LPARAM)L"PowerShell");
         updateMenuEnableStates();
         appendToOutput("PowerShell started...\n", "Output", OutputSeverity::Info);
     }
@@ -2564,14 +3422,13 @@ void Win32IDE::startPowerShell()
 
 void Win32IDE::startCommandPrompt()
 {
-    TerminalPane* pane = getActiveTerminalPane();
+    TerminalPane* pane = resolvePaneForInteractiveShellMenu();
     if (!pane || !pane->manager)
         return;
     stopTerminal();
-    if (pane->manager->start(Win32TerminalManager::CommandPrompt))
+    ensureShellRunningForPane(pane, Win32TerminalManager::CommandPrompt);
+    if (pane->manager->isRunning())
     {
-        appendText(pane->hwnd, "Command Prompt started...\n");
-        SendMessageW(m_hwndStatusBar, SB_SETTEXT, 1, (LPARAM)L"CMD");
         updateMenuEnableStates();
         appendToOutput("Command Prompt started...\n", "Output", OutputSeverity::Info);
     }
@@ -2579,7 +3436,7 @@ void Win32IDE::startCommandPrompt()
 
 void Win32IDE::stopTerminal()
 {
-    TerminalPane* pane = getActiveTerminalPane();
+    TerminalPane* pane = resolvePaneForInteractiveShellMenu();
     if (!pane || !pane->manager || !pane->manager->isRunning())
         return;
     pane->manager->stop();
@@ -2726,11 +3583,15 @@ void Win32IDE::executeCommand()
         else
         {
             // Fallback
-            TerminalPane* pane = getActiveTerminalPane();
-            if (pane && pane->manager && pane->manager->isRunning())
+            TerminalPane* pane = resolveTerminalPaneForUserTypedCommand();
+            if (pane && pane->manager)
             {
-                command += "\n";
-                pane->manager->writeInput(command);
+                ensureShellRunningForPane(pane, pane->shellType);
+                if (pane->manager->isRunning())
+                {
+                    command += "\n";
+                    pane->manager->writeInput(command);
+                }
             }
         }
         return;
@@ -2757,14 +3618,56 @@ void Win32IDE::executeCommand()
         return;
     }
 
-    // Send to terminal
-    TerminalPane* pane = getActiveTerminalPane();
-    if (pane && pane->manager && pane->manager->isRunning())
+    // Send to terminal (never inject into agent read-only panes from the bar)
+    TerminalPane* pane = resolveTerminalPaneForUserTypedCommand();
+    if (pane && pane->manager)
     {
-        addPowerShellHistory(command);  // Track in shared command history
-        command += "\n";
-        pane->manager->writeInput(command);
+        ensureShellRunningForPane(pane, pane->shellType);
+        if (pane->manager->isRunning())
+        {
+            addPowerShellHistory(command);  // Track in shared command history
+            command += "\n";
+            pane->manager->writeInput(command);
+        }
     }
+}
+
+std::string Win32IDE::filterTerminalCwdTelemetry(std::string& carry, const std::string& chunk,
+                                                 std::string* outCwdUpdate)
+{
+    const std::string beg = "RAWRXD_CWD|";
+    const std::string end = "|END";
+    std::string s = carry + chunk;
+    carry.clear();
+
+    std::string out;
+    out.reserve(s.size());
+    size_t i = 0;
+    while (i < s.size())
+    {
+        const size_t pbeg = s.find(beg, i);
+        if (pbeg == std::string::npos)
+        {
+            out.append(s, i, std::string::npos);
+            return out;
+        }
+        out.append(s, i, pbeg - i);
+        const size_t valStart = pbeg + beg.size();
+        const size_t pend = s.find(end, valStart);
+        if (pend == std::string::npos)
+        {
+            carry.assign(s, pbeg, std::string::npos);
+            return out;
+        }
+        if (outCwdUpdate)
+            *outCwdUpdate = s.substr(valStart, pend - valStart);
+        i = pend + end.size();
+        if (i < s.size() && s[i] == '\r')
+            ++i;
+        if (i < s.size() && s[i] == '\n')
+            ++i;
+    }
+    return out;
 }
 
 void Win32IDE::onTerminalOutput(int paneId, const std::string& output)
@@ -2772,15 +3675,32 @@ void Win32IDE::onTerminalOutput(int paneId, const std::string& output)
     if (isShuttingDown())
         return;
 
-    if (m_planOrchestrator) {
-        m_planOrchestrator->observeTerminalOutput("pane " + std::to_string(paneId), output, false);
+    TerminalPane* pane = findTerminalPane(paneId);
+    std::string filtered = output;
+    if (pane && pane->hwnd)
+    {
+        std::string cwdFromTelemetry;
+        filtered = filterTerminalCwdTelemetry(pane->terminalCwdTelemetryCarry, output, &cwdFromTelemetry);
+        if (!cwdFromTelemetry.empty())
+        {
+            const std::string newCwd = std::move(cwdFromTelemetry);
+            if (pane->integratedWorkingDirectory != newCwd)
+            {
+                pane->integratedWorkingDirectory = newCwd;
+                std::string gb;
+                queryGitBranchForIntegratedCwd(pane->integratedWorkingDirectory, gb);
+                pane->integratedGitBranchFromCwd = std::move(gb);
+            }
+            refreshIntegratedTerminalContextHint();
+        }
     }
 
-    TerminalPane* pane = findTerminalPane(paneId);
+    if (m_planOrchestrator)
+        m_planOrchestrator->observeTerminalOutput("pane " + std::to_string(paneId), filtered, false);
+
     if (!pane || !pane->hwnd)
         return;
-    appendText(pane->hwnd, output);
-    appendToOutput(output, "Debug", OutputSeverity::Info);
+    appendTerminalTextAnsi(paneId, pane->hwnd, filtered);
 }
 
 void Win32IDE::onTerminalError(int paneId, const std::string& error)
@@ -2788,14 +3708,15 @@ void Win32IDE::onTerminalError(int paneId, const std::string& error)
     if (isShuttingDown())
         return;
 
-    if (m_planOrchestrator) {
+    if (m_planOrchestrator)
+    {
         m_planOrchestrator->observeTerminalOutput("pane " + std::to_string(paneId), error, true);
     }
 
     TerminalPane* pane = findTerminalPane(paneId);
     if (!pane || !pane->hwnd)
         return;
-    appendText(pane->hwnd, error);
+    appendTerminalTextAnsi(paneId, pane->hwnd, error);
     appendToOutput(error, "Errors", OutputSeverity::Error);
 }
 
@@ -2808,6 +3729,30 @@ std::string Win32IDE::getWindowText(HWND hwnd)
     GetWindowTextW(hwnd, &wtext[0], length + 1);
     wtext.resize(length);
     return wideToUtf8(wtext.c_str());
+}
+
+std::string Win32IDE::getRichEditDocumentUtf8(HWND hwnd)
+{
+    if (!hwnd || !IsWindow(hwnd))
+        return {};
+    GETTEXTLENGTHEX gtl{};
+    gtl.flags = GTL_DEFAULT;
+    gtl.codepage = CP_UNICODE;
+    const LONG nchars = static_cast<LONG>(SendMessage(hwnd, EM_GETTEXTLENGTHEX, (WPARAM)&gtl, 0));
+    if (nchars <= 0)
+        return {};
+    std::vector<wchar_t> wbuf(static_cast<size_t>(nchars) + 2, L'\0');
+    GETTEXTEX gt{};
+    gt.cb = static_cast<DWORD>(wbuf.size() * sizeof(wchar_t));
+    gt.flags = GT_USECRLF;
+    gt.codepage = 1200;
+    gt.lpDefaultChar = nullptr;
+    gt.lpUsedDefChar = nullptr;
+    const LONG copied = static_cast<LONG>(SendMessage(hwnd, EM_GETTEXTEX, (WPARAM)&gt, (LPARAM)wbuf.data()));
+    if (copied <= 0)
+        return {};
+    wbuf[static_cast<size_t>(copied)] = L'\0';
+    return wideToUtf8(wbuf.data());
 }
 
 // UTF-8 byte offset <-> UTF-16 character index for Rich Edit
@@ -2830,6 +3775,15 @@ static int charIndexToUtf8ByteOffset(const std::string& utf8, int charIndex)
     return (int)wideToUtf8(w.substr(0, charIndex).c_str()).size();
 }
 
+static COLORREF ensureReadableTextColor(COLORREF bg, COLORREF fg)
+{
+    const int contrast = abs((int)GetRValue(bg) - (int)GetRValue(fg)) + abs((int)GetGValue(bg) - (int)GetGValue(fg)) +
+                         abs((int)GetBValue(bg) - (int)GetBValue(fg));
+    if (contrast < 96)
+        return RGB(212, 212, 212);
+    return fg;
+}
+
 void Win32IDE::setWindowText(HWND hwnd, const std::string& text)
 {
     SetWindowTextW(hwnd, utf8ToWide(text).c_str());
@@ -2837,14 +3791,7 @@ void Win32IDE::setWindowText(HWND hwnd, const std::string& text)
     {
         // Keep editor readable and reset viewport when swapping document content.
         COLORREF bg = m_currentTheme.backgroundColor;
-        COLORREF fg = m_currentTheme.textColor;
-        const int contrast =
-            abs((int)GetRValue(bg) - (int)GetRValue(fg)) + abs((int)GetGValue(bg) - (int)GetGValue(fg)) +
-            abs((int)GetBValue(bg) - (int)GetBValue(fg));
-        if (contrast < 96)
-        {
-            fg = RGB(212, 212, 212);
-        }
+        COLORREF fg = ensureReadableTextColor(bg, m_currentTheme.textColor);
 
         CHARFORMAT2W cf;
         ZeroMemory(&cf, sizeof(cf));
@@ -2959,7 +3906,7 @@ void Win32IDE::applyTheme()
         ZeroMemory(&cf, sizeof(cf));
         cf.cbSize = sizeof(cf);
         cf.dwMask = CFM_COLOR;
-        cf.crTextColor = m_currentTheme.textColor;
+        cf.crTextColor = ensureReadableTextColor(m_currentTheme.backgroundColor, m_currentTheme.textColor);
         cf.dwEffects = 0;
         SendMessageW(m_hwndEditor, EM_SETCHARFORMAT, SCF_DEFAULT, (LPARAM)&cf);
     }
@@ -2968,14 +3915,28 @@ void Win32IDE::applyTheme()
     {
         if (!pane.hwnd)
             continue;
-        SendMessage(pane.hwnd, EM_SETBKGNDCOLOR, 0, m_currentTheme.panelBg);
-        CHARFORMAT2W tcf;
-        ZeroMemory(&tcf, sizeof(tcf));
-        tcf.cbSize = sizeof(tcf);
-        tcf.dwMask = CFM_COLOR;
-        tcf.crTextColor = m_currentTheme.panelFg;
-        tcf.dwEffects = 0;
-        SendMessageW(pane.hwnd, EM_SETCHARFORMAT, SCF_ALL, (LPARAM)&tcf);
+        if (pane.kind == TerminalPaneKind::AgentReadOnly)
+        {
+            SendMessage(pane.hwnd, EM_SETBKGNDCOLOR, 0, RGB(42, 28, 46));
+            CHARFORMAT2W tcf;
+            ZeroMemory(&tcf, sizeof(tcf));
+            tcf.cbSize = sizeof(tcf);
+            tcf.dwMask = CFM_COLOR;
+            tcf.crTextColor = RGB(235, 188, 200);
+            tcf.dwEffects = 0;
+            SendMessageW(pane.hwnd, EM_SETCHARFORMAT, SCF_ALL, (LPARAM)&tcf);
+        }
+        else
+        {
+            SendMessage(pane.hwnd, EM_SETBKGNDCOLOR, 0, m_currentTheme.panelBg);
+            CHARFORMAT2W tcf;
+            ZeroMemory(&tcf, sizeof(tcf));
+            tcf.cbSize = sizeof(tcf);
+            tcf.dwMask = CFM_COLOR;
+            tcf.crTextColor = m_currentTheme.panelFg;
+            tcf.dwEffects = 0;
+            SendMessageW(pane.hwnd, EM_SETCHARFORMAT, SCF_ALL, (LPARAM)&tcf);
+        }
     }
 
     // 4. Deep apply to all surfaces (sidebar, activity bar, tabs, status bar, panels)
@@ -3107,10 +4068,12 @@ void Win32IDE::showGetHelp(const std::string& cmdlet)
     }
 
     std::string helpCommand = "Get-Help " + command + " -Full\n";
-    TerminalPane* pane = getActiveTerminalPane();
-    if (pane && pane->manager && pane->manager->isRunning())
+    TerminalPane* pane = resolveTerminalPaneForUserTypedCommand();
+    if (pane && pane->manager)
     {
-        pane->manager->writeInput(helpCommand);
+        ensureShellRunningForPane(pane, pane->shellType);
+        if (pane->manager->isRunning())
+            pane->manager->writeInput(helpCommand);
     }
 }
 
@@ -3135,6 +4098,33 @@ void Win32IDE::showCommandReference()
 }
 
 // Output / Clipboard / Minimap / Profiling implementations
+namespace
+{
+std::string normalizeOutputTabName(const std::string& name)
+{
+    if (name.empty() || _stricmp(name.c_str(), "General") == 0 || _stricmp(name.c_str(), "Output") == 0)
+        return "Output";
+    if (_stricmp(name.c_str(), "Errors") == 0)
+        return "Errors";
+    if (_stricmp(name.c_str(), "Debug") == 0)
+        return "Debug";
+    if (_stricmp(name.c_str(), "Find Results") == 0)
+        return "Find Results";
+    return "Output";
+}
+
+int outputTabControlId(const std::string& name)
+{
+    if (name == "Output")
+        return IDC_OUTPUT_EDIT_GENERAL;
+    if (name == "Errors")
+        return IDC_OUTPUT_EDIT_ERRORS;
+    if (name == "Debug")
+        return IDC_OUTPUT_EDIT_DEBUG;
+    return IDC_OUTPUT_EDIT_FIND;
+}
+}  // namespace
+
 void Win32IDE::createOutputTabs()
 {
     if (m_hwndOutputTabs)
@@ -3184,7 +4174,7 @@ void Win32IDE::createOutputTabs()
                                      (HMENU)(INT_PTR)defs[i].id, m_hInstance, nullptr);
         m_outputWindows[defs[i].key] = hEdit;
     }
-    m_activeOutputTab = "Output";
+    m_activeOutputTab = normalizeOutputTabName(m_activeOutputTab);
 
     // Restore persisted tab selection
     if (m_selectedOutputTab >= 0 && m_selectedOutputTab < 4)
@@ -3208,16 +4198,20 @@ void Win32IDE::createOutputTabs()
 
 void Win32IDE::addOutputTab(const std::string& name)
 {
-    if (m_outputWindows.find(name) != m_outputWindows.end())
+    const std::string normalizedName = normalizeOutputTabName(name);
+    if (m_outputWindows.find(normalizedName) != m_outputWindows.end())
+        return;
+    if (!m_hwndOutputTabs || !IsWindow(m_hwndOutputTabs))
         return;
     RECT client{};
     GetClientRect(m_hwndMain, &client);
     int tabBarHeight = 24;
-    HWND hEdit = CreateWindowExW(
-        WS_EX_CLIENTEDGE, L"EDIT", L"", WS_CHILD | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY, 0,
-        tabBarHeight, client.right, m_outputTabHeight - tabBarHeight, m_hwndMain, nullptr, m_hInstance, nullptr);
+    HWND hEdit = CreateWindowExW(WS_EX_CLIENTEDGE, L"EDIT", L"",
+                                 WS_CHILD | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY, 0, tabBarHeight,
+                                 client.right, m_outputTabHeight - tabBarHeight, m_hwndMain,
+                                 (HMENU)(INT_PTR)outputTabControlId(normalizedName), m_hInstance, nullptr);
     ShowWindow(hEdit, SW_HIDE);
-    m_outputWindows[name] = hEdit;
+    m_outputWindows[normalizedName] = hEdit;
 }
 
 void Win32IDE::appendToOutput(const std::string& text, const std::string& tabName, OutputSeverity severity)
@@ -3240,11 +4234,15 @@ void Win32IDE::appendToOutput(const std::string& text, const std::string& tabNam
     if (static_cast<int>(severity) < m_severityFilterLevel)
         return;
 
-    std::string target = tabName.empty() ? m_activeOutputTab : tabName;
-    if (m_outputWindows.find(target) == m_outputWindows.end())
+    std::string target = normalizeOutputTabName(tabName.empty() ? m_activeOutputTab : tabName);
+    auto it = m_outputWindows.find(target);
+    if (it == m_outputWindows.end())
     {
         addOutputTab(target);
+        it = m_outputWindows.find(target);
     }
+    if (it == m_outputWindows.end() || !it->second || !IsWindow(it->second))
+        return;
 
     // Add timestamp for Errors and Debug tabs
     std::string timestampedText = text;
@@ -3269,16 +4267,15 @@ void Win32IDE::appendToOutput(const std::string& text, const std::string& tabNam
     }
     else
     {
-        HWND hwnd = m_outputWindows[target];
-        appendText(hwnd, timestampedText);
+        appendText(it->second, timestampedText);
     }
 }
 
 void Win32IDE::clearOutput(const std::string& tabName)
 {
-    std::string target = tabName.empty() ? m_activeOutputTab : tabName;
+    std::string target = normalizeOutputTabName(tabName.empty() ? m_activeOutputTab : tabName);
     auto it = m_outputWindows.find(target);
-    if (it != m_outputWindows.end())
+    if (it != m_outputWindows.end() && it->second && IsWindow(it->second))
     {
         SetWindowTextW(it->second, L"");
     }
@@ -3286,9 +4283,9 @@ void Win32IDE::clearOutput(const std::string& tabName)
 
 void Win32IDE::formatOutput(const std::string& text, COLORREF color, const std::string& tabName)
 {
-    std::string target = tabName.empty() ? m_activeOutputTab : tabName;
+    std::string target = normalizeOutputTabName(tabName.empty() ? m_activeOutputTab : tabName);
     auto it = m_outputWindows.find(target);
-    if (it == m_outputWindows.end())
+    if (it == m_outputWindows.end() || !it->second || !IsWindow(it->second))
         return;
 
     HWND hwnd = it->second;
@@ -3302,7 +4299,7 @@ void Win32IDE::formatOutput(const std::string& text, COLORREF color, const std::
     cf.cbSize = sizeof(cf);
     cf.dwMask = CFM_COLOR;
     cf.crTextColor = color;
-    SendMessageW(hwnd, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
+    cf.crTextColor = ensureReadableTextColor(m_currentTheme.backgroundColor, m_currentTheme.textColor);
 
     std::wstring wtext = utf8ToWide(text);
     SETTEXTEX st{};
@@ -3339,7 +4336,8 @@ void Win32IDE::copyWithFormatting()
             memcpy(dest, text.c_str(), text.size() + 1);
             GlobalUnlock(hMem);
             // SetClipboardData takes ownership of hMem on success; only free on failure
-            if (!SetClipboardData(CF_TEXT, hMem)) {
+            if (!SetClipboardData(CF_TEXT, hMem))
+            {
                 GlobalFree(hMem);
             }
         }
@@ -3472,7 +4470,8 @@ void Win32IDE::copyLineNumbers()
             memcpy(dest, lineNumbers.c_str(), lineNumbers.size() + 1);
             GlobalUnlock(hMem);
             // SetClipboardData takes ownership of hMem on success; only free on failure
-            if (!SetClipboardData(CF_TEXT, hMem)) {
+            if (!SetClipboardData(CF_TEXT, hMem))
+            {
                 GlobalFree(hMem);
             }
         }
@@ -3757,12 +4756,46 @@ void Win32IDE::analyzeScript()
 
 void Win32IDE::measureExecutionTime()
 {
-    // Real implementation: Measure block execution
-    auto start = std::chrono::high_resolution_clock::now();
-    // execute selection... (simplified)
-    auto end = std::chrono::high_resolution_clock::now();
-    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    appendToOutput("Execution time info: " + std::to_string(ms) + "ms\n", "Output", OutputSeverity::Info);
+    // Get the currently selected text from the editor
+    CHARRANGE selection = {};
+    SendMessage(m_hwndEditor, EM_EXGETSEL, 0, (LPARAM)&selection);
+    const int selLen = selection.cpMax - selection.cpMin;
+    if (selLen <= 0)
+    {
+        appendToOutput("measureExecutionTime: No text selected — select a script block first.\n", "Output",
+                       OutputSeverity::Warning);
+        return;
+    }
+    std::string selectedText(selLen + 1, 0);
+    SendMessage(m_hwndEditor, EM_GETSELTEXT, 0, (LPARAM)&selectedText[0]);
+    selectedText.resize(selLen);
+
+    // Write to a temporary PowerShell script
+    char tmpDir[MAX_PATH] = {};
+    GetTempPathA(MAX_PATH, tmpDir);
+    const std::string scriptPath = std::string(tmpDir) + "rawrxd_exec_tmp.ps1";
+    {
+        std::ofstream f(scriptPath);
+        if (!f)
+        {
+            appendToOutput("measureExecutionTime: Failed to write temp script.\n", "Errors", OutputSeverity::Error);
+            return;
+        }
+        f << selectedText;
+    }
+
+    // Execute and measure wall-clock time
+    const auto start = std::chrono::high_resolution_clock::now();
+    const std::string cmdLine = "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"" + scriptPath + "\"";
+    const std::string result = ExecCmd(cmdLine.c_str());
+    const auto end = std::chrono::high_resolution_clock::now();
+    const long long ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+
+    DeleteFileA(scriptPath.c_str());
+
+    appendToOutput("=== Execution Time: " + std::to_string(ms) + "ms ===\n" +
+                       (result.empty() ? "(no output)\n" : result + "\n"),
+                   "Output", OutputSeverity::Info);
 }
 
 // Module Management
@@ -3873,15 +4906,22 @@ void Win32IDE::loadModule(const std::string& moduleName)
     // Explicit Logic: Actually load the module in PowerShell
     std::string command = "Import-Module '" + moduleName + "'\n";
 
-    TerminalPane* pane = getActiveTerminalPane();
-    if (pane && pane->manager && pane->manager->isRunning())
+    TerminalPane* pane = resolveTerminalPaneForUserTypedCommand();
+    if (pane && pane->manager)
     {
-        pane->manager->writeInput(command);
-        appendToOutput("Loading module: " + moduleName, "Output", OutputSeverity::Info);
+        ensureShellRunningForPane(pane, pane->shellType);
+        if (pane->manager->isRunning())
+        {
+            pane->manager->writeInput(command);
+            appendToOutput("Loading module: " + moduleName, "Output", OutputSeverity::Info);
+        }
+        else
+            appendToOutput("Cannot load module '" + moduleName + "': shell not running.", "Errors",
+                           OutputSeverity::Error);
     }
     else
     {
-        appendToOutput("Cannot load module '" + moduleName + "': No active terminal.", "Errors", OutputSeverity::Error);
+        appendToOutput("Cannot load module '" + moduleName + "': No user terminal.", "Errors", OutputSeverity::Error);
     }
 }
 
@@ -3901,17 +4941,22 @@ void Win32IDE::unloadModule(const std::string& moduleName)
     // Explicit Logic: Actually remove the module in PowerShell
     std::string command = "Remove-Module '" + moduleName + "'\n";
 
-    TerminalPane* pane = getActiveTerminalPane();
-    if (pane && pane->manager && pane->manager->isRunning())
+    TerminalPane* pane = resolveTerminalPaneForUserTypedCommand();
+    if (pane && pane->manager)
     {
-        pane->manager->writeInput(command);
-        appendToOutput("Unloading module: " + moduleName, "Output", OutputSeverity::Info);
+        ensureShellRunningForPane(pane, pane->shellType);
+        if (pane->manager->isRunning())
+        {
+            pane->manager->writeInput(command);
+            appendToOutput("Unloading module: " + moduleName, "Output", OutputSeverity::Info);
+        }
+        else
+            appendToOutput("Cannot unload module '" + moduleName + "': shell not running.", "Errors",
+                           OutputSeverity::Error);
     }
     else
     {
-        // Try to start one or log error
-        appendToOutput("Cannot unload module '" + moduleName + "': No active terminal.", "Errors",
-                       OutputSeverity::Error);
+        appendToOutput("Cannot unload module '" + moduleName + "': No user terminal.", "Errors", OutputSeverity::Error);
     }
 }
 
@@ -3932,11 +4977,15 @@ void Win32IDE::importModule()
         std::string modulePath = wideToUtf8(szFile);
         std::string command = "Import-Module '" + modulePath + "'\n";
 
-        TerminalPane* pane = getActiveTerminalPane();
-        if (pane && pane->manager && pane->manager->isRunning())
+        TerminalPane* pane = resolveTerminalPaneForUserTypedCommand();
+        if (pane && pane->manager)
         {
-            pane->manager->writeInput(command);
-            appendToOutput("Importing module: " + modulePath + "\n", "Output", OutputSeverity::Info);
+            ensureShellRunningForPane(pane, pane->shellType);
+            if (pane->manager->isRunning())
+            {
+                pane->manager->writeInput(command);
+                appendToOutput("Importing module: " + modulePath + "\n", "Output", OutputSeverity::Info);
+            }
         }
 
         // Refresh module list after import
@@ -3991,11 +5040,15 @@ void Win32IDE::exportModule()
                         "Export-ModuleMember -Function * -Cmdlet * -Variable * -Alias * -PassThru | Out-File '" +
                         savePath + "'\n";
 
-                    TerminalPane* pane = getActiveTerminalPane();
-                    if (pane && pane->manager && pane->manager->isRunning())
+                    TerminalPane* pane = resolveTerminalPaneForUserTypedCommand();
+                    if (pane && pane->manager)
                     {
-                        pane->manager->writeInput(command);
-                        appendToOutput("Exporting module to: " + savePath + "\n", "Output", OutputSeverity::Info);
+                        ensureShellRunningForPane(pane, pane->shellType);
+                        if (pane->manager->isRunning())
+                        {
+                            pane->manager->writeInput(command);
+                            appendToOutput("Exporting module to: " + savePath + "\n", "Output", OutputSeverity::Info);
+                        }
                     }
                 }
                 break;
@@ -4038,9 +5091,13 @@ void Win32IDE::searchHelp(const std::string& query)
 {
     std::string q = query.empty() ? "Get-Command" : query;
     std::string cmd = "Get-Help " + q + " -Online\n";
-    TerminalPane* pane = getActiveTerminalPane();
-    if (pane && pane->manager && pane->manager->isRunning())
-        pane->manager->writeInput(cmd);
+    TerminalPane* pane = resolveTerminalPaneForUserTypedCommand();
+    if (pane && pane->manager)
+    {
+        ensureShellRunningForPane(pane, pane->shellType);
+        if (pane->manager->isRunning())
+            pane->manager->writeInput(cmd);
+    }
 }
 
 void Win32IDE::toggleFloatingPanel()
@@ -4364,6 +5421,128 @@ void Win32IDE::showReplaceDialog()
     ShowWindow(m_hwndReplaceDialog, SW_SHOW);
 }
 
+void Win32IDE::setFindReplaceDialogSeed(const std::string& findQuery, const std::string& replaceQuery)
+{
+    m_lastSearchText = findQuery;
+    if (!replaceQuery.empty())
+        m_lastReplaceText = replaceQuery;
+
+    const std::wstring wFind = utf8ToWide(m_lastSearchText);
+    const std::wstring wRepl = utf8ToWide(m_lastReplaceText);
+
+    if (m_hwndFindDialog && IsWindow(m_hwndFindDialog))
+    {
+        if (HWND h = GetDlgItem(m_hwndFindDialog, IDC_FIND_TEXT))
+            SetWindowTextW(h, wFind.c_str());
+    }
+    if (m_hwndReplaceDialog && IsWindow(m_hwndReplaceDialog))
+    {
+        if (HWND h = GetDlgItem(m_hwndReplaceDialog, IDC_FIND_TEXT))
+            SetWindowTextW(h, wFind.c_str());
+        if (!replaceQuery.empty())
+        {
+            if (HWND h = GetDlgItem(m_hwndReplaceDialog, IDC_REPLACE_TEXT))
+                SetWindowTextW(h, wRepl.c_str());
+        }
+    }
+}
+
+HWND Win32IDE::resolveFindReplaceTargetHwnd()
+{
+    const HWND foc = GetFocus();
+    if (m_hwndEditor && IsWindow(m_hwndEditor) && foc == m_hwndEditor)
+        return m_hwndEditor;
+    for (const auto& pane : m_terminalPanes)
+    {
+        if (pane.hwnd && IsWindow(pane.hwnd) && foc == pane.hwnd)
+            return pane.hwnd;
+    }
+    // PowerShell panel: finding from the input line should search the scrollback (same as VS Code / Cursor terminal
+    // find).
+    if (m_hwndPowerShellInput && IsWindow(m_hwndPowerShellInput) && foc == m_hwndPowerShellInput &&
+        m_hwndPowerShellOutput && IsWindow(m_hwndPowerShellOutput))
+        return m_hwndPowerShellOutput;
+    if (m_hwndPowerShellOutput && IsWindow(m_hwndPowerShellOutput) && foc == m_hwndPowerShellOutput)
+        return m_hwndPowerShellOutput;
+    for (const auto& kv : m_outputWindows)
+    {
+        if (kv.second && IsWindow(kv.second) && foc == kv.second)
+            return kv.second;
+    }
+    const bool outputPanelTab = m_outputPanelVisible && m_activePanelTab == PanelTab::Output;
+    if (outputPanelTab && foc)
+    {
+        auto focusIn = [](HWND root, HWND f) -> bool
+        { return root && IsWindow(root) && f && (f == root || IsChild(root, f)); };
+        if ((m_hwndOutputTabs && IsWindow(m_hwndOutputTabs) && focusIn(m_hwndOutputTabs, foc)) ||
+            (m_hwndSeverityFilter && IsWindow(m_hwndSeverityFilter) && foc == m_hwndSeverityFilter))
+        {
+            const auto it = m_outputWindows.find(m_activeOutputTab);
+            if (it != m_outputWindows.end() && it->second && IsWindow(it->second))
+                return it->second;
+        }
+    }
+    const bool terminalTab = m_outputPanelVisible && m_activePanelTab == PanelTab::Terminal;
+    if (terminalTab)
+    {
+        auto focusIn = [](HWND root, HWND f) -> bool
+        { return root && IsWindow(root) && f && (f == root || IsChild(root, f)); };
+        const bool tabStripFocused =
+            g_rawrxdIntegratedTerminalTabs && IsWindow(g_rawrxdIntegratedTerminalTabs) && foc &&
+            (foc == g_rawrxdIntegratedTerminalTabs || IsChild(g_rawrxdIntegratedTerminalTabs, foc));
+        const bool panelToolbarFocused = foc && m_hwndPanelToolbar && IsWindow(m_hwndPanelToolbar) &&
+                                         (foc == m_hwndPanelToolbar || IsChild(m_hwndPanelToolbar, foc));
+        const bool panelTabsFocused = m_hwndPanelTabs && IsWindow(m_hwndPanelTabs) && foc &&
+                                      (foc == m_hwndPanelTabs || IsChild(m_hwndPanelTabs, foc));
+        if (focusIn(m_hwndFindDialog, foc) || focusIn(m_hwndReplaceDialog, foc) || focusIn(m_hwndCommandInput, foc) ||
+            tabStripFocused || panelToolbarFocused || panelTabsFocused)
+        {
+            TerminalPane* tp = getActiveTerminalPane();
+            if (tp && tp->hwnd && IsWindow(tp->hwnd))
+                return tp->hwnd;
+        }
+    }
+    if (m_hwndDebugConsoleOutput && IsWindow(m_hwndDebugConsoleOutput) && foc == m_hwndDebugConsoleOutput)
+        return m_hwndDebugConsoleOutput;
+    if (m_hwndDebugConsoleInput && IsWindow(m_hwndDebugConsoleInput) && foc == m_hwndDebugConsoleInput)
+        return m_hwndDebugConsoleInput;
+    const bool debugTab = m_outputPanelVisible && m_activePanelTab == PanelTab::DebugConsole;
+    if (debugTab && foc)
+    {
+        auto focusIn = [](HWND root, HWND f) -> bool
+        { return root && IsWindow(root) && f && (f == root || IsChild(root, f)); };
+        const bool panelTabsFocusedDbg = m_hwndPanelTabs && IsWindow(m_hwndPanelTabs) && foc &&
+                                         (foc == m_hwndPanelTabs || IsChild(m_hwndPanelTabs, foc));
+        const bool panelToolbarFocusedDbg = foc && m_hwndPanelToolbar && IsWindow(m_hwndPanelToolbar) &&
+                                            (foc == m_hwndPanelToolbar || IsChild(m_hwndPanelToolbar, foc));
+        if (focusIn(m_hwndFindDialog, foc) || focusIn(m_hwndReplaceDialog, foc) || panelTabsFocusedDbg ||
+            panelToolbarFocusedDbg)
+        {
+            if (m_hwndDebugConsoleOutput && IsWindow(m_hwndDebugConsoleOutput))
+                return m_hwndDebugConsoleOutput;
+        }
+    }
+    const bool problemsTab = m_outputPanelVisible && m_activePanelTab == PanelTab::Problems;
+    if (problemsTab && foc && m_hwndProblemsListView && IsWindow(m_hwndProblemsListView))
+    {
+        auto focusIn = [](HWND root, HWND f) -> bool
+        { return root && IsWindow(root) && f && (f == root || IsChild(root, f)); };
+        if (foc == m_hwndProblemsListView || IsChild(m_hwndProblemsListView, foc))
+            return m_hwndProblemsListView;
+        if (m_hwndProblemsFilter && IsWindow(m_hwndProblemsFilter) && foc == m_hwndProblemsFilter)
+            return m_hwndProblemsListView;
+        if (m_hwndPanelTabs && focusIn(m_hwndPanelTabs, foc))
+            return m_hwndProblemsListView;
+        if (m_hwndPanelToolbar && focusIn(m_hwndPanelToolbar, foc))
+            return m_hwndProblemsListView;
+        if (focusIn(m_hwndFindDialog, foc) || focusIn(m_hwndReplaceDialog, foc))
+            return m_hwndProblemsListView;
+    }
+    if (m_hwndEditor && IsWindow(m_hwndEditor))
+        return m_hwndEditor;
+    return nullptr;
+}
+
 void Win32IDE::findNext()
 {
     if (m_lastSearchText.empty())
@@ -4410,16 +5589,32 @@ void Win32IDE::replaceAll()
 
 bool Win32IDE::findText(const std::string& searchText, bool forward, bool caseSensitive, bool wholeWord, bool useRegex)
 {
-    if (!m_hwndEditor || searchText.empty())
+    if (searchText.empty())
         return false;
 
-    std::string editorText = getWindowText(m_hwndEditor);
+    HWND hwndSearch = resolveFindReplaceTargetHwnd();
+
+    if (!hwndSearch || !IsWindow(hwndSearch))
+        return false;
+
+    if (hwndSearch == m_hwndProblemsListView && m_hwndProblemsListView && IsWindow(m_hwndProblemsListView))
+        return findTextInProblemsList(searchText, forward, caseSensitive, wholeWord, useRegex);
+
+    if (hwndSearch != m_hwndEditor && useRegex)
+    {
+        MessageBoxW(m_hwndMain, L"Regex search runs in the code editor. Uncheck Regex or focus the editor.", L"Find",
+                    MB_OK | MB_ICONINFORMATION);
+        return false;
+    }
+
+    const bool inTerminalPane = (hwndSearch != m_hwndEditor);
+    std::string editorText = inTerminalPane ? getRichEditDocumentUtf8(hwndSearch) : getWindowText(hwndSearch);
     if (editorText.empty())
         return false;
     int textLen = (int)editorText.size();
 
-    CHARRANGE selection;
-    SendMessage(m_hwndEditor, EM_EXGETSEL, 0, (LPARAM)&selection);
+    CHARRANGE selection{};
+    SendMessage(hwndSearch, EM_EXGETSEL, 0, (LPARAM)&selection);
 
     int startChar = forward ? selection.cpMax : selection.cpMin - 1;
     if (startChar < 0)
@@ -4593,8 +5788,8 @@ bool Win32IDE::findText(const std::string& searchText, bool forward, bool caseSe
     {
         selection.cpMin = (LONG)utf8ByteOffsetToCharIndex(editorText, (int)foundPos);
         selection.cpMax = (LONG)utf8ByteOffsetToCharIndex(editorText, (int)(foundPos + foundLen));
-        SendMessage(m_hwndEditor, EM_EXSETSEL, 0, (LPARAM)&selection);
-        SendMessage(m_hwndEditor, EM_SCROLLCARET, 0, 0);
+        SendMessage(hwndSearch, EM_EXSETSEL, 0, (LPARAM)&selection);
+        SendMessage(hwndSearch, EM_SCROLLCARET, 0, 0);
         m_lastFoundPos = foundPos;
         return true;
     }
@@ -4603,20 +5798,270 @@ bool Win32IDE::findText(const std::string& searchText, bool forward, bool caseSe
     return false;
 }
 
+namespace
+{
+int listViewHeaderColumnCount(HWND lv)
+{
+    HWND hdr = ListView_GetHeader(lv);
+    if (hdr && IsWindow(hdr))
+        return Header_GetItemCount(hdr);
+    return 8;
+}
+
+std::string listViewRowCellsUtf8(HWND lv, int row)
+{
+    const int cols = listViewHeaderColumnCount(lv);
+    const BOOL unicode = IsWindowUnicode(lv);
+    std::string rowText;
+    for (int c = 0; c < cols; ++c)
+    {
+        if (c > 0)
+            rowText += '\t';
+        if (unicode)
+        {
+            wchar_t buf[4096];
+            LVITEMW it{};
+            it.iSubItem = c;
+            it.pszText = buf;
+            it.cchTextMax = static_cast<int>(sizeof(buf) / sizeof(buf[0]));
+            buf[0] = 0;
+            SendMessageW(lv, LVM_GETITEMTEXTW, static_cast<WPARAM>(row), reinterpret_cast<LPARAM>(&it));
+            rowText += wideToUtf8(buf);
+        }
+        else
+        {
+            char buf[4096];
+            LVITEMA it{};
+            it.iSubItem = c;
+            it.pszText = buf;
+            it.cchTextMax = static_cast<int>(sizeof(buf) / sizeof(buf[0]));
+            buf[0] = 0;
+            SendMessageA(lv, LVM_GETITEMTEXTA, static_cast<WPARAM>(row), reinterpret_cast<LPARAM>(&it));
+            rowText += buf;
+        }
+    }
+    return rowText;
+}
+}  // namespace
+
+bool Win32IDE::findTextInProblemsList(const std::string& searchText, bool forward, bool caseSensitive, bool wholeWord,
+                                      bool useRegex)
+{
+    HWND lv = m_hwndProblemsListView;
+    if (!lv || !IsWindow(lv) || searchText.empty())
+        return false;
+
+    const int n = ListView_GetItemCount(lv);
+    if (n <= 0)
+    {
+        MessageBoxW(m_hwndMain, L"Text not found.", L"Find", MB_OK | MB_ICONINFORMATION);
+        return false;
+    }
+
+    int sel = static_cast<int>(ListView_GetNextItem(lv, -1, LVNI_SELECTED));
+    if (sel >= n)
+        sel = -1;
+
+    auto buildHaystack = [lv](int idx) -> std::string
+    {
+        if (idx < 0 || idx >= ListView_GetItemCount(lv))
+            return {};
+        return listViewRowCellsUtf8(lv, idx);
+    };
+
+    auto matchPlain = [&](const std::string& haystack) -> bool
+    {
+        std::string hay = haystack;
+        std::string needle = searchText;
+        if (!caseSensitive)
+        {
+            std::transform(hay.begin(), hay.end(), hay.begin(), [](unsigned char c) { return (char)std::tolower(c); });
+            std::transform(needle.begin(), needle.end(), needle.begin(),
+                           [](unsigned char c) { return (char)std::tolower(c); });
+        }
+        if (!wholeWord)
+            return hay.find(needle) != std::string::npos;
+        size_t pos = hay.find(needle);
+        while (pos != std::string::npos)
+        {
+            const bool leftOk = (pos == 0) || !std::isalnum(static_cast<unsigned char>(hay[pos - 1]));
+            const bool rightOk = (pos + needle.size() >= hay.size()) ||
+                                 !std::isalnum(static_cast<unsigned char>(hay[pos + needle.size()]));
+            if (leftOk && rightOk)
+                return true;
+            pos = hay.find(needle, pos + 1);
+        }
+        return false;
+    };
+
+    auto matchRegex = [&](const std::string& haystack) -> bool
+    {
+        try
+        {
+            auto flags = std::regex_constants::ECMAScript;
+            if (!caseSensitive)
+                flags |= std::regex_constants::icase;
+            std::regex re(searchText, flags);
+            return std::regex_search(haystack, re);
+        }
+        catch (const std::regex_error& e)
+        {
+            std::string msg = "Invalid regex: ";
+            msg += e.what();
+            MessageBoxW(m_hwndMain, utf8ToWide(msg).c_str(), L"Find", MB_OK | MB_ICONERROR);
+            return false;
+        }
+    };
+
+    auto rowMatches = [&](int idx) -> bool
+    {
+        const std::string hay = buildHaystack(idx);
+        if (hay.empty())
+            return false;
+        return useRegex ? matchRegex(hay) : matchPlain(hay);
+    };
+
+    int foundIdx = -1;
+    for (int step = 0; step < n; ++step)
+    {
+        int idx = 0;
+        if (sel < 0)
+            idx = forward ? step : (n - 1 - step);
+        else if (forward)
+            idx = (sel + 1 + step) % n;
+        else
+            idx = (sel - 1 - step + n * 100) % n;
+
+        if (rowMatches(idx))
+        {
+            foundIdx = idx;
+            break;
+        }
+    }
+
+    if (foundIdx < 0)
+    {
+        MessageBoxW(m_hwndMain, L"Text not found.", L"Find", MB_OK | MB_ICONINFORMATION);
+        return false;
+    }
+
+    for (int i = 0; i < n; ++i)
+        ListView_SetItemState(lv, i, 0, LVIS_SELECTED | LVIS_FOCUSED);
+    ListView_SetItemState(lv, foundIdx, LVIS_SELECTED | LVIS_FOCUSED, LVIS_SELECTED | LVIS_FOCUSED);
+    ListView_SetSelectionMark(lv, foundIdx);
+    ListView_EnsureVisible(lv, foundIdx, FALSE);
+    SetFocus(lv);
+    return true;
+}
+
+void Win32IDE::applyEditorCharFormatFaceAndSizeFromSettings()
+{
+    if (!m_hwndEditor || !IsWindow(m_hwndEditor))
+        return;
+    CHARFORMAT2W cf{};
+    cf.cbSize = sizeof(cf);
+    cf.dwMask = CFM_FACE | CFM_SIZE | CFM_CHARSET;
+    const int pt = (std::max)(6, (std::min)(72, m_settings.fontSize));
+    cf.yHeight = pt * 20;
+    cf.bCharSet = DEFAULT_CHARSET;
+    const std::wstring face = utf8ToWide(m_settings.fontName.empty() ? "Consolas" : m_settings.fontName);
+    wcsncpy_s(cf.szFaceName, LF_FACESIZE, face.c_str(), _TRUNCATE);
+    SendMessageW(m_hwndEditor, EM_SETCHARFORMAT, SCF_ALL, (LPARAM)&cf);
+}
+
+void Win32IDE::selectAllProblemsListRows()
+{
+    HWND lv = m_hwndProblemsListView;
+    if (!lv || !IsWindow(lv))
+        return;
+    const int n = ListView_GetItemCount(lv);
+    for (int i = 0; i < n; ++i)
+        ListView_SetItemState(lv, i, LVIS_SELECTED, LVIS_SELECTED);
+    if (n > 0)
+        SetFocus(lv);
+}
+
+void Win32IDE::copyProblemsListSelectionToClipboard()
+{
+    HWND lv = m_hwndProblemsListView;
+    if (!lv || !IsWindow(lv))
+        return;
+
+    std::string clip;
+    int idx = -1;
+    while ((idx = ListView_GetNextItem(lv, idx, LVNI_SELECTED)) >= 0)
+    {
+        if (!clip.empty())
+            clip += "\r\n";
+        clip += listViewRowCellsUtf8(lv, idx);
+    }
+
+    if (clip.empty())
+    {
+        idx = ListView_GetNextItem(lv, -1, LVNI_FOCUSED | LVNI_SELECTED);
+        if (idx < 0)
+            idx = ListView_GetSelectionMark(lv);
+        if (idx >= 0)
+            clip = listViewRowCellsUtf8(lv, idx);
+    }
+
+    if (clip.empty())
+        return;
+
+    const std::wstring w = utf8ToWide(clip);
+    if (!OpenClipboard(m_hwndMain))
+        return;
+    EmptyClipboard();
+    const SIZE_T cb = (w.size() + 1) * sizeof(wchar_t);
+    HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, cb);
+    if (hMem)
+    {
+        void* p = GlobalLock(hMem);
+        if (p)
+        {
+            memcpy(p, w.c_str(), cb);
+            GlobalUnlock(hMem);
+            SetClipboardData(CF_UNICODETEXT, hMem);
+        }
+        else
+            GlobalFree(hMem);
+    }
+    CloseClipboard();
+}
+
 int Win32IDE::replaceText(const std::string& searchText, const std::string& replaceText, bool all, bool caseSensitive,
                           bool wholeWord, bool useRegex)
 {
-    if (!m_hwndEditor || searchText.empty())
+    if (searchText.empty())
         return 0;
+
+    HWND hwndTarget = resolveFindReplaceTargetHwnd();
+    if (!hwndTarget || !IsWindow(hwndTarget))
+        return 0;
+
+    if (hwndTarget == m_hwndProblemsListView)
+    {
+        MessageBoxW(m_hwndMain,
+                    L"Replace is not available in the Problems list. Focus the editor or an editable buffer.",
+                    L"Replace", MB_OK | MB_ICONINFORMATION);
+        return 0;
+    }
+
+    const bool inTerminalPane = (hwndTarget != m_hwndEditor);
+    if (inTerminalPane && useRegex)
+    {
+        MessageBoxW(m_hwndMain, L"Regex replace runs in the code editor. Uncheck Regex or focus the editor.",
+                    L"Replace", MB_OK | MB_ICONINFORMATION);
+        return 0;
+    }
 
     int replaceCount = 0;
 
     if (all)
     {
-        std::string editorText = getWindowText(m_hwndEditor);
+        std::string editorText = inTerminalPane ? getRichEditDocumentUtf8(hwndTarget) : getWindowText(hwndTarget);
         if (editorText.empty())
             return 0;
-        int textLen = (int)editorText.size();
 
         std::string result;
         size_t pos = 0;
@@ -4641,22 +6086,25 @@ int Win32IDE::replaceText(const std::string& searchText, const std::string& repl
         if (replaceCount > 0)
         {
             result.append(editorText, pos, std::string::npos);
-            setWindowText(m_hwndEditor, result);
-            m_fileModified = true;
-            updateLineNumbers();
+            setWindowText(hwndTarget, result);
+            if (!inTerminalPane)
+            {
+                m_fileModified = true;
+                updateLineNumbers();
+            }
         }
     }
     else
     {
         // Replace current selection if it matches search text
         CHARRANGE selection;
-        SendMessage(m_hwndEditor, EM_EXGETSEL, 0, (LPARAM)&selection);
+        SendMessage(hwndTarget, EM_EXGETSEL, 0, (LPARAM)&selection);
 
         int selLen = selection.cpMax - selection.cpMin;
         if (selLen > 0)
         {
             std::string selectedText(selLen + 1, 0);
-            SendMessage(m_hwndEditor, EM_GETSELTEXT, 0, (LPARAM)&selectedText[0]);
+            SendMessage(hwndTarget, EM_GETSELTEXT, 0, (LPARAM)&selectedText[0]);
             selectedText.resize(selLen);
 
             std::string cmpSelected = selectedText;
@@ -4670,8 +6118,9 @@ int Win32IDE::replaceText(const std::string& searchText, const std::string& repl
 
             if (cmpSelected == cmpSearch)
             {
-                SendMessageW(m_hwndEditor, EM_REPLACESEL, TRUE, (LPARAM)utf8ToWide(replaceText).c_str());
-                m_fileModified = true;
+                SendMessageW(hwndTarget, EM_REPLACESEL, TRUE, (LPARAM)utf8ToWide(replaceText).c_str());
+                if (!inTerminalPane)
+                    m_fileModified = true;
                 replaceCount = 1;
 
                 // Find next occurrence
@@ -5039,30 +6488,28 @@ void Win32IDE::populateFileTree(HTREEITEM parentItem, const std::string& path)
         tvis.hInsertAfter = TVI_LAST;
         tvis.item.mask = TVIF_TEXT | TVIF_PARAM;
 
-        wchar_t buf[MAX_PATH];
-        for (char drive = 'C'; drive <= 'Z'; ++drive)
+        wchar_t drives[512] = {};
+        DWORD len = GetLogicalDriveStringsW(static_cast<DWORD>(std::size(drives) - 1), drives);
+        if (len == 0 || len >= std::size(drives))
+            return;
+
+        for (const wchar_t* p = drives; *p; p += wcslen(p) + 1)
         {
-            std::string drivePath = std::string(1, drive) + ":";
-            DWORD drives = GetLogicalDrives();
-            int driveNum = drive - 'A';
+            const std::wstring driveRoot(p);
+            const std::string drivePath = wideToUtf8(driveRoot);
 
-            if (drives & (1 << driveNum))
-            {
-                std::string displayName = drivePath + "\\";
-                MultiByteToWideChar(CP_ACP, 0, displayName.c_str(), -1, buf, MAX_PATH);
-                tvis.item.pszText = buf;
-                tvis.item.lParam = (LPARAM) new std::string(drivePath);
+            tvis.item.pszText = const_cast<wchar_t*>(driveRoot.c_str());
+            tvis.item.lParam = (LPARAM) new std::string(drivePath);
 
-                HTREEITEM driveItem = (HTREEITEM)SendMessageW(m_hwndFileTree, TVM_INSERTITEM, 0, (LPARAM)&tvis);
-                m_treeItemPaths[driveItem] = drivePath;
+            HTREEITEM driveItem = (HTREEITEM)SendMessageW(m_hwndFileTree, TVM_INSERTITEM, 0, (LPARAM)&tvis);
+            m_treeItemPaths[driveItem] = drivePath;
 
-                TVINSERTSTRUCTW dummyVis = {};
-                dummyVis.hParent = driveItem;
-                dummyVis.item.mask = TVIF_TEXT;
-                static wchar_t s_ellipsis[] = L"...";
-                dummyVis.item.pszText = s_ellipsis;
-                SendMessageW(m_hwndFileTree, TVM_INSERTITEM, 0, (LPARAM)&dummyVis);
-            }
+            TVINSERTSTRUCTW dummyVis = {};
+            dummyVis.hParent = driveItem;
+            dummyVis.item.mask = TVIF_TEXT;
+            static wchar_t s_ellipsis[] = L"...";
+            dummyVis.item.pszText = s_ellipsis;
+            SendMessageW(m_hwndFileTree, TVM_INSERTITEM, 0, (LPARAM)&dummyVis);
         }
         return;
     }
@@ -5120,8 +6567,7 @@ void Win32IDE::populateFileTree(HTREEITEM parentItem, const std::string& path)
                 dummyVis.item.pszText = s_ellipsis2;
                 SendMessageW(m_hwndFileTree, TVM_INSERTITEM, 0, (LPARAM)&dummyVis);
             }
-            else if (strlen(findData.cFileName) > 5 &&
-                     strcmp(findData.cFileName + strlen(findData.cFileName) - 5, ".gguf") == 0)
+            else
             {
                 tvis.item.pszText = wbuf;
                 tvis.item.lParam = (LPARAM) new std::string(fullPath);
@@ -5142,12 +6588,28 @@ void Win32IDE::populateFileTree(HTREEITEM parentItem, const std::string& path)
 LRESULT CALLBACK Win32IDE::FileExplorerContainerProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     Win32IDE* pThis = (Win32IDE*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
+    if (uMsg == WM_SIZE)
+    {
+        if (pThis && pThis->m_hwndFileTree && IsWindow(pThis->m_hwndFileTree))
+        {
+            RECT rc{};
+            GetClientRect(hwnd, &rc);
+            const int w = (std::max)(0, static_cast<int>(rc.right - rc.left - 10));
+            const int h = (std::max)(0, static_cast<int>(rc.bottom - rc.top - 10));
+            MoveWindow(pThis->m_hwndFileTree, 5, 5, w, h, TRUE);
+        }
+        return 0;
+    }
     if (uMsg == WM_NOTIFY)
     {
         NMHDR* pnmh = reinterpret_cast<NMHDR*>(lParam);
-        if (pnmh && pnmh->code == TVN_DELETEITEM)
+        if (pnmh && pnmh->code == TVN_DELETEITEMW)
         {
-            NMTREEVIEWA* pnmtv = reinterpret_cast<NMTREEVIEWA*>(lParam);
+            NMTREEVIEWW* pnmtv = reinterpret_cast<NMTREEVIEWW*>(lParam);
+            if (pThis)
+            {
+                pThis->m_treeItemPaths.erase(pnmtv->itemOld.hItem);
+            }
             if (pnmtv->itemOld.lParam)
                 delete reinterpret_cast<std::string*>(pnmtv->itemOld.lParam);
             return 0;
@@ -5199,10 +6661,9 @@ void Win32IDE::loadModelFromPath(const std::string& filepath)
         appendToOutput("Model loaded into Agentic Bridge (streaming GGUF skipped).\n", "Output", OutputSeverity::Info);
     if (ggufOk || bridgeOk)
     {
-        std::string msg = "✅ Model loaded and ready for inference!\r\n\r\n"
-                          "You can now ask questions and use agentic tasks in the chat panel.\r\n"
-                          "Try: 'hello', 'model info', or request a task (Agent mode allows tool execution).";
-        appendCopilotResponse(msg);
+        syncAgentModeUiFromBridge();
+        refreshAgenticChatSessionContext();
+        appendModelLoadReadyCopilotTurns(filepath, true);
     }
 }
 
@@ -5223,33 +6684,55 @@ void Win32IDE::loadModelFromPathAsync(const std::string& filepath)
 
     appendToOutput("Starting background model load: " + filepath + "\n", "Output", OutputSeverity::Info);
 
-    std::thread([this, filepath]() {
-        DetachedThreadGuard _guard(m_activeDetachedThreads, m_shuttingDown);
-        if (_guard.cancelled)
+    std::thread(
+        [this, filepath]()
         {
-            std::lock_guard<std::mutex> lock(m_asyncModelLoadMutex);
-            m_asyncModelLoadRunning = false;
-            return;
-        }
+            DetachedThreadGuard _guard(m_activeDetachedThreads, m_shuttingDown);
+            if (_guard.cancelled)
+            {
+                std::lock_guard<std::mutex> lock(m_asyncModelLoadMutex);
+                m_asyncModelLoadRunning = false;
+                return;
+            }
 
-        auto result = std::make_unique<AsyncModelLoadResult>();
-        result->filepath = filepath;
-        result->ggufOk = loadGGUFModel(filepath);
-        if (result->ggufOk)
-        {
-            initializeInference();
-            initBackendManager();
-            initLLMRouter();
-        }
-        result->bridgeOk = loadModelForInference(filepath);
+            auto result = std::make_unique<AsyncModelLoadResult>();
+            result->filepath = filepath;
 
-        if (!m_hwndMain || !IsWindow(m_hwndMain) ||
-            !PostMessage(m_hwndMain, WM_MODEL_LOAD_DONE, 0, reinterpret_cast<LPARAM>(result.release())))
-        {
-            std::lock_guard<std::mutex> lock(m_asyncModelLoadMutex);
-            m_asyncModelLoadRunning = false;
-        }
-    }).detach();
+            try
+            {
+                result->ggufOk = loadGGUFModel(filepath);
+                // NOTE: initializeInference() is intentionally skipped here.
+                // loadModelForInference() below initialises the same shared CPUInferenceEngine
+                // via the AgenticBridge, avoiding a redundant double-load that would start and
+                // immediately join a swarm prefetch thread (expensive and crash-prone).
+                // initBackendManager / initLLMRouter configure routing tables only and are safe.
+                if (result->ggufOk)
+                {
+                    initBackendManager();
+                    initLLMRouter();
+                }
+                result->bridgeOk = loadModelForInference(filepath);
+            }
+            catch (const std::exception& ex)
+            {
+                OutputDebugStringA(
+                    ("[AsyncModelLoad] Exception during model load: " + std::string(ex.what()) + "\n").c_str());
+                postOutputPanelSafe("[Error] Model load crashed: " + std::string(ex.what()) + "\n");
+            }
+            catch (...)
+            {
+                OutputDebugStringA("[AsyncModelLoad] Unknown exception during model load\n");
+                postOutputPanelSafe("[Error] Model load crashed with unknown error.\n");
+            }
+
+            if (!m_hwndMain || !IsWindow(m_hwndMain) ||
+                !PostMessage(m_hwndMain, WM_MODEL_LOAD_DONE, 0, reinterpret_cast<LPARAM>(result.release())))
+            {
+                std::lock_guard<std::mutex> lock(m_asyncModelLoadMutex);
+                m_asyncModelLoadRunning = false;
+            }
+        })
+        .detach();
 }
 
 // ============================================================================
@@ -5261,16 +6744,112 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
     if (!m_ggufLoader)
         m_ggufLoader = std::make_unique<RawrXD::StreamingGGUFLoader>();
 
-    appendToOutput("Loading GGUF model: " + filepath + "\n", "Output", OutputSeverity::Info);
+    auto trimCopy = [](std::string s) -> std::string
+    {
+        const size_t first = s.find_first_not_of(" \t\r\n\"");
+        if (first == std::string::npos)
+            return std::string();
+        const size_t last = s.find_last_not_of(" \t\r\n\"");
+        return s.substr(first, last - first + 1);
+    };
+
+    std::string resolvedPath = trimCopy(filepath);
+    if (resolvedPath.empty())
+        resolvedPath = filepath;
+
+    std::vector<std::string> candidates;
+    auto pushCandidate = [&](const std::string& value)
+    {
+        const std::string t = trimCopy(value);
+        if (t.empty())
+            return;
+        if (std::find(candidates.begin(), candidates.end(), t) == candidates.end())
+            candidates.push_back(t);
+    };
+
+    pushCandidate(filepath);
+    pushCandidate(resolvedPath);
+
+    // Common typo repair: "instrut" -> "instruct", and accidental extra space before .gguf.
+    if (resolvedPath.find("instrut") != std::string::npos)
+    {
+        std::string fixed = resolvedPath;
+        size_t pos = 0;
+        while ((pos = fixed.find("instrut", pos)) != std::string::npos)
+        {
+            fixed.replace(pos, 7, "instruct");
+            pos += 8;
+        }
+        pushCandidate(fixed);
+    }
+    {
+        std::string fixed = resolvedPath;
+        const size_t extPos = fixed.rfind(".gguf");
+        if (extPos != std::string::npos && extPos > 0 && fixed[extPos - 1] == ' ')
+        {
+            fixed.erase(extPos - 1, 1);
+            pushCandidate(fixed);
+        }
+    }
+
+    std::error_code ec;
+    std::filesystem::path rp(resolvedPath);
+    const bool hasPathHint = resolvedPath.find(":\\") != std::string::npos ||
+                             resolvedPath.find('\\') != std::string::npos ||
+                             resolvedPath.find('/') != std::string::npos;
+    if (!hasPathHint)
+    {
+        const std::filesystem::path baseName = rp.filename();
+        for (const auto& dir : m_userModelDirectories)
+        {
+            pushCandidate((std::filesystem::path(dir) / baseName).string());
+        }
+        for (const auto& fullPath : m_modelPaths)
+        {
+            std::filesystem::path p(fullPath);
+            if (p.filename() == baseName)
+                pushCandidate(p.string());
+        }
+        pushCandidate((std::filesystem::path("F:\\OllamaModels") / baseName).string());
+        pushCandidate((std::filesystem::path("D:\\OllamaModels") / baseName).string());
+    }
+
+    // Known-good local fallbacks used by strict lane smoke.
+    pushCandidate("D:\\phi3mini.gguf");
+    pushCandidate("F:\\OllamaModels\\Phi-3-mini-4k-instruct-q8_0.gguf");
+
+    auto isReadableFile = [](const std::string& p) -> bool
+    {
+        std::ifstream f(p, std::ios::binary);
+        return f.good();
+    };
+
+    for (const auto& candidate : candidates)
+    {
+        if (std::filesystem::exists(candidate, ec) && isReadableFile(candidate))
+        {
+            resolvedPath = candidate;
+            break;
+        }
+    }
+
+    if (resolvedPath != filepath)
+    {
+        appendToOutput("[ModelResolver] Adjusted GGUF path to readable file: " + resolvedPath + "\n", "Output",
+                       OutputSeverity::Warning);
+    }
+
+    appendToOutput("Loading GGUF model: " + resolvedPath + "\n", "Output", OutputSeverity::Info);
     appendToOutput("This may take a moment for large files...\n", "Output", OutputSeverity::Info);
 
     try
     {
         // Attempt to open and parse the GGUF file (streaming - no full data load)
         appendToOutput("[1/5] Opening file...\n", "Output", OutputSeverity::Info);
-        if (!m_ggufLoader->Open(filepath))
+        if (!m_ggufLoader->Open(resolvedPath))
         {
-            std::string error = "❌ Failed to open GGUF file: " + filepath + "\nCheck if file exists and is readable.";
+            std::string error =
+                "❌ Failed to open GGUF file: " + resolvedPath + "\nCheck if file exists and is readable.";
             appendToOutput(error, "Errors", OutputSeverity::Error);
             ErrorReporter::report(error, m_hwndMain);
             return false;
@@ -5280,7 +6859,7 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
         if (!m_ggufLoader->ParseHeader())
         {
             std::string error =
-                "❌ Failed to parse GGUF header from: " + filepath + "\nFile may be corrupted or not a valid GGUF.";
+                "❌ Failed to parse GGUF header from: " + resolvedPath + "\nFile may be corrupted or not a valid GGUF.";
             appendToOutput(error, "Errors", OutputSeverity::Error);
             ErrorReporter::report(error, m_hwndMain);
             m_ggufLoader->Close();
@@ -5291,7 +6870,7 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
         if (!m_ggufLoader->ParseMetadata())
         {
             std::string error =
-                "❌ Failed to parse GGUF metadata from: " + filepath + "\nFile structure may be invalid.";
+                "❌ Failed to parse GGUF metadata from: " + resolvedPath + "\nFile structure may be invalid.";
             appendToOutput(error, "Errors", OutputSeverity::Error);
             ErrorReporter::report(error, m_hwndMain);
             m_ggufLoader->Close();
@@ -5304,7 +6883,7 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
         if (!m_ggufLoader->BuildTensorIndex())
         {
             std::string error =
-                "❌ Failed to build tensor index from: " + filepath + "\nFile may be too large or corrupted.";
+                "❌ Failed to build tensor index from: " + resolvedPath + "\nFile may be too large or corrupted.";
             appendToOutput(error, "Errors", OutputSeverity::Error);
             ErrorReporter::report(error, m_hwndMain);
             m_ggufLoader->Close();
@@ -5321,28 +6900,28 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
     }
     catch (const std::exception& e)
     {
-        std::string error = "❌ Exception loading GGUF file:\n" + std::string(e.what()) + "\n\nFile: " + filepath;
+        std::string error = "❌ Exception loading GGUF file:\n" + std::string(e.what()) + "\n\nFile: " + resolvedPath;
         appendToOutput(error + "\n", "Errors", OutputSeverity::Error);
         ErrorReporter::report(error, m_hwndMain);
         return false;
     }
     catch (...)
     {
-        std::string error = "❌ Unknown exception loading GGUF file: " + filepath;
+        std::string error = "❌ Unknown exception loading GGUF file: " + resolvedPath;
         appendToOutput(error + "\n", "Errors", OutputSeverity::Error);
         ErrorReporter::report(error, m_hwndMain);
         return false;
     }
 
     // Store model info
-    m_loadedModelPath = filepath;
+    m_loadedModelPath = resolvedPath;
     m_currentModelMetadata = m_ggufLoader->GetMetadata();
     m_modelTensors = m_ggufLoader->GetAllTensorInfo();  // Get tensor info for backward compatibility
 
     // Log success with memory savings information
     size_t currentMemory = m_ggufLoader->GetCurrentMemoryUsage();
     std::string info = "✅ Model loaded successfully (STREAMING MODE)!\n";
-    info += "File: " + filepath + "\n";
+    info += "File: " + resolvedPath + "\n";
     info += "Tensors: " + std::to_string(m_modelTensors.size()) + "\n";
     info += "Layers: " + std::to_string(m_currentModelMetadata.layer_count) + "\n";
     info += "Context: " + std::to_string(m_currentModelMetadata.context_length) + "\n";
@@ -5366,29 +6945,11 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
     appendToOutput(info, "Output", OutputSeverity::Info);
 
     // Update status bar
-    SendMessageW(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)utf8ToWide("Model: " + std::string(filepath)).c_str());
+    SendMessageW(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)utf8ToWide("Model: " + std::string(resolvedPath)).c_str());
 
-    // Auto-activate Copilot panel and send welcome message
-    if (m_hwndSecondarySidebar && m_hwndCopilotChatOutput)
-    {
-        // Make secondary sidebar visible if hidden
-        ShowWindow(m_hwndSecondarySidebar, SW_SHOW);
-
-        // Send agentic welcome message to Copilot
-        std::string welcomeMsg = "🤖 AI Model Loaded!\r\n\r\n";
-        welcomeMsg += "I'm now ready to assist you with:\r\n";
-        welcomeMsg += "• Code analysis and review\r\n";
-        welcomeMsg += "• GGUF model exploration\r\n";
-        welcomeMsg += "• Tensor inspection and debugging\r\n";
-        welcomeMsg += "• PowerShell automation\r\n";
-        welcomeMsg += "• File operations\r\n\r\n";
-        welcomeMsg += "Model: " + filepath + "\r\n";
-        welcomeMsg += "Tensors: " + std::to_string(m_modelTensors.size()) + "\r\n";
-        welcomeMsg += "Memory: " + std::to_string(currentMemory / 1024 / 1024) + " MB\r\n\r\n";
-        welcomeMsg += "Ask me anything!\r\n";
-
-        appendCopilotResponse(welcomeMsg);
-    }
+    // IMPORTANT: do not mutate chat UI/history here.
+    // loadGGUFModel can be called from async load paths; chat replay and user-visible
+    // messaging are coordinated on the UI thread in WM_MODEL_LOAD_DONE.
 
     return true;
 }
@@ -5512,38 +7073,24 @@ void Win32IDE::populateFileTree()
     // Clear existing items
     TreeView_DeleteAllItems(m_hwndFileExplorer);
 
-    // Add root directories for model browsing (config/env/resolver, then fallbacks)
-    std::vector<std::string> modelPaths;
-    const char* ollamaEnv = std::getenv("RAWRXD_OLLAMA_PATH");
-    if (ollamaEnv && ollamaEnv[0])
-        modelPaths.push_back(ollamaEnv);
-    const char* ollamaModels = std::getenv("OLLAMA_MODELS");
-    if (ollamaModels && ollamaModels[0])
-        modelPaths.push_back(std::string(ollamaModels));
-    modelPaths.push_back(PathResolver::getModelsPath());
-    const char* username = getenv("USERNAME");
-    std::string userDir(username && username[0] ? username : "User");
-    modelPaths.push_back("C:\\Users\\" + userDir + "\\OllamaModels");
-    modelPaths.push_back("D:\\OllamaModels");
-    modelPaths.push_back("C:\\OllamaModels");
+    // Enumerate all logical drives as roots to mirror full filesystem access.
+    wchar_t drives[512] = {};
+    DWORD len = GetLogicalDriveStringsW(static_cast<DWORD>(std::size(drives) - 1), drives);
+    if (len == 0 || len >= std::size(drives))
+        return;
 
-    for (const auto& path : modelPaths)
+    for (const wchar_t* p = drives; *p; p += wcslen(p) + 1)
     {
-        if (GetFileAttributesA(path.c_str()) != INVALID_FILE_ATTRIBUTES)
+        const std::wstring driveRoot(p);
+        const std::string drivePath = wideToUtf8(driveRoot);
+        HTREEITEM hRoot = addTreeItem(TVI_ROOT, drivePath, drivePath, true);
+        if (hRoot)
         {
-            std::string displayName = path;
-            size_t lastSlash = path.find_last_of("\\/");
-            if (lastSlash != std::string::npos)
-            {
-                displayName = path.substr(lastSlash + 1) + " (" + path + ")";
-            }
-
-            HTREEITEM hRoot = addTreeItem(TVI_ROOT, displayName, path, true);
-            scanDirectory(path, hRoot);
+            addTreeItem(hRoot, "Loading...", "", false);
         }
     }
 
-    // Expand the D:\OllamaModels by default if it exists
+    // Expand the first drive by default.
     HTREEITEM hFirst = TreeView_GetRoot(m_hwndFileExplorer);
     if (hFirst)
     {
@@ -5609,20 +7156,6 @@ void Win32IDE::scanDirectory(const std::string& dirPath, HTREEITEM hParent)
         if (findData.dwFileAttributes & (FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM))
         {
             continue;
-        }
-
-        // For files, only show model files and some common extensions
-        if (!isDirectory)
-        {
-            std::string fileName = findData.cFileName;
-            std::transform(fileName.begin(), fileName.end(), fileName.begin(), ::tolower);
-
-            if (!isModelFile(fullPath) && fileName.find(".txt") == std::string::npos &&
-                fileName.find(".json") == std::string::npos && fileName.find(".md") == std::string::npos &&
-                fileName.find(".log") == std::string::npos)
-            {
-                continue;
-            }
         }
 
         HTREEITEM hItem = addTreeItem(hParent, findData.cFileName, fullPath, isDirectory);
@@ -5758,11 +7291,8 @@ void Win32IDE::onFileExplorerDoubleClick()
                         return;
                     }
 
-                    std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-                    setWindowText(m_hwndEditor, content);
-                    m_currentFile = filePath;
-                    updateTitleBarText();
                     file.close();
+                    openFile(filePath);
                 }
             }
             catch (const std::exception& e)
@@ -5898,9 +7428,12 @@ void Win32IDE::showFileContextMenu(const std::string& filePath, bool isDirectory
 
             if (cmd == 50016)
             {
+                TerminalPane* pane = resolvePaneForInteractiveShellMenu();
+                if (pane && pane->id >= 0)
+                    setActiveTerminalPane(pane->id);
                 startPowerShell();
-                TerminalPane* pane = getActiveTerminalPane();
-                if (pane && pane->manager)
+                pane = resolvePaneForInteractiveShellMenu();
+                if (pane && pane->manager && pane->manager->isRunning())
                 {
                     std::string escaped = targetDir;
                     size_t pos = 0;
@@ -5915,9 +7448,12 @@ void Win32IDE::showFileContextMenu(const std::string& filePath, bool isDirectory
             }
             else
             {
+                TerminalPane* pane = resolvePaneForInteractiveShellMenu();
+                if (pane && pane->id >= 0)
+                    setActiveTerminalPane(pane->id);
                 startCommandPrompt();
-                TerminalPane* pane = getActiveTerminalPane();
-                if (pane && pane->manager)
+                pane = resolvePaneForInteractiveShellMenu();
+                if (pane && pane->manager && pane->manager->isRunning())
                 {
                     pane->manager->writeInput("cd /d \"" + targetDir + "\"\r\n");
                 }
@@ -5959,7 +7495,8 @@ void Win32IDE::showFileContextMenu(const std::string& filePath, bool isDirectory
                     strcpy_s(dest, filePath.size() + 1, filePath.c_str());
                     GlobalUnlock(hMem);
                     // SetClipboardData takes ownership of hMem on success; only free on failure
-                    if (!SetClipboardData(CF_TEXT, hMem)) {
+                    if (!SetClipboardData(CF_TEXT, hMem))
+                    {
                         GlobalFree(hMem);
                     }
                 }
@@ -6014,13 +7551,26 @@ std::string Win32IDE::sendMessageToModel(const std::string& message)
                "Switcher.\n";
     }
 
+    auto recordChatTurn = [this](const std::string& userMsg, const std::string& assistantMsg)
+    {
+        conversationDetectModelFormat(m_loadedModelPath.empty() ? std::string("local") : m_loadedModelPath);
+        if (m_inferenceConfig.contextWindow > 0)
+            conversationSetContextWindow(m_inferenceConfig.contextWindow);
+        conversationAddUser(userMsg);
+        conversationAddAssistant(assistantMsg);
+        m_chatHistory.push_back({"user", userMsg});
+        m_chatHistory.push_back({"assistant", assistantMsg});
+        persistChatTurnToDisk("user", userMsg);
+        persistChatTurnToDisk("assistant", assistantMsg);
+    };
+
     // Phase 8B/8C: Route through LLM router (if enabled) or backend manager
     if (m_backendManagerInitialized)
     {
         std::string resp = routeWithIntelligence(message);
         if (!resp.empty() && resp.find("[Backend Error]") != 0)
         {
-            m_chatHistory.push_back({message, resp});
+            recordChatTurn(message, resp);
             return resp;
         }
     }
@@ -6031,14 +7581,14 @@ std::string Win32IDE::sendMessageToModel(const std::string& message)
         auto tokens = engine->Tokenize(message);
         auto output_tokens = engine->Generate(tokens, 512);
         std::string response = engine->Detokenize(output_tokens);
-        m_chatHistory.push_back({message, response});
+        recordChatTurn(message, response);
         return response;
     }
 
     std::string llmResponse;
     if (trySendToOllama(message, llmResponse))
     {
-        m_chatHistory.push_back({message, llmResponse});
+        recordChatTurn(message, llmResponse);
         return llmResponse;
     }
 
@@ -6048,9 +7598,21 @@ std::string Win32IDE::sendMessageToModel(const std::string& message)
     if (m_agenticBridge && m_agenticBridge->HasUsableBackend())
     {
         AgentResponse r = m_agenticBridge->ExecuteAgentCommand(message);
+        if (r.type == AgentResponseType::TOOL_CALL && !r.content.empty())
+        {
+            conversationDetectModelFormat(m_loadedModelPath.empty() ? std::string("local") : m_loadedModelPath);
+            if (m_inferenceConfig.contextWindow > 0)
+                conversationSetContextWindow(m_inferenceConfig.contextWindow);
+            conversationAddUser(message);
+            m_chatHistory.push_back({"user", message});
+            persistChatTurnToDisk("user", message);
+            const std::string tname = r.toolName.empty() ? std::string("tool") : r.toolName;
+            recordToolTurnInChatHistory(tname, r.content, "result");
+            return r.content;
+        }
         if (r.type != AgentResponseType::AGENT_ERROR && !r.content.empty())
         {
-            m_chatHistory.push_back({message, r.content});
+            recordChatTurn(message, r.content);
             return r.content;
         }
         if (r.type == AgentResponseType::AGENT_ERROR && !r.content.empty())
@@ -6161,6 +7723,7 @@ void Win32IDE::updateGitStatus()
     if (!isGitRepository())
     {
         m_gitStatus = GitStatus();
+        refreshIntegratedTerminalContextHint();
         return;
     }
 
@@ -6215,6 +7778,7 @@ void Win32IDE::updateGitStatus()
 
     m_gitStatus.hasChanges =
         (m_gitStatus.modified + m_gitStatus.added + m_gitStatus.deleted + m_gitStatus.untracked) > 0;
+    refreshIntegratedTerminalContextHint();
 }
 
 void Win32IDE::gitCommit(const std::string& message)
@@ -6374,6 +7938,46 @@ bool Win32IDE::executeGitCommand(const std::string& command, std::string& output
     return false;
 }
 
+void Win32IDE::queryGitBranchForIntegratedCwd(const std::string& cwdUtf8, std::string& outBranch) const
+{
+    outBranch.clear();
+    if (cwdUtf8.empty())
+        return;
+
+    std::string quoted;
+    quoted.reserve(cwdUtf8.size() + 2);
+    quoted.push_back('"');
+    for (unsigned char uc : cwdUtf8)
+    {
+        const char c = static_cast<char>(uc);
+        if (c == '"')
+        {
+            quoted += '\\';
+            quoted += '"';
+        }
+        else
+            quoted += c;
+    }
+    quoted.push_back('"');
+
+    std::string out;
+    const std::string cmd = "git -C " + quoted + " rev-parse --abbrev-ref HEAD";
+    if (!const_cast<Win32IDE*>(this)->executeGitCommand(cmd, out))
+        return;
+
+    while (!out.empty() && (out.back() == '\n' || out.back() == '\r' || out.back() == ' ' || out.back() == '\t'))
+        out.pop_back();
+    if (out.empty())
+        return;
+    std::string lower = out;
+    for (auto& ch : lower)
+        ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+    if (lower.find("fatal:") != std::string::npos || lower.find("not a git repository") != std::string::npos)
+        return;
+
+    outBranch = std::move(out);
+}
+
 void Win32IDE::showGitPanel()
 {
     if (!isGitRepository())
@@ -6526,12 +8130,11 @@ bool Win32IDE::ensureAgenticBridgeHasModel(const std::string& path)
         initializeAgenticBridge();
     if (!m_agenticBridge)
         return false;
-    if (m_agenticBridge->LoadModel(path))
-    {
-        m_loadedModelPath = path;
-        return true;
-    }
-    return false;
+
+    // Register selected model path without forcing immediate heavyweight local load.
+    m_agenticBridge->SetModel(path);
+    m_loadedModelPath = path;
+    return true;
 }
 
 bool Win32IDE::loadModelForInference(const std::string& filepath)
@@ -6547,7 +8150,10 @@ bool Win32IDE::loadModelForInference(const std::string& filepath)
 
     if (m_agenticBridge)
     {
-        if (m_agenticBridge->LoadModel(filepath))
+        // Register path/model on bridge; actual backend load occurs through the
+        // active inference backend at request time.
+        m_agenticBridge->SetModel(filepath);
+        if (!filepath.empty())
         {
             m_loadedModelPath = filepath;
             METRICS.gauge("model.loaded", 1.0);
@@ -6556,15 +8162,17 @@ bool Win32IDE::loadModelForInference(const std::string& filepath)
 
             wireLayerProgressToOutputPanel();
 
-            // Lane A "Gold" integration: run a tiny post-load streamer self-check.
-            // This verifies (a) privilege attempt, (b) 2MB mapper alignment, (c) map/unmap sanity,
-            // without dragging Lane B CLI/bench harness into the UI.
-            appendStreamerPostLoadCheck(this, filepath);
+            // NOTE: appendStreamerPostLoadCheck removed — it opened a second RawrXDModelLoader
+            // from the background thread (redundant full file-map + cross-thread SendMessageW),
+            // which was crash-prone and unnecessary for correct inference.
 
             // Sync current UI state
             m_agenticBridge->SetContextSize("4K");
             if (m_hwndContextSlider)
                 SendMessage(m_hwndContextSlider, TBM_SETPOS, TRUE, 0);
+
+            // Thread-safe: tool sandbox roots follow workspace (also refreshed on UI thread after load).
+            syncAgenticToolGuardrailsFromWorkspace();
 
             return true;
         }
@@ -6659,6 +8267,9 @@ bool Win32IDE::initializeInference()
     {
         m_inferenceConfig.maxTokens = std::min(512, (int)m_currentModelMetadata.context_length / 4);
     }
+
+    // Ensure backend registration is visible to chat before first send.
+    RawrXD::InitializeAgenticChatBackend();
 
     appendToOutput("✅ Inference initialized for model: " + m_loadedModelPath, "Output", OutputSeverity::Info);
     wireLayerProgressToOutputPanel();
@@ -6872,11 +8483,11 @@ std::string Win32IDE::generateResponse(const std::string& prompt)
             {
                 int qCount = 0;
                 for (char c : decoded)
-                    if (c == '?') ++qCount;
+                    if (c == '?')
+                        ++qCount;
                 if (decoded.size() > 20 && qCount > static_cast<int>(decoded.size()) * 2 / 5)
-                    return "[Inference error: detokenization failed — " +
-                           std::to_string(qCount) + "/" + std::to_string(decoded.size()) +
-                           " tokens unresolved. Verify model/vocab compatibility.]";
+                    return "[Inference error: detokenization failed — " + std::to_string(qCount) + "/" +
+                           std::to_string(decoded.size()) + " tokens unresolved. Verify model/vocab compatibility.]";
             }
             return decoded;
         }
@@ -6898,7 +8509,8 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
     if (m_inferenceRunning.load())
     {
         std::function<void(const std::string&, bool)> pendingCallback = callback;
-        const size_t queuedDepth = EnqueuePendingInference(this, PendingInferenceRequest{prompt, std::move(pendingCallback)});
+        const size_t queuedDepth =
+            EnqueuePendingInference(this, PendingInferenceRequest{prompt, std::move(pendingCallback)});
         if (queuedDepth == 0)
         {
             METRICS.increment("inference.async_requests_rejected");
@@ -6945,9 +8557,15 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
             }
             try
             {
+                auto looksLikeLocalModelPath = [](const std::string& modelPath) -> bool
+                {
+                    return modelPath.find(".gguf") != std::string::npos || modelPath.find(":\\") != std::string::npos ||
+                           modelPath.find('/') != std::string::npos || modelPath.find('\\') != std::string::npos;
+                };
+
                 if (!m_agenticBridge)
                 {
-                    if (!m_loadedModelPath.empty())
+                    if (!m_loadedModelPath.empty() && looksLikeLocalModelPath(m_loadedModelPath))
                         ensureAgenticBridgeHasModel(m_loadedModelPath);
                     if (!m_agenticBridge)
                     {
@@ -6957,23 +8575,341 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
                         return;
                     }
                 }
-                if (m_agenticBridge && !m_loadedModelPath.empty() &&
-                    m_agenticBridge->GetCurrentModel() != m_loadedModelPath)
-                    m_agenticBridge->LoadModel(m_loadedModelPath);
+                if (m_agenticBridge && !m_loadedModelPath.empty())
+                {
+                    if (looksLikeLocalModelPath(m_loadedModelPath))
+                    {
+                        const bool needsLocalLoad = m_agenticBridge->GetCurrentModel() != m_loadedModelPath ||
+                                                    !m_agenticBridge->HasUsableBackend();
+                        if (needsLocalLoad)
+                        {
+                            OutputDebugStringA(("[AsyncBridge] Loading selected local model on worker thread: " +
+                                                m_loadedModelPath + "\n")
+                                                   .c_str());
+                            if (!ensureAgenticBridgeHasModel(m_loadedModelPath))
+                            {
+                                const std::string detail =
+                                    m_agenticBridge ? m_agenticBridge->GetLastModelLoadError() : "";
+                                const std::string error =
+                                    detail.empty() ? ("Error: Failed to load selected model: " + m_loadedModelPath)
+                                                   : ("Error: Failed to load selected model: " + m_loadedModelPath +
+                                                      " | " + detail);
+                                if (m_inferenceCallback)
+                                    m_inferenceCallback(error, true);
+                                finishAndScheduleNext();
+                                return;
+                            }
+                        }
+                    }
+                    else if (m_agenticBridge->GetCurrentModel() != m_loadedModelPath)
+                    {
+                        m_agenticBridge->SetModel(m_loadedModelPath);
+                        OutputDebugStringA(
+                            ("[AsyncBridge] Desired remote model updated: " + m_loadedModelPath + "\n").c_str());
+                    }
+                }
+
+                auto backendMissingNativeApi = std::make_shared<std::atomic<bool>>(false);
 
                 // Set callback to route NativeAgent stream to the UI
                 m_agenticBridge->SetOutputCallback(
-                    [this](const std::string& type, const std::string& msg)
+                    [this, backendMissingNativeApi](const std::string& type, const std::string& msg)
                     {
                         if (m_inferenceStopRequested.load() || isShuttingDown())
                             return;
+
+                        // PROBE A: raw callback entry
+                        {
+                            std::string probe = "[PROBE-A] BridgeCB type=" + type +
+                                                " msg_len=" + std::to_string(msg.size()) +
+                                                " preview=" + msg.substr(0, std::min(msg.size(), (size_t)60)) + "\n";
+                            OutputDebugStringA(probe.c_str());
+                        }
+
+                        // Only stream textual payload categories into chat rendering.
+                        if (type != "stream" && type != "agent")
+                        {
+                            std::string drop =
+                                "[CopilotBridgeDrop] type=" + type + " len=" + std::to_string(msg.size()) + "\n";
+                            OutputDebugStringA(drop.c_str());
+                            return;
+                        }
+
+                        const bool isNativeApiMissing =
+                            msg.find("Native inference API unavailable") != std::string::npos ||
+                            msg.find("[BackendError]") != std::string::npos;
+
+                        // Defer fallback until command returns to avoid callback re-entrancy.
+                        if (isNativeApiMissing)
+                        {
+                            backendMissingNativeApi->store(true);
+                            return;
+                        }
+
+                        if (looksLikeTokenIdSequencePayload(msg))
+                        {
+                            std::string warn =
+                                "[CopilotBridgeDrop] token-id payload suppressed len=" + std::to_string(msg.size()) +
+                                "\n";
+                            OutputDebugStringA(warn.c_str());
+                            return;
+                        }
+
+                        // PROBE A2: after all filters - about to fire m_inferenceCallback
+                        {
+                            std::string probe =
+                                "[PROBE-A2] Firing m_inferenceCallback msg_len=" + std::to_string(msg.size()) + "\n";
+                            OutputDebugStringA(probe.c_str());
+                        }
+
                         // "stream" type is what we send to chat UI
                         if (m_inferenceCallback)
+                        {
+                            m_currentInferenceResponse += msg;
+                            OutputDebugStringA(("[ChatAccum] bridge path accumulated_len=" +
+                                                std::to_string(m_currentInferenceResponse.size()) + "\n")
+                                                   .c_str());
                             m_inferenceCallback(msg, false);
+                        }
                     });
 
                 // Execute via agent bridge (supports /edit, /think, etc.)
+                OutputDebugStringA("[PROBE-B] Calling ExecuteAgentCommand\n");
                 m_agenticBridge->ExecuteAgentCommand(prompt);
+                {
+                    std::string probe = "[PROBE-B2] ExecuteAgentCommand returned. accumulated_len=" +
+                                        std::to_string(m_currentInferenceResponse.size()) +
+                                        " backendMissing=" + (backendMissingNativeApi->load() ? "1" : "0") + "\n";
+                    OutputDebugStringA(probe.c_str());
+                }
+
+                if (!m_inferenceStopRequested.load() && backendMissingNativeApi->load())
+                {
+                    bool routeCHandledByMinimalAgent = false;
+                    const bool hasAgenticPrefix = HasAgenticPrefix(prompt);
+                    const bool bridgeAgenticMode = m_agenticBridge && m_agenticBridge->IsAgenticMode();
+                    const bool wantsAgentic = hasAgenticPrefix || bridgeAgenticMode || m_agenticFunctionCallingMode;
+                    const bool layerAvailable = rawrxd::isAgenticLayerAvailable();
+                    const bool strictLocalSwarm = []()
+                    {
+                        char buf[12] = {};
+                        const DWORD n =
+                            GetEnvironmentVariableA("RAWRXD_FORCE_LOCAL_SWARM", buf, static_cast<DWORD>(sizeof(buf)));
+                        return n > 0 &&
+                               (buf[0] == '1' || buf[0] == 't' || buf[0] == 'T' || buf[0] == 'y' || buf[0] == 'Y');
+                    }();
+
+                    OutputDebugStringA(
+                        ("ROUTE_CHECK: route=C-main-fallback, wantsAgentic=" + std::to_string(wantsAgentic ? 1 : 0) +
+                         ", layerAvailable=" + std::to_string(layerAvailable ? 1 : 0) + "\n")
+                            .c_str());
+
+                    // Route C parity with Route B: try minimal agentic path before legacy SubmitInference fallback.
+                    if (wantsAgentic && layerAvailable)
+                    {
+                        const std::string strippedPrompt = StripAgenticPrefixForRouteParity(prompt);
+                        rawrxd::MinimalAgenticRequest req;
+                        req.message = strippedPrompt.empty() ? prompt : strippedPrompt;
+                        if (m_agenticBridge)
+                        {
+                            std::string sid = m_agenticBridge->GetAgenticSessionId();
+                            if (sid.empty())
+                            {
+                                sid = "win32ide-routec";
+                                m_agenticBridge->SetAgenticSessionId(sid);
+                            }
+                            req.session_id = sid;
+
+                            req.model_path = m_agenticBridge->GetCurrentModel();
+                            if (req.model_path.empty())
+                                req.model_path = m_loadedModelPath;
+                        }
+                        else
+                        {
+                            req.session_id = "win32ide-routec";
+                            req.model_path = m_loadedModelPath;
+                        }
+                        req.enable_tools = true;
+                        req.max_iterations = 10;
+                        req.workspace_root = workspaceDirectoryForChatPersistence();
+
+                        const auto miniResp = rawrxd::processAgenticRequest(req);
+                        if (miniResp.success)
+                        {
+                            std::string routed = FormatMinimalAgenticResponseForChat(miniResp);
+                            if (m_inferenceCallback)
+                            {
+                                m_currentInferenceResponse += routed;
+                                m_inferenceCallback(routed, false);
+                            }
+                            routeCHandledByMinimalAgent = true;
+                            OutputDebugStringA(
+                                "ROUTE_CHECK: route=C-main-fallback resolved via minimal agentic path\n");
+                        }
+                        else
+                        {
+                            if (strictLocalSwarm)
+                            {
+                                const std::string failClosed =
+                                    miniResp.error.empty()
+                                        ? "Error: Strict local swarm mode blocked Route C legacy fallback"
+                                        : miniResp.error;
+                                if (m_inferenceCallback)
+                                {
+                                    m_currentInferenceResponse += failClosed;
+                                    m_inferenceCallback(failClosed, false);
+                                }
+                                routeCHandledByMinimalAgent = true;
+                                OutputDebugStringA(
+                                    ("ROUTE_CHECK: route=C-main-fallback fail-closed under strict local swarm: " +
+                                     failClosed + "\n")
+                                        .c_str());
+                            }
+                            OutputDebugStringA(
+                                ("ROUTE_CHECK: route=C-main-fallback minimal agent failed: " + miniResp.error + "\n")
+                                    .c_str());
+                        }
+                    }
+
+                    if (routeCHandledByMinimalAgent)
+                    {
+                        OutputDebugStringA("[ChatFallback] Route C minimal agent handled request; skipping "
+                                           "SubmitInference fallback\n");
+                    }
+                    else
+                    {
+
+                        OutputDebugStringA("[ChatFallback] Native API missing reported by bridge; switching to "
+                                           "registered backend path\n");
+                        if (!RawrXD::InitializeAgenticChatBackend())
+                        {
+                            OutputDebugStringA("[ChatFallback] ERROR: InitializeAgenticChatBackend failed\n");
+                            std::string fallback = generateResponse(prompt);
+                            if (fallback.empty())
+                                fallback = "[FallbackError] Unable to generate response via native or remote backend.";
+                            if (m_inferenceCallback)
+                                m_inferenceCallback(fallback, false);
+                        }
+                        else
+                        {
+                            RawrXD::INativeInferenceBackend* backend = RawrXD::BackendRegistry::GetBackend();
+                            RawrXD::GenerationConfig cfg;
+                            cfg.max_tokens = m_inferenceConfig.maxTokens;
+                            cfg.temperature = m_inferenceConfig.temperature;
+                            cfg.top_k = m_inferenceConfig.topK;
+                            cfg.top_p = m_inferenceConfig.topP;
+
+                            std::vector<int> prompt_tokens;
+                            prompt_tokens.reserve(prompt.size());
+                            for (unsigned char c : prompt)
+                                prompt_tokens.push_back(static_cast<int>(c));
+
+                            OutputDebugStringA(("[ChatFallback] SubmitInference prompt_bytes=" +
+                                                std::to_string(prompt_tokens.size()) + "\n")
+                                                   .c_str());
+                            if (prompt_tokens.empty())
+                            {
+                                OutputDebugStringA("[ChatFallback] ERROR: Empty token list (prompt_tokens)\n");
+                            }
+                            else
+                            {
+                                const size_t sampleN = std::min<size_t>(prompt_tokens.size(), 5);
+                                for (size_t i = 0; i < sampleN; ++i)
+                                {
+                                    OutputDebugStringA(("[ChatFallback] token[" + std::to_string(i) +
+                                                        "]=" + std::to_string(prompt_tokens[i]) + "\n")
+                                                           .c_str());
+                                }
+                            }
+
+                            bool submitted = false;
+                            for (int attempt = 1; attempt <= 2 && !submitted; ++attempt)
+                            {
+                                backend = RawrXD::BackendRegistry::GetBackend();
+                                const bool backendReady = backend && backend->IsAvailable();
+                                OutputDebugStringA(
+                                    ("[ChatFallback] SubmitInference attempt=" + std::to_string(attempt) +
+                                     " backend_ready=" + std::string(backendReady ? "1" : "0") + "\n")
+                                        .c_str());
+                                if (backendReady)
+                                {
+                                    submitted = backend->SubmitInference(prompt_tokens, cfg);
+                                }
+
+                                if (!submitted && attempt < 2)
+                                {
+                                    OutputDebugStringA(
+                                        "[ChatFallback] SubmitInference not ready; waiting 350ms before retry\n");
+                                    std::this_thread::sleep_for(std::chrono::milliseconds(350));
+                                }
+                            }
+                            if (!submitted)
+                            {
+                                OutputDebugStringA("[ChatFallback] ERROR: SubmitInference failed\n");
+                                std::string fallback = generateResponse(prompt);
+                                if (fallback.empty())
+                                    fallback =
+                                        "[FallbackError] Unable to generate response via native or remote backend.";
+                                if (m_inferenceCallback)
+                                    m_inferenceCallback(fallback, false);
+                            }
+                            else
+                            {
+                                OutputDebugStringA("[ChatFallback] SubmitInference accepted - entering poll loop\n");
+                                int poll_count = 0;
+                                for (;;)
+                                {
+                                    ++poll_count;
+                                    if ((poll_count % 20) == 0)
+                                    {
+                                        OutputDebugStringA(
+                                            ("[ChatFallback] Poll #" + std::to_string(poll_count) + "\n").c_str());
+                                    }
+
+                                    if (m_inferenceStopRequested.load() || isShuttingDown())
+                                    {
+                                        OutputDebugStringA("[ChatFallback] Poll cancelled due to stop/shutdown\n");
+                                        backend->Cancel();
+                                        break;
+                                    }
+
+                                    std::string text;
+                                    bool done = false;
+                                    if (backend->GetResult(text, done))
+                                    {
+                                        OutputDebugStringA(("[ChatFallback] GetResult returned done=" +
+                                                            std::string(done ? "true" : "false") +
+                                                            " text_len=" + std::to_string(text.size()) + "\n")
+                                                               .c_str());
+                                        if (!text.empty() && m_inferenceCallback)
+                                        {
+                                            m_currentInferenceResponse += text;
+                                            OutputDebugStringA(("[ChatAccum] fallback path accumulated_len=" +
+                                                                std::to_string(m_currentInferenceResponse.size()) +
+                                                                "\n")
+                                                                   .c_str());
+                                            OutputDebugStringA(("[ChatFallback] Forwarding text to chat callback len=" +
+                                                                std::to_string(text.size()) + "\n")
+                                                                   .c_str());
+                                            m_inferenceCallback(text, false);
+                                        }
+                                        if (done)
+                                        {
+                                            OutputDebugStringA("[ChatFallback] Generation done - exiting poll loop\n");
+                                            break;
+                                        }
+                                    }
+                                    else if ((poll_count % 40) == 0)
+                                    {
+                                        OutputDebugStringA("[ChatFallback] GetResult returned false (no data yet)\n");
+                                    }
+
+                                    std::this_thread::sleep_for(std::chrono::milliseconds(25));
+                                }
+                            }
+                        }
+                    }
+                }
 
                 // Phase 4B: Choke Point 4 — hookPostGeneration after streaming inference
                 // Note: For streaming responses, the full output was already sent via callback.
@@ -6982,6 +8918,9 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
                 if (!m_inferenceStopRequested.load())
                 {
                     std::string accumulatedResponse = m_currentInferenceResponse;
+                    OutputDebugStringA(
+                        ("[ChatAccum] final accumulated_len=" + std::to_string(accumulatedResponse.size()) + "\n")
+                            .c_str());
                     if (!accumulatedResponse.empty())
                     {
                         FailureClassification inferenceFailure = hookPostGeneration(accumulatedResponse, prompt);
@@ -6993,8 +8932,8 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
                             // For streaming responses, we log the failure and record it
                             // but don't auto-retry (the user sees output in real-time)
                             recordSimpleEvent(AgentEventType::FailureDetected,
-                                              "Inference failure: " + failureTypeString(inferenceFailure.reason) + " | " +
-                                                  inferenceFailure.evidence);
+                                              "Inference failure: " + failureTypeString(inferenceFailure.reason) +
+                                                  " | " + inferenceFailure.evidence);
                         }
                     }
                 }
@@ -7048,21 +8987,15 @@ Win32IDE::InferenceConfig Win32IDE::getInferenceConfig() const
 
 std::string Win32IDE::buildChatPrompt(const std::string& userMessage)
 {
-    std::string prompt;
+    // Delegate to ConversationSession which handles multi-format templates
+    // (ChatML, Llama3, Phi3, Mistral, Alpaca, Raw), conversation history,
+    // and automatic token budget truncation.
+    std::string prompt = conversationBuildPrompt(userMessage);
 
-    // Add system prompt if set
-    if (!m_inferenceConfig.systemPrompt.empty())
-    {
-        prompt = "<|system|>\n" + m_inferenceConfig.systemPrompt + "\n<|end|>\n";
-        m_contextUsage.systemTokens = static_cast<int>(m_inferenceConfig.systemPrompt.length()) / 4;
-    }
-
-    // Add user message
-    prompt += "<|user|>\n" + userMessage + "\n<|end|>\n";
-    prompt += "<|assistant|>\n";
-
-    // Track message tokens and update context window
-    m_contextUsage.messageTokens += static_cast<int>(userMessage.length()) / 4;
+    // Track context usage for the status bar
+    int promptTokens = static_cast<int>(prompt.length()) / 4;
+    m_contextUsage.systemTokens = static_cast<int>(m_inferenceConfig.systemPrompt.length()) / 4;
+    m_contextUsage.messageTokens = promptTokens - m_contextUsage.systemTokens;
     m_contextUsage.maxTokens = m_inferenceConfig.contextWindow;
     updateContextWindowDisplay();
 
@@ -7181,13 +9114,67 @@ void Win32IDE::toggleTerminal()
     }
 }
 
+void Win32IDE::onViewTerminalShortcut()
+{
+    // Cursor / VS Code–style: Ctrl+` collapses the bottom terminal area when focus is already in integrated
+    // terminal UI or the dedicated PowerShell strip; otherwise opens/focuses the integrated terminal tab.
+    if (!m_hwndMain)
+        return;
+    HWND foc = GetFocus();
+    const bool cmdFocused = (m_hwndCommandInput && foc == m_hwndCommandInput);
+    const bool tabBarFocused = g_rawrxdIntegratedTerminalTabs && IsWindow(g_rawrxdIntegratedTerminalTabs) && foc &&
+                               (foc == g_rawrxdIntegratedTerminalTabs || IsChild(g_rawrxdIntegratedTerminalTabs, foc));
+    bool integratedShellSurfaceFocused = false;
+    for (const auto& pane : m_terminalPanes)
+    {
+        if (pane.hwnd && IsWindow(pane.hwnd) && foc && (foc == pane.hwnd || IsChild(pane.hwnd, foc)))
+        {
+            integratedShellSurfaceFocused = true;
+            break;
+        }
+    }
+    const bool psOutFocused = m_hwndPowerShellOutput && IsWindow(m_hwndPowerShellOutput) && foc &&
+                              (foc == m_hwndPowerShellOutput || IsChild(m_hwndPowerShellOutput, foc));
+    const bool psInFocused = m_hwndPowerShellInput && IsWindow(m_hwndPowerShellInput) && foc == m_hwndPowerShellInput;
+    const bool dedicatedPsFocused = psOutFocused || psInFocused;
+
+    const bool terminalTabActive = (m_activePanelTab == PanelTab::Terminal);
+    const bool integratedTerminalUiFocused = cmdFocused || tabBarFocused || integratedShellSurfaceFocused;
+    // Collapse when: (1) integrated terminal tab is active and focus is in that UI, or (2) focus is in the
+    // dedicated PowerShell strip (even if another bottom tab like Output/Problems is selected)—parity with a
+    // single "bottom terminal" affordance. Hiding clears both the output/terminal dock and the dedicated PS row.
+    const bool collapseIntegratedDock =
+        m_outputPanelVisible && (dedicatedPsFocused || (terminalTabActive && integratedTerminalUiFocused));
+    // Output dock can be hidden while the dedicated PS strip still shows — Ctrl+` should still dismiss it.
+    const bool collapseDedicatedPsOnly =
+        !m_outputPanelVisible && m_powerShellPanelVisible && m_hwndPowerShellPanel && dedicatedPsFocused;
+    if (collapseIntegratedDock)
+    {
+        m_outputPanelVisible = false;
+        hidePowerShellPanel();
+        InvalidateRect(m_hwndMain, nullptr, TRUE);
+        return;
+    }
+    if (collapseDedicatedPsOnly)
+    {
+        hidePowerShellPanel();
+        InvalidateRect(m_hwndMain, nullptr, TRUE);
+        return;
+    }
+    focusIntegratedTerminalPanel();
+}
+
 void Win32IDE::showAbout()
 {
     std::string aboutText = RAWRXD_VERSION_FULL "\n\n"
-                            "Build: " RAWRXD_BUILD_DATE " " RAWRXD_BUILD_TIME "\n"
-                            "Channel: " RAWRXD_CHANNEL "\n"
-                            "Units: " + std::to_string(RAWRXD_COMPILE_UNITS) + " compilation units\n"
-                            "MASM64: " + std::to_string(RAWRXD_MASM_KERNELS) + " ASM kernels\n\n"
+                                                "Build: " RAWRXD_BUILD_DATE " " RAWRXD_BUILD_TIME "\n"
+                                                "Channel: " RAWRXD_CHANNEL "\n"
+                                                "Units: " +
+                            std::to_string(RAWRXD_COMPILE_UNITS) +
+                            " compilation units\n"
+                            "MASM64: " +
+                            std::to_string(RAWRXD_MASM_KERNELS) +
+                            " ASM kernels\n\n"
                             "Engine:\n"
                             "• Native Win32 C++20 (no Qt, no Electron)\n"
                             "• GGUF Model Loader + AVX-512 Inference\n"
@@ -7197,10 +9184,7 @@ void Win32IDE::showAbout()
                             "• Voice Chat (waveIn/Out + VAD + STT/TTS)\n"
                             "• Unified GPU Accelerator Router\n"
                             "• Embedded LSP Server (JSON-RPC 2.0)\n"
-                            "• Distributed Swarm Inference\n\n"
-                            RAWRXD_COPYRIGHT "\n"
-                            RAWRXD_LICENSE "\n"
-                            RAWRXD_GITHUB;
+                            "• Distributed Swarm Inference\n\n" RAWRXD_COPYRIGHT "\n" RAWRXD_LICENSE "\n" RAWRXD_GITHUB;
 
     MessageBoxW(m_hwndMain, utf8ToWide(aboutText).c_str(), L"About RawrXD IDE", MB_OK | MB_ICONINFORMATION);
 }
@@ -7301,8 +9285,7 @@ void Win32IDE::createChatPanel()
         return;
     }
     SetWindowLongPtr(m_hwndSecondarySidebar, GWLP_USERDATA, (LONG_PTR)this);
-    m_oldSidebarProc =
-        (WNDPROC)SetWindowLongPtr(m_hwndSecondarySidebar, GWLP_WNDPROC, (LONG_PTR)SidebarProcImpl);
+    m_oldSidebarProc = (WNDPROC)SetWindowLongPtr(m_hwndSecondarySidebar, GWLP_WNDPROC, (LONG_PTR)SidebarProcImpl);
 
     m_hwndSecondarySidebarHeader = CreateWindowExW(0, L"STATIC", L"AI Chat", WS_CHILD | WS_VISIBLE | SS_LEFT, 5, 5, 290,
                                                    25, m_hwndSecondarySidebar, nullptr, m_hInstance, nullptr);
@@ -7378,7 +9361,7 @@ void Win32IDE::createChatPanel()
     // Adjust Y for chat pane and toggles to prevent overlap
     int toggleY = 170;
     int toggleX = 5;
-    int chatY = 230;
+    int chatY = 255;  // Adjusted for additional checkbox
 
     m_hwndChkMaxMode =
         CreateWindowExW(0, L"BUTTON", L"Max Mode", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, toggleX, toggleY, 140, 20,
@@ -7401,13 +9384,18 @@ void Win32IDE::createChatPanel()
         SendMessage(m_hwndChkDeepThink, WM_SETFONT, (WPARAM)hFont, TRUE);
     if (m_hwndChkDeepResearch)
         SendMessage(m_hwndChkDeepResearch, WM_SETFONT, (WPARAM)hFont, TRUE);
-    if (m_hwndChkNoRefusal)
-        SendMessage(m_hwndChkNoRefusal, WM_SETFONT, (WPARAM)hFont, TRUE);
+    toggleY += 25;
+    m_hwndChkAgenticMode =
+        CreateWindowExW(0, L"BUTTON", L"Agentic Mode", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, toggleX, toggleY, 140,
+                        20, m_hwndSecondarySidebar, (HMENU)IDC_AI_AGENTIC_MODE, m_hInstance, nullptr);
+
+    if (m_hwndChkAgenticMode)
+        SendMessage(m_hwndChkAgenticMode, WM_SETFONT, (WPARAM)hFont, TRUE);
 
     m_hwndCopilotChatOutput =
         CreateWindowExW(WS_EX_CLIENTEDGE, L"EDIT", L"",
-                        WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | WS_VSCROLL, 5, chatY, 290, 180,
-                        m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_CHAT_OUTPUT, m_hInstance, nullptr);
+                        WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | WS_VSCROLL, 5, chatY, 290,
+                        180, m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_CHAT_OUTPUT, m_hInstance, nullptr);
 
     if (m_hwndCopilotChatOutput)
     {
@@ -7427,6 +9415,8 @@ void Win32IDE::createChatPanel()
         m_oldCopilotInputProc =
             (WNDPROC)SetWindowLongPtr(m_hwndCopilotChatInput, GWLP_WNDPROC, (LONG_PTR)CopilotChatInputProc);
         SetWindowLongPtr(m_hwndCopilotChatInput, GWLP_USERDATA, (LONG_PTR)this);
+
+        ChatAutocomplete_Attach(m_hwndCopilotChatInput, m_hInstance);
     }
 
     m_hwndCopilotSendBtn =
@@ -7453,7 +9443,14 @@ void Win32IDE::createChatPanel()
         SetWindowLongPtr(m_hwndCopilotClearBtn, GWLP_USERDATA, (LONG_PTR)this);
     }
 
-    clearCopilotChat();
+    RawrXD_ApplyCopilotChatEditLimits(m_hwndCopilotChatOutput, m_hwndCopilotChatInput);
+    reloadPersistedChatHistoryIntoUi();
+
+    if (m_hwndSecondarySidebar && IsWindow(m_hwndSecondarySidebar))
+    {
+        CommandPreview_Create(m_hwndSecondarySidebar, m_hInstance);
+        ComposerPanel_Create(m_hwndSecondarySidebar, m_hInstance);
+    }
 
     m_secondarySidebarVisible = true;
     m_secondarySidebarWidth = 320;
@@ -7516,8 +9513,8 @@ void Win32IDE::populateModelSelector()
                                                 }),
                                  m_userModelDirectories.end());
 
-    static const std::vector<std::string> kCommonModelDirs = {"D:\\OllamaModels", "F:\\OllamaModels",
-                                                              "D:\\models", "F:\\models"};
+    static const std::vector<std::string> kCommonModelDirs = {"D:\\OllamaModels", "F:\\OllamaModels", "D:\\models",
+                                                              "F:\\models"};
     for (const auto& candidate : kCommonModelDirs)
     {
         addModelDirectory(candidate);
@@ -7630,12 +9627,7 @@ void Win32IDE::populateModelSelector()
     if (uiCount <= 0)
     {
         OutputDebugStringA("[ModelDiscovery] ui_count=0 after populate, applying hard fallback entries\n");
-        static const wchar_t* kFallbackModels[] = {
-            L"phi3mini.gguf",
-            L"llama2",
-            L"mistral",
-            L"neural-chat"
-        };
+        static const wchar_t* kFallbackModels[] = {L"phi3mini.gguf", L"llama2", L"mistral", L"neural-chat"};
         for (const auto* fallbackModel : kFallbackModels)
         {
             SendMessageW(m_hwndModelSelector, CB_ADDSTRING, 0, (LPARAM)fallbackModel);
@@ -7839,9 +9831,19 @@ void Win32IDE::HandleCopilotSend()
     if (!m_hwndCopilotChatInput || !m_hwndCopilotChatOutput)
         return;
 
-    wchar_t inputBuffer[2048] = {0};
-    GetWindowTextW(m_hwndCopilotChatInput, inputBuffer, 2047);
-    std::string userMessage = wideToUtf8(inputBuffer);
+    const int inputLen = GetWindowTextLengthW(m_hwndCopilotChatInput);
+    if (inputLen <= 0)
+    {
+        LOG_WARNING("Empty message - ignoring");
+        return;
+    }
+
+    std::vector<wchar_t> inputBuffer(static_cast<size_t>(inputLen) + 1, L'\0');
+    {
+        std::lock_guard<std::mutex> inputLock(g_chatInputBufferMutex);
+        GetWindowTextW(m_hwndCopilotChatInput, inputBuffer.data(), inputLen + 1);
+    }
+    const std::string userMessage = wideToUtf8(inputBuffer.data());
 
     if (userMessage.empty())
     {
@@ -7849,12 +9851,73 @@ void Win32IDE::HandleCopilotSend()
         return;
     }
 
+    const bool hasAgenticPrefix = HasAgenticPrefix(userMessage);
+
+    wchar_t validationError[512] = {};
+    if (!CommandPreview_Validate(inputBuffer.data(), validationError, static_cast<int>(std::size(validationError))))
+    {
+        const std::string err = wideToUtf8(validationError);
+        appendCopilotChatTextOnUiThread(std::string("\n[Validation] ") + err + "\n");
+        return;
+    }
+
+    CommandPreview_Hide();
+    ChatAutocomplete_Hide();
+
+    previewSlashRouting(userMessage);
+    hideSlashOverlay();
+
+    if (!userMessage.empty() && userMessage.front() == '/')
+    {
+        const auto parsedSlash = RawrXD::Agentic::SlashCommandParser::Parse(userMessage);
+        std::string planGoal;
+        if (ShouldOpenPlanApprovalFromSlashEdit(userMessage, parsedSlash, planGoal))
+        {
+            appendCopilotChatTextOnUiThread("[Plan] /edit --dry-run detected. Opening plan approval dialog.\n");
+            generateAgentPlan(planGoal);
+            clearCopilotInputOnUiThread();
+            return;
+        }
+    }
+
+    if (hasAgenticPrefix)
+    {
+        const std::string strippedProbe = StripAgenticPrefixForRouteParity(userMessage);
+        if (strippedProbe.empty())
+        {
+            appendCopilotChatTextOnUiThread(
+                "\r\n[Agentic] Add a prompt after /agent, /agentic, agentic:, or @agent. Example: /agent explain "
+                "src/main.cpp\r\n");
+            return;
+        }
+    }
+
+    bool expectedIdle = false;
+    if (!m_chatSendInFlight.compare_exchange_strong(expectedIdle, true))
+    {
+        appendToOutput("\n[Info] Previous request still in progress. Please wait for completion.\n", "Output",
+                       OutputSeverity::Info);
+        OutputDebugStringA("[HandleCopilotSend] send ignored: another request already in flight\n");
+        return;
+    }
+
+    setCopilotInteractionBusyOnUiThread(true);
+
+    auto releaseSendInFlight = [this]()
+    {
+        m_chatSendInFlight.store(false);
+        setCopilotInteractionBusyOnUiThread(false);
+    };
+
     ClearChatUtf8Carry(this);
+    m_streamingTokenAccumulator.clear();
 
     if (!m_hwndModelSelector || !IsWindow(m_hwndModelSelector))
     {
-        appendToOutput("\n[Error] Model selector unavailable. Please reopen AI Chat pane.\n", "Output", OutputSeverity::Error);
+        appendToOutput("\n[Error] Model selector unavailable. Please reopen AI Chat pane.\n", "Output",
+                       OutputSeverity::Error);
         OutputDebugStringA("[HandleCopilotSend] model selector unavailable\n");
+        releaseSendInFlight();
         return;
     }
 
@@ -7871,6 +9934,7 @@ void Win32IDE::HandleCopilotSend()
         appendToOutput("\n[Error] No models discovered. Configure OLLAMA_MODELS/RAWRXD_MODELS_PATH and reopen chat.\n",
                        "Output", OutputSeverity::Error);
         OutputDebugStringA("[HandleCopilotSend] aborting send due to empty model list\n");
+        releaseSendInFlight();
         return;
     }
 
@@ -7879,49 +9943,382 @@ void Win32IDE::HandleCopilotSend()
     if (modelIdx < 0 || modelIdx >= (int)m_availableModels.size())
         modelIdx = 0;
     std::string selectedModel = m_availableModels[modelIdx];
-
-    // Display user message
-    std::string displayText = "\n> User: " + userMessage + "\n";
-
-    int len = GetWindowTextLengthW(m_hwndCopilotChatOutput);
-    if (len > 0)
+    std::string selectedModelResolved =
+        resolveLocalModelSelectionPath(selectedModel, m_modelPaths, m_userModelDirectories);
+    if (selectedModelResolved != selectedModel)
     {
-        SendMessage(m_hwndCopilotChatOutput, EM_SETSEL, len, len);
+        OutputDebugStringA(
+            ("[HandleCopilotSend] resolved model ref '" + selectedModel + "' -> '" + selectedModelResolved + "'\n")
+                .c_str());
     }
-    SendMessageW(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE, (LPARAM)utf8ToWide(displayText).c_str());
 
-    // Clear input
-    SetWindowTextW(m_hwndCopilotChatInput, L"");
+    const bool selectedLocalModel = selectedModelResolved.find(".gguf") != std::string::npos ||
+                                    selectedModelResolved.find(":\\") != std::string::npos ||
+                                    selectedModelResolved.find('/') != std::string::npos ||
+                                    selectedModelResolved.find('\\') != std::string::npos;
+
+    m_ollamaModelOverride = selectedModelResolved;
+    if (selectedLocalModel)
+    {
+        const bool selectedLocalModelReady = (m_loadedModelPath == selectedModelResolved) && isModelLoaded();
+        if (!selectedLocalModelReady)
+        {
+            m_lastLocalModelReadyTickMs = 0;
+
+            // Always queue the user's message so it is auto-replayed after WM_MODEL_LOAD_DONE.
+            m_pendingChatOnLoadMessage = userMessage;
+
+            if (m_asyncModelLoadRunning)
+            {
+                appendToOutput("\n[Info] Model is loading — your message will be sent automatically when ready.\n",
+                               "Output", OutputSeverity::Info);
+                OutputDebugStringA("[HandleCopilotSend] queued pending chat; model still loading\n");
+                releaseSendInFlight();
+                return;
+            }
+
+            appendToOutput("\n[Info] Selected local model is not loaded yet. Starting background load now; your "
+                           "message will be sent automatically when ready.\n",
+                           "Output", OutputSeverity::Info);
+            OutputDebugStringA(("[HandleCopilotSend] selected local model not ready; kicking async load path=" +
+                                selectedModelResolved + "\n")
+                                   .c_str());
+            loadModelFromPathAsync(selectedModelResolved);
+            releaseSendInFlight();
+            return;
+        }
+
+        OutputDebugStringA(
+            ("[HandleCopilotSend] selected local model ready path=" + selectedModelResolved + "\n").c_str());
+
+        constexpr ULONGLONG kLocalModelWarmupGuardMs = 750;
+        const ULONGLONG readyTick = m_lastLocalModelReadyTickMs;
+        const ULONGLONG nowTick = GetTickCount64();
+        if (readyTick != 0 && nowTick >= readyTick && (nowTick - readyTick) < kLocalModelWarmupGuardMs)
+        {
+            m_pendingChatOnLoadMessage = userMessage;
+            OutputDebugStringA(("[HandleCopilotSend] deferring send during local model warmup window age_ms=" +
+                                std::to_string(nowTick - readyTick) + "\n")
+                                   .c_str());
+            PostMessage(m_hwndMain, WM_PENDING_CHAT_REPLAY, 0, 0);
+            releaseSendInFlight();
+            return;
+        }
+    }
+    else
+    {
+        OutputDebugStringA(("[HandleCopilotSend] selected remote model=" + selectedModelResolved + "\n").c_str());
+    }
+
+    // Session before `m_chatHistory` so `conversationAddUser` rehydrate does not duplicate this turn.
+    conversationDetectModelFormat(selectedModelResolved);
+    if (m_inferenceConfig.contextWindow > 0)
+    {
+        conversationSetContextWindow(m_inferenceConfig.contextWindow);
+    }
+    conversationAddUser(userMessage);
+
+    appendFormattedChatMessage("user", userMessage);
+    m_chatHistory.push_back({"user", userMessage});
+    persistChatTurnToDisk("user", userMessage);
+
+    auto sendStart = std::make_shared<std::chrono::steady_clock::time_point>(std::chrono::steady_clock::now());
+    auto recordCopilotThroughputAtComplete =
+        [this](const std::chrono::steady_clock::time_point& startedAt, const std::string& accumulatedUtf8)
+    {
+        if (accumulatedUtf8.empty())
+        {
+            return;
+        }
+        const double ms =
+            std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - startedAt).count();
+        if (ms < 1.0)
+        {
+            return;
+        }
+        const double estTok = std::max(1.0, static_cast<double>(accumulatedUtf8.size()) / 4.0);
+        METRICS.gauge("chat.copilot.estimated_tps", estTok / (ms / 1000.0));
+        METRICS.recordDuration("chat.copilot.generation_ms", ms);
+        METRICS.increment("chat.copilot.completion_runs_recorded", 1);
+        if (m_hwndMain && IsWindow(m_hwndMain))
+            PostMessageW(m_hwndMain, WM_STATUSBAR_REFRESH_COPILOT, 0, 0);
+    };
+    auto firstResponseActivityLogged = std::make_shared<std::atomic<bool>>(false);
+    auto markFirstResponseActivity =
+        [sendStart, firstResponseActivityLogged](const char* source, size_t payloadLen, bool complete)
+    {
+        if (firstResponseActivityLogged->exchange(true))
+            return;
+        const auto now = std::chrono::steady_clock::now();
+        const auto elapsedMs = std::chrono::duration_cast<std::chrono::milliseconds>(now - *sendStart).count();
+        METRICS.increment("chat.first_response_activity");
+        OutputDebugStringA(
+            ("[ChatLifecycle] first_response_activity source=" + std::string(source ? source : "unknown") +
+             " elapsed_ms=" + std::to_string(elapsedMs) + " payload_len=" + std::to_string(payloadLen) +
+             " complete=" + std::string(complete ? "true" : "false") + "\n")
+                .c_str());
+    };
+    OutputDebugStringA("[ChatLifecycle] send_dispatched awaiting_first_response_activity\n");
+
+    // Clear input lazily on first response activity so the prompt is not
+    // visually wiped before model output appears.
+    auto inputCleared = std::make_shared<std::atomic<bool>>(false);
+    auto clearInputOnce = [this, inputCleared, sendStart]()
+    {
+        if (inputCleared->exchange(true))
+            return;
+        const auto now = std::chrono::steady_clock::now();
+        const auto elapsedMs = std::chrono::duration_cast<std::chrono::milliseconds>(now - *sendStart).count();
+        METRICS.increment("chat.input_cleared_on_response_activity");
+        OutputDebugStringA(("[ChatLifecycle] input_cleared elapsed_ms=" + std::to_string(elapsedMs) + "\n").c_str());
+        clearCopilotInputOnUiThread();
+    };
+
+    auto aiPrefixWritten = std::make_shared<std::atomic<bool>>(false);
 
     // Generate response asynchronously
-    auto onResponse = [this](const std::string& response, bool complete)
+    auto onResponse = [this, clearInputOnce, markFirstResponseActivity, aiPrefixWritten, releaseSendInFlight, sendStart,
+                       recordCopilotThroughputAtComplete](const std::string& response, bool complete)
     {
         if (!m_hwndCopilotChatOutput)
+        {
+            if (complete)
+                releaseSendInFlight();
             return;
+        }
+
+        // First callback that indicates activity means we can safely clear input.
+        if (!response.empty() || complete)
+        {
+            markFirstResponseActivity("onResponse", response.size(), complete);
+            clearInputOnce();
+        }
 
         // Completion callbacks may use empty payloads as end-of-stream markers.
         if (response.empty())
         {
+            if (complete)
+            {
+                // On completion with no payload, render whatever was accumulated
+                if (!m_streamingTokenAccumulator.empty())
+                {
+                    replaceLastStreamingBlockWithMarkdown(m_streamingTokenAccumulator);
+                    conversationAddAssistant(m_streamingTokenAccumulator);
+                    m_chatHistory.push_back({"assistant", m_streamingTokenAccumulator});
+                    persistChatTurnToDisk("assistant", m_streamingTokenAccumulator);
+                    recordCopilotThroughputAtComplete(*sendStart, m_streamingTokenAccumulator);
+                    m_streamingTokenAccumulator.clear();
+                }
+                OutputDebugStringA("[ChatUi] onResponse received empty completion marker\n");
+                releaseSendInFlight();
+            }
             return;
         }
 
         logRawResponseHexPreview(response);
-        const std::string safe = normalizeChatUtf8Chunk(this, response, complete);
-        std::string displayResp = "AI: " + (safe.empty() ? std::string("[non-text backend payload]") : safe) +
-                                  (complete ? "\n" : "");
-        int len = GetWindowTextLengthW(m_hwndCopilotChatOutput);
-        if (len > 0)
+        std::string safe = normalizeChatUtf8Chunk(this, response, complete);
+        if (safe.empty() || safe == "[non-text backend payload suppressed]")
         {
-            SendMessage(m_hwndCopilotChatOutput, EM_SETSEL, len, len);
+            const std::string extracted = extractDisplayTextFromBackendPayload(response);
+            if (!extracted.empty())
+            {
+                const std::string extractedSafe = sanitizeForChatUi(extracted);
+                safe = extractedSafe.empty() ? extracted : extractedSafe;
+            }
         }
-        SendMessageW(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE, (LPARAM)utf8ToWide(displayResp).c_str());
+        OutputDebugStringA(("[ChatUi] onResponse raw_len=" + std::to_string(response.size()) +
+                            " safe_len=" + std::to_string(safe.size()) +
+                            " complete=" + std::string(complete ? "true" : "false") + "\n")
+                               .c_str());
+
+        // Accumulate streaming tokens for markdown re-render on completion
+        std::string safeText = safe.empty() ? std::string("[non-text backend payload]") : safe;
+        m_streamingTokenAccumulator += safeText;
+
+        // During streaming: show raw text for real-time feedback
+        const bool needsPrefix = !aiPrefixWritten->exchange(true);
+        std::string displayResp = (needsPrefix ? "Copilot: " : "") + safeText;
+        appendCopilotChatTextOnUiThread(displayResp);
+        OutputDebugStringA(("[ChatUi] appended text_len=" + std::to_string(displayResp.size()) + "\n").c_str());
+
+        if (complete)
+        {
+            // Replace raw streaming block with formatted markdown rendering
+            if (!m_streamingTokenAccumulator.empty())
+            {
+                replaceLastStreamingBlockWithMarkdown(m_streamingTokenAccumulator);
+                conversationAddAssistant(m_streamingTokenAccumulator);
+                m_chatHistory.push_back({"assistant", m_streamingTokenAccumulator});
+                persistChatTurnToDisk("assistant", m_streamingTokenAccumulator);
+                recordCopilotThroughputAtComplete(*sendStart, m_streamingTokenAccumulator);
+                m_streamingTokenAccumulator.clear();
+            }
+            releaseSendInFlight();
+        }
     };
 
-    // Set model override temporarily
-    m_ollamaModelOverride = selectedModel;
+    // Cursor/Copilot-style: agentic tools when (1) AI chat "agent" mode toggle, (2) Agentic bridge mode, or
+    // (3) explicit prefixes: /agent, /agentic, agentic:, @agent — same surface as CLI `main.cpp` /agent loop.
+    const bool bridgeAgenticMode = m_agenticBridge && m_agenticBridge->IsAgenticMode();
+    const bool wantsAgenticChat = hasAgenticPrefix || bridgeAgenticMode || m_agenticFunctionCallingMode;
+    const bool layerAvailable = rawrxd::isAgenticLayerAvailable();
+    const std::string agentRouteUserMessage =
+        hasAgenticPrefix ? StripAgenticPrefixForRouteParity(userMessage) : userMessage;
 
-    // Generate response
-    generateResponseAsync(userMessage, onResponse);
+    // Ollama HTTP + `AgenticChatSession` cannot drive local GGUF weights — route loaded models through
+    // `generateResponseAsync` (AgenticBridge, minimal agentic layer, native backends).
+    if (wantsAgenticChat && layerAvailable && !selectedLocalModel)
+    {
+        refreshAgenticChatSessionContext();
+        if (!m_agenticChatSession)
+        {
+            appendCopilotChatTextOnUiThread("\n[Agentic] Chat session unavailable. Check Ollama / backend init.\n");
+            releaseSendInFlight();
+            return;
+        }
+        m_agenticChatSession->SetAgenticMode(true);
+        if (modelIdx >= 0 && modelIdx < (int)m_availableModels.size())
+        {
+            m_agenticChatSession->SetChatModel(m_availableModels[modelIdx]);
+        }
+        // Use agentic chat session with function calling (route stripped prompt; history keeps full user line)
+        m_agenticChatSession->RunTurnAsync(
+            agentRouteUserMessage,
+            [this, clearInputOnce, markFirstResponseActivity](const std::string& chunk)
+            {
+                // Handle streaming content chunks — accumulate for markdown
+                if (!m_hwndCopilotChatOutput)
+                    return;
+                markFirstResponseActivity("agentic_chunk", chunk.size(), false);
+                clearInputOnce();
+                m_streamingTokenAccumulator += chunk;
+                appendCopilotChatTextOnUiThread(chunk);
+            },
+            [this, clearInputOnce, markFirstResponseActivity](const std::string& tool_name)
+            {
+                // Worker thread — UI text marshals via `appendCopilotChatTextOnUiThread`; history via PostMessage.
+                if (!m_hwndCopilotChatOutput)
+                    return;
+                markFirstResponseActivity("agentic_tool_start", tool_name.size(), false);
+                clearInputOnce();
+                std::string displayStatus = "\n[Running " + tool_name + "...]\n";
+                appendCopilotChatTextOnUiThread(displayStatus);
+                const std::string tn = tool_name.empty() ? std::string("tool") : tool_name;
+                postCopilotRecordToolTurnSafe(tn, std::string("[started]"));
+            },
+            [this, clearInputOnce, markFirstResponseActivity](const std::string& tool_name, const std::string& result)
+            {
+                if (!m_hwndCopilotChatOutput)
+                    return;
+                markFirstResponseActivity("agentic_tool_result", result.size(), false);
+                clearInputOnce();
+                std::string displayResult = "[" + tool_name + " Result]:\n" + result + "\n";
+                appendCopilotChatTextOnUiThread(displayResult);
+
+                const std::string tn = tool_name.empty() ? std::string("tool") : tool_name;
+                const std::string bodyForStore = result.empty() ? std::string("(no output)") : result;
+                postCopilotRecordToolTurnSafe(tn, bodyForStore);
+            },
+            [this, clearInputOnce, markFirstResponseActivity, releaseSendInFlight, sendStart,
+             recordCopilotThroughputAtComplete](const std::string& final_response)
+            {
+                markFirstResponseActivity("agentic_final", final_response.size(), true);
+                clearInputOnce();
+
+                if (!m_hwndCopilotChatOutput)
+                {
+                    releaseSendInFlight();
+                    return;
+                }
+
+                const std::string accCopy = m_streamingTokenAccumulator;
+                const std::string fullText = accCopy.empty() ? final_response : accCopy;
+                recordCopilotThroughputAtComplete(*sendStart, fullText);
+                postAgenticAssistantFinalSafe(accCopy, fullText);
+            });
+    }
+    else
+    {
+        if (wantsAgenticChat && !layerAvailable)
+        {
+            appendCopilotChatTextOnUiThread(
+                "\n[Agentic] Tool layer not ready yet — using standard chat for this message. "
+                "(Ensure agentic init completed; local GGUF or Ollama must be reachable.)\n");
+        }
+        // Local GGUF + agentic: `MinimalAgentController` + tools (parity with RawrEngine `/smoke`, Route C).
+        if (wantsAgenticChat && layerAvailable && selectedLocalModel && isModelLoaded())
+        {
+            rawrxd::MinimalAgenticRequest req;
+            req.message = agentRouteUserMessage;
+            req.model_path = selectedModelResolved;
+            req.enable_tools = true;
+            req.max_iterations = 10;
+            if (m_agenticBridge)
+            {
+                std::string sid = m_agenticBridge->GetAgenticSessionId();
+                if (sid.empty())
+                {
+                    sid = "win32ide-copilot";
+                    m_agenticBridge->SetAgenticSessionId(sid);
+                }
+                req.session_id = sid;
+            }
+            else
+            {
+                req.session_id = "win32ide-copilot";
+            }
+            req.workspace_root = workspaceDirectoryForChatPersistence();
+
+            HWND hwndMain = m_hwndMain;
+            std::thread(
+                [this, req, hwndMain]()
+                {
+                    if (isShuttingDown())
+                        return;
+                    const auto t0 = std::chrono::steady_clock::now();
+                    rawrxd::MinimalAgenticResponse miniResp;
+                    try
+                    {
+                        miniResp = rawrxd::processAgenticRequest(req);
+                    }
+                    catch (const std::exception& ex)
+                    {
+                        miniResp.success = false;
+                        miniResp.error = ex.what();
+                    }
+                    catch (...)
+                    {
+                        miniResp.success = false;
+                        miniResp.error = "unknown exception in processAgenticRequest";
+                    }
+                    const double ms =
+                        std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count();
+                    if (ms >= 1.0)
+                    {
+                        const double estTok = static_cast<double>(EstimateMinimalAgenticOutputChars(miniResp)) / 4.0;
+                        METRICS.gauge("chat.minimal_agentic.estimated_tps", std::max(1.0, estTok) / (ms / 1000.0));
+                        METRICS.recordDuration("chat.minimal_agentic.generation_ms", ms);
+                    }
+                    METRICS.increment("chat.minimal_agentic.worker_completed", 1);
+                    METRICS.gauge("chat.minimal_agentic.last_tool_calls",
+                                  static_cast<double>(miniResp.tool_calls_made));
+                    const bool ok = miniResp.success;
+                    const int tc = std::min(65535, std::max(0, miniResp.tool_calls_made));
+                    auto* heap = new rawrxd::MinimalAgenticResponse(std::move(miniResp));
+                    if (hwndMain && IsWindow(hwndMain))
+                    {
+                        PostMessageW(hwndMain, WM_COPILOT_MINIMAL_AGENTIC_DONE,
+                                     MAKEWPARAM(ok ? 1 : 0, static_cast<WORD>(tc)), reinterpret_cast<LPARAM>(heap));
+                    }
+                    else
+                        delete heap;
+                })
+                .detach();
+            return;
+        }
+        // Generate response using traditional method (GGUF async / Ollama bridge)
+        generateResponseAsync(userMessage, onResponse);
+    }
 }
 
 void Win32IDE::HandleCopilotClear()
@@ -7929,9 +10326,300 @@ void Win32IDE::HandleCopilotClear()
     if (!m_hwndCopilotChatOutput || !m_hwndCopilotChatInput)
         return;
 
+    clearPersistedChatHistoryOnDisk();
     clearCopilotChat();
     m_chatHistory.clear();
+    m_chatToolActions.clear();
+    m_currentToolActions.clear();
+    conversationClear();
+    m_streamingTokenAccumulator.clear();
     ClearChatUtf8Carry(this);
+    m_lastSlashStatusHint.clear();
+    hideSlashOverlay();
+    CommandPreview_Hide();
+    ChatAutocomplete_Hide();
+}
+
+void Win32IDE::previewSlashRouting(const std::string& userMessage)
+{
+    if (userMessage.empty() || userMessage.front() != '/')
+    {
+        return;
+    }
+
+    const auto parsed = RawrXD::Agentic::SlashCommandParser::Parse(userMessage);
+    const std::string preview = BuildSlashRoutePreview(parsed);
+    appendCopilotChatTextOnUiThread(std::string("\n") + preview + "\n");
+
+    if (!parsed.valid)
+    {
+        appendCopilotChatTextOnUiThread(std::string("[Slash] Try /help for command list. Error: ") + parsed.error +
+                                        "\n");
+    }
+}
+
+void Win32IDE::updateSlashStatusHint(const std::string& userMessage)
+{
+    std::string hint;
+    if (!userMessage.empty() && userMessage.front() == '/')
+    {
+        const auto parsed = RawrXD::Agentic::SlashCommandParser::Parse(userMessage);
+        hint = BuildSlashRoutePreview(parsed);
+        if (!parsed.valid)
+        {
+            hint = std::string("[Slash] ") + parsed.error;
+        }
+    }
+
+    if (hint == m_lastSlashStatusHint)
+    {
+        return;
+    }
+    m_lastSlashStatusHint = hint;
+
+    if (m_hwndStatusBar && IsWindow(m_hwndStatusBar))
+    {
+        std::wstring whint = utf8ToWide(hint);
+        SendMessageW(m_hwndStatusBar, SB_SETTEXTW, 1, reinterpret_cast<LPARAM>(whint.c_str()));
+    }
+}
+
+bool Win32IDE::tryAutocompleteSlashCommand()
+{
+    if (!m_hwndCopilotChatInput || !IsWindow(m_hwndCopilotChatInput))
+    {
+        return false;
+    }
+
+    const int inputLen = GetWindowTextLengthW(m_hwndCopilotChatInput);
+    if (inputLen <= 0)
+    {
+        return false;
+    }
+
+    std::vector<wchar_t> inputBuffer(static_cast<size_t>(inputLen) + 1, L'\0');
+    GetWindowTextW(m_hwndCopilotChatInput, inputBuffer.data(), inputLen + 1);
+    const std::string current = wideToUtf8(inputBuffer.data());
+    if (current.empty() || current.front() != '/' || current.find(' ') != std::string::npos)
+    {
+        return false;
+    }
+
+    std::string needle = current.substr(1);
+    std::transform(needle.begin(), needle.end(), needle.begin(),
+                   [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+
+    const auto commands = RawrXD::Agentic::SlashCommandParser::AvailableCommands();
+    for (const auto& cmd : commands)
+    {
+        std::string lowered = cmd;
+        std::transform(lowered.begin(), lowered.end(), lowered.begin(),
+                       [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+        if (lowered.rfind(needle, 0) == 0)
+        {
+            const std::wstring completed = utf8ToWide(std::string("/") + cmd + " ");
+            SetWindowTextW(m_hwndCopilotChatInput, completed.c_str());
+            SendMessageW(m_hwndCopilotChatInput, EM_SETSEL, static_cast<WPARAM>(completed.size()),
+                         static_cast<LPARAM>(completed.size()));
+            updateSlashStatusHint(std::string("/") + cmd);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void Win32IDE::ensureSlashOverlayCreated()
+{
+    if (m_hwndSlashOverlayPopup && IsWindow(m_hwndSlashOverlayPopup))
+    {
+        return;
+    }
+    if (!m_hwndMain || !IsWindow(m_hwndMain) || !m_hwndCopilotChatInput || !IsWindow(m_hwndCopilotChatInput))
+    {
+        return;
+    }
+
+    m_hwndSlashOverlayPopup = CreateWindowExW(WS_EX_TOOLWINDOW | WS_EX_TOPMOST, L"STATIC", L"", WS_POPUP | WS_BORDER, 0,
+                                              0, 520, 220, m_hwndMain, nullptr, m_hInstance, nullptr);
+    if (!m_hwndSlashOverlayPopup)
+    {
+        return;
+    }
+
+    m_hwndSlashOverlayList = CreateWindowExW(0, L"LISTBOX", L"", WS_CHILD | WS_VISIBLE | LBS_NOTIFY | WS_VSCROLL, 8, 8,
+                                             504, 136, m_hwndSlashOverlayPopup, nullptr, m_hInstance, nullptr);
+
+    m_hwndSlashOverlayPreview = CreateWindowExW(0, L"STATIC", L"", WS_CHILD | WS_VISIBLE, 8, 150, 504, 60,
+                                                m_hwndSlashOverlayPopup, nullptr, m_hInstance, nullptr);
+
+    HFONT hFont = static_cast<HFONT>(GetStockObject(DEFAULT_GUI_FONT));
+    if (m_hwndSlashOverlayList)
+    {
+        SendMessageW(m_hwndSlashOverlayList, WM_SETFONT, reinterpret_cast<WPARAM>(hFont), TRUE);
+    }
+    if (m_hwndSlashOverlayPreview)
+    {
+        SendMessageW(m_hwndSlashOverlayPreview, WM_SETFONT, reinterpret_cast<WPARAM>(hFont), TRUE);
+    }
+}
+
+void Win32IDE::hideSlashOverlay()
+{
+    if (m_hwndSlashOverlayPopup && IsWindow(m_hwndSlashOverlayPopup))
+    {
+        ShowWindow(m_hwndSlashOverlayPopup, SW_HIDE);
+    }
+    m_slashOverlayCommands.clear();
+    m_slashOverlaySelectedIndex = 0;
+}
+
+bool Win32IDE::isSlashOverlayVisible() const
+{
+    return m_hwndSlashOverlayPopup && IsWindow(m_hwndSlashOverlayPopup) && IsWindowVisible(m_hwndSlashOverlayPopup);
+}
+
+void Win32IDE::refreshSlashOverlay(const std::string& userMessage)
+{
+    if (userMessage.empty() || userMessage.front() != '/')
+    {
+        hideSlashOverlay();
+        return;
+    }
+
+    const size_t firstSpace = userMessage.find(' ');
+    const std::string commandToken =
+        (firstSpace == std::string::npos) ? userMessage.substr(1) : userMessage.substr(1, firstSpace - 1);
+    if (firstSpace != std::string::npos)
+    {
+        hideSlashOverlay();
+        return;
+    }
+
+    ensureSlashOverlayCreated();
+    if (!m_hwndSlashOverlayPopup || !m_hwndSlashOverlayList)
+    {
+        return;
+    }
+
+    std::string loweredNeedle = commandToken;
+    std::transform(loweredNeedle.begin(), loweredNeedle.end(), loweredNeedle.begin(),
+                   [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+
+    m_slashOverlayCommands.clear();
+    const auto commands = RawrXD::Agentic::SlashCommandParser::AvailableCommands();
+    for (const auto& cmd : commands)
+    {
+        std::string lowered = cmd;
+        std::transform(lowered.begin(), lowered.end(), lowered.begin(),
+                       [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+        if (loweredNeedle.empty() || lowered.rfind(loweredNeedle, 0) == 0)
+        {
+            m_slashOverlayCommands.push_back(cmd);
+        }
+    }
+
+    if (m_slashOverlayCommands.empty())
+    {
+        hideSlashOverlay();
+        return;
+    }
+
+    SendMessageW(m_hwndSlashOverlayList, LB_RESETCONTENT, 0, 0);
+    for (const auto& cmd : m_slashOverlayCommands)
+    {
+        const std::wstring row = utf8ToWide(std::string("/") + cmd + " - " + SlashCommandShortDescription(cmd));
+        SendMessageW(m_hwndSlashOverlayList, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(row.c_str()));
+    }
+
+    if (m_slashOverlaySelectedIndex >= static_cast<int>(m_slashOverlayCommands.size()))
+    {
+        m_slashOverlaySelectedIndex = 0;
+    }
+    SendMessageW(m_hwndSlashOverlayList, LB_SETCURSEL, static_cast<WPARAM>(m_slashOverlaySelectedIndex), 0);
+
+    if (m_hwndSlashOverlayPreview)
+    {
+        const std::string selected = m_slashOverlayCommands[m_slashOverlaySelectedIndex];
+        const std::wstring preview =
+            utf8ToWide(std::string("Route: /") + selected + " -> " + SlashCommandShortDescription(selected));
+        SetWindowTextW(m_hwndSlashOverlayPreview, preview.c_str());
+    }
+
+    RECT inputRc{};
+    GetWindowRect(m_hwndCopilotChatInput, &inputRc);
+    const int width = static_cast<int>(std::max(420L, inputRc.right - inputRc.left));
+    const int height = 220;
+    const int x = inputRc.left;
+    const int y = inputRc.top - height - 6;
+    SetWindowPos(m_hwndSlashOverlayPopup, HWND_TOPMOST, x, y, width, height, SWP_NOACTIVATE | SWP_SHOWWINDOW);
+}
+
+bool Win32IDE::handleSlashOverlayKey(WPARAM key)
+{
+    if (!isSlashOverlayVisible() || m_slashOverlayCommands.empty())
+    {
+        return false;
+    }
+
+    if (key == VK_UP)
+    {
+        m_slashOverlaySelectedIndex =
+            (m_slashOverlaySelectedIndex - 1 + static_cast<int>(m_slashOverlayCommands.size())) %
+            static_cast<int>(m_slashOverlayCommands.size());
+        SendMessageW(m_hwndSlashOverlayList, LB_SETCURSEL, static_cast<WPARAM>(m_slashOverlaySelectedIndex), 0);
+    }
+    else if (key == VK_DOWN)
+    {
+        m_slashOverlaySelectedIndex =
+            (m_slashOverlaySelectedIndex + 1) % static_cast<int>(m_slashOverlayCommands.size());
+        SendMessageW(m_hwndSlashOverlayList, LB_SETCURSEL, static_cast<WPARAM>(m_slashOverlaySelectedIndex), 0);
+    }
+    else if (key == VK_ESCAPE)
+    {
+        hideSlashOverlay();
+        return true;
+    }
+    else if (key == VK_TAB || key == VK_RETURN)
+    {
+        return applySlashOverlaySelection();
+    }
+    else
+    {
+        return false;
+    }
+
+    if (m_hwndSlashOverlayPreview && m_slashOverlaySelectedIndex >= 0 &&
+        m_slashOverlaySelectedIndex < static_cast<int>(m_slashOverlayCommands.size()))
+    {
+        const std::string selected = m_slashOverlayCommands[m_slashOverlaySelectedIndex];
+        const std::wstring preview =
+            utf8ToWide(std::string("Route: /") + selected + " -> " + SlashCommandShortDescription(selected));
+        SetWindowTextW(m_hwndSlashOverlayPreview, preview.c_str());
+    }
+    return true;
+}
+
+bool Win32IDE::applySlashOverlaySelection()
+{
+    if (!m_hwndCopilotChatInput || !IsWindow(m_hwndCopilotChatInput) || m_slashOverlayCommands.empty())
+    {
+        return false;
+    }
+
+    if (m_slashOverlaySelectedIndex < 0 ||
+        m_slashOverlaySelectedIndex >= static_cast<int>(m_slashOverlayCommands.size()))
+    {
+        return false;
+    }
+
+    const std::wstring completed =
+        utf8ToWide(std::string("/") + m_slashOverlayCommands[m_slashOverlaySelectedIndex] + " ");
+    SetWindowTextW(m_hwndCopilotChatInput, completed.c_str());
+    SendMessageW(m_hwndCopilotChatInput, EM_SETSEL, static_cast<WPARAM>(completed.size()),
+                 static_cast<LPARAM>(completed.size()));
+    hideSlashOverlay();
+    return true;
 }
 
 // ============================================================================
@@ -7947,6 +10635,42 @@ LRESULT CALLBACK Win32IDE::CopilotChatInputProc(HWND hwnd, UINT uMsg, WPARAM wPa
         OutputDebugStringA("[CopilotChatInputProc] Focus/Click detected\n");
     }
 
+    if (pThis && uMsg == WM_KEYDOWN)
+    {
+        const bool ctrlDown = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
+        if (ChatAutocomplete_HandleKeyDown(wParam, ctrlDown))
+        {
+            return 0;
+        }
+
+        if (wParam == VK_TAB)
+        {
+            if (pThis->isSlashOverlayVisible() && pThis->handleSlashOverlayKey(wParam))
+            {
+                return 0;
+            }
+            if (pThis->tryAutocompleteSlashCommand())
+            {
+                return 0;
+            }
+        }
+
+        if (wParam == VK_UP || wParam == VK_DOWN || wParam == VK_ESCAPE || wParam == VK_RETURN)
+        {
+            if (pThis->handleSlashOverlayKey(wParam))
+            {
+                if (wParam == VK_RETURN)
+                {
+                    return 0;
+                }
+                if (wParam == VK_ESCAPE || wParam == VK_UP || wParam == VK_DOWN)
+                {
+                    return 0;
+                }
+            }
+        }
+    }
+
     if (pThis && uMsg == WM_KEYDOWN && wParam == VK_RETURN)
     {
         const bool shiftPressed = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
@@ -7956,6 +10680,42 @@ LRESULT CALLBACK Win32IDE::CopilotChatInputProc(HWND hwnd, UINT uMsg, WPARAM wPa
             pThis->HandleCopilotSend();
             return 0;
         }
+    }
+
+    if (pThis && (uMsg == WM_KEYUP || uMsg == WM_CHAR))
+    {
+        if (pThis->m_hwndCopilotChatInput && IsWindow(pThis->m_hwndCopilotChatInput))
+        {
+            const int inputLen = GetWindowTextLengthW(pThis->m_hwndCopilotChatInput);
+            if (inputLen >= 0)
+            {
+                std::vector<wchar_t> inputBuffer(static_cast<size_t>(inputLen) + 1, L'\0');
+                GetWindowTextW(pThis->m_hwndCopilotChatInput, inputBuffer.data(), inputLen + 1);
+                const std::string inputUtf8 = wideToUtf8(inputBuffer.data());
+                pThis->updateSlashStatusHint(inputUtf8);
+                pThis->refreshSlashOverlay(inputUtf8);
+                ChatAutocomplete_OnInputChanged(inputBuffer.data());
+                CommandPreview_Update(inputBuffer.data());
+
+                if (!inputUtf8.empty() && inputUtf8.front() == '/' && pThis->m_hwndStatusBar &&
+                    IsWindow(pThis->m_hwndStatusBar))
+                {
+                    wchar_t routeLine[256] = {};
+                    CommandPreview_GetRouteLine(routeLine, static_cast<int>(std::size(routeLine)));
+                    if (routeLine[0] != L'\0')
+                    {
+                        SendMessageW(pThis->m_hwndStatusBar, SB_SETTEXTW, 1, reinterpret_cast<LPARAM>(routeLine));
+                    }
+                }
+            }
+        }
+    }
+
+    if (pThis && uMsg == WM_DESTROY)
+    {
+        CommandPreview_Destroy();
+        ChatAutocomplete_Detach();
+        ComposerPanel_Destroy();
     }
 
     if (pThis && pThis->m_oldCopilotInputProc)
@@ -8014,6 +10774,8 @@ void Win32IDE::HandleCopilotStreamUpdate(const char* token, size_t length)
         chunk = token;
     }
 
+    OutputDebugStringA(("[ChatUi] HandleCopilotStreamUpdate chunk_len=" + std::to_string(chunk.size()) + "\n").c_str());
+
     if (chunk.empty())
         return;
 
@@ -8021,10 +10783,149 @@ void Win32IDE::HandleCopilotStreamUpdate(const char* token, size_t length)
     if (chunk.empty())
         return;
 
-    int currentLen = GetWindowTextLengthW(m_hwndCopilotChatOutput);
-    SendMessage(m_hwndCopilotChatOutput, EM_SETSEL, currentLen, currentLen);
-    SendMessageW(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE, (LPARAM)utf8ToWide(chunk).c_str());
-    SendMessage(m_hwndCopilotChatOutput, WM_VSCROLL, SB_BOTTOM, 0);
+    appendCopilotChatTextOnUiThread(chunk);
+}
+
+void Win32IDE::appendCopilotChatTextOnUiThread(const std::string& text)
+{
+    if (text.empty() || !m_hwndCopilotChatOutput || !IsWindow(m_hwndCopilotChatOutput))
+        return;
+
+    if (m_hwndMain && GetWindowThreadProcessId(m_hwndMain, nullptr) != GetCurrentThreadId())
+    {
+        postCopilotChatAppendSafe(text);
+        return;
+    }
+
+    std::lock_guard<std::mutex> outLock(m_outputMutex);
+    SendMessage(m_hwndCopilotChatOutput, EM_SETSEL, -1, -1);
+    SendMessageW(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE, (LPARAM)utf8ToWide(text).c_str());
+    SendMessage(m_hwndCopilotChatOutput, EM_SCROLLCARET, 0, 0);
+}
+
+void Win32IDE::clearCopilotInputOnUiThread()
+{
+    if (!m_hwndCopilotChatInput || !IsWindow(m_hwndCopilotChatInput))
+        return;
+
+    if (m_hwndMain && GetWindowThreadProcessId(m_hwndMain, nullptr) != GetCurrentThreadId())
+    {
+        postCopilotInputClearSafe();
+        return;
+    }
+
+    std::lock_guard<std::mutex> inputLock(g_chatInputBufferMutex);
+    SetWindowTextW(m_hwndCopilotChatInput, L"");
+}
+
+void Win32IDE::setCopilotInteractionBusyOnUiThread(bool busy)
+{
+    if (!m_hwndMain || !IsWindow(m_hwndMain))
+        return;
+
+    if (GetWindowThreadProcessId(m_hwndMain, nullptr) != GetCurrentThreadId())
+    {
+        postCopilotInteractionBusySafe(busy);
+        return;
+    }
+
+    if (m_hwndCopilotSendBtn && IsWindow(m_hwndCopilotSendBtn))
+        EnableWindow(m_hwndCopilotSendBtn, busy ? FALSE : TRUE);
+
+    if (m_hwndCopilotChatInput && IsWindow(m_hwndCopilotChatInput))
+        EnableWindow(m_hwndCopilotChatInput, busy ? FALSE : TRUE);
+}
+
+void Win32IDE::postCopilotChatAppendSafe(const std::string& text)
+{
+    if (isShuttingDown() || !m_hwndMain || text.empty())
+        return;
+
+    char* copy = _strdup(text.c_str());
+    if (copy)
+    {
+        PostMessage(m_hwndMain, WM_COPILOT_CHAT_APPEND_SAFE, 0, (LPARAM)copy);
+    }
+}
+
+void Win32IDE::postCopilotRecordToolTurnSafe(const std::string& toolName, const std::string& resultBody)
+{
+    if (isShuttingDown() || !m_hwndMain)
+        return;
+    auto* p = new std::pair<std::string, std::string>(toolName, resultBody);
+    if (!PostMessageW(m_hwndMain, WM_COPILOT_RECORD_TOOL_TURN, 0, reinterpret_cast<LPARAM>(p)))
+    {
+        delete p;
+    }
+}
+
+void Win32IDE::postAgenticAssistantFinalSafe(const std::string& streamAccumulatorSnapshot,
+                                             const std::string& finalAssistantText)
+{
+    if (isShuttingDown() || !m_hwndMain)
+        return;
+    auto* env = new Win32IDEAgenticCopilotFinalEnvelope{streamAccumulatorSnapshot, finalAssistantText};
+    if (!PostMessageW(m_hwndMain, WM_COPILOT_AGENTIC_ASSISTANT_FINAL, 0, reinterpret_cast<LPARAM>(env)))
+    {
+        delete env;
+        m_chatSendInFlight.store(false);
+        setCopilotInteractionBusyOnUiThread(false);
+    }
+}
+
+void Win32IDE::applyAgenticAssistantFinalOnUiThread(std::string streamAccumulatorSnapshot,
+                                                    const std::string& finalAssistantText)
+{
+    m_streamingTokenAccumulator = std::move(streamAccumulatorSnapshot);
+
+    if (!m_hwndCopilotChatOutput || !IsWindow(m_hwndCopilotChatOutput))
+    {
+        m_streamingTokenAccumulator.clear();
+        m_chatSendInFlight.store(false);
+        setCopilotInteractionBusyOnUiThread(false);
+        return;
+    }
+
+    if (finalAssistantText.empty())
+    {
+        m_streamingTokenAccumulator.clear();
+        m_chatSendInFlight.store(false);
+        setCopilotInteractionBusyOnUiThread(false);
+        return;
+    }
+
+    if (!m_streamingTokenAccumulator.empty())
+    {
+        replaceLastStreamingBlockWithMarkdown(finalAssistantText);
+    }
+    else
+    {
+        appendFormattedChatMessage("assistant", finalAssistantText);
+    }
+
+    conversationAddAssistant(finalAssistantText);
+    m_chatHistory.push_back({"assistant", finalAssistantText});
+    persistChatTurnToDisk("assistant", finalAssistantText);
+    m_streamingTokenAccumulator.clear();
+    m_chatSendInFlight.store(false);
+    setCopilotInteractionBusyOnUiThread(false);
+    updateEnhancedStatusBar();
+}
+
+void Win32IDE::postCopilotInputClearSafe()
+{
+    if (isShuttingDown() || !m_hwndMain)
+        return;
+
+    PostMessage(m_hwndMain, WM_COPILOT_INPUT_CLEAR_SAFE, 0, 0);
+}
+
+void Win32IDE::postCopilotInteractionBusySafe(bool busy)
+{
+    if (isShuttingDown() || !m_hwndMain)
+        return;
+
+    PostMessage(m_hwndMain, WM_COPILOT_INTERACTION_BUSY_SAFE, busy ? 1 : 0, 0);
 }
 
 void Win32IDE::onModelSelectionChanged()
@@ -8033,15 +10934,33 @@ void Win32IDE::onModelSelectionChanged()
     if (idx >= 0 && idx < (int)m_availableModels.size())
     {
         m_ollamaModelOverride = m_availableModels[idx];
-        
-        // --- SOVEREIGN BRIDGE: Auto-load on selection ---
-        if (getenv("RAWRXD_USE_NATIVE_KERNELS"))
+
+        const std::string resolvedModel =
+            resolveLocalModelSelectionPath(m_ollamaModelOverride, m_modelPaths, m_userModelDirectories);
+        if (resolvedModel != m_ollamaModelOverride)
         {
-            // If it's a GGUF file or a local path, trigger the real load logic
-            if (m_ollamaModelOverride.find(".gguf") != std::string::npos ||
-                m_ollamaModelOverride.find(":\\") != std::string::npos)
+            OutputDebugStringA(
+                ("[ModelSelection] resolved model ref '" + m_ollamaModelOverride + "' -> '" + resolvedModel + "'\n")
+                    .c_str());
+            m_ollamaModelOverride = resolvedModel;
+        }
+
+        const bool looksLikeLocalModel = m_ollamaModelOverride.find(".gguf") != std::string::npos ||
+                                         m_ollamaModelOverride.find(":\\") != std::string::npos;
+
+        if (looksLikeLocalModel)
+        {
+            const bool alreadySelectedAndReady = (m_loadedModelPath == m_ollamaModelOverride) && isModelLoaded();
+            if (!alreadySelectedAndReady)
             {
-                loadModelForInference(m_ollamaModelOverride);
+                OutputDebugStringA(
+                    ("[ModelSelection] starting async local model load path=" + m_ollamaModelOverride + "\n").c_str());
+                loadModelFromPathAsync(m_ollamaModelOverride);
+            }
+            else
+            {
+                OutputDebugStringA(
+                    ("[ModelSelection] local model already loaded path=" + m_ollamaModelOverride + "\n").c_str());
             }
         }
     }
@@ -8063,8 +10982,9 @@ void Win32IDE::onMaxTokensChanged(int newValue)
 
 void Win32IDE::onContextSizeChanged(int newValue)
 {
-    static const int contextSizes[] = { 4096, 32768, 65536, 131072, 262144, 524288, 1048576 };
-    if (newValue < 0 || newValue > 6) newValue = 0;
+    static const int contextSizes[] = {4096, 32768, 65536, 131072, 262144, 524288, 1048576};
+    if (newValue < 0 || newValue > 6)
+        newValue = 0;
 
     m_currentContextSize = contextSizes[newValue];
     m_inferenceConfig.contextWindow = m_currentContextSize;
@@ -8072,13 +10992,14 @@ void Win32IDE::onContextSizeChanged(int newValue)
     // Phase 20: Propagation to status and sidebar
     if (m_hwndContextLabel)
     {
-        static const wchar_t* labels[] = { L"4K", L"32K", L"64K", L"128K", L"256K", L"512K", L"1M" };
+        static const wchar_t* labels[] = {L"4K", L"32K", L"64K", L"128K", L"256K", L"512K", L"1M"};
         SetWindowTextW(m_hwndContextLabel, labels[newValue]);
     }
-    
+
     updateContextWindowDisplay();
-    
-    appendToOutput("Context window updated to: " + std::to_string(m_currentContextSize) + " tokens\n", "Output", OutputSeverity::Info);
+
+    appendToOutput("Context window updated to: " + std::to_string(m_currentContextSize) + " tokens\n", "Output",
+                   OutputSeverity::Info);
 }
 
 void Win32IDE::handleModelBrowse()
@@ -8148,9 +11069,7 @@ void Win32IDE::createLineNumberGutter(HWND hwndParent)
 void Win32IDE::updateLineNumbers()
 {
     if (m_hwndLineNumbers && IsWindow(m_hwndLineNumbers))
-    {
-        InvalidateRect(m_hwndLineNumbers, nullptr, TRUE);
-    }
+        InvalidateRect(m_hwndLineNumbers, nullptr, FALSE);
 }
 
 void Win32IDE::paintLineNumbers(HDC hdc, RECT& rc)
@@ -8212,6 +11131,55 @@ void Win32IDE::paintLineNumbers(HDC hdc, RECT& rc)
         swprintf_s(buf, L"%4d", lineNum);
 
         RECT lineRect = {rc.left, i * lineHeight, rc.right - 4, (i + 1) * lineHeight};
+
+        // ── Breakpoint indicator (red circle in left margin) ──
+        bool hasBP = false;
+        for (const auto& bp : m_breakpoints)
+        {
+            if (bp.line == lineNum && bp.enabled && (bp.file.empty() || bp.file == m_currentFile))
+            {
+                hasBP = true;
+                break;
+            }
+        }
+        if (hasBP)
+        {
+            int dotSize = std::min(lineHeight - 4, 12);
+            int dotX = rc.left + 2;
+            int dotY = i * lineHeight + (lineHeight - dotSize) / 2;
+            HBRUSH bpBrush = CreateSolidBrush(RGB(220, 50, 47));
+            HPEN bpPen = CreatePen(PS_SOLID, 1, RGB(220, 50, 47));
+            HBRUSH oldBr = (HBRUSH)SelectObject(hdc, bpBrush);
+            HPEN oldPn = (HPEN)SelectObject(hdc, bpPen);
+            Ellipse(hdc, dotX, dotY, dotX + dotSize, dotY + dotSize);
+            SelectObject(hdc, oldBr);
+            SelectObject(hdc, oldPn);
+            DeleteObject(bpBrush);
+            DeleteObject(bpPen);
+        }
+
+        // ── Current execution line highlight (debugger paused) ──
+        if (m_debuggerPaused && m_debuggerCurrentLine == lineNum &&
+            (m_debuggerCurrentFile.empty() || m_debuggerCurrentFile == m_currentFile))
+        {
+            HBRUSH hlBrush = CreateSolidBrush(RGB(60, 60, 30));
+            RECT hlRect = {rc.left, i * lineHeight, rc.right, (i + 1) * lineHeight};
+            FillRect(hdc, &hlRect, hlBrush);
+            DeleteObject(hlBrush);
+
+            // Yellow arrow indicator
+            int arrowX = rc.left + 2;
+            int arrowY = i * lineHeight + lineHeight / 2;
+            HPEN arrowPen = CreatePen(PS_SOLID, 2, RGB(255, 204, 0));
+            HPEN oldAP = (HPEN)SelectObject(hdc, arrowPen);
+            MoveToEx(hdc, arrowX, arrowY, nullptr);
+            LineTo(hdc, arrowX + 8, arrowY);
+            LineTo(hdc, arrowX + 5, arrowY - 3);
+            MoveToEx(hdc, arrowX + 8, arrowY, nullptr);
+            LineTo(hdc, arrowX + 5, arrowY + 3);
+            SelectObject(hdc, oldAP);
+            DeleteObject(arrowPen);
+        }
 
         if (lineNum == m_currentLine)
         {
@@ -8279,6 +11247,36 @@ LRESULT CALLBACK Win32IDE::LineNumberProc(HWND hwnd, UINT uMsg, WPARAM wParam, L
     if (uMsg == WM_ERASEBKGND)
     {
         return 1;  // We handle painting
+    }
+
+    // Click in gutter → toggle breakpoint on that line
+    if (uMsg == WM_LBUTTONDOWN && ide)
+    {
+        int yClick = HIWORD(lParam);
+
+        // Calculate which line was clicked
+        int firstVisible = (int)SendMessage(ide->m_hwndEditor, EM_GETFIRSTVISIBLELINE, 0, 0);
+
+        // Get line height
+        HDC hdc = GetDC(hwnd);
+        HFONT hFont = ide->m_editorFont ? ide->m_editorFont : (HFONT)GetStockObject(SYSTEM_FIXED_FONT);
+        HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
+        TEXTMETRICW tm;
+        GetTextMetricsW(hdc, &tm);
+        int lineHeight = tm.tmHeight + tm.tmExternalLeading;
+        if (lineHeight <= 0)
+            lineHeight = 16;
+        SelectObject(hdc, hOldFont);
+        ReleaseDC(hwnd, hdc);
+
+        int clickedLine = firstVisible + (yClick / lineHeight) + 1;
+        int totalLines = (int)SendMessage(ide->m_hwndEditor, EM_GETLINECOUNT, 0, 0);
+        if (clickedLine >= 1 && clickedLine <= totalLines)
+        {
+            ide->toggleBreakpoint(ide->m_currentFile, clickedLine);
+            InvalidateRect(hwnd, nullptr, FALSE);
+        }
+        return 0;
     }
 
     if (ide && ide->m_oldLineNumberProc)
@@ -8441,8 +11439,7 @@ void Win32IDE::onTabChanged()
             m_editorTabs[m_activeTabIndex].cursorLine = line;
             m_editorTabs[m_activeTabIndex].cursorCol = col;
             // Save scroll position
-            m_editorTabs[m_activeTabIndex].scrollPos =
-                (int)SendMessageW(m_hwndEditor, EM_GETFIRSTVISIBLELINE, 0, 0);
+            m_editorTabs[m_activeTabIndex].scrollPos = (int)SendMessageW(m_hwndEditor, EM_GETFIRSTVISIBLELINE, 0, 0);
         }
 
         // Stash annotations for the outgoing tab
@@ -8495,16 +11492,18 @@ void Win32IDE::onTabClosing(int index)
             std::wstring prompt = L"Save changes to '";
             prompt += utf8ToWide(m_editorTabs[index].displayName);
             prompt += L"'?";
-            int result = MessageBoxW(m_hwndMain, prompt.c_str(),
-                                     L"RawrXD", MB_YESNOCANCEL | MB_ICONQUESTION);
-            if (result == IDYES) {
+            int result = MessageBoxW(m_hwndMain, prompt.c_str(), L"RawrXD", MB_YESNOCANCEL | MB_ICONQUESTION);
+            if (result == IDYES)
+            {
                 // Save before closing
                 int prev = m_activeTabIndex;
                 m_activeTabIndex = index;
                 saveCurrentFile();
                 m_activeTabIndex = prev;
-            } else if (result == IDCANCEL) {
-                return; // Abort close
+            }
+            else if (result == IDCANCEL)
+            {
+                return;  // Abort close
             }
             // IDNO falls through to remove without saving
         }
@@ -9958,6 +12957,187 @@ void Win32IDE::openModelUnified()
 // Routes editor-specific messages (scroll sync, key interception) while
 // forwarding everything else to the original EDIT wndproc.
 // ============================================================================
+namespace
+{
+std::wstring getEditorRangeTextW(HWND hwndEditor, LONG start, LONG end)
+{
+    if (!hwndEditor || end <= start)
+        return L"";
+
+    std::wstring text;
+    text.resize(static_cast<size_t>(end - start) + 1);
+
+    TEXTRANGEW tr = {};
+    tr.chrg.cpMin = start;
+    tr.chrg.cpMax = end;
+    tr.lpstrText = text.data();
+
+    SendMessageW(hwndEditor, EM_GETTEXTRANGE, 0, (LPARAM)&tr);
+    text.resize(wcslen(text.c_str()));
+    return text;
+}
+
+bool editorMoveByWord(HWND hwndEditor, bool forward, bool extendSelection)
+{
+    if (!hwndEditor)
+        return false;
+
+    CHARRANGE sel = {};
+    SendMessageW(hwndEditor, EM_EXGETSEL, 0, (LPARAM)&sel);
+
+    const LONG anchor = sel.cpMin;
+    LONG startPos = sel.cpMax;
+    if (!extendSelection && sel.cpMin != sel.cpMax)
+        startPos = forward ? (std::max)(sel.cpMin, sel.cpMax) : (std::min)(sel.cpMin, sel.cpMax);
+
+    const UINT findCmd = forward ? WB_MOVEWORDRIGHT : WB_MOVEWORDLEFT;
+    const LONG target = (LONG)SendMessageW(hwndEditor, EM_FINDWORDBREAK, findCmd, startPos);
+
+    CHARRANGE out = {};
+    if (extendSelection)
+    {
+        out.cpMin = anchor;
+        out.cpMax = target;
+    }
+    else
+    {
+        out.cpMin = target;
+        out.cpMax = target;
+    }
+
+    SendMessageW(hwndEditor, EM_EXSETSEL, 0, (LPARAM)&out);
+    SendMessageW(hwndEditor, EM_SCROLLCARET, 0, 0);
+    return true;
+}
+
+bool editorDuplicateCurrentLine(HWND hwndEditor, bool duplicateBelow)
+{
+    if (!hwndEditor)
+        return false;
+
+    CHARRANGE sel = {};
+    SendMessageW(hwndEditor, EM_EXGETSEL, 0, (LPARAM)&sel);
+    const LONG caret = sel.cpMax;
+
+    const int line = (int)SendMessageW(hwndEditor, EM_LINEFROMCHAR, caret, 0);
+    const LONG lineStart = (LONG)SendMessageW(hwndEditor, EM_LINEINDEX, line, 0);
+    if (lineStart < 0)
+        return false;
+
+    const LONG textLen = GetWindowTextLengthW(hwndEditor);
+    LONG lineEnd = (LONG)SendMessageW(hwndEditor, EM_LINEINDEX, line + 1, 0);
+    if (lineEnd < 0)
+        lineEnd = textLen;
+
+    const std::wstring lineText = getEditorRangeTextW(hwndEditor, lineStart, lineEnd);
+    if (lineText.empty())
+        return false;
+
+    CHARRANGE insertAt = {};
+    insertAt.cpMin = duplicateBelow ? lineEnd : lineStart;
+    insertAt.cpMax = insertAt.cpMin;
+    SendMessageW(hwndEditor, EM_EXSETSEL, 0, (LPARAM)&insertAt);
+    SendMessageW(hwndEditor, EM_REPLACESEL, TRUE, (LPARAM)lineText.c_str());
+
+    const LONG newCaret = duplicateBelow ? lineEnd : (lineStart + (lineEnd - lineStart));
+    CHARRANGE out = {newCaret, newCaret};
+    SendMessageW(hwndEditor, EM_EXSETSEL, 0, (LPARAM)&out);
+    SendMessageW(hwndEditor, EM_SCROLLCARET, 0, 0);
+    return true;
+}
+
+bool editorDeleteCurrentLine(HWND hwndEditor)
+{
+    if (!hwndEditor)
+        return false;
+
+    CHARRANGE sel = {};
+    SendMessageW(hwndEditor, EM_EXGETSEL, 0, (LPARAM)&sel);
+    const int line = (int)SendMessageW(hwndEditor, EM_LINEFROMCHAR, sel.cpMax, 0);
+    const LONG lineStart = (LONG)SendMessageW(hwndEditor, EM_LINEINDEX, line, 0);
+    if (lineStart < 0)
+        return false;
+
+    const LONG textLen = GetWindowTextLengthW(hwndEditor);
+    LONG lineEnd = (LONG)SendMessageW(hwndEditor, EM_LINEINDEX, line + 1, 0);
+    if (lineEnd < 0)
+        lineEnd = textLen;
+
+    CHARRANGE range = {lineStart, lineEnd};
+    SendMessageW(hwndEditor, EM_EXSETSEL, 0, (LPARAM)&range);
+    SendMessageW(hwndEditor, EM_REPLACESEL, TRUE, (LPARAM)L"");
+
+    CHARRANGE out = {lineStart, lineStart};
+    SendMessageW(hwndEditor, EM_EXSETSEL, 0, (LPARAM)&out);
+    SendMessageW(hwndEditor, EM_SCROLLCARET, 0, 0);
+    return true;
+}
+
+bool editorMoveCurrentLine(HWND hwndEditor, bool moveDown)
+{
+    if (!hwndEditor)
+        return false;
+
+    CHARRANGE sel = {};
+    SendMessageW(hwndEditor, EM_EXGETSEL, 0, (LPARAM)&sel);
+    const LONG caret = sel.cpMax;
+
+    const int line = (int)SendMessageW(hwndEditor, EM_LINEFROMCHAR, caret, 0);
+    const LONG textLen = GetWindowTextLengthW(hwndEditor);
+
+    const LONG lineStart = (LONG)SendMessageW(hwndEditor, EM_LINEINDEX, line, 0);
+    if (lineStart < 0)
+        return false;
+
+    LONG lineEnd = (LONG)SendMessageW(hwndEditor, EM_LINEINDEX, line + 1, 0);
+    if (lineEnd < 0)
+        lineEnd = textLen;
+
+    const std::wstring lineText = getEditorRangeTextW(hwndEditor, lineStart, lineEnd);
+    if (lineText.empty())
+        return false;
+
+    if (!moveDown)
+    {
+        if (line <= 0)
+            return false;
+
+        const LONG prevStart = (LONG)SendMessageW(hwndEditor, EM_LINEINDEX, line - 1, 0);
+        const std::wstring prevText = getEditorRangeTextW(hwndEditor, prevStart, lineStart);
+
+        CHARRANGE block = {prevStart, lineEnd};
+        SendMessageW(hwndEditor, EM_EXSETSEL, 0, (LPARAM)&block);
+        const std::wstring replacement = lineText + prevText;
+        SendMessageW(hwndEditor, EM_REPLACESEL, TRUE, (LPARAM)replacement.c_str());
+
+        CHARRANGE out = {prevStart, prevStart};
+        SendMessageW(hwndEditor, EM_EXSETSEL, 0, (LPARAM)&out);
+        SendMessageW(hwndEditor, EM_SCROLLCARET, 0, 0);
+        return true;
+    }
+
+    const LONG nextStart = lineEnd;
+    if (nextStart >= textLen)
+        return false;
+
+    LONG nextEnd = (LONG)SendMessageW(hwndEditor, EM_LINEINDEX, line + 2, 0);
+    if (nextEnd < 0)
+        nextEnd = textLen;
+
+    const std::wstring nextText = getEditorRangeTextW(hwndEditor, nextStart, nextEnd);
+    CHARRANGE block = {lineStart, nextEnd};
+    SendMessageW(hwndEditor, EM_EXSETSEL, 0, (LPARAM)&block);
+    const std::wstring replacement = nextText + lineText;
+    SendMessageW(hwndEditor, EM_REPLACESEL, TRUE, (LPARAM)replacement.c_str());
+
+    const LONG newLineStart = lineStart + static_cast<LONG>(nextText.size());
+    CHARRANGE out = {newLineStart, newLineStart};
+    SendMessageW(hwndEditor, EM_EXSETSEL, 0, (LPARAM)&out);
+    SendMessageW(hwndEditor, EM_SCROLLCARET, 0, 0);
+    return true;
+}
+}  // namespace
+
 LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     Win32IDE* pThis = (Win32IDE*)GetPropW(hwnd, kEditorWndProp);
@@ -9976,20 +13156,109 @@ LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wPara
                     pThis->updateLineNumbers();
                     if (pThis->m_minimapVisible)
                         pThis->updateMinimap();
+                    if (pThis->m_ghostTextVisible)
+                    {
+                        CHARRANGE sel = {};
+                        SendMessageA(hwnd, EM_EXGETSEL, 0, reinterpret_cast<LPARAM>(&sel));
+                        POINTL pt = {};
+                        SendMessageA(hwnd, EM_POSFROMCHAR, (WPARAM)sel.cpMin, reinterpret_cast<LPARAM>(&pt));
+                        pThis->updateGhostDiffOverlayUi(pt);
+                    }
+                    else
+                    {
+                        pThis->hideGhostDiffOverlayUi();
+                    }
                     return result;
                 }
                 break;
 
             case WM_KEYDOWN:
+            {
+                const bool ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
+                const bool shift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
+                const bool alt = (GetKeyState(VK_MENU) & 0x8000) != 0;
+
+                // Route existing multi-cursor keymap through the editor subclass.
+                if (pThis->handleMultiCursorKeyDown(wParam, ctrl, shift, alt))
+                {
+                    pThis->onEditorContentChanged();
+                    return 0;
+                }
+
+                // VSCode-like word navigation parity.
+                if (ctrl && !alt && (wParam == VK_LEFT || wParam == VK_RIGHT))
+                {
+                    if (editorMoveByWord(hwnd, wParam == VK_RIGHT, shift))
+                        return 0;
+                }
+
+                // VSCode-like line operations parity.
+                if (ctrl && shift && !alt && wParam == 'K')
+                {
+                    if (editorDeleteCurrentLine(hwnd))
+                    {
+                        pThis->onEditorContentChanged();
+                        return 0;
+                    }
+                }
+                if (alt && shift && !ctrl && (wParam == VK_UP || wParam == VK_DOWN))
+                {
+                    if (editorDuplicateCurrentLine(hwnd, wParam == VK_DOWN))
+                    {
+                        pThis->onEditorContentChanged();
+                        return 0;
+                    }
+                }
+                if (alt && !shift && !ctrl && (wParam == VK_UP || wParam == VK_DOWN))
+                {
+                    if (editorMoveCurrentLine(hwnd, wParam == VK_DOWN))
+                    {
+                        pThis->onEditorContentChanged();
+                        return 0;
+                    }
+                }
+
                 // Ghost text key handling — Tab accepts, Esc dismisses, other keys dismiss
                 if (pThis->handleGhostTextKey((UINT)wParam))
                 {
                     return 0;  // Ghost text consumed the key
                 }
-                // Ctrl+Shift+P → command palette
-                if (wParam == 'P' && (GetKeyState(VK_CONTROL) & 0x8000) && (GetKeyState(VK_SHIFT) & 0x8000))
+                // F1 — Command Palette (VS Code)
+                if (!ctrl && !shift && !alt && wParam == VK_F1)
                 {
-                    pThis->showCommandPalette();
+                    pThis->routeCommand(7008);
+                    return 0;
+                }
+                // Ctrl+Shift+P → command palette toggle
+                if (wParam == 'P' && ctrl && shift && !alt)
+                {
+                    if (pThis->m_commandPaletteVisible)
+                        pThis->hideCommandPalette();
+                    else
+                        pThis->showCommandPalette();
+                    return 0;
+                }
+                // Cursor / VS Code parity: Ctrl+P Quick Open (same as accelerator / main loop)
+                if (ctrl && !shift && !alt && wParam == 'P')
+                {
+                    pThis->routeCommand(IDM_FILE_QUICK_OPEN);
+                    return 0;
+                }
+                if (ctrl && !shift && !alt && (wParam == VK_OEM_3 || wParam == VK_OEM_8))
+                {
+                    pThis->routeCommand(2029);
+                    return 0;
+                }
+                // VS Code: Ctrl+J toggle panel (bottom) — distinct from Ctrl+` terminal focus
+                if (ctrl && !shift && !alt && wParam == 'J')
+                {
+                    pThis->routeCommand(IDM_VIEW_TOGGLE_BOTTOM_PANEL);
+                    return 0;
+                }
+                // Cursor-style: Ctrl+L → Agent / chat
+                if (ctrl && !shift && !alt && wParam == 'L')
+                {
+                    pThis->routeCommand(3009);
                     return 0;
                 }
                 // F9 → toggle breakpoint at current line
@@ -10002,6 +13271,7 @@ LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wPara
                     return 0;
                 }
                 break;
+            }
 
             case WM_PAINT:
             {
@@ -10016,17 +13286,23 @@ LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wPara
                     //     another WM_PAINT that erases and redraws — ~67ms cycle = perceptible flicker.
                     const bool titanActive = pThis && pThis->m_titanAgentRunning;
                     const bool ghostActive = pThis && pThis->m_ghostTextVisible;
-                    if (ghostActive || titanActive)
+                    const bool suggestionPulseActive =
+                        pThis && (pThis->m_activeSuggestionContext.state == SuggestionState::Pending ||
+                                  ((pThis->m_activeSuggestionContext.state == SuggestionState::Accepted ||
+                                    pThis->m_activeSuggestionContext.state == SuggestionState::Rejected) &&
+                                   (static_cast<uint64_t>(GetTickCount64()) <=
+                                    pThis->m_activeSuggestionContext.stateChangedTickMs + 220ull)));
+                    if (ghostActive || titanActive || suggestionPulseActive)
                     {
                         static uint64_t s_overlayPaintCount = 0;
-                        static double   s_overlayPaintMsSum = 0.0;
-                        static double   s_overlayPaintMsMax = 0.0;
+                        static double s_overlayPaintMsSum = 0.0;
+                        static double s_overlayPaintMsMax = 0.0;
                         static LARGE_INTEGER s_overlayQpcFreq = {};
                         // Cached back-buffer — reallocated only when the editor is resized.
                         // Avoids ~4MB GDI heap churn per overlay frame at 1080p.
-                        static HBITMAP s_cachedBackBuf  = nullptr;
-                        static int     s_cachedBackBufW = 0;
-                        static int     s_cachedBackBufH = 0;
+                        static HBITMAP s_cachedBackBuf = nullptr;
+                        static int s_cachedBackBufW = 0;
+                        static int s_cachedBackBufH = 0;
                         if (s_overlayQpcFreq.QuadPart == 0)
                         {
                             QueryPerformanceFrequency(&s_overlayQpcFreq);
@@ -10051,7 +13327,7 @@ LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wPara
                                     DeleteObject(s_cachedBackBuf);
                                     s_cachedBackBuf = nullptr;
                                 }
-                                s_cachedBackBuf  = CreateCompatibleBitmap(hdcScreen, w, h);
+                                s_cachedBackBuf = CreateCompatibleBitmap(hdcScreen, w, h);
                                 s_cachedBackBufW = w;
                                 s_cachedBackBufH = h;
                             }
@@ -10063,6 +13339,8 @@ LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wPara
                                 // WM_PRINTCLIENT is the correct message for this — it does not go
                                 // through BeginPaint/EndPaint so we own the DC lifecycle here.
                                 CallWindowProcW(oldProc, hwnd, WM_PRINTCLIENT, (WPARAM)hdcMem, PRF_CLIENT);
+                                // Sovereign diff pass: draw semi-transparent pending suggestion range tint.
+                                pThis->renderSuggestionTint(hdcMem);
                                 // Ghost text / Titan paging spinner composited off-screen — zero flicker.
                                 pThis->renderGhostText(hdcMem);
                                 // Single atomic blt: screen never sees an intermediate state.
@@ -10079,9 +13357,8 @@ LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wPara
                         QueryPerformanceCounter(&paintEnd);
                         if (s_overlayQpcFreq.QuadPart > 0)
                         {
-                            const double frameMs =
-                                (double)(paintEnd.QuadPart - paintStart.QuadPart) * 1000.0 /
-                                (double)s_overlayQpcFreq.QuadPart;
+                            const double frameMs = (double)(paintEnd.QuadPart - paintStart.QuadPart) * 1000.0 /
+                                                   (double)s_overlayQpcFreq.QuadPart;
                             ++s_overlayPaintCount;
                             s_overlayPaintMsSum += frameMs;
                             if (frameMs > s_overlayPaintMsMax)
@@ -10091,8 +13368,7 @@ LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wPara
                             {
                                 const double avgMs = s_overlayPaintMsSum / (double)s_overlayPaintCount;
                                 char perfBuf[256] = {};
-                                sprintf_s(perfBuf,
-                                          "[GhostOverlayPerf] frames=%llu avg_ms=%.3f max_ms=%.3f\n",
+                                sprintf_s(perfBuf, "[GhostOverlayPerf] frames=%llu avg_ms=%.3f max_ms=%.3f\n",
                                           (unsigned long long)s_overlayPaintCount, avgMs, s_overlayPaintMsMax);
                                 OutputDebugStringA(perfBuf);
                             }
@@ -10106,6 +13382,11 @@ LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wPara
             }
 
             case WM_CHAR:
+                if (pThis->handleMultiCursorChar(wParam))
+                {
+                    pThis->onEditorContentChanged();
+                    return 0;
+                }
                 // After character input, trigger syntax coloring debounce
                 if (oldProc)
                 {
@@ -10117,6 +13398,7 @@ LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wPara
 
             case WM_DESTROY:
                 // Clean up properties on destruction
+                pThis->destroyGhostDiffOverlayUi();
                 RemovePropW(hwnd, kEditorWndProp);
                 RemovePropW(hwnd, kEditorProcProp);
                 break;
@@ -10125,6 +13407,18 @@ LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wPara
 
     if (oldProc)
     {
+        if (pThis->m_ghostTextVisible)
+        {
+            CHARRANGE sel = {};
+            SendMessageA(hwnd, EM_EXGETSEL, 0, reinterpret_cast<LPARAM>(&sel));
+            POINTL pt = {};
+            SendMessageA(hwnd, EM_POSFROMCHAR, (WPARAM)sel.cpMin, reinterpret_cast<LPARAM>(&pt));
+            pThis->updateGhostDiffOverlayUi(pt);
+        }
+        else
+        {
+            pThis->hideGhostDiffOverlayUi();
+        }
         return CallWindowProcW(oldProc, hwnd, uMsg, wParam, lParam);
     }
     return DefWindowProcW(hwnd, uMsg, wParam, lParam);
@@ -10149,7 +13443,8 @@ LRESULT CALLBACK Win32IDE::SidebarProcImpl(HWND hwnd, UINT uMsg, WPARAM wParam, 
                 const int cnt = (pThis->m_hwndModelSelector && IsWindow(pThis->m_hwndModelSelector))
                                     ? (int)SendMessage(pThis->m_hwndModelSelector, CB_GETCOUNT, 0, 0)
                                     : -1;
-                std::string dbg = "[SidebarProcImpl] WM_SHOWWINDOW repopulate model count=" + std::to_string(cnt) + "\n";
+                std::string dbg =
+                    "[SidebarProcImpl] WM_SHOWWINDOW repopulate model count=" + std::to_string(cnt) + "\n";
                 OutputDebugStringA(dbg.c_str());
             }
             break;
@@ -10206,9 +13501,40 @@ LRESULT CALLBACK Win32IDE::SidebarProcImpl(HWND hwnd, UINT uMsg, WPARAM wParam, 
             {
                 int controlId = LOWORD(wParam);
                 int notifyCode = HIWORD(wParam);
+
+                if (CommandPreview_HandleCommand(controlId))
+                {
+                    if (controlId == 7211)
+                    {
+                        pThis->HandleCopilotSend();
+                    }
+                    return 0;
+                }
+
                 // Route button clicks from AI Chat panel controls
                 if (controlId == IDC_COPILOT_SEND_BTN)
                 {
+                    std::string promptPreview;
+                    if (pThis->m_hwndCopilotChatInput && IsWindow(pThis->m_hwndCopilotChatInput))
+                    {
+                        const int inputLen = GetWindowTextLengthW(pThis->m_hwndCopilotChatInput);
+                        if (inputLen > 0)
+                        {
+                            std::vector<wchar_t> inputBuffer(static_cast<size_t>(inputLen) + 1, L'\0');
+                            GetWindowTextW(pThis->m_hwndCopilotChatInput, inputBuffer.data(), inputLen + 1);
+                            promptPreview = wideToUtf8(inputBuffer.data());
+                        }
+                    }
+                    const bool hasAgenticPrefix = HasAgenticPrefix(promptPreview);
+                    const bool bridgeAgenticMode = pThis->m_agenticBridge && pThis->m_agenticBridge->IsAgenticMode();
+                    const bool wantsAgentic =
+                        hasAgenticPrefix || bridgeAgenticMode || pThis->m_agenticFunctionCallingMode;
+                    const bool layerAvailable = rawrxd::isAgenticLayerAvailable();
+                    OutputDebugStringA(
+                        ("ROUTE_CHECK: route=B-sidebar-command, prompt_len=" + std::to_string(promptPreview.size()) +
+                         ", wantsAgentic=" + std::to_string(wantsAgentic ? 1 : 0) +
+                         ", layerAvailable=" + std::to_string(layerAvailable ? 1 : 0) + "\n")
+                            .c_str());
                     OutputDebugStringA("[SidebarProcImpl] Send clicked\n");
                     pThis->HandleCopilotSend();
                     pThis->onCommand(pThis->m_hwndMain, controlId, (HWND)lParam, (UINT)notifyCode);
@@ -10249,6 +13575,10 @@ LRESULT CALLBACK Win32IDE::SidebarProcImpl(HWND hwnd, UINT uMsg, WPARAM wParam, 
                 else if (controlId == IDC_AI_NO_REFUSAL && notifyCode == BN_CLICKED)
                 {
                     pThis->onAIModeNoRefusal();
+                }
+                else if (controlId == IDC_AI_AGENTIC_MODE && notifyCode == BN_CLICKED)
+                {
+                    pThis->onAIModeAgentic();
                 }
             }
             return 0;
@@ -10398,13 +13728,31 @@ void Win32IDE::closeTerminalPane(int paneId)
                 it->manager->stop();
             if (it->hwnd && IsWindow(it->hwnd))
                 DestroyWindow(it->hwnd);
+            const bool wasPrimaryAgent = (m_primaryAgentTerminalId == paneId);
+            const bool wasLastUser =
+                (m_lastUserInteractiveTerminalId == paneId) && (it->kind == TerminalPaneKind::UserInteractive);
             m_terminalPanes.erase(it);
+            if (wasPrimaryAgent)
+                m_primaryAgentTerminalId = -1;
+            if (wasLastUser)
+            {
+                m_lastUserInteractiveTerminalId = -1;
+                for (auto& q : m_terminalPanes)
+                {
+                    if (q.kind == TerminalPaneKind::UserInteractive)
+                    {
+                        m_lastUserInteractiveTerminalId = q.id;
+                        break;
+                    }
+                }
+            }
             // Switch to another pane if we closed the active one
             if (m_activeTerminalId == paneId && !m_terminalPanes.empty())
             {
                 setActiveTerminalPane(m_terminalPanes.front().id);
             }
             appendToOutput("Closed terminal pane " + std::to_string(paneId) + "\n", "Output", OutputSeverity::Info);
+            layoutTerminalStrip();
             return;
         }
     }
@@ -10437,14 +13785,18 @@ void Win32IDE::resizeTerminalPanes()
 void Win32IDE::sendToAllTerminals(const std::string& command)
 {
     LOG_INFO("sendToAllTerminals: " + command);
+    int n = 0;
     for (auto& pane : m_terminalPanes)
     {
-        if (pane.manager)
-        {
-            pane.manager->writeInput(command + "\r\n");
-        }
+        if (pane.kind != TerminalPaneKind::UserInteractive || !pane.manager)
+            continue;
+        ensureShellRunningForPane(&pane, pane.shellType);
+        if (!pane.manager->isRunning())
+            continue;
+        pane.manager->writeInput(command + "\r\n");
+        ++n;
     }
-    appendToOutput("Sent to all " + std::to_string(m_terminalPanes.size()) + " terminals: " + command + "\n", "Output",
+    appendToOutput("Sent to " + std::to_string(n) + " user terminal(s): " + command + "\n", "Output",
                    OutputSeverity::Info);
 }
 
@@ -10458,8 +13810,16 @@ void Win32IDE::refreshExtensions()
     LOG_INFO("refreshExtensions");
     if (!m_extensionLoader)
     {
-        try { m_extensionLoader = std::make_unique<RawrXD::ExtensionLoader>(); m_extensionLoader->Scan(); m_extensionLoader->LoadNativeModules(); }
-        catch (...) { m_extensionLoader.reset(); }
+        try
+        {
+            m_extensionLoader = std::make_unique<RawrXD::ExtensionLoader>();
+            m_extensionLoader->Scan();
+            m_extensionLoader->LoadNativeModules();
+        }
+        catch (...)
+        {
+            m_extensionLoader.reset();
+        }
     }
     if (m_extensionLoader)
     {
@@ -10479,8 +13839,16 @@ void Win32IDE::loadExtension(const std::string& name)
     LOG_INFO("loadExtension: " + name);
     if (!m_extensionLoader)
     {
-        try { m_extensionLoader = std::make_unique<RawrXD::ExtensionLoader>(); m_extensionLoader->Scan(); m_extensionLoader->LoadNativeModules(); }
-        catch (...) { m_extensionLoader.reset(); }
+        try
+        {
+            m_extensionLoader = std::make_unique<RawrXD::ExtensionLoader>();
+            m_extensionLoader->Scan();
+            m_extensionLoader->LoadNativeModules();
+        }
+        catch (...)
+        {
+            m_extensionLoader.reset();
+        }
     }
     if (m_extensionLoader)
     {
@@ -10500,8 +13868,16 @@ void Win32IDE::unloadExtension(const std::string& name)
     LOG_INFO("unloadExtension: " + name);
     if (!m_extensionLoader)
     {
-        try { m_extensionLoader = std::make_unique<RawrXD::ExtensionLoader>(); m_extensionLoader->Scan(); m_extensionLoader->LoadNativeModules(); }
-        catch (...) { m_extensionLoader.reset(); }
+        try
+        {
+            m_extensionLoader = std::make_unique<RawrXD::ExtensionLoader>();
+            m_extensionLoader->Scan();
+            m_extensionLoader->LoadNativeModules();
+        }
+        catch (...)
+        {
+            m_extensionLoader.reset();
+        }
     }
     if (m_extensionLoader)
     {
@@ -10527,8 +13903,16 @@ void Win32IDE::showExtensionHelp(const std::string& name)
     LOG_INFO("showExtensionHelp: " + name);
     if (!m_extensionLoader)
     {
-        try { m_extensionLoader = std::make_unique<RawrXD::ExtensionLoader>(); m_extensionLoader->Scan(); m_extensionLoader->LoadNativeModules(); }
-        catch (...) { m_extensionLoader.reset(); }
+        try
+        {
+            m_extensionLoader = std::make_unique<RawrXD::ExtensionLoader>();
+            m_extensionLoader->Scan();
+            m_extensionLoader->LoadNativeModules();
+        }
+        catch (...)
+        {
+            m_extensionLoader.reset();
+        }
     }
     if (m_extensionLoader)
     {

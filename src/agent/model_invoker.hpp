@@ -31,14 +31,37 @@ struct LLMResponse {
     std::string error;
 };
 
+enum class ProviderType {
+    LocalGGUF,
+    Ollama,
+    OpenAICompatible,
+    AnthropicNative,
+    SwarmDistributed,
+    Unknown
+};
+
+struct ModelProviderConfig {
+    ProviderType type = ProviderType::Unknown;
+    std::string endpoint;
+    std::string apiKey;
+    std::string model;
+    bool enableSwarm = false;
+};
+
 class ModelInvoker {
 public:
     ModelInvoker() = default;
     ~ModelInvoker() = default;
 
     void setLLMBackend(const std::string& backend, const std::string& endpoint, const std::string& apiKey = "");
+    void setProviderConfig(const ModelProviderConfig& config);
     std::string getLLMBackend() const { return m_backend; }
+    ModelProviderConfig getProviderConfig() const { return m_providerConfig; }
     LLMResponse invoke(const InvocationParams& params);
+    LLMResponse queryRaw(const std::string& systemPrompt,
+                         const std::string& userPrompt,
+                         int maxTokens,
+                         double temperature = 0.2);
     void invokeAsync(const InvocationParams& params);
     void cancelPendingRequest();
     bool isInvoking() const { return m_isInvoking; }
@@ -56,8 +79,9 @@ private:
     std::string buildSystemPrompt(const std::vector<std::string>& tools);
     std::string buildUserMessage(const InvocationParams& params);
     nlohmann::json sendOllamaRequest(const std::string& model, const std::string& prompt, int maxTokens, double temperature);
-    nlohmann::json sendClaudeRequest(const std::string& prompt, int maxTokens, double temperature);
-    nlohmann::json sendOpenAIRequest(const std::string& prompt, int maxTokens, double temperature);
+    nlohmann::json sendClaudeRequest(const std::string& systemPrompt, const std::string& prompt, int maxTokens, double temperature);
+    nlohmann::json sendOpenAIRequest(const std::string& systemPrompt, const std::string& prompt, int maxTokens, double temperature);
+    nlohmann::json sendOpenAICompatibleRequest(const std::string& systemPrompt, const std::string& prompt, int maxTokens, double temperature);
     nlohmann::json parsePlan(const std::string& llmOutput);
     bool validatePlanSanity(const nlohmann::json& plan);
     std::string getCacheKey(const InvocationParams& params) const;
@@ -68,6 +92,7 @@ private:
     std::string m_endpoint;
     std::string m_apiKey;
     std::string m_model = "mistral";
+    ModelProviderConfig m_providerConfig;
     bool m_isInvoking = false;
     bool m_cachingEnabled = true;
     std::map<std::string, LLMResponse> m_responseCache;

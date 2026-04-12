@@ -3,6 +3,7 @@
 #include "hotpatch/Engine.hpp"
 
 #include <chrono>
+#include <cctype>
 #include <future>
 #include <iostream>
 #include <thread>
@@ -16,6 +17,60 @@ constexpr int kMaxRetries = 3;
 constexpr int kRetryBaseDelayMs = 100;
 
 extern "C" unsigned int rawr_cpu_has_avx2();
+
+std::string trimAsciiCopy(const std::string& value)
+{
+    size_t begin = 0;
+    while (begin < value.size() && std::isspace(static_cast<unsigned char>(value[begin]))) {
+        ++begin;
+    }
+
+    size_t end = value.size();
+    while (end > begin && std::isspace(static_cast<unsigned char>(value[end - 1]))) {
+        --end;
+    }
+
+    return value.substr(begin, end - begin);
+}
+
+std::string toLowerAsciiCopy(std::string value)
+{
+    for (char& ch : value) {
+        ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+    }
+    return value;
+}
+
+bool startsWithBackendError(const std::string& text, std::string* outDetail = nullptr)
+{
+    const std::string trimmed = trimAsciiCopy(text);
+    constexpr const char* kPrefix = "[BackendError]";
+    const size_t prefixLen = std::strlen(kPrefix);
+    if (trimmed.size() < prefixLen || trimmed.compare(0, prefixLen, kPrefix) != 0) {
+        return false;
+    }
+
+    if (outDetail) {
+        *outDetail = trimAsciiCopy(trimmed.substr(prefixLen));
+    }
+    return true;
+}
+
+std::string formatBackendError(const char* stage, const std::string& detail)
+{
+    const std::string trimmed = trimAsciiCopy(detail);
+    if (trimmed.empty()) {
+        return std::string("[BackendError] stage=") + stage + " detail=empty_error_payload";
+    }
+
+    const std::string lowered = toLowerAsciiCopy(trimmed);
+    if (lowered == "na" || lowered == "n/a" || lowered == "nan" || lowered == "null" || lowered == "none" ||
+        lowered == "-") {
+        return std::string("[BackendError] stage=") + stage + " detail=non_actionable_error_payload(" + trimmed + ")";
+    }
+
+    return std::string("[BackendError] stage=") + stage + " detail=" + trimmed;
+}
 
 int parseContextMetadataInt(const nlohmann::json& metadata, const char* key)
 {
@@ -102,10 +157,13 @@ AgentOllamaClient::~AgentOllamaClient() {
 std::string AgentOllamaClient::BuildPromptFromMessages(const std::vector<ChatMessage>& messages,
                                                        const nlohmann::json& tools) const {
     std::string prompt;
+    bool systemAlreadyMentionsTools = false;
 
     for (const auto& msg : messages) {
         if (msg.role == "system") {
             prompt += "System: " + msg.content + "\n\n";
+            systemAlreadyMentionsTools = (msg.content.find("Available Tools:") != std::string::npos) ||
+                                        (msg.content.find("Tool Call Protocol:") != std::string::npos);
             break;
         }
     }
@@ -120,16 +178,26 @@ std::string AgentOllamaClient::BuildPromptFromMessages(const std::vector<ChatMes
         }
     }
 
-    if (!tools.empty() && tools.is_array()) {
-        prompt += "\nAvailable tools:\n";
+    if (!systemAlreadyMentionsTools && !tools.empty() && tools.is_array()) {
+        prompt += "\nTool Call Protocol:\n";
+        prompt += "- Emit JSON only: {\"tool_call\": {\"name\": \"tool_name\", \"arguments\": {...}}}\n";
+        prompt += "- Available tool names: ";
+        bool first = true;
         for (const auto& tool : tools) {
-            if (tool.contains("function")) {
+            if (tool.contains("function") && tool["function"].is_object()) {
                 const auto& func = tool["function"];
-                prompt += "- " + func.value("name", "") + ": " +
-                          func.value("description", "") + "\n";
+                const std::string name = func.value("name", std::string());
+                if (name.empty()) {
+                    continue;
+                }
+                if (!first) {
+                    prompt += ", ";
+                }
+                first = false;
+                prompt += name;
             }
         }
-        prompt += "\nTo call a tool, respond with JSON: {\"tool_call\": {\"name\": \"tool_name\", \"arguments\": {...}}}\n";
+        prompt += "\n";
     }
 
     prompt += "Assistant: ";
@@ -138,6 +206,27 @@ std::string AgentOllamaClient::BuildPromptFromMessages(const std::vector<ChatMes
 
 void AgentOllamaClient::ParseToolCallsFromResponse(const std::string& response,
                                                    InferenceResult& result) const {
+    const std::string toolPrefix = "TOOL_CALL:";
+    const size_t prefixPos = response.find(toolPrefix);
+    if (prefixPos != std::string::npos) {
+        const size_t prefixedJsonStart = response.find('{', prefixPos + toolPrefix.size());
+        const size_t prefixedJsonEnd = response.rfind('}');
+        if (prefixedJsonStart != std::string::npos && prefixedJsonEnd != std::string::npos && prefixedJsonEnd >= prefixedJsonStart) {
+            try {
+                nlohmann::json tc = nlohmann::json::parse(response.substr(prefixedJsonStart, prefixedJsonEnd - prefixedJsonStart + 1));
+                const std::string name = tc.value("name", std::string());
+                nlohmann::json args = tc.value("arguments", nlohmann::json::object());
+                if (!name.empty()) {
+                    result.has_tool_calls = true;
+                    result.tool_calls.emplace_back(name, args);
+                    result.response = response.substr(0, prefixPos);
+                    return;
+                }
+            } catch (...) {
+            }
+        }
+    }
+
     size_t json_start = response.find("{");
     if (json_start == std::string::npos) {
         return;
@@ -158,6 +247,39 @@ void AgentOllamaClient::ParseToolCallsFromResponse(const std::string& response,
             if (!name.empty()) {
                 result.has_tool_calls = true;
                 result.tool_calls.emplace_back(name, args);
+                result.response = response.substr(0, json_start);
+                return;
+            }
+        }
+
+        if (j.contains("tool_calls") && j["tool_calls"].is_array()) {
+            for (const auto& entry : j["tool_calls"]) {
+                if (!entry.is_object()) {
+                    continue;
+                }
+
+                std::string name = entry.value("tool", std::string());
+                nlohmann::json args = entry.value("arguments", nlohmann::json::object());
+                if (name.empty() && entry.contains("function") && entry["function"].is_object()) {
+                    const auto& function = entry["function"];
+                    name = function.value("name", std::string());
+                    if (function.contains("arguments")) {
+                        args = function["arguments"];
+                        if (args.is_string()) {
+                            args = nlohmann::json::parse(args.get<std::string>(), nullptr, false);
+                            if (args.is_discarded()) {
+                                args = nlohmann::json::object();
+                            }
+                        }
+                    }
+                }
+
+                if (!name.empty()) {
+                    result.has_tool_calls = true;
+                    result.tool_calls.emplace_back(name, args.is_object() ? args : nlohmann::json::object());
+                }
+            }
+            if (result.has_tool_calls) {
                 result.response = response.substr(0, json_start);
             }
         }
@@ -225,8 +347,12 @@ InferenceResult AgentOllamaClient::ChatSync(const std::vector<ChatMessage>& mess
     result.success = true;
     result.has_tool_calls = false;
     result.response = completion_future.get();
-    if (result.response.rfind("[BackendError]", 0) == 0) {
-        return InferenceResult::error(result.response);
+    std::string backendDetail;
+    if (startsWithBackendError(result.response, &backendDetail)) {
+        return InferenceResult::error(formatBackendError("chat_sync", backendDetail));
+    }
+    if (trimAsciiCopy(result.response).empty()) {
+        return InferenceResult::error("[BackendError] stage=chat_sync detail=empty_completion_payload");
     }
     result.prompt_tokens = 0;
     result.completion_tokens = 0;
@@ -234,18 +360,20 @@ InferenceResult AgentOllamaClient::ChatSync(const std::vector<ChatMessage>& mess
 
     try {
         std::string metadata = metadata_promise.get_future().get();
-        nlohmann::json j = nlohmann::json::parse(metadata);
-        logBackendContextObservation(j, m_config.num_ctx);
-        if (j.contains("prompt_eval_count")) {
-            result.prompt_tokens = j["prompt_eval_count"].get<uint64_t>();
-        }
-        if (j.contains("eval_count")) {
-            result.completion_tokens = j["eval_count"].get<uint64_t>();
-        }
-        if (j.contains("eval_duration") && result.completion_tokens > 0) {
-            uint64_t eval_ns = j["eval_duration"].get<uint64_t>();
-            result.tokens_per_sec = static_cast<double>(result.completion_tokens) /
-                                    (static_cast<double>(eval_ns) / 1e9);
+        nlohmann::json j = nlohmann::json::parse(metadata, nullptr, false);
+        if (j.is_object()) {
+            logBackendContextObservation(j, m_config.num_ctx);
+            if (j.contains("prompt_eval_count")) {
+                result.prompt_tokens = j["prompt_eval_count"].get<uint64_t>();
+            }
+            if (j.contains("eval_count")) {
+                result.completion_tokens = j["eval_count"].get<uint64_t>();
+            }
+            if (j.contains("eval_duration") && result.completion_tokens > 0) {
+                uint64_t eval_ns = j["eval_duration"].get<uint64_t>();
+                result.tokens_per_sec = static_cast<double>(result.completion_tokens) /
+                                        (static_cast<double>(eval_ns) / 1e9);
+            }
         }
     } catch (...) {
     }
@@ -304,10 +432,18 @@ bool AgentOllamaClient::ChatStream(const std::vector<ChatMessage>& messages,
     };
 
     req.complete_cb = [=](const std::string& completion, const std::string& metadata) {
-        if (completion.rfind("[BackendError]", 0) == 0) {
+        std::string backendDetail;
+        if (startsWithBackendError(completion, &backendDetail)) {
             m_streaming.store(false);
             if (on_error) {
-                on_error(completion);
+                on_error(formatBackendError("chat_stream", backendDetail));
+            }
+            return;
+        }
+        if (trimAsciiCopy(completion).empty()) {
+            m_streaming.store(false);
+            if (on_error) {
+                on_error("[BackendError] stage=chat_stream detail=empty_completion_payload");
             }
             return;
         }
@@ -315,18 +451,20 @@ bool AgentOllamaClient::ChatStream(const std::vector<ChatMessage>& messages,
         *full_response = completion;
 
         try {
-            nlohmann::json j = nlohmann::json::parse(metadata);
-            logBackendContextObservation(j, m_config.num_ctx);
-            if (j.contains("prompt_eval_count")) {
-                *prompt_tokens = j["prompt_eval_count"].get<uint64_t>();
-            }
-            if (j.contains("eval_count")) {
-                *completion_tokens = j["eval_count"].get<uint64_t>();
-            }
-            if (j.contains("eval_duration") && *completion_tokens > 0) {
-                uint64_t eval_ns = j["eval_duration"].get<uint64_t>();
-                *tps = static_cast<double>(*completion_tokens) /
-                       (static_cast<double>(eval_ns) / 1e9);
+            nlohmann::json j = nlohmann::json::parse(metadata, nullptr, false);
+            if (j.is_object()) {
+                logBackendContextObservation(j, m_config.num_ctx);
+                if (j.contains("prompt_eval_count")) {
+                    *prompt_tokens = j["prompt_eval_count"].get<uint64_t>();
+                }
+                if (j.contains("eval_count")) {
+                    *completion_tokens = j["eval_count"].get<uint64_t>();
+                }
+                if (j.contains("eval_duration") && *completion_tokens > 0) {
+                    uint64_t eval_ns = j["eval_duration"].get<uint64_t>();
+                    *tps = static_cast<double>(*completion_tokens) /
+                           (static_cast<double>(eval_ns) / 1e9);
+                }
             }
         } catch (...) {
         }
@@ -393,8 +531,12 @@ InferenceResult AgentOllamaClient::FIMSync(const std::string& prefix,
     }
 
     std::string response = completion_future.get();
-    if (response.rfind("[BackendError]", 0) == 0) {
-        return InferenceResult::error(response);
+    std::string backendDetail;
+    if (startsWithBackendError(response, &backendDetail)) {
+        return InferenceResult::error(formatBackendError("fim_sync", backendDetail));
+    }
+    if (trimAsciiCopy(response).empty()) {
+        return InferenceResult::error("[BackendError] stage=fim_sync detail=empty_completion_payload");
     }
 
     size_t fill_pos = response.find("<FILL>");
@@ -445,24 +587,34 @@ bool AgentOllamaClient::FIMStream(const std::string& prefix,
     };
 
     req.complete_cb = [=](const std::string& completion, const std::string& metadata) {
-        if (completion.rfind("[BackendError]", 0) == 0) {
+        std::string backendDetail;
+        if (startsWithBackendError(completion, &backendDetail)) {
             m_streaming.store(false);
             if (on_error) {
-                on_error(completion);
+                on_error(formatBackendError("fim_stream", backendDetail));
+            }
+            return;
+        }
+        if (trimAsciiCopy(completion).empty()) {
+            m_streaming.store(false);
+            if (on_error) {
+                on_error("[BackendError] stage=fim_stream detail=empty_completion_payload");
             }
             return;
         }
 
         try {
-            nlohmann::json j = nlohmann::json::parse(metadata);
-            logBackendContextObservation(j, m_config.num_ctx);
-            if (j.contains("eval_count")) {
-                *completion_tokens = j["eval_count"].get<uint64_t>();
-            }
-            if (j.contains("eval_duration") && *completion_tokens > 0) {
-                uint64_t eval_ns = j["eval_duration"].get<uint64_t>();
-                *tps = static_cast<double>(*completion_tokens) /
-                       (static_cast<double>(eval_ns) / 1e9);
+            nlohmann::json j = nlohmann::json::parse(metadata, nullptr, false);
+            if (j.is_object()) {
+                logBackendContextObservation(j, m_config.num_ctx);
+                if (j.contains("eval_count")) {
+                    *completion_tokens = j["eval_count"].get<uint64_t>();
+                }
+                if (j.contains("eval_duration") && *completion_tokens > 0) {
+                    uint64_t eval_ns = j["eval_duration"].get<uint64_t>();
+                    *tps = static_cast<double>(*completion_tokens) /
+                           (static_cast<double>(eval_ns) / 1e9);
+                }
             }
         } catch (...) {
         }

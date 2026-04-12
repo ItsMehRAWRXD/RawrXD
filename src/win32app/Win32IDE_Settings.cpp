@@ -3,8 +3,11 @@
 // Architecture: C++23 + AVX-512, Zero-Dependency Sovereign Core
 // Build timestamp: 2026-03-31
 
+#include "IDEConfig.h"
 #include "Win32IDE.h"
 #include "Win32IDE_Types.h"
+#include <algorithm>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <immintrin.h>
@@ -78,16 +81,18 @@ bool LoadSettingsSovereign(SovereignConfig& config);
 void to_json(nlohmann::json& j, const SovereignConfig& config);
 void from_json(const nlohmann::json& j, SovereignConfig& config);
 
-namespace {
+namespace
+{
 thread_local int g_settings_save_depth = 0;
 thread_local int g_settings_load_depth = 0;
 
-struct DepthGuard {
+struct DepthGuard
+{
     explicit DepthGuard(int& depth_ref) : depth(depth_ref) { ++depth; }
     ~DepthGuard() { --depth; }
     int& depth;
 };
-} // namespace
+}  // namespace
 
 // Sovereign Settings Schema
 static SovereignConfig g_sovereign_config;
@@ -105,7 +110,8 @@ static bool WriteSettingsFileRaw(const SovereignConfig& config)
     temp_file += L".tmp";
 
     std::ofstream file(temp_file, std::ios::binary);
-    if (!file) {
+    if (!file)
+    {
         return false;
     }
 
@@ -119,23 +125,27 @@ static bool WriteSettingsFileRaw(const SovereignConfig& config)
 
 static bool ReadSettingsFileRaw(SovereignConfig& config)
 {
-    if (!std::filesystem::exists(SETTINGS_FILE)) {
+    if (!std::filesystem::exists(SETTINGS_FILE))
+    {
         return false;
     }
 
     const auto file_size = std::filesystem::file_size(SETTINGS_FILE);
-    if (file_size < 64) {
+    if (file_size < 64)
+    {
         return false;
     }
 
     std::ifstream file(SETTINGS_FILE, std::ios::binary);
-    if (!file) {
+    if (!file)
+    {
         return false;
     }
 
     std::vector<char> buffer(static_cast<size_t>(file_size));
     file.read(buffer.data(), static_cast<std::streamsize>(buffer.size()));
-    if (!file || file.gcount() != static_cast<std::streamsize>(buffer.size())) {
+    if (!file || file.gcount() != static_cast<std::streamsize>(buffer.size()))
+    {
         return false;
     }
 
@@ -289,7 +299,8 @@ void from_json(const nlohmann::json& j, SovereignConfig& config)
 // Persistence with Sovereign Integrity
 bool SaveSettingsSovereign(const SovereignConfig& config)
 {
-    if (g_settings_save_depth > 0) {
+    if (g_settings_save_depth > 0)
+    {
         return false;
     }
     DepthGuard save_guard(g_settings_save_depth);
@@ -299,12 +310,14 @@ bool SaveSettingsSovereign(const SovereignConfig& config)
         SovereignConfig signed_config = config;
         signed_config.zmm_signature = GenerateZMMSignature(signed_config);
 
-        if (!WriteSettingsFileRaw(signed_config)) {
+        if (!WriteSettingsFileRaw(signed_config))
+        {
             return false;
         }
 
         SovereignConfig verify_config;
-        if (!ReadSettingsFileRaw(verify_config)) {
+        if (!ReadSettingsFileRaw(verify_config))
+        {
             return false;
         }
 
@@ -318,14 +331,16 @@ bool SaveSettingsSovereign(const SovereignConfig& config)
 
 bool LoadSettingsSovereign(SovereignConfig& config)
 {
-    if (g_settings_load_depth > 0) {
+    if (g_settings_load_depth > 0)
+    {
         return false;
     }
     DepthGuard load_guard(g_settings_load_depth);
 
     try
     {
-        if (ReadSettingsFileRaw(config) && VerifyZMMSignature(config)) {
+        if (ReadSettingsFileRaw(config) && VerifyZMMSignature(config))
+        {
             return true;
         }
 
@@ -426,6 +441,35 @@ void Win32IDE::loadSettings()
     m_settings.minimapEnabled = true;
     m_settings.breadcrumbsEnabled = true;
     m_settings.smoothScrollEnabled = true;
+
+    // Integrated terminal from rawrxd.config.json (VS Code-style keys)
+    {
+        auto& ic = IDEConfig::getInstance();
+        const int sc = ic.getInt("terminal.scrollback", static_cast<int>(m_settings.integratedTerminalScrollbackChars));
+        if (sc > 0)
+        {
+            uint32_t v = static_cast<uint32_t>(sc);
+            if (v < 262144u)
+                v = 262144u;
+            if (v > 16777216u)
+                v = 16777216u;
+            m_settings.integratedTerminalScrollbackChars = v;
+        }
+        int fs = ic.getInt("terminal.fontSize", m_settings.integratedTerminalFontSize);
+        if (fs < 8)
+            fs = 8;
+        if (fs > 32)
+            fs = 32;
+        m_settings.integratedTerminalFontSize = fs;
+        std::string fam = ic.getString("terminal.fontFamily", m_settings.integratedTerminalFontFamily);
+        while (!fam.empty() && (unsigned char)fam.front() <= 32)
+            fam.erase(fam.begin());
+        while (!fam.empty() && (unsigned char)fam.back() <= 32)
+            fam.pop_back();
+        if (!fam.empty())
+            m_settings.integratedTerminalFontFamily = fam;
+        m_settings.agentTerminalIsolated = ic.getBool("agent.terminalIsolated", true);
+    }
 }
 
 void Win32IDE::saveSettings()
@@ -439,6 +483,33 @@ void Win32IDE::saveSettings()
     config.silence_privilege_warnings = m_settings.silencePrivilegeWarnings;
 
     UpdateSovereignConfig(config);
+
+    // Persist integrated-terminal fields read by loadSettings() from rawrxd.config.json (VS Code-style keys).
+    {
+        auto& ic = IDEConfig::getInstance();
+        ic.setBool("agent.terminalIsolated", m_settings.agentTerminalIsolated);
+
+        uint32_t sc = m_settings.integratedTerminalScrollbackChars;
+        if (sc < 262144u)
+            sc = 262144u;
+        if (sc > 16777216u)
+            sc = 16777216u;
+        ic.setInt("terminal.scrollback", static_cast<int>(sc));
+
+        int tfs = m_settings.integratedTerminalFontSize;
+        if (tfs < 8)
+            tfs = 8;
+        if (tfs > 32)
+            tfs = 32;
+        ic.setInt("terminal.fontSize", tfs);
+
+        const std::string& fam = m_settings.integratedTerminalFontFamily.empty()
+                                     ? std::string("Consolas")
+                                     : m_settings.integratedTerminalFontFamily;
+        ic.setString("terminal.fontFamily", fam);
+
+        ic.saveToFile("rawrxd.config.json");
+    }
 }
 
 void Win32IDE::applyDefaultSettings()
@@ -449,26 +520,53 @@ void Win32IDE::applyDefaultSettings()
 void Win32IDE::applySettings()
 {
     // --- Font ---
-    if (m_editorFont) {
+    if (m_editorFont)
+    {
         DeleteObject(m_editorFont);
         m_editorFont = nullptr;
     }
-    m_editorFont = CreateFontA(
-        -MulDiv(m_settings.fontSize, GetDpiForWindow(m_hwndMain), 72),
-        0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
-        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-        CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN,
-        m_settings.fontName.c_str());
+    {
+        const int fs = (std::max)(6, (std::min)(72, m_settings.fontSize));
+        const UINT dpi = (m_hwndMain && IsWindow(m_hwndMain)) ? GetDpiForWindow(m_hwndMain) : 96u;
+        const char* face = m_settings.fontName.empty() ? "Consolas" : m_settings.fontName.c_str();
+        m_editorFont =
+            CreateFontA(-MulDiv(fs, static_cast<int>(dpi), 72), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
+                        OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, face);
+    }
     if (m_hwndEditor && m_editorFont)
+    {
         SendMessage(m_hwndEditor, WM_SETFONT, (WPARAM)m_editorFont, TRUE);
+        applyEditorCharFormatFaceAndSizeFromSettings();
+    }
 
     // --- Theme ---
     applyThemeById(m_settings.themeId);
 
-    // --- Word wrap ---\n    // Word wrap state stored in m_settings; editor reflow handled by layout.
+    // --- Word wrap ---
+    // Word wrap state stored in m_settings; editor reflow handled by layout.
 
     // --- Tab size (stored for syntax / indent engine) ---
     // Propagated through m_settings; no Win32 API needed.
+
+    // --- Integrated terminal scrollback (IDEConfig terminal.scrollback + env override) ---
+    {
+        uint32_t capChars = m_settings.integratedTerminalScrollbackChars;
+        char envCap[32]{};
+        if (GetEnvironmentVariableA("RAWRXD_TERMINAL_SCROLLBACK_CHARS", envCap, sizeof(envCap)) > 0)
+            capChars = static_cast<uint32_t>(std::strtoul(envCap, nullptr, 10));
+        if (capChars < 262144u)
+            capChars = 262144u;
+        if (capChars > 16777216u)
+            capChars = 16777216u;
+        for (auto& p : m_terminalPanes)
+        {
+            if (p.hwnd && IsWindow(p.hwnd))
+                SendMessage(p.hwnd, EM_EXLIMITTEXT, 0, static_cast<LPARAM>(capChars));
+        }
+    }
+
+    applyIntegratedTerminalFontToAllPanes();
+    refreshPowerShellPanelFontsFromTerminalSettings();
 
     // --- Persist ---
     saveSettings();
@@ -482,63 +580,52 @@ void Win32IDE::showSettingsDialog()
     RECT rc;
     GetClientRect(m_hwndMain, &rc);
     int x = rc.left + (rc.right - rc.left - DLG_W) / 2;
-    int y = rc.top  + (rc.bottom - rc.top - DLG_H) / 2;
+    int y = rc.top + (rc.bottom - rc.top - DLG_H) / 2;
 
-    HWND hDlg = CreateWindowExW(
-        WS_EX_DLGMODALFRAME | WS_EX_TOPMOST,
-        L"STATIC", L"RawrXD Settings",
-        WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,
-        x, y, DLG_W, DLG_H,
-        m_hwndMain, nullptr, GetModuleHandle(nullptr), nullptr);
-    if (!hDlg) return;
+    HWND hDlg = CreateWindowExW(WS_EX_DLGMODALFRAME | WS_EX_TOPMOST, L"STATIC", L"RawrXD Settings",
+                                WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE, x, y, DLG_W, DLG_H, m_hwndMain,
+                                nullptr, GetModuleHandle(nullptr), nullptr);
+    if (!hDlg)
+        return;
 
     // Font size label + edit
-    CreateWindowExW(0, L"STATIC", L"Font Size:",
-        WS_CHILD | WS_VISIBLE, 20, 20, 100, 22, hDlg, nullptr, nullptr, nullptr);
-    HWND hFontSize = CreateWindowExW(WS_EX_CLIENTEDGE, L"EDIT",
-        std::to_wstring(m_settings.fontSize).c_str(),
-        WS_CHILD | WS_VISIBLE | ES_NUMBER, 130, 18, 60, 24, hDlg,
-        (HMENU)2001, nullptr, nullptr);
+    CreateWindowExW(0, L"STATIC", L"Font Size:", WS_CHILD | WS_VISIBLE, 20, 20, 100, 22, hDlg, nullptr, nullptr,
+                    nullptr);
+    HWND hFontSize =
+        CreateWindowExW(WS_EX_CLIENTEDGE, L"EDIT", std::to_wstring(m_settings.fontSize).c_str(),
+                        WS_CHILD | WS_VISIBLE | ES_NUMBER, 130, 18, 60, 24, hDlg, (HMENU)2001, nullptr, nullptr);
 
     // Font name label + edit
-    CreateWindowExW(0, L"STATIC", L"Font:",
-        WS_CHILD | WS_VISIBLE, 20, 54, 100, 22, hDlg, nullptr, nullptr, nullptr);
-    HWND hFontName = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT",
-        m_settings.fontName.c_str(),
-        WS_CHILD | WS_VISIBLE, 130, 52, 180, 24, hDlg,
-        (HMENU)2002, nullptr, nullptr);
+    CreateWindowExW(0, L"STATIC", L"Font:", WS_CHILD | WS_VISIBLE, 20, 54, 100, 22, hDlg, nullptr, nullptr, nullptr);
+    HWND hFontName = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", m_settings.fontName.c_str(), WS_CHILD | WS_VISIBLE, 130,
+                                     52, 180, 24, hDlg, (HMENU)2002, nullptr, nullptr);
 
     // Word wrap checkbox
-    HWND hWrap = CreateWindowExW(0, L"BUTTON", L"Word Wrap",
-        WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
-        20, 90, 140, 22, hDlg, (HMENU)2003, nullptr, nullptr);
+    HWND hWrap = CreateWindowExW(0, L"BUTTON", L"Word Wrap", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, 20, 90, 140, 22,
+                                 hDlg, (HMENU)2003, nullptr, nullptr);
     SendMessage(hWrap, BM_SETCHECK, m_settings.wordWrapEnabled ? BST_CHECKED : BST_UNCHECKED, 0);
 
     // Line numbers checkbox
-    HWND hLineNums = CreateWindowExW(0, L"BUTTON", L"Show Line Numbers",
-        WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
-        20, 118, 180, 22, hDlg, (HMENU)2004, nullptr, nullptr);
+    HWND hLineNums = CreateWindowExW(0, L"BUTTON", L"Show Line Numbers", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, 20,
+                                     118, 180, 22, hDlg, (HMENU)2004, nullptr, nullptr);
     SendMessage(hLineNums, BM_SETCHECK, m_settings.lineNumbersVisible ? BST_CHECKED : BST_UNCHECKED, 0);
 
     // Ghost text checkbox
-    HWND hGhost = CreateWindowExW(0, L"BUTTON", L"Ghost Text (AI Autocomplete)",
-        WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
-        20, 146, 260, 22, hDlg, (HMENU)2005, nullptr, nullptr);
+    HWND hGhost =
+        CreateWindowExW(0, L"BUTTON", L"Ghost Text (AI Autocomplete)", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, 20, 146,
+                        260, 22, hDlg, (HMENU)2005, nullptr, nullptr);
     SendMessage(hGhost, BM_SETCHECK, m_settings.ghostTextEnabled ? BST_CHECKED : BST_UNCHECKED, 0);
 
     // Minimap checkbox
-    HWND hMinimap = CreateWindowExW(0, L"BUTTON", L"Minimap",
-        WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
-        20, 174, 140, 22, hDlg, (HMENU)2006, nullptr, nullptr);
+    HWND hMinimap = CreateWindowExW(0, L"BUTTON", L"Minimap", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, 20, 174, 140, 22,
+                                    hDlg, (HMENU)2006, nullptr, nullptr);
     SendMessage(hMinimap, BM_SETCHECK, m_settings.minimapEnabled ? BST_CHECKED : BST_UNCHECKED, 0);
 
     // OK / Cancel buttons
-    HWND hOK = CreateWindowExW(0, L"BUTTON", L"OK",
-        WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,
-        DLG_W - 190, DLG_H - 70, 80, 30, hDlg, (HMENU)IDOK, nullptr, nullptr);
-    HWND hCancel = CreateWindowExW(0, L"BUTTON", L"Cancel",
-        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        DLG_W - 100, DLG_H - 70, 80, 30, hDlg, (HMENU)IDCANCEL, nullptr, nullptr);
+    HWND hOK = CreateWindowExW(0, L"BUTTON", L"OK", WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON, DLG_W - 190, DLG_H - 70,
+                               80, 30, hDlg, (HMENU)IDOK, nullptr, nullptr);
+    HWND hCancel = CreateWindowExW(0, L"BUTTON", L"Cancel", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, DLG_W - 100,
+                                   DLG_H - 70, 80, 30, hDlg, (HMENU)IDCANCEL, nullptr, nullptr);
 
     // Store IDE pointer for the dialog's message pump
     SetPropW(hDlg, L"IDE_PTR", (HANDLE)this);
@@ -547,33 +634,42 @@ void Win32IDE::showSettingsDialog()
     EnableWindow(m_hwndMain, FALSE);
     MSG msg;
     bool running = true;
-    while (running && GetMessage(&msg, nullptr, 0, 0)) {
-        if (msg.hwnd == hDlg || IsChild(hDlg, msg.hwnd)) {
-            if (msg.message == WM_COMMAND) {
+    while (running && GetMessage(&msg, nullptr, 0, 0))
+    {
+        if (msg.hwnd == hDlg || IsChild(hDlg, msg.hwnd))
+        {
+            if (msg.message == WM_COMMAND)
+            {
                 WORD id = LOWORD(msg.wParam);
-                if (id == IDOK) {
+                if (id == IDOK)
+                {
                     // Harvest values
                     wchar_t buf[64];
                     GetWindowTextW(hFontSize, buf, 64);
                     int fs = _wtoi(buf);
-                    if (fs >= 6 && fs <= 72) m_settings.fontSize = fs;
+                    if (fs >= 6 && fs <= 72)
+                        m_settings.fontSize = fs;
 
                     char nameBuf[128];
                     GetWindowTextA(hFontName, nameBuf, 128);
-                    if (nameBuf[0]) m_settings.fontName = nameBuf;
+                    if (nameBuf[0])
+                        m_settings.fontName = nameBuf;
 
-                    m_settings.wordWrapEnabled    = (SendMessage(hWrap, BM_GETCHECK, 0, 0) == BST_CHECKED);
+                    m_settings.wordWrapEnabled = (SendMessage(hWrap, BM_GETCHECK, 0, 0) == BST_CHECKED);
                     m_settings.lineNumbersVisible = (SendMessage(hLineNums, BM_GETCHECK, 0, 0) == BST_CHECKED);
-                    m_settings.ghostTextEnabled   = (SendMessage(hGhost, BM_GETCHECK, 0, 0) == BST_CHECKED);
-                    m_settings.minimapEnabled     = (SendMessage(hMinimap, BM_GETCHECK, 0, 0) == BST_CHECKED);
+                    m_settings.ghostTextEnabled = (SendMessage(hGhost, BM_GETCHECK, 0, 0) == BST_CHECKED);
+                    m_settings.minimapEnabled = (SendMessage(hMinimap, BM_GETCHECK, 0, 0) == BST_CHECKED);
 
                     applySettings();
                     running = false;
-                } else if (id == IDCANCEL) {
+                }
+                else if (id == IDCANCEL)
+                {
                     running = false;
                 }
             }
-            if (msg.message == WM_CLOSE || msg.message == WM_DESTROY) {
+            if (msg.message == WM_CLOSE || msg.message == WM_DESTROY)
+            {
                 running = false;
             }
         }

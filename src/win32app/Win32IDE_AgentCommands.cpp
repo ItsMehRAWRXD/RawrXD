@@ -10,6 +10,7 @@
 #include "RawrXD_AutonomousAgenticPipeline.h"
 #include "Win32IDE.h"
 #include "Win32IDE_AgenticBridge.h"
+#include "Win32IDE_Commands.h"
 #include "Win32SwarmBridge.h"
 #include <algorithm>
 #include <cctype>
@@ -30,7 +31,8 @@
 void HandleAutonomousCommunicator(void* idePtr);
 void HandleUnifiedTelemetry(void* idePtr);
 
-namespace {
+namespace
+{
 
 Agentic::AgenticPlanningOrchestrator* getPlanningOrchestratorReady()
 {
@@ -42,7 +44,7 @@ Agentic::AgenticPlanningOrchestrator* getPlanningOrchestratorReady()
     return orch.getOrchestrator();
 }
 
-} // namespace
+}  // namespace
 
 // ============================================================================
 // SUBAGENT CHAIN / SWARM / TODO HANDLERS (Phase 19B)
@@ -610,8 +612,7 @@ void Win32IDE::initializeAgenticBridge()
                     if (m_hwndCopilotChatOutput)
                     {
                         std::string formatted = "🤖 " + title + "\n" + content + "\n\n";
-                        SendMessageA(m_hwndCopilotChatOutput, EM_SETSEL, -1, -1);
-                        SendMessageA(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE, (LPARAM)formatted.c_str());
+                        appendCopilotChatTextOnUiThread(formatted);
                     }
                 });
 
@@ -876,93 +877,110 @@ void Win32IDE::initializePlanOrchestrator()
             m_planOrchestrator->setInferenceEngine(m_nativeEngine.get());
         }
 
-        m_planOrchestrator->setTerminalCommandSink([this](const std::string& command) {
-            sendToAllTerminalsPublic(command);
-        });
+        m_planOrchestrator->setTerminalCommandSink([this](const std::string& command)
+                                                   { sendToAllTerminalsPublic(command); });
 
         // Wire up event callbacks
-        m_planOrchestrator->onPlanningStarted = [this](const std::string& prompt) {
-            appendToOutput("🧠 Plan Orchestrator: Starting planning for: " + prompt + "\n", "Output", OutputSeverity::Info);
+        m_planOrchestrator->onPlanningStarted = [this](const std::string& prompt)
+        {
+            appendToOutput("🧠 Plan Orchestrator: Starting planning for: " + prompt + "\n", "Output",
+                           OutputSeverity::Info);
         };
 
-        m_planOrchestrator->onPlanningChunk = [this](const std::string& chunk) {
-            if (!chunk.empty()) {
+        m_planOrchestrator->onPlanningChunk = [this](const std::string& chunk)
+        {
+            if (!chunk.empty())
+            {
                 appendToOutput("🧠 Planning Stream: " + chunk + "\n", "Output", OutputSeverity::Info);
             }
         };
 
-        m_planOrchestrator->onPlanningCompleted = [this](const RawrXD::PlanningResult& result) {
-            std::string msg = "🧠 Plan Orchestrator: Planning completed - " +
-                            std::to_string(result.tasks.size()) + " tasks generated\n";
-            if (!result.errorMessage.empty()) {
+        m_planOrchestrator->onPlanningCompleted = [this](const RawrXD::PlanningResult& result)
+        {
+            std::string msg = "🧠 Plan Orchestrator: Planning completed - " + std::to_string(result.tasks.size()) +
+                              " tasks generated\n";
+            if (!result.errorMessage.empty())
+            {
                 msg += "⚠️ Error: " + result.errorMessage + "\n";
             }
             appendToOutput(msg, "Output", OutputSeverity::Info);
         };
 
-        m_planOrchestrator->onExecutionStarted = [this](int taskCount) {
+        m_planOrchestrator->onExecutionStarted = [this](int taskCount)
+        {
             appendToOutput("⚡ Plan Orchestrator: Starting execution of " + std::to_string(taskCount) + " tasks\n",
-                         "Output", OutputSeverity::Info);
+                           "Output", OutputSeverity::Info);
         };
 
-        m_planOrchestrator->onStepCompleted = [this](const std::string& message) {
-            if (!message.empty()) {
+        m_planOrchestrator->onStepCompleted = [this](const std::string& message)
+        {
+            if (!message.empty())
+            {
                 appendToOutput("📎 Plan Orchestrator Output: " + message + "\n", "Output", OutputSeverity::Info);
             }
         };
 
-        m_planOrchestrator->onPlanCompleted = [this](const std::string& message) {
-            if (!message.empty()) {
+        m_planOrchestrator->onPlanCompleted = [this](const std::string& message)
+        {
+            if (!message.empty())
+            {
                 appendToOutput("🎯 Plan Orchestrator: " + message + "\n", "Output", OutputSeverity::Info);
             }
         };
 
-        m_planOrchestrator->onTaskExecuted = [this](int index, bool success, const std::string& result) {
+        m_planOrchestrator->onTaskExecuted = [this](int index, bool success, const std::string& result)
+        {
             std::string status = success ? "✅" : "❌";
-            appendToOutput("⚡ Task " + std::to_string(index + 1) + ": " + status + " " + result + "\n",
-                         "Output", OutputSeverity::Info);
+            appendToOutput("⚡ Task " + std::to_string(index + 1) + ": " + status + " " + result + "\n", "Output",
+                           OutputSeverity::Info);
         };
 
-        m_planOrchestrator->onExecutionCompleted = [this](const RawrXD::ExecutionResult& result) {
-            std::string msg = "🎯 Plan Orchestrator: Execution completed - " +
-                            std::to_string(result.successCount) + " successful, " +
-                            std::to_string(result.failureCount) + " failed\n";
+        m_planOrchestrator->onExecutionCompleted = [this](const RawrXD::ExecutionResult& result)
+        {
+            std::string msg = "🎯 Plan Orchestrator: Execution completed - " + std::to_string(result.successCount) +
+                              " successful, " + std::to_string(result.failureCount) + " failed\n";
             appendToOutput(msg, "Output", OutputSeverity::Info);
         };
 
-        m_planOrchestrator->onErrorOccurred = [this](const std::string& error) {
-            appendToOutput("❌ Plan Orchestrator Error: " + error + "\n", "Errors", OutputSeverity::Error);
-        };
+        m_planOrchestrator->onErrorOccurred = [this](const std::string& error)
+        { appendToOutput("❌ Plan Orchestrator Error: " + error + "\n", "Errors", OutputSeverity::Error); };
 
-        m_planOrchestrator->onWorkspaceChanged = [this]() {
+        m_planOrchestrator->onWorkspaceChanged = [this]()
+        {
             appendToOutput("🔄 Plan Orchestrator: Workspace changed, refreshing IDE state\n", "Output",
                            OutputSeverity::Info);
 
             refreshFileExplorer();
 
-            if (!m_currentFile.empty()) {
-                if (!m_fileModified) {
+            if (!m_currentFile.empty())
+            {
+                if (!m_fileModified)
+                {
                     reloadCurrentFile();
-                } else {
-                    appendToOutput(
-                        "⚠️ Planner changed workspace files while the current buffer has unsaved edits; auto-reload skipped\n",
-                        "Output", OutputSeverity::Warning);
+                }
+                else
+                {
+                    appendToOutput("⚠️ Planner changed workspace files while the current buffer has unsaved edits; "
+                                   "auto-reload skipped\n",
+                                   "Output", OutputSeverity::Warning);
                 }
             }
         };
 
         // SECURITY GATEKEEPER: Human-in-the-loop approval for high-risk operations
-        m_planOrchestrator->onTaskApprovalRequired = [this](const RawrXD::EditTask& task) -> bool {
+        m_planOrchestrator->onTaskApprovalRequired = [this](const RawrXD::EditTask& task) -> bool
+        {
             std::string riskMsg = "🤖 Agent wants to execute a potentially risky operation:\n\n";
             riskMsg += "Operation: " + task.operation + "\n";
             riskMsg += "File: " + task.filePath + "\n";
-            if (!task.description.empty()) {
+            if (!task.description.empty())
+            {
                 riskMsg += "Description: " + task.description + "\n";
             }
             riskMsg += "\nAllow this operation?";
 
             int result = MessageBoxA(m_hwndMain, riskMsg.c_str(), "Security Gatekeeper",
-                                   MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2);
+                                     MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2);
             return (result == IDYES);
         };
 
@@ -970,28 +988,36 @@ void Win32IDE::initializePlanOrchestrator()
         m_planOrchestrator->initialize();
 
         // Start watching the workspace directory for file changes
-        if (!workspaceRoot.empty()) {
+        if (!workspaceRoot.empty())
+        {
             // Ensure file watcher is initialized
-            if (!m_fileWatcher) {
+            if (!m_fileWatcher)
+            {
                 initFileWatcher();
             }
             // Start watching the workspace directory
             std::wstring wWorkspace(workspaceRoot.begin(), workspaceRoot.end());
-            if (m_fileWatcher && m_fileWatcher->Start(wWorkspace)) {
+            if (m_fileWatcher && m_fileWatcher->Start(wWorkspace))
+            {
                 LOG_INFO("Watching workspace directory for plan orchestrator: " + workspaceRoot);
-                appendToOutput("👀 Watching workspace for autonomous planning updates\n", "Output", OutputSeverity::Info);
-            } else {
+                appendToOutput("👀 Watching workspace for autonomous planning updates\n", "Output",
+                               OutputSeverity::Info);
+            }
+            else
+            {
                 LOG_WARNING("Failed to start workspace watcher for plan orchestrator");
             }
         }
 
         LOG_INFO("Plan Orchestrator initialized successfully");
-        appendToOutput("✅ Plan Orchestrator initialized for autonomous task planning\n", "Output", OutputSeverity::Info);
+        appendToOutput("✅ Plan Orchestrator initialized for autonomous task planning\n", "Output",
+                       OutputSeverity::Info);
     }
     catch (const std::exception& e)
     {
         LOG_ERROR("Exception during Plan Orchestrator initialization: " + std::string(e.what()));
-        appendToOutput("❌ Failed to initialize Plan Orchestrator: " + std::string(e.what()) + "\n", "Errors", OutputSeverity::Error);
+        appendToOutput("❌ Failed to initialize Plan Orchestrator: " + std::string(e.what()) + "\n", "Errors",
+                       OutputSeverity::Error);
     }
     catch (...)
     {
@@ -1017,29 +1043,38 @@ void Win32IDE::onPlanOrchestratorStart()
 
     // Get task description from user
     char prompt[2048] = {0};
-    if (DialogBoxParamA(m_hInstance, "AGENT_PROMPT_DLG", m_hwndMain,
-        [](HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) -> INT_PTR {
-            switch (msg) {
-                case WM_INITDIALOG:
-                    SetWindowTextA(GetDlgItem(hwnd, 101), "Enter autonomous task for Plan Orchestrator:");
-                    return TRUE;
-                case WM_COMMAND:
-                    if (LOWORD(wp) == IDOK) {
-                        GetDlgItemTextA(hwnd, 102, (char*)lp, 2048);
-                        EndDialog(hwnd, IDOK);
+    if (DialogBoxParamA(
+            m_hInstance, "AGENT_PROMPT_DLG", m_hwndMain,
+            [](HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) -> INT_PTR
+            {
+                switch (msg)
+                {
+                    case WM_INITDIALOG:
+                        SetWindowTextA(GetDlgItem(hwnd, 101), "Enter autonomous task for Plan Orchestrator:");
                         return TRUE;
-                    } else if (LOWORD(wp) == IDCANCEL) {
-                        EndDialog(hwnd, IDCANCEL);
-                        return TRUE;
-                    }
-                    break;
-            }
-            return FALSE;
-        }, (LPARAM)prompt) != IDOK) {
+                    case WM_COMMAND:
+                        if (LOWORD(wp) == IDOK)
+                        {
+                            GetDlgItemTextA(hwnd, 102, (char*)lp, 2048);
+                            EndDialog(hwnd, IDOK);
+                            return TRUE;
+                        }
+                        else if (LOWORD(wp) == IDCANCEL)
+                        {
+                            EndDialog(hwnd, IDCANCEL);
+                            return TRUE;
+                        }
+                        break;
+                }
+                return FALSE;
+            },
+            (LPARAM)prompt) != IDOK)
+    {
         return;
     }
 
-    if (strlen(prompt) == 0) {
+    if (strlen(prompt) == 0)
+    {
         strcpy_s(prompt, "Analyze the codebase and suggest improvements");
     }
 
@@ -1047,21 +1082,33 @@ void Win32IDE::onPlanOrchestratorStart()
     appendToOutput("🧠 Starting Plan Orchestrator: " + promptStr + "\n", "Output", OutputSeverity::Info);
 
     // Execute plan and execute in background thread
-    std::thread([this, promptStr]() {
-        DetachedThreadGuard _guard(m_activeDetachedThreads, m_shuttingDown);
-        if (_guard.cancelled) return;
+    std::thread(
+        [this, promptStr]()
+        {
+            DetachedThreadGuard _guard(m_activeDetachedThreads, m_shuttingDown);
+            if (_guard.cancelled)
+                return;
 
-        try {
-            auto result = m_planOrchestrator->planAndExecute(promptStr, m_planOrchestrator->workspaceRoot());
-            if (result.success) {
-                appendToOutput("🎯 Plan Orchestrator completed successfully\n", "Output", OutputSeverity::Info);
-            } else {
-                appendToOutput("❌ Plan Orchestrator failed: " + result.errorMessage + "\n", "Errors", OutputSeverity::Error);
+            try
+            {
+                auto result = m_planOrchestrator->planAndExecute(promptStr, m_planOrchestrator->workspaceRoot());
+                if (result.success)
+                {
+                    appendToOutput("🎯 Plan Orchestrator completed successfully\n", "Output", OutputSeverity::Info);
+                }
+                else
+                {
+                    appendToOutput("❌ Plan Orchestrator failed: " + result.errorMessage + "\n", "Errors",
+                                   OutputSeverity::Error);
+                }
             }
-        } catch (const std::exception& e) {
-            appendToOutput("❌ Plan Orchestrator exception: " + std::string(e.what()) + "\n", "Errors", OutputSeverity::Error);
-        }
-    }).detach();
+            catch (const std::exception& e)
+            {
+                appendToOutput("❌ Plan Orchestrator exception: " + std::string(e.what()) + "\n", "Errors",
+                               OutputSeverity::Error);
+            }
+        })
+        .detach();
 }
 
 void Win32IDE::onPlanOrchestratorStop()
@@ -1100,21 +1147,33 @@ void Win32IDE::onPlanOrchestratorExecutePrompt(const std::string& prompt)
     appendToOutput("🧠 Executing prompt: " + prompt + "\n", "Output", OutputSeverity::Info);
 
     // Execute in background thread
-    std::thread([this, prompt]() {
-        DetachedThreadGuard _guard(m_activeDetachedThreads, m_shuttingDown);
-        if (_guard.cancelled) return;
+    std::thread(
+        [this, prompt]()
+        {
+            DetachedThreadGuard _guard(m_activeDetachedThreads, m_shuttingDown);
+            if (_guard.cancelled)
+                return;
 
-        try {
-            auto result = m_planOrchestrator->planAndExecute(prompt, m_planOrchestrator->workspaceRoot());
-            if (result.success) {
-                appendToOutput("🎯 Prompt execution completed successfully\n", "Output", OutputSeverity::Info);
-            } else {
-                appendToOutput("❌ Prompt execution failed: " + result.errorMessage + "\n", "Errors", OutputSeverity::Error);
+            try
+            {
+                auto result = m_planOrchestrator->planAndExecute(prompt, m_planOrchestrator->workspaceRoot());
+                if (result.success)
+                {
+                    appendToOutput("🎯 Prompt execution completed successfully\n", "Output", OutputSeverity::Info);
+                }
+                else
+                {
+                    appendToOutput("❌ Prompt execution failed: " + result.errorMessage + "\n", "Errors",
+                                   OutputSeverity::Error);
+                }
             }
-        } catch (const std::exception& e) {
-            appendToOutput("❌ Prompt execution exception: " + std::string(e.what()) + "\n", "Errors", OutputSeverity::Error);
-        }
-    }).detach();
+            catch (const std::exception& e)
+            {
+                appendToOutput("❌ Prompt execution exception: " + std::string(e.what()) + "\n", "Errors",
+                               OutputSeverity::Error);
+            }
+        })
+        .detach();
 }
 
 void Win32IDE::onPlanOrchestratorViewStatus()
@@ -1154,13 +1213,19 @@ void Win32IDE::onPlanOrchestratorViewPlan()
 
     std::stringstream planOutput;
     planOutput << "=== Current Plan ===\n";
-    if (plan.empty()) {
+    if (plan.empty())
+    {
         planOutput << "(No active plan)\n";
-    } else {
-        for (size_t i = 0; i < plan.size(); ++i) {
+    }
+    else
+    {
+        for (size_t i = 0; i < plan.size(); ++i)
+        {
             const auto& step = plan[i];
-            planOutput << (i + 1) << ". " << step.description << " [" << (step.isComplete ? "Complete" : "Pending") << "]\n";
-            if (!step.result.empty()) {
+            planOutput << (i + 1) << ". " << step.description << " [" << (step.isComplete ? "Complete" : "Pending")
+                       << "]\n";
+            if (!step.result.empty())
+            {
                 planOutput << "   Result: " << step.result << "\n";
             }
         }
@@ -1820,6 +1885,10 @@ void Win32IDE::handleAgentCommand(int commandId)
             HandleUnifiedTelemetry(this);
             break;
 
+        case IDM_INFERENCE_SPECULATIVE_RELOAD:
+            syncSpeculativeInferenceFromConfig();
+            break;
+
         // --- Agent Memory (Phase 19B) ---
         case IDM_AGENT_MEMORY:
             onAgentMemoryView();
@@ -2197,6 +2266,7 @@ void Win32IDE::syncAgentModeUiFromBridge()
         deep = m_agenticBridge->GetDeepThinking();
         research = m_agenticBridge->GetDeepResearch();
         noRefusal = m_agenticBridge->GetNoRefusal();
+        m_agenticFunctionCallingMode = m_agenticBridge->IsAgenticMode();
     }
     else if (m_agent)
     {
@@ -2204,10 +2274,6 @@ void Win32IDE::syncAgentModeUiFromBridge()
         deep = m_agent->IsDeepThink();
         research = m_agent->IsDeepResearch();
         noRefusal = m_agent->IsNoRefusal();
-    }
-    else
-    {
-        return;
     }
 
     if (m_hMenu)
@@ -2225,6 +2291,10 @@ void Win32IDE::syncAgentModeUiFromBridge()
         SendMessage(m_hwndChkDeepResearch, BM_SETCHECK, research ? BST_CHECKED : BST_UNCHECKED, 0);
     if (m_hwndChkNoRefusal)
         SendMessage(m_hwndChkNoRefusal, BM_SETCHECK, noRefusal ? BST_CHECKED : BST_UNCHECKED, 0);
+    if (m_hwndChkAgenticMode)
+        SendMessage(m_hwndChkAgenticMode, BM_SETCHECK, m_agenticFunctionCallingMode ? BST_CHECKED : BST_UNCHECKED, 0);
+    if (m_agenticChatSession)
+        m_agenticChatSession->SetAgenticMode(m_agenticFunctionCallingMode);
 
     if (m_agent)
     {
@@ -2323,6 +2393,23 @@ void Win32IDE::onAIModeNoRefusal()
                    OutputSeverity::Info);
 }
 
+void Win32IDE::onAIModeAgentic()
+{
+    LOG_INFO("onAIModeAgentic toggled");
+    m_agenticFunctionCallingMode = !m_agenticFunctionCallingMode;
+    if (m_agenticChatSession)
+        m_agenticChatSession->SetAgenticMode(m_agenticFunctionCallingMode);
+    if (m_agenticBridge)
+        m_agenticBridge->SetAgenticMode(m_agenticFunctionCallingMode);
+    if (m_hwndChkAgenticMode)
+        SendMessage(m_hwndChkAgenticMode, BM_SETCHECK, m_agenticFunctionCallingMode ? BST_CHECKED : BST_UNCHECKED, 0);
+    if (m_agenticFunctionCallingMode)
+        refreshAgenticChatSessionContext();
+    appendToOutput(std::string("Agentic Mode (Function Calling) ") +
+                       (m_agenticFunctionCallingMode ? "ENABLED" : "DISABLED") + "\n",
+                   "Output", OutputSeverity::Info);
+}
+
 // ============================================================================
 // AGENTIC PLANNING ORCHESTRATOR — Full Approval Gate Handlers
 // ============================================================================
@@ -2339,25 +2426,33 @@ void Win32IDE::onPlanningStart()
 
     // Wire the orchestrator callbacks to the IDE subsystems
     auto& integration = Agentic::OrchestratorIntegration::instance();
-    
+
     // 1. Tool Execution Tunnel
-    integration.setToolExecutor([this](const std::string& tool, const std::string& args, std::string& output) {
-        if (!m_agenticBridge) return false;
-        // Format as a model-like string for the bridge dispatcher
-        std::string toolCall = "tool: " + tool + "\nargs: " + args;
-        return m_agenticBridge->DispatchModelToolCalls(toolCall, output);
-    });
+    integration.setToolExecutor(
+        [this](const std::string& tool, const std::string& args, std::string& output)
+        {
+            if (!m_agenticBridge)
+                return false;
+            // Format as a model-like string for the bridge dispatcher
+            std::string toolCall = "tool: " + tool + "\nargs: " + args;
+            return m_agenticBridge->DispatchModelToolCalls(toolCall, output);
+        });
 
     // 2. Risk Analyzer (HITL Gate)
-    integration.setRiskAnalyzer([this](const Agentic::PlanStep& step) -> Agentic::StepRisk {
-        if (step.is_mutating && step.risk_level >= Agentic::StepRisk::Medium) {
-            std::string msg = "Agent proposes high-risk action: " + step.title + "\n" + step.description + "\n\nAllow execution?";
-            if (MessageBoxA(m_hwndMain, msg.c_str(), "Safety Gatekeeper", MB_YESNO | MB_ICONWARNING) == IDNO) {
-                return Agentic::StepRisk::Critical; // High risk used as "denied" signal here
+    integration.setRiskAnalyzer(
+        [this](const Agentic::PlanStep& step) -> Agentic::StepRisk
+        {
+            if (step.is_mutating && step.risk_level >= Agentic::StepRisk::Medium)
+            {
+                std::string msg =
+                    "Agent proposes high-risk action: " + step.title + "\n" + step.description + "\n\nAllow execution?";
+                if (MessageBoxA(m_hwndMain, msg.c_str(), "Safety Gatekeeper", MB_YESNO | MB_ICONWARNING) == IDNO)
+                {
+                    return Agentic::StepRisk::Critical;  // High risk used as "denied" signal here
+                }
             }
-        }
-        return step.risk_level;
-    });
+            return step.risk_level;
+        });
 
     char taskDesc[1024] = {0};
     if (DialogBoxParamA(
@@ -2654,6 +2749,11 @@ void Win32IDE::onPlanningDiagnostics()
 void Win32IDE::setAgenticMode(RawrXD::AgenticMode mode)
 {
     m_agenticMode = mode;
+    if (m_agenticBridge)
+    {
+        // Keep bridge-level routing mode aligned with explicit Ask/Plan/Agent UI mode.
+        m_agenticBridge->SetAgenticMode(mode == RawrXD::AgenticMode::Agent);
+    }
     LOG_INFO("Agentic mode set to " + std::string(RawrXD::AgenticModeToString(mode)));
     if (m_hwndAgenticModeAsk)
         SendMessage(m_hwndAgenticModeAsk, BM_SETCHECK, (mode == RawrXD::AgenticMode::Ask) ? BST_CHECKED : BST_UNCHECKED,

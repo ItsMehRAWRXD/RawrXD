@@ -3,6 +3,7 @@
 **Status:** canonical production lane  
 **Validated:** 2026-03-13  
 **Current output:** `build/monolithic/bin/RawrXD_Monolithic.exe`
+**Competes with:** GitHub Copilot Chat + Cursor Composer
 
 ---
 
@@ -44,8 +45,9 @@ This is the lane to use when the goal is a directly buildable, directly launchab
 
 - `src\asm\monolithic\Build-Monolithic.ps1` — full monolithic assembler/linker pipeline
 - `src\asm\monolithic\main.asm` — process entry and top-level wiring
+- `src\asm\monolithic\ast_indexer.asm` — AST context bootstrap seam for bridge lookups
 - `src\asm\monolithic\ui.asm` — editor surface, input, paint, ghost text, PE save/open hooks
-- `src\asm\monolithic\bridge.asm` — bridge boundary and message wiring
+- `src\asm\monolithic\bridge.asm` — bridge boundary, message wiring, and context retrieval dispatch
 - `src\asm\monolithic\pe_writer.asm` — PE writer path
 
 ---

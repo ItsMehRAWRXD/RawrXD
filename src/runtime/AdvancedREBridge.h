@@ -13,6 +13,12 @@ namespace RawrXD::RE {
         std::string errorMessage;
     };
 
+    struct REDisasmResult {
+        bool success = false;
+        std::string assembly;
+        std::string error;
+    };
+
     class SovereignREBridge {
     public:
         static SovereignREBridge& Instance();
@@ -36,6 +42,37 @@ namespace RawrXD::RE {
     private:
         SovereignREBridge() = default;
         std::string ExecutePipelineCommand(const std::string& command);
+    };
+
+    // AdvancedREBridge — Alias used by ToolRegistry for RE operations.
+    class AdvancedREBridge {
+    public:
+        static AdvancedREBridge& Instance() {
+            static AdvancedREBridge s;
+            return s;
+        }
+
+        REDisasmResult Disassemble(const std::string& filePath, uint64_t rva, size_t size) {
+            (void)filePath; (void)rva; (void)size;
+            REDisasmResult r;
+            r.success = false;
+            r.error = "AdvancedREBridge: not connected to disassembler backend";
+            return r;
+        }
+
+        bool VerifyAssembly(const std::string& asmCode, std::string& error) {
+            (void)asmCode;
+            error = "AdvancedREBridge: not connected to assembler backend";
+            return false;
+        }
+
+        nlohmann::json AnalyzeLogic(const std::string& filePath, uint64_t rva) {
+            (void)filePath; (void)rva;
+            return nlohmann::json{{"status", "not_connected"}};
+        }
+
+    private:
+        AdvancedREBridge() = default;
     };
 
 } // namespace RawrXD::RE

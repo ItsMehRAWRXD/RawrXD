@@ -20,6 +20,9 @@
 #include <vector>
 #include <windows.h>
 
+AgenticExecutor::AgenticExecutor() = default;
+AgenticExecutor::~AgenticExecutor() = default;
+
 // Request execution path:
 // 1. Normalize request and classify command-like operations.
 // 2. Route deterministic command requests through command execution.

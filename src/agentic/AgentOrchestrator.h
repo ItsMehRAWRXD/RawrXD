@@ -72,6 +72,7 @@ struct AgentSession {
     std::string session_id;
     std::vector<AgentStep> steps;
     std::vector<ChatMessage> messages;  // Full chat history
+    std::vector<std::string> applied_instruction_sources;
     int tool_calls_made = 0;
     int errors_encountered = 0;
     double total_elapsed_ms = 0.0;

@@ -8,7 +8,12 @@
 #include "../advanced_agent_features.hpp"
 #include "../agent/agentic_hotpatch_orchestrator.hpp"
 #include "../agent/agentic_puppeteer.hpp"
+#include "../agentic/AgentToolHandlers.h"
 #include "../agentic/OrchestratorBridge.h"
+#include "../agentic/SovereignAssembler.h"
+#include "../agentic/ToolRegistry.h"
+#include "../agentic/agent_controller_minimal.h"
+#include "../agentic/agentic_controller_wiring.h"
 #include "../agentic_engine.h"
 #include "../cpu_inference_engine.h"
 #include "../inference/PerformanceMonitor.h"
@@ -27,13 +32,44 @@
 #include <fstream>
 #include <iomanip>
 #include <memory>
+#include <optional>
 #include <sstream>
+#include <vector>
 
 namespace
 {
 
+/// Match Win32IDE::syncAgenticToolGuardrailsFromWorkspace — one canonical root for tools + explorer parity.
+[[nodiscard]] std::string canonicalWorkspaceRootForAgent(const std::string& root)
+{
+    if (root.empty())
+    {
+        return root;
+    }
+    std::error_code ec;
+    std::filesystem::path p(root);
+    if (std::filesystem::exists(p, ec))
+    {
+        p = std::filesystem::weakly_canonical(p, ec);
+    }
+    else
+    {
+        p = std::filesystem::absolute(p, ec);
+    }
+    return p.lexically_normal().string();
+}
+
 static constexpr size_t kMaxCommandFileBytes = 512 * 1024;
 static constexpr size_t kMaxRefinedPromptBytes = 768 * 1024;
+
+bool isTruthyEnvVar(const char* varName)
+{
+    if (!varName)
+        return false;
+    char buf[12] = {};
+    const DWORD n = GetEnvironmentVariableA(varName, buf, static_cast<DWORD>(sizeof(buf)));
+    return n > 0 && (buf[0] == '1' || buf[0] == 't' || buf[0] == 'T' || buf[0] == 'y' || buf[0] == 'Y');
+}
 
 bool envDisablesCapabilityHotpatch(const char* varName)
 {
@@ -76,6 +112,195 @@ bool envDisablesCapabilityHotpatch(const char* varName)
         }
     }
     return true;
+}
+
+[[nodiscard]] std::string ExtractDirectiveToolName(const std::string& modelOutput)
+{
+    std::string toolName = "tool";
+    auto toolPos = modelOutput.find("tool:");
+    if (toolPos == std::string::npos)
+        toolPos = modelOutput.find("TOOL:");
+    if (toolPos != std::string::npos)
+    {
+        size_t nameStart = toolPos + 5;
+        while (nameStart < modelOutput.size() && modelOutput[nameStart] == ' ')
+            nameStart++;
+        const size_t nameEnd = modelOutput.find_first_of(" \n\r({[", nameStart);
+        const size_t end = (nameEnd == std::string::npos) ? modelOutput.size() : nameEnd;
+        if (end > nameStart)
+            toolName.assign(modelOutput.data() + nameStart, modelOutput.data() + end);
+    }
+    return toolName;
+}
+
+[[nodiscard]] std::optional<std::string> QueryVsInstallPathFromVswhere()
+{
+    char vswhereBuf[MAX_PATH * 2]{};
+    const DWORD n = ExpandEnvironmentStringsA("%ProgramFiles(x86)%\\Microsoft Visual Studio\\Installer\\vswhere.exe",
+                                              vswhereBuf, sizeof(vswhereBuf));
+    if (n == 0 || n > sizeof(vswhereBuf))
+    {
+        return std::nullopt;
+    }
+    if (!std::filesystem::exists(vswhereBuf))
+    {
+        return std::nullopt;
+    }
+
+    const std::string cmd = std::string("\"") + vswhereBuf +
+                            "\" -latest -products * -requires "
+                            "Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath";
+    FILE* pipe = _popen(cmd.c_str(), "r");
+    if (!pipe)
+    {
+        return std::nullopt;
+    }
+
+    char line[2048]{};
+    std::string out;
+    if (fgets(line, sizeof(line), pipe) != nullptr)
+    {
+        out = line;
+        while (!out.empty() && (out.back() == '\r' || out.back() == '\n'))
+        {
+            out.pop_back();
+        }
+    }
+    (void)_pclose(pipe);
+
+    if (out.empty() || !std::filesystem::is_directory(out))
+    {
+        return std::nullopt;
+    }
+    return out;
+}
+
+[[nodiscard]] std::optional<std::string> FallbackVsInstallPath()
+{
+    static const char* kCandidates[] = {
+        "D:\\VS2022Enterprise",
+        "C:\\VS2022Enterprise",
+        "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise",
+        "C:\\Program Files\\Microsoft Visual Studio\\2022\\Professional",
+        "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community",
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools",
+    };
+    for (const char* root : kCandidates)
+    {
+        const std::filesystem::path vcvars =
+            std::filesystem::path(root) / "VC" / "Auxiliary" / "Build" / "vcvars64.bat";
+        if (std::filesystem::exists(vcvars))
+        {
+            return std::string(root);
+        }
+    }
+    return std::nullopt;
+}
+
+[[nodiscard]] std::string ResolveVsInstallRoot()
+{
+    if (const auto v = QueryVsInstallPathFromVswhere())
+    {
+        return *v;
+    }
+    if (const auto f = FallbackVsInstallPath())
+    {
+        return *f;
+    }
+    return {};
+}
+
+[[nodiscard]] std::optional<std::string> ResolveToolInLatestMsvc(const std::string& vsRoot, const std::string& arch,
+                                                                 const std::string& exeName)
+{
+    if (vsRoot.empty())
+    {
+        return std::nullopt;
+    }
+
+    const std::filesystem::path msvcRoot = std::filesystem::path(vsRoot) / "VC" / "Tools" / "MSVC";
+    if (!std::filesystem::is_directory(msvcRoot))
+    {
+        return std::nullopt;
+    }
+
+    std::vector<std::filesystem::path> versions;
+    for (const auto& entry : std::filesystem::directory_iterator(msvcRoot))
+    {
+        if (entry.is_directory())
+        {
+            versions.push_back(entry.path());
+        }
+    }
+    if (versions.empty())
+    {
+        return std::nullopt;
+    }
+
+    std::sort(versions.begin(), versions.end(), [](const std::filesystem::path& a, const std::filesystem::path& b)
+              { return a.filename().string() > b.filename().string(); });
+
+    auto makeBinPath = [&](const std::filesystem::path& ver) -> std::filesystem::path
+    {
+        if (arch == "x86" || arch == "i386")
+        {
+            return ver / "bin" / "Hostx86" / "x86" / exeName;
+        }
+        if (arch == "arm" || arch == "arm64")
+        {
+            return ver / "bin" / "Hostx64" / "arm64" / exeName;
+        }
+        return ver / "bin" / "Hostx64" / "x64" / exeName;
+    };
+
+    for (const auto& ver : versions)
+    {
+        const std::filesystem::path p = makeBinPath(ver);
+        if (std::filesystem::exists(p))
+        {
+            return p.string();
+        }
+    }
+    return std::nullopt;
+}
+
+[[nodiscard]] std::optional<std::string> ResolveVcvarsBatForArch(const std::string& vsRoot, const std::string& arch)
+{
+    if (vsRoot.empty())
+    {
+        return std::nullopt;
+    }
+    const std::filesystem::path build = std::filesystem::path(vsRoot) / "VC" / "Auxiliary" / "Build";
+
+    if (arch == "x86" || arch == "i386")
+    {
+        const std::filesystem::path p = build / "vcvars32.bat";
+        if (std::filesystem::exists(p))
+        {
+            return p.string();
+        }
+    }
+    else if (arch == "arm" || arch == "arm64")
+    {
+        const std::filesystem::path p = build / "vcvarsamd64_arm64.bat";
+        if (std::filesystem::exists(p))
+        {
+            return p.string();
+        }
+    }
+
+    const std::filesystem::path p64 = build / "vcvars64.bat";
+    if (!std::filesystem::exists(p64))
+    {
+        return std::nullopt;
+    }
+    return p64.string();
+}
+
+[[nodiscard]] std::string BuildCmdWithVcvars(const std::string& vcvarsBat, const std::string& toolPath,
+                                             const std::string& toolArgsTail)
+{
+    return "cmd /c \"call \\\"" + vcvarsBat + "\\\" && \\\"" + toolPath + "\\\" " + toolArgsTail + "\"";
 }
 
 }  // namespace
@@ -201,6 +426,32 @@ bool AgenticBridge::Initialize(const std::string& frameworkPath, const std::stri
         g_agentEngine = std::make_shared<AgenticEngine>();
         g_agentEngine->setInferenceEngine(cpu.get());
     }
+
+    // Wire the minimal agentic controller once CPU inference is available.
+    rawrxd::initializeAgentControllerWiring(cpu.get());
+
+    // P1: Initialize the Tool Registry for the agentic layer (44-tool base)
+    RawrXD::Agent::AgentToolRegistry::Instance();
+
+    // Hot-patch the internal tokenizer with AVX2 if an optional PE is present (sovereign-assembled DLL).
+    {
+        wchar_t buf[MAX_PATH]{};
+        DWORD n = GetEnvironmentVariableW(L"RAWRXD_AVX2_TOKENIZER_DLL", buf, MAX_PATH);
+        const std::filesystem::path envPath =
+            (n > 0 && n < MAX_PATH) ? std::filesystem::path(buf) : std::filesystem::path(L"d:\\avx2_tokenizer.dll");
+        if (!envPath.empty() && std::filesystem::exists(envPath))
+        {
+            if (SovereignAssembler::HotPatchTokenizer(envPath.c_str()))
+            {
+                LOG_INFO("AVX2 tokenizer hot-patched successfully.");
+            }
+            else
+            {
+                LOG_WARNING("AVX2 tokenizer hot-patch failed (missing exports or load error).");
+            }
+        }
+    }
+
     if (!m_workspaceRoot.empty())
     {
         g_agentEngine->setWorkspaceRoot(m_workspaceRoot);
@@ -214,6 +465,21 @@ bool AgenticBridge::Initialize(const std::string& frameworkPath, const std::stri
 
     m_initialized = true;
     LOG_INFO("Native Inference Stack initialized successfully.");
+    if (m_ide)
+    {
+        m_ide->appendToOutput(
+            "Agentic + inference ready — Command Palette (Ctrl+Shift+P)  ·  Toggle/focus terminal (Ctrl+`)  ·  New "
+            "integrated terminal (Ctrl+Shift+`)  ·  Agent terminal (Ctrl+Alt+A, read-only).\n",
+            "Agent", Win32IDE::OutputSeverity::Success);
+        if (IDEConfig::getInstance().getBool("features.speculativeDecoding", false))
+        {
+            m_ide->appendToOutput(
+                "[Speed] Speculative decoding enabled — set inference.speculativeDraftGguf and "
+                "inference.speculativeTargetGguf in rawrxd.config.json, then run palette: Inference: Reload "
+                "Speculative Decoding.\n",
+                "Agent", Win32IDE::OutputSeverity::Info);
+        }
+    }
     return true;
 }
 
@@ -227,7 +493,21 @@ bool AgenticBridge::HasUsableBackend() const
     if (RawrXD::Agent::OrchestratorBridge::Instance().IsInitialized())
         return true;
     if (!m_modelName.empty())
-        return true;
+    {
+        auto endsWith = [](const std::string& s, const std::string& ext) -> bool
+        {
+            if (ext.size() > s.size())
+                return false;
+            return s.compare(s.size() - ext.size(), ext.size(), ext) == 0;
+        };
+        std::string lower = m_modelName;
+        std::transform(lower.begin(), lower.end(), lower.begin(),
+                       [](unsigned char c) { return (char)std::tolower(c); });
+        const bool isLocalPath = m_modelName.find_first_of("/\\") != std::string::npos || endsWith(lower, ".gguf") ||
+                                 endsWith(lower, ".gguf2") || endsWith(lower, ".bin") ||
+                                 endsWith(lower, ".safetensors") || endsWith(lower, ".onnx");
+        return !isLocalPath;
+    }
     return false;
 }
 
@@ -305,6 +585,66 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt)
     if (!m_workspaceRoot.empty() && g_agentEngine)
         g_agentEngine->setWorkspaceRoot(m_workspaceRoot);
 
+    // Optional explicit route into the minimal agentic controller loop.
+    // Supported prefixes:
+    //   /agentic <prompt>
+    //   /agent <prompt>
+    //   agentic: <prompt>
+    //   @agent <prompt>
+    const std::string sanitizedPrompt = promptSan.sanitized;
+    bool hasAgenticPrefix = false;
+    std::string minimalPrompt = StripAgenticPrefix(sanitizedPrompt, hasAgenticPrefix);
+    const bool wantsMinimalAgent = m_enableAgenticMode || hasAgenticPrefix;
+    const bool strictLocalSwarm = isTruthyEnvVar("RAWRXD_FORCE_LOCAL_SWARM");
+
+    if (wantsMinimalAgent && rawrxd::isAgenticLayerAvailable())
+    {
+        static std::atomic<uint64_t> s_agentSessionCounter{0};
+        if (m_currentSessionId.empty())
+        {
+            const uint64_t sessionOrdinal = ++s_agentSessionCounter;
+            m_currentSessionId = "win32ide-agentic-" + std::to_string(sessionOrdinal);
+        }
+
+        rawrxd::MinimalAgenticRequest req;
+        req.message = minimalPrompt.empty() ? sanitizedPrompt : minimalPrompt;
+        req.session_id = m_currentSessionId;
+        req.model_path = ResolveModelPath();
+        req.enable_tools = true;
+        req.max_iterations = 10;
+        req.workspace_root = m_workspaceRoot;
+
+        const auto miniResp = rawrxd::processAgenticRequest(req);
+        if (miniResp.success)
+        {
+            std::string routed = miniResp.final_message;
+            if (miniResp.tool_calls_made > 0)
+            {
+                routed = "[Agent executed " + std::to_string(miniResp.tool_calls_made) + " tools]\n\n" + routed;
+            }
+            if (m_outputCallback && !miniResp.final_message.empty())
+            {
+                m_outputCallback("stream", routed);
+            }
+            closePerf();
+            return {AgentResponseType::ANSWER, routed};
+        }
+        if (strictLocalSwarm)
+        {
+            const std::string failClosed =
+                miniResp.error.empty()
+                    ? "Error: Strict local swarm mode rejected agentic request before legacy fallback"
+                    : miniResp.error;
+            if (m_outputCallback)
+            {
+                m_outputCallback("stream", failClosed);
+            }
+            closePerf();
+            return {AgentResponseType::AGENT_ERROR, failClosed};
+        }
+        LOG_WARNING("MinimalAgentController route failed, falling back to default bridge lane: " + miniResp.error);
+    }
+
     // E2: sync OrchestratorBridge model + workdir before routing
     auto& orch = RawrXD::Agent::OrchestratorBridge::Instance();
     if (!m_modelName.empty())
@@ -381,8 +721,7 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt)
         else
         {
             closePerf();
-            return {AgentResponseType::ANSWER,
-                    "Error: Could not read file (missing or exceeds size cap) " + path};
+            return {AgentResponseType::ANSWER, "Error: Could not read file (missing or exceeds size cap) " + path};
         }
     }
     else if (prompt.find("/suggest ") == 0)
@@ -404,8 +743,7 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt)
         else
         {
             closePerf();
-            return {AgentResponseType::ANSWER,
-                    "Error: Could not read file (missing or exceeds size cap) " + path};
+            return {AgentResponseType::ANSWER, "Error: Could not read file (missing or exceeds size cap) " + path};
         }
     }
     else if (prompt.find("/patch ") == 0)
@@ -428,8 +766,7 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt)
         else
         {
             closePerf();
-            return {AgentResponseType::ANSWER,
-                    "Error: Could not read file (missing or exceeds size cap) " + path};
+            return {AgentResponseType::ANSWER, "Error: Could not read file (missing or exceeds size cap) " + path};
         }
     }
 
@@ -526,12 +863,19 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt)
 
     // E6: record per-call inference latency
     {
-        const auto inferenceUs = std::chrono::duration_cast<std::chrono::microseconds>(
-            std::chrono::steady_clock::now() - inferenceStart).count();
+        const auto inferenceUs =
+            std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - inferenceStart)
+                .count();
         perf.recordLatency("agentic.bridge.inference", inferenceUs);
     }
 
     // CRITICAL: Stream response through callback so UI actually displays real inference output
+    {
+        std::string probe = "[PROBE-F] AgenticBridge emitting response_len=" + std::to_string(response.size()) +
+                            " has_callback=" + (m_outputCallback ? "1" : "0") +
+                            " preview=" + response.substr(0, std::min(response.size(), (size_t)80)) + "\n";
+        OutputDebugStringA(probe.c_str());
+    }
     if (m_outputCallback && !response.empty())
     {
         m_outputCallback("stream", response);
@@ -713,6 +1057,10 @@ bool AgenticBridge::StartAgentLoop(const std::string& initialPrompt, int maxIter
     {
         LOG_INFO("Agent loop cycle " + std::to_string(i + 1) + " / " + std::to_string(maxIterations));
 
+        if (m_ide)
+            m_ide->showAgentActivityStatus(
+                "Agent loop: " + std::to_string(i + 1) + " / " + std::to_string(maxIterations), 8000);
+
         AgentResponse response = ExecuteAgentCommand(currentPrompt);
 
         if (m_outputCallback)
@@ -824,8 +1172,7 @@ void AgenticBridge::ObserveGhostStreamSeq(uint64_t seq)
 
     uint64_t observed = prev;
     while (seq > observed &&
-           !m_lastGhostSeq.compare_exchange_weak(observed, seq, std::memory_order_relaxed,
-                                                 std::memory_order_relaxed))
+           !m_lastGhostSeq.compare_exchange_weak(observed, seq, std::memory_order_relaxed, std::memory_order_relaxed))
     {
     }
 }
@@ -876,9 +1223,26 @@ void AgenticBridge::SetModel(const std::string& modelName)
 
     if (isPath)
     {
-        // GGUF file path — load via native engine
-        if (g_agentEngine)
-            g_agentEngine->loadLocalModel(modelName);
+// GGUF file path — load via native engine
+// CRITICAL: Set environment variable so BackendOrchestrator.RunNativeInferenceSync
+// can load the model via InferenceEngine_LoadModel before attempting inference.
+#ifdef _WIN32
+        // Convert model path to wide char for SetEnvironmentVariableW
+        int wideLen = MultiByteToWideChar(CP_UTF8, 0, modelName.c_str(), -1, nullptr, 0);
+        if (wideLen > 0 && wideLen < 2048)
+        {
+            wchar_t wModelPath[2048] = {};
+            MultiByteToWideChar(CP_UTF8, 0, modelName.c_str(), -1, wModelPath, wideLen);
+            SetEnvironmentVariableW(L"RAWRXD_NATIVE_MODEL_PATH", wModelPath);
+        }
+#else
+        setenv("RAWRXD_NATIVE_MODEL_PATH", modelName.c_str(), 1);
+#endif
+        LOG_INFO("Set RAWRXD_NATIVE_MODEL_PATH to: " + modelName);
+
+        // Avoid eager heavyweight local-model loads here; this setter can be
+        // called from UI selection/race paths. Backend load is performed when
+        // inference is submitted through the active backend.
     }
     else if (!modelName.empty())
     {
@@ -1093,27 +1457,30 @@ AgentResponse AgenticBridge::ParseAgentResponse(const std::string& rawOutput)
         if (IsToolCall(line))
         {
             response.type = AgentResponseType::TOOL_CALL;
-            size_t firstColon = line.find(':');
-            size_t secondColon = line.find(':', firstColon + 1);
-            if (secondColon != std::string::npos)
+            const size_t colonPos = line.find(':');
+            if (colonPos != std::string::npos)
             {
-                response.toolName = line.substr(firstColon + 1, secondColon - firstColon - 1);
-                response.toolArgs = line.substr(secondColon + 1);
+                const std::string payload = line.substr(colonPos + 1);
+                const size_t spacePos = payload.find(' ');
+                if (spacePos != std::string::npos)
+                {
+                    response.toolName = payload.substr(0, spacePos);
+                    response.toolArgs = payload.substr(spacePos + 1);
+                }
+                else
+                {
+                    response.toolName = payload;
+                }
             }
         }
         else if (IsAnswer(line))
         {
             response.type = AgentResponseType::ANSWER;
-            response.content = line.substr(line.find(':') + 1);
-            const size_t first = response.content.find_first_not_of(" \t\n\r");
-            if (first == std::string::npos)
+            const size_t answerPos = line.find("ANSWER:");
+            if (answerPos != std::string::npos)
             {
-                response.content.clear();
-            }
-            else
-            {
-                const size_t last = response.content.find_last_not_of(" \t\n\r");
-                response.content = response.content.substr(first, last - first + 1);
+                response.content += line.substr(answerPos + 7);
+                response.content += "\n";
             }
         }
         fullContent += line + "\n";
@@ -1149,11 +1516,28 @@ bool AgenticBridge::IsAnswer(const std::string& line)
 // handled elsewhere in the codebase.
 void AgenticBridge::SetWorkspaceRoot(const std::string& workspaceRoot)
 {
-    m_workspaceRoot = workspaceRoot;
+    if (workspaceRoot.empty())
+    {
+        m_workspaceRoot.clear();
+        if (g_agentEngine)
+        {
+            g_agentEngine->setWorkspaceRoot(workspaceRoot);
+        }
+        LOG_INFO("AgenticBridge workspace root cleared");
+        return;
+    }
+
+    const std::string normalized = canonicalWorkspaceRootForAgent(workspaceRoot);
+    m_workspaceRoot = normalized;
     if (g_agentEngine)
     {
-        g_agentEngine->setWorkspaceRoot(workspaceRoot);
+        g_agentEngine->setWorkspaceRoot(normalized);
     }
+    rawrxd::MinimalAgentController::instance().setWorkspaceRoot(normalized);
+    RawrXD::Agent::ToolGuardrails guards = RawrXD::Agent::AgentToolHandlers::GetGuardrails();
+    guards.allowedRoots.clear();
+    guards.allowedRoots.push_back(normalized);
+    RawrXD::Agent::AgentToolHandlers::SetGuardrails(guards);
     LOG_INFO("AgenticBridge workspace root updated: " + m_workspaceRoot);
 }
 
@@ -1199,7 +1583,7 @@ std::string AgenticBridge::ResolveToolsModulePath()
                 return p.string();
         }
     }
-    
+
     // Fallback: check environment variables
     const char* envPaths[] = {"RAWRXD_TOOLS_PATH", "RAWRXD_HOME", "PROGRAMFILES"};
     for (const char* envVar : envPaths)
@@ -1212,27 +1596,81 @@ std::string AgenticBridge::ResolveToolsModulePath()
             auto toolsPath = p / "Tools" / "AgentTools.ps1";
             if (std::filesystem::exists(toolsPath))
                 return toolsPath.string();
-            
+
             toolsPath = p / "AgentTools.ps1";
             if (std::filesystem::exists(toolsPath))
                 return toolsPath.string();
         }
     }
-    
+
     // Fallback: check common installation directories
-    const std::string commonPaths[] = {
-        "C:\\Program Files\\RawrXD\\Tools\\AgentTools.ps1",
-        "C:\\RawrXD\\Tools\\AgentTools.ps1",
-        "D:\\rawrxd\\scripts\\AgentTools.ps1",
-        "..\\..\\scripts\\AgentTools.ps1"
-    };
+    const std::string commonPaths[] = {"C:\\Program Files\\RawrXD\\Tools\\AgentTools.ps1",
+                                       "C:\\RawrXD\\Tools\\AgentTools.ps1", "D:\\rawrxd\\scripts\\AgentTools.ps1",
+                                       "..\\..\\scripts\\AgentTools.ps1"};
     for (const auto& path : commonPaths)
     {
         if (std::filesystem::exists(path))
             return path;
     }
-    
+
     return "";
+}
+
+std::string AgenticBridge::ResolveModelPath() const
+{
+    if (!m_modelName.empty())
+    {
+        return m_modelName;
+    }
+    return "llama2";
+}
+
+std::string AgenticBridge::StripAgenticPrefix(const std::string& prompt, bool& wasAgenticPrefixed) const
+{
+    wasAgenticPrefixed = false;
+
+    auto trimLeft = [](std::string& s)
+    {
+        const auto pos = s.find_first_not_of(" \t\r\n");
+        if (pos == std::string::npos)
+        {
+            s.clear();
+            return;
+        }
+        if (pos > 0)
+            s.erase(0, pos);
+    };
+
+    if (prompt.rfind("agentic:", 0) == 0)
+    {
+        wasAgenticPrefixed = true;
+        std::string out = prompt.substr(8);
+        trimLeft(out);
+        return out;
+    }
+    if (prompt.rfind("/agentic ", 0) == 0)
+    {
+        wasAgenticPrefixed = true;
+        std::string out = prompt.substr(9);
+        trimLeft(out);
+        return out;
+    }
+    if (prompt.rfind("/agent ", 0) == 0)
+    {
+        wasAgenticPrefixed = true;
+        std::string out = prompt.substr(7);
+        trimLeft(out);
+        return out;
+    }
+    if (prompt.rfind("@agent ", 0) == 0)
+    {
+        wasAgenticPrefixed = true;
+        std::string out = prompt.substr(7);
+        trimLeft(out);
+        return out;
+    }
+
+    return prompt;
 }
 
 // ============================================================================
@@ -1243,7 +1681,7 @@ std::string AgenticBridge::RunDumpbin(const std::string& path, const std::string
 {
     if (path.empty())
         return "Error: Empty file path";
-    
+
     // Try engine first if available
     if (g_agentEngine)
     {
@@ -1251,50 +1689,39 @@ std::string AgenticBridge::RunDumpbin(const std::string& path, const std::string
         if (!engineResult.empty() && engineResult != "Agentic Engine not initialized")
             return engineResult;
     }
-    
-    // Fallback: use system dumpbin.exe
+
+    const std::string vsRoot = ResolveVsInstallRoot();
     std::string dumpbinPath;
-    
-    // Search for dumpbin in Visual Studio installations
-    const char* vsEditions[] = {"VS2022Enterprise", "VS2022Community", "VS2022Professional"};
-    for (const char* edition : vsEditions)
+    if (const auto found = ResolveToolInLatestMsvc(vsRoot, "x64", "dumpbin.exe"))
     {
-        char buffer[512];
-        DWORD n = GetEnvironmentVariableA(edition, buffer, sizeof(buffer));
-        if (n > 0 && n < sizeof(buffer))
-        {
-            std::string vsPath(buffer);
-            std::string candidate = vsPath + "\\VC\\Tools\\MSVC\\14.50.35717\\bin\\Hostx64\\x64\\dumpbin.exe";
-            if (std::filesystem::exists(candidate))
-            {
-                dumpbinPath = candidate;
-                break;
-            }
-        }
+        dumpbinPath = *found;
     }
-    
+
     if (dumpbinPath.empty())
     {
-        // Try default Visual Studio path
-        if (std::filesystem::exists("C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\VC\\Tools\\MSVC\\14.50.35717\\bin\\Hostx64\\x64\\dumpbin.exe"))
-            dumpbinPath = "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\VC\\Tools\\MSVC\\14.50.35717\\bin\\Hostx64\\x64\\dumpbin.exe";
+        return "Error: dumpbin.exe not found. Install Visual Studio 2022 with Desktop development with C++, or "
+               "ensure vswhere can locate an installation with VC tools.";
     }
-    
-    if (dumpbinPath.empty())
+
+    const std::optional<std::string> vcvars = ResolveVcvarsBatForArch(vsRoot, "x64");
+    const std::string modeArg = mode.empty() ? "/HEADERS" : "/" + mode;
+    std::string command;
+    if (vcvars.has_value())
     {
-        return "Error: dumpbin.exe not found in Visual Studio installation. Install Visual Studio 2022 or set VS2022Enterprise environment variable.";
+        const std::string tail = modeArg + " \"" + path + "\" 2>&1";
+        command = BuildCmdWithVcvars(*vcvars, dumpbinPath, tail);
     }
-    
-    // Execute dumpbin with the requested mode
-    std::string modeArg = mode.empty() ? "/HEADERS" : "/" + mode;
-    std::string command = "\"" + dumpbinPath + "\" " + modeArg + " \"" + path + "\" 2>&1";
-    
+    else
+    {
+        command = "\"" + dumpbinPath + "\" " + modeArg + " \"" + path + "\" 2>&1";
+    }
+
     FILE* pipe = _popen(command.c_str(), "r");
     if (!pipe)
     {
         return "Error: Failed to execute dumpbin.exe";
     }
-    
+
     std::string output;
     char buffer[512];
     while (fgets(buffer, sizeof(buffer), pipe) != nullptr)
@@ -1302,7 +1729,7 @@ std::string AgenticBridge::RunDumpbin(const std::string& path, const std::string
         output.append(buffer);
     }
     _pclose(pipe);
-    
+
     return output.empty() ? "Dumpbin completed with no output" : output;
 }
 
@@ -1310,42 +1737,38 @@ std::string AgenticBridge::RunCodex(const std::string& path)
 {
     if (path.empty())
         return "Error: Empty file path";
-    
-    // Try engine first if available
+
     if (g_agentEngine)
     {
         std::string engineResult = g_agentEngine->runCodex(path);
         if (!engineResult.empty() && engineResult != "Agentic Engine not initialized")
             return engineResult;
     }
-    
-    // Fallback: analyze the file independently
+
     if (!std::filesystem::exists(path))
         return "Error: File not found: " + path;
-    
+
     std::ifstream file(path, std::ios::binary);
     if (!file)
         return "Error: Cannot open file: " + path;
-    
+
     file.seekg(0, std::ios::end);
-    size_t fileSize = file.tellg();
+    size_t fileSize = static_cast<size_t>(file.tellg());
     file.seekg(0, std::ios::beg);
-    
-    // Read file magic/header for analysis
+
     uint32_t magic = 0;
     file.read(reinterpret_cast<char*>(&magic), sizeof(magic));
-    
+
     std::ostringstream analysis;
     analysis << "File Analysis: " << path << "\n";
     analysis << "Size: " << fileSize << " bytes\n";
-    
-    // Analysis based on magic number
-    if ((magic & 0xFFFF) == 0x5A4D)  // MZ header
+
+    if ((magic & 0xFFFF) == 0x5A4D)
     {
         analysis << "Type: PE Executable\n";
         analysis << "Subsystem: Windows\n";
     }
-    else if (magic == 0x7F454C46)  // ELF magic
+    else if (magic == 0x7F454C46)
     {
         analysis << "Type: ELF Binary\n";
     }
@@ -1361,14 +1784,14 @@ std::string AgenticBridge::RunCodex(const std::string& path)
     {
         analysis << "Type: Unknown/Binary\n";
     }
-    
+
     analysis << "First 4 bytes (hex): ";
     for (int i = 0; i < 4; ++i)
     {
-        analysis << std::hex << std::setw(2) << std::setfill('0') << ((magic >> (i*8)) & 0xFF);
+        analysis << std::hex << std::setw(2) << std::setfill('0') << ((magic >> (i * 8)) & 0xFF);
     }
     analysis << "\n";
-    
+
     return analysis.str();
 }
 
@@ -1382,7 +1805,7 @@ std::string AgenticBridge::RunCompilerImpl(const std::string& path, const std::s
 {
     if (path.empty())
         return "Error: Empty file path";
-    
+
     // Try engine first if available
     if (g_agentEngine)
     {
@@ -1390,41 +1813,52 @@ std::string AgenticBridge::RunCompilerImpl(const std::string& path, const std::s
         if (!engineResult.empty() && engineResult != "Agentic Engine not initialized")
             return engineResult;
     }
-    
+
     // Check if file exists
     if (!std::filesystem::exists(path))
         return "Error: File not found: " + path;
-    
+
     // Get file extension
     std::filesystem::path filePath(path);
     std::string ext = filePath.extension().string();
     std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
-    
-    std::string compiler;
+
     std::string compilerFlags;
-    
+    std::string sovereignFallbackBanner;
+
     // Detect language and get compiler
     if (ext == ".cpp" || ext == ".cc" || ext == ".cxx" || ext == ".c")
     {
-        // Try MSVC first
-        compiler = "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\VC\\Tools\\MSVC\\14.50.35717\\bin\\Hostx64\\x64\\cl.exe";
-        if (!std::filesystem::exists(compiler))
-        {
-            compiler = "C:\\VS2022Enterprise\\VC\\Tools\\MSVC\\14.50.35717\\bin\\Hostx64\\x64\\cl.exe";
-        }
-        if (!std::filesystem::exists(compiler))
-        {
-            compiler = "cl.exe";  // Hope it's in PATH
-        }
         compilerFlags = "/c /W4 /std:c++20";
     }
     else if (ext == ".asm" || ext == ".s")
     {
-        // Use ML64 for assembly
-        compiler = "C:\\VS2022Enterprise\\VC\\Tools\\MSVC\\14.50.35717\\bin\\Hostx64\\x64\\ml64.exe";
-        if (!std::filesystem::exists(compiler))
+        // Prefer zero-dependency sovereign assembler (subset MASM-like → PE). Falls back to ml64 for full MASM.
+        std::string asmSource;
+        if (ReadFileWithCap(path, kMaxCommandFileBytes, asmSource))
         {
-            compiler = "ml64.exe";
+            const std::filesystem::path peOut = filePath.parent_path() / (filePath.stem().string() + "_sovereign.exe");
+            std::string sovereignErr;
+            if (SovereignAssembler::AssembleAndLink(asmSource, peOut.wstring(), sovereignErr))
+            {
+                return "Sovereign internal assembler succeeded (no ml64). PE output: " + peOut.string();
+            }
+            if (!sovereignErr.empty())
+            {
+                sovereignFallbackBanner =
+                    "[SovereignAssembler failed; falling back to ml64. Reason: " + sovereignErr + "]\n";
+                RawrXD::Logging::Logger::instance().warning("SovereignAssembler (ml64 fallback): " + sovereignErr,
+                                                            "Win32IDE.RunCompiler");
+                postLogToMainWindow(UILogSeverity::Warning, "SovereignAssembler (ml64 fallback): " + sovereignErr);
+            }
+            else
+            {
+                sovereignFallbackBanner = "[SovereignAssembler failed with no error message; falling back to ml64]\n";
+                RawrXD::Logging::Logger::instance().warning(
+                    "SovereignAssembler failed with empty error string; using ml64 fallback.", "Win32IDE.RunCompiler");
+                postLogToMainWindow(UILogSeverity::Warning,
+                                    "SovereignAssembler failed with empty error string; using ml64 fallback.");
+            }
         }
         compilerFlags = "/c";
     }
@@ -1432,47 +1866,75 @@ std::string AgenticBridge::RunCompilerImpl(const std::string& path, const std::s
     {
         return "Error: Unsupported file type: " + ext;
     }
-    
-    // Add architecture flag
-    if (arch == "x64" || arch == "x86-64" || arch == "amd64")
+
+    const bool usesCl = (ext == ".cpp" || ext == ".cc" || ext == ".cxx" || ext == ".c");
+
+    if (usesCl)
     {
-        compilerFlags += " /machine:x64";
+        if (arch == "x64" || arch == "x86-64" || arch == "amd64")
+        {
+            compilerFlags += " /machine:x64";
+        }
+        else if (arch == "x86" || arch == "i386")
+        {
+            compilerFlags += " /machine:x86";
+        }
+        else if (arch == "arm" || arch == "arm64")
+        {
+            compilerFlags += " /machine:arm64";
+        }
     }
-    else if (arch == "x86" || arch == "i386")
+
+    const std::string vsRoot = ResolveVsInstallRoot();
+    const std::optional<std::string> vcvars = ResolveVcvarsBatForArch(vsRoot, arch);
+    const std::string exeName = usesCl ? "cl.exe" : "ml64.exe";
+    std::string resolvedTool;
+    if (const auto t = ResolveToolInLatestMsvc(vsRoot, arch, exeName))
     {
-        compilerFlags += " /machine:x86";
+        resolvedTool = *t;
     }
-    else if (arch == "arm" || arch == "arm64")
+
+    const std::string outFile = filePath.stem().string() + ".obj";
+    const std::string toolArgsTail = compilerFlags + " /Fo" + outFile + " \"" + path + "\" 2>&1";
+
+    std::string command;
+    if (vcvars.has_value() && !resolvedTool.empty())
     {
-        compilerFlags += " /machine:arm64";
+        command = BuildCmdWithVcvars(*vcvars, resolvedTool, toolArgsTail);
     }
-    
-    // Build command
-    std::string outFile = filePath.stem().string() + ".obj";
-    std::string command = compiler + " " + compilerFlags + " /Fo" + outFile + " \"" + path + "\" 2>&1";
-    
+    else if (!resolvedTool.empty())
+    {
+        command = "\"" + resolvedTool + "\" " + toolArgsTail;
+    }
+    else
+    {
+        command = exeName + " " + toolArgsTail;
+    }
+
     FILE* pipe = _popen(command.c_str(), "r");
     if (!pipe)
     {
-        return "Error: Failed to execute compiler. Ensure Visual Studio 2022 is installed.";
+        return "Error: Failed to execute compiler. Install Visual Studio 2022 with C++ workload, or open a "
+               "Developer Command Prompt and ensure cl.exe / ml64.exe are on PATH.";
     }
-    
+
     std::string output;
     char buffer[1024];
     while (fgets(buffer, sizeof(buffer), pipe) != nullptr)
     {
         output.append(buffer);
     }
-    int exitCode = _pclose(pipe);
-    
+    const int exitCode = _pclose(pipe);
+
+    const std::string toolLabel = usesCl ? "cl" : "ml64";
     if (exitCode == 0)
     {
-        return "Compilation succeeded. Output: " + outFile + "\n" + output;
+        return sovereignFallbackBanner + "Compilation succeeded (" + toolLabel + "). Output: " + outFile + "\n" +
+               output;
     }
-    else
-    {
-        return "Compilation failed (exit code: " + std::to_string(exitCode) + ")\n" + output;
-    }
+
+    return sovereignFallbackBanner + "Compilation failed (" + toolLabel + ", exit code: " + std::to_string(exitCode) +
+           ")\n" + output;
 }
 
 // ============================================================================
@@ -1604,16 +2066,16 @@ void AgenticBridge::ExecuteSubAgentChain(const std::string& taskDescription)
         LOG_ERROR("Cannot execute SubAgent chain: manager not initialized");
         return;
     }
-    
+
     // Parse the task description to identify subtasks
     std::vector<std::string> steps;
     std::stringstream ss(taskDescription);
     std::string line;
-    
+
     // Simple heuristic: "step1 | step2 | step3" or "1. step1 2. step2" format
     size_t delimPos = 0;
     std::string delimiter = (taskDescription.find(" | ") != std::string::npos) ? " | " : "; ";
-    
+
     size_t start = 0;
     size_t end = taskDescription.find(delimiter);
     while (end != std::string::npos)
@@ -1624,11 +2086,11 @@ void AgenticBridge::ExecuteSubAgentChain(const std::string& taskDescription)
         start = end + delimiter.length();
         end = taskDescription.find(delimiter, start);
     }
-    
+
     std::string finalStep = taskDescription.substr(start);
     if (!finalStep.empty())
         steps.push_back(finalStep);
-    
+
     // If no explicit steps, create a default two-step chain
     if (steps.empty() || steps.size() == 1)
     {
@@ -1636,9 +2098,9 @@ void AgenticBridge::ExecuteSubAgentChain(const std::string& taskDescription)
         steps.push_back("Analyze the following task and break it down:\n" + taskDescription);
         steps.push_back("Execute each subtask in the previous analysis:\n{{INPUT}}");
     }
-    
+
     LOG_INFO("ExecuteSubAgentChain: " + std::to_string(steps.size()) + " steps");
-    
+
     mgr->executeChain("bridge", steps, taskDescription);
 }
 
@@ -1650,43 +2112,53 @@ void AgenticBridge::ExecuteSubAgentSwarm(const std::string& taskDescription)
         LOG_ERROR("Cannot execute SubAgent swarm: manager not initialized");
         return;
     }
-    
+
     // Generate parallel analysis tasks from the description
     std::vector<std::string> prompts;
-    
+
     // Create diverse analysis angles
-    prompts.push_back("Security Analysis: Identify potential security vulnerabilities, threats, and risks in the following:\n" + taskDescription);
-    prompts.push_back("Performance Analysis: Identify performance bottlenecks, inefficiencies, and optimization opportunities:\n" + taskDescription);
-    prompts.push_back("Code Quality Analysis: Evaluate code quality, style, readability, and maintainability:\n" + taskDescription);
-    prompts.push_back("Architecture Analysis: Analyze design patterns, structure, and architectural improvements:\n" + taskDescription);
-    prompts.push_back("Testing Analysis: Identify test coverage gaps and suggest testing strategies:\n" + taskDescription);
-    
+    prompts.push_back(
+        "Security Analysis: Identify potential security vulnerabilities, threats, and risks in the following:\n" +
+        taskDescription);
+    prompts.push_back(
+        "Performance Analysis: Identify performance bottlenecks, inefficiencies, and optimization opportunities:\n" +
+        taskDescription);
+    prompts.push_back("Code Quality Analysis: Evaluate code quality, style, readability, and maintainability:\n" +
+                      taskDescription);
+    prompts.push_back("Architecture Analysis: Analyze design patterns, structure, and architectural improvements:\n" +
+                      taskDescription);
+    prompts.push_back("Testing Analysis: Identify test coverage gaps and suggest testing strategies:\n" +
+                      taskDescription);
+
     SwarmConfig config;
     config.mergeStrategy = "priority_vote";
     config.maxParallel = 5;
     config.timeoutMs = 30000;
-    
+
     LOG_INFO("ExecuteSubAgentSwarm: " + std::to_string(prompts.size()) + " parallel tasks");
-    
+
     mgr->executeSwarm("bridge", prompts, config);
 }
 
 std::vector<std::string> AgenticBridge::GetSubAgentTodoList()
 {
     std::vector<std::string> todos;
-    
-    // If there's a todo list in agent memory, retrieve it
+
     auto* mgr = GetSubAgentManager();
     if (mgr)
     {
-        // Try to get from manager if it has this capability
-        std::string todoStatus = mgr->getStatusSummary();
-        if (!todoStatus.empty())
+        for (const auto& item : mgr->getTodoList())
         {
-            todos.push_back("Current SubAgent Status: " + todoStatus);
+            std::string line = "[" + std::to_string(item.id) + "] " + item.title;
+            if (!item.description.empty())
+            {
+                line += " - " + item.description;
+            }
+            line += " (" + item.statusString() + ")";
+            todos.push_back(std::move(line));
         }
     }
-    
+
     return todos;
 }
 
@@ -1695,7 +2167,7 @@ void AgenticBridge::ClearSubAgentTodoList()
     auto* mgr = GetSubAgentManager();
     if (mgr)
     {
-        mgr->cancelAll();
+        mgr->setTodoList({});
         LOG_INFO("SubAgent todo list cleared");
     }
 }
@@ -1706,34 +2178,34 @@ std::string AgenticBridge::ExportAgentMemory()
     export_ss << "{\n";
     export_ss << "  \"exported_at\": \"" << std::time(nullptr) << "\",\n";
     export_ss << "  \"context\": {\n";
-    
+
     if (!m_modelName.empty())
         export_ss << "    \"model\": \"" << m_modelName << "\",\n";
-    
+
     if (!m_workspaceRoot.empty())
         export_ss << "    \"workspace\": \"" << m_workspaceRoot << "\",\n";
-    
+
     if (!m_languageContext.empty())
         export_ss << "    \"language\": \"" << m_languageContext << "\",\n";
-    
+
     if (!m_fileContext.empty())
         export_ss << "    \"file\": \"" << m_fileContext << "\",\n";
-    
+
     export_ss << "    \"max_mode\": " << (m_maxMode ? "true" : "false") << ",\n";
     export_ss << "    \"deep_thinking\": " << (m_deepThinking ? "true" : "false") << ",\n";
     export_ss << "    \"deep_research\": " << (m_deepResearch ? "true" : "false") << "\n";
     export_ss << "  },\n";
-    
+
     // Agent status
     export_ss << "  \"agent_status\": {\n";
     export_ss << "    \"initialized\": " << (m_initialized ? "true" : "false") << ",\n";
     export_ss << "    \"loop_running\": " << (m_agentLoopRunning ? "true" : "false") << "\n";
     export_ss << "  },\n";
-    
+
     // SubAgent information
     export_ss << "  \"subagent_info\": \"" << GetSubAgentStatus() << "\"\n";
     export_ss << "}\n";
-    
+
     return export_ss.str();
 }
 
@@ -1768,6 +2240,9 @@ void AgenticBridge::ExecuteBoundedAgentLoop(const std::string& prompt, int maxIt
     std::string currentPrompt = prompt;
     std::ostringstream transcript;
     bool completed = false;
+    int agentMirrorPaneId = -1;
+    if (m_ide && m_ide->getSettings().agentTerminalIsolated)
+        agentMirrorPaneId = m_ide->getOrCreatePrimaryAgentTerminalPane();
 
     for (int i = 0; i < boundedIterations; ++i)
     {
@@ -1777,6 +2252,10 @@ void AgenticBridge::ExecuteBoundedAgentLoop(const std::string& prompt, int maxIt
             break;
         }
 
+        if (m_ide)
+            m_ide->showAgentActivityStatus(
+                "Autonomous agent: step " + std::to_string(i + 1) + " / " + std::to_string(boundedIterations), 8000);
+
         AgentResponse response = ExecuteAgentCommand(currentPrompt);
         if (!response.content.empty())
         {
@@ -1785,6 +2264,26 @@ void AgenticBridge::ExecuteBoundedAgentLoop(const std::string& prompt, int maxIt
         else
         {
             transcript << "[iter " << (i + 1) << "] (empty response)\n";
+        }
+
+        if (agentMirrorPaneId >= 0 && m_ide)
+        {
+            constexpr size_t kMirrorCap = 900;
+            std::string preview = response.content;
+            const bool truncated = preview.size() > kMirrorCap;
+            if (truncated)
+                preview.resize(kMirrorCap);
+            std::string block =
+                "[autonomous " + std::to_string(i + 1) + "/" + std::to_string(boundedIterations) + "]\r\n";
+            if (!preview.empty())
+                block += preview;
+            else
+                block += "(empty)";
+            if (truncated)
+                block += "\r\n…[truncated]\r\n";
+            else
+                block += "\r\n";
+            m_ide->appendToTerminalPane(agentMirrorPaneId, block);
         }
 
         if (response.type == AgentResponseType::TOOL_CALL)
@@ -1828,37 +2327,52 @@ bool AgenticBridge::DispatchModelToolCalls(const std::string& modelOutput, std::
     auto* mgr = GetSubAgentManager();
     if (!mgr)
         return false;
+    const std::string toolNameForUx = ExtractDirectiveToolName(modelOutput);
     bool dispatched = mgr->dispatchToolCall("bridge", modelOutput, toolResult);
 
     // Phase 4B: Choke Point 2 — hookToolResult at the dispatch funnel
     // Every tool result flows through here, regardless of caller (Autonomy, Bridge, etc.)
     if (dispatched && m_ide)
     {
-        // Add visual feedback to terminal if tool executed
-        m_ide->appendToOutput("[AgenticBridge] Executing tool: " + modelOutput + "\n", "Output", Win32IDE::OutputSeverity::Info);
-        
-        // Extract tool name from the model output (first tool: directive)
-        std::string toolName = "unknown";
-        auto toolPos = modelOutput.find("tool:");
-        if (toolPos == std::string::npos)
-            toolPos = modelOutput.find("TOOL:");
-        if (toolPos != std::string::npos)
-        {
-            size_t nameStart = toolPos + 5;
-            while (nameStart < modelOutput.size() && modelOutput[nameStart] == ' ')
-                nameStart++;
-            size_t nameEnd = modelOutput.find_first_of(" \n\r({[", nameStart);
-            if (nameEnd == std::string::npos)
-                nameEnd = modelOutput.size();
-            toolName = modelOutput.substr(nameStart, nameEnd - nameStart);
-        }
+        // VS Code / Cursor-style: status bar only (avoid dumping full model directive into Output)
+        m_ide->showAgentActivityStatus(std::string("Running tool: ") + toolNameForUx, 5000);
+
+        const std::string toolName = toolNameForUx;
         FailureClassification toolFailure = m_ide->hookToolResult(toolName, toolResult);
         if (toolFailure.reason != AgentFailureType::None)
         {
             LOG_WARNING("[Phase4B] Tool '" + toolName +
                         "' failure at dispatch: " + m_ide->failureTypeString(toolFailure.reason) +
                         " (confidence=" + std::to_string(toolFailure.confidence) + ")");
-            m_ide->appendToOutput("[AgenticBridge] Tool failure: " + m_ide->failureTypeString(toolFailure.reason) + "\n", "Errors", Win32IDE::OutputSeverity::Error);
+            m_ide->appendToOutput("[AgenticBridge] Tool failure: " + m_ide->failureTypeString(toolFailure.reason) +
+                                      "\n",
+                                  "Errors", Win32IDE::OutputSeverity::Error);
+        }
+        if (m_ide->getSettings().agentTerminalIsolated)
+        {
+            const int agentPaneId = m_ide->getOrCreatePrimaryAgentTerminalPane();
+            constexpr size_t kMax = 1200;
+            std::string feed;
+            const size_t resultLen =
+                toolResult.empty() ? 0 : (toolResult.size() > kMax ? kMax + 24 : toolResult.size() + 4);
+            feed.reserve(32 + toolName.size() + resultLen);
+            feed.append("[tool] ");
+            feed.append(toolName);
+            feed.append("\r\n");
+            if (!toolResult.empty())
+            {
+                if (toolResult.size() > kMax)
+                {
+                    feed.append(toolResult.data(), kMax);
+                    feed += "\r\n[truncated]\r\n";
+                }
+                else
+                {
+                    feed += toolResult;
+                    feed += "\r\n";
+                }
+            }
+            m_ide->appendToTerminalPane(agentPaneId, feed);
         }
     }
 

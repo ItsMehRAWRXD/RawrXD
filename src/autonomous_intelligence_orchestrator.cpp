@@ -274,12 +274,27 @@ void AutonomousIntelligenceOrchestrator::generateImplementation(const std::strin
     if (onNotification) {
         onNotification("Status", "Generating implementation for: " + requirement);
     }
-    
-    // Would call AI model to generate code based on requirement
-    std::string generatedCode = "// Auto-generated implementation\n// TODO: Review and test";
-    
-    if (onNotification) {
+
+    const std::string prompt =
+        "You are a C++ expert. Generate a complete, compilable implementation for the following requirement.\n"
+        "Requirement: " + requirement + "\n"
+        "Output only valid C++ code with no extra commentary.";
+
+    std::string generatedCode;
+    if (m_modelRouter)
+    {
+        generatedCode = m_modelRouter->routeQuery("", prompt, 0.2f);
+    }
+
+    if (generatedCode.empty())
+    {
+        generatedCode = "// Auto-generated stub — model unavailable\n// Requirement: " + requirement;
+    }
+
+    if (onNotification)
+    {
         onNotification("Status", "Implementation generated");
+        onNotification("CodeGenResult", generatedCode);
     }
 }
 

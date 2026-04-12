@@ -4,6 +4,7 @@
 #include "universal_model_router.h"
 #include "agentic/AgentToolHandlers.h"
 #include "asm/rawrxd_asm_orchestration.h"
+#include "runtime/SemanticRetrieval.h"
 
 #include <algorithm>
 #include <cctype>
@@ -733,6 +734,16 @@ std::string PlanOrchestrator::buildPlanningPrompt(const std::string& userPrompt,
         for (std::size_t index = 0; index < std::min<std::size_t>(10, contextFiles.size()); ++index) {
             prompt << "\n- " << contextFiles[index];
         }
+    }
+
+    const std::string semanticContext =
+        RawrXD::Runtime::SemanticRetrieval::BuildPromptSemanticContextBlock(
+            userPrompt + "\n" + loopMemory,
+            6,
+            "PLANNER_SEMANTIC_CONTEXT");
+    if (!semanticContext.empty()) {
+        prompt << "\n\nRelevant semantic retrieval:";
+        prompt << "\n" << semanticContext;
     }
     return prompt.str();
 }

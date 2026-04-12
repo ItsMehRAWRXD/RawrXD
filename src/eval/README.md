@@ -62,7 +62,11 @@ RawrXD-SWEBench.exe --real-agent --model <name> --json <out.json> --jsonl <out.j
     [--max-output-tokens <N>]          # cap generated tokens
     [--seed <N>]                       # reproducibility seed (-1 = random)
     [--model-alias <label>]            # friendly name in JSONL
+    [--retry <N>]                      # extra retry attempts for empty/non-compliant responses
+    [--strict-mode]                    # reject fenced output even if extractable
+    [--fail-fast]                      # stop run on first failed task
     [--resume-checkpoint <path>]       # resume interrupted sweep
+    [--resume-jsonl <path>]            # recover completed sample_ids from prior JSONL
     [--context-max-bytes <N>]          # max bytes per injected file (default: 2500)
     [--context-max-total-bytes <N>]    # max total injected bytes (default: 5000)
     [--context-max-files <N>]          # max injected files (default: 2)
@@ -91,6 +95,25 @@ Use `--resume-checkpoint <path>` to enable resume:
 .\RawrXD-SWEBench.exe --real-agent --model codestral:22b `
     --json reports\run.json --jsonl reports\run.jsonl `
     --resume-checkpoint reports\run.checkpoint
+
+# Resume using prior telemetry JSONL when checkpoint file is unavailable
+.\RawrXD-SWEBench.exe --real-agent --model codestral:22b `
+    --json reports\run.json --jsonl reports\run.jsonl `
+    --resume-jsonl reports\run.jsonl
+```
+
+### File Lock Mitigation
+
+When the build fails with linker error LNK1104 on `RawrXD-SWEBench.exe`, use:
+
+```powershell
+.\scripts\Unlock-SWEBenchBinary.ps1 -BuildDir d:\rawrxd\build-ninja-ctx2 -Force
+```
+
+or run the unlock+build wrapper:
+
+```powershell
+.\scripts\Build-SWEBench-Unlocked.ps1 -BuildDir d:\rawrxd\build-ninja-ctx2 -Jobs 8 -ForceKill
 ```
 
 ### Comparison Script
@@ -98,6 +121,29 @@ Use `--resume-checkpoint <path>` to enable resume:
 ```powershell
 .\baseline_compare.ps1 -Left reports\run_a.json -Right reports\run_b.json
 ```
+
+### Deterministic Regression Gate
+
+Run a deterministic pass/fail gate against the canonical baseline in
+`reports/BENCHMARK_CONFIG.json`.
+
+Compare-only mode (uses an existing candidate report):
+
+```powershell
+.\scripts\Run-SWEBench-DeterministicGate.ps1 `
+    -CandidateJson reports\swe_codestral4_multifile_cap1024.json
+```
+
+Run-and-gate mode (executes harness first, then enforces thresholds):
+
+```powershell
+.\scripts\Run-SWEBench-DeterministicGate.ps1 -Run `
+    -BuildDir d:\rawrxd\build `
+    -OutputJson reports\swe_deterministic_candidate.json `
+    -OutputJsonl reports\swe_deterministic_candidate.jsonl
+```
+
+The script exits non-zero on regression and is safe to use as a CI gate.
 
 ---
 

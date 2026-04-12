@@ -45,13 +45,34 @@ static uint32_t TitanSecureTelemetryDispatch(const char* data, uint32_t size, ui
     }
 #endif
 
-    if (frameOut) {
-        std::memset(frameOut, 0, 64);
-        uint64_t seq = static_cast<uint64_t>(size);
-        std::memcpy(frameOut, &seq, sizeof(seq));
+    if (!frameOut) {
+        return 0;
     }
-    (void)data;
-    return 0;
+
+    // Deterministic fallback frame: [seq:8][fnv1a:8][len:4][flags:4][nonce:8]...
+    // This preserves observability on non-kernel lanes without pretending cryptographic sealing.
+    std::memset(frameOut, 0, 64);
+
+    const uint8_t* bytes = reinterpret_cast<const uint8_t*>(data);
+    uint64_t digest = 1469598103934665603ULL;
+    if (bytes && size > 0) {
+        for (uint32_t i = 0; i < size; ++i) {
+            digest ^= static_cast<uint64_t>(bytes[i]);
+            digest *= 1099511628211ULL;
+        }
+    }
+
+    const uint64_t seq = (static_cast<uint64_t>(GetTickCount64()) << 16) ^ static_cast<uint64_t>(size);
+    const uint32_t flags = 0xFA11BACCu; // fallback marker for downstream diagnostics
+    const uint64_t nonce = (digest ^ (seq << 1)) + 0x9E3779B97F4A7C15ULL;
+
+    std::memcpy(frameOut, &seq, sizeof(seq));
+    std::memcpy(frameOut + 8, &digest, sizeof(digest));
+    std::memcpy(frameOut + 16, &size, sizeof(size));
+    std::memcpy(frameOut + 20, &flags, sizeof(flags));
+    std::memcpy(frameOut + 24, &nonce, sizeof(nonce));
+
+    return 32;
 }
 } // namespace
 

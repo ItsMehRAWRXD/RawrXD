@@ -1,6 +1,7 @@
 #include "AppState.h"
 #include "agentic_engine.h"
 #include "cpu_inference_engine.h"
+#include "core/scoped_instructions_provider.hpp"
 #include "native_agent.hpp"
 #include "reverse_engineering/RawrDumpBin.hpp"
 #include "reverse_engineering/RawrCodex.hpp"
@@ -1251,9 +1252,35 @@ void AgenticEngine::setWorkspaceRoot(const std::string& rootPath) {
 }
 
 std::string AgenticEngine::chat(const std::string& message) {
+    std::string effectiveMessage = message;
+    if (!m_workspaceRoot.empty() && message.find("Scoped Instructions:") == std::string::npos) {
+        auto& provider = RawrXD::Core::ScopedInstructionsProvider::instance();
+        provider.setProjectRoot(m_workspaceRoot);
+        const auto resolved = provider.resolveForTargets({}, 4000);
+        if (!resolved.empty()) {
+            std::ostringstream scopedEnvelope;
+            scopedEnvelope << "Scoped Instructions:\n" << resolved.promptPayload << "\n";
+
+            const std::string telemetry = RawrXD::Core::ScopedInstructionsProvider::formatTelemetry(resolved);
+            if (!telemetry.empty()) {
+                scopedEnvelope << telemetry << "\n";
+            }
+
+            if (!resolved.sources.empty()) {
+                scopedEnvelope << "Scoped Sources:\n";
+                for (const auto& source : resolved.sources) {
+                    scopedEnvelope << "- " << source << "\n";
+                }
+            }
+
+            scopedEnvelope << "\nRequest:\n" << message;
+            effectiveMessage = scopedEnvelope.str();
+        }
+    }
+
     // Headless/CLI: use injected chat provider (Ollama, etc.) when set
     if (m_chatProvider) {
-        return m_chatProvider(message);
+        return m_chatProvider(effectiveMessage);
     }
     if (!m_inferenceEngine) return "[Error: No Inference Engine]";
 
@@ -1269,7 +1296,7 @@ std::string AgenticEngine::chat(const std::string& message) {
     agent.SetNoRefusal(m_config.noRefusal);
 
     // Use Execute instead of Ask to avoid boilerplate headers/footers in the string
-    return agent.Execute(message);
+    return agent.Execute(effectiveMessage);
 }
 
 // ============================================================================

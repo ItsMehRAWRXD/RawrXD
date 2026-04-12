@@ -27,6 +27,12 @@
 
 include RawrXD_Common.inc
 
+; --- Ring Buffer Configuration (Equates moved before .data) ---
+EVENT_BUFFER_SIZE       equ 8192    ; 8K slots (power of 2)
+EVENT_STRUCT_SIZE       equ 256     ; Max bytes per event entry
+EVENT_BUFFER_MASK       equ (EVENT_BUFFER_SIZE - 1)
+EVENT_STRUCT_SHIFT      equ 8       ; log2(256) = 8, used with shl
+
 ; Win32 APIs not in Common.inc
 EXTERNDEF GetSystemTimePreciseAsFileTime:PROC
 EXTERNDEF FileTimeToSystemTime:PROC
@@ -45,19 +51,8 @@ INCLUDE rawr_globals.inc
 ; Ring buffer and other data (standard .data alignment)
 .data
 
-    ; =========================================================================
-    ; Ring Buffer Configuration
-    ; EVENT_BUFFER_SIZE must be a power of 2 for bitmask indexing.
-    ; Each slot is EVENT_STRUCT_SIZE bytes (null-terminated string w/ timestamp).
-    ; =========================================================================
-
-    EVENT_BUFFER_SIZE       equ 8192    ; 8K slots (power of 2)
-    EVENT_STRUCT_SIZE       equ 256     ; Max bytes per event entry
-    EVENT_BUFFER_MASK       equ (EVENT_BUFFER_SIZE - 1)
-    EVENT_STRUCT_SHIFT      equ 8       ; log2(256) = 8, used with shl
-
     align 16
-    g_EventBuffer       db (EVENT_BUFFER_SIZE * EVENT_STRUCT_SIZE) dup(0)
+    g_EventBuffer       db (2097152) dup(0) ; 8K * 256 = 2097152 bytes
 
     align 8
     g_HeadIdx           dq 0    ; Producer index (atomic xadd)

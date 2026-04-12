@@ -32,6 +32,13 @@
 static bool g_avx2_supported = false;
 static bool g_avx512_supported = false;
 static bool g_features_detected = false;
+static std::atomic<uint32_t> g_stub_feature_detect_calls{0};
+static std::atomic<uint32_t> g_stub_request_hook_calls{0};
+static std::atomic<uint32_t> g_stub_stream_chunk_calls{0};
+static std::atomic<uint32_t> g_stub_reasoning_calls{0};
+static std::atomic<uint32_t> g_stub_transform_calls{0};
+static std::atomic<uint32_t> g_stub_integrity_calls{0};
+static std::atomic<uint32_t> g_stub_pattern_match_calls{0};
 
 static inline int ctz32(uint32_t v) {
 #ifdef _MSC_VER
@@ -44,6 +51,7 @@ static inline int ctz32(uint32_t v) {
 }
 
 static void detect_cpu_features() {
+    g_stub_feature_detect_calls.fetch_add(1, std::memory_order_relaxed);
     if (g_features_detected) return;
     
     int regs[4];
@@ -382,6 +390,7 @@ MasmOperationResult masm_byte_simd_compare_regions(const void* region1, const vo
 
 MasmOperationResult masm_server_inject_request_hook(void* request_buffer, size_t buffer_size, 
                                                     void (*transform)(void*, void*)) {
+    g_stub_request_hook_calls.fetch_add(1, std::memory_order_relaxed);
     if (!request_buffer || buffer_size == 0 || !transform) {
         return MasmOperationResult::error("Invalid parameters for request hook injection", -1);
     }
@@ -504,6 +513,7 @@ MasmOperationResult masm_server_inject_request_hook(void* request_buffer, size_t
 MasmOperationResult masm_server_stream_chunk_process(const void* input_chunk, size_t chunk_size,
                                                      void* output_buffer, size_t output_size,
                                                      size_t* bytes_processed) {
+    g_stub_stream_chunk_calls.fetch_add(1, std::memory_order_relaxed);
     if (!input_chunk || !output_buffer || !bytes_processed || chunk_size == 0 || output_size == 0) {
         if (bytes_processed) *bytes_processed = 0;
         return MasmOperationResult::error("Invalid parameters for stream chunk processing", -1);
@@ -795,6 +805,7 @@ MasmOperationResult masm_agent_failure_detect_simd(const AgentMasmContext* conte
 
 MasmOperationResult masm_agent_reasoning_accelerate(AgentMasmContext* context, const void* input_reasoning, size_t input_size,
     void* output_reasoning, size_t output_size, size_t* reasoning_cycles) {
+    g_stub_reasoning_calls.fetch_add(1, std::memory_order_relaxed);
     if (!context || !input_reasoning || !output_reasoning || !reasoning_cycles)
         return MasmOperationResult::error("Invalid parameters", -1);
     
@@ -1293,6 +1304,7 @@ MasmOperationResult masm_ai_memory_mapped_inference(const AiMemoryMappedRegion* 
 MasmOperationResult masm_ai_completion_stream_transform(const void* raw_completion, size_t completion_size,
                                                        void* transformed_output, size_t output_size,
                                                        uint32_t transformation_flags) {
+    g_stub_transform_calls.fetch_add(1, std::memory_order_relaxed);
     if (!raw_completion || !transformed_output || completion_size == 0 || output_size == 0) {
         return MasmOperationResult::error("Invalid parameters for completion stream transformation", -1);
     }
@@ -1587,6 +1599,7 @@ uint64_t masm_get_cpu_features(void) {
 #endif
 
 MasmOperationResult masm_validate_memory_integrity(const void* memory, size_t size, uint64_t expected_checksum) {
+    g_stub_integrity_calls.fetch_add(1, std::memory_order_relaxed);
     if (!memory || size == 0) {
         return MasmOperationResult::error("Invalid memory region", -1);
     }
@@ -2042,6 +2055,7 @@ MasmOperationResult masm_attention_compute_avx512(void* ctx, const void* queries
 MasmOperationResult masm_text_pattern_simd_match(const void* text, size_t text_size,
     const void* pattern, size_t pattern_size, uint64_t* match_offsets,
     size_t max_matches, size_t* match_count) {
+    g_stub_pattern_match_calls.fetch_add(1, std::memory_order_relaxed);
     if (!text || !pattern || !match_offsets || !match_count)
         return MasmOperationResult::error("Invalid parameters", -1);
     
@@ -2123,6 +2137,32 @@ MasmOperationResult masm_text_pattern_simd_match(const void* text, size_t text_s
     }
     
     return MasmOperationResult::ok("Pattern matching complete");
+}
+
+uint64_t masm_ai_agent_stub_get_stats(void) {
+    const uint64_t feature_detect = static_cast<uint64_t>(g_stub_feature_detect_calls.load(std::memory_order_relaxed) & 0xFFFFu);
+    const uint64_t request_hook = static_cast<uint64_t>(g_stub_request_hook_calls.load(std::memory_order_relaxed) & 0xFFFFu);
+    const uint64_t stream_chunk = static_cast<uint64_t>(g_stub_stream_chunk_calls.load(std::memory_order_relaxed) & 0xFFFFu);
+    const uint64_t reasoning = static_cast<uint64_t>(g_stub_reasoning_calls.load(std::memory_order_relaxed) & 0xFFFFu);
+    return feature_detect | (request_hook << 16) | (stream_chunk << 32) | (reasoning << 48);
+}
+
+uint64_t masm_ai_agent_stub_get_stats_ext(void) {
+    const uint64_t transform = static_cast<uint64_t>(g_stub_transform_calls.load(std::memory_order_relaxed) & 0xFFFFu);
+    const uint64_t integrity = static_cast<uint64_t>(g_stub_integrity_calls.load(std::memory_order_relaxed) & 0xFFFFu);
+    const uint64_t pattern_match = static_cast<uint64_t>(g_stub_pattern_match_calls.load(std::memory_order_relaxed) & 0xFFFFu);
+    const uint64_t avx_flags = static_cast<uint64_t>((g_avx2_supported ? 1u : 0u) | (g_avx512_supported ? 2u : 0u));
+    return transform | (integrity << 16) | (pattern_match << 32) | (avx_flags << 48);
+}
+
+void masm_ai_agent_stub_reset_stats(void) {
+    g_stub_feature_detect_calls.store(0, std::memory_order_relaxed);
+    g_stub_request_hook_calls.store(0, std::memory_order_relaxed);
+    g_stub_stream_chunk_calls.store(0, std::memory_order_relaxed);
+    g_stub_reasoning_calls.store(0, std::memory_order_relaxed);
+    g_stub_transform_calls.store(0, std::memory_order_relaxed);
+    g_stub_integrity_calls.store(0, std::memory_order_relaxed);
+    g_stub_pattern_match_calls.store(0, std::memory_order_relaxed);
 }
 
 } // extern "C"

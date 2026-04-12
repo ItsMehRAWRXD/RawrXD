@@ -5,6 +5,10 @@
 #include <atomic>
 #include <cstdio>
 #include <chrono>
+#include <mutex>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 // Forward-declare the IAT slot 20 export (defined below)
 // The definition at the bottom of this file provides the implementation.
@@ -175,6 +179,25 @@ extern "C" __declspec(dllexport) void AgenticBridge_SetAPIKey(const char* key) {
 // AgenticBridge Context (Slots 61-63)
 static void* g_pAgenticContext = nullptr;
 
+namespace {
+
+struct TabEntry {
+    std::string title;
+    void* content;
+};
+
+struct SidebarPanelEntry {
+    std::string title;
+    void* content;
+    bool visible;
+};
+
+std::mutex g_uiBridgeStateMutex;
+std::vector<TabEntry> g_tabs;
+std::unordered_map<std::string, SidebarPanelEntry> g_sidebarPanels;
+
+} // namespace
+
 extern "C" __declspec(dllexport) void* AgenticBridge_GetContext() {
     return g_pAgenticContext;
 }
@@ -191,44 +214,96 @@ extern "C" __declspec(dllexport) void AgenticBridge_ResetContext() {
 
 // Win32IDE UI Components (Slots 21-23)
 extern "C" __declspec(dllexport) void* Win32IDE_createAcceleratorTable(void* pTableData, int count) {
-    // Stub implementation for UI accelerator table
-    OutputDebugStringA("[Win32IDE] createAcceleratorTable stub called\n");
-    return CreateAcceleratorTableA(static_cast<LPACCEL>(pTableData), count);
+    if (!pTableData || count <= 0) {
+        OutputDebugStringA("[Win32IDE] createAcceleratorTable invalid arguments\n");
+        return nullptr;
+    }
+
+    HACCEL haccel = CreateAcceleratorTableA(static_cast<LPACCEL>(pTableData), count);
+    if (!haccel) {
+        OutputDebugStringA("[Win32IDE] createAcceleratorTable failed\n");
+        return nullptr;
+    }
+
+    OutputDebugStringA("[Win32IDE] createAcceleratorTable created\n");
+    return haccel;
 }
 
 extern "C" __declspec(dllexport) bool Win32IDE_removeTab(int tabIndex) {
+    if (tabIndex < 0) {
+        OutputDebugStringA("[Win32IDE] removeTab invalid index\n");
+        return false;
+    }
+
+    std::lock_guard<std::mutex> lock(g_uiBridgeStateMutex);
+    if (static_cast<size_t>(tabIndex) >= g_tabs.size()) {
+        char outOfRange[96];
+        sprintf_s(outOfRange, "[Win32IDE] removeTab index out of range=%d\n", tabIndex);
+        OutputDebugStringA(outOfRange);
+        return false;
+    }
+
+    g_tabs.erase(g_tabs.begin() + tabIndex);
     char buf[64];
-    sprintf_s(buf, "[Win32IDE] removeTab index=%d\n", tabIndex);
+    sprintf_s(buf, "[Win32IDE] removeTab index=%d remaining=%zu\n", tabIndex, g_tabs.size());
     OutputDebugStringA(buf);
-    return true; // Stub success
+    return true;
 }
 
 extern "C" __declspec(dllexport) bool Win32IDE_addTab(const char* title, void* pContent) {
-    char buf[128];
-    sprintf_s(buf, "[Win32IDE] addTab title=%s\n", title ? title : "NULL");
+    if (!title || title[0] == '\0') {
+        OutputDebugStringA("[Win32IDE] addTab invalid title\n");
+        return false;
+    }
+
+    std::lock_guard<std::mutex> lock(g_uiBridgeStateMutex);
+    g_tabs.push_back(TabEntry{title, pContent});
+
+    char buf[196];
+    sprintf_s(buf, "[Win32IDE] addTab title=%s count=%zu\n", title, g_tabs.size());
     OutputDebugStringA(buf);
-    return true; // Stub success
+    return true;
 }
 
 // Sidebar Implementation (Slots 24-27)
 extern "C" __declspec(dllexport) bool Win32IDE_addSidebarPanel(const char* id, const char* title, void* pContent) {
     if (!id || !title) return false;
+
+    std::lock_guard<std::mutex> lock(g_uiBridgeStateMutex);
+    g_sidebarPanels[std::string(id)] = SidebarPanelEntry{title, pContent, true};
+
     char buf[256];
-    sprintf_s(buf, "[Win32IDE] addSidebarPanel ID=%s Title=%s\n", id, title);
+    sprintf_s(buf, "[Win32IDE] addSidebarPanel ID=%s Title=%s count=%zu\n", id, title, g_sidebarPanels.size());
     OutputDebugStringA(buf);
-    return true; // Stub success
+    return true;
 }
 
 extern "C" __declspec(dllexport) bool Win32IDE_removeSidebarPanel(const char* id) {
     if (!id) return false;
+
+    std::lock_guard<std::mutex> lock(g_uiBridgeStateMutex);
+    const size_t erased = g_sidebarPanels.erase(std::string(id));
+
     char buf[128];
-    sprintf_s(buf, "[Win32IDE] removeSidebarPanel ID=%s\n", id);
+    sprintf_s(buf, "[Win32IDE] removeSidebarPanel ID=%s removed=%zu\n", id, erased);
     OutputDebugStringA(buf);
-    return true; // Stub success
+    return erased > 0;
 }
 
 extern "C" __declspec(dllexport) void Win32IDE_showSidebarPanel(const char* id) {
     if (!id) return;
+
+    std::lock_guard<std::mutex> lock(g_uiBridgeStateMutex);
+    auto it = g_sidebarPanels.find(std::string(id));
+    if (it == g_sidebarPanels.end()) {
+        char missing[160];
+        sprintf_s(missing, "[Win32IDE] showSidebarPanel missing ID=%s\n", id);
+        OutputDebugStringA(missing);
+        return;
+    }
+
+    it->second.visible = true;
+
     char buf[128];
     sprintf_s(buf, "[Win32IDE] showSidebarPanel ID=%s\n", id);
     OutputDebugStringA(buf);
@@ -236,6 +311,18 @@ extern "C" __declspec(dllexport) void Win32IDE_showSidebarPanel(const char* id) 
 
 extern "C" __declspec(dllexport) void Win32IDE_hideSidebarPanel(const char* id) {
     if (!id) return;
+
+    std::lock_guard<std::mutex> lock(g_uiBridgeStateMutex);
+    auto it = g_sidebarPanels.find(std::string(id));
+    if (it == g_sidebarPanels.end()) {
+        char missing[160];
+        sprintf_s(missing, "[Win32IDE] hideSidebarPanel missing ID=%s\n", id);
+        OutputDebugStringA(missing);
+        return;
+    }
+
+    it->second.visible = false;
+
     char buf[128];
     sprintf_s(buf, "[Win32IDE] hideSidebarPanel ID=%s\n", id);
     OutputDebugStringA(buf);

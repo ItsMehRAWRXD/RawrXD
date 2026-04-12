@@ -2,11 +2,12 @@
 // ToolRegistry.cpp — X-Macro Tool Registry Implementation
 // =============================================================================
 #include "ToolRegistry.h"
-#include <sstream>
+#include "AgentToolHandlers.h"
+#include <cctype>
 #include <chrono>
 #include <filesystem>
 #include <fstream>
-#include <cctype>
+#include <sstream>
 
 #include "../core/rawrxd_subsystem_api.hpp"
 #include "../core/unified_hotpatch_manager.hpp"
@@ -14,73 +15,113 @@
 #ifdef _WIN32
 #include <windows.h>
 #else
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/wait.h>
 #include <poll.h>
 #include <signal.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
 #endif
 
 // Windows <wingdi.h> defines ERROR as 0 which clashes with LogLevel::ERROR
 #ifdef ERROR
 #undef ERROR
 #endif
-#include "agentic_observability.h"
+#include "../../include/debug/ai_debugger.h"
+#include "../agent/DiskRecoveryAgent.h"
+#include "../core/amd_gpu_accelerator.h"
+#include "../core/native_debugger_engine.h"
+#include "../p2p/SystemIntegrityProver.h"
 #include "DiskRecoveryAgent.h"
+#include "SovereignAssembler.h"
+#include "agentic_observability.h"
+#include <intrin.h>
 
-namespace RawrXD {
-namespace Agent {
+namespace RawrXD
+{
+namespace Agent
+{
 
-static AgenticObservability& GetObs() {
+static AgenticObservability& GetObs()
+{
     static AgenticObservability instance;
     return instance;
 }
 static const char* kRegistryComponent = "ToolRegistry";
 
 using RawrXD::Agent::AgentToolRegistry;
-using RawrXD::Agent::ToolExecResult;
 using RawrXD::Agent::ToolDescriptor;
+using RawrXD::Agent::ToolExecResult;
 
-namespace {
+namespace
+{
 
-std::string NormalizeToolName(const std::string& raw) {
-    if (raw.empty()) return {};
+std::string NormalizeToolName(const std::string& raw)
+{
+    if (raw.empty())
+        return {};
 
     // Normalize separators + camelCase -> snake_case
     std::string normalized;
     normalized.reserve(raw.size() + 8);
     bool lastWasUnderscore = false;
-    for (char c : raw) {
+    for (char c : raw)
+    {
         unsigned char uc = static_cast<unsigned char>(c);
-        if (std::isalnum(uc)) {
-            if (std::isupper(uc) && !normalized.empty() && normalized.back() != '_') {
+        if (std::isalnum(uc))
+        {
+            if (std::isupper(uc) && !normalized.empty() && normalized.back() != '_')
+            {
                 normalized.push_back('_');
             }
             normalized.push_back(static_cast<char>(std::tolower(uc)));
             lastWasUnderscore = false;
-        } else {
-            if (!normalized.empty() && !lastWasUnderscore) {
+        }
+        else
+        {
+            if (!normalized.empty() && !lastWasUnderscore)
+            {
                 normalized.push_back('_');
                 lastWasUnderscore = true;
             }
         }
     }
 
-    while (!normalized.empty() && normalized.front() == '_') normalized.erase(normalized.begin());
-    while (!normalized.empty() && normalized.back() == '_') normalized.pop_back();
+    while (!normalized.empty() && normalized.front() == '_')
+        normalized.erase(normalized.begin());
+    while (!normalized.empty() && normalized.back() == '_')
+        normalized.pop_back();
 
     // Legacy aliases and common model outputs
-    if (normalized == "readfile") return "read_file";
-    if (normalized == "writefile") return "write_file";
-    if (normalized == "replacefile" || normalized == "replaceinfile") return "replace_in_file";
-    if (normalized == "executecommand" || normalized == "runcommand") return "execute_command";
-    if (normalized == "search" || normalized == "grep" || normalized == "searchcode") return "search_code";
-    if (normalized == "diagnostics" || normalized == "getdiagnostics") return "get_diagnostics";
-    if (normalized == "listdir" || normalized == "listdirectory") return "list_directory";
-    if (normalized == "coverage" || normalized == "getcoverage") return "get_coverage";
-    if (normalized == "build" || normalized == "runbuild") return "run_build";
-    if (normalized == "hotpatch" || normalized == "applyhotpatch") return "apply_hotpatch";
-    if (normalized == "diskrecovery" || normalized == "recoverdisk") return "disk_recovery";
+    if (normalized == "readfile")
+        return "read_file";
+    if (normalized == "edit_file" || normalized == "editfile")
+        return "replace_in_file";
+    if (normalized == "writefile")
+        return "write_file";
+    if (normalized == "replacefile" || normalized == "replaceinfile")
+        return "replace_in_file";
+    if (normalized == "run_terminal" || normalized == "runterminal" || normalized == "terminal")
+        return "execute_command";
+    if (normalized == "executecommand" || normalized == "runcommand")
+        return "execute_command";
+    if (normalized == "search" || normalized == "grep" || normalized == "searchcode")
+        return "search_code";
+    if (normalized == "diagnostics" || normalized == "getdiagnostics")
+        return "get_diagnostics";
+    if (normalized == "list_dir")
+        return "list_directory";
+    if (normalized == "listdir" || normalized == "listdirectory")
+        return "list_directory";
+    if (normalized == "coverage" || normalized == "getcoverage")
+        return "get_coverage";
+    if (normalized == "build" || normalized == "runbuild")
+        return "run_build";
+    if (normalized == "hotpatch" || normalized == "applyhotpatch")
+        return "apply_hotpatch";
+    if (normalized == "diskrecovery" || normalized == "recoverdisk")
+        return "disk_recovery";
+    if (normalized == "gh_create_pr")
+        return "gh_create_pr";
 
     return normalized;
 }
@@ -89,39 +130,47 @@ std::string NormalizeToolName(const std::string& raw) {
 // Default tool handlers (stubs — real implementations wire into engine)
 // -----------------------------------------------------------------------
 
-ToolExecResult HandleReadFile(const json& args) {
+ToolExecResult HandleReadFile(const json& args)
+{
     std::string path = args.value("path", "");
-    if (path.empty()) return ToolExecResult::error("Missing required parameter: path");
+    if (path.empty())
+        return ToolExecResult::error("Missing required parameter: path");
 
     std::ifstream ifs(path, std::ios::binary);
-    if (!ifs.is_open()) return ToolExecResult::error("Failed to open file: " + path);
+    if (!ifs.is_open())
+        return ToolExecResult::error("Failed to open file: " + path);
 
     std::ostringstream oss;
     oss << ifs.rdbuf();
     return ToolExecResult::ok(oss.str());
 }
 
-ToolExecResult HandleWriteFile(const json& args) {
+ToolExecResult HandleWriteFile(const json& args)
+{
     std::string path = args.value("path", "");
     std::string content = args.value("content", "");
-    if (path.empty()) return ToolExecResult::error("Missing required parameter: path");
+    if (path.empty())
+        return ToolExecResult::error("Missing required parameter: path");
 
     // Ensure parent directories exist
     std::filesystem::path p(path);
-    if (p.has_parent_path()) {
+    if (p.has_parent_path())
+    {
         std::error_code ec;
         std::filesystem::create_directories(p.parent_path(), ec);
     }
 
     std::ofstream ofs(path, std::ios::binary | std::ios::trunc);
-    if (!ofs.is_open()) return ToolExecResult::error("Failed to create file: " + path);
+    if (!ofs.is_open())
+        return ToolExecResult::error("Failed to create file: " + path);
 
     ofs.write(content.data(), content.size());
     ofs.close();
     return ToolExecResult::ok("File written: " + path + " (" + std::to_string(content.size()) + " bytes)");
 }
 
-ToolExecResult HandleReplaceInFile(const json& args) {
+ToolExecResult HandleReplaceInFile(const json& args)
+{
     std::string path = args.value("path", "");
     std::string oldStr = args.value("old_string", "");
     std::string newStr = args.value("new_string", "");
@@ -130,9 +179,9 @@ ToolExecResult HandleReplaceInFile(const json& args) {
 
     // Read
     std::ifstream ifs(path, std::ios::binary);
-    if (!ifs.is_open()) return ToolExecResult::error("Failed to open file: " + path);
-    std::string content((std::istreambuf_iterator<char>(ifs)),
-                         std::istreambuf_iterator<char>());
+    if (!ifs.is_open())
+        return ToolExecResult::error("Failed to open file: " + path);
+    std::string content((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
     ifs.close();
 
     // Find & replace (first occurrence)
@@ -144,17 +193,20 @@ ToolExecResult HandleReplaceInFile(const json& args) {
 
     // Write
     std::ofstream ofs(path, std::ios::binary | std::ios::trunc);
-    if (!ofs.is_open()) return ToolExecResult::error("Failed to write file: " + path);
+    if (!ofs.is_open())
+        return ToolExecResult::error("Failed to write file: " + path);
     ofs.write(content.data(), content.size());
     ofs.close();
 
     return ToolExecResult::ok("Replaced in " + path + " at offset " + std::to_string(pos));
 }
 
-ToolExecResult HandleExecuteCommand(const json& args) {
+ToolExecResult HandleExecuteCommand(const json& args)
+{
     std::string command = args.value("command", "");
     int timeout_ms = args.value("timeout", 30000);
-    if (command.empty()) return ToolExecResult::error("Missing required parameter: command");
+    if (command.empty())
+        return ToolExecResult::error("Missing required parameter: command");
 
 #ifdef _WIN32
     // CreateProcess with captured output
@@ -179,13 +231,13 @@ ToolExecResult HandleExecuteCommand(const json& args) {
 
     auto start = std::chrono::high_resolution_clock::now();
 
-    BOOL created = CreateProcessA(
-        nullptr, cmdline.data(), nullptr, nullptr, TRUE,
-        CREATE_NO_WINDOW, nullptr, nullptr, &si, &pi);
+    BOOL created =
+        CreateProcessA(nullptr, cmdline.data(), nullptr, nullptr, TRUE, CREATE_NO_WINDOW, nullptr, nullptr, &si, &pi);
 
     CloseHandle(hWritePipe);
 
-    if (!created) {
+    if (!created)
+    {
         CloseHandle(hReadPipe);
         return ToolExecResult::error("CreateProcess failed: " + std::to_string(GetLastError()));
     }
@@ -194,10 +246,12 @@ ToolExecResult HandleExecuteCommand(const json& args) {
     std::string output;
     char buffer[4096];
     DWORD bytesRead;
-    while (ReadFile(hReadPipe, buffer, sizeof(buffer), &bytesRead, nullptr) && bytesRead > 0) {
+    while (ReadFile(hReadPipe, buffer, sizeof(buffer), &bytesRead, nullptr) && bytesRead > 0)
+    {
         output.append(buffer, bytesRead);
         // Truncate if excessively large
-        if (output.size() > 1024 * 1024) {
+        if (output.size() > 1024 * 1024)
+        {
             output += "\n... [output truncated at 1MB]";
             break;
         }
@@ -206,7 +260,8 @@ ToolExecResult HandleExecuteCommand(const json& args) {
 
     DWORD waitResult = WaitForSingleObject(pi.hProcess, static_cast<DWORD>(timeout_ms));
     DWORD exitCode = 0;
-    if (waitResult == WAIT_TIMEOUT) {
+    if (waitResult == WAIT_TIMEOUT)
+    {
         TerminateProcess(pi.hProcess, 1);
         CloseHandle(pi.hProcess);
         CloseHandle(pi.hThread);
@@ -235,13 +290,15 @@ ToolExecResult HandleExecuteCommand(const json& args) {
     auto start = std::chrono::high_resolution_clock::now();
 
     pid_t pid = fork();
-    if (pid < 0) {
+    if (pid < 0)
+    {
         close(pipefd[0]);
         close(pipefd[1]);
         return ToolExecResult::error("fork() failed");
     }
 
-    if (pid == 0) {
+    if (pid == 0)
+    {
         // Child
         close(pipefd[0]);
         dup2(pipefd[1], STDOUT_FILENO);
@@ -264,10 +321,12 @@ ToolExecResult HandleExecuteCommand(const json& args) {
     pfd.events = POLLIN;
 
     auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(timeout_ms);
-    while (true) {
-        auto remaining = std::chrono::duration_cast<std::chrono::milliseconds>(
-            deadline - std::chrono::steady_clock::now()).count();
-        if (remaining <= 0) {
+    while (true)
+    {
+        auto remaining =
+            std::chrono::duration_cast<std::chrono::milliseconds>(deadline - std::chrono::steady_clock::now()).count();
+        if (remaining <= 0)
+        {
             kill(pid, SIGKILL);
             waitpid(pid, nullptr, 0);
             close(pipefd[0]);
@@ -275,21 +334,29 @@ ToolExecResult HandleExecuteCommand(const json& args) {
         }
 
         int ready = poll(&pfd, 1, static_cast<int>(std::min(remaining, (long long)1000)));
-        if (ready > 0) {
+        if (ready > 0)
+        {
             bytesRead = read(pipefd[0], buffer, sizeof(buffer) - 1);
-            if (bytesRead <= 0) break;
+            if (bytesRead <= 0)
+                break;
             buffer[bytesRead] = '\0';
             output += buffer;
-            if (output.size() > 1024 * 1024) {
+            if (output.size() > 1024 * 1024)
+            {
                 output += "\n... [output truncated at 1MB]";
                 break;
             }
-        } else if (ready == 0) {
+        }
+        else if (ready == 0)
+        {
             // Check if child exited
             int status;
             pid_t wp = waitpid(pid, &status, WNOHANG);
-            if (wp == pid) break;
-        } else {
+            if (wp == pid)
+                break;
+        }
+        else
+        {
             break;
         }
     }
@@ -311,11 +378,13 @@ ToolExecResult HandleExecuteCommand(const json& args) {
 #endif
 }
 
-ToolExecResult HandleSearchCode(const json& args) {
+ToolExecResult HandleSearchCode(const json& args)
+{
     std::string query = args.value("query", "");
     std::string pattern = args.value("file_pattern", "*.*");
     bool is_regex = args.value("is_regex", false);
-    if (query.empty()) return ToolExecResult::error("Missing required parameter: query");
+    if (query.empty())
+        return ToolExecResult::error("Missing required parameter: query");
 
     std::ostringstream results;
     int matchCount = 0;
@@ -323,104 +392,134 @@ ToolExecResult HandleSearchCode(const json& args) {
 
     // Build glob extension filter from pattern
     std::vector<std::string> extensions;
-    if (pattern != "*.*" && pattern != "*") {
+    if (pattern != "*.*" && pattern != "*")
+    {
         // Extract extension from pattern like "*.cpp" or "*.{cpp,h}"
         auto dotPos = pattern.find('.');
-        if (dotPos != std::string::npos) {
+        if (dotPos != std::string::npos)
+        {
             std::string ext = pattern.substr(dotPos);
             extensions.push_back(ext);
         }
     }
 
-    auto matchesPattern = [&](const std::filesystem::path& p) -> bool {
-        if (extensions.empty()) return true;
+    auto matchesPattern = [&](const std::filesystem::path& p) -> bool
+    {
+        if (extensions.empty())
+            return true;
         std::string ext = p.extension().string();
-        for (const auto& e : extensions) {
-            if (ext == e) return true;
+        for (const auto& e : extensions)
+        {
+            if (ext == e)
+                return true;
         }
         return false;
     };
 
     // Recursive search through current directory
     std::error_code ec;
-    for (auto& entry : std::filesystem::recursive_directory_iterator(".", ec)) {
-        if (!entry.is_regular_file()) continue;
-        if (!matchesPattern(entry.path())) continue;
-        if (matchCount >= maxMatches) {
+    for (auto& entry : std::filesystem::recursive_directory_iterator(".", ec))
+    {
+        if (!entry.is_regular_file())
+            continue;
+        if (!matchesPattern(entry.path()))
+            continue;
+        if (matchCount >= maxMatches)
+        {
             results << "\n... (truncated at " << maxMatches << " matches)\n";
             break;
         }
 
         // Read file and search for query
         std::ifstream ifs(entry.path(), std::ios::binary);
-        if (!ifs.is_open()) continue;
+        if (!ifs.is_open())
+            continue;
 
         std::string line;
         int lineNum = 0;
-        while (std::getline(ifs, line)) {
+        while (std::getline(ifs, line))
+        {
             lineNum++;
             size_t pos = std::string::npos;
-            if (is_regex) {
+            if (is_regex)
+            {
                 // Simple substring match as regex fallback
                 pos = line.find(query);
-            } else {
+            }
+            else
+            {
                 pos = line.find(query);
             }
 
-            if (pos != std::string::npos) {
+            if (pos != std::string::npos)
+            {
                 results << entry.path().string() << ":" << lineNum << ": ";
                 // Truncate long lines
-                if (line.size() > 200) {
+                if (line.size() > 200)
+                {
                     size_t start = (pos > 80) ? pos - 80 : 0;
                     results << "..." << line.substr(start, 200) << "...";
-                } else {
+                }
+                else
+                {
                     results << line;
                 }
                 results << "\n";
                 matchCount++;
-                if (matchCount >= maxMatches) break;
+                if (matchCount >= maxMatches)
+                    break;
             }
         }
     }
 
-    if (matchCount == 0) {
+    if (matchCount == 0)
+    {
         results << "No matches found for \"" << query << "\"";
-        if (!extensions.empty()) results << " in " << pattern << " files";
+        if (!extensions.empty())
+            results << " in " << pattern << " files";
         results << "\n";
-    } else {
+    }
+    else
+    {
         results << "\n" << matchCount << " match(es) found.\n";
     }
 
     return ToolExecResult::ok(results.str());
 }
 
-ToolExecResult HandleGetDiagnostics(const json& args) {
+ToolExecResult HandleGetDiagnostics(const json& args)
+{
     std::string file = args.value("file", "");
 
     auto& registry = SubsystemRegistry::instance();
 
     // Attempt to retrieve diagnostics from LSP subsystem
-    if (registry.isAvailable(SubsystemId::LSPDiagnostics)) {
+    if (registry.isAvailable(SubsystemId::LSPDiagnostics))
+    {
         SubsystemParams params{};
         params.id = SubsystemId::LSPDiagnostics;
         SubsystemResult result = registry.invoke(params);
-        if (result.success && result.detail) {
+        if (result.success && result.detail)
+        {
             return ToolExecResult::ok(result.detail);
         }
     }
 
     // Fallback: run compiler and parse output for diagnostics
-    if (!file.empty()) {
+    if (!file.empty())
+    {
         // Check if file is a C++ source — run a quick syntax check
         std::filesystem::path p(file);
         std::string ext = p.extension().string();
-        if (ext == ".cpp" || ext == ".hpp" || ext == ".h" || ext == ".cc") {
+        if (ext == ".cpp" || ext == ".hpp" || ext == ".h" || ext == ".cc")
+        {
             // Run cl.exe /Zs (syntax check only) to capture diagnostics
             json execArgs;
             execArgs["command"] = "cl.exe /Zs /EHsc /std:c++20 /W4 \"" + file + "\" 2>&1";
             execArgs["timeout"] = 15000;
             auto r = HandleExecuteCommand(execArgs);
-            if (!r.output.empty()) {
+            if (!r.output.empty())
+            {
                 return ToolExecResult::ok("[diagnostics] " + file + ":\n" + r.output);
             }
         }
@@ -430,43 +529,49 @@ ToolExecResult HandleGetDiagnostics(const json& args) {
                               (file.empty() ? "(all files)" : file));
 }
 
-ToolExecResult HandleListDirectory(const json& args) {
+ToolExecResult HandleListDirectory(const json& args)
+{
     std::string path = args.value("path", ".");
     bool recursive = args.value("recursive", false);
-    if (path.empty()) path = ".";
+    if (path.empty())
+        path = ".";
 
     std::ostringstream oss;
     std::error_code ec;
 
-    if (recursive) {
-        for (auto& entry : std::filesystem::recursive_directory_iterator(path, ec)) {
-            oss << (entry.is_directory() ? "[DIR]  " : "[FILE] ")
-                << entry.path().string() << "\n";
+    if (recursive)
+    {
+        for (auto& entry : std::filesystem::recursive_directory_iterator(path, ec))
+        {
+            oss << (entry.is_directory() ? "[DIR]  " : "[FILE] ") << entry.path().string() << "\n";
         }
-    } else {
-        for (auto& entry : std::filesystem::directory_iterator(path, ec)) {
-            oss << (entry.is_directory() ? "[DIR]  " : "[FILE] ")
-                << entry.path().filename().string() << "\n";
+    }
+    else
+    {
+        for (auto& entry : std::filesystem::directory_iterator(path, ec))
+        {
+            oss << (entry.is_directory() ? "[DIR]  " : "[FILE] ") << entry.path().filename().string() << "\n";
         }
     }
 
-    if (ec) return ToolExecResult::error("Directory listing failed: " + ec.message());
+    if (ec)
+        return ToolExecResult::error("Directory listing failed: " + ec.message());
     return ToolExecResult::ok(oss.str());
 }
 
-ToolExecResult HandleGetCoverage(const json& args) {
+ToolExecResult HandleGetCoverage(const json& args)
+{
     std::string file = args.value("file", "");
     std::string func = args.value("function_name", "");
-    std::string mode = args.value("mode", "diffcov"); // "bbcov" or "diffcov"
+    std::string mode = args.value("mode", "diffcov");  // "bbcov" or "diffcov"
 
     auto& registry = SubsystemRegistry::instance();
 
     // Dispatch to BBCov (basic-block coverage) or DiffCov (differential coverage)
-    SubsystemId targetMode = (mode == "bbcov")
-        ? SubsystemId::BBCov
-        : SubsystemId::DiffCov;
+    SubsystemId targetMode = (mode == "bbcov") ? SubsystemId::BBCov : SubsystemId::DiffCov;
 
-    if (!registry.isAvailable(targetMode)) {
+    if (!registry.isAvailable(targetMode))
+    {
         return ToolExecResult::error("[get_coverage] " + mode + " subsystem not available");
     }
 
@@ -474,30 +579,36 @@ ToolExecResult HandleGetCoverage(const json& args) {
     params.id = targetMode;
     SubsystemResult result = registry.invoke(params);
 
-    if (!result.success) {
-        return ToolExecResult::error(
-            std::string("[get_coverage] ") + mode + " failed: " + (result.detail ? result.detail : "unknown error"),
-            result.errorCode);
+    if (!result.success)
+    {
+        return ToolExecResult::error(std::string("[get_coverage] ") + mode +
+                                         " failed: " + (result.detail ? result.detail : "unknown error"),
+                                     result.errorCode);
     }
 
     std::ostringstream oss;
     oss << "[get_coverage] " << mode << " analysis complete";
-    if (result.artifactPath) {
+    if (result.artifactPath)
+    {
         oss << " — artifact: " << result.artifactPath;
     }
     oss << " (" << result.latencyMs << "ms)";
-    if (!file.empty()) oss << " [filter: " << file << "]";
-    if (!func.empty()) oss << " [function: " << func << "]";
+    if (!file.empty())
+        oss << " [filter: " << file << "]";
+    if (!func.empty())
+        oss << " [function: " << func << "]";
 
     return ToolExecResult::ok(oss.str());
 }
 
-ToolExecResult HandleRunBuild(const json& args) {
+ToolExecResult HandleRunBuild(const json& args)
+{
     std::string target = args.value("target", "all");
     std::string config = args.value("config", "Release");
 
     std::string cmd = "cmake --build . --config " + config;
-    if (target != "all") cmd += " --target " + target;
+    if (target != "all")
+        cmd += " --target " + target;
 
     json execArgs;
     execArgs["command"] = cmd;
@@ -505,17 +616,52 @@ ToolExecResult HandleRunBuild(const json& args) {
     return HandleExecuteCommand(execArgs);
 }
 
-ToolExecResult HandleApplyHotpatch(const json& args) {
+ToolExecResult HandleAsmAssemble(const json& args)
+{
+    std::string source = args.value("source", "");
+    std::string output = args.value("output", "agent_output.exe");
+    if (source.empty())
+    {
+        return ToolExecResult::error("No assembly source provided");
+    }
+    std::wstring wout(output.begin(), output.end());
+    std::string error;
+    if (!SovereignAssembler::AssembleAndLink(source, wout, error))
+    {
+        return ToolExecResult::error("Assembly failed: " + error);
+    }
+    // optional test-run (sandboxed)
+    if (args.value("test_run", false))
+    {
+        STARTUPINFOW si = {sizeof(si)};
+        PROCESS_INFORMATION pi;
+        if (CreateProcessW(wout.c_str(), NULL, NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, NULL, &si, &pi))
+        {
+            TerminateProcess(pi.hProcess, 0);
+            CloseHandle(pi.hProcess);
+            CloseHandle(pi.hThread);
+        }
+    }
+    return ToolExecResult::ok("Assembled successfully: " + output);
+}
+
+ToolExecResult HandleApplyHotpatch(const json& args)
+{
     std::string layer = args.value("layer", "");
     std::string target = args.value("target", "");
     std::string data = args.value("data", "");
     if (layer.empty() || target.empty())
         return ToolExecResult::error("Missing required parameters: layer, target");
 
+    // Pre-flight integrity gate: patching is a sovereign operation
+    if (!SystemIntegrityProver::Instance().RunBeforeCriticalOp("apply_hotpatch"))
+        return ToolExecResult::error("Integrity pre-flight FAILED: apply_hotpatch blocked.");
+
     auto& manager = UnifiedHotpatchManager::instance();
     UnifiedResult ur;
 
-    if (layer == "memory") {
+    if (layer == "memory")
+    {
         // Parse target as hex address, data as hex bytes
         uintptr_t addr = 0;
         sscanf(target.c_str(), "%llx", &addr);
@@ -524,7 +670,8 @@ ToolExecResult HandleApplyHotpatch(const json& args) {
 
         // Decode hex data string into byte array
         std::vector<uint8_t> bytes;
-        for (size_t i = 0; i + 1 < data.size(); i += 2) {
+        for (size_t i = 0; i + 1 < data.size(); i += 2)
+        {
             uint8_t byte = 0;
             sscanf(data.c_str() + i, "%2hhx", &byte);
             bytes.push_back(byte);
@@ -532,10 +679,10 @@ ToolExecResult HandleApplyHotpatch(const json& args) {
         if (bytes.empty())
             return ToolExecResult::error("No patch data provided");
 
-        ur = manager.apply_memory_patch(reinterpret_cast<void*>(addr),
-                                         bytes.size(), bytes.data());
+        ur = manager.apply_memory_patch(reinterpret_cast<void*>(addr), bytes.size(), bytes.data());
     }
-    else if (layer == "byte") {
+    else if (layer == "byte")
+    {
         // target = filename, data = hex-encoded patch
         std::vector<uint8_t> pattern, replacement;
         // data format: "PATTERN:REPLACEMENT" in hex
@@ -546,153 +693,642 @@ ToolExecResult HandleApplyHotpatch(const json& args) {
         std::string patternHex = data.substr(0, colonPos);
         std::string replaceHex = data.substr(colonPos + 1);
 
-        for (size_t i = 0; i + 1 < patternHex.size(); i += 2) {
-            uint8_t b; sscanf(patternHex.c_str() + i, "%2hhx", &b);
+        for (size_t i = 0; i + 1 < patternHex.size(); i += 2)
+        {
+            uint8_t b;
+            sscanf(patternHex.c_str() + i, "%2hhx", &b);
             pattern.push_back(b);
         }
-        for (size_t i = 0; i + 1 < replaceHex.size(); i += 2) {
-            uint8_t b; sscanf(replaceHex.c_str() + i, "%2hhx", &b);
+        for (size_t i = 0; i + 1 < replaceHex.size(); i += 2)
+        {
+            uint8_t b;
+            sscanf(replaceHex.c_str() + i, "%2hhx", &b);
             replacement.push_back(b);
         }
 
         ur = manager.apply_byte_search_patch(target.c_str(), pattern, replacement);
     }
-    else if (layer == "server") {
+    else if (layer == "server")
+    {
         // Server patches are registered by name, not via hex data
         // target = patch name to add/remove
-        if (data == "remove") {
+        if (data == "remove")
+        {
             ur = manager.remove_server_patch(target.c_str());
-        } else {
-            return ToolExecResult::error(
-                "Server patches must be registered programmatically. "
-                "Use target=name, data=remove to remove.");
+        }
+        else
+        {
+            return ToolExecResult::error("Server patches must be registered programmatically. "
+                                         "Use target=name, data=remove to remove.");
         }
     }
-    else {
-        return ToolExecResult::error("Unknown layer: " + layer +
-                                     ". Valid: memory, byte, server");
+    else
+    {
+        return ToolExecResult::error("Unknown layer: " + layer + ". Valid: memory, byte, server");
     }
 
-    if (!ur.result.success) {
+    if (!ur.result.success)
+    {
         const char* detail = ur.result.detail.empty() ? "unknown error" : ur.result.detail.c_str();
-        return ToolExecResult::error(
-            std::string("[apply_hotpatch] ") + layer + " layer failed: " +
-            detail,
-            ur.result.errorCode);
+        return ToolExecResult::error(std::string("[apply_hotpatch] ") + layer + " layer failed: " + detail,
+                                     ur.result.errorCode);
     }
 
     std::ostringstream oss;
     oss << "[apply_hotpatch] " << layer << " layer applied successfully"
-        << " | target=" << target
-        << " | seq=" << ur.sequenceId;
+        << " | target=" << target << " | seq=" << ur.sequenceId;
     return ToolExecResult::ok(oss.str());
 }
 
-ToolExecResult HandleDiskRecovery(const json& args) {
+ToolExecResult HandleDiskRecovery(const json& args)
+{
     std::string action = args.value("action", "");
-    if (action.empty()) return ToolExecResult::error("Missing required parameter: action");
+    if (action.empty())
+        return ToolExecResult::error("Missing required parameter: action");
 
     // Thread-local agent instance (persistent across calls within a session)
     static RawrXD::Recovery::DiskRecoveryAsmAgent agent;
 
-    if (action == "scan" || action == "find") {
+    if (action == "scan" || action == "find")
+    {
         int driveNum = agent.FindDrive();
         if (driveNum < 0)
             return ToolExecResult::error("No dying WD device found on PhysicalDrive0-15");
         return ToolExecResult::ok("Found candidate: PhysicalDrive" + std::to_string(driveNum));
     }
-    else if (action == "init" || action == "initialize") {
+    else if (action == "init" || action == "initialize")
+    {
         int driveNum = args.value("drive", -1);
         if (driveNum < 0)
             return ToolExecResult::error("Missing parameter: drive (0-15)");
         auto r = agent.Initialize(driveNum);
-        if (!r.success) return ToolExecResult::error(r.detail, r.errorCode);
+        if (!r.success)
+            return ToolExecResult::error(r.detail, r.errorCode);
         return ToolExecResult::ok(r.detail);
     }
-    else if (action == "extract_key" || action == "key") {
+    else if (action == "extract_key" || action == "key")
+    {
         auto r = agent.ExtractEncryptionKey();
-        if (!r.success) return ToolExecResult::error(r.detail, r.errorCode);
+        if (!r.success)
+            return ToolExecResult::error(r.detail, r.errorCode);
         return ToolExecResult::ok(r.detail);
     }
-    else if (action == "run" || action == "recover") {
+    else if (action == "run" || action == "recover")
+    {
         auto r = agent.RunRecovery();
-        if (!r.success) return ToolExecResult::error(r.detail, r.errorCode);
+        if (!r.success)
+            return ToolExecResult::error(r.detail, r.errorCode);
         return ToolExecResult::ok(r.detail);
     }
-    else if (action == "abort" || action == "stop") {
+    else if (action == "abort" || action == "stop")
+    {
         agent.Abort();
         return ToolExecResult::ok("Abort signal sent to recovery worker");
     }
-    else if (action == "stats" || action == "status") {
+    else if (action == "stats" || action == "status")
+    {
         auto stats = agent.GetStats();
         std::ostringstream oss;
-        oss << "Good: " << stats.goodSectors
-            << " | Bad: " << stats.badSectors
-            << " | Current LBA: " << stats.currentLBA
-            << " / " << stats.totalSectors
-            << " (" << static_cast<int>(stats.ProgressPercent()) << "%)";
+        oss << "Good: " << stats.goodSectors << " | Bad: " << stats.badSectors << " | Current LBA: " << stats.currentLBA
+            << " / " << stats.totalSectors << " (" << static_cast<int>(stats.ProgressPercent()) << "%)";
         return ToolExecResult::ok(oss.str());
     }
-    else if (action == "cleanup" || action == "close") {
+    else if (action == "cleanup" || action == "close")
+    {
         // Destructor handles cleanup via RAII, but explicit reset:
         agent = RawrXD::Recovery::DiskRecoveryAsmAgent();
         return ToolExecResult::ok("Recovery context cleaned up");
     }
-    else {
+    else if (action == "carve")
+    {
+        // Pre-flight: every carve operation must pass full integrity attestation.
+        // Physical (AVX-512), W^X policy, binary-on-disk, logic, and EventBus
+        // are all verified before we touch the disk image.
+        if (!SystemIntegrityProver::Instance().RunBeforeCriticalOp("carve"))
+        {
+            return ToolExecResult::error("Integrity pre-flight FAILED: carve operation blocked. "
+                                         "Check AVX-512 availability, W^X policy, and EventBus health.");
+        }
+
+        std::string imagePath = args.value("image_path", "");
+        std::string outputDir = args.value("output_dir", "");
+        if (imagePath.empty())
+            return ToolExecResult::error("Missing parameter: image_path (path to raw disk image)");
+        if (outputDir.empty())
+            return ToolExecResult::error("Missing parameter: output_dir (directory for carved files)");
+        size_t maxFiles = args.value("max_files", 256);
+
+        RawrXD::Recovery::DiskRecoveryAgent carver;
+        auto r = carver.CarveKnownSignatures(imagePath, outputDir, maxFiles);
+        if (!r.success)
+            return ToolExecResult::error(r.detail, r.errorCode);
+        return ToolExecResult::ok(r.detail);
+    }
+    else
+    {
         return ToolExecResult::error("Unknown action: " + action +
-            ". Valid: scan, init, extract_key, run, abort, stats, cleanup");
+                                     ". Valid: scan, init, extract_key, run, abort, stats, cleanup, carve");
     }
 }
 
-} // anonymous namespace
+// -----------------------------------------------------------------------
+// Git / GitHub handlers (bridge to AgentToolHandlers)
+// -----------------------------------------------------------------------
+
+ToolExecResult ToToolExecResult(const ToolCallResult& res)
+{
+    int exitCode = res.isSuccess() ? 0 : -1;
+    if (res.metadata.is_object() && res.metadata.contains("exit_code") && res.metadata["exit_code"].is_number_integer())
+    {
+        exitCode = res.metadata["exit_code"].get<int>();
+    }
+
+    if (res.isSuccess())
+    {
+        return ToolExecResult::ok(res.output, static_cast<double>(res.durationMs));
+    }
+
+    std::string message = res.error;
+    if (message.empty())
+    {
+        message = res.output.empty() ? "Tool execution failed" : res.output;
+    }
+    return ToolExecResult::error(message, exitCode);
+}
+
+ToolExecResult HandleGitStatus(const json& args)
+{
+    auto res = AgentToolHandlers::Instance().Execute("git_status", args);
+    return ToToolExecResult(res);
+}
+
+ToolExecResult HandleGitDiff(const json& args)
+{
+    auto res = AgentToolHandlers::Instance().Execute("git_diff", args);
+    return ToToolExecResult(res);
+}
+
+ToolExecResult HandleGitCommit(const json& args)
+{
+    auto res = AgentToolHandlers::Instance().Execute("git_commit", args);
+    return ToToolExecResult(res);
+}
+
+ToolExecResult HandleGitHubCreatePR(const json& args)
+{
+    auto res = AgentToolHandlers::Instance().Execute("gh_create_pr", args);
+    return ToToolExecResult(res);
+}
+
+ToolExecResult HandleTermExec(const json& args)
+{
+    std::string command = args.value("command", "");
+    std::string cwd = args.value("cwd", "");
+    int timeout_ms = args.value("timeout", 60000);
+
+    if (command.empty())
+        return ToolExecResult::error("Missing required parameter: command");
+
+    auto start = std::chrono::high_resolution_clock::now();
+
+#ifdef _WIN32
+    SECURITY_ATTRIBUTES sa{};
+    sa.nLength = sizeof(sa);
+    sa.bInheritHandle = TRUE;
+
+    HANDLE hReadPipe = nullptr, hWritePipe = nullptr;
+    if (!CreatePipe(&hReadPipe, &hWritePipe, &sa, 0))
+        return ToolExecResult::error("Failed to create pipe");
+
+    SetHandleInformation(hReadPipe, HANDLE_FLAG_INHERIT, 0);
+
+    STARTUPINFOA si{};
+    si.cb = sizeof(si);
+    si.dwFlags = STARTF_USESTDHANDLES;
+    si.hStdOutput = hWritePipe;
+    si.hStdError = hWritePipe;
+
+    PROCESS_INFORMATION pi{};
+    std::string cmdline = "cmd.exe /c " + command;
+
+    BOOL created = CreateProcessA(nullptr, cmdline.data(), nullptr, nullptr, TRUE, CREATE_NO_WINDOW, nullptr,
+                                  cwd.empty() ? nullptr : cwd.c_str(), &si, &pi);
+
+    CloseHandle(hWritePipe);
+
+    if (!created)
+    {
+        CloseHandle(hReadPipe);
+        return ToolExecResult::error("CreateProcess failed: " + std::to_string(GetLastError()));
+    }
+
+    std::string output;
+    char buffer[4096];
+    DWORD bytesRead;
+    while (ReadFile(hReadPipe, buffer, sizeof(buffer), &bytesRead, nullptr) && bytesRead > 0)
+    {
+        output.append(buffer, bytesRead);
+        if (output.size() > 2 * 1024 * 1024)
+        {
+            output += "\n... [output truncated at 2MB]";
+            break;
+        }
+    }
+    CloseHandle(hReadPipe);
+
+    DWORD waitResult = WaitForSingleObject(pi.hProcess, static_cast<DWORD>(timeout_ms));
+    DWORD exitCode = 0;
+    if (waitResult == WAIT_TIMEOUT)
+    {
+        TerminateProcess(pi.hProcess, 1);
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+        return ToolExecResult::error("TermExec timed out after " + std::to_string(timeout_ms) + "ms\n" + output, 1);
+    }
+
+    GetExitCodeProcess(pi.hProcess, &exitCode);
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+#else
+    // POSIX Implementation
+    int pipefd[2];
+    if (pipe(pipefd) != 0)
+        return ToolExecResult::error("Failed to create pipe");
+
+    pid_t pid = fork();
+    if (pid < 0)
+    {
+        close(pipefd[0]);
+        close(pipefd[1]);
+        return ToolExecResult::error("fork() failed");
+    }
+
+    if (pid == 0)
+    {
+        close(pipefd[0]);
+        dup2(pipefd[1], STDOUT_FILENO);
+        dup2(pipefd[1], STDERR_FILENO);
+        close(pipefd[1]);
+        if (!cwd.empty())
+        {
+            chdir(cwd.c_str());
+        }
+        execl("/bin/sh", "sh", "-c", command.c_str(), nullptr);
+        _exit(127);
+    }
+
+    close(pipefd[1]);
+    std::string output;
+    char buffer[4096];
+    ssize_t n;
+    while ((n = read(pipefd[0], buffer, sizeof(buffer))) > 0)
+    {
+        output.append(buffer, n);
+        if (output.size() > 2 * 1024 * 1024)
+            break;
+    }
+    close(pipefd[0]);
+
+    int status = 0;
+    waitpid(pid, &status, 0);
+    int exitCode = WIFEXITED(status) ? WEXITSTATUS(status) : 1;
+#endif
+
+    auto end = std::chrono::high_resolution_clock::now();
+    double elapsed = std::chrono::duration<double, std::milli>(end - start).count();
+
+    ToolExecResult result;
+    result.success = (exitCode == 0);
+    result.output = output;
+    result.exit_code = static_cast<int>(exitCode);
+    result.elapsed_ms = elapsed;
+    return result;
+}
+
+ToolExecResult HandleSysGetCapabilities(const json& args)
+{
+    (void)args;
+    json res = json::object();
+
+    // CPU Capabilities via __cpuid
+    int cpuInfo[4];
+    __cpuid(cpuInfo, 1);
+    bool hasAVX = (cpuInfo[2] & (1 << 28)) != 0;
+
+    int cpuInfo7[4];
+    __cpuidex(cpuInfo7, 7, 0);
+    bool hasAVX2 = (cpuInfo7[1] & (1 << 5)) != 0;
+    bool hasAVX512 = (cpuInfo7[1] & (1 << 16)) != 0;
+
+    res["cpu"]["avx"] = hasAVX;
+    res["cpu"]["avx2"] = hasAVX2;
+    res["cpu"]["avx512"] = hasAVX512;
+    res["cpu"]["architecture"] = "x64";
+
+    // GPU Capabilities
+    auto& accel = AMDGPUAccelerator::instance();
+    res["gpu"]["initialized"] = accel.isInitialized();
+    res["gpu"]["enabled"] = accel.isGPUEnabled();
+    res["gpu"]["name"] = accel.getGPUName();
+    res["gpu"]["vram_total_bytes"] = accel.getVRAMBytes();
+    res["gpu"]["backend"] = accel.getBackendName();
+    res["gpu"]["compute_units"] = accel.getComputeUnits();
+
+    // Runtime Tier Suggestion
+    std::string tier = "CPU_GENERIC";
+    if (accel.isGPUEnabled() && accel.getVRAMBytes() > 4ULL * 1024 * 1024 * 1024)
+    {
+        tier = "VRAM_ACCELERATED";
+    }
+    else if (hasAVX512)
+    {
+        tier = "CPU_AVX512";
+    }
+    else if (hasAVX2)
+    {
+        tier = "CPU_AVX2";
+    }
+    res["suggested_execution_tier"] = tier;
+
+    return ToolExecResult::ok(res.dump(2));
+}
+
+// ---------------------------------------------------------------------------
+// Debug Tool Handlers — Wire NativeDebuggerEngine into agent tool system
+// ---------------------------------------------------------------------------
+
+ToolExecResult HandleDebugLaunch(const json& args)
+{
+    std::string exePath = args.value("path", "");
+    if (exePath.empty())
+        return ToolExecResult::error("Missing required parameter: path");
+    std::string exeArgs = args.value("args", "");
+    std::string workDir = args.value("working_dir", "");
+
+    auto& engine = RawrXD::Debugger::NativeDebuggerEngine::Instance();
+    if (!engine.isInitialized())
+    {
+        RawrXD::Debugger::DebugConfig cfg;
+        cfg.symbolPath = "srv*C:\\Symbols*https://msdl.microsoft.com/download/symbols";
+        cfg.enableSourceStepping = true;
+        cfg.maxEventHistory = 500;
+        auto r = engine.initialize(cfg);
+        if (!r.success)
+            return ToolExecResult::error(std::string("Engine init failed: ") + r.detail);
+    }
+
+    auto r = engine.launchProcess(exePath, exeArgs, workDir);
+    if (!r.success)
+        return ToolExecResult::error(std::string("Launch failed: ") + r.detail);
+
+    json res;
+    res["pid"] = engine.getTargetPID();
+    res["state"] = "launched";
+    res["target"] = exePath;
+    return ToolExecResult::ok(res.dump(2));
+}
+
+ToolExecResult HandleDebugAttach(const json& args)
+{
+    int pid = args.value("pid", 0);
+    if (pid <= 0)
+        return ToolExecResult::error("Missing or invalid parameter: pid");
+
+    auto& engine = RawrXD::Debugger::NativeDebuggerEngine::Instance();
+    if (!engine.isInitialized())
+    {
+        RawrXD::Debugger::DebugConfig cfg;
+        cfg.symbolPath = "srv*C:\\Symbols*https://msdl.microsoft.com/download/symbols";
+        cfg.enableSourceStepping = true;
+        auto r = engine.initialize(cfg);
+        if (!r.success)
+            return ToolExecResult::error(std::string("Engine init failed: ") + r.detail);
+    }
+
+    auto r = engine.attachToProcess(static_cast<uint32_t>(pid));
+    if (!r.success)
+        return ToolExecResult::error(std::string("Attach failed: ") + r.detail);
+
+    json res;
+    res["pid"] = pid;
+    res["state"] = "attached";
+    return ToolExecResult::ok(res.dump(2));
+}
+
+ToolExecResult HandleDebugBreak(const json& args)
+{
+    (void)args;
+    auto& engine = RawrXD::Debugger::NativeDebuggerEngine::Instance();
+    auto r = engine.breakExecution();
+    if (!r.success)
+        return ToolExecResult::error(std::string("Break failed: ") + r.detail);
+    return ToolExecResult::ok("Execution paused.");
+}
+
+ToolExecResult HandleDebugContinue(const json& args)
+{
+    (void)args;
+    auto& engine = RawrXD::Debugger::NativeDebuggerEngine::Instance();
+    auto r = engine.go();
+    if (!r.success)
+        return ToolExecResult::error(std::string("Continue failed: ") + r.detail);
+    return ToolExecResult::ok("Execution resumed.");
+}
+
+ToolExecResult HandleDebugStepOver(const json& args)
+{
+    (void)args;
+    auto& engine = RawrXD::Debugger::NativeDebuggerEngine::Instance();
+    auto r = engine.stepOver();
+    if (!r.success)
+        return ToolExecResult::error(std::string("Step over failed: ") + r.detail);
+    return ToolExecResult::ok(engine.toJsonStatus());
+}
+
+ToolExecResult HandleDebugStepInto(const json& args)
+{
+    (void)args;
+    auto& engine = RawrXD::Debugger::NativeDebuggerEngine::Instance();
+    auto r = engine.stepInto();
+    if (!r.success)
+        return ToolExecResult::error(std::string("Step into failed: ") + r.detail);
+    return ToolExecResult::ok(engine.toJsonStatus());
+}
+
+ToolExecResult HandleDebugAddBreakpoint(const json& args)
+{
+    auto& engine = RawrXD::Debugger::NativeDebuggerEngine::Instance();
+
+    // Accept symbol, address, or file:line
+    std::string symbol = args.value("symbol", "");
+    std::string address = args.value("address", "");
+    std::string file = args.value("file", "");
+    int line = args.value("line", 0);
+
+    RawrXD::Debugger::DebugResult r;
+    if (!symbol.empty())
+    {
+        r = engine.addBreakpointBySymbol(symbol);
+    }
+    else if (!address.empty())
+    {
+        uint64_t addr = strtoull(address.c_str(), nullptr, 16);
+        r = engine.addBreakpoint(addr);
+    }
+    else if (!file.empty() && line > 0)
+    {
+        r = engine.addBreakpointBySourceLine(file, line);
+    }
+    else
+    {
+        return ToolExecResult::error("Provide 'symbol', 'address' (hex), or 'file'+'line'.");
+    }
+
+    if (!r.success)
+        return ToolExecResult::error(std::string("Add breakpoint failed: ") + r.detail);
+    return ToolExecResult::ok(engine.toJsonBreakpoints());
+}
+
+ToolExecResult HandleDebugRemoveBreakpoint(const json& args)
+{
+    int bpId = args.value("id", -1);
+    if (bpId < 0)
+        return ToolExecResult::error("Missing required parameter: id");
+
+    auto& engine = RawrXD::Debugger::NativeDebuggerEngine::Instance();
+    auto r = engine.removeBreakpoint(static_cast<uint32_t>(bpId));
+    if (!r.success)
+        return ToolExecResult::error(std::string("Remove breakpoint failed: ") + r.detail);
+    return ToolExecResult::ok(engine.toJsonBreakpoints());
+}
+
+ToolExecResult HandleDebugStacktrace(const json& args)
+{
+    (void)args;
+    auto& engine = RawrXD::Debugger::NativeDebuggerEngine::Instance();
+    return ToolExecResult::ok(engine.toJsonStack());
+}
+
+ToolExecResult HandleDebugRegisters(const json& args)
+{
+    (void)args;
+    auto& engine = RawrXD::Debugger::NativeDebuggerEngine::Instance();
+    return ToolExecResult::ok(engine.toJsonRegisters());
+}
+
+ToolExecResult HandleDebugMemory(const json& args)
+{
+    std::string addrStr = args.value("address", "");
+    if (addrStr.empty())
+        return ToolExecResult::error("Missing required parameter: address (hex)");
+    uint64_t address = strtoull(addrStr.c_str(), nullptr, 16);
+    uint64_t size = args.value("size", 256);
+    if (size > 4096)
+        size = 4096;
+
+    auto& engine = RawrXD::Debugger::NativeDebuggerEngine::Instance();
+    return ToolExecResult::ok(engine.toJsonMemory(address, size));
+}
+
+ToolExecResult HandleDebugDisasm(const json& args)
+{
+    std::string addrStr = args.value("address", "");
+    if (addrStr.empty())
+        return ToolExecResult::error("Missing required parameter: address (hex)");
+    uint64_t address = strtoull(addrStr.c_str(), nullptr, 16);
+    int lines = args.value("lines", 20);
+    if (lines > 200)
+        lines = 200;
+
+    auto& engine = RawrXD::Debugger::NativeDebuggerEngine::Instance();
+    return ToolExecResult::ok(engine.toJsonDisassembly(address, static_cast<uint32_t>(lines)));
+}
+
+ToolExecResult HandleDebugAnalyze(const json& args)
+{
+    (void)args;
+    auto& agent = RawrXD::Debug::AIDebugAgent::Instance();
+    auto analysis = agent.AnalyzeLastException();
+    return ToolExecResult::ok(agent.FormatAnalysisForLLM(analysis));
+}
+
+ToolExecResult HandleDebugSnapshot(const json& args)
+{
+    (void)args;
+    auto& agent = RawrXD::Debug::AIDebugAgent::Instance();
+    return ToolExecResult::ok(agent.CaptureDebugSnapshot());
+}
+
+ToolExecResult HandleDebugSuggestBreakpoints(const json& args)
+{
+    std::string context = args.value("context", "crash");
+    auto& agent = RawrXD::Debug::AIDebugAgent::Instance();
+    auto suggestions = agent.SuggestBreakpoints(context);
+
+    json result = json::array();
+    for (const auto& s : suggestions)
+    {
+        result.push_back({{"symbol", s.symbol},
+                          {"reason", s.reason},
+                          {"type", s.type == RawrXD::Debugger::BreakpointType::Hardware ? "hardware" : "software"}});
+    }
+    return ToolExecResult::ok(result.dump(2));
+}
+
+}  // anonymous namespace
 
 // ---------------------------------------------------------------------------
 // AgentToolRegistry implementation
 // ---------------------------------------------------------------------------
 
-AgentToolRegistry& AgentToolRegistry::Instance() {
+AgentToolRegistry& AgentToolRegistry::Instance()
+{
     static AgentToolRegistry instance;
     return instance;
 }
 
-AgentToolRegistry::AgentToolRegistry() {
+AgentToolRegistry::AgentToolRegistry()
+{
     InitDescriptors();
 }
 
-void AgentToolRegistry::InitDescriptors() {
-    // Use X-Macro to populate basic name/description
-    #define INIT_DESCRIPTOR(tool_name_, tool_desc_) \
-    { \
-        ToolDescriptor td; \
-        td.name = #tool_name_; \
-        td.description = tool_desc_; \
-        td.params_schema = json::object(); \
-        td.handler = nullptr; \
-        m_tools.push_back(std::move(td)); \
-        m_nameIndex[#tool_name_] = m_tools.size() - 1; \
+void AgentToolRegistry::InitDescriptors()
+{
+// Use X-Macro to populate basic name/description
+#define INIT_DESCRIPTOR(tool_name_, tool_desc_)                                                                        \
+    {                                                                                                                  \
+        ToolDescriptor td;                                                                                             \
+        td.name = #tool_name_;                                                                                         \
+        td.description = tool_desc_;                                                                                   \
+        td.params_schema = json::object();                                                                             \
+        td.handler = nullptr;                                                                                          \
+        m_tools.push_back(std::move(td));                                                                              \
+        m_nameIndex[#tool_name_] = m_tools.size() - 1;                                                                 \
     }
 
     AGENT_TOOLS_X(INIT_DESCRIPTOR)
-    #undef INIT_DESCRIPTOR
+#undef INIT_DESCRIPTOR
 
     // -----------------------------------------------------------------------
     // Wire parameter schemas programmatically (avoids preprocessor comma issue)
     // -----------------------------------------------------------------------
-    auto setParam = [this](const char* tool, const char* param,
-                           const char* type, const char* desc) {
+    auto setParam = [this](const char* tool, const char* param, const char* type, const char* desc)
+    {
         auto it = m_nameIndex.find(tool);
-        if (it != m_nameIndex.end()) {
+        if (it != m_nameIndex.end())
+        {
             json p;
             p["type"] = type;
             p["description"] = desc;
             m_tools[it->second].params_schema[param] = p;
         }
     };
-    auto setParamWithDefault = [this](const char* tool, const char* param,
-                                       const char* type, const char* desc,
-                                       json defaultVal) {
+    auto setParamWithDefault =
+        [this](const char* tool, const char* param, const char* type, const char* desc, json defaultVal)
+    {
         auto it = m_nameIndex.find(tool);
-        if (it != m_nameIndex.end()) {
+        if (it != m_nameIndex.end())
+        {
             json p;
             p["type"] = type;
             p["description"] = desc;
@@ -716,6 +1352,15 @@ void AgentToolRegistry::InitDescriptors() {
     // execute_command
     setParam("execute_command", "command", "string", "Shell command to execute");
     setParamWithDefault("execute_command", "timeout", "number", "Timeout in milliseconds (default 30000)", 30000);
+    setParam("execute_command", "cwd", "string",
+             "Optional working directory (allowlisted). Same as working_directory. Defaults to primary workspace root "
+             "when omitted.");
+    setParam("execute_command", "working_directory", "string",
+             "Optional working directory (allowlisted). Same as cwd.");
+    setParamWithDefault("execute_command", "use_integrated_terminal", "boolean",
+                        "Mirror command and output to the IDE agent terminal", false);
+    setParamWithDefault("execute_command", "mirror_to_ide_agent_terminal", "boolean",
+                        "Alias of use_integrated_terminal", false);
 
     // search_code
     setParam("search_code", "query", "string", "Search pattern (regex or literal)");
@@ -744,134 +1389,254 @@ void AgentToolRegistry::InitDescriptors() {
 
     // disk_recovery
     setParam("disk_recovery", "action", "string",
-             "Action to perform: scan, init, extract_key, run, abort, stats, cleanup");
-    setParamWithDefault("disk_recovery", "drive", "number",
-                         "Physical drive number (0-15) for init action", -1);
+             "Action to perform: scan, init, extract_key, run, abort, stats, cleanup, carve");
+    setParamWithDefault("disk_recovery", "drive", "number", "Physical drive number (0-15) for init action", -1);
+    setParamWithDefault("disk_recovery", "image_path", "string", "Path to raw disk image (for carve action)", "");
+    setParamWithDefault("disk_recovery", "output_dir", "string", "Directory for carved files (for carve action)", "");
+    setParamWithDefault("disk_recovery", "max_files", "number", "Maximum files to carve (default 256)", 256);
+
+    // git_status
+    // No params
+
+    // git_diff
+    setParamWithDefault("git_diff", "target", "string", "Diff target (default: HEAD)", "HEAD");
+
+    // git_commit
+    setParam("git_commit", "message", "string", "Commit message");
+
+    // gh_create_pr
+    setParam("gh_create_pr", "title", "string", "PR title");
+    setParam("gh_create_pr", "body", "string", "PR body");
+
+    // term_exec
+    setParam("term_exec", "command", "string", "Shell command to execute");
+    setParam("term_exec", "cwd", "string", "Working directory for the command");
+    setParamWithDefault("term_exec", "timeout", "number", "Timeout in ms (default 60000)", 60000);
+
+    // sys_get_capabilities
+    // No params
+
+    // asm_assemble
+    setParam("asm_assemble", "source", "string", "MASM x64 assembly source code content");
+    setParamWithDefault("asm_assemble", "output", "string", "Target executable path (default: agent_output.exe)",
+                        "agent_output.exe");
+    setParamWithDefault("asm_assemble", "test_run", "boolean",
+                        "If true, attempts a dry-run to verify the PE header stability", false);
+
+    // Debug tool param schemas
+    setParam("debug_launch", "path", "string", "Absolute path to the executable to launch under debugger");
+    setParamWithDefault("debug_launch", "args", "string", "Command-line arguments for the target", "");
+    setParamWithDefault("debug_launch", "working_dir", "string", "Working directory for the target", "");
+    setParam("debug_attach", "pid", "integer", "Process ID to attach to");
+    setParamWithDefault("debug_add_breakpoint", "symbol", "string", "Symbol name (e.g. main, MyClass::Foo)", "");
+    setParamWithDefault("debug_add_breakpoint", "address", "string", "Hex address (e.g. 7ff6a1230000)", "");
+    setParamWithDefault("debug_add_breakpoint", "file", "string", "Source file path for line breakpoint", "");
+    setParamWithDefault("debug_add_breakpoint", "line", "integer", "Source line number", 0);
+    setParam("debug_remove_breakpoint", "id", "integer", "Breakpoint ID to remove");
+    setParam("debug_memory", "address", "string", "Hex address to read memory from");
+    setParamWithDefault("debug_memory", "size", "integer", "Number of bytes to read (max 4096)", 256);
+    setParam("debug_disasm", "address", "string", "Hex address to start disassembly");
+    setParamWithDefault("debug_disasm", "lines", "integer", "Number of instructions to disassemble (max 200)", 20);
+    setParamWithDefault("debug_suggest_breakpoints", "context", "string",
+                        "Problem context: crash, hang, corruption, regression", "crash");
 
     // Wire default handlers
-    RegisterHandler("read_file",       HandleReadFile);
-    RegisterHandler("write_file",      HandleWriteFile);
+    RegisterHandler("read_file", HandleReadFile);
+    RegisterHandler("write_file", HandleWriteFile);
     RegisterHandler("replace_in_file", HandleReplaceInFile);
     RegisterHandler("execute_command", HandleExecuteCommand);
-    RegisterHandler("search_code",     HandleSearchCode);
+    RegisterHandler("search_code", HandleSearchCode);
     RegisterHandler("get_diagnostics", HandleGetDiagnostics);
-    RegisterHandler("list_directory",  HandleListDirectory);
-    RegisterHandler("get_coverage",    HandleGetCoverage);
-    RegisterHandler("run_build",       HandleRunBuild);
-    RegisterHandler("apply_hotpatch",  HandleApplyHotpatch);
-    RegisterHandler("disk_recovery",   HandleDiskRecovery);
+    RegisterHandler("list_directory", HandleListDirectory);
+    RegisterHandler("get_coverage", HandleGetCoverage);
+    RegisterHandler("run_build", HandleRunBuild);
+    RegisterHandler("asm_assemble", HandleAsmAssemble);
+    RegisterHandler("apply_hotpatch", HandleApplyHotpatch);
+    RegisterHandler("disk_recovery", HandleDiskRecovery);
+    RegisterHandler("git_status", HandleGitStatus);
+    RegisterHandler("git_diff", HandleGitDiff);
+    RegisterHandler("git_commit", HandleGitCommit);
+    RegisterHandler("gh_create_pr", HandleGitHubCreatePR);
+    RegisterHandler("term_exec", HandleTermExec);
+    RegisterHandler("sys_get_capabilities", HandleSysGetCapabilities);
+
+    // Debug tool handlers
+    RegisterHandler("debug_launch", HandleDebugLaunch);
+    RegisterHandler("debug_attach", HandleDebugAttach);
+    RegisterHandler("debug_break", HandleDebugBreak);
+    RegisterHandler("debug_continue", HandleDebugContinue);
+    RegisterHandler("debug_step_over", HandleDebugStepOver);
+    RegisterHandler("debug_step_into", HandleDebugStepInto);
+    RegisterHandler("debug_add_breakpoint", HandleDebugAddBreakpoint);
+    RegisterHandler("debug_remove_breakpoint", HandleDebugRemoveBreakpoint);
+    RegisterHandler("debug_stacktrace", HandleDebugStacktrace);
+    RegisterHandler("debug_registers", HandleDebugRegisters);
+    RegisterHandler("debug_memory", HandleDebugMemory);
+    RegisterHandler("debug_disasm", HandleDebugDisasm);
+    RegisterHandler("debug_analyze", HandleDebugAnalyze);
+    RegisterHandler("debug_snapshot", HandleDebugSnapshot);
+    RegisterHandler("debug_suggest_breakpoints", HandleDebugSuggestBreakpoints);
 }
 
-json AgentToolRegistry::GetToolSchemas() const {
+json AgentToolRegistry::GetToolSchemas() const
+{
     std::lock_guard<std::mutex> lock(m_mutex);
     json tools = json::array();
 
-    for (const auto& td : m_tools) {
+    for (const auto& td : m_tools)
+    {
         // Build required array from params that don't have defaults
         json required_params = json::array();
-        json params_copy = td.params_schema; // non-const copy for iteration
-        for (auto it = params_copy.begin(); it != params_copy.end(); ++it) {
+        json params_copy = td.params_schema;  // non-const copy for iteration
+        for (auto it = params_copy.begin(); it != params_copy.end(); ++it)
+        {
             const std::string& key = it.key();
             auto& val = it.value();
-            if (!val.contains("default")) {
+            if (!val.contains("default"))
+            {
                 required_params.push_back(key);
             }
         }
 
-        tools.push_back(nlohmann::json::object({
-            {"type", "function"},
-            {"function", nlohmann::json::object({
-                {"name", td.name},
-                {"description", td.description},
-                {"parameters", nlohmann::json::object({
-                    {"type", "object"},
-                    {"properties", td.params_schema},
-                    {"required", required_params}
-                })}
-            })}
-        }));
+        tools.push_back(nlohmann::json::object(
+            {{"type", "function"},
+             {"function",
+              nlohmann::json::object({{"name", td.name},
+                                      {"description", td.description},
+                                      {"parameters", nlohmann::json::object({{"type", "object"},
+                                                                             {"properties", td.params_schema},
+                                                                             {"required", required_params}})}})}}));
     }
     return tools;
 }
 
-std::string AgentToolRegistry::GetSystemPrompt(
-    const std::string& cwd,
-    const std::vector<std::string>& openFiles) const
+std::string AgentToolRegistry::GetSystemPrompt(const std::string& cwd, const std::vector<std::string>& openFiles,
+                                               std::vector<std::string>* appliedInstructionSources) const
 {
-    std::ostringstream ss;
-    ss << "You are RawrXD Agent, a local high-performance coding assistant with "
-       << "compiler-aware tool access and SIMD-accelerated code search.\n\n"
-       << "## Environment\n"
-       << "- Working Directory: " << cwd << "\n"
-       << "- Platform: Windows (MSVC 2022 / CMake 3.20+)\n"
-       << "- Language: C++20 + MASM64\n\n";
-
-    if (!openFiles.empty()) {
-        ss << "## Open Files\n";
-        for (const auto& f : openFiles) ss << "- " << f << "\n";
-        ss << "\n";
-    }
-
-    ss << "## Available Tools\n"
-       << "You have " << m_tools.size() << " tools available via function calling.\n"
-       << "Use the tool schemas provided in the API request.\n\n"
-       << "## Rules\n"
-       << "1. Always read_file before editing to get current content.\n"
-       << "2. Use replace_in_file for surgical edits; write_file for new files.\n"
-       << "3. Run run_build after code changes to verify compilation.\n"
-       << "4. Use get_diagnostics to check for errors after builds.\n"
-       << "5. Use get_coverage to verify your changes touch the right logic paths.\n"
-       << "6. Use search_code to find relevant code before making changes.\n"
-       << "7. All results follow PatchResult pattern: check .success before proceeding.\n"
-       << "8. No exceptions. Handle all errors via return values.\n";
-
-    return ss.str();
+    std::string prompt = AgentToolHandlers::GetSystemPrompt(cwd, openFiles, appliedInstructionSources);
+    std::ostringstream addon;
+    addon << "\n\nRegistry lane notes:\n"
+          << "- Tool count: " << m_tools.size() << "\n"
+          << "- Prefer run_build + get_diagnostics after edits in this lane.\n"
+          << "- Keep PatchResult fail-closed semantics for all tool outcomes.\n";
+    prompt += addon.str();
+    return prompt;
 }
 
-ToolExecResult AgentToolRegistry::Dispatch(const std::string& tool_name, const json& args) {
+ToolExecResult AgentToolRegistry::Dispatch(const std::string& tool_name, const json& args)
+{
     std::lock_guard<std::mutex> lock(m_mutex);
 
     const std::string normalizedTool = NormalizeToolName(tool_name);
-    if (normalizedTool.empty()) {
+    if (normalizedTool.empty())
+    {
         return ToolExecResult::error("Unknown tool: " + tool_name);
     }
 
     auto it = m_nameIndex.find(normalizedTool);
-    if (it == m_nameIndex.end()) {
-        GetObs().logWarn(kRegistryComponent, "Dispatch: unknown tool", nlohmann::json::object({
-            {"tool", tool_name},
-            {"normalized", normalizedTool}
-        }));
+
+    // ---- Intent similarity fallback ----
+    // When the LLM produces a tool name not in the index, compute bigram-Jaccard
+    // similarity against all registered tools and redirect to the best match
+    // (if similarity is above a useful threshold).
+    if (it == m_nameIndex.end())
+    {
+        // Check intent cache first (O(1) for repeated misses)
+        auto cacheIt = m_intentCache.find(normalizedTool);
+        if (cacheIt == m_intentCache.end())
+        {
+            // Compute bigram set for the query
+            auto makeBigrams = [](const std::string& s)
+            {
+                std::unordered_map<std::string, int> bg;
+                if (s.size() < 2)
+                {
+                    bg[s + " "] = 1;
+                    return bg;
+                }
+                for (size_t i = 0; i + 1 < s.size(); ++i)
+                    ++bg[s.substr(i, 2)];
+                return bg;
+            };
+            auto jaccard = [&](const std::unordered_map<std::string, int>& a,
+                               const std::unordered_map<std::string, int>& b) -> float
+            {
+                int intersection = 0, unionVal = 0;
+                for (auto& [k, v] : a)
+                {
+                    auto bit = b.find(k);
+                    if (bit != b.end())
+                        intersection += std::min(v, bit->second);
+                    unionVal += v;
+                }
+                for (auto& [k, v] : b)
+                    unionVal += v;
+                unionVal -= intersection;
+                return unionVal == 0 ? 0.0f : static_cast<float>(intersection) / static_cast<float>(unionVal);
+            };
+
+            auto queryBigrams = makeBigrams(normalizedTool);
+            std::vector<IntentMatch> ranked;
+            ranked.reserve(m_tools.size());
+            for (auto& [name, idx] : m_nameIndex)
+            {
+                float sim = jaccard(queryBigrams, makeBigrams(name));
+                ranked.push_back({name, sim});
+            }
+            std::sort(ranked.begin(), ranked.end(),
+                      [](const IntentMatch& a, const IntentMatch& b) { return a.similarity > b.similarity; });
+            if (ranked.size() > 3)
+                ranked.resize(3);
+            m_intentCache[normalizedTool] = ranked;
+            cacheIt = m_intentCache.find(normalizedTool);
+        }
+
+        constexpr float kSimilarityThreshold = 0.25f;
+        if (!cacheIt->second.empty() && cacheIt->second[0].similarity >= kSimilarityThreshold)
+        {
+            const std::string& resolved = cacheIt->second[0].toolName;
+            GetObs().logWarn(kRegistryComponent, "Dispatch: intent fallback",
+                             nlohmann::json::object({{"tool", tool_name},
+                                                     {"normalized", normalizedTool},
+                                                     {"resolved", resolved},
+                                                     {"similarity", cacheIt->second[0].similarity}}));
+            GetObs().incrementCounter("tool_registry.intent_fallbacks");
+            it = m_nameIndex.find(resolved);
+        }
+    }
+
+    if (it == m_nameIndex.end())
+    {
+        GetObs().logWarn(kRegistryComponent, "Dispatch: unknown tool",
+                         nlohmann::json::object({{"tool", tool_name}, {"normalized", normalizedTool}}));
         GetObs().incrementCounter("tool_registry.unknown_tool");
         return ToolExecResult::error("Unknown tool: " + tool_name);
     }
 
     auto& td = m_tools[it->second];
-    if (!td.handler) {
-        GetObs().logError(kRegistryComponent, "Dispatch: no handler", nlohmann::json::object({
-            {"tool", tool_name},
-            {"normalized", normalizedTool}
-        }));
+    if (!td.handler)
+    {
+        GetObs().logError(kRegistryComponent, "Dispatch: no handler",
+                          nlohmann::json::object({{"tool", tool_name}, {"normalized", normalizedTool}}));
         return ToolExecResult::error("No handler registered for tool: " + tool_name);
     }
 
     // Validate args
     std::string validationError;
-    if (!ValidateArgs(normalizedTool, args, validationError)) {
+    if (!ValidateArgs(normalizedTool, args, validationError))
+    {
         ++td.error_count;
-        GetObs().logWarn(kRegistryComponent, "Dispatch: validation failed", nlohmann::json::object({
-            {"tool", tool_name}, {"normalized", normalizedTool}, {"error", validationError}
-        }));
+        GetObs().logWarn(
+            kRegistryComponent, "Dispatch: validation failed",
+            nlohmann::json::object({{"tool", tool_name}, {"normalized", normalizedTool}, {"error", validationError}}));
         GetObs().incrementCounter("tool_registry.validation_failures");
         return ToolExecResult::error("Validation failed: " + validationError);
     }
 
     // Traced execution with timing
     auto spanId = GetObs().startSpan("tool_dispatch:" + normalizedTool);
-    GetObs().logDebug(kRegistryComponent, "Dispatching tool call", nlohmann::json::object({
-        {"tool", tool_name},
-        {"normalized", normalizedTool}
-    }));
+    GetObs().logDebug(kRegistryComponent, "Dispatching tool call",
+                      nlohmann::json::object({{"tool", tool_name}, {"normalized", normalizedTool}}));
 
     auto start = std::chrono::high_resolution_clock::now();
     ToolExecResult result = td.handler(args);
@@ -879,21 +1644,21 @@ ToolExecResult AgentToolRegistry::Dispatch(const std::string& tool_name, const j
     result.elapsed_ms = std::chrono::duration<double, std::milli>(end - start).count();
 
     ++td.invocation_count;
-    if (!result.success) {
+    if (!result.success)
+    {
         ++td.error_count;
         GetObs().endSpan(spanId, true, result.output);
-        GetObs().logWarn(kRegistryComponent, "Tool call failed", nlohmann::json::object({
-            {"tool", normalizedTool},
-            {"elapsed_ms", result.elapsed_ms},
-            {"exit_code", result.exit_code}
-        }));
+        GetObs().logWarn(
+            kRegistryComponent, "Tool call failed",
+            nlohmann::json::object(
+                {{"tool", normalizedTool}, {"elapsed_ms", result.elapsed_ms}, {"exit_code", result.exit_code}}));
         GetObs().incrementCounter("tool_registry.tool_errors");
-    } else {
+    }
+    else
+    {
         GetObs().endSpan(spanId);
-        GetObs().logDebug(kRegistryComponent, "Tool call succeeded", nlohmann::json::object({
-            {"tool", normalizedTool},
-            {"elapsed_ms", result.elapsed_ms}
-        }));
+        GetObs().logDebug(kRegistryComponent, "Tool call succeeded",
+                          nlohmann::json::object({{"tool", normalizedTool}, {"elapsed_ms", result.elapsed_ms}}));
     }
 
     GetObs().recordHistogram("tool_registry.dispatch_ms", static_cast<float>(result.elapsed_ms));
@@ -902,48 +1667,54 @@ ToolExecResult AgentToolRegistry::Dispatch(const std::string& tool_name, const j
     return result;
 }
 
-void AgentToolRegistry::RegisterHandler(const std::string& tool_name, ToolHandler handler) {
+void AgentToolRegistry::RegisterHandler(const std::string& tool_name, ToolHandler handler)
+{
     const std::string normalizedTool = NormalizeToolName(tool_name);
     auto it = m_nameIndex.find(normalizedTool);
-    if (it != m_nameIndex.end()) {
+    if (it != m_nameIndex.end())
+    {
         m_tools[it->second].handler = handler;
     }
 }
 
-std::vector<std::string> AgentToolRegistry::ListTools() const {
+std::vector<std::string> AgentToolRegistry::ListTools() const
+{
     std::lock_guard<std::mutex> lock(m_mutex);
     std::vector<std::string> names;
     names.reserve(m_tools.size());
-    for (const auto& td : m_tools) {
+    for (const auto& td : m_tools)
+    {
         names.emplace_back(td.name);
     }
     return names;
 }
 
-uint64_t AgentToolRegistry::GetTotalInvocations() const {
+uint64_t AgentToolRegistry::GetTotalInvocations() const
+{
     uint64_t total = 0;
-    for (const auto& td : m_tools) {
+    for (const auto& td : m_tools)
+    {
         total += td.invocation_count;
     }
     return total;
 }
 
-uint64_t AgentToolRegistry::GetTotalErrors() const {
+uint64_t AgentToolRegistry::GetTotalErrors() const
+{
     uint64_t total = 0;
-    for (const auto& td : m_tools) {
+    for (const auto& td : m_tools)
+    {
         total += td.error_count;
     }
     return total;
 }
 
-bool AgentToolRegistry::ValidateArgs(
-    const std::string& tool_name,
-    const json& args,
-    std::string& error) const
+bool AgentToolRegistry::ValidateArgs(const std::string& tool_name, const json& args, std::string& error) const
 {
     const std::string normalizedTool = NormalizeToolName(tool_name);
     auto it = m_nameIndex.find(normalizedTool);
-    if (it == m_nameIndex.end()) {
+    if (it == m_nameIndex.end())
+    {
         error = "Unknown tool: " + tool_name;
         return false;
     }
@@ -951,27 +1722,33 @@ bool AgentToolRegistry::ValidateArgs(
     const auto& td = m_tools[it->second];
 
     // Check required parameters (those without defaults)
-    json schema_copy = td.params_schema; // non-const copy for iteration
-    for (auto it2 = schema_copy.begin(); it2 != schema_copy.end(); ++it2) {
+    json schema_copy = td.params_schema;  // non-const copy for iteration
+    for (auto it2 = schema_copy.begin(); it2 != schema_copy.end(); ++it2)
+    {
         const std::string key = it2.key();
         auto& schema = it2.value();
-        if (!schema.contains("default") && !args.contains(key)) {
+        if (!schema.contains("default") && !args.contains(key))
+        {
             error = "Missing required parameter: " + key;
             return false;
         }
         // Type checking
-        if (args.contains(key)) {
+        if (args.contains(key))
+        {
             std::string expected_type = schema.value("type", "string");
             const auto& val = args[key];
-            if (expected_type == "string" && !val.is_string()) {
+            if (expected_type == "string" && !val.is_string())
+            {
                 error = "Parameter '" + key + "' must be a string";
                 return false;
             }
-            if (expected_type == "number" && !val.is_number()) {
+            if (expected_type == "number" && !val.is_number())
+            {
                 error = "Parameter '" + key + "' must be a number";
                 return false;
             }
-            if (expected_type == "boolean" && !val.is_boolean()) {
+            if (expected_type == "boolean" && !val.is_boolean())
+            {
                 error = "Parameter '" + key + "' must be a boolean";
                 return false;
             }
@@ -980,5 +1757,86 @@ bool AgentToolRegistry::ValidateArgs(
     return true;
 }
 
-} // namespace Agent
-} // namespace RawrXD
+}  // namespace Agent
+}  // namespace RawrXD
+
+
+// =============================================================================
+// AgentToolRegistry::RankByIntent
+// =============================================================================
+// Bigram-Jaccard ranking for approximate tool name matching.
+// Results are memoised in m_intentCache (protected by m_mutex).
+// =============================================================================
+namespace RawrXD
+{
+namespace Agent
+{
+
+std::vector<AgentToolRegistry::IntentMatch> AgentToolRegistry::RankByIntent(const std::string& query, size_t topK) const
+{
+    const std::string norm = NormalizeToolName(query);
+    std::lock_guard<std::mutex> lock(m_mutex);
+
+    // Return cached result if available
+    auto cacheIt = m_intentCache.find(norm);
+    if (cacheIt != m_intentCache.end())
+    {
+        auto result = cacheIt->second;
+        if (result.size() > topK)
+            result.resize(topK);
+        return result;
+    }
+
+    // Build bigram multiset for the query
+    auto makeBigrams = [](const std::string& s)
+    {
+        std::unordered_map<std::string, int> bg;
+        if (s.size() < 2)
+        {
+            bg[s + " "] = 1;
+            return bg;
+        }
+        for (size_t i = 0; i + 1 < s.size(); ++i)
+            ++bg[s.substr(i, 2)];
+        return bg;
+    };
+    auto jaccard = [&](const std::unordered_map<std::string, int>& a,
+                       const std::unordered_map<std::string, int>& b) -> float
+    {
+        int intersection = 0, unionVal = 0;
+        for (auto& [k, v] : a)
+        {
+            auto bit = b.find(k);
+            if (bit != b.end())
+                intersection += std::min(v, bit->second);
+            unionVal += v;
+        }
+        for (auto& [k, v] : b)
+            unionVal += v;
+        unionVal -= intersection;
+        return unionVal == 0 ? 0.0f : static_cast<float>(intersection) / static_cast<float>(unionVal);
+    };
+
+    const auto queryBigrams = makeBigrams(norm);
+    std::vector<IntentMatch> ranked;
+    ranked.reserve(m_tools.size());
+    for (auto& [name, idx] : m_nameIndex)
+    {
+        ranked.push_back({name, jaccard(queryBigrams, makeBigrams(name))});
+    }
+    std::sort(ranked.begin(), ranked.end(),
+              [](const IntentMatch& a, const IntentMatch& b) { return a.similarity > b.similarity; });
+
+    // Cache the full sorted list (capped at 16 to keep memory bounded)
+    constexpr size_t kCacheDepth = 16;
+    if (ranked.size() > kCacheDepth)
+        ranked.resize(kCacheDepth);
+    m_intentCache[norm] = ranked;
+
+    if (ranked.size() > topK)
+        ranked.resize(topK);
+    return ranked;
+}
+
+}  // namespace Agent
+}  // namespace RawrXD

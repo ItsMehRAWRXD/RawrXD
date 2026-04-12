@@ -123,6 +123,7 @@ private:
     TodoItem ParseTodoFromJson(const json& j);
     json TodoToJson(const TodoItem& todo) const;
     bool ExecutePowerShellCommand(const std::string& operation, const std::vector<std::string>& args);
+    bool ExecutePowerShellCommandCapture(const std::string& operation, const std::vector<std::string>& args, std::string& output);
     static DWORD WINAPI PipeServerThreadProc(LPVOID param);
     static DWORD WINAPI FileWatchThreadProc(LPVOID param);
 };

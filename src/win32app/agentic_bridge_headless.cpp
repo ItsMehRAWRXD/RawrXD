@@ -8,9 +8,9 @@
 // ============================================================================
 
 #include "Win32IDE_AgenticBridge.h"
-#include "ui/agentic_bridge_api.h"
 #include "Win32IDE_Phase16_AgenticController.h"
 #include "Win32IDE_Phase17_AgenticProfiler.h"
+#include "ui/agentic_bridge_api.h"
 
 #include <algorithm>
 #include <cctype>
@@ -19,9 +19,9 @@
 #include <cstring>
 #include <mutex>
 #include <sstream>
+#include <tlhelp32.h>
 #include <vector>
 #include <windows.h>
-#include <tlhelp32.h>
 
 // Forward-declared; never dereferenced in headless
 struct Win32IDE;
@@ -94,13 +94,27 @@ std::string JsonEscape(const std::string& value)
     {
         switch (c)
         {
-            case '"': out += "\\\""; break;
-            case '\\': out += "\\\\"; break;
-            case '\b': out += "\\b"; break;
-            case '\f': out += "\\f"; break;
-            case '\n': out += "\\n"; break;
-            case '\r': out += "\\r"; break;
-            case '\t': out += "\\t"; break;
+            case '"':
+                out += "\\\"";
+                break;
+            case '\\':
+                out += "\\\\";
+                break;
+            case '\b':
+                out += "\\b";
+                break;
+            case '\f':
+                out += "\\f";
+                break;
+            case '\n':
+                out += "\\n";
+                break;
+            case '\r':
+                out += "\\r";
+                break;
+            case '\t':
+                out += "\\t";
+                break;
             default:
                 if (c < 0x20)
                 {
@@ -185,6 +199,16 @@ bool AgenticBridge::Initialize(const std::string& frameworkPath, const std::stri
     return true;
 }
 
+bool AgenticBridge::HasUsableBackend() const
+{
+    const auto eng = m_nativeEngine ? m_nativeEngine : RawrXD::CPUInferenceEngine::GetSharedInstance();
+    if (eng && eng->IsModelLoaded())
+    {
+        return true;
+    }
+    return m_initialized && !m_modelName.empty();
+}
+
 AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt)
 {
     if (!m_initialized && !Initialize(m_frameworkPath, m_modelName))
@@ -224,9 +248,9 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt)
             m_outputCallback("stream", surfaced);
         }
         AgentResponse response{};
-        response.type      = AgentResponseType::TOOL_CALL;
-        response.content   = surfaced;
-        response.toolName  = "subagent_tool";
+        response.type = AgentResponseType::TOOL_CALL;
+        response.content = surfaced;
+        response.toolName = "subagent_tool";
         response.rawOutput = surfaced;
         return response;
     }
@@ -237,14 +261,12 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt)
         const std::string arg = TrimCopy(trimmed.substr(8));
         if (!AgenticNotifyToolStart("dumpbin"))
         {
-            return {AgentResponseType::AGENT_ERROR,
-                    "[Phase16] dumpbin deferred: aperture saturated"};
+            return {AgentResponseType::AGENT_ERROR, "[Phase16] dumpbin deferred: aperture saturated"};
         }
         Phase17ProfileGuard _p17("dumpbin");  // Phase 17: profile dumpbin dispatch
-        const ULONGLONG ts  = GetTickCount64();
+        const ULONGLONG ts = GetTickCount64();
         const std::string out = RunDumpbin(arg, "/headers");
-        AgenticNotifyToolEnd(!out.empty(),
-                             static_cast<uint32_t>(GetTickCount64() - ts));
+        AgenticNotifyToolEnd(!out.empty(), static_cast<uint32_t>(GetTickCount64() - ts));
         const std::string surfaced = AppendProfilerSummary(out, 3);
         return {AgentResponseType::TOOL_CALL, surfaced, "dumpbin", arg, surfaced};
     }
@@ -254,14 +276,12 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt)
         const std::string arg = TrimCopy(trimmed.substr(8));
         if (!AgenticNotifyToolStart("compile"))
         {
-            return {AgentResponseType::AGENT_ERROR,
-                    "[Phase16] compile deferred: aperture saturated"};
+            return {AgentResponseType::AGENT_ERROR, "[Phase16] compile deferred: aperture saturated"};
         }
         Phase17ProfileGuard _p17("compile");  // Phase 17: profile compile dispatch
-        const ULONGLONG ts  = GetTickCount64();
+        const ULONGLONG ts = GetTickCount64();
         const std::string out = RunCompiler(arg);
-        AgenticNotifyToolEnd(!out.empty(),
-                             static_cast<uint32_t>(GetTickCount64() - ts));
+        AgenticNotifyToolEnd(!out.empty(), static_cast<uint32_t>(GetTickCount64() - ts));
         const std::string surfaced = AppendProfilerSummary(out, 3);
         return {AgentResponseType::TOOL_CALL, surfaced, "compile", arg, surfaced};
     }
@@ -271,14 +291,12 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt)
         const std::string arg = TrimCopy(trimmed.substr(6));
         if (!AgenticNotifyToolStart("codex"))
         {
-            return {AgentResponseType::AGENT_ERROR,
-                    "[Phase16] codex deferred: aperture saturated"};
+            return {AgentResponseType::AGENT_ERROR, "[Phase16] codex deferred: aperture saturated"};
         }
         Phase17ProfileGuard _p17("codex");  // Phase 17: profile codex dispatch
-        const ULONGLONG ts  = GetTickCount64();
+        const ULONGLONG ts = GetTickCount64();
         const std::string out = RunCodex(arg);
-        AgenticNotifyToolEnd(!out.empty(),
-                             static_cast<uint32_t>(GetTickCount64() - ts));
+        AgenticNotifyToolEnd(!out.empty(), static_cast<uint32_t>(GetTickCount64() - ts));
         const std::string surfaced = AppendProfilerSummary(out, 3);
         return {AgentResponseType::TOOL_CALL, surfaced, "codex", arg, surfaced};
     }
@@ -287,8 +305,7 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt)
     {
         if (!AgenticNotifyToolStart("shell"))
         {
-            return {AgentResponseType::AGENT_ERROR,
-                    "[Phase16] shell deferred: aperture saturated"};
+            return {AgentResponseType::AGENT_ERROR, "[Phase16] shell deferred: aperture saturated"};
         }
         Phase17ProfileGuard _p17("shell");  // Phase 17: profile shell dispatch
         const ULONGLONG ts = GetTickCount64();
@@ -300,8 +317,7 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt)
         }
         AgenticNotifyToolEnd(ok, static_cast<uint32_t>(GetTickCount64() - ts));
         shellOutput = AppendProfilerSummary(shellOutput, 3);
-        return {ok ? AgentResponseType::ANSWER : AgentResponseType::AGENT_ERROR,
-                shellOutput};
+        return {ok ? AgentResponseType::ANSWER : AgentResponseType::AGENT_ERROR, shellOutput};
     }
 
     if (m_nativeAgent && m_nativeEngine && m_nativeEngine->IsModelLoaded())
@@ -389,8 +405,7 @@ std::string AgenticBridge::GetAgentStatus()
         << "\"phase17_top_tools\":\"" << phase17TopTools << "\","
         << "\"ghost_last_seq\":" << GetLastGhostSeq() << ","
         << "\"ghost_backtracks\":" << GetGhostSeqBacktracks() << ","
-        << "\"ghost_gap_events\":" << GetGhostSeqGapEvents()
-        << "}";
+        << "\"ghost_gap_events\":" << GetGhostSeqGapEvents() << "}";
     return oss.str();
 }
 
@@ -792,7 +807,8 @@ struct HeadlessWatchEntry
 std::vector<HeadlessWatchEntry> g_headlessWatches;
 
 // Simple x86-64 instruction disassembler for headless mode (when capstone unavailable)
-struct SimpleInstruction {
+struct SimpleInstruction
+{
     uint64_t address;
     uint8_t bytes[15];
     uint8_t length;
@@ -802,65 +818,78 @@ struct SimpleInstruction {
 // Decode basic x86-64 instructions without external dependency
 [[nodiscard]] bool DisassembleX64Simple(const uint8_t* code, size_t size, uint64_t address, SimpleInstruction& out)
 {
-    if (!code || size == 0) return false;
-    
+    if (!code || size == 0)
+        return false;
+
     uint8_t byte1 = code[0];
     out.address = address;
     out.length = 1;
     out.bytes[0] = byte1;
-    
+
     // Basic single-byte instructions
-    if (byte1 == 0x90) {
+    if (byte1 == 0x90)
+    {
         out.mnemonic = "nop";
         return true;
     }
-    if (byte1 == 0xc3) {
+    if (byte1 == 0xc3)
+    {
         out.mnemonic = "ret";
         return true;
     }
-    if (byte1 == 0xcc) {
+    if (byte1 == 0xcc)
+    {
         out.mnemonic = "int 3";
         return true;
     }
-    if (byte1 == 0x55) {
+    if (byte1 == 0x55)
+    {
         out.mnemonic = "push rbp";
         return true;
     }
-    
+
     // MOV rax, ...
-    if ((byte1 & 0xf0) == 0xb0 || byte1 == 0x48) {
-        if (size >= 2 && byte1 == 0x48 && code[1] == 0xc7) {
-            if (size >= 7 && code[2] == 0xc0) {
+    if ((byte1 & 0xf0) == 0xb0 || byte1 == 0x48)
+    {
+        if (size >= 2 && byte1 == 0x48 && code[1] == 0xc7)
+        {
+            if (size >= 7 && code[2] == 0xc0)
+            {
                 out.length = 7;
-                for (int i = 0; i < 7; ++i) out.bytes[i] = code[i];
+                for (int i = 0; i < 7; ++i)
+                    out.bytes[i] = code[i];
                 out.mnemonic = "mov rax, imm32";
                 return true;
             }
         }
     }
-    
+
     // Conditional jumps
-    if (byte1 == 0x74) {
+    if (byte1 == 0x74)
+    {
         out.length = 2;
         out.bytes[1] = size > 1 ? code[1] : 0;
         out.mnemonic = "jz rel8";
         return true;
     }
-    if (byte1 == 0x75) {
+    if (byte1 == 0x75)
+    {
         out.length = 2;
         out.bytes[1] = size > 1 ? code[1] : 0;
         out.mnemonic = "jnz rel8";
         return true;
     }
-    
+
     // JMP
-    if (byte1 == 0xe9) {
+    if (byte1 == 0xe9)
+    {
         out.length = 5;
-        for (int i = 0; i < 5 && i < size; ++i) out.bytes[i] = code[i];
+        for (int i = 0; i < 5 && i < size; ++i)
+            out.bytes[i] = code[i];
         out.mnemonic = "jmp rel32";
         return true;
     }
-    
+
     // Default: unknown instruction
     out.length = 1;
     out.mnemonic = "unknown";
@@ -886,9 +915,9 @@ struct SimpleInstruction {
     }
 
     const DWORD prot = mbi.Protect & 0xFF;
-    const bool readable = (prot == PAGE_READONLY || prot == PAGE_READWRITE || prot == PAGE_WRITECOPY ||
-                           prot == PAGE_EXECUTE_READ || prot == PAGE_EXECUTE_READWRITE ||
-                           prot == PAGE_EXECUTE_WRITECOPY);
+    const bool readable =
+        (prot == PAGE_READONLY || prot == PAGE_READWRITE || prot == PAGE_WRITECOPY || prot == PAGE_EXECUTE_READ ||
+         prot == PAGE_EXECUTE_READWRITE || prot == PAGE_EXECUTE_WRITECOPY);
     if (!readable)
     {
         return false;
@@ -937,13 +966,14 @@ void BuildSymbolCacheUnlocked()
 
 extern "C" void RawrXD_Disasm_HandleReq(void* req)
 {
-    if (!req) return;
-    
+    if (!req)
+        return;
+
     std::lock_guard<std::mutex> lock(g_headlessIpcMutex);
     g_headlessDisasm.clear();
-    
+
     const uint64_t address = *reinterpret_cast<const uint64_t*>(req);
-    
+
     uint8_t buffer[32] = {0};
 
     if (IsReadableAddressRange(address, sizeof(buffer)))
@@ -955,12 +985,14 @@ extern "C" void RawrXD_Disasm_HandleReq(void* req)
         // Graceful fallback for invalid or inaccessible addresses.
         buffer[0] = 0xCC;
     }
-    
+
     // Disassemble the buffer
     SimpleInstruction decoded[3];
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < 3; ++i)
+    {
         uint64_t currentAddr = address + i;
-        if (DisassembleX64Simple(buffer + i, sizeof(buffer) - i, currentAddr, decoded[i])) {
+        if (DisassembleX64Simple(buffer + i, sizeof(buffer) - i, currentAddr, decoded[i]))
+        {
             rawrxd::ipc::MsgDisasmChunk chunk{};
             chunk.address = decoded[i].address;
             chunk.length = decoded[i].length;
@@ -974,22 +1006,26 @@ extern "C" void RawrXD_Disasm_HandleReq(void* req)
 
 extern "C" void RawrXD_Symbol_HandleReq(void* req)
 {
-    if (!req) return;
-    
+    if (!req)
+        return;
+
     std::lock_guard<std::mutex> lock(g_headlessIpcMutex);
 
     const uint64_t address = *reinterpret_cast<const uint64_t*>(req);
     RefreshModuleCacheUnlocked();
     BuildSymbolCacheUnlocked();
-    
+
     // Find closest symbol to address
     g_headlessSymbolAddress = 0;
     uint64_t closestDistance = UINT64_MAX;
-    
-    for (const auto& [symbol, addr] : g_headlessSymbolCache) {
-        if (addr <= address) {
+
+    for (const auto& [symbol, addr] : g_headlessSymbolCache)
+    {
+        if (addr <= address)
+        {
             uint64_t distance = address - addr;
-            if (distance < closestDistance) {
+            if (distance < closestDistance)
+            {
                 closestDistance = distance;
                 g_headlessSymbolAddress = addr;
             }
@@ -1024,21 +1060,23 @@ extern "C" uint32_t RawrXD_Module_GetLastResult(const void** outEntries)
 {
     std::lock_guard<std::mutex> lock(g_headlessIpcMutex);
     RefreshModuleCacheUnlocked();
-    
+
     if (outEntries)
     {
         // Return module list as string array (simplified for headless)
         static std::string moduleList;
         moduleList.clear();
-        for (const auto& [name, range] : g_headlessModules) {
-            if (!moduleList.empty()) moduleList += "\n";
+        for (const auto& [name, range] : g_headlessModules)
+        {
+            if (!moduleList.empty())
+                moduleList += "\n";
             std::ostringstream oss;
             oss << name << " @ 0x" << std::hex << range.first << " (0x" << range.second << " bytes)";
             moduleList += oss.str();
         }
         *outEntries = moduleList.c_str();
     }
-    
+
     return static_cast<uint32_t>(g_headlessModules.size());
 }
 

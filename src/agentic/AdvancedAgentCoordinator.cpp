@@ -563,17 +563,43 @@ void AdvancedAgentCoordinator::scalingLoop() {
 }
 
 void AdvancedAgentCoordinator::healthMonitoringLoop() {
+    // Stale threshold: agents that have had real task activity but have not
+    // reported back within this window are presumed dead and quarantined.
+    // Freshly-registered agents with no tasks yet are exempt (totalTasksProcessed==0).
+    static constexpr int kStaleThresholdSec = 120;
+
     while (m_running) {
         std::this_thread::sleep_for(std::chrono::seconds(60));
 
-        // Unrestricted mode: keep agents available and only refresh heartbeat timestamps.
-        std::lock_guard<std::mutex> lock(m_mutex);
-        auto now = std::chrono::steady_clock::now();
-        for (auto& [agentId, health] : m_agentHealth) {
-            (void)agentId;
-            health.isHealthy = true;
-            health.failureReason.clear();
-            health.lastHealthCheck = now;
+        std::vector<std::string> toQuarantine;
+        {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            auto now = std::chrono::steady_clock::now();
+            for (auto& [agentId, health] : m_agentHealth) {
+                if (!health.isHealthy) continue;  // already quarantined
+
+                // Only check staleness for agents that have actually received tasks.
+                // Idle-registered agents (no tasks yet) start their staleness clock
+                // from first registration; we skip them until work flows through.
+                if (health.totalTasksProcessed == 0) continue;
+
+                auto elapsedSec = std::chrono::duration_cast<std::chrono::seconds>(
+                    now - health.lastHealthCheck).count();
+
+                if (elapsedSec > kStaleThresholdSec) {
+                    health.isHealthy = false;
+                    health.failureReason = "stale: no activity for "
+                        + std::to_string(elapsedSec) + "s";
+                    std::cout << "[HealthMonitor] Agent " << agentId
+                              << " declared dead (" << health.failureReason << ")\n";
+                    toQuarantine.push_back(agentId);
+                }
+            }
+        }
+
+        // Trigger recovery outside the lock so handleAgentFailure can re-acquire it.
+        for (const auto& agentId : toQuarantine) {
+            handleAgentFailure(agentId, "stale heartbeat timeout");
         }
     }
 }

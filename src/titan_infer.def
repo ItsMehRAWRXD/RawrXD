@@ -9,3 +9,5 @@ EXPORTS
     RawrXD_GetCapabilities @7
     RawrXD_SetLogLevel @8
     RawrXD_LoadModel @9
+    SubmitInference
+    GetResult

@@ -22,6 +22,7 @@
 #include "../../include/ghost_text_renderer.h"
 #include "../../include/PredictiveGhostText.h"
 #include "IDELogger.h"
+#include "../runtime/SemanticRetrieval.h"
 #include <richedit.h>
 #include <algorithm>
 #include <thread>
@@ -32,8 +33,12 @@
 #include <array>
 #include <cctype>
 #include <cstring>
+#include <cstdlib>
 #include <vector>
 
+#pragma comment(lib, "Msimg32.lib")
+
+#include "../agentic/agentic_controller_wiring.h"
 #include "../agentic/OllamaProvider.h"
 #include "../agentic/OrchestratorBridge.h"
 
@@ -47,8 +52,98 @@ static const int       GHOST_TEXT_MAX_CHARS = 512;    // Max ghost text length
 static const int       GHOST_TEXT_MAX_LINES = 8;      // Max multi-line completions
 static const uint64_t  GHOST_TEXT_CACHE_TTL_MS = 5000;  // 5s for 70B inference latency
 static const size_t    GHOST_TEXT_CACHE_MAX_ITEMS = 256;
+static const char*     GHOST_DIFF_OVERLAY_CLASS = "RawrXD_GhostDiffOverlay";
+static const int       GHOST_DIFF_OVERLAY_WIDTH = 164;
+static const int       GHOST_DIFF_OVERLAY_HEIGHT = 28;
 
 namespace {
+std::string BuildSemanticContextBlock(const std::string& prefixText) {
+    if (prefixText.size() < 5) {
+        return "";
+    }
+
+    return RawrXD::Runtime::SemanticRetrieval::BuildPromptSemanticContextBlock(
+        prefixText,
+        4,
+        "RELEVANT_CONTEXT");
+}
+
+std::string BuildGhostPromptContext(const std::string& editorContext,
+                                    const std::string& linePrefix) {
+    std::string prompt;
+    prompt.reserve(editorContext.size() + 2048);
+    prompt += "### Current Code:\n";
+    prompt += editorContext;
+    prompt += "\n\n";
+
+    const std::string semanticContext = BuildSemanticContextBlock(linePrefix);
+    if (!semanticContext.empty()) {
+        prompt += semanticContext;
+        prompt += "\n";
+    }
+
+    prompt += "### Continue inline:";
+    return prompt;
+}
+
+bool IsRelevantGhostSuggestion(const std::string& suggestion) {
+    if (suggestion.empty()) return false;
+
+    std::string lowered = suggestion;
+    std::transform(lowered.begin(), lowered.end(), lowered.begin(),
+                   [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+
+    if (lowered.find("explain") != std::string::npos) return false;
+    if (lowered.find("this code") != std::string::npos) return false;
+    if (lowered.find("here is") != std::string::npos) return false;
+
+    if (suggestion.find(';') != std::string::npos) return true;
+    if (suggestion.find('(') != std::string::npos) return true;
+    if (suggestion.find('=') != std::string::npos) return true;
+    if (suggestion.find('{') != std::string::npos) return true;
+
+    return suggestion.size() > 2;
+}
+
+std::string ExtractGhostSuggestion(const std::string& text, const std::string& prefixEcho) {
+    if (text.empty()) return "";
+
+    std::string normalized = text;
+    normalized.erase(std::remove(normalized.begin(), normalized.end(), '\r'), normalized.end());
+
+    size_t searchStart = 0;
+    std::string fallback;
+    while (searchStart <= normalized.size()) {
+        const size_t lineEnd = normalized.find('\n', searchStart);
+        std::string line = (lineEnd == std::string::npos)
+            ? normalized.substr(searchStart)
+            : normalized.substr(searchStart, lineEnd - searchStart);
+
+        while (!line.empty() && (line.front() == ' ' || line.front() == '\t')) line.erase(line.begin());
+        while (!line.empty() && (line.back() == ' ' || line.back() == '\t')) line.pop_back();
+
+        if (!line.empty() && line.rfind("```", 0) != 0) {
+            if (!prefixEcho.empty() && line.rfind(prefixEcho, 0) == 0) {
+                line.erase(0, prefixEcho.size());
+                while (!line.empty() && (line.front() == ' ' || line.front() == '\t')) line.erase(line.begin());
+            }
+
+            if (IsRelevantGhostSuggestion(line)) {
+                return line;
+            }
+
+            if (fallback.empty()) {
+                fallback = line;
+            }
+        }
+
+        if (lineEnd == std::string::npos) break;
+        searchStart = lineEnd + 1;
+    }
+
+    return fallback;
+}
+
 struct TitanGhostExports {
     HMODULE module = nullptr;
     bool initialized = false;
@@ -580,6 +675,28 @@ std::string getEditorRangeUtf8(HWND editor, LONG cpMin, LONG cpMax) {
     buffer[static_cast<size_t>(charLen)] = L'\0';
     return wideToUtf8Local(buffer.data());
 }
+
+void applyEditorRangeColor(HWND editor, LONG cpMin, LONG cpMax, COLORREF color) {
+    if (!editor || cpMax <= cpMin) {
+        return;
+    }
+
+    CHARRANGE range{};
+    range.cpMin = cpMin;
+    range.cpMax = cpMax;
+    SendMessageA(editor, EM_EXSETSEL, 0, reinterpret_cast<LPARAM>(&range));
+
+    CHARFORMAT2A cf{};
+    cf.cbSize = sizeof(cf);
+    cf.dwMask = CFM_COLOR;
+    cf.crTextColor = color;
+    SendMessageA(editor, EM_SETCHARFORMAT, SCF_SELECTION, reinterpret_cast<LPARAM>(&cf));
+
+    CHARRANGE restore{};
+    restore.cpMin = cpMax;
+    restore.cpMax = cpMax;
+    SendMessageA(editor, EM_EXSETSEL, 0, reinterpret_cast<LPARAM>(&restore));
+}
 } // namespace
 
 // ============================================================================
@@ -598,7 +715,14 @@ void Win32IDE::initGhostText() {
     m_ghostTextContent.clear();
     m_ghostTextLine           = -1;
     m_ghostTextColumn         = -1;
+    m_ghostTextPlanId.clear();
+    m_ghostTextSessionId.clear();
+    m_ghostTextPendingPlanId.clear();
+    m_ghostTextPendingSessionId.clear();
+    m_ghostTextFromAgentic = false;
+    m_ghostTextPendingFromAgentic = false;
     m_ghostTextFont           = nullptr;
+    m_activeSuggestionContext = {};
 
     // Wire ghost text overlay to editor so overlay can render/draw when used
     if (m_ghostTextRendererOverlay && m_hwndEditor) {
@@ -629,6 +753,7 @@ void Win32IDE::shutdownGhostText() {
         m_titanGhostStreamActive = false;
     }
     dismissGhostText();
+    destroyGhostDiffOverlayUi();
     if (m_ghostTextFont) {
         DeleteObject(m_ghostTextFont);
         m_ghostTextFont = nullptr;
@@ -670,10 +795,27 @@ void Win32IDE::onGhostTextTimer() {
 
     // Get up to 4KB of text before cursor for context
     int contextStart = (cursorPos > 4096) ? cursorPos - 4096 : 0;
-    int contextLen = cursorPos - contextStart;
 
     std::string context = getEditorRangeUtf8(m_hwndEditor, contextStart, cursorPos);
     if (context.empty()) return;
+
+    // Keep a same-line prefix snapshot so stale async responses cannot paint over a moved/changed caret context.
+    const std::string linePrefix = getLinePrefix(context);
+    if (linePrefix.size() < 5) {
+        dismissGhostText();
+        return;
+    }
+
+    static DWORD lastSemantic = 0;
+    const DWORD nowTick = GetTickCount();
+    if ((nowTick - lastSemantic) < 250) {
+        return;
+    }
+    lastSemantic = nowTick;
+
+    // Semantic bridge: enrich the prompt context with nearest indexed code context.
+    context = BuildGhostPromptContext(context, linePrefix);
+    m_ghostTextRequestLinePrefix = linePrefix;
 
     // Get current line/column for positioning
     int lineIndex = (int)SendMessageA(m_hwndEditor, EM_LINEFROMCHAR, cursorPos, 0);
@@ -720,6 +862,9 @@ void Win32IDE::onGhostTextTimer() {
         if (it != m_ghostTextCache.end() && (nowMs() - it->second.createdAtMs) <= GHOST_TEXT_CACHE_TTL_MS) {
             m_ghostTextMetrics.cacheHits++;
             m_ghostTextPending = false;
+            m_ghostTextPendingPlanId = it->second.planId;
+            m_ghostTextPendingSessionId = it->second.sessionId;
+            m_ghostTextPendingFromAgentic = it->second.fromAgentic;
             onGhostTextReady(cursorCopy, it->second.completion.c_str());
             return;
         }
@@ -729,8 +874,9 @@ void Win32IDE::onGhostTextTimer() {
         DetachedThreadGuard _guard(m_activeDetachedThreads, m_shuttingDown);
         if (_guard.cancelled) return;
         const uint64_t startedAt = nowMs();
-        std::string completion = requestGhostTextCompletion(
+        GhostTextCacheEntry suggestion = requestGhostTextCompletion(
             contextCopy, langCopy, suffixCopy, fileCopy, lineCopy, colCopy, requestSeq);
+        std::string completion = suggestion.completion;
         const uint64_t elapsedMs = nowMs() - startedAt;
 
         if (requestSeq != m_ghostTextRequestSeq.load()) {
@@ -748,7 +894,14 @@ void Win32IDE::onGhostTextTimer() {
                 m_ghostTextCache.erase(m_ghostTextCache.begin());
             }
             const std::string key = buildGhostCacheKey(fileCopy, langCopy, contextCopy, suffixCopy, lineCopy, colCopy);
-            m_ghostTextCache[key] = GhostTextCacheEntry{completion, nowMs()};
+            m_ghostTextPendingPlanId = suggestion.planId;
+            m_ghostTextPendingSessionId = suggestion.sessionId;
+            m_ghostTextPendingFromAgentic = suggestion.fromAgentic;
+            m_ghostTextCache[key] = GhostTextCacheEntry{completion,
+                                                        suggestion.planId,
+                                                        suggestion.sessionId,
+                                                        suggestion.fromAgentic,
+                                                        nowMs()};
             m_ghostTextMetrics.lastLatencyMs = (double)elapsedMs;
             const double reqCount = (double)std::max<uint64_t>(1, m_ghostTextMetrics.requests - m_ghostTextMetrics.cacheHits);
             m_ghostTextMetrics.avgLatencyMs =
@@ -770,13 +923,13 @@ void Win32IDE::onGhostTextTimer() {
 // COMPLETION REQUEST — runs on background thread
 // ============================================================================
 
-std::string Win32IDE::requestGhostTextCompletion(const std::string& context,
+Win32IDE::GhostTextCacheEntry Win32IDE::requestGhostTextCompletion(const std::string& context,
                                                    const std::string& language) {
     // Legacy 2-arg overload — forward to FIM-aware version with empty suffix
-    return requestGhostTextCompletion(context, language, "", "", 0, 0);
+    return requestGhostTextCompletion(context, language, "", "", 0, 0, 0);
 }
 
-std::string Win32IDE::requestGhostTextCompletion(const std::string& context,
+Win32IDE::GhostTextCacheEntry Win32IDE::requestGhostTextCompletion(const std::string& context,
                                                    const std::string& language,
                                                    const std::string& suffix,
                                                    const std::string& filePath,
@@ -790,19 +943,21 @@ std::string Win32IDE::requestGhostTextCompletion(const std::string& context,
 
     enum class GhostProviderKind {
         Titan,
+        Agentic,
         Local,
         Snippet,
         Lsp
     };
-    const std::array<GhostProviderKind, 4> precedence = {
+    const std::array<GhostProviderKind, 5> precedence = {
         GhostProviderKind::Titan,
+        GhostProviderKind::Agentic,
         GhostProviderKind::Local,
         GhostProviderKind::Snippet,
         GhostProviderKind::Lsp
     };
 
     for (GhostProviderKind provider : precedence) {
-        if (isStale()) return "";
+        if (isStale()) return {};
 
         if (provider == GhostProviderKind::Titan) {
             std::string titanCompletion = requestTitanGhostTextCompletion(
@@ -810,7 +965,50 @@ std::string Win32IDE::requestGhostTextCompletion(const std::string& context,
             if (!titanCompletion.empty()) {
                 std::lock_guard<std::mutex> lock(m_ghostTextCacheMutex);
                 m_ghostTextMetrics.localWins++;
-                return titanCompletion;
+                return GhostTextCacheEntry{titanCompletion, "", "", false, 0};
+            }
+        }
+
+        if (provider == GhostProviderKind::Agentic) {
+            if (!rawrxd::isAgenticLayerAvailable()) {
+                continue;
+            }
+
+            std::string workspaceRoot = m_projectRoot;
+            if (workspaceRoot.empty()) {
+                workspaceRoot = m_explorerRootPath;
+            }
+            if (workspaceRoot.empty()) {
+                workspaceRoot = m_currentDirectory;
+            }
+
+            std::string resolvedFilePath = filePath.empty() ? m_currentFile : filePath;
+            if (workspaceRoot.empty() && !resolvedFilePath.empty()) {
+                const size_t slash = resolvedFilePath.find_last_of("\\/");
+                if (slash != std::string::npos) {
+                    workspaceRoot = resolvedFilePath.substr(0, slash);
+                }
+            }
+            if (workspaceRoot.empty()) {
+                workspaceRoot = ".";
+            }
+
+            rawrxd::EditorContext editorContext;
+            editorContext.workspaceRoot = workspaceRoot;
+            editorContext.filePath = resolvedFilePath;
+            editorContext.language = language;
+            editorContext.modelPath = m_loadedModelPath;
+            editorContext.cursorLine = cursorLine;
+            editorContext.cursorColumn = cursorCol;
+
+            const size_t prefixWindow = std::min<size_t>(context.size(), 1536);
+            const std::string promptPrefix = context.substr(context.size() - prefixWindow, prefixWindow);
+            const rawrxd::CompletionResult result = rawrxd::requestInlineCompletion(promptPrefix, editorContext);
+            const std::string bridged = trimGhostText(result.suggestion);
+            if (result.success && !bridged.empty()) {
+                std::lock_guard<std::mutex> lock(m_ghostTextCacheMutex);
+                m_ghostTextMetrics.localWins++;
+                return GhostTextCacheEntry{bridged, result.planId, result.sessionId, !result.planId.empty(), 0};
             }
         }
 
@@ -830,11 +1028,11 @@ std::string Win32IDE::requestGhostTextCompletion(const std::string& context,
                 if (bResult.success && !bResult.completion.empty()) {
                     std::lock_guard<std::mutex> lock(m_ghostTextCacheMutex);
                     m_ghostTextMetrics.localWins++;
-                    return trimGhostText(bResult.completion);
+                    return GhostTextCacheEntry{trimGhostText(bResult.completion), "", "", false, 0};
                 }
             }
 
-            if (isStale()) return "";
+            if (isStale()) return {};
 
             // ---- Fallback: prediction backend, then native model, then local Ollama prompt ----
             if (!m_predictionProvider) {
@@ -864,11 +1062,11 @@ std::string Win32IDE::requestGhostTextCompletion(const std::string& context,
                 if (result.success && !result.completion.empty()) {
                     std::lock_guard<std::mutex> lock(m_ghostTextCacheMutex);
                     m_ghostTextMetrics.localWins++;
-                    return trimGhostText(result.completion);
+                    return GhostTextCacheEntry{trimGhostText(result.completion), "", "", false, 0};
                 }
             }
 
-            if (isStale()) return "";
+            if (isStale()) return {};
 
             if (m_nativeEngine && m_nativeEngine->IsModelLoaded()) {
                 auto tokens = m_nativeEngine->Tokenize(
@@ -880,11 +1078,11 @@ std::string Win32IDE::requestGhostTextCompletion(const std::string& context,
                 if (!result.empty()) {
                     std::lock_guard<std::mutex> lock(m_ghostTextCacheMutex);
                     m_ghostTextMetrics.localWins++;
-                    return result;
+                    return GhostTextCacheEntry{result, "", "", false, 0};
                 }
             }
 
-            if (isStale()) return "";
+            if (isStale()) return {};
 
             if (!m_ollamaBaseUrl.empty()) {
                 std::string response;
@@ -894,7 +1092,7 @@ std::string Win32IDE::requestGhostTextCompletion(const std::string& context,
                 if (trySendToOllama(prompt, response)) {
                     std::lock_guard<std::mutex> lock(m_ghostTextCacheMutex);
                     m_ghostTextMetrics.localWins++;
-                    return trimGhostText(response);
+                    return GhostTextCacheEntry{trimGhostText(response), "", "", false, 0};
                 }
             }
         }
@@ -904,7 +1102,7 @@ std::string Win32IDE::requestGhostTextCompletion(const std::string& context,
             if (!snippet.empty()) {
                 std::lock_guard<std::mutex> lock(m_ghostTextCacheMutex);
                 m_ghostTextMetrics.snippetWins++;
-                return snippet;
+                return GhostTextCacheEntry{snippet, "", "", false, 0};
             }
         }
 
@@ -921,7 +1119,7 @@ std::string Win32IDE::requestGhostTextCompletion(const std::string& context,
                 if (!lspText.empty()) {
                     std::lock_guard<std::mutex> lock(m_ghostTextCacheMutex);
                     m_ghostTextMetrics.lspWins++;
-                    return lspText;
+                    return GhostTextCacheEntry{lspText, "", "", false, 0};
                 }
             }
 
@@ -934,13 +1132,13 @@ std::string Win32IDE::requestGhostTextCompletion(const std::string& context,
                 if (!lspText.empty()) {
                     std::lock_guard<std::mutex> lock(m_ghostTextCacheMutex);
                     m_ghostTextMetrics.lspWins++;
-                    return lspText;
+                    return GhostTextCacheEntry{lspText, "", "", false, 0};
                 }
             }
         }
     }
 
-    return "";
+    return {};
 }
 
 std::string Win32IDE::requestTitanGhostTextCompletion(const std::string& context,
@@ -1128,12 +1326,38 @@ void Win32IDE::onGhostTextReady(int requestedCursorPos, const char* completionTe
         return;
     }
 
-    // ARCHITECTURE ALIGNMENT: 
+    // Validate same-line prefix snapshot before rendering asynchronous completion.
+    const int lineIndex = (int)SendMessageA(m_hwndEditor, EM_LINEFROMCHAR, sel.cpMin, 0);
+    const int lineStart = (int)SendMessageA(m_hwndEditor, EM_LINEINDEX, lineIndex, 0);
+    const std::string currentLinePrefix = getEditorRangeUtf8(m_hwndEditor, lineStart, sel.cpMin);
+    if (!m_ghostTextRequestLinePrefix.empty() && currentLinePrefix != m_ghostTextRequestLinePrefix) {
+        return;
+    }
+
+    const std::string extracted = trimGhostText(ExtractGhostSuggestion(completionText, m_ghostTextRequestLinePrefix));
+    if (!IsRelevantGhostSuggestion(extracted)) {
+        dismissGhostText();
+        return;
+    }
+
+    // ARCHITECTURE ALIGNMENT:
     // Directly update state and invalidate for RichEdit overlay rendering.
     // Ensure we don't just store, but activate the 'visible' state for WM_PAINT.
-    m_ghostTextContent = completionText;
+    m_ghostTextContent = extracted;
     m_ghostTextVisible = true;
     m_ghostTextAccepted = false;
+    m_ghostTextStreamSessionId = 0;
+    m_activeSuggestionContext.range.cpMin = requestedCursorPos;
+    m_activeSuggestionContext.range.cpMax = requestedCursorPos + static_cast<LONG>(m_ghostTextContent.size());
+    m_activeSuggestionContext.state = SuggestionState::Pending;
+    m_activeSuggestionContext.preview = m_ghostTextContent;
+    m_activeSuggestionContext.stateChangedTickMs = static_cast<uint64_t>(GetTickCount64());
+    m_ghostTextPlanId = m_ghostTextPendingPlanId;
+    m_ghostTextSessionId = m_ghostTextPendingSessionId;
+    m_ghostTextFromAgentic = m_ghostTextPendingFromAgentic;
+    m_ghostTextPendingPlanId.clear();
+    m_ghostTextPendingSessionId.clear();
+    m_ghostTextPendingFromAgentic = false;
 
     // Align with MASM Sovereign logic: trigger immediate repaint
     if (m_hwndEditor) {
@@ -1146,6 +1370,57 @@ void Win32IDE::onGhostTextReady(int requestedCursorPos, const char* completionTe
                 m_ghostTextContent.substr(0, 128), "", 0, true);
 }
 
+void Win32IDE::onGhostTextTokenChunk(const char* tokenChunk, uint64_t sessionId) {
+    if (!tokenChunk || !*tokenChunk || !m_hwndEditor) {
+        return;
+    }
+    if (sessionId == 0) {
+        return;
+    }
+
+    CHARRANGE sel{};
+    SendMessageA(m_hwndEditor, EM_EXGETSEL, 0, reinterpret_cast<LPARAM>(&sel));
+
+    if (m_ghostTextStreamSessionId == 0) {
+        m_ghostTextStreamSessionId = sessionId;
+    }
+    if (m_ghostTextStreamSessionId != sessionId) {
+        // Ignore stale or cross-request token streams.
+        return;
+    }
+
+    if (!m_ghostTextVisible) {
+        m_ghostTextVisible = true;
+        m_ghostTextAccepted = false;
+        m_ghostTextContent.clear();
+        m_ghostTextRequestCursorPos = static_cast<int>(sel.cpMin);
+        m_activeSuggestionContext.range.cpMin = static_cast<LONG>(sel.cpMin);
+        m_activeSuggestionContext.range.cpMax = static_cast<LONG>(sel.cpMin);
+        m_activeSuggestionContext.state = SuggestionState::Pending;
+        m_activeSuggestionContext.stateChangedTickMs = static_cast<uint64_t>(GetTickCount64());
+    }
+
+    // If caret moved since stream started, reset the streamed suggestion at new caret.
+    if (m_ghostTextRequestCursorPos >= 0 && m_ghostTextRequestCursorPos != static_cast<int>(sel.cpMin)) {
+        m_ghostTextContent.clear();
+        m_ghostTextRequestCursorPos = static_cast<int>(sel.cpMin);
+        m_activeSuggestionContext.range.cpMin = static_cast<LONG>(sel.cpMin);
+        m_activeSuggestionContext.range.cpMax = static_cast<LONG>(sel.cpMin);
+        m_activeSuggestionContext.state = SuggestionState::Pending;
+        m_activeSuggestionContext.stateChangedTickMs = static_cast<uint64_t>(GetTickCount64());
+    }
+
+    m_ghostTextContent += tokenChunk;
+    m_ghostTextContent = trimGhostText(m_ghostTextContent);
+    m_activeSuggestionContext.range.cpMin = static_cast<LONG>(m_ghostTextRequestCursorPos);
+    m_activeSuggestionContext.range.cpMax = static_cast<LONG>(m_ghostTextRequestCursorPos +
+        static_cast<int>(m_ghostTextContent.size()));
+    m_activeSuggestionContext.state = SuggestionState::Pending;
+
+    InvalidateRect(m_hwndEditor, nullptr, FALSE);
+    UpdateWindow(m_hwndEditor);
+}
+
 // ============================================================================
 // DISMISS — clears ghost text
 // ============================================================================
@@ -1153,15 +1428,38 @@ void Win32IDE::onGhostTextReady(int requestedCursorPos, const char* completionTe
 void Win32IDE::dismissGhostText() {
     if (!m_ghostTextVisible) return;
 
+    const bool shouldReportDismiss = !m_ghostTextAccepted && m_ghostTextFromAgentic && !m_ghostTextPlanId.empty();
+    const std::string feedbackPlanId = m_ghostTextPlanId;
+    const std::string feedbackSessionId = m_ghostTextSessionId;
+    const std::string feedbackPreview = m_ghostTextContent;
+
     m_ghostTextVisible  = false;
     m_ghostTextContent.clear();
     m_ghostTextLine     = -1;
     m_ghostTextColumn   = -1;
     m_ghostTextRequestCursorPos = -1;
+    m_ghostTextStreamSessionId = 0;
     m_ghostTextAccepted = false;
+    m_ghostTextPlanId.clear();
+    m_ghostTextSessionId.clear();
+    m_ghostTextFromAgentic = false;
+    if (m_activeSuggestionContext.state == SuggestionState::Pending) {
+        m_activeSuggestionContext.state = SuggestionState::Rejected;
+        m_activeSuggestionContext.stateChangedTickMs = static_cast<uint64_t>(GetTickCount64());
+    }
+    hideGhostDiffOverlayUi();
 
     if (m_hwndEditor) {
         InvalidateRect(m_hwndEditor, nullptr, FALSE);
+    }
+
+    if (shouldReportDismiss) {
+        rawrxd::reportInlineCompletionFeedback(feedbackSessionId,
+                                               feedbackPlanId,
+                                               false,
+                                               feedbackPreview.empty()
+                                                   ? "Ghost text dismissed before insertion."
+                                                   : std::string("Ghost text dismissed before insertion: ") + feedbackPreview.substr(0, 128));
     }
 }
 
@@ -1178,6 +1476,11 @@ void Win32IDE::acceptGhostText() {
     }
 
     std::string textToInsert = m_ghostTextContent;
+    CHARRANGE initialSel{};
+    SendMessageA(m_hwndEditor, EM_EXGETSEL, 0, reinterpret_cast<LPARAM>(&initialSel));
+    const std::string feedbackPlanId = m_ghostTextPlanId;
+    const std::string feedbackSessionId = m_ghostTextSessionId;
+    const bool feedbackFromAgentic = m_ghostTextFromAgentic;
     m_ghostTextAccepted = true;
 
     // Dismiss first to avoid re-rendering ghost during insert
@@ -1186,9 +1489,25 @@ void Win32IDE::acceptGhostText() {
     // Insert text at current cursor position
     SendMessageA(m_hwndEditor, EM_REPLACESEL, TRUE, (LPARAM)textToInsert.c_str());
 
+    const LONG insertedStart = initialSel.cpMin;
+    const LONG insertedEnd = insertedStart + static_cast<LONG>(textToInsert.size());
+    m_activeSuggestionContext.range.cpMin = insertedStart;
+    m_activeSuggestionContext.range.cpMax = insertedEnd;
+    m_activeSuggestionContext.state = SuggestionState::Accepted;
+    m_activeSuggestionContext.preview = textToInsert;
+    m_activeSuggestionContext.stateChangedTickMs = static_cast<uint64_t>(GetTickCount64());
+    applyEditorRangeColor(m_hwndEditor, insertedStart, insertedEnd, m_currentTheme.textColor);
+
     // Record acceptance event
     recordEvent(AgentEventType::GhostTextAccepted, "",
                 textToInsert.substr(0, 128), "", 0, true);
+
+    if (feedbackFromAgentic && !feedbackPlanId.empty()) {
+        rawrxd::reportInlineCompletionFeedback(feedbackSessionId,
+                                               feedbackPlanId,
+                                               true,
+                                               std::string("Ghost text accepted into editor: ") + textToInsert.substr(0, 128));
+    }
 
     LOG_INFO("Ghost text accepted (" + std::to_string(textToInsert.size()) + " chars)");
 }
@@ -1210,6 +1529,304 @@ static void DrawGhostTextFast(HDC hdc, int x, int y, const char* text)
     TextOutA(hdc, x, y, text, static_cast<int>(std::strlen(text)));
 }
 
+static void AlphaFillRect(HDC hdc, const RECT& rc, COLORREF color, BYTE alpha)
+{
+    const int width = rc.right - rc.left;
+    const int height = rc.bottom - rc.top;
+    if (width <= 0 || height <= 0)
+        return;
+
+    HDC hdcMem = CreateCompatibleDC(hdc);
+    if (!hdcMem)
+        return;
+
+    HBITMAP bmp = CreateCompatibleBitmap(hdc, width, height);
+    if (!bmp)
+    {
+        DeleteDC(hdcMem);
+        return;
+    }
+
+    HBITMAP oldBmp = (HBITMAP)SelectObject(hdcMem, bmp);
+    HBRUSH brush = CreateSolidBrush(color);
+    RECT local{0, 0, width, height};
+    FillRect(hdcMem, &local, brush);
+
+    BLENDFUNCTION bf{};
+    bf.BlendOp = AC_SRC_OVER;
+    bf.SourceConstantAlpha = alpha;
+    bf.AlphaFormat = 0;
+    AlphaBlend(hdc, rc.left, rc.top, width, height, hdcMem, 0, 0, width, height, bf);
+
+    DeleteObject(brush);
+    SelectObject(hdcMem, oldBmp);
+    DeleteObject(bmp);
+    DeleteDC(hdcMem);
+}
+
+void Win32IDE::renderSuggestionTint(HDC hdc)
+{
+    if (!m_hwndEditor)
+        return;
+
+    const uint64_t nowMs = static_cast<uint64_t>(GetTickCount64());
+    const uint64_t pulseWindowMs = 220;
+    const SuggestionState state = m_activeSuggestionContext.state;
+    if (state == SuggestionState::None)
+        return;
+
+    const bool isPending = state == SuggestionState::Pending;
+    const uint64_t ageMs = (nowMs >= m_activeSuggestionContext.stateChangedTickMs)
+        ? (nowMs - m_activeSuggestionContext.stateChangedTickMs)
+        : 0;
+    if (!isPending && ageMs > pulseWindowMs)
+    {
+        m_activeSuggestionContext.state = SuggestionState::None;
+        return;
+    }
+
+    const LONG cpMin = m_activeSuggestionContext.range.cpMin;
+    const LONG cpMax = m_activeSuggestionContext.range.cpMax;
+    if (cpMin < 0 || cpMax <= cpMin)
+        return;
+
+    const LONG textLen = (LONG)SendMessageA(m_hwndEditor, WM_GETTEXTLENGTH, 0, 0);
+    const LONG safeMin = (std::max)(0L, (std::min)(cpMin, textLen));
+    const LONG safeMax = (std::max)(safeMin, (std::min)(cpMax, textLen));
+    if (safeMax <= safeMin)
+        return;
+
+    TEXTMETRICA tm{};
+    GetTextMetricsA(hdc, &tm);
+    const int lineHeight = tm.tmHeight + tm.tmExternalLeading;
+
+    RECT editorRC{};
+    GetClientRect(m_hwndEditor, &editorRC);
+
+    const int startLine = (int)SendMessageA(m_hwndEditor, EM_LINEFROMCHAR, safeMin, 0);
+    const int endLine = (int)SendMessageA(m_hwndEditor, EM_LINEFROMCHAR, safeMax, 0);
+    for (int line = startLine; line <= endLine; ++line)
+    {
+        const LONG lineStart = (LONG)SendMessageA(m_hwndEditor, EM_LINEINDEX, line, 0);
+        LONG lineNext = (LONG)SendMessageA(m_hwndEditor, EM_LINEINDEX, line + 1, 0);
+        if (lineNext < 0)
+            lineNext = textLen;
+
+        const LONG segStart = (std::max)(safeMin, lineStart);
+        const LONG segEnd = (std::min)(safeMax, lineNext);
+        if (segEnd <= segStart)
+            continue;
+
+        POINTL pStart{};
+        POINTL pEnd{};
+        SendMessageA(m_hwndEditor, EM_POSFROMCHAR, (WPARAM)segStart, (LPARAM)&pStart);
+        SendMessageA(m_hwndEditor, EM_POSFROMCHAR, (WPARAM)segEnd, (LPARAM)&pEnd);
+        if (pStart.x < 0 || pStart.y < 0)
+            continue;
+
+        int x1 = pStart.x - 2;
+        int x2 = pEnd.x + 8;
+        if (line < endLine)
+            x2 = editorRC.right - 6;
+        if (x2 <= x1)
+            x2 = x1 + 16;
+
+        RECT tintRc{x1, pStart.y - 1, x2, pStart.y + lineHeight + 1};
+        if (tintRc.right <= 0 || tintRc.left >= editorRC.right || tintRc.bottom <= 0 || tintRc.top >= editorRC.bottom)
+            continue;
+
+        if (tintRc.left < 0)
+            tintRc.left = 0;
+        if (tintRc.right > editorRC.right)
+            tintRc.right = editorRC.right;
+        if (tintRc.top < 0)
+            tintRc.top = 0;
+        if (tintRc.bottom > editorRC.bottom)
+            tintRc.bottom = editorRC.bottom;
+
+        COLORREF tintColor = RGB(51, 0, 0);
+        BYTE tintAlpha = 76;
+        if (!isPending)
+        {
+            const double t = 1.0 - static_cast<double>(ageMs) / static_cast<double>(pulseWindowMs);
+            const double clamped = (std::max)(0.0, (std::min)(1.0, t));
+            tintColor = (state == SuggestionState::Accepted) ? RGB(24, 88, 42) : RGB(102, 24, 24);
+            tintAlpha = static_cast<BYTE>(28 + static_cast<int>(92.0 * clamped));
+        }
+        AlphaFillRect(hdc, tintRc, tintColor, tintAlpha);
+    }
+}
+
+LRESULT CALLBACK Win32IDE::GhostDiffOverlayProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    Win32IDE* pThis = reinterpret_cast<Win32IDE*>(GetWindowLongPtrA(hwnd, GWLP_USERDATA));
+
+    switch (uMsg)
+    {
+        case WM_NCHITTEST:
+            return HTCLIENT;
+
+        case WM_MOUSEACTIVATE:
+            return MA_NOACTIVATE;
+
+        case WM_LBUTTONUP:
+        {
+            if (!pThis)
+                return 0;
+            RECT rc = {};
+            GetClientRect(hwnd, &rc);
+            const int x = static_cast<int>(static_cast<short>(LOWORD(lParam)));
+            const int splitX = (rc.right - rc.left) / 2;
+            if (x < splitX)
+                pThis->acceptGhostText();
+            else
+                pThis->dismissGhostText();
+            return 0;
+        }
+
+        case WM_ERASEBKGND:
+            return 1;
+
+        case WM_PAINT:
+        {
+            PAINTSTRUCT ps = {};
+            HDC hdc = BeginPaint(hwnd, &ps);
+            RECT rc = {};
+            GetClientRect(hwnd, &rc);
+
+            HBRUSH shellBrush = CreateSolidBrush(RGB(28, 0, 0));
+            HPEN shellPen = CreatePen(PS_SOLID, 1, RGB(90, 20, 20));
+            HPEN oldPen = reinterpret_cast<HPEN>(SelectObject(hdc, shellPen));
+            HBRUSH oldBrush = reinterpret_cast<HBRUSH>(SelectObject(hdc, shellBrush));
+            RoundRect(hdc, rc.left, rc.top, rc.right, rc.bottom, 10, 10);
+            SelectObject(hdc, oldBrush);
+            SelectObject(hdc, oldPen);
+            DeleteObject(shellPen);
+            DeleteObject(shellBrush);
+
+            RECT inner = rc;
+            InflateRect(&inner, -2, -2);
+
+            RECT leftRc = inner;
+            leftRc.right = (inner.right + inner.left) / 2;
+            RECT rightRc = inner;
+            rightRc.left = leftRc.right;
+
+            HBRUSH keepBrush = CreateSolidBrush(RGB(48, 84, 52));
+            HBRUSH undoBrush = CreateSolidBrush(RGB(86, 52, 52));
+            FillRect(hdc, &leftRc, keepBrush);
+            FillRect(hdc, &rightRc, undoBrush);
+            DeleteObject(keepBrush);
+            DeleteObject(undoBrush);
+
+            SetBkMode(hdc, TRANSPARENT);
+            SetTextColor(hdc, RGB(220, 220, 220));
+            DrawTextA(hdc, "Keep", -1, &leftRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
+            DrawTextA(hdc, "Undo", -1, &rightRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
+
+            HPEN borderPen = CreatePen(PS_SOLID, 1, RGB(110, 30, 30));
+            oldPen = reinterpret_cast<HPEN>(SelectObject(hdc, borderPen));
+            oldBrush = reinterpret_cast<HBRUSH>(SelectObject(hdc, GetStockObject(NULL_BRUSH)));
+            RoundRect(hdc, rc.left, rc.top, rc.right, rc.bottom, 10, 10);
+            MoveToEx(hdc, leftRc.right, rc.top, nullptr);
+            LineTo(hdc, leftRc.right, rc.bottom);
+            SelectObject(hdc, oldBrush);
+            SelectObject(hdc, oldPen);
+            DeleteObject(borderPen);
+
+            EndPaint(hwnd, &ps);
+            return 0;
+        }
+    }
+
+    return DefWindowProcA(hwnd, uMsg, wParam, lParam);
+}
+
+void Win32IDE::hideGhostDiffOverlayUi()
+{
+    if (m_hwndGhostDiffOverlay && IsWindow(m_hwndGhostDiffOverlay))
+        ShowWindow(m_hwndGhostDiffOverlay, SW_HIDE);
+    m_ghostDiffOverlayVisible = false;
+}
+
+void Win32IDE::destroyGhostDiffOverlayUi()
+{
+    if (m_hwndGhostDiffOverlay && IsWindow(m_hwndGhostDiffOverlay))
+        DestroyWindow(m_hwndGhostDiffOverlay);
+    m_hwndGhostDiffOverlay = nullptr;
+    m_ghostDiffOverlayVisible = false;
+}
+
+void Win32IDE::updateGhostDiffOverlayUi(const POINTL& anchorPt)
+{
+    if (!m_hwndEditor || !m_ghostTextVisible || m_ghostTextContent.empty())
+    {
+        hideGhostDiffOverlayUi();
+        return;
+    }
+
+    static bool classRegistered = false;
+    if (!classRegistered)
+    {
+        WNDCLASSEXA wc = {};
+        wc.cbSize = sizeof(wc);
+        wc.lpfnWndProc = Win32IDE::GhostDiffOverlayProc;
+        wc.hInstance = m_hInstance;
+        wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+        wc.hbrBackground = reinterpret_cast<HBRUSH>(GetStockObject(BLACK_BRUSH));
+        wc.lpszClassName = GHOST_DIFF_OVERLAY_CLASS;
+        if (RegisterClassExA(&wc))
+            classRegistered = true;
+    }
+
+    if (!m_hwndGhostDiffOverlay || !IsWindow(m_hwndGhostDiffOverlay))
+    {
+        m_hwndGhostDiffOverlay = CreateWindowExA(WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE | WS_EX_LAYERED,
+                                                 GHOST_DIFF_OVERLAY_CLASS,
+                                                 "",
+                                                 WS_POPUP,
+                                                 0,
+                                                 0,
+                                                 GHOST_DIFF_OVERLAY_WIDTH,
+                                                 GHOST_DIFF_OVERLAY_HEIGHT,
+                                                 m_hwndMain,
+                                                 nullptr,
+                                                 m_hInstance,
+                                                 nullptr);
+        if (!m_hwndGhostDiffOverlay)
+            return;
+        SetWindowLongPtrA(m_hwndGhostDiffOverlay, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
+        SetLayeredWindowAttributes(m_hwndGhostDiffOverlay, 0, 238, LWA_ALPHA);
+    }
+
+    POINT screenPt = {anchorPt.x + 10, anchorPt.y + 22};
+    ClientToScreen(m_hwndEditor, &screenPt);
+
+    MONITORINFO mi = {};
+    mi.cbSize = sizeof(mi);
+    HMONITOR mon = MonitorFromPoint(screenPt, MONITOR_DEFAULTTONEAREST);
+    if (GetMonitorInfoA(mon, &mi))
+    {
+        if (screenPt.x + GHOST_DIFF_OVERLAY_WIDTH > mi.rcWork.right)
+            screenPt.x = mi.rcWork.right - GHOST_DIFF_OVERLAY_WIDTH;
+        if (screenPt.y + GHOST_DIFF_OVERLAY_HEIGHT > mi.rcWork.bottom)
+            screenPt.y = mi.rcWork.bottom - GHOST_DIFF_OVERLAY_HEIGHT;
+        if (screenPt.x < mi.rcWork.left)
+            screenPt.x = mi.rcWork.left;
+        if (screenPt.y < mi.rcWork.top)
+            screenPt.y = mi.rcWork.top;
+    }
+
+    SetWindowPos(m_hwndGhostDiffOverlay,
+                 HWND_TOPMOST,
+                 screenPt.x,
+                 screenPt.y,
+                 GHOST_DIFF_OVERLAY_WIDTH,
+                 GHOST_DIFF_OVERLAY_HEIGHT,
+                 SWP_NOACTIVATE | SWP_SHOWWINDOW);
+    m_ghostDiffOverlayVisible = true;
+}
+
 void Win32IDE::renderGhostText(HDC hdc) {
     if (!m_hwndEditor) return;
 
@@ -1227,7 +1844,10 @@ void Win32IDE::renderGhostText(HDC hdc) {
         }
     }
 
-    if ((!m_ghostTextVisible || m_ghostTextContent.empty()) && !showPagingStatus) return;
+    if ((!m_ghostTextVisible || m_ghostTextContent.empty()) && !showPagingStatus) {
+        hideGhostDiffOverlayUi();
+        return;
+    }
 
     // Get current cursor position to know where to draw
     CHARRANGE sel;
@@ -1237,7 +1857,10 @@ void Win32IDE::renderGhostText(HDC hdc) {
     POINTL pt;
     SendMessageA(m_hwndEditor, EM_POSFROMCHAR, (WPARAM)sel.cpMin, (LPARAM)&pt);
 
-    if (pt.x < 0 || pt.y < 0) return;  // Cursor not visible
+    if (pt.x < 0 || pt.y < 0) {
+        hideGhostDiffOverlayUi();
+        return;
+    }
 
     // Get the text after cursor on the same line to know rendering offset
     int lineIndex = (int)SendMessageA(m_hwndEditor, EM_LINEFROMCHAR, sel.cpMin, 0);
@@ -1269,7 +1892,10 @@ void Win32IDE::renderGhostText(HDC hdc) {
         }
     }
 
-    if (lines.empty()) return;
+    if (lines.empty()) {
+        hideGhostDiffOverlayUi();
+        return;
+    }
 
     // Get line height for multi-line offsets
     TEXTMETRICA tm;
@@ -1283,21 +1909,26 @@ void Win32IDE::renderGhostText(HDC hdc) {
     GetClientRect(m_hwndEditor, &editorRC);
 
     for (size_t i = 0; i < lines.size(); i++) {
-        if (drawY + lineHeight > editorRC.bottom) break;
+        int lineDrawX = drawX;
+        int lineDrawY = drawY;
 
-        if (i == 0) {
-            // OPTIMIZED: Call MASM Layout Engine directly
-            DrawGhostTextFast(hdc, drawX, drawY, lines[i].c_str());
-        } else {
+        if (i > 0) {
             POINTL lineStartPt;
             SendMessageA(m_hwndEditor, EM_POSFROMCHAR, (WPARAM)lineStart, (LPARAM)&lineStartPt);
-            int indentX = lineStartPt.x;
-
-            drawY += lineHeight;
-            // OPTIMIZED: Call MASM Layout Engine directly
-            DrawGhostTextFast(hdc, indentX, drawY, lines[i].c_str());
+            lineDrawX = lineStartPt.x;
+            lineDrawY += static_cast<int>(i) * lineHeight;
         }
+
+        if (lineDrawY + lineHeight > editorRC.bottom) break;
+
+        // OPTIMIZED: Call MASM Layout Engine directly
+        DrawGhostTextFast(hdc, lineDrawX, lineDrawY, lines[i].c_str());
     }
+
+    if (!showPagingStatus)
+        updateGhostDiffOverlayUi(endPt);
+    else
+        hideGhostDiffOverlayUi();
 }
 
 // ============================================================================

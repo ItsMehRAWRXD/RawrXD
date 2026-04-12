@@ -1,3 +1,4 @@
+#include "../../include/RawrXD_ApertureManager.h"
 #include "../../include/collab/websocket_hub.h"
 #include "../../include/crash_containment.h"
 #include "../../include/enterprise_feature_manager.hpp"
@@ -15,6 +16,8 @@
 #include "../../include/startup_phase_registry.h"
 #include "../../include/swarm_reconciliation.h"
 #include "../../include/update_signature.h"
+#include "../cli/swarm_orchestrator.h"
+#include "../core/HardwareScout.h"
 #include "../core/camellia256_bridge.hpp"
 #include "../core/enterprise_license.h"
 #include "../core/integrated_runtime.hpp"
@@ -22,16 +25,16 @@
 #include "../core/model_memory_hotpatch.hpp"
 #include "../core/rawrxd_state_mmf.hpp"
 #include "../core/unified_command_dispatch.hpp"
+#include "../cpu_inference_engine.h"
 #include "../modules/codex_ultimate.h"
 #include "../modules/engine_manager.h"
 #include "../modules/memory_manager.h"
 #include "../modules/vsix_loader.h"
+#include "../p2p/SystemIntegrityProver.h"
 #include "HeadlessIDE.h"
 #include "Win32IDE.h"
 #include "Win32IDE_AgenticBrowser.h"
 #include "WindowVisibilityHelpers.h"
-#include "../cpu_inference_engine.h"
-#include "../../include/RawrXD_ApertureManager.h"
 #include <commctrl.h>
 #include <dbghelp.h>
 #include <shellscalingapi.h>
@@ -44,6 +47,7 @@
 #endif
 #pragma comment(lib, "dbghelp.lib")
 #include "../agent/quantum_agent_orchestrator.hpp"
+#include "../agentic/ToolRegistry.h"
 #include "rawrxd/runtime/RuntimeSurfaceBootstrap.hpp"
 #include <algorithm>
 #include <chrono>
@@ -54,6 +58,7 @@
 #include <functional>
 #include <iostream>
 #include <mutex>
+#include <nlohmann/json.hpp>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -88,7 +93,7 @@ static bool isHeapWalkEnabled()
     char buf[8] = {};
     const DWORD n = GetEnvironmentVariableA("RAWRXD_HEAP_WALK_ON_OPEN", buf, (DWORD)sizeof(buf));
     if (n == 0)
-        return true; // Default ON so startup heap state is visible in debugger.
+        return true;  // Default ON so startup heap state is visible in debugger.
     return !(buf[0] == '0' || buf[0] == 'n' || buf[0] == 'N');
 }
 
@@ -134,13 +139,8 @@ static bool resolveDistRootForIntegrity(std::filesystem::path& outRoot)
         return false;
     }
 
-    const std::vector<std::filesystem::path> candidates = {
-        cwd / "dist",
-        cwd,
-        cwd.parent_path() / "dist",
-        cwd.parent_path().parent_path() / "dist",
-        std::filesystem::path("d:/dist")
-    };
+    const std::vector<std::filesystem::path> candidates = {cwd / "dist", cwd, cwd.parent_path() / "dist",
+                                                           cwd.parent_path().parent_path() / "dist"};
 
     for (const auto& candidate : candidates)
     {
@@ -167,7 +167,7 @@ static bool runApertureIntegrityPreflight(std::string& errorOut, std::string& di
     std::filesystem::path distRootPath;
     if (!resolveDistRootForIntegrity(distRootPath))
     {
-        return true; // No discoverable dist root; do not block non-dist developer launches.
+        return true;  // No discoverable dist root; do not block non-dist developer launches.
     }
 
     distRootOut = distRootPath.string();
@@ -211,9 +211,8 @@ static void emitStartupHeapSnapshot(const char* stage)
         heapValid = HeapValidate(heap, 0, nullptr);
 
     char header[256];
-    snprintf(header, sizeof(header),
-             "[main_win32][heap] stage=%s processHeap=%p heapValid=%d pid=%lu\n",
-             stage, heap, heapValid ? 1 : 0, (unsigned long)GetCurrentProcessId());
+    snprintf(header, sizeof(header), "[main_win32][heap] stage=%s processHeap=%p heapValid=%d pid=%lu\n", stage, heap,
+             heapValid ? 1 : 0, (unsigned long)GetCurrentProcessId());
     OutputDebugStringA(header);
     startupTrace("heap_snapshot", header);
 
@@ -247,10 +246,9 @@ static void emitStartupHeapSnapshot(const char* stage)
             if (loggedBusy < 8)
             {
                 char line[196];
-                snprintf(line, sizeof(line),
-                         "[main_win32][heap] stage=%s busy[%lu] addr=%p size=%zu overhead=%u\n",
-                         stage, (unsigned long)loggedBusy, entry.lpData,
-                         (size_t)entry.cbData, (unsigned)entry.cbOverhead);
+                snprintf(line, sizeof(line), "[main_win32][heap] stage=%s busy[%lu] addr=%p size=%zu overhead=%u\n",
+                         stage, (unsigned long)loggedBusy, entry.lpData, (size_t)entry.cbData,
+                         (unsigned)entry.cbOverhead);
                 OutputDebugStringA(line);
                 startupTrace("heap_walk_busy", line);
                 ++loggedBusy;
@@ -270,11 +268,11 @@ static void emitStartupHeapSnapshot(const char* stage)
     HeapUnlock(heap);
 
     char summary[256];
-    snprintf(summary, sizeof(summary),
-             "[main_win32][heap] stage=%s walkDone busyBlocks=%lu busyBytes=%zu regions=%lu uncommitted=%lu walkErr=%lu\n",
-             stage, (unsigned long)busyBlocks, (size_t)busyBytes,
-             (unsigned long)regionCount, (unsigned long)uncommittedRanges,
-             (unsigned long)walkErr);
+    snprintf(
+        summary, sizeof(summary),
+        "[main_win32][heap] stage=%s walkDone busyBlocks=%lu busyBytes=%zu regions=%lu uncommitted=%lu walkErr=%lu\n",
+        stage, (unsigned long)busyBlocks, (size_t)busyBytes, (unsigned long)regionCount,
+        (unsigned long)uncommittedRanges, (unsigned long)walkErr);
     OutputDebugStringA(summary);
     startupTrace("heap_walk_summary", summary);
 }
@@ -343,8 +341,12 @@ static bool hasHeadlessFlag(LPSTR lpCmdLine)
     if (!lpCmdLine)
         return false;
 
-    // Support both --headless and --server as headless triggers
-    return strstr(lpCmdLine, "--headless") != nullptr || strstr(lpCmdLine, "--server") != nullptr;
+    // Support --headless, --server, and --agent-prompt as headless triggers.
+    // --agent-prompt is the monolithic ASM headless lane; routing it through
+    // HeadlessIDE ensures the inference pipeline is fully initialised before
+    // the prompt is dispatched instead of falling through to GUI mode.
+    return strstr(lpCmdLine, "--headless") != nullptr || strstr(lpCmdLine, "--server") != nullptr ||
+           strstr(lpCmdLine, "--agent-prompt") != nullptr;
 }
 
 // Helper: check if launch args request help only (avoid long-running headless)
@@ -367,10 +369,12 @@ static void printHeadlessQuickHelp()
 {
     fputs("RawrXD Headless IDE\n"
           "Usage: RawrXD-Win32IDE.exe --headless [--repl|--no-server|--prompt <text>]\n"
-          "  --no-server     Disable HTTP server (exit immediately)\n"
-          "  --repl          Interactive REPL mode\n"
-          "  --prompt <txt>  Single-shot inference\n"
-          "  --help          Show this help and exit\n",
+          "  --no-server       Disable HTTP server (exit immediately)\n"
+          "  --repl            Interactive REPL mode\n"
+          "  --prompt <txt>    Single-shot Ollama chat (one /api/chat turn)\n"
+          "  --agent-prompt    Same prompt, but use multi-turn tool loop (IDE agentic parity)\n"
+          "  --ollama-model M  Pin Ollama model (else /api/tags or RAWRXD_OLLAMA_MODEL)\n"
+          "  --help            Show this help and exit\n",
           stdout);
     fflush(stdout);
 }
@@ -400,6 +404,13 @@ static bool hasSelfTestFlag(LPSTR lpCmdLine)
     if (!lpCmdLine)
         return false;
     return strstr(lpCmdLine, "--selftest") != nullptr;
+}
+
+static bool hasAgenticSmokeFlag(LPSTR lpCmdLine)
+{
+    if (!lpCmdLine)
+        return false;
+    return strstr(lpCmdLine, "--agentic-smoke") != nullptr;
 }
 
 static void selfTestOutputSink(const char* text, void* userData)
@@ -459,6 +470,8 @@ static bool fileContainsScaffoldMarker(const char* path, std::string& markerLine
     }
     return false;
 }
+
+static bool agenticSmokeToolRegistryStep(std::string& errOut);
 
 static int runStartupSelfTest()
 {
@@ -565,6 +578,15 @@ static int runStartupSelfTest()
         }
         if (clean)
             pass("placeholder-guard");
+    }
+
+    // 6) Agent tool registry (shared with IDE headless agentic path) — offline read_file
+    {
+        std::string agentErr;
+        if (!agenticSmokeToolRegistryStep(agentErr))
+            fail("agent-tool-registry", agentErr);
+        else
+            pass("agent-tool-registry");
     }
 
     fprintf(stdout, "[selftest] result=%s failures=%d\n", failures == 0 ? "PASS" : "FAIL", failures);
@@ -801,8 +823,8 @@ static void spawnRecoveryLauncher(const char* logPath, const char* dumpPath)
 // ============================================================================
 // Bounds: cap argument count and individual token size to prevent DoS via
 // a crafted shortcut/registry launch key.
-static constexpr size_t kMaxCmdArgs    = 64;     // hard cap on # of arguments
-static constexpr size_t kMaxTokenBytes = 4096;   // hard cap on single-token length
+static constexpr size_t kMaxCmdArgs = 64;       // hard cap on # of arguments
+static constexpr size_t kMaxTokenBytes = 4096;  // hard cap on single-token length
 
 static void parseCmdLine(LPSTR lpCmdLine, int& argc, char**& argv)
 {
@@ -820,15 +842,15 @@ static void parseCmdLine(LPSTR lpCmdLine, int& argc, char**& argv)
         std::string token;
         while (iss >> token)
         {
-            if (args.size() >= kMaxCmdArgs) break;  // DoS guard: cap argument count
+            if (args.size() >= kMaxCmdArgs)
+                break;  // DoS guard: cap argument count
             // Handle quoted arguments
             if (!token.empty() && token.front() == '"')
             {
                 token = token.substr(1);
                 std::string rest;
                 // Bound accumulation size to prevent memory DoS via unclosed quoted string
-                while (!token.empty() && token.back() != '"' &&
-                       token.size() < kMaxTokenBytes &&
+                while (!token.empty() && token.back() != '"' && token.size() < kMaxTokenBytes &&
                        std::getline(iss, rest, '"'))
                 {
                     token += ' ';
@@ -839,7 +861,8 @@ static void parseCmdLine(LPSTR lpCmdLine, int& argc, char**& argv)
                     token.pop_back();
                 }
                 // Clamp in case we hit kMaxTokenBytes mid-accumulation
-                if (token.size() > kMaxTokenBytes) token.resize(kMaxTokenBytes);
+                if (token.size() > kMaxTokenBytes)
+                    token.resize(kMaxTokenBytes);
             }
             args.push_back(std::move(token));
         }
@@ -985,8 +1008,55 @@ static bool runPhase(const std::string& name, Win32IDE& ide, HINSTANCE, LPSTR lp
         INITCOMMONCONTROLSEX icex = {sizeof(INITCOMMONCONTROLSEX), ICC_WIN95_CLASSES | ICC_BAR_CLASSES |
                                                                        ICC_TAB_CLASSES | ICC_TREEVIEW_CLASSES |
                                                                        ICC_LISTVIEW_CLASSES | ICC_STANDARD_CLASSES};
-        InitCommonControlsEx(&icex);
-        startupTrace("init_common_controls");
+        if (!InitCommonControlsEx(&icex))
+        {
+            startupTrace("init_common_controls_failed", "InitCommonControlsEx");
+            // No return false; fallback to legacy logic or continue with warning
+        }
+
+        // P0: UI Init (HWND & RichEdit) - Hardening: Force load MSFTEDIT.DLL for modern RichEdit support.
+        // We ensure it is loaded before any CreateWindow calls.
+        HMODULE hMsftEdit = LoadLibraryW(L"Msftedit.dll");
+        HMODULE hRich20 = LoadLibraryW(L"riched20.dll");
+
+        if (!hMsftEdit && !hRich20)
+        {
+            startupTrace("init_common_controls_failed", "richedit_load");
+            MessageBoxW(nullptr,
+                        L"Standard Edit components (Msftedit.dll or riched20.dll) not found.\nThis is a critical "
+                        L"system dependency.",
+                        L"RawrXD - Init Failure", MB_ICONERROR);
+            return false;
+        }
+
+        if (hMsftEdit)
+            startupTrace("init_common_controls", "MsftEdit loaded");
+        else
+            startupTrace("init_common_controls", "RichEdit20 fallback loaded");
+
+        // Sovereign Universal (Hardware Scout) - Phase: 1-Interrogation
+        // Detect VRAM/AVX-512 before engine startup to map GPU or CPU kernels.
+        auto profile = RawrXD::Core::HardwareScout::GetCurrentProfile();
+        startupTrace("init_hardware_scout", RawrXD::Core::HardwareScout::TierToString(profile.tier));
+
+        // Sovereign integrity attestation — runs asynchronously so it never
+        // delays the UI pump.  Results go to OutputDebugString via cout
+        // (captured by debugger) and to the startup log if all_pass fails.
+        std::thread(
+            []()
+            {
+                const bool ok = SystemIntegrityProver::Instance().AttestQuick();
+                if (!ok)
+                {
+                    OutputDebugStringA("[main_win32] WARNING: Sovereign integrity attestation FAILED.\n");
+                }
+                else
+                {
+                    OutputDebugStringA("[main_win32] Sovereign integrity attestation passed.\n");
+                }
+            })
+            .detach();
+
         return true;
     }
     if (name == "first_run_gauntlet")
@@ -1180,8 +1250,30 @@ static bool runPhase(const std::string& name, Win32IDE& ide, HINSTANCE, LPSTR lp
     }
     if (name == "swarm")
     {
-        startupTrace("swarm_deferred");
-        OutputDebugStringA("[main_win32] swarm deferred from startup\n");
+        const bool enableGuiSwarmInit = isTruthyEnvVar("RAWRXD_INIT_SWARM_GUI");
+        if (!enableGuiSwarmInit)
+        {
+            startupTrace("swarm_deferred");
+            OutputDebugStringA("[main_win32] swarm deferred from startup\n");
+            return true;
+        }
+
+        startupTrace("swarm_gui_init_start");
+        auto& swarm = RawrXD::Swarm::SwarmOrchestrator::instance();
+        if (!swarm.isInitialized())
+        {
+            const auto result = swarm.initialize(RawrXD::Swarm::NodeRole::Coordinator, "0.0.0.0");
+            if (!result.success)
+            {
+                const char* swarmDetail = result.detail ? result.detail : "unknown";
+                startupTrace("swarm_gui_init_nonfatal", swarmDetail);
+                OutputDebugStringA((std::string("[main_win32] swarm init non-fatal: ") + swarmDetail + "\n").c_str());
+                return true;
+            }
+        }
+
+        startupTrace("swarm_gui_init_done");
+        OutputDebugStringA("[main_win32] swarm initialized for GUI runtime\n");
         return true;
     }
     if (name == "auto_update")
@@ -1197,8 +1289,8 @@ static bool runPhase(const std::string& name, Win32IDE& ide, HINSTANCE, LPSTR lp
         if (!enableIntegratedRuntime)
         {
             startupTrace("integrated_runtime_deferred");
-            OutputDebugStringA(
-                "[main_win32] Integrated runtime deferred (set RAWRXD_ENABLE_INTEGRATED_RUNTIME=1 to enable at startup)\n");
+            OutputDebugStringA("[main_win32] Integrated runtime deferred (set RAWRXD_ENABLE_INTEGRATED_RUNTIME=1 to "
+                               "enable at startup)\n");
             return true;
         }
 
@@ -1366,7 +1458,8 @@ extern "C" int rawrxd_agentic_deep_think_loop(const char* prompt);
 
 static void ensureConsoleAttached(bool attachInput)
 {
-    auto hasUsableStdHandle = [](DWORD stdId) -> bool {
+    auto hasUsableStdHandle = [](DWORD stdId) -> bool
+    {
         HANDLE h = GetStdHandle(stdId);
         if (h == nullptr || h == INVALID_HANDLE_VALUE)
             return false;
@@ -1576,6 +1669,215 @@ static bool queryLocalOllamaEndpoint(const wchar_t* endpoint, std::string& outBo
 #endif
 }
 
+static bool postLocalOllamaChatJson(const std::string& jsonBody, std::string& outBody)
+{
+    outBody.clear();
+#ifdef _WIN32
+    bool ok = false;
+    HINTERNET hSession = WinHttpOpen(L"RawrXD-AgenticSmoke/1.0", WINHTTP_ACCESS_TYPE_NO_PROXY, WINHTTP_NO_PROXY_NAME,
+                                     WINHTTP_NO_PROXY_BYPASS, 0);
+    if (!hSession)
+        return false;
+
+    HINTERNET hConnect = WinHttpConnect(hSession, L"127.0.0.1", 11434, 0);
+    if (hConnect)
+    {
+        HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"POST", L"/api/chat", nullptr, WINHTTP_NO_REFERER,
+                                                WINHTTP_DEFAULT_ACCEPT_TYPES, 0);
+        if (hRequest)
+        {
+            static const wchar_t kHeaders[] = L"Content-Type: application/json\r\n";
+            if (WinHttpSendRequest(hRequest, kHeaders, (DWORD)-1, const_cast<char*>(jsonBody.data()),
+                                   static_cast<DWORD>(jsonBody.size()), static_cast<DWORD>(jsonBody.size()), 0) &&
+                WinHttpReceiveResponse(hRequest, nullptr))
+            {
+                DWORD statusCode = 0;
+                DWORD statusCodeSize = sizeof(statusCode);
+                if (WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
+                                        WINHTTP_HEADER_NAME_BY_INDEX, &statusCode, &statusCodeSize,
+                                        WINHTTP_NO_HEADER_INDEX) &&
+                    statusCode >= 200 && statusCode < 300)
+                {
+                    for (;;)
+                    {
+                        DWORD available = 0;
+                        if (!WinHttpQueryDataAvailable(hRequest, &available))
+                            break;
+                        if (available == 0)
+                        {
+                            ok = true;
+                            break;
+                        }
+                        std::vector<char> buffer(available + 1, 0);
+                        DWORD read = 0;
+                        if (!WinHttpReadData(hRequest, buffer.data(), available, &read))
+                            break;
+                        outBody.append(buffer.data(), read);
+                    }
+                    if (!ok && !outBody.empty())
+                        ok = true;
+                }
+            }
+            WinHttpCloseHandle(hRequest);
+        }
+        WinHttpCloseHandle(hConnect);
+    }
+    WinHttpCloseHandle(hSession);
+    return ok && !outBody.empty();
+#else
+    (void)jsonBody;
+    (void)outBody;
+    return false;
+#endif
+}
+
+static bool parseFirstOllamaModelName(const std::string& tagsJson, std::string& outName)
+{
+    outName.clear();
+    const char* nameKey = "\"name\":\"";
+    auto pos = tagsJson.find(nameKey);
+    if (pos == std::string::npos)
+        return false;
+    pos += strlen(nameKey);
+    auto end = tagsJson.find('"', pos);
+    if (end == std::string::npos || end <= pos)
+        return false;
+    outName = tagsJson.substr(pos, end - pos);
+    return !outName.empty();
+}
+
+static bool agenticSmokeToolRegistryStep(std::string& errOut)
+{
+    errOut.clear();
+    char tempDir[MAX_PATH] = {};
+    DWORD n = GetTempPathA(MAX_PATH, tempDir);
+    std::string dir = (n > 0) ? std::string(tempDir) : std::string(".");
+    std::string path = dir + "rawrxd_agentic_smoke_" + std::to_string(GetCurrentProcessId()) + "_" +
+                       std::to_string(GetTickCount64()) + ".tmp";
+    const std::string payload = "rawrxd-agentic-smoke\n";
+    {
+        std::ofstream out(path, std::ios::binary | std::ios::trunc);
+        if (!out)
+        {
+            errOut = "temp write failed";
+            return false;
+        }
+        out << payload;
+    }
+    nlohmann::json args;
+    args["path"] = path;
+    auto res = RawrXD::Agent::AgentToolRegistry::Instance().Dispatch("read_file", args);
+    DeleteFileA(path.c_str());
+    if (!res.success)
+    {
+        errOut = res.output.empty() ? "read_file failed" : res.output;
+        return false;
+    }
+    if (res.output != payload)
+    {
+        errOut = "read_file content mismatch";
+        return false;
+    }
+    return true;
+}
+
+static bool agenticSmokeListDirStep(std::string& errOut)
+{
+    errOut.clear();
+    char tempDir[MAX_PATH] = {};
+    DWORD tn = GetTempPathA(MAX_PATH, tempDir);
+    std::string dir = (tn > 0) ? std::string(tempDir) : std::string(".");
+    nlohmann::json args;
+    args["path"] = dir;
+    args["recursive"] = false;
+    auto res = RawrXD::Agent::AgentToolRegistry::Instance().Dispatch("list_dir", args);
+    if (!res.success)
+    {
+        errOut = res.output.empty() ? "list_dir failed" : res.output;
+        return false;
+    }
+    if (res.output.empty())
+    {
+        errOut = "list_dir returned empty output";
+        return false;
+    }
+    return true;
+}
+
+static int runAgenticSmokeTestExit()
+{
+    std::string err;
+    if (!agenticSmokeToolRegistryStep(err))
+    {
+        fprintf(stderr, "[agentic-smoke] FAIL: tool_registry — %s\n", err.c_str());
+        return 2;
+    }
+    fprintf(stdout, "[agentic-smoke] PASS: tool_registry read_file\n");
+
+    if (!agenticSmokeListDirStep(err))
+    {
+        fprintf(stderr, "[agentic-smoke] FAIL: list_dir — %s\n", err.c_str());
+        return 2;
+    }
+    fprintf(stdout, "[agentic-smoke] PASS: tool_registry list_dir (explorer parity)\n");
+
+    if (!isTruthyEnvVar("RAWRXD_AGENTIC_SMOKE_LIVE"))
+    {
+        fprintf(stdout, "[agentic-smoke] SKIP: live Ollama (set RAWRXD_AGENTIC_SMOKE_LIVE=1)\n");
+        return 0;
+    }
+
+    std::string tagsBody;
+    if (!queryLocalOllamaEndpoint(L"/api/tags", tagsBody) || tagsBody.empty())
+    {
+        fprintf(stderr, "[agentic-smoke] FAIL: live Ollama — /api/tags unreachable\n");
+        return 3;
+    }
+    std::string model;
+    if (!parseFirstOllamaModelName(tagsBody, model))
+    {
+        fprintf(stderr, "[agentic-smoke] FAIL: live Ollama — no model in /api/tags\n");
+        return 3;
+    }
+
+    nlohmann::json body;
+    body["model"] = model;
+    body["stream"] = false;
+    nlohmann::json msgs = nlohmann::json::array();
+    msgs.push_back(nlohmann::json::object({{"role", "user"}, {"content", "Reply with exactly: OK"}}));
+    body["messages"] = std::move(msgs);
+
+    std::string raw;
+    if (!postLocalOllamaChatJson(body.dump(), raw))
+    {
+        fprintf(stderr, "[agentic-smoke] FAIL: live Ollama — /api/chat POST failed\n");
+        return 3;
+    }
+    try
+    {
+        nlohmann::json j = nlohmann::json::parse(raw);
+        if (j.contains("message") && j["message"].contains("content"))
+        {
+            std::string content = j["message"]["content"].get<std::string>();
+            for (char& c : content)
+            {
+                if (c >= 'A' && c <= 'Z')
+                    c = static_cast<char>(c - 'A' + 'a');
+            }
+            if (content.find("ok") != std::string::npos)
+            {
+                fprintf(stdout, "[agentic-smoke] PASS: live ollama model=%s\n", model.c_str());
+                return 0;
+            }
+        }
+    }
+    catch (...)
+    {
+    }
+    fprintf(stderr, "[agentic-smoke] FAIL: live Ollama — response did not contain OK\n");
+    return 3;
+}
+
 static bool getArgValue(int argc, char** argv, const char* key, std::string& out)
 {
     for (int i = 0; i < argc; ++i)
@@ -1622,7 +1924,8 @@ static int runFastInferenceCLI(LPSTR lpCmdLine)
     }
 
     const int maxTokens = std::max(1, getArgInt(argc, argv, "--test-max-tokens", 1));
-    const std::string prompt = [&]() {
+    const std::string prompt = [&]()
+    {
         std::string p;
         if (getArgValue(argc, argv, "--test-prompt", p) && !p.empty())
             return p;
@@ -1663,8 +1966,7 @@ static int runFastInferenceCLI(LPSTR lpCmdLine)
     auto t0 = std::chrono::high_resolution_clock::now();
     std::vector<int32_t> generated = engine.Generate(inputTokens, maxTokens);
     auto t1 = std::chrono::high_resolution_clock::now();
-    const auto elapsedMs =
-        (long long)std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
+    const auto elapsedMs = (long long)std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
 
     if (generated.empty())
     {
@@ -2070,6 +2372,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
     // Explorer, shortcuts, or different CWD. Prevents silent failures on init.
     // ========================================================================
     setCwdToExeDirectory();
+
+    // Fast smoke: must run before bootstrapRuntimeSurface / integrity / GUI — same tool registry as agent chat.
+    if (hasAgenticSmokeFlag(lpCmdLine))
+    {
+        ensureConsoleAttached(true);
+        const int rc = runAgenticSmokeTestExit();
+        exportCommandArtifacts("--agentic-smoke");
+        FreeConsole();
+        return rc;
+    }
+
     RawrXD::Runtime::bootstrapRuntimeSurface();
 
     // Check environment first for forced console
@@ -2135,8 +2448,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
             startupTrace("integrity_preflight_failed", integrityError.c_str());
             std::ostringstream oss;
             oss << "RawrXD startup was blocked by integrity preflight.\n\n"
-                << "Reason:\n" << integrityError << "\n\n"
-                << "Dist Root:\n" << (distRoot.empty() ? "(not resolved)" : distRoot);
+                << "Reason:\n"
+                << integrityError << "\n\n"
+                << "Dist Root:\n"
+                << (distRoot.empty() ? "(not resolved)" : distRoot);
             MessageBoxA(nullptr, oss.str().c_str(), "RawrXD Integrity Gate", MB_ICONERROR | MB_OK);
             return 91;
         }
@@ -2272,8 +2587,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
         char cwd[MAX_PATH] = {};
         GetCurrentDirectoryA(MAX_PATH, cwd);
         char launchDiag[768] = {};
-        snprintf(launchDiag, sizeof(launchDiag), "argc=%d cmdline=\"%s\" cwd=\"%s\"", argc,
-                 lpCmdLine ? lpCmdLine : "", cwd);
+        snprintf(launchDiag, sizeof(launchDiag), "argc=%d cmdline=\"%s\" cwd=\"%s\"", argc, lpCmdLine ? lpCmdLine : "",
+                 cwd);
         logHeadlessDiag("launch", launchDiag);
 
         HeadlessIDE headless;
@@ -2281,20 +2596,24 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
 
         // Catch abort() from CRT assertions in Debug builds
         _set_abort_behavior(0, _WRITE_ABORT_MSG | _CALL_REPORTFAULT);
-        signal(SIGABRT, [](int) {
-            const char msg[] = "[headless] SIGABRT caught — CRT abort()\n";
-            DWORD wr = 0;
-            WriteFile(GetStdHandle(STD_ERROR_HANDLE), msg, sizeof(msg) - 1, &wr, nullptr);
-            _exit(99);
-        });
-        SetUnhandledExceptionFilter([](EXCEPTION_POINTERS* ep) -> LONG {
-            char buf[256];
-            snprintf(buf, sizeof(buf), "[headless] UNHANDLED EXCEPTION: 0x%08lX addr=%p\n",
-                     ep->ExceptionRecord->ExceptionCode, ep->ExceptionRecord->ExceptionAddress);
-            DWORD wr = 0;
-            WriteFile(GetStdHandle(STD_ERROR_HANDLE), buf, (DWORD)strlen(buf), &wr, nullptr);
-            return EXCEPTION_EXECUTE_HANDLER;
-        });
+        signal(SIGABRT,
+               [](int)
+               {
+                   const char msg[] = "[headless] SIGABRT caught — CRT abort()\n";
+                   DWORD wr = 0;
+                   WriteFile(GetStdHandle(STD_ERROR_HANDLE), msg, sizeof(msg) - 1, &wr, nullptr);
+                   _exit(99);
+               });
+        SetUnhandledExceptionFilter(
+            [](EXCEPTION_POINTERS* ep) -> LONG
+            {
+                char buf[256];
+                snprintf(buf, sizeof(buf), "[headless] UNHANDLED EXCEPTION: 0x%08lX addr=%p\n",
+                         ep->ExceptionRecord->ExceptionCode, ep->ExceptionRecord->ExceptionAddress);
+                DWORD wr = 0;
+                WriteFile(GetStdHandle(STD_ERROR_HANDLE), buf, (DWORD)strlen(buf), &wr, nullptr);
+                return EXCEPTION_EXECUTE_HANDLER;
+            });
 
         try
         {
@@ -2380,6 +2699,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
         return rc;
     }
 
+    // --agentic-smoke handled at WinMain entry (before bootstrap) for fast CI/smoke.
+
     // ========================================================================
     // GUI MODE — startup sequence from config/startup_phases.txt (dynamic, lazy)
     // ========================================================================
@@ -2444,6 +2765,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
         return 1;
     }
     emitStartupHeapSnapshot("after_show_window");
+    HWND hwndMain = ide.getMainWindow();
+    if (hwndMain && IsWindow(hwndMain))
+    {
+        UpdateWindow(hwndMain);
+        RedrawWindow(hwndMain, nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
+    }
     Win32IDE_AgenticBrowser_NotifyMainWindow(ide.getMainWindow());
     if (const char* ab = std::getenv("RAWRXD_AGENTIC_BROWSER"))
     {

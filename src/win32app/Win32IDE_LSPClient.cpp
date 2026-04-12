@@ -2267,3 +2267,106 @@ void Win32IDE::handleLSPDiagnosticsEndpoint(SOCKET client)
                        std::to_string(body.size()) + "\r\n\r\n" + body;
     send(client, resp.c_str(), (int)resp.size(), 0);
 }
+
+// ============================================================================
+// Organize Imports — textDocument/codeAction (source.organizeImports)
+// ============================================================================
+bool Win32IDE::lspOrganizeImports()
+{
+    if (m_currentFile.empty()) return false;
+
+    LSPLanguage lang = detectLanguageForFile(m_currentFile);
+    if (lang >= LSPLanguage::Count) return false;
+    if (m_lspStatuses[(size_t)lang].state != LSPServerState::Running) return false;
+
+    std::string uri = filePathToUri(m_currentFile);
+
+    // Count lines so we can send an "entire file" range
+    int lineCount = 0;
+    {
+        std::ifstream ifs(m_currentFile);
+        for (std::string l; std::getline(ifs, l); ++lineCount) {}
+    }
+
+    nlohmann::json params;
+    params["textDocument"]["uri"] = uri;
+    params["range"]["start"]["line"] = 0;
+    params["range"]["start"]["character"] = 0;
+    params["range"]["end"]["line"] = lineCount > 0 ? lineCount - 1 : 0;
+    params["range"]["end"]["character"] = 0;
+    params["context"]["diagnostics"] = nlohmann::json::array();
+    params["context"]["only"] = nlohmann::json::array({"source.organizeImports"});
+
+    int id = sendLSPRequest(lang, "textDocument/codeAction", params);
+    if (id < 0) return false;
+
+    nlohmann::json resp = readLSPResponse(lang, id, 10000);
+    if (!resp.contains("result") || !resp["result"].is_array()) return false;
+
+    bool anyApplied = false;
+    for (const auto& action : resp["result"])
+    {
+        // Accept CodeAction objects whose kind matches; skip bare Command objects
+        if (!action.contains("edit")) continue;
+        const auto& editj = action["edit"];
+
+        LSPWorkspaceEdit edit;
+        // changes: { uri: TextEdit[] }
+        if (editj.contains("changes") && editj["changes"].is_object())
+        {
+            for (const auto& [fileUri, editsArr] : editj["changes"].items())
+            {
+                std::vector<LSPWorkspaceEdit::TextEdit> tes;
+                for (const auto& ej : editsArr)
+                {
+                    LSPWorkspaceEdit::TextEdit te;
+                    te.newText = ej.value("newText", "");
+                    if (ej.contains("range"))
+                    {
+                        const auto& rj = ej["range"];
+                        te.range.start.line      = rj["start"].value("line", 0);
+                        te.range.start.character = rj["start"].value("character", 0);
+                        te.range.end.line        = rj["end"].value("line", 0);
+                        te.range.end.character   = rj["end"].value("character", 0);
+                    }
+                    tes.push_back(te);
+                }
+                edit.changes[fileUri] = tes;
+            }
+        }
+        // documentChanges: TextDocumentEdit[]
+        else if (editj.contains("documentChanges") && editj["documentChanges"].is_array())
+        {
+            for (const auto& dc : editj["documentChanges"])
+            {
+                if (!dc.contains("textDocument") || !dc.contains("edits")) continue;
+                std::string fileUri2 = dc["textDocument"].value("uri", "");
+                std::vector<LSPWorkspaceEdit::TextEdit> tes;
+                for (const auto& ej : dc["edits"])
+                {
+                    LSPWorkspaceEdit::TextEdit te;
+                    te.newText = ej.value("newText", "");
+                    if (ej.contains("range"))
+                    {
+                        const auto& rj = ej["range"];
+                        te.range.start.line      = rj["start"].value("line", 0);
+                        te.range.start.character = rj["start"].value("character", 0);
+                        te.range.end.line        = rj["end"].value("line", 0);
+                        te.range.end.character   = rj["end"].value("character", 0);
+                    }
+                    tes.push_back(te);
+                }
+                edit.changes[fileUri2] = tes;
+            }
+        }
+
+        if (!edit.changes.empty() && applyWorkspaceEdit(edit))
+        {
+            reloadCurrentFile();
+            anyApplied = true;
+            LOG_INFO("lspOrganizeImports: applied " + action.value("title", "organize imports"));
+            break;  // one action is sufficient
+        }
+    }
+    return anyApplied;
+}

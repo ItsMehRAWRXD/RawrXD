@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <cstdlib>
 
 // ============================================================================
 // register_rawr_inference — Registers the RAWR inference tool with ToolRegistry.
@@ -67,6 +68,27 @@ void register_git_mcp_tools() {
         if (!(ss >> path >> start >> end)) return "Invalid input: expected 'path start end'";
         
         return bridge.analyzeBlameRisk(path, start, end);
+    });
+
+    ToolRegistry::register_tool("swebench_autonomous_eval", [](const std::string& input) -> std::string {
+        const std::string model = input.empty() ? "phi3:mini" : input;
+        const std::string cmd =
+            "d:/rawrxd/build-ninja-max/bin/RawrXD-SWEBench.exe "
+            "--real-agent "
+            "--model \"" + model + "\" "
+            "--dataset d:/rawrxd/data/swebench_seed4.jsonl "
+            "--phase4-rag-lite --phase4-aperture-lines 100 "
+            "--output-format fenced "
+            "--autonomous-repair --autonomous-max-repair 2 "
+            "--timeout-ms 45000 --max-task-wall-ms 90000 "
+            "--jsonl d:/reports/swe_autonomous_latest.jsonl "
+            "--jsonl-summary d:/reports/swe_autonomous_latest_summary.json";
+
+        const int rc = std::system(cmd.c_str());
+        if (rc == 0) {
+            return "swebench_autonomous_eval: PASS (reports at d:/reports/swe_autonomous_latest*.json*)";
+        }
+        return "swebench_autonomous_eval: FAILED (exit_code=" + std::to_string(rc) + ")";
     });
 
     std::cout << "[REGISTRY] Registered Git MCP Bridge tools\n";

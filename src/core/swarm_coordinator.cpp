@@ -1213,6 +1213,19 @@ void SwarmCoordinator::handleConsensusVote(uint32_t nodeSlot,
         }
         emitEvent(SwarmEventType::ConsensusReached, 0xFFFFFFFF, payload->taskId,
                   "Consensus reached — result committed");
+        
+        // Finalize the task in the DAG
+        std::lock_guard<std::mutex> gLock(m_taskMapMutex);
+        auto it_task = m_taskIdToIndex.find(payload->taskId);
+        if (it_task != m_taskIdToIndex.end()) {
+            size_t idx = it_task->second;
+            std::lock_guard<std::mutex> graphLock(m_taskGraph.graphMutex);
+            m_taskGraph.tasks[idx].taskState = SwarmTaskState::Completed;
+            m_taskGraph.tasks[idx].completedAtMs = SwarmTime::nowMs();
+            m_taskGraph.completedTasks++;
+            m_taskGraph.runningTasks--;
+        }
+
     } else if (entry.rejectVotes >= quorum) {
         entry.rejected = true;
         {
@@ -1221,6 +1234,24 @@ void SwarmCoordinator::handleConsensusVote(uint32_t nodeSlot,
         }
         emitEvent(SwarmEventType::ConsensusRejected, 0xFFFFFFFF, payload->taskId,
                   "Consensus rejected — result discarded, retrying task");
+        
+        // Reset the task in the DAG for retry
+        std::lock_guard<std::mutex> gLock(m_taskMapMutex);
+        auto it_task = m_taskIdToIndex.find(payload->taskId);
+        if (it_task != m_taskIdToIndex.end()) {
+            size_t idx = it_task->second;
+            std::lock_guard<std::mutex> graphLock(m_taskGraph.graphMutex);
+            if (m_taskGraph.tasks[idx].retryCount < m_config.maxRetries) {
+                m_taskGraph.tasks[idx].taskState = SwarmTaskState::Ready;
+                m_taskGraph.tasks[idx].retryCount++;
+                m_taskGraph.runningTasks--;
+                m_taskGraph.pendingTasks++;
+            } else {
+                m_taskGraph.tasks[idx].taskState = SwarmTaskState::Failed;
+                m_taskGraph.runningTasks--;
+                m_taskGraph.failedTasks++;
+            }
+        }
     }
 }
 

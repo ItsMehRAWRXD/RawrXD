@@ -16,8 +16,11 @@
 #include "../../include/license_enforcement.h"
 #include "../../include/model_registry.h"
 #include "../../include/multi_file_search.h"
+#include "../agentic/AgentToolHandlers.h"
+#include "../agentic/agentic_controller_wiring.h"
 #include "../core/enterprise_license.h"
 #include "../cpu_inference_engine.h"
+#include "../inference/speculative_execution_engine.h"
 #include "../modules/ExtensionLoader.hpp"
 #include "../modules/native_memory.hpp"
 #include "../native_agent.hpp"
@@ -28,17 +31,29 @@
 #include "RawrXD_AgentCoordinator.h"
 #include "RawrXD_AutonomousAgenticPipeline.h"
 #include "Win32IDE.h"
+
+#include <memory>
+
+extern void RawrXD_FinishCopilotMinimalAgentic(Win32IDE* ide, WPARAM successWp, LPARAM heapUtf8String);
+#ifndef WM_COPILOT_MINIMAL_AGENTIC_DONE
+#define WM_COPILOT_MINIMAL_AGENTIC_DONE (WM_APP + 108)
+#endif
 #include "Win32IDE_AgenticBrowser.h"
 #include "Win32IDE_ComponentManagers.h"  // Complete types for unique_ptr<T> dtor
 #include "Win32IDE_IELabels.h"
 #include "WindowVisibilityHelpers.h"
+#include "context/semantic_index.h"
+#include "core/vector_index_persistence.h"
 #include "enterprise_feature_manager.hpp"
 #include "feature_registry_panel.h"
 #include "lsp/RawrXD_LSPServer.h"
 #include "multi_response_engine.h"
+#include "runtime/RuntimeProvider.h"
 #include "win32_feature_adapter.h"  // Unified Feature Dispatch adapter
 #include <commctrl.h>
 #include <richedit.h>
+
+extern HWND g_rawrxdIntegratedTerminalTabs;
 
 #ifndef WM_DPICHANGED
 #define WM_DPICHANGED 0x02E0
@@ -54,6 +69,10 @@
 #include <nlohmann/json.hpp>
 #include <shlobj.h>
 #include <sstream>
+#include <windowsx.h>
+
+extern "C" bool ComposerPanel_CommitChanges();
+extern "C" void ComposerPanel_HidePlan();
 
 
 // Menu command IDs — must match Win32IDE.cpp definitions
@@ -123,6 +142,7 @@ Win32IDE::~Win32IDE()
     // m_agenticBridge is non-owning; do not call reset() on raw pointers.
     m_agenticBridge = nullptr;
     m_agent.reset();
+    m_speculativeEngine.reset();
     m_nativeEngine.reset();
     m_modelResolver.reset();
     m_ggufLoader.reset();
@@ -154,8 +174,67 @@ Win32IDE::~Win32IDE()
     }
 }
 
+void Win32IDE::syncSpeculativeInferenceFromConfig()
+{
+    auto& cfg = IDEConfig::getInstance();
+    if (!cfg.getBool("features.speculativeDecoding", false))
+    {
+        m_speculativeEngine.reset();
+        return;
+    }
+    const std::string draft = cfg.getString("inference.speculativeDraftGguf", "");
+    const std::string target = cfg.getString("inference.speculativeTargetGguf", "");
+    if (draft.empty() || target.empty())
+    {
+        m_speculativeEngine.reset();
+        appendToOutput(
+            "[Speculative] Enable dual-GGUF: set inference.speculativeDraftGguf and inference.speculativeTargetGguf in "
+            "rawrxd.config.json.\n",
+            "Output", OutputSeverity::Info);
+        return;
+    }
+    if (!m_speculativeEngine)
+        m_speculativeEngine = std::make_unique<rawrxd::SpeculativeExecutionEngine>();
+    if (m_speculativeEngine->ConfigureGgufModels(draft, target))
+    {
+        appendToOutput("[Speculative] Draft + target GGUF loaded for speculative decoding.\n", "Output",
+                       OutputSeverity::Success);
+        if (m_hwndStatusBar)
+            SendMessageW(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)L"Speculative decoding: ready");
+    }
+    else
+    {
+        appendToOutput("[Speculative] Failed to configure draft/target GGUF; check paths and logs.\n", "Output",
+                       OutputSeverity::Warning);
+    }
+}
+
 extern "C" void Layout_CalculateAndApply(HWND hwnd, void* pIDE, int w, int h);
 extern "C" void Layout_GDI_Blit_Debug(HWND hwnd, void* pIDE);
+
+extern "C" void Layout_GDI_Blit_Debug_Fallback(HWND hwnd, void* pIDE)
+{
+    (void)pIDE;
+    if (!hwnd)
+        return;
+
+    HDC hdc = GetDC(hwnd);
+    if (!hdc)
+        return;
+
+    RECT rc{};
+    if (GetClientRect(hwnd, &rc))
+    {
+        // Render a lightweight fallback frame so debug-blit still has observable behavior
+        // even when the MASM implementation is not linked in this lane.
+        FrameRect(hdc, &rc, static_cast<HBRUSH>(GetStockObject(DKGRAY_BRUSH)));
+    }
+    ReleaseDC(hwnd, hdc);
+}
+
+#if defined(_M_X64)
+#pragma comment(linker, "/alternatename:Layout_GDI_Blit_Debug=Layout_GDI_Blit_Debug_Fallback")
+#endif
 
 // WindowProc - Static callback that routes to instance handleMessage
 LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -371,8 +450,7 @@ static bool sehCallOnCreateStep(OnCreateStepFn fn, void* self, HWND hwnd, const 
     {
         char crashMsg[512];
         snprintf(crashMsg, sizeof(crashMsg),
-                 "[RawrXD] SEH exception 0x%08lX in onCreate step '%s'. Continuing startup.\n",
-                 GetExceptionCode(),
+                 "[RawrXD] SEH exception 0x%08lX in onCreate step '%s'. Continuing startup.\n", GetExceptionCode(),
                  (stepName && stepName[0]) ? stepName : "unknown");
         OutputDebugStringA(crashMsg);
         return false;
@@ -386,8 +464,7 @@ static bool sehCallOnCreateStep(OnCreateStepFn fn, void* self, HWND hwnd, const 
     catch (...)
     {
         char crashMsg[512];
-        snprintf(crashMsg, sizeof(crashMsg),
-                 "[RawrXD] C++ exception in onCreate step '%s'. Continuing startup.\n",
+        snprintf(crashMsg, sizeof(crashMsg), "[RawrXD] C++ exception in onCreate step '%s'. Continuing startup.\n",
                  (stepName && stepName[0]) ? stepName : "unknown");
         OutputDebugStringA(crashMsg);
         return false;
@@ -536,8 +613,92 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             return 0;
         }
 
-        case WM_GETMINMAXINFO:
         case WM_NCCALCSIZE:
+        {
+            // Aperture frame step 1: remove the default non-client frame so the app
+            // can paint a seamless custom header/canvas in the client region.
+            if (wParam == TRUE)
+            {
+                if (NCCALCSIZE_PARAMS* pNc = reinterpret_cast<NCCALCSIZE_PARAMS*>(lParam))
+                {
+                    if (IsZoomed(hwnd))
+                    {
+                        // Keep maximized bounds within monitor work area.
+                        MONITORINFO mi = {sizeof(mi)};
+                        HMONITOR mon = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+                        if (GetMonitorInfoA(mon, &mi))
+                        {
+                            pNc->rgrc[0] = mi.rcWork;
+                        }
+                    }
+                }
+                return 0;
+            }
+            break;
+        }
+
+        case WM_NCHITTEST:
+        {
+            const LRESULT baseHit = DefWindowProcA(hwnd, uMsg, wParam, lParam);
+            if (baseHit == HTCLOSE || baseHit == HTMAXBUTTON || baseHit == HTMINBUTTON || baseHit == HTSYSMENU)
+            {
+                return baseHit;
+            }
+
+            RECT wr = {};
+            GetWindowRect(hwnd, &wr);
+
+            const POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
+
+            const int frameX = GetSystemMetrics(SM_CXSIZEFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER);
+            const int frameY = GetSystemMetrics(SM_CYSIZEFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER);
+
+            const bool canResize = !IsZoomed(hwnd);
+
+            if (canResize)
+            {
+                const bool left = pt.x < wr.left + frameX;
+                const bool right = pt.x >= wr.right - frameX;
+                const bool top = pt.y < wr.top + frameY;
+                const bool bottom = pt.y >= wr.bottom - frameY;
+
+                if (top && left)
+                    return HTTOPLEFT;
+                if (top && right)
+                    return HTTOPRIGHT;
+                if (bottom && left)
+                    return HTBOTTOMLEFT;
+                if (bottom && right)
+                    return HTBOTTOMRIGHT;
+                if (left)
+                    return HTLEFT;
+                if (right)
+                    return HTRIGHT;
+                if (top)
+                    return HTTOP;
+                if (bottom)
+                    return HTBOTTOM;
+            }
+
+            // Reserve a narrow drag strip in the top client area, while preserving
+            // child control interactivity (toolbar buttons, tabs, etc.).
+            const UINT dpi = GetDpiForWindow(hwnd);
+            const int captionDragHeight = MulDiv(36, (dpi > 0 ? static_cast<int>(dpi) : 96), 96);
+            if (pt.y >= wr.top && pt.y < wr.top + captionDragHeight)
+            {
+                POINT clientPt = pt;
+                ScreenToClient(hwnd, &clientPt);
+                HWND hChild = ChildWindowFromPointEx(hwnd, clientPt, CWP_SKIPINVISIBLE | CWP_SKIPDISABLED);
+                if (!hChild || hChild == hwnd)
+                {
+                    return HTCAPTION;
+                }
+            }
+
+            return HTCLIENT;
+        }
+
+        case WM_GETMINMAXINFO:
         case WM_WINDOWPOSCHANGING:
         case WM_WINDOWPOSCHANGED:
         case WM_ACTIVATEAPP:
@@ -566,6 +727,52 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                     hideCommandPalette();
                 else
                     showCommandPalette();
+                return 0;
+            }
+
+            // Quick Open (Ctrl+P) — VS Code / Cursor (also in accelerator table → WM_COMMAND 7029)
+            if ((GetKeyState(VK_CONTROL) & 0x8000) && !(GetKeyState(VK_SHIFT) & 0x8000) &&
+                !(GetKeyState(VK_MENU) & 0x8000) && (wParam == 'P'))
+            {
+                routeCommand(IDM_FILE_QUICK_OPEN);
+                return 0;
+            }
+
+            // Go To Line (Ctrl+G)
+            if ((GetKeyState(VK_CONTROL) & 0x8000) && !(GetKeyState(VK_SHIFT) & 0x8000) && (wParam == 'G'))
+            {
+                showGoToLineDialog();
+                return 0;
+            }
+
+            // Go To Symbol (Ctrl+Shift+O)
+            if ((GetKeyState(VK_CONTROL) & 0x8000) && (GetKeyState(VK_SHIFT) & 0x8000) && (wParam == 'O'))
+            {
+                showGoToSymbolPicker();
+                return 0;
+            }
+
+            // Toggle terminal / bottom panel (VS Code / Cursor: Ctrl+`)
+            if ((GetKeyState(VK_CONTROL) & 0x8000) && !(GetKeyState(VK_SHIFT) & 0x8000) &&
+                !(GetKeyState(VK_MENU) & 0x8000) && (wParam == VK_OEM_3 || wParam == VK_OEM_8))
+            {
+                routeCommand(2029);
+                return 0;
+            }
+
+            // Toggle bottom panel only (VS Code: Ctrl+J — distinct from Ctrl+` terminal focus)
+            if ((GetKeyState(VK_CONTROL) & 0x8000) && !(GetKeyState(VK_SHIFT) & 0x8000) &&
+                !(GetKeyState(VK_MENU) & 0x8000) && (wParam == 'J'))
+            {
+                routeCommand(IDM_VIEW_TOGGLE_BOTTOM_PANEL);
+                return 0;
+            }
+
+            // Cursor-style: Ctrl+L → Agent / chat panel
+            if ((GetKeyState(VK_CONTROL) & 0x8000) && !(GetKeyState(VK_SHIFT) & 0x8000) &&
+                !(GetKeyState(VK_MENU) & 0x8000) && wParam == 'L')
+            {
+                routeCommand(3009);
                 return 0;
             }
 
@@ -612,9 +819,9 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
-            
+
             // Invoke Pure MASM GDI Debug Overlay (Batch 1/8)
-            // Layout_GDI_Blit_Debug(hwnd, this); // [STUBBED to fix LNK2001]
+            Layout_GDI_Blit_Debug(hwnd, this);
 
             if (!m_backgroundBrush)
             {
@@ -682,12 +889,26 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                         idx = 3;
                     switchPanelTab(static_cast<PanelTab>(idx));
                 }
+                // Integrated terminal instance tabs (pwsh / cmd / Agent …) — VS Code-style shell switcher
+                if (pNMHDR->code == TCN_SELCHANGE && g_rawrxdIntegratedTerminalTabs &&
+                    pNMHDR->hwndFrom == g_rawrxdIntegratedTerminalTabs)
+                {
+                    int idx = (int)TabCtrl_GetCurSel(g_rawrxdIntegratedTerminalTabs);
+                    if (idx >= 0 && idx < static_cast<int>(m_terminalPanes.size()))
+                    {
+                        switchTerminalPane(m_terminalPanes[static_cast<size_t>(idx)].id);
+                    }
+                }
                 // Tier 3 (Feature 38/39): Status bar click → language/encoding selector (use part index for reliable
                 // dispatch)
                 if (pNMHDR->hwndFrom == m_hwndStatusBar && pNMHDR->code == NM_CLICK)
                 {
                     NMMOUSE* pNMMouse = reinterpret_cast<NMMOUSE*>(lParam);
                     handleStatusBarClick(static_cast<int>(pNMMouse->dwItemSpec));
+                }
+                if (pNMHDR->hwndFrom == m_hwndStatusBar && pNMHDR->code == NM_CUSTOMDRAW)
+                {
+                    return handleStatusBarCustomDraw(pNMHDR);
                 }
                 // Output panel tab switch (Output / Errors / Debug / Find Results)
                 if (pNMHDR->code == TCN_SELCHANGE && pNMHDR->hwndFrom == m_hwndOutputTabs)
@@ -744,15 +965,10 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                     if (pNMHDR->code == EN_VSCROLL || pNMHDR->code == EN_SELCHANGE || pNMHDR->code == EN_CHANGE)
                     {
                         updateLineNumbers();
-                        // Debounce syntax coloring on content change
-                        if (pNMHDR->code == EN_CHANGE && m_syntaxColoringEnabled)
-                        {
-                            onEditorContentChanged();
-                        }
-                        // Trigger AI Ghost Text on typing
+                        // Unified content-change path (includes ghost debounce + syntax debounce)
                         if (pNMHDR->code == EN_CHANGE)
                         {
-                            triggerGhostTextCompletion();
+                            onEditorContentChanged();
                         }
                         // Tier 3 (Feature 36): Mark file dirty on any content change
                         if (pNMHDR->code == EN_CHANGE)
@@ -894,6 +1110,15 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             {
                 updateStatusBarBackend();
                 refreshMoEPackHudStatusBarPart();
+                if (m_hwndStatusBar)
+                {
+                    InvalidateRect(m_hwndStatusBar, nullptr, FALSE);
+                }
+                return 0;
+            }
+            if (wParam == RAWRXD_IDT_PS_QUEUE_DRAIN)
+            {
+                drainPowerShellCommandQueue();
                 return 0;
             }
             if (wParam == IDT_SESSION_SAVE_DEBOUNCE)
@@ -1022,13 +1247,24 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
             if (result->ggufOk || result->bridgeOk)
             {
-                std::string msg = "✅ Model loaded and ready for inference!\r\n\r\n"
-                                  "You can now ask questions and use agentic tasks in the chat panel.\r\n"
-                                  "Try: 'hello', 'model info', or request a task (Agent mode allows tool execution).";
-                appendCopilotResponse(msg);
+                m_lastLocalModelReadyTickMs = GetTickCount64();
+                syncAgentModeUiFromBridge();
+                refreshAgenticChatSessionContext();
+
+                const bool hasPendingChat = !m_pendingChatOnLoadMessage.empty();
+                appendModelLoadReadyCopilotTurns(result->filepath, !hasPendingChat);
+
+                // If the user clicked Send while the model was still loading, replay
+                // the message now that the model is ready.
+                if (hasPendingChat)
+                {
+                    OutputDebugStringA("[WM_MODEL_LOAD_DONE] scheduling pending chat replay\n");
+                    PostMessage(m_hwndMain, WM_PENDING_CHAT_REPLAY, 0, 0);
+                }
             }
             else
             {
+                m_pendingChatOnLoadMessage.clear();  // discard pending on failure
                 appendToOutput("❌ Failed to load model: " + result->filepath +
                                    " (not a valid GGUF and native load failed).",
                                "Errors", OutputSeverity::Error);
@@ -1045,6 +1281,35 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                 InvalidateRect(m_hwndMain, nullptr, TRUE);
                 UpdateWindow(m_hwndMain);
             }
+            return 0;
+        }
+
+        case WM_APP + 303:
+        {  // WM_PENDING_CHAT_REPLAY
+            if (!m_pendingChatOnLoadMessage.empty() && m_hwndCopilotChatInput && IsWindow(m_hwndCopilotChatInput))
+            {
+                // Give backend registration/load-complete transitions a brief moment
+                // before issuing the replayed Send.
+                Sleep(200);
+
+                std::string pending = std::move(m_pendingChatOnLoadMessage);
+                m_pendingChatOnLoadMessage.clear();
+                OutputDebugStringA(("[WM_PENDING_CHAT_REPLAY] Replaying pending chat: " + pending + "\n").c_str());
+                SetWindowTextA(m_hwndCopilotChatInput, pending.c_str());
+                HandleCopilotSend();
+            }
+            return 0;
+        }
+
+        case WM_APP + 308:
+        {  // WM_STATUSBAR_REFRESH_COPILOT — worker thread updated chat TPS gauges
+            updateEnhancedStatusBar();
+            return 0;
+        }
+
+        case WM_APP + 304:
+        {  // WM_RAWR_TERMINAL_PROCESS_EXIT — shell monitor thread → UI thread
+            onTerminalProcessExited(static_cast<int>(wParam), static_cast<uint32_t>(lParam));
             return 0;
         }
 
@@ -1068,6 +1333,15 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             onGhostTextReady(cursorPos, text);
             if (text)
                 free(const_cast<char*>(text));  // Allocated with _strdup
+            return 0;
+        }
+
+        case WM_USER_GHOST_TOKEN:
+        {
+            const char* token = reinterpret_cast<const char*>(lParam);
+            onGhostTextTokenChunk(token, static_cast<uint64_t>(wParam));
+            if (token)
+                free(const_cast<char*>(token));
             return 0;
         }
 
@@ -1203,6 +1477,50 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                 }
                 return 0;
             }
+            if (uMsg == WM_COPILOT_CHAT_APPEND_SAFE)
+            {
+                const char* text = reinterpret_cast<const char*>(lParam);
+                if (text)
+                {
+                    appendCopilotChatTextOnUiThread(std::string(text));
+                    free(const_cast<char*>(text));
+                }
+                return 0;
+            }
+            if (uMsg == WM_COPILOT_RECORD_TOOL_TURN)
+            {
+                auto* raw = reinterpret_cast<std::pair<std::string, std::string>*>(lParam);
+                if (!raw)
+                    return 0;
+                std::unique_ptr<std::pair<std::string, std::string>> holder(raw);
+                recordPersistedToolTurnOnUiThread(holder->first, holder->second);
+                return 0;
+            }
+            if (uMsg == WM_COPILOT_AGENTIC_ASSISTANT_FINAL)
+            {
+                auto* raw = reinterpret_cast<Win32IDEAgenticCopilotFinalEnvelope*>(lParam);
+                if (!raw)
+                    return 0;
+                std::unique_ptr<Win32IDEAgenticCopilotFinalEnvelope> holder(raw);
+                applyAgenticAssistantFinalOnUiThread(std::move(holder->streamAccumulatorSnapshot),
+                                                     holder->finalAssistantText);
+                return 0;
+            }
+            if (uMsg == WM_COPILOT_INPUT_CLEAR_SAFE)
+            {
+                clearCopilotInputOnUiThread();
+                return 0;
+            }
+            if (uMsg == WM_COPILOT_INTERACTION_BUSY_SAFE)
+            {
+                setCopilotInteractionBusyOnUiThread(wParam != 0);
+                return 0;
+            }
+            if (uMsg == WM_COPILOT_MINIMAL_AGENTIC_DONE)
+            {
+                RawrXD_FinishCopilotMinimalAgentic(this, wParam, lParam);
+                return 0;
+            }
             if (uMsg == WM_IDE_MOE_PACK_STATUS_REFRESH)
             {
                 refreshMoEPackHudStatusBarPart();
@@ -1225,6 +1543,14 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                 onGhostTextReady((int)wParam, completionText);
                 if (completionText)
                     free(const_cast<char*>(completionText));
+                return 0;
+            }
+            if (uMsg == WM_USER_GHOST_TOKEN)
+            {
+                const char* token = reinterpret_cast<const char*>(lParam);
+                onGhostTextTokenChunk(token, static_cast<uint64_t>(wParam));
+                if (token)
+                    free(const_cast<char*>(token));
                 return 0;
             }
             if (uMsg == WM_TITAN_GHOST_STREAM)
@@ -1289,6 +1615,12 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             if (uMsg == WM_NATIVE_AI_PROGRESS)
             {
                 onNativeAIProgress();
+                return 0;
+            }
+            // Code completion results from background thread
+            if (uMsg == (WM_USER + 0x501))
+            {
+                onCompletionReady(lParam);
                 return 0;
             }
             break;
@@ -1373,16 +1705,16 @@ bool Win32IDE::createWindow()
     }
 
     // Load RichEdit libraries up front so control creation failures are explicit.
-    HMODULE hRichEdit20 = LoadLibraryA("riched20.dll");
-    HMODULE hMsftEdit = LoadLibraryA("msftedit.dll");
-    if (!hRichEdit20)
+    HMODULE hMsftEdit = LoadLibraryW(L"Msftedit.dll");
+    HMODULE hRichEdit20 = LoadLibraryW(L"riched20.dll");
+    if (!hMsftEdit && !hRichEdit20)
     {
-        LOG_ERROR("Failed to load riched20.dll (RichEdit20 controls unavailable)");
+        LOG_ERROR("Failed to load RichEdit runtime (Msftedit.dll / riched20.dll unavailable)");
         return false;
     }
     if (!hMsftEdit)
     {
-        LOG_WARNING("msftedit.dll not available; continuing with riched20 lane");
+        LOG_WARNING("Msftedit.dll not available; continuing with riched20 fallback lane");
     }
 
     WNDCLASSEXA wc = {};
@@ -1428,9 +1760,8 @@ bool Win32IDE::createWindow()
     }
     m_hwndMain =
         CreateWindowExA(WS_EX_APPWINDOW, kWindowClassName, "RawrXD IDE - Native Win32 AI Development Environment",
-                        WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE, winX, winY, winW,
-                        winH, nullptr, nullptr,
-                        m_hInstance, this);
+                        WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE, winX, winY, winW, winH,
+                        nullptr, nullptr, m_hInstance, this);
 
     if (!m_hwndMain)
     {
@@ -1543,7 +1874,10 @@ int Win32IDE::runMessageLoop()
         {
             METRICS.increment("app.messages_processed");
 
-            // Handle accelerator keys
+            if (m_hwndMain && m_hAccel && TranslateAccelerator(m_hwndMain, m_hAccel, &msg))
+                continue;
+
+            // Handle accelerator keys (fallback / keys not in ACCEL table)
             if (msg.message == WM_KEYDOWN)
             {
                 bool ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
@@ -1562,6 +1896,30 @@ int Win32IDE::runMessageLoop()
                     }
                     continue;
                 }
+                // VS Code / Cursor: Quick Open (Ctrl+P) — fallback when TranslateAccelerator does not consume
+                if (ctrl && !shift && !alt && msg.wParam == 'P')
+                {
+                    routeCommand(IDM_FILE_QUICK_OPEN);
+                    continue;
+                }
+                // VS Code / Cursor: toggle integrated terminal (Ctrl+`) — OEM_3/`~ US, OEM_8 on some layouts
+                if (ctrl && !shift && !alt && (msg.wParam == VK_OEM_3 || msg.wParam == VK_OEM_8))
+                {
+                    routeCommand(2029);  // IDM_VIEW_TERMINAL
+                    continue;
+                }
+                // VS Code: toggle bottom panel visibility (Ctrl+J) — workbench.action.togglePanel
+                if (ctrl && !shift && !alt && msg.wParam == 'J')
+                {
+                    routeCommand(IDM_VIEW_TOGGLE_BOTTOM_PANEL);
+                    continue;
+                }
+                // Cursor-style: Ctrl+L → Agent / chat panel
+                if (ctrl && !shift && !alt && msg.wParam == 'L')
+                {
+                    routeCommand(3009);
+                    continue;
+                }
                 if (ctrl && msg.wParam == 'N')
                 {
                     routeCommandUnified(IDM_FILE_NEW, this, m_hwndMain);
@@ -1570,6 +1928,12 @@ int Win32IDE::runMessageLoop()
                 if (ctrl && msg.wParam == 'O')
                 {
                     routeCommandUnified(IDM_FILE_OPEN, this, m_hwndMain);
+                    continue;
+                }
+                // Cursor / VS Code terminal: Ctrl+` toggles panel; Ctrl+Shift+` creates new user terminal
+                if (ctrl && shift && !alt && (msg.wParam == VK_OEM_3 || msg.wParam == VK_OEM_8))
+                {
+                    routeCommand(4011);
                     continue;
                 }
                 if (ctrl && msg.wParam == 'S')
@@ -1748,13 +2112,20 @@ void Win32IDE::onSize(int width, int height)
     if (width <= 0 || height <= 0)
         return;
 
+    // WM_SIZE can arrive before the editor control exists during cold startup.
+    // Defer full layout until core panes are created to avoid partial/incorrect bounds.
+    if (!m_hwndEditor || !IsWindow(m_hwndEditor) || !m_hwndMain || !IsWindow(m_hwndMain))
+        return;
+
     const int TOOLBAR_HEIGHT = dpiScale(32);
     const int STATUSBAR_HEIGHT = dpiScale(24);
     const int ACTIVITY_BAR_WIDTH = dpiScale(48);
     const int TAB_BAR_HEIGHT = dpiScale(28);
 
-    int sidebarWidth = m_sidebarVisible ? m_sidebarWidth : 0;
-    int secondarySidebarWidth = m_secondarySidebarVisible ? m_secondarySidebarWidth : 0;
+    const bool hasPrimarySidebar = (m_hwndSidebar && IsWindow(m_hwndSidebar));
+    const bool hasSecondarySidebar = (m_hwndSecondarySidebar && IsWindow(m_hwndSecondarySidebar));
+    int sidebarWidth = (m_sidebarVisible && hasPrimarySidebar) ? m_sidebarWidth : 0;
+    int secondarySidebarWidth = (m_secondarySidebarVisible && hasSecondarySidebar) ? m_secondarySidebarWidth : 0;
     const int minEditorWidth = dpiScale(320);
     const int minPanelHeight = dpiScale(96);
 
@@ -1768,7 +2139,7 @@ void Win32IDE::onSize(int width, int height)
 
     if (m_activeSnapState != SnapState::None && m_activeSnapState != SnapState::Custom)
     {
-        bool stillOnPreset = false;
+        bool stillOnPreset = true;
         switch (m_activeSnapState)
         {
             case SnapState::Compact:
@@ -1884,15 +2255,24 @@ void Win32IDE::onSize(int width, int height)
         secondarySidebarWidth = 0;
         editorRight = editorLeft + editorWidth;
     }
-    int editorAreaHeight = contentHeight - panelHeight - powerShellHeight;
+    const int bottomDockHeight = panelHeight + powerShellHeight;
+    int editorAreaHeight = contentHeight - bottomDockHeight;
     editorAreaHeight = (std::max)(0, editorAreaHeight);
+
+    // Nested coordinate system for the central workspace (editor + bottom dock).
+    RECT workspaceRect = {editorLeft, contentTop, editorRight, contentTop + contentHeight};
+    RECT editorRect = {workspaceRect.left, workspaceRect.top, workspaceRect.right,
+                       workspaceRect.top + editorAreaHeight};
+    RECT bottomDockRect = {workspaceRect.left, editorRect.bottom, workspaceRect.right, workspaceRect.bottom};
+
+    const int bottomTabStripHeight = dpiScale(24);
 
     // Tab bar (above editor)
     int tabBarBottom = contentTop;
     if (m_hwndTabBar)
     {
-        moveChild(m_hwndTabBar, editorLeft, contentTop, editorWidth, TAB_BAR_HEIGHT, TRUE);
-        tabBarBottom = contentTop + TAB_BAR_HEIGHT;
+        moveChild(m_hwndTabBar, editorRect.left, editorRect.top, editorWidth, TAB_BAR_HEIGHT, TRUE);
+        tabBarBottom = editorRect.top + TAB_BAR_HEIGHT;
     }
 
     // Breadcrumb bar (below tab bar, above editor) — ESP IE labeled
@@ -1911,14 +2291,14 @@ void Win32IDE::onSize(int width, int height)
     int editorW = 0;
     if (m_hwndLineNumbers)
     {
-        moveChild(m_hwndLineNumbers, editorLeft, breadcrumbBottom, gutterWidth, editorContentHeight, TRUE);
+        moveChild(m_hwndLineNumbers, editorRect.left, breadcrumbBottom, gutterWidth, editorContentHeight, TRUE);
     }
 
     // Editor (right of gutter)
     if (m_hwndEditor)
     {
         int minimapW = (m_minimapVisible && m_hwndMinimap) ? m_minimapWidth : 0;
-        int editorX = editorLeft + gutterWidth;
+        int editorX = editorRect.left + gutterWidth;
         editorW = editorWidth - gutterWidth - minimapW;
         editorW = (std::max)(0, editorW);
         moveChild(m_hwndEditor, editorX, breadcrumbBottom, editorW, editorContentHeight, TRUE);
@@ -1934,34 +2314,36 @@ void Win32IDE::onSize(int width, int height)
         if (m_hwndMinimap && m_minimapVisible)
         {
             minimapW = (std::max)(0, (std::min)(minimapW, editorWidth));
-            moveChild(m_hwndMinimap, editorRight - minimapW, breadcrumbBottom, minimapW, editorContentHeight, TRUE);
+            moveChild(m_hwndMinimap, editorRect.right - minimapW, breadcrumbBottom, minimapW, editorContentHeight,
+                      TRUE);
         }
     }
 
     // Output / Terminal panel area
-    int panelTop = contentTop + editorAreaHeight;
+    int panelTop = bottomDockRect.top;
     if (panelHeight > 0)
     {
         // Output tabs
         if (m_hwndOutputTabs)
         {
-            moveChild(m_hwndOutputTabs, editorLeft, panelTop, editorWidth, panelHeight, TRUE);
+            moveChild(m_hwndOutputTabs, bottomDockRect.left, panelTop, editorWidth, panelHeight, TRUE);
         }
-        int termTop = contentTop + editorAreaHeight;
-        int tabBarH = 24;
+        int termTop = bottomDockRect.top;
+        int tabBarH = bottomTabStripHeight;
         int termHeight = panelHeight;
         // Output tab windows (Output, Errors, Debug, Find Results)
         for (auto& kv : m_outputWindows)
         {
             if (kv.second)
             {
-                moveChild(kv.second, editorLeft, termTop + tabBarH, editorWidth, termHeight - tabBarH, TRUE);
+                moveChild(kv.second, bottomDockRect.left, termTop + tabBarH, editorWidth, termHeight - tabBarH, TRUE);
             }
         }
         // Problems ListView (5th tab) — same region
         if (m_hwndProblemsListView)
         {
-            moveChild(m_hwndProblemsListView, editorLeft, termTop + tabBarH, editorWidth, termHeight - tabBarH, TRUE);
+            moveChild(m_hwndProblemsListView, bottomDockRect.left, termTop + tabBarH, editorWidth, termHeight - tabBarH,
+                      TRUE);
         }
         panelTop += panelHeight;
     }
@@ -1969,9 +2351,9 @@ void Win32IDE::onSize(int width, int height)
     // Terminal panes — layout within the output panel area so they're visible
     if (!m_terminalPanes.empty() && panelHeight > 0)
     {
-        int termTop = contentTop + editorAreaHeight;
+        int termTop = bottomDockRect.top;
         int termHeight = panelHeight;
-        int tabBarH = 24;
+        int tabBarH = bottomTabStripHeight;
         if (m_hwndOutputTabs)
         {
             // Windows already positioned above; no-op for positioning
@@ -1981,7 +2363,7 @@ void Win32IDE::onSize(int width, int height)
     // PowerShell panel
     if (m_hwndPowerShellPanel && m_powerShellPanelVisible)
     {
-        moveChild(m_hwndPowerShellPanel, editorLeft, panelTop, editorWidth, powerShellHeight, TRUE);
+        moveChild(m_hwndPowerShellPanel, bottomDockRect.left, panelTop, editorWidth, powerShellHeight, TRUE);
     }
 
     // Secondary sidebar (Copilot Chat / AI Panel)
@@ -2036,7 +2418,14 @@ void Win32IDE::onSize(int width, int height)
     updateLineNumbers();
 
     // Store editor rect for GPU surface sync
-    m_editorRect = {editorLeft, contentTop, editorLeft + editorWidth, contentTop + editorAreaHeight};
+    m_editorRect = {editorRect.left, editorRect.top, editorRect.right, editorRect.bottom};
+
+    // Startup and lane-recovery hardening: ensure a full invalidation so controls that were
+    // created late still paint correctly after the first layout pass.
+    if (m_hwndMain && IsWindow(m_hwndMain))
+    {
+        InvalidateRect(m_hwndMain, nullptr, TRUE);
+    }
 
     Win32IDE_AgenticBrowser_Relayout();
 }
@@ -2254,6 +2643,8 @@ bool Win32IDE::trySendToOllama(const std::string& prompt, std::string& outRespon
 void Win32IDE::onCreate(HWND hwnd)
 {
     m_hwndMain = hwnd;
+    // Route runtime token stream chunks to this window for ghost text updates.
+    RawrXD::Runtime::RuntimeProvider::ConfigureWin32TokenMessenger(hwnd, WM_USER_GHOST_TOKEN);
     bool hadOnCreateStepFailure = false;
     auto initOptionalPanelsStep = +[](void* self, HWND h)
     {
@@ -2276,7 +2667,8 @@ void Win32IDE::onCreate(HWND hwnd)
         {
             ide->m_multiFileSearch = new MultiFileSearchWidget();
             // Default root: project root if set; else current working directory.
-            const std::string root = ide->m_projectRoot.empty() ? std::filesystem::current_path().string() : ide->m_projectRoot;
+            const std::string root =
+                ide->m_projectRoot.empty() ? std::filesystem::current_path().string() : ide->m_projectRoot;
             ide->m_multiFileSearch->setProjectRoot(root);
             ide->m_multiFileSearch->setShowCallback(&MultiFileSearchWidget_ShowDialog, ide->m_multiFileSearch);
         }
@@ -2331,11 +2723,14 @@ void Win32IDE::onCreate(HWND hwnd)
     auto createPrimarySidebarStep = +[](void* self, HWND h) { static_cast<Win32IDE*>(self)->createPrimarySidebar(h); };
     auto createTabBarStep = +[](void* self, HWND h) { static_cast<Win32IDE*>(self)->createTabBar(h); };
     auto createBreadcrumbBarStep = +[](void* self, HWND h) { static_cast<Win32IDE*>(self)->createBreadcrumbBar(h); };
-    auto createLineNumberGutterStep = +[](void* self, HWND h) { static_cast<Win32IDE*>(self)->createLineNumberGutter(h); };
+    auto createLineNumberGutterStep =
+        +[](void* self, HWND h) { static_cast<Win32IDE*>(self)->createLineNumberGutter(h); };
     auto createEditorStep = +[](void* self, HWND h) { static_cast<Win32IDE*>(self)->createEditor(h); };
-    auto createAnnotationOverlayStep = +[](void* self, HWND h) { static_cast<Win32IDE*>(self)->createAnnotationOverlay(h); };
+    auto createAnnotationOverlayStep =
+        +[](void* self, HWND h) { static_cast<Win32IDE*>(self)->createAnnotationOverlay(h); };
     auto createTerminalStep = +[](void* self, HWND h) { static_cast<Win32IDE*>(self)->createTerminal(h); };
-    auto createEnhancedStatusBarStep = +[](void* self, HWND h) { static_cast<Win32IDE*>(self)->createEnhancedStatusBar(h); };
+    auto createEnhancedStatusBarStep =
+        +[](void* self, HWND h) { static_cast<Win32IDE*>(self)->createEnhancedStatusBar(h); };
     auto createOutputTabsStep = +[](void* self, HWND) { static_cast<Win32IDE*>(self)->createOutputTabs(); };
     auto createChatPanelStep = +[](void* self, HWND) { static_cast<Win32IDE*>(self)->createChatPanel(); };
 
@@ -2344,7 +2739,11 @@ void Win32IDE::onCreate(HWND hwnd)
     icex.dwSize = sizeof(icex);
     icex.dwICC = ICC_BAR_CLASSES | ICC_TAB_CLASSES | ICC_LISTVIEW_CLASSES | ICC_TREEVIEW_CLASSES | ICC_PROGRESS_CLASS |
                  ICC_STANDARD_CLASSES;
-    InitCommonControlsEx(&icex);
+    if (!InitCommonControlsEx(&icex))
+    {
+        const DWORD commonControlsErr = GetLastError();
+        LOG_WARNING("InitCommonControlsEx failed, gle=" + std::to_string(commonControlsErr));
+    }
 
     // ================================================================
     // Create UI components — SEH-safe breadcrumb trail for diagnosis
@@ -2383,6 +2782,11 @@ void Win32IDE::onCreate(HWND hwnd)
     OutputDebugStringA("[onCreate] createChatPanel...\n");
     hadOnCreateStepFailure |= !sehCallOnCreateStep(createChatPanelStep, this, hwnd, "createChatPanel");
 
+    OutputDebugStringA("[onCreate] createAcceleratorTable...\n");
+    hadOnCreateStepFailure |= !sehCallOnCreateStep(
+        +[](void* self, HWND) { static_cast<Win32IDE*>(self)->createAcceleratorTable(); }, this, hwnd,
+        "createAcceleratorTable");
+
     hadOnCreateStepFailure |= !sehCallOnCreateStep(
         +[](void* self, HWND)
         {
@@ -2394,9 +2798,7 @@ void Win32IDE::onCreate(HWND hwnd)
                     ide->m_interpretabilityPanel->setParent(ide->m_hwndMain);
             }
         },
-        this,
-        hwnd,
-        "attachMainWindowProps");
+        this, hwnd, "attachMainWindowProps");
 
     LOG_INFO("onCreate complete — all panels created");
     OutputDebugStringA("[onCreate] all panels created OK\n");
@@ -2407,27 +2809,21 @@ void Win32IDE::onCreate(HWND hwnd)
     }
 
     OutputDebugStringA("[onCreate] initSyntaxColorizer...\n");
-    hadOnCreateStepFailure |= !sehCallOnCreateStep(+[](void* self, HWND) { static_cast<Win32IDE*>(self)->initSyntaxColorizer(); },
-                                                    this,
-                                                    hwnd,
-                                                    "initSyntaxColorizer");
+    hadOnCreateStepFailure |= !sehCallOnCreateStep(
+        +[](void* self, HWND) { static_cast<Win32IDE*>(self)->initSyntaxColorizer(); }, this, hwnd,
+        "initSyntaxColorizer");
 
     OutputDebugStringA("[onCreate] initGhostText...\n");
-    hadOnCreateStepFailure |=
-        !sehCallOnCreateStep(+[](void* self, HWND) { static_cast<Win32IDE*>(self)->initGhostText(); }, this, hwnd, "initGhostText");
+    hadOnCreateStepFailure |= !sehCallOnCreateStep(
+        +[](void* self, HWND) { static_cast<Win32IDE*>(self)->initGhostText(); }, this, hwnd, "initGhostText");
 
     OutputDebugStringA("[onCreate] restoreSession...\n");
-    hadOnCreateStepFailure |=
-        !sehCallOnCreateStep(+[](void* self, HWND) { static_cast<Win32IDE*>(self)->restoreSession(); }, this, hwnd, "restoreSession");
+    hadOnCreateStepFailure |= !sehCallOnCreateStep(
+        +[](void* self, HWND) { static_cast<Win32IDE*>(self)->restoreSession(); }, this, hwnd, "restoreSession");
 
     OutputDebugStringA("[onCreate] applyStartupLayoutProfileFromEnv...\n");
     hadOnCreateStepFailure |= !sehCallOnCreateStep(
-        +[](void* self, HWND)
-        {
-            static_cast<Win32IDE*>(self)->applyStartupLayoutProfileFromEnv();
-        },
-        this,
-        hwnd,
+        +[](void* self, HWND) { static_cast<Win32IDE*>(self)->applyStartupLayoutProfileFromEnv(); }, this, hwnd,
         "applyStartupLayoutProfileFromEnv");
 
     hadOnCreateStepFailure |= !sehCallOnCreateStep(
@@ -2438,17 +2834,11 @@ void Win32IDE::onCreate(HWND hwnd)
             sprintf_s(buf,
                       "HWND audit: Main=%p Editor=%p Sidebar=%p "
                       "ExplorerTree=%p OutputTabs=%p PowerShellPanel=%p",
-                      ide->m_hwndMain,
-                      ide->m_hwndEditor,
-                      ide->m_hwndSidebar,
-                      ide->m_hwndExplorerTree,
-                      ide->m_hwndOutputTabs,
-                      ide->m_hwndPowerShellPanel);
+                      ide->m_hwndMain, ide->m_hwndEditor, ide->m_hwndSidebar, ide->m_hwndExplorerTree,
+                      ide->m_hwndOutputTabs, ide->m_hwndPowerShellPanel);
             LOG_INFO(std::string(buf));
         },
-        this,
-        hwnd,
-        "logWindowAudit");
+        this, hwnd, "logWindowAudit");
 
     hadOnCreateStepFailure |= !sehCallOnCreateStep(
         +[](void* self, HWND)
@@ -2465,9 +2855,7 @@ void Win32IDE::onCreate(HWND hwnd)
             ide->m_backgroundBrush = CreateSolidBrush(RGB(30, 30, 30));
             ide->applyTheme();
         },
-        this,
-        hwnd,
-        "applyInitialTheme");
+        this, hwnd, "applyInitialTheme");
 
     hadOnCreateStepFailure |= !sehCallOnCreateStep(
         +[](void* self, HWND)
@@ -2481,9 +2869,7 @@ void Win32IDE::onCreate(HWND hwnd)
                 ide->updateContextWindowDisplay();
             }
         },
-        this,
-        hwnd,
-        "initStatusBarState");
+        this, hwnd, "initStatusBarState");
 
     hadOnCreateStepFailure |= !sehCallOnCreateStep(
         +[](void* self, HWND)
@@ -2494,9 +2880,7 @@ void Win32IDE::onCreate(HWND hwnd)
             ide->initBackendManager();
             ide->initLLMRouter();
         },
-        this,
-        hwnd,
-        "initBackendAndRouter");
+        this, hwnd, "initBackendAndRouter");
 
     hadOnCreateStepFailure |= !sehCallOnCreateStep(
         +[](void* self, HWND h)
@@ -2522,9 +2906,50 @@ void Win32IDE::onCreate(HWND hwnd)
                 ide->onSize(rc.right - rc.left, rc.bottom - rc.top);
             }
         },
-        this,
-        hwnd,
-        "recoverCriticalPanesAndRelayout");
+        this, hwnd, "recoverCriticalPanesAndRelayout");
+
+    hadOnCreateStepFailure |= !sehCallOnCreateStep(
+        +[](void* self, HWND)
+        {
+            auto* ide = static_cast<Win32IDE*>(self);
+            if (!ide || !ide->m_hwndMain)
+                return;
+
+            // Force one deterministic startup hydration pass so visible panes are not left blank
+            // when child creation order varies across lanes.
+            ide->setSidebarView(Win32IDE::SidebarView::Explorer);
+            ide->updateSecondarySidebarContent();
+
+            if (ide->m_hwndEditor && IsWindow(ide->m_hwndEditor))
+            {
+                ShowWindow(ide->m_hwndEditor, SW_SHOWNA);
+                SetFocus(ide->m_hwndEditor);
+            }
+
+            InvalidateRect(ide->m_hwndMain, nullptr, TRUE);
+            UpdateWindow(ide->m_hwndMain);
+        },
+        this, hwnd, "hydrateStartupViewsAndRepaint");
+
+    // Agent tools: mirror `execute_command` with use_integrated_terminal into read-only agent terminal (Cursor-style).
+    hadOnCreateStepFailure |= !sehCallOnCreateStep(
+        +[](void* self, HWND)
+        {
+            auto* ide = static_cast<Win32IDE*>(self);
+            if (!ide)
+                return;
+            RawrXD::Agent::AgentToolHandlers::SetIntegratedTerminalEchoCallback(
+                +[](const char* utf8, void* user)
+                {
+                    auto* w = static_cast<Win32IDE*>(user);
+                    if (!w || !utf8 || !*utf8)
+                        return;
+                    const int paneId = w->getOrCreatePrimaryAgentTerminalPane();
+                    (void)w->writeAgentTerminalLine(paneId, std::string(utf8));
+                },
+                ide);
+        },
+        this, hwnd, "registerIntegratedTerminalToolEcho");
 
     // Defer heavy init to after window is fully created
     PostMessage(hwnd, WM_APP + 100, 0, 0);
@@ -2828,6 +3253,66 @@ void Win32IDE::deferredHeavyInitBody()
         OutputDebugStringA("ERROR: loadSettings/applySettings failed\n");
     }
     syncAgentModeUiFromBridge();
+    syncSpeculativeInferenceFromConfig();
+
+    // Startup hardening: keep optional discovery, bridge-adjacent clients, and plugin managers
+    // off the WinMain path so failures cannot abort startup before the first paint.
+    try
+    {
+        initializeCoreRuntimeSpine();
+    }
+    catch (...)
+    {
+        OutputDebugStringA("ERROR: initializeCoreRuntimeSpine failed\n");
+    }
+    try
+    {
+        initAgentOllamaClient();
+    }
+    catch (...)
+    {
+        OutputDebugStringA("ERROR: initAgentOllamaClient failed\n");
+    }
+    try
+    {
+        initModelDiscovery();
+    }
+    catch (...)
+    {
+        OutputDebugStringA("ERROR: initModelDiscovery failed\n");
+    }
+    try
+    {
+        initEnterpriseStressTests();
+    }
+    catch (...)
+    {
+        OutputDebugStringA("ERROR: initEnterpriseStressTests failed\n");
+    }
+    try
+    {
+        initRefactoringPlugin();
+    }
+    catch (...)
+    {
+        OutputDebugStringA("ERROR: initRefactoringPlugin failed\n");
+    }
+    try
+    {
+        initLanguagePlugin();
+    }
+    catch (...)
+    {
+        OutputDebugStringA("ERROR: initLanguagePlugin failed\n");
+    }
+    try
+    {
+        initResourceGenerator();
+    }
+    catch (...)
+    {
+        OutputDebugStringA("ERROR: initResourceGenerator failed\n");
+    }
 
     if (isShuttingDown())
         return;
@@ -3009,6 +3494,16 @@ void Win32IDE::deferredHeavyInitBody()
         OutputDebugStringA("ERROR: initTier1Cosmetics failed\n");
     }
 
+    // Initialize Tier 2: High-visibility cosmetics (git diff viewer, terminal tabs, hover, refs, CodeLens, inlay)
+    try
+    {
+        initTier2Cosmetics();
+    }
+    catch (...)
+    {
+        OutputDebugStringA("ERROR: initTier2Cosmetics failed\n");
+    }
+
     // Initialize Phase 33: Quick-Win Systems (Shortcuts, Backups, Alerts, SLO)
     try
     {
@@ -3182,6 +3677,20 @@ void Win32IDE::onDestroy()
 {
     LOG_INFO("Win32IDE::onDestroy - shutting down");
 
+    if (m_hAccel)
+    {
+        DestroyAcceleratorTable(m_hAccel);
+        m_hAccel = nullptr;
+    }
+
+    RawrXD::Agent::AgentToolHandlers::SetIntegratedTerminalEchoCallback(nullptr, nullptr);
+
+    if (m_hwndMain && IsWindow(m_hwndMain))
+    {
+        KillTimer(m_hwndMain, RAWRXD_IDT_PS_QUEUE_DRAIN);
+    }
+    m_psCommandQueue.clear();
+
     if (m_hwndExpertHeatmapPanel && IsWindow(m_hwndExpertHeatmapPanel))
     {
         DestroyWindow(m_hwndExpertHeatmapPanel);
@@ -3212,6 +3721,30 @@ void Win32IDE::onDestroy()
         Sleep(200);  // Extra grace
     }
 
+    if (m_semanticIndexInitialized)
+    {
+        std::string workspaceRoot = m_projectRoot;
+        if (workspaceRoot.empty())
+            workspaceRoot = m_explorerRootPath;
+        if (workspaceRoot.empty())
+            workspaceRoot = m_currentDirectory;
+        if (workspaceRoot.empty())
+            workspaceRoot = ".";
+
+        std::string persistenceDetail;
+        const bool saved =
+            RawrXD::Core::VectorIndexPersistence::TrySaveSemanticIndexCache(workspaceRoot, &persistenceDetail);
+        OutputDebugStringA((std::string("[SemanticIndex] ") + persistenceDetail + "\n").c_str());
+
+        if (!saved)
+        {
+            OutputDebugStringA("[SemanticIndex] WARNING: cache save failed\n");
+        }
+
+        RawrXD::SemanticIndex::SemanticIndexEngine::Instance().Shutdown();
+        m_semanticIndexInitialized = false;
+    }
+
     // Shutdown Phase 29+36: VS Code Extension API + QuickJS VSIX Host
     shutdownVSCodeExtensionAPI();
 
@@ -3220,6 +3753,9 @@ void Win32IDE::onDestroy()
 
     // Shutdown Tier 3: Polish (smooth caret, ligatures, file watcher)
     shutdownTier3Polish();
+
+    // Shutdown Tier 2: Git diff overlay, terminal tabs, hover tooltips, reference/CodeLens/inlay surfaces
+    shutdownTier2Cosmetics();
 
     // Shutdown Tier 1: Critical Cosmetics (smooth scroll, minimap, auto-update)
     shutdownTier1Cosmetics();
@@ -3527,6 +4063,34 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
     // Copilot secondary sidebar control IDs (created in createSecondarySidebar)
     if (id == 1204)
     {
+        std::string promptPreview;
+        if (m_hwndCopilotChatInput && IsWindow(m_hwndCopilotChatInput))
+        {
+            const int inputLen = GetWindowTextLengthW(m_hwndCopilotChatInput);
+            if (inputLen > 0)
+            {
+                std::vector<wchar_t> inputBuffer(static_cast<size_t>(inputLen) + 1, L'\0');
+                GetWindowTextW(m_hwndCopilotChatInput, inputBuffer.data(), inputLen + 1);
+                const int utf8Len =
+                    WideCharToMultiByte(CP_UTF8, 0, inputBuffer.data(), -1, nullptr, 0, nullptr, nullptr);
+                if (utf8Len > 1)
+                {
+                    std::string utf8(static_cast<size_t>(utf8Len) - 1, '\0');
+                    WideCharToMultiByte(CP_UTF8, 0, inputBuffer.data(), -1, utf8.data(), utf8Len, nullptr, nullptr);
+                    promptPreview = std::move(utf8);
+                }
+            }
+        }
+        const bool hasAgenticPrefix = promptPreview.rfind("/agent", 0) == 0 ||
+                                      promptPreview.rfind("/agentic", 0) == 0 ||
+                                      promptPreview.rfind("agentic:", 0) == 0 || promptPreview.rfind("@agent", 0) == 0;
+        const bool bridgeAgenticMode = m_agenticBridge && m_agenticBridge->IsAgenticMode();
+        const bool wantsAgentic = hasAgenticPrefix || bridgeAgenticMode || m_agenticFunctionCallingMode;
+        const bool layerAvailable = rawrxd::isAgenticLayerAvailable();
+        OutputDebugStringA(("ROUTE_CHECK: route=C-main-command, prompt_len=" + std::to_string(promptPreview.size()) +
+                            ", wantsAgentic=" + std::to_string(wantsAgentic ? 1 : 0) +
+                            ", layerAvailable=" + std::to_string(layerAvailable ? 1 : 0) + "\n")
+                               .c_str());
         HandleCopilotSend();
         return;
     }
@@ -3566,6 +4130,27 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
     if (id == 14005)
     {
         onBoundedAgentLoop();
+        return;
+    }
+
+    if (id == 1001)  // Composer Apply
+    {
+        appendToOutput("Composer: Finalizing atomic workspace commit...\n", "System", OutputSeverity::Info);
+        if (ComposerPanel_CommitChanges())
+        {
+            appendToOutput("Composer: ALL CHANGES APPLIED SUCCESSFULLY.\n", "System", OutputSeverity::Success);
+        }
+        else
+        {
+            appendToOutput("Composer: ERROR - Atomic swap failed or stale file detected. Transaction aborted.\n",
+                           "System", OutputSeverity::Error);
+        }
+        ComposerPanel_HidePlan();
+        return;
+    }
+    if (id == 1002)  // Composer Cancel
+    {
+        ComposerPanel_HidePlan();
         return;
     }
 
@@ -3722,9 +4307,9 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
             }
             return;
         }
-        case 1307:  // IDC_PANEL_BTN_NEW_TERMINAL
+        case 1307:  // IDC_PANEL_BTN_NEW_TERMINAL — same as VS Code "+" (new integrated terminal session)
             switchPanelTab(PanelTab::Terminal);
-            handleTerminalCommand(4001);  // Start PowerShell terminal
+            handleTerminalCommand(IDM_TERMINAL_NEW_USER);
             return;
         case 1308:  // IDC_PANEL_BTN_SPLIT_TERMINAL
             switchPanelTab(PanelTab::Terminal);
@@ -3919,11 +4504,14 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
                 // Prompt user for goal via input dialog
                 wchar_t goalBuf[512] = {};
                 std::string goal;
-                if (DialogBoxWithInput(L"Plan Orchestrator", L"Enter your goal:", goalBuf, 512) && goalBuf[0]) {
+                if (DialogBoxWithInput(L"Plan Orchestrator", L"Enter your goal:", goalBuf, 512) && goalBuf[0])
+                {
                     int len = WideCharToMultiByte(CP_UTF8, 0, goalBuf, -1, nullptr, 0, nullptr, nullptr);
                     goal.resize(len > 0 ? len - 1 : 0);
                     WideCharToMultiByte(CP_UTF8, 0, goalBuf, -1, goal.data(), len, nullptr, nullptr);
-                } else {
+                }
+                else
+                {
                     goal = "Implement a hello world function in C++";
                 }
                 std::string workspaceRoot = m_projectRoot;
@@ -3941,14 +4529,22 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
                     workspaceRoot = ".";
 
                 // Run planning and execution asynchronously
-                std::thread([this, goal, workspaceRoot]() {
-                    auto result = m_planOrchestrator->planAndExecute(goal, workspaceRoot, false);
-                    if (result.success) {
-                        appendToOutput("✅ Plan Orchestrator: Task completed successfully\n", "Output", OutputSeverity::Info);
-                    } else {
-                        appendToOutput("❌ Plan Orchestrator: Task failed - " + result.errorMessage + "\n", "Errors", OutputSeverity::Error);
-                    }
-                }).detach();
+                std::thread(
+                    [this, goal, workspaceRoot]()
+                    {
+                        auto result = m_planOrchestrator->planAndExecute(goal, workspaceRoot, false);
+                        if (result.success)
+                        {
+                            appendToOutput("✅ Plan Orchestrator: Task completed successfully\n", "Output",
+                                           OutputSeverity::Info);
+                        }
+                        else
+                        {
+                            appendToOutput("❌ Plan Orchestrator: Task failed - " + result.errorMessage + "\n",
+                                           "Errors", OutputSeverity::Error);
+                        }
+                    })
+                    .detach();
 
                 if (m_hwndStatusBar)
                     SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)L"Plan Orchestrator started");
@@ -3959,12 +4555,15 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
             }
             return;
         case IDM_PLAN_ORCHESTRATOR_STOP:
-            if (m_planOrchestrator) {
+            if (m_planOrchestrator)
+            {
                 m_planOrchestrator->requestStop();
                 appendToOutput("\xE2\x9B\x94 Plan Orchestrator: Stop requested\n", "Output", OutputSeverity::Warning);
                 if (m_hwndStatusBar)
                     SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)L"Plan Orchestrator stopped");
-            } else {
+            }
+            else
+            {
                 MessageBoxW(m_hwndMain, L"Plan Orchestrator not initialized", L"Error", MB_OK | MB_ICONERROR);
             }
             return;
@@ -3974,7 +4573,10 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
                 auto steps = m_planOrchestrator->getPlan();
                 std::string status = "Plan Status:\n";
                 status += "Total steps: " + std::to_string(steps.size()) + "\n";
-                status += "Completed: " + std::to_string(std::count_if(steps.begin(), steps.end(), [](const auto& s){ return s.isComplete; })) + "\n";
+                status += "Completed: " +
+                          std::to_string(
+                              std::count_if(steps.begin(), steps.end(), [](const auto& s) { return s.isComplete; })) +
+                          "\n";
                 status += std::string("Complete: ") + (m_planOrchestrator->isComplete() ? "Yes" : "No") + "\n";
                 MessageBoxA(m_hwndMain, status.c_str(), "Plan Orchestrator Status", MB_OK | MB_ICONINFORMATION);
             }
@@ -3989,15 +4591,18 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
                 auto steps = m_planOrchestrator->getPlan();
                 std::string current_plan;
                 current_plan = "Current Plan:\n";
-                for (size_t i = 0; i < steps.size(); ++i) {
+                for (size_t i = 0; i < steps.size(); ++i)
+                {
                     current_plan += std::to_string(i + 1) + ". " + steps[i].description;
                     current_plan += (steps[i].isComplete ? " [Done]" : " [Pending]");
                     current_plan += "\n";
-                    if (!steps[i].result.empty()) {
+                    if (!steps[i].result.empty())
+                    {
                         current_plan += "   Result: " + steps[i].result + "\n";
                     }
                 }
-                if (current_plan == "Current Plan:\n") {
+                if (current_plan == "Current Plan:\n")
+                {
                     current_plan = "No current plan available";
                 }
                 MessageBoxA(m_hwndMain, current_plan.c_str(), "Current Plan", MB_OK | MB_ICONINFORMATION);

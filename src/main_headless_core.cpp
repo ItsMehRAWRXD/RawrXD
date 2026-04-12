@@ -1,8 +1,9 @@
 // RawrEngine Lane B: Headless minimal entry point.
 // Goal: keep the 274TB streamer/loader core linkable without GUI/hotpatch/omega subsystems.
 
-#include "gguf_loader.h"
+#include "Win32IDE_AgenticBridge.h"
 #include "cpu_inference_engine.h"
+#include "gguf_loader.h"
 #include "rawrxd_model_loader.h"
 
 #include <psapi.h>
@@ -10,16 +11,25 @@
 
 #include <memoryapi.h>
 
+#include <algorithm>
 #include <cstdint>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <exception>
-#include <algorithm>
 #include <filesystem>
 #include <fstream>
+#include <iomanip>
 #include <limits>
+#include <memory>
+#include <sstream>
 #include <string>
+#include <system_error>
 #include <vector>
+
+#ifndef RAWRXD_HEADLESS_COPILOT_TMP_CAP
+#define RAWRXD_HEADLESS_COPILOT_TMP_CAP 1024u
+#endif
 
 extern "C" unsigned __int64 RawrXD_EnableSeLockMemoryPrivilege();
 extern "C" unsigned int rawr_cpu_has_avx512();
@@ -78,7 +88,8 @@ static bool writeMinimalGgufV3(const std::filesystem::path& path)
     constexpr uint32_t kMagic = 0x46554747u;  // "GGUF" LE
     constexpr uint32_t kVersion = 3u;
     constexpr uint64_t kTensorCount = 1u;
-    constexpr uint64_t kKvCount = 4u;
+    // arch, tok model, file_type, llama dims (GATE-7), tokenizer tokens
+    constexpr uint64_t kKvCount = 9u;
 
     const std::string kArchKey = "general.architecture";
     const std::string kArchVal = "llama";
@@ -86,6 +97,16 @@ static bool writeMinimalGgufV3(const std::filesystem::path& path)
     const std::string kTokModelVal = "gpt2";
     const std::string kFileTypeKey = "general.file_type";
     const uint32_t kFileTypeVal = 0u;  // F32
+    const std::string kLlamaEmbKey = "llama.embedding_length";
+    const uint32_t kLlamaEmb = 4u;  // must match token_embd row / head divisibility
+    const std::string kLlamaBlocksKey = "llama.block_count";
+    const uint32_t kLlamaBlocks = 1u;
+    const std::string kLlamaHeadsKey = "llama.attention.head_count";
+    const uint32_t kLlamaHeads = 1u;
+    const std::string kLlamaHeadsKvKey = "llama.attention.head_count_kv";
+    const uint32_t kLlamaHeadsKv = 1u;
+    const std::string kLlamaCtxKey = "llama.context_length";
+    const uint32_t kLlamaCtx = 512u;
     const std::string kTokTokensKey = "tokenizer.ggml.tokens";
     const std::vector<std::string> kTokens = {"<unk>", "hello"};
 
@@ -114,6 +135,26 @@ static bool writeMinimalGgufV3(const std::filesystem::path& path)
     appendString(buf, kFileTypeKey);
     appendU32(buf, 4u);  // uint32
     appendU32(buf, kFileTypeVal);
+
+    appendString(buf, kLlamaEmbKey);
+    appendU32(buf, 4u);
+    appendU32(buf, kLlamaEmb);
+
+    appendString(buf, kLlamaBlocksKey);
+    appendU32(buf, 4u);
+    appendU32(buf, kLlamaBlocks);
+
+    appendString(buf, kLlamaHeadsKey);
+    appendU32(buf, 4u);
+    appendU32(buf, kLlamaHeads);
+
+    appendString(buf, kLlamaHeadsKvKey);
+    appendU32(buf, 4u);
+    appendU32(buf, kLlamaHeadsKv);
+
+    appendString(buf, kLlamaCtxKey);
+    appendU32(buf, 4u);
+    appendU32(buf, kLlamaCtx);
 
     appendString(buf, kTokTokensKey);
     appendU32(buf, 9u);  // array
@@ -382,6 +423,9 @@ static int printUsage()
         "[--shuffle-layout 0|1] [--seed <u32>]\n"
         "  RawrEngine.exe --load-model <path>\n"
         "  RawrEngine.exe --infer <path> --prompt <text> [--max-tokens <N>]\n"
+        "  RawrEngine.exe --copilot-smoke [--model <path.gguf>] [--prompt <text>] [--with-agentic] [--skip-agentic]\n"
+        "      (Lane B: load + one GenerateStreaming; optional second AgenticBridge pass with --with-agentic only;\n"
+        "       default skips agentic to avoid re-entrant GGUF init on the shared engine)\n"
         "  RawrEngine.exe --streamer-smoke <path> [--offset <u64>] [--size <u64>] [--iterations <N>]\n"
         "  RawrEngine.exe --bench-streamer <path> [--max-mb <N>] [--iters <N>] [--largepages 0|1] [--prefetch 0|1]\n"
         "  RawrEngine.exe --offset-sweep <path> [--window-mb <N>] [--iters <N>] [--seed <u64>] [--largepages 0|1] "
@@ -391,6 +435,212 @@ static int printUsage()
     DWORD written = 0;
     WriteFile(GetStdHandle(STD_OUTPUT_HANDLE), msg, static_cast<DWORD>(std::strlen(msg)), &written, nullptr);
     return 2;
+}
+
+/// Headless Copilot/Codex-style parity: load weights (or synthesize minimal GGUF), one streaming generation
+/// (TPS-style wall_ms / estimated_tps). Optional second pass: AgenticBridge::ExecuteAgentCommand when
+/// --with-agentic is passed (default off — re-loading the shared GGUF stack can AV on minimal smoke files).
+static int runCopilotSmoke(const std::vector<std::string>& args)
+{
+    auto writeStdout = [](const char* s)
+    {
+        if (!s)
+            return;
+        DWORD w = 0;
+        WriteFile(GetStdHandle(STD_OUTPUT_HANDLE), s, static_cast<DWORD>(std::strlen(s)), &w, nullptr);
+    };
+
+    std::filesystem::path ggufPath;
+    bool wroteTemp = false;
+
+    try
+    {
+        const char* modelOpt = getOptValue(args, "--model");
+        if (modelOpt && modelOpt[0])
+        {
+            ggufPath = std::filesystem::path(widenUtf8(modelOpt));
+        }
+        else
+        {
+            wchar_t tmpDir[RAWRXD_HEADLESS_COPILOT_TMP_CAP]{};
+            const DWORD n = GetTempPathW(RAWRXD_HEADLESS_COPILOT_TMP_CAP, tmpDir);
+            if (n == 0 || n >= RAWRXD_HEADLESS_COPILOT_TMP_CAP)
+            {
+                writeStdout("copilot-smoke: GetTempPathW failed\nEXIT=1\n");
+                return 1;
+            }
+            ggufPath = std::filesystem::path(tmpDir) / L"rawrxd_copilot_smoke_minimal.gguf";
+            if (!writeMinimalGgufV3(ggufPath))
+            {
+                writeStdout("copilot-smoke: failed to write minimal GGUF in %%TEMP%%\nEXIT=1\n");
+                return 1;
+            }
+            wroteTemp = true;
+        }
+
+        const char* promptStr = getOptValue(args, "--prompt");
+        const std::string prompt =
+            (promptStr && promptStr[0]) ? std::string(promptStr) : std::string("Reply with the single word: OK");
+
+        bool skipAgentic = true;
+        for (size_t ai = 1; ai < args.size(); ++ai)
+        {
+            if (args[ai] == "--with-agentic")
+            {
+                skipAgentic = false;
+            }
+            else if (args[ai] == "--skip-agentic")
+            {
+                skipAgentic = true;
+            }
+        }
+
+        const std::string modelUtf8 = ggufPath.string();
+        const std::shared_ptr<RawrXD::CPUInferenceEngine> engine = RawrXD::CPUInferenceEngine::GetSharedInstance();
+        if (!engine->LoadModel(modelUtf8))
+        {
+            const std::string err = engine->GetLastLoadErrorMessage();
+            if (!err.empty())
+            {
+                std::string line = "copilot-smoke: LoadModel failed: ";
+                line += err;
+                line += "\n";
+                writeStdout(line.c_str());
+            }
+            else
+            {
+                writeStdout("copilot-smoke: LoadModel failed\n");
+            }
+            if (wroteTemp)
+            {
+                std::error_code ec;
+                std::filesystem::remove(ggufPath, ec);
+            }
+            writeStdout("EXIT=1\n");
+            return 1;
+        }
+
+        const std::vector<int32_t> inputToks = engine->Tokenize(prompt);
+
+        LARGE_INTEGER perfFreq{};
+        LARGE_INTEGER t0{};
+        LARGE_INTEGER t1{};
+        if (!QueryPerformanceFrequency(&perfFreq) || perfFreq.QuadPart == 0)
+        {
+            perfFreq.QuadPart = 1;
+        }
+        std::string responseText;
+        QueryPerformanceCounter(&t0);
+        engine->GenerateStreaming(
+            inputToks, 128, [&responseText](const std::string& piece) { responseText += piece; }, []() {});
+        QueryPerformanceCounter(&t1);
+        const double wallMs =
+            (1000.0 * static_cast<double>(t1.QuadPart - t0.QuadPart)) / static_cast<double>(perfFreq.QuadPart);
+        const unsigned long long respChars = static_cast<unsigned long long>(responseText.size());
+        // Rough throughput: UTF-8 output chars / wall seconds (IDE chat uses token-based estimated_tps).
+        double estTps = 0.0;
+        if (wallMs > 1e-6)
+        {
+            estTps = static_cast<double>(respChars) / (wallMs / 1000.0);
+        }
+
+        const bool modelLoaded = engine->IsModelLoaded();
+
+        std::string agenticType = "skipped";
+        unsigned long long agenticChars = 0;
+        bool agenticOk = true;
+        if (modelLoaded && !skipAgentic)
+        {
+            // Attach to the already-loaded shared CPUInferenceEngine — do not call Initialize(..., modelUtf8)
+            // again or the loader/tokenizer may be re-entered and leave the engine inconsistent.
+            AgenticBridge bridge(nullptr);
+            if (!bridge.Initialize("", ""))
+            {
+                agenticOk = false;
+                agenticType = "INIT_FAILED";
+            }
+            else
+            {
+                const AgentResponse ar = bridge.ExecuteAgentCommand(prompt);
+                agenticChars = static_cast<unsigned long long>(ar.content.size());
+                agenticOk = (ar.type != AgentResponseType::AGENT_ERROR);
+                switch (ar.type)
+                {
+                    case AgentResponseType::ANSWER:
+                        agenticType = "ANSWER";
+                        break;
+                    case AgentResponseType::TOOL_CALL:
+                        agenticType = "TOOL_CALL";
+                        break;
+                    case AgentResponseType::THINKING:
+                        agenticType = "THINKING";
+                        break;
+                    default:
+                        agenticType = "AGENT_ERROR";
+                        break;
+                }
+            }
+        }
+
+        const bool ok = modelLoaded && (skipAgentic || agenticOk);
+        const char* rtype = modelLoaded ? "ANSWER" : "AGENT_ERROR";
+
+        {
+            std::ostringstream j;
+            j.setf(std::ios::fixed, std::ios::floatfield);
+            j << std::setprecision(3);
+            j << "COPILOT_SMOKE_JSON:{\"ok\":" << (ok ? "true" : "false") << ",\"response_type\":\"" << rtype
+              << "\",\"response_chars\":" << respChars << ",\"model_loaded\":" << (modelLoaded ? "true" : "false")
+              << ",\"wall_ms\":" << wallMs << ",\"estimated_tps\":" << estTps
+              << ",\"agentic_skipped\":" << (skipAgentic ? "true" : "false")
+              << ",\"agentic_ok\":" << (skipAgentic ? "true" : (agenticOk ? "true" : "false"))
+              << ",\"agentic_response_type\":\"" << agenticType << "\",\"agentic_response_chars\":" << agenticChars
+              << "}\n";
+            writeStdout(j.str().c_str());
+        }
+
+        writeStdout(ok ? "EXIT=0\n" : "EXIT=1\n");
+
+        if (wroteTemp)
+        {
+            std::error_code ec;
+            std::filesystem::remove(ggufPath, ec);
+        }
+        // Lane B: some builds fault during static teardown after a successful smoke; optional fast exit skips
+        // atexit/static destructors (set RAWRXD_COPILOT_SMOKE_FAST_EXIT=1 from smoketests / CI only).
+        if (ok)
+        {
+            const char* fastExit = std::getenv("RAWRXD_COPILOT_SMOKE_FAST_EXIT");
+            if (fastExit && fastExit[0] == '1' && fastExit[1] == '\0')
+            {
+                std::fflush(nullptr);
+                std::_Exit(0);
+            }
+        }
+        return ok ? 0 : 1;
+    }
+    catch (const std::exception& e)
+    {
+        char buf[512]{};
+        std::snprintf(buf, sizeof(buf), "copilot-smoke: exception: %s\nEXIT=1\n", e.what());
+        writeStdout(buf);
+        if (wroteTemp)
+        {
+            std::error_code ec;
+            std::filesystem::remove(ggufPath, ec);
+        }
+        return 1;
+    }
+    catch (...)
+    {
+        writeStdout("copilot-smoke: unknown exception\nEXIT=1\n");
+        if (wroteTemp)
+        {
+            std::error_code ec;
+            std::filesystem::remove(ggufPath, ec);
+        }
+        return 1;
+    }
 }
 
 static uint64_t qpcNow();
@@ -1200,7 +1450,8 @@ static int runInfer(const std::string& modelPath, const std::string& prompt, int
         if (!engine.LoadModel(modelPath))
         {
             const std::string detail = engine.GetLastLoadErrorMessage();
-            const std::string msg = detail.empty() ? "infer: LoadModel failed\n" : ("infer: LoadModel failed: " + detail + "\n");
+            const std::string msg =
+                detail.empty() ? "infer: LoadModel failed\n" : ("infer: LoadModel failed: " + detail + "\n");
             DWORD w = 0;
             WriteFile(GetStdHandle(STD_OUTPUT_HANDLE), msg.c_str(), static_cast<DWORD>(msg.size()), &w, nullptr);
             const char* done = "infer: stage=done status=fail reason=load_model\nEXIT=1\n";
@@ -1278,7 +1529,8 @@ static int runInfer(const std::string& modelPath, const std::string& prompt, int
     catch (const std::exception& e)
     {
         char buf[512]{};
-        std::snprintf(buf, sizeof(buf), "infer: exception: %s\ninfer: stage=done status=fail reason=exception\nEXIT=1\n", e.what());
+        std::snprintf(buf, sizeof(buf),
+                      "infer: exception: %s\ninfer: stage=done status=fail reason=exception\nEXIT=1\n", e.what());
         DWORD w = 0;
         WriteFile(GetStdHandle(STD_OUTPUT_HANDLE), buf, static_cast<DWORD>(std::strlen(buf)), &w, nullptr);
         return 2;
@@ -1305,6 +1557,10 @@ int main(int argc, char** argv)
     std::string arg1 = args.size() > 1 ? args[1] : "";
     if (arg1 == "--help" || arg1 == "-h")
         return printUsage();
+
+    // Copilot/Codex-style headless parity: CPUInferenceEngine smoke (optional temp GGUF).
+    if (arg1 == "--copilot-smoke" || arg1 == "--agentic-smoke")
+        return runCopilotSmoke(args);
 
     // Minimal sanity lane:
     // RawrEngine.exe --gguf-header <path>

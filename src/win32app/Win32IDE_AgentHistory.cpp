@@ -16,6 +16,7 @@
 // ============================================================================
 
 #include "Win32IDE.h"
+#include "../agentic/agentic_controller_wiring.h"
 #include "IDELogger.h"
 #include <fstream>
 #include <sstream>
@@ -28,6 +29,7 @@
 #include <nlohmann/json.hpp>
 #include <commctrl.h>
 #include <set>
+#include "rawrxd_telemetry_exports.h"
 
 namespace {
 constexpr size_t kMaxHistoryLineBytes = 64u * 1024u;
@@ -405,6 +407,18 @@ void Win32IDE::recordEvent(AgentEventType type, const std::string& agentId,
     // Update statistics
     m_historyStats.totalEvents++;
     m_historyStats.totalDurationMs += durationMs;
+
+    // --- Begin Telemetry Link ---
+    // If telemetry is enabled, update lock-free counters in the MASM kernel.
+    // This allows the high-performance UI to pull accuracy metrics without
+    // locking the AgentHistory mutex.
+    if (m_telemetryEnabled) {
+        UTC_IncrementCounter(reinterpret_cast<uint64_t*>(&g_Counter_AgentLoop));
+        if (type == AgentEventType::AgentFailed || type == AgentEventType::FailureFailed) {
+            UTC_IncrementCounter(reinterpret_cast<uint64_t*>(&g_Counter_Errors));
+        }
+    }
+    // --- End Telemetry Link ---
 
     switch (type) {
         case AgentEventType::AgentStarted:       m_historyStats.agentStarted++;      break;
@@ -876,6 +890,23 @@ void Win32IDE::updateAgentHistoryPanel() {
         std::string okStr = ev.success ? "Y" : "N";
         ListView_SetItemText(m_hwndHistoryList, rowIdx, 5, (LPSTR)okStr.c_str());
     }
+
+    std::ostringstream detail;
+    detail << "=== Session Lineage Review ===\r\n\r\n";
+    if (!m_currentSessionId.empty()) {
+        detail << rawrxd::getSessionPlanGraphSummary(m_currentSessionId, 6) << "\r\n";
+    } else {
+        detail << "Session PlanGraph: current session unavailable\r\n";
+    }
+
+    detail << "\r\n=== IDE Inline Session ===\r\n"
+           << rawrxd::getSessionPlanGraphSummary("ide-inline", 6) << "\r\n"
+           << "\r\n=== IDE Rewrite Session ===\r\n"
+           << rawrxd::getSessionPlanGraphSummary("ide-rewrite", 4) << "\r\n"
+           << "\r\n=== IDE Edit Session ===\r\n"
+           << rawrxd::getSessionPlanGraphSummary("ide-edit", 4) << "\r\n";
+
+    SetWindowTextA(m_hwndHistoryDetail, detail.str().c_str());
 }
 
 // ============================================================================

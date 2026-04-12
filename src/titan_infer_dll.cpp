@@ -1567,6 +1567,13 @@ struct InferRequest {
 
 static InferRequest g_currentRequest = {};
 
+// Legacy bridge compatibility for BackendOrchestrator probes.
+// This keeps older SubmitInference/GetResult callers functional while
+// internally using the newer RawrXD_* inference API lane.
+static volatile long g_legacy_bridge_active = 0;
+static volatile long long g_legacy_bridge_request_id = 0;
+static uint64_t g_legacy_bridge_handle = 0;
+
 // ============================================================================
 // Token-Level Lookahead Infrastructure (Phase 1)
 // Supports concurrent execution of 3 tokens while CPU preps next batch
@@ -2375,6 +2382,7 @@ static double g_rawrxd_map_latency_ms = 0.0;
 static double g_rawrxd_unmap_latency_ms = 0.0;
 static double g_rawrxd_inference_latency_ms = 0.0;
 static volatile long g_rawrxd_inference_active = 0;
+static volatile long g_diagnostic_force_completion = 0;  // Diagnostic: inject fake completion to test UI stack
 
 /* Phase 15.2: Thread policy control globals */
 static volatile long g_inference_thread_policy = RAWRXD_THREAD_PRIORITY_NORMAL;
@@ -3442,6 +3450,15 @@ static void RawrXDInferenceCallback(const char* text, int len) {
     g_rawrxd_last_callback_generation = g_rawrxd_inference_generation;
     g_rawrxd_last_completed_handle = g_rawrxd_inference_generation;
     TitanLogHandshakeSnapshot("RawrXDInferenceCallback: entered", g_rawrxd_last_completed_handle);
+    {
+        char dbgBuf[256];
+        wsprintfA(dbgBuf,
+                  "[TitanCallback] entered text_ptr=%llu len=%d gen=%llu",
+                  (unsigned long long)RawrXDPtrValue(text),
+                  len,
+                  (unsigned long long)g_rawrxd_last_completed_handle);
+        OutputDebugStringA(dbgBuf);
+    }
 
     // Ignore late callbacks after timeout/cancel to keep state consistent.
     if (g_rawrxd_inference_status == RAWRXD_ERROR_TIMED_OUT ||
@@ -3452,6 +3469,28 @@ static void RawrXDInferenceCallback(const char* text, int len) {
         return;
     }
 
+    // === DIAGNOSTIC INJECTION POINT ===
+    // Check for environment variable or global flag to inject fake completion.
+    // IMPORTANT: This only fires IF callback is actually invoked (i.e., after successful submit).
+    // If you don't see this message, the problem is in the submit layer, not the callback.
+    if (g_diagnostic_force_completion || 
+        GetEnvironmentVariableA("RAWRXD_DIAGNOSTIC_FORCE_COMPLETION", nullptr, 0) > 0) {
+        const char* fakeMsg = "[DIAGNOSTIC] Fake completion from fallback - proves UI stack works. "
+                              "If you see this, native inference generation is the problem.";
+        int fakeLen = (int)strlen(fakeMsg);
+        if (fakeLen < (int)sizeof(g_rawrxd_inference_text)) {
+            strcpy_s(g_rawrxd_inference_text, sizeof(g_rawrxd_inference_text), fakeMsg);
+            g_rawrxd_last_output_tokens = 12;  // Approximate word count
+            g_rawrxd_inference_status = RAWRXD_SUCCESS;
+            _InterlockedExchange(&g_rawrxd_inference_active, 0);
+            _InterlockedExchange(&g_rawrxd_completion_fence, 1);
+            TitanLogHandshakeSnapshot("RawrXDInferenceCallback: diagnostic-injection", g_rawrxd_last_completed_handle);
+            OutputDebugStringA("[TitanCallback] DIAGNOSTIC FAKE-COMPLETION INJECTED\n");
+            return;
+        }
+    }
+    // === END DIAGNOSTIC INJECTION ===
+
     if (!text) {
         g_rawrxd_inference_text[0] = 0;
         g_rawrxd_last_output_tokens = 0;
@@ -3460,6 +3499,7 @@ static void RawrXDInferenceCallback(const char* text, int len) {
         _InterlockedExchange(&g_rawrxd_inference_active, 0);
         _InterlockedExchange(&g_rawrxd_completion_fence, 1);
         TitanLogHandshakeSnapshot("RawrXDInferenceCallback: null-text", g_rawrxd_last_completed_handle);
+        OutputDebugStringA("[TitanCallback] null text -> NOT_READY\n");
         return;
     }
 
@@ -3467,6 +3507,32 @@ static void RawrXDInferenceCallback(const char* text, int len) {
                                              len,
                                              g_rawrxd_inference_text,
                                              (int)sizeof(g_rawrxd_inference_text));
+    {
+        char preview[96] = {0};
+        const int previewLen = (copyLen > 0) ? ((copyLen < 80) ? copyLen : 80) : 0;
+        for (int i = 0; i < previewLen; ++i) {
+            char c = g_rawrxd_inference_text[i];
+            preview[i] = (c >= 32 && c <= 126) ? c : '.';
+        }
+        char dbgBuf[320];
+        wsprintfA(dbgBuf,
+                  "[TitanCallback] normalized copyLen=%d preview=%s\n",
+                  copyLen,
+                  previewLen > 0 ? preview : "<empty>");
+        OutputDebugStringA(dbgBuf);
+    }
+
+    if (copyLen <= 0) {
+        g_rawrxd_inference_text[0] = 0;
+        g_rawrxd_last_output_tokens = 0;
+        g_rawrxd_inference_status = RAWRXD_ERROR_NOT_READY;
+        g_rawrxd_failed_inference_requests++;
+        _InterlockedExchange(&g_rawrxd_inference_active, 0);
+        _InterlockedExchange(&g_rawrxd_completion_fence, 1);
+        TitanLogHandshakeSnapshot("RawrXDInferenceCallback: empty-normalized-output", g_rawrxd_last_completed_handle);
+        OutputDebugStringA("[TitanCallback] normalized output empty -> NOT_READY\n");
+        return;
+    }
 
     if (_InterlockedCompareExchange(&g_rawrxd_streaming_enabled, 0, 0) != 0 && copyLen > 0) {
         uint64_t seq = (uint64_t)_InterlockedIncrement64(&g_rawrxd_stream_seq);
@@ -3484,6 +3550,15 @@ static void RawrXDInferenceCallback(const char* text, int len) {
 
     g_rawrxd_last_output_tokens = CountPseudoTokens(g_rawrxd_inference_text);
     g_rawrxd_inference_status = RAWRXD_SUCCESS;
+    {
+        char dbgBuf[224];
+        wsprintfA(dbgBuf,
+                  "[TitanCallback] success output_tokens=%u status=%d latency_ms=%u\n",
+                  (unsigned int)g_rawrxd_last_output_tokens,
+                  (int)g_rawrxd_inference_status,
+                  (unsigned int)g_rawrxd_inference_latency_ms);
+        OutputDebugStringA(dbgBuf);
+    }
     if (g_rawrxd_infer_start_tick.QuadPart != 0 && g_rawrxd_perf_freq.QuadPart > 0) {
         LARGE_INTEGER now = {};
         QueryPerformanceCounter(&now);
@@ -3554,6 +3629,7 @@ static void RawrXDInferenceCallback(const char* text, int len) {
 
 extern "C" __declspec(dllexport) RAWRXD_STATUS __stdcall RawrXD_WaitForInference(RAWRXD_INFERENCE_HANDLE inference_handle, uint32_t timeout_ms);
 extern "C" __declspec(dllexport) RAWRXD_STATUS __stdcall RawrXD_GetInferenceResult(RAWRXD_INFERENCE_HANDLE inference_handle, RAWRXD_INFERENCE_RESULT* result);
+extern "C" __declspec(dllexport) RAWRXD_STATUS __stdcall RawrXD_InferAsync(const char* prompt, size_t prompt_len, RAWRXD_INFERENCE_HANDLE* inference_handle);
 extern "C" __declspec(dllexport) RAWRXD_STATUS __stdcall RawrXD_BatchInferences(const char** prompts, uint32_t prompt_count, RAWRXD_INFERENCE_HANDLE* batch_handle);
 
 #if RAWR_ENABLE_GGML_LINK
@@ -4021,6 +4097,29 @@ extern "C" __declspec(dllexport) RAWRXD_STATUS __stdcall RawrXD_InferAsync(const
         OutputDebugStringA(dbgBuf);
     }
 
+    char fakeCompletionEnv[8] = {0};
+    const DWORD fakeCompletionLen =
+        GetEnvironmentVariableA("RAWRXD_DIAGNOSTIC_FAKE_COMPLETION", fakeCompletionEnv, (DWORD)sizeof(fakeCompletionEnv));
+    if (fakeCompletionLen > 0 && fakeCompletionLen < sizeof(fakeCompletionEnv) &&
+        fakeCompletionEnv[0] != '0' && fakeCompletionEnv[0] != 'n' && fakeCompletionEnv[0] != 'N' &&
+        fakeCompletionEnv[0] != 'f' && fakeCompletionEnv[0] != 'F') {
+        static char fakeCompletionText[512] = {0};
+        DWORD fakeTextLen = GetEnvironmentVariableA(
+            "RAWRXD_DIAGNOSTIC_FAKE_COMPLETION_TEXT",
+            fakeCompletionText,
+            (DWORD)sizeof(fakeCompletionText));
+        if (fakeTextLen == 0 || fakeTextLen >= sizeof(fakeCompletionText)) {
+            StrCopyN(fakeCompletionText,
+                     "[DIAGNOSTIC] Fake completion from Titan native path.",
+                     sizeof(fakeCompletionText));
+        }
+
+        *inference_handle = g_rawrxd_inference_generation;
+        OutputDebugStringA("[TitanDiagnostic] Forcing fake completion path\n");
+        RawrXDInferenceCallback(fakeCompletionText, (int)strlen(fakeCompletionText));
+        return RAWRXD_SUCCESS;
+    }
+
     TITAN_PARAMS params = {};
     if (g_rawrxd_perf_freq.QuadPart == 0) QueryPerformanceFrequency(&g_rawrxd_perf_freq);
     QueryPerformanceCounter(&g_rawrxd_infer_start_tick);
@@ -4344,6 +4443,91 @@ extern "C" __declspec(dllexport) RAWRXD_STATUS __stdcall RawrXD_GetInferenceResu
     result->status = g_rawrxd_inference_status;
     return g_rawrxd_inference_status;
 }
+
+extern "C" __declspec(dllexport) bool __stdcall SubmitInference(const char* prompt, uint64_t* request_id) {
+    if (!prompt || !request_id) {
+        OutputDebugStringA("[TitanLegacyApi] SubmitInference rejected: null prompt or request_id\n");
+        return false;
+    }
+    char dbg[256];
+    wsprintfA(dbg, "[TitanLegacyApi] SubmitInference prompt_len=%u\n", (unsigned int)strlen(prompt));
+    OutputDebugStringA(dbg);
+    if (_InterlockedCompareExchange(&g_legacy_bridge_active, 1, 0) != 0) {
+        OutputDebugStringA("[TitanLegacyApi] SubmitInference rejected: request already active\n");
+        return false;
+    }
+
+    RAWRXD_INFERENCE_HANDLE handle = 0;
+    const size_t prompt_len = strlen(prompt);
+    const RAWRXD_STATUS st = RawrXD_InferAsync(prompt, prompt_len, &handle);
+    if (st != RAWRXD_SUCCESS || handle == 0) {
+        wsprintfA(dbg, "[TitanLegacyApi] SubmitInference failed status=%d handle=%llu\n", (int)st,
+                  (unsigned long long)handle);
+        OutputDebugStringA(dbg);
+        _InterlockedExchange(&g_legacy_bridge_active, 0);
+        return false;
+    }
+
+    g_legacy_bridge_handle = handle;
+    const long long id = _InterlockedIncrement64(&g_legacy_bridge_request_id);
+    *request_id = static_cast<uint64_t>(id);
+    wsprintfA(dbg, "[TitanLegacyApi] SubmitInference accepted request_id=%llu handle=%llu\n",
+              (unsigned long long)*request_id, (unsigned long long)g_legacy_bridge_handle);
+    OutputDebugStringA(dbg);
+    return true;
+}
+
+extern "C" __declspec(dllexport) bool __stdcall GetResult(uint64_t request_id, char* out_buffer, uint32_t out_buffer_size) {
+    if (!out_buffer || out_buffer_size == 0) {
+        OutputDebugStringA("[TitanLegacyApi] GetResult rejected: null buffer or zero size\n");
+        return false;
+    }
+    if (_InterlockedCompareExchange(&g_legacy_bridge_active, 0, 0) == 0) {
+        return false;
+    }
+
+    const uint64_t active_id = static_cast<uint64_t>(_InterlockedCompareExchange64(&g_legacy_bridge_request_id, 0, 0));
+    if (request_id != active_id || g_legacy_bridge_handle == 0) {
+        return false;
+    }
+
+    RAWRXD_INFERENCE_RESULT result = {};
+    const RAWRXD_STATUS st = RawrXD_GetInferenceResult(g_legacy_bridge_handle, &result);
+    if (st == RAWRXD_ERROR_NOT_READY) {
+        // NOTE: Flag remains set (1) until result is ready. Caller should retry.
+        // DO NOT reset flag here - it tracks an in-flight inference.
+        return false;
+    }
+    
+    // CRITICAL: Any completion state (SUCCESS or error) must reset the active flag.
+    // This ensures subsequent SubmitInference calls can proceed.
+    char dbg[256] = {0};
+    g_legacy_bridge_handle = 0;
+    _InterlockedExchange(&g_legacy_bridge_active, 0);
+    
+    wsprintfA(dbg,
+              "[TitanLegacyApi] GetResult request_id=%llu status=%d output_buffer=%llu output_tokens=%u\n",
+              (unsigned long long)request_id, (int)st, (unsigned long long)result.output_buffer,
+              (unsigned int)result.output_token_count);
+    OutputDebugStringA(dbg);
+
+    const char* text = nullptr;
+    if (st == RAWRXD_SUCCESS && result.output_buffer != 0) {
+        text = reinterpret_cast<const char*>(static_cast<uintptr_t>(result.output_buffer));
+    }
+
+    if (!text || text[0] == '\0') {
+        text = "[BackendError] inference completed without text output";
+    }
+
+    const size_t max_copy = static_cast<size_t>(out_buffer_size - 1);
+    StrCopyN(out_buffer, text, max_copy + 1);
+    wsprintfA(dbg, "[TitanLegacyApi] GetResult returning text_len=%u\n", (unsigned int)strlen(out_buffer));
+    OutputDebugStringA(dbg);
+
+    return true;
+}
+
 extern "C" __declspec(dllexport) RAWRXD_STATUS __stdcall RawrXD_GetInferenceTokenCount(RAWRXD_INFERENCE_HANDLE, uint32_t* token_count) {
     if (!token_count) return RAWRXD_ERROR_INVALID_PARAM;
     *token_count = g_rawrxd_last_output_tokens;

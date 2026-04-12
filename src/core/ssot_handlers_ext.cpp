@@ -8658,7 +8658,7 @@ CommandResult handlePromptClassifyContext(const CommandContext& ctx)
     if (ctx.isGui && ctx.idePtr)
     {
         HWND hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);
-        PostMessageA(hwnd, WM_COMMAND, 11600, 0);
+        PostMessageA(hwnd, WM_COMMAND, 12300, 0);  // IDM_CRASH_SHOW (Tier5 band 12200–12314)
         return CommandResult::ok("prompt.classifyContext");
     }
 

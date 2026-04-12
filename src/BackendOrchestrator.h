@@ -33,6 +33,8 @@
 #include <chrono>
 #include <array>
 
+class AgenticExecutor; // global-namespace forward declaration
+
 namespace RawrXD {
 
 // Returns the active sliding-aperture reservation policy label used by GGUF mapping.
@@ -192,6 +194,7 @@ public:
     bool   SwapToModel(const std::string& tag);
     bool   UnloadModel(const std::string& tag);
     std::vector<std::string> GetLoadedModelTags() const;
+    std::string GetPreferredLoadedModelPath() const;
 
     // ---- Enhancement 6: Multi-tenant isolation ----
     void   CreateTenant(const std::string& tenant_id, int max_ctx = 4096);
@@ -254,6 +257,13 @@ public:
     void UpdateThermalReadings(float cpu_temp_c, float nvme_temp_c);
     int  GetRecommendedPrefetchDepth() const;
     int  GetRecommendedFusionWidth() const;
+
+    // ---- Titan IPC: tool-call dispatch ----
+    // Call once at IDE startup after constructing AgenticExecutor.
+    // Wires the TitanProxy ToolCallCb so tool calls emitted by TitanHost.exe
+    // are executed inside the IDE process (Writer/Thinker boundary).
+    // Pass nullptr to clear the callback (e.g. on AgenticExecutor teardown).
+    static void RegisterTitanToolDispatch(::AgenticExecutor* executor);
 
 private:
     BackendOrchestrator();

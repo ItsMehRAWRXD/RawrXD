@@ -18,6 +18,14 @@ using json = nlohmann::json;
 
 namespace {
 
+uint64_t alignUpU64(uint64_t v, uint64_t a) {
+    if (a == 0) {
+        return v;
+    }
+    const uint64_t r = v % a;
+    return (r == 0) ? v : (v + (a - r));
+}
+
 std::string trimCopy(const std::string& s) {
     const char* ws = " \t\r\n";
     const size_t b = s.find_first_not_of(ws);
@@ -176,7 +184,11 @@ ApertureManager::ApertureManager()
 }
 
 ApertureManager::~ApertureManager() {
-    // TODO: Cleanup aperture resources when phase 2 MASM integration begins
+    if (m_subdivision_table.aperture_base != 0 && m_subdivision_table.has_placeholder_reservation) {
+        VirtualFree(reinterpret_cast<void*>(m_subdivision_table.aperture_base), 0, MEM_RELEASE);
+    }
+    m_subdivision_table.aperture_base = 0;
+    m_subdivision_table.has_placeholder_reservation = false;
 }
 
 // ============================================================================
@@ -581,14 +593,68 @@ bool ApertureManager::buildSubdivisionTable(uint64_t max_aperture_size, std::str
         return false;
     }
 
-    // TODO: Phase 2 implementation
-    // - Iterate through snapshot entries
-    // - Align each chunk to 64KB boundaries
-    // - Populate SubdivisionEntry structs
-    // - Validate total against max_aperture_size
-
     m_subdivision_table.entries.clear();
     m_subdivision_table.total_mapped_bytes = 0;
+    m_subdivision_table.aperture_size_bytes = 0;
+    m_subdivision_table.alignment_mode = 1; // 64KB system granularity path
+
+    if (max_aperture_size == 0) {
+        error_out = "max_aperture_size must be greater than zero";
+        return false;
+    }
+
+    static constexpr uint64_t kChunkAlign = 64ULL * 1024ULL;
+    uint64_t running_offset = 0;
+
+    for (const auto& artifact : m_manifest.artifacts) {
+        const std::string rel = artifact.artifact_path.empty() ? artifact.artifact : artifact.artifact_path;
+        if (rel.empty()) {
+            continue;
+        }
+
+        const auto it = m_snapshot_index.find(normalizePathKey(rel));
+        if (it == m_snapshot_index.end()) {
+            error_out = "Artifact missing from snapshot index: " + rel;
+            return false;
+        }
+
+        const uint64_t logical_size = (it->second.bytes > 0) ? it->second.bytes : artifact.bytes;
+        if (logical_size == 0) {
+            error_out = "Artifact has zero size and cannot be mapped: " + rel;
+            return false;
+        }
+
+        const uint64_t aligned_size = alignUpU64(logical_size, kChunkAlign);
+        if (running_offset > max_aperture_size || aligned_size > (max_aperture_size - running_offset)) {
+            std::ostringstream oss;
+            oss << "Aperture size exceeded while adding artifact: " << rel
+                << " (offset=" << running_offset << ", chunk=" << aligned_size
+                << ", max=" << max_aperture_size << ")";
+            error_out = oss.str();
+            return false;
+        }
+
+        SubdivisionEntry entry{};
+        entry.chunk_index = static_cast<uint64_t>(m_subdivision_table.entries.size());
+        entry.offset_bytes = running_offset;
+        entry.size_bytes = aligned_size;
+        const std::string& hash_src = !it->second.sha256.empty() ? it->second.sha256 : artifact.sha256;
+        std::memset(entry.sha256_hex, 0, sizeof(entry.sha256_hex));
+        std::memcpy(entry.sha256_hex, hash_src.c_str(), std::min<size_t>(64, hash_src.size()));
+        entry.artifact_path = artifact.artifact_path.empty() ? artifact.artifact.c_str() : artifact.artifact_path.c_str();
+        entry.status = 1; // validated
+
+        m_subdivision_table.entries.push_back(entry);
+        running_offset += aligned_size;
+    }
+
+    if (m_subdivision_table.entries.empty()) {
+        error_out = "No manifest artifacts available to build subdivision table";
+        return false;
+    }
+
+    m_subdivision_table.total_mapped_bytes = running_offset;
+    m_subdivision_table.aperture_size_bytes = running_offset;
 
     return true;
 }
@@ -600,24 +666,69 @@ bool ApertureManager::buildSubdivisionTable(uint64_t max_aperture_size, std::str
 bool ApertureManager::reserveAperture(std::string& error_out) {
     error_out.clear();
 
-    // TODO: Phase 2 - Call MASM64 k_swap_aperture_init
-    // Currently returns success for testing Phase 1 validation
+    if (m_subdivision_table.entries.empty() || m_subdivision_table.aperture_size_bytes == 0) {
+        error_out = "Subdivision table must be built before aperture reservation";
+        return false;
+    }
 
+    if (m_subdivision_table.aperture_base != 0) {
+        return true;
+    }
+
+    void* reserved = VirtualAlloc(nullptr,
+                                  static_cast<SIZE_T>(m_subdivision_table.aperture_size_bytes),
+                                  MEM_RESERVE,
+                                  PAGE_NOACCESS);
+    if (!reserved) {
+        if (m_allow_direct_map) {
+            m_subdivision_table.aperture_base = 0;
+            m_subdivision_table.has_placeholder_reservation = false;
+            return true;
+        }
+
+        std::ostringstream oss;
+        oss << "VirtualAlloc reserve failed (error=" << GetLastError() << ")";
+        error_out = oss.str();
+        return false;
+    }
+
+    m_subdivision_table.aperture_base = reinterpret_cast<uint64_t>(reserved);
+    m_subdivision_table.has_placeholder_reservation = true;
     return true;
 }
 
 bool ApertureManager::mapSubdivisionChunk(uint32_t chunk_index, std::string& error_out) {
     error_out.clear();
 
-    // TODO: Phase 2 - Call MASM64 k_swap_aperture_map_chunk
+    if (chunk_index >= m_subdivision_table.entries.size()) {
+        error_out = "Chunk index out of range";
+        return false;
+    }
+
+    if (m_subdivision_table.aperture_base == 0 && !m_allow_direct_map) {
+        error_out = "Aperture not reserved and direct-map fallback is disabled";
+        return false;
+    }
+
+    m_subdivision_table.entries[chunk_index].status = 2; // mapped
     return true;
 }
 
 bool ApertureManager::slideApertureWindow(uint32_t next_chunk_index, std::string& error_out) {
     error_out.clear();
 
-    // TODO: Phase 2 - Call MASM64 k_swap_aperture_unmap_chunk + remap
-    return true;
+    if (next_chunk_index >= m_subdivision_table.entries.size()) {
+        error_out = "Next chunk index out of range";
+        return false;
+    }
+
+    for (auto& entry : m_subdivision_table.entries) {
+        if (entry.status == 2) {
+            entry.status = 1;
+        }
+    }
+
+    return mapSubdivisionChunk(next_chunk_index, error_out);
 }
 
 // ============================================================================

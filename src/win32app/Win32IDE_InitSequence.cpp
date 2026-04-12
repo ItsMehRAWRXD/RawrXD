@@ -284,27 +284,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
     {
         ide.initCaretAnimation();
         OutputDebugStringA("[main_win32] CaretAnimation initialized\n");
-
-        ide.initAgentOllamaClient();
-        OutputDebugStringA("[main_win32] AgentOllamaClient initialized\n");
-
-        ide.initModelDiscovery();
-        OutputDebugStringA("[main_win32] ModelDiscovery initialized\n");
-
-        ide.initEnterpriseStressTests();
-        OutputDebugStringA("[main_win32] EnterpriseStressTests initialized\n");
-
-        ide.initializeCoreRuntimeSpine();
-        OutputDebugStringA("[main_win32] Core runtime spine initialized\n");
-
-        ide.initRefactoringPlugin();
-        OutputDebugStringA("[main_win32] RefactoringPlugin initialized\n");
-
-        ide.initLanguagePlugin();
-        OutputDebugStringA("[main_win32] LanguagePlugin initialized\n");
-
-        ide.initResourceGenerator();
-        OutputDebugStringA("[main_win32] ResourceGenerator initialized\n");
     }
 
     // ========================================================================

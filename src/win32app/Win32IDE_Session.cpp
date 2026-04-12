@@ -12,19 +12,19 @@
 // Session file: %APPDATA%\RawrXD\session.json
 // ============================================================================
 
-#include "Win32IDE.h"
 #include "IDELogger.h"
-#include <nlohmann/json.hpp>
-#include <fstream>
+#include "Win32IDE.h"
 #include <algorithm>
 #include <cctype>
 #include <chrono>
 #include <cstdlib>
 #include <filesystem>
+#include <fstream>
 #include <iomanip>
+#include <nlohmann/json.hpp>
 #include <psapi.h>
-#include <shlobj.h>
 #include <richedit.h>
+#include <shlobj.h>
 #include <sstream>
 
 namespace
@@ -45,7 +45,7 @@ int toPhysicalWidthFrom96(int logicalWidth96, UINT currentDpi)
 {
     return MulDiv(logicalWidth96, clampDpiForSession(currentDpi), 96);
 }
-}
+}  // namespace
 
 namespace
 {
@@ -68,9 +68,8 @@ const char* snapStateToString(SnapState state)
 
 SnapState snapStateFromString(std::string value)
 {
-    std::transform(value.begin(), value.end(), value.begin(), [](unsigned char c) {
-        return static_cast<char>(std::tolower(c));
-    });
+    std::transform(value.begin(), value.end(), value.begin(),
+                   [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
 
     if (value == "compact")
         return SnapState::Compact;
@@ -96,14 +95,8 @@ std::string makeTimestampTag()
     SYSTEMTIME st{};
     GetLocalTime(&st);
     std::ostringstream oss;
-    oss << std::setfill('0')
-        << std::setw(4) << st.wYear
-        << std::setw(2) << st.wMonth
-        << std::setw(2) << st.wDay
-        << "_"
-        << std::setw(2) << st.wHour
-        << std::setw(2) << st.wMinute
-        << std::setw(2) << st.wSecond;
+    oss << std::setfill('0') << std::setw(4) << st.wYear << std::setw(2) << st.wMonth << std::setw(2) << st.wDay << "_"
+        << std::setw(2) << st.wHour << std::setw(2) << st.wMinute << std::setw(2) << st.wSecond;
     return oss.str();
 }
 
@@ -130,9 +123,8 @@ const char* sidebarViewToString(Win32IDE::SidebarView view)
 
 Win32IDE::SidebarView sidebarViewFromString(std::string value)
 {
-    std::transform(value.begin(), value.end(), value.begin(), [](unsigned char c) {
-        return static_cast<char>(std::tolower(c));
-    });
+    std::transform(value.begin(), value.end(), value.begin(),
+                   [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
 
     if (value == "explorer")
         return Win32IDE::SidebarView::Explorer;
@@ -194,8 +186,8 @@ std::string sanitizeProfileFileName(std::string value)
 
     for (char& ch : value)
     {
-        const bool allowed = (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') ||
-                             ch == '-' || ch == '_';
+        const bool allowed =
+            (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') || ch == '-' || ch == '_';
         if (!allowed)
             ch = '-';
     }
@@ -212,12 +204,10 @@ std::string sanitizeProfileFileName(std::string value)
 
 bool equalsIgnoreCase(std::string lhs, std::string rhs)
 {
-    std::transform(lhs.begin(), lhs.end(), lhs.begin(), [](unsigned char c) {
-        return static_cast<char>(std::tolower(c));
-    });
-    std::transform(rhs.begin(), rhs.end(), rhs.begin(), [](unsigned char c) {
-        return static_cast<char>(std::tolower(c));
-    });
+    std::transform(lhs.begin(), lhs.end(), lhs.begin(),
+                   [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    std::transform(rhs.begin(), rhs.end(), rhs.begin(),
+                   [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
     return lhs == rhs;
 }
 
@@ -235,15 +225,17 @@ int snapStateToPresetWidth96(SnapState state)
             return 0;
     }
 }
-}
+}  // namespace
 
 // ============================================================================
 // SESSION FILE PATH
 // ============================================================================
-std::string Win32IDE::getSessionFilePath() const {
+std::string Win32IDE::getSessionFilePath() const
+{
     // Use %APPDATA%\RawrXD\session.json
     char appDataPath[MAX_PATH] = {0};
-    if (SUCCEEDED(SHGetFolderPathA(nullptr, CSIDL_APPDATA, nullptr, 0, appDataPath))) {
+    if (SUCCEEDED(SHGetFolderPathA(nullptr, CSIDL_APPDATA, nullptr, 0, appDataPath)))
+    {
         std::string dir = std::string(appDataPath) + "\\RawrXD";
         CreateDirectoryA(dir.c_str(), nullptr);
         return dir + "\\session.json";
@@ -327,8 +319,8 @@ bool Win32IDE::loadLayoutProfile(const std::string& name, LayoutProfile& profile
 
     try
     {
-        const std::filesystem::path filePath = std::filesystem::path(getLayoutProfilesDirectory()) /
-                                               (sanitizeProfileFileName(name) + ".json");
+        const std::filesystem::path filePath =
+            std::filesystem::path(getLayoutProfilesDirectory()) / (sanitizeProfileFileName(name) + ".json");
         std::ifstream in(filePath, std::ios::binary);
         if (!in.is_open())
             return false;
@@ -548,7 +540,8 @@ void Win32IDE::promptAndApplySavedLayoutProfile()
 
 std::string Win32IDE::captureProfileBundleV1(const std::string& baselineLabel, int sampleSeconds)
 {
-    try {
+    try
+    {
         const int boundedSeconds = std::max(5, std::min(sampleSeconds, 300));
         const std::string stamp = makeTimestampTag();
         const std::string folderName = baselineLabel + "_" + stamp;
@@ -562,23 +555,17 @@ std::string Win32IDE::captureProfileBundleV1(const std::string& baselineLabel, i
         state["capturedAt"] = stamp;
         state["snapState"] = snapStateToString(m_activeSnapState);
         state["dpi"] = static_cast<int>(m_currentDpi);
-        state["sidebar"] = {
-            {"visible", m_sidebarVisible},
-            {"widthPx", m_sidebarWidth},
-            {"width96", toLogicalWidth96(m_sidebarWidth, m_currentDpi)},
-            {"secondaryWidthPx", m_secondarySidebarWidth},
-            {"secondaryWidth96", toLogicalWidth96(m_secondarySidebarWidth, m_currentDpi)},
-            {"view", static_cast<int>(m_currentSidebarView)}
-        };
-        state["panel"] = {
-            {"visible", m_panelVisible},
-            {"height", m_panelHeight},
-            {"maximized", m_panelMaximized},
-            {"activeTab", static_cast<int>(m_activePanelTab)}
-        };
-        state["model"] = {
-            {"loadedPath", m_loadedModelPath}
-        };
+        state["sidebar"] = {{"visible", m_sidebarVisible},
+                            {"widthPx", m_sidebarWidth},
+                            {"width96", toLogicalWidth96(m_sidebarWidth, m_currentDpi)},
+                            {"secondaryWidthPx", m_secondarySidebarWidth},
+                            {"secondaryWidth96", toLogicalWidth96(m_secondarySidebarWidth, m_currentDpi)},
+                            {"view", static_cast<int>(m_currentSidebarView)}};
+        state["panel"] = {{"visible", m_panelVisible},
+                          {"height", m_panelHeight},
+                          {"maximized", m_panelMaximized},
+                          {"activeTab", static_cast<int>(m_activePanelTab)}};
+        state["model"] = {{"loadedPath", m_loadedModelPath}};
         {
             std::ofstream out(bundleDir / "session_state.json");
             out << state.dump(2);
@@ -611,7 +598,8 @@ std::string Win32IDE::captureProfileBundleV1(const std::string& baselineLabel, i
             uint64_t prevProc100ns = fileTimeToUInt64(k0) + fileTimeToUInt64(u0);
             uint64_t lastWallMs = GetTickCount64();
 
-            for (int i = 0; i < boundedSeconds; ++i) {
+            for (int i = 0; i < boundedSeconds; ++i)
+            {
                 Sleep(1000);
 
                 FILETIME c1{}, e1{}, k1{}, u1{};
@@ -628,7 +616,8 @@ std::string Win32IDE::captureProfileBundleV1(const std::string& baselineLabel, i
                 pmc.cb = sizeof(pmc);
                 SIZE_T ws = 0;
                 SIZE_T priv = 0;
-                if (GetProcessMemoryInfo(hProc, reinterpret_cast<PROCESS_MEMORY_COUNTERS*>(&pmc), sizeof(pmc))) {
+                if (GetProcessMemoryInfo(hProc, reinterpret_cast<PROCESS_MEMORY_COUNTERS*>(&pmc), sizeof(pmc)))
+                {
                     ws = pmc.WorkingSetSize;
                     priv = pmc.PrivateUsage;
                 }
@@ -636,20 +625,16 @@ std::string Win32IDE::captureProfileBundleV1(const std::string& baselineLabel, i
                 IO_COUNTERS io{};
                 unsigned long long readMb = 0;
                 unsigned long long writeMb = 0;
-                if (GetProcessIoCounters(hProc, &io)) {
+                if (GetProcessIoCounters(hProc, &io))
+                {
                     readMb = static_cast<unsigned long long>(io.ReadTransferCount / (1024ull * 1024ull));
                     writeMb = static_cast<unsigned long long>(io.WriteTransferCount / (1024ull * 1024ull));
                 }
 
-                perf << i
-                     << "," << std::fixed << std::setprecision(2) << cpuPct
-                     << "," << std::fixed << std::setprecision(2)
-                     << (static_cast<double>(ws) / (1024.0 * 1024.0))
-                     << "," << std::fixed << std::setprecision(2)
-                     << (static_cast<double>(priv) / (1024.0 * 1024.0))
-                     << "," << readMb
-                     << "," << writeMb
-                     << "\n";
+                perf << i << "," << std::fixed << std::setprecision(2) << cpuPct << "," << std::fixed
+                     << std::setprecision(2) << (static_cast<double>(ws) / (1024.0 * 1024.0)) << "," << std::fixed
+                     << std::setprecision(2) << (static_cast<double>(priv) / (1024.0 * 1024.0)) << "," << readMb << ","
+                     << writeMb << "\n";
 
                 prevProc100ns = nowProc100ns;
                 lastWallMs = nowWallMs;
@@ -659,9 +644,9 @@ std::string Win32IDE::captureProfileBundleV1(const std::string& baselineLabel, i
         // 4) contract_results.json (baseline status record)
         {
             nlohmann::json contracts;
-            contracts["router_hybrid"] = { {"pass", nullptr}, {"fail", nullptr}, {"status", "unknown"} };
-            contracts["debug_swarm"] = { {"pass", nullptr}, {"fail", nullptr}, {"status", "unknown"} };
-            contracts["dual_multi_response"] = { {"pass", nullptr}, {"fail", nullptr}, {"status", "unknown"} };
+            contracts["router_hybrid"] = {{"pass", nullptr}, {"fail", nullptr}, {"status", "unknown"}};
+            contracts["debug_swarm"] = {{"pass", nullptr}, {"fail", nullptr}, {"status", "unknown"}};
+            contracts["dual_multi_response"] = {{"pass", nullptr}, {"fail", nullptr}, {"status", "unknown"}};
             contracts["note"] = "Populate from contract runner artifacts when available.";
             std::ofstream out(bundleDir / "contract_results.json");
             out << contracts.dump(2);
@@ -673,10 +658,12 @@ std::string Win32IDE::captureProfileBundleV1(const std::string& baselineLabel, i
             mm << "ProfileBundle=v1\n";
             mm << "LoaderSignature=baseline\n";
             mm << "ModelPath=" << m_loadedModelPath << "\n";
-            if (!m_loadedModelPath.empty()) {
+            if (!m_loadedModelPath.empty())
+            {
                 std::error_code ec;
                 const auto sz = std::filesystem::file_size(m_loadedModelPath, ec);
-                if (!ec) {
+                if (!ec)
+                {
                     mm << "ModelFileBytes=" << static_cast<unsigned long long>(sz) << "\n";
                 }
             }
@@ -686,7 +673,9 @@ std::string Win32IDE::captureProfileBundleV1(const std::string& baselineLabel, i
 
         LOG_INFO("Profile Bundle v1 captured at: " + bundleDir.string());
         return bundleDir.string();
-    } catch (const std::exception& ex) {
+    }
+    catch (const std::exception& ex)
+    {
         LOG_ERROR(std::string("captureProfileBundleV1 failed: ") + ex.what());
         return std::string();
     }
@@ -708,47 +697,55 @@ void Win32IDE::saveSessionDebounced(UINT delayMs)
     SetTimer(m_hwndMain, kSessionSaveDebounceTimerId, delayMs, nullptr);
 }
 
-void Win32IDE::saveSession() {
+void Win32IDE::saveSession()
+{
     LOG_INFO("Saving IDE session...");
-    
-    try {
+
+    try
+    {
         nlohmann::json session;
         session["version"] = 2;
-        session["schemaVersion"] = "2.3";     // Hardening: explicit schema version for forward compat
-        session["annotationFormat"] = 2;  // v2 = actions array; v1 = single actionType
+        session["schemaVersion"] = "2.3";  // Hardening: explicit schema version for forward compat
+        session["annotationFormat"] = 2;   // v2 = actions array; v1 = single actionType
         session["timestamp"] = std::to_string(GetTickCount64());
-        
+
         // Save each section
         saveSessionTabs(session);
         saveSessionPanelState(session);
         saveSessionEditorState(session);
         saveSessionAnnotations(session);
         saveSessionTheme(session);
-        
+
         // Save current file
         session["currentFile"] = m_currentFile;
 
         // Save active model so the next launch can restore inference/chat state.
-        if (!m_loadedModelPath.empty()) {
+        if (!m_loadedModelPath.empty())
+        {
             session["loadedModelPath"] = m_loadedModelPath;
         }
-        
+
         // Save working directory
         char cwd[MAX_PATH] = {0};
         GetCurrentDirectoryA(MAX_PATH, cwd);
         session["workingDirectory"] = std::string(cwd);
-        
+
         // Write to file
         std::string path = getSessionFilePath();
         std::ofstream out(path);
-        if (out.is_open()) {
+        if (out.is_open())
+        {
             out << session.dump(2);
             out.close();
             LOG_INFO("Session saved to: " + path);
-        } else {
+        }
+        else
+        {
             LOG_ERROR("Failed to write session file: " + path);
         }
-    } catch (const std::exception& e) {
+    }
+    catch (const std::exception& e)
+    {
         LOG_ERROR("Session save error: " + std::string(e.what()));
     }
 }
@@ -756,152 +753,180 @@ void Win32IDE::saveSession() {
 // ============================================================================
 // LOAD SESSION — compatibility/manual entry point
 // ============================================================================
-void Win32IDE::loadSession() {
+void Win32IDE::loadSession()
+{
     restoreSession();
 }
 
 // ============================================================================
 // RESTORE SESSION — master entry point
 // ============================================================================
-void Win32IDE::restoreSession() {
+void Win32IDE::restoreSession()
+{
     LOG_INFO("Restoring IDE session...");
 
     char disableRestore[16] = {};
-    const DWORD disableRestoreLen =
-        GetEnvironmentVariableA("RAWRXD_DISABLE_SESSION_RESTORE", disableRestore, static_cast<DWORD>(sizeof(disableRestore)));
-    if (disableRestoreLen > 0 && disableRestore[0] == '1') {
+    const DWORD disableRestoreLen = GetEnvironmentVariableA("RAWRXD_DISABLE_SESSION_RESTORE", disableRestore,
+                                                            static_cast<DWORD>(sizeof(disableRestore)));
+    if (disableRestoreLen > 0 && disableRestore[0] == '1')
+    {
         LOG_INFO("Session restore disabled by RAWRXD_DISABLE_SESSION_RESTORE=1");
+        reloadPersistedChatHistoryIntoUi();
         return;
     }
-    
-    try {
+
+    try
+    {
         std::string path = getSessionFilePath();
         std::ifstream in(path);
-        if (!in.is_open()) {
+        if (!in.is_open())
+        {
             LOG_INFO("No session file found at: " + path);
+            reloadPersistedChatHistoryIntoUi();
             return;
         }
-        
-        std::string content((std::istreambuf_iterator<char>(in)),
-                             std::istreambuf_iterator<char>());
+
+        std::string content((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
         in.close();
-        
+
         nlohmann::json session = nlohmann::json::parse(content);
-        
+
         // Validate version (accept v1 and v2)
         int version = session.value("version", 0);
-        if (version < 1 || version > 2) {
+        if (version < 1 || version > 2)
+        {
             LOG_WARNING("Unknown session version: " + std::to_string(version) + " — skipping restore");
+            reloadPersistedChatHistoryIntoUi();
             return;
         }
-        if (version == 1) {
+        if (version == 1)
+        {
             LOG_INFO("Session: upgrading from v1 format (legacy single-action annotations)");
         }
 
         // Hardening: log schema version for diagnostics
         std::string schemaVer = session.value("schemaVersion", "1.0");
         LOG_INFO("Session: schema version " + schemaVer + ", data version " + std::to_string(version));
-        
+
         // Restore each section
         restoreSessionTabs(session);
         restoreSessionPanelState(session);
         restoreSessionEditorState(session);
         restoreSessionAnnotations(session);
         restoreSessionTheme(session);
-        
+
         // Restore working directory
         std::string cwd = session.value("workingDirectory", "");
-        if (!cwd.empty()) {
+        if (!cwd.empty())
+        {
             SetCurrentDirectoryA(cwd.c_str());
         }
 
         // Restore loaded model after the working directory is set so relative paths resolve.
         std::string savedModelPath = session.value("loadedModelPath", "");
-        if (!savedModelPath.empty()) {
+        if (!savedModelPath.empty())
+        {
             bool restoredModel = false;
             DWORD modelAttrs = GetFileAttributesA(savedModelPath.c_str());
-            if (modelAttrs != INVALID_FILE_ATTRIBUTES && !(modelAttrs & FILE_ATTRIBUTE_DIRECTORY)) {
+            if (modelAttrs != INVALID_FILE_ATTRIBUTES && !(modelAttrs & FILE_ATTRIBUTE_DIRECTORY))
+            {
                 LOG_INFO("Session: restoring model from path " + savedModelPath);
                 bool ggufOk = loadGGUFModel(savedModelPath);
-                if (ggufOk) {
+                if (ggufOk)
+                {
                     initializeInference();
                     initBackendManager();
                     initLLMRouter();
                 }
                 bool bridgeOk = loadModelForInference(savedModelPath);
                 restoredModel = ggufOk || bridgeOk;
-            } else {
+            }
+            else
+            {
                 LOG_INFO("Session: attempting logical model restore via bridge for " + savedModelPath);
                 restoredModel = ensureAgenticBridgeHasModel(savedModelPath);
-                if (!restoredModel) {
+                if (!restoredModel)
+                {
                     LOG_WARNING("Session model missing or unavailable: " + savedModelPath);
                 }
             }
 
-            if (!restoredModel) {
+            if (!restoredModel)
+            {
                 m_loadedModelPath.clear();
             }
         }
-        
+
         m_sessionRestored = true;
         LOG_INFO("Session restored successfully.");
 
         // v1→v2 write-once migration: if we just loaded a v1 session,
         // re-save immediately as v2 so the legacy format is retired on disk.
-        if (version == 1) {
+        if (version == 1)
+        {
             LOG_INFO("Session: performing v1→v2 migration write...");
             saveSession();
             LOG_INFO("Session: v1→v2 migration complete — legacy format retired.");
         }
-        
-    } catch (const std::exception& e) {
+    }
+    catch (const std::exception& e)
+    {
         LOG_ERROR("Session restore error: " + std::string(e.what()));
     }
+    reloadPersistedChatHistoryIntoUi();
 }
 
 // ============================================================================
 // SAVE/RESTORE TABS
 // ============================================================================
-void Win32IDE::saveSessionTabs(nlohmann::json& session) {
+void Win32IDE::saveSessionTabs(nlohmann::json& session)
+{
     nlohmann::json tabs = nlohmann::json::array();
-    
-    for (const auto& tab : m_editorTabs) {
+
+    for (const auto& tab : m_editorTabs)
+    {
         nlohmann::json t;
         t["filePath"] = tab.filePath;
         t["displayName"] = tab.displayName;
         t["modified"] = tab.modified;
         tabs.push_back(t);
     }
-    
+
     session["tabs"] = tabs;
     session["activeTabIndex"] = m_activeTabIndex;
 }
 
-void Win32IDE::restoreSessionTabs(const nlohmann::json& session) {
-    if (!session.contains("tabs")) return;
-    
+void Win32IDE::restoreSessionTabs(const nlohmann::json& session)
+{
+    if (!session.contains("tabs"))
+        return;
+
     const auto& tabs = session["tabs"];
     int activeIdx = session.value("activeTabIndex", 0);
-    
-    for (size_t ti = 0; ti < tabs.size(); ti++) {
+
+    for (size_t ti = 0; ti < tabs.size(); ti++)
+    {
         const auto& t = tabs[ti];
         std::string filePath = t.value("filePath", "");
         std::string displayName = t.value("displayName", "");
-        
-        if (filePath.empty()) continue;
-        
+
+        if (filePath.empty())
+            continue;
+
         // Only restore tabs for files that still exist
         DWORD attrs = GetFileAttributesA(filePath.c_str());
-        if (attrs == INVALID_FILE_ATTRIBUTES) {
+        if (attrs == INVALID_FILE_ATTRIBUTES)
+        {
             LOG_WARNING("Session tab file missing: " + filePath);
             continue;
         }
-        
+
         addTab(filePath, displayName);
     }
-    
+
     // Set the active tab
-    if (activeIdx >= 0 && activeIdx < (int)m_editorTabs.size()) {
+    if (activeIdx >= 0 && activeIdx < (int)m_editorTabs.size())
+    {
         setActiveTab(activeIdx);
     }
 }
@@ -909,14 +934,15 @@ void Win32IDE::restoreSessionTabs(const nlohmann::json& session) {
 // ============================================================================
 // SAVE/RESTORE PANEL STATE
 // ============================================================================
-void Win32IDE::saveSessionPanelState(nlohmann::json& session) {
+void Win32IDE::saveSessionPanelState(nlohmann::json& session)
+{
     nlohmann::json panel;
-    
+
     panel["visible"] = m_panelVisible;
     panel["height"] = m_panelHeight;
     panel["maximized"] = m_panelMaximized;
     panel["activeTab"] = (int)m_activePanelTab;
-    
+
     // Sidebar state
     panel["sidebarVisible"] = m_sidebarVisible;
     panel["sidebarWidth"] = m_sidebarWidth;
@@ -925,27 +951,30 @@ void Win32IDE::saveSessionPanelState(nlohmann::json& session) {
     panel["secondarySidebarWidth96"] = toLogicalWidth96(m_secondarySidebarWidth, m_currentDpi);
     panel["sidebarSnapState"] = snapStateToString(m_activeSnapState);
     panel["sidebarView"] = (int)m_currentSidebarView;
-    
+
     session["panel"] = panel;
 }
 
-void Win32IDE::restoreSessionPanelState(const nlohmann::json& session) {
-    if (!session.contains("panel")) return;
-    
+void Win32IDE::restoreSessionPanelState(const nlohmann::json& session)
+{
+    if (!session.contains("panel"))
+        return;
+
     const auto& panel = session["panel"];
-    
+
     // Restore panel state
     m_panelVisible = panel.value("visible", true);
     m_panelHeight = panel.value("height", 200);
     m_panelMaximized = panel.value("maximized", false);
     if (m_panelVisible && m_panelHeight <= 0)
         m_panelHeight = 200;
-    
+
     int tabIdx = panel.value("activeTab", 0);
-    if (tabIdx >= 0 && tabIdx <= 3) {
+    if (tabIdx >= 0 && tabIdx <= 3)
+    {
         m_activePanelTab = static_cast<PanelTab>(tabIdx);
     }
-    
+
     // Restore sidebar state
     m_sidebarVisible = panel.value("sidebarVisible", true);
     if (panel.contains("sidebarWidth96"))
@@ -981,8 +1010,13 @@ void Win32IDE::restoreSessionPanelState(const nlohmann::json& session) {
         else
             m_activeSnapState = SnapState::Custom;
     }
-    
+
     int viewIdx = panel.value("sidebarView", 0);
+    if (viewIdx < static_cast<int>(SidebarView::None) || viewIdx > static_cast<int>(SidebarView::DiskRecovery))
+    {
+        LOG_WARNING("Session: invalid sidebarView " + std::to_string(viewIdx) + " — falling back to None");
+        viewIdx = static_cast<int>(SidebarView::None);
+    }
     m_currentSidebarView = static_cast<SidebarView>(viewIdx);
 
     if (m_activeSnapState == SnapState::Compact)
@@ -1014,133 +1048,149 @@ void Win32IDE::restoreSessionPanelState(const nlohmann::json& session) {
 // ============================================================================
 // SAVE/RESTORE EDITOR STATE (cursor, scroll, selection)
 // ============================================================================
-void Win32IDE::saveSessionEditorState(nlohmann::json& session) {
+void Win32IDE::saveSessionEditorState(nlohmann::json& session)
+{
     nlohmann::json editor;
-    
-    if (m_hwndEditor) {
+
+    if (m_hwndEditor)
+    {
         // Cursor position
         CHARRANGE sel;
         SendMessage(m_hwndEditor, EM_EXGETSEL, 0, (LPARAM)&sel);
         editor["selStart"] = (int)sel.cpMin;
         editor["selEnd"] = (int)sel.cpMax;
-        
+
         // Scroll position
         POINT scrollPos;
         SendMessage(m_hwndEditor, EM_GETSCROLLPOS, 0, (LPARAM)&scrollPos);
         editor["scrollX"] = (int)scrollPos.x;
         editor["scrollY"] = (int)scrollPos.y;
-        
+
         // First visible line
         int firstVisible = (int)SendMessage(m_hwndEditor, EM_GETFIRSTVISIBLELINE, 0, 0);
         editor["firstVisibleLine"] = firstVisible;
-        
+
         // Current line and column
         int line = (int)SendMessage(m_hwndEditor, EM_LINEFROMCHAR, sel.cpMin, 0);
         int lineStart = (int)SendMessage(m_hwndEditor, EM_LINEINDEX, line, 0);
         editor["cursorLine"] = line;
         editor["cursorColumn"] = (int)(sel.cpMin - lineStart);
     }
-    
+
     // Syntax coloring state
     editor["syntaxColoringEnabled"] = m_syntaxColoringEnabled;
     editor["syntaxLanguage"] = (int)m_syntaxLanguage;
-    
+
     // Annotation visibility
     editor["annotationsVisible"] = m_annotationsVisible;
-    
+
     session["editor"] = editor;
 }
 
-void Win32IDE::restoreSessionEditorState(const nlohmann::json& session) {
-    if (!session.contains("editor")) return;
-    
+void Win32IDE::restoreSessionEditorState(const nlohmann::json& session)
+{
+    if (!session.contains("editor"))
+        return;
+
     const auto& editor = session["editor"];
-    
+
     // Restore syntax coloring preference
     m_syntaxColoringEnabled = editor.value("syntaxColoringEnabled", true);
-    
+
     int langIdx = editor.value("syntaxLanguage", 0);
     m_syntaxLanguage = static_cast<SyntaxLanguage>(langIdx);
-    
+
     // Restore annotation visibility
     m_annotationsVisible = editor.value("annotationsVisible", true);
-    
-    if (!m_hwndEditor) return;
-    
+
+    if (!m_hwndEditor)
+        return;
+
     // Restore cursor/selection (defer slightly so content is loaded first)
     int selStart = editor.value("selStart", 0);
     int selEnd = editor.value("selEnd", 0);
     int scrollX = editor.value("scrollX", 0);
     int scrollY = editor.value("scrollY", 0);
-    
+
     // Use PostMessage to defer restoration until after content is loaded
     // Store values for deferred restore
-    m_sessionFilePath = getSessionFilePath(); // Tag that we're in restore mode
-    
+    m_sessionFilePath = getSessionFilePath();  // Tag that we're in restore mode
+
     // Set cursor position
     CHARRANGE cr;
     cr.cpMin = selStart;
     cr.cpMax = selEnd;
     SendMessage(m_hwndEditor, EM_EXSETSEL, 0, (LPARAM)&cr);
-    
+
     // Restore scroll position
     POINT scrollPos;
     scrollPos.x = scrollX;
     scrollPos.y = scrollY;
     SendMessage(m_hwndEditor, EM_SETSCROLLPOS, 0, (LPARAM)&scrollPos);
-    
+
     // Update line number gutter
     updateLineNumbers();
-    
-    LOG_INFO("Editor state restored: cursor at " + std::to_string(selStart) + 
-             ", scroll Y=" + std::to_string(scrollY));
+
+    LOG_INFO("Editor state restored: cursor at " + std::to_string(selStart) + ", scroll Y=" + std::to_string(scrollY));
 }
 
 // ============================================================================
 // SAVE/RESTORE THEME + TRANSPARENCY
 // ============================================================================
 
-void Win32IDE::saveSessionTheme(nlohmann::json& session) {
+void Win32IDE::saveSessionTheme(nlohmann::json& session)
+{
     nlohmann::json theme;
 
-    theme["name"]         = m_currentTheme.name;
-    theme["themeId"]      = m_activeThemeId;
-    theme["alpha"]        = (int)m_windowAlpha;
+    theme["name"] = m_currentTheme.name;
+    theme["themeId"] = m_activeThemeId;
+    theme["alpha"] = (int)m_windowAlpha;
     theme["transparency"] = m_transparencyEnabled;
 
     session["theme"] = theme;
-    LOG_DEBUG("Session: saved theme \"" + m_currentTheme.name +
-              "\" alpha=" + std::to_string(m_windowAlpha));
+    LOG_DEBUG("Session: saved theme \"" + m_currentTheme.name + "\" alpha=" + std::to_string(m_windowAlpha));
 }
 
-void Win32IDE::restoreSessionTheme(const nlohmann::json& session) {
-    if (!session.contains("theme")) return;
+void Win32IDE::restoreSessionTheme(const nlohmann::json& session)
+{
+    if (!session.contains("theme"))
+        return;
+
+    if (m_themes.empty())
+    {
+        populateBuiltinThemes();
+    }
 
     const auto& theme = session["theme"];
     std::string savedName = theme.value("name", "");
-    int savedId           = theme.value("themeId", (int)IDM_THEME_DARK_PLUS);
-    int savedAlpha        = theme.value("alpha", 255);
+    int savedId = theme.value("themeId", (int)IDM_THEME_DARK_PLUS);
+    int savedAlpha = theme.value("alpha", 255);
     bool savedTransparency = theme.value("transparency", savedAlpha < 255);
 
     // Validate theme ID is in valid range; fallback to Dark+ if not
-    if (savedId < IDM_THEME_DARK_PLUS || savedId > IDM_THEME_ABYSS) {
+    if (savedId < IDM_THEME_DARK_PLUS || savedId > IDM_THEME_ABYSS)
+    {
         // Try to match by name from m_themes map
         bool found = false;
-        for (int id = IDM_THEME_DARK_PLUS; id <= IDM_THEME_ABYSS; id++) {
+        for (int id = IDM_THEME_DARK_PLUS; id <= IDM_THEME_ABYSS; id++)
+        {
             IDETheme candidate = getBuiltinTheme(id);
-            if (candidate.name == savedName) {
+            if (candidate.name == savedName)
+            {
                 savedId = id;
                 found = true;
                 break;
             }
         }
-        if (!found) {
+        if (!found)
+        {
             LOG_WARNING("Session: unknown theme \"" + savedName + "\" — falling back to Dark+");
             savedId = IDM_THEME_DARK_PLUS;
         }
     }
 
-    // Apply the restored theme
+    // Apply only a validated built-in theme so stale session data cannot drive
+    // startup into an unregistered theme state.
     m_currentTheme = getBuiltinTheme(savedId);
     m_activeThemeId = savedId;
     applyTheme();
@@ -1152,10 +1202,10 @@ void Win32IDE::restoreSessionTheme(const nlohmann::json& session) {
     setWindowTransparency(alpha);
 
     // Re-trigger syntax coloring with restored theme palette
-    if (m_syntaxColoringEnabled) {
+    if (m_syntaxColoringEnabled)
+    {
         onEditorContentChanged();
     }
 
-    LOG_INFO("Session: restored theme \"" + m_currentTheme.name +
-             "\" alpha=" + std::to_string(alpha));
+    LOG_INFO("Session: restored theme \"" + m_currentTheme.name + "\" alpha=" + std::to_string(alpha));
 }

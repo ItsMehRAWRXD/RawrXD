@@ -148,6 +148,11 @@ struct TaskResult {
     int          emitted_patch_lines = 0;           // line count of emitted patch
     int          gold_patch_lines    = 0;           // line count of gold patch
     double       patch_jaccard_similarity = 0.0;    // Jaccard line-set overlap vs gold [0,1]
+    bool         patch_execution_checked = false;   // true when git apply --check was attempted
+    bool         patch_execution_success = false;   // pass/fail result of git apply --check
+    bool         autonomous_repair_enabled = false; // autonomous apply-check repair loop enabled
+    int          autonomous_repair_attempts = 0;    // apply-check retries attempted
+    bool         autonomous_repair_succeeded = false; // final patch succeeded after at least one repair retry
     std::string  wall_clock_ts;                     // ISO UTC timestamp at task start
     // Enhancement batch 4 telemetry
     uint64_t     response_token_estimate = 0;       // raw_response.size()/4 token estimate
@@ -538,20 +543,37 @@ static std::string build_patch_only_prompt(
     size_t* context_bytes_out = nullptr,
     bool hints_enabled = true,
     bool phase4_rag_lite = false,
-    int phase4_aperture_lines = 80)
+    int phase4_aperture_lines = 80,
+    const std::string& output_format = "plain",
+    const std::string& corrective_feedback = "")
 {
     std::ostringstream prompt;
     prompt << "You are an expert software engineering evaluation agent.\n";
     prompt << "A machine will score your output.\n";
     prompt << "Return ONLY a valid unified diff patch that fixes the task.\n";
-    prompt << "Do NOT include explanation, commentary, analysis, markdown fences, XML tags, or extra text.\n";
+    const bool fenced_output = (output_format == "fenced");
+    const bool auto_output = (output_format == "auto");
+    if (fenced_output) {
+        prompt << "Wrap the patch in a single ```diff fenced code block with no prose before/after.\n";
+    } else if (auto_output) {
+        prompt << "You may return either raw unified diff or a single ```diff fenced block.\n";
+        prompt << "Do NOT include prose, analysis, XML tags, or extra text.\n";
+    } else {
+        prompt << "Do NOT include explanation, commentary, analysis, markdown fences, XML tags, or extra text.\n";
+    }
     prompt << "If you cannot produce a valid unified diff, output exactly: NO_PATCH\n\n";
     prompt << "Output requirements:\n";
     prompt << "1. The first diff line must start with --- a/\n";
     prompt << "2. The second diff line must start with +++ b/\n";
     prompt << "3. Every file modification must include at least one @@ hunk header.\n";
     prompt << "4. Emit only the minimal files and hunks required to solve the task.\n";
-    prompt << "5. Do not wrap the diff in backticks.\n";
+    if (fenced_output) {
+        prompt << "5. Wrap the diff in a single ```diff fenced block.\n";
+    } else if (auto_output) {
+        prompt << "5. Prefer raw unified diff (fenced is allowed).\n";
+    } else {
+        prompt << "5. Do not wrap the diff in backticks.\n";
+    }
     prompt << "6. Do not output prose before or after the patch.\n";
     prompt << "7. If the fix spans multiple files, emit one contiguous unified diff containing every changed file.\n";
     prompt << "8. In multi-file output, each file must start with its own --- a/ and +++ b/ headers before its @@ hunks.\n";
@@ -594,7 +616,9 @@ static std::string build_patch_only_prompt(
     if (target_files.size() == 1) {
         prompt << "- Modifying files other than: " << target_files[0] << "\n";
     }
-    prompt << "\nThe first character of your reply must be '-' from the leading --- a/ header, unless you reply with NO_PATCH.\n";
+    if (!fenced_output) {
+        prompt << "\nThe first character of your reply must be '-' from the leading --- a/ header, unless you reply with NO_PATCH.\n";
+    }
     prompt << "Copy the structure of the valid examples, but use the real file paths and hunks for the task below.\n";
     prompt << "If the correct fix needs multiple files, include all of them in one unified diff response.\n\n";
     prompt << "Task ID: " << inst.task_id << "\n";
@@ -604,6 +628,11 @@ static std::string build_patch_only_prompt(
 
     if (hints_enabled && !inst.hints_text.empty()) {
         prompt << "Hints:\n" << inst.hints_text << "\n\n";
+    }
+
+    if (!corrective_feedback.empty()) {
+        prompt << "Autonomous repair feedback from previous failed patch attempt:\n";
+        prompt << corrective_feedback << "\n\n";
     }
 
     const int aperture = phase4_rag_lite ? std::max(20, phase4_aperture_lines) : 20;
@@ -629,7 +658,13 @@ static std::string build_patch_only_prompt(
         prompt << "- Preserve unrelated surrounding code and file structure.\n\n";
     }
 
-    prompt << "Output ONLY the unified diff now. Start immediately with --- a/ or output NO_PATCH.\n";
+    if (fenced_output) {
+        prompt << "Output ONLY the fenced diff now using ```diff ... ``` or output NO_PATCH.\n";
+    } else if (auto_output) {
+        prompt << "Output ONLY the unified diff now (raw or fenced) or output NO_PATCH.\n";
+    } else {
+        prompt << "Output ONLY the unified diff now. Start immediately with --- a/ or output NO_PATCH.\n";
+    }
     return prompt.str();
 }
 
@@ -986,6 +1021,46 @@ static int run_command(const std::string& cmd, double* elapsed_ms_out)
     return static_cast<int>(exit_code);
 }
 
+static bool check_patch_execution_success(
+    const std::filesystem::path& repo_root,
+    const std::string& patch,
+    bool& checked_out)
+{
+    checked_out = false;
+    if (patch.empty()) {
+        return false;
+    }
+
+    const std::filesystem::path git_dir = repo_root / ".git";
+    if (!std::filesystem::exists(git_dir)) {
+        return false;
+    }
+
+    const DWORD pid = GetCurrentProcessId();
+    const auto now_ticks = static_cast<unsigned long long>(
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch()).count());
+    const std::filesystem::path tmp_path =
+        std::filesystem::temp_directory_path() /
+        (std::string("rawrxd_swe_patch_") + std::to_string(pid) + "_" +
+         std::to_string(now_ticks) + ".diff");
+
+    if (!write_text_file(tmp_path, patch)) {
+        return false;
+    }
+
+    checked_out = true;
+    const std::string repo_quoted = "\"" + repo_root.string() + "\"";
+    const std::string patch_quoted = "\"" + tmp_path.string() + "\"";
+    const std::string cmd = "cmd.exe /C \"git -C " + repo_quoted +
+        " apply --check --whitespace=nowarn " + patch_quoted + " >nul 2>&1\"";
+
+    const int rc = run_command(cmd, nullptr);
+    std::error_code ec;
+    std::filesystem::remove(tmp_path, ec);
+    return rc == 0;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Agent interface — callers implement this to wire their model
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1059,10 +1134,12 @@ static void write_jsonl_schema_header(FILE* jsonl_out)
         std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now().time_since_epoch()).count());
     fprintf(jsonl_out,
-        "{\"type\":\"schema\",\"version\":\"3.2\",\"harness\":\"RawrXD-SWEBench\","
+        "{\"type\":\"schema\",\"version\":\"3.3\",\"harness\":\"RawrXD-SWEBench\","
         "\"ts\":%lld,\"fields\":[\"sample_id\",\"tokens_requested\",\"tokens_effective\","
         "\"elapsed_ms\",\"fuzzy_patch_score\",\"ws_fuzzy_patch_score\","
         "\"patch_jaccard_similarity\",\"patch_size_ratio\","
+        "\"patch_execution_checked\",\"patch_execution_success\","
+        "\"autonomous_repair_attempts\",\"autonomous_repair_succeeded\","
         "\"hunk_ins_lines\",\"hunk_del_lines\",\"prompt_hash\","
         "\"api_error_class\",\"wall_clock_ts\",\"success\"]}\n",
         ts);
@@ -1386,7 +1463,7 @@ static void write_jsonl_sample(FILE* jsonl_out, const TaskResult& result, size_t
     };
 
     fprintf(jsonl_out,
-        "{\"sample_id\": \"%s\", \"tokens_requested\": %llu, "
+        "{\"type\": \"sample\", \"sample_id\": \"%s\", \"tokens_requested\": %llu, "
         "\"tokens_effective\": %llu, \"kv_budget_bytes\": %llu, "
         "\"adapted\": %s, \"pressure_ratio\": %.6f, "
         "\"has_header\": %s, \"has_hunks\": %s, "
@@ -1408,6 +1485,9 @@ static void write_jsonl_sample(FILE* jsonl_out, const TaskResult& result, size_t
         "\"patch_jaccard_similarity\": %.4f, \"wall_clock_ts\": \"%s\", "
         "\"response_token_estimate\": %llu, "
         "\"ws_fuzzy_patch_score\": %.4f, \"patch_size_ratio\": %.4f, "
+        "\"patch_execution_checked\": %s, \"patch_execution_success\": %s, "
+        "\"autonomous_repair_enabled\": %s, \"autonomous_repair_attempts\": %d, "
+        "\"autonomous_repair_succeeded\": %s, "
         "\"hunk_ins_lines\": %d, \"hunk_del_lines\": %d, \"prompt_hash\": \"%016llx\", "
         "\"response_truncated\": %s, \"kv_headroom_ratio\": %.4f, "
         "\"context_pressure_high\": %s, \"diff_token_efficiency\": %.4f, "
@@ -1455,6 +1535,11 @@ static void write_jsonl_sample(FILE* jsonl_out, const TaskResult& result, size_t
         result.response_token_estimate,
         result.ws_fuzzy_patch_score,
         result.patch_size_ratio,
+        result.patch_execution_checked ? "true" : "false",
+        result.patch_execution_success ? "true" : "false",
+        result.autonomous_repair_enabled ? "true" : "false",
+        result.autonomous_repair_attempts,
+        result.autonomous_repair_succeeded ? "true" : "false",
         result.hunk_ins_lines,
         result.hunk_del_lines,
         static_cast<unsigned long long>(result.prompt_hash),
@@ -1631,6 +1716,14 @@ public:
                                      / static_cast<double>(std::max(1, compute_patch_line_count(inst.gold_patch)));
             }
             res.emitted_patch_lines = compute_patch_line_count(res.emitted_patch);
+            {
+                bool apply_checked = false;
+                res.patch_execution_success = check_patch_execution_success(
+                    resolve_repo_root(),
+                    res.emitted_patch,
+                    apply_checked);
+                res.patch_execution_checked = apply_checked;
+            }
             // E80: Count insertion/deletion body lines in emitted patch
             compute_hunk_ins_del(res.emitted_patch, res.hunk_ins_lines, res.hunk_del_lines);
             // Response token estimate
@@ -1872,7 +1965,9 @@ static bool write_json_report(const HarnessReport& r, const char* path)
             "\"kv_budget_bytes\": %llu, \"adapted\": %s, "
             "\"pressure_ratio\": %.4f, "
             "\"emitted_patch_lines\": %d, \"gold_patch_lines\": %d, "
-            "\"patch_jaccard_similarity\": %.4f, \"wall_clock_ts\": \"%s\", "
+            "\"patch_jaccard_similarity\": %.4f, "
+            "\"patch_execution_checked\": %s, \"patch_execution_success\": %s, "
+            "\"wall_clock_ts\": \"%s\", "
             "\"response_token_estimate\": %llu, "
             "\"ws_fuzzy_patch_score\": %.4f, \"patch_size_ratio\": %.4f}%s\n",
             t.task_id.c_str(),
@@ -1910,6 +2005,8 @@ static bool write_json_report(const HarnessReport& r, const char* path)
             t.emitted_patch_lines,
             t.gold_patch_lines,
             t.patch_jaccard_similarity,
+            t.patch_execution_checked ? "true" : "false",
+            t.patch_execution_success ? "true" : "false",
             json_escape(t.wall_clock_ts).c_str(),
             t.response_token_estimate,
             t.ws_fuzzy_patch_score,
@@ -1941,6 +2038,11 @@ static bool write_jsonl_summary_report(const HarnessReport& r, const char* path)
     int    refusal_count        = 0;  // F9/F13: model_refused errors
     int    format_err_count     = 0;  // F9: format_error class
     int    timeout_count        = 0;  // F9: timeout errors
+    int    patch_exec_checked   = 0;
+    int    patch_exec_success   = 0;
+    int    autonomous_enabled   = 0;
+    int    autonomous_attempts  = 0;
+    int    autonomous_succeeded = 0;
     uint64_t total_prompt_bytes = 0;  // #97: cumulative prompt bytes
     std::map<std::string, std::pair<int,int>> repo_pass;  // E94: repo -> (total, pass)
     std::map<std::string, std::vector<double>> repo_fuzzy_scores;  // #96: repo -> fuzzy score samples
@@ -1953,6 +2055,19 @@ static bool write_jsonl_summary_report(const HarnessReport& r, const char* path)
         if (t.api_error_class == "model_refused")  ++refusal_count;
         else if (t.api_error_class == "format_error") ++format_err_count;
         else if (t.api_error_class == "timeout")   ++timeout_count;
+        if (t.patch_execution_checked) {
+            ++patch_exec_checked;
+            if (t.patch_execution_success) {
+                ++patch_exec_success;
+            }
+        }
+        if (t.autonomous_repair_enabled) {
+            ++autonomous_enabled;
+        }
+        autonomous_attempts += t.autonomous_repair_attempts;
+        if (t.autonomous_repair_succeeded) {
+            ++autonomous_succeeded;
+        }
         total_prompt_bytes += t.prompt_byte_count;
         if (!t.repo.empty()) {
             auto& entry = repo_pass[t.repo];
@@ -2040,6 +2155,15 @@ static bool write_jsonl_summary_report(const HarnessReport& r, const char* path)
     fprintf(f, "  \"timeout_count\": %d,\n", timeout_count);
     fprintf(f, "  \"refusal_rate\": %.4f,\n",
         n_results > 0 ? static_cast<double>(refusal_count) / n_results : 0.0);
+    fprintf(f, "  \"patch_execution_checked\": %d,\n", patch_exec_checked);
+    fprintf(f, "  \"patch_execution_success\": %d,\n", patch_exec_success);
+    fprintf(f, "  \"patch_execution_success_rate\": %.4f,\n",
+        patch_exec_checked > 0
+            ? static_cast<double>(patch_exec_success) / patch_exec_checked
+            : 0.0);
+    fprintf(f, "  \"autonomous_repair_enabled_samples\": %d,\n", autonomous_enabled);
+    fprintf(f, "  \"autonomous_repair_attempts\": %d,\n", autonomous_attempts);
+    fprintf(f, "  \"autonomous_repair_succeeded\": %d,\n", autonomous_succeeded);
     fprintf(f, "  \"total_prompt_bytes\": %llu,\n",
         static_cast<unsigned long long>(total_prompt_bytes));
     // E94: Per-repo pass rate breakdown array
@@ -2081,6 +2205,8 @@ static bool write_csv_report(const HarnessReport& r, const char* path)
     fprintf(f, "task_id,status,elapsed_ms,fuzzy_patch_score,ws_fuzzy_patch_score,patch_jaccard_similarity,"
                "patch_size_ratio,emitted_patch_lines,gold_patch_lines,context_bytes_injected,"
                "gold_hunk_count,response_token_estimate,retry_attempts,api_error_class,"
+               "patch_execution_checked,patch_execution_success,"
+               "autonomous_repair_enabled,autonomous_repair_attempts,autonomous_repair_succeeded,"
                "prompt_byte_count,wall_clock_ts\n");
     for (const auto& t : r.results) {
         const char* st = "NOT_RUN";
@@ -2091,7 +2217,7 @@ static bool write_csv_report(const HarnessReport& r, const char* path)
         case TaskStatus::FAILED:        st = "FAILED";        break;
         default: break;
         }
-        fprintf(f, "%s,%s,%.2f,%.4f,%.4f,%.4f,%.4f,%d,%d,%zu,%d,%llu,%d,%s,%llu,%s\n",
+        fprintf(f, "%s,%s,%.2f,%.4f,%.4f,%.4f,%.4f,%d,%d,%zu,%d,%llu,%d,%s,%s,%s,%s,%d,%s,%llu,%s\n",
             t.task_id.c_str(), st, t.elapsed_ms,
             t.fuzzy_patch_score, t.ws_fuzzy_patch_score,
             t.patch_jaccard_similarity, t.patch_size_ratio,
@@ -2099,6 +2225,11 @@ static bool write_csv_report(const HarnessReport& r, const char* path)
             t.context_bytes_injected, t.gold_hunk_count,
             t.response_token_estimate, t.retry_attempts,
             t.api_error_class.empty() ? "none" : t.api_error_class.c_str(),
+            t.patch_execution_checked ? "true" : "false",
+            t.patch_execution_success ? "true" : "false",
+            t.autonomous_repair_enabled ? "true" : "false",
+            t.autonomous_repair_attempts,
+            t.autonomous_repair_succeeded ? "true" : "false",
             t.prompt_byte_count,
             t.wall_clock_ts.empty() ? "-" : t.wall_clock_ts.c_str());
     }
@@ -2120,8 +2251,8 @@ static bool write_markdown_report(const HarnessReport& r, const char* path)
     fprintf(f, "| Tests passed | %d (%.1f%%) |\n", r.tests_passed, r.test_pass_rate * 100.0);
     fprintf(f, "| **pass@1** | **%.4f** |\n", r.overall_score);
     fprintf(f, "\n## Per-task Results\n\n");
-    fprintf(f, "| task_id | status | elapsed_ms | fuzzy | ws_fuzzy | jaccard | size_ratio | lines_emitted | lines_gold |\n");
-    fprintf(f, "|---------|--------|------------|-------|----------|---------|------------|---------------|------------|\n");
+    fprintf(f, "| task_id | status | elapsed_ms | fuzzy | ws_fuzzy | jaccard | apply_check | apply_success | auto_repair_attempts | auto_repair_succeeded | size_ratio | lines_emitted | lines_gold |\n");
+    fprintf(f, "|---------|--------|------------|-------|----------|---------|-------------|---------------|----------------------|-----------------------|------------|---------------|------------|\n");
     for (const auto& t : r.results) {
         const char* st = "NOT_RUN";
         switch (t.status) {
@@ -2131,10 +2262,15 @@ static bool write_markdown_report(const HarnessReport& r, const char* path)
         case TaskStatus::FAILED:        st = "FAILED";        break;
         default: break;
         }
-        fprintf(f, "| %s | %s | %.0f | %.4f | %.4f | %.4f | %.4f | %d | %d |\n",
+        fprintf(f, "| %s | %s | %.0f | %.4f | %.4f | %.4f | %s | %s | %d | %s | %.4f | %d | %d |\n",
             t.task_id.c_str(), st, t.elapsed_ms,
             t.fuzzy_patch_score, t.ws_fuzzy_patch_score,
-            t.patch_jaccard_similarity, t.patch_size_ratio,
+            t.patch_jaccard_similarity,
+            t.patch_execution_checked ? "true" : "false",
+            t.patch_execution_success ? "true" : "false",
+            t.autonomous_repair_attempts,
+            t.autonomous_repair_succeeded ? "true" : "false",
+            t.patch_size_ratio,
             t.emitted_patch_lines, t.gold_patch_lines);
     }
     fclose(f);
@@ -2307,6 +2443,7 @@ struct MinimalOllamaClient {
     bool debug_http = false;
     int seed = -1;        // -1 = unset (random); set via --seed for reproducibility
     double temperature = -1.0; // -1.0 = unset; passed to Ollama options.temperature if >= 0
+    int recv_timeout_ms = 240000; // per-request receive timeout; override via --timeout-ms
 
     static void NormalizeHostAndPortLocal(const std::string& input, std::string& out_host, WORD& out_port)
     {
@@ -2550,7 +2687,7 @@ struct MinimalOllamaClient {
             return {};
         }
 
-        int recv_timeout_ms = 240000;
+        int recv_timeout_ms = this->recv_timeout_ms;
         const char* env_recv_timeout = getenv("RAWRXD_SWEBENCH_RECV_TIMEOUT_MS");
         if (env_recv_timeout && env_recv_timeout[0]) {
             const int parsed = atoi(env_recv_timeout);
@@ -2558,7 +2695,16 @@ struct MinimalOllamaClient {
                 recv_timeout_ms = parsed;
             }
         }
-        WinHttpSetTimeouts(session, 5000, 5000, 10000, recv_timeout_ms);
+        // Normalize receive timeout to a safe bounded range while honoring CLI/env overrides.
+        if (recv_timeout_ms < 1000) {
+            recv_timeout_ms = 1000;
+        }
+        if (recv_timeout_ms > 120000) {
+            recv_timeout_ms = 120000;
+        }
+        const int connect_timeout_ms = 5000;
+        const int send_timeout_ms = 5000;
+        WinHttpSetTimeouts(session, connect_timeout_ms, connect_timeout_ms, send_timeout_ms, recv_timeout_ms);
 
         HINTERNET connection = WinHttpConnect(session, whost.c_str(), static_cast<INTERNET_PORT>(port), 0);
         if (!connection) {
@@ -2703,13 +2849,19 @@ struct MinimalOllamaClient {
             return {};
         }
 
-        int recv_timeout_ms = 240000;
+        int recv_timeout_ms = this->recv_timeout_ms;
         const char* env_recv_timeout = getenv("RAWRXD_SWEBENCH_RECV_TIMEOUT_MS");
         if (env_recv_timeout && env_recv_timeout[0]) {
             const int parsed = atoi(env_recv_timeout);
             if (parsed > 0) {
                 recv_timeout_ms = parsed;
             }
+        }
+        if (recv_timeout_ms < 1000) {
+            recv_timeout_ms = 1000;
+        }
+        if (recv_timeout_ms > 120000) {
+            recv_timeout_ms = 120000;
         }
         WinHttpSetTimeouts(session, 5000, 5000, 10000, recv_timeout_ms);
 
@@ -2871,6 +3023,11 @@ struct RealAgentContext {
     size_t max_prompt_bytes = 0;  // if >0, trim context when prompt exceeds this limit
     double temperature = -1.0;    // if >= 0, passed to Ollama options.temperature
     int max_task_wall_ms = 0;     // E81: per-task wall-time budget cap in ms (0 = disabled)
+    bool phase4_rag_lite = false; // Phase 4: widen aperture + anti-speculation prompt policy
+    int phase4_aperture_lines = 80; // aperture radius around anchor line in RAG-lite mode
+    std::string output_format = "plain"; // prompt format mode: plain|fenced|auto
+    bool autonomous_patch_repair = false; // retry with corrective prompt when apply-check fails
+    int autonomous_max_repair = 2; // max apply-check repair retries
 };
 
 static std::string invoke_real_agent(
@@ -2878,6 +3035,9 @@ static std::string invoke_real_agent(
     RealAgentContext* ctx,
     SWEBench::TaskResult& result_out)
 {
+    fprintf(stdout, "[DEBUG] invoke_real_agent() called for task=%s\n", inst.task_id.c_str());
+    fflush(stdout);
+
     if (!ctx || !ctx->ollama_client) {
         result_out.failure_reason = "ollama_client not initialized";
         return {};
@@ -2885,6 +3045,7 @@ static std::string invoke_real_agent(
 
     try {
         std::string transport_error;
+        std::string corrective_feedback;
         int max_tokens = result_out.tokens_effective > 0
             ? static_cast<int>(std::min<uint64_t>(
                 result_out.tokens_effective,
@@ -2925,14 +3086,21 @@ static std::string invoke_real_agent(
             ctx->source_context_max_total_bytes,
             ctx->source_context_max_files,
             &context_bytes_injected,
-            ctx->hints_enabled);
+            ctx->hints_enabled,
+            ctx->phase4_rag_lite,
+            ctx->phase4_aperture_lines,
+            ctx->output_format,
+            corrective_feedback);
         result_out.context_bytes_injected = context_bytes_injected;
 
         // Max-prompt-bytes guard: rebuild without context if prompt exceeds limit
         if (ctx->max_prompt_bytes > 0 && prompt.size() > ctx->max_prompt_bytes) {
             size_t bytes_trim = 0;
             std::string prompt_trim = SWEBench::build_patch_only_prompt(
-                inst, target_files, false, 0, 0, 0, &bytes_trim, ctx->hints_enabled);
+                inst, target_files, false, 0, 0, 0, &bytes_trim,
+                ctx->hints_enabled, ctx->phase4_rag_lite, ctx->phase4_aperture_lines,
+                ctx->output_format,
+                corrective_feedback);
             if (ctx->debug_runtime) {
                 fprintf(stdout,
                     "[SWE][TRIM] task=%s prompt=%zu > max_prompt=%zu; context stripped\n",
@@ -2971,7 +3139,11 @@ static std::string invoke_real_agent(
         // E81: per-task wall-time budget — record start time before retry loop
         const auto task_wall_t0 = std::chrono::steady_clock::now();
 
-        const int max_attempts = 1 + std::max(0, ctx->retry_count);
+        const int base_attempts = 1 + std::max(0, ctx->retry_count);
+        const int repair_budget = (ctx->autonomous_patch_repair ? std::max(0, ctx->autonomous_max_repair) : 0);
+        const int max_attempts = base_attempts + repair_budget;
+        int repair_attempts_used = 0;
+        result_out.autonomous_repair_enabled = ctx->autonomous_patch_repair;
         for (int attempt = 0; attempt < max_attempts; ++attempt) {
             if (attempt > 0 && ctx->debug_runtime) {
                 fprintf(stdout,
@@ -2981,11 +3153,22 @@ static std::string invoke_real_agent(
                 fflush(stdout);
             }
 
+            fprintf(stdout,
+                "[DEBUG] About to call Ollama Generate() for task=%s max_tokens=%d prompt_size=%zu\n",
+                inst.task_id.c_str(), max_tokens, prompt.size());
+            fflush(stdout);
+
             std::string response =
                 ctx->ollama_client->Generate(
                     prompt,
                     max_tokens,
                     &transport_error);
+
+            fprintf(stdout,
+                "[DEBUG] Ollama Generate() returned: response_size=%zu transport_error='%s'\n",
+                response.size(), transport_error.c_str());
+            fflush(stdout);
+
             if (response.empty()) {
                 result_out.failure_reason = transport_error.empty()
                     ? "empty response from Ollama"
@@ -3013,6 +3196,41 @@ static std::string invoke_real_agent(
                     : normalization_error;
                 continue;
             }
+
+            bool apply_checked = false;
+            const bool apply_ok = SWEBench::check_patch_execution_success(
+                SWEBench::resolve_repo_root(),
+                patch,
+                apply_checked);
+            result_out.patch_execution_checked = apply_checked;
+            result_out.patch_execution_success = apply_ok;
+
+            if (ctx->autonomous_patch_repair && apply_checked && !apply_ok && repair_attempts_used < repair_budget) {
+                ++repair_attempts_used;
+                result_out.autonomous_repair_attempts = repair_attempts_used;
+                result_out.failure_reason = "autonomous repair: patch failed git apply --check; retrying";
+                corrective_feedback =
+                    "Previous patch failed git apply --check. Emit a corrected minimal unified diff "
+                    "with accurate file paths and hunk anchors. Keep edits tightly scoped and preserve exact context lines.";
+
+                prompt = SWEBench::build_patch_only_prompt(
+                    inst,
+                    target_files,
+                    ctx->source_context_enabled,
+                    ctx->source_context_max_bytes_per_file,
+                    ctx->source_context_max_total_bytes,
+                    ctx->source_context_max_files,
+                    &context_bytes_injected,
+                    ctx->hints_enabled,
+                    ctx->phase4_rag_lite,
+                    ctx->phase4_aperture_lines,
+                    ctx->output_format,
+                    corrective_feedback);
+                continue;
+            }
+
+            result_out.autonomous_repair_succeeded = (repair_attempts_used > 0) && apply_ok;
+            result_out.autonomous_repair_attempts = repair_attempts_used;
 
             return patch;
         }
@@ -3090,6 +3308,11 @@ static std::string invoke_real_agent(
 // --temperature        Ollama generation temperature (e.g. 0.2); -1 = unset (model default)
 // --deterministic      Force seed=42, temperature=0.0 for fully reproducible sweeps (F8)
 // --no-summary-json    Suppress writing the --jsonl-summary file even if path is set (#98)
+// --phase4-rag-lite    Enable Phase 4 RAG-lite prompt policy + wider source aperture
+// --phase4-aperture-lines  Anchor window radius in lines for RAG-lite context (default: 80)
+// --output-format      Prompt output mode: plain (default), fenced, or auto
+// --autonomous-repair  Retry with corrective prompt when git apply --check fails
+// --autonomous-max-repair  Maximum repair retries for apply-check failures (default: 2)
 //
 // Without --real-agent, runs null agent on built-in instances for self-test.
 
@@ -3131,6 +3354,11 @@ int main(int argc, char** argv)
     size_t      max_prompt_bytes   = 0;        // --max-prompt-bytes: trim context if exceeded
     double      temperature        = -1.0;     // --temperature <float>
     int         max_task_wall_ms   = 0;        // E81: --max-task-wall-ms per-task wall-time cap
+    bool        phase4_rag_lite    = false;    // --phase4-rag-lite
+    int         phase4_aperture_lines = 80;    // --phase4-aperture-lines <N>
+    std::string output_format = "plain";      // --output-format plain|fenced|auto
+    bool        autonomous_repair = false;     // --autonomous-repair
+    int         autonomous_max_repair = 2;     // --autonomous-max-repair <N>
 
     const char* env_context_max_bytes = getenv("RAWRXD_SWEBENCH_CONTEXT_MAX_BYTES");
     bool        deterministic      = false;    // F8: --deterministic (seed=42, temperature=0.0)
@@ -3253,6 +3481,23 @@ int main(int argc, char** argv)
         } else if (strcmp(argv[i], "--max-task-wall-ms") == 0 && i + 1 < argc) {
             max_task_wall_ms = atoi(argv[++i]);
             if (max_task_wall_ms < 0) max_task_wall_ms = 0;
+        } else if (strcmp(argv[i], "--phase4-rag-lite") == 0) {
+            phase4_rag_lite = true;
+        } else if (strcmp(argv[i], "--phase4-aperture-lines") == 0 && i + 1 < argc) {
+            phase4_aperture_lines = atoi(argv[++i]);
+            if (phase4_aperture_lines < 20) phase4_aperture_lines = 20;
+            if (phase4_aperture_lines > 400) phase4_aperture_lines = 400;
+        } else if (strcmp(argv[i], "--output-format") == 0 && i + 1 < argc) {
+            output_format = argv[++i];
+            if (output_format != "plain" && output_format != "fenced" && output_format != "auto") {
+                output_format = "plain";
+            }
+        } else if (strcmp(argv[i], "--autonomous-repair") == 0) {
+            autonomous_repair = true;
+        } else if (strcmp(argv[i], "--autonomous-max-repair") == 0 && i + 1 < argc) {
+            autonomous_max_repair = atoi(argv[++i]);
+            if (autonomous_max_repair < 0) autonomous_max_repair = 0;
+            if (autonomous_max_repair > 8) autonomous_max_repair = 8;
         } else if (strcmp(argv[i], "--deterministic") == 0) {
             deterministic = true;              // F8
         } else if (strcmp(argv[i], "--no-summary-json") == 0) {
@@ -3391,6 +3636,9 @@ int main(int argc, char** argv)
 
             MinimalOllamaClient ollama(chosen_host, ollama_port, chosen_model);
             ollama.debug_http = debug_http;
+            if (cli_timeout_ms > 0) {
+                ollama.recv_timeout_ms = cli_timeout_ms;
+            }
 
             if (list_models) {
                 std::string discover_error;
@@ -3467,6 +3715,11 @@ int main(int argc, char** argv)
             ctx.max_prompt_bytes = max_prompt_bytes;
             ctx.temperature = temperature;
             ctx.max_task_wall_ms = max_task_wall_ms;  // E81
+            ctx.phase4_rag_lite = phase4_rag_lite;
+            ctx.phase4_aperture_lines = phase4_aperture_lines;
+            ctx.output_format = output_format;
+            ctx.autonomous_patch_repair = autonomous_repair;
+            ctx.autonomous_max_repair = autonomous_max_repair;
             if (max_task_wall_ms > 0) {
                 fprintf(stdout, "[INFO] Per-task wall-time cap: %d ms\n", max_task_wall_ms);
             }
@@ -3489,6 +3742,16 @@ int main(int argc, char** argv)
                 ctx.source_context_max_files,
                 ctx.source_context_max_bytes_per_file,
                 ctx.source_context_max_total_bytes);
+            if (ctx.phase4_rag_lite) {
+                fprintf(stdout,
+                    "[INFO] Phase 4 RAG-lite: enabled (aperture_radius=%d lines)\n",
+                    ctx.phase4_aperture_lines);
+            }
+            fprintf(stdout, "[INFO] Output format mode: %s\n", ctx.output_format.c_str());
+            if (ctx.autonomous_patch_repair) {
+                fprintf(stdout, "[INFO] Autonomous patch repair: enabled (max_repair=%d)\n",
+                    ctx.autonomous_max_repair);
+            }
             if (seed >= 0) {
                 fprintf(stdout, "[INFO] Reproducibility seed: %d\n", seed);
             }

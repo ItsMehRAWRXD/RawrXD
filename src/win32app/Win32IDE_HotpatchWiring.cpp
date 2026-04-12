@@ -28,6 +28,7 @@
 #include "../agent_explainability.h"
 #include "../agent_policy.h"
 #include "../agentic/AgentOllamaClient.h"
+#include "../agentic/agentic_executor.h"
 #include "../core/enterprise_license.h"
 #include "../../include/lsp/RawrXD_LSPServer.h"
 
@@ -1520,7 +1521,10 @@ void HeadlessIDE::runInferenceStreaming(const std::string& prompt,
                 emitChunk(token, false);
                 m_outputSink->onStreamingToken(token.c_str(), token.size(), StreamTokenOrigin::Inference);
             },
-            /* on_tool_call */ [](const std::string&, const nlohmann::json&) {},
+            /* on_tool_call */ [](const std::string& toolName, const nlohmann::json& toolArgs) {
+                static AgenticExecutor s_executor;
+                s_executor.callTool(toolName, toolArgs.dump());
+            },
             /* on_done */ [&](const std::string& full, uint64_t pt, uint64_t ct, double tps) {
                 streamResult.success = true;
                 streamResult.prompt_tokens = pt;

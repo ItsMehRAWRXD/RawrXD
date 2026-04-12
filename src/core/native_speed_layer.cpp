@@ -79,6 +79,13 @@ extern "C" {
     void dequant_q8_0_avx2(const void* src, float* dst, uint64_t nblocks);
     void dequant_q8_0_avx512(const void* src, float* dst, uint64_t nblocks);
     void dequant_q2k_avx2(const void* src, float* dst, uint64_t nblocks);
+    extern "C" int dequant_q6k_avx512(const void* src, float* dst, int n);
+
+    static void dequant_q6k_avx512_wrapper(const void* src, float* dst, uint64_t nblocks) {
+        // Q6_K has 16 elements per partial block in our ASM, 16 blocks per GGUF hyper-block (256 elements).
+        // nblocks here refers to GGUF blocks (256 elements each).
+        dequant_q6k_avx512(src, dst, (int)(nblocks * 256));
+    }
 
     // Quantized GEMV
     void qgemv_q4_0_avx2(const void* A, const float* x, float* y,
@@ -292,6 +299,9 @@ DequantFn GetDequantKernel(QuantType qt, const CPUFeatures& cpu) {
         case QuantType::Q2_K:
             if (cpu.hasAVX2)        return dequant_q2k_avx2;
             return nullptr;  // No scalar fallback for Q2_K yet
+        case QuantType::Q6_K:
+            if (cpu.hasAVX512F && cpu.hasAVX512BW && cpu.hasAVX512VL) return dequant_q6k_avx512_wrapper;
+            return nullptr;
         default:
             return nullptr;
     }

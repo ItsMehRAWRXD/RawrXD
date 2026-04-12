@@ -1,6 +1,7 @@
 // BackendOrchestrator.cpp — Implementation
 #include "BackendOrchestrator.h"
 #include "InferenceProfiler.h"
+#include "win32app/TitanIPC.h"
 #include "gguf_loader.h"
 #include "kernels/kv_accum_avx512.h"
 
@@ -8,6 +9,7 @@
 #include <iostream>
 #include <fstream>
 #include <algorithm>
+#include <cctype>
 #include <cassert>
 #include <cstring>
 #include <functional>
@@ -40,6 +42,55 @@ static constexpr SIZE_T kSlidingApertureMinReserve = 8ULL * 1024ULL * 1024ULL;
 namespace RawrXD {
 
 namespace {
+
+std::string trimAsciiCopy(const std::string& value) {
+    size_t begin = 0;
+    while (begin < value.size() && std::isspace(static_cast<unsigned char>(value[begin]))) {
+        ++begin;
+    }
+
+    size_t end = value.size();
+    while (end > begin && std::isspace(static_cast<unsigned char>(value[end - 1]))) {
+        --end;
+    }
+
+    return value.substr(begin, end - begin);
+}
+
+std::string toLowerAsciiCopy(std::string value) {
+    for (char& ch : value) {
+        ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+    }
+    return value;
+}
+
+bool parseBackendErrorPayload(const std::string& text, std::string* outDetail = nullptr) {
+    const std::string trimmed = trimAsciiCopy(text);
+    constexpr const char* kPrefix = "[BackendError]";
+    const size_t prefixLen = std::strlen(kPrefix);
+    if (trimmed.size() < prefixLen || trimmed.compare(0, prefixLen, kPrefix) != 0) {
+        return false;
+    }
+    if (outDetail) {
+        *outDetail = trimAsciiCopy(trimmed.substr(prefixLen));
+    }
+    return true;
+}
+
+std::string normalizeBackendErrorForUi(const std::string& detail, const char* stage) {
+    const std::string trimmed = trimAsciiCopy(detail);
+    if (trimmed.empty()) {
+        return std::string("stage=") + stage + " detail=empty_backend_error_payload";
+    }
+
+    const std::string lowered = toLowerAsciiCopy(trimmed);
+    if (lowered == "na" || lowered == "n/a" || lowered == "nan" || lowered == "null" || lowered == "none" ||
+        lowered == "-") {
+        return std::string("stage=") + stage + " detail=non_actionable_backend_error_payload(" + trimmed + ")";
+    }
+
+    return std::string("stage=") + stage + " detail=" + trimmed;
+}
 
 using PFN_VirtualAlloc2 = PVOID(WINAPI*)(
     HANDLE,
@@ -387,6 +438,18 @@ NativeInferenceApi& GetNativeInferenceApi() {
         std::vector<std::wstring> probePaths;
         probePaths.emplace_back(exeDir + candidate);
 
+        // Optional explicit override path for native inference artifacts.
+        wchar_t envNativeDir[MAX_PATH] = {};
+        const DWORD envNativeLen = GetEnvironmentVariableW(
+            L"RAWRXD_NATIVE_DLL_DIR", envNativeDir, static_cast<DWORD>(std::size(envNativeDir)));
+        if (envNativeLen > 0 && envNativeLen < std::size(envNativeDir)) {
+            std::wstring p(envNativeDir);
+            if (!p.empty() && p.back() != L'\\' && p.back() != L'/') {
+                p.push_back(L'\\');
+            }
+            probePaths.emplace_back(p + candidate);
+        }
+
         // Dev fallback lanes when DLLs are produced in sibling build trees.
         try {
             namespace fs = std::filesystem;
@@ -397,8 +460,15 @@ NativeInferenceApi& GetNativeInferenceApi() {
 
             probePaths.emplace_back((repoRoot / L"build" / L"bin" / candidate).wstring());
             probePaths.emplace_back((repoRoot / L"build-ninja" / L"bin" / candidate).wstring());
+            probePaths.emplace_back((repoRoot / L"build-ninja-max" / L"bin" / candidate).wstring());
             probePaths.emplace_back((repoRoot / L"build_ninja3" / L"bin" / candidate).wstring());
             probePaths.emplace_back((repoRoot / L"Ship" / candidate).wstring());
+
+            // Common multi-root sibling lane used by strict wrappers.
+            fs::path siblingRawrxd = repoRoot.parent_path() / L"rawrxd";
+            probePaths.emplace_back((siblingRawrxd / L"build" / L"bin" / candidate).wstring());
+            probePaths.emplace_back((siblingRawrxd / L"build-ninja" / L"bin" / candidate).wstring());
+            probePaths.emplace_back((siblingRawrxd / L"build-ninja-max" / L"bin" / candidate).wstring());
         } catch (...) {
             // Path probing is best-effort; continue with whatever paths we have.
         }
@@ -451,13 +521,24 @@ NativeInferenceApi& GetNativeInferenceApi() {
             api.getLastError = getLastError;
             api.createEngine = reinterpret_cast<PFN_CreateInferenceEngine>(
                 GetProcAddress(module, "CreateInferenceEngine"));
+            api.destroyEngine = reinterpret_cast<PFN_DestroyInferenceEngine>(
+                GetProcAddress(module, "DestroyInferenceEngine"));
+
+            if (api.createEngine) {
+                api.engineHandle = api.createEngine();
+                api.engineCreateFailed = (api.engineHandle == nullptr);
+            } else {
+                api.engineCreateFailed = true;
+            }
             break;
         }
 
         FreeLibrary(module);
     }
 
-    api.initialized = true;
+    if (api.submit != nullptr || api.submitEngine != nullptr) {
+        api.initialized = true;
+    }
     return api;
 }
 
@@ -505,7 +586,33 @@ bool RunNativeInferenceSync(const std::string& prompt,
                             std::string& completion,
                             std::string& metadata,
                             std::string& error) {
+    // -------------------------------------------------------------------------
+    // Process-isolation path: route through TitanHost.exe over a named pipe.
+    // Disabled only when RAWRXD_INPROC_TITAN=1 is set in the environment
+    // (development / DLL-debug mode).  Any crash in TitanHost is isolated from
+    // the IDE GUI; the next call will automatically restart the host process.
+    // -------------------------------------------------------------------------
+    {
+        char inprocEnv[8] = {};
+        if (GetEnvironmentVariableA("RAWRXD_INPROC_TITAN", inprocEnv, sizeof(inprocEnv)) == 0
+            || strlen(inprocEnv) == 0 || inprocEnv[0] != '1') {
+            const uint32_t effectiveTimeout = (timeoutMs > 0) ? timeoutMs : 120000;
+            const bool ok = RawrXD::TitanProxy::instance().submit(
+                prompt, 256, effectiveTimeout, completion, metadata, error);
+            if (ok) return true;
+            // Host not available (binary missing) — fall through to in-process.
+            if (error.find("could not start") == std::string::npos) {
+                return false; // real inference error — propagate it
+            }
+            error.clear(); // host missing — try in-process as last resort
+        }
+    }
+
     NativeInferenceApi& api = GetNativeInferenceApi();
+    if (!api.engineHandle && api.createEngine) {
+        api.engineHandle = api.createEngine();
+        api.engineCreateFailed = (api.engineHandle == nullptr);
+    }
     const bool legacyApiReady = (api.module && api.submit && api.getResult);
     const bool win32ApiReady = (api.module && api.engineHandle && api.submitEngine && api.getResultEngine);
 
@@ -523,9 +630,28 @@ bool RunNativeInferenceSync(const std::string& prompt,
         const DWORD len = GetEnvironmentVariableW(L"RAWRXD_NATIVE_MODEL_PATH", modelPath, static_cast<DWORD>(sizeof(modelPath)));
         if (len > 0 && len < sizeof(modelPath)) {
             api.modelLoaded = (api.loadModel(api.engineHandle, modelPath) == 0); // RAWRXD_SUCCESS = 0
+        } else {
+            const std::string preferredModel = BackendOrchestrator::Instance().GetPreferredLoadedModelPath();
+            if (!preferredModel.empty()) {
+                wchar_t preferredWide[2048] = {};
+                const int converted = MultiByteToWideChar(
+                    CP_UTF8,
+                    0,
+                    preferredModel.c_str(),
+                    -1,
+                    preferredWide,
+                    static_cast<int>(std::size(preferredWide)));
+                if (converted > 0) {
+                    api.modelLoaded = (api.loadModel(api.engineHandle, preferredWide) == 0);
+                }
+            }
         }
-        if (len > 0 && !api.modelLoaded) {
-            error = "InferenceEngine_LoadModel failed for RAWRXD_NATIVE_MODEL_PATH";
+        if (!api.modelLoaded) {
+            if (len > 0) {
+                error = "InferenceEngine_LoadModel failed for RAWRXD_NATIVE_MODEL_PATH";
+            } else {
+                error = "InferenceEngine_LoadModel failed (no env model path and preferred loaded model path unavailable or invalid)";
+            }
             if (api.getLastError) {
                 const char* detail = api.getLastError();
                 if (detail && detail[0]) {
@@ -538,20 +664,40 @@ bool RunNativeInferenceSync(const std::string& prompt,
 
     uint64_t requestId = 0;
     if (legacyApiReady) {
+        OutputDebugStringA(("[PROBE-G] RunNativeInferenceSync legacyAPI submit prompt_len=" +
+                            std::to_string(prompt.size()) + "\n").c_str());
         if (!api.submit(prompt.c_str(), &requestId)) {
+            OutputDebugStringA("[PROBE-G] submit FAILED - checking if this is an async callback issue\n");
             error = "SubmitInference failed";
             return false;
         }
+        OutputDebugStringA(("[PROBE-G] submit OK requestId=" + std::to_string(requestId) + "\n").c_str());
     } else {
-        requestId = api.submitEngine(api.engineHandle, prompt.c_str(), static_cast<size_t>(256)); // Using 256 max tokens for this bridge
+        OutputDebugStringA(("[PROBE-G] RunNativeInferenceSync win32API submitEngine prompt_len=" +
+                            std::to_string(prompt.size()) + "\n").c_str());
+        requestId = api.submitEngine(api.engineHandle, prompt.c_str(), static_cast<size_t>(256));
         if (requestId == 0) {
+            OutputDebugStringA("[PROBE-G] submitEngine FAILED (returned 0)\n");
             error = "InferenceEngine_SubmitInference failed (returned 0)";
             return false;
         }
+        OutputDebugStringA(("[PROBE-G] submitEngine OK requestId=" + std::to_string(requestId) + "\n").c_str());
     }
 
     auto start = std::chrono::steady_clock::now();
     std::vector<char> buffer(1024 * 1024, 0);
+    int pollCount = 0;
+
+    auto makePreview = [](const std::string& text) {
+        const size_t limit = std::min<size_t>(text.size(), 96);
+        std::string preview;
+        preview.reserve(limit);
+        for (size_t i = 0; i < limit; ++i) {
+            const unsigned char ch = static_cast<unsigned char>(text[i]);
+            preview.push_back((ch >= 32 && ch <= 126) ? static_cast<char>(ch) : '.');
+        }
+        return preview;
+    };
 
     while (true) {
         bool gotResult = false;
@@ -563,6 +709,26 @@ bool RunNativeInferenceSync(const std::string& prompt,
 
         if (gotResult) {
             completion = std::string(buffer.data());
+            const std::string preview = makePreview(completion);
+            OutputDebugStringA(("[PROBE-G2] getResult OK at pollCount=" + std::to_string(pollCount) +
+                                " completion_len=" + std::to_string(completion.size()) +
+                                " preview=" + preview + "\n").c_str());
+            if (completion.empty()) {
+                error = "InferenceEngine_GetResult returned empty text payload";
+                if (api.getLastError) {
+                    const char* detail = api.getLastError();
+                    if (detail && detail[0]) {
+                        error += std::string(": ") + detail;
+                    }
+                }
+                return false;
+            }
+            std::string backendDetail;
+            if (parseBackendErrorPayload(completion, &backendDetail)) {
+                error = "Native inference returned backend error payload: " +
+                        normalizeBackendErrorForUi(backendDetail, "native_result");
+                return false;
+            }
             if (looksLikeBinaryInferencePayload(completion)) {
                 error = "InferenceEngine_GetResult returned non-text payload (likely token IDs or undecoded bytes)";
                 completion.clear();
@@ -580,10 +746,17 @@ bool RunNativeInferenceSync(const std::string& prompt,
         const auto elapsedMs = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::steady_clock::now() - start).count();
         if (timeoutMs > 0 && elapsedMs >= timeoutMs) {
+            OutputDebugStringA(("[PROBE-G3] getResult TIMEOUT at pollCount=" + std::to_string(pollCount) +
+                                " elapsedMs=" + std::to_string(elapsedMs) + "\n").c_str());
             error = "Inference request timed out";
             return false;
         }
 
+        if ((pollCount % 40) == 0) {
+            OutputDebugStringA(("[PROBE-G3] getResult poll #" + std::to_string(pollCount) +
+                                " elapsedMs=" + std::to_string(elapsedMs) + " no data yet\n").c_str());
+        }
+        ++pollCount;
         Sleep(10);
     }
 }
@@ -1674,6 +1847,21 @@ std::vector<std::string> BackendOrchestrator::GetLoadedModelTags() const {
     return tags;
 }
 
+std::string BackendOrchestrator::GetPreferredLoadedModelPath() const {
+    std::lock_guard<std::mutex> lk(m_model_mtx);
+    if (!m_active_model_tag.empty()) {
+        auto itActive = m_model_paths.find(m_active_model_tag);
+        if (itActive != m_model_paths.end() && !itActive->second.empty()) {
+            return itActive->second;
+        }
+    }
+    if (!m_model_paths.empty()) {
+        const auto& first = *m_model_paths.begin();
+        return first.second;
+    }
+    return {};
+}
+
 // ─── Enhancement 6: Multi-tenant ──────────────────────────────────────────────
 void BackendOrchestrator::CreateTenant(const std::string& tenant_id, int max_ctx) {
     std::lock_guard<std::mutex> lk(m_tenant_mtx);
@@ -1705,11 +1893,19 @@ uint64_t BackendOrchestrator::Enqueue(InferRequest req) {
     req.enqueue_time = std::chrono::steady_clock::now();
 
     int bucket = static_cast<int>(req.priority);
+    size_t depthAfterPush = 0;
     {
         std::lock_guard<std::mutex> lk(m_queue_mtx);
         m_queues[bucket].push_back(req);
         m_enqueue_times[req.id] = req.enqueue_time;
+        depthAfterPush = m_queues[bucket].size();
     }
+    OutputDebugStringA(("[BackendOrchestrator] Enqueue request_id=" + std::to_string(req.id) +
+                        " priority=" + std::to_string(bucket) +
+                        " prompt_len=" + std::to_string(req.prompt.size()) +
+                        " max_tokens=" + std::to_string(req.max_tokens) +
+                        " queue_depth=" + std::to_string(depthAfterPush) + "\n")
+                           .c_str());
     m_queue_cv.notify_one();
     return req.id;
 }
@@ -1753,6 +1949,10 @@ void BackendOrchestrator::DispatchLoop() {
                     q.pop_front();
                     m_enqueue_times.erase(req.id);
                     found = true;
+                    OutputDebugStringA(("[BackendOrchestrator] Dispatch picked request_id=" +
+                                        std::to_string(req.id) + " prompt_len=" +
+                                        std::to_string(req.prompt.size()) + "\n")
+                                           .c_str());
                     break;
                 }
             }
@@ -1766,11 +1966,20 @@ void BackendOrchestrator::DispatchLoop() {
 bool BackendOrchestrator::RunInference(const InferRequest& req) {
     auto& prof = InferenceProfiler::Instance();
     auto scoped = prof.MakeScoped("inference");
+    OutputDebugStringA(("[BackendOrchestrator] RunInference START request_id=" +
+                        std::to_string(req.id) + " prompt_len=" +
+                        std::to_string(req.prompt.size()) + " max_tokens=" +
+                        std::to_string(req.max_tokens) + "\n")
+                           .c_str());
 
     // Semantic cache lookup (Enhancement 8)
     if (m_cache_enabled) {
         std::string cached;
         if (LookupCache(req.prompt, cached)) {
+            OutputDebugStringA(("[BackendOrchestrator] Cache HIT request_id=" +
+                                std::to_string(req.id) + " cached_len=" +
+                                std::to_string(cached.size()) + "\n")
+                                   .c_str());
             if (req.complete_cb) req.complete_cb(cached, "{}");
             return true;
         }
@@ -1781,25 +1990,51 @@ bool BackendOrchestrator::RunInference(const InferRequest& req) {
     std::string error;
     const uint32_t timeoutMs = 120000;
 
+    OutputDebugStringA(("[BackendOrchestrator] RunNativeInferenceSync request_id=" +
+                        std::to_string(req.id) + " timeoutMs=" +
+                        std::to_string(timeoutMs) + "\n")
+                           .c_str());
     const bool ok = RunNativeInferenceSync(req.prompt, timeoutMs, completion, metadata, error);
     if (!ok) {
+        const std::string normalizedError = normalizeBackendErrorForUi(error, "orchestrator");
+        OutputDebugStringA(("[BackendOrchestrator] RunInference FAILED request_id=" +
+                            std::to_string(req.id) + " error=" + normalizedError + "\n")
+                               .c_str());
         if (req.complete_cb) {
-            req.complete_cb("[BackendError] " + error,
+            req.complete_cb("[BackendError] " + normalizedError,
                 "{\"error\":\"native_inference_failed\"}");
         }
         return false;
     }
+
+    OutputDebugStringA(("[BackendOrchestrator] RunInference OK request_id=" +
+                        std::to_string(req.id) + " completion_len=" +
+                        std::to_string(completion.size()) + " metadata_len=" +
+                        std::to_string(metadata.size()) + "\n")
+                           .c_str());
 
     if (m_cache_enabled && !completion.empty()) {
         InsertCache(req.prompt, completion);
     }
 
     if (req.stream_cb && !completion.empty()) {
+        OutputDebugStringA(("[BackendOrchestrator] stream_cb request_id=" +
+                            std::to_string(req.id) + " completion_len=" +
+                            std::to_string(completion.size()) + "\n")
+                               .c_str());
         req.stream_cb(completion);
     }
     if (req.complete_cb) {
+        OutputDebugStringA(("[BackendOrchestrator] complete_cb request_id=" +
+                            std::to_string(req.id) + " completion_len=" +
+                            std::to_string(completion.size()) + " metadata_len=" +
+                            std::to_string(metadata.size()) + "\n")
+                               .c_str());
         req.complete_cb(completion, metadata.empty() ? "{}" : metadata);
     }
+    OutputDebugStringA(("[BackendOrchestrator] RunInference END request_id=" +
+                        std::to_string(req.id) + "\n")
+                           .c_str());
     return true;
 }
 
@@ -2188,6 +2423,48 @@ int BackendOrchestrator::GetRecommendedFusionWidth() const {
         return std::max(1, cfg.fusion_width - 1);
     }
     return cfg.fusion_width;
+}
+
+// ============================================================================
+// Titan IPC — tool-call dispatch wiring
+// ============================================================================
+
+} // namespace RawrXD (close before global-namespace include)
+
+// AgenticExecutor lives in the global namespace — include outside namespace RawrXD.
+#ifndef BACKENDS_AGENTIC_EXECUTOR_FWD_INCLUDED
+#define BACKENDS_AGENTIC_EXECUTOR_FWD_INCLUDED
+#include "agentic/agentic_executor.h"
+#endif
+
+namespace RawrXD { // reopen for RegisterTitanToolDispatch
+
+/*static*/
+void BackendOrchestrator::RegisterTitanToolDispatch(::AgenticExecutor* executor) {
+    if (!executor) {
+        // Clear the callback (called on teardown).
+        RawrXD::TitanProxy::instance().setToolCallCallback(nullptr);
+        return;
+    }
+    // Capture executor by raw pointer — lifetime is the caller's responsibility.
+    // The callback is called synchronously inside TitanProxy::submit(), which is
+    // serialised by the proxy's critical section.
+    RawrXD::TitanProxy::instance().setToolCallCallback(
+        [executor](const std::string& payloadJson) -> std::string {
+            // payload JSON is: {"name":"toolName","args":{...}}
+            // Extract name and args.
+            const std::string needle = "\"name\":\"";
+            size_t pos = payloadJson.find(needle);
+            std::string toolName;
+            if (pos != std::string::npos) {
+                pos += needle.size();
+                size_t end = payloadJson.find('"', pos);
+                if (end != std::string::npos)
+                    toolName = payloadJson.substr(pos, end - pos);
+            }
+            // Pass full payload as paramsJson so AgenticExecutor can parse it.
+            return executor->callTool(toolName, payloadJson);
+        });
 }
 
 } // namespace RawrXD

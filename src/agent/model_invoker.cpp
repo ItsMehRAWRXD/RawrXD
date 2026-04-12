@@ -11,6 +11,7 @@
  */
 #include "model_invoker.hpp"
 #include "llm_http_client.hpp"
+#include "core/scoped_instructions_provider.hpp"
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
@@ -31,6 +32,78 @@ using json = nlohmann::json;
 // HTTP helper — thin wrapper over StlHttpClient for backward compat
 // ---------------------------------------------------------------------------
 namespace {
+
+std::string toLowerCopy(const std::string& value) {
+    std::string lower = value;
+    std::transform(lower.begin(), lower.end(), lower.begin(),
+                   [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    return lower;
+}
+
+std::string trimTrailingSlash(const std::string& value) {
+    if (value.empty()) {
+        return value;
+    }
+
+    size_t end = value.size();
+    while (end > 0 && value[end - 1] == '/') {
+        --end;
+    }
+    return value.substr(0, end);
+}
+
+bool endsWith(const std::string& value, const std::string& suffix) {
+    return value.size() >= suffix.size() &&
+           value.compare(value.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
+
+std::string resolveEndpoint(const std::string& endpoint, const std::string& suffix) {
+    if (endpoint.empty()) {
+        return endpoint;
+    }
+
+    const std::string trimmed = trimTrailingSlash(endpoint);
+    if (endsWith(trimmed, suffix)) {
+        return trimmed;
+    }
+    return trimmed + suffix;
+}
+
+ProviderType providerTypeFromBackend(const std::string& backend) {
+    const std::string lower = toLowerCopy(backend);
+    if (lower == "ollama") {
+        return ProviderType::Ollama;
+    }
+    if (lower == "localgguf" || lower == "local-gguf" || lower == "llama.cpp") {
+        return ProviderType::LocalGGUF;
+    }
+    if (lower == "claude" || lower == "anthropic") {
+        return ProviderType::AnthropicNative;
+    }
+    if (lower == "openai" || lower == "openai-turbo" || lower == "openai-compatible" ||
+        lower == "openrouter" || lower == "together" || lower == "deepinfra") {
+        return ProviderType::OpenAICompatible;
+    }
+    return ProviderType::Unknown;
+}
+
+std::string defaultModelForProvider(ProviderType type, const std::string& backend) {
+    const std::string lower = toLowerCopy(backend);
+    switch (type) {
+        case ProviderType::Ollama:
+        case ProviderType::LocalGGUF:
+            return "mistral";
+        case ProviderType::AnthropicNative:
+            return "claude-3-sonnet-20240229";
+        case ProviderType::OpenAICompatible:
+            if (lower == "openai-turbo") {
+                return "gpt-4-turbo";
+            }
+            return "gpt-4o";
+        default:
+            return "mistral";
+    }
+}
 
 /// Synchronous HTTP POST returning the response body (empty on error).
 /// Delegates to StlHttpClient singleton for proper async/future support.
@@ -65,21 +138,54 @@ std::string httpPost(const std::string& url, const std::string& body,
 void ModelInvoker::setLLMBackend(const std::string& backend,
                                   const std::string& endpoint,
                                   const std::string& apiKey) {
+    const ProviderType type = providerTypeFromBackend(backend);
+    ModelProviderConfig config;
+    config.type = type;
+    config.endpoint = endpoint;
+    config.apiKey = apiKey;
+    config.model = defaultModelForProvider(type, backend);
+
     m_backend  = backend;
     m_endpoint = endpoint;
     m_apiKey   = apiKey;
-
-    std::string be = backend;
-    std::transform(be.begin(), be.end(), be.begin(),
-                   [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
-
-    if (be == "ollama")       m_model = "mistral";
-    else if (be == "claude")  m_model = "claude-3-sonnet-20240229";
-    else if (be == "openai")  m_model = "gpt-4o";
-    else if (be == "openai-turbo") m_model = "gpt-4-turbo";
+    m_model    = config.model;
+    m_providerConfig = config;
 
     fprintf(stderr, "[INFO] [ModelInvoker] Backend: %s @ %s (model: %s)\n",
             backend.c_str(), endpoint.c_str(), m_model.c_str());
+}
+
+void ModelInvoker::setProviderConfig(const ModelProviderConfig& config) {
+    m_providerConfig = config;
+    m_endpoint = config.endpoint;
+    m_apiKey = config.apiKey;
+    if (!config.model.empty()) {
+        m_model = config.model;
+    }
+
+    switch (config.type) {
+        case ProviderType::Ollama:
+            m_backend = "ollama";
+            break;
+        case ProviderType::LocalGGUF:
+            m_backend = "localgguf";
+            break;
+        case ProviderType::AnthropicNative:
+            m_backend = "anthropic";
+            break;
+        case ProviderType::OpenAICompatible:
+            m_backend = "openai-compatible";
+            break;
+        case ProviderType::SwarmDistributed:
+            m_backend = "swarm-distributed";
+            break;
+        default:
+            m_backend = "unknown";
+            break;
+    }
+
+    fprintf(stderr, "[INFO] [ModelInvoker] Provider configured: %s @ %s (model: %s)\n",
+            m_backend.c_str(), m_endpoint.c_str(), m_model.c_str());
 }
 
 void ModelInvoker::setSystemPromptTemplate(const std::string& t) {
@@ -114,65 +220,26 @@ LLMResponse ModelInvoker::invoke(const InvocationParams& params) {
         std::string userMsg = buildUserMessage(params);
         json llmResp;
 
-        std::string be = m_backend;
-        std::transform(be.begin(), be.end(), be.begin(),
-                       [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+        ProviderType type = m_providerConfig.type;
+        if (type == ProviderType::Unknown) {
+            type = providerTypeFromBackend(m_backend);
+        }
 
-        if (be == "ollama")
+        switch (type) {
+        case ProviderType::Ollama:
+        case ProviderType::LocalGGUF:
             llmResp = sendOllamaRequest(m_model, userMsg, params.maxTokens, params.temperature);
-        else if (be == "claude")
-            llmResp = sendClaudeRequest(userMsg, params.maxTokens, params.temperature);
-        else if (be == "openai" || be == "openai-turbo")
-            llmResp = sendOpenAIRequest(userMsg, params.maxTokens, params.temperature);
-        else {
+            break;
+        case ProviderType::AnthropicNative:
+            llmResp = sendClaudeRequest("", userMsg, params.maxTokens, params.temperature);
+            break;
+        case ProviderType::OpenAICompatible:
+            llmResp = sendOpenAICompatibleRequest("", userMsg, params.maxTokens, params.temperature);
+            break;
+        default:
             response.error = "Unknown backend: " + m_backend;
             m_isInvoking = false;
             return response;
-        }
-
-        // --- Fallback chain: if primary backend returned empty, try alternatives ---
-        if (llmResp.empty() && !m_apiKey.empty()) {
-            fprintf(stderr, "[WARN] [ModelInvoker] Primary backend '%s' failed, attempting fallback chain\n",
-                    be.c_str());
-
-            // Fallback 1: OpenAI GPT-4o
-            if (be != "openai") {
-                std::string savedModel = m_model;
-                m_model = "gpt-4o";
-                llmResp = sendOpenAIRequest(userMsg, params.maxTokens, params.temperature);
-                if (!llmResp.empty()) {
-                    be = "openai"; // Update for response parsing below
-                    fprintf(stderr, "[INFO] [ModelInvoker] Fallback to GPT-4o succeeded\n");
-                } else {
-                    m_model = savedModel;
-                }
-            }
-
-            // Fallback 2: GPT-4-turbo if GPT-4o also failed
-            if (llmResp.empty() && m_model != "gpt-4-turbo") {
-                std::string savedModel = m_model;
-                m_model = "gpt-4-turbo";
-                llmResp = sendOpenAIRequest(userMsg, params.maxTokens, params.temperature);
-                if (!llmResp.empty()) {
-                    be = "openai";
-                    fprintf(stderr, "[INFO] [ModelInvoker] Fallback to GPT-4-turbo succeeded\n");
-                } else {
-                    m_model = savedModel;
-                }
-            }
-
-            // Fallback 3: Ollama local
-            if (llmResp.empty() && be != "ollama" && !m_endpoint.empty()) {
-                std::string savedModel = m_model;
-                m_model = "mistral";
-                llmResp = sendOllamaRequest(m_model, userMsg, params.maxTokens, params.temperature);
-                if (!llmResp.empty()) {
-                    be = "ollama";
-                    fprintf(stderr, "[INFO] [ModelInvoker] Fallback to Ollama/mistral succeeded\n");
-                } else {
-                    m_model = savedModel;
-                }
-            }
         }
 
         if (llmResp.empty()) {
@@ -183,17 +250,17 @@ LLMResponse ModelInvoker::invoke(const InvocationParams& params) {
         }
 
         // Parse backend-specific format
-        if (be == "ollama") {
+        if (type == ProviderType::Ollama || type == ProviderType::LocalGGUF) {
             response.rawOutput  = llmResp.value("response", "");
             response.tokensUsed = llmResp.value("eval_count", 0)
                                 + llmResp.value("prompt_eval_count", 0);
-        } else if (be == "claude") {
+        } else if (type == ProviderType::AnthropicNative) {
             auto content = llmResp.value("content", json::array());
             if (!content.empty())
                 response.rawOutput = content.at(0).value("text", "");
             if (llmResp.contains("usage"))
                 response.tokensUsed = llmResp.at("usage").value("output_tokens", 0);
-        } else if (be == "openai") {
+        } else if (type == ProviderType::OpenAICompatible) {
             auto choices = llmResp.value("choices", json::array());
             if (!choices.empty())
                 response.rawOutput = choices.at(0).value("message", json{}).value("content", "");
@@ -226,6 +293,74 @@ LLMResponse ModelInvoker::invoke(const InvocationParams& params) {
     }
 
     m_isInvoking = false;
+    return response;
+}
+
+LLMResponse ModelInvoker::queryRaw(const std::string& systemPrompt,
+                                   const std::string& userPrompt,
+                                   int maxTokens,
+                                   double temperature) {
+    LLMResponse response;
+
+    ProviderType type = m_providerConfig.type;
+    if (type == ProviderType::Unknown) {
+        type = providerTypeFromBackend(m_backend);
+    }
+
+    json llmResp;
+    switch (type) {
+        case ProviderType::Ollama:
+        case ProviderType::LocalGGUF: {
+            std::string prompt = userPrompt;
+            if (!systemPrompt.empty()) {
+                prompt = systemPrompt + "\n\nUser: " + userPrompt + "\n\nAssistant:";
+            }
+            llmResp = sendOllamaRequest(m_model, prompt, maxTokens, temperature);
+            break;
+        }
+        case ProviderType::AnthropicNative:
+            llmResp = sendClaudeRequest(systemPrompt, userPrompt, maxTokens, temperature);
+            break;
+        case ProviderType::OpenAICompatible:
+            llmResp = sendOpenAICompatibleRequest(systemPrompt, userPrompt, maxTokens, temperature);
+            break;
+        case ProviderType::Unknown:
+        default:
+            response.error = "Unknown provider configuration";
+            return response;
+    }
+
+    if (llmResp.empty()) {
+        response.error = "Empty response from provider";
+        return response;
+    }
+
+    if (type == ProviderType::Ollama || type == ProviderType::LocalGGUF) {
+        response.rawOutput = llmResp.value("response", "");
+        response.tokensUsed = llmResp.value("eval_count", 0)
+                            + llmResp.value("prompt_eval_count", 0);
+    } else if (type == ProviderType::AnthropicNative) {
+        auto content = llmResp.value("content", json::array());
+        if (!content.empty()) {
+            response.rawOutput = content.at(0).value("text", "");
+        }
+        if (llmResp.contains("usage")) {
+            response.tokensUsed = llmResp.at("usage").value("output_tokens", 0);
+        }
+    } else if (type == ProviderType::OpenAICompatible) {
+        auto choices = llmResp.value("choices", json::array());
+        if (!choices.empty()) {
+            response.rawOutput = choices.at(0).value("message", json{}).value("content", "");
+        }
+        if (llmResp.contains("usage")) {
+            response.tokensUsed = llmResp.at("usage").value("completion_tokens", 0);
+        }
+    }
+
+    response.success = !response.rawOutput.empty();
+    if (!response.success && response.error.empty()) {
+        response.error = "Provider returned no completion text";
+    }
     return response;
 }
 
@@ -269,6 +404,30 @@ Respond with a valid JSON array of actions. Each action must have:
 - Always break complex tasks into manageable steps
 - Use existing patterns found in the codebase
 )";
+
+    auto& scopedProvider = RawrXD::Core::ScopedInstructionsProvider::instance();
+    scopedProvider.setProjectRoot(fs::current_path().string());
+    const auto resolved = scopedProvider.resolveForTargets({}, 3000);
+    if (!resolved.empty()) {
+        p += "\n# Scoped Instructions\n";
+        p += resolved.promptPayload;
+        p += "\n";
+
+        const std::string telemetry = RawrXD::Core::ScopedInstructionsProvider::formatTelemetry(resolved);
+        if (!telemetry.empty()) {
+            p += "\n# Scoped Instruction Trace\n";
+            p += telemetry;
+            p += "\n";
+        }
+
+        if (!resolved.sources.empty()) {
+            p += "Applied Sources:\n";
+            for (const auto& source : resolved.sources) {
+                p += "- " + source + "\n";
+            }
+        }
+    }
+
     return p;
 }
 
@@ -296,7 +455,8 @@ json ModelInvoker::sendOllamaRequest(const std::string& model,
         {"stream",      false}
     });
 
-    std::string url = m_endpoint + "/api/generate";
+    const std::string baseEndpoint = m_providerConfig.endpoint.empty() ? m_endpoint : m_providerConfig.endpoint;
+    std::string url = resolveEndpoint(baseEndpoint, "/api/generate");
     fprintf(stderr, "[INFO] [ModelInvoker] POST %s\n", url.c_str());
     std::string resp = httpPost(url, payload.dump(), {}, {}, {}, 30000);
 
@@ -308,7 +468,8 @@ json ModelInvoker::sendOllamaRequest(const std::string& model,
     }
 }
 
-json ModelInvoker::sendClaudeRequest(const std::string& prompt,
+json ModelInvoker::sendClaudeRequest(const std::string& systemPrompt,
+                                      const std::string& prompt,
                                       int maxTokens, double temperature) {
     json payload = nlohmann::json::object({
         {"model",      m_model},
@@ -316,8 +477,14 @@ json ModelInvoker::sendClaudeRequest(const std::string& prompt,
         {"temperature", temperature},
         {"messages",   json::array({nlohmann::json::object({{"role", "user"}, {"content", prompt}})}) }
     });
+    if (!systemPrompt.empty()) {
+        payload["system"] = systemPrompt;
+    }
 
-    std::string resp = httpPost("https://api.anthropic.com/v1/messages",
+    const std::string endpoint = m_providerConfig.endpoint.empty()
+        ? "https://api.anthropic.com"
+        : m_providerConfig.endpoint;
+    std::string resp = httpPost(resolveEndpoint(endpoint, "/v1/messages"),
                                 payload.dump(), m_apiKey,
                                 "x-api-key", m_apiKey, 30000);
     // Note: Claude uses x-api-key header, not Bearer token; we send both
@@ -330,16 +497,32 @@ json ModelInvoker::sendClaudeRequest(const std::string& prompt,
     }
 }
 
-json ModelInvoker::sendOpenAIRequest(const std::string& prompt,
+json ModelInvoker::sendOpenAIRequest(const std::string& systemPrompt,
+                                      const std::string& prompt,
                                       int maxTokens, double temperature) {
+    return sendOpenAICompatibleRequest(systemPrompt, prompt, maxTokens, temperature);
+}
+
+json ModelInvoker::sendOpenAICompatibleRequest(const std::string& systemPrompt,
+                                                const std::string& prompt,
+                                                int maxTokens, double temperature) {
+    json messages = json::array();
+    if (!systemPrompt.empty()) {
+        messages.push_back(nlohmann::json::object({{"role", "system"}, {"content", systemPrompt}}));
+    }
+    messages.push_back(nlohmann::json::object({{"role", "user"}, {"content", prompt}}));
+
     json payload = nlohmann::json::object({
         {"model",      m_model},
         {"max_tokens", maxTokens},
         {"temperature", temperature},
-        {"messages",   json::array({nlohmann::json::object({{"role", "user"}, {"content", prompt}})}) }
+        {"messages",   messages }
     });
 
-    std::string resp = httpPost("https://api.openai.com/v1/chat/completions",
+    const std::string endpoint = m_providerConfig.endpoint.empty()
+        ? "https://api.openai.com"
+        : m_providerConfig.endpoint;
+    std::string resp = httpPost(resolveEndpoint(endpoint, "/v1/chat/completions"),
                                 payload.dump(), m_apiKey, {}, {}, 30000);
 
     if (resp.empty()) return {};

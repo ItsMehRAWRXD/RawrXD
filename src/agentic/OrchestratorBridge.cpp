@@ -1,6 +1,10 @@
 // =============================================================================
 // OrchestratorBridge.cpp — Minimal Wiring Layer for CLI
 // =============================================================================
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
 #include "OrchestratorBridge.h"
 #include "ToolCallResult.h"
 #include "../logging/Logger.h"
@@ -247,6 +251,15 @@ std::string OrchestratorBridge::RunAgent(const std::string& userPrompt) {
 
         if (!result.response.empty()) {
             latestResponse = result.response;
+        }
+
+        // PROBE-E: Ollama ChatSync result
+        {
+            std::string probe = "[PROBE-E] OrchestratorBridge step=" + std::to_string(step) +
+                " response_len=" + std::to_string(result.response.size()) +
+                " has_tool_calls=" + (result.has_tool_calls ? "1" : "0") +
+                " preview=" + result.response.substr(0, std::min(result.response.size(), (size_t)80)) + "\n";
+            OutputDebugStringA(probe.c_str());
         }
 
         if (!result.has_tool_calls || result.tool_calls.empty()) {

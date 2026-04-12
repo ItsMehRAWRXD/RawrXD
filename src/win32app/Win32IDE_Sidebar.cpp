@@ -15,8 +15,6 @@
 #include <filesystem>
 #include <fstream>
 #include <regex>
-#include <shellapi.h>
-#include <shlwapi.h>
 #include <sstream>
 
 #include "IDELogger.h"
@@ -32,7 +30,6 @@
 #endif
 
 #pragma comment(lib, "comctl32.lib")
-#pragma comment(lib, "shlwapi.lib")
 
 namespace fs = std::filesystem;
 
@@ -50,6 +47,57 @@ static std::wstring utf8ToWide(const std::string& utf8)
     if (MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), static_cast<int>(utf8.size()), out.data(), len) == 0)
         return {};
     return out;
+}
+
+static std::string wideToUtf8(const std::wstring& wide)
+{
+    if (wide.empty())
+        return {};
+    const int len = WideCharToMultiByte(CP_UTF8, 0, wide.c_str(), static_cast<int>(wide.size()), nullptr, 0, nullptr,
+                                        nullptr);
+    if (len <= 0)
+        return {};
+    std::string out(static_cast<size_t>(len), '\0');
+    if (WideCharToMultiByte(CP_UTF8, 0, wide.c_str(), static_cast<int>(wide.size()), out.data(), len, nullptr,
+                            nullptr) == 0)
+        return {};
+    return out;
+}
+
+static bool launchExplorerSelectPath(const std::string& utf8Path)
+{
+    const std::wstring widePath = utf8ToWide(utf8Path);
+    if (widePath.empty())
+        return false;
+
+    std::wstring commandLine = L"explorer.exe /select,\"";
+    commandLine += widePath;
+    commandLine += L"\"";
+
+    STARTUPINFOW si = {};
+    si.cb = sizeof(si);
+    PROCESS_INFORMATION pi = {};
+    std::vector<wchar_t> mutableCmd(commandLine.begin(), commandLine.end());
+    mutableCmd.push_back(L'\0');
+
+    const BOOL launched = CreateProcessW(nullptr, mutableCmd.data(), nullptr, nullptr, FALSE, 0, nullptr, nullptr, &si, &pi);
+    if (!launched)
+        return false;
+
+    CloseHandle(pi.hThread);
+    CloseHandle(pi.hProcess);
+    return true;
+}
+
+static bool shouldSkipFindData(const WIN32_FIND_DATAW& findData)
+{
+    if (wcscmp(findData.cFileName, L".") == 0 || wcscmp(findData.cFileName, L"..") == 0)
+        return true;
+    if ((findData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) != 0)
+        return true;
+    if ((findData.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM) != 0)
+        return true;
+    return false;
 }
 }  // namespace
 
@@ -96,6 +144,7 @@ constexpr int IDC_DEBUG_STOP = 6042;
 constexpr int IDC_DEBUG_VARIABLES = 6043;
 constexpr int IDC_DEBUG_CALLSTACK = 6044;
 constexpr int IDC_DEBUG_CONSOLE = 6045;
+constexpr int IDC_DEBUG_VARIABLES_LABEL = 6046;
 
 constexpr int IDC_EXT_SEARCH = 6050;
 constexpr int IDC_EXT_LIST = 6051;
@@ -259,6 +308,52 @@ void applySidebarPaneLayout(HWND parent, std::initializer_list<RXDControl> contr
     }
     layout.Update(parent);
 }
+
+void layoutActivityBarButtons(HWND hwndActivityBar)
+{
+    if (!hwndActivityBar)
+        return;
+
+    RECT rc = {};
+    if (!GetClientRect(hwndActivityBar, &rc))
+        return;
+
+    const int iconSize = 40;
+    const int slotHeight = 48;
+    const int margin = 4;
+    const int centeredLeft = (rc.right - iconSize) / 2;
+    const int left = centeredLeft > 0 ? centeredLeft : 0;
+
+    // Top group (primary workspace navigators).
+    const int topIds[] = {IDC_ACTIVITY_EXPLORER, IDC_ACTIVITY_SEARCH, IDC_ACTIVITY_SCM,
+                          IDC_ACTIVITY_DEBUG,    IDC_ACTIVITY_EXTENSIONS, IDC_ACTIVITY_RECOVERY};
+    // Bottom group (global tools).
+    const int bottomIds[] = {IDC_ACTIVITY_CHAT};
+
+    int y = margin;
+    for (int id : topIds)
+    {
+        if (HWND h = GetDlgItem(hwndActivityBar, id))
+        {
+            MoveWindow(h, left, y, iconSize, iconSize, FALSE);
+        }
+        y += slotHeight;
+    }
+
+    const int bottomGroupHeight = static_cast<int>(std::size(bottomIds)) * slotHeight;
+    int yBottom = rc.bottom - margin - bottomGroupHeight;
+    if (yBottom < y)
+        yBottom = y;
+
+    for (int id : bottomIds)
+    {
+        if (HWND h = GetDlgItem(hwndActivityBar, id))
+        {
+            MoveWindow(h, left, yBottom, iconSize, iconSize, FALSE);
+        }
+        yBottom += slotHeight;
+    }
+}
 }  // namespace
 
 WNDPROC Win32IDE::s_sidebarContentOldProc = nullptr;
@@ -297,6 +392,8 @@ void Win32IDE::createActivityBar(HWND hwndParent)
                                        y, 40, 40, m_hwndActivityBar, (HMENU)(INT_PTR)btn.id, m_hInstance, nullptr);
         y += 48;
     }
+
+    layoutActivityBarButtons(m_hwndActivityBar);
 
     appendToOutput("Activity Bar created with 7 views (Files, Search, Source, Debug, Exts, Recov, Chat)\n", "Output",
                    OutputSeverity::Info);
@@ -417,6 +514,11 @@ LRESULT CALLBACK Win32IDE::ActivityBarProc(HWND hwnd, UINT uMsg, WPARAM wParam, 
             EndPaint(hwnd, &ps);
             return 0;
         }
+
+        case WM_SIZE:
+            layoutActivityBarButtons(hwnd);
+            InvalidateRect(hwnd, nullptr, TRUE);
+            return 0;
     }
 
     return DefWindowProcA(hwnd, uMsg, wParam, lParam);
@@ -655,7 +757,7 @@ LRESULT CALLBACK Win32IDE::SidebarContentProc(HWND hwnd, UINT uMsg, WPARAM wPara
             }
             if (id == IDC_EXPLORER_COLLAPSE)
             {
-                pThis->refreshFileTree();
+                pThis->collapseAllFolders();
                 return 0;
             }
             // Extensions toolbar
@@ -783,6 +885,9 @@ void Win32IDE::setSidebarView(SidebarView view)
         return;
     }
 
+    if (m_hwndSidebarContent && IsWindow(m_hwndSidebarContent))
+        SendMessageA(m_hwndSidebarContent, WM_SETREDRAW, FALSE, 0);
+
     // Hide all views
     ShowWindow(m_hwndExplorerTree, SW_HIDE);
     ShowWindow(m_hwndExplorerToolbar, SW_HIDE);
@@ -794,6 +899,9 @@ void Win32IDE::setSidebarView(SidebarView view)
     ShowWindow(m_hwndSCMMessageBox, SW_HIDE);
     ShowWindow(m_hwndDebugConfigs, SW_HIDE);
     ShowWindow(m_hwndDebugToolbar, SW_HIDE);
+    ShowWindow(m_hwndDebugVariables, SW_HIDE);
+    if (HWND hDebugVarsLabel = GetDlgItem(m_hwndSidebarContent, IDC_DEBUG_VARIABLES_LABEL))
+        ShowWindow(hDebugVarsLabel, SW_HIDE);
     ShowWindow(m_hwndExtensionsList, SW_HIDE);
     ShowWindow(m_hwndExtensionSearch, SW_HIDE);
     // Recovery view controls
@@ -886,7 +994,6 @@ void Win32IDE::setSidebarView(SidebarView view)
                 GetClientRect(m_hwndSidebar, &rcSidebar);
                 resizeSidebar(rcSidebar.right, rcSidebar.bottom);
             }
-            refreshFileTree();
             appendToOutput("Explorer view activated\n", "Output", OutputSeverity::Info);
             break;
 
@@ -921,6 +1028,9 @@ void Win32IDE::setSidebarView(SidebarView view)
         case SidebarView::RunDebug:
             ShowWindow(m_hwndDebugConfigs, SW_SHOW);
             ShowWindow(m_hwndDebugToolbar, SW_SHOW);
+            ShowWindow(m_hwndDebugVariables, SW_SHOW);
+            if (HWND hDebugVarsLabel = GetDlgItem(m_hwndSidebarContent, IDC_DEBUG_VARIABLES_LABEL))
+                ShowWindow(hDebugVarsLabel, SW_SHOW);
             if (m_hwndSidebar)
             {
                 RECT rcSidebar = {};
@@ -977,6 +1087,17 @@ void Win32IDE::setSidebarView(SidebarView view)
     }
 
     updateSidebarContent();
+
+    if (m_hwndSidebarContent && IsWindow(m_hwndSidebarContent))
+    {
+        SendMessageA(m_hwndSidebarContent, WM_SETREDRAW, TRUE, 0);
+        RedrawWindow(m_hwndSidebarContent, nullptr, nullptr,
+                     RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN | RDW_UPDATENOW);
+    }
+    if (m_hwndSidebar && IsWindow(m_hwndSidebar))
+        RedrawWindow(m_hwndSidebar, nullptr, nullptr, RDW_INVALIDATE | RDW_ERASE | RDW_UPDATENOW);
+    if (m_hwndActivityBar && IsWindow(m_hwndActivityBar))
+        RedrawWindow(m_hwndActivityBar, nullptr, nullptr, RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN | RDW_UPDATENOW);
 }
 
 void Win32IDE::updateSidebarContent()
@@ -985,7 +1106,8 @@ void Win32IDE::updateSidebarContent()
     switch (m_currentSidebarView)
     {
         case SidebarView::Explorer:
-            refreshFileTree();
+            if (!m_refreshingExplorerTree)
+                refreshFileTree();
             break;
         case SidebarView::Search:
             // Search results are updated on demand
@@ -1082,11 +1204,13 @@ void Win32IDE::resizeSidebar(int width, int height)
     }
     else if (m_hwndDebugConfigs && m_currentSidebarView == SidebarView::RunDebug)
     {
+        const HWND hDebugVarsLabel = GetDlgItem(m_hwndSidebarContent, IDC_DEBUG_VARIABLES_LABEL);
         applySidebarPaneLayout(m_hwndSidebarContent,
                                {
                                    {m_hwndDebugToolbar, 0.0f, 0.0f, 1.0f, 0.0f, 0, 0, 0, 35},
-                                   {m_hwndDebugConfigs, 0.0f, 0.0f, 1.0f, 0.0f, 5, 40, -10, 100},
-                                   {m_hwndDebugVariables, 0.0f, 0.0f, 1.0f, 1.0f, 5, 145, -10, -150},
+                                   {m_hwndDebugConfigs, 0.0f, 0.0f, 1.0f, 0.0f, 5, 40, -10, 90},
+                                   {hDebugVarsLabel, 0.0f, 0.0f, 1.0f, 0.0f, 5, 136, -10, 20},
+                                   {m_hwndDebugVariables, 0.0f, 0.0f, 1.0f, 1.0f, 5, 160, -10, -165},
                                });
 
         EndDeferWindowPos(hdwp);
@@ -1095,12 +1219,37 @@ void Win32IDE::resizeSidebar(int width, int height)
     else if (m_hwndExtensionsList && m_currentSidebarView == SidebarView::Extensions)
     {
         const HWND hInstall = GetDlgItem(m_hwndSidebarContent, IDC_EXT_INSTALL_VSIX);
+        const HWND hInstallBtn = GetDlgItem(m_hwndSidebarContent, IDC_EXT_INSTALL);
+        const HWND hUninstallBtn = GetDlgItem(m_hwndSidebarContent, IDC_EXT_UNINSTALL);
+        const HWND hDetailsBtn = GetDlgItem(m_hwndSidebarContent, IDC_EXT_DETAILS);
+        const UINT dpi = getWindowDpiSafe(m_hwndSidebar ? m_hwndSidebar : m_hwndSidebarContent);
+        const int pad = MulDiv(5, static_cast<int>(dpi), 96);
+        const int gap = MulDiv(5, static_cast<int>(dpi), 96);
+        const int buttonTop = MulDiv(38, static_cast<int>(dpi), 96);
+        const int buttonH = MulDiv(24, static_cast<int>(dpi), 96);
+        const int searchH = MulDiv(25, static_cast<int>(dpi), 96);
+
         applySidebarPaneLayout(m_hwndSidebarContent,
                                {
-                                   {m_hwndExtensionSearch, 0.0f, 0.0f, 1.0f, 0.0f, 5, 10, -10, 25},
-                                   {m_hwndExtensionsList, 0.0f, 0.0f, 1.0f, 1.0f, 5, 68, -10, -73},
-                                   {hInstall, 0.0f, 1.0f, 1.0f, 0.0f, 5, -36, -10, 28},
+                                   {m_hwndExtensionSearch, 0.0f, 0.0f, 1.0f, 0.0f, pad, 10, -pad * 2, searchH},
+                                   {m_hwndExtensionsList, 0.0f, 0.0f, 1.0f, 1.0f, pad, 68, -pad * 2, -73},
                                });
+
+        const int totalWidth = std::max(0, width - (2 * pad));
+        const int colWidth = std::max(MulDiv(56, static_cast<int>(dpi), 96), (totalWidth - (3 * gap)) / 4);
+        const int rowTotal = (4 * colWidth) + (3 * gap);
+        int startX = pad;
+        if (rowTotal < totalWidth)
+            startX += (totalWidth - rowTotal) / 2;
+
+        if (hInstall)
+            MoveWindow((HWND)hInstall, startX, buttonTop, colWidth, buttonH, TRUE);
+        if (hInstallBtn)
+            MoveWindow((HWND)hInstallBtn, startX + colWidth + gap, buttonTop, colWidth, buttonH, TRUE);
+        if (hUninstallBtn)
+            MoveWindow((HWND)hUninstallBtn, startX + (colWidth + gap) * 2, buttonTop, colWidth, buttonH, TRUE);
+        if (hDetailsBtn)
+            MoveWindow((HWND)hDetailsBtn, startX + (colWidth + gap) * 3, buttonTop, colWidth, buttonH, TRUE);
 
         EndDeferWindowPos(hdwp);
         return;
@@ -1168,6 +1317,8 @@ void Win32IDE::createExplorerView(HWND hwndParent)
 
     SetWindowLongPtrA(m_hwndExplorerTree, GWLP_USERDATA, (LONG_PTR)this);
     SetWindowLongPtrA(m_hwndExplorerTree, GWLP_WNDPROC, (LONG_PTR)ExplorerTreeProc);
+    TreeView_SetBkColor(m_hwndExplorerTree, RGB(30, 30, 30));
+    TreeView_SetTextColor(m_hwndExplorerTree, RGB(240, 240, 240));
     applySidebarFonts(m_hwndSidebarTitle, m_hwndExplorerToolbar, m_hwndExplorerTree);
 
     // LOGGING AS REQUESTED
@@ -1195,85 +1346,136 @@ void Win32IDE::createExplorerView(HWND hwndParent)
 
 void Win32IDE::refreshFileTree()
 {
-    appendToOutput("refreshFileTree() called\n", "Output", OutputSeverity::Debug);
-    if (!m_hwndExplorerTree)
-    {
-        appendToOutput("Cannot refresh file tree - m_hwndExplorerTree is null\n", "Output", OutputSeverity::Warning);
+    if (!m_hwndExplorerTree || m_refreshingExplorerTree)
         return;
+
+    struct ExplorerRefreshGuard
+    {
+        bool& flag;
+        ~ExplorerRefreshGuard()
+        {
+            flag = false;
+        }
+    } guard{m_refreshingExplorerTree};
+    m_refreshingExplorerTree = true;
+
+    appendToOutput("refreshFileTree() called\n", "Output", OutputSeverity::Debug);
+    TreeView_DeleteAllItems(m_hwndExplorerTree);
+    m_treeItemPaths.clear();
+
+    if (m_explorerRootPath.empty())
+    {
+        char cwd[MAX_PATH] = {};
+        DWORD len = GetCurrentDirectoryA(MAX_PATH, cwd);
+        if (len > 0 && len < MAX_PATH)
+            m_explorerRootPath = cwd;
     }
 
-    TreeView_DeleteAllItems(m_hwndExplorerTree);
+    auto insertNode = [this](HTREEITEM parent, const std::wstring& label, const std::string& path, bool isDirectory,
+                             bool addLoadingDummy) -> HTREEITEM
+    {
+        TVINSERTSTRUCTW tvis = {};
+        tvis.hParent = parent;
+        tvis.hInsertAfter = TVI_LAST;
+        tvis.item.mask = TVIF_TEXT | TVIF_PARAM;
+        tvis.item.pszText = const_cast<wchar_t*>(label.c_str());
+        tvis.item.lParam = isDirectory ? 1 : 0;
 
-    // Add root folder
-    TVINSERTSTRUCTA tvis = {};
-    tvis.hParent = TVI_ROOT;
-    tvis.hInsertAfter = TVI_LAST;
-    tvis.item.mask = TVIF_TEXT | TVIF_PARAM;
+        HTREEITEM hItem = (HTREEITEM)SendMessageW(m_hwndExplorerTree, TVM_INSERTITEMW, 0, (LPARAM)&tvis);
+        if (!hItem)
+            return nullptr;
 
-    // Use static buffer for root text
-    static char rootText[] = "Workspace";
-    tvis.item.pszText = rootText;
-    tvis.item.lParam = 0;
+        if (!path.empty())
+            m_treeItemPaths[hItem] = path;
 
-    HTREEITEM hRoot = TreeView_InsertItem(m_hwndExplorerTree, &tvis);
+        if (isDirectory && addLoadingDummy)
+        {
+            TVINSERTSTRUCTW dummy = {};
+            dummy.hParent = hItem;
+            dummy.hInsertAfter = TVI_FIRST;
+            dummy.item.mask = TVIF_TEXT;
+            static wchar_t loadingText[] = L"Loading...";
+            dummy.item.pszText = loadingText;
+            SendMessageW(m_hwndExplorerTree, TVM_INSERTITEMW, 0, (LPARAM)&dummy);
+        }
+
+        return hItem;
+    };
+
+    HTREEITEM hRoot = insertNode(TVI_ROOT, L"This PC", std::string(), true, false);
     if (!hRoot)
     {
-        appendToOutput("Failed to create tree root\n", "Output", OutputSeverity::Error);
+        appendToOutput("Failed to create explorer root\n", "Output", OutputSeverity::Error);
         return;
     }
 
-    // Enumerate files and folders with error handling
-    try
+    if (!m_explorerRootPath.empty() && fs::exists(m_explorerRootPath) && fs::is_directory(m_explorerRootPath))
     {
-        if (!fs::exists(m_explorerRootPath))
+        std::wstring workspaceLabel = L"Workspace";
+        try
         {
-            appendToOutput("Explorer root path does not exist: " + m_explorerRootPath + "\n", "Output",
-                           OutputSeverity::Warning);
-            return;
-        }
-
-        appendToOutput("Enumerating directory: " + m_explorerRootPath + "\n", "Output", OutputSeverity::Debug);
-
-        for (const auto& entry : fs::directory_iterator(m_explorerRootPath))
-        {
-            try
+            const fs::path workspacePath = fs::path(m_explorerRootPath);
+            if (!workspacePath.filename().empty())
             {
-                std::string name = entry.path().filename().string();
-
-                // Allocate on heap to avoid scope issues
-                char* nameBuffer = new char[name.size() + 1];
-                strcpy_s(nameBuffer, name.size() + 1, name.c_str());
-
-                tvis.hParent = hRoot;
-                tvis.item.pszText = nameBuffer;
-                tvis.item.lParam = entry.is_directory() ? 1 : 0;
-
-                HTREEITEM hItem = TreeView_InsertItem(m_hwndExplorerTree, &tvis);
-
-                // Store path mapping
-                if (hItem)
-                {
-                    m_treeItemPaths[hItem] = entry.path().string();
-                }
-
-                // Clean up buffer after insertion
-                delete[] nameBuffer;
-            }
-            catch (const std::exception& e)
-            {
-                // Skip problematic entries
-                continue;
+                workspaceLabel += L" (";
+                workspaceLabel += workspacePath.filename().wstring();
+                workspaceLabel += L")";
             }
         }
+        catch (...)
+        {
+        }
 
-        appendToOutput("File tree refreshed successfully\n", "Output", OutputSeverity::Info);
+        HTREEITEM hWorkspace = insertNode(hRoot, workspaceLabel, m_explorerRootPath, true, true);
+        if (hWorkspace)
+            TreeView_Expand(m_hwndExplorerTree, hWorkspace, TVE_EXPAND);
     }
-    catch (const std::exception& e)
+
+    wchar_t drivesBuf[512] = {};
+    const DWORD drivesLen = GetLogicalDriveStringsW(static_cast<DWORD>(std::size(drivesBuf)), drivesBuf);
+    if (drivesLen == 0 || drivesLen >= std::size(drivesBuf))
     {
-        appendToOutput("Error refreshing file tree: " + std::string(e.what()) + "\n", "Output", OutputSeverity::Error);
+        appendToOutput("GetLogicalDriveStringsW failed; explorer is showing workspace only\n", "Output",
+                       OutputSeverity::Warning);
+    }
+    else
+    {
+        for (const wchar_t* drive = drivesBuf; *drive != L'\0'; drive += wcslen(drive) + 1)
+        {
+            std::wstring drivePathW = drive;
+            std::string drivePath = wideToUtf8(drivePathW);
+            if (drivePath.empty())
+                continue;
+
+            std::wstring driveLabel = drivePathW;
+            switch (GetDriveTypeW(drivePathW.c_str()))
+            {
+                case DRIVE_FIXED:
+                    driveLabel += L" [Fixed]";
+                    break;
+                case DRIVE_REMOVABLE:
+                    driveLabel += L" [Removable]";
+                    break;
+                case DRIVE_REMOTE:
+                    driveLabel += L" [Network]";
+                    break;
+                case DRIVE_CDROM:
+                    driveLabel += L" [CD/DVD]";
+                    break;
+                case DRIVE_RAMDISK:
+                    driveLabel += L" [RAM]";
+                    break;
+                default:
+                    driveLabel += L" [Drive]";
+                    break;
+            }
+
+            insertNode(hRoot, driveLabel, drivePath, true, true);
+        }
     }
 
     TreeView_Expand(m_hwndExplorerTree, hRoot, TVE_EXPAND);
+    appendToOutput("File tree refreshed successfully\n", "Output", OutputSeverity::Info);
 }
 
 void Win32IDE::expandFolder(const std::string& path)
@@ -1328,48 +1530,58 @@ void Win32IDE::expandFolder(const std::string& path)
         // Populate with real directory contents
         try
         {
-            for (const auto& entry : fs::directory_iterator(path))
+            const std::wstring searchPattern = utf8ToWide(path) + L"\\*";
+            WIN32_FIND_DATAW findData = {};
+            HANDLE hFind = FindFirstFileExW(searchPattern.c_str(), FindExInfoBasic, &findData, FindExSearchNameMatch,
+                                            nullptr, 0);
+            if (hFind == INVALID_HANDLE_VALUE)
             {
-                try
+                LOG_WARNING("expandFolder: FindFirstFileExW failed for path: " + path);
+            }
+            else
+            {
+                do
                 {
-                    std::string name = entry.path().filename().string();
-                    // Skip hidden/system entries starting with '.'
-                    if (!name.empty() && name[0] == '.')
+                    if (shouldSkipFindData(findData))
                         continue;
 
-                    TVINSERTSTRUCTA tvis = {};
+                    const bool isDirectory = (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+                    const std::wstring nameW(findData.cFileName);
+                    const std::string name = wideToUtf8(nameW);
+                    if (name.empty())
+                        continue;
+
+                    TVINSERTSTRUCTW tvis = {};
                     tvis.hParent = hTarget;
                     tvis.hInsertAfter = TVI_LAST;
                     tvis.item.mask = TVIF_TEXT | TVIF_PARAM;
 
-                    char* nameBuffer = new char[name.size() + 1];
-                    strcpy_s(nameBuffer, name.size() + 1, name.c_str());
-                    tvis.item.pszText = nameBuffer;
-                    tvis.item.lParam = entry.is_directory() ? 1 : 0;
+                    tvis.item.pszText = const_cast<wchar_t*>(nameW.c_str());
+                    tvis.item.lParam = isDirectory ? 1 : 0;
 
-                    HTREEITEM hNew = TreeView_InsertItem(m_hwndExplorerTree, &tvis);
+                    HTREEITEM hNew = (HTREEITEM)SendMessageW(m_hwndExplorerTree, TVM_INSERTITEMW, 0, (LPARAM)&tvis);
                     if (hNew)
                     {
-                        m_treeItemPaths[hNew] = entry.path().string();
-                        // Add dummy child for subdirectories so expand arrow shows (intentional UX: "Loading..." until
-                        // expanded)
-                        if (entry.is_directory())
+                        std::wstring fullPathW = utf8ToWide(path);
+                        if (!fullPathW.empty() && fullPathW.back() != L'\\')
+                            fullPathW += L'\\';
+                        fullPathW += nameW;
+                        m_treeItemPaths[hNew] = wideToUtf8(fullPathW);
+                        if (isDirectory)
                         {
-                            TVINSERTSTRUCTA dummy = {};
+                            TVINSERTSTRUCTW dummy = {};
                             dummy.hParent = hNew;
                             dummy.hInsertAfter = TVI_FIRST;
                             dummy.item.mask = TVIF_TEXT;
-                            static char loadingText[] = "Loading...";
+                            static wchar_t loadingText[] = L"Loading...";
                             dummy.item.pszText = loadingText;
-                            TreeView_InsertItem(m_hwndExplorerTree, &dummy);
+                            SendMessageW(m_hwndExplorerTree, TVM_INSERTITEMW, 0, (LPARAM)&dummy);
                         }
                     }
-                    delete[] nameBuffer;
                 }
-                catch (...)
-                {
-                    continue;
-                }
+                while (FindNextFileW(hFind, &findData) != 0);
+
+                FindClose(hFind);
             }
         }
         catch (const std::exception& e)
@@ -1527,28 +1739,37 @@ void Win32IDE::revealInExplorer(const std::string& filePath)
     if (filePath.empty())
         return;
 
-    // Try to find matching tree item
+    HTREEITEM matchedItem = nullptr;
+
+    // Try to find matching tree item without mutating the tree while iterating
+    // the path map. Tree expansion can synchronously trigger notifications that
+    // rebuild explorer state.
     for (const auto& kv : m_treeItemPaths)
     {
         if (_stricmp(kv.second.c_str(), filePath.c_str()) == 0)
         {
-            // Select and expand parents
-            HTREEITEM item = kv.first;
-            HTREEITEM parent = TreeView_GetParent(m_hwndExplorerTree, item);
-            while (parent)
-            {
-                TreeView_Expand(m_hwndExplorerTree, parent, TVE_EXPAND);
-                parent = TreeView_GetParent(m_hwndExplorerTree, parent);
-            }
-            TreeView_SelectItem(m_hwndExplorerTree, item);
-            SetFocus(m_hwndExplorerTree);
-            appendToOutput("Revealed in Explorer: " + filePath + "\n", "Output", OutputSeverity::Info);
-            return;
+            matchedItem = kv.first;
+            break;
         }
     }
 
-    // Fallback: open system Explorer and select the file
-    ShellExecuteA(nullptr, "open", "explorer.exe", ("/select,\"" + filePath + "\"").c_str(), nullptr, SW_SHOWNORMAL);
+    if (matchedItem)
+    {
+        HTREEITEM parent = TreeView_GetParent(m_hwndExplorerTree, matchedItem);
+        while (parent)
+        {
+            TreeView_Expand(m_hwndExplorerTree, parent, TVE_EXPAND);
+            parent = TreeView_GetParent(m_hwndExplorerTree, parent);
+        }
+        TreeView_SelectItem(m_hwndExplorerTree, matchedItem);
+        SetFocus(m_hwndExplorerTree);
+        appendToOutput("Revealed in Explorer: " + filePath + "\n", "Output", OutputSeverity::Info);
+        return;
+    }
+
+    // Fallback: open system Explorer and select the file without Shell32 helpers
+    if (!launchExplorerSelectPath(filePath))
+        appendToOutput("Failed to reveal in Explorer: " + filePath + "\n", "Output", OutputSeverity::Warning);
 }
 
 void Win32IDE::handleExplorerContextMenu(POINT pt)
@@ -2161,10 +2382,10 @@ void Win32IDE::createRunDebugView(HWND hwndParent)
     SendMessageA(m_hwndDebugConfigs, CB_SETCURSEL, 0, 0);
 
     // Variables view
-    CreateWindowExA(0, "STATIC", "Variables:", WS_CHILD | WS_VISIBLE, 5, 145, 100, 20, hwndParent, nullptr, m_hInstance,
-                    nullptr);
+    CreateWindowExA(0, "STATIC", "Variables:", WS_CHILD | WS_VISIBLE, 5, 136, 100, 20, hwndParent,
+                    (HMENU)(INT_PTR)IDC_DEBUG_VARIABLES_LABEL, m_hInstance, nullptr);
     m_hwndDebugVariables =
-        CreateWindowExA(WS_EX_CLIENTEDGE, WC_LISTVIEWA, "", WS_CHILD | LVS_REPORT | WS_VSCROLL, 5, 145,
+        CreateWindowExA(WS_EX_CLIENTEDGE, WC_LISTVIEWA, "", WS_CHILD | LVS_REPORT | WS_VSCROLL, 5, 160,
                         SIDEBAR_DEFAULT_WIDTH - 10, 450, hwndParent, (HMENU)IDC_DEBUG_VARIABLES, m_hInstance, nullptr);
 
     LVCOLUMNA col = {};
@@ -3909,27 +4130,55 @@ LRESULT CALLBACK Win32IDE::FileExplorerProc(HWND hwnd, UINT uMsg, WPARAM wParam,
                     {
                         case TVN_DELETEITEM:
                         {
-                            NMTREEVIEWA* pnmtv = (NMTREEVIEWA*)lParam;
-                            if (pnmtv->itemOld.lParam)
+                            if (pnmh->idFrom == IDC_FILE_TREE)
                             {
-                                if (pnmh->idFrom == IDC_FILE_EXPLORER)
+                                NMTREEVIEWW* pnmtv = reinterpret_cast<NMTREEVIEWW*>(lParam);
+                                if (pnmtv->itemOld.lParam)
                                 {
-                                    delete[] reinterpret_cast<char*>(pnmtv->itemOld.lParam);
+                                    /* IDC_FILE_TREE uses std::string* (freed in FileExplorerContainerProc). */
                                 }
-                                /* IDC_FILE_TREE uses std::string* (freed in FileExplorerContainerProc);
-                                 * IDC_EXPLORER_TREE uses lParam as flag/index, no heap */
+                            }
+                            else
+                            {
+                                NMTREEVIEWA* pnmtv = reinterpret_cast<NMTREEVIEWA*>(lParam);
+                                if (pnmtv->itemOld.lParam)
+                                {
+                                    if (pnmh->idFrom == IDC_FILE_EXPLORER)
+                                    {
+                                        delete[] reinterpret_cast<char*>(pnmtv->itemOld.lParam);
+                                    }
+                                    /* IDC_EXPLORER_TREE uses lParam as flag/index, no heap. */
+                                }
                             }
                             return 0;
                         }
 
+                        case TVN_SELCHANGEDW:
+                        {
+                            if (pnmh->idFrom == IDC_FILE_TREE)
+                            {
+                                NMTREEVIEWW* pnmtv = reinterpret_cast<NMTREEVIEWW*>(lParam);
+                                if (pnmtv->itemNew.hItem)
+                                {
+                                    pThis->onFileTreeSelect(pnmtv->itemNew.hItem);
+                                }
+                                return 0;
+                            }
+                            break;
+                        }
+
                         case TVN_SELCHANGEDA:
                         {
-                            NMTREEVIEWA* pnmtv = (NMTREEVIEWA*)lParam;
-                            if (pnmtv->itemNew.hItem)
+                            if (pnmh->idFrom != IDC_FILE_TREE)
                             {
-                                pThis->onFileTreeSelect(pnmtv->itemNew.hItem);
+                                NMTREEVIEWA* pnmtv = reinterpret_cast<NMTREEVIEWA*>(lParam);
+                                if (pnmtv->itemNew.hItem)
+                                {
+                                    pThis->onFileTreeSelect(pnmtv->itemNew.hItem);
+                                }
+                                return 0;
                             }
-                            return 0;
+                            break;
                         }
 
                         case NM_DBLCLK:
@@ -3942,18 +4191,50 @@ LRESULT CALLBACK Win32IDE::FileExplorerProc(HWND hwnd, UINT uMsg, WPARAM wParam,
                             return 0;
                         }
 
+                        case TVN_ITEMEXPANDINGW:
+                        {
+                            if (pnmh->idFrom == IDC_FILE_TREE)
+                            {
+                                NMTREEVIEWW* pnmtv = reinterpret_cast<NMTREEVIEWW*>(lParam);
+                                if ((pnmtv->action & TVE_EXPAND) && pnmtv->itemNew.hItem)
+                                {
+                                    std::string path = pThis->getTreeItemPath(pnmtv->itemNew.hItem);
+                                    if (!path.empty())
+                                    {
+                                        pThis->onFileTreeExpand(pnmtv->itemNew.hItem, path);
+                                    }
+                                }
+                                return 0;
+                            }
+                            if (pThis->m_refreshingExplorerTree && pnmh->idFrom == IDC_EXPLORER_TREE)
+                                return 0;
+                            break;
+                        }
+
                         case TVN_ITEMEXPANDINGA:
                         {
-                            NMTREEVIEWA* pnmtv = (NMTREEVIEWA*)lParam;
-                            if ((pnmtv->action & TVE_EXPAND) && pnmtv->itemNew.hItem)
+                            if (pnmh->idFrom != IDC_FILE_TREE)
                             {
-                                std::string path = pThis->getTreeItemPath(pnmtv->itemNew.hItem);
-                                if (!path.empty())
+                                NMTREEVIEWA* pnmtv = reinterpret_cast<NMTREEVIEWA*>(lParam);
+                                if (pThis->m_refreshingExplorerTree &&
+                                    (pnmh->idFrom == IDC_EXPLORER_TREE || pnmh->idFrom == IDC_FILE_EXPLORER))
                                 {
-                                    pThis->onFileTreeExpand(pnmtv->itemNew.hItem, path);
+                                    return 0;
                                 }
+                                if ((pnmtv->action & TVE_EXPAND) && pnmtv->itemNew.hItem)
+                                {
+                                    std::string path = pThis->getTreeItemPath(pnmtv->itemNew.hItem);
+                                    if (!path.empty())
+                                    {
+                                        if (pnmh->idFrom == IDC_EXPLORER_TREE || pnmh->idFrom == IDC_FILE_EXPLORER)
+                                            pThis->expandFolder(path);
+                                        else
+                                            pThis->onFileTreeExpand(pnmtv->itemNew.hItem, path);
+                                    }
+                                }
+                                return 0;
                             }
-                            return 0;
+                            break;
                         }
                     }
                 }
@@ -4069,8 +4350,20 @@ void Win32IDE::onFileTreeDoubleClick(HTREEITEM item)
 
     if (attrs & FILE_ATTRIBUTE_DIRECTORY)
     {
-        // It's a directory — expand the tree node
-        if (m_hwndFileTree)
+        auto it = m_treeItemPaths.find(item);
+        if (it != m_treeItemPaths.end() && !it->second.empty())
+        {
+            UINT state = TreeView_GetItemState(m_hwndFileTree, item, TVIS_EXPANDED);
+            if (state & TVIS_EXPANDED)
+            {
+                TreeView_Expand(m_hwndFileTree, item, TVE_COLLAPSE);
+            }
+            else
+            {
+                expandFolder(it->second);
+            }
+        }
+        else if (m_hwndFileTree)
         {
             TreeView_Expand(m_hwndFileTree, item, TVE_TOGGLE);
         }

@@ -1,5 +1,6 @@
 #include <chrono>
 #include <csignal>
+#include <cstdlib>
 #include <iostream>
 #include <string>
 #include <thread>
@@ -47,8 +48,8 @@
 #include "security/RawrXD_Universal_Dorker.h"
 
 // Phase 33: Voice Chat Engine
-#include "core/voice_chat.hpp"
 #include "core/shared_feature_dispatch.h"
+#include "core/voice_chat.hpp"
 
 // Enterprise License & Feature Manager
 #include "core/enterprise_license.h"
@@ -72,6 +73,18 @@ static void cliRegistryOutput(const char* text, void* userData)
         std::cout << text;
 }
 
+/// Optional stderr-free throughput hint for CLI `/chat` (same spirit as Win32 `METRICS` gauge on copilot completions).
+static void maybePrintCliChatBench(int chatMs, const std::string& response)
+{
+    const char* v = std::getenv("RAWRXD_CHAT_BENCH");
+    if (!v || v[0] != '1' || chatMs <= 0 || response.empty())
+        return;
+    const double approxTok = std::max(1.0, static_cast<double>(response.size()) / 4.0);
+    const double tps = (approxTok * 1000.0) / static_cast<double>(chatMs);
+    std::cout << "[Bench] wall_ms=" << chatMs << " approx_out_toks~" << static_cast<int>(approxTok) << " approx_tps~"
+              << static_cast<int>(tps) << " (chars/4 heuristic; unset RAWRXD_CHAT_BENCH to hide)\n";
+}
+
 static bool dispatchProfileBangCommand(const std::string& input)
 {
     if (input.empty() || input[0] != '!')
@@ -82,9 +95,12 @@ static bool dispatchProfileBangCommand(const std::string& input)
     std::string args = (split == std::string::npos) ? "" : input.substr(split + 1);
 
     // Accept both canonical profile commands and tool-prefixed aliases.
-    if (cmd == "!tools_profile_start") cmd = "!profile_start";
-    else if (cmd == "!tools_profile_stop") cmd = "!profile_stop";
-    else if (cmd == "!tools_profile_results") cmd = "!profile_results";
+    if (cmd == "!tools_profile_start")
+        cmd = "!profile_start";
+    else if (cmd == "!tools_profile_stop")
+        cmd = "!profile_stop";
+    else if (cmd == "!tools_profile_results")
+        cmd = "!profile_results";
 
     if (!(cmd == "!profile_start" || cmd == "!profile_stop" || cmd == "!profile_results"))
         return false;
@@ -179,7 +195,7 @@ int main(int argc, char** argv)
         {
             engine_type = argv[++i];
         }
-        else if (arg == "--swarm-mode")
+        else if (arg == "--swarm-mode" || arg == "--swarm-distributed")
         {
             swarm_mode = true;
         }
@@ -227,6 +243,7 @@ Usage: RawrEngine [options]  (or RawrXD_CLI for pure CLI build)
   --port <port>     HTTP port (default 23959 for RawrXD_CLI, 8080 for RawrEngine)
   --engine <type>   Inference engine: cpu (default) or dml (DirectML GPU)
   --swarm-mode      Enable swarm inference mode
+    --swarm-distributed Enable distributed swarm backend routing
   --chain-depth <n> Number of models to chain in swarm (default: 1)
   --manifest <path> Manifest model for swarm orchestration
   --max-mode        Enable maximum performance mode
@@ -453,6 +470,11 @@ REPL Commands (chat + agentic — same as Win32 IDE):
     // Configure swarm mode if enabled
     if (swarm_mode)
     {
+#ifdef _WIN32
+        _putenv_s("RAWRXD_ENABLE_SWARM", "1");
+#else
+        setenv("RAWRXD_ENABLE_SWARM", "1", 1);
+#endif
         std::cout << "[SYSTEM] Enabling swarm mode with chain depth: " << chain_depth << "\n";
         if (engine == &cpuEngine)
         {
@@ -912,6 +934,7 @@ REPL Commands (chat + agentic — same as Win32 IDE):
                     int chatMs =
                         (int)std::chrono::duration_cast<std::chrono::milliseconds>(chatEnd - chatStart).count();
                     historyRecorder.recordChatResponse(response, chatMs);
+                    maybePrintCliChatBench(chatMs, response);
                     if (response.empty())
                     {
                         std::cout << "[ERROR] No model loaded. Use --model <gguf> or /chat /model:llama3.2 <msg> or "
@@ -1034,8 +1057,9 @@ REPL Commands (chat + agentic — same as Win32 IDE):
                 }
                 if (prompt.empty())
                 {
-                    std::cout << "Usage: /agent <prompt> [max_iterations]. Runs agentic loop (chat + tool dispatch "
-                                 "until done, like Win32 Agent menu).\n";
+                    std::cout << "Usage: /agent <prompt> [max_iterations]. Headless agentic loop (chat + tool "
+                                 "dispatch). Parity: in Win32 IDE use the same intent via prefixes /agent, /agentic, "
+                                 "agentic:, or @agent in Copilot chat when the agentic layer is available.\n";
                 }
                 else
                 {
@@ -2573,4 +2597,4 @@ REPL Commands (chat + agentic — same as Win32 IDE):
     server.Stop();
     return 0;
 }
-#endif // RAWRXD_STANDALONE_MAIN
+#endif  // RAWRXD_STANDALONE_MAIN

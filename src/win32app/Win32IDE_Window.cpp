@@ -45,7 +45,11 @@ bool Win32IDE::createWindow()
 
     if (!m_hwndMain)
     {
-        LOG_ERROR("Failed to create main window");
+        DWORD err = GetLastError();
+        char msg[256];
+        snprintf(msg, sizeof(msg), "Failed to create main window. Error=0x%08X", err);
+        LOG_ERROR(msg);
+        MessageBoxA(nullptr, msg, "RawrXD - CreateWindowExA Failure", MB_ICONERROR);
         return false;
     }
 

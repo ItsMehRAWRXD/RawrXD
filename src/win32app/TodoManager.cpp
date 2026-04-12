@@ -7,6 +7,7 @@
 #include <sstream>
 #include <regex>
 #include <algorithm>
+#include <cctype>
 #include <ctime>
 #include <iomanip>
 
@@ -31,6 +32,23 @@ int clampNonNegativeInt(int value, int maxValue) {
     }
     return std::min(value, maxValue);
 }
+
+std::string toLowerCopy(const std::string& s) {
+    std::string out = s;
+    std::transform(out.begin(), out.end(), out.begin(),
+        [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    return out;
+}
+
+std::string readOpString(const json& cmd, const char* keyLower, const char* keyUpper) {
+    if (cmd.contains(keyLower) && cmd[keyLower].is_string()) {
+        return cmd[keyLower].get<std::string>();
+    }
+    if (cmd.contains(keyUpper) && cmd[keyUpper].is_string()) {
+        return cmd[keyUpper].get<std::string>();
+    }
+    return {};
+}
 }
 
 namespace RawrXD {
@@ -49,7 +67,28 @@ static std::string getRawrXDAppDataDir() {
 // Default script path for PowerShell todo integration (optional).
 static std::string getTodoScriptPath() {
     const char* env = getenv("RAWRXD_TODO_SCRIPT");
-    if (env && env[0]) return env;
+    if (env && env[0] && GetFileAttributesA(env) != INVALID_FILE_ATTRIBUTES) return env;
+
+    char modulePath[MAX_PATH] = {};
+    if (GetModuleFileNameA(nullptr, modulePath, MAX_PATH) > 0) {
+        std::string exePath = modulePath;
+        const size_t slash = exePath.find_last_of("\\/");
+        const std::string exeDir = (slash == std::string::npos) ? std::string(".") : exePath.substr(0, slash);
+
+        std::vector<std::string> candidates = {
+            exeDir + "\\scripts\\todo_manager.ps1",
+            exeDir + "\\..\\scripts\\todo_manager.ps1",
+            exeDir + "\\..\\..\\scripts\\todo_manager.ps1",
+            "d:\\rawrxd\\scripts\\todo_manager.ps1"
+        };
+
+        for (const auto& candidate : candidates) {
+            if (GetFileAttributesA(candidate.c_str()) != INVALID_FILE_ATTRIBUTES) {
+                return candidate;
+            }
+        }
+    }
+
     std::string dir = getRawrXDAppDataDir();
     if (dir.empty()) return {};
     CreateDirectoryA((dir + "\\scripts").c_str(), nullptr);
@@ -294,17 +333,39 @@ bool TodoManager::ClearAll() {
 
 std::vector<TodoItem> TodoManager::ParseCommand(const std::string& command) {
     std::vector<TodoItem> todos;
-    
-    // Use PowerShell parser for consistency
+
     std::vector<std::string> args = {
         "-Operation", "parse",
-        "-Command", "\"" + command + "\""
+        "-Command", "\"" + command + "\"",
+        "-Json"
     };
-    
-    // Execute PowerShell command and parse output
-    // In real implementation, capture stdout and parse results
-    
-    // Fallback: C++ parsing
+
+    std::string output;
+    if (ExecutePowerShellCommandCapture("parse", args, output) && !output.empty()) {
+        try {
+            const json parsed = json::parse(output);
+            if (parsed.is_array()) {
+                for (const auto& item : parsed) {
+                    TodoItem todo;
+                    todo.text = clampField(item.value("Text", std::string()), kMaxTodoTextBytes);
+                    todo.priority = clampField(item.value("Priority", std::string("Medium")), kMaxTodoFieldBytes);
+                    todo.status = clampField(item.value("Status", std::string("pending")), kMaxTodoFieldBytes);
+                    todo.source = clampField(item.value("Source", std::string("parsed")), kMaxTodoFieldBytes);
+                    todo.category = clampField(item.value("Category", std::string("general")), kMaxTodoFieldBytes);
+                    if (!todo.text.empty()) {
+                        todos.push_back(std::move(todo));
+                    }
+                }
+            }
+        }
+        catch (...) {
+        }
+    }
+
+    if (!todos.empty()) {
+        return todos;
+    }
+
     auto texts = TodoCommandParser::Parse(command);
     for (const auto& text : texts) {
         TodoItem todo;
@@ -447,35 +508,66 @@ json TodoManager::TodoToJson(const TodoItem& todo) const {
 }
 
 bool TodoManager::ExecutePowerShellCommand(const std::string& operation, const std::vector<std::string>& args) {
+    std::string output;
+    return ExecutePowerShellCommandCapture(operation, args, output);
+}
+
+bool TodoManager::ExecutePowerShellCommandCapture(const std::string& operation, const std::vector<std::string>& args, std::string& output) {
     std::string scriptPath = getTodoScriptPath();
     if (scriptPath.empty() || GetFileAttributesA(scriptPath.c_str()) == INVALID_FILE_ATTRIBUTES)
         return false;
     std::ostringstream cmd;
     cmd << "powershell.exe -ExecutionPolicy Bypass -File \"" << scriptPath << "\" ";
     cmd << "-Operation " << operation;
-    
+
     for (const auto& arg : args) {
         cmd << " " << arg;
     }
-    
-    STARTUPINFOA si = { sizeof(si) };
-    PROCESS_INFORMATION pi = { 0 };
-    
-    // CreateProcessA requires a writable buffer; create a copy to avoid const violations
-    std::string cmdStr = cmd.str();
-    
-    if (!CreateProcessA(NULL, cmdStr.data(), NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
+
+    SECURITY_ATTRIBUTES sa = {};
+    sa.nLength = sizeof(sa);
+    sa.bInheritHandle = TRUE;
+
+    HANDLE readPipe = INVALID_HANDLE_VALUE;
+    HANDLE writePipe = INVALID_HANDLE_VALUE;
+    if (!CreatePipe(&readPipe, &writePipe, &sa, 0)) {
         return false;
     }
-    
+    SetHandleInformation(readPipe, HANDLE_FLAG_INHERIT, 0);
+
+    STARTUPINFOA si = { sizeof(si) };
+    si.dwFlags = STARTF_USESTDHANDLES;
+    si.hStdOutput = writePipe;
+    si.hStdError = writePipe;
+    si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
+    PROCESS_INFORMATION pi = { 0 };
+
+    std::string cmdStr = cmd.str();
+
+    if (!CreateProcessA(NULL, cmdStr.data(), NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi)) {
+        CloseHandle(readPipe);
+        CloseHandle(writePipe);
+        return false;
+    }
+
+    CloseHandle(writePipe);
+
+    char buffer[2048];
+    DWORD bytesRead = 0;
+    output.clear();
+    while (ReadFile(readPipe, buffer, sizeof(buffer), &bytesRead, NULL) && bytesRead > 0) {
+        output.append(buffer, buffer + bytesRead);
+    }
+    CloseHandle(readPipe);
+
     WaitForSingleObject(pi.hProcess, INFINITE);
-    
+
     DWORD exitCode;
     GetExitCodeProcess(pi.hProcess, &exitCode);
-    
+
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
-    
+
     return exitCode == 0;
 }
 
@@ -493,15 +585,111 @@ DWORD WINAPI TodoManager::PipeServerThreadProc(LPVOID param) {
             if (ReadFile(manager->pipeHandle_, buffer, kMaxChunk, &bytesRead, NULL) && bytesRead > 0) {
                 const size_t safeBytes = (bytesRead <= kMaxChunk) ? static_cast<size_t>(bytesRead) : static_cast<size_t>(kMaxChunk);
                 buffer[safeBytes] = '\0';
-                
-                // Process command from PowerShell
+
+                json reply;
+                reply["ok"] = false;
                 try {
                     json command = json::parse(buffer);
-                    // Handle commands...
+                    if (!command.is_object()) {
+                        reply["error"] = "Command must be a JSON object";
+                    } else {
+                        const std::string opRaw = readOpString(command, "operation", "Operation");
+                        const std::string op = toLowerCopy(opRaw);
+
+                        if (op == "add") {
+                            const std::string text = readOpString(command, "text", "Text");
+                            const std::string priority = readOpString(command, "priority", "Priority").empty()
+                                ? "Medium" : readOpString(command, "priority", "Priority");
+                            const std::string source = readOpString(command, "source", "Source").empty()
+                                ? "user" : readOpString(command, "source", "Source");
+                            const bool ok = manager->AddTodo(text, priority, source);
+                            reply["ok"] = ok;
+                            if (!ok) reply["error"] = "AddTodo failed";
+                        }
+                        else if (op == "complete") {
+                            const int id = command.value("id", command.value("Id", 0));
+                            const bool ok = manager->CompleteTodo(id);
+                            reply["ok"] = ok;
+                            if (!ok) reply["error"] = "CompleteTodo failed";
+                        }
+                        else if (op == "update") {
+                            const int id = command.value("id", command.value("Id", 0));
+                            json updates;
+                            if (command.contains("updates") && command["updates"].is_object()) {
+                                updates = command["updates"];
+                            } else if (command.contains("Updates") && command["Updates"].is_object()) {
+                                updates = command["Updates"];
+                            } else {
+                                updates = command;
+                            }
+                            const bool ok = manager->UpdateTodo(id, updates);
+                            reply["ok"] = ok;
+                            if (!ok) reply["error"] = "UpdateTodo failed";
+                        }
+                        else if (op == "delete") {
+                            const int id = command.value("id", command.value("Id", 0));
+                            const bool ok = manager->DeleteTodo(id);
+                            reply["ok"] = ok;
+                            if (!ok) reply["error"] = "DeleteTodo failed";
+                        }
+                        else if (op == "clear") {
+                            const bool ok = manager->ClearAll();
+                            reply["ok"] = ok;
+                            if (!ok) reply["error"] = "ClearAll failed";
+                        }
+                        else if (op == "reload") {
+                            const bool ok = manager->Reload();
+                            reply["ok"] = ok;
+                            if (!ok) reply["error"] = "Reload failed";
+                        }
+                        else if (op == "list" || op == "getall") {
+                            reply["ok"] = true;
+                            reply["items"] = json::array();
+                            for (const auto& todo : manager->GetAll()) {
+                                reply["items"].push_back(manager->TodoToJson(todo));
+                            }
+                        }
+                        else if (op == "stats") {
+                            const auto stats = manager->GetStatistics();
+                            reply["ok"] = true;
+                            reply["stats"] = {
+                                {"totalCreated", stats.totalCreated},
+                                {"totalCompleted", stats.totalCompleted},
+                                {"totalDeleted", stats.totalDeleted},
+                                {"agenticCreated", stats.agenticCreated},
+                                {"userCreated", stats.userCreated},
+                                {"parsedCreated", stats.parsedCreated}
+                            };
+                            reply["count"] = manager->GetCount();
+                        }
+                        else if (op == "parse") {
+                            const std::string text = readOpString(command, "command", "Command");
+                            auto parsed = TodoCommandParser::Parse(text);
+                            reply["ok"] = true;
+                            reply["parsed"] = parsed;
+                        }
+                        else if (op == "agentic_create") {
+                            const std::string context = readOpString(command, "context", "Context");
+                            const auto todos = manager->CreateAgenticTodos(context);
+                            reply["ok"] = true;
+                            reply["items"] = json::array();
+                            for (const auto& todo : todos) {
+                                reply["items"].push_back(manager->TodoToJson(todo));
+                            }
+                        }
+                        else {
+                            reply["error"] = "Unsupported operation";
+                            reply["operation"] = opRaw;
+                        }
+                    }
                 }
                 catch (...) {
-                    // Invalid JSON
+                    reply["error"] = "Invalid JSON payload";
                 }
+
+                const std::string out = reply.dump();
+                DWORD bytesWritten = 0;
+                WriteFile(manager->pipeHandle_, out.c_str(), static_cast<DWORD>(out.size()), &bytesWritten, NULL);
             }
             
             DisconnectNamedPipe(manager->pipeHandle_);
@@ -733,6 +921,155 @@ std::vector<TodoItem> AgenticTodoCreator::GenerateContextSpecific() const {
     }
     
     return todos;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TodoUIRenderer Implementation
+// ═══════════════════════════════════════════════════════════════════════════════
+
+void TodoUIRenderer::DrawText(HDC hdc, const std::wstring& text, RECT rect, COLORREF color) {
+    if (!hdc || text.empty()) {
+        return;
+    }
+
+    const COLORREF oldColor = SetTextColor(hdc, color);
+    const int oldBkMode = SetBkMode(hdc, TRANSPARENT);
+    ::DrawTextW(hdc, text.c_str(), -1, &rect, DT_LEFT | DT_TOP | DT_NOPREFIX | DT_WORDBREAK);
+    SetBkMode(hdc, oldBkMode);
+    SetTextColor(hdc, oldColor);
+}
+
+void TodoUIRenderer::DrawIcon(HDC hdc, const std::wstring& icon, POINT pos) {
+    RECT rect = { pos.x, pos.y, pos.x + 24, pos.y + 24 };
+    DrawText(hdc, icon, rect, RGB(230, 230, 230));
+}
+
+void TodoUIRenderer::RenderTodoItem(HDC hdc, const TodoItem& todo, RECT itemRect, bool selected) {
+    if (!hdc) {
+        return;
+    }
+
+    HBRUSH bgBrush = CreateSolidBrush(selected ? RGB(45, 60, 85) : RGB(30, 30, 30));
+    FillRect(hdc, &itemRect, bgBrush);
+    DeleteObject(bgBrush);
+
+    RECT iconRect = itemRect;
+    iconRect.left += 8;
+    iconRect.top += 6;
+    iconRect.right = iconRect.left + 24;
+    iconRect.bottom = iconRect.top + 24;
+    DrawText(hdc, todo.GetStatusIcon(), iconRect, todo.GetStatusColor());
+
+    RECT priorityRect = iconRect;
+    priorityRect.left += 28;
+    priorityRect.right += 28;
+    DrawText(hdc, todo.GetPriorityIcon(), priorityRect, RGB(220, 220, 220));
+
+    RECT textRect = itemRect;
+    textRect.left += 64;
+    textRect.top += 6;
+    textRect.right -= 12;
+    textRect.bottom = textRect.top + 36;
+    DrawText(hdc, std::wstring(todo.text.begin(), todo.text.end()), textRect, RGB(240, 240, 240));
+
+    RECT metaRect = itemRect;
+    metaRect.left += 64;
+    metaRect.top += 38;
+    metaRect.right -= 12;
+    metaRect.bottom -= 6;
+    std::wstring meta = std::wstring(todo.priority.begin(), todo.priority.end()) +
+                        L" | " + std::wstring(todo.status.begin(), todo.status.end()) +
+                        L" | #" + std::to_wstring(todo.id);
+    DrawText(hdc, meta, metaRect, RGB(160, 160, 160));
+}
+
+void TodoUIRenderer::RenderProgressBar(HDC hdc, int completed, int total, RECT barRect) {
+    if (!hdc) {
+        return;
+    }
+
+    HBRUSH bgBrush = CreateSolidBrush(RGB(50, 50, 50));
+    FillRect(hdc, &barRect, bgBrush);
+    DeleteObject(bgBrush);
+
+    RECT fillRect = barRect;
+    if (total > 0 && completed > 0) {
+        const int width = barRect.right - barRect.left;
+        fillRect.right = barRect.left + (width * std::min(completed, total)) / total;
+        HBRUSH fillBrush = CreateSolidBrush(RGB(0, 180, 90));
+        FillRect(hdc, &fillRect, fillBrush);
+        DeleteObject(fillBrush);
+    }
+
+    FrameRect(hdc, &barRect, static_cast<HBRUSH>(GetStockObject(WHITE_BRUSH)));
+}
+
+void TodoUIRenderer::RenderStatistics(HDC hdc, const TodoManager::Statistics& stats, RECT statsRect) {
+    if (!hdc) {
+        return;
+    }
+
+    const int totalActive = std::max(0, stats.totalCreated - stats.totalDeleted);
+    const int completed = std::max(0, stats.totalCompleted);
+
+    RECT titleRect = statsRect;
+    titleRect.bottom = titleRect.top + 22;
+    DrawText(hdc, L"Todo Statistics", titleRect, RGB(255, 255, 255));
+
+    RECT bodyRect = statsRect;
+    bodyRect.top += 24;
+    std::wstring body =
+        L"Created: " + std::to_wstring(stats.totalCreated) +
+        L"  Completed: " + std::to_wstring(stats.totalCompleted) +
+        L"  Deleted: " + std::to_wstring(stats.totalDeleted) +
+        L"\nAgentic: " + std::to_wstring(stats.agenticCreated) +
+        L"  User: " + std::to_wstring(stats.userCreated) +
+        L"  Parsed: " + std::to_wstring(stats.parsedCreated);
+    DrawText(hdc, body, bodyRect, RGB(200, 200, 200));
+
+    RECT progressRect = statsRect;
+    progressRect.top = statsRect.bottom - 18;
+    RenderProgressBar(hdc, completed, std::max(totalActive, completed), progressRect);
+}
+
+void TodoUIRenderer::RenderTodoList(HDC hdc, const std::vector<TodoItem>& todos, RECT clientRect) {
+    if (!hdc) {
+        return;
+    }
+
+    HBRUSH bgBrush = CreateSolidBrush(RGB(24, 24, 24));
+    FillRect(hdc, &clientRect, bgBrush);
+    DeleteObject(bgBrush);
+
+    RECT headerRect = clientRect;
+    headerRect.left += 8;
+    headerRect.top += 8;
+    headerRect.bottom = headerRect.top + 24;
+    DrawText(hdc, L"Todo List", headerRect, RGB(255, 255, 255));
+
+    RECT statsRect = clientRect;
+    statsRect.left += 8;
+    statsRect.top = headerRect.bottom + 4;
+    statsRect.right -= 8;
+    statsRect.bottom = statsRect.top + 76;
+
+    TodoManager::Statistics stats = {};
+    stats.totalCreated = static_cast<int>(todos.size());
+    stats.totalCompleted = static_cast<int>(std::count_if(todos.begin(), todos.end(), [](const TodoItem& todo) {
+        return todo.status == "completed";
+    }));
+    RenderStatistics(hdc, stats, statsRect);
+
+    int y = statsRect.bottom + 10;
+    constexpr int itemHeight = 62;
+    for (size_t i = 0; i < todos.size(); ++i) {
+        RECT itemRect = { clientRect.left + 8, y, clientRect.right - 8, y + itemHeight };
+        if (itemRect.bottom > clientRect.bottom) {
+            break;
+        }
+        RenderTodoItem(hdc, todos[i], itemRect, false);
+        y += itemHeight + 6;
+    }
 }
 
 } // namespace Todos

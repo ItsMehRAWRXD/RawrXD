@@ -17,6 +17,7 @@
 # - test_terminal
 # - test_ide_main
 # - test_header
+# - sovereign_assembler_smoke
 
 cmake_minimum_required(VERSION 3.20)
 
@@ -344,6 +345,31 @@ if(NOT TARGET test_instructions_provider AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}
     endif()
     add_test(NAME test_instructions_provider COMMAND test_instructions_provider)
     message(STATUS "  ✓ Added test_instructions_provider")
+endif()
+
+if(TARGET sovereign_assembler_smoke)
+    add_test(NAME sovereign_assembler_smoke COMMAND sovereign_assembler_smoke)
+    message(STATUS "  ✓ Registered sovereign_assembler_smoke (SovereignAssembler PE smoke)")
+endif()
+
+# Lane B RawrEngine: headless Copilot parity (minimal GGUF + AgenticBridge + NativeAgent)
+if(TARGET RawrEngine)
+    add_test(
+        NAME rawrengine_copilot_smoke
+        COMMAND $<TARGET_FILE:RawrEngine> --copilot-smoke
+    )
+    set_tests_properties(rawrengine_copilot_smoke PROPERTIES LABELS "smoke;copilot;inference" TIMEOUT 600)
+    message(STATUS "  ✓ Registered rawrengine_copilot_smoke (RawrEngine --copilot-smoke)")
+endif()
+
+# Win32 IDE: headless agentic smoke (tool registry + optional live Ollama); exits before main window when flag present.
+if(TARGET RawrXD-Win32IDE)
+    add_test(
+        NAME win32ide_agentic_smoke
+        COMMAND $<TARGET_FILE:RawrXD-Win32IDE> --agentic-smoke
+    )
+    set_tests_properties(win32ide_agentic_smoke PROPERTIES LABELS "smoke;agentic;win32ide" TIMEOUT 600)
+    message(STATUS "  ✓ Registered win32ide_agentic_smoke (RawrXD-Win32IDE --agentic-smoke)")
 endif()
 
 message(STATUS "========================================")

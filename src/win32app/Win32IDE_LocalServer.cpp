@@ -2212,20 +2212,23 @@ std::vector<std::string> Win32IDE::getCandidateModelRootPaths()
     if (!programData.empty())
         addRoot(programData + "\\Ollama\\models");
 
-    // 3) Common custom locations (esp. on machines with big D: drives).
-    addRoot("D:\\OllamaModels");
-    addRoot("D:\\models");
+    // 3) Common custom locations (esp. on machines with big secondary drives).
+    // addRoot("D:\\OllamaModels");
+    // addRoot("D:\\models");
 
-    // 4) Portable folder next to the executable (bin\\models).
+    // 4) Portable folder next to the executable (models).
     char exePath[MAX_PATH] = {};
     DWORD n = GetModuleFileNameA(nullptr, exePath, MAX_PATH);
     if (n > 0 && n < MAX_PATH)
     {
         std::string exe(exePath, exePath + n);
         size_t slash = exe.find_last_of("\\/");
-        std::string dir = (slash == std::string::npos) ? std::string() : exe.substr(0, slash);
+        std::string dir = (slash == std::string::npos) ? std::string(".") : exe.substr(0, slash);
         if (!dir.empty())
+        {
             addRoot(dir + "\\models");
+            addRoot(dir + "\\dist"); // Often models live in dist/ too
+        }
     }
 
     return roots;

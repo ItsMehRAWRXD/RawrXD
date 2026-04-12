@@ -46,6 +46,8 @@
 #include <vector>
 #include <windows.h>
 
+#include "Win32IDE.h"  // routeToIde: ctx.idePtr is Win32IDE* (not HWND*)
+
 static RawrXD::Agent::AgentOllamaClient& getAgentClient();
 
 // ============================================================================
@@ -515,10 +517,14 @@ static CommandResult routeToIde(const CommandContext& ctx, uint32_t cmdId, const
     ReverseTraceScope _trace("ssot.routeToIde");
     if (ctx.isGui && ctx.idePtr)
     {
-        // Route to Win32IDE's WM_COMMAND handler (use ctx.hwnd when set by adapter)
-        HWND hwnd = reinterpret_cast<HWND>(ctx.hwnd);
+        // Route to Win32IDE's WM_COMMAND handler (ctx.hwnd from win32_feature_adapter; idePtr is Win32IDE*).
+        HWND hwnd = static_cast<HWND>(ctx.hwnd);
         if (!hwnd)
-            hwnd = *reinterpret_cast<HWND*>(ctx.idePtr);  // Fallback for older callers
+        {
+            auto* ide = static_cast<Win32IDE*>(ctx.idePtr);
+            if (ide)
+                hwnd = ide->getMainWindow();
+        }
         if (hwnd)
             PostMessageA(hwnd, WM_COMMAND, cmdId, 0);
         return CommandResult::ok(name);
@@ -4760,7 +4766,7 @@ CommandResult handlePluginUnloadAll(const CommandContext& ctx)
 CommandResult handlePromptClassifyContext(const CommandContext& ctx)
 {
     if (ctx.isGui && ctx.idePtr)
-        routeToIde(ctx, 11600, "prompt.classify");
+        routeToIde(ctx, 12300, "prompt.classify");  // was 11600; Tier5 crash panel ID (IDM_CRASH_SHOW)
     std::string text = ctx.args ? std::string(ctx.args) : std::string();
     if (text.empty())
         return CommandResult::error("Usage: !prompt_classify <text>");
@@ -5871,7 +5877,7 @@ CommandResult handleTransToggle(const CommandContext& ctx)
 CommandResult handleHelpCmdRef(const CommandContext& ctx)
 {
     if (ctx.isGui && ctx.idePtr)
-        return routeToIde(ctx, 4002, "help.cmdref");
+        return routeToIde(ctx, 7901, "help.cmdref");
     ctx.output("=== RawrXD Command Reference ===\n");
     ctx.output("Type !help <command> for details on a specific command.\n");
     ctx.output("Categories: file, edit, agent, debug, hotpatch, ai, re, voice, server, git, swarm\n");
@@ -5881,7 +5887,7 @@ CommandResult handleHelpCmdRef(const CommandContext& ctx)
 CommandResult handleHelpPsDocs(const CommandContext& ctx)
 {
     if (ctx.isGui && ctx.idePtr)
-        return routeToIde(ctx, 4003, "help.psdocs");
+        return routeToIde(ctx, 7902, "help.psdocs");
     ctx.output("PowerShell Integration Docs:\n");
     ctx.output("  Import-Module RawrXD  ? Load the RawrXD PowerShell module\n");
     ctx.output("  Get-RawrXDCommand     ? List all available commands\n");
@@ -5892,7 +5898,7 @@ CommandResult handleHelpPsDocs(const CommandContext& ctx)
 CommandResult handleHelpSearch(const CommandContext& ctx)
 {
     if (ctx.isGui && ctx.idePtr)
-        return routeToIde(ctx, 4004, "help.search");
+        return routeToIde(ctx, 7903, "help.search");
     std::string query = ctx.args ? ctx.args : "";
     if (query.empty())
     {
@@ -9233,4 +9239,3 @@ CommandResult handleMoeBenchmark(const CommandContext& ctx)
 {
     return routeToIde(ctx, 6130, "moe.benchmark");
 }
-

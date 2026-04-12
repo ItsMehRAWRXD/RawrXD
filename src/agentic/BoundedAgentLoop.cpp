@@ -22,6 +22,7 @@
 #include <sstream>
 #include <thread>
 #include <chrono>
+#include <unordered_map>
 
 // SCAFFOLD_295: BoundedAgentLoop integration
 
@@ -315,15 +316,29 @@ std::string BoundedAgentLoop::RunLoop(const std::string& userPrompt) {
 // ============================================================================
 
 ToolCallResult BoundedAgentLoop::DispatchTool(const std::string& name, const json& args) {
-    if (name == "read_file")        return AgentToolHandlers::ToolReadFile(args);
-    if (name == "write_file")       return AgentToolHandlers::WriteFile(args);
-    if (name == "replace_in_file")  return AgentToolHandlers::ReplaceInFile(args);
-    if (name == "list_dir")         return AgentToolHandlers::ListDir(args);
-    if (name == "execute_command")  return AgentToolHandlers::ExecuteCommand(args);
-    if (name == "search_code")      return AgentToolHandlers::SearchCode(args);
-    if (name == "get_diagnostics")  return AgentToolHandlers::GetDiagnostics(args);
+    static const std::unordered_map<std::string, std::string> kToolAliases = {
+        {"terminal_runCommand", "terminal_run_command"},
+        {"search_ripGrep", "search_ripgrep"},
+        {"fs_readFile", "fs_read_file"},
+        {"fs_writeFile", "fs_write_file"},
+        {"fs_listDirectory", "fs_list_directory"},
+        {"fs_deleteFile", "fs_delete_file"},
+        {"fs_moveFile", "fs_move_file"},
+        {"fs_copyFile", "fs_copy_file"}
+    };
 
-    return ToolCallResult::NotFound(name);
+    const auto aliasIt = kToolAliases.find(name);
+    const std::string resolvedName = (aliasIt != kToolAliases.end()) ? aliasIt->second : name;
+
+    ToolCallResult result = AgentToolHandlers::Instance().Execute(resolvedName, args);
+    if (result.outcome == ToolOutcome::NotFound) {
+        result.metadata = nlohmann::json::object({
+            {"requested_tool", name},
+            {"resolved_tool", resolvedName},
+            {"dispatcher", "registry"}
+        });
+    }
+    return result;
 }
 
 // ============================================================================

@@ -9,6 +9,8 @@
 #undef ERROR
 #endif
 #include "agentic_observability.h"
+#include <algorithm>
+#include <cctype>
 #include <chrono>
 #include <cstdio>
 #include <filesystem>
@@ -152,6 +154,45 @@ nlohmann::json extractToolArgsFromPayload(const nlohmann::json& payload)
 
     return nlohmann::json::object();
 }
+
+std::vector<std::string> BuildZeroDependencyPlan(const std::string& request)
+{
+    const std::string lower = [&]() {
+        std::string s = request;
+        std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) {
+            return static_cast<char>(std::tolower(c));
+        });
+        return s;
+    }();
+
+    std::vector<std::string> plan;
+    plan.push_back("Analyze request and identify target files/functions.");
+
+    if (lower.find("search") != std::string::npos || lower.find("find") != std::string::npos) {
+        plan.push_back("Run search_code to locate relevant symbols and call paths.");
+    }
+    if (lower.find("fix") != std::string::npos || lower.find("patch") != std::string::npos ||
+        lower.find("edit") != std::string::npos || lower.find("refactor") != std::string::npos) {
+        plan.push_back("Apply targeted edits with replace_in_file or write_file.");
+    }
+    if (lower.find("build") != std::string::npos || lower.find("compile") != std::string::npos ||
+        lower.find("error") != std::string::npos || lower.find("test") != std::string::npos) {
+        plan.push_back("Execute build/diagnostics and iterate on failures.");
+    }
+
+    plan.push_back("Summarize concrete changes and verification evidence.");
+    return plan;
+}
+
+std::string FormatPlanForSystemPrompt(const std::vector<std::string>& plan)
+{
+    std::ostringstream oss;
+    oss << "\n\nLocal planner (zero-dependency)\n";
+    for (size_t i = 0; i < plan.size(); ++i) {
+        oss << (i + 1) << ". " << plan[i] << "\n";
+    }
+    return oss.str();
+}
 }  // namespace
 
 void AgentOrchestrator::DispatchTask(const std::string& task_id, const nlohmann::json& payload)
@@ -245,7 +286,14 @@ void AgentOrchestrator::ExecuteTask(const std::string& id, const nlohmann::json&
 
         ChatMessage sysMsg;
         sysMsg.role = "system";
-        sysMsg.content = m_registry.GetSystemPrompt(cwd, promptFiles);
+        std::vector<std::string> scopedSources;
+        sysMsg.content = m_registry.GetSystemPrompt(cwd, promptFiles, &scopedSources);
+        session.applied_instruction_sources = scopedSources;
+        if (!scopedSources.empty()) {
+            GetObservability().logInfo(kComponent,
+                                       "Scoped instructions resolved",
+                                       {{"task_id", id}, {"source_count", static_cast<int>(scopedSources.size())}, {"sources", scopedSources}});
+        }
         if (!specialization.empty()) {
             sysMsg.content += "\n\nSpecialization focus: " + specialization;
         }
@@ -291,6 +339,8 @@ void AgentOrchestrator::ExecuteTask(const std::string& id, const nlohmann::json&
                                    {{"task_id", id},
                                     {"action", action},
                                     {"specialization", specialization},
+                                    {"applied_instruction_source_count", static_cast<int>(session.applied_instruction_sources.size())},
+                                    {"applied_instruction_sources", session.applied_instruction_sources},
                                     {"tool_calls_made", session.tool_calls_made},
                                     {"errors_encountered", session.errors_encountered},
                                     {"response_len", static_cast<int>(finalResponse.size())}});
@@ -437,7 +487,21 @@ AgentSession AgentOrchestrator::RunAgentLoop(const std::string& user_message, St
     sysMsg.role = "system";
     const std::string cwd = m_config.working_directory.empty() ? "." : m_config.working_directory;
     const std::vector<std::string> promptFiles = CollectPromptContextFiles(cwd);
-    sysMsg.content = m_registry.GetSystemPrompt(cwd, promptFiles);
+    std::vector<std::string> scopedSources;
+    sysMsg.content = m_registry.GetSystemPrompt(cwd, promptFiles, &scopedSources);
+    session.applied_instruction_sources = scopedSources;
+    if (!scopedSources.empty()) {
+        obs.logInfo(kComponent,
+                    "Scoped instructions resolved",
+                    nlohmann::json::object(
+                        {{"session_id", session.session_id},
+                         {"source_count", static_cast<int>(scopedSources.size())},
+                         {"sources", scopedSources}}));
+    }
+
+    // Zero-dependency planner loop: deterministic local planning before tool rounds.
+    const auto localPlan = BuildZeroDependencyPlan(user_message);
+    sysMsg.content += FormatPlanForSystemPrompt(localPlan);
     session.messages.push_back(sysMsg);
 
     // User message
@@ -453,6 +517,15 @@ AgentSession AgentOrchestrator::RunAgentLoop(const std::string& user_message, St
     session.steps.push_back(userStep);
     if (on_step)
         on_step(userStep);
+
+    // Emit planner trace step to keep runtime introspectable.
+    AgentStep plannerStep;
+    plannerStep.type = AgentStep::Type::AssistantMessage;
+    plannerStep.content = "[planner]\n" + FormatPlanForSystemPrompt(localPlan);
+    plannerStep.elapsed_ms = 0.0;
+    session.steps.push_back(plannerStep);
+    if (on_step)
+        on_step(plannerStep);
 
     // Agentic loop: call LLM, execute tools, feed results back
     for (int round = 0; round < m_config.max_tool_rounds; ++round)
@@ -487,6 +560,8 @@ AgentSession AgentOrchestrator::RunAgentLoop(const std::string& user_message, St
 
     obs.logInfo(kComponent, "Agent loop completed",
                 nlohmann::json::object({{"session_id", session.session_id},
+                                        {"applied_instruction_source_count", static_cast<int>(session.applied_instruction_sources.size())},
+                                        {"applied_instruction_sources", session.applied_instruction_sources},
                                         {"tool_calls_made", session.tool_calls_made},
                                         {"errors_encountered", session.errors_encountered},
                                         {"total_elapsed_ms", session.total_elapsed_ms},

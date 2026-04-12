@@ -45,12 +45,12 @@ struct AgentResponse
 class AgenticBridge
 {
   public:
-  enum class UILogSeverity : uint8_t
-  {
-    Info = 0,
-    Warning = 1,
-    Error = 2,
-  };
+    enum class UILogSeverity : uint8_t
+    {
+        Info = 0,
+        Warning = 1,
+        Error = 2,
+    };
 
     AgenticBridge(Win32IDE* ide);
     ~AgenticBridge();
@@ -87,6 +87,10 @@ class AgenticBridge
     bool GetDeepResearch() const { return m_deepResearch; }
     void SetNoRefusal(bool enabled);
     bool GetNoRefusal() const { return m_noRefusal; }
+    void SetAgenticMode(bool enabled) { m_enableAgenticMode = enabled; }
+    bool IsAgenticMode() const { return m_enableAgenticMode; }
+    void SetAgenticSessionId(std::string sessionId) { m_currentSessionId = std::move(sessionId); }
+    const std::string& GetAgenticSessionId() const { return m_currentSessionId; }
     void SetSwarmMode(bool enabled);
     bool GetSwarmMode() const { return m_swarmMode; }
     bool LoadSwarmFromDirectory(const std::string& directoryPath, int maxModels = 5);
@@ -203,7 +207,9 @@ class AgenticBridge
     // Path resolution
     std::string ResolveFrameworkPath();
     std::string ResolveToolsModulePath();
-    
+    std::string ResolveModelPath() const;
+    std::string StripAgenticPrefix(const std::string& prompt, bool& wasAgenticPrefixed) const;
+
     // Tool implementation helpers
     std::string RunCompilerImpl(const std::string& path, const std::string& arch);
 
@@ -249,6 +255,8 @@ class AgenticBridge
     std::string m_lastModelLoadError;
     bool m_multiAgentEnabled = false;
     bool m_swarmMode = false;
+    bool m_enableAgenticMode = true;  // Align with IDE default: agentic tools unless user disables
+    std::string m_currentSessionId;
     std::atomic<uint64_t> m_lastGhostSeq{0};
     std::atomic<uint64_t> m_ghostSeqBacktracks{0};
     std::atomic<uint64_t> m_ghostSeqGapEvents{0};
