@@ -420,7 +420,10 @@ allocWorkSlot PROC
     ; Wrap to MAX_WORK_SLOTS
     and     rax, (MAX_WORK_SLOTS - 1)
     imul    rax, rax, WORK_SLOT_SIZE
-    lea     rax, [g_WorkSlots + rax]
+    ; Two-step to avoid ADDR32 relocation (incompatible with /LARGEADDRESSAWARE):
+    ; lea can't combine RIP-relative symbol + register operand in x64.
+    lea     rcx, [g_WorkSlots]          ; RIP-relative base address
+    add     rax, rcx                    ; rax = &g_WorkSlots[slot_index]
     ret
 allocWorkSlot ENDP
 
