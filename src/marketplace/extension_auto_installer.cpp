@@ -227,7 +227,7 @@ AutoInstallResult ExtensionAutoInstaller::installSingleExtension(
 
     // Create a unique per-worker temp directory to prevent collision when
     // multiple parallel workers download/install at the same time.
-    // e.g. .rawrxd\temp\<PID>_<seq>\
+    // e.g. .rawrxd/temp/<PID>_<seq>/
     static std::atomic<uint64_t> s_tempSeq{0};
     const uint64_t workerSeq = s_tempSeq.fetch_add(1, std::memory_order_relaxed);
     std::string workerTemp = ".rawrxd\\temp\\" +
