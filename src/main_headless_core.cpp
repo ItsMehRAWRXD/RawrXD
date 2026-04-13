@@ -498,6 +498,8 @@ static int printUsage()
         "[--shuffle-layout 0|1] [--seed <u32>]\n"
         "  RawrEngine.exe --load-model <path>\n"
         "  RawrEngine.exe --infer <path> --prompt <text> [--max-tokens <N>] [--verbose]\n"
+        "  RawrEngine.exe --profile <name> [profile-specific options]\n"
+        "      profiles: production-14d\n"
         "  RawrEngine.exe --copilot-smoke [--model <path.gguf>] [--prompt <text>] [--with-agentic] [--skip-agentic]\n"
         "  RawrEngine.exe --production-finishers-14d [--model <path.gguf>] [--prompt <text>] [--with-agentic] [--skip-agentic] "
         "[--bench-max-mb <N>] [--bench-iters <N>] [--sweep-window-mb <N>] [--sweep-iters <N>] [--seed <u64>] "
@@ -958,6 +960,35 @@ static int runProductionFinishers14Day(const std::vector<std::string>& args)
     std::fflush(nullptr);
     std::_Exit(ok ? 0 : 1);
     return ok ? 0 : 1;
+}
+
+static int runProfileRouter(const std::vector<std::string>& args)
+{
+    auto writeStdout = [](const char* s)
+    {
+        if (!s)
+            return;
+        DWORD w = 0;
+        WriteFile(GetStdHandle(STD_OUTPUT_HANDLE), s, static_cast<DWORD>(std::strlen(s)), &w, nullptr);
+    };
+
+    const char* profile = getOptValue(args, "--profile");
+    if (!profile || !profile[0])
+    {
+        writeStdout("profile: missing profile name\n");
+        return 2;
+    }
+
+    if (std::strcmp(profile, "production-14d") == 0 || std::strcmp(profile, "production-finishers-14d") == 0 ||
+        std::strcmp(profile, "day4") == 0)
+    {
+        return runProductionFinishers14Day(args);
+    }
+
+    std::ostringstream msg;
+    msg << "profile: unknown profile '" << profile << "'\n";
+    writeStdout(msg.str().c_str());
+    return 2;
 }
 
 static uint64_t qpcNow();
@@ -1904,6 +1935,10 @@ int main(int argc, char** argv)
     std::string arg1 = args.size() > 1 ? args[1] : "";
     if (arg1 == "--help" || arg1 == "-h")
         return printUsage();
+
+    // Thin control-plane router for stable scripted workflows.
+    if (arg1 == "--profile")
+        return runProfileRouter(args);
 
     // Copilot/Codex-style headless parity: CPUInferenceEngine smoke (optional temp GGUF).
     if (arg1 == "--copilot-smoke" || arg1 == "--agentic-smoke")
