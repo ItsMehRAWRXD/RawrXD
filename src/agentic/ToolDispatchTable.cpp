@@ -73,22 +73,15 @@ static int Tool_WriteFile_Execute(const char* args, char* output, size_t outlen)
     return 0;
 }
 
-// Tool 2: ExecuteCommand — args = command string; output = captured stdout (truncated to outlen-1)
+// Tool 2: ExecuteCommand — DISABLED: legacy _popen path is a command injection vector.
+// All command execution MUST go through AgentToolHandlers::ExecuteCommand() which has
+// path validation, timeout enforcement, and sandboxed CreateProcessW.
 static int Tool_ExecuteCommand_Execute(const char* args, char* output, size_t outlen) {
-    if (!args || !output || outlen < 2) return -1;
-    FILE* pipe = _popen(args, "r");
-    if (!pipe) {
-        snprintf(output, outlen, "ExecuteCommand error: _popen failed");
-        return -1;
-    }
-    size_t written = 0;
-    int ch;
-    while (written < outlen - 1 && (ch = fgetc(pipe)) != EOF) {
-        output[written++] = static_cast<char>(ch);
-    }
-    output[written] = '\0';
-    int rc = _pclose(pipe);
-    return (rc == 0) ? 0 : 1;
+    if (!output || outlen < 2) return -1;
+    snprintf(output, outlen,
+        "ExecuteCommand via legacy dispatch is disabled for security. "
+        "Use AgentToolHandlers::ExecuteCommand() for sandboxed execution.");
+    return -1;
 }
 
 // Tool 3: CompleteCode

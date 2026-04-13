@@ -9,6 +9,7 @@
 
 #include "../cpu_inference_engine.h"
 #include "../native_agent.hpp"
+#include "../agentic/StreamingResultChannel.h"
 #include "Win32IDE_SubAgent.h"
 #include <atomic>
 #include <functional>
@@ -20,8 +21,12 @@
 #define RAWRXD_SUBSYS_MODES_D_INTEGRATED
 #endif
 
-// Forward declaration
+// Forward declarations
 class Win32IDE;
+namespace RawrXD::Agentic
+{
+class StreamingResultChannel;
+}
 
 // Agent response types
 enum class AgentResponseType
@@ -173,6 +178,19 @@ class AgenticBridge
     /// Dispatch tool calls detected in model output
     bool DispatchModelToolCalls(const std::string& modelOutput, std::string& toolResult);
 
+    /// Dispatch tool calls with streaming injection to UI
+    /// Emits tool events (started/result/error/complete) in real-time
+    /// This is the Phase 1 streaming implementation
+    /// @param modelOutput Model response with tool calls
+    /// @param onToolEvent Callback for each tool event (started/result/error/complete)
+    /// @return Final aggregated response after all tools complete
+    std::string DispatchModelToolCallsStreaming(
+        const std::string& modelOutput,
+        std::function<void(const RawrXD::Agentic::ToolExecutionEvent&)> onToolEvent);
+
+    /// Get the streaming result channel (for advanced usage)
+    RawrXD::Agentic::StreamingResultChannel* GetStreamingChannel() { return m_streamingChannel.get(); }
+
     // Compatibility wrappers (older UI command layer)
     void ExecuteSubAgentChain(const std::string& taskDescription);
     void ExecuteSubAgentSwarm(const std::string& taskDescription);
@@ -200,9 +218,14 @@ class AgenticBridge
 
     // Response parsing
     AgentResponse ParseAgentResponse(const std::string& rawOutput);
-    bool IsToolCall(const std::string& line);
-    bool IsAnswer(const std::string& line);
+    bool IsToolCall(const std::string& line) const;
+    bool IsAnswer(const std::string& line) const;
     std::string BuildOpenTabsPromptContext() const;
+    std::vector<std::string> ExtractToolCallLines(const std::string& modelOutput) const;
+    bool DispatchToolLinesBatched(const std::vector<std::string>& toolLines, const std::string& parentId,
+                                  std::string& toolResult,
+                                  RawrXD::Agentic::StreamingResultChannel* streamingChannel = nullptr);
+    void HandleToolDispatchResult(const std::string& toolName, const std::string& toolResult) const;
 
     // Path resolution
     std::string ResolveFrameworkPath();
@@ -253,6 +276,10 @@ class AgenticBridge
     ProgressCallback m_progressCallback;
     ModelLoadErrorCallback m_modelLoadErrorCallback;
     std::string m_lastModelLoadError;
+    
+    // Streaming result channel for Phase 1 (tool result injection)
+    std::unique_ptr<RawrXD::Agentic::StreamingResultChannel> m_streamingChannel;
+    
     bool m_multiAgentEnabled = false;
     bool m_swarmMode = false;
     bool m_enableAgenticMode = true;  // Align with IDE default: agentic tools unless user disables

@@ -7,6 +7,7 @@
 #include "slash_command_parser.hpp"
 
 #include <algorithm>
+#include <chrono>
 #include <sstream>
 #include <thread>
 
@@ -59,8 +60,16 @@ void AgenticChatSession::SetChatModel(std::string ollamaModelTag)
 
 AgenticChatSession::~AgenticChatSession()
 {
+    m_shuttingDown.store(true, std::memory_order_release);
+    m_cancelled.store(true, std::memory_order_release);
+
+    // Wait for detached threads to drain (max 30s safety bail)
+    for (int spins = 0; m_activeThreads.load(std::memory_order_acquire) > 0 && spins < 3000; ++spins)
+    {
+        Sleep(10);
+    }
+
     std::lock_guard<std::mutex> lock(m_mutex);
-    m_cancelled = true;
     if (m_repoMonitoringStarted)
     {
         RawrXD::Indexing::IncrementalRepositoryIndexer::instance().stopMonitoring();
@@ -73,8 +82,13 @@ void AgenticChatSession::Reset()
     std::lock_guard<std::mutex> lock(m_mutex);
     m_history.clear();
     m_streamBuffer.clear();
-    m_cancelled = false;
-    m_isProcessing = false;
+    m_cancelled.store(false);
+    m_isProcessing.store(false, std::memory_order_release);
+}
+
+void AgenticChatSession::CancelCurrentTurn()
+{
+    m_cancelled.store(true);
 }
 
 void AgenticChatSession::Initialize(const std::string& workspace_root, const std::vector<std::string>& open_files)
@@ -206,10 +220,10 @@ std::string AgenticChatSession::FormatToolResultForLLM(const std::string& tool_n
     }
 
     std::string output = result.value("output", std::string());
-    constexpr size_t kMax = 2000;
+    constexpr size_t kMax = 8192;
     if (output.size() > kMax)
     {
-        output = output.substr(0, kMax) + "... [truncated]";
+        output = output.substr(0, kMax) + "\n... [truncated, " + std::to_string(result.value("output", std::string()).size()) + " bytes total]";
     }
     return "Tool '" + tool_name + "' succeeded\n" + output;
 }
@@ -228,18 +242,19 @@ void AgenticChatSession::RunTurn(const std::string& user_message,
 {
     {
         std::lock_guard<std::mutex> lock(m_mutex);
-        if (m_isProcessing)
+        if (m_isProcessing.load(std::memory_order_acquire))
         {
             on_complete("Busy processing another request.");
             return;
         }
-        m_isProcessing = true;
+        m_isProcessing.store(true, std::memory_order_release);
+        m_cancelled.store(false);
     }
 
     auto releaseProcessing = [this]()
     {
         std::lock_guard<std::mutex> lock(m_mutex);
-        m_isProcessing = false;
+        m_isProcessing.store(false, std::memory_order_release);
     };
 
     AddToHistory({"user", user_message, "", json()});
@@ -307,6 +322,15 @@ void AgenticChatSession::RunTurn(const std::string& user_message,
 
     if (finalText.empty())
     {
+        if (m_cancelled.load())
+        {
+            finalText = "[Cancelled]";
+            AddToHistory({"assistant", finalText, "", json()});
+            on_complete(finalText);
+            releaseProcessing();
+            return;
+        }
+
         auto payload = BuildMessagesPayload();
         auto messages = BuildAgentMessages(payload);
 
@@ -315,38 +339,99 @@ void AgenticChatSession::RunTurn(const std::string& user_message,
         RawrXD::Agent::AgentOllamaClient client(cfg);
 
         const json tools = m_agenticMode ? RawrXD::Agent::AgentToolHandlers::GetAllSchemas() : json::array();
-        auto inference = client.ChatSync(messages, tools);
+        const auto turnStart = std::chrono::steady_clock::now();
+        bool reachedToolLimit = false;
+        std::string lastToolSummary;
 
-        if (!inference.success)
+        for (int iteration = 0; iteration < (m_agenticMode ? m_maxToolIterations : 1); ++iteration)
         {
-            finalText = "Model inference failed: " + inference.error_message;
-        }
-        else
-        {
-            finalText = inference.response;
+            auto inference = client.ChatSync(messages, tools);
 
-            if (m_agenticMode && inference.has_tool_calls && !inference.tool_calls.empty())
+            if (m_cancelled.load())
             {
-                const auto& firstTool = inference.tool_calls.front();
-                on_tool_start(firstTool.first);
-                const json toolResult = ExecuteTool(firstTool.first, firstTool.second);
-                const std::string toolSummary = FormatToolResultForLLM(firstTool.first, toolResult);
-                on_tool_result(firstTool.first, toolSummary);
-
-                if (finalText.empty())
-                {
-                    finalText = toolSummary;
-                }
-                else
-                {
-                    finalText += "\n\n" + toolSummary;
-                }
-                executedTool = true;
+                finalText = "[Cancelled]";
+                AddToHistory({"assistant", finalText, "", json()});
+                on_complete(finalText);
+                releaseProcessing();
+                return;
             }
 
+            if (!inference.success)
+            {
+                finalText = "Model inference failed: " + inference.error_message;
+                break;
+            }
+
+            RawrXD::Agent::ChatMessage assistantMsg;
+            assistantMsg.role = "assistant";
+            assistantMsg.content = inference.response;
+            messages.push_back(std::move(assistantMsg));
+
+            if (!m_agenticMode || !inference.has_tool_calls || inference.tool_calls.empty())
+            {
+                finalText = inference.response.empty() ? std::string("Model returned an empty response.") : inference.response;
+                break;
+            }
+
+            executedTool = true;
+            lastToolSummary.clear();
+            for (const auto& toolCall : inference.tool_calls)
+            {
+                if (m_cancelled.load())
+                {
+                    finalText = "[Cancelled]";
+                    break;
+                }
+
+                on_tool_start(toolCall.first);
+                const json toolResult = ExecuteTool(toolCall.first, toolCall.second);
+                const std::string toolSummary = FormatToolResultForLLM(toolCall.first, toolResult);
+                on_tool_result(toolCall.first, toolSummary);
+
+                if (!lastToolSummary.empty())
+                {
+                    lastToolSummary += "\n\n";
+                }
+                lastToolSummary += toolSummary;
+
+                RawrXD::Agent::ChatMessage toolMsg;
+                toolMsg.role = "tool";
+                toolMsg.tool_call_id = toolCall.first;
+                toolMsg.content = "[" + toolCall.first + "]\n" + toolResult.dump(2);
+                messages.push_back(std::move(toolMsg));
+            }
+
+            if (m_cancelled.load())
+            {
+                break;
+            }
+
+            const auto elapsedSeconds =
+                std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - turnStart).count();
+            if (elapsedSeconds >= m_maxTurnTimeSeconds)
+            {
+                finalText = lastToolSummary.empty() ? std::string("Turn timed out while executing tools.")
+                                                    : lastToolSummary + "\n\n[Turn timed out before final response]";
+                break;
+            }
+
+            if (iteration + 1 >= m_maxToolIterations)
+            {
+                reachedToolLimit = true;
+                finalText = lastToolSummary;
+                break;
+            }
+        }
+
+        if (reachedToolLimit)
+        {
             if (finalText.empty())
             {
-                finalText = "Model returned an empty response.";
+                finalText = "Reached max tool iterations without a final response.";
+            }
+            else
+            {
+                finalText += "\n\n[Reached max tool iterations without a final response]";
             }
         }
     }
@@ -366,7 +451,15 @@ void AgenticChatSession::RunTurnAsync(const std::string& user_message,
                                       std::function<void(const std::string&, const std::string&)> on_tool_result,
                                       std::function<void(const std::string&)> on_complete)
 {
-    std::thread worker([=]() { RunTurn(user_message, on_content_chunk, on_tool_start, on_tool_result, on_complete); });
+    m_activeThreads.fetch_add(1, std::memory_order_acq_rel);
+    std::thread worker([this, user_message, on_content_chunk, on_tool_start, on_tool_result, on_complete]()
+    {
+        if (!m_shuttingDown.load(std::memory_order_acquire))
+        {
+            RunTurn(user_message, on_content_chunk, on_tool_start, on_tool_result, on_complete);
+        }
+        m_activeThreads.fetch_sub(1, std::memory_order_acq_rel);
+    });
     worker.detach();
 }
 

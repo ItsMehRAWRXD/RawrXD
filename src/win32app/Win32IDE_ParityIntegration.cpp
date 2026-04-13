@@ -16,6 +16,13 @@ void Win32IDE::initializeAgenticParityFeatures() {
         LOG_WARNING("Failed to create AgentExecutionHUD");
     }
     
+    // Wire HUD stop button to cancel the current agent turn
+    AgentExecutionHUD::instance().onCancelRequested = [this]() {
+        if (m_agenticChatSession) {
+            m_agenticChatSession->CancelCurrentTurn();
+        }
+    };
+    
     // 3. Register Tool Execution Callbacks for HUD
     // Since AgentToolHandlers is a singleton, we hook into it
     auto& handlers = RawrXD::Agentic::AgentToolHandlers::Instance();

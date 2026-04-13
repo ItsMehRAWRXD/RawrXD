@@ -102,12 +102,15 @@ void Win32IDE::openFileDialog() {
                 
                 std::string content((std::istreambuf_iterator<char>(file)), 
                                   std::istreambuf_iterator<char>());
+                m_suppressLspDocumentSync = true;
                 setWindowText(m_hwndEditor, content);
+                m_suppressLspDocumentSync = false;
                 
                 m_currentFile = szFile;
                 m_fileModified = false;
                 setCurrentDirectoryFromFile(m_currentFile);
                 updateTitleBarText();
+                syncLSPDocumentOpen(m_currentFile, content);
                 
                 // Update recent files
                 updateRecentFiles(szFile);
@@ -145,12 +148,15 @@ void Win32IDE::openRecentFile(int index) {
         if (file) {
             std::string content((std::istreambuf_iterator<char>(file)), 
                               std::istreambuf_iterator<char>());
+            m_suppressLspDocumentSync = true;
             setWindowText(m_hwndEditor, content);
+            m_suppressLspDocumentSync = false;
             
             m_currentFile = filePath;
             m_fileModified = false;
             setCurrentDirectoryFromFile(m_currentFile);
             updateTitleBarText();
+            syncLSPDocumentOpen(m_currentFile, content);
             
             // Move to top of recent files
             updateRecentFiles(filePath);
@@ -221,9 +227,16 @@ void Win32IDE::closeFile() {
     if (m_fileModified && !promptSaveChanges()) {
         return;
     }
+
+    const std::string closingFile = m_currentFile;
+    if (!closingFile.empty()) {
+        syncLSPDocumentClose(closingFile);
+    }
     
     // Clear editor
+    m_suppressLspDocumentSync = true;
     setWindowText(m_hwndEditor, "");
+    m_suppressLspDocumentSync = false;
     
     // Reset state
     m_currentFile.clear();

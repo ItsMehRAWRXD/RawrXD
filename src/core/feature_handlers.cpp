@@ -765,8 +765,14 @@ CommandResult handleEditFind(const CommandContext& ctx)
     if (ctx.isGui && ctx.idePtr)
     {
         HWND hwnd = resolveGuiMainHwnd(ctx);
-        if (ctx.args && ctx.args[0] && g_pMainIDE)
+        if (ctx.args && ctx.args[0]
+#if !defined(RAWRXD_GOLD_BUILD)
+            && g_pMainIDE
+#endif
+        )
+#if !defined(RAWRXD_GOLD_BUILD)
             g_pMainIDE->setFindReplaceDialogSeed(std::string(ctx.args), "");
+#endif
         if (hwnd)
             PostMessageA(hwnd, WM_COMMAND, 2016, 0);  // IDM_EDIT_FIND (Win32IDE.cpp)
         ctx.output("[Edit] Find dialog opened.\n");
@@ -811,14 +817,20 @@ CommandResult handleEditReplace(const CommandContext& ctx)
     if (ctx.isGui && ctx.idePtr)
     {
         HWND hwnd = resolveGuiMainHwnd(ctx);
-        if (g_pMainIDE && ctx.args && ctx.args[0])
+        if (ctx.args && ctx.args[0]
+#if !defined(RAWRXD_GOLD_BUILD)
+            && g_pMainIDE
+#endif
+        )
         {
+#if !defined(RAWRXD_GOLD_BUILD)
             const std::string rest(ctx.args);
             const size_t sp = rest.find(' ');
             if (sp != std::string::npos)
                 g_pMainIDE->setFindReplaceDialogSeed(rest.substr(0, sp), rest.substr(sp + 1));
             else
                 g_pMainIDE->setFindReplaceDialogSeed(rest, "");
+#endif
         }
         if (hwnd)
             PostMessageA(hwnd, WM_COMMAND, 2017, 0);  // IDM_EDIT_REPLACE (Win32IDE.cpp / Win32IDE_Commands.cpp)

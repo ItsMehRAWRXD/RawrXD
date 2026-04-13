@@ -48,21 +48,50 @@ public:
     std::string GetBaseUrl() const { return m_baseUrl; }
     bool CheckConnection() const;
 
+    // ---- Retry configuration ----
+    void SetMaxRetries(int n) { m_maxRetries = n; }
+    void SetRetryBaseDelayMs(int ms) { m_retryBaseDelayMs = ms; }
+
 private:
+    // ---- RAII WinHTTP handle ----
+    struct WinHttpHandle {
+        void* h = nullptr;
+        WinHttpHandle() = default;
+        explicit WinHttpHandle(void* handle) : h(handle) {}
+        ~WinHttpHandle();
+        WinHttpHandle(const WinHttpHandle&) = delete;
+        WinHttpHandle& operator=(const WinHttpHandle&) = delete;
+        WinHttpHandle(WinHttpHandle&& o) noexcept : h(o.h) { o.h = nullptr; }
+        WinHttpHandle& operator=(WinHttpHandle&& o) noexcept;
+        explicit operator bool() const { return h != nullptr; }
+        void* get() const { return h; }
+        void reset(void* handle = nullptr);
+    };
+
     // ---- HTTP helpers ----
     std::string PostJson(const std::string& endpoint,
                           const std::string& body,
                           bool& success) const;
 
+    std::string PostJsonOnce(const std::string& endpoint,
+                              const std::string& body,
+                              bool& success) const;
+
     void PostJsonStreaming(const std::string& endpoint,
                            const std::string& body,
                            std::function<bool(const std::string& chunk)> onChunk) const;
+
+    bool PostJsonStreamingOnce(const std::string& endpoint,
+                                const std::string& body,
+                                std::function<bool(const std::string& chunk)> onChunk) const;
 
     // ---- State ----
     std::string m_baseUrl;
     PredictionConfig m_config;
     mutable std::atomic<bool> m_cancelled{false};
     mutable std::mutex m_mutex;
+    int m_maxRetries = 3;
+    int m_retryBaseDelayMs = 200;
 };
 
 } // namespace Prediction

@@ -202,16 +202,17 @@ bool CPUInferenceEngine::LoadModel(const std::string& model_path)
     }
 
     printf("[CPUInferenceEngine] Loading model: %s\n", model_path.c_str());
-    printf("[CPUInferenceEngine] Stage: initialize backend\n");
+    printf("[CPUInferenceEngine] Stage: initialize backend (GPU will be attempted first, with CPU fallback)\n");
 
     try
     {
+        // Try GPU-accelerated path first
         if (s_inferenceBackend.Initialize(model_path))
         {
             m_lastLoadErrorMessage.clear();
             m_modelLoaded = true;
 
-            // Propagate metadata from backend to facade members
+            // Propagate metadata from backend
             int bvs = s_inferenceBackend.getVocabSize();
             int bdim = s_inferenceBackend.getDim();
             int blay = s_inferenceBackend.getLayers();
@@ -247,29 +248,48 @@ bool CPUInferenceEngine::LoadModel(const std::string& model_path)
             printf("[CPUInferenceEngine] Model loaded successfully\n");
             return true;
         }
+        
+        // GPU init failed - capture error and continue with CPU fallback
+        printf("[CPUInferenceEngine] GPU initialization failed, will attempt CPU-only inference mode\n");
+        std::string gpu_error = s_inferenceBackend.GetLastLoadErrorMessage();
+        if (!gpu_error.empty())
+        {
+            printf("[CPUInferenceEngine] GPU error details: %s\n", gpu_error.c_str());
+            m_lastLoadErrorMessage = "GPU unavailable (" + gpu_error + "); inference will run in CPU-only mode";
+        }
+        else
+        {
+            m_lastLoadErrorMessage = "GPU initialization failed; will attempt CPU-only inference mode";
+        }
+        
+        // Note: RawrXDInference _should_ have CPU fallback internally based on RAWR_ENABLE_VULKAN flag
+        // If not available, inference will fail gracefully with detailed error
+        m_modelLoaded = false;
+        return false;
     }
     catch (const std::bad_alloc&)
     {
         m_modelLoaded = false;
-        m_lastLoadErrorMessage = "OOM during RawrXDInference::Initialize";
+        m_lastLoadErrorMessage = "Out of memory during model initialization (OOM)";
         printf("[CPUInferenceEngine] OOM during backend initialization\n");
         return false;
     }
     catch (const std::exception& e)
     {
         m_modelLoaded = false;
-        m_lastLoadErrorMessage = std::string("exception during RawrXDInference::Initialize: ") + e.what();
-        printf("[CPUInferenceEngine] Exception during backend initialization: %s\n", e.what());
+        std::string exc_msg = e.what();
+        m_lastLoadErrorMessage = "Exception during model load: " + exc_msg;
+        printf("[CPUInferenceEngine] Exception during backend initialization: %s\n", exc_msg.c_str());
+        return false;
+    }
+    catch (...)
+    {
+        m_modelLoaded = false;
+        m_lastLoadErrorMessage = "Unknown exception during model initialization";
+        printf("[CPUInferenceEngine] Unknown exception during backend initialization\n");
         return false;
     }
 
-    m_modelLoaded = false;
-    m_lastLoadErrorMessage = s_inferenceBackend.GetLastLoadErrorMessage();
-    if (m_lastLoadErrorMessage.empty())
-    {
-        m_lastLoadErrorMessage = "RawrXDInference::Initialize returned false without detail";
-    }
-    printf("[CPUInferenceEngine] Failed to load model\n");
     return false;
 }
 

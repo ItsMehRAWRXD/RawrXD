@@ -68,8 +68,11 @@ ModelManagerDialog::ModelManagerDialog(HWND parentHwnd, HINSTANCE hInstance)
 }
 
 ModelManagerDialog::~ModelManagerDialog() {
-    if (m_pullThread && m_pullThread->joinable()) {
+    if (m_pullActive.load()) {
         RawrXD::ModelPuller::Instance().Cancel();
+    }
+
+    if (m_pullThread && m_pullThread->joinable()) {
         m_pullThread->join();
     }
 }
@@ -176,7 +179,10 @@ INT_PTR CALLBACK ModelManagerDialog::DialogProc(HWND hwndDlg, UINT uMsg, WPARAM 
     }
 
     case WM_SEARCH_DONE:
-        self->PopulateSearchResults(self->m_searchResults);
+        if (auto* completion = reinterpret_cast<SearchCompletion*>(lParam)) {
+            self->HandleSearchCompleted(std::move(*completion));
+            delete completion;
+        }
         return 0;
 
     case WM_USER + 500: { // WM_PULL_STATUS
@@ -190,10 +196,10 @@ INT_PTR CALLBACK ModelManagerDialog::DialogProc(HWND hwndDlg, UINT uMsg, WPARAM 
     }
 
     case WM_USER + 501: { // WM_PULL_DONE
-        self->m_pullActive = false;
-        self->RefreshLocalModels();
-        SetWindowTextA(self->m_hwndDownloadStatus, "Download complete!");
-        SendMessage(self->m_hwndDownloadProgress, PBM_SETPOS, 100, 0);
+        if (auto* completion = reinterpret_cast<PullCompletion*>(lParam)) {
+            self->HandlePullCompleted(std::move(*completion));
+            delete completion;
+        }
         return 0;
     }
 
@@ -472,10 +478,17 @@ void ModelManagerDialog::OnSearchClicked() {
     EnableWindow(m_hwndSearchBtn, FALSE);
 
     // Background search
-    std::thread([this, query]() {
-        auto results = RawrXD::ModelPuller::Instance().Search(query);
-        m_searchResults = results;
-        PostMessage(m_hwndDlg, WM_SEARCH_DONE, 0, 0);
+    HWND dlgHwnd = m_hwndDlg;
+    std::thread([query, dlgHwnd]() {
+        auto* completion = new SearchCompletion();
+        completion->results = RawrXD::ModelPuller::Instance().Search(query);
+        if (completion->results.empty()) {
+            completion->error = "No matching GGUF repositories found, or the Hugging Face search request failed.";
+        }
+
+        if (!PostMessage(dlgHwnd, WM_SEARCH_DONE, 0, reinterpret_cast<LPARAM>(completion))) {
+            delete completion;
+        }
     }).detach();
 }
 
@@ -499,6 +512,15 @@ void ModelManagerDialog::PopulateSearchResults(const std::vector<RawrXD::HFRepoI
 
     SetWindowTextA(m_hwndSearchBtn, "Search");
     EnableWindow(m_hwndSearchBtn, TRUE);
+}
+
+void ModelManagerDialog::HandleSearchCompleted(SearchCompletion completion) {
+    m_searchResults = std::move(completion.results);
+    PopulateSearchResults(m_searchResults);
+
+    if (!completion.error.empty()) {
+        MessageBoxA(m_hwndDlg, completion.error.c_str(), "Model Search", MB_OK | MB_ICONINFORMATION);
+    }
 }
 
 void ModelManagerDialog::OnSearchResultSelected() {
@@ -530,6 +552,13 @@ void ModelManagerDialog::OnListFilesClicked() {
     auto files = RawrXD::ModelPuller::Instance().ListQuantizations(m_selectedRepoId);
     m_fileListResults = files;
     PopulateFileList(files);
+
+    if (files.empty()) {
+        MessageBoxA(m_hwndDlg,
+            "No GGUF files were found for that repository, or the file listing request failed.",
+            "Model Files",
+            MB_OK | MB_ICONINFORMATION);
+    }
 }
 
 void ModelManagerDialog::PopulateFileList(const std::vector<RawrXD::HFFileInfo>& files) {
@@ -572,6 +601,8 @@ void ModelManagerDialog::StartPull(const std::string& source) {
         return;
     }
 
+    FinalizePullThread();
+
     m_pullActive = true;
     SetWindowTextA(m_hwndDownloadFile, source.c_str());
     SetWindowTextA(m_hwndDownloadStatus, "Starting...");
@@ -579,17 +610,23 @@ void ModelManagerDialog::StartPull(const std::string& source) {
 
     HWND dlgHwnd = m_hwndDlg;
 
-    m_pullThread = std::make_unique<std::thread>([this, source, dlgHwnd]() {
-        RawrXD::ModelPuller::Instance().Pull(source,
+    m_pullThread = std::make_unique<std::thread>([source, dlgHwnd]() {
+        auto result = RawrXD::ModelPuller::Instance().Pull(source,
             [dlgHwnd](const RawrXD::PullStatus& status) {
                 // Post status update to UI thread
                 auto* ps = new RawrXD::PullStatus(status);
                 PostMessage(dlgHwnd, WM_USER + 500, 0, reinterpret_cast<LPARAM>(ps));
             });
 
-        PostMessage(dlgHwnd, WM_USER + 501, 0, 0);
+        auto* completion = new PullCompletion();
+        completion->success = result.success;
+        completion->filePath = std::move(result.filePath);
+        completion->error = std::move(result.error);
+
+        if (!PostMessage(dlgHwnd, WM_USER + 501, 0, reinterpret_cast<LPARAM>(completion))) {
+            delete completion;
+        }
     });
-    m_pullThread->detach();
 }
 
 void ModelManagerDialog::UpdateDownloadProgress(const RawrXD::PullStatus& status) {
@@ -615,6 +652,35 @@ void ModelManagerDialog::UpdateDownloadProgress(const RawrXD::PullStatus& status
 void ModelManagerDialog::OnCancelDownloadClicked() {
     RawrXD::ModelPuller::Instance().Cancel();
     SetWindowTextA(m_hwndDownloadStatus, "Cancelling...");
+}
+
+void ModelManagerDialog::HandlePullCompleted(PullCompletion completion) {
+    m_pullActive = false;
+    FinalizePullThread();
+    RefreshLocalModels();
+
+    if (completion.success) {
+        SetWindowTextA(m_hwndDownloadStatus, "Download complete!");
+        SendMessage(m_hwndDownloadProgress, PBM_SETPOS, 100, 0);
+        std::string successMessage = "Model ready:\n\n" + completion.filePath;
+        MessageBoxA(m_hwndDlg, successMessage.c_str(), "Model Ready", MB_OK | MB_ICONINFORMATION);
+        return;
+    }
+
+    SetWindowTextA(m_hwndDownloadStatus,
+        completion.error.empty() ? "Download failed." : completion.error.c_str());
+    MessageBoxA(
+        m_hwndDlg,
+        completion.error.empty() ? "The model pull did not complete successfully." : completion.error.c_str(),
+        "Model Pull Failed",
+        MB_OK | MB_ICONERROR);
+}
+
+void ModelManagerDialog::FinalizePullThread() {
+    if (m_pullThread && m_pullThread->joinable()) {
+        m_pullThread->join();
+    }
+    m_pullThread.reset();
 }
 
 // ============================================================================

@@ -105,7 +105,12 @@ void IocpFileWatcher::Stop() {
     }
 
     if (m_worker.joinable()) {
-        m_worker.join();
+        if (m_worker.get_id() == std::this_thread::get_id()) {
+            LOG_WARNING("IocpFileWatcher: Stop called from worker thread; detaching self to avoid deadlock");
+            m_worker.detach();
+        } else {
+            m_worker.join();
+        }
     }
 
     if (m_dirHandle != INVALID_HANDLE_VALUE) {

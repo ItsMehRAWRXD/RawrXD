@@ -1118,6 +1118,12 @@ static bool runPhase(const std::string& name, Win32IDE& ide, HINSTANCE, LPSTR lp
     {
         startupTrace("extension_bootstrap_start");
 
+        if (hasAgenticSmokeFlag(GetCommandLineA()))
+        {
+            startupTrace("extension_bootstrap_skipped", "agentic_smoke");
+            return true;
+        }
+
         const char* safeMode = std::getenv("RAWRXD_SAFE_MODE");
         if (safeMode && safeMode[0] == '1')
         {

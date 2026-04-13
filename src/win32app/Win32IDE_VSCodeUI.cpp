@@ -380,6 +380,13 @@ void Win32IDE::createSecondarySidebar(HWND hwndParent)
         WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | ES_WANTRETURN | WS_VSCROLL, 5, 490,
         m_secondarySidebarWidth - 10, 60, m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_CHAT_INPUT, m_hInstance, nullptr);
 
+    if (m_hwndCopilotChatOutput)
+    {
+        m_oldCopilotOutputProc =
+            (WNDPROC)SetWindowLongPtrA(m_hwndCopilotChatOutput, GWLP_WNDPROC, (LONG_PTR)CopilotChatOutputProc);
+        SetWindowLongPtrA(m_hwndCopilotChatOutput, GWLP_USERDATA, (LONG_PTR)this);
+    }
+
     if (m_hwndCopilotChatInput)
     {
         m_oldCopilotInputProc =

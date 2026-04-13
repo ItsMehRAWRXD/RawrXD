@@ -6,6 +6,7 @@
 #include <cstring>
 #include <cmath>
 #include <atomic>
+#include <algorithm>
 
 namespace {
 

@@ -1280,9 +1280,15 @@ void SwarmScheduler::onForwardTokenStepBegin()
 std::expected<void, SchedulerError> SwarmScheduler::onLayerComputeFinished(std::uint32_t modelIndex,
                                                                            std::uint32_t layerIndex)
 {
-    std::lock_guard<std::mutex> lock(m_schedMutex);
-    markFinishedForLayer_(modelIndex, layerIndex);
-    return pruneWorkingSetUnlocked_();
+    std::expected<void, SchedulerError> result;
+    {
+        std::lock_guard<std::mutex> lock(m_schedMutex);
+        markFinishedForLayer_(modelIndex, layerIndex);
+        result = pruneWorkingSetUnlocked_();
+    }
+    // Wake up prefetch I/O thread to process evictions and prefetch next layer
+    notifyPrefetchIoThread_();
+    return result;
 }
 
 std::expected<void, SchedulerError> SwarmScheduler::prefetchPump()

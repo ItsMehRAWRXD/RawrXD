@@ -16,6 +16,7 @@
 #include <nlohmann/json.hpp>
 #include <chrono>
 #include <sstream>
+#include <thread>
 #include <windows.h>
 #include <winhttp.h>
 
@@ -96,6 +97,28 @@ std::string TrimCompletion(const std::string& raw, int maxLines) {
 }
 
 } // anonymous namespace
+
+// ============================================================================
+// RAII WinHTTP handle
+// ============================================================================
+
+OllamaProvider::WinHttpHandle::~WinHttpHandle() {
+    if (h) WinHttpCloseHandle(h);
+}
+
+OllamaProvider::WinHttpHandle& OllamaProvider::WinHttpHandle::operator=(WinHttpHandle&& o) noexcept {
+    if (this != &o) {
+        if (h) WinHttpCloseHandle(h);
+        h = o.h;
+        o.h = nullptr;
+    }
+    return *this;
+}
+
+void OllamaProvider::WinHttpHandle::reset(void* handle) {
+    if (h) WinHttpCloseHandle(h);
+    h = handle;
+}
 
 // ============================================================================
 // Construction
@@ -285,78 +308,77 @@ std::string OllamaProvider::PostJson(const std::string& endpoint,
                                       const std::string& body,
                                       bool& success) const {
     success = false;
+    std::string lastError;
+
+    for (int attempt = 0; attempt < m_maxRetries; ++attempt) {
+        if (m_cancelled.load()) return "Cancelled";
+
+        if (attempt > 0) {
+            int delayMs = m_retryBaseDelayMs * (1 << (attempt - 1));
+            std::this_thread::sleep_for(std::chrono::milliseconds(delayMs));
+            if (m_cancelled.load()) return "Cancelled";
+        }
+
+        lastError = PostJsonOnce(endpoint, body, success);
+        if (success) return lastError;
+    }
+
+    return lastError;
+}
+
+std::string OllamaProvider::PostJsonOnce(const std::string& endpoint,
+                                          const std::string& body,
+                                          bool& success) const {
+    success = false;
     std::wstring host;
     INTERNET_PORT port;
     ParseUrl(m_baseUrl, host, port);
 
-    HINTERNET hSession = WinHttpOpen(L"RawrXD-GhostText/1.0",
-                                      WINHTTP_ACCESS_TYPE_NO_PROXY,
-                                      WINHTTP_NO_PROXY_NAME,
-                                      WINHTTP_NO_PROXY_BYPASS, 0);
+    WinHttpHandle hSession(WinHttpOpen(L"RawrXD-GhostText/1.0",
+                                        WINHTTP_ACCESS_TYPE_NO_PROXY,
+                                        WINHTTP_NO_PROXY_NAME,
+                                        WINHTTP_NO_PROXY_BYPASS, 0));
     if (!hSession) return "WinHttpOpen failed";
 
-    HINTERNET hConnect = WinHttpConnect(hSession, host.c_str(), port, 0);
-    if (!hConnect) {
-        WinHttpCloseHandle(hSession);
-        return "WinHttpConnect failed";
-    }
+    WinHttpHandle hConnect(WinHttpConnect(hSession.get(), host.c_str(), port, 0));
+    if (!hConnect) return "WinHttpConnect failed";
 
     std::wstring method = body.empty() ? L"GET" : L"POST";
     std::wstring path = ToWide(endpoint);
 
-    HINTERNET hRequest = WinHttpOpenRequest(hConnect, method.c_str(), path.c_str(),
-                                             nullptr, WINHTTP_NO_REFERER,
-                                             WINHTTP_DEFAULT_ACCEPT_TYPES, 0);
-    if (!hRequest) {
-        WinHttpCloseHandle(hConnect);
-        WinHttpCloseHandle(hSession);
-        return "WinHttpOpenRequest failed";
-    }
+    WinHttpHandle hRequest(WinHttpOpenRequest(hConnect.get(), method.c_str(), path.c_str(),
+                                               nullptr, WINHTTP_NO_REFERER,
+                                               WINHTTP_DEFAULT_ACCEPT_TYPES, 0));
+    if (!hRequest) return "WinHttpOpenRequest failed";
 
-    // Timeout: 60 seconds for prediction
     DWORD timeout = 60000;
-    WinHttpSetTimeouts(hRequest, timeout, timeout, timeout, timeout);
+    WinHttpSetTimeouts(hRequest.get(), timeout, timeout, timeout, timeout);
 
     BOOL sent;
     if (body.empty()) {
-        sent = WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0,
+        sent = WinHttpSendRequest(hRequest.get(), WINHTTP_NO_ADDITIONAL_HEADERS, 0,
                                    WINHTTP_NO_REQUEST_DATA, 0, 0, 0);
     } else {
         std::wstring headers = L"Content-Type: application/json";
-        sent = WinHttpSendRequest(hRequest, headers.c_str(), (DWORD)headers.size(),
+        sent = WinHttpSendRequest(hRequest.get(), headers.c_str(), (DWORD)headers.size(),
                                    (LPVOID)body.data(), (DWORD)body.size(),
                                    (DWORD)body.size(), 0);
     }
 
-    if (!sent) {
-        WinHttpCloseHandle(hRequest);
-        WinHttpCloseHandle(hConnect);
-        WinHttpCloseHandle(hSession);
-        return "Send failed (is Ollama running?)";
-    }
+    if (!sent) return "Send failed (is Ollama running?)";
 
-    BOOL received = WinHttpReceiveResponse(hRequest, nullptr);
-    if (!received) {
-        WinHttpCloseHandle(hRequest);
-        WinHttpCloseHandle(hConnect);
-        WinHttpCloseHandle(hSession);
+    if (!WinHttpReceiveResponse(hRequest.get(), nullptr))
         return "No response from Ollama";
-    }
 
-    // Read response body
     std::string responseBody;
     DWORD bytesAvailable = 0;
-    while (WinHttpQueryDataAvailable(hRequest, &bytesAvailable) && bytesAvailable > 0) {
+    while (WinHttpQueryDataAvailable(hRequest.get(), &bytesAvailable) && bytesAvailable > 0) {
         std::vector<char> buffer(bytesAvailable);
         DWORD bytesRead = 0;
-        if (WinHttpReadData(hRequest, buffer.data(), bytesAvailable, &bytesRead)) {
+        if (WinHttpReadData(hRequest.get(), buffer.data(), bytesAvailable, &bytesRead)) {
             responseBody.append(buffer.data(), bytesRead);
         }
     }
-
-    WinHttpCloseHandle(hRequest);
-    WinHttpCloseHandle(hConnect);
-    WinHttpCloseHandle(hSession);
 
     success = true;
     return responseBody;
@@ -365,64 +387,64 @@ std::string OllamaProvider::PostJson(const std::string& endpoint,
 void OllamaProvider::PostJsonStreaming(const std::string& endpoint,
                                        const std::string& body,
                                        std::function<bool(const std::string& chunk)> onChunk) const {
+    for (int attempt = 0; attempt < m_maxRetries; ++attempt) {
+        if (m_cancelled.load()) return;
+
+        if (attempt > 0) {
+            int delayMs = m_retryBaseDelayMs * (1 << (attempt - 1));
+            std::this_thread::sleep_for(std::chrono::milliseconds(delayMs));
+            if (m_cancelled.load()) return;
+        }
+
+        if (PostJsonStreamingOnce(endpoint, body, onChunk))
+            return;  // connected and streamed (or callback stopped it)
+    }
+}
+
+bool OllamaProvider::PostJsonStreamingOnce(const std::string& endpoint,
+                                            const std::string& body,
+                                            std::function<bool(const std::string& chunk)> onChunk) const {
     std::wstring host;
     INTERNET_PORT port;
     ParseUrl(m_baseUrl, host, port);
 
-    HINTERNET hSession = WinHttpOpen(L"RawrXD-GhostText-Stream/1.0",
-                                      WINHTTP_ACCESS_TYPE_NO_PROXY,
-                                      WINHTTP_NO_PROXY_NAME,
-                                      WINHTTP_NO_PROXY_BYPASS, 0);
-    if (!hSession) return;
+    WinHttpHandle hSession(WinHttpOpen(L"RawrXD-GhostText-Stream/1.0",
+                                        WINHTTP_ACCESS_TYPE_NO_PROXY,
+                                        WINHTTP_NO_PROXY_NAME,
+                                        WINHTTP_NO_PROXY_BYPASS, 0));
+    if (!hSession) return false;
 
-    HINTERNET hConnect = WinHttpConnect(hSession, host.c_str(), port, 0);
-    if (!hConnect) {
-        WinHttpCloseHandle(hSession);
-        return;
-    }
+    WinHttpHandle hConnect(WinHttpConnect(hSession.get(), host.c_str(), port, 0));
+    if (!hConnect) return false;
 
     std::wstring path = ToWide(endpoint);
-    HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"POST", path.c_str(),
-                                             nullptr, WINHTTP_NO_REFERER,
-                                             WINHTTP_DEFAULT_ACCEPT_TYPES, 0);
-    if (!hRequest) {
-        WinHttpCloseHandle(hConnect);
-        WinHttpCloseHandle(hSession);
-        return;
-    }
+    WinHttpHandle hRequest(WinHttpOpenRequest(hConnect.get(), L"POST", path.c_str(),
+                                               nullptr, WINHTTP_NO_REFERER,
+                                               WINHTTP_DEFAULT_ACCEPT_TYPES, 0));
+    if (!hRequest) return false;
 
-    // Long timeout for streaming
     DWORD timeout = 300000;
-    WinHttpSetTimeouts(hRequest, timeout, timeout, timeout, timeout);
+    WinHttpSetTimeouts(hRequest.get(), timeout, timeout, timeout, timeout);
 
     std::wstring headers = L"Content-Type: application/json";
-    BOOL sent = WinHttpSendRequest(hRequest, headers.c_str(), (DWORD)headers.size(),
+    BOOL sent = WinHttpSendRequest(hRequest.get(), headers.c_str(), (DWORD)headers.size(),
                                     (LPVOID)body.data(), (DWORD)body.size(),
                                     (DWORD)body.size(), 0);
-    if (!sent) {
-        WinHttpCloseHandle(hRequest);
-        WinHttpCloseHandle(hConnect);
-        WinHttpCloseHandle(hSession);
-        return;
-    }
+    if (!sent) return false;
 
-    if (!WinHttpReceiveResponse(hRequest, nullptr)) {
-        WinHttpCloseHandle(hRequest);
-        WinHttpCloseHandle(hConnect);
-        WinHttpCloseHandle(hSession);
-        return;
-    }
+    if (!WinHttpReceiveResponse(hRequest.get(), nullptr))
+        return false;
 
-    // Read streaming response line-by-line (NDJSON)
+    // Connection established — stream NDJSON lines
     std::string lineBuffer;
     DWORD bytesAvailable = 0;
 
     while (!m_cancelled.load() &&
-           WinHttpQueryDataAvailable(hRequest, &bytesAvailable) && bytesAvailable > 0) {
+           WinHttpQueryDataAvailable(hRequest.get(), &bytesAvailable) && bytesAvailable > 0) {
 
         std::vector<char> buffer(bytesAvailable);
         DWORD bytesRead = 0;
-        if (!WinHttpReadData(hRequest, buffer.data(), bytesAvailable, &bytesRead))
+        if (!WinHttpReadData(hRequest.get(), buffer.data(), bytesAvailable, &bytesRead))
             break;
 
         for (DWORD i = 0; i < bytesRead; ++i) {
@@ -431,7 +453,7 @@ void OllamaProvider::PostJsonStreaming(const std::string& endpoint,
                 if (!lineBuffer.empty()) {
                     bool keepGoing = onChunk(lineBuffer);
                     lineBuffer.clear();
-                    if (!keepGoing) goto done;
+                    if (!keepGoing) return true;
                 }
             } else {
                 lineBuffer += c;
@@ -444,8 +466,5 @@ void OllamaProvider::PostJsonStreaming(const std::string& endpoint,
         onChunk(lineBuffer);
     }
 
-done:
-    WinHttpCloseHandle(hRequest);
-    WinHttpCloseHandle(hConnect);
-    WinHttpCloseHandle(hSession);
+    return true;  // Connected successfully (even if cancelled mid-stream)
 }

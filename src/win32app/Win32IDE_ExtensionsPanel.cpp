@@ -11,6 +11,8 @@
 // ============================================================================
 
 #include "Win32IDE.h"
+#include "VSIXInstaller.hpp"
+#include "VSIXInstaller.hpp"
 #include <commctrl.h>
 #include <commdlg.h>
 #include <filesystem>
@@ -415,95 +417,48 @@ void Win32IDE::showExtensionDetails(const std::string& extensionId) {
 }
 
 // ============================================================================
-// EXTENSION PANEL COMMAND HANDLER (WM_COMMAND dispatch)
-// ============================================================================
+void Win32IDE::installFromVSIXFile()
+{
+    char path[MAX_PATH] = {};
+    OPENFILENAMEA ofn = {};
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = m_hwndMain;
+    ofn.lpstrFilter = "VS Code Extensions (*.vsix)\0*.vsix\0"
+                     "Native Plugins (*.dll)\0*.dll\0"
+                     "All Files (*.*)\0*.*\0";
+    ofn.lpstrFile = path;
+    ofn.nMaxFile = MAX_PATH;
+    ofn.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
 
-void Win32IDE::handleExtensionCommand(int commandId) {
-    switch (commandId) {
+    if (!GetOpenFileNameA(&ofn)) {
+        return;
+    }
 
-    case IDM_EXT_INSTALL: {
-        // Open file dialog for .vsix files
-        char path[MAX_PATH] = {};
-        OPENFILENAMEA ofn = {};
-        ofn.lStructSize = sizeof(ofn);
-        ofn.hwndOwner = m_hwndMain;
-        ofn.lpstrFilter = "VS Code Extensions (*.vsix)\0*.vsix\0"
-                         "Native Plugins (*.dll)\0*.dll\0"
-                         "All Files (*.*)\0*.*\0";
-        ofn.lpstrFile = path;
-        ofn.nMaxFile = MAX_PATH;
-        ofn.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
+    std::string extDir = getExtensionsDir();
+    fs::path src(path);
+    std::string srcExt = src.extension().string();
 
-        if (GetOpenFileNameA(&ofn)) {
-            std::string extDir = getExtensionsDir();
-            fs::path src(path);
-            std::string srcExt = src.extension().string();
-
-            if (_stricmp(srcExt.c_str(), ".vsix") == 0) {
-                if (RawrXD::VSIXInstaller::Install(src.string())) {
-                    appendToOutput("[Extensions] Installed VSIX: " + src.filename().string() + "\n",
-                                   "Extensions", OutputSeverity::Info);
-                    loadInstalledExtensions();
-                } else {
-                    appendToOutput("[Extensions] VSIX installation failed: " + src.filename().string() + "\n",
-                                   "Extensions", OutputSeverity::Error);
-                }
-            } else {
-                fs::path dst = fs::path(extDir) / src.filename();
-                std::error_code ec;
-                fs::copy_file(src, dst, fs::copy_options::overwrite_existing, ec);
-                if (!ec) {
-                    appendToOutput("[Extensions] Installed plugin: " + src.filename().string() + "\n",
-                                   "Extensions", OutputSeverity::Info);
-                    loadInstalledExtensions();
-                } else {
-                    appendToOutput("[Extensions] Failed to install: " + ec.message() + "\n",
-                                   "Extensions", OutputSeverity::Error);
-                }
-            }
+    if (_stricmp(srcExt.c_str(), ".vsix") == 0) {
+        if (RawrXD::VSIXInstaller::Install(src.string())) {
+            appendToOutput("[Extensions] Installed VSIX: " + src.filename().string() + "\n",
+                           "Extensions", OutputSeverity::Info);
+            loadInstalledExtensions();
+        } else {
+            appendToOutput("[Extensions] VSIX installation failed: " + src.filename().string() + "\n",
+                           "Extensions", OutputSeverity::Error);
         }
-        break;
+        return;
     }
 
-    case IDM_EXT_ENABLE: {
-        int sel = ListView_GetNextItem(m_hwndExtensionsList, -1, LVNI_SELECTED);
-        if (sel < 0) break;
-        char nameBuf[256] = {};
-        ListView_GetItemText(m_hwndExtensionsList, sel, 0, nameBuf, sizeof(nameBuf));
-        enableExtension(nameBuf);
-        break;
-    }
-
-    case IDM_EXT_DISABLE: {
-        int sel = ListView_GetNextItem(m_hwndExtensionsList, -1, LVNI_SELECTED);
-        if (sel < 0) break;
-        char nameBuf[256] = {};
-        ListView_GetItemText(m_hwndExtensionsList, sel, 0, nameBuf, sizeof(nameBuf));
-        disableExtension(nameBuf);
-        break;
-    }
-
-    case IDM_EXT_UNINSTALL: {
-        int sel = ListView_GetNextItem(m_hwndExtensionsList, -1, LVNI_SELECTED);
-        if (sel < 0) break;
-
-        char nameBuf[256] = {};
-        ListView_GetItemText(m_hwndExtensionsList, sel, 0, nameBuf, sizeof(nameBuf));
-
-        int confirm = MessageBoxA(m_hwndMain,
-            (std::string("Uninstall extension \"") + nameBuf + "\"?").c_str(),
-            "Uninstall Extension", MB_YESNO | MB_ICONQUESTION);
-        if (confirm != IDYES) break;
-
-        uninstallExtension(nameBuf);
-        break;
-    }
-
-    case IDM_EXT_RELOAD:
+    fs::path dst = fs::path(extDir) / src.filename();
+    std::error_code ec;
+    fs::copy_file(src, dst, fs::copy_options::overwrite_existing, ec);
+    if (!ec) {
+        appendToOutput("[Extensions] Installed plugin: " + src.filename().string() + "\n",
+                       "Extensions", OutputSeverity::Info);
         loadInstalledExtensions();
-        break;
-
-    default:
-        break;
+    } else {
+        appendToOutput("[Extensions] Failed to install: " + ec.message() + "\n",
+                       "Extensions", OutputSeverity::Error);
     }
 }

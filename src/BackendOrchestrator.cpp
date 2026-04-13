@@ -14,6 +14,7 @@
 #include <cstring>
 #include <functional>
 #include <iomanip>
+#include <mutex>
 #include <numeric>
 #include <filesystem>
 #include <regex>
@@ -402,9 +403,8 @@ struct NativeInferenceApi {
 
 NativeInferenceApi& GetNativeInferenceApi() {
     static NativeInferenceApi api;
-    if (api.initialized) {
-        return api;
-    }
+    static std::once_flag initFlag;
+    std::call_once(initFlag, [&]() {
 
     const wchar_t* kCandidates[] = {
         L"RawrXD_Titan.dll",
@@ -539,6 +539,7 @@ NativeInferenceApi& GetNativeInferenceApi() {
     if (api.submit != nullptr || api.submitEngine != nullptr) {
         api.initialized = true;
     }
+    }); // std::call_once
     return api;
 }
 
@@ -2463,7 +2464,8 @@ void BackendOrchestrator::RegisterTitanToolDispatch(::AgenticExecutor* executor)
                     toolName = payloadJson.substr(pos, end - pos);
             }
             // Pass full payload as paramsJson so AgenticExecutor can parse it.
-            return executor->callTool(toolName, payloadJson);
+            // Use :: prefix to refer to global namespace AgenticExecutor, not RawrXD::AgenticExecutor
+            return static_cast<::AgenticExecutor*>(executor)->callTool(toolName, payloadJson);
         });
 }
 

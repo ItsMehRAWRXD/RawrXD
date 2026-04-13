@@ -18,6 +18,8 @@ build_verify/
 build_win32_gui_test/
 build_gui_3/
 build-arm64/
+build-ninja/
+build-ninja-*/
 bin/
 lib/
 obj/
@@ -41,6 +43,7 @@ NUL.obj
 CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
+CTestTestfile.cmake
 Makefile
 
 # IDE

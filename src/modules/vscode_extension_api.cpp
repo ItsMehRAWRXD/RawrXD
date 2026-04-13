@@ -14,7 +14,11 @@
 
 // Win32IDE header for bridge access (forward-declared in header)
 // We need the actual definition here for method calls
+#ifdef RAWRXD_GOLD_BUILD
+#include "../win32app/Win32IDE_Headless_Bridge.h"
+#else
 #include "../win32app/Win32IDE.h"
+#endif
 
 #include <cstdarg>
 #include <cstdio>
@@ -27,6 +31,8 @@
 #include <wintrust.h>
 #pragma comment(lib, "wintrust.lib")
 #include <fstream>
+#include <nlohmann/json.hpp>
+#include <commctrl.h>
 
 // SCAFFOLD_242: VS Code extension API compatibility
 

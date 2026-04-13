@@ -4,6 +4,7 @@
 #include <sstream>
 #include <algorithm>
 #include <cctype>
+#include <vector>
 
 namespace RawrXD {
 namespace JSON {
@@ -22,6 +23,129 @@ namespace JSON {
  */
 class JSONSanitizer {
 public:
+    /**
+     * @brief Find the next balanced JSON object/array in the input.
+     *
+     * This is structure-first extraction: it ignores markdown fences,
+     * commentary, and trailing junk and only returns a balanced JSON region.
+     */
+    static bool FindNextJSONStructureBounds(
+        const std::string& input,
+        size_t search_offset,
+        size_t& start_out,
+        size_t& end_out)
+    {
+        bool in_string = false;
+        bool escape = false;
+        std::vector<char> expected_closers;
+        size_t start = std::string::npos;
+
+        for (size_t i = search_offset; i < input.size(); ++i) {
+            const char ch = input[i];
+
+            if (start == std::string::npos) {
+                if (ch == '{' || ch == '[') {
+                    start = i;
+                    expected_closers.push_back(ch == '{' ? '}' : ']');
+                }
+                continue;
+            }
+
+            if (in_string) {
+                if (escape) {
+                    escape = false;
+                    continue;
+                }
+
+                if (ch == '\\') {
+                    escape = true;
+                    continue;
+                }
+
+                if (ch == '"') {
+                    in_string = false;
+                }
+                continue;
+            }
+
+            if (ch == '"') {
+                in_string = true;
+                continue;
+            }
+
+            if (ch == '{') {
+                expected_closers.push_back('}');
+                continue;
+            }
+
+            if (ch == '[') {
+                expected_closers.push_back(']');
+                continue;
+            }
+
+            if ((ch == '}' || ch == ']') && !expected_closers.empty()) {
+                if (expected_closers.back() != ch) {
+                    start = std::string::npos;
+                    expected_closers.clear();
+                    in_string = false;
+                    escape = false;
+                    continue;
+                }
+
+                expected_closers.pop_back();
+                if (expected_closers.empty()) {
+                    start_out = start;
+                    end_out = i;
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @brief Extract the first balanced JSON object from the input.
+     */
+    static std::string ExtractFirstJSONObject(const std::string& input) {
+        size_t start = std::string::npos;
+        size_t end = std::string::npos;
+
+        for (size_t i = 0; i < input.size(); ++i) {
+            if (input[i] != '{') {
+                continue;
+            }
+
+            size_t candidate_start = std::string::npos;
+            size_t candidate_end = std::string::npos;
+            if (FindNextJSONStructureBounds(input, i, candidate_start, candidate_end) &&
+                candidate_start == i && candidate_end >= candidate_start) {
+                start = candidate_start;
+                end = candidate_end;
+                break;
+            }
+        }
+
+        if (start == std::string::npos || end == std::string::npos) {
+            return "";
+        }
+
+        return input.substr(start, end - start + 1);
+    }
+
+    /**
+     * @brief Extract the first balanced JSON object or array from the input.
+     */
+    static std::string ExtractFirstJSONStructure(const std::string& input) {
+        size_t start = std::string::npos;
+        size_t end = std::string::npos;
+        if (!FindNextJSONStructureBounds(input, 0, start, end)) {
+            return "";
+        }
+
+        return input.substr(start, end - start + 1);
+    }
+
     /**
      * @brief Remove markdown code fences from input
      */
@@ -151,6 +275,12 @@ public:
         
         // Strip common commentary prefixes
         result = StripCommentaryPrefix(result);
+
+        // Prefer a structurally balanced JSON payload over naive cleaned text.
+        std::string extracted = ExtractFirstJSONStructure(result);
+        if (!extracted.empty()) {
+            result = extracted;
+        }
         
         // Final whitespace trim
         result = TrimWhitespace(result);

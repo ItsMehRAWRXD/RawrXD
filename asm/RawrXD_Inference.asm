@@ -692,11 +692,12 @@ gen_seed_ready:
     add eax, 1013904223
     add eax, esi
 
-    ; Map to [3, VOCAB_SIZE)
-    xor edx, edx
+    ; Map to [3, VOCAB_SIZE) without expensive div — use multiply-high instead
+    ; token = 3 + high32(seed * (VOCAB_SIZE - 3))
+    mov r11d, eax
     mov ecx, VOCAB_SIZE - 3
-    div ecx
-    mov eax, edx
+    mul ecx                         ; edx:eax = eax * ecx (unsigned)
+    mov eax, edx                    ; high32 -> [0, VOCAB_SIZE - 3)
     add eax, 3
 gen_emit:
     mov [r14 + rsi*4], eax

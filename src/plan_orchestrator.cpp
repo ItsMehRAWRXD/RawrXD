@@ -1,6 +1,7 @@
 #include "plan_orchestrator.h"
 
 #include "RawrXD_Interfaces.h"
+#include "lsp_client.h"
 #include "universal_model_router.h"
 #include "agentic/AgentToolHandlers.h"
 #include "asm/rawrxd_asm_orchestration.h"
@@ -46,6 +47,69 @@ std::string trim(std::string value)
 bool startsWith(const std::string& text, const std::string& prefix)
 {
     return text.size() >= prefix.size() && text.compare(0, prefix.size(), prefix) == 0;
+}
+
+std::string normalizePathLike(std::string value)
+{
+    std::replace(value.begin(), value.end(), '\\', '/');
+    std::transform(value.begin(), value.end(), value.begin(),
+                   [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+    return value;
+}
+
+std::string taskUriSuffix(const std::string& filePath)
+{
+    const std::string normalized = normalizePathLike(filePath);
+    if (normalized.empty()) {
+        return normalized;
+    }
+    return normalized.front() == '/' ? normalized : "/" + normalized;
+}
+
+bool uriMatchesTaskFile(const std::string& uri, const std::string& filePath)
+{
+    if (filePath.empty()) {
+        return true;
+    }
+
+    const std::string normalizedUri = normalizePathLike(uri);
+    const std::string suffix = taskUriSuffix(filePath);
+    return normalizedUri.size() >= suffix.size() &&
+           normalizedUri.compare(normalizedUri.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
+
+bool resultContainsExactSymbol(const nlohmann::json& result,
+                               const std::string& symbolName,
+                               const std::string& filePath)
+{
+    if (!result.is_array()) {
+        return false;
+    }
+
+    for (const auto& entry : result) {
+        if (!entry.is_object()) {
+            continue;
+        }
+        if (!entry.contains("name") || !entry["name"].is_string() || entry["name"].get<std::string>() != symbolName) {
+            continue;
+        }
+        if (filePath.empty()) {
+            return true;
+        }
+        if (entry.contains("location") && entry["location"].is_object()) {
+            const auto& location = entry["location"];
+            if (location.contains("uri") && location["uri"].is_string() &&
+                uriMatchesTaskFile(location["uri"].get<std::string>(), filePath)) {
+                return true;
+            }
+        }
+        if (entry.contains("uri") && entry["uri"].is_string() &&
+            uriMatchesTaskFile(entry["uri"].get<std::string>(), filePath)) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 bool commandLooksDestructive(const std::string& command)
@@ -471,6 +535,7 @@ PlanningResult PlanOrchestrator::generatePlan(const std::string& prompt,
     }
 
     plan.affectedFiles = files;
+    validatePlanSymbols(plan, files);
     if (plan.estimatedChanges == 0) {
         plan.estimatedChanges = static_cast<int>(plan.tasks.size());
     }
@@ -491,8 +556,84 @@ PlanningResult PlanOrchestrator::generatePlan(const std::string& prompt,
 
     (void)m_inferenceEngine;
     (void)m_modelRouter;
-    (void)m_lspClient;
     return plan;
+}
+
+void PlanOrchestrator::validatePlanSymbols(PlanningResult& plan, const std::vector<std::string>& contextFiles)
+{
+    if (!m_lspClient || plan.tasks.empty()) {
+        return;
+    }
+
+    std::vector<EditTask> validatedTasks;
+    validatedTasks.reserve(plan.tasks.size());
+    std::vector<std::string> validationErrors;
+
+    for (const EditTask& task : plan.tasks) {
+        const std::string operation = toLower(task.operation);
+        const bool shouldValidateSymbol = !task.symbolName.empty() &&
+                                          (operation == "rename" || !task.newSymbolName.empty());
+        if (!shouldValidateSymbol) {
+            validatedTasks.push_back(task);
+            continue;
+        }
+
+        const std::string lookupPath = !task.filePath.empty()
+            ? resolvePath(task.filePath)
+            : (contextFiles.empty() ? std::string() : resolvePath(contextFiles.front()));
+
+        nlohmann::json symbolMatches = nlohmann::json::array();
+        try {
+            symbolMatches = m_lspClient->workspaceSymbols(task.symbolName).get();
+        } catch (...) {
+            validatedTasks.push_back(task);
+            continue;
+        }
+
+        if (!resultContainsExactSymbol(symbolMatches, task.symbolName, lookupPath)) {
+            validationErrors.push_back("LSP validation rejected rename task for missing symbol '" +
+                                       task.symbolName + "'" +
+                                       (task.filePath.empty() ? std::string() : (" in " + task.filePath)));
+            continue;
+        }
+
+        if (!task.newSymbolName.empty()) {
+            nlohmann::json newNameMatches = nlohmann::json::array();
+            try {
+                newNameMatches = m_lspClient->workspaceSymbols(task.newSymbolName).get();
+            } catch (...) {
+                validatedTasks.push_back(task);
+                continue;
+            }
+
+            if (resultContainsExactSymbol(newNameMatches, task.newSymbolName, lookupPath)) {
+                validationErrors.push_back("LSP validation rejected rename task because target symbol '" +
+                                           task.newSymbolName + "' already exists" +
+                                           (task.filePath.empty() ? std::string() : (" in " + task.filePath)));
+                continue;
+            }
+        }
+
+        validatedTasks.push_back(task);
+    }
+
+    plan.tasks = std::move(validatedTasks);
+    plan.estimatedChanges = static_cast<int>(plan.tasks.size());
+
+    if (!validationErrors.empty()) {
+        std::ostringstream oss;
+        for (size_t i = 0; i < validationErrors.size(); ++i) {
+            if (i != 0) {
+                oss << "\n";
+            }
+            oss << validationErrors[i];
+        }
+
+        plan.errorMessage = oss.str();
+        if (plan.tasks.empty()) {
+            plan.success = false;
+        }
+    }
 }
 
 ExecutionResult PlanOrchestrator::planAndExecute(const std::string& prompt,

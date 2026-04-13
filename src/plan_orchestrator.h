@@ -118,6 +118,7 @@ private:
                                      int maxSteps,
                                      bool dryRun);
     PlanningResult parsePlanningResponse(const std::string& response);
+    void validatePlanSymbols(PlanningResult& plan, const std::vector<std::string>& contextFiles);
     bool executeTask(const EditTask& task, bool dryRun);
     bool executeCommandTask(const EditTask& task, bool dryRun);
     bool executeReadTask(const EditTask& task, bool dryRun);

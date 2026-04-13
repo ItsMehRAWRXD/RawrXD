@@ -103,12 +103,19 @@ void Win32IDE::refreshAgenticChatSessionContext()
     m_agenticChatSession->RefreshContext(root, openFiles);
 
     // Keep HTTP agentic session aligned with the combo when the selection is an Ollama tag (not a local .gguf path).
-    if (m_hwndModelSelector && IsWindow(m_hwndModelSelector) && !m_availableModels.empty())
+    if (m_hwndModelSelector && IsWindow(m_hwndModelSelector))
     {
+        std::string tag;
         const int idx = (int)SendMessage(m_hwndModelSelector, CB_GETCURSEL, 0, 0);
-        if (idx >= 0 && idx < (int)m_availableModels.size())
         {
-            const std::string& tag = m_availableModels[idx];
+            std::lock_guard<std::mutex> modelListLock(m_availableModelsMutex);
+            if (idx >= 0 && idx < (int)m_availableModels.size())
+            {
+                tag = m_availableModels[idx];
+            }
+        }
+        if (!tag.empty())
+        {
             const bool looksLocal = tag.find(".gguf") != std::string::npos || tag.find(".ggml") != std::string::npos ||
                                     tag.find(".safetensors") != std::string::npos ||
                                     tag.find(":\\") != std::string::npos || tag.find('/') != std::string::npos ||
@@ -316,20 +323,25 @@ bool Win32IDE::testOllamaConnection()
                             continue;
                         }
                         // simple parse: find "name":"..."
-                        m_availableModels.clear();
-                        size_t pos = 0;
-                        while ((pos = body.find("\"name\":\"", pos)) != std::string::npos)
+                        size_t discoveredCount = 0;
                         {
-                            pos += 8;
-                            auto end = body.find('"', pos);
-                            if (end != std::string::npos)
+                            std::lock_guard<std::mutex> modelListLock(m_availableModelsMutex);
+                            m_availableModels.clear();
+                            size_t pos = 0;
+                            while ((pos = body.find("\"name\":\"", pos)) != std::string::npos)
                             {
-                                m_availableModels.push_back(body.substr(pos, end - pos));
-                                pos = end + 1;
+                                pos += 8;
+                                auto end = body.find('"', pos);
+                                if (end != std::string::npos)
+                                {
+                                    m_availableModels.push_back(body.substr(pos, end - pos));
+                                    pos = end + 1;
+                                }
                             }
+                            discoveredCount = m_availableModels.size();
                         }
                         // E5: status includes model count
-                        m_ollamaStatus = "Connected (" + std::to_string(m_availableModels.size()) + " models)";
+                        m_ollamaStatus = "Connected (" + std::to_string(discoveredCount) + " models)";
                         m_ollamaConnected = true;
                         // E7: record timestamp
                         m_ollamaLastConnectedMs = (uint64_t)GetTickCount64();

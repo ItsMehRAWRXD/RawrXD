@@ -5,6 +5,7 @@
 #include "Win32IDE.h"
 #include "Win32IDE_ModelManager.h"
 #include "model_puller/model_puller.h"
+#include "../../include/model_puller/download_manager.h"
 #include <cstdio>
 
 // Status bar part index for download progress (part 8 of 12)

@@ -291,6 +291,24 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             return 0;
         }
     }
+
+    // ────────────────────────────────────────────────────────────────────────
+    // Timer Message Handling (Phase 1C - Debug Hover)
+    // ────────────────────────────────────────────────────────────────────────
+    if (uMsg == WM_TIMER)
+    {
+        switch (wParam)
+        {
+            case 42001:  // HOVER_TIMER_ID (LSP Hover Timer)
+                onHoverTimer();
+                return 0;
+
+            case 0x2002:  // DEBUG_HOVER_TIMER_ID (Phase 1C - Debug Hover Timer)
+                onDebugHoverTimer();
+                return 0;
+        }
+    }
+
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 void Win32IDE::onCreate(HWND hwnd)

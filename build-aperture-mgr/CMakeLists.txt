@@ -14,13 +14,11 @@ add_library(ApertureManager STATIC
 target_include_directories(ApertureManager PUBLIC
     ../include
     ${NLOHMANN_JSON_INCLUDE_DIR}
-    "C:/Program Files (x86)/nlohmann_json/include"
-    "C:/Program Files (x86)/Windows Kits/10/Include/10.0.22621.0/um"
 )
 
 target_link_libraries(ApertureManager PUBLIC
     crypt32
-    wincrypt
+    advapi32
     kernel32
 )
 
@@ -40,7 +38,8 @@ target_link_libraries(ApertureManager_IntegrationTest PRIVATE
 
 target_compile_features(ApertureManager_IntegrationTest PRIVATE cxx_std_20)
 
-# Set up test to run against sealed archive
+# Enable testing and set up test to run against sealed archive
+include(CTest)
 add_test(
     NAME ApertureManager_IntegrationTest
     COMMAND ApertureManager_IntegrationTest

@@ -6,6 +6,7 @@
 #include <string>
 #include <functional>
 #include <memory>
+#include <type_traits>
 
 namespace RawrXD {
 namespace JSON {
@@ -20,9 +21,9 @@ using ParseSuccessCallback = std::function<void(const json&)>;
  * @brief Safe JSON parsing guard with multi-layer defense
  * 
  * Pipeline:
- * 1. Sanitization (strip fences, trim whitespace)
- * 2. Format verification (looks like JSON)
- * 3. Safe parsing with detailed error capture
+ * 1. Normalize input and extract the first balanced JSON structure
+ * 2. Parse extracted JSON with error capture
+ * 3. Fall back to sanitization only if no valid structure is found
  * 4. Schema validation
  * 5. Self-healing trigger on failure
  * 
@@ -30,10 +31,64 @@ using ParseSuccessCallback = std::function<void(const json&)>;
  */
 class JSONParseGuard {
 public:
+    static json ParseFirstValidStructure(
+        const std::string& raw_input,
+        std::string* error_out = nullptr)
+    {
+        std::string normalized = JSONSanitizer::TrimWhitespace(JSONSanitizer::RemoveBOM(raw_input));
+        if (normalized.empty()) {
+            if (error_out) {
+                *error_out = "Input normalized to empty before extraction";
+            }
+            return json::object();
+        }
+
+        std::string last_error;
+        size_t search_offset = 0;
+        size_t start = std::string::npos;
+        size_t end = std::string::npos;
+
+        while (JSONSanitizer::FindNextJSONStructureBounds(normalized, search_offset, start, end)) {
+            const std::string candidate = normalized.substr(start, end - start + 1);
+            try {
+                if (error_out) {
+                    error_out->clear();
+                }
+                return json::parse(candidate);
+            } catch (const std::exception& e) {
+                last_error = std::string("JSON parse error while validating extracted structure: ") + e.what();
+            }
+
+            search_offset = start + 1;
+        }
+
+        std::string sanitized = JSONSanitizer::Sanitize(normalized);
+        if (!sanitized.empty() && JSONSanitizer::LooksLikeJSON(sanitized)) {
+            try {
+                if (error_out) {
+                    error_out->clear();
+                }
+                return json::parse(sanitized);
+            } catch (const std::exception& e) {
+                last_error = std::string("JSON parse error after sanitization fallback: ") + e.what();
+            }
+        }
+
+        if (error_out) {
+            if (last_error.empty()) {
+                *error_out = "No parseable JSON structure found in input";
+            } else {
+                *error_out = "No parseable JSON structure found in input. Last error: " + last_error;
+            }
+        }
+
+        return json::object();
+    }
+
     /**
      * @brief Parse JSON with full hardening
      * 
-     * @param raw_input Raw input from LLM (may contain markdown, etc.)
+    * @param raw_input Raw input from LLM (may contain markdown, fence attributes, etc.)
      * @param on_parse_error Callback if parsing fails (for logging/recovery)
      * @param on_parse_success Callback on successful parse
      * @param require_schema If true, will validate against schema
@@ -50,45 +105,25 @@ public:
         SchemaValidator schema_validator = nullptr)
     {
         try {
-            // ========== LAYER 1: SANITIZATION ==========
-            std::string sanitized = JSONSanitizer::Sanitize(raw_input);
-            
-            if (sanitized.empty()) {
-                std::string error = "Input sanitized to empty after cleanup";
-                if (on_parse_error) on_parse_error(error);
+            // ========== LAYER 1: STRUCTURE-FIRST EXTRACTION + SAFE PARSE ==========
+            std::string parse_error;
+            json parsed = ParseFirstValidStructure(raw_input, &parse_error);
+            if (!parse_error.empty()) {
+                if (on_parse_error) on_parse_error(parse_error);
                 return json::object();
             }
             
-            // ========== LAYER 2: FORMAT CHECK ==========
-            if (!JSONSanitizer::LooksLikeJSON(sanitized)) {
-                std::string error = "Sanitized input does not look like JSON. First 100 chars: " + 
-                                   sanitized.substr(0, 100);
-                if (on_parse_error) on_parse_error(error);
-                return json::object();
-            }
-            
-            // ========== LAYER 3: SAFE PARSE ==========
-            json parsed;
-            try {
-                parsed = json::parse(sanitized);
-            } catch (const json::parse_error& e) {
-                std::string error = std::string("JSON parse error at byte offset ") + 
-                                   std::to_string(e.byte) + ": " + e.what();
-                if (on_parse_error) on_parse_error(error);
-                return json::object();
-            } catch (const std::exception& e) {
-                std::string error = std::string("Unexpected parse exception: ") + e.what();
-                if (on_parse_error) on_parse_error(error);
-                return json::object();
-            }
-            
-            // ========== LAYER 4: SCHEMA VALIDATION ==========
-            if (require_schema && schema_validator) {
-                std::string validation_error;
-                if (!schema_validator(parsed, validation_error)) {
-                    std::string error = std::string("Schema validation failed: ") + validation_error;
-                    if (on_parse_error) on_parse_error(error);
-                    return json::object();
+            // ========== LAYER 2: SCHEMA VALIDATION ==========
+            if (require_schema) {
+                if constexpr (!std::is_same_v<std::decay_t<SchemaValidator>, std::nullptr_t>) {
+                    if (schema_validator) {
+                        std::string validation_error;
+                        if (!schema_validator(parsed, validation_error)) {
+                            std::string error = std::string("Schema validation failed: ") + validation_error;
+                            if (on_parse_error) on_parse_error(error);
+                            return json::object();
+                        }
+                    }
                 }
             }
             
@@ -126,19 +161,12 @@ public:
         const std::string& streaming_chunk,
         ParseErrorCallback on_error = nullptr)
     {
-        std::string sanitized = JSONSanitizer::Sanitize(streaming_chunk);
-        
-        if (sanitized.empty()) {
-            if (on_error) on_error("Streaming chunk sanitized to empty");
-            return json::object();
+        std::string parse_error;
+        json parsed = ParseFirstValidStructure(streaming_chunk, &parse_error);
+        if (on_error && !parse_error.empty()) {
+            on_error(parse_error);
         }
-        
-        try {
-            return json::parse(sanitized);
-        } catch (const std::exception& e) {
-            if (on_error) on_error(std::string("Stream chunk parse failed: ") + e.what());
-            return json::object();
-        }
+        return parsed;
     }
 };
 
@@ -164,21 +192,14 @@ public:
         const std::string& parse_error)
     {
         return 
-            "Your previous response was invalid JSON. Please fix it and try again.\n"
+            "Return ONLY valid JSON.\n"
+            "No markdown. No explanation.\n"
+            "Format:\n"
+            "{ \"tool\": \"...\", \"arguments\": { ... } }\n"
             "\n"
-            "Error: " + parse_error + "\n"
+            "Parse failure:\n" + parse_error + "\n"
             "\n"
-            "Requirements:\n"
-            "- Return ONLY valid JSON\n"
-            "- No markdown code fences\n"
-            "- No comments or explanations outside the JSON\n"
-            "- Ensure 'tool' and 'arguments' fields are present\n"
-            "- Use proper JSON syntax (quotes, commas, etc.)\n"
-            "\n"
-            "Previous output:\n" +
-            bad_output + "\n"
-            "\n"
-            "Please return valid JSON now:";
+            "Fix this:\n" + bad_output;
     }
     
     /**

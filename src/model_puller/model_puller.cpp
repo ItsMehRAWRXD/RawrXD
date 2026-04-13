@@ -6,10 +6,9 @@
 // ============================================================================
 
 #include "model_puller/model_puller.h"
-#include "gguf_loader.h"
-#include "RawrXD_Interfaces.h"
 #include <iostream>
 #include <filesystem>
+#include <fstream>
 #include <regex>
 #include <algorithm>
 #include <cctype>
@@ -19,52 +18,112 @@
 namespace RawrXD {
 
 // ============================================================================
-// ValidateGGUF — post-download GGUF header + metadata validation
+// GGUF format constants (inline — avoids linking CPUInference::GGUFLoader)
+// ============================================================================
+static constexpr uint32_t GGUF_MAGIC = 0x46554747u; // "GGUF" LE
+
+// GGUF metadata value types (v2/v3 spec)
+enum GGUFValueType : uint32_t {
+    GGUF_TYPE_UINT8    = 0,
+    GGUF_TYPE_INT8     = 1,
+    GGUF_TYPE_UINT16   = 2,
+    GGUF_TYPE_INT16    = 3,
+    GGUF_TYPE_UINT32   = 4,
+    GGUF_TYPE_INT32    = 5,
+    GGUF_TYPE_FLOAT32  = 6,
+    GGUF_TYPE_BOOL     = 7,
+    GGUF_TYPE_STRING   = 8,
+    GGUF_TYPE_ARRAY    = 9,
+    GGUF_TYPE_UINT64   = 10,
+    GGUF_TYPE_INT64    = 11,
+    GGUF_TYPE_FLOAT64  = 12,
+};
+
+// Read a GGUF-format string: uint64 length + raw bytes (no null terminator)
+static bool ReadGGUFString(std::ifstream& f, std::string& out) {
+    uint64_t len = 0;
+    if (!f.read(reinterpret_cast<char*>(&len), 8)) return false;
+    if (len > 1024 * 1024) return false; // sanity cap: 1 MB
+    out.resize(static_cast<size_t>(len));
+    return !!f.read(out.data(), static_cast<std::streamsize>(len));
+}
+
+// Skip over a typed GGUF metadata value without reading it
+static bool SkipGGUFValue(std::ifstream& f, uint32_t valueType) {
+    switch (valueType) {
+        case GGUF_TYPE_UINT8:   case GGUF_TYPE_INT8:  case GGUF_TYPE_BOOL: f.seekg(1, std::ios::cur); break;
+        case GGUF_TYPE_UINT16:  case GGUF_TYPE_INT16:  f.seekg(2, std::ios::cur); break;
+        case GGUF_TYPE_UINT32:  case GGUF_TYPE_INT32:  case GGUF_TYPE_FLOAT32: f.seekg(4, std::ios::cur); break;
+        case GGUF_TYPE_UINT64:  case GGUF_TYPE_INT64:  case GGUF_TYPE_FLOAT64: f.seekg(8, std::ios::cur); break;
+        case GGUF_TYPE_STRING: { std::string s; if (!ReadGGUFString(f, s)) return false; break; }
+        case GGUF_TYPE_ARRAY: {
+            uint32_t elemType = 0;
+            uint64_t elemCount = 0;
+            if (!f.read(reinterpret_cast<char*>(&elemType), 4)) return false;
+            if (!f.read(reinterpret_cast<char*>(&elemCount), 8)) return false;
+            for (uint64_t i = 0; i < elemCount; ++i)
+                if (!SkipGGUFValue(f, elemType)) return false;
+            break;
+        }
+        default: return false;
+    }
+    return f.good();
+}
+
+// ============================================================================
+// ValidateGGUF — post-download GGUF header + metadata validation (inline)
 // ============================================================================
 // Returns true if file is a valid GGUF. Populates entry metadata on success.
 static bool ValidateGGUF(const std::string& filePath, ModelEntry& entry, std::string& errorOut) {
-    CPUInference::GGUFLoader loader;
-    if (!loader.Open(filePath)) {
+    std::ifstream f(filePath, std::ios::binary);
+    if (!f.is_open()) {
         errorOut = "Cannot open GGUF file: " + filePath;
         return false;
     }
 
-    if (!loader.ParseHeader()) {
-        loader.Close();
-        errorOut = "Invalid GGUF header (corrupt or not a GGUF file)";
+    // Read header: magic(4) + version(4) + tensor_count(8) + metadata_kv_count(8)
+    uint32_t magic = 0, version = 0;
+    uint64_t tensorCount = 0, kvCount = 0;
+    f.read(reinterpret_cast<char*>(&magic), 4);
+    f.read(reinterpret_cast<char*>(&version), 4);
+    f.read(reinterpret_cast<char*>(&tensorCount), 8);
+    f.read(reinterpret_cast<char*>(&kvCount), 8);
+    if (!f.good()) { errorOut = "GGUF too short: cannot read header"; return false; }
+
+    if (magic != GGUF_MAGIC) {
+        char buf[32];
+        snprintf(buf, sizeof(buf), "0x%08X", magic);
+        errorOut = std::string("Bad GGUF magic: expected 0x46554747, got ") + buf;
         return false;
     }
 
-    CPUInference::GGUFHeader hdr = loader.GetHeader();
-    // Magic number validation: 0x46554747 = "GGUF"
-    if (hdr.magic != 0x46554747u) {
-        loader.Close();
-        errorOut = "Bad GGUF magic: expected 0x46554747, got 0x"
-                 + ([&]{
-                        char buf[16];
-                        snprintf(buf, sizeof(buf), "%08X", hdr.magic);
-                        return std::string(buf);
-                    })();
+    if (version < 2 || version > 3) {
+        errorOut = "Unsupported GGUF version: " + std::to_string(version);
         return false;
     }
 
-    // Version sanity (only v2 and v3 known)
-    if (hdr.version < 2 || hdr.version > 3) {
-        loader.Close();
-        errorOut = "Unsupported GGUF version: " + std::to_string(hdr.version);
-        return false;
+    // Walk metadata KV pairs to find "general.architecture"
+    // Limit to first 200 KV pairs to avoid unbounded reads
+    uint64_t kvLimit = (kvCount < 200) ? kvCount : 200;
+    for (uint64_t i = 0; i < kvLimit; ++i) {
+        std::string key;
+        if (!ReadGGUFString(f, key)) break;
+
+        uint32_t valueType = 0;
+        if (!f.read(reinterpret_cast<char*>(&valueType), 4)) break;
+
+        if (key == "general.architecture" && valueType == GGUF_TYPE_STRING) {
+            std::string arch;
+            if (ReadGGUFString(f, arch) && !arch.empty())
+                entry.architecture = arch;
+            return true; // found what we need — done
+        }
+
+        // Skip this value
+        if (!SkipGGUFValue(f, valueType)) break;
     }
 
-    if (loader.ParseMetadata()) {
-        CPUInference::GGUFMetadata meta = loader.GetMetadata();
-        // Extract architecture from kv_pairs ("general.architecture" key)
-        auto it = meta.kv_pairs.find("general.architecture");
-        if (it != meta.kv_pairs.end() && !it->second.empty())
-            entry.architecture = it->second;
-    }
-
-    loader.Close();
-    return true;
+    return true; // valid GGUF even if architecture not found
 }
 
 // ============================================================================

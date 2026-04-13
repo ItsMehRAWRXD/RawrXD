@@ -24,6 +24,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <psapi.h>
 #include <sstream>
 #include <winhttp.h>
 
@@ -68,6 +69,62 @@ std::string compactSwarmSummary(const std::string& summary)
     if (end == std::string::npos)
         end = summary.size();
     return summary.substr(pos, end - pos);
+}
+
+struct BackendMemorySnapshot
+{
+    DWORD memoryLoadPercent = 0;
+    SIZE_T processWorkingSetBytes = 0;
+    bool valid = false;
+};
+
+BackendMemorySnapshot sampleBackendMemorySnapshot()
+{
+    BackendMemorySnapshot snapshot;
+
+    MEMORYSTATUSEX mem{};
+    mem.dwLength = sizeof(mem);
+    if (GlobalMemoryStatusEx(&mem))
+    {
+        snapshot.memoryLoadPercent = mem.dwMemoryLoad;
+        snapshot.valid = true;
+    }
+
+    PROCESS_MEMORY_COUNTERS_EX pmc{};
+    if (GetProcessMemoryInfo(GetCurrentProcess(), reinterpret_cast<PROCESS_MEMORY_COUNTERS*>(&pmc), sizeof(pmc)))
+    {
+        snapshot.processWorkingSetBytes = pmc.WorkingSetSize;
+        snapshot.valid = true;
+    }
+
+    return snapshot;
+}
+
+std::string clampPromptForHeapSafety(const std::string& prompt)
+{
+    static constexpr size_t kMaxPromptBytes = 128ull * 1024ull;
+    if (prompt.size() <= kMaxPromptBytes)
+    {
+        return prompt;
+    }
+
+    std::string clamped = prompt.substr(0, kMaxPromptBytes);
+    clamped += "\n\n[truncated by RawrXD: prompt exceeded backend heap-safety limit]";
+    return clamped;
+}
+
+bool isCriticalBackendMemoryPressure(const BackendMemorySnapshot& snapshot)
+{
+    static constexpr SIZE_T kCriticalWorkingSetBytes = 3ull * 1024ull * 1024ull * 1024ull;
+    return snapshot.valid &&
+           (snapshot.memoryLoadPercent >= 92u || snapshot.processWorkingSetBytes >= kCriticalWorkingSetBytes);
+}
+
+bool isElevatedBackendMemoryPressure(const BackendMemorySnapshot& snapshot)
+{
+    static constexpr SIZE_T kElevatedWorkingSetBytes = 2ull * 1024ull * 1024ull * 1024ull;
+    return snapshot.valid &&
+           (snapshot.memoryLoadPercent >= 85u || snapshot.processWorkingSetBytes >= kElevatedWorkingSetBytes);
 }
 }  // namespace
 
@@ -724,6 +781,21 @@ std::string Win32IDE::routeInferenceRequest(const std::string& prompt)
     logInfo(std::string("[InferenceFacade] ") + rawrxd::ide::inferenceFacadeLaneField(backendTypeString(active)) +
             " op=routeInferenceRequest");
 
+    std::string effectivePrompt = clampPromptForHeapSafety(prompt);
+    const BackendMemorySnapshot memorySnapshot = sampleBackendMemorySnapshot();
+
+    if (active == AIBackendType::LocalGGUF && m_nativeEngine && m_nativeEngine->IsModelLoaded() &&
+        isElevatedBackendMemoryPressure(memorySnapshot))
+    {
+        m_nativeEngine->ClearCache();
+        appendToOutput("[InferenceFacade] Local GGUF cache cleared preemptively under memory pressure.\n", "General",
+                       OutputSeverity::Warning);
+        if (isCriticalBackendMemoryPressure(memorySnapshot))
+        {
+            return "[BackendSwitcher] Error: Local GGUF inference aborted due to critical memory pressure after cache reset.";
+        }
+    }
+
     std::string result;
     auto startTime = std::chrono::steady_clock::now();
     bool success = false;
@@ -731,28 +803,28 @@ std::string Win32IDE::routeInferenceRequest(const std::string& prompt)
     switch (active)
     {
         case AIBackendType::LocalGGUF:
-            result = routeToLocalGGUF(prompt);
+            result = routeToLocalGGUF(effectivePrompt);
             break;
         case AIBackendType::Ollama:
-            result = routeToOllama(prompt);
+            result = routeToOllama(effectivePrompt);
             break;
         case AIBackendType::OpenAI:
-            result = routeToOpenAI(prompt);
+            result = routeToOpenAI(effectivePrompt);
             break;
         case AIBackendType::Claude:
-            result = routeToClaude(prompt);
+            result = routeToClaude(effectivePrompt);
             break;
         case AIBackendType::Gemini:
-            result = routeToGemini(prompt);
+            result = routeToGemini(effectivePrompt);
             break;
         case AIBackendType::ReasoningEngine:
-            result = this->routeToReasoningEngine(prompt);
+            result = this->routeToReasoningEngine(effectivePrompt);
             break;
         case AIBackendType::GitHubCopilot:
-            result = routeToGitHubCopilot(prompt);
+            result = routeToGitHubCopilot(effectivePrompt);
             break;
         case AIBackendType::AmazonQ:
-            result = routeToAmazonQ(prompt);
+            result = routeToAmazonQ(effectivePrompt);
             break;
         default:
             result = "[BackendSwitcher] Unknown active backend";

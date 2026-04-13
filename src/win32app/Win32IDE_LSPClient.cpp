@@ -54,6 +54,12 @@ static constexpr size_t kMaxLspArgBytes = 1024u;
 //   token types to editor highlight ranges.
 // ============================================================================
 
+
+
+
+
+
+
 // Standard LSP semantic token types (index order per spec)
 static const char* s_semanticTokenTypes[] = {
     "namespace",      // 0
@@ -87,7 +93,6 @@ static constexpr int s_numSemanticTokenTypes = sizeof(s_semanticTokenTypes) / si
 // ============================================================================
 // INITIALIZATION & LIFECYCLE
 // ============================================================================
-
 void Win32IDE::initLSPClient()
 {
     if (m_lspInitialized)
@@ -186,7 +191,6 @@ void Win32IDE::shutdownLSPClient()
 // ============================================================================
 // SERVER MANAGEMENT
 // ============================================================================
-
 bool Win32IDE::startLSPServer(LSPLanguage lang)
 {
     if (lang >= LSPLanguage::Count)
@@ -412,14 +416,23 @@ Win32IDE::LSPServerState Win32IDE::getLSPServerState(LSPLanguage lang) const
 // ============================================================================
 // JSON-RPC TRANSPORT
 // ============================================================================
-
 int Win32IDE::sendLSPRequest(LSPLanguage lang, const std::string& method, const nlohmann::json& params)
 {
     if (lang >= LSPLanguage::Count)
         return -1;
     auto& status = m_lspStatuses[(size_t)lang];
 
-    if (!status.hStdinWrite || status.state != LSPServerState::Running)
+    const bool allowDuringStartup = (method == "initialize");
+    if ((!status.hStdinWrite || (status.state != LSPServerState::Running && !(allowDuringStartup && status.state == LSPServerState::Starting))) &&
+        !allowDuringStartup && status.state != LSPServerState::Starting)
+    {
+        if (!m_lspInitialized)
+            initLSPClient();
+        if (!startLSPServer(lang))
+            return -1;
+    }
+
+    if (!status.hStdinWrite || (status.state != LSPServerState::Running && !(allowDuringStartup && status.state == LSPServerState::Starting)))
     {
         return -1;
     }
@@ -457,7 +470,17 @@ void Win32IDE::sendLSPNotification(LSPLanguage lang, const std::string& method, 
         return;
     auto& status = m_lspStatuses[(size_t)lang];
 
-    if (!status.hStdinWrite)
+    const bool allowDuringStartup = (method == "initialized");
+    if ((!status.hStdinWrite || (status.state != LSPServerState::Running && !(allowDuringStartup && status.state == LSPServerState::Starting))) &&
+        !allowDuringStartup && status.state != LSPServerState::Starting)
+    {
+        if (!m_lspInitialized)
+            initLSPClient();
+        if (!startLSPServer(lang))
+            return;
+    }
+
+    if (!status.hStdinWrite || (status.state != LSPServerState::Running && !(allowDuringStartup && status.state == LSPServerState::Starting)))
         return;
 
     nlohmann::json msg;
@@ -546,12 +569,12 @@ void Win32IDE::lspReaderThread(LSPLanguage lang)
         while (true)
         {
             // Look for Content-Length header
-            size_t headerEnd = buffer.find("\r\n\r\n");
-            if (headerEnd == std::string::npos)
+            size_t header_end = buffer.find("\r\n\r\n");
+            if (header_end == std::string::npos)
                 break;
 
-            std::string header = buffer.substr(0, headerEnd);
-            int contentLength = 0;
+            std::string header = buffer.substr(0, header_end);
+            int content_length = 0;
 
             // Parse Content-Length
             size_t clPos = header.find("Content-Length:");
@@ -569,7 +592,7 @@ void Win32IDE::lspReaderThread(LSPLanguage lang)
                 const unsigned long parsed = std::strtoul(contentLenStr.c_str(), &end, 10);
                 if (end == contentLenStr.c_str() || errno != 0)
                 {
-                    buffer.erase(0, headerEnd + 4);
+                    buffer.erase(0, header_end + 4);
                     continue;
                 }
                 while (end && *end == ' ')
@@ -578,44 +601,44 @@ void Win32IDE::lspReaderThread(LSPLanguage lang)
                 }
                 if (end && *end != '\0')
                 {
-                    buffer.erase(0, headerEnd + 4);
+                    buffer.erase(0, header_end + 4);
                     continue;
                 }
                 if (parsed > kMaxLspMessageBytes)
                 {
-                    buffer.erase(0, headerEnd + 4);
+                    buffer.erase(0, header_end + 4);
                     continue;
                 }
-                contentLength = static_cast<int>(parsed);
+                content_length = static_cast<int>(parsed);
             }
 
-            if (contentLength <= 0)
+            if (content_length <= 0)
             {
-                buffer.erase(0, headerEnd + 4);
+                buffer.erase(0, header_end + 4);
                 continue;
             }
 
-            size_t messageStart = headerEnd + 4;
-            if (buffer.size() < messageStart + contentLength)
+            size_t message_start = header_end + 4;
+            if (buffer.size() < message_start + content_length)
             {
                 break;  // Incomplete message — wait for more data
             }
 
-            std::string jsonBody = buffer.substr(messageStart, contentLength);
-            buffer.erase(0, messageStart + contentLength);
+            std::string json_body = buffer.substr(message_start, content_length);
+            buffer.erase(0, message_start + content_length);
 
             // Parse JSON
             try
             {
-                nlohmann::json msg = nlohmann::json::parse(jsonBody);
+                nlohmann::json msg = nlohmann::json::parse(json_body);
 
                 if (msg.contains("id") && !msg["id"].is_null())
                 {
                     // Response to a request
-                    int respId = msg["id"].get<int>();
+                    int resp_id = msg["id"].get<int>();
                     {
                         std::lock_guard<std::mutex> lock(m_lspResponseMutex);
-                        m_lspPendingResponses[respId] = msg;
+                        m_lspPendingResponses[resp_id] = msg;
                     }
                     m_lspResponseCV.notify_all();
                 }
@@ -706,7 +729,6 @@ void Win32IDE::lspReaderThread(LSPLanguage lang)
 // ============================================================================
 // LSP INITIALIZATION HANDSHAKE
 // ============================================================================
-
 bool Win32IDE::sendInitialize(LSPLanguage lang)
 {
     const auto& cfg = m_lspConfigs[(size_t)lang];
@@ -724,6 +746,7 @@ bool Win32IDE::sendInitialize(LSPLanguage lang)
     textDocCaps["references"]["dynamicRegistration"] = false;
     textDocCaps["rename"]["dynamicRegistration"] = false;
     textDocCaps["hover"]["dynamicRegistration"] = false;
+    textDocCaps["formatting"]["dynamicRegistration"] = false; // Added for Format on Save
     textDocCaps["publishDiagnostics"]["relatedInformation"] = false;
 
     nlohmann::json caps;
@@ -769,7 +792,6 @@ void Win32IDE::sendExit(LSPLanguage lang)
 // ============================================================================
 // DOCUMENT SYNCHRONIZATION
 // ============================================================================
-
 void Win32IDE::sendDidOpen(LSPLanguage lang, const std::string& uri, const std::string& languageId,
                            const std::string& content)
 {
@@ -817,7 +839,6 @@ void Win32IDE::sendDidSave(LSPLanguage lang, const std::string& uri)
 // ============================================================================
 // CORE LSP FEATURES
 // ============================================================================
-
 // ---- 1. Go-to-Definition --------------------------------------------------
 
 std::vector<Win32IDE::LSPLocation> Win32IDE::lspGotoDefinition(const std::string& uri, int line, int character)
@@ -1404,7 +1425,6 @@ void Win32IDE::displayDiagnosticsAsAnnotations(const std::string& uri)
 // ============================================================================
 // WORKSPACE EDIT APPLICATION
 // ============================================================================
-
 bool Win32IDE::applyWorkspaceEdit(const LSPWorkspaceEdit& edit)
 {
     if (edit.changes.empty())
@@ -1499,7 +1519,6 @@ bool Win32IDE::applyWorkspaceEdit(const LSPWorkspaceEdit& edit)
 // ============================================================================
 // LANGUAGE DETECTION & HELPERS
 // ============================================================================
-
 Win32IDE::LSPLanguage Win32IDE::detectLanguageForFile(const std::string& filePath) const
 {
     std::string ext;
@@ -1639,10 +1658,103 @@ std::string Win32IDE::uriToFilePath(const std::string& uri) const
     return decoded;
 }
 
+bool Win32IDE::prepareLSPDocument(const std::string& filePath, LSPLanguage& lang)
+{
+    if (filePath.empty())
+        return false;
+
+    if (!m_lspInitialized)
+        initLSPClient();
+
+    lang = detectLanguageForFile(filePath);
+    if (lang >= LSPLanguage::Count)
+        return false;
+
+    auto& status = m_lspStatuses[(size_t)lang];
+    if (status.state == LSPServerState::Running && status.hStdinWrite)
+        return true;
+
+    return startLSPServer(lang);
+}
+
+void Win32IDE::syncLSPDocumentOpen(const std::string& filePath, const std::string& content)
+{
+    LSPLanguage lang = LSPLanguage::Count;
+    if (!prepareLSPDocument(filePath, lang))
+        return;
+
+    const std::string uri = filePathToUri(filePath);
+    {
+        std::lock_guard<std::mutex> lock(m_lspMutex);
+        if (m_lspOpenDocuments.find(uri) != m_lspOpenDocuments.end())
+            return;
+        m_lspOpenDocuments[uri] = lang;
+    }
+
+    sendDidOpen(lang, uri, lspLanguageId(lang), content);
+}
+
+void Win32IDE::syncLSPDocumentChange(const std::string& filePath, const std::string& content)
+{
+    LSPLanguage lang = LSPLanguage::Count;
+    if (!prepareLSPDocument(filePath, lang))
+        return;
+
+    const std::string uri = filePathToUri(filePath);
+    bool shouldOpen = false;
+    {
+        std::lock_guard<std::mutex> lock(m_lspMutex);
+        if (m_lspOpenDocuments.find(uri) == m_lspOpenDocuments.end())
+        {
+            m_lspOpenDocuments[uri] = lang;
+            shouldOpen = true;
+        }
+    }
+
+    if (shouldOpen)
+        sendDidOpen(lang, uri, lspLanguageId(lang), content);
+
+    sendDidChange(lang, uri, content);
+}
+
+void Win32IDE::syncLSPDocumentClose(const std::string& filePath)
+{
+    if (filePath.empty() || !m_lspInitialized)
+        return;
+
+    const LSPLanguage lang = detectLanguageForFile(filePath);
+    if (lang >= LSPLanguage::Count)
+        return;
+
+    const std::string uri = filePathToUri(filePath);
+    {
+        std::lock_guard<std::mutex> lock(m_lspMutex);
+        auto it = m_lspOpenDocuments.find(uri);
+        if (it == m_lspOpenDocuments.end())
+            return;
+        m_lspOpenDocuments.erase(it);
+    }
+
+    auto& status = m_lspStatuses[(size_t)lang];
+    if (!status.hStdinWrite || (status.state != LSPServerState::Running && status.state != LSPServerState::Starting))
+        return;
+
+    sendDidClose(lang, uri);
+    clearDiagnostics(uri);
+}
+
+void Win32IDE::syncLSPDocumentSave(const std::string& filePath)
+{
+    LSPLanguage lang = LSPLanguage::Count;
+    if (!prepareLSPDocument(filePath, lang))
+        return;
+
+    sendDidSave(lang, filePathToUri(filePath));
+}
+
 // ============================================================================
 // STATUS & DISPLAY
 // ============================================================================
-
 std::string Win32IDE::getLSPStatusString() const
 {
     std::ostringstream ss;
@@ -1742,7 +1854,6 @@ std::string Win32IDE::getLSPDiagnosticsSummary() const
 // ============================================================================
 // COMMAND HANDLERS (called from handleToolsCommand)
 // ============================================================================
-
 void Win32IDE::cmdLSPGotoDefinition()
 {
     if (!m_lspInitialized)
@@ -1936,7 +2047,6 @@ void Win32IDE::cmdLSPHoverInfo()
 // ============================================================================
 // CONFIG PERSISTENCE (JSON)
 // ============================================================================
-
 std::string Win32IDE::getLSPConfigFilePath() const
 {
     std::string dir = getSessionFilePath();
@@ -2079,7 +2189,6 @@ void Win32IDE::saveLSPConfig()
 // ============================================================================
 // HTTP ENDPOINTS — Phase 9A
 // ============================================================================
-
 void Win32IDE::handleLSPStatusEndpoint(SOCKET client)
 {
     nlohmann::json j;
@@ -2151,7 +2260,6 @@ void Win32IDE::handleLSPStatusEndpoint(SOCKET client)
 //   LSP 3.16 encoded integer array: [deltaLine, deltaStartChar, length, tokenType, tokenModifiers] × N
 //   Returns structured SemanticToken vector for the editor to apply highlighting.
 // ============================================================================
-
 std::vector<Win32IDE::SemanticToken> Win32IDE::lspSemanticTokensFull(const std::string& uri)
 {
     std::vector<SemanticToken> tokens;
@@ -2369,4 +2477,603 @@ bool Win32IDE::lspOrganizeImports()
         }
     }
     return anyApplied;
+}
+
+// ---- 6. Document Formatting ------------------------------------------------
+
+std::vector<Win32IDE::LSPWorkspaceEdit::TextEdit> Win32IDE::lspDocumentFormatting(const std::string& filePath)
+{
+    std::vector<LSPWorkspaceEdit::TextEdit> edits;
+    LSPLanguage lang = detectLanguageForFile(filePath);
+    if (lang >= LSPLanguage::Count || m_lspStatuses[(size_t)lang].state != LSPServerState::Running)
+    {
+        return edits;
+    }
+
+    std::string uri = filePathToUri(filePath);
+    nlohmann::json params;
+    params["textDocument"]["uri"] = uri;
+    params["options"]["tabSize"] = 4;
+    params["options"]["insertSpaces"] = true;
+    params["options"]["trimTrailingWhitespace"] = true;
+    params["options"]["insertFinalNewline"] = true;
+
+    int id = sendLSPRequest(lang, "textDocument/formatting", params);
+    if (id < 0)
+        return edits;
+
+    nlohmann::json resp = readLSPResponse(lang, id, 5000);
+    m_lspStats.totalFormattingRequests++;
+
+    if (!resp.contains("result") || resp["result"].is_null() || !resp["result"].is_array())
+        return edits;
+
+    const auto& result = resp["result"];
+    for (size_t i = 0; i < result.size(); ++i)
+    {
+        const auto& ej = result[i];
+        LSPWorkspaceEdit::TextEdit te;
+
+        if (ej.contains("range"))
+        {
+            const auto& rj = ej["range"];
+            if (rj.contains("start"))
+            {
+                te.range.start.line = rj["start"].value("line", 0);
+                te.range.start.character = rj["start"].value("character", 0);
+            }
+            if (rj.contains("end"))
+            {
+                te.range.end.line = rj["end"].value("line", 0);
+                te.range.end.character = rj["end"].value("character", 0);
+            }
+        }
+        te.newText = ej.value("newText", "");
+        edits.push_back(te);
+    }
+
+    return edits;
+}
+
+void Win32IDE::cmdLSPFormatDocument()
+{
+    if (m_currentFile.empty())
+    {
+        appendToOutput("[LSP] No document currently active.", "General", OutputSeverity::Warning);
+        return;
+    }
+
+    auto edits = lspDocumentFormatting(m_currentFile);
+    if (edits.empty())
+    {
+        appendToOutput("[LSP] No formatting changes needed.", "General", OutputSeverity::Info);
+        return;
+    }
+
+    // Build WorkspaceEdit and apply
+    nlohmann::json edit;
+    std::string uri = filePathToUri(m_currentFile);
+    for (const auto& te : edits)
+    {
+        nlohmann::json textEdit;
+        textEdit["range"]["start"]["line"] = te.range.start.line;
+        textEdit["range"]["start"]["character"] = te.range.start.character;
+        textEdit["range"]["end"]["line"] = te.range.end.line;
+        textEdit["range"]["end"]["character"] = te.range.end.character;
+        textEdit["newText"] = te.newText;
+        edit["changes"][uri].push_back(textEdit);
+    }
+
+    applyWorkspaceEdit(edit);
+}
+
+bool Win32IDE::applyWorkspaceEdit(const nlohmann::json& edit)
+{
+    if (!edit.is_object() || !edit.contains("changes") || !edit["changes"].is_object())
+        return false;
+
+    LSPWorkspaceEdit typedEdit;
+    const nlohmann::json& changes = edit["changes"];
+    for (auto it = changes.begin(); it != changes.end(); ++it)
+    {
+        const std::string uri = it.key();
+        const nlohmann::json& textEdits = it.value();
+        if (!textEdits.is_array())
+            continue;
+
+        auto& typedEdits = typedEdit.changes[uri];
+        for (const auto& textEdit : textEdits)
+        {
+            if (!textEdit.is_object() || !textEdit.contains("range") || !textEdit.contains("newText"))
+                continue;
+
+            const auto& range = textEdit["range"];
+            if (!range.is_object() || !range.contains("start") || !range.contains("end"))
+                continue;
+
+            const auto& start = range["start"];
+            const auto& end = range["end"];
+            if (!start.is_object() || !end.is_object())
+                continue;
+
+            LSPWorkspaceEdit::TextEdit typed;
+            typed.range.start.line = start.value("line", 0);
+            typed.range.start.character = start.value("character", 0);
+            typed.range.end.line = end.value("line", 0);
+            typed.range.end.character = end.value("character", 0);
+            typed.newText = textEdit.value("newText", std::string());
+            typedEdits.push_back(std::move(typed));
+        }
+    }
+
+    if (typedEdit.changes.empty())
+        return false;
+
+    return applyWorkspaceEdit(typedEdit);
+}
+
+// ============================================================================
+// NEW LSP FEATURES: Range Formatting, Document Symbols, etc.
+// ============================================================================
+
+// ---- 7. Range Formatting --------------------------------------------------
+
+std::vector<Win32IDE::LSPWorkspaceEdit::TextEdit> Win32IDE::lspRangeFormatting(
+    const std::string& filePath, int startLine, int startChar, int endLine, int endChar)
+{
+    std::vector<LSPWorkspaceEdit::TextEdit> edits;
+    LSPLanguage lang = detectLanguageForFile(filePath);
+    if (lang >= LSPLanguage::Count || m_lspStatuses[(size_t)lang].state != LSPServerState::Running)
+    {
+        return edits;
+    }
+
+    std::string uri = filePathToUri(filePath);
+    nlohmann::json params;
+    params["textDocument"]["uri"] = uri;
+    params["range"]["start"]["line"] = startLine;
+    params["range"]["start"]["character"] = startChar;
+    params["range"]["end"]["line"] = endLine;
+    params["range"]["end"]["character"] = endChar;
+    params["options"]["tabSize"] = 4;
+    params["options"]["insertSpaces"] = true;
+
+    int id = sendLSPRequest(lang, "textDocument/rangeFormatting", params);
+    if (id < 0)
+        return edits;
+
+    nlohmann::json resp = readLSPResponse(lang, id, 5000);
+    m_lspStats.totalFormattingRequests++;
+
+    if (!resp.contains("result") || resp["result"].is_null() || !resp["result"].is_array())
+        return edits;
+
+    const auto& result = resp["result"];
+    for (size_t i = 0; i < result.size(); ++i)
+    {
+        const auto& ej = result[i];
+        LSPWorkspaceEdit::TextEdit te;
+
+        if (ej.contains("range"))
+        {
+            const auto& rj = ej["range"];
+            if (rj.contains("start"))
+            {
+                te.range.start.line = rj["start"].value("line", 0);
+                te.range.start.character = rj["start"].value("character", 0);
+            }
+            if (rj.contains("end"))
+            {
+                te.range.end.line = rj["end"].value("line", 0);
+                te.range.end.character = rj["end"].value("character", 0);
+            }
+        }
+        te.newText = ej.value("newText", "");
+        edits.push_back(te);
+    }
+
+    return edits;
+}
+
+void Win32IDE::cmdLSPFormatRange()
+{
+    if (m_currentFile.empty())
+    {
+        appendToOutput("[LSP] No document currently active.", "General", OutputSeverity::Warning);
+        return;
+    }
+
+    if (!m_lspInitialized)
+    {
+        appendToOutput("[LSP] Not initialized. Starting configured LSP servers...", "General", OutputSeverity::Info);
+        startAllLSPServers();
+    }
+
+    CHARRANGE sel = {};
+    SendMessageA(m_hwndEditor, EM_EXGETSEL, 0, (LPARAM)&sel);
+    if (sel.cpMin == sel.cpMax)
+    {
+        cmdLSPFormatDocument();
+        return;
+    }
+
+    int startLine = (int)SendMessageA(m_hwndEditor, EM_EXLINEFROMCHAR, 0, sel.cpMin);
+    int startLineOffset = (int)SendMessageA(m_hwndEditor, EM_LINEINDEX, startLine, 0);
+    int startColumn = (sel.cpMin >= startLineOffset) ? (sel.cpMin - startLineOffset) : 0;
+
+    int endLine = (int)SendMessageA(m_hwndEditor, EM_EXLINEFROMCHAR, 0, sel.cpMax);
+    int endLineOffset = (int)SendMessageA(m_hwndEditor, EM_LINEINDEX, endLine, 0);
+    int endColumn = (sel.cpMax >= endLineOffset) ? (sel.cpMax - endLineOffset) : 0;
+
+    auto edits = lspRangeFormatting(m_currentFile, startLine, startColumn, endLine, endColumn);
+    if (edits.empty())
+    {
+        appendToOutput("[LSP] Formatting returned no changes for the selected range.", "General",
+                       OutputSeverity::Info);
+        return;
+    }
+
+    LSPWorkspaceEdit edit;
+    edit.changes[filePathToUri(m_currentFile)] = std::move(edits);
+    bool ok = applyWorkspaceEdit(edit);
+    appendToOutput(ok ? "[LSP] Formatted selected range." : "[LSP] Failed to apply range formatting edits.",
+                   "General", ok ? OutputSeverity::Info : OutputSeverity::Error);
+}
+
+// ---- 8. Document Symbols --------------------------------------------------
+
+std::vector<Win32IDE::LSPSymbolInfo> Win32IDE::lspDocumentSymbols(const std::string& uri)
+{
+    std::vector<LSPSymbolInfo> symbols;
+    LSPLanguage lang = detectLanguageForFile(uriToFilePath(uri));
+    if (lang >= LSPLanguage::Count || m_lspStatuses[(size_t)lang].state != LSPServerState::Running)
+    {
+        return symbols;
+    }
+
+    nlohmann::json params;
+    params["textDocument"]["uri"] = uri;
+
+    int id = sendLSPRequest(lang, "textDocument/documentSymbol", params);
+    if (id < 0)
+        return symbols;
+
+    nlohmann::json resp = readLSPResponse(lang, id, 5000);
+    m_lspStats.totalDocumentSymbolRequests++;
+
+    if (!resp.contains("result") || !resp["result"].is_array())
+        return symbols;
+
+    const auto& result = resp["result"];
+    for (size_t i = 0; i < result.size(); ++i)
+    {
+        const auto& sj = result[i];
+        LSPSymbolInfo sym;
+
+        sym.name = sj.value("name", "");
+        sym.kind = sj.value("kind", 0);
+        sym.detail = sj.value("detail", "");
+        sym.containerName = sj.value("containerName", "");
+
+        if (sj.contains("location"))
+        {
+            const auto& lj = sj["location"];
+            sym.location.uri = lj.value("uri", "");
+            if (lj.contains("range"))
+            {
+                const auto& rj = lj["range"];
+                if (rj.contains("start"))
+                {
+                    sym.location.range.start.line = rj["start"].value("line", 0);
+                    sym.location.range.start.character = rj["start"].value("character", 0);
+                }
+                if (rj.contains("end"))
+                {
+                    sym.location.range.end.line = rj["end"].value("line", 0);
+                    sym.location.range.end.character = rj["end"].value("character", 0);
+                }
+            }
+        }
+
+        symbols.push_back(sym);
+    }
+
+    return symbols;
+}
+
+void Win32IDE::cmdLSPDocumentSymbols()
+{
+    if (m_currentFile.empty())
+    {
+        appendToOutput("[LSP] No document currently active.", "General", OutputSeverity::Warning);
+        return;
+    }
+
+    if (!m_lspInitialized)
+    {
+        appendToOutput("[LSP] Not initialized. Starting configured LSP servers...", "General", OutputSeverity::Info);
+        startAllLSPServers();
+    }
+
+    showGoToSymbolPicker();
+}
+
+// ---- 9. Workspace Symbols -------------------------------------------------
+
+std::vector<Win32IDE::LSPSymbolInfo> Win32IDE::lspWorkspaceSymbols(const std::string& query)
+{
+    std::vector<LSPSymbolInfo> symbols;
+    
+    LSPLanguage lang = LSPLanguage::Cpp;
+    if (m_lspStatuses[(size_t)lang].state != LSPServerState::Running)
+    {
+        lang = LSPLanguage::Python;
+        if (m_lspStatuses[(size_t)lang].state != LSPServerState::Running)
+        {
+            lang = LSPLanguage::TypeScript;
+            if (m_lspStatuses[(size_t)lang].state != LSPServerState::Running)
+            {
+                return symbols;
+            }
+        }
+    }
+
+    nlohmann::json params;
+    params["query"] = query;
+
+    int id = sendLSPRequest(lang, "workspace/symbol", params);
+    if (id < 0)
+        return symbols;
+
+    nlohmann::json resp = readLSPResponse(lang, id, 10000);
+    m_lspStats.totalWorkspaceSymbolRequests++;
+
+    if (!resp.contains("result") || !resp["result"].is_array())
+        return symbols;
+
+    const auto& result = resp["result"];
+    for (size_t i = 0; i < result.size(); ++i)
+    {
+        const auto& sj = result[i];
+        LSPSymbolInfo sym;
+
+        sym.name = sj.value("name", "");
+        sym.kind = sj.value("kind", 0);
+        sym.containerName = sj.value("containerName", "");
+
+        if (sj.contains("location"))
+        {
+            const auto& lj = sj["location"];
+            sym.location.uri = lj.value("uri", "");
+            if (lj.contains("range"))
+            {
+                const auto& rj = lj["range"];
+                if (rj.contains("start"))
+                {
+                    sym.location.range.start.line = rj["start"].value("line", 0);
+                    sym.location.range.start.character = rj["start"].value("character", 0);
+                }
+                if (rj.contains("end"))
+                {
+                    sym.location.range.end.line = rj["end"].value("line", 0);
+                    sym.location.range.end.character = rj["end"].value("character", 0);
+                }
+            }
+        }
+
+        symbols.push_back(sym);
+    }
+
+    return symbols;
+}
+
+void Win32IDE::cmdLSPWorkspaceSymbols()
+{
+    if (!m_lspInitialized)
+    {
+        appendToOutput("[LSP] Not initialized. Starting configured LSP servers...", "General", OutputSeverity::Info);
+        startAllLSPServers();
+    }
+
+    showGoToWorkspaceSymbolPicker();
+}
+
+// ---- 10. Implementation ---------------------------------------------------
+
+std::vector<Win32IDE::LSPLocation> Win32IDE::lspImplementation(const std::string& uri, int line, int character)
+{
+    std::vector<LSPLocation> results;
+    LSPLanguage lang = detectLanguageForFile(uriToFilePath(uri));
+    if (lang >= LSPLanguage::Count || m_lspStatuses[(size_t)lang].state != LSPServerState::Running)
+    {
+        return results;
+    }
+
+    nlohmann::json params;
+    params["textDocument"]["uri"] = uri;
+    params["position"]["line"] = line;
+    params["position"]["character"] = character;
+
+    int id = sendLSPRequest(lang, "textDocument/implementation", params);
+    if (id < 0)
+        return results;
+
+    nlohmann::json resp = readLSPResponse(lang, id, 10000);
+    m_lspStats.totalImplementationRequests++;
+
+    if (!resp.contains("result") || resp["result"].is_null())
+        return results;
+
+    auto parseLocation = [](const nlohmann::json& lj) -> LSPLocation
+    {
+        LSPLocation loc;
+        loc.uri = lj.value("uri", "");
+        if (lj.contains("range"))
+        {
+            const auto& rj = lj["range"];
+            if (rj.contains("start"))
+            {
+                loc.range.start.line = rj["start"].value("line", 0);
+                loc.range.start.character = rj["start"].value("character", 0);
+            }
+            if (rj.contains("end"))
+            {
+                loc.range.end.line = rj["end"].value("line", 0);
+                loc.range.end.character = rj["end"].value("character", 0);
+            }
+        }
+        return loc;
+    };
+
+    const auto& result = resp["result"];
+    if (result.is_array())
+    {
+        for (size_t ri = 0; ri < result.size(); ++ri)
+        {
+            results.push_back(parseLocation(result[ri]));
+        }
+    }
+    else if (result.is_object())
+    {
+        results.push_back(parseLocation(result));
+    }
+
+    return results;
+}
+
+void Win32IDE::cmdLSPImplementation()
+{
+    if (m_currentFile.empty())
+        return;
+
+    if (!m_lspInitialized)
+    {
+        appendToOutput("[LSP] Not initialized. Starting configured LSP servers...", "General", OutputSeverity::Info);
+        startAllLSPServers();
+    }
+
+    if (!m_hwndEditor)
+        return;
+
+    CHARRANGE sel = {};
+    SendMessageA(m_hwndEditor, EM_EXGETSEL, 0, (LPARAM)&sel);
+    int lineIndex = (int)SendMessageA(m_hwndEditor, EM_EXLINEFROMCHAR, 0, sel.cpMin);
+    int lineStart = (int)SendMessageA(m_hwndEditor, EM_LINEINDEX, lineIndex, 0);
+    int column = (sel.cpMin >= lineStart) ? (sel.cpMin - lineStart) : 0;
+    
+    std::string uri = filePathToUri(m_currentFile);
+    auto locations = lspImplementation(uri, lineIndex, column);
+
+    if (locations.empty())
+    {
+        appendToOutput("[LSP] No implementations found.", "General", OutputSeverity::Info);
+        return;
+    }
+
+    auto items = buildPeekItemsFromLspLocations(locations, PeekItemType::Definition, 3, 3);
+    showPeekOverlayWithItems(items, lineIndex + 1, column + 1);
+
+    appendToOutput("[LSP] " + std::to_string(locations.size()) +
+                       " implementation(s) found — showing peek overlay.",
+                   "General", OutputSeverity::Info);
+}
+
+// ---- 11. Type Definition ---------------------------------------------------
+
+std::vector<Win32IDE::LSPLocation> Win32IDE::lspTypeDefinition(const std::string& uri, int line, int character)
+{
+    std::vector<LSPLocation> results;
+    LSPLanguage lang = detectLanguageForFile(uriToFilePath(uri));
+    if (lang >= LSPLanguage::Count || m_lspStatuses[(size_t)lang].state != LSPServerState::Running)
+    {
+        return results;
+    }
+
+    nlohmann::json params;
+    params["textDocument"]["uri"] = uri;
+    params["position"]["line"] = line;
+    params["position"]["character"] = character;
+
+    int id = sendLSPRequest(lang, "textDocument/typeDefinition", params);
+    if (id < 0)
+        return results;
+
+    nlohmann::json resp = readLSPResponse(lang, id, 5000);
+    m_lspStats.totalTypeDefinitionRequests++;
+
+    if (!resp.contains("result") || resp["result"].is_null())
+        return results;
+
+    auto parseLocation = [](const nlohmann::json& lj) -> LSPLocation
+    {
+        LSPLocation loc;
+        loc.uri = lj.value("uri", "");
+        if (lj.contains("range"))
+        {
+            const auto& rj = lj["range"];
+            if (rj.contains("start"))
+            {
+                loc.range.start.line = rj["start"].value("line", 0);
+                loc.range.start.character = rj["start"].value("character", 0);
+            }
+            if (rj.contains("end"))
+            {
+                loc.range.end.line = rj["end"].value("line", 0);
+                loc.range.end.character = rj["end"].value("character", 0);
+            }
+        }
+        return loc;
+    };
+
+    const auto& result = resp["result"];
+    if (result.is_array())
+    {
+        for (size_t ri = 0; ri < result.size(); ++ri)
+        {
+            results.push_back(parseLocation(result[ri]));
+        }
+    }
+    else if (result.is_object())
+    {
+        results.push_back(parseLocation(result));
+    }
+
+    return results;
+}
+
+void Win32IDE::cmdLSPTypeDefinition()
+{
+    if (m_currentFile.empty())
+        return;
+
+    if (!m_lspInitialized)
+    {
+        appendToOutput("[LSP] Not initialized. Starting configured LSP servers...", "General", OutputSeverity::Info);
+        startAllLSPServers();
+    }
+
+    if (!m_hwndEditor)
+        return;
+
+    CHARRANGE sel = {};
+    SendMessageA(m_hwndEditor, EM_EXGETSEL, 0, (LPARAM)&sel);
+    int lineIndex = (int)SendMessageA(m_hwndEditor, EM_EXLINEFROMCHAR, 0, sel.cpMin);
+    int lineStart = (int)SendMessageA(m_hwndEditor, EM_LINEINDEX, lineIndex, 0);
+    int column = (sel.cpMin >= lineStart) ? (sel.cpMin - lineStart) : 0;
+    
+    std::string uri = filePathToUri(m_currentFile);
+    auto locations = lspTypeDefinition(uri, lineIndex, column);
+
+    if (locations.empty())
+    {
+        appendToOutput("[LSP] Type definition not found.", "General", OutputSeverity::Info);
+        return;
+    }
+
+    auto items = buildPeekItemsFromLspLocations(locations, PeekItemType::Definition, 3, 3);
+    showPeekOverlayWithItems(items, lineIndex + 1, column + 1);
+
+    appendToOutput("[LSP] " + std::to_string(locations.size()) +
+                       " type definition result(s) found — showing peek overlay.",
+                   "General", OutputSeverity::Info);
 }

@@ -770,6 +770,12 @@ void Win32IDE::triggerGhostTextCompletion() {
     // Kill any existing ghost text timer and dismiss current ghost text
     KillTimer(m_hwndMain, GHOST_TEXT_TIMER_ID);
     ++m_ghostTextRequestSeq;
+
+    // Cancel any in-flight prediction HTTP request (prevents stale retries)
+    if (m_predictionProvider) {
+        m_predictionProvider->Cancel();
+    }
+
     dismissGhostText();
 
     // Start a new debounce timer
@@ -937,8 +943,16 @@ Win32IDE::GhostTextCacheEntry Win32IDE::requestGhostTextCompletion(const std::st
                                                    uint64_t expectedSeq) {
     using namespace RawrXD::Prediction;
 
+    // Total deadline across all providers — cap at 8 seconds to prevent
+    // the cascade from blocking a background thread for minutes.
+    const auto cascadeDeadline = std::chrono::steady_clock::now() + std::chrono::seconds(8);
+
     const auto isStale = [this, expectedSeq]() -> bool {
         return expectedSeq != 0 && expectedSeq != m_ghostTextRequestSeq.load();
+    };
+
+    const auto isPastDeadline = [&cascadeDeadline]() -> bool {
+        return std::chrono::steady_clock::now() >= cascadeDeadline;
     };
 
     enum class GhostProviderKind {
@@ -957,7 +971,7 @@ Win32IDE::GhostTextCacheEntry Win32IDE::requestGhostTextCompletion(const std::st
     };
 
     for (GhostProviderKind provider : precedence) {
-        if (isStale()) return {};
+        if (isStale() || isPastDeadline()) return {};
 
         if (provider == GhostProviderKind::Titan) {
             std::string titanCompletion = requestTitanGhostTextCompletion(

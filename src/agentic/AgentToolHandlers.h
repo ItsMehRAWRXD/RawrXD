@@ -88,6 +88,7 @@ class AgentToolHandlers
     static ToolCallResult ExecuteCommand(const nlohmann::json& args);
     static ToolCallResult RunShell(const nlohmann::json& args);
     static ToolCallResult SearchCode(const nlohmann::json& args);
+    static ToolCallResult FileSearch(const nlohmann::json& args);
     static ToolCallResult GetDiagnostics(const nlohmann::json& args);
     static ToolCallResult SemanticSearch(const nlohmann::json& args);
     static ToolCallResult MentionLookup(const nlohmann::json& args);
@@ -97,6 +98,8 @@ class AgentToolHandlers
     static ToolCallResult ApplyMultiFileEdits(const nlohmann::json& args);
     static ToolCallResult LoadRules(const nlohmann::json& args);
     static ToolCallResult PlanTasks(const nlohmann::json& args);
+    static ToolCallResult ManageTodoList(const nlohmann::json& args);
+    static ToolCallResult Memory(const nlohmann::json& args);
     static ToolCallResult SwebenchAutonomousEval(const nlohmann::json& args);
 
     // ---- Git/GitHub Tools ----
@@ -106,6 +109,31 @@ class AgentToolHandlers
     static ToolCallResult GHCreatePR(const nlohmann::json& args);
     static ToolCallResult GHPrView(const nlohmann::json& args);
     static ToolCallResult GHIssueView(const nlohmann::json& args);
+
+    // ---- Debug Tools (DbgEng integration) ----
+    static ToolCallResult DebugLaunch(const nlohmann::json& args);
+    static ToolCallResult DebugAttach(const nlohmann::json& args);
+    static ToolCallResult DebugBreakTool(const nlohmann::json& args);
+    static ToolCallResult DebugContinue(const nlohmann::json& args);
+    static ToolCallResult DebugStepOver(const nlohmann::json& args);
+    static ToolCallResult DebugStepInto(const nlohmann::json& args);
+    static ToolCallResult DebugAddBreakpoint(const nlohmann::json& args);
+    static ToolCallResult DebugRemoveBreakpoint(const nlohmann::json& args);
+    static ToolCallResult DebugStacktrace(const nlohmann::json& args);
+    static ToolCallResult DebugRegisters(const nlohmann::json& args);
+    static ToolCallResult DebugMemory(const nlohmann::json& args);
+    static ToolCallResult DebugDisasm(const nlohmann::json& args);
+    static ToolCallResult DebugAnalyze(const nlohmann::json& args);
+    static ToolCallResult DebugSnapshot(const nlohmann::json& args);
+    static ToolCallResult DebugSuggestBreakpoints(const nlohmann::json& args);
+
+    // ---- Build / Assembly / Coverage / System Tools ----
+    static ToolCallResult RunBuild(const nlohmann::json& args);
+    static ToolCallResult AsmAssemble(const nlohmann::json& args);
+    static ToolCallResult GetCoverage(const nlohmann::json& args);
+    static ToolCallResult ApplyHotpatch(const nlohmann::json& args);
+    static ToolCallResult SysGetCapabilities(const nlohmann::json& args);
+    static ToolCallResult DiskRecovery(const nlohmann::json& args);
 
     // ---- Schema generation (OpenAI function-calling format) ----
     static nlohmann::json GetAllSchemas();

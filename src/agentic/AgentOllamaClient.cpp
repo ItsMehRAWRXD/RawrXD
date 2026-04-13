@@ -1,6 +1,7 @@
 #include "AgentOllamaClient.h"
 #include "BackendOrchestrator.h"
 #include "hotpatch/Engine.hpp"
+#include "json_parse_guard.hpp"
 
 #include <chrono>
 #include <cctype>
@@ -11,6 +12,8 @@
 using RawrXD::Agent::AgentOllamaClient;
 using RawrXD::Agent::InferenceResult;
 using RawrXD::Agent::OllamaHealth;
+using JSONGuard = RawrXD::JSON::JSONParseGuard;
+using JSONSanitizer = RawrXD::JSON::JSONSanitizer;
 
 namespace {
 constexpr int kMaxRetries = 3;
@@ -209,81 +212,70 @@ void AgentOllamaClient::ParseToolCallsFromResponse(const std::string& response,
     const std::string toolPrefix = "TOOL_CALL:";
     const size_t prefixPos = response.find(toolPrefix);
     if (prefixPos != std::string::npos) {
-        const size_t prefixedJsonStart = response.find('{', prefixPos + toolPrefix.size());
-        const size_t prefixedJsonEnd = response.rfind('}');
-        if (prefixedJsonStart != std::string::npos && prefixedJsonEnd != std::string::npos && prefixedJsonEnd >= prefixedJsonStart) {
-            try {
-                nlohmann::json tc = nlohmann::json::parse(response.substr(prefixedJsonStart, prefixedJsonEnd - prefixedJsonStart + 1));
-                const std::string name = tc.value("name", std::string());
-                nlohmann::json args = tc.value("arguments", nlohmann::json::object());
-                if (!name.empty()) {
-                    result.has_tool_calls = true;
-                    result.tool_calls.emplace_back(name, args);
-                    result.response = response.substr(0, prefixPos);
-                    return;
-                }
-            } catch (...) {
-            }
-        }
-    }
-
-    size_t json_start = response.find("{");
-    if (json_start == std::string::npos) {
-        return;
-    }
-
-    size_t json_end = response.rfind("}");
-    if (json_end == std::string::npos || json_end < json_start) {
-        return;
-    }
-
-    std::string json_str = response.substr(json_start, json_end - json_start + 1);
-    try {
-        nlohmann::json j = nlohmann::json::parse(json_str);
-        if (j.contains("tool_call") && j["tool_call"].is_object()) {
-            const auto& tc = j["tool_call"];
-            std::string name = tc.value("name", "");
+        nlohmann::json tc = JSONGuard::SafeParse(response.substr(prefixPos + toolPrefix.size()));
+        if (tc.is_object()) {
+            const std::string name = tc.value("name", std::string());
             nlohmann::json args = tc.value("arguments", nlohmann::json::object());
             if (!name.empty()) {
                 result.has_tool_calls = true;
-                result.tool_calls.emplace_back(name, args);
-                result.response = response.substr(0, json_start);
+                result.tool_calls.emplace_back(name, args.is_object() ? args : nlohmann::json::object());
+                result.response = response.substr(0, prefixPos);
                 return;
             }
         }
+    }
 
-        if (j.contains("tool_calls") && j["tool_calls"].is_array()) {
-            for (const auto& entry : j["tool_calls"]) {
-                if (!entry.is_object()) {
-                    continue;
-                }
+    size_t json_start = std::string::npos;
+    size_t json_end = std::string::npos;
+    if (!JSONSanitizer::FindNextJSONStructureBounds(response, 0, json_start, json_end)) {
+        return;
+    }
 
-                std::string name = entry.value("tool", std::string());
-                nlohmann::json args = entry.value("arguments", nlohmann::json::object());
-                if (name.empty() && entry.contains("function") && entry["function"].is_object()) {
-                    const auto& function = entry["function"];
-                    name = function.value("name", std::string());
-                    if (function.contains("arguments")) {
-                        args = function["arguments"];
-                        if (args.is_string()) {
-                            args = nlohmann::json::parse(args.get<std::string>(), nullptr, false);
-                            if (args.is_discarded()) {
-                                args = nlohmann::json::object();
-                            }
-                        }
+    nlohmann::json j = JSONGuard::SafeParse(response.substr(json_start, json_end - json_start + 1));
+    if (!j.is_object()) {
+        return;
+    }
+
+    if (j.contains("tool_call") && j["tool_call"].is_object()) {
+        const auto& tc = j["tool_call"];
+        std::string name = tc.value("name", "");
+        nlohmann::json args = tc.value("arguments", nlohmann::json::object());
+        if (!name.empty()) {
+            result.has_tool_calls = true;
+            result.tool_calls.emplace_back(name, args.is_object() ? args : nlohmann::json::object());
+            result.response = response.substr(0, json_start);
+            return;
+        }
+    }
+
+    if (j.contains("tool_calls") && j["tool_calls"].is_array()) {
+        for (const auto& entry : j["tool_calls"]) {
+            if (!entry.is_object()) {
+                continue;
+            }
+
+            std::string name = entry.value("tool", std::string());
+            nlohmann::json args = entry.value("arguments", nlohmann::json::object());
+            if (name.empty() && entry.contains("function") && entry["function"].is_object()) {
+                const auto& function = entry["function"];
+                name = function.value("name", std::string());
+                if (function.contains("arguments")) {
+                    args = function["arguments"];
+                    if (args.is_string()) {
+                        nlohmann::json parsedArgs = JSONGuard::SafeParse(args.get<std::string>());
+                        args = parsedArgs.is_object() ? parsedArgs : nlohmann::json::object();
                     }
                 }
-
-                if (!name.empty()) {
-                    result.has_tool_calls = true;
-                    result.tool_calls.emplace_back(name, args.is_object() ? args : nlohmann::json::object());
-                }
             }
-            if (result.has_tool_calls) {
-                result.response = response.substr(0, json_start);
+
+            if (!name.empty()) {
+                result.has_tool_calls = true;
+                result.tool_calls.emplace_back(name, args.is_object() ? args : nlohmann::json::object());
             }
         }
-    } catch (...) {
+        if (result.has_tool_calls) {
+            result.response = response.substr(0, json_start);
+        }
     }
 }
 
@@ -360,7 +352,7 @@ InferenceResult AgentOllamaClient::ChatSync(const std::vector<ChatMessage>& mess
 
     try {
         std::string metadata = metadata_promise.get_future().get();
-        nlohmann::json j = nlohmann::json::parse(metadata, nullptr, false);
+        nlohmann::json j = JSONGuard::SafeParse(metadata);
         if (j.is_object()) {
             logBackendContextObservation(j, m_config.num_ctx);
             if (j.contains("prompt_eval_count")) {
@@ -451,7 +443,7 @@ bool AgentOllamaClient::ChatStream(const std::vector<ChatMessage>& messages,
         *full_response = completion;
 
         try {
-            nlohmann::json j = nlohmann::json::parse(metadata, nullptr, false);
+            nlohmann::json j = JSONGuard::SafeParse(metadata);
             if (j.is_object()) {
                 logBackendContextObservation(j, m_config.num_ctx);
                 if (j.contains("prompt_eval_count")) {

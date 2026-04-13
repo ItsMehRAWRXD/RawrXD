@@ -65,6 +65,10 @@ void ChatInterface::sendMessage(const std::string& text) {
     }
 }
 
+void ChatInterface::addMessage(const std::string& role, const std::string& content) {
+    appendToHistory(role, content);
+}
+
 void ChatInterface::processResponse(const std::string& modelOutput) {
     appendToHistory("assistant", modelOutput);
     

@@ -40,6 +40,7 @@ extern void RawrXD_FinishCopilotMinimalAgentic(Win32IDE* ide, WPARAM successWp, 
 #endif
 #include "Win32IDE_AgenticBrowser.h"
 #include "Win32IDE_ComponentManagers.h"  // Complete types for unique_ptr<T> dtor
+#include "Win32IDE_DAPServer.h"  // Complete type for unique_ptr<Win32IDE_DAPServer> dtor
 #include "Win32IDE_IELabels.h"
 #include "WindowVisibilityHelpers.h"
 #include "context/semantic_index.h"

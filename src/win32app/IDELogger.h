@@ -34,13 +34,23 @@ public:
     }
 
     void initialize(const std::string& logPath = "RawrXD_IDE.log") {
-        std::lock_guard<std::mutex> lock(m_mutex);
-        if (m_logFile.is_open()) {
-            m_logFile.close();
+        bool shouldEmitInitMessage = false;
+        {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            // Idempotent: if already open (first call succeeded), ignore re-init.
+            // This prevents the background boot thread from closing the UI thread's
+            // log handle and generating a spurious "Logger init failed" event.
+            if (m_logFile.is_open()) {
+                return;
+            }
+            m_logFile.open(logPath, std::ios::out | std::ios::app);
+            m_initialized = m_logFile.is_open();
+            shouldEmitInitMessage = m_initialized;
         }
-        m_logFile.open(logPath, std::ios::out | std::ios::app);
-        m_initialized = true;
-        log(Level::INFO, "IDELogger", "Logging system initialized");
+
+        if (shouldEmitInitMessage) {
+            log(Level::INFO, "IDELogger", "Logging system initialized");
+        }
     }
 
     void setLevel(Level level) {

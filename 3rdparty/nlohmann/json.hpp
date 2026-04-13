@@ -65,13 +65,14 @@ public:
     }
     
     void push_back(const json& v) {
-            void erase(const std::string& key) {
-                m_object.erase(key);
-            }
-
-        @@    void push_back(const json& v) {
         if (m_type != value_t::array) m_type = value_t::array;
         m_array.push_back(std::make_shared<json>(v));
+    }
+    
+    void erase(const std::string& key) {
+        if (m_type == value_t::object) {
+            m_object.erase(key);
+        }
     }
     
     std::string dump(int indent = -1) const { return "{}"; }

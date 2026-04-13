@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -79,8 +80,11 @@ class AgenticChatSession
     // Clear conversation history
     void Reset();
 
+    // Cancel the in-flight turn (streaming / tool loop)
+    void CancelCurrentTurn();
+
     // Check if currently processing (blocks new sends)
-    bool IsProcessing() const { return m_isProcessing; }
+    bool IsProcessing() const { return m_isProcessing.load(std::memory_order_acquire); }
 
   private:
     LLMResponse ParseOpenAIResponse(const nlohmann::json& response);
@@ -104,7 +108,7 @@ class AgenticChatSession
 
   private:
     bool m_agenticMode = false;
-    bool m_isProcessing = false;
+    std::atomic<bool> m_isProcessing{false};
     std::string m_workspaceRoot;
     std::vector<std::string> m_openFiles;
     std::vector<ChatMessage> m_history;
@@ -117,10 +121,14 @@ class AgenticChatSession
 
     // Thread safety for async operations
     std::mutex m_mutex;
-    bool m_cancelled = false;
+    std::atomic<bool> m_cancelled{false};
 
     // Streaming buffer for partial JSON responses
     std::string m_streamBuffer;
+
+    // Detached-thread lifetime management
+    std::atomic<int> m_activeThreads{0};
+    std::atomic<bool> m_shuttingDown{false};
 
     // Optional incremental index monitor lifecycle for this session.
     bool m_repoMonitoringStarted = false;

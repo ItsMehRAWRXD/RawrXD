@@ -280,6 +280,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 add_compile_definitions(_CRT_SECURE_NO_WARNINGS NOMINMAX WIN32_LEAN_AND_MEAN)
+if(RAWRXD_GOLD_BUILD)
+    add_compile_definitions(RAWRXD_GOLD_BUILD=1)
+endif()
 
 # =============================================================================
 # Persistent SDK Include/Lib Paths (Phase 41 Build Fix)
@@ -673,6 +676,7 @@ set(SOURCES
     # T3-D: Deterministic Replay Engine (DivergenceEvent + TelemetrySnapshot)
     src/agentic/DeterministicReplayEngine.cpp
     src/agentic/AgentToolHandlers.cpp
+    src/agentic/DiffEngine.cpp
     src/agentic/AgenticChatSession.cpp
     src/agentic/RepositoryIndexer.cpp
     src/agentic/slash_command_parser.cpp
@@ -693,6 +697,9 @@ set(SOURCES
     src/agentic/SovereignAssembler.cpp
     src/agentic/RawrXD_AgentLoop.cpp
     src/agentic/agentic_executor.cpp
+    
+    # Phase 1: Streaming Result Injection for Tool Execution (P0.1)
+    src/agentic/StreamingResultChannel.cpp
 
     # T6: Autonomous Repair Orchestrator + Agent Memory Indexer
     src/core/auto_repair_orchestrator.cpp
@@ -750,7 +757,9 @@ set(SOURCES
     src/core/swarm_coordinator.cpp
     src/core/swarm_worker.cpp
     src/tool_registry.cpp
-    src/tool_registry_init.cpp
+    # NOTE: tool_registry_init.cpp NOT included here — real implementations are in
+    # src/modules/inference_engine.cpp and src/engine/sovereign_engines.cpp
+    # tool_registry_init.cpp is linker fallback-only (for targets that don't link those modules)
 
     # License enforcement + feature manifest (LicenseEnforcer, g_FeatureManifest, featureName) — required by complete_server, hotpatch, perf_telemetry, enterprise_licensev2_impl
     src/license_enforcement.cpp
@@ -823,7 +832,7 @@ set(SOURCES
 
     # Extension polyfill engine + VSCode API — required by js_extension_host
     src/core/extension_polyfill_engine.cpp
-    src/modules/vscode_extension_api.cpp
+    # src/modules/vscode_extension_api.cpp  # TEMPORARILY DISABLED - causing build issues
 
     # JS extension host — required by ssot_handlers_ext
     src/core/js_extension_host.cpp
@@ -1744,11 +1753,30 @@ target_sources(RawrXD_Gold PRIVATE
     src/core/native_debugger_engine.cpp
     src/core/native_debugger_symbols.cpp
     src/agentic/AgentOllamaClient.cpp
+    src/asm_bridge.cpp
+    src/sovereign/SovereignCoreWrapper.cpp
+    src/sovereign/fips_compliance.cpp
+    src/sovereign/hsm_integration.cpp
+    src/sovereign/policy_engine.cpp
+    src/sovereign/airgap_deployer.cpp
+    src/sovereign/classified_network.cpp
+    src/sovereign/RawrXD_SovereignStatusPanel.cpp
+    src/win32app/TitanIPC.cpp
+    src/runtime/SovereignWebSearch.cpp
+    src/runtime/SovereignSnapshot.cpp
+    src/runtime/SovereignCRDTSync.cpp
+    src/runtime/SovereignFuzzEngine.cpp
+    src/runtime/SovereignReplication.cpp
+    src/agentic/observability/Telemetry.cpp
     src/logging/Logger.cpp
     src/security/InputSanitizer.cpp
     src/core/ConfigurationValidator.cpp
+    src/core/context_config.cpp
     src/inference/PerformanceMonitor.cpp
     src/agentic/ErrorRecoveryManager.cpp
+    src/agentic/observability/Telemetry.cpp
+    src/agentic/hotpatch/Sentinel.cpp
+    src/win32app/TitanIPC.cpp
     # Link closure for unified/ssot lanes: implementations live outside main SOURCES or were stripped.
     tests/gguf_link_stubs.cpp
     src/core/rawrengine_command_handlers.cpp
@@ -1761,6 +1789,13 @@ target_sources(RawrXD_Gold PRIVATE
     src/core/rawrxd_native_log_fallback.cpp
     src/core/gold_enterprise_devunlock_stub.cpp
     src/core/gold_beacon_handlers.cpp
+    src/core/unlinked_symbols_batch_001.cpp
+    src/core/unlinked_symbols_batch_006.cpp
+    src/core/unlinked_symbols_batch_007.cpp
+    src/core/unlinked_symbols_batch_008.cpp
+    src/core/unlinked_symbols_batch_009.cpp
+    src/core/unlinked_symbols_batch_012.cpp
+    src/core/unlinked_symbols_batch_014.cpp
 )
 
 # Vulkan SDK for Gold build — linked later after find_package(Vulkan)
@@ -3141,6 +3176,7 @@ if(WIN32)
         src/win32app/Win32IDE_Themes.cpp
         src/win32app/Win32IDE_StreamingUX.cpp
         src/win32app/Win32IDE_Sidebar.cpp
+        src/win32app/Win32IDE_SidebarRuntime.cpp
         src/win32app/Win32IDE_Debugger.cpp
         src/win32app/Win32IDE_AutonomousDebugger.cpp
         src/win32app/Win32IDE_Annotations.cpp
@@ -3294,7 +3330,6 @@ if(WIN32)
         src/core/vram_probe.cpp
         src/runtime_core.cpp
         src/tool_registry.cpp
-        src/tool_registry_init.cpp
         src/agent/telemetry_collector.cpp
 
         # T6: Autonomous Repair Orchestrator + Agent Memory Indexer
@@ -3813,9 +3848,14 @@ if(WIN32)
         # ═══════════════════════════════════════════════════════════════
         src/win32app/Win32IDE_Tasks.cpp
         src/win32app/Win32IDE_GitPanel.cpp
+        src/win32app/Win32IDE_ExtensionsPanel.cpp
         src/win32app/Win32IDE_Refactor.cpp
         src/win32app/Win32IDE_SearchPanel.cpp
+        src/win32app/Win32IDE_ExpressionEvaluator.cpp
         src/win32app/Win32IDE_FuzzySearch.cpp
+        src/win32app/Win32IDE_DAPServer.cpp
+        src/win32app/Win32IDE_MissingActions.cpp
+        src/agentic/StreamingResultChannel.cpp
 
         # ═══════════════════════════════════════════════════════════════
         # Compile-Debt Resolved: IDE Cosmetics & Intelligence Layer

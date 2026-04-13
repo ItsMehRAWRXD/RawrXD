@@ -27,9 +27,11 @@
 #include "Win32IDE_Phase17_AgenticProfiler.h"
 #include "Win32IDE_SubAgent.h"
 #include <algorithm>
+#include <chrono>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <future>
 #include <iomanip>
 #include <memory>
 #include <optional>
@@ -61,6 +63,15 @@ namespace
 
 static constexpr size_t kMaxCommandFileBytes = 512 * 1024;
 static constexpr size_t kMaxRefinedPromptBytes = 768 * 1024;
+static constexpr size_t kMaxParallelBridgeToolCalls = 4;
+
+struct ToolDispatchBatchOutcome
+{
+    std::string toolName;
+    std::string toolResult;
+    uint64_t executionTimeMs = 0;
+    bool dispatched = false;
+};
 
 bool isTruthyEnvVar(const char* varName)
 {
@@ -398,6 +409,8 @@ AgenticBridge::AgenticBridge(Win32IDE* ide)
     : m_ide(ide), m_initialized(false), m_agentLoopRunning(false), m_hProcess(nullptr), m_hStdoutRead(nullptr),
       m_hStdoutWrite(nullptr), m_hStdinRead(nullptr), m_hStdinWrite(nullptr)
 {
+    // Initialize streaming result channel for Phase 1 (tool result injection)
+    m_streamingChannel = std::make_unique<RawrXD::Agentic::StreamingResultChannel>();
 }
 
 AgenticBridge::~AgenticBridge()
@@ -1494,12 +1507,12 @@ AgentResponse AgenticBridge::ParseAgentResponse(const std::string& rawOutput)
     return response;
 }
 
-bool AgenticBridge::IsToolCall(const std::string& line)
+bool AgenticBridge::IsToolCall(const std::string& line) const
 {
     return line.find("TOOL:") == 0;
 }
 
-bool AgenticBridge::IsAnswer(const std::string& line)
+bool AgenticBridge::IsAnswer(const std::string& line) const
 {
     return line.find("ANSWER:") == 0;
 }
@@ -2324,6 +2337,12 @@ void AgenticBridge::ExecuteBoundedAgentLoop(const std::string& prompt, int maxIt
 
 bool AgenticBridge::DispatchModelToolCalls(const std::string& modelOutput, std::string& toolResult)
 {
+    const auto toolLines = ExtractToolCallLines(modelOutput);
+    if (toolLines.size() > 1)
+    {
+        return DispatchToolLinesBatched(toolLines, "bridge", toolResult, nullptr);
+    }
+
     auto* mgr = GetSubAgentManager();
     if (!mgr)
         return false;
@@ -2334,49 +2353,224 @@ bool AgenticBridge::DispatchModelToolCalls(const std::string& modelOutput, std::
     // Every tool result flows through here, regardless of caller (Autonomy, Bridge, etc.)
     if (dispatched && m_ide)
     {
-        // VS Code / Cursor-style: status bar only (avoid dumping full model directive into Output)
-        m_ide->showAgentActivityStatus(std::string("Running tool: ") + toolNameForUx, 5000);
-
-        const std::string toolName = toolNameForUx;
-        FailureClassification toolFailure = m_ide->hookToolResult(toolName, toolResult);
-        if (toolFailure.reason != AgentFailureType::None)
-        {
-            LOG_WARNING("[Phase4B] Tool '" + toolName +
-                        "' failure at dispatch: " + m_ide->failureTypeString(toolFailure.reason) +
-                        " (confidence=" + std::to_string(toolFailure.confidence) + ")");
-            m_ide->appendToOutput("[AgenticBridge] Tool failure: " + m_ide->failureTypeString(toolFailure.reason) +
-                                      "\n",
-                                  "Errors", Win32IDE::OutputSeverity::Error);
-        }
-        if (m_ide->getSettings().agentTerminalIsolated)
-        {
-            const int agentPaneId = m_ide->getOrCreatePrimaryAgentTerminalPane();
-            constexpr size_t kMax = 1200;
-            std::string feed;
-            const size_t resultLen =
-                toolResult.empty() ? 0 : (toolResult.size() > kMax ? kMax + 24 : toolResult.size() + 4);
-            feed.reserve(32 + toolName.size() + resultLen);
-            feed.append("[tool] ");
-            feed.append(toolName);
-            feed.append("\r\n");
-            if (!toolResult.empty())
-            {
-                if (toolResult.size() > kMax)
-                {
-                    feed.append(toolResult.data(), kMax);
-                    feed += "\r\n[truncated]\r\n";
-                }
-                else
-                {
-                    feed += toolResult;
-                    feed += "\r\n";
-                }
-            }
-            m_ide->appendToTerminalPane(agentPaneId, feed);
-        }
+        HandleToolDispatchResult(toolNameForUx, toolResult);
     }
 
     return dispatched;
+}
+
+std::vector<std::string> AgenticBridge::ExtractToolCallLines(const std::string& modelOutput) const
+{
+    std::vector<std::string> toolLines;
+    std::istringstream iss(modelOutput);
+    std::string line;
+    while (std::getline(iss, line))
+    {
+        if (IsToolCall(line))
+        {
+            toolLines.push_back(line);
+        }
+    }
+    return toolLines;
+}
+
+void AgenticBridge::HandleToolDispatchResult(const std::string& toolName, const std::string& toolResult) const
+{
+    if (!m_ide)
+    {
+        return;
+    }
+
+    m_ide->showAgentActivityStatus(std::string("Running tool: ") + toolName, 5000);
+
+    FailureClassification toolFailure = m_ide->hookToolResult(toolName, toolResult);
+    if (toolFailure.reason != AgentFailureType::None)
+    {
+        LOG_WARNING("[Phase4B] Tool '" + toolName +
+                    "' failure at dispatch: " + m_ide->failureTypeString(toolFailure.reason) +
+                    " (confidence=" + std::to_string(toolFailure.confidence) + ")");
+        m_ide->appendToOutput("[AgenticBridge] Tool failure: " + m_ide->failureTypeString(toolFailure.reason) +
+                                  "\n",
+                              "Errors", Win32IDE::OutputSeverity::Error);
+    }
+    if (m_ide->getSettings().agentTerminalIsolated)
+    {
+        const int agentPaneId = m_ide->getOrCreatePrimaryAgentTerminalPane();
+        constexpr size_t kMax = 1200;
+        std::string feed;
+        const size_t resultLen = toolResult.empty() ? 0 : (toolResult.size() > kMax ? kMax + 24 : toolResult.size() + 4);
+        feed.reserve(32 + toolName.size() + resultLen);
+        feed.append("[tool] ");
+        feed.append(toolName);
+        feed.append("\r\n");
+        if (!toolResult.empty())
+        {
+            if (toolResult.size() > kMax)
+            {
+                feed.append(toolResult.data(), kMax);
+                feed += "\r\n[truncated]\r\n";
+            }
+            else
+            {
+                feed += toolResult;
+                feed += "\r\n";
+            }
+        }
+        m_ide->appendToTerminalPane(agentPaneId, feed);
+    }
+}
+
+bool AgenticBridge::DispatchToolLinesBatched(const std::vector<std::string>& toolLines, const std::string& parentId,
+                                             std::string& toolResult,
+                                             RawrXD::Agentic::StreamingResultChannel* streamingChannel)
+{
+    auto* mgr = GetSubAgentManager();
+    if (!mgr || toolLines.empty())
+    {
+        return false;
+    }
+
+    std::ostringstream combined;
+    const int totalTools = static_cast<int>(toolLines.size());
+
+    for (size_t batchStart = 0; batchStart < toolLines.size(); batchStart += kMaxParallelBridgeToolCalls)
+    {
+        const size_t batchEnd = std::min(toolLines.size(), batchStart + kMaxParallelBridgeToolCalls);
+        std::vector<std::future<ToolDispatchBatchOutcome>> futures;
+        futures.reserve(batchEnd - batchStart);
+
+        for (size_t index = batchStart; index < batchEnd; ++index)
+        {
+            const std::string toolLine = toolLines[index];
+            const std::string toolName = ExtractDirectiveToolName(toolLine);
+            if (streamingChannel)
+            {
+                streamingChannel->EmitToolStarted(toolName, static_cast<int>(index), totalTools);
+            }
+
+            futures.emplace_back(std::async(std::launch::async,
+                                            [mgr, parentId, toolLine, toolName]() -> ToolDispatchBatchOutcome
+                                            {
+                                                ToolDispatchBatchOutcome outcome;
+                                                outcome.toolName = toolName;
+                                                auto beginExec = std::chrono::high_resolution_clock::now();
+                                                outcome.dispatched =
+                                                    mgr->dispatchToolCall(parentId, toolLine, outcome.toolResult);
+                                                const auto endExec = std::chrono::high_resolution_clock::now();
+                                                outcome.executionTimeMs = static_cast<uint64_t>(
+                                                    std::chrono::duration_cast<std::chrono::milliseconds>(endExec - beginExec)
+                                                        .count());
+                                                return outcome;
+                                            }));
+        }
+
+        for (size_t futureIndex = 0; futureIndex < futures.size(); ++futureIndex)
+        {
+            const size_t toolIndex = batchStart + futureIndex;
+            ToolDispatchBatchOutcome outcome = futures[futureIndex].get();
+            if (outcome.dispatched)
+            {
+                if (streamingChannel)
+                {
+                    streamingChannel->EmitToolResult(outcome.toolName, outcome.toolResult, outcome.executionTimeMs,
+                                                     static_cast<int>(toolIndex), totalTools);
+                }
+                HandleToolDispatchResult(outcome.toolName, outcome.toolResult);
+                if (combined.tellp() > 0)
+                {
+                    combined << "\n";
+                }
+                combined << "[Tool Result: " << outcome.toolName << "]\n" << outcome.toolResult;
+            }
+            else
+            {
+                const std::string errorMsg = "Tool execution failed";
+                if (streamingChannel)
+                {
+                    streamingChannel->EmitToolError(outcome.toolName, errorMsg, outcome.executionTimeMs,
+                                                    static_cast<int>(toolIndex), totalTools);
+                }
+                if (m_ide)
+                {
+                    m_ide->appendToOutput("[StreamingBridge] Tool error: " + outcome.toolName + "\n", "Errors",
+                                          Win32IDE::OutputSeverity::Error);
+                }
+                if (combined.tellp() > 0)
+                {
+                    combined << "\n";
+                }
+                combined << "[Tool Error: " << outcome.toolName << "]\n" << errorMsg;
+            }
+        }
+    }
+
+    toolResult = combined.str();
+    return true;
+}
+
+// ============================================================================
+// Phase 1: Streaming Tool Result Injection
+// ============================================================================
+
+std::string AgenticBridge::DispatchModelToolCallsStreaming(
+    const std::string& modelOutput,
+    std::function<void(const RawrXD::Agentic::ToolExecutionEvent&)> onToolEvent)
+{
+    SCOPED_METRIC("agentic.dispatch_tools_streaming");
+
+    if (!m_streamingChannel)
+    {
+        LOG_WARNING("StreamingResultChannel not initialized");
+        // Fallback to synchronous dispatch
+        std::string toolResult;
+        DispatchModelToolCalls(modelOutput, toolResult);
+        return toolResult;
+    }
+
+    // Reset channel for new streaming session
+    m_streamingChannel->Reset();
+    m_streamingChannel->SetToolEventCallback(onToolEvent);
+    m_streamingChannel->SetStreamingEnabled(true);
+
+    // Extract tool calls from model output
+    auto* mgr = GetSubAgentManager();
+    if (!mgr)
+    {
+        LOG_WARNING("SubAgentManager not available for streaming dispatch");
+        std::string toolResult;
+        DispatchModelToolCalls(modelOutput, toolResult);
+        return toolResult;
+    }
+
+    // Parse model output to identify tool calls
+    // Format: Tool calls typically identified via pattern matching in ParseAgentResponse
+    const std::vector<std::string> toolLines = ExtractToolCallLines(modelOutput);
+    const int toolCount = static_cast<int>(toolLines.size());
+
+    // If no tool calls found, return output as-is
+    if (toolCount == 0)
+    {
+        m_streamingChannel->EmitStreamComplete(modelOutput);
+        return modelOutput;
+    }
+
+    std::string toolResult;
+    DispatchToolLinesBatched(toolLines, "bridge-streaming", toolResult, m_streamingChannel.get());
+
+    // Construct final response
+    std::string finalResponse = modelOutput;
+    if (!toolResult.empty())
+    {
+        finalResponse += "\n";
+        finalResponse += toolResult;
+    }
+
+    // Emit stream complete event
+    m_streamingChannel->EmitStreamComplete(finalResponse);
+
+    LOG_INFO("Streaming dispatch complete: " + std::to_string(toolCount) + " tools processed");
+
+    return finalResponse;
 }
 
 // ============================================================================

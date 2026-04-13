@@ -48,7 +48,7 @@
 
 #include "../../include/RawrOllamaBridge.hpp"
 #include "../../include/editor_engine.h"
-#include "../../include/model_puller/download_manager.h"
+namespace RawrXD { struct DownloadProgress; } // forward decl — full header in .cpp only
 #include "../../include/plugin_system/win32_plugin_loader.h"
 #include "../agentic/agent_controller_minimal.h"
 #include "../full_agentic_ide/FullAgenticIDE.h"
@@ -71,10 +71,16 @@
 #include "Win32IDE_Types.h"
 #include "Win32IDE_WebView2.h"
 #include "Win32TerminalManager.h"
+#include <nlohmann/json.hpp>
+
+using json = nlohmann::json;
 
 
 class Win32IDE;
 void Win32IDE_HandleTitanGhostStreamMessage(Win32IDE* ide);
+
+class OutlinePanel;
+class DockingPaneManager;
 
 namespace rawrxd
 {
@@ -112,9 +118,6 @@ struct Win32IDEAgenticCopilotFinalEnvelope
 #include "../modules/ExtensionLoader.hpp"
 #include "../modules/vscode_extension_api.h"
 #include "../ui/tool_action_status.h"
-#include <nlohmann/json.hpp>
-
-using json = nlohmann::json;
 #include <climits>
 #include <condition_variable>
 
@@ -135,6 +138,10 @@ using json = nlohmann::json;
 
 #include "Win32IDE_Commands.h"
 #include "Win32IDE_Types.h"
+#include "Win32IDE_GoToLine.h"
+#include "DockingPaneManager.h"
+#include "OutlinePanel.h"
+#include "Win32IDE_Git.h"
 
 // WM_TIMER id: drain async PowerShell queue (one command per tick; see Win32IDE_PowerShell.cpp)
 #ifndef RAWRXD_IDT_PS_QUEUE_DRAIN
@@ -271,13 +278,22 @@ struct RefactoringOption
 class Win32IDE
 {
     friend class AgenticBridge;
+    friend class Win32IDE_TabManager;
+    friend class Win32IDE_AgenticBridge;
+    friend class Win32IDE_Autonomy;
+    friend class Win32IDE_IRCBridge;
+    friend class Win32IDE_SubAgent;
+    friend class Win32IDE_WebView2;
+    friend class Win32TerminalManager;
+    friend class DockingPaneManager;
+    friend class OutlinePanel;
+    friend void Win32IDE_HandleTitanGhostStreamMessage(Win32IDE* ide);
     friend class PeekOverlayWindow;
     friend class vscode::VSCodeExtensionAPI;
     friend void onCreateTrampoline(void* self, HWND hwnd);
     friend void deferredInitTrampoline(void* self);
     friend void bgInitBody(void* self);
     friend void RawrXD_FinishCopilotMinimalAgentic(Win32IDE* ide, WPARAM wParam, LPARAM heapResponse);
-
   public:
     void runWorkspaceSearchFromDialog(const std::string& query);
     void deferredHeavyInitBody();  // SEH-safe body, called from bg thread via sehRunBgThread
@@ -329,6 +345,8 @@ class Win32IDE
     WNDPROC getOldTabBarProc() const { return m_oldTabBarProc; }
     const std::string& getProjectRoot() const { return m_projectRoot; }
     const std::string& getCurrentDirectory() const { return m_currentDirectory; }
+    void refreshWorkspaceSymbolPickerResults(const std::string& queryUtf8);
+    void jumpToWorkspaceSymbolPickerResult(const std::string& filePath, uint32_t line1Based);
     /// Canonical workspace directory for repo-relative paths and `.rawrxd/` artifacts (matches Help metrics export).
     std::filesystem::path resolveRawrxdWorkspaceBase() const;
 
@@ -990,6 +1008,13 @@ class Win32IDE
     void handleGitCommand(int commandId);
     void handleAgentCommand(int commandId);
 
+    // View Toggle/Show Methods (missing implementations for linker errors)
+    void toggleMinimap();
+    void toggleFloatingPanel();
+    void toggleSecondarySidebar();
+    void togglePanel();
+    void toggleSyntaxHighlighting();
+
     // Swarm state
     bool isSwarmRunning() const;
 
@@ -1218,7 +1243,6 @@ class Win32IDE
     COLORREF getTokenColor(TokenType type) const;
     SyntaxLanguage detectLanguageFromExtension(const std::string& filePath) const;
     void onEditorContentChanged();    // Debounced EN_CHANGE handler for syntax coloring
-    void toggleSyntaxHighlighting();  // Toggle syntax highlighting on/off
     bool isKeyword(const std::string& word, SyntaxLanguage lang) const;
     bool isBuiltinType(const std::string& word, SyntaxLanguage lang) const;
     static void CALLBACK SyntaxColorTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
@@ -1382,24 +1406,23 @@ class Win32IDE
     void createMinimap();
     void updateMinimap();
     void scrollToMinimapPosition(int y);
-    void toggleMinimap();
     void paintMinimap(HDC hdc, RECT& rc);
     void minimapHitTest(int mouseY, int& outLine);
 
     // Performance profiling
+    void measureExecutionTime();
     void startProfiling();
     void stopProfiling();
     void showProfileResults();
     void analyzeScript();
-    void measureExecutionTime();
 
     // Module management
     void refreshModuleList();
     void loadModule(const std::string& moduleName);
     void unloadModule(const std::string& moduleName);
-    void showModuleBrowser();
     void importModule();
     void exportModule();
+    void showModuleBrowser();
 
     // Model Manager (unified model puller dialog)
     void showModelManager();
@@ -1442,6 +1465,10 @@ class Win32IDE
     void appendText(HWND hwnd, const std::string& text);
     void syncEditorToGpuSurface();
     void initializeEditorSurface();
+    bool toggleEditorCommentSelection();
+    bool duplicateEditorLine(bool duplicateBelow);
+    bool deleteEditorLine();
+    bool moveEditorLine(bool moveDown);
     static LRESULT CALLBACK EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     static constexpr const wchar_t* kEditorWndProp = L"RawrXD_IDE_PTR";
     static constexpr const wchar_t* kEditorProcProp = L"RawrXD_EDITOR_PROC";
@@ -1498,7 +1525,6 @@ class Win32IDE
     void createFloatingPanel();
     void showFloatingPanel();
     void hideFloatingPanel();
-    void toggleFloatingPanel();
     void updateFloatingPanelContent(const std::string& content);
     void setFloatingPanelTab(int tabIndex);
     static LRESULT CALLBACK FloatingPanelProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -1777,12 +1803,18 @@ class Win32IDE
     /// Posted after chat throughput gauges update so status bar can show ~t/s est (safe from worker threads).
     static const UINT WM_STATUSBAR_REFRESH_COPILOT = WM_APP + 308;
 
+public:
     struct AsyncModelLoadResult
     {
         std::string filepath;
         bool ggufOk = false;
         bool bridgeOk = false;
     };
+
+    // Public entry point for SEH-safe async model init sequence
+    void initModelSubsystems();
+
+private:
 
     std::mutex m_asyncModelLoadMutex;
     bool m_asyncModelLoadRunning = false;
@@ -1834,12 +1866,14 @@ class Win32IDE
     // Window Procedures for Subclassing
     static LRESULT CALLBACK CommandInputProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     static LRESULT CALLBACK CopilotChatInputProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    static LRESULT CALLBACK CopilotChatOutputProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     static LRESULT CALLBACK CopilotButtonProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     static LRESULT CALLBACK SidebarProcImpl(HWND hwnd, UINT uMsg, WPARAM wParam,
                                             LPARAM lParam);  // Renamed to avoid overload conflict
     WNDPROC m_oldCommandInputProc = nullptr;
     WNDPROC m_oldSidebarProc = nullptr;
     WNDPROC m_oldCopilotInputProc = nullptr;
+    WNDPROC m_oldCopilotOutputProc = nullptr;
     WNDPROC m_oldCopilotSendBtnProc = nullptr;
     WNDPROC m_oldCopilotClearBtnProc = nullptr;
     WNDPROC m_oldFileExplorerContainerProc = nullptr;
@@ -2194,6 +2228,39 @@ class Win32IDE
     std::vector<WatchItem> m_watchList;
     int m_selectedStackFrameIndex = 0;
 
+    // ========================================================================
+    // DAP (Debug Adapter Protocol) Server — IDE Ecosystem Integration
+    // ========================================================================
+    std::unique_ptr<class Win32IDE_DAPServer> m_dapServer;
+    bool m_dapServerEnabled = false;
+
+    // DAP Server lifecycle
+    void initializeDAP();
+    void shutdownDAP();
+    bool isDAPServerRunning() const;
+
+    // DAP Event hooks (called from native debugger engine)
+    void notifyDAPBreakpointHit(int threadId, const std::string& reason, int frameId);
+    void notifyDAPThreadCreated(int threadId, const std::string& threadName);
+    void notifyDAPThreadExited(int threadId);
+    void notifyDAPProgramTerminated();
+    void notifyDAPDebugOutput(const std::string& text, const std::string& category);
+
+    // ========================================================================
+    // EXPRESSION EVALUATOR — Watch Expressions & Hover Tooltips
+    // ========================================================================
+    class ExpressionEvaluator;
+
+    // Evaluate custom expression in debug context
+    bool evaluateWatchExpression(const std::string& expression, int frameId, std::string& result,
+                                  std::string& type);
+
+    // Get value of variable at editor position (for hover tooltips)
+    std::string getHoverValueAtPosition(int line, int column, int frameId);
+
+    // Conditional breakpoint expression validation
+    bool validateBreakpointCondition(const std::string& expression, std::string& errorMsg);
+
     // Extensions View
     HWND m_hwndExtensionsList;
     HWND m_hwndExtensionSearch;
@@ -2284,6 +2351,7 @@ class Win32IDE
     SnapState m_activeSnapState = SnapState::None;
     int m_currentMaxTokens;
     std::vector<std::string> m_availableModels;
+    mutable std::mutex m_availableModelsMutex;
     std::vector<std::string> m_userModelDirectories;
     std::vector<std::pair<std::string, std::string>> m_chatHistory;  // role, message
     /// Last workspace path passed to RawrXD_Agent_InitProjectChat (avoid re-init on every turn).
@@ -2386,10 +2454,8 @@ class Win32IDE
     void updateEnhancedStatusBar();
     void updateProblemsPanel();
 
-    void toggleSecondarySidebar();
     void applySovereignSnapPreset(int basePixels, const wchar_t* presetName, bool persistSession = true);
     void updateSovereignSnapMenuChecks();
-    void togglePanel();
     void maximizePanel();
     void restorePanel();
 
@@ -2655,6 +2721,8 @@ class Win32IDE
     void onDebuggerOutput(const std::string& text);
     void onDebuggerContinued();
     void onDebuggerTerminated();
+    void registerDebuggerEngineCallbacks();
+    void syncDebuggerSessionStateFromEngine();
     // Helper Methods
     std::string formatDebuggerValue(const std::string& value, const std::string& type);
     bool isBreakpointAtLine(const std::string& file, int line) const;
@@ -3448,9 +3516,10 @@ class Win32IDE
     // Research state — last simulation result
     SimulationResult m_lastSimulationResult = {};
 
+    public:
     // ========================================================================
     // LSP Client Bridge — Phase 9A (Win32IDE_LSPClient.cpp)
-    // ========================================================================
+        // ========================================================================
     // Minimal LSP integration for C/C++ (clangd), Python (pyright), and
     // TypeScript (typescript-language-server). Provides go-to-definition,
     // find-references, rename, hover, and diagnostics. The LSP servers run as
@@ -3587,6 +3656,31 @@ class Win32IDE
         std::map<std::string, std::vector<TextEdit>> changes;
     };
 
+    // ---- Inlay Hints (LSP 3.17+) ----
+    struct LSPInlayHint
+    {
+        struct Position
+        {
+            int line = 0;
+            int character = 0;
+        } position;
+
+        std::string label;                  // "int", "param:", etc.
+        std::string kind = "type";          // "type" or "parameter"
+        std::string tooltip;                // Optional hover text
+        bool paddingLeft = false;
+        bool paddingRight = false;
+    };
+
+    // ---- Code Actions ----
+    struct LSPCodeAction
+    {
+        std::string title;
+        std::string kind;                   // "quickfix", "refactoring", etc.
+        std::string command;
+        bool hasEdit = false;
+    };
+
     // ---- LSP client statistics ----
     struct LSPStats
     {
@@ -3596,8 +3690,15 @@ class Win32IDE
         uint64_t totalHoverRequests = 0;
         uint64_t totalCompletionRequests = 0;
         uint64_t totalSignatureRequests = 0;
+        uint64_t totalFormattingRequests = 0;
+        uint64_t totalDocumentSymbolRequests = 0;
+        uint64_t totalWorkspaceSymbolRequests = 0;
+        uint64_t totalImplementationRequests = 0;
+        uint64_t totalTypeDefinitionRequests = 0;
         uint64_t totalDiagnosticsReceived = 0;
         uint64_t totalServerRestarts = 0;
+        uint64_t totalInlayHintRequests = 0;
+        uint64_t totalCodeActionRequests = 0;
     };
 
     // LSP Client — lifecycle
@@ -3626,6 +3727,7 @@ class Win32IDE
     void sendShutdown(LSPLanguage lang);
     void sendExit(LSPLanguage lang);
 
+public:
     // Document sync
     void sendDidOpen(LSPLanguage lang, const std::string& uri, const std::string& languageId,
                      const std::string& content);
@@ -3633,7 +3735,7 @@ class Win32IDE
     void sendDidClose(LSPLanguage lang, const std::string& uri);
     void sendDidSave(LSPLanguage lang, const std::string& uri);
 
-    // Core LSP features (5 required)
+    // Core LSP features (10+)
     std::vector<LSPLocation> lspGotoDefinition(const std::string& uri, int line, int character);
     std::vector<LSPLocation> lspFindReferences(const std::string& uri, int line, int character);
     LSPWorkspaceEdit lspRenameSymbol(const std::string& uri, int line, int character, const std::string& newName);
@@ -3641,10 +3743,17 @@ class Win32IDE
     std::vector<LSPCompletionItem> lspCompletion(const std::string& uri, int line, int character);
     LSPSignatureHelpInfo lspSignatureHelp(const std::string& uri, int line, int character, int triggerKind = 1);
     std::vector<SemanticToken> lspSemanticTokensFull(const std::string& uri);
+    std::vector<LSPWorkspaceEdit::TextEdit> lspDocumentFormatting(const std::string& filePath);
+    std::vector<LSPWorkspaceEdit::TextEdit> lspRangeFormatting(const std::string& filePath, int startLine, int startChar, int endLine, int endChar);
+    std::vector<LSPSymbolInfo> lspDocumentSymbols(const std::string& uri);
+    std::vector<LSPSymbolInfo> lspWorkspaceSymbols(const std::string& query);
+    std::vector<LSPLocation> lspImplementation(const std::string& uri, int line, int character);
+    std::vector<LSPLocation> lspTypeDefinition(const std::string& uri, int line, int character);
     // Diagnostics arrive as notifications — handled in lspReaderThread
 
     // Apply edits from LSP
     bool applyWorkspaceEdit(const LSPWorkspaceEdit& edit);
+    bool applyWorkspaceEdit(const nlohmann::json& edit);
 
     // Language detection
     LSPLanguage detectLanguageForFile(const std::string& filePath) const;
@@ -3655,6 +3764,11 @@ class Win32IDE
     // URI helpers
     std::string filePathToUri(const std::string& filePath) const;
     std::string uriToFilePath(const std::string& uri) const;
+    bool prepareLSPDocument(const std::string& filePath, LSPLanguage& lang);
+    void syncLSPDocumentOpen(const std::string& filePath, const std::string& content);
+    void syncLSPDocumentChange(const std::string& filePath, const std::string& content);
+    void syncLSPDocumentClose(const std::string& filePath);
+    void syncLSPDocumentSave(const std::string& filePath);
 
     // Diagnostics management
     void onDiagnosticsReceived(const std::string& uri, const std::vector<LSPDiagnostic>& diagnostics);
@@ -3675,6 +3789,33 @@ class Win32IDE
     void cmdLSPFindReferences();
     void cmdLSPRenameSymbol();
     void cmdLSPHoverInfo();
+    void cmdLSPFormatDocument();
+    void cmdLSPFormatRange();
+    void cmdLSPDocumentSymbols();
+    void cmdLSPWorkspaceSymbols();
+    void cmdLSPImplementation();
+    void cmdLSPTypeDefinition();
+    void cmdLSPInlayHints();
+    void cmdLSPCodeActions();
+
+    // Advanced LSP features
+    std::vector<LSPInlayHint> lspInlayHints(const std::string& uri, int startLine, int endLine);
+    std::vector<LSPCodeAction> lspCodeActions(const std::string& uri, int line, int startChar, int endChar, const std::vector<std::string>& diagnosticCodes);
+
+    // ========================================================================
+    // REFACTORING ENGINE — Code transformation operations
+    // ========================================================================
+    bool operationExtractVariable();
+    bool operationExtractFunction();
+    bool operationRenameLocalVariable();
+    void initRefactoringEngine();
+
+    // Refactoring helpers
+    std::string generateVariableNameFromExpression(const std::string& expr);
+    std::set<std::string> analyzeVariableUsage(const std::string& code);
+    bool isKeywordInAnyLanguage(const std::string& word) const;
+    std::string inferReturnType(const std::string& code, const std::set<std::string>& usedVars);
+    int findFunctionDeclarationStart(int fromLine);
 
     // HTTP endpoints
     void handleLSPStatusEndpoint(SOCKET client);
@@ -3685,8 +3826,10 @@ class Win32IDE
     std::array<LSPServerConfig, (size_t)LSPLanguage::Count> m_lspConfigs;
     std::array<LSPServerStatus, (size_t)LSPLanguage::Count> m_lspStatuses;
     std::map<std::string, std::vector<LSPDiagnostic>> m_lspDiagnostics;  // uri → diagnostics
+    std::map<std::string, LSPLanguage> m_lspOpenDocuments;                // uri → language
     std::map<int, nlohmann::json> m_lspPendingResponses;                 // requestId → response
     LSPStats m_lspStats = {};
+    bool m_suppressLspDocumentSync = false;
     std::mutex m_lspMutex;
     std::mutex m_lspDiagnosticsMutex;
     std::mutex m_lspResponseMutex;
@@ -5323,7 +5466,9 @@ class Win32IDE
     void cmdSemSaveIndex();
     void cmdSemLoadIndex();
     void cmdSemShowStats();
-    bool getEditorCursorFileLineCol(std::string& outFile, uint32_t& outLine1Based, uint32_t& outCol) const;
+        bool getEditorCursorFileLineCol(std::string& outFile, uint32_t& outLine1Based, uint32_t& outCol) const;
+
+    public:
     void navigateToFileLine(const std::string& filePath, uint32_t line1Based);
 
   public:
@@ -5571,7 +5716,6 @@ class Win32IDE
     static constexpr int IDM_VISION_VIEW_GUI_HOTPATCH = 11534;
 
     // ── Refactoring Engine (200+ pluginable refactorings) ──
-    void initRefactoringEngine();
     bool handleRefactoringCommand(int commandId);
     void cmdRefactorExtractMethod();
     void cmdRefactorExtractVariable();
@@ -5892,6 +6036,12 @@ class Win32IDE
     void onHoverReady(const std::string& content, int line, int col);
     void renderHoverContent(HDC hdc, RECT rc, const std::string& content);
     static LRESULT CALLBACK HoverTooltipProc(HWND, UINT, WPARAM, LPARAM);
+
+    // Debug hover value support (Phase 1C)
+    void onEditorMouseMoveDebugHover(int x, int y);
+    void onDebugHoverTimer();
+    void hideDebugHoverValue();
+    std::string extractIdentifierAtColumn(const std::string& line, int column);
 
     HoverTooltipState m_hoverState;
     HWND m_hwndHoverPopup = nullptr;
@@ -6946,6 +7096,7 @@ class Win32IDE
 
     // Go To Symbol picker (Ctrl+Shift+O)
     void showGoToSymbolPicker();
+    void showGoToWorkspaceSymbolPicker();
     void hideGoToSymbolPicker();
     bool isGoToSymbolPickerVisible() const;
     void populateSymbolPickerData();

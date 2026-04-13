@@ -43,6 +43,7 @@ MainWindow::MainWindow()
       m_problemsPanelHwnd(nullptr), m_findPanelHwnd(nullptr),
       m_findEditHwnd(nullptr), m_replaceEditHwnd(nullptr),
       m_findNextBtnHwnd(nullptr), m_replaceBtnHwnd(nullptr), m_replaceAllBtnHwnd(nullptr),
+            m_statusBarHwnd(nullptr), m_tabBarHwnd(nullptr), m_tabScrollHwnd(nullptr),
       m_terminalRunning(false), m_psInWrite(nullptr), m_psOutRead(nullptr),
       m_terminalReaderActive(false), m_floatingPanelVisible(false),
       m_problemsPanelVisible(true)
@@ -1223,7 +1224,7 @@ void MainWindow::createEditor()
     m_editorHwnd = CreateWindowExA(
         0, "RICHEDIT50W", nullptr,
         WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_NOHIDESEL,
-        10, 40, 580, 400, m_hwnd, nullptr, GetModuleHandle(nullptr), nullptr
+        10, 56, 580, 384, m_hwnd, nullptr, GetModuleHandle(nullptr), nullptr
     );
     if(m_editorHwnd) {
         HFONT hFont = CreateFontA(11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
@@ -1242,7 +1243,12 @@ void MainWindow::createTabBar()
 {
 #ifdef _WIN32
     if(!m_hwnd) return;
-    m_tabBarHwnd = CreateWindowExA(0, "STATIC", "", WS_CHILD | WS_VISIBLE, 10, 10, 580, 24, m_hwnd, nullptr, GetModuleHandle(nullptr), nullptr);
+    m_tabBarHwnd = CreateWindowExA(0, "STATIC", "", WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN,
+                                   10, 10, 580, 24, m_hwnd, nullptr, GetModuleHandle(nullptr), nullptr);
+    m_tabScrollHwnd = CreateWindowExA(0, "SCROLLBAR", nullptr,
+                                      WS_CHILD | WS_VISIBLE | SBS_HORZ,
+                                      10, 34, 580, 14, m_hwnd, (HMENU)1988,
+                                      GetModuleHandle(nullptr), nullptr);
     refreshTabBar();
 #endif
 }
@@ -1981,6 +1987,19 @@ LRESULT CALLBACK MainWindow::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPA
         }
         case WM_SIZE: {
             RECT rc; GetClientRect(hwnd, &rc);
+            if (window->m_tabBarHwnd) {
+                MoveWindow(window->m_tabBarHwnd, 10, 10, std::max(120, rc.right - 20), 24, TRUE);
+            }
+            if (window->m_tabScrollHwnd) {
+                MoveWindow(window->m_tabScrollHwnd, 10, 34, std::max(120, rc.right - 20), 14, TRUE);
+            }
+            if (window->m_editorHwnd) {
+                MoveWindow(window->m_editorHwnd, 10, 56, std::max(120, rc.right - 20), std::max(120, rc.bottom - 106), TRUE);
+            }
+            if (window->m_statusBarHwnd) {
+                MoveWindow(window->m_statusBarHwnd, 10, std::max(0, rc.bottom - 24), std::max(120, rc.right - 20), 20, TRUE);
+            }
+            window->refreshTabBar();
             if (window->m_splitLayout) {
                 auto* splitter = reinterpret_cast<RawrXD::UI::SplitLayout*>(window->m_splitLayout);
                 splitter->onResize(rc.right - rc.left, rc.bottom - rc.top);
@@ -2018,6 +2037,50 @@ LRESULT CALLBACK MainWindow::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPA
                 }
             }
             return 0;
+        }
+        case WM_HSCROLL:
+            if ((HWND)lParam == window->m_tabScrollHwnd) {
+                SCROLLINFO si{};
+                si.cbSize = sizeof(si);
+                si.fMask = SIF_ALL;
+                GetScrollInfo(window->m_tabScrollHwnd, SB_CTL, &si);
+                int pos = si.nPos;
+                switch (LOWORD(wParam)) {
+                    case SB_LINELEFT:   pos -= 30; break;
+                    case SB_LINERIGHT:  pos += 30; break;
+                    case SB_PAGELEFT:   pos -= static_cast<int>(si.nPage); break;
+                    case SB_PAGERIGHT:  pos += static_cast<int>(si.nPage); break;
+                    case SB_THUMBTRACK: pos = HIWORD(wParam); break;
+                    default: break;
+                }
+                pos = std::max(si.nMin, std::min(pos, si.nMax - static_cast<int>(si.nPage) + 1));
+                window->m_tabScrollOffset = std::max(0, pos);
+                window->refreshTabBar();
+                return 0;
+            }
+            break;
+        case WM_MOUSEWHEEL: {
+            POINT pt{ GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+            RECT bar{}, slider{};
+            bool overTabArea = false;
+            if (window->m_tabBarHwnd && GetWindowRect(window->m_tabBarHwnd, &bar) && PtInRect(&bar, pt)) {
+                overTabArea = true;
+            }
+            if (!overTabArea && window->m_tabScrollHwnd && GetWindowRect(window->m_tabScrollHwnd, &slider) && PtInRect(&slider, pt)) {
+                overTabArea = true;
+            }
+            if (overTabArea && !window->m_tabs.empty()) {
+                const short delta = GET_WHEEL_DELTA_WPARAM(wParam);
+                if (window->m_tabs.size() > 1) {
+                    const size_t n = window->m_tabs.size();
+                    const size_t next = (delta > 0)
+                        ? (window->m_currentTab == 0 ? (n - 1) : (window->m_currentTab - 1))
+                        : ((window->m_currentTab + 1) % n);
+                    window->switchTab(next);
+                }
+                return 0;
+            }
+            break;
         }
         case WM_KEYDOWN:
             if ((GetKeyState(VK_CONTROL) & 0x8000) && wParam == 'F') {
@@ -2594,11 +2657,35 @@ void MainWindow::refreshTabBar() {
     if(!m_tabBarHwnd) return;
     for(HWND h : m_tabButtons) DestroyWindow(h);
     m_tabButtons.clear();
-    int x=0; int btnWidth=90; int height=24; HINSTANCE inst=GetModuleHandle(nullptr);
+
+    RECT rc{};
+    GetClientRect(m_tabBarHwnd, &rc);
+    const int viewWidth = std::max(1L, rc.right - rc.left);
+    const int btnWidth = 130;
+    const int height = 24;
+    const int spacing = 2;
+    const int totalWidth = static_cast<int>(m_tabs.size()) * (btnWidth + spacing) + 24;
+    const int maxOffset = std::max(0, totalWidth - viewWidth);
+    m_tabScrollOffset = std::max(0, std::min(m_tabScrollOffset, maxOffset));
+
+    if (m_tabScrollHwnd) {
+        SCROLLINFO si{};
+        si.cbSize = sizeof(si);
+        si.fMask = SIF_RANGE | SIF_PAGE | SIF_POS;
+        si.nMin = 0;
+        si.nMax = std::max(0, totalWidth - 1);
+        si.nPage = static_cast<UINT>(viewWidth);
+        si.nPos = m_tabScrollOffset;
+        SetScrollInfo(m_tabScrollHwnd, SB_CTL, &si, TRUE);
+        ShowWindow(m_tabScrollHwnd, maxOffset > 0 ? SW_SHOW : SW_HIDE);
+    }
+
+    int x = -m_tabScrollOffset;
+    HINSTANCE inst=GetModuleHandle(nullptr);
     for(size_t i=0;i<m_tabs.size();++i){
         std::string label = m_tabs[i].filename + (m_tabs[i].dirty?"*":"");
         HWND btn = CreateWindowExA(0, "BUTTON", label.c_str(), WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, x,0,btnWidth,height, m_tabBarHwnd, (HMENU)(2000+i), inst, nullptr);
-        m_tabButtons.push_back(btn); x += btnWidth+2;
+        m_tabButtons.push_back(btn); x += btnWidth + spacing;
     }
     CreateWindowExA(0, "BUTTON", "+", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, x,0,24,height, m_tabBarHwnd, (HMENU)1999, inst, nullptr);
 }
@@ -2635,9 +2722,42 @@ void MainWindow::updateStatusBar() {
 }
 
 void MainWindow::saveTab(size_t index) {
-    if(index >= m_tabs.size()) return; auto& t = m_tabs[index];
-    if(t.filename.rfind("Untitled",0)==0) { t.filename = "Untitled" + std::to_string(index) + ".txt"; }
-    std::ofstream out(t.filename, std::ios::binary); if(out) { out << t.buffer.snapshot(); out.close(); t.dirty=false; }
+    if(index >= m_tabs.size()) return;
+    auto& t = m_tabs[index];
+
+    if (t.filename.empty() || t.filename.rfind("Untitled", 0) == 0) {
+#ifdef _WIN32
+        char filename[MAX_PATH] = {};
+        OPENFILENAMEA ofn = {};
+        ofn.lStructSize = sizeof(ofn);
+        ofn.hwndOwner = m_hwnd;
+        ofn.lpstrFilter = "All Files\0*.*\0Text Files\0*.txt\0C/C++\0*.c;*.cpp;*.h;*.hpp\0";
+        ofn.lpstrFile = filename;
+        ofn.nMaxFile = MAX_PATH;
+        ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST;
+        if (!GetSaveFileNameA(&ofn)) {
+            return;
+        }
+        t.filename = filename;
+#else
+        t.filename = "Untitled" + std::to_string(index) + ".txt";
+#endif
+    }
+
+    std::ofstream out(t.filename, std::ios::binary | std::ios::trunc);
+    if (!out) {
+#ifdef _WIN32
+        MessageBoxA(m_hwnd, "Failed to save file.", "Save Error", MB_OK | MB_ICONERROR);
+#endif
+        return;
+    }
+
+    const std::string content = t.buffer.snapshot();
+    out.write(content.data(), static_cast<std::streamsize>(content.size()));
+    out.close();
+    t.dirty = false;
+    refreshTabBar();
+    updateStatusBar();
 }
 
 void MainWindow::saveAllDirtyTabs() { for(size_t i=0;i<m_tabs.size();++i) if(m_tabs[i].dirty) saveTab(i); refreshTabBar(); }
@@ -2878,19 +2998,89 @@ void MainWindow::populateCommandPalette() {
 #ifdef _WIN32
     if(!m_commandPaletteHwnd) return;
     SendMessageA(m_commandPaletteHwnd, LB_RESETCONTENT, 0, 0);
-    const std::string& fname = m_tabs.empty()? std::string(): m_tabs[m_currentTab].filename;
-    bool isCpp = fname.ends_with(".cpp")||fname.ends_with(".hpp")||fname.ends_with(".h")||fname.ends_with(".c");
-    bool isPs = fname.ends_with(".ps1")||fname.ends_with(".psm1");
-    if(isCpp) {
-        SendMessageA(m_commandPaletteHwnd, LB_ADDSTRING, 0, (LPARAM)"Build Project");
-        SendMessageA(m_commandPaletteHwnd, LB_ADDSTRING, 0, (LPARAM)"Run Tests");
-        SendMessageA(m_commandPaletteHwnd, LB_ADDSTRING, 0, (LPARAM)"Toggle Header/Source");
-    } else if(isPs) {
-        SendMessageA(m_commandPaletteHwnd, LB_ADDSTRING, 0, (LPARAM)"Run Script");
-        SendMessageA(m_commandPaletteHwnd, LB_ADDSTRING, 0, (LPARAM)"Format Script");
-        SendMessageA(m_commandPaletteHwnd, LB_ADDSTRING, 0, (LPARAM)"List Functions");
-    } else {
-        SendMessageA(m_commandPaletteHwnd, LB_ADDSTRING, 0, (LPARAM)"No language actions");
+    
+    // === PRIORITY 1: Dynamic Tool Registry Population ===
+    
+    // Get all available tools from ToolRegistry
+    std::vector<std::string> allTools;
+    try {
+        // Include agent tools (primary source)
+        allTools = RawrXD::Agent::AgentToolRegistry::Instance().ListTools();
+        
+        // Add IDE-specific quick commands (language-contextual)
+        const std::string& fname = m_tabs.empty() ? std::string() : m_tabs[m_currentTab].filename;
+        bool isCpp = fname.ends_with(".cpp")||fname.ends_with(".hpp")||fname.ends_with(".h")||fname.ends_with(".c");
+        bool isPs = fname.ends_with(".ps1")||fname.ends_with(".psm1");
+        
+        // Contextual quick commands at top
+        if(isCpp) {
+            allTools.insert(allTools.begin(), "Quick: Build Project");
+            allTools.insert(allTools.begin() + 1, "Quick: Run Tests");
+            allTools.insert(allTools.begin() + 2, "Quick: Toggle Header/Source");
+        } else if(isPs) {
+            allTools.insert(allTools.begin(), "Quick: Run Script");
+            allTools.insert(allTools.begin() + 1, "Quick: Format Script");
+            allTools.insert(allTools.begin() + 2, "Quick: List Functions");
+        }
+    } catch (const std::exception& e) {
+        // Fallback if registry unavailable
+        allTools = {
+            "read_file", "write_file", "replace_in_file", 
+            "execute_command", "search_code", "get_diagnostics"
+        };
+    }
+    
+    // Store tool metadata for dispatcher
+    m_paletteTool.clear();
+    m_paletteIndex.clear();
+    
+    // === Fuzzy Search (if search text available) ===
+    std::vector<std::pair<int, std::string>> displayList;
+    
+    for (size_t i = 0; i < allTools.size(); ++i) {
+        displayList.push_back({(int)i, allTools[i]});
+    }
+    
+    // Sort by tool name for consistent ordering, limit to 30 visible
+    std::sort(displayList.begin(), displayList.end(),
+        [](const auto& a, const auto& b) { return a.second < b.second; });
+    
+    if (displayList.size() > 30) {
+        displayList.resize(30);
+    }
+    
+    // Populate listbox with formatted tool names + descriptions
+    for (size_t displayIdx = 0; displayIdx < displayList.size(); ++displayIdx) {
+        const auto& toolName = displayList[displayIdx].second;
+        
+        // Store tool name for execution
+        m_paletteTool.push_back(toolName);
+        m_paletteIndex.push_back(displayList[displayIdx].first);
+        
+        // Format display: "tool_name — description" (truncated at 80 chars for display)
+        std::string displayText = toolName;
+        
+        // Add description if available from registry
+        try {
+            auto schemas = RawrXD::Agent::AgentToolRegistry::Instance().GetToolSchemas();
+            for (const auto& tool : schemas) {
+                if (tool.find("name") != tool.end() && tool["name"].get<std::string>() == toolName) {
+                    if (tool.find("description") != tool.end()) {
+                        std::string desc = tool["description"].get<std::string>();
+                        if (desc.length() > 50) desc.resize(50);
+                        displayText += " — " + desc;
+                    }
+                    break;
+                }
+            }
+        } catch(...) {}
+        
+        SendMessageA(m_commandPaletteHwnd, LB_ADDSTRING, 0, (LPARAM)displayText.c_str());
+    }
+    
+    // If no tools found, show fallback message
+    if (displayList.empty()) {
+        SendMessageA(m_commandPaletteHwnd, LB_ADDSTRING, 0, (LPARAM)"(No tools available - check ToolRegistry)");
     }
 #endif
 }
@@ -2905,54 +3095,159 @@ void MainWindow::toggleCommandPalette() {
 
 void MainWindow::executePaletteSelection(int index) {
 #ifdef _WIN32
-    if(index < 0 || !m_commandPaletteHwnd) return; char buf[128]=""; SendMessageA(m_commandPaletteHwnd, LB_GETTEXT, index, (LPARAM)buf); std::string cmd(buf);
-    if(cmd=="Build Project") handleCommand("cmake --build .");
-    else if(cmd=="Run Tests") handleCommand("ctest");
-    else if(cmd=="Toggle Header/Source") {
-        if(!m_tabs.empty()) {
-            std::string cur = m_tabs[m_currentTab].filename;
-            std::string alt;
-            namespace fs = std::filesystem;
-            if(cur.size() > 4 && cur.substr(cur.size()-4)==".cpp") alt = cur.substr(0, cur.size()-4) + ".h";
-            else if(cur.size() > 2 && cur.substr(cur.size()-2)==".h") alt = cur.substr(0, cur.size()-2) + ".cpp";
-            
-            if(!alt.empty() && fs::exists(alt)) {
-                addTab(alt);
-            } else {
-                 if(cur.size() > 4 && cur.substr(cur.size()-4)==".cpp") alt = cur.substr(0, cur.size()-4) + ".hpp";
-                 if(!alt.empty() && fs::exists(alt)) addTab(alt);
-                 else appendToOutput("Header/Source swap failed: Counterpart not found.\n", "Errors", OutputSeverity::Warning);
-            }
+    // === PRIORITY 1 + PRIORITY 2: Tool Dispatch with Context Injection ===
+    
+    if(index < 0 || index >= (int)m_paletteTool.size() || !m_commandPaletteHwnd) return;
+    
+    const std::string& toolName = m_paletteTool[index];
+    
+    // === PRIORITY 2: Capture Editor Context (Selection, Cursor, File) ===
+    std::string editorContent;
+    DWORD cursorPos = 0;
+    DWORD selStart = 0, selEnd = 0;
+    std::string currentFile;
+    std::string selectedText;
+    
+    if(m_editorHwnd) {
+        editorContent = getWindowText(m_editorHwnd);
+        SendMessageA(m_editorHwnd, EM_GETSEL, (WPARAM)&selStart, (LPARAM)&selEnd);
+        cursorPos = selStart;
+        
+        // Extract selected text for context-aware tools
+        if(selEnd > selStart && selEnd <= editorContent.size()) {
+            selectedText = editorContent.substr(selStart, selEnd - selStart);
         }
     }
-    else if(cmd=="Run Script") handleCommand("powershell -File \"" + m_tabs[m_currentTab].filename + "\"");
-    else if(cmd=="Format Script") {
-        if(!m_tabs.empty()) {
-            std::string fn = m_tabs[m_currentTab].filename;
-            if(fn.find(".ps1") != std::string::npos) {
-                 handleCommand("powershell -NoProfile -Command \"& { if (Get-Command Invoke-ScriptAnalyzer -ErrorAction SilentlyContinue) { Invoke-ScriptAnalyzer -Path '" + fn + "' -Fix } else { Write-Host 'Install PSScriptAnalyzer for formatting' } }\"");
-                 appendToOutput("Format command sent for " + fn + "\n", "Output", OutputSeverity::Info);
-            } else {
-                 appendToOutput("No formatter configured for this file type.\n", "Output", OutputSeverity::Warning);
+    
+    if(!m_tabs.empty() && m_currentTab < m_tabs.size()) {
+        currentFile = m_tabs[m_currentTab].filename;
+    }
+    
+    // === Quick Commands (IDE-specific, hardcoded) ===
+    if(toolName.find("Quick:") == 0) {
+        if(toolName == "Quick: Build Project") {
+            handleCommand("cmake --build .");
+        }
+        else if(toolName == "Quick: Run Tests") {
+            handleCommand("ctest");
+        }
+        else if(toolName == "Quick: Toggle Header/Source") {
+            if(!m_tabs.empty()) {
+                std::string cur = m_tabs[m_currentTab].filename;
+                std::string alt;
+                namespace fs = std::filesystem;
+                if(cur.size() > 4 && cur.substr(cur.size()-4)==".cpp") alt = cur.substr(0, cur.size()-4) + ".h";
+                else if(cur.size() > 2 && cur.substr(cur.size()-2)==".h") alt = cur.substr(0, cur.size()-2) + ".cpp";
+                
+                if(!alt.empty() && fs::exists(alt)) {
+                    addTab(alt);
+                } else {
+                     if(cur.size() > 4 && cur.substr(cur.size()-4)==".cpp") alt = cur.substr(0, cur.size()-4) + ".hpp";
+                     if(!alt.empty() && fs::exists(alt)) addTab(alt);
+                }
             }
         }
-    }
-    else if(cmd=="List Functions") {
-         if(!m_tabs.empty()) {
-             appendToOutput("Functions in " + m_tabs[m_currentTab].title + ":\n", "Output", OutputSeverity::Info);
-             std::string content = getWindowText(m_hwndEditor);
-             std::istringstream stream(content);
-             std::string line;
-             int lineno = 0;
-             while(std::getline(stream, line)) {
-                 lineno++;
-                 // Simple regex-like check
-                 if(line.find("function ") != std::string::npos || (line.find("(") != std::string::npos && line.find("{") != std::string::npos)) {
-                     if(line.length() < 100)
-                        appendToOutput(std::to_string(lineno) + ": " + line + "\n", "Output", OutputSeverity::Info);
+        else if(toolName == "Quick: Run Script") {
+            if(!m_tabs.empty()) {
+                handleCommand("powershell -File \"" + m_tabs[m_currentTab].filename + "\"");
+            }
+        }
+        else if(toolName == "Quick: Format Script") {
+            if(!m_tabs.empty()) {
+                std::string fn = m_tabs[m_currentTab].filename;
+                if(fn.find(".ps1") != std::string::npos) {
+                     handleCommand("powershell -NoProfile -Command \"& { if (Get-Command Invoke-ScriptAnalyzer -ErrorAction SilentlyContinue) { Invoke-ScriptAnalyzer -Path '" + fn + "' -Fix } else { Write-Host 'Install PSScriptAnalyzer for formatting' } }\"");
+                }
+            }
+        }
+        else if(toolName == "Quick: List Functions") {
+             if(!m_tabs.empty()) {
+                 std::string content = getWindowText(m_editorHwnd);
+                 std::istringstream stream(content);
+                 std::string line;
+                 int lineno = 0;
+                 while(std::getline(stream, line)) {
+                     lineno++;
+                     if(line.find("function ") != std::string::npos || (line.find("(") != std::string::npos && line.find("{") != std::string::npos)) {
+                         if(line.length() < 100)
+                            sendToTerminal(std::to_string(lineno) + ": " + line + "\n");
+                     }
                  }
              }
-         }
+        }
+        return;
+    }
+    
+    // === Agent Tools (dispatched via ToolRegistry with context injection) ===
+    // === PRIORITY 3: Progress Tracking with Timing ===
+    try {
+        // Record start time for elapsed tracking
+        auto startTime = std::chrono::high_resolution_clock::now();
+        
+        // Show startup message with tool name and context
+        std::ostringstream initMsg;
+        initMsg << "[Tool Exec] Starting: " << toolName << "\n";
+        initMsg << "  Context: file='" << currentFile << "' "
+                << "sel_len=" << (selEnd - selStart) << "b "
+                << "cursor=" << cursorPos << "\n";
+        sendToTerminal(initMsg.str());
+        
+        // Build context object for tool execution
+        json toolContext = json::object();
+        toolContext["selected_text"] = selectedText;
+        toolContext["cursor_position"] = cursorPos;
+        toolContext["file_path"] = currentFile;
+        toolContext["file_content"] = editorContent;
+        toolContext["selection_start"] = selStart;
+        toolContext["selection_end"] = selEnd;
+        
+        // Show progress: 25% before dispatch
+        sendToTerminal("  [25% — Dispatching]\n");
+        
+        // Dispatch tool via registry (injects context automatically)
+        // Progress: 50% during execution
+        sendToTerminal("  [50% — Executing]\n");
+        auto result = RawrXD::Agent::AgentToolRegistry::Instance().Dispatch(toolName, toolContext);
+        
+        // Calculate elapsed time
+        auto endTime = std::chrono::high_resolution_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+        
+        // Display result with completion status
+        if(result.success) {
+            std::ostringstream successMsg;
+            successMsg << "  [100% ✓ Complete] Elapsed: " << elapsed.count() << "ms\n";
+            successMsg << "[Output]\n";
+            sendToTerminal(successMsg.str());
+            
+            // Truncate output to 2KB for display
+            std::string displayOutput = result.output;
+            if(displayOutput.length() > 2048) {
+                displayOutput = displayOutput.substr(0, 2045) + "...";
+            }
+            sendToTerminal(displayOutput + "\n");
+            
+            // If tool modified the file, sync editor (75% of remaining work)
+            if(toolName == "write_file" || toolName == "replace_in_file") {
+                syncEditorFromBuffer();
+            }
+        } else {
+            std::ostringstream errorMsg;
+            errorMsg << "  [100% ✗ Failed] Code: " << result.exit_code << " | Elapsed: " << elapsed.count() << "ms\n";
+            errorMsg << "[Error]\n";
+            sendToTerminal(errorMsg.str());
+            
+            std::string displayError = result.output;
+            if(displayError.length() > 1024) {
+                displayError = displayError.substr(0, 1021) + "...";
+            }
+            sendToTerminal(displayError + "\n");
+        }
+        
+        // Final summary line
+        sendToTerminal("---\n");
+    } catch(const std::exception& e) {
+        sendToTerminal("[Tool Exec Error] " + std::string(e.what()) + "\n");
     }
 #endif
 }

@@ -2836,6 +2836,71 @@ void Win32IDE::handleToolsCommand(int commandId)
             appendToOutput("[LSP] Configuration saved to " + getLSPConfigFilePath(), "General", OutputSeverity::Info);
             break;
 
+        case IDM_EDITOR_GOTO_LINE:
+            showGoToLineDialog();
+            break;
+
+        case IDM_EDITOR_GOTO_SYMBOL:
+            showGoToSymbolPicker();
+            break;
+
+        case IDM_EDITOR_GOTO_WORKSPACE_SYMBOL:
+            cmdLSPWorkspaceSymbols();
+            break;
+
+        case IDM_EDITOR_PEEK_DEFINITION:
+            cmdLSPGotoDefinition();
+            break;
+
+        case IDM_EDITOR_PEEK_REFERENCES:
+            cmdLSPFindReferences();
+            break;
+
+        case IDM_EDITOR_FORMAT_SELECTION:
+            cmdLSPFormatRange();
+            break;
+
+        case IDM_EDITOR_TOGGLE_COMMENT:
+            if (!toggleEditorCommentSelection())
+                appendToOutput("[Editor] Toggle comment was not applied.", "General", OutputSeverity::Warning);
+            break;
+
+        case IDM_EDITOR_DUPLICATE_LINE:
+            if (!duplicateEditorLine((GetKeyState(VK_UP) & 0x8000) == 0))
+                appendToOutput("[Editor] Duplicate line was not applied.", "General", OutputSeverity::Warning);
+            break;
+
+        case IDM_EDITOR_DELETE_LINE:
+            if (!deleteEditorLine())
+                appendToOutput("[Editor] Delete line was not applied.", "General", OutputSeverity::Warning);
+            break;
+
+        case IDM_EDITOR_MOVE_LINE_UP:
+            if (!moveEditorLine(false))
+                appendToOutput("[Editor] Move line up was not applied.", "General", OutputSeverity::Warning);
+            break;
+
+        case IDM_EDITOR_MOVE_LINE_DOWN:
+            if (!moveEditorLine(true))
+                appendToOutput("[Editor] Move line down was not applied.", "General", OutputSeverity::Warning);
+            break;
+
+        case IDM_EDITOR_GOTO_IMPLEMENTATION:
+            cmdLSPImplementation();
+            break;
+
+        case IDM_EDITOR_GOTO_TYPE_DEFINITION:
+            cmdLSPTypeDefinition();
+            break;
+
+        case IDM_EDITOR_CODE_ACTIONS:
+            cmdLSPCodeActions();
+            break;
+
+        case IDM_EDITOR_SHOW_INLAY_HINTS:
+            cmdLSPInlayHints();
+            break;
+
             // ============================================================
             // Phase 9A-ASM: ASM Semantic Support (5082–5093 range)
             // ============================================================
@@ -8127,7 +8192,7 @@ void Win32IDE::handleToolsCommand(int commandId)
             // Parity Workflow Layer — Batch 14 (5894–5900)
             // ================================================================
 
-        case 5894:  // Wrapper Lane Dry-Run Analyzer
+        case 6994:  // Wrapper Lane Dry-Run Analyzer
         {
             namespace fs = std::filesystem;
             fs::path root = resolveRawrxdWorkspaceBase();
@@ -11050,6 +11115,25 @@ void Win32IDE::buildCommandRegistry()
     m_commandRegistry.push_back({2017, "Edit: Replace", "Ctrl+H", "Edit"});
     m_commandRegistry.push_back({2018, "Edit: Find Next", "F3", "Edit"});
     m_commandRegistry.push_back({2019, "Edit: Find Previous", "Shift+F3", "Edit"});
+    m_commandRegistry.push_back({IDM_EDITOR_FORMAT_SELECTION, "Edit: Format Selection", "Shift+Alt+F", "Edit"});
+    m_commandRegistry.push_back({IDM_EDITOR_CODE_ACTIONS, "Edit: Code Actions", "Ctrl+.", "Edit"});
+    m_commandRegistry.push_back({IDM_EDITOR_SHOW_INLAY_HINTS, "Edit: Show Inlay Hints", "Ctrl+Alt+I", "Edit"});
+    m_commandRegistry.push_back({IDM_EDITOR_TOGGLE_COMMENT, "Edit: Toggle Comment", "Ctrl+/", "Edit"});
+    m_commandRegistry.push_back({IDM_EDITOR_DUPLICATE_LINE, "Edit: Duplicate Line", "Shift+Alt+Down", "Edit"});
+    m_commandRegistry.push_back({IDM_EDITOR_DELETE_LINE, "Edit: Delete Line", "Ctrl+Shift+K", "Edit"});
+    m_commandRegistry.push_back({IDM_EDITOR_MOVE_LINE_UP, "Edit: Move Line Up", "Alt+Up", "Edit"});
+    m_commandRegistry.push_back({IDM_EDITOR_MOVE_LINE_DOWN, "Edit: Move Line Down", "Alt+Down", "Edit"});
+
+    // Navigation tools exposed through the command palette even though they route via the tools lane.
+    m_commandRegistry.push_back({IDM_EDITOR_GOTO_LINE, "Navigation: Go To Line", "Ctrl+G", "Navigation"});
+    m_commandRegistry.push_back({IDM_EDITOR_GOTO_SYMBOL, "Navigation: Go To Symbol", "Ctrl+Shift+O", "Navigation"});
+    m_commandRegistry.push_back(
+        {IDM_EDITOR_GOTO_WORKSPACE_SYMBOL, "Navigation: Go To Workspace Symbol", "Ctrl+Shift+Alt+O", "Navigation"});
+    m_commandRegistry.push_back({IDM_EDITOR_PEEK_DEFINITION, "Navigation: Peek Definition", "Alt+F12", "Navigation"});
+    m_commandRegistry.push_back({IDM_EDITOR_PEEK_REFERENCES, "Navigation: Peek References", "Shift+F12", "Navigation"});
+    m_commandRegistry.push_back({IDM_EDITOR_GOTO_IMPLEMENTATION, "Navigation: Go To Implementation", "Ctrl+F12", "Navigation"});
+    m_commandRegistry.push_back(
+        {IDM_EDITOR_GOTO_TYPE_DEFINITION, "Navigation: Go To Type Definition", "Ctrl+Alt+F12", "Navigation"});
 
     // View commands (IDs must match handleViewCommand: 2020–2031, 3007, 3009)
     m_commandRegistry.push_back({2020, "View: Toggle Minimap", "Ctrl+M", "View"});
@@ -11118,7 +11202,7 @@ void Win32IDE::buildCommandRegistry()
     m_commandRegistry.push_back({5003, "Tools: Show Profile Results", "", "Tools"});
     m_commandRegistry.push_back({5004, "Tools: Analyze Script", "", "Tools"});
     m_commandRegistry.push_back({5005, "Tools: Code Snippets", "", "Tools"});
-    m_commandRegistry.push_back({5894, "Tools: Wrapper Lane Dry-Run Analyzer", "", "Tools"});
+    m_commandRegistry.push_back({6994, "Tools: Wrapper Lane Dry-Run Analyzer", "", "Tools"});
     m_commandRegistry.push_back({5895, "Tools: Monolithic Init Callsite Report", "", "Tools"});
     m_commandRegistry.push_back({5896, "Tools: Bridge Handshake Timeline Export", "", "Tools"});
     m_commandRegistry.push_back({5897, "Tools: Input Dialog Blocker Detector", "", "Tools"});
@@ -11353,6 +11437,33 @@ void Win32IDE::buildCommandRegistry()
     m_commandRegistry.push_back({IDM_SUBAGENT_TODO_LIST, "SubAgent: Todo List", "", "SubAgent"});
     m_commandRegistry.push_back({IDM_SUBAGENT_TODO_CLEAR, "SubAgent: Todo Clear", "", "SubAgent"});
     m_commandRegistry.push_back({IDM_SUBAGENT_STATUS, "SubAgent: Status", "", "SubAgent"});
+
+    // Distributed Swarm (Phase 11)
+    m_commandRegistry.push_back({IDM_SWARM_STATUS, "Swarm: Show Status", "", "Swarm"});
+    m_commandRegistry.push_back({IDM_SWARM_START_LEADER, "Swarm: Start Leader", "", "Swarm"});
+    m_commandRegistry.push_back({IDM_SWARM_START_WORKER, "Swarm: Start Worker", "", "Swarm"});
+    m_commandRegistry.push_back({IDM_SWARM_START_HYBRID, "Swarm: Start Hybrid", "", "Swarm"});
+    m_commandRegistry.push_back({IDM_SWARM_STOP, "Swarm: Stop", "", "Swarm"});
+    m_commandRegistry.push_back({IDM_SWARM_LIST_NODES, "Swarm: List Nodes", "", "Swarm"});
+    m_commandRegistry.push_back({IDM_SWARM_ADD_NODE, "Swarm: Add Node", "", "Swarm"});
+    m_commandRegistry.push_back({IDM_SWARM_REMOVE_NODE, "Swarm: Remove Node", "", "Swarm"});
+    m_commandRegistry.push_back({IDM_SWARM_BLACKLIST_NODE, "Swarm: Blacklist Node", "", "Swarm"});
+    m_commandRegistry.push_back({IDM_SWARM_BUILD_SOURCES, "Swarm: Build from Sources", "", "Swarm"});
+    m_commandRegistry.push_back({IDM_SWARM_BUILD_CMAKE, "Swarm: Build from CMake", "", "Swarm"});
+    m_commandRegistry.push_back({IDM_SWARM_START_BUILD, "Swarm: Start Build", "", "Swarm"});
+    m_commandRegistry.push_back({IDM_SWARM_CANCEL_BUILD, "Swarm: Cancel Build", "", "Swarm"});
+    m_commandRegistry.push_back({IDM_SWARM_CACHE_STATUS, "Swarm: Cache Status", "", "Swarm"});
+    m_commandRegistry.push_back({IDM_SWARM_CACHE_CLEAR, "Swarm: Cache Clear", "", "Swarm"});
+    m_commandRegistry.push_back({IDM_SWARM_SHOW_CONFIG, "Swarm: Show Config", "", "Swarm"});
+    m_commandRegistry.push_back({IDM_SWARM_TOGGLE_DISCOVERY, "Swarm: Toggle Discovery", "", "Swarm"});
+    m_commandRegistry.push_back({IDM_SWARM_SHOW_TASK_GRAPH, "Swarm: Show Task Graph", "", "Swarm"});
+    m_commandRegistry.push_back({IDM_SWARM_SHOW_EVENTS, "Swarm: Show Events", "", "Swarm"});
+    m_commandRegistry.push_back({IDM_SWARM_SHOW_STATS, "Swarm: Show Stats", "", "Swarm"});
+    m_commandRegistry.push_back({IDM_SWARM_RESET_STATS, "Swarm: Reset Stats", "", "Swarm"});
+    m_commandRegistry.push_back({IDM_SWARM_WORKER_STATUS, "Swarm: Worker Status", "", "Swarm"});
+    m_commandRegistry.push_back({IDM_SWARM_WORKER_CONNECT, "Swarm: Worker Connect", "", "Swarm"});
+    m_commandRegistry.push_back({IDM_SWARM_WORKER_DISCONNECT, "Swarm: Worker Disconnect", "", "Swarm"});
+    m_commandRegistry.push_back({IDM_SWARM_FITNESS_TEST, "Swarm: Worker Fitness Test", "", "Swarm"});
 
     // Reverse Engineering (full suite)
     m_commandRegistry.push_back({IDM_REVENG_ANALYZE, "RE: Run Codex Analysis", "", "RE"});
@@ -11760,6 +11871,210 @@ void Win32IDE::buildCommandRegistry()
     }
 
     m_filteredCommands = m_commandRegistry;
+}
+
+std::vector<Win32IDE::LSPInlayHint> Win32IDE::lspInlayHints(const std::string& uri, int startLine, int endLine)
+{
+    std::vector<LSPInlayHint> hints;
+    LSPLanguage lang = detectLanguageForFile(uriToFilePath(uri));
+    if (lang >= LSPLanguage::Count || m_lspStatuses[(size_t)lang].state != LSPServerState::Running)
+    {
+        return hints;
+    }
+
+    nlohmann::json params;
+    params["textDocument"]["uri"] = uri;
+    params["range"]["start"]["line"] = startLine;
+    params["range"]["start"]["character"] = 0;
+    params["range"]["end"]["line"] = endLine;
+    params["range"]["end"]["character"] = 4096;
+
+    int id = sendLSPRequest(lang, "textDocument/inlayHint", params);
+    if (id < 0)
+        return hints;
+
+    nlohmann::json resp = readLSPResponse(lang, id, 5000);
+    m_lspStats.totalInlayHintRequests++;
+
+    if (!resp.contains("result") || !resp["result"].is_array())
+        return hints;
+
+    const auto& result = resp["result"];
+    for (size_t i = 0; i < result.size(); ++i)
+    {
+        const auto& hj = result[i];
+        LSPInlayHint hint;
+
+        if (hj.contains("position"))
+        {
+            const auto& pos = hj["position"];
+            hint.position.line = pos.value("line", 0);
+            hint.position.character = pos.value("character", 0);
+        }
+
+        if (hj.contains("label"))
+        {
+            const auto& label = hj["label"];
+            if (label.is_string())
+            {
+                hint.label = label.get<std::string>();
+            }
+            else if (label.is_array())
+            {
+                for (size_t li = 0; li < label.size(); ++li)
+                {
+                    const auto& part = label[li];
+                    if (part.is_object() && part.contains("value"))
+                        hint.label += part.value("value", "");
+                }
+            }
+        }
+
+        if (hj.contains("kind"))
+        {
+            int kind = hj.value("kind", 0);
+            hint.kind = (kind == 1) ? "type" : "parameter";
+        }
+
+        if (hj.contains("tooltip") && hj["tooltip"].is_string())
+        {
+            hint.tooltip = hj["tooltip"].get<std::string>();
+        }
+
+        hints.push_back(std::move(hint));
+    }
+
+    return hints;
+}
+
+void Win32IDE::cmdLSPInlayHints()
+{
+    if (m_currentFile.empty())
+    {
+        appendToOutput("[LSP] No document active.", "General", OutputSeverity::Warning);
+        return;
+    }
+
+    if (!m_hwndEditor)
+        return;
+
+    SCROLLINFO si = {};
+    si.cbSize = sizeof(si);
+    si.fMask = SIF_POS | SIF_RANGE;
+    GetScrollInfo(m_hwndEditor, SB_VERT, &si);
+
+    int startLine = si.nPos;
+    int endLine = si.nPos + 50;
+
+    std::string uri = filePathToUri(m_currentFile);
+    std::vector<LSPInlayHint> hints = lspInlayHints(uri, startLine, endLine);
+
+    if (hints.empty())
+    {
+        appendToOutput("[LSP] No inlay hints available for active range.", "General", OutputSeverity::Info);
+        return;
+    }
+
+    appendToOutput("[LSP] Found " + std::to_string(hints.size()) + " inlay hint(s).", "General",
+                   OutputSeverity::Info);
+
+    for (const auto& hint : hints)
+    {
+        std::string log = "  Line " + std::to_string(hint.position.line + 1) + ", Col " +
+                          std::to_string(hint.position.character + 1) + ": " + hint.label + " (" + hint.kind + ")";
+        appendToOutput(log, "General", OutputSeverity::Info);
+    }
+}
+
+std::vector<Win32IDE::LSPCodeAction> Win32IDE::lspCodeActions(
+    const std::string& uri, int line, int startChar, int endChar, const std::vector<std::string>& diagnosticCodes)
+{
+    std::vector<LSPCodeAction> actions;
+    LSPLanguage lang = detectLanguageForFile(uriToFilePath(uri));
+    if (lang >= LSPLanguage::Count || m_lspStatuses[(size_t)lang].state != LSPServerState::Running)
+    {
+        return actions;
+    }
+
+    nlohmann::json params;
+    params["textDocument"]["uri"] = uri;
+    params["range"]["start"]["line"] = line;
+    params["range"]["start"]["character"] = startChar;
+    params["range"]["end"]["line"] = line;
+    params["range"]["end"]["character"] = endChar;
+
+    if (!diagnosticCodes.empty())
+    {
+        params["context"]["diagnostics"] = nlohmann::json::array();
+        for (const auto& code : diagnosticCodes)
+        {
+            params["context"]["diagnostics"].push_back(code);
+        }
+    }
+
+    int id = sendLSPRequest(lang, "textDocument/codeAction", params);
+    if (id < 0)
+        return actions;
+
+    nlohmann::json resp = readLSPResponse(lang, id, 5000);
+    m_lspStats.totalCodeActionRequests++;
+
+    if (!resp.contains("result") || !resp["result"].is_array())
+        return actions;
+
+    const auto& result = resp["result"];
+    for (size_t i = 0; i < result.size(); ++i)
+    {
+        const auto& aj = result[i];
+        LSPCodeAction action;
+        action.title = aj.value("title", "");
+        action.kind = aj.value("kind", "");
+
+        if (aj.contains("edit"))
+            action.hasEdit = true;
+        if (aj.contains("command") && aj["command"].is_object())
+            action.command = aj["command"].value("command", "");
+
+        actions.push_back(std::move(action));
+    }
+
+    return actions;
+}
+
+void Win32IDE::cmdLSPCodeActions()
+{
+    if (m_currentFile.empty() || !m_hwndEditor)
+    {
+        appendToOutput("[LSP] No active editor for code actions.", "General", OutputSeverity::Warning);
+        return;
+    }
+
+    CHARRANGE sel = {};
+    SendMessageW(m_hwndEditor, EM_EXGETSEL, 0, (LPARAM)&sel);
+
+    int line = SendMessageW(m_hwndEditor, EM_LINEFROMCHAR, sel.cpMin, 0);
+    int lineStart = SendMessageW(m_hwndEditor, EM_LINEINDEX, line, 0);
+    int startChar = sel.cpMin - lineStart;
+    int endChar = sel.cpMax - lineStart;
+
+    std::string uri = filePathToUri(m_currentFile);
+    std::vector<LSPCodeAction> actions = lspCodeActions(uri, line, startChar, endChar, {});
+
+    if (actions.empty())
+    {
+        appendToOutput("[LSP] No code actions available for this selection.", "General", OutputSeverity::Info);
+        return;
+    }
+
+    std::string output = "[LSP] Available code actions (" + std::to_string(actions.size()) + "):\n";
+    for (size_t i = 0; i < actions.size(); ++i)
+    {
+        output += "\n  " + std::to_string(i + 1) + ". " + actions[i].title;
+        if (!actions[i].kind.empty())
+            output += " [" + actions[i].kind + "]";
+    }
+
+    appendToOutput(output, "General", OutputSeverity::Info);
 }
 
 void Win32IDE::showCommandPalette()

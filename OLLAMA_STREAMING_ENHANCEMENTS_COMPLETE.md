@@ -28,11 +28,11 @@
 - **Benefit:** Real-time token streaming with minimal overhead
 
 ### 4. Data Structures Added
-`sm
+```masm
 connection_pool QWORD 4 DUP(0)        ; 4 connection slots
 pool_timestamps QWORD 4 DUP(0)        ; Reuse tracking
 pool_lock DWORD 0                      ; Spinlock for pool access
-`
+```
 
 ## Performance Analysis
 

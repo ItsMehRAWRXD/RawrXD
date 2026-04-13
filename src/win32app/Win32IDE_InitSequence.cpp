@@ -1,5 +1,6 @@
 #include "Win32IDE.h"
 #include "HeadlessIDE.h"
+#include "RouterOperations.h"
 #include "../../include/rawrxd_version.h"
 #include "../../include/final_gauntlet.h"
 #include "../../include/crash_containment.h"
@@ -287,6 +288,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
     }
 
     // ========================================================================
+    // LSP CLIENT INITIALIZATION - Phase 9A
+    // ========================================================================
+    {
+        ide.initLSPClient();
+        ide.startAllLSPServers();
+        OutputDebugStringA("[main_win32] LSP Client initialized and servers started\n");
+    }
+
+    // ========================================================================
     // CROSS-PROCESS STATE SYNC — Phase 36: MMF Initialization
     // Register this Win32IDE process in the shared memory region so that
     // React, CLI, and HTML frontends see our patch/config/model state.
@@ -393,6 +403,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
             OutputDebugStringA(err);
         }
     }
+
+    // Register Editor Commands
+    RawrXD::Win32App::RouterOperations::Instance().RegisterEditorCommands();
 
     // ========================================================================
     // MASM SUBSYSTEM INITIALIZATION — Cathedral Bridge

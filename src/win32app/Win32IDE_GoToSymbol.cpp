@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cwctype>
+#include <filesystem>
 #include <string>
 
 // ── File-static state ───────────────────────────────────────────────────────
@@ -28,8 +29,11 @@ struct FlatSymbol {
     std::wstring name;
     std::wstring detail;
     std::wstring kindLabel;
+    std::wstring pathOrContainer;
+    std::string filePath;
     int line = 0;
     int kindValue = 0;
+    bool workspaceResult = false;
 };
 
 static struct GoToSymbolState {
@@ -39,6 +43,7 @@ static struct GoToSymbolState {
     WNDPROC oldEditProc = nullptr;
     Win32IDE* pIDE      = nullptr;
     bool active         = false;
+    bool workspaceMode  = false;
     std::vector<FlatSymbol> allSymbols;
     std::vector<FlatSymbol> filtered;
 } s_gts;
@@ -50,8 +55,9 @@ static struct GoToSymbolState {
 static LRESULT CALLBACK GoToSymbolOverlayProc(HWND, UINT, WPARAM, LPARAM);
 static LRESULT CALLBACK GoToSymbolEditProc(HWND, UINT, WPARAM, LPARAM);
 static void populateList();
-static void filterSymbols();
-static void commitSymbolSelection();
+void filterSymbols();
+void commitSymbolSelection();
+static void showGoToSymbolPickerImpl(Win32IDE* ide, bool workspaceMode);
 
 // ============================================================================
 // Symbol kind → display label (matches LSP SymbolKind enum)
@@ -147,6 +153,35 @@ void Win32IDE::populateSymbolPickerData()
               [](const FlatSymbol& a, const FlatSymbol& b) { return a.line < b.line; });
 }
 
+void Win32IDE::refreshWorkspaceSymbolPickerResults(const std::string& queryUtf8)
+{
+    s_gts.filtered.clear();
+
+    auto workspaceSymbols = lspWorkspaceSymbols(queryUtf8);
+    s_gts.filtered.reserve(workspaceSymbols.size());
+
+    for (const auto& sym : workspaceSymbols) {
+        FlatSymbol fs;
+        fs.name = std::wstring(sym.name.begin(), sym.name.end());
+        fs.detail = std::wstring(sym.containerName.begin(), sym.containerName.end());
+        fs.kindLabel = symbolKindLabel(sym.kind);
+        fs.kindValue = sym.kind;
+        fs.line = sym.location.range.start.line + 1;
+        fs.filePath = uriToFilePath(sym.location.uri);
+        fs.workspaceResult = true;
+
+        std::filesystem::path targetPath(fs.filePath);
+        std::string pathLabel = sym.containerName.empty() ? targetPath.filename().string() : sym.containerName;
+        fs.pathOrContainer = std::wstring(pathLabel.begin(), pathLabel.end());
+        s_gts.filtered.push_back(std::move(fs));
+    }
+}
+
+void Win32IDE::jumpToWorkspaceSymbolPickerResult(const std::string& filePath, uint32_t line1Based)
+{
+    navigateToFileLine(filePath, line1Based);
+}
+
 // ============================================================================
 // Case-insensitive wide substring match
 // ============================================================================
@@ -172,7 +207,7 @@ static bool wideSubstringMatch(const std::wstring& haystack, const std::wstring&
 // ============================================================================
 // filterSymbols — apply the edit text as a filter
 // ============================================================================
-static void filterSymbols()
+void filterSymbols()
 {
     if (!s_gts.hwndEdit || !s_gts.hwndList) return;
 
@@ -183,6 +218,27 @@ static void filterSymbols()
     // Strip leading @ (VS Code convention)
     if (!query.empty() && query[0] == L'@')
         query = query.substr(1);
+
+    if (!query.empty() && query[0] == L'#')
+        query = query.substr(1);
+
+    if (s_gts.workspaceMode) {
+        if (!s_gts.pIDE) {
+            populateList();
+            return;
+        }
+
+        if (query.empty()) {
+            populateList();
+            return;
+        }
+
+        std::string queryUtf8(query.begin(), query.end());
+        s_gts.pIDE->refreshWorkspaceSymbolPickerResults(queryUtf8);
+
+        populateList();
+        return;
+    }
 
     s_gts.filtered.clear();
     for (const auto& sym : s_gts.allSymbols) {
@@ -219,9 +275,10 @@ static void populateList()
 
         // Column 1: kind
         {
+            std::wstring secondary = s_gts.workspaceMode ? sym.pathOrContainer : sym.kindLabel;
             LVITEMW lvi2 = {};
             lvi2.iSubItem = 1;
-            lvi2.pszText = const_cast<LPWSTR>(sym.kindLabel.c_str());
+            lvi2.pszText = const_cast<LPWSTR>(secondary.c_str());
             SendMessageW(s_gts.hwndList, LVM_SETITEMTEXTW, i, (LPARAM)&lvi2);
         }
 
@@ -248,7 +305,7 @@ static void populateList()
 // ============================================================================
 // commitSymbolSelection — jump to the selected symbol
 // ============================================================================
-static void commitSymbolSelection()
+void commitSymbolSelection()
 {
     if (!s_gts.hwndList || !s_gts.pIDE) return;
 
@@ -256,7 +313,10 @@ static void commitSymbolSelection()
     if (sel < 0 || sel >= (int)s_gts.filtered.size()) return;
 
     int line = s_gts.filtered[sel].line;
-    s_gts.pIDE->navigateToLine(line);
+    if (s_gts.workspaceMode && !s_gts.filtered[sel].filePath.empty())
+        s_gts.pIDE->jumpToWorkspaceSymbolPickerResult(s_gts.filtered[sel].filePath, (uint32_t)line);
+    else
+        s_gts.pIDE->navigateToLine(line);
     s_gts.pIDE->hideGoToSymbolPicker();
 }
 
@@ -265,35 +325,50 @@ static void commitSymbolSelection()
 // ============================================================================
 void Win32IDE::showGoToSymbolPicker()
 {
+    showGoToSymbolPickerImpl(this, false);
+}
+
+void Win32IDE::showGoToWorkspaceSymbolPicker()
+{
+    showGoToSymbolPickerImpl(this, true);
+}
+
+static void showGoToSymbolPickerImpl(Win32IDE* ide, bool workspaceMode)
+{
     if (s_gts.active) {
+        if (s_gts.workspaceMode != workspaceMode && s_gts.pIDE) {
+            s_gts.pIDE->hideGoToSymbolPicker();
+        } else {
         SetFocus(s_gts.hwndEdit);
         SendMessage(s_gts.hwndEdit, EM_SETSEL, 0, -1);
         return;
+        }
     }
 
-    s_gts.pIDE = this;
+    s_gts.pIDE = ide;
+    s_gts.workspaceMode = workspaceMode;
 
-    // ── Register class once ─────────────────────────────────────────────────
     static bool classRegistered = false;
     if (!classRegistered) {
         WNDCLASSEXW wc = {};
-        wc.cbSize        = sizeof(wc);
-        wc.lpfnWndProc   = GoToSymbolOverlayProc;
-        wc.hInstance      = m_hInstance;
-        wc.hCursor        = LoadCursor(nullptr, IDC_ARROW);
-        wc.hbrBackground  = CreateSolidBrush(RGB(37, 37, 38));
-        wc.lpszClassName  = L"RawrXD_GoToSymbol";
+        wc.cbSize = sizeof(wc);
+        wc.lpfnWndProc = GoToSymbolOverlayProc;
+        wc.hInstance = GetModuleHandleW(nullptr);
+        wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+        wc.hbrBackground = CreateSolidBrush(RGB(37, 37, 38));
+        wc.lpszClassName = L"RawrXD_GoToSymbol";
         RegisterClassExW(&wc);
         classRegistered = true;
     }
 
-    // ── Flatten symbol data ─────────────────────────────────────────────────
-    populateSymbolPickerData();
+    if (!workspaceMode)
+        ide->populateSymbolPickerData();
+    else
+        s_gts.allSymbols.clear();
 
-    // ── Calculate position: top-center of main window ───────────────────────
     RECT rcMain = {};
-    GetWindowRect(m_hwndMain, &rcMain);
-    const int popW = 500;
+    GetWindowRect(ide->getMainWindow(), &rcMain);
+    const int popW = 560;
     const int popH = 340;
     const int popX = rcMain.left + (rcMain.right - rcMain.left - popW) / 2;
     const int popY = rcMain.top + 50;
@@ -303,48 +378,42 @@ void Win32IDE::showGoToSymbolPicker()
         L"RawrXD_GoToSymbol", L"",
         WS_POPUP | WS_BORDER,
         popX, popY, popW, popH,
-        m_hwndMain, nullptr, m_hInstance, nullptr);
+        ide->getMainWindow(), nullptr, GetModuleHandleW(nullptr), nullptr);
 
-    // ── EDIT ────────────────────────────────────────────────────────────────
+    const wchar_t* seedText = workspaceMode ? L"" : L"@";
     s_gts.hwndEdit = CreateWindowExW(
-        0, L"EDIT", L"@",
+        0, L"EDIT", seedText,
         WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_BORDER,
         8, 8, popW - 16, 24,
         s_gts.hwndOverlay, (HMENU)(UINT_PTR)IDC_GTS_EDIT,
-        m_hInstance, nullptr);
+        GetModuleHandleW(nullptr), nullptr);
 
-    // Subclass edit for key handling
-    s_gts.oldEditProc = (WNDPROC)SetWindowLongPtrW(s_gts.hwndEdit, GWLP_WNDPROC,
-                                                     (LONG_PTR)GoToSymbolEditProc);
+    s_gts.oldEditProc = (WNDPROC)SetWindowLongPtrW(s_gts.hwndEdit, GWLP_WNDPROC, (LONG_PTR)GoToSymbolEditProc);
 
-    // ── ListView ────────────────────────────────────────────────────────────
     s_gts.hwndList = CreateWindowExW(
         0, WC_LISTVIEWW, L"",
         WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER,
         8, 38, popW - 16, popH - 46,
         s_gts.hwndOverlay, (HMENU)(UINT_PTR)IDC_GTS_LIST,
-        m_hInstance, nullptr);
+        GetModuleHandleW(nullptr), nullptr);
 
-    // Dark theme for list
     ListView_SetBkColor(s_gts.hwndList, RGB(37, 37, 38));
     ListView_SetTextBkColor(s_gts.hwndList, RGB(37, 37, 38));
     ListView_SetTextColor(s_gts.hwndList, RGB(204, 204, 204));
     ListView_SetExtendedListViewStyle(s_gts.hwndList, LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER);
 
-    // Add columns
     LVCOLUMNW lvc = {};
     lvc.mask = LVCF_WIDTH | LVCF_TEXT;
-    lvc.cx = popW - 16 - 80 - 50;
+    lvc.cx = popW - 16 - 180 - 60;
     lvc.pszText = (LPWSTR)L"Symbol";
     ListView_InsertColumn(s_gts.hwndList, 0, &lvc);
-    lvc.cx = 80;
-    lvc.pszText = (LPWSTR)L"Kind";
+    lvc.cx = 180;
+    lvc.pszText = (LPWSTR)(workspaceMode ? L"Container / File" : L"Kind");
     ListView_InsertColumn(s_gts.hwndList, 1, &lvc);
-    lvc.cx = 50;
+    lvc.cx = 60;
     lvc.pszText = (LPWSTR)L"Line";
     ListView_InsertColumn(s_gts.hwndList, 2, &lvc);
 
-    // ── Font ────────────────────────────────────────────────────────────────
     HFONT hFont = CreateFontW(
         -14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
         DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
@@ -352,14 +421,18 @@ void Win32IDE::showGoToSymbolPicker()
     SendMessage(s_gts.hwndEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
     SendMessage(s_gts.hwndList, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-    // ── Populate ────────────────────────────────────────────────────────────
-    s_gts.filtered = s_gts.allSymbols;
-    populateList();
+    if (workspaceMode) {
+        s_gts.filtered.clear();
+        populateList();
+    } else {
+        s_gts.filtered = s_gts.allSymbols;
+        populateList();
+    }
 
     ShowWindow(s_gts.hwndOverlay, SW_SHOWNA);
     SetForegroundWindow(s_gts.hwndOverlay);
     SetFocus(s_gts.hwndEdit);
-    SendMessage(s_gts.hwndEdit, EM_SETSEL, 1, -1); // select after @
+    SendMessage(s_gts.hwndEdit, EM_SETSEL, workspaceMode ? 0 : 1, -1);
 
     s_gts.active = true;
 }

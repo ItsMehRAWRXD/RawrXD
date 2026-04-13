@@ -290,11 +290,16 @@ public:
     HWND m_replaceAllBtnHwnd;
     HWND m_statusBarHwnd;
     HWND m_tabBarHwnd;
+    HWND m_tabScrollHwnd;
     HWND m_fileBrowserHwnd;
     HWND m_commandPaletteHwnd;
     HWND m_topChatHwnd;
     HWND m_userChatInputHwnd;
     HWND m_userChatSendBtn;
+    
+    // === Tool Registry Integration (Palette ↔ Executor Wiring) ===
+    std::vector<std::string> m_paletteTool;      // Tool names indexed by listbox position
+    std::vector<int> m_paletteIndex;             // Original registry indices
     
     HMENU m_menuBar;
 
@@ -350,6 +355,7 @@ public:
     size_t m_currentTab = 0;
     int m_fontSize = 11;
     int m_tabSize = 4;
+    int m_tabScrollOffset = 0;
     size_t m_maxFileSizeForLazyLoad = 0;
     long m_lastFindPos = -1;
     size_t m_lastEditPos = 0;

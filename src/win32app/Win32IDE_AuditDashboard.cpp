@@ -282,7 +282,12 @@ std::vector<Win32IDE::RuntimeValidationCheck> Win32IDE::runCriticalValidationBat
         const int modelUiCount = (m_hwndModelSelector && IsWindow(m_hwndModelSelector))
                                      ? (int)SendMessage(m_hwndModelSelector, CB_GETCOUNT, 0, 0)
                                      : 0;
-        const bool modelDiscoveryOk = (modelUiCount > 0) || !m_availableModels.empty() || !ollamaModels.empty();
+        size_t cachedModelCount = 0;
+        {
+            std::lock_guard<std::mutex> modelListLock(m_availableModelsMutex);
+            cachedModelCount = m_availableModels.size();
+        }
+        const bool modelDiscoveryOk = (modelUiCount > 0) || (cachedModelCount > 0) || !ollamaModels.empty();
 
         int paneId = createTerminalPane(Win32TerminalManager::ShellType::CommandPrompt, "P0 Validation Pane");
         bool terminalOk = (paneId >= 0) && (getActiveTerminalPane() != nullptr);
@@ -294,7 +299,7 @@ std::vector<Win32IDE::RuntimeValidationCheck> Win32IDE::runCriticalValidationBat
         const bool ok = modelDiscoveryOk && explorerOk && terminalOk;
         std::ostringstream oss;
         oss << "model_ui_count=" << modelUiCount
-            << ", model_cache=" << m_availableModels.size()
+            << ", model_cache=" << cachedModelCount
             << ", ollama_models=" << ollamaModels.size()
             << ", explorer=" << (explorerOk ? "ok" : "missing")
             << ", terminal=" << (terminalOk ? "ok" : "failed");

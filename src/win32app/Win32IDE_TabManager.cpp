@@ -29,8 +29,12 @@ bool Win32IDE_TabManager::initialize(HWND hwndParent)
 
     if (!m_hwndTabBar) return false;
 
-    // Apply sovereign theme
-    applySovereignTheme();
+    // Apply sovereign theme — non-fatal if settings JSON is missing/malformed
+    try {
+        applySovereignTheme();
+    } catch (...) {
+        // Theme application failed — fall back to hard-coded defaults, continue init
+    }
 
     // Load persisted tabs
     loadPersistedTabs();

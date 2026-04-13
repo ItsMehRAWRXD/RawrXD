@@ -317,7 +317,7 @@ AutoInstallResult ExtensionAutoInstaller::installExtension(
         return AutoInstallResult::error("Extension already installed", 0);
     }
 
-    return installSingleExtension(extensionId, callback);
+    return installSingleExtension(extensionId, callback, 1, 1);
 }
 
 AutoInstallResult ExtensionAutoInstaller::installExtensions(

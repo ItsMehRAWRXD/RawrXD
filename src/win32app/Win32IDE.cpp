@@ -1,6 +1,8 @@
 // Win32IDE.cpp - RawrXD Win32 IDE Implementation
 // Build timestamp: 2026-03-31
+#include <windows.h>
 #include "Win32IDE.h"
+#include "Win32IDE_DAPServer.h"  // Full type for unique_ptr<Win32IDE_DAPServer> dtor
 #include "../../Ship/RawrXD_AutonomousAgenticPipeline.h"  // Full type for unique_ptr destructor
 #include "../../Ship/Win32TerminalScrollback.hpp"
 #include "../../include/PathResolver.h"
@@ -48,6 +50,14 @@ extern "C" void RawrXD_ApplyCopilotChatEditLimits(HWND output, HWND input);
 #include <commctrl.h>
 #ifndef TRACKBAR_CLASSW
 #define TRACKBAR_CLASSW L"msctls_trackbar32"
+#endif
+
+#ifndef GET_X_LPARAM
+#define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
+#endif
+
+#ifndef GET_Y_LPARAM
+#define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
 #endif
 
 // Integrated terminal tab strip (VS Code / Cursor-style instance tabs) — Win32IDE_Core WM_NOTIFY compares this handle.
@@ -1703,12 +1713,49 @@ void Win32IDE::createMenuBar(HWND hwnd)
     AppendMenuW(hBuildMenu, MF_STRING, IDM_BUILD_REBUILD, L"Re&build");
     AppendMenuW(m_hMenu, MF_POPUP, (UINT_PTR)hBuildMenu, L"&Build");
 
+    // Debug menu (Unicode)
+    HMENU hDebugMenu = CreatePopupMenu();
+    AppendMenuW(hDebugMenu, MF_STRING, IDM_DBG_LAUNCH, L"&Start Debugging...\tF5");
+    AppendMenuW(hDebugMenu, MF_STRING, IDM_DBG_ATTACH, L"&Attach to Process...\tCtrl+Alt+P");
+    AppendMenuW(hDebugMenu, MF_STRING, IDM_DBG_DETACH, L"&Detach");
+    AppendMenuW(hDebugMenu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuW(hDebugMenu, MF_STRING, IDM_DBG_GO, L"&Continue\tF5");
+    AppendMenuW(hDebugMenu, MF_STRING, IDM_DBG_BREAK, L"&Break All\tAlt+F5");
+    AppendMenuW(hDebugMenu, MF_STRING, IDM_DBG_STEP_OVER, L"Step &Over\tF10");
+    AppendMenuW(hDebugMenu, MF_STRING, IDM_DBG_STEP_INTO, L"Step &Into\tF11");
+    AppendMenuW(hDebugMenu, MF_STRING, IDM_DBG_STEP_OUT, L"Step O&ut\tShift+F11");
+    AppendMenuW(hDebugMenu, MF_STRING, IDM_DBG_KILL, L"S&top Debugging\tShift+F5");
+    AppendMenuW(hDebugMenu, MF_STRING, 2108, L"&Restart Debugging\tCtrl+Shift+F5");
+    AppendMenuW(hDebugMenu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuW(hDebugMenu, MF_STRING, IDM_DBG_ADD_BP, L"Toggle &Breakpoint\tF9");
+    AppendMenuW(hDebugMenu, MF_STRING, IDM_DBG_STATUS, L"Debug Session &Status");
+    AppendMenuW(m_hMenu, MF_POPUP, (UINT_PTR)hDebugMenu, L"&Debug");
+
     // Edit menu (Unicode)
     HMENU hEditMenu = CreatePopupMenu();
     AppendMenuW(hEditMenu, MF_STRING, IDM_EDIT_FIND, L"&Find...\tCtrl+F");
     AppendMenuW(hEditMenu, MF_STRING, IDM_EDIT_REPLACE, L"&Replace...\tCtrl+H");
     AppendMenuW(hEditMenu, MF_STRING, IDM_EDIT_FIND_NEXT, L"Find &Next\tF3");
     AppendMenuW(hEditMenu, MF_STRING, IDM_EDIT_FIND_PREV, L"Find &Previous\tShift+F3");
+    AppendMenuW(hEditMenu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuW(hEditMenu, MF_STRING, IDM_EDITOR_GOTO_LINE, L"Go to &Line...\tCtrl+G");
+    AppendMenuW(hEditMenu, MF_STRING, IDM_EDITOR_GOTO_SYMBOL, L"Go to &Symbol...\tCtrl+Shift+O");
+    AppendMenuW(hEditMenu, MF_STRING, IDM_EDITOR_GOTO_WORKSPACE_SYMBOL,
+                L"Go to &Workspace Symbol...\tCtrl+Shift+Alt+O");
+    AppendMenuW(hEditMenu, MF_STRING, IDM_EDITOR_PEEK_DEFINITION, L"Peek &Definition\tAlt+F12");
+    AppendMenuW(hEditMenu, MF_STRING, IDM_EDITOR_PEEK_REFERENCES, L"Peek &References\tShift+F12");
+    AppendMenuW(hEditMenu, MF_STRING, IDM_EDITOR_GOTO_IMPLEMENTATION, L"Go to &Implementation\tCtrl+F12");
+    AppendMenuW(hEditMenu, MF_STRING, IDM_EDITOR_GOTO_TYPE_DEFINITION,
+                L"Go to &Type Definition\tCtrl+Alt+F12");
+    AppendMenuW(hEditMenu, MF_STRING, IDM_EDITOR_FORMAT_SELECTION, L"Format Se&lection\tShift+Alt+F");
+    AppendMenuW(hEditMenu, MF_STRING, IDM_EDITOR_CODE_ACTIONS, L"Code &Actions...\tCtrl+.");
+    AppendMenuW(hEditMenu, MF_STRING, IDM_EDITOR_SHOW_INLAY_HINTS, L"Show &Inlay Hints\tCtrl+Alt+I");
+    AppendMenuW(hEditMenu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuW(hEditMenu, MF_STRING, IDM_EDITOR_TOGGLE_COMMENT, L"Toggle Co&mment\tCtrl+/");
+    AppendMenuW(hEditMenu, MF_STRING, IDM_EDITOR_DUPLICATE_LINE, L"Du&plicate Line\tShift+Alt+Down");
+    AppendMenuW(hEditMenu, MF_STRING, IDM_EDITOR_DELETE_LINE, L"Delete Li&ne\tCtrl+Shift+K");
+    AppendMenuW(hEditMenu, MF_STRING, IDM_EDITOR_MOVE_LINE_UP, L"Move Line &Up\tAlt+Up");
+    AppendMenuW(hEditMenu, MF_STRING, IDM_EDITOR_MOVE_LINE_DOWN, L"Move Line D&own\tAlt+Down");
     AppendMenuW(hEditMenu, MF_SEPARATOR, 0, nullptr);
     AppendMenuW(hEditMenu, MF_STRING, IDM_EDIT_SNIPPET, L"Insert &Snippet...");
     AppendMenuW(hEditMenu, MF_SEPARATOR, 0, nullptr);
@@ -1838,6 +1885,41 @@ void Win32IDE::createMenuBar(HWND hwnd)
     AppendMenuW(hAlertMenu, MF_STRING, IDM_QW_ALERT_SHOW_HISTORY, L"Alert &History...");
     AppendMenuW(hAlertMenu, MF_STRING, IDM_QW_ALERT_DISMISS_ALL, L"&Dismiss All Alerts");
     AppendMenuW(hToolsMenu, MF_POPUP, (UINT_PTR)hAlertMenu, L"A&lerts");
+
+    // Distributed Swarm submenu (Phase 11)
+    HMENU hSwarmMenu = CreatePopupMenu();
+    AppendMenuW(hSwarmMenu, MF_STRING, IDM_SWARM_STATUS, L"Show &Status");
+    AppendMenuW(hSwarmMenu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuW(hSwarmMenu, MF_STRING, IDM_SWARM_START_LEADER, L"Start &Leader");
+    AppendMenuW(hSwarmMenu, MF_STRING, IDM_SWARM_START_WORKER, L"Start &Worker");
+    AppendMenuW(hSwarmMenu, MF_STRING, IDM_SWARM_START_HYBRID, L"Start &Hybrid");
+    AppendMenuW(hSwarmMenu, MF_STRING, IDM_SWARM_STOP, L"S&top");
+    AppendMenuW(hSwarmMenu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuW(hSwarmMenu, MF_STRING, IDM_SWARM_LIST_NODES, L"List &Nodes");
+    AppendMenuW(hSwarmMenu, MF_STRING, IDM_SWARM_ADD_NODE, L"&Add Node...");
+    AppendMenuW(hSwarmMenu, MF_STRING, IDM_SWARM_REMOVE_NODE, L"&Remove Node...");
+    AppendMenuW(hSwarmMenu, MF_STRING, IDM_SWARM_BLACKLIST_NODE, L"&Blacklist Node");
+    AppendMenuW(hSwarmMenu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuW(hSwarmMenu, MF_STRING, IDM_SWARM_BUILD_SOURCES, L"Build from &Sources");
+    AppendMenuW(hSwarmMenu, MF_STRING, IDM_SWARM_BUILD_CMAKE, L"Build from &CMake");
+    AppendMenuW(hSwarmMenu, MF_STRING, IDM_SWARM_START_BUILD, L"Start B&uild");
+    AppendMenuW(hSwarmMenu, MF_STRING, IDM_SWARM_CANCEL_BUILD, L"C&ancel Build");
+    AppendMenuW(hSwarmMenu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuW(hSwarmMenu, MF_STRING, IDM_SWARM_CACHE_STATUS, L"Cache St&atus");
+    AppendMenuW(hSwarmMenu, MF_STRING, IDM_SWARM_CACHE_CLEAR, L"Cache &Clear");
+    AppendMenuW(hSwarmMenu, MF_STRING, IDM_SWARM_SHOW_CONFIG, L"Show Confi&g");
+    AppendMenuW(hSwarmMenu, MF_STRING, IDM_SWARM_TOGGLE_DISCOVERY, L"Toggle &Discovery");
+    AppendMenuW(hSwarmMenu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuW(hSwarmMenu, MF_STRING, IDM_SWARM_SHOW_TASK_GRAPH, L"Show Task &Graph");
+    AppendMenuW(hSwarmMenu, MF_STRING, IDM_SWARM_SHOW_EVENTS, L"Show &Events");
+    AppendMenuW(hSwarmMenu, MF_STRING, IDM_SWARM_SHOW_STATS, L"Show S&tats");
+    AppendMenuW(hSwarmMenu, MF_STRING, IDM_SWARM_RESET_STATS, L"&Reset Stats");
+    AppendMenuW(hSwarmMenu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuW(hSwarmMenu, MF_STRING, IDM_SWARM_WORKER_STATUS, L"Worker Sta&tus");
+    AppendMenuW(hSwarmMenu, MF_STRING, IDM_SWARM_WORKER_CONNECT, L"Worker &Connect");
+    AppendMenuW(hSwarmMenu, MF_STRING, IDM_SWARM_WORKER_DISCONNECT, L"Worker D&isconnect");
+    AppendMenuW(hSwarmMenu, MF_STRING, IDM_SWARM_FITNESS_TEST, L"Worker &Fitness Test");
+    AppendMenuW(hToolsMenu, MF_POPUP, (UINT_PTR)hSwarmMenu, L"&Swarm");
 
     // Shortcuts & SLO (Tier 5)
     AppendMenuW(hToolsMenu, MF_SEPARATOR, 0, nullptr);
@@ -3175,7 +3257,13 @@ void Win32IDE::newFile()
         }
     }
 
+    if (!m_currentFile.empty())
+    {
+        syncLSPDocumentClose(m_currentFile);
+    }
+    m_suppressLspDocumentSync = true;
     setWindowText(m_hwndEditor, "");
+    m_suppressLspDocumentSync = false;
     m_currentFile.clear();
     m_fileModified = false;
     updateTitleBarText();
@@ -3297,11 +3385,14 @@ void Win32IDE::openFile(const std::string& filePath)
         if (file)
         {
             std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+            m_suppressLspDocumentSync = true;
             setWindowText(m_hwndEditor, content);
+            m_suppressLspDocumentSync = false;
             m_currentFile = filePath;
             m_fileModified = false;
             setCurrentDirectoryFromFile(m_currentFile);
             updateTitleBarText();
+            syncLSPDocumentOpen(m_currentFile, content);
 
             std::string displayName = extractLeafName(filePath);
             if (m_hwndTabBar)
@@ -3362,6 +3453,7 @@ bool Win32IDE::saveFile()
             file << content;
             m_fileModified = false;
             updateTitleBarText();
+            syncLSPDocumentSave(m_currentFile);
             SendMessageW(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)L"File saved");
             appendToOutput("File saved successfully (" + std::to_string(content.size()) + " bytes)\n", "Output",
                            OutputSeverity::Info);
@@ -3381,6 +3473,7 @@ bool Win32IDE::saveFile()
 bool Win32IDE::saveFileAs()
 {
     appendToOutput("File > Save As clicked\n", "Output", OutputSeverity::Info);
+    const std::string previousFile = m_currentFile;
     OPENFILENAMEW ofn;
     wchar_t szFile[260] = {0};
 
@@ -3399,6 +3492,30 @@ bool Win32IDE::saveFileAs()
     if (GetSaveFileNameW(&ofn))
     {
         m_currentFile = wideToUtf8(szFile);
+        if (previousFile != m_currentFile)
+        {
+            if (!previousFile.empty())
+            {
+                syncLSPDocumentClose(previousFile);
+            }
+
+            if (m_activeTabIndex >= 0 && m_activeTabIndex < (int)m_editorTabs.size())
+            {
+                auto& activeTab = m_editorTabs[m_activeTabIndex];
+                activeTab.filePath = m_currentFile;
+                activeTab.displayName = extractLeafName(m_currentFile);
+                if (m_tabManager)
+                {
+                    m_tabManager->updateTabDisplay(m_activeTabIndex);
+                }
+            }
+
+            if (m_hwndEditor)
+            {
+                syncLSPDocumentOpen(m_currentFile, getWindowText(m_hwndEditor));
+            }
+        }
+
         appendToOutput("Save As: " + m_currentFile + "\n", "Output", OutputSeverity::Info);
         setCurrentDirectoryFromFile(m_currentFile);
         updateTitleBarText();
@@ -6067,28 +6184,83 @@ int Win32IDE::replaceText(const std::string& searchText, const std::string& repl
             return 0;
 
         std::string result;
-        size_t pos = 0;
 
-        std::string haystack = editorText;
-        std::string needle = searchText;
-
-        if (!caseSensitive)
+        if (useRegex)
         {
-            std::transform(haystack.begin(), haystack.end(), haystack.begin(), ::tolower);
-            std::transform(needle.begin(), needle.end(), needle.begin(), ::tolower);
+            try
+            {
+                auto flags = std::regex_constants::ECMAScript;
+                if (!caseSensitive)
+                    flags |= std::regex_constants::icase;
+                std::regex pattern(searchText, flags);
+
+                std::string remaining = editorText;
+                std::smatch m;
+                while (std::regex_search(remaining, m, pattern))
+                {
+                    result.append(m.prefix().first, m.prefix().second);
+                    result.append(replaceText);
+                    remaining = m.suffix().str();
+                    replaceCount++;
+                }
+                result += remaining;
+            }
+            catch (const std::regex_error& e)
+            {
+                std::string msg = "Invalid regex: ";
+                msg += e.what();
+                MessageBoxW(m_hwndMain, utf8ToWide(msg).c_str(), L"Replace", MB_OK | MB_ICONERROR);
+                return 0;
+            }
         }
-
-        while ((pos = haystack.find(needle, pos)) != std::string::npos)
+        else
         {
-            result.append(editorText, 0, pos);
-            result.append(replaceText);
-            pos += needle.length();
-            replaceCount++;
+            std::string haystack = editorText;
+            std::string needle = searchText;
+
+            if (!caseSensitive)
+            {
+                std::transform(haystack.begin(), haystack.end(), haystack.begin(),
+                               [](unsigned char c) { return (char)std::tolower(c); });
+                std::transform(needle.begin(), needle.end(), needle.begin(),
+                               [](unsigned char c) { return (char)std::tolower(c); });
+            }
+
+            auto isWordBoundary = [&](size_t pos, size_t len) -> bool
+            {
+                if (!wholeWord)
+                    return true;
+                bool leftOk = (pos == 0) || !std::isalnum((unsigned char)haystack[pos - 1]);
+                bool rightOk = (pos + len >= haystack.size()) || !std::isalnum((unsigned char)haystack[pos + len]);
+                return leftOk && rightOk;
+            };
+
+            size_t scanPos = 0;
+            size_t lastEmit = 0;
+            while (scanPos < haystack.size())
+            {
+                size_t foundPos = haystack.find(needle, scanPos);
+                if (foundPos == std::string::npos)
+                    break;
+
+                if (!isWordBoundary(foundPos, needle.size()))
+                {
+                    scanPos = foundPos + 1;
+                    continue;
+                }
+
+                result.append(editorText, lastEmit, foundPos - lastEmit);
+                result.append(replaceText);
+                scanPos = foundPos + needle.size();
+                lastEmit = scanPos;
+                replaceCount++;
+            }
+
+            result.append(editorText, lastEmit, std::string::npos);
         }
 
         if (replaceCount > 0)
         {
-            result.append(editorText, pos, std::string::npos);
             setWindowText(hwndTarget, result);
             if (!inTerminalPane)
             {
@@ -6458,14 +6630,35 @@ void Win32IDE::createFileExplorer(HWND hwndParent)
         return;  // Already created
     }
 
-    m_hwndFileExplorer =
-        CreateWindowExW(0, L"STATIC", L"File Explorer", WS_CHILD | WS_VISIBLE | WS_BORDER, 0, 30, m_sidebarWidth, 500,
-                        hwndParent, (HMENU)IDC_FILE_EXPLORER, GetModuleHandle(nullptr), nullptr);
+    RECT parentRc{};
+    if (hwndParent && IsWindow(hwndParent))
+        GetClientRect(hwndParent, &parentRc);
+    const int parentW = (std::max)(0, static_cast<int>(parentRc.right - parentRc.left));
+    const int parentH = (std::max)(0, static_cast<int>(parentRc.bottom - parentRc.top));
+    const int explorerW = parentW > 0 ? parentW : m_sidebarWidth;
+    const int explorerH = parentH > 0 ? parentH : 500;
+
+    m_hwndFileExplorer = CreateWindowExW(0, L"STATIC", L"File Explorer", WS_CHILD | WS_VISIBLE | WS_BORDER, 0, 0,
+                                         explorerW, explorerH, hwndParent, (HMENU)IDC_FILE_EXPLORER,
+                                         GetModuleHandle(nullptr), nullptr);
+
+    if (!m_hwndFileExplorer)
+    {
+        return;
+    }
 
     m_hwndFileTree = CreateWindowExW(
         WS_EX_CLIENTEDGE, WC_TREEVIEWW, L"",
-        WS_CHILD | WS_VISIBLE | WS_BORDER | TVS_HASLINES | TVS_LINESATROOT | TVS_HASBUTTONS, 5, 5, m_sidebarWidth - 10,
-        490, m_hwndFileExplorer, (HMENU)IDC_FILE_TREE, GetModuleHandle(nullptr), nullptr);
+        WS_CHILD | WS_VISIBLE | WS_BORDER | TVS_HASLINES | TVS_LINESATROOT | TVS_HASBUTTONS, 5, 5,
+        (std::max)(0, explorerW - 10), (std::max)(0, explorerH - 10), m_hwndFileExplorer, (HMENU)IDC_FILE_TREE,
+        GetModuleHandle(nullptr), nullptr);
+
+    if (!m_hwndFileTree)
+    {
+        DestroyWindow(m_hwndFileExplorer);
+        m_hwndFileExplorer = nullptr;
+        return;
+    }
 
     SendMessage(m_hwndFileTree, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), TRUE);
 
@@ -6475,6 +6668,10 @@ void Win32IDE::createFileExplorer(HWND hwndParent)
 
     // Populate with drive letters
     populateFileTree(nullptr, "");
+    ShowWindow(m_hwndFileExplorer, SW_SHOW);
+    ShowWindow(m_hwndFileTree, SW_SHOW);
+    UpdateWindow(m_hwndFileTree);
+    UpdateWindow(m_hwndFileExplorer);
 }
 
 void Win32IDE::populateFileTree(HTREEITEM parentItem, const std::string& path)
@@ -6651,15 +6848,43 @@ void Win32IDE::loadModelFromPath(const std::string& filepath)
     if (filepath.empty())
         return;
     // Load regardless of extension: try streaming GGUF first, then ensure agentic bridge has the model
-    bool ggufOk = loadGGUFModel(filepath);
+    bool ggufOk = false;
+    try
+    {
+        ggufOk = loadGGUFModel(filepath);
+    }
+    catch (const std::exception& ex)
+    {
+        appendToOutput(std::string("[ModelLoad] Exception in loadGGUFModel: ") + ex.what() + "\n", "Errors",
+                       OutputSeverity::Error);
+    }
+    catch (...)
+    {
+        appendToOutput("[ModelLoad] Unknown exception in loadGGUFModel\n", "Errors", OutputSeverity::Error);
+    }
+
     if (ggufOk)
     {
-        initializeInference();
-        initBackendManager();
-        initLLMRouter();
+        try { initializeInference(); } catch (...) {}
+        try { initBackendManager(); } catch (...) {}
+        try { initLLMRouter(); } catch (...) {}
     }
     // Always feed path to agentic bridge so chat and task execution use this model (creates bridge if needed)
-    bool bridgeOk = loadModelForInference(filepath);
+    bool bridgeOk = false;
+    try
+    {
+        bridgeOk = loadModelForInference(filepath);
+    }
+    catch (const std::exception& ex)
+    {
+        appendToOutput(std::string("[ModelLoad] Exception in loadModelForInference: ") + ex.what() + "\n", "Errors",
+                       OutputSeverity::Error);
+    }
+    catch (...)
+    {
+        appendToOutput("[ModelLoad] Unknown exception in loadModelForInference\n", "Errors", OutputSeverity::Error);
+    }
+
     if (bridgeOk && !ggufOk)
         appendToOutput("Model loaded into Agentic Bridge (streaming GGUF skipped).\n", "Output", OutputSeverity::Info);
     if (ggufOk || bridgeOk)
@@ -6669,6 +6894,65 @@ void Win32IDE::loadModelFromPath(const std::string& filepath)
         appendModelLoadReadyCopilotTurns(filepath, true);
     }
 }
+
+// ===========================================================================
+// SEH-safe async model load body — standalone function to avoid MSVC C2712
+// (cannot use __try in functions that require object unwinding).  The lambda
+// in loadModelFromPathAsync hands data in/out via this plain-C-compatible struct.
+// ===========================================================================
+
+void Win32IDE::initModelSubsystems() {
+    initBackendManager();
+    initLLMRouter();
+}
+
+namespace {
+struct AsyncModelLoadParams
+{
+    Win32IDE* ide;
+    Win32IDE::AsyncModelLoadResult* result;
+};
+
+#ifdef _WIN32
+static void asyncModelLoadBodySEH(AsyncModelLoadParams* p) noexcept
+{
+    __try
+    {
+        p->result->ggufOk = p->ide->loadGGUFModel(p->result->filepath);
+        if (p->result->ggufOk)
+        {
+            p->ide->initModelSubsystems();
+        }
+        p->result->bridgeOk = p->ide->loadModelForInference(p->result->filepath);
+    }
+    __except (EXCEPTION_EXECUTE_HANDLER)
+    {
+        char buf[256];
+        snprintf(buf, sizeof(buf),
+                 "[AsyncModelLoad] SEH exception 0x%08lX during model load — aborting load\n",
+                 GetExceptionCode());
+        OutputDebugStringA(buf);
+        // postOutputPanelSafe is NOT called from __except because it has C++ dtor baggage;
+        // the result flags remain false so WM_MODEL_LOAD_DONE will surface a failure message.
+    }
+}
+#else
+static void asyncModelLoadBodySEH(AsyncModelLoadParams* p) noexcept
+{
+    try
+    {
+        p->result->ggufOk = p->ide->loadGGUFModel(p->result->filepath);
+        if (p->result->ggufOk)
+        {
+            p->ide->initBackendManager();
+            p->ide->initLLMRouter();
+        }
+        p->result->bridgeOk = p->ide->loadModelForInference(p->result->filepath);
+    }
+    catch (...) {}
+}
+#endif
+}  // namespace
 
 void Win32IDE::loadModelFromPathAsync(const std::string& filepath)
 {
@@ -6701,25 +6985,20 @@ void Win32IDE::loadModelFromPathAsync(const std::string& filepath)
             auto result = std::make_unique<AsyncModelLoadResult>();
             result->filepath = filepath;
 
+            // Route through the SEH-safe standalone helper so that hardware faults
+            // (access violations, etc.) in the GGUF loader / bridge init are caught before
+            // they propagate out of the thread and call std::terminate().
+            // C++ catch(...) with /EHsc does NOT catch SEH; __try must be in a function
+            // that has no C++ objects with destructors in scope (MSVC C2712).
+            AsyncModelLoadParams amlp{this, result.get()};
             try
             {
-                result->ggufOk = loadGGUFModel(filepath);
-                // NOTE: initializeInference() is intentionally skipped here.
-                // loadModelForInference() below initialises the same shared CPUInferenceEngine
-                // via the AgenticBridge, avoiding a redundant double-load that would start and
-                // immediately join a swarm prefetch thread (expensive and crash-prone).
-                // initBackendManager / initLLMRouter configure routing tables only and are safe.
-                if (result->ggufOk)
-                {
-                    initBackendManager();
-                    initLLMRouter();
-                }
-                result->bridgeOk = loadModelForInference(filepath);
+                asyncModelLoadBodySEH(&amlp);
             }
             catch (const std::exception& ex)
             {
                 OutputDebugStringA(
-                    ("[AsyncModelLoad] Exception during model load: " + std::string(ex.what()) + "\n").c_str());
+                    ("[AsyncModelLoad] C++ exception during model load: " + std::string(ex.what()) + "\n").c_str());
                 postOutputPanelSafe("[Error] Model load crashed: " + std::string(ex.what()) + "\n");
             }
             catch (...)
@@ -7565,9 +7844,12 @@ void Win32IDE::showFileContextMenu(const std::string& filePath, bool isDirectory
             if (file.is_open())
             {
                 std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+                m_suppressLspDocumentSync = true;
                 setWindowText(m_hwndEditor, content);
+                m_suppressLspDocumentSync = false;
                 m_currentFile = filePath;
                 updateTitleBarText();
+                syncLSPDocumentOpen(m_currentFile, content);
             }
         }
         break;
@@ -9584,12 +9866,17 @@ void Win32IDE::createChatPanel()
 
     // Align checkboxes + AI menu with AgenticBridge / NativeAgent (defaults are ON).
     syncAgentModeUiFromBridge();
+    updateSecondarySidebarContent();
+    ShowWindow(m_hwndSecondarySidebar, SW_SHOW);
+    UpdateWindow(m_hwndSecondarySidebar);
 }
 
 void Win32IDE::populateModelSelector()
 {
     if (!m_hwndModelSelector)
         return;
+
+    std::lock_guard<std::mutex> modelListLock(m_availableModelsMutex);
 
     OutputDebugStringA("[ModelDiscovery] populateModelSelector begin\n");
 
@@ -9622,9 +9909,15 @@ void Win32IDE::populateModelSelector()
     int prevIdx = (int)SendMessage(m_hwndModelSelector, CB_GETCURSEL, 0, 0);
     if (prevIdx >= 0)
     {
-        wchar_t prevBuf[512] = {0};
-        SendMessageW(m_hwndModelSelector, CB_GETLBTEXT, prevIdx, (LPARAM)prevBuf);
-        previousSelection = wideToUtf8(prevBuf);
+        const LRESULT prevTextLen = SendMessageW(m_hwndModelSelector, CB_GETLBTEXTLEN, prevIdx, 0);
+        if (prevTextLen > 0)
+        {
+            std::vector<wchar_t> prevBuf(static_cast<size_t>(prevTextLen) + 1, L'\0');
+            if (SendMessageW(m_hwndModelSelector, CB_GETLBTEXT, prevIdx, (LPARAM)prevBuf.data()) != CB_ERR)
+            {
+                previousSelection = wideToUtf8(prevBuf.data());
+            }
+        }
     }
 
     // Clear existing items
@@ -10049,14 +10342,21 @@ void Win32IDE::HandleCopilotSend()
     }
 
     int comboCount = (int)SendMessage(m_hwndModelSelector, CB_GETCOUNT, 0, 0);
-    if (comboCount <= 0 || m_availableModels.empty())
+    bool modelsEmpty = false;
+    {
+        std::lock_guard<std::mutex> modelListLock(m_availableModelsMutex);
+        modelsEmpty = m_availableModels.empty();
+    }
+    if (comboCount <= 0 || modelsEmpty)
     {
         OutputDebugStringA("[HandleCopilotSend] model list empty, forcing repopulate\n");
         populateModelSelector();
         comboCount = (int)SendMessage(m_hwndModelSelector, CB_GETCOUNT, 0, 0);
+        std::lock_guard<std::mutex> modelListLock(m_availableModelsMutex);
+        modelsEmpty = m_availableModels.empty();
     }
 
-    if (comboCount <= 0 || m_availableModels.empty())
+    if (comboCount <= 0 || modelsEmpty)
     {
         appendToOutput("\n[Error] No models discovered. Configure OLLAMA_MODELS/RAWRXD_MODELS_PATH and reopen chat.\n",
                        "Output", OutputSeverity::Error);
@@ -10067,9 +10367,21 @@ void Win32IDE::HandleCopilotSend()
 
     // Get selected model
     int modelIdx = (int)SendMessage(m_hwndModelSelector, CB_GETCURSEL, 0, 0);
-    if (modelIdx < 0 || modelIdx >= (int)m_availableModels.size())
-        modelIdx = 0;
-    std::string selectedModel = m_availableModels[modelIdx];
+    std::string selectedModel;
+    {
+        std::lock_guard<std::mutex> modelListLock(m_availableModelsMutex);
+        if (modelIdx < 0 || modelIdx >= (int)m_availableModels.size())
+            modelIdx = 0;
+        if (modelIdx < 0 || modelIdx >= (int)m_availableModels.size())
+        {
+            appendToOutput("\n[Error] No models available in cache after repopulate.\n", "Output",
+                           OutputSeverity::Error);
+            OutputDebugStringA("[HandleCopilotSend] cache empty after repopulate\n");
+            releaseSendInFlight();
+            return;
+        }
+        selectedModel = m_availableModels[modelIdx];
+    }
     std::string selectedModelResolved =
         resolveLocalModelSelectionPath(selectedModel, m_modelPaths, m_userModelDirectories);
     if (selectedModelResolved != selectedModel)
@@ -10304,10 +10616,8 @@ void Win32IDE::HandleCopilotSend()
             return;
         }
         m_agenticChatSession->SetAgenticMode(true);
-        if (modelIdx >= 0 && modelIdx < (int)m_availableModels.size())
-        {
-            m_agenticChatSession->SetChatModel(m_availableModels[modelIdx]);
-        }
+        if (!selectedModel.empty())
+            m_agenticChatSession->SetChatModel(selectedModel);
         // Use agentic chat session with function calling (route stripped prompt; history keeps full user line)
         m_agenticChatSession->RunTurnAsync(
             agentRouteUserMessage,
@@ -10757,6 +11067,11 @@ LRESULT CALLBACK Win32IDE::CopilotChatInputProc(HWND hwnd, UINT uMsg, WPARAM wPa
 {
     Win32IDE* pThis = (Win32IDE*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
 
+    if (pThis && uMsg == WM_CONTEXTMENU)
+    {
+        // Let the default edit control handle the context menu in this lane.
+    }
+
     if (pThis && (uMsg == WM_SETFOCUS || uMsg == WM_LBUTTONDOWN))
     {
         OutputDebugStringA("[CopilotChatInputProc] Focus/Click detected\n");
@@ -10849,6 +11164,23 @@ LRESULT CALLBACK Win32IDE::CopilotChatInputProc(HWND hwnd, UINT uMsg, WPARAM wPa
     {
         return CallWindowProc(pThis->m_oldCopilotInputProc, hwnd, uMsg, wParam, lParam);
     }
+    return DefWindowProcW(hwnd, uMsg, wParam, lParam);
+}
+
+LRESULT CALLBACK Win32IDE::CopilotChatOutputProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    Win32IDE* pThis = (Win32IDE*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
+
+    if (pThis && uMsg == WM_CONTEXTMENU)
+    {
+        // Let the default read-only edit control handle the context menu.
+    }
+
+    if (pThis && pThis->m_oldCopilotOutputProc)
+    {
+        return CallWindowProc(pThis->m_oldCopilotOutputProc, hwnd, uMsg, wParam, lParam);
+    }
+
     return DefWindowProcW(hwnd, uMsg, wParam, lParam);
 }
 
@@ -11057,38 +11389,54 @@ void Win32IDE::postCopilotInteractionBusySafe(bool busy)
 
 void Win32IDE::onModelSelectionChanged()
 {
-    int idx = (int)SendMessage(m_hwndModelSelector, CB_GETCURSEL, 0, 0);
-    if (idx >= 0 && idx < (int)m_availableModels.size())
-    {
-        m_ollamaModelOverride = m_availableModels[idx];
+    if (!m_hwndModelSelector || !IsWindow(m_hwndModelSelector))
+        return;
 
-        const std::string resolvedModel =
-            resolveLocalModelSelectionPath(m_ollamaModelOverride, m_modelPaths, m_userModelDirectories);
-        if (resolvedModel != m_ollamaModelOverride)
+    int idx = (int)SendMessage(m_hwndModelSelector, CB_GETCURSEL, 0, 0);
+    if (idx == CB_ERR)
+        return;
+
+    std::string selectedModel;
+    {
+        std::lock_guard<std::mutex> modelListLock(m_availableModelsMutex);
+        if (m_availableModels.empty())
+            return;
+        if (idx < 0 || idx >= (int)m_availableModels.size())
+            return;
+        selectedModel = m_availableModels[idx];
+    }
+
+    m_ollamaModelOverride = selectedModel;
+
+    const std::string resolvedModel =
+        resolveLocalModelSelectionPath(m_ollamaModelOverride, m_modelPaths, m_userModelDirectories);
+    if (resolvedModel != m_ollamaModelOverride)
+    {
+        OutputDebugStringA(
+            ("[ModelSelection] resolved model ref '" + m_ollamaModelOverride + "' -> '" + resolvedModel + "'\n")
+                .c_str());
+        m_ollamaModelOverride = resolvedModel;
+    }
+
+    const bool looksLikeLocalModel = m_ollamaModelOverride.find(".gguf") != std::string::npos ||
+                                     m_ollamaModelOverride.find(":\\") != std::string::npos;
+
+    if (looksLikeLocalModel)
+    {
+        const bool alreadySelectedAndReady = (m_loadedModelPath == m_ollamaModelOverride) && isModelLoaded();
+        if (alreadySelectedAndReady)
         {
             OutputDebugStringA(
-                ("[ModelSelection] resolved model ref '" + m_ollamaModelOverride + "' -> '" + resolvedModel + "'\n")
-                    .c_str());
-            m_ollamaModelOverride = resolvedModel;
+                ("[ModelSelection] local model already loaded path=" + m_ollamaModelOverride + "\n").c_str());
         }
-
-        const bool looksLikeLocalModel = m_ollamaModelOverride.find(".gguf") != std::string::npos ||
-                                         m_ollamaModelOverride.find(":\\") != std::string::npos;
-
-        if (looksLikeLocalModel)
+        else
         {
-            const bool alreadySelectedAndReady = (m_loadedModelPath == m_ollamaModelOverride) && isModelLoaded();
-            if (!alreadySelectedAndReady)
-            {
-                OutputDebugStringA(
-                    ("[ModelSelection] starting async local model load path=" + m_ollamaModelOverride + "\n").c_str());
-                loadModelFromPathAsync(m_ollamaModelOverride);
-            }
-            else
-            {
-                OutputDebugStringA(
-                    ("[ModelSelection] local model already loaded path=" + m_ollamaModelOverride + "\n").c_str());
-            }
+            OutputDebugStringA(("[ModelSelection] deferred local model load until explicit send/use path=" +
+                                m_ollamaModelOverride + "\n")
+                                   .c_str());
+            appendToOutput("[ModelSelection] Selected local model: " + m_ollamaModelOverride +
+                               "\n[ModelSelection] Load is deferred until chat send or explicit model load.\n",
+                           "Output", OutputSeverity::Info);
         }
     }
 }
@@ -11452,7 +11800,16 @@ void Win32IDE::createTabBar(HWND hwndParent)
     if (!m_tabManager)
     {
         m_tabManager = new Win32IDE_TabManager(this);
-        if (!m_tabManager->initialize(hwndParent))
+        bool initOk = false;
+        try
+        {
+            initOk = m_tabManager->initialize(hwndParent);
+        }
+        catch (...)
+        {
+            initOk = false;
+        }
+        if (!initOk)
         {
             delete m_tabManager;
             m_tabManager = nullptr;
@@ -11577,7 +11934,9 @@ void Win32IDE::onTabChanged()
         const auto& tab = m_editorTabs[newIndex];
 
         // Load tab content into editor
+        m_suppressLspDocumentSync = true;
         setWindowText(m_hwndEditor, tab.content);
+        m_suppressLspDocumentSync = false;
 
         // Restore cursor position
         int lineIndex = (int)SendMessageW(m_hwndEditor, EM_LINEINDEX, tab.cursorLine - 1, 0);
@@ -11595,7 +11954,16 @@ void Win32IDE::onTabChanged()
         restoreAnnotationsForTab();
 
         syncAgentContextFromActiveTab();
-        onEditorContentChanged();
+        m_fileModified = tab.modified;
+        if (!tab.filePath.empty())
+        {
+            syncLSPDocumentOpen(tab.filePath, tab.content);
+            displayDiagnosticsAsAnnotations(filePathToUri(tab.filePath));
+        }
+        else
+        {
+            clearAnnotationsForCurrentFile();
+        }
 
         // Update status bar
         if (m_hwndStatusBar)
@@ -11662,6 +12030,7 @@ void Win32IDE::saveCurrentFile()
                 std::string content = getWindowText(m_hwndEditor);
                 file.write(content.c_str(), content.size());
                 m_editorTabs[m_activeTabIndex].modified = false;
+                syncLSPDocumentSave(tab.filePath);
                 // Update tab display to remove modified indicator
                 if (m_tabManager)
                 {
@@ -11765,12 +12134,20 @@ void Win32IDE::loadTabsState()
                 SendMessage(m_hwndTabBar, TCM_SETCURSEL, m_activeTabIndex, 0);
                 // Load active tab content
                 const auto& tab = m_editorTabs[m_activeTabIndex];
+                m_suppressLspDocumentSync = true;
                 setWindowText(m_hwndEditor, tab.content);
+                m_suppressLspDocumentSync = false;
                 // Set cursor
                 int lineIndex = (int)SendMessageW(m_hwndEditor, EM_LINEINDEX, tab.cursorLine - 1, 0);
                 int charPos = lineIndex + tab.cursorCol - 1;
                 SendMessageW(m_hwndEditor, EM_SETSEL, charPos, charPos);
                 syncAgentContextFromActiveTab();
+                m_fileModified = tab.modified;
+                if (!tab.filePath.empty())
+                {
+                    syncLSPDocumentOpen(tab.filePath, tab.content);
+                    displayDiagnosticsAsAnnotations(filePathToUri(tab.filePath));
+                }
                 // Update status bar
                 if (m_hwndStatusBar)
                 {
@@ -11792,6 +12169,7 @@ void Win32IDE::removeTab(int index)
     if (!closingFile.empty())
     {
         m_annotationCache.erase(closingFile);
+        syncLSPDocumentClose(closingFile);
     }
     // If this is the active tab, clear live annotations
     if (index == m_activeTabIndex)
@@ -11812,7 +12190,9 @@ void Win32IDE::removeTab(int index)
     if (m_editorTabs.empty())
     {
         m_activeTabIndex = -1;
+        m_suppressLspDocumentSync = true;
         setWindowText(m_hwndEditor, "");
+        m_suppressLspDocumentSync = false;
         syncAgentContextFromActiveTab();
     }
     else if (index <= m_activeTabIndex)
@@ -11914,10 +12294,143 @@ void Win32IDE::handleTabClick(POINT pt)
 }
 
 // --- Command Input Subclass Procedure ---
+namespace
+{
+enum : UINT
+{
+    IDM_CTX_COPY = 0x7A01,
+    IDM_CTX_PASTE = 0x7A02,
+    IDM_CTX_COPY_ALL = 0x7A03,
+};
+
+static bool CopyWindowTextToClipboard(HWND hwndOwner, HWND hwndSource)
+{
+    const int len = GetWindowTextLengthW(hwndSource);
+    if (len <= 0)
+    {
+        return false;
+    }
+
+    std::vector<wchar_t> text(static_cast<size_t>(len) + 1, L'\0');
+    GetWindowTextW(hwndSource, text.data(), len + 1);
+
+    if (!OpenClipboard(hwndOwner && IsWindow(hwndOwner) ? hwndOwner : hwndSource))
+    {
+        return false;
+    }
+    EmptyClipboard();
+
+    const size_t bytes = (static_cast<size_t>(len) + 1) * sizeof(wchar_t);
+    HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, bytes);
+    if (!hMem)
+    {
+        CloseClipboard();
+        return false;
+    }
+
+    void* locked = GlobalLock(hMem);
+    if (!locked)
+    {
+        GlobalFree(hMem);
+        CloseClipboard();
+        return false;
+    }
+
+    memcpy(locked, text.data(), bytes);
+    GlobalUnlock(hMem);
+
+    if (!SetClipboardData(CF_UNICODETEXT, hMem))
+    {
+        GlobalFree(hMem);
+        CloseClipboard();
+        return false;
+    }
+
+    CloseClipboard();
+    return true;
+}
+
+static bool ShowEditContextMenu(HWND hwnd, LPARAM lParam)
+{
+    POINT pt = {};
+    if (GET_X_LPARAM(lParam) == -1 && GET_Y_LPARAM(lParam) == -1)
+    {
+        RECT rc = {};
+        GetWindowRect(hwnd, &rc);
+        pt.x = rc.left + ((rc.right - rc.left) / 2);
+        pt.y = rc.top + ((rc.bottom - rc.top) / 2);
+    }
+    else
+    {
+        pt.x = GET_X_LPARAM(lParam);
+        pt.y = GET_Y_LPARAM(lParam);
+    }
+
+    HMENU hMenu = CreatePopupMenu();
+    if (!hMenu)
+    {
+        return false;
+    }
+
+    AppendMenuW(hMenu, MF_STRING, IDM_CTX_COPY, L"Copy");
+    AppendMenuW(hMenu, MF_STRING, IDM_CTX_PASTE, L"Paste");
+    AppendMenuW(hMenu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuW(hMenu, MF_STRING, IDM_CTX_COPY_ALL, L"Copy All");
+
+    const LONG_PTR style = GetWindowLongPtr(hwnd, GWL_STYLE);
+    const bool readOnly = (style & ES_READONLY) != 0;
+    const int textLen = GetWindowTextLengthW(hwnd);
+
+    DWORD selStart = 0;
+    DWORD selEnd = 0;
+    SendMessageW(hwnd, EM_GETSEL, reinterpret_cast<WPARAM>(&selStart), reinterpret_cast<LPARAM>(&selEnd));
+    const bool hasSelection = selEnd > selStart;
+
+    if (!hasSelection)
+    {
+        EnableMenuItem(hMenu, IDM_CTX_COPY, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
+    }
+    if (readOnly || !IsClipboardFormatAvailable(CF_UNICODETEXT))
+    {
+        EnableMenuItem(hMenu, IDM_CTX_PASTE, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
+    }
+    if (textLen <= 0)
+    {
+        EnableMenuItem(hMenu, IDM_CTX_COPY_ALL, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
+    }
+
+    const int cmd = TrackPopupMenu(hMenu, TPM_RETURNCMD | TPM_RIGHTBUTTON, pt.x, pt.y, 0, hwnd, nullptr);
+    DestroyMenu(hMenu);
+
+    switch (cmd)
+    {
+        case IDM_CTX_COPY:
+            SendMessageW(hwnd, WM_COPY, 0, 0);
+            return true;
+        case IDM_CTX_PASTE:
+            if (!readOnly)
+            {
+                SendMessageW(hwnd, WM_PASTE, 0, 0);
+            }
+            return true;
+        case IDM_CTX_COPY_ALL:
+            CopyWindowTextToClipboard(GetActiveWindow(), hwnd);
+            return true;
+        default:
+            return false;
+    }
+}
+}  // namespace
+
 LRESULT CALLBACK Win32IDE::CommandInputProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     // Retrieve IDE pointer via GWLP_USERDATA (set in createTerminal)
     Win32IDE* ide = (Win32IDE*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+
+    if (uMsg == WM_CONTEXTMENU)
+    {
+        // Fall through to default proc context-menu behavior.
+    }
 
     if (uMsg == WM_KEYDOWN && wParam == VK_RETURN)
     {
@@ -13263,7 +13776,191 @@ bool editorMoveCurrentLine(HWND hwndEditor, bool moveDown)
     SendMessageW(hwndEditor, EM_SCROLLCARET, 0, 0);
     return true;
 }
+
+std::string editorCommentPrefixForPath(const std::string& filePath)
+{
+    std::string ext;
+    const size_t dot = filePath.find_last_of('.');
+    if (dot != std::string::npos)
+        ext = filePath.substr(dot);
+
+    std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char ch) { return (char)std::tolower(ch); });
+
+    if (ext == ".cpp" || ext == ".cc" || ext == ".cxx" || ext == ".c" || ext == ".h" || ext == ".hpp" ||
+        ext == ".hh" || ext == ".hxx" || ext == ".js" || ext == ".jsx" || ext == ".ts" || ext == ".tsx" ||
+        ext == ".java" || ext == ".cs" || ext == ".swift" || ext == ".kt" || ext == ".m" || ext == ".mm")
+        return "//";
+
+    if (ext == ".py" || ext == ".ps1" || ext == ".sh" || ext == ".rb" || ext == ".yml" || ext == ".yaml")
+        return "#";
+
+    if (ext == ".asm" || ext == ".s" || ext == ".inc")
+        return ";";
+
+    if (ext == ".sql" || ext == ".lua")
+        return "--";
+
+    return "//";
+}
+
+bool editorToggleCommentSelection(HWND hwndEditor, const std::string& currentFile)
+{
+    if (!hwndEditor)
+        return false;
+
+    CHARRANGE sel = {};
+    SendMessageW(hwndEditor, EM_EXGETSEL, 0, (LPARAM)&sel);
+
+    int startLine = (int)SendMessageW(hwndEditor, EM_LINEFROMCHAR, sel.cpMin, 0);
+    int endLine = (int)SendMessageW(hwndEditor, EM_LINEFROMCHAR, sel.cpMax, 0);
+    if (sel.cpMax > sel.cpMin)
+    {
+        const LONG endLineStart = (LONG)SendMessageW(hwndEditor, EM_LINEINDEX, endLine, 0);
+        if (endLineStart >= 0 && sel.cpMax == endLineStart && endLine > startLine)
+            --endLine;
+    }
+
+    const LONG rangeStart = (LONG)SendMessageW(hwndEditor, EM_LINEINDEX, startLine, 0);
+    if (rangeStart < 0)
+        return false;
+
+    LONG rangeEnd = (LONG)SendMessageW(hwndEditor, EM_LINEINDEX, endLine + 1, 0);
+    if (rangeEnd < 0)
+        rangeEnd = GetWindowTextLengthW(hwndEditor);
+    if (rangeEnd < rangeStart)
+        return false;
+
+    std::wstring block = getEditorRangeTextW(hwndEditor, rangeStart, rangeEnd);
+    if (block.empty())
+        return false;
+
+    const std::wstring prefix = utf8ToWide(editorCommentPrefixForPath(currentFile));
+    if (prefix.empty())
+        return false;
+
+    struct LineChunk
+    {
+        std::wstring text;
+        std::wstring newline;
+    };
+
+    std::vector<LineChunk> lines;
+    size_t cursor = 0;
+    while (cursor < block.size())
+    {
+        size_t nextBreak = block.find_first_of(L"\r\n", cursor);
+        LineChunk chunk;
+        if (nextBreak == std::wstring::npos)
+        {
+            chunk.text = block.substr(cursor);
+            cursor = block.size();
+        }
+        else
+        {
+            chunk.text = block.substr(cursor, nextBreak - cursor);
+            if (block[nextBreak] == L'\r' && nextBreak + 1 < block.size() && block[nextBreak + 1] == L'\n')
+            {
+                chunk.newline = L"\r\n";
+                cursor = nextBreak + 2;
+            }
+            else
+            {
+                chunk.newline.assign(1, block[nextBreak]);
+                cursor = nextBreak + 1;
+            }
+        }
+        lines.push_back(std::move(chunk));
+    }
+
+    bool uncomment = true;
+    bool sawContent = false;
+    for (const auto& line : lines)
+    {
+        const size_t indent = line.text.find_first_not_of(L" \t");
+        if (indent == std::wstring::npos)
+            continue;
+        sawContent = true;
+        if (line.text.compare(indent, prefix.size(), prefix) != 0)
+        {
+            uncomment = false;
+            break;
+        }
+    }
+    if (!sawContent)
+        return false;
+
+    for (auto& line : lines)
+    {
+        const size_t indent = line.text.find_first_not_of(L" \t");
+        if (indent == std::wstring::npos)
+            continue;
+
+        if (uncomment)
+        {
+            if (line.text.compare(indent, prefix.size(), prefix) == 0)
+            {
+                line.text.erase(indent, prefix.size());
+                if (indent < line.text.size() && line.text[indent] == L' ')
+                    line.text.erase(indent, 1);
+            }
+        }
+        else
+        {
+            std::wstring injected = prefix;
+            injected += L' ';
+            line.text.insert(indent, injected);
+        }
+    }
+
+    std::wstring updated;
+    for (const auto& line : lines)
+    {
+        updated += line.text;
+        updated += line.newline;
+    }
+
+    CHARRANGE replaceRange = {rangeStart, rangeEnd};
+    SendMessageW(hwndEditor, EM_EXSETSEL, 0, (LPARAM)&replaceRange);
+    SendMessageW(hwndEditor, EM_REPLACESEL, TRUE, (LPARAM)updated.c_str());
+
+    CHARRANGE out = {rangeStart, rangeStart + (LONG)updated.size()};
+    SendMessageW(hwndEditor, EM_EXSETSEL, 0, (LPARAM)&out);
+    SendMessageW(hwndEditor, EM_SCROLLCARET, 0, 0);
+    return true;
+}
 }  // namespace
+
+bool Win32IDE::toggleEditorCommentSelection()
+{
+    if (!editorToggleCommentSelection(m_hwndEditor, m_currentFile))
+        return false;
+    onEditorContentChanged();
+    return true;
+}
+
+bool Win32IDE::duplicateEditorLine(bool duplicateBelow)
+{
+    if (!editorDuplicateCurrentLine(m_hwndEditor, duplicateBelow))
+        return false;
+    onEditorContentChanged();
+    return true;
+}
+
+bool Win32IDE::deleteEditorLine()
+{
+    if (!editorDeleteCurrentLine(m_hwndEditor))
+        return false;
+    onEditorContentChanged();
+    return true;
+}
+
+bool Win32IDE::moveEditorLine(bool moveDown)
+{
+    if (!editorMoveCurrentLine(m_hwndEditor, moveDown))
+        return false;
+    onEditorContentChanged();
+    return true;
+}
 
 LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -13319,30 +14016,27 @@ LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wPara
                         return 0;
                 }
 
+                if (ctrl && !shift && !alt && wParam == VK_OEM_2)
+                {
+                    if (pThis->toggleEditorCommentSelection())
+                        return 0;
+                }
+
                 // VSCode-like line operations parity.
                 if (ctrl && shift && !alt && wParam == 'K')
                 {
-                    if (editorDeleteCurrentLine(hwnd))
-                    {
-                        pThis->onEditorContentChanged();
+                    if (pThis->deleteEditorLine())
                         return 0;
-                    }
                 }
                 if (alt && shift && !ctrl && (wParam == VK_UP || wParam == VK_DOWN))
                 {
-                    if (editorDuplicateCurrentLine(hwnd, wParam == VK_DOWN))
-                    {
-                        pThis->onEditorContentChanged();
+                    if (pThis->duplicateEditorLine(wParam == VK_DOWN))
                         return 0;
-                    }
                 }
                 if (alt && !shift && !ctrl && (wParam == VK_UP || wParam == VK_DOWN))
                 {
-                    if (editorMoveCurrentLine(hwnd, wParam == VK_DOWN))
-                    {
-                        pThis->onEditorContentChanged();
+                    if (pThis->moveEditorLine(wParam == VK_DOWN))
                         return 0;
-                    }
                 }
 
                 // Ghost text key handling — Tab accepts, Esc dismisses, other keys dismiss
@@ -13523,6 +14217,25 @@ LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wPara
                 }
                 break;
 
+            case WM_MOUSEMOVE:
+            {
+                int xPos = GET_X_LPARAM(lParam);
+                int yPos = GET_Y_LPARAM(lParam);
+                // Trigger debug hover value display (Phase 1C)
+                pThis->onEditorMouseMoveDebugHover(xPos, yPos);
+                // Also trigger LSP hover
+                pThis->onEditorMouseHover(xPos, yPos);
+                break;
+            }
+
+            case WM_MOUSELEAVE:
+            {
+                // Hide debug hover when mouse leaves editor
+                pThis->hideDebugHoverValue();
+                pThis->dismissHoverTooltip();
+                break;
+            }
+
             case WM_DESTROY:
                 // Clean up properties on destruction
                 pThis->destroyGhostDiffOverlayUi();
@@ -13664,14 +14377,12 @@ LRESULT CALLBACK Win32IDE::SidebarProcImpl(HWND hwnd, UINT uMsg, WPARAM wParam, 
                             .c_str());
                     OutputDebugStringA("[SidebarProcImpl] Send clicked\n");
                     pThis->HandleCopilotSend();
-                    pThis->onCommand(pThis->m_hwndMain, controlId, (HWND)lParam, (UINT)notifyCode);
                     return 0;
                 }
                 else if (controlId == IDC_COPILOT_CLEAR_BTN)
                 {
                     OutputDebugStringA("[SidebarProcImpl] Clear clicked\n");
                     pThis->HandleCopilotClear();
-                    pThis->onCommand(pThis->m_hwndMain, controlId, (HWND)lParam, (UINT)notifyCode);
                     return 0;
                 }
                 else if (controlId == IDC_MODEL_BROWSE_BTN)
@@ -13684,7 +14395,6 @@ LRESULT CALLBACK Win32IDE::SidebarProcImpl(HWND hwnd, UINT uMsg, WPARAM wParam, 
                 {
                     OutputDebugStringA("[SidebarProcImpl] Model selection changed\n");
                     pThis->onModelSelectionChanged();
-                    pThis->onCommand(pThis->m_hwndMain, controlId, (HWND)lParam, (UINT)notifyCode);
                     return 0;
                 }
                 else if (controlId == IDC_AI_MAX_MODE && notifyCode == BN_CLICKED)

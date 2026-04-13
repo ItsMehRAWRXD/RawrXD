@@ -3,5 +3,6 @@ test_swarm_expert_heatmap_stress 3 0.0202079
 test_moe_mixture_reference 2 0.00449285
 test_moe_batched_down_project 1 0.0071577
 rawrengine_copilot_smoke 0 0
+win32ide_agentic_smoke 0 0
 ---
-rawrengine_copilot_smoke
+win32ide_agentic_smoke

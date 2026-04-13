@@ -20,6 +20,7 @@
 #include <thread>
 #include <mutex>
 #include <functional>
+#include <utility>
 
 // Forward declarations
 namespace RawrXD {
@@ -48,6 +49,17 @@ public:
     std::string GetSelectedModelPath() const { return m_selectedModelPath; }
 
 private:
+    struct SearchCompletion {
+        std::vector<RawrXD::HFRepoInfo> results;
+        std::string error;
+    };
+
+    struct PullCompletion {
+        bool success = false;
+        std::string filePath;
+        std::string error;
+    };
+
     // Dialog creation helpers
     void CreateControls(HWND hwndDlg);
     void CreateDiscoverTab(HWND hwndDlg);
@@ -65,10 +77,13 @@ private:
     void OnPullFromSearchClicked();
     void PopulateSearchResults(const std::vector<RawrXD::HFRepoInfo>& results);
     void PopulateFileList(const std::vector<RawrXD::HFFileInfo>& files);
+    void HandleSearchCompleted(SearchCompletion completion);
 
     // Downloads tab handlers
     void OnCancelDownloadClicked();
     void UpdateDownloadProgress(const RawrXD::PullStatus& status);
+    void HandlePullCompleted(PullCompletion completion);
+    void FinalizePullThread();
 
     // Local tab handlers
     void RefreshLocalModels();
