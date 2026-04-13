@@ -49,6 +49,7 @@ Convert current feature surface into production-ready, gated, measurable deliver
 ### Day 6 - Security + Trust Boundaries
 - Validate permission deny-by-default paths.
 - Validate workspace trust guard behavior for restricted/untrusted modes.
+- Run real screenshot-to-model smoke probes for multimodal and non-multimodal model lanes when local runtime is available.
 - Gate: Required denies enforced and logged.
 
 ### Day 7 - Marketplace + Dependency Integrity

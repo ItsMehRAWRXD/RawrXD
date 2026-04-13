@@ -46,7 +46,7 @@ ExtensionHostCtx ends
 
 RipgrepRequest struct
     query           BYTE 512 DUP (?)
-    cwd             BYTE 260 DUP (?)
+    workingDir      BYTE 260 DUP (?)
     includePattern  BYTE 256 DUP (?)
     excludePattern  BYTE 256 DUP (?)
     caseSensitive   DWORD ?
@@ -525,7 +525,7 @@ HandleRipgrepRequest proc
 
     ; Write search params to ripgrep stdin
     ; Format: cwd\nquery\ninclude\nexclude\n
-    lea rdx, [rsi].RipgrepRequest.cwd
+    lea rdx, [rsi].RipgrepRequest.workingDir
     lea r9, [rsp+20h]
     invoke WriteFile, g_HostCtx.hRipgrepProc, rdx, 260, r9, 0
 

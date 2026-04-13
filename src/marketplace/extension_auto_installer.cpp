@@ -225,9 +225,16 @@ AutoInstallResult ExtensionAutoInstaller::installSingleExtension(
         emitProgress(progress, callback);
     }
 
-    std::string tempDir = ".rawrxd\\temp\\";
-    std::filesystem::create_directories(tempDir);
-    std::string vsixPath = tempDir + extensionId + "-" + entry.version + ".vsix";
+    // Create a unique per-worker temp directory to prevent collision when
+    // multiple parallel workers download/install at the same time.
+    // e.g. .rawrxd\temp\<PID>_<seq>\
+    static std::atomic<uint64_t> s_tempSeq{0};
+    const uint64_t workerSeq = s_tempSeq.fetch_add(1, std::memory_order_relaxed);
+    std::string workerTemp = ".rawrxd\\temp\\" +
+                             std::to_string(static_cast<unsigned long>(GetCurrentProcessId())) +
+                             "_" + std::to_string(workerSeq) + "\\";
+    std::filesystem::create_directories(workerTemp);
+    std::string vsixPath = workerTemp + extensionId + "-" + entry.version + ".vsix";
 
     if (!VSCodeMarketplace::DownloadVsix(publisher, extensionName, entry.version, vsixPath)) {
         std::lock_guard<std::mutex> lock(mutex_);
@@ -239,6 +246,7 @@ AutoInstallResult ExtensionAutoInstaller::installSingleExtension(
         progress.totalExtensions = totalExtensions;
         progress.detail = "Failed to download .vsix";
         emitProgress(progress, callback);
+        { std::error_code ec; std::filesystem::remove_all(workerTemp, ec); }
         return AutoInstallResult::error("Failed to download .vsix", 3);
     }
 
@@ -263,6 +271,7 @@ AutoInstallResult ExtensionAutoInstaller::installSingleExtension(
         progress.totalExtensions = totalExtensions;
         progress.detail = "Failed to install .vsix";
         emitProgress(progress, callback);
+        { std::error_code ec; std::filesystem::remove_all(workerTemp, ec); }
         return AutoInstallResult::error("Failed to install .vsix", 4);
     }
 
@@ -301,6 +310,7 @@ AutoInstallResult ExtensionAutoInstaller::installSingleExtension(
     AutoInstallResult result = AutoInstallResult::ok(1);
     result.installedIds.push_back(extensionId);
     result.detail = "Successfully installed " + extensionId;
+    { std::error_code ec; std::filesystem::remove_all(workerTemp, ec); }
     return result;
 }
 
