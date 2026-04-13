@@ -76,7 +76,10 @@ endif()
 
 # AI Completions Test
 if(NOT TARGET test_ai_completions AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_ai_completions.cpp")
-    add_executable(test_ai_completions test_ai_completions.cpp)
+    add_executable(test_ai_completions
+        test_ai_completions.cpp
+        real_time_completion_engine_test_impl.cpp
+    )
     target_include_directories(test_ai_completions PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
     set_target_properties(test_ai_completions PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests" CXX_STANDARD 20)
     add_test(NAME test_ai_completions COMMAND test_ai_completions)
@@ -370,6 +373,17 @@ if(TARGET RawrXD-Win32IDE)
     )
     set_tests_properties(win32ide_agentic_smoke PROPERTIES LABELS "smoke;agentic;win32ide" TIMEOUT 600)
     message(STATUS "  ✓ Registered win32ide_agentic_smoke (RawrXD-Win32IDE --agentic-smoke)")
+
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/smoke/win32ide_high_pressure_ui.ps1")
+        add_test(
+            NAME win32ide_high_pressure_ui
+            COMMAND pwsh -NoProfile -ExecutionPolicy Bypass
+                -File ${CMAKE_CURRENT_SOURCE_DIR}/smoke/win32ide_high_pressure_ui.ps1
+                -ExePath $<TARGET_FILE:RawrXD-Win32IDE>
+        )
+        set_tests_properties(win32ide_high_pressure_ui PROPERTIES LABELS "smoke;stress;win32ide;lsp;model" TIMEOUT 300)
+        message(STATUS "  ✓ Registered win32ide_high_pressure_ui (Win32IDE concurrent UI/LSP/model pressure)")
+    endif()
 endif()
 
 message(STATUS "========================================")

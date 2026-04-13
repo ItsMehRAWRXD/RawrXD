@@ -12,9 +12,11 @@
 #include "AgentToolHandlers.h"
 #include "DiffEngine.h"
 #include "core/scoped_instructions_provider.hpp"
+#include "lsp/LSPClient.hpp"
 #include "multi_file_edit_plan.hpp"
 #include "SovereignAssembler.h"
 #include "../win32app/TodoManager.h"
+#include "../collab/CollabToolHandlers.h"
 
 #include "../runtime/SemanticRetrieval.h"
 #include "native_debugger_engine.h"
@@ -24,10 +26,12 @@
 #include <cctype>
 #include <chrono>
 #include <cmath>
+#include <condition_variable>
 #include <filesystem>
 #include <fstream>
 #include <intrin.h>
 #include <iterator>
+#include <limits>
 #include <mutex>
 #include <regex>
 #include <sstream>
@@ -73,12 +77,198 @@ std::string TrimAscii(std::string value)
     return value;
 }
 
+bool ContainsControlChars(const std::string& value)
+{
+    for (unsigned char ch : value)
+    {
+        if (ch == '\0' || ch == '\r' || ch == '\n')
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+std::string TrimCommandToken(const std::string& token)
+{
+    std::string out = ToLowerCopy(TrimAscii(token));
+    if (out.empty())
+    {
+        return out;
+    }
+
+    const size_t slash = out.find_last_of("\\/");
+    if (slash != std::string::npos)
+    {
+        out = out.substr(slash + 1);
+    }
+
+    if (out.size() > 4 && out.substr(out.size() - 4) == ".exe")
+    {
+        out.resize(out.size() - 4);
+    }
+    return out;
+}
+
+std::string ExtractCommandHead(const std::string& command)
+{
+    const std::string trimmed = TrimAscii(command);
+    if (trimmed.empty())
+    {
+        return std::string();
+    }
+
+    if (trimmed.front() == '"')
+    {
+        const size_t closing = trimmed.find('"', 1);
+        if (closing == std::string::npos)
+        {
+            return TrimCommandToken(trimmed.substr(1));
+        }
+        return TrimCommandToken(trimmed.substr(1, closing - 1));
+    }
+
+    size_t end = 0;
+    while (end < trimmed.size())
+    {
+        const char ch = trimmed[end];
+        if (std::isspace(static_cast<unsigned char>(ch)) || ch == '&' || ch == '|' || ch == '<' || ch == '>')
+        {
+            break;
+        }
+        ++end;
+    }
+    return TrimCommandToken(trimmed.substr(0, end));
+}
+
+bool ContainsShellOperators(const std::string& command)
+{
+    return command.find('&') != std::string::npos || command.find('|') != std::string::npos ||
+           command.find('<') != std::string::npos || command.find('>') != std::string::npos;
+}
+
+ToolCallResult ValidateCommandPolicy(const json& args, const std::string& command)
+{
+    if (command.empty())
+    {
+        return ToolCallResult::Validation("command cannot be empty");
+    }
+
+    if (command.size() > 4096)
+    {
+        return ToolCallResult::Validation("command exceeds max length (4096)");
+    }
+
+    if (ContainsControlChars(command))
+    {
+        return ToolCallResult::Sandbox("command contains forbidden control characters");
+    }
+
+    const bool allowShellOperators = args.value("allow_shell_operators", false);
+    if (!allowShellOperators && ContainsShellOperators(command))
+    {
+        json meta = json::object();
+        meta["policy"] = "shell_operators";
+        meta["allow_shell_operators"] = false;
+        meta["command"] = command;
+        ToolCallResult blocked =
+            ToolCallResult::Sandbox("command contains shell operators; set allow_shell_operators=true to permit");
+        blocked.metadata = meta;
+        return blocked;
+    }
+
+    if (!AgentToolHandlers::GetGuardrails().allowedCommands.empty())
+    {
+        const std::string firstToken = ExtractCommandHead(command);
+        bool allowed = false;
+        for (const auto& configured : AgentToolHandlers::GetGuardrails().allowedCommands)
+        {
+            const std::string normalized = TrimCommandToken(configured);
+            if (!normalized.empty() && firstToken == normalized)
+            {
+                allowed = true;
+                break;
+            }
+        }
+
+        if (!allowed)
+        {
+            json meta = json::object();
+            meta["policy"] = "allowedCommands";
+            meta["first_token"] = firstToken;
+            meta["command"] = command;
+            ToolCallResult blocked = ToolCallResult::Sandbox("command not allowed by policy: " + firstToken);
+            blocked.metadata = meta;
+            return blocked;
+        }
+    }
+
+    return ToolCallResult::Ok(std::string());
+}
+
 bool ContainsDotDotPathTraversal(const std::string& value)
 {
     const std::string normalized = ToForwardSlashes(value);
     return normalized == ".." || normalized.find("../") != std::string::npos ||
            normalized.find("/..") != std::string::npos;
 }
+
+std::string ToFileUri(const std::string& normalizedPath)
+{
+    std::string uri = ToForwardSlashes(normalizedPath);
+    if (uri.size() > 2 && uri[1] == ':')
+    {
+        uri = "/" + uri;
+    }
+    return std::string("file://") + uri;
+}
+
+std::string LspSymbolKindName(int kind)
+{
+    switch (kind)
+    {
+        case 2:
+            return "module";
+        case 3:
+            return "namespace";
+        case 4:
+            return "package";
+        case 5:
+            return "class";
+        case 6:
+            return "method";
+        case 7:
+            return "property";
+        case 8:
+            return "field";
+        case 9:
+            return "constructor";
+        case 10:
+            return "enum";
+        case 11:
+            return "interface";
+        case 12:
+            return "function";
+        case 13:
+            return "variable";
+        case 14:
+            return "constant";
+        case 23:
+            return "struct";
+        case 24:
+            return "event";
+        case 25:
+            return "operator";
+        case 26:
+            return "typeParameter";
+        default:
+            return "symbol";
+    }
+}
+
+std::atomic<uint64_t> g_getCodeOutlineLspSuccess{0};
+std::atomic<uint64_t> g_getCodeOutlineLspTimeout{0};
+std::atomic<uint64_t> g_getCodeOutlineParserFallback{0};
 
 std::string MakeTimestampForFilename()
 {
@@ -159,6 +349,71 @@ std::string CreateBackupImpl(const std::string& path)
     }
 
     return std::string();
+}
+
+bool FindLatestBackupForPath(const std::string& path, fs::path& outBackupPath, std::string& outError)
+{
+    std::error_code ec;
+    const fs::path source(path);
+    const fs::path backupDir = source.parent_path() / ".rawrxd-backups";
+    if (!fs::exists(backupDir, ec) || ec || !fs::is_directory(backupDir, ec) || ec)
+    {
+        outError = "No backup directory found for file";
+        return false;
+    }
+
+    const std::string stem = source.stem().string();
+    const std::string extension = source.extension().string();
+    const std::string prefix = stem + ".";
+    const std::string suffix = extension + ".bak";
+
+    fs::path bestPath;
+    fs::file_time_type bestWriteTime{};
+    bool found = false;
+
+    for (const auto& entry : fs::directory_iterator(backupDir, fs::directory_options::skip_permission_denied, ec))
+    {
+        if (ec)
+        {
+            continue;
+        }
+        if (!entry.is_regular_file(ec) || ec)
+        {
+            continue;
+        }
+
+        const std::string name = entry.path().filename().string();
+        if (name.rfind(prefix, 0) != 0)
+        {
+            continue;
+        }
+        if (name.size() < suffix.size() || name.substr(name.size() - suffix.size()) != suffix)
+        {
+            continue;
+        }
+
+        const auto writeTime = entry.last_write_time(ec);
+        if (ec)
+        {
+            continue;
+        }
+
+        if (!found || writeTime > bestWriteTime)
+        {
+            found = true;
+            bestWriteTime = writeTime;
+            bestPath = entry.path();
+        }
+    }
+
+    if (!found)
+    {
+        outError = "No matching backup found";
+        return false;
+    }
+
+    outBackupPath = bestPath;
+    return true;
 }
 
 bool ResolveMemoryPath(const std::string& virtualPath, fs::path& resolvedPath, std::string& scope, std::string& error)
@@ -587,6 +842,325 @@ constexpr uint32_t kTermFlagAlive = 0x01u;
 constexpr uint32_t kTermFlagComplete = 0x04u;
 constexpr uint32_t kTermPipeUnavailable = 0xFFFFFFFFu;
 
+#ifndef PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE
+#define PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE 0x00020016
+#endif
+
+struct CircularOutputBuffer
+{
+    explicit CircularOutputBuffer(size_t capBytes)
+        : cap(std::max<size_t>(1, capBytes)), storage(cap, '\0')
+    {
+    }
+
+    void append(const char* data, size_t len)
+    {
+        if (data == nullptr || len == 0)
+        {
+            return;
+        }
+
+        totalWritten += static_cast<uint64_t>(len);
+
+        if (len >= cap)
+        {
+            std::memcpy(storage.data(), data + (len - cap), cap);
+            writePos = 0;
+            size = cap;
+            return;
+        }
+
+        const size_t toEnd = cap - writePos;
+        if (len <= toEnd)
+        {
+            std::memcpy(storage.data() + writePos, data, len);
+            writePos = (writePos + len) % cap;
+        }
+        else
+        {
+            std::memcpy(storage.data() + writePos, data, toEnd);
+            std::memcpy(storage.data(), data + toEnd, len - toEnd);
+            writePos = len - toEnd;
+        }
+
+        size = std::min(cap, size + len);
+    }
+
+    std::string tail(size_t maxBytes) const
+    {
+        if (size == 0 || maxBytes == 0)
+        {
+            return std::string();
+        }
+
+        const size_t bytes = std::min(size, maxBytes);
+        const size_t start = (writePos + cap - bytes) % cap;
+        std::string out;
+        out.resize(bytes);
+
+        if (start + bytes <= cap)
+        {
+            std::memcpy(out.data(), storage.data() + start, bytes);
+        }
+        else
+        {
+            const size_t first = cap - start;
+            std::memcpy(out.data(), storage.data() + start, first);
+            std::memcpy(out.data() + first, storage.data(), bytes - first);
+        }
+
+        return out;
+    }
+
+    uint64_t droppedBytes() const
+    {
+        return totalWritten > static_cast<uint64_t>(size) ? (totalWritten - static_cast<uint64_t>(size)) : 0ull;
+    }
+
+    size_t cap;
+    std::vector<char> storage;
+    size_t writePos = 0;
+    size_t size = 0;
+    uint64_t totalWritten = 0;
+};
+
+size_t ResolvePtyBufferCapBytes()
+{
+    constexpr size_t kMiB = 1024ull * 1024ull;
+    constexpr size_t kDefaultCap = 512ull * kMiB;
+    const char* env = std::getenv("RAWRXD_PTY_BUFFER_CAP_MB");
+    if (env == nullptr || env[0] == '\0')
+    {
+        return kDefaultCap;
+    }
+
+    char* end = nullptr;
+    const unsigned long long requestedMb = std::strtoull(env, &end, 10);
+    if (end == env || requestedMb == 0)
+    {
+        return kDefaultCap;
+    }
+
+    const unsigned long long clampedMb = std::min<unsigned long long>(512ull, std::max<unsigned long long>(32ull, requestedMb));
+    return static_cast<size_t>(clampedMb * kMiB);
+}
+
+bool FinalizeBufferedOutput(const CircularOutputBuffer& buffer, size_t maxCaptureBytes, std::string& output)
+{
+    output = buffer.tail(maxCaptureBytes);
+    const uint64_t dropped = buffer.droppedBytes();
+    if (dropped > 0)
+    {
+        output += "\n[PTY CIRCULAR BUFFER DROPPED " + std::to_string(dropped) + " BYTES]";
+    }
+    if (buffer.size > maxCaptureBytes)
+    {
+        output += "\n[OUTPUT TRUNCATED TO " + std::to_string(maxCaptureBytes) + " BYTES FOR TOOL RESPONSE]";
+    }
+    return true;
+}
+
+bool RunProcessWithPseudoConsole(const std::wstring& cmdLine,
+                                 uint32_t timeoutMs,
+                                 std::string& output,
+                                 uint32_t& exitCode,
+                                 const wchar_t* workingDirectoryUtf16)
+{
+    const HMODULE kernel32 = GetModuleHandleW(L"kernel32.dll");
+    if (kernel32 == nullptr)
+    {
+        exitCode = kTermPipeUnavailable;
+        return false;
+    }
+
+    using CreatePseudoConsoleFn = HRESULT(WINAPI*)(COORD, HANDLE, HANDLE, DWORD, HANDLE*);
+    using ClosePseudoConsoleFn = void(WINAPI*)(HANDLE);
+    const auto createPseudoConsole =
+        reinterpret_cast<CreatePseudoConsoleFn>(GetProcAddress(kernel32, "CreatePseudoConsole"));
+    const auto closePseudoConsole = reinterpret_cast<ClosePseudoConsoleFn>(GetProcAddress(kernel32, "ClosePseudoConsole"));
+    if (createPseudoConsole == nullptr || closePseudoConsole == nullptr)
+    {
+        exitCode = kTermPipeUnavailable;
+        return false;
+    }
+
+    HANDLE hInputRead = nullptr;
+    HANDLE hInputWrite = nullptr;
+    HANDLE hOutputRead = nullptr;
+    HANDLE hOutputWrite = nullptr;
+    HANDLE hPc = nullptr;
+    PROCESS_INFORMATION pi{};
+    STARTUPINFOEXW siex{};
+    SIZE_T attrSize = 0;
+
+    auto closeHandleSafe = [](HANDLE& h)
+    {
+        if (h != nullptr && h != INVALID_HANDLE_VALUE)
+        {
+            CloseHandle(h);
+            h = nullptr;
+        }
+    };
+
+    auto cleanup = [&]()
+    {
+        if (siex.lpAttributeList)
+        {
+            DeleteProcThreadAttributeList(siex.lpAttributeList);
+            HeapFree(GetProcessHeap(), 0, siex.lpAttributeList);
+            siex.lpAttributeList = nullptr;
+        }
+        if (hPc != nullptr)
+        {
+            closePseudoConsole(hPc);
+            hPc = nullptr;
+        }
+        closeHandleSafe(hInputRead);
+        closeHandleSafe(hInputWrite);
+        closeHandleSafe(hOutputRead);
+        closeHandleSafe(hOutputWrite);
+        closeHandleSafe(pi.hThread);
+        closeHandleSafe(pi.hProcess);
+    };
+
+    SECURITY_ATTRIBUTES sa{};
+    sa.nLength = sizeof(sa);
+    sa.bInheritHandle = TRUE;
+
+    if (!CreatePipe(&hInputRead, &hInputWrite, &sa, 0) || !CreatePipe(&hOutputRead, &hOutputWrite, &sa, 0))
+    {
+        exitCode = GetLastError();
+        cleanup();
+        return false;
+    }
+
+    if (!SetHandleInformation(hInputWrite, HANDLE_FLAG_INHERIT, 0) ||
+        !SetHandleInformation(hOutputRead, HANDLE_FLAG_INHERIT, 0))
+    {
+        exitCode = GetLastError();
+        cleanup();
+        return false;
+    }
+
+    const COORD consoleSize = {120, 30};
+    const HRESULT hr = createPseudoConsole(consoleSize, hInputRead, hOutputWrite, 0, &hPc);
+    if (FAILED(hr))
+    {
+        exitCode = static_cast<uint32_t>(HRESULT_CODE(hr));
+        cleanup();
+        return false;
+    }
+
+    InitializeProcThreadAttributeList(nullptr, 1, 0, &attrSize);
+    siex.lpAttributeList = static_cast<PPROC_THREAD_ATTRIBUTE_LIST>(HeapAlloc(GetProcessHeap(), 0, attrSize));
+    if (siex.lpAttributeList == nullptr)
+    {
+        exitCode = ERROR_NOT_ENOUGH_MEMORY;
+        cleanup();
+        return false;
+    }
+
+    if (!InitializeProcThreadAttributeList(siex.lpAttributeList, 1, 0, &attrSize))
+    {
+        exitCode = GetLastError();
+        cleanup();
+        return false;
+    }
+
+    if (!UpdateProcThreadAttribute(siex.lpAttributeList,
+                                   0,
+                                   PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE,
+                                   hPc,
+                                   sizeof(hPc),
+                                   nullptr,
+                                   nullptr))
+    {
+        exitCode = GetLastError();
+        cleanup();
+        return false;
+    }
+
+    siex.StartupInfo.cb = sizeof(STARTUPINFOEXW);
+    std::vector<wchar_t> mutableCmd(cmdLine.begin(), cmdLine.end());
+    mutableCmd.push_back(L'\0');
+
+    const DWORD creationFlags = EXTENDED_STARTUPINFO_PRESENT | CREATE_UNICODE_ENVIRONMENT;
+    if (!CreateProcessW(nullptr,
+                        mutableCmd.data(),
+                        nullptr,
+                        nullptr,
+                        FALSE,
+                        creationFlags,
+                        nullptr,
+                        (workingDirectoryUtf16 && workingDirectoryUtf16[0] != L'\0') ? workingDirectoryUtf16 : nullptr,
+                        &siex.StartupInfo,
+                        &pi))
+    {
+        exitCode = GetLastError();
+        cleanup();
+        return false;
+    }
+
+    closeHandleSafe(hInputRead);
+    closeHandleSafe(hOutputWrite);
+
+    const auto& guardrails = AgentToolHandlers::GetGuardrails();
+    CircularOutputBuffer circular(ResolvePtyBufferCapBytes());
+    char readBuf[8192];
+    const DWORD startTick = GetTickCount();
+
+    while (true)
+    {
+        DWORD available = 0;
+        if (PeekNamedPipe(hOutputRead, nullptr, 0, nullptr, &available, nullptr) && available > 0)
+        {
+            DWORD bytesRead = 0;
+            if (ReadFile(hOutputRead, readBuf, static_cast<DWORD>(sizeof(readBuf)), &bytesRead, nullptr) && bytesRead > 0)
+            {
+                circular.append(readBuf, static_cast<size_t>(bytesRead));
+            }
+        }
+
+        const DWORD waitResult = WaitForSingleObject(pi.hProcess, 10);
+        if (waitResult == WAIT_OBJECT_0)
+        {
+            for (;;)
+            {
+                DWORD bytesRead = 0;
+                if (!ReadFile(hOutputRead, readBuf, static_cast<DWORD>(sizeof(readBuf)), &bytesRead, nullptr) || bytesRead == 0)
+                {
+                    break;
+                }
+                circular.append(readBuf, static_cast<size_t>(bytesRead));
+            }
+
+            DWORD processExit = 0;
+            if (!GetExitCodeProcess(pi.hProcess, &processExit))
+            {
+                processExit = ERROR_GEN_FAILURE;
+            }
+            exitCode = static_cast<uint32_t>(processExit);
+            FinalizeBufferedOutput(circular,
+                                   std::max<size_t>(1024, guardrails.maxOutputCaptureBytes),
+                                   output);
+            cleanup();
+            return true;
+        }
+
+        if (GetTickCount() - startTick > timeoutMs)
+        {
+            TerminateProcess(pi.hProcess, 1);
+            exitCode = WAIT_TIMEOUT;
+            FinalizeBufferedOutput(circular,
+                                   std::max<size_t>(1024, guardrails.maxOutputCaptureBytes),
+                                   output);
+            output += "\n[TIMEOUT after " + std::to_string(timeoutMs) + "ms]";
+            cleanup();
+            return false;
+        }
+    }
+}
+
 bool RunProcessWithTermPipe(const std::wstring& cmdLine, uint32_t timeoutMs, std::string& output, uint32_t& exitCode)
 {
     static std::once_flag initFlag;
@@ -611,23 +1185,14 @@ bool RunProcessWithTermPipe(const std::wstring& cmdLine, uint32_t timeoutMs, std
         return false;
     }
 
+    CircularOutputBuffer circular(ResolvePtyBufferCapBytes());
     auto appendOutput = [&](const char* buffer, size_t bytes) -> bool
     {
         if (bytes == 0)
         {
             return true;
         }
-        const size_t remaining =
-            guardrails.maxOutputCaptureBytes > output.size() ? (guardrails.maxOutputCaptureBytes - output.size()) : 0;
-        const size_t toAppend = std::min(bytes, remaining);
-        output.append(buffer, toAppend);
-        if (toAppend < bytes || output.size() >= guardrails.maxOutputCaptureBytes)
-        {
-            output += "\n[OUTPUT TRUNCATED]";
-            TermPipe_Kill(sessionId);
-            exitCode = ERROR_MORE_DATA;
-            return false;
-        }
+        circular.append(buffer, bytes);
         return true;
     };
 
@@ -673,6 +1238,9 @@ bool RunProcessWithTermPipe(const std::wstring& cmdLine, uint32_t timeoutMs, std
                 processExitCode = session->exitCode;
             }
             exitCode = static_cast<uint32_t>(processExitCode);
+            FinalizeBufferedOutput(circular,
+                                   std::max<size_t>(1024, guardrails.maxOutputCaptureBytes),
+                                   output);
             TermPipe_Kill(sessionId);
             return true;
         }
@@ -680,6 +1248,9 @@ bool RunProcessWithTermPipe(const std::wstring& cmdLine, uint32_t timeoutMs, std
         if (GetTickCount() - startTick > timeoutMs)
         {
             TermPipe_Kill(sessionId);
+            FinalizeBufferedOutput(circular,
+                                   std::max<size_t>(1024, guardrails.maxOutputCaptureBytes),
+                                   output);
             output += "\n[TIMEOUT after " + std::to_string(timeoutMs) + "ms]";
             exitCode = WAIT_TIMEOUT;
             return false;
@@ -1076,6 +1647,7 @@ ToolCallResult AgentToolHandlers::ReplaceInFile(const json& args)
     std::string path = NormalizePath(args["path"].get<std::string>());
     std::string oldStr = args["old_string"].get<std::string>();
     std::string newStr = args["new_string"].get<std::string>();
+    const bool previewOnly = args.value("preview_only", false) || args.value("dry_run", false);
 
     if (!IsPathAllowed(path))
     {
@@ -1122,6 +1694,33 @@ ToolCallResult AgentToolHandlers::ReplaceInFile(const json& args)
     // Perform replacement
     std::string newContent = content.substr(0, pos) + newStr + content.substr(pos + oldStr.size());
 
+    auto diffResult = RawrXD::Diff::DiffEngine::ComputeDiff(content, newContent);
+    std::string unifiedDiff = diffResult.ToUnifiedDiff("a/" + path, "b/" + path);
+    constexpr size_t kMaxDiffPreviewBytes = 128 * 1024;
+    bool diffTruncated = false;
+    if (unifiedDiff.size() > kMaxDiffPreviewBytes)
+    {
+        unifiedDiff.resize(kMaxDiffPreviewBytes);
+        unifiedDiff += "\n[diff preview truncated]";
+        diffTruncated = true;
+    }
+
+    if (previewOnly)
+    {
+        nlohmann::json previewMeta = nlohmann::json::object();
+        previewMeta["path"] = path;
+        previewMeta["preview_only"] = true;
+        previewMeta["old_length"] = oldStr.size();
+        previewMeta["new_length"] = newStr.size();
+        previewMeta["position"] = pos;
+        previewMeta["multiple_matches"] = multipleMatches;
+        previewMeta["rollback_available"] = s_guardrails.requireBackupOnWrite;
+        previewMeta["rollback_strategy"] = s_guardrails.requireBackupOnWrite ? "restore_from_backup" : "none";
+        previewMeta["unified_diff"] = unifiedDiff;
+        previewMeta["diff_truncated"] = diffTruncated;
+        return ToolCallResult::Ok("Preview generated; no file changes were written", previewMeta);
+    }
+
     // Write back
     std::ofstream outFile(path, std::ios::trunc | std::ios::binary);
     if (!outFile.is_open())
@@ -1145,11 +1744,110 @@ ToolCallResult AgentToolHandlers::ReplaceInFile(const json& args)
     res_metadata["position"] = pos;
     res_metadata["multiple_matches"] = multipleMatches;
     res_metadata["line_delta"] = linesChanged;
+    res_metadata["rollback_available"] = s_guardrails.requireBackupOnWrite;
+    res_metadata["rollback_strategy"] = s_guardrails.requireBackupOnWrite ? "restore_from_backup" : "none";
+    res_metadata["preview_only"] = false;
+    res_metadata["unified_diff"] = unifiedDiff;
+    res_metadata["diff_truncated"] = diffTruncated;
 
     ToolCallResult result = ToolCallResult::Ok(msg, res_metadata);
     result.filePath = path;
+    result.bytesRead = content.size();
     result.bytesWritten = newContent.size();
     result.linesAffected = std::abs(linesChanged) + CountLines(newStr);
+    return result;
+}
+
+// ============================================================================
+// undo_edit — Restore file from most recent backup snapshot
+// ============================================================================
+
+ToolCallResult AgentToolHandlers::UndoEdit(const json& args)
+{
+    if (!args.contains("path") || !args["path"].is_string())
+    {
+        return ToolCallResult::Validation("undo_edit requires 'path' (string)");
+    }
+
+    const std::string path = NormalizePath(args["path"].get<std::string>());
+    if (!IsPathAllowed(path))
+    {
+        return ToolCallResult::Sandbox("Path not in workspace allowlist: " + path);
+    }
+
+    fs::path backupPath;
+    std::string backupError;
+    if (!FindLatestBackupForPath(path, backupPath, backupError))
+    {
+        return ToolCallResult::Error("undo_edit failed: " + backupError + " for " + path, ToolOutcome::NotFound);
+    }
+
+    const bool previewOnly = args.value("preview_only", false) || args.value("dry_run", false);
+
+    std::string backupContent;
+    if (!ReadTextFile(backupPath.string(), backupContent))
+    {
+        return ToolCallResult::Error("undo_edit failed to read backup: " + backupPath.string());
+    }
+
+    std::string currentContent;
+    const bool hasCurrent = ReadTextFile(path, currentContent);
+
+    auto diffResult = RawrXD::Diff::DiffEngine::ComputeDiff(hasCurrent ? currentContent : std::string(), backupContent);
+    std::string unifiedDiff = diffResult.ToUnifiedDiff("a/" + path, "b/" + path);
+    constexpr size_t kMaxDiffPreviewBytes = 128 * 1024;
+    bool diffTruncated = false;
+    if (unifiedDiff.size() > kMaxDiffPreviewBytes)
+    {
+        unifiedDiff.resize(kMaxDiffPreviewBytes);
+        unifiedDiff += "\n[diff preview truncated]";
+        diffTruncated = true;
+    }
+
+    if (previewOnly)
+    {
+        nlohmann::json previewMeta = nlohmann::json::object();
+        previewMeta["path"] = path;
+        previewMeta["preview_only"] = true;
+        previewMeta["rollback_available"] = true;
+        previewMeta["rollback_strategy"] = "restore_from_backup";
+        previewMeta["backup_path"] = backupPath.string();
+        previewMeta["unified_diff"] = unifiedDiff;
+        previewMeta["diff_truncated"] = diffTruncated;
+        return ToolCallResult::Ok("Preview generated; no file changes were written", previewMeta);
+    }
+
+    if (fs::exists(path) && s_guardrails.requireBackupOnWrite)
+    {
+        const std::string safetyBackupError = CreateBackup(path);
+        if (!safetyBackupError.empty())
+        {
+            return ToolCallResult::Error("undo_edit pre-restore backup failed: " + safetyBackupError);
+        }
+    }
+
+    std::ofstream out(path, std::ios::binary | std::ios::trunc);
+    if (!out)
+    {
+        return ToolCallResult::Error("undo_edit failed to open target for restore: " + path);
+    }
+    out.write(backupContent.data(), static_cast<std::streamsize>(backupContent.size()));
+    out.close();
+
+    nlohmann::json res_metadata = nlohmann::json::object();
+    res_metadata["path"] = path;
+    res_metadata["restored_from_backup"] = backupPath.string();
+    res_metadata["bytes_written"] = backupContent.size();
+    res_metadata["line_count"] = CountLines(backupContent);
+    res_metadata["rollback_available"] = true;
+    res_metadata["rollback_strategy"] = "restore_from_backup";
+    res_metadata["unified_diff"] = unifiedDiff;
+    res_metadata["diff_truncated"] = diffTruncated;
+
+    ToolCallResult result = ToolCallResult::Ok("File restored from latest backup", res_metadata);
+    result.filePath = path;
+    result.bytesWritten = backupContent.size();
+    result.linesAffected = CountLines(backupContent);
     return result;
 }
 
@@ -1361,6 +2059,151 @@ ToolCallResult AgentToolHandlers::CopyFile(const json& args)
     return result;
 }
 
+ToolCallResult AgentToolHandlers::RollbackFile(const json& args)
+{
+    if (!args.contains("path") || !args["path"].is_string())
+    {
+        return ToolCallResult::Validation("rollback_file requires 'path' (string)");
+    }
+
+    const std::string path = NormalizePath(args["path"].get<std::string>());
+    if (!IsPathAllowed(path))
+    {
+        return ToolCallResult::Sandbox("Path not in workspace allowlist: " + path);
+    }
+
+    const bool previewOnly = args.value("preview_only", false) || args.value("dry_run", false);
+    const bool createForwardBackup = args.value("create_forward_backup", true);
+
+    const fs::path target(path);
+    const fs::path backupDir = target.parent_path() / ".rawrxd-backups";
+
+    std::error_code ec;
+    if (!fs::exists(backupDir, ec) || !fs::is_directory(backupDir, ec))
+    {
+        return ToolCallResult::Error("No backup directory found for file: " + path);
+    }
+
+    fs::path selectedBackup;
+    if (args.contains("backup_path") && args["backup_path"].is_string())
+    {
+        selectedBackup = fs::path(NormalizePath(args["backup_path"].get<std::string>()));
+        if (!fs::exists(selectedBackup, ec) || !fs::is_regular_file(selectedBackup, ec))
+        {
+            return ToolCallResult::Error("Specified backup file not found: " + selectedBackup.string());
+        }
+    }
+    else
+    {
+        const std::string stem = target.stem().string();
+        const std::string ext = target.extension().string();
+        const std::string prefix = stem + ".";
+        const std::string suffix = ext.empty() ? ".bak" : (ext + ".bak");
+
+        fs::file_time_type newestTime{};
+        bool foundAny = false;
+        for (const auto& entry : fs::directory_iterator(backupDir, ec))
+        {
+            if (ec)
+            {
+                ec.clear();
+                continue;
+            }
+            if (!entry.is_regular_file(ec))
+            {
+                ec.clear();
+                continue;
+            }
+
+            const std::string name = entry.path().filename().string();
+            if (name.rfind(prefix, 0) != 0)
+            {
+                continue;
+            }
+            if (name.size() < suffix.size() || name.substr(name.size() - suffix.size()) != suffix)
+            {
+                continue;
+            }
+
+            const auto writeTime = entry.last_write_time(ec);
+            if (ec)
+            {
+                ec.clear();
+                continue;
+            }
+
+            if (!foundAny || writeTime > newestTime)
+            {
+                foundAny = true;
+                newestTime = writeTime;
+                selectedBackup = entry.path();
+            }
+        }
+
+        if (!foundAny)
+        {
+            return ToolCallResult::Error("No matching backup snapshots found for file: " + path);
+        }
+    }
+
+    const std::string selectedBackupPath = NormalizePath(selectedBackup.string());
+    if (!IsPathAllowed(selectedBackupPath))
+    {
+        return ToolCallResult::Sandbox("Backup path not in workspace allowlist: " + selectedBackupPath);
+    }
+
+    uintmax_t backupSize = fs::file_size(selectedBackup, ec);
+    if (ec)
+    {
+        backupSize = 0;
+        ec.clear();
+    }
+
+    nlohmann::json meta = nlohmann::json::object();
+    meta["path"] = path;
+    meta["backup_path"] = selectedBackupPath;
+    meta["backup_size_bytes"] = backupSize;
+    meta["preview_only"] = previewOnly;
+    meta["create_forward_backup"] = createForwardBackup;
+
+    if (previewOnly)
+    {
+        return ToolCallResult::Ok("Rollback preview ready; no file changes were written", meta);
+    }
+
+    if (createForwardBackup && fs::exists(target, ec) && fs::is_regular_file(target, ec))
+    {
+        const std::string backupErr = CreateBackup(path);
+        if (!backupErr.empty())
+        {
+            return ToolCallResult::Error(backupErr);
+        }
+        meta["forward_backup_created"] = true;
+    }
+    else
+    {
+        meta["forward_backup_created"] = false;
+    }
+
+    fs::copy_file(selectedBackup, target, fs::copy_options::overwrite_existing, ec);
+    if (ec)
+    {
+        return ToolCallResult::Error("Failed to restore backup: " + ec.message());
+    }
+
+    std::string restoredContent;
+    if (ReadTextFile(path, restoredContent))
+    {
+        meta["restored_lines"] = CountLines(restoredContent);
+        meta["restored_size_bytes"] = restoredContent.size();
+    }
+
+    ToolCallResult result = ToolCallResult::Ok("Rollback restore completed", meta);
+    result.filePath = path;
+    result.bytesWritten = static_cast<size_t>(backupSize);
+    return result;
+}
+
 ToolCallResult AgentToolHandlers::PathExists(const json& args)
 {
     if (!args.contains("path") || !args["path"].is_string())
@@ -1432,9 +2275,16 @@ bool AgentToolHandlers::RunProcess(const std::wstring& cmdLine, uint32_t timeout
                                    uint32_t& exitCode, const wchar_t* workingDirectoryUtf16)
 {
 #ifdef _WIN32
+    // Prefer ConPTY when available, then fall back to term-pipe, then CreateProcess.
+    if (RunProcessWithPseudoConsole(cmdLine, timeoutMs, output, exitCode, workingDirectoryUtf16))
+    {
+        return true;
+    }
+
     // Term-pipe path cannot honor a custom CWD; use CreateProcess fallback when cwd is set.
     if (!workingDirectoryUtf16 || workingDirectoryUtf16[0] == L'\0')
     {
+        output.clear();
         if (RunProcessWithTermPipe(cmdLine, timeoutMs, output, exitCode))
         {
             return true;
@@ -1560,13 +2410,17 @@ ToolCallResult AgentToolHandlers::ExecuteCommand(const json& args)
     }
 
     std::string command = args["command"].get<std::string>();
+    ToolCallResult commandPolicy = ValidateCommandPolicy(args, command);
+    if (commandPolicy.outcome != ToolOutcome::Success)
+    {
+        return commandPolicy;
+    }
+
     uint32_t timeout = s_guardrails.commandTimeoutMs;
     if (args.contains("timeout") && args["timeout"].is_number())
     {
-        timeout = static_cast<uint32_t>(args["timeout"].get<int>());
-        // Cap timeout at 5 minutes
-        if (timeout > 300000)
-            timeout = 300000;
+        const int requestedTimeout = args["timeout"].get<int>();
+        timeout = static_cast<uint32_t>(std::clamp(requestedTimeout, 1000, 300000));
     }
 
     const bool mirrorToIdeTerminal =
@@ -1633,6 +2487,7 @@ ToolCallResult AgentToolHandlers::ExecuteCommand(const json& args)
         res_metadata["exit_code"] = exitCode;
         res_metadata["elapsed_ms"] = elapsed;
         res_metadata["command"] = command;
+        res_metadata["timeout_ms"] = timeout;
         res_metadata["mirrored_to_ide_agent_terminal"] = mirrorToIdeTerminal;
         if (!cwdArg.empty())
             res_metadata["working_directory"] = NormalizePath(cwdArg);
@@ -1662,6 +2517,7 @@ ToolCallResult AgentToolHandlers::ExecuteCommand(const json& args)
     res_metadata["captured_bytes"] = output.size();
     res_metadata["original_bytes"] = originalSize;
     res_metadata["command"] = command;
+    res_metadata["timeout_ms"] = timeout;
     res_metadata["mirrored_to_ide_agent_terminal"] = mirrorToIdeTerminal;
     if (!cwdArg.empty())
         res_metadata["working_directory"] = NormalizePath(cwdArg);
@@ -1688,6 +2544,317 @@ ToolCallResult AgentToolHandlers::ExecuteCommand(const json& args)
         result.metadata = res_metadata;
         result.output = output;  // Include output even on error
     }
+    return result;
+}
+
+// ============================================================================
+// get_code_outline — Extract top-level symbols from a source file
+// ============================================================================
+
+ToolCallResult AgentToolHandlers::GetCodeOutline(const json& args)
+{
+    if (!args.contains("path") || !args["path"].is_string())
+    {
+        return ToolCallResult::Validation("get_code_outline requires 'path' (string)");
+    }
+
+    const std::string path = NormalizePath(args["path"].get<std::string>());
+    if (!IsPathAllowed(path))
+    {
+        return ToolCallResult::Sandbox("Path not in workspace allowlist: " + path);
+    }
+    if (!fs::exists(path) || !fs::is_regular_file(path))
+    {
+        return ToolCallResult::Error("File not found: " + path, ToolOutcome::NotFound);
+    }
+
+    const int maxSymbols = std::clamp(args.value("max_symbols", 500), 1, 2000);
+    const bool useLsp = args.value("use_lsp", true);
+    const int lspTimeoutMs = std::clamp(args.value("lsp_timeout_ms", 200), 50, 2000);
+    const auto startedAt = std::chrono::steady_clock::now();
+
+    std::string content;
+    if (!ReadTextFile(path, content))
+    {
+        return ToolCallResult::Error("Cannot read file: " + path);
+    }
+    if (content.size() > s_guardrails.maxFileSizeBytes)
+    {
+        return ToolCallResult::Error("File too large: " + std::to_string(content.size()) + " bytes");
+    }
+
+    const std::string ext = ToLowerCopy(fs::path(path).extension().string());
+    const std::vector<std::string> lines = ReadLines(content);
+
+    const bool isAsmLike = (ext == ".asm" || ext == ".inc" || ext == ".s");
+    const bool lspEligible = useLsp && !isAsmLike;
+
+    nlohmann::json lspSymbols = nlohmann::json::array();
+    nlohmann::json lspSymbolTree = nlohmann::json::array();
+    bool lspTimedOut = false;
+    int lspElapsedMs = 0;
+    if (lspEligible)
+    {
+        try
+        {
+            static RawrXD::Agentic::LSPManager s_lspManager;
+            const std::string workspaceRoot =
+                s_guardrails.allowedRoots.empty() ? fs::path(path).parent_path().string() : s_guardrails.allowedRoots[0];
+            const std::string languageId = s_lspManager.getLanguageId(path);
+            if (!languageId.empty())
+            {
+                RawrXD::Agentic::LSPClient* client = s_lspManager.getClient(languageId, workspaceRoot);
+                if (client != nullptr && client->isInitialized())
+                {
+                    std::mutex lspMutex;
+                    std::condition_variable lspCv;
+                    bool completed = false;
+                    const auto lspStart = std::chrono::steady_clock::now();
+
+                    client->requestDocumentSymbols(ToFileUri(path),
+                                                   [&](const std::vector<RawrXD::Agentic::LSPSymbolInfo>& syms) {
+                                                       std::function<nlohmann::json(const RawrXD::Agentic::LSPSymbolInfo&)> toTree;
+                                                       toTree = [&](const RawrXD::Agentic::LSPSymbolInfo& sym) {
+                                                           nlohmann::json node = nlohmann::json::object();
+                                                           node["name"] = sym.name;
+                                                           node["kind"] = LspSymbolKindName(sym.kind);
+                                                           node["line"] = sym.selectionRange.start.line + 1;
+                                                           node["children"] = nlohmann::json::array();
+                                                           for (const auto& child : sym.children)
+                                                           {
+                                                               node["children"].push_back(toTree(child));
+                                                           }
+                                                           return node;
+                                                       };
+
+                                                       std::function<void(const RawrXD::Agentic::LSPSymbolInfo&,
+                                                                          const std::string&)> flatten;
+                                                       nlohmann::json local = nlohmann::json::array();
+                                                       nlohmann::json tree = nlohmann::json::array();
+                                                       flatten = [&](const RawrXD::Agentic::LSPSymbolInfo& sym,
+                                                                     const std::string& parent) {
+                                                           if (static_cast<int>(local.size()) >= maxSymbols)
+                                                           {
+                                                               return;
+                                                           }
+
+                                                           nlohmann::json row = nlohmann::json::object();
+                                                           row["name"] = sym.name;
+                                                           row["kind"] = LspSymbolKindName(sym.kind);
+                                                           row["line"] = sym.range.start.line + 1;
+                                                           row["signature"] = parent.empty() ? sym.name : (parent + "::" + sym.name);
+                                                           local.push_back(row);
+
+                                                           for (const auto& child : sym.children)
+                                                           {
+                                                               flatten(child, row["signature"].get<std::string>());
+                                                               if (static_cast<int>(local.size()) >= maxSymbols)
+                                                               {
+                                                                   break;
+                                                               }
+                                                           }
+                                                       };
+
+                                                       for (const auto& sym : syms)
+                                                       {
+                                                           tree.push_back(toTree(sym));
+                                                           flatten(sym, sym.containerName);
+                                                       }
+
+                                                       {
+                                                           std::lock_guard<std::mutex> lock(lspMutex);
+                                                           lspSymbols = std::move(local);
+                                                           lspSymbolTree = std::move(tree);
+                                                           completed = true;
+                                                       }
+                                                       lspCv.notify_one();
+                                                   });
+
+                    std::unique_lock<std::mutex> lock(lspMutex);
+                    const bool ready = lspCv.wait_for(lock, std::chrono::milliseconds(lspTimeoutMs),
+                                                      [&]() { return completed; });
+                    if (!ready)
+                    {
+                        lspTimedOut = true;
+                        ++g_getCodeOutlineLspTimeout;
+                    }
+
+                    lspElapsedMs = static_cast<int>(std::chrono::duration_cast<std::chrono::milliseconds>(
+                                         std::chrono::steady_clock::now() - lspStart)
+                                         .count());
+
+                    if (ready && !lspSymbols.empty())
+                    {
+                        ++g_getCodeOutlineLspSuccess;
+                    }
+                }
+            }
+        }
+        catch (...)
+        {
+            // Fall through to parser fallback.
+        }
+    }
+
+    static const std::regex reCppContainer(
+        R"(^\s*(?:class|struct|enum|namespace)\s+([A-Za-z_~][A-Za-z0-9_:]*)\b)",
+        std::regex::ECMAScript);
+    static const std::regex reCppFunction(
+        R"(^\s*(?:template\s*<[^>]*>\s*)?(?:inline\s+|static\s+|virtual\s+|constexpr\s+|friend\s+|extern\s+|unsigned\s+|signed\s+|long\s+|short\s+|\w[\w:\<\>\*&\s]*\s+)+([A-Za-z_~][A-Za-z0-9_:]*)\s*\([^;{}]*\)\s*(?:const\s*)?(?:noexcept\s*)?(?:\{|$))",
+        std::regex::ECMAScript);
+    static const std::regex reAsmProc(R"(^\s*([A-Za-z_.$?@][A-Za-z0-9_.$?@]*)\s+proc\b)", std::regex::icase);
+    static const std::regex reAsmStruct(R"(^\s*([A-Za-z_.$?@][A-Za-z0-9_.$?@]*)\s+struct\b)", std::regex::icase);
+    static const std::regex reAsmMacro(R"(^\s*([A-Za-z_.$?@][A-Za-z0-9_.$?@]*)\s+macro\b)", std::regex::icase);
+    static const std::regex reAsmLabel(R"(^\s*([A-Za-z_.$?@][A-Za-z0-9_.$?@]*)\s*:\s*$)", std::regex::ECMAScript);
+    static const std::regex rePyDef(R"(^\s*def\s+([A-Za-z_][A-Za-z0-9_]*)\s*\()", std::regex::ECMAScript);
+    static const std::regex rePyClass(R"(^\s*class\s+([A-Za-z_][A-Za-z0-9_]*)\b)", std::regex::ECMAScript);
+    static const std::regex reJsClass(R"(^\s*class\s+([A-Za-z_$][A-Za-z0-9_$]*)\b)", std::regex::ECMAScript);
+    static const std::regex reJsFunction(
+        R"(^\s*(?:export\s+)?(?:async\s+)?function\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*\()", std::regex::ECMAScript);
+    static const std::regex reJsVarFn(
+        R"(^\s*(?:const|let|var)\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*(?:async\s*)?(?:\([^)]*\)|[A-Za-z_$][A-Za-z0-9_$]*)\s*=>)",
+        std::regex::ECMAScript);
+
+    auto isLikelyCommentLine = [](const std::string& line) {
+        const std::string trimmed = TrimAscii(line);
+        return trimmed.empty() || trimmed.rfind("//", 0) == 0 || trimmed.rfind("#", 0) == 0 ||
+               trimmed.rfind(";", 0) == 0;
+    };
+
+    nlohmann::json symbols = lspSymbols;
+    if (lspSymbols.empty())
+    {
+        ++g_getCodeOutlineParserFallback;
+    }
+    std::smatch match;
+    for (size_t i = 0; i < lines.size() && static_cast<int>(symbols.size()) < maxSymbols; ++i)
+    {
+        if (!lspSymbols.empty())
+        {
+            break;
+        }
+
+        const std::string& line = lines[i];
+        if (isLikelyCommentLine(line))
+        {
+            continue;
+        }
+
+        std::string kind;
+        std::string name;
+
+        if (ext == ".cpp" || ext == ".cc" || ext == ".c" || ext == ".h" || ext == ".hpp" || ext == ".hh")
+        {
+            if (std::regex_search(line, match, reCppContainer) && match.size() > 1)
+            {
+                kind = "container";
+                name = match[1].str();
+            }
+            else if (std::regex_search(line, match, reCppFunction) && match.size() > 1)
+            {
+                kind = "function";
+                name = match[1].str();
+            }
+        }
+        else if (ext == ".asm" || ext == ".inc" || ext == ".s")
+        {
+            if (std::regex_search(line, match, reAsmProc) && match.size() > 1)
+            {
+                kind = "proc";
+                name = match[1].str();
+            }
+            else if (std::regex_search(line, match, reAsmStruct) && match.size() > 1)
+            {
+                kind = "struct";
+                name = match[1].str();
+            }
+            else if (std::regex_search(line, match, reAsmMacro) && match.size() > 1)
+            {
+                kind = "macro";
+                name = match[1].str();
+            }
+            else if (std::regex_search(line, match, reAsmLabel) && match.size() > 1)
+            {
+                kind = "label";
+                name = match[1].str();
+            }
+        }
+        else if (ext == ".py")
+        {
+            if (std::regex_search(line, match, rePyClass) && match.size() > 1)
+            {
+                kind = "class";
+                name = match[1].str();
+            }
+            else if (std::regex_search(line, match, rePyDef) && match.size() > 1)
+            {
+                kind = "function";
+                name = match[1].str();
+            }
+        }
+        else if (ext == ".js" || ext == ".ts" || ext == ".jsx" || ext == ".tsx")
+        {
+            if (std::regex_search(line, match, reJsClass) && match.size() > 1)
+            {
+                kind = "class";
+                name = match[1].str();
+            }
+            else if (std::regex_search(line, match, reJsFunction) && match.size() > 1)
+            {
+                kind = "function";
+                name = match[1].str();
+            }
+            else if (std::regex_search(line, match, reJsVarFn) && match.size() > 1)
+            {
+                kind = "lambda";
+                name = match[1].str();
+            }
+        }
+
+        if (!name.empty())
+        {
+            nlohmann::json sym = nlohmann::json::object();
+            sym["name"] = name;
+            sym["kind"] = kind.empty() ? "symbol" : kind;
+            sym["line"] = static_cast<int>(i + 1);
+            sym["signature"] = TrimAscii(line);
+            symbols.push_back(sym);
+        }
+    }
+
+    nlohmann::json body = nlohmann::json::object();
+    body["path"] = path;
+    body["language"] = ext.empty() ? "unknown" : ext;
+    body["total_lines"] = static_cast<int>(lines.size());
+    body["symbol_count"] = symbols.size();
+    body["source"] = lspSymbols.empty() ? "parser_fallback" : "lsp_document_symbol";
+    body["lsp_timed_out"] = lspTimedOut;
+    body["lsp_timeout_ms"] = lspTimeoutMs;
+    body["symbols"] = symbols;
+    if (!lspSymbolTree.empty())
+    {
+        body["symbol_tree"] = lspSymbolTree;
+    }
+
+    nlohmann::json res_metadata = nlohmann::json::object();
+    res_metadata["path"] = path;
+    res_metadata["language"] = body["language"];
+    res_metadata["symbol_count"] = body["symbol_count"];
+    res_metadata["max_symbols"] = maxSymbols;
+    res_metadata["source"] = body["source"];
+    res_metadata["lsp_timed_out"] = lspTimedOut;
+    res_metadata["lsp_timeout_ms"] = lspTimeoutMs;
+    res_metadata["lsp_elapsed_ms"] = lspElapsedMs;
+    res_metadata["elapsed_ms"] = static_cast<int>(std::chrono::duration_cast<std::chrono::milliseconds>(
+                                       std::chrono::steady_clock::now() - startedAt)
+                                       .count());
+    res_metadata["outline_lsp_success_count"] = g_getCodeOutlineLspSuccess.load();
+    res_metadata["outline_lsp_timeout_count"] = g_getCodeOutlineLspTimeout.load();
+    res_metadata["outline_parser_fallback_count"] = g_getCodeOutlineParserFallback.load();
+
+    ToolCallResult result = ToolCallResult::Ok(body.dump(2), res_metadata);
+    result.filePath = path;
+    result.bytesRead = content.size();
     return result;
 }
 
@@ -2064,34 +3231,6 @@ ToolCallResult AgentToolHandlers::RunShell(const json& args)
     if (!args.contains("command") || !args["command"].is_string())
     {
         return ToolCallResult::Validation("run_shell requires 'command' (string)");
-    }
-    std::string command = args["command"].get<std::string>();
-
-    // Enforce allowlist if configured
-    if (!s_guardrails.allowedCommands.empty())
-    {
-        std::istringstream iss(command);
-        std::string first;
-        iss >> first;
-        bool allowed = false;
-        for (const auto& ac : s_guardrails.allowedCommands)
-        {
-            if (first == ac)
-            {
-                allowed = true;
-                break;
-            }
-        }
-        if (!allowed)
-        {
-            nlohmann::json meta = nlohmann::json::object();
-            meta["command"] = command;
-            meta["first_token"] = first;
-            meta["policy"] = "allowedCommands";
-            ToolCallResult res = ToolCallResult::Sandbox("Command not allowed by policy: " + first);
-            res.metadata = meta;
-            return res;
-        }
     }
     return ExecuteCommand(args);
 }
@@ -3201,6 +4340,34 @@ json AgentToolHandlers::GetAllSchemas()
     ef["function"]["name"] = "edit_file";
     ef["function"]["description"] = "Edit a file by replacing an exact text block with new text.";
     tools.push_back(ef);
+    
+    // undo_edit
+    json ue = json::object();
+    ue["type"] = "function";
+    json ue_f = json::object();
+    ue_f["name"] = "undo_edit";
+    ue_f["description"] =
+        "Restore a file from the latest backup snapshot in .rawrxd-backups. Supports preview_only for safe diff review.";
+    json ue_p = json::object();
+    ue_p["type"] = "object";
+    json ue_prop = json::object();
+    json ue_path = json::object();
+    ue_path["type"] = "string";
+    ue_path["description"] = "Absolute path to the file to restore";
+    json ue_preview = json::object();
+    ue_preview["type"] = "boolean";
+    ue_preview["description"] = "If true, return rollback diff metadata without writing.";
+    json ue_dry = json::object();
+    ue_dry["type"] = "boolean";
+    ue_dry["description"] = "Alias of preview_only.";
+    ue_prop["path"] = ue_path;
+    ue_prop["preview_only"] = ue_preview;
+    ue_prop["dry_run"] = ue_dry;
+    ue_p["properties"] = ue_prop;
+    ue_p["required"] = jstrArr({"path"});
+    ue_f["parameters"] = ue_p;
+    ue["function"] = ue_f;
+    tools.push_back(ue);
 
     // list_dir
     json ld = json::object();
@@ -3275,6 +4442,70 @@ json AgentToolHandlers::GetAllSchemas()
     ec_f["parameters"] = ec_p;
     ec["function"] = ec_f;
     tools.push_back(ec);
+
+    // get_code_outline
+    json gco = json::object();
+    gco["type"] = "function";
+    json gco_f = json::object();
+    gco_f["name"] = "get_code_outline";
+    gco_f["description"] = "Extract top-level symbols from a source file (functions/classes/labels)";
+    json gco_p = json::object();
+    gco_p["type"] = "object";
+    json gco_prop = json::object();
+    json gco_path = json::object();
+    gco_path["type"] = "string";
+    gco_path["description"] = "Absolute file path to inspect";
+    json gco_max = json::object();
+    gco_max["type"] = "number";
+    gco_max["description"] = "Maximum symbols to return (default 500, max 2000)";
+    json gco_use_lsp = json::object();
+    gco_use_lsp["type"] = "boolean";
+    gco_use_lsp["description"] = "Use LSP documentSymbol first when available (default true).";
+    json gco_lsp_timeout = json::object();
+    gco_lsp_timeout["type"] = "number";
+    gco_lsp_timeout["description"] = "LSP wait timeout in ms (default 200, clamped 50-2000).";
+    gco_prop["path"] = gco_path;
+    gco_prop["max_symbols"] = gco_max;
+    gco_prop["use_lsp"] = gco_use_lsp;
+    gco_prop["lsp_timeout_ms"] = gco_lsp_timeout;
+    gco_p["properties"] = gco_prop;
+    gco_p["required"] = jstrArr({"path"});
+    gco_f["parameters"] = gco_p;
+    gco["function"] = gco_f;
+    tools.push_back(gco);
+
+    // rollback_file
+    json rbf = json::object();
+    rbf["type"] = "function";
+    json rbf_f = json::object();
+    rbf_f["name"] = "rollback_file";
+    rbf_f["description"] =
+        "Restore a file from .rawrxd-backups snapshot. Defaults to latest matching backup unless backup_path is set.";
+    json rbf_p = json::object();
+    rbf_p["type"] = "object";
+    json rbf_prop = json::object();
+    json rbf_path = json::object();
+    rbf_path["type"] = "string";
+    rbf_path["description"] = "Absolute target file path to restore";
+    json rbf_backup = json::object();
+    rbf_backup["type"] = "string";
+    rbf_backup["description"] = "Optional explicit backup path (.bak)";
+    json rbf_preview = json::object();
+    rbf_preview["type"] = "boolean";
+    rbf_preview["description"] = "If true, validate and report selected backup without writing";
+    json rbf_forward = json::object();
+    rbf_forward["type"] = "boolean";
+    rbf_forward["description"] = "Create a forward backup before restore (default true)";
+    rbf_prop["path"] = rbf_path;
+    rbf_prop["backup_path"] = rbf_backup;
+    rbf_prop["preview_only"] = rbf_preview;
+    rbf_prop["dry_run"] = rbf_preview;
+    rbf_prop["create_forward_backup"] = rbf_forward;
+    rbf_p["properties"] = rbf_prop;
+    rbf_p["required"] = jstrArr({"path"});
+    rbf_f["parameters"] = rbf_p;
+    rbf["function"] = rbf_f;
+    tools.push_back(rbf);
 
     // run_terminal (alias of execute_command)
     json rt = ec;
@@ -3723,6 +4954,13 @@ json AgentToolHandlers::GetAllSchemas()
     gd["function"] = gd_f;
     tools.push_back(gd);
 
+    // Merge collaboration tool schemas
+    {
+        json collabSchemas = CollabToolHandlers::GetAllSchemas();
+        for (auto& s : collabSchemas)
+            tools.push_back(s);
+    }
+
     return tools;
 }
 
@@ -3890,6 +5128,10 @@ ToolCallResult AgentToolHandlers::ToolGitCommit(const nlohmann::json& args)
 ToolCallResult AgentToolHandlers::GHPrView(const nlohmann::json& args)
 {
     std::string num = args.value("number", "");
+    if (num.empty())
+    {
+        return ToolCallResult::Validation("gh_pr_view requires 'number' (string)");
+    }
     nlohmann::json forwarded;
     forwarded["command"] = "gh pr view " + num;
     return ExecuteCommand(forwarded);
@@ -3898,6 +5140,10 @@ ToolCallResult AgentToolHandlers::GHPrView(const nlohmann::json& args)
 ToolCallResult AgentToolHandlers::GHIssueView(const nlohmann::json& args)
 {
     std::string num = args.value("number", "");
+    if (num.empty())
+    {
+        return ToolCallResult::Validation("gh_issue_view requires 'number' (string)");
+    }
     nlohmann::json forwarded;
     forwarded["command"] = "gh issue view " + num;
     return ExecuteCommand(forwarded);
@@ -4344,6 +5590,7 @@ void AgentToolHandlers::InitializeDispatchTable()
     m_dispatchTable["fs_write"] = WriteFile;
     m_dispatchTable["edit_file"] = ReplaceInFile;
     m_dispatchTable["replace_in_file"] = ReplaceInFile;
+    m_dispatchTable["undo_edit"] = UndoEdit;
     m_dispatchTable["fs_replace_in_file"] = ReplaceInFile;
     m_dispatchTable["list_dir"] = ListDir;
     m_dispatchTable["list_directory"] = ListDir;
@@ -4352,6 +5599,8 @@ void AgentToolHandlers::InitializeDispatchTable()
     m_dispatchTable["fs_delete_file"] = DeleteFile;
     m_dispatchTable["fs_move_file"] = MoveFile;
     m_dispatchTable["fs_copy_file"] = CopyFile;
+    m_dispatchTable["rollback_file"] = RollbackFile;
+    m_dispatchTable["restore_file"] = RollbackFile;
     m_dispatchTable["fs_exists"] = PathExists;
     m_dispatchTable["fs_mkdir"] = MakeDirectory;
     m_dispatchTable["run_terminal"] = ExecuteCommand;
@@ -4359,6 +5608,7 @@ void AgentToolHandlers::InitializeDispatchTable()
     m_dispatchTable["run_in_terminal"] = ExecuteCommand;
     m_dispatchTable["terminal_run_command"] = ExecuteCommand;
     m_dispatchTable["run_shell"] = RunShell;
+    m_dispatchTable["get_code_outline"] = GetCodeOutline;
     m_dispatchTable["search_code"] = SearchCode;
     m_dispatchTable["fs_search"] = SearchCode;
     m_dispatchTable["search_ripgrep"] = SearchCode;
@@ -4414,6 +5664,26 @@ void AgentToolHandlers::InitializeDispatchTable()
     m_dispatchTable["apply_hotpatch"]       = ApplyHotpatch;
     m_dispatchTable["sys_get_capabilities"] = SysGetCapabilities;
     m_dispatchTable["disk_recovery"]        = DiskRecovery;
+
+    // Collaboration tools (Live Share, shared terminals, pair programming AI)
+    m_dispatchTable["collab_host_session"]     = CollabToolHandlers::HostSession;
+    m_dispatchTable["collab_join_session"]     = CollabToolHandlers::JoinSession;
+    m_dispatchTable["collab_leave_session"]    = CollabToolHandlers::LeaveSession;
+    m_dispatchTable["collab_share_file"]       = CollabToolHandlers::ShareFile;
+    m_dispatchTable["collab_edit_file"]        = CollabToolHandlers::EditSharedFile;
+    m_dispatchTable["collab_list_participants"]= CollabToolHandlers::ListParticipants;
+    m_dispatchTable["collab_send_chat"]        = CollabToolHandlers::SendChat;
+    m_dispatchTable["collab_create_terminal"]  = CollabToolHandlers::CreateTerminal;
+    m_dispatchTable["collab_terminal_input"]   = CollabToolHandlers::TerminalInput;
+    m_dispatchTable["collab_terminal_scrollback"] = CollabToolHandlers::TerminalScrollback;
+    m_dispatchTable["collab_list_terminals"]   = CollabToolHandlers::ListTerminals;
+    m_dispatchTable["collab_pair_start"]       = CollabToolHandlers::PairStart;
+    m_dispatchTable["collab_pair_swap_roles"]  = CollabToolHandlers::PairSwapRoles;
+    m_dispatchTable["collab_ai_suggest"]       = CollabToolHandlers::AISuggest;
+    m_dispatchTable["collab_review_code"]      = CollabToolHandlers::ReviewCode;
+    m_dispatchTable["collab_set_permission"]   = CollabToolHandlers::SetPermission;
+    m_dispatchTable["collab_kick"]             = CollabToolHandlers::KickParticipant;
+    m_dispatchTable["collab_status"]           = CollabToolHandlers::GetStatus;
 }
 
 AgentToolHandlers& AgentToolHandlers::Instance()

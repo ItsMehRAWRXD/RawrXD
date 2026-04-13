@@ -17,6 +17,7 @@
 #include <mutex>
 #include <atomic>
 #include <unordered_map>
+#include <chrono>
 #include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
@@ -46,7 +47,20 @@ namespace Agent {
     M(git_status,       "Get the current status of the git repository (branch, modified, staged files).") \
     M(git_diff,         "Get the diff of changes in the repository against a target (default: HEAD).") \
     M(git_commit,       "Commit staged changes with a descriptive message.") \
+    M(gh_issue_list,    "List GitHub issues for the current repository.") \
+    M(gh_issue_view,    "View details for a GitHub issue by number.") \
+    M(gh_pr_list,       "List GitHub pull requests for the current repository.") \
+    M(gh_pr_view,       "View details for a GitHub pull request by number.") \
     M(gh_create_pr,     "Create a new GitHub pull request for the current branch.") \
+    M(gh_pr_checks,     "Show CI/status checks for a GitHub pull request.") \
+    M(gh_pr_diff,       "Show unified diff for a GitHub pull request.") \
+    M(gh_pr_review,     "Submit a GitHub pull request review (approve, comment, request_changes).") \
+    M(gh_pr_comment,    "Add a comment to a GitHub pull request.") \
+    M(gh_pr_merge,      "Merge a GitHub pull request with merge/squash/rebase strategy.") \
+    M(propose_multifile_edits, "Plan structured multi-file edits and generate unified diff previews.") \
+    M(preview_multifile_diff, "Preview unified diffs for a structured multi-file edit plan.") \
+    M(apply_multifile_edits, "Apply a structured multi-file edit plan transactionally with rollback metadata.") \
+    M(refactor_rename_symbol, "Rename an identifier across one file or a workspace subtree with word-boundary safety.") \
     M(asm_assemble,     "Assemble MASM/x64 source code into a PE64 executable using the internal SovereignAssembler.") \
     M(sys_get_capabilities, "Query host hardware capabilities (CPU/GPU) to determine optimal execution tier (VRAM, AVX-512, etc.).") \
     M(debug_launch,     "Launch an executable under the native Windows debugger (DbgEng). Returns PID and initial state.") \
@@ -63,7 +77,11 @@ namespace Agent {
     M(debug_disasm,     "Disassemble instructions at a given address with annotations.") \
     M(debug_analyze,    "Analyze the last exception/crash with AI-generated root cause hypothesis and suggested actions.") \
     M(debug_snapshot,   "Capture a full debug session snapshot (state, exception, stack, modules) formatted for AI analysis.") \
-    M(debug_suggest_breakpoints, "Get AI-suggested breakpoints based on a problem description (e.g. 'crash', 'memory leak', 'deadlock').")
+    M(debug_suggest_breakpoints, "Get AI-suggested breakpoints based on a problem description (e.g. 'crash', 'memory leak', 'deadlock').") \
+    M(debug_status,     "Get current debugger session status (state, PID, target metadata).") \
+    M(debug_modules,    "List currently loaded modules in the debuggee process.") \
+    M(debug_detach,     "Detach debugger from the current target process.") \
+    M(debug_terminate,  "Terminate the current debuggee process and end session.")
 
 // ---------------------------------------------------------------------------
 // Tool ID enum — auto-generated from X-Macro
@@ -155,10 +173,18 @@ public:
                                           size_t topK = 3) const;
 
 private:
+    struct CachedToolResult {
+        ToolExecResult result;
+        std::chrono::steady_clock::time_point expiresAt;
+    };
+
     AgentToolRegistry();
     ~AgentToolRegistry() = default;
 
     void InitDescriptors();
+    bool IsResultCacheEligibleTool(const std::string& normalizedTool) const;
+    int ResultCacheTtlMs(const std::string& normalizedTool) const;
+    std::string BuildResultCacheKey(const std::string& normalizedTool, const json& args) const;
 
     mutable std::mutex m_mutex;
     std::vector<ToolDescriptor> m_tools;
@@ -169,6 +195,11 @@ private:
     // Populated lazily on the first Dispatch/RankByIntent call for each
     // unique query.  Protected by m_mutex.
     mutable std::unordered_map<std::string, std::vector<IntentMatch>> m_intentCache;
+
+    // ---- Tool result cache ----
+    // Key: normalized tool + canonical args JSON dump.
+    // Stores successful responses for read-only deterministic tools.
+    mutable std::unordered_map<std::string, CachedToolResult> m_toolResultCache;
 };
 
 } // namespace Agent

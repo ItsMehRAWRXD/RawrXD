@@ -1,5 +1,8 @@
 # Day 30 P0 Execution Backlog
 
+Update (2026-04-12): Active execution has been expanded into the 45-day closure plan at docs/PARITY_45_DAY_FINISH_BACKLOG.md.
+Kickoff status: STARTED.
+
 Purpose: convert parity strategy into executable closure work.
 
 ## Rules

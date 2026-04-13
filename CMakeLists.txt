@@ -1468,6 +1468,8 @@ set(RAWR_ENGINE_SOURCES
     src/win32app/agentic_bridge_headless.cpp
     src/win32app/agentic_headless_laneb_link_stubs.cpp
     src/win32app/bulk_fix_orchestrator_laneb_stub.cpp
+    src/agentic/StreamingResultChannel.cpp
+    src/agentic/observability/Logger.cpp
 )
 message(STATUS "[RawrEngine LaneB] Using curated headless core sources")
 
@@ -1475,7 +1477,12 @@ set(RAWR_ENGINE_LANE_B ON)
 
 set(RAWR_ENGINE_ASM_SOURCES
     src/asm/rawr_cpu_features.asm
+    src/asm/rawr_globals.asm
     src/asm/model_streamer_x64.asm
+    src/asm/mxcsr_determinism.asm
+    src/asm/zerocopy_ring_bridge.asm
+    src/asm/ums_micro_scheduler.asm
+    src/asm/inference_core.asm
     src/kernels/dequant_q6k_avx512.asm
     src/kernels/kv_accum_avx512.asm
 )
@@ -3759,6 +3766,11 @@ if(WIN32)
         src/win32app/Win32IDE_IRCBridge.cpp
         src/win32app/Win32IDE_IRCBridgeCommands.cpp
         src/collab/websocket_hub.cpp
+        src/collab/LiveShareSession.cpp
+        src/collab/SharedTerminal.cpp
+        src/collab/PairProgrammingAI.cpp
+        src/collab/CollaborationManager.cpp
+        src/collab/CollabToolHandlers.cpp
         src/win32app/Win32IDE_TestExplorerTree.cpp
         src/win32app/Win32IDE_NetworkPanel.cpp
         src/core/omega_orchestrator.cpp
@@ -3910,6 +3922,15 @@ if(WIN32)
         src/thermal/RAWRXD_ThermalDashboard.cpp
         src/win32app/VSCodeMarketplaceAPI.cpp
         src/marketplace/extension_auto_installer.cpp
+        # Phase 14-day: Extension Compatibility & Install stack (100%)
+        src/win32app/Win32IDE_ExtensionManager.cpp
+        src/win32app/Win32IDE_ExtensionToggles.cpp
+        src/win32app/Win32IDE_ExtensionMarketplace.cpp
+        src/marketplace/extension_marketplace_manager.cpp
+        src/marketplace/vsix_installer.cpp
+        src/marketplace/offline_cache_store.cpp
+        src/marketplace/enterprise_policy_engine.cpp
+        src/marketplace/vsix_loader.cpp
         # Multi-file search (real implementation; replaces earlier IDE stub)
         src/multi_file_search.cpp
         # Legacy support unit wiring removed from production lane.
@@ -4995,6 +5016,7 @@ if(WIN32)
         ${CMAKE_CURRENT_SOURCE_DIR}/src/telemetry
         ${CMAKE_CURRENT_SOURCE_DIR}/src/ui
         ${CMAKE_CURRENT_SOURCE_DIR}/src/git
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/collab
         ${CMAKE_CURRENT_SOURCE_DIR}/include
     )
 
@@ -5625,6 +5647,37 @@ set_target_properties(MCP-ModelSmoke PROPERTIES
     CXX_STANDARD_REQUIRED ON
 )
 message(STATUS "[MCPSmoke] Target: MCP-ModelSmoke")
+
+# Extension Installer smoke test — offline + live marketplace parity
+# Usage: ExtensionInstallerSmoke.exe            (offline/unit)
+#        ExtensionInstallerSmoke.exe --live      (live marketplace GET)
+add_executable(ExtensionInstallerSmoke EXCLUDE_FROM_ALL
+    src/tests/extension_installer_smoketest.cpp
+    src/marketplace/extension_auto_installer.cpp
+    src/marketplace/extension_marketplace_manager.cpp
+    src/marketplace/vsix_installer.cpp
+    src/marketplace/offline_cache_store.cpp
+    src/marketplace/enterprise_policy_engine.cpp
+    src/win32app/VSCodeMarketplaceAPI.cpp
+)
+target_include_directories(ExtensionInstallerSmoke PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+)
+if(MSVC)
+    target_compile_options(ExtensionInstallerSmoke PRIVATE /EHsc /W2 /Z7)
+endif()
+target_link_libraries(ExtensionInstallerSmoke PRIVATE
+    kernel32 winhttp wintrust crypt32 shell32 ole32
+)
+set_target_properties(ExtensionInstallerSmoke PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME ExtensionInstallerSmoke
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+message(STATUS "[ExtSmoke] Target: ExtensionInstallerSmoke  (offline + --live)")
 
 # BackendOrchestrator model sharding smoke test (manual)
 add_executable(BackendOrchestratorShardSmoke EXCLUDE_FROM_ALL

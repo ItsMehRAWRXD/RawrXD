@@ -79,14 +79,17 @@ class AgentToolHandlers
     static ToolCallResult ToolReadFile(const nlohmann::json& args);
     static ToolCallResult WriteFile(const nlohmann::json& args);
     static ToolCallResult ReplaceInFile(const nlohmann::json& args);
+    static ToolCallResult UndoEdit(const nlohmann::json& args);
     static ToolCallResult ListDir(const nlohmann::json& args);
     static ToolCallResult DeleteFile(const nlohmann::json& args);
     static ToolCallResult MoveFile(const nlohmann::json& args);
     static ToolCallResult CopyFile(const nlohmann::json& args);
+    static ToolCallResult RollbackFile(const nlohmann::json& args);
     static ToolCallResult PathExists(const nlohmann::json& args);
     static ToolCallResult MakeDirectory(const nlohmann::json& args);
     static ToolCallResult ExecuteCommand(const nlohmann::json& args);
     static ToolCallResult RunShell(const nlohmann::json& args);
+    static ToolCallResult GetCodeOutline(const nlohmann::json& args);
     static ToolCallResult SearchCode(const nlohmann::json& args);
     static ToolCallResult FileSearch(const nlohmann::json& args);
     static ToolCallResult GetDiagnostics(const nlohmann::json& args);

@@ -222,6 +222,9 @@ class AgenticBridge
     bool IsAnswer(const std::string& line) const;
     std::string BuildOpenTabsPromptContext() const;
     std::vector<std::string> ExtractToolCallLines(const std::string& modelOutput) const;
+    bool DispatchToolLinesPolicyAware(const std::vector<std::string>& toolLines, const std::string& parentId,
+                                      std::string& toolResult,
+                                      RawrXD::Agentic::StreamingResultChannel* streamingChannel = nullptr);
     bool DispatchToolLinesBatched(const std::vector<std::string>& toolLines, const std::string& parentId,
                                   std::string& toolResult,
                                   RawrXD::Agentic::StreamingResultChannel* streamingChannel = nullptr);

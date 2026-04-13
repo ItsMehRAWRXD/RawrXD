@@ -1,10 +1,12 @@
 #pragma once
 
 #include <atomic>
+#include <deque>
 #include <functional>
 #include <mutex>
 #include <string>
 #include <thread>
+#include <vector>
 #include <windows.h>
 
 class Win32TerminalManager
@@ -34,9 +36,12 @@ class Win32TerminalManager
     std::function<void(int)> onFinished;
 
   private:
+    bool startWithConPTY(const std::string& cmd, const char* workingDirectoryUtf8);
+    bool startWithPipes(const std::string& cmd, const char* workingDirectoryUtf8);
     void readOutputThread();
     void readErrorThread();
     void monitorProcessThread();
+    void appendToOutputRing(const char* data, size_t size);
     /// After natural exit, threads are done but handles may still be open — release before a new start().
     void resetStaleStateFromExitedProcess();
 
@@ -50,6 +55,9 @@ class Win32TerminalManager
     HANDLE m_hStdOutWrite;
     HANDLE m_hStdErrRead;
     HANDLE m_hStdErrWrite;
+    HANDLE m_hPseudoConsole;
+    HANDLE m_hPtyInputWrite;
+    HANDLE m_hPtyOutputRead;
 
     std::thread m_outputThread;
     std::thread m_errorThread;
@@ -58,4 +66,9 @@ class Win32TerminalManager
     std::atomic<bool> m_running;
     ShellType m_shellType;
     std::mutex m_stdinWriteMutex;
+
+    std::mutex m_outputRingMutex;
+    std::deque<std::string> m_outputRing;
+    size_t m_outputRingBytes;
+    static constexpr size_t kMaxOutputRingBytes = 512ull * 1024ull * 1024ull;
 };

@@ -98,6 +98,18 @@ void collectMoeMixturePlanRowRefs(const std::uint32_t modelIndex, const std::uin
     out = a * b;
     return true;
 }
+
+[[nodiscard]] bool stepTraceLoggingEnabled() noexcept
+{
+    static int enabled = -1;
+    if (enabled < 0)
+    {
+        char value[8] = {};
+        const DWORD len = GetEnvironmentVariableA("RAWRXD_TRACE_STEPS", value, static_cast<DWORD>(sizeof(value)));
+        enabled = (len > 0 && len < sizeof(value) && value[0] != '0') ? 1 : 0;
+    }
+    return enabled != 0;
+}
 }  // namespace
 
 class RawrXDTransformer::MoEPrepackWorker
@@ -1674,20 +1686,20 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
                 }
             }
 
-            if ((l % 5) == 0 || l == config.n_layers - 1)
+            if (stepTraceLoggingEnabled() && ((l % 5) == 0 || l == config.n_layers - 1))
             {
                 char stepBuf[192];
                 const int n = std::snprintf(stepBuf, sizeof(stepBuf), "[STEP] Layer %d/%d (pos=%lld token=%d/%d)\n",
                                             l + 1, config.n_layers, static_cast<long long>(current_pos + t), t + 1, T);
                 if (n > 0 && static_cast<size_t>(n) < sizeof(stepBuf))
                 {
-                    (void)std::fwrite(stepBuf, 1, static_cast<size_t>(n), stdout);
-                    std::fflush(stdout);
-                    OutputDebugStringA(stepBuf);
                     if (m_layerProgressCb)
                     {
                         m_layerProgressCb(std::string(stepBuf, static_cast<size_t>(n)));
                     }
+                    (void)std::fwrite(stepBuf, 1, static_cast<size_t>(n), stdout);
+                    std::fflush(stdout);
+                    OutputDebugStringA(stepBuf);
                 }
             }
             residual = x;

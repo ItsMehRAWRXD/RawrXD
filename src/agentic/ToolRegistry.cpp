@@ -8,6 +8,9 @@
 #include <filesystem>
 #include <fstream>
 #include <sstream>
+#include <algorithm>
+#include <array>
+#include <cstdlib>
 
 #include "../core/rawrxd_subsystem_api.hpp"
 #include "../core/unified_hotpatch_manager.hpp"
@@ -54,6 +57,83 @@ using RawrXD::Agent::ToolExecResult;
 
 namespace
 {
+
+std::string ToLowerAscii(std::string s)
+{
+    std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    return s;
+}
+
+std::string ExtractCommandBinary(const std::string& command)
+{
+    size_t i = 0;
+    while (i < command.size() && std::isspace(static_cast<unsigned char>(command[i])))
+    {
+        ++i;
+    }
+    if (i >= command.size())
+    {
+        return {};
+    }
+
+    std::string token;
+    if (command[i] == '"')
+    {
+        ++i;
+        while (i < command.size() && command[i] != '"')
+        {
+            token.push_back(command[i++]);
+        }
+    }
+    else
+    {
+        while (i < command.size() && !std::isspace(static_cast<unsigned char>(command[i])))
+        {
+            token.push_back(command[i++]);
+        }
+    }
+
+    const size_t slashPos = token.find_last_of("/\\");
+    if (slashPos != std::string::npos)
+    {
+        token = token.substr(slashPos + 1);
+    }
+    return ToLowerAscii(token);
+}
+
+bool IsAllowedCommandBinary(const std::string& binary)
+{
+    static const std::array<const char*, 13> kAllowed = {
+        "git", "git.exe", "cmake", "cmake.exe", "ninja", "ninja.exe", "cl", "cl.exe", "ctest", "ctest.exe",
+        "rg", "rg.exe", "pwsh"};
+
+    for (const char* allowed : kAllowed)
+    {
+        if (binary == allowed)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool LooksDestructiveCommand(const std::string& command)
+{
+    const std::string lower = ToLowerAscii(command);
+    static const std::array<const char*, 15> kDangerousFragments = {
+        " rm -rf",      "rm -rf ",      " del /f /s /q", " rmdir /s /q", " rd /s /q",     " git reset --hard",
+        " git clean -fd", " format ",      " diskpart",      " shutdown /s",  " mkfs",          " dd if=",
+        "cipher /w",     "takeown /f c:", ":(){:|:&};:"};
+
+    for (const char* fragment : kDangerousFragments)
+    {
+        if (lower.find(fragment) != std::string::npos)
+        {
+            return true;
+        }
+    }
+    return false;
+}
 
 std::string NormalizeToolName(const std::string& raw)
 {
@@ -120,8 +200,42 @@ std::string NormalizeToolName(const std::string& raw)
         return "apply_hotpatch";
     if (normalized == "diskrecovery" || normalized == "recoverdisk")
         return "disk_recovery";
+    if (normalized == "ghprlist" || normalized == "listpullrequests" || normalized == "list_pull_requests")
+        return "gh_pr_list";
+    if (normalized == "ghprview" || normalized == "viewpullrequest" || normalized == "view_pull_request")
+        return "gh_pr_view";
+    if (normalized == "ghissuelist" || normalized == "listissues" || normalized == "list_issues")
+        return "gh_issue_list";
+    if (normalized == "ghissueview" || normalized == "viewissue" || normalized == "view_issue")
+        return "gh_issue_view";
     if (normalized == "gh_create_pr")
         return "gh_create_pr";
+    if (normalized == "ghprchecks" || normalized == "prchecks" || normalized == "pullrequestchecks")
+        return "gh_pr_checks";
+    if (normalized == "ghprdiff" || normalized == "prdiff" || normalized == "pullrequestdiff")
+        return "gh_pr_diff";
+    if (normalized == "ghprreview" || normalized == "prreview" || normalized == "reviewpullrequest")
+        return "gh_pr_review";
+    if (normalized == "ghprcomment" || normalized == "prcomment" || normalized == "commentpullrequest")
+        return "gh_pr_comment";
+    if (normalized == "ghprmerge" || normalized == "prmerge" || normalized == "mergepullrequest")
+        return "gh_pr_merge";
+    if (normalized == "multifileplan" || normalized == "refactorplan")
+        return "propose_multifile_edits";
+    if (normalized == "multifilediff" || normalized == "refactorpreview")
+        return "preview_multifile_diff";
+    if (normalized == "multifileapply" || normalized == "refactorapply")
+        return "apply_multifile_edits";
+    if (normalized == "renamesymbol" || normalized == "refactorrename" || normalized == "rename_identifier")
+        return "refactor_rename_symbol";
+    if (normalized == "debugstatus" || normalized == "debug_state")
+        return "debug_status";
+    if (normalized == "debugmodules" || normalized == "listdebugmodules")
+        return "debug_modules";
+    if (normalized == "debugdetach" || normalized == "detachdebugger")
+        return "debug_detach";
+    if (normalized == "debugterminate" || normalized == "terminate_debuggee")
+        return "debug_terminate";
 
     return normalized;
 }
@@ -205,8 +319,30 @@ ToolExecResult HandleExecuteCommand(const json& args)
 {
     std::string command = args.value("command", "");
     int timeout_ms = args.value("timeout", 30000);
+    bool allowUnsafe = args.value("allow_unsafe", false);
     if (command.empty())
         return ToolExecResult::error("Missing required parameter: command");
+
+    const std::string binary = ExtractCommandBinary(command);
+    if (binary.empty())
+        return ToolExecResult::error("execute_command rejected: empty binary token");
+
+    if (!IsAllowedCommandBinary(binary))
+    {
+        return ToolExecResult::error("execute_command rejected: binary not allowlisted: " + binary);
+    }
+
+    if (LooksDestructiveCommand(command))
+    {
+        const char* unsafeEnv = std::getenv("RAWRXD_TOOL_EXEC_ALLOW_UNSAFE");
+        const bool envAllowsUnsafe = unsafeEnv && std::string(unsafeEnv) == "1";
+        if (!allowUnsafe && !envAllowsUnsafe)
+        {
+            return ToolExecResult::error(
+                "execute_command blocked by SafetyGovernor: destructive pattern detected; requires modal approval "
+                "(allow_unsafe=true or RAWRXD_TOOL_EXEC_ALLOW_UNSAFE=1)");
+        }
+    }
 
 #ifdef _WIN32
     // CreateProcess with captured output
@@ -418,9 +554,11 @@ ToolExecResult HandleSearchCode(const json& args)
 
     // Recursive search through current directory
     std::error_code ec;
-    for (auto& entry : std::filesystem::recursive_directory_iterator(".", ec))
+    for (auto& entry : std::filesystem::recursive_directory_iterator(
+             ".", std::filesystem::directory_options::skip_permission_denied, ec))
     {
-        if (!entry.is_regular_file())
+        std::error_code entryEc;
+        if (!entry.is_regular_file(entryEc))
             continue;
         if (!matchesPattern(entry.path()))
             continue;
@@ -539,19 +677,40 @@ ToolExecResult HandleListDirectory(const json& args)
     std::ostringstream oss;
     std::error_code ec;
 
-    if (recursive)
+    try
     {
-        for (auto& entry : std::filesystem::recursive_directory_iterator(path, ec))
+        if (recursive)
         {
-            oss << (entry.is_directory() ? "[DIR]  " : "[FILE] ") << entry.path().string() << "\n";
+            for (auto& entry : std::filesystem::recursive_directory_iterator(
+                     path, std::filesystem::directory_options::skip_permission_denied, ec))
+            {
+                std::error_code entryEc;
+                const bool isDirectory = entry.is_directory(entryEc);
+                if (entryEc)
+                {
+                    continue;
+                }
+                oss << (isDirectory ? "[DIR]  " : "[FILE] ") << entry.path().string() << "\n";
+            }
+        }
+        else
+        {
+            for (auto& entry : std::filesystem::directory_iterator(
+                     path, std::filesystem::directory_options::skip_permission_denied, ec))
+            {
+                std::error_code entryEc;
+                const bool isDirectory = entry.is_directory(entryEc);
+                if (entryEc)
+                {
+                    continue;
+                }
+                oss << (isDirectory ? "[DIR]  " : "[FILE] ") << entry.path().filename().string() << "\n";
+            }
         }
     }
-    else
+    catch (const std::filesystem::filesystem_error& ex)
     {
-        for (auto& entry : std::filesystem::directory_iterator(path, ec))
-        {
-            oss << (entry.is_directory() ? "[DIR]  " : "[FILE] ") << entry.path().filename().string() << "\n";
-        }
+        return ToolExecResult::error(std::string("Directory listing failed: ") + ex.what());
     }
 
     if (ec)
@@ -874,10 +1033,307 @@ ToolExecResult HandleGitCommit(const json& args)
     return ToToolExecResult(res);
 }
 
+ToolExecResult HandleGitHubIssueList(const json& args)
+{
+    auto res = AgentToolHandlers::Instance().Execute("gh_issue_list", args);
+    return ToToolExecResult(res);
+}
+
+ToolExecResult HandleGitHubIssueView(const json& args)
+{
+    auto res = AgentToolHandlers::Instance().Execute("gh_issue_view", args);
+    return ToToolExecResult(res);
+}
+
+ToolExecResult HandleGitHubPrList(const json& args)
+{
+    auto res = AgentToolHandlers::Instance().Execute("gh_pr_list", args);
+    return ToToolExecResult(res);
+}
+
+ToolExecResult HandleGitHubPrView(const json& args)
+{
+    auto res = AgentToolHandlers::Instance().Execute("gh_pr_view", args);
+    return ToToolExecResult(res);
+}
+
 ToolExecResult HandleGitHubCreatePR(const json& args)
 {
     auto res = AgentToolHandlers::Instance().Execute("gh_create_pr", args);
     return ToToolExecResult(res);
+}
+
+static std::string EscapeDoubleQuotedArg(const std::string& input)
+{
+    std::string out;
+    out.reserve(input.size() + 8);
+    for (char c : input)
+    {
+        if (c == '"' || c == '\\')
+        {
+            out.push_back('\\');
+        }
+        out.push_back(c);
+    }
+    return out;
+}
+
+static ToolExecResult RunGhCommand(const std::string& command)
+{
+    json forwarded = json::object();
+    forwarded["command"] = command;
+    auto res = AgentToolHandlers::Instance().Execute("execute_command", forwarded);
+    return ToToolExecResult(res);
+}
+
+ToolExecResult HandleGitHubPrChecks(const json& args)
+{
+    const std::string number = args.value("number", "");
+    if (number.empty())
+    {
+        return ToolExecResult::error("gh_pr_checks requires 'number'");
+    }
+    const std::string command = "gh pr checks " + number;
+    return RunGhCommand(command);
+}
+
+ToolExecResult HandleGitHubPrDiff(const json& args)
+{
+    const std::string number = args.value("number", "");
+    if (number.empty())
+    {
+        return ToolExecResult::error("gh_pr_diff requires 'number'");
+    }
+    const std::string command = "gh pr diff " + number;
+    return RunGhCommand(command);
+}
+
+ToolExecResult HandleGitHubPrReview(const json& args)
+{
+    const std::string number = args.value("number", "");
+    if (number.empty())
+    {
+        return ToolExecResult::error("gh_pr_review requires 'number'");
+    }
+
+    const std::string event = args.value("event", "comment");
+    const std::string body = args.value("body", "");
+    std::string command = "gh pr review " + number;
+
+    if (event == "approve")
+    {
+        command += " --approve";
+    }
+    else if (event == "request_changes")
+    {
+        command += " --request-changes";
+    }
+    else
+    {
+        command += " --comment";
+    }
+
+    if (!body.empty())
+    {
+        command += " --body \"" + EscapeDoubleQuotedArg(body) + "\"";
+    }
+    return RunGhCommand(command);
+}
+
+ToolExecResult HandleGitHubPrComment(const json& args)
+{
+    const std::string number = args.value("number", "");
+    const std::string body = args.value("body", "");
+    if (number.empty() || body.empty())
+    {
+        return ToolExecResult::error("gh_pr_comment requires 'number' and 'body'");
+    }
+
+    const std::string command =
+        "gh pr comment " + number + " --body \"" + EscapeDoubleQuotedArg(body) + "\"";
+    return RunGhCommand(command);
+}
+
+ToolExecResult HandleGitHubPrMerge(const json& args)
+{
+    const std::string number = args.value("number", "");
+    if (number.empty())
+    {
+        return ToolExecResult::error("gh_pr_merge requires 'number'");
+    }
+
+    const std::string strategy = args.value("strategy", "squash");
+    bool deleteBranch = args.value("delete_branch", true);
+
+    std::string command = "gh pr merge " + number;
+    if (strategy == "merge")
+    {
+        command += " --merge";
+    }
+    else if (strategy == "rebase")
+    {
+        command += " --rebase";
+    }
+    else
+    {
+        command += " --squash";
+    }
+
+    if (deleteBranch)
+    {
+        command += " --delete-branch";
+    }
+    return RunGhCommand(command);
+}
+
+ToolExecResult HandleProposeMultiFileEdits(const json& args)
+{
+    auto res = AgentToolHandlers::Instance().Execute("propose_multifile_edits", args);
+    return ToToolExecResult(res);
+}
+
+ToolExecResult HandlePreviewMultiFileDiff(const json& args)
+{
+    auto res = AgentToolHandlers::Instance().Execute("preview_multifile_diff", args);
+    return ToToolExecResult(res);
+}
+
+ToolExecResult HandleApplyMultiFileEdits(const json& args)
+{
+    auto res = AgentToolHandlers::Instance().Execute("apply_multifile_edits", args);
+    return ToToolExecResult(res);
+}
+
+static bool IsWordChar(unsigned char ch)
+{
+    return std::isalnum(ch) || ch == '_';
+}
+
+static size_t ReplaceWholeWordInBuffer(std::string& content, const std::string& from, const std::string& to)
+{
+    if (from.empty())
+    {
+        return 0;
+    }
+
+    size_t replacements = 0;
+    size_t pos = 0;
+    while ((pos = content.find(from, pos)) != std::string::npos)
+    {
+        const bool leftOk = (pos == 0) || !IsWordChar(static_cast<unsigned char>(content[pos - 1]));
+        const size_t after = pos + from.size();
+        const bool rightOk = (after >= content.size()) || !IsWordChar(static_cast<unsigned char>(content[after]));
+        if (leftOk && rightOk)
+        {
+            content.replace(pos, from.size(), to);
+            pos += to.size();
+            ++replacements;
+            continue;
+        }
+        pos += from.size();
+    }
+    return replacements;
+}
+
+ToolExecResult HandleRefactorRenameSymbol(const json& args)
+{
+    const std::string oldSymbol = args.value("old_symbol", "");
+    const std::string newSymbol = args.value("new_symbol", "");
+    if (oldSymbol.empty() || newSymbol.empty())
+    {
+        return ToolExecResult::error("refactor_rename_symbol requires 'old_symbol' and 'new_symbol'");
+    }
+
+    const bool apply = args.value("apply", false);
+    const std::string singlePath = args.value("path", "");
+    std::string root = args.value("root", ".");
+    const std::string filePattern = args.value("file_pattern", "");
+    int maxFiles = args.value("max_files", 200);
+    if (maxFiles < 1)
+    {
+        maxFiles = 1;
+    }
+
+    std::vector<std::filesystem::path> targets;
+    std::error_code ec;
+    if (!singlePath.empty())
+    {
+        targets.push_back(std::filesystem::path(singlePath));
+    }
+    else
+    {
+        for (auto it = std::filesystem::recursive_directory_iterator(
+                 root, std::filesystem::directory_options::skip_permission_denied, ec);
+             it != std::filesystem::recursive_directory_iterator(); ++it)
+        {
+            if (ec)
+            {
+                ec.clear();
+                continue;
+            }
+            if (!it->is_regular_file(ec))
+            {
+                ec.clear();
+                continue;
+            }
+
+            const std::string pathStr = it->path().string();
+            if (!filePattern.empty() && pathStr.find(filePattern) == std::string::npos)
+            {
+                continue;
+            }
+            targets.push_back(it->path());
+            if (static_cast<int>(targets.size()) >= maxFiles)
+            {
+                break;
+            }
+        }
+    }
+
+    json report = json::object();
+    report["old_symbol"] = oldSymbol;
+    report["new_symbol"] = newSymbol;
+    report["apply"] = apply;
+    report["files_scanned"] = targets.size();
+    report["files_changed"] = 0;
+    report["replacements"] = 0;
+    report["changed_files"] = json::array();
+
+    for (const auto& path : targets)
+    {
+        std::ifstream ifs(path, std::ios::binary);
+        if (!ifs.is_open())
+        {
+            continue;
+        }
+
+        std::string original((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+        ifs.close();
+
+        std::string updated = original;
+        const size_t replaced = ReplaceWholeWordInBuffer(updated, oldSymbol, newSymbol);
+        if (replaced == 0)
+        {
+            continue;
+        }
+
+        if (apply)
+        {
+            std::ofstream ofs(path, std::ios::binary | std::ios::trunc);
+            if (!ofs.is_open())
+            {
+                continue;
+            }
+            ofs.write(updated.data(), static_cast<std::streamsize>(updated.size()));
+            ofs.close();
+        }
+
+        report["files_changed"] = report["files_changed"].get<int>() + 1;
+        report["replacements"] = report["replacements"].get<int>() + static_cast<int>(replaced);
+        report["changed_files"].push_back(path.string());
+    }
+
+    return ToolExecResult::ok(report.dump(2));
 }
 
 ToolExecResult HandleTermExec(const json& args)
@@ -1283,8 +1739,8 @@ ToolExecResult HandleDebugSuggestBreakpoints(const json& args)
 
 AgentToolRegistry& AgentToolRegistry::Instance()
 {
-    static AgentToolRegistry instance;
-    return instance;
+    static AgentToolRegistry* instance = new AgentToolRegistry();
+    return *instance;
 }
 
 AgentToolRegistry::AgentToolRegistry()
@@ -1361,6 +1817,8 @@ void AgentToolRegistry::InitDescriptors()
                         "Mirror command and output to the IDE agent terminal", false);
     setParamWithDefault("execute_command", "mirror_to_ide_agent_terminal", "boolean",
                         "Alias of use_integrated_terminal", false);
+    setParamWithDefault("execute_command", "allow_unsafe", "boolean",
+                        "Set true only after explicit modal approval for destructive commands", false);
 
     // search_code
     setParam("search_code", "query", "string", "Search pattern (regex or literal)");
@@ -1404,9 +1862,23 @@ void AgentToolRegistry::InitDescriptors()
     // git_commit
     setParam("git_commit", "message", "string", "Commit message");
 
+    // GitHub issue / PR tools
+    setParamWithDefault("gh_issue_list", "command", "string", "Optional raw gh command override", "");
+    setParam("gh_issue_view", "number", "string", "Issue number to view");
+    setParamWithDefault("gh_pr_list", "command", "string", "Optional raw gh command override", "");
+    setParam("gh_pr_view", "number", "string", "Pull request number to view");
+
     // gh_create_pr
     setParam("gh_create_pr", "title", "string", "PR title");
     setParam("gh_create_pr", "body", "string", "PR body");
+
+    // Advanced multi-file edit/refactor tools
+    setParam("propose_multifile_edits", "edits", "array",
+             "Array of edits: {file, type(insert|delete|replace|modify), line_start, line_end, content, reason}");
+    setParam("preview_multifile_diff", "edits", "array",
+             "Array of edits: {file, type(insert|delete|replace|modify), line_start, line_end, content, reason}");
+    setParam("apply_multifile_edits", "edits", "array",
+             "Array of edits: {file, type(insert|delete|replace|modify), line_start, line_end, content, reason}");
 
     // term_exec
     setParam("term_exec", "command", "string", "Shell command to execute");
@@ -1456,7 +1928,14 @@ void AgentToolRegistry::InitDescriptors()
     RegisterHandler("git_status", HandleGitStatus);
     RegisterHandler("git_diff", HandleGitDiff);
     RegisterHandler("git_commit", HandleGitCommit);
+    RegisterHandler("gh_issue_list", HandleGitHubIssueList);
+    RegisterHandler("gh_issue_view", HandleGitHubIssueView);
+    RegisterHandler("gh_pr_list", HandleGitHubPrList);
+    RegisterHandler("gh_pr_view", HandleGitHubPrView);
     RegisterHandler("gh_create_pr", HandleGitHubCreatePR);
+    RegisterHandler("propose_multifile_edits", HandleProposeMultiFileEdits);
+    RegisterHandler("preview_multifile_diff", HandlePreviewMultiFileDiff);
+    RegisterHandler("apply_multifile_edits", HandleApplyMultiFileEdits);
     RegisterHandler("term_exec", HandleTermExec);
     RegisterHandler("sys_get_capabilities", HandleSysGetCapabilities);
 
@@ -1633,6 +2112,29 @@ ToolExecResult AgentToolRegistry::Dispatch(const std::string& tool_name, const j
         return ToolExecResult::error("Validation failed: " + validationError);
     }
 
+    const bool cacheEligible = IsResultCacheEligibleTool(normalizedTool);
+    const std::string cacheKey = cacheEligible ? BuildResultCacheKey(normalizedTool, args) : std::string();
+    if (cacheEligible)
+    {
+        const auto now = std::chrono::steady_clock::now();
+        auto cacheIt = m_toolResultCache.find(cacheKey);
+        if (cacheIt != m_toolResultCache.end())
+        {
+            if (cacheIt->second.expiresAt > now)
+            {
+                ToolExecResult cached = cacheIt->second.result;
+                cached.elapsed_ms = 0.0;
+                GetObs().incrementCounter("tool_registry.result_cache_hit");
+                GetObs().logDebug(kRegistryComponent,
+                                  "Dispatch: tool result cache hit",
+                                  nlohmann::json::object({{"tool", normalizedTool}}));
+                return cached;
+            }
+            m_toolResultCache.erase(cacheIt);
+        }
+        GetObs().incrementCounter("tool_registry.result_cache_miss");
+    }
+
     // Traced execution with timing
     auto spanId = GetObs().startSpan("tool_dispatch:" + normalizedTool);
     GetObs().logDebug(kRegistryComponent, "Dispatching tool call",
@@ -1656,6 +2158,19 @@ ToolExecResult AgentToolRegistry::Dispatch(const std::string& tool_name, const j
     }
     else
     {
+        if (cacheEligible)
+        {
+            const auto ttl = std::chrono::milliseconds(ResultCacheTtlMs(normalizedTool));
+            m_toolResultCache[cacheKey] = CachedToolResult{result, std::chrono::steady_clock::now() + ttl};
+
+            // Keep this bounded in case of broad repo sweeps.
+            constexpr size_t kMaxResultCacheEntries = 512;
+            if (m_toolResultCache.size() > kMaxResultCacheEntries)
+            {
+                m_toolResultCache.clear();
+            }
+        }
+
         GetObs().endSpan(spanId);
         GetObs().logDebug(kRegistryComponent, "Tool call succeeded",
                           nlohmann::json::object({{"tool", normalizedTool}, {"elapsed_ms", result.elapsed_ms}}));
@@ -1755,6 +2270,32 @@ bool AgentToolRegistry::ValidateArgs(const std::string& tool_name, const json& a
         }
     }
     return true;
+}
+
+bool AgentToolRegistry::IsResultCacheEligibleTool(const std::string& normalizedTool) const
+{
+    return normalizedTool == "read_file" || normalizedTool == "list_directory" || normalizedTool == "search_code" ||
+           normalizedTool == "get_diagnostics" || normalizedTool == "git_status" || normalizedTool == "git_diff";
+}
+
+int AgentToolRegistry::ResultCacheTtlMs(const std::string& normalizedTool) const
+{
+    if (normalizedTool == "read_file")
+        return 1500;
+    if (normalizedTool == "list_directory")
+        return 1200;
+    if (normalizedTool == "search_code")
+        return 2000;
+    if (normalizedTool == "get_diagnostics")
+        return 1200;
+    if (normalizedTool == "git_status" || normalizedTool == "git_diff")
+        return 800;
+    return 1000;
+}
+
+std::string AgentToolRegistry::BuildResultCacheKey(const std::string& normalizedTool, const json& args) const
+{
+    return normalizedTool + "|" + args.dump();
 }
 
 }  // namespace Agent

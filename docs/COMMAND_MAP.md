@@ -1,11 +1,11 @@
 # Command Map
 
-Proof baseline: --selftest
+Proof baseline: --agentic-smoke
 
 | cmdId | canonical | handler | category | enabled | attempts | proof note |
 |---:|---|---|---|---|---:|---|
 | 1001 | file.new | handleFileNew | File | yes | 0 | Registry wired + unified dispatch path |
-| 1002 | file.open | handleFileOpen | File | yes | 1 | Observed in runtime telemetry |
+| 1002 | file.open | handleFileOpen | File | yes | 0 | Covered by --selftest dispatch probe |
 | 1003 | file.save | handleFileSave | File | yes | 0 | Registry wired + unified dispatch path |
 | 1004 | file.saveAs | handleFileSaveAs | File | yes | 0 | Registry wired + unified dispatch path |
 | 1005 | file.saveAll | handleFileSaveAll | File | yes | 0 | Registry wired + unified dispatch path |
@@ -41,7 +41,7 @@ Proof baseline: --selftest
 | 2025 | view.outputPanel | handleViewOutputPanel | View | yes | 0 | Registry wired + unified dispatch path |
 | 2026 | view.streamingLoader | handleViewStreamingLoader | View | yes | 0 | Registry wired + unified dispatch path |
 | 2027 | view.vulkanRenderer | handleViewVulkanRenderer | View | yes | 0 | Registry wired + unified dispatch path |
-| 2028 | view.sidebar | handleViewSidebar | View | yes | 1 | Observed in runtime telemetry |
+| 2028 | view.sidebar | handleViewSidebar | View | yes | 0 | Covered by --selftest dispatch probe |
 | 2029 | view.terminal | handleViewTerminal | View | yes | 0 | Registry wired + unified dispatch path |
 | 3020 | git.status | handleGitStatus | Git | yes | 0 | Registry wired + unified dispatch path |
 | 3021 | git.commit | handleGitCommit | Git | yes | 0 | Registry wired + unified dispatch path |
@@ -65,7 +65,7 @@ Proof baseline: --selftest
 | 3114 | theme.oneDarkPro | handleThemeOneDark | Theme | yes | 0 | Registry wired + unified dispatch path |
 | 3115 | theme.synthwave84 | handleThemeSynthwave | Theme | yes | 0 | Registry wired + unified dispatch path |
 | 3116 | theme.abyss | handleThemeAbyss | Theme | yes | 0 | Registry wired + unified dispatch path |
-| 3200 | view.transparency100 | handleTrans100 | Transparency | yes | 1 | Observed in runtime telemetry |
+| 3200 | view.transparency100 | handleTrans100 | Transparency | yes | 0 | Covered by --selftest dispatch probe |
 | 3201 | view.transparency90 | handleTrans90 | Transparency | yes | 0 | Registry wired + unified dispatch path |
 | 3202 | view.transparency80 | handleTrans80 | Transparency | yes | 0 | Registry wired + unified dispatch path |
 | 3203 | view.transparency70 | handleTrans70 | Transparency | yes | 0 | Registry wired + unified dispatch path |
@@ -74,15 +74,15 @@ Proof baseline: --selftest
 | 3206 | view.transparency40 | handleTrans40 | Transparency | yes | 0 | Registry wired + unified dispatch path |
 | 3210 | view.transparencySet | handleTransCustom | Transparency | yes | 0 | Registry wired + unified dispatch path |
 | 3211 | view.transparencyToggle | handleTransToggle | Transparency | yes | 0 | Registry wired + unified dispatch path |
-| 4001 | help.about | handleHelpAbout | Help | yes | 0 | Registry wired + unified dispatch path |
-| 4002 | help.cmdref | handleHelpCmdRef | Help | yes | 0 | Registry wired + unified dispatch path |
-| 4003 | help.psdocs | handleHelpPsDocs | Help | yes | 0 | Registry wired + unified dispatch path |
-| 4004 | help.search | handleHelpSearch | Help | yes | 0 | Registry wired + unified dispatch path |
+| 7901 | help.cmdref | handleHelpCmdRef | Help | yes | 0 | Registry wired + unified dispatch path |
+| 7902 | help.psdocs | handleHelpPsDocs | Help | yes | 0 | Registry wired + unified dispatch path |
+| 7903 | help.search | handleHelpSearch | Help | yes | 0 | Registry wired + unified dispatch path |
+| 7904 | help.about | handleHelpAbout | Help | yes | 0 | Registry wired + unified dispatch path |
 | 4005 | terminal.new | handleTerminalNew | Terminal | yes | 0 | Registry wired + unified dispatch path |
 | 4006 | terminal.kill | handleTerminalKill | Terminal | yes | 0 | Registry wired + unified dispatch path |
 | 4007 | terminal.splitH | handleTerminalSplitH | Terminal | yes | 0 | Registry wired + unified dispatch path |
 | 4008 | terminal.splitV | handleTerminalSplitV | Terminal | yes | 0 | Registry wired + unified dispatch path |
-| 4009 | terminal.splitCode | handleTerminalSplitCode | Terminal | yes | 1 | Observed in runtime telemetry |
+| 4009 | terminal.splitCode | handleTerminalSplitCode | Terminal | yes | 0 | Covered by --selftest dispatch probe |
 | 4010 | terminal.list | handleTerminalList | Terminal | yes | 0 | Registry wired + unified dispatch path |
 | 4100 | agent.loop | handleAgentLoop | Agent | yes | 0 | Registry wired + unified dispatch path |
 | 4101 | agent.execute | handleAgentExecute | Agent | yes | 0 | Registry wired + unified dispatch path |
@@ -468,9 +468,9 @@ Proof baseline: --selftest
 | 8004 | decomp.copyLine | handleDecompCopyLine | ReverseEng | yes | 0 | Registry wired + unified dispatch path |
 | 8005 | decomp.copyAll | handleDecompCopyAll | ReverseEng | yes | 0 | Registry wired + unified dispatch path |
 | 8006 | decomp.gotoAddr | handleDecompGotoAddr | ReverseEng | yes | 0 | Registry wired + unified dispatch path |
-| 10000 | vscext.status | handleVscExtStatus | Plugin | yes | 2 | Observed in runtime telemetry |
+| 10000 | vscext.status | handleVscExtStatus | Plugin | yes | 0 | Covered by --selftest dispatch probe |
 | 10001 | vscext.reload | handleVscExtReload | Plugin | yes | 0 | Registry wired + unified dispatch path |
-| 10002 | vscext.listCommands | handleVscExtListCommands | Plugin | yes | 1 | Observed in runtime telemetry |
+| 10002 | vscext.listCommands | handleVscExtListCommands | Plugin | yes | 0 | Registry wired + unified dispatch path |
 | 10003 | vscext.listProviders | handleVscExtListProviders | Plugin | yes | 0 | Registry wired + unified dispatch path |
 | 10004 | vscext.diagnostics | handleVscExtDiagnostics | Plugin | yes | 0 | Registry wired + unified dispatch path |
 | 10005 | vscext.extensions | handleVscExtExtensions | Plugin | yes | 0 | Registry wired + unified dispatch path |
@@ -505,7 +505,7 @@ Proof baseline: --selftest
 | 11301 | marketplace.install | handleMarketplaceInstall | Marketplace | yes | 0 | Registry wired + unified dispatch path |
 | 11400 | embedding.encode | handleEmbeddingEncode | Embedding | yes | 0 | Registry wired + unified dispatch path |
 | 11500 | vision.analyze | handleVisionAnalyzeImage | Vision | yes | 0 | Registry wired + unified dispatch path |
-| 12300 | prompt.classify | handlePromptClassifyContext | Prompt | yes | 0 | SSOT posts WM_COMMAND 12300 (`IDM_CRASH_SHOW`, Tier 5 band 12200–12314); shares IDE command ID with crash panel until decoupled |
+| 11600 | prompt.classify | handlePromptClassifyContext | Prompt | yes | 0 | Registry wired + unified dispatch path |
 | 12000 | tier1.smoothScroll | handleTier1SmoothScrollToggle | Cosmetic | yes | 0 | Registry wired + unified dispatch path |
 | 12001 | tier1.minimapEnhanced | handleTier1MinimapEnhanced | Cosmetic | yes | 0 | Registry wired + unified dispatch path |
 | 12020 | tier1.breadcrumbs | handleTier1BreadcrumbsToggle | Cosmetic | yes | 0 | Registry wired + unified dispatch path |

@@ -203,7 +203,6 @@ bool CPUInferenceEngine::LoadModel(const std::string& model_path)
 
     printf("[CPUInferenceEngine] Loading model: %s\n", model_path.c_str());
     printf("[CPUInferenceEngine] Stage: initialize backend (GPU will be attempted first, with CPU fallback)\n");
-
     try
     {
         // Try GPU-accelerated path first
@@ -221,7 +220,6 @@ bool CPUInferenceEngine::LoadModel(const std::string& model_path)
             m_embeddingDim = (bdim > 0) ? bdim : 4096;
             m_numLayers = (blay > 0) ? blay : 32;
             m_numHeads = (bhd > 0) ? bhd : 32;
-
             // Try to load Titan ASM DLL if available
             if (m_useTitanAssembly && !m_hTitanDLL)
             {
@@ -422,10 +420,12 @@ void CPUInferenceEngine::GenerateStreaming(const std::vector<int32_t>& input_tok
     std::vector<uint32_t> u32_toks;
     if (!ConvertTokensToU32Checked(input_tokens, u32_toks, "GenerateStreaming"))
     {
+        fprintf(stderr, "[GenerateStreaming] DIAGNOSTIC: ConvertTokensToU32Checked failed, returning early\n");
         if (complete_callback)
             complete_callback();
         return;
     }
+
     try
     {
         s_inferenceBackend.GenerateFromTokens(u32_toks, static_cast<uint32_t>(max_tokens),

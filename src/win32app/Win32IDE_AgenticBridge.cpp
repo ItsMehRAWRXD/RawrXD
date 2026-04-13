@@ -14,6 +14,7 @@
 #include "../agentic/ToolRegistry.h"
 #include "../agentic/agent_controller_minimal.h"
 #include "../agentic/agentic_controller_wiring.h"
+#include "../agentic/agentic_orchestrator_integration.hpp"
 #include "../agentic_engine.h"
 #include "../cpu_inference_engine.h"
 #include "../inference/PerformanceMonitor.h"
@@ -36,6 +37,7 @@
 #include <memory>
 #include <optional>
 #include <sstream>
+#include <unordered_set>
 #include <vector>
 
 namespace
@@ -72,6 +74,179 @@ struct ToolDispatchBatchOutcome
     uint64_t executionTimeMs = 0;
     bool dispatched = false;
 };
+
+[[nodiscard]] std::string ExtractDirectiveToolName(const std::string& modelOutput);
+
+struct BridgeToolExecutionPolicy
+{
+    std::string normalizedName;
+    Agentic::StepRisk risk = Agentic::StepRisk::High;
+    bool isMutating = true;
+    bool allowParallel = false;
+};
+
+std::string NormalizeBridgeToolName(std::string value)
+{
+    std::transform(value.begin(), value.end(), value.begin(),
+                   [](unsigned char ch)
+                   {
+                       if (std::isalnum(ch))
+                       {
+                           return static_cast<char>(std::tolower(ch));
+                       }
+                       return '_';
+                   });
+
+    value.erase(std::unique(value.begin(), value.end(),
+                            [](char left, char right) { return left == '_' && right == '_'; }),
+                value.end());
+    while (!value.empty() && value.front() == '_')
+    {
+        value.erase(value.begin());
+    }
+    while (!value.empty() && value.back() == '_')
+    {
+        value.pop_back();
+    }
+
+    if (value == "grep_files" || value == "search_files")
+    {
+        return "search_code";
+    }
+    if (value == "list_directory")
+    {
+        return "list_dir";
+    }
+    if (value == "run_terminal")
+    {
+        return "execute_command";
+    }
+    return value;
+}
+
+const char* StepRiskLabel(Agentic::StepRisk risk)
+{
+    switch (risk)
+    {
+        case Agentic::StepRisk::VeryLow:
+            return "VeryLow";
+        case Agentic::StepRisk::Low:
+            return "Low";
+        case Agentic::StepRisk::Medium:
+            return "Medium";
+        case Agentic::StepRisk::High:
+            return "High";
+        case Agentic::StepRisk::Critical:
+            return "Critical";
+        default:
+            return "Unknown";
+    }
+}
+
+BridgeToolExecutionPolicy ClassifyBridgeToolExecution(const std::string& toolLine)
+{
+    static const std::unordered_set<std::string> kParallelReadOnlyTools = {
+        "read_file", "fs_read_file", "fs_read", "list_dir", "fs_list_dir", "file_search", "search_code",
+        "grep_search", "semantic_search", "get_diagnostics", "mention_lookup", "next_edit_hint",
+        "preview_multifile_diff", "path_exists", "fs_exists"
+    };
+    static const std::unordered_set<std::string> kSerialReadOnlyTools = {
+        "load_rules", "plan_tasks", "git_status", "git_diff", "gh_pr_view", "gh_issue_view", "gh_pr_list",
+        "gh_issue_list", "get_coverage", "sys_get_capabilities"
+    };
+    static const std::unordered_set<std::string> kLowRiskMutatingTools = {
+        "write_file", "replace_in_file", "edit_file", "fs_write_file", "fs_write", "fs_mkdir", "fs_copy_file",
+        "fs_move_file", "manage_todo_list"
+    };
+    static const std::unordered_set<std::string> kHighRiskTools = {
+        "execute_command", "run_in_terminal", "terminal_run_command", "run_shell", "run_build",
+        "git_commit", "gh_create_pr", "gh_pr_create", "apply_multifile_edits", "debug_launch",
+        "debug_attach", "debug_break", "debug_continue", "debug_step_over", "debug_step_into",
+        "debug_add_breakpoint", "debug_remove_breakpoint", "debug_stacktrace", "debug_registers",
+        "debug_memory", "debug_disasm", "debug_analyze", "debug_snapshot", "debug_suggest_breakpoints",
+        "apply_hotpatch", "disk_recovery", "asm_assemble", "swebench_autonomous_eval"
+    };
+    static const std::unordered_set<std::string> kCriticalTools = {"fs_delete_file"};
+
+    BridgeToolExecutionPolicy policy;
+    policy.normalizedName = NormalizeBridgeToolName(ExtractDirectiveToolName(toolLine));
+    if (policy.normalizedName.empty())
+    {
+        policy.normalizedName = "tool";
+    }
+
+    if (kParallelReadOnlyTools.count(policy.normalizedName) > 0)
+    {
+        policy.risk = Agentic::StepRisk::VeryLow;
+        policy.isMutating = false;
+        policy.allowParallel = true;
+    }
+    else if (kSerialReadOnlyTools.count(policy.normalizedName) > 0)
+    {
+        policy.risk = Agentic::StepRisk::Low;
+        policy.isMutating = false;
+    }
+    else if (kLowRiskMutatingTools.count(policy.normalizedName) > 0)
+    {
+        policy.risk = Agentic::StepRisk::Low;
+    }
+    else if (kHighRiskTools.count(policy.normalizedName) > 0)
+    {
+        policy.risk = Agentic::StepRisk::High;
+    }
+    else if (kCriticalTools.count(policy.normalizedName) > 0)
+    {
+        policy.risk = Agentic::StepRisk::Critical;
+    }
+    else
+    {
+        policy.risk = Agentic::StepRisk::Medium;
+    }
+
+    return policy;
+}
+
+Agentic::ApprovalPolicy GetBridgeApprovalPolicy()
+{
+    if (auto* orchestrator = Agentic::OrchestratorIntegration::instance().getOrchestrator())
+    {
+        return orchestrator->getApprovalPolicy();
+    }
+    return Agentic::ApprovalPolicy::Standard();
+}
+
+bool IsBridgeToolAutoApproved(const BridgeToolExecutionPolicy& toolPolicy, const Agentic::ApprovalPolicy& approvalPolicy)
+{
+    if (!toolPolicy.isMutating)
+    {
+        return true;
+    }
+
+    switch (toolPolicy.risk)
+    {
+        case Agentic::StepRisk::VeryLow:
+            return approvalPolicy.auto_approve_very_low_risk;
+        case Agentic::StepRisk::Low:
+            return approvalPolicy.auto_approve_low_risk;
+        case Agentic::StepRisk::Medium:
+            return !approvalPolicy.require_approval_medium;
+        case Agentic::StepRisk::High:
+            return !approvalPolicy.require_approval_high;
+        case Agentic::StepRisk::Critical:
+            return !approvalPolicy.require_approval_critical;
+        default:
+            return false;
+    }
+}
+
+std::string BuildApprovalBlockedMessage(const BridgeToolExecutionPolicy& toolPolicy)
+{
+    std::ostringstream oss;
+    oss << "[Approval Required] Tool '" << toolPolicy.normalizedName << "' blocked by approval policy"
+        << " (risk=" << StepRiskLabel(toolPolicy.risk)
+        << ", mutating=" << (toolPolicy.isMutating ? "yes" : "no") << ")";
+    return oss.str();
+}
 
 bool isTruthyEnvVar(const char* varName)
 {
@@ -2338,9 +2513,9 @@ void AgenticBridge::ExecuteBoundedAgentLoop(const std::string& prompt, int maxIt
 bool AgenticBridge::DispatchModelToolCalls(const std::string& modelOutput, std::string& toolResult)
 {
     const auto toolLines = ExtractToolCallLines(modelOutput);
-    if (toolLines.size() > 1)
+    if (!toolLines.empty())
     {
-        return DispatchToolLinesBatched(toolLines, "bridge", toolResult, nullptr);
+        return DispatchToolLinesPolicyAware(toolLines, "bridge", toolResult, nullptr);
     }
 
     auto* mgr = GetSubAgentManager();
@@ -2508,6 +2683,102 @@ bool AgenticBridge::DispatchToolLinesBatched(const std::vector<std::string>& too
     return true;
 }
 
+bool AgenticBridge::DispatchToolLinesPolicyAware(const std::vector<std::string>& toolLines, const std::string& parentId,
+                                                 std::string& toolResult,
+                                                 RawrXD::Agentic::StreamingResultChannel* streamingChannel)
+{
+    if (toolLines.empty())
+    {
+        toolResult.clear();
+        return false;
+    }
+
+    const Agentic::ApprovalPolicy approvalPolicy = GetBridgeApprovalPolicy();
+    std::ostringstream combined;
+    std::vector<std::string> parallelBatch;
+    bool handledAny = false;
+
+    auto appendCombined = [&combined](const std::string& text)
+    {
+        if (text.empty())
+        {
+            return;
+        }
+        if (combined.tellp() > 0)
+        {
+            combined << "\n";
+        }
+        combined << text;
+    };
+
+    auto flushParallelBatch = [&]()
+    {
+        if (parallelBatch.empty())
+        {
+            return;
+        }
+
+        std::string batchResult;
+        if (DispatchToolLinesBatched(parallelBatch, parentId, batchResult, streamingChannel))
+        {
+            handledAny = true;
+            appendCombined(batchResult);
+        }
+        parallelBatch.clear();
+    };
+
+    for (size_t index = 0; index < toolLines.size(); ++index)
+    {
+        const std::string& toolLine = toolLines[index];
+        const BridgeToolExecutionPolicy toolPolicy = ClassifyBridgeToolExecution(toolLine);
+        const bool autoApproved = IsBridgeToolAutoApproved(toolPolicy, approvalPolicy);
+
+        if (!autoApproved)
+        {
+            flushParallelBatch();
+
+            const std::string blockedMessage = BuildApprovalBlockedMessage(toolPolicy);
+            if (streamingChannel)
+            {
+                streamingChannel->EmitToolError(toolPolicy.normalizedName, blockedMessage, 0,
+                                                static_cast<int>(index), static_cast<int>(toolLines.size()));
+            }
+            if (m_ide)
+            {
+                m_ide->appendToOutput("[AgenticBridge] " + blockedMessage + "\n", "Agent",
+                                      Win32IDE::OutputSeverity::Warning);
+            }
+            appendCombined(blockedMessage);
+            handledAny = true;
+            continue;
+        }
+
+        const bool canRunParallel = approvalPolicy.allow_parallel_approvals && toolPolicy.allowParallel;
+        if (canRunParallel)
+        {
+            parallelBatch.push_back(toolLine);
+            if (parallelBatch.size() >= kMaxParallelBridgeToolCalls)
+            {
+                flushParallelBatch();
+            }
+            continue;
+        }
+
+        flushParallelBatch();
+
+        std::string singleResult;
+        if (DispatchToolLinesBatched({toolLine}, parentId, singleResult, streamingChannel))
+        {
+            handledAny = true;
+            appendCombined(singleResult);
+        }
+    }
+
+    flushParallelBatch();
+    toolResult = combined.str();
+    return handledAny;
+}
+
 // ============================================================================
 // Phase 1: Streaming Tool Result Injection
 // ============================================================================
@@ -2555,7 +2826,7 @@ std::string AgenticBridge::DispatchModelToolCallsStreaming(
     }
 
     std::string toolResult;
-    DispatchToolLinesBatched(toolLines, "bridge-streaming", toolResult, m_streamingChannel.get());
+    DispatchToolLinesPolicyAware(toolLines, "bridge-streaming", toolResult, m_streamingChannel.get());
 
     // Construct final response
     std::string finalResponse = modelOutput;

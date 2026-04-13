@@ -3,9 +3,25 @@
 #include <string>
 #include <vector>
 
+#ifndef PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE
+#define PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE 0x00020016
+#endif
+
+#ifndef HPCON
+typedef HANDLE HPCON;
+#endif
+
+namespace
+{
+using CreatePseudoConsoleFn = HRESULT(WINAPI*)(COORD, HANDLE, HANDLE, DWORD, HPCON*);
+using ClosePseudoConsoleFn = VOID(WINAPI*)(HPCON);
+}
+
 Win32TerminalManager::Win32TerminalManager()
     : m_hProcess(nullptr), m_hThread(nullptr), m_processId(0), m_hStdInRead(nullptr), m_hStdInWrite(nullptr),
-      m_hStdOutRead(nullptr), m_hStdOutWrite(nullptr), m_hStdErrRead(nullptr), m_hStdErrWrite(nullptr), m_running(false)
+    m_hStdOutRead(nullptr), m_hStdOutWrite(nullptr), m_hStdErrRead(nullptr), m_hStdErrWrite(nullptr),
+    m_hPseudoConsole(nullptr), m_hPtyInputWrite(nullptr), m_hPtyOutputRead(nullptr), m_running(false),
+    m_outputRingBytes(0)
 {
 }
 
@@ -38,31 +54,182 @@ void Win32TerminalManager::resetStaleStateFromExitedProcess()
         CloseHandle(m_hThread);
         m_hThread = nullptr;
     }
-    if (m_hStdInWrite)
+    auto closeIf = [](HANDLE& h)
     {
-        CloseHandle(m_hStdInWrite);
-        m_hStdInWrite = nullptr;
-    }
-    if (m_hStdOutRead)
+        if (h)
+        {
+            CloseHandle(h);
+            h = nullptr;
+        }
+    };
+
+    HANDLE hStdInWrite = m_hStdInWrite;
+    HANDLE hStdOutRead = m_hStdOutRead;
+    HANDLE hStdErrRead = m_hStdErrRead;
+    HANDLE hPtyInputWrite = m_hPtyInputWrite;
+    HANDLE hPtyOutputRead = m_hPtyOutputRead;
+
+    m_hStdInWrite = nullptr;
+    m_hStdOutRead = nullptr;
+    m_hStdErrRead = nullptr;
+    m_hPtyInputWrite = nullptr;
+    m_hPtyOutputRead = nullptr;
+
+    closeIf(hStdInWrite);
+    if (hPtyInputWrite && hPtyInputWrite != hStdInWrite)
+        closeIf(hPtyInputWrite);
+    closeIf(hStdOutRead);
+    if (hPtyOutputRead && hPtyOutputRead != hStdOutRead)
+        closeIf(hPtyOutputRead);
+    closeIf(hStdErrRead);
+    if (m_hPseudoConsole)
     {
-        CloseHandle(m_hStdOutRead);
-        m_hStdOutRead = nullptr;
-    }
-    if (m_hStdErrRead)
-    {
-        CloseHandle(m_hStdErrRead);
-        m_hStdErrRead = nullptr;
+        HMODULE kernel = GetModuleHandleA("kernel32.dll");
+        if (kernel)
+        {
+            auto closePseudoConsole = reinterpret_cast<ClosePseudoConsoleFn>(GetProcAddress(kernel, "ClosePseudoConsole"));
+            if (closePseudoConsole)
+                closePseudoConsole(reinterpret_cast<HPCON>(m_hPseudoConsole));
+        }
+        m_hPseudoConsole = nullptr;
     }
 }
 
-bool Win32TerminalManager::start(ShellType shell, const char* workingDirectoryUtf8)
+bool Win32TerminalManager::startWithConPTY(const std::string& cmd, const char* workingDirectoryUtf8)
 {
-    if (m_running)
+    HMODULE kernel = GetModuleHandleA("kernel32.dll");
+    if (!kernel)
         return false;
-    resetStaleStateFromExitedProcess();
 
-    m_shellType = shell;
+    auto createPseudoConsole = reinterpret_cast<CreatePseudoConsoleFn>(GetProcAddress(kernel, "CreatePseudoConsole"));
+    auto closePseudoConsole = reinterpret_cast<ClosePseudoConsoleFn>(GetProcAddress(kernel, "ClosePseudoConsole"));
+    if (!createPseudoConsole || !closePseudoConsole)
+        return false;
 
+    HANDLE hPtyInputRead = nullptr;
+    HANDLE hPtyInputWrite = nullptr;
+    HANDLE hPtyOutputRead = nullptr;
+    HANDLE hPtyOutputWrite = nullptr;
+
+    SECURITY_ATTRIBUTES sa;
+    sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+    sa.bInheritHandle = TRUE;
+    sa.lpSecurityDescriptor = nullptr;
+
+    if (!CreatePipe(&hPtyInputRead, &hPtyInputWrite, &sa, 0) || !CreatePipe(&hPtyOutputRead, &hPtyOutputWrite, &sa, 0))
+    {
+        if (hPtyInputRead)
+            CloseHandle(hPtyInputRead);
+        if (hPtyInputWrite)
+            CloseHandle(hPtyInputWrite);
+        if (hPtyOutputRead)
+            CloseHandle(hPtyOutputRead);
+        if (hPtyOutputWrite)
+            CloseHandle(hPtyOutputWrite);
+        return false;
+    }
+
+    SetHandleInformation(hPtyInputWrite, HANDLE_FLAG_INHERIT, 0);
+    SetHandleInformation(hPtyOutputRead, HANDLE_FLAG_INHERIT, 0);
+
+    HPCON hPc = nullptr;
+    const HRESULT hr = createPseudoConsole({120, 3000}, hPtyInputRead, hPtyOutputWrite, 0, &hPc);
+    CloseHandle(hPtyInputRead);
+    CloseHandle(hPtyOutputWrite);
+    if (FAILED(hr) || !hPc)
+    {
+        CloseHandle(hPtyInputWrite);
+        CloseHandle(hPtyOutputRead);
+        return false;
+    }
+
+    SIZE_T attrSize = 0;
+    STARTUPINFOEXA siEx;
+    ZeroMemory(&siEx, sizeof(siEx));
+    InitializeProcThreadAttributeList(nullptr, 1, 0, &attrSize);
+    siEx.lpAttributeList = reinterpret_cast<LPPROC_THREAD_ATTRIBUTE_LIST>(HeapAlloc(GetProcessHeap(), 0, attrSize));
+    if (!siEx.lpAttributeList)
+    {
+        closePseudoConsole(hPc);
+        CloseHandle(hPtyInputWrite);
+        CloseHandle(hPtyOutputRead);
+        return false;
+    }
+
+    bool attrOk = false;
+    if (InitializeProcThreadAttributeList(siEx.lpAttributeList, 1, 0, &attrSize) &&
+        UpdateProcThreadAttribute(siEx.lpAttributeList, 0, PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE, hPc, sizeof(HPCON),
+                                  nullptr, nullptr))
+    {
+        attrOk = true;
+    }
+
+    if (!attrOk)
+    {
+        DeleteProcThreadAttributeList(siEx.lpAttributeList);
+        HeapFree(GetProcessHeap(), 0, siEx.lpAttributeList);
+        closePseudoConsole(hPc);
+        CloseHandle(hPtyInputWrite);
+        CloseHandle(hPtyOutputRead);
+        return false;
+    }
+
+    siEx.StartupInfo.cb = sizeof(STARTUPINFOEXA);
+    PROCESS_INFORMATION pi;
+    ZeroMemory(&pi, sizeof(pi));
+
+    const char* lpCurrentDirectory = nullptr;
+    char resolvedDir[1024];
+    resolvedDir[0] = '\0';
+    if (workingDirectoryUtf8 && workingDirectoryUtf8[0])
+    {
+        const DWORD n =
+            GetFullPathNameA(workingDirectoryUtf8, static_cast<DWORD>(sizeof(resolvedDir)), resolvedDir, nullptr);
+        if (n > 0 && n < sizeof(resolvedDir))
+        {
+            const DWORD attr = GetFileAttributesA(resolvedDir);
+            if (attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY))
+                lpCurrentDirectory = resolvedDir;
+        }
+    }
+
+    std::vector<char> cmdLine(cmd.begin(), cmd.end());
+    cmdLine.push_back('\0');
+
+    const BOOL created = CreateProcessA(nullptr, cmdLine.data(), nullptr, nullptr, FALSE,
+                                        EXTENDED_STARTUPINFO_PRESENT | CREATE_NO_WINDOW, nullptr, lpCurrentDirectory,
+                                        &siEx.StartupInfo, &pi);
+
+    DeleteProcThreadAttributeList(siEx.lpAttributeList);
+    HeapFree(GetProcessHeap(), 0, siEx.lpAttributeList);
+
+    if (!created)
+    {
+        closePseudoConsole(hPc);
+        CloseHandle(hPtyInputWrite);
+        CloseHandle(hPtyOutputRead);
+        return false;
+    }
+
+    m_hProcess = pi.hProcess;
+    m_hThread = pi.hThread;
+    m_processId = pi.dwProcessId;
+    m_hPseudoConsole = reinterpret_cast<HANDLE>(hPc);
+    m_hPtyInputWrite = hPtyInputWrite;
+    m_hPtyOutputRead = hPtyOutputRead;
+    m_hStdInWrite = m_hPtyInputWrite;
+    m_hStdOutRead = m_hPtyOutputRead;
+    m_hStdErrRead = nullptr;
+    m_running = true;
+
+    m_outputThread = std::thread(&Win32TerminalManager::readOutputThread, this);
+    m_monitorThread = std::thread(&Win32TerminalManager::monitorProcessThread, this);
+
+    return true;
+}
+
+bool Win32TerminalManager::startWithPipes(const std::string& cmd, const char* workingDirectoryUtf8)
+{
     // Create pipes for stdin, stdout, stderr
     SECURITY_ATTRIBUTES sa;
     sa.nLength = sizeof(SECURITY_ATTRIBUTES);
@@ -95,6 +262,80 @@ bool Win32TerminalManager::start(ShellType shell, const char* workingDirectoryUt
     PROCESS_INFORMATION pi;
     ZeroMemory(&pi, sizeof(pi));
 
+    const char* lpCurrentDirectory = nullptr;
+    char resolvedDir[1024];
+    resolvedDir[0] = '\0';
+    if (workingDirectoryUtf8 && workingDirectoryUtf8[0])
+    {
+        const DWORD n =
+            GetFullPathNameA(workingDirectoryUtf8, static_cast<DWORD>(sizeof(resolvedDir)), resolvedDir, nullptr);
+        if (n > 0 && n < sizeof(resolvedDir))
+        {
+            const DWORD attr = GetFileAttributesA(resolvedDir);
+            if (attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY))
+                lpCurrentDirectory = resolvedDir;
+        }
+    }
+
+    // Writable command line buffer — CreateProcess may modify the string
+    std::vector<char> cmdLine(cmd.begin(), cmd.end());
+    cmdLine.push_back('\0');
+
+    // Create the process
+    if (!CreateProcessA(nullptr, cmdLine.data(), nullptr, nullptr, TRUE, CREATE_NO_WINDOW, nullptr, lpCurrentDirectory,
+                        &si, &pi))
+    {
+        std::cerr << "Failed to create process: " << GetLastError() << std::endl;
+        if (m_hStdOutRead)
+            CloseHandle(m_hStdOutRead);
+        if (m_hStdOutWrite)
+            CloseHandle(m_hStdOutWrite);
+        if (m_hStdErrRead)
+            CloseHandle(m_hStdErrRead);
+        if (m_hStdErrWrite)
+            CloseHandle(m_hStdErrWrite);
+        if (m_hStdInRead)
+            CloseHandle(m_hStdInRead);
+        if (m_hStdInWrite)
+            CloseHandle(m_hStdInWrite);
+        m_hStdOutRead = nullptr;
+        m_hStdOutWrite = nullptr;
+        m_hStdErrRead = nullptr;
+        m_hStdErrWrite = nullptr;
+        m_hStdInRead = nullptr;
+        m_hStdInWrite = nullptr;
+        return false;
+    }
+
+    m_hProcess = pi.hProcess;
+    m_hThread = pi.hThread;
+    m_processId = pi.dwProcessId;
+    m_running = true;
+
+    // Close unnecessary handles
+    CloseHandle(m_hStdOutWrite);
+    CloseHandle(m_hStdErrWrite);
+    CloseHandle(m_hStdInRead);
+    m_hStdOutWrite = nullptr;
+    m_hStdErrWrite = nullptr;
+    m_hStdInRead = nullptr;
+
+    // Start threads to read output
+    m_outputThread = std::thread(&Win32TerminalManager::readOutputThread, this);
+    m_errorThread = std::thread(&Win32TerminalManager::readErrorThread, this);
+    m_monitorThread = std::thread(&Win32TerminalManager::monitorProcessThread, this);
+
+    return true;
+}
+
+bool Win32TerminalManager::start(ShellType shell, const char* workingDirectoryUtf8)
+{
+    if (m_running)
+        return false;
+    resetStaleStateFromExitedProcess();
+
+    m_shellType = shell;
+
     // Choose shell — try pwsh (PS7) first, fall back to powershell.exe (PS5)
     std::string cmd;
     if (shell == PowerShell)
@@ -126,54 +367,13 @@ bool Win32TerminalManager::start(ShellType shell, const char* workingDirectoryUt
               "echo RAWRXD_CWD^|%CD%^|END\"";
     }
 
-    const char* lpCurrentDirectory = nullptr;
-    char resolvedDir[1024];
-    resolvedDir[0] = '\0';
-    if (workingDirectoryUtf8 && workingDirectoryUtf8[0])
-    {
-        const DWORD n =
-            GetFullPathNameA(workingDirectoryUtf8, static_cast<DWORD>(sizeof(resolvedDir)), resolvedDir, nullptr);
-        if (n > 0 && n < sizeof(resolvedDir))
-        {
-            const DWORD attr = GetFileAttributesA(resolvedDir);
-            if (attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY))
-                lpCurrentDirectory = resolvedDir;
-        }
-    }
+    bool started = startWithConPTY(cmd, workingDirectoryUtf8);
+    if (!started)
+        started = startWithPipes(cmd, workingDirectoryUtf8);
 
-    // Writable command line buffer — CreateProcess may modify the string
-    std::vector<char> cmdLine(cmd.begin(), cmd.end());
-    cmdLine.push_back('\0');
-
-    // Create the process
-    if (!CreateProcessA(nullptr, cmdLine.data(), nullptr, nullptr, TRUE, CREATE_NO_WINDOW, nullptr, lpCurrentDirectory,
-                        &si, &pi))
-    {
-        std::cerr << "Failed to create process: " << GetLastError() << std::endl;
-        return false;
-    }
-
-    m_hProcess = pi.hProcess;
-    m_hThread = pi.hThread;
-    m_processId = pi.dwProcessId;
-    m_running = true;
-
-    // Close unnecessary handles
-    CloseHandle(m_hStdOutWrite);
-    CloseHandle(m_hStdErrWrite);
-    CloseHandle(m_hStdInRead);
-
-    // Start threads to read output
-    m_outputThread = std::thread(&Win32TerminalManager::readOutputThread, this);
-    m_errorThread = std::thread(&Win32TerminalManager::readErrorThread, this);
-    m_monitorThread = std::thread(&Win32TerminalManager::monitorProcessThread, this);
-
-    if (onStarted)
-    {
+    if (started && onStarted)
         onStarted();
-    }
-
-    return true;
+    return started;
 }
 
 void Win32TerminalManager::stop()
@@ -199,14 +399,46 @@ void Win32TerminalManager::stop()
         if (m_monitorThread.joinable())
             m_monitorThread.join();
 
-        CloseHandle(m_hProcess);
-        CloseHandle(m_hThread);
-        CloseHandle(m_hStdInWrite);
-        CloseHandle(m_hStdOutRead);
-        CloseHandle(m_hStdErrRead);
+        HANDLE hStdInWrite = m_hStdInWrite;
+        HANDLE hStdOutRead = m_hStdOutRead;
+        HANDLE hStdErrRead = m_hStdErrRead;
+        HANDLE hPtyInputWrite = m_hPtyInputWrite;
+        HANDLE hPtyOutputRead = m_hPtyOutputRead;
+
+        if (m_hProcess)
+            CloseHandle(m_hProcess);
+        if (m_hThread)
+            CloseHandle(m_hThread);
+        if (hStdInWrite)
+            CloseHandle(hStdInWrite);
+        if (hPtyInputWrite && hPtyInputWrite != hStdInWrite)
+            CloseHandle(hPtyInputWrite);
+        if (hStdOutRead)
+            CloseHandle(hStdOutRead);
+        if (hPtyOutputRead && hPtyOutputRead != hStdOutRead)
+            CloseHandle(hPtyOutputRead);
+        if (hStdErrRead)
+            CloseHandle(hStdErrRead);
+        if (m_hPseudoConsole)
+        {
+            HMODULE kernel = GetModuleHandleA("kernel32.dll");
+            if (kernel)
+            {
+                auto closePseudoConsole =
+                    reinterpret_cast<ClosePseudoConsoleFn>(GetProcAddress(kernel, "ClosePseudoConsole"));
+                if (closePseudoConsole)
+                    closePseudoConsole(reinterpret_cast<HPCON>(m_hPseudoConsole));
+            }
+            m_hPseudoConsole = nullptr;
+        }
 
         m_hProcess = nullptr;
         m_hThread = nullptr;
+        m_hStdInWrite = nullptr;
+        m_hStdOutRead = nullptr;
+        m_hStdErrRead = nullptr;
+        m_hPtyInputWrite = nullptr;
+        m_hPtyOutputRead = nullptr;
     }
     else
     {
@@ -227,12 +459,39 @@ bool Win32TerminalManager::isRunning() const
 
 void Win32TerminalManager::writeInput(const std::string& data)
 {
-    if (!m_running || !m_hStdInWrite)
+    HANDLE targetInput = m_hPtyInputWrite ? m_hPtyInputWrite : m_hStdInWrite;
+    if (!m_running || !targetInput)
         return;
 
     std::lock_guard<std::mutex> lock(m_stdinWriteMutex);
     DWORD written = 0;
-    WriteFile(m_hStdInWrite, data.c_str(), static_cast<DWORD>(data.size()), &written, nullptr);
+    WriteFile(targetInput, data.c_str(), static_cast<DWORD>(data.size()), &written, nullptr);
+}
+
+void Win32TerminalManager::appendToOutputRing(const char* data, size_t size)
+{
+    if (!data || size == 0)
+        return;
+
+    std::lock_guard<std::mutex> lock(m_outputRingMutex);
+    m_outputRing.emplace_back(data, size);
+    m_outputRingBytes += size;
+
+    while (m_outputRingBytes > kMaxOutputRingBytes && !m_outputRing.empty())
+    {
+        std::string& head = m_outputRing.front();
+        const size_t overflow = m_outputRingBytes - kMaxOutputRingBytes;
+        if (overflow >= head.size())
+        {
+            m_outputRingBytes -= head.size();
+            m_outputRing.pop_front();
+            continue;
+        }
+
+        head.erase(0, overflow);
+        m_outputRingBytes -= overflow;
+        break;
+    }
 }
 
 void Win32TerminalManager::readOutputThread()
@@ -248,6 +507,7 @@ void Win32TerminalManager::readOutputThread()
             const size_t safeBytes =
                 (bytesRead <= kMaxChunk) ? static_cast<size_t>(bytesRead) : static_cast<size_t>(kMaxChunk);
             buffer[safeBytes] = '\0';
+            appendToOutputRing(buffer, safeBytes);
             if (onOutput)
             {
                 onOutput(std::string(buffer, safeBytes));
@@ -273,6 +533,7 @@ void Win32TerminalManager::readErrorThread()
             const size_t safeBytes =
                 (bytesRead <= kMaxChunk) ? static_cast<size_t>(bytesRead) : static_cast<size_t>(kMaxChunk);
             buffer[safeBytes] = '\0';
+            appendToOutputRing(buffer, safeBytes);
             if (onError)
             {
                 onError(std::string(buffer, safeBytes));

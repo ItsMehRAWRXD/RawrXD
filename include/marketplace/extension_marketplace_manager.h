@@ -18,7 +18,7 @@ class OfflineCacheStore;
  */
 class ExtensionMarketplaceManager {
 public:
-    ExtensionMarketplaceManager() = default;
+    ExtensionMarketplaceManager();
     ~ExtensionMarketplaceManager();
 
     void searchExtensions(const std::string& query, int page = 1, int pageSize = 20);
@@ -92,6 +92,8 @@ private:
     void parseExtensionDetails(void* reply);
     std::string getExtensionDownloadUrl(const std::string& extensionId, const std::string& version);
     bool isExtensionAllowed(const std::string& extensionId);
+    bool isExtensionInstalledLocally(const std::string& extensionId) const;
+    void upsertInstalled(const ExtensionInfo& info);
     void saveInstalledExtensions();
     void loadInstalledExtensions();
     void checkForUpdates();

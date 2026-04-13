@@ -11,6 +11,7 @@
 // ============================================================================
 
 #include "vscode_extension_api.h"
+#include "quickjs_extension_host.h"
 
 // Win32IDE header for bridge access (forward-declared in header)
 // We need the actual definition here for method calls
@@ -676,6 +677,10 @@ namespace workspace {
         else if (ext == ".sh") outDoc->languageId = "shellscript";
         else outDoc->languageId = "plaintext";
 
+        if (!outDoc->languageId.empty()) {
+            QuickJSExtensionHost::instance().onLanguageActivation(outDoc->languageId.c_str());
+        }
+
         // Count lines
         std::ifstream file(path);
         uint32_t lineCount = 0;
@@ -1313,6 +1318,24 @@ VSCodeAPIResult VSCodeExtensionAPI::initialize(Win32IDE* host, HWND mainWindow) 
     m_mainWindow = mainWindow;
     m_initialized = true;
 
+    {
+        std::lock_guard<std::mutex> policyLock(m_policyMutex);
+        if (m_permissionPolicy.empty()) {
+            m_permissionPolicy["commands"] = true;
+            m_permissionPolicy["ui"] = true;
+            m_permissionPolicy["storage"] = true;
+            m_permissionPolicy["workspace.read"] = true;
+            m_permissionPolicy["workspace.write"] = true;
+            m_permissionPolicy["clipboard.read"] = true;
+            m_permissionPolicy["clipboard.write"] = true;
+            m_permissionPolicy["network"] = false;
+            m_permissionPolicy["shell"] = false;
+            m_permissionPolicy["process"] = false;
+            m_permissionPolicy["debug.attach"] = false;
+            m_permissionPolicy["filesystem.outsideWorkspace"] = false;
+        }
+    }
+
     logInfo("[VSCodeExtensionAPI] Initialized — host=%p, hwnd=%p", host, mainWindow);
 
     // Register built-in commands
@@ -1538,6 +1561,21 @@ VSCodeAPIResult VSCodeExtensionAPI::loadExtension(const VSCodeExtensionManifest*
     if (!manifest) return VSCodeAPIResult::error("loadExtension: null manifest");
     if (manifest->id.empty()) return VSCodeAPIResult::error("loadExtension: empty extension ID");
 
+    if (manifest->requiresWorkspaceTrust && !isWorkspaceTrusted()) {
+        incrementErrors();
+        return VSCodeAPIResult::error("loadExtension: extension requires trusted workspace");
+    }
+
+    std::string deniedPermission;
+    if (!areManifestPermissionsAllowed(*manifest, &deniedPermission)) {
+        incrementErrors();
+        thread_local char deniedBuf[256];
+        snprintf(deniedBuf, sizeof(deniedBuf),
+                 "loadExtension: blocked by permission policy (%s)",
+                 deniedPermission.c_str());
+        return VSCodeAPIResult::error(deniedBuf);
+    }
+
     std::lock_guard<std::mutex> lock(m_extensionsMutex);
     if (m_extensions.count(manifest->id)) {
         return VSCodeAPIResult::error("loadExtension: extension already loaded");
@@ -1740,6 +1778,170 @@ VSCodeAPIResult VSCodeExtensionAPI::loadNativeExtension(const char* dllPath, con
     return VSCodeAPIResult::ok("Native extension loaded");
 }
 
+VSCodeAPIResult VSCodeExtensionAPI::setWorkspaceTrusted(bool trusted) {
+    m_workspaceTrusted.store(trusted, std::memory_order_release);
+    logInfo("[Security] Workspace trust set to: %s", trusted ? "trusted" : "untrusted");
+    return VSCodeAPIResult::ok("Workspace trust updated");
+}
+
+bool VSCodeExtensionAPI::isWorkspaceTrusted() const {
+    return m_workspaceTrusted.load(std::memory_order_acquire);
+}
+
+VSCodeAPIResult VSCodeExtensionAPI::setPermissionPolicy(const char* permission, bool allowed) {
+    if (!permission || !permission[0]) {
+        return VSCodeAPIResult::error("setPermissionPolicy: empty permission");
+    }
+    std::lock_guard<std::mutex> lock(m_policyMutex);
+    m_permissionPolicy[permission] = allowed;
+    return VSCodeAPIResult::ok("Permission policy updated");
+}
+
+bool VSCodeExtensionAPI::isPermissionAllowed(const char* permission) const {
+    if (!permission || !permission[0]) return false;
+    std::lock_guard<std::mutex> lock(m_policyMutex);
+    auto it = m_permissionPolicy.find(permission);
+    return it != m_permissionPolicy.end() ? it->second : false;
+}
+
+bool VSCodeExtensionAPI::areManifestPermissionsAllowed(const VSCodeExtensionManifest& manifest,
+                                                       std::string* deniedPermission) const {
+    std::lock_guard<std::mutex> lock(m_policyMutex);
+    for (const auto& permission : manifest.requestedPermissions) {
+        auto it = m_permissionPolicy.find(permission);
+        const bool allowed = (it != m_permissionPolicy.end()) ? it->second : false;
+        if (!allowed) {
+            if (deniedPermission) *deniedPermission = permission;
+            return false;
+        }
+    }
+    return true;
+}
+
+void VSCodeExtensionAPI::fireCommandActivationEvent(const char* commandId) {
+    if (!commandId || !commandId[0]) return;
+
+    std::string activationEvent = "onCommand:" + std::string(commandId);
+    QuickJSExtensionHost::instance().onActivationEvent(activationEvent.c_str());
+
+    std::vector<std::string> nativeToActivate;
+    {
+        std::lock_guard<std::mutex> lock(m_extensionsMutex);
+        for (const auto& [id, ext] : m_extensions) {
+            if (!ext || ext->activated) continue;
+            for (const auto& ev : ext->manifest.activationEvents) {
+                if (ev == "*" || ev == activationEvent) {
+                    nativeToActivate.push_back(id);
+                    break;
+                }
+            }
+        }
+    }
+
+    for (const auto& id : nativeToActivate) {
+        activateExtension(id.c_str());
+    }
+}
+
+void VSCodeExtensionAPI::fireLanguageActivationEvent(const char* languageId) {
+    if (!languageId || !languageId[0]) return;
+
+    std::string activationEvent = "onLanguage:" + std::string(languageId);
+    QuickJSExtensionHost::instance().onLanguageActivation(languageId);
+
+    std::vector<std::string> nativeToActivate;
+    {
+        std::lock_guard<std::mutex> lock(m_extensionsMutex);
+        for (const auto& [id, ext] : m_extensions) {
+            if (!ext || ext->activated) continue;
+            for (const auto& ev : ext->manifest.activationEvents) {
+                if (ev == "*" || ev == activationEvent) {
+                    nativeToActivate.push_back(id);
+                    break;
+                }
+            }
+        }
+    }
+
+    for (const auto& id : nativeToActivate) {
+        activateExtension(id.c_str());
+    }
+}
+
+void VSCodeExtensionAPI::fireViewActivationEvent(const char* viewId) {
+    if (!viewId || !viewId[0]) return;
+
+    std::string activationEvent = "onView:" + std::string(viewId);
+    QuickJSExtensionHost::instance().onActivationEvent(activationEvent.c_str());
+
+    std::vector<std::string> nativeToActivate;
+    {
+        std::lock_guard<std::mutex> lock(m_extensionsMutex);
+        for (const auto& [id, ext] : m_extensions) {
+            if (!ext || ext->activated) continue;
+            for (const auto& ev : ext->manifest.activationEvents) {
+                if (ev == "*" || ev == activationEvent) {
+                    nativeToActivate.push_back(id);
+                    break;
+                }
+            }
+        }
+    }
+
+    for (const auto& id : nativeToActivate) {
+        activateExtension(id.c_str());
+    }
+}
+
+void VSCodeExtensionAPI::fireFileOpenActivationEvent(const char* filePath) {
+    if (!filePath || !filePath[0]) return;
+
+    // Generate onFileOpen event
+    std::string activationEvent = "onFileOpen";
+    QuickJSExtensionHost::instance().onActivationEvent(activationEvent.c_str());
+
+    std::vector<std::string> nativeToActivate;
+    {
+        std::lock_guard<std::mutex> lock(m_extensionsMutex);
+        for (const auto& [id, ext] : m_extensions) {
+            if (!ext || ext->activated) continue;
+            for (const auto& ev : ext->manifest.activationEvents) {
+                if (ev == "*" || ev == "onFileOpen") {
+                    nativeToActivate.push_back(id);
+                    break;
+                }
+            }
+        }
+    }
+
+    for (const auto& id : nativeToActivate) {
+        activateExtension(id.c_str());
+    }
+}
+
+void VSCodeExtensionAPI::fireStartupActivationEvent() {
+    std::string activationEvent = "onStartup";
+    QuickJSExtensionHost::instance().onActivationEvent(activationEvent.c_str());
+
+    std::vector<std::string> nativeToActivate;
+    {
+        std::lock_guard<std::mutex> lock(m_extensionsMutex);
+        for (const auto& [id, ext] : m_extensions) {
+            if (!ext || ext->activated) continue;
+            for (const auto& ev : ext->manifest.activationEvents) {
+                if (ev == "*" || ev == "onStartup") {
+                    nativeToActivate.push_back(id);
+                    break;
+                }
+            }
+        }
+    }
+
+    for (const auto& id : nativeToActivate) {
+        activateExtension(id.c_str());
+    }
+}
+
 // ============================================================================
 // Command Registry
 // ============================================================================
@@ -1783,6 +1985,8 @@ VSCodeAPIResult VSCodeExtensionAPI::executeCommand(const char* commandId, const 
         return VSCodeAPIResult::error("executeCommand: null commandId");
     }
 
+    fireCommandActivationEvent(commandId);
+
     void (*handler)(void*) = nullptr;
     void* ctx = nullptr;
 
@@ -1804,10 +2008,48 @@ VSCodeAPIResult VSCodeExtensionAPI::executeCommand(const char* commandId, const 
             bridgeCommandToIDM(commandId);
             return VSCodeAPIResult::error("executeCommand: command not found");
         }
+        
+        // ====================================================================
+        // Permission Enforcement: Check if extension has permission for this command
+        // ====================================================================
+        bool permitExecution = true;
+        
+        // Try to find which extension owns this command
+        std::lock_guard<std::mutex> extLock(m_extensionsMutex);
+        for (const auto& [extId, ext] : m_extensions) {
+            if (!ext) continue;
+            
+            // Check if this extension contributed this command
+            bool owns = false;
+            for (const auto& cmd : ext->manifest.contributedCommands) {
+                if (cmd.command == commandId) {
+                    owns = true;
+                    break;
+                }
+            }
+            
+            if (owns) {
+                // Check permission policies for this extension
+                std::string deniedPerm;
+                if (!areManifestPermissionsAllowed(ext->manifest, &deniedPerm)) {
+                    permitExecution = false;
+                    incrementErrors();
+                    return VSCodeAPIResult::error(
+                        std::string("Permission denied: extension '" + std::string(extId) + 
+                        "' requires '" + deniedPerm + "' permission which is not granted").c_str());
+                }
+                break;
+            }
+        }
+        
+        if (!permitExecution) {
+            incrementErrors();
+            return VSCodeAPIResult::error("Command execution denied due to permission restrictions");
+        }
 
-        it->second.executionCount++;
         handler = it->second.handler;
         ctx = it->second.context;
+        it->second.executionCount++;
     }
     // Mutex released — safe to call handler without deadlock or reentrancy risk
     

@@ -1,0 +1,152 @@
+param(
+    [ValidateRange(1,14)]
+    [int]$Day = 1,
+    [switch]$Live,
+    [switch]$LiveInstall,
+    [switch]$Strict,
+    [string]$BuildDir = "D:/rawrxd/build",
+    [string]$ReportDir = "D:/rawrxd/contract_reports/extension-installer"
+)
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
+
+function Ensure-Dir([string]$Path) {
+    if (-not (Test-Path $Path)) {
+        New-Item -ItemType Directory -Path $Path -Force | Out-Null
+    }
+}
+
+function Run-Smoke([string[]]$SmokeArgs, [string]$Label) {
+    $exe = Join-Path $BuildDir "bin/ExtensionInstallerSmoke.exe"
+    if (-not (Test-Path $exe)) {
+        throw "Smoke test executable not found: $exe"
+    }
+
+    $stamp = Get-Date -Format "yyyyMMdd_HHmmss"
+    $out = Join-Path $ReportDir "${stamp}_${Label}.out.txt"
+    $err = Join-Path $ReportDir "${stamp}_${Label}.err.txt"
+
+    Write-Host "[14D] Running: $exe $($SmokeArgs -join ' ')"
+    & $exe @SmokeArgs 1> $out 2> $err
+    $exitCode = $LASTEXITCODE
+
+    Write-Host "[14D] ExitCode=$exitCode"
+    Write-Host "[14D] Out=$out"
+    Write-Host "[14D] Err=$err"
+
+    if ($Strict -and $exitCode -ne 0) {
+        throw "Smoke run failed in strict mode: $Label"
+    }
+
+    return [pscustomobject]@{
+        Label = $Label
+        ExitCode = $exitCode
+        OutFile = $out
+        ErrFile = $err
+    }
+}
+
+Ensure-Dir $ReportDir
+
+$results = @()
+
+switch ($Day) {
+    1 {
+        # Baseline coherence and security in offline mode.
+        $results += Run-Smoke -SmokeArgs @("--failure-inject", "--stress", "3") -Label "day01_baseline"
+    }
+    2 {
+        # Marketplace metadata validation.
+        $args = @("--live")
+        if (-not $Live) { $args = @() }
+        $results += Run-Smoke -SmokeArgs $args -Label "day02_marketplace"
+    }
+    3 {
+        # Installer idempotency and pending-state stability.
+        $results += Run-Smoke -SmokeArgs @("--stress", "10") -Label "day03_idempotency"
+    }
+    4 {
+        # Failure recovery paths.
+        $results += Run-Smoke -SmokeArgs @("--failure-inject", "--stress", "5") -Label "day04_failure_recovery"
+    }
+    5 {
+        # Live install path for target language extensions.
+        $args = @("--live-install")
+        if ($Live) { $args += "--live" }
+        $results += Run-Smoke -SmokeArgs $args -Label "day05_live_install"
+    }
+    6 {
+        # Parallel stress medium.
+        $args = @("--stress", "15")
+        if ($Live) { $args = @("--stress-live", "10") }
+        $results += Run-Smoke -SmokeArgs $args -Label "day06_parallel_medium"
+    }
+    7 {
+        # Parallel stress high.
+        $args = @("--stress", "25")
+        if ($Live) { $args = @("--stress-live", "20") }
+        $results += Run-Smoke -SmokeArgs $args -Label "day07_parallel_high"
+    }
+    8 {
+        # Combined live + failure injection.
+        $args = @("--failure-inject")
+        if ($Live) { $args += "--live" }
+        $results += Run-Smoke -SmokeArgs $args -Label "day08_combined"
+    }
+    9 {
+        # Activation artifact assertions with live install.
+        $args = @("--live-install")
+        if ($Live) { $args += "--live" }
+        $results += Run-Smoke -SmokeArgs $args -Label "day09_activation_artifacts"
+    }
+    10 {
+        # Stress + failure in one pass.
+        $args = @("--failure-inject", "--stress", "20")
+        if ($Live) { $args = @("--failure-inject", "--stress-live", "15") }
+        $results += Run-Smoke -SmokeArgs $args -Label "day10_stress_failure"
+    }
+    11 {
+        # Re-run baseline to prove no regression drift.
+        $results += Run-Smoke -SmokeArgs @("--failure-inject", "--stress", "3") -Label "day11_regression_baseline"
+    }
+    12 {
+        # Live marketplace consistency pass.
+        $args = @("--live")
+        if (-not $Live) { $args = @() }
+        $results += Run-Smoke -SmokeArgs $args -Label "day12_marketplace_consistency"
+    }
+    13 {
+        # Pre-release gate.
+        $args = @("--failure-inject", "--stress", "10")
+        if ($Live) { $args = @("--live", "--failure-inject", "--stress-live", "10") }
+        $results += Run-Smoke -SmokeArgs $args -Label "day13_release_gate"
+    }
+    14 {
+        # Final production certification pass.
+        $args = @("--failure-inject", "--stress", "10")
+        if ($LiveInstall) { $args += "--live-install" }
+        if ($Live) { $args += "--live" }
+        $results += Run-Smoke -SmokeArgs $args -Label "day14_certification"
+    }
+    default {
+        throw "Unsupported day: $Day"
+    }
+}
+
+$summaryPath = Join-Path $ReportDir ("summary_day{0:00}_{1}.txt" -f $Day, (Get-Date -Format "yyyyMMdd_HHmmss"))
+$summary = @()
+$summary += "RawrXD Extension Installer 14-Day Expansion"
+$summary += "Day=$Day Live=$Live LiveInstall=$LiveInstall Strict=$Strict"
+$summary += ""
+foreach ($r in $results) {
+    $summary += ("Label={0}" -f $r.Label)
+    $summary += ("ExitCode={0}" -f $r.ExitCode)
+    $summary += ("OutFile={0}" -f $r.OutFile)
+    $summary += ("ErrFile={0}" -f $r.ErrFile)
+    $summary += ""
+}
+$summary | Set-Content -Path $summaryPath -Encoding UTF8
+
+Write-Host "[14D] Summary: $summaryPath"
+Write-Host "[14D] Completed day $Day"

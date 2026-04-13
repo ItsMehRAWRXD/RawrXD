@@ -895,18 +895,18 @@ static std::wstring utf8ToWide(const std::string& utf8)
         return {};
     int len =
         MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, utf8.c_str(), static_cast<int>(utf8.size()), nullptr, 0);
-    UINT cp = CP_UTF8;
     DWORD flags = MB_ERR_INVALID_CHARS;
     if (len <= 0)
     {
-        len = MultiByteToWideChar(CP_ACP, 0, utf8.c_str(), static_cast<int>(utf8.size()), nullptr, 0);
-        cp = CP_ACP;
+        // Never reinterpret UTF-8 payloads as ACP; that causes mojibake.
+        // If strict UTF-8 fails, retry with replacement semantics but stay on UTF-8.
+        len = MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), static_cast<int>(utf8.size()), nullptr, 0);
         flags = 0;
     }
     if (len <= 0)
         return {};
     std::wstring out(static_cast<size_t>(len), L'\0');
-    if (MultiByteToWideChar(cp, flags, utf8.c_str(), static_cast<int>(utf8.size()), out.data(), len) == 0)
+    if (MultiByteToWideChar(CP_UTF8, flags, utf8.c_str(), static_cast<int>(utf8.size()), out.data(), len) == 0)
         return {};
     return out;
 }
@@ -1125,21 +1125,28 @@ static std::string sanitizeForChatUi(const std::string& input)
             text = converted;
     }
 
-    // Validate UTF-8 strictly; fall back to ANSI decode if bytes are malformed.
+    // Validate UTF-8 strictly; do not reinterpret malformed bytes as ACP.
     const int wLenUtf8 =
         MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, text.data(), static_cast<int>(text.size()), nullptr, 0);
     bool utf8Valid = (wLenUtf8 > 0);
     if (!utf8Valid)
     {
-        const int wLenAcp = MultiByteToWideChar(CP_ACP, 0, text.data(), static_cast<int>(text.size()), nullptr, 0);
-        if (wLenAcp > 0)
+        // Retry non-strict UTF-8 decode to preserve as much text as possible
+        // without switching code pages.
+        const int wLenUtf8Lossy =
+            MultiByteToWideChar(CP_UTF8, 0, text.data(), static_cast<int>(text.size()), nullptr, 0);
+        if (wLenUtf8Lossy > 0)
         {
-            std::wstring w(static_cast<size_t>(wLenAcp), L'\0');
-            if (MultiByteToWideChar(CP_ACP, 0, text.data(), static_cast<int>(text.size()), w.data(), wLenAcp) > 0)
+            std::wstring w(static_cast<size_t>(wLenUtf8Lossy), L'\0');
+            if (MultiByteToWideChar(CP_UTF8, 0, text.data(), static_cast<int>(text.size()), w.data(), wLenUtf8Lossy) >
+                0)
             {
-                const std::string converted = wideToUtf8N(w.data(), wLenAcp);
+                const std::string converted = wideToUtf8N(w.data(), wLenUtf8Lossy);
                 if (!converted.empty())
+                {
                     text = converted;
+                    utf8Valid = true;
+                }
             }
         }
     }
@@ -2344,8 +2351,8 @@ void Win32IDE::recreateFonts()
         DeleteObject(m_hFontUI);
         m_hFontUI = nullptr;
     }
-    m_hFontUI = CreateFontA(-dpiScale(14), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS,
-                            CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+    m_hFontUI = CreateFontW(-dpiScale(14), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
+                            CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Segoe UI");
 
     // Ghost text font — italic monospace
     if (m_ghostTextFont)
@@ -9699,8 +9706,8 @@ void Win32IDE::createChatPanel()
     m_hwndSecondarySidebarHeader = CreateWindowExW(0, L"STATIC", L"AI Chat", WS_CHILD | WS_VISIBLE | SS_LEFT, 5, 5, 290,
                                                    25, m_hwndSecondarySidebar, nullptr, m_hInstance, nullptr);
 
-    HFONT hFont = CreateFontA(-dpiScale(14), 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS,
-                              CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+    HFONT hFont = CreateFontW(-dpiScale(14), 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
+                              CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Segoe UI");
     if (m_hwndSecondarySidebarHeader)
     {
         SendMessage(m_hwndSecondarySidebarHeader, WM_SETFONT, (WPARAM)hFont, TRUE);

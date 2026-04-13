@@ -25,6 +25,11 @@ This is the lane to use when the goal is a directly buildable, directly launchab
 - `./Launch-AgenticIDE.ps1`
 - `Launch-AgenticIDE.bat`
 
+### Production Finishers
+- `./Finish-The-Vision.ps1`
+- `./Run-14Day-ProductionFinishers.ps1`
+- `Run-14Day-ProductionFinishers.bat`
+
 ---
 
 ## Typical Commands
@@ -70,5 +75,7 @@ This is the lane to use when the goal is a directly buildable, directly launchab
 ## Working Rule
 
 If the objective is the finished, usable IDE, stay on the monolithic lane first.
+
+If the objective is production-readiness verification and execution against the 14-day expansion gates, use `./Finish-The-Vision.ps1` first.
 
 Treat the rest of the repository as support material, legacy work, component experiments, or alternate implementations unless a specific file is being targeted.

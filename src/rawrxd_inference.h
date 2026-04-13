@@ -978,7 +978,6 @@ class RawrXDInference
                 }
             }
         }
-
         return generated;
     }
 
