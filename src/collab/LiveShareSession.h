@@ -20,6 +20,7 @@
 #include <cstdint>
 #include "crdt_buffer.h"
 #include "cursor_widget.h"
+#include <nlohmann/json.hpp>
 
 namespace RawrXD {
 

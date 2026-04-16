@@ -2021,7 +2021,7 @@ VSCodeAPIResult VSCodeExtensionAPI::executeCommand(const char* commandId, const 
             
             // Check if this extension contributed this command
             bool owns = false;
-            for (const auto& cmd : ext->manifest.contributedCommands) {
+            for (const auto& cmd : ext->manifest.commands) {
                 if (cmd.command == commandId) {
                     owns = true;
                     break;

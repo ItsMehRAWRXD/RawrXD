@@ -1,4 +1,9 @@
-#include "api_server.h"
+// async_logger.hpp MUST be first — before any Windows headers,
+// to prevent #define ERROR from winerror.h conflicting with LogSeverity::ERROR.
+#include "../include/async_logger.hpp"
+#include "../include/api_server.h"
+#include "overclock_governor.h"
+#include "AppState.h"
 #include "interactive_shell.h"
 #include "reverse_engineering/RawrDumpBin.hpp"
 #include "reverse_engineering/RawrCompiler.hpp"
@@ -6,7 +11,8 @@
 #include "diagnostics/self_diagnose.hpp"
 #include "cpu_inference_engine.h"
 #include "cot_response_schema.hpp"
-#include "async_logger.hpp"
+#include "../include/async_logger.hpp"
+// (already included above — keep for clarity but header guard prevents double inclusion)
 #include <iostream>
 #include <sstream>
 #include <fstream>
@@ -72,6 +78,10 @@ static std::string EscapeJsonString(const std::string& input, size_t max_len = 0
     return result;
 }
 
+// Forward declarations for static helpers defined later in this file
+static void HandleDumpBinRequest(const std::string& body, std::string& response);
+static std::string GetFullMemoryStatsJson();
+
 APIServer::APIServer(AppState& app_state)
     : app_state_(app_state), is_running_(false), port_(11434) {
 }
@@ -97,7 +107,7 @@ bool APIServer::Start(uint16_t port) {
             if (mmfResult.success) {
                 LogApiOperation("INFO", "MMF", "Cross-process state sync initialized");
             } else {
-                LogApiOperation("WARN", "MMF", std::string("MMF init failed: ") + (mmfResult.detail ? mmfResult.detail : "unknown"));
+                LogApiOperation("WARN", "MMF", std::string("MMF init failed: ") + (mmfResult.detail.empty() ? "unknown" : mmfResult.detail));
             }
         }
     }
@@ -399,18 +409,18 @@ std::string APIServer::GenerateCompletion(const std::string& prompt) {
     try {
         LogApiOperation("DEBUG", "INFERENCE", "Generating completion for prompt (" + std::to_string(prompt.length()) + " chars)");
         
-        if (!app_state_.loaded_model || !app_state_.gpu_context) {
+        if (!app_state_.inference_engine) {
             LogApiOperation("WARN", "INFERENCE", "No model loaded or GPU context unavailable");
 
             // Attempt to use the CPUInferenceEngine singleton if available
-            auto* cpuEngine = static_cast<CPUInferenceEngine*>(app_state_.inference_engine);
+            auto* cpuEngine = app_state_.inference_engine.get();
             if (cpuEngine) {
                 LogApiOperation("INFO", "INFERENCE", "Using CPUInferenceEngine fallback");
                 auto start = std::chrono::steady_clock::now();
 
                 // Tokenize → Generate → Detokenize pipeline
                 std::vector<int32_t> inputTokens = cpuEngine->Tokenize(prompt);
-                int maxTokens = static_cast<int>(app_state_.context_size > 0 ? app_state_.context_size : 256);
+                int maxTokens = 256;
                 std::vector<int32_t> outputTokens = cpuEngine->Generate(inputTokens, maxTokens);
                 std::string result = cpuEngine->Detokenize(outputTokens);
 
@@ -454,10 +464,10 @@ std::string APIServer::GenerateCompletion(const std::string& prompt) {
         // Dispatch to inference engine
         std::string completion;
         size_t outputTokenCount = 0;
-        auto* cpuEngine = static_cast<CPUInferenceEngine*>(app_state_.inference_engine);
+        auto* cpuEngine = app_state_.inference_engine.get();
         if (cpuEngine) {
             std::vector<int32_t> inputTokens = cpuEngine->Tokenize(prompt);
-            int maxTokens = static_cast<int>(app_state_.context_size > 0 ? app_state_.context_size : 256);
+            int maxTokens = 256;
             std::vector<int32_t> outputTokens = cpuEngine->Generate(inputTokens, maxTokens);
             outputTokenCount = outputTokens.size();
             completion = cpuEngine->Detokenize(outputTokens);
@@ -497,14 +507,14 @@ std::string APIServer::GenerateChatCompletion(const std::vector<ChatMessage>& me
     try {
         LogApiOperation("DEBUG", "CHAT_INFERENCE", "Generating chat completion for " + std::to_string(messages.size()) + " messages");
         
-        if (!app_state_.loaded_model || !app_state_.gpu_context) {
+        if (!app_state_.inference_engine) {
             LogApiOperation("WARN", "CHAT_INFERENCE", "No model loaded or GPU context unavailable");
 
             // Attempt CPUInferenceEngine fallback
-            auto* cpuEngine = static_cast<CPUInferenceEngine*>(app_state_.inference_engine);
+            auto* cpuEngine = app_state_.inference_engine.get();
             if (!cpuEngine) {
                 // If no engine at all but model_ready is true, try to get engine
-                if (!app_state_.model_ready.load()) {
+                if (!app_state_.inference_engine) {
                     return "Error: No model loaded. Use /api/pull to download a model first.";
                 }
             }
@@ -545,10 +555,10 @@ std::string APIServer::GenerateChatCompletion(const std::vector<ChatMessage>& me
 
         std::string completion;
         size_t chatOutputTokenCount = 0;
-        auto* cpuEngine = static_cast<CPUInferenceEngine*>(app_state_.inference_engine);
+        auto* cpuEngine = app_state_.inference_engine.get();
         if (cpuEngine) {
             std::vector<int32_t> inputTokens = cpuEngine->Tokenize(formattedPrompt);
-            int maxTokens = static_cast<int>(app_state_.context_size > 0 ? app_state_.context_size : 256);
+            int maxTokens = 256;
             std::vector<int32_t> outputTokens = cpuEngine->Generate(inputTokens, maxTokens);
             chatOutputTokenCount = outputTokens.size();
             completion = cpuEngine->Detokenize(outputTokens);

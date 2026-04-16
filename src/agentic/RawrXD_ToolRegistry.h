@@ -63,6 +63,12 @@ public:
 
     ToolResult Execute(const std::string& tool_name, const std::string& json_args, std::string& output);
 
+    // Native / MASM tool registration.  Call once at startup to surface built-in
+    // MASM kernels (NLShell_ValidateCommand, Vector_CosineSimilarity, etc.) as
+    // agent-callable tools without requiring a JSON registry file on disk.
+    bool RegisterNativeTool(ToolDefinition def);
+    void RegisterBuiltinMasmTools();
+
     using ConsentCallback = std::function<bool(const ToolDefinition&, const nlohmann::json&)>;
     void SetConsentCallback(ConsentCallback callback);
 

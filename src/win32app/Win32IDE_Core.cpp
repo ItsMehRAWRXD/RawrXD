@@ -40,7 +40,7 @@ extern void RawrXD_FinishCopilotMinimalAgentic(Win32IDE* ide, WPARAM successWp, 
 #endif
 #include "Win32IDE_AgenticBrowser.h"
 #include "Win32IDE_ComponentManagers.h"  // Complete types for unique_ptr<T> dtor
-#include "Win32IDE_DAPServer.h"  // Complete type for unique_ptr<Win32IDE_DAPServer> dtor
+#include "Win32IDE_DAPServer.h"          // Complete type for unique_ptr<Win32IDE_DAPServer> dtor
 #include "Win32IDE_IELabels.h"
 #include "WindowVisibilityHelpers.h"
 #include "context/semantic_index.h"
@@ -1301,6 +1301,10 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             }
             return 0;
         }
+
+        case WM_COPILOT_DEFERRED_SEND:
+            HandleCopilotSend();
+            return 0;
 
         case WM_APP + 308:
         {  // WM_STATUSBAR_REFRESH_COPILOT — worker thread updated chat TPS gauges
@@ -4092,7 +4096,7 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
                             ", wantsAgentic=" + std::to_string(wantsAgentic ? 1 : 0) +
                             ", layerAvailable=" + std::to_string(layerAvailable ? 1 : 0) + "\n")
                                .c_str());
-        HandleCopilotSend();
+        postDeferredCopilotSend();
         return;
     }
     if (id == 1205)

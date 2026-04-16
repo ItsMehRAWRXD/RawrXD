@@ -26,6 +26,7 @@ struct AppState {
     uint32_t current_gpu_freq_mhz = 0;
     uint32_t max_cpu_temp_c = 95;
     uint32_t max_gpu_hotspot_c = 90;
+    uint32_t boost_step_mhz = 25;
     uint32_t current_cpu_temp_c = 0;
     uint32_t current_gpu_hotspot_c = 0;
     float pid_integral = 0;
@@ -45,6 +46,14 @@ struct AppState {
     int applied_core_offset_mhz = 0;
     std::string governor_last_fault = "";
     std::string governor_status = "idle";
+    std::string status_message;
+    bool ryzen_master_detected = false;
+    bool adrenalin_cli_detected = false;
+    void* loaded_model = nullptr;
+    void* gpu_context = nullptr;
+    std::atomic<bool> model_ready{false};
+    std::string loaded_model_name;
+    uint32_t context_size = 2048;
     unsigned int current_cpu_temp = 0;
     unsigned int current_gpu_temp = 0;
     unsigned int current_gpu_power = 0;

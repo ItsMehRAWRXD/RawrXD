@@ -1,19 +1,17 @@
 // Win32IDE.cpp - RawrXD Win32 IDE Implementation
 // Build timestamp: 2026-03-31
-#include <windows.h>
 #include "Win32IDE.h"
-#include "Win32IDE_DAPServer.h"  // Full type for unique_ptr<Win32IDE_DAPServer> dtor
 #include "../../Ship/RawrXD_AutonomousAgenticPipeline.h"  // Full type for unique_ptr destructor
 #include "../../Ship/Win32TerminalScrollback.hpp"
 #include "../../include/PathResolver.h"
 #include "../../include/rawrxd_version.h"
 #include "../agentic/AgenticChatSession.h"
+#include "../agentic/AgenticSubmitInference_Fix.h"  // TOOL-AWARE INFERENCE BRIDGE
 #include "../agentic/agentic_controller_wiring.h"
 #include "../agentic/slash_command_parser.hpp"
-#include "../agentic/AgenticSubmitInference_Fix.h"  // TOOL-AWARE INFERENCE BRIDGE
 #include "../core/command_registry.hpp"
-#include "../core/layer_offload_manager.hpp"
 #include "../core/gpu_backend_bridge.h"
+#include "../core/layer_offload_manager.hpp"
 #include "../cpu_inference_engine.h"
 #include "../inference/speculative_execution_engine.h"  // Full type for unique_ptr<SpeculativeExecutionEngine> dtor
 #include "../model_source_resolver.h"
@@ -28,6 +26,7 @@
 #include "ModelConnection.h"
 #include "VSIXInstaller.hpp"
 #include "Win32IDE_AgenticBridge.h"
+#include "Win32IDE_DAPServer.h"  // Full type for unique_ptr<Win32IDE_DAPServer> dtor
 #include "Win32IDE_Settings.h"
 #include "feature_registry_panel.h"
 #include "lsp/RawrXD_LSPServer.h"
@@ -37,6 +36,7 @@
 #include <nlohmann/json.hpp>
 #include <psapi.h>
 #include <richedit.h>
+#include <windows.h>
 
 extern "C" void RawrXD_ApplyCopilotChatEditLimits(HWND output, HWND input);
 
@@ -1752,8 +1752,7 @@ void Win32IDE::createMenuBar(HWND hwnd)
     AppendMenuW(hEditMenu, MF_STRING, IDM_EDITOR_PEEK_DEFINITION, L"Peek &Definition\tAlt+F12");
     AppendMenuW(hEditMenu, MF_STRING, IDM_EDITOR_PEEK_REFERENCES, L"Peek &References\tShift+F12");
     AppendMenuW(hEditMenu, MF_STRING, IDM_EDITOR_GOTO_IMPLEMENTATION, L"Go to &Implementation\tCtrl+F12");
-    AppendMenuW(hEditMenu, MF_STRING, IDM_EDITOR_GOTO_TYPE_DEFINITION,
-                L"Go to &Type Definition\tCtrl+Alt+F12");
+    AppendMenuW(hEditMenu, MF_STRING, IDM_EDITOR_GOTO_TYPE_DEFINITION, L"Go to &Type Definition\tCtrl+Alt+F12");
     AppendMenuW(hEditMenu, MF_STRING, IDM_EDITOR_FORMAT_SELECTION, L"Format Se&lection\tShift+Alt+F");
     AppendMenuW(hEditMenu, MF_STRING, IDM_EDITOR_CODE_ACTIONS, L"Code &Actions...\tCtrl+.");
     AppendMenuW(hEditMenu, MF_STRING, IDM_EDITOR_SHOW_INLAY_HINTS, L"Show &Inlay Hints\tCtrl+Alt+I");
@@ -6645,20 +6644,20 @@ void Win32IDE::createFileExplorer(HWND hwndParent)
     const int explorerW = parentW > 0 ? parentW : m_sidebarWidth;
     const int explorerH = parentH > 0 ? parentH : 500;
 
-    m_hwndFileExplorer = CreateWindowExW(0, L"STATIC", L"File Explorer", WS_CHILD | WS_VISIBLE | WS_BORDER, 0, 0,
-                                         explorerW, explorerH, hwndParent, (HMENU)IDC_FILE_EXPLORER,
-                                         GetModuleHandle(nullptr), nullptr);
+    m_hwndFileExplorer =
+        CreateWindowExW(0, L"STATIC", L"File Explorer", WS_CHILD | WS_VISIBLE | WS_BORDER, 0, 0, explorerW, explorerH,
+                        hwndParent, (HMENU)IDC_FILE_EXPLORER, GetModuleHandle(nullptr), nullptr);
 
     if (!m_hwndFileExplorer)
     {
         return;
     }
 
-    m_hwndFileTree = CreateWindowExW(
-        WS_EX_CLIENTEDGE, WC_TREEVIEWW, L"",
-        WS_CHILD | WS_VISIBLE | WS_BORDER | TVS_HASLINES | TVS_LINESATROOT | TVS_HASBUTTONS, 5, 5,
-        (std::max)(0, explorerW - 10), (std::max)(0, explorerH - 10), m_hwndFileExplorer, (HMENU)IDC_FILE_TREE,
-        GetModuleHandle(nullptr), nullptr);
+    m_hwndFileTree =
+        CreateWindowExW(WS_EX_CLIENTEDGE, WC_TREEVIEWW, L"",
+                        WS_CHILD | WS_VISIBLE | WS_BORDER | TVS_HASLINES | TVS_LINESATROOT | TVS_HASBUTTONS, 5, 5,
+                        (std::max)(0, explorerW - 10), (std::max)(0, explorerH - 10), m_hwndFileExplorer,
+                        (HMENU)IDC_FILE_TREE, GetModuleHandle(nullptr), nullptr);
 
     if (!m_hwndFileTree)
     {
@@ -6872,9 +6871,27 @@ void Win32IDE::loadModelFromPath(const std::string& filepath)
 
     if (ggufOk)
     {
-        try { initializeInference(); } catch (...) {}
-        try { initBackendManager(); } catch (...) {}
-        try { initLLMRouter(); } catch (...) {}
+        try
+        {
+            initializeInference();
+        }
+        catch (...)
+        {
+        }
+        try
+        {
+            initBackendManager();
+        }
+        catch (...)
+        {
+        }
+        try
+        {
+            initLLMRouter();
+        }
+        catch (...)
+        {
+        }
     }
     // Always feed path to agentic bridge so chat and task execution use this model (creates bridge if needed)
     bool bridgeOk = false;
@@ -6908,12 +6925,14 @@ void Win32IDE::loadModelFromPath(const std::string& filepath)
 // in loadModelFromPathAsync hands data in/out via this plain-C-compatible struct.
 // ===========================================================================
 
-void Win32IDE::initModelSubsystems() {
+void Win32IDE::initModelSubsystems()
+{
     initBackendManager();
     initLLMRouter();
 }
 
-namespace {
+namespace
+{
 struct AsyncModelLoadParams
 {
     Win32IDE* ide;
@@ -6935,8 +6954,7 @@ static void asyncModelLoadBodySEH(AsyncModelLoadParams* p) noexcept
     __except (EXCEPTION_EXECUTE_HANDLER)
     {
         char buf[256];
-        snprintf(buf, sizeof(buf),
-                 "[AsyncModelLoad] SEH exception 0x%08lX during model load — aborting load\n",
+        snprintf(buf, sizeof(buf), "[AsyncModelLoad] SEH exception 0x%08lX during model load — aborting load\n",
                  GetExceptionCode());
         OutputDebugStringA(buf);
         // postOutputPanelSafe is NOT called from __except because it has C++ dtor baggage;
@@ -6956,7 +6974,9 @@ static void asyncModelLoadBodySEH(AsyncModelLoadParams* p) noexcept
         }
         p->result->bridgeOk = p->ide->loadModelForInference(p->result->filepath);
     }
-    catch (...) {}
+    catch (...)
+    {
+    }
 }
 #endif
 }  // namespace
@@ -7241,25 +7261,25 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
         {
             std::error_code fsec;
             fileSize = static_cast<uint64_t>(std::filesystem::file_size(resolvedPath, fsec));
-            if (fsec) fileSize = 0;
+            if (fsec)
+                fileSize = 0;
         }
 
-        const uint32_t layers     = m_currentModelMetadata.layer_count;
-        const uint32_t kvHeads    = m_currentModelMetadata.head_count_kv > 0
-                                    ? m_currentModelMetadata.head_count_kv
-                                    : m_currentModelMetadata.head_count;
-        const uint32_t headDim    = (m_currentModelMetadata.embedding_dim > 0 && m_currentModelMetadata.head_count > 0)
-                                    ? m_currentModelMetadata.embedding_dim / m_currentModelMetadata.head_count
-                                    : 128;  // safe default
-        const uint32_t ctxLen     = m_currentModelMetadata.context_length > 0
-                                    ? m_currentModelMetadata.context_length
-                                    : 4096; // safe default
+        const uint32_t layers = m_currentModelMetadata.layer_count;
+        const uint32_t kvHeads = m_currentModelMetadata.head_count_kv > 0 ? m_currentModelMetadata.head_count_kv
+                                                                          : m_currentModelMetadata.head_count;
+        const uint32_t headDim = (m_currentModelMetadata.embedding_dim > 0 && m_currentModelMetadata.head_count > 0)
+                                     ? m_currentModelMetadata.embedding_dim / m_currentModelMetadata.head_count
+                                     : 128;  // safe default
+        const uint32_t ctxLen =
+            m_currentModelMetadata.context_length > 0 ? m_currentModelMetadata.context_length : 4096;  // safe default
 
         // Detect VRAM via GPU backend bridge (if initialized)
         uint64_t vramBytes = 16ULL * 1024 * 1024 * 1024;  // fallback: 16 GB
         {
             auto& gpuBridge = RawrXD::GPU::getGPUBackendBridge();
-            if (gpuBridge.isInitialized()) {
+            if (gpuBridge.isInitialized())
+            {
                 auto caps = gpuBridge.getCapabilities();
                 if (caps.dedicatedVRAM > 0)
                     vramBytes = caps.dedicatedVRAM;
@@ -7273,28 +7293,26 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
         if (GlobalMemoryStatusEx(&memstat))
             sysRAM = memstat.ullTotalPhys;
 
-        if (fileSize > 0 && layers > 0) {
-            auto split = RawrXD::computeOptimalGPULayers(
-                fileSize, layers, kvHeads, headDim, ctxLen, vramBytes, sysRAM);
+        if (fileSize > 0 && layers > 0)
+        {
+            auto split = RawrXD::computeOptimalGPULayers(fileSize, layers, kvHeads, headDim, ctxLen, vramBytes, sysRAM);
 
-            const char* tierNames[] = { "FullGPU", "HybridSplit", "CPUDominant", "PureCPU" };
-            const char* tierName = (static_cast<int>(split.tier) < 4) ? tierNames[static_cast<int>(split.tier)] : "Unknown";
+            const char* tierNames[] = {"FullGPU", "HybridSplit", "CPUDominant", "PureCPU"};
+            const char* tierName =
+                (static_cast<int>(split.tier) < 4) ? tierNames[static_cast<int>(split.tier)] : "Unknown";
 
             char splitInfo[1024];
             snprintf(splitInfo, sizeof(splitInfo),
-                "\n[NGL Optimizer] Model: %.2f GiB, %u layers\n"
-                "  Tier: %s | Optimal GPU layers: %u/%u\n"
-                "  Est. VRAM: %.1f GB (of %.1f GB available)\n"
-                "  KV headroom: %.0f MB | Stable: %s\n"
-                "  Est. perf: pp512 ~ %.0f t/s, tg128 ~ %.1f t/s\n",
-                static_cast<double>(fileSize) / (1024.0 * 1024.0 * 1024.0),
-                layers, tierName,
-                split.gpuLayers, split.totalLayers,
-                static_cast<double>(split.estimatedVRAMBytes) / (1024.0 * 1024.0 * 1024.0),
-                static_cast<double>(vramBytes) / (1024.0 * 1024.0 * 1024.0),
-                static_cast<double>(split.kvCacheHeadroom) / (1024.0 * 1024.0),
-                split.stable ? "YES" : "NO",
-                split.estPromptTps, split.estGenerateTps);
+                     "\n[NGL Optimizer] Model: %.2f GiB, %u layers\n"
+                     "  Tier: %s | Optimal GPU layers: %u/%u\n"
+                     "  Est. VRAM: %.1f GB (of %.1f GB available)\n"
+                     "  KV headroom: %.0f MB | Stable: %s\n"
+                     "  Est. perf: pp512 ~ %.0f t/s, tg128 ~ %.1f t/s\n",
+                     static_cast<double>(fileSize) / (1024.0 * 1024.0 * 1024.0), layers, tierName, split.gpuLayers,
+                     split.totalLayers, static_cast<double>(split.estimatedVRAMBytes) / (1024.0 * 1024.0 * 1024.0),
+                     static_cast<double>(vramBytes) / (1024.0 * 1024.0 * 1024.0),
+                     static_cast<double>(split.kvCacheHeadroom) / (1024.0 * 1024.0), split.stable ? "YES" : "NO",
+                     split.estPromptTps, split.estGenerateTps);
 
             appendToOutput(splitInfo, "Output", OutputSeverity::Info);
 
@@ -7306,11 +7324,20 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
                 auto cap = getBackendCapability(AIBackendType::LocalGGUF);
                 cap.maxContextTokens = ctxLen;
                 // Quality score: FullGPU models run well → 0.7, split → 0.5, CPU-dominant → 0.3
-                switch (split.tier) {
-                    case RawrXD::InferenceTier::FullGPU:      cap.qualityScore = 0.7f; break;
-                    case RawrXD::InferenceTier::HybridSplit:   cap.qualityScore = 0.5f; break;
-                    case RawrXD::InferenceTier::CPUDominant:   cap.qualityScore = 0.35f; break;
-                    case RawrXD::InferenceTier::PureCPU:       cap.qualityScore = 0.2f; break;
+                switch (split.tier)
+                {
+                    case RawrXD::InferenceTier::FullGPU:
+                        cap.qualityScore = 0.7f;
+                        break;
+                    case RawrXD::InferenceTier::HybridSplit:
+                        cap.qualityScore = 0.5f;
+                        break;
+                    case RawrXD::InferenceTier::CPUDominant:
+                        cap.qualityScore = 0.35f;
+                        break;
+                    case RawrXD::InferenceTier::PureCPU:
+                        cap.qualityScore = 0.2f;
+                        break;
                 }
                 setBackendCapability(AIBackendType::LocalGGUF, cap);
             }
@@ -8880,33 +8907,35 @@ std::string Win32IDE::generateResponse(const std::string& prompt)
 void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<void(const std::string&, bool)> callback)
 {
     METRICS.increment("inference.async_requests_total");
-    std::lock_guard<std::mutex> lock(m_inferenceMutex);
-
-    if (m_inferenceRunning.load())
     {
-        std::function<void(const std::string&, bool)> pendingCallback = callback;
-        const size_t queuedDepth =
-            EnqueuePendingInference(this, PendingInferenceRequest{prompt, std::move(pendingCallback)});
-        if (queuedDepth == 0)
-        {
-            METRICS.increment("inference.async_requests_rejected");
-            if (callback)
-            {
-                callback("System busy: inference queue is full. Please retry.", true);
-            }
-        }
-        else
-        {
-            METRICS.increment("inference.async_requests_queued");
-        }
-        return;
-    }
+        std::lock_guard<std::mutex> lock(m_inferenceMutex);
 
-    m_inferenceRunning.store(true);
-    m_inferenceStopRequested.store(false);
-    m_currentInferencePrompt = prompt;
-    m_currentInferenceResponse.clear();
-    m_inferenceCallback = callback;
+        if (m_inferenceRunning.load())
+        {
+            std::function<void(const std::string&, bool)> pendingCallback = callback;
+            const size_t queuedDepth =
+                EnqueuePendingInference(this, PendingInferenceRequest{prompt, std::move(pendingCallback)});
+            if (queuedDepth == 0)
+            {
+                METRICS.increment("inference.async_requests_rejected");
+                if (callback)
+                {
+                    callback("System busy: inference queue is full. Please retry.", true);
+                }
+            }
+            else
+            {
+                METRICS.increment("inference.async_requests_queued");
+            }
+            return;
+        }
+
+        m_inferenceRunning.store(true);
+        m_inferenceStopRequested.store(false);
+        m_currentInferencePrompt = prompt;
+        m_currentInferenceResponse.clear();
+        m_inferenceCallback = callback;
+    }
 
     // Launch dedicated inference thread using Native Agentic Bridge
     m_inferenceThread = std::thread(
@@ -9080,48 +9109,56 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
                          ", layerAvailable=" + std::to_string(layerAvailable ? 1 : 0) + "\n")
                             .c_str());
 
-                    // Route C parity with Route B: try tool-aware agentic bridge before legacy SubmitInference fallback.
+                    // Route C parity with Route B: try tool-aware agentic bridge before legacy SubmitInference
+                    // fallback.
                     if (wantsAgentic && layerAvailable)
                     {
                         // ========== NEW: Use AgenticInferenceBridge for tool-aware inference ==========
                         using AgenticBridge = RawrXD::Agentic::AgenticInferenceBridge;
-                        
-                        auto bridgeResult = AgenticBridge::SubmitInferenceWithTools(
-                            prompt,           // User message
-                            "codestral",      // Default model
-                            4096);            // Max tokens
-                        
-                        if (bridgeResult.success) {
+
+                        auto bridgeResult = AgenticBridge::SubmitInferenceWithTools(prompt,       // User message
+                                                                                    "codestral",  // Default model
+                                                                                    4096);        // Max tokens
+
+                        if (bridgeResult.success)
+                        {
                             // Tool-aware inference succeeded
                             std::string response = bridgeResult.response;
-                            
-                            if (bridgeResult.usedTools) {
+
+                            if (bridgeResult.usedTools)
+                            {
                                 // Format tool execution trace for display
                                 std::string toolTrace = "\n\n[Tool Execution Trace]\n";
                                 toolTrace += "Iterations: " + std::to_string(bridgeResult.toolIterations) + "\n";
-                                if (!bridgeResult.toolTrace.empty()) {
-                                    for (const auto& record : bridgeResult.toolTrace) {
+                                if (!bridgeResult.toolTrace.empty())
+                                {
+                                    for (const auto& record : bridgeResult.toolTrace)
+                                    {
                                         toolTrace += "- " + record.toolName + " [" +
                                                      std::string(record.success ? "ok" : "error") + "]\n";
                                     }
                                 }
                                 response += toolTrace;
                             }
-                            
-                            if (m_inferenceCallback) {
+
+                            if (m_inferenceCallback)
+                            {
                                 m_currentInferenceResponse += response;
                                 m_inferenceCallback(response, false);
                             }
                             routeCHandledByMinimalAgent = true;
-                            OutputDebugStringA(
-                                ("ROUTE_CHECK: route=C-main-fallback resolved via bridge; tools=" + 
-                                 std::to_string(bridgeResult.usedTools ? 1 : 0) + 
-                                 " iterations=" + std::to_string(bridgeResult.toolIterations) + "\n").c_str());
-                        } else {
+                            OutputDebugStringA(("ROUTE_CHECK: route=C-main-fallback resolved via bridge; tools=" +
+                                                std::to_string(bridgeResult.usedTools ? 1 : 0) +
+                                                " iterations=" + std::to_string(bridgeResult.toolIterations) + "\n")
+                                                   .c_str());
+                        }
+                        else
+                        {
                             // Bridge failed try minimal agent fallback (preserves backward compat)
                             OutputDebugStringA(
-                                ("ROUTE_CHECK: bridge failed (" + bridgeResult.error + "), trying minimal agent\n").c_str());
-                            
+                                ("ROUTE_CHECK: bridge failed (" + bridgeResult.error + "), trying minimal agent\n")
+                                    .c_str());
+
                             const std::string strippedPrompt = StripAgenticPrefixForRouteParity(prompt);
                             rawrxd::MinimalAgenticRequest req;
                             req.message = strippedPrompt.empty() ? prompt : strippedPrompt;
@@ -9180,9 +9217,9 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
                                          failClosed + "\n")
                                             .c_str());
                                 }
-                                OutputDebugStringA(
-                                    ("ROUTE_CHECK: route=C-main-fallback minimal agent failed: " + miniResp.error + "\n")
-                                        .c_str());
+                                OutputDebugStringA(("ROUTE_CHECK: route=C-main-fallback minimal agent failed: " +
+                                                    miniResp.error + "\n")
+                                                       .c_str());
                             }
                         }
                     }
@@ -10250,6 +10287,13 @@ std::string Win32IDE::makeHttpRequest(const std::string& url, const std::string&
     return response;
 }
 
+void Win32IDE::postDeferredCopilotSend()
+{
+    if (isShuttingDown() || !m_hwndMain || !IsWindow(m_hwndMain))
+        return;
+    (void)PostMessageW(m_hwndMain, WM_COPILOT_DEFERRED_SEND, 0, 0);
+}
+
 void Win32IDE::HandleCopilotSend()
 {
     SCOPED_METRIC("chat.send_message");
@@ -11125,8 +11169,8 @@ LRESULT CALLBACK Win32IDE::CopilotChatInputProc(HWND hwnd, UINT uMsg, WPARAM wPa
         const bool shiftPressed = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
         if (!shiftPressed)
         {
-            OutputDebugStringA("[CopilotChatInputProc] ENTER send\n");
-            pThis->HandleCopilotSend();
+            OutputDebugStringA("[CopilotChatInputProc] ENTER send (deferred to main wnd)\n");
+            pThis->postDeferredCopilotSend();
             return 0;
         }
     }
@@ -11200,7 +11244,7 @@ LRESULT CALLBACK Win32IDE::CopilotButtonProc(HWND hwnd, UINT uMsg, WPARAM wParam
     {
         if (controlId == 1204)
         {
-            pThis->HandleCopilotSend();
+            pThis->postDeferredCopilotSend();
             return 0;
         }
         if (controlId == 1205)
@@ -13793,9 +13837,9 @@ std::string editorCommentPrefixForPath(const std::string& filePath)
 
     std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char ch) { return (char)std::tolower(ch); });
 
-    if (ext == ".cpp" || ext == ".cc" || ext == ".cxx" || ext == ".c" || ext == ".h" || ext == ".hpp" ||
-        ext == ".hh" || ext == ".hxx" || ext == ".js" || ext == ".jsx" || ext == ".ts" || ext == ".tsx" ||
-        ext == ".java" || ext == ".cs" || ext == ".swift" || ext == ".kt" || ext == ".m" || ext == ".mm")
+    if (ext == ".cpp" || ext == ".cc" || ext == ".cxx" || ext == ".c" || ext == ".h" || ext == ".hpp" || ext == ".hh" ||
+        ext == ".hxx" || ext == ".js" || ext == ".jsx" || ext == ".ts" || ext == ".tsx" || ext == ".java" ||
+        ext == ".cs" || ext == ".swift" || ext == ".kt" || ext == ".m" || ext == ".mm")
         return "//";
 
     if (ext == ".py" || ext == ".ps1" || ext == ".sh" || ext == ".rb" || ext == ".yml" || ext == ".yaml")

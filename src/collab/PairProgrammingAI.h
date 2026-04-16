@@ -13,6 +13,7 @@
 #include <memory>
 #include <mutex>
 #include <atomic>
+#include <nlohmann/json.hpp>
 #include <functional>
 #include <deque>
 #include <chrono>

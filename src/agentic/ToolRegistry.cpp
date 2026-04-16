@@ -3,14 +3,14 @@
 // =============================================================================
 #include "ToolRegistry.h"
 #include "AgentToolHandlers.h"
+#include <algorithm>
+#include <array>
 #include <cctype>
 #include <chrono>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <sstream>
-#include <algorithm>
-#include <array>
-#include <cstdlib>
 
 #include "../core/rawrxd_subsystem_api.hpp"
 #include "../core/unified_hotpatch_manager.hpp"
@@ -103,9 +103,9 @@ std::string ExtractCommandBinary(const std::string& command)
 
 bool IsAllowedCommandBinary(const std::string& binary)
 {
-    static const std::array<const char*, 13> kAllowed = {
-        "git", "git.exe", "cmake", "cmake.exe", "ninja", "ninja.exe", "cl", "cl.exe", "ctest", "ctest.exe",
-        "rg", "rg.exe", "pwsh"};
+    static const std::array<const char*, 13> kAllowed = {"git",       "git.exe", "cmake",  "cmake.exe", "ninja",
+                                                         "ninja.exe", "cl",      "cl.exe", "ctest",     "ctest.exe",
+                                                         "rg",        "rg.exe",  "pwsh"};
 
     for (const char* allowed : kAllowed)
     {
@@ -121,9 +121,9 @@ bool LooksDestructiveCommand(const std::string& command)
 {
     const std::string lower = ToLowerAscii(command);
     static const std::array<const char*, 15> kDangerousFragments = {
-        " rm -rf",      "rm -rf ",      " del /f /s /q", " rmdir /s /q", " rd /s /q",     " git reset --hard",
-        " git clean -fd", " format ",      " diskpart",      " shutdown /s",  " mkfs",          " dd if=",
-        "cipher /w",     "takeown /f c:", ":(){:|:&};:"};
+        " rm -rf",        "rm -rf ",       " del /f /s /q", " rmdir /s /q", " rd /s /q", " git reset --hard",
+        " git clean -fd", " format ",      " diskpart",     " shutdown /s", " mkfs",     " dd if=",
+        "cipher /w",      "takeown /f c:", ":(){:|:&};:"};
 
     for (const char* fragment : kDangerousFragments)
     {
@@ -1149,8 +1149,7 @@ ToolExecResult HandleGitHubPrComment(const json& args)
         return ToolExecResult::error("gh_pr_comment requires 'number' and 'body'");
     }
 
-    const std::string command =
-        "gh pr comment " + number + " --body \"" + EscapeDoubleQuotedArg(body) + "\"";
+    const std::string command = "gh pr comment " + number + " --body \"" + EscapeDoubleQuotedArg(body) + "\"";
     return RunGhCommand(command);
 }
 
@@ -1739,8 +1738,8 @@ ToolExecResult HandleDebugSuggestBreakpoints(const json& args)
 
 AgentToolRegistry& AgentToolRegistry::Instance()
 {
-    static AgentToolRegistry* instance = new AgentToolRegistry();
-    return *instance;
+    static AgentToolRegistry instance;
+    return instance;
 }
 
 AgentToolRegistry::AgentToolRegistry()
@@ -2125,8 +2124,7 @@ ToolExecResult AgentToolRegistry::Dispatch(const std::string& tool_name, const j
                 ToolExecResult cached = cacheIt->second.result;
                 cached.elapsed_ms = 0.0;
                 GetObs().incrementCounter("tool_registry.result_cache_hit");
-                GetObs().logDebug(kRegistryComponent,
-                                  "Dispatch: tool result cache hit",
+                GetObs().logDebug(kRegistryComponent, "Dispatch: tool result cache hit",
                                   nlohmann::json::object({{"tool", normalizedTool}}));
                 return cached;
             }

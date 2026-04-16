@@ -537,9 +537,9 @@ void Win32IDE::sendCopilotMessage(const std::string& message)
 
     // Single path with HandleCopilotSend: project-scoped disk history, streaming, agentic routing, and
     // ConversationSession stay aligned (Cursor/Copilot-style parity). Avoid duplicating Ollama/GGUF logic here.
-    RAWRXD_LOG_INFO("Win32IDE_VSCodeUI") << "[sendCopilotMessage] delegating to HandleCopilotSend";
+    RAWRXD_LOG_INFO("Win32IDE_VSCodeUI") << "[sendCopilotMessage] delegating to deferred HandleCopilotSend";
     SetWindowTextW(m_hwndCopilotChatInput, utf8ToWideForCopilotInput(message).c_str());
-    HandleCopilotSend();
+    postDeferredCopilotSend();
 }
 
 void Win32IDE::clearCopilotChat()

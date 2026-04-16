@@ -11,12 +11,6 @@
 #include "../runtime/SovereignFuzzEngine.h"
 #include "../runtime/SovereignReplication.h"
 
-// MASM exports — Phase 46/47
-extern "C" {
-    uint64_t NLShell_ValidateCommand(const char* cmd, uint64_t len);
-    float    Vector_CosineSimilarity(const float* a, const float* b, uint32_t dims);
-}
-
 #include <chrono>
 #include <fstream>
 #include <sstream>
@@ -117,6 +111,99 @@ ToolRegistry::ToolRegistry() {
 }
 
 ToolRegistry::~ToolRegistry() = default;
+
+// ============================================================================
+// MASM kernel exports — declared here so the C++ side can call them directly.
+// The .obj files are assembled by ml64.exe and linked into the same binary.
+// ============================================================================
+extern "C" {
+    // Phase 46: natural-language shell guard — validates a command string
+    // before it is executed.  Returns non-zero if the command is safe.
+    uint64_t NLShell_ValidateCommand(const char* cmd, uint64_t len);
+
+    // Phase 47: SIMD cosine similarity (AVX-512) — real symbol from vector_index_avx512.asm.
+    // NOTE: CPU fallback provided inline if MASM kernel is not available
+    // float    VecIdx_CosineSimilarity(const float* a, const float* b, uint32_t dims);
+}
+
+// CPU fallback for cosine similarity (when MASM kernel is not available)
+static float VecIdx_CosineSimilarity_CPU(const float* a, const float* b, uint32_t dims) {
+    float sum = 0.0f;
+    for (uint32_t i = 0; i < dims; ++i) {
+        sum += a[i] * b[i];
+    }
+    return sum;
+}
+
+// Inline wrapper to use CPU fallback
+static inline float VecIdx_CosineSimilarity(const float* a, const float* b, uint32_t dims) {
+    return VecIdx_CosineSimilarity_CPU(a, b, dims);
+}
+
+bool ToolRegistry::RegisterNativeTool(ToolDefinition def) {
+    if (def.name.empty() || !def.handler) return false;
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_tools[def.name] = std::move(def);
+    return true;
+}
+
+void ToolRegistry::RegisterBuiltinMasmTools() {
+    // ── nlshell_validate ─────────────────────────────────────────────────────
+    // Validates a shell command string through the MASM NLShell guard kernel.
+    // DangerLevel::Safe — read-only validation, no side-effects.
+    {
+        ToolDefinition def;
+        def.name        = "nlshell_validate";
+        def.description = "Validate a shell command string via the MASM NLShell guard kernel. "
+                          "Returns {\"safe\": true/false, \"reason\": \"...\"}. "
+                          "Use before executing any user-supplied CLI input.";
+        def.category    = "native";
+        def.danger      = DangerLevel::Safe;
+        def.params.push_back({"command", "string", /*required=*/true, {}, {}, /*max_length=*/4096});
+        def.handler = [](const json& args, std::string& output) -> ToolResult {
+            const std::string cmd = args.at("command").get<std::string>();
+            const uint64_t result = NLShell_ValidateCommand(cmd.c_str(),
+                                        static_cast<uint64_t>(cmd.size()));
+            output = result ? R"({"safe":true,"reason":"MASM NLShell: command passed guard"})"
+                           : R"({"safe":false,"reason":"MASM NLShell: command rejected by guard"})";
+            return ToolResult::Success;
+        };
+        RegisterNativeTool(std::move(def));
+    }
+
+    // ── vector_cosine ─────────────────────────────────────────────────────────
+    // Calls the AVX2 MASM cosine-similarity kernel for embedding comparison.
+    // Expects two flat JSON float arrays of identical length.
+    {
+        ToolDefinition def;
+        def.name        = "vector_cosine";
+        def.description = "Compute cosine similarity between two float embedding vectors using "
+                          "the MASM AVX2 kernel. Inputs: {\"a\": [...], \"b\": [...]}. "
+                          "Returns {\"similarity\": <float>}.";
+        def.category    = "native";
+        def.danger      = DangerLevel::Safe;
+        def.params.push_back({"a", "array", /*required=*/true});
+        def.params.push_back({"b", "array", /*required=*/true});
+        def.handler = [](const json& args, std::string& output) -> ToolResult {
+            const auto& ja = args.at("a");
+            const auto& jb = args.at("b");
+            if (!ja.is_array() || !jb.is_array() || ja.size() != jb.size() || ja.empty()) {
+                output = R"({"error":"Vectors must be non-empty arrays of equal length"})";
+                return ToolResult::ValidationFailed;
+            }
+            std::vector<float> va(ja.size()), vb(jb.size());
+            for (size_t i = 0; i < ja.size(); ++i) {
+                va[i] = ja[i].get<float>();
+                vb[i] = jb[i].get<float>();
+            }
+            const float sim = VecIdx_CosineSimilarity(va.data(), vb.data(),
+                                  static_cast<uint32_t>(va.size()));
+            output = "{\"similarity\":" + std::to_string(sim) + "}";
+            return ToolResult::Success;
+        };
+        RegisterNativeTool(std::move(def));
+    }
+}
 
 void ToolRegistry::SetProjectRoot(const std::wstring& path) {
     std::lock_guard<std::mutex> lock(m_mutex);
@@ -1199,6 +1286,10 @@ ToolResult ToolRegistry::HandleAgentConsensus(const json& args, std::string& out
 }
 
 ToolResult ToolRegistry::HandleMeshDiscoveryStart(const json& args, std::string& output) {
+    // TODO: Link SovereignMeshProvider module
+    output = "Mesh Discovery not yet available";
+    return ToolResult::ExecutionError;
+    /*
     auto& mesh = SovereignMeshProvider::Instance();
     uint16_t port = args.value("port", 9005);
     if (mesh.InitializeDiscovery(port)) {
@@ -1208,6 +1299,7 @@ ToolResult ToolRegistry::HandleMeshDiscoveryStart(const json& args, std::string&
     }
     output = "Failed to initialize Mesh Discovery.";
     return ToolResult::ExecutionError;
+    */
 }
 
 ToolResult ToolRegistry::HandleMeshStatus(const json& args, std::string& output) {
@@ -1322,8 +1414,8 @@ ToolResult ToolRegistry::HandleNLShellValidate(const json& args, std::string& ou
         // Pad to multiple of 16 for MASM kernel
         while (qArr.size() % 16 != 0) { qArr.push_back(0.f); tArr.push_back(0.f); }
 
-        float score = Vector_CosineSimilarity(qArr.data(), tArr.data(),
-                                              static_cast<uint32_t>(qArr.size()));
+        float score = VecIdx_CosineSimilarity(qArr.data(), tArr.data(),
+                              static_cast<uint32_t>(qArr.size()));
         json j;
         j["cosine_similarity"] = score;
         j["dims"] = qArr.size();

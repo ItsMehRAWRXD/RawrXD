@@ -3139,6 +3139,8 @@ if(WIN32)
     set(WIN32IDE_SOURCES
         src/win32app/main_win32.cpp
         src/win32app/HeadlessIDE.cpp
+        src/api_server.cpp
+        src/overclock_governor.cpp
         src/RawrXD_ApertureManager.cpp
         src/agent/quantum_agent_orchestrator.cpp
         src/ui/RawrXD_MainLoop.cpp
@@ -3295,6 +3297,7 @@ if(WIN32)
         src/agentic/AgenticChatSession.cpp
         src/agentic/BoundedAgentLoop.cpp
         src/agentic/OllamaProvider.cpp
+        src/interactive_shell.cpp
         src/agentic/DiffEngine.cpp
         src/agentic/slash_command_parser.cpp
         src/agentic/multi_file_edit_plan.cpp
@@ -3317,6 +3320,7 @@ if(WIN32)
         src/agentic/OrchestratorBridge.cpp
         src/agentic/AgenticSubmitInference_Fix.cpp
         src/agentic/AgenticNavigator.cpp
+        src/agentic/RawrXD_ToolRegistry.cpp
         src/agentic/ToolRegistry.cpp
         src/agentic/SovereignAssembler.cpp
         src/agentic/RawrXD_AgentLoop.cpp
@@ -3386,6 +3390,7 @@ if(WIN32)
         src/hot_patcher.cpp
         src/streaming_gguf_loader.cpp
         src/utils/Diagnostics.cpp
+        src/diagnostics/self_diagnose.cpp
         src/gguf_loader.cpp
         src/gguf_vocab_resolver.cpp
         src/model_source_resolver.cpp
@@ -3771,6 +3776,8 @@ if(WIN32)
         src/collab/PairProgrammingAI.cpp
         src/collab/CollaborationManager.cpp
         src/collab/CollabToolHandlers.cpp
+        src/collab/crdt_buffer.cpp
+        src/collab/cursor_widget.cpp
         src/win32app/Win32IDE_TestExplorerTree.cpp
         src/win32app/Win32IDE_NetworkPanel.cpp
         src/core/omega_orchestrator.cpp
@@ -4568,6 +4575,8 @@ if(WIN32)
         src/runtime/SovereignEvolutionLoop.cpp
         src/runtime/SovereignDeterministicReplay.cpp
         src/runtime/SovereignReplication.cpp
+        src/runtime/SovereignMeshProvider.cpp
+        src/runtime/SovereignMCPBridge.cpp
     )
 
     # ── SDMA GPU Scheduler (C++ replacement for MASM) ───────────────────────
