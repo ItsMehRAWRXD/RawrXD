@@ -1328,7 +1328,7 @@ static const wchar_t* s_paths[3488] = {
     L"scripts/Build-MASMBridge.ps1",
     L"scripts/Build-Phase1.ps1",
     L"scripts/Build-PowerShellBridge.ps1",
-    L"scripts/Demo_Sovereign_System.ps1",
+    L"scripts/Sovereign_System.ps1",
     L"scripts/DependencyManager.psm1",
     L"scripts/ExtensionManager.psm1",
     L"scripts/FeatureSyncAnalyzer.ps1",
@@ -1622,8 +1622,8 @@ static const wchar_t* s_paths[3488] = {
     L"src/agent_policy.cpp",
     L"src/agent_policy.h",
     L"src/agent_router.cpp",
-    L"src/agentic/AgentOllamaClient.cpp",
-    L"src/agentic/AgentOllamaClient.h",
+    L"src/agentic/NativeInferenceClient.cpp",
+    L"src/agentic/NativeInferenceClient.h",
     L"src/agentic/AgentOrchestrator.cpp",
     L"src/agentic/AgentOrchestrator.h",
     L"src/agentic/AgentToolHandlers.cpp",
@@ -1645,8 +1645,8 @@ static const wchar_t* s_paths[3488] = {
     L"src/agentic/FIMPromptBuilder.cpp",
     L"src/agentic/FIMPromptBuilder.h",
     L"src/agentic/GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm",
-    L"src/agentic/OllamaProvider.cpp",
-    L"src/agentic/OllamaProvider.h",
+    L"src/agentic/NativeStreamProvider.cpp",
+    L"src/agentic/NativeStreamProvider.h",
     L"src/agentic/OrchestratorBridge.cpp",
     L"src/agentic/OrchestratorBridge.h",
     L"src/agentic/Phase3_Agent_Kernel_Complete.asm",
@@ -2839,7 +2839,7 @@ static const wchar_t* s_paths[3488] = {
     L"src/paint/image_generator_example.cpp",
     L"src/paint/paint_main.cpp",
     L"src/performance_optimizer_integration.cpp",
-    L"src/phase_1_2_integration_demo.cpp",
+    L"src/phase_1_2_integration.cpp",
     L"src/plugin_system/win32_plugin_loader.cpp",
     L"src/plugins/MemoryPlugin.hpp",
     L"src/plugins/example_voice_plugin.cpp",
@@ -4816,7 +4816,7 @@ HMENU BuildSourceFileMenu() {
     AppendMenuW(h_0_60996, MF_STRING, 61003, L"Build-MASMBridge.ps1");
     AppendMenuW(h_0_60996, MF_STRING, 61004, L"Build-Phase1.ps1");
     AppendMenuW(h_0_60996, MF_STRING, 61005, L"Build-PowerShellBridge.ps1");
-    AppendMenuW(h_0_60996, MF_STRING, 61006, L"Demo_Sovereign_System.ps1");
+    AppendMenuW(h_0_60996, MF_STRING, 61006, L"Sovereign_System.ps1");
     AppendMenuW(h_0_60996, MF_STRING, 61007, L"DependencyManager.psm1");
     AppendMenuW(h_0_60996, MF_STRING, 61008, L"ExtensionManager.psm1");
     AppendMenuW(h_0_60996, MF_STRING, 61009, L"FeatureSyncAnalyzer.ps1");
@@ -5100,8 +5100,8 @@ HMENU BuildSourceFileMenu() {
     AppendMenuW(h_2_61245, MF_STRING, 61249, L"FeatureFlags.cpp");
     AppendMenuW(h_2_61245, MF_STRING, 61250, L"FeatureFlags.hpp");
     AppendMenuW(h_1_61202, MF_POPUP, (UINT_PTR)h_2_61245, L"wiring");
-    AppendMenuW(h_1_61202, MF_STRING, 61251, L"AgentOllamaClient.cpp");
-    AppendMenuW(h_1_61202, MF_STRING, 61252, L"AgentOllamaClient.h");
+    AppendMenuW(h_1_61202, MF_STRING, 61251, L"NativeInferenceClient.cpp");
+    AppendMenuW(h_1_61202, MF_STRING, 61252, L"NativeInferenceClient.h");
     AppendMenuW(h_1_61202, MF_STRING, 61253, L"AgentOrchestrator.cpp");
     AppendMenuW(h_1_61202, MF_STRING, 61254, L"AgentOrchestrator.h");
     AppendMenuW(h_1_61202, MF_STRING, 61255, L"AgentToolHandlers.cpp");
@@ -5123,8 +5123,8 @@ HMENU BuildSourceFileMenu() {
     AppendMenuW(h_1_61202, MF_STRING, 61271, L"FIMPromptBuilder.cpp");
     AppendMenuW(h_1_61202, MF_STRING, 61272, L"FIMPromptBuilder.h");
     AppendMenuW(h_1_61202, MF_STRING, 61273, L"GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm");
-    AppendMenuW(h_1_61202, MF_STRING, 61274, L"OllamaProvider.cpp");
-    AppendMenuW(h_1_61202, MF_STRING, 61275, L"OllamaProvider.h");
+    AppendMenuW(h_1_61202, MF_STRING, 61274, L"NativeStreamProvider.cpp");
+    AppendMenuW(h_1_61202, MF_STRING, 61275, L"NativeStreamProvider.h");
     AppendMenuW(h_1_61202, MF_STRING, 61276, L"OrchestratorBridge.cpp");
     AppendMenuW(h_1_61202, MF_STRING, 61277, L"OrchestratorBridge.h");
     AppendMenuW(h_1_61202, MF_STRING, 61278, L"Phase3_Agent_Kernel_Complete.asm");
@@ -6937,7 +6937,7 @@ HMENU BuildSourceFileMenu() {
     AppendMenuW(h_0_61124, MF_STRING, 62852, L"overclock_vendor.cpp");
     AppendMenuW(h_0_61124, MF_STRING, 62853, L"overclock_vendor.h");
     AppendMenuW(h_0_61124, MF_STRING, 62854, L"performance_optimizer_integration.cpp");
-    AppendMenuW(h_0_61124, MF_STRING, 62855, L"phase_1_2_integration_demo.cpp");
+    AppendMenuW(h_0_61124, MF_STRING, 62855, L"phase_1_2_integration.cpp");
     AppendMenuW(h_0_61124, MF_STRING, 62856, L"production_config_manager.cpp");
     AppendMenuW(h_0_61124, MF_STRING, 62857, L"production_config_manager.h");
     AppendMenuW(h_0_61124, MF_STRING, 62858, L"production_test_suite.cpp");

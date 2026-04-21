@@ -113,6 +113,7 @@ struct Win32IDEAgenticCopilotFinalEnvelope
 };
 
 #include "../../include/mcp_integration.h"
+#include "../agentic/OllamaProvider.h"  // NativeStreamProvider and deleter
 #include "../core/70b_gguf_hotpatch.h"
 #include "../core/governor_throttling.h"
 #include "../core/layer_offload_manager.hpp"
@@ -135,7 +136,6 @@ struct Win32IDEAgenticCopilotFinalEnvelope
 #include "../../include/agentic/agentic_composer_ux.h"
 #include "../agent/agentic_failure_detector.hpp"
 #include "../agentic/AgenticChatSession.h"
-#include "../agentic/OllamaProvider.h"
 #include "agentic_mode_switcher.hpp"
 
 
@@ -167,6 +167,14 @@ class RefactoringPluginManager;
 class LanguagePluginManager;
 class ResourceGeneratorManager;
 
+namespace RawrXD {
+namespace Prediction {
+class NativeStreamProvider;
+}
+}
+// Deleter defined in OllamaProvider.h - forward declaration only here
+struct NativeStreamProviderDeleter;
+
 // Forward declarations for Omega Orchestrator
 namespace rawrxd
 {
@@ -179,7 +187,7 @@ namespace RawrXD
 class LayerEvictionManager;
 namespace Backend
 {
-class OllamaClient;
+class NativeClient;
 }
 }  // namespace RawrXD
 struct LayerEvictionManagerDeleter
@@ -709,6 +717,9 @@ class Win32IDE
     InferenceConfig getInferenceConfig() const;
     void updateContextSliderLabel();
     std::string buildChatPrompt(const std::string& userMessage);
+    std::wstring resolveSymbolAtMentions(std::wstring_view rawPrompt) const;
+    void updateLiveSymbolPromptContextFromEditor();
+    void refreshSymbolIndexForCurrentDocumentAsync();
     void onInferenceToken(const std::string& token);
     void onInferenceComplete(const std::string& fullResponse);
 
@@ -1179,6 +1190,8 @@ class Win32IDE
   public:
     // Enhanced output panel (public — accessed by BuildRunner, AgentStreamingBridge, AuditDashboard, etc.)
     void createOutputTabs();
+    /** Replay debugger-only ctor milestones to the System output tab once output tabs exist. */
+    void flushCtorBootReplayToSystem();
     void addOutputTab(const std::string& name);
     void appendToOutput(const std::string& text, const std::string& tabName = "General",
                         OutputSeverity severity = OutputSeverity::Info);
@@ -1560,7 +1573,11 @@ class Win32IDE
         SourceControl = 3,
         RunDebug = 4,
         Extensions = 5,
-        DiskRecovery = 6
+        DiskRecovery = 6,
+        GitHub = 7,
+        GitHubPullRelease = 8,
+        Accounts = 9,
+        Manage = 10
     };
 
     struct LayoutProfile
@@ -1818,6 +1835,8 @@ class Win32IDE
         std::string filepath;
         bool ggufOk = false;
         bool bridgeOk = false;
+        uint64_t fileBytes = 0;
+        double wallMs = 0.0;
     };
 
     // Public entry point for SEH-safe async model init sequence
@@ -1828,6 +1847,7 @@ class Win32IDE
     bool m_asyncModelLoadRunning = false;
 
     std::string m_pendingChatOnLoadMessage;  // queued chat sent while model was loading
+    bool m_pendingChatOnLoadUserTurnRendered = false;  // chat UI already rendered queued user turn
 
     // AI Inference State
     InferenceConfig m_inferenceConfig;
@@ -2390,7 +2410,7 @@ class Win32IDE
     std::map<size_t, std::vector<RawrXD::UI::ToolActionStatus>> m_chatToolActions;
     RawrXD::UI::ToolActionAccumulator m_currentToolActions;         // accumulator for current response
     std::unique_ptr<RawrXD::OllamaBridge> m_ollamaBridge;           // Ollama backend for streaming completions
-    std::shared_ptr<RawrXD::Backend::OllamaClient> m_ollamaClient;  // Ollama client for agentic chat
+    std::shared_ptr<RawrXD::Backend::NativeClient> m_nativeClient;  // Ollama client for agentic chat
     std::unique_ptr<RawrXD::Agentic::AgenticChatSession> m_agenticChatSession;  // Function-calling chat interface
     bool m_ollamaBackendEnabled;                                                // Whether to use Ollama for chat
     static const UINT WM_RAWR_STREAM_DATA = WM_APP + 1337;
@@ -2398,6 +2418,78 @@ class Win32IDE
     HMODULE m_streamBridgeModule = nullptr;
     bool m_streamBridgeConfigured = false;
     static LRESULT CALLBACK SecondarySidebarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+    struct VideoGenerationJob
+    {
+        std::string id;
+        std::string engineName;
+        std::string provider;
+        std::string localModel;
+        std::string prompt;
+        std::string storyboard;
+        std::string style;
+        std::string duration;
+        std::string aspectRatio;
+        std::string resolution;
+        std::string negativePrompt;
+        std::string cameraMode;
+        std::string status;
+        std::string artifactDir;
+        std::string compressedPackagePath;
+        std::string backendManifestPath;
+        std::string renderedVideoPath;
+        std::string progressPath;
+        std::string shotPlanPath;
+        std::string contactSheetPath;
+        std::string previewStartPath;
+        std::string previewMidPath;
+        std::string previewEndPath;
+        std::string extractedTags;
+        std::string encoderDiagnostics;
+        int seed = 0;
+        int renderedWidth = 0;
+        int renderedHeight = 0;
+        int renderedFps = 0;
+        int renderedFrames = 0;
+        int renderedDurationSeconds = 0;
+        int shotCount = 0;
+        bool running = false;
+        bool completed = false;
+        bool cancelled = false;
+        bool brutalCompressionUsed = false;
+    };
+    HWND m_hwndVideoStudio = nullptr;
+    HWND m_hwndVideoPromptLabel = nullptr;
+    HWND m_hwndVideoStoryboardLabel = nullptr;
+    HWND m_hwndVideoProviderLabel = nullptr;
+    HWND m_hwndVideoLocalModelLabel = nullptr;
+    HWND m_hwndVideoStyleLabel = nullptr;
+    HWND m_hwndVideoDurationLabel = nullptr;
+    HWND m_hwndVideoAspectLabel = nullptr;
+    HWND m_hwndVideoResolutionLabel = nullptr;
+    HWND m_hwndVideoJobsLabel = nullptr;
+    HWND m_hwndVideoDetailsLabel = nullptr;
+    HWND m_hwndVideoPrompt = nullptr;
+    HWND m_hwndVideoStoryboard = nullptr;
+    HWND m_hwndVideoProvider = nullptr;
+    HWND m_hwndVideoLocalModel = nullptr;
+    HWND m_hwndVideoStyle = nullptr;
+    HWND m_hwndVideoDuration = nullptr;
+    HWND m_hwndVideoAspect = nullptr;
+    HWND m_hwndVideoResolution = nullptr;
+    HWND m_hwndVideoGenerateBtn = nullptr;
+    HWND m_hwndVideoUseChatBtn = nullptr;
+    HWND m_hwndVideoOpenFolderBtn = nullptr;
+    HWND m_hwndVideoCancelBtn = nullptr;
+    HWND m_hwndVideoJobList = nullptr;
+    HWND m_hwndVideoStatus = nullptr;
+    std::vector<VideoGenerationJob> m_videoJobs;
+    mutable std::mutex m_videoJobsMutex;
+    std::vector<std::string> m_videoDiscoveredModels;
+    void layoutVideoStudioControls();
+    VideoGenerationJob* findVideoJobById(const std::string& jobId);
+    const VideoGenerationJob* findVideoJobById(const std::string& jobId) const;
+    void populateVideoStudioLocalModels();
 
     // Panel (Bottom) - Terminal, Output, Problems, Debug Console
     HWND m_hwndPanelContainer;
@@ -2448,6 +2540,13 @@ class Win32IDE
     };
     StatusBarInfo m_statusBarInfo;
     HWND m_statusBarParts[12];  // Individual status bar items for custom drawing
+
+    // Model load telemetry for status bar / diagnostics (updated on UI thread).
+    std::string m_lastLoadedModelDisplayName;
+    std::string m_lastLoadedModelPath;
+    uint64_t m_lastLoadedModelBytes = 0;
+    double m_lastLoadedModelWallMs = 0.0;
+    bool m_lastLoadedModelOk = false;
 
     // VS Code UI Creation/Update functions
     void createActivityBarUI(HWND hwndParent);
@@ -2507,7 +2606,7 @@ class Win32IDE
     void LogToOutputPanel(const char* message, int type = 0);
 
     // Ollama config
-    std::string m_ollamaBaseUrl;        // e.g., http://localhost:11434
+    std::string m_ollamaBaseUrl;        // e.g., http://localhost:11435
     std::string m_ollamaModelOverride;  // if set, use this tag instead of deriving from filename
 
     // Optional panels (nullptr when feature not used)
@@ -2522,8 +2621,8 @@ class Win32IDE
     // Project root (for build commands)
     std::string m_projectRoot;
 
-    // FIM Prediction Provider (OllamaProvider for ghost text)
-    std::unique_ptr<RawrXD::Prediction::OllamaProvider> m_predictionProvider;
+    // FIM Prediction Provider (NativeStreamProvider for ghost text)
+    std::unique_ptr<RawrXD::Prediction::NativeStreamProvider, NativeStreamProviderDeleter> m_predictionProvider;
 
     // File Explorer members (additional)
     HIMAGELIST m_hImageList;
@@ -2536,6 +2635,8 @@ class Win32IDE
     bool m_agenticFunctionCallingMode = true;  // Copilot-style default: tools + workspace on first send
     std::atomic<bool> m_chatSendInFlight{false};
     ULONGLONG m_lastLocalModelReadyTickMs = 0;
+    mutable std::mutex m_liveSymbolContextMutex;
+    std::wstring m_liveSymbolPromptContext;
 
     // ========================================================================
     // DEDICATED POWERSHELL PANEL - Always Available PowerShell Console
@@ -2692,6 +2793,14 @@ class Win32IDE
                                                          size_t maxCount = 2048) const;
     void onModelSelectionChanged();
     void onMaxTokensChanged(int newValue);
+    void toggleVideoStudioWindow();
+    void showVideoStudioWindow();
+    void refreshVideoStudioUi();
+    void startVideoStudioRender();
+    void cancelSelectedVideoStudioJob();
+    void useChatPromptForVideoStudio();
+    void openVideoStudioOutputFolder();
+    static LRESULT CALLBACK VideoStudioProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
   private:
     // Debugger Execution Control
@@ -2899,6 +3008,7 @@ class Win32IDE
     // Agent Panel — Multi-File Edit Session (Win32IDE_AgentPanel.cpp)
     // ========================================================================
     void initAgentPanel();
+    void initAgentOllamaClient();  // Initialize Ollama client for agent operations
     void startAgentSession(const std::string& userGoal);
     void agentAcceptHunk(int fileIndex, int hunkIndex);
     void agentRejectHunk(int fileIndex, int hunkIndex);
@@ -3169,8 +3279,8 @@ class Win32IDE
     struct AIBackendConfig
     {
         AIBackendType type = AIBackendType::LocalGGUF;
-        std::string name;      // Human-readable label ("Local GGUF", "Ollama", etc.)
-        std::string endpoint;  // Base URL (e.g., "http://localhost:11434", "https://api.openai.com")
+        std::string name;      // Human-readable label ("Local GGUF", "native", etc.)
+        std::string endpoint;  // Base URL (e.g., "http://localhost:11435", "https://api.openai.com")
         std::string model;     // Model identifier (e.g., "llama3.2", "gpt-4o", "claude-sonnet-4-20250514")
         std::string apiKey;    // API key for remote backends (empty for local)
         bool enabled = true;
@@ -5061,9 +5171,36 @@ class Win32IDE
     void cmdAuditRunTests();
     void cmdAuditExportReport();
     void cmdAuditQuickStats();
-    std::vector<RuntimeValidationCheck> runCriticalValidationBatch1();
     std::vector<RuntimeValidationCheck> runCriticalValidationBatch2();
 
+  public:
+    /// Exposed for WinMain: conjoin with startup phases 1–8 after showWindow (opt-in via env).
+    std::vector<RuntimeValidationCheck> runCriticalValidationBatch1();
+    /// Exposed for WinMain startup conjoin with phases 9–16.
+    std::vector<RuntimeValidationCheck> runCriticalValidationBatch3();
+    /// E0-09..E0-16 — registry/config/logs, localhost /api/status, features, agentic, QuickJS, engines (after API
+    /// start).
+    std::vector<RuntimeValidationCheck> runCriticalValidationBatch4();
+    /// E0-17..E0-24 — WinMain structural depth (PR02, phase manifest, dirs, license init, shell HWNDs, GUI thread).
+    std::vector<RuntimeValidationCheck> runCriticalValidationBatch5();
+    /// E0-25..E0-32 — Message-loop boundary (shell enabled, editor class, output/chat chrome, title, model UI, menu
+    /// depth, focus).
+    std::vector<RuntimeValidationCheck> runCriticalValidationBatch6();
+    /// E0-33..E0-40 — Shell depth (RichEdit module, toolbar/tabs/chrome, phase milestones, DPI, feature breadth,
+    /// splitter/activity bar).
+    std::vector<RuntimeValidationCheck> runCriticalValidationBatch7();
+    /// E0-41..E0-48 — Workbench capstone (gutter/minimap, command input, chrome, trees, sidebar host, exe path, phase
+    /// gates, hung test).
+    std::vector<RuntimeValidationCheck> runCriticalValidationBatch8();
+    /// E0-49..E0-56 — Agent/chrome depth (copilot I/O, secondary sidebar, settings/title, Git stripe, model progress,
+    /// startup log artifact).
+    std::vector<RuntimeValidationCheck> runCriticalValidationBatch9();
+    /// E0-57..E0-64 — Problems/debug/extensions/outline/search/modules/model sliders (panel depth before message loop).
+    std::vector<RuntimeValidationCheck> runCriticalValidationBatch10();
+    /// One E0-0N check (N = 1..64). See config/startup_phases.txt and Audit dashboard batches3–10.
+    RuntimeValidationCheck runCriticalValidationE0Check(int e0Index1Based);
+
+  private:
     // Command router
     bool handleAuditCommand(int commandId);
 
@@ -5483,6 +5620,8 @@ class Win32IDE
 
   public:
     void navigateToFileLine(const std::string& filePath, uint32_t line1Based);
+    /// Startup phase `auto_update` and Help → Check for updates (implementation in Tier1Cosmetics).
+    void checkForUpdates();
 
   public:
     // Unified Problems Panel (P0) — accessed by ProblemsListSubclassProc
@@ -5811,6 +5950,12 @@ class Win32IDE
     bool handleFeaturesCommand(int commandId);
     bool verifyFeatureRoutingCoverageAtStartup(std::string* report = nullptr);
     void initAllFeatureModules();
+
+    /** Front-of-pipeline: run 5-tier subsystem enablement (core→AI→agent→build→advanced). Invoked from
+     * deferredHeavyInitBody. */
+    void enableAllFeaturesAndWire();
+    /** Legacy alias for enableAllFeaturesAndWire(). */
+    void wireAllSystems();
 
     // ════════════════════════════════════════════════════════════════════
     // TIER 2: HIGH VISIBILITY (Daily Friction) — Features 11–19
@@ -6642,7 +6787,6 @@ class Win32IDE
     // 10. Auto-Update Notification UI
     void initAutoUpdateUI();
     void shutdownAutoUpdateUI();
-    void checkForUpdates();
     void showUpdateNotification();
     void installUpdate();
     void dismissUpdateNotification();
@@ -6864,13 +7008,13 @@ class Win32IDE
     void toggleCaretAnimation();
 
     // Agent Ollama Client
-    void initAgentOllamaClient();
+    void initNativeInferenceClient();
     /// Sync `AgenticChatSession` workspace + open tabs (call before agentic turns; Copilot-style context).
     void refreshAgenticChatSessionContext();
     /// Point `AgentToolHandlers` + `MinimalAgentController` at the same folder as Explorer / chat persistence (agentic
     /// file tools).
     void syncAgenticToolGuardrailsFromWorkspace();
-    void shutdownAgentOllamaClient();
+    void shutdownNativeInferenceClient();
     bool testOllamaConnection();
     bool isOllamaConnected() const;
     std::string getOllamaStatus() const;

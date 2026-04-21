@@ -1,8 +1,24 @@
 param(
-    [string]$BuildDir = "d:/rawrxd/build-ninja-ctx2",
+    [string]$BuildDir = "",
     [int]$Jobs = 8,
     [switch]$ForceKill
 )
+
+$repoRoot = Split-Path -Parent $PSScriptRoot
+if (-not $BuildDir) {
+    foreach ($c in @(
+            (Join-Path $repoRoot "build-ninja-ctx2"),
+            (Join-Path $repoRoot "build-win32"),
+            (Join-Path $repoRoot "build-ninja"))) {
+        if (Test-Path -LiteralPath (Join-Path $c "CMakeCache.txt")) {
+            $BuildDir = $c
+            break
+        }
+    }
+}
+if (-not $BuildDir) {
+    $BuildDir = Join-Path $repoRoot "build-ninja-ctx2"
+}
 
 $unlockScript = Join-Path $PSScriptRoot "Unlock-SWEBenchBinary.ps1"
 

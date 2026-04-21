@@ -247,7 +247,7 @@ void Win32IDE::initializeAIBackend()
     // We wrap it here to ensure the onAIBackendVerified() handler is also
     // called when the result arrives.
     HWND hwnd = m_hwndMain;
-    std::string endpoint = m_ollamaBaseUrl.empty() ? "http://localhost:11434" : m_ollamaBaseUrl;
+    std::string endpoint = m_ollamaBaseUrl.empty() ? "http://localhost:11435" : m_ollamaBaseUrl;
 
     std::thread([hwnd, endpoint]() {
         ModelConnection conn(endpoint);

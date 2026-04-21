@@ -338,7 +338,7 @@ void BuildOutputConnector::parseErrorLine(const std::string& line) {
 
 BuildError BuildOutputConnector::parseMASMError(const std::string& line) {
     // MASM format: filename.asm(line) : severity code: message
-    // Example: test.asm(42) : error A2008: syntax error : mov
+    // Pattern: test.asm(42) : error A2008: syntax error : mov
     
     static std::regex masmRegex(
         R"(^(.+?)\((\d+)\)\s*:\s*(error|warning)\s+([A-Z]\d+)\s*:\s*(.+)$)",
@@ -363,7 +363,7 @@ BuildError BuildOutputConnector::parseMASMError(const std::string& line) {
 
 BuildError BuildOutputConnector::parseCppError(const std::string& line) {
     // MSVC C++ format: filename.cpp(line,col): severity code: message
-    // Example: test.cpp(42,5): error C2065: 'undefined' : undeclared identifier
+    // Pattern: test.cpp(42,5): error C2065: 'undefined' : undeclared identifier
     
     static std::regex cppRegex(
         R"(^(.+?)\((\d+)(?:,(\d+))?\)\s*:\s*(error|warning)\s+([A-Z]\d+)\s*:\s*(.+)$)",
@@ -388,7 +388,7 @@ BuildError BuildOutputConnector::parseCppError(const std::string& line) {
 
 BuildError BuildOutputConnector::parseLinkerError(const std::string& line) {
     // Linker format: LINK : severity code: message
-    // Example: LINK : fatal error LNK1104: cannot open file 'kernel32.lib'
+    // Pattern: LINK : fatal error LNK1104: cannot open file 'kernel32.lib'
     
     static std::regex linkerRegex(
         R"(^LINK\s*:\s*(fatal error|error|warning)\s+([A-Z]+\d+)\s*:\s*(.+)$)",

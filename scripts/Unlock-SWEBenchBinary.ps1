@@ -1,10 +1,26 @@
 param(
-    [string]$BuildDir = "d:/rawrxd/build-ninja-ctx2",
+    [string]$BuildDir = "",
     [string]$ExeName = "RawrXD-SWEBench.exe",
     [int]$WaitMs = 3000,
     [switch]$Force,
     [switch]$Quiet
 )
+
+$repoRoot = Split-Path -Parent $PSScriptRoot
+if (-not $BuildDir) {
+    foreach ($c in @(
+            (Join-Path $repoRoot "build-ninja-ctx2"),
+            (Join-Path $repoRoot "build-win32"),
+            (Join-Path $repoRoot "build-ninja"))) {
+        if (Test-Path -LiteralPath (Join-Path $c "CMakeCache.txt")) {
+            $BuildDir = $c
+            break
+        }
+    }
+}
+if (-not $BuildDir) {
+    $BuildDir = Join-Path $repoRoot "build-ninja-ctx2"
+}
 
 $exePath = Join-Path $BuildDir ("bin/" + $ExeName)
 $buildDirFull = [System.IO.Path]::GetFullPath($BuildDir)

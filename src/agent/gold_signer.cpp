@@ -304,7 +304,7 @@ std::string GoldSigner::detectEVCertificate() {
         }
 
         if (isEV) {
-            fprintf(stderr, "[GOLD_SIGN] Detected EV cert: %s\n", thumbStr);
+            // EV certificate detected
         }
     }
 
@@ -469,7 +469,6 @@ GoldSignResult GoldSigner::signFile(const std::string& filePath) {
 
     // Skip already-signed binaries unless overridden
     if (m_config.skipSigned && isAlreadySigned(filePath)) {
-        fprintf(stderr, "[GOLD_SIGN] SKIP (already signed): %s\n", filePath.c_str());
         result.signed_ok = true;
         result.verified_ok = true;
         return result;
@@ -485,9 +484,6 @@ GoldSignResult GoldSigner::signFile(const std::string& filePath) {
             return result;
         }
     }
-
-    fprintf(stderr, "[GOLD_SIGN] SIGN_START | Mode: %s | File: %s\n",
-            modeName(), filePath.c_str());
 
     if (m_config.mode == GoldSignMode::AzureTrustedSigning) {
         // Azure Trusted Signing path
@@ -563,9 +559,6 @@ GoldSignResult GoldSigner::signFile(const std::string& filePath) {
         }
     }
 
-    fprintf(stderr, "[GOLD_SIGN] SIGN_%s | File: %s\n",
-            result.signed_ok ? "SUCCESS" : "FAILED", filePath.c_str());
-
     if (onFileSigned) onFileSigned(filePath, result.signed_ok);
 
     // Post-sign verification
@@ -593,8 +586,6 @@ std::vector<GoldSignResult> GoldSigner::signDirectory(const std::string& dirPath
         return results;
     }
 
-    fprintf(stderr, "[GOLD_SIGN] Scanning directory: %s\n", dirPath.c_str());
-
     // Collect signable files
     const std::vector<std::string> extensions = {".exe", ".dll", ".msi", ".msix", ".sys"};
 
@@ -621,9 +612,6 @@ std::vector<GoldSignResult> GoldSigner::signDirectory(const std::string& dirPath
         if (!r.signed_ok) failed++;
     }
 
-    fprintf(stderr, "[GOLD_SIGN] Directory complete: %d signed, %d verified, %d failed\n",
-            signed_ok, verified_ok, failed);
-
     return results;
 }
 
@@ -635,9 +623,6 @@ bool GoldSigner::verifyFile(const std::string& filePath) {
 #ifdef _WIN32
     std::vector<std::string> args = {"verify", "/pa", "/v", filePath};
     bool ok = execProcess(m_signtoolPath, args);
-
-    fprintf(stderr, "[GOLD_SIGN] VERIFY_%s | File: %s\n",
-            ok ? "SUCCESS" : "FAILED", filePath.c_str());
 
     if (onFileVerified) onFileVerified(filePath, ok);
     return ok;
@@ -717,7 +702,6 @@ bool GoldSigner::writeAttestation(const std::string& directory,
     out << json.str();
     out.close();
 
-    fprintf(stderr, "[GOLD_SIGN] Attestation written: %s\n", outPath.string().c_str());
     return true;
 }
 
@@ -727,7 +711,6 @@ bool GoldSigner::writeAttestation(const std::string& directory,
 
 void GoldSigner::setError(const std::string& msg) {
     m_lastError = msg;
-    fprintf(stderr, "[GOLD_SIGN] ERROR: %s\n", msg.c_str());
 }
 
 } // namespace RawrXD

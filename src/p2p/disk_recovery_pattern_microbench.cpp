@@ -16,7 +16,7 @@
 //                     prefetch, scalar verifier only on candidate hits
 //   ExternalEngine  — compiled-in ASM engine (RAWRXD_USE_EXTERNAL_PATTERN_ENGINE)
 //
-// Build example (Windows):
+// Build (Windows):
 //   cl /O2 /std:c++20 /arch:AVX2 /EHsc src\p2p\disk_recovery_pattern_microbench.cpp \
 //      /Fe:pattern_microbench.exe
 // ============================================================================

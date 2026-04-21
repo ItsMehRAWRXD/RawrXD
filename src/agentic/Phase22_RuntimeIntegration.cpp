@@ -3,7 +3,7 @@
 // 
 // Phase 22: Runtime Integration of Optimized Kernel
 // 
-// This module demonstrates that the IDE's self-evolved kernel (AVX2 tokenizer)
+// This module shows that the IDE's self-evolved kernel (AVX2 tokenizer)
 // provides measurable real-world performance improvements during assembly.
 // 
 // Workflow:

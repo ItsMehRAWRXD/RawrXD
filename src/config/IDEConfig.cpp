@@ -48,8 +48,8 @@ void IDEConfig::setDefaults()
     m_values["inference.threadCount"] = "0";  // 0 = auto-detect
 
     // Ollama
-    m_values["ollama.baseUrl"] = "http://localhost:11434";
-    m_values["ollama.modelOverride"] = "";
+    m_values["native.baseUrl"] = "http://localhost:11435";
+    m_values["native.modelOverride"] = "";
 
     // Agentic system — 1x–99x production limits (balance, speed, agenticness, autonomy)
     m_values["agent.maxMode"] = "false";
@@ -381,7 +381,7 @@ void IDEConfig::applyEnvironmentOverrides()
     // Format: RAWRXD_SECTION_KEY maps to section.key
     // e.g., RAWRXD_INFERENCE_MAX_TOKENS -> inference.maxTokens
 
-    const char* envOverrides[] = {"RAWRXD_OLLAMA_BASE_URL", "RAWRXD_OLLAMA_MODEL",      "RAWRXD_LOG_LEVEL",
+    const char* envOverrides[] = {"RAWRXD_NATIVE_BASE_URL", "RAWRXD_NATIVE_MODEL",      "RAWRXD_LOG_LEVEL",
                                   "RAWRXD_FEATURES_VULKAN", "RAWRXD_INFERENCE_THREADS", "RAWRXD_INFERENCE_MAX_TOKENS",
                                   "RAWRXD_THEME",           "RAWRXD_AGENT_CYCLE_COUNT", nullptr};
 
@@ -391,8 +391,8 @@ void IDEConfig::applyEnvironmentOverrides()
         const char* configKey;
     };
     const EnvMapping mappings[] = {
-        {"RAWRXD_OLLAMA_BASE_URL", "ollama.baseUrl"},
-        {"RAWRXD_OLLAMA_MODEL", "ollama.modelOverride"},
+        {"RAWRXD_NATIVE_BASE_URL", "native.baseUrl"},
+        {"RAWRXD_NATIVE_MODEL", "native.modelOverride"},
         {"RAWRXD_LOG_LEVEL", "logging.level"},
         {"RAWRXD_FEATURES_VULKAN", "features.vulkanCompute"},
         {"RAWRXD_INFERENCE_THREADS", "inference.threadCount"},

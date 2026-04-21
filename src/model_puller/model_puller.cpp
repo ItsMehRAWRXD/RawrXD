@@ -532,7 +532,7 @@ PullResult ModelPuller::PullFromOllama(const ModelSource& src, PullStatusCallbac
 
         // Disk space pre-check
         std::string spaceErr;
-        std::string ollamaDir = (std::filesystem::path(m_index.GetModelsBasePath()) / "ollama").string();
+        std::string ollamaDir = (std::filesystem::path(m_index.GetModelsBasePath()) / "native").string();
         if (!CheckDiskSpace(ollamaDir + "\\check", modelSize, spaceErr)) {
             result.error = spaceErr;
             ReportStep(cb, PullStep::Failed, 1, result.error);
@@ -603,7 +603,7 @@ PullResult ModelPuller::PullFromOllama(const ModelSource& src, PullStatusCallbac
     entry.sizeBytes    = fileSize;
     entry.architecture = ggufArch;
     entry.sha256       = sha256;
-    entry.source       = "ollama://" + spec;
+    entry.source       = "native://" + spec;
     entry.downloadedAt = ModelIndex::NowISO8601();
 
     m_index.AddModel(entry);

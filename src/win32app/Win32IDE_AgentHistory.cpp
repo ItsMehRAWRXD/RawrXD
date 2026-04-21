@@ -75,7 +75,7 @@ uint64_t parseU64Field(const nlohmann::json& j, const char* key)
 }
 }
 
-// SCAFFOLD_038: Agent history and replay
+// Agent History and Replay Implementation
 
 
 // ============================================================================

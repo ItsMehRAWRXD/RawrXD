@@ -25,10 +25,7 @@
 #include <bcrypt.h>
 #include <wincrypt.h>
 
-// SCAFFOLD_344: QuantumAuthUI void* parent doc
-
-
-// SCAFFOLD_214: QuantumAuthUI and auth flow
+// Quantum Authentication UI Implementation
 
 #pragma comment(lib, "Bcrypt.lib")
 #pragma comment(lib, "crypt32.lib")
@@ -495,7 +492,6 @@ void KeyStorage::loadFromDisk()
             const size_t fileSize = static_cast<size_t>(fileEnd);
             static constexpr size_t kMaxKeystoreJsonBytes = 4u * 1024u * 1024u;
             if (fileSize > kMaxKeystoreJsonBytes) {
-                std::cerr << "[QuantumAuth] Keystore JSON too large, refusing to load\n";
                 return;
             }
             f.seekg(0);
@@ -539,14 +535,14 @@ void KeyStorage::loadFromDisk()
                              const size_t sz = static_cast<size_t>(endPos);
                              // Guard against corrupted/hostile oversized blob files.
                              if (sz > kMaxStoredBlobBytes) {
-                                 std::cerr << "[QuantumAuth] Blob file too large for key '" << meta.keyId << "', skipping\n";
+
                                  continue;
                              }
                              bf.seekg(0);
                              std::vector<uint8_t> blob(sz);
                              bf.read(reinterpret_cast<char*>(blob.data()), static_cast<std::streamsize>(sz));
                              if (!bf) {
-                                 std::cerr << "[QuantumAuth] Failed to read blob for key '" << meta.keyId << "'\n";
+
                                  continue;
                              }
                              m_encryptedKeys[meta.keyId] = blob;
@@ -555,7 +551,7 @@ void KeyStorage::loadFromDisk()
                  }
             }
         } catch (const std::exception& ex) {
-            std::cerr << "[QuantumAuth] Failed to load keystore JSON: " << ex.what() << std::endl;
+            (void)ex;
         }
     }
 }
@@ -578,13 +574,11 @@ void KeyStorage::saveToDisk()
     {
         std::ofstream f(tmpPath, std::ios::binary | std::ios::trunc);
         if (!f) {
-            std::cerr << "[QuantumAuth] Failed to open temp keystore file for write\n";
             return;
         }
         f << doc.dump(4);
         f.flush();
         if (!f) {
-            std::cerr << "[QuantumAuth] Failed to write temp keystore file\n";
             return;
         }
     }
@@ -597,7 +591,6 @@ void KeyStorage::saveToDisk()
         ec.clear();
         std::filesystem::rename(tmpPath, path, ec);
         if (ec) {
-            std::cerr << "[QuantumAuth] Failed to atomically replace keystore file: " << ec.message() << "\n";
             std::filesystem::remove(tmpPath, ec);
         }
     }

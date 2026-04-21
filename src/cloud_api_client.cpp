@@ -136,7 +136,7 @@ ApiResponse CloudApiClient::performRequest(const std::string& url_str, const nlo
                                      if (content.is_string()) response.content = content.get<std::string>();
                                  }
                              }
-                         } else if (config.provider == "ollama") {
+                         } else if (config.provider == "native") {
                              if (j.contains("response")) {
                                  auto& resp = j["response"];
                                  if (resp.is_string()) response.content = resp.get<std::string>();

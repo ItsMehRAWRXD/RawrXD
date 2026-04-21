@@ -7,7 +7,7 @@ endif()
 
 # RawrXD KeyGen — RSA-4096 Key Authority & License Signer (unlock 800B kernel / enterprise)
 # Build: standalone Win32 CLI; no Qt/engine deps. Use for --genkey, --hwid, --issue, --sign.
-add_executable(RawrXD_KeyGen WIN32
+add_executable(RawrXD_KeyGen
     RawrXD_KeyGen.cpp
 )
 target_link_libraries(RawrXD_KeyGen PRIVATE advapi32 crypt32)
@@ -23,6 +23,9 @@ target_link_libraries(rawrxd-titan-init-probe PRIVATE kernel32)
 
 # Simple GPU Test - For hotpatch testing framework
 if(TARGET InferenceEngine)
+    option(RAWRXD_BUILD_BENCH_CPU "Build bench_cpu CLI tool" OFF)
+    option(RAWRXD_BUILD_COMPREHENSIVE_BENCHMARK "Build comprehensive benchmark CLI tool" OFF)
+
   add_executable(simple_gpu_test
       simple_gpu_test.cpp
   )
@@ -43,35 +46,39 @@ if(TARGET InferenceEngine)
       ${_RAWRXD_OPTIONAL_GGML_LINK_LIBS}
   )
 
-  add_executable(bench_cpu
-      bench_cpu.cpp
-  )
+  if(RAWRXD_BUILD_BENCH_CPU)
+    add_executable(bench_cpu
+        bench_cpu.cpp
+    )
 
-  target_include_directories(bench_cpu PRIVATE
-      ${CMAKE_SOURCE_DIR}/src
-      ${CMAKE_SOURCE_DIR}/include
-  )
+    target_include_directories(bench_cpu PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+    )
 
-  target_link_libraries(bench_cpu PRIVATE
-      InferenceEngine
-      ${_RAWRXD_OPTIONAL_GGML_LINK_LIBS}
-  )
+    target_link_libraries(bench_cpu PRIVATE
+        InferenceEngine
+        ${_RAWRXD_OPTIONAL_GGML_LINK_LIBS}
+    )
+  endif()
 
-  add_executable(comprehensive_benchmark
-      comprehensive_benchmark.cpp
-      ../backend_selector.cpp
-      ../inference_benchmark.cpp
-  )
+  if(RAWRXD_BUILD_COMPREHENSIVE_BENCHMARK)
+    add_executable(comprehensive_benchmark
+        comprehensive_benchmark.cpp
+        ../backend_selector.cpp
+        ../inference_benchmark.cpp
+    )
 
-  target_include_directories(comprehensive_benchmark PRIVATE
-      ${CMAKE_SOURCE_DIR}/src
-      ${CMAKE_SOURCE_DIR}/include
-  )
+    target_include_directories(comprehensive_benchmark PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+    )
 
-  target_link_libraries(comprehensive_benchmark PRIVATE
-      InferenceEngine
-      ${_RAWRXD_OPTIONAL_GGML_LINK_LIBS}
-  )
+    target_link_libraries(comprehensive_benchmark PRIVATE
+        InferenceEngine
+        ${_RAWRXD_OPTIONAL_GGML_LINK_LIBS}
+    )
+  endif()
 
   # GGUF API Server - Real HTTP API with GPU inference
   add_executable(gguf_api_server

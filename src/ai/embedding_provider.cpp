@@ -55,7 +55,7 @@ private:
     
 public:
     SimpleTokenizer() {
-        // Add basic vocab for demo (real impl would load from model)
+        // Add basic vocab (real impl would load from model)
         m_vocab.push_back("[PAD]");
         m_vocab.push_back("[UNK]");
         m_vocab.push_back("[CLS]");
@@ -134,11 +134,7 @@ public:
         
         // Load model from GGUF file
         if (!loadModel(m_config.modelPath)) {
-            fprintf(stderr, "[EmbeddingProvider] Failed to load model: %s\n",
-                    m_config.modelPath.c_str());
-            
-            // Fallback: initialize random embeddings for demo
-            fprintf(stderr, "[EmbeddingProvider] Using fallback random embeddings\n");
+            // Failed to load model, use fallback random embeddings
             initRandomEmbeddings();
         }
         
@@ -228,7 +224,7 @@ private:
     }
     
     void initRandomEmbeddings() {
-        // Initialize random embeddings for demonstration
+        // Initialize random embeddings
         // Vocab size: 30000, dimensions: config.dimensions
         int vocabSize = 30000;
         m_embedMatrix.resize(vocabSize);

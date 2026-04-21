@@ -28,14 +28,14 @@ using namespace RawrXD;
 HybridCloudManager::HybridCloudManager(void* /*parent*/) {
     // Default local provider (Ollama) always available
     CloudProvider ollama;
-    ollama.providerId   = "ollama";
+    ollama.providerId   = "native";
     ollama.name         = "Ollama Local";
-    ollama.endpoint     = "http://127.0.0.1:11434";
+    ollama.endpoint     = "http://127.0.0.1:11435";
     ollama.isEnabled    = true;
     ollama.isHealthy    = true;
     ollama.costPerRequest = 0.0;
     ollama.averageLatency = 120.0;
-    providers["ollama"] = ollama;
+    providers["native"] = ollama;
 
     preferLocal           = true;
     cloudFallbackEnabled  = true;
@@ -224,7 +224,7 @@ HybridExecution HybridCloudManager::planExecution(const ExecutionRequest& reques
     // Cost gate: prefer local when cost limit would be exceeded
     if (!cloudFallbackEnabled || preferLocal) {
         plan.useCloud          = false;
-        plan.selectedProvider  = "ollama";
+        plan.selectedProvider  = "native";
         plan.selectedModel     = "local";
         plan.reasoning         = "Local preferred";
         plan.estimatedCost     = 0.0;
@@ -235,7 +235,7 @@ HybridExecution HybridCloudManager::planExecution(const ExecutionRequest& reques
 
     // Choose healthiest cloud provider
     for (const auto& [id, prov] : providers) {
-        if (prov.isEnabled && prov.isHealthy && id != "ollama") {
+        if (prov.isEnabled && prov.isHealthy && id != "native") {
             plan.useCloud          = true;
             plan.selectedProvider  = id;
             plan.selectedModel     = "default";
@@ -249,7 +249,7 @@ HybridExecution HybridCloudManager::planExecution(const ExecutionRequest& reques
 
     // Fallback to local
     plan.useCloud         = false;
-    plan.selectedProvider = "ollama";
+    plan.selectedProvider = "native";
     plan.selectedModel    = "local";
     plan.reasoning        = "No healthy cloud providers; using local";
     plan.estimatedCost    = 0.0;
@@ -368,7 +368,7 @@ ExecutionResult HybridCloudManager::executeOnCloud(const ExecutionRequest& r,
 }
 
 ExecutionResult HybridCloudManager::executeOnOllama(const ExecutionRequest& r) {
-    return executeCloud(r, "ollama", "llama3");
+    return executeCloud(r, "native", "llama3");
 }
 
 ExecutionResult HybridCloudManager::executeOnHuggingFace(const ExecutionRequest& r,
@@ -400,14 +400,14 @@ bool HybridCloudManager::shouldUseCloudExecution(const ExecutionRequest& request
     if (request.maxTokens > 32768) return true;             // Very large request → cloud
     if (costMetrics.todayCostUSD >= dailyCostLimit) return false;
     for (const auto& kv : providers) {
-        if (kv.second.isEnabled && kv.second.isHealthy && kv.first != "ollama") return true;
+        if (kv.second.isEnabled && kv.second.isHealthy && kv.first != "native") return true;
     }
     return false;
 }
 
 std::string HybridCloudManager::selectOptimalProvider(const ExecutionRequest& request) {
     double bestScore = -1.0;
-    std::string best = "ollama";
+    std::string best = "native";
     for (const auto& kv : providers) {
         if (!kv.second.isEnabled || !kv.second.isHealthy) continue;
         double score = calculateProviderScore(kv.second, request);
@@ -704,7 +704,7 @@ void HybridCloudManager::recordCost(const std::string& providerId, double cost) 
 
 void HybridCloudManager::updateCostMetrics(const ExecutionResult& result) {
     ++costMetrics.totalRequests;
-    if (result.executionLocation == "local" || result.executionLocation == "ollama") {
+    if (result.executionLocation == "local" || result.executionLocation == "native") {
         ++costMetrics.localRequests;
     } else {
         ++costMetrics.cloudRequests;
@@ -740,7 +740,7 @@ std::string HybridCloudManager::getNextFallbackProvider(const std::string& curre
     for (const auto& kv : providers) {
         if (kv.first != current && kv.second.isEnabled && kv.second.isHealthy) return kv.first;
     }
-    return "ollama";
+    return "native";
 }
 
 bool HybridCloudManager::shouldRetry(int attemptNumber, const std::string& /*errorType*/) {

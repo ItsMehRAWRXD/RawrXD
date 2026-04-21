@@ -8,7 +8,7 @@
   that exercises extension-installer stack (offline) and the turnkey agentic/copilot smoke chain.
 
 .PARAMETER BuildDir
-  CMake binary dir. If empty, first match among build-ninja, build-ninja-ctx2, build with CMakeCache.txt.
+  CMake binary dir. If empty, first match among build-win32, build-ninja, build-ninja-ctx2, build with CMakeCache.txt.
 
 .PARAMETER SkipExtensionInstaller
   Skip ExtensionInstallerSmoke.exe (e.g. when target not built).
@@ -48,7 +48,8 @@ function Resolve-BuildDir {
         return (Resolve-Path -LiteralPath $Prefer).Path
     }
     foreach ($c in @(
- (Join-Path $repoRoot "build-ninja"),
+            (Join-Path $repoRoot "build-win32"),
+            (Join-Path $repoRoot "build-ninja"),
             (Join-Path $repoRoot "build-ninja-ctx2"),
             (Join-Path $repoRoot "build_smoke_auto"),
             (Join-Path $repoRoot "build"))) {
@@ -64,6 +65,7 @@ function Find-ExtensionInstallerExe([string]$Bd) {
     if (-not $Bd) { return $null }
     foreach ($p in @(
             (Join-Path $Bd "bin\Release\ExtensionInstallerSmoke.exe"),
+            (Join-Path $Bd "bin\Debug\ExtensionInstallerSmoke.exe"),
             (Join-Path $Bd "bin\ExtensionInstallerSmoke.exe"),
             (Join-Path $Bd "ExtensionInstallerSmoke.exe"))) {
         if (Test-Path -LiteralPath $p) { return $p }
@@ -91,7 +93,7 @@ function Invoke-Step([string]$name, [scriptblock]$block) {
 if (-not $SkipExtensionInstaller) {
     Invoke-Step "extension_installer_smoke_offline" {
         if (-not $bd) {
-            throw "No CMake build dir (CMakeCache.txt). Pass -BuildDir or configure build-ninja|build."
+            throw "No CMake build dir (CMakeCache.txt). Pass -BuildDir or configure build-win32|build-ninja|build."
         }
         $exe = Find-ExtensionInstallerExe -Bd $bd
         if (-not $exe -and $TryBuildExtensionInstaller) {
@@ -118,7 +120,8 @@ if (-not $SkipTurnkey) {
     }
     else {
         Invoke-Step "turnkey_ide_smoke" {
-            & pwsh -NoProfile -File $turnkey @TurnkeyArgs
+            $tk = @("-NoProfile", "-File", $turnkey, "-BuildDir", $bd) + $TurnkeyArgs
+            & pwsh @tk
             if ($LASTEXITCODE -ne 0) { throw "Run-TurnkeyIdeSmoke exit $LASTEXITCODE" }
         }
     }

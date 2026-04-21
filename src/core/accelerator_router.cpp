@@ -100,8 +100,6 @@ RouterResult AcceleratorRouter::initialize() {
     }
     std::lock_guard<std::mutex> lock(m_mutex);
 
-    std::cout << "[Router] AcceleratorRouter initializing — probing all backends...\n";
-
     // Probe all hardware backends
     probeAllBackends();
 
@@ -114,50 +112,36 @@ RouterResult AcceleratorRouter::initialize() {
     if (m_backends[static_cast<int>(RouterBackendType::AMD_XDNA)].available) {
         bestLocal = RouterBackendType::AMD_XDNA;
         availCount++;
-        std::cout << "[Router] ✓ AMD XDNA backend available\n";
     }
     if (m_backends[static_cast<int>(RouterBackendType::Intel_Xe)].available) {
         if (bestLocal == RouterBackendType::CPU_Fallback) {
             bestLocal = RouterBackendType::Intel_Xe;
         }
         availCount++;
-        std::cout << "[Router] ✓ Intel Xe backend available\n";
     }
     if (m_backends[static_cast<int>(RouterBackendType::ARM64_Adreno)].available) {
         if (bestLocal == RouterBackendType::CPU_Fallback) {
             bestLocal = RouterBackendType::ARM64_Adreno;
         }
         availCount++;
-        std::cout << "[Router] ✓ ARM64 Adreno GPU backend available\n";
     }
     if (m_backends[static_cast<int>(RouterBackendType::ARM64_NPU)].available) {
         availCount++;
-        std::cout << "[Router] ✓ ARM64 Hexagon NPU backend available\n";
     }
     if (m_backends[static_cast<int>(RouterBackendType::NVIDIA_CUDA)].available) {
         if (bestLocal == RouterBackendType::CPU_Fallback) {
             bestLocal = RouterBackendType::NVIDIA_CUDA;
         }
         availCount++;
-        std::cout << "[Router] ✓ NVIDIA CUDA backend available\n";
     }
     if (m_backends[static_cast<int>(RouterBackendType::Cerebras_WSE)].available) {
         availCount++;
-        std::cout << "[Router] ✓ Cerebras WSE backend available (remote)\n";
     }
     // CPU is always counted
     availCount++;
-    std::cout << "[Router] ✓ CPU fallback always available\n";
 
     m_activeBackend.store(bestLocal, std::memory_order_release);
     m_initialized.store(true, std::memory_order_release);
-
-    std::cout << "[Router] AcceleratorRouter initialized.\n"
-              << "  Available backends: " << availCount << "\n"
-              << "  Active backend: " << getBackendName(bestLocal) << "\n"
-              << "  Local GPU min bytes: " << m_localGPUMinBytes << "\n"
-              << "  Remote min bytes: " << m_remoteMinBytes << "\n"
-              << "  NPU min bytes: " << m_npuMinBytes << "\n";
 
     return RouterResult::ok("Router initialized", bestLocal);
 }
@@ -166,18 +150,9 @@ void AcceleratorRouter::shutdown() {
     if (!m_initialized.load(std::memory_order_acquire)) return;
     std::lock_guard<std::mutex> lock(m_mutex);
 
-    std::cout << "[Router] AcceleratorRouter shutting down.\n";
-    std::cout << "  Total submissions: " << m_stats.totalSubmissions.load() << "\n";
-    std::cout << "  Total successes:   " << m_stats.totalSuccesses.load() << "\n";
-    std::cout << "  Total failures:    " << m_stats.totalFailures.load() << "\n";
-    std::cout << "  Total fallbacks:   " << m_stats.totalFallbacks.load() << "\n";
-    std::cout << "  Thermal throttles: " << m_stats.thermalThrottleEvents.load() << "\n";
-
     // We do NOT shut down individual backends — they manage their own lifecycle
     m_activeBackend.store(RouterBackendType::None, std::memory_order_release);
     m_initialized.store(false, std::memory_order_release);
-
-    std::cout << "[Router] Shutdown complete.\n";
 }
 
 // ============================================================================
@@ -1058,7 +1033,6 @@ RouterResult AcceleratorRouter::enableBackend(RouterBackendType type) {
     }
 
     m_backends[idx].enabled = true;
-    std::cout << "[Router] Backend enabled: " << getBackendName(type) << "\n";
     return RouterResult::ok("Backend enabled", type);
 }
 
@@ -1073,12 +1047,10 @@ RouterResult AcceleratorRouter::disableBackend(RouterBackendType type) {
     }
 
     m_backends[idx].enabled = false;
-    std::cout << "[Router] Backend disabled: " << getBackendName(type) << "\n";
 
     // If we just disabled the active backend, switch to auto
     if (m_activeBackend.load() == type) {
         m_forcedBackend.store(RouterBackendType::Auto, std::memory_order_release);
-        std::cout << "[Router] Active backend disabled — switching to auto-select\n";
     }
 
     return RouterResult::ok("Backend disabled", type);
@@ -1167,9 +1139,6 @@ RouterResult AcceleratorRouter::pollThermals() {
         if (m_backends[i].available && m_backends[i].enabled) {
             if (m_backends[i].currentTempC >= m_backends[i].thermalLimitC) {
                 anyThrottled = true;
-                std::cout << "[Router] THERMAL WARNING: " << m_backends[i].backendName
-                          << " at " << m_backends[i].currentTempC << "°C (limit: "
-                          << m_backends[i].thermalLimitC << "°C)\n";
 
                 if (m_thermalCb) {
                     m_thermalCb(m_backends[i].type, m_backends[i].currentTempC,
@@ -1373,8 +1342,6 @@ void AcceleratorRouter::probeAllBackends() {
 }
 
 void AcceleratorRouter::probeAMD() {
-    std::cout << "[Router] Probing AMD XDNA backend...\n";
-
     AMDGPUAccelerator& amd = AMDGPUAccelerator::instance();
 
     // Check if already initialized
@@ -1383,9 +1350,6 @@ void AcceleratorRouter::probeAMD() {
         uint32_t vendorId = amd.getVendorId();
         if (vendorId == 0x1002) { // AMD vendor ID
             m_backends[static_cast<int>(RouterBackendType::AMD_XDNA)].available = true;
-            std::cout << "[Router]   AMD GPU detected: " << amd.getGPUName()
-                      << " (" << amd.getComputeUnits() << " CUs, "
-                      << (amd.getVRAMBytes() / (1024*1024)) << " MB VRAM)\n";
             return;
         }
     }
@@ -1394,10 +1358,8 @@ void AcceleratorRouter::probeAMD() {
     AccelResult r = amd.initialize(GPUBackend::Auto);
     if (r.success && amd.getVendorId() == 0x1002) {
         m_backends[static_cast<int>(RouterBackendType::AMD_XDNA)].available = true;
-        std::cout << "[Router]   AMD GPU initialized: " << amd.getGPUName() << "\n";
     } else {
         m_backends[static_cast<int>(RouterBackendType::AMD_XDNA)].available = false;
-        std::cout << "[Router]   AMD GPU not available: " << r.detail << "\n";
     }
 }
 
@@ -1410,9 +1372,6 @@ void AcceleratorRouter::probeIntel() {
         uint32_t vendorId = intel.getVendorId();
         if (vendorId == 0x8086) { // Intel vendor ID
             m_backends[static_cast<int>(RouterBackendType::Intel_Xe)].available = true;
-            std::cout << "[Router]   Intel GPU detected: " << intel.getGPUName()
-                      << " (" << intel.getEUCount() << " EUs, "
-                      << (intel.getVRAMBytes() / (1024*1024)) << " MB VRAM)\n";
             return;
         }
     }
@@ -1420,10 +1379,8 @@ void AcceleratorRouter::probeIntel() {
     IntelAccelResult r = intel.initialize(IntelGPUBackend::Auto);
     if (r.success && intel.getVendorId() == 0x8086) {
         m_backends[static_cast<int>(RouterBackendType::Intel_Xe)].available = true;
-        std::cout << "[Router]   Intel GPU initialized: " << intel.getGPUName() << "\n";
     } else {
         m_backends[static_cast<int>(RouterBackendType::Intel_Xe)].available = false;
-        std::cout << "[Router]   Intel GPU not available: " << r.detail << "\n";
     }
 }
 
@@ -1466,13 +1423,10 @@ void AcceleratorRouter::probeARM64() {
 }
 
 void AcceleratorRouter::probeCerebras() {
-    std::cout << "[Router] Probing Cerebras WSE backend...\n";
-
     CerebrasWSEAccelerator& cerebras = CerebrasWSEAccelerator::instance();
 
     if (cerebras.isInitialized()) {
         m_backends[static_cast<int>(RouterBackendType::Cerebras_WSE)].available = true;
-        std::cout << "[Router]   Cerebras WSE already connected\n";
         return;
     }
 
@@ -1480,7 +1434,6 @@ void AcceleratorRouter::probeCerebras() {
     // The user must call cerebras.connect(endpoint) before the router can use it
     // We just check if it's been initialized elsewhere
     m_backends[static_cast<int>(RouterBackendType::Cerebras_WSE)].available = false;
-    std::cout << "[Router]   Cerebras WSE not connected (requires manual connect)\n";
 }
 
 // ============================================================================
@@ -1488,28 +1441,21 @@ void AcceleratorRouter::probeCerebras() {
 // ============================================================================
 
 void AcceleratorRouter::probeNVIDIA() {
-    std::cout << "[Router] Probing NVIDIA CUDA backend...\n";
-
     NvidiaCudaAccelerator& nvidia = NvidiaCudaAccelerator::instance();
 
     if (nvidia.isInitialized()) {
         m_backends[static_cast<int>(RouterBackendType::NVIDIA_CUDA)].available = true;
-        std::cout << "[Router]   NVIDIA GPU detected: " << nvidia.getGPUName()
-                  << " (SM " << nvidia.getComputeCapMajor() << "." << nvidia.getComputeCapMinor()
-                  << ", " << (nvidia.getVRAMBytes() / (1024*1024)) << " MB VRAM)\n";
         return;
     }
 
     NvidiaAccelResult r = nvidia.initialize(0);
     if (r.success) {
         m_backends[static_cast<int>(RouterBackendType::NVIDIA_CUDA)].available = true;
-        std::cout << "[Router]   NVIDIA GPU initialized: " << nvidia.getGPUName() << "\n";
 
         // Update peak TFLOPS estimate
         m_stats.peakLocalTFLOPS = std::max(m_stats.peakLocalTFLOPS, nvidia.getStats().peakTFLOPS);
     } else {
         m_backends[static_cast<int>(RouterBackendType::NVIDIA_CUDA)].available = false;
-        std::cout << "[Router]   NVIDIA GPU not available: " << r.detail << "\n";
     }
 }
 

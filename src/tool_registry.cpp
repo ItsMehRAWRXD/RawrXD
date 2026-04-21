@@ -1,7 +1,10 @@
 #include "tool_registry.h"
 #include "tool_registry_init.hpp"
+#include "video/tubi_backend.h"
 
 #include <algorithm>
+#include <chrono>
+#include <cstdint>
 #include <cstdlib>
 #include <cstring>
 #include <cstdio>
@@ -10,6 +13,7 @@
 #include <mutex>
 #include <regex>
 #include <sstream>
+#include <vector>
 
 #include <nlohmann/json.hpp>
 
@@ -67,6 +71,83 @@ inline bool WriteAllText(const fs::path& path, const std::string& content) {
     }
     out.write(content.data(), static_cast<std::streamsize>(content.size()));
     return out.good();
+}
+
+inline bool WriteBmp32(const fs::path& path, int width, int height, const std::vector<std::uint8_t>& rgba) {
+    if (width <= 0 || height <= 0) {
+        return false;
+    }
+    if (rgba.size() < static_cast<size_t>(width) * static_cast<size_t>(height) * 4u) {
+        return false;
+    }
+
+    const std::uint32_t fileHeaderSize = 14;
+    const std::uint32_t infoHeaderSize = 40;
+    const std::uint32_t pixelDataSize = static_cast<std::uint32_t>(width * height * 4);
+    const std::uint32_t fileSize = fileHeaderSize + infoHeaderSize + pixelDataSize;
+
+    std::ofstream f(path, std::ios::binary | std::ios::trunc);
+    if (!f) {
+        return false;
+    }
+
+    std::uint8_t fileHeader[14] = {};
+    fileHeader[0] = 'B';
+    fileHeader[1] = 'M';
+    std::memcpy(&fileHeader[2], &fileSize, 4);
+    std::uint32_t dataOffset = fileHeaderSize + infoHeaderSize;
+    std::memcpy(&fileHeader[10], &dataOffset, 4);
+    f.write(reinterpret_cast<const char*>(fileHeader), sizeof(fileHeader));
+
+    std::uint8_t infoHeader[40] = {};
+    std::memcpy(&infoHeader[0], &infoHeaderSize, 4);
+    std::int32_t w = width;
+    std::int32_t h = -height;
+    std::memcpy(&infoHeader[4], &w, 4);
+    std::memcpy(&infoHeader[8], &h, 4);
+    std::uint16_t planes = 1;
+    std::uint16_t bpp = 32;
+    std::memcpy(&infoHeader[12], &planes, 2);
+    std::memcpy(&infoHeader[14], &bpp, 2);
+    f.write(reinterpret_cast<const char*>(infoHeader), sizeof(infoHeader));
+
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            const size_t idx = static_cast<size_t>((y * width + x) * 4);
+            const std::uint8_t bgra[4] = {rgba[idx + 2], rgba[idx + 1], rgba[idx + 0], rgba[idx + 3]};
+            f.write(reinterpret_cast<const char*>(bgra), 4);
+        }
+    }
+
+    return f.good();
+}
+
+inline void BlendCircle(std::vector<std::uint8_t>& rgba, int width, int height, float cx, float cy, float radius,
+                        std::uint8_t r, std::uint8_t g, std::uint8_t b, std::uint8_t alpha) {
+    if (radius <= 0.0f) {
+        return;
+    }
+    const int x0 = std::max(0, static_cast<int>(cx - radius));
+    const int y0 = std::max(0, static_cast<int>(cy - radius));
+    const int x1 = std::min(width - 1, static_cast<int>(cx + radius));
+    const int y1 = std::min(height - 1, static_cast<int>(cy + radius));
+    const float rr = radius * radius;
+    const float blend = static_cast<float>(alpha) / 255.0f;
+
+    for (int y = y0; y <= y1; ++y) {
+        for (int x = x0; x <= x1; ++x) {
+            const float dx = static_cast<float>(x) - cx;
+            const float dy = static_cast<float>(y) - cy;
+            if ((dx * dx) + (dy * dy) > rr) {
+                continue;
+            }
+            const size_t idx = static_cast<size_t>((y * width + x) * 4);
+            rgba[idx + 0] = static_cast<std::uint8_t>(rgba[idx + 0] * (1.0f - blend) + r * blend);
+            rgba[idx + 1] = static_cast<std::uint8_t>(rgba[idx + 1] * (1.0f - blend) + g * blend);
+            rgba[idx + 2] = static_cast<std::uint8_t>(rgba[idx + 2] * (1.0f - blend) + b * blend);
+            rgba[idx + 3] = 255;
+        }
+    }
 }
 
 void RegisterCoreTools() {
@@ -270,6 +351,167 @@ void RegisterCoreTools() {
             resp["success"] = true;
             resp["count"] = entries.size();
             resp["entries"] = entries;
+            return resp.dump();
+        } catch (const std::exception& e) {
+            return std::string("{\"success\":false,\"error\":") + JsonEscape(e.what()) + "}";
+        }
+    });
+
+    ToolRegistry::register_tool("generate_image", [](const std::string& input) -> std::string {
+        try {
+            const json req = json::parse(input.empty() ? "{}" : input);
+            const std::string prompt = req.value("prompt", "");
+            if (prompt.empty()) {
+                return R"({"success":false,"error":"missing prompt"})";
+            }
+
+            const int width = std::clamp(req.value("width", 1024), 64, 4096);
+            const int height = std::clamp(req.value("height", 1024), 64, 4096);
+            const std::string style = req.value("style", std::string("cinematic"));
+
+            fs::path outputPath;
+            if (req.contains("output_path") && req["output_path"].is_string()) {
+                outputPath = fs::path(req["output_path"].get<std::string>());
+                if (!outputPath.is_absolute()) {
+                    outputPath = fs::path(WorkspaceRoot()) / outputPath;
+                }
+            } else {
+                const std::string slug = std::to_string(std::hash<std::string>{}(prompt + "|" + style));
+                outputPath = fs::path(WorkspaceRoot()) / "generated" / "images" / ("image_" + slug.substr(0, 12) + ".bmp");
+            }
+
+            if (!IsPathAllowed(outputPath)) {
+                return R"({"success":false,"error":"access denied"})";
+            }
+
+            std::error_code ec;
+            fs::create_directories(outputPath.parent_path(), ec);
+            if (ec) {
+                return std::string("{\"success\":false,\"error\":") + JsonEscape("failed to create output directory") + "}";
+            }
+
+            std::vector<std::uint8_t> rgba(static_cast<size_t>(width) * static_cast<size_t>(height) * 4u, 0);
+            const uint32_t seed = static_cast<uint32_t>(std::hash<std::string>{}(prompt + "|" + style));
+            const uint8_t r0 = static_cast<uint8_t>((seed >> 0) & 0xFF);
+            const uint8_t g0 = static_cast<uint8_t>((seed >> 8) & 0xFF);
+            const uint8_t b0 = static_cast<uint8_t>((seed >> 16) & 0xFF);
+            const uint8_t r1 = static_cast<uint8_t>((seed >> 24) & 0xFF);
+            const uint8_t g1 = static_cast<uint8_t>((seed >> 4) & 0xFF);
+            const uint8_t b1 = static_cast<uint8_t>((seed >> 12) & 0xFF);
+
+            for (int y = 0; y < height; ++y) {
+                const float t = static_cast<float>(y) / static_cast<float>(std::max(1, height - 1));
+                const std::uint8_t rr = static_cast<uint8_t>(r0 + static_cast<uint8_t>((r1 - r0) * t));
+                const std::uint8_t gg = static_cast<uint8_t>(g0 + static_cast<uint8_t>((g1 - g0) * t));
+                const std::uint8_t bb = static_cast<uint8_t>(b0 + static_cast<uint8_t>((b1 - b0) * t));
+                for (int x = 0; x < width; ++x) {
+                    const size_t idx = static_cast<size_t>((y * width + x) * 4);
+                    rgba[idx + 0] = rr;
+                    rgba[idx + 1] = gg;
+                    rgba[idx + 2] = bb;
+                    rgba[idx + 3] = 255;
+                }
+            }
+
+            const int circles = 8 + static_cast<int>(seed % 9);
+            for (int i = 0; i < circles; ++i) {
+                const uint32_t s = seed ^ static_cast<uint32_t>(i * 2654435761u);
+                const float cx = static_cast<float>(s % static_cast<uint32_t>(width));
+                const float cy = static_cast<float>((s >> 8) % static_cast<uint32_t>(height));
+                const float radius =
+                    static_cast<float>((s >> 16) % static_cast<uint32_t>(std::max(16, std::min(width, height) / 2))) +
+                    12.0f;
+                const std::uint8_t rr = static_cast<std::uint8_t>((s >> 4) & 0xFF);
+                const std::uint8_t gg = static_cast<std::uint8_t>((s >> 10) & 0xFF);
+                const std::uint8_t bb = static_cast<std::uint8_t>((s >> 18) & 0xFF);
+                BlendCircle(rgba, width, height, cx, cy, radius, rr, gg, bb, 84);
+            }
+
+            if (!WriteBmp32(outputPath, width, height, rgba)) {
+                return R"({"success":false,"error":"image write failed"})";
+            }
+
+            json resp;
+            resp["success"] = true;
+            resp["tool"] = "generate_image";
+            resp["prompt"] = prompt;
+            resp["style"] = style;
+            resp["width"] = width;
+            resp["height"] = height;
+            resp["output_path"] = outputPath.string();
+            return resp.dump();
+        } catch (const std::exception& e) {
+            return std::string("{\"success\":false,\"error\":") + JsonEscape(e.what()) + "}";
+        }
+    });
+
+    ToolRegistry::register_tool("generate_video", [](const std::string& input) -> std::string {
+        try {
+            const json req = json::parse(input.empty() ? "{}" : input);
+            const std::string prompt = req.value("prompt", "");
+            if (prompt.empty()) {
+                return R"({"success":false,"error":"missing prompt"})";
+            }
+
+            rawrxd::video::TubiRenderRequest request;
+            request.jobId = req.value("job_id", std::string());
+            if (request.jobId.empty()) {
+                const auto nowMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::system_clock::now().time_since_epoch()).count();
+                request.jobId = "video_" + std::to_string(nowMs);
+            }
+
+            request.engineName = req.value("engine", std::string("tubi"));
+            request.provider = req.value("provider", std::string("local"));
+            request.localModel = req.value("local_model", std::string("headless-default"));
+            request.prompt = prompt;
+            request.storyboard = req.value("storyboard", prompt);
+            request.style = req.value("style", std::string("Cinematic"));
+            request.duration = req.value("duration", std::string("6s"));
+            request.aspectRatio = req.value("aspect_ratio", std::string("16:9"));
+            request.resolution = req.value("resolution", std::string("720p"));
+            request.negativePrompt = req.value("negative_prompt", std::string("blurry, low detail"));
+            request.cameraMode = req.value("camera_mode", std::string("cinematic-pan"));
+            request.seed = req.value("seed", static_cast<int>(std::hash<std::string>{}(request.prompt) & 0x7fffffff));
+
+            if (req.contains("output_dir") && req["output_dir"].is_string()) {
+                request.outputDir = fs::path(req["output_dir"].get<std::string>());
+                if (!request.outputDir.is_absolute()) {
+                    request.outputDir = fs::path(WorkspaceRoot()) / request.outputDir;
+                }
+            } else {
+                request.outputDir = fs::path(WorkspaceRoot()) / "generated" / "videos" / request.jobId;
+            }
+
+            if (!IsPathAllowed(request.outputDir)) {
+                return R"({"success":false,"error":"access denied"})";
+            }
+
+            std::error_code ec;
+            fs::create_directories(request.outputDir, ec);
+            if (ec) {
+                return std::string("{\"success\":false,\"error\":") + JsonEscape("failed to create output directory") + "}";
+            }
+
+            const auto rendered = rawrxd::video::renderVideoClip(request);
+            if (!rendered) {
+                return std::string("{\"success\":false,\"error\":") + JsonEscape(rendered.error()) + "}";
+            }
+
+            json resp;
+            resp["success"] = true;
+            resp["tool"] = "generate_video";
+            resp["job_id"] = request.jobId;
+            resp["prompt"] = request.prompt;
+            resp["style"] = request.style;
+            resp["duration"] = request.duration;
+            resp["resolution"] = request.resolution;
+            resp["aspect_ratio"] = request.aspectRatio;
+            resp["output_dir"] = request.outputDir.string();
+            resp["manifest_path"] = rendered->manifestPath.string();
+            resp["mp4_path"] = rendered->mp4Path.string();
+            resp["frames_dir"] = rendered->framesDir.string();
+            resp["total_frames"] = rendered->totalFrames;
             return resp.dump();
         } catch (const std::exception& e) {
             return std::string("{\"success\":false,\"error\":") + JsonEscape(e.what()) + "}";

@@ -2,7 +2,7 @@
 #include "Win32IDE_Core.h" // For access to the main application class if needed
 
 // This is a placeholder for a real docking library's implementation.
-// For this example, we'll simulate the behavior without a real library.
+// Simulate the behavior without a real library.
 // A real implementation would include the library's headers and link its .lib.
 
 // --- Placeholder/Simulation Classes ---

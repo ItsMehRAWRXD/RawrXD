@@ -128,9 +128,9 @@ Win32IDE::~Win32IDE()
     // If onDestroy wasn't called (abnormal exit), do the thread wait here
     if (m_activeDetachedThreads.load(std::memory_order_acquire) > 0)
     {
-        for (int i = 0; i < 60 && m_activeDetachedThreads.load(std::memory_order_acquire) > 0; ++i)
+        for (int i = 0; i < 200 && m_activeDetachedThreads.load(std::memory_order_acquire) > 0; ++i)
         {
-            Sleep(50);
+            Sleep(10);
         }
     }
 
@@ -1265,6 +1265,7 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             else
             {
                 m_pendingChatOnLoadMessage.clear();  // discard pending on failure
+                m_pendingChatOnLoadUserTurnRendered = false;
                 appendToOutput("❌ Failed to load model: " + result->filepath +
                                    " (not a valid GGUF and native load failed).",
                                "Errors", OutputSeverity::Error);
@@ -1289,8 +1290,8 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             if (!m_pendingChatOnLoadMessage.empty() && m_hwndCopilotChatInput && IsWindow(m_hwndCopilotChatInput))
             {
                 // Give backend registration/load-complete transitions a brief moment
-                // before issuing the replayed Send.
-                Sleep(200);
+                // before issuing the replayed Send (keep small — this runs on the UI thread).
+                Sleep(32);
 
                 std::string pending = std::move(m_pendingChatOnLoadMessage);
                 m_pendingChatOnLoadMessage.clear();
@@ -1678,8 +1679,8 @@ bool Win32IDE::createWindow()
         config.applyFeatureToggles();
 
         // Apply config to IDE state
-        m_ollamaBaseUrl = config.getString("ollama.baseUrl", "http://localhost:11434");
-        m_ollamaModelOverride = config.getString("ollama.modelOverride", "");
+        m_ollamaBaseUrl = config.getString("native.baseUrl", "http://localhost:11435");
+        m_ollamaModelOverride = config.getString("native.modelOverride", "");
         m_autoSaveEnabled = config.getBool("editor.autoSave", false);
         m_gpuTextEnabled = config.getBool("performance.gpuTextRendering", true);
         m_useStreamingLoader = config.getBool("performance.streamingGGUFLoad", true);
@@ -2573,7 +2574,7 @@ bool Win32IDE::trySendToOllama(const std::string& prompt, std::string& outRespon
 {
     try
     {
-        ModelConnection conn(m_ollamaBaseUrl.empty() ? "http://localhost:11434" : m_ollamaBaseUrl);
+        ModelConnection conn(m_ollamaBaseUrl.empty() ? "http://localhost:11435" : m_ollamaBaseUrl);
 
         if (!conn.checkConnection())
         {
@@ -3710,15 +3711,15 @@ void Win32IDE::onDestroy()
     m_inferenceStopRequested = true;
     m_planExecutionCancelled.store(true);
 
-    // Wait for all detached threads to notice the flag and exit (up to 3s).
-    for (int i = 0; i < 60 && m_activeDetachedThreads.load(std::memory_order_acquire) > 0; ++i)
+    // Wait for all detached threads to notice the flag and exit (up to ~2s).
+    for (int i = 0; i < 200 && m_activeDetachedThreads.load(std::memory_order_acquire) > 0; ++i)
     {
-        Sleep(50);
+        Sleep(10);
     }
     if (m_activeDetachedThreads.load(std::memory_order_acquire) > 0)
     {
-        OutputDebugStringA("onDestroy: WARNING — detached threads still active after 3s\n");
-        Sleep(200);  // Extra grace
+        OutputDebugStringA("onDestroy: WARNING — detached threads still active after ~2s\n");
+        Sleep(40);  // Brief extra grace
     }
 
     if (m_semanticIndexInitialized)

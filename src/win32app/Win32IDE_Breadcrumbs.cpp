@@ -13,20 +13,29 @@
 #include <sstream>
 #include <algorithm>
 #include <vector>
+#include "../../include/RawrXD_ColorSpace.h"
 
-// SCAFFOLD_028: Breadcrumbs and navigation
+using namespace RawrXD::ColorSpace;
 
-// Breadcrumb bar colors (VS Code dark theme)
-static const COLORREF BC_BG           = RGB(37, 37, 38);
-static const COLORREF BC_TEXT         = RGB(169, 169, 169);
-static const COLORREF BC_SEPARATOR    = RGB(110, 110, 110);
-static const COLORREF BC_HOVER        = RGB(60, 60, 60);
-static const COLORREF BC_ACTIVE_TEXT  = RGB(220, 220, 220);
-static const COLORREF BC_ICON_FILE    = RGB(204, 204, 204);
-static const COLORREF BC_ICON_CLASS   = RGB(206, 145, 120);
-static const COLORREF BC_ICON_METHOD  = RGB(86, 156, 214);
-static const COLORREF BC_ICON_FUNC    = RGB(220, 220, 170);
-static const COLORREF BC_ICON_FOLDER  = RGB(197, 134, 192);
+// Breadcrumb bar colors - Adobe RGBa VSU Effects
+static const AdobeRGBa BC_BG           = VSU::Acrylic::DarkBase;
+static const AdobeRGBa BC_TEXT         = AdobeRGBa(0.66f, 0.66f, 0.66f, 1.00f);
+static const AdobeRGBa BC_SEPARATOR    = AdobeRGBa(0.43f, 0.43f, 0.43f, 1.00f);
+static const AdobeRGBa BC_HOVER        = AdobeRGBa(0.24f, 0.24f, 0.24f, 1.00f);
+static const AdobeRGBa BC_ACTIVE_TEXT  = AdobeRGBa(0.86f, 0.86f, 0.86f, 1.00f);
+static const AdobeRGBa BC_ICON_FILE    = AdobeRGBa(0.80f, 0.80f, 0.80f, 1.00f);
+static const AdobeRGBa BC_ICON_CLASS   = AdobeRGBa(0.81f, 0.57f, 0.47f, 1.00f);
+static const AdobeRGBa BC_ICON_METHOD  = AdobeRGBa(0.34f, 0.61f, 0.84f, 1.00f);
+static const AdobeRGBa BC_ICON_FUNC    = AdobeRGBa(0.86f, 0.86f, 0.67f, 1.00f);
+static const AdobeRGBa BC_ICON_FOLDER  = AdobeRGBa(0.77f, 0.53f, 0.75f, 1.00f);
+
+// Helper to convert AdobeRGBa to COLORREF for Win32 GDI
+inline COLORREF AdobeRGBaToCOLORREF(const AdobeRGBa& color) {
+    auto srgb = color.TosRGB();
+    return RGB(static_cast<int>(srgb.r * 255), 
+               static_cast<int>(srgb.g * 255), 
+               static_cast<int>(srgb.b * 255));
+}
 
 namespace {
 int g_breadcrumbHoverIndex = -1;
@@ -369,13 +378,13 @@ void Win32IDE::onBreadcrumbClick(int index)
 
 void Win32IDE::paintBreadcrumbs(HDC hdc, RECT& rc)
 {
-    // Fill background
-    HBRUSH bgBrush = CreateSolidBrush(BC_BG);
+    // Fill background with VSU Acrylic effect
+    HBRUSH bgBrush = CreateSolidBrush(AdobeRGBaToCOLORREF(BC_BG));
     FillRect(hdc, &rc, bgBrush);
     DeleteObject(bgBrush);
 
     // Draw bottom border
-    HPEN borderPen = CreatePen(PS_SOLID, 1, RGB(50, 50, 50));
+    HPEN borderPen = CreatePen(PS_SOLID, 1, AdobeRGBaToCOLORREF(VSU::Acrylic::DarkLuminosity));
     HPEN oldPen = (HPEN)SelectObject(hdc, borderPen);
     MoveToEx(hdc, rc.left, rc.bottom - 1, nullptr);
     LineTo(hdc, rc.right, rc.bottom - 1);
@@ -399,7 +408,7 @@ void Win32IDE::paintBreadcrumbs(HDC hdc, RECT& rc)
 
         // Draw separator before items (except first)
         if (i > 0) {
-            SetTextColor(hdc, BC_SEPARATOR);
+            SetTextColor(hdc, AdobeRGBaToCOLORREF(BC_SEPARATOR));
             const char* sep = " > ";
             RECT sepRect = { xPos, rc.top, xPos + 24, rc.bottom };
             DrawTextA(hdc, sep, -1, &sepRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
@@ -407,19 +416,19 @@ void Win32IDE::paintBreadcrumbs(HDC hdc, RECT& rc)
         }
 
         // Determine icon color based on symbol kind
-        COLORREF iconColor = BC_ICON_FILE;
+        COLORREF iconColor = AdobeRGBaToCOLORREF(BC_ICON_FILE);
         const char* icon = "";
         if (item.symbolKind == "class" || item.symbolKind == "struct") {
-            iconColor = BC_ICON_CLASS;
+            iconColor = AdobeRGBaToCOLORREF(BC_ICON_CLASS);
             icon = "C ";
         } else if (item.symbolKind == "method" || item.symbolKind == "function") {
-            iconColor = BC_ICON_METHOD;
+            iconColor = AdobeRGBaToCOLORREF(BC_ICON_METHOD);
             icon = "f ";
         } else if (item.symbolKind == "namespace") {
-            iconColor = BC_ICON_FUNC;
+            iconColor = AdobeRGBaToCOLORREF(BC_ICON_FUNC);
             icon = "N ";
         } else if (item.symbolKind == "folder" || item.symbolKind == "root") {
-            iconColor = BC_ICON_FOLDER;
+            iconColor = AdobeRGBaToCOLORREF(BC_ICON_FOLDER);
             icon = "D ";
         } else if (item.symbolKind == "file") {
             icon = "";
@@ -434,7 +443,7 @@ void Win32IDE::paintBreadcrumbs(HDC hdc, RECT& rc)
         }
 
         // Draw breadcrumb text
-        SetTextColor(hdc, (i == m_breadcrumbPath.size() - 1) ? BC_ACTIVE_TEXT : BC_TEXT);
+        SetTextColor(hdc, (i == m_breadcrumbPath.size() - 1) ? AdobeRGBaToCOLORREF(BC_ACTIVE_TEXT) : AdobeRGBaToCOLORREF(BC_TEXT));
         SIZE textSize;
         GetTextExtentPoint32A(hdc, item.label.c_str(), static_cast<int>(item.label.size()), &textSize);
 
@@ -445,7 +454,7 @@ void Win32IDE::paintBreadcrumbs(HDC hdc, RECT& rc)
         RECT hitRect = { itemLeft, rc.top, xPos, rc.bottom };
         if (static_cast<int>(i) == g_breadcrumbHoverIndex) {
             RECT hoverRect = { hitRect.left - 2, rc.top + 2, hitRect.right + 2, rc.bottom - 2 };
-            HBRUSH hHover = CreateSolidBrush(BC_HOVER);
+            HBRUSH hHover = CreateSolidBrush(AdobeRGBaToCOLORREF(BC_HOVER));
             FillRect(hdc, &hoverRect, hHover);
             DeleteObject(hHover);
 
@@ -455,7 +464,7 @@ void Win32IDE::paintBreadcrumbs(HDC hdc, RECT& rc)
                 RECT iconRect = { itemLeft + ((i > 0) ? 22 : 0), rc.top, itemLeft + ((i > 0) ? 22 : 0) + 16, rc.bottom };
                 DrawTextA(hdc, icon, -1, &iconRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
             }
-            SetTextColor(hdc, (i == m_breadcrumbPath.size() - 1) ? BC_ACTIVE_TEXT : BC_TEXT);
+            SetTextColor(hdc, (i == m_breadcrumbPath.size() - 1) ? AdobeRGBaToCOLORREF(BC_ACTIVE_TEXT) : AdobeRGBaToCOLORREF(BC_TEXT));
             DrawTextA(hdc, item.label.c_str(), -1, &textRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
         }
         m_breadcrumbRects.push_back(hitRect);

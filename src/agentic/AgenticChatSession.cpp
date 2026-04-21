@@ -1,6 +1,6 @@
 #include "AgenticChatSession.h"
 
-#include "AgentOllamaClient.h"
+#include "NativeInferenceClient.h"
 #include "AgentToolHandlers.h"
 #include "core/scoped_instructions_provider.hpp"
 #include "indexing/incremental_indexer.hpp"
@@ -334,9 +334,9 @@ void AgenticChatSession::RunTurn(const std::string& user_message,
         auto payload = BuildMessagesPayload();
         auto messages = BuildAgentMessages(payload);
 
-        RawrXD::Agent::OllamaConfig cfg;
+        RawrXD::Agent::NativeInferenceConfig cfg;
         cfg.chat_model = m_model;
-        RawrXD::Agent::AgentOllamaClient client(cfg);
+        RawrXD::Agent::NativeInferenceClient client(cfg);
 
         const json tools = m_agenticMode ? RawrXD::Agent::AgentToolHandlers::GetAllSchemas() : json::array();
         const auto turnStart = std::chrono::steady_clock::now();

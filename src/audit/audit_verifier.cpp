@@ -240,12 +240,6 @@ int run_cli(int argc, char** argv) {
 
     const auto report = AuditVerifier::instance().verify(cfg);
 
-    if (format == "json") {
-        std::printf("%s\n", report.to_json().c_str());
-    } else {
-        std::printf("%s\n", report.to_json().c_str());
-    }
-
     return report.has_critical_failures() ? 1 : 0;
 }
 

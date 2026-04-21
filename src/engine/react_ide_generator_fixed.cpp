@@ -193,7 +193,7 @@ export interface EngineState {
   setMemoryTier: (tier: string) => Promise<boolean>;
 }
 
-// Mock implementation for demo if server not running
+// Mock implementation if server not running
 const mockEngine = {
   execute: async (cmd: string) => {
     return `Executed: ${cmd}`;

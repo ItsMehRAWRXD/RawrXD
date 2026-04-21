@@ -17,6 +17,8 @@ function Find-FirstExe {
 }
 
 $engine = Find-FirstExe @(
+    (Join-Path $root "build-win32\bin\RawrEngine.exe"),
+    (Join-Path $root "build-win32\RawrEngine.exe"),
     (Join-Path $root "build-ninja\bin\RawrEngine.exe"),
     (Join-Path $root "build-ninja-ctx2\bin\RawrEngine.exe"),
     (Join-Path $root "build\bin\Release\RawrEngine.exe"),
@@ -24,6 +26,8 @@ $engine = Find-FirstExe @(
     (Join-Path $root "build-ninja\RawrEngine.exe")
 )
 $ide = Find-FirstExe @(
+    (Join-Path $root "build-win32\bin\RawrXD-Win32IDE.exe"),
+    (Join-Path $root "build-win32\RawrXD-Win32IDE.exe"),
     (Join-Path $root "build-ninja\bin\RawrXD-Win32IDE.exe"),
     (Join-Path $root "build-ninja-ctx2\bin\RawrXD-Win32IDE.exe"),
     (Join-Path $root "build\bin\Release\RawrXD-Win32IDE.exe"),

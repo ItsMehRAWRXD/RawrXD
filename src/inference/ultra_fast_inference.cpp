@@ -908,7 +908,7 @@ int32_t UltraFastInferenceEngine::runForwardPass(const std::vector<int32_t>& tok
 
     if (model_weights_.empty()) return 0;
 
-    // Simplified forward pass for demonstration
+    // Simplified forward pass
     float logit_sum = 0.0f;
     for (size_t i = 0; i < tokens.size(); ++i) {
         size_t idx = (tokens[i] + i) % model_weights_.size();

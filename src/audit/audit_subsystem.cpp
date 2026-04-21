@@ -373,7 +373,7 @@ public:
                 out_file.flush();
             }
             if (config.enable_console) {
-                std::fprintf(stderr, "[AUDIT] %s\n", line.c_str());
+                // Console output disabled
             }
             std::lock_guard<std::mutex> s_lock(stats_mutex);
             stats.bytes_written += static_cast<uint64_t>(line.size() + 1);

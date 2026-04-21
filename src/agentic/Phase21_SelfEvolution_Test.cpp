@@ -1,7 +1,7 @@
 // =============================================================================
 // Phase21_SelfEvolution_Test.cpp
 // 
-// Demonstrates autonomous self-optimization:
+// Autonomous self-optimization:
 // 1. Read the MASM kernel source
 // 2. Assemble it using SovereignAssembler (internal, zero-dependency)
 // 3. Validate the binary output

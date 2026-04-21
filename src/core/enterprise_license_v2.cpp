@@ -338,13 +338,15 @@ LicenseResult EnterpriseLicenseV2::initialize()
     }
 
     // Offline Sync Triage: If no valid license loaded, check offline validator cache
-    if (m_tier == LicenseTierV2::Community) {
+    if (m_tier == LicenseTierV2::Community)
+    {
         auto offlineResult = g_offlineValidator.validateOffline();
-        if (offlineResult.success) {
-             m_tier = static_cast<LicenseTierV2>(offlineResult.tier);
-             // Reconstruct features from cache (Low/High mask)
-             // ... logic for reconstructing mask omitted for brevity in this specific call
-             fprintf(stderr, "[LicenseV2] Restored tier %s from offline cache\n", tierName(m_tier));
+        if (offlineResult.success)
+        {
+            m_tier = static_cast<LicenseTierV2>(offlineResult.tier);
+            // Reconstruct features from cache (Low/High mask)
+            // ... logic for reconstructing mask omitted for brevity in this specific call
+            fprintf(stderr, "[LicenseV2] Restored tier %s from offline cache\n", tierName(m_tier));
         }
     }
 
@@ -589,7 +591,7 @@ LicenseResult EnterpriseLicenseV2::validateKey(const LicenseKeyV2& key) const
     }
 
     // Anti-Tamper: Timestamp Sanity (Issue date cannot be in the future)
-    if (key.issueDate > (now + 3600)) // 1 hour clock skew allowance
+    if (key.issueDate > (now + 3600))  // 1 hour clock skew allowance
     {
         return LicenseResult::error("License issue date is in the future", -16);
     }
@@ -857,25 +859,18 @@ void EnterpriseLicenseV2::signKey(LicenseKeyV2& key, const char* secret) const
 
     if (secret)
     {
-        AntiTampering::computeHMAC_SHA256(
-            reinterpret_cast<const uint8_t*>(&key), bodyLen,
-            reinterpret_cast<const uint8_t*>(secret), std::strlen(secret),
-            key.signature);
+        AntiTampering::computeHMAC_SHA256(reinterpret_cast<const uint8_t*>(&key), bodyLen,
+                                          reinterpret_cast<const uint8_t*>(secret), std::strlen(secret), key.signature);
     }
     else
     {
         // Fallback to Sovereign Root
-        static const uint8_t kSovereignPubKey[32] = {
-            0x52, 0x61, 0x77, 0x72, 0x58, 0x44, 0x5F, 0x53,
-            0x6F, 0x76, 0x65, 0x72, 0x65, 0x69, 0x67, 0x6E,
-            0x5F, 0x4C, 0x69, 0x63, 0x65, 0x6E, 0x73, 0x65,
-            0x5F, 0x56, 0x32, 0x5F, 0x4B, 0x65, 0x79, 0x21
-        };
+        static const uint8_t kSovereignPubKey[32] = {0x52, 0x61, 0x77, 0x72, 0x58, 0x44, 0x5F, 0x53, 0x6F, 0x76, 0x65,
+                                                     0x72, 0x65, 0x69, 0x67, 0x6E, 0x5F, 0x4C, 0x69, 0x63, 0x65, 0x6E,
+                                                     0x73, 0x65, 0x5F, 0x56, 0x32, 0x5F, 0x4B, 0x65, 0x79, 0x21};
 
-        AntiTampering::computeHMAC_SHA256(
-            reinterpret_cast<const uint8_t*>(&key), bodyLen,
-            kSovereignPubKey, sizeof(kSovereignPubKey),
-            key.signature);
+        AntiTampering::computeHMAC_SHA256(reinterpret_cast<const uint8_t*>(&key), bodyLen, kSovereignPubKey,
+                                          sizeof(kSovereignPubKey), key.signature);
     }
 }
 
@@ -891,22 +886,20 @@ bool EnterpriseLicenseV2::verifySignature(const LicenseKeyV2& key) const
     // Production Hardening: Verify structural integrity via CRC32 first
     // Note: LicenseKeyV2 layout must have CRC at the end or outside the protected range
     // For now, we use the HMAC-SHA256 implemented in license_anti_tampering.cpp
-    
+
     // Hardcoded public HMAC key for license verification (Sovereign Root)
     static const uint8_t kSovereignPubKey[32] = {
-        0x52, 0x61, 0x77, 0x72, 0x58, 0x44, 0x5F, 0x53, // RawrXD_S
-        0x6F, 0x76, 0x65, 0x72, 0x65, 0x69, 0x67, 0x6E, // overeign
-        0x5F, 0x4C, 0x69, 0x63, 0x65, 0x6E, 0x73, 0x65, // _License
-        0x5F, 0x56, 0x32, 0x5F, 0x4B, 0x65, 0x79, 0x21  // _V2_Key!
+        0x52, 0x61, 0x77, 0x72, 0x58, 0x44, 0x5F, 0x53,  // RawrXD_S
+        0x6F, 0x76, 0x65, 0x72, 0x65, 0x69, 0x67, 0x6E,  // overeign
+        0x5F, 0x4C, 0x69, 0x63, 0x65, 0x6E, 0x73, 0x65,  // _License
+        0x5F, 0x56, 0x32, 0x5F, 0x4B, 0x65, 0x79, 0x21   // _V2_Key!
     };
 
     uint8_t computedSignature[32];
     size_t dataSize = offsetof(LicenseKeyV2, signature);
 
-    if (!AntiTampering::computeHMAC_SHA256(
-            reinterpret_cast<const uint8_t*>(&key), dataSize,
-            kSovereignPubKey, sizeof(kSovereignPubKey),
-            computedSignature))
+    if (!AntiTampering::computeHMAC_SHA256(reinterpret_cast<const uint8_t*>(&key), dataSize, kSovereignPubKey,
+                                           sizeof(kSovereignPubKey), computedSignature))
     {
         return false;
     }

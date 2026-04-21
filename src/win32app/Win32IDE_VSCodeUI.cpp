@@ -123,19 +123,10 @@ std::string sanitizeChatText(const std::string& input)
 }
 }  // namespace
 
-// SCAFFOLD_270: Status bar and Copilot status
-
-
-// SCAFFOLD_024: Problems list and go-to-problem
-
-
-// SCAFFOLD_004: Panel container (Terminal, Output, Problems)
-
-
-// SCAFFOLD_003: Secondary sidebar (Copilot chat) creation
-
-
-// SCAFFOLD_002: Activity bar and primary sidebar layout
+// VSU (Visual Studio UI) Effect Rendering with Adobe RGBa Support
+// Includes Acrylic, Mica, and elevation shadow effects for modern IDE appearance
+#include "../include/RawrXD_ColorSpace.h"
+#include "../../RawrXD_Renderer_D2D.h"
 
 
 // Define GET_X_LPARAM and GET_Y_LPARAM if not available
@@ -200,19 +191,37 @@ std::string sanitizeChatText(const std::string& input)
 #define IDC_STATUS_COPILOT 1410
 #define IDC_STATUS_NOTIFICATIONS 1411
 
-// VS Code-like colors
-static const COLORREF VSCODE_ACTIVITY_BAR_BG = RGB(51, 51, 51);          // Dark gray
-static const COLORREF VSCODE_ACTIVITY_BAR_ACTIVE = RGB(37, 37, 38);      // Slightly lighter
-static const COLORREF VSCODE_ACTIVITY_BAR_HOVER = RGB(90, 93, 94);       // Hover highlight
-static const COLORREF VSCODE_ACTIVITY_BAR_ICON = RGB(204, 204, 204);     // Icon color
-static const COLORREF VSCODE_ACTIVITY_BAR_INDICATOR = RGB(0, 122, 204);  // Active indicator blue
+// VSU Effect Colors - Adobe RGBa for professional color accuracy
+// Using RawrXD::ColorSpace::VSU namespace for modern IDE appearance
+using namespace RawrXD::ColorSpace;
 
-static const COLORREF VSCODE_SIDEBAR_BG = RGB(37, 37, 38);
-static const COLORREF VSCODE_PANEL_BG = RGB(30, 30, 30);
-static const COLORREF VSCODE_STATUS_BAR_BG = RGB(0, 122, 204);      // Blue for normal
-static const COLORREF VSCODE_STATUS_BAR_DEBUG = RGB(204, 102, 0);   // Orange for debug
-static const COLORREF VSCODE_STATUS_BAR_REMOTE = RGB(22, 130, 93);  // Green for remote
-static const COLORREF VSCODE_STATUS_BAR_TEXT = RGB(255, 255, 255);
+// Activity Bar colors with proper Adobe RGBa
+static const AdobeRGBa VSCODE_ACTIVITY_BAR_BG = VSU::Acrylic::DarkBase;                    // Acrylic dark base
+static const AdobeRGBa VSCODE_ACTIVITY_BAR_ACTIVE = VSU::Mica::DarkTint;                   // Mica dark tint
+static const AdobeRGBa VSCODE_ACTIVITY_BAR_HOVER = AdobeRGBa(0.35f, 0.36f, 0.37f, 0.95f);  // Hover with alpha
+static const AdobeRGBa VSCODE_ACTIVITY_BAR_ICON = AdobeRGBa(0.80f, 0.80f, 0.80f, 1.00f);   // Icon color
+static const AdobeRGBa VSCODE_ACTIVITY_BAR_INDICATOR = VSU::Accents::Blue;                // Active indicator
+
+// Sidebar and Panel with VSU Acrylic effects
+static const AdobeRGBa VSCODE_SIDEBAR_BG = VSU::Acrylic::SidebarTint;
+static const AdobeRGBa VSCODE_PANEL_BG = VSU::Acrylic::PanelTint;
+static const AdobeRGBa VSCODE_STATUS_BAR_BG = VSU::Accents::Blue;
+static const AdobeRGBa VSCODE_STATUS_BAR_DEBUG = VSU::Accents::Warning;
+static const AdobeRGBa VSCODE_STATUS_BAR_REMOTE = VSU::Accents::Success;
+static const AdobeRGBa VSCODE_STATUS_BAR_TEXT = AdobeRGBa(1.00f, 1.00f, 1.00f, 1.00f);
+
+// Elevation shadow colors for depth perception
+static const AdobeRGBa SHADOW_ELEVATION_01 = VSU::Shadows::Shadow01;
+static const AdobeRGBa SHADOW_ELEVATION_04 = VSU::Shadows::Shadow04;
+static const AdobeRGBa SHADOW_ELEVATION_08 = VSU::Shadows::Shadow08;
+
+// Helper to convert AdobeRGBa to COLORREF for legacy Win32 controls
+inline COLORREF AdobeRGBaToCOLORREF(const AdobeRGBa& color) {
+    auto srgb = color.TosRGB();
+    return RGB(static_cast<int>(srgb.r * 255), 
+               static_cast<int>(srgb.g * 255), 
+               static_cast<int>(srgb.b * 255));
+}
 
 // Unicode icons for Activity Bar (simple ASCII fallbacks)
 static const char* ICON_EXPLORER = "[]";    // File explorer
@@ -229,16 +238,16 @@ static const char* ICON_ACCOUNTS = "@";     // User account
 
 void Win32IDE::createActivityBarUI(HWND hwndParent)
 {
-    // Create brushes for Activity Bar colors
-    m_actBarBackgroundBrush = CreateSolidBrush(VSCODE_ACTIVITY_BAR_BG);
-    m_actBarHoverBrush = CreateSolidBrush(VSCODE_ACTIVITY_BAR_HOVER);
-    m_actBarActiveBrush = CreateSolidBrush(VSCODE_ACTIVITY_BAR_ACTIVE);
+    // Create brushes for Activity Bar colors using Adobe RGBa
+    m_actBarBackgroundBrush = CreateSolidBrush(AdobeRGBaToCOLORREF(VSCODE_ACTIVITY_BAR_BG));
+    m_actBarHoverBrush = CreateSolidBrush(AdobeRGBaToCOLORREF(VSCODE_ACTIVITY_BAR_HOVER));
+    m_actBarActiveBrush = CreateSolidBrush(AdobeRGBaToCOLORREF(VSCODE_ACTIVITY_BAR_ACTIVE));
 
     // Create the Activity Bar container
     m_hwndActivityBar = CreateWindowExA(0, "STATIC", "", WS_CHILD | WS_VISIBLE | SS_OWNERDRAW, 0, 0, ACTIVITY_BAR_WIDTH,
                                         600, hwndParent, (HMENU)IDC_ACTIVITY_BAR, m_hInstance, nullptr);
 
-    // Set the background color
+    // Set the background color using Adobe RGBa
     SetClassLongPtr(m_hwndActivityBar, GCLP_HBRBACKGROUND, (LONG_PTR)m_actBarBackgroundBrush);
 
     // Create Activity Bar buttons (icons)
@@ -305,32 +314,42 @@ LRESULT CALLBACK Win32IDE::ActivityBarButtonProc(HWND hwnd, UINT uMsg, WPARAM wP
             DRAWITEMSTRUCT* dis = (DRAWITEMSTRUCT*)lParam;
             int buttonIndex = dis->CtlID - IDC_ACTBAR_EXPLORER;
 
-            // Draw background
-            COLORREF bgColor =
-                (buttonIndex == pThis->m_activeActivityBarButton) ? VSCODE_ACTIVITY_BAR_ACTIVE : VSCODE_ACTIVITY_BAR_BG;
+            // Draw background with VSU Acrylic effect
+            AdobeRGBa bgColor = (buttonIndex == pThis->m_activeActivityBarButton) 
+                ? VSCODE_ACTIVITY_BAR_ACTIVE 
+                : VSCODE_ACTIVITY_BAR_BG;
 
             if (dis->itemState & ODS_SELECTED)
             {
                 bgColor = VSCODE_ACTIVITY_BAR_HOVER;
             }
 
-            HBRUSH hBrush = CreateSolidBrush(bgColor);
+            // Apply elevation shadow for depth perception
+            RECT shadowRect = dis->rcItem;
+            shadowRect.left += 2;
+            shadowRect.top += 2;
+            HBRUSH hShadowBrush = CreateSolidBrush(AdobeRGBaToCOLORREF(SHADOW_ELEVATION_01));
+            FillRect(dis->hDC, &shadowRect, hShadowBrush);
+            DeleteObject(hShadowBrush);
+
+            // Draw main background
+            HBRUSH hBrush = CreateSolidBrush(AdobeRGBaToCOLORREF(bgColor));
             FillRect(dis->hDC, &dis->rcItem, hBrush);
             DeleteObject(hBrush);
 
-            // Draw active indicator (left border)
+            // Draw active indicator (left border) with accent color
             if (buttonIndex == pThis->m_activeActivityBarButton)
             {
                 RECT indicatorRect = dis->rcItem;
                 indicatorRect.right = 3;
-                HBRUSH hIndicator = CreateSolidBrush(VSCODE_ACTIVITY_BAR_INDICATOR);
+                HBRUSH hIndicator = CreateSolidBrush(AdobeRGBaToCOLORREF(VSCODE_ACTIVITY_BAR_INDICATOR));
                 FillRect(dis->hDC, &indicatorRect, hIndicator);
                 DeleteObject(hIndicator);
             }
 
-            // Draw icon text centered
+            // Draw icon text centered with proper Adobe RGBa color
             SetBkMode(dis->hDC, TRANSPARENT);
-            SetTextColor(dis->hDC, VSCODE_ACTIVITY_BAR_ICON);
+            SetTextColor(dis->hDC, AdobeRGBaToCOLORREF(VSCODE_ACTIVITY_BAR_ICON));
 
             char buttonText[16];
             GetWindowTextA(hwnd, buttonText, 16);
@@ -425,7 +444,7 @@ void Win32IDE::createSecondarySidebar(HWND hwndParent)
         {
             m_ollamaBridge->SetContextWindow(4096);  // Optimize for IDE chat
             m_ollamaBackendEnabled = true;
-            RAWRXD_LOG_INFO("Win32IDE_VSCodeUI") << "✅ Ollama bridge initialized at 127.0.0.1:11434";
+            RAWRXD_LOG_INFO("Win32IDE_VSCodeUI") << "✅ Ollama bridge initialized at 127.0.0.1:11435";
         }
         else
         {
@@ -943,9 +962,10 @@ LRESULT CALLBACK Win32IDE::SecondarySidebarProc(HWND hwnd, UINT uMsg, WPARAM wPa
         case WM_CTLCOLOREDIT:
         {
             HDC hdc = (HDC)wParam;
-            SetBkColor(hdc, VSCODE_SIDEBAR_BG);
-            SetTextColor(hdc, RGB(204, 204, 204));
-            static HBRUSH hBrush = CreateSolidBrush(VSCODE_SIDEBAR_BG);
+            // Use Adobe RGBa colors with proper conversion to COLORREF
+            SetBkColor(hdc, AdobeRGBaToCOLORREF(VSCODE_SIDEBAR_BG));
+            SetTextColor(hdc, AdobeRGBaToCOLORREF(AdobeRGBa(0.80f, 0.80f, 0.80f, 1.00f)));
+            static HBRUSH hBrush = CreateSolidBrush(AdobeRGBaToCOLORREF(VSCODE_SIDEBAR_BG));
             return (LRESULT)hBrush;
         }
     }
@@ -1360,6 +1380,35 @@ void Win32IDE::updateEnhancedStatusBar()
         std::string backendText = getActiveBackendName();
         if (!m_statusBarInfo.copilotActive)
             backendText += " (off)";
+
+        // Model info (local GGUF / resolved paths) — show last successful load size + load wall-time.
+        if (m_lastLoadedModelOk)
+        {
+            if (!m_lastLoadedModelDisplayName.empty())
+            {
+                backendText += " | ";
+                backendText += m_lastLoadedModelDisplayName;
+            }
+            if (m_lastLoadedModelBytes > 0)
+            {
+                const double gb = static_cast<double>(m_lastLoadedModelBytes) / (1024.0 * 1024.0 * 1024.0);
+                std::ostringstream szOss;
+                szOss << std::fixed << std::setprecision(gb >= 10.0 ? 0 : 1) << gb;
+                backendText += " ";
+                backendText += szOss.str();
+                backendText += "GB";
+            }
+            if (m_lastLoadedModelWallMs >= 1.0)
+            {
+                std::ostringstream msOss;
+                msOss << std::fixed << std::setprecision(m_lastLoadedModelWallMs >= 10000.0 ? 0 : 1)
+                      << (m_lastLoadedModelWallMs / 1000.0);
+                backendText += " (load ";
+                backendText += msOss.str();
+                backendText += "s)";
+            }
+        }
+
         const double tpsCopilot = METRICS.getGauge("chat.copilot.estimated_tps");
         const double tpsMini = METRICS.getGauge("chat.minimal_agentic.estimated_tps");
         const double tpsEst = (std::max)(tpsCopilot, tpsMini);

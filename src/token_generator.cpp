@@ -410,7 +410,6 @@ RawrXD::Expected<std::vector<std::string>, RawrXD::TokenError> TokenGenerator::d
 void TokenGenerator::setVulkanCompute(std::shared_ptr<VulkanCompute> vulkan) {
     m_vulkan = vulkan;
     if (m_vulkan) {
-        spdlog::info("TokenGenerator: GPU Acceleration Enabled");
         m_config.enableGpu = true;
     }
 }
@@ -419,7 +418,6 @@ RawrXD::Expected<std::vector<std::vector<int>>, RawrXD::TokenError> TokenGenerat
     const std::vector<std::string>& texts
 ) {
     if (!m_vulkan || !m_config.enableGpu) {
-        spdlog::warn("GPU encoding requested but Vulkan not available. Falling back to CPU.");
         return encodeBatch(texts);
     }
     return encodeBatch(texts);

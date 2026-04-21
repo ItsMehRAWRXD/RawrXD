@@ -27,6 +27,10 @@
 #include <cstring>
 #include <string_view>
 
+#ifndef RAWRXD_MIC_DEPS_DISABLED
+#define RAWRXD_MIC_DEPS_DISABLED 1
+#endif
+
 // ============================================================================
 // COMMAND EXPOSURE — Where a command is accessible
 // ============================================================================
@@ -68,6 +72,12 @@ enum CmdFlags : uint32_t
 // COMMAND TABLE — THE SINGLE SOURCE OF TRUTH
 // ============================================================================
 // Format: X(ID, SYMBOL, canonical_name, cli_alias, exposure, category, handler, flags)
+
+#if RAWRXD_MIC_DEPS_DISABLED
+#define RAWRXD_VOICE_CMD(...)
+#else
+#define RAWRXD_VOICE_CMD(...) X(__VA_ARGS__)
+#endif
 //
 // ID:         Win32 IDM_* value (0 = CLI-only, no GUI routing)
 // SYMBOL:     C++ enum symbol (becomes CmdID::SYMBOL)
@@ -617,17 +627,22 @@ enum CmdFlags : uint32_t
     X(9601, GAUNTLET_EXPORT, "gauntlet.export", "!gauntlet export", BOTH, "Gauntlet", handleGauntletExport, CMD_NONE)  \
                                                                                                                        \
     /* ═══════════════════ VOICE (9700-9709) ═══════════════════ */                                                    \
-    X(9700, VOICE_RECORD, "voice.record", "!voice record", BOTH, "Voice", handleVoiceRecord, CMD_NONE)                 \
-    X(9701, VOICE_PTT, "voice.ptt", "!voice ptt", BOTH, "Voice", handleVoicePTT, CMD_NONE)                             \
-    X(9702, VOICE_SPEAK, "voice.speak", "!voice speak", BOTH, "Voice", handleVoiceSpeak, CMD_NONE)                     \
-    X(9703, VOICE_JOIN_ROOM, "voice.joinRoom", "!voice join", BOTH, "Voice", handleVoiceJoinRoom, CMD_REQUIRES_NET)    \
-    X(9704, VOICE_DEVICES, "voice.devices", "!voice devices", BOTH, "Voice", handleVoiceDevices, CMD_NONE)             \
-    X(9705, VOICE_METRICS, "voice.metrics", "!voice metrics", BOTH, "Voice", handleVoiceMetrics, CMD_NONE)             \
-    X(9706, VOICE_TOGGLE_PANEL, "voice.togglePanel", "!voice status", BOTH, "Voice", handleVoiceStatus, CMD_NONE)      \
-    X(9707, VOICE_MODE_PTT, "voice.modePtt", "!voice mode", BOTH, "Voice", handleVoiceMode, CMD_NONE)                  \
-    X(9708, VOICE_MODE_CONTINUOUS, "voice.modeContinuous", "!voice continuous", BOTH, "Voice",                         \
-      handleVoiceModeContinuous, CMD_NONE)                                                                             \
-    X(9709, VOICE_MODE_DISABLED, "voice.modeDisabled", "!voice off", BOTH, "Voice", handleVoiceModeDisabled, CMD_NONE) \
+    RAWRXD_VOICE_CMD(9700, VOICE_RECORD, "voice.record", "!voice record", BOTH, "Voice", handleVoiceRecord, CMD_NONE) \
+    RAWRXD_VOICE_CMD(9701, VOICE_PTT, "voice.ptt", "!voice ptt", BOTH, "Voice", handleVoicePTT, CMD_NONE)             \
+    RAWRXD_VOICE_CMD(9702, VOICE_SPEAK, "voice.speak", "!voice speak", BOTH, "Voice", handleVoiceSpeak, CMD_NONE)     \
+    RAWRXD_VOICE_CMD(9703, VOICE_JOIN_ROOM, "voice.joinRoom", "!voice join", BOTH, "Voice", handleVoiceJoinRoom,      \
+                     CMD_REQUIRES_NET)                                                                                  \
+    RAWRXD_VOICE_CMD(9704, VOICE_DEVICES, "voice.devices", "!voice devices", BOTH, "Voice", handleVoiceDevices,       \
+                     CMD_NONE)                                                                                          \
+    RAWRXD_VOICE_CMD(9705, VOICE_METRICS, "voice.metrics", "!voice metrics", BOTH, "Voice", handleVoiceMetrics,       \
+                     CMD_NONE)                                                                                          \
+    RAWRXD_VOICE_CMD(9706, VOICE_TOGGLE_PANEL, "voice.togglePanel", "!voice status", BOTH, "Voice", handleVoiceStatus, \
+                     CMD_NONE)                                                                                          \
+    RAWRXD_VOICE_CMD(9707, VOICE_MODE_PTT, "voice.modePtt", "!voice mode", BOTH, "Voice", handleVoiceMode, CMD_NONE)  \
+    RAWRXD_VOICE_CMD(9708, VOICE_MODE_CONTINUOUS, "voice.modeContinuous", "!voice continuous", BOTH, "Voice",         \
+                     handleVoiceModeContinuous, CMD_NONE)                                                               \
+    RAWRXD_VOICE_CMD(9709, VOICE_MODE_DISABLED, "voice.modeDisabled", "!voice off", BOTH, "Voice",                    \
+                     handleVoiceModeDisabled, CMD_NONE)                                                                 \
                                                                                                                        \
     /* ═══════════════════ QW (Quality/Workflow 9800-9830) ═══════════════════ */                                      \
     X(9800, QW_SHORTCUT_EDITOR, "qw.shortcutEditor", "!qw shortcuts", BOTH, "QW", handleQwShortcutEditor, CMD_NONE)    \
@@ -707,9 +722,9 @@ enum CmdFlags : uint32_t
     X(0, CLI_AI_ENGINE, "cli.aiEngine", "!engine", CLI_ONLY, "CLI", handleAIEngineSelect, CMD_NONE)                    \
     X(0, CLI_AUTONOMY_RATE, "cli.autonomyRate", "!autonomy_rate", CLI_ONLY, "CLI", handleAutonomyRate, CMD_NONE)       \
     X(0, CLI_AUTONOMY_RUN, "cli.autonomyRun", "!autonomy_run", CLI_ONLY, "CLI", handleAutonomyRun, CMD_ASYNC)          \
-    X(0, CLI_VOICE_INIT, "cli.voiceInit", "!voice init", CLI_ONLY, "CLI", handleVoiceInit, CMD_NONE)                   \
-    X(0, CLI_VOICE_TRANSCRIBE, "cli.voiceTranscribe", "!voice transcribe", CLI_ONLY, "CLI", handleVoiceTranscribe,     \
-      CMD_NONE)                                                                                                        \
+    RAWRXD_VOICE_CMD(0, CLI_VOICE_INIT, "cli.voiceInit", "!voice init", CLI_ONLY, "CLI", handleVoiceInit, CMD_NONE)     \
+    RAWRXD_VOICE_CMD(0, CLI_VOICE_TRANSCRIBE, "cli.voiceTranscribe", "!voice transcribe", CLI_ONLY, "CLI",               \
+      handleVoiceTranscribe, CMD_NONE)                                                                                \
     X(0, CLI_SERVER_START, "cli.serverStart", "!server start", CLI_ONLY, "CLI", handleServerStart, CMD_ASYNC)          \
     X(0, CLI_SERVER_STOP, "cli.serverStop", "!server stop", CLI_ONLY, "CLI", handleServerStop, CMD_NONE)               \
     X(0, CLI_SERVER_STATUS, "cli.serverStatus", "!server status", CLI_ONLY, "CLI", handleServerStatus, CMD_NONE)       \
@@ -811,15 +826,20 @@ enum CmdFlags : uint32_t
       CMD_NONE)                                                                                                        \
                                                                                                                        \
     /* ═══════════════════ VOICE AUTOMATION (10200-10206) ═══════════════════ */                                       \
-    X(10200, VOICE_AUTO_TOGGLE, "voice.autoToggle", "!voice auto", BOTH, "Voice", handleVoiceAutoToggle, CMD_NONE)     \
-    X(10201, VOICE_AUTO_SETTINGS, "voice.autoSettings", "!voice settings", BOTH, "Voice", handleVoiceAutoSettings,     \
+    RAWRXD_VOICE_CMD(10200, VOICE_AUTO_TOGGLE, "voice.autoToggle", "!voice auto", BOTH, "Voice", handleVoiceAutoToggle, \
       CMD_NONE)                                                                                                        \
-    X(10202, VOICE_AUTO_NEXT, "voice.autoNextVoice", "!voice next", BOTH, "Voice", handleVoiceAutoNextVoice, CMD_NONE) \
-    X(10203, VOICE_AUTO_PREV, "voice.autoPrevVoice", "!voice prev", BOTH, "Voice", handleVoiceAutoPrevVoice, CMD_NONE) \
-    X(10204, VOICE_AUTO_RATE_UP, "voice.autoRateUp", "!voice rate_up", BOTH, "Voice", handleVoiceAutoRateUp, CMD_NONE) \
-    X(10205, VOICE_AUTO_RATE_DOWN, "voice.autoRateDown", "!voice rate_down", BOTH, "Voice", handleVoiceAutoRateDown,   \
-      CMD_NONE)                                                                                                        \
-    X(10206, VOICE_AUTO_STOP, "voice.autoStop", "!voice auto_stop", BOTH, "Voice", handleVoiceAutoStop, CMD_NONE)      \
+    RAWRXD_VOICE_CMD(10201, VOICE_AUTO_SETTINGS, "voice.autoSettings", "!voice settings", BOTH, "Voice",                 \
+      handleVoiceAutoSettings, CMD_NONE)                                                                              \
+    RAWRXD_VOICE_CMD(10202, VOICE_AUTO_NEXT, "voice.autoNextVoice", "!voice next", BOTH, "Voice",                      \
+      handleVoiceAutoNextVoice, CMD_NONE)                                                                             \
+    RAWRXD_VOICE_CMD(10203, VOICE_AUTO_PREV, "voice.autoPrevVoice", "!voice prev", BOTH, "Voice",                      \
+      handleVoiceAutoPrevVoice, CMD_NONE)                                                                             \
+    RAWRXD_VOICE_CMD(10204, VOICE_AUTO_RATE_UP, "voice.autoRateUp", "!voice rate_up", BOTH, "Voice",                   \
+      handleVoiceAutoRateUp, CMD_NONE)                                                                                \
+    RAWRXD_VOICE_CMD(10205, VOICE_AUTO_RATE_DOWN, "voice.autoRateDown", "!voice rate_down", BOTH, "Voice",             \
+      handleVoiceAutoRateDown, CMD_NONE)                                                                              \
+    RAWRXD_VOICE_CMD(10206, VOICE_AUTO_STOP, "voice.autoStop", "!voice auto_stop", BOTH, "Voice",                      \
+      handleVoiceAutoStop, CMD_NONE)                                                                                  \
                                                                                                                        \
     /* ═══════════════════ GAME ENGINE INTEGRATION (10619-10622) ═══════════════════ */                                \
     /* IDs 7001-7006 are reserved by resource.h for the Win32 Build menu — do not alias here. */                       \

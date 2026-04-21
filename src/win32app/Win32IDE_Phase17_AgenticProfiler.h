@@ -119,7 +119,7 @@ public:
     static uint32_t GetEpochCount();
 
     /// Returns a compact summary of top tools by accumulated cycles.
-    /// Example: "epochs=2 | compile=12345c | dumpbin=9876c"
+    /// Pattern: "epochs=2 | compile=12345c | dumpbin=9876c"
     static std::string GetTopToolsSummary(size_t maxTools = 3);
 
     /// Stable djb2 slot for a tool name (mod 16).

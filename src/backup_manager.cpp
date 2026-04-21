@@ -43,7 +43,6 @@ void BackupManager::start(int intervalMinutes) {
         m_running = true;
         // In a real app this would start a background thread
         // std::thread(&BackupManager::autoBackupLoop, this).detach();
-        std::cout << "[BackupManager] Started auto-backup service (Interval: " << intervalMinutes << "m)" << std::endl;
     }
 }
 
@@ -89,7 +88,6 @@ std::string BackupManager::createBackup(BackupType type, const std::string& targ
              return destPath.string();
         }
     } catch (const std::exception& e) {
-        std::cerr << "[BackupManager] Backup failed: " << e.what() << std::endl;
         return "";
     }
 

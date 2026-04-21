@@ -8,9 +8,10 @@
 // ============================================================================
 
 #include "feature_handlers.h"
+#include "../../include/RawrXD_ColorSpace.h"
 #include "../agent/agentic_failure_detector.hpp"
 #include "../agent/agentic_puppeteer.hpp"
-#include "../agentic/AgentOllamaClient.h"
+#include "../agentic/NativeInferenceClient.h"
 #include "../server/gguf_server_hotpatch.hpp"
 #include "../win32app/Win32IDE.h"
 #include "auto_repair_orchestrator.hpp"
@@ -38,6 +39,7 @@
 #include <vector>
 
 using RawrXD::Debugger::NativeDebuggerEngine;
+using namespace RawrXD::ColorSpace;
 
 // ============================================================================
 // Backend Configuration (engine selection state)
@@ -54,7 +56,7 @@ static struct BackendConfig
         std::string endpoint;
         bool available;
     };
-    std::vector<BackendInfo> backends = {{"Ollama (local)", "http://localhost:11434", false},
+    std::vector<BackendInfo> backends = {{"Native (local)", "http://localhost:11435", false},
                                          {"OpenAI API", "https://api.openai.com/v1", false},
                                          {"Claude API", "https://api.anthropic.com/v1", false},
                                          {"HuggingFace", "https://api-inference.huggingface.co", false},
@@ -253,43 +255,7 @@ CommandResult handleFileClose(const CommandContext& ctx)
     return CommandResult::ok("file.close");
 }
 
-CommandResult handleFileLoadModel(const CommandContext& ctx)
-{
-    if (!ctx.args || !ctx.args[0])
-    {
-        ctx.output("Usage: !model_load <path-to-gguf>\n");
-        return CommandResult::error("file.loadModel: missing path");
-    }
-    // Verify GGUF file exists and validate magic bytes
-    HANDLE h =
-        CreateFileA(ctx.args, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-    if (h == INVALID_HANDLE_VALUE)
-    {
-        std::string msg = "[Model] File not found: " + std::string(ctx.args) + "\n";
-        ctx.output(msg.c_str());
-        return CommandResult::error("file.loadModel: not found");
-    }
-    // Read GGUF magic: 0x46475547 ('GGUF')
-    uint32_t magic = 0;
-    DWORD bytesRead = 0;
-    ReadFile(h, &magic, sizeof(magic), &bytesRead, nullptr);
-    LARGE_INTEGER fileSize;
-    GetFileSizeEx(h, &fileSize);
-    CloseHandle(h);
-    if (magic != 0x46475547u)
-    {
-        ctx.output("[Model] Invalid GGUF magic bytes. Not a valid model file.\n");
-        return CommandResult::error("file.loadModel: invalid GGUF");
-    }
-    std::ostringstream oss;
-    oss << "[Model] Valid GGUF: " << ctx.args << " (" << (fileSize.QuadPart / (1024 * 1024)) << " MB)\n";
-    oss << "[Model] Dispatching to GGUFLoader...\n";
-    ctx.output(oss.str().c_str());
-    // Route to subsystem loader
-    // Note: SubsystemId::ModelManagement does not exist; dispatch via feature registry
-    // RAWRXD_INVOKE(Agent);
-    return CommandResult::ok("file.loadModel");
-}
+// handleFileLoadModel -> feature_handlers_model_load.cpp (shared by IDE + autonomy smoke test)
 
 CommandResult handleFileModelFromHF(const CommandContext& ctx)
 {
@@ -351,23 +317,23 @@ CommandResult handleFileModelFromOllama(const CommandContext& ctx)
 {
     if (!ctx.args || !ctx.args[0])
     {
-        ctx.output("Usage: !model_ollama <model-name>\n");
-        return CommandResult::error("file.modelFromOllama: missing model");
+        ctx.output("Usage: !model_native <model-name>\n");
+        return CommandResult::error("file.modelFromnative: missing model");
     }
     std::string modelName(ctx.args);
-    ctx.output(("[Ollama] Pulling model: " + modelName + "\n").c_str());
-    // Use AgentOllamaClient to pull model via Ollama API
+    ctx.output(("[Native] Pulling model: " + modelName + "\n").c_str());
+    // Use NativeInferenceClient to pull model via Ollama API
     try
     {
-        RawrXD::Agent::OllamaConfig ollamaCfg;
+        RawrXD::Agent::NativeInferenceConfig ollamaCfg;
         ollamaCfg.host = "127.0.0.1";
         ollamaCfg.port = 11434;
-        RawrXD::Agent::AgentOllamaClient client(ollamaCfg);
+        RawrXD::Agent::NativeInferenceClient client(ollamaCfg);
         if (!client.TestConnection())
         {
-            ctx.output("[Ollama] Cannot connect to Ollama at 127.0.0.1:11434.\n");
-            ctx.output("[Ollama] Start ollama with: ollama serve\n");
-            return CommandResult::error("file.modelFromOllama: no connection");
+            ctx.output("[Native] Cannot connect to Ollama at 127.0.0.1:11435.\n");
+            ctx.output("[Native] Start native inference server with: native inference serve\n");
+            return CommandResult::error("file.modelFromnative: no connection");
         }
         // List available models to verify the name
         auto models = client.ListModels();
@@ -382,14 +348,14 @@ CommandResult handleFileModelFromOllama(const CommandContext& ctx)
         }
         if (found)
         {
-            ctx.output(("[Ollama] Model '" + modelName + "' is available locally.\n").c_str());
+            ctx.output(("[Native] Model '" + modelName + "' is available locally.\n").c_str());
         }
         else
         {
             ctx.output(
-                ("[Ollama] Model '" + modelName + "' not found locally. Run: ollama pull " + modelName + "\n").c_str());
+                ("[Native] Model '" + modelName + "' not found locally. Run: rawrxd pull " + modelName + "\n").c_str());
             // Attempt pull via CLI
-            std::string cmd = "ollama pull " + modelName + " 2>&1";
+            std::string cmd = "rawrxd pull " + modelName + " 2>&1";
             FILE* pipe = _popen(cmd.c_str(), "r");
             if (pipe)
             {
@@ -401,20 +367,20 @@ CommandResult handleFileModelFromOllama(const CommandContext& ctx)
                 int rc = _pclose(pipe);
                 if (rc == 0)
                 {
-                    ctx.output("[Ollama] Pull complete.\n");
+                    ctx.output("[Native] Pull complete.\n");
                 }
                 else
                 {
-                    ctx.output("[Ollama] Pull failed.\n");
-                    return CommandResult::error("file.modelFromOllama: pull failed");
+                    ctx.output("[Native] Pull failed.\n");
+                    return CommandResult::error("file.modelFromnative: pull failed");
                 }
             }
         }
     }
     catch (...)
     {
-        ctx.output("[Ollama] Exception during model operation.\n");
-        return CommandResult::error("file.modelFromOllama: exception");
+        ctx.output("[Native] Exception during model operation.\n");
+        return CommandResult::error("file.modelFromnative: exception");
     }
     return CommandResult::ok("file.modelFromOllama");
 }
@@ -529,7 +495,7 @@ CommandResult handleFileUnifiedLoad(const CommandContext& ctx)
         return handleFileLoadModel(ctx);
     }
     // Assume Ollama model name
-    ctx.output("[Unified] Assuming Ollama model. Routing to model_ollama handler.\n");
+    ctx.output("[Unified] Assuming native model. Routing to model_native handler.\n");
     return handleFileModelFromOllama(ctx);
 }
 
@@ -542,7 +508,7 @@ CommandResult handleFileQuickLoad(const CommandContext& ctx)
     if (hFind == INVALID_HANDLE_VALUE)
     {
         ctx.output("[QuickLoad] No cached models found in .\\models\\\n");
-        ctx.output("[QuickLoad] Use !model_url or !model_ollama to download a model first.\n");
+        ctx.output("[QuickLoad] Use !model_url or !model_native to download a model first.\n");
         return CommandResult::ok("file.quickLoad");
     }
     // Find most recently modified GGUF file
@@ -2165,9 +2131,9 @@ CommandResult handleAIEngineSelect(const CommandContext& ctx)
     std::lock_guard<std::mutex> lock(g_backendCfg.mtx);
     g_backendCfg.activeBackend = engine;
     // Test connectivity for Ollama
-    if (engine == "ollama" || engine == "local")
+    if (engine == "native" || engine == "local")
     {
-        FILE* pipe = _popen("curl -s http://localhost:11434/api/version 2>&1", "r");
+        FILE* pipe = _popen("curl -s http://localhost:11435/api/version 2>&1", "r");
         bool reachable = false;
         if (pipe)
         {
@@ -2181,7 +2147,7 @@ CommandResult handleAIEngineSelect(const CommandContext& ctx)
         g_backendCfg.connected = reachable;
         for (auto& b : g_backendCfg.backends)
         {
-            if (b.name.find("Ollama") != std::string::npos)
+            if (b.name.find("native") != std::string::npos)
                 b.available = reachable;
         }
     }
@@ -2272,10 +2238,10 @@ extern "C" long long RunInference_fallback(const char* prompt, long long maxToke
     std::string response;
     if (prompt && prompt[0])
     {
-        RawrXD::Agent::OllamaConfig cfg;
+        RawrXD::Agent::NativeInferenceConfig cfg;
         cfg.host = "127.0.0.1";
         cfg.port = 11434;
-        RawrXD::Agent::AgentOllamaClient client(cfg);
+        RawrXD::Agent::NativeInferenceClient client(cfg);
         if (client.TestConnection())
         {
             std::vector<RawrXD::Agent::ChatMessage> msgs;
@@ -2803,11 +2769,8 @@ CommandResult handleRECFGAnalysis(const CommandContext& ctx)
 }
 
 // ============================================================================
-// VOICE — Wired to Win32 multimedia + SAPI TTS
+// VOICE — Microphone/audio probing disabled in this build
 // ============================================================================
-
-#include <mmsystem.h>
-#pragma comment(lib, "winmm.lib")
 
 static struct VoiceState
 {
@@ -2819,8 +2782,7 @@ static struct VoiceState
     uint64_t totalSamplesRecorded = 0;
     uint64_t totalSamplesSpoken = 0;
     uint64_t transcribeCount = 0;
-    HWAVEIN hWaveIn = nullptr;
-    HWAVEOUT hWaveOut = nullptr;
+    void* hAudioOut = nullptr;
     std::vector<uint8_t> recordBuffer;  // Captured audio data (16-bit PCM)
 } g_voiceState;
 
@@ -2831,14 +2793,11 @@ CommandResult handleVoiceInit(const CommandContext& ctx)
         ctx.output("[Voice] Already initialized.\n");
         return CommandResult::ok("voice.init");
     }
-    // Check available audio devices
-    UINT inDevs = waveInGetNumDevs();
-    UINT outDevs = waveOutGetNumDevs();
-    g_voiceState.initialized = (inDevs > 0 || outDevs > 0);
+    UINT outDevs = 0;
+    g_voiceState.initialized = (outDevs > 0);
     g_voiceState.currentMode = "ptt";
     std::ostringstream oss;
     oss << "[Voice] Engine initialized.\n"
-        << "  Input devices:  " << inDevs << "\n"
         << "  Output devices: " << outDevs << "\n"
         << "  Sample rate:    " << g_voiceState.sampleRate << " Hz\n"
         << "  Mode:           " << g_voiceState.currentMode << "\n"
@@ -2854,85 +2813,8 @@ CommandResult handleVoiceRecord(const CommandContext& ctx)
         ctx.output("[Voice] Not initialized. Run !voice init first.\n");
         return CommandResult::error("voice.record: not initialized");
     }
-    g_voiceState.recording = !g_voiceState.recording;
-    if (g_voiceState.recording)
-    {
-        // Open waveIn device for recording
-        WAVEFORMATEX wfx{};
-        wfx.wFormatTag = WAVE_FORMAT_PCM;
-        wfx.nChannels = 1;
-        wfx.nSamplesPerSec = g_voiceState.sampleRate;
-        wfx.wBitsPerSample = 16;
-        wfx.nBlockAlign = wfx.nChannels * wfx.wBitsPerSample / 8;
-        wfx.nAvgBytesPerSec = wfx.nSamplesPerSec * wfx.nBlockAlign;
-        wfx.cbSize = 0;
-        MMRESULT mr = waveInOpen(&g_voiceState.hWaveIn, WAVE_MAPPER, &wfx, 0, 0, CALLBACK_NULL);
-        if (mr != MMSYSERR_NOERROR)
-        {
-            g_voiceState.recording = false;
-            char err[128];
-            snprintf(err, sizeof(err), "[Voice] waveInOpen failed (err %d)\n", (int)mr);
-            ctx.output(err);
-            return CommandResult::error("voice.record: waveInOpen failed");
-        }
-        // Allocate recording buffer (5 seconds)
-        size_t bufSize = g_voiceState.sampleRate * 2 * 5;  // 16-bit mono, 5 sec
-        g_voiceState.recordBuffer.resize(bufSize);
-        WAVEHDR waveHdr{};
-        waveHdr.lpData = reinterpret_cast<LPSTR>(g_voiceState.recordBuffer.data());
-        waveHdr.dwBufferLength = static_cast<DWORD>(bufSize);
-        waveInPrepareHeader(g_voiceState.hWaveIn, &waveHdr, sizeof(WAVEHDR));
-        waveInAddBuffer(g_voiceState.hWaveIn, &waveHdr, sizeof(WAVEHDR));
-        waveInStart(g_voiceState.hWaveIn);
-        ctx.output("[Voice] Recording started (waveIn device opened, 5s buffer)...\n");
-    }
-    else
-    {
-        // Stop recording
-        if (g_voiceState.hWaveIn)
-        {
-            waveInStop(g_voiceState.hWaveIn);
-            waveInReset(g_voiceState.hWaveIn);
-            waveInClose(g_voiceState.hWaveIn);
-            g_voiceState.hWaveIn = nullptr;
-        }
-        g_voiceState.totalSamplesRecorded += g_voiceState.sampleRate * 5;
-        // Write captured audio to WAV file
-        FILE* wav = fopen("voice_buffer.wav", "wb");
-        if (wav && !g_voiceState.recordBuffer.empty())
-        {
-            // WAV header
-            uint32_t dataSize = static_cast<uint32_t>(g_voiceState.recordBuffer.size());
-            uint32_t fileSize = 36 + dataSize;
-            uint16_t audioFmt = 1, numCh = 1, bitsPerSamp = 16;
-            uint32_t sr = g_voiceState.sampleRate;
-            uint32_t byteRate = sr * numCh * bitsPerSamp / 8;
-            uint16_t blockAlign = numCh * bitsPerSamp / 8;
-            fwrite("RIFF", 1, 4, wav);
-            fwrite(&fileSize, 4, 1, wav);
-            fwrite("WAVEfmt ", 1, 8, wav);
-            uint32_t fmtSize = 16;
-            fwrite(&fmtSize, 4, 1, wav);
-            fwrite(&audioFmt, 2, 1, wav);
-            fwrite(&numCh, 2, 1, wav);
-            fwrite(&sr, 4, 1, wav);
-            fwrite(&byteRate, 4, 1, wav);
-            fwrite(&blockAlign, 2, 1, wav);
-            fwrite(&bitsPerSamp, 2, 1, wav);
-            fwrite("data", 1, 4, wav);
-            fwrite(&dataSize, 4, 1, wav);
-            fwrite(g_voiceState.recordBuffer.data(), 1, dataSize, wav);
-            fclose(wav);
-            ctx.output("[Voice] Recording stopped. Saved to voice_buffer.wav\n");
-        }
-        else
-        {
-            if (wav)
-                fclose(wav);
-            ctx.output("[Voice] Recording stopped. Buffer captured (save failed).\n");
-        }
-    }
-    return CommandResult::ok("voice.record");
+    ctx.output("[Voice] Microphone recording is disabled in this build.\n");
+    return CommandResult::error("voice.record: disabled");
 }
 
 CommandResult handleVoiceTranscribe(const CommandContext& ctx)
@@ -2952,7 +2834,7 @@ CommandResult handleVoiceTranscribe(const CommandContext& ctx)
         return CommandResult::error("voice.transcribe: no buffer");
     }
     // Attempt transcription via Ollama Whisper endpoint
-    FILE* pipe = _popen("curl -s http://localhost:11434/api/generate "
+    FILE* pipe = _popen("curl -s http://localhost:11435/api/generate "
                         "-d \"{\\\"model\\\":\\\"whisper\\\","
                         "\\\"prompt\\\":\\\"transcribe voice_buffer.wav\\\"}\" 2>&1",
                         "r");
@@ -2983,7 +2865,7 @@ CommandResult handleVoiceTranscribe(const CommandContext& ctx)
                 oss << "  Buffer size: " << sz << " bytes\n"
                     << "  Est. duration: ~" << (sz / (g_voiceState.sampleRate * 2)) << " sec\n"
                     << "  Format: 16-bit PCM mono @ " << g_voiceState.sampleRate << " Hz\n"
-                    << "  To transcribe: install whisper model via !model_ollama whisper\n";
+                    << "  To transcribe: install whisper model via !model_native whisper\n";
                 ctx.output(oss.str().c_str());
             }
         }
@@ -3037,30 +2919,11 @@ CommandResult handleVoiceSpeak(const CommandContext& ctx)
 
 CommandResult handleVoiceDevices(const CommandContext& ctx)
 {
-    UINT inDevs = waveInGetNumDevs();
-    UINT outDevs = waveOutGetNumDevs();
+    UINT outDevs = 0;
     std::ostringstream oss;
     oss << "=== Audio Devices ===\n";
-    oss << "Input devices:\n";
-    for (UINT i = 0; i < inDevs && i < 16; i++)
-    {
-        WAVEINCAPSA caps;
-        if (waveInGetDevCapsA(i, &caps, sizeof(caps)) == MMSYSERR_NOERROR)
-        {
-            oss << "  [" << i << "] " << caps.szPname << " (ch=" << caps.wChannels << ")\n";
-        }
-    }
     oss << "Output devices:\n";
-    for (UINT i = 0; i < outDevs && i < 16; i++)
-    {
-        WAVEOUTCAPSA caps;
-        if (waveOutGetDevCapsA(i, &caps, sizeof(caps)) == MMSYSERR_NOERROR)
-        {
-            oss << "  [" << i << "] " << caps.szPname << " (ch=" << caps.wChannels << ")\n";
-        }
-    }
-    if (inDevs == 0 && outDevs == 0)
-        oss << "  (no devices found)\n";
+    oss << "  (audio device probing disabled in this build)\n";
     ctx.output(oss.str().c_str());
     return CommandResult::ok("voice.devices");
 }
@@ -3094,8 +2957,7 @@ CommandResult handleVoiceStatus(const CommandContext& ctx)
         << "  Total recorded:  " << g_voiceState.totalSamplesRecorded << " samples\n"
         << "  Transcriptions:  " << g_voiceState.transcribeCount << "\n"
         << "  TTS invocations: " << g_voiceState.totalSamplesSpoken << "\n"
-        << "  Input devices:   " << waveInGetNumDevs() << "\n"
-        << "  Output devices:  " << waveOutGetNumDevs() << "\n";
+        << "  Output devices:  " << 0 << "\n";
     ctx.output(oss.str().c_str());
     return CommandResult::ok("voice.status");
 }
@@ -3300,7 +3162,7 @@ static struct ServerProcessState
     HANDLE hProcess = nullptr;
     HANDLE hThread = nullptr;
     DWORD pid = 0;
-    std::string command = "ollama serve";
+    std::string command = "native inference serve";
 
     bool isRunningNoLock() const
     {
@@ -3520,34 +3382,50 @@ CommandResult handleGitDiff(const CommandContext& ctx)
 }
 
 // ============================================================================
-// THEMES
+// THEMES - Adobe RGBa Color Space
 // ============================================================================
 
-// Theme color definitions
+// Theme color definitions using Adobe RGBa for professional color accuracy
 static struct ThemeEntry
 {
     const char* name;
-    COLORREF bg;
-    COLORREF fg;
-    COLORREF accent;
+    AdobeRGBa bg;
+    AdobeRGBa fg;
+    AdobeRGBa accent;
     BYTE alpha;  // window transparency (255 = opaque)
 } g_themes[] = {
-    {"dark", RGB(30, 30, 30), RGB(212, 212, 212), RGB(0, 122, 204), 255},
-    {"light", RGB(255, 255, 255), RGB(0, 0, 0), RGB(0, 122, 204), 255},
-    {"monokai", RGB(39, 40, 34), RGB(248, 248, 242), RGB(166, 226, 46), 255},
-    {"dracula", RGB(40, 42, 54), RGB(248, 248, 242), RGB(189, 147, 249), 255},
-    {"gruvbox", RGB(40, 40, 40), RGB(235, 219, 178), RGB(215, 153, 33), 255},
-    {"solarized-dark", RGB(0, 43, 54), RGB(131, 148, 150), RGB(38, 139, 210), 255},
-    {"solarized-light", RGB(253, 246, 227), RGB(101, 123, 131), RGB(38, 139, 210), 255},
-    {"nord", RGB(46, 52, 64), RGB(216, 222, 233), RGB(136, 192, 208), 255},
-    {"one-dark", RGB(40, 44, 52), RGB(171, 178, 191), RGB(97, 175, 239), 255},
-    {"one-light", RGB(250, 250, 250), RGB(56, 58, 66), RGB(64, 120, 242), 255},
-    {"github-dark", RGB(13, 17, 23), RGB(201, 209, 217), RGB(88, 166, 255), 255},
-    {"github-light", RGB(255, 255, 255), RGB(31, 35, 40), RGB(9, 105, 218), 255},
-    {"catppuccin", RGB(30, 30, 46), RGB(205, 214, 244), RGB(203, 166, 247), 255},
-    {"ayu-dark", RGB(10, 14, 20), RGB(179, 186, 197), RGB(255, 180, 84), 255},
-    {"ayu-light", RGB(250, 250, 250), RGB(95, 104, 117), RGB(255, 154, 0), 255},
-    {"rawrxd-neon", RGB(10, 10, 30), RGB(0, 255, 128), RGB(255, 0, 255), 240},
+    // dark - VSU Acrylic DarkBase
+    {"dark", AdobeRGBa(0.12f, 0.12f, 0.12f, 1.00f), AdobeRGBa(0.83f, 0.83f, 0.83f, 1.00f), VSU::Accents::Blue, 255},
+    // light - VSU Mica LightTint
+    {"light", VSU::Mica::LightTint, AdobeRGBa(0.00f, 0.00f, 0.00f, 1.00f), VSU::Accents::Blue, 255},
+    // monokai - Dark with green accent
+    {"monokai", AdobeRGBa(0.15f, 0.16f, 0.13f, 1.00f), AdobeRGBa(0.97f, 0.97f, 0.95f, 1.00f), AdobeRGBa(0.65f, 0.89f, 0.18f, 1.00f), 255},
+    // dracula - Dark with purple accent
+    {"dracula", AdobeRGBa(0.16f, 0.16f, 0.21f, 1.00f), AdobeRGBa(0.97f, 0.97f, 0.95f, 1.00f), AdobeRGBa(0.74f, 0.58f, 0.98f, 1.00f), 255},
+    // gruvbox - Warm dark theme
+    {"gruvbox", AdobeRGBa(0.16f, 0.16f, 0.16f, 1.00f), AdobeRGBa(0.92f, 0.86f, 0.70f, 1.00f), AdobeRGBa(0.84f, 0.60f, 0.13f, 1.00f), 255},
+    // solarized-dark
+    {"solarized-dark", AdobeRGBa(0.00f, 0.17f, 0.21f, 1.00f), AdobeRGBa(0.51f, 0.58f, 0.59f, 1.00f), AdobeRGBa(0.15f, 0.55f, 0.82f, 1.00f), 255},
+    // solarized-light
+    {"solarized-light", AdobeRGBa(0.99f, 0.96f, 0.89f, 1.00f), AdobeRGBa(0.40f, 0.48f, 0.51f, 1.00f), AdobeRGBa(0.15f, 0.55f, 0.82f, 1.00f), 255},
+    // nord - Arctic theme
+    {"nord", AdobeRGBa(0.18f, 0.20f, 0.25f, 1.00f), AdobeRGBa(0.85f, 0.87f, 0.91f, 1.00f), AdobeRGBa(0.53f, 0.75f, 0.82f, 1.00f), 255},
+    // one-dark
+    {"one-dark", AdobeRGBa(0.16f, 0.17f, 0.20f, 1.00f), AdobeRGBa(0.67f, 0.70f, 0.75f, 1.00f), AdobeRGBa(0.38f, 0.69f, 0.94f, 1.00f), 255},
+    // one-light
+    {"one-light", AdobeRGBa(0.98f, 0.98f, 0.98f, 1.00f), AdobeRGBa(0.22f, 0.23f, 0.26f, 1.00f), AdobeRGBa(0.25f, 0.47f, 0.95f, 1.00f), 255},
+    // github-dark
+    {"github-dark", AdobeRGBa(0.05f, 0.07f, 0.09f, 1.00f), AdobeRGBa(0.79f, 0.82f, 0.85f, 1.00f), AdobeRGBa(0.35f, 0.65f, 1.00f, 1.00f), 255},
+    // github-light
+    {"github-light", VSU::Mica::LightTint, AdobeRGBa(0.12f, 0.14f, 0.16f, 1.00f), AdobeRGBa(0.04f, 0.41f, 0.85f, 1.00f), 255},
+    // catppuccin
+    {"catppuccin", AdobeRGBa(0.12f, 0.12f, 0.18f, 1.00f), AdobeRGBa(0.80f, 0.84f, 0.96f, 1.00f), AdobeRGBa(0.80f, 0.65f, 0.97f, 1.00f), 255},
+    // ayu-dark
+    {"ayu-dark", AdobeRGBa(0.04f, 0.05f, 0.08f, 1.00f), AdobeRGBa(0.70f, 0.73f, 0.77f, 1.00f), AdobeRGBa(1.00f, 0.71f, 0.33f, 1.00f), 255},
+    // ayu-light
+    {"ayu-light", VSU::Mica::LightTint, AdobeRGBa(0.37f, 0.41f, 0.46f, 1.00f), AdobeRGBa(1.00f, 0.60f, 0.00f, 1.00f), 255},
+    // rawrxd-neon - Signature theme with transparency
+    {"rawrxd-neon", AdobeRGBa(0.04f, 0.04f, 0.12f, 1.00f), AdobeRGBa(0.00f, 1.00f, 0.50f, 1.00f), AdobeRGBa(1.00f, 0.00f, 1.00f, 1.00f), 240},
 };
 static const char* g_activeTheme = "dark";
 
@@ -3605,10 +3483,10 @@ CommandResult handleThemeSet(const CommandContext& ctx)
     }
     std::ostringstream oss;
     oss << "[Theme] Set to: " << found->name << "\n"
-        << "  Background: RGB(" << (int)GetRValue(found->bg) << "," << (int)GetGValue(found->bg) << ","
-        << (int)GetBValue(found->bg) << ")\n"
-        << "  Foreground: RGB(" << (int)GetRValue(found->fg) << "," << (int)GetGValue(found->fg) << ","
-        << (int)GetBValue(found->fg) << ")\n"
+        << "  Background: RGB(" << (int)(found->bg.r * 255) << "," << (int)(found->bg.g * 255) << ","
+        << (int)(found->bg.b * 255) << ")\n"
+        << "  Foreground: RGB(" << (int)(found->fg.r * 255) << "," << (int)(found->fg.g * 255) << ","
+        << (int)(found->fg.b * 255) << ")\n"
         << "  Opacity:    " << (int)found->alpha << "/255\n";
     ctx.output(oss.str().c_str());
     return CommandResult::ok("theme.set");
@@ -3997,7 +3875,7 @@ CommandResult handleHelpDocs(const CommandContext& ctx)
         HINSTANCE result = ShellExecuteA(nullptr, "open", docsPath.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
         if (reinterpret_cast<intptr_t>(result) > 32)
         {
-            ctx.output("[Help] Opened docs folder in Explorer. See IDE_DOCUMENTATION_INDEX.md for index.\n");
+            ctx.output("[Help] Opened docs folder in Explorer. See docs/index.md for pointers.\n");
         }
         else
         {

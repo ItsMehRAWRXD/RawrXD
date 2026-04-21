@@ -4,8 +4,11 @@ param(
     [switch]$AllDays,
     [switch]$Strict,
     [switch]$Fast,
+    [switch]$FastSmoke,
     [switch]$NoBuild,
-    [switch]$NoTests
+    [switch]$NoTests,
+    [string]$BuildDir = "",
+    [string[]]$Day2Targets = @()
 )
 
 Set-StrictMode -Version Latest
@@ -30,6 +33,7 @@ if ($AllDays) {
 }
 
 if ($Strict) { $invokeArgs += "-Strict" }
+if ($FastSmoke) { $invokeArgs += "-FastSmoke" }
 
 if ($Fast) {
     $invokeArgs += "-NoBuild"
@@ -37,6 +41,15 @@ if ($Fast) {
 } else {
     if ($NoBuild) { $invokeArgs += "-NoBuild" }
     if ($NoTests) { $invokeArgs += "-NoTests" }
+}
+
+if ($BuildDir) {
+    $invokeArgs += @("-BuildDir", $BuildDir)
+}
+
+if ($Day2Targets.Count -gt 0) {
+    $invokeArgs += @("-Day2Targets")
+    $invokeArgs += $Day2Targets
 }
 
 Write-Host "Launching 14-day finisher orchestrator..." -ForegroundColor Cyan

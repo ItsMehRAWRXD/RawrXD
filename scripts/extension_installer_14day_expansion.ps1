@@ -1,15 +1,18 @@
 param(
-    [ValidateRange(1,14)]
+    [ValidateRange(1,15)]
     [int]$Day = 1,
     [switch]$Live,
     [switch]$LiveInstall,
     [switch]$Strict,
+    [switch]$SkipIntegrationGate,
     [string]$BuildDir = "D:/rawrxd/build",
     [string]$ReportDir = "D:/rawrxd/contract_reports/extension-installer"
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+
+$repoRoot = Split-Path -Parent $PSScriptRoot
 
 function Ensure-Dir([string]$Path) {
     if (-not (Test-Path $Path)) {
@@ -37,6 +40,42 @@ function Run-Smoke([string[]]$SmokeArgs, [string]$Label) {
 
     if ($Strict -and $exitCode -ne 0) {
         throw "Smoke run failed in strict mode: $Label"
+    }
+
+    return [pscustomobject]@{
+        Label = $Label
+        ExitCode = $exitCode
+        OutFile = $out
+        ErrFile = $err
+    }
+}
+
+function Run-IntegrationGateMinimal([string]$Label) {
+    $gateScript = Join-Path $repoRoot "scripts\Run-IntegrationGateMinimal.ps1"
+    if (-not (Test-Path -LiteralPath $gateScript)) {
+        throw "Integration gate script not found: $gateScript"
+    }
+
+    $stamp = Get-Date -Format "yyyyMMdd_HHmmss"
+    $out = Join-Path $ReportDir "${stamp}_${Label}.out.txt"
+    $err = Join-Path $ReportDir "${stamp}_${Label}.err.txt"
+
+    $gateArgs = @("-NoProfile", "-File", $gateScript)
+    if ($BuildDir) {
+        $gateArgs += @("-BuildDir", $BuildDir)
+    }
+    $gateArgs += "-TryBuildExtensionInstaller"
+
+    Write-Host "[15D] Running integration gate: pwsh $($gateArgs -join ' ')"
+    & pwsh @gateArgs 1> $out 2> $err
+    $exitCode = $LASTEXITCODE
+
+    Write-Host "[15D] Integration gate ExitCode=$exitCode"
+    Write-Host "[15D] Out=$out"
+    Write-Host "[15D] Err=$err"
+
+    if ($Strict -and $exitCode -ne 0) {
+        throw "Integration gate failed in strict mode: $Label"
     }
 
     return [pscustomobject]@{
@@ -123,11 +162,22 @@ switch ($Day) {
         $results += Run-Smoke -SmokeArgs $args -Label "day13_release_gate"
     }
     14 {
-        # Final production certification pass.
-        $args = @("--failure-inject", "--stress", "10")
-        if ($LiveInstall) { $args += "--live-install" }
-        if ($Live) { $args += "--live" }
+        # Final production certification pass (matches docs: live + failure + stress-live 10; offline fallback without -Live).
+        if ($Live) {
+            $args = @("--live", "--failure-inject", "--stress-live", "10")
+            if ($LiveInstall) { $args += "--live-install" }
+        }
+        else {
+            $args = @("--failure-inject", "--stress", "10")
+        }
         $results += Run-Smoke -SmokeArgs $args -Label "day14_certification"
+    }
+    15 {
+        # Day 15: installer regression baseline + minimal system integration gate (IDE/agentic smoke chain).
+        $results += Run-Smoke -SmokeArgs @("--failure-inject", "--stress", "3") -Label "day15_installer_regression_baseline"
+        if (-not $SkipIntegrationGate) {
+            $results += Run-IntegrationGateMinimal -Label "day15_integration_gate_minimal"
+        }
     }
     default {
         throw "Unsupported day: $Day"
@@ -136,8 +186,8 @@ switch ($Day) {
 
 $summaryPath = Join-Path $ReportDir ("summary_day{0:00}_{1}.txt" -f $Day, (Get-Date -Format "yyyyMMdd_HHmmss"))
 $summary = @()
-$summary += "RawrXD Extension Installer 14-Day Expansion"
-$summary += "Day=$Day Live=$Live LiveInstall=$LiveInstall Strict=$Strict"
+$summary += "RawrXD Extension Installer expansion (days 1-15; day 15 adds integration gate)"
+$summary += "Day=$Day Live=$Live LiveInstall=$LiveInstall Strict=$Strict SkipIntegrationGate=$SkipIntegrationGate"
 $summary += ""
 foreach ($r in $results) {
     $summary += ("Label={0}" -f $r.Label)

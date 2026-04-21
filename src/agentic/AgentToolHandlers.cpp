@@ -17,6 +17,8 @@
 #include "SovereignAssembler.h"
 #include "../win32app/TodoManager.h"
 #include "../collab/CollabToolHandlers.h"
+#include "image_generator/image_generator.h"
+#include "video/tubi_backend.h"
 
 #include "../runtime/SemanticRetrieval.h"
 #include "native_debugger_engine.h"
@@ -67,6 +69,74 @@ std::string ToForwardSlashes(std::string value)
 {
     std::replace(value.begin(), value.end(), '\\', '/');
     return value;
+}
+
+std::string NormalizeDispatchToolName(std::string value)
+{
+    if (value.empty())
+    {
+        return value;
+    }
+
+    for (char& ch : value)
+    {
+        if (std::isalnum(static_cast<unsigned char>(ch)))
+        {
+            ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+        }
+        else
+        {
+            ch = '_';
+        }
+    }
+
+    std::string collapsed;
+    collapsed.reserve(value.size());
+    bool previousUnderscore = false;
+    for (char ch : value)
+    {
+        if (ch == '_')
+        {
+            if (!previousUnderscore)
+            {
+                collapsed.push_back('_');
+                previousUnderscore = true;
+            }
+        }
+        else
+        {
+            collapsed.push_back(ch);
+            previousUnderscore = false;
+        }
+    }
+
+    while (!collapsed.empty() && collapsed.front() == '_')
+    {
+        collapsed.erase(collapsed.begin());
+    }
+    while (!collapsed.empty() && collapsed.back() == '_')
+    {
+        collapsed.pop_back();
+    }
+
+    if (collapsed == "create_file")
+    {
+        return "write_file";
+    }
+    if (collapsed == "run_command" || collapsed == "terminal_execute")
+    {
+        return "execute_command";
+    }
+    if (collapsed == "list_files")
+    {
+        return "list_dir";
+    }
+    if (collapsed == "grep")
+    {
+        return "search_code";
+    }
+
+    return collapsed;
 }
 
 std::string TrimAscii(std::string value)
@@ -1385,6 +1455,269 @@ double CosineScore(const IndexedFile& f, const std::unordered_map<std::string, d
             dot += kv.second * it->second;
     }
     return dot / (f.norm * qnorm);
+}
+
+constexpr uint32_t kMemorySemanticDims = 256u;
+constexpr size_t kMemorySemanticMaxBytes = 256 * 1024;
+
+struct MemorySemanticRecord
+{
+    std::string virtualPath;
+    std::string summary;
+    std::vector<float> embedding;
+};
+
+fs::path GetMemorySemanticIndexPath()
+{
+    fs::path base = GetMemoryBaseForScope("user");
+    std::error_code ec;
+    fs::create_directories(base, ec);
+    return base / ".semantic_index.v1.json";
+}
+
+bool IsInternalMemoryArtifact(const fs::path& file)
+{
+    const std::string name = ToLowerCopy(file.filename().string());
+    return name == ".semantic_index.v1.json" || name == ".semantic_index.last_error.txt";
+}
+
+std::string BuildMemoryAutoSummary(const std::string& content)
+{
+    const auto lines = SplitLinesPreserveEmpty(content);
+    std::ostringstream summary;
+    size_t emitted = 0;
+    size_t totalChars = 0;
+    for (const auto& raw : lines)
+    {
+        const std::string line = TrimAscii(raw);
+        if (line.empty())
+        {
+            continue;
+        }
+        if (line.rfind("#", 0) == 0)
+        {
+            continue;
+        }
+        if (emitted > 0)
+        {
+            summary << " | ";
+        }
+        const std::string clipped = line.size() > 120 ? line.substr(0, 120) + "..." : line;
+        summary << clipped;
+        ++emitted;
+        totalChars += clipped.size();
+        if (emitted >= 3 || totalChars >= 240)
+        {
+            break;
+        }
+    }
+
+    std::string result = summary.str();
+    if (result.empty())
+    {
+        const std::string trimmed = TrimAscii(content);
+        result = trimmed.size() > 180 ? trimmed.substr(0, 180) + "..." : trimmed;
+    }
+    if (result.empty())
+    {
+        result = "(empty memory entry)";
+    }
+    return result;
+}
+
+double DenseCosine(const std::vector<float>& a, const std::vector<float>& b)
+{
+    if (a.empty() || a.size() != b.size())
+    {
+        return 0.0;
+    }
+
+    double dot = 0.0;
+    double na = 0.0;
+    double nb = 0.0;
+    for (size_t i = 0; i < a.size(); ++i)
+    {
+        const double av = static_cast<double>(a[i]);
+        const double bv = static_cast<double>(b[i]);
+        dot += (av * bv);
+        na += (av * av);
+        nb += (bv * bv);
+    }
+    if (!(na > 0.0) || !(nb > 0.0))
+    {
+        return 0.0;
+    }
+    return dot / (std::sqrt(na) * std::sqrt(nb));
+}
+
+bool SaveMemorySemanticIndex(const std::vector<MemorySemanticRecord>& records, std::string& outError)
+{
+    json root = json::object();
+    root["version"] = 1;
+    root["dimensions"] = kMemorySemanticDims;
+    root["records"] = json::array();
+    for (const auto& record : records)
+    {
+        json row = json::object();
+        row["path"] = record.virtualPath;
+        row["summary"] = record.summary;
+        row["embedding"] = record.embedding;
+        root["records"].push_back(std::move(row));
+    }
+
+    const fs::path indexPath = GetMemorySemanticIndexPath();
+    std::ofstream out(indexPath, std::ios::binary | std::ios::trunc);
+    if (!out)
+    {
+        outError = "failed to open semantic index for writing";
+        return false;
+    }
+    out << root.dump();
+    if (!out.good())
+    {
+        outError = "failed to persist semantic index";
+        return false;
+    }
+    return true;
+}
+
+bool LoadMemorySemanticIndex(std::vector<MemorySemanticRecord>& outRecords, std::string& outError)
+{
+    outRecords.clear();
+    const fs::path indexPath = GetMemorySemanticIndexPath();
+    if (!fs::exists(indexPath))
+    {
+        outError = "semantic index missing";
+        return false;
+    }
+
+    std::string raw;
+    if (!ReadTextFile(indexPath.string(), raw))
+    {
+        outError = "failed to read semantic index";
+        return false;
+    }
+    json root = json::parse(raw, nullptr, false);
+    if (root.is_discarded() || !root.is_object() || !root.contains("records") || !root["records"].is_array())
+    {
+        outError = "semantic index corrupted";
+        return false;
+    }
+
+    for (const auto& row : root["records"])
+    {
+        if (!row.is_object() || !row.contains("path") || !row["path"].is_string() || !row.contains("summary") ||
+            !row["summary"].is_string() || !row.contains("embedding") || !row["embedding"].is_array())
+        {
+            continue;
+        }
+
+        MemorySemanticRecord record;
+        record.virtualPath = row["path"].get<std::string>();
+        record.summary = row["summary"].get<std::string>();
+        for (const auto& v : row["embedding"])
+        {
+            if (!v.is_number_float() && !v.is_number_integer())
+            {
+                record.embedding.clear();
+                break;
+            }
+            record.embedding.push_back(v.get<float>());
+        }
+        if (record.embedding.empty())
+        {
+            continue;
+        }
+        outRecords.push_back(std::move(record));
+    }
+
+    outError.clear();
+    return true;
+}
+
+bool RebuildMemorySemanticIndex(size_t& outIndexed, std::string& outError)
+{
+    outIndexed = 0;
+    outError.clear();
+    std::vector<MemorySemanticRecord> records;
+
+    RawrXD::Runtime::SemanticRetrieval::InstallSemanticIndexEmbeddingCallback();
+    const std::vector<std::string> scopes = {"user", "session", "repo"};
+    for (const auto& scope : scopes)
+    {
+        const fs::path base = GetMemoryBaseForScope(scope);
+        std::error_code ec;
+        if (!fs::exists(base, ec) || ec)
+        {
+            continue;
+        }
+
+        for (const auto& entry : fs::recursive_directory_iterator(base, fs::directory_options::skip_permission_denied, ec))
+        {
+            if (ec)
+            {
+                continue;
+            }
+            if (!entry.is_regular_file(ec) || ec)
+            {
+                continue;
+            }
+            if (IsInternalMemoryArtifact(entry.path()))
+            {
+                continue;
+            }
+            if (entry.path().string().find(".rawrxd-backups") != std::string::npos)
+            {
+                continue;
+            }
+
+            const auto fileSize = entry.file_size(ec);
+            if (ec || fileSize == 0 || fileSize > kMemorySemanticMaxBytes)
+            {
+                continue;
+            }
+
+            std::string content;
+            if (!ReadTextFile(entry.path().string(), content))
+            {
+                continue;
+            }
+            if (content.empty() || IsLikelyBinary(content))
+            {
+                continue;
+            }
+
+            MemorySemanticRecord record;
+            record.virtualPath = MakeVirtualMemoryPath(scope, entry.path());
+            record.summary = BuildMemoryAutoSummary(content);
+
+            std::string embeddingText = record.virtualPath + "\n" + record.summary + "\n";
+            if (content.size() > 4096)
+            {
+                embeddingText += content.substr(0, 4096);
+            }
+            else
+            {
+                embeddingText += content;
+            }
+            record.embedding = RawrXD::Runtime::SemanticRetrieval::BuildDeterministicTextEmbedding(
+                embeddingText, kMemorySemanticDims);
+            if (record.embedding.empty())
+            {
+                continue;
+            }
+
+            records.push_back(std::move(record));
+        }
+    }
+
+    if (!SaveMemorySemanticIndex(records, outError))
+    {
+        return false;
+    }
+
+    outIndexed = records.size();
+    return true;
 }
 
 }  // anonymous namespace
@@ -3829,12 +4162,56 @@ ToolCallResult AgentToolHandlers::ManageTodoList(const json& args)
     }
 
     RawrXD::Todos::TodoManager manager;
-    if (!manager.ClearAll())
+    const auto existingTodos = manager.GetAll();
+    std::unordered_map<std::string, std::string> previousStatusByTitle;
+    previousStatusByTitle.reserve(existingTodos.size());
+    for (const auto& todo : existingTodos)
     {
-        return ToolCallResult::Error("Failed to clear existing todo list before update");
+        if (!todo.text.empty())
+        {
+            previousStatusByTitle[todo.text] = todo.status;
+        }
     }
 
-    json stored = json::array();
+    struct PlannedItem
+    {
+        int inputId = 0;
+        std::string title;
+        std::string status;
+        std::string priority;
+        std::string category;
+        std::vector<int> dependsOn;
+        std::string blockerType;
+        std::string blockerReason;
+    };
+
+    const auto normalizeStatus = [](const std::string& raw) {
+        const std::string lowered = ToLowerCopy(raw);
+        if (lowered == "not-started") return std::string("pending");
+        if (lowered == "in_progress") return std::string("in-progress");
+        if (lowered == "done") return std::string("completed");
+        return lowered;
+    };
+
+    const auto isStatusAllowed = [](const std::string& status) {
+        return status == "pending" || status == "in-progress" || status == "completed" ||
+               status == "blocked" || status == "cancelled";
+    };
+
+    const auto canTransition = [](const std::string& from, const std::string& to) {
+        if (from.empty() || from == to) return true;
+        if (from == "pending") return to == "in-progress" || to == "blocked" || to == "cancelled" || to == "completed";
+        if (from == "in-progress") return to == "completed" || to == "blocked" || to == "pending" || to == "cancelled";
+        if (from == "blocked") return to == "pending" || to == "in-progress" || to == "cancelled";
+        if (from == "completed") return false;
+        if (from == "cancelled") return to == "pending";
+        return true;
+    };
+
+    std::vector<PlannedItem> planned;
+    planned.reserve(args["todoList"].size());
+    std::unordered_set<int> declaredIds;
+    int inProgressCount = 0;
     for (const auto& item : args["todoList"])
     {
         if (!item.is_object())
@@ -3842,17 +4219,127 @@ ToolCallResult AgentToolHandlers::ManageTodoList(const json& args)
             return ToolCallResult::Validation("manage_todo_list entries must be objects");
         }
 
-        const std::string title = item.value("title", std::string());
-        if (title.empty())
+        PlannedItem row;
+        row.inputId = item.value("id", 0);
+        row.title = item.value("title", std::string());
+        row.status = normalizeStatus(item.value("status", std::string("pending")));
+        row.priority = item.value("priority", std::string("Medium"));
+        row.category = item.value("category", std::string("agentic"));
+
+        if (row.title.empty())
         {
             return ToolCallResult::Validation("manage_todo_list entries require 'title'");
         }
-
-        const std::string status = item.value("status", std::string("pending"));
-        const std::string priority = item.value("priority", std::string("Medium"));
-        if (!manager.AddTodo(title, priority, "agentic"))
+        if (!isStatusAllowed(row.status))
         {
-            return ToolCallResult::Error("Failed to add todo: " + title);
+            return ToolCallResult::Validation("manage_todo_list contains unsupported status: " + row.status);
+        }
+        if (row.status == "in-progress")
+        {
+            ++inProgressCount;
+        }
+
+        if (item.contains("dependencies") && item["dependencies"].is_array())
+        {
+            for (const auto& dep : item["dependencies"])
+            {
+                if (!dep.is_number_integer())
+                {
+                    return ToolCallResult::Validation("manage_todo_list dependencies must be integer IDs");
+                }
+                row.dependsOn.push_back(dep.get<int>());
+            }
+        }
+
+        if (item.contains("blocker") && item["blocker"].is_object())
+        {
+            const auto& blocker = item["blocker"];
+            if (blocker.contains("type") && blocker["type"].is_string())
+            {
+                row.blockerType = blocker["type"].get<std::string>();
+            }
+            if (blocker.contains("reason") && blocker["reason"].is_string())
+            {
+                row.blockerReason = blocker["reason"].get<std::string>();
+            }
+        }
+
+        planned.push_back(std::move(row));
+        declaredIds.insert(item.value("id", 0));
+    }
+
+    if (inProgressCount > 1)
+    {
+        return ToolCallResult::Validation("manage_todo_list allows at most one item in-progress");
+    }
+
+    // Validate dependency references and graph acyclicity on input IDs.
+    std::unordered_map<int, std::vector<int>> graph;
+    graph.reserve(planned.size());
+    for (const auto& row : planned)
+    {
+        if (row.inputId <= 0)
+        {
+            continue;
+        }
+        for (const int depId : row.dependsOn)
+        {
+            if (depId <= 0 || !declaredIds.count(depId))
+            {
+                return ToolCallResult::Validation("manage_todo_list dependency references unknown id: " + std::to_string(depId));
+            }
+            graph[row.inputId].push_back(depId);
+        }
+    }
+
+    std::unordered_set<int> tempMark;
+    std::unordered_set<int> permMark;
+    std::function<bool(int)> hasCycle = [&](int node) {
+        if (permMark.count(node))
+        {
+            return false;
+        }
+        if (tempMark.count(node))
+        {
+            return true;
+        }
+        tempMark.insert(node);
+        auto it = graph.find(node);
+        if (it != graph.end())
+        {
+            for (const int next : it->second)
+            {
+                if (hasCycle(next))
+                {
+                    return true;
+                }
+            }
+        }
+        tempMark.erase(node);
+        permMark.insert(node);
+        return false;
+    };
+
+    for (const auto& row : planned)
+    {
+        if (row.inputId > 0 && hasCycle(row.inputId))
+        {
+            return ToolCallResult::Validation("manage_todo_list dependency graph contains a cycle");
+        }
+    }
+
+    if (!manager.ClearAll())
+    {
+        return ToolCallResult::Error("Failed to clear existing todo list before update");
+    }
+
+    std::unordered_map<int, int> inputToStoredId;
+    json stored = json::array();
+    for (const auto& row : planned)
+    {
+        if (!manager.AddTodo(row.title, row.priority, "agentic"))
+        {
+            return ToolCallResult::Error("Failed to add todo: " + row.title);
         }
 
         const auto todos = manager.GetAll();
@@ -3862,28 +4349,85 @@ ToolCallResult AgentToolHandlers::ManageTodoList(const json& args)
         }
 
         const int createdId = todos.back().id;
-        json updates = json::object();
-        updates["status"] = status;
-        if (item.contains("category") && item["category"].is_string())
+        if (row.inputId > 0)
         {
-            updates["category"] = item["category"].get<std::string>();
+            inputToStoredId[row.inputId] = createdId;
         }
+
+        std::string effectiveStatus = row.status;
+        std::string blockerType = row.blockerType;
+        std::string blockerReason = row.blockerReason;
+        int blockedById = 0;
+
+        for (const int depInputId : row.dependsOn)
+        {
+            const auto depIt = std::find_if(planned.begin(), planned.end(),
+                                            [depInputId](const PlannedItem& p) { return p.inputId == depInputId; });
+            if (depIt != planned.end() && depIt->status != "completed")
+            {
+                effectiveStatus = "blocked";
+                blockerType = "dependency";
+                blockerReason = "Waiting for dependency id " + std::to_string(depInputId) + " to complete";
+                blockedById = depInputId;
+                break;
+            }
+        }
+
+        json updates = json::object();
+        updates["status"] = effectiveStatus;
+        updates["category"] = row.category;
+
+        json dependsOnStored = json::array();
+        for (const int depInputId : row.dependsOn)
+        {
+            auto it = inputToStoredId.find(depInputId);
+            if (it != inputToStoredId.end())
+            {
+                dependsOnStored.push_back(it->second);
+            }
+        }
+        updates["dependsOn"] = dependsOnStored;
+
+        json blocker = json::object();
+        blocker["type"] = blockerType;
+        blocker["reason"] = blockerReason;
+        blocker["blockedById"] = blockedById;
+        updates["blocker"] = blocker;
+        updates["blockedById"] = blockedById;
+
+        const auto prev = previousStatusByTitle.find(row.title);
+        if (prev != previousStatusByTitle.end())
+        {
+            const std::string prevStatus = normalizeStatus(prev->second);
+            if (!canTransition(prevStatus, effectiveStatus))
+            {
+                return ToolCallResult::Validation("Invalid durable transition for todo '" + row.title + "': " +
+                                                  prevStatus + " -> " + effectiveStatus);
+            }
+            updates["statusTransition"] = prevStatus + "->" + effectiveStatus;
+        }
+
         if (!manager.UpdateTodo(createdId, updates))
         {
             return ToolCallResult::Error("Failed to update todo status for id " + std::to_string(createdId));
         }
 
         json storedItem = json::object();
-        storedItem["input_id"] = item.value("id", createdId);
+        storedItem["input_id"] = row.inputId > 0 ? row.inputId : createdId;
         storedItem["stored_id"] = createdId;
-        storedItem["title"] = title;
-        storedItem["status"] = status;
-        storedItem["priority"] = priority;
+        storedItem["title"] = row.title;
+        storedItem["status"] = effectiveStatus;
+        storedItem["priority"] = row.priority;
+        storedItem["dependencies"] = dependsOnStored;
+        storedItem["blocker"] = blocker;
         stored.push_back(storedItem);
     }
 
     json meta = json::object();
     meta["count"] = stored.size();
+    meta["dependency_graph_nodes"] = planned.size();
+    meta["dependency_graph_edges"] = graph.size();
+    meta["durable_transitions_validated"] = true;
     return ToolCallResult::Ok(stored.dump(2), meta);
 }
 
@@ -3943,7 +4487,120 @@ ToolCallResult AgentToolHandlers::Memory(const json& args)
         json meta = json::object();
         meta["old_path"] = args["old_path"].get<std::string>();
         meta["new_path"] = args["new_path"].get<std::string>();
+
+        size_t indexed = 0;
+        std::string indexError;
+        if (RebuildMemorySemanticIndex(indexed, indexError))
+        {
+            meta["semantic_index_entries"] = indexed;
+        }
+        else
+        {
+            meta["semantic_index_error"] = indexError;
+        }
         return ToolCallResult::Ok("Memory path renamed", meta);
+    }
+
+    if (command == "reindex")
+    {
+        size_t indexed = 0;
+        std::string indexError;
+        if (!RebuildMemorySemanticIndex(indexed, indexError))
+        {
+            return ToolCallResult::Error("Failed to rebuild memory semantic index: " + indexError);
+        }
+
+        json meta = json::object();
+        meta["indexed_entries"] = indexed;
+        meta["semantic_index_path"] = GetMemorySemanticIndexPath().string();
+        return ToolCallResult::Ok("Memory semantic index rebuilt", meta);
+    }
+
+    if (command == "retrieve")
+    {
+        if (!args.contains("query") || !args["query"].is_string())
+        {
+            return ToolCallResult::Validation("memory retrieve requires 'query'");
+        }
+        const std::string query = TrimAscii(args["query"].get<std::string>());
+        if (query.empty())
+        {
+            return ToolCallResult::Validation("memory retrieve query cannot be empty");
+        }
+
+        const int topK = std::clamp(args.value("top_k", 5), 1, 20);
+        const bool refresh = args.value("refresh", false);
+
+        if (refresh)
+        {
+            size_t refreshed = 0;
+            std::string refreshError;
+            if (!RebuildMemorySemanticIndex(refreshed, refreshError))
+            {
+                return ToolCallResult::Error("Failed to refresh memory semantic index: " + refreshError);
+            }
+        }
+
+        std::vector<MemorySemanticRecord> records;
+        std::string loadError;
+        if (!LoadMemorySemanticIndex(records, loadError))
+        {
+            size_t indexed = 0;
+            std::string rebuildError;
+            if (!RebuildMemorySemanticIndex(indexed, rebuildError) || !LoadMemorySemanticIndex(records, loadError))
+            {
+                return ToolCallResult::Error("Failed to load memory semantic index: " + loadError);
+            }
+        }
+
+        const auto queryEmbedding = RawrXD::Runtime::SemanticRetrieval::BuildDeterministicTextEmbedding(
+            query, kMemorySemanticDims);
+        if (queryEmbedding.empty())
+        {
+            return ToolCallResult::Validation("memory retrieve could not embed query");
+        }
+
+        struct ScoredMemory
+        {
+            size_t index = 0;
+            double score = 0.0;
+        };
+        std::vector<ScoredMemory> scored;
+        scored.reserve(records.size());
+        for (size_t i = 0; i < records.size(); ++i)
+        {
+            const double score = DenseCosine(queryEmbedding, records[i].embedding);
+            if (score <= 0.0)
+            {
+                continue;
+            }
+            scored.push_back({i, score});
+        }
+        std::sort(scored.begin(), scored.end(), [](const ScoredMemory& a, const ScoredMemory& b)
+                  { return a.score > b.score; });
+        if (scored.size() > static_cast<size_t>(topK))
+        {
+            scored.resize(static_cast<size_t>(topK));
+        }
+
+        json result = json::array();
+        for (const auto& row : scored)
+        {
+            const auto& record = records[row.index];
+            json item = json::object();
+            item["path"] = record.virtualPath;
+            item["summary"] = record.summary;
+            item["score"] = row.score;
+            result.push_back(std::move(item));
+        }
+
+        json meta = json::object();
+        meta["query"] = query;
+        meta["top_k"] = topK;
+        meta["returned"] = result.size();
+        meta["indexed_entries"] = records.size();
+        meta["dimensions"] = kMemorySemanticDims;
+        return ToolCallResult::Ok(result.dump(2), meta);
     }
 
     if (!args.contains("path") || !args["path"].is_string())
@@ -4045,6 +4702,17 @@ ToolCallResult AgentToolHandlers::Memory(const json& args)
         json meta = json::object();
         meta["scope"] = scope;
         meta["bytes_written"] = content.size();
+        meta["auto_summary"] = BuildMemoryAutoSummary(content);
+        size_t indexed = 0;
+        std::string indexError;
+        if (RebuildMemorySemanticIndex(indexed, indexError))
+        {
+            meta["semantic_index_entries"] = indexed;
+        }
+        else
+        {
+            meta["semantic_index_error"] = indexError;
+        }
         return ToolCallResult::Ok("Memory file created", meta);
     }
 
@@ -4081,7 +4749,19 @@ ToolCallResult AgentToolHandlers::Memory(const json& args)
             return ToolCallResult::Error("Failed to write memory file after replacement");
         }
         out << content;
-        return ToolCallResult::Ok("Memory file updated");
+        json meta = json::object();
+        meta["auto_summary"] = BuildMemoryAutoSummary(content);
+        size_t indexed = 0;
+        std::string indexError;
+        if (RebuildMemorySemanticIndex(indexed, indexError))
+        {
+            meta["semantic_index_entries"] = indexed;
+        }
+        else
+        {
+            meta["semantic_index_error"] = indexError;
+        }
+        return ToolCallResult::Ok("Memory file updated", meta);
     }
 
     if (command == "insert")
@@ -4119,8 +4799,21 @@ ToolCallResult AgentToolHandlers::Memory(const json& args)
         {
             return ToolCallResult::Error("Failed to write memory file after insert");
         }
-        file << out.str();
-        return ToolCallResult::Ok("Memory file updated");
+        const std::string updated = out.str();
+        file << updated;
+        json meta = json::object();
+        meta["auto_summary"] = BuildMemoryAutoSummary(updated);
+        size_t indexed = 0;
+        std::string indexError;
+        if (RebuildMemorySemanticIndex(indexed, indexError))
+        {
+            meta["semantic_index_entries"] = indexed;
+        }
+        else
+        {
+            meta["semantic_index_error"] = indexError;
+        }
+        return ToolCallResult::Ok("Memory file updated", meta);
     }
 
     if (command == "delete")
@@ -4133,6 +4826,16 @@ ToolCallResult AgentToolHandlers::Memory(const json& args)
         }
         json meta = json::object();
         meta["removed_count"] = removed;
+        size_t indexed = 0;
+        std::string indexError;
+        if (RebuildMemorySemanticIndex(indexed, indexError))
+        {
+            meta["semantic_index_entries"] = indexed;
+        }
+        else
+        {
+            meta["semantic_index_error"] = indexError;
+        }
         return ToolCallResult::Ok("Memory path deleted", meta);
     }
 
@@ -4806,7 +5509,7 @@ json AgentToolHandlers::GetAllSchemas()
     json mem_prop = json::object();
     json mem_cmd = json::object();
     mem_cmd["type"] = "string";
-    mem_cmd["description"] = "Operation: view, create, str_replace, insert, delete, or rename";
+    mem_cmd["description"] = "Operation: view, create, str_replace, insert, delete, rename, reindex, or retrieve";
     json mem_path = json::object();
     mem_path["type"] = "string";
     mem_path["description"] = "Virtual memory path such as /memories/note.md or /memories/session/plan.md";
@@ -4834,6 +5537,15 @@ json AgentToolHandlers::GetAllSchemas()
     json mem_new_path = json::object();
     mem_new_path["type"] = "string";
     mem_new_path["description"] = "New virtual path for rename";
+    json mem_query = json::object();
+    mem_query["type"] = "string";
+    mem_query["description"] = "Semantic retrieval query text (for command=retrieve)";
+    json mem_top_k = json::object();
+    mem_top_k["type"] = "integer";
+    mem_top_k["description"] = "Maximum semantic retrieval hits (1-20)";
+    json mem_refresh = json::object();
+    mem_refresh["type"] = "boolean";
+    mem_refresh["description"] = "Rebuild semantic memory index before retrieve";
     mem_prop["command"] = mem_cmd;
     mem_prop["path"] = mem_path;
     mem_prop["file_text"] = mem_file;
@@ -4844,11 +5556,92 @@ json AgentToolHandlers::GetAllSchemas()
     mem_prop["view_range"] = mem_range;
     mem_prop["old_path"] = mem_old_path;
     mem_prop["new_path"] = mem_new_path;
+    mem_prop["query"] = mem_query;
+    mem_prop["top_k"] = mem_top_k;
+    mem_prop["refresh"] = mem_refresh;
     mem_p["properties"] = mem_prop;
     mem_p["required"] = jstrArr({"command"});
     mem_f["parameters"] = mem_p;
     mem["function"] = mem_f;
     tools.push_back(mem);
+
+    // generate_image
+    json gi = json::object();
+    gi["type"] = "function";
+    json gi_f = json::object();
+    gi_f["name"] = "generate_image";
+    gi_f["description"] = "Generate an image artifact from a prompt and save it to the workspace.";
+    json gi_p = json::object();
+    gi_p["type"] = "object";
+    json gi_prop = json::object();
+    json gi_prompt = json::object();
+    gi_prompt["type"] = "string";
+    gi_prompt["description"] = "Image generation prompt";
+    json gi_style = json::object();
+    gi_style["type"] = "string";
+    gi_style["description"] = "Optional style hint";
+    json gi_width = json::object();
+    gi_width["type"] = "integer";
+    gi_width["description"] = "Image width (64-4096)";
+    json gi_height = json::object();
+    gi_height["type"] = "integer";
+    gi_height["description"] = "Image height (64-4096)";
+    json gi_output = json::object();
+    gi_output["type"] = "string";
+    gi_output["description"] = "Optional output BMP path";
+    gi_prop["prompt"] = gi_prompt;
+    gi_prop["style"] = gi_style;
+    gi_prop["width"] = gi_width;
+    gi_prop["height"] = gi_height;
+    gi_prop["output_path"] = gi_output;
+    gi_p["properties"] = gi_prop;
+    gi_p["required"] = jstrArr({"prompt"});
+    gi_f["parameters"] = gi_p;
+    gi["function"] = gi_f;
+    tools.push_back(gi);
+
+    // generate_video
+    json gv = json::object();
+    gv["type"] = "function";
+    json gv_f = json::object();
+    gv_f["name"] = "generate_video";
+    gv_f["description"] = "Generate a local video artifact from a prompt/storyboard using the native tubi backend.";
+    json gv_p = json::object();
+    gv_p["type"] = "object";
+    json gv_prop = json::object();
+    json gv_prompt = json::object();
+    gv_prompt["type"] = "string";
+    gv_prompt["description"] = "Video generation prompt";
+    json gv_story = json::object();
+    gv_story["type"] = "string";
+    gv_story["description"] = "Optional storyboard / shot list";
+    json gv_style = json::object();
+    gv_style["type"] = "string";
+    gv_style["description"] = "Style preset (e.g. Cinematic, Anime)";
+    json gv_duration = json::object();
+    gv_duration["type"] = "string";
+    gv_duration["description"] = "Duration string (e.g. 6s, 10s)";
+    json gv_aspect = json::object();
+    gv_aspect["type"] = "string";
+    gv_aspect["description"] = "Aspect ratio (e.g. 16:9)";
+    json gv_resolution = json::object();
+    gv_resolution["type"] = "string";
+    gv_resolution["description"] = "Resolution preset (e.g. 720p, 1080p)";
+    json gv_output = json::object();
+    gv_output["type"] = "string";
+    gv_output["description"] = "Optional output directory";
+    gv_prop["prompt"] = gv_prompt;
+    gv_prop["storyboard"] = gv_story;
+    gv_prop["style"] = gv_style;
+    gv_prop["duration"] = gv_duration;
+    gv_prop["aspect_ratio"] = gv_aspect;
+    gv_prop["resolution"] = gv_resolution;
+    gv_prop["output_dir"] = gv_output;
+    gv_p["properties"] = gv_prop;
+    gv_p["required"] = jstrArr({"prompt"});
+    gv_f["parameters"] = gv_p;
+    gv["function"] = gv_f;
+    tools.push_back(gv);
 
     // swebench_autonomous_eval
     json sae = json::object();
@@ -5580,6 +6373,168 @@ ToolCallResult AgentToolHandlers::DiskRecovery(const nlohmann::json& args)
     return ToolCallResult::Ok(resp.dump(2));
 }
 
+ToolCallResult AgentToolHandlers::GenerateImage(const nlohmann::json& args)
+{
+    const std::string prompt = TrimAscii(args.value("prompt", std::string()));
+    if (prompt.empty())
+    {
+        return ToolCallResult::Validation("generate_image requires non-empty 'prompt'");
+    }
+
+    const int width = std::clamp(args.value("width", 1024), 64, 4096);
+    const int height = std::clamp(args.value("height", 1024), 64, 4096);
+    const std::string style = TrimAscii(args.value("style", std::string("cinematic")));
+
+    fs::path outputPath;
+    if (args.contains("output_path") && args["output_path"].is_string())
+    {
+        outputPath = NormalizePath(args["output_path"].get<std::string>());
+        if (!IsPathAllowed(outputPath.string()))
+        {
+            return ToolCallResult::Sandbox("output_path is outside allowed workspace roots");
+        }
+    }
+    else
+    {
+        fs::path workspaceRoot = s_guardrails.allowedRoots.empty() ? fs::current_path() : fs::path(s_guardrails.allowedRoots.front());
+        const std::string slug = std::to_string(std::hash<std::string>{}(prompt + "|" + style));
+        outputPath = workspaceRoot / "generated" / "images" / ("image_" + slug.substr(0, 12) + ".bmp");
+    }
+
+    std::error_code ec;
+    fs::create_directories(outputPath.parent_path(), ec);
+    if (ec)
+    {
+        return ToolCallResult::Error("Failed to create output directory: " + outputPath.parent_path().string());
+    }
+
+    ig::Canvas canvas(width, height);
+    const uint32_t seed = static_cast<uint32_t>(std::hash<std::string>{}(prompt + "|" + style));
+    const uint8_t r0 = static_cast<uint8_t>((seed >> 0) & 0xFF);
+    const uint8_t g0 = static_cast<uint8_t>((seed >> 8) & 0xFF);
+    const uint8_t b0 = static_cast<uint8_t>((seed >> 16) & 0xFF);
+    const uint8_t r1 = static_cast<uint8_t>((seed >> 24) & 0xFF);
+    const uint8_t g1 = static_cast<uint8_t>((seed >> 4) & 0xFF);
+    const uint8_t b1 = static_cast<uint8_t>((seed >> 12) & 0xFF);
+
+    for (int y = 0; y < height; ++y)
+    {
+        const float t = static_cast<float>(y) / static_cast<float>(std::max(1, height - 1));
+        ig::Color row(
+            static_cast<uint8_t>(r0 + static_cast<uint8_t>((r1 - r0) * t)),
+            static_cast<uint8_t>(g0 + static_cast<uint8_t>((g1 - g0) * t)),
+            static_cast<uint8_t>(b0 + static_cast<uint8_t>((b1 - b0) * t)),
+            255);
+        for (int x = 0; x < width; ++x)
+        {
+            canvas.set(x, y, row);
+        }
+    }
+
+    const int circles = 8 + static_cast<int>(seed % 9);
+    for (int i = 0; i < circles; ++i)
+    {
+        const uint32_t s = seed ^ static_cast<uint32_t>(i * 2654435761u);
+        const float cx = static_cast<float>(s % static_cast<uint32_t>(width));
+        const float cy = static_cast<float>((s >> 8) % static_cast<uint32_t>(height));
+        const float radius = static_cast<float>((s >> 16) % static_cast<uint32_t>(std::max(16, std::min(width, height) / 2))) + 12.0f;
+        ig::Color c(static_cast<uint8_t>((s >> 4) & 0xFF), static_cast<uint8_t>((s >> 10) & 0xFF),
+                    static_cast<uint8_t>((s >> 18) & 0xFF), 84);
+        ig::fill_circle(canvas, cx, cy, radius, c);
+    }
+
+    if (!ig::write_bmp(canvas, outputPath.string()))
+    {
+        return ToolCallResult::Error("Image write failed: " + outputPath.string());
+    }
+
+    json meta = json::object();
+    meta["prompt"] = prompt;
+    meta["style"] = style;
+    meta["width"] = width;
+    meta["height"] = height;
+    meta["output_path"] = outputPath.string();
+    return ToolCallResult::Ok(outputPath.string(), meta);
+}
+
+ToolCallResult AgentToolHandlers::GenerateVideo(const nlohmann::json& args)
+{
+    const std::string prompt = TrimAscii(args.value("prompt", std::string()));
+    if (prompt.empty())
+    {
+        return ToolCallResult::Validation("generate_video requires non-empty 'prompt'");
+    }
+
+    rawrxd::video::TubiRenderRequest request;
+    request.jobId = args.value("job_id", std::string());
+    if (request.jobId.empty())
+    {
+        request.jobId = "video_" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(
+                                                   std::chrono::system_clock::now().time_since_epoch())
+                                                   .count());
+    }
+
+    request.engineName = args.value("engine", std::string("tubi"));
+    request.provider = args.value("provider", std::string("local"));
+    request.localModel = args.value("local_model", std::string("headless-default"));
+    request.prompt = prompt;
+    request.storyboard = args.value("storyboard", prompt);
+    request.style = args.value("style", std::string("Cinematic"));
+    request.duration = args.value("duration", std::string("6s"));
+    request.aspectRatio = args.value("aspect_ratio", std::string("16:9"));
+    request.resolution = args.value("resolution", std::string("720p"));
+    request.negativePrompt = args.value("negative_prompt", std::string("blurry, low detail"));
+    request.cameraMode = args.value("camera_mode", std::string("cinematic-pan"));
+    request.seed = args.value("seed", static_cast<int>(std::hash<std::string>{}(request.prompt) & 0x7fffffff));
+
+    if (args.contains("output_dir") && args["output_dir"].is_string())
+    {
+        request.outputDir = NormalizePath(args["output_dir"].get<std::string>());
+        if (!IsPathAllowed(request.outputDir.string()))
+        {
+            return ToolCallResult::Sandbox("output_dir is outside allowed workspace roots");
+        }
+    }
+    else
+    {
+        const fs::path workspaceRoot = s_guardrails.allowedRoots.empty() ? fs::current_path() : fs::path(s_guardrails.allowedRoots.front());
+        request.outputDir = workspaceRoot / "generated" / "videos" / request.jobId;
+    }
+
+    std::error_code ec;
+    fs::create_directories(request.outputDir, ec);
+    if (ec)
+    {
+        return ToolCallResult::Error("Failed to create output_dir: " + request.outputDir.string());
+    }
+
+    const auto rendered = rawrxd::video::renderVideoClip(request);
+    if (!rendered)
+    {
+        return ToolCallResult::Error("Video render failed: " + rendered.error());
+    }
+
+    json meta = json::object();
+    meta["job_id"] = request.jobId;
+    meta["prompt"] = request.prompt;
+    meta["style"] = request.style;
+    meta["resolution"] = request.resolution;
+    meta["aspect_ratio"] = request.aspectRatio;
+    meta["duration"] = request.duration;
+    meta["output_dir"] = request.outputDir.string();
+    meta["manifest_path"] = rendered->manifestPath.string();
+    meta["frames_dir"] = rendered->framesDir.string();
+    meta["mp4_path"] = rendered->mp4Path.string();
+    meta["mp4_created"] = rendered->mp4Created;
+    meta["width"] = rendered->width;
+    meta["height"] = rendered->height;
+    meta["fps"] = rendered->fps;
+    meta["total_frames"] = rendered->totalFrames;
+    meta["duration_seconds"] = rendered->durationSeconds;
+    meta["shot_count"] = rendered->shotCount;
+    return ToolCallResult::Ok(rendered->mp4Created ? rendered->mp4Path.string() : rendered->framesDir.string(), meta);
+}
+
 void AgentToolHandlers::InitializeDispatchTable()
 {
     m_dispatchTable["read_file"] = ToolReadFile;
@@ -5664,6 +6619,8 @@ void AgentToolHandlers::InitializeDispatchTable()
     m_dispatchTable["apply_hotpatch"]       = ApplyHotpatch;
     m_dispatchTable["sys_get_capabilities"] = SysGetCapabilities;
     m_dispatchTable["disk_recovery"]        = DiskRecovery;
+    m_dispatchTable["generate_image"]       = GenerateImage;
+    m_dispatchTable["generate_video"]       = GenerateVideo;
 
     // Collaboration tools (Live Share, shared terminals, pair programming AI)
     m_dispatchTable["collab_host_session"]     = CollabToolHandlers::HostSession;
@@ -5694,7 +6651,13 @@ AgentToolHandlers& AgentToolHandlers::Instance()
 
 bool AgentToolHandlers::HasTool(const std::string& name) const
 {
-    return m_dispatchTable.find(name) != m_dispatchTable.end();
+    if (m_dispatchTable.find(name) != m_dispatchTable.end())
+    {
+        return true;
+    }
+
+    const std::string normalized = NormalizeDispatchToolName(name);
+    return !normalized.empty() && m_dispatchTable.find(normalized) != m_dispatchTable.end();
 }
 
 ToolCallResult AgentToolHandlers::Execute(const std::string& name, const nlohmann::json& args)
@@ -5705,5 +6668,23 @@ ToolCallResult AgentToolHandlers::Execute(const std::string& name, const nlohman
     {
         return it->second(args);
     }
+
+    const std::string normalized = NormalizeDispatchToolName(name);
+    if (!normalized.empty() && normalized != name)
+    {
+        it = m_dispatchTable.find(normalized);
+        if (it != m_dispatchTable.end())
+        {
+            ToolCallResult normalizedResult = it->second(args);
+            if (normalizedResult.metadata.is_null() || !normalizedResult.metadata.is_object())
+            {
+                normalizedResult.metadata = nlohmann::json::object();
+            }
+            normalizedResult.metadata["resolved_tool_name"] = normalized;
+            normalizedResult.metadata["original_tool_name"] = name;
+            return normalizedResult;
+        }
+    }
+
     return ToolCallResult::NotFound(name);
 }

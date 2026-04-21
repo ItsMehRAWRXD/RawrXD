@@ -17,17 +17,17 @@
 // ============================================================================
 
 #include "BoundedAgentLoop.h"
-#include "AgentOllamaClient.h"
+#include "NativeInferenceClient.h"
 
 #include <sstream>
 #include <thread>
 #include <chrono>
 #include <unordered_map>
 
-// SCAFFOLD_295: BoundedAgentLoop integration
+// Bounded Agent Loop Integration
 
 
-// SCAFFOLD_060: BoundedAgentLoop and cycle limit
+// BoundedAgentLoop and Cycle Limit Implementation
 
 
 using RawrXD::Agent::BoundedAgentLoop;
@@ -136,7 +136,7 @@ std::string BoundedAgentLoop::RunLoop(const std::string& userPrompt) {
         llm = m_llmBackend;
     }
     if (!llm) {
-        std::string baseUrl = m_config.ollamaBaseUrl;
+        std::string baseUrl = m_config.nativeBaseUrl;
         llm = [baseUrl](const LLMChatRequest& req) {
             return NativeChat(req, baseUrl);
         };
@@ -415,7 +415,7 @@ LLMChatResponse BoundedAgentLoop::NativeChat(const LLMChatRequest& request,
     LLMChatResponse response;
 
     // Parse host:port from config URL for backward compatibility with existing config.
-    RawrXD::Agent::OllamaConfig cfg;
+    RawrXD::Agent::NativeInferenceConfig cfg;
     cfg.timeout_ms = 300000;
     cfg.temperature = request.temperature;
     cfg.max_tokens = request.maxTokens;
@@ -458,7 +458,7 @@ LLMChatResponse BoundedAgentLoop::NativeChat(const LLMChatRequest& request,
         nativeMessages.push_back(std::move(native));
     }
 
-    RawrXD::Agent::AgentOllamaClient client(cfg);
+    RawrXD::Agent::NativeInferenceClient client(cfg);
     InferenceResult native = client.ChatSync(nativeMessages, request.tools);
     if (!native.success) {
         response.success = false;

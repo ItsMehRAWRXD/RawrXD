@@ -21,6 +21,19 @@
 
 cmake_minimum_required(VERSION 3.20)
 
+# ── GoogleTest (header-only fetch so gtest/gtest.h is available) ──────────────
+include(FetchContent)
+FetchContent_Declare(
+    googletest
+    URL "https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip"
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+)
+# Don't install gtest alongside the project
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
+# ─────────────────────────────────────────────────────────────────────────────
+
 # Enable testing
 enable_testing()
 
@@ -110,18 +123,14 @@ if(NOT TARGET test_tool_registry AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_to
     message(STATUS "  ✓ Added test_tool_registry")
 endif()
 
-# Voice Processor Test
-if(NOT TARGET test_voice_processor AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_voice_processor.cpp")
-    add_executable(test_voice_processor test_voice_processor.cpp)
-    target_include_directories(test_voice_processor PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
-    set_target_properties(test_voice_processor PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests" CXX_STANDARD 20)
-    add_test(NAME test_voice_processor COMMAND test_voice_processor)
-    message(STATUS "  ✓ Added test_voice_processor")
-endif()
+# Voice Processor Test intentionally disabled to remove microphone capture dependencies from builds.
 
 # Zero Retention Manager Test
 if(NOT TARGET test_zero_retention_manager AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_zero_retention_manager.cpp")
-    add_executable(test_zero_retention_manager test_zero_retention_manager.cpp)
+    add_executable(test_zero_retention_manager
+        test_zero_retention_manager.cpp
+        ${CMAKE_SOURCE_DIR}/src/terminal/zero_retention_manager.cpp
+    )
     target_include_directories(test_zero_retention_manager PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
     set_target_properties(test_zero_retention_manager PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests" CXX_STANDARD 20)
     add_test(NAME test_zero_retention_manager COMMAND test_zero_retention_manager)
@@ -151,9 +160,21 @@ endif()
 
 # IDE-Linked Autonomy Smoke Test
 if(NOT TARGET test_ide_model_autonomy AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/smoke/test_ide_model_autonomy.cpp")
-    add_executable(test_ide_model_autonomy smoke/test_ide_model_autonomy.cpp d:/rawrxd/src/core/feature_handlers.cpp)
+    add_executable(test_ide_model_autonomy
+        smoke/test_ide_model_autonomy.cpp
+        smoke/ide_autonomy_shield_stubs.cpp
+        ${CMAKE_SOURCE_DIR}/src/core/feature_handlers_model_load.cpp
+    )
     target_include_directories(test_ide_model_autonomy PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
-    set_target_properties(test_ide_model_autonomy PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests" CXX_STANDARD 20)
+    set_target_properties(test_ide_model_autonomy PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
+        CXX_STANDARD 20
+        # Global /LTCG can drop COMDATs from small helper TUs; keep this test a normal link.
+        INTERPROCEDURAL_OPTIMIZATION OFF
+    )
+    if(MSVC)
+        target_compile_options(test_ide_model_autonomy PRIVATE /GL-)
+    endif()
     if(WIN32)
        target_link_libraries(test_ide_model_autonomy PRIVATE ws2_32 winhttp psapi)
     endif()
@@ -193,8 +214,17 @@ if(NOT TARGET test_gguf_integration AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test
     add_executable(test_gguf_integration test_gguf_integration.cpp)
     target_include_directories(test_gguf_integration PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
     set_target_properties(test_gguf_integration PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests" CXX_STANDARD 20)
+    target_link_libraries(test_gguf_integration PRIVATE GTest::gtest GTest::gtest_main)
     add_test(NAME test_gguf_integration COMMAND test_gguf_integration)
     message(STATUS "  ✓ Added test_gguf_integration")
+endif()
+
+if(NOT TARGET test_engine_revolver AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_engine_revolver.cpp")
+    add_executable(test_engine_revolver test_engine_revolver.cpp ${CMAKE_SOURCE_DIR}/src/core/engine_revolver.cpp)
+    target_include_directories(test_engine_revolver PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
+    set_target_properties(test_engine_revolver PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests" CXX_STANDARD 23)
+    add_test(NAME test_engine_revolver COMMAND test_engine_revolver)
+    message(STATUS "  ✓ Added test_engine_revolver")
 endif()
 
 if(NOT TARGET test_swarm_scheduler_pin AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_swarm_scheduler_pin.cpp")
@@ -275,6 +305,7 @@ if(NOT TARGET test_basic_profiler AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/perfor
         performance/test_basic_profiler.cpp
         ${CMAKE_SOURCE_DIR}/src/profiler.cpp
         ${CMAKE_SOURCE_DIR}/src/profiling/AdvancedPerformanceProfiler.cpp
+        ${CMAKE_SOURCE_DIR}/src/logging/Logger.cpp
     )
     target_include_directories(test_basic_profiler PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
     set_target_properties(test_basic_profiler PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests" CXX_STANDARD 20)
@@ -287,6 +318,7 @@ if(NOT TARGET test_batch3_profiler_smoke AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}
         performance/test_batch3_profiler_smoke.cpp
         ${CMAKE_SOURCE_DIR}/src/profiler.cpp
         ${CMAKE_SOURCE_DIR}/src/profiling/AdvancedPerformanceProfiler.cpp
+        ${CMAKE_SOURCE_DIR}/src/logging/Logger.cpp
     )
     target_include_directories(test_batch3_profiler_smoke PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
     set_target_properties(test_batch3_profiler_smoke PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests" CXX_STANDARD 20)
@@ -384,6 +416,36 @@ if(TARGET RawrXD-Win32IDE)
         set_tests_properties(win32ide_high_pressure_ui PROPERTIES LABELS "smoke;stress;win32ide;lsp;model" TIMEOUT 300)
         message(STATUS "  ✓ Registered win32ide_high_pressure_ui (Win32IDE concurrent UI/LSP/model pressure)")
     endif()
+endif()
+
+# AgentOllamaClient RAWRXD_STREAM_* routing parity (no IDE binary; source assertions + env label matrix)
+if(EXISTS "${CMAKE_SOURCE_DIR}/scripts/Test-OllamaStreamRoutingEnv.ps1")
+    add_test(
+        NAME ollama_stream_routing_env_smoke
+        COMMAND pwsh -NoProfile -ExecutionPolicy Bypass
+            -File ${CMAKE_SOURCE_DIR}/scripts/Test-OllamaStreamRoutingEnv.ps1
+    )
+    set_tests_properties(ollama_stream_routing_env_smoke PROPERTIES LABELS "smoke;agentic;ollama" TIMEOUT 120)
+    message(STATUS "  ✓ Registered ollama_stream_routing_env_smoke (RAWRXD_STREAM_* routing)")
+endif()
+
+# 14-day expansion aggregate quality gate entrypoint for CTest-driven CI/task runs.
+# This wires the existing self_test_gate target into a named CTest so callers can run:
+#   ctest -R production_readiness_expansion_quality_gate
+if(TARGET self_test_gate)
+    add_test(
+        NAME production_readiness_expansion_quality_gate
+        COMMAND ${CMAKE_COMMAND}
+            -D BINARY_DIR=${CMAKE_BINARY_DIR}
+            -D CONFIG=$<CONFIG>
+            -D BUILD_TARGET=self_test_gate
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/smoke/build_target_with_retry.cmake
+    )
+    set_tests_properties(production_readiness_expansion_quality_gate PROPERTIES
+        LABELS "quality-gate;production;aggregate"
+        TIMEOUT 1800
+    )
+    message(STATUS "  ✓ Registered production_readiness_expansion_quality_gate (retry-hardened build of self_test_gate)")
 endif()
 
 message(STATUS "========================================")

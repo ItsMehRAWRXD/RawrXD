@@ -412,7 +412,7 @@ static void invokeOllamaGenerate(const std::string& model_name, const std::strin
     HINTERNET hConnect = WinHttpConnect(hSession, host, port, 0);
     if (!hConnect) {
         WinHttpCloseHandle(hSession);
-        callback("Error: Cannot connect to Ollama. Start Ollama (ollama serve) or use File > Load GGUF for local inference.", true);
+        callback("Error: Cannot connect to Ollama. Start native inference server (ollama serve) or use File > Load GGUF for local inference.", true);
         return;
     }
     HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"POST", L"/api/generate", NULL, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, 0);

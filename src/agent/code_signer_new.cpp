@@ -69,7 +69,6 @@ bool CodeSigner::signWindowsExecutable(const std::string& exePath,
     auto start = std::chrono::high_resolution_clock::now();
     
     if (!fs::exists(exePath)) {
-        std::cerr << "[CodeSigner] Executable not found: " << exePath << std::endl;
         return false;
     }
     
@@ -96,12 +95,6 @@ bool CodeSigner::signWindowsExecutable(const std::string& exePath,
     args.push_back(exePath);
     
     bool success = runProcess(signtool, args);
-    
-    if (success) {
-        std::cout << "[CodeSigner] Successfully signed: " << exePath << std::endl;
-    } else {
-        std::cerr << "[CodeSigner] Failed to sign: " << exePath << std::endl;
-    }
     
     return success;
 #else

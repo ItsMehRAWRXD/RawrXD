@@ -9,7 +9,7 @@
 // 3. Dynamically dispatch to JIT-compiled versions at runtime
 // 4. Projected improvement: +20-30% over Phase 25 (cumulative 60%+ vs Phase 20)
 // 
-// Example: MOV instruction appears 40% of time, gets JIT-optimized
+// MOV instruction appears 40% of time, gets JIT-optimized
 //   Standard encoding: 3-5 cycles
 //   JIT-optimized: 1-2 cycles
 // =============================================================================
@@ -344,10 +344,10 @@ public:
 };
 
 // =============================================================================
-// Phase 26: Demonstration
+// JIT Compilation
 // =============================================================================
 
-void Phase26_Demonstration() {
+void JIT_Compilation() {
     std::cout << "\n╔════════════════════════════════════════════════════╗\n";
     std::cout << "║  Phase 26: JIT-Compiled Hot-Paths - Final Tier    ║\n";
     std::cout << "║            Adaptive Instruction Dispatch          ║\n";
@@ -391,6 +391,6 @@ void Phase26_Demonstration() {
 
 int main(int argc, char* argv[]) {
     (void)argc; (void)argv;
-    SovereignAssembler::Phase26_Demonstration();
+    SovereignAssembler::JIT_Compilation();
     return 0;
 }

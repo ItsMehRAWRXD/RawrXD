@@ -71,12 +71,12 @@ void tryLoadApprovalPolicyFromDisk(AgenticPlanningOrchestrator& orch)
         {
             auto j = nlohmann::json::parse(ss.str());
             orch.setApprovalPolicy(ApprovalPolicy::fromJson(j));
-            LOG_INFO("AgenticOrch", "Loaded approval policy from " + path);
+            // Approval policy loaded
             return;
         }
         catch (...)
         {
-            LOG_INFO("AgenticOrch", "approval_policy.json present but invalid JSON: " + path);
+            // Invalid JSON in approval policy file
         }
     }
 }
@@ -169,7 +169,7 @@ void OrchestratorIntegration::initialize()
         m_orchestrator->setRiskAnalysisFn(m_riskAnalyzer);
     }
 
-    m_orchestrator->setExecutionLogFn([](const std::string& log_entry) { LOG_INFO("AgenticOrch", log_entry); });
+    m_orchestrator->setExecutionLogFn([](const std::string& log_entry) { /* Logging disabled */ });
 
     // Wire tool executor: delegates to the integration's callback
     m_orchestrator->setToolExecutorFn(

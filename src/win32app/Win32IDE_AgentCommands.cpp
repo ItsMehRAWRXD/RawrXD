@@ -1,7 +1,8 @@
 // Agent menu implementation for Win32IDE
 // Implements all agentic framework menu commands and integrations
 
-#include "../agentic/AgentOllamaClient.h"
+#include "../../include/enterprise_license.h"
+#include "../agentic/NativeInferenceClient.h"
 #include "../agentic/agentic_orchestrator_integration.hpp"
 #include "../core/enterprise_license.h"
 #include "IDELogger.h"
@@ -1470,9 +1471,9 @@ void Win32IDE::onAgentConfigureModel()
 
     try
     {
-        RawrXD::Agent::OllamaConfig probeCfg;
+        RawrXD::Agent::NativeInferenceConfig probeCfg;
         probeCfg.timeout_ms = 5000;  // Increased timeout for reliability
-        RawrXD::Agent::AgentOllamaClient probeClient(probeCfg);
+        RawrXD::Agent::NativeInferenceClient probeClient(probeCfg);
 
         if (probeClient.TestConnection())
         {
@@ -1490,7 +1491,7 @@ void Win32IDE::onAgentConfigureModel()
     }
     catch (const std::exception& e)
     {
-        connectionStatus = std::string("❌ Ollama error: ") + e.what();
+        connectionStatus = std::string("❌ Native inference error: ") + e.what();
         LOG_ERROR("Ollama probe exception: " + std::string(e.what()));
         availableModels.clear();
     }
@@ -2102,9 +2103,14 @@ void Win32IDE::handleAgentCommand(int commandId)
         }
         case IDM_AI_800B_STATUS:
         {
-            bool unlocked = RawrXD::EnterpriseLicense::is800BUnlocked();
-            std::string msg = unlocked ? "800B Dual-Engine: UNLOCKED (Enterprise)"
-                                       : "800B Dual-Engine: locked (requires Enterprise license)";
+            RawrXD::License::EnterpriseLicenseV2::Instance().initialize();
+            const bool v1 = RawrXD::EnterpriseLicense::is800BUnlocked();
+            const bool asmGlob = (RawrXD::g_800B_Unlocked != 0);
+            const bool v2 = RawrXD::License::EnterpriseLicenseV2::Instance().isFeatureEnabled(
+                RawrXD::License::FeatureID::DualEngine800B);
+            const bool unlocked = v1 || asmGlob || v2;
+            std::string msg = unlocked ? "800B Dual-Engine: UNLOCKED (V1/V2/MASM path active)"
+                                       : "800B Dual-Engine: locked (requires Enterprise entitlement)";
             appendToOutput(msg + "\n", "Output", OutputSeverity::Info);
             break;
         }

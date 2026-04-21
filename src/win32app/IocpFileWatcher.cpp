@@ -3,11 +3,7 @@
 
 #include <filesystem>
 
-// SCAFFOLD_357: IocpFileWatcher and file change
-
-
-// SCAFFOLD_168: IocpFileWatcher and reload
-
+// IOCP File Watcher Implementation - File Change and Reload
 
 namespace {
 std::string WideToUtf8(const std::wstring& value) {

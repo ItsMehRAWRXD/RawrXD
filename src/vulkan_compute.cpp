@@ -2835,7 +2835,7 @@ bool VulkanCompute::DispatchTitanMoEShardAsync(uint32_t experts_idx, uint32_t ac
     auto it = shaders_.find("titan_moe_shard");
     if (it == shaders_.end()) return false;
 
-    // Use a reusable descriptor set or allocate one (simplified for P2P demo)
+    // Use a reusable descriptor set or allocate one (simplified for P2P)
     VkDescriptorSetAllocateInfo ai{};
     ai.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
     ai.descriptorPool = titan_moe_descriptor_pool_;
@@ -2920,7 +2920,7 @@ bool VulkanCompute::DispatchTitanMoEShardAsync(uint32_t experts_idx, uint32_t ac
     bool success = vkQueueSubmit(compute_queue_, 1, &submit_info, VK_NULL_HANDLE) == VK_SUCCESS;
     
     // Note: Descriptor set and cmd buffer cleanup should be handled via a retirement queue in a real impl
-    // For this P2P demo, we assume the caller manages lifetime or we leak until cleanup.
+    // For this P2P, assume the caller manages lifetime or we leak until cleanup.
 
     if (success) {
         stats_.dispatch_count.fetch_add(1, std::memory_order_relaxed);

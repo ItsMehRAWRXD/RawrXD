@@ -254,7 +254,7 @@ std::unordered_map<uint64_t, InstructionSignature> VectorizedInstructionEmitter:
 VectorizedInstructionEmitter::EmitterMetrics VectorizedInstructionEmitter::metrics;
 
 // =============================================================================
-// Phase 24: Demonstration
+// Vectorized Instruction Emitter
 // =============================================================================
 
 int main(int argc, char* argv[]) {

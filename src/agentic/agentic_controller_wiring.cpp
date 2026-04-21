@@ -30,10 +30,10 @@
 namespace rawrxd
 {
 
-// Logging macros
-#define LOG_INFO(msg) std::cout << "[INFO] " << msg << std::endl
-#define LOG_ERROR(msg) std::cerr << "[ERROR] " << msg << std::endl
-#define LOG_WARNING(msg) std::cerr << "[WARN] " << msg << std::endl
+// Logging macros - disabled
+#define LOG_INFO(msg) ((void)0)
+#define LOG_ERROR(msg) ((void)0)
+#define LOG_WARNING(msg) ((void)0)
 
 // Global inference engine reference (set during initialization)
 static RawrXD::CPUInferenceEngine* g_inference_engine = nullptr;

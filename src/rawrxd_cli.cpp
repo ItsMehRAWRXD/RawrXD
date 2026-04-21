@@ -108,7 +108,7 @@ std::string QueryOllamaAPI(
             0);
 
         if (!hConnect) {
-            std::cerr << "[HTTP] Failed to connect to Ollama at localhost:11434\n";
+            std::cerr << "[HTTP] Failed to connect to Ollama at localhost:11435\n";
             WinHttpCloseHandle(hSession);
             return "";
         }
@@ -453,7 +453,7 @@ For more help: https://github.com/ItsMehRAWRXD/RawrXD/wiki
     // Initialize API server
     state.api_server = std::make_unique<APIServer>(state);
     state.api_server->Start(11434);
-    std::cout << "[API] Server started on http://localhost:11434" << std::endl;
+    std::cout << "[API] Server started on http://localhost:11435" << std::endl;
     
     // Initialize governor if requested
     if (state.enable_overclock_governor) {

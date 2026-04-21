@@ -135,7 +135,7 @@ struct HeadlessConfig
     std::string traceTokenCsvPath;   // --trace-token-csv <path>: dump Titan token trace CSV after single-shot
     /// When true (--agent-prompt), Ollama uses the multi-turn tool loop (parity with IDE agentic chat).
     bool agentPromptMode = false;
-    /// Optional fixed Ollama model name (--ollama-model); overrides auto-pick from /api/tags. Env: RAWRXD_OLLAMA_MODEL.
+    /// Optional fixed Ollama model name (--ollama-model); overrides auto-pick from /api/tags. Env: RAWRXD_NATIVE_MODEL.
     std::string ollamaModel;
 };
 
@@ -214,7 +214,7 @@ class HeadlessIDE
     enum class AIBackendType
     {
         LocalGGUF = 0,
-        Ollama = 1,
+        Native = 1,      // Renamed from 'native' to avoid Windows macro conflict
         OpenAI = 2,
         Claude = 3,
         Gemini = 4,

@@ -130,7 +130,7 @@ void MainWindow::setupLayerQuantWidget()
     connect(m_layerQuantWidget, &LayerQuantWidget::quantChanged,
             m_inferenceEngine, &InferenceEngine::setLayerQuant);
     
-    // Populate helper (GGUF metadata if available; else fallback examples)
+    // Populate helper (GGUF metadata if available; else fallback)
     auto populate = [this]() {
         m_layerQuantWidget->clearTensors();
         QStringList names = m_inferenceEngine ? m_inferenceEngine->tensorNames() : QStringList();

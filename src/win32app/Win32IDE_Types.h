@@ -447,7 +447,7 @@ struct IDESettings
     int aiMaxTokens = 512;
     int aiContextWindow = 4096;
     std::string aiModelPath;
-    std::string aiOllamaUrl = "http://localhost:11434";
+    std::string aiOllamaUrl = "http://localhost:11435";
     bool ghostTextEnabled = true;
     bool failureDetectorEnabled = true;
     int failureMaxRetries = 3;

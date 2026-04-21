@@ -16,7 +16,7 @@
 #include <cstring>
 #include <windows.h>
 
-// SCAFFOLD_068: agentic_puppeteer orchestration
+// Agentic Puppeteer Orchestration Implementation
 
 
 // MASM Bridge for byte-level corrections
@@ -138,7 +138,7 @@ AgenticPuppeteer::AgenticPuppeteer()
         "according to", "was invented by"
     };
 
-    fprintf(stderr, "[INFO] [AgenticPuppeteer] Initialized with refusal patterns and hallucination patterns\n");
+    // Initialized with refusal patterns and hallucination patterns
 }
 
 AgenticPuppeteer::~AgenticPuppeteer()
@@ -355,7 +355,7 @@ void AgenticPuppeteer::setEnabled(bool enable)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     m_enabled = enable;
-    fprintf(stderr, "[INFO] [AgenticPuppeteer] %s\n", enable ? "Enabled" : "Disabled");
+    // Enabled/Disabled
 }
 
 bool AgenticPuppeteer::isEnabled() const
@@ -468,7 +468,7 @@ std::string AgenticPuppeteer::handleInfiniteLoop(const std::string& response)
 RefusalBypassPuppeteer::RefusalBypassPuppeteer()
     : AgenticPuppeteer()
 {
-    fprintf(stderr, "[INFO] [RefusalBypassPuppeteer] Specialized for refusal bypass\n");
+    // Specialized for refusal bypass
 }
 
 CorrectionResult RefusalBypassPuppeteer::bypassRefusal(const std::string& refusedResponse, const std::string& originalPrompt)
@@ -499,7 +499,7 @@ std::string RefusalBypassPuppeteer::generateAlternativePrompt(const std::string&
 HallucinationCorrectorPuppeteer::HallucinationCorrectorPuppeteer()
     : AgenticPuppeteer()
 {
-    fprintf(stderr, "[INFO] [HallucinationCorrectorPuppeteer] Specialized for hallucination detection\n");
+    // Specialized for hallucination detection
 }
 
 CorrectionResult HallucinationCorrectorPuppeteer::detectAndCorrectHallucination(
@@ -542,7 +542,7 @@ std::string HallucinationCorrectorPuppeteer::validateFactuality(const std::strin
 FormatEnforcerPuppeteer::FormatEnforcerPuppeteer()
     : AgenticPuppeteer()
 {
-    fprintf(stderr, "[INFO] [FormatEnforcerPuppeteer] Specialized for format enforcement\n");
+    // Specialized for format enforcement
 }
 
 CorrectionResult FormatEnforcerPuppeteer::enforceJsonFormat(const std::string& response)

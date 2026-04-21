@@ -11,6 +11,8 @@
   5) Ship/Run-ChatAgenticSmoke.ps1 — RawrXD-Win32IDE --agentic-smoke (unless -SkipAgenticExe).
   6) RawrXD-TpsSmoke — when -RunTpsSmoke or RAWRXD_SMOKE_MODEL; -StrictTps fails on non-zero run.
 
+  Live Ollama: set RAWRXD_AGENTIC_SMOKE_LIVE=1 before running so Win32IDE --agentic-smoke exercises /api/tags and /api/chat (Ollama must be running).
+
 .PARAMETER SkipAgenticExe
   Skip Win32IDE --agentic-smoke.
 
@@ -129,12 +131,24 @@ else {
 if (-not $SkipCopilotCli) {
     $engine = $EngineExe
     if (-not $engine) {
-        $engine = Find-FirstExistingPath @(
+        $engineCandidates = @()
+        if ($BuildDir) {
+            $engineCandidates += @(
+                (Join-Path $BuildDir "bin\Release\RawrEngine.exe"),
+                (Join-Path $BuildDir "bin\Debug\RawrEngine.exe"),
+                (Join-Path $BuildDir "bin\RawrEngine.exe"),
+                (Join-Path $BuildDir "RawrEngine.exe")
+            )
+        }
+        $engineCandidates += @(
+            (Join-Path $repoRoot "build-win32\bin\RawrEngine.exe"),
             (Join-Path $repoRoot "build-ninja\bin\RawrEngine.exe"),
+            (Join-Path $repoRoot "build-win32\RawrEngine.exe"),
             (Join-Path $repoRoot "build\bin\Release\RawrEngine.exe"),
             (Join-Path $repoRoot "build\bin\RawrEngine.exe"),
             (Join-Path $repoRoot "build-ninja\RawrEngine.exe")
         )
+        $engine = Find-FirstExistingPath $engineCandidates
     }
     if ($engine) {
         Invoke-Step "headless_copilot_smoke" {
@@ -188,6 +202,7 @@ $wantTps = (-not $SkipTps) -and ($RunTpsSmoke -or ($env:RAWRXD_SMOKE_MODEL -and 
 if ($wantTps) {
     if (-not $BuildDir) {
         foreach ($c in @(
+                (Join-Path $repoRoot "build-win32"),
                 (Join-Path $repoRoot "build-ninja"),
                 (Join-Path $repoRoot "build-ninja-ctx2"),
                 (Join-Path $repoRoot "build_smoke_auto"),
@@ -213,6 +228,7 @@ if ($wantTps) {
         )
     }
     $tpsCandidates += @(
+        (Join-Path $repoRoot "build-win32\bin\RawrXD-TpsSmoke.exe"),
         (Join-Path $repoRoot "build-ninja\bin\RawrXD-TpsSmoke.exe"),
         (Join-Path $repoRoot "build-ninja-ctx2\bin\RawrXD-TpsSmoke.exe"),
         (Join-Path $repoRoot "build\bin\Release\RawrXD-TpsSmoke.exe"),
@@ -252,7 +268,8 @@ $obj = [ordered]@{
         liveAgenticOllama = "RAWRXD_AGENTIC_SMOKE_LIVE=1"
         tpsModel          = "RAWRXD_SMOKE_MODEL=<path.gguf>"
         tpsRef            = "RAWRXD_TPS_REF"
-        laneBCli          = "cmake --build build-ninja --target RawrEngine ; RawrEngine --copilot-smoke"
+        laneBCli          = "cmake --build <RAWRXD_BUILD_DIR|build-win32|build-ninja> --target RawrEngine ; <build-dir>\bin\RawrEngine.exe --copilot-smoke"
+        ideModelAutonomy  = "ctest -C Debug -R test_ide_model_autonomy --output-on-failure (from configured build dir)"
         fullChatParity    = "pwsh -File Ship/smoke_agentic_chat_parity.ps1"
         fastSourceOnly    = "pwsh -File scripts/Smoke-IDE-TurnKey.ps1"
     }

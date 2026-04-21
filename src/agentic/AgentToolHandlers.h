@@ -137,6 +137,8 @@ class AgentToolHandlers
     static ToolCallResult ApplyHotpatch(const nlohmann::json& args);
     static ToolCallResult SysGetCapabilities(const nlohmann::json& args);
     static ToolCallResult DiskRecovery(const nlohmann::json& args);
+    static ToolCallResult GenerateImage(const nlohmann::json& args);
+    static ToolCallResult GenerateVideo(const nlohmann::json& args);
 
     // ---- Schema generation (OpenAI function-calling format) ----
     static nlohmann::json GetAllSchemas();

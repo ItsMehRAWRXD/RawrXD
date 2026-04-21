@@ -1,10 +1,11 @@
 #include "AgenticSubmitInference_Fix.h"
 
-#include "AgentOllamaClient.h"
+#include "NativeInferenceClient.h"
 #include "AgentToolHandlers.h"
 #include "ToolCallResult.h"
 
 #include <algorithm>
+#include <cctype>
 #include <limits>
 
 namespace RawrXD {
@@ -13,6 +14,56 @@ namespace Agentic {
 using json = nlohmann::json;
 
 namespace {
+
+std::string TrimAscii(std::string value) {
+    const auto notSpace = [](unsigned char ch) { return !std::isspace(ch); };
+    value.erase(value.begin(), std::find_if(value.begin(), value.end(), notSpace));
+    value.erase(std::find_if(value.rbegin(), value.rend(), notSpace).base(), value.end());
+    return value;
+}
+
+bool ValidateQualityGate(const AgenticInferenceBridge::InferenceResult& result,
+                        const std::string& latestResponse,
+                        std::string& reason) {
+    const std::string trimmed = TrimAscii(latestResponse);
+    if (trimmed.empty()) {
+        reason = "empty_response";
+        return false;
+    }
+
+    if (!result.usedTools) {
+        return true;
+    }
+
+    int successCount = 0;
+    int failureCount = 0;
+    for (const auto& record : result.toolTrace) {
+        if (record.success) {
+            ++successCount;
+        } else {
+            ++failureCount;
+        }
+    }
+
+    if (successCount == 0 && failureCount > 0) {
+        reason = "all_tool_calls_failed";
+        return false;
+    }
+
+    return true;
+}
+
+Agent::ChatMessage BuildQualityRecoveryMessage(const std::string& reason) {
+    Agent::ChatMessage qualityMessage;
+    qualityMessage.role = "user";
+    qualityMessage.content =
+        "QUALITY_VALIDATION_FAILED: " + reason +
+        ". Continue autonomously: inspect the last tool outputs, pick valid registered tools only, and"
+        " produce either (a) corrected tool calls or (b) a final answer that explicitly reports unresolved failures.";
+    qualityMessage.tool_call_id.clear();
+    qualityMessage.tool_calls = json();
+    return qualityMessage;
+}
 
 std::string BuildToolMessageContent(const RawrXD::Agent::ToolCallResult& result) {
     if (result.isSuccess()) {
@@ -52,14 +103,14 @@ AgenticInferenceBridge::InferenceResult AgenticInferenceBridge::SubmitInferenceW
 {
     InferenceResult bridgeResult;
 
-    Agent::OllamaConfig clientConfig;
+    Agent::NativeInferenceConfig clientConfig;
     clientConfig.host = runtime.host.empty() ? "127.0.0.1" : runtime.host;
-    clientConfig.port = runtime.port == 0 ? 11434 : runtime.port;
-    clientConfig.chat_model = modelName.empty() ? "phi3:mini" : modelName;
+    clientConfig.port = runtime.port == 0 ? 11435 : runtime.port;
+    clientConfig.chat_model = modelName.empty() ? "headless-default" : modelName;
     clientConfig.temperature = runtime.temperature;
     clientConfig.max_tokens = ClampMaxTokens(max_tokens);
 
-    Agent::AgentOllamaClient client(clientConfig);
+    Agent::NativeInferenceClient client(clientConfig);
 
     std::vector<Agent::ChatMessage> messages;
     messages.push_back({"system",
@@ -90,6 +141,17 @@ AgenticInferenceBridge::InferenceResult AgenticInferenceBridge::SubmitInferenceW
         }
 
         if (!llmResult.has_tool_calls || llmResult.tool_calls.empty()) {
+            std::string qualityReason;
+            if (!ValidateQualityGate(bridgeResult, latestResponse, qualityReason)) {
+                if (step + 1 < maxIterations) {
+                    messages.push_back(BuildQualityRecoveryMessage(qualityReason));
+                    continue;
+                }
+
+                bridgeResult.error = "quality validation failed: " + qualityReason;
+                return bridgeResult;
+            }
+
             bridgeResult.success = true;
             if (bridgeResult.response.empty()) {
                 bridgeResult.response = latestResponse;
@@ -143,8 +205,14 @@ AgenticInferenceBridge::InferenceResult AgenticInferenceBridge::SubmitInferenceW
     }
 
     if (!latestResponse.empty()) {
-        bridgeResult.success = true;
-        bridgeResult.response = latestResponse + "\n\n[INFO] Agent step limit reached.";
+        std::string qualityReason;
+        if (ValidateQualityGate(bridgeResult, latestResponse, qualityReason)) {
+            bridgeResult.success = true;
+            bridgeResult.response = latestResponse + "\n\n[INFO] Agent step limit reached.";
+            return bridgeResult;
+        }
+
+        bridgeResult.error = "quality validation failed after step limit: " + qualityReason;
         return bridgeResult;
     }
 

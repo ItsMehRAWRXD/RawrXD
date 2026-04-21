@@ -11,6 +11,9 @@
 #include "Win32IDE_Phase16_AgenticController.h"
 #include "Win32IDE_Phase17_AgenticProfiler.h"
 #include "ui/agentic_bridge_api.h"
+#if !defined(RAWRXD_HEADLESS_ONLY) || !(RAWRXD_HEADLESS_ONLY)
+#include "../agentic/RawrXD_ToolRegistry.h"
+#endif
 
 #include <algorithm>
 #include <cctype>
@@ -22,6 +25,7 @@
 #include <tlhelp32.h>
 #include <vector>
 #include <windows.h>
+#include <winsock2.h>  // MUST precede windows.h to avoid winsock1/winsock2 redefinition
 
 // Forward-declared; never dereferenced in headless
 struct Win32IDE;
@@ -148,6 +152,228 @@ std::string AppendProfilerSummary(std::string text, uint32_t maxTools = 3)
     return text;
 }
 }  // namespace
+
+// ============================================================================
+// Self-hosting: headless server entry points
+// ============================================================================
+// RawrXD_StartHeadlessServer() spins up the agentic backend (inference +
+// tool-registry + agent loop) on a loopback TCP port and signals readiness
+// via a named event.  Both the GUI process and PowerShell scripts can call
+// this.  It is safe to call multiple times; subsequent calls are no-ops when
+// the server is already running.
+// ============================================================================
+
+namespace
+{
+std::atomic<bool> g_headlessRunning{false};
+HANDLE g_headlessThread = nullptr;
+uint16_t g_headlessPort = 0;
+HANDLE g_headlessReadyEvent = nullptr;
+
+struct HeadlessServerParams
+{
+    uint16_t port;
+    std::string repoRoot;
+};
+
+#if defined(RAWRXD_HEADLESS_ONLY) && RAWRXD_HEADLESS_ONLY
+// RawrEngine Lane B does not link RawrXD_ToolRegistry.cpp; keep HTTP tool surface inert.
+namespace
+{
+struct HeadlessLaneBToolSurface
+{
+    static void registerBuiltinMasmTools() {}
+
+    static void execute(const std::string& /*toolName*/, const std::string& /*jsonArgs*/, std::string& output)
+    {
+        output =
+            R"({"ok":false,"detail":"RawrEngine lane B: full Agent ToolRegistry not linked; use Win32IDE for tool HTTP dispatch"})";
+    }
+};
+}  // namespace
+#endif
+
+// Background thread: runs the API-server accept loop.
+DWORD WINAPI HeadlessServerThread(LPVOID param)
+{
+    HeadlessServerParams* p = reinterpret_cast<HeadlessServerParams*>(param);
+    const uint16_t port = p->port;
+    delete p;
+
+    // Register built-in MASM tools before the loop starts.
+#if defined(RAWRXD_HEADLESS_ONLY) && RAWRXD_HEADLESS_ONLY
+    HeadlessLaneBToolSurface::registerBuiltinMasmTools();
+#else
+    RawrXD::Agent::ToolRegistry::Instance().RegisterBuiltinMasmTools();
+#endif
+
+    // Spin a lightweight accept loop using Winsock directly so we have no
+    // dependency on the GUI stack.
+    WSADATA wsa{};
+    if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
+    {
+        g_headlessRunning.store(false);
+        return 1;
+    }
+
+    const SOCKET listenSock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (listenSock == INVALID_SOCKET)
+    {
+        WSACleanup();
+        g_headlessRunning.store(false);
+        return 1;
+    }
+
+    // SO_REUSEADDR so a fast restart doesn't hit TIME_WAIT.
+    const int yes = 1;
+    setsockopt(listenSock, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<const char*>(&yes), sizeof(yes));
+
+    sockaddr_in addr{};
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    addr.sin_port = htons(port);
+
+    if (bind(listenSock, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) != 0 || listen(listenSock, SOMAXCONN) != 0)
+    {
+        closesocket(listenSock);
+        WSACleanup();
+        g_headlessRunning.store(false);
+        return 2;
+    }
+
+    // Ready only after listen succeeds — avoids GUI connecting to a dead port.
+    if (g_headlessReadyEvent)
+    {
+        SetEvent(g_headlessReadyEvent);
+    }
+
+    while (g_headlessRunning.load())
+    {
+        // Non-blocking poll so the stop flag is checked regularly.
+        fd_set readfds;
+        FD_ZERO(&readfds);
+        FD_SET(listenSock, &readfds);
+        timeval tv{0, 100000};  // 100 ms
+        if (select(0, &readfds, nullptr, nullptr, &tv) <= 0)
+            continue;
+
+        const SOCKET clientSock = accept(listenSock, nullptr, nullptr);
+        if (clientSock == INVALID_SOCKET)
+            continue;
+
+        // Minimal HTTP/1.1 handler: read request, dispatch to ToolRegistry.
+        char buf[8192]{};
+        const int received = recv(clientSock, buf, sizeof(buf) - 1, 0);
+        if (received > 0)
+        {
+            // Parse tool_name and json_args from a POST body of the form:
+            //   POST /tool   body: {"tool":"<name>","args":{...}}
+            std::string body(buf, static_cast<size_t>(received));
+            const size_t bodyStart = body.find("\r\n\r\n");
+            std::string output;
+            if (bodyStart != std::string::npos)
+            {
+                const std::string json = body.substr(bodyStart + 4);
+                std::string toolName, toolArgs;
+                // Minimal JSON field extraction — not a full parser.
+                auto extractStr = [&](const std::string& key) -> std::string
+                {
+                    const std::string needle = "\"" + key + "\":\"";
+                    const size_t p = json.find(needle);
+                    if (p == std::string::npos)
+                        return {};
+                    const size_t s = p + needle.size();
+                    const size_t e = json.find('"', s);
+                    return e == std::string::npos ? std::string{} : json.substr(s, e - s);
+                };
+                const size_t argsKey = json.find("\"args\":");
+                toolName = extractStr("tool");
+                if (argsKey != std::string::npos)
+                    toolArgs = json.substr(argsKey + 7);
+
+#if defined(RAWRXD_HEADLESS_ONLY) && RAWRXD_HEADLESS_ONLY
+                HeadlessLaneBToolSurface::execute(toolName, toolArgs, output);
+#else
+                RawrXD::Agent::ToolRegistry::Instance().Execute(toolName, toolArgs, output);
+#endif
+            }
+            else
+            {
+                output = "{\"error\":\"malformed request\"}";
+            }
+            const std::string httpResp = "HTTP/1.1 200 OK\r\n"
+                                         "Content-Type: application/json\r\n"
+                                         "Content-Length: " +
+                                         std::to_string(output.size()) +
+                                         "\r\n"
+                                         "Connection: close\r\n\r\n" +
+                                         output;
+            send(clientSock, httpResp.c_str(), static_cast<int>(httpResp.size()), 0);
+        }
+        closesocket(clientSock);
+    }
+
+    closesocket(listenSock);
+    WSACleanup();
+    return 0;
+}
+}  // namespace
+
+extern "C"
+{
+
+    /// Start the headless agentic backend on the given loopback port.
+    /// Returns true on success or if already running.  Blocks up to 5 seconds
+    /// waiting for the server to signal readiness via the named event
+    /// "RawrXD_HeadlessReady_<port>".
+    bool RawrXD_StartHeadlessServer(uint16_t port)
+    {
+        if (g_headlessRunning.load())
+            return true;
+
+        if (port == 0)
+            port = 51700;
+
+        g_headlessPort = port;
+        g_headlessRunning.store(true);
+
+        const std::string evtName = "RawrXD_HeadlessReady_" + std::to_string(port);
+        g_headlessReadyEvent = CreateEventA(nullptr, TRUE, FALSE, evtName.c_str());
+
+        auto* params = new HeadlessServerParams{port, ""};
+        g_headlessThread = CreateThread(nullptr, 0, HeadlessServerThread, params, 0, nullptr);
+        if (!g_headlessThread)
+        {
+            g_headlessRunning.store(false);
+            return false;
+        }
+
+        // Wait up to 5 s for the ready signal.
+        if (g_headlessReadyEvent)
+            WaitForSingleObject(g_headlessReadyEvent, 5000);
+
+        return true;
+    }
+
+    /// Stop the headless server and join its thread.
+    void RawrXD_StopHeadlessServer()
+    {
+        g_headlessRunning.store(false);
+        if (g_headlessThread)
+        {
+            WaitForSingleObject(g_headlessThread, 10000);
+            CloseHandle(g_headlessThread);
+            g_headlessThread = nullptr;
+        }
+        if (g_headlessReadyEvent)
+        {
+            CloseHandle(g_headlessReadyEvent);
+            g_headlessReadyEvent = nullptr;
+        }
+        g_headlessPort = 0;
+    }
+
+}  // extern "C"
 
 AgenticBridge::AgenticBridge(Win32IDE* ide)
     : m_ide(ide), m_initialized(false), m_agentLoopRunning(false), m_hProcess(nullptr), m_hStdoutRead(nullptr),

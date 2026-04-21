@@ -11,7 +11,7 @@
 #include <algorithm>
 #include <filesystem>
 
-// SCAFFOLD_034: File operations and model load from explorer
+// File Operations and Model Load from Explorer Implementation
 
 
 // ============================================================================

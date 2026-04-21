@@ -72,7 +72,7 @@ struct OllamaChatMessage {
 
 // ─── Response ───────────────────────────────────────────────────────
 
-struct OllamaResponse {
+struct NativeInferenceResponse {
     bool error = false;
     std::string error_message;
 
@@ -128,15 +128,15 @@ struct RetryConfig {
 
 using StreamCallback = std::function<void(const std::string& chunk)>;
 using ErrorCallback = std::function<void(const std::string& error)>;
-using CompletionCallback = std::function<void(const OllamaResponse& response)>;
+using CompletionCallback = std::function<void(const NativeInferenceResponse& response)>;
 using ToolExecutor = std::function<std::string(const std::string& tool_name, const std::string& arguments_json)>;
 
 // ─── Client ─────────────────────────────────────────────────────────
 
-class OllamaClient {
+class NativeClient {
 public:
-    explicit OllamaClient(const std::string& base_url = "http://localhost:11434");
-    ~OllamaClient();
+    explicit NativeClient(const std::string& base_url = "http://localhost:11435");
+    ~NativeClient();
 
     // --- Configuration ---
     void setBaseUrl(const std::string& url);
@@ -153,8 +153,8 @@ public:
     std::vector<OllamaModel> listModels();
 
     // --- Synchronous Generation ---
-    OllamaResponse generateSync(const OllamaGenerateRequest& request);
-    OllamaResponse chatSync(const OllamaChatRequest& request);
+    NativeInferenceResponse generateSync(const OllamaGenerateRequest& request);
+    NativeInferenceResponse chatSync(const OllamaChatRequest& request);
 
     // --- Streaming Generation ---
     bool generate(const OllamaGenerateRequest& request,
@@ -168,7 +168,7 @@ public:
               CompletionCallback on_complete);
 
     // --- Tool-Augmented Chat ---
-    OllamaResponse chatWithTools(
+    NativeInferenceResponse chatWithTools(
         const OllamaChatRequest& request,
         ToolExecutor executor,
         int max_tool_rounds = 5);
@@ -194,7 +194,7 @@ private:
     std::string createChatRequestJson(const OllamaChatRequest& req);
 
     // Response parsing
-    OllamaResponse parseResponse(const std::string& json_str);
+    NativeInferenceResponse parseResponse(const std::string& json_str);
     std::vector<OllamaModel> parseModels(const std::string& json_str);
 
     // HTTP transport (WinHTTP)

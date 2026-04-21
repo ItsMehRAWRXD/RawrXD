@@ -377,6 +377,7 @@ if(RAWR_HAS_MASM)
         src/asm/inference_core.asm
         src/asm/inference_kernels.asm
         src/asm/token_queue_dequeue.asm
+        src/asm/RawrXD_SovereignTokenizerCore.asm
         src/asm/RawrXD_KQuant_Dequant.asm
         src/asm/RawrXD_AVX512_Dequant_BPE.asm
         src/kernels/dequant_q6k_avx512.asm
@@ -1483,6 +1484,7 @@ set(RAWR_ENGINE_ASM_SOURCES
     src/asm/zerocopy_ring_bridge.asm
     src/asm/ums_micro_scheduler.asm
     src/asm/inference_core.asm
+    src/asm/RawrXD_SovereignTokenizerCore.asm
     src/kernels/dequant_q6k_avx512.asm
     src/kernels/kv_accum_avx512.asm
 )
@@ -2740,11 +2742,16 @@ set(INFERENCE_ENGINE_SOURCES
     src/engine/sovereign_engines.cpp
     src/core/layer_offload_manager.cpp
     src/core/engine_registry.cpp
+    src/core/engine_revolver.cpp
     src/utils/Diagnostics.cpp
     src/inference/TitanLoaderDiagnostics.cpp
     src/inference/MemoryPressureGuard.cpp
     src/agentic/ErrorRecoveryManager.cpp
     src/inference/PerformanceMonitor.cpp
+    # Standalone inference link closure (cpu_inference_engine + model loader + transformer + swarm)
+    src/core/swarm_scheduler.cpp
+    src/core/gguf_swarm_plan_builder.cpp
+    src/logging/Logger.cpp
 )
 list(REMOVE_DUPLICATES INFERENCE_ENGINE_SOURCES)
 if(NOT RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
@@ -2843,6 +2850,7 @@ endif()
             src/asm/inference_core.asm
             src/asm/inference_kernels.asm
             src/asm/token_queue_dequeue.asm
+            src/asm/RawrXD_SovereignTokenizerCore.asm
             src/asm/quant_avx2.asm
             src/asm/RawrXD_KQuant_Dequant.asm
             src/asm/RawrXD_KQuant_Kernel.asm
@@ -2850,6 +2858,7 @@ endif()
             src/kernels/dequant_q6k_avx512.asm
             src/kernels/kv_accum_avx512.asm
             src/asm/RawrXD_Telemetry_Kernel.asm
+            src/asm/model_streamer_x64.asm
             # Known invalid ml64 scaffold in repository copy; keep C++ pyre_compute.cpp path active.
             # src/asm/RawrXD_Pyre_Compute.asm
         )
@@ -2900,6 +2909,36 @@ if(MSVC)
 endif()
 
 message(STATUS "[Phase 6] Standalone inference engine target: RawrXD-InferenceEngine")
+
+# Companion DLL for RawrXD-Serve — same ABI as rawrxd_serve_inference_plugin.cpp expects.
+if(MSVC AND TARGET InferenceEngine)
+    add_library(RawrXD-ServeInference SHARED
+        src/serve/RawrXD_ServeInference_dll.cpp
+    )
+    target_link_libraries(RawrXD-ServeInference PRIVATE InferenceEngine)
+    target_compile_definitions(RawrXD-ServeInference PRIVATE
+        RAWRXD_ServeInference_EXPORTS=1
+        NOMINMAX
+        _CRT_SECURE_NO_WARNINGS
+        RAWRXD_STRICT_PRODUCTION_PROFILE=$<IF:$<BOOL:${RAWRXD_PRODUCTION_STRIP_STUB_SOURCES}>,1,0>
+        RAWR_STANDALONE_INFERENCE=1
+        RAWR_HAS_SOVEREIGN_ENGINES=1
+        RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=$<IF:$<BOOL:${RAWRXD_PRODUCTION_STRIP_STUB_SOURCES}>,1,0>
+        ${_RAWR_ASM_FEATURE_DEFINITIONS}
+    )
+    target_compile_options(RawrXD-ServeInference PRIVATE
+        $<$<COMPILE_LANGUAGE:CXX>:/EHsc /W0 /arch:AVX512>
+        $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<NOT:$<CONFIG:Debug>>>:/O2>
+    )
+    target_link_options(RawrXD-ServeInference PRIVATE /LARGEADDRESSAWARE:NO)
+    set_target_properties(RawrXD-ServeInference PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME RawrXD_ServeInference
+        CXX_STANDARD 20
+        CXX_STANDARD_REQUIRED ON
+    )
+    message(STATUS "[Serve] RawrXD-ServeInference DLL target added (CPUInferenceEngine plugin)")
+endif()
 
 if(WIN32)
     option(RAWRXD_INLINE_DISPATCH "Inline aperture dispatch hot path for benchmarking" OFF)
@@ -3233,6 +3272,7 @@ if(WIN32)
         src/win32app/Win32IDE_Tier2Cosmetics.cpp
         src/win32app/Win32IDE_Tier1Cosmetics.cpp
         src/win32app/Win32IDE_Breadcrumbs.cpp
+        src/win32app/RawrXD_SymbolEngine.cpp
         src/win32app/Win32IDE_PlanExecutor.cpp
         src/agentic/agentic_planning_orchestrator.cpp
         src/agentic/failure_intelligence_orchestrator.cpp
@@ -3475,7 +3515,7 @@ if(WIN32)
 
         # HTTP Client — WinHTTP async with future retention (CLI+GUI)
         src/agent/llm_http_client.cpp
-        src/agent/model_invoker.cpp
+        # src/agent/model_invoker.cpp  # Test file - excluded from build
         src/agent/planner.cpp
         src/agent/meta_planner.cpp
         src/agent/eval_framework.cpp
@@ -3637,7 +3677,7 @@ if(WIN32)
 
         # Phase 21: Distributed Swarm Inference Orchestrator
         src/cli/swarm_orchestrator.cpp
-        src/core/swarm_orchestrator_link_stub.cpp
+        src/agentic/swarm_orchestrator.cpp
 
         # Phase 32A: Chain-of-Thought Multi-Model Review Engine
         src/core/chain_of_thought_engine.cpp
@@ -3969,7 +4009,20 @@ if(WIN32)
 
         # Phase 17: Agentic Profiler (per-tool RDTSC cycle accounting)
         src/win32app/Win32IDE_Phase17_AgenticProfiler.cpp
+
+        # Missing source files (linker gap closure)
+        src/win32app/Win32IDE_VideoStudio.cpp
+        src/win32app/Win32IDE_EnableAllFeatures.cpp
+        src/core/feature_handlers_model_load.cpp
+        src/autonomous_validation_layer.cpp
+        src/video/tubi_backend.cpp
     )
+
+    if(RAWR_HAS_MASM)
+        set(TUBI_ASM src/asm/RawrXD_TubiVideoBackend.asm)
+        set_source_files_properties(${TUBI_ASM} PROPERTIES LANGUAGE ASM_MASM)
+        list(APPEND WIN32IDE_SOURCES ${TUBI_ASM})
+    endif()
 
     if(NOT RAWRXD_INCLUDE_STRESS_AND_REPLAY_SOURCES)
         list(REMOVE_ITEM WIN32IDE_SOURCES
@@ -4592,7 +4645,7 @@ if(WIN32)
     # Batch 33: NLShell + VectorIndex ASM kernels (Phases 46-48)
     list(APPEND WIN32IDE_EXTRA_ASM
         # src/asm/RawrXD_VectorIndex.asm   # excluded in Win32IDE: duplicates Vector_* symbols from src/runtime/RawrXDVectorIndex.cpp
-        src/asm/RawrXD_NLShell.asm
+        # src/asm/RawrXD_NLShell.asm  # Using C++ stub in ai_agent_masm_stubs.cpp instead to avoid duplicate symbol
         src/asm/RawrXD_AVX512_VectorSearch.asm
     )
 
@@ -4606,7 +4659,7 @@ if(WIN32)
     # on line ~4045 only covers the initial WIN32IDE_EXTRA_ASM before this append).
     if(RAWR_HAS_MASM)
         set_source_files_properties(
-            src/asm/RawrXD_NLShell.asm
+            # src/asm/RawrXD_NLShell.asm  # Using C++ stub instead
             src/asm/RawrXD_AVX512_VectorSearch.asm
             PROPERTIES LANGUAGE ASM_MASM
         )
@@ -4892,9 +4945,15 @@ if(WIN32)
     # Link RE library into Win32IDE
     target_link_libraries(RawrXD-Win32IDE PRIVATE RawrXD-RE-Library)
     
-    # Singularity Core (Pure MASM layer - Final Link)
-    target_link_libraries(RawrXD-Win32IDE PRIVATE "d:/rawrxd/build/asm_obj/singularity_core.lib")
-    target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWR_SINGULARITY_LINKED=1)
+    # Singularity Core (Pure MASM layer — optional; skip link if lib not built yet)
+    set(_RAWRXD_SINGULARITY_CORE_LIB "${CMAKE_SOURCE_DIR}/build/asm_obj/singularity_core.lib")
+    if(EXISTS "${_RAWRXD_SINGULARITY_CORE_LIB}")
+        target_link_libraries(RawrXD-Win32IDE PRIVATE "${_RAWRXD_SINGULARITY_CORE_LIB}")
+        target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWR_SINGULARITY_LINKED=1)
+    else()
+        message(WARNING "singularity_core.lib not found at ${_RAWRXD_SINGULARITY_CORE_LIB} — Win32IDE links without it (place lib after MASM build).")
+        target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWR_SINGULARITY_LINKED=0)
+    endif()
 
     # Link MultiWindow Kernel into Win32IDE
     if(TARGET RawrXD_MultiWindow_Kernel)
@@ -5264,6 +5323,21 @@ if(WIN32)
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
     )
 
+    add_executable(workflow_persistence_smoke EXCLUDE_FROM_ALL
+        tests/test_workflow_persistence.cpp
+        src/agentic_loop_state.cpp
+        src/agentic_memory_system.cpp
+        src/execution_state_persistence.cpp
+    )
+    target_include_directories(workflow_persistence_smoke PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}
+    )
+    target_link_libraries(workflow_persistence_smoke PRIVATE kernel32 Rpcrt4)
+    set_target_properties(workflow_persistence_smoke PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    )
+
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/cpu_inference_engine_autofix_stub.cpp" AND NOT RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
         add_executable(RawrXD-AutoFixCLI
             src/app/cli_entrypoint.cpp
@@ -5453,6 +5527,30 @@ if(WIN32)
         OUTPUT_NAME RawrXD-QueryFusionBenchmark
     )
     message(STATUS "[Phase 9] Query Fusion Benchmark target: RawrXD-QueryFusionBenchmark")
+
+    # ═══════════════════════════════════════════════════════════════════
+    # Streamability benchmark — live StreamingGGUFLoader capacity scan + one-addition estimate
+    # ═══════════════════════════════════════════════════════════════════
+    add_executable(RawrXD-StreamabilityBenchmark EXCLUDE_FROM_ALL
+        src/tools/RawrXD_StreamabilityBenchmark.cpp
+        src/streaming_gguf_loader.cpp
+        src/utils/Diagnostics.cpp
+    )
+    target_include_directories(RawrXD-StreamabilityBenchmark PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    if(MSVC)
+        target_compile_options(RawrXD-StreamabilityBenchmark PRIVATE /EHsc /W2 /O2)
+    endif()
+    target_link_libraries(RawrXD-StreamabilityBenchmark PRIVATE kernel32)
+    set_target_properties(RawrXD-StreamabilityBenchmark PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME RawrXD-StreamabilityBenchmark
+        CXX_STANDARD 23
+        CXX_STANDARD_REQUIRED ON
+    )
+    message(STATUS "[Benchmark] RawrXD-StreamabilityBenchmark target")
 
     # ═══════════════════════════════════════════════════════════════════
     # TPS smoke — GGUFRunner + model_runtime_gate + runtime_surface unity + decode TPS vs ref (default 239)
@@ -5936,6 +6034,7 @@ add_executable(RawrXD-Serve EXCLUDE_FROM_ALL
     src/serve/rawrxd_serve_main.cpp
     src/serve/rawrxd_serve.cpp
     src/serve/rawrxd_model_registry.cpp
+    src/serve/rawrxd_serve_inference_plugin.cpp
 )
 target_include_directories(RawrXD-Serve PRIVATE
     ${CMAKE_SOURCE_DIR}/src/serve
@@ -5958,4 +6057,7 @@ set_target_properties(RawrXD-Serve PROPERTIES
     CXX_STANDARD 20
     CXX_STANDARD_REQUIRED ON
 )
+if(TARGET RawrXD-ServeInference)
+    add_dependencies(RawrXD-Serve RawrXD-ServeInference)
+endif()
 message(STATUS "[Serve] RawrXD-Serve target added (Ollama-compatible HTTP server + CLI)")

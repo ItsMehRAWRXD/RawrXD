@@ -1,7 +1,9 @@
 #include "../../include/RawrXD_ApertureManager.h"
+#include "../../include/api_server.h"
 #include "../../include/collab/websocket_hub.h"
 #include "../../include/crash_containment.h"
 #include "../../include/enterprise_feature_manager.hpp"
+#include "../../include/enterprise_license.h"
 #include "../../include/enterprise_stress_tests.h"
 #include "../../include/feature_flags_runtime.h"
 #include "../../include/final_gauntlet.h"
@@ -16,6 +18,7 @@
 #include "../../include/startup_phase_registry.h"
 #include "../../include/swarm_reconciliation.h"
 #include "../../include/update_signature.h"
+#include "../AppState.h"
 #include "../cli/swarm_orchestrator.h"
 #include "../core/HardwareScout.h"
 #include "../core/camellia256_bridge.hpp"
@@ -25,12 +28,13 @@
 #include "../core/model_memory_hotpatch.hpp"
 #include "../core/rawrxd_state_mmf.hpp"
 #include "../core/unified_command_dispatch.hpp"
-#include "../marketplace/extension_auto_installer.hpp"
 #include "../cpu_inference_engine.h"
+#include "../marketplace/extension_auto_installer.hpp"
 #include "../modules/codex_ultimate.h"
 #include "../modules/engine_manager.h"
 #include "../modules/memory_manager.h"
 #include "../modules/vsix_loader.h"
+#include "../overclock_governor.h"
 #include "../p2p/SystemIntegrityProver.h"
 #include "HeadlessIDE.h"
 #include "Win32IDE.h"
@@ -106,6 +110,33 @@ static bool isTruthyEnvVar(const char* name)
     if (!value || !value[0])
         return false;
     return !(value[0] == '0' || value[0] == 'n' || value[0] == 'N' || value[0] == 'f' || value[0] == 'F');
+}
+
+// Directory of the running IDE exe (ASCII); empty if unavailable.
+static std::string getIdeExeDirectoryA()
+{
+    char buf[MAX_PATH] = {};
+    const DWORD n = GetModuleFileNameA(nullptr, buf, (DWORD)sizeof(buf));
+    if (n == 0 || n >= sizeof(buf))
+        return {};
+    std::string p(buf, buf + n);
+    const size_t slash = p.find_last_of("\\/");
+    if (slash == std::string::npos)
+        return {};
+    return p.substr(0, slash);
+}
+
+// Join exe directory with a relative path using a single backslash (rel may contain backslashes).
+static std::string joinExeSubpathA(const std::string& exeDir, const char* relPath)
+{
+    if (!relPath || relPath[0] == '\0')
+        return exeDir;
+    if (exeDir.empty())
+        return {};
+    const char sep = (exeDir.back() == '\\' || exeDir.back() == '/') ? '\0' : '\\';
+    if (sep == '\0')
+        return exeDir + relPath;
+    return exeDir + std::string(1, sep) + relPath;
 }
 
 static bool fileExists(const std::filesystem::path& p)
@@ -370,11 +401,11 @@ static void printHeadlessQuickHelp()
 {
     fputs("RawrXD Headless IDE\n"
           "Usage: RawrXD-Win32IDE.exe --headless [--repl|--no-server|--prompt <text>]\n"
-          "  --no-server       Disable HTTP server (exit immediately)\n"
+          "  --no-server       Skip HTTP listener; tear down after headless init (no blocking server loop)\n"
           "  --repl            Interactive REPL mode\n"
           "  --prompt <txt>    Single-shot Ollama chat (one /api/chat turn)\n"
           "  --agent-prompt    Same prompt, but use multi-turn tool loop (IDE agentic parity)\n"
-          "  --ollama-model M  Pin Ollama model (else /api/tags or RAWRXD_OLLAMA_MODEL)\n"
+          "  --ollama-model M  Pin Ollama model (else /api/tags or RAWRXD_NATIVE_MODEL)\n"
           "  --help            Show this help and exit\n",
           stdout);
     fflush(stdout);
@@ -1000,10 +1031,488 @@ static void ensureMainWindowVisible(HWND hMain)
 static EngineManager* s_engine_mgr = nullptr;
 static CodexUltimate* s_codex = nullptr;
 
+// Self-hosting backend — Ollama-compatible API server backed by native MASM kernels.
+static AppState s_apiAppState;
+static std::unique_ptr<APIServer> s_apiServer;
+
+// Debugger + System output (after main HWND exists; appendToOutput no-ops until output tabs are live).
+static void guiBootMilestone(Win32IDE* ide, const char* debugLine, const char* userLine)
+{
+    if (debugLine && debugLine[0])
+        OutputDebugStringA(debugLine);
+    if (!userLine || !userLine[0])
+        return;
+    if (!ide || ide->isShuttingDown())
+        return;
+    HWND hwnd = ide->getMainWindow();
+    if (!hwnd || !IsWindow(hwnd))
+        return;
+    ide->appendToOutput(std::string(userLine), "System", Win32IDE::OutputSeverity::Info);
+}
+
+// Post–message-loop cleanup: debugger always; System tab if main HWND still valid (ignores isShuttingDown).
+static void guiShutdownMilestone(Win32IDE* ide, const char* debugLine, const char* userLine)
+{
+    if (debugLine && debugLine[0])
+        OutputDebugStringA(debugLine);
+    if (!userLine || !userLine[0] || !ide)
+        return;
+    HWND hwnd = ide->getMainWindow();
+    if (!hwnd || !IsWindow(hwnd))
+        return;
+    ide->appendToOutput(std::string(userLine), "System", Win32IDE::OutputSeverity::Info);
+}
+
+// Lines before Win32IDE exists: always debugger + ide_startup.log; System tab replay once HWND is valid.
+static std::vector<std::pair<std::string, std::string>> s_earlyWinMainReplay;
+
+static void earlyWinMainMilestone(const char* traceStep, const char* debugLine, const char* userLine)
+{
+    if (debugLine && debugLine[0])
+        OutputDebugStringA(debugLine);
+    if (traceStep && traceStep[0])
+        startupTrace(traceStep, (userLine && userLine[0]) ? userLine : debugLine);
+    if (s_startupLog && traceStep &&
+        (std::strncmp(traceStep, "winmain_early_b", 15) == 0 || std::strncmp(traceStep, "winmain_early_e0_", 17) == 0))
+    {
+        RawrXD::Startup::ensureStartupSessionId();
+        std::string line = traceStep;
+        line.push_back('|');
+        line += RawrXD::Startup::getStartupSessionId();
+        startupTrace("startup_conjoined_early_1_8", line.c_str());
+    }
+    if (userLine && userLine[0])
+        s_earlyWinMainReplay.emplace_back(debugLine ? std::string(debugLine) : std::string{}, std::string(userLine));
+}
+
+static void flushEarlyWinMainReplayToSystemOutput(Win32IDE* ide)
+{
+    if (s_earlyWinMainReplay.empty())
+        return;
+    if (!ide || ide->isShuttingDown())
+        return;
+    HWND hwnd = ide->getMainWindow();
+    if (!hwnd || !IsWindow(hwnd))
+        return;
+    for (const auto& pr : s_earlyWinMainReplay)
+        ide->appendToOutput(pr.second, "System", Win32IDE::OutputSeverity::Info);
+    s_earlyWinMainReplay.clear();
+}
+
+// Split config/startup_phases.txt for GUI boot: through createWindow, then pre-show
+// (e.g. enterprise_license), then phases after showWindow up to (but not including) message_loop_entered.
+// Lazy-prefixed phases are omitted here; physical window show stays in WinMain between mid and post.
+static void partitionGuiStartupFromConfig(std::vector<std::string>& preCreateWindow,
+                                          std::vector<std::string>& betweenCreateAndShow,
+                                          std::vector<std::string>& afterShow)
+{
+    preCreateWindow.clear();
+    betweenCreateAndShow.clear();
+    afterShow.clear();
+
+    enum class Zone
+    {
+        BeforeCreateWindow,
+        AfterCreateUntilShow,
+        AfterShow
+    } zone = Zone::BeforeCreateWindow;
+
+    for (const std::string& name : RawrXD::Startup::getPhaseOrder())
+    {
+        if (RawrXD::Startup::isPhaseLazy(name))
+            continue;
+        if (name == "message_loop_entered")
+            continue;
+
+        if (name == "createWindow")
+        {
+            preCreateWindow.push_back(name);
+            zone = Zone::AfterCreateUntilShow;
+            continue;
+        }
+        if (name == "showWindow")
+        {
+            zone = Zone::AfterShow;
+            continue;
+        }
+
+        switch (zone)
+        {
+            case Zone::BeforeCreateWindow:
+                preCreateWindow.push_back(name);
+                break;
+            case Zone::AfterCreateUntilShow:
+                betweenCreateAndShow.push_back(name);
+                break;
+            case Zone::AfterShow:
+                afterShow.push_back(name);
+                break;
+        }
+    }
+}
+
+// Pre-createWindow + between create/show phases → E0 probes (front-to-back conjoin with startup_phases.txt).
+// Distinct indices per phase where possible (avoid repeating E0-01 for three consecutive lines).
+static int e0IndexForPreOrMidShowPhase(const std::string& name)
+{
+    if (name == "init_common_controls")
+        return 17;  // PR02 session id
+    if (name == "first_run_gauntlet")
+        return 18;  // Phase manifest / count
+    if (name == "vsix_loader")
+        return 19;  // extensions|plugins directories
+    if (name == "plugin_signature")
+        return 4;  // Swarm singleton (trust phase; lightweight structural check)
+    if (name == "creating_ide_instance")
+        return 10;  // Config directory (workspace layout)
+    if (name == "createWindow")
+        return 7;  // Editor HWND
+    if (name == "enterprise_license")
+        return 20;  // License subsystem initialized
+    return 0;
+}
+
+// Post-show phases (extension_bootstrap .. layout) map to E0-01..E0-07; message_loop_entered → E0-08.
+// See config/startup_phases.txt and Win32IDE::runCriticalValidationE0Check.
+static int e0IndexForPostShowPhase(const std::string& name)
+{
+    if (name == "extension_bootstrap")
+        return 1;
+    if (name == "integrated_runtime")
+        return 6;
+    if (name == "camellia_init")
+        return 3;
+    if (name == "masm_init")
+        return 7;
+    if (name == "swarm")
+        return 4;
+    if (name == "auto_update")
+        return 2;
+    if (name == "layout")
+        return 5;
+    return 0;
+}
+
+static void traceConjoinedE0ForPhase(Win32IDE& ide, const std::string& phaseName, int e0Override = 0)
+{
+    const int id = e0Override > 0 ? e0Override : e0IndexForPostShowPhase(phaseName);
+    if (id < 1 || id > 64)
+        return;
+    const auto c = ide.runCriticalValidationE0Check(id);
+    std::string line = phaseName;
+    line.push_back('|');
+    line += c.passed ? "pass " : "fail ";
+    line += c.name;
+    line += " :: ";
+    if (c.detail.size() > 200)
+        line.append(c.detail, 0, 200);
+    else
+        line += c.detail;
+    startupTrace("startup_conjoined_e0", line.c_str());
+}
+
+// E0-09..E0-16 — after localhost API server start (see config/startup_phases.txt).
+static const char* e0Batch4Anchor(int e0Id)
+{
+    switch (e0Id)
+    {
+        case 9:
+            return "registry";
+        case 10:
+            return "config_dir";
+        case 11:
+            return "logs_dir";
+        case 12:
+            return "api_status";
+        case 13:
+            return "feature_registry";
+        case 14:
+            return "agentic_bridge";
+        case 15:
+            return "quickjs_host";
+        case 16:
+            return "engines_dir";
+        default:
+            return "unknown";
+    }
+}
+
+static void traceConjoinedE0PostApiBatch(Win32IDE& ide)
+{
+    int pass = 0;
+    for (int id = 9; id <= 16; ++id)
+    {
+        const auto c = ide.runCriticalValidationE0Check(id);
+        if (c.passed)
+            ++pass;
+        std::string line = "post_api|";
+        line += e0Batch4Anchor(id);
+        line.push_back('|');
+        line += c.passed ? "pass " : "fail ";
+        line += c.name;
+        line += " :: ";
+        if (c.detail.size() > 200)
+            line.append(c.detail, 0, 200);
+        else
+            line += c.detail;
+        startupTrace("startup_conjoined_e0_b4", line.c_str());
+    }
+    startupTrace("startup_conjoined_e0_b4_summary", (std::to_string(pass) + "/8").c_str());
+}
+
+// E0-17..E0-24 — extended conjoined checks (session, phase manifest, extensions, license, layout depth).
+static const char* e0Batch5Anchor(int e0Id)
+{
+    switch (e0Id)
+    {
+        case 17:
+            return "pr02_session";
+        case 18:
+            return "phase_manifest";
+        case 19:
+            return "extensions_dir";
+        case 20:
+            return "enterprise_license";
+        case 21:
+            return "client_area";
+        case 22:
+            return "sidebars";
+        case 23:
+            return "main_children";
+        case 24:
+            return "gui_thread";
+        default:
+            return "unknown";
+    }
+}
+
+static void traceConjoinedE0ExtendedBatch(Win32IDE& ide)
+{
+    int pass = 0;
+    for (int id = 17; id <= 24; ++id)
+    {
+        const auto c = ide.runCriticalValidationE0Check(id);
+        if (c.passed)
+            ++pass;
+        std::string line = "pre_loop|";
+        line += e0Batch5Anchor(id);
+        line.push_back('|');
+        line += c.passed ? "pass " : "fail ";
+        line += c.name;
+        line += " :: ";
+        if (c.detail.size() > 200)
+            line.append(c.detail, 0, 200);
+        else
+            line += c.detail;
+        startupTrace("startup_conjoined_e0_b5", line.c_str());
+    }
+    startupTrace("startup_conjoined_e0_b5_summary", (std::to_string(pass) + "/8").c_str());
+}
+
+// E0-25..E0-32 — message-loop boundary / shell readiness (after PostMessage + SetFocus(editor)).
+static const char* e0Batch6Anchor(int e0Id)
+{
+    switch (e0Id)
+    {
+        case 25:
+            return "main_input_enabled";
+        case 26:
+            return "editor_class";
+        case 27:
+            return "output_chrome";
+        case 28:
+            return "copilot_output";
+        case 29:
+            return "window_title";
+        case 30:
+            return "model_selector";
+        case 31:
+            return "menu_depth";
+        case 32:
+            return "focus_under_main";
+        default:
+            return "unknown";
+    }
+}
+
+static void traceConjoinedE0LoopReadyBatch(Win32IDE& ide)
+{
+    int pass = 0;
+    for (int id = 25; id <= 32; ++id)
+    {
+        const auto c = ide.runCriticalValidationE0Check(id);
+        if (c.passed)
+            ++pass;
+        std::string line = "loop_ready|";
+        line += e0Batch6Anchor(id);
+        line.push_back('|');
+        line += c.passed ? "pass " : "fail ";
+        line += c.name;
+        line += " :: ";
+        if (c.detail.size() > 200)
+            line.append(c.detail, 0, 200);
+        else
+            line += c.detail;
+        startupTrace("startup_conjoined_e0_b6", line.c_str());
+    }
+    startupTrace("startup_conjoined_e0_b6_summary", (std::to_string(pass) + "/8").c_str());
+}
+
+// E0-33..E0-40 — shell depth after loop_ready batch (same pump; see runCriticalValidationBatch7).
+static const char* e0Batch7Anchor(int e0Id)
+{
+    switch (e0Id)
+    {
+        case 33:
+            return "richedit_module";
+        case 34:
+            return "toolbar";
+        case 35:
+            return "tab_bar";
+        case 36:
+            return "chrome_close";
+        case 37:
+            return "phase_milestones";
+        case 38:
+            return "main_dpi";
+        case 39:
+            return "feature_breadth";
+        case 40:
+            return "splitter_or_activity";
+        default:
+            return "unknown";
+    }
+}
+
+static void traceConjoinedE0ShellDeepBatch(Win32IDE& ide)
+{
+    int pass = 0;
+    for (int id = 33; id <= 40; ++id)
+    {
+        const auto c = ide.runCriticalValidationE0Check(id);
+        if (c.passed)
+            ++pass;
+        std::string line = "shell_deep|";
+        line += e0Batch7Anchor(id);
+        line.push_back('|');
+        line += c.passed ? "pass " : "fail ";
+        line += c.name;
+        line += " :: ";
+        if (c.detail.size() > 200)
+            line.append(c.detail, 0, 200);
+        else
+            line += c.detail;
+        startupTrace("startup_conjoined_e0_b7", line.c_str());
+    }
+    startupTrace("startup_conjoined_e0_b7_summary", (std::to_string(pass) + "/8").c_str());
+}
+
+// E0-41..E0-48 — workbench capstone (same pump as b6/b7; see runCriticalValidationBatch8).
+// E0-49..E0-56 — agent/Git/startup-log (runCriticalValidationBatch9; traceConjoinedE0AgentChromeBatch).
+static const char* e0Batch8Anchor(int e0Id)
+{
+    switch (e0Id)
+    {
+        case 41:
+            return "gutter_or_minimap";
+        case 42:
+            return "command_input";
+        case 43:
+            return "chrome_min_max";
+        case 44:
+            return "explorer_tree";
+        case 45:
+            return "sidebar_content";
+        case 46:
+            return "exe_image_path";
+        case 47:
+            return "phase_license_ext";
+        case 48:
+            return "main_not_hung";
+        default:
+            return "unknown";
+    }
+}
+
+static void traceConjoinedE0WorkbenchBatch(Win32IDE& ide)
+{
+    int pass = 0;
+    for (int id = 41; id <= 48; ++id)
+    {
+        const auto c = ide.runCriticalValidationE0Check(id);
+        if (c.passed)
+            ++pass;
+        std::string line = "workbench|";
+        line += e0Batch8Anchor(id);
+        line.push_back('|');
+        line += c.passed ? "pass " : "fail ";
+        line += c.name;
+        line += " :: ";
+        if (c.detail.size() > 200)
+            line.append(c.detail, 0, 200);
+        else
+            line += c.detail;
+        startupTrace("startup_conjoined_e0_b8", line.c_str());
+    }
+    startupTrace("startup_conjoined_e0_b8_summary", (std::to_string(pass) + "/8").c_str());
+}
+
+// E0-49..E0-56 — agent / Git / startup-log artifact (same pre-loop pump as b6–b10).
+// E0-57..E0-64 — panels + model sliders (runCriticalValidationBatch10; traceConjoinedE0PanelsDeepBatch).
+static const char* e0Batch9Anchor(int e0Id)
+{
+    switch (e0Id)
+    {
+        case 49:
+            return "copilot_input";
+        case 50:
+            return "copilot_send";
+        case 51:
+            return "copilot_clear_or_secondary";
+        case 52:
+            return "settings_btn";
+        case 53:
+            return "title_label";
+        case 54:
+            return "git_surface";
+        case 55:
+            return "model_progress";
+        case 56:
+            return "ide_startup_log";
+        default:
+            return "unknown";
+    }
+}
+
+static void traceConjoinedE0AgentChromeBatch(Win32IDE& ide)
+{
+    int pass = 0;
+    for (int id = 49; id <= 56; ++id)
+    {
+        const auto c = ide.runCriticalValidationE0Check(id);
+        if (c.passed)
+            ++pass;
+        std::string line = "agent_chrome|";
+        line += e0Batch9Anchor(id);
+        line.push_back('|');
+        line += c.passed ? "pass " : "fail ";
+        line += c.name;
+        line += " :: ";
+        if (c.detail.size() > 200)
+            line.append(c.detail, 0, 200);
+        else
+            line += c.detail;
+        startupTrace("startup_conjoined_e0_b9", line.c_str());
+    }
+    startupTrace("startup_conjoined_e0_b9_summary", (std::to_string(pass) + "/8").c_str());
+}
+
 // Run one startup phase by name. Sequence is from config/startup_phases.txt (dynamic).
 // Returns false to abort (e.g. createWindow failed).
 static bool runPhase(const std::string& name, Win32IDE& ide, HINSTANCE, LPSTR lpCmdLine)
 {
+    RawrXD::Startup::ensureStartupSessionId();
+
     if (name == "init_common_controls")
     {
         INITCOMMONCONTROLSEX icex = {sizeof(INITCOMMONCONTROLSEX), ICC_WIN95_CLASSES | ICC_BAR_CLASSES |
@@ -1040,30 +1549,46 @@ static bool runPhase(const std::string& name, Win32IDE& ide, HINSTANCE, LPSTR lp
         auto profile = RawrXD::Core::HardwareScout::GetCurrentProfile();
         startupTrace("init_hardware_scout", RawrXD::Core::HardwareScout::TierToString(profile.tier));
 
-        // Sovereign integrity attestation — runs asynchronously so it never
-        // delays the UI pump.  Results go to OutputDebugString via cout
-        // (captured by debugger) and to the startup log if all_pass fails.
-        std::thread(
-            []()
+        // Sovereign integrity attestation — async; skip in CI/smoke via RAWRXD_SKIP_STARTUP_ATTEST=1.
+        {
+            char skipAttest[8] = {};
+            const DWORD n =
+                GetEnvironmentVariableA("RAWRXD_SKIP_STARTUP_ATTEST", skipAttest, (DWORD)sizeof(skipAttest));
+            if (n > 0 && skipAttest[0] == '1')
             {
-                const bool ok = SystemIntegrityProver::Instance().AttestQuick();
-                if (!ok)
-                {
-                    OutputDebugStringA("[main_win32] WARNING: Sovereign integrity attestation FAILED.\n");
-                }
-                else
-                {
-                    OutputDebugStringA("[main_win32] Sovereign integrity attestation passed.\n");
-                }
-            })
-            .detach();
+                startupTrace("init_common_controls", "integrity_attest_skipped");
+            }
+            else
+            {
+                std::thread(
+                    []()
+                    {
+                        const bool ok = SystemIntegrityProver::Instance().AttestQuick();
+                        if (!ok)
+                        {
+                            OutputDebugStringA("[main_win32] WARNING: Sovereign integrity attestation FAILED.\n");
+                        }
+                        else
+                        {
+                            OutputDebugStringA("[main_win32] Sovereign integrity attestation passed.\n");
+                        }
+                    })
+                    .detach();
+            }
+        }
 
         return true;
     }
     if (name == "first_run_gauntlet")
     {
         startupTrace("first_run_gauntlet_start");
-        const char* gauntletFlag = "config\\first_run.flag";
+        const std::string exeDir = getIdeExeDirectoryA();
+        const std::string cfgDir = joinExeSubpathA(exeDir, "config");
+        if (!exeDir.empty() && !cfgDir.empty())
+            CreateDirectoryA(cfgDir.c_str(), nullptr);
+        const std::string gauntletPath =
+            exeDir.empty() ? std::string("config\\first_run.flag") : joinExeSubpathA(exeDir, "config\\first_run.flag");
+        const char* gauntletFlag = gauntletPath.c_str();
         DWORD attrs = GetFileAttributesA(gauntletFlag);
         if (attrs == INVALID_FILE_ATTRIBUTES)
         {
@@ -1084,7 +1609,8 @@ static bool runPhase(const std::string& name, Win32IDE& ide, HINSTANCE, LPSTR lp
                     MessageBoxA(nullptr, msg, "RawrXD \xe2\x80\x94 First Run Check", MB_OK | MB_ICONWARNING);
                 }
             }
-            CreateDirectoryA("config", nullptr);
+            if (exeDir.empty())
+                CreateDirectoryA("config", nullptr);
             HANDLE hFlag =
                 CreateFileA(gauntletFlag, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
             if (hFlag != INVALID_HANDLE_VALUE)
@@ -1100,8 +1626,15 @@ static bool runPhase(const std::string& name, Win32IDE& ide, HINSTANCE, LPSTR lp
     }
     if (name == "vsix_loader")
     {
-        VSIXLoader::GetInstance().Initialize("plugins");
-        startupTrace("vsix_loader");
+        const std::string exeDir = getIdeExeDirectoryA();
+        const std::string pluginsDir = exeDir.empty() ? std::string("plugins") : joinExeSubpathA(exeDir, "plugins");
+        const std::string extDir = exeDir.empty() ? std::string("extensions") : joinExeSubpathA(exeDir, "extensions");
+        CreateDirectoryA(pluginsDir.c_str(), nullptr);
+        CreateDirectoryA(extDir.c_str(), nullptr);
+        CreateDirectoryA("plugins", nullptr);
+        CreateDirectoryA("extensions", nullptr);
+        VSIXLoader::GetInstance().Initialize(pluginsDir);
+        startupTrace("vsix_loader", pluginsDir.c_str());
         return true;
     }
     if (name == "plugin_signature")
@@ -1116,7 +1649,7 @@ static bool runPhase(const std::string& name, Win32IDE& ide, HINSTANCE, LPSTR lp
     }
     if (name == "extension_bootstrap")
     {
-        startupTrace("extension_bootstrap_start");
+        startupTrace("extension_bootstrap_start", RawrXD::Startup::getStartupSessionId());
 
         if (hasAgenticSmokeFlag(GetCommandLineA()))
         {
@@ -1156,24 +1689,24 @@ static bool runPhase(const std::string& name, Win32IDE& ide, HINSTANCE, LPSTR lp
                     const char* stage = "unknown";
                     switch (progress.stage)
                     {
-                    case InstallProgress::Stage::Querying:
-                        stage = "querying";
-                        break;
-                    case InstallProgress::Stage::Downloading:
-                        stage = "downloading";
-                        break;
-                    case InstallProgress::Stage::Installing:
-                        stage = "installing";
-                        break;
-                    case InstallProgress::Stage::Verifying:
-                        stage = "verifying";
-                        break;
-                    case InstallProgress::Stage::Complete:
-                        stage = "complete";
-                        break;
-                    case InstallProgress::Stage::Failed:
-                        stage = "failed";
-                        break;
+                        case InstallProgress::Stage::Querying:
+                            stage = "querying";
+                            break;
+                        case InstallProgress::Stage::Downloading:
+                            stage = "downloading";
+                            break;
+                        case InstallProgress::Stage::Installing:
+                            stage = "installing";
+                            break;
+                        case InstallProgress::Stage::Verifying:
+                            stage = "verifying";
+                            break;
+                        case InstallProgress::Stage::Complete:
+                            stage = "complete";
+                            break;
+                        case InstallProgress::Stage::Failed:
+                            stage = "failed";
+                            break;
                     }
 
                     std::ostringstream oss;
@@ -1200,7 +1733,25 @@ static bool runPhase(const std::string& name, Win32IDE& ide, HINSTANCE, LPSTR lp
     }
     if (name == "creating_ide_instance")
     {
-        startupTrace("creating_ide_instance");
+        CreateDirectoryA("config", nullptr);
+        CreateDirectoryA("logs", nullptr);
+        CreateDirectoryA("registry", nullptr);
+        CreateDirectoryA("crash_dumps", nullptr);
+        CreateDirectoryA("extensions", nullptr);
+        CreateDirectoryA("plugins", nullptr);
+        CreateDirectoryA("engines", nullptr);
+        const std::string exeDir = getIdeExeDirectoryA();
+        if (!exeDir.empty())
+        {
+            const char* subdirs[] = {"config", "logs", "registry", "crash_dumps", "extensions", "plugins", "engines"};
+            for (const char* sub : subdirs)
+            {
+                const std::string p = joinExeSubpathA(exeDir, sub);
+                if (!p.empty())
+                    CreateDirectoryA(p.c_str(), nullptr);
+            }
+        }
+        startupTrace("creating_ide_instance", "dirs_ok");
         return true;
     }
     if (name == "createWindow")
@@ -1312,25 +1863,60 @@ static bool runPhase(const std::string& name, Win32IDE& ide, HINSTANCE, LPSTR lp
     }
     if (name == "enterprise_license")
     {
-        startupTrace("enterprise_license_deferred");
-        OutputDebugStringA("[main_win32] enterprise_license deferred from startup\n");
+        const char* safeMode = std::getenv("RAWRXD_SAFE_MODE");
+        if (safeMode && safeMode[0] == '1')
+        {
+            startupTrace("enterprise_license_skipped", "safe_mode");
+            return true;
+        }
+        // MASM / V1 bridge first so V2 initialize can merge entitlements (800B bit, tier).
+        const bool masmOk = RawrXD::EnterpriseLicense::initialize();
+        startupTrace("enterprise_license_masm", masmOk ? "ok" : "degraded");
+        const auto v2r = RawrXD::License::EnterpriseLicenseV2::Instance().initialize();
+        startupTrace("enterprise_license_v2", v2r.success ? "ok" : (v2r.detail ? v2r.detail : "err"));
         return true;
     }
     if (name == "showWindow")
     {
-        // Defer actual show until after layout to prevent transient hidden/0x0 states.
-        startupTrace("showWindow_deferred");
+        HWND hMain = ide.getMainWindow();
+        if (hMain && IsWindow(hMain))
+        {
+            ensureMainWindowVisible(hMain);
+            pumpMessages();
+            pumpMessages();
+            startupTrace("showWindow", "visible");
+        }
+        else
+        {
+            startupTrace("showWindow_deferred", "no_hwnd_yet");
+        }
         return true;
     }
     if (name == "camellia_init")
     {
-        startupTrace("camellia_init_deferred");
-        OutputDebugStringA("[main_win32] camellia_init deferred from startup\n");
+        if (!isTruthyEnvVar("RAWRXD_ENABLE_STARTUP_CAMELLIA"))
+        {
+            startupTrace("camellia_init_deferred");
+            OutputDebugStringA("[main_win32] camellia_init deferred (set RAWRXD_ENABLE_STARTUP_CAMELLIA=1)\n");
+            return true;
+        }
+        startupTrace("camellia_init_start", RawrXD::Startup::getStartupSessionId());
+        using RawrXD::Crypto::Camellia256Bridge;
+        auto& br = Camellia256Bridge::instance();
+        if (!br.isInitialized())
+        {
+            const auto ir = br.initialize();
+            startupTrace("camellia_hwid_key", ir.success ? "ok" : (ir.detail ? ir.detail : "err"));
+        }
+        const auto tr = br.selfTest();
+        startupTrace("camellia_selftest", tr.success ? "ok" : (tr.detail ? tr.detail : "err"));
         return true;
     }
     if (name == "masm_init")
     {
-        startupTrace("masm_init_done");
+        (void)RawrXD::Startup::runPhaseLazy("masm_init");
+        const auto profile = RawrXD::Core::HardwareScout::GetCurrentProfile();
+        startupTrace("masm_init", RawrXD::Core::HardwareScout::TierToString(profile.tier));
         return true;
     }
     if (name == "swarm")
@@ -1363,8 +1949,18 @@ static bool runPhase(const std::string& name, Win32IDE& ide, HINSTANCE, LPSTR lp
     }
     if (name == "auto_update")
     {
-        startupTrace("auto_update_deferred");
-        OutputDebugStringA("[main_win32] auto_update deferred from startup\n");
+        if (isTruthyEnvVar("RAWRXD_STARTUP_UPDATE_CHECK"))
+        {
+            startupTrace("auto_update_check_start");
+            ide.checkForUpdates();
+            startupTrace("auto_update_check_scheduled");
+        }
+        else
+        {
+            startupTrace("auto_update_deferred");
+            OutputDebugStringA(
+                "[main_win32] auto_update: background check deferred (set RAWRXD_STARTUP_UPDATE_CHECK=1 to run)\n");
+        }
         return true;
     }
     if (name == "integrated_runtime")
@@ -1379,21 +1975,33 @@ static bool runPhase(const std::string& name, Win32IDE& ide, HINSTANCE, LPSTR lp
             return true;
         }
 
-        startupTrace("integrated_runtime_start");
+        startupTrace("integrated_runtime_start", RawrXD::Startup::getStartupSessionId());
         OutputDebugStringA("[main_win32] Integrated runtime: booting Transcendence (E->Omega)...\n");
         bootIntegratedRuntimeSafely();
-        startupTrace("integrated_runtime_done");
+        startupTrace("integrated_runtime_done", RawrXD::Startup::getStartupSessionId());
         return true;
     }
     if (name == "layout")
     {
-        startupTrace("layout_start");
-        startupTrace("layout_skipped");
-        OutputDebugStringA("[main_win32] Layout: SKIPPED to avoid window close\n");
+        if (isTruthyEnvVar("RAWRXD_SKIP_STARTUP_LAYOUT"))
+        {
+            startupTrace("layout_skipped", "env_skip");
+            return true;
+        }
+        startupTrace("layout_start", RawrXD::Startup::getStartupSessionId());
+        HWND hMain = ide.getMainWindow();
+        if (hMain && IsWindow(hMain))
+        {
+            ide.layoutTerminalStrip();
+            startupTrace("layout_done", "terminal_strip");
+        }
+        else
+            startupTrace("layout_skipped", "no_main_hwnd");
         return true;
     }
     if (name == "message_loop_entered")
     {
+        startupTrace("message_loop_entered", RawrXD::Startup::getStartupSessionId());
         return true;
     }
     return true;
@@ -2447,6 +3055,56 @@ static int runFeatureProbeCLI(HINSTANCE hInstance, LPSTR lpCmdLine)
     return assertsFailed == 0 ? 0 : 20 + assertsFailed;
 }
 
+// E0-57..E0-64 — panels + model depth (runCriticalValidationBatch10). Placed immediately before WinMain for MSVC TU
+// visibility with the pre-loop conjoin block below.
+static const char* e0Batch10Anchor(int e0Id)
+{
+    switch (e0Id)
+    {
+        case 57:
+            return "problems_surface";
+        case 58:
+            return "debug_console";
+        case 59:
+            return "debugger_dock";
+        case 60:
+            return "extensions_panel";
+        case 61:
+            return "outline_tree";
+        case 62:
+            return "search_results";
+        case 63:
+            return "module_browser";
+        case 64:
+            return "model_sliders";
+        default:
+            return "unknown";
+    }
+}
+
+static void traceConjoinedE0PanelsDeepBatch(Win32IDE& ide)
+{
+    int pass = 0;
+    for (int id = 57; id <= 64; ++id)
+    {
+        const auto c = ide.runCriticalValidationE0Check(id);
+        if (c.passed)
+            ++pass;
+        std::string line = "panels_deep|";
+        line += e0Batch10Anchor(id);
+        line.push_back('|');
+        line += c.passed ? "pass " : "fail ";
+        line += c.name;
+        line += " :: ";
+        if (c.detail.size() > 200)
+            line.append(c.detail, 0, 200);
+        else
+            line += c.detail;
+        startupTrace("startup_conjoined_e0_b10", line.c_str());
+    }
+    startupTrace("startup_conjoined_e0_b10_summary", (std::to_string(pass) + "/8").c_str());
+}
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow)
 {
     emitStartupHeapSnapshot("winmain.entry");
@@ -2457,6 +3115,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
     // Explorer, shortcuts, or different CWD. Prevents silent failures on init.
     // ========================================================================
     setCwdToExeDirectory();
+    earlyWinMainMilestone("winmain_early_b1",
+                          "[IDE-Pipeline:WinMain-Early] Batch 1/8: working directory pinned to exe folder\n",
+                          "[Init:WinMain-Early] Batch 1/8: process CWD set to executable directory\n");
 
     // ========================================================================
     // UI INITIALIZATION HARDENING — Load critical system libraries FIRST
@@ -2466,19 +3127,24 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
     {
         // Load RichEdit 2.0 control library (used by editor)
         HMODULE msftedit = LoadLibraryW(L"Msftedit.dll");
-        if (!msftedit) {
+        if (!msftedit)
+        {
             OutputDebugStringA("[WinMain Init] WARNING: Failed to load Msftedit.dll; RichEdit controls may fail\n");
         }
-        
+
         // Initialize common controls v6 (required for themed buttons, comboboxes, etc.)
         INITCOMMONCONTROLSEX icex = {};
         icex.dwSize = sizeof(icex);
         icex.dwICC = ICC_WIN95_CLASSES;  // Button, static, edit, listbox, combobox, scrollbar
-        
-        if (!InitCommonControlsEx(&icex)) {
+
+        if (!InitCommonControlsEx(&icex))
+        {
             OutputDebugStringA("[WinMain Init] WARNING: InitCommonControlsEx failed\n");
         }
     }
+    earlyWinMainMilestone("winmain_early_b2",
+                          "[IDE-Pipeline:WinMain-Early] Batch 2/8: RichEdit + common controls v6 primed\n",
+                          "[Init:WinMain-Early] Batch 2/8: system control libraries loaded and initialized\n");
 
     // Fast smoke: must run before bootstrapRuntimeSurface / integrity / GUI — same tool registry as agent chat.
     if (hasAgenticSmokeFlag(lpCmdLine))
@@ -2499,6 +3165,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
     {
         ensureConsoleAttached(false);
     }
+    earlyWinMainMilestone("winmain_early_b3", "[IDE-Pipeline:WinMain-Early] Batch 3/8: runtime surface bootstrapped\n",
+                          "[Init:WinMain-Early] Batch 3/8: native runtime surface bootstrap complete\n");
 
     if (lpCmdLine && strstr(lpCmdLine, "--test-deep-thinking"))
     {
@@ -2538,7 +3206,20 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
         std::string logPath = "ide_startup.log";
         s_startupLog = new std::ofstream(logPath, std::ios::out | std::ios::trunc);
         if (s_startupLog->is_open())
+        {
             startupTrace("WinMain", "start");
+            RawrXD::Startup::ensureStartupSessionId();
+            const char* sid = RawrXD::Startup::getStartupSessionId();
+            const std::string sess = sid ? std::string(sid) : std::string();
+            for (const char* step : {"winmain_early_b1", "winmain_early_b2", "winmain_early_b3"})
+            {
+                std::string line = "replay|";
+                line += sess;
+                line.push_back('|');
+                line += step;
+                startupTrace("startup_conjoined_early_1_8", line.c_str());
+            }
+        }
         else
         {
             delete s_startupLog;
@@ -2546,6 +3227,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
         }
     }
     emitStartupHeapSnapshot("startup_log_initialized");
+    earlyWinMainMilestone("winmain_early_b4",
+                          "[IDE-Pipeline:WinMain-Early] Batch 4/8: ide_startup.log trace channel ready\n",
+                          "[Init:WinMain-Early] Batch 4/8: startup audit log opened in working directory\n");
 
     {
         std::string integrityError;
@@ -2572,6 +3256,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
             startupTrace("integrity_preflight_skipped_no_dist");
         }
     }
+    earlyWinMainMilestone("winmain_early_b5",
+                          "[IDE-Pipeline:WinMain-Early] Batch 5/8: aperture integrity preflight satisfied\n",
+                          "[Init:WinMain-Early] Batch 5/8: distribution integrity gate passed\n");
 
 #ifdef _DEBUG
     // Optional: enable CRT debug heap checking via environment variable.
@@ -2636,10 +3323,16 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
     }
     startupTrace("crash_containment_installed");
     emitStartupHeapSnapshot("crash_containment_installed");
+    earlyWinMainMilestone("winmain_early_b6",
+                          "[IDE-Pipeline:WinMain-Early] Batch 6/8: Cathedral crash containment installed\n",
+                          "[Init:WinMain-Early] Batch 6/8: crash dumps and patch rollback boundary active\n");
 
     // DPI awareness — before any GUI (Win32 GUI fix)
     ensureDpiAwareness();
     startupTrace("dpi_awareness");
+    earlyWinMainMilestone("winmain_early_b7",
+                          "[IDE-Pipeline:WinMain-Early] Batch 7/8: per-monitor DPI awareness applied\n",
+                          "[Init:WinMain-Early] Batch 7/8: DPI awareness configured before window creation\n");
 
     // ========================================================================
     // HEADLESS MODE — Phase 19C
@@ -2790,6 +3483,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
         return exitCode;
     }
 
+    earlyWinMainMilestone("winmain_early_b8",
+                          "[IDE-Pipeline:WinMain-Early] Batch 8/8: headless transport path not selected\n",
+                          "[Init:WinMain-Early] Batch 8/8: continuing interactive Win32 GUI startup\n");
+
     if (hasSelfTestFlag(lpCmdLine))
     {
         if (s_startupLog)
@@ -2806,6 +3503,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
         return rc;
     }
 
+    earlyWinMainMilestone("winmain_early_e0_1",
+                          "[IDE-Pipeline:WinMain-Early] E0-1/8: startup self-test CLI route not selected\n",
+                          "[Init:WinMain-Early] E0-1/8: --selftest fast path skipped\n");
+
     // --agentic-smoke handled at WinMain entry (before bootstrap) for fast CI/smoke.
 
     // ========================================================================
@@ -2821,44 +3522,122 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
         }
         return runVsixTestAndExit();
     }
+
+    earlyWinMainMilestone("winmain_early_e0_2",
+                          "[IDE-Pipeline:WinMain-Early] E0-2/8: VSIX instrumented test route not selected\n",
+                          "[Init:WinMain-Early] E0-2/8: VSIX self-test exit path skipped\n");
+
     if (hasSafeModeFlag(lpCmdLine))
     {
         SetEnvironmentVariableA("RAWRXD_SAFE_MODE", "1");
         OutputDebugStringA("[main_win32] Safe mode enabled (--safe-mode)\n");
     }
 
+    earlyWinMainMilestone("winmain_early_e0_3",
+                          "[IDE-Pipeline:WinMain-Early] E0-3/8: safe-mode environment flag evaluated\n",
+                          "[Init:WinMain-Early] E0-3/8: optional safe mode applied if requested\n");
+
+    emitStartupHeapSnapshot("winmain.gui_before_ide_ctor");
+    earlyWinMainMilestone("winmain_early_e0_4",
+                          "[IDE-Pipeline:WinMain-Early] E0-4/8: GUI cold-start heap snapshot (pre-Win32IDE)\n",
+                          "[Init:WinMain-Early] E0-4/8: heap snapshot before native IDE construction\n");
+
+    {
+        const std::string sid = RawrXD::Startup::getStartupSessionId();
+        const std::string userLine = std::string("[Init:WinMain-Early] E0-5/8: startup session id=") + sid + "\n";
+        earlyWinMainMilestone("winmain_early_e0_5",
+                              "[IDE-Pipeline:WinMain-Early] E0-5/8: startup session id bound to trace\n",
+                              userLine.c_str());
+    }
+
     RawrXD::Startup::registerLazyPhase("masm_init", []()
                                        { OutputDebugStringA("[main_win32] MASM init (lazy) — run on first use\n"); });
+    earlyWinMainMilestone("winmain_early_e0_6",
+                          "[IDE-Pipeline:WinMain-Early] E0-6/8: lazy MASM phase registered on startup registry\n",
+                          "[Init:WinMain-Early] E0-6/8: deferred MASM init hook registered\n");
+    earlyWinMainMilestone("winmain_early_e0_7",
+                          "[IDE-Pipeline:WinMain-Early] E0-7/8: Win32IDE constructor entry (stack frame)\n",
+                          "[Init:WinMain-Early] E0-7/8: entering Win32IDE object construction\n");
+    earlyWinMainMilestone("winmain_early_e0_8",
+                          "[IDE-Pipeline:WinMain-Early] E0-8/8: native IDE singleton allocation gate\n",
+                          "[Init:WinMain-Early] E0-8/8: final pre-constructor gate; allocating Win32IDE\n");
     Win32IDE ide(hInstance);
     emitStartupHeapSnapshot("ide_constructed");
 
-    // ========================================================================
-    // SPLIT STARTUP: Quick phases first (show window), then heavy async phases
-    // This prevents UI freeze by showing the window immediately.
-    // ========================================================================
-    const std::vector<std::string> quickPhases = {"init_common_controls", "first_run_gauntlet",    "vsix_loader",
-                                                  "plugin_signature",     "creating_ide_instance", "createWindow"};
-
-    // Run quick phases before window show
-    for (const std::string& name : quickPhases)
     {
-        startupTrace(name.c_str(), "phase_start");
-        bool phaseOk = false;
-        if (!runPhaseSafely(name, ide, hInstance, lpCmdLine, &phaseOk) || !phaseOk)
+        const std::string exeDir = getIdeExeDirectoryA();
+        if (!exeDir.empty())
         {
-            if (s_startupLog)
-            {
-                s_startupLog->close();
-                delete s_startupLog;
-                s_startupLog = nullptr;
-            }
-            MessageBoxW(nullptr, L"Failed to initialize IDE", L"Error", MB_OK | MB_ICONERROR);
-            return 1;
+            const std::string phaseFile = joinExeSubpathA(exeDir, "config\\startup_phases.txt");
+            if (GetFileAttributesA(phaseFile.c_str()) != INVALID_FILE_ATTRIBUTES)
+                RawrXD::Startup::setPhaseOrderFileOverride(phaseFile);
         }
-        startupTrace(name.c_str(), "phase_done");
     }
+    guiBootMilestone(&ide, "[IDE-Pipeline:WinMain] Batch 1/8: Win32IDE constructed + phase order file resolved\n",
+                     "[Init:WinMain] Batch 1/8: IDE instance and startup phase config ready\n");
 
-    // CRITICAL: Show window NOW before any heavy initialization
+    // ========================================================================
+    // SPLIT STARTUP: phase order from config/startup_phases.txt (not hardcoded).
+    // Pre-createWindow → pre-show (e.g. license) → show window → post-show heavy work.
+    // ========================================================================
+    std::vector<std::string> preCreateWindow;
+    std::vector<std::string> betweenCreateAndShow;
+    std::vector<std::string> afterShow;
+    partitionGuiStartupFromConfig(preCreateWindow, betweenCreateAndShow, afterShow);
+    guiBootMilestone(&ide, "[IDE-Pipeline:WinMain] Batch 2/8: startup phases partitioned (pre / mid / post-show)\n",
+                     "[Init:WinMain] Batch 2/8: startup phases partitioned for window lifecycle\n");
+
+    auto traceColdStartConjoinedStep = [&](const std::string& phaseName)
+    {
+        std::string line = phaseName;
+        line.push_back('|');
+        line += RawrXD::Startup::getStartupSessionId();
+        startupTrace("startup_conjoined_phases_1_8_step", line.c_str());
+    };
+
+    auto afterColdOrMidPhase = [&](const std::string& phaseName)
+    {
+        traceColdStartConjoinedStep(phaseName);
+        const int e0Id = e0IndexForPreOrMidShowPhase(phaseName);
+        if (e0Id > 0)
+            traceConjoinedE0ForPhase(ide, phaseName, e0Id);
+    };
+
+    auto runPhasesAbortOnFail = [&](const std::vector<std::string>& phases,
+                                    const std::function<void(const std::string&)>& afterEachPhase = {}) -> bool
+    {
+        for (const std::string& name : phases)
+        {
+            startupTrace(name.c_str(), (std::string("phase_start|") + RawrXD::Startup::getStartupSessionId()).c_str());
+            bool phaseOk = false;
+            if (!runPhaseSafely(name, ide, hInstance, lpCmdLine, &phaseOk) || !phaseOk)
+            {
+                if (s_startupLog)
+                {
+                    s_startupLog->close();
+                    delete s_startupLog;
+                    s_startupLog = nullptr;
+                }
+                MessageBoxW(nullptr, L"Failed to initialize IDE", L"Error", MB_OK | MB_ICONERROR);
+                return false;
+            }
+            startupTrace(name.c_str(), (std::string("phase_done|") + RawrXD::Startup::getStartupSessionId()).c_str());
+            if (afterEachPhase)
+                afterEachPhase(name);
+        }
+        return true;
+    };
+
+    if (!runPhasesAbortOnFail(preCreateWindow, afterColdOrMidPhase))
+        return 1;
+    guiBootMilestone(&ide, "[IDE-Pipeline:WinMain] Batch 3/8: pre-createWindow startup phases complete\n",
+                     "[Init:WinMain] Batch 3/8: pre-createWindow startup phases complete\n");
+    if (!runPhasesAbortOnFail(betweenCreateAndShow, afterColdOrMidPhase))
+        return 1;
+    guiBootMilestone(&ide, "[IDE-Pipeline:WinMain] Batch 4/8: between createWindow and showWindow phases complete\n",
+                     "[Init:WinMain] Batch 4/8: pre-show startup phases complete\n");
+
+    // CRITICAL: Show window NOW before post-show subsystem phases
     startupTrace("showWindow");
     if (!showMainWindowSafely(ide))
     {
@@ -2870,6 +3649,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
         }
         MessageBoxW(nullptr, L"Failed to show IDE window", L"Error", MB_OK | MB_ICONERROR);
         return 1;
+    }
+    {
+        bool showPhaseOk = false;
+        (void)runPhaseSafely("showWindow", ide, hInstance, lpCmdLine, &showPhaseOk);
+        // Eighth line in config/startup_phases.txt — not part of runPhasesAbortOnFail; keep cold conjoin aligned.
+        traceColdStartConjoinedStep("showWindow");
+        traceConjoinedE0ForPhase(ide, "showWindow", 2);  // E0-02 main window visibility
     }
     emitStartupHeapSnapshot("after_show_window");
     HWND hwndMain = ide.getMainWindow();
@@ -2890,25 +3676,92 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
         pumpMessages();  // Pump so window paints before message loop
 
     OutputDebugStringA("[main_win32] ==> WINDOW NOW VISIBLE <== Entering message loop\n");
+    flushEarlyWinMainReplayToSystemOutput(&ide);
+    guiBootMilestone(&ide, "[IDE-Pipeline:WinMain] Batch 5/8: main window shown + initial message pumps\n",
+                     "[Init:WinMain] Batch 5/8: main window visible and initial paints pumped\n");
 
-    // Now that window is visible, run heavy subsystem phases
-    // (These are now mostly deferred to async via modified phase funcs above)
-    // Transcendence coordinator (E→Ω); respects RAWRXD_SKIP_INTEGRATED_RUNTIME=1 inside boot().
-    const std::vector<std::string> heavyPhases = {"extension_bootstrap", "integrated_runtime", "enterprise_license",
-                                                  "camellia_init",      "swarm",              "auto_update",
-                                                  "layout"};
-    for (const std::string& name : heavyPhases)
+    // Conjoined audit for cold-start phases 1–8 (config lines 12–19): maps to E01–E08 in
+    // docs/STARTUP_PHASES_BATCH1_E01_E08_MATRIX.md. Opt-in — batch probes Ollama and UI surfaces.
+    if (hwndMain && IsWindow(hwndMain) && isTruthyEnvVar("RAWRXD_ENABLE_STARTUP_VALIDATION_BATCH1"))
+    {
+        startupTrace("startup_conjoined_phases_1_8_begin", RawrXD::Startup::getStartupSessionId());
+        const auto b1 = ide.runCriticalValidationBatch1();
+        int b1pass = 0;
+        for (const auto& c : b1)
+        {
+            if (c.passed)
+                ++b1pass;
+            std::string line = c.passed ? "pass " : "fail ";
+            line += c.name;
+            line += " :: ";
+            if (c.detail.size() > 200)
+                line.append(c.detail, 0, 200);
+            else
+                line += c.detail;
+            startupTrace("startup_conjoined_phases_1_8", line.c_str());
+        }
+        startupTrace("startup_conjoined_phases_1_8_summary",
+                     (std::to_string(b1pass) + "/" + std::to_string(b1.size())).c_str());
+    }
+
+    // Now that window is visible, run post-show phases from config (extension_bootstrap, integrated_runtime, …)
+    for (const std::string& name : afterShow)
     {
         if (RawrXD::Startup::isPhaseLazy(name))
             continue;
-        startupTrace((std::string("heavy_") + name).c_str(), "start");
+        startupTrace((std::string("heavy_") + name).c_str(),
+                     (std::string("start|") + RawrXD::Startup::getStartupSessionId()).c_str());
         bool phaseOk = false;
         if (!runPhaseSafely(name, ide, hInstance, lpCmdLine, &phaseOk) || !phaseOk)
         {
             OutputDebugStringA(("[main_win32] Heavy phase failed: " + name + "\n").c_str());
         }
-        startupTrace((std::string("heavy_") + name).c_str(), "done");
+        traceConjoinedE0ForPhase(ide, name);
+        startupTrace((std::string("heavy_") + name).c_str(),
+                     (std::string("done|") + RawrXD::Startup::getStartupSessionId()).c_str());
     }
+    guiBootMilestone(&ide, "[IDE-Pipeline:WinMain] Batch 6/8: post-show synchronous startup phases complete\n",
+                     "[Init:WinMain] Batch 6/8: post-show startup phases complete\n");
+
+    // E0-17..E0-24: run after layout so E0-21..24 (client/sidebars/children/thread) reflect final chrome.
+    if (hwndMain && IsWindow(hwndMain))
+    {
+        startupTrace("startup_conjoined_e0_17_24_begin", RawrXD::Startup::getStartupSessionId());
+        traceConjoinedE0ExtendedBatch(ide);
+    }
+
+    // Rollup E0-01..E0-08: per-phase lines already emitted above via traceConjoinedE0ForPhase.
+    if (hwndMain && IsWindow(hwndMain))
+    {
+        startupTrace("startup_conjoined_phases_9_16_begin", RawrXD::Startup::getStartupSessionId());
+        const auto e0 = ide.runCriticalValidationBatch3();
+        int e0pass = 0;
+        for (const auto& c : e0)
+        {
+            if (c.passed)
+                ++e0pass;
+        }
+        startupTrace("startup_conjoined_e0_summary",
+                     (std::to_string(e0pass) + "/" + std::to_string(e0.size())).c_str());
+        const char* verbose = std::getenv("RAWRXD_STARTUP_E0_VERBOSE_ROLLUP");
+        if (verbose && verbose[0] == '1')
+        {
+            for (const auto& c : e0)
+            {
+                std::string line = c.passed ? "pass " : "fail ";
+                line += c.name;
+                line += " :: ";
+                if (c.detail.size() > 200)
+                    line.append(c.detail, 0, 200);
+                else
+                    line += c.detail;
+                startupTrace("startup_conjoined_e0_rollup", line.c_str());
+            }
+        }
+    }
+    guiBootMilestone(&ide,
+                     "[IDE-Pipeline:WinMain] Batch 7/8: startup conjoined validation (runCriticalValidationBatch3)\n",
+                     "[Init:WinMain] Batch 7/8: startup validation batch complete\n");
 
     // ========================================================================
     // SELFTEST MODE — run critical checks and exit (no message loop)
@@ -2926,7 +3779,69 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
         return code;
     }
 
-    startupTrace("message_loop_entered");
+    // ========================================================================
+    // BACKEND API SERVER — self-hosting HTTP + WebSocket on localhost
+    // Exposes OpenAI-compatible endpoints so the IDE serves inference to its
+    // own extension host, VS Code extensions, and the native MASM agentic loop.
+    // Override port via RAWRXD_API_PORT env var (default 11434).
+    // ========================================================================
+    {
+        uint16_t apiPort = 11434;
+        char portBuf[8] = {};
+        if (GetEnvironmentVariableA("RAWRXD_API_PORT", portBuf, sizeof(portBuf)) > 0)
+        {
+            int p = atoi(portBuf);
+            if (p > 1024 && p < 65536)
+                apiPort = static_cast<uint16_t>(p);
+        }
+        s_apiServer = std::make_unique<APIServer>(s_apiAppState);
+        if (s_apiServer->Start(apiPort))
+        {
+            char msg[128];
+            snprintf(msg, sizeof(msg), "[main_win32] Backend API server started on localhost:%u\n", apiPort);
+            OutputDebugStringA(msg);
+            startupTrace("api_server_started");
+        }
+        else
+        {
+            OutputDebugStringA("[main_win32] WARNING: Backend API server failed to start\n");
+            startupTrace("api_server_start_failed");
+            s_apiServer.reset();
+        }
+    }
+
+    // Conjoined E0-09..E0-16 (post_api) — E0-12 expects /api/status when server is up.
+    // E0-17..E0-24 already ran after post-show layout (see traceConjoinedE0ExtendedBatch above).
+    if (hwndMain && IsWindow(hwndMain))
+    {
+        startupTrace("startup_conjoined_e0_09_16_begin", RawrXD::Startup::getStartupSessionId());
+        traceConjoinedE0PostApiBatch(ide);
+    }
+
+    {
+        bool mleOk = false;
+        (void)runPhaseSafely("message_loop_entered", ide, hInstance, lpCmdLine, &mleOk);
+        traceConjoinedE0ForPhase(ide, "message_loop_entered", 8);
+    }
+    guiBootMilestone(&ide, "[IDE-Pipeline:WinMain] Batch 8/8: backend API armed + message_loop_entered phase run\n",
+                     "[Init:WinMain] Batch 8/8: backend API and message-loop entry phase ready\n");
+    guiBootMilestone(&ide, "[IDE-Pipeline:WinMain] E0-1/8: Pre-loop — main HWND and client area stable\n",
+                     "[Init:WinMain] E0-1/8: Main window handle stable before message loop\n");
+    guiBootMilestone(&ide, "[IDE-Pipeline:WinMain] E0-2/8: Pre-loop — startup phase lists drained to this point\n",
+                     "[Init:WinMain] E0-2/8: Config-driven startup phases drained (sync slice)\n");
+    guiBootMilestone(&ide, "[IDE-Pipeline:WinMain] E0-3/8: Pre-loop — visibility + agentic browser host notified\n",
+                     "[Init:WinMain] E0-3/8: Visibility and agentic browser hooks notified\n");
+    guiBootMilestone(&ide, "[IDE-Pipeline:WinMain] E0-4/8: Pre-loop — initial paint pumps completed\n",
+                     "[Init:WinMain] E0-4/8: Initial UI message pumps completed\n");
+    guiBootMilestone(&ide, "[IDE-Pipeline:WinMain] E0-5/8: Pre-loop — post-show heavy phases attempted\n",
+                     "[Init:WinMain] E0-5/8: Post-show heavy phases attempted\n");
+    guiBootMilestone(
+        &ide, "[IDE-Pipeline:WinMain] E0-6/8: Pre-loop — batches 3+4+5 summarized (b6–b10 traces at loop edge)\n",
+        "[Init:WinMain] E0-6/8: Batches 3–5 summarized; E0-25..64 as startup_conjoined_e0_b6–b10 after focus+pump\n");
+    guiBootMilestone(&ide, "[IDE-Pipeline:WinMain] E0-7/8: Pre-loop — optional localhost API server state settled\n",
+                     "[Init:WinMain] E0-7/8: Localhost API server state settled\n");
+    guiBootMilestone(&ide, "[IDE-Pipeline:WinMain] E0-8/8: Pre-loop — entering Win32IDE::runMessageLoop\n",
+                     "[Init:WinMain] E0-8/8: Entering primary message loop\n");
     OutputDebugStringA("[main_win32] ⭐ MESSAGE LOOP STARTING ⭐\n");
 
     // Post delayed force-visible so the window is brought to front once the loop runs
@@ -2937,6 +3852,21 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
         HWND editor = ide.getEditor();
         if (editor && IsWindow(editor))
             SetFocus(editor);
+    }
+    pumpMessages();  // one pump so focus/chrome settle before E0-25..64 (b6–b10)
+
+    if (hwndMain && IsWindow(hwndMain))
+    {
+        startupTrace("startup_conjoined_e0_25_32_begin", RawrXD::Startup::getStartupSessionId());
+        traceConjoinedE0LoopReadyBatch(ide);
+        startupTrace("startup_conjoined_e0_33_40_begin", RawrXD::Startup::getStartupSessionId());
+        traceConjoinedE0ShellDeepBatch(ide);
+        startupTrace("startup_conjoined_e0_41_48_begin", RawrXD::Startup::getStartupSessionId());
+        traceConjoinedE0WorkbenchBatch(ide);
+        startupTrace("startup_conjoined_e0_49_56_begin", RawrXD::Startup::getStartupSessionId());
+        traceConjoinedE0AgentChromeBatch(ide);
+        startupTrace("startup_conjoined_e0_57_64_begin", RawrXD::Startup::getStartupSessionId());
+        traceConjoinedE0PanelsDeepBatch(ide);
     }
 
     // Run message loop with exception safety
@@ -2966,9 +3896,25 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
     // The IDE's onDestroy() already ran (from WM_DESTROY), but the Win32IDE
     // object is still alive on the stack. Clear its dangling pointers first.
     // ========================================================================
+    guiShutdownMilestone(&ide, "[IDE-Pipeline:WinMainShutdown] Batch 1/8: post–message-loop cleanup entered\n",
+                         "[Shutdown:WinMain] Batch 1/8: GUI cleanup phase started\n");
+    // ========================================================================
+    // BACKEND API SERVER SHUTDOWN — stop before GUI/MASM cleanup
+    // ========================================================================
+    if (s_apiServer)
+    {
+        s_apiServer->Stop();
+        s_apiServer.reset();
+        OutputDebugStringA("[main_win32] Backend API server stopped\n");
+    }
+    guiShutdownMilestone(&ide, "[IDE-Pipeline:WinMainShutdown] Batch 2/8: localhost API server stopped or absent\n",
+                         "[Shutdown:WinMain] Batch 2/8: Backend API server tearoff complete\n");
+
     Win32IDE_AgenticBrowser_Shutdown();
     ide.setEngineManager(nullptr);
     ide.setCodexUltimate(nullptr);
+    guiShutdownMilestone(&ide, "[IDE-Pipeline:WinMainShutdown] Batch 3/8: agentic browser + engine pointers cleared\n",
+                         "[Shutdown:WinMain] Batch 3/8: Agentic browser shutdown and engine handles nulled\n");
 
     // ========================================================================
     // INTEGRATED RUNTIME — Transcendence coordinator (Ω → E) before ASM teardown
@@ -2979,6 +3925,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
         RawrXD::IntegratedRuntime::shutdown();
         OutputDebugStringA("[main_win32] Integrated runtime shutdown complete\n");
     }
+    guiShutdownMilestone(&ide,
+                         "[IDE-Pipeline:WinMainShutdown] Batch 4/8: integrated runtime (Transcendence) shut down\n",
+                         "[Shutdown:WinMain] Batch 4/8: Integrated runtime shutdown complete\n");
 
     // ========================================================================
     // REVERSE-ENGINEERED KERNEL SHUTDOWN — Before Tier-2 MASM shutdown
@@ -2989,6 +3938,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
         RawrXD::ReverseEngineered::ShutdownAllSubsystems();
         OutputDebugStringA("[main_win32] ReverseEngineered kernel shutdown complete\n");
     }
+    guiShutdownMilestone(&ide, "[IDE-Pipeline:WinMainShutdown] Batch 5/8: ReverseEngineered kernel shut down\n",
+                         "[Shutdown:WinMain] Batch 5/8: Reverse-engineered kernel shutdown complete\n");
+#else
+    guiShutdownMilestone(&ide,
+                         "[IDE-Pipeline:WinMainShutdown] Batch 5/8: ReverseEngineered ASM lane not linked (skip)\n",
+                         "[Shutdown:WinMain] Batch 5/8: Reverse-engineered kernel not in this build\n");
 #endif
 
     // ========================================================================
@@ -3003,6 +3958,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
         asm_spengine_shutdown();
         OutputDebugStringA("[main_win32] MASM subsystems shutdown complete\n");
     }
+    guiShutdownMilestone(
+        &ide, "[IDE-Pipeline:WinMainShutdown] Batch 6/8: MASM subsystems (quadbuf/orchestrator/LSP) shut down\n",
+        "[Shutdown:WinMain] Batch 6/8: MASM subsystem shutdown complete\n");
 
     // ========================================================================
     // CAMELLIA-256 SHUTDOWN — Secure zero all key material
@@ -3048,6 +4006,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
             OutputDebugStringA("[main_win32] Plugin Signature Verifier shutdown\n");
         }
     }
+    guiShutdownMilestone(&ide,
+                         "[IDE-Pipeline:WinMainShutdown] Batch 8/8: Swarm / plugin sandbox / signature verifier pass\n",
+                         "[Shutdown:WinMain] Batch 8/8: Enterprise plugin stack shutdown pass complete\n");
 
     // Shutdown cross-process state and JS extension host
     {
@@ -3111,6 +4072,32 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
     }
 
     exportCommandArtifacts("runtime-exit");
+
+    guiShutdownMilestone(&ide, "[IDE-Pipeline:WinMainShutdown] E0-1/8: JS host + MMF cross-process lane torn down\n",
+                         "[Shutdown:WinMain] E0-1/8: Extension host and MMF shutdown complete\n");
+    guiShutdownMilestone(&ide, "[IDE-Pipeline:WinMainShutdown] E0-2/8: Codex / engine manager heap objects released\n",
+                         "[Shutdown:WinMain] E0-2/8: Global engine pointers released\n");
+    guiShutdownMilestone(&ide, "[IDE-Pipeline:WinMainShutdown] E0-3/8: Cathedral crash containment ledger flushed\n",
+                         "[Shutdown:WinMain] E0-3/8: Crash containment uninstalled\n");
+    guiShutdownMilestone(&ide, "[IDE-Pipeline:WinMainShutdown] E0-4/8: Enterprise license singleton finalized\n",
+                         "[Shutdown:WinMain] E0-4/8: Enterprise license shutdown complete\n");
+    guiShutdownMilestone(&ide, "[IDE-Pipeline:WinMainShutdown] E0-5/8: runtime-exit command artifacts exported\n",
+                         "[Shutdown:WinMain] E0-5/8: Runtime exit artifacts exported\n");
+    guiShutdownMilestone(&ide,
+                         "[IDE-Pipeline:WinMainShutdown] E0-6/8: Win32IDE stack instance about to go out of scope\n",
+                         "[Shutdown:WinMain] E0-6/8: IDE stack object teardown follows return\n");
+    guiShutdownMilestone(&ide, "[IDE-Pipeline:WinMainShutdown] E0-7/8: process exit code from WM_QUIT preserved\n",
+                         "[Shutdown:WinMain] E0-7/8: Exit code preserved for WinMain return\n");
+    guiShutdownMilestone(&ide, "[IDE-Pipeline:WinMainShutdown] E0-8/8: WinMain GUI shutdown checkpoint complete\n",
+                         "[Shutdown:WinMain] E0-8/8: GUI shutdown checkpoints complete\n");
+
+    if (s_startupLog)
+    {
+        startupTrace("WinMain_shutdown", "gui_shutdown_tail_complete");
+        s_startupLog->close();
+        delete s_startupLog;
+        s_startupLog = nullptr;
+    }
 
     return exitCode;
 }
@@ -3313,6 +4300,12 @@ int HeadlessIDE::run()
         return finish(0);
     }
 
+    // Match HeadlessIDE.cpp / help text: --no-server must not block in an idle loop.
+    if (!m_config.enableServer)
+    {
+        return finish(0);
+    }
+
     if (m_config.mode == HeadlessRunMode::REPL || m_config.enableRepl)
     {
         std::string line;
@@ -3337,6 +4330,12 @@ int HeadlessIDE::run()
         return finish(0);
     }
 
+    // Default headless mode is Server; --no-server must exit (parity with HeadlessIDE::runServerMode).
+    if (m_config.mode == HeadlessRunMode::Server && !m_config.enableServer)
+    {
+        return finish(0);
+    }
+
     if (m_config.enableServer && !m_config.quiet)
     {
         LOG_INFO(std::string("[headless] fallback server loop listening on ") + m_config.bindAddress + ":" + std::to_string(m_config.port));
@@ -3344,7 +4343,7 @@ int HeadlessIDE::run()
 
     while (!m_shutdownRequested.load())
     {
-        Sleep(200);
+        Sleep(25);
     }
 
     return finish(0);

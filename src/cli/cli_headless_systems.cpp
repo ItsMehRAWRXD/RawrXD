@@ -1727,6 +1727,8 @@ void cmd_policy(const std::string& args)
 
 void cmd_tools(const std::string& args)
 {
+    (void)args;
+    ToolRegistry::ensure_core_tools();
     std::string toolList = ToolRegistry::list_tools();
     if (toolList.empty())
     {
@@ -1734,6 +1736,28 @@ void cmd_tools(const std::string& args)
         return;
     }
     std::cout << "\n🔧 Registered Tools:\n" << toolList << "\n";
+}
+
+void cmd_tool_exec(const std::string& args)
+{
+    ToolRegistry::ensure_core_tools();
+
+    auto [toolName, rest] = splitFirst(args);
+    if (toolName.empty())
+    {
+        std::cout << "Usage: !tool_exec <tool_name> [json_params]\n";
+        return;
+    }
+
+    std::string params = rest.empty() ? "{}" : rest;
+    std::string result;
+    if (!ToolRegistry::execute_tool(toolName, params, result))
+    {
+        std::cout << "❌ Tool not found: " << toolName << "\n";
+        return;
+    }
+
+    std::cout << result << "\n";
 }
 
 // ============================================================================

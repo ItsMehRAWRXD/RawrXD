@@ -83,4 +83,14 @@
 // --- VSCode extension (handled via vscode_extension_api.h, alias here) -------
 // IDM_VSCEXT_API_STATUS et al. are defined in ../modules/vscode_extension_api.h
 
+// --- Icons (10001–10099) ----------------------------------------------------
+#define IDI_APP_ICON            10001
+#define IDI_FILE_NEW            10002
+#define IDI_FILE_OPEN           10003
+#define IDI_FILE_SAVE           10004
+
+// --- Bitmaps (10101–10199) --------------------------------------------------
+#define IDB_TOOLBAR             10101
+#define IDB_SIDEBAR             10102
+
 #endif // RAWRXD_RESOURCE_H

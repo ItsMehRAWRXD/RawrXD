@@ -36,7 +36,7 @@ typedef std::function<void()> CompleteCallback;
 class ModelConnection
 {
 public:
-    ModelConnection(const std::string& endpoint = "http://localhost:11434")
+    ModelConnection(const std::string& endpoint = "http://localhost:11435")
         : m_endpoint(endpoint), m_connected(false), m_isProcessing(false),
           m_workerThread(nullptr), m_stopWorker(false)
     {

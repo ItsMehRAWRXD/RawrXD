@@ -309,7 +309,7 @@ bool AITrainingPipeline::prepareTrainingData(const AIDigestionDataset& dataset) 
     
     // Convert knowledge representations to training format
     for (const auto& knowledge : dataset.samples) {
-        // Create training examples from knowledge
+        // Create training samples from knowledge
         nlohmann::json trainingExample;
         
         // Generate instruction-response pairs

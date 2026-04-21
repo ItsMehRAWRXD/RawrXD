@@ -43,7 +43,7 @@
 #include <commctrl.h>
 #include <richedit.h>
 #include <commdlg.h>
-#include "../agentic/AgentOllamaClient.h"
+#include "../agentic/NativeInferenceClient.h"
 
 // ============================================================================
 // AI RE data structures
@@ -234,7 +234,7 @@ static std::string aiSuggestSymbolName(const std::string& originalName,
     }
 
     // LLM path: send disassembly context for semantic name inference
-    RawrXD::Agent::OllamaConfig cfg;
+    RawrXD::Agent::NativeInferenceConfig cfg;
     cfg.host = "127.0.0.1";
     cfg.port = 11435;  // IDE embedded server
     // chat_model left empty — auto-detected from /api/tags
@@ -242,7 +242,7 @@ static std::string aiSuggestSymbolName(const std::string& originalName,
     cfg.max_tokens = 64;
     cfg.timeout_ms = 10000;  // Quick timeout for RE workflow
 
-    RawrXD::Agent::AgentOllamaClient client(cfg);
+    RawrXD::Agent::NativeInferenceClient client(cfg);
     if (!client.TestConnection()) {
         // Ollama unavailable — fall back to address-based naming
         char buf[32];
@@ -297,7 +297,7 @@ static std::string aiSuggestType(const std::string& originalType, const std::str
 
     // LLM path for ambiguous types
     if (originalType == "int" || originalType == "void*" || originalType == "char*") {
-        RawrXD::Agent::OllamaConfig cfg;
+        RawrXD::Agent::NativeInferenceConfig cfg;
         cfg.host = "127.0.0.1";
         cfg.port = 11435;  // IDE embedded server
         // chat_model left empty — auto-detected from /api/tags
@@ -305,7 +305,7 @@ static std::string aiSuggestType(const std::string& originalType, const std::str
         cfg.max_tokens = 32;
         cfg.timeout_ms = 8000;
 
-        RawrXD::Agent::AgentOllamaClient client(cfg);
+        RawrXD::Agent::NativeInferenceClient client(cfg);
         if (client.TestConnection()) {
             std::vector<RawrXD::Agent::ChatMessage> messages;
             messages.push_back({"system",
@@ -1068,7 +1068,7 @@ void Win32IDE::cmdAIREShow() {
 }
 
 // ============================================================================
-// Load binary (demo or file dialog)
+// Load binary (file dialog)
 // ============================================================================
 
 void Win32IDE::cmdAIRELoad() {
@@ -1088,8 +1088,8 @@ void Win32IDE::cmdAIRELoad() {
         path.resize(len - 1);
         WideCharToMultiByte(CP_UTF8, 0, filePath, -1, path.data(), len, nullptr, nullptr);
     } else {
-        // No file selected — load demo
-        path = "demo_binary.exe";
+        // No file selected — load default
+        path = "binary.exe";
     }
 
     {

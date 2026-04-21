@@ -177,7 +177,7 @@ public:
         g_command_state.commands_handled.fetch_add(1, std::memory_order_relaxed);
         g_command_state.last_command_id.store(command_id, std::memory_order_release);
         
-        // Route based on command_id (example command ranges)
+        // Route based on command_id (command ranges)
         // 0-999: file operations
         // 1000-1999: edit operations
         // 2000-2999: view operations

@@ -63,7 +63,7 @@ struct FeedbackEntry {
 #include <cmath>
 #include <algorithm>
 
-// SCAFFOLD_092: AgenticEngine chat/analyze/generate
+// Agentic Engine Implementation - Chat/Analyze/Generate
 
 
 // Static feedback tracking
@@ -1278,7 +1278,7 @@ std::string AgenticEngine::chat(const std::string& message) {
         }
     }
 
-    // Headless/CLI: use injected chat provider (Ollama, etc.) when set
+    // Headless/CLI: use injected chat provider when set when set
     if (m_chatProvider) {
         return m_chatProvider(effectiveMessage);
     }

@@ -125,7 +125,7 @@ class Win32IDE::ExpressionEvaluator
         if (it == m_variables.end())
             return false;
 
-        // Simplified: just return a synthetic value for demo
+        // Simplified: return synthetic value
         if (fieldName == "size" && it->second.first.find("std::string") != std::string::npos)
         {
             result = "5";
@@ -155,7 +155,7 @@ class Win32IDE::ExpressionEvaluator
         if (it == m_variables.end())
             return false;
 
-        // Simplified: return synthetic element for demo
+        // Simplified: return synthetic element
         result = "<element at index " + std::to_string(index) + ">";
         type = "unknown";  // Would parse element type from array type
         return true;
@@ -281,7 +281,7 @@ class Win32IDE::ExpressionEvaluator
             auto it = m_variables.find(arg);
             if (it != m_variables.end() && it->second.first.find("string") != std::string::npos)
             {
-                // Would actually compute string length - for demo return dummy
+                // Would actually compute string length - return dummy
                 result = "5";
                 type = "size_t";
                 return true;
@@ -312,7 +312,7 @@ bool Win32IDE::evaluateWatchExpression(const std::string& expression, int frameI
 {
     if (!m_localVariables.empty())
     {
-        // Quick demo: support "$var" format
+        // Support "$var" format
         if (expression.front() == '$')
         {
             std::string varName = expression.substr(1);

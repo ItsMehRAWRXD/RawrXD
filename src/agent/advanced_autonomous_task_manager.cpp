@@ -186,8 +186,6 @@ AdvancedAutonomousTaskManager::AdvancedAutonomousTaskManager()
     multi_model_stats_ = {};
     cycle_agent_stats_ = {};
     quantum_stats_ = {};
-    
-    std::cout << "[QuantumAgent] Advanced Autonomous Task Manager initializing..." << std::endl;
 }
 
 AdvancedAutonomousTaskManager::~AdvancedAutonomousTaskManager() {
@@ -201,7 +199,6 @@ bool AdvancedAutonomousTaskManager::initialize(
     const QuantumOptimizationConfig& quantum_config) {
     
     if (initialized_.load()) {
-        std::cout << "[QuantumAgent] Already initialized" << std::endl;
         return true;
     }
     
@@ -216,8 +213,6 @@ bool AdvancedAutonomousTaskManager::initialize(
         if (quantum_config_.quantum_acceleration_enabled) {
             quantum_memory_pool_ = std::make_unique<uint8_t[]>(quantum_config_.memory_pool_size + QUANTUM_MEMORY_ALIGNMENT);
             quantum_stats_.quantum_acceleration_active = true;
-            std::cout << "[QuantumAgent] Quantum acceleration enabled with " 
-                      << (quantum_config_.memory_pool_size / 1024 / 1024) << "MB memory pool" << std::endl;
         }
         
         // Initialize agent system components
@@ -240,15 +235,11 @@ bool AdvancedAutonomousTaskManager::initialize(
         if (model_config.model_count > 1) {
             multi_model_stats_.total_configured_models = model_config.model_count;
             multi_model_stats_.load_balancing_active = model_config.load_balancing_enabled;
-            std::cout << "[QuantumAgent] Multi-model system initialized with " 
-                      << static_cast<uint32_t>(model_config.model_count) << " models" << std::endl;
         }
         
         // Initialize cycle agent system
         if (agent_config.agent_count > 1) {
             cycle_agent_stats_.total_configured_agents = agent_config.agent_count;
-            std::cout << "[QuantumAgent] Cycle agent system initialized with " 
-                      << static_cast<uint32_t>(agent_config.agent_count) << " agents" << std::endl;
         }
         
         // Start monitoring thread
@@ -260,18 +251,9 @@ bool AdvancedAutonomousTaskManager::initialize(
         
         initialized_ = true;
         
-        std::cout << "[QuantumAgent] Advanced Autonomous Task Manager initialization complete" << std::endl;
-        std::cout << "[QuantumAgent] Features enabled:" << std::endl;
-        std::cout << "  - Quantum acceleration: " << (quantum_config_.quantum_acceleration_enabled ? "YES" : "NO") << std::endl;
-        std::cout << "  - Multi-model support: " << static_cast<uint32_t>(model_config.model_count) << "x models" << std::endl;
-        std::cout << "  - Cycle agent system: " << static_cast<uint32_t>(agent_config.agent_count) << "x agents" << std::endl;
-        std::cout << "  - Worker threads: " << thread_count << std::endl;
-        std::cout << "  - Dynamic PowerShell timeout: " << (ps_config.auto_adjust_timeout ? "YES" : "NO") << std::endl;
-        
         return true;
         
     } catch (const std::exception& e) {
-        std::cerr << "[QuantumAgent] Initialization failed: " << e.what() << std::endl;
         return false;
     }
 }
@@ -279,7 +261,7 @@ bool AdvancedAutonomousTaskManager::initialize(
 void AdvancedAutonomousTaskManager::shutdown() {
     if (!initialized_.load()) return;
     
-    std::cout << "[QuantumAgent] Shutting down Advanced Autonomous Task Manager..." << std::endl;
+    // Shutting down Advanced Autonomous Task Manager
     
     shutting_down_ = true;
     
@@ -314,14 +296,10 @@ void AdvancedAutonomousTaskManager::shutdown() {
     
     initialized_ = false;
     shutting_down_ = false;
-    
-    std::cout << "[QuantumAgent] Shutdown complete" << std::endl;
 }
 
 std::vector<QuantumTask> AdvancedAutonomousTaskManager::generate_todos_automatically(
     const std::string& description, uint32_t max_todos, bool include_dependencies) {
-    
-    std::cout << "[QuantumAgent] Auto-generating todos for: " << description << std::endl;
     
     std::vector<QuantumTask> generated_todos;
     
@@ -401,10 +379,10 @@ std::vector<QuantumTask> AdvancedAutonomousTaskManager::generate_todos_automatic
             generated_todos.push_back(todo);
         }
         
-        std::cout << "[QuantumAgent] Generated " << generated_todos.size() << " todos automatically" << std::endl;
+        // Generated todos automatically
         
     } catch (const std::exception& e) {
-        std::cerr << "[QuantumAgent] Error generating todos: " << e.what() << std::endl;
+        // Error generating todos
     }
     
     return generated_todos;
@@ -438,8 +416,6 @@ std::string AdvancedAutonomousTaskManager::create_task(
         task_condition_.notify_one();
     }
     
-    std::cout << "[QuantumAgent] Created task: " << task->id << " - " << description << std::endl;
-    
     return task->id;
 }
 
@@ -472,7 +448,7 @@ QuantumTaskResult AdvancedAutonomousTaskManager::execute_task_sync(const std::st
         return QuantumTaskResult::error_result(task_id, "Task not found");
     }
     
-    std::cout << "[QuantumAgent] Executing task synchronously: " << task_id << std::endl;
+    // Executing task synchronously
     
     return execute_task_internal(task);
 }
@@ -502,12 +478,12 @@ bool AdvancedAutonomousTaskManager::execute_task_async(
 
 void AdvancedAutonomousTaskManager::start_autonomous_processing() {
     if (processing_active_.load()) {
-        std::cout << "[QuantumAgent] Autonomous processing already active" << std::endl;
+        // Autonomous processing already active
         return;
     }
     
     processing_active_ = true;
-    std::cout << "[QuantumAgent] Starting autonomous task processing..." << std::endl;
+    // Starting autonomous task processing
     
     // Notify all worker threads to start processing
     task_condition_.notify_all();
@@ -516,14 +492,12 @@ void AdvancedAutonomousTaskManager::start_autonomous_processing() {
 void AdvancedAutonomousTaskManager::stop_autonomous_processing() {
     if (!processing_active_.load()) return;
     
-    std::cout << "[QuantumAgent] Stopping autonomous task processing..." << std::endl;
+    // Stopping autonomous task processing
     processing_active_ = false;
 }
 
 bool AdvancedAutonomousTaskManager::execute_top_difficult_tasks(
     uint32_t count, bool preserve_complexity, bool bypass_constraints) {
-    
-    std::cout << "[QuantumAgent] Executing top " << count << " most difficult tasks" << std::endl;
     
     // Get all tasks and sort by difficulty
     std::vector<std::shared_ptr<QuantumTask>> all_tasks;
@@ -557,8 +531,6 @@ bool AdvancedAutonomousTaskManager::execute_top_difficult_tasks(
         }
     }
     
-    std::cout << "[QuantumAgent] Executed " << executed_count << " difficult tasks" << std::endl;
-    
     return executed_count > 0;
 }
 
@@ -571,13 +543,12 @@ std::string AdvancedAutonomousTaskManager::execute_powershell_command(
         calculate_dynamic_timeout(command) : 
         powershell_config_.base_timeout;
     
-    std::cout << "[QuantumAgent] Executing PowerShell command with " 
+    // Executing PowerShell command
               << timeout.count() << "ms timeout" << std::endl;
     
     auto start_time = std::chrono::high_resolution_clock::now();
     
     try {
-        std::cout << "[PowerShell] " << command << std::endl;
         powershell_stats_.total_commands++;
         powershell_stats_.current_timeout = timeout;
 
@@ -641,7 +612,7 @@ std::string AdvancedAutonomousTaskManager::execute_powershell_command(
 
     } catch (const std::exception& e) {
         powershell_stats_.failed_commands++;
-        std::cerr << "[PowerShell] Error: " << e.what() << std::endl;
+        // PowerShell error
         return std::string("Error: ") + e.what();
     }
 }
@@ -666,13 +637,13 @@ void AdvancedAutonomousTaskManager::set_powershell_timeout(std::chrono::millisec
     timeout = std::min(timeout, powershell_config_.max_timeout);
     
     powershell_config_.base_timeout = timeout;
-    std::cout << "[QuantumAgent] PowerShell timeout set to " << timeout.count() << "ms" << std::endl;
+    // PowerShell timeout set
 }
 
 void AdvancedAutonomousTaskManager::enable_random_timeout_variation(bool enabled) {
     std::lock_guard<std::mutex> lock(powershell_mutex_);
     powershell_config_.random_variation_enabled = enabled;
-    std::cout << "[QuantumAgent] Random timeout variation " << (enabled ? "enabled" : "disabled") << std::endl;
+    // Random timeout variation
 }
 
 AdvancedAutonomousTaskManager::PowerShellStats AdvancedAutonomousTaskManager::get_powershell_stats() const {
@@ -684,7 +655,6 @@ bool AdvancedAutonomousTaskManager::configure_multi_model_system(
     uint8_t model_count, const std::vector<std::string>& model_names, bool enable_load_balancing) {
     
     if (model_count == 0 || model_count > 99) {
-        std::cerr << "[QuantumAgent] Invalid model count: " << static_cast<uint32_t>(model_count) << std::endl;
         return false;
     }
     
@@ -695,9 +665,6 @@ bool AdvancedAutonomousTaskManager::configure_multi_model_system(
     multi_model_stats_.total_configured_models = model_count;
     multi_model_stats_.active_models = model_count;
     multi_model_stats_.load_balancing_active = enable_load_balancing;
-    
-    std::cout << "[QuantumAgent] Multi-model system configured: " 
-              << static_cast<uint32_t>(model_count) << " models" << std::endl;
     
     return true;
 }
@@ -714,13 +681,10 @@ QuantumTaskResult AdvancedAutonomousTaskManager::execute_multi_model_consensus(
         model_count = multi_model_config_.model_count;
     }
     
-    std::cout << "[QuantumAgent] Executing task on " << static_cast<uint32_t>(model_count) 
+    // Executing task on models
               << " models for consensus" << std::endl;
     
     std::vector<QuantumTaskResult> results;
-    
-    // Execute on multiple models in parallel
-    std::vector<std::future<QuantumTaskResult>> futures;
     
     for (uint8_t i = 0; i < model_count; ++i) {
         futures.emplace_back(std::async(std::launch::async, [this, task]() {
@@ -776,7 +740,7 @@ void AdvancedAutonomousTaskManager::initialize_worker_threads(uint32_t thread_co
     }
     
     comprehensive_stats_.thread_pool_size = thread_count;
-    std::cout << "[QuantumAgent] Initialized " << thread_count << " worker threads" << std::endl;
+    // Initialized worker threads
 }
 
 void AdvancedAutonomousTaskManager::worker_thread_function() {
@@ -957,7 +921,7 @@ std::vector<QuantumTask> AdvancedAutonomousTaskManager::generate_todos_from_anal
 
 bool AdvancedAutonomousTaskManager::execute_with_complexity_preservation(std::shared_ptr<QuantumTask> task) {
     // Execute task while preserving full complexity - no simplification
-    std::cout << "[QuantumAgent] Executing with complexity preservation: " << task->id << std::endl;
+    // Executing with complexity preservation
     
     // Disable any optimization that might simplify the task
     bool original_quantum_setting = quantum_config_.quantum_acceleration_enabled;
@@ -1045,7 +1009,7 @@ void AdvancedAutonomousTaskManager::balance_quality_speed_automatically() {
 }
 
 void AdvancedAutonomousTaskManager::apply_reverse_engineered_optimizations() {
-    std::cout << "[QuantumAgent] Applying reverse-engineered optimizations..." << std::endl;
+    // Applying reverse-engineered optimizations
 
     if (quantum_memory_pool_) {
         uintptr_t pool_addr = reinterpret_cast<uintptr_t>(quantum_memory_pool_.get());
@@ -1064,7 +1028,7 @@ void AdvancedAutonomousTaskManager::apply_reverse_engineered_optimizations() {
         quantum_config_.quantum_thread_count > 0 ? quantum_config_.quantum_thread_count : MAX_QUANTUM_THREADS
     );
 
-    std::cout << "[QuantumAgent] Reverse-engineered optimizations applied" << std::endl;
+    // Reverse-engineered optimizations applied
 }
 
 std::shared_ptr<QuantumTask> AdvancedAutonomousTaskManager::get_task(const std::string& task_id) {

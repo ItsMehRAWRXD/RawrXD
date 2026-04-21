@@ -6,6 +6,7 @@
 // ID allocation map (non-overlapping):
 //   1001–1026   Control IDs (IDC_)
 //   2030–2031   View: explorer, extensions
+//   2042–2046   View: github, pull requests/releases, accounts, manage, video studio
 //   3060        View: collaboration
 //   3100–3117   Theme commands
 //   3200–3211   Transparency
@@ -76,6 +77,11 @@
 #define IDM_VIEW_LAYOUT_PROFILE_APPLY 2039
 #define IDM_VIEW_LAYOUT_PROFILE_SAVE 2040
 #define IDM_VIEW_TOGGLE_BOTTOM_PANEL 2041  // VS Code: workbench.action.togglePanel (Ctrl+J)
+#define IDM_VIEW_GITHUB 2042
+#define IDM_VIEW_GITHUB_PULL_RELEASE 2043
+#define IDM_VIEW_ACCOUNTS 2044
+#define IDM_VIEW_MANAGE 2045
+#define IDM_VIEW_VIDEO_STUDIO 2046
 // File: Quick Open (Ctrl+P) — same numeric band as Help palette IDs; routed via handleHelpCommand
 #define IDM_FILE_QUICK_OPEN 7029
 #define IDM_CHAT_EXPORT_CLIPBOARD 7030  // Command palette: copy Copilot chat to clipboard
@@ -85,6 +91,18 @@
 
 // ---- Internal profiling/capture commands -----------------------------------
 #define IDM_INTERNAL_CAPTURE_PROFILE 3014
+
+// ---- 14-day production finisher / quality-gate tooling ---------------------
+#define IDM_TOOLS_RUN_14DAY_FINISHERS 3017
+#define IDM_TOOLS_RUN_14DAY_FINISHERS_STRICT 3018
+#define IDM_TOOLS_RUN_14DAY_QUALITY_GATES 3019
+#define IDM_TOOLS_OPEN_14DAY_REPORTS 3025
+#define IDM_TOOLS_SHOW_14DAY_GATE_SUMMARY 3026
+#define IDM_TOOLS_SHOW_14DAY_ARTIFACT_MANIFEST 3027
+#define IDM_TOOLS_RUN_14DAY_INTEGRATION_GATE 3028
+#define IDM_TOOLS_RUN_14DAY_TURNKEY_SMOKE 3029
+#define IDM_TOOLS_RUN_14DAY_AGGREGATE_GATE 3048
+#define IDM_TOOLS_SHOW_14DAY_AGGREGATE_RESULT 3049
 
 // ---- Theme commands (3100–3117) --------------------------------------------
 #define IDM_THEME_BASE 3100

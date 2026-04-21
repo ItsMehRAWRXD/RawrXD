@@ -40,7 +40,7 @@
 #include "../agent/local_reasoning_integration.hpp"
 #include "../agent/model_invoker.hpp"
 #include "../agent/telemetry_collector.hpp"
-#include "../agentic/AgentOllamaClient.h"
+#include "../agentic/NativeInferenceClient.h"
 #include "../agentic/BoundedAgentLoop.h"
 #include "../agentic/ToolRegistry.h"
 #include "../lsp/diagnostic_consumer.h"
@@ -78,6 +78,10 @@
 #pragma comment(lib, "psapi.lib")
 #endif
 #pragma comment(lib, "dbghelp.lib")
+
+#ifndef RAWRXD_MIC_DEPS_DISABLED
+#define RAWRXD_MIC_DEPS_DISABLED 1
+#endif
 
 // Bring reverse engineering types into scope
 using RawrXD::Perf::PerfTelemetry;
@@ -623,8 +627,8 @@ CommandResult handleAgentConfigureModel(const CommandContext& ctx)
     {
         std::string backend(ctx.args);
         std::string endpoint;
-        if (backend == "ollama")
-            endpoint = "http://localhost:11434";
+        if (backend == "native")
+            endpoint = "http://localhost:11435";
         else if (backend == "openai")
             endpoint = "https://api.openai.com/v1";
         else if (backend == "claude")
@@ -645,7 +649,7 @@ CommandResult handleAgentConfigureModel(const CommandContext& ctx)
         char buf[256];
         snprintf(buf, sizeof(buf), "Current backend: %s\n", current.c_str());
         ctx.output(buf);
-        ctx.output("Usage: !agent_configure_model <ollama|openai|claude|local>\n");
+        ctx.output("Usage: !agent_configure_model <native|openai|claude|local>\n");
     }
     return CommandResult::ok("agent.configure");
 }
@@ -691,7 +695,7 @@ CommandResult handleAgentStartLoop(const CommandContext& ctx)
     auto& mi = getModelInvoker();
     if (!mi.getLLMBackend().empty())
         config.model = mi.getLLMBackend();
-    config.ollamaBaseUrl = "http://localhost:11434";
+    config.nativeBaseUrl = "http://localhost:11435";
     if (ctx.args && ctx.args[0])
         config.model = ctx.args;
     config.autoVerify = true;
@@ -721,7 +725,7 @@ static std::atomic<int> g_aiMaxIterations{1};  // Cycle multiplier for MAX / mul
 static CommandResult setAiContext(const CommandContext& ctx, int tokens, const char* label)
 {
     g_aiContextTokens.store(tokens, std::memory_order_relaxed);
-    RawrXD::Agent::OllamaConfig cfg;
+    RawrXD::Agent::NativeInferenceConfig cfg;
     cfg.num_ctx = tokens;
     char buf[128];
     snprintf(buf, sizeof(buf), "[AI] Context window set to %s (%d tokens) — active on next request.\n", label, tokens);
@@ -1438,7 +1442,7 @@ CommandResult handleAiModelSelect(const CommandContext& ctx)
         else
         {
             // Treat as Ollama model name
-            getModelInvoker().setLLMBackend("ollama", "http://localhost:11434");
+            getModelInvoker().setLLMBackend("native", "http://localhost:11435");
         }
         char buf[256];
         snprintf(buf, sizeof(buf), "[AI] Model selected: %s (backend: %s)\n", model.c_str(),
@@ -1454,7 +1458,7 @@ CommandResult handleAiModelSelect(const CommandContext& ctx)
         ctx.output("  gpt-4o          (OpenAI, 128K context)\n");
         ctx.output("  gpt-4-turbo     (OpenAI, 128K context)\n");
         ctx.output("  claude-3-sonnet (Anthropic, 200K context)\n");
-        ctx.output("  mistral         (Ollama local, 32K context)\n");
+        ctx.output("  mistral         (Native local, 32K context)\n");
         ctx.output("  local-gguf      (Direct GGUF inference)\n");
     }
     return CommandResult::ok("ai.model");
@@ -2431,7 +2435,7 @@ CommandResult handleAutonomySetGoal(const CommandContext& ctx)
     // Use user's configured model backend, not a hardcoded provider
     auto& mi = getModelInvoker();
     cfg.model = mi.getLLMBackend().empty() ? "qwen2.5-coder:14b" : mi.getLLMBackend();
-    cfg.ollamaBaseUrl = "http://localhost:11434";
+    cfg.nativeBaseUrl = "http://localhost:11435";
     RawrXD::Agent::BoundedAgentLoop loop;
     loop.Configure(cfg);
     auto result = loop.Execute(std::string("Goal: ") + ctx.args);
@@ -2945,7 +2949,7 @@ CommandResult handleFileModelFromUrl(const CommandContext& ctx)
 {
     if (!ctx.args || !ctx.args[0])
     {
-        ctx.output("Usage: !model_url <https://example.com/model.gguf>\n");
+        ctx.output("Usage: !model_url <https://host.com/model.gguf>\n");
         return CommandResult::error("Missing URL", -1);
     }
     char buf[512];
@@ -3022,7 +3026,7 @@ CommandResult handleFileModelQuickLoad(const CommandContext& ctx)
 
 CommandResult handleFileModelUnified(const CommandContext& ctx)
 {
-    ctx.output("[File] Unified model loader: auto-detecting source (HF/URL/local/Ollama)...\n");
+    ctx.output("[File] Unified model loader: auto-detecting source (HF/URL/local/Native)...\n");
     if (ctx.isGui)
     {
         HWND h = (HWND)(ctx.idePtr);
@@ -3078,7 +3082,7 @@ CommandResult handleFileModelUnified(const CommandContext& ctx)
     }
     else if (!ctx.isGui)
     {
-        ctx.output("  Usage: !file_model_unified <path|url|hf_repo|ollama_model>\n");
+        ctx.output("  Usage: !file_model_unified <path|url|hf_repo|RAWRXD_NATIVE_MODEL>\n");
     }
     return CommandResult::ok("file.modelUnified");
 }
@@ -5098,7 +5102,7 @@ CommandResult handleRouterShowCapabilities(const CommandContext& ctx)
     snprintf(buf, sizeof(buf), "  Active backend: %s\n", currentBackend.empty() ? "(none)" : currentBackend.c_str());
     ctx.output(buf);
     // Query registered backends from known endpoint configurations
-    const char* knownBackends[][3] = {{"ollama", "http://localhost:11434", "local inference, streaming"},
+    const char* knownBackends[][3] = {{"native", "http://localhost:11435", "local inference, streaming"},
                                       {"openai", "https://api.openai.com/v1", "GPT models, function calling"},
                                       {"claude", "https://api.anthropic.com/v1", "Claude models, tool use"},
                                       {"directml", "local://dml", "local GPU inference (DirectML)"},
@@ -5152,7 +5156,7 @@ CommandResult handleRouterShowFallbacks(const CommandContext& ctx)
     };
     FallbackEntry chain[] = {{"openai", "cloud primary"},
                              {"claude", "cloud alternate"},
-                             {"ollama", "local fallback"},
+                             {"native", "local fallback"},
                              {"local", "GGUF CPU fallback"}};
     for (const auto& fb : chain)
     {
@@ -7109,15 +7113,7 @@ CommandResult handleVoicePtt(const CommandContext& ctx)
     if (g_voiceState.pttActive)
     {
         ctx.output("[Voice] PTT: Transmitting...\n");
-        // Start waveIn capture
-        UINT devCount = 0;
-#ifdef _WIN32
-        devCount = waveInGetNumDevs();
-#endif
-        if (devCount == 0)
-        {
-            ctx.output("[Voice] WARNING: No audio input devices detected.\n");
-        }
+        ctx.output("[Voice] Microphone capture is disabled in this build.\n");
     }
     else
     {
@@ -7131,77 +7127,12 @@ CommandResult handleVoicePtt(const CommandContext& ctx)
 CommandResult handleVoiceShowDevices(const CommandContext& ctx)
 {
     ctx.output("[Voice] ═══ Audio Devices ═══\n");
-#ifdef _WIN32
-    // Input devices (waveIn)
-    UINT inCount = waveInGetNumDevs();
-    char buf[512];
-    snprintf(buf, sizeof(buf), "  Input devices: %u\n", inCount);
-    ctx.output(buf);
-    for (UINT i = 0; i < inCount && i < 16; i++)
-    {
-        WAVEINCAPSA caps{};
-        if (waveInGetDevCapsA(i, &caps, sizeof(caps)) == MMSYSERR_NOERROR)
-        {
-            snprintf(buf, sizeof(buf), "    [%u] %s (ch=%u, fmt=0x%08X)\n", i, caps.szPname, caps.wChannels,
-                     caps.dwFormats);
-            ctx.output(buf);
-        }
-    }
-    // Output devices (waveOut)
-    UINT outCount = waveOutGetNumDevs();
-    snprintf(buf, sizeof(buf), "  Output devices: %u\n", outCount);
-    ctx.output(buf);
-    for (UINT i = 0; i < outCount && i < 16; i++)
-    {
-        WAVEOUTCAPSA caps{};
-        if (waveOutGetDevCapsA(i, &caps, sizeof(caps)) == MMSYSERR_NOERROR)
-        {
-            snprintf(buf, sizeof(buf), "    [%u] %s (ch=%u, fmt=0x%08X)\n", i, caps.szPname, caps.wChannels,
-                     caps.dwFormats);
-            ctx.output(buf);
-        }
-    }
-#else
-    ctx.output("  (POSIX audio device enumeration via /proc/asound or pipewire)\n");
-    // Try ALSA enumeration via /proc
-    FILE* f = fopen("/proc/asound/cards", "r");
-    if (f)
-    {
-        char line[256];
-        while (fgets(line, sizeof(line), f))
-        {
-            char buf2[300];
-            snprintf(buf2, sizeof(buf2), "    %s", line);
-            ctx.output(buf2);
-        }
-        fclose(f);
-    }
-    else
-    {
-        ctx.output("  No ALSA devices found.\n");
-    }
-#endif
-    ctx.output("  ═══════════════════════\n");
-    return CommandResult::ok("voice.showDevices");
-}
-
-CommandResult handleVoiceTogglePanel(const CommandContext& ctx)
-{
-    g_voiceState.panelVisible = !g_voiceState.panelVisible;
-#ifdef _WIN32
-    // Look for voice panel window and toggle visibility
-    HWND hPanel = FindWindowExA(nullptr, nullptr, nullptr, "RawrXD Voice Panel");
-    if (hPanel)
-    {
-        ShowWindow(hPanel, g_voiceState.panelVisible ? SW_SHOW : SW_HIDE);
-    }
-#endif
-    char buf[128];
-    snprintf(buf, sizeof(buf), "[Voice] Panel %s\n", g_voiceState.panelVisible ? "SHOWN" : "HIDDEN");
-    ctx.output(buf);
+    ctx.output("  Output devices: 0\n");
+    ctx.output("  Input devices: 0\n");
+    ctx.output("  (audio device probing disabled in this build)\n");
     if (ctx.emitEvent)
-        ctx.emitEvent("voice.panelVisible", g_voiceState.panelVisible ? "true" : "false");
-    return CommandResult::ok("voice.togglePanel");
+        ctx.emitEvent("voice.devices", "disabled");
+    return CommandResult::ok("voice.showDevices");
 }
 
 // ============================================================================
@@ -7689,7 +7620,7 @@ CommandResult handleModelBfScanAll(const CommandContext& ctx)
         return CommandResult::error("Scan in progress", -1);
     }
     ctx.output("[BruteForce] Starting full model brute-force scan...\n");
-    ctx.output("  Scanning: local dirs, Ollama blobs, HuggingFace cache, user cache\n");
+    ctx.output("  Scanning: local dirs, native model blobs, HuggingFace cache, user cache\n");
 
     RawrXD::BruteForceScanConfig config;
     if (ctx.args && ctx.args[0])
@@ -7760,7 +7691,7 @@ CommandResult handleModelBfProbeSingle(const CommandContext& ctx)
     snprintf(buf, sizeof(buf),
              "[BruteForce] %-40s │ %-8s │ %-6s │ %.1fGB\n"
              "  Tensors: %llu │ Ctx: %uK │ Layers: %u │ Heads: %u/%u\n"
-             "  CPU: %s │ Ollama: %s │ Native: %s │ Tok/s: %.1f\n"
+             "  CPU: %s │ native: %s │ Native: %s │ Tok/s: %.1f\n"
              "  CLI: %s │ GUI: %s │ HTML: %s\n",
              result.filename.c_str(), result.architecture.c_str(), result.quantization.c_str(), sizeGB,
              (unsigned long long)result.tensor_count, result.context_length / 1024, result.layer_count,
@@ -7910,7 +7841,7 @@ CommandResult handleModelBfStatus(const CommandContext& ctx)
     return CommandResult::ok("model_bf.status");
 }
 
-// ---- 8. Hotpatch Enable — live-patch Ollama server inference path ----
+// ---- 8. Hotpatch Enable — live-patch native inference server inference path ----
 CommandResult handleModelBfHotpatchEnable(const CommandContext& ctx)
 {
     ctx.output("[BruteForce/Hotpatch] Enabling model brute-force hotpatching...\n");
@@ -8084,11 +8015,11 @@ CommandResult handleModelBfHotpatchStatus(const CommandContext& ctx)
     // Query brute-force scan state
     auto& engine = getBruteForceEngine();
     auto& results = engine.GetLastResults();
-    int ollamaCount = 0, cpuCount = 0, nativeCount = 0;
+    int nativeCount = 0, cpuCount = 0, nativeCount = 0;
     for (const auto& r : results)
     {
         if (r.ollama_available)
-            ollamaCount++;
+            nativeCount++;
         if (r.cpu_loadable)
             cpuCount++;
         if (r.native_loadable)
@@ -8097,7 +8028,7 @@ CommandResult handleModelBfHotpatchStatus(const CommandContext& ctx)
 
     snprintf(buf, sizeof(buf), "║ Cached Models: %d\n", (int)results.size());
     ctx.output(buf);
-    snprintf(buf, sizeof(buf), "║ Ollama-ready:  %d\n", ollamaCount);
+    snprintf(buf, sizeof(buf), "║ Native-ready:  %d\n", nativeCount);
     ctx.output(buf);
     snprintf(buf, sizeof(buf), "║ CPU-loadable:  %d\n", cpuCount);
     ctx.output(buf);
@@ -8289,7 +8220,7 @@ void initAutoFeatureRegistry()
     // ══════════════ BACKEND (11 commands) ══════════════
     autoReg("backend.switch_local", "Backend Switch Local", "Switch local (backend system)", FeatureGroup::LLMRouter,
             IDM_BACKEND_SWITCH_LOCAL, "!backend_switch_local", "", handleBackendSwitchLocal, true, true, false);
-    autoReg("backend.switch_ollama", "Backend Switch Ollama", "Switch ollama (backend system)", FeatureGroup::LLMRouter,
+    autoReg("backend.switch_native", "Backend Switch Native", "Switch Native (backend system)", FeatureGroup::LLMRouter,
             IDM_BACKEND_SWITCH_OLLAMA, "!backend_switch_ollama", "", handleBackendSwitchOllama, true, true, false);
     autoReg("backend.switch_openai", "Backend Switch Openai", "Switch openai (backend system)", FeatureGroup::LLMRouter,
             IDM_BACKEND_SWITCH_OPENAI, "!backend_switch_openai", "", handleBackendSwitchOpenai, true, true, false);
@@ -8466,7 +8397,7 @@ void initAutoFeatureRegistry()
             IDM_FILE_LOAD_MODEL, "!file_load_model", "", handleFileLoadModel, true, true, false);
     autoReg("file.model_from_hf", "File Model From Hf", "Model from hf (file system)", FeatureGroup::FileOps,
             IDM_FILE_MODEL_FROM_HF, "!file_model_from_hf", "", handleFileModelFromHf, true, true, false);
-    autoReg("file.model_from_ollama", "File Model From Ollama", "Model from ollama (file system)",
+    autoReg("file.model_from_native", "File Model From Native", "Model from native inference (file system)",
             FeatureGroup::FileOps, IDM_FILE_MODEL_FROM_OLLAMA, "!file_model_from_ollama", "", handleFileModelFromOllama,
             true, true, false);
     autoReg("file.model_from_url", "File Model From Url", "Model from url (file system)", FeatureGroup::FileOps,
@@ -9083,41 +9014,43 @@ void initAutoFeatureRegistry()
     autoReg("view.monaco_sync_theme", "View Monaco Sync Theme", "Monaco sync theme (view system)", FeatureGroup::View,
             IDM_VIEW_MONACO_SYNC_THEME, "!view_monaco_sync_theme", "", handleViewMonacoSyncTheme, true, true, false);
 
-    // ══════════════ VOICE (17 commands) ══════════════
-    autoReg("voice.record", "Voice Record", "Record (voice system)", FeatureGroup::Voice, IDM_VOICE_RECORD,
+        // ══════════════ VOICE (17 commands) ══════════════
+    #if !RAWRXD_MIC_DEPS_DISABLED
+        autoReg("voice.record", "Voice Record", "Record (voice system)", FeatureGroup::Voice, IDM_VOICE_RECORD,
             "!voice_record", "", handleVoiceRecord, true, true, false);
-    autoReg("voice.ptt", "Voice Ptt", "Ptt (voice system)", FeatureGroup::Voice, IDM_VOICE_PTT, "!voice_ptt", "",
+        autoReg("voice.ptt", "Voice Ptt", "Ptt (voice system)", FeatureGroup::Voice, IDM_VOICE_PTT, "!voice_ptt", "",
             handleVoicePtt, true, true, false);
-    autoReg("voice.speak", "Voice Speak", "Speak (voice system)", FeatureGroup::Voice, IDM_VOICE_SPEAK, "!voice_speak",
-            "", handleVoiceSpeak, true, true, false);
-    autoReg("voice.join_room", "Voice Join Room", "Join room (voice system)", FeatureGroup::Voice, IDM_VOICE_JOIN_ROOM,
+        autoReg("voice.speak", "Voice Speak", "Speak (voice system)", FeatureGroup::Voice, IDM_VOICE_SPEAK,
+            "!voice_speak", "", handleVoiceSpeak, true, true, false);
+        autoReg("voice.join_room", "Voice Join Room", "Join room (voice system)", FeatureGroup::Voice, IDM_VOICE_JOIN_ROOM,
             "!voice_join_room", "", handleVoiceJoinRoom, true, true, false);
-    autoReg("voice.show_devices", "Voice Show Devices", "Show devices (voice system)", FeatureGroup::Voice,
+        autoReg("voice.show_devices", "Voice Show Devices", "Show devices (voice system)", FeatureGroup::Voice,
             IDM_VOICE_SHOW_DEVICES, "!voice_show_devices", "", handleVoiceShowDevices, true, true, false);
-    autoReg("voice.metrics", "Voice Metrics", "Metrics (voice system)", FeatureGroup::Voice, IDM_VOICE_METRICS,
+        autoReg("voice.metrics", "Voice Metrics", "Metrics (voice system)", FeatureGroup::Voice, IDM_VOICE_METRICS,
             "!voice_metrics", "", handleVoiceMetrics, true, true, false);
-    autoReg("voice.toggle_panel", "Voice Toggle Panel", "Toggle panel (voice system)", FeatureGroup::Voice,
+        autoReg("voice.toggle_panel", "Voice Toggle Panel", "Toggle panel (voice system)", FeatureGroup::Voice,
             IDM_VOICE_TOGGLE_PANEL, "!voice_toggle_panel", "", handleVoiceTogglePanel, true, true, false);
-    autoReg("voice.mode_ptt", "Voice Mode Ptt", "Mode ptt (voice system)", FeatureGroup::Voice, IDM_VOICE_MODE_PTT,
+        autoReg("voice.mode_ptt", "Voice Mode Ptt", "Mode ptt (voice system)", FeatureGroup::Voice, IDM_VOICE_MODE_PTT,
             "!voice_mode_ptt", "", handleVoiceModePtt, true, true, false);
-    autoReg("voice.mode_continuous", "Voice Mode Continuous", "Mode continuous (voice system)", FeatureGroup::Voice,
+        autoReg("voice.mode_continuous", "Voice Mode Continuous", "Mode continuous (voice system)", FeatureGroup::Voice,
             IDM_VOICE_MODE_CONTINUOUS, "!voice_mode_continuous", "", handleVoiceModeContinuous, true, true, false);
-    autoReg("voice.mode_disabled", "Voice Mode Disabled", "Mode disabled (voice system)", FeatureGroup::Voice,
+        autoReg("voice.mode_disabled", "Voice Mode Disabled", "Mode disabled (voice system)", FeatureGroup::Voice,
             IDM_VOICE_MODE_DISABLED, "!voice_mode_disabled", "", handleVoiceModeDisabled, true, true, false);
-    autoReg("voice.auto_toggle", "Voice Auto Toggle", "Auto toggle (voice system)", FeatureGroup::Voice,
+        autoReg("voice.auto_toggle", "Voice Auto Toggle", "Auto toggle (voice system)", FeatureGroup::Voice,
             IDM_VOICE_AUTO_TOGGLE, "!voice_auto_toggle", "", handleVoiceAutoToggle, true, true, false);
-    autoReg("voice.auto_settings", "Voice Auto Settings", "Auto settings (voice system)", FeatureGroup::Voice,
+        autoReg("voice.auto_settings", "Voice Auto Settings", "Auto settings (voice system)", FeatureGroup::Voice,
             IDM_VOICE_AUTO_SETTINGS, "!voice_auto_settings", "", handleVoiceAutoSettings, true, true, false);
-    autoReg("voice.auto_next_voice", "Voice Auto Next Voice", "Auto next voice (voice system)", FeatureGroup::Voice,
+        autoReg("voice.auto_next_voice", "Voice Auto Next Voice", "Auto next voice (voice system)", FeatureGroup::Voice,
             IDM_VOICE_AUTO_NEXT_VOICE, "!voice_auto_next_voice", "", handleVoiceAutoNextVoice, true, true, false);
-    autoReg("voice.auto_prev_voice", "Voice Auto Prev Voice", "Auto prev voice (voice system)", FeatureGroup::Voice,
+        autoReg("voice.auto_prev_voice", "Voice Auto Prev Voice", "Auto prev voice (voice system)", FeatureGroup::Voice,
             IDM_VOICE_AUTO_PREV_VOICE, "!voice_auto_prev_voice", "", handleVoiceAutoPrevVoice, true, true, false);
-    autoReg("voice.auto_rate_up", "Voice Auto Rate Up", "Auto rate up (voice system)", FeatureGroup::Voice,
+        autoReg("voice.auto_rate_up", "Voice Auto Rate Up", "Auto rate up (voice system)", FeatureGroup::Voice,
             IDM_VOICE_AUTO_RATE_UP, "!voice_auto_rate_up", "", handleVoiceAutoRateUp, true, true, false);
-    autoReg("voice.auto_rate_down", "Voice Auto Rate Down", "Auto rate down (voice system)", FeatureGroup::Voice,
+        autoReg("voice.auto_rate_down", "Voice Auto Rate Down", "Auto rate down (voice system)", FeatureGroup::Voice,
             IDM_VOICE_AUTO_RATE_DOWN, "!voice_auto_rate_down", "", handleVoiceAutoRateDown, true, true, false);
-    autoReg("voice.auto_stop", "Voice Auto Stop", "Auto stop (voice system)", FeatureGroup::Voice, IDM_VOICE_AUTO_STOP,
-            "!voice_auto_stop", "", handleVoiceAutoStop, true, true, false);
+        autoReg("voice.auto_stop", "Voice Auto Stop", "Auto stop (voice system)", FeatureGroup::Voice,
+            IDM_VOICE_AUTO_STOP, "!voice_auto_stop", "", handleVoiceAutoStop, true, true, false);
+    #endif
 
     // ══════════════ VSCEXT (10 commands) ══════════════
     autoReg("vscext.api_status", "Vscext Api Status", "Api status (vscext system)", FeatureGroup::Tools,

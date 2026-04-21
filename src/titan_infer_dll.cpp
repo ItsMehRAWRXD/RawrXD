@@ -564,7 +564,7 @@ static int StrIEquals(const char* a, const char* b) {
 
 static void ConfigureLiveRoutePolicy() {
     char envModel[96] = {0};
-    DWORD envModelLen = GetEnvironmentVariableA("TITAN_OLLAMA_MODEL", envModel, (DWORD)sizeof(envModel));
+    DWORD envModelLen = GetEnvironmentVariableA("TITAN_RAWRXD_NATIVE_MODEL", envModel, (DWORD)sizeof(envModel));
     if (envModelLen > 0 && envModelLen < sizeof(envModel)) {
         StrCopyBounded(g_liveModelName, envModel, (int)sizeof(g_liveModelName));
     } else {
@@ -1081,7 +1081,7 @@ static int ExtractAndFoldJsonEmbeddingVector(const char* json,
 }
 
 // ============================================================================
-// OllamaGenerate — HTTP POST to localhost:11434/api/generate
+// OllamaGenerate — HTTP POST to localhost:11435/api/generate
 // Returns response text length, or negative on error
 // ============================================================================
 
@@ -1123,7 +1123,7 @@ static int OllamaGenerate(const char* prompt, int maxTokens, float temperature,
     static char httpReq[66000];
     int hp = 0;
     hp = StrCopy(httpReq, hp, "POST /api/generate HTTP/1.1\r\n");
-    hp = StrCopy(httpReq, hp, "Host: 127.0.0.1:11434\r\n");
+    hp = StrCopy(httpReq, hp, "Host: 127.0.0.1:11435\r\n");
     hp = StrCopy(httpReq, hp, "Content-Type: application/json\r\n");
     hp = StrCopy(httpReq, hp, "Content-Length: ");
     hp = IntToStr(httpReq, hp, bp);
@@ -1729,7 +1729,7 @@ static DWORD __stdcall InferenceThread(LPVOID param) {
 
     // ================================================================
     // Route 1: Ollama HTTP API — REAL 70B INFERENCE (non-simulated)
-    // POST http://127.0.0.1:11434/api/generate
+    // POST http://127.0.0.1:11435/api/generate
     // Model: bg40-unleashed:latest (BigDaddyG 70B Q4_K_M)
     // ================================================================
     static char ollamaResp[16384];
@@ -1767,7 +1767,7 @@ static DWORD __stdcall InferenceThread(LPVOID param) {
             return 4;
         }
         TitanLog("InferenceThread: callback completed (ollama route)");
-        if (EnforceMandatoryCompletionOnSuccess(req, callback, "ollama") != 0) {
+        if (EnforceMandatoryCompletionOnSuccess(req, callback, "native") != 0) {
             return 8;
         }
         _InterlockedExchange(&g_rawrxd_dispatch_stage, 29);
@@ -1781,7 +1781,7 @@ static DWORD __stdcall InferenceThread(LPVOID param) {
     if (_InterlockedCompareExchange(&g_allowOfflineFallback, 0, 0) == 0) {
         char liveErr[256];
         wsprintfA(liveErr,
-                  "[Titan live route unavailable: model=%s host=127.0.0.1:11434 rc=%d]",
+                  "[Titan live route unavailable: model=%s host=127.0.0.1:11435 rc=%d]",
                   g_liveModelName,
                   respLen);
         __try {
@@ -2202,16 +2202,22 @@ extern "C" __declspec(dllexport) void Titan_Shutdown(void) {
     _InterlockedExchange(&g_cancelRequest, 1);
 
     // Bounded wait for active inference (max 3 seconds, not infinite)
-    int waitCount = 0;
+    const DWORD waitStart = GetTickCount();
+    int waitPollCount = 0;
     while (_InterlockedCompareExchange(&g_currentRequest.active, 0, 0) != 0) {
-        Sleep(10);
-        if (++waitCount > 300) {  // 3 seconds max
+        if ((GetTickCount() - waitStart) >= 3000UL) {  // 3 seconds max
             // Force-release the active flag — inference thread will
             // harmlessly write to static buffers on completion
             _InterlockedExchange(&g_currentRequest.active, 0);
             TitanLog("Titan_Shutdown: Forced active flag release after 3s");
             break;
         }
+        if (waitPollCount < 32) {
+            Sleep(0);
+        } else {
+            Sleep(1);
+        }
+        ++waitPollCount;
     }
     
     // Close persistent transport session before tearing down Winsock.
@@ -2796,7 +2802,7 @@ static int OllamaEmbeddingsRequest(const char* prompt, float* outVec, uint32_t o
     static char httpReq[70000];
     int hp = 0;
     hp = StrCopy(httpReq, hp, "POST /api/embeddings HTTP/1.1\r\n");
-    hp = StrCopy(httpReq, hp, "Host: 127.0.0.1:11434\r\n");
+    hp = StrCopy(httpReq, hp, "Host: 127.0.0.1:11435\r\n");
     hp = StrCopy(httpReq, hp, "Content-Type: application/json\r\n");
     hp = StrCopy(httpReq, hp, "Content-Length: ");
     hp = IntToStr(httpReq, hp, bp);
@@ -4293,6 +4299,7 @@ extern "C" __declspec(dllexport) RAWRXD_STATUS __stdcall RawrXD_WaitForInference
         OutputDebugStringA(mbBuf);
     }
     int last_progress_bucket = -1;
+    int wait_poll_count = 0;
     while (1) {
         const long req_active = _InterlockedCompareExchange(&g_currentRequest.active, 0, 0);
         const long infer_active = _InterlockedCompareExchange(&g_rawrxd_inference_active, 0, 0);
@@ -4375,7 +4382,12 @@ extern "C" __declspec(dllexport) RAWRXD_STATUS __stdcall RawrXD_WaitForInference
             }
             return RAWRXD_ERROR_TIMED_OUT;
         }
-        Sleep(10);
+        if (wait_poll_count < 32) {
+            Sleep(0);
+        } else {
+            Sleep(1);
+        }
+        ++wait_poll_count;
     }
     if (_InterlockedCompareExchange(&g_currentRequest.active, 0, 0) != 0 || g_rawrxd_inference_active != 0) {
         g_rawrxd_inference_status = RAWRXD_ERROR_NOT_READY;

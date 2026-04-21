@@ -21,7 +21,7 @@
   When TPS runs, non-zero exit fails the script.
 
 .PARAMETER LaneBHeadless
-  When RawrEngine.exe exists (build-ninja or build), run --copilot-smoke (Lane B JSON + optional fast exit).
+  When RawrEngine.exe exists (build-win32, build-ninja, or build), run --copilot-smoke (Lane B JSON + optional fast exit).
 
 .EXAMPLE
   .\scripts\Smoke-IDE-TurnKey.ps1
@@ -50,7 +50,9 @@ $skipCopilotCli = $true
 if ($LaneBHeadless) {
     $re = $null
     foreach ($c in @(
+            (Join-Path $repoRoot "build-win32\bin\RawrEngine.exe"),
             (Join-Path $repoRoot "build-ninja\bin\RawrEngine.exe"),
+            (Join-Path $repoRoot "build-win32\RawrEngine.exe"),
             (Join-Path $repoRoot "build-ninja\RawrEngine.exe"),
             (Join-Path $repoRoot "build\bin\RawrEngine.exe"))) {
         if (Test-Path -LiteralPath $c) { $re = $c; break }

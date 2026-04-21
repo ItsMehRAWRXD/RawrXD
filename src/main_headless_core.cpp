@@ -1,4 +1,4 @@
-// RawrEngine Lane B: Headless minimal entry point.
+ // RawrEngine Lane B: Headless minimal entry point.
 // Goal: keep the 274TB streamer/loader core linkable without GUI/hotpatch/omega subsystems.
 
 #include "Win32IDE_AgenticBridge.h"
@@ -12,7 +12,6 @@
 #include <memoryapi.h>
 
 #include <algorithm>
-#include <cerrno>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
@@ -498,12 +497,7 @@ static int printUsage()
         "[--shuffle-layout 0|1] [--seed <u32>]\n"
         "  RawrEngine.exe --load-model <path>\n"
         "  RawrEngine.exe --infer <path> --prompt <text> [--max-tokens <N>] [--verbose]\n"
-        "  RawrEngine.exe --profile <name> [profile-specific options]\n"
-        "      profiles: production-14d\n"
         "  RawrEngine.exe --copilot-smoke [--model <path.gguf>] [--prompt <text>] [--with-agentic] [--skip-agentic]\n"
-        "  RawrEngine.exe --production-finishers-14d [--model <path.gguf>] [--prompt <text>] [--with-agentic] [--skip-agentic] "
-        "[--bench-max-mb <N>] [--bench-iters <N>] [--sweep-window-mb <N>] [--sweep-iters <N>] [--seed <u64>] "
-        "[--prefetch 0|1] [--largepages 0|1] [--report <path.json>]\n"
         "      (Lane B: load + one GenerateStreaming; optional second AgenticBridge pass with --with-agentic only;\n"
         "       default skips agentic to avoid re-entrant GGUF init on the shared engine)\n"
         "  RawrEngine.exe --streamer-smoke <path> [--offset <u64>] [--size <u64>] [--iterations <N>]\n"
@@ -721,274 +715,6 @@ static int runCopilotSmoke(const std::vector<std::string>& args)
         }
         return 1;
     }
-}
-
-static int loadModel(const std::string& path);
-static int streamerSmoke(const std::wstring& wPath, uint64_t offset, uint64_t size, uint32_t iterations);
-static int benchStreamer(const std::wstring& wPath, uint32_t maxMb, uint32_t iters, bool tryLargePages,
-                         bool prefetch);
-static int offsetSweepLoader(const std::wstring& wPath, uint32_t windowMb, uint32_t iters, uint64_t seed,
-                             bool prefetch);
-
-static bool parseU32OptBounded(const std::vector<std::string>& args, const char* opt, uint32_t fallback,
-                               uint32_t minValue, uint32_t maxValue, uint32_t& out)
-{
-    const char* s = getOptValue(args, opt);
-    if (!s || !s[0])
-    {
-        out = fallback;
-        return true;
-    }
-
-    errno = 0;
-    char* end = nullptr;
-    const unsigned long v = std::strtoul(s, &end, 10);
-    if (errno != 0 || end == s || (end && *end != '\0'))
-        return false;
-    if (v < minValue || v > maxValue)
-        return false;
-    out = static_cast<uint32_t>(v);
-    return true;
-}
-
-static bool parseU64OptBounded(const std::vector<std::string>& args, const char* opt, uint64_t fallback,
-                               uint64_t minValue, uint64_t maxValue, uint64_t& out)
-{
-    const char* s = getOptValue(args, opt);
-    if (!s || !s[0])
-    {
-        out = fallback;
-        return true;
-    }
-
-    errno = 0;
-    char* end = nullptr;
-    const unsigned long long v = std::strtoull(s, &end, 10);
-    if (errno != 0 || end == s || (end && *end != '\0'))
-        return false;
-    if (v < minValue || v > maxValue)
-        return false;
-    out = static_cast<uint64_t>(v);
-    return true;
-}
-
-static bool parseBoolOpt01(const std::vector<std::string>& args, const char* opt, bool fallback, bool& out)
-{
-    const char* s = getOptValue(args, opt);
-    if (!s || !s[0])
-    {
-        out = fallback;
-        return true;
-    }
-    if (std::strcmp(s, "0") == 0)
-    {
-        out = false;
-        return true;
-    }
-    if (std::strcmp(s, "1") == 0)
-    {
-        out = true;
-        return true;
-    }
-    return false;
-}
-
-static int runProductionFinishers14Day(const std::vector<std::string>& args)
-{
-    auto writeStdout = [](const char* s)
-    {
-        if (!s)
-            return;
-        DWORD w = 0;
-        WriteFile(GetStdHandle(STD_OUTPUT_HANDLE), s, static_cast<DWORD>(std::strlen(s)), &w, nullptr);
-    };
-
-    uint32_t benchMaxMb = 64u;
-    uint32_t benchIters = 4u;
-    uint32_t sweepWindowMb = 64u;
-    uint32_t sweepIters = 256u;
-    uint64_t seed = 0x14D0C0DEULL;
-    bool prefetch = true;
-    bool largePages = true;
-
-    if (!parseU32OptBounded(args, "--bench-max-mb", 64u, 1u, 16384u, benchMaxMb) ||
-        !parseU32OptBounded(args, "--bench-iters", 4u, 1u, 1024u, benchIters) ||
-        !parseU32OptBounded(args, "--sweep-window-mb", 64u, 1u, 16384u, sweepWindowMb) ||
-        !parseU32OptBounded(args, "--sweep-iters", 256u, 1u, 1000000u, sweepIters) ||
-        !parseU64OptBounded(args, "--seed", 0x14D0C0DEULL, 1ull, std::numeric_limits<uint64_t>::max(), seed) ||
-        !parseBoolOpt01(args, "--prefetch", true, prefetch) ||
-        !parseBoolOpt01(args, "--largepages", true, largePages))
-    {
-        writeStdout("production-finishers-14d: invalid option value\n");
-        return 2;
-    }
-
-    std::filesystem::path ggufPath;
-    bool wroteTempModel = false;
-
-    const char* modelOpt = getOptValue(args, "--model");
-    if (modelOpt && modelOpt[0])
-    {
-        ggufPath = std::filesystem::path(widenUtf8(modelOpt));
-    }
-    else
-    {
-        wchar_t tmpDir[RAWRXD_HEADLESS_COPILOT_TMP_CAP]{};
-        const DWORD n = GetTempPathW(RAWRXD_HEADLESS_COPILOT_TMP_CAP, tmpDir);
-        if (n == 0 || n >= RAWRXD_HEADLESS_COPILOT_TMP_CAP)
-        {
-            writeStdout("production-finishers-14d: GetTempPathW failed\n");
-            return 1;
-        }
-        ggufPath = std::filesystem::path(tmpDir) / L"rawrxd_14day_finishers_minimal.gguf";
-        if (!writeMinimalGgufV3(ggufPath))
-        {
-            writeStdout("production-finishers-14d: failed to create temp GGUF\n");
-            return 1;
-        }
-        wroteTempModel = true;
-    }
-
-    const std::string modelUtf8 = ggufPath.string();
-    const std::wstring modelWide = widenUtf8(modelUtf8.c_str());
-
-    std::error_code fsErr;
-    const uint64_t fileBytes = static_cast<uint64_t>(std::filesystem::file_size(ggufPath, fsErr));
-    if (!fsErr && fileBytes > 0)
-    {
-        const uint64_t fileMb = std::max<uint64_t>(1ull, fileBytes / (1024ull * 1024ull));
-        if (benchMaxMb > fileMb)
-            benchMaxMb = static_cast<uint32_t>(fileMb);
-        if (sweepWindowMb > fileMb)
-            sweepWindowMb = static_cast<uint32_t>(fileMb);
-    }
-
-    bool skipAgentic = true;
-    for (size_t i = 1; i < args.size(); ++i)
-    {
-        if (args[i] == "--with-agentic")
-            skipAgentic = false;
-        else if (args[i] == "--skip-agentic")
-            skipAgentic = true;
-    }
-
-    const char* promptOpt = getOptValue(args, "--prompt");
-    const std::string prompt = (promptOpt && promptOpt[0]) ? std::string(promptOpt)
-                                                            : std::string("Reply with the single word: READY");
-
-    const char* reportOpt = getOptValue(args, "--report");
-    const std::string reportPath = (reportOpt && reportOpt[0]) ? std::string(reportOpt) : std::string();
-
-    const int loadRc = loadModel(modelUtf8);
-    const int streamerRc = streamerSmoke(modelWide, 0ull, 4096ull, 8u);
-    const int benchRc = benchStreamer(modelWide, benchMaxMb, benchIters, largePages, prefetch);
-    const int sweepLoaderRc = offsetSweepLoader(modelWide, sweepWindowMb, sweepIters, seed, prefetch);
-
-    std::vector<std::string> smokeArgs;
-    smokeArgs.reserve(10);
-    smokeArgs.emplace_back("RawrEngine.exe");
-    smokeArgs.emplace_back("--copilot-smoke");
-    smokeArgs.emplace_back("--model");
-    smokeArgs.emplace_back(modelUtf8);
-    smokeArgs.emplace_back("--prompt");
-    smokeArgs.emplace_back(prompt);
-    smokeArgs.emplace_back(skipAgentic ? "--skip-agentic" : "--with-agentic");
-
-    const int copilotRc = runCopilotSmoke(smokeArgs);
-
-    const bool benchSoftPass = (benchRc == 0 || benchRc == 2);
-    bool ok = (loadRc == 0) && (streamerRc == 0) && benchSoftPass && (sweepLoaderRc == 0) && (copilotRc == 0);
-
-    std::ostringstream json;
-    json << "{\"ok\":" << (ok ? "true" : "false")
-         << ",\"model\":\"" << modelUtf8 << "\""
-         << ",\"temp_model\":" << (wroteTempModel ? "true" : "false")
-         << ",\"prefetch\":" << (prefetch ? "true" : "false")
-         << ",\"largepages\":" << (largePages ? "true" : "false")
-         << ",\"bench_soft_pass\":" << (benchSoftPass ? "true" : "false")
-         << ",\"checks\":{"
-         << "\"load_model\":" << loadRc << ","
-         << "\"streamer_smoke\":" << streamerRc << ","
-         << "\"bench_streamer\":" << benchRc << ","
-         << "\"offset_sweep_loader\":" << sweepLoaderRc << ","
-         << "\"copilot_smoke\":" << copilotRc << "}}";
-
-    if (!reportPath.empty())
-    {
-        try
-        {
-            std::filesystem::path rp = std::filesystem::path(widenUtf8(reportPath.c_str()));
-            if (!rp.parent_path().empty())
-                std::filesystem::create_directories(rp.parent_path());
-            std::ofstream out(rp, std::ios::binary | std::ios::trunc);
-            if (!out)
-            {
-                writeStdout("production-finishers-14d: failed to open report path\n");
-                ok = false;
-            }
-            else
-            {
-                out << json.str() << "\n";
-                out.flush();
-                if (!out.good())
-                {
-                    writeStdout("production-finishers-14d: failed to write report\n");
-                    ok = false;
-                }
-            }
-        }
-        catch (...)
-        {
-            writeStdout("production-finishers-14d: report path exception\n");
-            ok = false;
-        }
-    }
-
-    {
-        std::ostringstream j;
-        j << "PROD_FINISHERS_14D_JSON:" << json.str() << "\n";
-        writeStdout(j.str().c_str());
-    }
-
-    if (wroteTempModel)
-    {
-        std::error_code ec;
-        std::filesystem::remove(ggufPath, ec);
-    }
-
-    writeStdout(ok ? "production-finishers-14d: EXIT=0\n" : "production-finishers-14d: EXIT=1\n");
-    std::fflush(nullptr);
-    std::_Exit(ok ? 0 : 1);
-    return ok ? 0 : 1;
-}
-
-static int runProfileRouter(const std::vector<std::string>& args)
-{
-    auto writeStdout = [](const char* s)
-    {
-        if (!s)
-            return;
-        DWORD w = 0;
-        WriteFile(GetStdHandle(STD_OUTPUT_HANDLE), s, static_cast<DWORD>(std::strlen(s)), &w, nullptr);
-    };
-
-    const char* profile = getOptValue(args, "--profile");
-    if (!profile || !profile[0])
-    {
-        writeStdout("profile: missing profile name\n");
-        return 2;
-    }
-
-    if (std::strcmp(profile, "production-14d") == 0 || std::strcmp(profile, "production-finishers-14d") == 0 ||
-        std::strcmp(profile, "day4") == 0)
-    {
-        return runProductionFinishers14Day(args);
-    }
-
-    std::ostringstream msg;
-    msg << "profile: unknown profile '" << profile << "'\n";
-    writeStdout(msg.str().c_str());
-    return 2;
 }
 
 static uint64_t qpcNow();
@@ -1411,10 +1137,10 @@ static int benchStreamer(const std::wstring& wPath, uint32_t maxMb, uint32_t ite
         if (prefetch)
             (void)tryPrefetchRange(src, mapSize);
 
-        // Integrity check: snapshot tail bytes from source and verify destination matches after copy.
+        // Sentinel integrity: stamp last 4 bytes in the source range and expect it in destination.
+        constexpr uint32_t kSentinel = 0xDEADC0DEu;
         const size_t tail = mapSize - sizeof(uint32_t);
-        uint32_t srcTailValue = 0;
-        std::memcpy(&srcTailValue, reinterpret_cast<const uint8_t*>(src) + tail, sizeof(uint32_t));
+        std::memcpy(reinterpret_cast<uint8_t*>(src) + tail, &kSentinel, sizeof(uint32_t));
 
         // memcpy benchmark
         uint64_t t0 = qpcNow();
@@ -1447,8 +1173,8 @@ static int benchStreamer(const std::wstring& wPath, uint32_t maxMb, uint32_t ite
 
         // Fence/sentinel check: verify sentinel reached destination.
         uint32_t got = 0;
-        std::memcpy(&got, reinterpret_cast<const uint8_t*>(dstAlloc.aligned) + tail, sizeof(uint32_t));
-        const bool sentinelOk = (got == srcTailValue);
+        std::memcpy(&got, reinterpret_cast<uint8_t*>(dstAlloc.aligned) + tail, sizeof(uint32_t));
+        const bool sentinelOk = (got == kSentinel);
 
         char line[256]{};
         const char* alignStr = src2mbAligned ? "2MB" : "64K+";
@@ -1936,17 +1662,9 @@ int main(int argc, char** argv)
     if (arg1 == "--help" || arg1 == "-h")
         return printUsage();
 
-    // Thin control-plane router for stable scripted workflows.
-    if (arg1 == "--profile")
-        return runProfileRouter(args);
-
     // Copilot/Codex-style headless parity: CPUInferenceEngine smoke (optional temp GGUF).
     if (arg1 == "--copilot-smoke" || arg1 == "--agentic-smoke")
         return runCopilotSmoke(args);
-
-    // 14-day production finisher lane: consolidated readiness checks with machine-readable output.
-    if (arg1 == "--production-finishers-14d")
-        return runProductionFinishers14Day(args);
 
     // Minimal sanity lane:
     // RawrEngine.exe --gguf-header <path>

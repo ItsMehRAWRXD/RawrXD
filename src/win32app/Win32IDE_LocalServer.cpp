@@ -715,7 +715,14 @@ void Win32IDE::stopLocalServer()
     m_localServerRunning.store(false);
     if (m_localServerThread.joinable())
     {
-        m_localServerThread.join();
+        if (m_localServerThread.get_id() == std::this_thread::get_id())
+        {
+            m_localServerThread.detach();
+        }
+        else
+        {
+            m_localServerThread.join();
+        }
     }
     appendToOutput("[Server] Stopped", "General", OutputSeverity::Info);
 }
@@ -1827,7 +1834,7 @@ void Win32IDE::handleModelBridgeUnloadEndpoint(SOCKET client)
 }
 
 // ============================================================================
-// OLLAMA: /api/tags — list loaded models
+// native: /api/tags — list loaded models
 // ============================================================================
 
 void Win32IDE::handleOllamaApiTags(SOCKET client)
@@ -1855,7 +1862,7 @@ void Win32IDE::handleOllamaApiTags(SOCKET client)
 }
 
 // ============================================================================
-// OLLAMA: /api/generate — generate text (streaming or non-streaming)
+// native: /api/generate — generate text (streaming or non-streaming)
 // ============================================================================
 
 void Win32IDE::handleOllamaApiGenerate(SOCKET client, const std::string& body)
@@ -3603,7 +3610,7 @@ void Win32IDE::handleBackendActiveEndpoint(SOCKET client)
 }
 
 // POST /api/backend/switch — switch active backend
-// Body: {"backend": "Ollama"} or {"backend": "openai", "model": "gpt-4o", "apiKey": "sk-..."}
+// Body: {"backend": "native"} or {"backend": "openai", "model": "gpt-4o", "apiKey": "sk-..."}
 void Win32IDE::handleBackendSwitchEndpoint(SOCKET client, const std::string& body)
 {
     try

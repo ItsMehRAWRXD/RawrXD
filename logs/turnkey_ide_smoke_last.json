@@ -1,21 +1,22 @@
 {
   "ok": true,
-  "timestamp": "2026-04-11T18:42:34.3982291-04:00",
+  "timestamp": "2026-04-20T16:55:35.5666480-04:00",
   "repoRoot": "D:\\rawrxd",
   "steps": {
     "chat_copilot_parity_symbols": "ok",
-    "chat_agentic_ui_marshalling": "skipped: -SkipUiMarshalling",
+    "chat_agentic_ui_marshalling": "ok",
     "agentic_chat_route_symbols": "ok",
-    "headless_copilot_smoke": "ok",
+    "headless_copilot_smoke": "skipped: -SkipCopilotCli",
     "win32_agentic_registry_smoke": "skipped: -SkipAgenticExe",
     "tps_smoke": "skipped: -RunTpsSmoke or RAWRXD_SMOKE_MODEL; or -SkipTps"
   },
   "envHints": {
-    "liveAgenticOllama": "RAWRXD_AGENTIC_SMOKE_LIVE=1",
-    "tpsRef": "RAWRXD_TPS_REF",
-    "fastSourceOnly": "pwsh -File scripts/Smoke-IDE-TurnKey.ps1",
-    "fullChatParity": "pwsh -File Ship/smoke_agentic_chat_parity.ps1",
     "tpsModel": "RAWRXD_SMOKE_MODEL=<path.gguf>",
-    "laneBCli": "cmake --build build-ninja --target RawrEngine ; RawrEngine --copilot-smoke"
+    "tpsRef": "RAWRXD_TPS_REF",
+    "fullChatParity": "pwsh -File Ship/smoke_agentic_chat_parity.ps1",
+    "laneBCli": "cmake --build <RAWRXD_BUILD_DIR|build-win32|build-ninja> --target RawrEngine ; <build-dir>\\bin\\RawrEngine.exe --copilot-smoke",
+    "ideModelAutonomy": "ctest -C Debug -R test_ide_model_autonomy --output-on-failure (from configured build dir)",
+    "fastSourceOnly": "pwsh -File scripts/Smoke-IDE-TurnKey.ps1",
+    "liveAgenticOllama": "RAWRXD_AGENTIC_SMOKE_LIVE=1"
   }
 }

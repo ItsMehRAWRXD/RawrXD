@@ -23,9 +23,9 @@
 #include "../agent_explainability.h"
 #include "../agent_history.h"
 #include "../agent_policy.h"
-#include "../agentic/AgentOllamaClient.h"
-#include "../agentic/agentic_executor.h"
+#include "../agentic/NativeInferenceClient.h"
 #include "../agentic/ToolRegistry.h"
+#include "../agentic/agentic_executor.h"
 #include "../cli/swarm_orchestrator.h"
 #include "../core/agent_safety_contract.h"
 #include "../core/confidence_gate.h"
@@ -35,6 +35,7 @@
 #include "../core/universal_model_hotpatcher.h"
 #include "../cpu_inference_engine.h"
 #include "../kernels/kv_accum_avx512.h"
+#include "TitanIPC.h"
 #include "multi_response_engine.h"
 
 #include <algorithm>
@@ -60,7 +61,7 @@
 #include <tlhelp32.h>
 #include <unordered_map>
 
-// SCAFFOLD_130: Headless inference and model load
+// Headless IDE Implementation - Inference and Model Load
 
 namespace
 {
@@ -73,7 +74,7 @@ constexpr size_t kMaxHeadlessInferenceResponseBytes = 1024 * 1024;
 constexpr size_t kMaxHeadlessHttpResponseBytes = 1024 * 1024;
 constexpr size_t kMaxHeadlessSearchMatches = 1000;
 constexpr DWORD kHeadlessHttpRecvTimeoutMs = 2000;
-constexpr int kHeadlessOllamaTimeoutMs = 5000;
+constexpr int kHeadlessNativeTimeoutMs = 5000;
 
 static std::string extractOllamaChatMessageContent(const std::string& rawResp)
 {
@@ -2439,8 +2440,8 @@ HeadlessResult HeadlessIDE::initBackendManager()
     // Configure default backend based on config
     if (!m_config.backend.empty())
     {
-        if (m_config.backend == "ollama")
-            m_activeBackend = AIBackendType::Ollama;
+        if (m_config.backend == "native")
+            m_activeBackend = AIBackendType::Native;
         else if (m_config.backend == "openai")
             m_activeBackend = AIBackendType::OpenAI;
         else if (m_config.backend == "claude")
@@ -2451,8 +2452,8 @@ HeadlessResult HeadlessIDE::initBackendManager()
             m_activeBackend = AIBackendType::LocalGGUF;
     }
 
-    // Probe Ollama availability via WinSock TCP connect to port 11434
-    bool ollamaAvailable = false;
+    // Probe local native service availability via WinSock TCP connect to port 11435
+    bool nativeTransportAvailable = false;
     {
         WSADATA wsaTmp{};
         WSAStartup(MAKEWORD(2, 2), &wsaTmp);
@@ -2463,7 +2464,7 @@ HeadlessResult HeadlessIDE::initBackendManager()
             ioctlsocket(s, FIONBIO, &nonBlock);
             sockaddr_in addr{};
             addr.sin_family = AF_INET;
-            addr.sin_port = htons(11434);
+            addr.sin_port = htons(11435);
             addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
             int cr = connect(s, reinterpret_cast<sockaddr*>(&addr), sizeof(addr));
             if (cr == SOCKET_ERROR && WSAGetLastError() == WSAEWOULDBLOCK)
@@ -2479,12 +2480,12 @@ HeadlessResult HeadlessIDE::initBackendManager()
                     int err = 0;
                     int errLen = sizeof(err);
                     getsockopt(s, SOL_SOCKET, SO_ERROR, reinterpret_cast<char*>(&err), &errLen);
-                    ollamaAvailable = (err == 0);
+                    nativeTransportAvailable = (err == 0);
                 }
             }
             else
             {
-                ollamaAvailable = (cr == 0);
+                nativeTransportAvailable = (cr == 0);
             }
             closesocket(s);
         }
@@ -2492,21 +2493,16 @@ HeadlessResult HeadlessIDE::initBackendManager()
 
     std::ostringstream statusMsg;
     statusMsg << "Backend manager initialized (headless)";
-    if (ollamaAvailable)
+    if (nativeTransportAvailable)
     {
-        statusMsg << " | Ollama: online (port 11434 reachable)";
-        // Default to Ollama if available and no explicit backend set
-        if (m_config.backend.empty())
-        {
-            m_activeBackend = AIBackendType::Ollama;
-        }
+        statusMsg << " | native service: online (port 11435 reachable)";
     }
     else
     {
-        statusMsg << " | Ollama: offline";
+        statusMsg << " | native: offline";
     }
 
-    const char* backendNames[] = {"LocalGGUF", "Ollama", "OpenAI", "Claude", "Gemini"};
+    const char* backendNames[] = {"LocalGGUF", "native", "OpenAI", "Claude", "Gemini"};
     statusMsg << " | Active: " << backendNames[static_cast<int>(m_activeBackend)];
 
     m_backendManagerInitialized = true;
@@ -2537,7 +2533,7 @@ HeadlessResult HeadlessIDE::initLLMRouter()
     };
 
     RouterEntry routes[] = {
-        {AIBackendType::Ollama, "Ollama", 1, m_backendManagerInitialized},
+        {AIBackendType::Native, "native", 1, m_backendManagerInitialized},
         {AIBackendType::LocalGGUF, "LocalGGUF", 2, m_modelLoaded},
         {AIBackendType::OpenAI, "OpenAI", 10, false},
         {AIBackendType::Claude, "Claude", 11, false},
@@ -2906,6 +2902,13 @@ bool HeadlessIDE::loadModel(const std::string& filepath)
 
         // Expose the resolved model path for native Win32 inference DLL shims.
         SetEnvironmentVariableA("RAWRXD_NATIVE_MODEL_PATH", localPath.c_str());
+        {
+            std::string titanErr;
+            if (!RawrXD::TitanProxy::instance().loadModel(localPath, titanErr))
+            {
+                m_outputSink->appendOutput(("TitanHost load_model: " + titanErr).c_str(), OutputSeverity::Warning);
+            }
+        }
 
         // For forensic map-only mode, skip heavyweight GGUF metadata parsing and
         // perform a direct sliding-window probe through BackendOrchestrator.
@@ -3122,6 +3125,7 @@ bool HeadlessIDE::unloadModel()
     m_loadedModelPath.clear();
     m_loadedModelName.clear();
     SetEnvironmentVariableA("RAWRXD_NATIVE_MODEL_PATH", nullptr);
+    RawrXD::TitanProxy::instance().clearLoadedModelCache();
     m_outputSink->onStatusUpdate("model", "(none)");
     return true;
 }
@@ -3224,24 +3228,25 @@ void HeadlessIDE::runInferenceStreaming(const std::string& prompt,
 {
     m_outputSink->onStreamStart("inference");
 
-    // Use AgentOllamaClient streaming API for real per-token delivery
-    const bool canUseOllamaStreaming = ((m_activeBackend == AIBackendType::Ollama) ||
+    // ChatStream: embedded native NDJSON; VIA_ORCHESTRATOR=1 → batch; FALLBACK_ORCHESTRATOR=1 → retry batch if direct
+    // fails.
+    const bool canUseNativeStreaming = ((m_activeBackend == AIBackendType::Native) ||
                                         (m_activeBackend == AIBackendType::LocalGGUF && !m_orchestratorModelLoaded)) &&
-                                       probeBackendHealth(AIBackendType::Ollama);
+                                       probeBackendHealth(AIBackendType::Native);
 
-    if (canUseOllamaStreaming)
+    if (canUseNativeStreaming)
     {
-        RawrXD::Agent::OllamaConfig cfg;
+        RawrXD::Agent::NativeInferenceConfig cfg;
         cfg.host = "127.0.0.1";
-        cfg.port = 11434;
-        cfg.timeout_ms = kHeadlessOllamaTimeoutMs;
-        // chat_model left empty — auto-detected from Ollama /api/tags
+        cfg.port = 11435;
+        cfg.timeout_ms = kHeadlessNativeTimeoutMs;
+        // chat_model left empty — auto-detected from the embedded native model host.
         cfg.temperature = m_config.temperature;
         cfg.max_tokens = m_config.maxTokens;
         cfg.use_gpu = true;
         cfg.num_gpu = 99;
 
-        RawrXD::Agent::AgentOllamaClient client(cfg);
+        RawrXD::Agent::NativeInferenceClient client(cfg);
         std::vector<RawrXD::Agent::ChatMessage> messages;
         messages.push_back({"system", "You are RawrXD IDE's embedded AI assistant.", "", {}});
         messages.push_back({"user", prompt, "", {}});
@@ -3257,7 +3262,9 @@ void HeadlessIDE::runInferenceStreaming(const std::string& prompt,
                 }
                 m_outputSink->onStreamingToken(token.c_str(), token.size(), StreamTokenOrigin::Inference);
             },
-            /* on_tool_call */ [](const std::string& toolName, const nlohmann::json& toolArgs) {
+            /* on_tool_call */
+            [](const std::string& toolName, const nlohmann::json& toolArgs)
+            {
                 static AgenticExecutor s_executor;
                 s_executor.callTool(toolName, toolArgs.dump());
             },
@@ -3290,7 +3297,7 @@ void HeadlessIDE::runInferenceStreaming(const std::string& prompt,
 // ============================================================================
 bool HeadlessIDE::setActiveBackend(AIBackendType type)
 {
-    const char* backendNames[] = {"LocalGGUF", "Ollama", "OpenAI", "Claude", "Gemini"};
+    const char* backendNames[] = {"LocalGGUF", "native", "OpenAI", "Claude", "Gemini"};
     int idx = static_cast<int>(type);
     if (idx < 0 || idx >= static_cast<int>(AIBackendType::Count))
     {
@@ -3398,8 +3405,8 @@ bool HeadlessIDE::setActiveBackend(AIBackendType type)
             case AIBackendType::LocalGGUF:
                 hint = " (load a model first)";
                 break;
-            case AIBackendType::Ollama:
-                hint = " (ensure Ollama is running on port 11434)";
+            case AIBackendType::Native:
+                hint = " (ensure the embedded native transport is running on port 11435)";
                 break;
             case AIBackendType::OpenAI:
                 hint = " (set OPENAI_API_KEY)";
@@ -3438,7 +3445,7 @@ HeadlessIDE::AIBackendType HeadlessIDE::getActiveBackendType() const
 
 std::string HeadlessIDE::getBackendStatusString() const
 {
-    const char* backendNames[] = {"LocalGGUF", "Ollama", "OpenAI", "Claude", "Gemini"};
+    const char* backendNames[] = {"LocalGGUF", "native", "OpenAI", "Claude", "Gemini"};
     int idx = static_cast<int>(m_activeBackend);
     std::ostringstream oss;
     oss << "Backend: " << (idx >= 0 && idx < 5 ? backendNames[idx] : "Unknown") << " (headless)\n";
@@ -3456,9 +3463,9 @@ bool HeadlessIDE::probeBackendHealth(AIBackendType type)
             // Local GGUF: healthy if model is loaded
             return m_modelLoaded;
 
-        case AIBackendType::Ollama:
+        case AIBackendType::Native:
         {
-            // Probe real Ollama HTTP endpoint via WinSock TCP connect to 127.0.0.1:11434
+            // Probe local native service endpoint via WinSock TCP connect to 127.0.0.1:11435
             bool connected = false;
             WSADATA wsaTmp{};
             WSAStartup(MAKEWORD(2, 2), &wsaTmp);
@@ -3470,7 +3477,7 @@ bool HeadlessIDE::probeBackendHealth(AIBackendType type)
                 ioctlsocket(s, FIONBIO, &nonBlock);
                 sockaddr_in addr{};
                 addr.sin_family = AF_INET;
-                addr.sin_port = htons(11434);
+                addr.sin_port = htons(11435);
                 addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
                 int cr = connect(s, reinterpret_cast<sockaddr*>(&addr), sizeof(addr));
                 if (cr == SOCKET_ERROR && WSAGetLastError() == WSAEWOULDBLOCK)
@@ -3497,7 +3504,7 @@ bool HeadlessIDE::probeBackendHealth(AIBackendType type)
             }
             if (connected)
             {
-                m_outputSink->appendOutput("Ollama: port 11434 reachable", OutputSeverity::Debug);
+                m_outputSink->appendOutput("native service: port 11435 reachable", OutputSeverity::Debug);
             }
             return connected;
         }
@@ -3755,10 +3762,12 @@ std::string HeadlessIDE::routeInferenceRequest(const std::string& prompt)
 
     if (m_headlessMinimal && m_activeBackend == AIBackendType::LocalGGUF && !m_modelLoaded)
     {
-        if (!probeBackendHealth(AIBackendType::Ollama))
+        // In minimal mode, attempt native/local model discovery only.
+        prepareInferenceBackend(std::string());
+
+        if (!m_modelLoaded && !m_orchestratorModelLoaded)
         {
-            return "[error] Inference unavailable in headless minimal mode — no local model loaded and Ollama is "
-                   "unreachable";
+            return "[error] Inference unavailable in headless minimal mode — no local model loaded";
         }
     }
 
@@ -3828,193 +3837,9 @@ std::string HeadlessIDE::routeInferenceRequest(const std::string& prompt)
         }
     }
 
-    const bool localBackendNoModel =
-        (m_activeBackend == AIBackendType::LocalGGUF && !m_modelLoaded && !m_orchestratorModelLoaded);
-    const bool canUseOllama = ((m_activeBackend == AIBackendType::Ollama) || localBackendNoModel) &&
-                              probeBackendHealth(AIBackendType::Ollama);
-
-    if (canUseOllama)
+    if (m_activeBackend == AIBackendType::Native)
     {
-        // Direct WinHTTP POST to Ollama /api/chat (avoids internal BackendOrchestrator path)
-        auto ollamaHttpPost = [](const std::string& jsonBody) -> std::string
-        {
-            HINTERNET hSession = WinHttpOpen(L"RawrXD/1.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME,
-                                             WINHTTP_NO_PROXY_BYPASS, 0);
-            if (!hSession)
-                return "";
-            HINTERNET hConnect = WinHttpConnect(hSession, L"127.0.0.1", 11434, 0);
-            if (!hConnect)
-            {
-                WinHttpCloseHandle(hSession);
-                return "";
-            }
-            HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"POST", L"/api/chat", nullptr, WINHTTP_NO_REFERER,
-                                                    WINHTTP_DEFAULT_ACCEPT_TYPES, 0);
-            if (!hRequest)
-            {
-                WinHttpCloseHandle(hConnect);
-                WinHttpCloseHandle(hSession);
-                return "";
-            }
-            static const wchar_t kHeaders[] = L"Content-Type: application/json\r\n";
-            BOOL ok = WinHttpSendRequest(hRequest, kHeaders, (DWORD)-1, const_cast<char*>(jsonBody.c_str()),
-                                         static_cast<DWORD>(jsonBody.size()), static_cast<DWORD>(jsonBody.size()), 0);
-            std::string response;
-            if (ok && WinHttpReceiveResponse(hRequest, nullptr))
-            {
-                DWORD sz = 0;
-                do
-                {
-                    sz = 0;
-                    WinHttpQueryDataAvailable(hRequest, &sz);
-                    if (sz)
-                    {
-                        std::string chunk(sz, '\0');
-                        DWORD read = 0;
-                        if (WinHttpReadData(hRequest, chunk.data(), sz, &read))
-                            response.append(chunk.data(), read);
-                    }
-                } while (sz > 0);
-            }
-            WinHttpCloseHandle(hRequest);
-            WinHttpCloseHandle(hConnect);
-            WinHttpCloseHandle(hSession);
-            return response;
-        };
-
-        // Discover first available model via GET /api/tags
-        auto ollamaHttpGet = [](const std::string& endpoint) -> std::string
-        {
-            HINTERNET hSession = WinHttpOpen(L"RawrXD/1.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME,
-                                             WINHTTP_NO_PROXY_BYPASS, 0);
-            if (!hSession)
-                return "";
-            HINTERNET hConnect = WinHttpConnect(hSession, L"127.0.0.1", 11434, 0);
-            if (!hConnect)
-            {
-                WinHttpCloseHandle(hSession);
-                return "";
-            }
-            std::wstring wep(endpoint.begin(), endpoint.end());
-            HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"GET", wep.c_str(), nullptr, WINHTTP_NO_REFERER,
-                                                    WINHTTP_DEFAULT_ACCEPT_TYPES, 0);
-            if (!hRequest)
-            {
-                WinHttpCloseHandle(hConnect);
-                WinHttpCloseHandle(hSession);
-                return "";
-            }
-            std::string response;
-            if (WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0, WINHTTP_NO_REQUEST_DATA, 0, 0, 0) &&
-                WinHttpReceiveResponse(hRequest, nullptr))
-            {
-                DWORD sz = 0;
-                do
-                {
-                    sz = 0;
-                    WinHttpQueryDataAvailable(hRequest, &sz);
-                    if (sz)
-                    {
-                        std::string chunk(sz, '\0');
-                        DWORD read = 0;
-                        if (WinHttpReadData(hRequest, chunk.data(), sz, &read))
-                            response.append(chunk.data(), read);
-                    }
-                } while (sz > 0);
-            }
-            WinHttpCloseHandle(hRequest);
-            WinHttpCloseHandle(hConnect);
-            WinHttpCloseHandle(hSession);
-            return response;
-        };
-
-        // Resolve model: --ollama-model, RAWRXD_OLLAMA_MODEL, or first tag from /api/tags
-        std::string chatModel = m_config.ollamaModel;
-        if (chatModel.empty())
-        {
-            if (const char* envModel = std::getenv("RAWRXD_OLLAMA_MODEL"))
-            {
-                if (envModel[0])
-                {
-                    chatModel = envModel;
-                }
-            }
-        }
-        if (chatModel.empty())
-        {
-            std::string tagsJson = ollamaHttpGet("/api/tags");
-            const char* nameKey = "\"name\":\"";
-            auto pos = tagsJson.find(nameKey);
-            if (pos != std::string::npos)
-            {
-                pos += strlen(nameKey);
-                auto end = tagsJson.find('"', pos);
-                if (end != std::string::npos && end > pos)
-                {
-                    chatModel = tagsJson.substr(pos, end - pos);
-                }
-            }
-        }
-        if (chatModel.empty())
-        {
-            m_outputSink->appendOutput("Ollama: no models available", OutputSeverity::Warning);
-        }
-        else if (m_config.agentPromptMode)
-        {
-            std::string toolLoopResult = processInferenceWithToolLoop(prompt, chatModel, ollamaHttpPost, 5);
-
-            auto t1 = std::chrono::steady_clock::now();
-            double durationMs = std::chrono::duration<double, std::milli>(t1 - t0).count();
-
-            if (!toolLoopResult.empty())
-            {
-                char perf[256];
-                snprintf(perf, sizeof(perf), "[inference/ollama-toolloop] %.0f ms model=%s", durationMs,
-                         chatModel.c_str());
-                m_outputSink->appendOutput(perf, OutputSeverity::Debug);
-                if (toolLoopResult.size() > kMaxHeadlessInferenceResponseBytes)
-                {
-                    return toolLoopResult.substr(0, kMaxHeadlessInferenceResponseBytes);
-                }
-                return toolLoopResult;
-            }
-        }
-        else
-        {
-            nlohmann::json body;
-            body["model"] = chatModel;
-            body["stream"] = false;
-            nlohmann::json msgs = nlohmann::json::array();
-            nlohmann::json sysMsg;
-            sysMsg["role"] = "system";
-            sysMsg["content"] = "You are RawrXD IDE's embedded AI assistant.";
-            msgs.push_back(std::move(sysMsg));
-            nlohmann::json userMsg;
-            userMsg["role"] = "user";
-            userMsg["content"] = prompt;
-            msgs.push_back(std::move(userMsg));
-            body["messages"] = std::move(msgs);
-
-            std::string rawResp = ollamaHttpPost(body.dump());
-            std::string completion = extractOllamaChatMessageContent(rawResp);
-            if (completion.empty())
-            {
-                m_outputSink->appendOutput("Ollama: empty or unparseable /api/chat response", OutputSeverity::Warning);
-            }
-            else
-            {
-                auto t1 = std::chrono::steady_clock::now();
-                double durationMs = std::chrono::duration<double, std::milli>(t1 - t0).count();
-                char perf[256];
-                snprintf(perf, sizeof(perf), "[inference/ollama-chat] %.0f ms model=%s", durationMs, chatModel.c_str());
-                m_outputSink->appendOutput(perf, OutputSeverity::Debug);
-                if (completion.size() > kMaxHeadlessInferenceResponseBytes)
-                {
-                    return completion.substr(0, kMaxHeadlessInferenceResponseBytes);
-                }
-                return completion;
-            }
-        }
+        return "[error] External Ollama backend is disabled; use local/native model streaming";
     }
 
     if (m_activeBackend == AIBackendType::LocalGGUF && m_modelLoaded && !m_orchestratorModelLoaded)
@@ -4084,8 +3909,8 @@ std::string HeadlessIDE::routeInferenceRequest(const std::string& prompt)
     }
 
     // Final fallback: provide actionable error
-    return "[error] Inference unavailable — ensure Ollama is running on port 11434 "
-           "or configure an alternative backend with 'backend <type>'";
+        return "[error] Inference unavailable — load a local model for LocalGGUF/native streaming "
+            "or configure an alternative backend with 'backend <type>'";
 }
 
 // ============================================================================
@@ -4454,7 +4279,14 @@ void HeadlessIDE::stopServer()
     }
     if (m_serverThread.joinable())
     {
-        m_serverThread.join();
+        if (m_serverThread.get_id() == std::this_thread::get_id())
+        {
+            m_serverThread.detach();
+        }
+        else
+        {
+            m_serverThread.join();
+        }
     }
     m_outputSink->appendOutput("HTTP server stopped", OutputSeverity::Info);
 }
@@ -5045,9 +4877,9 @@ void HeadlessIDE::handleClient(SOCKET clientFd)
             {
                 target = AIBackendType::LocalGGUF;
             }
-            else if (backend == "ollama")
+            else if (backend == "native")
             {
-                target = AIBackendType::Ollama;
+                target = AIBackendType::Native;
             }
             else if (backend == "openai")
             {
@@ -7786,10 +7618,10 @@ int HeadlessIDE::runServerMode()
         }
     }
 
-    // Block until shutdown
+    // Block until shutdown (tight poll so Ctrl+C / stop feels immediate)
     while (!m_shutdownRequested.load())
     {
-        Sleep(100);
+        Sleep(25);
     }
 
     {
@@ -8607,7 +8439,7 @@ Command-line flags:
   --max-tokens <n>              Max tokens (default: 2048)
   --temperature <f>             Temperature (default: 0.7)
   --repl                        Interactive REPL mode
-  --no-server                   Don't start HTTP server
+  --no-server                   Skip HTTP server (runServerMode returns immediately after init)
   --verbose / -v                Verbose output
   --quiet / -q                  Quiet mode (warnings/errors only)
   --json                        JSON-structured output
@@ -8653,6 +8485,10 @@ void HeadlessIDE::shutdownAll()
     catch (...)
     {
         // Best-effort telemetry flush/shutdown.
+#if defined(_WIN32)
+        // Shutdown() normally ends with TitanProxy::shutdown(); if it threw earlier, finish Titan here.
+        RawrXD::TitanProxy::instance().shutdown();
+#endif
     }
 
     stopServer();

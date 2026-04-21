@@ -24,7 +24,7 @@
 #include <sstream>
 #include <iomanip>
 
-// SCAFFOLD_331: SwarmPanel message and wiring
+// Swarm Panel Message and Wiring Implementation
 
 
 // ── Local copies of utility functions (same pattern as Phase 10) ──────────

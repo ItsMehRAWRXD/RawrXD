@@ -485,7 +485,7 @@ private:
         }
 
         if (backend == "ollama-local") {
-            RawrXD::Backend::OllamaClient client("http://localhost:11434");
+            RawrXD::Backend::NativeClient client("http://localhost:11435");
             if (client.isRunning()) {
                 detail = "ollama-responding";
                 return true;
@@ -1473,8 +1473,8 @@ private:
         // Resolve Ollama host/port from environment or defaults
         std::string ollamaHost = "localhost";
         int ollamaPort = 11434;
-        if (const char* env = std::getenv("OLLAMA_HOST")) ollamaHost = env;
-        if (const char* env = std::getenv("OLLAMA_PORT")) ollamaPort = std::stoi(env);
+        if (const char* env = std::getenv("RAWRXD_NATIVE_HOST")) ollamaHost = env;
+        if (const char* env = std::getenv("RAWRXD_NATIVE_PORT")) ollamaPort = std::stoi(env);
 
         // If our own port is the same as Ollama, bump to avoid loop
         if (ollamaPort == port_) {
@@ -1525,7 +1525,7 @@ private:
             WinHttpCloseHandle(hSession);
             std::string detail = "WinHttpSendRequest failed (" + std::to_string(err) + ")";
             if (err == ERROR_WINHTTP_CANNOT_CONNECT)
-                detail += " — Is Ollama running on " + ollamaHost + ":" + std::to_string(ollamaPort) + "?";
+                detail += " — is native inference server running on " + ollamaHost + ":" + std::to_string(ollamaPort) + "?";
             return MakeErrorResponse(502, detail);
         }
 
@@ -1822,8 +1822,8 @@ private:
         // Query Ollama /api/tags for real models, merge with local GGUF info
         std::string ollamaHost = "localhost";
         int ollamaPort = 11434;
-        if (const char* env = std::getenv("OLLAMA_HOST")) ollamaHost = env;
-        if (const char* env = std::getenv("OLLAMA_PORT")) ollamaPort = std::stoi(env);
+        if (const char* env = std::getenv("RAWRXD_NATIVE_HOST")) ollamaHost = env;
+        if (const char* env = std::getenv("RAWRXD_NATIVE_PORT")) ollamaPort = std::stoi(env);
         if (ollamaPort == port_) ollamaPort = 11434;
 
         std::wstring wHost(ollamaHost.begin(), ollamaHost.end());
@@ -2530,8 +2530,8 @@ private:
         // Resolve Ollama backend
         std::string ollamaHost = "localhost";
         int ollamaPort = 11434;
-        if (const char* env = std::getenv("OLLAMA_HOST")) ollamaHost = env;
-        if (const char* env = std::getenv("OLLAMA_PORT")) ollamaPort = std::stoi(env);
+        if (const char* env = std::getenv("RAWRXD_NATIVE_HOST")) ollamaHost = env;
+        if (const char* env = std::getenv("RAWRXD_NATIVE_PORT")) ollamaPort = std::stoi(env);
         if (ollamaPort == port_) {
             ollamaPort = 11434;
             if (ollamaPort == port_) ollamaPort = 11435;
@@ -2597,7 +2597,7 @@ private:
             WinHttpCloseHandle(hSession);
             std::string detail = "WinHttpSendRequest failed (" + std::to_string(err) + ")";
             if (err == ERROR_WINHTTP_CANNOT_CONNECT)
-                detail += " — Is Ollama running on " + ollamaHost + ":" + std::to_string(ollamaPort) + "?";
+                detail += " — is native inference server running on " + ollamaHost + ":" + std::to_string(ollamaPort) + "?";
             return MakeErrorResponse(502, detail);
         }
 
@@ -2781,8 +2781,8 @@ private:
         // Proxy to Ollama
         std::string ollamaHost = "localhost";
         int ollamaPort = 11434;
-        if (const char* env = std::getenv("OLLAMA_HOST")) ollamaHost = env;
-        if (const char* env = std::getenv("OLLAMA_PORT")) ollamaPort = std::stoi(env);
+        if (const char* env = std::getenv("RAWRXD_NATIVE_HOST")) ollamaHost = env;
+        if (const char* env = std::getenv("RAWRXD_NATIVE_PORT")) ollamaPort = std::stoi(env);
         if (ollamaPort == port_) {
             ollamaPort = 11434;
             if (ollamaPort == port_) ollamaPort = 11435;
@@ -4015,7 +4015,7 @@ private:
             r["active"] = true;
             r["strategy"] = "round-robin";
             r["backends"] = nlohmann::json::array();
-            r["backends"].push_back({{"name","ollama-local"},{"url","http://localhost:11434"},{"alive",true},{"latency_ms",12}});
+            r["backends"].push_back({{"name","ollama-local"},{"url","http://localhost:11435"},{"alive",true},{"latency_ms",12}});
             r["decisions"] = 0;
             r["uptime_seconds"] = std::chrono::duration_cast<std::chrono::seconds>(
                 std::chrono::steady_clock::now() - start_time_).count();
@@ -4404,7 +4404,7 @@ private:
             nlohmann::json r;
             r["active_backend"] = active_backend;
             r["backends"] = nlohmann::json::array();
-            r["backends"].push_back({{"name","ollama-local"},{"type","ollama"},{"url","http://localhost:11434"},{"status", active_backend == "ollama-local" ? "active" : "online"}});
+            r["backends"].push_back({{"name","ollama-local"},{"type","native"},{"url","http://localhost:11435"},{"status", active_backend == "ollama-local" ? "active" : "online"}});
             r["backends"].push_back({{"name","rawrxd-tool-server"},{"type","tool-server"},{"url","http://localhost:11435"},{"status", active_backend == "rawrxd-tool-server" ? "active" : "online"}});
             return JsonOk(r.dump());
         }

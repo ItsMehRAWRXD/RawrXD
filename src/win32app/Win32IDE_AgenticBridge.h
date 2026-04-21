@@ -17,6 +17,11 @@
 #include <string>
 #include <vector>
 
+// Forward declaration for the headless server entry point (implemented in
+// agentic_bridge_headless.cpp and linked into both GUI and headless builds).
+extern "C" bool  RawrXD_StartHeadlessServer(uint16_t port);
+extern "C" void  RawrXD_StopHeadlessServer();
+
 #ifndef RAWRXD_SUBSYS_MODES_D_INTEGRATED
 #define RAWRXD_SUBSYS_MODES_D_INTEGRATED
 #endif
@@ -291,4 +296,8 @@ class AgenticBridge
     std::atomic<uint64_t> m_ghostSeqBacktracks{0};
     std::atomic<uint64_t> m_ghostSeqGapEvents{0};
     HWND m_hwndMain = nullptr;
+
+    // Self-hosting: loopback port where the headless backend is listening.
+    // 0 = not in headless IPC mode (standard in-process operation).
+    uint16_t m_headlessPort = 0;
 };

@@ -2,12 +2,12 @@
 // test_orchestrator_modules.cpp — Regression Tests for Orchestrator Modules
 // =============================================================================
 // Black-box behavioral tests per tools.instructions.md § Comprehensive Testing.
-// Tests the X-Macro ToolRegistry, FIMPromptBuilder, AgentOllamaClient config,
+// Tests the X-Macro ToolRegistry, FIMPromptBuilder, NativeInferenceClient config,
 // AgentOrchestrator session management, and DiskRecoveryAgent C++ wrapper.
 //
 // Build:
 //   cl /std:c++17 /EHsc /W4 /I<src> /I<include> test_orchestrator_modules.cpp
-//      ToolRegistry.obj FIMPromptBuilder.obj AgentOllamaClient.obj
+//      ToolRegistry.obj FIMPromptBuilder.obj NativeInferenceClient.obj
 //      AgentOrchestrator.obj DiskRecoveryAgent.obj OrchestratorBridge.obj
 //      /link winhttp.lib kernel32.lib user32.lib advapi32.lib
 //
@@ -28,7 +28,7 @@
 // Module headers under test
 #include "ToolRegistry.h"
 #include "FIMPromptBuilder.h"
-#include "AgentOllamaClient.h"
+#include "NativeInferenceClient.h"
 #include "AgentOrchestrator.h"
 #include "DiskRecoveryAgent.h"
 
@@ -325,11 +325,11 @@ void test_fim_prefix_ratio() {
 }
 
 // ==========================================================================
-// § 3. AgentOllamaClient — Config Validation (no server needed)
+// § 3. NativeInferenceClient — Config Validation (no server needed)
 // ==========================================================================
 
 void test_ollama_config_defaults() {
-    OllamaConfig cfg;
+    NativeInferenceConfig cfg;
     TEST_ASSERT(cfg.host == "127.0.0.1", "Default host is localhost");
     TEST_ASSERT(cfg.port == 11434, "Default port is 11434");
     TEST_ASSERT(!cfg.chat_model.empty(), "Default chat model is set");
@@ -339,18 +339,18 @@ void test_ollama_config_defaults() {
 }
 
 void test_ollama_client_construction() {
-    OllamaConfig cfg;
+    NativeInferenceConfig cfg;
     cfg.host = "127.0.0.1";
     cfg.port = 11434;
 
     // Construction should not throw or crash
-    AgentOllamaClient client(cfg);
+    NativeInferenceClient client(cfg);
     TEST_PASS("ollama_client_construction");
 }
 
 void test_ollama_cancel_before_stream() {
-    OllamaConfig cfg;
-    AgentOllamaClient client(cfg);
+    NativeInferenceConfig cfg;
+    NativeInferenceClient client(cfg);
 
     // Cancel when nothing is running should be safe
     client.CancelStream();
@@ -544,8 +544,8 @@ int main() {
     test_fim_build_from_parts();
     test_fim_prefix_ratio();
 
-    // § 3. AgentOllamaClient
-    std::cout << "\n--- AgentOllamaClient Tests ---" << std::endl;
+    // § 3. NativeInferenceClient
+    std::cout << "\n--- NativeInferenceClient Tests ---" << std::endl;
     test_ollama_config_defaults();
     test_ollama_client_construction();
     test_ollama_cancel_before_stream();

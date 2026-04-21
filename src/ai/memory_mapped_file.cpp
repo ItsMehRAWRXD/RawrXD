@@ -80,8 +80,6 @@ bool MemoryMappedFile::EnsureMappedRange(size_t offset, size_t size) const
     {
         if (!UnmapViewOfFile(mappedViewBase))
         {
-            DWORD error = GetLastError();
-            std::cerr << "[MemoryMappedFile] Failed to unmap sliding view (Error: " << error << ")" << std::endl;
             return false;
         }
         mappedViewBase = nullptr;
@@ -94,9 +92,6 @@ bool MemoryMappedFile::EnsureMappedRange(size_t offset, size_t size) const
                                static_cast<DWORD>(alignedStart & 0xFFFFFFFFULL), static_cast<SIZE_T>(alignedSize));
     if (!view)
     {
-        DWORD error = GetLastError();
-        std::cerr << "[MemoryMappedFile] Failed to map sliding view for: " << filePath << " (Error: " << error << ")"
-                  << std::endl;
         return false;
     }
 
@@ -132,8 +127,6 @@ bool MemoryMappedFile::Open(const std::string& path)
 
     if (fileHandle == INVALID_HANDLE_VALUE)
     {
-        DWORD error = GetLastError();
-        std::cerr << "[MemoryMappedFile] Failed to open file: " << path << " (Error: " << error << ")" << std::endl;
         return false;
     }
 
@@ -141,7 +134,6 @@ bool MemoryMappedFile::Open(const std::string& path)
     LARGE_INTEGER fileSizeLI;
     if (!GetFileSizeEx(fileHandle, &fileSizeLI))
     {
-        std::cerr << "[MemoryMappedFile] Failed to get file size for: " << path << std::endl;
         Close();
         return false;
     }
@@ -149,7 +141,6 @@ bool MemoryMappedFile::Open(const std::string& path)
 
     if (fileSize == 0)
     {
-        std::cerr << "[MemoryMappedFile] File is empty: " << path << std::endl;
         Close();
         return false;
     }
@@ -163,15 +154,10 @@ bool MemoryMappedFile::Open(const std::string& path)
 
     if (mappingHandle == nullptr)
     {
-        DWORD error = GetLastError();
-        std::cerr << "[MemoryMappedFile] Failed to create file mapping for: " << path << " (Error: " << error << ")"
-                  << std::endl;
         Close();
         return false;
     }
 
-    std::cout << "[MemoryMappedFile] Opened sliding map: " << path << " (" << (fileSize / 1024 / 1024) << " MB)"
-              << std::endl;
     return true;
 }
 
@@ -179,11 +165,7 @@ void MemoryMappedFile::Close()
 {
     if (mappedViewBase != nullptr)
     {
-        if (!UnmapViewOfFile(mappedViewBase))
-        {
-            DWORD error = GetLastError();
-            std::cerr << "[MemoryMappedFile] Failed to unmap view (Error: " << error << ")" << std::endl;
-        }
+        UnmapViewOfFile(mappedViewBase);
         mappedViewBase = nullptr;
         mappedData = nullptr;
     }
@@ -192,21 +174,13 @@ void MemoryMappedFile::Close()
 
     if (mappingHandle != nullptr)
     {
-        if (!CloseHandle(mappingHandle))
-        {
-            DWORD error = GetLastError();
-            std::cerr << "[MemoryMappedFile] Failed to close mapping handle (Error: " << error << ")" << std::endl;
-        }
+        CloseHandle(mappingHandle);
         mappingHandle = nullptr;
     }
 
     if (fileHandle != INVALID_HANDLE_VALUE)
     {
-        if (!CloseHandle(fileHandle))
-        {
-            DWORD error = GetLastError();
-            std::cerr << "[MemoryMappedFile] Failed to close file handle (Error: " << error << ")" << std::endl;
-        }
+        CloseHandle(fileHandle);
         fileHandle = INVALID_HANDLE_VALUE;
     }
 

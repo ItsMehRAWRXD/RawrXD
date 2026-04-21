@@ -219,7 +219,7 @@ ExecutionPlan* AgenticPlanningOrchestrator::finalizeStoredPlanUnderLock(Executio
         m_execLogFn("Plan registered: " + pid + " — pending=" + std::to_string(result->pending_approvals) +
                     " auto_ok=" + std::to_string(result->approved_steps));
     }
-    LOG_INFO("AgenticPlanning", "Plan registered: " + pid);
+    // Plan registered
     return result;
 }
 

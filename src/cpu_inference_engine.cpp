@@ -9,11 +9,13 @@
 #include "kernels/dequant_q6k_avx512.h"
 #include "kernels/kv_accum_avx512.h"
 #include <algorithm>
+#include <cctype>
 #include <chrono>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
 #include <filesystem>
+#include <fstream>
 #include <immintrin.h>
 #include <iostream>
 #include <limits>
@@ -43,6 +45,330 @@ namespace
 {
 constexpr size_t kMaxContextTokens = 1'000'000;
 constexpr size_t kMaxKvCacheBytes = 8ull * 1024ull * 1024ull * 1024ull;
+
+constexpr uint32_t kRxaMagic = 0x21584152u;     // "RXA!"
+constexpr uint32_t kRxaVersion1 = 0x00010000u;  // v1.0
+constexpr uint8_t kRxaAlgRaw = 0;
+
+#pragma pack(push, 1)
+struct RxaHeaderV1
+{
+    uint32_t magic;
+    uint32_t version;
+    uint32_t flags;
+    uint32_t blockSize;
+    uint64_t uncompressedSize;
+    uint32_t blockCount;
+    uint32_t reserved;
+};
+
+struct RxaBlockEntryV1
+{
+    uint64_t offset;
+    uint32_t compressedSize;
+    uint32_t uncompressedSize;
+    uint32_t crc32c;
+    uint8_t algorithm;
+    uint8_t reserved[3];
+};
+#pragma pack(pop)
+
+bool hasRxaExtension(const std::string& modelPath)
+{
+    std::error_code ec;
+    const std::filesystem::path p(modelPath);
+    std::string ext = p.extension().string();
+    std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    return !ec && ext == ".rxa";
+}
+
+class Utf8StreamSanitizer
+{
+  public:
+    std::string Consume(const std::string& chunk)
+    {
+        pending_ += chunk;
+        return Extract(false);
+    }
+
+    std::string Finish()
+    {
+        std::string out = Extract(true);
+        pending_.clear();
+        return out;
+    }
+
+  private:
+    static bool IsContinuation(unsigned char c)
+    {
+        return (c & 0xC0u) == 0x80u;
+    }
+
+    std::string Extract(bool finalChunk)
+    {
+        std::string out;
+        size_t i = 0;
+
+        while (i < pending_.size())
+        {
+            const unsigned char c0 = static_cast<unsigned char>(pending_[i]);
+            if (c0 <= 0x7Fu)
+            {
+                out.push_back(static_cast<char>(c0));
+                ++i;
+                continue;
+            }
+
+            auto need = [&](size_t count) -> bool { return (i + count) <= pending_.size(); };
+
+            if (c0 >= 0xC2u && c0 <= 0xDFu)
+            {
+                if (!need(2))
+                {
+                    if (!finalChunk)
+                        break;
+                    ++i;
+                    continue;
+                }
+                const unsigned char c1 = static_cast<unsigned char>(pending_[i + 1]);
+                if (IsContinuation(c1))
+                {
+                    out.append(pending_, i, 2);
+                    i += 2;
+                }
+                else
+                {
+                    ++i;
+                }
+                continue;
+            }
+
+            if (c0 >= 0xE0u && c0 <= 0xEFu)
+            {
+                if (!need(3))
+                {
+                    if (!finalChunk)
+                        break;
+                    ++i;
+                    continue;
+                }
+
+                const unsigned char c1 = static_cast<unsigned char>(pending_[i + 1]);
+                const unsigned char c2 = static_cast<unsigned char>(pending_[i + 2]);
+                bool ok = false;
+                if (c0 == 0xE0u)
+                    ok = (c1 >= 0xA0u && c1 <= 0xBFu) && IsContinuation(c2);
+                else if (c0 == 0xEDu)
+                    ok = (c1 >= 0x80u && c1 <= 0x9Fu) && IsContinuation(c2);
+                else
+                    ok = IsContinuation(c1) && IsContinuation(c2);
+
+                if (ok)
+                {
+                    out.append(pending_, i, 3);
+                    i += 3;
+                }
+                else
+                {
+                    ++i;
+                }
+                continue;
+            }
+
+            if (c0 >= 0xF0u && c0 <= 0xF4u)
+            {
+                if (!need(4))
+                {
+                    if (!finalChunk)
+                        break;
+                    ++i;
+                    continue;
+                }
+
+                const unsigned char c1 = static_cast<unsigned char>(pending_[i + 1]);
+                const unsigned char c2 = static_cast<unsigned char>(pending_[i + 2]);
+                const unsigned char c3 = static_cast<unsigned char>(pending_[i + 3]);
+                bool ok = false;
+                if (c0 == 0xF0u)
+                    ok = (c1 >= 0x90u && c1 <= 0xBFu) && IsContinuation(c2) && IsContinuation(c3);
+                else if (c0 == 0xF4u)
+                    ok = (c1 >= 0x80u && c1 <= 0x8Fu) && IsContinuation(c2) && IsContinuation(c3);
+                else
+                    ok = IsContinuation(c1) && IsContinuation(c2) && IsContinuation(c3);
+
+                if (ok)
+                {
+                    out.append(pending_, i, 4);
+                    i += 4;
+                }
+                else
+                {
+                    ++i;
+                }
+                continue;
+            }
+
+            ++i;
+        }
+
+        if (i > 0)
+            pending_.erase(0, i);
+        if (finalChunk && !pending_.empty())
+            pending_.clear();
+
+        return out;
+    }
+
+    std::string pending_;
+};
+
+std::string sanitizeUtf8Lossy(const std::string& input)
+{
+    Utf8StreamSanitizer sanitizer;
+    std::string out = sanitizer.Consume(input);
+    out += sanitizer.Finish();
+    return out;
+}
+
+bool isRxaHeaderValid(const RxaHeaderV1& header)
+{
+    if (header.magic != kRxaMagic)
+        return false;
+    if (header.version != kRxaVersion1)
+        return false;
+    if (header.blockSize < 4096 || header.blockSize > (64u * 1024u * 1024u))
+        return false;
+    if (header.blockCount == 0 || header.blockCount > (8u * 1024u * 1024u))
+        return false;
+    if (header.uncompressedSize == 0 || header.uncompressedSize > (256ull * 1024ull * 1024ull * 1024ull))
+        return false;
+    return true;
+}
+
+bool extractRxaToTempGguf(const std::string& rxaPath, std::string& outGgufPath, std::string& outError)
+{
+    outGgufPath.clear();
+    outError.clear();
+
+    std::ifstream in(rxaPath, std::ios::binary);
+    if (!in.is_open())
+    {
+        outError = "unable to open RXA archive";
+        return false;
+    }
+
+    RxaHeaderV1 header{};
+    in.read(reinterpret_cast<char*>(&header), sizeof(header));
+    if (!in.good() || !isRxaHeaderValid(header))
+    {
+        outError = "invalid RXA header";
+        return false;
+    }
+
+    std::vector<RxaBlockEntryV1> entries(header.blockCount);
+    in.read(reinterpret_cast<char*>(entries.data()), static_cast<std::streamsize>(entries.size() * sizeof(RxaBlockEntryV1)));
+    if (!in.good())
+    {
+        outError = "failed to read RXA block index";
+        return false;
+    }
+
+    std::error_code ec;
+    const std::filesystem::path sourcePath(rxaPath);
+    const std::filesystem::path tempRoot = std::filesystem::temp_directory_path(ec);
+    if (ec)
+    {
+        outError = "failed to resolve temp directory";
+        return false;
+    }
+
+    const std::string cacheName = sourcePath.stem().string() + ".streamed.gguf";
+    const std::filesystem::path cachePath = tempRoot / cacheName;
+
+    const bool cacheExists = std::filesystem::exists(cachePath, ec) && !ec;
+    if (cacheExists)
+    {
+        const uint64_t cachedSize = std::filesystem::file_size(cachePath, ec);
+        if (!ec && cachedSize == header.uncompressedSize)
+        {
+            const auto sourceTime = std::filesystem::last_write_time(sourcePath, ec);
+            if (!ec)
+            {
+                const auto cacheTime = std::filesystem::last_write_time(cachePath, ec);
+                if (!ec && cacheTime >= sourceTime)
+                {
+                    outGgufPath = cachePath.string();
+                    return true;
+                }
+            }
+        }
+    }
+
+    std::ofstream out(cachePath, std::ios::binary | std::ios::trunc);
+    if (!out.is_open())
+    {
+        outError = "unable to create cached GGUF output";
+        return false;
+    }
+
+    std::vector<char> compressed;
+    uint64_t writtenTotal = 0;
+
+    for (uint32_t i = 0; i < header.blockCount; ++i)
+    {
+        const RxaBlockEntryV1& entry = entries[i];
+        if (entry.algorithm != kRxaAlgRaw)
+        {
+            outError = "unsupported RXA compression algorithm in archive";
+            return false;
+        }
+        if (entry.compressedSize < entry.uncompressedSize)
+        {
+            outError = "corrupt RXA block size metadata";
+            return false;
+        }
+
+        compressed.resize(entry.compressedSize);
+        in.seekg(static_cast<std::streamoff>(entry.offset), std::ios::beg);
+        if (!in.good())
+        {
+            outError = "invalid RXA block offset";
+            return false;
+        }
+
+        in.read(compressed.data(), static_cast<std::streamsize>(entry.compressedSize));
+        if (!in.good())
+        {
+            outError = "failed to read RXA block payload";
+            return false;
+        }
+
+        out.write(compressed.data(), static_cast<std::streamsize>(entry.uncompressedSize));
+        if (!out.good())
+        {
+            outError = "failed to stream RXA block to GGUF cache";
+            return false;
+        }
+
+        writtenTotal += entry.uncompressedSize;
+    }
+
+    out.flush();
+    if (!out.good())
+    {
+        outError = "failed to flush streamed GGUF cache";
+        return false;
+    }
+
+    if (writtenTotal != header.uncompressedSize)
+    {
+        outError = "RXA output size mismatch";
+        return false;
+    }
+
+    outGgufPath = cachePath.string();
+    return true;
+}
 
 bool checkedMulSize(size_t a, size_t b, size_t& out)
 {
@@ -201,12 +527,27 @@ bool CPUInferenceEngine::LoadModel(const std::string& model_path)
         return false;
     }
 
-    printf("[CPUInferenceEngine] Loading model: %s\n", model_path.c_str());
+    std::string effectiveModelPath = model_path;
+    if (hasRxaExtension(model_path))
+    {
+        std::string extractedPath;
+        std::string extractError;
+        if (!extractRxaToTempGguf(model_path, extractedPath, extractError))
+        {
+            m_lastLoadErrorMessage = "RXA stream extraction failed: " + extractError;
+            printf("[CPUInferenceEngine] RXA extraction failed for %s: %s\n", model_path.c_str(), extractError.c_str());
+            return false;
+        }
+        effectiveModelPath = extractedPath;
+        printf("[CPUInferenceEngine] RXA stream extraction complete: %s -> %s\n", model_path.c_str(), effectiveModelPath.c_str());
+    }
+
+    printf("[CPUInferenceEngine] Loading model: %s\n", effectiveModelPath.c_str());
     printf("[CPUInferenceEngine] Stage: initialize backend (GPU will be attempted first, with CPU fallback)\n");
     try
     {
         // Try GPU-accelerated path first
-        if (s_inferenceBackend.Initialize(model_path))
+        if (s_inferenceBackend.Initialize(effectiveModelPath))
         {
             m_lastLoadErrorMessage.clear();
             m_modelLoaded = true;
@@ -238,7 +579,7 @@ bool CPUInferenceEngine::LoadModel(const std::string& model_path)
                     }
                     if (fnTitan_LoadModel && m_pTitanContext)
                     {
-                        fnTitan_LoadModel(m_pTitanContext, model_path.c_str());
+                        fnTitan_LoadModel(m_pTitanContext, effectiveModelPath.c_str());
                     }
                 }
             }
@@ -312,7 +653,8 @@ std::vector<int32_t> CPUInferenceEngine::Tokenize(const std::string& text)
 {
     if (!m_modelLoaded || text.empty())
         return {};
-    auto u32_toks = s_inferenceBackend.Tokenize(text);
+    const std::string safeText = sanitizeUtf8Lossy(text);
+    auto u32_toks = s_inferenceBackend.Tokenize(safeText);
     return std::vector<int32_t>(u32_toks.begin(), u32_toks.end());
 }
 
@@ -323,7 +665,7 @@ std::string CPUInferenceEngine::Detokenize(const std::vector<int32_t>& tokens)
     std::vector<uint32_t> u32_toks;
     if (!ConvertTokensToU32Checked(tokens, u32_toks, "Detokenize"))
         return "";
-    return s_inferenceBackend.Detokenize(u32_toks);
+    return sanitizeUtf8Lossy(s_inferenceBackend.Detokenize(u32_toks));
 }
 
 // ============================================================================
@@ -432,8 +774,9 @@ void CPUInferenceEngine::GenerateStreaming(const std::vector<int32_t>& input_tok
                                               [&](uint32_t tok, const std::string& piece)
                                               {
                                                   emitSwarmTelemetryThrottled_(false);
-                                                  if (token_callback && !piece.empty())
-                                                      token_callback(piece);
+                                                  const std::string safePiece = sanitizeUtf8Lossy(piece);
+                                                  if (token_callback && !safePiece.empty())
+                                                      token_callback(safePiece);
                                                   if (token_id_callback)
                                                       token_id_callback(static_cast<int32_t>(tok));
                                                   m_currentPos++;
@@ -557,9 +900,10 @@ void CPUInferenceEngine::GenerateSwarmStreaming(const std::vector<int32_t>& inpu
                 prompt_tokens, static_cast<uint32_t>(std::max(1, tokens_per_model / speculative_depth)),
                 [&](uint32_t token_id, const std::string& token_str)
                 {
-                    if (token_callback && !token_str.empty() && batch == 0)
+                    const std::string safeTokenStr = sanitizeUtf8Lossy(token_str);
+                    if (token_callback && !safeTokenStr.empty() && batch == 0)
                     {
-                        token_callback(token_str);
+                        token_callback(safeTokenStr);
                     }
                     batch_tokens.push_back(static_cast<int32_t>(token_id));
                 });

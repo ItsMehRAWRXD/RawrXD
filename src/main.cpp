@@ -1,203 +1,94 @@
-#include <chrono>
-#include <csignal>
-#include <cstdlib>
+#include "ide_engine.hpp"
 #include <iostream>
-#include <string>
-#include <thread>
-#include <vector>
-#ifdef _WIN32
-#include <direct.h>
-#else
-#include <unistd.h>
-#endif
-#include "agent_explainability.h"
-#include "agent_history.h"
-#include "agent_policy.h"
-#include "agentic_engine.h"
-#include "ai_backend.h"
-#include "complete_server.h"
-#include "cpu_inference_engine.h"
-#include "dml_inference_engine.h"
-#include "memory_core.h"
-#include "subagent_core.h"
+#include <windows.h>
 
-// Phase 20-25: New subsystem headers
-#include "amd_gpu_accelerator.h"
-#include "gpu_kernel_autotuner.h"
-#include "production_release.h"
-#include "sandbox_integration.h"
-#include "swarm_decision_bridge.h"
-#include "universal_model_hotpatcher.h"
-#include "webrtc_signaling.h"
+using namespace RawrXD;
 
-// Phase 21: Distributed Swarm Inference Orchestrator
-#include "swarm_orchestrator.h"
-
-// Phase 20: CLI headless systems (for ! commands dispatch)
-#include "cli_headless_systems.h"
-
-// Phase 19: CLI Autonomy Loop — headless autonomous agentic loop (same command set as Win32 IDE)
-#include "cli/cli_autonomy_loop.h"
-#include "cli/deep_iteration_engine.h"
-
-// Phase 26: ReverseEngineered MASM Kernel — Scheduler, Heartbeat, Deadlock, GPU DMA, Tensor
-#include "../include/reverse_engineered_bridge.h"
-
-// Phase 51: Security — Dork Scanner + Universal Dorker
-#include "security/RawrXD_GoogleDork_Scanner.h"
-#include "security/RawrXD_Universal_Dorker.h"
-
-// Phase 33: Voice Chat Engine
-#include "core/shared_feature_dispatch.h"
-#include "core/voice_chat.hpp"
-
-// Enterprise License & Feature Manager
-#include "core/enterprise_license.h"
-#include "enterprise/multi_gpu.h"
-#include "enterprise/support_tier.h"
-#include "enterprise_feature_manager.hpp"
-
-// Agentic Autonomous: Operation mode + Model selection + parallel cap
-#include "agentic_autonomous_config.h"
-
-void SignalHandler(int signal)
-{
-    std::cout << "\n[ENGINE] Exiting...\n";
-    exit(0);
-}
-
-static void cliRegistryOutput(const char* text, void* userData)
-{
-    (void)userData;
-    if (text)
-        std::cout << text;
-}
-
-/// Optional stderr-free throughput hint for CLI `/chat` (same spirit as Win32 `METRICS` gauge on copilot completions).
-static void maybePrintCliChatBench(int chatMs, const std::string& response)
-{
-    const char* v = std::getenv("RAWRXD_CHAT_BENCH");
-    if (!v || v[0] != '1' || chatMs <= 0 || response.empty())
-        return;
-    const double approxTok = std::max(1.0, static_cast<double>(response.size()) / 4.0);
-    const double tps = (approxTok * 1000.0) / static_cast<double>(chatMs);
-    std::cout << "[Bench] wall_ms=" << chatMs << " approx_out_toks~" << static_cast<int>(approxTok) << " approx_tps~"
-              << static_cast<int>(tps) << " (chars/4 heuristic; unset RAWRXD_CHAT_BENCH to hide)\n";
-}
-
-static bool dispatchProfileBangCommand(const std::string& input)
-{
-    if (input.empty() || input[0] != '!')
-        return false;
-
-    size_t split = input.find_first_of(" \t");
-    std::string cmd = (split == std::string::npos) ? input : input.substr(0, split);
-    std::string args = (split == std::string::npos) ? "" : input.substr(split + 1);
-
-    // Accept both canonical profile commands and tool-prefixed aliases.
-    if (cmd == "!tools_profile_start")
-        cmd = "!profile_start";
-    else if (cmd == "!tools_profile_stop")
-        cmd = "!profile_stop";
-    else if (cmd == "!tools_profile_results")
-        cmd = "!profile_results";
-
-    if (!(cmd == "!profile_start" || cmd == "!profile_stop" || cmd == "!profile_results"))
-        return false;
-
-    CommandContext ctx{};
-    ctx.rawInput = input.c_str();
-    ctx.args = args.c_str();
-    ctx.idePtr = nullptr;
-    ctx.cliStatePtr = nullptr;
-    ctx.commandId = 0;
-    ctx.isGui = false;
-    ctx.isHeadless = true;
-    ctx.hwnd = nullptr;
-    ctx.emitEvent = nullptr;
-    ctx.outputFn = &cliRegistryOutput;
-    ctx.outputUserData = nullptr;
-
-    CommandResult result = SharedFeatureRegistry::instance().dispatchByCli(cmd.c_str(), ctx);
-    if (!result.success && result.detail)
-    {
-        std::cout << "[Profile] " << result.detail << "\n";
+// Console mode for testing without UI
+void RunConsoleMode(IDEEngine& engine) {
+    std::cout << "RawrXD IDE - Console Mode\n";
+    std::cout << "Status: " << engine.GetStatusMessage() << "\n\n";
+    
+    std::string command;
+    while (true) {
+        std::cout << "> ";
+        std::getline(std::cin, command);
+        
+        if (command == "quit" || command == "exit") {
+            break;
+        } else if (command == "status") {
+            std::cout << "State: " << engine.GetStatusMessage() << "\n";
+            std::cout << "AI Available: " << (engine.IsAIAvailable() ? "Yes" : "No") << "\n";
+        } else if (command.substr(0, 4) == "open") {
+            std::string path = command.substr(5);
+            auto doc = engine.OpenDocument(path);
+            std::cout << "Opened: " << doc.path << " (ID: " << doc.id << ")\n";
+        } else if (command == "list") {
+            auto docs = engine.GetOpenDocuments();
+            for (const auto& doc : docs) {
+                std::cout << "  [" << doc.id << "] " << doc.path 
+                          << (doc.isDirty ? " [modified]" : "") << "\n";
+            }
+        } else if (command.substr(0, 4) == "chat") {
+            std::string msg = command.substr(5);
+            engine.RequestAIChat(msg);
+            std::cout << "Sent to AI\n";
+        } else if (command == "help") {
+            std::cout << "Commands:\n";
+            std::cout << "  open <path>  - Open document\n";
+            std::cout << "  list         - List open documents\n";
+            std::cout << "  chat <msg>   - Send chat to AI\n";
+            std::cout << "  status       - Show IDE status\n";
+            std::cout << "  quit         - Exit\n";
+        } else {
+            std::cout << "Unknown command. Type 'help' for list.\n";
+        }
     }
-    return true;
 }
 
-// Build guard: compile this entry point only for the CLI target.
-// Default Win32 IDE uses win32app/Win32IDE_Main.cpp.
-#ifdef RAWRXD_STANDALONE_MAIN
-int main(int argc, char** argv)
-{
-    std::signal(SIGINT, SignalHandler);
-#ifdef RAWRXD_PURE_CLI
-    std::cout << R"(
-╔══════════════════════════════════════════════════════════════╗
-║           RawrXD CLI — Same command set as Win32 IDE         ║
-║  Full chat + agentic autonomous • Same engine as Win32 GUI   ║
-║  Default port 23959 — Win32 IDE connects to this server      ║
-║  /chat • /agent • /wish • /subagent • /chain • /swarm        ║
-╚══════════════════════════════════════════════════════════════╝
-)" << std::endl;
-#else
-    std::cout << R"(
-╔══════════════════════════════════════════════════════════════╗
-║              RawrXD Engine v7.5 — Agentic Core               ║
-║  Subagents • Chaining • HexMag Swarm • History & Replay     ║
-║  Phase 25: AMD GPU • Sandbox • 800B Streaming Quant          ║
-║  Phase 21: Distributed Swarm Inference • AVX-512 Requant     ║
-╚══════════════════════════════════════════════════════════════╝
-)" << std::endl;
-#endif
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, 
+                   LPSTR lpCmdLine, int nCmdShow) {
+    
+    // Check for console mode
+    bool consoleMode = (strstr(lpCmdLine, "--console") != nullptr);
+    
+    IDEEngine& engine = IDEEngine::Instance();
+    
+    IDEConfig config;
+    config.theme = "dark";
+    config.fontSize = 14;
+    config.enableAI = true;
+    config.nativeEndpoint = "http://localhost:11435";
+    config.defaultModel = "codellama";
+    
+    if (!engine.Initialize(config)) {
+        MessageBoxA(NULL, "Failed to initialize IDE engine", "RawrXD Error", MB_OK);
+        return 1;
+    }
+    
+    if (consoleMode) {
+        AllocConsole();
+        FILE* dummy;
+        freopen_s(&dummy, "CONOUT$", "w", stdout);
+        freopen_s(&dummy, "CONIN$", "r", stdin);
+        
+        RunConsoleMode(engine);
+        
+        FreeConsole();
+    } else {
+        // GUI mode would initialize window here
+        // For now, fallback to console
+        AllocConsole();
+        std::cout << "RawrXD IDE v1.0 - GUI mode placeholder\n";
+        std::cout << "Use --console flag for interactive mode\n";
+        system("pause");
+    }
+    
+    engine.Shutdown();
+    return 0;
+}
 
-    // Command registration is automatic via static AutoRegistrar in
-    // unified_command_dispatch.cpp — reads COMMAND_TABLE at startup.
-
-    std::string model_path;
-#if defined(RAWRXD_PURE_CLI)
-    uint16_t port = 23959;  // Win32 IDE expects this port for /api/chat and /api/tool
-#else
-    uint16_t port = 8080;
-#endif
-    bool enable_http = true;
-    bool enable_repl = true;
-    std::string history_dir = "./history";
-    std::string policy_dir = "./policies";
-    std::string engine_type = "cpu";  // "cpu" or "dml"
-    bool list_models_only = false;
-    std::string work_dir;
-    bool swarm_mode = false;
-    int chain_depth = 1;
-    std::string manifest_model;
-
-    for (int i = 1; i < argc; ++i)
-    {
-        std::string arg = argv[i];
-        if (arg == "--model" && i + 1 < argc)
-        {
-            model_path = argv[++i];
-        }
-        else if (arg == "--list" || arg == "-l")
-        {
-            list_models_only = true;
-        }
-        else if (arg == "--dir" && i + 1 < argc)
-        {
-            work_dir = argv[++i];
-        }
-        else if (arg == "--port" && i + 1 < argc)
-        {
-            port = static_cast<uint16_t>(std::stoi(argv[++i]));
-        }
-        else if (arg == "--engine" && i + 1 < argc)
-        {
-            engine_type = argv[++i];
-        }
-        else if (arg == "--swarm-mode" || arg == "--swarm-distributed")
-        {
-            swarm_mode = true;
+#if 0
         }
         else if (arg == "--chain-depth" && i + 1 < argc)
         {
@@ -301,7 +192,7 @@ HTTP API Endpoints:
   GET  /api/security/dashboard    Security dashboard summary (Phase 51)
 
 REPL Commands (chat + agentic — same as Win32 IDE):
-  /chat <message>           Chat (GGUF or Ollama)
+    /chat <message>           Chat (native model host)
   /agent <prompt> [N]       Agentic loop (chat + tools, max N cycles)
   /wish <natural lang>      Execute user wish
   /subagent <prompt>        Spawn a sub-agent
@@ -352,12 +243,12 @@ REPL Commands (chat + agentic — same as Win32 IDE):
         }
     }
 
-    // --list: list Ollama models and exit (production CLI)
+    // --list: list native model-host models and exit (production CLI)
     if (list_models_only)
     {
         std::string host = "localhost";
-        int ollama_port = 11434;
-        const char* e = std::getenv("OLLAMA_HOST");
+        int model_host_port = 11435;
+        const char* e = std::getenv("RAWRXD_MODEL_HOST");
         if (e && e[0])
         {
             std::string u = e;
@@ -368,7 +259,7 @@ REPL Commands (chat + agentic — same as Win32 IDE):
             if (c != std::string::npos && c + 1 < u.size())
             {
                 host = u.substr(0, c);
-                ollama_port = std::stoi(u.substr(c + 1));
+                model_host_port = std::stoi(u.substr(c + 1));
             }
             else
             {
@@ -376,19 +267,19 @@ REPL Commands (chat + agentic — same as Win32 IDE):
             }
         }
         std::vector<std::string> names;
-        if (OllamaListModelsSync(host, ollama_port, names))
+        if (ModelHostListModelsSync(host, model_host_port, names))
         {
-            std::cout << "Ollama models at " << host << ":" << ollama_port << ":\n";
+            std::cout << "Native model-host models at " << host << ":" << model_host_port << ":\n";
             if (names.empty())
-                std::cout << "  (none — run 'ollama pull <model>' to add models)\n";
+                std::cout << "  (none detected)\n";
             else
                 for (const auto& n : names)
                     std::cout << "  " << n << "\n";
         }
         else
         {
-            std::cout << "Could not reach Ollama at " << host << ":" << ollama_port
-                      << ". Start Ollama or set OLLAMA_HOST.\n";
+            std::cout << "Could not reach native model host at " << host << ":" << model_host_port
+                      << ". Start RawrXD headless server or set RAWRXD_MODEL_HOST.\n";
         }
         return 0;
     }
@@ -587,16 +478,16 @@ REPL Commands (chat + agentic — same as Win32 IDE):
                 std::cout << prefix[level] << " " << msg << "\n";
             }
         });
-    // Pre-register Ollama as a common second backend
+    // Pre-register native model host as a common second backend
     {
-        AIBackendConfig ollama;
-        ollama.id = "ollama";
-        ollama.displayName = "Ollama";
-        ollama.type = AIBackendType::Ollama;
-        ollama.endpoint = "http://localhost:11434";
-        ollama.model = "llama3";
-        ollama.enabled = true;
-        backendMgr.addBackend(ollama);
+        AIBackendConfig nativeHost;
+        nativeHost.id = "rawrxd-native";
+        nativeHost.displayName = "RawrXD Native Host";
+        nativeHost.type = AIBackendType::Custom;
+        nativeHost.endpoint = "http://localhost:11435";
+        nativeHost.model = "headless-default";
+        nativeHost.enabled = true;
+        backendMgr.addBackend(nativeHost);
     }
     std::cout << "[SYSTEM] Backend manager: " << backendMgr.backendCount()
               << " backends, active=" << backendMgr.getActiveBackendName() << " (Phase 8B)\n";
@@ -729,8 +620,8 @@ REPL Commands (chat + agentic — same as Win32 IDE):
             {
                 std::cout
                     << "Commands (same as Win32 IDE — chat + agentic autonomous):\n"
-                    << "  /chat <message>         Chat (GGUF or Ollama if no model loaded)\n"
-                    << "  /chat /model:<name> <m> Chat using Ollama model <name>\n"
+                    << "  /chat <message>         Chat (GGUF or native model host if no model loaded)\n"
+                    << "  /chat /model:<name> <m> Chat using native model alias <name>\n"
                     << "  /wish <natural lang>    Execute user wish (same as API /api/agent/wish)\n"
                     << "  /agent <prompt> [N]     Agentic loop: chat + tools until done (max N cycles, default 10)\n"
                     << "  /subagent <prompt>      Spawn a sub-agent\n"
@@ -864,7 +755,7 @@ REPL Commands (chat + agentic — same as Win32 IDE):
                 std::string msg = raw;
                 if (msg.empty())
                 {
-                    std::cout << "[ERROR] Empty message. Use: /chat <message> or /chat /model:llama3.2 <message>\n";
+                    std::cout << "[ERROR] Empty message. Use: /chat <message> or /chat /model:headless-default <message>\n";
                 }
                 else
                 {
@@ -874,11 +765,11 @@ REPL Commands (chat + agentic — same as Win32 IDE):
                         {
                             return agentEngine.chat(message);
                         }
-                        if (!modelOverride.empty() || backendMgr.getActiveId() == "ollama")
+                        if (!modelOverride.empty() || backendMgr.getActiveId() == "rawrxd-native")
                         {
                             std::string host = "localhost";
-                            int port = 11434;
-                            const char* envHost = std::getenv("OLLAMA_HOST");
+                            int port = 11435;
+                            const char* envHost = std::getenv("RAWRXD_MODEL_HOST");
                             if (envHost && envHost[0])
                             {
                                 std::string u = envHost;
@@ -896,7 +787,7 @@ REPL Commands (chat + agentic — same as Win32 IDE):
                                     host = u;
                                 }
                             }
-                            else if (backendMgr.getActiveId() == "ollama")
+                            else if (backendMgr.getActiveId() == "rawrxd-native")
                             {
                                 auto cfg = backendMgr.getActiveBackend();
                                 std::string ep = cfg.endpoint;
@@ -910,16 +801,16 @@ REPL Commands (chat + agentic — same as Win32 IDE):
                                     port = std::stoi(ep.substr(c + 1));
                                 }
                             }
-                            std::string ollamaModel =
+                            std::string selectedModel =
                                 modelOverride.empty() ? backendMgr.getActiveBackend().model : modelOverride;
-                            if (ollamaModel.empty())
-                                ollamaModel = "llama3.2";
+                            if (selectedModel.empty())
+                                selectedModel = "headless-default";
                             std::string response;
-                            if (OllamaGenerateSync(host, port, ollamaModel, message, response))
+                            if (ModelHostGenerateSync(host, port, selectedModel, message, response))
                             {
                                 return response;
                             }
-                            return "[Ollama error: start Ollama or check OLLAMA_HOST / backend]";
+                            return "[Native host error: check RAWRXD_MODEL_HOST / backend]";
                         }
                         if (agentEngine.isModelLoaded())
                         {
@@ -937,8 +828,8 @@ REPL Commands (chat + agentic — same as Win32 IDE):
                     maybePrintCliChatBench(chatMs, response);
                     if (response.empty())
                     {
-                        std::cout << "[ERROR] No model loaded. Use --model <gguf> or /chat /model:llama3.2 <msg> or "
-                                     "/backend use ollama\n";
+                        std::cout << "[ERROR] No model loaded. Use --model <gguf> or /chat /model:headless-default <msg> or "
+                                     "/backend use rawrxd-native\n";
                     }
                     else
                     {
@@ -980,8 +871,8 @@ REPL Commands (chat + agentic — same as Win32 IDE):
                 else
                 {
                     std::string host = "localhost";
-                    int port = 11434;
-                    const char* envHost = std::getenv("OLLAMA_HOST");
+                    int port = 11435;
+                    const char* envHost = std::getenv("RAWRXD_MODEL_HOST");
                     if (envHost && envHost[0])
                     {
                         std::string u = envHost;
@@ -1002,7 +893,7 @@ REPL Commands (chat + agentic — same as Win32 IDE):
                     else
                     {
                         auto cfg = backendMgr.getActiveBackend();
-                        if (cfg.type == AIBackendType::Ollama && !cfg.endpoint.empty())
+                        if (!cfg.endpoint.empty())
                         {
                             std::string ep = cfg.endpoint;
                             size_t p = ep.find("://");
@@ -1018,16 +909,15 @@ REPL Commands (chat + agentic — same as Win32 IDE):
                     }
                     std::string model = backendMgr.getActiveBackend().model;
                     if (model.empty())
-                        model = "llama3.2";
+                        model = "headless-default";
                     std::string response;
-                    if (OllamaGenerateSync(host, port, model, msg, response))
+                    if (ModelHostGenerateSync(host, port, model, msg, response))
                     {
                         std::cout << response << "\n";
                     }
                     else
                     {
-                        std::cout << "[ERROR] Ollama unavailable. Start Ollama or use /backend use ollama and pull a "
-                                     "model.\n";
+                        std::cout << "[ERROR] Native model host unavailable. Start RawrXD headless service or set RAWRXD_MODEL_HOST.\n";
                     }
                 }
             }
@@ -1079,8 +969,8 @@ REPL Commands (chat + agentic — same as Win32 IDE):
                         else
                         {
                             std::string host = "localhost";
-                            int port = 11434;
-                            const char* e = std::getenv("OLLAMA_HOST");
+                            int port = 11435;
+                            const char* e = std::getenv("RAWRXD_MODEL_HOST");
                             if (e && e[0])
                             {
                                 std::string u = e;
@@ -1101,7 +991,7 @@ REPL Commands (chat + agentic — same as Win32 IDE):
                             else
                             {
                                 auto cfg = backendMgr.getActiveBackend();
-                                if (cfg.type == AIBackendType::Ollama && !cfg.endpoint.empty())
+                                if (!cfg.endpoint.empty())
                                 {
                                     std::string ep = cfg.endpoint;
                                     size_t p = ep.find("://");
@@ -1117,9 +1007,9 @@ REPL Commands (chat + agentic — same as Win32 IDE):
                             }
                             std::string model = backendMgr.getActiveBackend().model;
                             if (model.empty())
-                                model = "llama3.2";
-                            if (!OllamaGenerateSync(host, port, model, currentPrompt, response))
-                                response = "[Ollama error]";
+                                model = "headless-default";
+                            if (!ModelHostGenerateSync(host, port, model, currentPrompt, response))
+                                response = "[Native host error]";
                         }
                         std::cout << "\n[Cycle " << (i + 1) << "]\n" << response << "\n";
                         if (!allowTools)
@@ -1236,7 +1126,7 @@ REPL Commands (chat + agentic — same as Win32 IDE):
                 std::cout << "[Smoke] Goal: Verify multi-step tools (filesystem + shell).\n\n";
                 if (!agentEngine.isModelLoaded())
                 {
-                    std::cout << "[Smoke] Hint: No GGUF loaded — using Ollama. Ensure 'ollama serve' is running.\n\n";
+                    std::cout << "[Smoke] Hint: No GGUF loaded — using native model host. Ensure RawrXD headless service is running.\n\n";
                 }
                 auto operationMode = RawrXD::AgenticAutonomousConfig::instance().getOperationMode();
                 bool allowTools = (operationMode != RawrXD::AgenticOperationMode::Ask &&
@@ -1252,8 +1142,8 @@ REPL Commands (chat + agentic — same as Win32 IDE):
                     else
                     {
                         std::string host = "localhost";
-                        int port = 11434;
-                        const char* e = std::getenv("OLLAMA_HOST");
+                        int port = 11435;
+                        const char* e = std::getenv("RAWRXD_MODEL_HOST");
                         if (e && e[0])
                         {
                             std::string u = e;
@@ -1274,7 +1164,7 @@ REPL Commands (chat + agentic — same as Win32 IDE):
                         else
                         {
                             auto cfg = backendMgr.getActiveBackend();
-                            if (cfg.type == AIBackendType::Ollama && !cfg.endpoint.empty())
+                            if (!cfg.endpoint.empty())
                             {
                                 std::string ep = cfg.endpoint;
                                 size_t p = ep.find("://");
@@ -1290,9 +1180,9 @@ REPL Commands (chat + agentic — same as Win32 IDE):
                         }
                         std::string model = backendMgr.getActiveBackend().model;
                         if (model.empty())
-                            model = "llama3.2";
-                        if (!OllamaGenerateSync(host, port, model, currentPrompt, response))
-                            response = "[Ollama error: start ollama serve]";
+                            model = "headless-default";
+                        if (!ModelHostGenerateSync(host, port, model, currentPrompt, response))
+                            response = "[Native host error: start RawrXD headless service]";
                     }
                     std::cout << "\n[Cycle " << (i + 1) << "]\n" << response << "\n";
                     if (!allowTools)

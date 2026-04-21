@@ -5,7 +5,7 @@
 // Shards 120B-800B model layers across up to 64 nodes, each running
 // UniversalModelHotpatcher locally with per-layer quantization.
 //
-// Memory Distribution Example (4-node LAN, 800B model):
+// Memory Distribution (4-node LAN, 800B model):
 //   Node 1 (Coordinator): Layers 0-31  (Embedding + Early) - Q4_K_M
 //   Node 2 (Worker GPU):  Layers 32-95 (Mid) - Q6_K (GPU accelerated)
 //   Node 3 (Worker CPU):  Layers 96-127 (Late) - Q3_K_M (CPU only)

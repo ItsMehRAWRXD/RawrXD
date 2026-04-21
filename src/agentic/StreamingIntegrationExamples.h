@@ -1,5 +1,5 @@
 // ============================================================================
-// Phase 1 Integration Example - Streaming Tool Result Injection
+// Streaming Integration - Tool Result Injection
 // How to use the new DispatchModelToolCallsStreaming() method in Win32IDE chat
 // ============================================================================
 
@@ -11,7 +11,7 @@
 namespace RawrXD::Phase1Examples
 {
 
-/// Example demonstrating how to integrate streaming tool execution in Win32IDE chat panel
+/// How to integrate streaming tool execution in Win32IDE chat panel
 ///
 /// BEFORE (Current - No Streaming):
 /// ```
@@ -220,7 +220,7 @@ void ExampleMetricsCollection()
     */
 }
 
-}  // namespace RawrXD::Phase1Examples
+}  // namespace RawrXD::Streaming
 
 /// ============================================================================
 /// MIGRATION GUIDE: From Sequential to Streaming

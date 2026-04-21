@@ -1,8 +1,22 @@
 param(
-    [string]$LogPath = "d:\rawrxd\build-ninja-ctx2\bin\swe_live_debug_stdout.txt",
+    [string]$LogPath = "",
     [int]$Tail = 40,
     [switch]$Raw
 )
+
+$repoRoot = Split-Path -Parent $PSScriptRoot
+if (-not $LogPath) {
+    foreach ($rel in @(
+            "build-ninja-ctx2\bin\swe_live_debug_stdout.txt",
+            "build-win32\bin\swe_live_debug_stdout.txt",
+            "build-ninja\bin\swe_live_debug_stdout.txt")) {
+        $c = Join-Path $repoRoot $rel
+        if (Test-Path -LiteralPath $c) { $LogPath = $c; break }
+    }
+}
+if (-not $LogPath) {
+    $LogPath = Join-Path $repoRoot "build-ninja-ctx2\bin\swe_live_debug_stdout.txt"
+}
 
 if (-not (Test-Path -LiteralPath $LogPath)) {
     Write-Host "[watch] waiting for log file: $LogPath" -ForegroundColor Yellow

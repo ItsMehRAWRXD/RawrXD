@@ -119,44 +119,51 @@ static std::atomic<uint64_t> g_agenticDurationAccum{0};
 static std::atomic<uint64_t> g_agenticLastToolHash{0};
 
 // ═══════════════════ TPS SENTINEL (Guardrail) ═══════════════════
-static double   g_baselineTps = 0.0;
-static double   g_baselineLatencyMs = 0.0;
+static double g_baselineTps = 0.0;
+static double g_baselineLatencyMs = 0.0;
 static uint64_t g_baselineColdLoadMs = 0.0;
-static bool     g_sentinelArmed = false;
-static int      g_rollbackCooldown = 0; // Lockout cycles
+static bool g_sentinelArmed = false;
+static int g_rollbackCooldown = 0;  // Lockout cycles
 
 // Windowing for smoothing
-static double   g_tpsWindow[8]{};
-static int      g_tpsWindowIdx = 0;
-static int      g_tpsWindowCount = 0;
+static double g_tpsWindow[8]{};
+static int g_tpsWindowIdx = 0;
+static int g_tpsWindowCount = 0;
 
 static void LoadSovereignManifest()
 {
     FILE* f = std::fopen("deploy/sovereign_manifest.json", "rt");
-    if (!f) return;
+    if (!f)
+        return;
     char line[512];
     while (std::fgets(line, sizeof(line), f))
     {
-        if (std::strstr(line, "\"moe_sparse_gather_tps\":")) {
+        if (std::strstr(line, "\"moe_sparse_gather_tps\":"))
+        {
             char* val = std::strchr(line, ':');
-            if (val) g_baselineTps = std::atof(val + 1);
+            if (val)
+                g_baselineTps = std::atof(val + 1);
         }
-        else if (std::strstr(line, "\"latency_ms\":")) {
+        else if (std::strstr(line, "\"latency_ms\":"))
+        {
             char* val = std::strchr(line, ':');
-            if (val) g_baselineLatencyMs = std::atof(val + 1);
+            if (val)
+                g_baselineLatencyMs = std::atof(val + 1);
         }
     }
     std::fclose(f);
     if (g_baselineTps > 0.1)
     {
         g_sentinelArmed = true;
-        RawrXD_Native_Log("[SENTINEL] Armed | Baseline TPS: %.2f | Latency: %.3f ms", g_baselineTps, g_baselineLatencyMs);
+        RawrXD_Native_Log("[SENTINEL] Armed | Baseline TPS: %.2f | Latency: %.3f ms", g_baselineTps,
+                          g_baselineLatencyMs);
     }
 }
 
 static void VerifyTpsSentinel(double currentTps, double currentLatencyMs)
 {
-    if (!g_sentinelArmed) return;
+    if (!g_sentinelArmed)
+        return;
     if (g_rollbackCooldown > 0)
     {
         g_rollbackCooldown--;
@@ -164,20 +171,22 @@ static void VerifyTpsSentinel(double currentTps, double currentLatencyMs)
         {
             RawrXD_Native_Log("[SENTINEL] COOLDOWN ACTIVE: %d cycles remaining...", g_rollbackCooldown);
         }
-        return; 
+        return;
     }
 
     // Update moving average window
     g_tpsWindow[g_tpsWindowIdx] = currentTps;
     g_tpsWindowIdx = (g_tpsWindowIdx + 1) % 8;
-    if (g_tpsWindowCount < 8) g_tpsWindowCount++;
+    if (g_tpsWindowCount < 8)
+        g_tpsWindowCount++;
 
     double avgTps = 0.0;
-    for (int i = 0; i < g_tpsWindowCount; ++i) avgTps += g_tpsWindow[i];
+    for (int i = 0; i < g_tpsWindowCount; ++i)
+        avgTps += g_tpsWindow[i];
     avgTps /= g_tpsWindowCount;
 
-    const double tpsThreshold = g_baselineTps * 0.90; // 10% tolerance
-    const double latThreshold = g_baselineLatencyMs * 1.25; // 25% tolerance for latency spikes
+    const double tpsThreshold = g_baselineTps * 0.90;        // 10% tolerance
+    const double latThreshold = g_baselineLatencyMs * 1.25;  // 25% tolerance for latency spikes
 
     bool tpsRegression = (avgTps < tpsThreshold);
     bool latRegression = (currentLatencyMs > latThreshold && g_baselineLatencyMs > 0.0001);
@@ -185,13 +194,16 @@ static void VerifyTpsSentinel(double currentTps, double currentLatencyMs)
     if (tpsRegression || latRegression)
     {
         const char* classification = "UNKNOWN";
-        if (tpsRegression && latRegression) classification = "CRITICAL_PIPELINE_COLLAPSE";
-        else if (tpsRegression)            classification = "THROUGHPUT_EFFICIENCY_LOSS";
-        else if (latRegression)            classification = "LATENCY_STALL_OR_IO_CONTENTION";
+        if (tpsRegression && latRegression)
+            classification = "CRITICAL_PIPELINE_COLLAPSE";
+        else if (tpsRegression)
+            classification = "THROUGHPUT_EFFICIENCY_LOSS";
+        else if (latRegression)
+            classification = "LATENCY_STALL_OR_IO_CONTENTION";
 
         RawrXD_Native_Log("[SENTINEL] ALERT [%s]: REGRESSION DETECTED!", classification);
-        RawrXD_Native_Log("[SENTINEL] Status: AvgTPS=%.2f (Base=%.2f) | Lat=%.3fms (Base=%.3fms)", 
-                          avgTps, g_baselineTps, currentLatencyMs, g_baselineLatencyMs);
+        RawrXD_Native_Log("[SENTINEL] Status: AvgTPS=%.2f (Base=%.2f) | Lat=%.3fms (Base=%.3fms)", avgTps,
+                          g_baselineTps, currentLatencyMs, g_baselineLatencyMs);
 
         // AUTO-RESPONSE: Rollback Hotpatch if active
         if (g_rawrHotpatchStats.swapsApplied > 0)
@@ -207,7 +219,8 @@ static void VerifyTpsSentinel(double currentTps, double currentLatencyMs)
 
             g_rawrHotpatchStats.swapsRolledBack++;
             g_rawrHotpatchStats.swapsApplied = 0;
-            RawrXD_Native_Log("[SENTINEL] ROLLBACK COMPLETE. SYSTEM RETURNED TO BASELINE (Lockout: %d cycles).", g_rollbackCooldown);
+            RawrXD_Native_Log("[SENTINEL] ROLLBACK COMPLETE. SYSTEM RETURNED TO BASELINE (Lockout: %d cycles).",
+                              g_rollbackCooldown);
         }
     }
     else
@@ -949,7 +962,7 @@ extern "C"
         return 0;
     }
     int find_pattern_asm_Internal(const uint8_t* data, uint64_t dataLen, const uint8_t* pattern, uint64_t patternLen,
-                         uint64_t* outOffset)
+                                  uint64_t* outOffset)
     {
         if (!data || !pattern || !outOffset || dataLen == 0 || patternLen == 0 || patternLen > dataLen)
         {
@@ -1161,12 +1174,12 @@ extern "C"
         return 0;
     }
     int asm_camellia256_auth_decrypt_file_Internal(const char* inputPath, const char* outputPath, const uint8_t* key,
-                                          uint32_t keyLen)
+                                                   uint32_t keyLen)
     {
         return transformFileWithKey(inputPath, outputPath, key, keyLen);
     }
     int asm_camellia256_auth_encrypt_file_Internal(const char* inputPath, const char* outputPath, const uint8_t* key,
-                                          uint32_t keyLen)
+                                                   uint32_t keyLen)
     {
         return transformFileWithKey(inputPath, outputPath, key, keyLen);
     }
@@ -1397,8 +1410,8 @@ extern "C"
         analysis->total_params = AD_CountParameters_Internal(tensorTable);
         if (tensorTable->name_ptr)
         {
-            analysis->layer_count = static_cast<uint32_t>(
-                std::max<int32_t>(0, AD_ExtractLayerIndex_Internal(reinterpret_cast<const char*>(tensorTable->name_ptr)) + 1));
+            analysis->layer_count = static_cast<uint32_t>(std::max<int32_t>(
+                0, AD_ExtractLayerIndex_Internal(reinterpret_cast<const char*>(tensorTable->name_ptr)) + 1));
             AD_IdentifyPattern(tensorTable, analysis);
         }
         return 1;
@@ -2003,14 +2016,14 @@ extern "C"
         g_soState.metrics.bytes_streamed += static_cast<uint64_t>(g_quadbufState.tokenStream.size() * sizeof(uint32_t));
         return static_cast<int>(g_quadbufState.tokenStream.size());
     }
-    #ifndef RAWRXD_DISABLE_DUPLICATE_SHIMS
+#ifndef RAWRXD_DISABLE_DUPLICATE_SHIMS
     int asm_quadbuf_shutdown()
     {
         std::lock_guard<std::mutex> lock(g_runtimeShimMutex);
         g_quadbufState = {};
         return 0;
     }
-    #endif
+#endif
     int asm_gguf_loader_lookup(const char* symbolName)
     {
         if (!symbolName || symbolName[0] == '\0')
@@ -2135,14 +2148,14 @@ extern "C"
         g_ggufLoaderState = {};
         return 0;
     }
-    #ifndef RAWRXD_DISABLE_DUPLICATE_SHIMS
+#ifndef RAWRXD_DISABLE_DUPLICATE_SHIMS
     int asm_spengine_shutdown()
     {
         std::lock_guard<std::mutex> lock(g_runtimeShimMutex);
         g_spengineState = {};
         return 0;
     }
-    #endif
+#endif
     int asm_lsp_bridge_get_stats(void* outStats)
     {
         if (!outStats)
@@ -2461,7 +2474,7 @@ extern "C"
             static_cast<uint64_t>(crc32Bytes(static_cast<const uint8_t*>(initSpec), 64) % 10000u);
         return 0;
     }
-#endif // 0
+#endif  // 0
 
     int asm_mesh_crdt_delta_Internal(const void* baseState, void* outDelta)
     {
@@ -3186,7 +3199,7 @@ extern "C"
         return 0;
     }
 
-    #ifndef RAWRXD_DISABLE_DUPLICATE_SHIMS
+#ifndef RAWRXD_DISABLE_DUPLICATE_SHIMS
     int asm_omega_implement_generate(const void* requirementBlob, void* outArtifact)
     {
         if (!requirementBlob || !outArtifact)
@@ -3464,7 +3477,7 @@ extern "C"
         out[1] = crc;
         return 0;
     }
-    #endif
+#endif
 
     int asm_perf_get_slot_count_v2()
     {
@@ -3503,7 +3516,7 @@ class Win32IDE
     void onPlanOrchestratorViewStatus();
     void onPlanOrchestratorViewPlan();
 };
-#endif // RAWRXD_DISABLE_DUPLICATE_SHIMS
+#endif  // RAWRXD_DISABLE_DUPLICATE_SHIMS
 
 #ifndef RAWRXD_DISABLE_DUPLICATE_SHIMS
 void Win32IDE::HandleCopilotStreamUpdate(const char* chunk, unsigned __int64 chunkBytes)
@@ -3578,55 +3591,53 @@ void Win32IDE::onInferenceComplete(const std::string& result)
     state.lastInference = result;
     state.outputLines.emplace_back("Inference complete: " + result);
 }
-#endif // RAWRXD_DISABLE_DUPLICATE_SHIMS
+#endif  // RAWRXD_DISABLE_DUPLICATE_SHIMS
 
 #ifndef RAWRXD_DISABLE_DUPLICATE_SHIMS
-  void Win32IDE::onPlanOrchestratorStart()
-  {
-      auto& state = getWin32BridgeState(this);
-      state.outputLines.emplace_back("Plan orchestrator started");
-      g_omegaState.monitorEvents += 1;
-      g_omegaState.pipelineRuns += 1;
-  }
-  void Win32IDE::onPlanOrchestratorStop()
-  {
-      auto& state = getWin32BridgeState(this);
-      state.outputLines.emplace_back("Plan orchestrator stopped");
-      g_omegaState.monitorEvents += 1;
-  }
-  void Win32IDE::onPlanOrchestratorViewStatus()
-  {
-      auto& state = getWin32BridgeState(this);
-      std::ostringstream oss;
-      oss << "Plan status: runs=" << g_omegaState.pipelineRuns
-          << " plans=" << g_omegaState.plans
-          << " tests=" << g_omegaState.tests
-          << " passed=" << g_omegaState.testsPassed
-          << " lastScore=" << g_omegaState.lastScore;
-      state.outputLines.emplace_back(oss.str());
-      g_omegaState.monitorEvents += 1;
-  }
-  void Win32IDE::onPlanOrchestratorViewPlan()
-  {
-      auto& state = getWin32BridgeState(this);
-      std::ostringstream oss;
-      oss << "Plan detail: artifacts=" << g_omegaState.generatedArtifacts
-          << " steps=" << g_omegaState.steps
-          << " evolutions=" << g_omegaState.evolutions
-          << " crc=" << g_omegaState.lastStateCrc;
-      state.outputLines.emplace_back(oss.str());
-      g_omegaState.monitorEvents += 1;
-  }
+void Win32IDE::onPlanOrchestratorStart()
+{
+    auto& state = getWin32BridgeState(this);
+    state.outputLines.emplace_back("Plan orchestrator started");
+    g_omegaState.monitorEvents += 1;
+    g_omegaState.pipelineRuns += 1;
+}
+void Win32IDE::onPlanOrchestratorStop()
+{
+    auto& state = getWin32BridgeState(this);
+    state.outputLines.emplace_back("Plan orchestrator stopped");
+    g_omegaState.monitorEvents += 1;
+}
+void Win32IDE::onPlanOrchestratorViewStatus()
+{
+    auto& state = getWin32BridgeState(this);
+    std::ostringstream oss;
+    oss << "Plan status: runs=" << g_omegaState.pipelineRuns << " plans=" << g_omegaState.plans
+        << " tests=" << g_omegaState.tests << " passed=" << g_omegaState.testsPassed
+        << " lastScore=" << g_omegaState.lastScore;
+    state.outputLines.emplace_back(oss.str());
+    g_omegaState.monitorEvents += 1;
+}
+void Win32IDE::onPlanOrchestratorViewPlan()
+{
+    auto& state = getWin32BridgeState(this);
+    std::ostringstream oss;
+    oss << "Plan detail: artifacts=" << g_omegaState.generatedArtifacts << " steps=" << g_omegaState.steps
+        << " evolutions=" << g_omegaState.evolutions << " crc=" << g_omegaState.lastStateCrc;
+    state.outputLines.emplace_back(oss.str());
+    g_omegaState.monitorEvents += 1;
+}
 #endif
 
 // MoE benchmark bridge — outside extern "C" to preserve C++ class/template linkage
 #include "rawrxd_moe_sparse_bridge.hpp"
-#include <iostream>
 #include <iomanip>
+#include <iostream>
+
 
 extern "C" void dequant_q6k_avx512(const uint8_t* src, float* dst, int n);
 
-extern "C" {
+extern "C"
+{
     int VulkanKernel_Init(void);
     int VulkanKernel_EnumerateP2P(void);
     void VulkanKernel_Cleanup(void);
@@ -3635,58 +3646,77 @@ extern "C" {
     int VulkanKernel_AllocZeroCopyBuffer(uint64_t size, uint32_t* out_idx, void** host_ptr);
     int VulkanKernel_CopyToDevice(uint32_t buf_idx, const void* data, uint64_t size);
     int VulkanKernel_CopyToHost(uint32_t buf_idx, void* data, uint64_t size);
-    int VulkanKernel_DispatchTitanMoEShard(uint32_t exp, uint32_t act, uint32_t log, uint32_t out,
-                                            uint32_t num_e, uint32_t h, uint32_t k);
+    int VulkanKernel_DispatchTitanMoEShard(uint32_t exp, uint32_t act, uint32_t log, uint32_t out, uint32_t num_e,
+                                           uint32_t h, uint32_t k);
 }
 
 extern "C"
 {
+#ifndef RAWRXD_GOLD_BUILD
 #ifndef RAWRXD_DISABLE_DUPLICATE_SHIMS
     int main(int argc, char** argv)
     {
         LoadSovereignManifest();
-        for (int i = 0; i < argc; ++i) {
-            if (std::string(argv[i]) == "--moe-bench") {
-                uint32_t    experts     = 8;
-                uint32_t    hidden      = 4096;
-                uint32_t    topk        = 2;
-                uint32_t    ffn         = 12000;
-                int         iter        = 100;
-                int         forceExpert = -1;   // -1 = uniform routing
-                bool        runQ6K      = false;
-                bool        useVulkan   = false;
+        for (int i = 0; i < argc; ++i)
+        {
+            if (std::string(argv[i]) == "--moe-bench")
+            {
+                uint32_t experts = 8;
+                uint32_t hidden = 4096;
+                uint32_t topk = 2;
+                uint32_t ffn = 12000;
+                int iter = 100;
+                int forceExpert = -1;  // -1 = uniform routing
+                bool runQ6K = false;
+                bool useVulkan = false;
                 std::string modelPath;
 
-                for (int j = 0; j < argc; ++j) {
+                for (int j = 0; j < argc; ++j)
+                {
                     std::string a = argv[j];
-                    if (a == "--experts"      && j+1 < argc) experts      = static_cast<uint32_t>(std::stoi(argv[j+1]));
-                    if (a == "--hidden"       && j+1 < argc) hidden       = static_cast<uint32_t>(std::stoi(argv[j+1]));
-                    if (a == "--topk"         && j+1 < argc) topk         = static_cast<uint32_t>(std::stoi(argv[j+1]));
-                    if (a == "--iter"         && j+1 < argc) iter         = std::stoi(argv[j+1]);
-                    if (a == "--model"        && j+1 < argc) modelPath    = argv[j+1];
-                    if (a == "--force-expert" && j+1 < argc) forceExpert  = std::stoi(argv[j+1]);
-                    if (a == "--q6k")                        runQ6K       = true;
-                    if (a == "--vulkan")                     useVulkan    = true;
-                    if (a == "--v1.3-p2p") {
+                    if (a == "--experts" && j + 1 < argc)
+                        experts = static_cast<uint32_t>(std::stoi(argv[j + 1]));
+                    if (a == "--hidden" && j + 1 < argc)
+                        hidden = static_cast<uint32_t>(std::stoi(argv[j + 1]));
+                    if (a == "--topk" && j + 1 < argc)
+                        topk = static_cast<uint32_t>(std::stoi(argv[j + 1]));
+                    if (a == "--iter" && j + 1 < argc)
+                        iter = std::stoi(argv[j + 1]);
+                    if (a == "--model" && j + 1 < argc)
+                        modelPath = argv[j + 1];
+                    if (a == "--force-expert" && j + 1 < argc)
+                        forceExpert = std::stoi(argv[j + 1]);
+                    if (a == "--q6k")
+                        runQ6K = true;
+                    if (a == "--vulkan")
+                        useVulkan = true;
+                    if (a == "--v1.3-p2p")
+                    {
                         std::cout << "[v1.3 P2P] Initializing P2P Fabric Enumeration...\n";
-                        if (!VulkanKernel_Init()) { std::cerr << "Vulkan init failed\n"; return 1; }
+                        if (!VulkanKernel_Init())
+                        {
+                            std::cerr << "Vulkan init failed\n";
+                            return 1;
+                        }
                         int groupCount = VulkanKernel_EnumerateP2P();
                         std::cout << "[v1.3 P2P] Found " << groupCount << " affinity group(s)\n";
                         VulkanKernel_Cleanup();
                         return 0;
                     }
                 }
-                if (iter < 1) iter = 1;
+                if (iter < 1)
+                    iter = 1;
 
-                if (runQ6K) {
+                if (runQ6K)
+                {
                     std::cout << "[Q6K Bench] N=" << hidden << " iter=" << iter << "\n";
                     // Check for VBMI / VPMULTISHIFTQB availability
                     bool hasVbmi = false;
-                    #ifdef _MSC_VER
+#ifdef _MSC_VER
                     int cpuInfo[4];
                     __cpuidex(cpuInfo, 7, 0);
-                    hasVbmi = (cpuInfo[2] & (1 << 1)); // ECX bit 1 of leaf 7,0
-                    #endif
+                    hasVbmi = (cpuInfo[2] & (1 << 1));  // ECX bit 1 of leaf 7,0
+#endif
                     std::cout << "[Q6K] AVX-512 VBMI Support: " << (hasVbmi ? "YES" : "NO") << "\n";
 
                     std::vector<uint8_t> qdata(hidden + 64, 0x55);
@@ -3694,21 +3724,28 @@ extern "C"
                     // warm up
                     dequant_q6k_avx512(qdata.data(), f32data.data(), hidden);
                     auto t0 = std::chrono::high_resolution_clock::now();
-                    for (int n = 0; n < iter; ++n) {
+                    for (int n = 0; n < iter; ++n)
+                    {
                         dequant_q6k_avx512(qdata.data(), f32data.data(), hidden);
                     }
                     auto t1 = std::chrono::high_resolution_clock::now();
                     double sec = std::chrono::duration<double>(t1 - t0).count();
                     double tps = (double)hidden * iter / sec;
-                    std::cout << "[Q6K] " << std::fixed << std::setprecision(2) 
-                              << (tps / 1e6) << " M TPS | " << (sec * 1000.0 / iter) << " ms\n";
+                    std::cout << "[Q6K] " << std::fixed << std::setprecision(2) << (tps / 1e6) << " M TPS | "
+                              << (sec * 1000.0 / iter) << " ms\n";
                     return 0;
                 }
 
-                if (useVulkan) {
+                if (useVulkan)
+                {
                     std::cout << "[Vulkan MoE Bench] Initializing device (RDMA Path)...\n";
-                    if (!VulkanKernel_Init()) { std::cerr << "Vulkan init failed\n"; return 1; }
-                    if (!VulkanKernel_EnsureTitanMoEShardPipeline("src/gpu/titan_moe_shard.spv")) {
+                    if (!VulkanKernel_Init())
+                    {
+                        std::cerr << "Vulkan init failed\n";
+                        return 1;
+                    }
+                    if (!VulkanKernel_EnsureTitanMoEShardPipeline("src/gpu/titan_moe_shard.spv"))
+                    {
                         std::cerr << "Shader failed (did you compile titan_moe_shard.comp?)\n";
                         return 1;
                     }
@@ -3723,70 +3760,86 @@ extern "C"
 
                     std::vector<float> h_exp(experts * hidden, 0.5f);
                     std::vector<float> h_log(experts, 0.1f);
-                    if (forceExpert >= 0 && (uint32_t)forceExpert < experts) h_log[forceExpert] = 10.0f;
+                    if (forceExpert >= 0 && (uint32_t)forceExpert < experts)
+                        h_log[forceExpert] = 10.0f;
 
                     VulkanKernel_CopyToDevice(b_exp, h_exp.data(), h_exp.size() * sizeof(float));
                     VulkanKernel_CopyToDevice(b_log, h_log.data(), h_log.size() * sizeof(float));
-                    
+
                     // Initial seed into Zero-Copy VRAM
-                    if (p_act) {
-                        for (uint32_t idx=0; idx<hidden; ++idx) ((float*)p_act)[idx] = 1.0f;
+                    if (p_act)
+                    {
+                        for (uint32_t idx = 0; idx < hidden; ++idx)
+                            ((float*)p_act)[idx] = 1.0f;
                     }
 
                     std::cout << "[Vulkan RDMA] Starting benchmark (" << iter << " iterations)...\n";
                     auto t0 = std::chrono::high_resolution_clock::now();
-                    for (int n = 0; n < iter; ++n) {
+                    for (int n = 0; n < iter; ++n)
+                    {
                         // In a real scenario, dequant_q6k_avx512 would write directly to p_act here.
                         // For this benchmark, we simulate the direct dequant write.
                         VulkanKernel_DispatchTitanMoEShard(b_exp, b_act, b_log, b_out, experts, hidden, topk);
                     }
                     auto t1 = std::chrono::high_resolution_clock::now();
                     double sec = std::chrono::duration<double>(t1 - t0).count();
-                    std::cout << "[Vulkan RDMA Result] " << (iter / sec) << " TPS | Avg " << (sec*1000.0/iter) << " ms\n";
+                    std::cout << "[Vulkan RDMA Result] " << (iter / sec) << " TPS | Avg " << (sec * 1000.0 / iter)
+                              << " ms\n";
                     return 0;
                 }
 
                 RawrXD::MoE::MoeConfig cfg = {};
-                cfg.num_experts       = experts;
-                cfg.top_k             = topk;
-                cfg.hidden_dim        = hidden;
-                cfg.ffn_dim           = ffn;
-                cfg.weight_dtype      = 4; // Q4_K
+                cfg.num_experts = experts;
+                cfg.top_k = topk;
+                cfg.hidden_dim = hidden;
+                cfg.ffn_dim = ffn;
+                cfg.weight_dtype = 4;  // Q4_K
                 cfg.expert_size_bytes = (uint64_t)hidden * ffn / 2;
 
                 // Weights: prefer memory-mapped model file for real I/O pressure;
                 // fall back to a zeroed VirtualAlloc slab for synthetic benchmarks.
                 HANDLE hFile = INVALID_HANDLE_VALUE, hMap = NULL;
                 bool usingMmap = false;
-                if (!modelPath.empty()) {
-                    hFile = CreateFileA(modelPath.c_str(), GENERIC_READ, FILE_SHARE_READ,
-                                        NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-                    if (hFile != INVALID_HANDLE_VALUE) {
+                if (!modelPath.empty())
+                {
+                    hFile = CreateFileA(modelPath.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING,
+                                        FILE_ATTRIBUTE_NORMAL, NULL);
+                    if (hFile != INVALID_HANDLE_VALUE)
+                    {
                         hMap = CreateFileMappingA(hFile, NULL, PAGE_READONLY, 0, 0, NULL);
-                        if (hMap) {
+                        if (hMap)
+                        {
                             cfg.weights_base = MapViewOfFile(hMap, FILE_MAP_READ, 0, 0, 0);
                             usingMmap = (cfg.weights_base != nullptr);
                         }
                     }
                     if (!usingMmap)
-                        std::cerr << "[WARN] --model \"" << modelPath << "\" could not be mapped; using zeroed weights\n";
+                        std::cerr << "[WARN] --model \"" << modelPath
+                                  << "\" could not be mapped; using zeroed weights\n";
                 }
-                if (!cfg.weights_base) {
-                    cfg.weights_base = VirtualAlloc(NULL,
-                        (size_t)cfg.expert_size_bytes * experts, MEM_COMMIT, PAGE_READWRITE);
+                if (!cfg.weights_base)
+                {
+                    cfg.weights_base =
+                        VirtualAlloc(NULL, (size_t)cfg.expert_size_bytes * experts, MEM_COMMIT, PAGE_READWRITE);
                 }
-                if (!cfg.weights_base) {
+                if (!cfg.weights_base)
+                {
                     std::cerr << "[ERROR] weights_base allocation failed — out of memory\n";
                     return 1;
                 }
-                cfg.scales_base = VirtualAlloc(NULL,
-                    (size_t)experts * (ffn / 32) * sizeof(float), MEM_COMMIT, PAGE_READWRITE);
-                if (!cfg.scales_base) {
+                cfg.scales_base =
+                    VirtualAlloc(NULL, (size_t)experts * (ffn / 32) * sizeof(float), MEM_COMMIT, PAGE_READWRITE);
+                if (!cfg.scales_base)
+                {
                     std::cerr << "[ERROR] scales_base allocation failed — out of memory\n";
-                    if (usingMmap)  UnmapViewOfFile(cfg.weights_base);
-                    else            VirtualFree(cfg.weights_base, 0, MEM_RELEASE);
-                    if (hMap)  CloseHandle(hMap);
-                    if (hFile != INVALID_HANDLE_VALUE) CloseHandle(hFile);
+                    if (usingMmap)
+                        UnmapViewOfFile(cfg.weights_base);
+                    else
+                        VirtualFree(cfg.weights_base, 0, MEM_RELEASE);
+                    if (hMap)
+                        CloseHandle(hMap);
+                    if (hFile != INVALID_HANDLE_VALUE)
+                        CloseHandle(hFile);
                     return 1;
                 }
 
@@ -3799,10 +3852,12 @@ extern "C"
                 std::vector<float> input(hidden, 1.0f);
                 std::vector<float> output(hidden, 0.0f);
 
-                std::cout << "[MoE Bench] experts=" << experts << " topk=" << topk
-                          << " hidden=" << hidden << " iter=" << iter;
-                if (!modelPath.empty()) std::cout << " model=\"" << modelPath << "\"";
-                if (forceExpert >= 0)   std::cout << " force-expert=" << forceExpert;
+                std::cout << "[MoE Bench] experts=" << experts << " topk=" << topk << " hidden=" << hidden
+                          << " iter=" << iter;
+                if (!modelPath.empty())
+                    std::cout << " model=\"" << modelPath << "\"";
+                if (forceExpert >= 0)
+                    std::cout << " force-expert=" << forceExpert;
                 std::cout << "\n";
 
                 auto t0 = std::chrono::high_resolution_clock::now();
@@ -3813,23 +3868,28 @@ extern "C"
                 // Floating-point sub-millisecond resolution prevents the 0ms / 100k-TPS
                 // floor-truncation trap from chrono::milliseconds integer cast.
                 double elapsed_ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
-                if (elapsed_ms < 0.001) elapsed_ms = 0.001;
+                if (elapsed_ms < 0.001)
+                    elapsed_ms = 0.001;
                 double tps = static_cast<double>(iter) / (elapsed_ms / 1000.0);
                 double avgLat = elapsed_ms / iter;
 
                 VerifyTpsSentinel(tps, avgLat);
 
                 std::cout << "\n[MoE Benchmark Result]\n";
-                std::cout << "Zen 4 AVX-512 Throughput: " << tps              << " TPS\n";
+                std::cout << "Zen 4 AVX-512 Throughput: " << tps << " TPS\n";
                 std::cout << "Avg Latency:              " << avgLat << " ms\n";
-                std::cout << "Total Elapsed:            " << elapsed_ms        << " ms (" << iter << " iterations)\n";
+                std::cout << "Total Elapsed:            " << elapsed_ms << " ms (" << iter << " iterations)\n";
 
                 // Cleanup
                 VirtualFree(cfg.scales_base, 0, MEM_RELEASE);
-                if (usingMmap)             UnmapViewOfFile(cfg.weights_base);
-                else if (cfg.weights_base) VirtualFree(cfg.weights_base, 0, MEM_RELEASE);
-                if (hMap)  CloseHandle(hMap);
-                if (hFile != INVALID_HANDLE_VALUE) CloseHandle(hFile);
+                if (usingMmap)
+                    UnmapViewOfFile(cfg.weights_base);
+                else if (cfg.weights_base)
+                    VirtualFree(cfg.weights_base, 0, MEM_RELEASE);
+                if (hMap)
+                    CloseHandle(hMap);
+                if (hFile != INVALID_HANDLE_VALUE)
+                    CloseHandle(hFile);
                 return 0;
             }
         }
@@ -3838,7 +3898,10 @@ extern "C"
 
     int __stdcall WinMain(HINSTANCE hI, HINSTANCE hP, LPSTR lp, int nS)
     {
-        (void)hI; (void)hP; (void)lp; (void)nS;
+        (void)hI;
+        (void)hP;
+        (void)lp;
+        (void)nS;
         AllocConsole();
         FILE* f;
         freopen_s(&f, "CONOUT$", "w", stdout);
@@ -3848,34 +3911,59 @@ extern "C"
         printf("CMD: %s\n", lp);
         return main(__argc, __argv);
     }
-    #endif
+#endif  // RAWRXD_DISABLE_DUPLICATE_SHIMS
+#endif  // RAWRXD_GOLD_BUILD
 
-// Enterprise ASM Kernels Fallbacks
-    void Titan_RMSNorm_AVX512_Internal() { g_hwsynthOptimizeCalls.fetch_add(1, std::memory_order_relaxed); }
-    void Titan_SiLU_AVX512_Internal() { g_hwsynthOptimizeCalls.fetch_add(1, std::memory_order_relaxed); }
-    void Sampler_SoftMax_TopK_Fused_Internal() { g_hwsynthOptimizeCalls.fetch_add(1, std::memory_order_relaxed); }
-    void Sampler_ApplyTemperature_AVX512_Internal() { g_hwsynthOptimizeCalls.fetch_add(1, std::memory_order_relaxed); }
-    void Sampler_FindMax_AVX512_Internal() { g_hwsynthOptimizeCalls.fetch_add(1, std::memory_order_relaxed); }
-    void Sampler_ExpSum_AVX512_Internal() { g_hwsynthOptimizeCalls.fetch_add(1, std::memory_order_relaxed); }
-
-    // Agentic Profiler / Tooling Fallbacks (C-Linkage)
-    #ifndef RAWRXD_DISABLE_DUPLICATE_SHIMS
-    void RawrXD_Agentic_SampleProfileToken() {
-        g_agenticTokenSamples.fetch_add(1, std::memory_order_relaxed);
+    // Enterprise ASM Kernels Fallbacks
+    void Titan_RMSNorm_AVX512_Internal()
+    {
+        g_hwsynthOptimizeCalls.fetch_add(1, std::memory_order_relaxed);
     }
-    void AgenticProfilerBeginEpoch() {
+    void Titan_SiLU_AVX512_Internal()
+    {
+        g_hwsynthOptimizeCalls.fetch_add(1, std::memory_order_relaxed);
+    }
+    void Sampler_SoftMax_TopK_Fused_Internal()
+    {
+        g_hwsynthOptimizeCalls.fetch_add(1, std::memory_order_relaxed);
+    }
+    void Sampler_ApplyTemperature_AVX512_Internal()
+    {
+        g_hwsynthOptimizeCalls.fetch_add(1, std::memory_order_relaxed);
+    }
+    void Sampler_FindMax_AVX512_Internal()
+    {
+        g_hwsynthOptimizeCalls.fetch_add(1, std::memory_order_relaxed);
+    }
+    void Sampler_ExpSum_AVX512_Internal()
+    {
+        g_hwsynthOptimizeCalls.fetch_add(1, std::memory_order_relaxed);
+    }
+
+// Agentic Profiler / Tooling Fallbacks (C-Linkage)
+#ifndef RAWRXD_DISABLE_DUPLICATE_SHIMS
+    uint64_t RawrXD_Agentic_SampleProfileToken(uint32_t slot)
+    {
+        (void)slot;
+        g_agenticTokenSamples.fetch_add(1, std::memory_order_relaxed);
+        return static_cast<uint64_t>(GetTickCount64());
+    }
+    void AgenticProfilerBeginEpoch()
+    {
         g_agenticEpochCount.fetch_add(1, std::memory_order_relaxed);
         g_agenticEpochStartTick.store(static_cast<uint64_t>(GetTickCount64()), std::memory_order_relaxed);
     }
-    uint64_t AgenticProfilerGetElapsed() {
+    uint64_t AgenticProfilerGetElapsed()
+    {
         const uint64_t start = g_agenticEpochStartTick.load(std::memory_order_relaxed);
-        if (start == 0) {
+        if (start == 0)
+        {
             return 0;
         }
         const uint64_t now = static_cast<uint64_t>(GetTickCount64());
         return (now >= start) ? (now - start) : 0;
     }
-    #endif
+#endif
     int asm_spengine_cpu_optimize_Internal(const void* p)
     {
         g_hwsynthOptimizeCalls.fetch_add(1, std::memory_order_relaxed);
@@ -3925,24 +4013,27 @@ extern "C"
         return 0;
     }
 
-    // Singularity Globals
-    #ifndef RAWRXD_DISABLE_DUPLICATE_SHIMS
+// Singularity Globals
+#ifndef RAWRXD_DISABLE_DUPLICATE_SHIMS
     uint64_t g_rawrxd_completion_fence = 0;
     void* g_rawrxd_last_doorbell_addr = nullptr;
     uint64_t g_rawrxd_last_doorbell_value = 0;
     uint64_t g_rawrxd_last_doorbell_emit_seq = 0;
     bool g_rawrxd_omega_probe_early_return = false;
-    #endif
+#endif
 }
 
 // C++ mangled fallbacks
 #ifndef RAWRXD_DISABLE_DUPLICATE_SHIMS
-bool AgenticNotifyToolStart(char const* toolName) {
+bool AgenticNotifyToolStart(char const* toolName)
+{
     g_agenticToolStarts.fetch_add(1, std::memory_order_relaxed);
 
     uint64_t h = 1469598103934665603ULL;
-    if (toolName) {
-        for (const unsigned char* p = reinterpret_cast<const unsigned char*>(toolName); *p; ++p) {
+    if (toolName)
+    {
+        for (const unsigned char* p = reinterpret_cast<const unsigned char*>(toolName); *p; ++p)
+        {
             h ^= static_cast<uint64_t>(*p);
             h *= 1099511628211ULL;
         }
@@ -3950,16 +4041,21 @@ bool AgenticNotifyToolStart(char const* toolName) {
     g_agenticLastToolHash.store(h, std::memory_order_relaxed);
     return true;
 }
-void AgenticNotifyToolEnd(bool success, unsigned int duration) {
+void AgenticNotifyToolEnd(bool success, unsigned int duration)
+{
     g_agenticToolEnds.fetch_add(1, std::memory_order_relaxed);
-    if (success) {
+    if (success)
+    {
         g_agenticToolSuccesses.fetch_add(1, std::memory_order_relaxed);
-    } else {
+    }
+    else
+    {
         g_agenticToolFailures.fetch_add(1, std::memory_order_relaxed);
     }
     g_agenticDurationAccum.fetch_add(static_cast<uint64_t>(duration), std::memory_order_relaxed);
 }
-std::string AgenticProfilerTopSummary(unsigned int count) {
+std::string AgenticProfilerTopSummary(unsigned int count)
+{
     std::ostringstream oss;
     const uint64_t starts = g_agenticToolStarts.load(std::memory_order_relaxed);
     const uint64_t ends = g_agenticToolEnds.load(std::memory_order_relaxed);
@@ -3967,30 +4063,21 @@ std::string AgenticProfilerTopSummary(unsigned int count) {
     const uint64_t fail = g_agenticToolFailures.load(std::memory_order_relaxed);
     const uint64_t totalDur = g_agenticDurationAccum.load(std::memory_order_relaxed);
     const uint64_t avgDur = ends ? (totalDur / ends) : 0;
-    oss << "AgenticProfiler slots=" << asm_perf_get_slot_count_v2()
-        << ", requested=" << count
+    oss << "AgenticProfiler slots=" << asm_perf_get_slot_count_v2() << ", requested=" << count
         << ", elapsed_ticks=" << AgenticProfilerGetElapsed()
-        << ", epochs=" << g_agenticEpochCount.load(std::memory_order_relaxed)
-        << ", starts=" << starts
-        << ", ends=" << ends
-        << ", ok=" << ok
-        << ", fail=" << fail
-        << ", avg_duration_ms=" << avgDur
+        << ", epochs=" << g_agenticEpochCount.load(std::memory_order_relaxed) << ", starts=" << starts
+        << ", ends=" << ends << ", ok=" << ok << ", fail=" << fail << ", avg_duration_ms=" << avgDur
         << ", token_samples=" << g_agenticTokenSamples.load(std::memory_order_relaxed)
         << ", last_tool_hash=" << g_agenticLastToolHash.load(std::memory_order_relaxed);
     return oss.str();
 }
 
-struct Phase17Profiler {
+struct Phase17Profiler
+{
     static unsigned int GetEpochCount();
 };
-unsigned int Phase17Profiler::GetEpochCount() {
+unsigned int Phase17Profiler::GetEpochCount()
+{
     return static_cast<unsigned int>(g_agenticEpochCount.load(std::memory_order_relaxed));
 }
 #endif
-
-
-
-
-
-

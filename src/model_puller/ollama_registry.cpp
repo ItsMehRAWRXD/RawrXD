@@ -160,7 +160,7 @@ bool OllamaRegistryClient::Pull(const std::string& modelSpec,
         if (c == '/' || c == '\\' || c == ':') c = '_';
     }
 
-    std::filesystem::path dirPath = std::filesystem::path(destDir) / "ollama" / (safeName + "_" + safeTag);
+    std::filesystem::path dirPath = std::filesystem::path(destDir) / "native" / (safeName + "_" + safeTag);
     std::error_code ec;
     std::filesystem::create_directories(dirPath, ec);
 

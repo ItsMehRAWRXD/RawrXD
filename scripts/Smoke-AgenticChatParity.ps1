@@ -42,10 +42,25 @@ if ($failedTool.Count -gt 0) {
     throw "Smoke-AgenticChatParity: missing under src/win32app: $($failedTool -join ', ')"
 }
 Write-Host "Smoke-AgenticChatParity: OK (Win32IDE route + win32app tool persistence APIs present)."
-$exe = Join-Path $root "build-ninja\bin\RawrXD-Win32IDE.exe"
-if (Test-Path -LiteralPath $exe) {
-    Write-Host "Found $exe (run IDE manually to verify /agent in AI chat)."
+$exeCandidates = @(
+    (Join-Path $root "build-win32\bin\Release\RawrXD-Win32IDE.exe"),
+    (Join-Path $root "build-win32\bin\Debug\RawrXD-Win32IDE.exe"),
+    (Join-Path $root "build-win32\bin\RawrXD-Win32IDE.exe"),
+    (Join-Path $root "build-win32\RawrXD-Win32IDE.exe"),
+    (Join-Path $root "build-ninja\bin\Release\RawrXD-Win32IDE.exe"),
+    (Join-Path $root "build-ninja\bin\RawrXD-Win32IDE.exe"),
+    (Join-Path $root "build-ninja-ctx2\bin\RawrXD-Win32IDE.exe"),
+    (Join-Path $root "build\bin\Release\RawrXD-Win32IDE.exe"),
+    (Join-Path $root "build\bin\RawrXD-Win32IDE.exe"),
+    (Join-Path $root "build-ninja\RawrXD-Win32IDE.exe")
+)
+$exeFound = $null
+foreach ($c in $exeCandidates) {
+    if (Test-Path -LiteralPath $c) { $exeFound = $c; break }
+}
+if ($exeFound) {
+    Write-Host "Found $exeFound (run IDE manually to verify /agent in AI chat)."
 } else {
-    Write-Host "Optional: build RawrXD-Win32IDE to produce $exe"
+    Write-Host "Optional: build RawrXD-Win32IDE (e.g. build-win32\bin or build-ninja\bin)."
 }
 exit 0

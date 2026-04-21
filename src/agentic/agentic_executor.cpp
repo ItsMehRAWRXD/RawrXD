@@ -165,20 +165,47 @@ bool AgenticExecutor::executeStep(const std::string& stepJson) {
 
     bool success = false;
     if (m_agenticEngine) {
-        if (lowered.find("read_file") != std::string::npos || lowered.find("list_directory") != std::string::npos ||
-            lowered.find("grep") != std::string::npos || lowered.find("search") != std::string::npos) {
-            // Non-mutating step: rely on engine response quality and failure detection.
-            const std::string output = m_agenticEngine->processQuery("Execute tool step: " + stepJson);
-            success = !detectFailure(output);
-            addToMemory("last_step_output", output);
-        } else if (lowered.find("compile") != std::string::npos || lowered.find("build") != std::string::npos) {
-            const std::string output = m_agenticEngine->executeCommand(stepJson, false);
-            success = !detectFailure(output);
-            addToMemory("last_step_output", output);
+        using AgenticBridge = RawrXD::Agentic::AgenticInferenceBridge;
+        AgenticBridge::RuntimeConfig bridgeConfig;
+        bridgeConfig.workingDirectory = m_currentWorkingDirectory.empty() ? "." : m_currentWorkingDirectory;
+        bridgeConfig.maxToolIterations = 6;
+
+        const std::string bridgePrompt =
+            "Execute this autonomous step with available tools and report a concise completion summary.\n"
+            "Step: " + stepJson;
+
+        auto bridgeResult = AgenticBridge::SubmitInferenceWithTools(
+            bridgePrompt,
+            "codestral",
+            2048,
+            bridgeConfig);
+
+        if (bridgeResult.success) {
+            std::string validationPayload = bridgeResult.response;
+            if (!bridgeResult.toolTrace.empty()) {
+                validationPayload += "\n" + SerializeToolTrace(bridgeResult.toolTrace).dump();
+            }
+            success = verifyStepCompletion(stepJson, validationPayload);
+
+            addToMemory("last_step_output", bridgeResult.response);
+            addToMemory("last_step_tool_trace", SerializeToolTrace(bridgeResult.toolTrace).dump());
+            addToMemory("last_step_tool_iterations", std::to_string(bridgeResult.toolIterations));
+
+            if (m_onLogMessage) {
+                const std::string msg = "[AgenticExecutor] Step bridge execution iterations=" +
+                                        std::to_string(bridgeResult.toolIterations) +
+                                        (bridgeResult.usedTools ? " tools_used=true" : " tools_used=false");
+                m_onLogMessage(msg.c_str(), m_callbackContext);
+            }
         } else {
             const std::string output = m_agenticEngine->processQuery("Execute and report result for step: " + stepJson);
-            success = !detectFailure(output);
+            success = !detectFailure(output) && verifyStepCompletion(stepJson, output);
             addToMemory("last_step_output", output);
+
+            if (m_onLogMessage) {
+                const std::string msg = "[AgenticExecutor] Step bridge fallback: " + bridgeResult.error;
+                m_onLogMessage(msg.c_str(), m_callbackContext);
+            }
         }
     }
 
@@ -506,9 +533,16 @@ void AgenticExecutor::removeMemoryItem(const std::string& key) {
 }
 
 bool AgenticExecutor::detectFailure(const std::string& output) {
-    return output.find("error") != std::string::npos ||
-           output.find("Error") != std::string::npos ||
-           output.find("failed") != std::string::npos;
+    std::string lowered = output;
+    std::transform(lowered.begin(), lowered.end(), lowered.begin(), [](unsigned char c) {
+        return static_cast<char>(std::tolower(c));
+    });
+
+    return lowered.find("error") != std::string::npos ||
+           lowered.find("failed") != std::string::npos ||
+           lowered.find("validation failed") != std::string::npos ||
+           lowered.find("tool not found") != std::string::npos ||
+           lowered.find("quality validation failed") != std::string::npos;
 }
 
 std::string AgenticExecutor::generateCorrectionPlan(const std::string& failureReason) {

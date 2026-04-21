@@ -43,7 +43,7 @@ static std::string ToLowerAscii(const std::string& str) {
 
 static bool MatchesWildcard(const std::string& pattern, const std::string& value) {
     // Simple wildcard matching: * matches anything
-    // Examples:
+    // Patterns:
     //   "ms-python.*" matches "ms-python.python", "ms-python.debugger"
     //   "python" matches "python" exactly
     //   "onLanguage:*" matches any language

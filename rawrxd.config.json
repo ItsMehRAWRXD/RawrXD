@@ -52,10 +52,10 @@
                       "batchSize":  512,
                       "temperature":  0.7
                   },
-    "ollama":  {
-                   "baseUrl":  "http://localhost:11434",
+    "native":  {
+                   "baseUrl":  "http://localhost:11435",
                    "timeout":  30,
-                   "model":  "llama2"
+                   "model":  "headless-default"
                },
     "voiceAutomation":  {
                             "rate":  1.0,

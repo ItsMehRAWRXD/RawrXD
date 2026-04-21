@@ -437,7 +437,7 @@ void Win32IDE::loadSettings()
     m_settings.aiMaxTokens = 512;
     m_settings.aiContextWindow = 4096;
     m_settings.aiModelPath = "";
-    m_settings.aiOllamaUrl = "http://localhost:11434";
+    m_settings.aiOllamaUrl = "http://localhost:11435";
     m_settings.ghostTextEnabled = true;
     m_settings.failureDetectorEnabled = true;
     m_settings.failureMaxRetries = 3;

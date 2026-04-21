@@ -4873,7 +4873,7 @@ void RawrXDModelLoader::ReleaseTensor(const std::string& name)
 }
 
 // ============================================================================
-// [ENHANCEMENT] Sovereign Neural Hive-Mind Demonstration
+// [ENHANCEMENT] Sovereign Neural Hive-Mind
 // ============================================================================
 
 void RawrXDModelLoader::DemonstrateSovereignCapabilities()
@@ -4954,7 +4954,7 @@ void RawrXDModelLoader::DemonstrateSovereignCapabilities()
         printf("  ✅ AVX-512 VPOPCNT: AVAILABLE\n");
         printf("     Ready for 0.8-bit weight reconstruction\n");
 
-        // Demonstrate VPOPCNT on sample data
+        // VPOPCNT on sample data
         __m512i test_data = _mm512_set_epi32(0xAAAAAAAA, 0x55555555, 0xCCCCCCCC, 0x33333333, 0xAAAAAAAA, 0x55555555,
                                              0xCCCCCCCC, 0x33333333, 0xAAAAAAAA, 0x55555555, 0xCCCCCCCC, 0x33333333,
                                              0xAAAAAAAA, 0x55555555, 0xCCCCCCCC, 0x33333333);

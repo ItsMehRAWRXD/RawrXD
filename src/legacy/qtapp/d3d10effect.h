@@ -198,7 +198,7 @@ inline HRESULT D3DX10CreateEffectFromMemory(
     if (!device || !data) return E_INVALIDARG;
 
     // ultra-minimal parser:  look for "technique11 Name { pass P0 { ... } }"
-    // This is **NOT** a real HLSL parser – just enough for demo shaders.
+    // This is **NOT** a real HLSL parser – just enough for shaders.
     auto* e = new D3D10Effect;
     e->device = device;
 

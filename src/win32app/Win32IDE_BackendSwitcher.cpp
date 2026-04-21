@@ -15,8 +15,9 @@
 // ============================================================================
 
 #include "../agent/local_reasoning_integration.hpp"
-#include "../agentic/AgentOllamaClient.h"
+#include "../agentic/NativeInferenceClient.h"
 #include "../modules/vsix_loader.h"
+#include "TitanIPC.h"
 #include "Win32IDE.h"
 #include "rawrxd/ide/inference_facade.hpp"
 #include <algorithm>
@@ -30,7 +31,8 @@
 
 // nlohmann/json already included via Win32IDE.h
 
-namespace {
+namespace
+{
 bool isTruthyEnv(const char* value)
 {
     if (!value || !*value)
@@ -153,8 +155,8 @@ void Win32IDE::initBackendManager()
 
     auto& ollama = m_backendConfigs[(size_t)AIBackendType::Ollama];
     ollama.type = AIBackendType::Ollama;
-    ollama.name = "Ollama";
-    ollama.endpoint = "http://localhost:11434";
+    ollama.name = "native";
+    ollama.endpoint = "http://localhost:11435";
     ollama.model = "";  // Will be populated from Ollama /api/tags or settings
     ollama.apiKey = "";
     ollama.enabled = true;
@@ -249,25 +251,25 @@ void Win32IDE::initBackendManager()
     // ---- Load saved configs (overrides defaults) ---------------------------
     loadBackendConfigs();
 
-    // ---- Auto-detect Ollama model if still empty ----------------------------
+    // ---- Auto-detect native model if still empty ----------------------------
     {
         auto& ollamaCfg = m_backendConfigs[(size_t)AIBackendType::Ollama];
         if (ollamaCfg.model.empty() && ollamaCfg.enabled)
         {
             try
             {
-                RawrXD::Agent::OllamaConfig probeCfg;
+                RawrXD::Agent::NativeInferenceConfig probeCfg;
                 probeCfg.host = "127.0.0.1";
-                probeCfg.port = 11434;
+                probeCfg.port = 11435;
                 probeCfg.timeout_ms = 3000;
-                RawrXD::Agent::AgentOllamaClient probeClient(probeCfg);
+                RawrXD::Agent::NativeInferenceClient probeClient(probeCfg);
                 if (probeClient.TestConnection())
                 {
                     auto models = probeClient.ListModels();
                     if (!models.empty())
                     {
                         ollamaCfg.model = models[0];
-                        logInfo("[BackendSwitcher] Auto-detected Ollama model: " + ollamaCfg.model);
+                        logInfo("[BackendSwitcher] Auto-detected native model: " + ollamaCfg.model);
                     }
                 }
             }
@@ -286,11 +288,14 @@ void Win32IDE::initBackendManager()
 
 void Win32IDE::shutdownBackendManager()
 {
-    if (!m_backendManagerInitialized)
-        return;
     logFunction("shutdownBackendManager");
-    saveBackendConfigs();
-    m_backendManagerInitialized = false;
+    if (m_backendManagerInitialized)
+    {
+        saveBackendConfigs();
+        m_backendManagerInitialized = false;
+    }
+    // Graceful TitanHost exit whether or not backends.json was ever saved.
+    RawrXD::TitanProxy::instance().shutdown();
 }
 
 // ============================================================================
@@ -547,6 +552,9 @@ std::string Win32IDE::getBackendStatusString() const
         ss << "     endpoint: " << (cfg.endpoint.empty() ? "(native)" : cfg.endpoint) << "\n";
         ss << "     model:    " << (cfg.model.empty() ? "(loaded file)" : cfg.model) << "\n";
     }
+    // Native stream routing env label temporarily disabled - function not found
+    // ss << "  Native stream routing (env): " << RawrXD::Agent::GetOllamaStreamRoutingEnvLabel() << "\n";
+    ss << "  Native stream routing (env): (disabled)\n";
     return ss.str();
 }
 
@@ -634,7 +642,7 @@ bool Win32IDE::probeBackendHealth(AIBackendType type)
                 std::string resp = httpPost(cfg.endpoint + "/api/tags", "", {}, 5000);
                 healthy = !resp.empty() && resp.find("models") != std::string::npos;
                 if (!healthy)
-                    error = "Ollama not responding or no models available";
+                    error = "Native host not responding or no models available";
             }
             catch (...)
             {
@@ -695,7 +703,7 @@ bool Win32IDE::probeBackendHealth(AIBackendType type)
                 healthy = VSIXLoader::GetInstance().IsPluginLoaded("github.copilot");
                 if (!healthy)
                     error = "GitHub Copilot extension not loaded. Use AI menu > Install from VSIX, or switch to "
-                            "Ollama/Local.";
+                            "Native/Local.";
             }
             catch (...)
             {
@@ -712,7 +720,7 @@ bool Win32IDE::probeBackendHealth(AIBackendType type)
                 healthy = VSIXLoader::GetInstance().IsPluginLoaded("amazonwebservices.aws-toolkit-vscode");
                 if (!healthy)
                     error =
-                        "Amazon Q extension not loaded. Use AI menu > Install from VSIX, or switch to Ollama/Local.";
+                        "Amazon Q extension not loaded. Use AI menu > Install from VSIX, or switch to Native/Local.";
             }
             catch (...)
             {
@@ -792,7 +800,8 @@ std::string Win32IDE::routeInferenceRequest(const std::string& prompt)
                        OutputSeverity::Warning);
         if (isCriticalBackendMemoryPressure(memorySnapshot))
         {
-            return "[BackendSwitcher] Error: Local GGUF inference aborted due to critical memory pressure after cache reset.";
+            return "[BackendSwitcher] Error: Local GGUF inference aborted due to critical memory pressure after cache "
+                   "reset.";
         }
     }
 
@@ -894,10 +903,10 @@ std::string Win32IDE::routeToOllama(const std::string& prompt)
     const auto& cfg = m_backendConfigs[(size_t)AIBackendType::Ollama];
     if (cfg.endpoint.empty())
     {
-        return "[BackendSwitcher] Error: Ollama endpoint not configured";
+        return "[BackendSwitcher] Error: native endpoint not configured";
     }
 
-    // Build Ollama /api/generate request body
+    // Build native /api/generate request body
     nlohmann::json reqBody;
     reqBody["model"] = cfg.model;
     reqBody["prompt"] = prompt;
@@ -915,13 +924,13 @@ std::string Win32IDE::routeToOllama(const std::string& prompt)
         }
         if (rj.contains("error"))
         {
-            return "[BackendSwitcher] Error (Ollama): " + rj["error"].get<std::string>();
+            return "[BackendSwitcher] Error (native): " + rj["error"].get<std::string>();
         }
-        return "[BackendSwitcher] Error (Ollama): Unexpected response format";
+        return "[BackendSwitcher] Error (native): Unexpected response format";
     }
     catch (const std::exception& e)
     {
-        return std::string("[BackendSwitcher] Error (Ollama): ") + e.what();
+        return std::string("[BackendSwitcher] Error (native): ") + e.what();
     }
 }
 
@@ -1449,11 +1458,10 @@ void Win32IDE::updateStatusBarBackend()
     // Append live GPU dispatch counters when the Vulkan compute layer is linked
 #if defined(RAWRXD_VULKAN_COMPUTE_LINKED)
     {
-        uint64_t attempts = 0, success = 0, fallback = 0,
-                 asm_calls = 0, invalid_abi = 0, pipeline_miss = 0;
-        VulkanKernel_GetRawDispatchCounters(&attempts, &success, &fallback,
-                                            &asm_calls, &invalid_abi, &pipeline_miss);
-        if (attempts > 0) {
+        uint64_t attempts = 0, success = 0, fallback = 0, asm_calls = 0, invalid_abi = 0, pipeline_miss = 0;
+        VulkanKernel_GetRawDispatchCounters(&attempts, &success, &fallback, &asm_calls, &invalid_abi, &pipeline_miss);
+        if (attempts > 0)
+        {
             label += " | " + std::to_string(success) + "d";
             if (fallback > 0)
                 label += " (" + std::to_string(fallback) + " fb)";
@@ -1484,7 +1492,7 @@ std::string Win32IDE::backendTypeString(AIBackendType type) const
         case AIBackendType::LocalGGUF:
             return "LocalGGUF";
         case AIBackendType::Ollama:
-            return "Ollama";
+            return "native";
         case AIBackendType::OpenAI:
             return "OpenAI";
         case AIBackendType::Claude:
@@ -1500,7 +1508,7 @@ Win32IDE::Win32IDE::AIBackendType Win32IDE::backendTypeFromString(const std::str
 {
     if (name == "LocalGGUF" || name == "local" || name == "Local GGUF")
         return AIBackendType::LocalGGUF;
-    if (name == "Ollama" || name == "ollama")
+    if (name == "native" || name == "native")
         return AIBackendType::Ollama;
     if (name == "OpenAI" || name == "openai")
         return AIBackendType::OpenAI;

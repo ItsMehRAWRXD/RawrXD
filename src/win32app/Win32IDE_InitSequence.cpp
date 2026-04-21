@@ -280,7 +280,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
 
     // ========================================================================
     // COMPONENT INITIALIZATION — Phase 35: New IDE Components
-    // Initialize the newly implemented components: CaretAnimation, AgentOllamaClient, ModelDiscovery
+    // Initialize the newly implemented components: CaretAnimation, NativeInferenceClient, ModelDiscovery
     // ========================================================================
     {
         ide.initCaretAnimation();

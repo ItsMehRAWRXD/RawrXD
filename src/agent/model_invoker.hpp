@@ -54,14 +54,27 @@ public:
     ~ModelInvoker() = default;
 
     void setLLMBackend(const std::string& backend, const std::string& endpoint, const std::string& apiKey = "");
-    void setProviderConfig(const ModelProviderConfig& config);
+    void setProviderConfig(const ModelProviderConfig& config) { m_providerConfig = config; }
     std::string getLLMBackend() const { return m_backend; }
     ModelProviderConfig getProviderConfig() const { return m_providerConfig; }
-    LLMResponse invoke(const InvocationParams& params);
+    LLMResponse invoke(const InvocationParams& params) {
+        // Stub implementation - returns error
+        LLMResponse r;
+        r.success = false;
+        r.error = "ModelInvoker::invoke not implemented";
+        return r;
+    }
     LLMResponse queryRaw(const std::string& systemPrompt,
                          const std::string& userPrompt,
                          int maxTokens,
-                         double temperature = 0.2);
+                         double temperature = 0.2) {
+        InvocationParams params;
+        params.wish = userPrompt;
+        params.context = systemPrompt;
+        params.maxTokens = maxTokens;
+        params.temperature = temperature;
+        return invoke(params);
+    }
     void invokeAsync(const InvocationParams& params);
     void cancelPendingRequest();
     bool isInvoking() const { return m_isInvoking; }

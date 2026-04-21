@@ -26,8 +26,8 @@ namespace RawrXD::UI {
 namespace RawrXD::Backend { 
     struct OllamaChatMessage { std::string role; std::string content; }; 
     struct OllamaChatRequest { std::string model; bool stream; std::vector<OllamaChatMessage> messages; }; 
-    struct OllamaResponse { struct { std::string content; } message; };
-    class OllamaBackend { public: OllamaResponse chatSync(const OllamaChatRequest& r) { return {{""}}; } };
+    struct NativeInferenceResponse { struct { std::string content; } message; };
+    class OllamaBackend { public: NativeInferenceResponse chatSync(const OllamaChatRequest& r) { return {{""}}; } };
     class OllamaSession { 
     public: 
         void setSessionName(const std::string&) {}

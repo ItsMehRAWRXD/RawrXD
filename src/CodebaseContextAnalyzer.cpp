@@ -132,7 +132,7 @@ std::vector<Symbol> CodebaseContextAnalyzer::parseSymbols(const std::string& fil
     std::string line;
     int lineNum = 0;
     
-    // Simple regex-based parsing for demonstration
+    // Simple regex-based parsing
     std::regex funcPattern(R"(^(?:void|int|bool|auto|std::\w+)\s+(\w+)\s*\()");
     std::regex classPattern(R"(^class\s+(\w+))");
     std::regex varPattern(R"(^(?:int|float|double|bool|std::\w+)\s+(\w+))");

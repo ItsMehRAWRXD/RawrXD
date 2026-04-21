@@ -3334,7 +3334,7 @@ int main(int argc, char** argv)
     const char* model_alias   = nullptr;
     const char* resume_checkpoint = nullptr;
     const char* resume_jsonl = nullptr;
-    int         ollama_port   = 11434;
+    int         RAWRXD_NATIVE_PORT   = 11434;
     int         max_tasks     = -1;
     int         max_output_tokens = 0;
     int         cli_timeout_ms = 0;
@@ -3408,7 +3408,7 @@ int main(int argc, char** argv)
         } else if (strcmp(argv[i], "--model") == 0 && i + 1 < argc) {
             model_name = argv[++i];
         } else if (strcmp(argv[i], "--port") == 0 && i + 1 < argc) {
-            ollama_port = atoi(argv[++i]);
+            RAWRXD_NATIVE_PORT = atoi(argv[++i]);
         } else if (strcmp(argv[i], "--host") == 0 && i + 1 < argc) {
             host_name = argv[++i];
         } else if (strcmp(argv[i], "--debug-http") == 0) {
@@ -3607,15 +3607,15 @@ int main(int argc, char** argv)
         try {
             const char* env_model = getenv("RAWRXD_SWEBENCH_MODEL");
             if (!env_model || !env_model[0]) {
-                env_model = getenv("OLLAMA_MODEL");
+                env_model = getenv("RAWRXD_NATIVE_MODEL");
             }
             const char* env_port = getenv("RAWRXD_SWEBENCH_PORT");
             if (env_port && env_port[0]) {
-                ollama_port = atoi(env_port);
+                RAWRXD_NATIVE_PORT = atoi(env_port);
             }
             const char* env_host = getenv("RAWRXD_SWEBENCH_HOST");
             if (!env_host || !env_host[0]) {
-                env_host = getenv("OLLAMA_HOST");
+                env_host = getenv("RAWRXD_NATIVE_HOST");
             }
             const char* env_debug = getenv("RAWRXD_SWEBENCH_DEBUG_HTTP");
             if (env_debug && env_debug[0] && strcmp(env_debug, "0") != 0) {
@@ -3634,7 +3634,7 @@ int main(int argc, char** argv)
                 chosen_model = env_model;
             }
 
-            MinimalOllamaClient ollama(chosen_host, ollama_port, chosen_model);
+            MinimalOllamaClient ollama(chosen_host, RAWRXD_NATIVE_PORT, chosen_model);
             ollama.debug_http = debug_http;
             if (cli_timeout_ms > 0) {
                 ollama.recv_timeout_ms = cli_timeout_ms;
@@ -3672,7 +3672,7 @@ int main(int argc, char** argv)
                 }
             }
 
-            fprintf(stdout, "[INFO] Using Ollama model: %s on port %d\n", chosen_model.c_str(), ollama_port);
+            fprintf(stdout, "[INFO] Using Ollama model: %s on port %d\n", chosen_model.c_str(), RAWRXD_NATIVE_PORT);
 
             // F12: Ollama reachability preflight — verify service is responding before sweep
             {
@@ -3681,7 +3681,7 @@ int main(int argc, char** argv)
                 if (pf_models.empty() && !pf_err.empty()) {
                     fprintf(stderr, "[ERROR] Ollama preflight failed: %s\n", pf_err.c_str());
                     fprintf(stderr, "        Ensure Ollama is running on %s:%d\n",
-                        chosen_host.c_str(), ollama_port);
+                        chosen_host.c_str(), RAWRXD_NATIVE_PORT);
                     if (jsonl_file) { fclose(jsonl_file); }
                     return 1;
                 }
@@ -3694,7 +3694,7 @@ int main(int argc, char** argv)
                 jsonl_file,
                 chosen_model,
                 ollama.host,
-                ollama_port,
+                RAWRXD_NATIVE_PORT,
                 (model_alias && model_alias[0]) ? model_alias : chosen_model,
                 seed,
                 retry_count,

@@ -577,13 +577,13 @@ std::string Win32IDE::getPlanTokenBudgetStatus() const
 // ============================================================================
 
 // Model tier priority: local GGUF > Ollama
-static const std::vector<std::string> MODEL_PRIORITY = {"local_gguf", "ollama"};
+static const std::vector<std::string> MODEL_PRIORITY = {"local_gguf", "native"};
 
 // Step type → preferred model tier
 static const std::map<std::string, std::string> STEP_MODEL_PREFERENCE = {
     {"code_edit", "local_gguf"},     {"file_create", "local_gguf"}, {"file_delete", "local_gguf"},
-    {"shell_command", "local_gguf"}, {"analysis", "ollama"},        {"verification", "ollama"},
-    {"general", "ollama"},
+    {"shell_command", "local_gguf"}, {"analysis", "native"},        {"verification", "native"},
+    {"general", "native"},
 };
 
 AgentModelRoute Win32IDE::routeStepToModel(const PlanStep& step)
@@ -592,7 +592,7 @@ AgentModelRoute Win32IDE::routeStepToModel(const PlanStep& step)
     route.stepType = planStepTypeString(step.type);
 
     // Determine preferred tier
-    std::string preferred = "ollama";
+    std::string preferred = "native";
     auto it = STEP_MODEL_PREFERENCE.find(route.stepType);
     if (it != STEP_MODEL_PREFERENCE.end())
         preferred = it->second;
@@ -609,9 +609,9 @@ AgentModelRoute Win32IDE::routeStepToModel(const PlanStep& step)
     }
     else if (ollamaAvail)
     {
-        route.selectedTier = "ollama";
+        route.selectedTier = "native";
         route.modelName = m_agenticBridge->GetModelName();
-        route.fallbackUsed = (preferred != "ollama");
+        route.fallbackUsed = (preferred != "native");
     }
     else
     {

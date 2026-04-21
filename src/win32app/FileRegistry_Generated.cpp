@@ -1010,7 +1010,7 @@ void FileRegistry::registerAllFiles() {
     registerFile("./dist/RawrXD_Enterprise_v3.0/extras/powershield/tests/Test-Live-Ollama.ps1");
     registerFile("./dist/RawrXD_Enterprise_v3.0/extras/powershield/tests/Test-MenuIntegration.ps1");
     registerFile("./dist/RawrXD_Enterprise_v3.0/extras/powershield/tests/Test-ModelAgency.ps1");
-    registerFile("./dist/RawrXD_Enterprise_v3.0/extras/powershield/tests/Test-OllamaIntegration.ps1");
+    registerFile("./dist/RawrXD_Enterprise_v3.0/extras/powershield/tests/Test-NativeIntegration.ps1");
     registerFile("./dist/RawrXD_Enterprise_v3.0/extras/powershield/tests/Test-PopOut-Editor.ps1");
     registerFile("./dist/RawrXD_Enterprise_v3.0/extras/powershield/tests/Test-RawrXD-Agentic-Integration.ps1");
     registerFile("./dist/RawrXD_Enterprise_v3.0/extras/powershield/tests/Test-RawrXD-Features.ps1");
@@ -1485,7 +1485,7 @@ void FileRegistry::registerAllFiles() {
     registerFile("./scripts/Build-MASMBridge.ps1");
     registerFile("./scripts/Build-Phase1.ps1");
     registerFile("./scripts/Build-PowerShellBridge.ps1");
-    registerFile("./scripts/Demo_Sovereign_System.ps1");
+    registerFile("./scripts/Sovereign_System.ps1");
     registerFile("./scripts/FeatureSyncAnalyzer.ps1");
     registerFile("./scripts/Find-ExtensionWiring.ps1");
     registerFile("./scripts/Find-UnintegratedWidgets.ps1");
@@ -1757,8 +1757,8 @@ void FileRegistry::registerAllFiles() {
     registerFile("./src/agent_policy.cpp");
     registerFile("./src/agent_policy.h");
     registerFile("./src/agent_router.cpp");
-    registerFile("./src/agentic/AgentOllamaClient.cpp");
-    registerFile("./src/agentic/AgentOllamaClient.h");
+    registerFile("./src/agentic/NativeInferenceClient.cpp");
+    registerFile("./src/agentic/NativeInferenceClient.h");
     registerFile("./src/agentic/AgentOrchestrator.cpp");
     registerFile("./src/agentic/AgentOrchestrator.h");
     registerFile("./src/agentic/AgentToolHandlers.cpp");
@@ -1780,8 +1780,8 @@ void FileRegistry::registerAllFiles() {
     registerFile("./src/agentic/FIMPromptBuilder.cpp");
     registerFile("./src/agentic/FIMPromptBuilder.h");
     registerFile("./src/agentic/GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm");
-    registerFile("./src/agentic/OllamaProvider.cpp");
-    registerFile("./src/agentic/OllamaProvider.h");
+    registerFile("./src/agentic/NativeStreamProvider.cpp");
+    registerFile("./src/agentic/NativeStreamProvider.h");
     registerFile("./src/agentic/OrchestratorBridge.cpp");
     registerFile("./src/agentic/OrchestratorBridge.h");
     registerFile("./src/agentic/Phase3_Agent_Kernel_Complete.asm");
@@ -2936,7 +2936,7 @@ void FileRegistry::registerAllFiles() {
     registerFile("./src/paint/image_generator_example.cpp");
     registerFile("./src/paint/paint_main.cpp");
     registerFile("./src/performance_optimizer_integration.cpp");
-    registerFile("./src/phase_1_2_integration_demo.cpp");
+    registerFile("./src/phase_1_2_integration.cpp");
     registerFile("./src/plugin_system/win32_plugin_loader.cpp");
     registerFile("./src/plugins/MemoryPlugin.hpp");
     registerFile("./src/plugins/example_voice_plugin.cpp");

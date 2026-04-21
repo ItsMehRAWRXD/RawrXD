@@ -16,7 +16,6 @@ ChatInterface::~ChatInterface() {
 void ChatInterface::setModel(const std::string& modelPath) {
     m_engine = std::make_unique<CPUInference::CPUInferenceEngine>();
     if (!m_engine->LoadModel(modelPath)) {
-        std::cerr << "Failed to load model: " << modelPath << std::endl;
         m_engine.reset();
     }
 }

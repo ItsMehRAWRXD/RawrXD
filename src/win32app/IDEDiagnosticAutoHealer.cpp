@@ -67,7 +67,8 @@ void IDEDiagnosticAutoHealer::StopDiagnostic()
     {
         if (m_diagnosticThread->get_id() == std::this_thread::get_id())
         {
-            OutputDebugStringW(L"[AutoHealer] StopDiagnostic called from diagnostic thread; detaching self to avoid deadlock\n");
+            OutputDebugStringW(
+                L"[AutoHealer] StopDiagnostic called from diagnostic thread; detaching self to avoid deadlock\n");
             m_diagnosticThread->detach();
         }
         else

@@ -14,7 +14,7 @@
 
 #include "ssot_handlers.h"
 #include "../../native_gguf_loader.h"
-#include "agentic/AgentOllamaClient.h"
+#include "agentic/NativeInferenceClient.h"
 #include "auto_repair_orchestrator.hpp"
 #include "byte_level_hotpatcher.hpp"
 #include "command_registry.hpp"
@@ -48,7 +48,7 @@
 
 #include "Win32IDE.h"  // routeToIde: ctx.idePtr is Win32IDE* (not HWND*)
 
-static RawrXD::Agent::AgentOllamaClient& getAgentClient();
+static RawrXD::Agent::NativeInferenceClient& getAgentClient();
 
 // ============================================================================
 // HELPER: Route to IDE UI via WM_COMMAND when in GUI mode (CLI gets text output)
@@ -662,8 +662,8 @@ namespace
 struct SSOBackendState
 {
     std::mutex mtx;
-    std::string activeBackend = "ollama";
-    RawrXD::Agent::OllamaConfig ollamaConfig;
+    std::string activeBackend = "native";
+    RawrXD::Agent::NativeInferenceConfig NativeInferenceConfig;
     std::map<std::string, std::string> apiKeys;
     std::string localModelInput;
     std::string localModelResolvedPath;
@@ -706,11 +706,11 @@ struct SSOConfidenceState
     }
 };
 
-static RawrXD::Agent::AgentOllamaClient createSsoOllamaClient()
+static RawrXD::Agent::NativeInferenceClient createSsoOllamaClient()
 {
     auto& bs = SSOBackendState::instance();
     std::lock_guard<std::mutex> lock(bs.mtx);
-    return RawrXD::Agent::AgentOllamaClient(bs.ollamaConfig);
+    return RawrXD::Agent::NativeInferenceClient(bs.NativeInferenceConfig);
 }
 
 struct BackendLocalModelResolution
@@ -2123,7 +2123,7 @@ CommandResult handleBackendSwitchLocal(const CommandContext& ctx)
     }
     else
     {
-        ctx.output("  Model Source: not configured. Use !backend_config local_model <path|url|hf_repo|ollama_model>\n");
+        ctx.output("  Model Source: not configured. Use !backend_config local_model <path|url|hf_repo|RAWRXD_NATIVE_MODEL>\n");
     }
     return CommandResult::ok("backend.switchLocal");
 }
@@ -2132,11 +2132,11 @@ CommandResult handleBackendSwitchOllama(const CommandContext& ctx)
 {
     ReverseTraceScope _trace("ssot.backend.switchOllama");
     auto& bs = SSOBackendState::instance();
-    RawrXD::Agent::OllamaConfig config;
+    RawrXD::Agent::NativeInferenceConfig config;
     {
         std::lock_guard<std::mutex> lock(bs.mtx);
-        bs.activeBackend = "ollama";
-        config = bs.ollamaConfig;
+        bs.activeBackend = "native";
+        config = bs.NativeInferenceConfig;
     }
 
     getAgentClient().SetConfig(config);
@@ -2149,9 +2149,9 @@ CommandResult handleBackendSwitchOllama(const CommandContext& ctx)
     std::string model;
     {
         std::lock_guard<std::mutex> lock(bs.mtx);
-        host = bs.ollamaConfig.host;
-        port = static_cast<int>(bs.ollamaConfig.port);
-        model = bs.ollamaConfig.chat_model;
+        host = bs.NativeInferenceConfig.host;
+        port = static_cast<int>(bs.NativeInferenceConfig.port);
+        model = bs.NativeInferenceConfig.chat_model;
     }
 
     char buf[320];
@@ -2250,14 +2250,14 @@ CommandResult handleBackendShowStatus(const CommandContext& ctx)
 {
     auto& bs = SSOBackendState::instance();
     std::string activeBackend;
-    RawrXD::Agent::OllamaConfig config;
+    RawrXD::Agent::NativeInferenceConfig config;
     std::string localModelInput;
     std::string localModelResolvedPath;
     std::string localModelError;
     {
         std::lock_guard<std::mutex> lock(bs.mtx);
         activeBackend = bs.activeBackend;
-        config = bs.ollamaConfig;
+        config = bs.NativeInferenceConfig;
         localModelInput = bs.localModelInput;
         localModelResolvedPath = bs.localModelResolvedPath;
         localModelError = bs.localModelError;
@@ -2279,6 +2279,10 @@ CommandResult handleBackendShowStatus(const CommandContext& ctx)
         status += "  Ollama TPS: " + oss.str() + " tok/s\n";
     }
     status += "  Streaming: " + std::string(metrics.isStreaming ? "YES" : "NO") + "\n";
+    if (!metrics.streamRouting.empty())
+    {
+        status += "  Stream routing: " + metrics.streamRouting + "\n";
+    }
     status += "  Consecutive Errors: " + std::to_string(metrics.consecutiveErrors) + "\n";
     if (!localModelInput.empty())
     {
@@ -2408,13 +2412,13 @@ CommandResult handleBackendConfigure(const CommandContext& ctx)
     {
         std::lock_guard<std::mutex> lock(bs.mtx);
         std::string status = "[BACKEND] Config:\n";
-        status += "  host=" + bs.ollamaConfig.host + "\n";
-        status += "  port=" + std::to_string(bs.ollamaConfig.port) + "\n";
-        status += "  model=" + bs.ollamaConfig.chat_model + "\n";
-        status += "  fim_model=" + bs.ollamaConfig.fim_model + "\n";
-        status += "  temperature=" + std::to_string(bs.ollamaConfig.temperature) + "\n";
-        status += "  max_tokens=" + std::to_string(bs.ollamaConfig.max_tokens) + "\n";
-        status += "  num_ctx=" + std::to_string(bs.ollamaConfig.num_ctx) + "\n";
+        status += "  host=" + bs.NativeInferenceConfig.host + "\n";
+        status += "  port=" + std::to_string(bs.NativeInferenceConfig.port) + "\n";
+        status += "  model=" + bs.NativeInferenceConfig.chat_model + "\n";
+        status += "  fim_model=" + bs.NativeInferenceConfig.fim_model + "\n";
+        status += "  temperature=" + std::to_string(bs.NativeInferenceConfig.temperature) + "\n";
+        status += "  max_tokens=" + std::to_string(bs.NativeInferenceConfig.max_tokens) + "\n";
+        status += "  num_ctx=" + std::to_string(bs.NativeInferenceConfig.num_ctx) + "\n";
         status += "  local_model=" + bs.localModelInput + "\n";
         status += "  Usage: !backend_config <key> <value>\n";
         ctx.output(status.c_str());
@@ -2432,19 +2436,19 @@ CommandResult handleBackendConfigure(const CommandContext& ctx)
     {
         std::lock_guard<std::mutex> lock(bs.mtx);
         if (key == "host")
-            bs.ollamaConfig.host = value;
+            bs.NativeInferenceConfig.host = value;
         else if (key == "port")
-            bs.ollamaConfig.port = static_cast<uint16_t>(std::atoi(value.c_str()));
+            bs.NativeInferenceConfig.port = static_cast<uint16_t>(std::atoi(value.c_str()));
         else if (key == "model" || key == "chat_model")
-            bs.ollamaConfig.chat_model = value;
+            bs.NativeInferenceConfig.chat_model = value;
         else if (key == "fim_model")
-            bs.ollamaConfig.fim_model = value;
+            bs.NativeInferenceConfig.fim_model = value;
         else if (key == "temperature")
-            bs.ollamaConfig.temperature = static_cast<float>(std::atof(value.c_str()));
+            bs.NativeInferenceConfig.temperature = static_cast<float>(std::atof(value.c_str()));
         else if (key == "max_tokens")
-            bs.ollamaConfig.max_tokens = std::atoi(value.c_str());
+            bs.NativeInferenceConfig.max_tokens = std::atoi(value.c_str());
         else if (key == "num_ctx")
-            bs.ollamaConfig.num_ctx = std::atoi(value.c_str());
+            bs.NativeInferenceConfig.num_ctx = std::atoi(value.c_str());
         else if (key == "local_model" || key == "local_model_path" || key == "model_source")
         {
             bs.localModelInput = localResolution.input;
@@ -2454,7 +2458,7 @@ CommandResult handleBackendConfigure(const CommandContext& ctx)
         else
             return CommandResult::error("Unknown config key");
 
-        getAgentClient().SetConfig(bs.ollamaConfig);
+        getAgentClient().SetConfig(bs.NativeInferenceConfig);
     }
 
     std::string msg = "[BACKEND] Set " + key + " = " + value + "\n";
@@ -2481,7 +2485,7 @@ CommandResult handleBackendHealthCheck(const CommandContext& ctx)
     ctx.output("[BACKEND] Health Check:\n");
     auto client = createSsoOllamaClient();
     bool ok = client.TestConnection();
-    ctx.output(ok ? "  ollama:  OK\n" : "  ollama:  FAIL\n");
+    ctx.output(ok ? "  native:  OK\n" : "  native:  FAIL\n");
 
     auto& bs = SSOBackendState::instance();
     {
@@ -2547,10 +2551,10 @@ CommandResult handleBackendSaveConfigs(const CommandContext& ctx)
         json += "{\n";
         json += "  \"activeBackend\": \"" + bs.activeBackend + "\",\n";
         json += "  \"ollama\": {\n";
-        json += "    \"host\": \"" + bs.ollamaConfig.host + "\",\n";
-        json += "    \"port\": " + std::to_string(bs.ollamaConfig.port) + ",\n";
-        json += "    \"chat_model\": \"" + bs.ollamaConfig.chat_model + "\",\n";
-        json += "    \"fim_model\": \"" + bs.ollamaConfig.fim_model + "\"\n";
+        json += "    \"host\": \"" + bs.NativeInferenceConfig.host + "\",\n";
+        json += "    \"port\": " + std::to_string(bs.NativeInferenceConfig.port) + ",\n";
+        json += "    \"chat_model\": \"" + bs.NativeInferenceConfig.chat_model + "\",\n";
+        json += "    \"fim_model\": \"" + bs.NativeInferenceConfig.fim_model + "\"\n";
         json += "  },\n";
         json += "  \"local\": {\n";
         json += "    \"model_input\": \"" + bs.localModelInput + "\",\n";
@@ -2608,7 +2612,7 @@ CommandResult handleRouterStatus(const CommandContext& ctx)
              "  Total routed: %llu\n"
              "  Total tokens: %llu\n",
              rs.enabled.load() ? "Yes" : "No", rs.policy.c_str(), bs.activeBackend.c_str(),
-             bs.ollamaConfig.chat_model.c_str(), rs.ensembleEnabled.load() ? "Yes" : "No",
+             bs.NativeInferenceConfig.chat_model.c_str(), rs.ensembleEnabled.load() ? "Yes" : "No",
              static_cast<unsigned long long>(rs.totalRouted.load()),
              static_cast<unsigned long long>(rs.totalTokens.load()));
     ctx.output(buf);
@@ -6100,9 +6104,9 @@ static bool configureAIContextMemoryLocked(AIContextRuntimeState& st, uint32_t t
     return true;
 }
 
-static RawrXD::Agent::AgentOllamaClient& getAgentClient()
+static RawrXD::Agent::NativeInferenceClient& getAgentClient()
 {
-    static RawrXD::Agent::AgentOllamaClient client;
+    static RawrXD::Agent::NativeInferenceClient client;
     return client;
 }
 
@@ -6137,10 +6141,10 @@ static CommandResult setAIContextWindow(const CommandContext& ctx, uint32_t cmdI
     {
         auto& bs = SSOBackendState::instance();
         std::lock_guard<std::mutex> lock(bs.mtx);
-        bs.ollamaConfig.num_ctx = static_cast<int>(tokenCount);
-        if (bs.ollamaConfig.max_tokens > bs.ollamaConfig.num_ctx)
+        bs.NativeInferenceConfig.num_ctx = static_cast<int>(tokenCount);
+        if (bs.NativeInferenceConfig.max_tokens > bs.NativeInferenceConfig.num_ctx)
         {
-            bs.ollamaConfig.max_tokens = bs.ollamaConfig.num_ctx;
+            bs.NativeInferenceConfig.max_tokens = bs.NativeInferenceConfig.num_ctx;
         }
     }
 
@@ -8824,8 +8828,8 @@ CommandResult handleVoiceModeContinuous(const CommandContext& ctx)
 {
     if (ctx.isGui && ctx.idePtr)
         return routeToIde(ctx, 9708, "voice.modeContinuous");
-    ctx.output("[VOICE] Mode set to CONTINUOUS\n");
-    ctx.output("  Input is always captured. Use !voice_mode_disabled to stop.\n");
+    ctx.output("[VOICE] Mode set to CONTINUOUS (microphone disabled build)\n");
+    ctx.output("  No microphone capture backend is active in this build.\n");
     return CommandResult::ok("voice.modeContinuous");
 }
 CommandResult handleVoiceModeDisabled(const CommandContext& ctx)

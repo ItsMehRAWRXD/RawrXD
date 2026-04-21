@@ -11,7 +11,7 @@
 
 // Basic logging stub (replace with real logging if available)
 extern "C" void LogMessage(const char* msg) {
-    printf("[ASM Bridge] %s\n", msg);
+    // Logging disabled
 }
 
 extern "C" void RawrXD_AccelRouter_Create_MASM();
@@ -160,11 +160,11 @@ extern "C" void RawrXD_OutputChannel_Create_MASM();
 extern "C" void RawrXD_OutputChannel_CreateAPI_MASM();
 extern "C" void RawrXD_Path_Join_MASM();
 extern "C" void RawrXD_Path_Join_PackageJson_MASM();
-extern "C" void RawrXD_Phase1Initialize_MASM();
-extern "C" void RawrXD_Phase1LogMessage_MASM();
-extern "C" void RawrXD_Phase2Initialize_MASM();
-extern "C" void RawrXD_Phase3Initialize_MASM();
-extern "C" void RawrXD_Phase4Initialize_MASM();
+extern "C" void RawrXD_CoreInitialize_MASM();
+extern "C" void RawrXD_CoreLogMessage_MASM();
+extern "C" void RawrXD_AgentInitialize_MASM();
+extern "C" void RawrXD_TokenInitialize_MASM();
+extern "C" void RawrXD_ModelInitialize_MASM();
 extern "C" void RawrXD_Pipe_RunServer_MASM();
 extern "C" void RawrXD_PrintU64_MASM();
 extern "C" void RawrXD_ProcessReceivedHeartbeat_MASM();
@@ -822,24 +822,24 @@ extern "C" void OutputChannel_AppendLine() {
 }
 
 // Phase initialize stubs
-extern "C" void Phase1Initialize() {
-    RawrXD_Phase1Initialize_MASM();
+extern "C" void CoreInitialize() {
+    RawrXD_CoreInitialize_MASM();
 }
 
-extern "C" void Phase1LogMessage() {
-    RawrXD_Phase1LogMessage_MASM();
+extern "C" void CoreLogMessage() {
+    RawrXD_CoreLogMessage_MASM();
 }
 
-extern "C" void Phase2Initialize() {
-    RawrXD_Phase2Initialize_MASM();
+extern "C" void AgentInitialize() {
+    RawrXD_AgentInitialize_MASM();
 }
 
-extern "C" void Phase3Initialize() {
-    RawrXD_Phase3Initialize_MASM();
+extern "C" void TokenInitialize() {
+    RawrXD_TokenInitialize_MASM();
 }
 
-extern "C" void Phase4Initialize() {
-    RawrXD_Phase4Initialize_MASM();
+extern "C" void ModelInitialize() {
+    RawrXD_ModelInitialize_MASM();
 }
 
 extern "C" void Week1Initialize() {

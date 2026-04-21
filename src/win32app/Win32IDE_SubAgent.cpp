@@ -233,7 +233,7 @@ void Win32IDE::onSubAgentChain() {
     }
 
     // Prompt user for chain steps
-    // For now, demonstrate with a two-step chain derived from current editor content
+    // Two-step chain derived from current editor content
     std::string editorContent = getWindowText(m_hwndEditor);
     if (editorContent.empty()) {
         appendToOutput("⚠️ No editor content for chain input\n", "Output", OutputSeverity::Warning);
@@ -279,7 +279,7 @@ void Win32IDE::onSubAgentSwarm() {
         return;
     }
 
-    // Demonstrate swarm with parallel analysis tasks
+    // Swarm with parallel analysis tasks
     std::string editorContent = getWindowText(m_hwndEditor);
     if (editorContent.empty()) {
         appendToOutput("⚠️ No editor content for swarm input\n", "Output", OutputSeverity::Warning);

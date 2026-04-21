@@ -64,7 +64,7 @@ typedef struct
 #include "rawrxd_sampler.h"
 #include "rawrxd_tokenizer.h"
 #include "rawrxd_transformer.h"
-#include "swarm_scheduler.hpp"
+#include "core/swarm_scheduler.hpp"
 #include "titan_token_trace.h"
 #include "utf8_validator.h"
 

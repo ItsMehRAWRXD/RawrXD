@@ -201,7 +201,6 @@ AccelResult AMDGPUAccelerator::initialize(GPUBackend preferredBackend)
     if (!r.success)
     {
         m_activeBackend = GPUBackend::None;
-        std::cout << "[AMD-GPU] Warning: No GPU backend available, CPU-only mode.\n";
         // Not a fatal error — system works without GPU
     }
 
@@ -295,8 +294,6 @@ void AMDGPUAccelerator::shutdown()
 
     m_activeBackend = GPUBackend::None;
     m_initialized.store(false);
-
-    std::cout << "[AMD-GPU] Shutdown complete.\n";
 }
 
 // ============================================================================
@@ -314,7 +311,6 @@ AccelResult AMDGPUAccelerator::enableGPU()
     if (!wasEnabled)
     {
         m_stats.toggleOnCount.fetch_add(1, std::memory_order_relaxed);
-        std::cout << "[AMD-GPU] GPU ENABLED — backend: " << getBackendName() << "\n";
 
         if (m_toggleCb)
         {

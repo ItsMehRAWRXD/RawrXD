@@ -79,9 +79,6 @@ LocalReasoningEngine::AnalysisResult LocalReasoningEngine::analyze(const Analysi
         }
 
     } catch (const std::exception& e) {
-        if (m_verbose) {
-            std::cerr << "[LocalReasoning] Analysis error: " << e.what() << "\n";
-        }
         result.summary = std::string("Analysis error: ") + e.what();
         result.overallConfidence = 0.0f;
     }

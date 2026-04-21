@@ -472,6 +472,21 @@ public:
     // ========================================================================
     // ValidateExtractedContents — Post-extraction safety checks
     // ========================================================================
+    // Uninstall — remove an installed extension directory by id
+    static bool Uninstall(const std::string& extensionId) {
+        std::string installRoot = GetExtensionsInstallRoot();
+        std::error_code ec;
+        for (const auto& entry : std::filesystem::directory_iterator(installRoot, ec)) {
+            if (!entry.is_directory()) continue;
+            std::string dirName = entry.path().filename().string();
+            if (dirName.rfind(extensionId, 0) == 0) {
+                std::filesystem::remove_all(entry.path(), ec);
+                return !ec;
+            }
+        }
+        return false;
+    }
+
     static bool ValidateExtractedContents(const std::string& installDir) {
         std::error_code ec;
 

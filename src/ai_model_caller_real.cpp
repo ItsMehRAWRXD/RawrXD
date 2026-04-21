@@ -67,33 +67,13 @@ extern "C" {
     void ggml_backend_free(ggml_backend* backend);
 }
 
-// Logging
+// Logging - disabled for production
 enum LogLevel { LOG_DEBUG = 0, LOG_INFO = 1, LOG_WARN = 2, LOG_ERROR = 3 };
 
-static LogLevel s_minLogLevel = LOG_INFO;
+static LogLevel s_minLogLevel = LOG_ERROR;
 
 static void LogMessage(LogLevel level, const char* fmt, ...) {
-    if (level < s_minLogLevel) return;
-    
-    va_list args;
-    va_start(args, fmt);
-    
-    const char* levels[] = { "[DEBUG]", "[INFO]", "[WARN]", "[ERROR]" };
-    const char* colors[] = { "\033[90m", "\033[36m", "\033[33m", "\033[31m" };
-    const char* reset = "\033[0m";
-    
-    // Print timestamp
-    SYSTEMTIME st;
-    GetLocalTime(&st);
-    fprintf(stderr, "%s[%02d:%02d:%02d.%03d] %s ", 
-            colors[level], st.wHour, st.wMinute, st.wSecond, st.wMilliseconds, levels[level]);
-    
-    // Print formatted message
-    vfprintf(stderr, fmt, args);
-    fprintf(stderr, "%s\n", reset);
-    fflush(stderr);
-    
-    va_end(args);
+    // Logging disabled
 }
 
 // ============================================================
@@ -338,13 +318,13 @@ struct InferenceResult {
 // ============================================================
 bool AIModelCaller_Initialize(const ModelConfig& config) {
     if (g_ctx.initialized) {
-        LogMessage(LOG_WARN, "Inference already initialized, cleaning up first");
+        // Inference already initialized, cleaning up first
         // Forward declaration - implemented below
         void AIModelCaller_Cleanup();
         AIModelCaller_Cleanup();
     }
     
-    LogMessage(LOG_INFO, "Initializing inference context...");
+    // Initializing inference context
     
     // Create GGML context
     ggml_init_params params = {};
@@ -354,14 +334,14 @@ bool AIModelCaller_Initialize(const ModelConfig& config) {
     
     g_ctx.ctx = ggml_init(params);
     if (!g_ctx.ctx) {
-        LogMessage(LOG_ERROR, "Failed to create GGML context");
+        // Failed to create GGML context
         return false;
     }
     
     // Initialize backend (CPU for now, GPU via Vulkan later)
     g_ctx.backend = ggml_backend_cpu_init();
     if (!g_ctx.backend) {
-        LogMessage(LOG_ERROR, "Failed to initialize backend");
+        // Failed to initialize backend
         ggml_free(g_ctx.ctx);
         g_ctx.ctx = nullptr;
         return false;
@@ -399,7 +379,7 @@ bool AIModelCaller_Initialize(const ModelConfig& config) {
     g_ctx.kv_cache_k = ggml_new_tensor_4d(g_ctx.ctx, GGML_TYPE_F32,
         head_dim, g_ctx.n_head, g_ctx.n_ctx, g_ctx.n_layer);
     if (!g_ctx.kv_cache_k) {
-        LogMessage(LOG_ERROR, "Failed to allocate KV cache K");
+        // Failed to allocate KV cache K
         goto cleanup_error;
     }
     ggml_set_name(g_ctx.kv_cache_k, "kv_cache_k");
@@ -408,7 +388,7 @@ bool AIModelCaller_Initialize(const ModelConfig& config) {
     g_ctx.kv_cache_v = ggml_new_tensor_4d(g_ctx.ctx, GGML_TYPE_F32,
         head_dim, g_ctx.n_head, g_ctx.n_ctx, g_ctx.n_layer);
     if (!g_ctx.kv_cache_v) {
-        LogMessage(LOG_ERROR, "Failed to allocate KV cache V");
+        // Failed to allocate KV cache V
         goto cleanup_error;
     }
     ggml_set_name(g_ctx.kv_cache_v, "kv_cache_v");
@@ -454,7 +434,7 @@ InferenceResult AIModelCaller_RunInference_Real(const ModelInput& input) {
     InferenceResult result;
     
     if (!g_ctx.initialized) {
-        LogMessage(LOG_ERROR, "Inference not initialized");
+        // Inference not initialized
         result.error = ERROR_NOT_INITIALIZED;
         return result;
     }
@@ -470,7 +450,7 @@ InferenceResult AIModelCaller_RunInference_Real(const ModelInput& input) {
     
     ggml_context* graph_ctx = ggml_init(graph_params);
     if (!graph_ctx) {
-        LogMessage(LOG_ERROR, "Failed to create graph context");
+        // Failed to create graph context
         result.error = ERROR_OUT_OF_MEMORY;
         return result;
     }
@@ -478,7 +458,7 @@ InferenceResult AIModelCaller_RunInference_Real(const ModelInput& input) {
     // Build computation graph for one token
     ggml_cgraph* gf = ggml_new_graph(graph_ctx);
     if (!gf) {
-        LogMessage(LOG_ERROR, "Failed to create computation graph");
+        // Failed to create computation graph
         ggml_free(graph_ctx);
         result.error = ERROR_OUT_OF_MEMORY;
         return result;
@@ -688,11 +668,11 @@ std::vector<InferenceResult> AIModelCaller_RunBatchInference(
 // ============================================================
 void AIModelCaller_Cleanup() {
     if (!g_ctx.initialized) {
-        LogMessage(LOG_DEBUG, "Inference context not initialized, nothing to cleanup");
+        // Inference context not initialized, nothing to cleanup
         return;
     }
     
-    LogMessage(LOG_INFO, "Cleaning up inference context...");
+    // Cleaning up inference context
     
     // Clear weight vectors (tensors freed with context)
     g_ctx.layer_norm_1.clear();
@@ -716,20 +696,20 @@ void AIModelCaller_Cleanup() {
     if (g_ctx.backend) {
         ggml_backend_free(g_ctx.backend);
         g_ctx.backend = nullptr;
-        LogMessage(LOG_DEBUG, "Backend freed");
+        // Backend freed
     }
     
     // Free main context (frees all tensors)
     if (g_ctx.ctx) {
         ggml_free(g_ctx.ctx);
         g_ctx.ctx = nullptr;
-        LogMessage(LOG_DEBUG, "GGML context freed");
+        // GGML context freed
     }
     
     g_ctx.n_past = 0;
     g_ctx.initialized = false;
     
-    LogMessage(LOG_INFO, "Inference context cleaned up successfully");
+    // Inference context cleaned up successfully
 }
 
 // ============================================================
@@ -746,7 +726,7 @@ void AIModelCaller_ResetKVCache() {
     }
     g_ctx.n_past = 0;
     
-    LogMessage(LOG_INFO, "KV cache reset");
+    // KV cache reset
 }
 
 // ============================================================

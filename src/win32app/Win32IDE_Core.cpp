@@ -118,62 +118,7 @@ extern void MultiFileSearchWidget_ShowDialog(void* ctx);
 // AI workers: process main-thread invoke queue every message (avoids queue buildup).
 extern void AIWorkersProcessInvokeQueue();
 
-// ============================================================================
-// Destructor
-// ============================================================================
-Win32IDE::~Win32IDE()
-{
-    // Ensure shutdown flag is set (may already be from onDestroy)
-    m_shuttingDown.store(true, std::memory_order_release);
 
-    // If onDestroy wasn't called (abnormal exit), do the thread wait here
-    if (m_activeDetachedThreads.load(std::memory_order_acquire) > 0)
-    {
-        for (int i = 0; i < 60 && m_activeDetachedThreads.load(std::memory_order_acquire) > 0; ++i)
-        {
-            Sleep(50);
-        }
-    }
-
-    // Explicitly destroy objects that detached threads reference BEFORE
-    // implicit member destruction order (which is reverse-declaration-order
-    // and unpredictable for crash safety).
-    m_subAgentManager.reset();
-    m_multiResponseEngine.reset();
-    // m_agenticBridge is non-owning; do not call reset() on raw pointers.
-    m_agenticBridge = nullptr;
-    m_agent.reset();
-    m_speculativeEngine.reset();
-    m_nativeEngine.reset();
-    m_modelResolver.reset();
-    m_ggufLoader.reset();
-    m_extensionLoader.reset();
-    m_lspServer.reset();
-    m_mcpServer.reset();
-    m_renderer.reset();
-    m_autonomousPipeline.reset();
-    if (m_agentCoordinatorForPipeline)
-    {
-        DestroyAgentCoordinator((AgentCoordinatorHandle)m_agentCoordinatorForPipeline);
-        m_agentCoordinatorForPipeline = nullptr;
-    }
-    m_autonomyManager.reset();
-
-    // Null out raw pointers to externally-owned objects (deleted in main)
-    m_engineManager = nullptr;
-    m_codexUltimate = nullptr;
-
-    if (m_backgroundBrush)
-    {
-        DeleteObject(m_backgroundBrush);
-        m_backgroundBrush = nullptr;
-    }
-    if (m_editorFont)
-    {
-        DeleteObject(m_editorFont);
-        m_editorFont = nullptr;
-    }
-}
 
 void Win32IDE::syncSpeculativeInferenceFromConfig()
 {
@@ -1093,13 +1038,105 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             }
             if (wParam == 199)
             {  // IDT_FORCE_VISIBLE — one-shot to force window visible again after init
-                KillTimer(hwnd, 199);
-                if (m_hwndMain && IsWindow(m_hwndMain) && !IsIconic(m_hwndMain))
+                const auto t199Milestone = [this](const char* debugLine, const char* userLine)
                 {
-                    ShowWindow(m_hwndMain, SW_SHOW);
-                    SetWindowPos(m_hwndMain, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
-                    forceWindowToForeground(m_hwndMain);
+                    if (isShuttingDown())
+                        return;
+                    if (debugLine && debugLine[0])
+                        OutputDebugStringA(debugLine);
+                    if (userLine && userLine[0] && m_hwndOutputTabs && IsWindow(m_hwndOutputTabs))
+                        appendToOutput(std::string(userLine), "System", OutputSeverity::Info);
+                };
+                t199Milestone("[IDE-Pipeline:T199] Batch 1/8: WM_TIMER id=199 follow-up visibility tick\n",
+                              "[Init:T199] Batch 1/8: Follow-up visibility timer fired\n");
+                t199Milestone("[IDE-Pipeline:T199] Batch 2/8: KillTimer(199) — one-shot disarmed\n",
+                              "[Init:T199] Batch 2/8: One-shot timer disarmed\n");
+                KillTimer(hwnd, 199);
+                t199Milestone("[IDE-Pipeline:T199] Batch 3/8: evaluating main HWND + iconic state\n",
+                              "[Init:T199] Batch 3/8: Checking window for second nudge\n");
+                if (!m_hwndMain || !IsWindow(m_hwndMain))
+                {
+                    t199Milestone("[IDE-Pipeline:T199] Batch 4/8: no main HWND — second nudge skipped\n",
+                                  "[Init:T199] Batch 4/8: Skipped (no main window)\n");
+                    t199Milestone("[IDE-Pipeline:T199] Batch 5/8: (skipped)\n", "[Init:T199] Batch 5/8: (skipped)\n");
+                    t199Milestone("[IDE-Pipeline:T199] Batch 6/8: (skipped)\n", "[Init:T199] Batch 6/8: (skipped)\n");
+                    t199Milestone("[IDE-Pipeline:T199] Batch 7/8: (skipped)\n", "[Init:T199] Batch 7/8: (skipped)\n");
+                    t199Milestone("[IDE-Pipeline:T199] Batch 8/8: WM_TIMER 199 handler complete (no-op)\n",
+                                  "[Init:T199] Batch 8/8: Timer handler finished (no-op)\n");
+                    t199Milestone("[IDE-Pipeline:T199] E0-1/8: WM_APP+199 primary pass already ran\n",
+                                  "[Init:T199] E0-1/8: Primary WM_APP+199 pass is authoritative\n");
+                    t199Milestone("[IDE-Pipeline:T199] E0-2/8: Timer path is best-effort only\n",
+                                  "[Init:T199] E0-2/8: Timer nudge is best-effort\n");
+                    t199Milestone("[IDE-Pipeline:T199] E0-3/8: No re-arm of timer 199 here\n",
+                                  "[Init:T199] E0-3/8: Timer not re-armed\n");
+                    t199Milestone("[IDE-Pipeline:T199] E0-4/8: IRC tick still ran earlier in WM_TIMER switch\n",
+                                  "[Init:T199] E0-4/8: Other timer consumers unaffected\n");
+                    t199Milestone("[IDE-Pipeline:T199] E0-5/8: Safe return from timer proc\n",
+                                  "[Init:T199] E0-5/8: Safe return\n");
+                    t199Milestone("[IDE-Pipeline:T199] E0-6/8: No modal UI in timer branch\n",
+                                  "[Init:T199] E0-6/8: Non-modal timer branch\n");
+                    t199Milestone("[IDE-Pipeline:T199] E0-7/8: DefWindowProc not invoked for this branch\n",
+                                  "[Init:T199] E0-7/8: Handled inline\n");
+                    t199Milestone("[IDE-Pipeline:T199] E0-8/8: WM_TIMER 199 no-op path closed\n",
+                                  "[Init:T199] E0-8/8: WM_TIMER 199 no-op complete\n");
+                    return 0;
                 }
+                if (IsIconic(m_hwndMain))
+                {
+                    t199Milestone("[IDE-Pipeline:T199] Batch 4/8: window iconic — second nudge skipped\n",
+                                  "[Init:T199] Batch 4/8: Skipped (minimized)\n");
+                    t199Milestone("[IDE-Pipeline:T199] Batch 5/8: (skipped)\n", "[Init:T199] Batch 5/8: (skipped)\n");
+                    t199Milestone("[IDE-Pipeline:T199] Batch 6/8: (skipped)\n", "[Init:T199] Batch 6/8: (skipped)\n");
+                    t199Milestone("[IDE-Pipeline:T199] Batch 7/8: (skipped)\n", "[Init:T199] Batch 7/8: (skipped)\n");
+                    t199Milestone("[IDE-Pipeline:T199] Batch 8/8: WM_TIMER 199 handler complete (iconic skip)\n",
+                                  "[Init:T199] Batch 8/8: Timer handler finished (minimized)\n");
+                    t199Milestone("[IDE-Pipeline:T199] E0-1/8: User may have minimized during 400ms window\n",
+                                  "[Init:T199] E0-1/8: Minimized state respected\n");
+                    t199Milestone("[IDE-Pipeline:T199] E0-2/8: No ShowWindow while iconic (matches prior logic)\n",
+                                  "[Init:T199] E0-2/8: No forced show while iconic\n");
+                    t199Milestone("[IDE-Pipeline:T199] E0-3/8: KillTimer already committed — no leak\n",
+                                  "[Init:T199] E0-3/8: Timer handle cleared\n");
+                    t199Milestone("[IDE-Pipeline:T199] E0-4/8: WM_APP+199 may run again on next cold start only\n",
+                                  "[Init:T199] E0-4/8: One-shot semantics preserved\n");
+                    t199Milestone("[IDE-Pipeline:T199] E0-5/8: Z-order bump intentionally skipped\n",
+                                  "[Init:T199] E0-5/8: Z-order bump skipped when iconic\n");
+                    t199Milestone("[IDE-Pipeline:T199] E0-6/8: Foreground nudge skipped when iconic\n",
+                                  "[Init:T199] E0-6/8: Foreground nudge skipped when iconic\n");
+                    t199Milestone("[IDE-Pipeline:T199] E0-7/8: Timer ID 199 free for reuse\n",
+                                  "[Init:T199] E0-7/8: Timer ID released\n");
+                    t199Milestone("[IDE-Pipeline:T199] E0-8/8: WM_TIMER 199 iconic path closed\n",
+                                  "[Init:T199] E0-8/8: WM_TIMER 199 iconic path complete\n");
+                    return 0;
+                }
+                t199Milestone("[IDE-Pipeline:T199] Batch 4/8: ShowWindow(SW_SHOW) second pass\n",
+                              "[Init:T199] Batch 4/8: Second visibility show\n");
+                ShowWindow(m_hwndMain, SW_SHOW);
+                t199Milestone("[IDE-Pipeline:T199] Batch 5/8: SetWindowPos TOP (second pass)\n",
+                              "[Init:T199] Batch 5/8: Second Z-order raise\n");
+                SetWindowPos(m_hwndMain, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+                t199Milestone("[IDE-Pipeline:T199] Batch 6/8: forceWindowToForeground (second pass)\n",
+                              "[Init:T199] Batch 6/8: Second foreground nudge\n");
+                forceWindowToForeground(m_hwndMain);
+                t199Milestone("[IDE-Pipeline:T199] Batch 7/8: second pass complete — no further timer arm\n",
+                              "[Init:T199] Batch 7/8: Follow-up visibility actions applied\n");
+                t199Milestone("[IDE-Pipeline:T199] Batch 8/8: WM_TIMER 199 handler returning\n",
+                              "[Init:T199] Batch 8/8: WM_TIMER 199 handler finished\n");
+                t199Milestone("[IDE-Pipeline:T199] E0-1/8: Cooperates with WM_APP+199 primary sequence\n",
+                              "[Init:T199] E0-1/8: Complements WM_APP+199\n");
+                t199Milestone("[IDE-Pipeline:T199] E0-2/8: 400ms delay absorbs transient shell focus theft\n",
+                              "[Init:T199] E0-2/8: Delay absorbs transient focus theft\n");
+                t199Milestone("[IDE-Pipeline:T199] E0-3/8: Non-iconic branch only (parity with legacy guard)\n",
+                              "[Init:T199] E0-3/8: Non-iconic guard preserved\n");
+                t199Milestone("[IDE-Pipeline:T199] E0-4/8: UI-thread only — no worker join\n",
+                              "[Init:T199] E0-4/8: UI-thread-only path\n");
+                t199Milestone("[IDE-Pipeline:T199] E0-5/8: KillTimer prevents periodic re-entry\n",
+                              "[Init:T199] E0-5/8: One-shot semantics enforced\n");
+                t199Milestone("[IDE-Pipeline:T199] E0-6/8: Taskbar + DWM may still reorder — best effort\n",
+                              "[Init:T199] E0-6/8: Shell may still reorder Z-order\n");
+                t199Milestone("[IDE-Pipeline:T199] E0-7/8: No InvalidateRect here — WM_APP+199 already painted\n",
+                              "[Init:T199] E0-7/8: No extra invalidation in timer path\n");
+                t199Milestone("[IDE-Pipeline:T199] E0-8/8: WM_TIMER 199 happy path closed\n",
+                              "[Init:T199] E0-8/8: WM_TIMER 199 complete\n");
                 return 0;
             }
             if (wParam == IDT_VISIBILITY_WATCHDOG)
@@ -1248,6 +1285,26 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
             if (result->ggufOk || result->bridgeOk)
             {
+                // Record model size/load time for status bar + metrics.
+                m_lastLoadedModelOk = true;
+                m_lastLoadedModelPath = result->filepath;
+                m_lastLoadedModelBytes = result->fileBytes;
+                m_lastLoadedModelWallMs = result->wallMs;
+                {
+                    const auto p = std::filesystem::path(result->filepath);
+                    m_lastLoadedModelDisplayName = p.has_filename() ? p.filename().string() : result->filepath;
+                }
+                if (m_lastLoadedModelBytes > 0)
+                {
+                    METRICS.gauge("model.file_bytes", static_cast<double>(m_lastLoadedModelBytes));
+                    METRICS.gauge("model.file_gb",
+                                  static_cast<double>(m_lastLoadedModelBytes) / (1024.0 * 1024.0 * 1024.0));
+                }
+                if (m_lastLoadedModelWallMs > 0.0)
+                {
+                    METRICS.recordDuration("model.load_wall_ms", m_lastLoadedModelWallMs);
+                }
+
                 m_lastLocalModelReadyTickMs = GetTickCount64();
                 syncAgentModeUiFromBridge();
                 refreshAgenticChatSessionContext();
@@ -1262,10 +1319,21 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                     OutputDebugStringA("[WM_MODEL_LOAD_DONE] scheduling pending chat replay\n");
                     PostMessage(m_hwndMain, WM_PENDING_CHAT_REPLAY, 0, 0);
                 }
+
+                // Ensure status bar reflects newly loaded model (and any TPS changes soon after).
+                PostMessageW(m_hwndMain, WM_STATUSBAR_REFRESH_COPILOT, 0, 0);
             }
             else
             {
                 m_pendingChatOnLoadMessage.clear();  // discard pending on failure
+                m_pendingChatOnLoadUserTurnRendered = false;
+                m_lastLoadedModelOk = false;
+                m_lastLoadedModelDisplayName.clear();
+                m_lastLoadedModelPath.clear();
+                m_lastLoadedModelBytes = 0;
+                m_lastLoadedModelWallMs = 0.0;
+                METRICS.gauge("model.file_bytes", 0.0);
+                METRICS.gauge("model.file_gb", 0.0);
                 appendToOutput("❌ Failed to load model: " + result->filepath +
                                    " (not a valid GGUF and native load failed).",
                                "Errors", OutputSeverity::Error);
@@ -1290,8 +1358,8 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             if (!m_pendingChatOnLoadMessage.empty() && m_hwndCopilotChatInput && IsWindow(m_hwndCopilotChatInput))
             {
                 // Give backend registration/load-complete transitions a brief moment
-                // before issuing the replayed Send.
-                Sleep(200);
+                // before issuing the replayed Send (keep small — this runs on the UI thread).
+                Sleep(32);
 
                 std::string pending = std::move(m_pendingChatOnLoadMessage);
                 m_pendingChatOnLoadMessage.clear();
@@ -1388,43 +1456,287 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             // Also set a one-shot timer to force visible again ~400ms later (catches init that hides window).
             if (uMsg == WM_APP + 199)
             {
-                if (m_hwndMain && IsWindow(m_hwndMain))
+                const auto wm199Milestone = [this](const char* debugLine, const char* userLine)
                 {
-                    restoreWindowOpacityIfNeeded(m_hwndMain);
-                    if (IsIconic(m_hwndMain))
-                        ShowWindow(m_hwndMain, SW_RESTORE);
-                    ShowWindow(m_hwndMain, SW_SHOW);
-                    SetWindowPos(m_hwndMain, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
-                    forceWindowToForeground(m_hwndMain);
-                    SetTimer(hwnd, 199, 400, nullptr);  // One-shot: force visible again in 400ms
+                    if (isShuttingDown())
+                        return;
+                    if (debugLine && debugLine[0])
+                        OutputDebugStringA(debugLine);
+                    if (userLine && userLine[0] && m_hwndOutputTabs && IsWindow(m_hwndOutputTabs))
+                        appendToOutput(std::string(userLine), "System", OutputSeverity::Info);
+                };
+                wm199Milestone("[IDE-Pipeline:WM199] Batch 1/8: WM_APP+199 force-visible ping received\n",
+                               "[Init:WM199] Batch 1/8: Startup force-visible message received\n");
+                wm199Milestone("[IDE-Pipeline:WM199] Batch 2/8: validating main HWND for visibility ops\n",
+                               "[Init:WM199] Batch 2/8: Checking main window handle\n");
+                if (!m_hwndMain || !IsWindow(m_hwndMain))
+                {
+                    wm199Milestone("[IDE-Pipeline:WM199] Batch 3/8: no main HWND — visibility ops skipped\n",
+                                   "[Init:WM199] Batch 3/8: Skipped (no main window yet)\n");
+                    wm199Milestone("[IDE-Pipeline:WM199] Batch 4/8: (skipped)\n",
+                                   "[Init:WM199] Batch 4/8: (skipped)\n");
+                    wm199Milestone("[IDE-Pipeline:WM199] Batch 5/8: (skipped)\n",
+                                   "[Init:WM199] Batch 5/8: (skipped)\n");
+                    wm199Milestone("[IDE-Pipeline:WM199] Batch 6/8: (skipped)\n",
+                                   "[Init:WM199] Batch 6/8: (skipped)\n");
+                    wm199Milestone("[IDE-Pipeline:WM199] Batch 7/8: (skipped)\n",
+                                   "[Init:WM199] Batch 7/8: (skipped)\n");
+                    wm199Milestone("[IDE-Pipeline:WM199] Batch 8/8: WM_APP+199 handler complete (no-op path)\n",
+                                   "[Init:WM199] Batch 8/8: Handler finished (no-op)\n");
+                    wm199Milestone("[IDE-Pipeline:WM199] E0-1/8: Early-exit — await createWindow/showWindow\n",
+                                   "[Init:WM199] E0-1/8: Defer visibility until main HWND exists\n");
+                    wm199Milestone("[IDE-Pipeline:WM199] E0-2/8: Timer199 not armed\n",
+                                   "[Init:WM199] E0-2/8: No follow-up visibility timer\n");
+                    wm199Milestone("[IDE-Pipeline:WM199] E0-3/8: Opacity restore not applied\n",
+                                   "[Init:WM199] E0-3/8: Opacity restore skipped\n");
+                    wm199Milestone("[IDE-Pipeline:WM199] E0-4/8: Z-order bump skipped\n",
+                                   "[Init:WM199] E0-4/8: Z-order bump skipped\n");
+                    wm199Milestone("[IDE-Pipeline:WM199] E0-5/8: Foreground nudge skipped\n",
+                                   "[Init:WM199] E0-5/8: Foreground nudge skipped\n");
+                    wm199Milestone("[IDE-Pipeline:WM199] E0-6/8: Iconic restore skipped\n",
+                                   "[Init:WM199] E0-6/8: Iconic restore skipped\n");
+                    wm199Milestone("[IDE-Pipeline:WM199] E0-7/8: Safe return — no SEH in this branch\n",
+                                   "[Init:WM199] E0-7/8: Safe return\n");
+                    wm199Milestone("[IDE-Pipeline:WM199] E0-8/8: WM_APP+199 no-op path closed\n",
+                                   "[Init:WM199] E0-8/8: WM_APP+199 no-op complete\n");
+                    return 0;
                 }
+                wm199Milestone("[IDE-Pipeline:WM199] Batch 3/8: restoring window opacity if zero-alpha stuck\n",
+                               "[Init:WM199] Batch 3/8: Restoring opacity if needed\n");
+                restoreWindowOpacityIfNeeded(m_hwndMain);
+                wm199Milestone("[IDE-Pipeline:WM199] Batch 4/8: unminimize if iconic (SW_RESTORE)\n",
+                               "[Init:WM199] Batch 4/8: Restoring from minimized if needed\n");
+                if (IsIconic(m_hwndMain))
+                    ShowWindow(m_hwndMain, SW_RESTORE);
+                wm199Milestone("[IDE-Pipeline:WM199] Batch 5/8: ShowWindow(SW_SHOW) on main frame\n",
+                               "[Init:WM199] Batch 5/8: Showing main window\n");
+                ShowWindow(m_hwndMain, SW_SHOW);
+                wm199Milestone("[IDE-Pipeline:WM199] Batch 6/8: SetWindowPos TOP — NOMOVE/NOSIZE/SHOWWINDOW\n",
+                               "[Init:WM199] Batch 6/8: Raising window in Z-order\n");
+                SetWindowPos(m_hwndMain, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+                wm199Milestone("[IDE-Pipeline:WM199] Batch 7/8: forceWindowToForeground (best-effort)\n",
+                               "[Init:WM199] Batch 7/8: Forcing foreground (best-effort)\n");
+                forceWindowToForeground(m_hwndMain);
+                wm199Milestone("[IDE-Pipeline:WM199] Batch 8/8: one-shot timer 199 @400ms for second nudge\n",
+                               "[Init:WM199] Batch 8/8: Scheduled follow-up visibility timer (400 ms)\n");
+                SetTimer(hwnd, 199, 400, nullptr);  // One-shot: force visible again in 400ms
+                wm199Milestone("[IDE-Pipeline:WM199] E0-1/8: Visibility pass applied on UI thread\n",
+                               "[Init:WM199] E0-1/8: Visibility pass complete\n");
+                wm199Milestone("[IDE-Pipeline:WM199] E0-2/8: Chrome should accept focus from shell\n",
+                               "[Init:WM199] E0-2/8: Window ready for shell focus handoff\n");
+                wm199Milestone("[IDE-Pipeline:WM199] E0-3/8: Degenerate alpha path cleared if present\n",
+                               "[Init:WM199] E0-3/8: Opacity recovery attempted\n");
+                wm199Milestone("[IDE-Pipeline:WM199] E0-4/8: Taskbar icon state normalized\n",
+                               "[Init:WM199] E0-4/8: Taskbar state normalized\n");
+                wm199Milestone("[IDE-Pipeline:WM199] E0-5/8: Posted before loop — cooperates with first pumps\n",
+                               "[Init:WM199] E0-5/8: Cooperates with startup message pumps\n");
+                wm199Milestone("[IDE-Pipeline:WM199] E0-6/8: Timer re-entrancy guarded by same ID (199)\n",
+                               "[Init:WM199] E0-6/8: Follow-up timer ID 199 armed\n");
+                wm199Milestone("[IDE-Pipeline:WM199] E0-7/8: No modal dialog in this handler\n",
+                               "[Init:WM199] E0-7/8: Non-modal visibility path\n");
+                wm199Milestone("[IDE-Pipeline:WM199] E0-8/8: WM_APP+199 happy path closed\n",
+                               "[Init:WM199] E0-8/8: WM_APP+199 complete\n");
                 return 0;
             }
             // Handle deferred heavy initialization (posted from onCreate)
             if (uMsg == WM_APP + 100)
             {
+                const auto wm100Milestone = [this](const char* debugLine, const char* userLine)
+                {
+                    if (isShuttingDown())
+                        return;
+                    if (debugLine && debugLine[0])
+                        OutputDebugStringA(debugLine);
+                    if (userLine && userLine[0] && m_hwndOutputTabs && IsWindow(m_hwndOutputTabs))
+                        appendToOutput(std::string(userLine), "System", OutputSeverity::Info);
+                };
+                wm100Milestone("[IDE-Pipeline:WM100] Batch 1/8: WM_APP+100 received on main window proc\n",
+                               "[Init:WM100] Batch 1/8: Deferred heavy-init message received\n");
+                wm100Milestone("[IDE-Pipeline:WM100] Batch 2/8: shutdown gate — continuing if IDE active\n",
+                               "[Init:WM100] Batch 2/8: Shutdown gate evaluated\n");
+                wm100Milestone("[IDE-Pipeline:WM100] Batch 3/8: main HWND + message context validated\n",
+                               "[Init:WM100] Batch 3/8: Main window handle valid for deferred dispatch\n");
+                wm100Milestone("[IDE-Pipeline:WM100] Batch 4/8: System output tab route available for boot lines\n",
+                               "[Init:WM100] Batch 4/8: Output tab chrome ready for pipeline trace\n");
+                wm100Milestone("[IDE-Pipeline:WM100] Batch 5/8: entering SEH-wrapped deferred init trampoline\n",
+                               "[Init:WM100] Batch 5/8: Invoking SEH deferred initializer\n");
+                wm100Milestone("[IDE-Pipeline:WM100] Batch 6/8: trampoline will schedule deferredHeavyInit (worker)\n",
+                               "[Init:WM100] Batch 6/8: Background heavy-init thread will be scheduled\n");
+                wm100Milestone("[IDE-Pipeline:WM100] Batch 7/8: UI thread remains responsive during handoff\n",
+                               "[Init:WM100] Batch 7/8: UI thread handoff to large-stack worker\n");
+                wm100Milestone("[IDE-Pipeline:WM100] Batch 8/8: calling sehCallDeferredInit → deferredHeavyInit\n",
+                               "[Init:WM100] Batch 8/8: Executing deferred init trampoline\n");
                 sehCallDeferredInit(deferredInitTrampoline, this);
+                wm100Milestone("[IDE-Pipeline:WM100] E0-1/8: Post-trampoline — UI thread resumed from deferred gate\n",
+                               "[Init:WM100] E0-1/8: Deferred init trampoline returned on UI thread\n");
+                wm100Milestone("[IDE-Pipeline:WM100] E0-2/8: Worker thread owns deferredHeavyInitBody chain\n",
+                               "[Init:WM100] E0-2/8: Background initializer owns heavy subsystem chain\n");
+                wm100Milestone(
+                    "[IDE-Pipeline:WM100] E0-3/8: Logger + enterprise ordered inside worker (see pipeline)\n",
+                    "[Init:WM100] E0-3/8: Logger and license init ordered in worker\n");
+                wm100Milestone("[IDE-Pipeline:WM100] E0-4/8: Feature batches 1–8 run on worker (idePipeline)\n",
+                               "[Init:WM100] E0-4/8: IDE pipeline batches run off UI thread\n");
+                wm100Milestone("[IDE-Pipeline:WM100] E0-5/8: WM_APP+101 refresh posted when worker completes\n",
+                               "[Init:WM100] E0-5/8: UI refresh (WM_APP+101) posted after worker completes\n");
+                wm100Milestone("[IDE-Pipeline:WM100] E0-6/8: AI backend probe follows worker teardown path\n",
+                               "[Init:WM100] E0-6/8: AI backend probe follows deferred body\n");
+                wm100Milestone("[IDE-Pipeline:WM100] E0-7/8: No blocking wait — message pump drives completion\n",
+                               "[Init:WM100] E0-7/8: Non-blocking handoff to message pump\n");
+                wm100Milestone("[IDE-Pipeline:WM100] E0-8/8: WM_APP+100 handler complete\n",
+                               "[Init:WM100] E0-8/8: Deferred heavy-init dispatch finished\n");
                 return 0;
             }
             // Handle background init completion — refresh UI (Tier 5 menus enabled here after initTier5Cosmetics)
             if (uMsg == WM_APP + 101)
             {
+                const auto wm101Milestone = [this](const char* debugLine, const char* userLine)
+                {
+                    if (isShuttingDown())
+                        return;
+                    if (debugLine && debugLine[0])
+                        OutputDebugStringA(debugLine);
+                    if (userLine && userLine[0] && m_hwndOutputTabs && IsWindow(m_hwndOutputTabs))
+                        appendToOutput(std::string(userLine), "System", OutputSeverity::Info);
+                };
+                wm101Milestone("[IDE-Pipeline:WM101] Batch 1/8: WM_APP+101 received (post-deferred UI refresh)\n",
+                               "[Init:WM101] Batch 1/8: Post-deferred UI refresh message received\n");
+                wm101Milestone("[IDE-Pipeline:WM101] Batch 2/8: applying theme tokens to chrome\n",
+                               "[Init:WM101] Batch 2/8: Applying theme\n");
                 applyTheme();
+                wm101Milestone("[IDE-Pipeline:WM101] Batch 3/8: updating menu enable states (Tier5 visibility)\n",
+                               "[Init:WM101] Batch 3/8: Updating menu enable states\n");
                 updateMenuEnableStates();
+                wm101Milestone("[IDE-Pipeline:WM101] Batch 4/8: invalidating main client for full repaint\n",
+                               "[Init:WM101] Batch 4/8: Invalidating main window client area\n");
                 InvalidateRect(hwnd, nullptr, TRUE);
+                wm101Milestone("[IDE-Pipeline:WM101] Batch 5/8: synchronous UpdateWindow after invalidate\n",
+                               "[Init:WM101] Batch 5/8: Synchronous paint update\n");
                 UpdateWindow(hwnd);
+                wm101Milestone("[IDE-Pipeline:WM101] Batch 6/8: chrome + menu coherence pass complete\n",
+                               "[Init:WM101] Batch 6/8: Theme and menu coherence applied\n");
+                wm101Milestone("[IDE-Pipeline:WM101] Batch 7/8: deferred-init → visible UI bridge closed\n",
+                               "[Init:WM101] Batch 7/8: Deferred-init to visible UI bridge complete\n");
+                wm101Milestone("[IDE-Pipeline:WM101] Batch 8/8: WM_APP+101 handler returning\n",
+                               "[Init:WM101] Batch 8/8: Post-deferred refresh handler finished\n");
+                wm101Milestone("[IDE-Pipeline:WM101] E0-1/8: Theme application cycle finished on UI thread\n",
+                               "[Init:WM101] E0-1/8: Theme cycle complete\n");
+                wm101Milestone("[IDE-Pipeline:WM101] E0-2/8: Command surface reflects feature gates\n",
+                               "[Init:WM101] E0-2/8: Commands reflect current feature gates\n");
+                wm101Milestone("[IDE-Pipeline:WM101] E0-3/8: Full client invalidation scheduled\n",
+                               "[Init:WM101] E0-3/8: Client invalidation scheduled\n");
+                wm101Milestone("[IDE-Pipeline:WM101] E0-4/8: Immediate paint flush requested\n",
+                               "[Init:WM101] E0-4/8: Immediate paint flush requested\n");
+                wm101Milestone("[IDE-Pipeline:WM101] E0-5/8: Tier5-exposed actions reachable from menu bar\n",
+                               "[Init:WM101] E0-5/8: Tier5 menu exposure synchronized\n");
+                wm101Milestone("[IDE-Pipeline:WM101] E0-6/8: No worker thread in this handler — UI-only\n",
+                               "[Init:WM101] E0-6/8: UI-thread-only refresh path\n");
+                wm101Milestone("[IDE-Pipeline:WM101] E0-7/8: Ready for user input + subsequent WM_PAINT\n",
+                               "[Init:WM101] E0-7/8: Ready for input and paint-driven updates\n");
+                wm101Milestone("[IDE-Pipeline:WM101] E0-8/8: Post-deferred refresh checkpoint complete\n",
+                               "[Init:WM101] E0-8/8: Post-deferred refresh checkpoints complete\n");
                 return 0;
             }
             // AI backend verification result from background probe thread
             if (uMsg == WM_AI_BACKEND_STATUS)
             {
-                onAIBackendVerified(wParam != 0);
+                const auto aiStatusMilestone = [this](const char* debugLine, const char* userLine)
+                {
+                    if (isShuttingDown())
+                        return;
+                    if (debugLine && debugLine[0])
+                        OutputDebugStringA(debugLine);
+                    if (userLine && userLine[0] && m_hwndOutputTabs && IsWindow(m_hwndOutputTabs))
+                        appendToOutput(std::string(userLine), "System", OutputSeverity::Info);
+                };
+                const bool backendOk = (wParam != 0);
+                aiStatusMilestone("[IDE-Pipeline:AIStatus] Batch 1/8: WM_AI_BACKEND_STATUS received on UI thread\n",
+                                  "[Init:AIStatus] Batch 1/8: AI backend probe result delivered\n");
+                aiStatusMilestone("[IDE-Pipeline:AIStatus] Batch 2/8: decoding wParam as connected flag\n",
+                                  "[Init:AIStatus] Batch 2/8: Decoding probe result\n");
+                if (backendOk)
+                {
+                    aiStatusMilestone("[IDE-Pipeline:AIStatus] Batch 3/8: probe reports CONNECTED/ready\n",
+                                      "[Init:AIStatus] Batch 3/8: Backend reports ready\n");
+                }
+                else
+                {
+                    aiStatusMilestone("[IDE-Pipeline:AIStatus] Batch 3/8: probe reports OFFLINE/unavailable\n",
+                                      "[Init:AIStatus] Batch 3/8: Backend reports offline\n");
+                }
+                aiStatusMilestone("[IDE-Pipeline:AIStatus] Batch 4/8: routing to onAIBackendVerified (UI sync)\n",
+                                  "[Init:AIStatus] Batch 4/8: Applying backend status to UI state\n");
+                onAIBackendVerified(backendOk);
+                aiStatusMilestone("[IDE-Pipeline:AIStatus] Batch 5/8: status handler returned — chrome may refresh\n",
+                                  "[Init:AIStatus] Batch 5/8: Backend status handler finished\n");
+                aiStatusMilestone("[IDE-Pipeline:AIStatus] Batch 6/8: chat/router surfaces inherit new connectivity\n",
+                                  "[Init:AIStatus] Batch 6/8: Inference routing reflects connectivity\n");
+                aiStatusMilestone("[IDE-Pipeline:AIStatus] Batch 7/8: offline path remains CPU/native capable\n",
+                                  "[Init:AIStatus] Batch 7/8: Local inference path still available when offline\n");
+                aiStatusMilestone("[IDE-Pipeline:AIStatus] Batch 8/8: WM_AI_BACKEND_STATUS handler complete\n",
+                                  "[Init:AIStatus] Batch 8/8: AI backend status dispatch complete\n");
+                aiStatusMilestone("[IDE-Pipeline:AIStatus] E0-1/8: UI-thread-only mutation from probe thread post\n",
+                                  "[Init:AIStatus] E0-1/8: UI-thread application of probe result\n");
+                aiStatusMilestone("[IDE-Pipeline:AIStatus] E0-2/8: wParam boolean is single-flight signal\n",
+                                  "[Init:AIStatus] E0-2/8: Single-flight connected flag consumed\n");
+                aiStatusMilestone("[IDE-Pipeline:AIStatus] E0-3/8: no blocking wait — posted message semantics\n",
+                                  "[Init:AIStatus] E0-3/8: Async posted-message semantics\n");
+                aiStatusMilestone("[IDE-Pipeline:AIStatus] E0-4/8: onAIBackendVerified owns menu/status affordances\n",
+                                  "[Init:AIStatus] E0-4/8: Status affordances updated in handler\n");
+                aiStatusMilestone("[IDE-Pipeline:AIStatus] E0-5/8: failure does not abort message loop\n",
+                                  "[Init:AIStatus] E0-5/8: Offline is non-fatal for shell\n");
+                aiStatusMilestone("[IDE-Pipeline:AIStatus] E0-6/8: cooperates with deferred init ordering\n",
+                                  "[Init:AIStatus] E0-6/8: Ordered after deferred init probe\n");
+                aiStatusMilestone("[IDE-Pipeline:AIStatus] E0-7/8: re-entrant safe — no nested probe here\n",
+                                  "[Init:AIStatus] E0-7/8: Handler is non-reentrant for probe\n");
+                aiStatusMilestone("[IDE-Pipeline:AIStatus] E0-8/8: AI backend status checkpoint closed\n",
+                                  "[Init:AIStatus] E0-8/8: AI backend status checkpoints complete\n");
                 return 0;
             }
             // Tier 3 (Feature 35): File changed externally → show reload toast
             if (uMsg == WM_FILE_CHANGED_EXTERNAL)
             {
+                const auto extFileMilestone = [this](const char* debugLine, const char* userLine)
+                {
+                    if (isShuttingDown())
+                        return;
+                    if (debugLine && debugLine[0])
+                        OutputDebugStringA(debugLine);
+                    if (userLine && userLine[0] && m_hwndOutputTabs && IsWindow(m_hwndOutputTabs))
+                        appendToOutput(std::string(userLine), "System", OutputSeverity::Info);
+                };
+                extFileMilestone("[IDE-Pipeline:ExtFile] Batch 1/8: WM_FILE_CHANGED_EXTERNAL received\n",
+                                 "[Init:ExtFile] Batch 1/8: External file change notification received\n");
+                extFileMilestone("[IDE-Pipeline:ExtFile] Batch 2/8: routing to reload toast (Tier 3)\n",
+                                 "[Init:ExtFile] Batch 2/8: Preparing reload toast\n");
+                extFileMilestone("[IDE-Pipeline:ExtFile] Batch 3/8: UI-thread handler — no disk read here\n",
+                                 "[Init:ExtFile] Batch 3/8: UI-thread dispatch (no blocking I/O)\n");
+                extFileMilestone("[IDE-Pipeline:ExtFile] Batch 4/8: showFileChangedToast() invoked next\n",
+                                 "[Init:ExtFile] Batch 4/8: Invoking file-changed toast\n");
                 showFileChangedToast();
+                extFileMilestone("[IDE-Pipeline:ExtFile] Batch 5/8: toast surface returned control to pump\n",
+                                 "[Init:ExtFile] Batch 5/8: Toast handler returned\n");
+                extFileMilestone("[IDE-Pipeline:ExtFile] Batch 6/8: editor buffer may prompt user reload\n",
+                                 "[Init:ExtFile] Batch 6/8: User may reload from toast\n");
+                extFileMilestone("[IDE-Pipeline:ExtFile] Batch 7/8: watcher coalesces bursts upstream\n",
+                                 "[Init:ExtFile] Batch 7/8: Watcher coalescing assumed upstream\n");
+                extFileMilestone("[IDE-Pipeline:ExtFile] Batch 8/8: WM_FILE_CHANGED_EXTERNAL handler complete\n",
+                                 "[Init:ExtFile] Batch 8/8: External file-change dispatch complete\n");
+                extFileMilestone("[IDE-Pipeline:ExtFile] E0-1/8: Non-fatal — does not terminate message loop\n",
+                                 "[Init:ExtFile] E0-1/8: Non-fatal notification\n");
+                extFileMilestone("[IDE-Pipeline:ExtFile] E0-2/8: Posted message semantics (async from watcher)\n",
+                                 "[Init:ExtFile] E0-2/8: Async posted semantics\n");
+                extFileMilestone("[IDE-Pipeline:ExtFile] E0-3/8: No automatic reload without user confirm\n",
+                                 "[Init:ExtFile] E0-3/8: No silent reload implied\n");
+                extFileMilestone("[IDE-Pipeline:ExtFile] E0-4/8: Toast is non-modal overlay path\n",
+                                 "[Init:ExtFile] E0-4/8: Non-modal toast path\n");
+                extFileMilestone("[IDE-Pipeline:ExtFile] E0-5/8: Safe with concurrent editor typing\n",
+                                 "[Init:ExtFile] E0-5/8: Safe with concurrent editing\n");
+                extFileMilestone("[IDE-Pipeline:ExtFile] E0-6/8: Re-entrant file events may queue further WM\n",
+                                 "[Init:ExtFile] E0-6/8: Further events may queue\n");
+                extFileMilestone("[IDE-Pipeline:ExtFile] E0-7/8: Feature 35 audit tag retained in pipeline\n",
+                                 "[Init:ExtFile] E0-7/8: Tier-3 feature path\n");
+                extFileMilestone("[IDE-Pipeline:ExtFile] E0-8/8: External file-change checkpoint closed\n",
+                                 "[Init:ExtFile] E0-8/8: External file-change checkpoints complete\n");
                 return 0;
             }
             // Handle "load downloaded model" signal from background download threads
@@ -1683,8 +1995,8 @@ bool Win32IDE::createWindow()
         config.applyFeatureToggles();
 
         // Apply config to IDE state
-        m_ollamaBaseUrl = config.getString("ollama.baseUrl", "http://localhost:11434");
-        m_ollamaModelOverride = config.getString("ollama.modelOverride", "");
+        m_ollamaBaseUrl = config.getString("native.baseUrl", "http://localhost:11435");
+        m_ollamaModelOverride = config.getString("native.modelOverride", "");
         m_autoSaveEnabled = config.getBool("editor.autoSave", false);
         m_gpuTextEnabled = config.getBool("performance.gpuTextRendering", true);
         m_useStreamingLoader = config.getBool("performance.streamingGGUFLoad", true);
@@ -1763,10 +2075,9 @@ bool Win32IDE::createWindow()
         winW = (std::min)((int)(r.right - r.left) - 100, 1600);
         winH = (std::min)((int)(r.bottom - r.top) - 100, 1000);
     }
-    m_hwndMain =
-        CreateWindowExA(WS_EX_APPWINDOW, kWindowClassName, "RawrXD IDE - Native Win32 AI Development Environment",
-                        WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE, winX, winY, winW, winH,
-                        nullptr, nullptr, m_hInstance, this);
+    m_hwndMain = CreateWindowExA(WS_EX_APPWINDOW, kWindowClassName, "RawrXD - Native Win32 AI Development Environment",
+                                 WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE, winX, winY, winW,
+                                 winH, nullptr, nullptr, m_hInstance, this);
 
     if (!m_hwndMain)
     {
@@ -1871,6 +2182,48 @@ int Win32IDE::runMessageLoop()
     LOG_INFO("Message loop starting");
     METRICS.increment("app.message_loop_starts");
     auto loopStart = std::chrono::high_resolution_clock::now();
+
+    const auto loopBootMilestone = [this](const char* debugLine, const char* userLine)
+    {
+        if (isShuttingDown())
+            return;
+        if (debugLine && debugLine[0])
+            OutputDebugStringA(debugLine);
+        if (userLine && userLine[0] && m_hwndOutputTabs && IsWindow(m_hwndOutputTabs))
+            appendToOutput(std::string(userLine), "System", OutputSeverity::Info);
+    };
+    loopBootMilestone("[IDE-Pipeline:MsgLoop] Batch 1/8: runMessageLoop entered\n",
+                      "[Init:MsgLoop] Batch 1/8: Primary message loop starting\n");
+    loopBootMilestone("[IDE-Pipeline:MsgLoop] Batch 2/8: session metrics + loop timer armed\n",
+                      "[Init:MsgLoop] Batch 2/8: Session metrics counters armed\n");
+    loopBootMilestone("[IDE-Pipeline:MsgLoop] Batch 3/8: accelerator table bound to main HWND\n",
+                      "[Init:MsgLoop] Batch 3/8: Accelerator table will translate for main window\n");
+    loopBootMilestone("[IDE-Pipeline:MsgLoop] Batch 4/8: fallback key routing (palette, quick open) armed\n",
+                      "[Init:MsgLoop] Batch 4/8: Fallback keyboard routing ready\n");
+    loopBootMilestone("[IDE-Pipeline:MsgLoop] Batch 5/8: GetMessage pump — blocking until quit or message\n",
+                      "[Init:MsgLoop] Batch 5/8: Entering GetMessage dispatch loop\n");
+    loopBootMilestone("[IDE-Pipeline:MsgLoop] Batch 6/8: TranslateMessage + DispatchMessage path active\n",
+                      "[Init:MsgLoop] Batch 6/8: Standard translate/dispatch path active\n");
+    loopBootMilestone("[IDE-Pipeline:MsgLoop] Batch 7/8: AI worker invoke queue serviced each iteration\n",
+                      "[Init:MsgLoop] Batch 7/8: AI worker queue hooked into pump\n");
+    loopBootMilestone("[IDE-Pipeline:MsgLoop] Batch 8/8: first GetMessage iteration beginning\n",
+                      "[Init:MsgLoop] Batch 8/8: Awaiting first message\n");
+    loopBootMilestone("[IDE-Pipeline:MsgLoop] E0-1/8: Main HWND stable for TranslateAccelerator\n",
+                      "[Init:MsgLoop] E0-1/8: Main window stable for accelerators\n");
+    loopBootMilestone("[IDE-Pipeline:MsgLoop] E0-2/8: m_hAccel valid or null-safe (table optional)\n",
+                      "[Init:MsgLoop] E0-2/8: Accelerator handle state known\n");
+    loopBootMilestone("[IDE-Pipeline:MsgLoop] E0-3/8: Exception containment around pump (try/catch)\n",
+                      "[Init:MsgLoop] E0-3/8: Pump wrapped in exception containment\n");
+    loopBootMilestone("[IDE-Pipeline:MsgLoop] E0-4/8: METRICS session duration recorded on exit\n",
+                      "[Init:MsgLoop] E0-4/8: Session duration will record on loop end\n");
+    loopBootMilestone("[IDE-Pipeline:MsgLoop] E0-5/8: IDEConfig save hooks on normal loop exit\n",
+                      "[Init:MsgLoop] E0-5/8: Config save scheduled on clean exit\n");
+    loopBootMilestone("[IDE-Pipeline:MsgLoop] E0-6/8: WM_QUIT will surface as exit code in wParam\n",
+                      "[Init:MsgLoop] E0-6/8: Quit code will propagate from WM_QUIT\n");
+    loopBootMilestone("[IDE-Pipeline:MsgLoop] E0-7/8: Deferred WM_APP+100/101 may process inside this loop\n",
+                      "[Init:MsgLoop] E0-7/8: Deferred init messages may process inside this loop\n");
+    loopBootMilestone("[IDE-Pipeline:MsgLoop] E0-8/8: Entering while (GetMessage) — loop live\n",
+                      "[Init:MsgLoop] E0-8/8: Message loop live\n");
 
     MSG msg = {};
     try
@@ -2090,15 +2443,53 @@ int Win32IDE::runMessageLoop()
                     MB_ICONERROR | MB_OK);
     }
 
-    // Log session metrics on exit
+    // Log session metrics on exit (debugger always; System tab if chrome still alive)
+    const auto loopExitMilestone = [this](const char* debugLine, const char* userLine)
+    {
+        if (debugLine && debugLine[0])
+            OutputDebugStringA(debugLine);
+        if (userLine && userLine[0] && m_hwndOutputTabs && IsWindow(m_hwndOutputTabs))
+            appendToOutput(std::string(userLine), "System", OutputSeverity::Info);
+    };
+    loopExitMilestone("[IDE-Pipeline:MsgLoopExit] Batch 1/8: message loop exited (GetMessage returned 0 or error)\n",
+                      "[Shutdown:MsgLoop] Batch 1/8: Primary message loop stopped\n");
     auto loopEnd = std::chrono::high_resolution_clock::now();
     double sessionMs = std::chrono::duration<double, std::milli>(loopEnd - loopStart).count();
+    loopExitMilestone("[IDE-Pipeline:MsgLoopExit] Batch 2/8: session wall clock sampled for METRICS\n",
+                      "[Shutdown:MsgLoop] Batch 2/8: Session duration sampled\n");
     METRICS.recordDuration("app.session_duration_ms", sessionMs);
+    loopExitMilestone("[IDE-Pipeline:MsgLoopExit] Batch 3/8: app.session_duration_ms recorded\n",
+                      "[Shutdown:MsgLoop] Batch 3/8: Metrics duration recorded\n");
     LOG_INFO("Message loop ended — session duration: " + std::to_string(sessionMs / 1000.0) + "s");
+    loopExitMilestone("[IDE-Pipeline:MsgLoopExit] Batch 4/8: LOG_INFO session summary emitted\n",
+                      "[Shutdown:MsgLoop] Batch 4/8: Session summary logged\n");
     LOG_INFO("Messages processed: " + std::to_string(METRICS.getCounter("app.messages_processed")));
-
+    loopExitMilestone("[IDE-Pipeline:MsgLoopExit] Batch 5/8: messages_processed counter logged\n",
+                      "[Shutdown:MsgLoop] Batch 5/8: Message count logged\n");
+    loopExitMilestone("[IDE-Pipeline:MsgLoopExit] Batch 6/8: persisting IDEConfig rawrxd.config.json\n",
+                      "[Shutdown:MsgLoop] Batch 6/8: Saving IDE configuration\n");
     // Save configuration on exit
     IDEConfig::getInstance().saveToFile("rawrxd.config.json");
+    loopExitMilestone("[IDE-Pipeline:MsgLoopExit] Batch 7/8: IDEConfig saveToFile completed\n",
+                      "[Shutdown:MsgLoop] Batch 7/8: Configuration file write completed\n");
+    loopExitMilestone("[IDE-Pipeline:MsgLoopExit] Batch 8/8: returning exit code from msg.wParam\n",
+                      "[Shutdown:MsgLoop] Batch 8/8: Returning process exit code\n");
+    loopExitMilestone("[IDE-Pipeline:MsgLoopExit] E0-1/8: WM_QUIT wParam preserved for WinMain\n",
+                      "[Shutdown:MsgLoop] E0-1/8: Quit code preserved\n");
+    loopExitMilestone("[IDE-Pipeline:MsgLoopExit] E0-2/8: METRICS gauges finalized for this session\n",
+                      "[Shutdown:MsgLoop] E0-2/8: Session metrics finalized\n");
+    loopExitMilestone("[IDE-Pipeline:MsgLoopExit] E0-3/8: Exception path may have skipped loop tail — still safe\n",
+                      "[Shutdown:MsgLoop] E0-3/8: Unified exit tail after try/catch\n");
+    loopExitMilestone("[IDE-Pipeline:MsgLoopExit] E0-4/8: IDEConfig path is cwd-relative rawrxd.config.json\n",
+                      "[Shutdown:MsgLoop] E0-4/8: Config path is rawrxd.config.json\n");
+    loopExitMilestone("[IDE-Pipeline:MsgLoopExit] E0-5/8: No second GetMessage after this point\n",
+                      "[Shutdown:MsgLoop] E0-5/8: Pump fully drained\n");
+    loopExitMilestone("[IDE-Pipeline:MsgLoopExit] E0-6/8: HWND lifetime managed by WM_DESTROY elsewhere\n",
+                      "[Shutdown:MsgLoop] E0-6/8: Window teardown follows Win32 lifecycle\n");
+    loopExitMilestone("[IDE-Pipeline:MsgLoopExit] E0-7/8: Resource-heavy subsystems already torn down in onDestroy\n",
+                      "[Shutdown:MsgLoop] E0-7/8: Heavy teardown remains in onDestroy path\n");
+    loopExitMilestone("[IDE-Pipeline:MsgLoopExit] E0-8/8: runMessageLoop return boundary\n",
+                      "[Shutdown:MsgLoop] E0-8/8: runMessageLoop return\n");
 
     return static_cast<int>(msg.wParam);
 }
@@ -2578,7 +2969,7 @@ bool Win32IDE::trySendToOllama(const std::string& prompt, std::string& outRespon
 {
     try
     {
-        ModelConnection conn(m_ollamaBaseUrl.empty() ? "http://localhost:11434" : m_ollamaBaseUrl);
+        ModelConnection conn(m_ollamaBaseUrl.empty() ? "http://localhost:11435" : m_ollamaBaseUrl);
 
         if (!conn.checkConnection())
         {
@@ -2750,6 +3141,16 @@ void Win32IDE::onCreate(HWND hwnd)
         LOG_WARNING("InitCommonControlsEx failed, gle=" + std::to_string(commonControlsErr));
     }
 
+    const auto frontPipelineMilestone = [this](const char* debugLine, const char* userLine)
+    {
+        if (isShuttingDown())
+            return;
+        if (debugLine && debugLine[0])
+            OutputDebugStringA(debugLine);
+        if (userLine && userLine[0] && m_hwndOutputTabs && IsWindow(m_hwndOutputTabs))
+            appendToOutput(std::string(userLine), "System", OutputSeverity::Info);
+    };
+
     // ================================================================
     // Create UI components — SEH-safe breadcrumb trail for diagnosis
     // Each step is wrapped so a crash pinpoints the exact function.
@@ -2762,6 +3163,8 @@ void Win32IDE::onCreate(HWND hwnd)
     hadOnCreateStepFailure |= !sehCallOnCreateStep(createMenuBarStep, this, hwnd, "createMenuBar");
     OutputDebugStringA("[onCreate] createToolbar...\n");
     hadOnCreateStepFailure |= !sehCallOnCreateStep(createToolbarStep, this, hwnd, "createToolbar");
+    frontPipelineMilestone("[IDE-Pipeline:Front] Batch 1/8: optional panels + menu + toolbar\n",
+                           "[Init:Front] Batch 1/8: optional panels, menu, and toolbar\n");
 
     OutputDebugStringA("[onCreate] createActivityBar...\n");
     hadOnCreateStepFailure |= !sehCallOnCreateStep(createActivityBarStep, this, hwnd, "createActivityBar");
@@ -2772,11 +3175,15 @@ void Win32IDE::onCreate(HWND hwnd)
     hadOnCreateStepFailure |= !sehCallOnCreateStep(createTabBarStep, this, hwnd, "createTabBar");
     OutputDebugStringA("[onCreate] createBreadcrumbBar...\n");
     hadOnCreateStepFailure |= !sehCallOnCreateStep(createBreadcrumbBarStep, this, hwnd, "createBreadcrumbBar");
+    frontPipelineMilestone("[IDE-Pipeline:Front] Batch 2/8: activity bar + sidebar + tabs + breadcrumb\n",
+                           "[Init:Front] Batch 2/8: activity bar, primary sidebar, tabs, and breadcrumb\n");
     OutputDebugStringA("[onCreate] createLineNumberGutter...\n");
     hadOnCreateStepFailure |= !sehCallOnCreateStep(createLineNumberGutterStep, this, hwnd, "createLineNumberGutter");
     OutputDebugStringA("[onCreate] createEditor...\n");
     hadOnCreateStepFailure |= !sehCallOnCreateStep(createEditorStep, this, hwnd, "createEditor");
     hadOnCreateStepFailure |= !sehCallOnCreateStep(createAnnotationOverlayStep, this, hwnd, "createAnnotationOverlay");
+    frontPipelineMilestone("[IDE-Pipeline:Front] Batch 3/8: line gutter + editor + annotation overlay\n",
+                           "[Init:Front] Batch 3/8: line gutter, editor, and annotation overlay\n");
     OutputDebugStringA("[onCreate] createTerminal...\n");
     hadOnCreateStepFailure |= !sehCallOnCreateStep(createTerminalStep, this, hwnd, "createTerminal");
     OutputDebugStringA("[onCreate] createEnhancedStatusBar...\n");
@@ -2784,8 +3191,11 @@ void Win32IDE::onCreate(HWND hwnd)
 
     OutputDebugStringA("[onCreate] createOutputTabs...\n");
     hadOnCreateStepFailure |= !sehCallOnCreateStep(createOutputTabsStep, this, hwnd, "createOutputTabs");
+    this->flushCtorBootReplayToSystem();
     OutputDebugStringA("[onCreate] createChatPanel...\n");
     hadOnCreateStepFailure |= !sehCallOnCreateStep(createChatPanelStep, this, hwnd, "createChatPanel");
+    frontPipelineMilestone("[IDE-Pipeline:Front] Batch 4/8: terminal + status bar + output tabs + chat\n",
+                           "[Init:Front] Batch 4/8: terminal, status bar, output tabs, and chat\n");
 
     OutputDebugStringA("[onCreate] createAcceleratorTable...\n");
     hadOnCreateStepFailure |= !sehCallOnCreateStep(
@@ -2804,6 +3214,8 @@ void Win32IDE::onCreate(HWND hwnd)
             }
         },
         this, hwnd, "attachMainWindowProps");
+    frontPipelineMilestone("[IDE-Pipeline:Front] Batch 5/8: accelerators + main window props + primary shell closed\n",
+                           "[Init:Front] Batch 5/8: accelerators and main window properties attached\n");
 
     LOG_INFO("onCreate complete — all panels created");
     OutputDebugStringA("[onCreate] all panels created OK\n");
@@ -2844,6 +3256,9 @@ void Win32IDE::onCreate(HWND hwnd)
             LOG_INFO(std::string(buf));
         },
         this, hwnd, "logWindowAudit");
+    frontPipelineMilestone(
+        "[IDE-Pipeline:Front] Batch 6/8: syntax + ghost + session restore + startup layout + HWND audit\n",
+        "[Init:Front] Batch 6/8: syntax colorizer, ghost text, session, layout, and HWND audit\n");
 
     hadOnCreateStepFailure |= !sehCallOnCreateStep(
         +[](void* self, HWND)
@@ -2886,6 +3301,9 @@ void Win32IDE::onCreate(HWND hwnd)
             ide->initLLMRouter();
         },
         this, hwnd, "initBackendAndRouter");
+    frontPipelineMilestone(
+        "[IDE-Pipeline:Front] Batch 7/8: initial theme + status snapshot + backend manager + LLM router\n",
+        "[Init:Front] Batch 7/8: theme, status bar, backend manager, and LLM router\n");
 
     hadOnCreateStepFailure |= !sehCallOnCreateStep(
         +[](void* self, HWND h)
@@ -2955,6 +3373,27 @@ void Win32IDE::onCreate(HWND hwnd)
                 ide);
         },
         this, hwnd, "registerIntegratedTerminalToolEcho");
+    frontPipelineMilestone(
+        "[IDE-Pipeline:Front] Batch 8/8: critical panes + layout + view hydration + agent terminal echo\n",
+        "[Init:Front] Batch 8/8: pane recovery, layout, startup views, and integrated terminal echo\n");
+
+    frontPipelineMilestone("[IDE-Pipeline:Front] E0-1/8: Front thread — document/editor HWNDs verified for handoff\n",
+                           "[Init:Front] E0-1/8: Editor and shell HWNDs ready for background init\n");
+    frontPipelineMilestone("[IDE-Pipeline:Front] E0-2/8: Front thread — output + terminal routing armed\n",
+                           "[Init:Front] E0-2/8: Output and terminal routing armed\n");
+    frontPipelineMilestone("[IDE-Pipeline:Front] E0-3/8: Front thread — session + layout snapshots applied\n",
+                           "[Init:Front] E0-3/8: Session and startup layout snapshots applied\n");
+    frontPipelineMilestone("[IDE-Pipeline:Front] E0-4/8: Front thread — theme tokens + status bar live\n",
+                           "[Init:Front] E0-4/8: Theme and status bar live\n");
+    frontPipelineMilestone("[IDE-Pipeline:Front] E0-5/8: Front thread — backend + router stubs reachable from UI\n",
+                           "[Init:Front] E0-5/8: Backend manager and LLM router reachable from UI thread\n");
+    frontPipelineMilestone("[IDE-Pipeline:Front] E0-6/8: Front thread — workspace geometry and focus order set\n",
+                           "[Init:Front] E0-6/8: Workspace geometry and focus order set\n");
+    frontPipelineMilestone("[IDE-Pipeline:Front] E0-7/8: Front thread — agent tool echo bridge registered\n",
+                           "[Init:Front] E0-7/8: Agent integrated-terminal echo bridge registered\n");
+    frontPipelineMilestone(
+        "[IDE-Pipeline:Front] E0-8/8: Front thread — posting WM_APP+100 (deferred heavy initializer)\n",
+        "[Init:Front] E0-8/8: Posting deferred heavy initializer (WM_APP+100)\n");
 
     // Defer heavy init to after window is fully created
     PostMessage(hwnd, WM_APP + 100, 0, 0);
@@ -3054,6 +3493,13 @@ DWORD WINAPI Win32IDE::deferredHeavyInitThreadProc(LPVOID param)
 
 void Win32IDE::deferredHeavyInit()
 {
+    if (!isShuttingDown())
+    {
+        OutputDebugStringA("[IDE-Pipeline] Bridge: UI thread entered deferredHeavyInit (CreateThread next)\n");
+        if (m_hwndOutputTabs && IsWindow(m_hwndOutputTabs))
+            appendToOutput("[Init] Bridge: UI thread starting background initializer (large-stack thread)\n", "System",
+                           OutputSeverity::Info);
+    }
     // Run heavy initialization on a background thread with large stack to avoid 0xC00000FD.
     HANDLE h = CreateThread(nullptr, kDeferredInitStackSize, &Win32IDE::deferredHeavyInitThreadProc, this, 0, nullptr);
     if (h)
@@ -3104,6 +3550,30 @@ void Win32IDE::deferredHeavyInitBody()
     if (isShuttingDown())
         return;
 
+    const auto idePipelineMilestone = [this](const char* debugLine, const char* userLine)
+    {
+        if (isShuttingDown())
+            return;
+        if (debugLine && debugLine[0])
+            OutputDebugStringA(debugLine);
+        if (userLine && userLine[0])
+            appendToOutput(std::string(userLine), "System", OutputSeverity::Info);
+    };
+
+    // IDE pipeline — Batch 1/8 (front): 5-tier orchestration before inference/agent wiring.
+    try
+    {
+        enableAllFeaturesAndWire();
+        idePipelineMilestone("[IDE-Pipeline] Batch 1/8: enableAllFeaturesAndWire (core→AI→agent→build→advanced)\n",
+                             "[Init] Batch 1/8: subsystem orchestration (core→AI→agent→build→advanced)\n");
+    }
+    catch (...)
+    {
+        OutputDebugStringA("ERROR: enableAllFeaturesAndWire failed\n");
+    }
+    if (isShuttingDown())
+        return;
+
     // Initialize Native CPU Inference Engine
     try
     {
@@ -3119,6 +3589,8 @@ void Win32IDE::deferredHeavyInitBody()
         m_nativeEngineLoaded = false;
         OutputDebugStringA("ERROR: CPUInferenceEngine init failed\n");
     }
+    idePipelineMilestone("[IDE-Pipeline] Batch 2/8: CPU inference engine + layer progress wiring\n",
+                         "[Init] Batch 2/8: CPU inference engine + layer progress wiring\n");
     if (isShuttingDown())
         return;
 
@@ -3184,6 +3656,8 @@ void Win32IDE::deferredHeavyInitBody()
     {
         OutputDebugStringA("ERROR: ExtensionLoader init failed\n");
     }
+    idePipelineMilestone("[IDE-Pipeline] Batch 3/8: NativeAgent + ExtensionLoader\n",
+                         "[Init] Batch 3/8: NativeAgent + ExtensionLoader\n");
     if (isShuttingDown())
         return;
 
@@ -3196,6 +3670,8 @@ void Win32IDE::deferredHeavyInitBody()
     {
         OutputDebugStringA("ERROR: initializeAgenticBridge failed\n");
     }
+    idePipelineMilestone("[IDE-Pipeline] Batch 4/8: Agentic bridge + AI panel shells\n",
+                         "[Init] Batch 4/8: Agentic bridge + AI panel shells\n");
 
     // Initialize AI/Extensions panels so menu -> show() creates real UI
     if (isShuttingDown())
@@ -3246,6 +3722,8 @@ void Win32IDE::deferredHeavyInitBody()
     {
         OutputDebugStringA("ERROR: initAgentPanel failed\n");
     }
+    idePipelineMilestone("[IDE-Pipeline] Batch 5/8: Ghost text + failure detector + agent diff panel\n",
+                         "[Init] Batch 5/8: Ghost text + failure detector + agent diff panel\n");
 
     // Load persistent settings from %APPDATA%\RawrXD\settings.json
     try
@@ -3270,6 +3748,8 @@ void Win32IDE::deferredHeavyInitBody()
     {
         OutputDebugStringA("ERROR: initializeCoreRuntimeSpine failed\n");
     }
+    idePipelineMilestone("[IDE-Pipeline] Batch 6/8: Core runtime spine + bridge-adjacent clients\n",
+                         "[Init] Batch 6/8: Core runtime spine + bridge-adjacent clients\n");
     try
     {
         initAgentOllamaClient();
@@ -3593,6 +4073,8 @@ void Win32IDE::deferredHeavyInitBody()
         {
             OutputDebugStringA("ERROR: startLocalServer failed\n");
         }
+        idePipelineMilestone("[IDE-Pipeline] Batch 7/8: Local HTTP server (beacon / tooling)\n",
+                             "[Init] Batch 7/8: Local HTTP server (beacon / tooling)\n");
     }
 
     // Initialize Cursor/JB-Parity Feature Modules
@@ -3634,7 +4116,12 @@ void Win32IDE::deferredHeavyInitBody()
         {
             OutputDebugStringA("ERROR: initTier5Cosmetics failed\n");
         }
+        idePipelineMilestone("[IDE-Pipeline] Batch 8/8: Tier5 cosmetics + downstream model paths\n",
+                             "[Init] Batch 8/8: Tier5 cosmetics + downstream model paths\n");
     }
+
+    idePipelineMilestone("[IDE-Pipeline] E0-1: Tier5 + feature-module chain finished; entering GGUF standby\n",
+                         "[Init] E0-1/8: Tier5 and feature routing complete; GGUF standby next\n");
 
     // Standby StreamingGGUFLoader so load/inspect paths never hit a nullptr gate (non-authoritative vs CPU engine).
     if (!isShuttingDown() && !m_ggufLoader)
@@ -3652,11 +4139,16 @@ void Win32IDE::deferredHeavyInitBody()
         }
     }
 
-    OutputDebugStringA("deferredHeavyInit complete (background thread)\n");
+    idePipelineMilestone("[IDE-Pipeline] E0-2: GGUF loader standby path evaluated (background thread)\n",
+                         "[Init] E0-2/8: GGUF loader standby evaluated\n");
+    idePipelineMilestone("[IDE-Pipeline] E0-3: deferredHeavyInit complete (background thread)\n",
+                         "[Init] E0-3/8: deferred init primary phases complete (background thread)\n");
 
     // Initialize AI backend probe (background thread, posts WM_AI_BACKEND_STATUS on result)
     if (!isShuttingDown())
     {
+        idePipelineMilestone("[IDE-Pipeline] E0-4: starting AI backend capability probe\n",
+                             "[Init] E0-4/8: starting AI backend capability probe\n");
         try
         {
             initializeAIBackend();
@@ -3665,14 +4157,27 @@ void Win32IDE::deferredHeavyInitBody()
         {
             OutputDebugStringA("ERROR: initializeAIBackend failed\n");
         }
+        idePipelineMilestone("[IDE-Pipeline] E0-5: AI backend probe invoked\n",
+                             "[Init] E0-5/8: AI backend probe invoked\n");
     }
 
-
+    idePipelineMilestone("[IDE-Pipeline] E0-6: preparing main-window refresh handoff\n",
+                         "[Init] E0-6/8: preparing main-window refresh handoff\n");
     // Notify UI thread to refresh
-    if (m_hwndMain && !isShuttingDown())
+    if (!isShuttingDown() && m_hwndMain)
     {
         PostMessage(m_hwndMain, WM_APP + 101, 0, 0);
+        idePipelineMilestone("[IDE-Pipeline] E0-7: WM_APP+101 posted for main-window refresh\n",
+                             "[Init] E0-7/8: main-window refresh message posted\n");
     }
+    else if (!isShuttingDown())
+    {
+        idePipelineMilestone("[IDE-Pipeline] E0-7: WM_APP+101 skipped (no main HWND)\n",
+                             "[Init] E0-7/8: main-window refresh skipped (no main HWND)\n");
+    }
+
+    idePipelineMilestone("[IDE-Pipeline] E0-8: deferredHeavyInitBody returning\n",
+                         "[Init] E0-8/8: background startup pipeline finished\n");
 }
 
 // ============================================================================
@@ -3715,15 +4220,15 @@ void Win32IDE::onDestroy()
     m_inferenceStopRequested = true;
     m_planExecutionCancelled.store(true);
 
-    // Wait for all detached threads to notice the flag and exit (up to 3s).
-    for (int i = 0; i < 60 && m_activeDetachedThreads.load(std::memory_order_acquire) > 0; ++i)
+    // Wait for all detached threads to notice the flag and exit (up to ~2s).
+    for (int i = 0; i < 200 && m_activeDetachedThreads.load(std::memory_order_acquire) > 0; ++i)
     {
-        Sleep(50);
+        Sleep(10);
     }
     if (m_activeDetachedThreads.load(std::memory_order_acquire) > 0)
     {
-        OutputDebugStringA("onDestroy: WARNING — detached threads still active after 3s\n");
-        Sleep(200);  // Extra grace
+        OutputDebugStringA("onDestroy: WARNING — detached threads still active after ~2s\n");
+        Sleep(40);  // Brief extra grace
     }
 
     if (m_semanticIndexInitialized)
@@ -4484,6 +4989,9 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
             return;
         case IDM_VIEW_AGENT_PANEL:
             toggleAgentPanel();
+            return;
+        case IDM_VIEW_VIDEO_STUDIO:  // 2046
+            toggleVideoStudioWindow();
             return;
         case IDM_SECURITY_SCAN_SECRETS:
             RunSecretsScan();

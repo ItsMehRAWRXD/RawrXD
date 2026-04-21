@@ -29,7 +29,7 @@
 #include "cli/cli_feature_bridge.h"
 #include "core/feature_handlers.h"
 
-// SCAFFOLD_094: cli_shell agentic engine wiring
+// CLI Shell Agentic Engine Wiring
 
 
 namespace fs = std::filesystem;
@@ -711,8 +711,6 @@ void cmd_agent_loop(const std::string& args) {
         using AgenticBridge = RawrXD::Agentic::AgenticInferenceBridge;
         
         for (int i = 0; i < iterations; i++) {
-            std::cout << "[Agent Iter " << (i+1) << "/" << iterations << "] Processing...\n";
-            
             // ========== NEW: Tool-aware inference for each iteration ==========
             std::string iteration_prompt = 
                 "Iteration " + std::to_string(i + 1) + "/" + std::to_string(iterations) +
@@ -725,10 +723,6 @@ void cmd_agent_loop(const std::string& args) {
             
             if (bridgeResult.success) {
                 std::cout << bridgeResult.response << "\n";
-                if (bridgeResult.usedTools) {
-                    std::cout << "[Iteration " << (i+1) << "] " 
-                              << bridgeResult.toolIterations << " tool calls executed\n";
-                }
             } else {
                 // Fallback to legacy engine
                 if (eng && eng->isModelLoaded()) {
@@ -739,7 +733,7 @@ void cmd_agent_loop(const std::string& args) {
                     if (mgr) {
                         std::string toolResult;
                         if (mgr->dispatchToolCall("cli-loop", response, toolResult)) {
-                            std::cout << "[Tool Result] " << toolResult << "\n";
+                            std::cout << toolResult << "\n";
                         }
                     }
                 } else {
@@ -1956,6 +1950,7 @@ void print_help() {
     std::cout << "  !policy stats                 Engine statistics\n";
     std::cout << "\n🔧 TOOL REGISTRY:\n";
     std::cout << "  !tools                        List registered tools\n";
+    std::cout << "  !tool_exec <name> [json]      Execute a registered tool\n";
     std::cout << "\n🔍 TOOLS:\n";
     std::cout << "  !search <pattern> [path]      Search files\n";
     std::cout << "  !analyze                      Analyze current file\n";
@@ -2099,6 +2094,7 @@ void route_command(const std::string& line) {
     else if (cmd == "!explain") cmd_explain(args);
     else if (cmd == "!policy") cmd_policy(args);
     else if (cmd == "!tools") cmd_tools(args);
+    else if (cmd == "!tool_exec") cmd_tool_exec(args);
     
     // Tools
     else if (cmd == "!search") cmd_search_files(args);

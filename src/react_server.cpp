@@ -190,7 +190,7 @@ void handle_api_request(SOCKET s, const std::string& method, const std::string& 
         std::string patchName = get_json_string(body, "name");
         std::string targetMod = get_json_string(body, "module");
         GlobalContext& ctx = GlobalContext::Get();
-        // Mock implementation for API demonstration
+        // Mock implementation for API
         bool res = true; 
         std::string status = res ? "patched" : "failed";
         http_response(s, "application/json", "{\"status\": \"" + status + "\", \"name\": \"" + patchName + "\"}");

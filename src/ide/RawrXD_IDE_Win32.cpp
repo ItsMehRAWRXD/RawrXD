@@ -2406,7 +2406,7 @@ static int IDE_Main(HINSTANCE hInstance) {
             L"RawrXD IDE - Completion Ready", MB_OK | MB_ICONINFORMATION);
     } else {
         MessageBoxW(NULL, 
-            L"⚠ Ollama not detected at localhost:11434\n\n"
+            L"⚠ Ollama not detected at localhost:11435\n\n"
             L"To enable AI completions:\n"
             L"1. Install Ollama from https://ollama.ai\n"
             L"2. Run: ollama serve\n"

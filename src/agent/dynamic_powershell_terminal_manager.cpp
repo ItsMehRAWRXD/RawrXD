@@ -218,8 +218,6 @@ std::vector<wchar_t> BuildEnvironmentBlock(
 DynamicPowerShellTerminalManager::DynamicPowerShellTerminalManager()
     : startup_time_(std::chrono::system_clock::now()),
       random_generator_(std::chrono::high_resolution_clock::now().time_since_epoch().count()) {
-    
-    std::cout << "[TerminalManager] Dynamic PowerShell Terminal Manager initializing..." << std::endl;
     performance_metrics_ = {};
 }
 
@@ -229,7 +227,6 @@ DynamicPowerShellTerminalManager::~DynamicPowerShellTerminalManager() {
 
 bool DynamicPowerShellTerminalManager::initialize(const DynamicTimeoutConfig& config) {
     if (initialized_.load()) {
-        std::cout << "[TerminalManager] Already initialized" << std::endl;
         return true;
     }
     
@@ -260,25 +257,15 @@ bool DynamicPowerShellTerminalManager::initialize(const DynamicTimeoutConfig& co
         
         initialized_ = true;
         
-        std::cout << "[TerminalManager] Initialization complete" << std::endl;
-        std::cout << "  - Worker threads: " << thread_count << std::endl;
-        std::cout << "  - Base timeout: " << config_.base_timeout.count() << "ms" << std::endl;
-        std::cout << "  - Adaptive learning: " << (config_.enable_adaptive_learning ? "enabled" : "disabled") << std::endl;
-        std::cout << "  - Random variation: " << (config_.enable_random_variation ? "enabled" : "disabled") << std::endl;
-        std::cout << "  - Quantum enhancement: " << (config_.enable_quantum_enhancement ? "enabled" : "disabled") << std::endl;
-        
         return true;
         
-    } catch (const std::exception& e) {
-        std::cerr << "[TerminalManager] Initialization failed: " << e.what() << std::endl;
+    } catch (const std::exception&) {
         return false;
     }
 }
 
 void DynamicPowerShellTerminalManager::shutdown() {
     if (!initialized_.load()) return;
-    
-    std::cout << "[TerminalManager] Shutting down..." << std::endl;
     
     shutting_down_ = true;
     
@@ -310,8 +297,6 @@ void DynamicPowerShellTerminalManager::shutdown() {
     
     initialized_ = false;
     shutting_down_ = false;
-    
-    std::cout << "[TerminalManager] Shutdown complete" << std::endl;
 }
 
 std::string DynamicPowerShellTerminalManager::create_session(
@@ -349,9 +334,6 @@ std::string DynamicPowerShellTerminalManager::create_session(
         performance_metrics_.total_sessions_created++;
         performance_metrics_.active_sessions = sessions_.size();
     }
-    
-    std::cout << "[TerminalManager] Created session: " << session->session_id 
-              << " (working dir: " << session->working_directory << ")" << std::endl;
     
     return session->session_id;
 }
@@ -400,7 +382,6 @@ bool DynamicPowerShellTerminalManager::close_session(const std::string& session_
         performance_metrics_.active_sessions = sessions_.size();
     }
     
-    std::cout << "[TerminalManager] Closed session: " << session_id << std::endl;
     return true;
 }
 
@@ -442,11 +423,7 @@ void DynamicPowerShellTerminalManager::cleanup_inactive_sessions() {
     for (const auto& session_id : sessions_to_remove) {
         close_session(session_id);
     }
-    
-    if (!sessions_to_remove.empty()) {
-        std::cout << "[TerminalManager] Cleaned up " << sessions_to_remove.size() 
-                  << " inactive sessions" << std::endl;
-    }
+}
 }
 
 TerminalExecutionResult DynamicPowerShellTerminalManager::execute_command(const TerminalExecutionRequest& request) {
@@ -455,8 +432,6 @@ TerminalExecutionResult DynamicPowerShellTerminalManager::execute_command(const 
     }
     
     std::string request_id = generate_request_id();
-    std::cout << "[TerminalManager] Executing command: " << request.command 
-              << " (request: " << request_id << ")" << std::endl;
     
     auto result = execute_command_internal(request);
     result.request_id = request_id;
@@ -543,7 +518,7 @@ std::chrono::milliseconds DynamicPowerShellTerminalManager::calculate_dynamic_ti
         timeout = std::min(timeout, config_.max_timeout);
         
     } catch (const std::exception& e) {
-        std::cerr << "[TerminalManager] Error calculating timeout: " << e.what() << std::endl;
+        (void)e;
         timeout = config_.base_timeout;
     }
     
@@ -611,8 +586,6 @@ std::chrono::milliseconds DynamicPowerShellTerminalManager::predict_execution_ti
 }
 
 void DynamicPowerShellTerminalManager::optimize_timeouts() {
-    std::cout << "[TerminalManager] Optimizing timeouts based on execution history..." << std::endl;
-    
     std::lock_guard<std::mutex> lock(stats_mutex_);
     uint32_t optimizations = 0;
     
@@ -635,8 +608,6 @@ void DynamicPowerShellTerminalManager::optimize_timeouts() {
         std::lock_guard<std::mutex> metrics_lock(metrics_mutex_);
         performance_metrics_.adaptations_performed += optimizations;
     }
-    
-    std::cout << "[TerminalManager] Optimized " << optimizations << " timeout patterns" << std::endl;
 }
 
 TerminalExecutionResult DynamicPowerShellTerminalManager::execute_command_internal(const TerminalExecutionRequest& request) {
@@ -667,9 +638,6 @@ TerminalExecutionResult DynamicPowerShellTerminalManager::execute_command_intern
     result.output_buffer_cap_bytes = per_execution_cap;
     
     try {
-        std::cout << "[PowerShell:" << session_id << "] " << request.command << std::endl;
-        std::cout << "[PowerShell:" << session_id << "] Timeout: " << timeout.count() << "ms" << std::endl;
-
 #ifdef _WIN32
         SECURITY_ATTRIBUTES sa{};
         sa.nLength = sizeof(sa);
@@ -1094,10 +1062,6 @@ void DynamicPowerShellTerminalManager::perform_maintenance_tasks() {
             performance_metrics_.timeout_accuracy = timeout_success_rate;
         }
     }
-    
-    std::cout << "[TerminalManager] Maintenance: " 
-              << performance_metrics_.active_sessions << " active sessions, "
-              << performance_metrics_.overall_success_rate * 100.0 << "% success rate" << std::endl;
 }
 
 bool DynamicPowerShellTerminalManager::validate_resource_limits() {
@@ -1113,8 +1077,6 @@ bool DynamicPowerShellTerminalManager::validate_resource_limits() {
     // Check if memory limit exceeded
     size_t total_limit = config_.max_concurrent_sessions * config_.max_memory_per_session;
     if (total_memory > total_limit) {
-        std::cout << "[TerminalManager] WARNING: Memory usage (" << total_memory / 1024 / 1024 
-                  << "MB) exceeds limit (" << total_limit / 1024 / 1024 << "MB)" << std::endl;
         return false;
     }
     

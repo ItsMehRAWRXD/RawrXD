@@ -273,8 +273,8 @@ AIImplementation::AIImplementation(
 bool AIImplementation::initialize(const LLMConfig& config) {
     m_config = config;
 
-    const bool isLocalRuntime = (m_config.backend == "local" || m_config.backend == "ollama");
-    if (m_config.backend != "local" && m_config.backend != "ollama" && m_config.backend != "openai" &&
+    const bool isLocalRuntime = (m_config.backend == "local" || m_config.backend == "native");
+    if (m_config.backend != "local" && m_config.backend != "native" && m_config.backend != "openai" &&
         m_config.backend != "anthropic") {
         if (m_logger) {
             m_logger->error("AIImplementation", "Unsupported backend: " + m_config.backend);
@@ -403,8 +403,8 @@ CompletionResponse AIImplementation::complete(const CompletionRequest& request) 
     CompletionResponse response;
 
     try {
-        if (m_config.backend == "ollama" || m_config.backend == "local") {
-            // Build Ollama request (simplified)
+        if (m_config.backend == "native" || m_config.backend == "local") {
+            // Build native inference request (simplified)
             std::string ollamaBody = "{\"model\":\"" + m_config.modelName + "\",\"prompt\":\"" + request.prompt + "\",\"stream\":false}";
 
             HTTPRequest httpReq;
@@ -416,7 +416,7 @@ CompletionResponse AIImplementation::complete(const CompletionRequest& request) 
             auto httpResp = m_httpClient->sendRequest(httpReq);
 
             if (httpResp.success) {
-                // Parse Ollama JSON response: {"response":"...","total_duration":...,"eval_count":N,...}
+                // Parse native inference JSON response: {"response":"...","total_duration":...,"eval_count":N,...}
                 std::string respBody = httpResp.body;
                 std::string completionText;
                 int evalCount = 0;
@@ -561,8 +561,8 @@ CompletionResponse AIImplementation::streamComplete(
     CompletionResponse response;
 
     try {
-        if (m_config.backend == "ollama" || m_config.backend == "local") {
-            // Build Ollama streaming request
+        if (m_config.backend == "native" || m_config.backend == "local") {
+            // Build native streaming request
             std::string ollamaBody = "{\"model\":\"" + m_config.modelName + 
                 "\",\"prompt\":\"" + request.prompt + "\",\"stream\":true}";
 
@@ -577,7 +577,7 @@ CompletionResponse AIImplementation::streamComplete(
             int totalTokens = 0;
 
             auto httpResp = m_httpClient->sendRequest(httpReq, [&](const std::string& chunk) {
-                // Ollama streams JSON lines: {"response":"token","done":false}
+                // Native streaming: JSON lines: {"response":"token","done":false}
                 // Parse each line for the "response" field
                 size_t respPos = chunk.find("\"response\":\"");
                 if (respPos != std::string::npos) {
@@ -791,7 +791,7 @@ bool AIImplementation::supportsToolCalling() const {
 
 bool AIImplementation::testConnectivity() {
     try {
-        if (m_config.backend == "ollama" || m_config.backend == "local") {
+        if (m_config.backend == "native" || m_config.backend == "local") {
             if (!m_config.allowRemoteFallback && !isLoopbackEndpoint(m_config.endpoint)) {
                 return false;
             }

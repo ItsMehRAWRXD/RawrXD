@@ -1,18 +1,9 @@
-# RawrXD Documentation Index
+# Docs
 
-This is the canonical top-level index for release and architecture navigation.
+Engineering references only. Removed narrative “documentary” / strategic-essay markdown (`RAWRXD_IDE_DOCUMENTARY_OVERVIEW.md`, `IDE_STRATEGIC_PILLARS.md`); use **`ENHANCEMENT_15_PRODUCT_READY_7.md`**, **`BRIDGE_GAP_AUDIT.md`**, and **`COMMAND_MAP.md`** instead.
 
-## Primary Entry Points
+- Changelog: [CHANGELOG.md](CHANGELOG.md)
+- Command map (if present): [COMMAND_MAP.md](COMMAND_MAP.md)
+- Repository root convention: [REPOSITORY_ROOT.md](REPOSITORY_ROOT.md) (if present)
 
-- [SOVEREIGN_NEURAL_HIVE_MIND_ARCHITECTURE.md](SOVEREIGN_NEURAL_HIVE_MIND_ARCHITECTURE.md)
-- [IDE_DOCUMENTATION_INDEX.md](IDE_DOCUMENTATION_INDEX.md)
-- [DELIVERY_INDEX.md](DELIVERY_INDEX.md)
-
-## Production Gate Evidence
-
-- Archive folder: `D:/contract_reports/archive/2026-04-04_prod_gate`
-- Throughput proof: `D:/contract_reports/archive/2026-04-04_prod_gate/throughput_phi3mini_vulkan_ngl99_t1.txt`
-
-## Notes
-
-- The Sovereign Neural Hive-Mind architecture document is the authoritative post-release baseline for production status, verification references, and operating guidance.
+Build and run: see repository `README.md` and `START_HERE.md`.

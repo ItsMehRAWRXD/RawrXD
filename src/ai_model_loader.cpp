@@ -112,11 +112,6 @@ public:
         result.success = true;
         result.info = m_info;
         
-        std::cout << "[ModelLoader] Loaded: " << m_info.name 
-                  << " (" << m_info.architecture << ", " 
-                  << m_info.layerCount << " layers, "
-                  << (m_info.fileSizeBytes / (1024*1024)) << " MB)" << std::endl;
-        
         return result;
     }
     
@@ -124,7 +119,6 @@ public:
         if (m_loaded) {
             m_loaded = false;
             m_info = ModelInfo{};
-            std::cout << "[ModelLoader] Model unloaded" << std::endl;
         }
     }
     

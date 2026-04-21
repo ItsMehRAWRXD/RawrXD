@@ -59,7 +59,7 @@ bool SpeculativeDecoder::verifyTokens(
     // Speculative decoding (Levy et al.) allows accepting tokens if 
     // target_prob(token) >= draft_prob(token).
     
-    // Placeholder: accept first 2 tokens for demonstration
+    // Placeholder: accept first 2 tokens
     acceptedTokens.clear();
     for (size_t i = 0; i < std::min(draftTokens.size(), (size_t)2); ++i) {
         acceptedTokens.push_back(draftTokens[i]);

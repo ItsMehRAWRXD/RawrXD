@@ -81,8 +81,8 @@ class AgenticObservability
     using LogCallback = void (*)(const LogEntry& entry, void* userData);
     void setLogCallback(LogCallback cb, void* userData = nullptr)
     {
-        m_logCb = cb;
-        m_logCbData = userData;
+      m_logCb = cb;
+      m_logCbData = userData;
     }
 
     // -----------------------------------------------------------------------

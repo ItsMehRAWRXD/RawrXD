@@ -66,11 +66,28 @@ void Win32IDE::renameItemInExplorer(const std::string& path)
         return;
     }
 
-    appendToOutput("[Explorer] Rename requested for: " + path + "\n", "Explorer", OutputSeverity::Info);
-    MessageBoxA(m_hwndMain,
-                "Rename is not yet wired to an input dialog in this lane.\nUse the shell or file explorer to rename the item.",
-                "Rename Explorer Item",
-                MB_OK | MB_ICONINFORMATION);
+    HWND tree = nullptr;
+    if (m_hwndFileTree && IsWindow(m_hwndFileTree))
+    {
+        tree = m_hwndFileTree;
+    }
+    else if (m_hwndFileExplorer && IsWindow(m_hwndFileExplorer))
+    {
+        tree = m_hwndFileExplorer;
+    }
+
+    if (tree)
+    {
+        HTREEITEM selected = TreeView_GetSelection(tree);
+        if (selected)
+        {
+            appendToOutput("[Explorer] Rename requested for: " + path + "\n", "Explorer", OutputSeverity::Info);
+            SendMessage(tree, TVM_EDITLABEL, 0, reinterpret_cast<LPARAM>(selected));
+            return;
+        }
+    }
+
+    appendToOutput("[Explorer] Rename failed: no selected tree item\n", "Explorer", OutputSeverity::Warning);
 }
 
 void Win32IDE::discardChanges()

@@ -14,8 +14,6 @@ SwarmOrchestrator::SwarmOrchestrator(size_t maxAgents)
     , m_running(true)
     , m_initialized(true)
 {
-    spdlog::info("SwarmOrchestrator initialized with {} max agents", maxAgents);
-    
     // Start the swarm loop thread
     m_swarmThread = std::thread(&SwarmOrchestrator::swarmLoop, this);
 }
@@ -73,8 +71,6 @@ std::expected<ConsensusResult, SwarmError> SwarmOrchestrator::executeTask(const 
         auto result = future.get();
         if (result) {
             results.push_back(*result);
-        } else {
-            spdlog::error("Subtask execution failed: {}", (int)result.error());
         }
     }
     

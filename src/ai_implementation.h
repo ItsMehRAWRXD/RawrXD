@@ -32,7 +32,7 @@ class ModelTester;
 // Configuration structures
 //=============================================================================
 struct LLMConfig {
-    std::string backend = "ollama";         // "ollama", "openai", "anthropic", "local"
+    std::string backend = "native";         // "native", "openai", "anthropic", "local"
     std::string endpoint = "http://localhost:11435";
     std::string modelName = "llama2";
     std::string apiKey;

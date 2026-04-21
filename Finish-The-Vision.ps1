@@ -1,6 +1,7 @@
 param(
     [switch]$Fast,
-    [switch]$Strict
+    [switch]$Strict,
+    [string]$BuildDir = ""
 )
 
 Set-StrictMode -Version Latest
@@ -21,6 +22,9 @@ if ($Strict -or -not $PSBoundParameters.ContainsKey("Strict")) {
 }
 if ($Fast) {
     $args += "-Fast"
+}
+if ($BuildDir) {
+    $args += @("-BuildDir", $BuildDir)
 }
 
 Write-Host "Finishing the vision..." -ForegroundColor Cyan

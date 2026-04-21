@@ -363,10 +363,10 @@ public:
 };
 
 // =============================================================================
-// Phase 25: Demonstration
+// GPU-Assisted Assembly
 // =============================================================================
 
-void Phase25_Demonstration() {
+void GPU_Assembly() {
     std::cout << "\n╔════════════════════════════════════════════════════╗\n";
     std::cout << "║   Phase 25: GPU-Assisted Assembly - POC Demo      ║\n";
     std::cout << "║          Target: 10GB+ MASM Files                 ║\n";
@@ -410,6 +410,6 @@ void Phase25_Demonstration() {
 
 int main(int argc, char* argv[]) {
     (void)argc; (void)argv;
-    SovereignAssembler::Phase25_Demonstration();
+    SovereignAssembler::GPU_Assembly();
     return 0;
 }

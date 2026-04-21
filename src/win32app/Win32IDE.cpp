@@ -7,6 +7,7 @@
 #include "../../include/rawrxd_version.h"
 #include "../agentic/AgenticChatSession.h"
 #include "../agentic/AgenticSubmitInference_Fix.h"  // TOOL-AWARE INFERENCE BRIDGE
+#include "../agentic/OllamaProvider.h"  // NativeStreamProvider and deleter
 #include "../agentic/agentic_controller_wiring.h"
 #include "../agentic/slash_command_parser.hpp"
 #include "../core/command_registry.hpp"
@@ -28,6 +29,7 @@
 #include "Win32IDE_AgenticBridge.h"
 #include "Win32IDE_DAPServer.h"  // Full type for unique_ptr<Win32IDE_DAPServer> dtor
 #include "Win32IDE_Settings.h"
+#include "RawrXD_SymbolEngine.h"
 #include "feature_registry_panel.h"
 #include "lsp/RawrXD_LSPServer.h"
 #include "multi_response_engine.h"
@@ -85,6 +87,17 @@ HWND g_rawrxdIntegratedTerminalTabs = nullptr;
 #include <unordered_map>
 #include <vector>
 #include <winhttp.h>
+
+// Debugger + System (replay after createOutputTabs): minimal Win32IDE ctor has no output HWND yet.
+static std::vector<std::string> g_ideCtorBootUserLines;
+
+static void ideCtorBootMilestone(const char* debugLine, const char* userLine)
+{
+    if (debugLine && debugLine[0])
+        OutputDebugStringA(debugLine);
+    if (userLine && userLine[0])
+        g_ideCtorBootUserLines.emplace_back(userLine);
+}
 
 
 // Complete type declarations for unique_ptr<T> component managers.
@@ -846,7 +859,7 @@ static HICON getVmmLedIcon(VmmRibbonTier tier)
 //   Telemetry dashboard                → Win32IDE_TelemetryDashboard.cpp
 //   Test explorer tree                 → Win32IDE_TestExplorerTree.cpp
 //   Themes / color picker              → Win32IDE_Themes.cpp, Win32IDE_ColorPicker.cpp
-//   Voice chat / automation            → Win32IDE_VoiceChat.cpp, Win32IDE_VoiceAutomation.cpp
+//   Voice automation                   → Win32IDE_VoiceAutomation.cpp
 //   Transcendence panel                → Win32IDE_TranscendencePanel.cpp
 //   Checkpoint manager                 → Win32IDE_Session.cpp
 //   Error/warning counts               → Win32IDE_ProblemsPanel.cpp
@@ -1620,9 +1633,13 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
 
     // Initialize profiling frequency (safe — kernel call)
     QueryPerformanceFrequency(&m_profilingFreq);
+    ideCtorBootMilestone("[IDE-Pipeline:Ctor] Batch 1/8: minimal ctor entered + QPC frequency sampled\n",
+                         "[Init:Ctor] Batch 1/8: high-resolution performance counter initialized\n");
 
     // Initialize clipboard history
     m_clipboardHistory.reserve(MAX_CLIPBOARD_HISTORY);
+    ideCtorBootMilestone("[IDE-Pipeline:Ctor] Batch 2/8: clipboard history ring reserved\n",
+                         "[Init:Ctor] Batch 2/8: clipboard history capacity reserved\n");
 
     // Initialize Git status
     m_gitStatus = GitStatus();
@@ -1631,12 +1648,18 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
     char currentDir[MAX_PATH];
     GetCurrentDirectoryA(MAX_PATH, currentDir);
     m_gitRepoPath = currentDir;
+    ideCtorBootMilestone("[IDE-Pipeline:Ctor] Batch 3/8: Git status object + default repo path from CWD\n",
+                         "[Init:Ctor] Batch 3/8: Git working tree path captured from process directory\n");
 
     // Default Ollama configuration
-    m_ollamaBaseUrl = "http://localhost:11434";
+    m_ollamaBaseUrl = "http://localhost:11435";
     m_ollamaModelOverride = "";
+    ideCtorBootMilestone("[IDE-Pipeline:Ctor] Batch 4/8: Ollama localhost defaults installed\n",
+                         "[Init:Ctor] Batch 4/8: default Ollama base URL and model override initialized\n");
 
     m_nativeEngineLoaded = false;
+    ideCtorBootMilestone("[IDE-Pipeline:Ctor] Batch 5/8: native engine slot marked unloaded (lazy bind)\n",
+                         "[Init:Ctor] Batch 5/8: native engine loaded flag cleared until backend wiring\n");
 
     // Initialize 70B GGUF Hotpatch
     m_ggufHotpatch = std::make_unique<RawrXD::GGUFHotpatch>();
@@ -1644,9 +1667,33 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
     {
         LOG_WARNING("70B GGUF hotpatch skipped; running with default loader settings");
     }
+    ideCtorBootMilestone("[IDE-Pipeline:Ctor] Batch 6/8: GGUF hotpatch module constructed + apply evaluated\n",
+                         "[Init:Ctor] Batch 6/8: 70B GGUF hotpatch path evaluated\n");
 
     // Initialize Governor/Throttling
     m_governorThrottling = std::make_unique<RawrXD::GovernorThrottling>();
+    ideCtorBootMilestone("[IDE-Pipeline:Ctor] Batch 7/8: governor throttling subsystem constructed\n",
+                         "[Init:Ctor] Batch 7/8: execution governor and throttling online\n");
+
+    ideCtorBootMilestone("[IDE-Pipeline:Ctor] Batch 8/8: minimal Win32IDE ctor body complete\n",
+                         "[Init:Ctor] Batch 8/8: constructor finished; window shell deferred to onCreate\n");
+
+    ideCtorBootMilestone("[IDE-Pipeline:Ctor] E0-1/8: Ctor — QPC baseline valid for IDE timers\n",
+                         "[Init:Ctor] E0-1/8: Profiler frequency baseline ready\n");
+    ideCtorBootMilestone("[IDE-Pipeline:Ctor] E0-2/8: Ctor — clipboard capture ring pre-sized\n",
+                         "[Init:Ctor] E0-2/8: Clipboard history ring sized\n");
+    ideCtorBootMilestone("[IDE-Pipeline:Ctor] E0-3/8: Ctor — Git repo path tracks working directory\n",
+                         "[Init:Ctor] E0-3/8: Git default path bound to CWD\n");
+    ideCtorBootMilestone("[IDE-Pipeline:Ctor] E0-4/8: Ctor — local HTTP agent defaults pinned\n",
+                         "[Init:Ctor] E0-4/8: Localhost inference defaults pinned\n");
+    ideCtorBootMilestone("[IDE-Pipeline:Ctor] E0-5/8: Ctor — heavy inference deferred past ctor\n",
+                         "[Init:Ctor] E0-5/8: Native engine load deferred to startup phases\n");
+    ideCtorBootMilestone("[IDE-Pipeline:Ctor] E0-6/8: Ctor — GGUF hotpatch lane settled\n",
+                         "[Init:Ctor] E0-6/8: GGUF hotpatch lane settled\n");
+    ideCtorBootMilestone("[IDE-Pipeline:Ctor] E0-7/8: Ctor — governor owns runtime throttling policy\n",
+                         "[Init:Ctor] E0-7/8: Governor policy object ready\n");
+    ideCtorBootMilestone("[IDE-Pipeline:Ctor] E0-8/8: Ctor — handoff to WinMain / createWindow / onCreate\n",
+                         "[Init:Ctor] E0-8/8: Handing off to window creation and onCreate\n");
 }
 
 // Build a "Commands" submenu from COMMAND_TABLE so every GUI-exposed command has a menu entry (avoids menu-only drift).
@@ -1805,9 +1852,15 @@ void Win32IDE::createMenuBar(HWND hwnd)
     AppendMenuW(hViewMenu, MF_STRING, IDM_VIEW_USE_VULKAN_RENDERER, L"Enable Vulkan Renderer (experimental)");
     AppendMenuW(hViewMenu, MF_SEPARATOR, 0, nullptr);
     AppendMenuW(hViewMenu, MF_STRING, IDM_VIEW_AGENT_PANEL, L"Agent &Panel\tCtrl+L");
+    AppendMenuW(hViewMenu, MF_STRING, IDM_VIEW_VIDEO_STUDIO, L"&Video Studio");
     AppendMenuW(hViewMenu, MF_SEPARATOR, 0, nullptr);
     AppendMenuW(hViewMenu, MF_STRING, IDM_MARKETPLACE_SHOW, L"Extension &Marketplace");
     AppendMenuW(hViewMenu, MF_STRING, IDM_VIEW_COLLABORATION, L"&Collaboration");
+    AppendMenuW(hViewMenu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuW(hViewMenu, MF_STRING, IDM_VIEW_GITHUB, L"&GitHub");
+    AppendMenuW(hViewMenu, MF_STRING, IDM_VIEW_GITHUB_PULL_RELEASE, L"GitHub Pull &Release");
+    AppendMenuW(hViewMenu, MF_STRING, IDM_VIEW_ACCOUNTS, L"&Accounts");
+    AppendMenuW(hViewMenu, MF_STRING, IDM_VIEW_MANAGE, L"&Manage");
     AppendMenuW(hViewMenu, MF_SEPARATOR, 0, nullptr);
     AppendMenuW(hViewMenu, MF_STRING, IDM_TELDASH_SHOW, L"Telemetry &Dashboard...");
     AppendMenuW(hViewMenu, MF_STRING, IDM_EMOJI_PICKER, L"&Emoji Picker");
@@ -1837,19 +1890,21 @@ void Win32IDE::createMenuBar(HWND hwnd)
     AppendMenuW(hToolsMenu, MF_STRING, IDM_TOOLS_ANALYZE_SCRIPT, L"&Analyze Script");
     AppendMenuW(hToolsMenu, MF_STRING, IDM_INTERNAL_CAPTURE_PROFILE, L"Capture Profile Bundle v1");
     AppendMenuW(hToolsMenu, MF_SEPARATOR, 0, nullptr);
-
-    // Voice Chat submenu (Unicode — Qt removal / pure Win32)
-    HMENU hVoiceMenu = CreatePopupMenu();
-    AppendMenuW(hVoiceMenu, MF_STRING, IDM_VOICE_TOGGLE_PANEL, L"Show/Hide &Voice Panel\tCtrl+Shift+U");
-    AppendMenuW(hVoiceMenu, MF_SEPARATOR, 0, nullptr);
-    AppendMenuW(hVoiceMenu, MF_STRING, IDM_VOICE_RECORD, L"&Record / Stop\tF9");
-    AppendMenuW(hVoiceMenu, MF_STRING, IDM_VOICE_PTT, L"&Push-to-Talk\tCtrl+Shift+V");
-    AppendMenuW(hVoiceMenu, MF_STRING, IDM_VOICE_SPEAK, L"Text-to-&Speech");
-    AppendMenuW(hVoiceMenu, MF_SEPARATOR, 0, nullptr);
-    AppendMenuW(hVoiceMenu, MF_STRING, IDM_VOICE_JOIN_ROOM, L"&Join/Leave Room");
-    AppendMenuW(hVoiceMenu, MF_STRING, IDM_VOICE_SHOW_DEVICES, L"Audio &Devices...");
-    AppendMenuW(hVoiceMenu, MF_STRING, IDM_VOICE_METRICS, L"&Metrics...");
-    AppendMenuW(hToolsMenu, MF_POPUP, (UINT_PTR)hVoiceMenu, L"&Voice Chat");
+    AppendMenuW(hToolsMenu, MF_STRING, IDM_TOOLS_RUN_14DAY_FINISHERS, L"Run 14-Day Production &Finishers");
+    AppendMenuW(hToolsMenu, MF_STRING, IDM_TOOLS_RUN_14DAY_FINISHERS_STRICT,
+                L"Run 14-Day Production Finishers (&Strict)");
+    AppendMenuW(hToolsMenu, MF_STRING, IDM_TOOLS_RUN_14DAY_QUALITY_GATES, L"Run 14-Day &Quality Gate Validation");
+    AppendMenuW(hToolsMenu, MF_STRING, IDM_TOOLS_OPEN_14DAY_REPORTS, L"Open 14-Day &Reports Folder");
+    AppendMenuW(hToolsMenu, MF_STRING, IDM_TOOLS_SHOW_14DAY_GATE_SUMMARY, L"Show Latest 14-Day Gate &Summary");
+    AppendMenuW(hToolsMenu, MF_STRING, IDM_TOOLS_SHOW_14DAY_ARTIFACT_MANIFEST,
+                L"Show Latest 14-Day &Artifact Manifest");
+    AppendMenuW(hToolsMenu, MF_STRING, IDM_TOOLS_RUN_14DAY_INTEGRATION_GATE, L"Run 14-Day &Integration Gate");
+    AppendMenuW(hToolsMenu, MF_STRING, IDM_TOOLS_RUN_14DAY_TURNKEY_SMOKE, L"Run 14-Day &Turnkey IDE Smoke");
+    AppendMenuW(hToolsMenu, MF_STRING, IDM_TOOLS_RUN_14DAY_AGGREGATE_GATE,
+                L"Run 14-Day Production Readiness &Aggregate Gate");
+    AppendMenuW(hToolsMenu, MF_STRING, IDM_TOOLS_SHOW_14DAY_AGGREGATE_RESULT,
+                L"Show Latest 14-Day Aggregate Gate &Result");
+    AppendMenuW(hToolsMenu, MF_SEPARATOR, 0, nullptr);
 
     // Voice Automation submenu (Phase 44: TTS for AI responses)
     HMENU hVoiceAutoMenu = CreatePopupMenu();
@@ -2140,7 +2195,7 @@ void Win32IDE::createToolbar(HWND hwnd)
 void Win32IDE::createTitleBarControls()
 {
     DWORD labelStyle = WS_CHILD | WS_VISIBLE | SS_CENTER | SS_NOPREFIX;
-    m_hwndTitleLabel = CreateWindowExW(0, L"STATIC", L"RawrXD IDE", labelStyle, 0, 0, 200, 24, m_hwndToolbar,
+    m_hwndTitleLabel = CreateWindowExW(0, L"STATIC", L"RawrXD", labelStyle, 0, 0, 200, 24, m_hwndToolbar,
                                        (HMENU)IDC_TITLE_TEXT, m_hInstance, nullptr);
 
     DWORD buttonStyle = WS_CHILD | WS_VISIBLE | BS_FLAT;
@@ -3422,6 +3477,7 @@ void Win32IDE::openFile(const std::string& filePath)
             updateLineNumbers();
             updateGitStatus();  // Update Git status for gutter indicators
             syncEditorToGpuSurface();
+            refreshSymbolIndexForCurrentDocumentAsync();
             appendToOutput("File opened successfully (" + std::to_string(content.size()) + " bytes)\n", "Output",
                            OutputSeverity::Info);
         }
@@ -3460,6 +3516,7 @@ bool Win32IDE::saveFile()
             m_fileModified = false;
             updateTitleBarText();
             syncLSPDocumentSave(m_currentFile);
+            refreshSymbolIndexForCurrentDocumentAsync();
             SendMessageW(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)L"File saved");
             appendToOutput("File saved successfully (" + std::to_string(content.size()) + " bytes)\n", "Output",
                            OutputSeverity::Info);
@@ -4221,6 +4278,22 @@ void Win32IDE::showCommandReference()
                             "ConvertFrom-Json - Convert from JSON\n";
 
     MessageBoxW(m_hwndMain, utf8ToWide(reference).c_str(), L"PowerShell Reference", MB_OK);
+}
+
+void Win32IDE::flushCtorBootReplayToSystem()
+{
+    if (g_ideCtorBootUserLines.empty())
+        return;
+    if (isShuttingDown())
+    {
+        g_ideCtorBootUserLines.clear();
+        return;
+    }
+    if (!m_hwndOutputTabs || !IsWindow(m_hwndOutputTabs))
+        return;
+    for (const std::string& line : g_ideCtorBootUserLines)
+        appendToOutput(line, "System", OutputSeverity::Info);
+    g_ideCtorBootUserLines.clear();
 }
 
 // Output / Clipboard / Minimap / Profiling implementations
@@ -6653,11 +6726,11 @@ void Win32IDE::createFileExplorer(HWND hwndParent)
         return;
     }
 
-    m_hwndFileTree =
-        CreateWindowExW(WS_EX_CLIENTEDGE, WC_TREEVIEWW, L"",
-                        WS_CHILD | WS_VISIBLE | WS_BORDER | TVS_HASLINES | TVS_LINESATROOT | TVS_HASBUTTONS, 5, 5,
-                        (std::max)(0, explorerW - 10), (std::max)(0, explorerH - 10), m_hwndFileExplorer,
-                        (HMENU)IDC_FILE_TREE, GetModuleHandle(nullptr), nullptr);
+    m_hwndFileTree = CreateWindowExW(WS_EX_CLIENTEDGE, WC_TREEVIEWW, L"",
+                                     WS_CHILD | WS_VISIBLE | WS_BORDER | TVS_HASLINES | TVS_LINESATROOT |
+                                         TVS_HASBUTTONS | TVS_EDITLABELS,
+                                     5, 5, (std::max)(0, explorerW - 10), (std::max)(0, explorerH - 10),
+                                     m_hwndFileExplorer, (HMENU)IDC_FILE_TREE, GetModuleHandle(nullptr), nullptr);
 
     if (!m_hwndFileTree)
     {
@@ -6809,16 +6882,82 @@ LRESULT CALLBACK Win32IDE::FileExplorerContainerProc(HWND hwnd, UINT uMsg, WPARA
     if (uMsg == WM_NOTIFY)
     {
         NMHDR* pnmh = reinterpret_cast<NMHDR*>(lParam);
-        if (pnmh && pnmh->code == TVN_DELETEITEMW)
+        if (pnmh && pThis && pnmh->hwndFrom == pThis->m_hwndFileTree)
         {
-            NMTREEVIEWW* pnmtv = reinterpret_cast<NMTREEVIEWW*>(lParam);
-            if (pThis)
+            switch (pnmh->code)
             {
-                pThis->m_treeItemPaths.erase(pnmtv->itemOld.hItem);
+                case TVN_ITEMEXPANDINGW:
+                {
+                    NMTREEVIEWW* pnmtv = reinterpret_cast<NMTREEVIEWW*>(lParam);
+                    if ((pnmtv->action & TVE_EXPAND) && pnmtv->itemNew.lParam)
+                    {
+                        const std::string* path = reinterpret_cast<const std::string*>(pnmtv->itemNew.lParam);
+                        if (path)
+                        {
+                            pThis->onFileTreeExpand(pnmtv->itemNew.hItem, *path);
+                        }
+                    }
+                    return 0;
+                }
+                case NM_DBLCLK:
+                    pThis->onFileExplorerDoubleClick();
+                    return 0;
+                case NM_RCLICK:
+                    pThis->onFileExplorerRightClick();
+                    return 0;
+                case TVN_ENDLABELEDITW:
+                {
+                    NMTVDISPINFOW* pdi = reinterpret_cast<NMTVDISPINFOW*>(lParam);
+                    if (!pdi->item.pszText || !pdi->item.lParam)
+                        return FALSE;
+
+                    std::string* oldPath = reinterpret_cast<std::string*>(pdi->item.lParam);
+                    if (!oldPath)
+                        return FALSE;
+
+                    std::wstring newNameW(pdi->item.pszText);
+                    std::string newName = wideToUtf8(newNameW);
+                    if (newName.empty())
+                        return FALSE;
+
+                    std::filesystem::path oldFs(*oldPath);
+                    std::filesystem::path newFs = oldFs.parent_path() / newName;
+
+                    std::error_code ec;
+                    std::filesystem::rename(oldFs, newFs, ec);
+                    if (ec)
+                    {
+                        pThis->appendToOutput("[Explorer] Rename failed: " + ec.message() + "\n", "Explorer",
+                                              OutputSeverity::Error);
+                        return FALSE;
+                    }
+
+                    const std::string newPath = newFs.string();
+                    auto* newPathPtr = new std::string(newPath);
+                    TVITEMW setItem = {};
+                    setItem.hItem = pdi->item.hItem;
+                    setItem.mask = TVIF_PARAM;
+                    setItem.lParam = reinterpret_cast<LPARAM>(newPathPtr);
+                    SendMessageW(pThis->m_hwndFileTree, TVM_SETITEMW, 0, reinterpret_cast<LPARAM>(&setItem));
+
+                    pThis->m_treeItemPaths.erase(pdi->item.hItem);
+                    pThis->m_treeItemPaths[pdi->item.hItem] = newPath;
+
+                    delete oldPath;
+                    pThis->appendToOutput("[Explorer] Renamed to: " + newPath + "\n", "Explorer", OutputSeverity::Info);
+                    return TRUE;
+                }
+                case TVN_DELETEITEMW:
+                {
+                    NMTREEVIEWW* pnmtv = reinterpret_cast<NMTREEVIEWW*>(lParam);
+                    pThis->m_treeItemPaths.erase(pnmtv->itemOld.hItem);
+                    if (pnmtv->itemOld.lParam)
+                        delete reinterpret_cast<std::string*>(pnmtv->itemOld.lParam);
+                    return 0;
+                }
+                default:
+                    break;
             }
-            if (pnmtv->itemOld.lParam)
-                delete reinterpret_cast<std::string*>(pnmtv->itemOld.lParam);
-            return 0;
         }
     }
     WNDPROC oldProc = pThis ? pThis->m_oldFileExplorerContainerProc : nullptr;
@@ -7011,6 +7150,15 @@ void Win32IDE::loadModelFromPathAsync(const std::string& filepath)
 
             auto result = std::make_unique<AsyncModelLoadResult>();
             result->filepath = filepath;
+            const uint64_t tick0 = GetTickCount64();
+            {
+                std::error_code ec;
+                const auto sz = std::filesystem::file_size(std::filesystem::path(filepath), ec);
+                if (!ec)
+                {
+                    result->fileBytes = static_cast<uint64_t>(sz);
+                }
+            }
 
             // Route through the SEH-safe standalone helper so that hardware faults
             // (access violations, etc.) in the GGUF loader / bridge init are caught before
@@ -7034,6 +7182,8 @@ void Win32IDE::loadModelFromPathAsync(const std::string& filepath)
                 postOutputPanelSafe("[Error] Model load crashed with unknown error.\n");
             }
 
+            result->wallMs = static_cast<double>(GetTickCount64() - tick0);
+
             if (!m_hwndMain || !IsWindow(m_hwndMain) ||
                 !PostMessage(m_hwndMain, WM_MODEL_LOAD_DONE, 0, reinterpret_cast<LPARAM>(result.release())))
             {
@@ -7053,6 +7203,8 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
     if (!m_ggufLoader)
         m_ggufLoader = std::make_unique<RawrXD::StreamingGGUFLoader>();
 
+    const uint64_t tick0 = GetTickCount64();
+
     auto trimCopy = [](std::string s) -> std::string
     {
         const size_t first = s.find_first_not_of(" \t\r\n\"");
@@ -7065,6 +7217,18 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
     std::string resolvedPath = trimCopy(filepath);
     if (resolvedPath.empty())
         resolvedPath = filepath;
+
+    // Best-effort: capture size early for UX + metrics even if load fails later.
+    {
+        std::error_code fsec;
+        const auto sz = std::filesystem::file_size(std::filesystem::path(resolvedPath), fsec);
+        if (!fsec)
+        {
+            m_lastLoadedModelBytes = static_cast<uint64_t>(sz);
+            METRICS.gauge("model.file_bytes", static_cast<double>(m_lastLoadedModelBytes));
+            METRICS.gauge("model.file_gb", static_cast<double>(m_lastLoadedModelBytes) / (1024.0 * 1024.0 * 1024.0));
+        }
+    }
 
     std::vector<std::string> candidates;
     auto pushCandidate = [&](const std::string& value)
@@ -7227,6 +7391,15 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
     m_currentModelMetadata = m_ggufLoader->GetMetadata();
     m_modelTensors = m_ggufLoader->GetAllTensorInfo();  // Get tensor info for backward compatibility
 
+    // Model load telemetry for UX + reverse-engineered parity (status bar + metrics).
+    m_lastLoadedModelOk = true;
+    m_lastLoadedModelPath = resolvedPath;
+    m_lastLoadedModelDisplayName = std::filesystem::path(resolvedPath).has_filename()
+                                       ? std::filesystem::path(resolvedPath).filename().string()
+                                       : resolvedPath;
+    m_lastLoadedModelWallMs = static_cast<double>(GetTickCount64() - tick0);
+    METRICS.recordDuration("model.gguf_stream_wall_ms", m_lastLoadedModelWallMs);
+
     // Log success with memory savings information
     size_t currentMemory = m_ggufLoader->GetCurrentMemoryUsage();
     std::string info = "✅ Model loaded successfully (STREAMING MODE)!\n";
@@ -7252,6 +7425,10 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
     }
 
     appendToOutput(info, "Output", OutputSeverity::Info);
+
+    // Reflect new model in status bar immediately.
+    if (m_hwndMain && IsWindow(m_hwndMain))
+        PostMessageW(m_hwndMain, WM_STATUSBAR_REFRESH_COPILOT, 0, 0);
 
     // ---- GPU Layer Split Optimizer ----
     // Compute optimal ngl based on model metadata and detected VRAM.
@@ -8546,6 +8723,8 @@ bool Win32IDE::loadModelForInference(const std::string& filepath)
     METRICS.increment("model.load_attempts");
     appendToOutput("Loading model: " + filepath + "\n", "System", OutputSeverity::Info);
 
+    const uint64_t tick0 = GetTickCount64();
+
     if (!m_agenticBridge)
     {
         initializeAgenticBridge();
@@ -8562,6 +8741,28 @@ bool Win32IDE::loadModelForInference(const std::string& filepath)
             METRICS.gauge("model.loaded", 1.0);
             METRICS.increment("model.load_success");
             appendToOutput("Model loaded successfully into Agentic Bridge.\n", "System", OutputSeverity::Info);
+
+            // Keep status bar and metrics in sync even when GGUF streaming is skipped.
+            m_lastLoadedModelOk = true;
+            m_lastLoadedModelPath = filepath;
+            m_lastLoadedModelDisplayName = std::filesystem::path(filepath).has_filename()
+                                               ? std::filesystem::path(filepath).filename().string()
+                                               : filepath;
+            {
+                std::error_code fsec;
+                const auto sz = std::filesystem::file_size(std::filesystem::path(filepath), fsec);
+                if (!fsec)
+                {
+                    m_lastLoadedModelBytes = static_cast<uint64_t>(sz);
+                    METRICS.gauge("model.file_bytes", static_cast<double>(m_lastLoadedModelBytes));
+                    METRICS.gauge("model.file_gb",
+                                  static_cast<double>(m_lastLoadedModelBytes) / (1024.0 * 1024.0 * 1024.0));
+                }
+            }
+            m_lastLoadedModelWallMs = static_cast<double>(GetTickCount64() - tick0);
+            METRICS.recordDuration("model.bridge_set_wall_ms", m_lastLoadedModelWallMs);
+            if (m_hwndMain && IsWindow(m_hwndMain))
+                PostMessageW(m_hwndMain, WM_STATUSBAR_REFRESH_COPILOT, 0, 0);
 
             wireLayerProgressToOutputPanel();
 
@@ -8583,6 +8784,7 @@ bool Win32IDE::loadModelForInference(const std::string& filepath)
 
     METRICS.increment("model.load_failures");
     METRICS.gauge("model.loaded", 0.0);
+    m_lastLoadedModelOk = false;
     std::string detail;
     if (m_agenticBridge)
     {
@@ -8689,7 +8891,16 @@ void Win32IDE::shutdownInference()
         m_inferenceStopRequested.store(true);
         if (m_inferenceThread.joinable())
         {
-            m_inferenceThread.join();
+            if (m_inferenceThread.get_id() == std::this_thread::get_id())
+            {
+                // Joining the current thread throws std::system_error
+                // ("resource deadlock would occur").
+                m_inferenceThread.detach();
+            }
+            else
+            {
+                m_inferenceThread.join();
+            }
         }
     }
 
@@ -8723,7 +8934,7 @@ std::string Win32IDE::generateResponse(const std::string& prompt)
     {
         if (m_ollamaBaseUrl.empty())
             return "";
-        // Expect base URL like http://localhost:11434
+        // Expect base URL like http://localhost:11435
         std::string base = m_ollamaBaseUrl;
         if (base.rfind("http://", 0) != 0 && base.rfind("https://", 0) != 0)
             return "";
@@ -9445,6 +9656,36 @@ std::string Win32IDE::buildChatPrompt(const std::string& userMessage)
     // and automatic token budget truncation.
     std::string prompt = conversationBuildPrompt(userMessage);
 
+    // Inject symbol-aware cursor context (best-effort) to mirror Cursor/VS Code style locality.
+    {
+        std::lock_guard<std::mutex> lock(m_liveSymbolContextMutex);
+        const std::string sectionHeader = "### Cursor Symbol Context\n";
+        const std::string sectionBody = wideToUtf8(m_liveSymbolPromptContext);
+
+        // Freeze rule: cursor-context section is replaced in-place, never unboundedly appended.
+        size_t sectionPos = prompt.find(sectionHeader);
+        if (sectionPos != std::string::npos)
+        {
+            size_t sectionEnd = prompt.find("\n### ", sectionPos + sectionHeader.size());
+            if (sectionEnd == std::string::npos)
+            {
+                sectionEnd = prompt.size();
+            }
+            prompt.erase(sectionPos, sectionEnd - sectionPos);
+
+            if (!sectionBody.empty())
+            {
+                const std::string replacement = "\n\n" + sectionHeader + sectionBody;
+                prompt.insert(sectionPos, replacement);
+            }
+        }
+        else if (!sectionBody.empty())
+        {
+            prompt += "\n\n" + sectionHeader;
+            prompt += sectionBody;
+        }
+    }
+
     // Track context usage for the status bar
     int promptTokens = static_cast<int>(prompt.length()) / 4;
     m_contextUsage.systemTokens = static_cast<int>(m_inferenceConfig.systemPrompt.length()) / 4;
@@ -9453,6 +9694,91 @@ std::string Win32IDE::buildChatPrompt(const std::string& userMessage)
     updateContextWindowDisplay();
 
     return prompt;
+}
+
+std::wstring Win32IDE::resolveSymbolAtMentions(std::wstring_view rawPrompt) const
+{
+    auto& aiCtx = RawrXD::SymbolEngine::GlobalAISymbolContext();
+    auto refs = aiCtx.ExtractSymbolRefs(rawPrompt);
+    if (refs.empty())
+    {
+        return std::wstring(rawPrompt);
+    }
+
+    // Freeze rule: deterministic and bounded mention resolution.
+    std::sort(refs.begin(), refs.end());
+    refs.erase(std::unique(refs.begin(), refs.end()), refs.end());
+
+    constexpr size_t kMaxResolvedSymbols = 32;
+    if (refs.size() > kMaxResolvedSymbols)
+    {
+        refs.resize(kMaxResolvedSymbols);
+    }
+
+    std::wstring enriched(rawPrompt);
+    std::wstring resolvedLines;
+
+    auto& db = RawrXD::SymbolEngine::GlobalSymbolDatabase();
+    for (UINT64 id : refs)
+    {
+        auto sym = db.FindById(id);
+        if (sym)
+        {
+            resolvedLines += L"- " + sym->ToAIContext() + L"\n";
+        }
+    }
+
+    if (!resolvedLines.empty())
+    {
+        enriched += L"\n\n### Resolved Symbol Context\n";
+        enriched += resolvedLines;
+    }
+
+    return enriched;
+}
+
+void Win32IDE::updateLiveSymbolPromptContextFromEditor()
+{
+    if (!m_hwndEditor || m_currentFile.empty())
+    {
+        return;
+    }
+
+    const bool agentActive = m_titanAgentRunning || m_inferenceRunning.load() || m_chatSendInFlight.load();
+    if (!agentActive)
+    {
+        return;
+    }
+
+    CHARRANGE sel = {};
+    SendMessageW(m_hwndEditor, EM_EXGETSEL, 0, reinterpret_cast<LPARAM>(&sel));
+    const LONG charPos = sel.cpMin;
+    const int line = static_cast<int>(SendMessageW(m_hwndEditor, EM_LINEFROMCHAR, charPos, 0));
+    const int lineStart = static_cast<int>(SendMessageW(m_hwndEditor, EM_LINEINDEX, line, 0));
+    const int col = std::max(0, static_cast<int>(charPos) - lineStart);
+
+    const std::wstring uri = utf8ToWide(m_currentFile);
+    auto& aiCtx = RawrXD::SymbolEngine::GlobalAISymbolContext();
+    const std::wstring ctx = aiCtx.BuildPromptContext(uri, static_cast<UINT>(line), static_cast<UINT>(col));
+
+    std::lock_guard<std::mutex> lock(m_liveSymbolContextMutex);
+    m_liveSymbolPromptContext = ctx;
+}
+
+void Win32IDE::refreshSymbolIndexForCurrentDocumentAsync()
+{
+    if (!m_hwndEditor || m_currentFile.empty())
+    {
+        return;
+    }
+
+    std::string content = getWindowText(m_hwndEditor);
+    if (content.empty() || content.size() > 10 * 1024 * 1024)
+    {
+        return;
+    }
+
+    RawrXD::SymbolEngine::IndexFileAsync(utf8ToWide(m_currentFile), std::move(content));
 }
 
 void Win32IDE::onInferenceToken(const std::string& token)
@@ -9634,7 +9960,7 @@ void Win32IDE::showAbout()
                             "• Chain-of-Thought Multi-Model Review\n"
                             "• Native PDB Symbol Server (MSF v7.00)\n"
                             "• Three-Layer Hotpatch System\n"
-                            "• Voice Chat (waveIn/Out + VAD + STT/TTS)\n"
+                            "• Voice Automation (TTS)\n"
                             "• Unified GPU Accelerator Router\n"
                             "• Embedded LSP Server (JSON-RPC 2.0)\n"
                             "• Distributed Swarm Inference\n\n" RAWRXD_COPYRIGHT "\n" RAWRXD_LICENSE "\n" RAWRXD_GITHUB;
@@ -10296,6 +10622,9 @@ void Win32IDE::postDeferredCopilotSend()
 
 void Win32IDE::HandleCopilotSend()
 {
+    // [BOUNDARY-POINT LOGGING] Chat send entry
+    OutputDebugStringA("[Win32IDE::HandleCopilotSend] ENTRY\n");
+
     SCOPED_METRIC("chat.send_message");
     METRICS.increment("chat.messages_sent");
 
@@ -10314,7 +10643,13 @@ void Win32IDE::HandleCopilotSend()
         std::lock_guard<std::mutex> inputLock(g_chatInputBufferMutex);
         GetWindowTextW(m_hwndCopilotChatInput, inputBuffer.data(), inputLen + 1);
     }
-    const std::string userMessage = wideToUtf8(inputBuffer.data());
+    std::wstring effectiveInput(inputBuffer.data());
+    if (!effectiveInput.empty() && effectiveInput.front() != L'/')
+    {
+        effectiveInput = resolveSymbolAtMentions(effectiveInput);
+    }
+
+    const std::string userMessage = wideToUtf8(effectiveInput);
 
     if (userMessage.empty())
     {
@@ -10447,6 +10782,13 @@ void Win32IDE::HandleCopilotSend()
                                     selectedModelResolved.find('/') != std::string::npos ||
                                     selectedModelResolved.find('\\') != std::string::npos;
 
+    const bool replayingDeferredUserTurn =
+        m_pendingChatOnLoadUserTurnRendered && (m_pendingChatOnLoadMessage == userMessage);
+    if (replayingDeferredUserTurn)
+    {
+        m_pendingChatOnLoadUserTurnRendered = false;
+    }
+
     m_ollamaModelOverride = selectedModelResolved;
     if (selectedLocalModel)
     {
@@ -10458,10 +10800,20 @@ void Win32IDE::HandleCopilotSend()
             // Always queue the user's message so it is auto-replayed after WM_MODEL_LOAD_DONE.
             m_pendingChatOnLoadMessage = userMessage;
 
+            if (!m_pendingChatOnLoadUserTurnRendered)
+            {
+                // Ensure chat output changes immediately for strict smoke harnesses and users,
+                // even when local model inference is deferred until load completion.
+                appendFormattedChatMessage("user", userMessage);
+                m_pendingChatOnLoadUserTurnRendered = true;
+            }
+
             if (m_asyncModelLoadRunning)
             {
                 appendToOutput("\n[Info] Model is loading — your message will be sent automatically when ready.\n",
                                "Output", OutputSeverity::Info);
+                appendCopilotChatTextOnUiThread(
+                    "\n[Info] Model is loading. Your message is queued and will be sent automatically when ready.\n");
                 OutputDebugStringA("[HandleCopilotSend] queued pending chat; model still loading\n");
                 releaseSendInFlight();
                 return;
@@ -10470,6 +10822,8 @@ void Win32IDE::HandleCopilotSend()
             appendToOutput("\n[Info] Selected local model is not loaded yet. Starting background load now; your "
                            "message will be sent automatically when ready.\n",
                            "Output", OutputSeverity::Info);
+            appendCopilotChatTextOnUiThread(
+                "\n[Info] Selected local model is loading. Your queued message will auto-send when ready.\n");
             OutputDebugStringA(("[HandleCopilotSend] selected local model not ready; kicking async load path=" +
                                 selectedModelResolved + "\n")
                                    .c_str());
@@ -10508,7 +10862,10 @@ void Win32IDE::HandleCopilotSend()
     }
     conversationAddUser(userMessage);
 
-    appendFormattedChatMessage("user", userMessage);
+    if (!replayingDeferredUserTurn)
+    {
+        appendFormattedChatMessage("user", userMessage);
+    }
     m_chatHistory.push_back({"user", userMessage});
     persistChatTurnToDisk("user", userMessage);
 
@@ -10819,6 +11176,8 @@ void Win32IDE::HandleCopilotClear()
     m_chatHistory.clear();
     m_chatToolActions.clear();
     m_currentToolActions.clear();
+    m_pendingChatOnLoadMessage.clear();
+    m_pendingChatOnLoadUserTurnRendered = false;
     conversationClear();
     m_streamingTokenAccumulator.clear();
     ClearChatUtf8Carry(this);
@@ -12082,6 +12441,7 @@ void Win32IDE::saveCurrentFile()
                 file.write(content.c_str(), content.size());
                 m_editorTabs[m_activeTabIndex].modified = false;
                 syncLSPDocumentSave(tab.filePath);
+                refreshSymbolIndexForCurrentDocumentAsync();
                 // Update tab display to remove modified indicator
                 if (m_tabManager)
                 {
@@ -13358,7 +13718,7 @@ void Win32IDE::openModelFromURL()
     SendMessage(hEdit, WM_SETFONT, (WPARAM)m_hFontUI, TRUE);
     SetFocus(hEdit);
 
-    // Example label
+    // Label
     HWND hExample = CreateWindowExA(
         0, "STATIC", "Example: https://huggingface.co/TheBloke/Llama-2-7B-GGUF/resolve/main/llama-2-7b.Q4_K_M.gguf",
         WS_CHILD | WS_VISIBLE | SS_LEFT, 16, 76, 520, 18, hDlg, nullptr, m_hInstance, nullptr);
@@ -13540,7 +13900,7 @@ void Win32IDE::openModelUnified()
                            "  Local file:     C:\\models\\my-model.gguf\n"
                            "  HuggingFace:  TheBloke/Llama-2-7B-GGUF  or  hf://repo-id\n"
                            "  Ollama blob:   llama3.2:3b  or  codellama:7b\n"
-                           "  Direct URL:     https://example.com/model.gguf";
+                           "  Direct URL:     https://host.com/model.gguf";
 
     HWND hHelp = CreateWindowExA(0, "STATIC", helpText.c_str(), WS_CHILD | WS_VISIBLE | SS_LEFT, 16, 78, 540, 90, hDlg,
                                  nullptr, m_hInstance, nullptr);
@@ -14142,6 +14502,13 @@ LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wPara
                     pThis->toggleBreakpoint(pThis->m_currentFile, line);
                     return 0;
                 }
+                break;
+            }
+
+            case WM_KEYUP:
+            case WM_LBUTTONUP:
+            {
+                pThis->updateLiveSymbolPromptContextFromEditor();
                 break;
             }
 
@@ -14989,3 +15356,6 @@ bool Win32IDE::DialogBoxWithInput(const wchar_t* title, const wchar_t* prompt, w
     }
     return params.ok;
 }
+
+// Destructor definition - must be in .cpp where NativeStreamProvider is complete
+Win32IDE::~Win32IDE() = default;

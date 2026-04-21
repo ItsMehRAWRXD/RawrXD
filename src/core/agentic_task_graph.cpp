@@ -28,10 +28,8 @@
 #else
 #include <sys/stat.h>
 
-// SCAFFOLD_099: agentic_task_graph executor_agenticLoop
+// Agentic Task Graph Implementation
 
-
-// SCAFFOLD_071: AgenticTaskGraph DAG execution
 
 #define RAWRXD_MKDIR(p) mkdir(p, 0755)
 #endif
@@ -1976,7 +1974,7 @@ TaskResult AgenticTaskGraph::executor_agenticLoop(TaskNode* self, void* context)
     RawrXD::Agent::AgentLoopConfig config;
     config.maxSteps = 8;
     // model left empty — auto-detected from Ollama /api/tags at runtime
-    config.ollamaBaseUrl = "http://localhost:11434";
+    config.nativeBaseUrl = "http://localhost:11435";
     config.autoVerify = true;
 
     // Extract working directory from checkpointData if present

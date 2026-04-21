@@ -48,8 +48,6 @@ AgenticObservability& AgenticObservability::instance()
 
 AgenticObservability::AgenticObservability() : m_systemStartTime(std::chrono::system_clock::now())
 {
-    fprintf(stderr, "[AgenticObservability] Initialized - Ready for comprehensive observability\n");
-    fflush(stderr);
     // Heartbeat writes metrics.prom and calls exportMetricsAsPrometheus from a worker thread; keep it off by default
     // until explicitly started (avoids races during early smoke/CLI paths). UI/agentic subsystems may call
     // startHeartbeatLoop() when telemetry export is desired.
@@ -61,8 +59,6 @@ AgenticObservability::AgenticObservability() : m_systemStartTime(std::chrono::sy
 AgenticObservability::~AgenticObservability()
 {
     stopHeartbeatLoop();
-    fprintf(stderr, "[AgenticObservability] Destroyed - Logged %d entries and %d metrics\n", m_totalLogsWritten,
-            m_totalMetricsRecorded);
 }
 
 // ---------------------------------------------------------------------------
@@ -133,7 +129,7 @@ void AgenticObservability::logWarn(const std::string& component, const std::stri
 void AgenticObservability::logInfo(const std::string& component, const std::string& message,
                                    const nlohmann::json& context)
 {
-    log(LogLevel::ObsError, component, message, context);
+    log(LogLevel::ObsInfo, component, message, context);
 }
 
 void AgenticObservability::logError(const std::string& component, const std::string& message,

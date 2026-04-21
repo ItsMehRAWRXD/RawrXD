@@ -230,9 +230,6 @@ void AgenticConfiguration::applyEnvironmentOverrides()
         const char* envVal = std::getenv(envKey.c_str());
         if (envVal && envVal[0] != '\0') {
             cfg.value = parseValue(envVal, cfg.type);
-            if (m_debugMode) {
-                fprintf(stderr, "[AgenticConfig] Override from env: %s=%s\n", key.c_str(), envVal);
-            }
         }
     }
 }

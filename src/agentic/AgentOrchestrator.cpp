@@ -19,7 +19,7 @@
 #include <sstream>
 #include <unordered_map>
 
-// SCAFFOLD_061: AgentOrchestrator task dispatch implementation
+// AgentOrchestrator Task Dispatch Implementation
 // Reverse-engineered from IDE integration patterns:
 // 1. Task Queue Management
 // 2. Priority-based Thread Pooling
@@ -403,7 +403,7 @@ using RawrXD::Agent::InferenceResult;
 
 AgentOrchestrator::AgentOrchestrator() : m_registry(AgentToolRegistry::Instance())
 {
-    m_client = std::make_unique<AgentOllamaClient>(m_ollamaConfig);
+    m_client = std::make_unique<NativeInferenceClient>(m_nativeConfig);
     if (TaskWorkerState* taskWorker = CreateTaskWorkerState(this)) {
         taskWorker->thread = std::thread([this]() { ProcessTaskQueue(); });
     }
@@ -447,14 +447,14 @@ void AgentOrchestrator::SetConfig(const OrchestratorConfig& config)
     m_config = config;
 }
 
-void AgentOrchestrator::SetNativeConfig(const OllamaConfig& config)
+void AgentOrchestrator::SetNativeConfig(const NativeInferenceConfig& config)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
-    m_ollamaConfig = config;
-    m_client = std::make_unique<AgentOllamaClient>(config);
+    m_nativeConfig = config;
+    m_client = std::make_unique<NativeInferenceClient>(config);
 }
 
-void AgentOrchestrator::SetOllamaConfig(const OllamaConfig& config)
+void AgentOrchestrator::SetOllamaConfig(const NativeInferenceConfig& config)
 {
     SetNativeConfig(config);
 }

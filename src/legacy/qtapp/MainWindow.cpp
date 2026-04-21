@@ -5895,7 +5895,7 @@ void MainWindow::trackEditorScrollPosition()
                 QMessageBox::warning(this, tr("GGUF open"), tr("Cannot read %1").arg(path));
                 continue;
             }
-            QByteArray raw = f.readAll();  // whole file for demo
+            QByteArray raw = f.readAll();  // whole file
             f.close();
 
             QByteArray gz = brutal::compress(raw);

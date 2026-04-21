@@ -1,4 +1,5 @@
 #include "Win32IDE.h"
+#include "Win32IDE_Commands.h"
 
 #include <commctrl.h>
 
@@ -13,8 +14,22 @@ constexpr int IDC_ACTIVITY_SEARCH = 6002;
 constexpr int IDC_ACTIVITY_SCM = 6003;
 constexpr int IDC_ACTIVITY_DEBUG = 6004;
 constexpr int IDC_ACTIVITY_EXTENSIONS = 6005;
-constexpr int IDC_ACTIVITY_RECOVERY = 6006;
-constexpr int IDC_ACTIVITY_CHAT = 6007;
+constexpr int IDC_ACTIVITY_GITHUB = 6006;
+constexpr int IDC_ACTIVITY_GITHUB_PULL_RELEASE = 6007;
+constexpr int IDC_ACTIVITY_ACCOUNTS = 6008;
+constexpr int IDC_ACTIVITY_MANAGE = 6009;
+constexpr int IDC_ACTIVITY_RECOVERY = 6010;
+constexpr int IDC_ACTIVITY_CHAT = 6011;
+
+constexpr int IDC_GITHUB_OPEN_REPO = 6060;
+constexpr int IDC_GITHUB_OPEN_ISSUES = 6061;
+constexpr int IDC_GITHUB_OPEN_PULLS = 6062;
+constexpr int IDC_GITHUB_OPEN_RELEASES = 6063;
+constexpr int IDC_ACCOUNTS_OPEN_SETTINGS = 6064;
+constexpr int IDC_ACCOUNTS_OPEN_GITHUB_LOGIN = 6065;
+constexpr int IDC_MANAGE_OPEN_EXTENSIONS = 6066;
+constexpr int IDC_MANAGE_OPEN_SETTINGS = 6067;
+constexpr int IDC_MANAGE_OPEN_LAYOUTS = 6068;
 
 constexpr int IDC_DEBUG_CONFIGS = 6040;
 constexpr int IDC_DEBUG_START = 6041;
@@ -34,6 +49,28 @@ void destroySidebarChildren(HWND sidebar)
         DestroyWindow(child);
         child = next;
     }
+}
+
+void createSidebarHeaderText(HWND parent, const char* title, const char* subtitle)
+{
+    if (!parent)
+        return;
+
+    CreateWindowExA(0, "STATIC", title, WS_CHILD | WS_VISIBLE | SS_LEFT,
+                    8, 8, 220, 20, parent, nullptr, nullptr, nullptr);
+
+    CreateWindowExA(0, "STATIC", subtitle, WS_CHILD | WS_VISIBLE | SS_LEFT,
+                    8, 30, 230, 32, parent, nullptr, nullptr, nullptr);
+}
+
+void createSidebarActionButton(HWND parent, int id, const char* label, int y)
+{
+    if (!parent)
+        return;
+
+    CreateWindowExA(0, "BUTTON", label, WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                    8, y, 220, 28,
+                    parent, reinterpret_cast<HMENU>(static_cast<INT_PTR>(id)), nullptr, nullptr);
 }
 }
 
@@ -67,6 +104,10 @@ void Win32IDE::createActivityBar(HWND hwndParent)
         {IDC_ACTIVITY_SCM, "Source"},
         {IDC_ACTIVITY_DEBUG, "Debug"},
         {IDC_ACTIVITY_EXTENSIONS, "Exts"},
+        {IDC_ACTIVITY_GITHUB, "GitHub"},
+        {IDC_ACTIVITY_GITHUB_PULL_RELEASE, "Pulls"},
+        {IDC_ACTIVITY_ACCOUNTS, "Acct"},
+        {IDC_ACTIVITY_MANAGE, "Mng"},
         {IDC_ACTIVITY_RECOVERY, "Recov"},
         {IDC_ACTIVITY_CHAT, "Chat"},
     };
@@ -187,6 +228,27 @@ void Win32IDE::setSidebarView(SidebarView view)
         case SidebarView::Extensions:
             createExtensionsView(m_hwndSidebar);
             break;
+        case SidebarView::GitHub:
+            createSidebarHeaderText(m_hwndSidebar, "GitHub", "Open repository links and collaboration surfaces.");
+            createSidebarActionButton(m_hwndSidebar, IDC_GITHUB_OPEN_REPO, "Open Repository", 76);
+            createSidebarActionButton(m_hwndSidebar, IDC_GITHUB_OPEN_ISSUES, "Open Issues", 110);
+            break;
+        case SidebarView::GitHubPullRelease:
+            createSidebarHeaderText(m_hwndSidebar, "GitHub Pull / Release", "Review pull requests and release streams.");
+            createSidebarActionButton(m_hwndSidebar, IDC_GITHUB_OPEN_PULLS, "Open Pull Requests", 76);
+            createSidebarActionButton(m_hwndSidebar, IDC_GITHUB_OPEN_RELEASES, "Open Releases", 110);
+            break;
+        case SidebarView::Accounts:
+            createSidebarHeaderText(m_hwndSidebar, "Accounts", "Manage identity and sign-in state.");
+            createSidebarActionButton(m_hwndSidebar, IDC_ACCOUNTS_OPEN_SETTINGS, "Open Account Settings", 76);
+            createSidebarActionButton(m_hwndSidebar, IDC_ACCOUNTS_OPEN_GITHUB_LOGIN, "Sign In: GitHub", 110);
+            break;
+        case SidebarView::Manage:
+            createSidebarHeaderText(m_hwndSidebar, "Manage", "Open settings, layouts, and extension controls.");
+            createSidebarActionButton(m_hwndSidebar, IDC_MANAGE_OPEN_EXTENSIONS, "Open Extensions", 76);
+            createSidebarActionButton(m_hwndSidebar, IDC_MANAGE_OPEN_SETTINGS, "Open Settings", 110);
+            createSidebarActionButton(m_hwndSidebar, IDC_MANAGE_OPEN_LAYOUTS, "Open Layout Profiles", 144);
+            break;
         case SidebarView::DiskRecovery:
             createDiskRecoveryView(m_hwndSidebar);
             break;
@@ -216,6 +278,10 @@ void Win32IDE::updateSidebarContent()
         case SidebarView::Extensions:
             loadInstalledExtensions();
             break;
+        case SidebarView::GitHub:
+        case SidebarView::GitHubPullRelease:
+        case SidebarView::Accounts:
+        case SidebarView::Manage:
         case SidebarView::Search:
         case SidebarView::DiskRecovery:
         case SidebarView::None:
@@ -266,6 +332,26 @@ LRESULT CALLBACK Win32IDE::ActivityBarProc(HWND hwnd, UINT uMsg, WPARAM wParam, 
                     if (!ide->m_sidebarVisible)
                         ide->toggleSidebar();
                     return 0;
+                case IDC_ACTIVITY_GITHUB:
+                    ide->setSidebarView(SidebarView::GitHub);
+                    if (!ide->m_sidebarVisible)
+                        ide->toggleSidebar();
+                    return 0;
+                case IDC_ACTIVITY_GITHUB_PULL_RELEASE:
+                    ide->setSidebarView(SidebarView::GitHubPullRelease);
+                    if (!ide->m_sidebarVisible)
+                        ide->toggleSidebar();
+                    return 0;
+                case IDC_ACTIVITY_ACCOUNTS:
+                    ide->setSidebarView(SidebarView::Accounts);
+                    if (!ide->m_sidebarVisible)
+                        ide->toggleSidebar();
+                    return 0;
+                case IDC_ACTIVITY_MANAGE:
+                    ide->setSidebarView(SidebarView::Manage);
+                    if (!ide->m_sidebarVisible)
+                        ide->toggleSidebar();
+                    return 0;
                 case IDC_ACTIVITY_RECOVERY:
                     ide->setSidebarView(SidebarView::DiskRecovery);
                     if (!ide->m_sidebarVisible)
@@ -298,6 +384,44 @@ LRESULT CALLBACK Win32IDE::SidebarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
     Win32IDE* ide = reinterpret_cast<Win32IDE*>(GetWindowLongPtrA(hwnd, GWLP_USERDATA));
     switch (uMsg)
     {
+        case WM_COMMAND:
+            if (!ide)
+                return 0;
+
+            switch (LOWORD(wParam))
+            {
+                case IDC_GITHUB_OPEN_REPO:
+                    ShellExecuteA(nullptr, "open", "https://github.com/ItsMehRAWRXD/RawrXD", nullptr, nullptr, SW_SHOW);
+                    return 0;
+                case IDC_GITHUB_OPEN_ISSUES:
+                    ShellExecuteA(nullptr, "open", "https://github.com/ItsMehRAWRXD/RawrXD/issues", nullptr, nullptr,
+                                 SW_SHOW);
+                    return 0;
+                case IDC_GITHUB_OPEN_PULLS:
+                    ShellExecuteA(nullptr, "open", "https://github.com/ItsMehRAWRXD/RawrXD/pulls", nullptr, nullptr,
+                                 SW_SHOW);
+                    return 0;
+                case IDC_GITHUB_OPEN_RELEASES:
+                    ShellExecuteA(nullptr, "open", "https://github.com/ItsMehRAWRXD/RawrXD/releases", nullptr, nullptr,
+                                 SW_SHOW);
+                    return 0;
+                case IDC_ACCOUNTS_OPEN_SETTINGS:
+                    PostMessageA(ide->m_hwndMain, WM_COMMAND, IDM_T1_SETTINGS_GUI, 0);
+                    return 0;
+                case IDC_ACCOUNTS_OPEN_GITHUB_LOGIN:
+                    ShellExecuteA(nullptr, "open", "https://github.com/login", nullptr, nullptr, SW_SHOW);
+                    return 0;
+                case IDC_MANAGE_OPEN_EXTENSIONS:
+                    ide->setSidebarView(SidebarView::Extensions);
+                    return 0;
+                case IDC_MANAGE_OPEN_SETTINGS:
+                    PostMessageA(ide->m_hwndMain, WM_COMMAND, IDM_T1_SETTINGS_GUI, 0);
+                    return 0;
+                case IDC_MANAGE_OPEN_LAYOUTS:
+                    PostMessageA(ide->m_hwndMain, WM_COMMAND, IDM_VIEW_LAYOUT_PROFILE_APPLY, 0);
+                    return 0;
+            }
+            break;
         case WM_SIZE:
             if (ide)
                 ide->resizeSidebar(LOWORD(lParam), HIWORD(lParam));

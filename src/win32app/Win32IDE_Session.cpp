@@ -116,6 +116,14 @@ const char* sidebarViewToString(Win32IDE::SidebarView view)
             return "extensions";
         case Win32IDE::SidebarView::DiskRecovery:
             return "diskRecovery";
+        case Win32IDE::SidebarView::GitHub:
+            return "github";
+        case Win32IDE::SidebarView::GitHubPullRelease:
+            return "githubPullRelease";
+        case Win32IDE::SidebarView::Accounts:
+            return "accounts";
+        case Win32IDE::SidebarView::Manage:
+            return "manage";
         default:
             return "none";
     }
@@ -138,6 +146,14 @@ Win32IDE::SidebarView sidebarViewFromString(std::string value)
         return Win32IDE::SidebarView::Extensions;
     if (value == "diskrecovery")
         return Win32IDE::SidebarView::DiskRecovery;
+    if (value == "github")
+        return Win32IDE::SidebarView::GitHub;
+    if (value == "githubpullrelease")
+        return Win32IDE::SidebarView::GitHubPullRelease;
+    if (value == "accounts")
+        return Win32IDE::SidebarView::Accounts;
+    if (value == "manage")
+        return Win32IDE::SidebarView::Manage;
     return Win32IDE::SidebarView::None;
 }
 
@@ -1012,7 +1028,7 @@ void Win32IDE::restoreSessionPanelState(const nlohmann::json& session)
     }
 
     int viewIdx = panel.value("sidebarView", 0);
-    if (viewIdx < static_cast<int>(SidebarView::None) || viewIdx > static_cast<int>(SidebarView::DiskRecovery))
+    if (viewIdx < static_cast<int>(SidebarView::None) || viewIdx > static_cast<int>(SidebarView::Manage))
     {
         LOG_WARNING("Session: invalid sidebarView " + std::to_string(viewIdx) + " — falling back to None");
         viewIdx = static_cast<int>(SidebarView::None);

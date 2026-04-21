@@ -262,7 +262,7 @@ void IDEMainWindow::onCloudSettings() {
     // Would show cloud configuration dialog
     QMessageBox::information(this, "Cloud Settings",
         "Configure cloud providers:\n"
-        "- Ollama: localhost:11434 (Active)\n"
+        "- native: localhost:11435 (Active)\n"
         "- HuggingFace: API key required\n"
         "- AWS/Azure/GCP: Enterprise only");
 }

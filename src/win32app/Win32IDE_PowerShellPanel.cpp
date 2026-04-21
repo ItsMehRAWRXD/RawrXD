@@ -38,11 +38,6 @@ void Win32IDE::createPowerShellPanel()
         CreateWindowExA(WS_EX_CLIENTEDGE, "STATIC", "PowerShell Console", WS_CHILD | WS_VISIBLE | WS_BORDER, 0, 0, 800,
                         m_powerShellPanelHeight, m_hwndMain, (HMENU)IDC_PS_PANEL_CONTAINER, m_hInstance, NULL);
 
-    // LOGGING AS REQUESTED
-    char logBuf[256];
-    sprintf_s(logBuf, "PowerShellPanel HWND created: %p (Parent: %p)", m_hwndPowerShellPanel, m_hwndMain);
-    LOG_INFO(std::string(logBuf));
-
     if (!m_hwndPowerShellPanel)
     {
         return;
@@ -131,7 +126,7 @@ void Win32IDE::createPowerShellPanel()
     SendMessage(m_hwndPSBtnExecute, WM_SETFONT, (WPARAM)hFont, TRUE);
 
     // Create status bar
-    m_hwndPowerShellStatusBar = CreateWindowExA(0, "STATIC", "PowerShell Status: Ready",
+    m_hwndPowerShellStatusBar = CreateWindowExA(0, "STATIC", "PowerShell: Ready",
                                                 WS_CHILD | WS_VISIBLE | SS_LEFT, 5, m_powerShellPanelHeight - 25, 790,
                                                 20, m_hwndPowerShellPanel, (HMENU)IDC_PS_STATUSBAR, m_hInstance, NULL);
 
@@ -159,20 +154,12 @@ void Win32IDE::createPowerShellPanel()
     // on first use so the IDE can finish painting immediately.
     initializePowerShellPanel();
 
-    // LOGGING AS REQUESTED
-    // char logBuf[256]; // REUSED
-    sprintf_s(logBuf, "PowerShell Panel HWNDs: Main=%p Output=%p Input=%p", m_hwndPowerShellPanel,
-              m_hwndPowerShellOutput, m_hwndPowerShellInput);
-    LOG_INFO(std::string(logBuf));
-
     // Show welcome message
     appendPowerShellOutput("═══════════════════════════════════════════════════════════════\n", RGB(0, 255, 255));
     appendPowerShellOutput("  RawrXD Integrated PowerShell Console\n", RGB(255, 255, 0));
     appendPowerShellOutput("═══════════════════════════════════════════════════════════════\n", RGB(0, 255, 255));
     appendPowerShellOutput("\n", RGB(200, 200, 200));
 
-    appendPowerShellOutput("PowerShell Version: pending (lazy start)\n", RGB(0, 255, 0));
-    appendPowerShellOutput("Edition: pending (lazy start)\n", RGB(0, 255, 0));
     appendPowerShellOutput("\nType commands below or click 'Load RawrXD' to access RawrXD.ps1 functions\n",
                            RGB(200, 200, 200));
     appendPowerShellOutput("\nCommands:\n", RGB(255, 255, 0));
@@ -288,9 +275,9 @@ void Win32IDE::initializePowerShellPanel()
     // Defer launching the shell process until the first command is executed.
     // This avoids a multi-second launch stall during WM_CREATE / startup.
     m_powerShellSessionActive = false;
-    m_psState.version = "pending";
-    m_psState.edition = "pending";
-    m_psState.currentExecutionPolicy = "pending";
+    m_psState.version.clear();
+    m_psState.edition.clear();
+    m_psState.currentExecutionPolicy.clear();
     updatePowerShellStatus();
 }
 
@@ -351,22 +338,11 @@ void Win32IDE::layoutPowerShellPanel()
 {
     if (!m_hwndPowerShellPanel || !m_powerShellPanelVisible)
     {
-        // LOGGING AS REQUESTED
-        char buf[256];
-        sprintf_s(buf, "layoutPowerShellPanel skipped: hwnd=%p visible=%d", m_hwndPowerShellPanel,
-                  m_powerShellPanelVisible);
-        LOG_INFO(std::string(buf));
         return;
     }
 
     RECT mainRect;
     GetClientRect(m_hwndMain, &mainRect);
-
-    // LOGGING AS REQUESTED
-    char buf[256];
-    sprintf_s(buf, "layoutPowerShellPanel: Parent=%dx%d PanelHeight=%d HWND=%p", mainRect.right - mainRect.left,
-              mainRect.bottom - mainRect.top, m_powerShellPanelHeight, m_hwndPowerShellPanel);
-    LOG_INFO(std::string(buf));
 
     int mainWidth = mainRect.right - mainRect.left;
     int mainHeight = mainRect.bottom - mainRect.top;
@@ -757,8 +733,10 @@ void Win32IDE::updatePowerShellStatus()
         status += "Not Active";
     }
 
-    status += " | ";
-    status += m_psState.version.empty() ? "pending" : m_psState.version;
+    if (!m_psState.version.empty()) {
+        status += " | ";
+        status += m_psState.version;
+    }
 
     if (!m_terminalTabs.empty() && m_activeTerminalTab >= 0 &&
         m_activeTerminalTab < static_cast<int>(m_terminalTabIntegratedWorkingDirectory.size()))

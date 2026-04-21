@@ -31,9 +31,6 @@ bool AdvancedAgentCoordinator::initialize(const ScalingPolicy& scaling,
     m_healthMonitorThread = std::thread(&AdvancedAgentCoordinator::healthMonitoringLoop, this);
     m_recoveryThread = std::thread(&AdvancedAgentCoordinator::recoveryLoop, this);
 
-    std::cout << "[AdvancedAgentCoordinator] Initialized with " << scaling.minAgents
-              << " min agents, " << redundancy.replicationFactor << "x redundancy" << std::endl;
-
     return true;
 }
 
@@ -43,8 +40,6 @@ void AdvancedAgentCoordinator::shutdown() {
     if (m_scalingThread.joinable()) m_scalingThread.join();
     if (m_healthMonitorThread.joinable()) m_healthMonitorThread.join();
     if (m_recoveryThread.joinable()) m_recoveryThread.join();
-
-    std::cout << "[AdvancedAgentCoordinator] Shutdown complete" << std::endl;
 }
 
 // =============================================================================
@@ -148,8 +143,6 @@ void AdvancedAgentCoordinator::updateAgentHealth(const std::string& agentId, boo
     health.isHealthy = (health.consecutiveFailures < 3);
 
     if (!health.isHealthy) {
-        std::cout << "[HealthMonitor] Agent " << agentId << " marked unhealthy: "
-                  << health.failureReason << std::endl;
     }
 }
 
@@ -175,7 +168,6 @@ void AdvancedAgentCoordinator::quarantineUnhealthyAgent(const std::string& agent
 
     if (m_agentHealth.count(agentId)) {
         m_agentHealth[agentId].isHealthy = false;
-        std::cout << "[HealthMonitor] Quarantined agent: " << agentId << std::endl;
 
         // Trigger recovery process
         handleAgentFailure(agentId, "Health check failed");
@@ -227,10 +219,6 @@ void AdvancedAgentCoordinator::markTaskCompleted(const std::string& taskId) {
         auto& dep = m_taskDependencies[taskId];
         dep.completed = true;
         dep.completionTime = std::chrono::steady_clock::now();
-
-        // Notify dependents (could trigger more tasks)
-        std::cout << "[DependencyManager] Task " << taskId << " completed, "
-                  << dep.dependents.size() << " dependents notified" << std::endl;
     }
 
     cleanupCompletedDependencies();
@@ -247,9 +235,6 @@ void AdvancedAgentCoordinator::submitTask(std::shared_ptr<AgentTask> task, TaskP
     m_taskQueue.push(pTask);
 
     m_taskAvailable.notify_one();
-
-    std::cout << "[TaskScheduler] Submitted task " << task->id
-              << " with priority " << static_cast<int>(priority) << std::endl;
 }
 
 std::shared_ptr<AgentTask> AdvancedAgentCoordinator::getNextTask() {
@@ -286,8 +271,7 @@ void AdvancedAgentCoordinator::reprioritizeTask(const std::string& taskId, TaskP
     }
     if (found) {
         m_taskQueue = std::move(rebuilt);
-        std::cout << "[TaskScheduler] Reprioritized task " << taskId
-                  << " to priority " << static_cast<int>(newPriority) << std::endl;
+        // Task reprioritized
     }
 }
 
@@ -405,13 +389,13 @@ void AdvancedAgentCoordinator::evaluateScalingNeeds() {
 }
 
 bool AdvancedAgentCoordinator::scaleUp(int additionalAgents) {
-    std::cout << "[ScalingManager] Scaling up by " << additionalAgents << " agents" << std::endl;
+    // Scaling up agents
     // Implementation would create new agent instances
     return true;
 }
 
 bool AdvancedAgentCoordinator::scaleDown(int removeAgents) {
-    std::cout << "[ScalingManager] Scaling down by " << removeAgents << " agents" << std::endl;
+    // Scaling down agents
     // Implementation would gracefully shutdown agents
     return true;
 }
@@ -455,9 +439,6 @@ void AdvancedAgentCoordinator::handleAgentFailure(const std::string& agentId, co
 
     m_activeRecoveries.push_back(recovery);
 
-    std::cout << "[FaultTolerance] Handling failure of agent " << agentId
-              << ": " << reason << std::endl;
-
     // Start recovery process
     redistributeOrphanedTasks(agentId);
 }
@@ -466,18 +447,15 @@ void AdvancedAgentCoordinator::redistributeOrphanedTasks(const std::string& fail
     // Find healthy agents to redistribute to
     auto healthyAgents = getHealthyAgents();
     if (healthyAgents.empty()) {
-        std::cout << "[FaultTolerance] No healthy agents available for redistribution" << std::endl;
+        // No healthy agents available for redistribution
         return;
     }
 
     // In a real implementation, this would redistribute actual tasks
-    std::cout << "[FaultTolerance] Redistributing tasks from " << failedAgentId
-              << " to " << healthyAgents.size() << " healthy agents" << std::endl;
+    // Redistributing tasks from failed agent
 }
 
 bool AdvancedAgentCoordinator::attemptRecovery(const std::string& agentId) {
-    std::cout << "[FaultTolerance] Attempting recovery of agent " << agentId << std::endl;
-
     // Find the recovery record
     auto it = std::find_if(m_activeRecoveries.begin(), m_activeRecoveries.end(),
                           [&agentId](const FailureRecovery& r) {
@@ -496,7 +474,6 @@ bool AdvancedAgentCoordinator::attemptRecovery(const std::string& agentId) {
                 m_agentHealth[agentId].isHealthy = true;
                 m_agentHealth[agentId].consecutiveFailures = 0;
             }
-            std::cout << "[FaultTolerance] Successfully recovered agent " << agentId << std::endl;
         }
 
         return recovered;
@@ -590,8 +567,6 @@ void AdvancedAgentCoordinator::healthMonitoringLoop() {
                     health.isHealthy = false;
                     health.failureReason = "stale: no activity for "
                         + std::to_string(elapsedSec) + "s";
-                    std::cout << "[HealthMonitor] Agent " << agentId
-                              << " declared dead (" << health.failureReason << ")\n";
                     toQuarantine.push_back(agentId);
                 }
             }

@@ -2,13 +2,30 @@
 #include "model_loader/GGUFConstants.hpp"
 #include "utils/Diagnostics.hpp"
 #include <algorithm>
+#include <cmath>
 #include <cstring>
 #include <iostream>
+#include <limits>
 #include <new>
 #include <stdexcept>
 
 // SCAFFOLD_102: Streaming GGUF loader
 
+namespace
+{
+
+// Matches asm-side GGUF_MAX_TENSORS / reasonable upper bound for real GGUF files.
+constexpr uint64_t kMaxGgufTensorIndexEntries = 65536;
+
+bool mulU64Checked(uint64_t a, uint64_t b, uint64_t& out)
+{
+    if (b != 0 && a > std::numeric_limits<uint64_t>::max() / b)
+        return false;
+    out = a * b;
+    return true;
+}
+
+}  // namespace
 
 namespace RawrXD
 {
@@ -77,6 +94,7 @@ bool StreamingGGUFLoader::Close()
     }
     is_open_ = false;
     tensor_index_.clear();
+    tensor_enumeration_order_.clear();
     zones_.clear();
     active_zones_.clear();
     current_zone_ = "";
@@ -737,6 +755,16 @@ bool StreamingGGUFLoader::BuildTensorIndex()
         }
     }
 
+    if (header_.tensor_count > kMaxGgufTensorIndexEntries)
+    {
+        std::cerr << "❌ Tensor count " << header_.tensor_count << " exceeds supported maximum "
+                  << kMaxGgufTensorIndexEntries << std::endl;
+        return false;
+    }
+
+    tensor_enumeration_order_.clear();
+    tensor_enumeration_order_.reserve(static_cast<size_t>(header_.tensor_count));
+
     // Now read tensor info (no data!)
     for (uint64_t i = 0; i < header_.tensor_count; ++i)
     {
@@ -768,10 +796,16 @@ bool StreamingGGUFLoader::BuildTensorIndex()
             return false;
 
         ref.size = CalculateTensorSize(ref.shape, ref.type);
+        if (ref.size == UINT64_MAX)
+        {
+            std::cerr << "❌ Tensor size overflow while indexing: " << ref.name << std::endl;
+            return false;
+        }
         ref.zone_name = "";  // Will be assigned later
         ref.index = i;       // Set tensor index
 
         tensor_index_[ref.name] = ref;
+        tensor_enumeration_order_.push_back(ref);
     }
 
     return true;
@@ -779,21 +813,19 @@ bool StreamingGGUFLoader::BuildTensorIndex()
 
 std::vector<TensorRef> StreamingGGUFLoader::GetTensorIndex() const
 {
-    std::vector<TensorRef> result;
-    for (const auto& [name, ref] : tensor_index_)
-    {
-        result.push_back(ref);
-    }
-    return result;
+    return tensor_enumeration_order_;
 }
 
 void StreamingGGUFLoader::AssignTensorsToZones()
 {
     // Zone assignment strategy (like a game engine):
-    // Group tensors into zones (8 layers per zone)
+    // Group tensors into zones (8 layers per zone).
+    // Iterate **GGUF enumeration order** so per-zone tensor lists match file / layer walk order
+    // (map iteration is name-sorted and breaks blk.N ordering, e.g. blk.10 before blk.2).
 
-    for (auto& [tensor_name, tensor_ref] : tensor_index_)
+    const auto assignOne = [this](TensorRef& tensor_ref)
     {
+        const std::string& tensor_name = tensor_ref.name;
         std::string zone;
 
         // Pattern matching to assign zones
@@ -828,6 +860,26 @@ void StreamingGGUFLoader::AssignTensorsToZones()
         zones_[zone].total_bytes += tensor_ref.size;
 
         tensor_ref.zone_name = zone;
+        auto mapIt = tensor_index_.find(tensor_name);
+        if (mapIt != tensor_index_.end())
+        {
+            mapIt->second.zone_name = zone;
+        }
+    };
+
+    if (!tensor_enumeration_order_.empty())
+    {
+        for (TensorRef& tensor_ref : tensor_enumeration_order_)
+        {
+            assignOne(tensor_ref);
+        }
+    }
+    else
+    {
+        for (auto& [tensor_name, tensor_ref] : tensor_index_)
+        {
+            assignOne(tensor_ref);
+        }
     }
 
     // Print zone info
@@ -1117,15 +1169,32 @@ std::vector<std::string> StreamingGGUFLoader::GetAllZones() const
 std::vector<TensorInfo> StreamingGGUFLoader::GetAllTensorInfo() const
 {
     std::vector<TensorInfo> result;
-    for (const auto& [name, ref] : tensor_index_)
+
+    auto appendInfo = [](const TensorRef& ref, std::vector<TensorInfo>& out)
     {
         TensorInfo info;
-        info.name = name;
+        info.name = ref.name;
         info.shape = ref.shape;
         info.type = ref.type;
         info.offset = ref.offset;
         info.size_bytes = ref.size;
-        result.push_back(info);
+        out.push_back(std::move(info));
+    };
+
+    if (!tensor_enumeration_order_.empty())
+    {
+        result.reserve(tensor_enumeration_order_.size());
+        for (const TensorRef& ref : tensor_enumeration_order_)
+        {
+            appendInfo(ref, result);
+        }
+    }
+    else
+    {
+        for (const auto& [name, ref] : tensor_index_)
+        {
+            appendInfo(ref, result);
+        }
     }
     return result;
 }
@@ -1237,7 +1306,8 @@ uint64_t StreamingGGUFLoader::CalculateTensorSize(const std::vector<uint64_t>& s
     uint64_t num_elements = 1;
     for (uint64_t dim : shape)
     {
-        num_elements *= dim;
+        if (!mulU64Checked(num_elements, dim, num_elements))
+            return UINT64_MAX;
     }
 
     // Bytes per element for each GGMLType (complete v3 coverage)
@@ -1337,7 +1407,13 @@ uint64_t StreamingGGUFLoader::CalculateTensorSize(const std::vector<uint64_t>& s
             break;  // Conservative default
     }
 
-    return static_cast<uint64_t>(num_elements * bytes_per_element);
+    const long double prod = static_cast<long double>(num_elements) * static_cast<long double>(bytes_per_element);
+    if (!std::isfinite(static_cast<double>(prod)) ||
+        prod >= static_cast<long double>(std::numeric_limits<uint64_t>::max()))
+    {
+        return UINT64_MAX;
+    }
+    return static_cast<uint64_t>(prod);
 }
 
 // ============================================================================

@@ -1,7 +1,7 @@
 /**
- * Simple GGUF API Server - Lightweight Ollama-Compatible HTTP API
+ * Simple GGUF API Server - Lightweight Native Inference HTTP API
  * Provides real HTTP endpoints with actual inference backend via EngineRegistry
- * Demonstrates working Winsock HTTP server for model serving
+ * Working Winsock HTTP server for model serving
  */
 
 #include <winsock2.h>
@@ -197,9 +197,6 @@ std::string HandleGenerateRequest(const std::string& body) {
          << R"(,"tokens_per_sec":)" << (int)tokens_per_sec
          << "}";
 
-    printf("[INFER] Engine=%s prompt_len=%zu response_len=%d %.1fms (%.0f tok/s)\n",
-           engine->name(), prompt.size(), eval_count, elapsed_ms, tokens_per_sec);
-
     return BuildHttpResponse(200, "application/json", json.str());
 }
 
@@ -218,7 +215,7 @@ std::string HandleClientRequest(const std::string& request) {
     std::string method, path, http_version;
     iss >> method >> path >> http_version;
     
-    printf("[REQ] %s %s\n", method.c_str(), path.c_str());
+    // Request received
     
     // Route to handlers
     if (method == "GET") {
@@ -257,7 +254,7 @@ std::string HandleClientRequest(const std::string& request) {
 // ============================================================
 
 void ServerLoop(int port) {
-    printf("[HTTP] Server loop started on port %d\n", port);
+    // Server loop started
     
     while (g_running.load()) {
         sockaddr_in client_addr;
@@ -266,7 +263,7 @@ void ServerLoop(int port) {
         SOCKET client_socket = accept(g_listen_socket, (sockaddr*)&client_addr, &client_addr_len);
         if (client_socket == INVALID_SOCKET) {
             if (WSAGetLastError() != WSAEINTR) {
-                printf("[HTTP] accept() failed: %d\n", WSAGetLastError());
+            // accept() failed
             }
             continue;
         }
@@ -289,7 +286,7 @@ void ServerLoop(int port) {
         closesocket(client_socket);
     }
     
-    printf("[HTTP] Server loop exited\n");
+    // Server loop exited
 }
 
 // ============================================================
@@ -297,19 +294,19 @@ void ServerLoop(int port) {
 // ============================================================
 
 bool InitializeServer(int port) {
-    printf("[HTTP] Initializing Winsock...\n");
+    // Initializing Winsock
     
     WSADATA wsa_data;
     int wsa_result = WSAStartup(MAKEWORD(2, 2), &wsa_data);
     if (wsa_result != 0) {
-        printf("[HTTP] WSAStartup failed: %d\n", wsa_result);
+        // WSAStartup failed
         return false;
     }
     
-    printf("[HTTP] Creating listen socket...\n");
+    // Creating listen socket
     g_listen_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (g_listen_socket == INVALID_SOCKET) {
-        printf("[HTTP] socket() failed: %d\n", WSAGetLastError());
+        // socket() failed
         WSACleanup();
         return false;
     }
@@ -325,7 +322,7 @@ bool InitializeServer(int port) {
     server_addr.sin_port = htons(port);
     
     if (bind(g_listen_socket, (sockaddr*)&server_addr, sizeof(server_addr)) == SOCKET_ERROR) {
-        printf("[HTTP] bind() failed: %d\n", WSAGetLastError());
+        // bind() failed
         closesocket(g_listen_socket);
         WSACleanup();
         return false;
@@ -333,13 +330,13 @@ bool InitializeServer(int port) {
     
     // Listen
     if (listen(g_listen_socket, SOMAXCONN) == SOCKET_ERROR) {
-        printf("[HTTP] listen() failed: %d\n", WSAGetLastError());
+        // listen() failed
         closesocket(g_listen_socket);
         WSACleanup();
         return false;
     }
     
-    printf("[HTTP] Server listening on port %d\n", port);
+    // Server listening on port
     return true;
 }
 
@@ -358,33 +355,16 @@ int main(int argc, char* argv[]) {
         }
     }
     
-    printf("\n");
-    printf("╔════════════════════════════════════════════════════════╗\n");
-    printf("║   Simple GGUF API Server - Ollama-Compatible HTTP      ║\n");
-    printf("║              Real HTTP Server Implementation           ║\n");
-    printf("╚════════════════════════════════════════════════════════╝\n\n");
+    // Print banner
     
     // Initialize server
     if (!InitializeServer(port)) {
-        printf("FATAL: Failed to initialize server\n");
+        // Failed to initialize server
         return 1;
     }
     
     g_running = true;
     g_start_time = std::chrono::steady_clock::now();
-    
-    printf("\n");
-    printf("╔════════════════════════════════════════════════════════╗\n");
-    printf("║         Listening for Inference Requests               ║\n");
-    printf("╚════════════════════════════════════════════════════════╝\n\n");
-    
-    printf("Endpoints:\n");
-    printf("  GET  http://localhost:%d/health\n", port);
-    printf("  GET  http://localhost:%d/api/tags\n", port);
-    printf("  GET  http://localhost:%d/api/status\n", port);
-    printf("  POST http://localhost:%d/api/generate\n\n", port);
-    
-    printf("Press Ctrl+C to exit.\n\n");
     
     // Start server loop in main thread
     ServerLoop(port);

@@ -220,7 +220,16 @@ void Win32IDE_DAPServer::stopServer()
         m_serverSocket = INVALID_SOCKET;
     }
     if (m_serverThread.joinable())
-        m_serverThread.join();
+    {
+        if (m_serverThread.get_id() == std::this_thread::get_id())
+        {
+            m_serverThread.detach();
+        }
+        else
+        {
+            m_serverThread.join();
+        }
+    }
 }
 
 bool Win32IDE_DAPServer::isRunning() const

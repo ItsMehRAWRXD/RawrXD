@@ -6,7 +6,7 @@
 //   Bridge_ClearSuggestion, Bridge_RequestSuggestion
 //
 // Loads RawrXD_Titan.dll at runtime via LoadLibrary for live 70B inference.
-// Falls back to a simple demo ghost text if the DLL is not found.
+// Falls back to simple ghost text if the DLL is not found.
 // ============================================================================
 
 #include <windows.h>

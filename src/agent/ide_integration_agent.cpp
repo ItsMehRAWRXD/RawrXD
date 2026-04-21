@@ -37,7 +37,7 @@ void IDEIntegrationAgent::executeCommand(const std::string& command) {
 
 void IDEIntegrationAgent::processVoiceCommand(const std::string& transcribedText) {
     // Voice commands would match against a more natural grammar
-    // For example: "Install GitHub Copilot" -> action=install-extension, params={ext=github-copilot}
+    // Pattern: "Install GitHub Copilot" -> action=install-extension, params={ext=github-copilot}
     executeCommand(transcribedText);
 }
 

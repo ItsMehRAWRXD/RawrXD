@@ -15,8 +15,6 @@ void AgenticComposer::startGoal(const std::string& userGoal, const std::vector<s
     
     // Add planning step
     m_steps.push_back({"Goal Analysis", "Analyze cross-file dependencies for: " + userGoal, false, false});
-    
-    std::cout << "[AgenticComposer] Starting goal: " << userGoal << std::endl;
 
     // Simulate async planning task
     std::thread([this, userGoal, files]() {
@@ -44,11 +42,9 @@ void AgenticComposer::approveStep() {
         if (m_rewriteEngine->applyPlan(m_activePlan)) {
             m_steps.back().completed = true;
             m_state = ComposerState::Success;
-            std::cout << "[AgenticComposer] Successfully applied coordinated edits." << std::endl;
         } else {
             m_steps.back().failed = true;
             m_state = ComposerState::Failed;
-            std::cout << "[AgenticComposer] Plan application failed. Triggering rollback." << std::endl;
             m_rewriteEngine->rollback(m_activePlan);
         }
     }).detach();
@@ -61,9 +57,7 @@ void AgenticComposer::rejectStep() {
 }
 
 void AgenticComposer::rollbackAll() {
-    std::cout << "[AgenticComposer] Rolling back all changes." << std::endl;
     m_rewriteEngine->rollback(m_activePlan);
-    m_state = ComposerState::Idle;
 }
 
 } // namespace IDE

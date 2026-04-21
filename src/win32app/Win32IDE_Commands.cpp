@@ -79,9 +79,9 @@ HybridCloudManager& commandCloudManager()
     if (!initialized)
     {
         CloudProvider local;
-        local.providerId = "ollama";
-        local.name = "Ollama";
-        local.endpoint = "http://127.0.0.1:11434";
+        local.providerId = "native";
+        local.name = "native";
+        local.endpoint = "http://127.0.0.1:11435";
         local.isEnabled = true;
         local.isHealthy = true;
         local.costPerRequest = 0.0;
@@ -412,9 +412,16 @@ static FuzzyResult fuzzyMatchScore(const std::string& query, const std::string& 
 
 bool Win32IDE::routeCommand(int commandId)
 {
+    // [BOUNDARY-POINT LOGGING] Command dispatch entry
+    char logBuf[256];
+    snprintf(logBuf, sizeof(logBuf), "[Win32IDE::routeCommand] ENTRY: commandId=%d (0x%04X)", commandId, commandId);
+    OutputDebugStringA(logBuf);
+    OutputDebugStringA("\n");
+    
     // Route to appropriate handler based on command ID range
     if (commandId >= 1000 && commandId < 2000)
     {
+        OutputDebugStringA("[Win32IDE::routeCommand] Routing to >> handleFileCommand\n");
         handleFileCommand(commandId);
         return true;
     }
@@ -1361,6 +1368,30 @@ void Win32IDE::handleViewCommand(int commandId)
                 toggleSidebar();
             SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "Extensions");
             break;
+        case IDM_VIEW_GITHUB:  // show sidebar with GitHub view
+            setSidebarView(SidebarView::GitHub);
+            if (!m_sidebarVisible)
+                toggleSidebar();
+            SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "GitHub");
+            break;
+        case IDM_VIEW_GITHUB_PULL_RELEASE:  // show sidebar with Pull Requests / Releases view
+            setSidebarView(SidebarView::GitHubPullRelease);
+            if (!m_sidebarVisible)
+                toggleSidebar();
+            SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "GitHub Pull Requests / Releases");
+            break;
+        case IDM_VIEW_ACCOUNTS:  // show sidebar with Accounts view
+            setSidebarView(SidebarView::Accounts);
+            if (!m_sidebarVisible)
+                toggleSidebar();
+            SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "Accounts");
+            break;
+        case IDM_VIEW_MANAGE:  // show sidebar with Manage view
+            setSidebarView(SidebarView::Manage);
+            if (!m_sidebarVisible)
+                toggleSidebar();
+            SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "Manage");
+            break;
         case 2029:  // IDM_VIEW_TERMINAL — VS Code / Cursor: toggle panel + focus terminal bar
             onViewTerminalShortcut();
             SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)(m_outputPanelVisible ? "Terminal" : "Panel hidden"));
@@ -1524,6 +1555,457 @@ void Win32IDE::handleViewCommand(int commandId)
             if (m_hwndStatusBar)
                 SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "Feature Registry");
             break;
+
+        case IDM_TOOLS_RUN_14DAY_FINISHERS:
+        case IDM_TOOLS_RUN_14DAY_FINISHERS_STRICT:
+        case IDM_TOOLS_RUN_14DAY_QUALITY_GATES:
+        {
+            const bool strict = (commandId == IDM_TOOLS_RUN_14DAY_FINISHERS_STRICT);
+            const bool runQualityGateValidation = (commandId == IDM_TOOLS_RUN_14DAY_QUALITY_GATES);
+
+            auto append14DayLaunchAudit = [&](const std::string& outcome,
+                                              const std::filesystem::path& scriptPath,
+                                              const std::string& scriptArgs,
+                                              const std::string& details)
+            {
+                std::error_code ec;
+                const std::filesystem::path workspaceRoot = resolveRawrxdWorkspaceBase();
+                const std::filesystem::path reportDir = workspaceRoot / "reports" / "14day";
+                std::filesystem::create_directories(reportDir, ec);
+
+                std::ofstream out(reportDir / "ide_launch_audit.log", std::ios::app);
+                if (!out.is_open())
+                    return;
+
+                const auto now = std::chrono::system_clock::now();
+                const auto nowMs =
+                    std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
+
+                out << nowMs << "|cmd=" << commandId << "|mode="
+                    << (runQualityGateValidation ? "quality-gates" : (strict ? "finishers-strict" : "finishers"))
+                    << "|outcome=" << outcome << "|script=" << scriptPath.string() << "|args=" << scriptArgs;
+                if (!details.empty())
+                    out << "|details=" << details;
+                out << "\n";
+            };
+
+            auto enqueue14DayRun =
+                [&](const std::filesystem::path& scriptPath, const std::string& scriptArgs, const char* label,
+                    const char* statusText) -> bool
+            {
+                std::string pathUtf8 = scriptPath.string();
+                if (pathUtf8.empty())
+                    return false;
+
+                std::string escapedPath;
+                escapedPath.reserve(pathUtf8.size() + 8);
+                for (char c : pathUtf8)
+                {
+                    if (c == '\'')
+                        escapedPath += "''";
+                    else
+                        escapedPath.push_back(c);
+                }
+
+                std::string psCommand = "& '" + escapedPath + "'";
+                if (!scriptArgs.empty())
+                    psCommand += " " + scriptArgs;
+
+                const std::string queued = executePowerShellCommand(psCommand, true);
+                appendToOutput(std::string("[14-Day] Queued ") + label + ": " + scriptPath.string() + "\n" +
+                                   "[14-Day] " + queued + "\n",
+                               "Output", OutputSeverity::Info);
+                append14DayLaunchAudit("queued", scriptPath, scriptArgs, queued);
+
+                if (m_hwndStatusBar)
+                {
+                    SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)statusText);
+                }
+                return true;
+            };
+
+            auto tryRunFromRoots = [&](const std::vector<std::filesystem::path>& roots,
+                                       const std::vector<std::filesystem::path>& relPaths,
+                                       const std::string& args,
+                                       const char* label,
+                                       const char* statusText) -> bool
+            {
+                for (const auto& root : roots)
+                {
+                    for (const auto& rel : relPaths)
+                    {
+                        const std::filesystem::path candidate = root / rel;
+                        if (std::filesystem::exists(candidate) &&
+                            enqueue14DayRun(candidate, args, label, statusText))
+                        {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            };
+
+            std::vector<std::filesystem::path> roots;
+            if (!m_projectRoot.empty())
+                roots.emplace_back(m_projectRoot);
+            if (!m_currentDirectory.empty())
+                roots.emplace_back(m_currentDirectory);
+
+            char exePath[MAX_PATH] = {};
+            if (GetModuleFileNameA(nullptr, exePath, MAX_PATH) > 0)
+            {
+                roots.emplace_back(std::filesystem::path(exePath).parent_path());
+            }
+            roots.emplace_back(std::filesystem::current_path());
+
+            std::vector<std::filesystem::path> productionScriptCandidates;
+            productionScriptCandidates.emplace_back(
+                std::filesystem::path("scripts") / "production" / "Invoke-14Day-ProductionFinishers.ps1");
+            productionScriptCandidates.emplace_back(std::filesystem::path("rawrxd") / "scripts" / "production" /
+                                                    "Invoke-14Day-ProductionFinishers.ps1");
+            productionScriptCandidates.emplace_back("Run-14Day-ProductionFinishers.ps1");
+            productionScriptCandidates.emplace_back(std::filesystem::path("rawrxd") / "Run-14Day-ProductionFinishers.ps1");
+
+            std::vector<std::filesystem::path> qualityGateScriptCandidates;
+            qualityGateScriptCandidates.emplace_back(
+                std::filesystem::path("scripts") / "production" / "Invoke-14Day-QualityGateValidation.ps1");
+            qualityGateScriptCandidates.emplace_back(std::filesystem::path("rawrxd") / "scripts" / "production" /
+                                                     "Invoke-14Day-QualityGateValidation.ps1");
+
+            bool launched = false;
+            if (runQualityGateValidation)
+            {
+                launched = tryRunFromRoots(roots, qualityGateScriptCandidates, "-AllDays -Strict",
+                                           "quality-gate validation run", "14-day quality gates queued");
+            }
+            else
+            {
+                std::string args = "-AllDays";
+                if (strict)
+                    args += " -Strict";
+                launched = tryRunFromRoots(roots, productionScriptCandidates, args,
+                                           strict ? "production finisher run (strict)"
+                                                  : "production finisher run",
+                                           strict ? "14-day finishers queued (strict)"
+                                                  : "14-day finishers queued");
+            }
+
+            if (!launched)
+            {
+                append14DayLaunchAudit("failed", std::filesystem::path(), std::string(),
+                                       runQualityGateValidation
+                                           ? "missing Invoke-14Day-QualityGateValidation.ps1"
+                                           : "missing production finisher script");
+                appendToOutput(
+                    runQualityGateValidation
+                        ? "[14-Day] Could not find scripts/production/Invoke-14Day-QualityGateValidation.ps1\n"
+                        : "[14-Day] Could not find 14-day production finisher script\n",
+                    "Errors", OutputSeverity::Error);
+                if (m_hwndStatusBar)
+                    SendMessage(m_hwndStatusBar, SB_SETTEXT, 0,
+                                (LPARAM)(runQualityGateValidation ? "14-day quality-gate script not found"
+                                                                  : "14-day finisher script not found"));
+            }
+            break;
+        }
+
+        case IDM_TOOLS_OPEN_14DAY_REPORTS:
+        {
+            const std::filesystem::path reportDir = resolveRawrxdWorkspaceBase() / "reports" / "14day";
+            std::error_code ec;
+            std::filesystem::create_directories(reportDir, ec);
+            const auto openResult =
+                (INT_PTR)ShellExecuteW(m_hwndMain, L"open", reportDir.wstring().c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+            if (openResult <= 32)
+            {
+                appendToOutput(std::string("[14-Day] Failed to open reports folder: ") + reportDir.string() + "\n",
+                               "Errors", OutputSeverity::Error);
+                if (m_hwndStatusBar)
+                    SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "14-day reports open failed");
+            }
+            else
+            {
+                appendToOutput(std::string("[14-Day] Opened reports folder: ") + reportDir.string() + "\n", "Output",
+                               OutputSeverity::Info);
+                if (m_hwndStatusBar)
+                    SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "14-day reports folder opened");
+            }
+            break;
+        }
+
+        case IDM_TOOLS_SHOW_14DAY_GATE_SUMMARY:
+        {
+            const std::filesystem::path summaryPath =
+                resolveRawrxdWorkspaceBase() / "reports" / "14day" / "quality_gate_summary.md";
+            std::ifstream in(summaryPath);
+            if (!in.is_open())
+            {
+                appendToOutput(std::string("[14-Day] Could not read gate summary: ") + summaryPath.string() + "\n", "Errors",
+                               OutputSeverity::Error);
+                if (m_hwndStatusBar)
+                    SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "14-day gate summary missing");
+                break;
+            }
+
+            std::ostringstream preview;
+            preview << "[14-Day] Latest Quality Gate Summary\n";
+
+            std::string line;
+            int lineCount = 0;
+            while (std::getline(in, line) && lineCount < 30)
+            {
+                preview << line << "\n";
+                ++lineCount;
+            }
+
+            appendToOutput(preview.str(), "Output", OutputSeverity::Info);
+            if (m_hwndStatusBar)
+                SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "14-day gate summary loaded");
+            break;
+        }
+
+        case IDM_TOOLS_SHOW_14DAY_ARTIFACT_MANIFEST:
+        {
+            const std::filesystem::path manifestPath =
+                resolveRawrxdWorkspaceBase() / "reports" / "14day" / "quality_gate_artifact_manifest.md";
+            std::ifstream in(manifestPath);
+            if (!in.is_open())
+            {
+                appendToOutput(std::string("[14-Day] Could not read artifact manifest: ") + manifestPath.string() + "\n",
+                               "Errors", OutputSeverity::Error);
+                if (m_hwndStatusBar)
+                    SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "14-day artifact manifest missing");
+                break;
+            }
+
+            std::ostringstream preview;
+            preview << "[14-Day] Latest Artifact Manifest\n";
+
+            std::string line;
+            int lineCount = 0;
+            while (std::getline(in, line) && lineCount < 40)
+            {
+                preview << line << "\n";
+                ++lineCount;
+            }
+
+            appendToOutput(preview.str(), "Output", OutputSeverity::Info);
+            if (m_hwndStatusBar)
+                SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "14-day artifact manifest loaded");
+            break;
+        }
+
+        case IDM_TOOLS_RUN_14DAY_INTEGRATION_GATE:
+        {
+            auto enqueueIntegrationGate = [&](const std::filesystem::path& scriptPath) -> bool
+            {
+                std::string pathUtf8 = scriptPath.string();
+                if (pathUtf8.empty())
+                    return false;
+
+                std::string escapedPath;
+                escapedPath.reserve(pathUtf8.size() + 8);
+                for (char c : pathUtf8)
+                {
+                    if (c == '\'')
+                        escapedPath += "''";
+                    else
+                        escapedPath.push_back(c);
+                }
+
+                const std::string psCommand = "& '" + escapedPath + "'";
+                const std::string queued = executePowerShellCommand(psCommand, true);
+                appendToOutput(std::string("[14-Day] Queued integration gate: ") + scriptPath.string() + "\n" +
+                                   "[14-Day] " + queued + "\n",
+                               "Output", OutputSeverity::Info);
+                if (m_hwndStatusBar)
+                    SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "14-day integration gate queued");
+                return true;
+            };
+
+            std::vector<std::filesystem::path> roots;
+            if (!m_projectRoot.empty())
+                roots.emplace_back(m_projectRoot);
+            if (!m_currentDirectory.empty())
+                roots.emplace_back(m_currentDirectory);
+            roots.emplace_back(resolveRawrxdWorkspaceBase());
+
+            char exePath[MAX_PATH] = {};
+            if (GetModuleFileNameA(nullptr, exePath, MAX_PATH) > 0)
+                roots.emplace_back(std::filesystem::path(exePath).parent_path());
+
+            std::vector<std::filesystem::path> scriptCandidates;
+            scriptCandidates.emplace_back(std::filesystem::path("scripts") / "Run-IntegrationGateMinimal.ps1");
+            scriptCandidates.emplace_back(std::filesystem::path("rawrxd") / "scripts" / "Run-IntegrationGateMinimal.ps1");
+
+            bool launched = false;
+            for (const auto& root : roots)
+            {
+                for (const auto& rel : scriptCandidates)
+                {
+                    const std::filesystem::path candidate = root / rel;
+                    if (std::filesystem::exists(candidate) && enqueueIntegrationGate(candidate))
+                    {
+                        launched = true;
+                        break;
+                    }
+                }
+                if (launched)
+                    break;
+            }
+
+            if (!launched)
+            {
+                appendToOutput("[14-Day] Could not find scripts/Run-IntegrationGateMinimal.ps1\n", "Errors",
+                               OutputSeverity::Error);
+                if (m_hwndStatusBar)
+                    SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "14-day integration gate script not found");
+            }
+            break;
+        }
+
+        case IDM_TOOLS_RUN_14DAY_TURNKEY_SMOKE:
+        {
+            auto enqueueTurnkeySmoke = [&](const std::filesystem::path& scriptPath) -> bool
+            {
+                std::string pathUtf8 = scriptPath.string();
+                if (pathUtf8.empty())
+                    return false;
+
+                std::string escapedPath;
+                escapedPath.reserve(pathUtf8.size() + 8);
+                for (char c : pathUtf8)
+                {
+                    if (c == '\'')
+                        escapedPath += "''";
+                    else
+                        escapedPath.push_back(c);
+                }
+
+                const std::string psCommand = "& '" + escapedPath + "'";
+                const std::string queued = executePowerShellCommand(psCommand, true);
+                appendToOutput(std::string("[14-Day] Queued turnkey IDE smoke: ") + scriptPath.string() + "\n" +
+                                   "[14-Day] " + queued + "\n",
+                               "Output", OutputSeverity::Info);
+                if (m_hwndStatusBar)
+                    SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "14-day turnkey smoke queued");
+                return true;
+            };
+
+            std::vector<std::filesystem::path> roots;
+            if (!m_projectRoot.empty())
+                roots.emplace_back(m_projectRoot);
+            if (!m_currentDirectory.empty())
+                roots.emplace_back(m_currentDirectory);
+            roots.emplace_back(resolveRawrxdWorkspaceBase());
+
+            char exePath[MAX_PATH] = {};
+            if (GetModuleFileNameA(nullptr, exePath, MAX_PATH) > 0)
+                roots.emplace_back(std::filesystem::path(exePath).parent_path());
+
+            std::vector<std::filesystem::path> scriptCandidates;
+            scriptCandidates.emplace_back(std::filesystem::path("scripts") / "Run-TurnkeyIdeSmoke.ps1");
+            scriptCandidates.emplace_back(std::filesystem::path("rawrxd") / "scripts" / "Run-TurnkeyIdeSmoke.ps1");
+
+            bool launched = false;
+            for (const auto& root : roots)
+            {
+                for (const auto& rel : scriptCandidates)
+                {
+                    const std::filesystem::path candidate = root / rel;
+                    if (std::filesystem::exists(candidate) && enqueueTurnkeySmoke(candidate))
+                    {
+                        launched = true;
+                        break;
+                    }
+                }
+                if (launched)
+                    break;
+            }
+
+            if (!launched)
+            {
+                appendToOutput("[14-Day] Could not find scripts/Run-TurnkeyIdeSmoke.ps1\n", "Errors",
+                               OutputSeverity::Error);
+                if (m_hwndStatusBar)
+                    SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "14-day turnkey smoke script not found");
+            }
+            break;
+        }
+
+        case IDM_TOOLS_RUN_14DAY_AGGREGATE_GATE:
+        {
+            auto enqueueAggregateGate = [&](const std::filesystem::path& buildDir) -> bool
+            {
+                if (buildDir.empty())
+                    return false;
+
+                std::string dirUtf8 = buildDir.string();
+                if (dirUtf8.empty())
+                    return false;
+
+                std::string escapedDir;
+                escapedDir.reserve(dirUtf8.size() + 8);
+                for (char c : dirUtf8)
+                {
+                    if (c == '\'')
+                        escapedDir += "''";
+                    else
+                        escapedDir.push_back(c);
+                }
+
+                const std::string psCommand = "ctest --test-dir '" + escapedDir +
+                                              "' -R production_readiness_expansion_quality_gate -V -C Release";
+                const std::string queued = executePowerShellCommand(psCommand, true);
+                appendToOutput(std::string("[14-Day] Queued aggregate readiness gate from: ") + buildDir.string() +
+                                   "\n[14-Day] " + queued + "\n",
+                               "Output", OutputSeverity::Info);
+                if (m_hwndStatusBar)
+                    SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "14-day aggregate gate queued");
+                return true;
+            };
+
+            std::vector<std::filesystem::path> roots;
+            if (!m_projectRoot.empty())
+                roots.emplace_back(m_projectRoot);
+            if (!m_currentDirectory.empty())
+                roots.emplace_back(m_currentDirectory);
+            roots.emplace_back(resolveRawrxdWorkspaceBase());
+
+            char exePath[MAX_PATH] = {};
+            if (GetModuleFileNameA(nullptr, exePath, MAX_PATH) > 0)
+                roots.emplace_back(std::filesystem::path(exePath).parent_path());
+
+            std::vector<std::filesystem::path> buildDirCandidates;
+            buildDirCandidates.emplace_back("build-ninja");
+            buildDirCandidates.emplace_back(std::filesystem::path("rawrxd") / "build-ninja");
+
+            bool launched = false;
+            for (const auto& root : roots)
+            {
+                for (const auto& rel : buildDirCandidates)
+                {
+                    const std::filesystem::path candidate = root / rel;
+                    if (std::filesystem::exists(candidate) && std::filesystem::is_directory(candidate) &&
+                        enqueueAggregateGate(candidate))
+                    {
+                        launched = true;
+                        break;
+                    }
+                }
+                if (launched)
+                    break;
+            }
+
+            if (!launched)
+            {
+                appendToOutput("[14-Day] Could not find build-ninja directory for aggregate gate\n", "Errors",
+                               OutputSeverity::Error);
+                if (m_hwndStatusBar)
+                    SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "14-day aggregate gate build dir not found");
+            }
+            break;
+        }
 
         // ====================================================================
         // MODULES MENU (3050–3052) — IDM_MODULES_REFRESH, IMPORT, EXPORT
@@ -11148,6 +11630,10 @@ void Win32IDE::buildCommandRegistry()
     m_commandRegistry.push_back({IDM_VIEW_TOGGLE_BOTTOM_PANEL, "View: Toggle Panel", "Ctrl+J", "View"});
     m_commandRegistry.push_back({2030, "View: File Explorer", "Ctrl+Shift+E", "View"});
     m_commandRegistry.push_back({2031, "View: Extensions", "Ctrl+Shift+X", "View"});
+    m_commandRegistry.push_back({IDM_VIEW_GITHUB, "View: GitHub", "", "View"});
+    m_commandRegistry.push_back({IDM_VIEW_GITHUB_PULL_RELEASE, "View: GitHub Pull Requests / Releases", "", "View"});
+    m_commandRegistry.push_back({IDM_VIEW_ACCOUNTS, "View: Accounts", "", "View"});
+    m_commandRegistry.push_back({IDM_VIEW_MANAGE, "View: Manage", "", "View"});
     m_commandRegistry.push_back({IDM_VIEW_SOVEREIGN_SNAP_COMPACT, "View: Sovereign Snap Compact", "", "View"});
     m_commandRegistry.push_back({IDM_VIEW_SOVEREIGN_SNAP_STANDARD, "View: Sovereign Snap Standard", "", "View"});
     m_commandRegistry.push_back({IDM_VIEW_SOVEREIGN_SNAP_WIDE, "View: Sovereign Snap Wide", "", "View"});
@@ -11347,6 +11833,16 @@ void Win32IDE::buildCommandRegistry()
     m_commandRegistry.push_back({6001, "Tools: Model Manager", "Ctrl+Shift+P", "Tools"});
     m_commandRegistry.push_back({3015, "Tools: License Creator", "Ctrl+Shift+L", "Tools"});
     m_commandRegistry.push_back({3016, "Tools: Feature Registry", "Ctrl+Shift+F", "Tools"});
+    m_commandRegistry.push_back({IDM_TOOLS_RUN_14DAY_FINISHERS, "Tools: Run 14-Day Production Finishers", "", "Tools"});
+    m_commandRegistry.push_back({IDM_TOOLS_RUN_14DAY_FINISHERS_STRICT, "Tools: Run 14-Day Production Finishers (Strict)", "", "Tools"});
+    m_commandRegistry.push_back({IDM_TOOLS_RUN_14DAY_QUALITY_GATES, "Tools: Run 14-Day Quality Gate Validation", "", "Tools"});
+    m_commandRegistry.push_back({IDM_TOOLS_OPEN_14DAY_REPORTS, "Tools: Open 14-Day Reports Folder", "", "Tools"});
+    m_commandRegistry.push_back({IDM_TOOLS_SHOW_14DAY_GATE_SUMMARY, "Tools: Show Latest 14-Day Gate Summary", "", "Tools"});
+    m_commandRegistry.push_back({IDM_TOOLS_SHOW_14DAY_ARTIFACT_MANIFEST, "Tools: Show Latest 14-Day Artifact Manifest", "", "Tools"});
+    m_commandRegistry.push_back({IDM_TOOLS_RUN_14DAY_INTEGRATION_GATE, "Tools: Run 14-Day Integration Gate", "", "Tools"});
+    m_commandRegistry.push_back({IDM_TOOLS_RUN_14DAY_TURNKEY_SMOKE, "Tools: Run 14-Day Turnkey IDE Smoke", "", "Tools"});
+    m_commandRegistry.push_back({IDM_TOOLS_RUN_14DAY_AGGREGATE_GATE,
+                                 "Tools: Run 14-Day Production Readiness Aggregate Gate", "", "Tools"});
 
     // Module commands (6100–6199; menu uses 3050–3052 in handleViewCommand)
     m_commandRegistry.push_back({6101, "Modules: Refresh List", "", "Modules"});
@@ -13102,7 +13598,7 @@ void Win32IDE::showMonacoSettingsDialog()
 // ============================================================================
 void Win32IDE::ExecuteToolingSmokeTest()
 {
-    // CRITICAL FIX: Demonstrate proper bounds checking for tool table access
+    // CRITICAL FIX: Proper bounds checking for tool table access
     //
     // BEFORE (BROKEN):
     //   if (count == 0) return;
@@ -14822,7 +15318,7 @@ bool Win32IDE::handleFailureIntelligenceCommand(int commandId)
                 return true;
             }
 
-            // For demo: mark as Transient
+            // Mark as Transient
             g_failureIntelligence->learnFromFailure(*recent[0], Agentic::FailureCategory::Transient);
             appendToOutput("Pattern learned\n", "Output", OutputSeverity::Info);
             return true;

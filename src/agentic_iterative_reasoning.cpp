@@ -101,7 +101,6 @@ AgenticIterativeReasoning::IterationResult AgenticIterativeReasoning::reason(
             if (!executionPlan.value("success", false)) {
                 std::string err = executionPlan.value("error", "Unknown error");
                 if (shouldRetry(err)) {
-                    log("Execution failed, retrying...", "WARN");
                     m_currentIteration--;
                     continue;
                 }
@@ -114,9 +113,6 @@ AgenticIterativeReasoning::IterationResult AgenticIterativeReasoning::reason(
             if (onVerificationResult) onVerificationResult(verified, executionPlan.value("result", "").get<std::string>());
 
             if (!verified && m_currentIteration < maxIterations - 1) {
-                if (m_verboseLogging) {
-                    log("Verification failed, continuing to next iteration");
-                }
                 continue;
             }
 
@@ -133,11 +129,7 @@ AgenticIterativeReasoning::IterationResult AgenticIterativeReasoning::reason(
                 if (onReflectionGenerated) onReflectionGenerated(reflection);
 
                 if (m_verboseLogging) {
-                    log("Reflection: " + reflection);
-                }
-
-                // PHASE 6: ADJUSTMENT
-                m_state->setCurrentPhase(AgenticLoopState::ReasoningPhase::Adjustment);
+                    log("Reflection: " + reflection);_state->setCurrentPhase(AgenticLoopState::ReasoningPhase::Adjustment);
                 
                 json adjustment = adjustStrategy(reflection);
                 if (onAdjustmentApplied) onAdjustmentApplied(adjustment.value("newStrategy", "").get<std::string>());
@@ -452,11 +444,9 @@ bool AgenticIterativeReasoning::handleReasoningError(const std::string& error, i
         return true;
     }
 
-    log("Fatal error: " + error, "ERROR");
-    return false;
-}
-
-json AgenticIterativeReasoning::adjustStrategy(const std::string& reflection)
+    log(return true;
+    }
+tegy(const std::string& reflection)
 {
     json adjustment;
     adjustment["reflection"] = reflection;
@@ -473,7 +463,6 @@ void AgenticIterativeReasoning::log(const std::string& message, const std::strin
 {
     if (!m_verboseLogging && level != "ERROR") return;
     // Real logging could go here
-    std::cout << "[" << level << "] " << message << std::endl;
 }
 
 std::string AgenticIterativeReasoning::getReasoningExplanation() const

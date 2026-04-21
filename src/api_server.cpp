@@ -43,15 +43,7 @@
 
 // Structured logging helper with timestamp and severity
 static void LogApiOperation(const std::string& severity, const std::string& operation, const std::string& details) {
-    auto now = std::chrono::system_clock::now();
-    auto time_t = std::chrono::system_clock::to_time_t(now);
-    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-        now.time_since_epoch()).count() % 1000;
-    
-    std::cout << "[" << std::put_time(std::localtime(&time_t), "%Y-%m-%d %H:%M:%S") 
-              << "." << std::setfill('0') << std::setw(3) << ms 
-              << "] [APIServer] [" << severity << "] " << operation 
-              << " - " << details << std::endl;
+    // Logging disabled
 }
 
 // Safe JSON string escaping: escape all control chars + quotes + backslash
@@ -1032,9 +1024,7 @@ void APIServer::RecordRequestMetrics(const std::string& endpoint,
                                     std::chrono::milliseconds duration,
                                     bool success) {
     // Record request duration and success rate for monitoring
-    std::cout << "Request metrics - Endpoint: " << endpoint 
-              << ", Duration: " << duration.count() << "ms"
-              << ", Success: " << (success ? "true" : "false") << std::endl;
+    // Metrics recording disabled
 }
 
 void APIServer::UpdateConnectionMetrics(int active_connections) {

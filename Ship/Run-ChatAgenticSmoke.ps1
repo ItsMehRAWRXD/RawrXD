@@ -22,8 +22,11 @@ if (-not $exe) {
 }
 if (-not $exe) {
     foreach ($c in @(
+            (Join-Path $repoRoot "build-win32\bin\Release\RawrXD-Win32IDE.exe"),
+            (Join-Path $repoRoot "build-win32\bin\RawrXD-Win32IDE.exe"),
             (Join-Path $repoRoot "build-ninja\bin\Release\RawrXD-Win32IDE.exe"),
             (Join-Path $repoRoot "build-ninja\bin\RawrXD-Win32IDE.exe"),
+            (Join-Path $repoRoot "build-win32\RawrXD-Win32IDE.exe"),
             (Join-Path $repoRoot "build-ninja-ctx2\bin\Release\RawrXD-Win32IDE.exe"),
             (Join-Path $repoRoot "build-ninja-ctx2\bin\RawrXD-Win32IDE.exe"),
             (Join-Path $repoRoot "build-ninja\RawrXD-Win32IDE.exe"),

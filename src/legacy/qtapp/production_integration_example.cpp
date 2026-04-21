@@ -184,7 +184,7 @@ void loadModelWithStreaming(const QString& modelPath) {
     StreamingGGUFLoader* loader = new StreamingGGUFLoader();
     
     // Set maximum loaded zones (adjust based on available RAM)
-    // Example: 8 zones of ~1GB each = 8GB max memory footprint
+    // 8 zones of ~1GB each = 8GB max memory footprint
     loader->setMaxLoadedZones(8);
     
     // Open model file
@@ -229,7 +229,7 @@ void loadModelWithStreaming(const QString& modelPath) {
             }
         });
     
-    // Example: Load specific zones for inference
+    // Load specific zones for inference
     // In production, this would be driven by model architecture
     loader->LoadZone("embeddings");
     loader->LoadZone("layer_0_15");  // Layers 0-15

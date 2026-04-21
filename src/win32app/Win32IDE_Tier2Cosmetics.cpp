@@ -19,6 +19,7 @@
 
 #include "IDELogger.h"
 #include "Win32IDE.h"
+#include "../../include/RawrXD_ColorSpace.h"
 #include <algorithm>
 #include <commctrl.h>
 #include <cstdint>
@@ -30,46 +31,47 @@
 #include <set>
 #include <sstream>
 
-// SCAFFOLD_166: Tier 2 cosmetics and fonts
+using namespace RawrXD::ColorSpace;
 
+// Helper to convert AdobeRGBa to COLORREF for Win32 GDI
+inline COLORREF AdobeRGBaToCOLORREF(const AdobeRGBa& color) {
+    auto srgb = color.TosRGB();
+    return RGB(static_cast<int>(srgb.r * 255), 
+               static_cast<int>(srgb.g * 255), 
+               static_cast<int>(srgb.b * 255));
+}
 
-// SCAFFOLD_165: Git diff inline or side-by-side
-
-
-// SCAFFOLD_164: Reference tree and symbol list
-
-
-// SCAFFOLD_025: Git diff panel and hunk display
+// Tier 2 Cosmetics Implementation
 
 
 #pragma comment(lib, "comctl32.lib")
 
 // ============================================================================
-// TIER 2 COLORS (VS Code / JetBrains standard palette)
+// TIER 2 COLORS - Adobe RGBa VSU Effects
 // ============================================================================
-static const COLORREF T2_BG = RGB(30, 30, 30);
-static const COLORREF T2_PANEL_BG = RGB(37, 37, 38);
-static const COLORREF T2_HEADER_BG = RGB(45, 45, 46);
-static const COLORREF T2_TEXT = RGB(204, 204, 204);
-static const COLORREF T2_DIM_TEXT = RGB(128, 128, 128);
-static const COLORREF T2_ACCENT = RGB(0, 122, 204);
-static const COLORREF T2_BORDER = RGB(60, 60, 60);
-static const COLORREF T2_SELECTED = RGB(4, 57, 94);
-static const COLORREF T2_HOVER_BG = RGB(45, 45, 46);
-static const COLORREF T2_DIFF_ADD_BG = RGB(35, 61, 37);
-static const COLORREF T2_DIFF_DEL_BG = RGB(72, 30, 30);
-static const COLORREF T2_DIFF_ADD_TEXT = RGB(100, 255, 100);
-static const COLORREF T2_DIFF_DEL_TEXT = RGB(255, 100, 100);
-static const COLORREF T2_DIFF_HDR = RGB(86, 156, 214);
-static const COLORREF T2_CODELENS_TEXT = RGB(140, 140, 140);
-static const COLORREF T2_INLAY_TEXT = RGB(110, 160, 210);
-static const COLORREF T2_HOVER_BORDER = RGB(80, 80, 80);
-static const COLORREF T2_PARAM_ACTIVE = RGB(86, 156, 214);
-static const COLORREF T2_PARAM_INACTIVE = RGB(150, 150, 150);
-static const COLORREF T2_REF_FILE = RGB(229, 192, 123);
-static const COLORREF T2_REF_LINE_NUM = RGB(110, 110, 110);
-static const COLORREF T2_TAB_ACTIVE_BG = RGB(30, 30, 30);
-static const COLORREF T2_TAB_INACTIVE_BG = RGB(45, 45, 46);
+static const AdobeRGBa T2_BG = VSU::Acrylic::DarkBase;
+static const AdobeRGBa T2_PANEL_BG = VSU::Acrylic::PanelTint;
+static const AdobeRGBa T2_HEADER_BG = VSU::Acrylic::DarkLuminosity;
+static const AdobeRGBa T2_TEXT = AdobeRGBa(0.80f, 0.80f, 0.80f, 1.00f);
+static const AdobeRGBa T2_DIM_TEXT = AdobeRGBa(0.50f, 0.50f, 0.50f, 1.00f);
+static const AdobeRGBa T2_ACCENT = VSU::Accents::Blue;
+static const AdobeRGBa T2_BORDER = AdobeRGBa(0.24f, 0.24f, 0.24f, 1.00f);
+static const AdobeRGBa T2_SELECTED = VSU::Accents::BlueDark;
+static const AdobeRGBa T2_HOVER_BG = VSU::Acrylic::DarkLuminosity;
+static const AdobeRGBa T2_DIFF_ADD_BG = AdobeRGBa(0.14f, 0.24f, 0.14f, 1.00f);
+static const AdobeRGBa T2_DIFF_DEL_BG = AdobeRGBa(0.28f, 0.12f, 0.12f, 1.00f);
+static const AdobeRGBa T2_DIFF_ADD_TEXT = AdobeRGBa(0.39f, 1.00f, 0.39f, 1.00f);
+static const AdobeRGBa T2_DIFF_DEL_TEXT = AdobeRGBa(1.00f, 0.39f, 0.39f, 1.00f);
+static const AdobeRGBa T2_DIFF_HDR = VSU::Accents::Blue;
+static const AdobeRGBa T2_CODELENS_TEXT = AdobeRGBa(0.55f, 0.55f, 0.55f, 1.00f);
+static const AdobeRGBa T2_INLAY_TEXT = AdobeRGBa(0.43f, 0.63f, 0.82f, 1.00f);
+static const AdobeRGBa T2_HOVER_BORDER = AdobeRGBa(0.31f, 0.31f, 0.31f, 1.00f);
+static const AdobeRGBa T2_PARAM_ACTIVE = VSU::Accents::Blue;
+static const AdobeRGBa T2_PARAM_INACTIVE = AdobeRGBa(0.59f, 0.59f, 0.59f, 1.00f);
+static const AdobeRGBa T2_REF_FILE = AdobeRGBa(0.90f, 0.75f, 0.48f, 1.00f);
+static const AdobeRGBa T2_REF_LINE_NUM = AdobeRGBa(0.43f, 0.43f, 0.43f, 1.00f);
+static const AdobeRGBa T2_TAB_ACTIVE_BG = VSU::Acrylic::DarkBase;
+static const AdobeRGBa T2_TAB_INACTIVE_BG = VSU::Acrylic::DarkLuminosity;
 
 // ============================================================================
 // TIER 2 IDs
@@ -115,7 +117,7 @@ static void ensureTier2ClassesRegistered(HINSTANCE hInst)
         wc.lpfnWndProc = DefWindowProcA;
         wc.hInstance = hInst;
         wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-        wc.hbrBackground = CreateSolidBrush(T2_BG);
+        wc.hbrBackground = CreateSolidBrush(AdobeRGBaToCOLORREF(T2_BG));
         wc.lpszClassName = name;
         RegisterClassExA(&wc);
     };
@@ -432,7 +434,7 @@ void Win32IDE::createGitDiffPanel()
         headerH, halfW, panelH - dpiScale(60) - headerH, m_hwndGitDiffPanel, (HMENU)(UINT_PTR)IDC_GITDIFF_LEFT,
         GetModuleHandle(NULL), NULL);
     SendMessageA(m_hwndGitDiffLeft, WM_SETFONT, (WPARAM)m_gitDiffFont, TRUE);
-    SendMessageA(m_hwndGitDiffLeft, EM_SETBKGNDCOLOR, 0, T2_BG);
+    SendMessageA(m_hwndGitDiffLeft, EM_SETBKGNDCOLOR, 0, AdobeRGBaToCOLORREF(T2_BG));
 
     // Right pane (new)
     m_hwndGitDiffRight = CreateWindowExA(
@@ -440,7 +442,7 @@ void Win32IDE::createGitDiffPanel()
         headerH, halfW, panelH - dpiScale(60) - headerH, m_hwndGitDiffPanel, (HMENU)(UINT_PTR)IDC_GITDIFF_RIGHT,
         GetModuleHandle(NULL), NULL);
     SendMessageA(m_hwndGitDiffRight, WM_SETFONT, (WPARAM)m_gitDiffFont, TRUE);
-    SendMessageA(m_hwndGitDiffRight, EM_SETBKGNDCOLOR, 0, T2_BG);
+    SendMessageA(m_hwndGitDiffRight, EM_SETBKGNDCOLOR, 0, AdobeRGBaToCOLORREF(T2_BG));
 
     // Navigation buttons
     CreateWindowExA(0, "BUTTON", "< Prev Hunk", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, halfW - dpiScale(160),
@@ -495,25 +497,25 @@ void Win32IDE::populateGitDiffPane(HWND hwndRichEdit, const std::vector<DiffLine
         char lineNumBuf[16];
         snprintf(lineNumBuf, sizeof(lineNumBuf), "%4d | ", lineNum++);
 
-        COLORREF textColor = T2_TEXT;
-        COLORREF bgColor = T2_BG;
+        COLORREF textColor = AdobeRGBaToCOLORREF(T2_TEXT);
+        COLORREF bgColor = AdobeRGBaToCOLORREF(T2_BG);
 
         switch (dl.type)
         {
             case DiffLineType::Added:
-                textColor = T2_DIFF_ADD_TEXT;
-                bgColor = T2_DIFF_ADD_BG;
+                textColor = AdobeRGBaToCOLORREF(T2_DIFF_ADD_TEXT);
+                bgColor = AdobeRGBaToCOLORREF(T2_DIFF_ADD_BG);
                 break;
             case DiffLineType::Removed:
-                textColor = T2_DIFF_DEL_TEXT;
-                bgColor = T2_DIFF_DEL_BG;
+                textColor = AdobeRGBaToCOLORREF(T2_DIFF_DEL_TEXT);
+                bgColor = AdobeRGBaToCOLORREF(T2_DIFF_DEL_BG);
                 break;
             case DiffLineType::Context:
             default:
                 break;
         }
 
-        appendColored(lineNumBuf, T2_DIM_TEXT, T2_BG);
+        appendColored(lineNumBuf, AdobeRGBaToCOLORREF(T2_DIM_TEXT), AdobeRGBaToCOLORREF(T2_BG));
         appendColored(dl.text + "\n", textColor, bgColor);
     }
 }
@@ -583,12 +585,12 @@ LRESULT CALLBACK Win32IDE::GitDiffPanelProc(HWND hwnd, UINT msg, WPARAM wParam, 
             // Header bar
             int headerH = ide ? ide->dpiScale(32) : 32;
             RECT headerRect = {0, 0, rc.right, headerH};
-            HBRUSH hdrBrush = CreateSolidBrush(T2_HEADER_BG);
+            HBRUSH hdrBrush = CreateSolidBrush(AdobeRGBaToCOLORREF(T2_HEADER_BG));
             FillRect(hdc, &headerRect, hdrBrush);
             DeleteObject(hdrBrush);
 
             SetBkMode(hdc, TRANSPARENT);
-            SetTextColor(hdc, T2_DIFF_HDR);
+            SetTextColor(hdc, AdobeRGBaToCOLORREF(T2_DIFF_HDR));
             int halfW = rc.right / 2;
             RECT leftLabel = {8, 6, halfW, headerH};
             DrawTextA(hdc, "Original (HEAD)", -1, &leftLabel, DT_LEFT | DT_SINGLELINE);
@@ -596,7 +598,7 @@ LRESULT CALLBACK Win32IDE::GitDiffPanelProc(HWND hwnd, UINT msg, WPARAM wParam, 
             DrawTextA(hdc, "Working Copy", -1, &rightLabel, DT_LEFT | DT_SINGLELINE);
 
             // Divider
-            HPEN pen = CreatePen(PS_SOLID, 1, T2_BORDER);
+            HPEN pen = CreatePen(PS_SOLID, 1, AdobeRGBaToCOLORREF(T2_BORDER));
             HPEN oldPen = (HPEN)SelectObject(hdc, pen);
             MoveToEx(hdc, halfW, 0, NULL);
             LineTo(hdc, halfW, rc.bottom);
@@ -671,7 +673,7 @@ void Win32IDE::initTerminalTabs()
     ps.shellPath = "powershell.exe";
     ps.shellArgs = "-NoLogo";
     ps.icon = "PS";
-    ps.color = RGB(0, 122, 204);
+    ps.color = AdobeRGBaToCOLORREF(VSU::Accents::Blue);
     m_terminalTabProfiles.push_back(ps);
 
     TerminalProfile cmd;
@@ -679,7 +681,7 @@ void Win32IDE::initTerminalTabs()
     cmd.shellPath = "cmd.exe";
     cmd.shellArgs = "";
     cmd.icon = ">";
-    cmd.color = RGB(204, 204, 204);
+    cmd.color = AdobeRGBaToCOLORREF(AdobeRGBa(0.80f, 0.80f, 0.80f, 1.00f));
     m_terminalTabProfiles.push_back(cmd);
 
     // Check for Git Bash
@@ -690,7 +692,7 @@ void Win32IDE::initTerminalTabs()
         bash.shellPath = "C:\\Program Files\\Git\\bin\\bash.exe";
         bash.shellArgs = "--login -i";
         bash.icon = "$";
-        bash.color = RGB(214, 157, 133);
+        bash.color = AdobeRGBaToCOLORREF(AdobeRGBa(0.84f, 0.62f, 0.52f, 1.00f));
         m_terminalTabProfiles.push_back(bash);
     }
 
@@ -702,7 +704,7 @@ void Win32IDE::initTerminalTabs()
         wsl.shellPath = "wsl.exe";
         wsl.shellArgs = "";
         wsl.icon = "~";
-        wsl.color = RGB(78, 201, 176);
+        wsl.color = AdobeRGBaToCOLORREF(AdobeRGBa(0.31f, 0.79f, 0.69f, 1.00f));
         m_terminalTabProfiles.push_back(wsl);
     }
 
@@ -829,7 +831,7 @@ void Win32IDE::addTerminalTab(int profileIndex)
         }
         if (m_activeTerminalTab == static_cast<int>(tabIndex) && m_hwndPowerShellOutput)
         {
-            appendPowerShellOutput(filtered, RGB(200, 200, 200));
+            appendPowerShellOutput(filtered, AdobeRGBaToCOLORREF(AdobeRGBa(0.78f, 0.78f, 0.78f, 1.00f)));
         }
     };
 
@@ -839,7 +841,7 @@ void Win32IDE::addTerminalTab(int profileIndex)
             return;
         if (m_activeTerminalTab == static_cast<int>(tabIndex) && m_hwndPowerShellOutput)
         {
-            appendPowerShellOutput("[ERROR] " + error, RGB(255, 100, 100));
+            appendPowerShellOutput("[ERROR] " + error, AdobeRGBaToCOLORREF(VSU::Accents::Error));
         }
     };
 
@@ -955,7 +957,7 @@ LRESULT CALLBACK Win32IDE::TerminalTabBarProc(HWND hwnd, UINT msg, WPARAM wParam
             RECT rc;
             GetClientRect(hwnd, &rc);
 
-            HBRUSH bgBrush = CreateSolidBrush(T2_HEADER_BG);
+            HBRUSH bgBrush = CreateSolidBrush(AdobeRGBaToCOLORREF(T2_HEADER_BG));
             FillRect(hdc, &rc, bgBrush);
             DeleteObject(bgBrush);
 
@@ -978,7 +980,7 @@ LRESULT CALLBACK Win32IDE::TerminalTabBarProc(HWND hwnd, UINT msg, WPARAM wParam
                 auto& tab = ide->m_terminalTabs[i];
                 RECT tabRect = {x, 0, x + tabW, tabH};
 
-                COLORREF bgColor = (i == ide->m_activeTerminalTab) ? T2_TAB_ACTIVE_BG : T2_TAB_INACTIVE_BG;
+                COLORREF bgColor = (i == ide->m_activeTerminalTab) ? AdobeRGBaToCOLORREF(T2_TAB_ACTIVE_BG) : AdobeRGBaToCOLORREF(T2_TAB_INACTIVE_BG);
                 HBRUSH tabBrush = CreateSolidBrush(bgColor);
                 FillRect(hdc, &tabRect, tabBrush);
                 DeleteObject(tabBrush);
@@ -1002,12 +1004,12 @@ LRESULT CALLBACK Win32IDE::TerminalTabBarProc(HWND hwnd, UINT msg, WPARAM wParam
                 DeleteObject(iconBrush);
 
                 // Tab title
-                SetTextColor(hdc, (i == ide->m_activeTerminalTab) ? T2_TEXT : T2_DIM_TEXT);
+                SetTextColor(hdc, (i == ide->m_activeTerminalTab) ? AdobeRGBaToCOLORREF(T2_TEXT) : AdobeRGBaToCOLORREF(T2_DIM_TEXT));
                 RECT textRect = {x + 22, 0, x + tabW - 20, tabH};
                 DrawTextA(hdc, tab.title.c_str(), -1, &textRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
 
                 // Close [x] area
-                SetTextColor(hdc, T2_DIM_TEXT);
+                SetTextColor(hdc, AdobeRGBaToCOLORREF(T2_DIM_TEXT));
                 RECT closeRect = {x + tabW - 18, 0, x + tabW - 4, tabH};
                 DrawTextA(hdc, "x", 1, &closeRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
@@ -1232,7 +1234,7 @@ LRESULT CALLBACK Win32IDE::HoverTooltipProc(HWND hwnd, UINT msg, WPARAM wParam, 
             GetClientRect(hwnd, &rc);
 
             // Background
-            HBRUSH bgBrush = CreateSolidBrush(RGB(40, 40, 44));
+            HBRUSH bgBrush = CreateSolidBrush(AdobeRGBaToCOLORREF(VSU::Acrylic::DarkBase));
             FillRect(hdc, &rc, bgBrush);
             DeleteObject(bgBrush);
 
@@ -1260,20 +1262,20 @@ LRESULT CALLBACK Win32IDE::HoverTooltipProc(HWND hwnd, UINT msg, WPARAM wParam, 
                 if (firstLine && ide->m_hoverBoldFont)
                 {
                     SelectObject(hdc, ide->m_hoverBoldFont);
-                    SetTextColor(hdc, RGB(78, 201, 176));
+                    SetTextColor(hdc, AdobeRGBaToCOLORREF(AdobeRGBa(0.31f, 0.79f, 0.69f, 1.00f)));
                     firstLine = false;
                 }
                 else if (line.find("```") == 0)
                 {
                     // Code block marker — use monospace color
-                    SetTextColor(hdc, RGB(206, 145, 120));
+                    SetTextColor(hdc, AdobeRGBaToCOLORREF(AdobeRGBa(0.81f, 0.57f, 0.47f, 1.00f)));
                     SelectObject(hdc, ide->m_hoverFont);
                     continue;
                 }
                 else
                 {
                     SelectObject(hdc, ide->m_hoverFont);
-                    SetTextColor(hdc, T2_TEXT);
+                    SetTextColor(hdc, AdobeRGBaToCOLORREF(T2_TEXT));
                 }
 
                 TextOutA(hdc, 12, y, line.c_str(), (int)line.size());
@@ -1284,7 +1286,7 @@ LRESULT CALLBACK Win32IDE::HoverTooltipProc(HWND hwnd, UINT msg, WPARAM wParam, 
             }
 
             // Border
-            HPEN borderPen = CreatePen(PS_SOLID, 1, T2_HOVER_BORDER);
+            HPEN borderPen = CreatePen(PS_SOLID, 1, AdobeRGBaToCOLORREF(T2_HOVER_BORDER));
             HPEN oldPen = (HPEN)SelectObject(hdc, borderPen);
             HBRUSH oldBr = (HBRUSH)SelectObject(hdc, GetStockObject(NULL_BRUSH));
             Rectangle(hdc, rc.left, rc.top, rc.right, rc.bottom);
@@ -1553,7 +1555,7 @@ LRESULT CALLBACK Win32IDE::SignatureHelpProc(HWND hwnd, UINT msg, WPARAM wParam,
             RECT rc;
             GetClientRect(hwnd, &rc);
 
-            HBRUSH bgBrush = CreateSolidBrush(RGB(40, 40, 44));
+            HBRUSH bgBrush = CreateSolidBrush(AdobeRGBaToCOLORREF(VSU::Acrylic::DarkBase));
             FillRect(hdc, &rc, bgBrush);
             DeleteObject(bgBrush);
 
@@ -1573,11 +1575,11 @@ LRESULT CALLBACK Win32IDE::SignatureHelpProc(HWND hwnd, UINT msg, WPARAM wParam,
             // Render parameter indicator
             std::string paramLabel =
                 "Parameter " + std::to_string(activeParam + 1) + "/" + std::to_string(ide->m_signatureParamCount);
-            SetTextColor(hdc, T2_DIM_TEXT);
+            SetTextColor(hdc, AdobeRGBaToCOLORREF(T2_DIM_TEXT));
             TextOutA(hdc, 12, 6, paramLabel.c_str(), (int)paramLabel.size());
 
             // Render the signature with highlighted active param
-            SetTextColor(hdc, T2_TEXT);
+            SetTextColor(hdc, AdobeRGBaToCOLORREF(T2_TEXT));
             int y = rc.bottom / 2;
 
             // Split signature at commas and highlight the active one
@@ -1586,7 +1588,7 @@ LRESULT CALLBACK Win32IDE::SignatureHelpProc(HWND hwnd, UINT msg, WPARAM wParam,
             if (parenOpen != std::string::npos)
             {
                 std::string prefix = sig.substr(0, parenOpen + 1);
-                SetTextColor(hdc, T2_TEXT);
+                SetTextColor(hdc, AdobeRGBaToCOLORREF(T2_TEXT));
                 SIZE prefixSize;
                 GetTextExtentPoint32A(hdc, prefix.c_str(), (int)prefix.size(), &prefixSize);
                 TextOutA(hdc, 12, y, prefix.c_str(), (int)prefix.size());
@@ -1608,14 +1610,14 @@ LRESULT CALLBACK Win32IDE::SignatureHelpProc(HWND hwnd, UINT msg, WPARAM wParam,
                 {
                     if (i > 0)
                     {
-                        SetTextColor(hdc, T2_DIM_TEXT);
+                        SetTextColor(hdc, AdobeRGBaToCOLORREF(T2_DIM_TEXT));
                         TextOutA(hdc, x, y, ", ", 2);
                         SIZE commaSize;
                         GetTextExtentPoint32A(hdc, ", ", 2, &commaSize);
                         x += commaSize.cx;
                     }
 
-                    SetTextColor(hdc, (i == activeParam) ? T2_PARAM_ACTIVE : T2_PARAM_INACTIVE);
+                    SetTextColor(hdc, (i == activeParam) ? AdobeRGBaToCOLORREF(T2_PARAM_ACTIVE) : AdobeRGBaToCOLORREF(T2_PARAM_INACTIVE));
                     if (i == activeParam)
                     {
                         SelectObject(hdc, ide->m_hoverBoldFont ? ide->m_hoverBoldFont : ide->m_signatureFont);
@@ -1633,7 +1635,7 @@ LRESULT CALLBACK Win32IDE::SignatureHelpProc(HWND hwnd, UINT msg, WPARAM wParam,
 
                 if (parenClose != std::string::npos)
                 {
-                    SetTextColor(hdc, T2_TEXT);
+                    SetTextColor(hdc, AdobeRGBaToCOLORREF(T2_TEXT));
                     TextOutA(hdc, x, y, ")", 1);
                 }
             }
@@ -1643,7 +1645,7 @@ LRESULT CALLBACK Win32IDE::SignatureHelpProc(HWND hwnd, UINT msg, WPARAM wParam,
             }
 
             // Border
-            HPEN borderPen = CreatePen(PS_SOLID, 1, T2_HOVER_BORDER);
+            HPEN borderPen = CreatePen(PS_SOLID, 1, AdobeRGBaToCOLORREF(T2_HOVER_BORDER));
             HPEN oldPen = (HPEN)SelectObject(hdc, borderPen);
             HBRUSH oldBr = (HBRUSH)SelectObject(hdc, GetStockObject(NULL_BRUSH));
             Rectangle(hdc, rc.left, rc.top, rc.right, rc.bottom);
@@ -1739,8 +1741,8 @@ void Win32IDE::showFindAllReferences(const std::string& symbol, const std::vecto
                                           (HMENU)(UINT_PTR)IDC_REFPANEL_TREE, GetModuleHandle(NULL), NULL);
 
     // Dark theme for TreeView
-    TreeView_SetBkColor(m_hwndReferenceTree, T2_PANEL_BG);
-    TreeView_SetTextColor(m_hwndReferenceTree, T2_TEXT);
+    TreeView_SetBkColor(m_hwndReferenceTree, AdobeRGBaToCOLORREF(T2_PANEL_BG));
+    TreeView_SetTextColor(m_hwndReferenceTree, AdobeRGBaToCOLORREF(T2_TEXT));
     SendMessageA(m_hwndReferenceTree, WM_SETFONT, (WPARAM)m_referenceFont, TRUE);
 
     // Group results by file
@@ -1856,21 +1858,21 @@ LRESULT CALLBACK Win32IDE::ReferencePanelProc(HWND hwnd, UINT msg, WPARAM wParam
 
             int headerH = ide ? ide->dpiScale(28) : 28;
             RECT headerRect = {0, 0, rc.right, headerH};
-            HBRUSH hdrBrush = CreateSolidBrush(T2_HEADER_BG);
+            HBRUSH hdrBrush = CreateSolidBrush(AdobeRGBaToCOLORREF(T2_HEADER_BG));
             FillRect(hdc, &headerRect, hdrBrush);
             DeleteObject(hdrBrush);
 
             if (ide)
             {
                 SetBkMode(hdc, TRANSPARENT);
-                SetTextColor(hdc, T2_TEXT);
+                SetTextColor(hdc, AdobeRGBaToCOLORREF(T2_TEXT));
                 std::string title = "References: '" + ide->m_referenceSymbol + "' (" +
                                     std::to_string(ide->m_referenceResults.size()) + " results)";
                 RECT titleRect = {8, 4, rc.right - 32, headerH};
                 DrawTextA(hdc, title.c_str(), -1, &titleRect, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
             }
 
-            HPEN borderPen = CreatePen(PS_SOLID, 1, T2_BORDER);
+            HPEN borderPen = CreatePen(PS_SOLID, 1, AdobeRGBaToCOLORREF(T2_BORDER));
             HPEN oldPen = (HPEN)SelectObject(hdc, borderPen);
             MoveToEx(hdc, 0, headerH - 1, NULL);
             LineTo(hdc, rc.right, headerH - 1);
@@ -2089,7 +2091,7 @@ void Win32IDE::renderCodeLens(HDC hdc)
     int visibleLines = (editorRC.bottom - editorRC.top) / lineHeight;
 
     SetBkMode(hdc, TRANSPARENT);
-    SetTextColor(hdc, T2_CODELENS_TEXT);
+    SetTextColor(hdc, AdobeRGBaToCOLORREF(T2_CODELENS_TEXT));
 
     for (const auto& entry : m_codeLensEntries)
     {
@@ -2413,12 +2415,12 @@ void Win32IDE::renderInlayHints(HDC hdc)
         GetTextExtentPoint32A(hdc, hint.text.c_str(), (int)hint.text.size(), &textSize);
 
         RECT pillRect = {x + 2, y + 1, x + textSize.cx + 6, y + lineHeight - 1};
-        HBRUSH pillBrush = CreateSolidBrush(RGB(50, 50, 55));
+        HBRUSH pillBrush = CreateSolidBrush(AdobeRGBaToCOLORREF(AdobeRGBa(0.20f, 0.20f, 0.22f, 1.00f)));
         FillRect(hdc, &pillRect, pillBrush);
         DeleteObject(pillBrush);
 
         // Draw rounded corners (simplified — just rect)
-        HPEN borderPen = CreatePen(PS_SOLID, 1, RGB(65, 65, 70));
+        HPEN borderPen = CreatePen(PS_SOLID, 1, AdobeRGBaToCOLORREF(AdobeRGBa(0.25f, 0.25f, 0.27f, 1.00f)));
         HPEN oldPen = (HPEN)SelectObject(hdc, borderPen);
         HBRUSH oldBr = (HBRUSH)SelectObject(hdc, GetStockObject(NULL_BRUSH));
         Rectangle(hdc, pillRect.left, pillRect.top, pillRect.right, pillRect.bottom);
@@ -2428,7 +2430,7 @@ void Win32IDE::renderInlayHints(HDC hdc)
 
         // Draw text
         SetBkMode(hdc, TRANSPARENT);
-        SetTextColor(hdc, T2_INLAY_TEXT);
+        SetTextColor(hdc, AdobeRGBaToCOLORREF(T2_INLAY_TEXT));
         TextOutA(hdc, x + 4, y + 1, hint.text.c_str(), (int)hint.text.size());
     }
 

@@ -97,8 +97,8 @@ Usage: rawrxd model <command> [arguments]
 Commands:
   pull <source>         Download a model
                           HuggingFace: bartowski/Qwen2.5-Coder-32B-Instruct-GGUF:Q4_K_M
-                          Ollama:      llama3.2:3b
-                          URL:         https://example.com/model.gguf
+                          native:      llama3.2:3b
+                          URL:         https://host.com/model.gguf
                           Local:       C:\models\my_model.gguf
 
   list <repo>           List available GGUF files in a HuggingFace repo

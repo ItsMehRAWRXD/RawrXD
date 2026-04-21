@@ -299,10 +299,10 @@ class RawrXDModelLoader
     void FlushIncidentalCache();
     void BeginStreamingRange(uint64_t offset, size_t size);
     void EndStreamingRange();
-    // Internal demonstration / self-test helper
+    // Internal self-test helper
     void RunInternalSelfTest();
 
-    // Sovereign capabilities demonstration
+    // Sovereign capabilities
     void DemonstrateSovereignCapabilities();
 
     // Backend mode and file type validation

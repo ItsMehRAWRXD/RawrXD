@@ -38,11 +38,26 @@ void Win32TerminalManager::resetStaleStateFromExitedProcess()
     m_running = false;
 
     if (m_outputThread.joinable())
-        m_outputThread.join();
+    {
+        if (m_outputThread.get_id() == std::this_thread::get_id())
+            m_outputThread.detach();
+        else
+            m_outputThread.join();
+    }
     if (m_errorThread.joinable())
-        m_errorThread.join();
+    {
+        if (m_errorThread.get_id() == std::this_thread::get_id())
+            m_errorThread.detach();
+        else
+            m_errorThread.join();
+    }
     if (m_monitorThread.joinable())
-        m_monitorThread.join();
+    {
+        if (m_monitorThread.get_id() == std::this_thread::get_id())
+            m_monitorThread.detach();
+        else
+            m_monitorThread.join();
+    }
 
     if (m_hProcess)
     {
@@ -393,11 +408,26 @@ void Win32TerminalManager::stop()
         WaitForSingleObject(m_hProcess, 5000);  // 5s max instead of INFINITE
 
         if (m_outputThread.joinable())
-            m_outputThread.join();
+        {
+            if (m_outputThread.get_id() == std::this_thread::get_id())
+                m_outputThread.detach();
+            else
+                m_outputThread.join();
+        }
         if (m_errorThread.joinable())
-            m_errorThread.join();
+        {
+            if (m_errorThread.get_id() == std::this_thread::get_id())
+                m_errorThread.detach();
+            else
+                m_errorThread.join();
+        }
         if (m_monitorThread.joinable())
-            m_monitorThread.join();
+        {
+            if (m_monitorThread.get_id() == std::this_thread::get_id())
+                m_monitorThread.detach();
+            else
+                m_monitorThread.join();
+        }
 
         HANDLE hStdInWrite = m_hStdInWrite;
         HANDLE hStdOutRead = m_hStdOutRead;

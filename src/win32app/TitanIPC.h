@@ -16,13 +16,20 @@
 //
 // Named pipe: \\.\pipe\RawrXD_TitanHost_{PID_of_IDE}
 //   Per-IDE-instance pipe name prevents cross-contamination.
+//
+// Frozen streaming transport contract (implementation lane):
+//   see TitanStreamIPCContract.h for shared-memory ring + mailbox + event ABI.
 
-#include <windows.h>
-#include <string>
 #include <cstdint>
 #include <functional>
+#include <string>
+#include <windows.h>
 
-namespace RawrXD {
+#include "TitanStreamIPCContract.h"
+
+
+namespace RawrXD
+{
 
 // ============================================================================
 // Protocol constants
@@ -33,6 +40,10 @@ namespace RawrXD {
 //   Response:  {"seq":N, "ok":true,  "completion":"...", "metadata":"..."}
 //   Response:  {"seq":N, "ok":false, "error":"..."}                      -- inference error
 //   Response:  {"seq":N, "ok":false, "error":"...", "fatal":true}       -- kernel fault; host is exiting
+//   Request:   {"cmd":"load_model", "path":"D:/models/foo.gguf"}   -- UTF-8 path; loads weights in TitanHost
+//   Response:  {"ok":true}  or  {"ok":false, "error":"..."}
+//   (Preferred over relying on RAWRXD_NATIVE_MODEL_PATH alone; IDE calls this before infer.)
+//
 //   Request:   {"cmd":"ping"}
 //   Response:  {"pong":true, "build":"..."}
 //   Request:   {"cmd":"exit"}
@@ -43,27 +54,24 @@ namespace RawrXD {
 // Host feeds result back into next inference round.  Up to 8 rounds per request.
 
 static constexpr uint32_t TITAN_PIPE_FRAME_MAX = 8 * 1024 * 1024;  // 8 MB
-static constexpr uint32_t TITAN_DEFAULT_TIMEOUT_MS = 120'000;       // 2 min
+static constexpr uint32_t TITAN_DEFAULT_TIMEOUT_MS = 120'000;      // 2 min
 static constexpr const char* TITAN_HOST_EXE = "RawrXD-TitanHost.exe";
 
 // ============================================================================
 // TitanProxy — client side, lives inside the IDE process
 // ============================================================================
 
-class TitanProxy {
-public:
+class TitanProxy
+{
+  public:
     // Acquire singleton.
     static TitanProxy& instance();
 
     // Send an inference request.  Blocking up to timeoutMs.
     // Returns true on success; fills  completion+metadata.
     // Returns false; fills error string on failure/crash/timeout.
-    bool submit(const std::string& prompt,
-                uint32_t          maxTokens,
-                uint32_t          timeoutMs,
-                std::string&      completion,
-                std::string&      metadata,
-                std::string&      error);
+    bool submit(const std::string& prompt, uint32_t maxTokens, uint32_t timeoutMs, std::string& completion,
+                std::string& metadata, std::string& error);
 
     // Optional streaming token callback.  Called on a worker thread.
     // If set, individual tokens are pushed before the final completion arrives.
@@ -82,6 +90,13 @@ public:
     // Ping the host process (health check).
     bool ping(std::string& buildInfo);
 
+    // Push model path to TitanHost over the pipe (UTF-8). Idempotent for the same path.
+    // Returns false if the host reports failure or the pipe breaks.
+    bool loadModel(const std::string& pathUtf8, std::string& error);
+
+    // Drop cached path (e.g. after RAWRXD_NATIVE_MODEL_PATH is cleared / model unloaded).
+    void clearLoadedModelCache();
+
     // Gracefully shut down the host process.
     void shutdown();
 
@@ -90,7 +105,7 @@ public:
 
     bool isConnected() const { return m_hPipe != INVALID_HANDLE_VALUE; }
 
-private:
+  private:
     TitanProxy() = default;
     ~TitanProxy() { shutdown(); }
     TitanProxy(const TitanProxy&) = delete;
@@ -106,19 +121,22 @@ private:
     // Kill the host process without sending "exit" (used after crash).
     void forceKillHost();
 
-    HANDLE   m_hPipe    = INVALID_HANDLE_VALUE;
-    HANDLE   m_hProcess = nullptr;  // HANDLE to TitanHost.exe
-    HANDLE   m_hJob     = nullptr;  // Job object keeping host alive
-    uint32_t m_seq      = 0;
+    HANDLE m_hPipe = INVALID_HANDLE_VALUE;
+    HANDLE m_hProcess = nullptr;  // HANDLE to TitanHost.exe
+    HANDLE m_hJob = nullptr;      // Job object keeping host alive
+    uint32_t m_seq = 0;
 
     // Critical section for serialising concurrent callers.
     CRITICAL_SECTION m_cs{};
-    bool             m_csInit = false;
+    bool m_csInit = false;
 
-    TokenCb     m_tokenCb;
-    ToolCallCb  m_toolCallCb;
+    TokenCb m_tokenCb;
+    ToolCallCb m_toolCallCb;
+
+    // Last path successfully sent to TitanHost (avoids redundant load_model frames).
+    std::string m_lastLoadedModelPathUtf8;
 
     std::string pipeName() const;
 };
 
-} // namespace RawrXD
+}  // namespace RawrXD

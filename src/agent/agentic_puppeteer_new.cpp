@@ -13,9 +13,6 @@ AgenticPuppeteer::AgenticPuppeteer()
     m_hallucinationPatterns = {"As of my knowledge cutoff", "I'm not sure but",
                               "I think", "probably", "likely", "might",
                               "according to", "was invented by"};
-    
-    std::cout << "[AgenticPuppeteer] Initialized with " << m_refusalPatterns.size() 
-              << " refusal patterns and " << m_hallucinationPatterns.size() << " hallucination patterns" << std::endl;
 }
 
 AgenticPuppeteer::~AgenticPuppeteer()

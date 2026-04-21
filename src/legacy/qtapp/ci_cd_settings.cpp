@@ -266,7 +266,7 @@ QString CICDSettings::registerWebhook(const QString& jobId, const QString& platf
         QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss")
     ).arg(rand() % 10000);
     
-    QString webhookUrl = QString("https://api.example.com/webhooks/%1").arg(webhookId);
+    QString webhookUrl = QString("https://api.host.com/webhooks/%1").arg(webhookId);
     
     emit webhookReceived(platform, "registered");
     

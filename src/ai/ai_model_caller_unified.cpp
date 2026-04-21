@@ -33,15 +33,7 @@
 enum LogLevel { DEBUG = 0, INFO = 1, WARN = 2, ERROR = 3 };
 
 static void LogMessage(LogLevel level, const char* fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    
-    const char* level_str[] = { "[DEBUG]", "[INFO]", "[WARN]", "[ERROR]" };
-    fprintf(stderr, "%s ", level_str[level]);
-    vfprintf(stderr, fmt, args);
-    fprintf(stderr, "\n");
-
-    va_end(args);
+    // Logging disabled
 }
 
 // ============================================================

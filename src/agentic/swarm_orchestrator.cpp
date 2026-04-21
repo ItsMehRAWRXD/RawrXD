@@ -63,7 +63,7 @@ RawrXD::Expected<std::string, SwarmError> SwarmOrchestrator::executeTask(
     if (!decompositionResult) return RawrXD::unexpected(decompositionResult.error());
     
     auto subtasks = decompositionResult.value();
-    if (subtasks.empty()) return "Task decomposition yielded no actionable items.";
+    if (subtasks.empty()) return std::string("Task decomposition yielded no actionable items.");
 
     auto swarmTask = std::make_unique<SwarmTask>();
     swarmTask->id = generateTaskId();

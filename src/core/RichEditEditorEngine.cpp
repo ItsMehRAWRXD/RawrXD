@@ -1,5 +1,6 @@
 // ============================================================================
 // RichEditEditorEngine.cpp — IEditorEngine Adapter for Win32 RichEdit
+// VSU Effects: Uses Adobe RGBa color space for professional color accuracy
 // ============================================================================
 //
 // Phase 28: Editor Engine Abstraction — RichEdit Emergency Fallback
@@ -23,6 +24,7 @@
 // ============================================================================
 
 #include "editor_engine.h"
+#include "../include/RawrXD_ColorSpace.h"
 
 #include <windows.h>
 #include <commctrl.h> // For Subclass
@@ -32,6 +34,16 @@
 #include <vector>
 
 #pragma comment(lib, "comctl32.lib")
+
+using namespace RawrXD::ColorSpace;
+
+// Helper to convert AdobeRGBa to COLORREF for Win32 GDI
+inline COLORREF AdobeRGBaToCOLORREF(const AdobeRGBa& color) {
+    auto srgb = color.TosRGB();
+    return RGB(static_cast<int>(srgb.r * 255), 
+               static_cast<int>(srgb.g * 255), 
+               static_cast<int>(srgb.b * 255));
+}
 
 // Forward declaration
 struct IDETheme;
@@ -517,7 +529,7 @@ LRESULT CALLBACK RichEditEditorEngine::SubclassProc(HWND hWnd, UINT uMsg, WPARAM
             GetCaretPos(&pt);
             
             HFONT hOldFont = (HFONT)SelectObject(hdc, self->m_hFont);
-            SetTextColor(hdc, RGB(128, 128, 128)); // Grey
+            SetTextColor(hdc, AdobeRGBaToCOLORREF(AdobeRGBa(0.50f, 0.50f, 0.50f, 1.00f))); // VSU Grey
             SetBkMode(hdc, TRANSPARENT);
             
             TextOutW(hdc, pt.x, pt.y, self->m_ghostText.c_str(), (int)self->m_ghostText.length());

@@ -1027,7 +1027,7 @@ Win32IDE::GhostTextCacheEntry Win32IDE::requestGhostTextCompletion(const std::st
         }
 
         if (provider == GhostProviderKind::Local) {
-            // ---- Primary: OrchestratorBridge FIM (uses AgentOllamaClient + FIMPromptBuilder) ----
+            // ---- Primary: OrchestratorBridge FIM (uses NativeInferenceClient + FIMPromptBuilder) ----
             {
                 auto& orchBridge = RawrXD::Agent::OrchestratorBridge::Instance();
                 RawrXD::Prediction::PredictionContext bCtx;
@@ -1050,8 +1050,9 @@ Win32IDE::GhostTextCacheEntry Win32IDE::requestGhostTextCompletion(const std::st
 
             // ---- Fallback: prediction backend, then native model, then local Ollama prompt ----
             if (!m_predictionProvider) {
-                std::string baseUrl = m_ollamaBaseUrl.empty() ? "http://localhost:11434" : m_ollamaBaseUrl;
-                m_predictionProvider = std::make_unique<OllamaProvider>(baseUrl);
+                std::string baseUrl = m_ollamaBaseUrl.empty() ? "http://localhost:11435" : m_ollamaBaseUrl;
+                m_predictionProvider = std::unique_ptr<RawrXD::Prediction::NativeStreamProvider, NativeStreamProviderDeleter>(
+                    new RawrXD::Prediction::OllamaProvider(baseUrl));
 
                 PredictionConfig cfg;
                 cfg.model       = getResolvedOllamaModel().empty() ? "qwen2.5-coder:14b" : getResolvedOllamaModel();

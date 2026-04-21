@@ -1,16 +1,32 @@
 param(
-    [string]$ExePath = "d:\rawrxd\build\bin\RawrEngine.exe",
+    [string]$ExePath = "",
     [string]$ModelPath = "F:\OllamaModels\Phi-3-mini-4k-instruct-q8_0.gguf",
     [string]$Prompt = "<|user|>`ncreate a react server<|end|>`n<|assistant|>`n",
     [int]$MaxTokens = 16,
     [int]$TimeoutSeconds = 360,
-    [string]$OutFile = "d:\rawrxd\rawrengine_cli_proof.txt",
-    [string]$StatusFile = "d:\rawrxd\_proof_status.txt",
-    [string]$VerboseFile = "d:\rawrxd\_infer_verbose.txt"
+    [string]$OutFile = "",
+    [string]$StatusFile = "",
+    [string]$VerboseFile = ""
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+
+$repoRoot = Split-Path -Parent $PSScriptRoot
+if (-not $ExePath) {
+    foreach ($c in @(
+            (Join-Path $repoRoot "build-win32\bin\RawrEngine.exe"),
+            (Join-Path $repoRoot "build-ninja\bin\RawrEngine.exe"),
+            (Join-Path $repoRoot "build\bin\RawrEngine.exe"))) {
+        if (Test-Path -LiteralPath $c) { $ExePath = $c; break }
+    }
+}
+if (-not $ExePath) {
+    $ExePath = Join-Path $repoRoot "build-win32\bin\RawrEngine.exe"
+}
+if (-not $OutFile) { $OutFile = Join-Path $repoRoot "rawrengine_cli_proof.txt" }
+if (-not $StatusFile) { $StatusFile = Join-Path $repoRoot "_proof_status.txt" }
+if (-not $VerboseFile) { $VerboseFile = Join-Path $repoRoot "_infer_verbose.txt" }
 
 "EXE=$ExePath" | Set-Content -Path $StatusFile
 "MODEL=$ModelPath" | Add-Content -Path $StatusFile

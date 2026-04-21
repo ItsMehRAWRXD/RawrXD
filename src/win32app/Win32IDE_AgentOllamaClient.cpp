@@ -1,5 +1,5 @@
 // ============================================================================
-// Win32IDE_AgentOllamaClient.cpp — Agent Ollama Client Implementation
+// Win32IDE_NativeInferenceClient.cpp — Agent Ollama Client Implementation
 // ============================================================================
 // Provides Ollama integration for agentic operations:
 //   - Connection testing
@@ -28,7 +28,7 @@ static const std::string DEFAULT_OLLAMA_ENDPOINT = "http://localhost:11435";
 // AGENT OLLAMA CLIENT METHODS
 // ============================================================================
 
-void Win32IDE::initAgentOllamaClient()
+void Win32IDE::initNativeInferenceClient()
 {
     m_ollamaClientInitialized = true;
     m_ollamaConnected = false;
@@ -47,7 +47,7 @@ void Win32IDE::initAgentOllamaClient()
     m_ollamaStatus = "Not connected";
 
     // Connection probing is handled directly through WinHTTP in this module.
-    m_ollamaClient.reset();
+    m_nativeClient.reset();
 
     // Initialize agentic chat session
     m_agenticChatSession = std::make_unique<RawrXD::Agentic::AgenticChatSession>();
@@ -65,7 +65,7 @@ void Win32IDE::initAgentOllamaClient()
         }
     }
     m_agenticChatSession->Initialize(workspaceRoot, openFiles);
-    if (const char* envModel = std::getenv("RAWRXD_AGENT_OLLAMA_MODEL"))
+    if (const char* envModel = std::getenv("RAWRXD_AGENT_RAWRXD_NATIVE_MODEL"))
     {
         if (envModel[0] != '\0')
         {
@@ -85,7 +85,7 @@ void Win32IDE::refreshAgenticChatSessionContext()
     {
         if (!m_ollamaClientInitialized)
         {
-            initAgentOllamaClient();
+            initNativeInferenceClient();
             return;
         }
         m_agenticChatSession = std::make_unique<RawrXD::Agentic::AgenticChatSession>();
@@ -159,7 +159,7 @@ void Win32IDE::syncAgenticToolGuardrailsFromWorkspace()
     rawrxd::MinimalAgentController::instance().setWorkspaceRoot(absRoot);
 }
 
-void Win32IDE::shutdownAgentOllamaClient()
+void Win32IDE::shutdownNativeInferenceClient()
 {
     m_ollamaClientInitialized = false;
     m_ollamaConnected = false;
@@ -172,7 +172,7 @@ void Win32IDE::shutdownAgentOllamaClient()
     }
 
     // Reset Ollama client
-    m_ollamaClient.reset();
+    m_nativeClient.reset();
 }
 
 // E1: retry connection up to 2 times on failure before giving up
@@ -399,4 +399,10 @@ void Win32IDE::setOllamaEndpoint(const std::string& endpoint)
 std::string Win32IDE::getOllamaEndpoint() const
 {
     return m_ollamaEndpoint;
+}
+
+// Alias for compatibility with Win32IDE_Core.cpp initialization sequence
+void Win32IDE::initAgentOllamaClient()
+{
+    initNativeInferenceClient();
 }

@@ -240,6 +240,25 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             }
             return 0;
 
+        // Safe cross-thread output append: lParam owns a heap-allocated std::string.
+        // Posted by AgentPanel_AppendToken (background IPC thread) → consumed on UI thread.
+        case WM_IDE_OUTPUT_APPEND_SAFE:
+        {
+            auto* payload = reinterpret_cast<std::string*>(lParam);
+            if (payload)
+            {
+                appendToOutput(*payload, "Agent", OutputSeverity::Info);
+                delete payload;
+            }
+            return 0;
+        }
+
+        // Deferred agent diff refresh (posted from AgentPanel_FinalizeStream on any thread).
+        case WM_APP + 112:
+            if (bridgeIsAgentPanelReady())
+                bridgeRefreshAgentDiff();
+            return 0;
+
         case WM_ACTIVATE:
         {
             WORD state = LOWORD(wParam);

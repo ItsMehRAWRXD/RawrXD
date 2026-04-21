@@ -20,12 +20,10 @@ static std::atomic<bool> g_swarmActive{false};
 
 int WINAPI InitializeSwarmSystemImpl(void* rawConfig) {
     if (!rawConfig) {
-        OutputDebugStringA("[Win32SwarmBridge] Error: Null configuration (E_INVALIDARG)\n");
         return E_INVALIDARG;
     }
 
     if (g_swarmActive.exchange(true)) {
-        OutputDebugStringA("[Win32SwarmBridge] Swarm already initialized\n");
         return S_OK; // Idempotent success
     }
 
@@ -33,13 +31,11 @@ int WINAPI InitializeSwarmSystemImpl(void* rawConfig) {
     
     // Validate config
     if (config->structSize != sizeof(SwarmInitConfig)) {
-        OutputDebugStringA("[Win32SwarmBridge] Invalid struct size\n");
         g_swarmActive = false;
         return E_INVALIDARG;
     }
 
     if (config->maxSubAgents == 0 || config->maxSubAgents > 64) {
-        OutputDebugStringA("[Win32SwarmBridge] Invalid swarm configuration\n");
         g_swarmActive = false;
         return E_INVALIDARG;
     }
@@ -56,7 +52,6 @@ int WINAPI InitializeSwarmSystemImpl(void* rawConfig) {
         
         // Initialize coordinator inference model
         if (!manager.initializeSwarm(topology, config->coordinatorModel)) {
-            OutputDebugStringA("[Win32SwarmBridge] Failed to initialize coordinator model\n");
             g_swarmActive = false;
             return E_FAIL;
         }
@@ -64,15 +59,9 @@ int WINAPI InitializeSwarmSystemImpl(void* rawConfig) {
         g_swarmContext = std::make_unique<SwarmContext>();
         g_swarmContext->creationTime = GetTickCount64();
 
-        char msg[256];
-        sprintf_s(msg, "[Win32SwarmBridge] Swarm initialized: %u workers, GPU steal=%d, model=%s\n",
-                  config->maxSubAgents, (int)config->enableGPUWorkStealing, config->coordinatorModel);
-        OutputDebugStringA(msg);
-
         return S_OK;
     }
     catch (...) {
-        OutputDebugStringA("[Win32SwarmBridge] Exception during initialization\n");
         g_swarmActive = false;
         return E_UNEXPECTED;
     }
@@ -147,9 +136,6 @@ static char g_APIKey[128] = { 0 };
 // SLOTS 56-60
 extern "C" __declspec(dllexport) void AgenticBridge_SetModelPath(const char* path) {
     if (path) strcpy_s(g_ModelPath, path);
-    char msg[MAX_PATH + 64];
-    sprintf_s(msg, "[AgenticBridge] Model Path set: %s\n", g_ModelPath);
-    OutputDebugStringA(msg);
 }
 
 extern "C" __declspec(dllexport) bool AgenticBridge_GetModelPath(char* buffer, uint32_t bufferSize) {
@@ -159,10 +145,8 @@ extern "C" __declspec(dllexport) bool AgenticBridge_GetModelPath(char* buffer, u
 }
 
 extern "C" __declspec(dllexport) void AgenticBridge_UpdateStatus(const char* status) {
-    if (!status) return;
-    char msg[256];
-    sprintf_s(msg, "[AgenticBridge] Status Update: %s\n", status);
-    OutputDebugStringA(msg);
+    // Status update processed
+    (void)status;
 }
 
 extern "C" __declspec(dllexport) bool AgenticBridge_GetAPIKey(char* buffer, uint32_t bufferSize) {
@@ -173,7 +157,6 @@ extern "C" __declspec(dllexport) bool AgenticBridge_GetAPIKey(char* buffer, uint
 
 extern "C" __declspec(dllexport) void AgenticBridge_SetAPIKey(const char* key) {
     if (key) strcpy_s(g_APIKey, key);
-    OutputDebugStringA("[AgenticBridge] API Key updated\n");
 }
 
 // AgenticBridge Context (Slots 61-63)
@@ -204,34 +187,28 @@ extern "C" __declspec(dllexport) void* AgenticBridge_GetContext() {
 
 extern "C" __declspec(dllexport) void AgenticBridge_SetContext(void* pContext) {
     g_pAgenticContext = pContext;
-    OutputDebugStringA("[AgenticBridge] Context updated\n");
 }
 
 extern "C" __declspec(dllexport) void AgenticBridge_ResetContext() {
     g_pAgenticContext = nullptr;
-    OutputDebugStringA("[AgenticBridge] Context reset\n");
 }
 
 // Win32IDE UI Components (Slots 21-23)
 extern "C" __declspec(dllexport) void* Win32IDE_createAcceleratorTable(void* pTableData, int count) {
     if (!pTableData || count <= 0) {
-        OutputDebugStringA("[Win32IDE] createAcceleratorTable invalid arguments\n");
         return nullptr;
     }
 
     HACCEL haccel = CreateAcceleratorTableA(static_cast<LPACCEL>(pTableData), count);
     if (!haccel) {
-        OutputDebugStringA("[Win32IDE] createAcceleratorTable failed\n");
         return nullptr;
     }
 
-    OutputDebugStringA("[Win32IDE] createAcceleratorTable created\n");
     return haccel;
 }
 
 extern "C" __declspec(dllexport) bool Win32IDE_removeTab(int tabIndex) {
     if (tabIndex < 0) {
-        OutputDebugStringA("[Win32IDE] removeTab invalid index\n");
         return false;
     }
 
@@ -252,16 +229,11 @@ extern "C" __declspec(dllexport) bool Win32IDE_removeTab(int tabIndex) {
 
 extern "C" __declspec(dllexport) bool Win32IDE_addTab(const char* title, void* pContent) {
     if (!title || title[0] == '\0') {
-        OutputDebugStringA("[Win32IDE] addTab invalid title\n");
         return false;
     }
 
     std::lock_guard<std::mutex> lock(g_uiBridgeStateMutex);
     g_tabs.push_back(TabEntry{title, pContent});
-
-    char buf[196];
-    sprintf_s(buf, "[Win32IDE] addTab title=%s count=%zu\n", title, g_tabs.size());
-    OutputDebugStringA(buf);
     return true;
 }
 
@@ -330,11 +302,9 @@ extern "C" __declspec(dllexport) void Win32IDE_hideSidebarPanel(const char* id) 
 
 extern "C" __declspec(dllexport) uint32_t Win32IDE_executeSwarmTask(const char* taskDesc) {
     if (!taskDesc) return 0;
-    OutputDebugStringA("[Win32SwarmBridge] Executing Swarm Task (Slot 54)\n");
     return RawrXD::Agentic::SubAgentManager::instance().executeSwarmTask(taskDesc);
 }
 
 extern "C" __declspec(dllexport) void Win32IDE_shutdownSwarmSystem() {
-    OutputDebugStringA("[Win32SwarmBridge] Shutting down Swarm System (Slot 55)\n");
     RawrXD::Bridge::ShutdownSwarmSystem();
 }

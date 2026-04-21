@@ -436,7 +436,6 @@ void HttpChainStep::start(const std::string& url,
                        const std::string& jsonBody,
                        int timeoutMs) {
     if (m_state == State::Running) {
-        fprintf(stderr, "[WARN] [HttpChainStep:%s] Already running\n", m_name.c_str());
         return;
     }
 
@@ -445,9 +444,6 @@ void HttpChainStep::start(const std::string& url,
 
     // CRITICAL: m_future MUST be stored as member to keep the async alive
     m_future = StlHttpClient::instance().postJsonAsync(url, jsonBody, timeoutMs);
-
-    fprintf(stderr, "[INFO] [HttpChainStep:%s] Started async POST %s\n",
-            m_name.c_str(), url.c_str());
 }
 
 bool HttpChainStep::poll() {
@@ -464,10 +460,6 @@ bool HttpChainStep::poll() {
             m_result = HttpResponse::fail(std::string("Future exception: ") + e.what());
             m_state  = State::Failed;
         }
-        fprintf(stderr, "[INFO] [HttpChainStep:%s] %s (%dms)\n",
-                m_name.c_str(),
-                m_state == State::Completed ? "Completed" : "Failed",
-                m_result.latencyMs);
         return true;
     }
     return false;
@@ -481,8 +473,6 @@ bool HttpChainStep::waitFor(int timeoutMs) {
     if (timeoutMs > 0) {
         auto status = m_future.wait_for(std::chrono::milliseconds(timeoutMs));
         if (status != std::future_status::ready) {
-            fprintf(stderr, "[WARN] [HttpChainStep:%s] Wait timed out after %dms\n",
-                    m_name.c_str(), timeoutMs);
             return false;
         }
     } else {
@@ -524,13 +514,10 @@ bool HttpChainExecutor::executeAll(
     m_results.clear();
     m_cancelled.store(false);
 
-    fprintf(stderr, "[INFO] [HttpChainExecutor] Executing %zu steps\n", m_pending.size());
-
     std::string prevResult;
 
     for (size_t i = 0; i < m_pending.size(); ++i) {
         if (m_cancelled.load()) {
-            fprintf(stderr, "[WARN] [HttpChainExecutor] Cancelled at step %zu\n", i);
             return false;
         }
 
@@ -563,13 +550,10 @@ bool HttpChainExecutor::executeAll(
         if (ok) {
             prevResult = sr.response.body;
         } else {
-            fprintf(stderr, "[ERROR] [HttpChainExecutor] Step '%s' failed: %s\n",
-                    step.name.c_str(), sr.response.error.c_str());
             return false;
         }
     }
 
-    fprintf(stderr, "[INFO] [HttpChainExecutor] All %zu steps completed\n", m_pending.size());
     return true;
 }
 

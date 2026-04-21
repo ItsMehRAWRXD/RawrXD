@@ -74,8 +74,9 @@ void Win32IDE::initLLMRouter() {
     m_taskPreferences[(size_t)LLMTaskType::ToolExecution].fallbackBackend   = AIBackendType::Gemini;
 
     // Chat → prefer LocalGGUF (low latency, free)
+    // Keep fallback inside local/native lane only.
     m_taskPreferences[(size_t)LLMTaskType::Chat].preferredBackend  = AIBackendType::LocalGGUF;
-    m_taskPreferences[(size_t)LLMTaskType::Chat].fallbackBackend   = AIBackendType::Ollama;
+    m_taskPreferences[(size_t)LLMTaskType::Chat].fallbackBackend   = AIBackendType::LocalGGUF;
 
     // Research → prefer Gemini (large context window)
     m_taskPreferences[(size_t)LLMTaskType::Research].preferredBackend  = AIBackendType::Gemini;
@@ -118,7 +119,7 @@ void Win32IDE::initDefaultCapabilities() {
     local.qualityScore         = 0.4f;
     local.notes                = "Native CPU inference, zero latency to network";
 
-    // Ollama — free (local), moderate context
+    // Native host lane (legacy Ollama enum slot) — free (local), moderate context
     auto& ollama     = m_backendCapabilities[(size_t)AIBackendType::Ollama];
     ollama.backend             = AIBackendType::Ollama;
     ollama.maxContextTokens    = 8192;
@@ -128,7 +129,7 @@ void Win32IDE::initDefaultCapabilities() {
     ollama.supportsJsonMode    = true;
     ollama.costTier            = 0;   // Free (local)
     ollama.qualityScore        = 0.5f;
-    ollama.notes               = "Local Ollama server, GPU-accelerated";
+    ollama.notes               = "Embedded native model host, local streaming";
 
     // OpenAI — paid, large context, function calling
     auto& openai     = m_backendCapabilities[(size_t)AIBackendType::OpenAI];

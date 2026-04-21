@@ -12,10 +12,8 @@
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <mmsystem.h>
 #include <powrprof.h>
 #pragma comment(lib, "PowrProf.lib")
-#pragma comment(lib, "Winmm.lib")
 #endif
 
 namespace RawrXD {

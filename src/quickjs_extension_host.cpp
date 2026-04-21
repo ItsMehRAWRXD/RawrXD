@@ -257,7 +257,7 @@ bool CompileExtensionSource(JSContext* ctx, const char* source) {
 // Bind C++ vscode.* API functions to JS
 bool BindVSCodeAPI(JSContext* ctx, vscode::VSCodeExtensionAPI* api) {
     // TODO: Create JS global "vscode" object with method bindings
-    // Example structure:
+    // Structure:
     //   vscode.commands.registerCommand(name, callback)
     //   vscode.window.showMessage(level, message)
     //   vscode.workspace.getConfiguration(section)

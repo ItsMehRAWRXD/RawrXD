@@ -24,11 +24,13 @@
 #include "../vsix_native_converter.hpp"
 #include "IDEConfig.h"
 #include "IDELogger.h"
+#include "TitanIPC.h"
 #include "Win32IDE.h"
 #include "Win32IDE_Phase17_AgenticProfiler.h"
 #include "Win32IDE_SubAgent.h"
 #include <algorithm>
 #include <chrono>
+#include <cstdio>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -39,6 +41,7 @@
 #include <sstream>
 #include <unordered_set>
 #include <vector>
+#include <winhttp.h>
 
 namespace
 {
@@ -97,9 +100,9 @@ std::string NormalizeBridgeToolName(std::string value)
                        return '_';
                    });
 
-    value.erase(std::unique(value.begin(), value.end(),
-                            [](char left, char right) { return left == '_' && right == '_'; }),
-                value.end());
+    value.erase(
+        std::unique(value.begin(), value.end(), [](char left, char right) { return left == '_' && right == '_'; }),
+        value.end());
     while (!value.empty() && value.front() == '_')
     {
         value.erase(value.begin());
@@ -145,27 +148,55 @@ const char* StepRiskLabel(Agentic::StepRisk risk)
 
 BridgeToolExecutionPolicy ClassifyBridgeToolExecution(const std::string& toolLine)
 {
-    static const std::unordered_set<std::string> kParallelReadOnlyTools = {
-        "read_file", "fs_read_file", "fs_read", "list_dir", "fs_list_dir", "file_search", "search_code",
-        "grep_search", "semantic_search", "get_diagnostics", "mention_lookup", "next_edit_hint",
-        "preview_multifile_diff", "path_exists", "fs_exists"
-    };
+    static const std::unordered_set<std::string> kParallelReadOnlyTools = {"read_file",
+                                                                           "fs_read_file",
+                                                                           "fs_read",
+                                                                           "list_dir",
+                                                                           "fs_list_dir",
+                                                                           "file_search",
+                                                                           "search_code",
+                                                                           "grep_search",
+                                                                           "semantic_search",
+                                                                           "get_diagnostics",
+                                                                           "mention_lookup",
+                                                                           "next_edit_hint",
+                                                                           "preview_multifile_diff",
+                                                                           "path_exists",
+                                                                           "fs_exists"};
     static const std::unordered_set<std::string> kSerialReadOnlyTools = {
-        "load_rules", "plan_tasks", "git_status", "git_diff", "gh_pr_view", "gh_issue_view", "gh_pr_list",
-        "gh_issue_list", "get_coverage", "sys_get_capabilities"
-    };
+        "load_rules",    "plan_tasks", "git_status",    "git_diff",     "gh_pr_view",
+        "gh_issue_view", "gh_pr_list", "gh_issue_list", "get_coverage", "sys_get_capabilities"};
     static const std::unordered_set<std::string> kLowRiskMutatingTools = {
-        "write_file", "replace_in_file", "edit_file", "fs_write_file", "fs_write", "fs_mkdir", "fs_copy_file",
-        "fs_move_file", "manage_todo_list"
-    };
-    static const std::unordered_set<std::string> kHighRiskTools = {
-        "execute_command", "run_in_terminal", "terminal_run_command", "run_shell", "run_build",
-        "git_commit", "gh_create_pr", "gh_pr_create", "apply_multifile_edits", "debug_launch",
-        "debug_attach", "debug_break", "debug_continue", "debug_step_over", "debug_step_into",
-        "debug_add_breakpoint", "debug_remove_breakpoint", "debug_stacktrace", "debug_registers",
-        "debug_memory", "debug_disasm", "debug_analyze", "debug_snapshot", "debug_suggest_breakpoints",
-        "apply_hotpatch", "disk_recovery", "asm_assemble", "swebench_autonomous_eval"
-    };
+        "write_file", "replace_in_file", "edit_file",    "fs_write_file",   "fs_write",
+        "fs_mkdir",   "fs_copy_file",    "fs_move_file", "manage_todo_list"};
+    static const std::unordered_set<std::string> kHighRiskTools = {"execute_command",
+                                                                   "run_in_terminal",
+                                                                   "terminal_run_command",
+                                                                   "run_shell",
+                                                                   "run_build",
+                                                                   "git_commit",
+                                                                   "gh_create_pr",
+                                                                   "gh_pr_create",
+                                                                   "apply_multifile_edits",
+                                                                   "debug_launch",
+                                                                   "debug_attach",
+                                                                   "debug_break",
+                                                                   "debug_continue",
+                                                                   "debug_step_over",
+                                                                   "debug_step_into",
+                                                                   "debug_add_breakpoint",
+                                                                   "debug_remove_breakpoint",
+                                                                   "debug_stacktrace",
+                                                                   "debug_registers",
+                                                                   "debug_memory",
+                                                                   "debug_disasm",
+                                                                   "debug_analyze",
+                                                                   "debug_snapshot",
+                                                                   "debug_suggest_breakpoints",
+                                                                   "apply_hotpatch",
+                                                                   "disk_recovery",
+                                                                   "asm_assemble",
+                                                                   "swebench_autonomous_eval"};
     static const std::unordered_set<std::string> kCriticalTools = {"fs_delete_file"};
 
     BridgeToolExecutionPolicy policy;
@@ -215,7 +246,8 @@ Agentic::ApprovalPolicy GetBridgeApprovalPolicy()
     return Agentic::ApprovalPolicy::Standard();
 }
 
-bool IsBridgeToolAutoApproved(const BridgeToolExecutionPolicy& toolPolicy, const Agentic::ApprovalPolicy& approvalPolicy)
+bool IsBridgeToolAutoApproved(const BridgeToolExecutionPolicy& toolPolicy,
+                              const Agentic::ApprovalPolicy& approvalPolicy)
 {
     if (!toolPolicy.isMutating)
     {
@@ -243,8 +275,8 @@ std::string BuildApprovalBlockedMessage(const BridgeToolExecutionPolicy& toolPol
 {
     std::ostringstream oss;
     oss << "[Approval Required] Tool '" << toolPolicy.normalizedName << "' blocked by approval policy"
-        << " (risk=" << StepRiskLabel(toolPolicy.risk)
-        << ", mutating=" << (toolPolicy.isMutating ? "yes" : "no") << ")";
+        << " (risk=" << StepRiskLabel(toolPolicy.risk) << ", mutating=" << (toolPolicy.isMutating ? "yes" : "no")
+        << ")";
     return oss.str();
 }
 
@@ -317,6 +349,120 @@ bool envDisablesCapabilityHotpatch(const char* varName)
             toolName.assign(modelOutput.data() + nameStart, modelOutput.data() + end);
     }
     return toolName;
+}
+
+[[nodiscard]] std::string JsonQuoteStringForToolBody(const std::string& s)
+{
+    std::string o;
+    o.reserve(s.size() + 2);
+    o.push_back('"');
+    for (unsigned char c : s)
+    {
+        switch (c)
+        {
+            case '"':
+                o += "\\\"";
+                break;
+            case '\\':
+                o += "\\\\";
+                break;
+            case '\b':
+                o += "\\b";
+                break;
+            case '\f':
+                o += "\\f";
+                break;
+            case '\n':
+                o += "\\n";
+                break;
+            case '\r':
+                o += "\\r";
+                break;
+            case '\t':
+                o += "\\t";
+                break;
+            default:
+                if (c < 0x20)
+                {
+                    char buf[8];
+                    std::snprintf(buf, sizeof(buf), "\\u%04x", static_cast<unsigned int>(c));
+                    o += buf;
+                }
+                else
+                {
+                    o.push_back(static_cast<char>(c));
+                }
+                break;
+        }
+    }
+    o.push_back('"');
+    return o;
+}
+
+/// POST JSON to the in-process / sibling headless tool server (loopback).
+[[nodiscard]] bool HttpPostHeadlessTool(uint16_t port, const std::string& jsonBody, std::string& responseOut)
+{
+    responseOut.clear();
+    if (port == 0 || jsonBody.empty())
+    {
+        return false;
+    }
+
+    HINTERNET hSession = WinHttpOpen(L"RawrXD-AgenticBridge/1.0", WINHTTP_ACCESS_TYPE_NO_PROXY, WINHTTP_NO_PROXY_NAME,
+                                     WINHTTP_NO_PROXY_BYPASS, 0);
+    if (!hSession)
+    {
+        return false;
+    }
+    HINTERNET hConnect = WinHttpConnect(hSession, L"127.0.0.1", port, 0);
+    if (!hConnect)
+    {
+        WinHttpCloseHandle(hSession);
+        return false;
+    }
+    HINTERNET hRequest =
+        WinHttpOpenRequest(hConnect, L"POST", L"/tool", nullptr, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, 0);
+    if (!hRequest)
+    {
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return false;
+    }
+
+    const wchar_t* hdr = L"Content-Type: application/json\r\n";
+    const DWORD bodyLen = static_cast<DWORD>(jsonBody.size());
+    LPVOID reqBody =
+        (bodyLen != 0u) ? reinterpret_cast<LPVOID>(const_cast<char*>(jsonBody.data())) : WINHTTP_NO_REQUEST_DATA;
+    const BOOL sent = WinHttpSendRequest(hRequest, hdr, static_cast<DWORD>(-1L), reqBody, bodyLen, bodyLen, 0);
+    if (!sent || !WinHttpReceiveResponse(hRequest, nullptr))
+    {
+        WinHttpCloseHandle(hRequest);
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return false;
+    }
+
+    for (;;)
+    {
+        DWORD chunk = 0;
+        if (!WinHttpQueryDataAvailable(hRequest, &chunk) || chunk == 0)
+        {
+            break;
+        }
+        std::string buf(chunk, '\0');
+        DWORD read = 0;
+        if (!WinHttpReadData(hRequest, buf.data(), chunk, &read))
+        {
+            break;
+        }
+        buf.resize(read);
+        responseOut += buf;
+    }
+
+    WinHttpCloseHandle(hRequest);
+    WinHttpCloseHandle(hConnect);
+    WinHttpCloseHandle(hSession);
+    return !responseOut.empty();
 }
 
 [[nodiscard]] std::optional<std::string> QueryVsInstallPathFromVswhere()
@@ -544,21 +690,6 @@ std::string AgenticBridge::BuildOpenTabsPromptContext() const
     return oss.str();
 }
 
-// SCAFFOLD_054: AgenticBridge DispatchModelToolCalls
-
-
-// SCAFFOLD_053: AgenticBridge LoadModel and model override
-
-
-// SCAFFOLD_052: AgenticBridge StartAgentLoop / StopAgentLoop
-
-
-// SCAFFOLD_051: AgenticBridge ExecuteAgentCommand
-
-
-// SCAFFOLD_020: Agentic bridge initialization
-
-
 namespace
 {
 [[nodiscard]] inline std::shared_ptr<RawrXD::CPUInferenceEngine> SharedCpuEngine()
@@ -580,12 +711,27 @@ void SetIDEAgenticEngineForCommands(AgenticEngine* engine)
 // Constructor / Destructor
 // ============================================================================
 
+// Forward declaration — defined in Win32IDE_AgentStreamingBridge.cpp
+extern "C" void AgentPanel_AppendToken(const wchar_t* token);
+
 AgenticBridge::AgenticBridge(Win32IDE* ide)
     : m_ide(ide), m_initialized(false), m_agentLoopRunning(false), m_hProcess(nullptr), m_hStdoutRead(nullptr),
       m_hStdoutWrite(nullptr), m_hStdinRead(nullptr), m_hStdinWrite(nullptr)
 {
     // Initialize streaming result channel for Phase 1 (tool result injection)
     m_streamingChannel = std::make_unique<RawrXD::Agentic::StreamingResultChannel>();
+
+    // Wire TitanProxy token callback → IDE streaming bridge so process-to-process
+    // token streaming surfaces incrementally in the Agent output panel.
+    RawrXD::TitanProxy::instance().setTokenCallback([](const std::string& token) {
+        if (token.empty()) return;
+        // Convert UTF-8 token to wide char for AgentPanel_AppendToken
+        const int wLen = MultiByteToWideChar(CP_UTF8, 0, token.c_str(), static_cast<int>(token.size()), nullptr, 0);
+        if (wLen <= 0) return;
+        std::wstring wide(static_cast<size_t>(wLen), L'\0');
+        MultiByteToWideChar(CP_UTF8, 0, token.c_str(), static_cast<int>(token.size()), &wide[0], wLen);
+        AgentPanel_AppendToken(wide.c_str());
+    });
 }
 
 AgenticBridge::~AgenticBridge()
@@ -602,6 +748,56 @@ bool AgenticBridge::Initialize(const std::string& frameworkPath, const std::stri
     SCOPED_METRIC("agentic.initialize");
     if (m_initialized)
         return true;
+
+    // ── Self-hosting IPC split ────────────────────────────────────────────────
+    // If RAWRXD_HEADLESS_PORT is set in the environment (or the IDE was launched
+    // with --headless <port>), delegate all tool execution to the headless
+    // backend process over loopback HTTP.  We just need to record the port; the
+    // actual dispatch happens in ExecuteAgentCommand via the DispatchToHeadless
+    // helper added below.  If the headless process isn't running yet, start it
+    // in-process on the requested port so both GUI and headless share one binary.
+    {
+        wchar_t envBuf[32]{};
+        const DWORD envLen = GetEnvironmentVariableW(L"RAWRXD_HEADLESS_PORT", envBuf, 32);
+        if (envLen > 0 && envLen < 32)
+        {
+            const int requestedPort = _wtoi(envBuf);
+            if (requestedPort > 0 && requestedPort <= 65535)
+            {
+                m_headlessPort = static_cast<uint16_t>(requestedPort);
+
+                // Check if the named ready-event exists (meaning an external
+                // headless server is already running).
+                const std::string evtName = "RawrXD_HeadlessReady_" + std::to_string(m_headlessPort);
+                const HANDLE existing = OpenEventA(SYNCHRONIZE, FALSE, evtName.c_str());
+                if (existing != nullptr)
+                {
+                    // External server already running \u2014 just use it.
+                    CloseHandle(existing);
+                    LOG_INFO("Headless backend detected on port " + std::to_string(m_headlessPort) +
+                             " \u2014 GUI will delegate tool calls over loopback.");
+                }
+                else
+                {
+                    // Spin up in-process so we don\u2019t need a separate process launch.
+                    LOG_INFO("Starting in-process headless backend on port " + std::to_string(m_headlessPort) + " ...");
+                    RawrXD_StartHeadlessServer(m_headlessPort);
+                }
+
+                // MASM-backed tools: RawrXD::Agent::ToolRegistry registers builtins in its constructor.
+
+                m_initialized = true;
+                if (m_ide)
+                {
+                    m_ide->appendToOutput("[Self-Host] Agentic backend running on loopback port " +
+                                              std::to_string(m_headlessPort) + ". MASM tools registered.\n",
+                                          "Agent", Win32IDE::OutputSeverity::Success);
+                }
+                return true;
+            }
+        }
+    }
+    // ── End self-hosting IPC split ────────────────────────────────────────────
 
     LOG_INFO("Initializing Native Inference Stack...");
 
@@ -1396,6 +1592,17 @@ void AgenticBridge::SetModel(const std::string& modelName)
     m_modelName = modelName;
     LOG_INFO("Model set to: " + modelName);
 
+    if (modelName.empty())
+    {
+#ifdef _WIN32
+        SetEnvironmentVariableW(L"RAWRXD_NATIVE_MODEL_PATH", nullptr);
+        RawrXD::TitanProxy::instance().clearLoadedModelCache();
+#else
+        unsetenv("RAWRXD_NATIVE_MODEL_PATH");
+#endif
+        return;
+    }
+
     auto endsWith = [](const std::string& s, const std::string& ext) -> bool
     {
         if (ext.size() > s.size())
@@ -1428,12 +1635,24 @@ void AgenticBridge::SetModel(const std::string& modelName)
 #endif
         LOG_INFO("Set RAWRXD_NATIVE_MODEL_PATH to: " + modelName);
 
-        // Avoid eager heavyweight local-model loads here; this setter can be
-        // called from UI selection/race paths. Backend load is performed when
-        // inference is submitted through the active backend.
+#ifdef _WIN32
+        std::string titanErr;
+        if (!RawrXD::TitanProxy::instance().loadModel(modelName, titanErr))
+        {
+            LOG_WARNING("TitanHost load_model (eager): " + titanErr);
+        }
+#endif
     }
     else if (!modelName.empty())
     {
+        // Native file path no longer selected — drop env + Titan cache so inference
+        // does not keep a stale GGUF in TitanHost.
+#ifdef _WIN32
+        SetEnvironmentVariableW(L"RAWRXD_NATIVE_MODEL_PATH", nullptr);
+        RawrXD::TitanProxy::instance().clearLoadedModelCache();
+#else
+        unsetenv("RAWRXD_NATIVE_MODEL_PATH");
+#endif
         // Ollama model tag (e.g. "llama3.3:latest") — propagate to BackendSwitcher
         // so that routeToOllama() sends the correct model name
         if (m_ide)
@@ -1588,7 +1807,7 @@ bool AgenticBridge::ReadProcessOutput(std::string& output, DWORD timeoutMs)
             break;
         }
 
-        Sleep(100);
+        Sleep(15);
     }
 
     LOG_DEBUG("Read " + std::to_string(output.length()) + " bytes from process");
@@ -2564,8 +2783,7 @@ void AgenticBridge::HandleToolDispatchResult(const std::string& toolName, const 
         LOG_WARNING("[Phase4B] Tool '" + toolName +
                     "' failure at dispatch: " + m_ide->failureTypeString(toolFailure.reason) +
                     " (confidence=" + std::to_string(toolFailure.confidence) + ")");
-        m_ide->appendToOutput("[AgenticBridge] Tool failure: " + m_ide->failureTypeString(toolFailure.reason) +
-                                  "\n",
+        m_ide->appendToOutput("[AgenticBridge] Tool failure: " + m_ide->failureTypeString(toolFailure.reason) + "\n",
                               "Errors", Win32IDE::OutputSeverity::Error);
     }
     if (m_ide->getSettings().agentTerminalIsolated)
@@ -2573,7 +2791,8 @@ void AgenticBridge::HandleToolDispatchResult(const std::string& toolName, const 
         const int agentPaneId = m_ide->getOrCreatePrimaryAgentTerminalPane();
         constexpr size_t kMax = 1200;
         std::string feed;
-        const size_t resultLen = toolResult.empty() ? 0 : (toolResult.size() > kMax ? kMax + 24 : toolResult.size() + 4);
+        const size_t resultLen =
+            toolResult.empty() ? 0 : (toolResult.size() > kMax ? kMax + 24 : toolResult.size() + 4);
         feed.reserve(32 + toolName.size() + resultLen);
         feed.append("[tool] ");
         feed.append(toolName);
@@ -2605,6 +2824,8 @@ bool AgenticBridge::DispatchToolLinesBatched(const std::vector<std::string>& too
         return false;
     }
 
+    const uint16_t headlessPort = m_headlessPort;
+
     std::ostringstream combined;
     const int totalTools = static_cast<int>(toolLines.size());
 
@@ -2623,20 +2844,40 @@ bool AgenticBridge::DispatchToolLinesBatched(const std::vector<std::string>& too
                 streamingChannel->EmitToolStarted(toolName, static_cast<int>(index), totalTools);
             }
 
-            futures.emplace_back(std::async(std::launch::async,
-                                            [mgr, parentId, toolLine, toolName]() -> ToolDispatchBatchOutcome
-                                            {
-                                                ToolDispatchBatchOutcome outcome;
-                                                outcome.toolName = toolName;
-                                                auto beginExec = std::chrono::high_resolution_clock::now();
-                                                outcome.dispatched =
-                                                    mgr->dispatchToolCall(parentId, toolLine, outcome.toolResult);
-                                                const auto endExec = std::chrono::high_resolution_clock::now();
-                                                outcome.executionTimeMs = static_cast<uint64_t>(
-                                                    std::chrono::duration_cast<std::chrono::milliseconds>(endExec - beginExec)
-                                                        .count());
-                                                return outcome;
-                                            }));
+            futures.emplace_back(std::async(
+                std::launch::async,
+                [mgr, parentId, toolLine, toolName, headlessPort]() -> ToolDispatchBatchOutcome
+                {
+                    ToolDispatchBatchOutcome outcome;
+                    outcome.toolName = toolName;
+                    auto beginExec = std::chrono::high_resolution_clock::now();
+                    if (headlessPort != 0)
+                    {
+                        std::string argsJson = "{}";
+                        const size_t brace = toolLine.find('{');
+                        if (brace != std::string::npos)
+                        {
+                            argsJson = toolLine.substr(brace);
+                        }
+                        const std::string body =
+                            "{\"tool\":" + JsonQuoteStringForToolBody(toolName) + ",\"args\":" + argsJson + "}";
+                        std::string httpOut;
+                        if (HttpPostHeadlessTool(headlessPort, body, httpOut))
+                        {
+                            outcome.dispatched = true;
+                            outcome.toolResult = std::move(httpOut);
+                            const auto endExec = std::chrono::high_resolution_clock::now();
+                            outcome.executionTimeMs = static_cast<uint64_t>(
+                                std::chrono::duration_cast<std::chrono::milliseconds>(endExec - beginExec).count());
+                            return outcome;
+                        }
+                    }
+                    outcome.dispatched = mgr->dispatchToolCall(parentId, toolLine, outcome.toolResult);
+                    const auto endExec = std::chrono::high_resolution_clock::now();
+                    outcome.executionTimeMs = static_cast<uint64_t>(
+                        std::chrono::duration_cast<std::chrono::milliseconds>(endExec - beginExec).count());
+                    return outcome;
+                }));
         }
 
         for (size_t futureIndex = 0; futureIndex < futures.size(); ++futureIndex)
@@ -2740,8 +2981,8 @@ bool AgenticBridge::DispatchToolLinesPolicyAware(const std::vector<std::string>&
             const std::string blockedMessage = BuildApprovalBlockedMessage(toolPolicy);
             if (streamingChannel)
             {
-                streamingChannel->EmitToolError(toolPolicy.normalizedName, blockedMessage, 0,
-                                                static_cast<int>(index), static_cast<int>(toolLines.size()));
+                streamingChannel->EmitToolError(toolPolicy.normalizedName, blockedMessage, 0, static_cast<int>(index),
+                                                static_cast<int>(toolLines.size()));
             }
             if (m_ide)
             {
@@ -2784,8 +3025,7 @@ bool AgenticBridge::DispatchToolLinesPolicyAware(const std::vector<std::string>&
 // ============================================================================
 
 std::string AgenticBridge::DispatchModelToolCallsStreaming(
-    const std::string& modelOutput,
-    std::function<void(const RawrXD::Agentic::ToolExecutionEvent&)> onToolEvent)
+    const std::string& modelOutput, std::function<void(const RawrXD::Agentic::ToolExecutionEvent&)> onToolEvent)
 {
     SCOPED_METRIC("agentic.dispatch_tools_streaming");
 

@@ -32,15 +32,17 @@ void Telemetry::logFunctionCall(const std::string& functionName) {
 }
 
 void Telemetry::logError(const std::string& functionName, const std::string& error) {
-    std::cerr << "[ERROR] " << functionName << ": " << error << std::endl;
+    (void)functionName;
+    (void)error;
 }
 
 void Telemetry::logWarning(const std::string& functionName, const std::string& warning) {
-    std::cerr << "[WARN] " << functionName << ": " << warning << std::endl;
+    (void)functionName;
+    (void)warning;
 }
 
 void Telemetry::logInfo(const std::string& message) {
-    std::cout << "[INFO] " << message << std::endl;
+    (void)message;
 }
 
 void Telemetry::metric(const std::string& name, double value, const std::map<std::string, std::string>& labels) {
