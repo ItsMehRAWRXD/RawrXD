@@ -14,6 +14,9 @@
 #pragma comment(lib, "psapi.lib")
 #pragma comment(lib, "kernel32.lib")
 
+// MASM Bridge
+extern "C" HANDLE MASM_CreateIsolatedProcess(const char* AppName, const char* CmdLine, const char* WorkDir, DWORD MemLimitMB);
+
 namespace RawrXD::Extensions {
 
     // ============================================================================
@@ -42,50 +45,24 @@ namespace RawrXD::Extensions {
         if (m_processState != HostProcessState::Uninitialized && 
             m_processState != HostProcessState::Failed) {
             LogEvent("STARTUP_ERROR", "Process already started or in invalid state");
-            return E_ALREADY_INITIALIZED;
+            return HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS);
         }
 
         m_processState = HostProcessState::Starting;
 
-        // Create job object for resource management
-        HRESULT hrJob = SetupJobObject();
-        if (FAILED(hrJob)) {
-            LogEvent("STARTUP_ERROR", "Failed to setup job object: " + std::to_string(hrJob));
-            m_processState = HostProcessState::Failed;
-            return hrJob;
-        }
-
-        // Create the isolated process
+        // Create the isolated process via MASM Broker (includes job setup)
         HRESULT hrProcess = CreateIsolatedProcess();
         if (FAILED(hrProcess)) {
-            LogEvent("STARTUP_ERROR", "Failed to create isolated process: " + std::to_string(hrProcess));
+            LogEvent("STARTUP_ERROR", "Failed to create isolated process via broker: " + std::to_string(hrProcess));
             m_processState = HostProcessState::Failed;
-            if (m_jobObject) {
-                CloseHandle(m_jobObject);
-                m_jobObject = nullptr;
-            }
             return hrProcess;
         }
 
-        // Assign process to job object
-        if (!AssignProcessToJobObject(m_jobObject, m_processHandle)) {
-            DWORD dwError = GetLastError();
-            LogEvent("STARTUP_ERROR", "Failed to assign process to job object: " + std::to_string(dwError));
-            TerminateProcess(m_processHandle, 1);
-            CloseHandle(m_processHandle);
-            CloseHandle(m_threadHandle);
-            m_processState = HostProcessState::Failed;
-            return HRESULT_FROM_WIN32(dwError);
-        }
-
-        // Resume process threads
-        ResumeThread(m_threadHandle);
-        
         // Get current time for telemetry
         GetSystemTimeAsFileTime(&m_startTime);
 
         m_processState = HostProcessState::Running;
-        LogEvent("STARTUP_SUCCESS", "Process started with PID: " + std::to_string(m_processId));
+        LogEvent("STARTUP_SUCCESS", "Process started via MASM Broker with PID: " + std::to_string(m_processId));
 
         // Fire callback
         if (m_onStartedCallback) {
@@ -174,44 +151,29 @@ namespace RawrXD::Extensions {
 
     HRESULT ExtensionHostProcess::CreateIsolatedProcess()
     {
-        // For now, create a minimal host process
-        // In production, this would launch the actual extension host executable
-        
         std::string hostExePath = m_metadata.extensionPath + "\\extension_host.exe";
-        
-        // Create process suspended to setup job object before resuming
-        STARTUPINFOA siStartInfo = {0};
-        PROCESS_INFORMATION piProcInfo = {0};
-        
-        siStartInfo.cb = sizeof(STARTUPINFOA);
-        siStartInfo.dwFlags = STARTF_USESHOWWINDOW;
-        siStartInfo.wShowWindow = SW_HIDE;
-
-        // Build command line
         std::string cmdLine = m_metadata.extensionId;
 
-        BOOL bResult = CreateProcessA(
+        // Call MASM Process Broker for secure, isolated creation
+        HANDLE hProcess = MASM_CreateIsolatedProcess(
             hostExePath.c_str(),
-            (LPSTR)cmdLine.c_str(),
-            nullptr,                          // Process security attributes
-            nullptr,                          // Thread security attributes
-            FALSE,                            // Inherit handles
-            CREATE_SUSPENDED |                // Start suspended for resource setup
-            CREATE_NEW_CONSOLE |
-            CREATE_SEPARATE_WOW_VDM,
-            nullptr,                          // Environment
-            m_metadata.extensionPath.c_str(), // Working directory
-            &siStartInfo,
-            &piProcInfo);
+            cmdLine.c_str(),
+            m_metadata.extensionPath.c_str(),
+            m_quota.maxMemoryMB
+        );
 
-        if (!bResult) {
+        if (hProcess == nullptr || hProcess == INVALID_HANDLE_VALUE) {
             DWORD dwError = GetLastError();
+            LogEvent("BROKER_ERROR", "MASM Process Broker failed to create isolated process. Error: " + std::to_string(dwError));
             return HRESULT_FROM_WIN32(dwError);
         }
 
-        m_processHandle = piProcInfo.hProcess;
-        m_threadHandle = piProcInfo.hThread;
-        m_processId = piProcInfo.dwProcessId;
+        m_processHandle = hProcess;
+        m_processId = GetProcessId(hProcess);
+        
+        // Note: Thread handle is not currently returned by this version of the MASM broker.
+        // If needed, we could update the MASM routine to return the PROCESS_INFORMATION struct.
+        m_threadHandle = nullptr; 
 
         return S_OK;
     }
@@ -227,9 +189,9 @@ namespace RawrXD::Extensions {
         // Set resource limits
         JOBOBJECT_EXTENDED_LIMIT_INFORMATION jeli = {0};
         jeli.BasicLimitInformation.LimitFlags = 
-            JOB_OBJECT_LIMIT_MEMORY |
-            JOB_OBJECT_LIMIT_PROCESS_TIME |
-            JOB_OBJECT_LIMIT_ACTIVE_PROCESS;
+            JOB_OBJECT_LIMIT_JOB_MEMORY |
+            JOB_OBJECT_LIMIT_ACTIVE_PROCESS |
+            JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
         
         // Memory limit (in bytes)
         jeli.JobMemoryLimit = (SIZE_T)m_quota.maxMemoryMB * 1024 * 1024;
@@ -446,7 +408,7 @@ namespace RawrXD::Extensions {
             << m_metadata.extensionId << ": "
             << details;
 
-        IDELogger::Get().Info(oss.str());
+        LOG_INFO(oss.str());
     }
 
     // ============================================================================

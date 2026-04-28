@@ -25,7 +25,7 @@ constexpr int kHeartbeatIntervalMs = 15000;
 
 AgenticController::AgenticController()
 {
-    // No signal connections needed — callbacks used instead
+    fprintf(stderr, "[AgenticController] Created\n");
 }
 
 AgenticController::~AgenticController() = default;
@@ -159,4 +159,6 @@ void AgenticController::handleWindowActivated() {
     }
 
     const auto statuses = m_coordinator->getAllAgentStatuses();
+}
+
 } // namespace RawrXD::IDE

@@ -755,19 +755,105 @@ std::vector<Win32IDE::LSPCodeAction> Win32IDE::lspCodeActions(const std::string&
 
         if (aj.contains("edit"))
         {
-            // Store the edit JSON for later application
+            action.edit = aj["edit"];
             action.hasEdit = true;
         }
 
         if (aj.contains("command"))
         {
-            action.command = aj["command"].value("command", "");
+            if (aj["command"].is_object())
+                action.command = aj["command"].value("command", "");
+            else
+                action.command = aj["command"].get<std::string>();
         }
 
         actions.push_back(action);
     }
 
     return actions;
+}
+
+
+bool Win32IDE::applyWorkspaceEdit(const nlohmann::json& editJson)
+{
+    LSPWorkspaceEdit typedEdit;
+
+    // Handle 'changes' (uri -> TextEdit[])
+    if (editJson.contains("changes") && editJson["changes"].is_object())
+    {
+        for (auto it = editJson["changes"].begin(); it != editJson["changes"].end(); ++it)
+        {
+            std::string uri = it.key();
+            for (const auto& ej : it.value())
+            {
+                LSPWorkspaceEdit::TextEdit te;
+                te.newText = ej.value("newText", "");
+                if (ej.contains("range"))
+                {
+                    const auto& rj = ej["range"];
+                    te.range.start.line = rj["start"].value("line", 0);
+                    te.range.start.character = rj["start"].value("character", 0);
+                    te.range.end.line = rj["end"].value("line", 0);
+                    te.range.end.character = rj["end"].value("character", 0);
+                }
+                typedEdit.changes[uri].push_back(te);
+            }
+        }
+    }
+
+    // Handle 'documentChanges' (TextDocumentEdit[] | ResourceOperation[])
+    if (editJson.contains("documentChanges") && editJson["documentChanges"].is_array())
+    {
+        for (const auto& dc : editJson["documentChanges"])
+        {
+            if (dc.contains("kind"))
+            {
+                // Resource Operation
+                LSPWorkspaceEdit::ResourceOperation op;
+                std::string kind = dc.value("kind", "");
+                if (kind == "create")
+                {
+                    op.type = LSPWorkspaceEdit::ResourceOperation::Type::Create;
+                    op.uri = dc.value("uri", "");
+                    op.overwrite = dc.value("options", nlohmann::json::object()).value("overwrite", false);
+                    op.ignoreIfExists = dc.value("options", nlohmann::json::object()).value("ignoreIfExists", false);
+                }
+                else if (kind == "rename")
+                {
+                    op.type = LSPWorkspaceEdit::ResourceOperation::Type::Rename;
+                    op.uri = dc.value("oldUri", "");
+                    op.newUri = dc.value("newUri", "");
+                    op.overwrite = dc.value("options", nlohmann::json::object()).value("overwrite", false);
+                }
+                else if (kind == "delete")
+                {
+                    op.type = LSPWorkspaceEdit::ResourceOperation::Type::Delete;
+                    op.uri = dc.value("uri", "");
+                    op.recursive = dc.value("options", nlohmann::json::object()).value("recursive", false);
+                    op.ignoreIfNotExists = dc.value("options", nlohmann::json::object()).value("ignoreIfNotExists", false);
+                }
+                typedEdit.resourceOperations.push_back(op);
+            }
+            else if (dc.contains("textDocument") && dc.contains("edits"))
+            {
+                // TextDocumentEdit
+                std::string uri = dc["textDocument"].value("uri", "");
+                for (const auto& ej : dc["edits"])
+                {
+                    LSPWorkspaceEdit::TextEdit te;
+                    te.newText = ej.value("newText", "");
+                    const auto& rj = ej["range"];
+                    te.range.start.line = rj["start"].value("line", 0);
+                    te.range.start.character = rj["start"].value("character", 0);
+                    te.range.end.line = rj["end"].value("line", 0);
+                    te.range.end.character = rj["end"].value("character", 0);
+                    typedEdit.changes[uri].push_back(te);
+                }
+            }
+        }
+    }
+
+    return applyWorkspaceEdit(typedEdit);
 }
 
 void Win32IDE::cmdLSPCodeActions()

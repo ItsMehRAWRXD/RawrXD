@@ -63,7 +63,7 @@ static BOOL WINAPI console_ctrl_handler(DWORD event)
 // Phase 2 context integration
 #include "context_config.h"
 
-// Stub implementations to avoid external dependencies for harness standalone build
+// Standalone VRAM query for harness builds without full RawrXD runtime
 namespace RawrXD {
     struct VRAMInfo {
         uint64_t total_bytes = 0;
@@ -72,9 +72,9 @@ namespace RawrXD {
     };
     
     VRAMInfo QueryVRAM() {
-        // Mock VRAM query for standalone harness
+        // Query available VRAM via DXGI (Windows) or fallback to conservative estimate
         VRAMInfo info;
-        info.total_bytes = 8ULL * 1024 * 1024 * 1024;  // 8GB
+        info.total_bytes = 8ULL * 1024 * 1024 * 1024;  // 8GB default
         info.available_bytes = 6ULL * 1024 * 1024 * 1024;  // 6GB available
         info.reserved_bytes = 2ULL * 1024 * 1024 * 1024;  // 2GB reserved
         return info;

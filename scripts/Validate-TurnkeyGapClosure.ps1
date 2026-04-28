@@ -153,7 +153,10 @@ function Invoke-PreFlightValidation {
     Add-ValidationResult -Phase "PreFlight" -Test "CMakeAvailable" -Passed ($null -ne $cmake) -Message $(if ($cmake) { $cmake.Source } else { "Not in PATH" })
     
     $msbuild = Get-Command msbuild -ErrorAction SilentlyContinue
-    $hasCompiler = ($null -ne $msbuild) -or (Test-Path "${env:ProgramFiles}\Microsoft Visual Studio\2022\*")
+    $vsDir = Join-Path $env:ProgramFiles "Microsoft Visual Studio"
+    $hasVS = (Test-Path $vsDir) -and ($null -ne (Get-ChildItem -Path $vsDir -Directory -ErrorAction SilentlyContinue | Select-Object -First 1))
+    $ml64 = Test-Path "C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\ml64.exe"
+    $hasCompiler = ($null -ne $msbuild) -or $hasVS -or $ml64
     Add-ValidationResult -Phase "PreFlight" -Test "CompilerAvailable" -Passed $hasCompiler -Message $(if ($hasCompiler) { "MSVC/MSBuild found" } else { "No compiler detected" })
     
     # Port Availability Check
@@ -206,7 +209,7 @@ function Invoke-DeployValidation {
     # Determine build directory
     $buildDir = if ($BuildDir) { $BuildDir } else {
         $candidates = @("build-win32", "build-ninja", "build")
-        $found = $candidates | Where-Object { Test-Path (Join-Path $repoRoot $_ "CMakeCache.txt") } | Select-Object -First 1
+        $found = $candidates | Where-Object { Test-Path (Join-Path (Join-Path $repoRoot $_) "CMakeCache.txt") } | Select-Object -First 1
         if ($found) { Join-Path $repoRoot $found } else { $null }
     }
     
@@ -307,12 +310,16 @@ function Invoke-RuntimeValidation {
     $shipScript = Join-Path $repoRoot "Ship\Run-ChatAgenticSmoke.ps1"
     Add-ValidationResult -Phase "Runtime" -Test "AgenticSmokeScript" -Passed (Test-Path $shipScript) -Message $(if (Test-Path $shipScript) { "Found" } else { "Optional - not found" }) -Severity "Info"
     
-    # Validate memory system
+    # Validate memory system — check VS Code Copilot memory paths or local memories dir
     $memoriesDir = Join-Path $repoRoot "memories"
-    $hasMemories = Test-Path $memoriesDir
-    Add-ValidationResult -Phase "Runtime" -Test "MemorySystem" -Passed $hasMemories -Message $(if ($hasMemories) { "Memory directory exists" } else { "Memory system not initialized" })
+    $copilotMemDir = "$env:APPDATA\GitHub Copilot\memories"
+    $hasLocalMemories = Test-Path $memoriesDir
+    $hasCopilotMemories = Test-Path $copilotMemDir
+    $hasMemories = $hasLocalMemories -or $hasCopilotMemories
+    $memoryMsg = if ($hasLocalMemories) { "Local memories dir: $memoriesDir" } elseif ($hasCopilotMemories) { "Copilot memories: $copilotMemDir" } else { "Memory system not initialized" }
+    Add-ValidationResult -Phase "Runtime" -Test "MemorySystem" -Passed $hasMemories -Message $memoryMsg
     
-    if ($hasMemories) {
+    if ($hasLocalMemories) {
         $tiers = @("session", "repo")
         foreach ($tier in $tiers) {
             $tierPath = Join-Path $memoriesDir $tier

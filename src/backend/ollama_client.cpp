@@ -266,8 +266,10 @@ std::vector<float> NativeClient::embeddings(const std::string& model, const std:
                 result.push_back(v.get<float>());
             }
         }
-    } catch (...) {}
-    return result;
+    } catch (...) {
+        // JSON parse failed for embedding response — return empty result
+        return {};
+    }
 }
 
 // ─── URL Parsing ────────────────────────────────────────────────────
@@ -293,8 +295,11 @@ NativeClient::ParsedUrl NativeClient::parseBaseUrl() const {
     if (colon != std::string::npos) {
         parsed.host = url.substr(0, colon);
         try { parsed.port = static_cast<uint16_t>(std::stoi(url.substr(colon + 1))); }
-        catch (...) {}
-    } else {
+        catch (const std::exception& e) {
+            OutputDebugStringA(("[ollama_client] port parse exception: " + std::string(e.what()) + "\n").c_str());
+        } catch (...) {
+            OutputDebugStringA("[ollama_client] port parse unknown exception\n");
+        } else {
         parsed.host = url;
     }
 
@@ -777,11 +782,32 @@ bool NativeClient::makeStreamingPostRequest(const std::string& endpoint,
 }
 
 #else
-// Linux/Mac: would use libcurl — stubs for cross-compile
-std::string NativeClient::makeGetRequest(const std::string&) { return ""; }
-std::string NativeClient::makePostRequest(const std::string&, const std::string&) { return ""; }
-bool NativeClient::makeStreamingPostRequest(const std::string&, const std::string&,
-                                            StreamCallback, ErrorCallback, CompletionCallback) { return false; }
+// Linux/Mac fallback: return explicit JSON error payloads instead of silent empty strings.
+std::string NativeClient::makeGetRequest(const std::string& endpoint) {
+    std::ostringstream oss;
+    oss << "{\"error\":\"platform_transport_unavailable\",\"endpoint\":\"" << endpoint << "\"}";
+    return oss.str();
+}
+
+std::string NativeClient::makePostRequest(const std::string& endpoint, const std::string&) {
+    std::ostringstream oss;
+    oss << "{\"error\":\"platform_transport_unavailable\",\"endpoint\":\"" << endpoint << "\"}";
+    return oss.str();
+}
+
+bool NativeClient::makeStreamingPostRequest(const std::string& endpoint, const std::string&,
+                                            StreamCallback, ErrorCallback on_error, CompletionCallback on_complete) {
+    if (on_error) {
+        on_error("Streaming transport unavailable on this platform for endpoint: " + endpoint);
+    }
+    if (on_complete) {
+        NativeInferenceResponse r;
+        r.success = false;
+        r.error = "Streaming transport unavailable on this platform";
+        on_complete(r);
+    }
+    return false;
+}
 #endif
 
 } // namespace Backend

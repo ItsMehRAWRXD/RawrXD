@@ -1,4 +1,5 @@
 #include "streaming_gguf_loader.h"
+#include "mapped_window_streamer.h"
 #include "model_loader/GGUFConstants.hpp"
 #include "utils/Diagnostics.hpp"
 #include <algorithm>
@@ -31,7 +32,8 @@ namespace RawrXD
 {
 
 StreamingGGUFLoader::StreamingGGUFLoader()
-    : is_open_(false), current_zone_memory_(0), max_zone_memory_mb_(GGUFConstants::DEFAULT_ZONE_MEMORY_MB)
+    : is_open_(false), current_zone_memory_(0), max_zone_memory_mb_(GGUFConstants::DEFAULT_ZONE_MEMORY_MB),
+      mmap_streamer_(nullptr), using_mmap_(false)
 {
     std::memset(&header_, 0, sizeof(GGUFHeader));
 }
@@ -960,6 +962,18 @@ bool StreamingGGUFLoader::LoadZone(const std::string& zone_name, uint64_t max_me
         return false;
     }
 
+    // AUDIT_FIX_1: Hard size check - if zone exceeds 2GB, fail gracefully with diagnostic
+    // This prevents OOM and informs user of streaming limitations
+    constexpr uint64_t ZONE_BUFFER_MAX_BYTES = 2147483648ULL;  // 2 GB hard ceiling
+    if (zone.total_bytes > ZONE_BUFFER_MAX_BYTES)
+    {
+        std::cerr << "❌ Zone '" << zone_name << "' size (" << (zone.total_bytes / (1024.0 * 1024.0 * 1024.0))
+                  << " GiB) exceeds maximum streamable per-zone limit (2 GiB)." << std::endl;
+        std::cerr << "   ℹ️  This model requires mapped-window streaming (fallback not yet active)." << std::endl;
+        std::cerr << "   💡 Workaround: Enable 'MappedWindowStreamer' in build configuration." << std::endl;
+        return false;
+    }
+
     // Stream from disk
     zone.data.clear();
     try
@@ -969,8 +983,8 @@ bool StreamingGGUFLoader::LoadZone(const std::string& zone_name, uint64_t max_me
     catch (const std::bad_alloc&)
     {
         // Reserve failure is non-fatal: continue with incremental growth.
-        std::cerr << "[StreamingGGUFLoader] LoadZone: reserve failed for zone '" << zone_name << "' ("
-                  << zone.total_bytes << " bytes), falling back to incremental buffering" << std::endl;
+        std::cerr << "[StreamingGGUFLoader] AUDIT_FIX_2: reserve failed for zone '" << zone_name << "' ("
+                  << zone.total_bytes << " bytes), falling back to incremental buffering (slower)" << std::endl;
     }
 
     uint64_t total_loaded = 0;
@@ -1001,8 +1015,11 @@ bool StreamingGGUFLoader::LoadZone(const std::string& zone_name, uint64_t max_me
         }
         catch (const std::bad_alloc&)
         {
-            std::cerr << "[StreamingGGUFLoader] LoadZone: resize failed for tensor '" << tensor_name << "' ("
-                      << ref.size << " bytes)" << std::endl;
+            // AUDIT_FIX_3: Incremental resize failure => log exactly which tensor failed
+            // This diagnostic helps identify problematic tensors in large models
+            std::cerr << "❌ AUDIT_FIX_3 resize failed for tensor '" << tensor_name << "' offset=" << ref.offset 
+                      << " size=" << (ref.size / (1024.0 * 1024.0)) << " MB (running total: " 
+                      << (total_loaded / (1024.0 * 1024.0)) << " MB)" << std::endl;
             zone.data.resize(old_size);
             return false;
         }
@@ -1024,6 +1041,46 @@ bool StreamingGGUFLoader::LoadZone(const std::string& zone_name, uint64_t max_me
     current_zone_memory_ = total_loaded;
 
     std::cout << "✅ Zone loaded: " << zone_name << " (" << (total_loaded / (1024.0 * 1024.0)) << " MB)" << std::endl;
+
+    return true;
+}
+
+bool StreamingGGUFLoader::LoadZoneMapped(const std::string& zone_name)
+{
+    // AUDIT_FIX_4: Memory-mapped streaming fallback for oversized zones
+    // This is called when traditional vector-based buffering fails due to allocation limits.
+    
+    auto zone_it = zones_.find(zone_name);
+    if (zone_it == zones_.end())
+    {
+        std::cerr << "❌ Zone not found for mmap load: " << zone_name << std::endl;
+        return false;
+    }
+
+    TensorZoneInfo& zone = zone_it->second;
+
+    // Initialize mmap streamer on first use
+    if (!mmap_streamer_)
+    {
+        mmap_streamer_ = std::make_unique<MappedWindowStreamer>();
+        if (!mmap_streamer_->Initialize(filepath_))
+        {
+            std::cerr << "❌ Failed to initialize MappedWindowStreamer for " << filepath_ << std::endl;
+            mmap_streamer_.reset();
+            return false;
+        }
+        using_mmap_ = true;
+        std::cout << "🗺️  Switched to memory-mapped streaming for large zones" << std::endl;
+    }
+
+    // For mmap mode, we don't buffer entire zone — we stream on-demand
+    // Just mark it as loaded so GetTensorData routes through mmap path
+    zone.is_loaded = true;
+    current_zone_ = zone_name;
+    current_zone_memory_ = 0;  // No resident RAM for this zone
+
+    std::cout << "✅ Zone mapped (mmap): " << zone_name << " (" << (zone.total_bytes / (1024.0 * 1024.0))
+              << " MB) — will stream on-demand" << std::endl;
 
     return true;
 }

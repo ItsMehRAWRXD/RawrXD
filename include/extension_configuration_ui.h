@@ -195,7 +195,7 @@ public:
 private:
     ExtensionConfigurationUI* m_configUI;
 
-    // UI rendering helpers (TODO: Implement actual UI)
+    // UI rendering helpers (implemented in extension_configuration_ui.cpp)
     std::string RenderStringControl(const ConfigurationSchemaEntry& schema);
     std::string RenderNumberControl(const ConfigurationSchemaEntry& schema);
     std::string RenderBooleanControl(const ConfigurationSchemaEntry& schema);

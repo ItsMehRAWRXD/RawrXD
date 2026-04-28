@@ -229,8 +229,9 @@ bool Win32IDE::validateAndDispatchToolCall(const std::string& toolName, const st
         return false;
     }
     Phase17ProfileGuard _p17(toolName);  // Phase 17: profile tool dispatch
-    const ULONGLONG ts  = GetTickCount64();
-    const bool ok = m_agenticBridge->DispatchModelToolCalls(toolName + " " + argsJson, toolResult);
+    const ULONGLONG ts = GetTickCount64();
+    const bool ok =
+        m_agenticBridge->DispatchModelToolCalls(std::string("TOOL:") + toolName + " " + argsJson, toolResult);
     AgenticNotifyToolEnd(ok, static_cast<uint32_t>(GetTickCount64() - ts));
     return ok;
 }
@@ -618,8 +619,9 @@ AgentModelRoute Win32IDE::routeStepToModel(const PlanStep& step)
         route.selectedTier = "unavailable";
         route.modelName.clear();
         route.fallbackUsed = true;
-        appendToOutput("[ModelRouter] ERROR: No local/Ollama model available; load a model before running agentic steps",
-                       "General", OutputSeverity::Error);
+        appendToOutput(
+            "[ModelRouter] ERROR: No local/Ollama model available; load a model before running agentic steps",
+            "General", OutputSeverity::Error);
     }
 
     if (route.fallbackUsed)

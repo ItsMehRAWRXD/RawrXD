@@ -1171,7 +1171,11 @@ PDBSymbolServer::PDBSymbolServer() {
 }
 
 PDBSymbolServer::~PDBSymbolServer() {
-    // Nothing to clean up — WinHTTP handles are per-request
+    // Cleanup WinHTTP handles
+    if (m_hSession) {
+        WinHttpCloseHandle(m_hSession);
+        m_hSession = nullptr;
+    }
 }
 
 // ============================================================================

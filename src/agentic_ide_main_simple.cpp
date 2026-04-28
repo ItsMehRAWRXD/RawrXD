@@ -12,6 +12,10 @@
 #include "RawrXD_Foundation.h"
 #include "universal_model_router.h"
 #include "include/RawrXD_ColorSpace.h"
+#include "streaming/AdaptiveTensorCodec.hpp"
+#include "streaming/atc_benchmark.hpp"
+#include "quantization/braided_quantizer_fingerprint.hpp"
+#include <iostream>
 
 using namespace RawrXD;
 using namespace RawrXD::ColorSpace;
@@ -26,6 +30,7 @@ inline COLORREF AdobeRGBaToCOLORREF(const AdobeRGBa& color) {
 
 class IDEWindow : public Window {
     UniversalModelRouter router;
+    rawrxd::AdaptiveTensorCodec atc; // Add the Adaptive Tensor Codec
     String status = "Ready. Press F5 to run Titan+Assembly inference.";
     String outputText;
     
@@ -33,6 +38,14 @@ public:
     IDEWindow() {
         // Initialize logic - assume model path is auto-detected or configured
         // router.initializeLocalEngine(""); 
+
+        // Attempt to open a model. Replace with your actual model path.
+        // This should be a large GGUF model to test the streaming.
+        if (atc.OpenModel(L"d:\\codestral22b.gguf")) {
+            status = "ATC Model Loaded. Ready for streaming inference.";
+        } else {
+            status = "Error: Could not load model with ATC.";
+        }
     }
     
     void paintEvent(PAINTSTRUCT& ps) override {
@@ -60,18 +73,76 @@ public:
     
     void keyPressEvent(int key, int mods) override {
         if (key == VK_F5) {
-            status = "Running Inference via Titan Assembly Engine...";
+            status = "Running Inference via ATC Streaming...";
             update(); // Repaint
              
-            // Simple blocking inference
-            // In a real app this would be threaded.
-            String prompt = "This is a test of the Titan Engine.";
+            // This is a conceptual test. A real implementation would involve
+            // a compute loop that uses the ATC to get tensor data tile by tile.
             
-            // Note: routeQuery lazily loads the engine which lazily loads the DLL
-            std::string response = router.routeQuery("local-default", prompt.toUtf8());
+            // 1. Prefetch the first tensor we'll need (e.g., "token_embd.weight")
+            atc.PrefetchTensor("token_embd.weight");
+
+            // 2. Get a pointer to the low-fidelity ("360p") tile data.
+            //    Accessing this pointer will be fast because of the prefetch.
+            const void* tile_data = atc.GetTileData("token_embd.weight", 0, rawrxd::TensorLOD::L0_Q4);
+
+            if (tile_data) {
+                // 3. In a real engine, you would now pass this tile_data to an AVX-512 kernel.
+                //    For this test, we'll just confirm we got a valid pointer.
+                char buffer[256];
+                sprintf_s(buffer, "Successfully got tile pointer: %p. Ready for compute.", tile_data);
+                outputText = String(buffer);
+
+                // 4. Once done with the tensor, we can signal to the OS it can be discarded.
+                atc.DiscardTensor("token_embd.weight");
+                status = "Streaming Inference Step Complete.";
+
+            } else {
+                outputText = "Failed to get tile data via ATC.";
+                status = "Streaming Inference Error.";
+            }
             
-            outputText = String(response);
-            status = "Inference Complete.";
+            update();
+        }
+        else if (key == VK_F6) { // New key for running the benchmark
+            status = "Running ATC Benchmark...";
+            update();
+
+            ATCBenchmark benchmark;
+            // The reference output should be the predictable result from our simulated inference
+            std::string reference_output;
+            for (int i = 0; i < 100; ++i) {
+                reference_output += static_cast<char>(('T' + i) % 256);
+            }
+
+            ATCBenchmarkResult result = benchmark.run(L"d:\\codestral22b.gguf", "Test", reference_output);
+
+            if (result.success) {
+                char buffer[512];
+                sprintf_s(buffer, "Benchmark Complete.\nTTFT: %.2f ms\nTPS: %.2f\nPeak Memory: %zu MB\nFingerprint Match: %s",
+                    result.time_to_to_first_token_ms,
+                    result.tokens_per_second,
+                    result.peak_working_set_mb,
+                    result.fingerprint_match ? "Yes" : "No");
+                outputText = String(buffer);
+            } else {
+                outputText = "Benchmark Failed: " + String(result.error_message);
+            }
+            status = "Benchmark Finished.";
+            update();
+        }
+        else if (key == VK_F7) { // New key for Braided Quantizer Fingerprint
+            status = "Running Braided Quantizer Fingerprint...";
+            update();
+
+            BraidedQuantizerFingerprintResult result = BraidedQuantizerFingerprint::run_test();
+            
+            outputText = String(result.message);
+            if (result.passed) {
+                status = "Fingerprint Passed.";
+            } else {
+                status = "Fingerprint FAILED.";
+            }
             update();
         }
         else if (key == VK_ESCAPE) {

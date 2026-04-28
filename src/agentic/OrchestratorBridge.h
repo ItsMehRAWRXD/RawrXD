@@ -3,7 +3,7 @@
 // =============================================================================
 #pragma once
 
-#include "NativeInferenceClient.h"
+#include "AgentOllamaClient.h"
 #include "AgentToolHandlers.h"
 // Include OllamaProvider.h for Prediction types (NativeStreamProvider.h redirects to it)
 #include "OllamaProvider.h"
@@ -47,6 +47,15 @@ public:
     OrchestratorBridge() = default;
     ~OrchestratorBridge() = default;
 
+    // ---- Callbacks ----
+    using StatusCallback = std::function<void(const std::string&)>;
+    using ErrorCallback = std::function<void(const std::string&)>;
+    using AgentCompleteCallback = std::function<void(const std::string&)>;
+
+    void SetStatusCallback(StatusCallback cb) { m_onStatusUpdate = std::move(cb); }
+    void SetErrorCallback(ErrorCallback cb) { m_onError = std::move(cb); }
+    void SetAgentCompleteCallback(AgentCompleteCallback cb) { m_onAgentComplete = std::move(cb); }
+
 private:
     bool EnsureClientReady();
     void RefreshAvailableModels();
@@ -60,6 +69,9 @@ public:
     NativeInferenceConfig m_nativeConfig;
     int m_maxSteps = 8;
     std::vector<std::string> m_availableModels;
+    StatusCallback m_onStatusUpdate;
+    ErrorCallback m_onError;
+    AgentCompleteCallback m_onAgentComplete;
 };
 
 } // namespace Agent

@@ -116,9 +116,9 @@ enum class KernelSlot : uint32_t {
     Snapshot_Restore             = 45,
     Snapshot_Verify              = 46,
 
-    // Reserved for future kernels
-    Reserved_47                  = 47,
-    Reserved_48                  = 48,
+    // Speculation
+    Spec_CandidatesGeneration    = 47,
+    Spec_PrecomputeForward       = 48,
 
     // User-defined slots (49-63)
     UserSlot_0                   = 49,

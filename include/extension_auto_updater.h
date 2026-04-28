@@ -183,6 +183,7 @@ private:
     // Tracking
     std::vector<ExtensionUpdateInfo> m_pendingUpdates;
     std::vector<UpdateInstallRecord> m_installHistory;
+    std::unordered_map<std::string, std::string> m_backupPaths;  // extId -> backup dir path
 
     // Callbacks
     std::function<void(const ExtensionUpdateInfo&)> m_onUpdateAvailable;

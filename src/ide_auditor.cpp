@@ -811,10 +811,23 @@ void IDEAuditor::collectRealTimeMetrics() {
 
 void IDEAuditor::analyzeTrends() {
     // Analyze performance trends over time
+    fprintf(stderr, "[IDEAuditor] Analyzing performance trends\n");
+    // Calculate trend slopes for key metrics
+    for (auto& [metric, values] : m_metricHistory) {
+        if (values.size() >= 2) {
+            float slope = (values.back() - values.front()) / static_cast<float>(values.size());
+            m_trends[metric] = slope;
+        }
+    }
 }
 
 void IDEAuditor::predictPerformance() {
-    // Predict future performance
+    // Predict future performance based on trends
+    fprintf(stderr, "[IDEAuditor] Predicting future performance\n");
+    for (const auto& [metric, slope] : m_trends) {
+        float current = m_metricHistory[metric].empty() ? 0.0f : m_metricHistory[metric].back();
+        m_predictions[metric] = current + slope * 10.0f; // Predict 10 samples ahead
+    }
 }
 
 std::string IDEAuditor::getTimestamp() const {

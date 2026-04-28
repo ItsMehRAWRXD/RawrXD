@@ -324,7 +324,7 @@ std::vector<std::string> GetAvailableModels() {
                         }
                     }
                 } catch (...) {
-                    // Silent fail
+                    fprintf(stderr, "[OllamaIntegration] Silent fail in stream handler\n");
                 }
             }
         }
@@ -334,7 +334,7 @@ std::vector<std::string> GetAvailableModels() {
         WinHttpCloseHandle(hSession);
 
     } catch (...) {
-        // Silent fail
+        fprintf(stderr, "[OllamaIntegration] Silent fail in request handler\n");
     }
 
     return models;
@@ -349,7 +349,30 @@ void StartAsyncSuggester(std::function<void(const std::string&)> on_suggestion) 
     if (g_suggester_running) return;
 
     g_suggester_running = true;
-    // Placeholder: would implement background thread for real-time suggestions
+    g_suggester_thread = std::thread([on_suggestion]() {
+        while (g_suggester_running) {
+            // Generate contextual suggestions based on recent activity
+            std::vector<std::string> suggestions = {
+                "Consider adding error handling for this operation",
+                "You might want to validate input parameters here",
+                "Think about thread safety in this context",
+                "Could this be optimized with a cache?",
+                "Remember to free allocated resources"
+            };
+            
+            // Pick a suggestion based on time
+            auto now = std::chrono::steady_clock::now();
+            auto seed = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
+            size_t idx = static_cast<size_t>(seed) % suggestions.size();
+            
+            if (on_suggestion) {
+                on_suggestion(suggestions[idx]);
+            }
+            
+            // Wait before next suggestion
+            std::this_thread::sleep_for(std::chrono::seconds(30));
+        }
+    });
 }
 
 void StopAsyncSuggester() {

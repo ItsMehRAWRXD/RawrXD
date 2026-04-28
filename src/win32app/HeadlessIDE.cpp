@@ -14,6 +14,7 @@
 #include "../../include/chain_of_thought_engine.h"
 #include "../agentic_engine.h"
 #include "../core/instructions_provider.hpp"
+#include "IDEWiringAutoMapper.h"
 #include "IOutputSink.h"
 #include <winhttp.h>
 
@@ -23,7 +24,7 @@
 #include "../agent_explainability.h"
 #include "../agent_history.h"
 #include "../agent_policy.h"
-#include "../agentic/NativeInferenceClient.h"
+#include "../agentic/AgentOllamaClient.h"
 #include "../agentic/ToolRegistry.h"
 #include "../agentic/agentic_executor.h"
 #include "../cli/swarm_orchestrator.h"
@@ -2010,7 +2011,15 @@ int HeadlessIDE::run()
 
     int exitCode = 0;
 
-    if (m_config.benchSweep)
+    if (m_config.autoMapWiring || m_config.checkWiringBoundaries)
+    {
+        exitCode = runWiringAuditMode();
+    }
+    else if (m_config.autonomousWorkflowMode)
+    {
+        exitCode = runAutonomousWorkflowMode();
+    }
+    else if (m_config.benchSweep)
     {
         exitCode = runScalingSweepMode();
     }
@@ -2365,6 +2374,85 @@ HeadlessResult HeadlessIDE::parseArgs(int argc, char* argv[])
                 return HeadlessResult::error("Missing value for --ollama-model", 2);
             }
             m_config.ollamaModel = argv[++i];
+        }
+        else if (arg == "--auto-map-wiring")
+        {
+            m_config.autoMapWiring = true;
+            m_config.enableServer = false;
+        }
+        else if (arg == "--wiring-check")
+        {
+            m_config.checkWiringBoundaries = true;
+            m_config.enableServer = false;
+        }
+        else if (arg == "--wiring-no-legacy")
+        {
+            m_config.wiringIncludeLegacy = false;
+        }
+        else if (arg == "--wiring-reinspect-passes")
+        {
+            if (i + 1 >= argc)
+            {
+                return HeadlessResult::error("Missing value for --wiring-reinspect-passes", 2);
+            }
+            int parsedPasses = 0;
+            if (!tryParseIntArg(argv[i + 1], 1, 5, parsedPasses))
+            {
+                return HeadlessResult::error("Invalid value for --wiring-reinspect-passes", 2);
+            }
+            m_config.wiringReinspectPasses = parsedPasses;
+            ++i;
+        }
+        else if (arg == "--wiring-report")
+        {
+            if (i + 1 >= argc)
+            {
+                return HeadlessResult::error("Missing value for --wiring-report", 2);
+            }
+            m_config.wiringReportPath = argv[++i];
+        }
+        else if (arg == "--wiring-submit")
+        {
+            if (i + 1 >= argc)
+            {
+                return HeadlessResult::error("Missing value for --wiring-submit", 2);
+            }
+            m_config.wiringSubmissionPath = argv[++i];
+        }
+        else if (arg == "--autonomous")
+        {
+            m_config.autonomousWorkflowMode = true;
+            m_config.enableServer = false;
+        }
+        else if (arg == "--workflow")
+        {
+            if (i + 1 >= argc)
+            {
+                return HeadlessResult::error("Missing value for --workflow", 2);
+            }
+            m_config.workflowName = argv[++i];
+            m_config.autonomousWorkflowMode = true;
+            m_config.enableServer = false;
+        }
+        else if (arg == "--state")
+        {
+            if (i + 1 >= argc)
+            {
+                return HeadlessResult::error("Missing value for --state", 2);
+            }
+            m_config.workflowStateFile = argv[++i];
+        }
+        else if (arg == "--workflow-verbose")
+        {
+            m_config.workflowVerbose = true;
+        }
+        else if (arg == "--workflow-output")
+        {
+            if (i + 1 >= argc)
+            {
+                return HeadlessResult::error("Missing value for --workflow-output", 2);
+            }
+            m_config.workflowOutputDir = argv[++i];
         }
         else if (arg.rfind("--", 0) == 0)
         {
@@ -3909,8 +3997,8 @@ std::string HeadlessIDE::routeInferenceRequest(const std::string& prompt)
     }
 
     // Final fallback: provide actionable error
-        return "[error] Inference unavailable — load a local model for LocalGGUF/native streaming "
-            "or configure an alternative backend with 'backend <type>'";
+    return "[error] Inference unavailable — load a local model for LocalGGUF/native streaming "
+           "or configure an alternative backend with 'backend <type>'";
 }
 
 // ============================================================================
@@ -7825,6 +7913,61 @@ int HeadlessIDE::runBatchMode()
     return 0;
 }
 
+int HeadlessIDE::runWiringAuditMode()
+{
+    RawrXD::Wiring::AutoMapperOptions options;
+    options.reinspectPasses = std::max(1, m_config.wiringReinspectPasses);
+    options.includeLegacy = m_config.wiringIncludeLegacy;
+    options.checkCliGuiBoundaries = m_config.checkWiringBoundaries || m_config.autoMapWiring;
+
+    const RawrXD::Wiring::AutoMapperReport report = RawrXD::Wiring::IDEWiringAutoMapper::run(options);
+
+    const std::string reportPath =
+        m_config.wiringReportPath.empty() ? "wiring_auto_map_report.json" : m_config.wiringReportPath;
+    const bool wroteReport = RawrXD::Wiring::IDEWiringAutoMapper::writeJson(report, reportPath);
+
+    bool wroteSubmission = true;
+    std::string submissionPath = m_config.wiringSubmissionPath;
+    if (submissionPath.empty())
+    {
+        submissionPath = "wiring_generation_submission.json";
+    }
+    if (m_config.autoMapWiring)
+    {
+        wroteSubmission = RawrXD::Wiring::IDEWiringAutoMapper::writeSubmissionJson(report, submissionPath);
+    }
+
+    std::ostringstream summary;
+    summary << "Wiring audit complete: features=" << report.featuresScanned << " files=" << report.filesScanned
+            << " missing_source=" << report.missingSourceCount << " boundary_gaps=" << report.boundaryGapCount
+            << " recommendations=" << report.recommendationCount;
+    m_outputSink->appendOutput(summary.str().c_str(), OutputSeverity::Info);
+
+    if (wroteReport)
+    {
+        m_outputSink->appendOutput(("Wiring report written: " + reportPath).c_str(), OutputSeverity::Info);
+    }
+    else
+    {
+        m_outputSink->appendOutput(("Failed to write wiring report: " + reportPath).c_str(), OutputSeverity::Error);
+    }
+
+    if (m_config.autoMapWiring)
+    {
+        if (wroteSubmission)
+        {
+            m_outputSink->appendOutput(("Wiring submission written: " + submissionPath).c_str(), OutputSeverity::Info);
+        }
+        else
+        {
+            m_outputSink->appendOutput(("Failed to write wiring submission: " + submissionPath).c_str(),
+                                       OutputSeverity::Error);
+        }
+    }
+
+    return (wroteReport && wroteSubmission) ? 0 : 1;
+}
+
 int HeadlessIDE::runAttentionBenchMode()
 {
     const bool avx512Runtime = RawrXD::KernelOps::HasAVX512Runtime();
@@ -8350,6 +8493,31 @@ void HeadlessIDE::processReplCommand(const std::string& input)
             ip.loadAll();
         m_outputSink->appendOutput(ip.toJSON().c_str(), OutputSeverity::Info);
     }
+    else if (input == "wiring map" || input == "wiring check" || input == "wiring full")
+    {
+        RawrXD::Wiring::AutoMapperOptions options;
+        options.reinspectPasses = std::max(1, m_config.wiringReinspectPasses);
+        options.includeLegacy = m_config.wiringIncludeLegacy;
+        options.checkCliGuiBoundaries = (input != "wiring map");
+
+        const RawrXD::Wiring::AutoMapperReport report = RawrXD::Wiring::IDEWiringAutoMapper::run(options);
+        const std::string reportPath = "wiring_repl_report.json";
+        const std::string submitPath = "wiring_repl_submission.json";
+        const bool wroteReport = RawrXD::Wiring::IDEWiringAutoMapper::writeJson(report, reportPath);
+        const bool wroteSubmit = RawrXD::Wiring::IDEWiringAutoMapper::writeSubmissionJson(report, submitPath);
+
+        std::ostringstream oss;
+        oss << "[Wiring] features=" << report.featuresScanned << " files=" << report.filesScanned
+            << " missing_source=" << report.missingSourceCount << " boundary_gaps=" << report.boundaryGapCount
+            << " recommendations=" << report.recommendationCount;
+        m_outputSink->appendOutput(oss.str().c_str(), OutputSeverity::Info);
+        m_outputSink->appendOutput(
+            (std::string("[Wiring] report: ") + reportPath + (wroteReport ? " [ok]" : " [failed]")).c_str(),
+            wroteReport ? OutputSeverity::Info : OutputSeverity::Error);
+        m_outputSink->appendOutput(
+            (std::string("[Wiring] submission: ") + submitPath + (wroteSubmit ? " [ok]" : " [failed]")).c_str(),
+            wroteSubmit ? OutputSeverity::Info : OutputSeverity::Error);
+    }
     else
     {
         // Treat as inference prompt
@@ -8408,6 +8576,9 @@ RawrXD Headless IDE — REPL Commands
   instructions reload Reload from disk
   instructions paths  Show search paths
   instructions json   Export as JSON
+    wiring map          Re-inspect feature wiring and write report/submission
+    wiring check        Check CLI/GUI start-end boundary coverage gaps
+    wiring full         Run map + boundary checks together
   quit / exit      Exit the REPL
 
   <any other text>  Treated as inference prompt
@@ -8444,6 +8615,12 @@ Command-line flags:
   --quiet / -q                  Quiet mode (warnings/errors only)
   --json                        JSON-structured output
   --settings <file>             Load settings from file
+    --auto-map-wiring             Run full feature auto-mapper and exit
+    --wiring-check                Run CLI/GUI start-end boundary checker and exit
+    --wiring-no-legacy            Exclude legacy paths during wiring scan
+    --wiring-reinspect-passes <n> Reinspect passes (1-5)
+    --wiring-report <path>        Output path for wiring report JSON
+    --wiring-submit <path>        Output path for wiring submission JSON
 )";
     fprintf(stdout, "%s\n", help);
 }

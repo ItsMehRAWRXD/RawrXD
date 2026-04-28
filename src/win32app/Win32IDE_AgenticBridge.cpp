@@ -4,6 +4,7 @@
 // ============================================================================
 
 #include "Win32IDE_AgenticBridge.h"
+#include "../ai/production_inference_engine.h"
 #include "../action_executor.h"
 #include "../advanced_agent_features.hpp"
 #include "../agent/agentic_hotpatch_orchestrator.hpp"
@@ -15,6 +16,7 @@
 #include "../agentic/agent_controller_minimal.h"
 #include "../agentic/agentic_controller_wiring.h"
 #include "../agentic/agentic_orchestrator_integration.hpp"
+#include "../agentic/tool_call_parser.h"
 #include "../agentic_engine.h"
 #include "../cpu_inference_engine.h"
 #include "../inference/PerformanceMonitor.h"
@@ -70,6 +72,58 @@ static constexpr size_t kMaxCommandFileBytes = 512 * 1024;
 static constexpr size_t kMaxRefinedPromptBytes = 768 * 1024;
 static constexpr size_t kMaxParallelBridgeToolCalls = 4;
 
+// Models often prefix prose on the same line ("Sure — TOOL:read_file {...}").
+// Scan for a case-insensitive "tool:" token and normalize to a TOOL:-prefixed directive.
+[[nodiscard]] static size_t findCaseInsensitiveToolDirective(const std::string& text)
+{
+    if (text.size() < 5)
+    {
+        return std::string::npos;
+    }
+    static const char kRef[] = "tool:";
+    for (size_t i = 0; i + 5 <= text.size(); ++i)
+    {
+        bool ok = true;
+        for (size_t j = 0; j < 5; ++j)
+        {
+            const unsigned char a = static_cast<unsigned char>(std::tolower(static_cast<unsigned char>(text[i + j])));
+            if (a != static_cast<unsigned char>(kRef[j]))
+            {
+                ok = false;
+                break;
+            }
+        }
+        if (ok)
+        {
+            return i;
+        }
+    }
+    return std::string::npos;
+}
+
+[[nodiscard]] static std::string normalizeEmbeddedToolDirective(std::string chunk)
+{
+    while (!chunk.empty() && std::isspace(static_cast<unsigned char>(chunk.front())))
+    {
+        chunk.erase(chunk.begin());
+    }
+    while (!chunk.empty() && std::isspace(static_cast<unsigned char>(chunk.back())))
+    {
+        chunk.pop_back();
+    }
+    const size_t pos = findCaseInsensitiveToolDirective(chunk);
+    if (pos == std::string::npos)
+    {
+        return {};
+    }
+    std::string tail = chunk.substr(pos);
+    if (tail.size() < 5)
+    {
+        return {};
+    }
+    return std::string("TOOL:") + tail.substr(5);
+}
+
 struct ToolDispatchBatchOutcome
 {
     std::string toolName;
@@ -118,7 +172,8 @@ std::string NormalizeBridgeToolName(std::string value)
     }
     if (value == "list_directory")
     {
-        return "list_dir";
+        // ToolRegistry canonical name is list_directory.
+        return "list_directory";
     }
     if (value == "run_terminal")
     {
@@ -349,6 +404,50 @@ bool envDisablesCapabilityHotpatch(const char* varName)
             toolName.assign(modelOutput.data() + nameStart, modelOutput.data() + end);
     }
     return toolName;
+}
+
+// Runs a single TOOL:/tool: line against AgentToolRegistry (replaces SubAgentManager stub for Win32 bridge).
+[[nodiscard]] static bool executeToolLineWithRegistry(const std::string& toolLine, std::string& toolResultOut)
+{
+    toolResultOut.clear();
+    std::string normalized = toolLine;
+    if (normalized.rfind("TOOL:", 0) != 0 && normalized.rfind("tool:", 0) != 0)
+    {
+        normalized = normalizeEmbeddedToolDirective(normalized);
+    }
+    if (normalized.empty())
+    {
+        return false;
+    }
+    if (normalized.rfind("tool:", 0) == 0)
+    {
+        normalized = std::string("TOOL:") + normalized.substr(5);
+    }
+
+    const std::string toolName = ExtractDirectiveToolName(normalized);
+    if (toolName.empty() || toolName == "tool")
+    {
+        return false;
+    }
+
+    nlohmann::json args = nlohmann::json::object();
+    const size_t brace = normalized.find('{');
+    if (brace != std::string::npos)
+    {
+        try
+        {
+            args = nlohmann::json::parse(normalized.substr(brace));
+        }
+        catch (...)
+        {
+            toolResultOut = "[tool_error] invalid JSON arguments";
+            return true;
+        }
+    }
+
+    const auto r = RawrXD::Agent::AgentToolRegistry::Instance().Dispatch(toolName, args);
+    toolResultOut = r.success ? r.output : (std::string("[tool_error] ") + r.output);
+    return true;
 }
 
 [[nodiscard]] std::string JsonQuoteStringForToolBody(const std::string& s)
@@ -700,6 +799,7 @@ namespace
 
 static std::shared_ptr<AgenticEngine> g_agentEngine = nullptr;
 static AgenticEngine* g_commandDispatchEngine = nullptr;
+static std::shared_ptr<RawrXD::ProductionInferenceEngine> g_prodEngine = nullptr;
 
 void SetIDEAgenticEngineForCommands(AgenticEngine* engine)
 {
@@ -723,15 +823,19 @@ AgenticBridge::AgenticBridge(Win32IDE* ide)
 
     // Wire TitanProxy token callback → IDE streaming bridge so process-to-process
     // token streaming surfaces incrementally in the Agent output panel.
-    RawrXD::TitanProxy::instance().setTokenCallback([](const std::string& token) {
-        if (token.empty()) return;
-        // Convert UTF-8 token to wide char for AgentPanel_AppendToken
-        const int wLen = MultiByteToWideChar(CP_UTF8, 0, token.c_str(), static_cast<int>(token.size()), nullptr, 0);
-        if (wLen <= 0) return;
-        std::wstring wide(static_cast<size_t>(wLen), L'\0');
-        MultiByteToWideChar(CP_UTF8, 0, token.c_str(), static_cast<int>(token.size()), &wide[0], wLen);
-        AgentPanel_AppendToken(wide.c_str());
-    });
+    RawrXD::TitanProxy::instance().setTokenCallback(
+        [](const std::string& token)
+        {
+            if (token.empty())
+                return;
+            // Convert UTF-8 token to wide char for AgentPanel_AppendToken
+            const int wLen = MultiByteToWideChar(CP_UTF8, 0, token.c_str(), static_cast<int>(token.size()), nullptr, 0);
+            if (wLen <= 0)
+                return;
+            std::wstring wide(static_cast<size_t>(wLen), L'\0');
+            MultiByteToWideChar(CP_UTF8, 0, token.c_str(), static_cast<int>(token.size()), &wide[0], wLen);
+            AgentPanel_AppendToken(wide.c_str());
+        });
 }
 
 AgenticBridge::~AgenticBridge()
@@ -805,14 +909,20 @@ bool AgenticBridge::Initialize(const std::string& frameworkPath, const std::stri
 
     const auto cpu = SharedCpuEngine();
 
+    if (!g_prodEngine)
+    {
+        g_prodEngine = std::make_shared<RawrXD::ProductionInferenceEngine>();
+    }
+
     if (!g_agentEngine)
     {
         g_agentEngine = std::make_shared<AgenticEngine>();
-        g_agentEngine->setInferenceEngine(cpu.get());
+        // Preference for production engine if available
+        g_agentEngine->setInferenceEngine(g_prodEngine.get());
     }
 
-    // Wire the minimal agentic controller once CPU inference is available.
-    rawrxd::initializeAgentControllerWiring(cpu.get());
+    // Wire the minimal agentic controller once inference is available.
+    rawrxd::initializeAgentControllerWiring(g_prodEngine.get());
 
     // P1: Initialize the Tool Registry for the agentic layer (44-tool base)
     RawrXD::Agent::AgentToolRegistry::Instance();
@@ -1209,7 +1319,8 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt)
     // NOTE: hookToolResult fires inside DispatchModelToolCalls (the funnel)
     //       so every caller — Autonomy, Bridge, etc. — gets failure detection.
     std::string toolResult;
-    if (DispatchModelToolCalls(response, toolResult))
+    const bool toolDispatched = DispatchModelToolCalls(response, toolResult);
+    if (toolDispatched)
     {
         LOG_INFO("Tool call dispatched from model output");
 
@@ -1267,7 +1378,7 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt)
 
     AgentResponse r;
     r.content = response;
-    r.type = AgentResponseType::ANSWER;
+    r.type = toolDispatched ? AgentResponseType::TOOL_CALL : AgentResponseType::ANSWER;
     closePerf();
     return r;
 }
@@ -1434,16 +1545,19 @@ bool AgenticBridge::StartAgentLoop(const std::string& initialPrompt, int maxIter
     }
 
     m_agentLoopRunning = true;
+    const int boundedIterations = std::max(1, std::min(maxIterations, 50));
     std::string currentPrompt = initialPrompt;
-    bool success = true;
+    const std::string goal = initialPrompt;
+    bool completed = false;
+    const bool success = true;
 
-    for (int i = 0; i < maxIterations && m_agentLoopRunning; ++i)
+    for (int i = 0; i < boundedIterations && m_agentLoopRunning; ++i)
     {
-        LOG_INFO("Agent loop cycle " + std::to_string(i + 1) + " / " + std::to_string(maxIterations));
+        LOG_INFO("Agent loop cycle " + std::to_string(i + 1) + " / " + std::to_string(boundedIterations));
 
         if (m_ide)
             m_ide->showAgentActivityStatus(
-                "Agent loop: " + std::to_string(i + 1) + " / " + std::to_string(maxIterations), 8000);
+                "Agent loop: " + std::to_string(i + 1) + " / " + std::to_string(boundedIterations), 8000);
 
         AgentResponse response = ExecuteAgentCommand(currentPrompt);
 
@@ -1458,21 +1572,51 @@ bool AgenticBridge::StartAgentLoop(const std::string& initialPrompt, int maxIter
                                 "Agent [Cycle " + std::to_string(i + 1) + "]:\n" + response.content);
         }
 
-        // Check for tool results appended to the response (ExecuteAgentCommand does this)
-        size_t toolResultPos = response.content.find("[Tool Execution Result]");
-        if (toolResultPos != std::string::npos)
+        if (response.type == AgentResponseType::TOOL_CALL)
         {
-            // Found tool results, feed them back into the model
-            currentPrompt = "Observation from tool execution:\n" + response.content.substr(toolResultPos);
-            // Optionally add a reminder to the agent to continue
-            currentPrompt += "\n\nContinue toward the goal: " + initialPrompt;
+            static constexpr const char kToolMarker[] = "[Tool Execution Result]";
+            const size_t markerPos = response.content.find(kToolMarker);
+            if (markerPos != std::string::npos)
+            {
+                size_t payloadStart = markerPos + sizeof(kToolMarker) - 1;
+                while (payloadStart < response.content.size() &&
+                       (response.content[payloadStart] == '\n' || response.content[payloadStart] == '\r'))
+                {
+                    ++payloadStart;
+                }
+                const std::string observation = response.content.substr(payloadStart);
+                currentPrompt =
+                    "Observation from tool execution:\n" + observation + "\n\nContinue toward the goal: " + goal;
+                continue;
+            }
+
+            std::string toolResult;
+            if (DispatchModelToolCalls(response.content, toolResult) && !toolResult.empty())
+            {
+                currentPrompt = "Tool result:\n" + toolResult + "\nProvide the next step or final answer.";
+                continue;
+            }
         }
-        else
+
+        if (response.type == AgentResponseType::ANSWER && !response.content.empty())
         {
-            // No tool results, agent likely finished or reached a terminal state
-            LOG_INFO("Agent loop completed: No further tool calls detected.");
+            completed = true;
+            LOG_INFO("Agent loop completed: model returned final answer.");
             break;
         }
+
+        if (response.content.empty())
+        {
+            LOG_WARNING("Agent loop: empty model response; stopping.");
+            break;
+        }
+
+        currentPrompt = "Continue from previous result and make progress:\n" + response.content;
+    }
+
+    if (!completed && m_agentLoopRunning)
+    {
+        LOG_INFO("Agent loop: iteration cap reached without a final answer.");
     }
 
     m_agentLoopRunning = false;
@@ -1903,7 +2047,9 @@ AgentResponse AgenticBridge::ParseAgentResponse(const std::string& rawOutput)
 
 bool AgenticBridge::IsToolCall(const std::string& line) const
 {
-    return line.find("TOOL:") == 0;
+    // Accept both legacy (TOOL:) and compact (tool:) prefixes.
+    // Downstream execution normalizes prefixes anyway.
+    return line.rfind("TOOL:", 0) == 0 || line.rfind("tool:", 0) == 0;
 }
 
 bool AgenticBridge::IsAnswer(const std::string& line) const
@@ -2695,6 +2841,23 @@ void AgenticBridge::ExecuteBoundedAgentLoop(const std::string& prompt, int maxIt
 
         if (response.type == AgentResponseType::TOOL_CALL)
         {
+            static constexpr const char kToolMarker[] = "[Tool Execution Result]";
+            const size_t markerPos = response.content.find(kToolMarker);
+            if (markerPos != std::string::npos)
+            {
+                size_t payloadStart = markerPos + sizeof(kToolMarker) - 1;
+                while (payloadStart < response.content.size() &&
+                       (response.content[payloadStart] == '\n' || response.content[payloadStart] == '\r'))
+                {
+                    ++payloadStart;
+                }
+                const std::string observation = response.content.substr(payloadStart);
+                transcript << "[tool] " << observation << "\n";
+                currentPrompt =
+                    "Observation from tool execution:\n" + observation + "\n\nContinue toward the goal:\n" + prompt;
+                continue;
+            }
+
             std::string toolResult;
             if (DispatchModelToolCalls(response.content, toolResult) && !toolResult.empty())
             {
@@ -2737,20 +2900,11 @@ bool AgenticBridge::DispatchModelToolCalls(const std::string& modelOutput, std::
         return DispatchToolLinesPolicyAware(toolLines, "bridge", toolResult, nullptr);
     }
 
-    auto* mgr = GetSubAgentManager();
-    if (!mgr)
-        return false;
-    const std::string toolNameForUx = ExtractDirectiveToolName(modelOutput);
-    bool dispatched = mgr->dispatchToolCall("bridge", modelOutput, toolResult);
-
-    // Phase 4B: Choke Point 2 — hookToolResult at the dispatch funnel
-    // Every tool result flows through here, regardless of caller (Autonomy, Bridge, etc.)
-    if (dispatched && m_ide)
-    {
-        HandleToolDispatchResult(toolNameForUx, toolResult);
-    }
-
-    return dispatched;
+    // Do not fall through to SubAgentManager::dispatchToolCall — the default implementation
+    // historically returned "success" with a synthetic string without executing ToolRegistry,
+    // which hid real tool work from chat and bounded-loop callers.
+    toolResult.clear();
+    return false;
 }
 
 std::vector<std::string> AgenticBridge::ExtractToolCallLines(const std::string& modelOutput) const
@@ -2762,9 +2916,61 @@ std::vector<std::string> AgenticBridge::ExtractToolCallLines(const std::string& 
     {
         if (IsToolCall(line))
         {
-            toolLines.push_back(line);
+            // Normalize to canonical prefix for the executor.
+            if (line.rfind("tool:", 0) == 0)
+            {
+                toolLines.push_back("TOOL:" + line.substr(5));
+            }
+            else
+            {
+                toolLines.push_back(line);
+            }
+        }
+        else
+        {
+            const std::string embedded = normalizeEmbeddedToolDirective(line);
+            if (!embedded.empty())
+            {
+                toolLines.push_back(embedded);
+            }
         }
     }
+
+    // If no explicit tool lines were emitted, try structured JSON tool_calls.
+    // This enables function-calling style models without requiring prompt hotpatches.
+    if (toolLines.empty() && !modelOutput.empty())
+    {
+        const RawrXD::Agentic::ToolCallParseResult parsed = RawrXD::Agentic::ToolCallParser::parse(modelOutput);
+        for (const auto& call : parsed.toolCalls)
+        {
+            if (call.name.empty())
+            {
+                continue;
+            }
+            std::string args = "{}";
+            try
+            {
+                // Keep compact; the executor re-parses by locating the first '{'.
+                args = call.arguments.dump();
+            }
+            catch (...)
+            {
+                args = "{}";
+            }
+            toolLines.push_back("TOOL:" + call.name + " " + args);
+        }
+    }
+
+    // Single-line / pasted blobs: directive may appear without a leading newline.
+    if (toolLines.empty() && !modelOutput.empty())
+    {
+        const std::string embedded = normalizeEmbeddedToolDirective(modelOutput);
+        if (!embedded.empty())
+        {
+            toolLines.push_back(embedded);
+        }
+    }
+
     return toolLines;
 }
 
@@ -2818,11 +3024,11 @@ bool AgenticBridge::DispatchToolLinesBatched(const std::vector<std::string>& too
                                              std::string& toolResult,
                                              RawrXD::Agentic::StreamingResultChannel* streamingChannel)
 {
-    auto* mgr = GetSubAgentManager();
-    if (!mgr || toolLines.empty())
+    if (toolLines.empty())
     {
         return false;
     }
+    auto* mgr = GetSubAgentManager();
 
     const uint16_t headlessPort = m_headlessPort;
 
@@ -2848,6 +3054,7 @@ bool AgenticBridge::DispatchToolLinesBatched(const std::vector<std::string>& too
                 std::launch::async,
                 [mgr, parentId, toolLine, toolName, headlessPort]() -> ToolDispatchBatchOutcome
                 {
+                    (void)parentId;
                     ToolDispatchBatchOutcome outcome;
                     outcome.toolName = toolName;
                     auto beginExec = std::chrono::high_resolution_clock::now();
@@ -2872,7 +3079,14 @@ bool AgenticBridge::DispatchToolLinesBatched(const std::vector<std::string>& too
                             return outcome;
                         }
                     }
-                    outcome.dispatched = mgr->dispatchToolCall(parentId, toolLine, outcome.toolResult);
+                    if (executeToolLineWithRegistry(toolLine, outcome.toolResult))
+                    {
+                        outcome.dispatched = true;
+                    }
+                    else if (mgr)
+                    {
+                        outcome.dispatched = mgr->dispatchToolCall(parentId, toolLine, outcome.toolResult);
+                    }
                     const auto endExec = std::chrono::high_resolution_clock::now();
                     outcome.executionTimeMs = static_cast<uint64_t>(
                         std::chrono::duration_cast<std::chrono::milliseconds>(endExec - beginExec).count());

@@ -21,8 +21,7 @@
 // the KV cache (data/size/resize/assign/clear).
 // VirtualAlloc returns zero-filled pages, so 0.0f fill is free.
 // ---------------------------------------------------------------------------
-template <typename T>
-struct VAllocBuffer
+template <typename T> struct VAllocBuffer
 {
     T* m_ptr = nullptr;
     size_t m_size = 0;
@@ -31,10 +30,21 @@ struct VAllocBuffer
     ~VAllocBuffer() { free_(); }
     VAllocBuffer(const VAllocBuffer&) = delete;
     VAllocBuffer& operator=(const VAllocBuffer&) = delete;
-    VAllocBuffer(VAllocBuffer&& o) noexcept : m_ptr(o.m_ptr), m_size(o.m_size) { o.m_ptr = nullptr; o.m_size = 0; }
+    VAllocBuffer(VAllocBuffer&& o) noexcept : m_ptr(o.m_ptr), m_size(o.m_size)
+    {
+        o.m_ptr = nullptr;
+        o.m_size = 0;
+    }
     VAllocBuffer& operator=(VAllocBuffer&& o) noexcept
     {
-        if (this != &o) { free_(); m_ptr = o.m_ptr; m_size = o.m_size; o.m_ptr = nullptr; o.m_size = 0; }
+        if (this != &o)
+        {
+            free_();
+            m_ptr = o.m_ptr;
+            m_size = o.m_size;
+            o.m_ptr = nullptr;
+            o.m_size = 0;
+        }
         return *this;
     }
 
@@ -48,13 +58,14 @@ struct VAllocBuffer
     void resize(size_t n, T /*val*/ = T{})
     {
         free_();
-        if (n == 0) return;
+        if (n == 0)
+            return;
         const size_t bytes = n * sizeof(T);
         m_ptr = static_cast<T*>(::VirtualAlloc(nullptr, bytes, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
-        if (!m_ptr) {
+        if (!m_ptr)
+        {
             DWORD err = ::GetLastError();
-            printf("[VAllocBuffer] VirtualAlloc FAILED: n=%zu bytes=%zu err=%lu\n",
-                   n, bytes, (unsigned long)err);
+            printf("[VAllocBuffer] VirtualAlloc FAILED: n=%zu bytes=%zu err=%lu\n", n, bytes, (unsigned long)err);
             throw std::bad_alloc();
         }
         m_size = n;
@@ -64,20 +75,23 @@ struct VAllocBuffer
     void assign(size_t n, T val)
     {
         free_();
-        if (n == 0) return;
+        if (n == 0)
+            return;
         const size_t bytes = n * sizeof(T);
         m_ptr = static_cast<T*>(::VirtualAlloc(nullptr, bytes, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
-        if (!m_ptr) {
+        if (!m_ptr)
+        {
             DWORD err = ::GetLastError();
-            printf("[VAllocBuffer] VirtualAlloc FAILED (assign): n=%zu bytes=%zu err=%lu\n",
-                   n, bytes, (unsigned long)err);
+            printf("[VAllocBuffer] VirtualAlloc FAILED (assign): n=%zu bytes=%zu err=%lu\n", n, bytes,
+                   (unsigned long)err);
             throw std::bad_alloc();
         }
         m_size = n;
         // VirtualAlloc zeros pages.  If caller requests non-zero fill, do it.
         T zero{};
         if (std::memcmp(&val, &zero, sizeof(T)) != 0)
-            for (size_t i = 0; i < n; ++i) m_ptr[i] = val;
+            for (size_t i = 0; i < n; ++i)
+                m_ptr[i] = val;
     }
 
     void clear() noexcept { free_(); }
@@ -86,7 +100,11 @@ struct VAllocBuffer
   private:
     void free_() noexcept
     {
-        if (m_ptr) { ::VirtualFree(m_ptr, 0, MEM_RELEASE); m_ptr = nullptr; }
+        if (m_ptr)
+        {
+            ::VirtualFree(m_ptr, 0, MEM_RELEASE);
+            m_ptr = nullptr;
+        }
         m_size = 0;
     }
 };
@@ -184,6 +202,12 @@ class RawrXDTransformer
         /// After a heatmap snapshot, enqueue up to N resident expert hints per tick (async prepack only).
         bool moe_down_grouped_prepack_hint_from_heatmap = false;
         int moe_down_grouped_prepack_heatmap_max_hints_per_tick = 16;
+
+        /// Minimal expert prefetch: after router top‑K is known, materialize the expert gate/up/down tensors via
+        /// RawrXDModelLoader hotpatch slots to avoid first-use stalls.
+        bool moe_expert_prefetch = true;
+        /// Cap prefetch fanout even if router returns more experts (0 = no cap).
+        int moe_expert_prefetch_max = 8;
     };
 
     ~RawrXDTransformer();
@@ -223,10 +247,7 @@ class RawrXDTransformer
     {
         return m_moeGroupedSingleExpertApplies;
     }
-    [[nodiscard]] std::uint64_t moeGroupedWeightedFallbacks() const noexcept
-    {
-        return m_moeGroupedWeightedFallbacks;
-    }
+    [[nodiscard]] std::uint64_t moeGroupedWeightedFallbacks() const noexcept { return m_moeGroupedWeightedFallbacks; }
     [[nodiscard]] std::uint64_t moeGroupedSingleExpertFallbacks() const noexcept
     {
         return m_moeGroupedSingleExpertFallbacks;
@@ -316,6 +337,8 @@ class RawrXDTransformer
     void onSwarmPlanRowsEvicted_(std::span<const std::size_t> rows);
     void installSwarmPlanRowEvictionObserver_();
 
+    void prefetchMoEExperts_(const std::string& blkPrefix, const std::vector<std::uint32_t>& expertOrdinals);
+
     // KV Cache — float buffers use VirtualAlloc to bypass debug CRT heap limits.
     VAllocBuffer<float> kv_cache_k;
     VAllocBuffer<float> kv_cache_v;
@@ -350,6 +373,10 @@ class RawrXDTransformer
     std::uint64_t m_moePrepackQueueDropped = 0;
     std::uint64_t m_moePrepackSkippedNotResident = 0;
     std::uint64_t m_moePrepackInserts = 0;
+
+    std::uint64_t m_moeExpertPrefetchAttempts = 0;
+    std::uint64_t m_moeExpertPrefetchMaterialized = 0;
+    std::uint64_t m_moeExpertPrefetchErrors = 0;
 
     std::unique_ptr<MoEPrepackWorker, MoEPrepackWorkerDeleter> m_moePrepackWorker;
 };

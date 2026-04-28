@@ -363,13 +363,29 @@ void SwarmOrchestrator::updateAgentStats(SwarmAgent* agent, const SwarmResult& r
     }
 }
 
-// Stub for remaining interface methods required effectively
 std::expected<void, SwarmError> SwarmOrchestrator::submitTask(std::unique_ptr<SwarmTask> task) {
-    // Add to queue
+    if (!task) {
+        return std::unexpected(SwarmError::InvalidTask);
+    }
+    {
+        std::lock_guard<std::mutex> lock(m_taskMutex);
+        if (m_taskQueue.size() >= m_maxAgents * 10) {
+            return std::unexpected(SwarmError::ResourceExhausted);
+        }
+        m_taskQueue.push(std::move(task));
+    }
+    m_taskCondition.notify_one();
     return {};
 }
 
 std::expected<void, SwarmError> SwarmOrchestrator::removeAgent(const std::string& agentId) {
+    std::lock_guard<std::mutex> lock(m_agentMutex);
+    auto it = std::find_if(m_agents.begin(), m_agents.end(),
+        [&agentId](const auto& agent) { return agent->id == agentId; });
+    if (it == m_agents.end()) {
+        return std::unexpected(SwarmError::AgentNotFound);
+    }
+    m_agents.erase(it);
     return {};
 }
 

@@ -34,7 +34,7 @@ RawrXD::Expected<void, IDEError> IDEOrchestrator::initialize() {
     if (m_config.enableNetwork) {
         auto networkResult = setupNetworking();
         if (!networkResult) {
-            // Continue without network
+            fprintf(stderr, "[IDEOrchestrator] Network initialization failed, continuing without network\n");
         }
     }
     
@@ -80,7 +80,7 @@ RawrXD::Expected<void, IDEError> IDEOrchestrator::initialize() {
     {
         auto toolchainResult = setupToolchain();
         if (!toolchainResult) {
-            // Non-fatal — IDE works without toolchain
+            fprintf(stderr, "[IDEOrchestrator] Toolchain not found, IDE works without it\n");
         }
     }
     
@@ -100,7 +100,7 @@ RawrXD::Expected<void, IDEError> IDEOrchestrator::initializeComponents() {
     m_vulkanCompute = std::make_shared<VulkanCompute>();
     auto vkResult = m_vulkanCompute->initialize();
     if (!vkResult) {
-        // Don't fail the whole IDE, just run in CPU mode
+        fprintf(stderr, "[IDEOrchestrator] Vulkan not available, running in CPU mode\n");
     }
 
     // Create inference engine first (needed by others)
@@ -160,7 +160,7 @@ RawrXD::Expected<void, IDEError> IDEOrchestrator::setupNetworking() {
     // Test network connectivity
     auto httpResult = netManager.getHttpClient().get("http://localhost:11435/api/tags");
     if (!httpResult) {
-        // Network test failed but continue
+        fprintf(stderr, "[IDEOrchestrator] Network test failed but continuing\n");
     }
     
     return {};

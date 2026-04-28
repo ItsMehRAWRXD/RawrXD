@@ -559,6 +559,7 @@ find_package(Threads REQUIRED)
 
 set(SOURCES 
     src/main.cpp
+    src/native_ai_integration.cpp
     src/memory_core.cpp
     src/hot_patcher.cpp
     src/cpu_inference_engine.cpp
@@ -578,6 +579,8 @@ set(SOURCES
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
     src/compression_interface.cpp
+    src/rxa_packer.cpp
+    src/prometheus_lowmem.cpp
     
     src/engine/gguf_core.cpp
     src/engine/inference_kernels.cpp
@@ -591,6 +594,7 @@ set(SOURCES
     
     src/core/execution_scheduler.cpp
     src/core/system_integrity_audit_trail.cpp
+    src/core/diff_engine.cpp
     
     # Agentic Decision Tree + CLI Autonomy (Phase 19)
     src/cli/agentic_decision_tree.cpp
@@ -1118,6 +1122,13 @@ set(SOURCES
     src/core/auto_update_system.cpp
 
     # ═══════════════════════════════════════════════════════════════════
+    # Prometheus 120B MoE Engine — Frontier-class inference (MoE, GQA, Ring Attention,
+    # Flash Attention, Speculative Decoding, Tool Calling, Artifacts, Extended Thinking)
+    # ═══════════════════════════════════════════════════════════════════
+    src/prometheus/prometheus_bindings.cpp
+    src/prometheus/prometheus_weight_loader.cpp
+
+    # ═══════════════════════════════════════════════════════════════════
     # Autonomy Gap Closure — Phase A-D + Tier 1.4 + Tier 2.3
     # ═══════════════════════════════════════════════════════════════════
 
@@ -1514,6 +1525,7 @@ endif()
 # =============================================================================
 # Reverse Engineering Suite (sub-module)
 # =============================================================================
+add_subdirectory(src)
 add_subdirectory(src/reverse_engineering)
 
 add_executable(RawrEngine ${RAWR_ENGINE_SOURCES} ${RAWR_ENGINE_ASM_SOURCES})
@@ -1545,6 +1557,7 @@ target_include_directories(RawrEngine PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/tools
     ${CMAKE_CURRENT_SOURCE_DIR}/src/telemetry
     ${CMAKE_CURRENT_SOURCE_DIR}/src/reverse_engineering
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/prometheus
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/include/gpu
 )
@@ -1696,6 +1709,7 @@ target_include_directories(RawrXD_Gold PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/tools
     ${CMAKE_CURRENT_SOURCE_DIR}/src/telemetry
     ${CMAKE_CURRENT_SOURCE_DIR}/src/reverse_engineering
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/prometheus
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/include/gpu
 )
@@ -2723,6 +2737,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/gguf_vocab_resolver.cpp
     src/streaming_gguf_loader.cpp
     src/compression_interface.cpp
+    src/brutal_implementation.cpp
     src/memory_core.cpp
     src/license_enforcement.cpp
     src/feature_flags_runtime.cpp
@@ -2740,6 +2755,8 @@ set(INFERENCE_ENGINE_SOURCES
     src/engine/core_generator.cpp
     src/engine/pyre_compute.cpp
     src/engine/sovereign_engines.cpp
+    src/engine/cpu_engine.cpp
+    src/engine/tokenless_loader.cpp
     src/core/layer_offload_manager.cpp
     src/core/engine_registry.cpp
     src/core/engine_revolver.cpp
@@ -2752,10 +2769,31 @@ set(INFERENCE_ENGINE_SOURCES
     src/core/swarm_scheduler.cpp
     src/core/gguf_swarm_plan_builder.cpp
     src/logging/Logger.cpp
+    src/gguf_factory/behavior_config_v2.cpp
+    src/tokenizer/tokenizer_base.cpp
+    src/tokenizer/bpe_tokenizer.cpp
+    src/tokenizer/huggingface_tokenizer.cpp
+    src/tokenizer/tiktoken_tokenizer.cpp
+    src/tokenizer/wordpiece_tokenizer.cpp
+    src/tokenizer/sentencepiece_tokenizer.cpp
+    src/tokenizer/sentencepiece_protobuf.cpp
+    src/tokenizer/tokenizer_factory.cpp
+    src/loader/gguf_tensor_loader.cpp
+    src/loader/tensor_filter.cpp
+    src/weights/safetensors.cpp
+    src/weights/weight_init.cpp
+    src/weights/quantized_loaders.cpp
+    src/codec/brutal_gzip.cpp
+    src/codec/gzip_brutal_inflate.cpp
 )
 list(REMOVE_DUPLICATES INFERENCE_ENGINE_SOURCES)
 if(NOT RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
     list(APPEND INFERENCE_ENGINE_SOURCES src/inference/inference_standalone_link_shims.cpp)
+endif()
+
+# Optional tooling targets
+if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/tools/tokenizer_roundtrip_test/CMakeLists.txt")
+    add_subdirectory(src/tools/tokenizer_roundtrip_test)
 endif()
 if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
     list(FILTER INFERENCE_ENGINE_SOURCES EXCLUDE REGEX ".*/.*_link_shims?\\.cpp$")
@@ -2792,11 +2830,47 @@ add_executable(RawrXD-InferenceEngine EXCLUDE_FROM_ALL
     src/inference/inference_standalone_main.cpp
 )
 target_link_libraries(RawrXD-InferenceEngine PRIVATE InferenceEngine)
+
+# ---------------------------------------------------------------------------
+# Autocomplete engine – zero-dependency, single-file GGUF transformer daemon
+# ---------------------------------------------------------------------------
+add_executable(RawrXD-Autocomplete EXCLUDE_FROM_ALL
+    src/autocomplete.cpp
+)
+set_target_properties(RawrXD-Autocomplete PROPERTIES
+    CXX_STANDARD 17
+    CXX_STANDARD_REQUIRED ON
+)
+target_compile_options(RawrXD-Autocomplete PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:/O2 /arch:AVX2 /EHsc /W3>
+    $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-O3 -mavx2 -pthread -Wall>
+)
+if(NOT MSVC)
+    target_link_libraries(RawrXD-Autocomplete PRIVATE pthread)
+    if(UNIX AND NOT APPLE)
+        target_link_libraries(RawrXD-Autocomplete PRIVATE rt)
+    endif()
+endif()
 if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
     set_target_properties(RawrXD-InferenceEngine PROPERTIES
         EXCLUDE_FROM_ALL FALSE
         EXCLUDE_FROM_DEFAULT_BUILD FALSE
     )
+endif()
+
+# =============================================================================
+# Titan ABI Boundary (MASM Control Plane <-> C++ Inference Plane)
+# =============================================================================
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/titan/titan_abi.cpp")
+    add_library(RawrXD_TitanABI STATIC
+        src/titan/titan_abi.cpp
+    )
+    target_include_directories(RawrXD_TitanABI PUBLIC
+        ${CMAKE_SOURCE_DIR}/src
+    )
+    if(MSVC)
+        target_compile_options(RawrXD_TitanABI PRIVATE /arch:AVX2)
+    endif()
 endif()
 
 add_executable(RawrXD-ComparativeBenchmark EXCLUDE_FROM_ALL
@@ -2809,6 +2883,62 @@ target_include_directories(RawrXD-ComparativeBenchmark PRIVATE
 target_compile_definitions(RawrXD-ComparativeBenchmark PRIVATE
     NOMINMAX
     _CRT_SECURE_NO_WARNINGS
+)
+
+# =============================================================================
+# Maximus TPS Streamer
+# =============================================================================
+add_library(MaximusStreamer STATIC
+    src/maximus_streamer.cpp
+)
+target_include_directories(MaximusStreamer PUBLIC
+    ${CMAKE_SOURCE_DIR}/include
+)
+target_compile_features(MaximusStreamer PUBLIC cxx_std_20)
+set_target_properties(MaximusStreamer PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+)
+
+add_executable(RawrXD-MaximusDemo EXCLUDE_FROM_ALL
+    examples/maximus_demo.cpp
+)
+target_link_libraries(RawrXD-MaximusDemo PRIVATE MaximusStreamer)
+target_include_directories(RawrXD-MaximusDemo PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+)
+set_target_properties(RawrXD-MaximusDemo PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
+
+# =============================================================================
+# Agentic Streamer Bridge
+# =============================================================================
+add_library(AgenticStreamerBridge STATIC
+    src/agentic_streamer_bridge.cpp
+    src/agentic/agentic_tool_executor.cpp
+)
+target_link_libraries(AgenticStreamerBridge PUBLIC
+    MaximusStreamer
+)
+target_include_directories(AgenticStreamerBridge PUBLIC
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+)
+target_compile_features(AgenticStreamerBridge PUBLIC cxx_std_20)
+set_target_properties(AgenticStreamerBridge PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+)
+
+add_executable(RawrXD-AgenticBridgeDemo EXCLUDE_FROM_ALL
+    examples/agentic_bridge_demo.cpp
+)
+target_link_libraries(RawrXD-AgenticBridgeDemo PRIVATE AgenticStreamerBridge)
+target_include_directories(RawrXD-AgenticBridgeDemo PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+)
+set_target_properties(RawrXD-AgenticBridgeDemo PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
 
 target_compile_definitions(InferenceEngine PRIVATE
@@ -3178,6 +3308,7 @@ if(WIN32)
     set(WIN32IDE_SOURCES
         src/win32app/main_win32.cpp
         src/win32app/HeadlessIDE.cpp
+        src/win32app/HeadlessIDE_AutonomousWorkflowMode.cpp
         src/api_server.cpp
         src/overclock_governor.cpp
         src/RawrXD_ApertureManager.cpp
@@ -3213,6 +3344,7 @@ if(WIN32)
         src/win32app/Win32IDE_Accelerators.cpp
         src/win32app/Win32IDE_CoreRuntimeSpine.cpp
         src/win32app/Win32IDE_Commands.cpp
+        src/win32app/Win32IDE_ModelLab.cpp
         src/win32app/Win32IDE_VSCodeUI.cpp
         src/win32app/Win32IDE_CopilotNativeGlue.cpp
             src/win32app/WindowManager.cpp
@@ -3225,6 +3357,7 @@ if(WIN32)
         src/win32app/Win32IDE_StreamingUX.cpp
         src/win32app/Win32IDE_Sidebar.cpp
         src/win32app/Win32IDE_SidebarRuntime.cpp
+        src/gguf_factory/gguf_writer_minimal.cpp
         src/win32app/Win32IDE_Debugger.cpp
         src/win32app/Win32IDE_AutonomousDebugger.cpp
         src/win32app/Win32IDE_Annotations.cpp
@@ -3331,6 +3464,9 @@ if(WIN32)
         # Core engine files needed by IDE
         src/agentic_engine.cpp
         src/subagent_core.cpp
+        src/bridge_layer.cpp
+        src/titan/titan_abi.cpp
+        src/bridge_on_suggestion_ready_stub.cpp
 
         # Bounded Agent Loop + FIM Provider (Agent→IDE Pivot)
         src/agentic/AgentToolHandlers.cpp
@@ -3362,11 +3498,13 @@ if(WIN32)
         src/agentic/AgenticNavigator.cpp
         src/agentic/RawrXD_ToolRegistry.cpp
         src/agentic/ToolRegistry.cpp
+        src/agentic/ToolRegistry_HardwareSecurity_Batch1.cpp
         src/agentic/SovereignAssembler.cpp
         src/agentic/RawrXD_AgentLoop.cpp
         src/agentic/agentic_executor.cpp
         src/agentic/FIMPromptBuilder.cpp
         src/agentic/react_tool_loop.cpp
+        src/ai/inference_retry_shim.cpp
         
         # SDMA Phase 1: Coordinator (burst scheduling bridge/thread management)
         src/core/sdma/sdma_coordinator.cpp
@@ -3423,6 +3561,9 @@ if(WIN32)
         src/rawrxd_sampler.cpp
         src/modules/engine_manager.cpp
         src/cpu_inference_engine.cpp
+        src/ai/fast_spec.cpp
+        src/ai/fast_spec_inference_bridge.cpp
+        src/mapped_window_streamer.cpp
         src/dispatch_orchestrator.cpp
         src/core/swarm_scheduler.cpp
         src/core/gguf_swarm_plan_builder.cpp
@@ -4016,6 +4157,14 @@ if(WIN32)
         src/core/feature_handlers_model_load.cpp
         src/autonomous_validation_layer.cpp
         src/video/tubi_backend.cpp
+
+        # Sovereign Cursor — AI-powered editor brain
+        src/editor/SovereignGapBuffer.cpp
+        src/ai/SovereignVectorStore.cpp
+        src/ai/SovereignCursor.cpp
+
+        # Prometheus 800B MoE Weight Loader
+        src/inference/PrometheusMoE.cpp
     )
 
     if(RAWR_HAS_MASM)
@@ -4687,6 +4836,10 @@ if(WIN32)
         src/gpu/speculative_inference_bridge.cpp
         src/gpu/paged_kv_cache.cpp
         src/inference/ultra_fast_inference.cpp
+        # AI Engine Core Integration
+        src/ai/ai_inference_real.cpp
+        src/ai/speculative_decoder.cpp
+        src/ai/production_inference_engine.cpp
         # Dual-model speculative orchestrator (simulation + integration seam; see SPECULATIVE_EXECUTION_INTEGRATION.md)
         src/inference/speculative_execution_engine.cpp
     )
@@ -4695,6 +4848,38 @@ if(WIN32)
     list(APPEND WIN32IDE_SOURCES
         src/tool_registry_init.cpp
         src/core/system_integrity_audit_trail.cpp
+        # Link-closure: HTTP server entrypoints used by api_server.cpp
+        src/server/RawrXD_HttpServer.cpp
+        # Link-closure: NativeAgent ctor/dtor referenced by Win32IDE agentic bridge
+        src/native_agent.cpp
+        # Link-closure: GPUDispatchGate referenced by quantum_agent_orchestrator.cpp
+        src/inference/rawrxd_gpu_dispatch_impl.cpp
+        # Link-closure: RTP protocol impl referenced by Win32IDE_Commands.cpp
+        src/win32app/rawrxd_rtp_protocol_impl.cpp
+        # Link-closure: Sovereign GPU C++ fallback stubs referenced by Win32IDE_TabManager.cpp
+        src/win32app/sovereign_gpu_impl.cpp
+        # Link-closure: Root NativeGGUFLoader used by ssot_handlers.cpp probe
+        native_gguf_loader.cpp
+        # Link-closure: SovereignInferenceClient implementation referenced by agentic engines
+        src/agentic/SovereignInferenceClient.cpp
+        # Link-closure: Tool call parser implementation used by SovereignInferenceClient
+        src/agentic/tool_call_parser.cpp
+        # Link-closure: D3D12 bridge referenced by GPUDispatchGate fallback
+        src/gguf_d3d12_bridge.cpp
+        # Link-closure: EngineRegistry implementation referenced by runtime_core/tool init
+        src/core/engine_registry.cpp
+        src/core/unlinked_symbols_batch_012.cpp
+        # Link-closure: real CoT fallback system (unified_hotpatch_manager.hpp)
+        src/core/cot_fallback_system.cpp
+        src/core/cot_fallback_system_impl.cpp
+        # Link-closure: Win32IDE collaboration implementations (global ABI used by include/collab/*.h)
+        src/win32app/rawrxd_collab_crdt_impl.cpp
+        # Link-closure: ModelInvoker implementation
+        src/agent/model_invoker.cpp
+        # Link-closure: GGUFRunner Qt-style callbacks implementation + kernel link shims
+        src/llm_adapter/ggufrunner_impl.cpp
+        # Link-closure: LlamaNativeBridge used by SovereignInferenceClient
+        src/inference/RawrXD_LlamaNative.cpp
     )
 
     # Model Puller subsystem
@@ -4707,6 +4892,11 @@ if(WIN32)
         src/model_puller/model_puller_cli.cpp
         src/win32app/Win32IDE_ModelManager.cpp
         src/win32app/Win32IDE_ModelManagerBridge.cpp
+        src/win32app/Win32IDE_DownloadsPanel.cpp
+        # Link-closure: Win32IDE missing-features method implementations referenced by Win32IDE/Core
+        src/win32app/Win32IDE_MissingFeaturesCore.cpp
+        # IDEFeatures implementation (initialize, loadWorkspace, openFile)
+        src/features/missing_features.cpp
     )
 
     add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${ASM_KERNEL_SOURCES} ${WIN32IDE_EXTRA_ASM})
@@ -5036,6 +5226,7 @@ if(WIN32)
         advapi32 crypt32 bcrypt wintrust
         opengl32 wininet
         pdh
+        rawrxd_gpu_gate
         ${MASM_OBJECTS}
         ${_WIN32IDE_LINKED_MONOLITHIC_OBJS}
     )
@@ -5085,6 +5276,7 @@ if(WIN32)
         ${CMAKE_CURRENT_SOURCE_DIR}/src/ui
         ${CMAKE_CURRENT_SOURCE_DIR}/src/git
         ${CMAKE_CURRENT_SOURCE_DIR}/src/collab
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/prometheus
         ${CMAKE_CURRENT_SOURCE_DIR}/include
     )
 
@@ -5338,6 +5530,70 @@ if(WIN32)
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
     )
 
+    add_executable(agent_workflow_orchestrator_smoke EXCLUDE_FROM_ALL
+        tests/test_agent_workflow_orchestrator.cpp
+    )
+    target_include_directories(agent_workflow_orchestrator_smoke PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}
+    )
+    target_link_libraries(agent_workflow_orchestrator_smoke PRIVATE kernel32)
+    set_target_properties(agent_workflow_orchestrator_smoke PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    )
+    add_test(NAME agent_workflow_orchestrator_smoke COMMAND agent_workflow_orchestrator_smoke)
+
+    add_executable(benchmark_cli EXCLUDE_FROM_ALL
+        src/cli_benchmark_main.cpp
+        src/streaming/AdaptiveTensorCodec.cpp
+        src/streaming/atc_benchmark.cpp
+        src/gguf_parser.cpp
+        src/gguf_loader.cpp
+        src/quantization/BraidedQuantizer.cpp
+        src/quantization/braided_quantizer_fingerprint.cpp
+    )
+    target_include_directories(benchmark_cli PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    target_link_libraries(benchmark_cli PRIVATE
+        kernel32
+        user32
+        ole32
+        oleaut32
+        version
+        Rpcrt4
+        Psapi
+    )
+    set_target_properties(benchmark_cli PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    )
+
+    add_executable(model_permutator EXCLUDE_FROM_ALL
+        src/model_permutator/permutator_main.cpp
+        src/model_permutator/ModelPermutationEngine.cpp
+        src/streaming/AdaptiveTensorCodec.cpp
+        src/streaming/atc_benchmark.cpp
+        src/gguf_parser.cpp
+        src/gguf_loader.cpp
+    )
+    target_include_directories(model_permutator PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    target_link_libraries(model_permutator PRIVATE
+        kernel32
+        user32
+        ole32
+        oleaut32
+        version
+        Rpcrt4
+        Psapi
+    )
+    set_target_properties(model_permutator PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    )
+
     if(EXISTS "${CMAKE_SOURCE_DIR}/src/cpu_inference_engine_autofix_stub.cpp" AND NOT RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
         add_executable(RawrXD-AutoFixCLI
             src/app/cli_entrypoint.cpp
@@ -5528,29 +5784,7 @@ if(WIN32)
     )
     message(STATUS "[Phase 9] Query Fusion Benchmark target: RawrXD-QueryFusionBenchmark")
 
-    # ═══════════════════════════════════════════════════════════════════
-    # Streamability benchmark — live StreamingGGUFLoader capacity scan + one-addition estimate
-    # ═══════════════════════════════════════════════════════════════════
-    add_executable(RawrXD-StreamabilityBenchmark EXCLUDE_FROM_ALL
-        src/tools/RawrXD_StreamabilityBenchmark.cpp
-        src/streaming_gguf_loader.cpp
-        src/utils/Diagnostics.cpp
-    )
-    target_include_directories(RawrXD-StreamabilityBenchmark PRIVATE
-        ${CMAKE_SOURCE_DIR}/src
-        ${CMAKE_SOURCE_DIR}/include
-    )
-    if(MSVC)
-        target_compile_options(RawrXD-StreamabilityBenchmark PRIVATE /EHsc /W2 /O2)
-    endif()
-    target_link_libraries(RawrXD-StreamabilityBenchmark PRIVATE kernel32)
-    set_target_properties(RawrXD-StreamabilityBenchmark PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-        OUTPUT_NAME RawrXD-StreamabilityBenchmark
-        CXX_STANDARD 23
-        CXX_STANDARD_REQUIRED ON
-    )
-    message(STATUS "[Benchmark] RawrXD-StreamabilityBenchmark target")
+
 
     # ═══════════════════════════════════════════════════════════════════
     # TPS smoke — GGUFRunner + model_runtime_gate + runtime_surface unity + decode TPS vs ref (default 239)
@@ -5585,6 +5819,55 @@ if(WIN32)
         CXX_STANDARD_REQUIRED ON
     )
     message(STATUS "[Smoke] RawrXD-TpsSmoke target (Run-TpsSmoke.ps1)")
+
+# ─────────────────────────────────────────────────────────────────────────────
+# RawrXD-MemoryBench — synthetic stress benchmark for the 10-strategy memory
+# subsystem. EXCLUDE_FROM_ALL so it never breaks the main IDE build.
+# Build: cmake --build build-ninja --target RawrXD-MemoryBench
+# Run  : .\build-ninja\bin\RawrXD-MemoryBench.exe [--verbose]
+# ─────────────────────────────────────────────────────────────────────────────
+add_executable(RawrXD-MemoryBench EXCLUDE_FROM_ALL
+    src/memory/memory_system_bench.cpp
+    src/memory/memory_morph_controller.cpp
+    src/memory/attention_heat_zone_partitioning.cpp
+    src/memory/cross_session_memory_dedup.cpp
+    src/memory/speculative_memory_branching.cpp
+    src/memory/kv_cache_pager.cpp
+    src/memory/layer_offload_scheduler.cpp
+    src/memory/tensor_compression_pool.cpp
+    src/memory/gradient_checkpoint_manager.cpp
+    src/memory/sliding_window_kv_eviction.cpp
+    src/memory/predictive_kv_prefetch_graph.cpp
+    src/memory/execution_path_memory_folding.cpp
+    src/memory/delta_state_kv_encoding.cpp
+    src/memory/context_topology_compression.cpp
+)
+
+target_include_directories(RawrXD-MemoryBench PRIVATE
+    src/memory
+    include
+)
+
+if(MSVC)
+    # /O2 only in non-Debug configs; /RTC1 from CMAKE_CXX_FLAGS_DEBUG is incompatible with /O2
+    target_compile_options(RawrXD-MemoryBench PRIVATE
+        /EHsc /W3 /arch:AVX2 /std:c++20
+        $<$<NOT:$<CONFIG:Debug>>:/O2>
+    )
+else()
+    target_compile_options(RawrXD-MemoryBench PRIVATE -O2 -std=c++20 -Wall -Wextra)
+endif()
+
+target_link_libraries(RawrXD-MemoryBench PRIVATE kernel32)
+
+set_target_properties(RawrXD-MemoryBench PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME RawrXD-MemoryBench
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+
+message(STATUS "[MemoryBench] RawrXD-MemoryBench target registered (cmake --build ... --target RawrXD-MemoryBench)")
 
     # ═══════════════════════════════════════════════════════════════════
     # Model analysis — shared lib (Win32IDE + CLI) + CLI tool (docs/ANALYSIS_QUICKSTART.md)
@@ -5869,6 +6152,63 @@ endif()
 message(STATUS "[AgenticOrchestrator] Smoke test target: agentic_orchestrator_smoke_test (build with: cmake --build . --target agentic_orchestrator_smoke_test)")
 
 # ============================================================================
+# Intelligent Review System Smoke Tests
+# ============================================================================
+add_executable(intelligent_review_smoke_test EXCLUDE_FROM_ALL
+    src/intelligent_review.cpp
+    src/smoke_test_intelligent_review.cpp
+)
+
+target_include_directories(intelligent_review_smoke_test PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_compile_features(intelligent_review_smoke_test PRIVATE cxx_std_17)
+
+if(WIN32)
+    target_link_libraries(intelligent_review_smoke_test PRIVATE
+        Threads::Threads
+        user32 gdi32 shell32
+    )
+else()
+    target_link_libraries(intelligent_review_smoke_test PRIVATE Threads::Threads)
+endif()
+
+message(STATUS "[IntelligentReview] Smoke test target: intelligent_review_smoke_test (build with: cmake --build . --target intelligent_review_smoke_test)")
+
+# ============================================================================
+# TLS Bridge Smoke Tests
+# ============================================================================
+add_executable(tls_bridge_smoke_test EXCLUDE_FROM_ALL
+    src/llm_tls_bridge.cpp
+    src/tests/tls_bridge_smoke.cpp
+)
+
+target_include_directories(tls_bridge_smoke_test PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_compile_features(tls_bridge_smoke_test PRIVATE cxx_std_17)
+
+if(WIN32)
+    target_link_libraries(tls_bridge_smoke_test PRIVATE
+        Threads::Threads
+        user32 gdi32 shell32 ws2_32 crypt32
+    )
+else()
+    target_link_libraries(tls_bridge_smoke_test PRIVATE 
+        Threads::Threads
+        ssl crypto
+    )
+endif()
+
+message(STATUS "[TLSBridge] Smoke test target: tls_bridge_smoke_test (build with: cmake --build . --target tls_bridge_smoke_test)")
+
+# ============================================================================
 # SovereignAssembler encoding smoke (jmp fixup, ALU, movzx)
 # ============================================================================
 add_executable(sovereign_assembler_smoke EXCLUDE_FROM_ALL
@@ -6050,6 +6390,7 @@ if(MSVC)
 endif()
 target_link_libraries(RawrXD-Serve PRIVATE
     kernel32 httpapi ws2_32
+    rawrxd_gpu_gate
 )
 set_target_properties(RawrXD-Serve PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin

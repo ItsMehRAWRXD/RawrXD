@@ -513,7 +513,15 @@ uint32_t ExtensionPermissionManager::parsePermissions(const std::vector<std::str
 }
 
 std::string ExtensionPermissionManager::getWorkspaceRoot() const {
-    // TODO: Get actual workspace root from IDE
+    // Get actual workspace root from IDE or environment
+    // Try IDE first, then environment variable, then current path
+    if (g_ideInstance && g_ideInstance->GetWorkspaceRoot()) {
+        return g_ideInstance->GetWorkspaceRoot();
+    }
+    const char* workspace = std::getenv("RAWRXD_WORKSPACE");
+    if (workspace) {
+        return workspace;
+    }
     return std::filesystem::current_path().string();
 }
 

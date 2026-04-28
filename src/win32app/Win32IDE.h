@@ -48,6 +48,9 @@
 
 #include "../../include/RawrOllamaBridge.hpp"
 #include "../../include/editor_engine.h"
+#include "../../include/missing_features_batch3.hpp"
+#include "../../include/missing_features_batch6.hpp"
+#include "../../include/missing_features_batch7.hpp"
 namespace RawrXD
 {
 struct DownloadProgress;
@@ -88,6 +91,7 @@ class DockingPaneManager;
 namespace rawrxd
 {
 class SpeculativeExecutionEngine;
+class IDEFeatures;
 }
 
 #include <array>
@@ -104,6 +108,8 @@ class SpeculativeExecutionEngine;
 #include <thread>
 #include <unordered_map>
 #include <vector>
+
+#include "Win32IDE_DownloadsPanel.h"
 
 // Posted from AgenticChatSession worker thread; UI thread finalizes markdown + `m_chatHistory` + disk.
 struct Win32IDEAgenticCopilotFinalEnvelope
@@ -167,11 +173,13 @@ class RefactoringPluginManager;
 class LanguagePluginManager;
 class ResourceGeneratorManager;
 
-namespace RawrXD {
-namespace Prediction {
+namespace RawrXD
+{
+namespace Prediction
+{
 class NativeStreamProvider;
 }
-}
+}  // namespace RawrXD
 // Deleter defined in OllamaProvider.h - forward declaration only here
 struct NativeStreamProviderDeleter;
 
@@ -287,9 +295,15 @@ struct RefactoringOption
     std::string description;
 };
 
+// Forward declaration for D2D syntax bridge friend access
+namespace RawrXD { class D2DSyntaxBridge; }
+
+// Win32IDE main application class
 class Win32IDE
 {
     friend class AgenticBridge;
+    friend class Win32IDE_DAPServer;
+    friend class Win32IDE_DAPServer;
     friend class Win32IDE_TabManager;
     friend class Win32IDE_AgenticBridge;
     friend class Win32IDE_Autonomy;
@@ -306,6 +320,7 @@ class Win32IDE
     friend void deferredInitTrampoline(void* self);
     friend void bgInitBody(void* self);
     friend void RawrXD_FinishCopilotMinimalAgentic(Win32IDE* ide, WPARAM wParam, LPARAM heapResponse);
+    friend class RawrXD::D2DSyntaxBridge;
 
   public:
     void runWorkspaceSearchFromDialog(const std::string& query);
@@ -554,13 +569,25 @@ class Win32IDE
     }
     void sendToAllTerminalsPublic(const std::string& cmd) { sendToAllTerminals(cmd); }
 
+    // Debugger Interface (for DAP server)
+    void debuggerLaunchProgram(const std::string& program, const std::vector<std::string>& args, const std::string& cwd,
+                               bool stopOnEntry);
+    void debuggerSetBreakpoint(const std::string& source, int line, int column, const std::string& condition);
+
     // File Watcher Public Interface
     void initFileWatcher();
     void shutdownFileWatcher();
 
+        // Missing Features Core Integration (facade over src/features/missing_features.hpp)
+        void initializeMissingFeaturesCore();
+        void syncMissingFeaturesFileContext(const std::string& filePath);
+        void syncMissingFeaturesWorkspaceContext(const std::string& workspacePath);
+        bool isMissingFeaturesCoreReady() const;
+
   private:
     EngineManager* m_engineManager = nullptr;
     CodexUltimate* m_codexUltimate = nullptr;
+        std::shared_ptr<rawrxd::IDEFeatures> m_missingFeaturesCore;
 
     // Window procedure
     static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -745,6 +772,7 @@ class Win32IDE
     void renderSuggestionTint(HDC hdc);
     void renderGhostText(HDC hdc);
     bool handleGhostTextKey(UINT vk);
+    bool handleGhostTextTypedChar(wchar_t ch);
     void updateGhostDiffOverlayUi(const POINTL& anchorPt);
     void hideGhostDiffOverlayUi();
     void destroyGhostDiffOverlayUi();
@@ -770,6 +798,7 @@ class Win32IDE
     // View Operations
     void toggleOutputPanel();
     void toggleTerminal();
+    void toggleSovereignCLI();
     /// VS Code / Cursor: toggle bottom panel and focus integrated terminal command bar when shown.
     void onViewTerminalShortcut();
     void showAbout();
@@ -1447,6 +1476,11 @@ class Win32IDE
     void updateDownloadProgress(const RawrXD::DownloadProgress& progress);
     void clearDownloadProgress();
 
+    // Downloads Panel (LM Studio-style download tracker)
+    void showDownloadsPanel();
+    void hideDownloadsPanel();
+    void toggleDownloadsPanel();
+
     // Command Palette (Ctrl+Shift+P)
     struct CommandPaletteItem
     {
@@ -1686,6 +1720,8 @@ class Win32IDE
     void showMultiFileSearchDialog();
     void showCICDSettingsDialog();
     void showModelRegistryDialog();
+    // Model Lab: write GGUF metadata-only profiles (Win32 native dialog).
+    void showModelLabDialog();
     friend LRESULT CALLBACK CICDSettingsDlgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
     friend LRESULT CALLBACK MultiFileSearchDlgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
     friend LRESULT CALLBACK ModelRegistryDlgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -1846,7 +1882,7 @@ class Win32IDE
     std::mutex m_asyncModelLoadMutex;
     bool m_asyncModelLoadRunning = false;
 
-    std::string m_pendingChatOnLoadMessage;  // queued chat sent while model was loading
+    std::string m_pendingChatOnLoadMessage;            // queued chat sent while model was loading
     bool m_pendingChatOnLoadUserTurnRendered = false;  // chat UI already rendered queued user turn
 
     // AI Inference State
@@ -2277,8 +2313,10 @@ class Win32IDE
     // ========================================================================
     // EXPRESSION EVALUATOR — Watch Expressions & Hover Tooltips
     // ========================================================================
+  public:
     class ExpressionEvaluator;
 
+  public:
     // Evaluate custom expression in debug context
     bool evaluateWatchExpression(const std::string& expression, int frameId, std::string& result, std::string& type);
 
@@ -2352,6 +2390,9 @@ class Win32IDE
     // Secondary Sidebar (Right) - AI Chat / Copilot area
     HWND m_hwndSecondarySidebar;
     HWND m_hwndSecondarySidebarHeader;
+
+    // Downloads Panel
+    std::unique_ptr<DownloadsPanelWindow> m_downloadsPanel;
     HWND m_hwndCopilotChatInput;
     HWND m_hwndCopilotChatOutput;
     HWND m_hwndCopilotSendBtn;
@@ -2888,6 +2929,8 @@ class Win32IDE
     void onGhostTextReady(int requestedCursorPos, const char* completionText);
     void onGhostTextTokenChunk(const char* tokenChunk, uint64_t sessionId);
     void dismissGhostText();
+    void scheduleTitanDraftPrefetch();
+    void invalidateTitanDraftPrefetch();
     void toggleGhostText();
     std::string trimGhostText(const std::string& raw);
 
@@ -2918,6 +2961,7 @@ class Win32IDE
     std::unique_ptr<RawrXD::IDE::PredictiveGhostText> m_predictiveGhostText;
     bool m_ghostTextAccepted = false;
     bool m_ghostTextPending = false;
+    std::string m_ghostTextCommitContent;
     int m_ghostTextLine = -1;
     int m_ghostTextColumn = -1;
     int m_ghostTextRequestCursorPos = -1;
@@ -2941,6 +2985,11 @@ class Win32IDE
     uint64_t m_titanGhostPackets = 0;
     bool m_titanGhostStreamActive = false;
     std::mutex m_titanAgentMutex;
+    std::mutex m_titanDraftPrefetchMutex;
+    std::string m_titanPrefetchedDraftBlock;
+    int m_titanPrefetchedDraftTokens = 0;
+    uint64_t m_titanPrefetchGeneration = 0;
+    bool m_titanDraftPrefetchInFlight = false;
     std::string m_titanAgentStreamText;
     uint64_t m_titanAgentStreamSeq = 0;
     uint64_t m_titanAgentSeqGaps = 0;
@@ -3774,7 +3823,21 @@ class Win32IDE
             LSPRange range;
             std::string newText;
         };
+
+        struct ResourceOperation
+        {
+            enum class Type { Create, Rename, Delete };
+            Type type;
+            std::string uri;       // Target for Create/Delete, Source for Rename
+            std::string newUri;    // Target for Rename
+            bool overwrite = false;
+            bool ignoreIfExists = false;
+            bool recursive = false;
+            bool ignoreIfNotExists = false;
+        };
+
         std::map<std::string, std::vector<TextEdit>> changes;
+        std::vector<ResourceOperation> resourceOperations;
     };
 
     // ---- Inlay Hints (LSP 3.17+) ----
@@ -3799,6 +3862,7 @@ class Win32IDE
         std::string title;
         std::string kind;  // "quickfix", "refactoring", etc.
         std::string command;
+        nlohmann::json edit;  // Full WorkspaceEdit JSON
         bool hasEdit = false;
     };
 
@@ -3952,6 +4016,7 @@ class Win32IDE
     std::map<std::string, LSPLanguage> m_lspOpenDocuments;               // uri → language
     std::map<int, nlohmann::json> m_lspPendingResponses;                 // requestId → response
     LSPStats m_lspStats = {};
+    std::vector<LSPInlayHint> m_lastInlayHints;
     bool m_suppressLspDocumentSync = false;
     std::mutex m_lspMutex;
     std::mutex m_lspDiagnosticsMutex;
@@ -7275,6 +7340,31 @@ class Win32IDE
 
   private:
 };
+
+// Batch 3 feature systems: AI Completion, IntelliSense, Semantic Highlighting,
+// Document Links, Hover, Signature Help, Rename, Extract, Organize Imports,
+// Code Lens, Inlay Hints, Color Decorations, Bookmarks, TODO Parser,
+// Spell Checker, Clipboard History.
+inline rawrxd::IDEFeatures3& GetIDEFeatures3() {
+    static rawrxd::IDEFeatures3 instance;
+    static bool initialized = false;
+    if (!initialized) { instance.initialize(); initialized = true; }
+    return instance;
+}
+
+inline rawrxd::IDEFeatures6& GetIDEFeatures6() {
+    static rawrxd::IDEFeatures6 instance;
+    static bool initialized = false;
+    if (!initialized) { instance.initialize(); initialized = true; }
+    return instance;
+}
+
+inline rawrxd::IDEFeatures7& GetIDEFeatures7() {
+    static rawrxd::IDEFeatures7 instance;
+    static bool initialized = false;
+    if (!initialized) { instance.initialize(); initialized = true; }
+    return instance;
+}
 
 // Global IDE instance for C-callable bridges (agent streaming, etc.). Set in initProblemsPanel().
 extern Win32IDE* g_pMainIDE;

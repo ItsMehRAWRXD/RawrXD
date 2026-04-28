@@ -73,7 +73,20 @@ enum LogLevel { LOG_DEBUG = 0, LOG_INFO = 1, LOG_WARN = 2, LOG_ERROR = 3 };
 static LogLevel s_minLogLevel = LOG_ERROR;
 
 static void LogMessage(LogLevel level, const char* fmt, ...) {
-    // Logging disabled
+    if (level < s_minLogLevel) return;
+    const char* levelStr = "INFO";
+    switch (level) {
+        case LOG_DEBUG: levelStr = "DEBUG"; break;
+        case LOG_WARN:  levelStr = "WARN";  break;
+        case LOG_ERROR: levelStr = "ERROR"; break;
+        default: break;
+    }
+    va_list args;
+    va_start(args, fmt);
+    fprintf(stderr, "[AIModelCaller][%s] ", levelStr);
+    vfprintf(stderr, fmt, args);
+    fprintf(stderr, "\n");
+    va_end(args);
 }
 
 // ============================================================

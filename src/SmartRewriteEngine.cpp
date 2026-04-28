@@ -88,7 +88,8 @@ std::vector<CodeIssue> SmartRewriteEngine::detectCodeSmells(
         // Check for long functions (multiple heuristics)
         if (line.find("void ") != std::string::npos || 
             line.find("int ") != std::string::npos) {
-            // This is a simplified check
+            // Detected function signature
+            fprintf(stderr, "[SmartRewriteEngine] Detected function signature\n");
         }
         
         // Check for duplicate code patterns

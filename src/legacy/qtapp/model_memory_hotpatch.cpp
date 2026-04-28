@@ -13,7 +13,7 @@ struct ModelMemoryHotpatch::RegionProtectCookie {
 #ifdef _WIN32
     DWORD oldProtection; // Used by VirtualProtect
 #else
-    int dummy; // Placeholder for POSIX (mprotect doesn't need a cookie for restore)
+    int protectionFlags; // POSIX mprotect flags (PROT_READ|PROT_WRITE|PROT_EXEC)
 #endif
     size_t alignedStart;
     size_t alignedSize;

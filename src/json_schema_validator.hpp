@@ -4,6 +4,7 @@
 #include <string>
 #include <functional>
 #include <vector>
+#include <windows.h>
 
 namespace RawrXD {
 namespace JSON {
@@ -164,7 +165,11 @@ public:
             if (j.contains(field) && j[field].is_string()) {
                 return j[field].get<std::string>();
             }
-        } catch (...) {}
+        } catch (const std::exception& e) {
+            OutputDebugStringA(("[json_schema_validator] GetStringField exception: " + std::string(e.what()) + "\n").c_str());
+        } catch (...) {
+            OutputDebugStringA("[json_schema_validator] GetStringField unknown exception\n");
+        }
         return default_value;
     }
     
@@ -179,7 +184,11 @@ public:
             if (j.contains(field) && j[field].is_object()) {
                 return j[field];
             }
-        } catch (...) {}
+        } catch (const std::exception& e) {
+            OutputDebugStringA(("[json_schema_validator] GetObjectField exception: " + std::string(e.what()) + "\n").c_str());
+        } catch (...) {
+            OutputDebugStringA("[json_schema_validator] GetObjectField unknown exception\n");
+        }
         return json::object();
     }
     
@@ -194,7 +203,11 @@ public:
             if (j.contains(field) && j[field].is_array()) {
                 return j[field];
             }
-        } catch (...) {}
+        } catch (const std::exception& e) {
+            OutputDebugStringA(("[json_schema_validator] GetArrayField exception: " + std::string(e.what()) + "\n").c_str());
+        } catch (...) {
+            OutputDebugStringA("[json_schema_validator] GetArrayField unknown exception\n");
+        }
         return json::array();
     }
 };

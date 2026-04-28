@@ -23,6 +23,7 @@
 #include "../core/unified_hotpatch_manager.hpp"
 #include "IDELogger.h"
 #include "Win32IDE.h"
+#include "../agentic/ToolRegistry.h"
 #include <algorithm>
 #include <atomic>
 #include <cctype>
@@ -36,6 +37,7 @@
 #include <vector>
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#include <nlohmann/json.hpp>
 
 // Forward: socket type
 using LocalServerSocket = SOCKET;
@@ -4959,11 +4961,35 @@ void Win32IDE::handleToolDispatchEndpoint(SOCKET client, const std::string& body
     }
     else
     {
-        std::string resp = LocalServerUtil::buildHttpResponse(
-            400, "{\"error\":\"unknown_tool\",\"message\":\"Unknown tool: " + LocalServerUtil::escapeJson(tool) +
-                     "\",\"available\":[\"read_file\",\"write_file\",\"list_directory\",\"delete_file\","
-                     "\"rename_file\",\"mkdir\",\"search_files\",\"stat_file\",\"copy_file\",\"move_file\","
-                     "\"execute_command\",\"git_status\"]}");
+        // Generic dispatch through production AgentToolRegistry so the HTTP tool surface
+        // stays consistent with autonomy and agentic tool execution.
+        nlohmann::json jargs = nlohmann::json::object();
+        try
+        {
+            jargs = nlohmann::json::parse(argsBody, nullptr, false);
+            if (!jargs.is_object())
+            {
+                jargs = nlohmann::json::object({{"value", jargs}});
+            }
+        }
+        catch (...)
+        {
+            jargs = nlohmann::json::object({{"raw", argsBody}});
+        }
+
+        RawrXD::Agent::ToolExecResult r = RawrXD::Agent::AgentToolRegistry::Instance().Dispatch(tool, jargs);
+
+        nlohmann::json respJ;
+        respJ["success"] = r.success;
+        respJ["tool"] = tool;
+        respJ["output"] = r.output;
+        respJ["elapsed_ms"] = r.elapsed_ms;
+        if (!r.success)
+        {
+            respJ["error"] = "tool_failed";
+        }
+
+        std::string resp = LocalServerUtil::buildHttpResponse(r.success ? 200 : 500, respJ.dump());
         LocalServerUtil::sendAll(client, resp);
     }
 

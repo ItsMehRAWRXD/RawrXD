@@ -7,7 +7,7 @@
 #include "../../include/rawrxd_version.h"
 #include "../agentic/AgenticChatSession.h"
 #include "../agentic/AgenticSubmitInference_Fix.h"  // TOOL-AWARE INFERENCE BRIDGE
-#include "../agentic/OllamaProvider.h"  // NativeStreamProvider and deleter
+#include "../agentic/OllamaProvider.h"              // NativeStreamProvider and deleter
 #include "../agentic/agentic_controller_wiring.h"
 #include "../agentic/slash_command_parser.hpp"
 #include "../core/command_registry.hpp"
@@ -25,11 +25,14 @@
 #include "IDEConfig.h"
 #include "IDELogger.h"
 #include "ModelConnection.h"
+#include "RawrXD_SymbolEngine.h"
 #include "VSIXInstaller.hpp"
 #include "Win32IDE_AgenticBridge.h"
 #include "Win32IDE_DAPServer.h"  // Full type for unique_ptr<Win32IDE_DAPServer> dtor
+#include "Win32IDE_ModelDropdownProfile.h"
 #include "Win32IDE_Settings.h"
-#include "RawrXD_SymbolEngine.h"
+#include "../../include/missing_features_batch3.hpp"
+#include "../../include/experimental_module8.hpp"
 #include "feature_registry_panel.h"
 #include "lsp/RawrXD_LSPServer.h"
 #include "multi_response_engine.h"
@@ -107,6 +110,11 @@ static void ideCtorBootMilestone(const char* debugLine, const char* userLine)
 
 // Defined once here; declared as `extern` in Win32IDE.h.
 Win32IDE* g_pMainIDE = nullptr;
+
+// Batch 3 advanced feature pack (AI completion, IntelliSense, semantic tools, etc.).
+// This keeps the subsystem available for incremental hook-up in focused lanes.
+static rawrxd::IDEFeatures3 g_missingFeaturesBatch3;
+static rawrxd::ExperimentalModule8 g_experimentalModule8;
 
 std::filesystem::path Win32IDE::resolveRawrxdWorkspaceBase() const
 {
@@ -1390,6 +1398,15 @@ static void logRawResponseHexPreview(const std::string& response)
 #ifndef IDC_MODEL_BROWSE_BTN
 #define IDC_MODEL_BROWSE_BTN 1209
 #endif
+#ifndef IDC_COPILOT_NEW_CHAT_BTN
+#define IDC_COPILOT_NEW_CHAT_BTN 1210
+#endif
+#ifndef IDC_MODEL_MODE_SELECTOR
+#define IDC_MODEL_MODE_SELECTOR 1211
+#endif
+#ifndef IDC_MODEL_EFFORT_LABEL
+#define IDC_MODEL_EFFORT_LABEL 1212
+#endif
 #ifndef IDC_AI_MAX_TOKENS_SLIDER
 #define IDC_AI_MAX_TOKENS_SLIDER 5005
 #endif
@@ -1524,6 +1541,7 @@ static void logRawResponseHexPreview(const std::string& response)
 #define IDM_TOOLS_PROFILE_RESULTS 3012
 #define IDM_TOOLS_ANALYZE_SCRIPT 3013
 #define IDM_INTERNAL_CAPTURE_PROFILE 3014
+#define IDM_TOOLS_MODEL_LAB 3055
 
 #define IDM_GIT_STATUS 3020
 #define IDM_GIT_COMMIT 3021
@@ -1534,6 +1552,10 @@ static void logRawResponseHexPreview(const std::string& response)
 #define IDM_MODULES_REFRESH 3050
 #define IDM_MODULES_IMPORT 3051
 #define IDM_MODULES_EXPORT 3052
+
+#ifndef IDM_VIEW_SOVEREIGN_CLI
+#define IDM_VIEW_SOVEREIGN_CLI ID_VIEW_SOVEREIGN_CLI
+#endif
 
 // Help menu IDs MUST NOT use 4000–4099 — that band is handleTerminalCommand (parity with command_registry terminal.*).
 #define IDM_HELP_CMDREF 7901
@@ -1824,6 +1846,7 @@ void Win32IDE::createMenuBar(HWND hwnd)
     AppendMenuW(hViewMenu, MF_STRING, IDM_VIEW_OUTPUT_TABS, L"&Output Tabs");
     AppendMenuW(hViewMenu, MF_STRING, IDM_VIEW_OUTPUT_PANEL, L"Output &Panel");
     AppendMenuW(hViewMenu, MF_STRING, IDM_VIEW_TERMINAL, L"&Terminal\tCtrl+`");
+    AppendMenuW(hViewMenu, MF_STRING, IDM_VIEW_SOVEREIGN_CLI, L"&Sovereign CLI\tCtrl+Shift+`");
     AppendMenuW(hViewMenu, MF_STRING, IDM_VIEW_TOGGLE_BOTTOM_PANEL, L"&Panel\tCtrl+J");
     AppendMenuW(hViewMenu, MF_STRING, IDM_VIEW_MODULE_BROWSER, L"Module &Browser");
     AppendMenuW(hViewMenu, MF_STRING, IDM_VIEW_FLOATING_PANEL, L"&Floating Panel");
@@ -1890,6 +1913,9 @@ void Win32IDE::createMenuBar(HWND hwnd)
     AppendMenuW(hToolsMenu, MF_STRING, IDM_TOOLS_ANALYZE_SCRIPT, L"&Analyze Script");
     AppendMenuW(hToolsMenu, MF_STRING, IDM_INTERNAL_CAPTURE_PROFILE, L"Capture Profile Bundle v1");
     AppendMenuW(hToolsMenu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuW(hToolsMenu, MF_STRING, IDM_TOOLS_MODEL_LAB, L"Model &Lab...\tCtrl+Alt+M");
+    AppendMenuW(hToolsMenu, MF_STRING, 6001, L"&Model Manager...");
+    AppendMenuW(hToolsMenu, MF_STRING, 6002, L"&Downloads\tCtrl+Shift+D");
     AppendMenuW(hToolsMenu, MF_STRING, IDM_TOOLS_RUN_14DAY_FINISHERS, L"Run 14-Day Production &Finishers");
     AppendMenuW(hToolsMenu, MF_STRING, IDM_TOOLS_RUN_14DAY_FINISHERS_STRICT,
                 L"Run 14-Day Production Finishers (&Strict)");
@@ -3421,6 +3447,7 @@ void Win32IDE::openWorkspaceFolder()
     {
         const std::string u8 = wideToUtf8(path);
         applyWorkspaceFolderForChatHistory(u8);
+        syncMissingFeaturesWorkspaceContext(u8);
         appendToOutput("[Workspace] Opened folder: " + u8 + "\n", "Output", OutputSeverity::Info);
         if (m_hwndStatusBar)
             SendMessageW(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)L"Workspace folder opened");
@@ -3454,6 +3481,7 @@ void Win32IDE::openFile(const std::string& filePath)
             setCurrentDirectoryFromFile(m_currentFile);
             updateTitleBarText();
             syncLSPDocumentOpen(m_currentFile, content);
+            syncMissingFeaturesFileContext(m_currentFile);
 
             std::string displayName = extractLeafName(filePath);
             if (m_hwndTabBar)
@@ -10080,12 +10108,29 @@ void Win32IDE::createChatPanel()
                     nullptr, m_hInstance, nullptr);
 
     m_hwndModelSelector =
-        CreateWindowExW(0, L"COMBOBOX", L"", WS_CHILD | WS_VISIBLE | CBS_DROPDOWN | CBS_AUTOHSCROLL, 60, 35, 200, 200,
+        CreateWindowExW(0, L"COMBOBOX", L"", WS_CHILD | WS_VISIBLE | CBS_DROPDOWN | CBS_AUTOHSCROLL, 60, 35, 250, 200,
                         m_hwndSecondarySidebar, (HMENU)IDC_MODEL_SELECTOR, m_hInstance, nullptr);
 
-    // Add browse button next to model selector
-    CreateWindowExW(0, L"BUTTON", L"Browse...", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 265, 35, 70, 23,
-                    m_hwndSecondarySidebar, (HMENU)IDC_MODEL_BROWSE_BTN, m_hInstance, nullptr);
+    CreateWindowExW(0, L"STATIC", L"Mode:", WS_CHILD | WS_VISIBLE | SS_LEFT, 5, 61, 50, 18, m_hwndSecondarySidebar,
+                    nullptr, m_hInstance, nullptr);
+    HWND hwndModeSelector =
+        CreateWindowExW(0, L"COMBOBOX", L"", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL, 60, 60, 250, 180,
+                        m_hwndSecondarySidebar, (HMENU)IDC_MODEL_MODE_SELECTOR, m_hInstance, nullptr);
+    if (hwndModeSelector)
+    {
+        SendMessageW(hwndModeSelector, CB_ADDSTRING, 0, (LPARAM)L"Thinking");
+        SendMessageW(hwndModeSelector, CB_ADDSTRING, 0, (LPARAM)L"Deep Research");
+        SendMessageW(hwndModeSelector, CB_ADDSTRING, 0, (LPARAM)L"Max Mode");
+        SendMessageW(hwndModeSelector, CB_ADDSTRING, 0, (LPARAM)L"Swarm");
+        SendMessageW(hwndModeSelector, CB_ADDSTRING, 0, (LPARAM)L"Browser");
+        SendMessageW(hwndModeSelector, CB_ADDSTRING, 0, (LPARAM)L"Vision");
+        SendMessageW(hwndModeSelector, CB_ADDSTRING, 0, (LPARAM)L"Video");
+        SendMessageW(hwndModeSelector, CB_SETCURSEL, 0, 0);
+    }
+
+    HWND hwndEffortLabel =
+        CreateWindowExW(0, L"STATIC", L"Thinking Effort: Medium", WS_CHILD | WS_VISIBLE | SS_LEFT, 60, 84, 250, 18,
+                        m_hwndSecondarySidebar, (HMENU)IDC_MODEL_EFFORT_LABEL, m_hInstance, nullptr);
 
     if (m_hwndModelSelector)
     {
@@ -10093,31 +10138,34 @@ void Win32IDE::createChatPanel()
         populateModelSelector();
     }
 
-    // Set font for browse button
-    HWND hwndBrowseBtn = GetDlgItem(m_hwndSecondarySidebar, IDC_MODEL_BROWSE_BTN);
-    if (hwndBrowseBtn)
+    if (hwndModeSelector)
     {
-        SendMessage(hwndBrowseBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
+        SendMessage(hwndModeSelector, WM_SETFONT, (WPARAM)hFont, TRUE);
     }
 
-    CreateWindowExW(0, L"STATIC", L"Max Tokens:", WS_CHILD | WS_VISIBLE | SS_LEFT, 5, 60, 80, 18,
+    if (hwndEffortLabel)
+    {
+        SendMessage(hwndEffortLabel, WM_SETFONT, (WPARAM)hFont, TRUE);
+    }
+
+    CreateWindowExW(0, L"STATIC", L"Max Tokens:", WS_CHILD | WS_VISIBLE | SS_LEFT, 5, 105, 80, 18,
                     m_hwndSecondarySidebar, nullptr, m_hInstance, nullptr);
 
-    m_hwndMaxTokensLabel = CreateWindowExW(0, L"STATIC", L"512", WS_CHILD | WS_VISIBLE | SS_RIGHT, 245, 60, 50, 18,
+    m_hwndMaxTokensLabel = CreateWindowExW(0, L"STATIC", L"512", WS_CHILD | WS_VISIBLE | SS_RIGHT, 245, 105, 50, 18,
                                            m_hwndSecondarySidebar, nullptr, m_hInstance, nullptr);
 
     m_hwndMaxTokensSlider =
-        CreateWindowExW(0, TRACKBAR_CLASSW, L"", WS_CHILD | WS_VISIBLE | TBS_HORZ | TBS_NOTICKS, 5, 80, 290, 25,
+        CreateWindowExW(0, TRACKBAR_CLASSW, L"", WS_CHILD | WS_VISIBLE | TBS_HORZ | TBS_NOTICKS, 5, 125, 290, 25,
                         m_hwndSecondarySidebar, (HMENU)IDC_AI_MAX_TOKENS_SLIDER, m_hInstance, nullptr);
 
-    CreateWindowExW(0, L"STATIC", L"Context:", WS_CHILD | WS_VISIBLE | SS_LEFT, 5, 110, 80, 18, m_hwndSecondarySidebar,
+    CreateWindowExW(0, L"STATIC", L"Context:", WS_CHILD | WS_VISIBLE | SS_LEFT, 5, 155, 80, 18, m_hwndSecondarySidebar,
                     nullptr, m_hInstance, nullptr);
 
-    m_hwndContextLabel = CreateWindowExW(0, L"STATIC", L"4K", WS_CHILD | WS_VISIBLE | SS_RIGHT, 245, 110, 50, 18,
+    m_hwndContextLabel = CreateWindowExW(0, L"STATIC", L"4K", WS_CHILD | WS_VISIBLE | SS_RIGHT, 245, 155, 50, 18,
                                          m_hwndSecondarySidebar, nullptr, m_hInstance, nullptr);
 
     m_hwndContextSlider =
-        CreateWindowExW(0, TRACKBAR_CLASSW, L"", WS_CHILD | WS_VISIBLE | TBS_HORZ | TBS_NOTICKS, 5, 130, 290, 25,
+        CreateWindowExW(0, TRACKBAR_CLASSW, L"", WS_CHILD | WS_VISIBLE | TBS_HORZ | TBS_NOTICKS, 5, 175, 290, 25,
                         m_hwndSecondarySidebar, (HMENU)IDC_AI_CONTEXT_SLIDER, m_hInstance, nullptr);
 
     if (m_hwndContextSlider)
@@ -10138,9 +10186,9 @@ void Win32IDE::createChatPanel()
     }
 
     // Adjust Y for chat pane and toggles to prevent overlap
-    int toggleY = 170;
+    int toggleY = 215;
     int toggleX = 5;
-    int chatY = 255;  // Adjusted for additional checkbox
+    int chatY = 300;
 
     m_hwndChkMaxMode =
         CreateWindowExW(0, L"BUTTON", L"Max Mode", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, toggleX, toggleY, 140, 20,
@@ -10199,7 +10247,7 @@ void Win32IDE::createChatPanel()
     }
 
     m_hwndCopilotSendBtn =
-        CreateWindowExW(0, L"BUTTON", L"Send", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 5, 505, 140, 30,
+        CreateWindowExW(0, L"BUTTON", L"Send", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 5, 505, 92, 30,
                         m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_SEND_BTN, m_hInstance, nullptr);
 
     if (m_hwndCopilotSendBtn)
@@ -10211,7 +10259,7 @@ void Win32IDE::createChatPanel()
     }
 
     m_hwndCopilotClearBtn =
-        CreateWindowExW(0, L"BUTTON", L"Clear", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 150, 505, 140, 30,
+        CreateWindowExW(0, L"BUTTON", L"Clear", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 102, 505, 92, 30,
                         m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_CLEAR_BTN, m_hInstance, nullptr);
 
     if (m_hwndCopilotClearBtn)
@@ -10220,6 +10268,14 @@ void Win32IDE::createChatPanel()
         m_oldCopilotClearBtnProc =
             (WNDPROC)SetWindowLongPtr(m_hwndCopilotClearBtn, GWLP_WNDPROC, (LONG_PTR)CopilotButtonProc);
         SetWindowLongPtr(m_hwndCopilotClearBtn, GWLP_USERDATA, (LONG_PTR)this);
+    }
+
+    HWND hwndNewChatBtn = CreateWindowExW(0, L"BUTTON", L"New Chat", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 199, 505,
+                                          92, 30, m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_NEW_CHAT_BTN, m_hInstance,
+                                          nullptr);
+    if (hwndNewChatBtn)
+    {
+        SendMessage(hwndNewChatBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
     }
 
     RawrXD_ApplyCopilotChatEditLimits(m_hwndCopilotChatOutput, m_hwndCopilotChatInput);
@@ -10277,17 +10333,9 @@ void Win32IDE::populateModelSelector()
     // Preserve prior selection if possible
     std::string previousSelection;
     int prevIdx = (int)SendMessage(m_hwndModelSelector, CB_GETCURSEL, 0, 0);
-    if (prevIdx >= 0)
+    if (prevIdx >= 0 && prevIdx < (int)m_availableModels.size())
     {
-        const LRESULT prevTextLen = SendMessageW(m_hwndModelSelector, CB_GETLBTEXTLEN, prevIdx, 0);
-        if (prevTextLen > 0)
-        {
-            std::vector<wchar_t> prevBuf(static_cast<size_t>(prevTextLen) + 1, L'\0');
-            if (SendMessageW(m_hwndModelSelector, CB_GETLBTEXT, prevIdx, (LPARAM)prevBuf.data()) != CB_ERR)
-            {
-                previousSelection = wideToUtf8(prevBuf.data());
-            }
-        }
+        previousSelection = m_availableModels[(size_t)prevIdx];
     }
 
     // Clear existing items
@@ -10383,7 +10431,9 @@ void Win32IDE::populateModelSelector()
     // Populate combobox
     for (const auto& model : m_availableModels)
     {
-        const LRESULT addRes = SendMessageW(m_hwndModelSelector, CB_ADDSTRING, 0, (LPARAM)utf8ToWide(model).c_str());
+        const std::string uiLabel = rawrxd::BuildModelDropdownLabel(model);
+        const LRESULT addRes =
+            SendMessageW(m_hwndModelSelector, CB_ADDSTRING, 0, (LPARAM)utf8ToWide(uiLabel).c_str());
         if (addRes == CB_ERR || addRes == CB_ERRSPACE)
         {
             std::string dbg = "[ModelDiscovery] CB_ADDSTRING failed for: " + model + "\n";
@@ -10417,10 +10467,12 @@ void Win32IDE::populateModelSelector()
     if (uiCount <= 0)
     {
         OutputDebugStringA("[ModelDiscovery] ui_count=0 after populate, applying hard fallback entries\n");
-        static const wchar_t* kFallbackModels[] = {L"phi3mini.gguf", L"llama2", L"mistral", L"neural-chat"};
+        static const char* kFallbackModels[] = {"phi3mini.gguf", "llama2", "mistral", "neural-chat"};
+        m_availableModels.assign(kFallbackModels, kFallbackModels + 4);
         for (const auto* fallbackModel : kFallbackModels)
         {
-            SendMessageW(m_hwndModelSelector, CB_ADDSTRING, 0, (LPARAM)fallbackModel);
+            const std::string uiLabel = rawrxd::BuildModelDropdownLabel(fallbackModel);
+            SendMessageW(m_hwndModelSelector, CB_ADDSTRING, 0, (LPARAM)utf8ToWide(uiLabel).c_str());
         }
         SendMessage(m_hwndModelSelector, CB_SETCURSEL, 0, 0);
     }
@@ -10870,8 +10922,10 @@ void Win32IDE::HandleCopilotSend()
     persistChatTurnToDisk("user", userMessage);
 
     auto sendStart = std::make_shared<std::chrono::steady_clock::time_point>(std::chrono::steady_clock::now());
+    // Shared TTFT tracking: written once on first token, read at completion for ESP display.
+    auto firstTokenElapsedMs = std::make_shared<std::atomic<long long>>(-1);
     auto recordCopilotThroughputAtComplete =
-        [this](const std::chrono::steady_clock::time_point& startedAt, const std::string& accumulatedUtf8)
+        [this, firstTokenElapsedMs](const std::chrono::steady_clock::time_point& startedAt, const std::string& accumulatedUtf8)
     {
         if (accumulatedUtf8.empty())
         {
@@ -10884,20 +10938,43 @@ void Win32IDE::HandleCopilotSend()
             return;
         }
         const double estTok = std::max(1.0, static_cast<double>(accumulatedUtf8.size()) / 4.0);
-        METRICS.gauge("chat.copilot.estimated_tps", estTok / (ms / 1000.0));
+        const double tps = estTok / (ms / 1000.0);
+        METRICS.gauge("chat.copilot.estimated_tps", tps);
         METRICS.recordDuration("chat.copilot.generation_ms", ms);
         METRICS.increment("chat.copilot.completion_runs_recorded", 1);
         if (m_hwndMain && IsWindow(m_hwndMain))
             PostMessageW(m_hwndMain, WM_STATUSBAR_REFRESH_COPILOT, 0, 0);
+
+        // ── LM Studio-style Extended Status Panel (ESP) ──────────────────────
+        // Format: "  {tps} tok/sec  •  {tokens} tokens  •  {ttft}s to first token  •  Stop reason: {reason}"
+        const long long estTokenCount = static_cast<long long>(std::round(estTok));
+        const long long ttftMs = firstTokenElapsedMs->load();
+        char espBuf[256];
+        if (ttftMs >= 0)
+        {
+            std::snprintf(espBuf, sizeof(espBuf),
+                "\n\u2500\u2500 %.2f tok/sec  \u2022  %lld tokens  \u2022  %.2fs to first token  \u2022  Stop reason: EOS Token Found\n",
+                tps, estTokenCount, static_cast<double>(ttftMs) / 1000.0);
+        }
+        else
+        {
+            std::snprintf(espBuf, sizeof(espBuf),
+                "\n\u2500\u2500 %.2f tok/sec  \u2022  %lld tokens  \u2022  Stop reason: EOS Token Found\n",
+                tps, estTokenCount);
+        }
+        appendCopilotChatTextOnUiThread(std::string(espBuf));
+        // ─────────────────────────────────────────────────────────────────────
     };
     auto firstResponseActivityLogged = std::make_shared<std::atomic<bool>>(false);
     auto markFirstResponseActivity =
-        [sendStart, firstResponseActivityLogged](const char* source, size_t payloadLen, bool complete)
+        [sendStart, firstResponseActivityLogged, firstTokenElapsedMs](const char* source, size_t payloadLen, bool complete)
     {
         if (firstResponseActivityLogged->exchange(true))
             return;
         const auto now = std::chrono::steady_clock::now();
         const auto elapsedMs = std::chrono::duration_cast<std::chrono::milliseconds>(now - *sendStart).count();
+        // Record TTFT for ESP display.
+        firstTokenElapsedMs->store(static_cast<long long>(elapsedMs));
         METRICS.increment("chat.first_response_activity");
         OutputDebugStringA(
             ("[ChatLifecycle] first_response_activity source=" + std::string(source ? source : "unknown") +
@@ -11817,6 +11894,12 @@ void Win32IDE::onModelSelectionChanged()
     }
 
     m_ollamaModelOverride = selectedModel;
+
+    if (HWND hwndEffort = GetDlgItem(m_hwndSecondarySidebar, IDC_MODEL_EFFORT_LABEL))
+    {
+        const std::string effort = rawrxd::BuildThinkingEffortSummary(selectedModel);
+        SetWindowTextW(hwndEffort, utf8ToWide(effort).c_str());
+    }
 
     const std::string resolvedModel =
         resolveLocalModelSelectionPath(m_ollamaModelOverride, m_modelPaths, m_userModelDirectories);
@@ -14470,6 +14553,12 @@ LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wPara
                         pThis->showCommandPalette();
                     return 0;
                 }
+                // Ctrl+Shift+D → Downloads panel toggle
+                if (wParam == 'D' && ctrl && shift && !alt)
+                {
+                    pThis->toggleDownloadsPanel();
+                    return 0;
+                }
                 // Cursor / VS Code parity: Ctrl+P Quick Open (same as accelerator / main loop)
                 if (ctrl && !shift && !alt && wParam == 'P')
                 {
@@ -14621,6 +14710,10 @@ LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wPara
             }
 
             case WM_CHAR:
+                if (pThis->m_ghostTextVisible)
+                {
+                    pThis->handleGhostTextTypedChar(static_cast<wchar_t>(wParam));
+                }
                 if (pThis->handleMultiCursorChar(wParam))
                 {
                     pThis->onEditorContentChanged();
@@ -14687,6 +14780,31 @@ LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wPara
 // Handles paint, sizing, and command routing for the right-side AI panel.
 // Distinct from SidebarProc which handles the primary (left) sidebar.
 // ============================================================================
+static void logSidebarRefreshSeh(const char* phase, DWORD sehCode)
+{
+    char crashMsg[192];
+    snprintf(crashMsg, sizeof(crashMsg), "[SidebarProcImpl] %s model refresh SEH 0x%08lX (non-fatal)\n",
+             phase ? phase : "unknown", (unsigned long)sehCode);
+    OutputDebugStringA(crashMsg);
+}
+
+static bool tryPopulateModelSelectorSeh(Win32IDE* ide, const char* phase)
+{
+    if (!ide)
+        return false;
+
+    __try
+    {
+        ide->populateModelSelector();
+        return true;
+    }
+    __except (EXCEPTION_EXECUTE_HANDLER)
+    {
+        logSidebarRefreshSeh(phase, GetExceptionCode());
+        return false;
+    }
+}
+
 LRESULT CALLBACK Win32IDE::SidebarProcImpl(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     Win32IDE* pThis = (Win32IDE*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
@@ -14697,13 +14815,27 @@ LRESULT CALLBACK Win32IDE::SidebarProcImpl(HWND hwnd, UINT uMsg, WPARAM wParam, 
         {
             if (pThis && wParam)
             {
-                pThis->populateModelSelector();
-                const int cnt = (pThis->m_hwndModelSelector && IsWindow(pThis->m_hwndModelSelector))
-                                    ? (int)SendMessage(pThis->m_hwndModelSelector, CB_GETCOUNT, 0, 0)
-                                    : -1;
-                std::string dbg =
-                    "[SidebarProcImpl] WM_SHOWWINDOW repopulate model count=" + std::to_string(cnt) + "\n";
-                OutputDebugStringA(dbg.c_str());
+                const int cntBefore = (pThis->m_hwndModelSelector && IsWindow(pThis->m_hwndModelSelector))
+                                          ? (int)SendMessage(pThis->m_hwndModelSelector, CB_GETCOUNT, 0, 0)
+                                          : -1;
+                if (cntBefore <= 0)
+                {
+                    if (tryPopulateModelSelectorSeh(pThis, "WM_SHOWWINDOW"))
+                    {
+                        const int cntAfter = (pThis->m_hwndModelSelector && IsWindow(pThis->m_hwndModelSelector))
+                                                 ? (int)SendMessage(pThis->m_hwndModelSelector, CB_GETCOUNT, 0, 0)
+                                                 : -1;
+                        std::string dbg = "[SidebarProcImpl] WM_SHOWWINDOW repopulate model count=" +
+                                          std::to_string(cntAfter) + "\n";
+                        OutputDebugStringA(dbg.c_str());
+                    }
+                }
+                else
+                {
+                    std::string dbg = "[SidebarProcImpl] WM_SHOWWINDOW skip repopulate existing model count=" +
+                                      std::to_string(cntBefore) + "\n";
+                    OutputDebugStringA(dbg.c_str());
+                }
             }
             break;
         }
@@ -14715,7 +14847,7 @@ LRESULT CALLBACK Win32IDE::SidebarProcImpl(HWND hwnd, UINT uMsg, WPARAM wParam, 
                 const int cnt = (int)SendMessage(pThis->m_hwndModelSelector, CB_GETCOUNT, 0, 0);
                 if (cnt <= 0)
                 {
-                    pThis->populateModelSelector();
+                    (void)tryPopulateModelSelectorSeh(pThis, "WM_SETFOCUS");
                 }
             }
             break;
@@ -14731,7 +14863,7 @@ LRESULT CALLBACK Win32IDE::SidebarProcImpl(HWND hwnd, UINT uMsg, WPARAM wParam, 
                 if (cnt <= 0)
                 {
                     OutputDebugStringA("[SidebarProcImpl] WM_ACTIVATE refresh because model count is zero\n");
-                    pThis->populateModelSelector();
+                    (void)tryPopulateModelSelectorSeh(pThis, "WM_ACTIVATE");
                 }
             }
             break;
@@ -14803,10 +14935,73 @@ LRESULT CALLBACK Win32IDE::SidebarProcImpl(HWND hwnd, UINT uMsg, WPARAM wParam, 
                     pThis->HandleCopilotClear();
                     return 0;
                 }
+                else if (controlId == IDC_COPILOT_NEW_CHAT_BTN)
+                {
+                    OutputDebugStringA("[SidebarProcImpl] New Chat clicked\n");
+                    pThis->HandleCopilotClear();
+                    pThis->appendCopilotChatTextOnUiThread(
+                        "\n[Chat] Started a new chat. Model and mode are ready.\n");
+                    if (pThis->m_hwndCopilotChatInput && IsWindow(pThis->m_hwndCopilotChatInput))
+                        SetFocus(pThis->m_hwndCopilotChatInput);
+                    return 0;
+                }
                 else if (controlId == IDC_MODEL_BROWSE_BTN)
                 {
                     OutputDebugStringA("[SidebarProcImpl] Browse clicked\n");
                     pThis->handleModelBrowse();
+                    return 0;
+                }
+                else if (controlId == IDC_MODEL_MODE_SELECTOR && notifyCode == CBN_SELCHANGE)
+                {
+                    HWND hwndMode = GetDlgItem(hwnd, IDC_MODEL_MODE_SELECTOR);
+                    const int modeIndex = hwndMode ? (int)SendMessage(hwndMode, CB_GETCURSEL, 0, 0) : 0;
+                    auto setCheck = [](HWND h, bool on)
+                    {
+                        if (h && IsWindow(h))
+                            SendMessageW(h, BM_SETCHECK, on ? BST_CHECKED : BST_UNCHECKED, 0);
+                    };
+
+                    // Reset and apply selected profile using existing toggles.
+                    setCheck(pThis->m_hwndChkMaxMode, false);
+                    setCheck(pThis->m_hwndChkDeepThink, false);
+                    setCheck(pThis->m_hwndChkDeepResearch, false);
+                    setCheck(pThis->m_hwndChkAgenticMode, false);
+
+                    switch (modeIndex)
+                    {
+                        case 0:  // Thinking
+                            setCheck(pThis->m_hwndChkDeepThink, true);
+                            setCheck(pThis->m_hwndChkAgenticMode, true);
+                            break;
+                        case 1:  // Deep Research
+                            setCheck(pThis->m_hwndChkDeepThink, true);
+                            setCheck(pThis->m_hwndChkDeepResearch, true);
+                            setCheck(pThis->m_hwndChkAgenticMode, true);
+                            break;
+                        case 2:  // Max Mode
+                            setCheck(pThis->m_hwndChkMaxMode, true);
+                            setCheck(pThis->m_hwndChkDeepThink, true);
+                            setCheck(pThis->m_hwndChkDeepResearch, true);
+                            setCheck(pThis->m_hwndChkAgenticMode, true);
+                            break;
+                        case 3:  // Swarm
+                            setCheck(pThis->m_hwndChkAgenticMode, true);
+                            break;
+                        case 4:  // Browser
+                        case 5:  // Vision
+                        case 6:  // Video
+                            setCheck(pThis->m_hwndChkAgenticMode, true);
+                            break;
+                        default:
+                            break;
+                    }
+
+                    pThis->onAIModeMax();
+                    pThis->onAIModeDeepThink();
+                    pThis->onAIModeDeepResearch();
+                    pThis->onAIModeAgentic();
+                    pThis->appendToOutput("[ModelMode] Profile applied from selector.\n", "Output",
+                                          OutputSeverity::Info);
                     return 0;
                 }
                 else if (controlId == IDC_MODEL_SELECTOR && notifyCode == CBN_SELCHANGE)
@@ -14894,17 +15089,23 @@ LRESULT CALLBACK Win32IDE::SidebarProcImpl(HWND hwnd, UINT uMsg, WPARAM wParam, 
 
                 // If model selector controls exist in this build lane, lay them out responsively.
                 HWND hwndBrowseBtn = GetDlgItem(hwnd, IDC_MODEL_BROWSE_BTN);
+                HWND hwndModeSelector = GetDlgItem(hwnd, IDC_MODEL_MODE_SELECTOR);
+                HWND hwndEffortLabel = GetDlgItem(hwnd, IDC_MODEL_EFFORT_LABEL);
+                HWND hwndNewChatBtn = GetDlgItem(hwnd, IDC_COPILOT_NEW_CHAT_BTN);
                 if (pThis->m_hwndModelSelector && IsWindow(pThis->m_hwndModelSelector))
                 {
                     const int selectorY = pThis->dpiScale(34);
-                    const int browseW = pThis->dpiScale(84);
-                    const int selectorW = (std::max)(pThis->dpiScale(96), fullW - browseW - gap);
+                    const int modeW = pThis->dpiScale(118);
+                    const int selectorW = (std::max)(pThis->dpiScale(96), fullW - modeW - gap);
                     moveControl(pThis->m_hwndModelSelector, margin, selectorY, selectorW, pThis->dpiScale(240));
-                    moveControl(hwndBrowseBtn, margin + selectorW + gap, selectorY, browseW, pThis->dpiScale(24));
-                    topY = (std::max)(topY, selectorY + pThis->dpiScale(24) + margin);
+                    moveControl(hwndModeSelector, margin + selectorW + gap, selectorY, modeW, pThis->dpiScale(240));
+                    moveControl(hwndEffortLabel, margin, selectorY + pThis->dpiScale(26), fullW, pThis->dpiScale(18));
+                    moveControl(hwndBrowseBtn, margin + selectorW + gap, selectorY + pThis->dpiScale(26), modeW,
+                                pThis->dpiScale(24));
+                    topY = (std::max)(topY, selectorY + pThis->dpiScale(56) + margin);
                 }
 
-                const int buttonW = (std::max)(minButtonW, (fullW - gap) / 2);
+                const int buttonW = (std::max)(pThis->dpiScale(72), (fullW - gap * 2) / 3);
                 const int buttonY = (std::max)(topY, panelH - margin - buttonH);
                 const int inputH = (std::max)(minInputH, (std::min)(maxInputH, panelH / 4));
                 const int inputY = (std::max)(topY, buttonY - gap - inputH);
@@ -14915,6 +15116,7 @@ LRESULT CALLBACK Win32IDE::SidebarProcImpl(HWND hwnd, UINT uMsg, WPARAM wParam, 
                 moveControl(pThis->m_hwndCopilotChatInput, margin, inputY, fullW, inputH);
                 moveControl(pThis->m_hwndCopilotSendBtn, margin, buttonY, buttonW, buttonH);
                 moveControl(pThis->m_hwndCopilotClearBtn, margin + buttonW + gap, buttonY, buttonW, buttonH);
+                moveControl(hwndNewChatBtn, margin + (buttonW + gap) * 2, buttonY, buttonW, buttonH);
 
                 if (hdwp)
                     EndDeferWindowPos(hdwp);

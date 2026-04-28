@@ -681,8 +681,9 @@ bool AgenticLoopState::deserializeState(const std::string& jsonStr)
 
         if (state.contains("memory") && state["memory"].is_object()) {
             m_memory.clear();
-            for (auto it = state["memory"].begin(); it != state["memory"].end(); ++it) {
-                m_memory[it.key()] = it.value();
+            const auto& memObj = state["memory"];
+            for (const auto& [key, value] : memObj.items()) {
+                m_memory[key] = value;
             }
         }
 
@@ -703,8 +704,8 @@ bool AgenticLoopState::deserializeState(const std::string& jsonStr)
             m_suggestedStrategies = state["suggestedStrategies"].get<std::vector<std::string>>();
         }
 
-        m_stateStartTime = fromUnixMillis(state.value("stateStartTimeMs", 0), std::chrono::system_clock::now());
-        m_lastUpdateTime = fromUnixMillis(state.value("lastUpdateTimeMs", 0), std::chrono::system_clock::now());
+        m_stateStartTime = fromUnixMillis(state.value<int64_t>("stateStartTimeMs", 0), std::chrono::system_clock::now());
+        m_lastUpdateTime = fromUnixMillis(state.value<int64_t>("lastUpdateTimeMs", 0), std::chrono::system_clock::now());
 
         if (state.contains("lastPhaseStarted") && state["lastPhaseStarted"].is_string()) {
             m_lastPhaseStarted = stringToPhase(state["lastPhaseStarted"].get<std::string>());
@@ -726,8 +727,8 @@ bool AgenticLoopState::deserializeState(const std::string& jsonStr)
 
                 Iteration iteration;
                 iteration.iterationNumber = iterationJson.value("iterationNumber", 0);
-                iteration.startTime = fromUnixMillis(iterationJson.value("startTimeMs", 0), std::chrono::system_clock::now());
-                iteration.endTime = fromUnixMillis(iterationJson.value("endTimeMs", 0), iteration.startTime);
+                iteration.startTime = fromUnixMillis(iterationJson.value<int64_t>("startTimeMs", 0), std::chrono::system_clock::now());
+                iteration.endTime = fromUnixMillis(iterationJson.value<int64_t>("endTimeMs", 0), iteration.startTime);
                 iteration.currentPhase = stringToPhase(iterationJson.value("currentPhase", std::string("Analysis")));
                 iteration.status = stringToStatus(iterationJson.value("status", std::string("NotStarted")));
                 iteration.goalStatement = iterationJson.value("goalStatement", "");
@@ -748,7 +749,7 @@ bool AgenticLoopState::deserializeState(const std::string& jsonStr)
                         }
 
                         Decision decision;
-                        decision.timestamp = fromUnixMillis(decisionJson.value("timestampMs", 0), std::chrono::system_clock::now());
+                        decision.timestamp = fromUnixMillis(decisionJson.value<int64_t>("timestampMs", 0), std::chrono::system_clock::now());
                         decision.phase = stringToPhase(decisionJson.value("phase", std::string("Analysis")));
                         decision.description = decisionJson.value("description", "");
                         decision.reasoning = decisionJson.value("reasoning", nlohmann::json::object());
@@ -785,7 +786,7 @@ bool AgenticLoopState::deserializeState(const std::string& jsonStr)
                 }
 
                 ErrorRecord error;
-                error.timestamp = fromUnixMillis(errorJson.value("timestampMs", 0), std::chrono::system_clock::now());
+                error.timestamp = fromUnixMillis(errorJson.value<int64_t>("timestampMs", 0), std::chrono::system_clock::now());
                 error.errorType = errorJson.value("errorType", "");
                 error.errorMessage = errorJson.value("errorMessage", "");
                 error.stackTrace = errorJson.value("stackTrace", "");
@@ -801,38 +802,6 @@ bool AgenticLoopState::deserializeState(const std::string& jsonStr)
     } catch (...) {
         return false;
     }
-}
-
-// ===== DEBUGGING =====
-
-std::string AgenticLoopState::generateDebugReport() const
-{
-    std::string report;
-    report += "=== AGENTIC LOOP STATE DEBUG REPORT ===\n\n";
-
-    report += "ITERATIONS:\n";
-    for (const auto& iteration : m_iterations) {
-        report += "  " + std::to_string(iteration.iterationNumber) + ". "
-                + iteration.goalStatement + " - "
-                + statusToString(iteration.status) + "\n";
-        report += "     Decisions: " + std::to_string(iteration.decisions.size())
-                + ", Errors: " + std::to_string(iteration.errorCount) + "\n";
-    }
-
-    report += "\nERRORS:\n";
-    for (const auto& error : m_errorHistory) {
-        report += "  [" + timePointToHMS(error.timestamp) + "] "
-                + error.errorType + " - "
-                + error.errorMessage + "\n";
-    }
-
-    report += "\nMETRICS:\n";
-    nlohmann::json metrics = getMetrics();
-    for (auto it = metrics.begin(); it != metrics.end(); ++it) {
-        report += "  " + it.key() + ": " + it.value().dump() + "\n";
-    }
-
-    return report;
 }
 
 // ===== HELPER METHODS =====

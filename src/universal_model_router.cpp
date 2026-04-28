@@ -86,7 +86,9 @@ UniversalModelRouter::UniversalModelRouter()
     : m_localEngineReady(false),
       m_cloudClientReady(false)
 {
-    // Cloud client will be initialized lazily
+    // Initialize cloud client for remote model routing
+    cloud_client = std::make_unique<CloudApiClient>();
+    fprintf(stderr, "[UniversalModelRouter] Cloud client initialized lazily\n");
 }
 
 UniversalModelRouter::~UniversalModelRouter() = default;

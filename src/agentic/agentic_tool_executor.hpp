@@ -166,7 +166,7 @@ private:
                                  const std::string& cwd, int timeout_seconds);
     
     // Process monitoring
-    bool monitorProcess(void* process_handle, int timeout_ms, std::string& stdout, std::string& stderr);
+    bool monitorProcess(void* process_handle, int timeout_ms, std::string& out, std::string& err);
     
     std::map<std::string, ToolPolicy> m_policies;
     

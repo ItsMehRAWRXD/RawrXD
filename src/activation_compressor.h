@@ -1,4 +1,3 @@
-#pragma once
 
 #include <vector>
 #include <cstdint>
@@ -6,6 +5,16 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
+
+/**
+#pragma once
+
+#include <algorithm>
+#include <cmath>
+#include <cstdint>
+#include <cstring>
+#include <memory>
+#include <vector>
 
 /**
  * @file activation_compressor.h

@@ -30,10 +30,10 @@
 namespace rawrxd
 {
 
-// Logging macros - disabled
-#define LOG_INFO(msg) ((void)0)
-#define LOG_ERROR(msg) ((void)0)
-#define LOG_WARNING(msg) ((void)0)
+// Logging macros — wired to Logger singleton
+#define LOG_INFO(msg)  RawrXD::Logging::Logger::instance().info(msg, "AgenticWiring")
+#define LOG_ERROR(msg) RawrXD::Logging::Logger::instance().error(msg, "AgenticWiring")
+#define LOG_WARNING(msg) RawrXD::Logging::Logger::instance().warning(msg, "AgenticWiring")
 
 // Global inference engine reference (set during initialization)
 static RawrXD::CPUInferenceEngine* g_inference_engine = nullptr;

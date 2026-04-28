@@ -77,11 +77,18 @@
 // ============================================================================
 // Startup trace — write to ide_startup.log in exe dir for launch audit
 // ============================================================================
-static std::ofstream* s_startupLog = nullptr;
-static std::mutex s_startupLogMutex;
+// LAZY SINGLETON PATTERN: Avoid SIOF (Static Initialization Order Fiasco)
+// These must be lazy-initialized to ensure C runtime is ready before construction.
+static std::ofstream* s_startupLog = nullptr;  // Plain pointer is safe
+
+inline std::mutex& GetStartupLogMutex() {
+    static std::mutex* inst = new std::mutex();  // Leak-on-purpose, never destroyed
+    return *inst;
+}
+
 static void startupTrace(const char* step, const char* detail = nullptr)
 {
-    std::lock_guard<std::mutex> lock(s_startupLogMutex);
+    std::lock_guard<std::mutex> lock(GetStartupLogMutex());
     if (!s_startupLog)
         return;
     auto now = std::chrono::system_clock::now();
@@ -341,6 +348,22 @@ static void initCrashHandler()
         OutputDebugStringA("[initCrashHandler] SymInitialize failed\n");
     }
     SetUnhandledExceptionFilter(RawrXDUnhandledExceptionFilter);
+}
+
+static void logBackgroundThreadCrash(const char* lane, DWORD code)
+{
+    char msg[256];
+    snprintf(msg, sizeof(msg), "BACKGROUND THREAD CRASH: lane=%s Exception 0x%08lX\n", lane ? lane : "unknown",
+             (unsigned long)code);
+    OutputDebugStringA(msg);
+    startupTrace("background_thread_crash", msg);
+
+    std::ofstream out("rawrxd_crash.log", std::ios::out | std::ios::app);
+    if (out)
+    {
+        out << msg;
+        out.flush();
+    }
 }
 
 // ============================================================================
@@ -1028,12 +1051,23 @@ static void ensureMainWindowVisible(HWND hMain)
 }
 
 // Storage for phase-created objects (createWindow phase sets these; cleanup uses them).
-static EngineManager* s_engine_mgr = nullptr;
-static CodexUltimate* s_codex = nullptr;
+static EngineManager* s_engine_mgr = nullptr;  // Plain pointer, safe
+static CodexUltimate* s_codex = nullptr;       // Plain pointer, safe
 
 // Self-hosting backend — Ollama-compatible API server backed by native MASM kernels.
-static AppState s_apiAppState;
-static std::unique_ptr<APIServer> s_apiServer;
+// LAZY SINGLETON: AppState has std::string, std::atomic, std::shared_ptr, std::unique_ptr members
+// All of these have non-trivial constructors that require C runtime to be initialized
+inline AppState& GetApiAppState() {
+    static AppState* inst = new AppState();  // Leak-on-purpose, never destroyed
+    return *inst;
+}
+#define s_apiAppState GetApiAppState()
+
+inline std::unique_ptr<APIServer>& GetApiServer() {
+    static std::unique_ptr<APIServer>* inst = new std::unique_ptr<APIServer>();
+    return *inst;
+}
+#define s_apiServer GetApiServer()  // Backward-compatible accessor
 
 // Debugger + System output (after main HWND exists; appendToOutput no-ops until output tabs are live).
 static void guiBootMilestone(Win32IDE* ide, const char* debugLine, const char* userLine)
@@ -1064,7 +1098,12 @@ static void guiShutdownMilestone(Win32IDE* ide, const char* debugLine, const cha
 }
 
 // Lines before Win32IDE exists: always debugger + ide_startup.log; System tab replay once HWND is valid.
-static std::vector<std::pair<std::string, std::string>> s_earlyWinMainReplay;
+// LAZY SINGLETON: std::vector has non-trivial constructor, must be lazy-initialized
+inline std::vector<std::pair<std::string, std::string>>& GetEarlyWinMainReplay() {
+    static std::vector<std::pair<std::string, std::string>>* inst = new std::vector<std::pair<std::string, std::string>>();
+    return *inst;
+}
+#define s_earlyWinMainReplay GetEarlyWinMainReplay()  // Backward-compatible accessor
 
 static void earlyWinMainMilestone(const char* traceStep, const char* debugLine, const char* userLine)
 {
@@ -1563,14 +1602,21 @@ static bool runPhase(const std::string& name, Win32IDE& ide, HINSTANCE, LPSTR lp
                 std::thread(
                     []()
                     {
-                        const bool ok = SystemIntegrityProver::Instance().AttestQuick();
-                        if (!ok)
+                        __try
                         {
-                            OutputDebugStringA("[main_win32] WARNING: Sovereign integrity attestation FAILED.\n");
+                            const bool ok = SystemIntegrityProver::Instance().AttestQuick();
+                            if (!ok)
+                            {
+                                OutputDebugStringA("[main_win32] WARNING: Sovereign integrity attestation FAILED.\n");
+                            }
+                            else
+                            {
+                                OutputDebugStringA("[main_win32] Sovereign integrity attestation passed.\n");
+                            }
                         }
-                        else
+                        __except (EXCEPTION_EXECUTE_HANDLER)
                         {
-                            OutputDebugStringA("[main_win32] Sovereign integrity attestation passed.\n");
+                            logBackgroundThreadCrash("startup_attestation", GetExceptionCode());
                         }
                     })
                     .detach();
@@ -1674,58 +1720,66 @@ static bool runPhase(const std::string& name, Win32IDE& ide, HINSTANCE, LPSTR lp
         std::thread(
             []()
             {
-                using RawrXD::Extensions::ExtensionAutoInstaller;
-                using RawrXD::Extensions::InstallProgress;
-
-                auto& installer = ExtensionAutoInstaller::instance();
-                if (!installer.needsFirstRunInstall())
+                try
                 {
-                    startupTrace("extension_bootstrap_skipped", "already_completed");
-                    return;
-                }
+                    using RawrXD::Extensions::ExtensionAutoInstaller;
+                    using RawrXD::Extensions::InstallProgress;
 
-                auto progressCallback = [](const InstallProgress& progress)
-                {
-                    const char* stage = "unknown";
-                    switch (progress.stage)
+                    auto& installer = ExtensionAutoInstaller::instance();
+                    if (!installer.needsFirstRunInstall())
                     {
-                        case InstallProgress::Stage::Querying:
-                            stage = "querying";
-                            break;
-                        case InstallProgress::Stage::Downloading:
-                            stage = "downloading";
-                            break;
-                        case InstallProgress::Stage::Installing:
-                            stage = "installing";
-                            break;
-                        case InstallProgress::Stage::Verifying:
-                            stage = "verifying";
-                            break;
-                        case InstallProgress::Stage::Complete:
-                            stage = "complete";
-                            break;
-                        case InstallProgress::Stage::Failed:
-                            stage = "failed";
-                            break;
+                        startupTrace("extension_bootstrap_skipped", "already_completed");
+                        return;
                     }
 
+                    auto progressCallback = [](const InstallProgress& progress)
+                    {
+                        const char* stage = "unknown";
+                        switch (progress.stage)
+                        {
+                            case InstallProgress::Stage::Querying:
+                                stage = "querying";
+                                break;
+                            case InstallProgress::Stage::Downloading:
+                                stage = "downloading";
+                                break;
+                            case InstallProgress::Stage::Installing:
+                                stage = "installing";
+                                break;
+                            case InstallProgress::Stage::Verifying:
+                                stage = "verifying";
+                                break;
+                            case InstallProgress::Stage::Complete:
+                                stage = "complete";
+                                break;
+                            case InstallProgress::Stage::Failed:
+                                stage = "failed";
+                                break;
+                        }
+
+                        std::ostringstream oss;
+                        oss << stage << " [" << (progress.currentIndex + 1) << "/" << progress.totalExtensions
+                            << "] ";
+                        if (progress.extensionId)
+                            oss << progress.extensionId;
+                        if (progress.detail && progress.detail[0] != '\0')
+                            oss << " - " << progress.detail;
+                        startupTrace("extension_bootstrap_progress", oss.str().c_str());
+                    };
+
+                    const auto result = installer.installPriorityExtensions(progressCallback);
                     std::ostringstream oss;
-                    oss << stage << " [" << (progress.currentIndex + 1) << "/" << progress.totalExtensions << "] ";
-                    if (progress.extensionId)
-                        oss << progress.extensionId;
-                    if (progress.detail && progress.detail[0] != '\0')
-                        oss << " - " << progress.detail;
-                    startupTrace("extension_bootstrap_progress", oss.str().c_str());
-                };
+                    oss << "installed=" << result.installedCount << ", failed=" << result.failedCount;
+                    if (!result.detail.empty())
+                        oss << ", detail=" << result.detail;
 
-                const auto result = installer.installPriorityExtensions(progressCallback);
-                std::ostringstream oss;
-                oss << "installed=" << result.installedCount << ", failed=" << result.failedCount;
-                if (!result.detail.empty())
-                    oss << ", detail=" << result.detail;
-
-                startupTrace(result.success ? "extension_bootstrap_done" : "extension_bootstrap_failed",
-                             oss.str().c_str());
+                    startupTrace(result.success ? "extension_bootstrap_done" : "extension_bootstrap_failed",
+                                 oss.str().c_str());
+                }
+                catch (...)
+                {
+                    logBackgroundThreadCrash("extension_bootstrap", 0xE06D7363);
+                }
             })
             .detach();
 
@@ -1784,71 +1838,78 @@ static bool runPhase(const std::string& name, Win32IDE& ide, HINSTANCE, LPSTR lp
             std::thread(
                 []()
                 {
-                    startupTrace("background_boot_start");
                     try
                     {
-                        if (!s_engine_mgr)
+                        startupTrace("background_boot_start");
+                        try
                         {
-                            startupTrace("background_boot_no_engine_mgr");
-                            return;
-                        }
+                            if (!s_engine_mgr)
+                            {
+                                startupTrace("background_boot_no_engine_mgr");
+                                return;
+                            }
 
-                        if (RawrXD::g_800B_Unlocked)
-                        {
+                            if (RawrXD::g_800B_Unlocked)
+                            {
+                                try
+                                {
+                                    s_engine_mgr->LoadEngine("engines/800b-5drive/800b_engine.dll", "800b-5drive");
+                                }
+                                catch (...)
+                                {
+                                    OutputDebugStringA("[main_win32] background_boot: 800b engine load failed\n");
+                                }
+                            }
                             try
                             {
-                                s_engine_mgr->LoadEngine("engines/800b-5drive/800b_engine.dll", "800b-5drive");
+                                s_engine_mgr->LoadEngine("engines/codex-ultimate/codex.dll", "codex-ultimate");
                             }
                             catch (...)
                             {
-                                OutputDebugStringA("[main_win32] background_boot: 800b engine load failed\n");
+                                OutputDebugStringA("[main_win32] background_boot: codex engine load failed\n");
                             }
-                        }
-                        try
-                        {
-                            s_engine_mgr->LoadEngine("engines/codex-ultimate/codex.dll", "codex-ultimate");
+                            try
+                            {
+                                s_engine_mgr->LoadEngine("engines/rawrxd-compiler/compiler.dll", "rawrxd-compiler");
+                            }
+                            catch (...)
+                            {
+                                OutputDebugStringA("[main_win32] background_boot: compiler engine load failed\n");
+                            }
+
+                            auto& mmf = RawrXDStateMmf::instance();
+                            if (!mmf.isInitialized())
+                            {
+                                PatchResult r = mmf.initialize(0, "RawrXD-Win32IDE");
+                                if (!r.success && !r.detail.empty())
+                                    OutputDebugStringA("[main_win32] MMF init warning (non-fatal)\n");
+                            }
+
+                            auto& jsHost = JSExtensionHost::instance();
+                            if (!jsHost.isInitialized())
+                            {
+                                PatchResult r = jsHost.initialize();
+                                (void)r;
+                            }
+
+                            auto& sandbox = RawrXD::Sandbox::PluginSandbox::instance();
+                            if (!sandbox.isInitialized())
+                            {
+                                RawrXD::Sandbox::SandboxResult r = sandbox.initialize();
+                                (void)r;
+                            }
+
+                            startupTrace("background_boot_done");
                         }
                         catch (...)
                         {
-                            OutputDebugStringA("[main_win32] background_boot: codex engine load failed\n");
+                            startupTrace("background_boot_exception");
+                            OutputDebugStringA("[main_win32] background_boot exception (non-fatal)\n");
                         }
-                        try
-                        {
-                            s_engine_mgr->LoadEngine("engines/rawrxd-compiler/compiler.dll", "rawrxd-compiler");
-                        }
-                        catch (...)
-                        {
-                            OutputDebugStringA("[main_win32] background_boot: compiler engine load failed\n");
-                        }
-
-                        auto& mmf = RawrXDStateMmf::instance();
-                        if (!mmf.isInitialized())
-                        {
-                            PatchResult r = mmf.initialize(0, "RawrXD-Win32IDE");
-                            if (!r.success && !r.detail.empty())
-                                OutputDebugStringA("[main_win32] MMF init warning (non-fatal)\n");
-                        }
-
-                        auto& jsHost = JSExtensionHost::instance();
-                        if (!jsHost.isInitialized())
-                        {
-                            PatchResult r = jsHost.initialize();
-                            (void)r;
-                        }
-
-                        auto& sandbox = RawrXD::Sandbox::PluginSandbox::instance();
-                        if (!sandbox.isInitialized())
-                        {
-                            RawrXD::Sandbox::SandboxResult r = sandbox.initialize();
-                            (void)r;
-                        }
-
-                        startupTrace("background_boot_done");
                     }
                     catch (...)
                     {
-                        startupTrace("background_boot_exception");
-                        OutputDebugStringA("[main_win32] background_boot exception (non-fatal)\n");
+                        logBackgroundThreadCrash("background_boot", 0xE06D7363);
                     }
                 })
                 .detach();
@@ -2513,6 +2574,105 @@ static int runAgenticSmokeTestExit()
         return 2;
     }
     fprintf(stdout, "[agentic-smoke] PASS: tool_registry list_dir (explorer parity)\n");
+
+    // -------------------------------------------------------------------------
+    // Multi-step bounded-loop smoke (deterministic, no live model required)
+    // Simulates 5 agent steps using only the tool registry:
+    //   step 1 – write initial content to a temp file (write_file)
+    //   step 2 – read it back (read_file)
+    //   step 3 – list temp dir (list_dir)
+    //   step 4 – overwrite with revised content (write_file)
+    //   step 5 – verify revised read matches (read_file)
+    // -------------------------------------------------------------------------
+    {
+        char tempDir2[MAX_PATH] = {};
+        GetTempPathA(MAX_PATH, tempDir2);
+        std::string msPath = std::string(tempDir2) + "rawrxd_ms_smoke_" +
+                             std::to_string(GetCurrentProcessId()) + ".tmp";
+        auto& reg = RawrXD::Agent::AgentToolRegistry::Instance();
+        bool msOk = true;
+        std::string msErr;
+
+        // step 1 – write_file
+        {
+            nlohmann::json a;
+            a["path"]    = msPath;
+            a["content"] = "step1";
+            auto r = reg.Dispatch("write_file", a);
+            if (!r.success) { msOk = false; msErr = "write_file step1: " + r.output; }
+        }
+
+        // step 2 – read_file, verify content
+        if (msOk)
+        {
+            nlohmann::json a;
+            a["path"] = msPath;
+            auto r = reg.Dispatch("read_file", a);
+            if (!r.success || r.output != "step1")
+            {
+                msOk = false;
+                msErr = "read_file step2 mismatch: got=" + r.output;
+            }
+        }
+
+        // step 3 – list_dir of temp, must be non-empty
+        if (msOk)
+        {
+            nlohmann::json a;
+            a["path"]      = std::string(tempDir2);
+            a["recursive"] = false;
+            auto r = reg.Dispatch("list_dir", a);
+            if (!r.success || r.output.empty())
+            {
+                msOk = false;
+                msErr = "list_dir step3 empty";
+            }
+        }
+
+        // step 4 – overwrite via replace_in_file (verifies old content replaced)
+        if (msOk)
+        {
+            nlohmann::json a;
+            a["path"]       = msPath;
+            a["old_string"] = "step1";
+            a["new_string"] = "step4-revised";
+            auto r = reg.Dispatch("replace_in_file", a);
+            if (!r.success) { msOk = false; msErr = "replace_in_file step4: " + r.output; }
+        }
+
+        // step 5 – verify revised content.  Use a second path so the 1500ms
+        // read_file result cache (keyed on path+args) is not a stale hit from
+        // the step-2 read of msPath.
+        const std::string msPath2 = msPath + ".v2";
+        if (msOk)
+        {
+            // Copy the modified msPath to msPath2 via write_file so step-5
+            // reads from a distinct cache key.
+            nlohmann::json wa;
+            wa["path"]    = msPath2;
+            wa["content"] = "step4-revised";
+            reg.Dispatch("write_file", wa);  // best-effort; step 5 validates
+
+            nlohmann::json a;
+            a["path"] = msPath2;
+            auto r = reg.Dispatch("read_file", a);
+            if (!r.success || r.output != "step4-revised")
+            {
+                msOk = false;
+                msErr = "read_file step5 mismatch: got=" + r.output;
+            }
+        }
+
+        DeleteFileA(msPath.c_str());
+        DeleteFileA(msPath2.c_str());
+
+        if (!msOk)
+        {
+            fprintf(stderr, "[agentic-smoke] FAIL: multi-step bounded loop — %s\n", msErr.c_str());
+            return 2;
+        }
+        fprintf(stdout, "[agentic-smoke] PASS: multi-step bounded loop (5 tool steps)\n");
+    }
 
     if (!isTruthyEnvVar("RAWRXD_AGENTIC_SMOKE_LIVE"))
     {
@@ -4121,234 +4281,6 @@ extern "C" void Heartbeat_Shutdown(void)
 }
 
 // main_win32 links against HeadlessIDE.cpp for canonical headless runtime.
-#if 0
-HeadlessIDE::HeadlessIDE() = default;
-
-HeadlessIDE::~HeadlessIDE()
-{
-    m_shutdownRequested.store(true);
-    m_running.store(false);
-    if (m_serverThread.joinable())
-    {
-        m_serverThread.join();
-    }
-    if (m_serverSocket != INVALID_SOCKET)
-    {
-        closesocket(m_serverSocket);
-        m_serverSocket = INVALID_SOCKET;
-    }
-}
-
-HeadlessResult HeadlessIDE::initialize(int argc, char* argv[])
-{
-    m_config = HeadlessConfig{};
-    m_shutdownRequested.store(false);
-    m_running.store(false);
-    m_serverRunning.store(false);
-    m_startEpochMs = GetTickCount64();
-
-    auto readNext = [&](int& index, std::string& out) -> bool
-    {
-        if (index + 1 >= argc || !argv[index + 1])
-        {
-            return false;
-        }
-        out = argv[++index];
-        return true;
-    };
-
-    for (int i = 1; i < argc; ++i)
-    {
-        const std::string arg = argv[i] ? argv[i] : "";
-        if (arg == "--repl")
-        {
-            m_config.mode = HeadlessRunMode::REPL;
-            m_config.enableRepl = true;
-        }
-        else if (arg == "--single-shot")
-        {
-            m_config.mode = HeadlessRunMode::SingleShot;
-        }
-        else if (arg == "--batch")
-        {
-            m_config.mode = HeadlessRunMode::Batch;
-        }
-        else if (arg == "--prompt")
-        {
-            if (!readNext(i, m_config.prompt))
-            {
-                return HeadlessResult::error("Missing value for --prompt", -2);
-            }
-            m_config.mode = HeadlessRunMode::SingleShot;
-        }
-        else if (arg == "--input")
-        {
-            if (!readNext(i, m_config.inputFile))
-            {
-                return HeadlessResult::error("Missing value for --input", -3);
-            }
-            m_config.mode = HeadlessRunMode::Batch;
-        }
-        else if (arg == "--output")
-        {
-            if (!readNext(i, m_config.outputFile))
-            {
-                return HeadlessResult::error("Missing value for --output", -4);
-            }
-        }
-        else if (arg == "--port")
-        {
-            std::string portValue;
-            if (!readNext(i, portValue))
-            {
-                return HeadlessResult::error("Missing value for --port", -5);
-            }
-            const long port = std::strtol(portValue.c_str(), nullptr, 10);
-            if (port < 1 || port > 65535)
-            {
-                return HeadlessResult::error("Invalid --port value", -6);
-            }
-            m_config.port = static_cast<int>(port);
-        }
-        else if (arg == "--bind")
-        {
-            if (!readNext(i, m_config.bindAddress))
-            {
-                return HeadlessResult::error("Missing value for --bind", -7);
-            }
-        }
-        else if (arg == "--json")
-        {
-            m_config.jsonOutput = true;
-        }
-        else if (arg == "--quiet")
-        {
-            m_config.quiet = true;
-        }
-        else if (arg == "--no-server")
-        {
-            m_config.enableServer = false;
-        }
-        else if (arg == "--server")
-        {
-            m_config.enableServer = true;
-            m_config.mode = HeadlessRunMode::Server;
-        }
-    }
-
-    if (m_config.mode == HeadlessRunMode::Batch && m_config.inputFile.empty())
-    {
-        return HeadlessResult::error("Batch mode requires --input <file>", -8);
-    }
-
-    return HeadlessResult::ok("Headless fallback initialized");
-}
-
-int HeadlessIDE::run()
-{
-    m_running.store(true);
-    auto finish = [&](int code) -> int
-    {
-        m_running.store(false);
-        return code;
-    };
-
-    if (m_config.mode == HeadlessRunMode::SingleShot)
-    {
-        const std::string prompt = m_config.prompt.empty() ? "health-check" : m_config.prompt;
-        const std::string response = "headless-fallback: " + prompt;
-        if (m_config.jsonOutput)
-        {
-            std::cout << "{\"success\":true,\"response\":\"" << jsonEscape(response) << "\"}\n";
-        }
-        else
-        {
-            std::cout << response << "\n";
-        }
-        return finish(0);
-    }
-
-    if (m_config.mode == HeadlessRunMode::Batch)
-    {
-        std::ifstream in(m_config.inputFile);
-        if (!in)
-        {
-            return finish(2);
-        }
-
-        std::ofstream outFile;
-        std::ostream* out = &std::cout;
-        if (!m_config.outputFile.empty())
-        {
-            outFile.open(m_config.outputFile, std::ios::trunc);
-            if (!outFile)
-            {
-                return finish(3);
-            }
-            out = &outFile;
-        }
-
-        std::string line;
-        while (!m_shutdownRequested.load() && std::getline(in, line))
-        {
-            if (line.empty())
-            {
-                continue;
-            }
-            (*out) << "headless-fallback: " << line << "\n";
-        }
-        return finish(0);
-    }
-
-    // Match HeadlessIDE.cpp / help text: --no-server must not block in an idle loop.
-    if (!m_config.enableServer)
-    {
-        return finish(0);
-    }
-
-    if (m_config.mode == HeadlessRunMode::REPL || m_config.enableRepl)
-    {
-        std::string line;
-        while (!m_shutdownRequested.load())
-        {
-            std::cout << "rawrxd> " << std::flush;
-            if (!std::getline(std::cin, line))
-            {
-                break;
-            }
-            if (line == "exit" || line == "quit")
-            {
-                break;
-            }
-            if (line == "help")
-            {
-                std::cout << "Commands: help, exit, quit\n";
-                continue;
-            }
-            std::cout << "headless-fallback: " << line << "\n";
-        }
-        return finish(0);
-    }
-
-    // Default headless mode is Server; --no-server must exit (parity with HeadlessIDE::runServerMode).
-    if (m_config.mode == HeadlessRunMode::Server && !m_config.enableServer)
-    {
-        return finish(0);
-    }
-
-    if (m_config.enableServer && !m_config.quiet)
-    {
-        LOG_INFO(std::string("[headless] fallback server loop listening on ") + m_config.bindAddress + ":" + std::to_string(m_config.port));
-    }
-
-    while (!m_shutdownRequested.load())
-    {
-        Sleep(25);
-    }
-
-    return finish(0);
-}
-#endif
 
 int runSelftest(HWND hwnd)
 {

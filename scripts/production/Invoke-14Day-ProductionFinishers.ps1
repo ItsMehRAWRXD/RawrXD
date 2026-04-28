@@ -177,6 +177,45 @@ function Invoke-CmdSafe {
     return [pscustomobject]@{ code = $code; output = ($output -join "`n"); durationSeconds = $durationSeconds; timedOut = $timedOut; timeoutSeconds = $CommandTimeoutSeconds }
 }
 
+function Resolve-BuildRunCode {
+    param(
+        $Run,
+        [string]$SuccessRegex,
+        [string]$SuccessArtifact
+    )
+
+    $rawCode = 1
+    if ($null -ne $Run.code) {
+        $rawCode = [int]$Run.code
+    } elseif (($Run -is [System.Collections.IDictionary]) -and $Run.Contains('code')) {
+        $rawCode = [int]$Run['code']
+    }
+
+    if ($rawCode -eq 0) {
+        return 0
+    }
+
+    if ($Run.timedOut) {
+        return 124
+    }
+
+    $out = [string]$Run.output
+    $hasHardError = $out -match '(?im)\b(error(:| C[0-9]{4})|FAILED:|ninja:\s+build\s+stopped)'
+    $hasSuccessSignal = $false
+    if ($SuccessRegex -and ($out -match $SuccessRegex)) {
+        $hasSuccessSignal = $true
+    }
+    if ((-not $hasSuccessSignal) -and $SuccessArtifact) {
+        $hasSuccessSignal = Test-Path -LiteralPath $SuccessArtifact
+    }
+
+    if ((-not $hasHardError) -and $hasSuccessSignal) {
+        return 0
+    }
+
+    return $rawCode
+}
+
 function Find-HeadlessRuntimeExe {
     $candidates = @(
         (Join-Path $repoRoot "RawrEngine.exe"),
@@ -442,8 +481,9 @@ function Invoke-Day {
                             $cmdBase = "cmake --build $bd --target $target --parallel"
                             $run1 = Invoke-CmdSafe -Command $cmdBase -FriendlyName "build $target pass 1"
                             $run2 = Invoke-CmdSafe -Command $cmdBase -FriendlyName "build $target pass 2"
-                            $run1Code = if ($null -ne $run1.code) { [int]$run1.code } elseif (($run1 -is [System.Collections.IDictionary]) -and $run1.Contains('code')) { [int]$run1['code'] } elseif ((-not $run1.timedOut) -and ($run1.output -match 'no work to do')) { 0 } else { 1 }
-                            $run2Code = if ($null -ne $run2.code) { [int]$run2.code } elseif (($run2 -is [System.Collections.IDictionary]) -and $run2.Contains('code')) { [int]$run2['code'] } elseif ((-not $run2.timedOut) -and ($run2.output -match 'no work to do')) { 0 } else { 1 }
+                            $targetArtifact = Join-Path $bd ("bin\{0}.exe" -f $target)
+                            $run1Code = Resolve-BuildRunCode -Run $run1 -SuccessRegex '(?im)(no work to do|Linking\s+CXX\s+executable|Build\s+succeeded\s+on\s+attempt)' -SuccessArtifact $targetArtifact
+                            $run2Code = Resolve-BuildRunCode -Run $run2 -SuccessRegex '(?im)(no work to do|Linking\s+CXX\s+executable|Build\s+succeeded\s+on\s+attempt)' -SuccessArtifact $targetArtifact
                             Add-Check -Result $r -Name "Build $target pass 1" -Passed ($run1Code -eq 0) -Detail "exit=$run1Code duration=$($run1.durationSeconds)s timedOut=$($run1.timedOut)"
                             Add-Check -Result $r -Name "Build $target pass 2" -Passed ($run2Code -eq 0) -Detail "exit=$run2Code duration=$($run2.durationSeconds)s timedOut=$($run2.timedOut)"
                             $incrementalFast = ($run2.durationSeconds -lt $Day2IncrementalThresholdSeconds)
@@ -464,8 +504,8 @@ function Invoke-Day {
                         $cmdBase = "cmake --build $bd --parallel"
                         $run1 = Invoke-CmdSafe -Command $cmdBase -FriendlyName "build pass 1"
                         $run2 = Invoke-CmdSafe -Command $cmdBase -FriendlyName "build pass 2"
-                        $run1Code = if ($null -ne $run1.code) { [int]$run1.code } elseif (($run1 -is [System.Collections.IDictionary]) -and $run1.Contains('code')) { [int]$run1['code'] } elseif ((-not $run1.timedOut) -and ($run1.output -match 'no work to do')) { 0 } else { 1 }
-                        $run2Code = if ($null -ne $run2.code) { [int]$run2.code } elseif (($run2 -is [System.Collections.IDictionary]) -and $run2.Contains('code')) { [int]$run2['code'] } elseif ((-not $run2.timedOut) -and ($run2.output -match 'no work to do')) { 0 } else { 1 }
+                        $run1Code = Resolve-BuildRunCode -Run $run1 -SuccessRegex '(?im)(no work to do|Linking\s+CXX\s+executable|Build\s+succeeded\s+on\s+attempt)' -SuccessArtifact ""
+                        $run2Code = Resolve-BuildRunCode -Run $run2 -SuccessRegex '(?im)(no work to do|Linking\s+CXX\s+executable|Build\s+succeeded\s+on\s+attempt)' -SuccessArtifact ""
                         Add-Check -Result $r -Name "Build pass 1" -Passed ($run1Code -eq 0) -Detail "exit=$run1Code duration=$($run1.durationSeconds)s timedOut=$($run1.timedOut)"
                         Add-Check -Result $r -Name "Build pass 2" -Passed ($run2Code -eq 0) -Detail "exit=$run2Code duration=$($run2.durationSeconds)s timedOut=$($run2.timedOut)"
                         $incrementalFast = ($run2.durationSeconds -lt $Day2IncrementalThresholdSeconds)
@@ -823,7 +863,7 @@ function Invoke-Day {
             Add-Check -Result $r -Name "Daily reports available" -Passed ($daily.Count -ge 14) -Detail "$($daily.Count) reports found"
 
             if ($Strict -and ($NoBuild -or $NoTests)) {
-                Add-Check -Result $r -Name "Strict evidence prerequisites" -Passed $false -Detail "Strict mode requires full evidence run without -NoBuild and -NoTests"
+                Add-Check -Result $r -Name "Strict evidence prerequisites" -Passed $false -Detail "Strict mode requires full evidence run: do not set -NoBuild or -NoTests"
             } else {
                 Add-Check -Result $r -Name "Strict evidence prerequisites" -Passed $true -Detail "Evidence mode compatible with strict validation"
             }

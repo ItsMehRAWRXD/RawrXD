@@ -24,7 +24,7 @@
 #pragma comment(lib, "bcrypt.lib")
 #endif
 
-// Stub license check for test mode
+// Conditional license check for test mode
 #ifdef BUILD_KEYMGMT_TEST
 #define LICENSE_CHECK(feature) true
 #else

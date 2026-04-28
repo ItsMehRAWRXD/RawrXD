@@ -4,6 +4,8 @@
 #include "ggml.h"
 #include "ggml-backend.h"
 #include "gguf.h"
+#include "speculative_decoder.h"
+#include "../RawrXD_Interfaces.h"
 #include <windows.h>
 
 #include <algorithm>
@@ -291,6 +293,9 @@ struct ModelState {
     ggml_backend* backend = nullptr;
     ggml_backend_buffer* buffer = nullptr;
 
+    // Speculative Decoder Integration
+    std::unique_ptr<RawrXD::SpeculativeDecoder> spec_decoder;
+
     // Model hyperparameters
     int32_t n_vocab = 0;
     int32_t n_embd = 0;
@@ -449,6 +454,9 @@ bool LoadModelReal(const char* path) {
         LogError("Failed to allocate backend buffer");
         return false;
     }
+
+    // Initialize Speculative Decoder
+    g_model.spec_decoder = std::make_unique<RawrXD::SpeculativeDecoder>();
 
     // Initialize tokenizer minimally
     if (g_tokenizer.vocab.empty()) {
@@ -639,6 +647,15 @@ InferenceResult RunInferenceReal(const std::string& prompt) {
     for (int i = 0; i < cutoff; i++) {
         acc += prob_idx[i].first;
         if (acc >= r) { next_token = prob_idx[i].second; break; }
+    }
+
+    // Speculative Decoder: Learn from the actual generation
+    if (g_model.spec_decoder) {
+        std::vector<uint32_t> context_u32;
+        for (int t : tokens) context_u32.push_back((uint32_t)t);
+        
+        // We simulate a "prediction" to update the n-gram weights
+        g_model.spec_decoder->LearnFromPrediction(context_u32, next_token, next_token, true);
     }
 
     result.tokens.push_back(next_token);

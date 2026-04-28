@@ -536,7 +536,8 @@ TrainingResult DatasetPipeline::buildTokenizer(uint32_t vocabSize) {
 
         // Progress reporting every 1000 merges
         if ((currentVocab - 256) % 1000 == 0) {
-            // Could call a callback here
+            // Report progress callback
+            fprintf(stderr, "[ModelTrainingPipeline] Vocab progress: %d tokens\n", currentVocab);
         }
     }
 
@@ -2094,7 +2095,7 @@ TrainingResult QuantizationEngine::writeGGUFHeader(FILE* f, const ModelArchConfi
     fwrite(&GGUF_MAGIC, 4, 1, f);
     fwrite(&GGUF_VERSION, 4, 1, f);
 
-    // Placeholder for tensor count and metadata KV count (will seek back)
+    // Reserve space for tensor count and metadata KV count (patched after writing)
     uint64_t tensorCount = 0;
     uint64_t metaKVCount = 0;
     long tensorCountPos = ftell(f);

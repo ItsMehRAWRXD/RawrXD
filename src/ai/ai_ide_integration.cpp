@@ -1009,5 +1009,229 @@ LRESULT CALLBACK AIIDEIntegration::AgentPanelProc(HWND hwnd, UINT msg, WPARAM wP
     return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
+// ============================================================================
+// Sovereign Cursor Integration
+// ============================================================================
+
+bool AIIDEIntegration::InitializeSovereignCursor() {
+    if (m_sovereign_cursor_initialized) return true;
+
+    SovereignCursorConfig cfg;
+    cfg.modelPath = m_settings.preferred_model.empty()
+                        ? "models/phi3-mini-q4.gguf"
+                        : m_settings.preferred_model;
+    cfg.contextSize = 8192;
+    cfg.temperature = 0.2f;
+    cfg.maxTokens = 2048;
+    cfg.autoSuggest = m_settings.auto_inline_completion;
+    cfg.debounceMs = static_cast<uint32_t>(m_settings.inline_trigger_delay_ms);
+    cfg.speculativeDecode = true;
+    cfg.draftTokens = 5;
+
+    m_sovereign_cursor = std::make_unique<SovereignCursor>(cfg);
+
+    // Set callbacks
+    m_sovereign_cursor->SetSuggestionCallback(
+        [this](const AISuggestion& suggestion) {
+            OnSovereignSuggestion(suggestion);
+        });
+    m_sovereign_cursor->SetProgressCallback(
+        [this](const std::string& status) {
+            UpdateSovereignCursorStatus(status);
+        });
+
+    if (!m_sovereign_cursor->Initialize()) {
+        m_sovereign_cursor.reset();
+        return false;
+    }
+
+    m_sovereign_cursor_initialized = true;
+    CreateSovereignCursorPanel();
+    return true;
+}
+
+void AIIDEIntegration::ShutdownSovereignCursor() {
+    if (m_sovereign_cursor) {
+        m_sovereign_cursor->Shutdown();
+        m_sovereign_cursor.reset();
+    }
+    m_sovereign_cursor_initialized = false;
+
+    if (m_sovereign_cursor_panel) {
+        DestroyWindow(m_sovereign_cursor_panel);
+        m_sovereign_cursor_panel = nullptr;
+        m_sovereign_cursor_status = nullptr;
+    }
+}
+
+void AIIDEIntegration::TriggerSovereignCompletion() {
+    if (!InitializeSovereignCursor()) return;
+    m_sovereign_cursor->RequestCompletion();
+}
+
+void AIIDEIntegration::TriggerSovereignInlineSuggestion() {
+    if (!InitializeSovereignCursor()) return;
+    m_sovereign_cursor->RequestInlineSuggestion();
+}
+
+void AIIDEIntegration::TriggerSovereignRefactor() {
+    if (!InitializeSovereignCursor()) return;
+    m_sovereign_cursor->RequestRefactoring();
+}
+
+void AIIDEIntegration::TriggerSovereignExplain() {
+    if (!InitializeSovereignCursor()) return;
+    m_sovereign_cursor->RequestExplanation();
+}
+
+void AIIDEIntegration::TriggerSovereignFix() {
+    if (!InitializeSovereignCursor()) return;
+    m_sovereign_cursor->RequestFix();
+}
+
+void AIIDEIntegration::TriggerSovereignDiff(const std::wstring& instruction) {
+    if (!InitializeSovereignCursor()) return;
+    int len = WideCharToMultiByte(CP_UTF8, 0, instruction.c_str(), -1, nullptr, 0, nullptr, nullptr);
+    std::string utf8(len - 1, 0);
+    WideCharToMultiByte(CP_UTF8, 0, instruction.c_str(), -1, &utf8[0], len, nullptr, nullptr);
+    m_sovereign_cursor->RequestDiff(utf8);
+}
+
+void AIIDEIntegration::AcceptSovereignSuggestion() {
+    if (m_sovereign_suggestion_visible && !m_sovereign_current_suggestion.text.empty()) {
+        if (m_sovereign_current_suggestion.isDiff) {
+            ApplySovereignSuggestion(m_sovereign_current_suggestion);
+        } else {
+            InsertTextAtCursor(m_sovereign_current_suggestion.text);
+        }
+        m_sovereign_suggestion_visible = false;
+    }
+}
+
+void AIIDEIntegration::RejectSovereignSuggestion() {
+    m_sovereign_suggestion_visible = false;
+    HideInlineSuggestion();
+}
+
+void AIIDEIntegration::ShowSovereignCursorPanel() {
+    if (!m_sovereign_cursor_panel) {
+        CreateSovereignCursorPanel();
+    }
+    if (m_sovereign_cursor_panel) {
+        ShowWindow(m_sovereign_cursor_panel, SW_SHOW);
+    }
+}
+
+void AIIDEIntegration::HideSovereignCursorPanel() {
+    if (m_sovereign_cursor_panel) {
+        ShowWindow(m_sovereign_cursor_panel, SW_HIDE);
+    }
+}
+
+void AIIDEIntegration::UpdateSovereignCursorStatus(const std::string& status) {
+    if (m_sovereign_cursor_status) {
+        SetWindowTextA(m_sovereign_cursor_status, status.c_str());
+    }
+}
+
+bool AIIDEIntegration::IsSovereignCursorReady() const {
+    return m_sovereign_cursor_initialized && m_sovereign_cursor && m_sovereign_cursor->IsReady();
+}
+
+void AIIDEIntegration::CreateSovereignCursorPanel() {
+    if (m_sovereign_cursor_panel) return;
+
+    RECT rc;
+    GetClientRect(m_main_window, &rc);
+    int width = 320;
+    int height = 140;
+    int x = 10;
+    int y = rc.bottom - height - 10;
+
+    m_sovereign_cursor_panel = CreateWindowExW(
+        WS_EX_CLIENTEDGE, L"STATIC", L"Sovereign Cursor",
+        WS_CHILD | WS_VISIBLE, x, y, width, height,
+        m_main_window, nullptr, GetModuleHandleW(nullptr), nullptr);
+
+    if (!m_sovereign_cursor_panel) return;
+
+    CreateWindowExW(0, L"STATIC", L"Status:",
+                    WS_CHILD | WS_VISIBLE, 10, 10, 50, 20,
+                    m_sovereign_cursor_panel, nullptr,
+                    GetModuleHandleW(nullptr), nullptr);
+
+    m_sovereign_cursor_status = CreateWindowExW(
+        0, L"STATIC", L"Idle",
+        WS_CHILD | WS_VISIBLE, 65, 10, width - 80, 20,
+        m_sovereign_cursor_panel, nullptr,
+        GetModuleHandleW(nullptr), nullptr);
+
+    CreateWindowExW(0, L"BUTTON", L"Complete",
+                    WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                    10, 40, 90, 26, m_sovereign_cursor_panel,
+                    reinterpret_cast<HMENU>(7001),
+                    GetModuleHandleW(nullptr), nullptr);
+
+    CreateWindowExW(0, L"BUTTON", L"Refactor",
+                    WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                    110, 40, 90, 26, m_sovereign_cursor_panel,
+                    reinterpret_cast<HMENU>(7002),
+                    GetModuleHandleW(nullptr), nullptr);
+
+    CreateWindowExW(0, L"BUTTON", L"Explain",
+                    WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                    210, 40, 90, 26, m_sovereign_cursor_panel,
+                    reinterpret_cast<HMENU>(7003),
+                    GetModuleHandleW(nullptr), nullptr);
+
+    CreateWindowExW(0, L"BUTTON", L"Fix",
+                    WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                    10, 75, 90, 26, m_sovereign_cursor_panel,
+                    reinterpret_cast<HMENU>(7004),
+                    GetModuleHandleW(nullptr), nullptr);
+
+    CreateWindowExW(0, L"BUTTON", L"Accept",
+                    WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                    110, 75, 90, 26, m_sovereign_cursor_panel,
+                    reinterpret_cast<HMENU>(7005),
+                    GetModuleHandleW(nullptr), nullptr);
+
+    CreateWindowExW(0, L"BUTTON", L"Reject",
+                    WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                    210, 75, 90, 26, m_sovereign_cursor_panel,
+                    reinterpret_cast<HMENU>(7006),
+                    GetModuleHandleW(nullptr), nullptr);
+}
+
+void AIIDEIntegration::OnSovereignSuggestion(const AISuggestion& suggestion) {
+    m_sovereign_current_suggestion = suggestion;
+    m_sovereign_suggestion_visible = true;
+
+    if (!suggestion.text.empty()) {
+        if (suggestion.isDiff) {
+            ShowInlineSuggestion(suggestion);
+        } else {
+            // For inline suggestions, show ghost text
+            AISuggestion ghost;
+            ghost.suggestion_text = suggestion.text;
+            ShowInlineSuggestion(ghost);
+        }
+    }
+}
+
+void AIIDEIntegration::ApplySovereignSuggestion(const AISuggestion& suggestion) {
+    if (suggestion.isDiff && !suggestion.hunks.empty()) {
+        // Apply each hunk via editor control
+        for (const auto& hunk : suggestion.hunks) {
+            // Set selection to the range to replace
+            CHARRANGE range;
+            range.cpMin = static_cast<LONG>(hunk.oldStart);
+            range.cpMax = static_cast<LONG>(hunk.oldStart + hunk.oldLength);
+            SendMessage(m_editor_control, EM_EXSETSEL, 0, (LPARAM)&range);
+            ReplaceSelection(hunk.newText);
+        }
+    }
+}
+
 } // namespace AI
 } // namespace RawrXD

@@ -24,8 +24,14 @@ class CDockingManager {
 public:
     CDockingManager() = default;
     void Create(HWND hWndMain) { m_hWndMain = hWndMain; }
-    void EnableAutoHidePanes(DWORD) {}
-    void SetDockingMode(DWORD) {}
+    void EnableAutoHidePanes(DWORD dwStyle) {
+        for (auto& pane : m_panes) {
+            if (pane) pane->autoHide = (dwStyle != 0);
+        }
+    }
+    void SetDockingMode(DWORD mode) {
+        dockingMode_ = mode;
+    }
     CPane* CreatePane(HWND hWnd, const std::wstring& title, DWORD dwStyle) {
         auto pane = std::make_unique<CPane>(hWnd, title);
         m_panes.push_back(std::move(pane));

@@ -36,7 +36,7 @@ namespace RawrXD::Extensions {
     HRESULT RequestResponseChannel::Connect(DWORD timeoutMs)
     {
         if (m_state != IPCChannelState::Disconnected) {
-            m_lastError = E_ALREADY_INITIALIZED;
+            m_lastError = HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS);
             return m_lastError;
         }
 
@@ -74,13 +74,13 @@ namespace RawrXD::Extensions {
                     dwError = GetLastError();
                     m_lastError = HRESULT_FROM_WIN32(dwError);
                     m_state = IPCChannelState::Error;
-                    IDELogger::Get().Error("Failed to create named pipe: " + std::to_string(dwError));
+                    LOG_ERROR("Failed to create named pipe: " + std::to_string(dwError));
                     return m_lastError;
                 }
             } else {
                 m_lastError = HRESULT_FROM_WIN32(dwError);
                 m_state = IPCChannelState::Error;
-                IDELogger::Get().Error("Failed to connect to named pipe: " + std::to_string(dwError));
+                LOG_ERROR("Failed to connect to named pipe: " + std::to_string(dwError));
                 return m_lastError;
             }
         }
@@ -101,7 +101,7 @@ namespace RawrXD::Extensions {
             m_state = IPCChannelState::Error;
             CloseHandle(m_pipeHandle);
             m_pipeHandle = nullptr;
-            IDELogger::Get().Error("IPC contract validation failed");
+            LOG_ERROR("IPC contract validation failed");
             return m_lastError;
         }
 
@@ -121,7 +121,7 @@ namespace RawrXD::Extensions {
 
         m_state = IPCChannelState::Connected;
         m_lastError = S_OK;
-        IDELogger::Get().Info("IPC channel connected: " + m_channelName);
+        LOG_INFO("IPC channel connected: " + m_channelName);
 
         return S_OK;
     }
@@ -155,7 +155,7 @@ namespace RawrXD::Extensions {
         }
 
         m_state = IPCChannelState::Disconnected;
-        IDELogger::Get().Info("IPC channel disconnected: " + m_channelName);
+        LOG_INFO("IPC channel disconnected: " + m_channelName);
     }
 
     bool RequestResponseChannel::IsConnected() const
@@ -283,7 +283,7 @@ namespace RawrXD::Extensions {
         // Check payload size bounds (max 1MB per message)
         const DWORD MAX_PAYLOAD_SIZE = 1024 * 1024;
         if (message.payloadSize > MAX_PAYLOAD_SIZE) {
-            IDELogger::Get().Warning("Message payload exceeds maximum size");
+            LOG_WARNING("Message payload exceeds maximum size");
             return E_INVALIDARG;
         }
 
@@ -355,7 +355,7 @@ namespace RawrXD::Extensions {
         // Bounds check on payload size
         const DWORD MAX_PAYLOAD_SIZE = 1024 * 1024;
         if (message.payloadSize > MAX_PAYLOAD_SIZE) {
-            IDELogger::Get().Warning("Received message with oversized payload");
+            LOG_WARNING("Received message with oversized payload");
             return E_INVALIDARG;
         }
 

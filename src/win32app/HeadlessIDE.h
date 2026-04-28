@@ -137,6 +137,21 @@ struct HeadlessConfig
     bool agentPromptMode = false;
     /// Optional fixed Ollama model name (--ollama-model); overrides auto-pick from /api/tags. Env: RAWRXD_NATIVE_MODEL.
     std::string ollamaModel;
+
+    // Wiring auto-mapper and CLI/GUI start-end coverage checks
+    bool autoMapWiring = false;
+    bool checkWiringBoundaries = false;
+    bool wiringIncludeLegacy = true;
+    int wiringReinspectPasses = 2;
+    std::string wiringReportPath;
+    std::string wiringSubmissionPath;
+
+    // Autonomous workflow execution mode (Phase 1 Agent Polish)
+    bool autonomousWorkflowMode = false;  // --autonomous: enable workflow execution mode
+    std::string workflowName;              // --workflow <name>: workflow to execute
+    std::string workflowStateFile;         // --state <file>: serialized workflow state to resume
+    bool workflowVerbose = false;          // --workflow-verbose: detailed workflow logging
+    std::string workflowOutputDir;         // --workflow-output <dir>: directory for workflow outputs
 };
 
 // ============================================================================
@@ -333,6 +348,8 @@ class HeadlessIDE
     int runBatchMode();
     int runAttentionBenchMode();
     int runScalingSweepMode();
+    int runWiringAuditMode();
+    int runAutonomousWorkflowMode();  // Phase 1: Execute serialized agent workflows
 
     // ---- REPL helpers ----
     void processReplCommand(const std::string& input);

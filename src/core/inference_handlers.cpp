@@ -334,7 +334,9 @@ CommandResult handleInferenceLoadRun(const CommandContext& ctx) {
         inference::AutonomousInferenceEngine::InferenceConfig config;
         config.max_batch_size = 1;
         config.ctx_size = state.contextSize;
-        config.n_gpu_layers = 0;  // CPU-only for now
+        // GPU inference is mandatory across IDE/CLI/Model. 999 mirrors llama.cpp's
+        // "-ngl 999" sentinel for full offload; the runtime clamps to layer count.
+        config.n_gpu_layers = 999;
         config.flash_attention = false;
         
         auto engine = std::make_unique<inference::UltraFastInferenceEngine>(config);

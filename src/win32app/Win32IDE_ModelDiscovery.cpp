@@ -47,8 +47,12 @@ void traceDiscoveryPath(const std::string& path, bool exists)
 // ============================================================================
 // CONSTANTS
 // ============================================================================
+#include "Win32IDE_PathResolver.h"
+
 static const std::vector<std::string> DEFAULT_MODEL_PATHS = {"F:\\OllamaModels", "C:\\Users\\Public\\Models",
-                                                             "D:\\Models", "E:\\Models"};
+                                                             "D:\\Models", "E:\\Models",
+                                                             RawrXDPathResolver::GetUserDocumentsPath() + "\\Models",
+                                                             RawrXDPathResolver::GetAppDataPath() + "\\RawrXD\\Models"};
 
 static const std::vector<std::string> MODEL_EXTENSIONS = {".gguf", ".bin", ".safetensors", ".ckpt"};
 

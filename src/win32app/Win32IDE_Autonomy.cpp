@@ -240,23 +240,25 @@ void AutonomyManager::executeAction(const std::string& action)
     // Differentiate tool vs prompt
     if (action.rfind("tool:", 0) == 0)
     {
-        std::string toolCall = action.substr(5);
+        const std::string toolCall = action.substr(5);
 
-        // Check if this is a subagent/chain/swarm tool call
+        // DispatchModelToolCalls routes through ExtractToolCallLines +
+        // DispatchToolLinesPolicyAware — approval policy is enforced there.
         std::string toolResult;
         if (m_bridge->DispatchModelToolCalls(toolCall, toolResult))
         {
             addObservation("TOOL_DISPATCH:" + toolCall + " => " + toolResult);
-            LOG_INFO("Autonomy dispatched subagent tool: " + toolCall);
+            LOG_INFO("Autonomy dispatched tool: " + toolCall);
             return;
         }
 
         auto resp = m_bridge->ExecuteAgentCommand(toolCall);
 
-        // Also check the response for embedded tool calls
-        if (m_bridge->DispatchModelToolCalls(resp.content, toolResult))
+        // Also route any embedded tool calls in the reply through the funnel.
+        std::string embeddedResult;
+        if (m_bridge->DispatchModelToolCalls(resp.content, embeddedResult))
         {
-            addObservation("TOOL:" + toolCall + " => " + resp.content + "\n[Tool Result] " + toolResult);
+            addObservation("TOOL:" + toolCall + " => " + resp.content + "\n[Tool Result] " + embeddedResult);
         }
         else
         {
@@ -265,10 +267,10 @@ void AutonomyManager::executeAction(const std::string& action)
     }
     else if (action.rfind("prompt:", 0) == 0)
     {
-        std::string prompt = action.substr(7);
+        const std::string prompt = action.substr(7);
         auto resp = m_bridge->ExecuteAgentCommand(prompt);
 
-        // Check if the model's answer contains tool calls
+        // Route any embedded tool calls through the policy funnel.
         std::string toolResult;
         if (m_bridge->DispatchModelToolCalls(resp.content, toolResult))
         {

@@ -40,7 +40,11 @@ std::vector<BenchmarkResult> InferenceBenchmark::runBenchmarkSuite(const Benchma
                                                      config.benchmarkRuns);
 
                         if (config.enableMemoryTracking) {
-                            // Additional memory measurement could be added here
+                            // Track peak memory during inference
+                            PROCESS_MEMORY_COUNTERS pmc;
+                            if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
+                                result.peakMemoryMB = pmc.PeakWorkingSetSize / (1024.0 * 1024.0);
+                            }
                         }
 
                         bestBaselineTps = std::max(bestBaselineTps, result.tokensPerSec);
@@ -384,8 +388,8 @@ void InferenceBenchmark::warmupEngine(std::unique_ptr<InferenceEngine>& engine,
     for (int i = 0; i < warmupRuns; ++i) {
         try {
             engine->Generate(tokens, 5); // Short generation for warmup
-        } catch (const std::exception&) {
-            // Ignore warmup failures
+        } catch (const std::exception& e) {
+            fprintf(stderr, "[InferenceBenchmark] Warmup failed: %s\n", e.what());
         }
     }
 }

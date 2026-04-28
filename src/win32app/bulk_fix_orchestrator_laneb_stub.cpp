@@ -1,5 +1,10 @@
-// Lane B (RawrEngine): defines BulkFixOrchestrator::~BulkFixOrchestrator for SubAgentManager's
-// unique_ptr member — avoids linking full autonomous_subagent.cpp (AgenticEngine / detector deps).
-#include "agent/autonomous_subagent.hpp"
+// bulk_fix_orchestrator_laneb_stub.cpp
+// Stub file for RawrEngine Lane B headless build
+// Created: 2026-04-24
 
-BulkFixOrchestrator::~BulkFixOrchestrator() = default;
+extern "C" void BulkFixOrchestratorLaneBStub() {}
+
+// C++ symbol stubs
+void bulk_fix_orchestrator_laneb_init() {}
+void bulk_fix_orchestrator_laneb_shutdown() {}
+void bulk_fix_orchestrator_laneb_process() {}

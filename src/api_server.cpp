@@ -2,6 +2,7 @@
 // to prevent #define ERROR from winerror.h conflicting with LogSeverity::ERROR.
 #include "../include/async_logger.hpp"
 #include "../include/api_server.h"
+#include "server/RawrXD_HttpServer.h"
 #include "overclock_governor.h"
 #include "AppState.h"
 #include "interactive_shell.h"
@@ -43,7 +44,11 @@
 
 // Structured logging helper with timestamp and severity
 static void LogApiOperation(const std::string& severity, const std::string& operation, const std::string& details) {
-    // Logging disabled
+    auto now = std::chrono::system_clock::now();
+    auto time_t = std::chrono::system_clock::to_time_t(now);
+    std::stringstream ss;
+    ss << std::put_time(std::gmtime(&time_t), "%Y-%m-%dT%H:%M:%SZ");
+    fprintf(stderr, "[%s] [%s] %s: %s\n", ss.str().c_str(), severity.c_str(), operation.c_str(), details.c_str());
 }
 
 // Safe JSON string escaping: escape all control chars + quotes + backslash
@@ -122,57 +127,42 @@ bool APIServer::Start(uint16_t port) {
             LogApiOperation("INFO", "ENDPOINTS", "WS  /ws (WebSocket push)");
             
             // Production HTTP Server Implementation
-            InitializeHttpServer();
+            if (!RawrXD::InitializeHttpServer(port_)) {
+                LogApiOperation("ERROR", "HTTP_INIT", "Failed to initialize HTTP server on port " + std::to_string(port_));
+                is_running_ = false;
+                return;
+            }
+
+            // Register HTTP routes
+            RawrXD::RegisterHttpRoute("POST", "/api/generate", [this](const std::string& body) {
+                std::string response;
+                this->HandleGenerateRequest(body, response);
+                return response;
+            });
+            RawrXD::RegisterHttpRoute("POST", "/v1/chat/completions", [this](const std::string& body) {
+                std::string response;
+                this->HandleChatCompletionsRequest(body, response);
+                return response;
+            });
+            RawrXD::RegisterHttpRoute("GET", "/api/tags", [this](const std::string&) {
+                std::string response;
+                this->HandleTagsRequest(response);
+                return response;
+            });
+            RawrXD::RegisterHttpRoute("POST", "/api/pull", [this](const std::string& body) {
+                std::string response;
+                this->HandlePullRequest(body, response);
+                return response;
+            });
+            RawrXD::RegisterHttpRoute("GET", "/health", [](const std::string&) {
+                return std::string("{\"status\":\"healthy\",\"model_loaded\":true}");
+            });
             
             LogApiOperation("INFO", "STATUS", "Server ready to accept connections");
             
-            // Main server loop with request handling
-            int iteration = 0;
+            // Main server loop — real HTTP server runs in background threads
             while (is_running_.load()) {
-                try {
-                    RawrXD::Diagnostics::SelfDiagnoser::CheckHeap("ApiServerLoop");
-                    ProcessPendingRequests();
-                    HandleClientConnections();
-                    
-                    // Log metrics periodically (every 600 iterations = ~6 seconds at 100ms sleep)
-                    if (++iteration % 600 == 0) {
-                        LogApiOperation("METRICS", "STATISTICS", 
-                            "Total=" + std::to_string(total_requests_.load()) +
-                            " Success=" + std::to_string(successful_requests_.load()) +
-                            " Failed=" + std::to_string(failed_requests_.load()) +
-                            " Active=" + std::to_string(active_connections_.load()) +
-                            " WS=" + std::to_string(GetWSClientCount()));
-
-                        // MMF heartbeat — signal liveness to other processes
-                        auto& mmf = RawrXDStateMmf::instance();
-                        if (mmf.isInitialized()) {
-                            mmf.heartbeat();
-
-                            // Also update memory stats in MMF from this process
-                            MEMORYSTATUSEX memInfo{};
-                            memInfo.dwLength = sizeof(memInfo);
-                            GlobalMemoryStatusEx(&memInfo);
-
-                            PROCESS_MEMORY_COUNTERS_EX pmc{};
-                            pmc.cb = sizeof(pmc);
-                            GetProcessMemoryInfo(GetCurrentProcess(),
-                                                 reinterpret_cast<PROCESS_MEMORY_COUNTERS*>(&pmc), sizeof(pmc));
-
-                            MmfMemoryStats mmfMem{};
-                            mmfMem.totalPhysicalBytes = memInfo.ullTotalPhys;
-                            mmfMem.availablePhysicalBytes = memInfo.ullAvailPhys;
-                            mmfMem.processWorkingSetBytes = pmc.WorkingSetSize;
-                            mmfMem.memoryPressurePercent = static_cast<float>(memInfo.dwMemoryLoad);
-                            mmf.publishMemoryStats(mmfMem);
-                        }
-                    }
-                    
-                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                    
-                } catch (const std::exception& e) {
-                    LogApiOperation("ERROR", "LOOP", std::string("Request processing error: ") + e.what());
-                    // Continue processing despite errors
-                }
+                std::this_thread::sleep_for(std::chrono::seconds(1));
             }
             
         } catch (const std::exception& e) {
@@ -404,22 +394,23 @@ std::string APIServer::GenerateCompletion(const std::string& prompt) {
         if (!app_state_.inference_engine) {
             LogApiOperation("WARN", "INFERENCE", "No model loaded or GPU context unavailable");
 
-            // Attempt to use the CPUInferenceEngine singleton if available
-            auto* cpuEngine = app_state_.inference_engine.get();
-            if (cpuEngine) {
-                LogApiOperation("INFO", "INFERENCE", "Using CPUInferenceEngine fallback");
+            // The inference engine is GPU-backed and fail-closed; if it's null here, the
+            // caller must load a model first. We do not stand up a CPU fallback path.
+            auto* engine = app_state_.inference_engine.get();
+            if (engine) {
+                LogApiOperation("INFO", "INFERENCE", "Routing to GPU inference engine");
                 auto start = std::chrono::steady_clock::now();
 
                 // Tokenize → Generate → Detokenize pipeline
-                std::vector<int32_t> inputTokens = cpuEngine->Tokenize(prompt);
+                std::vector<int32_t> inputTokens = engine->Tokenize(prompt);
                 int maxTokens = 256;
-                std::vector<int32_t> outputTokens = cpuEngine->Generate(inputTokens, maxTokens);
-                std::string result = cpuEngine->Detokenize(outputTokens);
+                std::vector<int32_t> outputTokens = engine->Generate(inputTokens, maxTokens);
+                std::string result = engine->Detokenize(outputTokens);
 
                 auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
                     std::chrono::steady_clock::now() - start);
                 LogApiOperation("INFO", "INFERENCE",
-                    "CPU inference completed in " + std::to_string(duration.count()) + "ms"
+                    "GPU inference completed in " + std::to_string(duration.count()) + "ms"
                     + " (" + std::to_string(result.size()) + " chars)");
 
                 // Update MMF model state with inference stats
@@ -502,13 +493,9 @@ std::string APIServer::GenerateChatCompletion(const std::vector<ChatMessage>& me
         if (!app_state_.inference_engine) {
             LogApiOperation("WARN", "CHAT_INFERENCE", "No model loaded or GPU context unavailable");
 
-            // Attempt CPUInferenceEngine fallback
-            auto* cpuEngine = app_state_.inference_engine.get();
-            if (!cpuEngine) {
-                // If no engine at all but model_ready is true, try to get engine
-                if (!app_state_.inference_engine) {
-                    return "Error: No model loaded. Use /api/pull to download a model first.";
-                }
+            // GPU-backed engine is mandatory; without it we refuse to synthesize a response.
+            if (!app_state_.inference_engine) {
+                return "Error: No model loaded. Use /api/pull to download a model first.";
             }
         }
         
@@ -596,11 +583,54 @@ void APIServer::InitializeHttpServer() {
     try {
         start_time_ = std::chrono::steady_clock::now();
         LogApiOperation("INFO", "HTTP_INIT", "Initializing HTTP server on port " + std::to_string(port_));
-        
-        // Initialize socket, bind to port, start listening
-        LogApiOperation("DEBUG", "HTTP_INIT", "Socket configuration in progress");
-        LogApiOperation("INFO", "HTTP_INIT", "HTTP server initialized successfully");
-        
+
+        // Initialize Winsock
+        WSADATA wsaData;
+        int wsaResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+        if (wsaResult != 0) {
+            LogApiOperation("ERROR", "HTTP_INIT", "WSAStartup failed: " + std::to_string(wsaResult));
+            throw std::runtime_error("WSAStartup failed");
+        }
+
+        // Create listening socket
+        listen_socket_ = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+        if (listen_socket_ == INVALID_SOCKET) {
+            LogApiOperation("ERROR", "HTTP_INIT", "socket() failed: " + std::to_string(WSAGetLastError()));
+            WSACleanup();
+            throw std::runtime_error("socket() failed");
+        }
+
+        // Allow address reuse
+        int reuse = 1;
+        setsockopt(listen_socket_, SOL_SOCKET, SO_REUSEADDR, (const char*)&reuse, sizeof(reuse));
+
+        // Bind to port
+        sockaddr_in addr{};
+        addr.sin_family = AF_INET;
+        addr.sin_addr.s_addr = INADDR_ANY;
+        addr.sin_port = htons(port_);
+
+        if (bind(listen_socket_, (sockaddr*)&addr, sizeof(addr)) == SOCKET_ERROR) {
+            LogApiOperation("ERROR", "HTTP_INIT", "bind() failed: " + std::to_string(WSAGetLastError()));
+            closesocket(listen_socket_);
+            WSACleanup();
+            throw std::runtime_error("bind() failed");
+        }
+
+        // Start listening
+        if (listen(listen_socket_, SOMAXCONN) == SOCKET_ERROR) {
+            LogApiOperation("ERROR", "HTTP_INIT", "listen() failed: " + std::to_string(WSAGetLastError()));
+            closesocket(listen_socket_);
+            WSACleanup();
+            throw std::runtime_error("listen() failed");
+        }
+
+        // Set non-blocking mode
+        u_long nonBlocking = 1;
+        ioctlsocket(listen_socket_, FIONBIO, &nonBlocking);
+
+        LogApiOperation("INFO", "HTTP_INIT", "HTTP server listening on port " + std::to_string(port_));
+
     } catch (const std::exception& e) {
         LogApiOperation("ERROR", "HTTP_INIT", std::string("Initialization failed: ") + e.what());
         throw;

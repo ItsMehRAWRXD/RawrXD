@@ -293,7 +293,13 @@ bool AgenticConfiguration::isFeatureEnabledForUser(const std::string& featureNam
             int minPct = std::stoi(toggle.rolloutPercentage.substr(0, dashPos));
             int maxPct = std::stoi(toggle.rolloutPercentage.substr(dashPos + 1));
             return hash >= minPct && hash < maxPct;
-        } catch (...) {}
+        } catch (const std::exception& e) {
+            std::cerr << "[ERROR] AgenticConfiguration rollout parse error: " << e.what() << std::endl;
+            return false;
+        } catch (...) {
+            std::cerr << "[ERROR] AgenticConfiguration rollout parse unknown exception" << std::endl;
+            return false;
+        }
     }
     return true;
 }

@@ -30,9 +30,21 @@ namespace RawrXD::Backend {
     class OllamaBackend { public: NativeInferenceResponse chatSync(const OllamaChatRequest& r) { return {{""}}; } };
     class OllamaSession { 
     public: 
-        void setSessionName(const std::string&) {}
-        void recordUserPrompt(const std::string&) {}
-        void recordAIResponse(const std::string&, const std::string&, uint64_t, uint64_t) {}
+        void setSessionName(const std::string& name) { sessionName_ = name; }
+        void recordUserPrompt(const std::string& prompt) {
+            chatHistory_.push_back({"user", prompt});
+        }
+        void recordAIResponse(const std::string& model, const std::string& response, uint64_t tokensIn, uint64_t tokensOut) {
+            chatHistory_.push_back({"assistant", response});
+            totalTokensIn_ += tokensIn;
+            totalTokensOut_ += tokensOut;
+        }
+
+    private:
+        std::string sessionName_;
+        std::vector<std::pair<std::string, std::string>> chatHistory_;
+        uint64_t totalTokensIn_ = 0;
+        uint64_t totalTokensOut_ = 0;
     };
 }
 

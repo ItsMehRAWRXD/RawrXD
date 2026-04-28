@@ -46,8 +46,12 @@ std::string AgenticCopilotBridge::executeWithFailureRecovery(const std::string& 
         // Step 2: Invoke primary agentic engine
         if (!m_agenticEngine) return "Error: Engine offline";
         
-        // Mocking engine call for now
-        response = "Primary response for: " + prompt;
+        // Invoke primary agentic engine with fallback
+        if (m_agenticEngine) {
+            response = m_agenticEngine->process(prompt);
+        } else {
+            response = "Error: Engine not initialized";
+        }
 
         // Step 3: Hotpatch and validate response
         JsonValue ctx = JsonValue::createObject();

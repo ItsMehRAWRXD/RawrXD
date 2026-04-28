@@ -191,7 +191,7 @@ void AIAgenticBridge::ProcessQueue() {
         currentCancelFlag_ = std::make_shared<std::atomic<bool>>(false);
         auto t0 = std::chrono::steady_clock::now();
         std::string response;
-        bool ok = CallNativeInference(req->prompt, response, currentCancelFlag_);
+        bool ok = CallOllamaAPI(req->prompt, response, currentCancelFlag_);
         double elapsed = std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count();
         requestCount_++;
         { std::lock_guard<std::mutex> lk(responseMutex_); totalResponseTime_ += elapsed; }
@@ -201,7 +201,7 @@ void AIAgenticBridge::ProcessQueue() {
     }
 }
 
-bool AIAgenticBridge::CallNativeInference(const std::string& prompt, std::string& response,
+bool AIAgenticBridge::CallOllamaAPI(const std::string& prompt, std::string& response,
     std::shared_ptr<std::atomic<bool>> cancelFlag) {
     HttpScope scope;
     scope.hSession = WinHttpOpen(L"RawrXD-IDE/1.0",

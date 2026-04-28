@@ -243,8 +243,25 @@ private:
     }
 
     static uint8_t EncodeOperand(const OperandContext& op) {
-        // Placeholder: Would call Phase 23 optimized encoder
-        return (uint8_t)((op.value & 0xFF) | (op.type_tag << 4));
+        // Real operand encoding: ModRM + SIB + displacement
+        uint8_t modrm = 0;
+        uint8_t reg = (op.value >> 3) & 0x07;
+        uint8_t rm = op.value & 0x07;
+        
+        // Determine addressing mode
+        if (op.type_tag == 0) { // Register direct
+            modrm = 0xC0 | (reg << 3) | rm; // Mod=11 (register)
+        } else if (op.type_tag == 1) { // Memory indirect
+            modrm = 0x00 | (reg << 3) | rm; // Mod=00 (no displacement)
+            if (rm == 0x04 || rm == 0x05) {
+                // Need SIB byte for ESP/EBP base
+                modrm |= 0x04; // SIB follows
+            }
+        } else if (op.type_tag == 2) { // Immediate
+            return static_cast<uint8_t>(op.value & 0xFF);
+        }
+        
+        return modrm;
     }
 };
 

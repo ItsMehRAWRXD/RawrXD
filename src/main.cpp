@@ -1,70 +1,250 @@
+/**
+ * RawrXD IDE - Main Entry Point
+ * 
+ * Fully integrated with Native AI Integration layer for both CLI and GUI modes.
+ * Features: LLM chat, code completion, semantic search, tool execution, agent planning.
+ */
+
 #include "ide_engine.hpp"
+#include "native_ai_integration.hpp"
 #include <iostream>
 #include <windows.h>
+#include <string>
+#include <vector>
 
 using namespace RawrXD;
 
-// Console mode for testing without UI
+// ============================================================================
+// Enhanced Console Mode with Full AI Integration
+// ============================================================================
 void RunConsoleMode(IDEEngine& engine) {
-    std::cout << "RawrXD IDE - Console Mode\n";
-    std::cout << "Status: " << engine.GetStatusMessage() << "\n\n";
+    rawrxd::CLIIntegration cli;
+    
+    // Initialize AI integration
+    rawrxd::AIConfig aiConfig;
+    aiConfig.llmEndpoint = "127.0.0.1";
+    aiConfig.llmPort = 11434;
+    aiConfig.serverPort = 3001;
+    aiConfig.enableServer = true;
+    aiConfig.enableTools = true;
+    aiConfig.enableSearch = true;
+    aiConfig.enableCompletion = true;
+    aiConfig.defaultModel = "codellama";
+    aiConfig.workspacePath = ".";
+    
+    if (!cli.initialize(aiConfig)) {
+        std::cerr << "Failed to initialize AI integration\n";
+        return;
+    }
+    
+    // Start AI server for external clients
+    rawrxd::NativeAIIntegration::Instance().startServer();
+    
+    std::cout << "\n";
+    std::cout << "╔══════════════════════════════════════════════════════════════════════╗\n";
+    std::cout << "║              RawrXD IDE - Console Mode (AI Integrated)               ║\n";
+    std::cout << "╠══════════════════════════════════════════════════════════════════════╣\n";
+    std::cout << "║  IDE Status: " << engine.GetStatusMessage() << "\n";
+    std::cout << "║  AI Server: Port " << aiConfig.serverPort << "\n";
+    std::cout << "╚══════════════════════════════════════════════════════════════════════╝\n\n";
     
     std::string command;
     while (true) {
         std::cout << "> ";
         std::getline(std::cin, command);
         
+        if (command.empty()) continue;
+        
         if (command == "quit" || command == "exit") {
             break;
         } else if (command == "status") {
-            std::cout << "State: " << engine.GetStatusMessage() << "\n";
-            std::cout << "AI Available: " << (engine.IsAIAvailable() ? "Yes" : "No") << "\n";
+            std::cout << "\n=== IDE Status ===\n";
+            std::cout << "  State: " << engine.GetStatusMessage() << "\n";
+            std::cout << "  AI Available: " << (engine.IsAIAvailable() ? "Yes" : "No") << "\n";
+            auto docs = engine.GetOpenDocuments();
+            std::cout << "  Open Documents: " << docs.size() << "\n";
+            cli.cmdStatus();
         } else if (command.substr(0, 4) == "open") {
             std::string path = command.substr(5);
             auto doc = engine.OpenDocument(path);
             std::cout << "Opened: " << doc.path << " (ID: " << doc.id << ")\n";
+            
+            // Index file for AI
+            rawrxd::NativeAIIntegration::Instance().indexWorkspace();
         } else if (command == "list") {
             auto docs = engine.GetOpenDocuments();
             for (const auto& doc : docs) {
                 std::cout << "  [" << doc.id << "] " << doc.path 
                           << (doc.isDirty ? " [modified]" : "") << "\n";
             }
-        } else if (command.substr(0, 4) == "chat") {
-            std::string msg = command.substr(5);
-            engine.RequestAIChat(msg);
-            std::cout << "Sent to AI\n";
+        } else if (command.substr(0, 5) == "/chat") {
+            std::string msg = command.substr(6);
+            cli.cmdChat(msg);
+        } else if (command.substr(0, 8) == "/search ") {
+            std::string query = command.substr(8);
+            cli.cmdSearch(query);
+        } else if (command.substr(0, 6) == "/tool ") {
+            std::string toolName = command.substr(6);
+            cli.cmdTool(toolName, {});
+        } else if (command == "/models") {
+            cli.cmdModel("list", "");
+        } else if (command == "/tools") {
+            cli.cmdTool("", {});
+        } else if (command == "/status") {
+            cli.cmdStatus();
+        } else if (command == "/help") {
+            cli.printHelp();
         } else if (command == "help") {
-            std::cout << "Commands:\n";
+            std::cout << "\nIDE Commands:\n";
             std::cout << "  open <path>  - Open document\n";
             std::cout << "  list         - List open documents\n";
-            std::cout << "  chat <msg>   - Send chat to AI\n";
             std::cout << "  status       - Show IDE status\n";
-            std::cout << "  quit         - Exit\n";
+            std::cout << "  quit         - Exit\n\n";
+            std::cout << "AI Commands (prefix with /):\n";
+            std::cout << "  /chat <msg>   - Chat with AI\n";
+            std::cout << "  /search <q>   - Search codebase\n";
+            std::cout << "  /tool <name>  - Execute tool\n";
+            std::cout << "  /models       - List LLM models\n";
+            std::cout << "  /tools        - List available tools\n";
+            std::cout << "  /status       - AI system status\n";
+            std::cout << "  /help         - Full AI help\n";
         } else {
-            std::cout << "Unknown command. Type 'help' for list.\n";
+            // Default: treat as chat message
+            cli.cmdChat(command);
         }
     }
+    
+    // Cleanup
+    rawrxd::NativeAIIntegration::Instance().stopServer();
+    rawrxd::NativeAIIntegration::Instance().shutdown();
 }
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, 
-                   LPSTR lpCmdLine, int nCmdShow) {
+// ============================================================================
+// GUI Mode Entry Point
+// ============================================================================
+int RunGUIMode(HINSTANCE hInstance, IDEEngine& engine) {
+    // Initialize AI for GUI
+    rawrxd::AIConfig aiConfig;
+    aiConfig.llmEndpoint = "127.0.0.1";
+    aiConfig.llmPort = 11434;
+    aiConfig.serverPort = 3001;
+    aiConfig.enableServer = true;
+    aiConfig.enableTools = true;
+    aiConfig.enableSearch = true;
+    aiConfig.enableCompletion = true;
+    aiConfig.defaultModel = "codellama";
     
-    // Check for console mode
-    bool consoleMode = (strstr(lpCmdLine, "--console") != nullptr);
+    rawrxd::GUIIntegration guiAI;
+    if (!guiAI.initialize(aiConfig, NULL)) {
+        std::cerr << "Warning: AI integration initialization failed\n";
+    }
     
+    // Start AI server
+    rawrxd::NativeAIIntegration::Instance().startServer();
+    
+    // TODO: Initialize Win32 GUI window
+    // For now, show message and wait
+    AllocConsole();
+    std::cout << "RawrXD IDE v1.0 - GUI Mode\n";
+    std::cout << "AI Server running on port " << aiConfig.serverPort << "\n";
+    std::cout << "GUI window initialization pending...\n";
+    std::cout << "Press Enter to exit.\n";
+    std::cin.get();
+    
+    // Cleanup
+    rawrxd::NativeAIIntegration::Instance().stopServer();
+    rawrxd::NativeAIIntegration::Instance().shutdown();
+    
+    return 0;
+}
+
+// ============================================================================
+// Main Entry Point
+// ============================================================================
+int main(int argc, char* argv[])
+{
+    // Parse command line arguments
+    bool consoleMode = false;
+    bool startServer = false;
+    int serverPort = 3001;
+    std::string model;
+    
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg == "--console" || arg == "-c") {
+            consoleMode = true;
+        } else if (arg == "--server" || arg == "-s") {
+            startServer = true;
+        } else if (arg == "--port" && i + 1 < argc) {
+            serverPort = std::stoi(argv[++i]);
+        } else if (arg == "--model" && i + 1 < argc) {
+            model = argv[++i];
+        } else if (arg == "--help" || arg == "-h") {
+            std::cout << "RawrXD IDE v1.0 - Native AI IDE\n\n";
+            std::cout << "Usage: RawrXD [options]\n\n";
+            std::cout << "Options:\n";
+            std::cout << "  --console, -c      Run in console mode\n";
+            std::cout << "  --server, -s       Start AI server only\n";
+            std::cout << "  --port <n>         AI server port (default: 3001)\n";
+            std::cout << "  --model <name>     Default LLM model\n";
+            std::cout << "  --help, -h         Show this help\n";
+            return 0;
+        }
+    }
+    
+    // Server-only mode
+    if (startServer) {
+        rawrxd::AIConfig aiConfig;
+        aiConfig.serverPort = serverPort;
+        aiConfig.enableServer = true;
+        aiConfig.enableTools = true;
+        aiConfig.enableSearch = true;
+        aiConfig.enableCompletion = true;
+        if (!model.empty()) aiConfig.defaultModel = model;
+        
+        auto& ai = rawrxd::NativeAIIntegration::Instance();
+        ai.setLogCallback([](const std::string& msg) {
+            std::cout << msg << std::endl;
+        });
+        
+        if (!ai.initialize(aiConfig)) {
+            std::cerr << "Failed to initialize AI server\n";
+            return 1;
+        }
+        
+        if (!ai.startServer()) {
+            std::cerr << "Failed to start AI server on port " << serverPort << "\n";
+            return 1;
+        }
+        
+        std::cout << "RawrXD AI Server running on port " << serverPort << "\n";
+        std::cout << "Press Ctrl+C to stop\n";
+        
+        // Wait forever
+        while (ai.isServerRunning()) {
+            Sleep(1000);
+        }
+        
+        ai.shutdown();
+        return 0;
+    }
+    
+    // Initialize IDE engine
     IDEEngine& engine = IDEEngine::Instance();
     
     IDEConfig config;
     config.theme = "dark";
     config.fontSize = 14;
     config.enableAI = true;
-    config.nativeEndpoint = "http://localhost:11435";
-    config.defaultModel = "codellama";
+    config.ollamaEndpoint = "http://localhost:11434";
+    config.defaultModel = model.empty() ? "codellama" : model;
     
     if (!engine.Initialize(config)) {
         MessageBoxA(NULL, "Failed to initialize IDE engine", "RawrXD Error", MB_OK);
         return 1;
     }
+    
+    int result = 0;
     
     if (consoleMode) {
         AllocConsole();
@@ -76,16 +256,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
         
         FreeConsole();
     } else {
-        // GUI mode would initialize window here
-        // For now, fallback to console
-        AllocConsole();
-        std::cout << "RawrXD IDE v1.0 - GUI mode placeholder\n";
-        std::cout << "Use --console flag for interactive mode\n";
-        system("pause");
+        result = RunGUIMode(GetModuleHandle(NULL), engine);
     }
     
     engine.Shutdown();
-    return 0;
+    return result;
 }
 
 #if 0
@@ -101,14 +276,18 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
         else if (arg == "--max-mode")
         {
             // Enable maximum performance mode
+            fprintf(stderr, "[RawrXD] Maximum performance mode enabled\n");
+            SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
         }
         else if (arg == "--no-refusal")
         {
             // Enable direct-response mode
+            fprintf(stderr, "[RawrXD] Direct-response mode enabled\n");
         }
         else if (arg == "--bypass-all")
         {
             // Enable all bypasses
+            fprintf(stderr, "[RawrXD] All bypasses enabled\n");
         }
         else if (arg == "--no-http")
         {
@@ -1898,6 +2077,7 @@ REPL Commands (chat + agentic — same as Win32 IDE):
             else if (dispatchProfileBangCommand(input))
             {
                 // Profile command handled via shared feature dispatcher hotpatch path.
+                fprintf(stderr, "[RawrXD] Profile command dispatched\n");
             }
             // ── Phase 20: Model Hotpatcher ! Commands ──
             else if (input.substr(0, 12) == "!model_load ")

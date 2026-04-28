@@ -72,6 +72,31 @@ function Write-Log {
     Add-Content -Path $script:LogFile -Value $logEntry -ErrorAction SilentlyContinue
 }
 
+function Merge-Hashtable {
+    param(
+        [hashtable]$Base,
+        [hashtable]$Defaults
+    )
+
+    foreach ($key in $Defaults.Keys) {
+        $defaultValue = $Defaults[$key]
+        if (-not $Base.ContainsKey($key) -or $null -eq $Base[$key]) {
+            $Base[$key] = $defaultValue
+            continue
+        }
+
+        if ($Base[$key] -is [System.Collections.IDictionary] -and $defaultValue -is [hashtable]) {
+            $nested = @{}
+            foreach ($entry in $Base[$key].GetEnumerator()) {
+                $nested[$entry.Key] = $entry.Value
+            }
+            $Base[$key] = Merge-Hashtable -Base $nested -Defaults $defaultValue
+        }
+    }
+
+    return $Base
+}
+
 function Invoke-Phase {
     param(
         [int]$Number,
@@ -133,6 +158,23 @@ function Show-Banner {
     Write-Host ""
 }
 
+function Get-LaunchTargets {
+    $candidates = @(
+        @{ Label = "bin-turnkey\\RawrXD-Win32IDE.exe"; Path = Join-Path $script:ProjectRoot "bin-turnkey\RawrXD-Win32IDE.exe" },
+        @{ Label = "build-turnkey\\bin\\RawrXD-Win32IDE.exe"; Path = Join-Path $script:ProjectRoot "build-turnkey\bin\RawrXD-Win32IDE.exe" },
+        @{ Label = "build-ninja\\bin\\RawrXD-Win32IDE.exe"; Path = Join-Path $script:ProjectRoot "build-ninja\bin\RawrXD-Win32IDE.exe" }
+    )
+
+    $targets = @()
+    foreach ($candidate in $candidates) {
+        if (Test-Path $candidate.Path) {
+            $targets += $candidate.Label
+        }
+    }
+
+    return $targets
+}
+
 function Show-Prerequisites {
     Write-Host "Prerequisites Check:" -ForegroundColor Cyan
     Write-Host ""
@@ -190,6 +232,7 @@ $phase2 = {
         LogPath = "$env:TEMP\rawrxd-phase2.log"
     }
     if ($Clean) { $args.Clean = $true }
+    if ($OutputPath) { $args.OutputPath = $OutputPath }
     
     & $scriptPath @args
     if ($LASTEXITCODE -ne $null -and $LASTEXITCODE -ne 0) {
@@ -243,13 +286,11 @@ $phase3 = {
 $phase4 = {
     $configPath = Join-Path $script:ProjectRoot "rawrxd.config.json"
     
-    # Check if config exists
-    if (Test-Path $configPath) {
-        Write-Host "  Configuration exists: $configPath" -ForegroundColor Green
-        return $true
+    $modelsDir = Join-Path $script:ProjectRoot "models"
+    if (-not (Test-Path $modelsDir)) {
+        New-Item -ItemType Directory -Path $modelsDir -Force | Out-Null
     }
-    
-    # Create default config
+
     $defaultConfig = @{
         model = @{
             path = "models"
@@ -273,14 +314,57 @@ $phase4 = {
     }
     
     # Find any downloaded model
-    $modelsDir = Join-Path $script:ProjectRoot "models"
-    $downloadedModel = Get-ChildItem $modelsDir -Filter "*.gguf" | Select-Object -First 1
+    $downloadedModel = Get-ChildItem $modelsDir -Filter "*.gguf" -ErrorAction SilentlyContinue | Select-Object -First 1
     if ($downloadedModel) {
         $defaultConfig.model.default_model = $downloadedModel.Name
     }
+
+    $configData = @{}
+    if (Test-Path $configPath) {
+        try {
+            $existingConfig = Get-Content $configPath -Raw | ConvertFrom-Json -AsHashtable -ErrorAction Stop
+            if ($existingConfig) {
+                $configData = $existingConfig
+            }
+            Write-Host "  Updating existing configuration: $configPath" -ForegroundColor Green
+        }
+        catch {
+            Write-Host "  Existing configuration is invalid JSON, rebuilding defaults" -ForegroundColor Yellow
+        }
+    }
+
+    if ($configData.ContainsKey("theme") -and -not $configData.ContainsKey("ui")) {
+        $fontName = "Consolas"
+        $fontSize = 12
+        if ($configData.ContainsKey("editor") -and $configData.editor -is [System.Collections.IDictionary]) {
+            if ($configData.editor.ContainsKey("fontFamily") -and $configData.editor.fontFamily) {
+                $fontName = $configData.editor.fontFamily
+            }
+            if ($configData.editor.ContainsKey("fontSize") -and $configData.editor.fontSize) {
+                $fontSize = $configData.editor.fontSize
+            }
+        }
+
+        $themeName = "dark"
+        if ($configData.theme -is [System.Collections.IDictionary] -and $configData.theme.ContainsKey("name") -and $configData.theme.name) {
+            $themeName = $configData.theme.name
+        }
+
+        $configData.ui = @{
+            theme = $themeName
+            font = $fontName
+            font_size = $fontSize
+        }
+    }
+
+    $configData = Merge-Hashtable -Base $configData -Defaults $defaultConfig
+
+    if (($configData.model.default_model -eq "") -and $configData.ContainsKey("native") -and $configData.native -is [System.Collections.IDictionary] -and $configData.native.ContainsKey("model") -and $configData.native.model) {
+        $configData.model.default_model = $configData.native.model
+    }
     
-    $defaultConfig | ConvertTo-Json -Depth 3 | Out-File $configPath
-    Write-Host "  ✓ Created default configuration" -ForegroundColor Green
+    $configData | ConvertTo-Json -Depth 6 | Out-File $configPath
+    Write-Host "  ✓ Configuration normalized for turnkey deployment" -ForegroundColor Green
     
     return $true
 }
@@ -343,7 +427,12 @@ Write-Host "                    DEPLOYMENT SUMMARY                          " -F
 Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Cyan
 Write-Host ""
 
-foreach ($phase in $script:PhaseResults) {
+$finalPhases = $script:PhaseResults |
+    Group-Object Phase |
+    ForEach-Object { $_.Group[-1] } |
+    Sort-Object Phase
+
+foreach ($phase in $finalPhases) {
     $color = switch ($phase.Status) {
         "SUCCESS" { "Green" }
         "FAILED" { "Red" }
@@ -364,6 +453,10 @@ Write-Host "Duration: $($duration.ToString())" -ForegroundColor White
 Write-Host "Log file: $LogFile" -ForegroundColor Gray
 
 if ($success) {
+    $launchTargets = Get-LaunchTargets
+    $launchLine1 = if ($launchTargets.Count -gt 0) { $launchTargets[0] } else { "build-ninja\\bin\\RawrXD-Win32IDE.exe" }
+    $launchLine2 = if ($launchTargets.Count -gt 1) { $launchTargets[1] } else { $null }
+
     Write-Host ""
     Write-Host "╔═══════════════════════════════════════════════════════════════╗" -ForegroundColor Green
     Write-Host "║                                                               ║" -ForegroundColor Green
@@ -371,11 +464,13 @@ if ($success) {
     Write-Host "║                                                               ║" -ForegroundColor Green
     Write-Host "║   RawrXD IDE is ready to use!                                 ║" -ForegroundColor Green
     Write-Host "║                                                               ║" -ForegroundColor Green
-    Write-Host "║   Next steps:                                                 ║" -ForegroundColor Green
-    Write-Host "║   1. Launch: .\bin-turnkey\RawrXD-Win32IDE.exe               ║" -ForegroundColor Green
-    Write-Host "║   2. Or run: .\scripts\turnkey\Launch-RawrXD.ps1               ║" -ForegroundColor Green
-    Write-Host "║                                                               ║" -ForegroundColor Green
     Write-Host "╚═══════════════════════════════════════════════════════════════╝" -ForegroundColor Green
+    Write-Host "  Launch: $launchLine1" -ForegroundColor Green
+    if ($launchLine2) {
+        Write-Host "  Alternate: $launchLine2" -ForegroundColor Green
+    } else {
+        Write-Host "  Re-run: .\Turnkey-Deploy.ps1 -SkipEnvironment" -ForegroundColor Green
+    }
     exit 0
 } else {
     Write-Host ""

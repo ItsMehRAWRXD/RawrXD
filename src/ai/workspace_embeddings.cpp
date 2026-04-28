@@ -24,6 +24,7 @@
 #include <random>
 #include <chrono>
 #include <functional>
+#include <iostream>
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -46,9 +47,8 @@ bool CanUseNativeVectorKernel(const std::vector<float>& lhs, const std::vector<f
     static const int simdTier = VecIdx_CheckCPU();
     return simdTier >= 2;
 #else
-    (void)lhs;
-    (void)rhs;
-    return false;
+    // POSIX: no native MASM kernel available; validate compatibility for portable path
+    return !lhs.empty() && lhs.size() == rhs.size() && lhs.size() % 4 == 0;
 #endif
 }
 
@@ -233,7 +233,11 @@ public:
 
                 count += indexFile(pathStr);
             }
-        } catch (...) {}
+        } catch (const std::exception& e) {
+            std::cerr << "[ERROR] WorkspaceEmbeddings directory scan exception: " << e.what() << std::endl;
+        } catch (...) {
+            std::cerr << "[ERROR] WorkspaceEmbeddings directory scan unknown exception" << std::endl;
+        }
         return count;
     }
 

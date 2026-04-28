@@ -78,10 +78,72 @@ nlohmann::json SovereignREBridge::RunHeuristicScan(uintptr_t targetBase, size_t 
     result["scanner"] = "Sovereign_V2_Heuristics";
     result["target_address"] = targetBase;
     
-    // Placeholder for actual heuristic logic which would normally 
-    // be driven by the agent's observation of register state or memory patterns.
-    result["status"] = "Baseline scan complete. No critical violations detected in segment.";
-    result["entropy_score"] = 0.45; 
+    // Real heuristic scan: analyze memory segment for anomalies
+    if (targetBase == 0 || range == 0) {
+        result["status"] = "Invalid parameters: base address or range is zero";
+        result["entropy_score"] = 0.0;
+        result["anomalies"] = nlohmann::json::array();
+        return result;
+    }
+    
+    // Calculate Shannon entropy of the memory range
+    const uint8_t* data = reinterpret_cast<const uint8_t*>(targetBase);
+    size_t freq[256] = {};
+    size_t validBytes = 0;
+    
+    for (size_t i = 0; i < range; ++i) {
+        try {
+            uint8_t byte = data[i];
+            freq[byte]++;
+            validBytes++;
+        } catch (...) {
+            // Memory access violation - stop scanning
+            break;
+        }
+    }
+    
+    if (validBytes == 0) {
+        result["status"] = "Memory access denied - could not read target range";
+        result["entropy_score"] = 0.0;
+        result["anomalies"] = nlohmann::json::array();
+        return result;
+    }
+    
+    double entropy = 0.0;
+    for (int i = 0; i < 256; ++i) {
+        if (freq[i] > 0) {
+            double p = static_cast<double>(freq[i]) / validBytes;
+            entropy -= p * std::log2(p);
+        }
+    }
+    
+    // Normalize entropy to 0-1 range (max entropy for bytes is 8)
+    double normalizedEntropy = entropy / 8.0;
+    
+    // Detect anomalies: high entropy = encrypted/packed, low entropy = nulls/code
+    nlohmann::json anomalies = nlohmann::json::array();
+    
+    if (normalizedEntropy > 0.95) {
+        anomalies.push_back({{"type", "high_entropy"}, {"description", "Possible encrypted or packed data"}, {"severity", "medium"}});
+    } else if (normalizedEntropy < 0.1) {
+        anomalies.push_back({{"type", "low_entropy"}, {"description", "Large block of uniform data (nulls or padding)"}, {"severity", "low"}});
+    }
+    
+    // Check for common shellcode signatures
+    if (validBytes >= 4) {
+        for (size_t i = 0; i < validBytes - 4; ++i) {
+            // Check for NOP sled (0x90)
+            if (data[i] == 0x90 && data[i+1] == 0x90 && data[i+2] == 0x90) {
+                anomalies.push_back({{"type", "nop_sled"}, {"offset", i}, {"description", "NOP sled detected - possible shellcode"}, {"severity", "high"}});
+                break;
+            }
+        }
+    }
+    
+    result["status"] = "Heuristic scan complete. Analyzed " + std::to_string(validBytes) + " bytes.";
+    result["entropy_score"] = normalizedEntropy;
+    result["anomalies"] = anomalies;
+    result["bytes_scanned"] = validBytes;
     
     return result;
 }

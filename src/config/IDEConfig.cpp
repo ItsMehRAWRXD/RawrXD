@@ -141,42 +141,49 @@ bool IDEConfig::loadFromFile(const std::string& configPath)
         content.assign(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
         nlohmann::json json = nlohmann::json::parse(content);
 
-        // Flatten JSON into key-value pairs using dot notation
-        std::function<void(const std::string&, nlohmann::json)> flatten;
-        flatten = [&](const std::string& prefix, nlohmann::json j)
+        // Flatten JSON into key-value pairs using dot notation.
+        // Walk object_t directly (no json iterator proxy recursion), avoiding debug-iterator mismatches.
+        std::vector<std::pair<std::string, nlohmann::json>> work;
+        work.emplace_back("", json);
+
+        while (!work.empty())
         {
-            if (j.is_object())
+            auto current = work.back();
+            work.pop_back();
+
+            const std::string& prefix = current.first;
+            const nlohmann::json& node = current.second;
+
+            if (node.is_object())
             {
-                for (auto it = j.begin(); it != j.end(); ++it)
+                for (auto it = node.begin(); it != node.end(); ++it)
                 {
-                    std::string key = it.key();
-                    nlohmann::json value = it.value();
+                    const std::string key = it.key();
+                    const nlohmann::json value = it.value();
                     std::string fullKey = prefix.empty() ? key : prefix + "." + key;
-                    flatten(fullKey, value);
+                    work.emplace_back(std::move(fullKey), value);
                 }
             }
-            else if (j.is_string())
+            else if (node.is_string())
             {
-                m_values[prefix] = j.get<std::string>();
+                m_values[prefix] = node.get<std::string>();
             }
-            else if (j.is_boolean())
+            else if (node.is_boolean())
             {
-                m_values[prefix] = j.get<bool>() ? "true" : "false";
+                m_values[prefix] = node.get<bool>() ? "true" : "false";
             }
-            else if (j.is_number())
+            else if (node.is_number())
             {
-                if (j.is_number_integer())
+                if (node.is_number_integer())
                 {
-                    m_values[prefix] = std::to_string(j.get<int64_t>());
+                    m_values[prefix] = std::to_string(node.get<int64_t>());
                 }
                 else
                 {
-                    m_values[prefix] = std::to_string(j.get<double>());
+                    m_values[prefix] = std::to_string(node.get<double>());
                 }
             }
-        };
-
-        flatten("", json);
+        }
         LOG_INFO(std::string("[IDEConfig] Loaded ") + std::to_string(m_values.size()) +
                  " config keys from: " + configPath);
         return true;

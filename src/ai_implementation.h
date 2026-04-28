@@ -36,7 +36,9 @@ struct LLMConfig {
     std::string endpoint = "http://localhost:11435";
     std::string modelName = "llama2";
     std::string apiKey;
-    std::string localBackendMode = "auto-with-verified-fallback"; // "cpu-only", "gpu-only", "auto-with-verified-fallback"
+    // GPU inference is mandatory across IDE/CLI/Model. CPU-only and verified-fallback
+    // modes are intentionally rejected at runtime; this default cannot be toggled off.
+    std::string localBackendMode = "gpu-only"; // GPU-ONLY: enforced lane, no CPU fallback
     bool allowRemoteFallback = false;
     int maxTokens = 2048;
     float temperature = 0.7f;

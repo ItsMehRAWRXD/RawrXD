@@ -3,13 +3,83 @@
 
 #include "ExtensionAPI_VSCode.h"
 #include "ExtensionSandboxManager.h"
+#include "ExtensionHost.h"
+#include "TitanIPC.h"
 #include "IDELogger.h"
 #include <algorithm>
+#include <filesystem>
+#include <fstream>
+#include <regex>
 #include <sstream>
 #include <windows.h>
 #include <Shlobj.h>
+#include <shellapi.h>
 
 #pragma comment(lib, "Shell32.lib")
+
+namespace {
+
+    std::string normalizePathForMatch(std::string path)
+    {
+        std::transform(path.begin(), path.end(), path.begin(), [](unsigned char ch) {
+            if (ch == '\\') {
+                return '/';
+            }
+            return static_cast<char>(std::tolower(ch));
+        });
+        return path;
+    }
+
+    std::regex globToRegex(const std::string& pattern)
+    {
+        std::string regexText;
+        regexText.reserve(pattern.size() * 2);
+        regexText += '^';
+
+        const std::string normalized = normalizePathForMatch(pattern);
+        for (size_t index = 0; index < normalized.size(); ++index) {
+            const char ch = normalized[index];
+            if (ch == '*') {
+                const bool isDoubleStar = (index + 1 < normalized.size() && normalized[index + 1] == '*');
+                if (isDoubleStar) {
+                    regexText += ".*";
+                    ++index;
+                } else {
+                    regexText += "[^/]*";
+                }
+                continue;
+            }
+
+            if (ch == '?') {
+                regexText += '.';
+                continue;
+            }
+
+            if (std::string(".^$|()[]{}+\\").find(ch) != std::string::npos) {
+                regexText += '\\';
+            }
+            regexText += ch;
+        }
+
+        regexText += '$';
+        return std::regex(regexText, std::regex::icase);
+    }
+
+    bool matchesGlob(const std::string& value, const std::string& pattern)
+    {
+        if (pattern.empty()) {
+            return true;
+        }
+
+        const std::string normalizedPattern = normalizePathForMatch(pattern);
+        if (normalizedPattern == "*" || normalizedPattern == "**" || normalizedPattern == "**/*") {
+            return true;
+        }
+
+        return std::regex_match(normalizePathForMatch(value), globToRegex(normalizedPattern));
+    }
+
+} // namespace
 
 namespace RawrXD::Extensions::VSCodeAPI {
 
@@ -63,7 +133,7 @@ namespace RawrXD::Extensions::VSCodeAPI {
 
     void Progress::Report(int percentage, const std::string& message)
     {
-        IDELogger::Get().Info("Progress: " + std::to_string(percentage) + "% - " + message);
+        LOG_INFO("Progress: " + std::to_string(percentage) + "% - " + message);
     }
 
     // ============================================================================
@@ -83,7 +153,16 @@ namespace RawrXD::Extensions::VSCodeAPI {
             return it->second;
         }
 
-        // Try to read file content
+        // SANDBOX CHECK: Verify read access
+        // Note: In a real multi-tenant host, we would retrieve the context for the current extension.
+        // For Day 9, we use a placeholder check that will bewired to the active IPC context in Phase 3.
+        ExtensionSecurityContext dummyContext; 
+        if (!FilesystemAccessControl::CheckReadAccess(dummyContext, fileName)) {
+            LOG_WARNING("Sandbox Blocked: OpenTextDocument unauthorized for " + fileName);
+            return nullptr;
+        }
+
+        // Read file content (fail-soft; empty doc if unreadable)
         auto doc = std::make_shared<TextDocument>();
         doc->m_fileName = fileName;
         doc->m_languageId = "plaintext";
@@ -103,8 +182,20 @@ namespace RawrXD::Extensions::VSCodeAPI {
             else if (ext == "json") doc->m_languageId = "json";
         }
 
+        try {
+            std::ifstream f(fileName, std::ios::binary);
+            if (f.is_open()) {
+                doc->m_text.assign(std::istreambuf_iterator<char>(f), std::istreambuf_iterator<char>());
+                doc->m_isDirty = false;
+            } else {
+                doc->m_text.clear();
+            }
+        } catch (...) {
+            doc->m_text.clear();
+        }
+
         m_openDocuments[fileName] = doc;
-        IDELogger::Get().Info("Opened document: " + fileName + " (" + doc->m_languageId + ")");
+        LOG_INFO("Opened document: " + fileName + " (" + doc->m_languageId + ")");
 
         return doc;
     }
@@ -113,9 +204,54 @@ namespace RawrXD::Extensions::VSCodeAPI {
     {
         std::vector<std::string> results;
 
-        // In production, would use Windows file APIs to search
-        // For now, return empty results
-        IDELogger::Get().Info("Find files: " + include + (exclude.empty() ? "" : " (exclude: " + exclude + ")"));
+        auto folders = GetWorkspaceFolders();
+        for (const auto& folder : folders) {
+            std::filesystem::path root(folder.uri.GetPath());
+            std::error_code error;
+            if (!std::filesystem::exists(root, error)) {
+                continue;
+            }
+
+            std::filesystem::recursive_directory_iterator it(
+                root,
+                std::filesystem::directory_options::skip_permission_denied,
+                error);
+            std::filesystem::recursive_directory_iterator end;
+
+            while (it != end) {
+                if (error) {
+                    error.clear();
+                    it.increment(error);
+                    continue;
+                }
+
+                const auto& entry = *it;
+                if (entry.is_regular_file(error)) {
+                    const std::filesystem::path fullPath = entry.path();
+                    std::string relativePath;
+
+                    std::filesystem::path relative = std::filesystem::relative(fullPath, root, error);
+                    if (!error) {
+                        relativePath = relative.generic_string();
+                    } else {
+                        error.clear();
+                        relativePath = fullPath.filename().generic_string();
+                    }
+
+                    if (matchesGlob(relativePath, include) && !matchesGlob(relativePath, exclude)) {
+                        results.push_back(fullPath.string());
+                    }
+                }
+
+                it.increment(error);
+            }
+        }
+
+        std::sort(results.begin(), results.end());
+        results.erase(std::unique(results.begin(), results.end()), results.end());
+
+        LOG_INFO("Find files: " + include + (exclude.empty() ? "" : " (exclude: " + exclude + ")") +
+                 " -> " + std::to_string(results.size()) + " match(es)");
 
         return results;
     }
@@ -125,7 +261,7 @@ namespace RawrXD::Extensions::VSCodeAPI {
         for (auto& pair : m_openDocuments) {
             pair.second->m_isDirty = false;
         }
-        IDELogger::Get().Info("Saved all documents");
+        LOG_INFO("Saved all documents");
         return true;
     }
 
@@ -180,26 +316,26 @@ namespace RawrXD::Extensions::VSCodeAPI {
 
     void WindowAPI::ShowInformationMessage(const std::string& message)
     {
-        IDELogger::Get().Info("Message: " + message);
+        LOG_INFO("Message: " + message);
         MessageBoxA(nullptr, message.c_str(), "RawrXD Extension", MB_ICONINFORMATION | MB_OK);
     }
 
     void WindowAPI::ShowWarningMessage(const std::string& message)
     {
-        IDELogger::Get().Warning("Warning: " + message);
+        LOG_WARNING("Warning: " + message);
         MessageBoxA(nullptr, message.c_str(), "RawrXD Extension", MB_ICONWARNING | MB_OK);
     }
 
     void WindowAPI::ShowErrorMessage(const std::string& message)
     {
-        IDELogger::Get().Error("Error: " + message);
+        LOG_ERROR("Error: " + message);
         MessageBoxA(nullptr, message.c_str(), "RawrXD Extension", MB_ICONERROR | MB_OK);
     }
 
     void WindowAPI::ShowInputBox(const std::string& prompt, InputBoxCallback callback)
     {
         // In production, would show actual input dialog
-        IDELogger::Get().Info("Input prompt: " + prompt);
+        LOG_INFO("Input prompt: " + prompt);
         if (callback) {
             callback("user_input");
         }
@@ -210,7 +346,7 @@ namespace RawrXD::Extensions::VSCodeAPI {
         const std::string& placeHolder,
         QuickPickCallback callback)
     {
-        IDELogger::Get().Info("Quick pick with " + std::to_string(items.size()) + " items");
+        LOG_INFO("Quick pick with " + std::to_string(items.size()) + " items");
         if (callback && !items.empty()) {
             callback(items[0]);
         }
@@ -222,9 +358,9 @@ namespace RawrXD::Extensions::VSCodeAPI {
         ProgressCallback callback)
     {
         Progress progress;
-        IDELogger::Get().Info("Starting progress: " + title);
+        LOG_INFO("Starting progress: " + title);
         callback(progress);
-        IDELogger::Get().Info("Completed progress: " + title);
+        LOG_INFO("Completed progress: " + title);
     }
 
     // ============================================================================
@@ -242,7 +378,7 @@ namespace RawrXD::Extensions::VSCodeAPI {
         std::function<void()> callback)
     {
         m_commands[commandId] = callback;
-        IDELogger::Get().Info("Registered command: " + commandId);
+        LOG_INFO("Registered command: " + commandId);
     }
 
     void CommandsAPI::RegisterCommandWithArgs(
@@ -250,7 +386,7 @@ namespace RawrXD::Extensions::VSCodeAPI {
         std::function<void(const std::string& args)> callback)
     {
         m_commandsWithArgs[commandId] = callback;
-        IDELogger::Get().Info("Registered command with args: " + commandId);
+        LOG_INFO("Registered command with args: " + commandId);
     }
 
     void CommandsAPI::ExecuteCommand(const std::string& commandId)
@@ -258,9 +394,9 @@ namespace RawrXD::Extensions::VSCodeAPI {
         auto it = m_commands.find(commandId);
         if (it != m_commands.end()) {
             it->second();
-            IDELogger::Get().Info("Executed command: " + commandId);
+            LOG_INFO("Executed command: " + commandId);
         } else {
-            IDELogger::Get().Warning("Command not found: " + commandId);
+            LOG_WARNING("Command not found: " + commandId);
         }
     }
 
@@ -269,9 +405,9 @@ namespace RawrXD::Extensions::VSCodeAPI {
         auto it = m_commandsWithArgs.find(commandId);
         if (it != m_commandsWithArgs.end()) {
             it->second(args);
-            IDELogger::Get().Info("Executed command with args: " + commandId);
+            LOG_INFO("Executed command with args: " + commandId);
         } else {
-            IDELogger::Get().Warning("Command not found: " + commandId);
+            LOG_WARNING("Command not found: " + commandId);
         }
     }
 
@@ -297,12 +433,36 @@ namespace RawrXD::Extensions::VSCodeAPI {
         return instance;
     }
 
+    std::string LanguagesAPI::Predict(const std::string& prompt, const InferenceOptions& options)
+    {
+        // Day 9 Bridge: Forward to TitanProxy for host-isolated inference.
+        // This allows extensions to use RawrXD's local LLM without loading model weights
+        // into the sensitive extension process.
+        
+        std::string completion, metadata, error;
+        bool ok = TitanProxy::instance().submit(
+            prompt, 
+            options.maxTokens, 
+            options.timeoutMs, 
+            completion, 
+            metadata, 
+            error
+        );
+
+        if (!ok) {
+            LOG_ERROR("LanguagesAPI::Predict failed: " + error);
+            return "";
+        }
+
+        return completion;
+    }
+
     void LanguagesAPI::RegisterCompletionProvider(
         const std::string& language,
         std::shared_ptr<CompletionProvider> provider)
     {
         m_completionProviders[language] = provider;
-        IDELogger::Get().Info("Registered completion provider for language: " + language);
+        LOG_INFO("Registered completion provider for language: " + language);
     }
 
     void LanguagesAPI::RegisterHoverProvider(
@@ -310,7 +470,7 @@ namespace RawrXD::Extensions::VSCodeAPI {
         std::shared_ptr<HoverProvider> provider)
     {
         m_hoverProviders[language] = provider;
-        IDELogger::Get().Info("Registered hover provider for language: " + language);
+        LOG_INFO("Registered hover provider for language: " + language);
     }
 
     std::shared_ptr<DiagnosticCollection> LanguagesAPI::CreateDiagnosticCollection(
@@ -318,7 +478,7 @@ namespace RawrXD::Extensions::VSCodeAPI {
     {
         auto collection = std::make_shared<DiagnosticCollection>();
         m_diagnosticCollections[name] = collection;
-        IDELogger::Get().Info("Created diagnostic collection: " + name);
+        LOG_INFO("Created diagnostic collection: " + name);
         return collection;
     }
 
@@ -329,19 +489,19 @@ namespace RawrXD::Extensions::VSCodeAPI {
     void DiagnosticCollection::Set(const std::string& fileName, const std::vector<std::string>& diagnostics)
     {
         m_diagnostics[fileName] = diagnostics;
-        IDELogger::Get().Info("Set " + std::to_string(diagnostics.size()) + " diagnostics for: " + fileName);
+        LOG_INFO("Set " + std::to_string(diagnostics.size()) + " diagnostics for: " + fileName);
     }
 
     void DiagnosticCollection::Clear()
     {
         m_diagnostics.clear();
-        IDELogger::Get().Info("Cleared all diagnostics");
+        LOG_INFO("Cleared all diagnostics");
     }
 
     void DiagnosticCollection::Delete(const std::string& fileName)
     {
         m_diagnostics.erase(fileName);
-        IDELogger::Get().Info("Deleted diagnostics for: " + fileName);
+        LOG_INFO("Deleted diagnostics for: " + fileName);
     }
 
     // ============================================================================
@@ -388,10 +548,14 @@ namespace RawrXD::Extensions::VSCodeAPI {
 
     void EnvironmentAPI::OpenExternal(const std::string& url)
     {
-        // Validate URL through security sandbox
-        // In production, would check sandbox permissions
-        
-        IDELogger::Get().Info("Opening external URL: " + url);
+        // SANDBOX CHECK: Verify network/URL access
+        ExtensionSecurityContext dummyContext;
+        if (!NetworkAccessControl::CheckURLAccess(dummyContext, url)) {
+            LOG_WARNING("Sandbox Blocked: OpenExternal unauthorized for " + url);
+            return;
+        }
+
+        LOG_INFO("Opening external URL: " + url);
         
         // Use ShellExecute to open URL
         ShellExecuteA(nullptr, "open", url.c_str(), nullptr, nullptr, SW_SHOW);
@@ -407,7 +571,7 @@ namespace RawrXD::Extensions::VSCodeAPI {
                 SetClipboardData(CF_TEXT, hglbCopy);
             }
             CloseClipboard();
-            IDELogger::Get().Info("Copied to clipboard: " + std::to_string(text.length()) + " bytes");
+            LOG_INFO("Copied to clipboard: " + std::to_string(text.length()) + " bytes");
         }
     }
 
@@ -425,7 +589,7 @@ namespace RawrXD::Extensions::VSCodeAPI {
                 }
             }
             CloseClipboard();
-            IDELogger::Get().Info("Pasted from clipboard: " + std::to_string(result.length()) + " bytes");
+            LOG_INFO("Pasted from clipboard: " + std::to_string(result.length()) + " bytes");
         }
 
         return result;

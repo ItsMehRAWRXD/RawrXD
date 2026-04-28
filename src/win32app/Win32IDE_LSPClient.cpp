@@ -979,33 +979,68 @@ Win32IDE::LSPWorkspaceEdit Win32IDE::lspRenameSymbol(const std::string& uri, int
         for (size_t dci = 0; dci < docChanges.size(); ++dci)
         {
             const nlohmann::json& dc = docChanges[dci];
-            if (!dc.contains("textDocument") || !dc.contains("edits"))
-                continue;
-            std::string fileUri = dc["textDocument"].value("uri", "");
-            std::vector<LSPWorkspaceEdit::TextEdit> edits;
-            const auto& dcEdits = dc["edits"];
-            for (size_t ei = 0; ei < dcEdits.size(); ++ei)
+
+            // Handle TextDocumentEdit
+            if (dc.contains("textDocument") && dc.contains("edits"))
             {
-                const nlohmann::json& ej = dcEdits[ei];
-                LSPWorkspaceEdit::TextEdit te;
-                te.newText = ej.value("newText", "");
-                if (ej.contains("range"))
+                std::string fileUri = dc["textDocument"].value("uri", "");
+                std::vector<LSPWorkspaceEdit::TextEdit> edits;
+                const auto& dcEdits = dc["edits"];
+                for (size_t ei = 0; ei < dcEdits.size(); ++ei)
                 {
-                    const auto& rj = ej["range"];
-                    if (rj.contains("start"))
+                    const nlohmann::json& ej = dcEdits[ei];
+                    LSPWorkspaceEdit::TextEdit te;
+                    te.newText = ej.value("newText", "");
+                    if (ej.contains("range"))
                     {
-                        te.range.start.line = rj["start"].value("line", 0);
-                        te.range.start.character = rj["start"].value("character", 0);
+                        const auto& rj = ej["range"];
+                        if (rj.contains("start"))
+                        {
+                            te.range.start.line = rj["start"].value("line", 0);
+                            te.range.start.character = rj["start"].value("character", 0);
+                        }
+                        if (rj.contains("end"))
+                        {
+                            te.range.end.line = rj["end"].value("line", 0);
+                            te.range.end.character = rj["end"].value("character", 0);
+                        }
                     }
-                    if (rj.contains("end"))
-                    {
-                        te.range.end.line = rj["end"].value("line", 0);
-                        te.range.end.character = rj["end"].value("character", 0);
-                    }
+                    edits.push_back(te);
                 }
-                edits.push_back(te);
+                edit.changes[fileUri] = edits;
             }
-            edit.changes[fileUri] = edits;
+            // Handle Resource Operations (LSP 3.17)
+            else if (dc.contains("kind"))
+            {
+                std::string kind = dc.value("kind", "");
+                LSPWorkspaceEdit::ResourceOperation op;
+                if (kind == "create")
+                {
+                    op.type = LSPWorkspaceEdit::ResourceOperation::Type::Create;
+                    op.uri = dc.value("uri", "");
+                    op.overwrite = dc.value("options", nlohmann::json::object()).value("overwrite", false);
+                    op.ignoreIfExists = dc.value("options", nlohmann::json::object()).value("ignoreIfExists", false);
+                    edit.resourceOperations.push_back(op);
+                }
+                else if (kind == "rename")
+                {
+                    op.type = LSPWorkspaceEdit::ResourceOperation::Type::Rename;
+                    op.uri = dc.value("oldUri", "");
+                    op.newUri = dc.value("newUri", "");
+                    op.overwrite = dc.value("options", nlohmann::json::object()).value("overwrite", false);
+                    op.ignoreIfExists = dc.value("options", nlohmann::json::object()).value("ignoreIfExists", false);
+                    edit.resourceOperations.push_back(op);
+                }
+                else if (kind == "delete")
+                {
+                    op.type = LSPWorkspaceEdit::ResourceOperation::Type::Delete;
+                    op.uri = dc.value("uri", "");
+                    op.recursive = dc.value("options", nlohmann::json::object()).value("recursive", false);
+                    op.ignoreIfNotExists =
+                        dc.value("options", nlohmann::json::object()).value("ignoreIfNotExists", false);
+                    edit.resourceOperations.push_back(op);
+                }
+            }
         }
     }
 
@@ -1375,12 +1410,112 @@ void Win32IDE::displayDiagnosticsAsAnnotations(const std::string& uri)
 
 bool Win32IDE::applyWorkspaceEdit(const LSPWorkspaceEdit& edit)
 {
-    if (edit.changes.empty())
+    if (edit.changes.empty() && edit.resourceOperations.empty())
         return false;
 
     int filesChanged = 0;
     int editsApplied = 0;
+    int resourcesAffected = 0;
 
+    // 1. First handle resource operations (LSP 3.17)
+    for (const auto& op : edit.resourceOperations)
+    {
+        std::string path = uriToFilePath(op.uri);
+        std::string newPath = op.newUri.empty() ? "" : uriToFilePath(op.newUri);
+
+        switch (op.type)
+        {
+            case LSPWorkspaceEdit::ResourceOperation::Type::Create:
+            {
+                if (testPathExists(path) && !op.overwrite)
+                {
+                    if (!op.ignoreIfExists)
+                    {
+                        appendToOutput("[LSP] Create file failed: " + path + " already exists.", "General",
+                                       OutputSeverity::Warning);
+                    }
+                    continue;
+                }
+                std::ofstream ofs(path);
+                if (ofs.is_open())
+                {
+                    resourcesAffected++;
+                    appendToOutput("[LSP] Created file: " + path, "General", OutputSeverity::Info);
+                }
+                break;
+            }
+            case LSPWorkspaceEdit::ResourceOperation::Type::Rename:
+            {
+                if (!testPathExists(path))
+                {
+                    if (!op.ignoreIfExists)
+                    {
+                        appendToOutput("[LSP] Rename failed: source " + path + " does not exist.", "General",
+                                       OutputSeverity::Warning);
+                    }
+                    continue;
+                }
+                if (testPathExists(newPath) && !op.overwrite)
+                {
+                    appendToOutput("[LSP] Rename failed: target " + newPath + " already exists.", "General",
+                                   OutputSeverity::Warning);
+                    continue;
+                }
+                if (MoveFileExA(path.c_str(), newPath.c_str(),
+                                MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH))
+                {
+                    resourcesAffected++;
+                    appendToOutput("[LSP] Renamed: " + path + " -> " + newPath, "General", OutputSeverity::Info);
+                }
+                break;
+            }
+            case LSPWorkspaceEdit::ResourceOperation::Type::Delete:
+            {
+                if (!testPathExists(path))
+                {
+                    if (!op.ignoreIfNotExists)
+                    {
+                        appendToOutput("[LSP] Delete failed: " + path + " does not exist.", "General",
+                                       OutputSeverity::Warning);
+                    }
+                    continue;
+                }
+                // Check if directory
+                DWORD attr = GetFileAttributesA(path.c_str());
+                if (attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY))
+                {
+                    if (op.recursive)
+                    {
+                        // Recursive directory delete (SHFileOperation approach or simple rmdir)
+                        SHFILEOPSTRUCTA shop = {0};
+                        shop.wFunc = FO_DELETE;
+                        shop.pFrom = path.c_str();
+                        shop.fFlags = FOF_NOCONFIRMATION | FOF_SILENT | FOF_NOERRORUI;
+                        if (SHFileOperationA(&shop) == 0)
+                        {
+                            resourcesAffected++;
+                        }
+                    }
+                    else
+                    {
+                        if (RemoveDirectoryA(path.c_str()))
+                            resourcesAffected++;
+                    }
+                }
+                else
+                {
+                    if (DeleteFileA(path.c_str()))
+                    {
+                        resourcesAffected++;
+                        appendToOutput("[LSP] Deleted file: " + path, "General", OutputSeverity::Info);
+                    }
+                }
+                break;
+            }
+        }
+    }
+
+    // 2. Then handle text changes
     for (const auto& [uri, textEdits] : edit.changes)
     {
         std::string filePath = uriToFilePath(uri);
@@ -1424,15 +1559,16 @@ bool Win32IDE::applyWorkspaceEdit(const LSPWorkspaceEdit& edit)
             {
                 // Single-line edit
                 std::string& l = lines[startLine];
-                std::string before = l.substr(0, startChar);
+                std::string before = l.substr(0, std::min((int)l.size(), startChar));
                 std::string after = (endChar < (int)l.size()) ? l.substr(endChar) : "";
                 l = before + te.newText + after;
             }
             else
             {
                 // Multi-line edit
-                std::string firstLine = lines[startLine].substr(0, startChar);
-                std::string lastLine = (endChar < (int)lines[endLine].size()) ? lines[endLine].substr(endChar) : "";
+                std::string firstLine = lines[startLine].substr(0, std::min((int)lines[startLine].size(), startChar));
+                std::string lastLine =
+                    (endChar < (int)lines[endLine].size()) ? lines[endLine].substr(endChar) : "";
                 // Remove lines [startLine+1 ... endLine]
                 lines.erase(lines.begin() + startLine + 1, lines.begin() + endLine + 1);
                 lines[startLine] = firstLine + te.newText + lastLine;
@@ -1454,14 +1590,17 @@ bool Win32IDE::applyWorkspaceEdit(const LSPWorkspaceEdit& edit)
         }
     }
 
-    if (filesChanged > 0)
+    if (filesChanged > 0 || resourcesAffected > 0)
     {
-        appendToOutput("[LSP] Applied " + std::to_string(editsApplied) + " edits across " +
-                           std::to_string(filesChanged) + " file(s).",
-                       "General", OutputSeverity::Info);
+        std::string msg = "[LSP] Applied " + std::to_string(editsApplied) + " edits across " +
+                          std::to_string(filesChanged) + " file(s)";
+        if (resourcesAffected > 0)
+            msg += " and " + std::to_string(resourcesAffected) + " resource op(s)";
+        msg += ".";
+        appendToOutput(msg, "General", OutputSeverity::Info);
     }
 
-    return filesChanged > 0;
+    return filesChanged > 0 || resourcesAffected > 0;
 }
 
 Win32IDE::LSPLanguage Win32IDE::detectLanguageForFile(const std::string& filePath) const
@@ -2501,46 +2640,109 @@ void Win32IDE::cmdLSPFormatDocument()
     applyWorkspaceEdit(edit);
 }
 
-bool Win32IDE::applyWorkspaceEdit(const nlohmann::json& edit)
+bool Win32IDE::applyWorkspaceEdit(const nlohmann::json& editJson)
 {
-    if (!edit.is_object() || !edit.contains("changes") || !edit["changes"].is_object())
+    if (!editJson.is_object())
         return false;
 
     LSPWorkspaceEdit typedEdit;
-    const nlohmann::json& changes = edit["changes"];
-    for (auto it = changes.begin(); it != changes.end(); ++it)
+
+    // 1. Handle 'changes' (uri -> TextEdit[])
+    if (editJson.contains("changes") && editJson["changes"].is_object())
     {
-        const std::string uri = it.key();
-        const nlohmann::json& textEdits = it.value();
-        if (!textEdits.is_array())
-            continue;
-
-        auto& typedEdits = typedEdit.changes[uri];
-        for (const auto& textEdit : textEdits)
+        for (auto it = editJson["changes"].begin(); it != editJson["changes"].end(); ++it)
         {
-            if (!textEdit.is_object() || !textEdit.contains("range") || !textEdit.contains("newText"))
+            const std::string uri = it.key();
+            const nlohmann::json& textEdits = it.value();
+            if (!textEdits.is_array())
                 continue;
 
-            const auto& range = textEdit["range"];
-            if (!range.is_object() || !range.contains("start") || !range.contains("end"))
-                continue;
+            auto& typedEdits = typedEdit.changes[uri];
+            for (const auto& textEdit : textEdits)
+            {
+                if (!textEdit.is_object() || !textEdit.contains("range") || !textEdit.contains("newText"))
+                    continue;
 
-            const auto& start = range["start"];
-            const auto& end = range["end"];
-            if (!start.is_object() || !end.is_object())
-                continue;
+                const auto& range = textEdit["range"];
+                if (!range.is_object() || !range.contains("start") || !range.contains("end"))
+                    continue;
 
-            LSPWorkspaceEdit::TextEdit typed;
-            typed.range.start.line = start.value("line", 0);
-            typed.range.start.character = start.value("character", 0);
-            typed.range.end.line = end.value("line", 0);
-            typed.range.end.character = end.value("character", 0);
-            typed.newText = textEdit.value("newText", std::string());
-            typedEdits.push_back(std::move(typed));
+                const auto& start = range["start"];
+                const auto& end = range["end"];
+                if (!start.is_object() || !end.is_object())
+                    continue;
+
+                LSPWorkspaceEdit::TextEdit typed;
+                typed.range.start.line = start.value("line", 0);
+                typed.range.start.character = start.value("character", 0);
+                typed.range.end.line = end.value("line", 0);
+                typed.range.end.character = end.value("character", 0);
+                typed.newText = textEdit.value("newText", std::string());
+                typedEdits.push_back(std::move(typed));
+            }
         }
     }
 
-    if (typedEdit.changes.empty())
+    // 2. Handle 'documentChanges' (TextDocumentEdit[] | ResourceOperation[])
+    if (editJson.contains("documentChanges") && editJson["documentChanges"].is_array())
+    {
+        const auto& docChanges = editJson["documentChanges"];
+        for (const auto& dc : docChanges)
+        {
+            if (dc.contains("kind"))
+            {
+                // Resource Operation
+                LSPWorkspaceEdit::ResourceOperation op;
+                std::string kind = dc.value("kind", "");
+                if (kind == "create")
+                {
+                    op.type = LSPWorkspaceEdit::ResourceOperation::Type::Create;
+                    op.uri = dc.value("uri", "");
+                    op.overwrite = dc.value("options", nlohmann::json::object()).value("overwrite", false);
+                    op.ignoreIfExists = dc.value("options", nlohmann::json::object()).value("ignoreIfExists", false);
+                }
+                else if (kind == "rename")
+                {
+                    op.type = LSPWorkspaceEdit::ResourceOperation::Type::Rename;
+                    op.uri = dc.value("oldUri", "");
+                    op.newUri = dc.value("newUri", "");
+                    op.overwrite = dc.value("options", nlohmann::json::object()).value("overwrite", false);
+                }
+                else if (kind == "delete")
+                {
+                    op.type = LSPWorkspaceEdit::ResourceOperation::Type::Delete;
+                    op.uri = dc.value("uri", "");
+                    op.recursive = dc.value("options", nlohmann::json::object()).value("recursive", false);
+                    op.ignoreIfNotExists = dc.value("options", nlohmann::json::object()).value("ignoreIfNotExists", false);
+                }
+                typedEdit.resourceOperations.push_back(op);
+            }
+            else if (dc.contains("textDocument") && dc.contains("edits"))
+            {
+                // TextDocumentEdit
+                std::string uri = dc["textDocument"].value("uri", "");
+                if (dc["edits"].is_array())
+                {
+                    auto& typedEdits = typedEdit.changes[uri];
+                    for (const auto& ej : dc["edits"])
+                    {
+                        if (!ej.is_object() || !ej.contains("range") || !ej.contains("newText"))
+                            continue;
+                        const auto& range = ej["range"];
+                        LSPWorkspaceEdit::TextEdit typed;
+                        typed.range.start.line = range["start"].value("line", 0);
+                        typed.range.start.character = range["start"].value("character", 0);
+                        typed.range.end.line = range["end"].value("line", 0);
+                        typed.range.end.character = range["end"].value("character", 0);
+                        typed.newText = ej.value("newText", std::string());
+                        typedEdits.push_back(std::move(typed));
+                    }
+                }
+            }
+        }
+    }
+
+    if (typedEdit.changes.empty() && typedEdit.resourceOperations.empty())
         return false;
 
     return applyWorkspaceEdit(typedEdit);
@@ -2747,26 +2949,43 @@ static bool parseSymbolInformationJson(const nlohmann::json& sj, Win32IDE::LSPSy
     sym.detail = sj.value("detail", "");
     sym.containerName = sj.value("containerName", "");
 
-    if (!sj.contains("location") || !sj["location"].is_object())
-        return false;
-
-    const auto& lj = sj["location"];
-    sym.location.uri = lj.value("uri", "");
-    if (!lj.contains("range") || !lj["range"].is_object())
-        return !sym.name.empty() && !sym.location.uri.empty();
-
-    const auto& rj = lj["range"];
-    if (rj.contains("start"))
+    if (sj.contains("location") && sj["location"].is_object())
     {
-        sym.location.range.start.line = rj["start"].value("line", 0);
-        sym.location.range.start.character = rj["start"].value("character", 0);
+        const auto& lj = sj["location"];
+        sym.location.uri = lj.value("uri", "");
+        if (lj.contains("range") && lj["range"].is_object())
+        {
+            const auto& rj = lj["range"];
+            if (rj.contains("start"))
+            {
+                sym.location.range.start.line = rj["start"].value("line", 0);
+                sym.location.range.start.character = rj["start"].value("character", 0);
+            }
+            if (rj.contains("end"))
+            {
+                sym.location.range.end.line = rj["end"].value("line", 0);
+                sym.location.range.end.character = rj["end"].value("character", 0);
+            }
+        }
     }
-    if (rj.contains("end"))
+    // Handle DocumentSymbol (recursive/hierarchical) by picking selectionRange OR range as location
+    else if (sj.contains("selectionRange") && sj["selectionRange"].is_object())
     {
-        sym.location.range.end.line = rj["end"].value("line", 0);
-        sym.location.range.end.character = rj["end"].value("character", 0);
+        const auto& rj = sj["selectionRange"];
+        sym.location.uri = "current";  // Placeholder, often filled by caller for doc symbols
+        if (rj.contains("start"))
+        {
+            sym.location.range.start.line = rj["start"].value("line", 0);
+            sym.location.range.start.character = rj["start"].value("character", 0);
+        }
+        if (rj.contains("end"))
+        {
+            sym.location.range.end.line = rj["end"].value("line", 0);
+            sym.location.range.end.character = rj["end"].value("character", 0);
+        }
     }
-    return !sym.name.empty() && !sym.location.uri.empty();
+
+    return !sym.name.empty();
 }
 
 }  // namespace
@@ -2821,6 +3040,85 @@ std::vector<Win32IDE::LSPSymbolInfo> Win32IDE::lspWorkspaceSymbols(const std::st
 
     return symbols;
 }
+
+
+std::vector<Win32IDE::LSPInlayHint> Win32IDE::lspInlayHints(const std::string& uri, int startLine, int endLine)
+{
+    std::vector<LSPInlayHint> hints;
+    LSPLanguage lang = detectLanguageForFile(uriToFilePath(uri));
+    if (lang >= LSPLanguage::Count || m_lspStatuses[(size_t)lang].state != LSPServerState::Running)
+        return hints;
+
+    nlohmann::json params;
+    params["textDocument"]["uri"] = uri;
+    params["range"]["start"] = {{"line", startLine}, {"character", 0}};
+    params["range"]["end"] = {{"line", endLine}, {"character", 999}};
+
+    int id = sendLSPRequest(lang, "textDocument/inlayHint", params);
+    if (id < 0)
+        return hints;
+
+    nlohmann::json resp = readLSPResponse(lang, id, 3000);
+    if (!resp.contains("result") || !resp["result"].is_array())
+        return hints;
+
+    for (const auto& hj : resp["result"])
+    {
+        LSPInlayHint hint;
+        if (hj.contains("position"))
+        {
+            hint.position.line = hj["position"].value("line", 0);
+            hint.position.character = hj["position"].value("character", 0);
+        }
+
+        if (hj.contains("label"))
+        {
+            if (hj["label"].is_string())
+            {
+                hint.label = hj["label"].get<std::string>();
+            }
+            else if (hj["label"].is_array())
+            {
+                for (const auto& part : hj["label"])
+                {
+                    hint.label += part.value("value", "");
+                }
+            }
+        }
+
+        hint.kind = (hj.value("kind", 1) == 1) ? "type" : "parameter";
+        hint.tooltip = hj.value("tooltip", "");
+        hint.paddingLeft = hj.value("paddingLeft", false);
+        hint.paddingRight = hj.value("paddingRight", false);
+
+        hints.push_back(hint);
+    }
+
+    return hints;
+}
+
+
+void Win32IDE::cmdLSPInlayHints()
+{
+    if (m_currentFile.empty())
+        return;
+
+    std::string uri = filePathToUri(m_currentFile);
+    auto hints = lspInlayHints(uri, 0, 500);
+
+    std::ostringstream ss;
+    ss << "[LSP] Received " << hints.size() << " inlay hints for " << m_currentFile << "\n";
+    for (const auto& h : hints)
+    {
+        ss << "  L" << (h.position.line + 1) << ":" << h.position.character << " [" << h.kind << "] " << h.label
+           << "\n";
+    }
+    appendToOutput(ss.str(), "General", OutputSeverity::Info);
+
+    m_lastInlayHints = std::move(hints);
+    InvalidateRect(m_hwndEditor, NULL, FALSE);
+}
+
 
 void Win32IDE::cmdLSPWorkspaceSymbols()
 {

@@ -881,7 +881,6 @@ void FileRegistry::registerAllFiles() {
     registerFile("./desktop/desktop_copilot_enhanced.ps1");
     registerFile("./desktop/voice_assistant_full.ps1");
     registerFile("./desktop/voice_assistant_launcher.ps1");
-    registerFile("./desktop/voice_music_player.ps1");
     registerFile("./dist/RawrXD_Enterprise_v3.0/extras/assistance_suite/desktop_copilot_enhanced.ps1");
     registerFile("./dist/RawrXD_Enterprise_v3.0/extras/assistance_suite/voice_assistant_full.ps1");
     registerFile("./dist/RawrXD_Enterprise_v3.0/extras/assistance_suite/voice_assistant_launcher.ps1");
@@ -1087,7 +1086,6 @@ void FileRegistry::registerAllFiles() {
     registerFile("./dist/desktop_copilot_enhanced.ps1");
     registerFile("./dist/voice_assistant_full.ps1");
     registerFile("./dist/voice_assistant_launcher.ps1");
-    registerFile("./dist/voice_music_player.ps1");
     registerFile("./examples/common-ggml.cpp");
     registerFile("./examples/common-ggml.h");
     registerFile("./examples/common.cpp");
@@ -3539,5 +3537,5 @@ void FileRegistry::registerAllFiles() {
     registerFile("./wrapper/launch-macos.sh");
     registerFile("./wrapper/rawrxd-cli-local.ps1");
     registerFile("./wrapper/rawrxd-cli-local.sh");
-    s_logger.info("Registered {} files", 3533);
+    s_logger.info("Registered {} files", 3531);
 }

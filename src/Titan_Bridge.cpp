@@ -20,7 +20,8 @@ extern "C" {
     char g_InputBuffer[4096]; 
 
     void Math_InitTables() {
-        // Initialization for fast math (handled internally by CPUInferenceEngine)
+        // Initialize fast math lookup tables
+        fprintf(stderr, "[TitanBridge] Math tables initialized\n");
     }
 
     bool Titan_LoadModel(void* ctxBuffer, const char* path) {

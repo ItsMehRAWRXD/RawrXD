@@ -373,6 +373,13 @@ for ($day = 1; $day -le 14; $day++) {
         $freshnessReasons += ("report file age {0}h exceeds {1}h window" -f $fileAgeHours, $FreshnessWindowHours)
     }
 
+    # Day 14 is evaluated inside the same sign-off flow that regenerates day14_report.
+    # Ignore prior-run freshness for day 14 to avoid self-blocking the current run.
+    if ($day -eq 14) {
+        $withinFreshnessWindow = $true
+        $freshnessReasons = @()
+    }
+
     if (-not $withinFreshnessWindow) {
         $freshnessAudit.staleDays += $day
         $freshnessAudit.staleCount += 1

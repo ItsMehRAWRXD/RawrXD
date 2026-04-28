@@ -55,9 +55,15 @@ EXTERN SetFilePointerEx:PROC
 EXTERN ExitProcess:PROC
 EXTERN GetStdHandle:PROC
 EXTERN WriteConsoleA:PROC
+EXTERN OutputDebugStringA:PROC
 EXTERN lstrlenA:PROC
 EXTERN VirtualAlloc:PROC
 EXTERN VirtualFree:PROC
+EXTERN CreateFileW:PROC
+EXTERN CreateFileMappingW:PROC
+EXTERN MapViewOfFile:PROC
+EXTERN UnmapViewOfFile:PROC
+EXTERN GetFileSizeEx:PROC
 EXTERN LoadLibraryA:PROC
 EXTERN GetProcAddress:PROC
 EXTERN FreeLibrary:PROC

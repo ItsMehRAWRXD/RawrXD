@@ -473,8 +473,9 @@ extern "C" int asm_apply_memory_patch(...)
 
 #endif  // RAWRXD_SUBSYS_MODES_D_INTEGRATED
 
-#if !defined(RAWRXD_GOLD_BUILD)
-// Snapshot API: C++ fallbacks for hotpatch/shadow paths. RawrXD_Gold uses gold_asm_closure_stubs.cpp.
+#if !defined(RAWRXD_GOLD_BUILD) && !defined(RAWR_HAS_MASM)
+// Snapshot API: C++ fallbacks for hotpatch/shadow paths.
+// If MASM is available, the snapshot exports come from the MASM object pack.
 extern "C"
 {
     int asm_snapshot_capture(...)
@@ -485,6 +486,22 @@ extern "C"
     {
         return 0;
     }
+    int asm_snapshot_verify(...)
+    {
+        return 0;
+    }
+    int asm_snapshot_discard(...)
+    {
+        return 0;
+    }
+}
+#endif
+
+#if !defined(RAWRXD_GOLD_BUILD)
+// These snapshot entrypoints are referenced by hotpatch/orchestrator paths but are not always
+// present in the MASM snapshot pack. Provide harmless fallbacks.
+extern "C"
+{
     int asm_snapshot_verify(...)
     {
         return 0;

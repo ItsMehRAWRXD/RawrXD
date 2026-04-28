@@ -588,7 +588,10 @@ void AgenticCopilotBridge::onModelLoaded(const std::string& modelPath)
 
 void AgenticCopilotBridge::onEditorContentChanged()
 {
-    // Could trigger auto-analysis or inline suggestions
+    // Trigger auto-analysis or inline suggestions when editor content changes
+    if (m_autoAnalysisEnabled) {
+        requestInlineSuggestions();
+    }
 }
 
 // ========== PRODUCTION FEATURES: USER FEEDBACK ==========

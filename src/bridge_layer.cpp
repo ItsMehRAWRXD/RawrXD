@@ -11,6 +11,8 @@
 #include <stdio.h>
 #include <intrin.h>
 
+#include "titan/titan_abi.h"
+
 // Windows API forward declarations (no windows.h dependency)
 typedef void* HMODULE;
 typedef void* HWND;
@@ -45,6 +47,10 @@ extern "C" {
 #define MB_ERR_INVALID_CHARS 0x00000008
 #endif
 
+#ifndef _countof
+#define _countof(arr) (sizeof(arr) / sizeof((arr)[0]))
+#endif
+
 // Global required by ui.asm (EXTERN g_hInstance:QWORD)
 extern "C" void* g_hInstance = nullptr;
 
@@ -58,6 +64,101 @@ extern "C" unsigned long g_accumulatedSteps = 0;
 // ============================================================================
 
 static const int MAX_GHOST_LEN_CPP   = 1024;
+
+static int BuildDraftBlockGhostText(const uint32_t* tokens,
+                                    const float* confidence,
+                                    int tokenCapacity,
+                                    wchar_t* out,
+                                    int outCapacity) {
+    if (!tokens || !confidence || !out || tokenCapacity <= 0 || outCapacity <= 1) {
+        return 0;
+    }
+
+    int written = 0;
+    int emitted = 0;
+
+    for (int i = 0; i < tokenCapacity; ++i) {
+        const uint32_t tok = tokens[i];
+        const float conf = confidence[i];
+
+        // Treat zero-id and non-positive confidence as end-of-block sentinels.
+        if (tok == 0 || conf <= 0.0f) {
+            break;
+        }
+
+        wchar_t chunk[32] = {0};
+        // Keep token identity stable in the UI path until text decode wiring lands.
+        const int chunkLen = _snwprintf_s(
+            chunk,
+            _countof(chunk),
+            _TRUNCATE,
+            emitted == 0 ? L"tok_%u" : L" tok_%u",
+            tok);
+
+        if (chunkLen <= 0) {
+            continue;
+        }
+
+        if (written + chunkLen >= outCapacity - 1) {
+            break;
+        }
+
+        for (int j = 0; j < chunkLen; ++j) {
+            out[written + j] = chunk[j];
+        }
+        written += chunkLen;
+        ++emitted;
+    }
+
+    out[written] = 0;
+    return written;
+}
+
+static int BuildDraftBlockGhostTextA(const uint32_t* tokens,
+                                     const float* confidence,
+                                     int tokenCapacity,
+                                     char* out,
+                                     int outCapacity,
+                                     int* outTokenCount) {
+    if (!tokens || !confidence || !out || tokenCapacity <= 0 || outCapacity <= 1) {
+        if (outTokenCount) *outTokenCount = 0;
+        return 0;
+    }
+
+    int written = 0;
+    int emitted = 0;
+    for (int i = 0; i < tokenCapacity; ++i) {
+        const uint32_t tok = tokens[i];
+        const float conf = confidence[i];
+        if (tok == 0 || conf <= 0.0f) {
+            break;
+        }
+
+        char chunk[32] = {0};
+        const int chunkLen = _snprintf_s(
+            chunk,
+            _countof(chunk),
+            _TRUNCATE,
+            emitted == 0 ? "tok_%u" : " tok_%u",
+            tok);
+        if (chunkLen <= 0) {
+            continue;
+        }
+        if (written + chunkLen >= outCapacity - 1) {
+            break;
+        }
+
+        for (int j = 0; j < chunkLen; ++j) {
+            out[written + j] = chunk[j];
+        }
+        written += chunkLen;
+        ++emitted;
+    }
+
+    out[written] = 0;
+    if (outTokenCount) *outTokenCount = emitted;
+    return written;
+}
 
 static int DecodeModelTextToWide(const char* text, int len, wchar_t* out, int outCapacity) {
     if (!text || len <= 0 || !out || outCapacity <= 0) return 0;
@@ -103,6 +204,26 @@ static TITAN_PROC g_TitanInfer = NULL;
 static TITAN_INIT_PROC g_TitanInit = NULL;
 static TITAN_ABORT_PROC g_TitanAbort = NULL;
 static int g_TitanReady = 0;
+static uint64_t g_TitanRxHandle = 0;
+
+static int Bridge_EnsureTitanRxKernel() {
+    if (g_TitanRxHandle != 0) {
+        return 1;
+    }
+
+    static const char kRxMapName[] = "RawrXD.BridgeLayer.RxKernel";
+    TitanAbiCommand createCmd{};
+    createCmd.opcode = TITAN_OP_CREATE_RX_KERNEL;
+    createCmd.ptr0 = (uint64_t)kRxMapName;
+
+    TitanAbiResponse createResp{};
+    if (Titan_ExecuteCommand(&createCmd, &createResp) != TITAN_STATUS_OK || createResp.handle == 0) {
+        return 0;
+    }
+
+    g_TitanRxHandle = createResp.handle;
+    return 1;
+}
 
 // Forward declaration: ASM-callable ghost text callback
 extern "C" void Bridge_OnSuggestionReady(const wchar_t* text, int len);
@@ -160,6 +281,49 @@ extern "C" int Bridge_RequestSuggestion(const wchar_t* text, int row, int col) {
     }
     context[len] = 0;
 
+    if (Bridge_EnsureTitanRxKernel()) {
+        TitanAbiCommand submitCmd{};
+        submitCmd.opcode = OP_RX_SUBMIT;
+        submitCmd.handle = g_TitanRxHandle;
+        submitCmd.ptr0 = (uint64_t)context;
+
+        TitanAbiResponse submitResp{};
+        if (Titan_ExecuteCommand(&submitCmd, &submitResp) == TITAN_STATUS_OK) {
+            TitanAbiCommand stepCmd{};
+            stepCmd.opcode = OP_RX_STEP;
+            stepCmd.handle = g_TitanRxHandle;
+            TitanAbiResponse stepResp{};
+
+            if (Titan_ExecuteCommand(&stepCmd, &stepResp) == TITAN_STATUS_OK) {
+                uint32_t draftTokens[8] = {0};
+                float draftConfidence[8] = {0};
+
+                TitanAbiCommand blockCmd{};
+                blockCmd.opcode = TITAN_OP_RX_READ_DRAFT_BLOCK;
+                blockCmd.handle = g_TitanRxHandle;
+                blockCmd.ptr0 = (uint64_t)draftTokens;
+                blockCmd.ptr1 = (uint64_t)draftConfidence;
+                blockCmd.count = 8;
+
+                TitanAbiResponse blockResp{};
+                if (Titan_ExecuteCommand(&blockCmd, &blockResp) == TITAN_STATUS_OK) {
+                    wchar_t tokenMsg[MAX_GHOST_LEN_CPP] = {0};
+                    const int tokenMsgLen = BuildDraftBlockGhostText(
+                        draftTokens,
+                        draftConfidence,
+                        8,
+                        tokenMsg,
+                        MAX_GHOST_LEN_CPP);
+
+                    if (tokenMsgLen > 0) {
+                        Bridge_OnSuggestionReady(tokenMsg, tokenMsgLen);
+                        return 0;
+                    }
+                }
+            }
+        }
+    }
+
     if (g_TitanInfer && g_TitanReady == 1) {
         // Live 70B Path: F:\OllamaModels\BigDaddyG-UNLEASHED-Q4_K_M.gguf
         static TITAN_PARAMS p;
@@ -175,6 +339,45 @@ extern "C" int Bridge_RequestSuggestion(const wchar_t* text, int row, int col) {
     static const wchar_t emptyMsg[] = L"";
     Bridge_OnSuggestionReady(emptyMsg, 0);
     return -1;
+}
+
+extern "C" int Bridge_ReadDraftBlockGhostA(char* out, int outCapacity, int* outTokenCount) {
+    if (!out || outCapacity <= 1) {
+        if (outTokenCount) *outTokenCount = 0;
+        return 0;
+    }
+    out[0] = 0;
+    if (outTokenCount) *outTokenCount = 0;
+
+    if (!Bridge_EnsureTitanRxKernel()) {
+        return 0;
+    }
+
+    TitanAbiCommand stepCmd{};
+    stepCmd.opcode = OP_RX_STEP;
+    stepCmd.handle = g_TitanRxHandle;
+
+    TitanAbiResponse stepResp{};
+    if (Titan_ExecuteCommand(&stepCmd, &stepResp) != TITAN_STATUS_OK) {
+        return 0;
+    }
+
+    uint32_t draftTokens[8] = {0};
+    float draftConfidence[8] = {0};
+
+    TitanAbiCommand blockCmd{};
+    blockCmd.opcode = TITAN_OP_RX_READ_DRAFT_BLOCK;
+    blockCmd.handle = g_TitanRxHandle;
+    blockCmd.ptr0 = (uint64_t)draftTokens;
+    blockCmd.ptr1 = (uint64_t)draftConfidence;
+    blockCmd.count = 8;
+
+    TitanAbiResponse blockResp{};
+    if (Titan_ExecuteCommand(&blockCmd, &blockResp) != TITAN_STATUS_OK) {
+        return 0;
+    }
+
+    return BuildDraftBlockGhostTextA(draftTokens, draftConfidence, 8, out, outCapacity, outTokenCount);
 }
 
 // RLHF Tracking Counters (non-simulated)
@@ -198,6 +401,14 @@ extern "C" void Bridge_ClearSuggestion() {
 }
 
 extern "C" void Bridge_AbortInference() {
+    if (g_TitanRxHandle != 0) {
+        TitanAbiCommand stopCmd{};
+        stopCmd.opcode = TITAN_OP_RX_STOP_KERNEL;
+        stopCmd.handle = g_TitanRxHandle;
+        TitanAbiResponse stopResp{};
+        (void)Titan_ExecuteCommand(&stopCmd, &stopResp);
+    }
+
     if (g_TitanAbort) {
         g_TitanAbort();  // Sets g_cancelRequest = 1 in DLL
     }

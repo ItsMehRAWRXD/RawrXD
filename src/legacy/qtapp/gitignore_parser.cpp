@@ -55,7 +55,8 @@ std::regex GitignoreRule::globToRegex(const std::string& glob)
     pattern.replace("}", "\\}");
 
     // Handle ** (match any number of directories)
-    pattern.replace("**", "\x01"); // Placeholder
+    // Use a temporary sentinel that won't collide with user content
+    pattern.replace("**", "\x01"); // Temporary sentinel for double-star
 
     // Handle * (match anything except /)
     pattern.replace("*", "[^/]*");

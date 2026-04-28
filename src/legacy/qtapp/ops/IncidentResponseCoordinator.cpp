@@ -156,8 +156,19 @@ std::vector<IncidentResponseCoordinator::Incident> IncidentResponseCoordinator::
     return res;
 }
 
-void IncidentResponseCoordinator::incidentOpened(const Incident& inc) { (void)inc; }
-void IncidentResponseCoordinator::incidentUpdated(const Incident& inc) { (void)inc; }
-void IncidentResponseCoordinator::incidentResolved(const Incident& inc) { (void)inc; }
-void IncidentResponseCoordinator::incidentEscalated(const Incident& inc) { (void)inc; }
+void IncidentResponseCoordinator::incidentOpened(const Incident& inc) {
+    LogInfo("event:incidentOpened", inc.id + " title=" + inc.title);
+}
+
+void IncidentResponseCoordinator::incidentUpdated(const Incident& inc) {
+    LogInfo("event:incidentUpdated", inc.id + " status=" + statusToString(inc.status));
+}
+
+void IncidentResponseCoordinator::incidentResolved(const Incident& inc) {
+    LogInfo("event:incidentResolved", inc.id + " resolvedAt=" + std::to_string(inc.resolvedAt));
+}
+
+void IncidentResponseCoordinator::incidentEscalated(const Incident& inc) {
+    LogInfo("event:incidentEscalated", inc.id + " owner=" + inc.owner + " count=" + std::to_string(inc.escalations));
+}
 

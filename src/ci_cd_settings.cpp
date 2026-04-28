@@ -469,7 +469,7 @@ std::string CICDSettings::deployModel(const std::string& jobId, const std::strin
         metaFile.close();
 
     } catch (const std::exception& e) {
-        (void)e;
+        last_error_ = std::string("CI/CD deploy failed: ") + e.what();
         return ""; // Indicate failure
     }
 

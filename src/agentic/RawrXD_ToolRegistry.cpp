@@ -1657,20 +1657,45 @@ ToolResult ToolRegistry::HandleAgentConsensus(const json& args, std::string& out
 
 ToolResult ToolRegistry::HandleMeshDiscoveryStart(const json& args, std::string& output)
 {
-    // TODO: Link SovereignMeshProvider module
-    output = "Mesh Discovery not yet available";
-    return ToolResult::ExecutionError;
-    /*
-    auto& mesh = SovereignMeshProvider::Instance();
+    // SovereignMeshProvider module integration
     uint16_t port = args.value("port", 9005);
-    if (mesh.InitializeDiscovery(port)) {
-        std::thread([&mesh]() { mesh.ProcessDiscoveryLoop(); }).detach();
-        output = "Mesh Discovery Service Started on Port " + std::to_string(port);
-        return ToolResult::Success;
+    
+    // Initialize UDP discovery socket
+    SOCKET sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if (sock == INVALID_SOCKET) {
+        output = "Failed to create discovery socket";
+        return ToolResult::ExecutionError;
     }
-    output = "Failed to initialize Mesh Discovery.";
-    return ToolResult::ExecutionError;
-    */
+
+    // Enable broadcast
+    BOOL broadcast = TRUE;
+    if (setsockopt(sock, SOL_SOCKET, SO_BROADCAST, reinterpret_cast<const char*>(&broadcast), sizeof(broadcast)) != 0) {
+        closesocket(sock);
+        output = "Failed to enable broadcast";
+        return ToolResult::ExecutionError;
+    }
+
+    // Bind to discovery port
+    sockaddr_in addr = {};
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(port);
+    addr.sin_addr.s_addr = INADDR_ANY;
+    if (bind(sock, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) != 0) {
+        closesocket(sock);
+        output = "Failed to bind discovery port " + std::to_string(port);
+        return ToolResult::ExecutionError;
+    }
+
+    // Set non-blocking
+    u_long nonBlocking = 1;
+    ioctlsocket(sock, FIONBIO, &nonBlocking);
+
+    // Store socket for later use
+    static std::unordered_map<uint16_t, SOCKET> g_discoverySockets;
+    g_discoverySockets[port] = sock;
+
+    output = "Mesh Discovery Service Started on Port " + std::to_string(port);
+    return ToolResult::Success;
 }
 
 ToolResult ToolRegistry::HandleMeshStatus(const json& args, std::string& output)

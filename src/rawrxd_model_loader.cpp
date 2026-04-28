@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <expected>
 #include <iostream>
 #include <limits>
 #include <mutex>
@@ -13,6 +14,7 @@
 #include <string>
 #include <thread>
 #include <windows.h>
+
 
 #include <memoryapi.h>
 
@@ -437,8 +439,7 @@ static inline void DotProduct2RowsF32_TPS(const float* w0, const float* w1, cons
 }
 
 static inline void DotProduct4RowsF32_TPS(const float* w0, const float* w1, const float* w2, const float* w3,
-                                          const float* x, size_t n, float* out0, float* out1, float* out2,
-                                          float* out3)
+                                          const float* x, size_t n, float* out0, float* out1, float* out2, float* out3)
 {
     if (!w0 || !w1 || !w2 || !w3 || !x || !out0 || !out1 || !out2 || !out3)
         return;
@@ -1416,9 +1417,8 @@ bool RawrXDModelLoader::mapNewViewIntoComputeSlotLocked_(std::size_t slotIndex, 
             const uint64_t minMapSize = requestEnd - windowStart;
             if (!m_useLargePages && (error == ERROR_NOT_ENOUGH_MEMORY || error == ERROR_OUTOFMEMORY))
             {
-                const size_t minRetryFloor = static_cast<size_t>(std::max<uint64_t>(
-                    minMapSize,
-                    1ULL * 1024ULL * 1024ULL));
+                const size_t minRetryFloor =
+                    static_cast<size_t>(std::max<uint64_t>(minMapSize, 1ULL * 1024ULL * 1024ULL));
                 if (m_streamingActive && !useReservedAperture)
                 {
                     constexpr size_t kLegacyPressureClampFloor = 8ULL * 1024ULL * 1024ULL;
@@ -1464,9 +1464,12 @@ bool RawrXDModelLoader::mapNewViewIntoComputeSlotLocked_(std::size_t slotIndex, 
         {
             static size_t s_legacyWindowCount = 0;
             ++s_legacyWindowCount;
-            if (s_legacyWindowCount <= 3 || s_legacyWindowCount % 500 == 0) {
-                printf("[RawrXD] Legacy Window %llu-%llu GB: Mapped %zu MB (call #%zu)\n", windowStart / (1024ULL * 1024ULL * 1024ULL),
-                       (windowStart + mapSize) / (1024ULL * 1024ULL * 1024ULL), mapSize / (1024 * 1024), s_legacyWindowCount);
+            if (s_legacyWindowCount <= 3 || s_legacyWindowCount % 500 == 0)
+            {
+                printf("[RawrXD] Legacy Window %llu-%llu GB: Mapped %zu MB (call #%zu)\n",
+                       windowStart / (1024ULL * 1024ULL * 1024ULL),
+                       (windowStart + mapSize) / (1024ULL * 1024ULL * 1024ULL), mapSize / (1024 * 1024),
+                       s_legacyWindowCount);
             }
         }
 
@@ -1541,8 +1544,8 @@ void* RawrXDModelLoader::MapWindow(uint64_t offset, size_t size)
     if (prefetchView != nullptr && prefetchViewSize > 0)
     {
         uint64_t preEnd = 0;
-        if (TryAddU64(prefetchOffset, static_cast<uint64_t>(prefetchViewSize), &preEnd) &&
-            offset >= prefetchOffset && reqEnd <= preEnd && reqEnd <= m_fileSize)
+        if (TryAddU64(prefetchOffset, static_cast<uint64_t>(prefetchViewSize), &preEnd) && offset >= prefetchOffset &&
+            reqEnd <= preEnd && reqEnd <= m_fileSize)
         {
             const std::size_t promoIdx = pickComputeSlotForPromotionLocked_();
             if (promoIdx < m_computeSlots.size())
@@ -1645,12 +1648,12 @@ void* RawrXDModelLoader::MapWindow(uint64_t offset, size_t size)
         const uint64_t needed = reqEnd - windowStart;
         const uint64_t capped = std::min<uint64_t>(remaining, std::min<uint64_t>(apertureSize, maxFallbackBytes));
 
-        if (!useReservedAperture && m_streamingActive && m_streamingLockedWindowSize == 0 &&
-            !m_useLargePages && headlessMinimalMode)
+        if (!useReservedAperture && m_streamingActive && m_streamingLockedWindowSize == 0 && !m_useLargePages &&
+            headlessMinimalMode)
         {
             constexpr uint64_t kHeadlessMinimalStreamingLock = 16ULL * 1024ULL * 1024ULL;
-            const uint64_t bootstrap = std::max<uint64_t>(1ULL * 1024ULL * 1024ULL,
-                                                          std::min<uint64_t>(capped, kHeadlessMinimalStreamingLock));
+            const uint64_t bootstrap =
+                std::max<uint64_t>(1ULL * 1024ULL * 1024ULL, std::min<uint64_t>(capped, kHeadlessMinimalStreamingLock));
             if (bootstrap > 0)
             {
                 m_streamingLockedWindowSize = static_cast<size_t>(bootstrap);
@@ -1695,7 +1698,7 @@ void* RawrXDModelLoader::MapWindow(uint64_t offset, size_t size)
             uint64_t lockedBase = static_cast<uint64_t>(m_streamingLockedWindowSize);
             if (m_streamingPressureCapBytes > 0)
                 lockedBase = std::min<uint64_t>(lockedBase, static_cast<uint64_t>(m_streamingPressureCapBytes));
-            const uint64_t lockSlack  = granularity; // 64 KB threshold headroom only
+            const uint64_t lockSlack = granularity;  // 64 KB threshold headroom only
             if (needed > lockedBase + lockSlack)
             {
                 return nullptr;
@@ -1849,32 +1852,34 @@ void* RawrXDModelLoader::MapPrefetchWindow(uint64_t offset, size_t size)
 
     if (!m_mapping || size == 0)
         return nullptr;
-    
+
     // Check headless minimal mode for telemetry downgrade
     char headlessMinimal[8] = {};
     const DWORD len = GetEnvironmentVariableA("RAWRXD_HEADLESS_MINIMAL", headlessMinimal,
                                               static_cast<DWORD>(sizeof(headlessMinimal)));
-    const bool headlessMinimalMode =
-        (len > 0 && len < sizeof(headlessMinimal) && headlessMinimal[0] != '0');
-    
+    const bool headlessMinimalMode = (len > 0 && len < sizeof(headlessMinimal) && headlessMinimal[0] != '0');
+
     uint64_t reqEnd = 0;
     if (!TryAddU64(offset, static_cast<uint64_t>(size), &reqEnd))
     {
-        if (!headlessMinimalMode) {
+        if (!headlessMinimalMode)
+        {
             printf("[RawrXD] MapPrefetchWindow: range overflow at offset %llu size %zu\n", offset, size);
         }
         return nullptr;
     }
     if (offset >= m_fileSize)
     {
-        if (!headlessMinimalMode) {
+        if (!headlessMinimalMode)
+        {
             printf("[RawrXD] MapPrefetchWindow: offset %llu beyond file size %llu\n", offset, m_fileSize);
         }
         return nullptr;
     }
     if (reqEnd > m_fileSize)
     {
-        if (!headlessMinimalMode) {
+        if (!headlessMinimalMode)
+        {
             printf("[RawrXD] MapPrefetchWindow: range past EOF\n");
         }
         return nullptr;
@@ -1919,7 +1924,8 @@ void* RawrXDModelLoader::MapPrefetchWindow(uint64_t offset, size_t size)
             const uint64_t minMapSize64 = delta + static_cast<uint64_t>(size);
             if (minMapSize64 <= static_cast<uint64_t>(std::numeric_limits<SIZE_T>::max()))
             {
-                const SIZE_T minMapSize = static_cast<SIZE_T>(std::max<uint64_t>(minMapSize64, 1ULL * 1024ULL * 1024ULL));
+                const SIZE_T minMapSize =
+                    static_cast<SIZE_T>(std::max<uint64_t>(minMapSize64, 1ULL * 1024ULL * 1024ULL));
                 SIZE_T retrySize = mapSize / 2;
                 while (!prefetchView && retrySize >= minMapSize)
                 {
@@ -1947,13 +1953,13 @@ void* RawrXDModelLoader::MapPrefetchWindow(uint64_t offset, size_t size)
             char headlessMinimal[8] = {};
             const DWORD len = GetEnvironmentVariableA("RAWRXD_HEADLESS_MINIMAL", headlessMinimal,
                                                       static_cast<DWORD>(sizeof(headlessMinimal)));
-            const bool headlessMinimalMode =
-                (len > 0 && len < sizeof(headlessMinimal) && headlessMinimal[0] != '0');
+            const bool headlessMinimalMode = (len > 0 && len < sizeof(headlessMinimal) && headlessMinimal[0] != '0');
             const std::uint32_t prefetchOomTrip = headlessMinimalMode ? 2u : 4u;
             if (m_prefetchOomFailureStreak >= prefetchOomTrip)
             {
                 m_prefetchSuppressedForStreaming = true;
-                printf("[RawrXD] MapPrefetchWindow: suppressing prefetch for active streaming range after %u OOM failures\n",
+                printf("[RawrXD] MapPrefetchWindow: suppressing prefetch for active streaming range after %u OOM "
+                       "failures\n",
                        m_prefetchOomFailureStreak);
             }
         }
@@ -1961,9 +1967,9 @@ void* RawrXDModelLoader::MapPrefetchWindow(uint64_t offset, size_t size)
         char headlessMinimal[8] = {};
         const DWORD len = GetEnvironmentVariableA("RAWRXD_HEADLESS_MINIMAL", headlessMinimal,
                                                   static_cast<DWORD>(sizeof(headlessMinimal)));
-        const bool headlessMinimalMode =
-            (len > 0 && len < sizeof(headlessMinimal) && headlessMinimal[0] != '0');
-        if (!headlessMinimalMode) {
+        const bool headlessMinimalMode = (len > 0 && len < sizeof(headlessMinimal) && headlessMinimal[0] != '0');
+        if (!headlessMinimalMode)
+        {
             printf("[RawrXD] MapPrefetchWindow MapViewOfFile failed at %llu size %zu (Error: %lu)\n", mapStart, mapSize,
                    mapError);
         }
@@ -1977,7 +1983,8 @@ void* RawrXDModelLoader::MapPrefetchWindow(uint64_t offset, size_t size)
         static_cast<uint64_t>(size) > (static_cast<uint64_t>(prefetchViewSize) - delta))
     {
         unmapPrefetchViewLocked_();
-        if (!headlessMinimalMode) {
+        if (!headlessMinimalMode)
+        {
             printf("[RawrXD] MapPrefetchWindow: request does not fit in mapped span\n");
         }
         return nullptr;
@@ -2096,8 +2103,8 @@ bool RawrXDModelLoader::MapIncidentalWindow(uint64_t offset, size_t size, void*&
     uint64_t reqEnd = 0;
     if (!TryAddU64(offset, static_cast<uint64_t>(size), &reqEnd))
     {
-        printf("[MapIncidentalWindow] FAIL: overflow offset=%llu size=%zu\n",
-               static_cast<unsigned long long>(offset), size);
+        printf("[MapIncidentalWindow] FAIL: overflow offset=%llu size=%zu\n", static_cast<unsigned long long>(offset),
+               size);
         return false;
     }
     if (offset >= m_fileSize || reqEnd > m_fileSize)
@@ -2109,8 +2116,7 @@ bool RawrXDModelLoader::MapIncidentalWindow(uint64_t offset, size_t size, void*&
     }
 
     // Check if the requested range is within the cached window
-    if (m_incCache && offset >= m_incCacheStart &&
-        reqEnd <= m_incCacheStart + static_cast<uint64_t>(m_incCacheSize))
+    if (m_incCache && offset >= m_incCacheStart && reqEnd <= m_incCacheStart + static_cast<uint64_t>(m_incCacheSize))
     {
         viewBase = m_incCache;  // sentinel: caller must NOT unmap this
         dataPtr = static_cast<uint8_t*>(m_incCache) + static_cast<size_t>(offset - m_incCacheStart);
@@ -2134,23 +2140,27 @@ bool RawrXDModelLoader::MapIncidentalWindow(uint64_t offset, size_t size, void*&
     }
 
     // Try progressively smaller cache windows: 64 MB -> 16 MB -> 4 MB -> 1 MB -> exact
-    static constexpr size_t kCacheTiers[] = {64u * 1024u * 1024u, 16u * 1024u * 1024u,
-                                              4u * 1024u * 1024u, 1u * 1024u * 1024u, 0};
+    static constexpr size_t kCacheTiers[] = {64u * 1024u * 1024u, 16u * 1024u * 1024u, 4u * 1024u * 1024u,
+                                             1u * 1024u * 1024u, 0};
     void* newView = nullptr;
     SIZE_T mapSize = 0;
 
     for (size_t tier : kCacheTiers)
     {
         size_t windowSize = (tier > 0) ? tier : minMapSize;
-        if (windowSize < minMapSize) windowSize = minMapSize;
+        if (windowSize < minMapSize)
+            windowSize = minMapSize;
         uint64_t mapEnd = mapStart + windowSize;
-        if (mapEnd > m_fileSize) mapEnd = m_fileSize;
-        if (mapEnd < reqEnd) mapEnd = reqEnd;
+        if (mapEnd > m_fileSize)
+            mapEnd = m_fileSize;
+        if (mapEnd < reqEnd)
+            mapEnd = reqEnd;
         mapSize = static_cast<SIZE_T>(mapEnd - mapStart);
 
         newView = MapViewOfFile(m_mapping, FILE_MAP_READ, static_cast<DWORD>(mapStart >> 32),
                                 static_cast<DWORD>(mapStart & 0xFFFFFFFF), mapSize);
-        if (newView) break;
+        if (newView)
+            break;
     }
 
     if (!newView)
@@ -2225,8 +2235,7 @@ void RawrXDModelLoader::BeginStreamingRange(uint64_t offset, size_t size)
             char headlessMinimal[8] = {};
             const DWORD len = GetEnvironmentVariableA("RAWRXD_HEADLESS_MINIMAL", headlessMinimal,
                                                       static_cast<DWORD>(sizeof(headlessMinimal)));
-            const bool headlessMinimalMode =
-                (len > 0 && len < sizeof(headlessMinimal) && headlessMinimal[0] != '0');
+            const bool headlessMinimalMode = (len > 0 && len < sizeof(headlessMinimal) && headlessMinimal[0] != '0');
             if (headlessMinimalMode)
             {
                 constexpr size_t kHeadlessMinimalProactiveClamp = 16ULL * 1024ULL * 1024ULL;
@@ -2329,14 +2338,11 @@ struct GGUFFileHeader
 class SovereignInterceptor
 {
   public:
-        SovereignInterceptor() = default;
+    SovereignInterceptor() = default;
 
     // [ENHANCEMENT] Locate Policy Gate Check
     // Scans compiled binary for JZ/JNE instructions checking interception flags
-    bool LocatePolicyGate()
-    {
-        return false;
-    }
+    bool LocatePolicyGate() { return false; }
 
     // [ENHANCEMENT] Apply Policy Gate No-Op
     // Runtime policy patching is disabled; this reports disabled status.
@@ -2349,10 +2355,7 @@ class SovereignInterceptor
     }
 
     // Restore original policy checks (for debugging)
-    bool RestorePolicyChecks()
-    {
-        return false;
-    }
+    bool RestorePolicyChecks() { return false; }
 };
 
 // Global interceptor instance
@@ -2439,8 +2442,7 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
     {
         const DWORD openError = GetLastError();
         const std::string msg = std::string("[RawrXD][GATE-5] file open failed err=") +
-                                std::to_string(static_cast<unsigned long>(openError)) +
-                                " path=" + modelPathUtf8;
+                                std::to_string(static_cast<unsigned long>(openError)) + " path=" + modelPathUtf8;
         printf("%s\n", msg.c_str());
         setLoadError("gate_file_access", msg);
         return false;
@@ -2609,7 +2611,7 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
            static_cast<unsigned long long>(hdr->tensor_count));
 
     // Gate: reject tensor_count values that would cause OOM on reserve() before any parsing
-    constexpr uint64_t kMaxTensorsInGGUF = 1ULL << 16; // 65536 — far above any real model
+    constexpr uint64_t kMaxTensorsInGGUF = 1ULL << 16;  // 65536 — far above any real model
     if (hdr->tensor_count > kMaxTensorsInGGUF)
     {
         const std::string msg = "[RawrXD][GATE-2] tensor_count out of range (DoS guard)";
@@ -2689,8 +2691,7 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
         if (tensorSize == 0)
         {
             char buf[512] = {0};
-            snprintf(buf, sizeof(buf),
-                     "[RawrXD][GATE-2] tensor span rejected: invalid packed size for %s (type=%u)",
+            snprintf(buf, sizeof(buf), "[RawrXD][GATE-2] tensor span rejected: invalid packed size for %s (type=%u)",
                      tensorInfo.name.c_str(), tensorInfo.type);
             printf("%s\n", buf);
             setLoadError("gate_tensor_span_size", buf);
@@ -2772,33 +2773,40 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
     {
         bool configOk = true;
         char cfgBuf[512] = {0};
-        if (n_embd <= 0) {
-            snprintf(cfgBuf, sizeof(cfgBuf),
-                     "[RawrXD][GATE-7] invalid config: n_embd=%d (must be > 0)", n_embd);
+        if (n_embd <= 0)
+        {
+            snprintf(cfgBuf, sizeof(cfgBuf), "[RawrXD][GATE-7] invalid config: n_embd=%d (must be > 0)", n_embd);
             configOk = false;
-        } else if (n_layers <= 0) {
-            snprintf(cfgBuf, sizeof(cfgBuf),
-                     "[RawrXD][GATE-7] invalid config: n_layers=%d (must be > 0)", n_layers);
+        }
+        else if (n_layers <= 0)
+        {
+            snprintf(cfgBuf, sizeof(cfgBuf), "[RawrXD][GATE-7] invalid config: n_layers=%d (must be > 0)", n_layers);
             configOk = false;
-        } else if (n_heads <= 0) {
-            snprintf(cfgBuf, sizeof(cfgBuf),
-                     "[RawrXD][GATE-7] invalid config: n_heads=%d (must be > 0)", n_heads);
+        }
+        else if (n_heads <= 0)
+        {
+            snprintf(cfgBuf, sizeof(cfgBuf), "[RawrXD][GATE-7] invalid config: n_heads=%d (must be > 0)", n_heads);
             configOk = false;
-        } else if (vocab_size <= 0) {
-            snprintf(cfgBuf, sizeof(cfgBuf),
-                     "[RawrXD][GATE-7] invalid config: vocab_size=%d (must be > 0)", vocab_size);
+        }
+        else if (vocab_size <= 0)
+        {
+            snprintf(cfgBuf, sizeof(cfgBuf), "[RawrXD][GATE-7] invalid config: vocab_size=%d (must be > 0)",
+                     vocab_size);
             configOk = false;
-        } else if (n_ctx <= 0) {
-            snprintf(cfgBuf, sizeof(cfgBuf),
-                     "[RawrXD][GATE-7] invalid config: n_ctx=%d (must be > 0)", n_ctx);
+        }
+        else if (n_ctx <= 0)
+        {
+            snprintf(cfgBuf, sizeof(cfgBuf), "[RawrXD][GATE-7] invalid config: n_ctx=%d (must be > 0)", n_ctx);
             configOk = false;
-        } else if ((n_embd % n_heads) != 0) {
-            snprintf(cfgBuf, sizeof(cfgBuf),
-                     "[RawrXD][GATE-7] invalid config: n_embd=%d not divisible by n_heads=%d",
+        }
+        else if ((n_embd % n_heads) != 0)
+        {
+            snprintf(cfgBuf, sizeof(cfgBuf), "[RawrXD][GATE-7] invalid config: n_embd=%d not divisible by n_heads=%d",
                      n_embd, n_heads);
             configOk = false;
         }
-        if (!configOk) {
+        if (!configOk)
+        {
             printf("%s\n", cfgBuf);
             setLoadError("gate_config_dims", cfgBuf);
             m_tensors.clear();
@@ -2846,10 +2854,10 @@ const std::string& RawrXDModelLoader::GetLastLoadErrorMessage() const
 // Simple metadata skipper / scraper
 uint8_t* RawrXDModelLoader::ParseMetadata(uint8_t* ptr, uint64_t count)
 {
-    constexpr uint64_t kMaxMetadataEntries = 1ULL << 20;       // 1,048,576
-    constexpr uint64_t kMaxMetadataKeyBytes = 1ULL << 20;      // 1 MiB
-    constexpr uint64_t kMaxMetadataStringBytes = 256ULL << 20; // 256 MiB
-    constexpr uint64_t kMaxMetadataArrayLen = 1ULL << 30;      // defensive bound
+    constexpr uint64_t kMaxMetadataEntries = 1ULL << 20;        // 1,048,576
+    constexpr uint64_t kMaxMetadataKeyBytes = 1ULL << 20;       // 1 MiB
+    constexpr uint64_t kMaxMetadataStringBytes = 256ULL << 20;  // 256 MiB
+    constexpr uint64_t kMaxMetadataArrayLen = 1ULL << 30;       // defensive bound
 
     const auto advancePtr = [](uint8_t*& p, uint64_t bytes) -> bool
     {
@@ -2972,12 +2980,12 @@ uint8_t* RawrXDModelLoader::ParseMetadata(uint8_t* ptr, uint64_t count)
                         }
                         if (!advancePtr(ptr, 8))
                             return nullptr;
-                        
+
                         if (key == "tokenizer.ggml.tokens")
                         {
                             vocab.emplace_back((char*)ptr, static_cast<size_t>(slen));
                         }
-                        
+
                         if (!advancePtr(ptr, slen))
                             return nullptr;
                     }
@@ -3003,7 +3011,7 @@ uint8_t* RawrXDModelLoader::ParseMetadata(uint8_t* ptr, uint64_t count)
                 {
                     const uint32_t val = *(uint32_t*)ptr;
                     printf("[DEBUG] Scalar key: %s, type: %u, value: %u\n", key.c_str(), type, val);
-                    
+
                     if (key.find("vocab") != std::string::npos)
                     {
                         printf("[DEBUG] Found vocab-related key: %s = %u\n", key.c_str(), val);
@@ -3017,7 +3025,8 @@ uint8_t* RawrXDModelLoader::ParseMetadata(uint8_t* ptr, uint64_t count)
                     // to avoid .vision.* / .audio.* sub-component keys overwriting
                     // the text model config (e.g., mistral3.vision.embedding_length
                     // was incorrectly overwriting mistral3.embedding_length).
-                    if (!m_metadataArchitecture.empty()) {
+                    if (!m_metadataArchitecture.empty())
+                    {
                         const std::string& arch = m_metadataArchitecture;
                         if (key == arch + ".embedding_length")
                             n_embd = static_cast<int>(val);
@@ -3035,10 +3044,12 @@ uint8_t* RawrXDModelLoader::ParseMetadata(uint8_t* ptr, uint64_t count)
                             n_experts = static_cast<int>(val);
                         else if (key == arch + ".expert_used_count" || key == arch + ".moe.expert_used_count")
                             n_experts_used = static_cast<int>(val);
-                    } else {
+                    }
+                    else
+                    {
                         // Fallback: architecture unknown — use endsWith but reject sub-components
-                        if (key.find(".vision.") == std::string::npos &&
-                            key.find(".audio.") == std::string::npos) {
+                        if (key.find(".vision.") == std::string::npos && key.find(".audio.") == std::string::npos)
+                        {
                             if (endsWith(key, ".embedding_length"))
                                 n_embd = static_cast<int>(val);
                             else if (endsWith(key, ".block_count"))
@@ -3062,10 +3073,10 @@ uint8_t* RawrXDModelLoader::ParseMetadata(uint8_t* ptr, uint64_t count)
                         // Don't set vocab_size from scalar, use vocab.size() instead
                         printf("[DEBUG] Ignoring tokenizer.ggml.vocab_size scalar: %u\n", val);
                     }
-                        if (key == "tokenizer.ggml.eos_token_id")
-                            eos_token_id = static_cast<int>(val);
-                        if (key == "tokenizer.ggml.bos_token_id")
-                            bos_token_id = static_cast<int>(val);
+                    if (key == "tokenizer.ggml.eos_token_id")
+                        eos_token_id = static_cast<int>(val);
+                    if (key == "tokenizer.ggml.bos_token_id")
+                        bos_token_id = static_cast<int>(val);
                 }
 
                 const uint64_t scalarBytes = ggufScalarSize(type);
@@ -3080,16 +3091,16 @@ uint8_t* RawrXDModelLoader::ParseMetadata(uint8_t* ptr, uint64_t count)
             }
         }
     }
-    
+
     // Fallback: if vocab was populated, use vocab.size() for vocab_size
     if (!vocab.empty())
     {
         vocab_size = (int)vocab.size();
         printf("[DEBUG] Fallback: set vocab_size to vocab.size() = %d\n", vocab_size);
     }
-    
+
     printf("[DEBUG] Final: vocab_size=%d, vocab.size()=%llu\n", vocab_size, (unsigned long long)vocab.size());
-    
+
     return ptr;
 }
 
@@ -3172,22 +3183,18 @@ size_t RawrXDModelLoader::CalculateTensorDataSize(const Tensor& t) const
 
     switch (t.type)
     {
-        case 6:                     // Q5_0
-            return TryComputeBlockPackedBytes(elements, 32ULL, 22ULL, &packedBytes)
-                       ? static_cast<size_t>(packedBytes)
-                       : 0;
-        case 7:                     // Q5_1
-            return TryComputeBlockPackedBytes(elements, 32ULL, 24ULL, &packedBytes)
-                       ? static_cast<size_t>(packedBytes)
-                       : 0;
-        case 9:                     // Q8_1
-            return TryComputeBlockPackedBytes(elements, 32ULL, 36ULL, &packedBytes)
-                       ? static_cast<size_t>(packedBytes)
-                       : 0;
-        case 15:                     // Q8_K
-            return TryComputeBlockPackedBytes(elements, 256ULL, 256ULL, &packedBytes)
-                       ? static_cast<size_t>(packedBytes)
-                       : 0;
+        case 6:  // Q5_0
+            return TryComputeBlockPackedBytes(elements, 32ULL, 22ULL, &packedBytes) ? static_cast<size_t>(packedBytes)
+                                                                                    : 0;
+        case 7:  // Q5_1
+            return TryComputeBlockPackedBytes(elements, 32ULL, 24ULL, &packedBytes) ? static_cast<size_t>(packedBytes)
+                                                                                    : 0;
+        case 9:  // Q8_1
+            return TryComputeBlockPackedBytes(elements, 32ULL, 36ULL, &packedBytes) ? static_cast<size_t>(packedBytes)
+                                                                                    : 0;
+        case 15:  // Q8_K
+            return TryComputeBlockPackedBytes(elements, 256ULL, 256ULL, &packedBytes) ? static_cast<size_t>(packedBytes)
+                                                                                      : 0;
         default:
             printf("[RawrXD] Unsupported tensor type %u for %s\n", t.type, t.name.c_str());
             return 0;
@@ -3198,8 +3205,7 @@ void RawrXDModelLoader::LoadTensorAsync(Tensor& t)
 {
     if (!SupportsLazyDequantType(t.type))
     {
-        printf("[RawrXD] LoadTensorAsync aborted: unsupported lazy dequant type %u for %s\n", t.type,
-               t.name.c_str());
+        printf("[RawrXD] LoadTensorAsync aborted: unsupported lazy dequant type %u for %s\n", t.type, t.name.c_str());
         t.cpuFloatData.clear();
         return;
     }
@@ -3353,8 +3359,7 @@ void RawrXDModelLoader::LoadTensorAsync(Tensor& t)
         if (!TryAddU64(currentOffset, static_cast<uint64_t>(chunkSize), &nextOffset) ||
             !TryAddSizeT(elementsProcessed, chunkElements, &nextElementsProcessed))
         {
-            printf("[RawrXD] Chunk progression overflow for tensor %s at offset %llu\n", t.name.c_str(),
-                   currentOffset);
+            printf("[RawrXD] Chunk progression overflow for tensor %s at offset %llu\n", t.name.c_str(), currentOffset);
             t.cpuFloatData.clear();
             return;
         }
@@ -3839,8 +3844,8 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
     size_t tileFloatCount = 0;
     if (!TryMulSizeT(TILE_ROWS, K, &tileFloatCount))
     {
-        printf("[StreamingMatMul] Tile float count overflow for %s (tile_rows=%zu K=%zu)\n", name.c_str(),
-               TILE_ROWS, K);
+        printf("[StreamingMatMul] Tile float count overflow for %s (tile_rows=%zu K=%zu)\n", name.c_str(), TILE_ROWS,
+               K);
         return false;
     }
     tile_buf.resize(tileFloatCount);
@@ -3984,8 +3989,8 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
             float* dstRow = tile_buf.data();
             if (!decodeRowToFloat(rowPtr, dstRow))
             {
-                printf("[StreamingMatMul] Failed to decode incidental row for %s row=%zu type=%u\n", name.c_str(),
-                       row, t.type);
+                printf("[StreamingMatMul] Failed to decode incidental row for %s row=%zu type=%u\n", name.c_str(), row,
+                       t.type);
                 UnmapIncidentalWindow(incidentalBase);
                 return false;
             }
@@ -4004,8 +4009,7 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
             for (size_t r = 0; r < tileRows; ++r)
             {
                 uint64_t rowLocalOffset = 0;
-                if (!TryMulU64(static_cast<uint64_t>(localRow + r), static_cast<uint64_t>(rowBytes),
-                               &rowLocalOffset))
+                if (!TryMulU64(static_cast<uint64_t>(localRow + r), static_cast<uint64_t>(rowBytes), &rowLocalOffset))
                 {
                     printf("[StreamingMatMul] Local row offset overflow for %s row=%zu\n", name.c_str(),
                            row + localRow + r);
@@ -4657,6 +4661,115 @@ float* RawrXDModelLoader::GetTensor(const std::string& name)
     return t.cpuFloatData.data();
 }
 
+std::expected<float*, std::string> RawrXDModelLoader::GetTensorExpected(const std::string& name)
+{
+    auto it = m_tensors.find(name);
+    if (it == m_tensors.end())
+    {
+        return std::unexpected("tensor not found: " + name);
+    }
+
+    float* p = GetTensor(name);
+    if (!p)
+    {
+        if (!m_lastLoadErrorStage.empty() || !m_lastLoadErrorMessage.empty())
+        {
+            return std::unexpected("GetTensor failed for '" + name + "': " + m_lastLoadErrorStage + " / " +
+                                   m_lastLoadErrorMessage);
+        }
+        return std::unexpected("GetTensor returned null for: " + name);
+    }
+    return p;
+}
+
+bool RawrXDModelLoader::isMoEExpertTensorName_(const std::string& name) const
+{
+    // Canonical llama.cpp Mixtral-style marker and a HF-style fallback (used by slice planner too).
+    return name.find("ffn_experts.") != std::string::npos || name.find("mlp.experts.") != std::string::npos;
+}
+
+void RawrXDModelLoader::evictExpertCacheIfNeeded_()
+{
+    if (m_expertCacheBudgetBytes == 0)
+        return;
+
+    std::uint64_t used = 0;
+    for (const auto& kv : m_tensors)
+    {
+        const Tensor& t = kv.second;
+        if (!t.cpuFloatData.empty() && isMoEExpertTensorName_(t.name))
+        {
+            used += static_cast<std::uint64_t>(t.cpuFloatData.size()) * sizeof(float);
+        }
+    }
+    if (used <= m_expertCacheBudgetBytes)
+        return;
+
+    // Evict LRU expert tensors until under budget.
+    // Hotpatch slots are set to nullptr so callers that re-check the slot can reload.
+    while (used > m_expertCacheBudgetBytes)
+    {
+        std::string bestName;
+        std::uint64_t bestTouch = std::numeric_limits<std::uint64_t>::max();
+        for (const auto& kv : m_hotLastTouch)
+        {
+            const std::string& n = kv.first;
+            const std::uint64_t touch = kv.second;
+            auto tit = m_tensors.find(n);
+            if (tit == m_tensors.end())
+                continue;
+            const Tensor& t = tit->second;
+            if (t.cpuFloatData.empty())
+                continue;
+            if (!isMoEExpertTensorName_(n))
+                continue;
+            if (touch < bestTouch)
+            {
+                bestTouch = touch;
+                bestName = n;
+            }
+        }
+        if (bestName.empty())
+            break;
+
+        Tensor& t = m_tensors[bestName];
+        const std::uint64_t bytes = static_cast<std::uint64_t>(t.cpuFloatData.size()) * sizeof(float);
+        t.cpuFloatData.clear();
+        t.cpuFloatData.shrink_to_fit();
+        used = (bytes > used) ? 0 : (used - bytes);
+
+        auto hp = m_hotTensorPtrs.find(bestName);
+        if (hp != m_hotTensorPtrs.end())
+            hp->second.store(nullptr, std::memory_order_release);
+
+        // Keep this lightweight: eviction is expected under budget pressure.
+        // (Avoid logging dependencies here; loader already emits debug prints elsewhere.)
+    }
+}
+
+std::expected<std::atomic<float*>*, std::string> RawrXDModelLoader::GetTensorHotSlot(const std::string& name)
+{
+    if (m_tensors.find(name) == m_tensors.end())
+        return std::unexpected("tensor not found: " + name);
+
+    // Ensure slot exists and is stable.
+    std::atomic<float*>& slot = m_hotTensorPtrs[name];
+    m_hotLastTouch[name] = m_hotClock++;
+
+    float* cur = slot.load(std::memory_order_acquire);
+    if (cur)
+        return &slot;
+
+    // Materialize now and publish to slot.
+    auto got = GetTensorExpected(name);
+    if (!got)
+        return std::unexpected(got.error());
+
+    slot.store(got.value(), std::memory_order_release);
+    evictExpertCacheIfNeeded_();
+    return &slot;
+}
+
 bool RawrXDModelLoader::GetTensorRow(const std::string& name, size_t rowIndex, float* out, size_t cols)
 {
     if (!out)
@@ -4683,13 +4796,12 @@ bool RawrXDModelLoader::GetTensorRow(const std::string& name, size_t rowIndex, f
     const size_t rowCount = static_cast<size_t>(t.dims[1]);
     if (cols != rowWidth || rowIndex >= rowCount)
     {
-        printf("[GetTensorRow] FAIL: tensor '%s' cols=%zu rowWidth=%zu rowIndex=%zu rowCount=%zu\n",
-               name.c_str(), cols, rowWidth, rowIndex, rowCount);
+        printf("[GetTensorRow] FAIL: tensor '%s' cols=%zu rowWidth=%zu rowIndex=%zu rowCount=%zu\n", name.c_str(), cols,
+               rowWidth, rowIndex, rowCount);
         return false;
     }
 
-    auto mapTensorRow = [&](size_t rowBytes, uint64_t* outRowOffset, void** outIncidentalBase,
-                            uint8_t** outPtr) -> bool
+    auto mapTensorRow = [&](size_t rowBytes, uint64_t* outRowOffset, void** outIncidentalBase, uint8_t** outPtr) -> bool
     {
         if (!outRowOffset || !outIncidentalBase || !outPtr || rowBytes == 0)
         {
@@ -4718,8 +4830,8 @@ bool RawrXDModelLoader::GetTensorRow(const std::string& name, size_t rowIndex, f
         bool mapOk = MapIncidentalWindow(*outRowOffset, rowBytes, *outIncidentalBase, *outPtr);
         if (!mapOk)
         {
-            printf("[mapTensorRow] FAIL: MapIncidentalWindow failed for '%s' offset=%llu size=%zu\n",
-                   name.c_str(), static_cast<unsigned long long>(*outRowOffset), rowBytes);
+            printf("[mapTensorRow] FAIL: MapIncidentalWindow failed for '%s' offset=%llu size=%zu\n", name.c_str(),
+                   static_cast<unsigned long long>(*outRowOffset), rowBytes);
         }
         return mapOk;
     };

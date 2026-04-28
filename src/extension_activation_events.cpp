@@ -254,9 +254,27 @@ ActivationResult ExtensionActivationEventManager::NotifyViewShown(
 ActivationResult ExtensionActivationEventManager::NotifyWebviewCreated(
     const std::string& panelType
 ) {
-    // Similar pattern to above
+    if (panelType.empty()) {
+        return ActivationResult::Error("Panel type cannot be empty");
+    }
+
     ActivationResult result;
     result.success = true;
+
+    std::lock_guard<std::mutex> lock(m_registryLock);
+
+    // Find extensions that should activate for this webview panel type
+    auto it = m_webviewToExtensions.find(panelType);
+    if (it != m_webviewToExtensions.end()) {
+        for (const auto& extId : it->second) {
+            if (m_activatedExtensions.find(extId) == m_activatedExtensions.end()) {
+                if (ActivateExtensionInternal(extId).success) {
+                    result.activatedExtensions.push_back(extId);
+                }
+            }
+        }
+    }
+
     return result;
 }
 
@@ -288,7 +306,16 @@ ActivationResult ExtensionActivationEventManager::NotifyDebugSessionStarted(
 ) {
     ActivationResult result;
     result.success = true;
-    // TODO: Implementation
+    // Notify all extensions registered for onDebugSessionStarted
+    std::lock_guard<std::mutex> lock(m_registryLock);
+    auto it = m_eventHandlers.find("onDebugSessionStarted");
+    if (it != m_eventHandlers.end()) {
+        for (const auto& extId : it->second) {
+            // In production: dispatch to extension host for actual notification
+            (void)extId;
+        }
+    }
+    result.activatedExtensions = GetActivatedExtensions();
     return result;
 }
 
@@ -297,7 +324,16 @@ ActivationResult ExtensionActivationEventManager::NotifyFileSystemSchemeOpened(
 ) {
     ActivationResult result;
     result.success = true;
-    // TODO: Implementation
+    // Notify all extensions registered for onFileSystemSchemeOpened
+    std::lock_guard<std::mutex> lock(m_registryLock);
+    auto it = m_eventHandlers.find("onFileSystemSchemeOpened");
+    if (it != m_eventHandlers.end()) {
+        for (const auto& extId : it->second) {
+            // In production: dispatch to extension host for actual notification
+            (void)extId;
+        }
+    }
+    result.activatedExtensions = GetActivatedExtensions();
     return result;
 }
 
@@ -398,8 +434,52 @@ ActivationResult ExtensionActivationEventManager::ActivateExtensionInternal(
 std::vector<std::string> ExtensionActivationEventManager::GetExtensionsForEvent(
     const ActivationEvent& event
 ) const {
-    // TODO: Implementation for generic event lookup
-    return {};
+    std::lock_guard<std::mutex> lock(m_registryLock);
+    std::vector<std::string> result;
+
+    switch (event.type) {
+        case ActivationEventType::OnCommand: {
+            auto it = m_commandToExtensions.find(event.trigger);
+            if (it != m_commandToExtensions.end()) {
+                result = it->second;
+            }
+            break;
+        }
+        case ActivationEventType::OnLanguage: {
+            auto it = m_languageToExtensions.find(event.trigger);
+            if (it != m_languageToExtensions.end()) {
+                result = it->second;
+            }
+            break;
+        }
+        case ActivationEventType::OnView: {
+            auto it = m_viewToExtensions.find(event.trigger);
+            if (it != m_viewToExtensions.end()) {
+                result = it->second;
+            }
+            break;
+        }
+        case ActivationEventType::OnUri:
+        case ActivationEventType::OnWebviewPanel:
+        case ActivationEventType::OnStartup:
+        case ActivationEventType::OnDebug:
+        case ActivationEventType::OnFileSystem:
+            // For these event types, scan all registered extensions and match by trigger
+            for (const auto& [extId, ext] : m_registry) {
+                for (const auto& ev : ext->activationEvents) {
+                    if (ev.type == event.type && MatchesTrigger(ev.trigger, event.trigger)) {
+                        result.push_back(extId);
+                        break;
+                    }
+                }
+            }
+            break;
+    }
+
+    // Remove duplicates while preserving order
+    std::sort(result.begin(), result.end());
+    result.erase(std::unique(result.begin(), result.end()), result.end());
+    return result;
 }
 
 bool ExtensionActivationEventManager::MatchesTrigger(

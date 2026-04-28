@@ -1543,3 +1543,37 @@ void Win32IDE::toggleDebugger()
         attachDebugger();
     }
 }
+
+// ============================================================================
+// DEBUGGER COMMAND WRAPPERS (DAPServer compatibility)
+// ============================================================================
+
+void Win32IDE::startDebugging()
+{
+    attachDebugger();
+}
+
+void Win32IDE::stopDebugging()
+{
+    stopDebugger();
+}
+
+void Win32IDE::stepOver()
+{
+    stepOverExecution();
+}
+
+void Win32IDE::stepInto()
+{
+    stepIntoExecution();
+}
+
+void Win32IDE::stepOut()
+{
+    stepOutExecution();
+}
+
+void Win32IDE::continueExecution()
+{
+    resumeExecution();
+}

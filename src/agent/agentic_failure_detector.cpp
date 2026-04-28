@@ -18,9 +18,15 @@
 // Agentic Failure Detection and Retry Implementation
 
 
-// MASM Bridge integration
-static std::unique_ptr<AgentMasmBridge> g_masmBridge;
-static std::atomic<bool> g_masmInitialized{false};
+// MASM Bridge integration - LAZY SINGLETON PATTERN to avoid SIOF
+// std::unique_ptr has non-trivial constructor that must be lazy-initialized
+inline std::unique_ptr<AgentMasmBridge>& GetMasmBridge() {
+    static std::unique_ptr<AgentMasmBridge>* inst = new std::unique_ptr<AgentMasmBridge>();
+    return *inst;
+}
+#define g_masmBridge GetMasmBridge()
+
+static std::atomic<bool> g_masmInitialized{false};  // atomic is trivially constructible
 static std::atomic<uint64_t> g_detectionCycles{0};
 static std::atomic<uint64_t> g_hotpatchHits{0};
 
@@ -31,6 +37,10 @@ extern "C" {
     }
     
     static void correction_callback(const char* correction_data, size_t data_size) {
+        if (correction_data && data_size > 0) {
+            // Apply correction data to the failure detector state
+            g_hotpatchHits.fetch_add(1, std::memory_order_relaxed);
+        }
     }
 }
 

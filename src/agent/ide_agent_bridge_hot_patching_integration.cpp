@@ -237,7 +237,9 @@ bool IDEAgentBridgeWithHotPatching::startHotPatchingProxy() {
 
         return true;
     } catch (const std::exception& ex) {
-        (void)ex;
+        if (m_logger) {
+            m_logger->error("HotPatchingProxy init failed: " + std::string(ex.what()));
+        }
         return false;
     }
 }

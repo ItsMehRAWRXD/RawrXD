@@ -311,7 +311,7 @@ public:
         if (!config.workspaceRoot.empty()) {
             std::error_code ec;
             if (!std::filesystem::exists(config.workspaceRoot, ec)) {
-                // Workspace root does not exist
+                fprintf(stderr, "[AgenticCore] Warning: workspace root does not exist: %s\n", config.workspaceRoot.c_str());
             }
         }
 

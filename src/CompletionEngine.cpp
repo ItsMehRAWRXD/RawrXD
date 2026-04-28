@@ -284,7 +284,7 @@ std::vector<CompletionSuggestion> IntelligentCompletionEngine::inferCompletions(
             }
         }
     } catch (...) {
-        // Model unavailable — fall through to heuristic fallback
+        fprintf(stderr, "[CompletionEngine] Model unavailable, using heuristic fallback\n");
     }
 
     // Heuristic fallback if no model response

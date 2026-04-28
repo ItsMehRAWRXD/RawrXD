@@ -135,7 +135,7 @@ bool BeaconClient::sendMessage(const std::string& sourceId, const std::string& t
             auto opts = nlohmann::json::parse(options);
             body["options"] = opts;
         } catch (...) {
-            // Ignore invalid options
+            fprintf(stderr, "[BeaconClient] Invalid options in message\n");
         }
     }
 
@@ -166,7 +166,9 @@ bool BeaconClient::sendToAgentic(const std::string& sourceId, const std::string&
         try {
             auto p = nlohmann::json::parse(params);
             body["params"] = p;
-        } catch (...) {}
+        } catch (...) {
+            fprintf(stderr, "[BeaconClient] JSON parse failed for params\n");
+        }
     }
 
     std::string response;
@@ -218,7 +220,11 @@ bool BeaconClient::sendToSecurity(const std::string& sourceId, const std::string
         try {
             auto d = nlohmann::json::parse(data);
             body["data"] = d;
-        } catch (...) {}
+        } catch (const std::exception& e) {
+            OutputDebugStringA(("[BeaconClient] JSON parse exception: " + std::string(e.what()) + "\n").c_str());
+        } catch (...) {
+            OutputDebugStringA("[BeaconClient] JSON parse unknown exception\n");
+        }
     }
 
     std::string response;

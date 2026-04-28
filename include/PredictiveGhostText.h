@@ -43,6 +43,11 @@ private:
     // Internal state for debouncing
     uint64_t m_lastUpdateTick = 0;
     
+    // Prediction engine state
+    bool m_enabled = true;
+    float m_confidenceThreshold = 0.7f;
+    size_t m_contextWindow = 50;
+    
     // Speculative decoder bridge
     // This will eventually call the SpeculativeDecoder implemented earlier
 };

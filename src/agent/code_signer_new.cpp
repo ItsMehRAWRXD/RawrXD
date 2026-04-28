@@ -103,7 +103,7 @@ bool CodeSigner::signWindowsExecutable(const std::string& exePath,
 }
 
 bool CodeSigner::signMacOSBundle(const std::string& bundlePath, const std::string& identity) {
-    // Not implemented for Windows
+    // macOS bundle signing not supported on Windows builds
     return false;
 }
 

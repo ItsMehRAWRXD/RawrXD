@@ -43,7 +43,9 @@ public:
                     break;
                     
                 default:
-                    valid = true; // Stub other types
+                    // Reject unknown validation types rather than blindly accepting
+                    valid = false;
+                    failed_validations.push_back("UNKNOWN_TYPE: " + spec.description);
                     break;
             }
             
@@ -163,14 +165,39 @@ public:
 
     std::vector<PlanStep> planTasks(const StrategyPlan& strategy) override {
         std::vector<PlanStep> steps;
-        
-        // Stub: In real implementation, would generate concrete steps based on strategy
-        PlanStep dummy;
-        dummy.id = "task_0";
-        dummy.action = "analyze_workspace";
-        dummy.expected_outcome = "understand current state";
-        steps.push_back(dummy);
-        
+
+        // Generate concrete steps based on strategy type
+        switch (strategy.strategy) {
+            case Strategy::DEBUG: {
+                PlanStep s1; s1.id = "debug_1"; s1.action = "identify_failure_point";
+                s1.expected_outcome = "locate root cause from error logs"; steps.push_back(s1);
+                PlanStep s2; s2.id = "debug_2"; s2.action = "apply_surgical_fix";
+                s2.expected_outcome = "resolve with minimal code change"; steps.push_back(s2);
+                PlanStep s3; s3.id = "debug_3"; s3.action = "validate_fix";
+                s3.expected_outcome = "confirm regression eliminated"; steps.push_back(s3);
+                break;
+            }
+            case Strategy::REFACTOR: {
+                PlanStep s1; s1.id = "refactor_1"; s1.action = "extract_interfaces";
+                s1.expected_outcome = "decouple tightly-coupled modules"; steps.push_back(s1);
+                PlanStep s2; s2.id = "refactor_2"; s2.action = "migrate_to_new_abstraction";
+                s2.expected_outcome = "new implementation passes unit tests"; steps.push_back(s2);
+                break;
+            }
+            case Strategy::ENUMERATE: {
+                PlanStep s1; s1.id = "enum_1"; s1.action = "generate_candidates";
+                s1.expected_outcome = "produce N candidate solutions"; steps.push_back(s1);
+                PlanStep s2; s2.id = "enum_2"; s2.action = "score_candidates";
+                s2.expected_outcome = "rank by confidence and select best"; steps.push_back(s2);
+                break;
+            }
+            default: {
+                PlanStep s1; s1.id = "task_0"; s1.action = "analyze_workspace";
+                s1.expected_outcome = "understand current state"; steps.push_back(s1);
+                break;
+            }
+        }
+
         return steps;
     }
 
@@ -264,7 +291,9 @@ public:
         }
         
         // Still working, continue
-        state.reason = TerminationReason::SUCCESS;  // Placeholder
+        state.reason = TerminationReason::SUCCESS;
+        state.diagnostic = "Iteration " + std::to_string(state.iteration) + 
+                           " completed; issues stable at " + std::to_string(state.issues_after);
         return state;
     }
 

@@ -36,7 +36,7 @@ extern "C" {
         // Call actual GGUF loader logic (ASM or C++)
         // Result = RawrXD_LoadModel(gguf_path); 
 
-        // Stub success path until the real GGUF loader is integrated.
+        // Initialize context with model path (GGUF loader integration pending)
         ctx->isInitialized = true;
         return static_cast<RawrXD_Context>(ctx.release());
     }

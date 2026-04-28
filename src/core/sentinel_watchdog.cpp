@@ -838,7 +838,7 @@ bool SentinelWatchdog::locateTextSection() {
 
             // Validate — the section should be executable
             if (!(sections[i].Characteristics & IMAGE_SCN_MEM_EXECUTE)) {
-                // .text is not executable? Suspicious, but continue
+                fprintf(stderr, "[SentinelWatchdog] Warning: .text section not executable\n");
             }
 
             m_textLocated = true;

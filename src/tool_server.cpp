@@ -173,7 +173,7 @@ static std::string ResolveDefaultModelPath() {
             return current_model.string();
         }
     } catch (...) {
-        // continue to other fallbacks
+        fprintf(stderr, "[ToolServer] Continuing to other fallbacks\n");
     }
 
     for (const fs::path& candidate : { fs::path("d:/rawrxd/model.gguf"), fs::path("d:/rawrxd/Modelfiles/model.gguf") }) {
@@ -1122,7 +1122,7 @@ private:
         try {
             req = nlohmann::json::parse(body);
         } catch (...) {
-            // Fall back to ExtractJsonValue for minimal compatibility.
+            fprintf(stderr, "[ToolServer] Falling back to ExtractJsonValue\n");
         }
 
         std::string prompt = req.value("prompt", ExtractJsonValue(body, "prompt"));
@@ -1410,7 +1410,7 @@ private:
         try {
             req = nlohmann::json::parse(body);
         } catch (...) {
-            // Fall back to ExtractJsonValue below.
+            fprintf(stderr, "[ToolServer] Falling back to ExtractJsonValue\n");
         }
 
         std::string question = req.value("question", ExtractJsonValue(body, "question"));
@@ -2672,7 +2672,7 @@ private:
                             send(client_socket, doneLine.c_str(), static_cast<int>(doneLine.length()), 0);
                         }
                     } catch (...) {
-                        // Skip malformed NDJSON lines
+                        fprintf(stderr, "[ToolServer] Skipping malformed NDJSON line\n");
                     }
                 }
             }

@@ -314,7 +314,34 @@ DependencyGraph ExtensionDependencyResolver::BuildDependencyGraph(
     const std::string& extensionId
 ) const {
     DependencyGraph graph;
-    // TODO: Build full dependency graph for extension
+    std::unordered_set<std::string> visited;
+    std::queue<std::string> queue;
+
+    queue.push(extensionId);
+    visited.insert(extensionId);
+
+    while (!queue.empty()) {
+        std::string current = queue.front();
+        queue.pop();
+
+        auto it = m_catalog.find(current);
+        if (it == m_catalog.end()) {
+            continue;
+        }
+
+        // Use the latest version's dependencies
+        if (!it->second.empty()) {
+            const auto& entry = it->second.front();
+            for (const auto& dep : entry.dependencies) {
+                graph.edges[current].push_back(dep.extensionId);
+                if (visited.find(dep.extensionId) == visited.end()) {
+                    visited.insert(dep.extensionId);
+                    queue.push(dep.extensionId);
+                }
+            }
+        }
+    }
+
     return graph;
 }
 
@@ -322,9 +349,50 @@ std::vector<std::string> ExtensionDependencyResolver::DetectConflicts(
     const std::vector<Dependency>& dependencies
 ) const {
     std::vector<std::string> conflicts;
+    std::unordered_map<std::string, std::vector<VersionConstraint>> constraintsByExt;
 
-    // TODO: Analyze dependencies for version conflicts
-    // For MVP, return empty
+    // Group constraints by extension ID
+    for (const auto& dep : dependencies) {
+        constraintsByExt[dep.extensionId].push_back(dep.constraint);
+    }
+
+    // Check for conflicting constraints on the same extension
+    for (const auto& [extId, constraints] : constraintsByExt) {
+        if (constraints.size() < 2) {
+            continue;  // No conflict possible with single constraint
+        }
+
+        // Get available versions for this extension
+        auto versions = GetAvailableVersions(extId);
+        if (versions.empty()) {
+            conflicts.push_back(extId + ": no versions available");
+            continue;
+        }
+
+        // Find versions that satisfy ALL constraints
+        std::vector<SemanticVersion> compatibleVersions;
+        for (const auto& ver : versions) {
+            bool allSatisfied = true;
+            for (const auto& constraint : constraints) {
+                if (!constraint.IsSatisfiedBy(ver)) {
+                    allSatisfied = false;
+                    break;
+                }
+            }
+            if (allSatisfied) {
+                compatibleVersions.push_back(ver);
+            }
+        }
+
+        if (compatibleVersions.empty()) {
+            std::string conflictMsg = extId + ": conflicting constraints ";
+            for (size_t i = 0; i < constraints.size(); ++i) {
+                if (i > 0) conflictMsg += " vs ";
+                conflictMsg += constraints[i].ToString();
+            }
+            conflicts.push_back(conflictMsg);
+        }
+    }
 
     return conflicts;
 }
@@ -392,7 +460,22 @@ bool ExtensionDependencyResolver::HasCycleDetection(
     std::unordered_set<std::string>& visited,
     DependencyGraph& graph
 ) const {
-    // TODO: DFS-based cycle detection
+    // DFS-based cycle detection for extension dependency graph
+    if (visiting.count(current)) return true;  // Cycle found
+    if (visited.count(current)) return false;    // Already checked, no cycle
+    
+    visited.insert(current);
+    
+    auto it = graph.dependencies.find(current);
+    if (it != graph.dependencies.end()) {
+        std::unordered_set<std::string> newVisiting = visiting;
+        newVisiting.insert(current);
+        for (const auto& dep : it->second) {
+            if (HasCycleDetection(dep.extensionId, newVisiting, visited, graph)) {
+                return true;
+            }
+        }
+    }
     return false;
 }
 
@@ -400,8 +483,27 @@ bool ExtensionDependencyResolver::NegotiateConflict(
     const DependencyGraph& graph,
     std::unordered_map<std::string, SemanticVersion>& versions
 ) {
-    // TODO: Version negotiation algorithm
-    return false;
+    // Version negotiation: select highest compatible version for each extension
+    for (const auto& ext : graph.extensions) {
+        SemanticVersion highest = ext.second.version;
+        
+        auto depIt = graph.dependencies.find(ext.first);
+        if (depIt != graph.dependencies.end()) {
+            for (const auto& dep : depIt->second) {
+                auto reqIt = versions.find(dep.extensionId);
+                if (reqIt != versions.end()) {
+                    // Keep the higher version requirement
+                    if (dep.requiredVersion > reqIt->second) {
+                        reqIt->second = dep.requiredVersion;
+                    }
+                } else {
+                    versions[dep.extensionId] = dep.requiredVersion;
+                }
+            }
+        }
+        versions[ext.first] = highest;
+    }
+    return true;
 }
 
 // ============================================================================

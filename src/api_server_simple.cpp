@@ -6,6 +6,7 @@
 
 #include <winsock2.h>
 #include <windows.h>
+#include "gpu_enforcement.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -20,10 +21,17 @@
 #pragma warning(disable : 4996)
 
 // Global state
-static std::atomic<bool> g_running(false);
+static std::atomic<bool> g_running(false);  // atomic with trivial init is OK
 static SOCKET g_listen_socket = INVALID_SOCKET;
-static std::chrono::steady_clock::time_point g_start_time;
-static std::string g_active_model;   // currently loaded model name
+static std::chrono::steady_clock::time_point g_start_time;  // trivial
+
+// LAZY SINGLETON: std::string has non-trivial constructor
+inline std::string& GetActiveModel() {
+    static std::string* inst = new std::string();
+    return *inst;
+}
+#define g_active_model GetActiveModel()
+
 static Engine* g_active_engine = nullptr;
 
 // ============================================================
@@ -263,7 +271,7 @@ void ServerLoop(int port) {
         SOCKET client_socket = accept(g_listen_socket, (sockaddr*)&client_addr, &client_addr_len);
         if (client_socket == INVALID_SOCKET) {
             if (WSAGetLastError() != WSAEINTR) {
-            // accept() failed
+                fprintf(stderr, "[APIServer] accept() failed: %d\n", WSAGetLastError());
             }
             continue;
         }
@@ -345,6 +353,9 @@ bool InitializeServer(int port) {
 // ============================================================
 
 int main(int argc, char* argv[]) {
+    // Mandatory GPU gate — the API server refuses to start without a GPU.
+    rxd::gpu::require();
+
     int port = 11434;
     
     // Parse arguments

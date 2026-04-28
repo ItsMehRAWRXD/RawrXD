@@ -153,7 +153,11 @@ ApiResponse CloudApiClient::performRequest(const std::string& url_str, const nlo
                              }
                          }
                       }
-                 } catch(...) {}
+                 } catch(const std::exception& e) {
+                     OutputDebugStringA(("[cloud_api_client] response parse exception: " + std::string(e.what()) + "\n").c_str());
+                 } catch(...) {
+                     OutputDebugStringA("[cloud_api_client] response parse unknown exception\n");
+                 }
              }
         } else {
             response.error_message = "HTTP " + std::to_string(response.status_code);

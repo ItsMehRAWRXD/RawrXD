@@ -54,6 +54,35 @@ function Test-FileExists {
     return $exists
 }
 
+function Test-ConfigPropertyPath {
+    param(
+        $Config,
+        [string[]]$Path
+    )
+
+    $current = $Config
+    foreach ($segment in $Path) {
+        if ($null -eq $current) {
+            return $false
+        }
+
+        if ($current -is [System.Collections.IDictionary]) {
+            if (-not $current.Contains($segment)) {
+                return $false
+            }
+            $current = $current[$segment]
+            continue
+        }
+
+        if ($current.PSObject.Properties.Name -notcontains $segment) {
+            return $false
+        }
+        $current = $current.$segment
+    }
+
+    return $true
+}
+
 function Test-PEFormat {
     param([string]$ExecutablePath)
     
@@ -78,7 +107,6 @@ function Test-ExecutableLaunch {
         $process = Start-Process -FilePath $ExecutablePath -ArgumentList "--version" -PassThru -WindowStyle Hidden -ErrorAction Stop
         
         # Wait briefly to see if it crashes immediately
-        $timeout = $false
         $process.WaitForExit(2000) | Out-Null
         
         if ($process.HasExited) {
@@ -149,14 +177,39 @@ function Test-Configuration {
     }
     
     try {
-        $config = Get-Content $ConfigPath -Raw | ConvertFrom-Json -ErrorAction Stop
-        
-        $checks = @(
-            @{ Name = "Config JSON parse"; Passed = $true }
+        $config = Get-Content $ConfigPath -Raw | ConvertFrom-Json -AsHashtable -ErrorAction Stop
+
+        $requiredAlternatives = @(
+            @{ Name = "model"; Alternatives = @(@("model"), @("native"), @("modelServer")) },
+            @{ Name = "inference"; Alternatives = @(@("inference")) },
+            @{ Name = "ui"; Alternatives = @(@("ui"), @("theme"), @("editor")) },
+            @{ Name = "paths"; Alternatives = @(@("paths"), @("modelServer", "configPath")) }
         )
-        
-        Write-TestResult -TestName "Configuration JSON" -Passed $true -Message "Valid JSON structure" -Category "Config"
-        return $true
+
+        $missing = @()
+        foreach ($requirement in $requiredAlternatives) {
+            $satisfied = $false
+            foreach ($alternative in $requirement.Alternatives) {
+                if (Test-ConfigPropertyPath -Config $config -Path $alternative) {
+                    $satisfied = $true
+                    break
+                }
+            }
+
+            if (-not $satisfied) {
+                $missing += $requirement.Name
+            }
+        }
+
+        $passed = $missing.Count -eq 0
+        $message = if ($passed) {
+            "Valid JSON structure with required deployment settings"
+        } else {
+            "Missing required settings: $($missing -join ', ')"
+        }
+
+        Write-TestResult -TestName "Configuration JSON" -Passed $passed -Message $message -Category "Config"
+        return $passed
     }
     catch {
         Write-TestResult -TestName "Configuration JSON" -Passed $false -Message $_.Exception.Message -Category "Config"
@@ -220,12 +273,17 @@ function Test-Performance {
     try {
         $sw = [System.Diagnostics.Stopwatch]::StartNew()
         $process = Start-Process -FilePath $ExecutablePath -ArgumentList "--version" -PassThru -WindowStyle Hidden
-        $process.WaitForExit(5000)
+        $exitedQuickly = $process.WaitForExit(1000)
         $sw.Stop()
         
         $startupTime = $sw.ElapsedMilliseconds
-        $passed = $startupTime -lt 5000  # Should start in under 5 seconds
-        
+        if (-not $exitedQuickly -and -not $process.HasExited) {
+            Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
+            Write-TestResult -TestName "Startup performance" -Passed $true -Message "Process started and stayed healthy after ${startupTime}ms" -Category "Performance"
+            return $true
+        }
+
+        $passed = $startupTime -lt 5000
         Write-TestResult -TestName "Startup performance" -Passed $passed -Message "${startupTime}ms" -Category "Performance"
         return $passed
     }
@@ -302,7 +360,9 @@ Write-Host ""
 if (-not $BinaryPath) {
     $possiblePaths = @(
         "$script:ProjectRoot\bin-turnkey\RawrXD-Win32IDE.exe",
+        "$script:ProjectRoot\build-ninja\bin\RawrXD-Win32IDE.exe",
         "$script:ProjectRoot\build-turnkey\bin\RawrXD-Win32IDE.exe",
+        "$script:ProjectRoot\build\bin\Release\RawrXD-Win32IDE.exe",
         "$script:ProjectRoot\bin\RawrXD-Win32IDE.exe",
         "$script:ProjectRoot\RawrXD-Win32IDE.exe"
     )
@@ -336,35 +396,37 @@ Write-Host ""
 
 # File existence tests
 if ($BinaryPath) {
-    Test-FileExists -Path $BinaryPath -Description "Main executable"
-    Test-PEFormat -ExecutablePath $BinaryPath
-    Test-ExecutableLaunch -ExecutablePath $BinaryPath
-    Test-Dependencies -ExecutablePath $BinaryPath
-    Test-Performance -ExecutablePath $BinaryPath
+    [void](Test-FileExists -Path $BinaryPath -Description "Main executable")
+    [void](Test-PEFormat -ExecutablePath $BinaryPath)
+    [void](Test-ExecutableLaunch -ExecutablePath $BinaryPath)
+    [void](Test-Dependencies -ExecutablePath $BinaryPath)
+    [void](Test-Performance -ExecutablePath $BinaryPath)
 } else {
     Write-TestResult -TestName "Binary detection" -Passed $false -Message "No executable found" -Category "Files"
 }
 
 if ($ConfigPath) {
-    Test-FileExists -Path $ConfigPath -Description "Configuration file"
-    Test-Configuration -ConfigPath $ConfigPath
+    [void](Test-FileExists -Path $ConfigPath -Description "Configuration file")
+    [void](Test-Configuration -ConfigPath $ConfigPath)
 } else {
     Write-TestResult -TestName "Config detection" -Passed $false -Message "No config file found" -Category "Config"
 }
 
-Test-DirectoryStructure
+[void](Test-DirectoryStructure)
 
 # Check for build artifacts
 $binDirs = @(
     "$script:ProjectRoot\bin-turnkey",
+    "$script:ProjectRoot\build-ninja\bin",
     "$script:ProjectRoot\bin",
-    "$script:ProjectRoot\build-turnkey\bin"
+    "$script:ProjectRoot\build-turnkey\bin",
+    "$script:ProjectRoot\build\bin\Release"
 )
 
 $binDirFound = $false
 foreach ($dir in $binDirs) {
     if (Test-Path $dir) {
-        Test-BuildArtifacts -BinDir $dir
+        [void](Test-BuildArtifacts -BinDir $dir)
         $binDirFound = $true
         break
     }

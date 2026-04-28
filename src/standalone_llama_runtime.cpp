@@ -389,13 +389,13 @@ bool LlamaRuntime::ensure_model_loaded(const std::wstring& gguf_path, int32_t gp
         model_params = m_fn->model_default_params();
     }
     int32_t requested_gpu_layers = gpu_layers;
-    const char* forceVk = std::getenv("RAWRXD_FORCE_VULKAN");
-    const bool forceVulkan = forceVk && forceVk[0] != '\0' && forceVk[0] != '0';
     const char* forceLayersEnv = std::getenv("RAWRXD_FORCE_GPU_LAYERS");
     if (forceLayersEnv && forceLayersEnv[0] != '\0') {
         requested_gpu_layers = static_cast<int32_t>(std::atoi(forceLayersEnv));
-    } else if (forceVulkan && requested_gpu_layers <= 0) {
-        // 999 mirrors llama-cli "-ngl 999" behavior (effectively all possible layers).
+    }
+    // GPU inference is mandatory: clamp any non-positive request up to 999 (full offload).
+    // RAWRXD_FORCE_VULKAN is honored implicitly because every load now offloads layers.
+    if (requested_gpu_layers <= 0) {
         requested_gpu_layers = 999;
     }
     model_params.n_gpu_layers = requested_gpu_layers;

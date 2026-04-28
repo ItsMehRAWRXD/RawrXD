@@ -90,9 +90,23 @@ public:
     const PredictionStats& GetStats() const { return m_stats; }
 
     /**
+     * Pre-execute possible continuations for speculation using batched operations.
+     * 
+     * @param candidate_tokens - Tokens to speculatively process
+     * @param context - Input context
+     * @return Vector of pre-computed logits for candidates
+     */
+    std::vector<std::vector<float>> SpeculativeBatchPrecompute(
+        const std::vector<uint32_t>& candidate_tokens,
+        const std::vector<uint32_t>& context);
+
+    /**
      * Reset statistics.
      */
-    void ResetStats() { m_stats = PredictionStats(); }
+    void ResetStats() { 
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_stats = PredictionStats(); 
+    }
 
     /**
      * Enable/disable speculative decoding.
@@ -105,11 +119,25 @@ public:
      */
     void SetSpeculationDepth(size_t depth) { m_speculation_depth = depth; }
     void SetConfidenceThreshold(float threshold) { m_confidence_threshold = threshold; }
+    void SetTemperature(float temp) { m_temperature = temp; }
+    void UpdateNGramModel(const std::vector<uint32_t>& context, uint32_t actual_token, bool was_correct);
+    void InitializeFromLoader(IGGUFLoader* loader) {
+        m_loader = loader;
+        if (m_loader) {
+            auto meta = m_loader->GetMetadata();
+            m_vocabSize = meta.vocab_size;
+            m_embeddingDim = meta.embedding_dim;
+        }
+    }
 
 private:
     bool m_enabled = true;
     size_t m_speculation_depth = 4;  // How many tokens ahead to predict
     float m_confidence_threshold = 0.6f;
+    float m_temperature = 0.7f;
+    uint32_t m_vocabSize = 32000;
+    size_t m_embeddingDim = 4096;
+    IGGUFLoader* m_loader = nullptr;
 
     // Token n-gram statistics for simple prediction
     std::unordered_map<uint32_t, std::vector<std::pair<uint32_t, int>>> m_bigram_model;

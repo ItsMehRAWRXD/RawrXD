@@ -21,6 +21,14 @@ add_executable(rawrxd-titan-init-probe
 )
 target_link_libraries(rawrxd-titan-init-probe PRIVATE kernel32)
 
+# MiniCMake - tiny zero-dependency C++ build system driver.
+add_executable(minicmake
+        minicmake.cpp
+)
+if(MSVC)
+    target_compile_options(minicmake PRIVATE /W4)
+endif()
+
 # Simple GPU Test - For hotpatch testing framework
 if(TARGET InferenceEngine)
     option(RAWRXD_BUILD_BENCH_CPU "Build bench_cpu CLI tool" OFF)
@@ -99,10 +107,28 @@ else()
   message(STATUS "[Tools] InferenceEngine library target not available; skipping inference-dependent CLI tools")
 endif()
 
-# Install targets (RawrXD_KeyGen ships with IDE for License Creator > Launch KeyGen)
-set(_RAWRXD_TOOL_INSTALL_TARGETS RawrXD_KeyGen rawrxd-titan-init-probe)
+# RawrXD Streamability Benchmark - For testing large model loading
+if(TARGET InferenceEngine)
+  add_executable(RawrXD-StreamabilityBenchmark
+      RawrXD_StreamabilityBenchmark.cpp
+      ../mapped_window_streamer.cpp
+  )
 
-foreach(_rawrxd_tool_target simple_gpu_test real_multi_model_benchmark bench_cpu comprehensive_benchmark gguf_api_server)
+  target_link_libraries(RawrXD-StreamabilityBenchmark PRIVATE
+      InferenceEngine
+      ${_RAWRXD_OPTIONAL_GGML_LINK_LIBS}
+  )
+endif()
+
+# GGUF profile test (writer-only; does not depend on Win32IDE link closure)
+if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/gguf_profile_test/CMakeLists.txt")
+    add_subdirectory(gguf_profile_test)
+endif()
+
+# Install targets (RawrXD_KeyGen ships with IDE for License Creator > Launch KeyGen)
+set(_RAWRXD_TOOL_INSTALL_TARGETS RawrXD_KeyGen rawrxd-titan-init-probe minicmake)
+
+foreach(_rawrxd_tool_target simple_gpu_test real_multi_model_benchmark bench_cpu comprehensive_benchmark gguf_api_server RawrXD-StreamabilityBenchmark)
     if(TARGET ${_rawrxd_tool_target})
         list(APPEND _RAWRXD_TOOL_INSTALL_TARGETS ${_rawrxd_tool_target})
     endif()

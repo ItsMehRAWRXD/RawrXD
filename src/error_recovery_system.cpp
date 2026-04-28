@@ -32,7 +32,11 @@ ErrorRecoverySystem::ErrorRecoverySystem()
 }
 
 ErrorRecoverySystem::~ErrorRecoverySystem() {
-    // No timers to stop — poll-based
+    // Stop all recovery timers
+    for (auto& [id, timer] : m_recoveryTimers) {
+        timer.active = false;
+    }
+    m_recoveryTimers.clear();
 }
 
 void ErrorRecoverySystem::tick() {

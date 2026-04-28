@@ -1,6 +1,7 @@
 // ============================================================================
 // rawrxd_serve_main.cpp — Single-binary Ollama replacement CLI
 // ============================================================================
+#include "../gpu_enforcement.h"
 // Usage:
 //   rawrxd serve [--host 0.0.0.0] [--port 11434] [--model-dir D:\models]
 //   rawrxd run   <model> [--prompt "..."]
@@ -788,6 +789,9 @@ int main(int argc, char* argv[])
 {
     // Enable UTF-8 console output
     SetConsoleOutputCP(65001);
+
+    // Mandatory GPU gate — RawrXD-Serve refuses to start without a GPU.
+    rxd::gpu::require();
 
     auto args = parseArgs(argc, argv);
 

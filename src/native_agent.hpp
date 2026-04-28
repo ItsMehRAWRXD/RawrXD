@@ -18,7 +18,8 @@ class NativeAgent {
 public:
     using OutputCallback = std::function<void(const std::string&)>;
 
-    NativeAgent(CPUInferenceEngine* engine) : m_engine(engine) {}
+    NativeAgent(CPUInferenceEngine* engine);
+    ~NativeAgent();
 
     void SetOutputCallback(OutputCallback cb) { m_callback = cb; }
     void SetDeepThink(bool enabled) { m_deepThink = enabled; }

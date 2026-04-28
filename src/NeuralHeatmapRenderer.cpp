@@ -11,6 +11,11 @@ NeuralHeatmapRenderer::NeuralHeatmapRenderer(HWND targetWnd) : m_hWnd(targetWnd)
 
 NeuralHeatmapRenderer::~NeuralHeatmapRenderer() {
     // Cleanup GDI+/DirectWrite resources
+    if (m_hWnd) {
+        InvalidateRect(m_hWnd, NULL, FALSE);
+    }
+    m_attentionPoints.clear();
+    std::cout << "[NeuralHeatmapRenderer] Cleanup complete" << std::endl;
 }
 
 void NeuralHeatmapRenderer::updateAttentionData(const std::vector<AttentionPoint>& points) {

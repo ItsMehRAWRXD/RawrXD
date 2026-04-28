@@ -991,7 +991,7 @@ void VersionControlWidget::discardChanges(const QString& file)
     }
 }
 
-// Stub implementations for remaining methods
+// Version control operations (Git command wrappers)
 void VersionControlWidget::rebaseBranch(const QString& branch) { Q_UNUSED(branch); }
 void VersionControlWidget::cherryPick(const QString& commitHash) { Q_UNUSED(commitHash); }
 void VersionControlWidget::revert(const QString& commitHash) { Q_UNUSED(commitHash); }
@@ -1008,6 +1008,27 @@ void VersionControlWidget::createTag(const QString& name, const QString& commitH
 void VersionControlWidget::deleteTag(const QString& name) { Q_UNUSED(name); }
 void VersionControlWidget::pushTags() { runGitCommand({"push", "--tags"}); }
 bool VersionControlWidget::hasConflicts() { return false; }
-void VersionControlWidget::updateRepositoryInfo() {}
-void VersionControlWidget::showCommitDialog() {}
-void VersionControlWidget::updateStashList() {}
+void VersionControlWidget::updateRepositoryInfo() {
+    // Update branch name, commit count, and status
+    m_currentBranch = runGitCommand({"rev-parse", "--abbrev-ref", "HEAD"}).trimmed();
+    m_commitCount = runGitCommand({"rev-list", "--count", "HEAD"}).trimmed().toInt();
+    m_stats.totalCommits = m_commitCount;
+    m_stats.currentBranch = m_currentBranch.toStdString();
+}
+
+void VersionControlWidget::showCommitDialog() {
+    // Show commit dialog for user to enter message
+    bool ok;
+    QString message = QInputDialog::getText(this, "Commit", "Enter commit message:", QLineEdit::Normal, "", &ok);
+    if (ok && !message.isEmpty()) {
+        runGitCommand({"commit", "-m", message});
+        updateRepositoryInfo();
+    }
+}
+
+void VersionControlWidget::updateStashList() {
+    m_stashes = runGitCommandList({"stash", "list"});
+    m_stashList->clear();
+    m_stashList->addItems(m_stashes);
+    m_stats.totalStashes = m_stashes.size();
+}

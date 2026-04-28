@@ -15,12 +15,13 @@
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
+#include <windows.h>
+#include <shellapi.h>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <string>
 #include <vector>
-#include <windows.h>
 
 
 // ============================================================================
@@ -346,20 +347,7 @@ static bool RunInference(TitanApi& api, HANDLE hPipe, uint32_t seq, const std::s
         return false;
     }
 
-    // -------------------------------------------------------------------------
-    // SEH guard: any DLL-side AV, alignment fault, or AVX-512 exception is
-    // caught here.  We emit a structured error frame to the IDE so it can
-    // display "Kernel fault: <code>" rather than seeing ERROR_BROKEN_PIPE
-    // with no context.  After writing the frame we ExitProcess so the OS
-    // reclaims the model weights cleanly.
-    // -------------------------------------------------------------------------
-    DWORD sehCode = 0;
-    bool sehFired = false;
-
-    __try
-    {
-
-        std::string currentPrompt = prompt;
+    std::string currentPrompt = prompt;
         // Tool-call interleave loop: each iteration is one inference round.
         for (int round = 0; round < 8; ++round)
         {
@@ -556,25 +544,7 @@ static bool RunInference(TitanApi& api, HANDLE hPipe, uint32_t seq, const std::s
             return true;
         }
 
-        errOut = "Tool-call round limit exceeded (8 rounds)";
-        return false;
-    }
-    __except (sehCode = GetExceptionCode(), sehFired = true, EXCEPTION_EXECUTE_HANDLER)
-    {
-        // Fault caught. Build a diagnostic frame and flush it to the IDE
-        // before ExitProcess so the GUI shows a meaningful error.
-        char faultBuf[128];
-        snprintf(faultBuf, sizeof(faultBuf), "Titan kernel fault: 0x%08X", sehCode);
-        std::string faultResp = "{" + JsonInt("seq", seq) + "," + JsonBool("ok", false) + "," +
-                                JsonStr("error", faultBuf) + "," + JsonBool("fatal", true) + "}";
-        PipeWriteFrame(hPipe, faultResp);
-        FlushFileBuffers(hPipe);
-        DisconnectNamedPipe(hPipe);
-        // Delay briefly so IDE receives the frame before pipe dies.
-        Sleep(50);
-        ExitProcess(static_cast<UINT>(sehCode));
-    }
-    // Unreachable — ExitProcess was called in __except.
+    errOut = "Tool-call round limit exceeded (8 rounds)";
     return false;
 }
 
@@ -600,16 +570,16 @@ static std::string BuildPipeName()
     return pipeName;
 }
 
-int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
+int main(int /*argc*/, char* /*argv*/[])
 {
     // Parse command line for parent PID.
-    int argc = 0;
-    LPWSTR* argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+    int wargc = 0;
+    LPWSTR* wargv = CommandLineToArgvW(GetCommandLineW(), &wargc);
     DWORD parentPid = 0;
-    if (argc >= 2)
-        parentPid = static_cast<DWORD>(wcstoul(argv[1], nullptr, 10));
-    if (argv)
-        LocalFree(argv);
+    if (wargc >= 2)
+        parentPid = static_cast<DWORD>(wcstoul(wargv[1], nullptr, 10));
+    if (wargv)
+        LocalFree(wargv);
 
     char pipeName[64];
     snprintf(pipeName, sizeof(pipeName), "\\\\.\\pipe\\RawrXD_TitanHost_%u", parentPid);

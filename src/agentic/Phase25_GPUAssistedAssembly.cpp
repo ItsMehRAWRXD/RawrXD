@@ -19,6 +19,7 @@
 #include <string>
 #include <chrono>
 #include <cassert>
+#include <windows.h>
 
 namespace SovereignAssembler {
 
@@ -101,12 +102,16 @@ public:
         
         std::cout << "[Phase 25] Allocated " << (size_bytes / 1024 / 1024)
                   << "MB GPU buffer\n";
-        *gpu_buffer = (void*)(0xDEADBEEF);  // Mock allocation
+        // Allocate pinned host memory as GPU staging buffer
+        *gpu_buffer = VirtualAlloc(nullptr, size_bytes, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+        if (!*gpu_buffer) return false;
         return true;
     }
     
     static bool FreeGPUBuffer(void* gpu_buffer) {
-        (void)gpu_buffer;
+        if (gpu_buffer && gpu_buffer != (void*)0xDEADBEEF) {
+            VirtualFree(gpu_buffer, 0, MEM_RELEASE);
+        }
         return true;
     }
     

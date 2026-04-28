@@ -28,7 +28,22 @@ PredictionResult PredictiveEditEngine::predictNextEdit(
         result.confidence = 0.95f;
         result.lineOffset = 1;
     } else if (context.find("void ") != std::string::npos && context.find("{") != std::string::npos && context.find("}") == std::string::npos) {
-        result.suggestedEdit = "    // TODO: Implement " + language + " logic";
+        // Generate language-specific function body based on detected language
+        if (language == "cpp" || language == "c++" || language == "c") {
+            result.suggestedEdit = "    // TODO: Implement function logic\n    return 0;";
+        } else if (language == "python") {
+            result.suggestedEdit = "    # TODO: Implement function logic\n    pass";
+        } else if (language == "javascript" || language == "typescript" || language == "js" || language == "ts") {
+            result.suggestedEdit = "    // TODO: Implement function logic\n    return null;";
+        } else if (language == "rust") {
+            result.suggestedEdit = "    // TODO: Implement function logic\n    todo!()";
+        } else if (language == "go" || language == "golang") {
+            result.suggestedEdit = "    // TODO: Implement function logic\n    return nil, nil";
+        } else if (language == "java") {
+            result.suggestedEdit = "    // TODO: Implement function logic\n    return null;";
+        } else {
+            result.suggestedEdit = "    // TODO: Implement " + language + " function logic";
+        }
         result.rationale = "New function skeleton detected.";
         result.confidence = 0.70f;
         result.lineOffset = 1;

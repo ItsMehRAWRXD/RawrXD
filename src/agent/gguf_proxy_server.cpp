@@ -62,7 +62,11 @@ void parseHostPort(const std::string& ep, std::string& host, int& port) {
 
 // ---------------------------------------------------------------------------
 GGUFProxyServer::~GGUFProxyServer() {
-    try { stopServer(); } catch (...) {}
+    try { stopServer(); } catch (const std::exception& e) {
+        OutputDebugStringA(("[gguf_proxy_server] stopServer exception: " + std::string(e.what()) + "\n").c_str());
+    } catch (...) {
+        OutputDebugStringA("[gguf_proxy_server] stopServer unknown exception\n");
+    }
 }
 
 void GGUFProxyServer::initialize(int listenPort, AgentHotPatcher* hotPatcher,

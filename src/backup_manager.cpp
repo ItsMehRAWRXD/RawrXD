@@ -121,7 +121,19 @@ std::vector<BackupManager::BackupInfo> BackupManager::listBackups() const {
 }
 
 void BackupManager::cleanOldBackups(int daysToKeep) {
-    // Walk directory and remove old folders
+    if (daysToKeep <= 0) return;
+    auto now = std::chrono::system_clock::now();
+    auto cutoff = now - std::chrono::hours(24 * daysToKeep);
+    
+    std::error_code ec;
+    for (const auto& entry : std::filesystem::directory_iterator(m_backupDir, ec)) {
+        if (entry.is_directory()) {
+            auto lastWrite = entry.last_write_time();
+            if (lastWrite < cutoff) {
+                std::filesystem::remove_all(entry.path(), ec);
+            }
+        }
+    }
 }
 
 std::string BackupManager::generateBackupId() const {

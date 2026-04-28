@@ -632,9 +632,10 @@ struct VSCodeQuickPickItem {
     std::string     detail;
     bool            picked;
     bool            alwaysShow;
+    bool            disabled;
     void*           userData;
 
-    VSCodeQuickPickItem() : picked(false), alwaysShow(false), userData(nullptr) {}
+    VSCodeQuickPickItem() : picked(false), alwaysShow(false), disabled(false), userData(nullptr) {}
 };
 
 // ============================================================================
@@ -784,8 +785,19 @@ struct VSCodeTerminal {
     SendTextCallback    sendTextFn;
     void*               sendTextCtx;
 
-    void show(bool preserveFocus = false) { (void)preserveFocus; }
-    void hide() {}
+    void show(bool preserveFocus = false) {
+        (void)preserveFocus;
+        if (alive && hTerminal) {
+            ShowWindow(hTerminal, SW_SHOW);
+        }
+    }
+    void hide() {
+        if (alive && hTerminal) {
+            ShowWindow(hTerminal, SW_HIDE);
+        }
+    }
+
+    HWND hTerminal = nullptr;
 
     VSCodeTerminal() : id(0), processId(0), exitStatus(-1), alive(false),
                        sendTextFn(nullptr), sendTextCtx(nullptr) {}

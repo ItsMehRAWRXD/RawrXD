@@ -1,12 +1,27 @@
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+
 #include "AgenticSubmitInference_Fix.h"
 
 #include "NativeInferenceClient.h"
 #include "AgentToolHandlers.h"
 #include "ToolCallResult.h"
+#include "../ai/inference_retry_shim.h"
 
 #include <algorithm>
 #include <cctype>
 #include <limits>
+#include <memory>
+#include <thread>
+#include <chrono>
+
+#ifdef min
+#undef min
+#endif
+#ifdef max
+#undef max
+#endif
 
 namespace RawrXD {
 namespace Agentic {
@@ -14,6 +29,134 @@ namespace Agentic {
 using json = nlohmann::json;
 
 namespace {
+
+// Process-wide retry shim. Per-endpoint circuit-breaker state is keyed by
+// host:port:model so a stuck remote model trips its own circuit without
+// affecting other endpoints.
+rxd::ai::InferenceRetryShim& GlobalRetryShim() {
+    static rxd::ai::InferenceRetryShim shim(rxd::ai::RetryPolicy{
+        /*max_retries=*/4,
+        /*base_ms=*/40,
+        /*max_backoff_ms=*/2000,
+        /*circuit_threshold=*/4,
+        /*circuit_reset_ms=*/15000,
+        /*jitter_frac=*/0.25
+    });
+    return shim;
+}
+
+// Map a NativeInferenceClient failure message to the shim's status code.
+// Fatal classes (auth, schema, bad request) are returned NonRetryable so we
+// fail fast instead of burning budget on retries that will never succeed.
+rxd::ai::InferenceStatus ClassifyFailure(const std::string& errLower) {
+    static const char* kFatal[] = {
+        "unauthorized", "forbidden", "401", "403",
+        "invalid request", "bad request", "400",
+        "not found", "404",
+        "unsupported model", "validation failed",
+        "tool_registry_init_failed"
+    };
+    for (const char* needle : kFatal) {
+        if (errLower.find(needle) != std::string::npos) {
+            return rxd::ai::InferenceStatus::NonRetryable;
+        }
+    }
+    return rxd::ai::InferenceStatus::Retryable;
+}
+
+std::string LowerCopy(const std::string& s) {
+    std::string out;
+    out.reserve(s.size());
+    for (char c : s) out.push_back(static_cast<char>(std::tolower(static_cast<unsigned char>(c))));
+    return out;
+}
+
+std::string EndpointTag(const Agent::NativeInferenceConfig& cfg) {
+    return cfg.host + ":" + std::to_string(cfg.port) + "|" + cfg.chat_model;
+}
+
+// Submit one ChatSync attempt against a session that may need recreation.
+// On a retryable failure we drop the current session pointer so the next
+// attempt re-creates it from scratch — this is the "backend handle survives
+// model reloads" guarantee.
+rxd::ai::InferenceStatus SubmitOneAttempt(
+    std::unique_ptr<Agent::NativeInferenceClient>& session,
+    const Agent::NativeInferenceConfig&            clientConfig,
+    const std::vector<Agent::ChatMessage>&         messages,
+    const json&                                    tools,
+    Agent::InferenceResult&                        out_result)
+{
+    if (!session) {
+        try {
+            session.reset(new Agent::NativeInferenceClient(clientConfig));
+        } catch (const std::exception& e) {
+            out_result = Agent::InferenceResult::error(
+                std::string("session_create_failed: ") + e.what());
+            return ClassifyFailure(LowerCopy(out_result.error_message));
+        } catch (...) {
+            out_result = Agent::InferenceResult::error(
+                "session_create_failed: unknown exception");
+            return rxd::ai::InferenceStatus::Retryable;
+        }
+    }
+
+    try {
+        out_result = session->ChatSync(messages, tools);
+    } catch (const std::exception& e) {
+        out_result = Agent::InferenceResult::error(
+            std::string("chat_sync_exception: ") + e.what());
+        session.reset(); // stale handle suspected; force recreate next attempt
+        return rxd::ai::InferenceStatus::Retryable;
+    } catch (...) {
+        out_result = Agent::InferenceResult::error(
+            "chat_sync_exception: unknown backend error");
+        session.reset();
+        return rxd::ai::InferenceStatus::Retryable;
+    }
+
+    if (out_result.success) return rxd::ai::InferenceStatus::OK;
+
+    const std::string elow = LowerCopy(out_result.error_message);
+    const auto status = ClassifyFailure(elow);
+    if (status == rxd::ai::InferenceStatus::Retryable) {
+        // Drop session so the next attempt rebuilds it; protects against
+        // half-open WinHTTP handles after the backend cycled.
+        session.reset();
+    }
+    return status;
+}
+
+/**
+ * Pre-flight check: Ensure tool registry is fully initialized before attempting ChatSync.
+ * Returns true if registry is ready, false if unrecoverable error.
+ */
+bool EnsureToolRegistryReady(int maxRetries = 3) {
+    // Attempt to access the registry instance. If it fails, retry.
+    for (int attempt = 0; attempt < maxRetries; ++attempt) {
+        try {
+            auto& registry = Agent::AgentToolHandlers::Instance();
+            
+            // Probe: Try to get any schema to verify initialization
+            const auto schemas = registry.GetAllSchemas();
+            if (!schemas.empty()) {
+                return true;  // Registry is ready
+            }
+            
+            // Registry exists but is empty; force re-initialization
+            if (attempt < maxRetries - 1) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(100 * (attempt + 1)));
+                continue;
+            }
+        } catch (const std::exception& e) {
+            if (attempt < maxRetries - 1) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(100 * (attempt + 1)));
+                continue;
+            }
+            return false;  // Unrecoverable error
+        }
+    }
+    return false;
+}
 
 std::string TrimAscii(std::string value) {
     const auto notSpace = [](unsigned char ch) { return !std::isspace(ch); };
@@ -103,6 +246,15 @@ AgenticInferenceBridge::InferenceResult AgenticInferenceBridge::SubmitInferenceW
 {
     InferenceResult bridgeResult;
 
+    // PRE-FLIGHT: Ensure tool registry is ready before attempting inference loop
+    if (!EnsureToolRegistryReady(3)) {
+        bridgeResult.success = false;
+        bridgeResult.error = "tool_registry_init_failed: Unable to initialize agent tool handlers after 3 retries";
+        bridgeResult.usedTools = false;
+        bridgeResult.toolIterations = 0;
+        return bridgeResult;
+    }
+
     Agent::NativeInferenceConfig clientConfig;
     clientConfig.host = runtime.host.empty() ? "127.0.0.1" : runtime.host;
     clientConfig.port = runtime.port == 0 ? 11435 : runtime.port;
@@ -110,7 +262,11 @@ AgenticInferenceBridge::InferenceResult AgenticInferenceBridge::SubmitInferenceW
     clientConfig.temperature = runtime.temperature;
     clientConfig.max_tokens = ClampMaxTokens(max_tokens);
 
-    Agent::NativeInferenceClient client(clientConfig);
+    // Session is owned by this call. Each retry attempt may swap it out via
+    // SubmitOneAttempt() if the previous handle went stale (model reload,
+    // backend cycled, half-open WinHTTP, etc.).
+    std::unique_ptr<Agent::NativeInferenceClient> client;
+    const std::string circuitTag = EndpointTag(clientConfig);
 
     std::vector<Agent::ChatMessage> messages;
     messages.push_back({"system",
@@ -128,10 +284,20 @@ AgenticInferenceBridge::InferenceResult AgenticInferenceBridge::SubmitInferenceW
     for (int step = 0; step < maxIterations; ++step) {
         bridgeResult.toolIterations = step + 1;
 
-        Agent::InferenceResult llmResult = client.ChatSync(messages, tools);
-        if (!llmResult.success) {
-            bridgeResult.error = llmResult.error_message.empty() ? "agentic inference failed"
-                                                                 : llmResult.error_message;
+        Agent::InferenceResult llmResult;
+        const auto shimStatus = GlobalRetryShim().Execute(
+            [&]() { return SubmitOneAttempt(client, clientConfig, messages, tools, llmResult); },
+            circuitTag);
+
+        if (shimStatus != rxd::ai::InferenceStatus::OK) {
+            const char* statusTag =
+                (shimStatus == rxd::ai::InferenceStatus::CircuitOpen)  ? "circuit_open"
+              : (shimStatus == rxd::ai::InferenceStatus::NonRetryable) ? "non_retryable"
+                                                                       :  "retries_exhausted";
+            std::string detail = llmResult.error_message.empty()
+                                     ? std::string("agentic inference failed")
+                                     : llmResult.error_message;
+            bridgeResult.error = std::string(statusTag) + ": " + detail;
             return bridgeResult;
         }
 
@@ -183,8 +349,19 @@ AgenticInferenceBridge::InferenceResult AgenticInferenceBridge::SubmitInferenceW
             const auto& toolCall = llmResult.tool_calls[i];
             const std::string callId = "call_" + std::to_string(step) + "_" + std::to_string(i);
 
-            Agent::ToolCallResult toolResult =
-                Agent::AgentToolHandlers::Instance().Execute(toolCall.first, toolCall.second);
+            // Attempt tool execution with graceful error handling
+            Agent::ToolCallResult toolResult;
+            try {
+                toolResult = Agent::AgentToolHandlers::Instance().Execute(toolCall.first, toolCall.second);
+            } catch (const std::exception& e) {
+                // Tool execution threw; mark as failure but continue
+                toolResult.error = std::string("tool_exception: ") + e.what();
+                toolResult.output.clear();
+            } catch (...) {
+                // Catch-all for untyped exceptions (backend errors, etc.)
+                toolResult.error = "tool_exception: unknown backend error during tool execution (check registry)";
+                toolResult.output.clear();
+            }
 
             InferenceResult::ToolCallRecord record;
             record.toolName = toolCall.first;

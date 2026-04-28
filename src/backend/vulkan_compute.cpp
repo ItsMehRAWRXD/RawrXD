@@ -572,7 +572,7 @@ std::expected<void, VulkanError> VulkanCompute::createComputePipeline(
     return {};
 }
 
-// Stub implementation for other methods to satisfy linker
+// Vulkan buffer creation with memory type selection and host-visible mapping
 std::expected<VulkanBuffer, VulkanError> VulkanCompute::createBuffer(size_t size, VkBufferUsageFlags usage,
                                                                      VkMemoryPropertyFlags properties)
 {

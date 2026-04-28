@@ -182,16 +182,40 @@ void ExtensionPermissionsManager::RequestUserApproval(
     const PermissionRequest& request,
     std::function<void(const PermissionApproval&)> callback
 ) {
-    // TODO: Trigger UI prompt (would usually show dialog to user)
-    // For now, just auto-deny complex permissions
+    if (!callback) {
+        return;
+    }
+
     PermissionApproval approval;
     approval.extensionId = request.extensionId;
     approval.scope = request.scope;
-    approval.decision = PermissionDecision::PromptRequired;
 
-    if (callback) {
-        callback(approval);
+    // Build permission description
+    std::string scopeDesc = PermissionScopeToString(request.scope);
+    std::string msg = "Extension '" + request.extensionId + "' requests permission:\n\n" +
+                      "Scope: " + scopeDesc + "\n";
+    if (!request.detail.empty()) {
+        msg += "Detail: " + request.detail + "\n";
     }
+    msg += "\nAllow this permission?";
+
+    std::wstring wMsg(msg.begin(), msg.end());
+    std::wstring wTitle = L"RawrXD — Extension Permission";
+
+    int result = MessageBoxW(nullptr, wMsg.c_str(), wTitle.c_str(),
+                             MB_YESNOCANCEL | MB_ICONQUESTION | MB_TOPMOST);
+
+    if (result == IDYES) {
+        approval.decision = PermissionDecision::Approved;
+        RecordApproval(approval);
+    } else if (result == IDNO) {
+        approval.decision = PermissionDecision::Denied;
+        RecordApproval(approval);
+    } else {
+        approval.decision = PermissionDecision::PromptRequired;
+    }
+
+    callback(approval);
 }
 
 bool ExtensionPermissionsManager::RecordApproval(const PermissionApproval& approval) {
@@ -361,8 +385,27 @@ bool ExtensionPermissionsManager::LoadPermissions(const std::string& storagePath
 
         if (data.contains("permissions") && data["permissions"].is_object()) {
             for (auto& [extId, perms] : data["permissions"].items()) {
+                if (!perms.is_object()) continue;
                 auto& record = m_permissions[extId];
-                // TODO: Deserialize permission records
+                if (perms.contains("requestedScopes") && perms["requestedScopes"].is_number()) {
+                    record.requestedScopes = static_cast<PermissionScope>(perms["requestedScopes"].get<uint32_t>());
+                }
+                if (perms.contains("grantedScopes") && perms["grantedScopes"].is_number()) {
+                    record.grantedScopes = static_cast<PermissionScope>(perms["grantedScopes"].get<uint32_t>());
+                }
+                if (perms.contains("lastDecision") && perms["lastDecision"].is_string()) {
+                    std::string d = perms["lastDecision"].get<std::string>();
+                    if (d == "approved") record.lastDecision = PermissionDecision::Approved;
+                    else if (d == "denied") record.lastDecision = PermissionDecision::Denied;
+                    else if (d == "temporary") record.lastDecision = PermissionDecision::TemporaryApproval;
+                    else record.lastDecision = PermissionDecision::PromptRequired;
+                }
+                if (perms.contains("lastPromptTimeMs") && perms["lastPromptTimeMs"].is_number()) {
+                    record.lastPromptTimeMs = perms["lastPromptTimeMs"].get<uint64_t>();
+                }
+                if (perms.contains("isBlacklisted") && perms["isBlacklisted"].is_boolean()) {
+                    record.isBlacklisted = perms["isBlacklisted"].get<bool>();
+                }
             }
         }
 
@@ -384,8 +427,18 @@ bool ExtensionPermissionsManager::SavePermissions(const std::string& storagePath
         {
             std::lock_guard<std::mutex> lock(m_lock);
             for (const auto& [extId, record] : m_permissions) {
-                // TODO: Serialize permission records
-                data["permissions"][extId] = json::object();
+                json item;
+                item["requestedScopes"] = static_cast<uint32_t>(record.requestedScopes);
+                item["grantedScopes"] = static_cast<uint32_t>(record.grantedScopes);
+                switch (record.lastDecision) {
+                    case PermissionDecision::Approved: item["lastDecision"] = "approved"; break;
+                    case PermissionDecision::Denied: item["lastDecision"] = "denied"; break;
+                    case PermissionDecision::TemporaryApproval: item["lastDecision"] = "temporary"; break;
+                    default: item["lastDecision"] = "prompt"; break;
+                }
+                item["lastPromptTimeMs"] = record.lastPromptTimeMs;
+                item["isBlacklisted"] = record.isBlacklisted;
+                data["permissions"][extId] = item;
             }
         }
 
@@ -431,7 +484,7 @@ bool RequestExtensionPermission(const std::string& extensionId,
     PermissionRequest req(extensionId, scope, reason);
     GetPermissionsManager().RequestUserApproval(req,
         [](const PermissionApproval& approval) {
-            // User response callback
+            fprintf(stderr, "[ExtensionPermissions] User response: %s\n", approval.granted ? "granted" : "denied");
         }
     );
     return false;  // Would be true after user approves

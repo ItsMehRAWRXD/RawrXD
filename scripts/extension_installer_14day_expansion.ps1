@@ -5,7 +5,8 @@ param(
     [switch]$LiveInstall,
     [switch]$Strict,
     [switch]$SkipIntegrationGate,
-    [string]$BuildDir = "D:/rawrxd/build",
+    [switch]$TryBuildSmoke,
+    [string]$BuildDir = "",
     [string]$ReportDir = "D:/rawrxd/contract_reports/extension-installer"
 )
 
@@ -14,6 +15,48 @@ $ErrorActionPreference = "Stop"
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
 
+function Resolve-BuildDir {
+    param([string]$Prefer)
+
+    if ($Prefer -and (Test-Path -LiteralPath (Join-Path $Prefer "CMakeCache.txt"))) {
+        return (Resolve-Path -LiteralPath $Prefer).Path
+    }
+
+    foreach ($c in @(
+            (Join-Path $repoRoot "build-win32"),
+            (Join-Path $repoRoot "build-ninja"),
+            (Join-Path $repoRoot "build-ninja-ctx2"),
+            (Join-Path $repoRoot "build_smoke_auto"),
+            (Join-Path $repoRoot "build"))) {
+        $cache = Join-Path $c "CMakeCache.txt"
+        if (Test-Path -LiteralPath $cache) {
+            return (Resolve-Path -LiteralPath $c).Path
+        }
+    }
+
+    return $null
+}
+
+function Find-ExtensionInstallerExe {
+    param([string]$Bd)
+
+    if (-not $Bd) {
+        return $null
+    }
+
+    foreach ($p in @(
+            (Join-Path $Bd "bin\Release\ExtensionInstallerSmoke.exe"),
+            (Join-Path $Bd "bin\Debug\ExtensionInstallerSmoke.exe"),
+            (Join-Path $Bd "bin\ExtensionInstallerSmoke.exe"),
+            (Join-Path $Bd "ExtensionInstallerSmoke.exe"))) {
+        if (Test-Path -LiteralPath $p) {
+            return $p
+        }
+    }
+
+    return $null
+}
+
 function Ensure-Dir([string]$Path) {
     if (-not (Test-Path $Path)) {
         New-Item -ItemType Directory -Path $Path -Force | Out-Null
@@ -21,9 +64,18 @@ function Ensure-Dir([string]$Path) {
 }
 
 function Run-Smoke([string[]]$SmokeArgs, [string]$Label) {
-    $exe = Join-Path $BuildDir "bin/ExtensionInstallerSmoke.exe"
+    $exe = Find-ExtensionInstallerExe -Bd $script:ResolvedBuildDir
+    if (-not $exe -and $TryBuildSmoke -and $script:ResolvedBuildDir) {
+        Write-Host "[14D] Building ExtensionInstallerSmoke in $($script:ResolvedBuildDir)" -ForegroundColor Cyan
+        & cmake --build $script:ResolvedBuildDir --target ExtensionInstallerSmoke --parallel
+        if ($LASTEXITCODE -ne 0) {
+            throw "cmake build ExtensionInstallerSmoke exit $LASTEXITCODE"
+        }
+        $exe = Find-ExtensionInstallerExe -Bd $script:ResolvedBuildDir
+    }
+
     if (-not (Test-Path $exe)) {
-        throw "Smoke test executable not found: $exe"
+        throw "Smoke test executable not found under build dir '$($script:ResolvedBuildDir)'; set -BuildDir, configure CMake tree, or pass -TryBuildSmoke"
     }
 
     $stamp = Get-Date -Format "yyyyMMdd_HHmmss"
@@ -87,6 +139,8 @@ function Run-IntegrationGateMinimal([string]$Label) {
 }
 
 Ensure-Dir $ReportDir
+
+$script:ResolvedBuildDir = Resolve-BuildDir -Prefer $BuildDir
 
 $results = @()
 
@@ -187,7 +241,8 @@ switch ($Day) {
 $summaryPath = Join-Path $ReportDir ("summary_day{0:00}_{1}.txt" -f $Day, (Get-Date -Format "yyyyMMdd_HHmmss"))
 $summary = @()
 $summary += "RawrXD Extension Installer expansion (days 1-15; day 15 adds integration gate)"
-$summary += "Day=$Day Live=$Live LiveInstall=$LiveInstall Strict=$Strict SkipIntegrationGate=$SkipIntegrationGate"
+$summary += "Day=$Day Live=$Live LiveInstall=$LiveInstall Strict=$Strict SkipIntegrationGate=$SkipIntegrationGate TryBuildSmoke=$TryBuildSmoke"
+$summary += "ResolvedBuildDir=$script:ResolvedBuildDir"
 $summary += ""
 foreach ($r in $results) {
     $summary += ("Label={0}" -f $r.Label)

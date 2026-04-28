@@ -167,6 +167,7 @@ void NativeProxy::stopGeneration() {
 
 void NativeProxy::onNetworkReply() {
     // Legacy hook point (Qt version). Current implementation is synchronous via backend::NativeClient.
+    fprintf(stderr, "[NativeProxy] Network reply received (legacy hook)\n");
 }
 
 void NativeProxy::onNetworkError(int code) {

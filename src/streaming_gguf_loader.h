@@ -9,6 +9,8 @@
 namespace RawrXD
 {
 
+class MappedWindowStreamer;  // Forward declaration
+
 struct TensorZoneInfo
 {
     std::string zone_name;             // "embedding", "layers_0", "layers_1", etc.
@@ -72,6 +74,8 @@ class StreamingGGUFLoader : public IGGUFLoader
 
     // Access raw tensor data
     bool GetTensorData(const std::string& tensor_name, std::vector<uint8_t>& data);
+    // Probe that tensor bytes are readable without materializing the full tensor in RAM.
+    bool ProbeTensorData(const std::string& tensor_name, size_t sample_bytes = 4096);
     // Get total file size
     uint64_t GetTotalFileSize();
 
@@ -79,6 +83,10 @@ class StreamingGGUFLoader : public IGGUFLoader
     std::string filepath_;
     std::ifstream file_;
     bool is_open_;
+    
+    // AUDIT_FIX_4: Memory-mapped fallback for large zones
+    std::unique_ptr<class MappedWindowStreamer> mmap_streamer_;
+    bool using_mmap_;
 
     GGUFHeader header_;
     GGUFMetadata metadata_;
@@ -100,6 +108,7 @@ class StreamingGGUFLoader : public IGGUFLoader
 
     // ---- Configuration ----
     uint64_t max_zone_memory_mb_;  // How much RAM per zone? (512 MB default)
+    uint64_t data_section_offset_; // GGUF tensor offsets are relative to tensor data section
 
     // ---- Internal Helpers ----
 
@@ -108,6 +117,9 @@ class StreamingGGUFLoader : public IGGUFLoader
 
     // Load zone data from disk
     bool StreamZoneFromDisk(const std::string& zone_name);
+    
+    // AUDIT_FIX_4: Memory-mapped fallback when buffer allocation fails
+    bool LoadZoneMapped(const std::string& zone_name);
 
     // Calculate which layer a tensor belongs to
     int32_t ExtractLayerNumber(const std::string& tensor_name) const;

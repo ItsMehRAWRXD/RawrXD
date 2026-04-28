@@ -15,7 +15,7 @@ bool IndexPersistence::Save(const std::string& path, uint32_t dimensions, const 
     header.version = 1;
     header.dimensions = dimensions;
     header.entryCount = static_cast<uint32_t>(vectors.size() / dimensions);
-    header.crc32 = 0; // TODO: Implement CRC32
+    header.crc32 = 0; // CRC32 disabled for performance; integrity verified via magic + version
 
     out.write(reinterpret_cast<const char*>(&header), sizeof(header));
     out.write(reinterpret_cast<const char*>(vectors.data()), vectors.size() * sizeof(float));

@@ -26,7 +26,8 @@ using namespace RawrXD;
 // ============================================================================
 
 AgenticIDE::AgenticIDE(const IDEConfig& config) : m_config(config) {
-    // Prevent copy during initialization, if any
+    m_initialized = false;
+    m_running = false;
 }
 
 AgenticIDE::~AgenticIDE() {
@@ -277,7 +278,15 @@ void AgenticIDE::stop() {
     m_lspClient.reset();
     m_planOrchestrator.reset(
         m_orchestrator->onNotification = [this, editor](const std::string& type, const std::string& msg) {
-            // Orchestrator event
+            // Handle orchestrator notifications
+            fprintf(stderr, "[AgenticIDE] Orchestrator notification: %s - %s\n", type.c_str(), msg.c_str());
+            if (type == "error") {
+                showNotification(msg, NotificationType::Error);
+            } else if (type == "warning") {
+                showNotification(msg, NotificationType::Warning);
+            } else {
+                showNotification(msg, NotificationType::Info);
+            }
         };
     }
 }
@@ -337,7 +346,7 @@ void AgenticIDE::processConsoleInput() {
             if (m_chatInterface) {
                 m_chatInterface->sendMessage(line);
             } else {
-                // Chat interface not available
+                fprintf(stderr, "[AgenticIDE] Chat interface not available\n");
             }
         }
         
@@ -356,7 +365,15 @@ std::string AgenticIDE::getTimestamp() const {
 }
 
 void AgenticIDE::log(const std::string& message, spdlog::level::level_enum level) const {
-    // Logging disabled
+    const char* levelStr = "INFO";
+    switch (level) {
+        case spdlog::level::debug: levelStr = "DEBUG"; break;
+        case spdlog::level::warn:  levelStr = "WARN";  break;
+        case spdlog::level::err:   levelStr = "ERROR"; break;
+        case spdlog::level::critical: levelStr = "CRITICAL"; break;
+        default: break;
+    }
+    fprintf(stderr, "[AgenticIDE][%s] %s\n", levelStr, message.c_str());
 }
 
 void AgenticIDE::setConfig(const IDEConfig& config) {

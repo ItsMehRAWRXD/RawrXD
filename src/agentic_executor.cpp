@@ -521,7 +521,10 @@ json AgenticExecutor::compileProject(const std::string& projectPath, const std::
                     files.push_back(entry.path().filename().string());
                 }
             }
-        } catch(...) {}
+        } catch(...) {
+            // Filesystem iteration failed — log and continue with empty file list
+            errorOccurred("Filesystem iteration failed during compilation");
+        }
         
         if (files.empty()) {
             result["success"] = false;

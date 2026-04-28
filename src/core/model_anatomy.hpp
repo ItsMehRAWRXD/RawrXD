@@ -27,12 +27,13 @@ struct ModelAnatomy
     uint32_t ggufVersion{0};
     uint64_t tensorCount{0};
     uint64_t totalParams{0};
+    uint64_t totalBytes{0};
     std::vector<TensorEntry> tensors;
 };
 
 void ClassifyTensor(const std::string& name, int& category, int& layerId);
 
-/// Stub: optional IGGUFLoader integration when available.
+/// Production fallback: reconstruct anatomy via reflection when full IGGUFLoader is not linked.
 bool BuildAnatomyFromLoader(void* loader, ModelAnatomy& out, std::ostream* streamOut);
 
 /// Parse GGUF tensor table from disk (metadata only; uses aligned tensor-data base offsets).

@@ -82,6 +82,24 @@ OffloadConfig OffloadConfig::withEnvironmentOverrides(const OffloadConfig& base)
     return c;
 }
 
+static uint64_t effectiveWeightBudgetBytes(const OffloadConfig& c)
+{
+    if (!c.enable_vram_partitioning)
+    {
+        return c.vramBudgetBytes;
+    }
+
+    uint64_t reserved = c.kv_reserve + c.headroom;
+    if (reserved >= c.vramBudgetBytes)
+    {
+        // Never return zero to avoid unbounded eviction loops.
+        const uint64_t floorBytes = 256ULL * 1024ULL * 1024ULL;
+        return (c.vramBudgetBytes > floorBytes) ? floorBytes : c.vramBudgetBytes;
+    }
+
+    return c.vramBudgetBytes - reserved;
+}
+
 std::string LayerOffloadManager::spillStagingFileForLayer(uint32_t layerIndex) const
 {
     if (m_config.spillStagingRoot.empty())
@@ -495,7 +513,7 @@ PatchResult LayerOffloadManager::initialize(const char* modelPath, const PyreLay
     m_q2kContext.scratchSize = Q2KDequantContext::SUPERBLOCK_SIZE;
 
     // Initialize stats
-    m_stats.budgetBytes = offloadConfig.vramBudgetBytes;
+    m_stats.budgetBytes = effectiveWeightBudgetBytes(m_config);
     m_stats.totalLayerCount = m_layerCount;
 
     m_initialized = true;
@@ -1593,9 +1611,17 @@ PatchResult LayerOffloadManager::ensureLayerResident(uint32_t layerIndex)
         m_stats.prefetchMisses++;
     }
 
-    // Check if we need to evict to make room
-    while (m_stats.residentLayerCount >= m_config.maxResidentLayers)
+    // Check if we need to evict to make room (count + budget partition)
+    const uint64_t incomingLayerBytes = m_layers[layerIndex].totalDequantBytes;
+    while (true)
     {
+        const bool overCount = getResidentCount() >= m_config.maxResidentLayers;
+        const bool overBudget =
+            (current_weight_usage() + incomingLayerBytes) > effectiveWeightBudgetBytes(m_config);
+        if (!overCount && !overBudget)
+        {
+            break;
+        }
         evictLeastRecentLayer();
     }
 
@@ -1842,9 +1868,17 @@ void LayerOffloadManager::prefetchWorkerThread()
 
         if (layerToLoad != UINT32_MAX)
         {
-            // Evict if needed
-            while (m_stats.residentLayerCount >= m_config.maxResidentLayers)
+            // Evict if needed (count + budget partition)
+            const uint64_t incomingLayerBytes = m_layers[layerToLoad].totalDequantBytes;
+            while (true)
             {
+                const bool overCount = getResidentCount() >= m_config.maxResidentLayers;
+                const bool overBudget =
+                    (current_weight_usage() + incomingLayerBytes) > effectiveWeightBudgetBytes(m_config);
+                if (!overCount && !overBudget)
+                {
+                    break;
+                }
                 evictLeastRecentLayer();
             }
 
@@ -1873,6 +1907,43 @@ bool LayerOffloadManager::shouldSkipLayer(uint32_t layerIndex) const
     if (layerIndex >= m_layerCount)
         return false;
     return m_layers[layerIndex].skipRecommended;
+}
+
+void LayerOffloadManager::updateKVReservation(size_t num_tokens, size_t num_layers, size_t num_heads,
+                                              size_t head_dim, size_t bytes_per_elem)
+{
+    if (!m_initialized)
+    {
+        return;
+    }
+
+    // Approximate KV bytes: 2 (K+V) * tokens * layers * heads * head_dim * bytes_per_elem
+    const long double kvEstimate =
+        2.0L * static_cast<long double>(num_tokens) * static_cast<long double>(num_layers) *
+        static_cast<long double>(num_heads) * static_cast<long double>(head_dim) *
+        static_cast<long double>(bytes_per_elem);
+
+    const uint64_t maxKvByBudget =
+        (m_config.vramBudgetBytes > m_config.headroom) ? (m_config.vramBudgetBytes - m_config.headroom) : 0ULL;
+    const uint64_t kvBytes = (kvEstimate <= 0.0L)
+                                 ? 0ULL
+                                 : static_cast<uint64_t>(std::min<long double>(kvEstimate, maxKvByBudget));
+
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_config.kv_reserve = kvBytes;
+    }
+
+    {
+        std::lock_guard<std::mutex> slock(m_statsMutex);
+        m_stats.budgetBytes = effectiveWeightBudgetBytes(m_config);
+    }
+}
+
+size_t LayerOffloadManager::current_weight_usage() const
+{
+    std::lock_guard<std::mutex> slock(m_statsMutex);
+    return static_cast<size_t>(m_stats.currentResidentBytes);
 }
 
 // ============================================================================

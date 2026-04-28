@@ -48,7 +48,7 @@ static bool SafeGetString(const json& obj, const std::string& key, std::string& 
             return true;
         }
     } catch (...) {
-        // JSON access exception
+        fprintf(stderr, "[ExtensionManifest] JSON access exception in SafeGetString\n");
     }
     return false;
 }
@@ -64,7 +64,7 @@ static bool SafeGetArray(const json& obj, const std::string& key, std::vector<st
             return true;
         }
     } catch (...) {
-        // JSON access exception
+        fprintf(stderr, "[ExtensionManifest] JSON access exception in SafeGetArray\n");
     }
     return false;
 }
@@ -76,7 +76,7 @@ static bool SafeGetObject(const json& obj, const std::string& key, json& outObj)
             return true;
         }
     } catch (...) {
-        // JSON access exception
+        fprintf(stderr, "[ExtensionManifest] JSON access exception in SafeGetObject\n");
     }
     return false;
 }
@@ -88,7 +88,7 @@ static bool SafeGetBool(const json& obj, const std::string& key, bool& outValue)
             return true;
         }
     } catch (...) {
-        // JSON access exception
+        fprintf(stderr, "[ExtensionManifest] JSON access exception in SafeGetBool\n");
     }
     return false;
 }
@@ -103,9 +103,22 @@ CommandContribution ExtensionManifestParser::ParseCommand(const json& obj) {
     SafeGetString(obj, "title", cmd.title);
     SafeGetString(obj, "category", cmd.category);
     SafeGetString(obj, "description", cmd.description);
-    
-    // TODO: Parse keybinding if present
-    
+
+    // Parse keybinding if present
+    if (obj.contains("keybinding") && obj["keybinding"].is_object()) {
+        const auto& kb = obj["keybinding"];
+        std::string val;
+        if (SafeGetString(kb, "key", val)) cmd.keybinding["key"] = val;
+        if (SafeGetString(kb, "mac", val)) cmd.keybinding["mac"] = val;
+        if (SafeGetString(kb, "linux", val)) cmd.keybinding["linux"] = val;
+        if (SafeGetString(kb, "win", val)) cmd.keybinding["win"] = val;
+        if (SafeGetString(kb, "when", val)) cmd.keybinding["when"] = val;
+    }
+    // Also support flat keybinding fields at command level
+    if (obj.contains("key") && obj["key"].is_string()) {
+        cmd.keybinding["key"] = obj["key"].get<std::string>();
+    }
+
     return cmd;
 }
 
@@ -198,7 +211,7 @@ void ExtensionManifestParser::ParseContributions(const json& root, ExtensionMani
             }
         }
     } catch (...) {
-        // Skip malformed commands
+        fprintf(stderr, "[ExtensionManifest] Skipped malformed command\n");
     }
 
     // Parse languages
@@ -209,7 +222,7 @@ void ExtensionManifestParser::ParseContributions(const json& root, ExtensionMani
             }
         }
     } catch (...) {
-        // Skip malformed languages
+        fprintf(stderr, "[ExtensionManifest] Skipped malformed language\n");
     }
 
     // Parse keybindings
@@ -220,7 +233,7 @@ void ExtensionManifestParser::ParseContributions(const json& root, ExtensionMani
             }
         }
     } catch (...) {
-        // Skip malformed keybindings
+        fprintf(stderr, "[ExtensionManifest] Skipped malformed keybinding\n");
     }
 
     // Parse themes
@@ -231,7 +244,7 @@ void ExtensionManifestParser::ParseContributions(const json& root, ExtensionMani
             }
         }
     } catch (...) {
-        // Skip malformed themes
+        fprintf(stderr, "[ExtensionManifest] Skipped malformed themes\n");
     }
 
     // Parse configuration
@@ -244,14 +257,14 @@ void ExtensionManifestParser::ParseContributions(const json& root, ExtensionMani
             }
         }
     } catch (...) {
-        // Skip malformed configuration
+        fprintf(stderr, "[ExtensionManifest] Skipped malformed configuration\n");
     }
 
     // Parse grammars
     try {
         SafeGetArray(contrib, "grammars", out.contributes.grammars);
     } catch (...) {
-        // Skip
+        fprintf(stderr, "[ExtensionManifest] Skipped malformed grammars\n");
     }
 }
 
@@ -265,7 +278,7 @@ void ExtensionManifestParser::ParseDependencies(const json& root, ExtensionManif
                 }
             }
         } catch (...) {
-            // Skip
+            fprintf(stderr, "[ExtensionManifest] Skipped malformed dependency\n");
         }
     }
 
@@ -278,7 +291,7 @@ void ExtensionManifestParser::ParseDependencies(const json& root, ExtensionManif
                 }
             }
         } catch (...) {
-            // Skip
+            fprintf(stderr, "[ExtensionManifest] Skipped malformed devDependency\n");
         }
     }
 }
@@ -358,7 +371,56 @@ bool ExtensionManifestParser::Validate(const ExtensionManifest& manifest,
         return false;
     }
 
-    // TODO: Additional validation rules
+    // Validate version format (semver-like: major.minor.patch)
+    {
+        std::regex semverRegex(R"((\d+)\.(\d+)\.(\d+)(?:-([\w.-]+))?(?:\+([\w.-]+))?)");
+        if (!std::regex_match(manifest.version, semverRegex)) {
+            outErrorMessage = "Invalid version format: '" + manifest.version + "' (expected semver)";
+            return false;
+        }
+    }
+
+    // Validate engine version if present
+    if (!manifest.engines.empty()) {
+        auto it = manifest.engines.find("vscode");
+        if (it != manifest.engines.end()) {
+            std::regex engineRegex(R"(^\^(\d+)\.(\d+)\.(\d+)$)");
+            if (!std::regex_match(it->second, engineRegex)) {
+                outErrorMessage = "Invalid engine version format: '" + it->second + "'";
+                return false;
+            }
+        }
+    }
+
+    // Validate activation events are non-empty
+    if (!manifest.activationEvents.empty()) {
+        for (const auto& evt : manifest.activationEvents) {
+            if (evt.empty()) {
+                outErrorMessage = "Empty activation event found";
+                return false;
+            }
+        }
+    }
+
+    // Validate contribution command IDs are non-empty
+    for (const auto& cmd : manifest.contributes.commands) {
+        if (cmd.id.empty()) {
+            outErrorMessage = "Command contribution with empty ID";
+            return false;
+        }
+    }
+
+    // Validate keybinding format
+    for (const auto& kb : manifest.contributes.keybindings) {
+        if (kb.command.empty()) {
+            outErrorMessage = "Keybinding with empty command";
+            return false;
+        }
+        if (kb.key.empty() && kb.mac.empty() && kb.linux.empty() && kb.win.empty()) {
+            outErrorMessage = "Keybinding for '" + kb.command + "' has no key specified";
+            return false;
+        }
+    }
 
     return true;
 }
@@ -385,7 +447,7 @@ std::vector<std::string> ExtensionManifestParser::ExtractDependencies(const json
                 deps.push_back(key);
             }
         } catch (...) {
-            // Skip
+            fprintf(stderr, "[ExtensionManifest] Skipped malformed dependency extraction\n");
         }
     }
     return deps;

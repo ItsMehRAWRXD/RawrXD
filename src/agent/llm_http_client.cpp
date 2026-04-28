@@ -399,7 +399,11 @@ HttpResponse StlHttpClient::platformSend(const HttpRequest& req) {
     if (lastNL != std::string::npos && lastNL > 0) {
         std::string codeStr = output.substr(lastNL + 1);
         body = output.substr(0, lastNL);
-        try { statusCode = std::stoi(codeStr); } catch (...) {}
+        try { statusCode = std::stoi(codeStr); } catch (const std::exception& e) {
+            OutputDebugStringA(("[llm_http_client] status code parse exception: " + std::string(e.what()) + "\n").c_str());
+        } catch (...) {
+            OutputDebugStringA("[llm_http_client] status code parse unknown exception\n");
+        }
     }
 
     bool isOk = (statusCode >= 200 && statusCode < 300);

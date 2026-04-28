@@ -817,8 +817,7 @@ AISymbolContext& GlobalAISymbolContext()
 
 void IndexFileAsync(std::wstring uri, std::string content)
 {
-    std::thread([uri = std::move(uri), content = std::move(content)]()
-                { GlobalSymbolHost().IndexFile(uri, content); })
+    std::thread([uri = std::move(uri), content = std::move(content)]() { GlobalSymbolHost().IndexFile(uri, content); })
         .detach();
 }
 

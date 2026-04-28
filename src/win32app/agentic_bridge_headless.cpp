@@ -583,8 +583,9 @@ bool AgenticBridge::StartAgentLoop(const std::string& initialPrompt, int maxIter
     AgenticProfilerBeginEpoch();
     m_agentLoopRunning = true;
     std::string nextPrompt = initialPrompt;
+    const int boundedIterations = std::max(1, std::min(maxIterations, 50));
 
-    for (int i = 0; i < maxIterations && m_agentLoopRunning; ++i)
+    for (int i = 0; i < boundedIterations && m_agentLoopRunning; ++i)
     {
         AgentResponse response = ExecuteAgentCommand(nextPrompt);
         if (m_outputCallback)

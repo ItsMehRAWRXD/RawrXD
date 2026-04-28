@@ -378,8 +378,14 @@ namespace nlohmann {
         size_t erase(const std::string& key) {
             if (type_ == 4 && object_) return object_->erase(key);
             return 0;
+        }        
+        // Clear the JSON value
+        void clear() {
+            type_ = 0;
+            value_.reset();
+            object_.reset();
+            array_.reset();
         }
-
         static std::string escape_json(const std::string& s) {
             std::string out;
             out.reserve(s.size());
@@ -514,13 +520,30 @@ namespace nlohmann {
 
         struct ItemsProxy {
              std::shared_ptr<std::map<std::string, json>> obj;
-             auto begin() { return obj ? obj->begin() : std::map<std::string, json>::iterator(); }
-             auto end() { return obj ? obj->end() : std::map<std::string, json>::iterator(); }
+             auto begin() {
+                 if (obj) return obj->begin();
+                 // Return begin() from a static empty map to avoid null dereference
+                 static std::map<std::string, json> empty_map;
+                 return empty_map.begin();
+             }
+             auto end() {
+                 if (obj) return obj->end();
+                 static std::map<std::string, json> empty_map;
+                 return empty_map.end();
+             }
         };
         struct ConstItemsProxy {
              std::shared_ptr<std::map<std::string, json>> obj;
-             auto begin() const { return obj ? obj->cbegin() : std::map<std::string, json>::const_iterator(); }
-             auto end() const { return obj ? obj->cend() : std::map<std::string, json>::const_iterator(); }
+             auto begin() const {
+                 if (obj) return obj->cbegin();
+                 static const std::map<std::string, json> empty_map;
+                 return empty_map.cbegin();
+             }
+             auto end() const {
+                 if (obj) return obj->cend();
+                 static const std::map<std::string, json> empty_map;
+                 return empty_map.cend();
+             }
         };
         ItemsProxy items() { return {object_}; }
         ConstItemsProxy items() const { return {object_}; }

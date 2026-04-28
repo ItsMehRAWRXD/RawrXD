@@ -88,9 +88,15 @@ std::span<const std::size_t> SwarmPlanSliceIndex::indicesFor(std::uint32_t model
 std::expected<void, SchedulerError> ISwarmMemoryBackend::prefetchPinRange(std::uint32_t modelIndex,
                                                                           std::uint64_t offset, std::uint64_t size)
 {
-    (void)modelIndex;
-    (void)offset;
-    (void)size;
+    if (modelIndex == 0xFFFFFFFFu) {
+        return std::unexpected(SchedulerError::InvalidArgument);
+    }
+    if (size == 0) {
+        return {}; // Nothing to pin
+    }
+    // Track pinned ranges per model for later unpin
+    std::lock_guard<std::mutex> lock(m_prefetchMutex);
+    m_pinnedRanges[modelIndex].push_back({offset, size});
     return {};
 }
 
@@ -101,7 +107,12 @@ void ISwarmMemoryBackend::prefetchUnpinRange(std::uint32_t modelIndex, std::uint
     (void)size;
 }
 
-void ISwarmMemoryBackend::resetPrefetchPins() {}
+void ISwarmMemoryBackend::resetPrefetchPins() {
+    // Reset all prefetch pins to allow new prefetches
+    // In production: clear pinned memory regions
+    std::lock_guard<std::mutex> lock(m_prefetchMutex);
+    m_pinnedRanges.clear();
+}
 
 namespace
 {

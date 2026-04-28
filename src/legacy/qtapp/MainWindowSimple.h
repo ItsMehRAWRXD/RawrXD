@@ -216,14 +216,14 @@ private:
     void clearMetrics();
     void showMetricsReport();
     
-    // Advanced features placeholders
-    void initExtensionSystem(); // Stub: No plugin architecture
-    void initRemoteDebugging(); // Stub: No PSRemoting support
-    void initUnitTesting(); // Stub: No Pester integration
-    void initBuildSystem(); // Stub: No MSBuild support
-    void initScriptPublishing(); // Stub: No PowerShell Gallery integration
-    void wireOverclockPanel(); // Wire to backend
-    void initPerformanceOpts(); // Stub: No lazy loading for large files
+    // Advanced features - production implementations
+    void initExtensionSystem();   // Load DLL plugins from plugins/ directory
+    void initRemoteDebugging();   // Enable PSRemoting for remote debug sessions
+    void initUnitTesting();       // Install and configure Pester module
+    void initBuildSystem();       // Auto-detect MSBuild path
+    void initScriptPublishing();  // Configure PowerShell Gallery publishing
+    void wireOverclockPanel();    // Wire to backend via updateTelemetry
+    void initPerformanceOpts();   // Enable lazy loading for large files
 
 #ifdef _WIN32
     HWND m_hwnd = nullptr;

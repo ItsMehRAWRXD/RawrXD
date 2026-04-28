@@ -3301,9 +3301,17 @@ void Win32IDE::onCreate(HWND hwnd)
             ide->initLLMRouter();
         },
         this, hwnd, "initBackendAndRouter");
+
+    hadOnCreateStepFailure |= !sehCallOnCreateStep(
+        +[](void* self, HWND)
+        {
+            auto* ide = static_cast<Win32IDE*>(self);
+            ide->initializeMissingFeaturesCore();
+        },
+        this, hwnd, "initializeMissingFeaturesCore");
     frontPipelineMilestone(
-        "[IDE-Pipeline:Front] Batch 7/8: initial theme + status snapshot + backend manager + LLM router\n",
-        "[Init:Front] Batch 7/8: theme, status bar, backend manager, and LLM router\n");
+        "[IDE-Pipeline:Front] Batch 7/8: initial theme + status snapshot + backend manager + LLM router + features core\n",
+        "[Init:Front] Batch 7/8: theme, status bar, backend manager, LLM router, and features core\n");
 
     hadOnCreateStepFailure |= !sehCallOnCreateStep(
         +[](void* self, HWND h)

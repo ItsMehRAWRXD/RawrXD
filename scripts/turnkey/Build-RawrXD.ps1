@@ -180,9 +180,9 @@ function Test-BuildOutput {
     Write-Log "Validating build output..."
     
     $expectedOutputs = @(
-        "RawrXD-Win32IDE.exe",
-        "RawrXD-Win32IDE.pdb",
-        "RawrXD.exe"
+        @{ Name = "RawrXD-Win32IDE.exe"; Required = $true },
+        @{ Name = "RawrXD-Win32IDE.pdb"; Required = $false },
+        @{ Name = "RawrXD.exe"; Required = $false }
     )
     
     $binDir = Join-Path $script:BuildDir "bin"
@@ -197,25 +197,26 @@ function Test-BuildOutput {
     $missingOutputs = @()
     
     foreach ($output in $expectedOutputs) {
-        $outputPath = Join-Path $binDir $output
+        $outputPath = Join-Path $binDir $output.Name
         if (Test-Path $outputPath) {
             $fileInfo = Get-Item $outputPath
             $foundOutputs += [PSCustomObject]@{
-                Name = $output
+                Name = $output.Name
                 Path = $outputPath
                 Size = $fileInfo.Length
                 SizeMB = [math]::Round($fileInfo.Length / 1MB, 2)
             }
-            Write-Log "  ✓ Found: $output ($([math]::Round($fileInfo.Length / 1MB, 2)) MB)" "SUCCESS"
+            Write-Log "  ✓ Found: $($output.Name) ($([math]::Round($fileInfo.Length / 1MB, 2)) MB)" "SUCCESS"
         } else {
             $missingOutputs += $output
-            Write-Log "  ✗ Missing: $output" "WARN"
+            $level = if ($output.Required) { "WARN" } else { "INFO" }
+            $prefix = if ($output.Required) { "✗" } else { "•" }
+            Write-Log "  $prefix Missing: $($output.Name)" $level
         }
     }
     
     # Check for critical outputs
-    $criticalOutputs = @("RawrXD-Win32IDE.exe", "RawrXD.exe")
-    $criticalMissing = $criticalOutputs | Where-Object { $_ -in $missingOutputs }
+    $criticalMissing = $missingOutputs | Where-Object { $_.Required } | ForEach-Object { $_.Name }
     
     if ($criticalMissing) {
         throw "Critical outputs missing: $($criticalMissing -join ', ')"

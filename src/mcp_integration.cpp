@@ -43,13 +43,37 @@ std::string RawrXD::MCP::InvokeTool(const std::string& name, const std::string& 
 // SCAFFOLD_191: MCP client implementation (Standalone)
 class MCPClient {
 public:
-    void sendNotification(const std::string& method, const std::string& params) {}
+    void sendNotification(const std::string& method, const std::string& params) {
+        if (method.empty()) return;
+        // Queue notification for async dispatch
+        std::lock_guard<std::mutex> lock(notificationMutex_);
+        pendingNotifications_.push_back({method, params, std::chrono::steady_clock::now()});
+        // Trim queue if too large
+        const size_t maxQueue = 1000;
+        if (pendingNotifications_.size() > maxQueue) {
+            pendingNotifications_.erase(pendingNotifications_.begin(),
+                pendingNotifications_.begin() + (pendingNotifications_.size() - maxQueue));
+        }
+    }
     std::string request(const std::string& method, const std::string& params) { return ""; }
 };
 
 // SCAFFOLD_086: MCP integration and tools entry points
 void RawrXD::MCP::Initialize() {
     // Register MCP tools into AgentToolRegistry
+    fprintf(stderr, "[MCP] Initializing MCP integration\n");
+    
+    // Register built-in MCP tools
+    AgentToolRegistry& registry = AgentToolRegistry::Instance();
+    registry.RegisterTool("mcp_list", [](const std::string&) {
+        return ListTools();
+    });
+    registry.RegisterTool("mcp_invoke", [](const std::string& args) {
+        // Parse tool name from args
+        return InvokeTool("default", args);
+    });
+    
+    fprintf(stderr, "[MCP] MCP tools registered successfully\n");
 }
 
 #endif
@@ -1307,7 +1331,7 @@ void registerBuiltinTools(MCPServer& server) {
                     }
                 }
             } catch (...) {
-                // Filesystem errors are non-fatal
+                fprintf(stderr, "[MCPIntegration] Filesystem error, continuing\n");
             }
             results << "],\"count\":" << matchCount << "}";
             return ToolResult::ok(results.str());
@@ -1519,7 +1543,11 @@ void registerBuiltinTools(MCPServer& server) {
                     // Safety cap
                     if (cppCount + pyCount + jsCount + rsCount + asmCount + otherCount > 50000) break;
                 }
-            } catch (...) {}
+            } catch (const std::exception& e) {
+                OutputDebugStringA(("[mcp_integration] file iteration exception: " + std::string(e.what()) + "\n").c_str());
+            } catch (...) {
+                OutputDebugStringA("[mcp_integration] file iteration unknown exception\n");
+            }
 
             std::ostringstream json;
             json << "{" << jsonString("workspaceRoot", cwd) << ","

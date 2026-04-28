@@ -16,7 +16,9 @@ struct AppState {
     std::string model_path;
     float temperature = 0.8f;
     float top_p = 0.95f;
-    bool is_gpu_enabled = false;
+    // GPU inference is mandatory; AppState always reports enabled and persistence layers
+    // are required to clamp this to true regardless of on-disk config.
+    bool is_gpu_enabled = true;
     int thread_count = 8;
     int vram_limit_mb = 4096;
     uint32_t target_all_core_mhz = 0;

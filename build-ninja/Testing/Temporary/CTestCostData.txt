@@ -4,7 +4,7 @@ test_moe_mixture_reference 2 0
 test_moe_batched_down_project 1 0
 rawrengine_copilot_smoke 0 0
 win32ide_agentic_smoke 2 0.132398
-production_readiness_expansion_quality_gate 27 1.33239
+production_readiness_expansion_quality_gate 31 0
 test_ai_completions 0 0
 test_llm_connectivity 0 0
 test_tool_registry 2 0.0232098
@@ -28,3 +28,4 @@ win32ide_high_pressure_ui 1 20.0517
 test_model_loader_streamer_smoke 0 0
 ollama_stream_routing_env_smoke 3 0.0996978
 ---
+production_readiness_expansion_quality_gate

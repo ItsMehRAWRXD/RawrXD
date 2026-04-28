@@ -936,6 +936,9 @@ void MainWindow::handleMenuCommand(WORD cmdId)
                 SetFocus(m_terminalHwnd);
             }
             break;
+        case IDM_VIEW_SOVEREIGN_CLI:
+            toggleSovereignCLI();
+            break;
         case IDM_VIEW_OUTPUT:
             if (m_terminalHwnd)
             {

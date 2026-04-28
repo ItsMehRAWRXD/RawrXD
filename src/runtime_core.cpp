@@ -47,17 +47,6 @@ struct RuntimeState {
 static RuntimeState g_state;
 static std::unordered_map<std::string, Engine*> engines;
 
-Engine* EngineRegistry::get(const std::string& name) {
-    if (engines.find(name) != engines.end()) {
-        return engines[name];
-    }
-    return nullptr;
-}
-
-void EngineRegistry::register_engine(Engine* e) {
-    engines[e->name()] = e;
-}
-
 std::string get_active_engine_name() {
     if (g_state.active_engine) return g_state.active_engine->name();
     return "None";

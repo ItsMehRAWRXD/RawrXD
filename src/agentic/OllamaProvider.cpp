@@ -12,6 +12,7 @@
 // ============================================================================
 
 #include "NativeStreamProvider.h"
+#include "../ai/inference_retry_shim.h"
 
 #include <chrono>
 #include <nlohmann/json.hpp>
@@ -31,6 +32,19 @@ using RawrXD::Prediction::PredictionContext;
 using RawrXD::Prediction::PredictionResult;
 using RawrXD::Prediction::StreamTokenCallback;
 using json = nlohmann::json;
+
+// Global retry shim — circuit breaker + exponential backoff with jitter.
+// Policy: 5 retries, 50ms base, circuit opens at 3 consecutive failures.
+static rxd::ai::InferenceRetryShim g_inference_retry{[](){
+    rxd::ai::RetryPolicy p;
+    p.max_retries = 5;
+    p.base_ms = 50;
+    p.max_backoff_ms = 5000;
+    p.circuit_threshold = 3;
+    p.circuit_reset_ms = 30000;
+    p.jitter_frac = 0.25;
+    return p;
+}()};
 
 namespace
 {
@@ -373,27 +387,29 @@ void NativeStreamProvider::Cancel()
 std::string NativeStreamProvider::PostJson(const std::string& endpoint, const std::string& body, bool& success) const
 {
     success = false;
-    std::string lastError;
+    if (m_cancelled.load())
+        return "Cancelled";
 
-    for (int attempt = 0; attempt < m_maxRetries; ++attempt)
-    {
+    std::string lastResult;
+
+    auto status = g_inference_retry.Execute([&]() -> rxd::ai::InferenceStatus {
         if (m_cancelled.load())
-            return "Cancelled";
+            return rxd::ai::InferenceStatus::NonRetryable;
 
-        if (attempt > 0)
-        {
-            int delayMs = m_retryBaseDelayMs * (1 << (attempt - 1));
-            std::this_thread::sleep_for(std::chrono::milliseconds(delayMs));
-            if (m_cancelled.load())
-                return "Cancelled";
+        bool ok = false;
+        lastResult = PostJsonOnce(endpoint, body, ok);
+        if (ok) {
+            success = true;
+            return rxd::ai::InferenceStatus::OK;
         }
+        // Connection-level failures are retryable; leave non-retryable for 4xx HTTP
+        return rxd::ai::InferenceStatus::Retryable;
+    }, endpoint);
 
-        lastError = PostJsonOnce(endpoint, body, success);
-        if (success)
-            return lastError;
-    }
+    if (status == rxd::ai::InferenceStatus::CircuitOpen)
+        lastResult = "Circuit open: too many consecutive failures for " + endpoint;
 
-    return lastError;
+    return lastResult;
 }
 
 std::string NativeStreamProvider::PostJsonOnce(const std::string& endpoint, const std::string& body, bool& success) const
@@ -457,25 +473,18 @@ std::string NativeStreamProvider::PostJsonOnce(const std::string& endpoint, cons
     return responseBody;
 }
 
-void NativeStreamProvider::PostJsonStreaming(const std::string& endpoint, const std::string& body,
+void NativeStreamProvider::PostJsonStreaming(const std::string& endpoint, const std::string& jsonBody,
                                        std::function<bool(const std::string& chunk)> onChunk) const
 {
-    for (int attempt = 0; attempt < m_maxRetries; ++attempt)
-    {
+    if (m_cancelled.load())
+        return;
+
+    g_inference_retry.Execute([&]() -> rxd::ai::InferenceStatus {
         if (m_cancelled.load())
-            return;
-
-        if (attempt > 0)
-        {
-            int delayMs = m_retryBaseDelayMs * (1 << (attempt - 1));
-            std::this_thread::sleep_for(std::chrono::milliseconds(delayMs));
-            if (m_cancelled.load())
-                return;
-        }
-
-        if (PostJsonStreamingOnce(endpoint, body, onChunk))
-            return;  // connected and streamed (or callback stopped it)
-    }
+            return rxd::ai::InferenceStatus::NonRetryable;
+        bool connected = PostJsonStreamingOnce(endpoint, jsonBody, onChunk);
+        return connected ? rxd::ai::InferenceStatus::OK : rxd::ai::InferenceStatus::Retryable;
+    }, endpoint + ":stream");
 }
 
 bool NativeStreamProvider::PostJsonStreamingOnce(const std::string& endpoint, const std::string& body,

@@ -10,6 +10,7 @@
 #include <vector>
 #include <algorithm>
 #include <cctype>
+#include <chrono>
 
 namespace Agentic
 {
@@ -71,7 +72,6 @@ void tryLoadApprovalPolicyFromDisk(AgenticPlanningOrchestrator& orch)
         {
             auto j = nlohmann::json::parse(ss.str());
             orch.setApprovalPolicy(ApprovalPolicy::fromJson(j));
-            // Approval policy loaded
             return;
         }
         catch (...)
@@ -169,7 +169,23 @@ void OrchestratorIntegration::initialize()
         m_orchestrator->setRiskAnalysisFn(m_riskAnalyzer);
     }
 
-    m_orchestrator->setExecutionLogFn([](const std::string& log_entry) { /* Logging disabled */ });
+    m_orchestrator->setExecutionLogFn(
+        [this](const std::string& log_entry)
+        {
+            if (m_onLogMessage)
+            {
+                m_onLogMessage(log_entry);
+            }
+        });
+
+    m_orchestrator->setApprovalCallback(
+        [this](const ExecutionPlan& plan, int step_idx)
+        {
+            if (m_onApprovalRequired)
+            {
+                m_onApprovalRequired(plan, step_idx);
+            }
+        });
 
     // Wire tool executor: delegates to the integration's callback
     m_orchestrator->setToolExecutorFn(
@@ -216,7 +232,6 @@ ExecutionPlan* OrchestratorIntegration::planAndApproveTask(const std::string& ta
     {
         auto& step = plan->steps[i];
 
-        // Use custom analyzer if provided, otherwise use built-in
         if (m_riskAnalyzer)
         {
             step.risk_level = m_riskAnalyzer(step);
@@ -231,8 +246,6 @@ ExecutionPlan* OrchestratorIntegration::planAndApproveTask(const std::string& ta
     for (size_t i = 0; i < plan->steps.size(); ++i)
     {
         auto& step = plan->steps[i];
-
-        // Determine eligibility for auto-approval based on policy and risk
         auto policy = m_orchestrator->getApprovalPolicy();
 
         bool should_auto_approve = false;
@@ -250,15 +263,144 @@ ExecutionPlan* OrchestratorIntegration::planAndApproveTask(const std::string& ta
             step.approval_status = ApprovalStatus::ApprovedAuto;
             step.approval_user = "system";
             step.approval_reason = "Auto-approved by policy";
+            if (m_onStepApproved)
+            {
+                m_onStepApproved(*plan, static_cast<int>(i));
+            }
         }
         else
         {
-            // Request human approval
-            m_orchestrator->requestApproval(plan, i);
+            m_orchestrator->requestApproval(plan, static_cast<int>(i));
+            if (m_onApprovalRequired)
+            {
+                m_onApprovalRequired(*plan, static_cast<int>(i));
+            }
         }
     }
 
+    if (m_onPlanGenerated)
+    {
+        m_onPlanGenerated(*plan);
+    }
+
     return plan;
+}
+
+bool OrchestratorIntegration::executePlanStep(ExecutionPlan* plan, int step_idx)
+{
+    if (!plan || !m_orchestrator)
+        return false;
+
+    if (m_onStepExecutionStarted)
+    {
+        m_onStepExecutionStarted(*plan, step_idx);
+    }
+
+    bool success = m_orchestrator->executeNextApprovedStep(plan);
+
+    if (success)
+    {
+        if (m_onStepCompleted)
+        {
+            m_onStepCompleted(*plan, step_idx);
+        }
+    }
+    else
+    {
+        if (m_onStepFailed)
+        {
+            m_onStepFailed(*plan, step_idx, plan->steps[step_idx].error_message);
+        }
+    }
+
+    return success;
+}
+
+bool OrchestratorIntegration::executeEntirePlan(ExecutionPlan* plan)
+{
+    if (!plan || !m_orchestrator)
+        return false;
+
+    if (m_onPlanExecutionStarted)
+    {
+        m_onPlanExecutionStarted(*plan);
+    }
+
+    plan->is_executing.store(true);
+    bool all_success = true;
+
+    for (size_t i = 0; i < plan->steps.size(); ++i)
+    {
+        if (!executePlanStep(plan, static_cast<int>(i)))
+        {
+            all_success = false;
+            break;
+        }
+    }
+
+    plan->is_executing.store(false);
+
+    if (all_success)
+    {
+        if (m_onPlanCompleted)
+        {
+            m_onPlanCompleted(*plan);
+        }
+    }
+    else
+    {
+        if (m_onPlanFailed)
+        {
+            m_onPlanFailed(*plan, "One or more steps failed during execution");
+        }
+    }
+
+    return all_success;
+}
+
+void OrchestratorIntegration::cancelPlan(ExecutionPlan* plan)
+{
+    if (!plan)
+        return;
+
+    plan->is_executing.store(false);
+    for (auto& step : plan->steps)
+    {
+        if (step.status == ExecutionStatus::Executing)
+        {
+            step.status = ExecutionStatus::Failed;
+            step.error_message = "Cancelled by user";
+        }
+    }
+
+    if (m_onPlanCancelled)
+    {
+        m_onPlanCancelled(*plan);
+    }
+}
+
+void OrchestratorIntegration::pausePlan(ExecutionPlan* plan)
+{
+    if (!plan)
+        return;
+
+    plan->is_executing.store(false);
+    if (m_onPlanPaused)
+    {
+        m_onPlanPaused(*plan);
+    }
+}
+
+void OrchestratorIntegration::resumePlan(ExecutionPlan* plan)
+{
+    if (!plan)
+        return;
+
+    plan->is_executing.store(true);
+    if (m_onPlanResumed)
+    {
+        m_onPlanResumed(*plan);
+    }
 }
 
 int OrchestratorIntegration::getPendingApprovalCount() const
@@ -277,8 +419,11 @@ std::vector<std::pair<ExecutionPlan*, int>> OrchestratorIntegration::getPendingA
 
 void OrchestratorIntegration::onPlanGeneration(const std::string& task, ExecutionPlan& plan)
 {
-    // Called during plan generation; allows customization
-    // (Currently used internally)
+    (void)task;
+    if (m_onPlanGenerated)
+    {
+        m_onPlanGenerated(plan);
+    }
 }
 
 void OrchestratorIntegration::onStepExecution(ExecutionPlan* plan, int step_idx)
@@ -288,7 +433,6 @@ void OrchestratorIntegration::onStepExecution(ExecutionPlan* plan, int step_idx)
 
     auto& step = plan->steps[step_idx];
 
-    // Execute each action in the step
     for (const auto& action : step.actions)
     {
         std::string output;
@@ -300,11 +444,19 @@ void OrchestratorIntegration::onStepExecution(ExecutionPlan* plan, int step_idx)
         {
             step.error_message = "Tool execution failed: " + action;
             step.status = ExecutionStatus::Failed;
+            if (m_onStepFailed)
+            {
+                m_onStepFailed(*plan, step_idx, step.error_message);
+            }
             return;
         }
     }
 
     step.status = ExecutionStatus::Success;
+    if (m_onStepCompleted)
+    {
+        m_onStepCompleted(*plan, step_idx);
+    }
 }
 
 void OrchestratorIntegration::onRollbackRequest(ExecutionPlan* plan, int step_idx)
@@ -314,6 +466,12 @@ void OrchestratorIntegration::onRollbackRequest(ExecutionPlan* plan, int step_id
 
     auto& step = plan->steps[step_idx];
     m_rollbackExecutor(step);
+    step.status = ExecutionStatus::Rolled_Back;
+
+    if (m_onStepRolledBack)
+    {
+        m_onStepRolledBack(*plan, step_idx);
+    }
 }
 
 }  // namespace Agentic

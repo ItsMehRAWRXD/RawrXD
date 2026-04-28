@@ -43,6 +43,7 @@
 #define ID_VIEW_EXPLORER        3001
 #define ID_VIEW_SEARCH          3002
 #define ID_VIEW_TERMINAL        3003
+#define ID_VIEW_SOVEREIGN_CLI   3004  // Sovereign CLI IDE tab
 #define ID_VIEW_OUTPUT          3004
 #define ID_VIEW_PROBLEMS        3005
 #define ID_VIEW_SIDEBAR         3010

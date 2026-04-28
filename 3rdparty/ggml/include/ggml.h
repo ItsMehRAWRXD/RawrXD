@@ -1,5 +1,14 @@
 #pragma once
 
+// Build metadata is typically injected by CMake; provide safe fallbacks.
+#ifndef GGML_VERSION
+#define GGML_VERSION "unknown"
+#endif
+
+#ifndef GGML_COMMIT
+#define GGML_COMMIT "unknown"
+#endif
+
 //
 // GGML Tensor Library
 //

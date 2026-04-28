@@ -94,11 +94,27 @@ private:
     }
 
     static WhitespaceSkipperPtr LoadKernel(const std::wstring& dllPath) {
-        // Placeholder: In real scenario, use LoadLibraryW to load the DLL
-        // and GetProcAddress to retrieve the function
-        // For now, return nullptr to indicate process (actual loading deferred to link-time)
-        (void)dllPath;
-        return nullptr; // TODO: Implement DLL loading
+        // Production implementation: dynamically load DLL and retrieve function
+        HMODULE hMod = LoadLibraryW(dllPath.c_str());
+        if (!hMod) {
+            return nullptr;
+        }
+        // Try common export names for whitespace skipper
+        WhitespaceSkipperPtr func = reinterpret_cast<WhitespaceSkipperPtr>(
+            GetProcAddress(hMod, "SkipWhitespace_AVX512"));
+        if (!func) {
+            func = reinterpret_cast<WhitespaceSkipperPtr>(
+                GetProcAddress(hMod, "SkipWhitespace_AVX2"));
+        }
+        if (!func) {
+            func = reinterpret_cast<WhitespaceSkipperPtr>(
+                GetProcAddress(hMod, "SkipWhitespace"));
+        }
+        if (!func) {
+            FreeLibrary(hMod);
+            return nullptr;
+        }
+        return func;
     }
 
     static BenchmarkResults BenchmarkKernel(WhitespaceSkipperPtr func) {

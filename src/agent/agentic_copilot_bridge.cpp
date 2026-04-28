@@ -90,8 +90,7 @@ std::string AgenticCopilotBridge::generateCodeCompletion(const std::string& cont
         }
 
         int64_t elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - t0).count();
-        // Metrics
-                (long long)elapsed, prefix.length(), context.length());
+        (void)elapsed;
 
         if (onCompletionReady) onCompletionReady(completion);
         return completion;
@@ -125,8 +124,7 @@ std::string AgenticCopilotBridge::analyzeActiveFile() {
         );
 
         int64_t elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - t0).count();
-        // Metrics
-                (long long)elapsed, analysis.size());
+        (void)elapsed;
 
         if (onAnalysisReady) onAnalysisReady(analysis);
         return analysis;
@@ -166,8 +164,7 @@ std::string AgenticCopilotBridge::suggestRefactoring(const std::string& code) {
         );
 
         int64_t elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - t0).count();
-        // Metrics
-                (long long)elapsed, suggestions.size());
+        (void)elapsed;
 
         return suggestions;
     } catch (const std::exception& e) {
@@ -206,8 +203,7 @@ std::string AgenticCopilotBridge::generateTestsForCode(const std::string& code) 
         );
 
         int64_t elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - t0).count();
-        // Metrics
-                (long long)elapsed, tests.size());
+        (void)elapsed;
 
         return tests;
     } catch (const std::exception& e) {
@@ -278,8 +274,7 @@ std::string AgenticCopilotBridge::askAgent(const std::string& question, const Js
         m_lastConversationContext = response;
 
         int64_t elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - t0).count();
-        // Metrics
-                (long long)elapsed, question.length(), m_conversationHistory.size());
+        (void)elapsed;
 
         if (onAgentResponseReady) onAgentResponseReady(response);
         return response;

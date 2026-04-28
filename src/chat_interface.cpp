@@ -14,7 +14,7 @@ ChatInterface::~ChatInterface() {
 }
 
 void ChatInterface::setModel(const std::string& modelPath) {
-    m_engine = std::make_unique<CPUInference::CPUInferenceEngine>();
+    m_engine = std::make_unique<CPUInferenceEngine>();
     if (!m_engine->LoadModel(modelPath)) {
         m_engine.reset();
     }
@@ -76,7 +76,7 @@ void ChatInterface::processResponse(const std::string& modelOutput) {
 
 void ChatInterface::appendToHistory(const std::string& role, const std::string& content) {
     std::lock_guard<std::mutex> lock(m_mutex);
-    m_history.push_back({ role, content, std::time(nullptr) });
+    m_history.push_back({ role, content, static_cast<int64_t>(std::time(nullptr)) });
 }
 
 std::vector<ChatInterface::Message> ChatInterface::getHistory() const {

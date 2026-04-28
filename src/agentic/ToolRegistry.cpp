@@ -11,12 +11,24 @@
 #include <filesystem>
 #include <fstream>
 #include <sstream>
+#include <unordered_set>
 
+#include "../../include/multimodal/vision_encoder.h"
 #include "../core/rawrxd_subsystem_api.hpp"
 #include "../core/unified_hotpatch_manager.hpp"
+#include "../modules/game_engine_manager.h"
 
 #ifdef _WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
 #include <windows.h>
+#include <objidl.h> // IStream for GDI+
+#include <gdiplus.h>
+#pragma comment(lib, "gdiplus.lib")
 #else
 #include <poll.h>
 #include <signal.h>
@@ -54,6 +66,18 @@ static const char* kRegistryComponent = "ToolRegistry";
 using RawrXD::Agent::AgentToolRegistry;
 using RawrXD::Agent::ToolDescriptor;
 using RawrXD::Agent::ToolExecResult;
+
+// Forward declarations — implemented in ToolRegistry_HardwareSecurity_Batch1.cpp (same enclosing namespace).
+ToolExecResult HandleGetGpuTelemetry(const json& args);
+ToolExecResult HandleTuneVramLimit(const json& args);
+ToolExecResult HandleBenchKernel(const json& args);
+ToolExecResult HandleCreateMemorySilo(const json& args);
+ToolExecResult HandleQuerySiloStats(const json& args);
+ToolExecResult HandleSetSiloQuota(const json& args);
+ToolExecResult HandleMapModelAperture(const json& args);
+ToolExecResult HandleQueryVirtualMemory(const json& args);
+ToolExecResult HandleManageLocalEmbeddings(const json& args);
+ToolExecResult HandlePurgeTelemetry(const json& args);
 
 namespace
 {
@@ -236,6 +260,8 @@ std::string NormalizeToolName(const std::string& raw)
         return "debug_detach";
     if (normalized == "debugterminate" || normalized == "terminate_debuggee")
         return "debug_terminate";
+    if (normalized == "take_screenshot" || normalized == "capture_screenshot" || normalized == "screen_capture")
+        return "screenshot";
 
     return normalized;
 }
@@ -243,6 +269,167 @@ std::string NormalizeToolName(const std::string& raw)
 // -----------------------------------------------------------------------
 // Default tool handlers (stubs — real implementations wire into engine)
 // -----------------------------------------------------------------------
+
+ToolExecResult HandleScreenshot(const json& args);
+ToolExecResult HandleToolRegistrySelfCheck(const json& args);
+ToolExecResult HandleIngameFrameCheck(const json& args);
+
+#ifdef _WIN32
+bool EnsureGdiplusStarted()
+{
+    static std::once_flag s_once;
+    static bool s_ok = false;
+    std::call_once(s_once,
+                   []()
+                   {
+                       Gdiplus::GdiplusStartupInput input;
+                       ULONG_PTR token = 0;
+                       const auto st = Gdiplus::GdiplusStartup(&token, &input, nullptr);
+                       s_ok = (st == Gdiplus::Ok);
+                       (void)token;  // Deliberately leak token for process lifetime.
+                   });
+    return s_ok;
+}
+
+bool GetPngEncoderClsid(CLSID& outClsid)
+{
+    using namespace Gdiplus;
+    UINT num = 0, size = 0;
+    if (GetImageEncodersSize(&num, &size) != Ok || size == 0)
+        return false;
+
+    std::vector<uint8_t> buf(size);
+    ImageCodecInfo* pInfo = reinterpret_cast<ImageCodecInfo*>(buf.data());
+    if (GetImageEncoders(num, size, pInfo) != Ok)
+        return false;
+
+    for (UINT i = 0; i < num; ++i)
+    {
+        if (pInfo[i].MimeType && wcscmp(pInfo[i].MimeType, L"image/png") == 0)
+        {
+            outClsid = pInfo[i].Clsid;
+            return true;
+        }
+    }
+    return false;
+}
+
+static ToolExecResult CaptureToPngFile(const std::wstring& outPath, const std::string& mode, int x, int y, int width,
+                                       int height)
+{
+    if (!EnsureGdiplusStarted())
+        return ToolExecResult::error("GDI+ init failed");
+
+    if (width <= 0 || height <= 0)
+    {
+        width = GetSystemMetrics(SM_CXSCREEN);
+        height = GetSystemMetrics(SM_CYSCREEN);
+    }
+    if (x < 0)
+        x = 0;
+    if (y < 0)
+        y = 0;
+
+    HDC hdcScreen = GetDC(nullptr);
+    if (!hdcScreen)
+        return ToolExecResult::error("Cannot get screen DC");
+
+    HDC hdcMem = CreateCompatibleDC(hdcScreen);
+    if (!hdcMem)
+    {
+        ReleaseDC(nullptr, hdcScreen);
+        return ToolExecResult::error("Cannot create compatible DC");
+    }
+
+    HBITMAP hBmp = CreateCompatibleBitmap(hdcScreen, width, height);
+    if (!hBmp)
+    {
+        DeleteDC(hdcMem);
+        ReleaseDC(nullptr, hdcScreen);
+        return ToolExecResult::error("Cannot create bitmap");
+    }
+
+    HGDIOBJ oldObj = SelectObject(hdcMem, hBmp);
+
+    bool ok = false;
+    if (ToLowerAscii(mode) == "active_window")
+    {
+        HWND hwnd = GetForegroundWindow();
+        if (hwnd)
+        {
+            RECT rc{};
+            if (GetWindowRect(hwnd, &rc))
+            {
+                const int w = (std::max)(1, static_cast<int>(rc.right - rc.left));
+                const int h = (std::max)(1, static_cast<int>(rc.bottom - rc.top));
+                // Capture the window area into our bitmap, scaled/cropped to requested width/height.
+                // Prefer PrintWindow; fallback to BitBlt from screen.
+                HDC hdcWin = CreateCompatibleDC(hdcScreen);
+                HBITMAP hWinBmp = CreateCompatibleBitmap(hdcScreen, w, h);
+                if (hdcWin && hWinBmp)
+                {
+                    HGDIOBJ oldWin = SelectObject(hdcWin, hWinBmp);
+                    if (PrintWindow(hwnd, hdcWin, PW_RENDERFULLCONTENT) != 0)
+                    {
+                        StretchBlt(hdcMem, 0, 0, width, height, hdcWin, 0, 0, w, h, SRCCOPY);
+                        ok = true;
+                    }
+                    SelectObject(hdcWin, oldWin);
+                }
+                if (!ok)
+                {
+                    // Fallback to screen copy.
+                    StretchBlt(hdcMem, 0, 0, width, height, hdcScreen, rc.left, rc.top, w, h, SRCCOPY);
+                    ok = true;
+                }
+                if (hWinBmp)
+                    DeleteObject(hWinBmp);
+                if (hdcWin)
+                    DeleteDC(hdcWin);
+            }
+        }
+    }
+    else
+    {
+        // Desktop (or rect crop via x,y)
+        ok = (BitBlt(hdcMem, 0, 0, width, height, hdcScreen, x, y, SRCCOPY) != 0);
+    }
+
+    SelectObject(hdcMem, oldObj);
+    DeleteDC(hdcMem);
+    ReleaseDC(nullptr, hdcScreen);
+
+    if (!ok)
+    {
+        DeleteObject(hBmp);
+        return ToolExecResult::error("Screenshot capture failed");
+    }
+
+    CLSID pngClsid{};
+    if (!GetPngEncoderClsid(pngClsid))
+    {
+        DeleteObject(hBmp);
+        return ToolExecResult::error("PNG encoder not available");
+    }
+
+    Gdiplus::Bitmap bmp(hBmp, nullptr);
+    DeleteObject(hBmp);
+
+    if (bmp.GetLastStatus() != Gdiplus::Ok)
+        return ToolExecResult::error("Failed to wrap bitmap");
+
+    const auto st = bmp.Save(outPath.c_str(), &pngClsid, nullptr);
+    if (st != Gdiplus::Ok)
+        return ToolExecResult::error("Failed to save PNG");
+
+    json out;
+    out["path"] = std::string(outPath.begin(), outPath.end());
+    out["width"] = width;
+    out["height"] = height;
+    out["mode"] = mode;
+    return ToolExecResult::ok(out.dump());
+}
+#endif
 
 ToolExecResult HandleReadFile(const json& args)
 {
@@ -257,6 +444,199 @@ ToolExecResult HandleReadFile(const json& args)
     std::ostringstream oss;
     oss << ifs.rdbuf();
     return ToolExecResult::ok(oss.str());
+}
+
+ToolExecResult HandleScreenshot(const json& args)
+{
+#ifndef _WIN32
+    (void)args;
+    return ToolExecResult::error("screenshot is only implemented on Windows");
+#else
+    const std::string mode = args.value("mode", "desktop");
+    const int x = args.value("x", 0);
+    const int y = args.value("y", 0);
+    const int width = args.value("width", 0);
+    const int height = args.value("height", 0);
+
+    std::string outPathUtf8 = args.value("path", "");
+    if (outPathUtf8.empty())
+    {
+        char tmpPath[MAX_PATH]{};
+        DWORD n = GetTempPathA(MAX_PATH, tmpPath);
+        std::string base = (n > 0 && n < MAX_PATH) ? std::string(tmpPath) : std::string(".\\");
+        SYSTEMTIME st{};
+        GetLocalTime(&st);
+        std::ostringstream oss;
+        oss << base << "rawrxd_screenshot_" << st.wYear << std::setw(2) << std::setfill('0') << st.wMonth
+            << std::setw(2) << std::setfill('0') << st.wDay << "_" << std::setw(2) << std::setfill('0') << st.wHour
+            << std::setw(2) << std::setfill('0') << st.wMinute << std::setw(2) << std::setfill('0') << st.wSecond
+            << ".png";
+        outPathUtf8 = oss.str();
+    }
+
+    std::wstring outPathW(outPathUtf8.begin(), outPathUtf8.end());
+    return CaptureToPngFile(outPathW, mode, x, y, width, height);
+#endif
+}
+
+ToolExecResult HandleToolRegistrySelfCheck(const json& args)
+{
+    (void)args;
+    auto& reg = AgentToolRegistry::Instance();
+    const auto missing = reg.GetToolsMissingHandlers();
+    json out;
+    out["ok"] = missing.empty();
+    out["tool_count"] = static_cast<int>(reg.ListTools().size());
+    out["missing_handlers"] = missing;
+    return ToolExecResult::ok(out.dump());
+}
+
+ToolExecResult HandleIngameFrameCheck(const json& args)
+{
+#ifndef _WIN32
+    (void)args;
+    return ToolExecResult::error("ingame_frame_check is only implemented on Windows");
+#else
+    const std::string mode = args.value("mode", "active_window");  // better default for games
+    const bool includeProfiler = args.value("include_profiler", true);
+    const bool captureFresh = args.value("capture", true);
+    const std::string inputPath = args.value("path", "");
+
+    std::string pngPath;
+    if (captureFresh)
+    {
+        json shotArgs = args;
+        shotArgs["mode"] = mode;
+        ToolExecResult shot = HandleScreenshot(shotArgs);
+        if (!shot.success)
+            return shot;
+        try
+        {
+            auto j = json::parse(shot.output);
+            pngPath = j.value("path", "");
+        }
+        catch (...)
+        {
+            return ToolExecResult::error("Failed to parse screenshot tool output");
+        }
+    }
+    else
+    {
+        if (inputPath.empty())
+            return ToolExecResult::error("ingame_frame_check: set capture=true or provide path");
+        pngPath = inputPath;
+    }
+
+    // Use VisionEncoder to capture a stable raw frame representation.
+    RawrXD::Multimodal::VisionEncoder enc;
+    auto loaded = enc.LoadFromFile(pngPath);
+    if (!loaded.success || !loaded.image.isValid())
+    {
+        return ToolExecResult::error(std::string("Failed to load frame: ") + loaded.error);
+    }
+
+    // Heuristic z-fighting / clipping score:
+    // We approximate "high-frequency alternating pixels" by scanning BMP/PNG raw bytes when available.
+    // Since ImageData::rawBytes is file bytes (compressed for PNG), we rely on GDI+ decode for pixels.
+    if (!EnsureGdiplusStarted())
+        return ToolExecResult::error("GDI+ init failed");
+
+    std::wstring wpath(pngPath.begin(), pngPath.end());
+    Gdiplus::Bitmap bmp(wpath.c_str());
+    if (bmp.GetLastStatus() != Gdiplus::Ok)
+        return ToolExecResult::error("Failed to decode PNG via GDI+");
+
+    const int w = static_cast<int>(bmp.GetWidth());
+    const int h = static_cast<int>(bmp.GetHeight());
+    if (w <= 4 || h <= 4)
+        return ToolExecResult::error("Frame too small for analysis");
+
+    Gdiplus::Rect rc(0, 0, w, h);
+    Gdiplus::BitmapData bd{};
+    if (bmp.LockBits(&rc, Gdiplus::ImageLockModeRead, PixelFormat32bppARGB, &bd) != Gdiplus::Ok)
+        return ToolExecResult::error("Failed to lock frame pixels");
+
+    auto* p = static_cast<const uint8_t*>(bd.Scan0);
+    const int stride = bd.Stride;
+    const int stepX = std::max(1, w / 256);
+    const int stepY = std::max(1, h / 256);
+
+    uint64_t samples = 0;
+    uint64_t hiFreqEdges = 0;
+    uint64_t alternating = 0;
+
+    auto pix = [&](int xx, int yy) -> uint32_t
+    {
+        const uint8_t* row = p + yy * stride;
+        return *reinterpret_cast<const uint32_t*>(row + xx * 4);
+    };
+    auto luma = [&](uint32_t argb) -> int
+    {
+        const int b = (argb) & 0xFF;
+        const int g = (argb >> 8) & 0xFF;
+        const int r = (argb >> 16) & 0xFF;
+        // integer approx of 0.299r + 0.587g + 0.114b
+        return (r * 77 + g * 150 + b * 29) >> 8;
+    };
+
+    for (int yy = stepY; yy < h - stepY; yy += stepY)
+    {
+        for (int xx = stepX; xx < w - stepX; xx += stepX)
+        {
+            const int a = luma(pix(xx - stepX, yy));
+            const int b0 = luma(pix(xx, yy));
+            const int c = luma(pix(xx + stepX, yy));
+
+            const int d1 = std::abs(b0 - a);
+            const int d2 = std::abs(c - b0);
+            const int edge = d1 + d2;
+            if (edge > 80)  // strong local contrast change
+                hiFreqEdges++;
+
+            // Alternating pattern (a high, b low, c high) or (low, high, low)
+            if ((a > b0 + 40 && c > b0 + 40) || (b0 > a + 40 && b0 > c + 40))
+                alternating++;
+
+            samples++;
+        }
+    }
+
+    bmp.UnlockBits(&bd);
+
+    const double edgeRate = samples ? (double)hiFreqEdges / (double)samples : 0.0;
+    const double altRate = samples ? (double)alternating / (double)samples : 0.0;
+    const double zfightScore = std::min(1.0, (edgeRate * 0.6 + altRate * 1.2));
+
+    json out;
+    out["path"] = pngPath;
+    out["width"] = w;
+    out["height"] = h;
+    out["metrics"] = {{"samples", static_cast<uint64_t>(samples)},
+                      {"hi_freq_edge_rate", edgeRate},
+                      {"alternating_rate", altRate},
+                      {"z_fighting_score_0_1", zfightScore}};
+    out["diagnosis"] = (zfightScore > 0.35) ? "possible_z_fighting_or_clipping" : "no_strong_clipping_signal_detected";
+
+    if (includeProfiler && RawrXD::GameEngine::g_gameEngineManager &&
+        RawrXD::GameEngine::g_gameEngineManager->isInitialized())
+    {
+        auto snap = RawrXD::GameEngine::g_gameEngineManager->getProfilerSnapshot();
+        out["engine_profiler"] = {{"engine", static_cast<int>(snap.engine)},
+                                  {"frameTimeMs", snap.frameTimeMs},
+                                  {"cpuTimeMs", snap.cpuTimeMs},
+                                  {"gpuTimeMs", snap.gpuTimeMs},
+                                  {"drawCalls", snap.drawCalls},
+                                  {"triangles", snap.triangles},
+                                  {"fps", snap.fps},
+                                  {"totalMemoryMB", snap.totalMemoryMB}};
+    }
+    else
+    {
+        out["engine_profiler"] = nullptr;
+    }
+
+    return ToolExecResult::ok(out.dump());
+#endif
 }
 
 ToolExecResult HandleWriteFile(const json& args)
@@ -1765,6 +2145,92 @@ void AgentToolRegistry::InitDescriptors()
 #undef INIT_DESCRIPTOR
 
     // -----------------------------------------------------------------------
+    // Reconcile schemas with AgentToolHandlers (single source of truth)
+    // -----------------------------------------------------------------------
+    // AgentToolHandlers::GetAllSchemas() returns OpenAI function-calling schema:
+    // { "type":"function", "function": { "name", "description", "parameters": { "properties", "required" } } }
+    // We translate it into ToolRegistry's internal param schema format:
+    // params_schema[param] = { type, description, (optional) default }
+    //
+    // NOTE: ToolRegistry marks a parameter as "optional" if it has a "default".
+    // For schemas that don't express defaults, we set default=null for non-required params
+    // to keep required detection stable.
+    try
+    {
+        const json handlerSchemas = AgentToolHandlers::GetAllSchemas();
+        for (const auto& s : handlerSchemas)
+        {
+            if (!s.is_object() || s.value("type", "") != "function" || !s.contains("function"))
+            {
+                continue;
+            }
+            const auto& fn = s["function"];
+            const std::string name = fn.value("name", "");
+            if (name.empty())
+            {
+                continue;
+            }
+            auto it = m_nameIndex.find(name);
+            if (it == m_nameIndex.end())
+            {
+                // ToolRegistry remains the superset of tools for now; unknown tools are ignored here.
+                continue;
+            }
+
+            ToolDescriptor& td = m_tools[it->second];
+            // Note: ToolDescriptor::description is a const char* (static storage expectation).
+            // We intentionally do not overwrite it with dynamic strings from JSON.
+
+            // Rebuild param schema from AgentToolHandlers' OpenAI parameters shape.
+            json rebuilt = json::object();
+            if (fn.contains("parameters") && fn["parameters"].is_object())
+            {
+                const auto& params = fn["parameters"];
+                const json props = params.value("properties", json::object());
+                json required = params.value("required", json::array());
+
+                std::unordered_set<std::string> requiredSet;
+                if (required.is_array())
+                {
+                    for (const auto& r : required)
+                    {
+                        if (r.is_string())
+                        {
+                            requiredSet.insert(r.get<std::string>());
+                        }
+                    }
+                }
+
+                if (props.is_object())
+                {
+                    for (auto pit = props.begin(); pit != props.end(); ++pit)
+                    {
+                        json p = json::object();
+                        const json& in = pit.value();
+                        p["type"] = in.value("type", "string");
+                        p["description"] = in.value("description", "");
+                        if (requiredSet.find(pit.key()) == requiredSet.end())
+                        {
+                            // Mark optional so GetToolSchemas required[] stays correct.
+                            p["default"] = nullptr;
+                        }
+                        rebuilt[pit.key()] = p;
+                    }
+                }
+            }
+
+            if (!rebuilt.empty())
+            {
+                td.params_schema = std::move(rebuilt);
+            }
+        }
+    }
+    catch (...)
+    {
+        // Fail-closed: keep the ToolRegistry-built schemas as a fallback.
+    }
+
+    // -----------------------------------------------------------------------
     // Wire parameter schemas programmatically (avoids preprocessor comma issue)
     // -----------------------------------------------------------------------
     auto setParam = [this](const char* tool, const char* param, const char* type, const char* desc)
@@ -1818,6 +2284,30 @@ void AgentToolRegistry::InitDescriptors()
                         "Alias of use_integrated_terminal", false);
     setParamWithDefault("execute_command", "allow_unsafe", "boolean",
                         "Set true only after explicit modal approval for destructive commands", false);
+
+    // screenshot
+    setParamWithDefault("screenshot", "mode", "string", "Capture mode: desktop or active_window", "desktop");
+    setParamWithDefault("screenshot", "path", "string", "Output PNG path (default: %TEMP%\\rawrxd_screenshot_*.png)",
+                        "");
+    setParamWithDefault("screenshot", "x", "integer", "Capture origin X (desktop mode only)", 0);
+    setParamWithDefault("screenshot", "y", "integer", "Capture origin Y (desktop mode only)", 0);
+    setParamWithDefault("screenshot", "width", "integer", "Capture width (0=full screen/window)", 0);
+    setParamWithDefault("screenshot", "height", "integer", "Capture height (0=full screen/window)", 0);
+
+    // tool_registry_self_check
+    // No params
+
+    // ingame_frame_check
+    setParamWithDefault("ingame_frame_check", "capture", "boolean", "Capture a fresh screenshot first", true);
+    setParamWithDefault("ingame_frame_check", "mode", "string", "Capture mode: desktop or active_window",
+                        "active_window");
+    setParamWithDefault("ingame_frame_check", "path", "string", "If capture=false, analyze this image path", "");
+    setParamWithDefault("ingame_frame_check", "include_profiler", "boolean",
+                        "Attach Unity/Unreal profiler snapshot if available", true);
+    setParamWithDefault("ingame_frame_check", "x", "integer", "Capture origin X (desktop mode only)", 0);
+    setParamWithDefault("ingame_frame_check", "y", "integer", "Capture origin Y (desktop mode only)", 0);
+    setParamWithDefault("ingame_frame_check", "width", "integer", "Capture width (0=full screen/window)", 0);
+    setParamWithDefault("ingame_frame_check", "height", "integer", "Capture height (0=full screen/window)", 0);
 
     // search_code
     setParam("search_code", "query", "string", "Search pattern (regex or literal)");
@@ -1887,6 +2377,64 @@ void AgentToolRegistry::InitDescriptors()
     // sys_get_capabilities
     // No params
 
+    // =====================================================================
+    // BATCH 1: Parameter schemas for unsimplified tools
+    // =====================================================================
+
+    // get_gpu_telemetry
+    setParamWithDefault("get_gpu_telemetry", "backend", "string", "GPU backend: vulkan, hip, cuda, dml, cpu",
+                        "primary");
+    setParamWithDefault("get_gpu_telemetry", "include_details", "boolean", "Include detailed telemetry", true);
+
+    // tune_vram_limit
+    setParam("tune_vram_limit", "limit_mb", "number", "VRAM limit in MB (256-1048576)");
+    setParamWithDefault("tune_vram_limit", "apply_immediately", "boolean", "Apply immediately or on next load", false);
+    setParamWithDefault("tune_vram_limit", "backend", "string", "Target backend (auto, vulkan, hip, cuda, dml)",
+                        "auto");
+
+    // bench_kernel
+    setParamWithDefault("bench_kernel", "kernel_name", "string", "Kernel to benchmark (default: all)", "all");
+    setParamWithDefault("bench_kernel", "iterations", "number", "Iteration count (1-1000000)", 1000);
+    setParamWithDefault("bench_kernel", "thread_count", "number", "Thread count for benchmark", 0);
+    setParamWithDefault("bench_kernel", "force_cpu_affinity", "boolean", "Force CPU affinity", false);
+
+    // create_memory_silo
+    setParam("create_memory_silo", "silo_name", "string", "Silo name (alphanumeric + underscore)");
+    setParam("create_memory_silo", "max_memory_mb", "number", "Max memory in MB (32-262144)");
+    setParamWithDefault("create_memory_silo", "max_processes", "number", "Max processes (default 256)", 256);
+    setParamWithDefault("create_memory_silo", "enable_iocp", "boolean", "Enable I/O completion port", true);
+    setParamWithDefault("create_memory_silo", "enable_cpu_limit", "boolean", "Enable CPU limit", false);
+    setParamWithDefault("create_memory_silo", "cpu_limit_percent", "number", "CPU limit %%", 0.0);
+
+    // query_silo_stats
+    setParam("query_silo_stats", "silo_id", "string", "Silo ID from create_memory_silo");
+
+    // set_silo_quota
+    setParam("set_silo_quota", "silo_id", "string", "Silo ID");
+    setParam("set_silo_quota", "new_limit_mb", "number", "New memory limit in MB");
+
+    // map_model_aperture
+    setParam("map_model_aperture", "file_path", "string", "Path to model file (GGUF, bin, etc.)");
+    setParamWithDefault("map_model_aperture", "offset_mb", "number", "Offset in MB", 0);
+    setParamWithDefault("map_model_aperture", "length_mb", "number", "Length in MB (0=entire file)", 0);
+    setParamWithDefault("map_model_aperture", "access", "string", "Access mode: read or readwrite", "read");
+    setParamWithDefault("map_model_aperture", "use_v3", "boolean", "Use MapViewOfFile3 if available", true);
+
+    // query_virtual_memory
+    setParamWithDefault("query_virtual_memory", "address", "string", "Memory address (hex or decimal)", "0");
+    setParamWithDefault("query_virtual_memory", "process_id", "number", "Process ID (current if omitted)", 0);
+
+    // manage_local_embeddings
+    setParam("manage_local_embeddings", "action", "string", "Action: index, query, clear, stats");
+    setParamWithDefault("manage_local_embeddings", "workspace_path", "string", "Workspace path for indexing", "");
+    setParamWithDefault("manage_local_embeddings", "query_text", "string", "Query text for semantic search", "");
+    setParamWithDefault("manage_local_embeddings", "top_k", "number", "Top K results (1-100)", 10);
+
+    // purge_telemetry
+    setParamWithDefault("purge_telemetry", "target", "string", "Target: logs, traces, cache, all", "all");
+    setParamWithDefault("purge_telemetry", "max_age_days", "number", "Delete older than N days (-1=all)", -1);
+    setParamWithDefault("purge_telemetry", "dry_run", "boolean", "Simulate without deleting", false);
+
     // asm_assemble
     setParam("asm_assemble", "source", "string", "MASM x64 assembly source code content");
     setParamWithDefault("asm_assemble", "output", "string", "Target executable path (default: agent_output.exe)",
@@ -1916,6 +2464,9 @@ void AgentToolRegistry::InitDescriptors()
     RegisterHandler("write_file", HandleWriteFile);
     RegisterHandler("replace_in_file", HandleReplaceInFile);
     RegisterHandler("execute_command", HandleExecuteCommand);
+    RegisterHandler("screenshot", HandleScreenshot);
+    RegisterHandler("tool_registry_self_check", HandleToolRegistrySelfCheck);
+    RegisterHandler("ingame_frame_check", HandleIngameFrameCheck);
     RegisterHandler("search_code", HandleSearchCode);
     RegisterHandler("get_diagnostics", HandleGetDiagnostics);
     RegisterHandler("list_directory", HandleListDirectory);
@@ -1924,6 +2475,27 @@ void AgentToolRegistry::InitDescriptors()
     RegisterHandler("asm_assemble", HandleAsmAssemble);
     RegisterHandler("apply_hotpatch", HandleApplyHotpatch);
     RegisterHandler("disk_recovery", HandleDiskRecovery);
+
+    // =====================================================================
+    // BATCH 1: UNSIMPLIFIED Hardware, Security, Memory & Sovereign Tools
+    // =====================================================================
+    // Wire hardware telemetry and optimization handlers
+    RegisterHandler("get_gpu_telemetry", HandleGetGpuTelemetry);
+    RegisterHandler("tune_vram_limit", HandleTuneVramLimit);
+    RegisterHandler("bench_kernel", HandleBenchKernel);
+
+    // Wire memory silo (security) handlers
+    RegisterHandler("create_memory_silo", HandleCreateMemorySilo);
+    RegisterHandler("query_silo_stats", HandleQuerySiloStats);
+    RegisterHandler("set_silo_quota", HandleSetSiloQuota);
+
+    // Wire virtual memory and aperture mapping handlers
+    RegisterHandler("map_model_aperture", HandleMapModelAperture);
+    RegisterHandler("query_virtual_memory", HandleQueryVirtualMemory);
+
+    // Wire sovereign operations handlers
+    RegisterHandler("manage_local_embeddings", HandleManageLocalEmbeddings);
+    RegisterHandler("purge_telemetry", HandlePurgeTelemetry);
     RegisterHandler("git_status", HandleGitStatus);
     RegisterHandler("git_diff", HandleGitDiff);
     RegisterHandler("git_commit", HandleGitCommit);
@@ -1954,6 +2526,79 @@ void AgentToolRegistry::InitDescriptors()
     RegisterHandler("debug_analyze", HandleDebugAnalyze);
     RegisterHandler("debug_snapshot", HandleDebugSnapshot);
     RegisterHandler("debug_suggest_breakpoints", HandleDebugSuggestBreakpoints);
+
+    // -----------------------------------------------------------------------
+    // Final reconciliation pass:
+    // Ensure ToolRegistry parameter schemas match AgentToolHandlers catalog.
+    // This intentionally runs AFTER local setParam() wiring so we don't drift.
+    // -----------------------------------------------------------------------
+    try
+    {
+        const json handlerSchemas = AgentToolHandlers::GetAllSchemas();
+        for (const auto& s : handlerSchemas)
+        {
+            if (!s.is_object() || s.value("type", "") != "function" || !s.contains("function"))
+            {
+                continue;
+            }
+            const auto& fn = s["function"];
+            const std::string name = fn.value("name", "");
+            if (name.empty())
+            {
+                continue;
+            }
+            auto it = m_nameIndex.find(name);
+            if (it == m_nameIndex.end())
+            {
+                continue;
+            }
+
+            json rebuilt = json::object();
+            if (fn.contains("parameters") && fn["parameters"].is_object())
+            {
+                const auto& params = fn["parameters"];
+                const json props = params.value("properties", json::object());
+                json required = params.value("required", json::array());
+
+                std::unordered_set<std::string> requiredSet;
+                if (required.is_array())
+                {
+                    for (const auto& r : required)
+                    {
+                        if (r.is_string())
+                        {
+                            requiredSet.insert(r.get<std::string>());
+                        }
+                    }
+                }
+
+                if (props.is_object())
+                {
+                    for (auto pit = props.begin(); pit != props.end(); ++pit)
+                    {
+                        json p = json::object();
+                        const json& in = pit.value();
+                        p["type"] = in.value("type", "string");
+                        p["description"] = in.value("description", "");
+                        if (requiredSet.find(pit.key()) == requiredSet.end())
+                        {
+                            p["default"] = nullptr;
+                        }
+                        rebuilt[pit.key()] = p;
+                    }
+                }
+            }
+
+            if (!rebuilt.empty())
+            {
+                m_tools[it->second].params_schema = std::move(rebuilt);
+            }
+        }
+    }
+    catch (...)
+    {
+        // Keep local schema as fallback.
+    }
 }
 
 json AgentToolRegistry::GetToolSchemas() const
@@ -2200,6 +2845,26 @@ std::vector<std::string> AgentToolRegistry::ListTools() const
         names.emplace_back(td.name);
     }
     return names;
+}
+
+std::vector<std::string> AgentToolRegistry::GetToolsMissingHandlers() const
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    std::vector<std::string> missing;
+    missing.reserve(m_tools.size());
+    for (const auto& td : m_tools)
+    {
+        const std::string name = td.name ? td.name : "";
+        const bool hasExternalImpl = !name.empty() && AgentToolHandlers::Instance().HasTool(name);
+        if (!td.handler && !hasExternalImpl)
+        {
+            missing.push_back(name);
+        }
+    }
+    // Remove any empty entries (defensive)
+    missing.erase(std::remove_if(missing.begin(), missing.end(), [](const std::string& s) { return s.empty(); }),
+                  missing.end());
+    return missing;
 }
 
 uint64_t AgentToolRegistry::GetTotalInvocations() const

@@ -59,7 +59,9 @@ AgenticMemorySystem::AgenticMemorySystem()
 
 AgenticMemorySystem::~AgenticMemorySystem()
 {
-    // Cleanup handled by unique_ptr
+    // Cleanup: clear all memory stores
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_memories.clear();
 }
 
 std::string AgenticMemorySystem::generateUUID() {

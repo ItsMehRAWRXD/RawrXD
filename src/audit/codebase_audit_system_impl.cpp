@@ -101,7 +101,7 @@ bool CodebaseAuditSystem::initialize(const AuditConfiguration& config,
         return true;
         
     } catch (const std::exception& e) {
-        (void)e;
+        last_error_ = std::string("Audit init failed: ") + e.what();
         return false;
     }
 }
@@ -636,7 +636,7 @@ std::string CodebaseAuditSystem::read_file_content(const std::string& file_path)
         }
         return std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
     } catch (const std::exception& e) {
-        (void)e;
+        last_error_ = std::string("Audit read failed: ") + e.what();
         return "";
     }
 }

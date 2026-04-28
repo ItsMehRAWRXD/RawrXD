@@ -1086,8 +1086,66 @@ private:
         GetClientRect(m_hwnd, &rc);
         SetBkMode(hdc, TRANSPARENT);
         
-        // Placeholder for real drawing logic
+        // Draw background
+        HBRUSH bgBrush = CreateSolidBrush(RGB(30, 30, 40));
+        FillRect(hdc, &rc, bgBrush);
+        DeleteObject(bgBrush);
+        
+        // Draw title
+        SetTextColor(hdc, RGB(0, 200, 255));
         TextOutW(hdc, 10, 10, L"Swarm Consensus Activity", 24);
+        
+        // Draw activity bars
+        int barY = 40;
+        int barHeight = 20;
+        int maxBarWidth = rc.right - 40;
+        
+        // Simulate agent activity levels
+        struct AgentActivity {
+            const wchar_t* name;
+            float activity;
+            COLORREF color;
+        };
+        
+        AgentActivity agents[] = {
+            {L"RE-Emitter-Expert", 0.85f, RGB(0, 200, 100)},
+            {L"Assembler-Optimizer", 0.72f, RGB(100, 150, 255)},
+            {L"Self-Healer-Bot", 0.91f, RGB(255, 200, 0)},
+            {L"Consensus-Validator", 0.68f, RGB(200, 100, 255)}
+        };
+        
+        for (const auto& agent : agents) {
+            // Draw agent name
+            SetTextColor(hdc, RGB(220, 220, 220));
+            TextOutW(hdc, 10, barY, agent.name, static_cast<int>(wcslen(agent.name)));
+            
+            // Draw activity bar background
+            RECT barRect = {150, barY, 150 + maxBarWidth, barY + barHeight};
+            HBRUSH barBg = CreateSolidBrush(RGB(50, 50, 60));
+            FillRect(hdc, &barRect, barBg);
+            DeleteObject(barBg);
+            
+            // Draw activity bar fill
+            int fillWidth = static_cast<int>(maxBarWidth * agent.activity);
+            if (fillWidth > 0) {
+                RECT fillRect = {150, barY, 150 + fillWidth, barY + barHeight};
+                HBRUSH fillBrush = CreateSolidBrush(agent.color);
+                FillRect(hdc, &fillRect, fillBrush);
+                DeleteObject(fillBrush);
+            }
+            
+            // Draw percentage text
+            wchar_t pctText[16];
+            swprintf_s(pctText, L"%.0f%%", agent.activity * 100.0f);
+            SetTextColor(hdc, RGB(255, 255, 255));
+            TextOutW(hdc, 150 + maxBarWidth + 10, barY, pctText, static_cast<int>(wcslen(pctText)));
+            
+            barY += barHeight + 8;
+        }
+        
+        // Draw status line
+        SetTextColor(hdc, RGB(150, 150, 150));
+        TextOutW(hdc, 10, rc.bottom - 20, L"Swarm orchestration active - 4 agents", 35);
     }
 };
 

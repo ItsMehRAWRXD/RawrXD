@@ -25,7 +25,8 @@ param(
     [int[]]$OneAdditionWindowSweepMB = @(),
     [double]$MinFileSizeMB = 1,
     [switch]$FastProbe,
-    [string]$OutputDir = ""
+    [string]$OutputDir = "",
+    [int]$PerModelTimeoutSec = 300
 )
 
 Set-StrictMode -Version Latest
@@ -102,7 +103,8 @@ function Get-ProcessResult {
         [Parameter(Mandatory = $true)][string]$FileName,
         [Parameter(Mandatory = $true)][string[]]$Arguments,
         [Parameter(Mandatory = $true)][string]$WorkingDirectory,
-        [hashtable]$Environment = @{}
+        [hashtable]$Environment = @{},
+        [int]$TimeoutSec = 0
     )
 
     $psi = New-Object System.Diagnostics.ProcessStartInfo
@@ -118,11 +120,24 @@ function Get-ProcessResult {
     $proc = New-Object System.Diagnostics.Process
     $proc.StartInfo = $psi
     [void]$proc.Start()
+
+    if ($TimeoutSec -gt 0) {
+        if (-not $proc.WaitForExit($TimeoutSec * 1000)) {
+            try { $proc.Kill() } catch { }
+            try { $proc.WaitForExit() } catch { }
+            $stdout = ""
+            $stderr = "process_timeout_after_${TimeoutSec}s"
+            return [pscustomobject]@{ ExitCode = 124; StdOut = $stdout; StdErr = $stderr; TimedOut = $true }
+        }
+    }
+    else {
+        $proc.WaitForExit()
+    }
+
     $stdout = $proc.StandardOutput.ReadToEnd()
     $stderr = $proc.StandardError.ReadToEnd()
-    $proc.WaitForExit()
 
-    return [pscustomobject]@{ ExitCode = $proc.ExitCode; StdOut = $stdout; StdErr = $stderr }
+    return [pscustomobject]@{ ExitCode = $proc.ExitCode; StdOut = $stdout; StdErr = $stderr; TimedOut = $false }
 }
 
 function Convert-BytesToGiB {
@@ -294,14 +309,15 @@ for ($i = 0; $i -lt $models.Count; $i++) {
     $streamArgs = @($model.FullName, "--window-mb", "$MappedWindowMB")
     if ($FastProbe) { $streamArgs += "--first-zone-only" }
 
-    $streamResult = Get-ProcessResult -FileName $streamExe -Arguments $streamArgs -WorkingDirectory $repoRoot -Environment @{ "RAWRXD_MAX_STREAM_MACHINE_JSON" = "1" }
+    $streamResult = Get-ProcessResult -FileName $streamExe -Arguments $streamArgs -WorkingDirectory $repoRoot -Environment @{ "RAWRXD_MAX_STREAM_MACHINE_JSON" = "1" } -TimeoutSec $PerModelTimeoutSec
     $streamJson = Get-JsonLinePayload -CombinedText ($streamResult.StdErr + "`n" + $streamResult.StdOut) -Prefix "RAWRXD_MAX_STREAM_JSON="
     $bestOneAddition = Get-BestOneAdditionEstimate -StreamJson $streamJson -WindowSweepMB $effectiveWindowSweepMB -MappedWindowMB $MappedWindowMB
 
     $tpsJson = $null
+    $tpsResult = $null
     if ($RunTps -and $tpsExe -and $streamJson -and $streamJson.streamable -and $model.Length -le $tpsMaxBytes) {
         Write-Host (("[{0}/{1}] TPS:    {2}" -f ($i + 1), $models.Count, $model.Name)) -ForegroundColor DarkCyan
-        $tpsResult = Get-ProcessResult -FileName $tpsExe -Arguments @($model.FullName, "$MaxTokens") -WorkingDirectory $repoRoot -Environment @{ "RAWRXD_TPS_MACHINE_JSON" = "1"; "RAWRXD_TPS_REF" = "239" }
+        $tpsResult = Get-ProcessResult -FileName $tpsExe -Arguments @($model.FullName, "$MaxTokens") -WorkingDirectory $repoRoot -Environment @{ "RAWRXD_TPS_MACHINE_JSON" = "1"; "RAWRXD_TPS_REF" = "239" } -TimeoutSec $PerModelTimeoutSec
         $tpsJson = Get-JsonLinePayload -CombinedText ($tpsResult.StdErr + "`n" + $tpsResult.StdOut) -Prefix "RAWRXD_TPS_JSON="
     }
 
@@ -310,7 +326,7 @@ for ($i = 0; $i -lt $models.Count; $i++) {
             SizeBytes                    = [UInt64]$model.Length
             SizeGiB                      = Convert-BytesToGiB -Bytes ([UInt64]$model.Length)
             StreamExit                   = if ($streamJson) { [int]$streamJson.exit } else { [int]$streamResult.ExitCode }
-            StreamPhase                  = if ($streamJson) { [string]$streamJson.phase } else { "no_json" }
+            StreamPhase                  = if ($streamJson) { [string]$streamJson.phase } elseif ($streamResult.TimedOut) { "timeout" } else { "no_json" }
             Streamable                   = if ($streamJson) { [bool]$streamJson.streamable } else { $false }
             Arch                         = if ($streamJson) { [string]$streamJson.arch } else { "" }
             Layers                       = if ($streamJson) { [int]$streamJson.layers } else { 0 }
@@ -346,7 +362,7 @@ for ($i = 0; $i -lt $models.Count; $i++) {
             ProbeMs                      = if ($streamJson) { [double]$streamJson.probe_ms } else { 0.0 }
             StreamDetail                 = if ($streamJson) { [string]$streamJson.detail } else { (($streamResult.StdErr + " " + $streamResult.StdOut).Trim()) }
             TpsExit                      = if ($tpsJson) { [int]$tpsJson.exit } else { "" }
-            TpsPhase                     = if ($tpsJson) { [string]$tpsJson.phase } else { "" }
+            TpsPhase                     = if ($tpsJson) { [string]$tpsJson.phase } elseif ($tpsResult -and $tpsResult.TimedOut) { "timeout" } else { "" }
             Tps                          = if ($tpsJson) { [double]$tpsJson.tps } else { "" }
             TpsWallS                     = if ($tpsJson) { [double]$tpsJson.wall_s } else { "" }
             TpsSteps                     = if ($tpsJson) { [int]$tpsJson.steps } else { "" }
@@ -363,7 +379,9 @@ $meaningful = @(
         [UInt64]$_.EstimatedCurrentMaxBytes -gt 0
     }
 )
-$summaryPool = if ($meaningful.Count -gt 0) { $meaningful } else { $successful }
+$summaryPool = @(
+    if ($meaningful.Count -gt 0) { $meaningful } else { $successful }
+)
 $largestActual = $successful | Sort-Object SizeBytes -Descending | Select-Object -First 1
 $largestEstimatedCurrent = $summaryPool | Sort-Object EstimatedCurrentMaxBytes -Descending | Select-Object -First 1
 $largestEstimatedOneAddition = $summaryPool | Sort-Object EstimatedOneAdditionMaxBytes -Descending | Select-Object -First 1

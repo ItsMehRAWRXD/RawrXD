@@ -160,6 +160,9 @@ namespace RawrXD {
         uint64_t offset;
         uint64_t size;
         uint64_t size_bytes; // Alias for size to match legacy code
+        bool loaded = false; // Track if tensor is loaded into memory
+        std::vector<uint8_t> hostData; // CPU fallback storage for tensor data
+        const void* data = nullptr; // Pointer to mapped or GPU memory (non-owning)
     };
 
     struct GGUFMetadata {

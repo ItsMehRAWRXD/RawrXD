@@ -8,7 +8,12 @@
 
 namespace SovereignAssembler {
 
-static std::mutex g_sandboxMutex;
+// LAZY SINGLETON PATTERN: Avoid SIOF - std::mutex has non-trivial constructor
+inline std::mutex& GetSandboxMutex() {
+    static std::mutex* inst = new std::mutex();
+    return *inst;
+}
+#define g_sandboxMutex GetSandboxMutex()
 
 AgenticMemorySandbox& AgenticMemorySandbox::Instance() {
     static AgenticMemorySandbox instance;

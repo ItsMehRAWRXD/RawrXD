@@ -41,7 +41,7 @@ namespace Swarm
 enum class SchedulerError : std::uint8_t
 {
     Ok = 0,
-    NotImplemented,  // Stub phase: operation not yet backed
+    NotImplemented,  // Phase-gate: operation reserved for future scheduler backend
     InvalidArgument,
     WorkingSetFull,
     PrefetchBusy,
@@ -51,6 +51,7 @@ enum class SchedulerError : std::uint8_t
     OutOfMemory,
     /// `submitPlan` refused: at least one resident slice still has an active compute pin (hold).
     PlanRowsHeld,
+    InvalidModelIndex,
 };
 
 inline const char* schedulerErrorMessage(SchedulerError e)
@@ -77,6 +78,8 @@ inline const char* schedulerErrorMessage(SchedulerError e)
             return "out_of_memory";
         case SchedulerError::PlanRowsHeld:
             return "plan_rows_held";
+        case SchedulerError::InvalidModelIndex:
+            return "invalid_model_index";
     }
     return "unknown";
 }
@@ -277,6 +280,10 @@ class ISwarmMemoryBackend
         (void)size;
         return false;
     }
+
+  protected:
+    mutable std::mutex m_prefetchMutex;
+    std::unordered_map<std::uint32_t, std::vector<std::pair<std::uint64_t, std::uint64_t>>> m_pinnedRanges;
 };
 
 // ---------------------------------------------------------------------------

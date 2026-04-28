@@ -11,6 +11,7 @@
 #include <functional>
 #include <unordered_map>
 #include <condition_variable>
+#include <chrono>
 #include "../../include/inference/token_queue_fast.h"
 
 /**
@@ -257,6 +258,7 @@ public:
         size_t max_memory_mb = 45000;  // 45GB for model + KV
         bool enable_async_inference = true;
         bool enable_ollama_blob_support = true;
+        float temperature = 0.7f;
     };
     
     struct InferenceStats {
@@ -369,6 +371,23 @@ private:
     std::thread inference_thread_;
     std::mutex inference_mutex_;
     std::atomic<bool> running_{false};
+
+    struct FeedbackEntry {
+        std::string text;
+        bool isPositive = false;
+        std::chrono::steady_clock::time_point timestamp;
+    };
+    std::vector<FeedbackEntry> feedback_history_;
+
+    // Stats tracking
+    int total_tokens_generated_ = 0;
+    int tokens_in_current_batch_ = 0;
+    int batch_count_ = 0;
+    float current_tps_ = 0.0f;
+    std::chrono::steady_clock::time_point last_stats_update_;
+    float gpu_utilization_ = 0.0f;
+    float cpu_utilization_ = 0.0f;
+    void* vulkan_engine_ = nullptr;  // Opaque Vulkan engine handle
     
     void updateStats();
     void monitorGPUUtilization();

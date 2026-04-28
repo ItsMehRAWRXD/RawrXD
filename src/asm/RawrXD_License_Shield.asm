@@ -406,15 +406,10 @@ Shield_DecryptKernelEntry_Bridge ENDP
 ;
 ; Returns: EAX = 1 if .text section is clean, 0 if tampered
 ; =============================================================================
-Shield_VerifyIntegrity PROC FRAME
+Shield_VerifyIntegrity PROC
     push    rbx
-    .pushreg rbx
     push    rsi
-    .pushreg rsi
     push    rdi
-    .pushreg rdi
-
-    .endprolog
 
     ; Get our own module base (NULL = current EXE)
     xor     ecx, ecx
@@ -1188,39 +1183,13 @@ Shield_InitializeDefense PROC FRAME
     cmp     ebx, 01Fh
     je      @@sid_clean
 
-    ; At least one layer failed → tamper detected
+    ; Fail closed without trap-based crashes.
+    ; Startup must remain stable even when integrity checks fail.
     lock inc g_ShieldTamperCount
-
-    ; Silent death: mutate canary (delayed corruption)
     mov     rax, g_CanaryXorKey
     xor     g_CanaryValue, rax
-
-    ; ---- BATCH 4: Anti-Debug Traps ----
-    ; If a debugger is present, some of these instructions 
-    ; will cause different behavior or explicit traps.
-    
-    ; 1. Trap Flag (TF) check
-    pushfq
-    pop     rax
-    bt      rax, 8                          ; Test TF bit (bit 8)
-    jc      @@sid_explode                   ; TF set → likely being single-stepped
-
-    ; 2. INT 2Dh (Debugger Breakpoint for x64)
-    ; In a non-debugged process, this will cause an exception.
-    ; If a debugger is present, it will skip the next instruction.
-    ; This is a classic "skipping" anti-debug trick.
-    xor     eax, eax
-    int     02Dh                            ; Break into debugger (if any)
-    nop                                     ; Debugger skips this
-    ; If we reach here, no debugger or it didn't skip.
-    
     xor     eax, eax                        ; Return 0 = tampered
     jmp     @@sid_exit
-
-@@sid_explode:
-    ; Immediate termination if TF detected in defense chain
-    xor     ecx, ecx
-    call    ExitProcess
 
 @@sid_clean:
     mov     eax, 1                          ; All layers passed

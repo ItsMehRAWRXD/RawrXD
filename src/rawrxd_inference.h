@@ -1,4 +1,9 @@
 #pragma once
+
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
@@ -12,7 +17,7 @@
 #include <vector>
 
 
-#ifdef RAWR_ENABLE_VULKAN
+#if RAWR_HAS_VULKAN
 #include <vulkan/vulkan.h>
 #else
 // Vulkan stubs for CPU mode
@@ -67,6 +72,14 @@ typedef struct
 #include "core/swarm_scheduler.hpp"
 #include "titan_token_trace.h"
 #include "utf8_validator.h"
+#include "ai/fast_spec_inference_bridge.h"
+
+#ifdef min
+#undef min
+#endif
+#ifdef max
+#undef max
+#endif
 
 /// Snapshot of MoE grouped pack cache + async prepack counters (Win32IDE HUD / staging telemetry).
 struct MoEPackHudMetrics
@@ -841,6 +854,20 @@ class RawrXDInference
         m_lastLogits = logits;
         uint32_t absolutePos = static_cast<uint32_t>(tokens.size());
 
+        // FastSpec live integration (local-first): draft generation +
+        // probabilistic target validation in-process. This path can be disabled
+        // with RAWRXD_ENABLE_FASTSPEC=0 and falls back to the legacy sampler
+        // on any invalid output.
+        const char* fastSpecEnv = std::getenv("RAWRXD_ENABLE_FASTSPEC");
+        const bool fastSpecEnabled = !(fastSpecEnv && std::string(fastSpecEnv) == "0");
+        RawrXD::FastSpecInferenceBridge fastSpecBridge({
+            vocabSize,
+            4u,
+            16u
+        });
+        fastSpecBridge.PrefillContext(tokens);
+        uint64_t fastSpecRng = 0x9E3779B97F4A7C15ULL ^ static_cast<uint64_t>(tokens.size());
+
         // Emit one prefill-stage trace row so diagnostics survive long prefill runs
         // even if generation does not reach the first sampled token yet.
         {
@@ -884,18 +911,30 @@ class RawrXDInference
             try
             {
                 currentTrace.record_t3();  // Compute begin (pre-sample)
-                nextToken = sampler.Sample(logits.data(), logits.size(), tokens);
-                currentTrace.record_t4();  // Compute end (post-sample softmax)
+                if (fastSpecEnabled)
+                {
+                    const uint32_t lastToken = tokens.empty() ? 0u : tokens.back();
+                    auto step = fastSpecBridge.GenerateTokenSampled(lastToken, logits, &fastSpecRng);
+                    nextToken = step.accepted_token;
+                }
+
+                if (!fastSpecEnabled || nextToken >= vocabSize)
+                {
+                    // Safety fallback: preserve existing behavior if FastSpec is
+                    // disabled or returns an out-of-range token.
+                    nextToken = sampler.Sample(logits.data(), logits.size(), tokens);
+                }
+                currentTrace.record_t4();  // Compute end (post-sample)
             }
             catch (const std::exception& ex)
             {
-                m_lastLoadErrorMessage = std::string("generate_from_tokens: sampler failed: ") + ex.what();
+                m_lastLoadErrorMessage = std::string("generate_from_tokens: sampler/spec failed: ") + ex.what();
                 m_lastLogits.clear();
                 return generated;
             }
             catch (...)
             {
-                m_lastLoadErrorMessage = "generate_from_tokens: sampler failed with unknown exception";
+                m_lastLoadErrorMessage = "generate_from_tokens: sampler/spec failed with unknown exception";
                 m_lastLogits.clear();
                 return generated;
             }

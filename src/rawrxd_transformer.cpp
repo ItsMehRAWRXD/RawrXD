@@ -79,7 +79,13 @@ void collectMoeMixturePlanRowRefs(const std::uint32_t modelIndex, const std::uin
     {
         const std::string full = ep + n;
         if (loader->hasTensorNamed(full))
-            return loader->GetTensor(full);
+        {
+            auto slot = loader->GetTensorHotSlot(full);
+            if (!slot)
+                return nullptr;
+            // Hotpatch slot: callers must not cache this pointer beyond the immediate use.
+            return slot.value()->load(std::memory_order_acquire);
+        }
     }
     return nullptr;
 }
@@ -1297,15 +1303,17 @@ bool RawrXDTransformer::Initialize(VkDevice device, VkPhysicalDevice physDevice,
     }
     // Hard cap: limit per K/V buffer.  VAllocBuffer uses VirtualAlloc which can
     // handle multi-GB allocations, but keep a sane upper bound.
-    constexpr std::size_t kMaxKvBytesPerBuffer = 2ull * 1024 * 1024 * 1024; // 2 GB
+    constexpr std::size_t kMaxKvBytesPerBuffer = 2ull * 1024 * 1024 * 1024;  // 2 GB
     const std::size_t kMaxKvFloatsPerBuffer = kMaxKvBytesPerBuffer / sizeof(float);
     if (kv_size > kMaxKvFloatsPerBuffer)
     {
-        const int capped_ctx = static_cast<int>(kMaxKvFloatsPerBuffer / static_cast<std::size_t>(std::max(1, kv_dim * config.n_layers)));
-        printf("[RawrXD] KV cache budget cap: ctx %d -> %d (kv_size %zu -> budget %zu floats)\n",
-               ctx, capped_ctx, kv_size, kMaxKvFloatsPerBuffer);
+        const int capped_ctx =
+            static_cast<int>(kMaxKvFloatsPerBuffer / static_cast<std::size_t>(std::max(1, kv_dim * config.n_layers)));
+        printf("[RawrXD] KV cache budget cap: ctx %d -> %d (kv_size %zu -> budget %zu floats)\n", ctx, capped_ctx,
+               kv_size, kMaxKvFloatsPerBuffer);
         ctx = std::max(32, capped_ctx);
-        kv_size = static_cast<std::size_t>(config.n_layers) * static_cast<std::size_t>(ctx) * static_cast<std::size_t>(kv_dim);
+        kv_size = static_cast<std::size_t>(config.n_layers) * static_cast<std::size_t>(ctx) *
+                  static_cast<std::size_t>(kv_dim);
     }
     printf("[RawrXD] KV cache: %zu floats (%.1f MB per cache)\n", kv_size, kv_size * 4.0 / 1e6);
     // Diagnose available memory before allocation
@@ -1322,24 +1330,33 @@ bool RawrXDTransformer::Initialize(VkDevice device, VkPhysicalDevice physDevice,
     // halved ctx on failure.
     {
         bool allocated = false;
-        while (ctx >= 8 && !allocated) {
-            kv_size = static_cast<std::size_t>(config.n_layers) * static_cast<std::size_t>(ctx) * static_cast<std::size_t>(kv_dim);
-            printf("[RawrXD] KV cache attempt: ctx=%d, %zu floats (%.1f MB per cache)\n",
-                   ctx, kv_size, kv_size * 4.0 / 1e6);
-            try {
+        while (ctx >= 8 && !allocated)
+        {
+            kv_size = static_cast<std::size_t>(config.n_layers) * static_cast<std::size_t>(ctx) *
+                      static_cast<std::size_t>(kv_dim);
+            printf("[RawrXD] KV cache attempt: ctx=%d, %zu floats (%.1f MB per cache)\n", ctx, kv_size,
+                   kv_size * 4.0 / 1e6);
+            try
+            {
                 kv_cache_k.resize(kv_size, 0.0f);
                 kv_cache_v.resize(kv_size, 0.0f);
                 kv_cache_pos.assign(static_cast<size_t>(config.n_layers) * static_cast<size_t>(ctx), -1);
                 allocated = true;
-            } catch (const std::bad_alloc&) {
+            }
+            catch (const std::bad_alloc&)
+            {
                 printf("[RawrXD] KV resize failed at ctx=%d (%.1f MB per cache)\n", ctx, kv_size * 4.0 / 1e6);
-                kv_cache_k.clear(); kv_cache_k.shrink_to_fit();
-                kv_cache_v.clear(); kv_cache_v.shrink_to_fit();
-                kv_cache_pos.clear(); kv_cache_pos.shrink_to_fit();
+                kv_cache_k.clear();
+                kv_cache_k.shrink_to_fit();
+                kv_cache_v.clear();
+                kv_cache_v.shrink_to_fit();
+                kv_cache_pos.clear();
+                kv_cache_pos.shrink_to_fit();
                 ctx /= 2;
             }
         }
-        if (!allocated) {
+        if (!allocated)
+        {
             printf("[RawrXD] FATAL: KV cache allocation exhausted (min ctx=8)\n");
             return false;
         }
@@ -1388,6 +1405,55 @@ bool RawrXDTransformer::Initialize(VkDevice device, VkPhysicalDevice physDevice,
     // Precompute RoPE tables if needed (usually just done on fly in kernels)
     printf("[RawrXD] Transformer Initialized. AVX-512 Kernels Linked.\n");
     return true;
+}
+
+void RawrXDTransformer::prefetchMoEExperts_(const std::string& blkPrefix,
+                                            const std::vector<std::uint32_t>& expertOrdinals)
+{
+    if (!loader || expertOrdinals.empty() || !config.moe_expert_prefetch)
+        return;
+
+    const int cap = (config.moe_expert_prefetch_max > 0) ? std::max(0, config.moe_expert_prefetch_max)
+                                                         : static_cast<int>(expertOrdinals.size());
+    const int n = std::min(static_cast<int>(expertOrdinals.size()), cap);
+
+    const std::array<std::array<const char*, 3>, 2> kPat = {{
+        {"ffn_gate.weight", "ffn_up.weight", "ffn_down.weight"},
+        {"w1.weight", "w3.weight", "w2.weight"},
+    }};
+
+    for (int i = 0; i < n; ++i)
+    {
+        const std::uint32_t e = expertOrdinals[static_cast<std::size_t>(i)];
+        const std::string ep = blkPrefix + "ffn_experts." + std::to_string(e) + ".";
+
+        for (const auto& tri : kPat)
+        {
+            const std::string g = ep + tri[0];
+            const std::string u = ep + tri[1];
+            const std::string d = ep + tri[2];
+            if (!loader->hasTensorNamed(g) || !loader->hasTensorNamed(u) || !loader->hasTensorNamed(d))
+                continue;
+
+            ++m_moeExpertPrefetchAttempts;
+            const auto sg = loader->GetTensorHotSlot(g);
+            const auto su = loader->GetTensorHotSlot(u);
+            const auto sd = loader->GetTensorHotSlot(d);
+            if (!sg || !su || !sd)
+            {
+                ++m_moeExpertPrefetchErrors;
+                continue;
+            }
+
+            // If any pointer is now non-null, treat as materialized for telemetry.
+            if (sg.value()->load(std::memory_order_acquire) || su.value()->load(std::memory_order_acquire) ||
+                sd.value()->load(std::memory_order_acquire))
+            {
+                ++m_moeExpertPrefetchMaterialized;
+            }
+            break;
+        }
+    }
 }
 
 bool RawrXDTransformer::tryMoeSyncPackMixtureIntoCache(const std::uint32_t layer, const std::string& blkPrefix,
@@ -1599,8 +1665,8 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
         const uint32_t& token = tokens[t];
         if (token >= static_cast<uint32_t>(config.vocab_size))
         {
-            printf("[Forward] FATAL: Token ID %u out of bounds [0, %d) at position %d. Rejecting batch.\n", 
-                   token, config.vocab_size, t);
+            printf("[Forward] FATAL: Token ID %u out of bounds [0, %d) at position %d. Rejecting batch.\n", token,
+                   config.vocab_size, t);
             return {};
         }
     }
@@ -1618,8 +1684,8 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
 
     for (int t = 0; t < T; t++)
     {
-        const bool swarmTokenActive = (m_swarmScheduler != nullptr) && (loader != nullptr) && (loader->getExperts() > 0) &&
-                                      !m_swarmPinningSuppressed;
+        const bool swarmTokenActive = (m_swarmScheduler != nullptr) && (loader != nullptr) &&
+                                      (loader->getExperts() > 0) && !m_swarmPinningSuppressed;
         if (swarmTokenActive)
             m_swarmScheduler->onForwardTokenStepBegin();
 
@@ -1721,8 +1787,8 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
             const std::string wqkv_name = prefix + "attn_qkv.weight";
             const std::string wo_name = prefix + "attn_output.weight";
 
-            const bool has_split_qkv = loader->hasTensorNamed(wq_name) && loader->hasTensorNamed(wk_name) &&
-                                       loader->hasTensorNamed(wv_name);
+            const bool has_split_qkv =
+                loader->hasTensorNamed(wq_name) && loader->hasTensorNamed(wk_name) && loader->hasTensorNamed(wv_name);
             if (has_split_qkv)
             {
                 if (!loader->StreamingMatMul(wq_name, x.data(), q.data(), dim, dim))
@@ -1749,7 +1815,8 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
                 if (!loader->hasTensorNamed(wqkv_name) ||
                     !loader->StreamingMatMul(wqkv_name, x.data(), packed_qkv.data(), dim, packed_qkv_dim))
                 {
-                    printf("[Forward] FATAL: Missing compatible attention projection for %s (expected split q/k/v or packed qkv)\n",
+                    printf("[Forward] FATAL: Missing compatible attention projection for %s (expected split q/k/v or "
+                           "packed qkv)\n",
                            prefix.c_str());
                     return {};
                 }
@@ -1886,6 +1953,9 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
                     printf("[Forward] WARN: pinSwarmSlicesForLayer experts layer %d failed: %s\n", l,
                            RawrXD::Swarm::schedulerErrorMessage(pe.error()));
                 }
+
+                // Minimal prefetch: materialize expert weights now that routing is known.
+                prefetchMoEExperts_(prefix, moeExpertPick);
             }
 
             const std::string w1_name = ffn_prefix + "gate.weight";
@@ -1973,8 +2043,8 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
                                                  kPick) != RawrXD::MoEDownProject::Path::GroupedCached)
                         return false;
 
-                    const std::string mixKey = makeMoeMixturePackCacheKey(0u, static_cast<std::uint32_t>(l),
-                                                                          expertPick, m_swarmPlanSliceIndex);
+                    const std::string mixKey = makeMoeMixturePackCacheKey(0u, static_cast<std::uint32_t>(l), expertPick,
+                                                                          m_swarmPlanSliceIndex);
                     std::vector<std::size_t> mixturePlanRows;
                     collectMoeMixturePlanRowRefs(0u, static_cast<std::uint32_t>(l), expertPick, m_swarmPlanSliceIndex,
                                                  mixturePlanRows);

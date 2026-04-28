@@ -141,7 +141,51 @@ json AgenticCopilotBridge::transformCode(const std::string& code, const std::str
         return result;
     }
     
-    std::string transformed = code;  // Placeholder
+    std::string transformed = code;
+    
+    // Apply basic transformations based on requested operation
+    if (transformation == "format") {
+        // Simple formatting: normalize indentation to 4 spaces
+        std::string formatted;
+        int indent = 0;
+        bool inLine = false;
+        for (size_t i = 0; i < code.size(); ++i) {
+            char c = code[i];
+            if (c == '{') { formatted += c; formatted += '\n'; indent++; inLine = false; }
+            else if (c == '}') { formatted += '\n'; indent--; for (int j = 0; j < indent * 4; ++j) formatted += ' '; formatted += c; inLine = false; }
+            else if (c == ';') { formatted += c; formatted += '\n'; inLine = false; }
+            else if (c == '\n') { if (inLine) { formatted += '\n'; inLine = false; } }
+            else {
+                if (!inLine) { for (int j = 0; j < indent * 4; ++j) formatted += ' '; inLine = true; }
+                formatted += c;
+            }
+        }
+        transformed = formatted;
+    } else if (transformation == "minify") {
+        // Remove extra whitespace
+        std::string minified;
+        bool lastWasSpace = true;
+        for (char c : code) {
+            if (std::isspace(static_cast<unsigned char>(c))) {
+                if (!lastWasSpace) { minified += ' '; lastWasSpace = true; }
+            } else { minified += c; lastWasSpace = false; }
+        }
+        transformed = minified;
+    } else if (transformation == "comment_strip") {
+        // Strip C-style single-line comments
+        std::string stripped;
+        for (size_t i = 0; i < code.size(); ++i) {
+            if (i + 1 < code.size() && code[i] == '/' && code[i+1] == '/') {
+                while (i < code.size() && code[i] != '\n') ++i;
+            } else {
+                stripped += code[i];
+            }
+        }
+        transformed = stripped;
+    } else {
+        // Unknown transformation: return original with warning
+        result["warning"] = "Unknown transformation: '" + transformation + "'";
+    }
     
     result["success"] = true;
     result["original_code"] = code;
@@ -172,10 +216,54 @@ std::string AgenticCopilotBridge::findBugs(const std::string& code)
     if (!m_engine) return "Engine not initialized";
     
     std::string analysis = "Bug analysis:\n";
-    analysis += "- Check for null pointer dereferences\n";
-    analysis += "- Verify bounds checking\n";
-    analysis += "- Ensure proper resource cleanup";
-    
+    bool foundIssues = false;
+
+    // Check for null pointer dereference patterns
+    if (code.find("*") != std::string::npos && code.find("nullptr") == std::string::npos &&
+        code.find("NULL") == std::string::npos && code.find("if (") == std::string::npos) {
+        analysis += "- WARNING: Potential null pointer dereference (pointer use without null check)\n";
+        foundIssues = true;
+    }
+
+    // Check for unchecked array access
+    if (code.find("[") != std::string::npos && code.find(".at(") == std::string::npos &&
+        code.find("size()") == std::string::npos && code.find("length()") == std::string::npos) {
+        analysis += "- WARNING: Unchecked array/index access (consider bounds checking)\n";
+        foundIssues = true;
+    }
+
+    // Check for resource leaks (new without delete, fopen without fclose)
+    if ((code.find("new ") != std::string::npos && code.find("delete") == std::string::npos) ||
+        (code.find("fopen") != std::string::npos && code.find("fclose") == std::string::npos)) {
+        analysis += "- WARNING: Potential resource leak (allocation without corresponding release)\n";
+        foundIssues = true;
+    }
+
+    // Check for unsafe string functions
+    if (code.find("strcpy(") != std::string::npos || code.find("strcat(") != std::string::npos ||
+        code.find("sprintf(") != std::string::npos) {
+        analysis += "- WARNING: Use of unsafe C string functions (consider strncpy, strncat, snprintf)\n";
+        foundIssues = true;
+    }
+
+    // Check for magic numbers
+    size_t pos = 0;
+    int magicNumberCount = 0;
+    while ((pos = code.find_first_of("0123456789", pos)) != std::string::npos) {
+        size_t end = code.find_first_not_of("0123456789.", pos);
+        std::string num = code.substr(pos, end - pos);
+        if (num != "0" && num != "1" && num != "2" && num != "-1") magicNumberCount++;
+        pos = end;
+    }
+    if (magicNumberCount > 3) {
+        analysis += "- NOTE: Multiple magic numbers detected (consider named constants)\n";
+        foundIssues = true;
+    }
+
+    if (!foundIssues) {
+        analysis += "- No obvious issues detected by static heuristic scan\n";
+    }
+
     return analysis;
 }
 

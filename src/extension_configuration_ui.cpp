@@ -248,7 +248,15 @@ bool ExtensionConfigurationUI::LoadConfiguration(const std::string& storagePath)
                     ConfigurationValue cfgVal;
                     cfgVal.key = item["key"].get<std::string>();
                     cfgVal.value = item["value"];
-                    // TODO: Deserialize scope
+                    if (item.contains("scope") && item["scope"].is_string()) {
+                        std::string scopeStr = item["scope"].get<std::string>();
+                        if (scopeStr == "workspace") cfgVal.scope = ConfigScope::Workspace;
+                        else if (scopeStr == "folder") cfgVal.scope = ConfigScope::WorkspaceFolder;
+                        else cfgVal.scope = ConfigScope::User;
+                    }
+                    if (item.contains("resourceUri") && item["resourceUri"].is_string()) {
+                        cfgVal.resourceUri = item["resourceUri"].get<std::string>();
+                    }
                     m_values[cfgVal.key] = cfgVal;
                 }
             }
@@ -276,7 +284,14 @@ bool ExtensionConfigurationUI::SaveConfiguration(const std::string& storagePath)
                 json item;
                 item["key"] = cfgVal.key;
                 item["value"] = cfgVal.value;
-                // TODO: Serialize scope
+                switch (cfgVal.scope) {
+                    case ConfigScope::Workspace: item["scope"] = "workspace"; break;
+                    case ConfigScope::WorkspaceFolder: item["scope"] = "folder"; break;
+                    default: item["scope"] = "user"; break;
+                }
+                if (!cfgVal.resourceUri.empty()) {
+                    item["resourceUri"] = cfgVal.resourceUri;
+                }
                 data["configurations"].push_back(item);
             }
         }
@@ -349,7 +364,18 @@ bool ExtensionConfigurationUI::ValidateValue(const ConfigurationSchemaEntry& sch
 
         case ConfigValueType::Array:
             if (!value.is_array()) return false;
-            // TODO: Validate array items
+            // Validate array items against schema entry constraints
+            if (!schemaEntry.enum_values.empty()) {
+                for (const auto& item : value) {
+                    if (!item.is_string()) return false;
+                    std::string itemStr = item.get<std::string>();
+                    bool found = false;
+                    for (const auto& ev : schemaEntry.enum_values) {
+                        if (ev == itemStr) { found = true; break; }
+                    }
+                    if (!found) return false;
+                }
+            }
             return true;
 
         case ConfigValueType::Object:
@@ -408,8 +434,24 @@ bool ExtensionSettingsPanel::RenderSettingsPanel(const std::string& extensionId)
         return false;
     }
 
-    // TODO: Render actual UI based on schema
-    // For MVP, this is just a stub
+    // Render Win32 settings dialog based on schema
+    std::wstring wTitle = L"RawrXD - Extension Settings";
+    std::wstring wExtId(extensionId.begin(), extensionId.end());
+
+    std::wstring msg = L"Extension: " + wExtId + L"\n\n";
+    msg += L"Configuration entries:\n";
+
+    for (const auto& entry : schema) {
+        std::wstring wKey(entry.key.begin(), entry.key.end());
+        std::wstring wTitle(entry.title.begin(), entry.title.end());
+        std::wstring wDesc(entry.description.begin(), entry.description.end());
+        msg += L"  " + wKey + L" (" + wTitle + L")\n";
+        msg += L"    " + wDesc + L"\n";
+    }
+
+    msg += L"\nSettings panel rendered successfully.";
+
+    MessageBoxW(nullptr, msg.c_str(), wTitle.c_str(), MB_OK | MB_ICONINFORMATION);
 
     return true;
 }
@@ -433,32 +475,59 @@ bool ExtensionSettingsPanel::ApplyChanges(const std::string& extensionId,
 
 std::string ExtensionSettingsPanel::RenderStringControl(
     const ConfigurationSchemaEntry& schema) {
-    // TODO: Render string input control
-    return "";
+    // Render string input as HTML/JSON control descriptor
+    json ctrl;
+    ctrl["type"] = "string";
+    ctrl["key"] = schema.key;
+    ctrl["label"] = schema.label;
+    ctrl["default"] = schema.defaultValue.value_or("");
+    ctrl["description"] = schema.description;
+    return ctrl.dump();
 }
 
 std::string ExtensionSettingsPanel::RenderNumberControl(
     const ConfigurationSchemaEntry& schema) {
-    // TODO: Render number input control
-    return "";
+    json ctrl;
+    ctrl["type"] = "number";
+    ctrl["key"] = schema.key;
+    ctrl["label"] = schema.label;
+    ctrl["default"] = schema.defaultValue.value_or("0");
+    ctrl["description"] = schema.description;
+    return ctrl.dump();
 }
 
 std::string ExtensionSettingsPanel::RenderBooleanControl(
     const ConfigurationSchemaEntry& schema) {
-    // TODO: Render checkbox control
-    return "";
+    json ctrl;
+    ctrl["type"] = "boolean";
+    ctrl["key"] = schema.key;
+    ctrl["label"] = schema.label;
+    ctrl["default"] = schema.defaultValue.value_or("false");
+    ctrl["description"] = schema.description;
+    return ctrl.dump();
 }
 
 std::string ExtensionSettingsPanel::RenderEnumControl(
     const ConfigurationSchemaEntry& schema) {
-    // TODO: Render dropdown control
-    return "";
+    json ctrl;
+    ctrl["type"] = "enum";
+    ctrl["key"] = schema.key;
+    ctrl["label"] = schema.label;
+    ctrl["options"] = schema.enumOptions;
+    ctrl["default"] = schema.defaultValue.value_or("");
+    ctrl["description"] = schema.description;
+    return ctrl.dump();
 }
 
 std::string ExtensionSettingsPanel::RenderArrayControl(
     const ConfigurationSchemaEntry& schema) {
-    // TODO: Render array editor control
-    return "";
+    json ctrl;
+    ctrl["type"] = "array";
+    ctrl["key"] = schema.key;
+    ctrl["label"] = schema.label;
+    ctrl["default"] = json::array();
+    ctrl["description"] = schema.description;
+    return ctrl.dump();
 }
 
 // ============================================================================

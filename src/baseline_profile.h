@@ -35,7 +35,7 @@ namespace baseline_profile {
             if (key == "model_path") s.model_path = value;
             else if (key == "temperature") s.temperature = std::strtof(value.c_str(), nullptr);
             else if (key == "top_p") s.top_p = std::strtof(value.c_str(), nullptr);
-            else if (key == "is_gpu_enabled") s.is_gpu_enabled = (value == "1");
+            else if (key == "is_gpu_enabled") s.is_gpu_enabled = true; // GPU is mandatory; on-disk false is ignored
             else if (key == "thread_count") s.thread_count = std::atoi(value.c_str());
             else if (key == "vram_limit_mb") s.vram_limit_mb = std::atoi(value.c_str());
             else if (key == "target_all_core_mhz") s.target_all_core_mhz = static_cast<uint32_t>(std::strtoul(value.c_str(), nullptr, 10));

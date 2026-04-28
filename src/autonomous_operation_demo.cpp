@@ -438,6 +438,126 @@ AutonomousOperationDemo::EvidencePackage AutonomousOperationDemo::collectAllEvid
 
 bool AutonomousOperationDemo::runRegressionTests()
 {
+    bool allPassed = true;
+
+    // Regression 1: persistence round-trip
+    if (m_persistence) {
+        WorkflowExecution exec;
+        exec.executionId = "regression_rtt";
+        exec.workflowName = "RegressionRTT";
+        exec.status = "in-progress";
+        m_persistence->persistWorkflowExecution(exec);
+        auto loaded = m_persistence->loadWorkflowExecution("regression_rtt");
+        if (!loaded || loaded->status != "in-progress") {
+            recordLog("✗ Regression 1 FAILED: persistence round-trip");
+            allPassed = false;
+        } else {
+            recordLog("✓ Regression 1 PASS: persistence round-trip");
+        }
+    }
+
+    // Regression 2: memory search returns results
+    if (m_memory) {
+        auto results = m_memory->semanticSearch("code analysis", 3);
+        if (results.empty()) {
+            recordLog("✗ Regression 2 FAILED: memory search returned no results");
+            allPassed = false;
+        } else {
+            recordLog("✓ Regression 2 PASS: memory search operational");
+        }
+    }
+
+    // Regression 3: task creation and dependency
+    if (m_tasks) {
+        auto t1 = m_tasks->createTask("regr_task_a", "Step A", "tool_a", {});
+        auto t2 = m_tasks->createTask("regr_task_b", "Step B", "tool_b", {});
+        m_tasks->addDependency(t2, t1);
+        auto status = m_tasks->getWorkflowStatus();
+        if (status.totalTasks < 2) {
+            recordLog("✗ Regression 3 FAILED: task graph not tracking correctly");
+            allPassed = false;
+        } else {
+            recordLog("✓ Regression 3 PASS: task dependency graph intact");
+        }
+    }
+
+    return allPassed;
+}
+
+bool AutonomousOperationDemo::validateAgentLoops()
+{
+    if (!m_loopState) return false;
+
+    // Agent loop state must be initialised and not in terminal error
+    auto state = m_loopState->getCurrentState();
+    bool healthy = (state != AgenticLoopState::State::FatalError);
+    recordLog(healthy ? "✓ Agent loops healthy" : "✗ Agent loop in fatal error state");
+    return healthy;
+}
+
+bool AutonomousOperationDemo::isProductionReady() const
+{
+    // Must have all subsystems wired
+    if (!m_persistence || !m_memory || !m_tasks || !m_executor || !m_loopState)
+        return false;
+
+    // Performance must be acceptable (tool success rate >= 75%)
+    if (m_metrics.totalToolCalls > 0) {
+        float rate = static_cast<float>(m_metrics.successfulToolCalls) /
+                     static_cast<float>(m_metrics.totalToolCalls) * 100.0f;
+        if (rate < 75.0f) return false;
+    }
+
+    return true;
+}
+
+nlohmann::json AutonomousOperationDemo::getReadinessAssessment() const
+{
+    nlohmann::json j;
+    j["persistence_wired"] = (m_persistence != nullptr);
+    j["memory_wired"]      = (m_memory != nullptr);
+    j["tasks_wired"]       = (m_tasks != nullptr);
+    j["executor_wired"]    = (m_executor != nullptr);
+    j["loop_state_wired"]  = (m_loopState != nullptr);
+
+    float toolSuccessRate = 0.0f;
+    if (m_metrics.totalToolCalls > 0) {
+        toolSuccessRate = static_cast<float>(m_metrics.successfulToolCalls) /
+                         static_cast<float>(m_metrics.totalToolCalls) * 100.0f;
+    }
+    j["tool_success_rate_pct"] = toolSuccessRate;
+    j["production_ready"] = isProductionReady();
+    return j;
+}
+
+// ===== Private Helpers =====
+
+void AutonomousOperationDemo::recordLog(const std::string& message)
+{
+    m_runtimeLog += "[DEMO] " + message + "\n";
+}
+
+void AutonomousOperationDemo::recordBuildLog(const std::string& message)
+{
+    m_buildLog += "[BUILD] " + message + "\n";
+}
+
+bool AutonomousOperationDemo::executeWithTiming(
+    std::function<bool()> operation, float& timeMs)
+{
+    auto start = std::chrono::high_resolution_clock::now();
+    bool ok = false;
+    try { ok = operation(); }
+    catch (...) { ok = false; }
+    auto end = std::chrono::high_resolution_clock::now();
+    timeMs = std::chrono::duration<float, std::milli>(end - start).count();
+    m_metrics.totalToolCalls++;
+    if (ok) m_metrics.successfulToolCalls++;
+    return ok;
+}
+
+// Placeholder for end-of-file
+{
     recordLog("=== Running Regression Tests ===");
 
     if (!m_loopState) {

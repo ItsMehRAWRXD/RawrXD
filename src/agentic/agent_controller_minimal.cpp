@@ -32,7 +32,8 @@ using json = nlohmann::json;
             auto it = (m).find(k);                                                                                     \
             if (it == (m).end())                                                                                       \
             {                                                                                                          \
-                __debugbreak();                                                                                        \
+                agentLogError("SAFE_LOOKUP failed for key '" + std::string(k) + "'");                                  \
+                throw std::runtime_error("SAFE_LOOKUP: key not found");                                                \
             }                                                                                                          \
             return it->second;                                                                                         \
         })()

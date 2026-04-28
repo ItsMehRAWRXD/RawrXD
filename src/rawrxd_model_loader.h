@@ -5,11 +5,18 @@
 #include <unordered_map>
 #include <vector>
 
+// std::expected is C++23; the project builds MSVC as C++23, but some indexers may not have <expected>.
+// Forward declare for headers; definition lives in translation units that include <expected>.
+namespace std
+{
+template <class T, class E> class expected;
+}  // namespace std
+
 
 #include <array>
 #include <functional>
 #include <mutex>
-#ifdef RAWR_ENABLE_VULKAN
+#if defined(RAWR_HAS_VULKAN) && RAWR_HAS_VULKAN
 #include <vulkan/vulkan.h>
 #else
 // Standard Win32/CPU build - Vulkan handles not needed
@@ -98,6 +105,11 @@ class RawrXDModelLoader
 
     bool Load(const wchar_t* path, VkDevice device, VkPhysicalDevice physDevice);
     float* GetTensor(const std::string& name);
+    /// Like GetTensor(), but returns a structured failure message.
+    [[nodiscard]] std::expected<float*, std::string> GetTensorExpected(const std::string& name);
+    /// Hotpatch indirection for tensors that may be evicted/reloaded (MoE experts).
+    /// Returns a stable atomic slot (pointer value may change); callers should not cache the pointer value.
+    [[nodiscard]] std::expected<std::atomic<float*>*, std::string> GetTensorHotSlot(const std::string& name);
     bool GetTensorRow(const std::string& name, size_t rowIndex, float* out, size_t cols);
     bool StreamingMatMul(const std::string& name, const float* x, float* y, size_t K, size_t N);
     void ReleaseTensor(const std::string& name);
@@ -128,9 +140,9 @@ class RawrXDModelLoader
     bool m_silencePrivilegeWarnings = false;
 
     // Cached incidental window: avoids repeated MapViewOfFile/UnmapViewOfFile
-    void*    m_incCache       = nullptr;  // MapViewOfFile base
-    uint64_t m_incCacheStart  = 0;        // file offset of cached map start
-    size_t   m_incCacheSize   = 0;        // size of cached region
+    void* m_incCache = nullptr;    // MapViewOfFile base
+    uint64_t m_incCacheStart = 0;  // file offset of cached map start
+    size_t m_incCacheSize = 0;     // size of cached region
 
     // Sliding window memory mapping for large files
     void* virtualBase;    // Reserved virtual address space
@@ -198,11 +210,11 @@ class RawrXDModelLoader
     int n_ctx = 0;
     int vocab_size = 0;
     std::vector<std::string> vocab;  // Token strings from GGUF
-    int n_ffn = 0;  // feed_forward_length (0 = infer from dim*4)
+    int n_ffn = 0;                   // feed_forward_length (0 = infer from dim*4)
     int n_experts = 0;
     int n_experts_used = 0;
-      int eos_token_id = 2;    // from tokenizer.ggml.eos_token_id
-      int bos_token_id = 1;    // from tokenizer.ggml.bos_token_id
+    int eos_token_id = 2;  // from tokenizer.ggml.eos_token_id
+    int bos_token_id = 1;  // from tokenizer.ggml.bos_token_id
     std::string m_metadataArchitecture;
     std::string m_metadataTokenizerModel;
     uint32_t m_metadataFileType = 0xFFFFFFFFu;  // GGUF file_type identifier
@@ -233,13 +245,22 @@ class RawrXDModelLoader
     int getExperts() const { return n_experts; }
     /// MoE metadata (`expert_used_count`); 0 if unset — callers may fall back to a small default.
     int getExpertsUsedCount() const { return n_experts_used; }
-      int getEOSTokenId() const { return eos_token_id; }
-      int getBOSTokenId() const { return bos_token_id; }
+    int getEOSTokenId() const { return eos_token_id; }
+    int getBOSTokenId() const { return bos_token_id; }
     /// True if \p name appears in the loaded tensor map (does not materialize weights).
     [[nodiscard]] bool hasTensorNamed(const std::string& name) const;
 
   private:
     std::unordered_map<std::string, Tensor> m_tensors;
+
+    // --- Minimal hotpatch + expert cache (MoE) ---
+    std::unordered_map<std::string, std::atomic<float*>> m_hotTensorPtrs;
+    std::unordered_map<std::string, std::uint64_t> m_hotLastTouch;
+    std::uint64_t m_hotClock = 1;
+    std::uint64_t m_expertCacheBudgetBytes = 512ull * 1024ull * 1024ull;  // 512 MiB default
+
+    [[nodiscard]] bool isMoEExpertTensorName_(const std::string& name) const;
+    void evictExpertCacheIfNeeded_();
 
   public:
     // Helpers

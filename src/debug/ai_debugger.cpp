@@ -19,6 +19,7 @@
 
 #include "../core/native_debugger_engine.h"
 #include "../../include/debug/ai_debugger.h"
+#include "../agentic/SovereignInferenceClient.h"
 #include <string>
 #include <vector>
 #include <sstream>
@@ -759,6 +760,95 @@ static const char* DebugStateToString(Debugger::DebugSessionState state) {
             default: return "Unknown";
         }
     }
+// ---- Sovereign Inference Integration ----
+void AIDebugAgent::SetInferenceClient(
+    std::shared_ptr<RawrXD::Agent::SovereignInferenceClient> client) {
+    m_inferenceClient = std::move(client);
+}
+
+bool AIDebugAgent::HasInferenceClient() const {
+    return m_inferenceClient != nullptr && m_inferenceClient->IsLoaded();
+}
+
+std::string AIDebugAgent::GenerateAIHypothesis(const ExceptionAnalysis& analysis) {
+    if (!HasInferenceClient()) {
+        return GenerateHypothesis(analysis, {}, {});  // Fallback to static rules
+    }
+
+    std::string prompt = FormatAnalysisForLLM(analysis);
+    prompt += "\n\nBased on this analysis, provide a concise hypothesis (1-2 sentences) about the root cause.";
+
+    std::vector<RawrXD::Agent::ChatMessage> messages;
+    messages.push_back({"system", "You are an expert debugger. Analyze crash reports and provide root cause hypotheses."});
+    messages.push_back({"user", prompt});
+
+    auto res = m_inferenceClient->ChatSync(messages);
+    if (res.success && !res.response.empty()) {
+        return res.response;
+    }
+    return GenerateHypothesis(analysis, {}, {});  // Fallback
+}
+
+std::vector<std::string> AIDebugAgent::GenerateAISuggestedActions(const ExceptionAnalysis& analysis) {
+    if (!HasInferenceClient()) {
+        return GenerateSuggestedActions(analysis, {});  // Fallback to static rules
+    }
+
+    std::string prompt = FormatAnalysisForLLM(analysis);
+    prompt += "\n\nList 3-5 specific actionable steps to diagnose or fix this issue.";
+
+    std::vector<RawrXD::Agent::ChatMessage> messages;
+    messages.push_back({"system", "You are an expert debugger. Suggest concrete debugging steps."});
+    messages.push_back({"user", prompt});
+
+    auto res = m_inferenceClient->ChatSync(messages);
+    if (res.success && !res.response.empty()) {
+        std::vector<std::string> actions;
+        std::istringstream iss(res.response);
+        std::string line;
+        while (std::getline(iss, line)) {
+            if (!line.empty() && (line[0] == '-' || line[0] == '*')) {
+                actions.push_back(line.substr(1));
+            }
+        }
+        if (!actions.empty()) return actions;
+    }
+    return GenerateSuggestedActions(analysis, {});  // Fallback
+}
+
+std::vector<AIDebugAgent::BreakpointSuggestion> AIDebugAgent::GenerateAIBreakpointSuggestions(
+    const std::string& context) {
+    std::vector<BreakpointSuggestion> suggestions;
+
+    if (!HasInferenceClient()) {
+        return suggestions;  // No AI available
+    }
+
+    std::string prompt = "Code context:\n" + context +
+        "\n\nSuggest strategic breakpoints for debugging this code. "
+        "List function names and why they are important.";
+
+    std::vector<RawrXD::Agent::ChatMessage> messages;
+    messages.push_back({"system", "You are an expert debugger. Suggest strategic breakpoints."});
+    messages.push_back({"user", prompt});
+
+    auto res = m_inferenceClient->ChatSync(messages);
+    if (res.success && !res.response.empty()) {
+        std::istringstream iss(res.response);
+        std::string line;
+        while (std::getline(iss, line)) {
+            if (!line.empty() && (line[0] == '-' || line[0] == '*')) {
+                BreakpointSuggestion bp;
+                bp.symbol = line.substr(1);
+                bp.reason = "AI-suggested strategic breakpoint";
+                bp.type = Debugger::BreakpointType::Software;
+                suggestions.push_back(bp);
+            }
+        }
+    }
+    return suggestions;
+}
+
 #pragma optimize("", on)
 
 } // namespace Debug

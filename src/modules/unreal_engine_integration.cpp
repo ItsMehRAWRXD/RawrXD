@@ -1364,10 +1364,28 @@ std::string UnrealEngineIntegration::getPluginDescriptor(const std::string& plug
 // ============================================================================
 bool UnrealEngineIntegration::isSourceControlEnabled() const { return false; }
 std::string UnrealEngineIntegration::getSourceControlProvider() const { return "None"; }
-bool UnrealEngineIntegration::checkOutFile(const std::string& filePath) { return true; }
-bool UnrealEngineIntegration::markForAdd(const std::string& filePath) { return true; }
-bool UnrealEngineIntegration::markForDelete(const std::string& filePath) { return true; }
-bool UnrealEngineIntegration::revertFile(const std::string& filePath) { return true; }
+bool UnrealEngineIntegration::checkOutFile(const std::string& filePath) {
+    if (!m_initialized.load() || filePath.empty()) return false;
+    if (m_logCallback) m_logCallback(("Checking out: " + filePath).c_str(), 1);
+    // In production: call Perforce/SVN checkout via command line
+    return fs::exists(filePath);
+}
+bool UnrealEngineIntegration::markForAdd(const std::string& filePath) {
+    if (!m_initialized.load() || filePath.empty()) return false;
+    if (m_logCallback) m_logCallback(("Marking for add: " + filePath).c_str(), 1);
+    return true;
+}
+bool UnrealEngineIntegration::markForDelete(const std::string& filePath) {
+    if (!m_initialized.load() || filePath.empty()) return false;
+    if (m_logCallback) m_logCallback(("Marking for delete: " + filePath).c_str(), 1);
+    return true;
+}
+bool UnrealEngineIntegration::revertFile(const std::string& filePath) {
+    if (!m_initialized.load() || filePath.empty()) return false;
+    std::string msg = "Reverting: " + filePath;
+    if (m_logCallback) m_logCallback(msg.c_str(), 1);
+    return true;
+}
 
 // ============================================================================
 // Automation / Testing

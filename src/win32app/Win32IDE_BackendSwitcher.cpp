@@ -1,6 +1,7 @@
 // ============================================================================
 // Win32IDE_BackendSwitcher.cpp — Phase 8B: AI Backend Switcher
 // ============================================================================
+#include "../gpu_enforcement.h"
 // Runtime switching between inference backends:
 //   - LocalGGUF  : Native RawrXD CPU inference engine
 //   - Ollama     : Ollama HTTP API (local or remote)
@@ -141,6 +142,9 @@ void Win32IDE::initBackendManager()
 
     logFunction("initBackendManager");
 
+    // Mandatory GPU gate — IDE refuses to host any backend without a GPU.
+    rxd::gpu::require();
+
     // ---- Populate default configs for each backend type --------------------
     auto& local = m_backendConfigs[(size_t)AIBackendType::LocalGGUF];
     local.type = AIBackendType::LocalGGUF;
@@ -170,7 +174,7 @@ void Win32IDE::initBackendManager()
     openai.endpoint = "https://api.openai.com";
     openai.model = "gpt-4o";
     openai.apiKey = "";
-    openai.enabled = false;  // Disabled until API key set
+    openai.enabled = true;   // Enabled by default; requests gated on API key presence
     openai.timeoutMs = 30000;
     openai.maxTokens = 4096;
     openai.temperature = 0.7f;
@@ -181,7 +185,7 @@ void Win32IDE::initBackendManager()
     claude.endpoint = "https://api.anthropic.com";
     claude.model = "claude-sonnet-4-20250514";
     claude.apiKey = "";
-    claude.enabled = false;  // Disabled until API key set
+    claude.enabled = true;   // Enabled by default; requests gated on API key presence
     claude.timeoutMs = 30000;
     claude.maxTokens = 4096;
     claude.temperature = 0.7f;
@@ -192,7 +196,7 @@ void Win32IDE::initBackendManager()
     gemini.endpoint = "https://generativelanguage.googleapis.com";
     gemini.model = "gemini-2.0-flash";
     gemini.apiKey = "";
-    gemini.enabled = false;  // Disabled until API key set
+    gemini.enabled = true;   // Enabled by default; requests gated on API key presence
     gemini.timeoutMs = 30000;
     gemini.maxTokens = 4096;
     gemini.temperature = 0.7f;

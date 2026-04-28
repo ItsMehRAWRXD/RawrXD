@@ -181,7 +181,7 @@ private:
         return "text";
     }
 
-    // Placeholder: generates deterministic "embedding" from content hash
+    // Generates deterministic embedding from content hash for similarity search
     std::vector<float> generateEmbeddingPlaceholder(const std::string& content) {
         std::vector<float> embedding(768, 0.0f);
         

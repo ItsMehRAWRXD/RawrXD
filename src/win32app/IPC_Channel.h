@@ -9,6 +9,8 @@
 #include <memory>
 #include <functional>
 #include <cstdint>
+#include <atomic>
+#include <queue>
 
 namespace RawrXD::Extensions {
 

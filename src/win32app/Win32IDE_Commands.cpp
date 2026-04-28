@@ -417,7 +417,7 @@ bool Win32IDE::routeCommand(int commandId)
     snprintf(logBuf, sizeof(logBuf), "[Win32IDE::routeCommand] ENTRY: commandId=%d (0x%04X)", commandId, commandId);
     OutputDebugStringA(logBuf);
     OutputDebugStringA("\n");
-    
+
     // Route to appropriate handler based on command ID range
     if (commandId >= 1000 && commandId < 2000)
     {
@@ -1556,6 +1556,12 @@ void Win32IDE::handleViewCommand(int commandId)
                 SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "Feature Registry");
             break;
 
+        case 3055:  // IDM_TOOLS_MODEL_LAB — GGUF metadata profile generator
+            showModelLabDialog();
+            if (m_hwndStatusBar)
+                SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "Model Lab");
+            break;
+
         case IDM_TOOLS_RUN_14DAY_FINISHERS:
         case IDM_TOOLS_RUN_14DAY_FINISHERS_STRICT:
         case IDM_TOOLS_RUN_14DAY_QUALITY_GATES:
@@ -1563,10 +1569,8 @@ void Win32IDE::handleViewCommand(int commandId)
             const bool strict = (commandId == IDM_TOOLS_RUN_14DAY_FINISHERS_STRICT);
             const bool runQualityGateValidation = (commandId == IDM_TOOLS_RUN_14DAY_QUALITY_GATES);
 
-            auto append14DayLaunchAudit = [&](const std::string& outcome,
-                                              const std::filesystem::path& scriptPath,
-                                              const std::string& scriptArgs,
-                                              const std::string& details)
+            auto append14DayLaunchAudit = [&](const std::string& outcome, const std::filesystem::path& scriptPath,
+                                              const std::string& scriptArgs, const std::string& details)
             {
                 std::error_code ec;
                 const std::filesystem::path workspaceRoot = resolveRawrxdWorkspaceBase();
@@ -1589,9 +1593,8 @@ void Win32IDE::handleViewCommand(int commandId)
                 out << "\n";
             };
 
-            auto enqueue14DayRun =
-                [&](const std::filesystem::path& scriptPath, const std::string& scriptArgs, const char* label,
-                    const char* statusText) -> bool
+            auto enqueue14DayRun = [&](const std::filesystem::path& scriptPath, const std::string& scriptArgs,
+                                       const char* label, const char* statusText) -> bool
             {
                 std::string pathUtf8 = scriptPath.string();
                 if (pathUtf8.empty())
@@ -1625,18 +1628,15 @@ void Win32IDE::handleViewCommand(int commandId)
             };
 
             auto tryRunFromRoots = [&](const std::vector<std::filesystem::path>& roots,
-                                       const std::vector<std::filesystem::path>& relPaths,
-                                       const std::string& args,
-                                       const char* label,
-                                       const char* statusText) -> bool
+                                       const std::vector<std::filesystem::path>& relPaths, const std::string& args,
+                                       const char* label, const char* statusText) -> bool
             {
                 for (const auto& root : roots)
                 {
                     for (const auto& rel : relPaths)
                     {
                         const std::filesystem::path candidate = root / rel;
-                        if (std::filesystem::exists(candidate) &&
-                            enqueue14DayRun(candidate, args, label, statusText))
+                        if (std::filesystem::exists(candidate) && enqueue14DayRun(candidate, args, label, statusText))
                         {
                             return true;
                         }
@@ -1659,16 +1659,17 @@ void Win32IDE::handleViewCommand(int commandId)
             roots.emplace_back(std::filesystem::current_path());
 
             std::vector<std::filesystem::path> productionScriptCandidates;
-            productionScriptCandidates.emplace_back(
-                std::filesystem::path("scripts") / "production" / "Invoke-14Day-ProductionFinishers.ps1");
+            productionScriptCandidates.emplace_back(std::filesystem::path("scripts") / "production" /
+                                                    "Invoke-14Day-ProductionFinishers.ps1");
             productionScriptCandidates.emplace_back(std::filesystem::path("rawrxd") / "scripts" / "production" /
                                                     "Invoke-14Day-ProductionFinishers.ps1");
             productionScriptCandidates.emplace_back("Run-14Day-ProductionFinishers.ps1");
-            productionScriptCandidates.emplace_back(std::filesystem::path("rawrxd") / "Run-14Day-ProductionFinishers.ps1");
+            productionScriptCandidates.emplace_back(std::filesystem::path("rawrxd") /
+                                                    "Run-14Day-ProductionFinishers.ps1");
 
             std::vector<std::filesystem::path> qualityGateScriptCandidates;
-            qualityGateScriptCandidates.emplace_back(
-                std::filesystem::path("scripts") / "production" / "Invoke-14Day-QualityGateValidation.ps1");
+            qualityGateScriptCandidates.emplace_back(std::filesystem::path("scripts") / "production" /
+                                                     "Invoke-14Day-QualityGateValidation.ps1");
             qualityGateScriptCandidates.emplace_back(std::filesystem::path("rawrxd") / "scripts" / "production" /
                                                      "Invoke-14Day-QualityGateValidation.ps1");
 
@@ -1684,18 +1685,15 @@ void Win32IDE::handleViewCommand(int commandId)
                 if (strict)
                     args += " -Strict";
                 launched = tryRunFromRoots(roots, productionScriptCandidates, args,
-                                           strict ? "production finisher run (strict)"
-                                                  : "production finisher run",
-                                           strict ? "14-day finishers queued (strict)"
-                                                  : "14-day finishers queued");
+                                           strict ? "production finisher run (strict)" : "production finisher run",
+                                           strict ? "14-day finishers queued (strict)" : "14-day finishers queued");
             }
 
             if (!launched)
             {
                 append14DayLaunchAudit("failed", std::filesystem::path(), std::string(),
-                                       runQualityGateValidation
-                                           ? "missing Invoke-14Day-QualityGateValidation.ps1"
-                                           : "missing production finisher script");
+                                       runQualityGateValidation ? "missing Invoke-14Day-QualityGateValidation.ps1"
+                                                                : "missing production finisher script");
                 appendToOutput(
                     runQualityGateValidation
                         ? "[14-Day] Could not find scripts/production/Invoke-14Day-QualityGateValidation.ps1\n"
@@ -1714,8 +1712,8 @@ void Win32IDE::handleViewCommand(int commandId)
             const std::filesystem::path reportDir = resolveRawrxdWorkspaceBase() / "reports" / "14day";
             std::error_code ec;
             std::filesystem::create_directories(reportDir, ec);
-            const auto openResult =
-                (INT_PTR)ShellExecuteW(m_hwndMain, L"open", reportDir.wstring().c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+            const auto openResult = (INT_PTR)ShellExecuteW(m_hwndMain, L"open", reportDir.wstring().c_str(), nullptr,
+                                                           nullptr, SW_SHOWNORMAL);
             if (openResult <= 32)
             {
                 appendToOutput(std::string("[14-Day] Failed to open reports folder: ") + reportDir.string() + "\n",
@@ -1740,8 +1738,8 @@ void Win32IDE::handleViewCommand(int commandId)
             std::ifstream in(summaryPath);
             if (!in.is_open())
             {
-                appendToOutput(std::string("[14-Day] Could not read gate summary: ") + summaryPath.string() + "\n", "Errors",
-                               OutputSeverity::Error);
+                appendToOutput(std::string("[14-Day] Could not read gate summary: ") + summaryPath.string() + "\n",
+                               "Errors", OutputSeverity::Error);
                 if (m_hwndStatusBar)
                     SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "14-day gate summary missing");
                 break;
@@ -1771,7 +1769,8 @@ void Win32IDE::handleViewCommand(int commandId)
             std::ifstream in(manifestPath);
             if (!in.is_open())
             {
-                appendToOutput(std::string("[14-Day] Could not read artifact manifest: ") + manifestPath.string() + "\n",
+                appendToOutput(std::string("[14-Day] Could not read artifact manifest: ") + manifestPath.string() +
+                                   "\n",
                                "Errors", OutputSeverity::Error);
                 if (m_hwndStatusBar)
                     SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "14-day artifact manifest missing");
@@ -1836,7 +1835,8 @@ void Win32IDE::handleViewCommand(int commandId)
 
             std::vector<std::filesystem::path> scriptCandidates;
             scriptCandidates.emplace_back(std::filesystem::path("scripts") / "Run-IntegrationGateMinimal.ps1");
-            scriptCandidates.emplace_back(std::filesystem::path("rawrxd") / "scripts" / "Run-IntegrationGateMinimal.ps1");
+            scriptCandidates.emplace_back(std::filesystem::path("rawrxd") / "scripts" /
+                                          "Run-IntegrationGateMinimal.ps1");
 
             bool launched = false;
             for (const auto& root : roots)
@@ -11245,6 +11245,13 @@ void Win32IDE::handleToolsCommand(int commandId)
             showModelManager();
             break;
 
+        // ================================================================
+        // Downloads Panel — LM Studio-style download tracker
+        // ================================================================
+        case 6002:  // Downloads
+            toggleDownloadsPanel();
+            break;
+
         default:
             appendToOutput("[Tools] Unhandled command ID: " + std::to_string(commandId) + "\n", "Output",
                            OutputSeverity::Info);
@@ -11613,7 +11620,8 @@ void Win32IDE::buildCommandRegistry()
         {IDM_EDITOR_GOTO_WORKSPACE_SYMBOL, "Navigation: Go To Workspace Symbol", "Ctrl+Shift+Alt+O", "Navigation"});
     m_commandRegistry.push_back({IDM_EDITOR_PEEK_DEFINITION, "Navigation: Peek Definition", "Alt+F12", "Navigation"});
     m_commandRegistry.push_back({IDM_EDITOR_PEEK_REFERENCES, "Navigation: Peek References", "Shift+F12", "Navigation"});
-    m_commandRegistry.push_back({IDM_EDITOR_GOTO_IMPLEMENTATION, "Navigation: Go To Implementation", "Ctrl+F12", "Navigation"});
+    m_commandRegistry.push_back(
+        {IDM_EDITOR_GOTO_IMPLEMENTATION, "Navigation: Go To Implementation", "Ctrl+F12", "Navigation"});
     m_commandRegistry.push_back(
         {IDM_EDITOR_GOTO_TYPE_DEFINITION, "Navigation: Go To Type Definition", "Ctrl+Alt+F12", "Navigation"});
 
@@ -11831,18 +11839,26 @@ void Win32IDE::buildCommandRegistry()
     m_commandRegistry.push_back({5997, "Tools: LSP Ghost Unification Pack Export", "", "Tools"});
     m_commandRegistry.push_back({5998, "Tools: Batch 13 Integration Scorecard", "", "Tools"});
     m_commandRegistry.push_back({6001, "Tools: Model Manager", "Ctrl+Shift+P", "Tools"});
+    m_commandRegistry.push_back({6002, "Tools: Downloads", "Ctrl+Shift+D", "Tools"});
     m_commandRegistry.push_back({3015, "Tools: License Creator", "Ctrl+Shift+L", "Tools"});
     m_commandRegistry.push_back({3016, "Tools: Feature Registry", "Ctrl+Shift+F", "Tools"});
+    m_commandRegistry.push_back({3055, "Tools: Model Lab (GGUF Profile)", "Ctrl+Alt+M", "Tools"});
     m_commandRegistry.push_back({IDM_TOOLS_RUN_14DAY_FINISHERS, "Tools: Run 14-Day Production Finishers", "", "Tools"});
-    m_commandRegistry.push_back({IDM_TOOLS_RUN_14DAY_FINISHERS_STRICT, "Tools: Run 14-Day Production Finishers (Strict)", "", "Tools"});
-    m_commandRegistry.push_back({IDM_TOOLS_RUN_14DAY_QUALITY_GATES, "Tools: Run 14-Day Quality Gate Validation", "", "Tools"});
+    m_commandRegistry.push_back(
+        {IDM_TOOLS_RUN_14DAY_FINISHERS_STRICT, "Tools: Run 14-Day Production Finishers (Strict)", "", "Tools"});
+    m_commandRegistry.push_back(
+        {IDM_TOOLS_RUN_14DAY_QUALITY_GATES, "Tools: Run 14-Day Quality Gate Validation", "", "Tools"});
     m_commandRegistry.push_back({IDM_TOOLS_OPEN_14DAY_REPORTS, "Tools: Open 14-Day Reports Folder", "", "Tools"});
-    m_commandRegistry.push_back({IDM_TOOLS_SHOW_14DAY_GATE_SUMMARY, "Tools: Show Latest 14-Day Gate Summary", "", "Tools"});
-    m_commandRegistry.push_back({IDM_TOOLS_SHOW_14DAY_ARTIFACT_MANIFEST, "Tools: Show Latest 14-Day Artifact Manifest", "", "Tools"});
-    m_commandRegistry.push_back({IDM_TOOLS_RUN_14DAY_INTEGRATION_GATE, "Tools: Run 14-Day Integration Gate", "", "Tools"});
-    m_commandRegistry.push_back({IDM_TOOLS_RUN_14DAY_TURNKEY_SMOKE, "Tools: Run 14-Day Turnkey IDE Smoke", "", "Tools"});
-    m_commandRegistry.push_back({IDM_TOOLS_RUN_14DAY_AGGREGATE_GATE,
-                                 "Tools: Run 14-Day Production Readiness Aggregate Gate", "", "Tools"});
+    m_commandRegistry.push_back(
+        {IDM_TOOLS_SHOW_14DAY_GATE_SUMMARY, "Tools: Show Latest 14-Day Gate Summary", "", "Tools"});
+    m_commandRegistry.push_back(
+        {IDM_TOOLS_SHOW_14DAY_ARTIFACT_MANIFEST, "Tools: Show Latest 14-Day Artifact Manifest", "", "Tools"});
+    m_commandRegistry.push_back(
+        {IDM_TOOLS_RUN_14DAY_INTEGRATION_GATE, "Tools: Run 14-Day Integration Gate", "", "Tools"});
+    m_commandRegistry.push_back(
+        {IDM_TOOLS_RUN_14DAY_TURNKEY_SMOKE, "Tools: Run 14-Day Turnkey IDE Smoke", "", "Tools"});
+    m_commandRegistry.push_back(
+        {IDM_TOOLS_RUN_14DAY_AGGREGATE_GATE, "Tools: Run 14-Day Production Readiness Aggregate Gate", "", "Tools"});
 
     // Module commands (6100–6199; menu uses 3050–3052 in handleViewCommand)
     m_commandRegistry.push_back({6101, "Modules: Refresh List", "", "Modules"});
@@ -12471,8 +12487,7 @@ void Win32IDE::cmdLSPInlayHints()
         return;
     }
 
-    appendToOutput("[LSP] Found " + std::to_string(hints.size()) + " inlay hint(s).", "General",
-                   OutputSeverity::Info);
+    appendToOutput("[LSP] Found " + std::to_string(hints.size()) + " inlay hint(s).", "General", OutputSeverity::Info);
 
     for (const auto& hint : hints)
     {
@@ -12482,8 +12497,9 @@ void Win32IDE::cmdLSPInlayHints()
     }
 }
 
-std::vector<Win32IDE::LSPCodeAction> Win32IDE::lspCodeActions(
-    const std::string& uri, int line, int startChar, int endChar, const std::vector<std::string>& diagnosticCodes)
+std::vector<Win32IDE::LSPCodeAction> Win32IDE::lspCodeActions(const std::string& uri, int line, int startChar,
+                                                              int endChar,
+                                                              const std::vector<std::string>& diagnosticCodes)
 {
     std::vector<LSPCodeAction> actions;
     LSPLanguage lang = detectLanguageForFile(uriToFilePath(uri));

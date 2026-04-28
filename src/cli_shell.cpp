@@ -697,7 +697,11 @@ void cmd_agent_loop(const std::string& args) {
         try {
             iterations = std::stoi(args.substr(space + 1));
             prompt = args.substr(0, space);
-        } catch (...) {}
+        } catch (const std::exception& e) {
+            OutputDebugStringA(("[cli_shell] iteration parse exception: " + std::string(e.what()) + "\n").c_str());
+        } catch (...) {
+            OutputDebugStringA("[cli_shell] iteration parse unknown exception\n");
+        }
     }
     
     g_state.agentLoopRunning = true;
@@ -2165,8 +2169,11 @@ void route_command(const std::string& line) {
     }
     else if (cmd == "!server") {
         int port = 8080;
-        try { port = std::stoi(args); } catch(...) {}
-        std::thread(start_server, port).detach();
+        try { port = std::stoi(args); } catch (const std::exception& e) {
+            OutputDebugStringA(("[cli_shell] port parse exception: " + std::string(e.what()) + "\n").c_str());
+        } catch (...) {
+            OutputDebugStringA("[cli_shell] port parse unknown exception\n");
+        }
         std::cout << "🌐 Backend server started on port " << port << "\n";
     }
     else {

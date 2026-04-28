@@ -523,7 +523,7 @@ NativeInferenceApi& GetNativeInferenceApi()
                 }
                 catch (...)
                 {
-                    // Path probing is best-effort; continue with whatever paths we have.
+                    fprintf(stderr, "[BackendOrchestrator] Path probing failed for %ls\n", candidate);
                 }
 
                 for (const auto& path : probePaths)
@@ -1506,7 +1506,7 @@ bool mapSlidingWindow(MappedShardFile& file, uint64_t offset, size_t window_size
         return true;
     };
 
-    // Placeholder reservations only support one active replace mapping without placeholder splitting.
+    // Windows placeholder reservations only support one active replace mapping without splitting.
     int stripe_target = getApertureStripeCount();
     if (file.has_placeholder_reservation && stripe_target > 1)
     {
@@ -1596,7 +1596,7 @@ bool mapSlidingWindow(MappedShardFile& file, uint64_t offset, size_t window_size
 
 }  // namespace
 
-// Stub for large page alignment check
+// Check if large pages (2MB) are available by verifying SeLockMemoryPrivilege
 static bool IsLargePageAlignmentAvailable() {
     // Check if large pages are available
     HANDLE hToken = nullptr;

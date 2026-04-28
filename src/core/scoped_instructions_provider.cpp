@@ -97,7 +97,7 @@ std::vector<std::string> ScopedInstructionsProvider::findInstructionFiles(
             current = current.parent_path();
         }
     } catch (...) {
-        // Silently skip on filesystem errors
+        fprintf(stderr, "[ScopedInstructionsProvider] Filesystem error during scan, skipping\n");
     }
     
     return found;
@@ -131,7 +131,7 @@ std::vector<std::string> ScopedInstructionsProvider::loadFileAdjacentMetadata(
             }
         }
     } catch (...) {
-        // Silently skip on filesystem errors
+        fprintf(stderr, "[ScopedInstructionsProvider] Filesystem error loading metadata, skipping\n");
     }
     
     return metadata;
@@ -197,7 +197,7 @@ ScopedInstructions ScopedInstructionsProvider::getForFile(
             InstructionScope::FILE : InstructionScope::DIRECTORY;
         
     } catch (...) {
-        // Return empty on any error
+        fprintf(stderr, "[ScopedInstructionsProvider] Error resolving file instructions, returning empty\n");
     }
     
     return result;
@@ -224,7 +224,7 @@ ScopedInstructions ScopedInstructionsProvider::getForDirectory(
         result.primaryScope = InstructionScope::DIRECTORY;
         
     } catch (...) {
-        // Return empty on any error
+        fprintf(stderr, "[ScopedInstructionsProvider] Error resolving directory instructions, returning empty\n");
     }
     
     return result;
@@ -247,7 +247,7 @@ ScopedInstructions ScopedInstructionsProvider::getProjectInstructions() {
             result.primaryScope = InstructionScope::PROJECT;
         }
     } catch (...) {
-        // Return empty on any error
+        fprintf(stderr, "[ScopedInstructionsProvider] Error loading project instructions, returning empty\n");
     }
     
     return result;

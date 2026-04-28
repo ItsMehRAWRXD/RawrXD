@@ -307,7 +307,7 @@ public:
         
         // Final header update
         file.seekp(0, std::ios::beg);
-        header.dataCRC = 0xDEADC0DE; // Placeholder
+        header.dataCRC = compute_crc32(reinterpret_cast<const uint8_t*>(&header), sizeof(header) - sizeof(uint32_t));
         file.write(reinterpret_cast<const char*>(&header), sizeof(header));
         
         return file.good();
@@ -558,8 +558,26 @@ private:
     }
     
     uint32_t calculateCRC(const std::string& path) const {
-        // Implement proper CRC32 calculation
-        return 0;  // Placeholder
+        // CRC32 implementation using polynomial 0xEDB88320 (IEEE 802.3)
+        static uint32_t crcTable[256];
+        static bool tableInitialized = false;
+        
+        if (!tableInitialized) {
+            for (int i = 0; i < 256; ++i) {
+                uint32_t crc = static_cast<uint32_t>(i);
+                for (int j = 0; j < 8; ++j) {
+                    crc = (crc >> 1) ^ (0xEDB88320 & -(crc & 1));
+                }
+                crcTable[i] = crc;
+            }
+            tableInitialized = true;
+        }
+        
+        uint32_t crc = 0xFFFFFFFF;
+        for (unsigned char c : path) {
+            crc = (crc >> 8) ^ crcTable[(crc ^ c) & 0xFF];
+        }
+        return ~crc;
     }
     
     uint64_t m_nextEntryId = 1;

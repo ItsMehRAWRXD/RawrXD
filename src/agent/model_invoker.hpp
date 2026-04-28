@@ -57,13 +57,7 @@ public:
     void setProviderConfig(const ModelProviderConfig& config) { m_providerConfig = config; }
     std::string getLLMBackend() const { return m_backend; }
     ModelProviderConfig getProviderConfig() const { return m_providerConfig; }
-    LLMResponse invoke(const InvocationParams& params) {
-        // Stub implementation - returns error
-        LLMResponse r;
-        r.success = false;
-        r.error = "ModelInvoker::invoke not implemented";
-        return r;
-    }
+    LLMResponse invoke(const InvocationParams& params);
     LLMResponse queryRaw(const std::string& systemPrompt,
                          const std::string& userPrompt,
                          int maxTokens,
@@ -92,8 +86,8 @@ private:
     std::string buildSystemPrompt(const std::vector<std::string>& tools);
     std::string buildUserMessage(const InvocationParams& params);
     nlohmann::json sendOllamaRequest(const std::string& model, const std::string& prompt, int maxTokens, double temperature);
-    nlohmann::json sendClaudeRequest(const std::string& systemPrompt, const std::string& prompt, int maxTokens, double temperature);
-    nlohmann::json sendOpenAIRequest(const std::string& systemPrompt, const std::string& prompt, int maxTokens, double temperature);
+    nlohmann::json sendClaudeRequest(const std::string& prompt, int maxTokens, double temperature);
+    nlohmann::json sendOpenAIRequest(const std::string& prompt, int maxTokens, double temperature);
     nlohmann::json sendOpenAICompatibleRequest(const std::string& systemPrompt, const std::string& prompt, int maxTokens, double temperature);
     nlohmann::json parsePlan(const std::string& llmOutput);
     bool validatePlanSanity(const nlohmann::json& plan);

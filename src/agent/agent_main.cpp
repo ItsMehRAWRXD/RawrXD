@@ -13,6 +13,7 @@
 #include "self_test_gate.hpp"
 #include "simple_json.hpp"
 #include "agent_self_healing_orchestrator.hpp"
+#include "../gpu_enforcement.h"
 #include "agentic_hotpatch_orchestrator.hpp"
 
 #include <string>
@@ -104,6 +105,9 @@ static void printVersion()
 
 int main(int argc, char *argv[])
 {
+    // Mandatory GPU gate — the agent CLI refuses to start without a GPU.
+    rxd::gpu::require();
+
     // ============================================================================
     // Zero-Touch Initialization: Counter-Strike Mode
     // ============================================================================

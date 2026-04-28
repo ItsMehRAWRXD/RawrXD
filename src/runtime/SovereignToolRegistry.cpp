@@ -73,8 +73,69 @@ void SovereignToolRegistry::registerCoreTools() {
         "Writes content to a file, creating it if necessary.",
         "{ \"path\": \"string\", \"content\": \"string\" }",
         [](const std::string& args) {
-            // Placeholder: Needs proper JSON parsing of path/content
-            return "File write mock successful";
+            // Parse JSON arguments manually for minimal dependency
+            std::string path;
+            std::string content;
+            
+            // Extract path value
+            size_t pathPos = args.find("\"path\"");
+            if (pathPos != std::string::npos) {
+                size_t colonPos = args.find(':', pathPos);
+                if (colonPos != std::string::npos) {
+                    size_t quoteStart = args.find('"', colonPos);
+                    if (quoteStart != std::string::npos) {
+                        size_t quoteEnd = args.find('"', quoteStart + 1);
+                        if (quoteEnd != std::string::npos) {
+                            path = args.substr(quoteStart + 1, quoteEnd - quoteStart - 1);
+                        }
+                    }
+                }
+            }
+            
+            // Extract content value
+            size_t contentPos = args.find("\"content\"");
+            if (contentPos != std::string::npos) {
+                size_t colonPos = args.find(':', contentPos);
+                if (colonPos != std::string::npos) {
+                    size_t quoteStart = args.find('"', colonPos);
+                    if (quoteStart != std::string::npos) {
+                        size_t quoteEnd = args.find('"', quoteStart + 1);
+                        if (quoteEnd != std::string::npos) {
+                            content = args.substr(quoteStart + 1, quoteEnd - quoteStart - 1);
+                        }
+                    }
+                }
+            }
+            
+            if (path.empty()) {
+                return std::string("ERROR: Missing or invalid 'path' argument");
+            }
+            
+            // Security: prevent directory traversal
+            if (path.find("..") != std::string::npos || path.find(":") != std::string::npos) {
+                return std::string("ERROR: Invalid path contains traversal or absolute path");
+            }
+            
+            try {
+                // Create parent directories if needed
+                fs::path filePath(path);
+                fs::path parent = filePath.parent_path();
+                if (!parent.empty() && !fs::exists(parent)) {
+                    fs::create_directories(parent);
+                }
+                
+                std::ofstream out(filePath, std::ios::binary);
+                if (!out.is_open()) {
+                    return std::string("ERROR: Could not open file for writing: ") + path;
+                }
+                out.write(content.data(), content.size());
+                out.close();
+                
+                return std::string("SUCCESS: Wrote ") + std::to_string(content.size()) + 
+                       " bytes to " + path;
+            } catch (const std::exception& e) {
+                return std::string("ERROR: Exception during file write: ") + e.what();
+            }
         }
     });
 

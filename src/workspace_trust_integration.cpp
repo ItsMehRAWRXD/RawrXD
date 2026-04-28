@@ -229,9 +229,37 @@ void WorkspaceTrustManager::RequestWorkspaceTrust(
         return;
     }
 
-    // TODO: Show UI prompt to user asking for workspace trust
-    // For MVP, call callback with false
-    callback(false);
+    // If a custom prompt callback is registered, delegate to it
+    if (m_trustPromptCallback) {
+        m_trustPromptCallback(workspacePath, callback);
+        return;
+    }
+
+    // Win32 fallback: show a modal trust dialog
+    std::wstring wPath(workspacePath.begin(), workspacePath.end());
+    std::wstring msg = L"Do you trust the workspace at:\n\n" + wPath +
+                       L"\n\nTrusted workspaces allow extensions full access.\n" +
+                       L"Untrusted workspaces run in restricted mode.";
+
+    int result = MessageBoxW(nullptr, msg.c_str(),
+                             L"RawrXD — Workspace Trust",
+                             MB_YESNOCANCEL | MB_ICONQUESTION | MB_TOPMOST);
+
+    bool trusted = (result == IDYES);
+    bool remember = (result != IDCANCEL);
+
+    if (result != IDCANCEL) {
+        std::lock_guard<std::mutex> lock(m_lock);
+        auto normalizedPath = NormalizePath(workspacePath);
+        auto& decision = m_trustDecisions[normalizedPath];
+        decision.workspacePath = normalizedPath;
+        decision.state = trusted ? WorkspaceTrustState::Trusted : WorkspaceTrustState::Untrusted;
+        decision.decisionTimeMs = ::GetTickCount64();
+        decision.decidingUser = "current_user";
+        decision.rememberDecision = remember;
+    }
+
+    callback(trusted);
 }
 
 void WorkspaceTrustManager::RequestCapabilityPermission(
@@ -244,9 +272,52 @@ void WorkspaceTrustManager::RequestCapabilityPermission(
         return;
     }
 
-    // TODO: Show UI prompt to user requesting capability permission
-    // For MVP, call callback with false
-    callback(false);
+    // If a custom permission callback is registered, delegate to it
+    if (m_capabilityPermissionCallback) {
+        m_capabilityPermissionCallback(workspacePath, capability, extensionId, callback);
+        return;
+    }
+
+    // Win32 fallback: show a modal capability permission dialog
+    std::wstring wExt(extensionId.begin(), extensionId.end());
+    std::wstring wPath(workspacePath.begin(), workspacePath.end());
+
+    const char* capName = "Unknown";
+    switch (capability) {
+        case GuardedCapability::ExecuteCommand:   capName = "Execute Commands"; break;
+        case GuardedCapability::TerminalAccess:   capName = "Terminal Access"; break;
+        case GuardedCapability::ProcessSpawn:     capName = "Spawn Processes"; break;
+        case GuardedCapability::FileWrite:        capName = "File Write"; break;
+        case GuardedCapability::NetworkRequest:   capName = "Network Requests"; break;
+        case GuardedCapability::ExtensionScripting: capName = "Extension Scripting"; break;
+        case GuardedCapability::TaskExecution:    capName = "Task Execution"; break;
+        case GuardedCapability::DebuggerAccess:   capName = "Debugger Access"; break;
+    }
+
+    std::wstring msg = L"Extension '" + wExt + L"' requests permission:\n\n" +
+                       L"Capability: " + std::wstring(capName, capName + strlen(capName)) + L"\n" +
+                       L"Workspace: " + wPath + L"\n\n" +
+                       L"Allow this capability?";
+
+    int result = MessageBoxW(nullptr, msg.c_str(),
+                             L"RawrXD — Capability Permission",
+                             MB_YESNOCANCEL | MB_ICONQUESTION | MB_TOPMOST);
+
+    bool allowed = (result == IDYES);
+    bool remember = (result != IDCANCEL);
+
+    if (result != IDCANCEL) {
+        std::lock_guard<std::mutex> lock(m_lock);
+        auto normalizedPath = NormalizePath(workspacePath);
+        auto& decision = m_trustDecisions[normalizedPath];
+        decision.workspacePath = normalizedPath;
+        decision.state = allowed ? WorkspaceTrustState::Trusted : WorkspaceTrustState::Untrusted;
+        decision.decisionTimeMs = ::GetTickCount64();
+        decision.decidingUser = "current_user";
+        decision.rememberDecision = remember;
+    }
+
+    callback(allowed);
 }
 
 void WorkspaceTrustManager::SetExtensionTrustPolicy(const std::string& extensionId,
@@ -308,7 +379,24 @@ bool WorkspaceTrustManager::LoadTrustDecisions(const std::string& storagePath) {
             for (auto& [path, decision] : data["trust_decisions"].items()) {
                 TrustDecision td;
                 td.workspacePath = path;
-                // TODO: Deserialize state from JSON
+                if (decision.is_object()) {
+                    if (decision.contains("state") && decision["state"].is_string()) {
+                        std::string stateStr = decision["state"].get<std::string>();
+                        if (stateStr == "trusted") td.state = WorkspaceTrustState::Trusted;
+                        else if (stateStr == "untrusted") td.state = WorkspaceTrustState::Untrusted;
+                        else if (stateStr == "restricted") td.state = WorkspaceTrustState::RestrictedMode;
+                        else td.state = WorkspaceTrustState::Unknown;
+                    }
+                    if (decision.contains("decisionTimeMs") && decision["decisionTimeMs"].is_number()) {
+                        td.decisionTimeMs = decision["decisionTimeMs"].get<uint64_t>();
+                    }
+                    if (decision.contains("decidingUser") && decision["decidingUser"].is_string()) {
+                        td.decidingUser = decision["decidingUser"].get<std::string>();
+                    }
+                    if (decision.contains("rememberDecision") && decision["rememberDecision"].is_boolean()) {
+                        td.rememberDecision = decision["rememberDecision"].get<bool>();
+                    }
+                }
                 m_trustDecisions[path] = td;
             }
         }
@@ -333,7 +421,16 @@ bool WorkspaceTrustManager::SaveTrustDecisions(const std::string& storagePath) {
 
             for (const auto& [path, decision] : m_trustDecisions) {
                 json item;
-                // TODO: Serialize decision to JSON
+                item["workspacePath"] = decision.workspacePath;
+                switch (decision.state) {
+                    case WorkspaceTrustState::Trusted:        item["state"] = "trusted"; break;
+                    case WorkspaceTrustState::Untrusted:      item["state"] = "untrusted"; break;
+                    case WorkspaceTrustState::RestrictedMode: item["state"] = "restricted"; break;
+                    default:                                  item["state"] = "unknown"; break;
+                }
+                item["decisionTimeMs"] = decision.decisionTimeMs;
+                item["decidingUser"] = decision.decidingUser;
+                item["rememberDecision"] = decision.rememberDecision;
                 data["trust_decisions"][path] = item;
             }
         }

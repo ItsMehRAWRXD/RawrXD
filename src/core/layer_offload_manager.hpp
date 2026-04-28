@@ -240,6 +240,11 @@ struct OffloadConfig
     bool asyncPrefetch;            // Background thread for prefetch (default: true)
     uint32_t ioThreadCount;        // Number of I/O threads for loading (default: 2)
     std::string spillStagingRoot;  // Optional: UNC or local path (env RAWRXD_SPILL_ROOT) for eviction staging
+    
+    // VRAM Budget Partitioning - Added for explicit KV cache reservation
+    uint64_t kv_reserve = 0;          // Dynamic KV cache reservation (bytes)
+    uint64_t headroom = 512 * 1024 * 1024;  // 512MB for OS/DWM
+    bool enable_vram_partitioning = true;  // Enable explicit budget partitioning
 
     static OffloadConfig defaultConfig()
     {
@@ -391,6 +396,12 @@ class LayerOffloadManager
     bool isInitialized() const { return m_initialized; }
     uint32_t getLayerCount() const { return m_layerCount; }
     uint32_t getResidentCount() const;
+    
+    // ---- VRAM Budget Partitioning ----
+    void updateKVReservation(size_t num_tokens, size_t num_layers, size_t num_heads, 
+                             size_t head_dim, size_t bytes_per_elem = 2);
+    size_t current_weight_usage() const;
+    size_t current_kv_usage() const { return m_config.kv_reserve; }
 
     // Optional network/local spill staging (see OffloadConfig::spillStagingRoot).
     const std::string& spillStagingRootPath() const { return m_config.spillStagingRoot; }

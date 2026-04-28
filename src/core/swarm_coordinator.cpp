@@ -574,7 +574,8 @@ uint64_t SwarmCoordinator::addTask(SwarmTaskType type,
         m_taskGraph.tasks.push_back(std::move(task));
         m_taskGraph.totalTasks++;
         if (dependencies.empty()) {
-            // Ready immediately
+            // Task is ready immediately - no dependencies
+            task.taskState = SwarmTaskState::Ready;
         } else {
             m_taskGraph.pendingTasks++;
         }

@@ -3,13 +3,18 @@
 
 // AI-Assisted Debug Agent — NativeDebuggerEngine Backend
 // Production debug agent using DbgEng COM for AI-assisted debugging.
+// Integrates with SovereignInferenceClient for LLM-powered analysis.
 // NO SOURCE FILE IS TO BE SIMPLIFIED
 
 #include <string>
 #include <vector>
 #include <cstdint>
+#include <memory>
 
 namespace RawrXD {
+namespace Agent {
+    class SovereignInferenceClient;
+}
 namespace Debugger {
     enum class BreakpointType : uint32_t;
 }
@@ -25,6 +30,10 @@ struct ExceptionInfo {
 class AIDebugAgent {
 public:
     static AIDebugAgent& Instance();
+
+    // ---- Sovereign Inference Integration ----
+    void SetInferenceClient(std::shared_ptr<RawrXD::Agent::SovereignInferenceClient> client);
+    bool HasInferenceClient() const;
 
     // ---- Session Management ----
     struct LaunchResult {
@@ -80,10 +89,17 @@ public:
     std::string DisassembleWithAnnotations(uint64_t address, uint32_t lineCount = 20);
     std::string CaptureDebugSnapshot();
 
+    // ---- AI-Powered Analysis ----
+    std::string GenerateAIHypothesis(const ExceptionAnalysis& analysis);
+    std::vector<std::string> GenerateAISuggestedActions(const ExceptionAnalysis& analysis);
+    std::vector<BreakpointSuggestion> GenerateAIBreakpointSuggestions(const std::string& context);
+
 private:
     AIDebugAgent() = default;
     AIDebugAgent(const AIDebugAgent&) = delete;
     AIDebugAgent& operator=(const AIDebugAgent&) = delete;
+
+    std::shared_ptr<RawrXD::Agent::SovereignInferenceClient> m_inferenceClient;
 };
 
 } // namespace Debug

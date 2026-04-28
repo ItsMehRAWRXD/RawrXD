@@ -92,7 +92,11 @@ std::vector<std::string> IndexManifest::GetDirtyFiles(const std::string& rootPat
                 }
             }
         }
-    } catch (...) {}
+    } catch (const std::exception& e) {
+        OutputDebugStringA((std::string("[IndexManifest] ScanForDirtyFiles exception: ") + e.what() + "\n").c_str());
+    } catch (...) {
+        OutputDebugStringA("[IndexManifest] ScanForDirtyFiles unknown exception\n");
+    }
     return dirty;
 }
 

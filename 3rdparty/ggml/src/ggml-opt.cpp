@@ -1011,8 +1011,8 @@ void ggml_opt_fit(
     ggml_time_init();
     const int64_t t_start_us = ggml_time_us();
 
-    const int64_t ndata           = ggml_opt_dataset_data(dataset)->ne[1];
-    const int64_t nbatch_physical = inputs->ne[1];
+    const int64_t ndata           = ggml_opt_dataset_ndata(dataset);
+    const int64_t nbatch_physical = ggml_nrows(inputs);
     GGML_ASSERT(ndata          % nbatch_logical  == 0);
     GGML_ASSERT(nbatch_logical % nbatch_physical == 0);
 

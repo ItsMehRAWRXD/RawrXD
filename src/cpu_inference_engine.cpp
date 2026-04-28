@@ -5,7 +5,9 @@
 // ============================================================================
 #include "cpu_inference_engine.h"
 #include "rawrxd_inference.h"
+#include "gpu/speculative_decoder_v2.h"
 #include "rawr_circular_sdma.h"
+#include "codec/brutal_gzip.h"
 #include "kernels/dequant_q6k_avx512.h"
 #include "kernels/kv_accum_avx512.h"
 #include <algorithm>
@@ -49,6 +51,9 @@ constexpr size_t kMaxKvCacheBytes = 8ull * 1024ull * 1024ull * 1024ull;
 constexpr uint32_t kRxaMagic = 0x21584152u;     // "RXA!"
 constexpr uint32_t kRxaVersion1 = 0x00010000u;  // v1.0
 constexpr uint8_t kRxaAlgRaw = 0;
+constexpr uint8_t kRxaAlgXpress = 1;
+constexpr uint8_t kRxaAlgLznt1 = 2;
+constexpr uint8_t kRxaAlgBrutalGzip = 3;
 
 #pragma pack(push, 1)
 struct RxaHeaderV1
@@ -245,6 +250,88 @@ bool isRxaHeaderValid(const RxaHeaderV1& header)
     return true;
 }
 
+#ifdef _WIN32
+using FRtlGetCompressionWorkSpaceSize = long(__stdcall*)(unsigned short, unsigned long*, unsigned long*);
+using FRtlDecompressBufferEx = long(__stdcall*)(unsigned short, unsigned char*, unsigned long, const unsigned char*,
+                                                unsigned long, unsigned long*, void*);
+
+static bool decompressRxaBlockWindows(uint8_t algorithm, const uint8_t* src, uint32_t srcSize, uint8_t* dst,
+                                      uint32_t dstSize, std::string& outError)
+{
+    if (!src || !dst || srcSize == 0 || dstSize == 0)
+    {
+        outError = "invalid RXA compressed block pointers";
+        return false;
+    }
+
+    unsigned short format = 0;
+    if (algorithm == kRxaAlgXpress)
+    {
+        // COMPRESS_ALGORITHM_XPRESS_HUFF
+        format = 0x0004u;
+    }
+    else if (algorithm == kRxaAlgLznt1)
+    {
+        // COMPRESSION_FORMAT_LZNT1
+        format = 0x0002u;
+    }
+    else
+    {
+        outError = "unsupported RXA compression algorithm";
+        return false;
+    }
+
+    HMODULE ntdll = GetModuleHandleA("ntdll.dll");
+    if (!ntdll)
+    {
+        ntdll = LoadLibraryA("ntdll.dll");
+    }
+    if (!ntdll)
+    {
+        outError = "failed to load ntdll for RXA decompression";
+        return false;
+    }
+
+    auto pGetWorkspace = reinterpret_cast<FRtlGetCompressionWorkSpaceSize>(
+        GetProcAddress(ntdll, "RtlGetCompressionWorkSpaceSize"));
+    auto pDecompress = reinterpret_cast<FRtlDecompressBufferEx>(GetProcAddress(ntdll, "RtlDecompressBufferEx"));
+    if (!pGetWorkspace || !pDecompress)
+    {
+        outError = "required decompression symbols unavailable in ntdll";
+        return false;
+    }
+
+    unsigned long workspaceCompress = 0;
+    unsigned long workspaceDecompress = 0;
+    const long wsStatus = pGetWorkspace(format, &workspaceCompress, &workspaceDecompress);
+    if (wsStatus < 0)
+    {
+        outError = "failed to query RXA decompression workspace";
+        return false;
+    }
+
+    std::vector<uint8_t> workspace;
+    workspace.resize(static_cast<size_t>(workspaceDecompress));
+
+    unsigned long finalSize = 0;
+    const long decStatus = pDecompress(format, reinterpret_cast<unsigned char*>(dst), static_cast<unsigned long>(dstSize),
+                                       reinterpret_cast<const unsigned char*>(src), static_cast<unsigned long>(srcSize),
+                                       &finalSize, workspace.empty() ? nullptr : workspace.data());
+    if (decStatus < 0)
+    {
+        outError = "RXA block decompression failed";
+        return false;
+    }
+    if (finalSize != static_cast<unsigned long>(dstSize))
+    {
+        outError = "RXA decompressed block size mismatch";
+        return false;
+    }
+
+    return true;
+}
+#endif
+
 bool extractRxaToTempGguf(const std::string& rxaPath, std::string& outGgufPath, std::string& outError)
 {
     outGgufPath.clear();
@@ -317,14 +404,14 @@ bool extractRxaToTempGguf(const std::string& rxaPath, std::string& outGgufPath, 
     for (uint32_t i = 0; i < header.blockCount; ++i)
     {
         const RxaBlockEntryV1& entry = entries[i];
-        if (entry.algorithm != kRxaAlgRaw)
-        {
-            outError = "unsupported RXA compression algorithm in archive";
-            return false;
-        }
-        if (entry.compressedSize < entry.uncompressedSize)
+        if (entry.algorithm == kRxaAlgRaw && entry.compressedSize < entry.uncompressedSize)
         {
             outError = "corrupt RXA block size metadata";
+            return false;
+        }
+        if (entry.algorithm != kRxaAlgRaw && entry.compressedSize == 0)
+        {
+            outError = "corrupt RXA compressed block";
             return false;
         }
 
@@ -343,7 +430,60 @@ bool extractRxaToTempGguf(const std::string& rxaPath, std::string& outGgufPath, 
             return false;
         }
 
-        out.write(compressed.data(), static_cast<std::streamsize>(entry.uncompressedSize));
+        if (entry.algorithm == kRxaAlgRaw)
+        {
+            out.write(compressed.data(), static_cast<std::streamsize>(entry.uncompressedSize));
+        }
+        else if (entry.algorithm == kRxaAlgBrutalGzip)
+        {
+            const std::vector<uint8_t> packed(reinterpret_cast<const uint8_t*>(compressed.data()),
+                                              reinterpret_cast<const uint8_t*>(compressed.data()) + entry.compressedSize);
+            std::vector<uint8_t> decompressed = brutal::decompress(packed);
+            if (decompressed.size() != static_cast<size_t>(entry.uncompressedSize))
+            {
+                outError = "RXA brutal block decompressed size mismatch";
+                return false;
+            }
+            out.write(reinterpret_cast<const char*>(decompressed.data()),
+                      static_cast<std::streamsize>(entry.uncompressedSize));
+        }
+        else
+        {
+#ifdef _WIN32
+            // Some archives may carry legacy algorithm metadata but still contain
+            // brutal gzip blocks. Detect by gzip magic and decode via brutal path.
+            if (entry.compressedSize >= 2 && static_cast<uint8_t>(compressed[0]) == 0x1f &&
+                static_cast<uint8_t>(compressed[1]) == 0x8b)
+            {
+                const std::vector<uint8_t> packed(reinterpret_cast<const uint8_t*>(compressed.data()),
+                                                  reinterpret_cast<const uint8_t*>(compressed.data()) + entry.compressedSize);
+                std::vector<uint8_t> decompressed = brutal::decompress(packed);
+                if (decompressed.size() != static_cast<size_t>(entry.uncompressedSize))
+                {
+                    outError = "RXA brutal fallback decompressed size mismatch";
+                    return false;
+                }
+                out.write(reinterpret_cast<const char*>(decompressed.data()),
+                          static_cast<std::streamsize>(entry.uncompressedSize));
+            }
+            else
+            {
+                std::vector<uint8_t> decompressed(static_cast<size_t>(entry.uncompressedSize));
+                std::string decError;
+                if (!decompressRxaBlockWindows(entry.algorithm, reinterpret_cast<const uint8_t*>(compressed.data()),
+                                               entry.compressedSize, decompressed.data(), entry.uncompressedSize, decError))
+                {
+                    outError = decError;
+                    return false;
+                }
+                out.write(reinterpret_cast<const char*>(decompressed.data()),
+                          static_cast<std::streamsize>(entry.uncompressedSize));
+            }
+#else
+            outError = "compressed RXA blocks require Windows decompression backend";
+            return false;
+#endif
+        }
         if (!out.good())
         {
             outError = "failed to stream RXA block to GGUF cache";
@@ -481,6 +621,287 @@ inline void AccumulateScaledKVHotPath(float* dst, const float* src, float scale,
     return true;
 }
 
+[[nodiscard]] std::vector<std::pair<int, float>> BuildTopKLogprobs(const std::vector<float>& logits, int topK)
+{
+    std::vector<std::pair<int, float>> result;
+    if (topK <= 0 || logits.empty())
+    {
+        return result;
+    }
+
+    const std::size_t vocabSize = logits.size();
+    std::vector<int> validIndices;
+    validIndices.reserve(vocabSize);
+
+    float maxLogit = -std::numeric_limits<float>::infinity();
+    for (std::size_t i = 0; i < vocabSize; ++i)
+    {
+        const float value = logits[i];
+        if (!std::isfinite(value))
+        {
+            continue;
+        }
+        validIndices.push_back(static_cast<int>(i));
+        if (value > maxLogit)
+        {
+            maxLogit = value;
+        }
+    }
+
+    if (validIndices.empty())
+    {
+        return result;
+    }
+
+    double sumExp = 0.0;
+    for (int index : validIndices)
+    {
+        sumExp += std::exp(static_cast<double>(logits[static_cast<std::size_t>(index)] - maxLogit));
+    }
+
+    if (!(sumExp > 0.0))
+    {
+        return result;
+    }
+
+    const float logZ = static_cast<float>(maxLogit + std::log(sumExp));
+    topK = std::min(topK, static_cast<int>(validIndices.size()));
+
+    auto better = [&](int left, int right)
+    {
+        return logits[static_cast<std::size_t>(left)] > logits[static_cast<std::size_t>(right)];
+    };
+
+    if (topK < static_cast<int>(validIndices.size()))
+    {
+        std::partial_sort(validIndices.begin(), validIndices.begin() + topK, validIndices.end(), better);
+    }
+    else
+    {
+        std::sort(validIndices.begin(), validIndices.end(), better);
+    }
+
+    result.reserve(static_cast<std::size_t>(topK));
+    for (int i = 0; i < topK; ++i)
+    {
+        const int tokenId = validIndices[static_cast<std::size_t>(i)];
+        const float value = logits[static_cast<std::size_t>(tokenId)];
+        if (!std::isfinite(value))
+        {
+            continue;
+        }
+        result.emplace_back(tokenId, value - logZ);
+    }
+
+    return result;
+}
+
+struct SwarmSpeculativeAdapter
+{
+    RawrXDInference* engine = nullptr;
+    std::vector<uint32_t> cachedContext;
+    std::vector<float> cachedLogits;
+    std::string modelId;
+};
+
+[[nodiscard]] std::vector<float> EvaluateAdapterContext(SwarmSpeculativeAdapter& adapter,
+                                                        const std::vector<int>& context)
+{
+    std::vector<uint32_t> requested;
+    requested.reserve(context.size());
+
+    for (int token : context)
+    {
+        if (token < 0)
+        {
+            return {};
+        }
+        requested.push_back(static_cast<uint32_t>(token));
+    }
+
+    if (!adapter.engine)
+    {
+        return {};
+    }
+
+    if (requested == adapter.cachedContext)
+    {
+        return adapter.cachedLogits;
+    }
+
+    const bool canAdvance = !adapter.cachedContext.empty() &&
+                            requested.size() == adapter.cachedContext.size() + 1 &&
+                            std::equal(adapter.cachedContext.begin(), adapter.cachedContext.end(), requested.begin());
+
+    std::vector<float> logits;
+    if (canAdvance)
+    {
+        std::vector<uint32_t> delta{requested.back()};
+        logits = adapter.engine->ForwardTokens(delta, static_cast<uint32_t>(adapter.cachedContext.size()));
+    }
+    else
+    {
+        logits = adapter.engine->ForwardTokens(requested, 0);
+    }
+
+    if (logits.empty())
+    {
+        adapter.cachedContext.clear();
+        adapter.cachedLogits.clear();
+        return {};
+    }
+
+    adapter.cachedContext = std::move(requested);
+    adapter.cachedLogits = logits;
+    return logits;
+}
+
+[[nodiscard]] RawrXD::Speculative::ModelInference BuildSwarmModelInference(SwarmSpeculativeAdapter& adapter)
+{
+    RawrXD::Speculative::ModelInference model;
+    model.modelId = adapter.modelId;
+
+    model.logprobs = [](const std::vector<int>& context, int topK, void* userData)
+        -> std::vector<std::pair<int, float>>
+    {
+        auto* state = reinterpret_cast<SwarmSpeculativeAdapter*>(userData);
+        if (!state || !state->engine || topK <= 0)
+        {
+            return {};
+        }
+        const std::vector<float> logits = EvaluateAdapterContext(*state, context);
+        return BuildTopKLogprobs(logits, topK);
+    };
+
+    model.batchLogprobs = [](const std::vector<std::vector<int>>& contexts, int topK, void* userData)
+        -> std::vector<std::vector<std::pair<int, float>>>
+    {
+        auto* state = reinterpret_cast<SwarmSpeculativeAdapter*>(userData);
+        if (!state || !state->engine || topK <= 0)
+        {
+            return {};
+        }
+
+        std::vector<std::vector<std::pair<int, float>>> results;
+        results.reserve(contexts.size());
+        for (const auto& ctx : contexts)
+        {
+            const std::vector<float> logits = EvaluateAdapterContext(*state, ctx);
+            results.push_back(BuildTopKLogprobs(logits, topK));
+        }
+        return results;
+    };
+
+    model.decode = [](int tokenId, void* userData) -> std::string
+    {
+        auto* state = reinterpret_cast<SwarmSpeculativeAdapter*>(userData);
+        if (!state || !state->engine || tokenId < 0)
+        {
+            return {};
+        }
+        return state->engine->Detokenize({static_cast<uint32_t>(tokenId)});
+    };
+
+    model.encode = [](const std::string& text, void* userData) -> std::vector<int>
+    {
+        auto* state = reinterpret_cast<SwarmSpeculativeAdapter*>(userData);
+        if (!state || !state->engine)
+        {
+            return {};
+        }
+        const auto tokens = state->engine->Tokenize(text);
+        return std::vector<int>(tokens.begin(), tokens.end());
+    };
+
+    model.userData = &adapter;
+    return model;
+}
+
+[[nodiscard]] uint64_t EstimateSwarmModelScale(const RawrXDInference& model)
+{
+    const uint64_t dim = static_cast<uint64_t>(std::max(1, model.getDim()));
+    const uint64_t layers = static_cast<uint64_t>(std::max(1, model.getLayers()));
+    const uint64_t heads = static_cast<uint64_t>(std::max(1, model.getHeads()));
+    const uint64_t vocab = static_cast<uint64_t>(std::max(1, model.getVocabSize()));
+    return (layers * dim) + heads + (vocab / 1024u);
+}
+
+[[nodiscard]] bool SelectSpeculativeSwarmPair(const std::vector<std::unique_ptr<RawrXDInference>>& models,
+                                              std::size_t& draftIndex, std::size_t& targetIndex)
+{
+    draftIndex = 0;
+    targetIndex = 0;
+    if (models.size() < 2)
+    {
+        return false;
+    }
+
+    std::size_t bestTarget = std::numeric_limits<std::size_t>::max();
+    uint64_t bestTargetScore = 0;
+    int targetVocab = 0;
+    for (std::size_t i = 0; i < models.size(); ++i)
+    {
+        const auto* model = models[i].get();
+        if (!model)
+        {
+            continue;
+        }
+        const int vocab = model->getVocabSize();
+        const uint64_t score = EstimateSwarmModelScale(*model);
+        if (score > bestTargetScore || (score == bestTargetScore && i > bestTarget))
+        {
+            bestTargetScore = score;
+            bestTarget = i;
+            targetVocab = vocab;
+        }
+    }
+
+    if (bestTarget == std::numeric_limits<std::size_t>::max() || targetVocab <= 0)
+    {
+        return false;
+    }
+
+    std::size_t bestDraft = std::numeric_limits<std::size_t>::max();
+    uint64_t bestDraftScore = std::numeric_limits<uint64_t>::max();
+    for (std::size_t i = 0; i < models.size(); ++i)
+    {
+        if (i == bestTarget)
+        {
+            continue;
+        }
+        const auto* model = models[i].get();
+        if (!model || model->getVocabSize() != targetVocab)
+        {
+            continue;
+        }
+        const uint64_t score = EstimateSwarmModelScale(*model);
+        if (score < bestDraftScore || (score == bestDraftScore && i < bestDraft))
+        {
+            bestDraftScore = score;
+            bestDraft = i;
+        }
+    }
+
+    if (bestDraft == std::numeric_limits<std::size_t>::max())
+    {
+        return false;
+    }
+
+    draftIndex = bestDraft;
+    targetIndex = bestTarget;
+    return true;
+}
+
+[[nodiscard]] bool IsTruthyEnv(const char* name)
+{
+    const char* value = std::getenv(name);
+    if (!value || value[0] == '\0')
+    {
+        return false;
+    }
+    return value[0] != '0' && value[0] != 'f' && value[0] != 'F' && value[0] != 'n' && value[0] != 'N';
+}
+
 // ============================================================================
 // Shared CPUInferenceEngine (single facade; matches single s_inferenceBackend).
 // Static holder keeps one refcount so the facade is not destroyed while the
@@ -588,21 +1009,19 @@ bool CPUInferenceEngine::LoadModel(const std::string& model_path)
             return true;
         }
         
-        // GPU init failed - capture error and continue with CPU fallback
-        printf("[CPUInferenceEngine] GPU initialization failed, will attempt CPU-only inference mode\n");
+        // GPU init failed — fail closed. GPU inference is mandatory; CPU fallback is
+        // intentionally not permitted. Surface the underlying GPU error verbatim.
+        printf("[CPUInferenceEngine] GPU initialization failed; refusing CPU fallback (GPU is mandatory)\n");
         std::string gpu_error = s_inferenceBackend.GetLastLoadErrorMessage();
         if (!gpu_error.empty())
         {
             printf("[CPUInferenceEngine] GPU error details: %s\n", gpu_error.c_str());
-            m_lastLoadErrorMessage = "GPU unavailable (" + gpu_error + "); inference will run in CPU-only mode";
+            m_lastLoadErrorMessage = "GPU initialization failed (" + gpu_error + "); GPU inference is mandatory and CPU fallback is disabled";
         }
         else
         {
-            m_lastLoadErrorMessage = "GPU initialization failed; will attempt CPU-only inference mode";
+            m_lastLoadErrorMessage = "GPU initialization failed; GPU inference is mandatory and CPU fallback is disabled";
         }
-        
-        // Note: RawrXDInference _should_ have CPU fallback internally based on RAWR_ENABLE_VULKAN flag
-        // If not available, inference will fail gracefully with detailed error
         m_modelLoaded = false;
         return false;
     }
@@ -874,6 +1293,143 @@ void CPUInferenceEngine::GenerateSwarmStreaming(const std::vector<int32_t>& inpu
 
     printf("[Swarm] Starting chain with %zu models, depth %d\n", m_swarmModels.size(), chain_depth);
 
+    std::size_t draftIndex = 0;
+    std::size_t targetIndex = 0;
+    if (SelectSpeculativeSwarmPair(m_swarmModels, draftIndex, targetIndex))
+    {
+        SwarmSpeculativeAdapter draftAdapter;
+        draftAdapter.engine = m_swarmModels[draftIndex].get();
+        draftAdapter.modelId = std::string("swarm:draft:") + std::to_string(draftIndex);
+
+        SwarmSpeculativeAdapter targetAdapter;
+        targetAdapter.engine = m_swarmModels[targetIndex].get();
+        targetAdapter.modelId = std::string("swarm:target:") + std::to_string(targetIndex);
+
+        RawrXD::Speculative::SpeculationConfig specCfg{};
+        specCfg.maxDraftTokens = m_maxMode ? 8 : (m_deepThinking ? 6 : 5);
+        specCfg.minDraftTokens = 1;
+        specCfg.acceptanceThreshold = m_deepThinking ? 0.25f : 0.30f;
+        specCfg.adaptiveDraftLen = true;
+        specCfg.treeSpeculation = m_maxMode || m_deepThinking || m_deepResearch ||
+                                  current_tokens.size() >= 128u ||
+                                  IsTruthyEnv("RAWRXD_SWARM_TREE_SPECULATION");
+        specCfg.treeBranching = m_maxMode ? 4 : 2;
+        specCfg.treeDepth = m_deepResearch ? 4 : (m_maxMode ? 4 : 3);
+        specCfg.ensembleDrafts = m_deepResearch ? 2 : 1;
+        specCfg.temperatureDraft = 0.0f;
+        specCfg.temperatureTarget = 0.0f;
+
+        RawrXD::Speculative::SpeculativeDecoderV2 decoder;
+        decoder.setConfig(specCfg);
+
+        const auto draftModel = BuildSwarmModelInference(draftAdapter);
+        const auto targetModel = BuildSwarmModelInference(targetAdapter);
+        if (decoder.setDraftModel(draftModel).success && decoder.setTargetModel(targetModel).success)
+        {
+            struct SwarmStreamSink
+            {
+                std::function<void(const std::string&)>* tokenCallback = nullptr;
+                std::function<void(int32_t)>* tokenIdCallback = nullptr;
+                int* currentPos = nullptr;
+            } sink{&token_callback, &token_id_callback, &m_currentPos};
+
+            std::vector<uint32_t> promptU32;
+            if (!ConvertTokensToU32Checked(current_tokens, promptU32, "GenerateSwarmStreaming speculative prompt"))
+            {
+                printf("[Swarm] Speculative prompt validation failed, using legacy chain path\n");
+            }
+            else
+            {
+                std::vector<int> promptTokens(promptU32.begin(), promptU32.end());
+                if (static_cast<unsigned long long>(current_tokens.size()) >
+                    static_cast<unsigned long long>(std::numeric_limits<int>::max()))
+                {
+                    m_currentPos = std::numeric_limits<int>::max();
+                }
+                else
+                {
+                    m_currentPos = static_cast<int>(current_tokens.size());
+                }
+
+                auto streamCallback = [](const RawrXD::Speculative::Token& token, bool /*isDraft*/, void* userData)
+                {
+                    auto* state = reinterpret_cast<SwarmStreamSink*>(userData);
+                    if (!state)
+                    {
+                        return;
+                    }
+
+                    const std::string safePiece = sanitizeUtf8Lossy(token.text);
+                    try
+                    {
+                        if (state->tokenCallback && !safePiece.empty())
+                        {
+                            (*state->tokenCallback)(safePiece);
+                        }
+                    }
+                    catch (...)
+                    {
+                    }
+
+                    try
+                    {
+                        if (state->tokenIdCallback)
+                        {
+                            (*state->tokenIdCallback)(static_cast<int32_t>(token.id));
+                        }
+                    }
+                    catch (...)
+                    {
+                    }
+
+                    if (state->currentPos)
+                    {
+                        ++(*state->currentPos);
+                    }
+                };
+
+                const auto speculativeResult = decoder.generateStreaming(promptTokens, max_tokens, streamCallback, &sink);
+                if (speculativeResult.success)
+                {
+                    std::vector<uint32_t> finalContext = promptU32;
+                    for (const auto& token : speculativeResult.tokens)
+                    {
+                        if (token.id >= 0)
+                        {
+                            finalContext.push_back(static_cast<uint32_t>(token.id));
+                        }
+                    }
+
+                    if (!finalContext.empty() && finalContext.back() == 0u)
+                    {
+                        finalContext.pop_back();
+                    }
+
+                    if (!finalContext.empty())
+                    {
+                        const auto logits = targetAdapter.engine->ForwardTokens(finalContext, 0);
+                        if (!logits.empty())
+                        {
+                            m_lastState = logits;
+                        }
+                    }
+
+                    emitSwarmTelemetryThrottled_(true);
+                    if (complete_callback)
+                        complete_callback();
+                    return;
+                }
+
+                printf("[Swarm] Speculative decode unavailable, falling back to legacy chaining: %s\n",
+                       speculativeResult.detail ? speculativeResult.detail : "unknown error");
+            }
+        }
+        else
+        {
+            printf("[Swarm] Speculative decoder setup failed, using legacy chaining\n");
+        }
+    }
+
     for (int chain_step = 0; chain_step < chain_depth && tokens_generated < max_tokens; ++chain_step)
     {
         // Select model for this step (cycle through available models)
@@ -958,6 +1514,7 @@ void CPUInferenceEngine::GenerateSwarmStreaming(const std::vector<int32_t>& inpu
 
     if (complete_callback)
         complete_callback();
+    emitSwarmTelemetryThrottled_(true);
     printf("[Swarm] Chain complete, generated %d tokens\n", tokens_generated);
 }
 

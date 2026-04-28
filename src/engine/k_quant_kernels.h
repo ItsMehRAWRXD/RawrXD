@@ -44,6 +44,7 @@ namespace kquant {
 // ---------------------------------------------------------------------------
 // Block structs — must match GGML layout byte-for-byte
 // ---------------------------------------------------------------------------
+#pragma pack(push, 1)
 
 // Q4_K super-block: 256 weights, 144 bytes
 struct block_q4_K {
@@ -72,6 +73,8 @@ struct block_q6_K {
     uint16_t d;          // fp16 super-block scale
 };
 static_assert(sizeof(block_q6_K) == 210, "block_q6_K size mismatch");
+
+#pragma pack(pop)
 
 // ---------------------------------------------------------------------------
 // fp16→fp32 helpers (scalar, no intrinsics needed for scale loads)

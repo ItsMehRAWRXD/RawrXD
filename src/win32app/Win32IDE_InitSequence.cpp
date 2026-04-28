@@ -676,10 +676,18 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
     // Cleanup engine resources (IDE no longer holds pointers to these)
     try {
         delete codex;
-    } catch (...) {}
+    } catch (const std::exception& e) {
+        OutputDebugStringA((std::string("[InitSequence] codex cleanup exception: ") + e.what() + "\n").c_str());
+    } catch (...) {
+        OutputDebugStringA("[InitSequence] codex cleanup unknown exception\n");
+    }
     try {
         delete engine_mgr;
-    } catch (...) {}
+    } catch (const std::exception& e) {
+        OutputDebugStringA((std::string("[InitSequence] engine_mgr cleanup exception: ") + e.what() + "\n").c_str());
+    } catch (...) {
+        OutputDebugStringA("[InitSequence] engine_mgr cleanup unknown exception\n");
+    }
 
     // ========================================================================
     // CRASH CONTAINMENT UNINSTALL — Cathedral teardown

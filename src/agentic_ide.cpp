@@ -40,7 +40,8 @@ using namespace RawrXD;
 // ============================================================================
 
 AgenticIDE::AgenticIDE(const IDEConfig& config) : m_config(config) {
-    // Prevent copy during initialization, if any
+    m_initialized = false;
+    m_running = false;
 }
 
 AgenticIDE::~AgenticIDE() {
@@ -161,7 +162,7 @@ Result<void> AgenticIDE::startBackgroundServices() {
                 try {
                     task();
                 } catch (const std::exception& e) {
-                   // Silent
+                    fprintf(stderr, "[AgenticIDE] Worker exception: %s\n", e.what());
                 }
                 m_activeWorkers.fetch_sub(1, std::memory_order_relaxed);
             }
@@ -304,7 +305,7 @@ void AgenticIDE::processConsoleInput() {
             if (m_chatInterface) {
                 m_chatInterface->sendMessage(line);
             } else {
-                // Chat interface not available
+                fprintf(stderr, "[AgenticIDE] Chat interface not available\n");
             }
         }
         
@@ -323,7 +324,15 @@ std::string AgenticIDE::getTimestamp() const {
 }
 
 void AgenticIDE::log(const std::string& message, spdlog::level::level_enum level) {
-    // Logging disabled
+    const char* levelStr = "INFO";
+    switch (level) {
+        case spdlog::level::debug: levelStr = "DEBUG"; break;
+        case spdlog::level::warn:  levelStr = "WARN";  break;
+        case spdlog::level::err:   levelStr = "ERROR"; break;
+        case spdlog::level::critical: levelStr = "CRITICAL"; break;
+        default: break;
+    }
+    fprintf(stderr, "[AgenticIDE][%s] %s\n", levelStr, message.c_str());
 }
 
 void AgenticIDE::setConfig(const IDEConfig& config) {

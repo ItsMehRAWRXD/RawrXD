@@ -510,7 +510,11 @@ public:
                         actions.push_back(action);
                     }
                 }
-            } catch (...) {}
+            } catch (const std::exception& e) {
+                OutputDebugStringA((std::string("[LSPClient] parse_actions exception: ") + e.what() + "\n").c_str());
+            } catch (...) {
+                OutputDebugStringA("[LSPClient] parse_actions unknown exception\n");
+            }
         }
         
         return actions;

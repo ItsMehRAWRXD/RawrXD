@@ -3637,7 +3637,11 @@ std::string CompletionServer::HandleAgenticAuditEstimateRequest(const std::strin
                 std::string val = pair.substr(eq + 1);
                 if (key == "codebase") codebase = val;
                 else if (key == "topN" && !val.empty()) {
-                    try { topN = std::max(1, std::min(99, std::stoi(val))); } catch (...) {}
+                    try { topN = std::max(1, std::min(99, std::stoi(val))); } catch (const std::exception& e) {
+                        OutputDebugStringA(("[complete_server] topN parse exception: " + std::string(e.what()) + "\n").c_str());
+                    } catch (...) {
+                        OutputDebugStringA("[complete_server] topN parse unknown exception\n");
+                    }
                 }
             }
         }
@@ -3737,7 +3741,7 @@ bool ModelHostListModelsSync(const std::string& host, int port, std::vector<std:
     if (!TcpGet("127.0.0.1", 11435, "/v1/models", body)) return true;
 
     std::vector<std::string> parsed;
-    ParseModelHostModels(body, parsed);
+    RawrXD::ParseModelHostModels(body, parsed);
     for (const auto& name : parsed) {
         if (!name.empty() && std::find(outNames.begin(), outNames.end(), name) == outNames.end()) {
             outNames.push_back(name);

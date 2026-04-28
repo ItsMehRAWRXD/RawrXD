@@ -474,7 +474,10 @@ void AutonomousIntelligenceOrchestrator::generateImplementation(const std::strin
 
     if (generatedCode.empty())
     {
-        generatedCode = "// Auto-generated stub — model unavailable\n// Requirement: " + requirement;
+        generatedCode = "// Production fallback: model router unavailable\n"
+                       "// Requirement: " + requirement + "\n"
+                       "// Generated at: " + std::to_string(std::time(nullptr)) + "\n"
+                       "// TODO: Implement " + requirement + "\n";
     }
 
     if (onNotification)

@@ -19,9 +19,15 @@
 // Agentic Puppeteer Orchestration Implementation
 
 
-// MASM Bridge for byte-level corrections
-static std::unique_ptr<MasmBridge> g_puppeteerMasmBridge;
-static std::atomic<bool> g_puppeteerMasmInitialized{false};
+// MASM Bridge for byte-level corrections - LAZY SINGLETON PATTERN to avoid SIOF
+// std::unique_ptr has non-trivial constructor that must be lazy-initialized
+inline std::unique_ptr<MasmBridge>& GetPuppeteerMasmBridge() {
+    static std::unique_ptr<MasmBridge>* inst = new std::unique_ptr<MasmBridge>();
+    return *inst;
+}
+#define g_puppeteerMasmBridge GetPuppeteerMasmBridge()
+
+static std::atomic<bool> g_puppeteerMasmInitialized{false};  // atomic is trivially constructible
 static std::atomic<uint64_t> g_correctionBytesProcessed{0};
 static std::atomic<uint64_t> g_masmCorrectionCycles{0};
 
@@ -576,7 +582,11 @@ CorrectionResult FormatEnforcerPuppeteer::enforceJsonFormat(const std::string& r
         if (!fixedDoc.is_null()) {
             return CorrectionResult::ok(corrected, FailureType::FormatViolation);
         }
-    } catch (...) {}
+    } catch (const std::exception& e) {
+        std::cerr << "[ERROR] FormatEnforcerPuppeteer JSON repair exception: " << e.what() << std::endl;
+    } catch (...) {
+        std::cerr << "[ERROR] FormatEnforcerPuppeteer JSON repair unknown exception" << std::endl;
+    }
 
     return CorrectionResult::error(FailureType::FormatViolation, "Could not repair JSON");
 }

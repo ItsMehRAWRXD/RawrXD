@@ -97,6 +97,12 @@ private:
     void saveInstalledExtensions();
     void loadInstalledExtensions();
     void checkForUpdates();
+    void emitInstallationStatus(const std::string& status);
+
+    void* m_searchReply = nullptr;
+    void* m_detailsReply = nullptr;
+    void* m_installReply = nullptr;
+    void* m_updateReply = nullptr;
 
     SearchResultsFn m_onSearchResults;
     ExtensionDetailsFn m_onExtensionDetails;

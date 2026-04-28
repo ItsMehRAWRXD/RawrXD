@@ -10,11 +10,11 @@ int64_t NowMs() {
 }
 
 void LogInfo(const std::string& event, const std::string& detail) {
-    
+    std::cout << "[INFO] " << event << ": " << detail << std::endl;
 }
 
 void LogWarn(const std::string& event, const std::string& detail) {
-    
+    std::cerr << "[WARN] " << event << ": " << detail << std::endl;
 }
 }
 

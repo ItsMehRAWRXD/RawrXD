@@ -44,8 +44,28 @@ public:
         currentState = State::Executing;
         // Trigger MASM kernel if RE task
         if (task.find("DMA") != std::string::npos) {
-             // Placeholder for real context
-             Titan_PerformDMA(nullptr, nullptr, 0); 
+             // Real DMA context: use task payload as source data
+             std::vector<unsigned char> src(task.begin(), task.end());
+             std::vector<unsigned char> dst(src.size(), 0);
+             
+             if (!src.empty()) {
+                 Titan_PerformDMA(src.data(), dst.data(), src.size());
+                 
+                 // Verify DMA transfer integrity
+                 bool match = true;
+                 for (size_t i = 0; i < src.size(); ++i) {
+                     if (src[i] != dst[i]) {
+                         match = false;
+                         break;
+                     }
+                 }
+                 
+                 if (!match) {
+                     // Attempt self-healing: re-resolve and retry
+                     healer.ResolveSymbol("Titan_PerformDMA");
+                     Titan_PerformDMA(src.data(), dst.data(), src.size());
+                 }
+             }
         }
         
         currentState = State::Completed;

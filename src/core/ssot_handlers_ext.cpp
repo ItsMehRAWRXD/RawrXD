@@ -203,7 +203,7 @@ static std::string localInlineCompletion(const std::string& prefix)
     if (last == '(')
         return prefix + ")";
     if (last == '{')
-        return prefix + "\n    // TODO: implement\n}";
+        return prefix + "\n    // TODO: implement body\n}";
     if (last == '[')
         return prefix + "]";
     if (last == '<')

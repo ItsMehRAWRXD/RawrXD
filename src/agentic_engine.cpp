@@ -66,14 +66,36 @@ struct FeedbackEntry {
 // Agentic Engine Implementation - Chat/Analyze/Generate
 
 
-// Static feedback tracking
-static std::mutex g_feedbackMutex;
-static std::vector<FeedbackEntry> g_feedbackLog;
-static int g_positiveCount = 0;
-static int g_negativeCount = 0;
-static std::vector<std::string> g_avoidPatterns;
-static bool g_prefVerbose = false;
-static std::string g_prefLanguage = "en";
+// Static feedback tracking - LAZY SINGLETON PATTERN to avoid SIOF
+// std::mutex and std::vector have non-trivial constructors that must be lazy-initialized
+inline std::mutex& GetFeedbackMutex() {
+    static std::mutex* inst = new std::mutex();
+    return *inst;
+}
+#define g_feedbackMutex GetFeedbackMutex()
+
+inline std::vector<FeedbackEntry>& GetFeedbackLog() {
+    static std::vector<FeedbackEntry>* inst = new std::vector<FeedbackEntry>();
+    return *inst;
+}
+#define g_feedbackLog GetFeedbackLog()
+
+static int g_positiveCount = 0;  // Trivial, safe for static init
+static int g_negativeCount = 0;  // Trivial, safe for static init
+
+inline std::vector<std::string>& GetAvoidPatterns() {
+    static std::vector<std::string>* inst = new std::vector<std::string>();
+    return *inst;
+}
+#define g_avoidPatterns GetAvoidPatterns()
+
+static bool g_prefVerbose = false;       // Trivial, safe
+// LAZY SINGLETON: std::string has non-trivial constructor
+inline std::string& GetPrefLanguage() {
+    static std::string* inst = new std::string("en");
+    return *inst;
+}
+#define g_prefLanguage GetPrefLanguage()
 
 namespace {
 
@@ -332,7 +354,8 @@ AgenticEngine::AgenticEngine() : m_inferenceEngine(nullptr) {}
 AgenticEngine::~AgenticEngine() {}
 
 void AgenticEngine::initialize() {
-    // Initialization logic if needed
+    m_initialized = true;
+    fprintf(stderr, "[AgenticEngine] Initialized\n");
 }
 
 std::string AgenticEngine::analyzeCode(const std::string& code) {
@@ -1320,15 +1343,40 @@ std::string AgenticEngine::executeChain(const std::vector<std::string>& steps,
         UTC_IncrementCounter(&g_Counter_AgentLoop);
 #endif
         std::string prompt = steps[i];
-        // Replace {{input}} placeholder
+        // Replace {{input}} placeholder with robust bounds checking
         const std::string placeholder = "{{input}}";
         size_t pos = 0;
         while ((pos = prompt.find(placeholder, pos)) != std::string::npos) {
             prompt.replace(pos, placeholder.size(), currentInput);
             pos += currentInput.size();
         }
+        // Also support {{input:N}} for truncated context (last N chars)
+        pos = 0;
+        while (true) {
+            size_t start = prompt.find("{{input:", pos);
+            if (start == std::string::npos) break;
+            size_t end = prompt.find("}}", start);
+            if (end == std::string::npos) break;
+            std::string numStr = prompt.substr(start + 8, end - (start + 8));
+            try {
+                size_t maxLen = std::stoul(numStr);
+                std::string truncated = currentInput;
+                if (truncated.size() > maxLen) {
+                    truncated = "..." + truncated.substr(truncated.size() - maxLen + 3);
+                }
+                prompt.replace(start, end - start + 2, truncated);
+                pos = start + truncated.size();
+            } catch (...) {
+                pos = end + 2;
+            }
+        }
         if (prompt == steps[i] && !currentInput.empty()) {
-            prompt += "\n\nContext from previous step:\n" + currentInput;
+            // If no placeholder was found, append context with length guard
+            std::string ctx = currentInput;
+            if (ctx.size() > 4000) {
+                ctx = "..." + ctx.substr(ctx.size() - 4000 + 3);
+            }
+            prompt += "\n\nContext from previous step:\n" + ctx;
         }
         currentInput = chat(prompt);
     }

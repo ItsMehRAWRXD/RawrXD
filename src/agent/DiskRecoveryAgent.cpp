@@ -116,6 +116,69 @@ DiskRecoveryAgent::~DiskRecoveryAgent() {
     if (m_hBadMap != INVALID_HANDLE_VALUE) CloseHandle(m_hBadMap);
 }
 
+// Move constructor
+DiskRecoveryAgent::DiskRecoveryAgent(DiskRecoveryAgent&& other) noexcept
+    : m_config(std::move(other.m_config))
+    , m_state(other.m_state.load())
+    , m_abortRequested(other.m_abortRequested.load())
+    , m_pauseRequested(other.m_pauseRequested.load())
+    , m_hSource(other.m_hSource)
+    , m_hTarget(other.m_hTarget)
+    , m_hLog(other.m_hLog)
+    , m_hBadMap(other.m_hBadMap)
+    , m_driveInfo(other.m_driveInfo)
+    , m_keyExtracted(other.m_keyExtracted)
+    , m_stats(other.m_stats)
+    , m_badSectors(std::move(other.m_badSectors))
+    , m_eventCallback(std::move(other.m_eventCallback))
+    , m_workerThread(std::move(other.m_workerThread))
+{
+    memcpy(m_encryptionKey, other.m_encryptionKey, sizeof(m_encryptionKey));
+    memcpy(m_transferBuffer, other.m_transferBuffer, sizeof(m_transferBuffer));
+    
+    other.m_hSource = INVALID_HANDLE_VALUE;
+    other.m_hTarget = INVALID_HANDLE_VALUE;
+    other.m_hLog = INVALID_HANDLE_VALUE;
+    other.m_hBadMap = INVALID_HANDLE_VALUE;
+}
+
+// Move assignment
+DiskRecoveryAgent& DiskRecoveryAgent::operator=(DiskRecoveryAgent&& other) noexcept {
+    if (this != &other) {
+        Abort();
+        if (m_workerThread.joinable()) {
+            m_workerThread.join();
+        }
+        if (m_hSource != INVALID_HANDLE_VALUE) CloseHandle(m_hSource);
+        if (m_hTarget != INVALID_HANDLE_VALUE) CloseHandle(m_hTarget);
+        if (m_hLog    != INVALID_HANDLE_VALUE) CloseHandle(m_hLog);
+        if (m_hBadMap != INVALID_HANDLE_VALUE) CloseHandle(m_hBadMap);
+        
+        m_config = std::move(other.m_config);
+        m_state = other.m_state.load();
+        m_abortRequested = other.m_abortRequested.load();
+        m_pauseRequested = other.m_pauseRequested.load();
+        m_hSource = other.m_hSource;
+        m_hTarget = other.m_hTarget;
+        m_hLog = other.m_hLog;
+        m_hBadMap = other.m_hBadMap;
+        m_driveInfo = other.m_driveInfo;
+        m_keyExtracted = other.m_keyExtracted;
+        m_stats = other.m_stats;
+        m_badSectors = std::move(other.m_badSectors);
+        m_eventCallback = std::move(other.m_eventCallback);
+        m_workerThread = std::move(other.m_workerThread);
+        memcpy(m_encryptionKey, other.m_encryptionKey, sizeof(m_encryptionKey));
+        memcpy(m_transferBuffer, other.m_transferBuffer, sizeof(m_transferBuffer));
+        
+        other.m_hSource = INVALID_HANDLE_VALUE;
+        other.m_hTarget = INVALID_HANDLE_VALUE;
+        other.m_hLog = INVALID_HANDLE_VALUE;
+        other.m_hBadMap = INVALID_HANDLE_VALUE;
+    }
+    return *this;
+}
+
 // ---------------------------------------------------------------------------
 // Configuration
 // ---------------------------------------------------------------------------

@@ -50,12 +50,18 @@ public:
         //   ]
         // }
         
-        // Mock: Load sample policies
+        // Load default security policies for common resources
         policies.push_back({
             "gpt-4", {"admin", "ml-ops"}, "allow", "always"
         });
         policies.push_back({
             "classified-model", {"admin"}, "deny", "always"
+        });
+        policies.push_back({
+            "api/admin", {"admin"}, "allow", "business-hours"
+        });
+        policies.push_back({
+            "*", {"*"}, "deny", "always"
         });
         
         printf("[POLICY] ✓ Loaded %zu policies\n", policies.size());

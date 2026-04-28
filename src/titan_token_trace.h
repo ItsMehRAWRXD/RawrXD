@@ -7,6 +7,13 @@
 #include <cstring>
 #include <intrin.h>  // RDTSCP
 
+#ifdef min
+#undef min
+#endif
+#ifdef max
+#undef max
+#endif
+
 /**
  * TitanTokenTrace: Zero-overhead cycle-accurate token pipeline instrumentation
  * 

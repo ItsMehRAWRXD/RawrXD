@@ -218,6 +218,14 @@ namespace RawrXD::Extensions::VSCodeAPI {
     public:
         static LanguagesAPI& Get();
 
+        // Model-driven services
+        struct InferenceOptions {
+            uint32_t maxTokens = 512;
+            uint32_t timeoutMs = 30000;
+        };
+
+        std::string Predict(const std::string& prompt, const InferenceOptions& options = InferenceOptions());
+
         // Provider registration
         void RegisterCompletionProvider(
             const std::string& language,

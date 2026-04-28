@@ -639,7 +639,7 @@ void ModelBruteForceEngine::ProbeWithOllama(ModelProbeResult& result,
             result.probe_output = ir.response.substr(0, 200);
         }
     } catch (...) {
-        // No exceptions in release — this is a safety net
+        fprintf(stderr, "[ModelBruteforceEngine] Exception caught in safety net\n");
     }
 }
 

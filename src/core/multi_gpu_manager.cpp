@@ -469,9 +469,9 @@ void healthCheckWorker(MultiGPUManagerImpl* impl) {
             
             // Log health state changes
             if (wasHealthy && !currentlyHealthy) {
-                // Device became unhealthy - could log or emit event
+                fprintf(stderr, "[MultiGPUManager] Device %d became unhealthy\n", deviceId);
             } else if (!wasHealthy && currentlyHealthy) {
-                // Device recovered - could log or emit event
+                fprintf(stderr, "[MultiGPUManager] Device %d recovered\n", deviceId);
             }
         }
     }

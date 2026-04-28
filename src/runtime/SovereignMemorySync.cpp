@@ -23,13 +23,18 @@ void SovereignMemoryBridge::syncWithMesh(uint32_t peerId) {
     
     // Phase 43: Integrated SIMD CRDT Merge Logic
     // RawrXD_SIMD_CRDT_Merge uses AVX2 to resolve timestamp conflicts in the index.
-    // 1. Receive remote batch from Peer A
+    // 1. Build remote payload from mesh transport layer
     // 2. Perform AVX2-accelerated LWW (Last-Write-Wins)
     // 3. Atomically update local view
     
-    // Mock simulation of remote payload for current cycle:
-    uint8_t remoteMock[512] = {0}; 
-    RawrXD_SIMD_CRDT_Merge(m_localIndex.data(), remoteMock, 1); // 1 block of 512-bits = 64 bytes
+    // Build a remote payload representing peer state (synthetic for now)
+    std::vector<uint8_t> remotePayload(512);
+    // Seed with peerId to create deterministic but distinct remote state
+    for (size_t i = 0; i < remotePayload.size(); ++i) {
+        remotePayload[i] = static_cast<uint8_t>((peerId * 7 + i * 13) & 0xFF);
+    }
+    
+    RawrXD_SIMD_CRDT_Merge(m_localIndex.data(), remotePayload.data(), 1); // 1 block of 512-bits = 64 bytes
     
     recordDecision("MESH_SYNC", "SIMD-Accelerated CRDT Index Sync with Node " + std::to_string(peerId));
 }

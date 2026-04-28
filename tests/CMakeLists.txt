@@ -83,6 +83,11 @@ if(TARGET test_kv_cache)
     message(STATUS "  ✓ Registered test_kv_cache")
 endif()
 
+if(TARGET agent_workflow_orchestrator_smoke)
+    add_test(NAME agent_workflow_orchestrator_smoke COMMAND agent_workflow_orchestrator_smoke)
+    message(STATUS "  ✓ Registered agent_workflow_orchestrator_smoke")
+endif()
+
 # ============================================================
 # NEW TESTS - Qt-free, C++20 native test framework
 # ============================================================
@@ -180,6 +185,34 @@ if(NOT TARGET test_ide_model_autonomy AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/sm
     endif()
     add_test(NAME test_ide_model_autonomy COMMAND test_ide_model_autonomy)
     message(STATUS "  ✓ Added test_ide_model_autonomy")
+endif()
+
+# Extreme memory optimizer smoke test
+if(NOT TARGET test_extreme_memory_optimizer AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/smoke/test_extreme_memory_optimizer.cpp")
+    add_executable(test_extreme_memory_optimizer
+        smoke/test_extreme_memory_optimizer.cpp
+    )
+    target_include_directories(test_extreme_memory_optimizer PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
+    set_target_properties(test_extreme_memory_optimizer PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
+        CXX_STANDARD 20
+    )
+    add_test(NAME test_extreme_memory_optimizer COMMAND test_extreme_memory_optimizer)
+    message(STATUS "  ✓ Added test_extreme_memory_optimizer")
+endif()
+
+# Quality corrector smoke test
+if(NOT TARGET test_quality_corrector AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/smoke/test_quality_corrector.cpp")
+    add_executable(test_quality_corrector
+        smoke/test_quality_corrector.cpp
+    )
+    target_include_directories(test_quality_corrector PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
+    set_target_properties(test_quality_corrector PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
+        CXX_STANDARD 20
+    )
+    add_test(NAME test_quality_corrector COMMAND test_quality_corrector)
+    message(STATUS "  ✓ Added test_quality_corrector")
 endif()
 
 # Sandboxed Terminal Test
@@ -324,6 +357,399 @@ if(NOT TARGET test_batch3_profiler_smoke AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}
     set_target_properties(test_batch3_profiler_smoke PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests" CXX_STANDARD 20)
     add_test(NAME test_batch3_profiler_smoke COMMAND test_batch3_profiler_smoke)
     message(STATUS "  ✓ Added test_batch3_profiler_smoke")
+endif()
+
+# State Subscription Engine Guarantees Smoke Test
+if(NOT TARGET test_state_subscription_engine_smoke AND EXISTS "${CMAKE_SOURCE_DIR}/src/tests/state_subscription_engine_smoke.cpp")
+    add_executable(test_state_subscription_engine_smoke
+        ${CMAKE_SOURCE_DIR}/src/tests/state_subscription_engine_smoke.cpp
+    )
+    target_include_directories(test_state_subscription_engine_smoke PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+    )
+    set_target_properties(test_state_subscription_engine_smoke PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
+        CXX_STANDARD 20
+    )
+    add_test(NAME test_state_subscription_engine_smoke COMMAND test_state_subscription_engine_smoke)
+    message(STATUS "  ✓ Added test_state_subscription_engine_smoke")
+endif()
+
+# AI Execution Guardrails Smoke Test
+if(NOT TARGET test_ai_execution_guardrails_smoke AND EXISTS "${CMAKE_SOURCE_DIR}/src/tests/ai_execution_guardrails_smoke.cpp")
+    add_executable(test_ai_execution_guardrails_smoke
+        ${CMAKE_SOURCE_DIR}/src/tests/ai_execution_guardrails_smoke.cpp
+        ${CMAKE_SOURCE_DIR}/src/core/ai_execution_guardrails.cpp
+    )
+    target_include_directories(test_ai_execution_guardrails_smoke PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+    )
+    set_target_properties(test_ai_execution_guardrails_smoke PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
+        CXX_STANDARD 20
+    )
+    add_test(NAME test_ai_execution_guardrails_smoke COMMAND test_ai_execution_guardrails_smoke)
+    message(STATUS "  ✓ Added test_ai_execution_guardrails_smoke")
+endif()
+
+# AI Execution Guardrails Chaos Test
+if(NOT TARGET test_ai_execution_guardrails_chaos AND EXISTS "${CMAKE_SOURCE_DIR}/src/tests/ai_execution_guardrails_chaos.cpp")
+    add_executable(test_ai_execution_guardrails_chaos
+        ${CMAKE_SOURCE_DIR}/src/tests/ai_execution_guardrails_chaos.cpp
+        ${CMAKE_SOURCE_DIR}/src/core/ai_execution_guardrails.cpp
+    )
+    target_include_directories(test_ai_execution_guardrails_chaos PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+    )
+    set_target_properties(test_ai_execution_guardrails_chaos PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
+        CXX_STANDARD 20
+    )
+    add_test(NAME test_ai_execution_guardrails_chaos COMMAND test_ai_execution_guardrails_chaos)
+    message(STATUS "  ✓ Added test_ai_execution_guardrails_chaos")
+endif()
+
+# Safe Inference Session Integration Test
+if(NOT TARGET test_safe_inference_session_integration AND EXISTS "${CMAKE_SOURCE_DIR}/src/tests/safe_inference_session_integration.cpp")
+    add_executable(test_safe_inference_session_integration
+        ${CMAKE_SOURCE_DIR}/src/tests/safe_inference_session_integration.cpp
+        ${CMAKE_SOURCE_DIR}/src/core/safe_inference_session.cpp
+        ${CMAKE_SOURCE_DIR}/src/core/ai_execution_guardrails.cpp
+    )
+    target_include_directories(test_safe_inference_session_integration PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+    )
+    set_target_properties(test_safe_inference_session_integration PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
+        CXX_STANDARD 20
+    )
+    add_test(NAME test_safe_inference_session_integration COMMAND test_safe_inference_session_integration)
+    message(STATUS "  ✓ Added test_safe_inference_session_integration")
+endif()
+
+# ============================================================================
+# NEW TESTS — Phase 2 Extension Host + Sovereign Inference
+# ============================================================================
+
+# KV Cache Ownership Test
+if(NOT TARGET test_kv_cache_ownership AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/inference/test_kv_cache_ownership.cpp")
+    add_executable(test_kv_cache_ownership
+        inference/test_kv_cache_ownership.cpp
+        ${CMAKE_SOURCE_DIR}/src/inference/kv_cache_ownership.cpp
+    )
+    target_include_directories(test_kv_cache_ownership PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+    )
+    target_link_libraries(test_kv_cache_ownership PRIVATE GTest::gtest GTest::gtest_main)
+    set_target_properties(test_kv_cache_ownership PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
+        CXX_STANDARD 20
+    )
+    add_test(NAME test_kv_cache_ownership COMMAND test_kv_cache_ownership)
+    message(STATUS "  ✓ Added test_kv_cache_ownership")
+endif()
+
+# Speculative Pipeline Test
+if(NOT TARGET test_speculative_pipeline AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/inference/test_speculative_pipeline.cpp")
+    add_executable(test_speculative_pipeline
+        inference/test_speculative_pipeline.cpp
+        ${CMAKE_SOURCE_DIR}/src/inference/speculative_pipeline.cpp
+    )
+    target_include_directories(test_speculative_pipeline PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+    )
+    target_link_libraries(test_speculative_pipeline PRIVATE GTest::gtest GTest::gtest_main)
+    set_target_properties(test_speculative_pipeline PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
+        CXX_STANDARD 20
+    )
+    add_test(NAME test_speculative_pipeline COMMAND test_speculative_pipeline)
+    message(STATUS "  ✓ Added test_speculative_pipeline")
+endif()
+
+# Extension Host Test
+if(NOT TARGET test_extension_host AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/win32app/test_extension_host.cpp")
+    add_executable(test_extension_host
+        win32app/test_extension_host.cpp
+        ${CMAKE_SOURCE_DIR}/src/win32app/ExtensionHost.cpp
+        ${CMAKE_SOURCE_DIR}/src/win32app/ExtensionHost_Discovery.cpp
+        ${CMAKE_SOURCE_DIR}/src/win32app/ExtensionHost_VSCodeAPIs.cpp
+        ${CMAKE_SOURCE_DIR}/src/win32app/ExtensionAPI_VSCode.cpp
+        ${CMAKE_SOURCE_DIR}/src/win32app/ExtensionHostProcess.cpp
+        ${CMAKE_SOURCE_DIR}/src/win32app/ExtensionSandboxManager.cpp
+        ${CMAKE_SOURCE_DIR}/src/win32app/IPC_Channel.cpp
+    )
+    target_include_directories(test_extension_host PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/win32app
+        ${CMAKE_SOURCE_DIR}/src/extensions
+    )
+    target_link_libraries(test_extension_host PRIVATE GTest::gtest GTest::gtest_main)
+    set_target_properties(test_extension_host PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
+        CXX_STANDARD 20
+    )
+    if(WIN32)
+        target_link_libraries(test_extension_host PRIVATE shell32 ole32)
+    endif()
+    add_test(NAME test_extension_host COMMAND test_extension_host)
+    message(STATUS "  ✓ Added test_extension_host")
+endif()
+
+# Extension Host Smoke Test (Phase 2 - process isolation + sandbox)
+if(NOT TARGET extension_ipc_echo_stub AND EXISTS "${CMAKE_SOURCE_DIR}/src/tests/extension_ipc_echo_stub.cpp")
+    add_executable(extension_ipc_echo_stub
+        ${CMAKE_SOURCE_DIR}/src/tests/extension_ipc_echo_stub.cpp
+    )
+    set_target_properties(extension_ipc_echo_stub PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
+        CXX_STANDARD 20
+    )
+endif()
+
+if(NOT TARGET extension_host_smoke_test AND EXISTS "${CMAKE_SOURCE_DIR}/src/tests/extension_host_smoke_test.cpp")
+    add_executable(extension_host_smoke_test
+        ${CMAKE_SOURCE_DIR}/src/tests/extension_host_smoke_test.cpp
+        ${CMAKE_SOURCE_DIR}/src/extensions/process_broker.cpp
+        ${CMAKE_SOURCE_DIR}/src/extensions/security_sandbox.cpp
+        ${CMAKE_SOURCE_DIR}/src/extensions/vscode_api_bridge.cpp
+        ${CMAKE_SOURCE_DIR}/src/win32app/ExtensionAPI_VSCode.cpp
+    )
+    target_include_directories(extension_host_smoke_test PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/extensions
+    )
+    set_target_properties(extension_host_smoke_test PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
+        CXX_STANDARD 20
+    )
+    if(WIN32)
+        target_link_libraries(extension_host_smoke_test PRIVATE psapi)
+    endif()
+    if(TARGET extension_ipc_echo_stub)
+        add_dependencies(extension_host_smoke_test extension_ipc_echo_stub)
+    endif()
+    add_test(NAME extension_host_smoke_test COMMAND extension_host_smoke_test)
+    message(STATUS "  ✓ Added extension_host_smoke_test")
+endif()
+
+# ============================================================================
+# Batch-4 smoke: IPC, Speculative Pipeline, AST Completions, Arbitration
+# ============================================================================
+if(NOT TARGET batch4_ipc_spec_ast_arb_smoke AND
+   EXISTS "${CMAKE_SOURCE_DIR}/src/tests/batch4_ipc_spec_ast_arb_smoke.cpp")
+    add_executable(batch4_ipc_spec_ast_arb_smoke
+        ${CMAKE_SOURCE_DIR}/src/tests/batch4_ipc_spec_ast_arb_smoke.cpp
+        ${CMAKE_SOURCE_DIR}/src/lsp/treesitter_parser.cpp
+        ${CMAKE_SOURCE_DIR}/src/lsp/completion_provider.cpp
+    )
+    target_include_directories(batch4_ipc_spec_ast_arb_smoke PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(batch4_ipc_spec_ast_arb_smoke PROPERTIES
+        CXX_STANDARD 20
+        CXX_STANDARD_REQUIRED ON
+    )
+    if(WIN32)
+        target_link_libraries(batch4_ipc_spec_ast_arb_smoke PRIVATE kernel32)
+    endif()
+    add_test(NAME batch4_ipc_spec_ast_arb_smoke COMMAND batch4_ipc_spec_ast_arb_smoke)
+    message(STATUS "  ✓ Added batch4_ipc_spec_ast_arb_smoke")
+endif()
+
+# ============================================================================
+# Extension-kernel wire smoke (shared protocol + shm bi-channel roundtrip)
+# ============================================================================
+if(NOT TARGET autocomplete_kernel_wire_smoke AND
+   EXISTS "${CMAKE_SOURCE_DIR}/src/tests/autocomplete_kernel_wire_smoke.cpp")
+    add_executable(autocomplete_kernel_wire_smoke
+        ${CMAKE_SOURCE_DIR}/src/tests/autocomplete_kernel_wire_smoke.cpp
+    )
+    target_include_directories(autocomplete_kernel_wire_smoke PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(autocomplete_kernel_wire_smoke PROPERTIES
+        CXX_STANDARD 20
+        CXX_STANDARD_REQUIRED ON
+    )
+    if(WIN32)
+        target_link_libraries(autocomplete_kernel_wire_smoke PRIVATE kernel32)
+    endif()
+    add_test(NAME autocomplete_kernel_wire_smoke COMMAND autocomplete_kernel_wire_smoke)
+    message(STATUS "  ✓ Added autocomplete_kernel_wire_smoke")
+endif()
+
+# ============================================================================
+# Compile-only guard: fused autocomplete kernel TU must compile in-tree
+# ============================================================================
+if(NOT TARGET autocomplete_kernel_compile_guard AND
+   EXISTS "${CMAKE_SOURCE_DIR}/src/extension_kernel/autocomplete_kernel.cpp")
+    add_library(autocomplete_kernel_compile_guard OBJECT
+        ${CMAKE_SOURCE_DIR}/src/extension_kernel/autocomplete_kernel.cpp
+    )
+    target_include_directories(autocomplete_kernel_compile_guard PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(autocomplete_kernel_compile_guard PROPERTIES
+        CXX_STANDARD 20
+        CXX_STANDARD_REQUIRED ON
+    )
+    message(STATUS "  ✓ Added autocomplete_kernel_compile_guard")
+endif()
+
+# ============================================================================
+# Cross-repo router smoke: federated local indexes + bounded top-K routing
+# ============================================================================
+if(NOT TARGET cross_repo_router_smoke AND
+   EXISTS "${CMAKE_SOURCE_DIR}/src/tests/cross_repo_router_smoke.cpp")
+    add_executable(cross_repo_router_smoke
+        ${CMAKE_SOURCE_DIR}/src/tests/cross_repo_router_smoke.cpp
+    )
+    target_include_directories(cross_repo_router_smoke PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(cross_repo_router_smoke PROPERTIES
+        CXX_STANDARD 20
+        CXX_STANDARD_REQUIRED ON
+    )
+    add_test(NAME cross_repo_router_smoke COMMAND cross_repo_router_smoke)
+    message(STATUS "  ✓ Added cross_repo_router_smoke")
+endif()
+
+# ============================================================================
+# P95 latency harness: tail-latency gate for shared-memory completion path
+# ============================================================================
+if(NOT TARGET autocomplete_p95_latency_harness AND
+   EXISTS "${CMAKE_SOURCE_DIR}/src/tests/autocomplete_p95_latency_harness.cpp")
+    add_executable(autocomplete_p95_latency_harness
+        ${CMAKE_SOURCE_DIR}/src/tests/autocomplete_p95_latency_harness.cpp
+    )
+    target_include_directories(autocomplete_p95_latency_harness PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(autocomplete_p95_latency_harness PROPERTIES
+        CXX_STANDARD 20
+        CXX_STANDARD_REQUIRED ON
+    )
+    if(WIN32)
+        target_link_libraries(autocomplete_p95_latency_harness PRIVATE kernel32)
+    endif()
+    add_test(NAME autocomplete_p95_latency_harness COMMAND autocomplete_p95_latency_harness)
+    message(STATUS "  ✓ Added autocomplete_p95_latency_harness")
+endif()
+
+# ============================================================================
+# Titan Rx hot-path smoke: submit -> step -> shared-channel block commit
+# ============================================================================
+if(TARGET RawrXD_TitanABI AND
+   NOT TARGET titan_rx_hotpath_smoke AND
+   EXISTS "${CMAKE_SOURCE_DIR}/src/tests/titan_rx_hotpath_smoke.cpp")
+    add_executable(titan_rx_hotpath_smoke
+        ${CMAKE_SOURCE_DIR}/src/tests/titan_rx_hotpath_smoke.cpp
+    )
+    target_include_directories(titan_rx_hotpath_smoke PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    target_link_libraries(titan_rx_hotpath_smoke PRIVATE RawrXD_TitanABI)
+    set_target_properties(titan_rx_hotpath_smoke PROPERTIES
+        CXX_STANDARD 20
+        CXX_STANDARD_REQUIRED ON
+    )
+    add_test(NAME titan_rx_hotpath_smoke COMMAND titan_rx_hotpath_smoke)
+    message(STATUS "  ✓ Added titan_rx_hotpath_smoke")
+endif()
+
+# ============================================================================
+# Sovereign ASM Kernel Tests (GoogleTest v1.14.0)
+# ============================================================================
+
+# ASM Kernel Accuracy + Performance Test Suite
+if(NOT TARGET test_sovereign_kernels AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/asm/test_sovereign_kernels.cpp")
+    # ASM sources to compile alongside the test
+    # NOTE: SovereignSpeculativeEngine.asm requires LlamaNativeBridge C++ symbols
+    # which are not available in the test target. We compile only the standalone
+    # engine and kernel functions for unit testing.
+    set(TEST_ASM_SOURCES
+        ${CMAKE_SOURCE_DIR}/src/asm/sovereign_kernels.asm
+        ${CMAKE_SOURCE_DIR}/src/asm/SovereignStandaloneEngine.asm
+    )
+    if(RAWR_HAS_MASM)
+        set_source_files_properties(${TEST_ASM_SOURCES} PROPERTIES LANGUAGE ASM_MASM)
+    endif()
+    
+    add_executable(test_sovereign_kernels
+        asm/test_sovereign_kernels.cpp
+        ${TEST_ASM_SOURCES}
+    )
+    target_include_directories(test_sovereign_kernels PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/asm
+    )
+    target_link_libraries(test_sovereign_kernels PRIVATE
+        GTest::gtest
+        GTest::gtest_main
+    )
+    target_compile_options(test_sovereign_kernels PRIVATE
+        /arch:AVX2
+        /fp:precise
+        $<$<CONFIG:Release>:/O2>
+        $<$<CONFIG:RelWithDebInfo>:/O2>
+    )
+    set_target_properties(test_sovereign_kernels PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
+        CXX_STANDARD 20
+        CXX_STANDARD_REQUIRED ON
+    )
+    add_test(NAME test_sovereign_kernels COMMAND test_sovereign_kernels)
+    message(STATUS "  ✓ Added test_sovereign_kernels")
+endif()
+
+# ASM Kernel Benchmark Target (separate, longer running)
+if(NOT TARGET bench_sovereign_kernels AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/asm/test_sovereign_kernels.cpp")
+    add_executable(bench_sovereign_kernels
+        asm/test_sovereign_kernels.cpp
+        ${TEST_ASM_SOURCES}
+    )
+    target_include_directories(bench_sovereign_kernels PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/asm
+    )
+    target_link_libraries(bench_sovereign_kernels PRIVATE
+        GTest::gtest
+        GTest::gtest_main
+    )
+    target_compile_options(bench_sovereign_kernels PRIVATE
+        /arch:AVX2
+        /fp:precise
+        $<$<CONFIG:Release>:/O2>
+        $<$<CONFIG:RelWithDebInfo>:/O2>
+    )
+    target_compile_definitions(bench_sovereign_kernels PRIVATE
+        SOVEREIGN_BENCHMARK_MODE=1
+    )
+    set_target_properties(bench_sovereign_kernels PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
+        CXX_STANDARD 20
+        CXX_STANDARD_REQUIRED ON
+    )
+    add_test(NAME bench_sovereign_kernels COMMAND bench_sovereign_kernels)
+    message(STATUS "  ✓ Added bench_sovereign_kernels")
 endif()
 
 # ============================================================

@@ -106,5 +106,22 @@ extern "C" int V280_UI_GetGhostText(char* buf, int buf_size) {
     return static_cast<int>(std::strlen(buf));
 }
 
-extern "C" void asm_quadbuf_shutdown(void) {}
-extern "C" void asm_spengine_shutdown(void) {}
+// ============================================================================
+// Quad-buffer shutdown fallback — logs once, safe to call repeatedly.
+// ============================================================================
+extern "C" void asm_quadbuf_shutdown(void) {
+    static std::atomic<bool> logged{false};
+    if (!logged.exchange(true, std::memory_order_relaxed)) {
+        std::fprintf(stderr, "[INFO] [v280] asm_quadbuf_shutdown — optional ASM module not linked.\n");
+    }
+}
+
+// ============================================================================
+// Sparse-engine shutdown fallback — logs once, safe to call repeatedly.
+// ============================================================================
+extern "C" void asm_spengine_shutdown(void) {
+    static std::atomic<bool> logged{false};
+    if (!logged.exchange(true, std::memory_order_relaxed)) {
+        std::fprintf(stderr, "[INFO] [v280] asm_spengine_shutdown — optional ASM module not linked.\n");
+    }
+}

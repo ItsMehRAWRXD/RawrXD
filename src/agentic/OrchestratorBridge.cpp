@@ -37,8 +37,24 @@ std::string OrchestratorBridge::RunAgent(const std::string& userPrompt) {
 }
 
 void OrchestratorBridge::RunAgentAsync(const std::string& userPrompt) {
-    // Async execution placeholder
-    (void)userPrompt;
+    if (!EnsureClientReady()) {
+        if (m_onError) m_onError("Orchestrator not initialized");
+        return;
+    }
+    
+    // Launch async execution in a detached thread
+    std::thread([this, userPrompt]() {
+        try {
+            auto result = RunAgent(userPrompt);
+            if (m_onAgentComplete) {
+                m_onAgentComplete(result);
+            }
+        } catch (const std::exception& e) {
+            if (m_onError) {
+                m_onError(std::string("Async agent error: ") + e.what());
+            }
+        }
+    }).detach();
 }
 
 Prediction::PredictionResult OrchestratorBridge::RequestGhostText(
@@ -66,9 +82,25 @@ void OrchestratorBridge::RequestGhostTextStream(
     const Prediction::PredictionContext& ctx,
     Prediction::StreamTokenCallback onToken) {
     
-    (void)ctx;
-    (void)onToken;
-    // Streaming placeholder
+    if (!EnsureClientReady() || !onToken) {
+        return;
+    }
+    
+    try {
+        // Build FIM prompt
+        std::string prompt = ctx.prefix + "<|fim_middle|>" + ctx.suffix;
+        
+        // Use FIMStream from native client
+        m_nativeClient->FIMStream(prompt, "", "",
+            [onToken](const std::string& token) { onToken(token, false); },
+            [onToken](const std::string& full, uint64_t, uint64_t, double) { onToken(full, true); },
+            [](const std::string& err) { (void)err; });
+        
+    } catch (const std::exception& e) {
+        if (m_onError) {
+            m_onError(std::string("Ghost text stream error: ") + e.what());
+        }
+    }
 }
 
 void OrchestratorBridge::SetModel(const std::string& model) {
@@ -96,11 +128,40 @@ bool OrchestratorBridge::EnsureClientReady() {
 }
 
 void OrchestratorBridge::RefreshAvailableModels() {
-    // Placeholder
+    if (!EnsureClientReady()) return;
+    
+    try {
+        // Query native client for available models
+        auto models = m_nativeClient->ListModels();
+        m_availableModels = std::move(models);
+        
+        if (m_availableModels.empty()) {
+            // Fallback to default models
+            m_availableModels = {
+                "qwen2.5-coder:14b",
+                "qwen2.5-coder:7b",
+                "deepseek-coder:6.7b",
+                "codellama:13b",
+                "mistral",
+                "phi3:medium",
+                "llama3.1:8b"
+            };
+        }
+        
+        if (m_onStatusUpdate) {
+            m_onStatusUpdate("Available models refreshed: " + 
+                           std::to_string(m_availableModels.size()) + " models found");
+        }
+    } catch (const std::exception& e) {
+        if (m_onError) m_onError(std::string("Failed to refresh models: ") + e.what());
+    }
 }
 
 void OrchestratorBridge::ApplyConfig() {
-    // Placeholder
+    if (!m_nativeClient) return;
+    
+    // Apply configuration to the native client
+    m_nativeClient->SetConfig(m_nativeConfig);
 }
 
 std::string OrchestratorBridge::SelectPreferredModel(bool preferCoder) const {

@@ -405,16 +405,16 @@ RawrXD::Expected<void, UnifiedMemoryError> UnifiedMemoryExecutor::streamingExecu
         auto exec = executeLayerUnified(layer, input, output);
         if (!exec)
         {
-            (void)free(output);
-            (void)free(input);
+            this->free(output);
+            this->free(input);
             return RawrXD::unexpected(exec.error());
         }
         // Feed-forward next layer input.
         std::memcpy(input.ptr, output.ptr, static_cast<size_t>(input.sizeBytes));
     }
 
-    (void)free(output);
-    (void)free(input);
+    this->free(output);
+    this->free(input);
 
     return {};
 }
@@ -473,8 +473,8 @@ RawrXD::Expected<void, UnifiedMemoryError> UnifiedMemoryExecutor::heterogeneousS
             auto exec = executeLayerUnified(layer, input, output);
             if (!exec)
             {
-                (void)free(output);
-                (void)free(input);
+                this->free(output);
+                this->free(input);
                 return RawrXD::unexpected(exec.error());
             }
         }
@@ -482,8 +482,8 @@ RawrXD::Expected<void, UnifiedMemoryError> UnifiedMemoryExecutor::heterogeneousS
         std::memcpy(input.ptr, output.ptr, static_cast<size_t>(ioBytes));
     }
 
-    (void)free(output);
-    (void)free(input);
+    this->free(output);
+    this->free(input);
 
     return {};
 }

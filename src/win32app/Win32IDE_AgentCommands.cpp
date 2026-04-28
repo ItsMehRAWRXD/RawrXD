@@ -3,8 +3,10 @@
 
 #include "../../include/enterprise_license.h"
 #include "../agentic/NativeInferenceClient.h"
+#include "../agentic/ToolRegistry.h"
 #include "../agentic/agentic_orchestrator_integration.hpp"
 #include "../core/enterprise_license.h"
+#include "AutonomousAgent.h"
 #include "IDELogger.h"
 #include "ModelConnection.h"
 #include "RawrXD_AgentCoordinator.h"
@@ -12,6 +14,7 @@
 #include "Win32IDE.h"
 #include "Win32IDE_AgenticBridge.h"
 #include "Win32IDE_Commands.h"
+#include "Win32IDE_ModelDropdownProfile.h"
 #include "Win32SwarmBridge.h"
 #include <algorithm>
 #include <cctype>
@@ -50,428 +53,46 @@ Agentic::AgenticPlanningOrchestrator* getPlanningOrchestratorReady()
 // ============================================================================
 // SUBAGENT CHAIN / SWARM / TODO HANDLERS (Phase 19B)
 // ============================================================================
-// Implemented elsewhere:
-// - SubAgent + agent memory UI: Win32IDE_SubAgent.cpp
-// - Autonomy UI: Win32IDE.cpp
-// - Bounded agent loop UI: Win32IDE_AgentPanel.cpp
+// Implemented in Win32IDE_SubAgent.cpp — declarations only here.
 // Keep only one implementation per handler to avoid duplicate linker symbols.
-#if 0
-void Win32IDE::onSubAgentChain() {
-    LOG_INFO("onSubAgentChain called");
-    if (!m_agenticBridge) {
-        initializeAgenticBridge();
-    }
-    if (!m_agenticBridge) {
-        MessageBoxA(m_hwndMain, "Agentic Framework not initialized", "SubAgent Error", MB_OK | MB_ICONERROR);
-        return;
-    }
-    
-    // Get task description from user
-    char taskDesc[1024] = {0};
-    if (DialogBoxParamA(m_hInstance, "AGENT_PROMPT_DLG", m_hwndMain,
-        [](HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) -> INT_PTR {
-            switch (msg) {
-                case WM_INITDIALOG:
-                    SetWindowTextA(GetDlgItem(hwnd, 101), "Enter task for SubAgent Chain:");
-                    return TRUE;
-                case WM_COMMAND:
-                    if (LOWORD(wp) == IDOK) {
-                        GetDlgItemTextA(hwnd, 102, (char*)lp, 1024);
-                        EndDialog(hwnd, IDOK);
-                        return TRUE;
-                    } else if (LOWORD(wp) == IDCANCEL) {
-                        EndDialog(hwnd, IDCANCEL);
-                        return TRUE;
-                    }
-                    break;
-            }
-            return FALSE;
-        }, (LPARAM)taskDesc) != IDOK) {
-        return;
-    }
-    
-    if (strlen(taskDesc) == 0) {
-        strcpy_s(taskDesc, "Execute modular task sequence");
-    }
-    
-    appendToOutput("🔗 SubAgent Chain initiated: " + std::string(taskDesc) + "\n", "Output", OutputSeverity::Info);
-    
-    // Execute chain in background
-    std::thread([this, taskStr = std::string(taskDesc)]() {
-        DetachedThreadGuard _guard(m_activeDetachedThreads, m_shuttingDown);
-        if (_guard.cancelled) return;
-        m_agenticBridge->ExecuteSubAgentChain(taskStr);
-    }).detach();
-}
 
-void Win32IDE::onSubAgentSwarm() {
-    LOG_INFO("onSubAgentSwarm called");
-    if (!m_agenticBridge) {
-        initializeAgenticBridge();
-    }
-    if (!m_agenticBridge) {
-        MessageBoxA(m_hwndMain, "Agentic Framework not initialized", "SubAgent Error", MB_OK | MB_ICONERROR);
-        return;
-    }
-    
-    // Get swarm task from user
-    char taskDesc[1024] = {0};
-    if (DialogBoxParamA(m_hInstance, "AGENT_PROMPT_DLG", m_hwndMain,
-        [](HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) -> INT_PTR {
-            switch (msg) {
-                case WM_INITDIALOG:
-                    SetWindowTextA(GetDlgItem(hwnd, 101), "Enter task for SubAgent Swarm:");
-                    return TRUE;
-                case WM_COMMAND:
-                    if (LOWORD(wp) == IDOK) {
-                        GetDlgItemTextA(hwnd, 102, (char*)lp, 1024);
-                        EndDialog(hwnd, IDOK);
-                        return TRUE;
-                    } else if (LOWORD(wp) == IDCANCEL) {
-                        EndDialog(hwnd, IDCANCEL);
-                        return TRUE;
-                    }
-                    break;
-            }
-            return FALSE;
-        }, (LPARAM)taskDesc) != IDOK) {
-        return;
-    }
-    
-    if (strlen(taskDesc) == 0) {
-        strcpy_s(taskDesc, "Execute parallel task swarm");
-    }
-    
-    appendToOutput("🐝 SubAgent Swarm initiated: " + std::string(taskDesc) + "\n", "Output", OutputSeverity::Info);
-    
-    // Execute swarm in background
-    std::thread([this, taskStr = std::string(taskDesc)]() {
-        DetachedThreadGuard _guard(m_activeDetachedThreads, m_shuttingDown);
-        if (_guard.cancelled) return;
-        m_agenticBridge->ExecuteSubAgentSwarm(taskStr);
-    }).detach();
-}
-
-void Win32IDE::onSubAgentTodoList() {
-    LOG_INFO("onSubAgentTodoList called");
-    if (!m_agenticBridge)
-        initializeAgenticBridge();
-    if (!m_agenticBridge) {
-        appendToOutput("[SubAgent] Bridge unavailable — load a model first (File > Load Model).\n", "Output", OutputSeverity::Warning);
-        return;
-    }
-
-    std::vector<std::string> todoItems = m_agenticBridge->GetSubAgentTodoList();
-    
-    std::stringstream todoOutput;
-    todoOutput << "=== SubAgent Todo List ===\n\n";
-    if (todoItems.empty()) {
-        todoOutput << "(empty)\n";
-    } else {
-        for (size_t i = 0; i < todoItems.size(); ++i) {
-            todoOutput << (i + 1) << ". " << todoItems[i] << "\n";
-        }
-    }
-    
-    appendToOutput(todoOutput.str(), "Output", OutputSeverity::Info);
-}
-
-void Win32IDE::onSubAgentTodoClear() {
-    LOG_INFO("onSubAgentTodoClear called");
-    if (!m_agenticBridge)
-        initializeAgenticBridge();
-    if (!m_agenticBridge) {
-        appendToOutput("[SubAgent] Bridge unavailable — load a model first (File > Load Model).\n", "Output", OutputSeverity::Warning);
-        return;
-    }
-
-    if (MessageBoxA(m_hwndMain, "Clear all SubAgent todo items?", "Confirm", MB_YESNO | MB_ICONQUESTION) == IDYES) {
-        m_agenticBridge->ClearSubAgentTodoList();
-        appendToOutput("🗑️ SubAgent Todo List cleared\n", "Output", OutputSeverity::Info);
-    }
-}
-
-void Win32IDE::onSubAgentStatus() {
-    LOG_INFO("onSubAgentStatus called");
-    if (!m_agenticBridge)
-        initializeAgenticBridge();
-    if (!m_agenticBridge) {
-        appendToOutput("[SubAgent] Bridge unavailable — load a model first (File > Load Model).\n", "Output", OutputSeverity::Warning);
-        return;
-    }
-
-    std::string status = m_agenticBridge->GetSubAgentStatus();
-    appendToOutput("=== SubAgent Status ===\n" + status + "\n", "Output", OutputSeverity::Info);
-}
+// onSubAgentChain()     → Win32IDE_SubAgent.cpp
+// onSubAgentSwarm()     → Win32IDE_SubAgent.cpp
+// onSubAgentTodoList()  → Win32IDE_SubAgent.cpp
+// onSubAgentTodoClear() → Win32IDE_SubAgent.cpp
+// onSubAgentStatus()    → Win32IDE_SubAgent.cpp
 
 // ============================================================================
 // AGENT MEMORY HANDLERS (Phase 19B)
 // ============================================================================
-#if 0
-void Win32IDE::onAgentMemoryView() {
-    LOG_INFO("onAgentMemoryView called");
-    if (!m_agenticBridge) {
-        initializeAgenticBridge();
-    }
-    if (!m_agenticBridge) {
-        MessageBoxA(m_hwndMain, "Agentic Framework not initialized", "Agent Error", MB_OK | MB_ICONERROR);
-        return;
-    }
-    
-    std::string memory = m_agenticBridge->ExportAgentMemory();
-    std::stringstream memOutput;
-    memOutput << "=== Agent Memory Context ===\n\n" << memory << "\n";
-    
-    appendToOutput(memOutput.str(), "Output", OutputSeverity::Info);
-}
+// Implemented in Win32IDE_SubAgent.cpp — declarations only here.
 
-void Win32IDE::onAgentMemoryClear() {
-    LOG_INFO("onAgentMemoryClear called");
-    if (!m_agenticBridge) {
-        initializeAgenticBridge();
-    }
-    if (!m_agenticBridge) {
-        MessageBoxA(m_hwndMain, "Agentic Framework not initialized", "Agent Error", MB_OK | MB_ICONERROR);
-        return;
-    }
-    
-    if (MessageBoxA(m_hwndMain, "Clear all agent memory? This cannot be undone.", "Confirm Clear", MB_YESNO | MB_ICONWARNING) == IDYES) {
-        m_agenticBridge->ClearAgentMemory();
-        appendToOutput("🗑️ Agent Memory cleared\n", "Output", OutputSeverity::Info);
-    }
-}
-
-void Win32IDE::onAgentMemoryExport() {
-    LOG_INFO("onAgentMemoryExport called");
-    if (!m_agenticBridge) {
-        initializeAgenticBridge();
-    }
-    if (!m_agenticBridge) {
-        MessageBoxA(m_hwndMain, "Agentic Framework not initialized", "Agent Error", MB_OK | MB_ICONERROR);
-        return;
-    }
-    
-    // Prefer the IDE's tracked directory; fall back to deriving from current file.
-    std::string exportPath = m_currentDirectory;
-    if (exportPath.empty()) {
-        exportPath = m_currentFile;
-        if (!exportPath.empty()) {
-            size_t lastSlash = exportPath.find_last_of("\\/");
-            if (lastSlash != std::string::npos) {
-                exportPath = exportPath.substr(0, lastSlash);
-            } else {
-                exportPath.clear();
-            }
-        }
-    }
-    if (exportPath.empty()) exportPath = ".";
-    exportPath += "\\agent_memory_export.json";
-    
-    std::string memory = m_agenticBridge->ExportAgentMemory();
-    
-    std::ofstream outFile(exportPath);
-    if (outFile.is_open()) {
-        outFile << memory;
-        outFile.close();
-        appendToOutput("✅ Agent Memory exported to: " + exportPath + "\n", "Output", OutputSeverity::Info);
-    } else {
-        appendToOutput("❌ Failed to export agent memory\n", "Errors", OutputSeverity::Error);
-    }
-}
-#endif
+// onAgentMemoryView()   → Win32IDE_SubAgent.cpp
+// onAgentMemoryClear()  → Win32IDE_SubAgent.cpp
+// onAgentMemoryExport() → Win32IDE_SubAgent.cpp
 
 // ============================================================================
 // AUTONOMY HANDLERS
 // ============================================================================
-#if 0
-void Win32IDE::onAutonomyToggle() {
-    LOG_INFO("onAutonomyToggle called");
-    if (!m_agenticBridge) {
-        initializeAgenticBridge();
-    }
-    if (!m_autonomyManager) {
-        initializeAutonomy();
-    }
-    
-    bool isRunning = m_autonomyManager && m_autonomyManager->IsRunning();
-    if (m_autonomyManager) {
-        if (isRunning) {
-            m_autonomyManager->Stop();
-            appendToOutput("⏸️ Autonomy toggled OFF\n", "Output", OutputSeverity::Info);
-        } else {
-            m_autonomyManager->Start();
-            appendToOutput("▶️ Autonomy toggled ON\n", "Output", OutputSeverity::Info);
-        }
-    }
-}
+// Implemented in Win32IDE.cpp — declarations only here.
 
-void Win32IDE::onAutonomyStart() {
-    LOG_INFO("onAutonomyStart called");
-    if (!m_agenticBridge) {
-        initializeAgenticBridge();
-    }
-    if (!m_autonomyManager) {
-        initializeAutonomy();
-    }
-    
-    if (m_autonomyManager && !m_autonomyManager->IsRunning()) {
-        m_autonomyManager->Start();
-        appendToOutput("▶️ Autonomy started\n", "Output", OutputSeverity::Info);
-    }
-}
+// onAutonomyToggle()     → Win32IDE.cpp
+// onAutonomyStart()      → Win32IDE.cpp
+// onAutonomyStop()       → Win32IDE.cpp
+// onAutonomySetGoal()    → Win32IDE.cpp
+// onAutonomyViewStatus() → Win32IDE.cpp
+// onAutonomyViewMemory() → Win32IDE.cpp
 
-void Win32IDE::onAutonomyStop() {
-    LOG_INFO("onAutonomyStop called");
-    if (m_autonomyManager && m_autonomyManager->IsRunning()) {
-        m_autonomyManager->Stop();
-        appendToOutput("⏹️ Autonomy stopped\n", "Output", OutputSeverity::Info);
-    }
-}
+// ============================================================================
+// BOUNDED AGENT LOOP
+// ============================================================================
+// Implemented in Win32IDE_AgentPanel.cpp — declarations only here.
 
-void Win32IDE::onAutonomySetGoal() {
-    LOG_INFO("onAutonomySetGoal called");
-    if (!m_agenticBridge)
-        initializeAgenticBridge();
-    if (!m_autonomyManager)
-        initializeAutonomy();
-    if (!m_autonomyManager) {
-        appendToOutput("Autonomy unavailable: load a model first (File → Load Model).\n", "Output",
-                       OutputSeverity::Warning);
-        return;
-    }
-    
-    char goalText[512] = {0};
-    if (DialogBoxParamA(m_hInstance, "AGENT_PROMPT_DLG", m_hwndMain,
-        [](HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) -> INT_PTR {
-            switch (msg) {
-                case WM_INITDIALOG:
-                    SetWindowTextA(GetDlgItem(hwnd, 101), "Enter autonomy goal:");
-                    return TRUE;
-                case WM_COMMAND:
-                    if (LOWORD(wp) == IDOK) {
-                        GetDlgItemTextA(hwnd, 102, (char*)lp, 512);
-                        EndDialog(hwnd, IDOK);
-                        return TRUE;
-                    } else if (LOWORD(wp) == IDCANCEL) {
-                        EndDialog(hwnd, IDCANCEL);
-                        return TRUE;
-                    }
-                    break;
-            }
-            return FALSE;
-        }, (LPARAM)goalText) == IDOK && strlen(goalText) > 0) {
-        m_autonomyManager->SetGoal(std::string(goalText));
-        appendToOutput("🎯 Autonomy goal set: " + std::string(goalText) + "\n", "Output", OutputSeverity::Info);
-    }
-}
+// onBoundedAgentLoop() → Win32IDE_AgentPanel.cpp
 
-void Win32IDE::onAutonomyViewStatus() {
-    LOG_INFO("onAutonomyViewStatus called");
-    if (!m_agenticBridge)
-        initializeAgenticBridge();
-    if (!m_autonomyManager)
-        initializeAutonomy();
-    if (!m_autonomyManager) {
-        appendToOutput("Autonomy unavailable: load a model first (File → Load Model).\n", "Output",
-                       OutputSeverity::Warning);
-        return;
-    }
-    
-    std::string status = m_autonomyManager->GetStatus();
-    appendToOutput("=== Autonomy Status ===\n" + status + "\n", "Output", OutputSeverity::Info);
-}
-
-void Win32IDE::onAutonomyViewMemory() {
-    LOG_INFO("onAutonomyViewMemory called");
-    if (!m_agenticBridge)
-        initializeAgenticBridge();
-    if (!m_autonomyManager)
-        initializeAutonomy();
-    if (!m_autonomyManager) {
-        appendToOutput("Autonomy unavailable: load a model first (File → Load Model).\n", "Output",
-                       OutputSeverity::Warning);
-        return;
-    }
-    
-    std::string memory = m_autonomyManager->ExportMemory();
-    appendToOutput("=== Autonomy Memory ===\n" + memory + "\n", "Output", OutputSeverity::Info);
-}
-#endif
-
-// ----------------------------------------------------------------------------
-// Autonomous Agentic Pipeline (Task 1: Wire + Build)
-// Init: create coordinator, wire buildChatPrompt / routeWithIntelligence / onInferenceToken / appendStreamingToken.
-// Trigger: Autonomy menu -> Pipeline: Run once | Start autonomous loop | Stop autonomous loop.
-// Note: Implementation is below (after the old #if 0 block) to avoid duplicate definitions.
-// This comment block is intentionally left here for documentation
-
-#if 0
-void Win32IDE::onBoundedAgentLoop() {
-    LOG_INFO("onBoundedAgentLoop called");
-    if (!m_agenticBridge) {
-        initializeAgenticBridge();
-    }
-    if (!m_agenticBridge) {
-        MessageBoxA(m_hwndMain, "Agentic Framework not initialized", "Agent Error", MB_OK | MB_ICONERROR);
-        return;
-    }
-    
-    // Get task and iteration limit from user
-    char taskDesc[1024] = {0};
-    if (DialogBoxParamA(m_hInstance, "AGENT_PROMPT_DLG", m_hwndMain,
-        [](HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) -> INT_PTR {
-            switch (msg) {
-                case WM_INITDIALOG:
-                    SetWindowTextA(GetDlgItem(hwnd, 101), "Enter task for Bounded Agent Loop (task:max_iterations):");
-                    return TRUE;
-                case WM_COMMAND:
-                    if (LOWORD(wp) == IDOK) {
-                        GetDlgItemTextA(hwnd, 102, (char*)lp, 1024);
-                        EndDialog(hwnd, IDOK);
-                        return TRUE;
-                    } else if (LOWORD(wp) == IDCANCEL) {
-                        EndDialog(hwnd, IDCANCEL);
-                        return TRUE;
-                    }
-                    break;
-            }
-            return FALSE;
-        }, (LPARAM)taskDesc) != IDOK) {
-        return;
-    }
-    
-    std::string input(taskDesc);
-    std::string task = input;
-    int maxIterations = 5; // default
-    
-    size_t colonPos = input.find(':');
-    if (colonPos != std::string::npos) {
-        task = input.substr(0, colonPos);
-        std::string iterStr = input.substr(colonPos + 1);
-        try {
-            maxIterations = std::stoi(iterStr);
-            if (maxIterations <= 0) maxIterations = 5;
-        } catch (...) {
-            maxIterations = 5;
-        }
-    }
-    
-    if (task.empty()) {
-        task = "Execute bounded task";
-    }
-    
-    appendToOutput("[Agent] Bounded Agent Loop with max iterations (" + std::to_string(maxIterations) + "): " + task + "\n", "Output", OutputSeverity::Info);
-    
-    // Execute with bounded retries in background
-    std::thread([this, taskStr = task, maxIter = maxIterations]() {
-        DetachedThreadGuard _guard(m_activeDetachedThreads, m_shuttingDown);
-        if (_guard.cancelled) return;
-        m_agenticBridge->ExecuteBoundedAgentLoop(taskStr, maxIter);
-    }).detach();
-}
-#endif
-
-#endif
+// ============================================================================
+// ACTIVE IMPLEMENTATIONS BELOW
+// ============================================================================
 
 // ensureAutonomousPipelineInitialized + pipeline handlers (defined here so they are compiled)
 // E1: workspace-aware prompt injection  E2: loop telemetry  E3: shutdown guard
@@ -677,6 +298,40 @@ void Win32IDE::initializeAgenticBridge()
                 // Initialize Autonomy Manager
                 initializeAutonomy();
 
+                // Wire AgenticPlanningOrchestrator tool executor to production AgentToolRegistry.
+                // Without this, plan execution reports "No tool executor configured" even though tools exist.
+                {
+                    auto& integration = Agentic::OrchestratorIntegration::instance();
+                    integration.initialize();
+                    integration.setToolExecutor(
+                        [](const std::string& tool_name, const std::string& args, std::string& output) -> bool
+                        {
+                            // args is expected to be JSON (object); allow empty.
+                            json jargs = json::object();
+                            if (!args.empty())
+                            {
+                                try
+                                {
+                                    jargs = json::parse(args);
+                                    if (!jargs.is_object())
+                                    {
+                                        // Normalize to object so tool handlers can read keys.
+                                        jargs = json::object({{"value", jargs}});
+                                    }
+                                }
+                                catch (...)
+                                {
+                                    // If parsing fails, pass the raw string in a stable key.
+                                    jargs = json::object({{"raw", args}});
+                                }
+                            }
+                            RawrXD::Agent::ToolExecResult r =
+                                RawrXD::Agent::AgentToolRegistry::Instance().Dispatch(tool_name, jargs);
+                            output = r.output;
+                            return r.success;
+                        });
+                }
+
                 // Initialize Native Engine if not already done
                 if (!m_nativeEngine)
                 {
@@ -707,6 +362,27 @@ void Win32IDE::initializeAgenticBridge()
                     m_agenticBridge->SetWorkspaceRoot(m_projectRoot);
                 else if (!m_explorerRootPath.empty())
                     m_agenticBridge->SetWorkspaceRoot(m_explorerRootPath);
+
+                // Production hardening: surface any missing tool wiring immediately.
+                // This prevents "agent feels non-autonomous" due to silently missing handlers.
+                {
+                    auto missing = RawrXD::Agent::AgentToolRegistry::Instance().GetToolsMissingHandlers();
+                    if (!missing.empty())
+                    {
+                        std::string msg = "⚠️ Tool registry wiring incomplete. Missing handlers for:\n";
+                        for (const auto& name : missing)
+                        {
+                            msg += " - " + name + "\n";
+                        }
+                        appendToOutput(msg, "Errors", OutputSeverity::Warning);
+                        LOG_WARNING(msg);
+                    }
+                    else
+                    {
+                        appendToOutput("✅ Tool registry wiring OK (all handlers present)\n", "Output",
+                                       OutputSeverity::Info);
+                    }
+                }
 
                 // Propagate to Native Engine if available
                 if (m_nativeEngine)
@@ -1606,7 +1282,9 @@ void Win32IDE::onAgentConfigureModel()
     for (size_t i = 0; i < availableModels.size(); ++i)
     {
         const auto& model = availableModels[i];
-        SendMessageA(hwndCombo, CB_ADDSTRING, 0, (LPARAM)model.c_str());
+        const std::string uiLabel = rawrxd::BuildModelDropdownLabel(model);
+        const int itemIdx = (int)SendMessageA(hwndCombo, CB_ADDSTRING, 0, (LPARAM)uiLabel.c_str());
+        SendMessageA(hwndCombo, CB_SETITEMDATA, itemIdx, (LPARAM)i);
 
         // Pre-select current model or first in list
         if (model == currentModel)
@@ -1648,15 +1326,22 @@ void Win32IDE::onAgentConfigureModel()
                 int sel = (int)SendMessageA(hwndCombo, CB_GETCURSEL, 0, 0);
                 if (sel != CB_ERR)
                 {
-                    char buffer[256] = {0};
-                    SendMessageA(hwndCombo, CB_GETLBTEXT, sel, (LPARAM)buffer);
-                    selectedModel = buffer;
-
-                    // Remove "(current, not available)" suffix if present
-                    size_t notAvailPos = selectedModel.find(" (current, not available)");
-                    if (notAvailPos != std::string::npos)
+                    const LRESULT itemData = SendMessageA(hwndCombo, CB_GETITEMDATA, sel, 0);
+                    if (itemData != CB_ERR && itemData >= 0 && itemData < (LRESULT)availableModels.size())
                     {
-                        selectedModel = selectedModel.substr(0, notAvailPos);
+                        selectedModel = availableModels[(size_t)itemData];
+                    }
+                    else
+                    {
+                        // Safety fallback when item data is unavailable.
+                        char buffer[512] = {0};
+                        SendMessageA(hwndCombo, CB_GETLBTEXT, sel, (LPARAM)buffer);
+                        selectedModel = buffer;
+                        size_t suffixPos = selectedModel.find(" - A Carrot > - ");
+                        if (suffixPos != std::string::npos)
+                        {
+                            selectedModel = selectedModel.substr(0, suffixPos);
+                        }
                     }
 
                     accepted = true;
@@ -2439,8 +2124,8 @@ void Win32IDE::onPlanningStart()
         {
             if (!m_agenticBridge)
                 return false;
-            // Format as a model-like string for the bridge dispatcher
-            std::string toolCall = "tool: " + tool + "\nargs: " + args;
+            // Single-line directive so ExtractToolCallLines + registry dispatch see the full JSON args.
+            const std::string toolCall = std::string("TOOL:") + tool + " " + args;
             return m_agenticBridge->DispatchModelToolCalls(toolCall, output);
         });
 
@@ -2868,6 +2553,24 @@ void Win32IDE::initializeAutonomy()
         m_autonomyManager = std::make_unique<AutonomyManager>(m_agenticBridge);
         m_autonomyManager->setOutputCallback([this](const std::string& msg)
                                              { appendToOutput(msg, "Output", OutputSeverity::Warning); });
+    }
+
+    // Also bring up the always-on diagnostic + self-healing watchdog so autonomy has a backstop.
+    // This is safe to call multiple times; it is internally idempotent.
+    {
+        AgentConfig cfg;
+        cfg.enableAutoDiagnostics = true;
+        cfg.enableBeaconing = true;
+        cfg.enableSelfHealing = true;
+        cfg.enableReporting = true;
+        cfg.beaconIntervalMs = 1000;
+        AutonomousAgent::Initialize(cfg);
+        if (auto* agent = AutonomousAgent::Instance())
+        {
+            agent->SetIDEWindow(m_hwndMain);
+            agent->SetIDEProcessId(GetCurrentProcessId());
+            (void)agent->Start();
+        }
     }
 
     appendToOutput("✅ Autonomy Manager initialized\n", "Output", OutputSeverity::Info);
