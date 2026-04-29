@@ -292,6 +292,207 @@ static inline void RawrPrefetchRowHead(const float* row, size_t n)
         RawrPrefetchRead(row + 48);
 }
 
+// ---------------------------------------------------------------------------
+// Fused Q8_0 GEMV helpers (AVX2)
+// Bypass the float32 tile buffer entirely: read int8 blocks → dot with float32 x[]
+// Bandwidth: ~34 B/row (Q8_0) + 128 B (x, cached) vs 294 B/row decode+dot path
+// ---------------------------------------------------------------------------
+#if defined(__AVX2__)
+/// Horizontal sum of all 8 float lanes in a __m256 register.
+static inline float HsumF32x8_TPS(__m256 v)
+{
+    __m128 lo = _mm256_castps256_ps128(v);
+    __m128 hi = _mm256_extractf128_ps(v, 1);
+    lo        = _mm_add_ps(lo, hi);
+    lo        = _mm_add_ps(lo, _mm_movehl_ps(lo, lo));
+    return _mm_cvtss_f32(_mm_add_ss(lo, _mm_movehdup_ps(lo)));
+}
+
+/// Single-row fused Q8_0 GEMV.  Reads int8 blocks directly from the mmap view —
+/// no intermediate float32 tile write or read.
+/// rowSrc: pointer to first Q8_0 block of this row (blocks are 34 bytes each)
+/// x:      float32 activation vector  (length = blocksPerRow * 32)
+static float FusedQ8RowDot_TPS(const uint8_t* rowSrc, const float* x, size_t blocksPerRow)
+{
+    __m256 acc0 = _mm256_setzero_ps();
+    __m256 acc1 = _mm256_setzero_ps();
+    __m256 acc2 = _mm256_setzero_ps();
+    __m256 acc3 = _mm256_setzero_ps();
+    for (size_t b = 0; b < blocksPerRow; ++b)
+    {
+        const uint8_t* bp = rowSrc + b * 34;
+        const __m256   vd = _mm256_set1_ps(f16_to_f32(*reinterpret_cast<const uint16_t*>(bp)));
+        const int8_t*  qi = reinterpret_cast<const int8_t*>(bp + 2);
+        const float*   xi = x + b * 32;
+        acc0 = _mm256_add_ps(acc0, _mm256_mul_ps(
+            _mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(
+                _mm_loadl_epi64(reinterpret_cast<const __m128i*>(qi +  0)))), vd),
+            _mm256_loadu_ps(xi +  0)));
+        acc1 = _mm256_add_ps(acc1, _mm256_mul_ps(
+            _mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(
+                _mm_loadl_epi64(reinterpret_cast<const __m128i*>(qi +  8)))), vd),
+            _mm256_loadu_ps(xi +  8)));
+        acc2 = _mm256_add_ps(acc2, _mm256_mul_ps(
+            _mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(
+                _mm_loadl_epi64(reinterpret_cast<const __m128i*>(qi + 16)))), vd),
+            _mm256_loadu_ps(xi + 16)));
+        acc3 = _mm256_add_ps(acc3, _mm256_mul_ps(
+            _mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(
+                _mm_loadl_epi64(reinterpret_cast<const __m128i*>(qi + 24)))), vd),
+            _mm256_loadu_ps(xi + 24)));
+    }
+    return HsumF32x8_TPS(_mm256_add_ps(_mm256_add_ps(acc0, acc1), _mm256_add_ps(acc2, acc3)));
+}
+
+/// 4-row fused Q8_0 GEMV.  Reads x[] once per block and accumulates into all 4 rows
+/// simultaneously, halving activation vector bandwidth vs 4× single-row calls.
+static void FusedQ8GEMV4Rows_TPS(const uint8_t* r0, const uint8_t* r1,
+                                  const uint8_t* r2, const uint8_t* r3,
+                                  const float* x, size_t blocksPerRow,
+                                  float& y0, float& y1, float& y2, float& y3)
+{
+    __m256 a0a = _mm256_setzero_ps(), a0b = _mm256_setzero_ps(),
+           a0c = _mm256_setzero_ps(), a0d = _mm256_setzero_ps();
+    __m256 a1a = _mm256_setzero_ps(), a1b = _mm256_setzero_ps(),
+           a1c = _mm256_setzero_ps(), a1d = _mm256_setzero_ps();
+    __m256 a2a = _mm256_setzero_ps(), a2b = _mm256_setzero_ps(),
+           a2c = _mm256_setzero_ps(), a2d = _mm256_setzero_ps();
+    __m256 a3a = _mm256_setzero_ps(), a3b = _mm256_setzero_ps(),
+           a3c = _mm256_setzero_ps(), a3d = _mm256_setzero_ps();
+    for (size_t b = 0; b < blocksPerRow; ++b)
+    {
+        const uint8_t* p0 = r0 + b * 34, *p1 = r1 + b * 34,
+                      *p2 = r2 + b * 34, *p3 = r3 + b * 34;
+        const __m256 vd0 = _mm256_set1_ps(f16_to_f32(*reinterpret_cast<const uint16_t*>(p0)));
+        const __m256 vd1 = _mm256_set1_ps(f16_to_f32(*reinterpret_cast<const uint16_t*>(p1)));
+        const __m256 vd2 = _mm256_set1_ps(f16_to_f32(*reinterpret_cast<const uint16_t*>(p2)));
+        const __m256 vd3 = _mm256_set1_ps(f16_to_f32(*reinterpret_cast<const uint16_t*>(p3)));
+        const int8_t* q0 = reinterpret_cast<const int8_t*>(p0 + 2);
+        const int8_t* q1 = reinterpret_cast<const int8_t*>(p1 + 2);
+        const int8_t* q2 = reinterpret_cast<const int8_t*>(p2 + 2);
+        const int8_t* q3 = reinterpret_cast<const int8_t*>(p3 + 2);
+        const float*  xi = x + b * 32;
+        const __m256 vx0 = _mm256_loadu_ps(xi +  0);
+        const __m256 vx1 = _mm256_loadu_ps(xi +  8);
+        const __m256 vx2 = _mm256_loadu_ps(xi + 16);
+        const __m256 vx3 = _mm256_loadu_ps(xi + 24);
+        a0a = _mm256_add_ps(a0a, _mm256_mul_ps(_mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_loadl_epi64(reinterpret_cast<const __m128i*>(q0+ 0)))), vd0), vx0));
+        a0b = _mm256_add_ps(a0b, _mm256_mul_ps(_mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_loadl_epi64(reinterpret_cast<const __m128i*>(q0+ 8)))), vd0), vx1));
+        a0c = _mm256_add_ps(a0c, _mm256_mul_ps(_mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_loadl_epi64(reinterpret_cast<const __m128i*>(q0+16)))), vd0), vx2));
+        a0d = _mm256_add_ps(a0d, _mm256_mul_ps(_mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_loadl_epi64(reinterpret_cast<const __m128i*>(q0+24)))), vd0), vx3));
+        a1a = _mm256_add_ps(a1a, _mm256_mul_ps(_mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_loadl_epi64(reinterpret_cast<const __m128i*>(q1+ 0)))), vd1), vx0));
+        a1b = _mm256_add_ps(a1b, _mm256_mul_ps(_mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_loadl_epi64(reinterpret_cast<const __m128i*>(q1+ 8)))), vd1), vx1));
+        a1c = _mm256_add_ps(a1c, _mm256_mul_ps(_mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_loadl_epi64(reinterpret_cast<const __m128i*>(q1+16)))), vd1), vx2));
+        a1d = _mm256_add_ps(a1d, _mm256_mul_ps(_mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_loadl_epi64(reinterpret_cast<const __m128i*>(q1+24)))), vd1), vx3));
+        a2a = _mm256_add_ps(a2a, _mm256_mul_ps(_mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_loadl_epi64(reinterpret_cast<const __m128i*>(q2+ 0)))), vd2), vx0));
+        a2b = _mm256_add_ps(a2b, _mm256_mul_ps(_mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_loadl_epi64(reinterpret_cast<const __m128i*>(q2+ 8)))), vd2), vx1));
+        a2c = _mm256_add_ps(a2c, _mm256_mul_ps(_mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_loadl_epi64(reinterpret_cast<const __m128i*>(q2+16)))), vd2), vx2));
+        a2d = _mm256_add_ps(a2d, _mm256_mul_ps(_mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_loadl_epi64(reinterpret_cast<const __m128i*>(q2+24)))), vd2), vx3));
+        a3a = _mm256_add_ps(a3a, _mm256_mul_ps(_mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_loadl_epi64(reinterpret_cast<const __m128i*>(q3+ 0)))), vd3), vx0));
+        a3b = _mm256_add_ps(a3b, _mm256_mul_ps(_mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_loadl_epi64(reinterpret_cast<const __m128i*>(q3+ 8)))), vd3), vx1));
+        a3c = _mm256_add_ps(a3c, _mm256_mul_ps(_mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_loadl_epi64(reinterpret_cast<const __m128i*>(q3+16)))), vd3), vx2));
+        a3d = _mm256_add_ps(a3d, _mm256_mul_ps(_mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_loadl_epi64(reinterpret_cast<const __m128i*>(q3+24)))), vd3), vx3));
+    }
+    y0 = HsumF32x8_TPS(_mm256_add_ps(_mm256_add_ps(a0a, a0b), _mm256_add_ps(a0c, a0d)));
+    y1 = HsumF32x8_TPS(_mm256_add_ps(_mm256_add_ps(a1a, a1b), _mm256_add_ps(a1c, a1d)));
+    y2 = HsumF32x8_TPS(_mm256_add_ps(_mm256_add_ps(a2a, a2b), _mm256_add_ps(a2c, a2d)));
+    y3 = HsumF32x8_TPS(_mm256_add_ps(_mm256_add_ps(a3a, a3b), _mm256_add_ps(a3c, a3d)));
+}
+
+/// Single-row fused Q4_0 GEMV.  Decodes nibble pairs directly from mmap view.
+/// Q4_0 layout: qs[i] lo nibble-8 = w[i], qs[i] hi nibble-8 = w[i+16].
+/// blockStride=18, blockElements=32, rowBytes = blocksPerRow*18.
+static float FusedQ4_0RowDot_TPS(const uint8_t* rowSrc, const float* x, size_t blocksPerRow)
+{
+    __m256 acc0 = _mm256_setzero_ps();
+    __m256 acc1 = _mm256_setzero_ps();
+    __m256 acc2 = _mm256_setzero_ps();
+    __m256 acc3 = _mm256_setzero_ps();
+    const __m128i nibMask = _mm_set1_epi8(0x0F);
+    const __m128i bias8   = _mm_set1_epi8(8);
+    for (size_t b = 0; b < blocksPerRow; ++b)
+    {
+        const uint8_t* bp = rowSrc + b * 18;
+        const __m256   vd = _mm256_set1_ps(f16_to_f32(*reinterpret_cast<const uint16_t*>(bp)));
+        const __m128i  pk = _mm_loadu_si128(reinterpret_cast<const __m128i*>(bp + 2));
+        const float*   xi = x + b * 32;
+        __m128i lo = _mm_sub_epi8(_mm_and_si128(pk, nibMask), bias8);                   // w[0..15]
+        __m128i hi = _mm_sub_epi8(_mm_and_si128(_mm_srli_epi16(pk, 4), nibMask), bias8); // w[16..31]
+        acc0 = _mm256_add_ps(acc0, _mm256_mul_ps(
+            _mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(lo)), vd),
+            _mm256_loadu_ps(xi + 0)));
+        acc1 = _mm256_add_ps(acc1, _mm256_mul_ps(
+            _mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_bsrli_si128(lo, 8))), vd),
+            _mm256_loadu_ps(xi + 8)));
+        acc2 = _mm256_add_ps(acc2, _mm256_mul_ps(
+            _mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(hi)), vd),
+            _mm256_loadu_ps(xi + 16)));
+        acc3 = _mm256_add_ps(acc3, _mm256_mul_ps(
+            _mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_bsrli_si128(hi, 8))), vd),
+            _mm256_loadu_ps(xi + 24)));
+    }
+    return HsumF32x8_TPS(_mm256_add_ps(_mm256_add_ps(acc0, acc1), _mm256_add_ps(acc2, acc3)));
+}
+
+/// 4-row fused Q4_0 GEMV.  Reads x[] once per block for all 4 rows.
+static void FusedQ4_0GEMV4Rows_TPS(const uint8_t* r0, const uint8_t* r1,
+                                    const uint8_t* r2, const uint8_t* r3,
+                                    const float* x, size_t blocksPerRow,
+                                    float& y0, float& y1, float& y2, float& y3)
+{
+    __m256 a0 = _mm256_setzero_ps(), a1 = _mm256_setzero_ps(),
+           a2 = _mm256_setzero_ps(), a3 = _mm256_setzero_ps();
+    const __m128i nibMask = _mm_set1_epi8(0x0F);
+    const __m128i bias8   = _mm_set1_epi8(8);
+    for (size_t b = 0; b < blocksPerRow; ++b)
+    {
+        const uint8_t* p0 = r0 + b*18, *p1 = r1 + b*18,
+                      *p2 = r2 + b*18, *p3 = r3 + b*18;
+        const __m256 vd0 = _mm256_set1_ps(f16_to_f32(*reinterpret_cast<const uint16_t*>(p0)));
+        const __m256 vd1 = _mm256_set1_ps(f16_to_f32(*reinterpret_cast<const uint16_t*>(p1)));
+        const __m256 vd2 = _mm256_set1_ps(f16_to_f32(*reinterpret_cast<const uint16_t*>(p2)));
+        const __m256 vd3 = _mm256_set1_ps(f16_to_f32(*reinterpret_cast<const uint16_t*>(p3)));
+        __m128i pk0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(p0 + 2));
+        __m128i pk1 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(p1 + 2));
+        __m128i pk2 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(p2 + 2));
+        __m128i pk3 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(p3 + 2));
+        __m128i lo0 = _mm_sub_epi8(_mm_and_si128(pk0, nibMask), bias8);
+        __m128i hi0 = _mm_sub_epi8(_mm_and_si128(_mm_srli_epi16(pk0, 4), nibMask), bias8);
+        __m128i lo1 = _mm_sub_epi8(_mm_and_si128(pk1, nibMask), bias8);
+        __m128i hi1 = _mm_sub_epi8(_mm_and_si128(_mm_srli_epi16(pk1, 4), nibMask), bias8);
+        __m128i lo2 = _mm_sub_epi8(_mm_and_si128(pk2, nibMask), bias8);
+        __m128i hi2 = _mm_sub_epi8(_mm_and_si128(_mm_srli_epi16(pk2, 4), nibMask), bias8);
+        __m128i lo3 = _mm_sub_epi8(_mm_and_si128(pk3, nibMask), bias8);
+        __m128i hi3 = _mm_sub_epi8(_mm_and_si128(_mm_srli_epi16(pk3, 4), nibMask), bias8);
+        const float* xi = x + b * 32;
+        const __m256 vx0 = _mm256_loadu_ps(xi +  0);
+        const __m256 vx1 = _mm256_loadu_ps(xi +  8);
+        const __m256 vx2 = _mm256_loadu_ps(xi + 16);
+        const __m256 vx3 = _mm256_loadu_ps(xi + 24);
+        a0 = _mm256_add_ps(a0, _mm256_mul_ps(_mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(lo0)), vd0), vx0));
+        a0 = _mm256_add_ps(a0, _mm256_mul_ps(_mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_bsrli_si128(lo0, 8))), vd0), vx1));
+        a0 = _mm256_add_ps(a0, _mm256_mul_ps(_mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(hi0)), vd0), vx2));
+        a0 = _mm256_add_ps(a0, _mm256_mul_ps(_mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_bsrli_si128(hi0, 8))), vd0), vx3));
+        a1 = _mm256_add_ps(a1, _mm256_mul_ps(_mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(lo1)), vd1), vx0));
+        a1 = _mm256_add_ps(a1, _mm256_mul_ps(_mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_bsrli_si128(lo1, 8))), vd1), vx1));
+        a1 = _mm256_add_ps(a1, _mm256_mul_ps(_mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(hi1)), vd1), vx2));
+        a1 = _mm256_add_ps(a1, _mm256_mul_ps(_mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_bsrli_si128(hi1, 8))), vd1), vx3));
+        a2 = _mm256_add_ps(a2, _mm256_mul_ps(_mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(lo2)), vd2), vx0));
+        a2 = _mm256_add_ps(a2, _mm256_mul_ps(_mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_bsrli_si128(lo2, 8))), vd2), vx1));
+        a2 = _mm256_add_ps(a2, _mm256_mul_ps(_mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(hi2)), vd2), vx2));
+        a2 = _mm256_add_ps(a2, _mm256_mul_ps(_mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_bsrli_si128(hi2, 8))), vd2), vx3));
+        a3 = _mm256_add_ps(a3, _mm256_mul_ps(_mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(lo3)), vd3), vx0));
+        a3 = _mm256_add_ps(a3, _mm256_mul_ps(_mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_bsrli_si128(lo3, 8))), vd3), vx1));
+        a3 = _mm256_add_ps(a3, _mm256_mul_ps(_mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(hi3)), vd3), vx2));
+        a3 = _mm256_add_ps(a3, _mm256_mul_ps(_mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_bsrli_si128(hi3, 8))), vd3), vx3));
+    }
+    y0 = HsumF32x8_TPS(a0);
+    y1 = HsumF32x8_TPS(a1);
+    y2 = HsumF32x8_TPS(a2);
+    y3 = HsumF32x8_TPS(a3);
+}
+#endif  // __AVX2__
+
 static inline float DotProductF32_TPS(const float* a, const float* b, size_t n)
 {
     if (!a || !b || n == 0)
@@ -2850,6 +3051,30 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
     }
     m_lastLoadErrorStage.clear();
     m_lastLoadErrorMessage.clear();
+
+    // Background page pre-touch: walks the sovereign mmap at page stride so that
+    // NVMe demand-paging faults are front-loaded during model load rather than
+    // stalling the first inference token.  Detached — inference may race safely
+    // since all accesses are read-only and pages already in-flight remain valid.
+    {
+        std::lock_guard<std::mutex> lk(m_slidingWindowMutex);
+        void*  svView = m_computeSlots[0].view;
+        size_t svSize = m_computeSlots[0].mappedSize;
+        if (svView && svSize > 0)
+        {
+            std::thread([svView, svSize]()
+            {
+                const volatile uint8_t* p = static_cast<const volatile uint8_t*>(svView);
+                for (size_t off = 0; off < svSize; off += 4096)
+                    (void)p[off];
+                printf("[RawrXD] Page pre-touch complete: %zu MB model pages resident\n",
+                       svSize / (1024 * 1024));
+            }).detach();
+            printf("[RawrXD] Page pre-touch thread launched (%zu MB in background)\n",
+                   svSize / (1024 * 1024));
+        }
+    }
+
     return true;
 }
 
@@ -4056,8 +4281,51 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
 
                 workerFutures.push_back(std::async(
                     std::launch::async,
-                    [&pin, &x, &y, &decodeRowToFloat, K, rowBytes, TILE_ROWS, wStart, wEnd, row]() -> bool
+                    [&pin, &x, &y, &decodeRowToFloat, K, rowBytes, TILE_ROWS, wStart, wEnd, row,
+                     decodeKind, blocksPerRow]() -> bool
                     {
+#if defined(__AVX2__)
+                        // Fused Q8_0 path: no float32 tile allocation, ~2.5× bandwidth reduction
+                        if (decodeKind == StreamingRowDecodeKind::Q8_0 ||
+                            decodeKind == StreamingRowDecodeKind::Q4_0)
+                        {
+                            size_t wLocalRow = wStart;
+                            while (wLocalRow + 3 < wEnd)
+                            {
+                                const uint8_t* rs0 = static_cast<const uint8_t*>(pin.GetPointer(
+                                    static_cast<uint64_t>(wLocalRow + 0) * static_cast<uint64_t>(rowBytes)));
+                                const uint8_t* rs1 = static_cast<const uint8_t*>(pin.GetPointer(
+                                    static_cast<uint64_t>(wLocalRow + 1) * static_cast<uint64_t>(rowBytes)));
+                                const uint8_t* rs2 = static_cast<const uint8_t*>(pin.GetPointer(
+                                    static_cast<uint64_t>(wLocalRow + 2) * static_cast<uint64_t>(rowBytes)));
+                                const uint8_t* rs3 = static_cast<const uint8_t*>(pin.GetPointer(
+                                    static_cast<uint64_t>(wLocalRow + 3) * static_cast<uint64_t>(rowBytes)));
+                                if (!rs0 || !rs1 || !rs2 || !rs3)
+                                    return false;
+                                if (decodeKind == StreamingRowDecodeKind::Q8_0)
+                                    FusedQ8GEMV4Rows_TPS(rs0, rs1, rs2, rs3, x, blocksPerRow,
+                                        y[row + wLocalRow + 0], y[row + wLocalRow + 1],
+                                        y[row + wLocalRow + 2], y[row + wLocalRow + 3]);
+                                else
+                                    FusedQ4_0GEMV4Rows_TPS(rs0, rs1, rs2, rs3, x, blocksPerRow,
+                                        y[row + wLocalRow + 0], y[row + wLocalRow + 1],
+                                        y[row + wLocalRow + 2], y[row + wLocalRow + 3]);
+                                wLocalRow += 4;
+                            }
+                            while (wLocalRow < wEnd)
+                            {
+                                const uint8_t* rs = static_cast<const uint8_t*>(pin.GetPointer(
+                                    static_cast<uint64_t>(wLocalRow) * static_cast<uint64_t>(rowBytes)));
+                                if (!rs)
+                                    return false;
+                                y[row + wLocalRow] = (decodeKind == StreamingRowDecodeKind::Q8_0)
+                                    ? FusedQ8RowDot_TPS(rs, x, blocksPerRow)
+                                    : FusedQ4_0RowDot_TPS(rs, x, blocksPerRow);
+                                ++wLocalRow;
+                            }
+                            return true;
+                        }
+#endif  // __AVX2__
                         thread_local std::vector<float> par_tile_buf;
                         par_tile_buf.resize(TILE_ROWS * K);
 
@@ -4142,6 +4410,57 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
         }
         else
         {
+#if defined(__AVX2__)
+            // Fused Q8_0/Q4_0 sequential path: no tile buffer, direct int8→float dot
+            if (decodeKind == StreamingRowDecodeKind::Q8_0 ||
+                decodeKind == StreamingRowDecodeKind::Q4_0)
+            {
+                size_t localRow = 0;
+                while (localRow + 3 < shardRows)
+                {
+                    const uint8_t* rs0 = static_cast<const uint8_t*>(pin.GetPointer(
+                        static_cast<uint64_t>(localRow + 0) * static_cast<uint64_t>(rowBytes)));
+                    const uint8_t* rs1 = static_cast<const uint8_t*>(pin.GetPointer(
+                        static_cast<uint64_t>(localRow + 1) * static_cast<uint64_t>(rowBytes)));
+                    const uint8_t* rs2 = static_cast<const uint8_t*>(pin.GetPointer(
+                        static_cast<uint64_t>(localRow + 2) * static_cast<uint64_t>(rowBytes)));
+                    const uint8_t* rs3 = static_cast<const uint8_t*>(pin.GetPointer(
+                        static_cast<uint64_t>(localRow + 3) * static_cast<uint64_t>(rowBytes)));
+                    if (!rs0 || !rs1 || !rs2 || !rs3)
+                    {
+                        printf("[StreamingMatMul] Invalid pinned pointer (fused seq) for %s row=%zu\n",
+                               name.c_str(), row + localRow);
+                        return false;
+                    }
+                    if (decodeKind == StreamingRowDecodeKind::Q8_0)
+                        FusedQ8GEMV4Rows_TPS(rs0, rs1, rs2, rs3, x, blocksPerRow,
+                            y[row + localRow + 0], y[row + localRow + 1],
+                            y[row + localRow + 2], y[row + localRow + 3]);
+                    else
+                        FusedQ4_0GEMV4Rows_TPS(rs0, rs1, rs2, rs3, x, blocksPerRow,
+                            y[row + localRow + 0], y[row + localRow + 1],
+                            y[row + localRow + 2], y[row + localRow + 3]);
+                    localRow += 4;
+                }
+                while (localRow < shardRows)
+                {
+                    const uint8_t* rs = static_cast<const uint8_t*>(pin.GetPointer(
+                        static_cast<uint64_t>(localRow) * static_cast<uint64_t>(rowBytes)));
+                    if (!rs)
+                    {
+                        printf("[StreamingMatMul] Invalid pinned pointer (fused seq tail) for %s row=%zu\n",
+                               name.c_str(), row + localRow);
+                        return false;
+                    }
+                    y[row + localRow] = (decodeKind == StreamingRowDecodeKind::Q8_0)
+                        ? FusedQ8RowDot_TPS(rs, x, blocksPerRow)
+                        : FusedQ4_0RowDot_TPS(rs, x, blocksPerRow);
+                    ++localRow;
+                }
+            }
+            else
+#endif  // __AVX2__
+            {
             size_t localRow = 0;
             while (localRow < shardRows)
             {
@@ -4216,6 +4535,7 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
 
                 localRow += tileRows;
             }
+            }  // end non-fused tile-decode block
         }
 
         row += shardRows;
