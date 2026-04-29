@@ -1682,8 +1682,31 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
     std::vector<float> scores(cache_ctx);
     std::vector<uint8_t> score_valid(cache_ctx, 0);
 
+    // ---------------------------------------------------------------------------
+    // Per-token phase profiler (accumulated over all T tokens, printed at end)
+    // ---------------------------------------------------------------------------
+    using PhaseClock = std::chrono::high_resolution_clock;
+    using PhaseNs    = long long;
+    struct PhaseTimers
+    {
+        PhaseNs qkv_proj    = 0;  // attn_qkv StreamingMatMul
+        PhaseNs rope_kv     = 0;  // RoPE + KV cache memcpy writes
+        PhaseNs attn_scores = 0;  // Q·K^T dot products
+        PhaseNs softmax_vm  = 0;  // softmax + value mix (softmax·V)
+        PhaseNs attn_out    = 0;  // attn_output StreamingMatMul (wo)
+        PhaseNs ffn         = 0;  // gate+up+silu+hadamard+down (all FFN)
+        PhaseNs output_proj = 0;  // final output.weight projection
+        PhaseNs token_total = 0;  // full token wall time
+    } pt;
+#define PHASE_START(v) (v) = PhaseClock::now()
+#define PHASE_END(v, field) pt.field += std::chrono::duration_cast<std::chrono::nanoseconds>(PhaseClock::now() - (v)).count()
+
+    // One start-time variable per phase — reused each layer/token iteration without redeclaration.
+    PhaseClock::time_point _pt_qkv{}, _pt_rope{}, _pt_attn{}, _pt_ao{}, _pt_ffn{}, _pt_op{};
+
     for (int t = 0; t < T; t++)
     {
+        const auto _token_t0 = PhaseClock::now();
         const bool swarmTokenActive = (m_swarmScheduler != nullptr) && (loader != nullptr) &&
                                       (loader->getExperts() > 0) && !m_swarmPinningSuppressed;
         if (swarmTokenActive)
@@ -1789,6 +1812,7 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
 
             const bool has_split_qkv =
                 loader->hasTensorNamed(wq_name) && loader->hasTensorNamed(wk_name) && loader->hasTensorNamed(wv_name);
+            PHASE_START(_pt_qkv);
             if (has_split_qkv)
             {
                 if (!loader->StreamingMatMul(wq_name, x.data(), q.data(), dim, dim))
@@ -1827,8 +1851,10 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
                 std::memcpy(v.data(), packed_qkv.data() + static_cast<size_t>(dim) + static_cast<size_t>(kv_dim),
                             static_cast<size_t>(kv_dim) * sizeof(float));
             }
+            PHASE_END(_pt_qkv, qkv_proj);
 
             // RoPE — apply separately for Q (n_heads) and K (n_kv_heads)
+            PHASE_START(_pt_rope);
             RoPE_AVX512(q.data(), nullptr, current_pos + t, head_dim, n_heads);
             RoPE_AVX512(k.data(), nullptr, current_pos + t, head_dim, n_kv_heads);
 
@@ -1848,6 +1874,7 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
             memcpy(kv_cache_k.data() + cache_offset, k.data(), static_cast<size_t>(kv_dim) * sizeof(float));
             memcpy(kv_cache_v.data() + cache_offset, v.data(), static_cast<size_t>(kv_dim) * sizeof(float));
             kv_cache_pos[static_cast<size_t>(l) * static_cast<size_t>(cache_ctx) + static_cast<size_t>(slot)] = abs_pos;
+            PHASE_END(_pt_rope, rope_kv);
 
             // Multi-head attention with GQA
             std::fill(att_out.begin(), att_out.end(), 0.0f);
@@ -1856,6 +1883,7 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
             const int64_t window_start = seq_len_total - static_cast<int64_t>(attn_len);
             const float inv_scale = 1.0f / sqrtf(static_cast<float>(head_dim));
 
+            PHASE_START(_pt_attn);
             for (int h = 0; h < n_heads; h++)
             {
                 const int kv_h = std::min(n_kv_heads - 1, h / heads_per_kv);
@@ -1910,13 +1938,16 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
                     VectorAddScaled_AVX512(out_head, v_past, scores[p], head_dim);
                 }
             }
+            PHASE_END(_pt_attn, attn_scores);
 
             // Output projection: dim → dim
+            PHASE_START(_pt_ao);
             if (!loader->StreamingMatMul(wo_name, att_out.data(), attn_final.data(), dim, dim))
             {
                 printf("[Forward] FATAL: StreamingMatMul failed for %s\n", wo_name.c_str());
                 return {};
             }
+            PHASE_END(_pt_ao, attn_out);
 
             // Residual add
             VectorAdd_AVX512(x.data(), residual.data(), attn_final.data(), dim);
@@ -1938,6 +1969,7 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
             }
             RMSNorm_AVX512(x.data(), x.data(), ffn_norm, dim, config.rms_norm_eps);
 
+            PHASE_START(_pt_ffn);
             std::vector<std::uint32_t> moeExpertPick;
             std::vector<float> moeMixtureWeights;
             if (moeTwoPhasePin && layerSwarmActive)
@@ -2218,6 +2250,7 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
             }
 
             VectorAdd_AVX512(x.data(), residual.data(), final_ffn.data(), dim);
+            PHASE_END(_pt_ffn, ffn);
             for (int i = 0; i < dim; ++i)
             {
                 if (!std::isfinite(x[i]))
@@ -2234,8 +2267,9 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
                 }
                 (void)m_swarmScheduler->onLayerComputeFinished(0u, static_cast<std::uint32_t>(l));
             }
-        }
-    }
+        }  // end layer loop
+        pt.token_total += std::chrono::duration_cast<std::chrono::nanoseconds>(PhaseClock::now() - _token_t0).count();
+    }  // end token loop
 
     // Final norm + output projection
     float* out_norm = loader->GetTensor("output_norm.weight");
@@ -2252,22 +2286,52 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
         return {};
     }
     std::vector<float> logits(config.vocab_size);
-    if (!loader->StreamingMatMul("output.weight", x.data(), logits.data(), dim, config.vocab_size))
     {
-        MEMORYSTATUSEX ms2{};
-        ms2.dwLength = sizeof(ms2);
-        GlobalMemoryStatusEx(&ms2);
-        const size_t shard_mb = (static_cast<size_t>(config.vocab_size) * (static_cast<size_t>(dim) / 256) * 84) >> 20;
-        printf("[Forward] FATAL: output.weight StreamingMatMul failed. "
-               "vocab=%d dim=%d shard_est=%zu MB avail_phys=%llu MB avail_virt=%llu MB\n",
-               config.vocab_size, dim, shard_mb, ms2.ullAvailPhys >> 20, ms2.ullAvailVirtual >> 20);
-        return {};
+        PHASE_START(_pt_op);
+        if (!loader->StreamingMatMul("output.weight", x.data(), logits.data(), dim, config.vocab_size))
+        {
+            MEMORYSTATUSEX ms2{};
+            ms2.dwLength = sizeof(ms2);
+            GlobalMemoryStatusEx(&ms2);
+            const size_t shard_mb = (static_cast<size_t>(config.vocab_size) * (static_cast<size_t>(dim) / 256) * 84) >> 20;
+            printf("[Forward] FATAL: output.weight StreamingMatMul failed. "
+                   "vocab=%d dim=%d shard_est=%zu MB avail_phys=%llu MB avail_virt=%llu MB\n",
+                   config.vocab_size, dim, shard_mb, ms2.ullAvailPhys >> 20, ms2.ullAvailVirtual >> 20);
+            return {};
+        }
+        PHASE_END(_pt_op, output_proj);
     }
     for (int i = 0; i < config.vocab_size; ++i)
     {
         if (!std::isfinite(logits[i]))
             logits[i] = -std::numeric_limits<float>::max();
     }
+
+    // ---------------------------------------------------------------------------
+    // Phase breakdown report (printed once per Forward() call, T tokens total)
+    // ---------------------------------------------------------------------------
+    {
+        const PhaseNs total_all = pt.qkv_proj + pt.rope_kv + pt.attn_scores +
+                                  pt.attn_out + pt.ffn + pt.output_proj;
+        auto ms  = [](PhaseNs ns) -> double { return static_cast<double>(ns) * 1e-6; };
+        auto pct = [&](PhaseNs ns) -> double {
+            return total_all > 0 ? (static_cast<double>(ns) / static_cast<double>(total_all)) * 100.0 : 0.0;
+        };
+        printf("[PHASE] tokens=%d total_acc=%.1f ms\n", T, ms(total_all));
+        printf("[PHASE]   qkv_proj    %7.1f ms  %5.1f%%\n", ms(pt.qkv_proj),    pct(pt.qkv_proj));
+        printf("[PHASE]   rope_kv     %7.1f ms  %5.1f%%\n", ms(pt.rope_kv),     pct(pt.rope_kv));
+        printf("[PHASE]   attn_scores %7.1f ms  %5.1f%%\n", ms(pt.attn_scores), pct(pt.attn_scores));
+        printf("[PHASE]   attn_out    %7.1f ms  %5.1f%%\n", ms(pt.attn_out),    pct(pt.attn_out));
+        printf("[PHASE]   ffn         %7.1f ms  %5.1f%%\n", ms(pt.ffn),         pct(pt.ffn));
+        printf("[PHASE]   output_proj %7.1f ms  %5.1f%%\n", ms(pt.output_proj), pct(pt.output_proj));
+        printf("[PHASE]   unaccounted %7.1f ms  (overhead / norms / residual)\n",
+               ms(pt.token_total - total_all));
+        printf("[PHASE]   per_token   %7.1f ms avg\n",
+               T > 0 ? ms(total_all) / static_cast<double>(T) : 0.0);
+        std::fflush(stdout);
+    }
+#undef PHASE_START
+#undef PHASE_END
 
     return logits;
 }
