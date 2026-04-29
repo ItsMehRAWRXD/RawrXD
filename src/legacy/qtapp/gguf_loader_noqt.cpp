@@ -13,11 +13,11 @@ constexpr uint32_t GGUF_MAGIC = 0x46554747;  // "GGUF"
 constexpr uint32_t GGUF_VERSION = 3;
 
 // GGML type enumeration
-enum GGML_TYPE {
-    GGML_TYPE_F32 = 0,
-    GGML_TYPE_F16 = 1,
-    GGML_TYPE_Q4_0 = 2,
-    GGML_TYPE_Q4_1 = 3,
+enum ggml_rxd_type {
+    GGML_RXD_TYPE_F32 = 0,
+    GGML_RXD_TYPE_F16 = 1,
+    GGML_RXD_TYPE_Q4_0 = 2,
+    GGML_RXD_TYPE_Q4_1 = 3,
     // ... additional types
 };
 

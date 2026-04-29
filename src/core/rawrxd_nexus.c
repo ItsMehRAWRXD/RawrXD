@@ -43,25 +43,25 @@ static RXDNexusEngine g_nexus = {0};
 
 static size_t rxd_nexus_bytes_per_block(GGMLType type) {
     switch (type) {
-    case GGML_TYPE_Q4_0:
+    case GGML_RXD_TYPE_Q4_0:
         return 18;
-    case GGML_TYPE_Q4_1:
+    case GGML_RXD_TYPE_Q4_1:
         return 20;
-    case GGML_TYPE_Q5_0:
+    case GGML_RXD_TYPE_Q5_0:
         return 22;
-    case GGML_TYPE_Q5_1:
+    case GGML_RXD_TYPE_Q5_1:
         return 24;
-    case GGML_TYPE_Q8_0:
+    case GGML_RXD_TYPE_Q8_0:
         return 34;
-    case GGML_TYPE_Q4_K:
+    case GGML_RXD_TYPE_Q4_K:
         return 144;
-    case GGML_TYPE_Q5_K:
+    case GGML_RXD_TYPE_Q5_K:
         return 176;
-    case GGML_TYPE_Q6_K:
+    case GGML_RXD_TYPE_Q6_K:
         return 210;
-    case GGML_TYPE_F16:
+    case GGML_RXD_TYPE_F16:
         return 2;
-    case GGML_TYPE_F32:
+    case GGML_RXD_TYPE_F32:
         return 4;
     default:
         return 0;
@@ -754,7 +754,7 @@ void rxd_adapt_quant_init(uint32_t layer_count) {
     g_adapt_quant.auto_adjust_enabled = true;
     
     for (uint32_t i = 0; i < g_adapt_quant.layer_count; i++) {
-        g_adapt_quant.layers[i].current_type = GGML_TYPE_Q4_K;
+        g_adapt_quant.layers[i].current_type = GGML_RXD_TYPE_Q4_K;
         g_adapt_quant.layers[i].importance_score = 0.5f;
     }
 }
@@ -814,18 +814,18 @@ void rxd_adapt_quant_auto_adjust(float vram_pressure) {
         
         /* High VRAM pressure + low importance = downgrade quant */
         if (vram_pressure > 0.9f && importance < 0.5f) {
-            if (layer->current_type == GGML_TYPE_Q6_K) {
-                rxd_adapt_quant_switch_layer(i, GGML_TYPE_Q4_K);
-            } else if (layer->current_type == GGML_TYPE_Q4_K) {
-                rxd_adapt_quant_switch_layer(i, GGML_TYPE_Q4_0);
+            if (layer->current_type == GGML_RXD_TYPE_Q6_K) {
+                rxd_adapt_quant_switch_layer(i, GGML_RXD_TYPE_Q4_K);
+            } else if (layer->current_type == GGML_RXD_TYPE_Q4_K) {
+                rxd_adapt_quant_switch_layer(i, GGML_RXD_TYPE_Q4_0);
             }
         }
         /* Low VRAM pressure + high importance = upgrade quant */
         else if (vram_pressure < 0.5f && importance > 0.8f) {
-            if (layer->current_type == GGML_TYPE_Q4_0) {
-                rxd_adapt_quant_switch_layer(i, GGML_TYPE_Q4_K);
-            } else if (layer->current_type == GGML_TYPE_Q4_K) {
-                rxd_adapt_quant_switch_layer(i, GGML_TYPE_Q6_K);
+            if (layer->current_type == GGML_RXD_TYPE_Q4_0) {
+                rxd_adapt_quant_switch_layer(i, GGML_RXD_TYPE_Q4_K);
+            } else if (layer->current_type == GGML_RXD_TYPE_Q4_K) {
+                rxd_adapt_quant_switch_layer(i, GGML_RXD_TYPE_Q6_K);
             }
         }
     }

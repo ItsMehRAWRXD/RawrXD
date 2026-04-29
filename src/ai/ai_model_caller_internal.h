@@ -9,7 +9,7 @@
 #endif
 
 typedef struct RAWRXD_GGML_TITAN_BRIDGE {
-    void* ggml_ctx;
+    void* ggml_rxd_ctx;
     void* model_tensors;
     int n_layers;
     int n_embd;

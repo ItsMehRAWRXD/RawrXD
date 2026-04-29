@@ -94,7 +94,8 @@ public:
     
     std::vector<BuildHistoryEntry> getBuildHistory(int maxEntries = 50) const;
     void clearBuildHistory();
-\npublic:\n    void buildStarted(const std::string& sourceFile);
+
+\npublic:\n    void buildStarted(const std::string& sourceFile);
     void buildProgress(int percentage, const std::string& status);
     void buildOutputReceived(const std::string& output);
     void buildErrorDetected(const BuildError& error);
@@ -104,7 +105,8 @@ public:
     
     // Real-time diagnostics
     void diagnosticAdded(const std::string& file, int line, const std::string& severity, const std::string& message);
-\nprivate:\n    void onProcessStarted();
+
+\nprivate:\n    void onProcessStarted();
     void onProcessFinished(int exitCode, void*::ExitStatus exitStatus);
     void onProcessError(void*::ProcessError error);
     void onStdoutReadyRead();
@@ -193,7 +195,8 @@ public:
     void saveConfiguration(const std::string& name, const BuildConfiguration& config);
     BuildConfiguration loadConfiguration(const std::string& name);
     std::stringList getAvailableConfigurations() const;
-\npublic:\n    void buildStarted(const std::string& target);
+
+\npublic:\n    void buildStarted(const std::string& target);
     void buildProgress(int percentage);
     void buildCompleted(bool success);
     void buildSystemDetected(BuildSystem system);

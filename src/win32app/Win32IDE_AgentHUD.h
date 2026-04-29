@@ -14,6 +14,7 @@ public:
     
     void showToolExecuting(const std::string& toolName, const std::string& args);
     void completeTool(const std::string& result, bool success);
+    void updateTelemetry();
     void hide();
     
     std::function<void()> onCancelRequested;

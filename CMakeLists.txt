@@ -3487,6 +3487,7 @@ if(WIN32)
 
         # T3-D: Deterministic Replay Engine (DivergenceEvent + TelemetrySnapshot)
         src/agentic/DeterministicReplayEngine.cpp
+        src/engine/telemetry_replay_tool.cpp
 
         # T4: Autonomous Recovery Orchestrator (FailureClass → recovery → verify → commit)
         src/agentic/autonomous_recovery_orchestrator.cpp
@@ -3505,6 +3506,9 @@ if(WIN32)
         src/agentic/FIMPromptBuilder.cpp
         src/agentic/react_tool_loop.cpp
         src/ai/inference_retry_shim.cpp
+        src/core/safe_inference_session.cpp
+        src/ai/embedding_provider.cpp
+        src/core/ai_execution_guardrails.cpp
         
         # SDMA Phase 1: Coordinator (burst scheduling bridge/thread management)
         src/core/sdma/sdma_coordinator.cpp
@@ -4899,7 +4903,19 @@ if(WIN32)
         src/features/missing_features.cpp
     )
 
-    add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${ASM_KERNEL_SOURCES} ${WIN32IDE_EXTRA_ASM})
+    add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${ASM_KERNEL_SOURCES} ${WIN32IDE_EXTRA_ASM}
+        src/ggml.c
+        src/ggml-alloc.c
+        src/ggml-quants.c
+        src/ggml-cpu/ggml-cpu.c
+        src/ggml-cpu/ggml-cpu.cpp
+        src/ggml-cpu/quants.c
+        src/ggml-cpu/repack.cpp
+    )
+
+    target_include_directories(RawrXD-Win32IDE PRIVATE
+        src/ggml-cpu
+    )
 
     # GPU sovereign ASM link state (UI/runtime detection)
     if(DEFINED RAWRXD_HAS_SOVEREIGN_GPU_ASM)
@@ -5134,6 +5150,9 @@ if(WIN32)
     
     # Link RE library into Win32IDE
     target_link_libraries(RawrXD-Win32IDE PRIVATE RawrXD-RE-Library)
+    if(TARGET ggml)
+        target_link_libraries(RawrXD-Win32IDE PRIVATE ggml)
+    endif()
     
     # Singularity Core (Pure MASM layer — optional; skip link if lib not built yet)
     set(_RAWRXD_SINGULARITY_CORE_LIB "${CMAKE_SOURCE_DIR}/build/asm_obj/singularity_core.lib")

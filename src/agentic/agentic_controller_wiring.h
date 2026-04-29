@@ -25,7 +25,7 @@ struct ExecutePlanTelemetry {
 
 /// Initialize the agent controller and wire it with the inference engine
 /// Should be called once during AgenticBridge initialization
-void initializeAgentControllerWiring(RawrXD::CPUInferenceEngine* inference_engine);
+void initializeAgentControllerWiring(RawrXD::InferenceEngine* inference_engine);
 
 /// Process an agentic request using the minimal agent controller
 /// Returns true if successfully processed via agentic path, false if should fall back

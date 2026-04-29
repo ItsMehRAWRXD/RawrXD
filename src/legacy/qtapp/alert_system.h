@@ -39,14 +39,16 @@ public:
     void escalateAlert(const std::string& alertId, const std::string& reason);
     void assignAlert(const std::string& alertId, const std::string& assignee);
     void setAlertSLA(const std::string& alertId, const void*& sla);
-\npublic:\n    void onPerformanceAnomaly(const std::string& metric, double currentValue, double threshold);
+
+\npublic:\n    void onPerformanceAnomaly(const std::string& metric, double currentValue, double threshold);
     void onResourceExhaustion(const std::string& resourceType, double usage);
     void onErrorPatternDetected(const std::string& errorType, int frequency);
     void onBuildFailure(const std::string& buildId, const std::string& error);
     void onSecurityIssue(const std::string& severity, const std::string& description);
     void onDependencyUpdate(const std::string& package, const std::string& version);
     void onConfigurationDrift(const std::string& setting, const std::string& expected, const std::string& actual);
-\npublic:\n    void alertCreated(const std::string& alertId, const void*& alert);
+
+\npublic:\n    void alertCreated(const std::string& alertId, const void*& alert);
     void alertResolved(const std::string& alertId);
     void alertEscalated(const std::string& alertId, const std::string& level);
     void alertAssigned(const std::string& alertId, const std::string& assignee);

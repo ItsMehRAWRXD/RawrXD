@@ -145,7 +145,7 @@ bool GgufTensorParallelLoader::parseHeader()
             if (!read_u64(tm.dims[d])) return false;
         // Unused dims = 1
         for (uint32_t d = tm.n_dims; d < 4; ++d) tm.dims[d] = 1;
-        if (!f.read((char*)&tm.ggml_type, 4)) return false;
+        if (!f.read((char*)&tm.ggml_rxd_type, 4)) return false;
         if (!read_u64(tm.file_offset)) return false;
 
         size_t idx = tensor_meta_.size();
@@ -246,9 +246,9 @@ bool GgufTensorParallelLoader::computeShardBounds(
         spec.n_cols    = n_shard_cols;
 
         // byte offset within a row
-        int64_t bpe  = bytesPerElement(meta.ggml_type);
-        int64_t bpb  = blockSizeBytes(meta.ggml_type);
-        int64_t epb  = elementsPerBlock(meta.ggml_type);
+        int64_t bpe  = bytesPerElement(meta.ggml_rxd_type);
+        int64_t bpb  = blockSizeBytes(meta.ggml_rxd_type);
+        int64_t epb  = elementsPerBlock(meta.ggml_rxd_type);
 
         if (bpe > 0) {
             // Scalar type: straightforward
@@ -267,9 +267,9 @@ bool GgufTensorParallelLoader::computeShardBounds(
     }
 
     // Row mode: compute byte bounds
-    int64_t bpe  = bytesPerElement(meta.ggml_type);
-    int64_t bpb  = blockSizeBytes(meta.ggml_type);
-    int64_t epb  = elementsPerBlock(meta.ggml_type);
+    int64_t bpe  = bytesPerElement(meta.ggml_rxd_type);
+    int64_t bpb  = blockSizeBytes(meta.ggml_rxd_type);
+    int64_t epb  = elementsPerBlock(meta.ggml_rxd_type);
     int64_t row_bytes = 0;
 
     if (bpe > 0) {
@@ -328,7 +328,7 @@ std::optional<TensorParallelInfo> GgufTensorParallelLoader::loadShard(
 
     TensorParallelInfo info;
     info.name      = tensor_name;
-    info.ggml_type = meta.ggml_type;
+    info.ggml_rxd_type = meta.ggml_rxd_type;
     info.n_rows    = spec.n_rows;
     info.n_cols    = spec.n_cols;
     info.shard     = spec;

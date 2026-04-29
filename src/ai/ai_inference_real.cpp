@@ -1,8 +1,9 @@
 // ai_inference_real.cpp - COMPLETE REPLACEMENT FOR FAKE 0.42f GENERATOR
 // Production-ready transformer inference with real GGML backend
 
-#include "ggml.h"
-#include "ggml-backend.h"
+#include "ggml_rxd_internal.h"
+#include "ggml-backend_rxd_internal.h"
+#include "ggml-cpu.h"
 #include "gguf.h"
 #include "speculative_decoder.h"
 #include "../RawrXD_Interfaces.h"
@@ -20,6 +21,14 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+
+namespace RawrXD {
+
+struct InferenceBatch {
+    const int32_t* tokens;
+    uint32_t count;
+    float temperature;
+};
 
 extern "C" {
 int VulkanKernel_Init(void);
@@ -74,6 +83,23 @@ static std::string EnvString(const char* name) {
         return std::string();
     }
     return std::string(value, value + len);
+}
+
+// Basic structured logging for this module
+static void LogInfo(const char* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    vfprintf(stdout, fmt, args);
+    fprintf(stdout, "\n");
+    va_end(args);
+}
+
+static void LogError(const char* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    vfprintf(stderr, fmt, args);
+    fprintf(stderr, "\n");
+    va_end(args);
 }
 
 static bool RunVulkanTruthPreflight() {
@@ -259,24 +285,6 @@ done:
 }
 
 // Basic structured logging for this module
-static void LogError(const char* fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-
-    v
-
-    va_end(args);
-}
-
-static void LogInfo(const char* fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-
-    v
-
-    va_end(args);
-}
-
 struct InferenceResult {
     std::vector<int> tokens;
     std::vector<float> logits;
@@ -288,10 +296,10 @@ struct InferenceResult {
 
 // Model state
 struct ModelState {
-    ggml_context* ctx = nullptr;
+    ggml_rxd_context* ctx = nullptr;
     gguf_context* gguf_ctx = nullptr;
-    ggml_backend* backend = nullptr;
-    ggml_backend_buffer* buffer = nullptr;
+    ggml_rxd_backend* backend = nullptr;
+    ggml_rxd_backend_buffer* buffer = nullptr;
 
     // Speculative Decoder Integration
     std::unique_ptr<RawrXD::SpeculativeDecoder> spec_decoder;
@@ -308,12 +316,12 @@ struct ModelState {
     float f_norm_rms_eps = 1e-5f;
 
     // Tensors
-    ggml_tensor* tok_embd = nullptr;
-    ggml_tensor* norm_f = nullptr;
-    ggml_tensor* output = nullptr;
+    ggml_rxd_tensor* tok_embd = nullptr;
+    ggml_rxd_tensor* norm_f = nullptr;
+    ggml_rxd_tensor* output = nullptr;
 
-    std::vector<ggml_tensor*> layers_k;
-    std::vector<ggml_tensor*> layers_v;
+    std::vector<ggml_rxd_tensor*> layers_k;
+    std::vector<ggml_rxd_tensor*> layers_v;
 };
 
 static ModelState g_model;
@@ -392,6 +400,7 @@ struct Tokenizer {
 static Tokenizer g_tokenizer;
 
 // Initialize model from GGUF file
+
 bool LoadModelReal(const char* path) {
     if (!RunVulkanTruthPreflight()) {
         LogError("Vulkan preflight failed and inference is gated");
@@ -424,32 +433,32 @@ bool LoadModelReal(const char* path) {
     }
 
     // Initialize backend (CPU for compatibility, CUDA/Vulkan if available)
-    g_model.backend = ggml_backend_cpu_init();
+    g_model.backend = ggml_rxd_backend_cpu_init();
     if (!g_model.backend) {
         LogError("Failed to initialize GGML backend");
         return false;
     }
 
     // Allocate context
-    size_t ctx_size = ggml_tensor_overhead() * (6 + g_model.n_layer * 6) + ggml_graph_overhead();
-    ggml_init_params ctx_params = {};
+    size_t ctx_size = ggml_rxd_tensor_overhead() * (6 + g_model.n_layer * 6) + ggml_rxd_graph_overhead();
+    ggml_rxd_init_params ctx_params = {};
     ctx_params.mem_size = ctx_size;
     ctx_params.mem_buffer = nullptr;
     ctx_params.no_alloc = true;
 
-    g_model.ctx = ggml_init(ctx_params);
+    g_model.ctx = ggml_rxd_init(ctx_params);
     if (!g_model.ctx) {
         LogError("Failed to initialize GGML context");
         return false;
     }
 
     // Load tensors
-    g_model.tok_embd = ggml_get_tensor(g_model.ctx, "token_embd.weight");
-    g_model.norm_f   = ggml_get_tensor(g_model.ctx, "output_norm.weight");
-    g_model.output   = ggml_get_tensor(g_model.ctx, "output.weight");
+    g_model.tok_embd = ggml_rxd_get_tensor(g_model.ctx, "token_embd.weight");
+    g_model.norm_f   = ggml_rxd_get_tensor(g_model.ctx, "output_norm.weight");
+    g_model.output   = ggml_rxd_get_tensor(g_model.ctx, "output.weight");
 
     // Allocate backend buffer
-    g_model.buffer = ggml_backend_alloc_ctx_tensors(g_model.ctx, g_model.backend);
+    g_model.buffer = ggml_rxd_backend_alloc_ctx_tensors(g_model.ctx, g_model.backend);
     if (!g_model.buffer) {
         LogError("Failed to allocate backend buffer");
         return false;
@@ -473,52 +482,52 @@ bool LoadModelReal(const char* path) {
 }
 
 // Build computation graph for one token
-static ggml_cgraph* BuildGraph(ModelState& model, const std::vector<int32_t>& tokens, int n_past) {
-    ggml_cgraph* gf = ggml_new_graph(model.ctx);
+static ggml_rxd_cgraph* BuildGraph(ModelState& model, const std::vector<int32_t>& tokens, int n_past) {
+    ggml_rxd_cgraph* gf = ggml_rxd_new_graph(model.ctx);
 
     // Input tokens
-    ggml_tensor* inp_tokens = ggml_new_tensor_1d(model.ctx, GGML_TYPE_I32, tokens.size());
+    ggml_rxd_tensor* inp_tokens = ggml_rxd_new_tensor_1d(model.ctx, GGML_RXD_TYPE_I32, tokens.size());
     std::memcpy(inp_tokens->data, tokens.data(), tokens.size() * sizeof(int32_t));
 
     // Get embeddings
-    ggml_tensor* inpL = ggml_get_rows(model.ctx, model.tok_embd, inp_tokens);
+    ggml_rxd_tensor* inpL = ggml_rxd_get_rows(model.ctx, model.tok_embd, inp_tokens);
 
     // Process each layer
     for (int il = 0; il < model.n_layer; il++) {
-        ggml_tensor* cur = inpL;
+        ggml_rxd_tensor* cur = inpL;
 
         // Layer norm
         char buf[128];
         std::snprintf(buf, sizeof(buf), "blk.%d.attn_norm.weight", il);
-        ggml_tensor* attn_norm = ggml_get_tensor(model.ctx, buf);
-        cur = ggml_rms_norm(model.ctx, cur, model.f_norm_rms_eps);
-        cur = ggml_mul(model.ctx, cur, attn_norm);
+        ggml_rxd_tensor* attn_norm = ggml_rxd_get_tensor(model.ctx, buf);
+        cur = ggml_rxd_rms_norm(model.ctx, cur, model.f_norm_rms_eps);
+        cur = ggml_rxd_mul(model.ctx, cur, attn_norm);
 
         // QKV projections
         std::snprintf(buf, sizeof(buf), "blk.%d.attn_q.weight", il);
-        ggml_tensor* wq = ggml_get_tensor(model.ctx, buf);
+        ggml_rxd_tensor* wq = ggml_rxd_get_tensor(model.ctx, buf);
         std::snprintf(buf, sizeof(buf), "blk.%d.attn_k.weight", il);
-        ggml_tensor* wk = ggml_get_tensor(model.ctx, buf);
+        ggml_rxd_tensor* wk = ggml_rxd_get_tensor(model.ctx, buf);
         std::snprintf(buf, sizeof(buf), "blk.%d.attn_v.weight", il);
-        ggml_tensor* wv = ggml_get_tensor(model.ctx, buf);
+        ggml_rxd_tensor* wv = ggml_rxd_get_tensor(model.ctx, buf);
 
-        ggml_tensor* Q = ggml_mul_mat(model.ctx, wq, cur);
-        ggml_tensor* K = ggml_mul_mat(model.ctx, wk, cur);
-        ggml_tensor* V = ggml_mul_mat(model.ctx, wv, cur);
+        ggml_rxd_tensor* Q = ggml_rxd_mul_mat(model.ctx, wq, cur);
+        ggml_rxd_tensor* K = ggml_rxd_mul_mat(model.ctx, wk, cur);
+        ggml_rxd_tensor* V = ggml_rxd_mul_mat(model.ctx, wv, cur);
 
         // RoPE (Rotary Position Embedding)
-        ggml_tensor* KQ_pos = ggml_new_tensor_1d(model.ctx, GGML_TYPE_I32, tokens.size());
+        ggml_rxd_tensor* KQ_pos = ggml_rxd_new_tensor_1d(model.ctx, GGML_RXD_TYPE_I32, tokens.size());
         for (size_t i = 0; i < tokens.size(); i++) {
             reinterpret_cast<int32_t*>(KQ_pos->data)[i] = n_past + static_cast<int>(i);
         }
 
         int n_rot = model.n_embd / model.n_head;
-        Q = ggml_rope_inplace(model.ctx, Q, KQ_pos, n_rot, 0, 0);
-        K = ggml_rope_inplace(model.ctx, K, KQ_pos, n_rot, 0, 0);
+        Q = ggml_rxd_rope_ext_inplace(model.ctx, Q, KQ_pos, nullptr, n_rot, 0, 4096, 10000.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f);
+        K = ggml_rxd_rope_ext_inplace(model.ctx, K, KQ_pos, nullptr, n_rot, 0, 4096, 10000.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f);
 
         // Store K,V in cache
         if (il < static_cast<int>(model.layers_k.size())) {
-            ggml_tensor* k_cache = ggml_view_3d(
+            ggml_rxd_tensor* k_cache = ggml_rxd_view_3d(
                 model.ctx,
                 model.layers_k[il],
                 model.n_embd / model.n_head,
@@ -528,7 +537,7 @@ static ggml_cgraph* BuildGraph(ModelState& model, const std::vector<int32_t>& to
                 model.n_embd * sizeof(float),
                 n_past * model.n_embd * sizeof(float));
 
-            ggml_tensor* v_cache = ggml_view_3d(
+            ggml_rxd_tensor* v_cache = ggml_rxd_view_3d(
                 model.ctx,
                 model.layers_v[il],
                 model.n_embd / model.n_head,
@@ -538,55 +547,55 @@ static ggml_cgraph* BuildGraph(ModelState& model, const std::vector<int32_t>& to
                 model.n_embd * sizeof(float),
                 n_past * model.n_embd * sizeof(float));
 
-            ggml_build_forward_expand(gf, ggml_cpy(model.ctx, K, k_cache));
-            ggml_build_forward_expand(gf, ggml_cpy(model.ctx, V, v_cache));
+            ggml_rxd_build_forward_expand(gf, ggml_rxd_cpy(model.ctx, K, k_cache));
+            ggml_rxd_build_forward_expand(gf, ggml_rxd_cpy(model.ctx, V, v_cache));
         }
 
         // Attention: Q @ K^T
-        ggml_tensor* KQ = ggml_mul_mat(model.ctx, K, Q);
-        KQ = ggml_scale_inplace(model.ctx, KQ, 1.0f / std::sqrt(static_cast<float>(model.n_embd / model.n_head)));
-        KQ = ggml_diag_mask_inf_inplace(model.ctx, KQ, n_past);
-        KQ = ggml_soft_max_inplace(model.ctx, KQ);
+        ggml_rxd_tensor* KQ = ggml_rxd_mul_mat(model.ctx, K, Q);
+        KQ = ggml_rxd_scale_inplace(model.ctx, KQ, 1.0f / std::sqrt(static_cast<float>(model.n_embd / model.n_head)));
+        KQ = ggml_rxd_diag_mask_inf_inplace(model.ctx, KQ, n_past);
+        KQ = ggml_rxd_soft_max_inplace(model.ctx, KQ);
 
         // Attention @ V
-        ggml_tensor* KQV = ggml_mul_mat(model.ctx, V, KQ);
+        ggml_rxd_tensor* KQV = ggml_rxd_mul_mat(model.ctx, V, KQ);
 
         // Output projection
         std::snprintf(buf, sizeof(buf), "blk.%d.attn_output.weight", il);
-        ggml_tensor* wo = ggml_get_tensor(model.ctx, buf);
-        cur = ggml_mul_mat(model.ctx, wo, KQV);
+        ggml_rxd_tensor* wo = ggml_rxd_get_tensor(model.ctx, buf);
+        cur = ggml_rxd_mul_mat(model.ctx, wo, KQV);
 
         // Residual
-        inpL = ggml_add(model.ctx, inpL, cur);
+        inpL = ggml_rxd_add(model.ctx, inpL, cur);
 
         // FFN
         std::snprintf(buf, sizeof(buf), "blk.%d.ffn_norm.weight", il);
-        ggml_tensor* ffn_norm = ggml_get_tensor(model.ctx, buf);
-        cur = ggml_rms_norm(model.ctx, inpL, model.f_norm_rms_eps);
-        cur = ggml_mul(model.ctx, cur, ffn_norm);
+        ggml_rxd_tensor* ffn_norm = ggml_rxd_get_tensor(model.ctx, buf);
+        cur = ggml_rxd_rms_norm(model.ctx, inpL, model.f_norm_rms_eps);
+        cur = ggml_rxd_mul(model.ctx, cur, ffn_norm);
 
         // SwiGLU
         std::snprintf(buf, sizeof(buf), "blk.%d.ffn_gate.weight", il);
-        ggml_tensor* w1 = ggml_get_tensor(model.ctx, buf);
+        ggml_rxd_tensor* w1 = ggml_rxd_get_tensor(model.ctx, buf);
         std::snprintf(buf, sizeof(buf), "blk.%d.ffn_up.weight", il);
-        ggml_tensor* w3 = ggml_get_tensor(model.ctx, buf);
+        ggml_rxd_tensor* w3 = ggml_rxd_get_tensor(model.ctx, buf);
         std::snprintf(buf, sizeof(buf), "blk.%d.ffn_down.weight", il);
-        ggml_tensor* w2 = ggml_get_tensor(model.ctx, buf);
+        ggml_rxd_tensor* w2 = ggml_rxd_get_tensor(model.ctx, buf);
 
-        ggml_tensor* tmp = ggml_silu(model.ctx, ggml_mul_mat(model.ctx, w1, cur));
-        cur = ggml_mul(model.ctx, tmp, ggml_mul_mat(model.ctx, w3, cur));
-        cur = ggml_mul_mat(model.ctx, w2, cur);
+        ggml_rxd_tensor* tmp = ggml_rxd_silu(model.ctx, ggml_rxd_mul_mat(model.ctx, w1, cur));
+        cur = ggml_rxd_mul(model.ctx, tmp, ggml_rxd_mul_mat(model.ctx, w3, cur));
+        cur = ggml_rxd_mul_mat(model.ctx, w2, cur);
 
-        inpL = ggml_add(model.ctx, inpL, cur);
+        inpL = ggml_rxd_add(model.ctx, inpL, cur);
     }
 
     // Final norm
-    inpL = ggml_rms_norm(model.ctx, inpL, model.f_norm_rms_eps);
-    inpL = ggml_mul(model.ctx, inpL, model.norm_f);
+    inpL = ggml_rxd_rms_norm(model.ctx, inpL, model.f_norm_rms_eps);
+    inpL = ggml_rxd_mul(model.ctx, inpL, model.norm_f);
 
     // Output logits
-    ggml_tensor* logits = ggml_mul_mat(model.ctx, model.output, inpL);
-    ggml_build_forward_expand(gf, logits);
+    ggml_rxd_tensor* logits = ggml_rxd_mul_mat(model.ctx, model.output, inpL);
+    ggml_rxd_build_forward_expand(gf, logits);
 
     return gf;
 }
@@ -604,12 +613,12 @@ InferenceResult RunInferenceReal(const std::string& prompt) {
     std::vector<int32_t> tokens = g_tokenizer.tokenize(prompt);
 
     // Build and compute graph
-    ggml_cgraph* gf = BuildGraph(g_model, tokens, 0);
-    ggml_graph_compute_with_ctx(g_model.ctx, gf, 1);
+    ggml_rxd_cgraph* gf = BuildGraph(g_model, tokens, 0);
+    ggml_rxd_backend_graph_compute(g_model.backend, gf);
 
     // Get logits for last token
-    ggml_tensor* logits = gf->nodes[gf->n_nodes - 1];
-    float* logits_data = static_cast<float*>(ggml_get_data(logits));
+    ggml_rxd_tensor* logits = ggml_rxd_graph_node(gf, -1);
+    float* logits_data = static_cast<float*>(ggml_rxd_get_data(logits));
     int n_vocab = g_model.n_vocab;
 
     result.logits.resize(n_vocab);
@@ -665,3 +674,5 @@ InferenceResult RunInferenceReal(const std::string& prompt) {
 
     return result;
 }
+
+} // namespace RawrXD

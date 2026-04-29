@@ -50,7 +50,7 @@ struct TensorInfo {
     std::string name;
     uint32_t    n_dims;
     uint64_t    dims[4];
-    uint32_t    ggml_type;
+    uint32_t    ggml_rxd_type;
     uint64_t    offset;     // byte offset from start of data section
 };
 
@@ -137,7 +137,7 @@ bool parse_lora_tensors(const std::string& path,
         if (ti.n_dims > 4) return false;
         for (uint32_t d = 0; d < ti.n_dims; ++d)
             if (!read_u64(f, ti.dims[d])) return false;
-        if (!f.read((char*)&ti.ggml_type, 4)) return false;
+        if (!f.read((char*)&ti.ggml_rxd_type, 4)) return false;
         if (!read_u64(f, ti.offset)) return false;
         tensors.push_back(std::move(ti));
     }
@@ -155,7 +155,7 @@ bool read_f32_tensor(const std::string& path,
                      const TensorInfo& ti,
                      std::vector<float>& out)
 {
-    if (ti.ggml_type != GGUF_TYPE_FLOAT32) return false; // only F32 lora for now
+    if (ti.ggml_rxd_type != GGUF_TYPE_FLOAT32) return false; // only F32 lora for now
 
     uint64_t n_elems = 1;
     for (uint32_t d = 0; d < ti.n_dims; ++d) n_elems *= ti.dims[d];

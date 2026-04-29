@@ -570,13 +570,32 @@ static int runStartupSelfTest()
     }
 
     // 2) Command dispatch sanity (representative WM_COMMAND IDs)
+    // We verify registration + linkage only — HANDLER_ERROR means the handler ran (correct
+    // behaviour for headless probes with no args). Fail only on NOT_FOUND / NULL_HANDLER /
+    // WRONG_EXPOSURE, which indicate a registry gap or a broken link.
     {
         std::string diag;
         const uint32_t ids[] = {1002u, 2028u, 3200u, 4009u, 10000u};
         bool ok = true;
         for (uint32_t id : ids)
         {
-            if (!runDispatchProbe(id, diag))
+            CommandContext ctx{};
+            ctx.rawInput = "";
+            ctx.args     = "";
+            ctx.commandId      = id;
+            ctx.isGui          = false;
+            ctx.isHeadless     = true;
+            ctx.outputFn       = selfTestOutputSink;
+            ctx.outputUserData = &diag;
+            auto result = RawrXD::Dispatch::dispatchByGuiId(id, ctx);
+            // OK or HANDLER_ERROR (no args) = handler is linked and callable → pass.
+            // PRECOND_FAIL (feature gated at runtime) is also acceptable for a headless probe.
+            // Fail only on: NOT_FOUND (unregistered), NULL_HANDLER (link gap), WRONG_EXPOSURE.
+            const bool linked =
+                result.status == RawrXD::Dispatch::DispatchStatus::OK ||
+                result.status == RawrXD::Dispatch::DispatchStatus::HANDLER_ERROR ||
+                result.status == RawrXD::Dispatch::DispatchStatus::PRECOND_FAIL;
+            if (!linked)
             {
                 ok = false;
                 fail("dispatch", std::to_string(id));

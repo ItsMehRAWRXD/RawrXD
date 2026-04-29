@@ -7,7 +7,7 @@
 #pragma comment(lib, "dxgi.lib")
 
 struct RAWRXD_GGML_TITAN_BRIDGE {
-    void * ggml_ctx;
+    void * ggml_rxd_ctx;
     void * model_tensors;
     int n_layers;
     int n_embd;
@@ -156,7 +156,7 @@ int main(int argc, char ** argv) {
     RAWRXD_GGML_TITAN_BRIDGE bridge = {};
     const int bridgeRc = getBridge(&bridge);
     std::printf("BRIDGE_RC:%d\n", bridgeRc);
-    std::printf("GGML_CTX:%p\n", bridge.ggml_ctx);
+    std::printf("GGML_RXD_CTX:%p\n", bridge.ggml_rxd_ctx);
     std::printf("MODEL_TENSORS:%p\n", bridge.model_tensors);
     std::printf("DIMS:n_layers=%d n_embd=%d n_head=%d n_vocab=%d n_ctx=%d\n",
                 bridge.n_layers,
@@ -183,7 +183,7 @@ int main(int argc, char ** argv) {
         std::printf("VRAM_STATUS:UNKNOWN\n");
     }
 
-    const int liveOk = (bridgeRc == 1 && bridge.ggml_ctx != nullptr);
+    const int liveOk = (bridgeRc == 1 && bridge.ggml_rxd_ctx != nullptr);
     std::printf("PROBE_STATUS:%s\n", liveOk ? "LIVE" : "NOT_LIVE");
 
     if (titanShutdown) {

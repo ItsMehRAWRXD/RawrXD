@@ -63,7 +63,8 @@ public:
     ToolResult refactorCode(const std::string& filePath, const std::string& description);
     ToolResult createCode(const std::string& filePath, const std::string& description);
     ToolResult fixCode(const std::string& filePath, const std::string& description);
-\npublic:\n    void toolExecuted(const std::string& name, const ToolResult& result);
+
+\npublic:\n    void toolExecuted(const std::string& name, const ToolResult& result);
     void toolFailed(const std::string& name, const std::string& error);
     void toolProgress(const std::string& name, const std::string& progress);
     void toolExecutionCompleted(const std::string& name, const std::string& result);

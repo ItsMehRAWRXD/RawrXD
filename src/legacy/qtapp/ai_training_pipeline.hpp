@@ -119,7 +119,8 @@ class AITrainingPipeline  {public:
     bool quantizeModel(const std::string& inputPath, const std::string& outputPath, const std::string& quantization);
     bool validateModel(const std::string& modelPath);
     bool testModel(const std::string& modelPath, const std::stringList& testPrompts);
-\npublic:\n    // Training progress
+
+\npublic:\n    // Training progress
     void trainingStarted();
     void trainingProgress(double progress, const nlohmann::json& metrics);
     void trainingPaused();
@@ -136,9 +137,11 @@ class AITrainingPipeline  {public:
     void modelSaved(const std::string& path);
     void modelQuantized(const std::string& path, const std::string& quantization);
     void modelValidated(const std::string& path, bool isValid);
-\npublic:\n    void onTrainingTimeout();
+
+\npublic:\n    void onTrainingTimeout();
     void onModelCheckpoint();
-\nprivate:\n    void handleTrainingOutput();
+
+\nprivate:\n    void handleTrainingOutput();
     void handleTrainingError();
     void handleTrainingFinished();
 
@@ -237,7 +240,8 @@ class LlamaTrainer  {public:
     bool prepareTraining(const std::string& datasetPath, const AITrainingArchitecture& arch);
     bool startTraining(const TrainingHyperparameters& params);
     bool quantizeModel(const std::string& inputPath, const std::string& outputPath, const std::string& quantization);
-    \npublic:\n    void trainingProgress(double progress);
+    
+\npublic:\n    void trainingProgress(double progress);
     void trainingCompleted(const std::string& modelPath);
     void trainingFailed(const std::string& error);
 
@@ -260,7 +264,8 @@ class ModelQuantizer  {public:
     bool quantizeModel(const std::string& inputPath, const std::string& outputPath, const std::string& quantization);
     std::stringList getSupportedQuantizations() const;
     double estimateQuantizedSize(const std::string& modelPath, const std::string& quantization);
-\npublic:\n    void quantizationProgress(double progress);
+
+\npublic:\n    void quantizationProgress(double progress);
     void quantizationCompleted(const std::string& outputPath);
     void quantizationFailed(const std::string& error);
 
@@ -281,7 +286,8 @@ class TrainingValidator  {public:
     bool validateModel(const std::string& modelPath);
     bool testModel(const std::string& modelPath, const std::stringList& testPrompts);
     nlohmann::json getValidationResults() const;
-\npublic:\n    void validationProgress(double progress);
+
+\npublic:\n    void validationProgress(double progress);
     void validationCompleted(bool isValid, const nlohmann::json& results);
 
 private:

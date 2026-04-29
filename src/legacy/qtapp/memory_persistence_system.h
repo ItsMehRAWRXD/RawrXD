@@ -53,14 +53,16 @@ public:
     void* suggestContextBasedOnHistory(const std::string& currentContext);
     void* suggestRelevantFiles(const std::string& currentFile);
     std::string suggestNextAction(const void*& currentState);
-\npublic:\n    void onSessionStarted(const std::string& sessionId);
+
+\npublic:\n    void onSessionStarted(const std::string& sessionId);
     void onSessionEnded(const std::string& sessionId);
     void onCodeFileOpened(const std::string& filePath);
     void onCodeFileModified(const std::string& filePath);
     void onBuildCompleted(const std::string& buildId, bool success);
     void enableAutoSnapshot(bool enable);
     void setSnapshotInterval(int minutes);
-\npublic:\n    void snapshotSaved(const std::string& sessionId);
+
+\npublic:\n    void snapshotSaved(const std::string& sessionId);
     void sessionRestored(const std::string& sessionName);
     void memoryOptimized(const void*& stats);
     void suggestionGenerated(const void*& suggestions);

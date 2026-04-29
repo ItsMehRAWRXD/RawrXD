@@ -31,20 +31,20 @@ static const char* format_size(size_t bytes) {
     return buffer;
 }
 
-static const char* ggml_type_name(GGMLType type) {
+static const char* ggml_rxd_type_name(GGMLType type) {
     switch (type) {
-        case GGML_TYPE_F32: return "F32";
-        case GGML_TYPE_F16: return "F16";
-        case GGML_TYPE_Q4_0: return "Q4_0";
-        case GGML_TYPE_Q4_1: return "Q4_1";
-        case GGML_TYPE_Q5_0: return "Q5_0";
-        case GGML_TYPE_Q5_1: return "Q5_1";
-        case GGML_TYPE_Q8_0: return "Q8_0";
-        case GGML_TYPE_Q2_K: return "Q2_K";
-        case GGML_TYPE_Q3_K: return "Q3_K";
-        case GGML_TYPE_Q4_K: return "Q4_K";
-        case GGML_TYPE_Q5_K: return "Q5_K";
-        case GGML_TYPE_Q6_K: return "Q6_K";
+        case GGML_RXD_TYPE_F32: return "F32";
+        case GGML_RXD_TYPE_F16: return "F16";
+        case GGML_RXD_TYPE_Q4_0: return "Q4_0";
+        case GGML_RXD_TYPE_Q4_1: return "Q4_1";
+        case GGML_RXD_TYPE_Q5_0: return "Q5_0";
+        case GGML_RXD_TYPE_Q5_1: return "Q5_1";
+        case GGML_RXD_TYPE_Q8_0: return "Q8_0";
+        case GGML_RXD_TYPE_Q2_K: return "Q2_K";
+        case GGML_RXD_TYPE_Q3_K: return "Q3_K";
+        case GGML_RXD_TYPE_Q4_K: return "Q4_K";
+        case GGML_RXD_TYPE_Q5_K: return "Q5_K";
+        case GGML_RXD_TYPE_Q6_K: return "Q6_K";
         default: return "UNKNOWN";
     }
 }
@@ -121,22 +121,22 @@ static void demo_quantization_profiles(void) {
     printf("├────────────┼────────────┼────────────┼────────────┼────────────┤\n");
     
     printf("│ %-10s │ %-10s │ %-10s │ %-10s │ %-10s │\n",
-           "Speed", ggml_type_name(QUANT_PROFILE_SPEED.default_type),
-           ggml_type_name(QUANT_PROFILE_SPEED.attention_type),
-           ggml_type_name(QUANT_PROFILE_SPEED.feedforward_type),
-           ggml_type_name(QUANT_PROFILE_SPEED.embedding_type));
+           "Speed", ggml_rxd_type_name(QUANT_PROFILE_SPEED.default_type),
+           ggml_rxd_type_name(QUANT_PROFILE_SPEED.attention_type),
+           ggml_rxd_type_name(QUANT_PROFILE_SPEED.feedforward_type),
+           ggml_rxd_type_name(QUANT_PROFILE_SPEED.embedding_type));
     
     printf("│ %-10s │ %-10s │ %-10s │ %-10s │ %-10s │\n",
-           "Balanced", ggml_type_name(QUANT_PROFILE_BALANCED.default_type),
-           ggml_type_name(QUANT_PROFILE_BALANCED.attention_type),
-           ggml_type_name(QUANT_PROFILE_BALANCED.feedforward_type),
-           ggml_type_name(QUANT_PROFILE_BALANCED.embedding_type));
+           "Balanced", ggml_rxd_type_name(QUANT_PROFILE_BALANCED.default_type),
+           ggml_rxd_type_name(QUANT_PROFILE_BALANCED.attention_type),
+           ggml_rxd_type_name(QUANT_PROFILE_BALANCED.feedforward_type),
+           ggml_rxd_type_name(QUANT_PROFILE_BALANCED.embedding_type));
     
     printf("│ %-10s │ %-10s │ %-10s │ %-10s │ %-10s │\n",
-           "Quality", ggml_type_name(QUANT_PROFILE_QUALITY.default_type),
-           ggml_type_name(QUANT_PROFILE_QUALITY.attention_type),
-           ggml_type_name(QUANT_PROFILE_QUALITY.feedforward_type),
-           ggml_type_name(QUANT_PROFILE_QUALITY.embedding_type));
+           "Quality", ggml_rxd_type_name(QUANT_PROFILE_QUALITY.default_type),
+           ggml_rxd_type_name(QUANT_PROFILE_QUALITY.attention_type),
+           ggml_rxd_type_name(QUANT_PROFILE_QUALITY.feedforward_type),
+           ggml_rxd_type_name(QUANT_PROFILE_QUALITY.embedding_type));
     
     printf("└────────────┴────────────┴────────────┴────────────┴────────────┘\n");
     
@@ -258,7 +258,7 @@ static void demo_gguf_analysis(const char* path) {
         gguf_get_tensor_data(ctx, info->name.data, &size);
         
         printf("  │ %-26s │ %-8s │ %10llu │ %8s │\n",
-               info->name.data, ggml_type_name((GGMLType)info->type),
+               info->name.data, ggml_rxd_type_name((GGMLType)info->type),
                (unsigned long long)elements, format_size(size));
         
         total_elements += elements;

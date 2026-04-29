@@ -1,11 +1,11 @@
 # Command Map
 
-Proof baseline: --agentic-smoke
+Proof baseline: --selftest
 
 | cmdId | canonical | handler | category | enabled | attempts | proof note |
 |---:|---|---|---|---|---:|---|
 | 1001 | file.new | handleFileNew | File | yes | 0 | Registry wired + unified dispatch path |
-| 1002 | file.open | handleFileOpen | File | yes | 0 | Covered by --selftest dispatch probe |
+| 1002 | file.open | handleFileOpen | File | yes | 1 | Observed in runtime telemetry |
 | 1003 | file.save | handleFileSave | File | yes | 0 | Registry wired + unified dispatch path |
 | 1004 | file.saveAs | handleFileSaveAs | File | yes | 0 | Registry wired + unified dispatch path |
 | 1005 | file.saveAll | handleFileSaveAll | File | yes | 0 | Registry wired + unified dispatch path |
@@ -41,7 +41,7 @@ Proof baseline: --agentic-smoke
 | 2025 | view.outputPanel | handleViewOutputPanel | View | yes | 0 | Registry wired + unified dispatch path |
 | 2026 | view.streamingLoader | handleViewStreamingLoader | View | yes | 0 | Registry wired + unified dispatch path |
 | 2027 | view.vulkanRenderer | handleViewVulkanRenderer | View | yes | 0 | Registry wired + unified dispatch path |
-| 2028 | view.sidebar | handleViewSidebar | View | yes | 0 | Covered by --selftest dispatch probe |
+| 2028 | view.sidebar | handleViewSidebar | View | yes | 1 | Observed in runtime telemetry |
 | 2029 | view.terminal | handleViewTerminal | View | yes | 0 | Registry wired + unified dispatch path |
 | 3020 | git.status | handleGitStatus | Git | yes | 0 | Registry wired + unified dispatch path |
 | 3021 | git.commit | handleGitCommit | Git | yes | 0 | Registry wired + unified dispatch path |
@@ -65,7 +65,7 @@ Proof baseline: --agentic-smoke
 | 3114 | theme.oneDarkPro | handleThemeOneDark | Theme | yes | 0 | Registry wired + unified dispatch path |
 | 3115 | theme.synthwave84 | handleThemeSynthwave | Theme | yes | 0 | Registry wired + unified dispatch path |
 | 3116 | theme.abyss | handleThemeAbyss | Theme | yes | 0 | Registry wired + unified dispatch path |
-| 3200 | view.transparency100 | handleTrans100 | Transparency | yes | 0 | Covered by --selftest dispatch probe |
+| 3200 | view.transparency100 | handleTrans100 | Transparency | yes | 1 | Observed in runtime telemetry |
 | 3201 | view.transparency90 | handleTrans90 | Transparency | yes | 0 | Registry wired + unified dispatch path |
 | 3202 | view.transparency80 | handleTrans80 | Transparency | yes | 0 | Registry wired + unified dispatch path |
 | 3203 | view.transparency70 | handleTrans70 | Transparency | yes | 0 | Registry wired + unified dispatch path |
@@ -82,7 +82,7 @@ Proof baseline: --agentic-smoke
 | 4006 | terminal.kill | handleTerminalKill | Terminal | yes | 0 | Registry wired + unified dispatch path |
 | 4007 | terminal.splitH | handleTerminalSplitH | Terminal | yes | 0 | Registry wired + unified dispatch path |
 | 4008 | terminal.splitV | handleTerminalSplitV | Terminal | yes | 0 | Registry wired + unified dispatch path |
-| 4009 | terminal.splitCode | handleTerminalSplitCode | Terminal | yes | 0 | Covered by --selftest dispatch probe |
+| 4009 | terminal.splitCode | handleTerminalSplitCode | Terminal | yes | 1 | Observed in runtime telemetry |
 | 4010 | terminal.list | handleTerminalList | Terminal | yes | 0 | Registry wired + unified dispatch path |
 | 4100 | agent.loop | handleAgentLoop | Agent | yes | 0 | Registry wired + unified dispatch path |
 | 4101 | agent.execute | handleAgentExecute | Agent | yes | 0 | Registry wired + unified dispatch path |
@@ -456,9 +456,9 @@ Proof baseline: --agentic-smoke
 | 8004 | decomp.copyLine | handleDecompCopyLine | ReverseEng | yes | 0 | Registry wired + unified dispatch path |
 | 8005 | decomp.copyAll | handleDecompCopyAll | ReverseEng | yes | 0 | Registry wired + unified dispatch path |
 | 8006 | decomp.gotoAddr | handleDecompGotoAddr | ReverseEng | yes | 0 | Registry wired + unified dispatch path |
-| 10000 | vscext.status | handleVscExtStatus | Plugin | yes | 0 | Covered by --selftest dispatch probe |
+| 10000 | vscext.status | handleVscExtStatus | Plugin | yes | 2 | Observed in runtime telemetry |
 | 10001 | vscext.reload | handleVscExtReload | Plugin | yes | 0 | Registry wired + unified dispatch path |
-| 10002 | vscext.listCommands | handleVscExtListCommands | Plugin | yes | 0 | Registry wired + unified dispatch path |
+| 10002 | vscext.listCommands | handleVscExtListCommands | Plugin | yes | 1 | Observed in runtime telemetry |
 | 10003 | vscext.listProviders | handleVscExtListProviders | Plugin | yes | 0 | Registry wired + unified dispatch path |
 | 10004 | vscext.diagnostics | handleVscExtDiagnostics | Plugin | yes | 0 | Registry wired + unified dispatch path |
 | 10005 | vscext.extensions | handleVscExtExtensions | Plugin | yes | 0 | Registry wired + unified dispatch path |

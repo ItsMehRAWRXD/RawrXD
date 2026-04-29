@@ -7,9 +7,9 @@
 #include <cstdint>
 
 // Forward declarations for ggml
-struct ggml_context;
-struct ggml_tensor;
-struct ggml_cgraph;
+struct ggml_rxd_context;
+struct ggml_rxd_tensor;
+struct ggml_rxd_cgraph;
 
 // Forward declaration to avoid circular dependency
 class InferenceEngine;
@@ -102,52 +102,52 @@ private:
     bool m_ggufDirectMode{false};
     
     // ggml computation context
-    ggml_context* m_ctx{nullptr};
-    ggml_context* m_kvCtx{nullptr};  // KV cache context
+    ggml_rxd_context* m_ctx{nullptr};
+    ggml_rxd_context* m_kvCtx{nullptr};  // KV cache context
     
     // Model weights as ggml tensors
-    ggml_tensor* m_tokenEmbed{nullptr};
-    ggml_tensor* m_outputWeight{nullptr};
+    ggml_rxd_tensor* m_tokenEmbed{nullptr};
+    ggml_rxd_tensor* m_outputWeight{nullptr};
     
     struct LayerWeights {
-        ggml_tensor* attn_q{nullptr};
-        ggml_tensor* attn_k{nullptr};
-        ggml_tensor* attn_v{nullptr};
-        ggml_tensor* attn_proj{nullptr};
-        ggml_tensor* ln1_weight{nullptr};
-        ggml_tensor* ln1_bias{nullptr};
-        ggml_tensor* mlp_fc1{nullptr};
-        ggml_tensor* mlp_fc2{nullptr};
-        ggml_tensor* ln2_weight{nullptr};
-        ggml_tensor* ln2_bias{nullptr};
+        ggml_rxd_tensor* attn_q{nullptr};
+        ggml_rxd_tensor* attn_k{nullptr};
+        ggml_rxd_tensor* attn_v{nullptr};
+        ggml_rxd_tensor* attn_proj{nullptr};
+        ggml_rxd_tensor* ln1_weight{nullptr};
+        ggml_rxd_tensor* ln1_bias{nullptr};
+        ggml_rxd_tensor* mlp_fc1{nullptr};
+        ggml_rxd_tensor* mlp_fc2{nullptr};
+        ggml_rxd_tensor* ln2_weight{nullptr};
+        ggml_rxd_tensor* ln2_bias{nullptr};
         
         // FIX 4: Add Bias Terms
-        ggml_tensor* attn_q_bias{nullptr};
-        ggml_tensor* attn_k_bias{nullptr};
-        ggml_tensor* attn_v_bias{nullptr};
-        ggml_tensor* attn_output_bias{nullptr};
-        ggml_tensor* mlp_fc1_bias{nullptr};
-        ggml_tensor* mlp_fc2_bias{nullptr};
+        ggml_rxd_tensor* attn_q_bias{nullptr};
+        ggml_rxd_tensor* attn_k_bias{nullptr};
+        ggml_rxd_tensor* attn_v_bias{nullptr};
+        ggml_rxd_tensor* attn_output_bias{nullptr};
+        ggml_rxd_tensor* mlp_fc1_bias{nullptr};
+        ggml_rxd_tensor* mlp_fc2_bias{nullptr};
     };
     std::vector<LayerWeights> m_layers;
     
     // KV cache for efficient generation
-    std::vector<ggml_tensor*> m_kCache;
-    std::vector<ggml_tensor*> m_vCache;
+    std::vector<ggml_rxd_tensor*> m_kCache;
+    std::vector<ggml_rxd_tensor*> m_vCache;
     
     bool m_ready{false};
     
     // Helper methods
-    ggml_tensor* createTensorFromCache(const QString& name, 
+    ggml_rxd_tensor* createTensorFromCache(const QString& name, 
                                        const QHash<QString, QByteArray>& cache,
                                        const int64_t* shape, int nDims);
     
     // New overload that accepts type ID
-    ggml_tensor* createTensorFromCache(const QByteArray& data,
+    ggml_rxd_tensor* createTensorFromCache(const QByteArray& data,
                                        int typeId,
                                        const std::vector<qint64>& dimensions);
     
-    ggml_tensor* buildGraph(ggml_context* ctx, const std::vector<int32_t>& tokens);
+    ggml_rxd_tensor* buildGraph(ggml_rxd_context* ctx, const std::vector<int32_t>& tokens);
     int sampleToken(const std::vector<float>& logits, float temperature);
     void initKVCache();
     void freeContext();

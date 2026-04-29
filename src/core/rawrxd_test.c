@@ -125,7 +125,7 @@ TEST(dequant_tensor_generic) {
     float data[16];
     for (int i = 0; i < 16; i++) data[i] = (float)i;
     
-    DequantResult d = dequant_tensor(data, GGML_TYPE_F32, 16);
+    DequantResult d = dequant_tensor(data, GGML_RXD_TYPE_F32, 16);
     ASSERT_TRUE(d.data != NULL);
     ASSERT_EQ(d.count, 16);
     
@@ -198,7 +198,7 @@ TEST(gguf_load_valid) {
     uint64_t dim = 32;
     fwrite(&dim, 8, 1, f);
     
-    uint32_t type = GGML_TYPE_Q4_0;
+    uint32_t type = GGML_RXD_TYPE_Q4_0;
     fwrite(&type, 4, 1, f);
     
     uint64_t offset = 0;
@@ -252,7 +252,7 @@ TEST(hotswap_create_destroy) {
     fwrite(&n_dims, 4, 1, f);
     uint64_t dim = 32;
     fwrite(&dim, 8, 1, f);
-    uint32_t type = GGML_TYPE_Q4_0;
+    uint32_t type = GGML_RXD_TYPE_Q4_0;
     fwrite(&type, 4, 1, f);
     uint64_t offset = 0;
     fwrite(&offset, 8, 1, f);
@@ -290,7 +290,7 @@ TEST(hotswap_get_tensor) {
     fwrite(name1, 1, name_len, f);
     uint32_t n_dims = 1; fwrite(&n_dims, 4, 1, f);
     uint64_t dim = 32; fwrite(&dim, 8, 1, f);
-    uint32_t type = GGML_TYPE_Q4_0; fwrite(&type, 4, 1, f);
+    uint32_t type = GGML_RXD_TYPE_Q4_0; fwrite(&type, 4, 1, f);
     uint64_t offset = 0; fwrite(&offset, 8, 1, f);
     
     // Tensor 2
@@ -300,7 +300,7 @@ TEST(hotswap_get_tensor) {
     fwrite(name2, 1, name_len, f);
     n_dims = 1; fwrite(&n_dims, 4, 1, f);
     dim = 32; fwrite(&dim, 8, 1, f);
-    type = GGML_TYPE_Q4_0; fwrite(&type, 4, 1, f);
+    type = GGML_RXD_TYPE_Q4_0; fwrite(&type, 4, 1, f);
     offset = 18; fwrite(&offset, 8, 1, f);
     
     uint8_t tensor_data[36] = {0};
@@ -345,7 +345,7 @@ TEST(hotswap_backup_restore) {
     fwrite(name, 1, name_len, f);
     uint32_t n_dims = 1; fwrite(&n_dims, 4, 1, f);
     uint64_t dim = 32; fwrite(&dim, 8, 1, f);
-    uint32_t type = GGML_TYPE_Q4_0; fwrite(&type, 4, 1, f);
+    uint32_t type = GGML_RXD_TYPE_Q4_0; fwrite(&type, 4, 1, f);
     uint64_t offset = 0; fwrite(&offset, 8, 1, f);
     
     uint8_t tensor_data[18] = {0};
@@ -413,7 +413,7 @@ TEST(lockpick_add_experiment) {
     fwrite(name, 1, name_len, f);
     uint32_t n_dims = 1; fwrite(&n_dims, 4, 1, f);
     uint64_t dim = 32; fwrite(&dim, 8, 1, f);
-    uint32_t type = GGML_TYPE_Q4_0; fwrite(&type, 4, 1, f);
+    uint32_t type = GGML_RXD_TYPE_Q4_0; fwrite(&type, 4, 1, f);
     uint64_t offset = 0; fwrite(&offset, 8, 1, f);
     
     uint8_t tensor_data[18] = {0};
@@ -455,7 +455,7 @@ TEST(lockpick_generate_json) {
     fwrite(name, 1, name_len, f);
     uint32_t n_dims = 1; fwrite(&n_dims, 4, 1, f);
     uint64_t dim = 32; fwrite(&dim, 8, 1, f);
-    uint32_t type = GGML_TYPE_Q4_0; fwrite(&type, 4, 1, f);
+    uint32_t type = GGML_RXD_TYPE_Q4_0; fwrite(&type, 4, 1, f);
     uint64_t offset = 0; fwrite(&offset, 8, 1, f);
     
     uint8_t tensor_data[18] = {0};

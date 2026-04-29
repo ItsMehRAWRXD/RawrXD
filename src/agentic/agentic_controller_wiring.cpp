@@ -36,7 +36,7 @@ namespace rawrxd
 #define LOG_WARNING(msg) RawrXD::Logging::Logger::instance().warning(msg, "AgenticWiring")
 
 // Global inference engine reference (set during initialization)
-static RawrXD::CPUInferenceEngine* g_inference_engine = nullptr;
+static RawrXD::InferenceEngine* g_inference_engine = nullptr;
 static bool g_agentic_initialized = false;
 
 namespace
@@ -523,7 +523,7 @@ std::string getGlobalLLMResponse(const std::string& system_prompt, const std::st
     }
 }
 
-void initializeAgentControllerWiring(RawrXD::CPUInferenceEngine* inference_engine)
+void initializeAgentControllerWiring(RawrXD::InferenceEngine* inference_engine)
 {
     if (g_agentic_initialized)
     {

@@ -17,7 +17,7 @@ struct VisionTensorMetadata {
     uint64_t size;
     uint32_t dimensions[4];
     uint32_t num_dims;
-    uint32_t type; // GGML_TYPE_F32, etc.
+    uint32_t type; // GGML_RXD_TYPE_F32, etc.
 
     void validate() const {
         if (size == 0 || size > 1024ULL * 1024 * 1024 * 4) { // 4GB max shard

@@ -220,7 +220,7 @@ bool StreamingGGUFLoader::BuildTensorIndex() {
         TensorMetadata meta;
         meta.name = rt.name;
         meta.ndims = rt.ndims;
-        meta.ggml_type = rt.type;
+        meta.ggml_rxd_type = rt.type;
         meta.absolute_offset = dataStart + rt.offset;
         
         // Estimate tensor size from type and offset delta

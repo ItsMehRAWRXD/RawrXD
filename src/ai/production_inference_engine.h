@@ -35,21 +35,39 @@ public:
         const std::vector<int32_t>& input_tokens,
         int max_tokens,
         std::function<void(const std::string&)> token_callback,
-        std::function<void()> complete_callback = nullptr,
-        void* user_data = nullptr) override;
+        std::function<void()> complete_callback,
+        std::function<void(int32_t)> token_id_callback = nullptr) override;
 
-    // ---- Configuration ----
-    virtual void SetContextLimit(size_t limit) override;
-    virtual size_t GetContextLimit() const override;
-    virtual void SetThreadCount(int count) override;
-    virtual int GetThreadCount() const override;
-    virtual const char* GetBackendName() const override;
+    // ---- Model Info ----
+    virtual int GetVocabSize() const override;
+    virtual int GetEmbeddingDim() const override;
+    virtual int GetNumLayers() const override;
+    virtual int GetNumHeads() const override;
+
+    // ---- AI Mode Flags ----
+    virtual void SetMaxMode(bool enabled) override;
+    virtual void SetDeepThinking(bool enabled) override;
+    virtual void SetDeepResearch(bool enabled) override;
+    virtual bool IsMaxMode() const override;
+    virtual bool IsDeepThinking() const override;
+    virtual bool IsDeepResearch() const override;
+
+    // ---- Memory Management ----
+    virtual size_t GetMemoryUsage() const override;
+    virtual void ClearCache() override;
+
+    // ---- Engine Identification ----
+    virtual const char* GetEngineName() const override;
 
 private:
     bool m_modelLoaded = false;
     std::string m_modelPath;
     size_t m_contextLimit = 4096;
     int m_threadCount = 4;
+
+    bool m_maxMode = false;
+    bool m_deepThinking = false;
+    bool m_deepResearch = false;
 };
 
 } // namespace RawrXD

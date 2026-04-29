@@ -343,7 +343,7 @@ bool inference_forward(InferenceContext* ctx, const int32_t* tokens,
     // Simulate token generation
     uint64_t inference_start = get_time_ns_impl();
     
-    // Simulate compute (would call ggml_compute_forward)
+    // Simulate compute (would call ggml_rxd_compute_forward)
     // In real implementation, this would:
     // 1. Copy tokens to batch
     // 2. Run forward pass through model

@@ -20,7 +20,7 @@
 namespace RawrXD
 {
 
-// Tensor data types — values match ggml_type from GGUF spec
+// Tensor data types — values match ggml_rxd_type from GGUF spec
 enum class TensorType
 {
     F32 = 0,    // 32-bit float

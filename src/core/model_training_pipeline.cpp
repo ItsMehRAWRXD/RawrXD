@@ -38,7 +38,7 @@ extern "C" {
     uint64_t KQuant_DequantizeQ4_K(const void* src, float* dst, uint64_t numElements);
     uint64_t KQuant_DequantizeQ6_K(const void* src, float* dst, uint64_t numElements);
     uint64_t KQuant_DequantizeF16(const uint16_t* src, float* dst, uint64_t numElements);
-    uint64_t KQuant_Dispatch(uint32_t ggml_type, const void* src, float* dst, uint64_t numElements);
+    uint64_t KQuant_Dispatch(uint32_t ggml_rxd_type, const void* src, float* dst, uint64_t numElements);
 }
 
 // ============================================================================
@@ -58,7 +58,7 @@ enum GGUFMetaType : uint32_t {
     GGUF_TYPE_FLOAT64 = 12,
 };
 
-// GGUF tensor types (matches ggml_type)
+// GGUF tensor types (matches ggml_rxd_type)
 enum GGUFTensorType : uint32_t {
     GGUF_TENSOR_F32   = 0,  GGUF_TENSOR_F16   = 1,
     GGUF_TENSOR_Q4_0  = 2,  GGUF_TENSOR_Q4_1  = 3,

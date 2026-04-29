@@ -19,11 +19,11 @@ TransformerInference::~TransformerInference() {
 
 void TransformerInference::freeContext() {
     if (m_ctx) {
-        ggml_free(m_ctx);
+        ggml_rxd_free(m_ctx);
         m_ctx = nullptr;
     }
     if (m_kvCtx) {
-        ggml_free(m_kvCtx);
+        ggml_rxd_free(m_kvCtx);
         m_kvCtx = nullptr;
     }
     m_ready = false;
@@ -40,13 +40,13 @@ bool TransformerInference::loadWeights(const std::map<std::string, std::pair<std
     
     // Allocate ggml context for model weights
     size_t ctxSize = 1024ull * 1024 * 1024;  // 1GB for weights
-    struct ggml_init_params params = {
+    struct ggml_rxd_init_params params = {
         .mem_size = ctxSize,
         .mem_buffer = nullptr,
         .no_alloc = false,
     };
     
-    m_ctx = ggml_init(params);
+    m_ctx = ggml_rxd_init(params);
     if (!m_ctx) {
         
         return false;
@@ -158,7 +158,7 @@ bool TransformerInference::loadWeightsWithTypes(const std::map<std::string, std:
     return loadWeights(tensorCache, nLayers, nEmbd, nHead, nVocab);
 }
 
-struct ggml_tensor* TransformerInference::createTensorFromCache(const std::vector<uint8_t>& data,
+struct ggml_rxd_tensor* TransformerInference::createTensorFromCache(const std::vector<uint8_t>& data,
                                                                 int ggmlType,
                                                                 const std::vector<int64_t>& shape) {
     if (data.empty() || !m_ctx) {
@@ -166,14 +166,14 @@ struct ggml_tensor* TransformerInference::createTensorFromCache(const std::vecto
     }
     
     // Create tensor with appropriate shape
-    struct ggml_tensor* tensor = nullptr;
+    struct ggml_rxd_tensor* tensor = nullptr;
     
     if (shape.size() == 1) {
-        tensor = ggml_new_tensor_1d(m_ctx, static_cast<enum ggml_type>(ggmlType), shape[0]);
+        tensor = ggml_rxd_new_tensor_1d(m_ctx, static_cast<enum ggml_rxd_type>(ggmlType), shape[0]);
     } else if (shape.size() == 2) {
-        tensor = ggml_new_tensor_2d(m_ctx, static_cast<enum ggml_type>(ggmlType), shape[0], shape[1]);
+        tensor = ggml_rxd_new_tensor_2d(m_ctx, static_cast<enum ggml_rxd_type>(ggmlType), shape[0], shape[1]);
     } else if (shape.size() == 3) {
-        tensor = ggml_new_tensor_3d(m_ctx, static_cast<enum ggml_type>(ggmlType), shape[0], shape[1], shape[2]);
+        tensor = ggml_rxd_new_tensor_3d(m_ctx, static_cast<enum ggml_rxd_type>(ggmlType), shape[0], shape[1], shape[2]);
     }
     
     if (!tensor) {
@@ -181,14 +181,14 @@ struct ggml_tensor* TransformerInference::createTensorFromCache(const std::vecto
     }
     
     // Copy data into tensor
-    if (tensor->data && data.size() <= ggml_nbytes(tensor)) {
+    if (tensor->data && data.size() <= ggml_rxd_nbytes(tensor)) {
         std::memcpy(tensor->data, data.data(), data.size());
     }
     
     return tensor;
 }
 
-struct ggml_tensor* TransformerInference::createTensorRef(const uint8_t* data,
+struct ggml_rxd_tensor* TransformerInference::createTensorRef(const uint8_t* data,
                                                           int ggmlType,
                                                           const std::vector<int64_t>& shape) {
     if (!data || !m_ctx) {
@@ -196,12 +196,12 @@ struct ggml_tensor* TransformerInference::createTensorRef(const uint8_t* data,
     }
     
     // Create tensor reference (doesn't own data)
-    struct ggml_tensor* tensor = nullptr;
+    struct ggml_rxd_tensor* tensor = nullptr;
     
     if (shape.size() == 1) {
-        tensor = ggml_new_tensor_1d(m_ctx, static_cast<enum ggml_type>(ggmlType), shape[0]);
+        tensor = ggml_rxd_new_tensor_1d(m_ctx, static_cast<enum ggml_rxd_type>(ggmlType), shape[0]);
     } else if (shape.size() == 2) {
-        tensor = ggml_new_tensor_2d(m_ctx, static_cast<enum ggml_type>(ggmlType), shape[0], shape[1]);
+        tensor = ggml_rxd_new_tensor_2d(m_ctx, static_cast<enum ggml_rxd_type>(ggmlType), shape[0], shape[1]);
     }
     
     if (tensor) {

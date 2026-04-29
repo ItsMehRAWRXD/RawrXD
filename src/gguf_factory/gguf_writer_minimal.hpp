@@ -34,7 +34,7 @@ struct GGUFTensorInfoMinimal
 {
     std::string name;
     std::vector<int64_t> shape;
-    uint32_t type = 0;    // ggml_type value
+    uint32_t type = 0;    // ggml_rxd_type value
     uint64_t offset = 0;  // offset into data section (filled on write_complete)
 };
 

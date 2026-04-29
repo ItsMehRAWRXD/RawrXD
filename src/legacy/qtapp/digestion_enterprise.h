@@ -126,7 +126,8 @@ public:
     void* lastReport() const;
     std::vector<AgenticTask> pendingTasks() const;
     std::stringList modifiedFiles() const;
-\npublic:\n    void pipelineStarted(std::string sessionId, int totalFiles);
+
+\npublic:\n    void pipelineStarted(std::string sessionId, int totalFiles);
     void progressUpdate(int filesProcessed, int totalFiles, int stubsFound, int percent);
     void fileScanned(const std::string &path, int stubsInFile, std::string language);
     void chunkCompleted(int chunkIndex, int chunksTotal, int filesInChunk);
@@ -140,7 +141,8 @@ public:
     void pipelineFinished(const void* &report, bool success);
     void errorOccurred(const std::string &file, const std::string &error, bool fatal);
     void statisticsUpdate(const DigestionStats &stats);
-\nprivate:\n    void onLLMResponse(const std::string &taskId, const std::string &response, bool success);
+
+\nprivate:\n    void onLLMResponse(const std::string &taskId, const std::string &response, bool success);
 
 private:
     // ==================== Initialization ====================

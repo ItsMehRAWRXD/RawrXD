@@ -1423,6 +1423,10 @@ bool Win32IDE::applyWorkspaceEdit(const LSPWorkspaceEdit& edit)
         std::string path = uriToFilePath(op.uri);
         std::string newPath = op.newUri.empty() ? "" : uriToFilePath(op.newUri);
 
+        auto testPathExists = [](const std::string& p) {
+            return std::filesystem::exists(p);
+        };
+
         switch (op.type)
         {
             case LSPWorkspaceEdit::ResourceOperation::Type::Create:

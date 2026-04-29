@@ -1042,7 +1042,7 @@ static const wchar_t* s_paths[3488] = {
     L"include/final_gauntlet.h",
     L"include/flash_attention.h",
     L"include/format_router.h",
-    L"include/ggml/ggml_nanoquant.h",
+    L"include/ggml/ggml_rxd_nanoquant.h",
     L"include/gguf.h",
     L"include/gguf_loader.h",
     L"include/ghost_text_renderer.h",
@@ -2558,16 +2558,16 @@ static const wchar_t* s_paths[3488] = {
     L"src/ggml-zdnn/utils.hpp",
     L"src/ggml.c",
     L"src/ggml.cpp",
-    L"src/ggml/ggml_nanoquant.cpp",
-    L"src/ggml_masm/attention.asm",
-    L"src/ggml_masm/compression.asm",
-    L"src/ggml_masm/ggml_backend.asm",
-    L"src/ggml_masm/ggml_masm_backend.cpp",
-    L"src/ggml_masm/ggml_masm_bridge.h",
-    L"src/ggml_masm/kv_cache.asm",
-    L"src/ggml_masm/quantization.asm",
-    L"src/ggml_masm/tensor_ops.asm",
-    L"src/ggml_masm/test_masm_ops.cpp",
+    L"src/ggml/ggml_rxd_nanoquant.cpp",
+    L"src/ggml_rxd_masm/attention.asm",
+    L"src/ggml_rxd_masm/compression.asm",
+    L"src/ggml_rxd_masm/ggml_rxd_backend.asm",
+    L"src/ggml_rxd_masm/ggml_rxd_masm_backend.cpp",
+    L"src/ggml_rxd_masm/ggml_rxd_masm_bridge.h",
+    L"src/ggml_rxd_masm/kv_cache.asm",
+    L"src/ggml_rxd_masm/quantization.asm",
+    L"src/ggml_rxd_masm/tensor_ops.asm",
+    L"src/ggml_rxd_masm/test_masm_ops.cpp",
     L"src/gguf.cpp",
     L"src/gguf_api_server.cpp",
     L"src/gguf_diagnostic.cpp",
@@ -4352,7 +4352,7 @@ HMENU BuildSourceFileMenu() {
     AppendMenuW(h_1_60665, MF_STRING, 60665, L"DrawingEngine.h");
     AppendMenuW(h_0_60644, MF_POPUP, (UINT_PTR)h_1_60665, L"drawing");
     HMENU h_1_60666 = CreatePopupMenu();
-    AppendMenuW(h_1_60666, MF_STRING, 60666, L"ggml_nanoquant.h");
+    AppendMenuW(h_1_60666, MF_STRING, 60666, L"ggml_rxd_nanoquant.h");
     AppendMenuW(h_0_60644, MF_POPUP, (UINT_PTR)h_1_60666, L"ggml");
     HMENU h_1_60667 = CreatePopupMenu();
     AppendMenuW(h_1_60667, MF_STRING, 60667, L"gpu_backend.h");
@@ -5755,7 +5755,7 @@ HMENU BuildSourceFileMenu() {
     AppendMenuW(h_1_61863, MF_STRING, 61864, L"Phase1_Master.asm");
     AppendMenuW(h_0_61124, MF_POPUP, (UINT_PTR)h_1_61863, L"foundation");
     HMENU h_1_61865 = CreatePopupMenu();
-    AppendMenuW(h_1_61865, MF_STRING, 61865, L"ggml_nanoquant.cpp");
+    AppendMenuW(h_1_61865, MF_STRING, 61865, L"ggml_rxd_nanoquant.cpp");
     AppendMenuW(h_0_61124, MF_POPUP, (UINT_PTR)h_1_61865, L"ggml");
     HMENU h_1_61866 = CreatePopupMenu();
     AppendMenuW(h_1_61866, MF_STRING, 61866, L"ggml-blas.cpp");
@@ -5998,14 +5998,14 @@ HMENU BuildSourceFileMenu() {
     HMENU h_1_62040 = CreatePopupMenu();
     AppendMenuW(h_1_62040, MF_STRING, 62040, L"attention.asm");
     AppendMenuW(h_1_62040, MF_STRING, 62041, L"compression.asm");
-    AppendMenuW(h_1_62040, MF_STRING, 62042, L"ggml_backend.asm");
-    AppendMenuW(h_1_62040, MF_STRING, 62043, L"ggml_masm_backend.cpp");
-    AppendMenuW(h_1_62040, MF_STRING, 62044, L"ggml_masm_bridge.h");
+    AppendMenuW(h_1_62040, MF_STRING, 62042, L"ggml_rxd_backend.asm");
+    AppendMenuW(h_1_62040, MF_STRING, 62043, L"ggml_rxd_masm_backend.cpp");
+    AppendMenuW(h_1_62040, MF_STRING, 62044, L"ggml_rxd_masm_bridge.h");
     AppendMenuW(h_1_62040, MF_STRING, 62045, L"kv_cache.asm");
     AppendMenuW(h_1_62040, MF_STRING, 62046, L"quantization.asm");
     AppendMenuW(h_1_62040, MF_STRING, 62047, L"tensor_ops.asm");
     AppendMenuW(h_1_62040, MF_STRING, 62048, L"test_masm_ops.cpp");
-    AppendMenuW(h_0_61124, MF_POPUP, (UINT_PTR)h_1_62040, L"ggml_masm");
+    AppendMenuW(h_0_61124, MF_POPUP, (UINT_PTR)h_1_62040, L"ggml_rxd_masm");
     HMENU h_1_62049 = CreatePopupMenu();
     AppendMenuW(h_1_62049, MF_STRING, 62049, L"git_context.cpp");
     AppendMenuW(h_1_62049, MF_STRING, 62050, L"git_context.h");

@@ -29,9 +29,11 @@ public:
     void setStatus(const std::string& status);
     void setBackend(const std::string& backend);
     void reset();
-\npublic:\n    void pingUpdated(int latencyMs);
+
+\npublic:\n    void pingUpdated(int latencyMs);
     void statsUpdated(const LatencyStats& stats);
-\nprivate:\n    void onPingTimer();
+
+\nprivate:\n    void onPingTimer();
     void updateSystemMetrics();
 
 private:

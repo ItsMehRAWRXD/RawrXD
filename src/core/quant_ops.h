@@ -144,7 +144,7 @@ QUANTIZATION UTILITIES
 
 /* Calculate quantized block count */
 static inline size_t quant_block_count(GGMLType type, size_t num_elements) {
-    size_t block_size = GGML_BLOCK_SIZE[type];
+    size_t block_size = GGML_RXD_BLOCK_SIZE[type];
     return (num_elements + block_size - 1) / block_size;
 }
 

@@ -203,33 +203,33 @@ typedef struct {
 /* Built-in profiles */
 static const QuantProfile QUANT_PROFILE_SPEED = {
     .name = "speed",
-    .default_type = GGML_TYPE_Q4_0,
-    .attention_type = GGML_TYPE_Q4_0,
-    .feedforward_type = GGML_TYPE_Q4_0,
-    .embedding_type = GGML_TYPE_Q8_0,
-    .output_type = GGML_TYPE_Q8_0,
+    .default_type = GGML_RXD_TYPE_Q4_0,
+    .attention_type = GGML_RXD_TYPE_Q4_0,
+    .feedforward_type = GGML_RXD_TYPE_Q4_0,
+    .embedding_type = GGML_RXD_TYPE_Q8_0,
+    .output_type = GGML_RXD_TYPE_Q8_0,
     .quality_threshold = 15.0f, /* 15 dB minimum SNR */
     .target_vram = 0 /* No limit */
 };
 
 static const QuantProfile QUANT_PROFILE_BALANCED = {
     .name = "balanced",
-    .default_type = GGML_TYPE_Q4_K,
-    .attention_type = GGML_TYPE_Q5_K,
-    .feedforward_type = GGML_TYPE_Q4_K,
-    .embedding_type = GGML_TYPE_Q8_0,
-    .output_type = GGML_TYPE_Q6_K,
+    .default_type = GGML_RXD_TYPE_Q4_K,
+    .attention_type = GGML_RXD_TYPE_Q5_K,
+    .feedforward_type = GGML_RXD_TYPE_Q4_K,
+    .embedding_type = GGML_RXD_TYPE_Q8_0,
+    .output_type = GGML_RXD_TYPE_Q6_K,
     .quality_threshold = 20.0f,
     .target_vram = 0
 };
 
 static const QuantProfile QUANT_PROFILE_QUALITY = {
     .name = "quality",
-    .default_type = GGML_TYPE_Q6_K,
-    .attention_type = GGML_TYPE_Q6_K,
-    .feedforward_type = GGML_TYPE_Q5_K,
-    .embedding_type = GGML_TYPE_F16,
-    .output_type = GGML_TYPE_F16,
+    .default_type = GGML_RXD_TYPE_Q6_K,
+    .attention_type = GGML_RXD_TYPE_Q6_K,
+    .feedforward_type = GGML_RXD_TYPE_Q5_K,
+    .embedding_type = GGML_RXD_TYPE_F16,
+    .output_type = GGML_RXD_TYPE_F16,
     .quality_threshold = 30.0f,
     .target_vram = 0
 };

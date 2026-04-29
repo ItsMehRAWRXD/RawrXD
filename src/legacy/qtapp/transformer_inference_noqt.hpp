@@ -13,16 +13,16 @@
 #include <ggml.h>
 
 struct LayerWeights {
-    struct ggml_tensor* attn_q = nullptr;
-    struct ggml_tensor* attn_k = nullptr;
-    struct ggml_tensor* attn_v = nullptr;
-    struct ggml_tensor* attn_out = nullptr;
-    struct ggml_tensor* attn_norm = nullptr;
+    struct ggml_rxd_tensor* attn_q = nullptr;
+    struct ggml_rxd_tensor* attn_k = nullptr;
+    struct ggml_rxd_tensor* attn_v = nullptr;
+    struct ggml_rxd_tensor* attn_out = nullptr;
+    struct ggml_rxd_tensor* attn_norm = nullptr;
     
-    struct ggml_tensor* mlp_gate = nullptr;
-    struct ggml_tensor* mlp_up = nullptr;
-    struct ggml_tensor* mlp_down = nullptr;
-    struct ggml_tensor* mlp_norm = nullptr;
+    struct ggml_rxd_tensor* mlp_gate = nullptr;
+    struct ggml_rxd_tensor* mlp_up = nullptr;
+    struct ggml_rxd_tensor* mlp_down = nullptr;
+    struct ggml_rxd_tensor* mlp_norm = nullptr;
 };
 
 class TransformerInference {
@@ -47,12 +47,12 @@ public:
     void markReadyForGGUFInference() { m_ready = true; }
     
 private:
-    struct ggml_context* m_ctx = nullptr;
-    struct ggml_context* m_kvCtx = nullptr;
+    struct ggml_rxd_context* m_ctx = nullptr;
+    struct ggml_rxd_context* m_kvCtx = nullptr;
     
-    struct ggml_tensor* m_tokenEmbed = nullptr;
-    struct ggml_tensor* m_outputWeight = nullptr;
-    struct ggml_tensor* m_posEmbed = nullptr;
+    struct ggml_rxd_tensor* m_tokenEmbed = nullptr;
+    struct ggml_rxd_tensor* m_outputWeight = nullptr;
+    struct ggml_rxd_tensor* m_posEmbed = nullptr;
     
     std::vector<LayerWeights> m_layers;
     
@@ -64,10 +64,10 @@ private:
     bool m_ready = false;
     
     // Helper methods
-    struct ggml_tensor* createTensorFromCache(const std::vector<uint8_t>& data,
+    struct ggml_rxd_tensor* createTensorFromCache(const std::vector<uint8_t>& data,
                                               int ggmlType,
                                               const std::vector<int64_t>& shape);
-    struct ggml_tensor* createTensorRef(const uint8_t* data,
+    struct ggml_rxd_tensor* createTensorRef(const uint8_t* data,
                                         int ggmlType,
                                         const std::vector<int64_t>& shape);
     

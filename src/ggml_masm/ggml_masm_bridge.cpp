@@ -1,6 +1,6 @@
-// ggml_masm_bridge.cpp — Production GGML MASM bridge implementation
+// ggml_rxd_masm_bridge.cpp — Production GGML MASM bridge implementation
 
-#include "ggml_masm_bridge.h"
+#include "ggml_rxd_masm_bridge.h"
 #include <windows.h>
 #include <string>
 #include <cstdio>
@@ -174,7 +174,7 @@ extern "C" void dequantize_q8_1(const void* src, float* dst, int64_t n) {
     // Placeholder
 }
 
-extern "C" void ggml_masm_mul_mat(const float* A, const float* B, float* C, 
+extern "C" void ggml_rxd_masm_mul_mat(const float* A, const float* B, float* C, 
                                     int64_t M, int64_t N, int64_t K) {
     if (!A || !B || !C || M <= 0 || N <= 0 || K <= 0) return;
     
@@ -189,17 +189,17 @@ extern "C" void ggml_masm_mul_mat(const float* A, const float* B, float* C,
     }
 }
 
-extern "C" void ggml_masm_mul_mat_q4_0(const float* A, const void* B_q4, float* C,
+extern "C" void ggml_rxd_masm_mul_mat_q4_0(const float* A, const void* B_q4, float* C,
                                           int64_t M, int64_t N, int64_t K) {
     // Dequantize B first, then multiply
     std::vector<float> B_dequant(K * N);
     dequantize_q4_0(B_q4, B_dequant.data(), K * N);
-    ggml_masm_mul_mat(A, B_dequant.data(), C, M, N, K);
+    ggml_rxd_masm_mul_mat(A, B_dequant.data(), C, M, N, K);
 }
 
-extern "C" void ggml_masm_mul_mat_q8_0(const float* A, const void* B_q8, float* C,
+extern "C" void ggml_rxd_masm_mul_mat_q8_0(const float* A, const void* B_q8, float* C,
                                           int64_t M, int64_t N, int64_t K) {
     std::vector<float> B_dequant(K * N);
     dequantize_q8_0(B_q8, B_dequant.data(), K * N);
-    ggml_masm_mul_mat(A, B_dequant.data(), C, M, N, K);
+    ggml_rxd_masm_mul_mat(A, B_dequant.data(), C, M, N, K);
 }

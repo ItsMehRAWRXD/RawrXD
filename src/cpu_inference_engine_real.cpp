@@ -80,13 +80,13 @@ static inline bool hasAvx2_()
 // Q8_0 DEQUANTIZATION + MATVEC (GGML layout)
 //
 // GGML Q8_0 layout (per 32 elements):
-//   [0..1]  ggml_half d  (f16 scale)
+//   [0..1]  ggml_rxd_half d  (f16 scale)
 //   [2..33] int8 qs[32]
 // Total: 34 bytes per 32 weights
 // ============================================================================
 struct Q8_0Block
 {
-    uint16_t d;     // f16 scale (ggml_half)
+    uint16_t d;     // f16 scale (ggml_rxd_half)
     int8_t qs[32];  // 32 int8 values
 };
 static_assert(sizeof(Q8_0Block) == 34, "Q8_0 block must be 34 bytes");

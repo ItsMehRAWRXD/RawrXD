@@ -19,33 +19,33 @@
 // into the final binary; we weakly reference the Vulkan probe symbols and
 // fall back to a stub returning 0 when the Vulkan backend is absent.
 extern "C" {
-    int  ggml_backend_vk_get_device_count(void);
-    void ggml_backend_vk_get_device_description(int device, char * description, size_t description_size);
-    void ggml_backend_vk_get_device_memory(int device, size_t * free, size_t * total);
+    int  ggml_rxd_backend_vk_get_device_count(void);
+    void ggml_rxd_backend_vk_get_device_description(int device, char * description, size_t description_size);
+    void ggml_rxd_backend_vk_get_device_memory(int device, size_t * free, size_t * total);
 }
 
 #if defined(_MSC_VER)
 extern "C" int  rxd_gpu_vk_device_count_stub(void) { return 0; }
 extern "C" void rxd_gpu_vk_device_description_stub(int, char * d, size_t n) { if (d && n) d[0] = '\0'; }
 extern "C" void rxd_gpu_vk_device_memory_stub(int, size_t * f, size_t * t) { if (f) *f = 0; if (t) *t = 0; }
-#pragma comment(linker, "/alternatename:ggml_backend_vk_get_device_count=rxd_gpu_vk_device_count_stub")
-#pragma comment(linker, "/alternatename:ggml_backend_vk_get_device_description=rxd_gpu_vk_device_description_stub")
-#pragma comment(linker, "/alternatename:ggml_backend_vk_get_device_memory=rxd_gpu_vk_device_memory_stub")
+#pragma comment(linker, "/alternatename:ggml_rxd_backend_vk_get_device_count=rxd_gpu_vk_device_count_stub")
+#pragma comment(linker, "/alternatename:ggml_rxd_backend_vk_get_device_description=rxd_gpu_vk_device_description_stub")
+#pragma comment(linker, "/alternatename:ggml_rxd_backend_vk_get_device_memory=rxd_gpu_vk_device_memory_stub")
 #endif
 
 // CUDA / HIP probes are weakly referenced; if the symbol is missing at link
 // time, the corresponding probe simply returns 0. On MSVC we use /alternatename
 // fallbacks for the optional symbols.
 #if defined(_MSC_VER)
-extern "C" int ggml_backend_cuda_get_device_count(void);
-extern "C" int ggml_backend_hip_get_device_count(void);
+extern "C" int ggml_rxd_backend_cuda_get_device_count(void);
+extern "C" int ggml_rxd_backend_hip_get_device_count(void);
 extern "C" int rxd_gpu_cuda_device_count_stub(void) { return 0; }
 extern "C" int rxd_gpu_hip_device_count_stub(void)  { return 0; }
-#pragma comment(linker, "/alternatename:ggml_backend_cuda_get_device_count=rxd_gpu_cuda_device_count_stub")
-#pragma comment(linker, "/alternatename:ggml_backend_hip_get_device_count=rxd_gpu_hip_device_count_stub")
+#pragma comment(linker, "/alternatename:ggml_rxd_backend_cuda_get_device_count=rxd_gpu_cuda_device_count_stub")
+#pragma comment(linker, "/alternatename:ggml_rxd_backend_hip_get_device_count=rxd_gpu_hip_device_count_stub")
 #else
-extern "C" __attribute__((weak)) int ggml_backend_cuda_get_device_count(void) { return 0; }
-extern "C" __attribute__((weak)) int ggml_backend_hip_get_device_count(void)  { return 0; }
+extern "C" __attribute__((weak)) int ggml_rxd_backend_cuda_get_device_count(void) { return 0; }
+extern "C" __attribute__((weak)) int ggml_rxd_backend_hip_get_device_count(void)  { return 0; }
 #endif
 
 namespace rxd::gpu {
@@ -78,13 +78,13 @@ void detect_locked() {
 
     // 1. Vulkan first (broadest hardware coverage incl. AMD RDNA3).
     int vk_count = 0;
-    try { vk_count = ggml_backend_vk_get_device_count(); } catch (...) { vk_count = 0; }
+    try { vk_count = ggml_rxd_backend_vk_get_device_count(); } catch (...) { vk_count = 0; }
     if (vk_count > 0) {
         g_status.active       = Backend::Vulkan;
         g_status.device_count = vk_count;
-        ggml_backend_vk_get_device_description(0, g_status.device_name, sizeof(g_status.device_name));
+        ggml_rxd_backend_vk_get_device_description(0, g_status.device_name, sizeof(g_status.device_name));
         size_t fr = 0, tot = 0;
-        ggml_backend_vk_get_device_memory(0, &fr, &tot);
+        ggml_rxd_backend_vk_get_device_memory(0, &fr, &tot);
         g_status.vram_free_bytes  = fr;
         g_status.vram_total_bytes = tot;
         g_active.store(true, std::memory_order_release);
@@ -98,7 +98,7 @@ void detect_locked() {
 
     // 2. CUDA.
     int cu = 0;
-    try { cu = ggml_backend_cuda_get_device_count(); } catch (...) { cu = 0; }
+    try { cu = ggml_rxd_backend_cuda_get_device_count(); } catch (...) { cu = 0; }
     if (cu > 0) {
         g_status.active       = Backend::Cuda;
         g_status.device_count = cu;
@@ -110,7 +110,7 @@ void detect_locked() {
 
     // 3. HIP / ROCm.
     int hp = 0;
-    try { hp = ggml_backend_hip_get_device_count(); } catch (...) { hp = 0; }
+    try { hp = ggml_rxd_backend_hip_get_device_count(); } catch (...) { hp = 0; }
     if (hp > 0) {
         g_status.active       = Backend::Hip;
         g_status.device_count = hp;

@@ -3657,20 +3657,20 @@ static bool InitializeGGMLBridgeContext() {
         return false;
     }
 
-    ggml_context* ggml_ctx = nullptr;
+    ggml_rxd_context* ggml_rxd_ctx = nullptr;
     gguf_init_params params = {};
     params.no_alloc = false;
-    params.ctx = &ggml_ctx;
+    params.ctx = &ggml_rxd_ctx;
 
     g_titan_gguf_ctx = gguf_init_from_file(g_modelPath, params);
-    if (!g_titan_gguf_ctx || !ggml_ctx) {
+    if (!g_titan_gguf_ctx || !ggml_rxd_ctx) {
         TitanLog("Titan_GGMLBridge: gguf_init_from_file failed, metadata-only bridge remains active");
         ShutdownGGMLBridgeContext();
         return false;
     }
 
-    g_ggml_ctx = ggml_ctx;
-    g_model_tensors = ggml_get_first_tensor(ggml_ctx);
+    g_ggml_ctx = ggml_rxd_ctx;
+    g_model_tensors = ggml_rxd_get_first_tensor(ggml_rxd_ctx);
     TitanLog("Titan_GGMLBridge: live GGML context hydrated from active model");
     return true;
 }
@@ -3867,7 +3867,7 @@ extern "C" RAWRXD_TITAN_BRIDGE_API int RawrXD_GetGGMLTitanBridge(RAWRXD_GGML_TIT
         return 0;
     }
 
-    out_bridge->ggml_ctx = g_ggml_ctx;
+    out_bridge->ggml_rxd_ctx = g_ggml_ctx;
     out_bridge->model_tensors = g_model_tensors;
     out_bridge->n_layers = g_n_layers;
     out_bridge->n_embd = g_n_embd;

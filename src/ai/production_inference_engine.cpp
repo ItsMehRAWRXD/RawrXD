@@ -68,7 +68,7 @@ void ProductionInferenceEngine::GenerateStreaming(
     int max_tokens,
     std::function<void(const std::string&)> token_callback,
     std::function<void()> complete_callback,
-    void* user_data) 
+    std::function<void(int32_t)> token_id_callback) 
 {
     // Implementation of streaming inference.
     // We'll bridge this to a loop calling RunInferenceReal or a modified version that supports callbacks.
@@ -81,24 +81,23 @@ void ProductionInferenceEngine::GenerateStreaming(
     }
 }
 
-void ProductionInferenceEngine::SetContextLimit(size_t limit) {
-    m_contextLimit = limit;
-}
+int ProductionInferenceEngine::GetVocabSize() const { return 32000; }
+int ProductionInferenceEngine::GetEmbeddingDim() const { return 4096; }
+int ProductionInferenceEngine::GetNumLayers() const { return 32; }
+int ProductionInferenceEngine::GetNumHeads() const { return 32; }
 
-size_t ProductionInferenceEngine::GetContextLimit() const {
-    return m_contextLimit;
-}
+void ProductionInferenceEngine::SetMaxMode(bool enabled) { m_maxMode = enabled; }
+void ProductionInferenceEngine::SetDeepThinking(bool enabled) { m_deepThinking = enabled; }
+void ProductionInferenceEngine::SetDeepResearch(bool enabled) { m_deepResearch = enabled; }
+bool ProductionInferenceEngine::IsMaxMode() const { return m_maxMode; }
+bool ProductionInferenceEngine::IsDeepThinking() const { return m_deepThinking; }
+bool ProductionInferenceEngine::IsDeepResearch() const { return m_deepResearch; }
 
-void ProductionInferenceEngine::SetThreadCount(int count) {
-    m_threadCount = count;
-}
+size_t ProductionInferenceEngine::GetMemoryUsage() const { return 0; }
+void ProductionInferenceEngine::ClearCache() {}
 
-int ProductionInferenceEngine::GetThreadCount() const {
-    return m_threadCount;
-}
-
-const char* ProductionInferenceEngine::GetBackendName() const {
-    return "GGML+Vulkan+MASM(Spec)";
+const char* ProductionInferenceEngine::GetEngineName() const {
+    return "RawrXD Production Engine (Vulkan/GGML)";
 }
 
 } // namespace RawrXD

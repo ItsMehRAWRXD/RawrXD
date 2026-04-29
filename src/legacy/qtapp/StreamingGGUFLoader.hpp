@@ -32,7 +32,7 @@
 struct TensorMetadata {
     QString name;
     uint32_t ndims = 0;
-    uint32_t ggml_type = 0;
+    uint32_t ggml_rxd_type = 0;
     quint64 absolute_offset = 0;
     quint64 size_bytes = 0;
     QString zone_id;

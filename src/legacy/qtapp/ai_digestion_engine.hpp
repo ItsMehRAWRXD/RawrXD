@@ -154,7 +154,8 @@ class AIDigestionEngine  {public:
     void startTraining();
     void stopTraining();
     bool isTraining() const;
-    \npublic:\n    // Progress signals
+    
+\npublic:\n    // Progress signals
     void progressChanged(double progress);
     void statusChanged(const std::string& status);
     void fileProcessed(const std::string& filePath, int processedCount, int totalCount);
@@ -168,11 +169,13 @@ class AIDigestionEngine  {public:
     // Knowledge extraction signals
     void knowledgeExtracted(const KnowledgeRepresentation& knowledge);
     void datasetUpdated(int totalSamples, int totalTokens);
-\npublic:\n    void pauseDigestion();
+
+\npublic:\n    void pauseDigestion();
     void resumeDigestion();
     void clearDataset();
     void processFile(const std::string& filePath);
-\nprivate:\n    void processFileInternal(const std::string& filePath);
+
+\nprivate:\n    void processFileInternal(const std::string& filePath);
     void onDigestionThreadFinished();
     void onTrainingThreadFinished();
 
@@ -267,8 +270,10 @@ private:
 // Helper class for background digestion
 class DigestionWorker  {public:
     explicit DigestionWorker(AIDigestionEngine* engine);
-    \npublic:\n    void processFiles(const std::stringList& files, const DigestionConfig& config);
-\npublic:\n    void fileProcessed(const std::string& filePath);
+    
+\npublic:\n    void processFiles(const std::stringList& files, const DigestionConfig& config);
+
+\npublic:\n    void fileProcessed(const std::string& filePath);
     void finished();
     void error(const std::string& message);
 
@@ -279,8 +284,10 @@ private:
 // Helper class for background training
 class TrainingWorker  {public:
     explicit TrainingWorker(AIDigestionEngine* engine);
-    \npublic:\n    void startTraining(const AIDigestionDataset& dataset, const DigestionConfig& config);
-\npublic:\n    void trainingProgress(double progress);
+    
+\npublic:\n    void startTraining(const AIDigestionDataset& dataset, const DigestionConfig& config);
+
+\npublic:\n    void trainingProgress(double progress);
     void finished(const std::string& modelPath);
     void error(const std::string& message);
 

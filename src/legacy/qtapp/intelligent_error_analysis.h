@@ -40,12 +40,14 @@ public:
     std::string classifyError(const std::string& errorText);
     double calculateErrorConfidence(const void*& errorAnalysis);
     void* analyzeErrorSeverity(const void*& errorAnalysis);
-\npublic:\n    void processBuildError(const std::string& compiler, const std::string& output);
+
+\npublic:\n    void processBuildError(const std::string& compiler, const std::string& output);
     void processRuntimeError(const std::string& errorType, const std::string& message, const std::string& stackTrace);
     void processTestFailure(const std::string& testName, const std::string& failureMessage);
     void processCodeAnalysisWarning(const std::string& file, const std::string& line, const std::string& warning);
     void onAutoRefresh();
-\npublic:\n    void errorAnalyzed(const void*& analysis);
+
+\npublic:\n    void errorAnalyzed(const void*& analysis);
     void fixGenerated(const void*& fixOptions);
     void fixApplied(const std::string& errorId, const void*& fix, bool success);
     void errorPatternLearned(const std::string& errorType, const std::string& fixPattern);

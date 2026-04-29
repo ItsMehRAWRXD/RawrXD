@@ -145,15 +145,15 @@ void gemv_q4_K_avx2(const float* x, const block_q4_K* w, float* y, int n, int k)
 void gemv_q6_K_avx2(const float* x, const block_q6_K* w, float* y, int n, int k);
 
 // ---------------------------------------------------------------------------
-// Unified dispatch — matches ggml_type enum from common_types.h
+// Unified dispatch — matches ggml_rxd_type enum from common_types.h
 // ---------------------------------------------------------------------------
-void dequant_k(ggml_type type, const void* src, float* dst, int n_elements);
+void dequant_k(ggml_rxd_type type, const void* src, float* dst, int n_elements);
 
 // ---------------------------------------------------------------------------
 // Fused dispatch — pick the right GEMV for the weight type
 // Used by sovereign_engines / pyre_compute dispatch table
 // ---------------------------------------------------------------------------
-void matmul_k_fused(ggml_type type,
+void matmul_k_fused(ggml_rxd_type type,
                     const float* x, const void* w, float* y,
                     int n_out, int k_dim);
 

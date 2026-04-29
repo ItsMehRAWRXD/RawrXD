@@ -7,7 +7,7 @@
 //
 // Integrates with:
 //   - nanoquant_bridge.h    (MASM64 ASM exports)
-//   - ggml_nanoquant.h      (GGML type registration)
+//   - ggml_rxd_nanoquant.h      (GGML type registration)
 //   - gguf_loader.h         (GGUF tensor enumeration)
 //   - agentic_observability.h (metrics + logging)
 //
@@ -15,7 +15,7 @@
 // =============================================================================
 
 #include "quant/nanoquant_bridge.h"
-#include "ggml/ggml_nanoquant.h"
+#include "ggml/ggml_rxd_nanoquant.h"
 #include "agentic_observability.h"
 
 #include <cstdio>
@@ -186,7 +186,7 @@ QuantizeResult AgentTool_QuantizeModel(const NanoQuantConfig& config) {
     // =========================================================================
     //  Step 2: Register GGML NanoQuant types
     // =========================================================================
-    ggml_register_nanoquant_types();
+    ggml_rxd_register_nanoquant_types();
     
     // =========================================================================
     //  Step 3: Validate configuration
@@ -212,7 +212,7 @@ QuantizeResult AgentTool_QuantizeModel(const NanoQuantConfig& config) {
     // GGUFLoader loader;
     // if (!loader.open(config.input_path)) { return error; }
     // for (auto& tensor : loader.tensors()) {
-    //     if (tensor.type == GGML_TYPE_F32 || tensor.type == GGML_TYPE_F16) {
+    //     if (tensor.type == GGML_RXD_TYPE_F32 || tensor.type == GGML_RXD_TYPE_F16) {
     //         float* data = loader.load_tensor_f32(tensor);
     //         uint64_t n_el = tensor.n_elements;
     //         if (config.matrix_factor_rank > 0 && tensor.n_dims == 2) {
@@ -226,7 +226,7 @@ QuantizeResult AgentTool_QuantizeModel(const NanoQuantConfig& config) {
     //                                 tensor.name.c_str());
     //         }
     //     }
-    //     writer.write_tensor(tensor.name, GGML_TYPE_NQ_1, blocks, n_blocks * BLOCK_NQ1_SIZE);
+    //     writer.write_tensor(tensor.name, GGML_RXD_TYPE_NQ_1, blocks, n_blocks * BLOCK_NQ1_SIZE);
     // }
     
     auto total_end = std::chrono::high_resolution_clock::now();

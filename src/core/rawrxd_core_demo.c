@@ -28,29 +28,29 @@ static void demo_quantization(void) {
     printf("Original data: 256 floats (%zu bytes)\n", 256 * sizeof(float));
     
     /* Q4_0 quantization */
-    RXDQuant q4 = rxd_quant(data, 256, GGML_TYPE_Q4_0);
+    RXDQuant q4 = rxd_quant(data, 256, GGML_RXD_TYPE_Q4_0);
     printf("Q4_0 quantized: %zu bytes (%.1f%% compression)\n", 
            q4.size, 100.0 * (1.0 - (double)q4.size / (256 * sizeof(float))));
     
-    RXDDequant d4 = rxd_dequant(q4.data, GGML_TYPE_Q4_0, 256);
+    RXDDequant d4 = rxd_dequant(q4.data, GGML_RXD_TYPE_Q4_0, 256);
     RXDQuality q4_qual = rxd_estimate_quality(data, d4.data, 256);
     printf("  Q4_0 Quality: MSE=%.6f, SNR=%.2f dB\n", q4_qual.mse, q4_qual.snr_db);
     
     /* Q8_0 quantization */
-    RXDQuant q8 = rxd_quant(data, 256, GGML_TYPE_Q8_0);
+    RXDQuant q8 = rxd_quant(data, 256, GGML_RXD_TYPE_Q8_0);
     printf("Q8_0 quantized: %zu bytes (%.1f%% compression)\n", 
            q8.size, 100.0 * (1.0 - (double)q8.size / (256 * sizeof(float))));
     
-    RXDDequant d8 = rxd_dequant(q8.data, GGML_TYPE_Q8_0, 256);
+    RXDDequant d8 = rxd_dequant(q8.data, GGML_RXD_TYPE_Q8_0, 256);
     RXDQuality q8_qual = rxd_estimate_quality(data, d8.data, 256);
     printf("  Q8_0 Quality: MSE=%.6f, SNR=%.2f dB\n", q8_qual.mse, q8_qual.snr_db);
     
     /* Q4_K quantization */
-    RXDQuant q4k = rxd_quant(data, 256, GGML_TYPE_Q4_K);
+    RXDQuant q4k = rxd_quant(data, 256, GGML_RXD_TYPE_Q4_K);
     printf("Q4_K quantized: %zu bytes (%.1f%% compression)\n", 
            q4k.size, 100.0 * (1.0 - (double)q4k.size / (256 * sizeof(float))));
     
-    RXDDequant d4k = rxd_dequant(q4k.data, GGML_TYPE_Q4_K, 256);
+    RXDDequant d4k = rxd_dequant(q4k.data, GGML_RXD_TYPE_Q4_K, 256);
     RXDQuality q4k_qual = rxd_estimate_quality(data, d4k.data, 256);
     printf("  Q4_K Quality: MSE=%.6f, SNR=%.2f dB\n", q4k_qual.mse, q4k_qual.snr_db);
     

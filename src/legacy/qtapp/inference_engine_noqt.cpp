@@ -74,7 +74,7 @@ bool InferenceEngine::loadModel(const std::string& path) {
                     if (!tensorData.empty()) {
                         CachedTensorData cached;
                         cached.data = tensorData;
-                        cached.ggml_type_id = m_loader->getTensorType(name);
+                        cached.ggml_rxd_type_id = m_loader->getTensorType(name);
                         m_tensorCache[name] = cached;
                     }
                 }
@@ -113,7 +113,7 @@ bool InferenceEngine::loadModel(const std::string& path) {
                 // Load transformer weights
                 std::map<std::string, std::pair<std::vector<uint8_t>, int>> tensorMap;
                 for (auto& p : m_tensorCache) {
-                    tensorMap[p.first] = {p.second.data, p.second.ggml_type_id};
+                    tensorMap[p.first] = {p.second.data, p.second.ggml_rxd_type_id};
                 }
                 
                 bool transformerOk = m_transformer.loadWeightsWithTypes(tensorMap, nLayers, nEmbd, nHead, nVocab);

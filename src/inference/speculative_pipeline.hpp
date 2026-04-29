@@ -15,6 +15,11 @@
 #pragma once
 
 #include "../inference_engine.h"
+#include "../telemetry/sovereign_stats_block_v2.h"
+#include "../telemetry/SovereignTelemetry_MASM_Bridge.h"
+#include "../telemetry/execution_timeline.h"
+#include "../engine/global_runtime_orchestrator.h"
+#include <chrono>
 
 #include <atomic>
 #include <cstdint>
@@ -96,12 +101,16 @@ public:
         std::vector<int32_t> context = prompt;
         uint32_t total_generated     = 0;
         uint32_t current_speculate_n = m_cfg.speculate_n;
+        auto start_time = std::chrono::high_resolution_clock::now();
 
         while (total_generated < m_cfg.max_tokens) {
+            TimelineScope ts_step(ExecutionPhase::VULKAN_VERIFY);
+            auto step_start = std::chrono::high_resolution_clock::now();
             // --- Step 1: draft proposes current_speculate_n tokens -----------
             std::vector<int32_t> draft_seq;
             draft_seq.reserve(current_speculate_n);
             {
+                TimelineScope ts_draft(ExecutionPhase::SPECULATIVE_DRAFT, (uint16_t)current_speculate_n);
                 std::vector<int32_t> draft_ctx = context;
                 std::vector<int32_t> proposed  =
                     m_draft->Generate(draft_ctx,
@@ -161,12 +170,26 @@ public:
             }
 
             // --- Step 4: adaptive speculate_n --------------------------------
-            if (m_cfg.adaptive_n && result.stats.draft_tokens_total >= 8) {
+            if (m_cfg.adaptive_n) {
                 float rate = result.stats.acceptance_rate();
-                if (rate < m_cfg.accept_ratio && current_speculate_n > 1)
-                    current_speculate_n--;         // falling back — draft is weak
-                else if (rate > 0.9f && current_speculate_n < m_cfg.speculate_n * 2)
-                    current_speculate_n++;         // going well — be more aggressive
+                float total_elapsed = std::chrono::duration<float>(std::chrono::high_resolution_clock::now() - start_time).count();
+                float tps = total_elapsed > 0 ? (float)total_generated / total_elapsed : 0.0f;
+
+                // Consult the Global Orchestrator instead of local heuristics
+                GlobalRuntimeOrchestrator::Get().UpdateInferenceMetrics(rate, tps);
+                current_speculate_n = GlobalRuntimeOrchestrator::Get().GetCurrentState().optimal_speculate_n;
+            }
+
+            // --- Step 5: Sovereign Telemetry Update --------------------------
+            if (m_statsBlock) {
+                auto now = std::chrono::high_resolution_clock::now();
+                float total_elapsed = std::chrono::duration<float>(now - start_time).count();
+                float step_elapsed_ms = std::chrono::duration<float, std::milli>(now - step_start).count();
+                
+                float tps = total_elapsed > 0 ? (float)total_generated / total_elapsed : 0.0f;
+                float mspt = (float)step_elapsed_ms / (accepted + 1); // rough estimate per step
+
+                SovereignTelemetry_Update(m_statsBlock, tps, mspt, accepted, (uint32_t)draft_seq.size() - accepted, 0.0f);
             }
         }
     done:
@@ -200,12 +223,17 @@ public:
     PipelineConfig& config()       { return m_cfg; }
     const PipelineConfig& config() const { return m_cfg; }
 
+    void setStatsBlock(SovereignStatsBlockV2* block) {
+        m_statsBlock = block;
+    }
+
 private:
     InferenceEngine* m_draft  = nullptr;
     InferenceEngine* m_target = nullptr;
     PipelineConfig   m_cfg;
     std::mt19937     m_rng;
     std::atomic<bool> m_stop{false};
+    SovereignStatsBlockV2* m_statsBlock = nullptr;
 };
 
 } // namespace RawrXD::Inference

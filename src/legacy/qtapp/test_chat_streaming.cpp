@@ -96,9 +96,9 @@ int main(int argc, char *argv[]) {
         
         // Force CPU-only mode to bypass GPU initialization deadlock
         SetEnvironmentVariableA("CUDA_VISIBLE_DEVICES", "");
-        SetEnvironmentVariableA("GGML_CUDA", "0");
+        SetEnvironmentVariableA("GGML_RXD_CUDA", "0");
         _putenv("CUDA_VISIBLE_DEVICES=");
-        _putenv("GGML_CUDA=0");
+        _putenv("GGML_RXD_CUDA=0");
 
         InferenceEngine engine;
         engine.setThreadingEnabled(false);

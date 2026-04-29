@@ -24,7 +24,7 @@ void dequantize_braids_gpu(
 
 // GPU matrix-vector multiply: out[r] = sum_c W[r*cols + c] * x[c], for r in [0,rows).
 // W is a row-major fp32 matrix (`rows` x `cols`), x is fp32 length `cols`, out is fp32
-// length `rows`. Backed by a ggml_backend graph submitted to the active GPU backend.
+// length `rows`. Backed by a ggml_rxd_backend graph submitted to the active GPU backend.
 // Aborts if no GPU is active or the dispatch fails.
 void matmul_f32_gpu(
     const float* W,

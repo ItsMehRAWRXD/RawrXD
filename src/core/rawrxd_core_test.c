@@ -140,17 +140,17 @@ TEST(quant_generic_dispatch) {
     for (int i = 0; i < 128; i++) data[i] = (float)i / 64.0f;
     
     /* Test F32 */
-    RXDQuant qf32 = rxd_quant(data, 128, GGML_TYPE_F32);
-    RXDDequant df32 = rxd_dequant(qf32.data, GGML_TYPE_F32, 128);
+    RXDQuant qf32 = rxd_quant(data, 128, GGML_RXD_TYPE_F32);
+    RXDDequant df32 = rxd_dequant(qf32.data, GGML_RXD_TYPE_F32, 128);
     ASSERT(df32.data != NULL);
     ASSERT_EQ(df32.count, 128);
     rxd_quant_free(&qf32);
     rxd_dequant_free(&df32);
     
     /* Test Q4_0 */
-    RXDQuant q4 = rxd_quant(data, 128, GGML_TYPE_Q4_0);
+    RXDQuant q4 = rxd_quant(data, 128, GGML_RXD_TYPE_Q4_0);
     ASSERT(q4.data != NULL);
-    RXDDequant d4 = rxd_dequant(q4.data, GGML_TYPE_Q4_0, 128);
+    RXDDequant d4 = rxd_dequant(q4.data, GGML_RXD_TYPE_Q4_0, 128);
     ASSERT(d4.data != NULL);
     rxd_quant_free(&q4);
     rxd_dequant_free(&d4);
@@ -396,14 +396,14 @@ TEST(engine_metrics) {
 
 TEST(profile_defaults) {
     ASSERT_STR_EQ(RXD_PROFILE_SPEED.name, "speed");
-    ASSERT_EQ(RXD_PROFILE_SPEED.default_type, GGML_TYPE_Q4_0);
-    ASSERT_EQ(RXD_PROFILE_SPEED.attn_type, GGML_TYPE_Q4_0);
+    ASSERT_EQ(RXD_PROFILE_SPEED.default_type, GGML_RXD_TYPE_Q4_0);
+    ASSERT_EQ(RXD_PROFILE_SPEED.attn_type, GGML_RXD_TYPE_Q4_0);
     
     ASSERT_STR_EQ(RXD_PROFILE_BALANCED.name, "balanced");
-    ASSERT_EQ(RXD_PROFILE_BALANCED.default_type, GGML_TYPE_Q4_K);
+    ASSERT_EQ(RXD_PROFILE_BALANCED.default_type, GGML_RXD_TYPE_Q4_K);
     
     ASSERT_STR_EQ(RXD_PROFILE_QUALITY.name, "quality");
-    ASSERT_EQ(RXD_PROFILE_QUALITY.default_type, GGML_TYPE_Q6_K);
+    ASSERT_EQ(RXD_PROFILE_QUALITY.default_type, GGML_RXD_TYPE_Q6_K);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

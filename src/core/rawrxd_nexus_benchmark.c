@@ -503,7 +503,7 @@ static void benchmark_adaptive_quantization(void) {
     /* Warmup */
     for (int i = 0; i < BENCHMARK_WARMUP; i++) {
         rxd_adapt_quant_analyze_layer(i % 32, "layer.weight");
-        rxd_adapt_quant_switch_layer(i % 32, GGML_TYPE_Q4_K);
+        rxd_adapt_quant_switch_layer(i % 32, GGML_RXD_TYPE_Q4_K);
     }
     
     /* Benchmark analysis */

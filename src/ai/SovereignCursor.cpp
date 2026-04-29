@@ -7,10 +7,17 @@
 // ============================================================================
 
 #include "SovereignCursor.h"
+#include "../engine/global_runtime_orchestrator.h"
 #include <chrono>
 #include <sstream>
 #include <iomanip>
 #include <cmath>
+
+// Forward declarations for embedding C API
+extern "C" {
+    bool RawrXD_AI_InitEmbeddingProvider(const char* modelPath, int dimensions);
+    bool RawrXD_AI_Embed(const char* text, float* output, int outputSize);
+}
 
 namespace RawrXD {
 namespace AI {
@@ -172,9 +179,38 @@ void SovereignCursor::IndexWorkspace(const std::string& path) {
 
 void SovereignCursor::IndexFile(const std::string& path,
                                  const std::string& content) {
-    (void)path;
-    (void)content;
-    // TODO: Parse file, extract functions/classes, embed, store
+    auto& orch = GlobalRuntimeOrchestrator::Get();
+    float risk = orch.AssessRisk();
+    
+    // Safety Gate: Skip indexing if system is under high pressure (risk > 0.4)
+    // and wait for a "Safety Pulse" during lower risk moments.
+    if (risk > 0.40f) {
+        // Log telemetry that indexing was throttled for safety
+        return;
+    }
+
+    // Initialize embedding provider if needed
+    static bool provider_init = false;
+    if (!provider_init) {
+        RawrXD_AI_InitEmbeddingProvider(config_.modelPath.c_str(), config_.embeddingDim);
+        provider_init = true;
+    }
+
+    std::vector<float> embedding(config_.embeddingDim);
+    if (!RawrXD_AI_Embed(content.c_str(), embedding.data(), (int)config_.embeddingDim)) {
+        return;
+    }
+
+    if (vectorStore_) {
+        EmbeddingChunk chunk;
+        chunk.id = std::hash<std::string>{}(path + content);
+        chunk.fileId = std::hash<std::string>{}(path);
+        chunk.name = path;
+        chunk.codeLength = content.length();
+        chunk.dim = config_.embeddingDim;
+        
+        vectorStore_->AddChunk(chunk, embedding.data());
+    }
 }
 
 void SovereignCursor::ClearIndex() {

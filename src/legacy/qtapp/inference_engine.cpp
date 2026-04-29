@@ -234,7 +234,7 @@ bool InferenceEngine::loadModel(const QString& path)
                 QHash<QString, QPair<QByteArray, int>> tensorCacheWithTypes;
                 for (auto it = m_tensorCache.constBegin(); it != m_tensorCache.constEnd(); ++it) {
                     tensorCacheWithTypes.insert(it.key(), 
-                        QPair<QByteArray, int>(it.value().data, it.value().ggml_type_id));
+                        QPair<QByteArray, int>(it.value().data, it.value().ggml_rxd_type_id));
                 }
                 
                 qInfo() << "[InferenceEngine] Attempting transformer weight loading with type information";
@@ -548,7 +548,7 @@ void InferenceEngine::rebuildTensorCache()
                     if (!quantized.isEmpty()) {
                         CachedTensorData tensorData;
                         tensorData.data = quantized;
-                        tensorData.ggml_type_id = resulting_type_id;
+                        tensorData.ggml_rxd_type_id = resulting_type_id;
                         m_tensorCache.insert(name, tensorData);
                     }
                 } catch (const std::exception& e) {

@@ -2375,8 +2375,8 @@ void DequantizeQ8_0(const uint8_t* quantized, float* output, int size)
 void DequantizeQ4_K(const uint8_t* quantized, float* output, int num_elements)
 {
     // Q4_K: 256-element super-blocks. Layout per block:
-    //   [0..1]   d    (ggml_half / f16): super-block scale multiplier
-    //   [2..3]   dmin (ggml_half / f16): super-block min multiplier
+    //   [0..1]   d    (ggml_rxd_half / f16): super-block scale multiplier
+    //   [2..3]   dmin (ggml_rxd_half / f16): super-block min multiplier
     //   [4..15]  scales[12]: 8 sub-blocks × (6-bit scale + 6-bit min), packed
     //   [16..143] qs[128]: 256 packed 4-bit quantized values
     // Total: 144 bytes per block.

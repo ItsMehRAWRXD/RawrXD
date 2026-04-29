@@ -49,7 +49,7 @@ struct ShardSpec {
 // ============================================================================
 struct TensorParallelInfo {
     std::string name;
-    uint32_t    ggml_type;
+    uint32_t    ggml_rxd_type;
     int64_t     n_rows;
     int64_t     n_cols;
     ShardSpec   shard;
@@ -139,7 +139,7 @@ public:
 private:
     struct TensorMeta {
         std::string name;
-        uint32_t    ggml_type;
+        uint32_t    ggml_rxd_type;
         uint32_t    n_dims;
         uint64_t    dims[4];
         uint64_t    file_offset; // bytes from start of data section
@@ -147,9 +147,9 @@ private:
 
     bool parseHeader();
     bool computeShardBounds(const TensorMeta& meta, ShardSpec& spec);
-    int64_t bytesPerElement(uint32_t ggml_type) const;
-    int64_t blockSizeBytes(uint32_t ggml_type) const;
-    int64_t elementsPerBlock(uint32_t ggml_type) const;
+    int64_t bytesPerElement(uint32_t ggml_rxd_type) const;
+    int64_t blockSizeBytes(uint32_t ggml_rxd_type) const;
+    int64_t elementsPerBlock(uint32_t ggml_rxd_type) const;
 
     Config cfg_;
     bool   is_open_ = false;

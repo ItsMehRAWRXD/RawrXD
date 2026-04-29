@@ -93,7 +93,7 @@ public:
 private:
     struct CachedTensorData {
         std::vector<uint8_t> data;  // Replaces std::vector<uint8_t>
-        int ggml_type_id = 0;
+        int ggml_rxd_type_id = 0;
     };
     
     ProgressCallback m_loadProgressCallback;

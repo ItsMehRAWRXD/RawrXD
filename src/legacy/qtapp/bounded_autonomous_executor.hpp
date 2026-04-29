@@ -132,7 +132,8 @@ public:
      * @brief Get detailed log for iteration N
      */
     ExecutionLog iterationLog(int iteration) const;
-    \npublic:\n    // Lifecycle signals
+    
+\npublic:\n    // Lifecycle signals
     void loopStarted(const std::string& initialTask);
     void loopFinished();
     void loopStopped();  // User clicked stop before completion
@@ -164,7 +165,8 @@ public:
     // State change signals
     void shutdownRequested();
     void humanOverrideTriggered();
-\nprivate:\n    // Main loop driver
+
+\nprivate:\n    // Main loop driver
     void runAutonomousLoop();
     
     // Phase handlers

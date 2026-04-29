@@ -16,10 +16,10 @@ constexpr int32_t kMaxCtxTokens = 4096;
 using llama_token_abi = int32_t;
 using llama_pos_abi = int32_t;
 using llama_seq_id_abi = int32_t;
-using ggml_backend_dev_t_abi = void*;
-using ggml_backend_buffer_type_t_abi = void*;
-using ggml_backend_sched_eval_callback_abi = bool (*)(void*, bool, void*);
-using ggml_abort_callback_abi = bool (*)(void*);
+using ggml_rxd_backend_dev_t_abi = void*;
+using ggml_rxd_backend_buffer_type_t_abi = void*;
+using ggml_rxd_backend_sched_eval_callback_abi = bool (*)(void*, bool, void*);
+using ggml_rxd_abort_callback_abi = bool (*)(void*);
 using llama_progress_callback_abi = bool (*)(float, void*);
 
 static std::wstring dll_dir_of_current_exe() {
@@ -58,7 +58,7 @@ static_assert(sizeof(llama_batch_abi) == 56, "llama_batch ABI size must match ll
 
 struct llama_model_tensor_buft_override_abi {
     const char* pattern = nullptr;
-    ggml_backend_buffer_type_t_abi buft = nullptr;
+    ggml_rxd_backend_buffer_type_t_abi buft = nullptr;
 };
 
 struct llama_model_kv_override_abi {
@@ -73,7 +73,7 @@ struct llama_model_kv_override_abi {
 };
 
 struct llama_model_params_abi {
-    ggml_backend_dev_t_abi* devices = nullptr;
+    ggml_rxd_backend_dev_t_abi* devices = nullptr;
     const llama_model_tensor_buft_override_abi* tensor_buft_overrides = nullptr;
     int32_t n_gpu_layers = 0;
     int32_t split_mode = 0;
@@ -111,11 +111,11 @@ struct llama_context_params_abi {
     float yarn_beta_slow = 0.0f;
     uint32_t yarn_orig_ctx = 0;
     float defrag_thold = 0.0f;
-    ggml_backend_sched_eval_callback_abi cb_eval = nullptr;
+    ggml_rxd_backend_sched_eval_callback_abi cb_eval = nullptr;
     void* cb_eval_user_data = nullptr;
     int32_t type_k = 0;
     int32_t type_v = 0;
-    ggml_abort_callback_abi abort_callback = nullptr;
+    ggml_rxd_abort_callback_abi abort_callback = nullptr;
     void* abort_callback_data = nullptr;
     bool embeddings = false;
     bool offload_kqv = false;
@@ -180,7 +180,7 @@ struct LlamaRuntime::Fn {
 
     using p_kv_cache_clear = void (*)(void* ctx);
 
-    p_ggml_backend_load_all ggml_backend_load_all = nullptr;
+    p_ggml_backend_load_all ggml_rxd_backend_load_all = nullptr;
     p_backend_init backend_init = nullptr;
     p_backend_free backend_free = nullptr;
     p_model_default_params model_default_params = nullptr;
@@ -308,10 +308,10 @@ bool LlamaRuntime::bind_exports(std::string& error) {
 
     // Optional.
     if (m_h_ggml) {
-        f->ggml_backend_load_all = (Fn::p_ggml_backend_load_all)GetProcAddress((HMODULE)m_h_ggml, "ggml_backend_load_all");
+        f->ggml_rxd_backend_load_all = (Fn::p_ggml_backend_load_all)GetProcAddress((HMODULE)m_h_ggml, "ggml_rxd_backend_load_all");
     }
-    if (!f->ggml_backend_load_all) {
-        f->ggml_backend_load_all = (Fn::p_ggml_backend_load_all)GetProcAddress(h, "ggml_backend_load_all");
+    if (!f->ggml_rxd_backend_load_all) {
+        f->ggml_rxd_backend_load_all = (Fn::p_ggml_backend_load_all)GetProcAddress(h, "ggml_rxd_backend_load_all");
     }
     f->backend_init = (Fn::p_backend_init)GetProcAddress(h, "llama_backend_init");
     f->backend_free = (Fn::p_backend_free)GetProcAddress(h, "llama_backend_free");
@@ -330,8 +330,8 @@ fail:
 
 bool LlamaRuntime::init_backend(std::string& error) {
     (void)error;
-    if (m_fn && m_fn->ggml_backend_load_all) {
-        m_fn->ggml_backend_load_all();
+    if (m_fn && m_fn->ggml_rxd_backend_load_all) {
+        m_fn->ggml_rxd_backend_load_all();
     }
     if (m_fn && m_fn->backend_init) {
         m_fn->backend_init();

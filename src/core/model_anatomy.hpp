@@ -11,7 +11,7 @@ namespace RawrXD
 struct TensorEntry
 {
     std::string name;
-    uint32_t tensorType{0};  // ggml_type raw
+    uint32_t tensorType{0};  // ggml_rxd_type raw
     int category{10};         // see kCategoryNames in .cpp
     int layerId{-1};
     uint64_t byteOffset{0};   // absolute file offset to payload

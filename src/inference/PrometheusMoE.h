@@ -50,7 +50,7 @@ struct MoEConfig {
     size_t kvCacheBytes = 0;
 
     // Quantization
-    int quantType = 0;              // GGML_TYPE_Q4_0, etc.
+    int quantType = 0;              // GGML_RXD_TYPE_Q4_0, etc.
 
     bool IsValid() const {
         return isMoE && numLayers > 0 && numExperts > 0

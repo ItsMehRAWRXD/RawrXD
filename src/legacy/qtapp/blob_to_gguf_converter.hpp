@@ -116,7 +116,8 @@ public:
      * @brief Get estimated file size for output GGUF
      */
     int64_t getEstimatedGGUFSize() const;
-\npublic:\n    /**
+
+\npublic:\n    /**
      * @brief Emitted when conversion progress updates
      */
     void progressUpdated(const ConversionProgress& progress);

@@ -40,56 +40,56 @@ typedef enum {
 
 /* GGML Tensor Types (Quantization Formats) */
 typedef enum {
-    GGML_TYPE_F32 = 0,
-    GGML_TYPE_F16 = 1,
-    GGML_TYPE_Q4_0 = 2, /* 4-bit, block 32, scale */
-    GGML_TYPE_Q4_1 = 3, /* 4-bit, block 32, scale + min */
-    GGML_TYPE_Q4_2 = 4, /* (unused) */
-    GGML_TYPE_Q4_3 = 5, /* (unused) */
-    GGML_TYPE_Q5_0 = 6, /* 5-bit, block 32, scale */
-    GGML_TYPE_Q5_1 = 7, /* 5-bit, block 32, scale + min */
-    GGML_TYPE_Q8_0 = 8, /* 8-bit, block 32, scale */
-    GGML_TYPE_Q8_1 = 9, /* 8-bit, block 32, scale + min */
-    GGML_TYPE_Q2_K = 10, /* 2-bit K-quant */
-    GGML_TYPE_Q3_K = 11, /* 3-bit K-quant */
-    GGML_TYPE_Q4_K = 12, /* 4-bit K-quant */
-    GGML_TYPE_Q5_K = 13, /* 5-bit K-quant */
-    GGML_TYPE_Q6_K = 14, /* 6-bit K-quant */
-    GGML_TYPE_Q8_K = 15, /* 8-bit K-quant */
-    GGML_TYPE_IQ2_XXS = 16, /* 2-bit IQ */
-    GGML_TYPE_IQ2_XS = 17,
-    GGML_TYPE_IQ3_XXS = 18,
-    GGML_TYPE_IQ1_S = 19,
-    GGML_TYPE_IQ1_M = 20,
-    GGML_TYPE_IQ4_NL = 21,
-    GGML_TYPE_IQ3_S = 22,
-    GGML_TYPE_IQ2_S = 23,
-    GGML_TYPE_IQ4_XS = 24,
-    GGML_TYPE_I8 = 25,
-    GGML_TYPE_I16 = 26,
-    GGML_TYPE_I32 = 27,
-    GGML_TYPE_I64 = 28,
-    GGML_TYPE_F64 = 29,
-    GGML_TYPE_BF16 = 30,
-    GGML_TYPE_COUNT
+    GGML_RXD_TYPE_F32 = 0,
+    GGML_RXD_TYPE_F16 = 1,
+    GGML_RXD_TYPE_Q4_0 = 2, /* 4-bit, block 32, scale */
+    GGML_RXD_TYPE_Q4_1 = 3, /* 4-bit, block 32, scale + min */
+    GGML_RXD_TYPE_Q4_2 = 4, /* (unused) */
+    GGML_RXD_TYPE_Q4_3 = 5, /* (unused) */
+    GGML_RXD_TYPE_Q5_0 = 6, /* 5-bit, block 32, scale */
+    GGML_RXD_TYPE_Q5_1 = 7, /* 5-bit, block 32, scale + min */
+    GGML_RXD_TYPE_Q8_0 = 8, /* 8-bit, block 32, scale */
+    GGML_RXD_TYPE_Q8_1 = 9, /* 8-bit, block 32, scale + min */
+    GGML_RXD_TYPE_Q2_K = 10, /* 2-bit K-quant */
+    GGML_RXD_TYPE_Q3_K = 11, /* 3-bit K-quant */
+    GGML_RXD_TYPE_Q4_K = 12, /* 4-bit K-quant */
+    GGML_RXD_TYPE_Q5_K = 13, /* 5-bit K-quant */
+    GGML_RXD_TYPE_Q6_K = 14, /* 6-bit K-quant */
+    GGML_RXD_TYPE_Q8_K = 15, /* 8-bit K-quant */
+    GGML_RXD_TYPE_IQ2_XXS = 16, /* 2-bit IQ */
+    GGML_RXD_TYPE_IQ2_XS = 17,
+    GGML_RXD_TYPE_IQ3_XXS = 18,
+    GGML_RXD_TYPE_IQ1_S = 19,
+    GGML_RXD_TYPE_IQ1_M = 20,
+    GGML_RXD_TYPE_IQ4_NL = 21,
+    GGML_RXD_TYPE_IQ3_S = 22,
+    GGML_RXD_TYPE_IQ2_S = 23,
+    GGML_RXD_TYPE_IQ4_XS = 24,
+    GGML_RXD_TYPE_I8 = 25,
+    GGML_RXD_TYPE_I16 = 26,
+    GGML_RXD_TYPE_I32 = 27,
+    GGML_RXD_TYPE_I64 = 28,
+    GGML_RXD_TYPE_F64 = 29,
+    GGML_RXD_TYPE_BF16 = 30,
+    GGML_RXD_TYPE_COUNT
 } GGMLType;
 
 /* Block sizes for each quantization type */
-static const size_t GGML_BLOCK_SIZE[GGML_TYPE_COUNT] = {
-    [GGML_TYPE_F32] = 1,
-    [GGML_TYPE_F16] = 1,
-    [GGML_TYPE_Q4_0] = 32,
-    [GGML_TYPE_Q4_1] = 32,
-    [GGML_TYPE_Q5_0] = 32,
-    [GGML_TYPE_Q5_1] = 32,
-    [GGML_TYPE_Q8_0] = 32,
-    [GGML_TYPE_Q8_1] = 32,
-    [GGML_TYPE_Q2_K] = 256,
-    [GGML_TYPE_Q3_K] = 256,
-    [GGML_TYPE_Q4_K] = 256,
-    [GGML_TYPE_Q5_K] = 256,
-    [GGML_TYPE_Q6_K] = 256,
-    [GGML_TYPE_Q8_K] = 256,
+static const size_t GGML_RXD_BLOCK_SIZE[GGML_RXD_TYPE_COUNT] = {
+    [GGML_RXD_TYPE_F32] = 1,
+    [GGML_RXD_TYPE_F16] = 1,
+    [GGML_RXD_TYPE_Q4_0] = 32,
+    [GGML_RXD_TYPE_Q4_1] = 32,
+    [GGML_RXD_TYPE_Q5_0] = 32,
+    [GGML_RXD_TYPE_Q5_1] = 32,
+    [GGML_RXD_TYPE_Q8_0] = 32,
+    [GGML_RXD_TYPE_Q8_1] = 32,
+    [GGML_RXD_TYPE_Q2_K] = 256,
+    [GGML_RXD_TYPE_Q3_K] = 256,
+    [GGML_RXD_TYPE_Q4_K] = 256,
+    [GGML_RXD_TYPE_Q5_K] = 256,
+    [GGML_RXD_TYPE_Q6_K] = 256,
+    [GGML_RXD_TYPE_Q8_K] = 256,
 };
 
 /* GGUF Header */

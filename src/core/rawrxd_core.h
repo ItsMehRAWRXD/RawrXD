@@ -53,30 +53,30 @@ extern "C" {
 #define GGUF_VERSION_3 3
 
 typedef enum {
-    GGML_TYPE_F32 = 0, GGML_TYPE_F16 = 1,
-    GGML_TYPE_Q4_0 = 2, GGML_TYPE_Q4_1 = 3,
-    GGML_TYPE_Q5_0 = 6, GGML_TYPE_Q5_1 = 7,
-    GGML_TYPE_Q8_0 = 8, GGML_TYPE_Q8_1 = 9,
-    GGML_TYPE_Q2_K = 10, GGML_TYPE_Q3_K = 11,
-    GGML_TYPE_Q4_K = 12, GGML_TYPE_Q5_K = 13, GGML_TYPE_Q6_K = 14,
-    GGML_TYPE_COUNT
+    GGML_RXD_TYPE_F32 = 0, GGML_RXD_TYPE_F16 = 1,
+    GGML_RXD_TYPE_Q4_0 = 2, GGML_RXD_TYPE_Q4_1 = 3,
+    GGML_RXD_TYPE_Q5_0 = 6, GGML_RXD_TYPE_Q5_1 = 7,
+    GGML_RXD_TYPE_Q8_0 = 8, GGML_RXD_TYPE_Q8_1 = 9,
+    GGML_RXD_TYPE_Q2_K = 10, GGML_RXD_TYPE_Q3_K = 11,
+    GGML_RXD_TYPE_Q4_K = 12, GGML_RXD_TYPE_Q5_K = 13, GGML_RXD_TYPE_Q6_K = 14,
+    GGML_RXD_TYPE_COUNT
 } GGMLType;
 
-static const size_t GGML_BLOCK_SIZE[] = {
-    [GGML_TYPE_F32] = 1, [GGML_TYPE_F16] = 1,
-    [GGML_TYPE_Q4_0] = 32, [GGML_TYPE_Q4_1] = 32,
-    [GGML_TYPE_Q5_0] = 32, [GGML_TYPE_Q5_1] = 32,
-    [GGML_TYPE_Q8_0] = 32, [GGML_TYPE_Q8_1] = 32,
-    [GGML_TYPE_Q2_K] = 256, [GGML_TYPE_Q3_K] = 256,
-    [GGML_TYPE_Q4_K] = 256, [GGML_TYPE_Q5_K] = 256, [GGML_TYPE_Q6_K] = 256,
+static const size_t GGML_RXD_BLOCK_SIZE[] = {
+    [GGML_RXD_TYPE_F32] = 1, [GGML_RXD_TYPE_F16] = 1,
+    [GGML_RXD_TYPE_Q4_0] = 32, [GGML_RXD_TYPE_Q4_1] = 32,
+    [GGML_RXD_TYPE_Q5_0] = 32, [GGML_RXD_TYPE_Q5_1] = 32,
+    [GGML_RXD_TYPE_Q8_0] = 32, [GGML_RXD_TYPE_Q8_1] = 32,
+    [GGML_RXD_TYPE_Q2_K] = 256, [GGML_RXD_TYPE_Q3_K] = 256,
+    [GGML_RXD_TYPE_Q4_K] = 256, [GGML_RXD_TYPE_Q5_K] = 256, [GGML_RXD_TYPE_Q6_K] = 256,
 };
 
-static const size_t GGML_BYTES_PER_BLOCK[] = {
-    [GGML_TYPE_F32] = 4, [GGML_TYPE_F16] = 2,
-    [GGML_TYPE_Q4_0] = 18, [GGML_TYPE_Q4_1] = 20,
-    [GGML_TYPE_Q5_0] = 22, [GGML_TYPE_Q5_1] = 24,
-    [GGML_TYPE_Q8_0] = 34, [GGML_TYPE_Q8_1] = 36,
-    [GGML_TYPE_Q4_K] = 144, [GGML_TYPE_Q5_K] = 176, [GGML_TYPE_Q6_K] = 210,
+static const size_t GGML_RXD_BYTES_PER_BLOCK[] = {
+    [GGML_RXD_TYPE_F32] = 4, [GGML_RXD_TYPE_F16] = 2,
+    [GGML_RXD_TYPE_Q4_0] = 18, [GGML_RXD_TYPE_Q4_1] = 20,
+    [GGML_RXD_TYPE_Q5_0] = 22, [GGML_RXD_TYPE_Q5_1] = 24,
+    [GGML_RXD_TYPE_Q8_0] = 34, [GGML_RXD_TYPE_Q8_1] = 36,
+    [GGML_RXD_TYPE_Q4_K] = 144, [GGML_RXD_TYPE_Q5_K] = 176, [GGML_RXD_TYPE_Q6_K] = 210,
 };
 
 typedef struct {
@@ -301,13 +301,13 @@ static RXDQuant rxd_quant_q4_k(const float* data, size_t count) {
 
 static RXDDequant rxd_dequant(const void* data, GGMLType type, uint64_t elements) {
     RXDDequant r = {0};
-    size_t block_size = GGML_BLOCK_SIZE[type];
+    size_t block_size = GGML_RXD_BLOCK_SIZE[type];
     size_t blocks = (elements + block_size - 1) / block_size;
     switch (type) {
-        case GGML_TYPE_Q4_0: return rxd_dequant_q4_0(data, blocks);
-        case GGML_TYPE_Q8_0: return rxd_dequant_q8_0(data, blocks);
-        case GGML_TYPE_Q4_K: return rxd_dequant_q4_k(data, blocks);
-        case GGML_TYPE_F32:
+        case GGML_RXD_TYPE_Q4_0: return rxd_dequant_q4_0(data, blocks);
+        case GGML_RXD_TYPE_Q8_0: return rxd_dequant_q8_0(data, blocks);
+        case GGML_RXD_TYPE_Q4_K: return rxd_dequant_q4_k(data, blocks);
+        case GGML_RXD_TYPE_F32:
             r.count = elements; r.data = (float*)malloc(elements * sizeof(float));
             memcpy(r.data, data, elements * sizeof(float)); break;
         default: break;
@@ -317,10 +317,10 @@ static RXDDequant rxd_dequant(const void* data, GGMLType type, uint64_t elements
 
 static RXDQuant rxd_quant(const float* data, size_t count, GGMLType type) {
     switch (type) {
-        case GGML_TYPE_Q4_0: return rxd_quant_q4_0(data, count);
-        case GGML_TYPE_Q8_0: return rxd_quant_q8_0(data, count);
-        case GGML_TYPE_Q4_K: return rxd_quant_q4_k(data, count);
-        case GGML_TYPE_F32: {
+        case GGML_RXD_TYPE_Q4_0: return rxd_quant_q4_0(data, count);
+        case GGML_RXD_TYPE_Q8_0: return rxd_quant_q8_0(data, count);
+        case GGML_RXD_TYPE_Q4_K: return rxd_quant_q4_k(data, count);
+        case GGML_RXD_TYPE_F32: {
             RXDQuant r = {0}; r.size = count * sizeof(float);
             r.data = malloc(r.size); memcpy(r.data, data, r.size); return r;
         }
@@ -385,9 +385,9 @@ static void* rxd_model_get_tensor(const RXDModel* m, const char* name, size_t* o
         if (strcmp(m->tensors[i].name.data, name) == 0) {
             uint64_t elements = 1;
             for (uint32_t d = 0; d < m->tensors[i].n_dims; d++) elements *= m->tensors[i].dims[d];
-            size_t block_size = GGML_BLOCK_SIZE[m->tensors[i].type];
+            size_t block_size = GGML_RXD_BLOCK_SIZE[m->tensors[i].type];
             size_t blocks = (elements + block_size - 1) / block_size;
-            size_t size = blocks * GGML_BYTES_PER_BLOCK[m->tensors[i].type];
+            size_t size = blocks * GGML_RXD_BYTES_PER_BLOCK[m->tensors[i].type];
             if (out_size) *out_size = size;
             return (uint8_t*)m->file_view + m->data_offset + m->tensors[i].offset;
         }
@@ -432,9 +432,9 @@ typedef struct {
     float min_snr;
 } RXDQuantProfile;
 
-static const RXDQuantProfile RXD_PROFILE_SPEED = {"speed", GGML_TYPE_Q4_0, GGML_TYPE_Q4_0, GGML_TYPE_Q4_0, GGML_TYPE_Q8_0, GGML_TYPE_Q8_0, 15.0f};
-static const RXDQuantProfile RXD_PROFILE_BALANCED = {"balanced", GGML_TYPE_Q4_K, GGML_TYPE_Q5_K, GGML_TYPE_Q4_K, GGML_TYPE_Q8_0, GGML_TYPE_Q6_K, 20.0f};
-static const RXDQuantProfile RXD_PROFILE_QUALITY = {"quality", GGML_TYPE_Q6_K, GGML_TYPE_Q6_K, GGML_TYPE_Q5_K, GGML_TYPE_F16, GGML_TYPE_F16, 30.0f};
+static const RXDQuantProfile RXD_PROFILE_SPEED = {"speed", GGML_RXD_TYPE_Q4_0, GGML_RXD_TYPE_Q4_0, GGML_RXD_TYPE_Q4_0, GGML_RXD_TYPE_Q8_0, GGML_RXD_TYPE_Q8_0, 15.0f};
+static const RXDQuantProfile RXD_PROFILE_BALANCED = {"balanced", GGML_RXD_TYPE_Q4_K, GGML_RXD_TYPE_Q5_K, GGML_RXD_TYPE_Q4_K, GGML_RXD_TYPE_Q8_0, GGML_RXD_TYPE_Q6_K, 20.0f};
+static const RXDQuantProfile RXD_PROFILE_QUALITY = {"quality", GGML_RXD_TYPE_Q6_K, GGML_RXD_TYPE_Q6_K, GGML_RXD_TYPE_Q5_K, GGML_RXD_TYPE_F16, GGML_RXD_TYPE_F16, 30.0f};
 
 static RXDHotswap rxd_hotswap_create(const char* path) {
     RXDHotswap h = {0};

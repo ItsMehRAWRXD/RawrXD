@@ -1,4 +1,4 @@
-﻿#include "text_buffer.hpp"
+#include "text_buffer.hpp"
 #include <algorithm>
 #include <sstream>
 

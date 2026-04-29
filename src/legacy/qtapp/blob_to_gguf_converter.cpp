@@ -9,7 +9,7 @@ const uint32_t GGUF_MAGIC = 0x46554747;
 const uint32_t GGUF_VERSION = 3;
 
 // GGML type enum (must match ggml.h)
-enum class ggml_type : int32_t {
+enum class ggml_rxd_type : int32_t {
     F32 = 0,
     F16 = 1,
     Q4_0 = 2,
@@ -105,7 +105,7 @@ std::vector<ConversionTensor> BlobToGGUFConverter::detectTensors()
         ConversionTensor tensor;
         tensor.name = "weights_0";
         tensor.data = m_blobData;
-        tensor.ggmlType = static_cast<int32_t>(ggml_type::F32);
+        tensor.ggmlType = static_cast<int32_t>(ggml_rxd_type::F32);
         tensor.shape = {static_cast<int32_t>(m_blobData.size() / 4)};
         tensors.append(tensor);
         return tensors;
@@ -148,7 +148,7 @@ int32_t BlobToGGUFConverter::estimateQuantizationType(const std::vector<uint8_t>
     // use F32; otherwise try Q4_0 for compression
 
     if (tensorData.size() < 4) {
-        return static_cast<int32_t>(ggml_type::F32);
+        return static_cast<int32_t>(ggml_rxd_type::F32);
     }
 
     // Check first float value to infer type
@@ -157,11 +157,11 @@ int32_t BlobToGGUFConverter::estimateQuantizationType(const std::vector<uint8_t>
 
     // If value is reasonable (not extreme), keep as F32
     if (std::abs(firstValue) < 100.0f) {
-        return static_cast<int32_t>(ggml_type::F32);
+        return static_cast<int32_t>(ggml_rxd_type::F32);
     }
 
     // Otherwise use Q4_0 for compression
-    return static_cast<int32_t>(ggml_type::Q4_0);
+    return static_cast<int32_t>(ggml_rxd_type::Q4_0);
 }
 
 bool BlobToGGUFConverter::convertToGGUF(const std::string& outputPath)

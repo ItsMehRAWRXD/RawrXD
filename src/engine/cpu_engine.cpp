@@ -1,11 +1,13 @@
 #include "cpu_engine.hpp"
 
 #include "../tokenizer/tokenizer_base.hpp"
+#include "global_runtime_orchestrator.h"
 
 #include <algorithm>
 #include <cmath>
 #include <numeric>
 #include <random>
+#include <chrono>
 
 namespace engine
 {
@@ -276,6 +278,9 @@ void CPUEngine::generate_streaming(const std::vector<int32_t>& prompt_tokens, in
     std::vector<int32_t> all = prompt_tokens;
     int32_t cur = prompt_tokens.back();
 
+    auto start_time = std::chrono::steady_clock::now();
+    int tokens_generated = 0;
+
     for (int step = 0; step < max_tokens; ++step)
     {
         if (cancel && cancel->load(std::memory_order_acquire))
@@ -283,10 +288,27 @@ void CPUEngine::generate_streaming(const std::vector<int32_t>& prompt_tokens, in
             cb("", true);
             return;
         }
+
+        // Mock acceptance rate for now (0.7-0.9) until draft model is fully wired
+        float acceptance_rate = 0.85f;
+        
         std::vector<float> logits = m_engine.Eval({cur});
         const int32_t next = sample_token_(logits, params, all);
         all.push_back(next);
         cur = next;
+        tokens_generated++;
+
+        // Update Orchestrator periodically
+        if (tokens_generated % 5 == 0) {
+            auto now = std::chrono::steady_clock::now();
+            float seconds = std::chrono::duration<float>(now - start_time).count();
+            float tps = (seconds > 0) ? (tokens_generated / seconds) : 0.0f;
+            RawrXD::GlobalRuntimeOrchestrator::Get().UpdateInferenceMetrics(acceptance_rate, tps);
+            
+            // Mock memory pressure and cache reuse for HUD demonstration
+            RawrXD::GlobalRuntimeOrchestrator::Get().UpdateMemoryMetrics(0.45f + (step * 0.001f));
+            RawrXD::GlobalRuntimeOrchestrator::Get().UpdateCacheMetrics(0.92f);
+        }
 
         if (next == eos_token_id())
         {

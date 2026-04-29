@@ -60,7 +60,8 @@ public:
     // ========== BUILD CACHE ==========
     void enableBuildCache(bool enabled);
     void clearBuildCache();
-    \npublic:\n    // Compilation lifecycle
+    
+\npublic:\n    // Compilation lifecycle
     void compilationStarted();
     void compilationFinished(bool success);
     void compilationCancelled();
@@ -80,7 +81,8 @@ public:
     // Editor integration
     void requestNavigateToError(const std::string& file, int line, int column);
     void requestHighlightError(int line, int column, int end_line, int end_column);
-\nprivate:\n    void onWorkerFinished(bool success);
+
+\nprivate:\n    void onWorkerFinished(bool success);
     void onWorkerProgress(int percent);
     void onWorkerStageChanged(int stage);
     void onWorkerError(const std::string& error);
@@ -131,7 +133,8 @@ public:
     void displayCompilationReport(const std::string& title, const std::string& summary);
     
     void exportReport(const std::string& filename);
-\npublic:\n    void errorClicked(const std::string& file, int line, int column);
+
+\npublic:\n    void errorClicked(const std::string& file, int line, int column);
 
 private:
     class ErrorItem {
@@ -189,9 +192,11 @@ public:
     void setSourceFile(const std::string& source);
     void setOutputFile(const std::string& output);
     void setOptions(const Compiler::CompilationOptions& opts);
-\npublic:\n    void compile();
+
+\npublic:\n    void compile();
     void cancel();
-\npublic:\n    void finished(bool success);
+
+\npublic:\n    void finished(bool success);
     void progressUpdated(int percent);
     void stageChanged(int stage);
     void errorOccurred(const std::string& error);
@@ -219,7 +224,8 @@ public:
     explicit CompileToolbar(CompilerInterface* compiler, void* parent = nullptr);
     
     void updateMetrics(const Compiler::CompilationMetrics& metrics);
-\npublic:\n    void compilePressed();
+
+\npublic:\n    void compilePressed();
     void compileAndRunPressed();
     void compileAndDebugPressed();
     void settingsPressed();
@@ -255,9 +261,11 @@ public:
     
     int getTotalErrors() const { return total_errors_; }
     int getCurrentError() const { return current_error_; }
-\npublic:\n    void errorSelected(int line, int column);
+
+\npublic:\n    void errorSelected(int line, int column);
     void errorSelectedInFile(const std::string& file, int line, int column);
-\nprivate:\n    void onPrevError();
+
+\nprivate:\n    void onPrevError();
     void onNextError();
     void updateDisplay();
 

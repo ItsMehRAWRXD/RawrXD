@@ -134,7 +134,8 @@ public:
      * @return JSON with status, output, metrics
      */
     nlohmann::json toJSON() const;
-\npublic:\n    /**
+
+\npublic:\n    /**
      * @brief Emitted when status changes
      */
     void statusChanged(Status newStatus, Status oldStatus);

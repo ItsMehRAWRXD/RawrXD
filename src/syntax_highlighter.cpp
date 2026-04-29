@@ -1,4 +1,4 @@
-﻿#include "syntax_highlighter.hpp"
+#include "syntax_highlighter.hpp"
 #include <cctype>
 
 namespace RawrXD {

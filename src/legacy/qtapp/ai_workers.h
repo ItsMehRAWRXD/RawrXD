@@ -72,14 +72,17 @@ public:
     Progress currentProgress() const;
     bool isRunning() const;
     bool isPaused() const;
-    \npublic:\n    void progressChanged(const Progress& progress);
+    
+\npublic:\n    void progressChanged(const Progress& progress);
     void fileStarted(const std::string& fileName);
     void fileCompleted(const std::string& fileName, bool success);
     void digestionCompleted(bool success, const std::string& message);
     void errorOccurred(const std::string& error);
     void stateChanged(State newState);
-\npublic:\n    void processFiles();
-\nprivate:\n    void updateProgress();
+
+\npublic:\n    void processFiles();
+
+\nprivate:\n    void updateProgress();
 
 private:
     void setState(State newState);
@@ -181,7 +184,8 @@ public:
     Progress currentProgress() const;
     bool isRunning() const;
     bool isPaused() const;
-    \npublic:\n    void progressChanged(const Progress& progress);
+    
+\npublic:\n    void progressChanged(const Progress& progress);
     void epochStarted(int epoch);
     void epochCompleted(int epoch, double loss, double accuracy);
     void batchCompleted(int batch, double batchLoss);
@@ -190,8 +194,10 @@ public:
     void trainingCompleted(bool success, const std::string& modelPath);
     void errorOccurred(const std::string& error);
     void stateChanged(State newState);
-\npublic:\n    void processTraining();
-\nprivate:\n    void updateProgress();
+
+\npublic:\n    void processTraining();
+
+\nprivate:\n    void updateProgress();
     void handleEpochComplete();
     void handleBatchComplete();
     void handleValidation();
@@ -289,10 +295,12 @@ public:
     bool hasActiveWorkers() const;
     std::vector<AIDigestionWorker*> activeDigestionWorkers() const;
     std::vector<AITrainingWorker*> activeTrainingWorkers() const;
-\npublic:\n    void workerStarted(void* worker);
+
+\npublic:\n    void workerStarted(void* worker);
     void workerFinished(void* worker);
     void allWorkersFinished();
-\nprivate:\n    void onWorkerFinished();
+
+\nprivate:\n    void onWorkerFinished();
     void onWorkerError(const std::string& error);
 
 private:

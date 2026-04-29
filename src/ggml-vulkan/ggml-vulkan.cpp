@@ -61,8 +61,8 @@ DispatchLoaderDynamic & ggml_vk_default_dispatcher();
 #define YIELD()
 #endif
 
-#include "ggml-impl.h"
-#include "ggml-backend-impl.h"
+#include "ggml-impl_rxd_internal.h"
+#include "ggml-backend-impl_rxd_internal.h"
 
 #include "ggml-vulkan-shaders.hpp"
 

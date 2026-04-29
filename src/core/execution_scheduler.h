@@ -70,7 +70,7 @@ struct TensorSlot {
     int                 layerIndex;     // -1 for global tensors (embeddings, norms)
     uint64_t            sizeBytes;      // Raw (quantized) size on disk
     uint64_t            dequantBytes;   // Dequantized F32 size
-    uint32_t            quantType;      // ggml_type
+    uint32_t            quantType;      // ggml_rxd_type
     int32_t             refCount;       // Pin reference count
     uint64_t            lastAccessTick; // For LRU eviction
     

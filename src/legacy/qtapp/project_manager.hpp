@@ -61,9 +61,11 @@ public:
     
     // File watching
     void enableFileWatching(bool enable);
-\npublic:\n    void patternsChanged();
+
+\npublic:\n    void patternsChanged();
     void gitignoreModified(const std::string& path);
-\nprivate:\n    void onGitignoreFileChanged(const std::string& path);
+
+\nprivate:\n    void onGitignoreFileChanged(const std::string& path);
 
 private:
     struct Pattern {
@@ -132,7 +134,8 @@ private:
     void loadProjects();
     bool exportProjects(const std::string& filePath);
     bool importProjects(const std::string& filePath);
-\npublic:\n    void projectAdded(const std::string& projectPath);
+
+\npublic:\n    void projectAdded(const std::string& projectPath);
     void projectRemoved(const std::string& projectPath);
     void projectsChanged();
     void projectPinned(const std::string& projectPath, bool pinned);
@@ -206,7 +209,8 @@ public:
     };
     
     FilterStats getFilterStats() const { return m_stats; }
-\npublic:\n    void filterChanged();
+
+\npublic:\n    void filterChanged();
 
 private:
     bool matchesCustomPatterns(const std::string& path) const;
@@ -265,7 +269,8 @@ public:
     // Workspace
     void saveWorkspace();
     void loadWorkspace();
-\npublic:\n    void projectOpened(const std::string& projectPath);
+
+\npublic:\n    void projectOpened(const std::string& projectPath);
     void projectClosed(const std::string& projectPath);
     void currentProjectChanged(const std::string& projectPath);
 

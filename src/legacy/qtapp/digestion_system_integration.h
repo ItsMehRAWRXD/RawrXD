@@ -52,7 +52,8 @@ public:
             file.close();
         }
     }
-    \npublic:\n    void pipelineStarted();
+    
+\npublic:\n    void pipelineStarted();
     void pipelineProgress(int current, int total);
     void pipelineFinished(const void*& report);
     void errorOccurred(const std::string& error);

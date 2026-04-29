@@ -416,7 +416,7 @@ std::string RuntimeProvider::GetLastError() const {
 
 RuntimeProvider::HardwarePolicy RuntimeProvider::AutoDetectHardware() const {
     HardwarePolicy policy;
-    const char* disableVkEnv = std::getenv("GGML_VK_DISABLE");
+    const char* disableVkEnv = std::getenv("GGML_RXD_VK_DISABLE");
     const bool disableVk = disableVkEnv && disableVkEnv[0] != '\0' && disableVkEnv[0] != '0';
 
     bool hasAvx512F = false;

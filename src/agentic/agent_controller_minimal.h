@@ -34,7 +34,7 @@ class json;
 // Forward declaration for inference engine
 namespace RawrXD
 {
-class CPUInferenceEngine;
+class InferenceEngine;
 }
 
 namespace rawrxd
@@ -198,14 +198,14 @@ class MinimalAgentController
     bool isAvailable() const { return initialized_; }
 
     // Optional: Set a reference to the inference engine for LLM calls
-    void setInferenceEngine(RawrXD::CPUInferenceEngine* engine) { inference_engine_ = engine; }
+    void setInferenceEngine(RawrXD::InferenceEngine* engine) { inference_engine_ = engine; }
 
   private:
     MinimalAgentController() = default;
 
     bool initialized_ = false;
     std::vector<MinimalTool> tools_;
-    RawrXD::CPUInferenceEngine* inference_engine_ = nullptr;
+    RawrXD::InferenceEngine* inference_engine_ = nullptr;
     WorkspaceContext workspace_context_;
     SessionState session_state_;
     std::unordered_map<std::string, SessionContext> sessions_;

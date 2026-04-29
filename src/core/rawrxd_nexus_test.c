@@ -458,7 +458,7 @@ TEST(adaptive_quant_init) {
     ASSERT_TRUE(g_adapt_quant.auto_adjust_enabled);
     
     for (uint32_t i = 0; i < 32; i++) {
-        ASSERT_EQ(g_adapt_quant.layers[i].current_type, GGML_TYPE_Q4_K);
+        ASSERT_EQ(g_adapt_quant.layers[i].current_type, GGML_RXD_TYPE_Q4_K);
     }
 }
 
@@ -475,10 +475,10 @@ TEST(adaptive_quant_analyze) {
 TEST(adaptive_quant_switch) {
     rxd_adapt_quant_init(32);
     
-    bool switched = rxd_adapt_quant_switch_layer(0, GGML_TYPE_Q6_K);
+    bool switched = rxd_adapt_quant_switch_layer(0, GGML_RXD_TYPE_Q6_K);
     ASSERT_TRUE(switched);
     ASSERT_TRUE(g_adapt_quant.layers[0].is_switched);
-    ASSERT_EQ(g_adapt_quant.layers[0].current_type, GGML_TYPE_Q6_K);
+    ASSERT_EQ(g_adapt_quant.layers[0].current_type, GGML_RXD_TYPE_Q6_K);
     ASSERT_EQ(g_adapt_quant.switched_layers, 1);
 }
 

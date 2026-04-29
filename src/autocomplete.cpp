@@ -115,7 +115,7 @@ enum class GGMLType : uint32_t {
     UNKNOWN = 0xFFFFFFFFu
 };
 
-static const char* ggml_type_name(GGMLType t) {
+static const char* ggml_rxd_type_name(GGMLType t) {
     switch (t) {
         case GGMLType::F32:  return "F32";
         case GGMLType::F16:  return "F16";

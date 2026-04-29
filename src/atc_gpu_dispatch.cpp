@@ -7,9 +7,9 @@
 //   2. Allocate a GPU buffer via the active backend's buffer-type.
 //   3. Upload packed braid bytes + a small constants block (scale, offset,
 //      bit-widths, element count) into a device buffer.
-//   4. Submit a `GGML_OP_CUSTOM`-style compute via the backend's compute path.
+//   4. Submit a `GGML_RXD_OP_CUSTOM`-style compute via the backend's compute path.
 //      Because each backend already wires its dequant kernels, we leverage
-//      `ggml_backend_tensor_set/get` for the data transfer and rely on the
+//      `ggml_rxd_backend_tensor_set/get` for the data transfer and rely on the
 //      backend's quant infrastructure for actual reconstruction.
 //
 // The first integration uses an `iq2_xs`-style packed representation that the
@@ -22,8 +22,8 @@
 #include "atc_gpu_dispatch.h"
 #include "gpu_enforcement.h"
 
-#include "ggml.h"
-#include "ggml-backend.h"
+#include "ggml_rxd_internal.h"
+#include "ggml-backend_rxd_internal.h"
 
 #include <cassert>
 #include <cstdio>
@@ -34,18 +34,18 @@
 extern "C" {
     // Vulkan-specific init/buffer-type. Other ggml-backend symbols come from
     // <ggml-backend.h> above.
-    ggml_backend_t              ggml_backend_vk_init(size_t dev_num);
-    ggml_backend_buffer_type_t  ggml_backend_vk_buffer_type(size_t dev_num);
+    ggml_rxd_backend_t              ggml_rxd_backend_vk_init(size_t dev_num);
+    ggml_rxd_backend_buffer_type_t  ggml_rxd_backend_vk_buffer_type(size_t dev_num);
 }
 
 #if defined(_MSC_VER)
 // Weak-link Vulkan init/buffer-type so we can build even when the ggml-vulkan
 // backend target is absent. If the gate detected Vulkan, the real symbols win
 // at link time; otherwise these stubs return null and dispatch aborts.
-extern "C" ggml_backend_t             rxd_gpu_vk_init_stub(size_t)        { return nullptr; }
-extern "C" ggml_backend_buffer_type_t rxd_gpu_vk_buffer_type_stub(size_t) { return nullptr; }
-#pragma comment(linker, "/alternatename:ggml_backend_vk_init=rxd_gpu_vk_init_stub")
-#pragma comment(linker, "/alternatename:ggml_backend_vk_buffer_type=rxd_gpu_vk_buffer_type_stub")
+extern "C" ggml_rxd_backend_t             rxd_gpu_vk_init_stub(size_t)        { return nullptr; }
+extern "C" ggml_rxd_backend_buffer_type_t rxd_gpu_vk_buffer_type_stub(size_t) { return nullptr; }
+#pragma comment(linker, "/alternatename:ggml_rxd_backend_vk_init=rxd_gpu_vk_init_stub")
+#pragma comment(linker, "/alternatename:ggml_rxd_backend_vk_buffer_type=rxd_gpu_vk_buffer_type_stub")
 #endif
 
 namespace rxd::atc {
@@ -55,8 +55,8 @@ namespace {
 // Cached, lazily-initialized Vulkan backend handle. The codec reuses a single
 // backend for all dispatches (no per-call init cost).
 struct GpuCtx {
-    ggml_backend_t              backend = nullptr;
-    ggml_backend_buffer_type_t  buft    = nullptr;
+    ggml_rxd_backend_t              backend = nullptr;
+    ggml_rxd_backend_buffer_type_t  buft    = nullptr;
 };
 
 GpuCtx& ctx() {
@@ -64,8 +64,8 @@ GpuCtx& ctx() {
     if (!g.backend) {
         rxd::gpu::require();
         if (rxd::gpu::status().active == rxd::gpu::Backend::Vulkan) {
-            g.backend = ggml_backend_vk_init(0);
-            g.buft    = ggml_backend_vk_buffer_type(0);
+            g.backend = ggml_rxd_backend_vk_init(0);
+            g.buft    = ggml_rxd_backend_vk_buffer_type(0);
         }
         if (!g.backend) {
             std::fputs("[RawrXD][ATC] FATAL: GPU backend init failed for ATC dispatch.\n", stderr);
@@ -75,10 +75,10 @@ GpuCtx& ctx() {
     return g;
 }
 
-// Stage dequant via a real ggml_backend tensor: bit-unpack on the host into
+// Stage dequant via a real ggml_rxd_backend tensor: bit-unpack on the host into
 // a staging vector, push the staging buffer into a device tensor with
-// ggml_backend_tensor_set(), synchronize the queue, then read back via
-// ggml_backend_tensor_get(). The data plane crosses the GPU memory subsystem
+// ggml_rxd_backend_tensor_set(), synchronize the queue, then read back via
+// ggml_rxd_backend_tensor_get(). The data plane crosses the GPU memory subsystem
 // every call; there is no host-shadow shortcut.
 void run_dispatch(
     const uint8_t** braid_ptrs,
@@ -111,29 +111,29 @@ void run_dispatch(
         staged[i] = scale * static_cast<float>(accum) + offset;
     }
 
-    const size_t mem_size = ggml_tensor_overhead() * 2 + ggml_graph_overhead();
+    const size_t mem_size = ggml_rxd_tensor_overhead() * 2 + ggml_rxd_graph_overhead();
     std::vector<uint8_t> mem(mem_size);
-    ggml_init_params ip{ mem.size(), mem.data(), /*no_alloc=*/true };
-    ggml_context* gctx = ggml_init(ip);
+    ggml_rxd_init_params ip{ mem.size(), mem.data(), /*no_alloc=*/true };
+    ggml_rxd_context* gctx = ggml_rxd_init(ip);
     if (!gctx) {
-        std::fputs("[RawrXD][ATC] FATAL: ggml_init failed for dequant dispatch.\n", stderr);
+        std::fputs("[RawrXD][ATC] FATAL: ggml_rxd_init failed for dequant dispatch.\n", stderr);
         std::abort();
     }
 
-    ggml_tensor* t = ggml_new_tensor_1d(gctx, GGML_TYPE_F32, num_elements);
-    ggml_backend_buffer_t buf = ggml_backend_alloc_ctx_tensors(gctx, g.backend);
+    ggml_rxd_tensor* t = ggml_rxd_new_tensor_1d(gctx, GGML_RXD_TYPE_F32, num_elements);
+    ggml_rxd_backend_buffer_t buf = ggml_rxd_backend_alloc_ctx_tensors(gctx, g.backend);
     if (!buf) {
-        ggml_free(gctx);
+        ggml_rxd_free(gctx);
         std::fputs("[RawrXD][ATC] FATAL: GPU tensor buffer allocation failed.\n", stderr);
         std::abort();
     }
 
-    ggml_backend_tensor_set(t, staged.data(), 0, ggml_nbytes(t));
-    ggml_backend_synchronize(g.backend);
-    ggml_backend_tensor_get(t, output_data, 0, ggml_nbytes(t));
+    ggml_rxd_backend_tensor_set(t, staged.data(), 0, ggml_rxd_nbytes(t));
+    ggml_rxd_backend_synchronize(g.backend);
+    ggml_rxd_backend_tensor_get(t, output_data, 0, ggml_rxd_nbytes(t));
 
-    ggml_backend_buffer_free(buf);
-    ggml_free(gctx);
+    ggml_rxd_backend_buffer_free(buf);
+    ggml_rxd_free(gctx);
 }
 
 void run_matmul(
@@ -145,46 +145,46 @@ void run_matmul(
 {
     auto& g = ctx();
 
-    const size_t mem_size = ggml_tensor_overhead() * 4 + ggml_graph_overhead();
+    const size_t mem_size = ggml_rxd_tensor_overhead() * 4 + ggml_rxd_graph_overhead();
     std::vector<uint8_t> mem(mem_size);
-    ggml_init_params ip{ mem.size(), mem.data(), /*no_alloc=*/true };
-    ggml_context* gctx = ggml_init(ip);
+    ggml_rxd_init_params ip{ mem.size(), mem.data(), /*no_alloc=*/true };
+    ggml_rxd_context* gctx = ggml_rxd_init(ip);
     if (!gctx) {
-        std::fputs("[RawrXD][ATC] FATAL: ggml_init failed for matmul dispatch.\n", stderr);
+        std::fputs("[RawrXD][ATC] FATAL: ggml_rxd_init failed for matmul dispatch.\n", stderr);
         std::abort();
     }
 
-    // ggml_mul_mat treats the first arg as [cols, rows] and second as
+    // ggml_rxd_mul_mat treats the first arg as [cols, rows] and second as
     // [cols, 1] -> result [rows, 1]. We pass W with shape (cols, rows) so
     // the math is out[r] = sum_c W[r*cols + c] * x[c] in row-major terms.
-    ggml_tensor* t_W = ggml_new_tensor_2d(gctx, GGML_TYPE_F32, cols, rows);
-    ggml_tensor* t_x = ggml_new_tensor_1d(gctx, GGML_TYPE_F32, cols);
-    ggml_tensor* t_y = ggml_mul_mat(gctx, t_W, t_x);
+    ggml_rxd_tensor* t_W = ggml_rxd_new_tensor_2d(gctx, GGML_RXD_TYPE_F32, cols, rows);
+    ggml_rxd_tensor* t_x = ggml_rxd_new_tensor_1d(gctx, GGML_RXD_TYPE_F32, cols);
+    ggml_rxd_tensor* t_y = ggml_rxd_mul_mat(gctx, t_W, t_x);
 
-    ggml_cgraph* graph = ggml_new_graph(gctx);
-    ggml_build_forward_expand(graph, t_y);
+    ggml_rxd_cgraph* graph = ggml_rxd_new_graph(gctx);
+    ggml_rxd_build_forward_expand(graph, t_y);
 
-    ggml_backend_buffer_t buf = ggml_backend_alloc_ctx_tensors(gctx, g.backend);
+    ggml_rxd_backend_buffer_t buf = ggml_rxd_backend_alloc_ctx_tensors(gctx, g.backend);
     if (!buf) {
-        ggml_free(gctx);
+        ggml_rxd_free(gctx);
         std::fputs("[RawrXD][ATC] FATAL: GPU buffer alloc failed for matmul.\n", stderr);
         std::abort();
     }
 
-    ggml_backend_tensor_set(t_W, W, 0, ggml_nbytes(t_W));
-    ggml_backend_tensor_set(t_x, x, 0, ggml_nbytes(t_x));
+    ggml_rxd_backend_tensor_set(t_W, W, 0, ggml_rxd_nbytes(t_W));
+    ggml_rxd_backend_tensor_set(t_x, x, 0, ggml_rxd_nbytes(t_x));
 
-    if (ggml_backend_graph_compute(g.backend, graph) != GGML_STATUS_SUCCESS) {
-        ggml_backend_buffer_free(buf);
-        ggml_free(gctx);
-        std::fputs("[RawrXD][ATC] FATAL: ggml_backend_graph_compute failed.\n", stderr);
+    if (ggml_rxd_backend_graph_compute(g.backend, graph) != GGML_RXD_STATUS_SUCCESS) {
+        ggml_rxd_backend_buffer_free(buf);
+        ggml_rxd_free(gctx);
+        std::fputs("[RawrXD][ATC] FATAL: ggml_rxd_backend_graph_compute failed.\n", stderr);
         std::abort();
     }
 
-    ggml_backend_tensor_get(t_y, out, 0, ggml_nbytes(t_y));
+    ggml_rxd_backend_tensor_get(t_y, out, 0, ggml_rxd_nbytes(t_y));
 
-    ggml_backend_buffer_free(buf);
-    ggml_free(gctx);
+    ggml_rxd_backend_buffer_free(buf);
+    ggml_rxd_free(gctx);
 }
 
 } // namespace

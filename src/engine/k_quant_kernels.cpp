@@ -309,20 +309,20 @@ void gemv_q6_K_avx2(const float* x, const block_q6_K* w, float* y, int n, int k)
 // Unified Dispatch
 // ============================================================================
 
-void dequant_k(ggml_type type, const void* src, float* dst, int n_elements)
+void dequant_k(ggml_rxd_type type, const void* src, float* dst, int n_elements)
 {
     switch (type) {
-    case GGML_TYPE_Q4_K: {
+    case GGML_RXD_TYPE_Q4_K: {
         int n_blocks = n_elements / 256;
         dequantize_q4_K(static_cast<const block_q4_K*>(src), dst, n_blocks);
         break;
     }
-    case GGML_TYPE_Q5_K: {
+    case GGML_RXD_TYPE_Q5_K: {
         int n_blocks = n_elements / 256;
         dequantize_q5_K(static_cast<const block_q5_K*>(src), dst, n_blocks);
         break;
     }
-    case GGML_TYPE_Q6_K: {
+    case GGML_RXD_TYPE_Q6_K: {
         int n_blocks = n_elements / 256;
         dequantize_q6_K(static_cast<const block_q6_K*>(src), dst, n_blocks);
         break;
@@ -334,18 +334,18 @@ void dequant_k(ggml_type type, const void* src, float* dst, int n_elements)
     }
 }
 
-void matmul_k_fused(ggml_type type,
+void matmul_k_fused(ggml_rxd_type type,
                     const float* x, const void* w, float* y,
                     int n_out, int k_dim)
 {
     switch (type) {
-    case GGML_TYPE_Q4_K:
+    case GGML_RXD_TYPE_Q4_K:
         gemv_q4_K_avx2(x, static_cast<const block_q4_K*>(w), y, n_out, k_dim);
         break;
-    case GGML_TYPE_Q6_K:
+    case GGML_RXD_TYPE_Q6_K:
         gemv_q6_K_avx2(x, static_cast<const block_q6_K*>(w), y, n_out, k_dim);
         break;
-    case GGML_TYPE_Q5_K: {
+    case GGML_RXD_TYPE_Q5_K: {
         // Q5_K GEMV: dequantize then dot product (no fused path yet)
         int n_blocks = k_dim / 256;
         std::vector<float> tmp(k_dim);

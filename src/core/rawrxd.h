@@ -35,22 +35,22 @@ extern "C" {
 #define GGUF_VERSION_3 3
 
 typedef enum {
-    GGML_TYPE_F32 = 0, GGML_TYPE_F16 = 1,
-    GGML_TYPE_Q4_0 = 2, GGML_TYPE_Q4_1 = 3,
-    GGML_TYPE_Q5_0 = 6, GGML_TYPE_Q5_1 = 7,
-    GGML_TYPE_Q8_0 = 8,
-    GGML_TYPE_Q2_K = 10, GGML_TYPE_Q3_K = 11,
-    GGML_TYPE_Q4_K = 12, GGML_TYPE_Q5_K = 13, GGML_TYPE_Q6_K = 14,
-    GGML_TYPE_COUNT
+    GGML_RXD_TYPE_F32 = 0, GGML_RXD_TYPE_F16 = 1,
+    GGML_RXD_TYPE_Q4_0 = 2, GGML_RXD_TYPE_Q4_1 = 3,
+    GGML_RXD_TYPE_Q5_0 = 6, GGML_RXD_TYPE_Q5_1 = 7,
+    GGML_RXD_TYPE_Q8_0 = 8,
+    GGML_RXD_TYPE_Q2_K = 10, GGML_RXD_TYPE_Q3_K = 11,
+    GGML_RXD_TYPE_Q4_K = 12, GGML_RXD_TYPE_Q5_K = 13, GGML_RXD_TYPE_Q6_K = 14,
+    GGML_RXD_TYPE_COUNT
 } GGMLType;
 
-static const size_t GGML_BLOCK_SIZE[] = {
-    [GGML_TYPE_F32] = 1, [GGML_TYPE_F16] = 1,
-    [GGML_TYPE_Q4_0] = 32, [GGML_TYPE_Q4_1] = 32,
-    [GGML_TYPE_Q5_0] = 32, [GGML_TYPE_Q5_1] = 32,
-    [GGML_TYPE_Q8_0] = 32,
-    [GGML_TYPE_Q2_K] = 256, [GGML_TYPE_Q3_K] = 256,
-    [GGML_TYPE_Q4_K] = 256, [GGML_TYPE_Q5_K] = 256, [GGML_TYPE_Q6_K] = 256,
+static const size_t GGML_RXD_BLOCK_SIZE[] = {
+    [GGML_RXD_TYPE_F32] = 1, [GGML_RXD_TYPE_F16] = 1,
+    [GGML_RXD_TYPE_Q4_0] = 32, [GGML_RXD_TYPE_Q4_1] = 32,
+    [GGML_RXD_TYPE_Q5_0] = 32, [GGML_RXD_TYPE_Q5_1] = 32,
+    [GGML_RXD_TYPE_Q8_0] = 32,
+    [GGML_RXD_TYPE_Q2_K] = 256, [GGML_RXD_TYPE_Q3_K] = 256,
+    [GGML_RXD_TYPE_Q4_K] = 256, [GGML_RXD_TYPE_Q5_K] = 256, [GGML_RXD_TYPE_Q6_K] = 256,
 };
 
 typedef struct {
@@ -247,13 +247,13 @@ static QuantResult quant_q4_k(const float* data, size_t count) {
 /* Generic dequant/quant */
 static DequantResult dequant_tensor(const void* data, GGMLType type, uint64_t elements) {
     DequantResult r = {0};
-    size_t block_size = GGML_BLOCK_SIZE[type];
+    size_t block_size = GGML_RXD_BLOCK_SIZE[type];
     size_t blocks = (elements + block_size - 1) / block_size;
     switch (type) {
-        case GGML_TYPE_Q4_0: return dequant_q4_0(data, blocks);
-        case GGML_TYPE_Q8_0: return dequant_q8_0(data, blocks);
-        case GGML_TYPE_Q4_K: return dequant_q4_k(data, blocks);
-        case GGML_TYPE_F32:
+        case GGML_RXD_TYPE_Q4_0: return dequant_q4_0(data, blocks);
+        case GGML_RXD_TYPE_Q8_0: return dequant_q8_0(data, blocks);
+        case GGML_RXD_TYPE_Q4_K: return dequant_q4_k(data, blocks);
+        case GGML_RXD_TYPE_F32:
             r.count = elements; r.data = (float*)malloc(elements * sizeof(float));
             memcpy(r.data, data, elements * sizeof(float)); break;
         default: break;
@@ -263,10 +263,10 @@ static DequantResult dequant_tensor(const void* data, GGMLType type, uint64_t el
 
 static QuantResult quant_tensor(const float* data, size_t count, GGMLType type) {
     switch (type) {
-        case GGML_TYPE_Q4_0: return quant_q4_0(data, count);
-        case GGML_TYPE_Q8_0: return quant_q8_0(data, count);
-        case GGML_TYPE_Q4_K: return quant_q4_k(data, count);
-        case GGML_TYPE_F32: {
+        case GGML_RXD_TYPE_Q4_0: return quant_q4_0(data, count);
+        case GGML_RXD_TYPE_Q8_0: return quant_q8_0(data, count);
+        case GGML_RXD_TYPE_Q4_K: return quant_q4_k(data, count);
+        case GGML_RXD_TYPE_F32: {
             QuantResult r = {0}; r.size = count * sizeof(float);
             r.data = malloc(r.size); memcpy(r.data, data, r.size); return r;
         }
@@ -353,11 +353,11 @@ static void* gguf_get_tensor_data(const GGUFContext* ctx, const char* name, size
         if (strcmp(ctx->tensor_infos[i].name.data, name) == 0) {
             uint64_t elements = 1;
             for (uint32_t d = 0; d < ctx->tensor_infos[i].n_dims; d++) elements *= ctx->tensor_infos[i].dims[d];
-            size_t block_size = GGML_BLOCK_SIZE[ctx->tensor_infos[i].type];
+            size_t block_size = GGML_RXD_BLOCK_SIZE[ctx->tensor_infos[i].type];
             size_t blocks = (elements + block_size - 1) / block_size;
-            size_t bytes_per_block = (ctx->tensor_infos[i].type == GGML_TYPE_Q4_0) ? 18 :
-                                     (ctx->tensor_infos[i].type == GGML_TYPE_Q8_0) ? 34 :
-                                     (ctx->tensor_infos[i].type == GGML_TYPE_Q4_K) ? sizeof(block_q4_k) : 4;
+            size_t bytes_per_block = (ctx->tensor_infos[i].type == GGML_RXD_TYPE_Q4_0) ? 18 :
+                                     (ctx->tensor_infos[i].type == GGML_RXD_TYPE_Q8_0) ? 34 :
+                                     (ctx->tensor_infos[i].type == GGML_RXD_TYPE_Q4_K) ? sizeof(block_q4_k) : 4;
             size_t size = blocks * bytes_per_block;
             if (out_size) *out_size = size;
             return (uint8_t*)ctx->file_view + ctx->data_offset + ctx->tensor_infos[i].offset;
@@ -413,9 +413,9 @@ typedef struct {
     size_t target_vram;
 } QuantProfile;
 
-static const QuantProfile QUANT_PROFILE_SPEED = {"speed", GGML_TYPE_Q4_0, GGML_TYPE_Q4_0, GGML_TYPE_Q4_0, GGML_TYPE_Q8_0, GGML_TYPE_Q8_0, 15.0f, 0};
-static const QuantProfile QUANT_PROFILE_BALANCED = {"balanced", GGML_TYPE_Q4_K, GGML_TYPE_Q5_K, GGML_TYPE_Q4_K, GGML_TYPE_Q8_0, GGML_TYPE_Q6_K, 20.0f, 0};
-static const QuantProfile QUANT_PROFILE_QUALITY = {"quality", GGML_TYPE_Q6_K, GGML_TYPE_Q6_K, GGML_TYPE_Q5_K, GGML_TYPE_F16, GGML_TYPE_F16, 30.0f, 0};
+static const QuantProfile QUANT_PROFILE_SPEED = {"speed", GGML_RXD_TYPE_Q4_0, GGML_RXD_TYPE_Q4_0, GGML_RXD_TYPE_Q4_0, GGML_RXD_TYPE_Q8_0, GGML_RXD_TYPE_Q8_0, 15.0f, 0};
+static const QuantProfile QUANT_PROFILE_BALANCED = {"balanced", GGML_RXD_TYPE_Q4_K, GGML_RXD_TYPE_Q5_K, GGML_RXD_TYPE_Q4_K, GGML_RXD_TYPE_Q8_0, GGML_RXD_TYPE_Q6_K, 20.0f, 0};
+static const QuantProfile QUANT_PROFILE_QUALITY = {"quality", GGML_RXD_TYPE_Q6_K, GGML_RXD_TYPE_Q6_K, GGML_RXD_TYPE_Q5_K, GGML_RXD_TYPE_F16, GGML_RXD_TYPE_F16, 30.0f, 0};
 
 static HotswapSession* hotswap_from_context(GGUFContext* ctx) {
     if (!ctx || !ctx->is_loaded) return NULL;

@@ -8,6 +8,7 @@
 #include "AgentToolHandlers.h"
 #include "ToolCallResult.h"
 #include "../ai/inference_retry_shim.h"
+#include "../engine/global_runtime_orchestrator.h"
 
 #include <algorithm>
 #include <cctype>
@@ -118,6 +119,12 @@ rxd::ai::InferenceStatus SubmitOneAttempt(
 
     const std::string elow = LowerCopy(out_result.error_message);
     const auto status = ClassifyFailure(elow);
+
+    // Phase 4: Handle "blocked" as a retryable event if it's transient
+    if (elow.find("blocked") != std::string::npos || elow.find("throttled") != std::string::npos) {
+        return rxd::ai::InferenceStatus::Retryable;
+    }
+
     if (status == rxd::ai::InferenceStatus::Retryable) {
         // Drop session so the next attempt rebuilds it; protects against
         // half-open WinHTTP handles after the backend cycled.
@@ -284,6 +291,33 @@ AgenticInferenceBridge::InferenceResult AgenticInferenceBridge::SubmitInferenceW
     for (int step = 0; step < maxIterations; ++step) {
         bridgeResult.toolIterations = step + 1;
 
+        // Phase 5: Adaptive Recovery & Safety Gating
+        // If risk is too high, we block or enter a poll-recovery loop
+        while (GlobalRuntimeOrchestrator::Get().AssessRisk() > 0.85f) {
+            // Check context size before stalling; if we're near limit, aborting is safer
+            // than stalling a high-context session.
+            // (Placeholder for future: CheckContextPressure() > 0.90)
+
+            // Log throttling for observability
+            // GlobalLogger().Warn("Agentic loop throttled at step %d due to risk > 0.85", step);
+
+            // Poll orchestrator every 500ms for recovery
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            
+            // If we've pulsed back to a safe zone (< 0.40), resume immediately
+            if (GlobalRuntimeOrchestrator::Get().AssessRisk() < 0.40f) {
+                break; 
+            }
+        }
+
+        // Phase 4: Risk-Gated Tool Expansion Gate
+        // Double-check just in case we broke from a timeout/limit
+        if (GlobalRuntimeOrchestrator::Get().AssessRisk() > 0.85f) {
+            bridgeResult.success = false;
+            bridgeResult.error = "system_throttled: High resource pressure (risk > 0.85). Aborted tool loop step " + std::to_string(step);
+            return bridgeResult;
+        }
+
         Agent::InferenceResult llmResult;
         const auto shimStatus = GlobalRetryShim().Execute(
             [&]() { return SubmitOneAttempt(client, clientConfig, messages, tools, llmResult); },
@@ -297,7 +331,13 @@ AgenticInferenceBridge::InferenceResult AgenticInferenceBridge::SubmitInferenceW
             std::string detail = llmResult.error_message.empty()
                                      ? std::string("agentic inference failed")
                                      : llmResult.error_message;
-            bridgeResult.error = std::string(statusTag) + ": " + detail;
+
+            // Map blocked status to a clear user message
+            if (shimStatus == rxd::ai::InferenceStatus::Retryable && detail.find("blocked") != std::string::npos) {
+                bridgeResult.error = "system_throttled: " + detail;
+            } else {
+                bridgeResult.error = std::string(statusTag) + ": " + detail;
+            }
             return bridgeResult;
         }
 

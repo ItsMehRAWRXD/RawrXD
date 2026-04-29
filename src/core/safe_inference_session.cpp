@@ -1,4 +1,5 @@
 #include "safe_inference_session.hpp"
+#include "../engine/global_runtime_orchestrator.h"
 
 #include <algorithm>
 #include <chrono>
@@ -408,8 +409,14 @@ rawrxd::ai::GuardrailResult SafeInferenceSession::validate_tokens(
 }
 
 bool SafeInferenceSession::check_resource_constraints() {
-    // TODO: Implement actual resource checking
-    // For now, just return true
+    float global_risk = GlobalRuntimeOrchestrator::Get().AssessRisk();
+    if (global_risk > 0.85f) {
+        // Critical system risk detected by Global Orchestrator
+        return false;
+    }
+    
+    // Check specific memory/CPU limits if monitor is active
+    // TODO: Connect ResourceMonitor to actually update current usage
     return true;
 }
 

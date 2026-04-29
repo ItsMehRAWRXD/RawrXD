@@ -359,7 +359,7 @@ private:
     // Define structure to store quantized tensor data and its type
     struct CachedTensorData {
         QByteArray data;
-        int ggml_type_id;  // Stores the enum ggml_type as an integer
+        int ggml_rxd_type_id;  // Stores the enum ggml_rxd_type as an integer
     };
     
     // Define structure for inference requests

@@ -108,7 +108,8 @@ public:
     void bindToProgressBar(void *bar);
     void bindToLogView(void *log);
     void bindToTreeView(QTreeWidget *tree);
-\npublic:\n    void progressUpdate(int filesProcessed, int totalFiles, int stubsFound, int percentComplete);
+
+\npublic:\n    void progressUpdate(int filesProcessed, int totalFiles, int stubsFound, int percentComplete);
     void fileScanned(const std::string &path, int stubsInFile, const std::string &language);
     void agenticTaskGenerated(const AgenticTask &task);
     void extensionApplied(const std::string &file, int line, const std::string &fixType);
@@ -122,7 +123,8 @@ public:
     void runningChanged(bool running);
     void statsChanged(const DigestionStats &stats);
     void checkpointSaved(const std::string &path);
-\nprivate:\n    void onFileProcessed(const std::string &path, const void* &result);
+
+\nprivate:\n    void onFileProcessed(const std::string &path, const void* &result);
     void onTaskApplied(const std::string &file, int line, bool success);
 
 private:
