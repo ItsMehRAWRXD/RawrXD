@@ -921,6 +921,121 @@ static void FusedQ4_0GEMV4Rows512_TPS(const uint8_t* r0, const uint8_t* r1,
 }
 
 // ---------------------------------------------------------------------------
+// Fused Q4_0 GateUp GEMV (AVX-512): 4 gate rows + 4 up rows in one x pass
+//
+// Both gate and up weights share the same input x[].  Processing them
+// together halves the number of pool dispatches per FFN layer (3→2) and
+// amortises x-block loading across 8 output elements per inner iteration,
+// keeping the x slice hotter in L1 even on large K.
+//
+// g0..g3:  Q4_0 row pointers for gate weight rows [wStart..wStart+3]
+// u0..u3:  Q4_0 row pointers for up   weight rows [wStart..wStart+3]
+// gy0..gy3, uy0..uy3: output accumulators (written by reference)
+// ---------------------------------------------------------------------------
+#if defined(__AVX512F__)
+static void FusedQ4_0GateUp4Rows512_TPS(
+    const uint8_t* g0, const uint8_t* g1, const uint8_t* g2, const uint8_t* g3,
+    const uint8_t* u0, const uint8_t* u1, const uint8_t* u2, const uint8_t* u3,
+    const float* x, size_t blocksPerRow,
+    float& gy0, float& gy1, float& gy2, float& gy3,
+    float& uy0, float& uy1, float& uy2, float& uy3)
+{
+    __m512 ag0 = _mm512_setzero_ps(), ag1_hi = _mm512_setzero_ps();
+    __m512 ag1 = _mm512_setzero_ps(), ag0_hi = _mm512_setzero_ps();
+    __m512 ag2 = _mm512_setzero_ps(), ag2_hi = _mm512_setzero_ps();
+    __m512 ag3 = _mm512_setzero_ps(), ag3_hi = _mm512_setzero_ps();
+    __m512 au0 = _mm512_setzero_ps(), au0_hi = _mm512_setzero_ps();
+    __m512 au1 = _mm512_setzero_ps(), au1_hi = _mm512_setzero_ps();
+    __m512 au2 = _mm512_setzero_ps(), au2_hi = _mm512_setzero_ps();
+    __m512 au3 = _mm512_setzero_ps(), au3_hi = _mm512_setzero_ps();
+    const __m128i nibMask = _mm_set1_epi8(0x0F);
+    const __m128i bias8   = _mm_set1_epi8(8);
+    for (size_t b = 0; b < blocksPerRow; ++b)
+    {
+        const uint8_t* pg0 = g0 + b * 18, *pg1 = g1 + b * 18,
+                      *pg2 = g2 + b * 18, *pg3 = g3 + b * 18;
+        const uint8_t* pu0 = u0 + b * 18, *pu1 = u1 + b * 18,
+                      *pu2 = u2 + b * 18, *pu3 = u3 + b * 18;
+        if (b + 2 < blocksPerRow)
+        {
+            _mm_prefetch(reinterpret_cast<const char*>(pg0 + 2 * 18), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(pg1 + 2 * 18), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(pg2 + 2 * 18), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(pg3 + 2 * 18), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(pu0 + 2 * 18), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(pu1 + 2 * 18), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(pu2 + 2 * 18), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(pu3 + 2 * 18), _MM_HINT_T0);
+        }
+        // Load x block (shared for all 8 output rows)
+        const float* xi = x + b * 32;
+        const __m512 vx0 = _mm512_loadu_ps(xi);
+        const __m512 vx1 = _mm512_loadu_ps(xi + 16);
+
+        // Decode gate rows
+        const __m512 vdg0 = _mm512_set1_ps(f16_to_f32(*reinterpret_cast<const uint16_t*>(pg0)));
+        const __m512 vdg1 = _mm512_set1_ps(f16_to_f32(*reinterpret_cast<const uint16_t*>(pg1)));
+        const __m512 vdg2 = _mm512_set1_ps(f16_to_f32(*reinterpret_cast<const uint16_t*>(pg2)));
+        const __m512 vdg3 = _mm512_set1_ps(f16_to_f32(*reinterpret_cast<const uint16_t*>(pg3)));
+        __m128i pkg0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(pg0 + 2));
+        __m128i pkg1 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(pg1 + 2));
+        __m128i pkg2 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(pg2 + 2));
+        __m128i pkg3 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(pg3 + 2));
+        __m128i log0 = _mm_sub_epi8(_mm_and_si128(pkg0, nibMask), bias8);
+        __m128i hig0 = _mm_sub_epi8(_mm_and_si128(_mm_srli_epi16(pkg0, 4), nibMask), bias8);
+        __m128i log1 = _mm_sub_epi8(_mm_and_si128(pkg1, nibMask), bias8);
+        __m128i hig1 = _mm_sub_epi8(_mm_and_si128(_mm_srli_epi16(pkg1, 4), nibMask), bias8);
+        __m128i log2 = _mm_sub_epi8(_mm_and_si128(pkg2, nibMask), bias8);
+        __m128i hig2 = _mm_sub_epi8(_mm_and_si128(_mm_srli_epi16(pkg2, 4), nibMask), bias8);
+        __m128i log3 = _mm_sub_epi8(_mm_and_si128(pkg3, nibMask), bias8);
+        __m128i hig3 = _mm_sub_epi8(_mm_and_si128(_mm_srli_epi16(pkg3, 4), nibMask), bias8);
+        ag0    = _mm512_fmadd_ps(_mm512_mul_ps(_mm512_cvtepi32_ps(_mm512_cvtepi8_epi32(log0)), vdg0), vx0, ag0);
+        ag0_hi = _mm512_fmadd_ps(_mm512_mul_ps(_mm512_cvtepi32_ps(_mm512_cvtepi8_epi32(hig0)), vdg0), vx1, ag0_hi);
+        ag1    = _mm512_fmadd_ps(_mm512_mul_ps(_mm512_cvtepi32_ps(_mm512_cvtepi8_epi32(log1)), vdg1), vx0, ag1);
+        ag1_hi = _mm512_fmadd_ps(_mm512_mul_ps(_mm512_cvtepi32_ps(_mm512_cvtepi8_epi32(hig1)), vdg1), vx1, ag1_hi);
+        ag2    = _mm512_fmadd_ps(_mm512_mul_ps(_mm512_cvtepi32_ps(_mm512_cvtepi8_epi32(log2)), vdg2), vx0, ag2);
+        ag2_hi = _mm512_fmadd_ps(_mm512_mul_ps(_mm512_cvtepi32_ps(_mm512_cvtepi8_epi32(hig2)), vdg2), vx1, ag2_hi);
+        ag3    = _mm512_fmadd_ps(_mm512_mul_ps(_mm512_cvtepi32_ps(_mm512_cvtepi8_epi32(log3)), vdg3), vx0, ag3);
+        ag3_hi = _mm512_fmadd_ps(_mm512_mul_ps(_mm512_cvtepi32_ps(_mm512_cvtepi8_epi32(hig3)), vdg3), vx1, ag3_hi);
+
+        // Decode up rows (same x blocks)
+        const __m512 vdu0 = _mm512_set1_ps(f16_to_f32(*reinterpret_cast<const uint16_t*>(pu0)));
+        const __m512 vdu1 = _mm512_set1_ps(f16_to_f32(*reinterpret_cast<const uint16_t*>(pu1)));
+        const __m512 vdu2 = _mm512_set1_ps(f16_to_f32(*reinterpret_cast<const uint16_t*>(pu2)));
+        const __m512 vdu3 = _mm512_set1_ps(f16_to_f32(*reinterpret_cast<const uint16_t*>(pu3)));
+        __m128i pku0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(pu0 + 2));
+        __m128i pku1 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(pu1 + 2));
+        __m128i pku2 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(pu2 + 2));
+        __m128i pku3 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(pu3 + 2));
+        __m128i lou0 = _mm_sub_epi8(_mm_and_si128(pku0, nibMask), bias8);
+        __m128i hiu0 = _mm_sub_epi8(_mm_and_si128(_mm_srli_epi16(pku0, 4), nibMask), bias8);
+        __m128i lou1 = _mm_sub_epi8(_mm_and_si128(pku1, nibMask), bias8);
+        __m128i hiu1 = _mm_sub_epi8(_mm_and_si128(_mm_srli_epi16(pku1, 4), nibMask), bias8);
+        __m128i lou2 = _mm_sub_epi8(_mm_and_si128(pku2, nibMask), bias8);
+        __m128i hiu2 = _mm_sub_epi8(_mm_and_si128(_mm_srli_epi16(pku2, 4), nibMask), bias8);
+        __m128i lou3 = _mm_sub_epi8(_mm_and_si128(pku3, nibMask), bias8);
+        __m128i hiu3 = _mm_sub_epi8(_mm_and_si128(_mm_srli_epi16(pku3, 4), nibMask), bias8);
+        au0    = _mm512_fmadd_ps(_mm512_mul_ps(_mm512_cvtepi32_ps(_mm512_cvtepi8_epi32(lou0)), vdu0), vx0, au0);
+        au0_hi = _mm512_fmadd_ps(_mm512_mul_ps(_mm512_cvtepi32_ps(_mm512_cvtepi8_epi32(hiu0)), vdu0), vx1, au0_hi);
+        au1    = _mm512_fmadd_ps(_mm512_mul_ps(_mm512_cvtepi32_ps(_mm512_cvtepi8_epi32(lou1)), vdu1), vx0, au1);
+        au1_hi = _mm512_fmadd_ps(_mm512_mul_ps(_mm512_cvtepi32_ps(_mm512_cvtepi8_epi32(hiu1)), vdu1), vx1, au1_hi);
+        au2    = _mm512_fmadd_ps(_mm512_mul_ps(_mm512_cvtepi32_ps(_mm512_cvtepi8_epi32(lou2)), vdu2), vx0, au2);
+        au2_hi = _mm512_fmadd_ps(_mm512_mul_ps(_mm512_cvtepi32_ps(_mm512_cvtepi8_epi32(hiu2)), vdu2), vx1, au2_hi);
+        au3    = _mm512_fmadd_ps(_mm512_mul_ps(_mm512_cvtepi32_ps(_mm512_cvtepi8_epi32(lou3)), vdu3), vx0, au3);
+        au3_hi = _mm512_fmadd_ps(_mm512_mul_ps(_mm512_cvtepi32_ps(_mm512_cvtepi8_epi32(hiu3)), vdu3), vx1, au3_hi);
+    }
+    gy0 = HsumF32x16_TPS(_mm512_add_ps(ag0,    ag0_hi));
+    gy1 = HsumF32x16_TPS(_mm512_add_ps(ag1,    ag1_hi));
+    gy2 = HsumF32x16_TPS(_mm512_add_ps(ag2,    ag2_hi));
+    gy3 = HsumF32x16_TPS(_mm512_add_ps(ag3,    ag3_hi));
+    uy0 = HsumF32x16_TPS(_mm512_add_ps(au0,    au0_hi));
+    uy1 = HsumF32x16_TPS(_mm512_add_ps(au1,    au1_hi));
+    uy2 = HsumF32x16_TPS(_mm512_add_ps(au2,    au2_hi));
+    uy3 = HsumF32x16_TPS(_mm512_add_ps(au3,    au3_hi));
+}
+#endif  // __AVX512F__
+
+// ---------------------------------------------------------------------------
 // Fused Q2_K GEMV helpers (AVX-512)
 // 16-wide: _mm512_cvtepu8_epi32 expands 16 bytes → 16 int32 in one instruction.
 // Each sub-group of 16 elements processed in 1 pass (vs 2 in AVX2).
@@ -5366,6 +5481,190 @@ uint32_t RawrXDModelLoader::FindMemoryType(uint32_t typeFilter, VkMemoryProperty
     }
 #endif
     return 0;
+}
+
+// ---------------------------------------------------------------------------
+// StreamingFusedGateUp: fused gate + up Q4_0 GEMV in one pool dispatch
+//
+// Both gate and up tensors use the same x[] input vector.  Processing them
+// in one worker dispatch halves round-trips through the condition-variable
+// rendezvous and amortises x-block loading across 8 output rows per iteration
+// (4 gate + 4 up), keeping the 12KB x slice hotter in L1/L2 during the pass.
+//
+// Falls back to two separate StreamingMatMul calls for non-Q4_0 tensors.
+// ---------------------------------------------------------------------------
+bool RawrXDModelLoader::StreamingFusedGateUp(
+    const std::string& gate_name, const std::string& up_name,
+    const float* x, float* h_gate, float* h_up, size_t K, size_t N)
+{
+    // Validate gate tensor
+    auto git = m_tensors.find(gate_name);
+    auto uit = m_tensors.find(up_name);
+    if (git == m_tensors.end() || uit == m_tensors.end())
+    {
+        // Missing tensor – fall back to sequential
+        bool ok = true;
+        if (git == m_tensors.end())
+            ok = false;
+        else
+            ok = StreamingMatMul(gate_name, x, h_gate, K, N);
+        if (ok && uit != m_tensors.end())
+            ok = StreamingMatMul(up_name, x, h_up, K, N);
+        return ok;
+    }
+
+#if defined(__AVX512F__)
+    // Both tensors must be Q4_0 (type==2) with K divisible by 32 to use the fused path
+    if (git->second.type == 2 && uit->second.type == 2 &&
+        (K % 32) == 0 && rawr_cpu_has_avx512())
+    {
+        Tensor& tg = git->second;
+        Tensor& tu = uit->second;
+        const size_t blockStride   = 18;
+        const size_t blockElements = 32;
+        const size_t blocksPerRow  = K / blockElements;
+        const size_t rowBytes      = blocksPerRow * blockStride;
+
+        // Validate file bounds for both tensors
+        uint64_t endG = 0, endU = 0;
+        {
+            uint64_t szG = 0, szU = 0;
+            if (!TryMulU64(N, rowBytes, &szG) || !TryAddU64(tg.offset, szG, &endG) ||
+                endG > m_fileSize)
+            {
+                printf("[StreamingFusedGateUp] Gate tensor %s out of file\n", gate_name.c_str());
+                goto fallback;
+            }
+            if (!TryMulU64(N, rowBytes, &szU) || !TryAddU64(tu.offset, szU, &endU) ||
+                endU > m_fileSize)
+            {
+                printf("[StreamingFusedGateUp] Up tensor %s out of file\n", up_name.c_str());
+                goto fallback;
+            }
+        }
+
+        // Choose window / pin size (reuse same heuristic as StreamingMatMul)
+        const uint64_t maxFallbackBytes =
+            (m_fileSize > 16ULL * 1024ULL * 1024ULL * 1024ULL)
+                ? (2ULL * 1024ULL * 1024ULL * 1024ULL)
+                : ((m_fileSize > 8ULL * 1024ULL * 1024ULL * 1024ULL)
+                       ? (1ULL * 1024ULL * 1024ULL * 1024ULL)
+                       : (512ULL * 1024ULL * 1024ULL));
+        const uint64_t pinBudget = std::min<uint64_t>(windowSize ? windowSize : maxFallbackBytes, maxFallbackBytes);
+        size_t pinRows = static_cast<size_t>(pinBudget / rowBytes);
+        if (pinRows == 0) pinRows = 1;
+
+        static const int kMaxW = 8;
+        static const size_t kParThreshold = 64;
+        const unsigned int hw = std::thread::hardware_concurrency();
+
+        size_t row = 0;
+        while (row < N)
+        {
+            const size_t shardRows = std::min(pinRows, N - row);
+
+            uint64_t rowByteOff = static_cast<uint64_t>(row) * static_cast<uint64_t>(rowBytes);
+            uint64_t shardOffG  = tg.offset + rowByteOff;
+            uint64_t shardOffU  = tu.offset + rowByteOff;
+            const size_t shardBytes = shardRows * rowBytes;
+
+            StreamingPin pinG(this, shardOffG, shardBytes);
+            StreamingPin pinU(this, shardOffU, shardBytes);
+            if (!pinG.IsValid() || !pinU.IsValid())
+            {
+                // Shard too large – fall through to per-row fallback
+                for (size_t r = row; r < row + shardRows; ++r)
+                {
+                    if (!StreamingMatMul(gate_name, x, h_gate, K, N))  return false;
+                    if (!StreamingMatMul(up_name,   x, h_up,   K, N))  return false;
+                }
+                row += shardRows;
+                continue;
+            }
+
+            const int nWorkers = (shardRows >= kParThreshold && hw > 1)
+                                     ? static_cast<int>(std::min<unsigned int>(hw, kMaxW))
+                                     : 1;
+            const size_t rowsPerWorker = (shardRows + static_cast<size_t>(nWorkers) - 1)
+                                         / static_cast<size_t>(nWorkers);
+
+            std::atomic<bool> allOk{true};
+            GetWorkerPool(nWorkers).dispatch(
+                [&pinG, &pinU, &x, h_gate, h_up, rowBytes, blocksPerRow,
+                 rowsPerWorker, shardRows, row, &allOk](int w)
+                {
+                    const size_t wStart = static_cast<size_t>(w) * rowsPerWorker;
+                    const size_t wEnd   = std::min(wStart + rowsPerWorker, shardRows);
+                    if (wStart >= shardRows)
+                        return;
+
+                    size_t wRow = wStart;
+                    // 4-row fused gate+up kernel
+                    while (wRow + 3 < wEnd)
+                    {
+                        const uint8_t* g0 = static_cast<const uint8_t*>(pinG.GetPointer(
+                            static_cast<uint64_t>(wRow + 0) * static_cast<uint64_t>(rowBytes)));
+                        const uint8_t* g1 = static_cast<const uint8_t*>(pinG.GetPointer(
+                            static_cast<uint64_t>(wRow + 1) * static_cast<uint64_t>(rowBytes)));
+                        const uint8_t* g2 = static_cast<const uint8_t*>(pinG.GetPointer(
+                            static_cast<uint64_t>(wRow + 2) * static_cast<uint64_t>(rowBytes)));
+                        const uint8_t* g3 = static_cast<const uint8_t*>(pinG.GetPointer(
+                            static_cast<uint64_t>(wRow + 3) * static_cast<uint64_t>(rowBytes)));
+                        const uint8_t* u0 = static_cast<const uint8_t*>(pinU.GetPointer(
+                            static_cast<uint64_t>(wRow + 0) * static_cast<uint64_t>(rowBytes)));
+                        const uint8_t* u1 = static_cast<const uint8_t*>(pinU.GetPointer(
+                            static_cast<uint64_t>(wRow + 1) * static_cast<uint64_t>(rowBytes)));
+                        const uint8_t* u2 = static_cast<const uint8_t*>(pinU.GetPointer(
+                            static_cast<uint64_t>(wRow + 2) * static_cast<uint64_t>(rowBytes)));
+                        const uint8_t* u3 = static_cast<const uint8_t*>(pinU.GetPointer(
+                            static_cast<uint64_t>(wRow + 3) * static_cast<uint64_t>(rowBytes)));
+                        if (!g0 || !g1 || !g2 || !g3 || !u0 || !u1 || !u2 || !u3)
+                        {
+                            allOk.store(false, std::memory_order_relaxed);
+                            return;
+                        }
+                        FusedQ4_0GateUp4Rows512_TPS(
+                            g0, g1, g2, g3, u0, u1, u2, u3, x, blocksPerRow,
+                            h_gate[row + wRow + 0], h_gate[row + wRow + 1],
+                            h_gate[row + wRow + 2], h_gate[row + wRow + 3],
+                            h_up  [row + wRow + 0], h_up  [row + wRow + 1],
+                            h_up  [row + wRow + 2], h_up  [row + wRow + 3]);
+                        wRow += 4;
+                    }
+                    // Scalar tail
+                    while (wRow < wEnd)
+                    {
+                        const uint8_t* g = static_cast<const uint8_t*>(pinG.GetPointer(
+                            static_cast<uint64_t>(wRow) * static_cast<uint64_t>(rowBytes)));
+                        const uint8_t* u = static_cast<const uint8_t*>(pinU.GetPointer(
+                            static_cast<uint64_t>(wRow) * static_cast<uint64_t>(rowBytes)));
+                        if (!g || !u)
+                        {
+                            allOk.store(false, std::memory_order_relaxed);
+                            return;
+                        }
+                        h_gate[row + wRow] = FusedQ4_0RowDot512_TPS(g, x, blocksPerRow);
+                        h_up  [row + wRow] = FusedQ4_0RowDot512_TPS(u, x, blocksPerRow);
+                        ++wRow;
+                    }
+                }, nWorkers);
+
+            if (!allOk.load())
+            {
+                printf("[StreamingFusedGateUp] Worker failed for %s / %s row=%zu\n",
+                       gate_name.c_str(), up_name.c_str(), row);
+                return false;
+            }
+            row += shardRows;
+        }
+        return true;
+    }
+fallback:
+#endif  // __AVX512F__
+    // Non-Q4_0 or no AVX-512: fall back to two independent StreamingMatMul calls
+    if (!StreamingMatMul(gate_name, x, h_gate, K, N))
+        return false;
+    return StreamingMatMul(up_name, x, h_up, K, N);
 }
 
 bool RawrXDModelLoader::IsSupportedFileType(uint32_t fileType) const

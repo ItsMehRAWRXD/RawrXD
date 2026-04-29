@@ -2010,15 +2010,12 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
             {
                 if (denseFfn)
                 {
-                    if (!loader->StreamingMatMul(w1_name, x.data(), h1.data(), dim, hdim))
+                    // Fused gate+up: loads x once per block pair, halves pool dispatch count
+                    if (!loader->StreamingFusedGateUp(w1_name, w3_name, x.data(),
+                                                      h1.data(), h3.data(), dim, hdim))
                     {
-                        printf("[Forward] FATAL: StreamingMatMul failed for %s\n", w1_name.c_str());
-                        return {};
-                    }
-
-                    if (!loader->StreamingMatMul(w3_name, x.data(), h3.data(), dim, hdim))
-                    {
-                        printf("[Forward] FATAL: StreamingMatMul failed for %s\n", w3_name.c_str());
+                        printf("[Forward] FATAL: StreamingFusedGateUp failed for %s / %s\n",
+                               w1_name.c_str(), w3_name.c_str());
                         return {};
                     }
                 }

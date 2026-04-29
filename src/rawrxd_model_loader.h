@@ -112,6 +112,12 @@ class RawrXDModelLoader
     [[nodiscard]] std::expected<std::atomic<float*>*, std::string> GetTensorHotSlot(const std::string& name);
     bool GetTensorRow(const std::string& name, size_t rowIndex, float* out, size_t cols);
     bool StreamingMatMul(const std::string& name, const float* x, float* y, size_t K, size_t N);
+    /// Fused gate+up GEMV: computes both gate and up tensors in a single pool dispatch,
+    /// loading x once per block pair.  Both tensors must be Q4_0 with the same K and N.
+    /// h_gate and h_up are output vectors of length N.  Falls back to two StreamingMatMul
+    /// calls if the tensors are not both Q4_0 (e.g. unsupported type or missing).
+    bool StreamingFusedGateUp(const std::string& gate_name, const std::string& up_name,
+                              const float* x, float* h_gate, float* h_up, size_t K, size_t N);
     void ReleaseTensor(const std::string& name);
     void SetLoadErrorCallback(ModelLoadErrorCallback callback);
     const std::string& GetLastLoadErrorMessage() const;
