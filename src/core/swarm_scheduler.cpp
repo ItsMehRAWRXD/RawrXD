@@ -411,7 +411,13 @@ void RawrXDModelLoaderMemoryBackend::unpinRange(std::uint32_t modelIndex, std::u
     if (m_pinnedModel != modelIndex || m_pinnedOffset != offset || m_pinnedSize != size)
         return;
     m_loader->unmarkComputeRangeInUse(offset, size);
-    m_loader->UnmapWindow();
+    // Do NOT call UnmapWindow here — the compute slot must stay live for the
+    // entire forward pass.  MapWindow already handles lazy eviction when the
+    // requested offset crosses into a different aligned window (e.g. 0-2 GB →
+    // 2-4 GB).  An explicit UnmapWindow() is issued at inference teardown by
+    // the outer caller.  Calling it here on every tensor unpin caused ~320
+    // MapViewOfFile3 remaps per token (one per tensor access), collapsing TPS
+    // from ~3,000+ to <1 on the sovereign-aperture path.
     m_pinned = false;
 }
 

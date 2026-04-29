@@ -454,7 +454,13 @@ class RawrXDInference
                cfg.n_layers, cfg.n_heads, cfg.n_kv_heads, cfg.vocab_size, cfg.hidden_dim, cfg.n_ctx);
 
         printf("[RawrXD] Stage: tokenizer.Load\n");
-        if (!tokenizer.LoadFromGGUF(modelPath))
+        // Use vocab already parsed by RawrXDModelLoader — avoids re-opening the GGUF
+        // through the stub GGUFLoader which returns an empty metadata.tokens.
+        const std::vector<std::string>& loaderVocab = loader.getVocab();
+        const bool tokenizerOk = loaderVocab.empty()
+            ? tokenizer.LoadFromGGUF(modelPath)   // fallback: try direct GGUF read
+            : tokenizer.LoadFromVocab(loaderVocab); // fast path: reuse parsed vocab
+        if (!tokenizerOk)
         {
             m_lastLoadErrorMessage = "tokenizer_load: failed to load vocab from GGUF";
 #ifdef RAWR_ENABLE_VULKAN
