@@ -8,11 +8,13 @@
 #include <expected>
 #include <iostream>
 #include <limits>
+#include <future>
 #include <mutex>
 #include <new>
 #include <set>
 #include <string>
 #include <thread>
+#include <vector>
 #include <windows.h>
 
 
@@ -1090,7 +1092,17 @@ bool RawrXDModelLoader::InitializeSlidingWindow(uint64_t fileSize)
         }
     }
 
-    const SIZE_T apertureSize = static_cast<SIZE_T>(std::min<uint64_t>(fileSize, effectiveWindowSize));
+    // For models that fit entirely in VA space (≤ 8 GB), size the sovereign
+    // aperture to cover the whole file.  This eliminates the 2-per-token
+    // window-boundary remap churn that collapses TPS on models straddling a
+    // 2 GB boundary (e.g. 3.8 GB Phi-3-mini Q8_0).  On x64, reserving up to
+    // 8 GB of VA is negligible (128 TB available) and incurs zero physical
+    // commit.  Larger models keep the original capped logic.
+    constexpr uint64_t kSingleMapThreshold = 8ULL * 1024ULL * 1024ULL * 1024ULL;  // 8 GB
+    const uint64_t apertureSizeU64 = (fileSize <= kSingleMapThreshold)
+                                         ? fileSize
+                                         : std::min<uint64_t>(fileSize, effectiveWindowSize);
+    const SIZE_T apertureSize = static_cast<SIZE_T>(apertureSizeU64);
 
     if (PlaceholderApertureApisAvailable())
     {
@@ -3913,8 +3925,24 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
 #else
                     const Q8_0_Block* blk = reinterpret_cast<const Q8_0_Block*>(blockPtr);
                     const float d = f16_to_f32(blk->d);
+                    float* dst32 = dstRow + b * 32;
+#if defined(__AVX2__)
+                    {
+                        const __m256 vd = _mm256_set1_ps(d);
+                        // 4 × 8-element batches using AVX2 int8→float sign-extend path
+                        __m128i vi0 = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(blk->qs +  0));
+                        __m128i vi1 = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(blk->qs +  8));
+                        __m128i vi2 = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(blk->qs + 16));
+                        __m128i vi3 = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(blk->qs + 24));
+                        _mm256_storeu_ps(dst32 +  0, _mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(vi0)), vd));
+                        _mm256_storeu_ps(dst32 +  8, _mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(vi1)), vd));
+                        _mm256_storeu_ps(dst32 + 16, _mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(vi2)), vd));
+                        _mm256_storeu_ps(dst32 + 24, _mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(vi3)), vd));
+                    }
+#else
                     for (int i = 0; i < 32; ++i)
-                        dstRow[b * 32 + static_cast<size_t>(i)] = static_cast<float>(blk->qs[i]) * d;
+                        dst32[i] = static_cast<float>(blk->qs[i]) * d;
+#endif
 #endif
                     blockPtr += 34;
                 }
@@ -4001,85 +4029,193 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
             continue;
         }
 
-        size_t localRow = 0;
-        while (localRow < shardRows)
+        // Parallel tile dispatch: partition shardRows across worker threads.
+        // pin.GetPointer() is const (pointer arithmetic, no lock) — safe to call concurrently.
+        // decodeRowToFloat captures only const values/fn-ptrs — safe to call concurrently.
+        // Each worker uses its own thread_local tile buffer; y[] writes are non-overlapping.
+        static const int kMaxWorkers = 8;
+        static const size_t kParallelRowThreshold = 64;
+        const unsigned int hwThreads = std::thread::hardware_concurrency();
+        const int nWorkers = (shardRows >= kParallelRowThreshold && hwThreads > 1)
+                                 ? static_cast<int>(std::min<unsigned int>(hwThreads, kMaxWorkers))
+                                 : 1;
+
+        if (nWorkers > 1)
         {
-            const size_t tileRows = std::min(TILE_ROWS, shardRows - localRow);
+            const size_t rowsPerWorker = (shardRows + static_cast<size_t>(nWorkers) - 1)
+                                         / static_cast<size_t>(nWorkers);
+            std::vector<std::future<bool>> workerFutures;
+            workerFutures.reserve(static_cast<size_t>(nWorkers));
 
-            for (size_t r = 0; r < tileRows; ++r)
+            for (int w = 0; w < nWorkers; ++w)
             {
-                uint64_t rowLocalOffset = 0;
-                if (!TryMulU64(static_cast<uint64_t>(localRow + r), static_cast<uint64_t>(rowBytes), &rowLocalOffset))
-                {
-                    printf("[StreamingMatMul] Local row offset overflow for %s row=%zu\n", name.c_str(),
-                           row + localRow + r);
-                    return false;
-                }
-                const uint8_t* rowSrc = static_cast<const uint8_t*>(pin.GetPointer(rowLocalOffset));
-                if (!rowSrc)
-                {
-                    printf("[StreamingMatMul] Invalid pinned pointer for %s row=%zu\n", name.c_str(),
-                           row + localRow + r);
-                    return false;
-                }
+                const size_t wStart = static_cast<size_t>(w) * rowsPerWorker;
+                const size_t wEnd   = std::min(wStart + rowsPerWorker, shardRows);
+                if (wStart >= shardRows)
+                    break;
 
-                float* dstRow = tile_buf.data() + r * K;
-                if (!decodeRowToFloat(rowSrc, dstRow))
-                {
-                    printf("[StreamingMatMul] Failed to decode pinned row for %s row=%zu type=%u\n", name.c_str(),
-                           row + localRow + r, t.type);
-                    return false;
-                }
-            }
+                workerFutures.push_back(std::async(
+                    std::launch::async,
+                    [&pin, &x, &y, &decodeRowToFloat, K, rowBytes, TILE_ROWS, wStart, wEnd, row]() -> bool
+                    {
+                        thread_local std::vector<float> par_tile_buf;
+                        par_tile_buf.resize(TILE_ROWS * K);
 
-            size_t r = 0;
+                        size_t wLocalRow = wStart;
+                        while (wLocalRow < wEnd)
+                        {
+                            const size_t wTileRows = std::min(TILE_ROWS, wEnd - wLocalRow);
+
+                            for (size_t r = 0; r < wTileRows; ++r)
+                            {
+                                uint64_t rLoc = static_cast<uint64_t>(wLocalRow + r)
+                                                * static_cast<uint64_t>(rowBytes);
+                                const uint8_t* rowSrc =
+                                    static_cast<const uint8_t*>(pin.GetPointer(rLoc));
+                                if (!rowSrc)
+                                    return false;
+                                float* dstRow = par_tile_buf.data() + r * K;
+                                if (!decodeRowToFloat(rowSrc, dstRow))
+                                    return false;
+                            }
+
+                            size_t r = 0;
 #if defined(__AVX512F__)
-            const bool use_avx512_64row = (rawr_cpu_has_avx512() != 0);
+                            const bool w_avx512 = (rawr_cpu_has_avx512() != 0);
 #else
-            const bool use_avx512_64row = false;
+                            const bool w_avx512 = false;
 #endif
+                            for (; w_avx512 && (r + 63 < wTileRows); r += 64)
+                            {
+                                alignas(64) float out64[64];
+                                const float* rowsBase = par_tile_buf.data() + r * K;
+                                const float* nextBase = (r + 127 < wTileRows)
+                                                            ? (par_tile_buf.data() + (r + 64) * K)
+                                                            : nullptr;
+                                DotProduct64Rows16x4F32_TPS(rowsBase, nextBase, x, K, out64);
+                                for (size_t i = 0; i < 64; ++i)
+                                    y[row + wLocalRow + r + i] = out64[i];
+                            }
+                            for (; r + 3 < wTileRows; r += 4)
+                            {
+                                const float* w0 = par_tile_buf.data() + (r + 0) * K;
+                                const float* w1 = par_tile_buf.data() + (r + 1) * K;
+                                const float* w2 = par_tile_buf.data() + (r + 2) * K;
+                                const float* w3 = par_tile_buf.data() + (r + 3) * K;
+                                float o0 = 0.0f, o1 = 0.0f, o2 = 0.0f, o3 = 0.0f;
+                                DotProduct4RowsF32_TPS(w0, w1, w2, w3, x, K, &o0, &o1, &o2, &o3);
+                                y[row + wLocalRow + r + 0] = o0;
+                                y[row + wLocalRow + r + 1] = o1;
+                                y[row + wLocalRow + r + 2] = o2;
+                                y[row + wLocalRow + r + 3] = o3;
+                            }
+                            for (; r + 1 < wTileRows; r += 2)
+                            {
+                                const float* w0 = par_tile_buf.data() + r * K;
+                                const float* w1 = par_tile_buf.data() + (r + 1) * K;
+                                float o0 = 0.0f, o1 = 0.0f;
+                                DotProduct2RowsF32_TPS(w0, w1, x, K, &o0, &o1);
+                                y[row + wLocalRow + r + 0] = o0;
+                                y[row + wLocalRow + r + 1] = o1;
+                            }
+                            if (r < wTileRows)
+                                y[row + wLocalRow + r] =
+                                    DotProductF32_TPS(par_tile_buf.data() + r * K, x, K);
 
-            for (; use_avx512_64row && (r + 63 < tileRows); r += 64)
+                            wLocalRow += wTileRows;
+                        }
+                        return true;
+                    }));
+            }
+
+            bool allOk = true;
+            for (auto& f : workerFutures)
             {
-                alignas(64) float out64[64];
-                const float* rowsBase = tile_buf.data() + r * K;
-                const float* nextRowsBase = (r + 127 < tileRows) ? (tile_buf.data() + (r + 64) * K) : nullptr;
-                DotProduct64Rows16x4F32_TPS(rowsBase, nextRowsBase, x, K, out64);
-                for (size_t i = 0; i < 64; ++i)
+                if (!f.get())
+                    allOk = false;
+            }
+            if (!allOk)
+            {
+                printf("[StreamingMatMul] Parallel worker failed for tensor %s\n", name.c_str());
+                return false;
+            }
+        }
+        else
+        {
+            size_t localRow = 0;
+            while (localRow < shardRows)
+            {
+                const size_t tileRows = std::min(TILE_ROWS, shardRows - localRow);
+
+                for (size_t r = 0; r < tileRows; ++r)
                 {
-                    y[row + localRow + r + i] = out64[i];
+                    uint64_t rowLocalOffset = 0;
+                    if (!TryMulU64(static_cast<uint64_t>(localRow + r), static_cast<uint64_t>(rowBytes),
+                                   &rowLocalOffset))
+                    {
+                        printf("[StreamingMatMul] Local row offset overflow for %s row=%zu\n", name.c_str(),
+                               row + localRow + r);
+                        return false;
+                    }
+                    const uint8_t* rowSrc = static_cast<const uint8_t*>(pin.GetPointer(rowLocalOffset));
+                    if (!rowSrc)
+                    {
+                        printf("[StreamingMatMul] Invalid pinned pointer for %s row=%zu\n", name.c_str(),
+                               row + localRow + r);
+                        return false;
+                    }
+
+                    float* dstRow = tile_buf.data() + r * K;
+                    if (!decodeRowToFloat(rowSrc, dstRow))
+                    {
+                        printf("[StreamingMatMul] Failed to decode pinned row for %s row=%zu type=%u\n",
+                               name.c_str(), row + localRow + r, t.type);
+                        return false;
+                    }
                 }
-            }
 
-            for (; r + 3 < tileRows; r += 4)
-            {
-                const float* w0 = tile_buf.data() + (r + 0) * K;
-                const float* w1 = tile_buf.data() + (r + 1) * K;
-                const float* w2 = tile_buf.data() + (r + 2) * K;
-                const float* w3 = tile_buf.data() + (r + 3) * K;
-                float o0 = 0.0f, o1 = 0.0f, o2 = 0.0f, o3 = 0.0f;
-                DotProduct4RowsF32_TPS(w0, w1, w2, w3, x, K, &o0, &o1, &o2, &o3);
-                y[row + localRow + r + 0] = o0;
-                y[row + localRow + r + 1] = o1;
-                y[row + localRow + r + 2] = o2;
-                y[row + localRow + r + 3] = o3;
-            }
+                size_t r = 0;
+#if defined(__AVX512F__)
+                const bool use_avx512_64row = (rawr_cpu_has_avx512() != 0);
+#else
+                const bool use_avx512_64row = false;
+#endif
+                for (; use_avx512_64row && (r + 63 < tileRows); r += 64)
+                {
+                    alignas(64) float out64[64];
+                    const float* rowsBase     = tile_buf.data() + r * K;
+                    const float* nextRowsBase = (r + 127 < tileRows) ? (tile_buf.data() + (r + 64) * K) : nullptr;
+                    DotProduct64Rows16x4F32_TPS(rowsBase, nextRowsBase, x, K, out64);
+                    for (size_t i = 0; i < 64; ++i)
+                        y[row + localRow + r + i] = out64[i];
+                }
+                for (; r + 3 < tileRows; r += 4)
+                {
+                    const float* w0 = tile_buf.data() + (r + 0) * K;
+                    const float* w1 = tile_buf.data() + (r + 1) * K;
+                    const float* w2 = tile_buf.data() + (r + 2) * K;
+                    const float* w3 = tile_buf.data() + (r + 3) * K;
+                    float o0 = 0.0f, o1 = 0.0f, o2 = 0.0f, o3 = 0.0f;
+                    DotProduct4RowsF32_TPS(w0, w1, w2, w3, x, K, &o0, &o1, &o2, &o3);
+                    y[row + localRow + r + 0] = o0;
+                    y[row + localRow + r + 1] = o1;
+                    y[row + localRow + r + 2] = o2;
+                    y[row + localRow + r + 3] = o3;
+                }
+                for (; r + 1 < tileRows; r += 2)
+                {
+                    const float* w0 = tile_buf.data() + r * K;
+                    const float* w1 = tile_buf.data() + (r + 1) * K;
+                    float o0 = 0.0f, o1 = 0.0f;
+                    DotProduct2RowsF32_TPS(w0, w1, x, K, &o0, &o1);
+                    y[row + localRow + r + 0] = o0;
+                    y[row + localRow + r + 1] = o1;
+                }
+                if (r < tileRows)
+                    y[row + localRow + r] = DotProductF32_TPS(tile_buf.data() + r * K, x, K);
 
-            for (; r + 1 < tileRows; r += 2)
-            {
-                const float* w0 = tile_buf.data() + r * K;
-                const float* w1 = tile_buf.data() + (r + 1) * K;
-                float o0 = 0.0f, o1 = 0.0f;
-                DotProduct2RowsF32_TPS(w0, w1, x, K, &o0, &o1);
-                y[row + localRow + r + 0] = o0;
-                y[row + localRow + r + 1] = o1;
+                localRow += tileRows;
             }
-
-            if (r < tileRows)
-            {
-                y[row + localRow + r] = DotProductF32_TPS(tile_buf.data() + r * K, x, K);
-            }
-            localRow += tileRows;
         }
 
         row += shardRows;
