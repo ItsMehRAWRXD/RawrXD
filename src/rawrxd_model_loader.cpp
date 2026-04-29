@@ -493,6 +493,183 @@ static void FusedQ4_0GEMV4Rows_TPS(const uint8_t* r0, const uint8_t* r1,
 }
 #endif  // __AVX2__
 
+// ---------------------------------------------------------------------------
+// AVX-512 fused GEMV helpers: 16-wide vectors, FMA, software prefetch
+// Doubles SIMD width vs AVX2: 2 chunks per Q8_0 block, 2 per Q4_0 block.
+// Prefetch 2 blocks ahead to overlap DDR5/NVMe latency with compute.
+// Requires __AVX512F__ (present on Zen4/Zen4c, Skylake-X+, Sapphire Rapids).
+// ---------------------------------------------------------------------------
+#if defined(__AVX512F__)
+/// Horizontal sum: fold 4 quad-lanes of __m512 using only AVX-512F (no DQ).
+static inline float HsumF32x16_TPS(__m512 v)
+{
+    const __m128 q0 = _mm512_extractf32x4_ps(v, 0);
+    const __m128 q1 = _mm512_extractf32x4_ps(v, 1);
+    const __m128 q2 = _mm512_extractf32x4_ps(v, 2);
+    const __m128 q3 = _mm512_extractf32x4_ps(v, 3);
+    __m128 s = _mm_add_ps(_mm_add_ps(q0, q1), _mm_add_ps(q2, q3));
+    s = _mm_add_ps(s, _mm_movehl_ps(s, s));
+    return _mm_cvtss_f32(_mm_add_ss(s, _mm_movehdup_ps(s)));
+}
+
+// ---------------------------------------------------------------------------
+// Q8_0 AVX-512
+// ---------------------------------------------------------------------------
+/// Single-row fused Q8_0 GEMV (AVX-512): 2 chunks of 16 int8s per block.
+static float FusedQ8RowDot512_TPS(const uint8_t* rowSrc, const float* x, size_t blocksPerRow)
+{
+    __m512 acc0 = _mm512_setzero_ps();
+    __m512 acc1 = _mm512_setzero_ps();
+    for (size_t b = 0; b < blocksPerRow; ++b)
+    {
+        const uint8_t* bp = rowSrc + b * 34;
+        if (b + 2 < blocksPerRow)
+            _mm_prefetch(reinterpret_cast<const char*>(bp + 2 * 34), _MM_HINT_T0);
+        const __m512 vd = _mm512_set1_ps(f16_to_f32(*reinterpret_cast<const uint16_t*>(bp)));
+        const float* xi = x + b * 32;
+        acc0 = _mm512_fmadd_ps(
+            _mm512_mul_ps(_mm512_cvtepi32_ps(_mm512_cvtepi8_epi32(
+                _mm_loadu_si128(reinterpret_cast<const __m128i*>(bp + 2)))), vd),
+            _mm512_loadu_ps(xi), acc0);
+        acc1 = _mm512_fmadd_ps(
+            _mm512_mul_ps(_mm512_cvtepi32_ps(_mm512_cvtepi8_epi32(
+                _mm_loadu_si128(reinterpret_cast<const __m128i*>(bp + 18)))), vd),
+            _mm512_loadu_ps(xi + 16), acc1);
+    }
+    return HsumF32x16_TPS(_mm512_add_ps(acc0, acc1));
+}
+
+/// 4-row fused Q8_0 GEMV (AVX-512): x[] loaded once per block for all 4 rows.
+/// 8 accumulators (4 rows × 2 chunks) — well within the 32-register file on Zen4.
+static void FusedQ8GEMV4Rows512_TPS(const uint8_t* r0, const uint8_t* r1,
+                                      const uint8_t* r2, const uint8_t* r3,
+                                      const float* x, size_t blocksPerRow,
+                                      float& y0, float& y1, float& y2, float& y3)
+{
+    __m512 a00 = _mm512_setzero_ps(), a01 = _mm512_setzero_ps();
+    __m512 a10 = _mm512_setzero_ps(), a11 = _mm512_setzero_ps();
+    __m512 a20 = _mm512_setzero_ps(), a21 = _mm512_setzero_ps();
+    __m512 a30 = _mm512_setzero_ps(), a31 = _mm512_setzero_ps();
+    for (size_t b = 0; b < blocksPerRow; ++b)
+    {
+        const uint8_t* p0 = r0 + b*34, *p1 = r1 + b*34,
+                      *p2 = r2 + b*34, *p3 = r3 + b*34;
+        if (b + 2 < blocksPerRow)
+        {
+            _mm_prefetch(reinterpret_cast<const char*>(p0 + 2*34), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(p1 + 2*34), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(p2 + 2*34), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(p3 + 2*34), _MM_HINT_T0);
+        }
+        const __m512 vd0 = _mm512_set1_ps(f16_to_f32(*reinterpret_cast<const uint16_t*>(p0)));
+        const __m512 vd1 = _mm512_set1_ps(f16_to_f32(*reinterpret_cast<const uint16_t*>(p1)));
+        const __m512 vd2 = _mm512_set1_ps(f16_to_f32(*reinterpret_cast<const uint16_t*>(p2)));
+        const __m512 vd3 = _mm512_set1_ps(f16_to_f32(*reinterpret_cast<const uint16_t*>(p3)));
+        const float* xi = x + b * 32;
+        const __m512 vx0 = _mm512_loadu_ps(xi);       // elements 0-15
+        const __m512 vx1 = _mm512_loadu_ps(xi + 16);  // elements 16-31
+        a00 = _mm512_fmadd_ps(_mm512_mul_ps(_mm512_cvtepi32_ps(_mm512_cvtepi8_epi32(_mm_loadu_si128(reinterpret_cast<const __m128i*>(p0 +  2)))), vd0), vx0, a00);
+        a01 = _mm512_fmadd_ps(_mm512_mul_ps(_mm512_cvtepi32_ps(_mm512_cvtepi8_epi32(_mm_loadu_si128(reinterpret_cast<const __m128i*>(p0 + 18)))), vd0), vx1, a01);
+        a10 = _mm512_fmadd_ps(_mm512_mul_ps(_mm512_cvtepi32_ps(_mm512_cvtepi8_epi32(_mm_loadu_si128(reinterpret_cast<const __m128i*>(p1 +  2)))), vd1), vx0, a10);
+        a11 = _mm512_fmadd_ps(_mm512_mul_ps(_mm512_cvtepi32_ps(_mm512_cvtepi8_epi32(_mm_loadu_si128(reinterpret_cast<const __m128i*>(p1 + 18)))), vd1), vx1, a11);
+        a20 = _mm512_fmadd_ps(_mm512_mul_ps(_mm512_cvtepi32_ps(_mm512_cvtepi8_epi32(_mm_loadu_si128(reinterpret_cast<const __m128i*>(p2 +  2)))), vd2), vx0, a20);
+        a21 = _mm512_fmadd_ps(_mm512_mul_ps(_mm512_cvtepi32_ps(_mm512_cvtepi8_epi32(_mm_loadu_si128(reinterpret_cast<const __m128i*>(p2 + 18)))), vd2), vx1, a21);
+        a30 = _mm512_fmadd_ps(_mm512_mul_ps(_mm512_cvtepi32_ps(_mm512_cvtepi8_epi32(_mm_loadu_si128(reinterpret_cast<const __m128i*>(p3 +  2)))), vd3), vx0, a30);
+        a31 = _mm512_fmadd_ps(_mm512_mul_ps(_mm512_cvtepi32_ps(_mm512_cvtepi8_epi32(_mm_loadu_si128(reinterpret_cast<const __m128i*>(p3 + 18)))), vd3), vx1, a31);
+    }
+    y0 = HsumF32x16_TPS(_mm512_add_ps(a00, a01));
+    y1 = HsumF32x16_TPS(_mm512_add_ps(a10, a11));
+    y2 = HsumF32x16_TPS(_mm512_add_ps(a20, a21));
+    y3 = HsumF32x16_TPS(_mm512_add_ps(a30, a31));
+}
+
+// ---------------------------------------------------------------------------
+// Q4_0 AVX-512
+// ---------------------------------------------------------------------------
+/// Single-row fused Q4_0 GEMV (AVX-512): unpack 16 packed bytes → lo/hi nibbles
+/// each as 16 int8s, expand to int32, scale+dot in 2 full-width FMAs per block.
+static float FusedQ4_0RowDot512_TPS(const uint8_t* rowSrc, const float* x, size_t blocksPerRow)
+{
+    __m512 acc0 = _mm512_setzero_ps();
+    __m512 acc1 = _mm512_setzero_ps();
+    const __m128i nibMask = _mm_set1_epi8(0x0F);
+    const __m128i bias8   = _mm_set1_epi8(8);
+    for (size_t b = 0; b < blocksPerRow; ++b)
+    {
+        const uint8_t* bp = rowSrc + b * 18;
+        if (b + 2 < blocksPerRow)
+            _mm_prefetch(reinterpret_cast<const char*>(bp + 2 * 18), _MM_HINT_T0);
+        const __m512 vd  = _mm512_set1_ps(f16_to_f32(*reinterpret_cast<const uint16_t*>(bp)));
+        const __m128i pk = _mm_loadu_si128(reinterpret_cast<const __m128i*>(bp + 2));
+        const __m128i lo = _mm_sub_epi8(_mm_and_si128(pk, nibMask), bias8);                    // w[0..15]
+        const __m128i hi = _mm_sub_epi8(_mm_and_si128(_mm_srli_epi16(pk, 4), nibMask), bias8); // w[16..31]
+        const float* xi  = x + b * 32;
+        acc0 = _mm512_fmadd_ps(_mm512_mul_ps(_mm512_cvtepi32_ps(_mm512_cvtepi8_epi32(lo)), vd),
+                               _mm512_loadu_ps(xi), acc0);
+        acc1 = _mm512_fmadd_ps(_mm512_mul_ps(_mm512_cvtepi32_ps(_mm512_cvtepi8_epi32(hi)), vd),
+                               _mm512_loadu_ps(xi + 16), acc1);
+    }
+    return HsumF32x16_TPS(_mm512_add_ps(acc0, acc1));
+}
+
+/// 4-row fused Q4_0 GEMV (AVX-512): loads x[] once per block for 4 rows.
+static void FusedQ4_0GEMV4Rows512_TPS(const uint8_t* r0, const uint8_t* r1,
+                                        const uint8_t* r2, const uint8_t* r3,
+                                        const float* x, size_t blocksPerRow,
+                                        float& y0, float& y1, float& y2, float& y3)
+{
+    __m512 a00 = _mm512_setzero_ps(), a01 = _mm512_setzero_ps();
+    __m512 a10 = _mm512_setzero_ps(), a11 = _mm512_setzero_ps();
+    __m512 a20 = _mm512_setzero_ps(), a21 = _mm512_setzero_ps();
+    __m512 a30 = _mm512_setzero_ps(), a31 = _mm512_setzero_ps();
+    const __m128i nibMask = _mm_set1_epi8(0x0F);
+    const __m128i bias8   = _mm_set1_epi8(8);
+    for (size_t b = 0; b < blocksPerRow; ++b)
+    {
+        const uint8_t* p0 = r0 + b*18, *p1 = r1 + b*18,
+                      *p2 = r2 + b*18, *p3 = r3 + b*18;
+        if (b + 2 < blocksPerRow)
+        {
+            _mm_prefetch(reinterpret_cast<const char*>(p0 + 2*18), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(p1 + 2*18), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(p2 + 2*18), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(p3 + 2*18), _MM_HINT_T0);
+        }
+        const __m512 vd0 = _mm512_set1_ps(f16_to_f32(*reinterpret_cast<const uint16_t*>(p0)));
+        const __m512 vd1 = _mm512_set1_ps(f16_to_f32(*reinterpret_cast<const uint16_t*>(p1)));
+        const __m512 vd2 = _mm512_set1_ps(f16_to_f32(*reinterpret_cast<const uint16_t*>(p2)));
+        const __m512 vd3 = _mm512_set1_ps(f16_to_f32(*reinterpret_cast<const uint16_t*>(p3)));
+        __m128i pk0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(p0 + 2));
+        __m128i pk1 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(p1 + 2));
+        __m128i pk2 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(p2 + 2));
+        __m128i pk3 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(p3 + 2));
+        __m128i lo0 = _mm_sub_epi8(_mm_and_si128(pk0, nibMask), bias8);
+        __m128i hi0 = _mm_sub_epi8(_mm_and_si128(_mm_srli_epi16(pk0, 4), nibMask), bias8);
+        __m128i lo1 = _mm_sub_epi8(_mm_and_si128(pk1, nibMask), bias8);
+        __m128i hi1 = _mm_sub_epi8(_mm_and_si128(_mm_srli_epi16(pk1, 4), nibMask), bias8);
+        __m128i lo2 = _mm_sub_epi8(_mm_and_si128(pk2, nibMask), bias8);
+        __m128i hi2 = _mm_sub_epi8(_mm_and_si128(_mm_srli_epi16(pk2, 4), nibMask), bias8);
+        __m128i lo3 = _mm_sub_epi8(_mm_and_si128(pk3, nibMask), bias8);
+        __m128i hi3 = _mm_sub_epi8(_mm_and_si128(_mm_srli_epi16(pk3, 4), nibMask), bias8);
+        const float* xi  = x + b * 32;
+        const __m512 vx0 = _mm512_loadu_ps(xi);
+        const __m512 vx1 = _mm512_loadu_ps(xi + 16);
+        a00 = _mm512_fmadd_ps(_mm512_mul_ps(_mm512_cvtepi32_ps(_mm512_cvtepi8_epi32(lo0)), vd0), vx0, a00);
+        a01 = _mm512_fmadd_ps(_mm512_mul_ps(_mm512_cvtepi32_ps(_mm512_cvtepi8_epi32(hi0)), vd0), vx1, a01);
+        a10 = _mm512_fmadd_ps(_mm512_mul_ps(_mm512_cvtepi32_ps(_mm512_cvtepi8_epi32(lo1)), vd1), vx0, a10);
+        a11 = _mm512_fmadd_ps(_mm512_mul_ps(_mm512_cvtepi32_ps(_mm512_cvtepi8_epi32(hi1)), vd1), vx1, a11);
+        a20 = _mm512_fmadd_ps(_mm512_mul_ps(_mm512_cvtepi32_ps(_mm512_cvtepi8_epi32(lo2)), vd2), vx0, a20);
+        a21 = _mm512_fmadd_ps(_mm512_mul_ps(_mm512_cvtepi32_ps(_mm512_cvtepi8_epi32(hi2)), vd2), vx1, a21);
+        a30 = _mm512_fmadd_ps(_mm512_mul_ps(_mm512_cvtepi32_ps(_mm512_cvtepi8_epi32(lo3)), vd3), vx0, a30);
+        a31 = _mm512_fmadd_ps(_mm512_mul_ps(_mm512_cvtepi32_ps(_mm512_cvtepi8_epi32(hi3)), vd3), vx1, a31);
+    }
+    y0 = HsumF32x16_TPS(_mm512_add_ps(a00, a01));
+    y1 = HsumF32x16_TPS(_mm512_add_ps(a10, a11));
+    y2 = HsumF32x16_TPS(_mm512_add_ps(a20, a21));
+    y3 = HsumF32x16_TPS(_mm512_add_ps(a30, a31));
+}
+#endif  // __AVX512F__
+
 static inline float DotProductF32_TPS(const float* a, const float* b, size_t n)
 {
     if (!a || !b || n == 0)
@@ -4284,8 +4461,50 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
                     [&pin, &x, &y, &decodeRowToFloat, K, rowBytes, TILE_ROWS, wStart, wEnd, row,
                      decodeKind, blocksPerRow]() -> bool
                     {
+#if defined(__AVX512F__)
+                        // AVX-512 fused path: 16-wide, 2 chunks/block, FMA, software prefetch
+                        if ((decodeKind == StreamingRowDecodeKind::Q8_0 ||
+                             decodeKind == StreamingRowDecodeKind::Q4_0) && rawr_cpu_has_avx512())
+                        {
+                            size_t wLocalRow = wStart;
+                            while (wLocalRow + 3 < wEnd)
+                            {
+                                const uint8_t* rs0 = static_cast<const uint8_t*>(pin.GetPointer(
+                                    static_cast<uint64_t>(wLocalRow + 0) * static_cast<uint64_t>(rowBytes)));
+                                const uint8_t* rs1 = static_cast<const uint8_t*>(pin.GetPointer(
+                                    static_cast<uint64_t>(wLocalRow + 1) * static_cast<uint64_t>(rowBytes)));
+                                const uint8_t* rs2 = static_cast<const uint8_t*>(pin.GetPointer(
+                                    static_cast<uint64_t>(wLocalRow + 2) * static_cast<uint64_t>(rowBytes)));
+                                const uint8_t* rs3 = static_cast<const uint8_t*>(pin.GetPointer(
+                                    static_cast<uint64_t>(wLocalRow + 3) * static_cast<uint64_t>(rowBytes)));
+                                if (!rs0 || !rs1 || !rs2 || !rs3)
+                                    return false;
+                                if (decodeKind == StreamingRowDecodeKind::Q8_0)
+                                    FusedQ8GEMV4Rows512_TPS(rs0, rs1, rs2, rs3, x, blocksPerRow,
+                                        y[row + wLocalRow + 0], y[row + wLocalRow + 1],
+                                        y[row + wLocalRow + 2], y[row + wLocalRow + 3]);
+                                else
+                                    FusedQ4_0GEMV4Rows512_TPS(rs0, rs1, rs2, rs3, x, blocksPerRow,
+                                        y[row + wLocalRow + 0], y[row + wLocalRow + 1],
+                                        y[row + wLocalRow + 2], y[row + wLocalRow + 3]);
+                                wLocalRow += 4;
+                            }
+                            while (wLocalRow < wEnd)
+                            {
+                                const uint8_t* rs = static_cast<const uint8_t*>(pin.GetPointer(
+                                    static_cast<uint64_t>(wLocalRow) * static_cast<uint64_t>(rowBytes)));
+                                if (!rs)
+                                    return false;
+                                y[row + wLocalRow] = (decodeKind == StreamingRowDecodeKind::Q8_0)
+                                    ? FusedQ8RowDot512_TPS(rs, x, blocksPerRow)
+                                    : FusedQ4_0RowDot512_TPS(rs, x, blocksPerRow);
+                                ++wLocalRow;
+                            }
+                            return true;
+                        }
+#endif  // __AVX512F__
 #if defined(__AVX2__)
-                        // Fused Q8_0 path: no float32 tile allocation, ~2.5× bandwidth reduction
+                        // AVX2 fused Q8_0/Q4_0: no tile buf, ~2.5× bandwidth reduction
                         if (decodeKind == StreamingRowDecodeKind::Q8_0 ||
                             decodeKind == StreamingRowDecodeKind::Q4_0)
                         {
@@ -4410,8 +4629,58 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
         }
         else
         {
+#if defined(__AVX512F__)
+            // AVX-512 sequential fused path: 16-wide, FMA, software prefetch
+            if ((decodeKind == StreamingRowDecodeKind::Q8_0 ||
+                 decodeKind == StreamingRowDecodeKind::Q4_0) && rawr_cpu_has_avx512())
+            {
+                size_t localRow = 0;
+                while (localRow + 3 < shardRows)
+                {
+                    const uint8_t* rs0 = static_cast<const uint8_t*>(pin.GetPointer(
+                        static_cast<uint64_t>(localRow + 0) * static_cast<uint64_t>(rowBytes)));
+                    const uint8_t* rs1 = static_cast<const uint8_t*>(pin.GetPointer(
+                        static_cast<uint64_t>(localRow + 1) * static_cast<uint64_t>(rowBytes)));
+                    const uint8_t* rs2 = static_cast<const uint8_t*>(pin.GetPointer(
+                        static_cast<uint64_t>(localRow + 2) * static_cast<uint64_t>(rowBytes)));
+                    const uint8_t* rs3 = static_cast<const uint8_t*>(pin.GetPointer(
+                        static_cast<uint64_t>(localRow + 3) * static_cast<uint64_t>(rowBytes)));
+                    if (!rs0 || !rs1 || !rs2 || !rs3)
+                    {
+                        printf("[StreamingMatMul] Invalid pinned ptr (avx512 seq) for %s row=%zu\n",
+                               name.c_str(), row + localRow);
+                        return false;
+                    }
+                    if (decodeKind == StreamingRowDecodeKind::Q8_0)
+                        FusedQ8GEMV4Rows512_TPS(rs0, rs1, rs2, rs3, x, blocksPerRow,
+                            y[row + localRow + 0], y[row + localRow + 1],
+                            y[row + localRow + 2], y[row + localRow + 3]);
+                    else
+                        FusedQ4_0GEMV4Rows512_TPS(rs0, rs1, rs2, rs3, x, blocksPerRow,
+                            y[row + localRow + 0], y[row + localRow + 1],
+                            y[row + localRow + 2], y[row + localRow + 3]);
+                    localRow += 4;
+                }
+                while (localRow < shardRows)
+                {
+                    const uint8_t* rs = static_cast<const uint8_t*>(pin.GetPointer(
+                        static_cast<uint64_t>(localRow) * static_cast<uint64_t>(rowBytes)));
+                    if (!rs)
+                    {
+                        printf("[StreamingMatMul] Invalid pinned ptr (avx512 seq tail) for %s row=%zu\n",
+                               name.c_str(), row + localRow);
+                        return false;
+                    }
+                    y[row + localRow] = (decodeKind == StreamingRowDecodeKind::Q8_0)
+                        ? FusedQ8RowDot512_TPS(rs, x, blocksPerRow)
+                        : FusedQ4_0RowDot512_TPS(rs, x, blocksPerRow);
+                    ++localRow;
+                }
+            }
+            else
+#endif  // __AVX512F__
 #if defined(__AVX2__)
-            // Fused Q8_0/Q4_0 sequential path: no tile buffer, direct int8→float dot
+            // AVX2 fused Q8_0/Q4_0 sequential path: no tile buffer, direct int8→float dot
             if (decodeKind == StreamingRowDecodeKind::Q8_0 ||
                 decodeKind == StreamingRowDecodeKind::Q4_0)
             {
