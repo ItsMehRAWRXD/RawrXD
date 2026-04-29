@@ -1336,6 +1336,161 @@ static void FusedQ4_KGEMV4Rows512_TPS(const uint8_t* r0, const uint8_t* r1,
     y2 = HsumF32x16_TPS(a2);
     y3 = HsumF32x16_TPS(a3);
 }
+
+// ---------------------------------------------------------------------------
+// Q6_K AVX-512 fused GEMV
+//
+// Block: ql(128B) + qh(64B) + scales(16B) + d(f16,2B) = 210B / 256 elements
+// 16 sub-groups of 16 elements each (2 per 32-elem slice, 8 slices per half).
+// 6-bit values: low4 from two ql nibbles, top2 from packed qh byte fields.
+// weight[i] = d * sc[group(i)] * (val[i] - 32)  where sc is int8.
+//
+// Decode for l=0..31, half n ∈ {0,128}:
+//   q1[l] = (ql[l    ] & 0xF) | ((qh[l] >> 0 & 3) << 4) - 32  → element n+l
+//   q2[l] = (ql[l+32 ] & 0xF) | ((qh[l] >> 2 & 3) << 4) - 32  → element n+l+32
+//   q3[l] = (ql[l    ] >>  4) | ((qh[l] >> 4 & 3) << 4) - 32  → element n+l+64
+//   q4[l] = (ql[l+32 ] >>  4) | ((qh[l] >> 6      ) << 4) - 32 → element n+l+96
+// Scales per l: d*sc[l/16 + {0,2,4,6}] for q1/q2/q3/q4.
+// Two halves (ql+=64, qh+=32, sc+=8 per half advance).
+//
+// Prefetch: 3 blocks ahead (3×210=630B ≈ 9.8 cache lines).
+// ---------------------------------------------------------------------------
+
+/// Single-row fused Q6_K GEMV (AVX-512).
+static float FusedQ6_KRowDot512_TPS(const uint8_t* rowSrc, const float* x, size_t blocksPerRow)
+{
+    __m512 acc = _mm512_setzero_ps();
+    const __m512i mask4  = _mm512_set1_epi32(0x0F);
+    const __m512i mask2  = _mm512_set1_epi32(0x03);
+    const __m512i bias32 = _mm512_set1_epi32(32);
+    for (size_t b = 0; b < blocksPerRow; ++b)
+    {
+        const uint8_t* bp = rowSrc + b * 210;
+        if (b + 3 < blocksPerRow)
+            _mm_prefetch(reinterpret_cast<const char*>(bp + 3 * 210), _MM_HINT_T0);
+        const float        d  = f16_to_f32(*reinterpret_cast<const uint16_t*>(bp + 208));
+        const int8_t*      sc = reinterpret_cast<const int8_t*>(bp + 192);
+        const float*       xi = x + b * 256;
+        for (int half = 0; half < 2; ++half)
+        {
+            const uint8_t* ql = bp + half * 64;
+            const uint8_t* qh = bp + 128 + half * 32;
+            const int8_t*   s = sc + half * 8;
+            const float*   xh = xi + half * 128;
+            for (int sub = 0; sub < 2; ++sub)
+            {
+                const uint8_t* qa  = ql + sub * 16;
+                const uint8_t* qb  = ql + 32 + sub * 16;
+                const uint8_t* qhp = qh + sub * 16;
+                const float*   xs  = xh + sub * 16;
+                const float ds0 = d * (float)s[sub + 0];
+                const float ds1 = d * (float)s[sub + 2];
+                const float ds2 = d * (float)s[sub + 4];
+                const float ds3 = d * (float)s[sub + 6];
+                const __m512i qa32 = _mm512_cvtepu8_epi32(_mm_loadu_si128(reinterpret_cast<const __m128i*>(qa)));
+                const __m512i qb32 = _mm512_cvtepu8_epi32(_mm_loadu_si128(reinterpret_cast<const __m128i*>(qb)));
+                const __m512i qhv  = _mm512_cvtepu8_epi32(_mm_loadu_si128(reinterpret_cast<const __m128i*>(qhp)));
+                const __m512i v0 = _mm512_sub_epi32(_mm512_or_si512(
+                    _mm512_and_si512(qa32, mask4),
+                    _mm512_slli_epi32(_mm512_and_si512(qhv, mask2), 4)), bias32);
+                const __m512i v1 = _mm512_sub_epi32(_mm512_or_si512(
+                    _mm512_and_si512(qb32, mask4),
+                    _mm512_slli_epi32(_mm512_and_si512(_mm512_srli_epi32(qhv, 2), mask2), 4)), bias32);
+                const __m512i v2 = _mm512_sub_epi32(_mm512_or_si512(
+                    _mm512_srli_epi32(qa32, 4),
+                    _mm512_slli_epi32(_mm512_and_si512(_mm512_srli_epi32(qhv, 4), mask2), 4)), bias32);
+                const __m512i v3 = _mm512_sub_epi32(_mm512_or_si512(
+                    _mm512_srli_epi32(qb32, 4),
+                    _mm512_slli_epi32(_mm512_srli_epi32(qhv, 6), 4)), bias32);
+                acc = _mm512_fmadd_ps(_mm512_mul_ps(_mm512_cvtepi32_ps(v0), _mm512_set1_ps(ds0)), _mm512_loadu_ps(xs     ), acc);
+                acc = _mm512_fmadd_ps(_mm512_mul_ps(_mm512_cvtepi32_ps(v1), _mm512_set1_ps(ds1)), _mm512_loadu_ps(xs + 32), acc);
+                acc = _mm512_fmadd_ps(_mm512_mul_ps(_mm512_cvtepi32_ps(v2), _mm512_set1_ps(ds2)), _mm512_loadu_ps(xs + 64), acc);
+                acc = _mm512_fmadd_ps(_mm512_mul_ps(_mm512_cvtepi32_ps(v3), _mm512_set1_ps(ds3)), _mm512_loadu_ps(xs + 96), acc);
+            }
+        }
+    }
+    return HsumF32x16_TPS(acc);
+}
+
+/// 4-row fused Q6_K GEMV (AVX-512). x[] loaded once per sub-chunk for all 4 rows.
+static void FusedQ6_KGEMV4Rows512_TPS(const uint8_t* r0, const uint8_t* r1,
+                                       const uint8_t* r2, const uint8_t* r3,
+                                       const float* x, size_t blocksPerRow,
+                                       float& y0, float& y1, float& y2, float& y3)
+{
+    __m512 a0 = _mm512_setzero_ps(), a1 = _mm512_setzero_ps(),
+           a2 = _mm512_setzero_ps(), a3 = _mm512_setzero_ps();
+    const __m512i mask4  = _mm512_set1_epi32(0x0F);
+    const __m512i mask2  = _mm512_set1_epi32(0x03);
+    const __m512i bias32 = _mm512_set1_epi32(32);
+    for (size_t b = 0; b < blocksPerRow; ++b)
+    {
+        const uint8_t* p0 = r0 + b * 210, *p1 = r1 + b * 210,
+                      *p2 = r2 + b * 210, *p3 = r3 + b * 210;
+        if (b + 3 < blocksPerRow)
+        {
+            _mm_prefetch(reinterpret_cast<const char*>(p0 + 3 * 210), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(p1 + 3 * 210), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(p2 + 3 * 210), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(p3 + 3 * 210), _MM_HINT_T0);
+        }
+        const float d0 = f16_to_f32(*reinterpret_cast<const uint16_t*>(p0 + 208));
+        const float d1 = f16_to_f32(*reinterpret_cast<const uint16_t*>(p1 + 208));
+        const float d2 = f16_to_f32(*reinterpret_cast<const uint16_t*>(p2 + 208));
+        const float d3 = f16_to_f32(*reinterpret_cast<const uint16_t*>(p3 + 208));
+        const float* xi = x + b * 256;
+        for (int half = 0; half < 2; ++half)
+        {
+            for (int sub = 0; sub < 2; ++sub)
+            {
+                const float* xs = xi + half * 128 + sub * 16;
+                const __m512 vx0 = _mm512_loadu_ps(xs);
+                const __m512 vx1 = _mm512_loadu_ps(xs + 32);
+                const __m512 vx2 = _mm512_loadu_ps(xs + 64);
+                const __m512 vx3 = _mm512_loadu_ps(xs + 96);
+#define RAWRXD_Q6K_ROW512(acc_, bp_, d_)                                                                     \
+        {                                                                                                     \
+            const uint8_t* _qa  = (bp_) + half * 64 + sub * 16;                                             \
+            const uint8_t* _qb  = (bp_) + half * 64 + 32 + sub * 16;                                       \
+            const uint8_t* _qhp = (bp_) + 128 + half * 32 + sub * 16;                                      \
+            const int8_t*  _s   = reinterpret_cast<const int8_t*>((bp_) + 192) + half * 8;                  \
+            const float _ds0 = (d_) * (float)_s[sub + 0];                                                   \
+            const float _ds1 = (d_) * (float)_s[sub + 2];                                                   \
+            const float _ds2 = (d_) * (float)_s[sub + 4];                                                   \
+            const float _ds3 = (d_) * (float)_s[sub + 6];                                                   \
+            const __m512i _qa32 = _mm512_cvtepu8_epi32(_mm_loadu_si128(reinterpret_cast<const __m128i*>(_qa)));  \
+            const __m512i _qb32 = _mm512_cvtepu8_epi32(_mm_loadu_si128(reinterpret_cast<const __m128i*>(_qb)));  \
+            const __m512i _qhv  = _mm512_cvtepu8_epi32(_mm_loadu_si128(reinterpret_cast<const __m128i*>(_qhp))); \
+            const __m512i _v0 = _mm512_sub_epi32(_mm512_or_si512(                                           \
+                _mm512_and_si512(_qa32, mask4),                                                              \
+                _mm512_slli_epi32(_mm512_and_si512(_qhv, mask2), 4)), bias32);                               \
+            const __m512i _v1 = _mm512_sub_epi32(_mm512_or_si512(                                           \
+                _mm512_and_si512(_qb32, mask4),                                                              \
+                _mm512_slli_epi32(_mm512_and_si512(_mm512_srli_epi32(_qhv, 2), mask2), 4)), bias32);         \
+            const __m512i _v2 = _mm512_sub_epi32(_mm512_or_si512(                                           \
+                _mm512_srli_epi32(_qa32, 4),                                                                 \
+                _mm512_slli_epi32(_mm512_and_si512(_mm512_srli_epi32(_qhv, 4), mask2), 4)), bias32);         \
+            const __m512i _v3 = _mm512_sub_epi32(_mm512_or_si512(                                           \
+                _mm512_srli_epi32(_qb32, 4),                                                                 \
+                _mm512_slli_epi32(_mm512_srli_epi32(_qhv, 6), 4)), bias32);                                  \
+            (acc_) = _mm512_fmadd_ps(_mm512_mul_ps(_mm512_cvtepi32_ps(_v0), _mm512_set1_ps(_ds0)), vx0, (acc_)); \
+            (acc_) = _mm512_fmadd_ps(_mm512_mul_ps(_mm512_cvtepi32_ps(_v1), _mm512_set1_ps(_ds1)), vx1, (acc_)); \
+            (acc_) = _mm512_fmadd_ps(_mm512_mul_ps(_mm512_cvtepi32_ps(_v2), _mm512_set1_ps(_ds2)), vx2, (acc_)); \
+            (acc_) = _mm512_fmadd_ps(_mm512_mul_ps(_mm512_cvtepi32_ps(_v3), _mm512_set1_ps(_ds3)), vx3, (acc_)); \
+        }
+                RAWRXD_Q6K_ROW512(a0, p0, d0)
+                RAWRXD_Q6K_ROW512(a1, p1, d1)
+                RAWRXD_Q6K_ROW512(a2, p2, d2)
+                RAWRXD_Q6K_ROW512(a3, p3, d3)
+#undef RAWRXD_Q6K_ROW512
+            }
+        }
+    }
+    y0 = HsumF32x16_TPS(a0);
+    y1 = HsumF32x16_TPS(a1);
+    y2 = HsumF32x16_TPS(a2);
+    y3 = HsumF32x16_TPS(a3);
+}
 #endif  // __AVX512F__
 
 static inline float DotProductF32_TPS(const float* a, const float* b, size_t n)
@@ -4826,6 +4981,7 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
         Q8_0,
         Q2_K,  // fused 2-bit K-quant GEMV (84B/block, 256 elements)
         Q4_K,  // fused 4-bit K-quant GEMV (144B/block, 256 elements)
+        Q6_K,  // fused 6-bit K-quant GEMV (210B/block, 256 elements)
         KQuant,
     };
 
@@ -4883,6 +5039,16 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
             }
             decodeKind = StreamingRowDecodeKind::Q4_K;
             blockStride = 144;
+            blockElements = 256;
+            break;
+        case 14:  // Q6_K: ql(128B)+qh(64B)+scales(16B)+d(2B) = 210B / 256 elements
+            if ((K % 256) != 0)
+            {
+                printf("[StreamingMatMul] K=%zu not divisible by 256 for tensor %s\n", K, name.c_str());
+                return false;
+            }
+            decodeKind = StreamingRowDecodeKind::Q6_K;
+            blockStride = 210;
             blockElements = 256;
             break;
         default:
@@ -5052,6 +5218,17 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
                 }
                 return true;
             }
+            case StreamingRowDecodeKind::Q6_K:
+            {
+                const uint8_t* blockPtr = rowSrc;
+                for (size_t b = 0; b < blocksPerRow; ++b)
+                {
+                    RawrPrefetchRead(blockPtr + 210 * 2);
+                    DequantQ6K_Block(blockPtr, dstRow + b * 256);
+                    blockPtr += 210;
+                }
+                return true;
+            }
             case StreamingRowDecodeKind::KQuant:
             {
                 const uint8_t* blockPtr = rowSrc;
@@ -5165,7 +5342,8 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
                         if ((decodeKind == StreamingRowDecodeKind::Q8_0 ||
                              decodeKind == StreamingRowDecodeKind::Q4_0 ||
                              decodeKind == StreamingRowDecodeKind::Q2_K ||
-                             decodeKind == StreamingRowDecodeKind::Q4_K) && rawr_cpu_has_avx512())
+                             decodeKind == StreamingRowDecodeKind::Q4_K ||
+                             decodeKind == StreamingRowDecodeKind::Q6_K) && rawr_cpu_has_avx512())
                         {
                             size_t wLocalRow = wStart;
                             while (wLocalRow + 3 < wEnd)
@@ -5192,6 +5370,10 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
                                     FusedQ4_KGEMV4Rows512_TPS(rs0, rs1, rs2, rs3, x, blocksPerRow,
                                         y[row + wLocalRow + 0], y[row + wLocalRow + 1],
                                         y[row + wLocalRow + 2], y[row + wLocalRow + 3]);
+                                else if (decodeKind == StreamingRowDecodeKind::Q6_K)
+                                    FusedQ6_KGEMV4Rows512_TPS(rs0, rs1, rs2, rs3, x, blocksPerRow,
+                                        y[row + wLocalRow + 0], y[row + wLocalRow + 1],
+                                        y[row + wLocalRow + 2], y[row + wLocalRow + 3]);
                                 else
                                     FusedQ2KGEMV4Rows512_TPS(rs0, rs1, rs2, rs3, x, blocksPerRow,
                                         y[row + wLocalRow + 0], y[row + wLocalRow + 1],
@@ -5210,7 +5392,9 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
                                         ? FusedQ4_0RowDot512_TPS(rs, x, blocksPerRow)
                                         : (decodeKind == StreamingRowDecodeKind::Q4_K)
                                             ? FusedQ4_KRowDot512_TPS(rs, x, blocksPerRow)
-                                            : FusedQ2KRowDot512_TPS(rs, x, blocksPerRow);
+                                            : (decodeKind == StreamingRowDecodeKind::Q6_K)
+                                                ? FusedQ6_KRowDot512_TPS(rs, x, blocksPerRow)
+                                                : FusedQ2KRowDot512_TPS(rs, x, blocksPerRow);
                                 ++wLocalRow;
                             }
                             return true;
@@ -5350,7 +5534,8 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
             if ((decodeKind == StreamingRowDecodeKind::Q8_0 ||
                  decodeKind == StreamingRowDecodeKind::Q4_0 ||
                  decodeKind == StreamingRowDecodeKind::Q2_K ||
-                 decodeKind == StreamingRowDecodeKind::Q4_K) && rawr_cpu_has_avx512())
+                 decodeKind == StreamingRowDecodeKind::Q4_K ||
+                 decodeKind == StreamingRowDecodeKind::Q6_K) && rawr_cpu_has_avx512())
             {
                 size_t localRow = 0;
                 while (localRow + 3 < shardRows)
@@ -5381,6 +5566,10 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
                         FusedQ4_KGEMV4Rows512_TPS(rs0, rs1, rs2, rs3, x, blocksPerRow,
                             y[row + localRow + 0], y[row + localRow + 1],
                             y[row + localRow + 2], y[row + localRow + 3]);
+                    else if (decodeKind == StreamingRowDecodeKind::Q6_K)
+                        FusedQ6_KGEMV4Rows512_TPS(rs0, rs1, rs2, rs3, x, blocksPerRow,
+                            y[row + localRow + 0], y[row + localRow + 1],
+                            y[row + localRow + 2], y[row + localRow + 3]);
                     else
                         FusedQ2KGEMV4Rows512_TPS(rs0, rs1, rs2, rs3, x, blocksPerRow,
                             y[row + localRow + 0], y[row + localRow + 1],
@@ -5403,7 +5592,9 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
                             ? FusedQ4_0RowDot512_TPS(rs, x, blocksPerRow)
                             : (decodeKind == StreamingRowDecodeKind::Q4_K)
                                 ? FusedQ4_KRowDot512_TPS(rs, x, blocksPerRow)
-                                : FusedQ2KRowDot512_TPS(rs, x, blocksPerRow);
+                                : (decodeKind == StreamingRowDecodeKind::Q6_K)
+                                    ? FusedQ6_KRowDot512_TPS(rs, x, blocksPerRow)
+                                    : FusedQ2KRowDot512_TPS(rs, x, blocksPerRow);
                     ++localRow;
                 }
             }
