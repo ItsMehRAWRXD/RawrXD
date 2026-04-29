@@ -426,6 +426,8 @@ static float FusedQ8RowDot_TPS(const uint8_t* rowSrc, const float* x, size_t blo
     for (size_t b = 0; b < blocksPerRow; ++b)
     {
         const uint8_t* bp = rowSrc + b * 34;
+        if (b + 5 < blocksPerRow)
+            _mm_prefetch(reinterpret_cast<const char*>(bp + 5 * 34), _MM_HINT_T0);
         const __m256   vd = _mm256_set1_ps(f16_to_f32(*reinterpret_cast<const uint16_t*>(bp)));
         const int8_t*  qi = reinterpret_cast<const int8_t*>(bp + 2);
         const float*   xi = x + b * 32;
@@ -468,6 +470,13 @@ static void FusedQ8GEMV4Rows_TPS(const uint8_t* r0, const uint8_t* r1,
     {
         const uint8_t* p0 = r0 + b * 34, *p1 = r1 + b * 34,
                       *p2 = r2 + b * 34, *p3 = r3 + b * 34;
+        if (b + 5 < blocksPerRow)
+        {
+            _mm_prefetch(reinterpret_cast<const char*>(p0 + 5 * 34), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(p1 + 5 * 34), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(p2 + 5 * 34), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(p3 + 5 * 34), _MM_HINT_T0);
+        }
         const __m256 vd0 = _mm256_set1_ps(f16_to_f32(*reinterpret_cast<const uint16_t*>(p0)));
         const __m256 vd1 = _mm256_set1_ps(f16_to_f32(*reinterpret_cast<const uint16_t*>(p1)));
         const __m256 vd2 = _mm256_set1_ps(f16_to_f32(*reinterpret_cast<const uint16_t*>(p2)));
@@ -518,6 +527,8 @@ static float FusedQ4_0RowDot_TPS(const uint8_t* rowSrc, const float* x, size_t b
     for (size_t b = 0; b < blocksPerRow; ++b)
     {
         const uint8_t* bp = rowSrc + b * 18;
+        if (b + 8 < blocksPerRow)
+            _mm_prefetch(reinterpret_cast<const char*>(bp + 8 * 18), _MM_HINT_T0);
         const __m256   vd = _mm256_set1_ps(f16_to_f32(*reinterpret_cast<const uint16_t*>(bp)));
         const __m128i  pk = _mm_loadu_si128(reinterpret_cast<const __m128i*>(bp + 2));
         const float*   xi = x + b * 32;
@@ -553,6 +564,13 @@ static void FusedQ4_0GEMV4Rows_TPS(const uint8_t* r0, const uint8_t* r1,
     {
         const uint8_t* p0 = r0 + b*18, *p1 = r1 + b*18,
                       *p2 = r2 + b*18, *p3 = r3 + b*18;
+        if (b + 8 < blocksPerRow)
+        {
+            _mm_prefetch(reinterpret_cast<const char*>(p0 + 8 * 18), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(p1 + 8 * 18), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(p2 + 8 * 18), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(p3 + 8 * 18), _MM_HINT_T0);
+        }
         const __m256 vd0 = _mm256_set1_ps(f16_to_f32(*reinterpret_cast<const uint16_t*>(p0)));
         const __m256 vd1 = _mm256_set1_ps(f16_to_f32(*reinterpret_cast<const uint16_t*>(p1)));
         const __m256 vd2 = _mm256_set1_ps(f16_to_f32(*reinterpret_cast<const uint16_t*>(p2)));
@@ -619,8 +637,8 @@ static float FusedQ2KRowDot_TPS(const uint8_t* rowSrc, const float* x, size_t bl
         const uint8_t* sc   = bp + 4;
         const uint8_t* q    = bp + 20;
         const float*   xi   = x + b * 256;
-        if (b + 1 < blocksPerRow)
-            _mm_prefetch(reinterpret_cast<const char*>(rowSrc + (b + 1) * 84), _MM_HINT_T0);
+        if (b + 3 < blocksPerRow)
+            _mm_prefetch(reinterpret_cast<const char*>(rowSrc + (b + 3) * 84), _MM_HINT_T0);
         int is = 0;
         for (int half = 0; half < 2; ++half)
         {
@@ -677,12 +695,12 @@ static void FusedQ2KGEMV4Rows_TPS(const uint8_t* r0, const uint8_t* r1,
     {
         const uint8_t* p0 = r0 + b * 84, *p1 = r1 + b * 84,
                       *p2 = r2 + b * 84, *p3 = r3 + b * 84;
-        if (b + 1 < blocksPerRow)
+        if (b + 3 < blocksPerRow)
         {
-            _mm_prefetch(reinterpret_cast<const char*>(p0 + 84), _MM_HINT_T0);
-            _mm_prefetch(reinterpret_cast<const char*>(p1 + 84), _MM_HINT_T0);
-            _mm_prefetch(reinterpret_cast<const char*>(p2 + 84), _MM_HINT_T0);
-            _mm_prefetch(reinterpret_cast<const char*>(p3 + 84), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(p0 + 3 * 84), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(p1 + 3 * 84), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(p2 + 3 * 84), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(p3 + 3 * 84), _MM_HINT_T0);
         }
         const float d0 = f16_to_f32(*reinterpret_cast<const uint16_t*>(p0));
         const float m0 = f16_to_f32(*reinterpret_cast<const uint16_t*>(p0 + 2));
@@ -774,8 +792,8 @@ static float FusedQ8RowDot512_TPS(const uint8_t* rowSrc, const float* x, size_t 
     for (size_t b = 0; b < blocksPerRow; ++b)
     {
         const uint8_t* bp = rowSrc + b * 34;
-        if (b + 2 < blocksPerRow)
-            _mm_prefetch(reinterpret_cast<const char*>(bp + 2 * 34), _MM_HINT_T0);
+        if (b + 5 < blocksPerRow)
+            _mm_prefetch(reinterpret_cast<const char*>(bp + 5 * 34), _MM_HINT_T0);
         const __m512 vd = _mm512_set1_ps(f16_to_f32(*reinterpret_cast<const uint16_t*>(bp)));
         const float* xi = x + b * 32;
         acc0 = _mm512_fmadd_ps(
@@ -805,12 +823,12 @@ static void FusedQ8GEMV4Rows512_TPS(const uint8_t* r0, const uint8_t* r1,
     {
         const uint8_t* p0 = r0 + b*34, *p1 = r1 + b*34,
                       *p2 = r2 + b*34, *p3 = r3 + b*34;
-        if (b + 2 < blocksPerRow)
+        if (b + 5 < blocksPerRow)
         {
-            _mm_prefetch(reinterpret_cast<const char*>(p0 + 2*34), _MM_HINT_T0);
-            _mm_prefetch(reinterpret_cast<const char*>(p1 + 2*34), _MM_HINT_T0);
-            _mm_prefetch(reinterpret_cast<const char*>(p2 + 2*34), _MM_HINT_T0);
-            _mm_prefetch(reinterpret_cast<const char*>(p3 + 2*34), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(p0 + 5*34), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(p1 + 5*34), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(p2 + 5*34), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(p3 + 5*34), _MM_HINT_T0);
         }
         const __m512 vd0 = _mm512_set1_ps(f16_to_f32(*reinterpret_cast<const uint16_t*>(p0)));
         const __m512 vd1 = _mm512_set1_ps(f16_to_f32(*reinterpret_cast<const uint16_t*>(p1)));
@@ -848,8 +866,8 @@ static float FusedQ4_0RowDot512_TPS(const uint8_t* rowSrc, const float* x, size_
     for (size_t b = 0; b < blocksPerRow; ++b)
     {
         const uint8_t* bp = rowSrc + b * 18;
-        if (b + 2 < blocksPerRow)
-            _mm_prefetch(reinterpret_cast<const char*>(bp + 2 * 18), _MM_HINT_T0);
+        if (b + 8 < blocksPerRow)
+            _mm_prefetch(reinterpret_cast<const char*>(bp + 8 * 18), _MM_HINT_T0);
         const __m512 vd  = _mm512_set1_ps(f16_to_f32(*reinterpret_cast<const uint16_t*>(bp)));
         const __m128i pk = _mm_loadu_si128(reinterpret_cast<const __m128i*>(bp + 2));
         const __m128i lo = _mm_sub_epi8(_mm_and_si128(pk, nibMask), bias8);                    // w[0..15]
@@ -879,12 +897,12 @@ static void FusedQ4_0GEMV4Rows512_TPS(const uint8_t* r0, const uint8_t* r1,
     {
         const uint8_t* p0 = r0 + b*18, *p1 = r1 + b*18,
                       *p2 = r2 + b*18, *p3 = r3 + b*18;
-        if (b + 2 < blocksPerRow)
+        if (b + 8 < blocksPerRow)
         {
-            _mm_prefetch(reinterpret_cast<const char*>(p0 + 2*18), _MM_HINT_T0);
-            _mm_prefetch(reinterpret_cast<const char*>(p1 + 2*18), _MM_HINT_T0);
-            _mm_prefetch(reinterpret_cast<const char*>(p2 + 2*18), _MM_HINT_T0);
-            _mm_prefetch(reinterpret_cast<const char*>(p3 + 2*18), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(p0 + 8*18), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(p1 + 8*18), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(p2 + 8*18), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(p3 + 8*18), _MM_HINT_T0);
         }
         const __m512 vd0 = _mm512_set1_ps(f16_to_f32(*reinterpret_cast<const uint16_t*>(p0)));
         const __m512 vd1 = _mm512_set1_ps(f16_to_f32(*reinterpret_cast<const uint16_t*>(p1)));
@@ -956,16 +974,16 @@ static void FusedQ4_0GateUp4Rows512_TPS(
                       *pg2 = g2 + b * 18, *pg3 = g3 + b * 18;
         const uint8_t* pu0 = u0 + b * 18, *pu1 = u1 + b * 18,
                       *pu2 = u2 + b * 18, *pu3 = u3 + b * 18;
-        if (b + 2 < blocksPerRow)
+        if (b + 8 < blocksPerRow)
         {
-            _mm_prefetch(reinterpret_cast<const char*>(pg0 + 2 * 18), _MM_HINT_T0);
-            _mm_prefetch(reinterpret_cast<const char*>(pg1 + 2 * 18), _MM_HINT_T0);
-            _mm_prefetch(reinterpret_cast<const char*>(pg2 + 2 * 18), _MM_HINT_T0);
-            _mm_prefetch(reinterpret_cast<const char*>(pg3 + 2 * 18), _MM_HINT_T0);
-            _mm_prefetch(reinterpret_cast<const char*>(pu0 + 2 * 18), _MM_HINT_T0);
-            _mm_prefetch(reinterpret_cast<const char*>(pu1 + 2 * 18), _MM_HINT_T0);
-            _mm_prefetch(reinterpret_cast<const char*>(pu2 + 2 * 18), _MM_HINT_T0);
-            _mm_prefetch(reinterpret_cast<const char*>(pu3 + 2 * 18), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(pg0 + 8 * 18), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(pg1 + 8 * 18), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(pg2 + 8 * 18), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(pg3 + 8 * 18), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(pu0 + 8 * 18), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(pu1 + 8 * 18), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(pu2 + 8 * 18), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(pu3 + 8 * 18), _MM_HINT_T0);
         }
         // Load x block (shared for all 8 output rows)
         const float* xi = x + b * 32;
@@ -1054,8 +1072,8 @@ static float FusedQ2KRowDot512_TPS(const uint8_t* rowSrc, const float* x, size_t
         const uint8_t* sc   = bp + 4;
         const uint8_t* q    = bp + 20;
         const float*   xi   = x + b * 256;
-        if (b + 1 < blocksPerRow)
-            _mm_prefetch(reinterpret_cast<const char*>(rowSrc + (b + 1) * 84), _MM_HINT_T0);
+        if (b + 3 < blocksPerRow)
+            _mm_prefetch(reinterpret_cast<const char*>(rowSrc + (b + 3) * 84), _MM_HINT_T0);
         int is = 0;
         for (int half = 0; half < 2; ++half)
         {
@@ -1100,12 +1118,12 @@ static void FusedQ2KGEMV4Rows512_TPS(const uint8_t* r0, const uint8_t* r1,
     {
         const uint8_t* p0 = r0 + b * 84, *p1 = r1 + b * 84,
                       *p2 = r2 + b * 84, *p3 = r3 + b * 84;
-        if (b + 1 < blocksPerRow)
+        if (b + 3 < blocksPerRow)
         {
-            _mm_prefetch(reinterpret_cast<const char*>(p0 + 84), _MM_HINT_T0);
-            _mm_prefetch(reinterpret_cast<const char*>(p1 + 84), _MM_HINT_T0);
-            _mm_prefetch(reinterpret_cast<const char*>(p2 + 84), _MM_HINT_T0);
-            _mm_prefetch(reinterpret_cast<const char*>(p3 + 84), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(p0 + 3 * 84), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(p1 + 3 * 84), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(p2 + 3 * 84), _MM_HINT_T0);
+            _mm_prefetch(reinterpret_cast<const char*>(p3 + 3 * 84), _MM_HINT_T0);
         }
         const float d0 = f16_to_f32(*reinterpret_cast<const uint16_t*>(p0));
         const float m0 = f16_to_f32(*reinterpret_cast<const uint16_t*>(p0 + 2));
