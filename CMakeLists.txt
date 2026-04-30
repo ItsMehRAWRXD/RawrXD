@@ -2661,11 +2661,11 @@ if(Vulkan_FOUND)
     message(STATUS "[Vulkan] Found SDK: ${Vulkan_INCLUDE_DIRS}")
     target_include_directories(RawrEngine PRIVATE ${Vulkan_INCLUDE_DIRS})
     target_link_libraries(RawrEngine PRIVATE Vulkan::Vulkan)
-    target_compile_definitions(RawrEngine PRIVATE RAWR_HAS_VULKAN=1)
+    target_compile_definitions(RawrEngine PRIVATE RAWR_HAS_VULKAN=1 RAWR_ENABLE_VULKAN=1)
     # Gold target
     target_include_directories(RawrXD_Gold PRIVATE ${Vulkan_INCLUDE_DIRS})
     target_link_libraries(RawrXD_Gold PRIVATE Vulkan::Vulkan)
-    target_compile_definitions(RawrXD_Gold PRIVATE RAWR_HAS_VULKAN=1)
+    target_compile_definitions(RawrXD_Gold PRIVATE RAWR_HAS_VULKAN=1 RAWR_ENABLE_VULKAN=1)
 else()
     # Try manual path — D: first, then C:
     file(GLOB _VK_SDK_DIRS "D:/VulkanSDK/1.*")
@@ -2679,12 +2679,12 @@ else()
         target_include_directories(RawrEngine PRIVATE "${_VK_SDK_DIR}/Include")
         target_link_directories(RawrEngine PRIVATE "${_VK_SDK_DIR}/Lib")
         target_link_libraries(RawrEngine PRIVATE vulkan-1)
-        target_compile_definitions(RawrEngine PRIVATE RAWR_HAS_VULKAN=1)
+        target_compile_definitions(RawrEngine PRIVATE RAWR_HAS_VULKAN=1 RAWR_ENABLE_VULKAN=1)
         # Gold target
         target_include_directories(RawrXD_Gold PRIVATE "${_VK_SDK_DIR}/Include")
         target_link_directories(RawrXD_Gold PRIVATE "${_VK_SDK_DIR}/Lib")
         target_link_libraries(RawrXD_Gold PRIVATE vulkan-1)
-        target_compile_definitions(RawrXD_Gold PRIVATE RAWR_HAS_VULKAN=1)
+        target_compile_definitions(RawrXD_Gold PRIVATE RAWR_HAS_VULKAN=1 RAWR_ENABLE_VULKAN=1)
     else()
         message(STATUS "[Vulkan] SDK not found — GPU compute uses CPU fallback")
         target_compile_definitions(RawrEngine PRIVATE RAWR_HAS_VULKAN=0)
@@ -3446,6 +3446,12 @@ if(WIN32)
         src/win32app/Win32IDE_SettingsEvents.cpp
         src/win32app/Win32TerminalManager.cpp
         src/win32app/TransparentRenderer.cpp
+
+        # Context Fusion Layer — Phase 45: Unified semantic state machine
+        src/core/ContextFusionEngine.cpp
+        src/core/ContextFusionWiring.cpp
+        src/win32app/GhostTextContextSubscriber.cpp
+        src/win32app/ChatPanelModelCaller.cpp
 
         # Plugin System — Phase 43: Native Win32 DLL loading (C ABI)
         src/plugin_system/win32_plugin_loader.cpp
@@ -4909,8 +4915,16 @@ if(WIN32)
         src/ggml-quants.c
         src/ggml-cpu/ggml-cpu.c
         src/ggml-cpu/ggml-cpu.cpp
+        src/ggml-cpu/traits.cpp
+        src/ggml-cpu/hbm.cpp
+        src/ggml-cpu/vec.cpp
+        src/ggml-cpu/ops.cpp
+        src/ggml-cpu/unary-ops.cpp
+        src/ggml-cpu/binary-ops.cpp
         src/ggml-cpu/quants.c
         src/ggml-cpu/repack.cpp
+        src/ggml-cpu/arch/x86/quants.c
+        src/ggml-cpu/arch/x86/repack.cpp
     )
 
     target_include_directories(RawrXD-Win32IDE PRIVATE
@@ -5188,12 +5202,12 @@ if(WIN32)
     if(Vulkan_FOUND)
         target_include_directories(RawrXD-Win32IDE PRIVATE ${Vulkan_INCLUDE_DIRS})
         target_link_libraries(RawrXD-Win32IDE PRIVATE Vulkan::Vulkan)
-        target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWR_HAS_VULKAN=1)
+        target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWR_HAS_VULKAN=1 RAWR_ENABLE_VULKAN=1)
     elseif(_VK_SDK_DIRS)
         target_include_directories(RawrXD-Win32IDE PRIVATE "${_VK_SDK_DIR}/Include")
         target_link_directories(RawrXD-Win32IDE PRIVATE "${_VK_SDK_DIR}/Lib")
         target_link_libraries(RawrXD-Win32IDE PRIVATE vulkan-1)
-        target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWR_HAS_VULKAN=1)
+        target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWR_HAS_VULKAN=1 RAWR_ENABLE_VULKAN=1)
     else()
         target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWR_HAS_VULKAN=0)
     endif()
