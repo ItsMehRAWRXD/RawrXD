@@ -76,6 +76,14 @@ static bool EnvTruthy(const char* name) {
            std::strcmp(value, "on") == 0;
 }
 
+static bool IsQ4KQ81U32KernelPath(const std::string& path) {
+    std::string lower = path;
+    std::transform(lower.begin(), lower.end(), lower.begin(), [](unsigned char ch) {
+        return static_cast<char>(std::tolower(ch));
+    });
+    return lower.find("q4k_q8_1") != std::string::npos && lower.find("u32") != std::string::npos;
+}
+
 static std::string EnvString(const char* name) {
     char value[MAX_PATH] = {};
     DWORD len = GetEnvironmentVariableA(name, value, static_cast<DWORD>(sizeof(value)));
@@ -207,61 +215,66 @@ static bool RunVulkanTruthPreflight() {
                 goto done;
             }
 
-            constexpr uint32_t M = 8;
-            constexpr uint32_t K = 8;
-            constexpr uint32_t N = 8;
+            if (IsQ4KQ81U32KernelPath(spv_path)) {
+                LogInfo("[VulkanPreflight] Loaded q4k_q8_1_u32 kernel; skipping FP32 matmul validation because the shader expects packed Q4_K/Q8_1 buffers");
+            } else {
 
-            std::vector<float> a(static_cast<size_t>(M) * K);
-            std::vector<float> b(static_cast<size_t>(K) * N);
-            std::vector<float> gpu_out(static_cast<size_t>(M) * N, 0.0f);
-            std::vector<float> cpu_out(static_cast<size_t>(M) * N, 0.0f);
+                constexpr uint32_t M = 8;
+                constexpr uint32_t K = 8;
+                constexpr uint32_t N = 8;
 
-            for (size_t i = 0; i < a.size(); ++i) {
-                a[i] = static_cast<float>((static_cast<int>(i % 7) - 3) * 0.25f);
-            }
-            for (size_t i = 0; i < b.size(); ++i) {
-                b[i] = static_cast<float>((static_cast<int>(i % 5) - 2) * 0.5f);
-            }
+                std::vector<float> a(static_cast<size_t>(M) * K);
+                std::vector<float> b(static_cast<size_t>(K) * N);
+                std::vector<float> gpu_out(static_cast<size_t>(M) * N, 0.0f);
+                std::vector<float> cpu_out(static_cast<size_t>(M) * N, 0.0f);
 
-            for (uint32_t m = 0; m < M; ++m) {
-                for (uint32_t n = 0; n < N; ++n) {
-                    float acc = 0.0f;
-                    for (uint32_t k = 0; k < K; ++k) {
-                        acc += a[static_cast<size_t>(m) * K + k] * b[static_cast<size_t>(k) * N + n];
-                    }
-                    cpu_out[static_cast<size_t>(m) * N + n] = acc;
+                for (size_t i = 0; i < a.size(); ++i) {
+                    a[i] = static_cast<float>((static_cast<int>(i % 7) - 3) * 0.25f);
                 }
+                for (size_t i = 0; i < b.size(); ++i) {
+                    b[i] = static_cast<float>((static_cast<int>(i % 5) - 2) * 0.5f);
+                }
+
+                for (uint32_t m = 0; m < M; ++m) {
+                    for (uint32_t n = 0; n < N; ++n) {
+                        float acc = 0.0f;
+                        for (uint32_t k = 0; k < K; ++k) {
+                            acc += a[static_cast<size_t>(m) * K + k] * b[static_cast<size_t>(k) * N + n];
+                        }
+                        cpu_out[static_cast<size_t>(m) * N + n] = acc;
+                    }
+                }
+
+                uint32_t a_idx = 0, b_idx = 0, out_idx = 0;
+                if (!VulkanKernel_AllocBuffer(static_cast<uint64_t>(a.size() * sizeof(float)), &a_idx) ||
+                    !VulkanKernel_AllocBuffer(static_cast<uint64_t>(b.size() * sizeof(float)), &b_idx) ||
+                    !VulkanKernel_AllocBuffer(static_cast<uint64_t>(gpu_out.size() * sizeof(float)), &out_idx) ||
+                    !VulkanKernel_CopyToDevice(a_idx, a.data(), static_cast<uint64_t>(a.size() * sizeof(float))) ||
+                    !VulkanKernel_CopyToDevice(b_idx, b.data(), static_cast<uint64_t>(b.size() * sizeof(float))) ||
+                    !VulkanKernel_DispatchMatMul(a_idx, b_idx, out_idx, M, K, N) ||
+                    !VulkanKernel_CopyToHost(out_idx, gpu_out.data(), static_cast<uint64_t>(gpu_out.size() * sizeof(float)))) {
+                    LogError("[VulkanPreflight] MatMul dispatch preflight failed");
+                    ok = false;
+                    goto done;
+                }
+
+                float max_error = 0.0f;
+                for (size_t i = 0; i < gpu_out.size(); ++i) {
+                    max_error = std::max(max_error, std::fabs(gpu_out[i] - cpu_out[i]));
+                }
+
+                LogInfo("[VulkanPreflight] MatMul validation: M=%u K=%u N=%u max_error=%e",
+                        M, K, N, static_cast<double>(max_error));
+
+                if (max_error > 1e-2f) {
+                    LogError("[VulkanPreflight] MatMul validation failed: max_error=%e (threshold=%e)",
+                             static_cast<double>(max_error), 1e-2);
+                    ok = false;
+                    goto done;
+                }
+
+                LogInfo("[VulkanPreflight] MatMul pipeline dispatch validated");
             }
-
-            uint32_t a_idx = 0, b_idx = 0, out_idx = 0;
-            if (!VulkanKernel_AllocBuffer(static_cast<uint64_t>(a.size() * sizeof(float)), &a_idx) ||
-                !VulkanKernel_AllocBuffer(static_cast<uint64_t>(b.size() * sizeof(float)), &b_idx) ||
-                !VulkanKernel_AllocBuffer(static_cast<uint64_t>(gpu_out.size() * sizeof(float)), &out_idx) ||
-                !VulkanKernel_CopyToDevice(a_idx, a.data(), static_cast<uint64_t>(a.size() * sizeof(float))) ||
-                !VulkanKernel_CopyToDevice(b_idx, b.data(), static_cast<uint64_t>(b.size() * sizeof(float))) ||
-                !VulkanKernel_DispatchMatMul(a_idx, b_idx, out_idx, M, K, N) ||
-                !VulkanKernel_CopyToHost(out_idx, gpu_out.data(), static_cast<uint64_t>(gpu_out.size() * sizeof(float)))) {
-                LogError("[VulkanPreflight] MatMul dispatch preflight failed");
-                ok = false;
-                goto done;
-            }
-
-            float max_error = 0.0f;
-            for (size_t i = 0; i < gpu_out.size(); ++i) {
-                max_error = std::max(max_error, std::fabs(gpu_out[i] - cpu_out[i]));
-            }
-
-            LogInfo("[VulkanPreflight] MatMul validation: M=%u K=%u N=%u max_error=%e",
-                    M, K, N, static_cast<double>(max_error));
-
-            if (max_error > 1e-2f) {
-                LogError("[VulkanPreflight] MatMul validation failed: max_error=%e (threshold=%e)",
-                         static_cast<double>(max_error), 1e-2);
-                ok = false;
-                goto done;
-            }
-
-            LogInfo("[VulkanPreflight] MatMul pipeline dispatch validated");
         } else if (dispatch_required) {
             LogError("[VulkanPreflight] Dispatch required but RAWRXD_VULKAN_MATMUL_SPV is unset");
             ok = false;
