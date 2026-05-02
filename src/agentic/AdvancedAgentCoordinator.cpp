@@ -1,4 +1,5 @@
 #include "AdvancedAgentCoordinator.h"
+#include "LockFreeAgentCoordinator.h"
 #include <algorithm>
 #include <numeric>
 #include <random>
@@ -20,6 +21,12 @@ AdvancedAgentCoordinator& AdvancedAgentCoordinator::instance() {
 
 bool AdvancedAgentCoordinator::initialize(const ScalingPolicy& scaling,
                                         const RedundancyConfig& redundancy) {
+    // Initialize lock-free coordinator (NEW)
+    m_lockFreeCoord = &LockFreeAgentCoordinator::instance();
+    if (!m_lockFreeCoord->initialize()) {
+        return false;
+    }
+
     std::lock_guard<std::mutex> lock(m_mutex);
 
     m_scalingPolicy = scaling;
@@ -34,8 +41,17 @@ bool AdvancedAgentCoordinator::initialize(const ScalingPolicy& scaling,
     return true;
 }
 
+AdvancedAgentCoordinator::~AdvancedAgentCoordinator() {
+    shutdown();
+}
+
 void AdvancedAgentCoordinator::shutdown() {
     m_running = false;
+
+    // Shutdown lock-free coordinator (NEW)
+    if (m_lockFreeCoord) {
+        m_lockFreeCoord->shutdown();
+    }
 
     if (m_scalingThread.joinable()) m_scalingThread.join();
     if (m_healthMonitorThread.joinable()) m_healthMonitorThread.join();

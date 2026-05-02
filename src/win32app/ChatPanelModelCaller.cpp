@@ -1,25 +1,24 @@
 // ChatPanelModelCaller.cpp — Verified ModelCaller connection for Chat Panel
-// Fixes the partial Chat Panel by ensuring ModelCaller is properly wired.
+// Uses the real static ModelCaller API (ai_model_caller.h)
 
 #include "ChatPanelModelCaller.h"
+#include "ai_model_caller.h"
 #include <sstream>
 
 namespace RawrXD {
 
 ChatPanelModelCaller::ChatPanelModelCaller(IChatPanel* chatPanel)
-    : m_chatPanel(chatPanel), m_modelCaller(nullptr) {
+    : m_chatPanel(chatPanel), m_initialized(false) {
 }
 
 bool ChatPanelModelCaller::Initialize(const std::string& modelEndpoint) {
     if (m_initialized) return true;
     
     try {
-        // Create real ModelCaller (not stub)
-        m_modelCaller = std::make_unique<AIModelCaller>();
-        
-        // Configure endpoint
-        if (!modelEndpoint.empty()) {
-            m_modelCaller->SetEndpoint(modelEndpoint);
+        // Initialize the static ModelCaller
+        if (!ModelCaller::Initialize(modelEndpoint)) {
+            m_lastError = "ModelCaller::Initialize failed for endpoint: " + modelEndpoint;
+            return false;
         }
         
         // Set default system prompt if not already set
@@ -42,7 +41,7 @@ bool ChatPanelModelCaller::Initialize(const std::string& modelEndpoint) {
 }
 
 void ChatPanelModelCaller::Shutdown() {
-    m_modelCaller.reset();
+    ModelCaller::Shutdown();
     m_initialized = false;
 }
 
@@ -54,7 +53,6 @@ void ChatPanelModelCaller::OnContextUpdate(const ContextFrame& frame) {
     m_lastVersion = frame.version;
     
     // Update chat panel with current context
-    // This allows the chat panel to show relevant context
     m_chatPanel->SetContextFile(frame.filePath);
     m_chatPanel->SetContextLanguage(frame.languageId);
 }
@@ -82,13 +80,10 @@ void ChatPanelModelCaller::OnContextEvent(const ContextEvent& event) {
 
 void ChatPanelModelCaller::SetSystemPrompt(const std::string& prompt) {
     m_systemPrompt = prompt;
-    if (m_modelCaller) {
-        m_modelCaller->SetSystemPrompt(prompt);
-    }
 }
 
 void ChatPanelModelCaller::SendToModel(const ContextFrame& frame, const std::string& userMessage) {
-    if (!m_modelCaller) {
+    if (!ModelCaller::IsReady()) {
         HandleModelError("ModelCaller not initialized");
         return;
     }
@@ -99,16 +94,20 @@ void ChatPanelModelCaller::SendToModel(const ContextFrame& frame, const std::str
     // Show typing indicator
     m_chatPanel->ShowTypingIndicator(true);
     
-    // Send async request
-    m_modelCaller->RequestCompletion(prompt, [this](const std::string& response, bool success) {
-        m_chatPanel->ShowTypingIndicator(false);
+    // Use static ModelCaller::generateCode for chat responses
+    try {
+        std::string response = ModelCaller::generateCode(
+            prompt,           // instruction
+            frame.languageId, // fileType
+            ""                // context (already in prompt)
+        );
         
-        if (success) {
-            HandleModelResponse(response);
-        } else {
-            HandleModelError(response);
-        }
-    });
+        m_chatPanel->ShowTypingIndicator(false);
+        HandleModelResponse(response);
+    } catch (const std::exception& e) {
+        m_chatPanel->ShowTypingIndicator(false);
+        HandleModelError(std::string("Model error: ") + e.what());
+    }
 }
 
 std::string ChatPanelModelCaller::BuildPrompt(const ContextFrame& frame, const std::string& userMessage) {

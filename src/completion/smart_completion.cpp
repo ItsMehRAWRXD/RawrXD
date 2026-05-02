@@ -5,6 +5,7 @@
 // ============================================================================
 
 #include "completion/smart_completion.h"
+#include "ide/ast_completion_bridge.h"
 
 #include <algorithm>
 #include <sstream>
@@ -792,6 +793,9 @@ private:
     std::unordered_map<std::string, uint32_t> usageStats_;
     std::unordered_map<std::string, std::chrono::system_clock::time_point> lastUsed_;
     
+    // AST Context Bridge (NEW)
+    std::shared_ptr<IDE::ASTCompletionBridge> astBridge_;
+    
     ContextAnalysis analyzeContextInternal(const CompletionContext& context) const {
         ContextAnalysis analysis;
         
@@ -1027,6 +1031,18 @@ public:
         
         std::vector<CompletionItem> allItems;
         
+        // Capture AST context if bridge is available (NEW)
+        IDE::ASTContext astContext;
+        if (astBridge_) {
+            astContext = astBridge_->captureASTContext(
+                context.uri, context.language, 
+                context.position.line, context.position.column);
+            
+            // Enrich completion context with AST information
+            auto mutableContext = context; // Copy for modification
+            astBridge_->enrichCompletionContext(mutableContext, astContext);
+        }
+        
         // Get completions from different sources
         auto keywords = getKeywordCompletions(context);
         allItems.insert(allItems.end(), keywords.begin(), keywords.end());
@@ -1042,6 +1058,21 @@ public:
         
         auto symbols = getSymbolCompletions(context);
         allItems.insert(allItems.end(), symbols.begin(), symbols.end());
+        
+        // Get scope-aware completions from AST if available (NEW)
+        if (astBridge_ && astContext.isValid) {
+            // Extract prefix from context
+            std::string prefix;
+            size_t lastSpace = context.textBeforeCursor.rfind(' ');
+            if (lastSpace != std::string::npos) {
+                prefix = context.textBeforeCursor.substr(lastSpace + 1);
+            } else {
+                prefix = context.textBeforeCursor;
+            }
+            
+            auto scopeCompletions = astBridge_->getScopeCompletions(astContext, prefix);
+            allItems.insert(allItems.end(), scopeCompletions.begin(), scopeCompletions.end());
+        }
         
         // Get completions from providers
         for (const auto& provider : providers_) {

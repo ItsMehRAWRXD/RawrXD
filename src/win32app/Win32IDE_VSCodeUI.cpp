@@ -6,6 +6,7 @@
 #include "Win32IDE.h"
 #include <algorithm>
 #include <commctrl.h>
+#include <cmath>
 #include <cstdint>
 #include <cstring>
 #include <filesystem>
@@ -1419,6 +1420,37 @@ void Win32IDE::updateEnhancedStatusBar()
             backendText += " | ~";
             backendText += tpsOss.str();
             backendText += " t/s est";
+        }
+
+        const double alpha = METRICS.getGauge("spec.telemetry.acceptance_rate");
+        const double roi = METRICS.getGauge("spec.telemetry.roi");
+        const double totalMs = METRICS.getGauge("spec.telemetry.total_ms");
+        const double effectiveTps = METRICS.getGauge("spec.telemetry.effective_tps");
+        const int expertId = static_cast<int>(std::llround(METRICS.getGauge("spec.telemetry.expert_id")));
+        if (totalMs > 0.0)
+        {
+            std::ostringstream telem;
+            telem << std::fixed << std::setprecision(2);
+            telem << " | α=" << alpha;
+            telem << " ROI=" << roi;
+            if (effectiveTps > 0.1)
+            {
+                telem << " t/s=" << std::setprecision(1) << effectiveTps;
+                telem << std::setprecision(2);
+            }
+            if (expertId >= 0)
+            {
+                telem << " E=" << expertId;
+            }
+            if (roi < 1.0)
+            {
+                telem << " [TAX]";
+            }
+            else if (roi >= 1.5)
+            {
+                telem << " [DIV]";
+            }
+            backendText += telem.str();
         }
         SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 11, (LPARAM)backendText.c_str());
     }

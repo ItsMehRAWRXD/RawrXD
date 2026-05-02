@@ -1010,6 +1010,16 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                 onTitanPagingHeartbeatTimer();
                 return 0;
             }
+            if (wParam == 8890)
+            {  // PREFETCH_IDLE_TIMER_ID — trigger speculative prefetch after 150ms idle
+                onPrefetchIdleTimer();
+                return 0;
+            }
+            if (wParam == 8891)
+            {  // GHOST_TEXT_RENDER_TIMER_ID — coalesce streamed ghost tokens before repaint
+                onGhostTextRenderMessage();
+                return 0;
+            }
             if (wParam == MODEL_PROGRESS_TIMER_ID)
             {
                 // Poll model progress and update the progress bar UI
@@ -1415,6 +1425,26 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             onGhostTextTokenChunk(token, static_cast<uint64_t>(wParam));
             if (token)
                 free(const_cast<char*>(token));
+            return 0;
+        }
+
+        case WM_USER_GHOST_RENDER:
+            onGhostTextRenderMessage();
+            return 0;
+
+        case WM_USER_GHOST_COMPLETE:
+        {
+            const char* text = reinterpret_cast<const char*>(lParam);
+            onGhostTextComplete(static_cast<uint64_t>(wParam), text);
+            if (text)
+                free(const_cast<char*>(text));
+            return 0;
+        }
+
+        case RawrXD::Review::WM_USER_EDIT_REVIEW_REQUIRED:
+        {
+            auto* request = reinterpret_cast<RawrXD::Review::PendingEditRequest*>(lParam);
+            queueNavigatorPendingEdit(request);
             return 0;
         }
 
@@ -1868,6 +1898,25 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                 onGhostTextTokenChunk(token, static_cast<uint64_t>(wParam));
                 if (token)
                     free(const_cast<char*>(token));
+                return 0;
+            }
+            if (uMsg == WM_USER_GHOST_RENDER)
+            {
+                onGhostTextRenderMessage();
+                return 0;
+            }
+            if (uMsg == WM_USER_GHOST_COMPLETE)
+            {
+                const char* completionText = reinterpret_cast<const char*>(lParam);
+                onGhostTextComplete(static_cast<uint64_t>(wParam), completionText);
+                if (completionText)
+                    free(const_cast<char*>(completionText));
+                return 0;
+            }
+            if (uMsg == RawrXD::Review::WM_USER_EDIT_REVIEW_REQUIRED)
+            {
+                auto* request = reinterpret_cast<RawrXD::Review::PendingEditRequest*>(lParam);
+                queueNavigatorPendingEdit(request);
                 return 0;
             }
             if (uMsg == WM_TITAN_GHOST_STREAM)
@@ -3725,10 +3774,11 @@ void Win32IDE::deferredHeavyInitBody()
     try
     {
         initAgentPanel();
+        initEditReviewPanel();
     }
     catch (...)
     {
-        OutputDebugStringA("ERROR: initAgentPanel failed\n");
+        OutputDebugStringA("ERROR: initAgentPanel/initEditReviewPanel failed\n");
     }
     idePipelineMilestone("[IDE-Pipeline] Batch 5/8: Ghost text + failure detector + agent diff panel\n",
                          "[Init] Batch 5/8: Ghost text + failure detector + agent diff panel\n");
@@ -4648,6 +4698,51 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
     if (id == 14005)
     {
         onBoundedAgentLoop();
+        return;
+    }
+    if (id == 14021)
+    {
+        if (codeNotify == LBN_SELCHANGE)
+        {
+            onPendingEditSelectionChanged();
+        }
+        else if (codeNotify == LBN_DBLCLK)
+        {
+            LRESULT sel = SendMessageA(m_hwndEditReviewList, LB_GETCURSEL, 0, 0);
+            if (sel != LB_ERR)
+            {
+                const uint64_t editId =
+                    static_cast<uint64_t>(SendMessageA(m_hwndEditReviewList, LB_GETITEMDATA, sel, 0));
+                approvePendingEdit(editId);
+            }
+        }
+        return;
+    }
+    if (id == 14023 || id == 14024)
+    {
+        LRESULT sel = m_hwndEditReviewList ? SendMessageA(m_hwndEditReviewList, LB_GETCURSEL, 0, 0) : LB_ERR;
+        if (sel != LB_ERR)
+        {
+            const uint64_t editId = static_cast<uint64_t>(SendMessageA(m_hwndEditReviewList, LB_GETITEMDATA, sel, 0));
+            if (id == 14023)
+            {
+                approvePendingEdit(editId);
+            }
+            else
+            {
+                declinePendingEdit(editId);
+            }
+        }
+        return;
+    }
+    if (id == 14025)
+    {
+        approveAllPendingEdits();
+        return;
+    }
+    if (id == 14026)
+    {
+        declineAllPendingEdits();
         return;
     }
 

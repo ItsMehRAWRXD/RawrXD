@@ -6675,7 +6675,13 @@ static bool ggml_rxd_vk_should_use_mmvq(const vk_device& device, uint32_t m, uin
         switch (src0_type) {
         case GGML_RXD_TYPE_Q8_0:
             return device->architecture == vk_device_architecture::AMD_GCN;
+        // RDNA3 benefits from tiled GEMM even for N=1 (single token generation)
+        // MMVQ (GEMV) underutilizes wavefronts; tiled GEMM saturates GPU
         default:
+            // For RDNA3, prefer tiled GEMM (MMQ) over GEMV for better GPU utilization
+            if (device->architecture == vk_device_architecture::AMD_RDNA3) {
+                return false;  // Use MMQ (tiled GEMM) instead of MMVQ (GEMV)
+            }
             return true;
         }
     case VK_VENDOR_ID_INTEL:
@@ -7147,9 +7153,16 @@ static void ggml_rxd_vk_mul_mat(ggml_rxd_backend_vk_context * ctx, vk_context& s
         ggml_rxd_vk_mul_mat_vec_nc_f16_f32(ctx, subctx, cgraph, node_idx);
     // mul_mat_vec supports batching ne12*ne13 when ne11==1, or treating ne11 as the batch size (up to four)
     // when ne12 and ne13 are one.
+    // RDNA3: Prefer tiled GEMM (MMQ) over GEMV for better GPU utilization even for N=1
     } else if ((dst->ne[1] == 1 || (dst->ne[1] <= mul_mat_vec_max_cols && src1->ne[2] * src1->ne[3] == 1)) &&
-               (src0->type == GGML_RXD_TYPE_F32 || src0->type == GGML_RXD_TYPE_F16 || src0->type == GGML_RXD_TYPE_BF16 || ggml_rxd_is_quantized(src0->type))) {
+               (src0->type == GGML_RXD_TYPE_F32 || src0->type == GGML_RXD_TYPE_F16 || src0->type == GGML_RXD_TYPE_BF16 || ggml_rxd_is_quantized(src0->type)) &&
+               ctx->device->architecture != vk_device_architecture::AMD_RDNA3) {
         ggml_rxd_vk_mul_mat_vec_q_f16(ctx, subctx, cgraph, node_idx);
+    } else if (ctx->device->architecture == vk_device_architecture::AMD_RDNA3 &&
+               (dst->ne[1] == 1 || (dst->ne[1] <= mul_mat_vec_max_cols && src1->ne[2] * src1->ne[3] == 1)) &&
+               (src0->type == GGML_RXD_TYPE_F32 || src0->type == GGML_RXD_TYPE_F16 || src0->type == GGML_RXD_TYPE_BF16 || ggml_rxd_is_quantized(src0->type))) {
+        // RDNA3: Use tiled GEMM (MMQ) for N=1 to saturate wavefronts
+        ggml_rxd_vk_mul_mat_q_f16(ctx, subctx, src0, src1, dst, false);
     } else {
         ggml_rxd_vk_mul_mat_q_f16(ctx, subctx, src0, src1, dst, false);
     }

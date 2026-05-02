@@ -56,6 +56,11 @@ struct NativeInferenceConfig
     int num_ctx = RawrXD::ContextLimits::DEFAULT;  // Unified context window
     bool use_gpu = true;
     int num_gpu = 99;  // All layers on GPU
+    
+    // TPS-based warmup for large models (prompt processing to heat up GPU/KV cache)
+    double tps_warmup_threshold = 5.0;  // Below this tok/s, trigger warmup
+    int warmup_max_tokens = 64;           // Short batch completion to warm model
+    bool enable_auto_warmup = true;       // Auto-warmup on poor TPS detection
 };
 
 // ---------------------------------------------------------------------------
@@ -176,6 +181,21 @@ class NativeInferenceClient
     // -- Enhancement: Connection warmup + model health --
     bool WarmupConnection();
     bool CheckModelHealth(const std::string& modelName);
+    
+    // -- Enhancement: TPS-based model warmup for large models --
+    /// Performs a batch completion to warm up GPU/KV cache for better streaming TPS.
+    /// Call when TPS is detected as poor (below config.tps_warmup_threshold).
+    /// Returns true if warmup was performed, false if skipped (already warm or disabled).
+    bool WarmupModelForStreaming();
+    
+    /// Check if model needs warmup based on recent TPS metrics.
+    bool NeedsWarmup() const;
+    
+    /// Mark model as warmed (skip future warmups until cooldown).
+    void MarkWarmed();
+    
+    /// Get last measured TPS (for warmup decision).
+    double GetLastMeasuredTPS() const { return m_lastMeasuredTPS; }
 
     // -- Enhancement: ChatSync with automatic retry --
     InferenceResult ChatSyncWithRetry(const std::vector<ChatMessage>& messages, const json& tools = json::array(),
@@ -195,6 +215,10 @@ class NativeInferenceClient
         uint16_t port = 0;
         /// e.g. "orchestrator" | "direct" | "direct+fallback" (from RAWRXD_STREAM_* env at snapshot time).
         std::string streamRouting;
+        // TPS warmup state
+        double lastMeasuredTPS = 0.0;
+        bool modelWarmed = false;
+        double tpsWarmupThreshold = 0.0;
     };
     MetricsSnapshot GetMetricsSnapshot() const;
 
@@ -239,6 +263,14 @@ class NativeInferenceClient
 
     /// Active Ollama HTTP stream (for CancelStream → WinHTTP cancel bit).
     Prediction::NativeStreamProvider* m_activeStreamHttp{nullptr};
+    
+    // TPS-based warmup state
+    std::atomic<bool> m_modelWarmed{false};
+    std::atomic<double> m_lastMeasuredTPS{0.0};
+    std::chrono::steady_clock::time_point m_lastWarmupTime;
+    
+    /// Internal: perform the actual warmup batch completion.
+    bool performWarmupCompletion();
 };
 
 /// Same label as MetricsSnapshot::streamRouting (RAWRXD_STREAM_VIA_ORCHESTRATOR / RAWRXD_STREAM_FALLBACK_ORCHESTRATOR).
@@ -257,6 +289,12 @@ inline std::string GetNativeStreamRoutingEnvLabel()
     }
     return out;
 }
+
+/// TPS threshold for warmup trigger (configurable via NativeInferenceConfig::tps_warmup_threshold)
+constexpr double kDefaultTPSWarmupThreshold = 5.0;  // tok/s
+
+/// Cooldown period before re-warmup is allowed (seconds)
+constexpr int kWarmupCooldownSeconds = 300;
 
 }  // namespace Agent
 }  // namespace RawrXD

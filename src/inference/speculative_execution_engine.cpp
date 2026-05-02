@@ -254,7 +254,9 @@ void KVRollbackManager::AdvanceKVByTokens(void* kvCache, uint32_t acceptedTokenC
 
 SpeculativeExecutionEngine::SpeculativeExecutionEngine(const Config& cfg)
     : m_config(cfg), m_mainModel(nullptr), m_draftModel(nullptr), m_mainParams(0), m_draftParams(0),
-      m_totalSpeculated(0), m_totalAccepted(0), m_kvRollbacks(0)
+    m_totalSpeculated(0), m_totalAccepted(0), m_kvRollbacks(0), m_lastAcceptanceRate(0.0f),
+    m_lastTokensProduced(0), m_lastDraftLatencyMs(0.0), m_lastVerifyLatencyMs(0.0), m_lastTotalMs(0.0),
+    m_lastExpertId(-1)
 {
 
     m_draftSelector = std::make_unique<DraftModelSelector>();
@@ -347,6 +349,13 @@ SpeculativeExecutionEngine::ExecutionResult SpeculativeExecutionEngine::Generate
         result.totalAccepted = static_cast<uint32_t>(gen.stats.totalAccepted);
         result.acceptanceRate = gen.stats.totalDrafted > 0 ? gen.stats.acceptanceRate : 0.0f;
         result.speedupFactor = gen.stats.speedupRatio > 0.0f ? gen.stats.speedupRatio : 1.0f;
+
+        m_lastAcceptanceRate.store(result.acceptanceRate, std::memory_order_release);
+        m_lastTokensProduced.store(static_cast<int>(result.tokens.size()), std::memory_order_release);
+        m_lastDraftLatencyMs.store(static_cast<double>(gen.stats.avgDraftLatencyMs), std::memory_order_release);
+        m_lastVerifyLatencyMs.store(static_cast<double>(gen.stats.avgVerifyLatencyMs), std::memory_order_release);
+        m_lastTotalMs.store(static_cast<double>(result.timeMs), std::memory_order_release);
+        m_lastExpertId.store(-1, std::memory_order_release);
         return result;
     }
 
@@ -365,21 +374,33 @@ SpeculativeExecutionEngine::ExecutionResult SpeculativeExecutionEngine::Generate
 
     uint32_t remainingTokens = countToGenerate;
     std::vector<uint32_t> contextCopy = context;
+    double totalDraftLatencyMs = 0.0;
+    double totalVerifyLatencyMs = 0.0;
 
     while (remainingTokens > 0)
     {
         // Phase 1: Generate K speculative tokens from draft
         uint32_t speculateCount = std::min(m_config.maxSpeculativeTokens, remainingTokens);
 
+        auto draftStart = std::chrono::high_resolution_clock::now();
+
         auto specTokens =
             m_generator->GenerateSpeculativeTokens(m_draftModel, contextCopy, speculateCount, temperature);
+
+        auto draftEnd = std::chrono::high_resolution_clock::now();
+        totalDraftLatencyMs +=
+            std::chrono::duration<double, std::milli>(draftEnd - draftStart).count();
 
         result.totalSpeculated += speculateCount;
         m_totalSpeculated.fetch_add(speculateCount, std::memory_order_relaxed);
 
         // Phase 2: Verify with main model
         std::vector<uint32_t> acceptedTokens;
+        auto verifyStart = std::chrono::high_resolution_clock::now();
         uint32_t acceptedCount = m_verifier->VerifyAndAccept(m_mainModel, specTokens, contextCopy, acceptedTokens);
+        auto verifyEnd = std::chrono::high_resolution_clock::now();
+        totalVerifyLatencyMs +=
+            std::chrono::duration<double, std::milli>(verifyEnd - verifyStart).count();
 
         result.totalAccepted += acceptedCount;
         m_totalAccepted.fetch_add(acceptedCount, std::memory_order_relaxed);
@@ -417,6 +438,13 @@ SpeculativeExecutionEngine::ExecutionResult SpeculativeExecutionEngine::Generate
         result.speedupFactor = 1.0f + (result.acceptanceRate * 2.5f);  // Empirical
     }
 
+    m_lastAcceptanceRate.store(result.acceptanceRate, std::memory_order_release);
+    m_lastTokensProduced.store(static_cast<int>(result.tokens.size()), std::memory_order_release);
+    m_lastDraftLatencyMs.store(totalDraftLatencyMs, std::memory_order_release);
+    m_lastVerifyLatencyMs.store(totalVerifyLatencyMs, std::memory_order_release);
+    m_lastTotalMs.store(static_cast<double>(result.timeMs), std::memory_order_release);
+    m_lastExpertId.store(-1, std::memory_order_release);
+
     return result;
 }
 
@@ -445,6 +473,18 @@ SpeculativeExecutionEngine::Stats SpeculativeExecutionEngine::GetStats() const
                  .kvRollbackCount = m_kvRollbacks.load(std::memory_order_acquire)};
 }
 
+SpeculativeExecutionEngine::DiagnosticFrame SpeculativeExecutionEngine::GetLastDiagnosticFrame() const
+{
+    DiagnosticFrame frame{};
+    frame.acceptance_rate = m_lastAcceptanceRate.load(std::memory_order_acquire);
+    frame.tokens_produced = m_lastTokensProduced.load(std::memory_order_acquire);
+    frame.draft_latency_ms = m_lastDraftLatencyMs.load(std::memory_order_acquire);
+    frame.verify_latency_ms = m_lastVerifyLatencyMs.load(std::memory_order_acquire);
+    frame.total_ms = m_lastTotalMs.load(std::memory_order_acquire);
+    frame.expert_id = m_lastExpertId.load(std::memory_order_acquire);
+    return frame;
+}
+
 void SpeculativeExecutionEngine::ResetStats()
 {
     if (m_inferenceBridge)
@@ -454,6 +494,12 @@ void SpeculativeExecutionEngine::ResetStats()
     m_totalSpeculated.store(0, std::memory_order_release);
     m_totalAccepted.store(0, std::memory_order_release);
     m_kvRollbacks.store(0, std::memory_order_release);
+    m_lastAcceptanceRate.store(0.0f, std::memory_order_release);
+    m_lastTokensProduced.store(0, std::memory_order_release);
+    m_lastDraftLatencyMs.store(0.0, std::memory_order_release);
+    m_lastVerifyLatencyMs.store(0.0, std::memory_order_release);
+    m_lastTotalMs.store(0.0, std::memory_order_release);
+    m_lastExpertId.store(-1, std::memory_order_release);
 }
 
 }  // namespace rawrxd

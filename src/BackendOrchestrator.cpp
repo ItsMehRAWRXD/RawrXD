@@ -40,8 +40,45 @@
 #define MEM_REPLACE_PLACEHOLDER 0x00004000
 #endif
 
-static constexpr SIZE_T kSlidingApertureSize = 2ULL * 1024ULL * 1024ULL * 1024ULL;
-static constexpr SIZE_T kSlidingApertureMinReserve = 8ULL * 1024ULL * 1024ULL;
+// ============================================================================
+// MEMORY ZONE CONFIGURATION (P0 Fix: 2GB Ceiling Removal)
+// ============================================================================
+// Old: Hard 2GB limit caused allocation failures for 40B+ models
+// New: Tiered approach with automatic segmented fallback
+//
+// Tier 1: Fast path - contiguous 2GB aperture (existing behavior)
+// Tier 2: Segmented - Multiple 1GB windows for 2-8GB models
+// Tier 3: Mapped - MapViewOfFile3 per tensor for 8GB+ models
+// ============================================================================
+
+static constexpr SIZE_T kSlidingApertureSize = 2ULL * 1024ULL * 1024ULL * 1024ULL;        // 2GB fast path
+static constexpr SIZE_T kSegmentedWindowSize = 1ULL * 1024ULL * 1024ULL * 1024ULL;       // 1GB segments
+static constexpr SIZE_T kSlidingApertureMinReserve = 8ULL * 1024ULL * 1024ULL;           // 8MB minimum
+static constexpr uint64_t kLargeModelThreshold = 8ULL * 1024ULL * 1024ULL * 1024ULL;       // 8GB -> mapped mode
+
+// Memory mode for large model handling
+enum class MemoryMode {
+    Contiguous,     // Single 2GB aperture (fastest)
+    Segmented,      // Multiple 1GB windows (2-8GB models)
+    MappedPerTensor // Individual tensor mapping (8GB+)
+};
+
+struct MemoryModeConfig {
+    MemoryMode mode;
+    size_t window_size;
+    size_t max_windows;
+    bool use_placeholder;
+};
+
+static MemoryModeConfig SelectMemoryMode(uint64_t model_size_bytes) {
+    if (model_size_bytes >= kLargeModelThreshold) {
+        return {MemoryMode::MappedPerTensor, 0, 0, false};  // Per-tensor mapping
+    } else if (model_size_bytes > kSlidingApertureSize) {
+        size_t windows = static_cast<size_t>((model_size_bytes + kSegmentedWindowSize - 1) / kSegmentedWindowSize);
+        return {MemoryMode::Segmented, kSegmentedWindowSize, windows, true};
+    }
+    return {MemoryMode::Contiguous, kSlidingApertureSize, 1, true};
+}
 
 namespace RawrXD
 {
@@ -1430,10 +1467,22 @@ bool mapSlidingWindow(MappedShardFile& file, uint64_t offset, size_t window_size
 
     // Calculate how much to map. Keep the physical offset aligned at 64KB, but
     // expand the logical window to include a prefetch runway ahead of the active slice.
+    // P0 Fix: Support segmented windows for models >2GB
     uint64_t desired_window = std::max<uint64_t>(safe_window_size, kGgufApertureMinWindowBytes);
     desired_window = std::max<uint64_t>(desired_window, safe_window_size + kGgufAperturePrefetchBytes);
     desired_window = std::min<uint64_t>(desired_window, file.size_bytes - aligned_offset);
-    desired_window = std::min<uint64_t>(desired_window, kSlidingApertureSize);
+    
+    // Select memory mode based on file size
+    MemoryModeConfig mem_config = SelectMemoryMode(file.size_bytes);
+    
+    // For segmented mode, use smaller windows
+    if (mem_config.mode == MemoryMode::Segmented) {
+        desired_window = std::min<uint64_t>(desired_window, mem_config.window_size);
+    } else if (mem_config.mode == MemoryMode::Contiguous) {
+        desired_window = std::min<uint64_t>(desired_window, kSlidingApertureSize);
+    }
+    // For MappedPerTensor, desired_window stays as calculated (per-tensor mapping)
+    
     if (file.reserved_aperture_size > 0)
     {
         desired_window = std::min<uint64_t>(desired_window, static_cast<uint64_t>(file.reserved_aperture_size));

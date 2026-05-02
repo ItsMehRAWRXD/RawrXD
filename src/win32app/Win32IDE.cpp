@@ -13,6 +13,7 @@
 #include "../core/command_registry.hpp"
 #include "../core/gpu_backend_bridge.h"
 #include "../core/layer_offload_manager.hpp"
+#include "../core/PendingEditReviewGate.hpp"
 #include "../cpu_inference_engine.h"
 #include "../inference/speculative_execution_engine.h"  // Full type for unique_ptr<SpeculativeExecutionEngine> dtor
 #include "../model_source_resolver.h"
@@ -9663,6 +9664,14 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
 void Win32IDE::stopInference()
 {
     m_inferenceStopRequested.store(true);
+    if (m_nativePipeline)
+    {
+        const uint64_t requestId = m_nativePipeline->ActiveRequestId();
+        if (requestId != 0)
+        {
+            m_nativePipeline->CancelInference(requestId);
+        }
+    }
     ClearPendingInference(this);
 }
 
@@ -9890,6 +9899,29 @@ void Win32IDE::editPaste()
     {
         SendMessage(m_hwndEditor, WM_PASTE, 0, 0);
     }
+}
+
+bool Win32IDE::ApplyPendingEdit(const PendingEditEntry& edit)
+{
+    if (!m_hwndEditor || !IsWindow(m_hwndEditor))
+        return false;
+
+    LONG startPos = edit.oldRange.cpMin;
+    LONG endPos = edit.oldRange.cpMax;
+    if (startPos < 0 || endPos < startPos)
+        return false;
+
+    // Set selection to the target range
+    CHARRANGE sel;
+    sel.cpMin = startPos;
+    sel.cpMax = endPos;
+    SendMessageA(m_hwndEditor, EM_EXSETSEL, 0, (LPARAM)&sel);
+
+    // Replace the selected text with the new text
+    std::wstring wNewText = utf8ToWide(edit.newText);
+    SendMessageW(m_hwndEditor, EM_REPLACESEL, TRUE, (LPARAM)wNewText.c_str());
+
+    return true;
 }
 
 // ============================================================================

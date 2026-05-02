@@ -362,6 +362,7 @@ public:
     std::string m_colorScheme = "default";
     std::string m_problemsFilter = "all";
     std::string m_currentModelPath;
+    std::string m_lastModelPath;  // Phase 1: model persistence across sessions
     
     size_t m_currentTheme = 0;
     size_t m_currentTab = 0;

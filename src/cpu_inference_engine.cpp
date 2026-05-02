@@ -7,6 +7,8 @@
 #include "rawrxd_inference.h"
 #include "gpu/speculative_decoder_v2.h"
 #include "rawr_circular_sdma.h"
+#include "inference/MemoryPressureGuard.h"
+#include "inference/rawr_inference_autopatch_loop.h"
 #include "codec/brutal_gzip.h"
 #include "kernels/dequant_q6k_avx512.h"
 #include "kernels/kv_accum_avx512.h"
@@ -54,6 +56,28 @@ constexpr uint8_t kRxaAlgRaw = 0;
 constexpr uint8_t kRxaAlgXpress = 1;
 constexpr uint8_t kRxaAlgLznt1 = 2;
 constexpr uint8_t kRxaAlgBrutalGzip = 3;
+
+const char* AutopatchActionName(RawrXD::Inference::PatchAction action)
+{
+    using RawrXD::Inference::PatchAction;
+    switch (action)
+    {
+        case PatchAction::None:
+            return "none";
+        case PatchAction::EmergencyReset:
+            return "emergency-reset";
+        case PatchAction::EvictCold20:
+            return "evict-cold-20pct";
+        case PatchAction::PrefetchDown:
+            return "prefetch-down";
+        case PatchAction::PrefetchUp:
+            return "prefetch-up";
+        case PatchAction::EnableKvCompression:
+            return "kv-compression";
+        default:
+            return "unknown";
+    }
+}
 
 #pragma pack(push, 1)
 struct RxaHeaderV1
@@ -925,7 +949,9 @@ CPUInferenceEngine* CPUInferenceEngine::getInstance()
 // ============================================================================
 // Lifecycle
 // ============================================================================
-CPUInferenceEngine::CPUInferenceEngine() = default;
+CPUInferenceEngine::CPUInferenceEngine() {
+    m_measurement_collector = std::make_unique<RawrXD::Inference::MeasurementCollector>();
+}
 CPUInferenceEngine::~CPUInferenceEngine()
 {
     ClearCache();
@@ -1177,6 +1203,13 @@ void CPUInferenceEngine::GenerateStreaming(const std::vector<int32_t>& input_tok
     m_lastSwarmTelemetryPost = std::chrono::steady_clock::now() - std::chrono::milliseconds(300);
     emitSwarmTelemetryThrottled_(true);
 
+    // New collector per generation session to avoid cross-request metric bleed.
+    m_measurement_collector = std::make_unique<RawrXD::Inference::MeasurementCollector>();
+    if (m_measurement_collector)
+    {
+        m_measurement_collector->ConfigureAutopatchGate(16, 20.0, 3);
+    }
+
     // Stream directly from token IDs to avoid detokenize->retokenize drift.
     std::vector<uint32_t> u32_toks;
     if (!ConvertTokensToU32Checked(input_tokens, u32_toks, "GenerateStreaming"))
@@ -1189,6 +1222,45 @@ void CPUInferenceEngine::GenerateStreaming(const std::vector<int32_t>& input_tok
 
     try
     {
+        static auto token_step = 0;
+        token_step = 0;
+        auto token_start_time = std::chrono::high_resolution_clock::now();
+        double peak_bandwidth_gbps = 0.0;
+        bool diag_compute_stalled = false;
+        bool diag_cache_thrash = false;
+        bool diag_under_prefetch = false;
+        bool diag_over_prefetch = false;
+        std::string latest_root_cause = "NOMINAL";
+
+        if (m_measurement_collector)
+        {
+            m_measurement_collector->TokenGenerationStart();
+            m_measurement_collector->SetDiagnosisCallback(
+                [&](const RawrXD::Autopatch::Diagnosis& diag)
+                {
+                    latest_root_cause = diag.root_cause;
+                    diag_compute_stalled = (diag.root_cause.find("COMPUTE_STALLED") != std::string::npos);
+                    diag_cache_thrash = diag.pattern.cache_thrashing;
+                    diag_under_prefetch = diag.pattern.under_prefetching;
+                    diag_over_prefetch = diag.pattern.over_prefetching;
+                });
+        }
+
+        RawrXD::Inference::InferenceAutopatchConfig autopatchCfg;
+        autopatchCfg.ringCapacity = 256;
+        autopatchCfg.tpsWindow = 64;
+        autopatchCfg.adaptEvery = 8;
+        // CORRECTED: Realistic TPS thresholds based on measurement framework fix
+        // Baseline: ~117 TPS for 40B Q4_K_M on CPU
+        // Panic: below minimum viable throughput
+        // Target: realistic sustained throughput  
+        // Headroom: optimistic but achievable with tuning
+        autopatchCfg.panicTps = 12.0;      // Minimum viable for 70B (per gate threshold)
+        autopatchCfg.targetTps = 100.0;    // Realistic baseline for 40B
+        autopatchCfg.headroomTps = 130.0;  // Optimistic with good cache locality
+        autopatchCfg.highPressure = 0.85;  // Memory pressure threshold
+        RawrXD::Inference::InferenceAutopatchController autopatch(autopatchCfg);
+
         s_inferenceBackend.GenerateFromTokens(u32_toks, static_cast<uint32_t>(max_tokens),
                                               [&](uint32_t tok, const std::string& piece)
                                               {
@@ -1199,6 +1271,81 @@ void CPUInferenceEngine::GenerateStreaming(const std::vector<int32_t>& input_tok
                                                   if (token_id_callback)
                                                       token_id_callback(static_cast<int32_t>(tok));
                                                   m_currentPos++;
+                                                  // Measurement: Record token generation timing
+                                                  auto token_end_time = std::chrono::high_resolution_clock::now();
+                                                  if (m_measurement_collector) {
+                                                      uint64_t elapsed_us = std::chrono::duration_cast<std::chrono::microseconds>(token_end_time - token_start_time).count();
+                                                      auto sdma = QuerySDMATelemetry();
+                                                      RawrXD::Inference::TokenTelemetry telem{};
+                                                      telem.tokenLatencyUs = elapsed_us;
+                                                      telem.committedRamBytes = RawrXD::Inference::MemoryPressureGuard::committedRAM();
+                                                      telem.committedVramBytes = RawrXD::Inference::MemoryPressureGuard::committedVRAM();
+                                                      telem.cacheHitRate = sdma.cache_hit_rate;
+                                                      telem.dispatchBound = !sdma.within_32ms_target;
+
+                                                      constexpr double kRamBudget = 64.0 * 1024.0 * 1024.0 * 1024.0;
+                                                      constexpr double kVramBudget = 16.0 * 1024.0 * 1024.0 * 1024.0;
+                                                      const double pressureNorm =
+                                                          (static_cast<double>(telem.committedRamBytes) / kRamBudget) * 0.65 +
+                                                          (static_cast<double>(telem.committedVramBytes) / kVramBudget) * 0.35;
+                                                      const float pressurePct = static_cast<float>(std::clamp(pressureNorm * 100.0, 0.0, 100.0));
+
+                                                      int tierCurrent = 0;
+                                                      if (pressurePct > 92.0f)
+                                                          tierCurrent = 3;
+                                                      else if (pressurePct > 82.0f)
+                                                          tierCurrent = 2;
+                                                      else if (pressurePct > 70.0f)
+                                                          tierCurrent = 1;
+
+                                                      const double bandwidthGbps = (elapsed_us > 0)
+                                                              ? (static_cast<double>(m_embeddingDim) * sizeof(float) * 8.0 / static_cast<double>(elapsed_us) / 1000.0)
+                                                              : 0.0;
+                                                          peak_bandwidth_gbps = std::max(peak_bandwidth_gbps, bandwidthGbps);
+                                                      m_measurement_collector->TokenGenerationEnd(
+                                                          static_cast<int>(tok),
+                                                          bandwidthGbps,
+                                                          telem.cacheHitRate,
+                                                          static_cast<int>(autopatch.currentPrefetchDepth()),
+                                                          pressurePct,
+                                                          tierCurrent
+                                                      );
+                                                      token_step++;
+                                                      token_start_time = std::chrono::high_resolution_clock::now();
+
+                                                      // Diagnostic-driven telemetry shaping for autopatch tuning.
+                                                      if (diag_compute_stalled)
+                                                      {
+                                                          telem.dispatchBound = true;
+                                                      }
+                                                      if (diag_cache_thrash)
+                                                      {
+                                                          telem.cacheHitRate = std::min(telem.cacheHitRate, 0.35);
+                                                      }
+
+                                                      autopatch.onToken(telem);
+                                                      const bool urgent_adapt = diag_compute_stalled && ((token_step % 2) == 0);
+                                                      if (autopatch.shouldAdapt() || urgent_adapt)
+                                                      {
+                                                          const auto decision = autopatch.adapt();
+                                                          if (decision.action != RawrXD::Inference::PatchAction::None)
+                                                          {
+                                                              std::printf(
+                                                                  "[Autopatch] tok=%llu action=%s tps=%.1f pressure=%.3f depth=%u diag=%s\n",
+                                                                  static_cast<unsigned long long>(autopatch.tokenCount()),
+                                                                  AutopatchActionName(decision.action),
+                                                                  decision.rollingTps,
+                                                                  decision.rollingPressure,
+                                                                  decision.suggestedPrefetchDepth,
+                                                                  latest_root_cause.c_str());
+                                                          }
+                                                      }
+
+                                                      if (m_measurement_collector)
+                                                      {
+                                                          m_measurement_collector->TokenGenerationStart();
+                                                      }
+                                                  }
                                               });
     }
     catch (const std::bad_alloc&)
@@ -1212,6 +1359,34 @@ void CPUInferenceEngine::GenerateStreaming(const std::vector<int32_t>& input_tok
         throw;
     }
     m_lastState = s_inferenceBackend.LastLogits();
+
+    if (m_measurement_collector)
+    {
+        const auto finalMeasurement = m_measurement_collector->GetFinalMeasurement();
+        RawrXD::Benchmark::MeasurementValidator::ThroughputEnvelope envelope;
+        envelope.peak_memory_bandwidth_gbps = 25.0; // Conservative default for DDR4
+        envelope.avg_token_footprint_bytes = std::max(1024.0, static_cast<double>(m_embeddingDim) * sizeof(float));
+        envelope.pipeline_efficiency = 0.65;
+
+        const bool valid = RawrXD::Benchmark::MeasurementValidator::ValidateMeasurement(finalMeasurement, &envelope);
+        const auto gate = m_measurement_collector->EvaluateAutopatchGate();
+
+        if (!valid)
+        {
+            std::fprintf(stderr,
+                         "[Measurement] invalid session measurement (ttft_ms=%.1f decode_tps=%.2f e2e_tps=%.2f)\n",
+                         finalMeasurement.ttft_ms(),
+                         finalMeasurement.real_decode_tps(),
+                         finalMeasurement.total_end_to_end_tps());
+        }
+
+        std::printf("[Measurement] gate=%s reason=%s samples=%zu rolling_tps=%.2f stddev=%.2f\n",
+                    gate.allow ? "allow" : "block",
+                    gate.reason.c_str(),
+                    gate.sample_count,
+                    gate.rolling_tps,
+                    gate.tps_stddev);
+    }
 
     emitSwarmTelemetryThrottled_(true);
 

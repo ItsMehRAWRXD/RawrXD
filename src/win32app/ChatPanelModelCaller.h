@@ -5,7 +5,7 @@
 
 #include "core/ContextFusionEngine.h"
 #include "chat_interface.h"
-#include "ai/ai_model_caller_real.h"  // Real ModelCaller implementation
+#include "ai_model_caller.h"  // Real ModelCaller implementation
 
 namespace RawrXD {
 
@@ -30,12 +30,11 @@ public:
     bool IsEnabled() const { return m_enabled; }
     
     // Status
-    bool IsConnected() const { return m_modelCaller != nullptr; }
+    bool IsConnected() const { return ModelCaller::IsReady(); }
     std::string GetLastError() const { return m_lastError; }
 
 private:
     IChatPanel* m_chatPanel;
-    std::unique_ptr<AIModelCaller> m_modelCaller;
     std::string m_systemPrompt;
     std::string m_lastError;
     int m_maxContextLines = 50;

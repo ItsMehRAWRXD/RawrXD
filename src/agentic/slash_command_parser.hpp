@@ -17,8 +17,13 @@
  * /search <pattern>                    → semantic code search
  * /read <file>                         → read file
  * /write <file> <content>              → write file
+ * /memory <command> [path] [text]      → persistent agent memory files
  * /refactor <type> [selection]         → refactoring (extract, rename, etc)
  * /git <action> [args]                 → git operations
+ * /explain [code|selection]            → explain code or selection
+ * /fix [file|selection]                → fix issues in file or selection
+ * /test [file|pattern]                 → generate/run tests
+ * /optimize [file|selection]           → optimize code performance
  * /help [command]                      → show command help
  */
 
@@ -69,8 +74,19 @@ private:
     static ParsedCommand ParseSearch(const std::vector<std::string>& args);
     static ParsedCommand ParseRead(const std::vector<std::string>& args);
     static ParsedCommand ParseWrite(const std::vector<std::string>& args);
+    static ParsedCommand ParseMemory(const std::vector<std::string>& args);
     static ParsedCommand ParseRefactor(const std::vector<std::string>& args);
     static ParsedCommand ParseGit(const std::vector<std::string>& args);
+    static ParsedCommand ParseExplain(const std::vector<std::string>& args);
+    static ParsedCommand ParseFix(const std::vector<std::string>& args);
+    static ParsedCommand ParseTest(const std::vector<std::string>& args);
+    static ParsedCommand ParseOptimize(const std::vector<std::string>& args);
+    
+    // Streaming control commands (NEW)
+    static ParsedCommand ParseStreaming(const std::vector<std::string>& args);
+    static ParsedCommand ParseStreamingStatus(const std::vector<std::string>& args);
+    static ParsedCommand ParseStreamingAutopatch(const std::vector<std::string>& args);
+    static ParsedCommand ParseStreamingThrottle(const std::vector<std::string>& args);
     
     static std::vector<std::string> Tokenize(const std::string& input);
 };

@@ -480,6 +480,8 @@
 #define WM_FILE_CHANGED_EXTERNAL (WM_APP + 200)
 #define WM_GHOST_TEXT_READY (WM_APP + 400)
 #define WM_USER_GHOST_TOKEN (WM_USER + 101)
+#define WM_USER_GHOST_RENDER (WM_USER + 102)
+#define WM_USER_GHOST_COMPLETE (WM_USER + 103)
 #define WM_TITAN_GHOST_STREAM (WM_APP + 401)
 #define WM_RAWR_LOG_MESSAGE (WM_APP + 402)  // wParam = type (0=info,1=warn,2=error), lParam = allocated string
 #define WM_TITAN_AGENT_STREAM (WM_APP + 403)

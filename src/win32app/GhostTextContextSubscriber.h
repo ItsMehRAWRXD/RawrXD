@@ -23,6 +23,14 @@ public:
     void SetMinConfidence(float conf) { m_minConfidence = conf; }
     void SetEnabled(bool enabled) { m_enabled = enabled; }
 
+    // Latency telemetry (zero-overhead, populated after each request)
+    static int64_t GetLastLatencyUs();
+    static int GetRequestCount();
+    static uint64_t GetStaleFrameCount();
+    static uint64_t GetTotalFrameCount();
+    static double GetStaleRate();
+    static void ResetTelemetry();
+
 private:
     Win32IDE_GhostText* m_ghostText;
     int m_debounceMs = 77;  // Calibrated for 28ms P50 latency

@@ -2,12 +2,25 @@
 // Provides stubs for unresolved ASM EXTERN symbols
 // DEP-free, no Qt, pure MASM x64 compatible, C++20
 
+#include <windows.h>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <mutex>
 #include <atomic>
+#include <queue>
+#include <vector>
+#include <string>
+#include <thread>
+#include <chrono>
+#include <condition_variable>
+#include <map>
+#include <sstream>
+#include <fstream>
+#include <algorithm>
+#include <cmath>
+#include <nlohmann/json.hpp>
 
 // Basic logging stub (replace with real logging if available)
 extern "C" void LogMessage(const char* msg) {
@@ -637,6 +650,7 @@ struct SwarmJob {
     uint64_t id{0};
     std::string payload;
     std::atomic<bool> completed{false};
+    std::atomic<bool> aborted{false};
 };
 static std::vector<SwarmJob> g_swarm_jobs;
 static std::mutex g_swarm_mutex;
@@ -1333,7 +1347,6 @@ extern "C" void SubmitInferenceRequest() {
 }
 
 // JSON utilities — functional C++ implementation using nlohmann/json
-#include <nlohmann/json.hpp>
 static nlohmann::json g_json_root;
 
 extern "C" void Json_ParseString(const char* str) {
@@ -1378,12 +1391,6 @@ extern "C" size_t Json_GetArray(const char* key) {
 extern "C" void Json_GetObjectField(const char* key) {
     // Returns object handle
     if (!key) return;
-    try {
-        if (g_json_root.contains(key) && g_json_root[key].is_object()) {
-            g_json_root = g_json_root[key];
-        }
-    } catch (...) {}
-}
     try {
         if (g_json_root.contains(key) && g_json_root[key].is_object()) {
             g_json_root = g_json_root[key];
@@ -1665,6 +1672,11 @@ extern "C" void Observable_Create_WorkspaceFolders() {
 // Orchestrator — functional C++ implementation
 static std::atomic<bool> g_orchestrator_ready{false};
 
+extern "C" void CoreInitialize();
+extern "C" void AgentInitialize();
+extern "C" void Inference_Initialize();
+extern "C" void Swarm_Initialize();
+
 extern "C" void OrchestratorInitialize() {
     if (g_orchestrator_ready.exchange(true)) return;
     CoreInitialize();
@@ -1690,7 +1702,7 @@ extern "C" void OutputChannel_Create(const char* name) {
     std::lock_guard<std::mutex> lock(g_output_mutex);
     OutputChannel ch;
     ch.name = name;
-    g_output_channels[name] = std::move(ch);
+    g_output_channels.insert_or_assign(name, std::move(ch));
 }
 
 extern "C" void OutputChannel_CreateAPI(const char* name) {
@@ -1851,6 +1863,9 @@ extern "C" const char* RawrXD_JSON_Stringify(const char* obj) {
     }
 }
 
+static std::mutex g_ui_notify_mutex;
+static std::queue<std::string> g_ui_notifications;
+
 extern "C" void RawrXD_UI_Push_Notify(const char* title, const char* msg) {
     if (!title || !msg) return;
     std::lock_guard<std::mutex> lock(g_ui_notify_mutex);
@@ -1865,7 +1880,7 @@ extern "C" void RouteModelLoad(const char* path) {
 
 // Sample logits — functional C++ implementation
 #include <algorithm>
-#include <math>
+#include <cmath>
 
 extern "C" int Sample_Logits_TopP(float* logits, int vocab_size, float temperature, float top_p) {
     if (!logits || vocab_size <= 0) return 0;

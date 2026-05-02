@@ -90,6 +90,7 @@ class StreamingGGUFLoader : public IGGUFLoader
 
     GGUFHeader header_;
     GGUFMetadata metadata_;
+    uint64_t tensor_info_offset_;  // Byte offset where tensor info section begins (after metadata)
 
     // Maps tensor_name → {offset, size, type, shape}
     std::map<std::string, TensorRef> tensor_index_;

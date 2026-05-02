@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 #include <atomic>
+#include <mutex>
+#include <chrono>
 
 namespace RawrXD {
 namespace Backend {
@@ -214,6 +216,14 @@ private:
     int m_timeout_seconds = 300;
     RetryConfig m_retry_config;
     std::atomic<bool> m_cancelled{false};
+
+    // ─── Model-list cache (deduplicates redundant /api/tags calls) ───
+    mutable std::mutex m_model_cache_mutex;
+    std::vector<OllamaModel> m_cached_models;
+    std::chrono::steady_clock::time_point m_cache_timestamp;
+    static constexpr std::chrono::seconds k_model_cache_ttl{30};
+    std::once_flag m_health_check_once;
+    std::string m_health_check_tags_response;
 };
 
 } // namespace Backend

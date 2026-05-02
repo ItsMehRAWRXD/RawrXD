@@ -153,6 +153,15 @@ public:
 
 class SpeculativeExecutionEngine {
 public:
+    struct DiagnosticFrame {
+        float acceptance_rate = 0.0f;
+        int tokens_produced = 0;
+        double draft_latency_ms = 0.0;
+        double verify_latency_ms = 0.0;
+        double total_ms = 0.0;
+        int expert_id = -1;
+    };
+
     struct Config {
         uint32_t maxSpeculativeTokens = 4;  // K in the paper
         float acceptanceThreshold = 0.5f;
@@ -209,6 +218,7 @@ public:
     };
     
     Stats GetStats() const;
+    DiagnosticFrame GetLastDiagnosticFrame() const;
     void ResetStats();
     
 private:
@@ -226,6 +236,13 @@ private:
     std::atomic<uint64_t> m_totalSpeculated;
     std::atomic<uint64_t> m_totalAccepted;
     std::atomic<uint64_t> m_kvRollbacks;
+
+    std::atomic<float> m_lastAcceptanceRate;
+    std::atomic<int> m_lastTokensProduced;
+    std::atomic<double> m_lastDraftLatencyMs;
+    std::atomic<double> m_lastVerifyLatencyMs;
+    std::atomic<double> m_lastTotalMs;
+    std::atomic<int> m_lastExpertId;
 
     std::unique_ptr<RawrXD::Speculative::SpeculativeInferenceBridge> m_inferenceBridge;
 };

@@ -141,6 +141,10 @@ bool StreamingGGUFLoader::ParseHeader()
     // Calculate metadata offset
     header_.metadata_offset = file_.tellg();
 
+    // Pre-calculate where tensor info section will begin (after metadata is parsed)
+    // This will be set correctly after ParseMetadata completes
+    tensor_info_offset_ = 0;
+
     return true;
 }
 
@@ -519,6 +523,9 @@ bool StreamingGGUFLoader::ParseMetadata()
         tryResolveU32("feed_forward_length", metadata_.feed_forward_length);
     }
 
+    // Capture the file position where tensor info section begins
+    tensor_info_offset_ = static_cast<uint64_t>(file_.tellg());
+
     return true;
 }
 
@@ -534,228 +541,24 @@ bool StreamingGGUFLoader::BuildTensorIndex()
         return false;
     }
 
-    // Skip metadata to get to tensor info
-    file_.seekg(header_.metadata_offset);
-
-    // Skip metadata entries — must handle ALL 13 GGUF v3 value types
-    for (uint64_t i = 0; i < header_.metadata_kv_count; ++i)
-    {
-        std::string key, value;
-        if (!ReadString(key))
-            return false;
-
-        uint32_t value_type;
-        if (!ReadValue(value_type))
-            return false;
-
-        switch (value_type)
-        {
-            case GGUFConstants::GGUF_VALUE_TYPE_UINT8:
-            {
-                uint8_t v;
-                if (!ReadValue(v))
-                    return false;
-                break;
-            }
-            case GGUFConstants::GGUF_VALUE_TYPE_INT8:
-            {
-                int8_t v;
-                if (!ReadValue(v))
-                    return false;
-                break;
-            }
-            case GGUFConstants::GGUF_VALUE_TYPE_UINT16:
-            {
-                uint16_t v;
-                if (!ReadValue(v))
-                    return false;
-                break;
-            }
-            case GGUFConstants::GGUF_VALUE_TYPE_INT16:
-            {
-                int16_t v;
-                if (!ReadValue(v))
-                    return false;
-                break;
-            }
-            case GGUFConstants::GGUF_VALUE_TYPE_UINT32:
-            {
-                uint32_t v;
-                if (!ReadValue(v))
-                    return false;
-                break;
-            }
-            case GGUFConstants::GGUF_VALUE_TYPE_INT32:
-            {
-                int32_t v;
-                if (!ReadValue(v))
-                    return false;
-                break;
-            }
-            case GGUFConstants::GGUF_VALUE_TYPE_FLOAT32:
-            {
-                float v;
-                if (!ReadValue(v))
-                    return false;
-                break;
-            }
-            case GGUFConstants::GGUF_VALUE_TYPE_BOOL:
-            {
-                uint8_t v;
-                if (!ReadValue(v))
-                    return false;
-                break;
-            }
-            case GGUFConstants::GGUF_VALUE_TYPE_STRING:
-            {
-                if (!ReadString(value))
-                    return false;
-                break;
-            }
-            case GGUFConstants::GGUF_VALUE_TYPE_ARRAY:
-            {
-                // Must skip the entire array: element_type + count + elements
-                constexpr uint64_t MAX_ARRAY_COUNT = 100000000;  // 100M elements max
-                uint32_t elem_type;
-                uint64_t arr_count;
-                if (!ReadValue(elem_type))
-                    return false;
-                if (!ReadValue(arr_count))
-                    return false;
-
-                if (arr_count > MAX_ARRAY_COUNT)
-                {
-                    std::cerr << "❌ Array count " << arr_count << " exceeds max " << MAX_ARRAY_COUNT
-                              << " while skipping metadata array" << std::endl;
-                    return false;
-                }
-
-                for (uint64_t a = 0; a < arr_count; ++a)
-                {
-                    switch (elem_type)
-                    {
-                        case GGUFConstants::GGUF_VALUE_TYPE_UINT8:
-                        {
-                            uint8_t v;
-                            if (!ReadValue(v))
-                                return false;
-                            break;
-                        }
-                        case GGUFConstants::GGUF_VALUE_TYPE_INT8:
-                        {
-                            int8_t v;
-                            if (!ReadValue(v))
-                                return false;
-                            break;
-                        }
-                        case GGUFConstants::GGUF_VALUE_TYPE_UINT16:
-                        {
-                            uint16_t v;
-                            if (!ReadValue(v))
-                                return false;
-                            break;
-                        }
-                        case GGUFConstants::GGUF_VALUE_TYPE_INT16:
-                        {
-                            int16_t v;
-                            if (!ReadValue(v))
-                                return false;
-                            break;
-                        }
-                        case GGUFConstants::GGUF_VALUE_TYPE_UINT32:
-                        {
-                            uint32_t v;
-                            if (!ReadValue(v))
-                                return false;
-                            break;
-                        }
-                        case GGUFConstants::GGUF_VALUE_TYPE_INT32:
-                        {
-                            int32_t v;
-                            if (!ReadValue(v))
-                                return false;
-                            break;
-                        }
-                        case GGUFConstants::GGUF_VALUE_TYPE_FLOAT32:
-                        {
-                            float v;
-                            if (!ReadValue(v))
-                                return false;
-                            break;
-                        }
-                        case GGUFConstants::GGUF_VALUE_TYPE_BOOL:
-                        {
-                            uint8_t v;
-                            if (!ReadValue(v))
-                                return false;
-                            break;
-                        }
-                        case GGUFConstants::GGUF_VALUE_TYPE_STRING:
-                        {
-                            std::string s;
-                            if (!ReadString(s))
-                                return false;
-                            break;
-                        }
-                        case GGUFConstants::GGUF_VALUE_TYPE_UINT64:
-                        {
-                            uint64_t v;
-                            if (!ReadValue(v))
-                                return false;
-                            break;
-                        }
-                        case GGUFConstants::GGUF_VALUE_TYPE_INT64:
-                        {
-                            int64_t v;
-                            if (!ReadValue(v))
-                                return false;
-                            break;
-                        }
-                        case GGUFConstants::GGUF_VALUE_TYPE_FLOAT64:
-                        {
-                            double v;
-                            if (!ReadValue(v))
-                                return false;
-                            break;
-                        }
-                        default:
-                        {
-                            std::cerr << "❌ Unknown array element type " << elem_type << " while skipping metadata"
-                                      << std::endl;
-                            return false;
-                        }
-                    }
-                }
-                break;
-            }
-            case GGUFConstants::GGUF_VALUE_TYPE_UINT64:
-            {
-                uint64_t v;
-                if (!ReadValue(v))
-                    return false;
-                break;
-            }
-            case GGUFConstants::GGUF_VALUE_TYPE_INT64:
-            {
-                int64_t v;
-                if (!ReadValue(v))
-                    return false;
-                break;
-            }
-            case GGUFConstants::GGUF_VALUE_TYPE_FLOAT64:
-            {
-                double v;
-                if (!ReadValue(v))
-                    return false;
-                break;
-            }
-            default:
-            {
-                std::cerr << "❌ Unknown metadata type " << value_type << " while skipping key: " << key << std::endl;
-                return false;
-            }
-        }
+    // After ParseMetadata, file cursor is positioned at the start of tensor info section
+    // Use the current position directly instead of re-parsing metadata
+    if (tensor_info_offset_ == 0) {
+        // Fallback: calculate from current file position if not set
+        tensor_info_offset_ = static_cast<uint64_t>(file_.tellg());
+    } else {
+        // Use pre-calculated offset from end of ParseMetadata
+        file_.seekg(tensor_info_offset_);
     }
+
+    // Debug logging for boundary verification
+    std::streampos current_pos = file_.tellg();
+    file_.seekg(0, std::ios::end);
+    std::streampos file_size = file_.tellg();
+    file_.seekg(current_pos);
+    std::cout << "[GGUF] tensor_info_offset=" << tensor_info_offset_ 
+              << " file_size=" << file_size 
+              << " tensor_count=" << header_.tensor_count << std::endl;
 
     if (header_.tensor_count > kMaxGgufTensorIndexEntries)
     {
@@ -962,16 +765,14 @@ bool StreamingGGUFLoader::LoadZone(const std::string& zone_name, uint64_t max_me
         return false;
     }
 
-    // AUDIT_FIX_1: Hard size check - if zone exceeds 2GB, fail gracefully with diagnostic
-    // This prevents OOM and informs user of streaming limitations
-    constexpr uint64_t ZONE_BUFFER_MAX_BYTES = 2147483648ULL;  // 2 GB hard ceiling
+    // AUDIT_FIX_1: Auto-fallback to memory-mapped streaming for zones > 2GB
+    // This prevents OOM while still allowing large model loading
+    constexpr uint64_t ZONE_BUFFER_MAX_BYTES = 2147483648ULL;  // 2 GB soft ceiling
     if (zone.total_bytes > ZONE_BUFFER_MAX_BYTES)
     {
-        std::cerr << "❌ Zone '" << zone_name << "' size (" << (zone.total_bytes / (1024.0 * 1024.0 * 1024.0))
-                  << " GiB) exceeds maximum streamable per-zone limit (2 GiB)." << std::endl;
-        std::cerr << "   ℹ️  This model requires mapped-window streaming (fallback not yet active)." << std::endl;
-        std::cerr << "   💡 Workaround: Enable 'MappedWindowStreamer' in build configuration." << std::endl;
-        return false;
+        std::cout << "ℹ️  Zone '" << zone_name << "' size (" << (zone.total_bytes / (1024.0 * 1024.0 * 1024.0))
+                  << " GiB) exceeds buffer limit (2 GiB). Auto-fallback to mmap streaming." << std::endl;
+        return LoadZoneMapped(zone_name);
     }
 
     // Stream from disk

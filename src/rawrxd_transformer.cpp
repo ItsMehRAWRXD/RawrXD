@@ -1495,8 +1495,15 @@ bool RawrXDTransformer::tryMoeSyncPackMixtureIntoCache(const std::uint32_t layer
 
 std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& tokens, int start_pos)
 {
+    printf("[Forward] ENTRY: tokens=%zu start_pos=%d\n", tokens.size(), start_pos);
+    std::fflush(stdout);
+    
     if (tokens.empty())
+    {
+        printf("[Forward] EMPTY: returning early\n");
+        std::fflush(stdout);
         return {};
+    }
 
     // Available physical memory in MB (cheap syscall, used for OOM diagnosis)
     auto AvailPhysMB = []() -> size_t
@@ -1512,6 +1519,10 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
         printf("[Forward] FATAL: loader is null\n");
         return {};
     }
+
+    printf("[Forward] Config check: dim=%d layers=%d hidden=%d heads=%d\n", 
+           config.dim, config.n_layers, config.hidden_dim, config.n_heads);
+    std::fflush(stdout);
 
     if (config.dim <= 0 || config.n_layers <= 0 || config.hidden_dim <= 0 || config.n_heads <= 0)
     {
@@ -1706,6 +1717,9 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
 
     for (int t = 0; t < T; t++)
     {
+        printf("[Forward] Processing token %d/%d\n", t+1, T);
+        std::fflush(stdout);
+        
         const auto _token_t0 = PhaseClock::now();
         const bool swarmTokenActive = (m_swarmScheduler != nullptr) && (loader != nullptr) &&
                                       (loader->getExperts() > 0) && !m_swarmPinningSuppressed;
@@ -1718,6 +1732,8 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
 
         // 1. Embedding lookup
         std::string emb_name = "token_embd.weight";
+        printf("[Forward] Token %d: embedding lookup for token=%u\n", t+1, token);
+        std::fflush(stdout);
 
         if (config.vocab_size <= 0)
         {
@@ -1726,10 +1742,16 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
         }
 
         // Token ID already validated upfront — no need to clamp
+        printf("[Forward] Token %d: calling GetTensorRow for embedding\n", t+1);
+        std::fflush(stdout);
         bool row_ok = loader->GetTensorRow(emb_name, static_cast<size_t>(token), x.data(), static_cast<size_t>(dim));
+        printf("[Forward] Token %d: GetTensorRow returned %s\n", t+1, row_ok ? "true" : "false");
+        std::fflush(stdout);
         if (!row_ok)
         {
             emb_name = "model.embed_tokens.weight";
+            printf("[Forward] Token %d: trying alternate embedding tensor: %s\n", t+1, emb_name.c_str());
+            std::fflush(stdout);
             row_ok = loader->GetTensorRow(emb_name, static_cast<size_t>(token), x.data(), static_cast<size_t>(dim));
         }
         if (!row_ok)
@@ -1737,10 +1759,25 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
             printf("[Forward] FATAL: Missing token embedding tensor\n");
             return {};
         }
+        printf("[Forward] Token %d: embedding lookup complete\n", t+1);
+        std::fflush(stdout);
 
         // 2. Transformer Layers
+        printf("[Forward] Token %d: starting %d transformer layers\n", t+1, config.n_layers);
+        std::fflush(stdout);
+
+        // Heartbeat tracking for stall detection
+        auto layerStartTime = PhaseClock::now();
+        int remapCount = 0;
+        constexpr int kMaxLayerTimeMs = 30000;  // 30s max per layer before considered stalled
+
         for (int l = 0; l < config.n_layers; l++)
         {
+            if (l == 0 || l % 16 == 0 || l == config.n_layers - 1) {
+                printf("[Forward] Token %d: Layer %d/%d starting\n", t+1, l+1, config.n_layers);
+                std::fflush(stdout);
+            }
+
             const bool layerSwarmActive = (m_swarmScheduler != nullptr) && !m_swarmPinningSuppressed &&
                                           (loader != nullptr) && (loader->getExperts() > 0);
             std::vector<std::size_t> layerPinnedPlanRows;
@@ -1795,13 +1832,24 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
 
             // --- ATTENTION ---
             std::string prefix = "blk." + std::to_string(l) + ".";
-
+            
+            if (l == 0) {
+                printf("[Forward] Token %d: Layer %d - getting attn_norm\n", t+1, l+1);
+                std::fflush(stdout);
+            }
+            
             float* attn_norm = loader->GetTensor(prefix + "attn_norm.weight");
             if (!attn_norm)
             {
                 printf("[Forward] FATAL: Missing %sattn_norm.weight\n", prefix.c_str());
                 return {};
             }
+            
+            if (l == 0) {
+                printf("[Forward] Token %d: Layer %d - applying RMSNorm\n", t+1, l+1);
+                std::fflush(stdout);
+            }
+            
             RMSNorm_AVX512(x.data(), x.data(), attn_norm, dim, config.rms_norm_eps);
 
             const std::string wq_name = prefix + "attn_q.weight";
@@ -1812,9 +1860,20 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
 
             const bool has_split_qkv =
                 loader->hasTensorNamed(wq_name) && loader->hasTensorNamed(wk_name) && loader->hasTensorNamed(wv_name);
+                
+            if (l == 0) {
+                printf("[Forward] Token %d: Layer %d - has_split_qkv=%s\n", t+1, l+1, has_split_qkv ? "true" : "false");
+                std::fflush(stdout);
+            }
+            
             PHASE_START(_pt_qkv);
             if (has_split_qkv)
             {
+                if (l == 0) {
+                    printf("[Forward] Token %d: Layer %d - calling StreamingMatMul for Q\n", t+1, l+1);
+                    std::fflush(stdout);
+                }
+                
                 if (!loader->StreamingMatMul(wq_name, x.data(), q.data(), dim, dim))
                 {
                     printf("[Forward] FATAL: StreamingMatMul failed for %s\n", wq_name.c_str());
@@ -2263,6 +2322,22 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
                     layerPinnedPlanRows.clear();
                 }
                 (void)m_swarmScheduler->onLayerComputeFinished(0u, static_cast<std::uint32_t>(l));
+            }
+            
+            // Heartbeat: Check for stall every 8 layers
+            if ((l % 8) == 0 || l == config.n_layers - 1)
+            {
+                auto layerElapsed = std::chrono::duration_cast<std::chrono::milliseconds>(PhaseClock::now() - layerStartTime).count();
+                if (layerElapsed > kMaxLayerTimeMs)
+                {
+                    printf("[STALL] Layer %d/%d exceeded %d ms (elapsed %lld ms) - possible bandwidth saturation\n", 
+                           l + 1, config.n_layers, kMaxLayerTimeMs, static_cast<long long>(layerElapsed));
+                }
+                else if (l > 0 && (l % 16) == 0)
+                {
+                    printf("[HEARTBEAT] Layer %d/%d complete, elapsed %lld ms\n", 
+                           l + 1, config.n_layers, static_cast<long long>(layerElapsed));
+                }
             }
         }  // end layer loop
         pt.token_total += std::chrono::duration_cast<std::chrono::nanoseconds>(PhaseClock::now() - _token_t0).count();

@@ -495,6 +495,15 @@ bool NativeInferenceClient::ChatStream(const std::vector<ChatMessage>& messages,
                                    ErrorCallback on_error)
 {
     const std::string prompt = BuildPromptFromMessages(messages, tools);
+    
+    // TPS-based warmup: if previous streaming had poor TPS, warm up the model first
+    // This helps large models (70B+) that have cold-start latency issues
+    if (NeedsWarmup())
+    {
+        LOG_INFO("NativeInferenceClient", "Detected poor TPS, performing warmup before streaming");
+        WarmupModelForStreaming();
+    }
+    
     if (envStreamViaOrchestrator())
     {
         return runChatStreamViaOrchestrator(prompt, tools, on_token, on_tool_call, on_done, on_error);
@@ -672,6 +681,19 @@ bool NativeInferenceClient::runChatStreamDirect(const std::string& prompt, const
         m_totalDurationMs += elapsed_ms;
     }
     m_totalTokens.fetch_add(*completion_tokens, std::memory_order_relaxed);
+    
+    // Record TPS for future warmup decisions
+    if (*tps > 0.0)
+    {
+        m_lastMeasuredTPS.store(*tps, std::memory_order_release);
+        // If TPS is still poor after streaming, clear warmed flag to trigger re-warmup next time
+        if (*tps < m_config.tps_warmup_threshold)
+        {
+            m_modelWarmed.store(false, std::memory_order_release);
+            LOG_WARNING("NativeInferenceClient", "Low TPS detected: " + std::to_string(*tps) + 
+                       " tok/s (threshold: " + std::to_string(m_config.tps_warmup_threshold) + ")");
+        }
+    }
 
     if (on_done)
     {
@@ -789,6 +811,19 @@ bool NativeInferenceClient::runChatStreamViaOrchestrator(const std::string& prom
         }
         m_totalTokens.fetch_add(*completion_tokens, std::memory_order_relaxed);
         m_streaming.store(false);
+        
+        // Record TPS for future warmup decisions
+        if (*tps > 0.0)
+        {
+            m_lastMeasuredTPS.store(*tps, std::memory_order_release);
+            // If TPS is still poor after streaming, clear warmed flag to trigger re-warmup next time
+            if (*tps < m_config.tps_warmup_threshold)
+            {
+                m_modelWarmed.store(false, std::memory_order_release);
+                LOG_WARNING("NativeInferenceClient", "Low TPS detected: " + std::to_string(*tps) + 
+                           " tok/s (threshold: " + std::to_string(m_config.tps_warmup_threshold) + ")");
+            }
+        }
 
         if (on_done)
         {
@@ -1221,6 +1256,9 @@ NativeInferenceClient::MetricsSnapshot NativeInferenceClient::GetMetricsSnapshot
     snap.host = m_config.host;
     snap.port = m_config.port;
     snap.streamRouting = GetNativeStreamRoutingEnvLabel();
+    snap.lastMeasuredTPS = m_lastMeasuredTPS.load(std::memory_order_relaxed);
+    snap.modelWarmed = m_modelWarmed.load(std::memory_order_relaxed);
+    snap.tpsWarmupThreshold = m_config.tps_warmup_threshold;
     return snap;
 }
 
@@ -1250,4 +1288,158 @@ InferenceResult NativeInferenceClient::ChatSyncWithRetry(const std::vector<ChatM
     }
 
     return InferenceResult::error("ChatSync failed after retries");
+}
+
+// ---------------------------------------------------------------------------
+// TPS-Based Model Warmup for Large Models
+// ---------------------------------------------------------------------------
+// When streaming from large models (70B+), the first tokens can be very slow
+// due to GPU/KV cache cold start. This warmup mechanism does a short batch
+// completion to "heat up" the model before streaming, improving TPS.
+// ---------------------------------------------------------------------------
+
+bool NativeInferenceClient::NeedsWarmup() const
+{
+    if (!m_config.enable_auto_warmup)
+    {
+        return false;
+    }
+    
+    // Already warmed and within cooldown period
+    if (m_modelWarmed.load(std::memory_order_relaxed))
+    {
+        auto now = std::chrono::steady_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - m_lastWarmupTime).count();
+        if (elapsed < kWarmupCooldownSeconds)
+        {
+            return false;
+        }
+        // Cooldown expired - may need re-warmup
+        return m_lastMeasuredTPS.load(std::memory_order_relaxed) < m_config.tps_warmup_threshold;
+    }
+    
+    // Check if TPS is below threshold
+    double lastTps = m_lastMeasuredTPS.load(std::memory_order_relaxed);
+    return lastTps > 0.0 && lastTps < m_config.tps_warmup_threshold;
+}
+
+bool NativeInferenceClient::WarmupModelForStreaming()
+{
+    if (!m_config.enable_auto_warmup)
+    {
+        LOG_DEBUG("NativeInferenceClient", "Auto-warmup disabled by config");
+        return false;
+    }
+    
+    // Check cooldown
+    if (m_modelWarmed.load(std::memory_order_relaxed))
+    {
+        auto now = std::chrono::steady_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - m_lastWarmupTime).count();
+        if (elapsed < kWarmupCooldownSeconds)
+        {
+            LOG_DEBUG("NativeInferenceClient", "Model already warmed, cooldown remaining: " + 
+                     std::to_string(kWarmupCooldownSeconds - elapsed) + "s");
+            return false;
+        }
+    }
+    
+    LOG_INFO("NativeInferenceClient", "Performing model warmup (TPS below threshold: " + 
+             std::to_string(m_config.tps_warmup_threshold) + " tok/s)");
+    
+    if (performWarmupCompletion())
+    {
+        MarkWarmed();
+        return true;
+    }
+    return false;
+}
+
+void NativeInferenceClient::MarkWarmed()
+{
+    m_modelWarmed.store(true, std::memory_order_release);
+    m_lastWarmupTime = std::chrono::steady_clock::now();
+    LOG_INFO("NativeInferenceClient", "Model marked as warmed at " + 
+             std::to_string(std::chrono::duration_cast<std::chrono::seconds>(
+                 m_lastWarmupTime.time_since_epoch()).count()) + "s");
+}
+
+bool NativeInferenceClient::performWarmupCompletion()
+{
+    // Build a minimal warmup prompt - short and simple to process quickly
+    std::string warmupPrompt = "Complete this sentence: The quick brown fox";
+    
+    RawrXD::InferRequest req;
+    req.id = m_nextRequestId++;
+    req.prompt = warmupPrompt;
+    req.max_tokens = m_config.warmup_max_tokens > 0 ? m_config.warmup_max_tokens : 64;
+    req.tenant_id = "warmup";
+    
+    std::promise<std::pair<std::string, std::string>> completion_promise;
+    
+    req.complete_cb = [&completion_promise](const std::string& completion, const std::string& metadata)
+    {
+        completion_promise.set_value({completion, metadata});
+    };
+    
+    auto start_time = std::chrono::steady_clock::now();
+    auto& bo = RawrXD::BackendOrchestrator::Instance();
+    uint64_t req_id = bo.Enqueue(req);
+    
+    std::future<std::pair<std::string, std::string>> future = completion_promise.get_future();
+    
+    // Shorter timeout for warmup (30s max)
+    if (future.wait_for(std::chrono::seconds(30)) != std::future_status::ready)
+    {
+        bo.Cancel(req_id);
+        LOG_WARNING("NativeInferenceClient", "Warmup completion timed out");
+        return false;
+    }
+    
+    auto result = future.get();
+    const std::string& completion = result.first;
+    const std::string& metadata = result.second;
+    
+    auto end_time = std::chrono::steady_clock::now();
+    double elapsed_ms = static_cast<double>(
+        std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count());
+    
+    // Check for errors
+    std::string backendDetail;
+    if (startsWithBackendError(completion, &backendDetail))
+    {
+        LOG_WARNING("NativeInferenceClient", "Warmup failed: " + backendDetail);
+        return false;
+    }
+    
+    // Extract TPS from metadata
+    double warmup_tps = 0.0;
+    try
+    {
+        nlohmann::json j = JSONGuard::SafeParse(metadata);
+        if (j.is_object())
+        {
+            uint64_t eval_count = j.value("eval_count", 0ULL);
+            uint64_t eval_duration_ns = j.value("eval_duration", 0ULL);
+            if (eval_count > 0 && eval_duration_ns > 0)
+            {
+                warmup_tps = static_cast<double>(eval_count) / (static_cast<double>(eval_duration_ns) / 1e9);
+            }
+        }
+    }
+    catch (...)
+    {
+    }
+    
+    LOG_INFO("NativeInferenceClient", "Warmup completed in " + std::to_string(elapsed_ms) + 
+             "ms, TPS: " + std::to_string(warmup_tps) + " tok/s, tokens: " + 
+             std::to_string(completion.size()));
+    
+    // Update last measured TPS
+    if (warmup_tps > 0.0)
+    {
+        m_lastMeasuredTPS.store(warmup_tps, std::memory_order_release);
+    }
+    
+    return true;
 }

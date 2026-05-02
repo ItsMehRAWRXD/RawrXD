@@ -135,6 +135,11 @@ std::string NormalizeDispatchToolName(std::string value)
     {
         return "search_code";
     }
+    if (collapsed == "memoryfile" || collapsed == "agent_memory" || collapsed == "agentmemory" ||
+        collapsed == "memory_files" || collapsed == "memories")
+    {
+        return "memory_file";
+    }
 
     return collapsed;
 }
@@ -5565,6 +5570,13 @@ json AgentToolHandlers::GetAllSchemas()
     mem["function"] = mem_f;
     tools.push_back(mem);
 
+    json mem_file_alias = mem;
+    mem_file_alias["function"]["name"] = "memory_file";
+    mem_file_alias["function"]["description"] =
+        "File-oriented alias for the memory tool. Manage persistent RawrXD memory files using /memories, "
+        "/memories/session, or /memories/repo paths.";
+    tools.push_back(mem_file_alias);
+
     // generate_image
     json gi = json::object();
     gi["type"] = "function";
@@ -6579,6 +6591,9 @@ void AgentToolHandlers::InitializeDispatchTable()
     m_dispatchTable["plan_tasks"] = PlanTasks;
     m_dispatchTable["manage_todo_list"] = ManageTodoList;
     m_dispatchTable["memory"] = Memory;
+    m_dispatchTable["memory_file"] = Memory;
+    m_dispatchTable["agent_memory"] = Memory;
+    m_dispatchTable["memories"] = Memory;
     m_dispatchTable["swebench_autonomous_eval"] = SwebenchAutonomousEval;
     m_dispatchTable["get_diagnostics"] = GetDiagnostics;
 

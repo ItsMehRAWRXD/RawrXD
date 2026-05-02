@@ -6,18 +6,22 @@
 
 #include <winsock2.h>
 #include <windows.h>
+#include <winhttp.h>
 #include "gpu_enforcement.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <thread>
+#include <mutex>
 #include <atomic>
 #include <chrono>
-#include <ctime>
+#include <time>
 #include <sstream>
+#include <vector>
 #include "engine_iface.h"
 
 #pragma comment(lib, "ws2_32.lib")
+#pragma comment(lib, "winhttp.lib")
 #pragma warning(disable : 4996)
 
 // Global state
@@ -349,6 +353,147 @@ bool InitializeServer(int port) {
 }
 
 // ============================================================
+// Smoke Test Mode — Bounded, deterministic validation
+// ============================================================
+
+#include <chrono>
+#include <thread>
+
+static bool g_smoke_test_mode = false;
+static int  g_smoke_timeout_sec = 10;
+
+static std::chrono::steady_clock::time_point SmokeStart() {
+    return std::chrono::steady_clock::now();
+}
+
+static bool SmokeTimedOut(const std::chrono::steady_clock::time_point& start) {
+    auto elapsed = std::chrono::steady_clock::now() - start;
+    return std::chrono::duration_cast<std::chrono::seconds>(elapsed).count() >= g_smoke_timeout_sec;
+}
+
+static void SmokeLog(const std::string& msg) {
+    std::cout << "[SMOKE] " << msg << std::endl;
+}
+
+// Forward declare internal HTTP client helper for smoke tests
+static std::string SmokeHttpGet(const std::string& path);
+
+static bool Test_OllamaVersion(const std::chrono::steady_clock::time_point& start) {
+    if (SmokeTimedOut(start)) {
+        SmokeLog("TIMEOUT before Ollama version test");
+        return false;
+    }
+
+    std::string response = SmokeHttpGet("/api/version");
+    if (response.empty() || response.find("version") == std::string::npos) {
+        SmokeLog("Ollama version FAILED");
+        return false;
+    }
+    SmokeLog("Ollama version OK");
+    return true;
+}
+
+static std::once_flag g_models_once;
+static std::string    g_models_cached;
+static bool           g_models_fetched = false;
+
+static bool Test_ModelDiscovery(const std::chrono::steady_clock::time_point& start) {
+    if (SmokeTimedOut(start)) {
+        SmokeLog("TIMEOUT before model discovery test");
+        return false;
+    }
+
+    std::call_once(g_models_once, [&]() {
+        std::string response = SmokeHttpGet("/api/tags");
+        if (!response.empty() && response.find("models") != std::string::npos) {
+            g_models_cached = response;
+            g_models_fetched = true;
+        }
+    });
+
+    if (!g_models_fetched) {
+        SmokeLog("Model discovery FAILED");
+        return false;
+    }
+    SmokeLog("Model discovery OK");
+    return true;
+}
+
+static int RunSmokeTest() {
+    SmokeLog("Starting bounded smoke test suite");
+    auto start = SmokeStart();
+
+    bool ok = true;
+    ok &= Test_OllamaVersion(start);
+    ok &= Test_ModelDiscovery(start);
+
+    if (!ok) {
+        SmokeLog("FAIL");
+        return 1;
+    }
+    SmokeLog("PASS");
+    return 0;
+}
+
+// Minimal internal HTTP GET for smoke tests (connects to localhost:port)
+static std::string SmokeHttpGet(const std::string& path) {
+    // Build full URL from the port we would have listened on
+    extern int g_smoke_target_port;
+    std::string url = "http://127.0.0.1:" + std::to_string(g_smoke_target_port) + path;
+
+    HINTERNET hSession = WinHttpOpen(L"RawrXD-Smoke/1.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
+                                     WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
+    if (!hSession) return "";
+
+    std::wstring wUrl(url.begin(), url.end());
+    URL_COMPONENTS urlComp = { sizeof(urlComp) };
+    urlComp.dwHostNameLength = (DWORD)-1;
+    urlComp.dwUrlPathLength  = (DWORD)-1;
+    WinHttpCrackUrl(wUrl.c_str(), 0, 0, &urlComp);
+
+    std::wstring host(urlComp.lpszHostName, urlComp.dwHostNameLength);
+    std::wstring wpath(urlComp.lpszUrlPath, urlComp.dwUrlPathLength);
+    INTERNET_PORT port = urlComp.nPort;
+
+    HINTERNET hConnect = WinHttpConnect(hSession, host.c_str(), port, 0);
+    if (!hConnect) { WinHttpCloseHandle(hSession); return ""; }
+
+    HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"GET", wpath.c_str(),
+                                            nullptr, WINHTTP_NO_REFERER,
+                                            WINHTTP_DEFAULT_ACCEPT_TYPES, 0);
+    if (!hRequest) { WinHttpCloseHandle(hConnect); WinHttpCloseHandle(hSession); return ""; }
+
+    BOOL sent = WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0,
+                                   WINHTTP_NO_REQUEST_DATA, 0, 0, 0);
+    if (!sent || !WinHttpReceiveResponse(hRequest, nullptr)) {
+        WinHttpCloseHandle(hRequest);
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return "";
+    }
+
+    std::string response;
+    DWORD dwSize = 0;
+    do {
+        dwSize = 0;
+        WinHttpQueryDataAvailable(hRequest, &dwSize);
+        if (dwSize == 0) break;
+        std::vector<char> buffer(dwSize + 1);
+        DWORD dwRead = 0;
+        WinHttpReadData(hRequest, buffer.data(), dwSize, &dwRead);
+        buffer[dwRead] = '\0';
+        response.append(buffer.data(), dwRead);
+    } while (dwSize > 0);
+
+    WinHttpCloseHandle(hRequest);
+    WinHttpCloseHandle(hConnect);
+    WinHttpCloseHandle(hSession);
+    return response;
+}
+
+static int g_smoke_target_port = 11434;
+
+// ============================================================
 // Main Entry Point
 // ============================================================
 
@@ -363,7 +508,44 @@ int main(int argc, char* argv[]) {
         std::string arg = argv[i];
         if (arg == "--port" && i + 1 < argc) {
             port = atoi(argv[++i]);
+        } else if (arg == "--smoke-test") {
+            g_smoke_test_mode = true;
+        } else if (arg == "--smoke-timeout" && i + 1 < argc) {
+            g_smoke_timeout_sec = atoi(argv[++i]);
         }
+    }
+    
+    g_smoke_target_port = port;
+
+    // Smoke-test mode: bounded validation, no daemon loop
+    if (g_smoke_test_mode) {
+        // Start a background thread with the server so we can test against it
+        std::thread serverThread([&port]() {
+            if (!InitializeServer(port)) {
+                std::cerr << "[SMOKE] Failed to initialize server on port " << port << "\n";
+                return;
+            }
+            g_running = true;
+            g_start_time = std::chrono::steady_clock::now();
+            ServerLoop(port);
+        });
+
+        // Give the server a moment to come up
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+        int code = RunSmokeTest();
+
+        // Signal shutdown and clean up
+        g_running = false;
+        if (g_listen_socket != INVALID_SOCKET) {
+            closesocket(g_listen_socket);
+            g_listen_socket = INVALID_SOCKET;
+        }
+        if (serverThread.joinable()) {
+            serverThread.join();
+        }
+        WSACleanup();
+        return code;
     }
     
     // Print banner

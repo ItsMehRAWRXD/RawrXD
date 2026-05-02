@@ -53,6 +53,7 @@
 #pragma comment(lib, "dbghelp.lib")
 #include "../agent/quantum_agent_orchestrator.hpp"
 #include "../agentic/ToolRegistry.h"
+#include "../skill_system/SkillSystemBuildIntegration.h"
 #include "rawrxd/runtime/RuntimeSurfaceBootstrap.hpp"
 #include <algorithm>
 #include <chrono>
@@ -465,7 +466,10 @@ static bool hasAgenticSmokeFlag(LPSTR lpCmdLine)
 {
     if (!lpCmdLine)
         return false;
-    return strstr(lpCmdLine, "--agentic-smoke") != nullptr;
+    // --agentic-smoke is the canonical flag; --smoke-test is the user-facing alias.
+    // Both route to the same bounded, deterministic runAgenticSmokeTestExit().
+    return strstr(lpCmdLine, "--agentic-smoke") != nullptr ||
+           strstr(lpCmdLine, "--smoke-test") != nullptr;
 }
 
 static void selfTestOutputSink(const char* text, void* userData)
@@ -2579,6 +2583,10 @@ static bool agenticSmokeListDirStep(std::string& errOut)
 
 static int runAgenticSmokeTestExit()
 {
+    auto t0 = std::chrono::steady_clock::now();
+    int modelCount = 0;
+    std::string ollamaStatus = "skip";
+
     std::string err;
     if (!agenticSmokeToolRegistryStep(err))
     {
@@ -2696,6 +2704,8 @@ static int runAgenticSmokeTestExit()
     if (!isTruthyEnvVar("RAWRXD_AGENTIC_SMOKE_LIVE"))
     {
         fprintf(stdout, "[agentic-smoke] SKIP: live Ollama (set RAWRXD_AGENTIC_SMOKE_LIVE=1)\n");
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - t0).count();
+        fprintf(stdout, "[smoke] result=PASS duration_ms=%lld ollama=skip models=0\n", (long long)elapsed);
         return 0;
     }
 
@@ -2703,13 +2713,26 @@ static int runAgenticSmokeTestExit()
     if (!queryLocalOllamaEndpoint(L"/api/tags", tagsBody) || tagsBody.empty())
     {
         fprintf(stderr, "[agentic-smoke] FAIL: live Ollama — /api/tags unreachable\n");
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - t0).count();
+        fprintf(stderr, "[smoke] result=FAIL duration_ms=%lld ollama=unreachable models=0\n", (long long)elapsed);
         return 3;
     }
     std::string model;
     if (!parseFirstOllamaModelName(tagsBody, model))
     {
         fprintf(stderr, "[agentic-smoke] FAIL: live Ollama — no model in /api/tags\n");
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - t0).count();
+        fprintf(stderr, "[smoke] result=FAIL duration_ms=%lld ollama=no_models models=0\n", (long long)elapsed);
         return 3;
+    }
+
+    // Count models in tags response for telemetry
+    {
+        try {
+            nlohmann::json j = nlohmann::json::parse(tagsBody);
+            if (j.contains("models") && j["models"].is_array())
+                modelCount = static_cast<int>(j["models"].size());
+        } catch (...) {}
     }
 
     nlohmann::json body;
@@ -2723,6 +2746,8 @@ static int runAgenticSmokeTestExit()
     if (!postLocalOllamaChatJson(body.dump(), raw))
     {
         fprintf(stderr, "[agentic-smoke] FAIL: live Ollama — /api/chat POST failed\n");
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - t0).count();
+        fprintf(stderr, "[smoke] result=FAIL duration_ms=%lld ollama=chat_fail models=%d\n", (long long)elapsed, modelCount);
         return 3;
     }
     try
@@ -2739,6 +2764,8 @@ static int runAgenticSmokeTestExit()
             if (content.find("ok") != std::string::npos)
             {
                 fprintf(stdout, "[agentic-smoke] PASS: live ollama model=%s\n", model.c_str());
+                auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - t0).count();
+                fprintf(stdout, "[smoke] result=PASS duration_ms=%lld ollama=OK models=%d\n", (long long)elapsed, modelCount);
                 return 0;
             }
         }
@@ -2747,6 +2774,8 @@ static int runAgenticSmokeTestExit()
     {
     }
     fprintf(stderr, "[agentic-smoke] FAIL: live Ollama — response did not contain OK\n");
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - t0).count();
+    fprintf(stderr, "[smoke] result=FAIL duration_ms=%lld ollama=bad_response models=%d\n", (long long)elapsed, modelCount);
     return 3;
 }
 
@@ -2783,6 +2812,18 @@ static int runFastInferenceCLI(LPSTR lpCmdLine)
     int argc = 0;
     char** argv = nullptr;
     parseCmdLine(lpCmdLine, argc, argv);
+
+    std::string matmulKernel;
+    if (getArgValue(argc, argv, "--matmul-kernel", matmulKernel) && !matmulKernel.empty())
+    {
+        SetEnvironmentVariableA("RAWRXD_VULKAN_MATMUL_KERNEL", matmulKernel.c_str());
+    }
+
+    std::string matmulSpv;
+    if (getArgValue(argc, argv, "--matmul-spv", matmulSpv) && !matmulSpv.empty())
+    {
+        SetEnvironmentVariableA("RAWRXD_VULKAN_MATMUL_SPV", matmulSpv.c_str());
+    }
 
     std::string modelPath;
     std::ofstream resultLog("inference_fast_result.txt", std::ios::out | std::ios::trunc);
@@ -3742,6 +3783,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
                           "[Init:WinMain-Early] E0-8/8: final pre-constructor gate; allocating Win32IDE\n");
     Win32IDE ide(hInstance);
     emitStartupHeapSnapshot("ide_constructed");
+
+    // ========================================================================
+    // SKILL SYSTEM INITIALIZATION — Cursor-style .cursorrules injection
+    // First 520 lines of skill context ALWAYS injected regardless of model
+    // ========================================================================
+    {
+        RawrXD::SkillSystem::InitializeSkillSystem();
+        OutputDebugStringA("[main_win32] Skill system initialized + prompt warming pre-seeded\n");
+    }
 
     {
         const std::string exeDir = getIdeExeDirectoryA();

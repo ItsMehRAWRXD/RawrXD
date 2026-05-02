@@ -14,6 +14,7 @@
 #include "inference_engine.h"
 #include "plugins/MemoryPlugin.hpp"
 #include "rawrxd_inference.h"
+#include "cpu_inference_measurement_integration.h"
 
 
 
@@ -275,6 +276,9 @@ class CPUInferenceEngine : public InferenceEngine
 
     // Model state
     bool m_modelLoaded = false;
+
+        // Corrected measurement & pattern recognition (Session 4)
+        std::unique_ptr<RawrXD::Inference::MeasurementCollector> m_measurement_collector;
     std::string m_lastLoadErrorMessage;
     int m_vocabSize = 0;
     int m_embeddingDim = 0;

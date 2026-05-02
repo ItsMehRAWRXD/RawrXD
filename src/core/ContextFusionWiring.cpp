@@ -33,29 +33,29 @@ public:
         auto& engine = ContextFusionEngine::Get();
         
         // Editor events
-        bus.FileOpened.connect([](const std::string& path) {
+        bus.Subscribe(EventType::FileOpened, [](const Event& ev) {
             ContextFusionEngine::Get().EmitEvent(
-                ContextEvent(ContextEvent::FILE_OPENED, "EventBus", (void*)&path)
+                ContextEvent(ContextEvent::FILE_OPENED, "EventBus", (void*)&ev.data)
             );
         });
         
-        bus.FileSaved.connect([](const std::string& path) {
+        bus.Subscribe(EventType::FileSaved, [](const Event& ev) {
             ContextFusionEngine::Get().EmitEvent(
-                ContextEvent(ContextEvent::FILE_SAVED, "EventBus", (void*)&path)
+                ContextEvent(ContextEvent::FILE_SAVED, "EventBus", (void*)&ev.data)
             );
         });
         
         // Agent events
-        bus.AgentMessage.connect([](const std::string& msg) {
+        bus.Subscribe(EventType::AIResponse, [](const Event& ev) {
             ContextFusionEngine::Get().EmitEvent(
-                ContextEvent(ContextEvent::AGENT_ACTION, "EventBus", (void*)&msg)
+                ContextEvent(ContextEvent::AGENT_ACTION, "EventBus", (void*)&ev.data)
             );
         });
         
-        // Build events
-        bus.BuildFinished.connect([](const std::string& target, bool success) {
+        // Build events — map to generic tool execution
+        bus.Subscribe(EventType::ExtensionActivated, [](const Event& ev) {
             ContextFusionEngine::Get().EmitEvent(
-                ContextEvent(ContextEvent::TOOL_EXECUTED, "EventBus", (void*)&target)
+                ContextEvent(ContextEvent::TOOL_EXECUTED, "EventBus", (void*)&ev.data)
             );
         });
     }

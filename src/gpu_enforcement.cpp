@@ -19,18 +19,18 @@
 // into the final binary; we weakly reference the Vulkan probe symbols and
 // fall back to a stub returning 0 when the Vulkan backend is absent.
 extern "C" {
-    int  ggml_rxd_backend_vk_get_device_count(void);
-    void ggml_rxd_backend_vk_get_device_description(int device, char * description, size_t description_size);
-    void ggml_rxd_backend_vk_get_device_memory(int device, size_t * free, size_t * total);
+    int  ggml_backend_vk_get_device_count(void);
+    void ggml_backend_vk_get_device_description(int device, char * description, size_t description_size);
+    void ggml_backend_vk_get_device_memory(int device, size_t * free, size_t * total);
 }
 
 #if defined(_MSC_VER)
 extern "C" int  rxd_gpu_vk_device_count_stub(void) { return 0; }
 extern "C" void rxd_gpu_vk_device_description_stub(int, char * d, size_t n) { if (d && n) d[0] = '\0'; }
 extern "C" void rxd_gpu_vk_device_memory_stub(int, size_t * f, size_t * t) { if (f) *f = 0; if (t) *t = 0; }
-#pragma comment(linker, "/alternatename:ggml_rxd_backend_vk_get_device_count=rxd_gpu_vk_device_count_stub")
-#pragma comment(linker, "/alternatename:ggml_rxd_backend_vk_get_device_description=rxd_gpu_vk_device_description_stub")
-#pragma comment(linker, "/alternatename:ggml_rxd_backend_vk_get_device_memory=rxd_gpu_vk_device_memory_stub")
+#pragma comment(linker, "/alternatename:ggml_backend_vk_get_device_count=rxd_gpu_vk_device_count_stub")
+#pragma comment(linker, "/alternatename:ggml_backend_vk_get_device_description=rxd_gpu_vk_device_description_stub")
+#pragma comment(linker, "/alternatename:ggml_backend_vk_get_device_memory=rxd_gpu_vk_device_memory_stub")
 #endif
 
 // CUDA / HIP probes are weakly referenced; if the symbol is missing at link
@@ -77,14 +77,24 @@ void detect_locked() {
     g_status.vram_free_bytes  = 0;
 
     // 1. Vulkan first (broadest hardware coverage incl. AMD RDNA3).
+    // Explicitly load ggml-vulkan.dll to ensure the real functions are available
+#if defined(_WIN32)
+    HMODULE vkModule = LoadLibraryA("ggml-vulkan.dll");
+    if (vkModule) {
+        std::fprintf(stderr, "[RawrXD][GPU] Loaded ggml-vulkan.dll for Vulkan backend detection\n");
+    } else {
+        std::fprintf(stderr, "[RawrXD][GPU] Failed to load ggml-vulkan.dll: %lu\n", GetLastError());
+    }
+#endif
+    
     int vk_count = 0;
-    try { vk_count = ggml_rxd_backend_vk_get_device_count(); } catch (...) { vk_count = 0; }
+    try { vk_count = ggml_backend_vk_get_device_count(); } catch (...) { vk_count = 0; }
     if (vk_count > 0) {
         g_status.active       = Backend::Vulkan;
         g_status.device_count = vk_count;
-        ggml_rxd_backend_vk_get_device_description(0, g_status.device_name, sizeof(g_status.device_name));
+        ggml_backend_vk_get_device_description(0, g_status.device_name, sizeof(g_status.device_name));
         size_t fr = 0, tot = 0;
-        ggml_rxd_backend_vk_get_device_memory(0, &fr, &tot);
+        ggml_backend_vk_get_device_memory(0, &fr, &tot);
         g_status.vram_free_bytes  = fr;
         g_status.vram_total_bytes = tot;
         g_active.store(true, std::memory_order_release);

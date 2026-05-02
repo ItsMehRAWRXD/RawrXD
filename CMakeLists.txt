@@ -420,6 +420,8 @@ if(RAWR_HAS_MASM)
         src/asm/agentic_deep_thinking_kernels.asm
         src/kernels/RawrXD_Omega_Singularity.asm
         src/kernels/RawrXD_Omega_Agentic.asm
+        # Sovereign FP8 Quantizer - Hardware-independent quantization for RX 7800 XT
+        src/kernels/sovereign_fp8_quantizer.asm
         # Sovereign agentic runtime: terminal capture, context buffer, JSON plan parser
         src/asm/RawrXD_TerminalCapture.asm
         src/asm/RawrXD_ContextBuffer.asm
@@ -533,6 +535,43 @@ if(RAWRXD_GLSLANG_VALIDATOR OR RAWRXD_GLSLC)
     add_custom_target(rawrxd-sovereign-kernel-spv DEPENDS ${RAWRXD_SOVEREIGN_SHADER_SPV})
 endif()
 
+# FP8 Quantization Shader
+set(RAWRXD_FP8_SHADER_SRC "${CMAKE_SOURCE_DIR}/src/quantization/shaders/fp8_quantize.comp")
+set(RAWRXD_FP8_SHADER_SPV "${RAWRXD_TEST_SHADER_DIR}/fp8_quantize.spv")
+
+if(RAWRXD_GLSLANG_VALIDATOR)
+    add_custom_command(
+        OUTPUT ${RAWRXD_FP8_SHADER_SPV}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${RAWRXD_TEST_SHADER_DIR}
+        COMMAND ${RAWRXD_GLSLANG_VALIDATOR}
+                -V
+                --target-env vulkan1.3
+                -o ${RAWRXD_FP8_SHADER_SPV}
+                ${RAWRXD_FP8_SHADER_SRC}
+        DEPENDS ${RAWRXD_FP8_SHADER_SRC}
+        COMMENT "Generating FP8 SPIR-V shader: fp8_quantize.spv"
+        VERBATIM
+    )
+elseif(RAWRXD_GLSLC)
+    add_custom_command(
+        OUTPUT ${RAWRXD_FP8_SHADER_SPV}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${RAWRXD_TEST_SHADER_DIR}
+        COMMAND ${RAWRXD_GLSLC}
+                -fshader-stage=compute
+                --target-env=vulkan1.3
+                -O
+                ${RAWRXD_FP8_SHADER_SRC}
+                -o ${RAWRXD_FP8_SHADER_SPV}
+        DEPENDS ${RAWRXD_FP8_SHADER_SRC}
+        COMMENT "Generating FP8 SPIR-V shader with glslc: fp8_quantize.spv"
+        VERBATIM
+    )
+endif()
+
+if(RAWRXD_GLSLANG_VALIDATOR OR RAWRXD_GLSLC)
+    add_custom_target(rawrxd-fp8-shader-spv DEPENDS ${RAWRXD_FP8_SHADER_SPV})
+endif()
+
 set(_RAWR_ASM_FEATURE_DEFINITIONS
     RAWR_HAS_MASM=$<IF:$<BOOL:${RAWR_HAS_MASM}>,1,0>
     RAWRXD_LINK_QUADBUFFER_ASM=$<IF:$<BOOL:${RAWR_HAS_MASM}>,1,0>
@@ -617,10 +656,19 @@ set(SOURCES
     src/core/native_speed_layer.cpp
     src/core/local_ai_core.cpp
     src/core/native_inference_pipeline.cpp
+    src/core/speculative_inference_engine.cpp
     
     # Layer Offload Manager — RAM streaming for 74B+ models on 16GB VRAM
     src/core/layer_offload_manager.cpp
-    
+
+    # Sovereign FP8 Quantizer — Hardware-independent quantization for RX 7800 XT
+    src/kernels/sovereign_fp8_quantizer.cpp
+
+    # FP8 Quantization Implementation (E4M3/E5M2 formats)
+    src/quantization/fp8_quantizer.cpp
+    src/quantization/fp8_gpu_dispatch.cpp
+    src/quantization/fp8_kv_cache_integration.cpp
+
     # Three-layer hotpatch system (needed by decision tree)
     src/core/model_memory_hotpatch.cpp
     src/core/byte_level_hotpatcher.cpp
@@ -841,6 +889,9 @@ set(SOURCES
 
     # JS extension host — required by ssot_handlers_ext
     src/core/js_extension_host.cpp
+
+    # Extension Scheduler Bridge — integrates Extension API with ExecutionScheduler v2
+    src/extension_host/ExtensionSchedulerBridge.cpp
 
     # Model source resolver — required by auto_feature_registry
     src/model_source_resolver.cpp
@@ -1647,7 +1698,7 @@ else()
         src/core/ssot_handlers_ext_isolated.cpp
     )
     list(APPEND GOLD_UNDERSCORE_SOURCES
-        src/core/auto_feature_stub_impl.cpp
+        src/core/auto_feature_impl.cpp
         src/core/missing_handler_stubs.cpp
     )
     set(_RAWR_GOLD_AUTO_FEATURE_REGISTRY_PROVIDES_HANDLERS 0)
@@ -2733,7 +2784,6 @@ set(INFERENCE_ENGINE_SOURCES
     src/rawrxd_transformer.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_sampler.cpp
-    src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
     src/streaming_gguf_loader.cpp
     src/compression_interface.cpp
@@ -2765,6 +2815,10 @@ set(INFERENCE_ENGINE_SOURCES
     src/inference/MemoryPressureGuard.cpp
     src/agentic/ErrorRecoveryManager.cpp
     src/inference/PerformanceMonitor.cpp
+    src/inference/rawr_inference_autopatch_loop.cpp
+    src/ai/fast_spec.cpp
+    src/ai/fast_spec_inference_bridge.cpp
+    src/gguf_loader.cpp
     # Standalone inference link closure (cpu_inference_engine + model loader + transformer + swarm)
     src/core/swarm_scheduler.cpp
     src/core/gguf_swarm_plan_builder.cpp
@@ -3374,6 +3428,9 @@ if(WIN32)
         src/win32app/Win32IDE_ChatCommands.cpp
         src/win32app/Win32IDE_ComposerPanel.cpp
         src/win32app/Win32IDE_TabManager.cpp
+        src/ui/advanced_docking_system.cpp
+        src/kv_cache/kv_cache_fp8_quantizer.cpp
+        src/tests/titan_70b_stress_test.cpp
         src/win32app/Win32IDE_Settings.cpp
         src/win32app/Win32IDE_AutonomousCommunicator.cpp
         src/win32app/Win32IDE_AgenticComposerUX.cpp
@@ -3451,6 +3508,7 @@ if(WIN32)
         src/core/ContextFusionEngine.cpp
         src/core/ContextFusionWiring.cpp
         src/win32app/GhostTextContextSubscriber.cpp
+        src/win32app/PrefixCache.cpp
         src/win32app/ChatPanelModelCaller.cpp
 
         # Plugin System — Phase 43: Native Win32 DLL loading (C ABI)
@@ -3896,6 +3954,9 @@ if(WIN32)
 
         # Transaction Journal (WAL journal for atomic file operations)
         src/core/transaction_journal.cpp
+
+        # Pending Edit Review Gate — tool-driven edit review queue with state machine
+        src/core/PendingEditReviewGate.cpp
 
         # Instructions Provider — unified *.instructions.md loader (HTTP+CLI+GUI)
         src/core/instructions_provider.cpp
@@ -4440,6 +4501,11 @@ if(WIN32)
         src/ui/ExportBridge.cpp
         src/terminal/embedded_terminal.cpp
         src/win32app/sovereign_gpu_link_stubs.cpp
+        # Skill System — Cursor-style .cursorrules injection (first 520 lines guarantee)
+        src/skill_system/SkillInjectionEngine.cpp
+        src/skill_system/SkillToggleUI.cpp
+        src/skill_system/SkillSystemBuildIntegration.cpp
+        src/skill_system/PromptWarmingEngine.cpp
     )
 
     set(WIN32IDE_EXTRA_ASM "")
@@ -5303,6 +5369,7 @@ if(WIN32)
         ${CMAKE_CURRENT_SOURCE_DIR}/src/ide
         ${CMAKE_CURRENT_SOURCE_DIR}/src/llm_adapter
         ${CMAKE_CURRENT_SOURCE_DIR}/src/auth
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/skill_system
         ${CMAKE_CURRENT_SOURCE_DIR}/src/context
         ${CMAKE_CURRENT_SOURCE_DIR}/src/multimodal_engine
         ${CMAKE_CURRENT_SOURCE_DIR}/src/telemetry
@@ -5549,7 +5616,42 @@ if(WIN32)
     )
 
     add_executable(workflow_persistence_smoke EXCLUDE_FROM_ALL
-        tests/test_workflow_persistence.cpp
+            tests/test_workflow_persistence.cpp
+        )
+
+        add_executable(smoke_test_measurement_integration EXCLUDE_FROM_ALL
+            src/speculative/smoke_test_measurement_integration.cpp
+        )
+        target_include_directories(smoke_test_measurement_integration PRIVATE
+            ${CMAKE_SOURCE_DIR}/src
+            ${CMAKE_SOURCE_DIR}/src/speculative
+            ${CMAKE_SOURCE_DIR}
+        )
+        target_link_libraries(smoke_test_measurement_integration PRIVATE kernel32)
+        set_target_properties(smoke_test_measurement_integration PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+            CXX_STANDARD 17
+        )
+        add_test(NAME smoke_test_measurement_integration COMMAND smoke_test_measurement_integration)
+
+        add_executable(e2e_integration_test EXCLUDE_FROM_ALL
+            src/speculative/e2e_integration_test.cpp
+            src/gguf_loader.cpp
+        )
+        target_include_directories(e2e_integration_test PRIVATE
+            ${CMAKE_SOURCE_DIR}/src
+            ${CMAKE_SOURCE_DIR}/src/speculative
+            ${CMAKE_SOURCE_DIR}
+        )
+        target_link_libraries(e2e_integration_test PRIVATE kernel32)
+        set_target_properties(e2e_integration_test PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+            CXX_STANDARD 17
+        )
+        add_test(NAME e2e_integration_test COMMAND e2e_integration_test)
+
+        add_executable(workflow_persistence_smoke_original EXCLUDE_FROM_ALL
+            tests/test_workflow_persistence.cpp
         src/agentic_loop_state.cpp
         src/agentic_memory_system.cpp
         src/execution_state_persistence.cpp
@@ -5687,6 +5789,30 @@ if(WIN32)
         OUTPUT_NAME RawrXD-Benchmark
     )
     message(STATUS "[Phase C] GPU Benchmark target: RawrXD-Benchmark")
+
+    # Decode micro-benchmark (direct CPUInferenceEngine path, CLI-quirk free)
+    add_executable(RawrXD-DecodeMicroBench EXCLUDE_FROM_ALL
+        src/speculative/decode_microbench_cpu_engine.cpp
+    )
+    target_include_directories(RawrXD-DecodeMicroBench PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    target_link_libraries(RawrXD-DecodeMicroBench PRIVATE
+        InferenceEngine
+        kernel32
+        user32
+        ole32
+        oleaut32
+        version
+        Rpcrt4
+        Psapi
+    )
+    set_target_properties(RawrXD-DecodeMicroBench PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME RawrXD-DecodeMicroBench
+    )
+    message(STATUS "[DecodeProbe] CPUInferenceEngine decode micro-benchmark target: RawrXD-DecodeMicroBench")
 
     # ═══════════════════════════════════════════════════════════════════
     # Router Benchmark Runner — benchmark_generation + benchmark_long_context
@@ -6212,6 +6338,69 @@ endif()
 message(STATUS "[IntelligentReview] Smoke test target: intelligent_review_smoke_test (build with: cmake --build . --target intelligent_review_smoke_test)")
 
 # ============================================================================
+# FP8 Quantization Test Suite
+# ============================================================================
+add_executable(test_fp8_quantization EXCLUDE_FROM_ALL
+    tests/test_fp8_quantization.cpp
+    src/quantization/fp8_quantizer.cpp
+)
+
+target_include_directories(test_fp8_quantization PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_compile_features(test_fp8_quantization PRIVATE cxx_std_17)
+
+if(MSVC)
+    target_compile_options(test_fp8_quantization PRIVATE /EHsc /W2 /arch:AVX2)
+endif()
+
+if(WIN32)
+    target_link_libraries(test_fp8_quantization PRIVATE
+        Threads::Threads
+    )
+else()
+    target_link_libraries(test_fp8_quantization PRIVATE Threads::Threads)
+endif()
+
+set_target_properties(test_fp8_quantization PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+)
+
+message(STATUS "[FP8Quantization] Test target: test_fp8_quantization (build with: cmake --build . --target test_fp8_quantization)")
+
+# ============================================================================
+# Context Fusion Harness
+# ============================================================================
+add_executable(context_fusion_harness EXCLUDE_FROM_ALL
+    src/tests/context_fusion_harness.cpp
+    src/core/ContextFusionEngine.cpp
+    src/win32app/GhostTextContextSubscriber.cpp
+    src/win32app/PrefixCache.cpp
+)
+
+target_include_directories(context_fusion_harness PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_compile_features(context_fusion_harness PRIVATE cxx_std_17)
+
+if(WIN32)
+    target_link_libraries(context_fusion_harness PRIVATE
+        Threads::Threads
+        user32 gdi32 shell32 ws2_32
+    )
+else()
+    target_link_libraries(context_fusion_harness PRIVATE Threads::Threads)
+endif()
+
+message(STATUS "[ContextFusion] Harness target: context_fusion_harness (build with: cmake --build . --target context_fusion_harness)")
+
+# ============================================================================
 # TLS Bridge Smoke Tests
 # ============================================================================
 add_executable(tls_bridge_smoke_test EXCLUDE_FROM_ALL
@@ -6361,6 +6550,66 @@ if(RAWRXD_BUILD_ADDRESS_RESOLVER_NATIVE AND EXISTS "${CMAKE_SOURCE_DIR}/tools/ad
 
     message(STATUS "[Tools] Native address resolver target enabled: address_resolver_native (smoke targets: address_resolver_native_smoke, address_resolver_native_smoke_soft, address_resolver_native_smoke_minimal)")
 endif()
+
+# ════════════════════════════════════════════════════════════════════
+# ExtensionScheduler Integration Test
+# Build: cmake --build build-ninja --target ExtensionScheduler_Integration_Test
+# ════════════════════════════════════════════════════════════════════
+add_executable(ExtensionScheduler_Integration_Test EXCLUDE_FROM_ALL
+    tests/integration/ExtensionScheduler_Integration_Test.cpp
+    src/extension_host/ExtensionSchedulerBridge.cpp
+)
+target_include_directories(ExtensionScheduler_Integration_Test PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/extension_host
+)
+if(MSVC)
+    target_compile_options(ExtensionScheduler_Integration_Test PRIVATE /EHsc /W3)
+    target_compile_options(ExtensionScheduler_Integration_Test PRIVATE
+        $<$<CONFIG:Release>:/O2>
+        $<$<CONFIG:RelWithDebInfo>:/O2>
+    )
+endif()
+target_link_libraries(ExtensionScheduler_Integration_Test PRIVATE kernel32)
+set_target_properties(ExtensionScheduler_Integration_Test PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME ExtensionScheduler_Integration_Test
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+message(STATUS "[Integration Test] ExtensionScheduler_Integration_Test target added")
+
+# ════════════════════════════════════════════════════════════════════
+# Sovereign FP8 Quantizer Test
+# Build: cmake --build build-ninja --target SovereignFP8_Test
+# ════════════════════════════════════════════════════════════════════
+add_executable(SovereignFP8_Test EXCLUDE_FROM_ALL
+    tests/integration/test_sovereign_fp8.cpp
+    src/kernels/sovereign_fp8_quantizer.cpp
+    src/kernels/sovereign_fp8_quantizer.asm
+)
+target_include_directories(SovereignFP8_Test PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/kernels
+)
+set_source_files_properties(src/kernels/sovereign_fp8_quantizer.asm PROPERTIES LANGUAGE ASM_MASM)
+if(MSVC)
+    target_compile_options(SovereignFP8_Test PRIVATE /EHsc /W3 /O2)
+    target_compile_options(SovereignFP8_Test PRIVATE
+        $<$<CONFIG:Release>:/O2>
+        $<$<CONFIG:RelWithDebInfo>:/O2>
+    )
+endif()
+target_link_libraries(SovereignFP8_Test PRIVATE kernel32)
+set_target_properties(SovereignFP8_Test PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME SovereignFP8_Test
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+message(STATUS "[Sovereign Test] SovereignFP8_Test target added (RX 7800 XT high-throughput validation)")
 
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/CMakeLists.txt")
     enable_testing()

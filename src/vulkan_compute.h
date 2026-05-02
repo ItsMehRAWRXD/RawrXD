@@ -118,6 +118,14 @@ struct ComputeShader {
     std::vector<uint32_t>    spirv_code;
 };
 
+enum class MatMulKernelMode : uint32_t {
+    FloatF32 = 0,
+    Q4KQ81U32 = 1,
+    Q40U32 = 2,
+    Q5KU32 = 3,
+    Q6KU32 = 4,
+};
+
 // =============================================================================
 // AsyncCommandBuffer — Pooled command buffer with fence tracking
 // =============================================================================
@@ -368,6 +376,8 @@ private:
     // ---- MatMul Permanent Descriptor System ----
     VkDescriptorSetLayout  matmul_descriptor_set_layout_ = nullptr;
     VkDescriptorPool       matmul_descriptor_pool_       = nullptr;
+    MatMulKernelMode       matmul_kernel_mode_           = MatMulKernelMode::FloatF32;
+    uint32_t               matmul_push_constant_words_   = 3;
 
     // ---- Fused MLP Descriptor System ----
     VkDescriptorSetLayout  fused_mlp_descriptor_layout_  = nullptr;

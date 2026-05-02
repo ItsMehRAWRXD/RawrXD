@@ -61,8 +61,8 @@ DispatchLoaderDynamic & ggml_vk_default_dispatcher();
 #define YIELD()
 #endif
 
-#include "ggml-impl_rxd_internal.h"
-#include "ggml-backend-impl_rxd_internal.h"
+#include "ggml-impl.h"
+#include "ggml-backend-impl.h"
 
 #include "ggml-vulkan-shaders.hpp"
 
@@ -1755,9 +1755,9 @@ void vk_memory_logger::log_deallocation(vk_buffer_ref buf_ref) {
     const bool device = bool(buf->memory_property_flags & vk::MemoryPropertyFlagBits::eDeviceLocal);
     std::string type = device ? "device" : "host";
     auto it = allocations.find(buf->buffer);
+    total_device -= device ? it->second : 0;
+    total_host -= device ? 0 : it->second;
     if (it != allocations.end()) {
-        total_device -= device ? it->second : 0;
-        total_host -= device ? 0 : it->second;
         VK_LOG_MEMORY(buf->device->name << ": -" << format_size(it->second) << " " << type << " at " << buf->buffer << ". Total device: " << format_size(total_device) << ", total host: " << format_size(total_host));
         allocations.erase(it);
     } else {
@@ -7147,9 +7147,16 @@ static void ggml_vk_mul_mat(ggml_backend_vk_context * ctx, vk_context& subctx, c
         ggml_vk_mul_mat_vec_nc_f16_f32(ctx, subctx, cgraph, node_idx);
     // mul_mat_vec supports batching ne12*ne13 when ne11==1, or treating ne11 as the batch size (up to four)
     // when ne12 and ne13 are one.
+    // RDNA3: Prefer tiled GEMM (MMQ) over GEMV for better GPU utilization even for N=1
     } else if ((dst->ne[1] == 1 || (dst->ne[1] <= mul_mat_vec_max_cols && src1->ne[2] * src1->ne[3] == 1)) &&
-               (src0->type == GGML_TYPE_F32 || src0->type == GGML_TYPE_F16 || src0->type == GGML_TYPE_BF16 || ggml_is_quantized(src0->type))) {
+               (src0->type == GGML_TYPE_F32 || src0->type == GGML_TYPE_F16 || src0->type == GGML_TYPE_BF16 || ggml_is_quantized(src0->type)) &&
+               ctx->device->architecture != vk_device_architecture::AMD_RDNA3) {
         ggml_vk_mul_mat_vec_q_f16(ctx, subctx, cgraph, node_idx);
+    } else if (ctx->device->architecture == vk_device_architecture::AMD_RDNA3 &&
+               (dst->ne[1] == 1 || (dst->ne[1] <= mul_mat_vec_max_cols && src1->ne[2] * src1->ne[3] == 1)) &&
+               (src0->type == GGML_TYPE_F32 || src0->type == GGML_TYPE_F16 || src0->type == GGML_TYPE_BF16 || ggml_is_quantized(src0->type))) {
+        // RDNA3: Use tiled GEMM (MMQ) for N=1 to saturate wavefronts
+        ggml_vk_mul_mat_q_f16(ctx, subctx, src0, src1, dst, false);
     } else {
         ggml_vk_mul_mat_q_f16(ctx, subctx, src0, src1, dst, false);
     }

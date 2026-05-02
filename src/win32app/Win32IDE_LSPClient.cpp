@@ -1413,9 +1413,9 @@ bool Win32IDE::applyWorkspaceEdit(const LSPWorkspaceEdit& edit)
     if (edit.changes.empty() && edit.resourceOperations.empty())
         return false;
 
-    int filesChanged = 0;
-    int editsApplied = 0;
-    int resourcesAffected = 0;
+    int filesQueued = 0;
+    int editsQueued = 0;
+    int resourcesQueued = 0;
 
     // 1. First handle resource operations (LSP 3.17)
     for (const auto& op : edit.resourceOperations)
@@ -1440,12 +1440,9 @@ bool Win32IDE::applyWorkspaceEdit(const LSPWorkspaceEdit& edit)
                     }
                     continue;
                 }
-                std::ofstream ofs(path);
-                if (ofs.is_open())
-                {
-                    resourcesAffected++;
-                    appendToOutput("[LSP] Created file: " + path, "General", OutputSeverity::Info);
-                }
+                queueFilePendingEdit(RawrXD::Review::EditSource::Lsp, RawrXD::Review::EditType::Create, path,
+                                     std::string(), std::string());
+                resourcesQueued++;
                 break;
             }
             case LSPWorkspaceEdit::ResourceOperation::Type::Rename:
@@ -1465,12 +1462,9 @@ bool Win32IDE::applyWorkspaceEdit(const LSPWorkspaceEdit& edit)
                                    OutputSeverity::Warning);
                     continue;
                 }
-                if (MoveFileExA(path.c_str(), newPath.c_str(),
-                                MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH))
-                {
-                    resourcesAffected++;
-                    appendToOutput("[LSP] Renamed: " + path + " -> " + newPath, "General", OutputSeverity::Info);
-                }
+                queueFilePendingEdit(RawrXD::Review::EditSource::Lsp, RawrXD::Review::EditType::Rename, path,
+                                     std::string(), std::string(), newPath);
+                resourcesQueued++;
                 break;
             }
             case LSPWorkspaceEdit::ResourceOperation::Type::Delete:
@@ -1484,36 +1478,21 @@ bool Win32IDE::applyWorkspaceEdit(const LSPWorkspaceEdit& edit)
                     }
                     continue;
                 }
-                // Check if directory
+                std::string oldText;
                 DWORD attr = GetFileAttributesA(path.c_str());
-                if (attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY))
+                if (attr != INVALID_FILE_ATTRIBUTES && !(attr & FILE_ATTRIBUTE_DIRECTORY))
                 {
-                    if (op.recursive)
+                    std::ifstream ifs(path, std::ios::binary);
+                    if (ifs.is_open())
                     {
-                        // Recursive directory delete (SHFileOperation approach or simple rmdir)
-                        SHFILEOPSTRUCTA shop = {0};
-                        shop.wFunc = FO_DELETE;
-                        shop.pFrom = path.c_str();
-                        shop.fFlags = FOF_NOCONFIRMATION | FOF_SILENT | FOF_NOERRORUI;
-                        if (SHFileOperationA(&shop) == 0)
-                        {
-                            resourcesAffected++;
-                        }
-                    }
-                    else
-                    {
-                        if (RemoveDirectoryA(path.c_str()))
-                            resourcesAffected++;
+                        std::ostringstream buffer;
+                        buffer << ifs.rdbuf();
+                        oldText = buffer.str();
                     }
                 }
-                else
-                {
-                    if (DeleteFileA(path.c_str()))
-                    {
-                        resourcesAffected++;
-                        appendToOutput("[LSP] Deleted file: " + path, "General", OutputSeverity::Info);
-                    }
-                }
+                queueFilePendingEdit(RawrXD::Review::EditSource::Lsp, RawrXD::Review::EditType::Delete, path,
+                                     oldText, std::string());
+                resourcesQueued++;
                 break;
             }
         }
@@ -1524,7 +1503,16 @@ bool Win32IDE::applyWorkspaceEdit(const LSPWorkspaceEdit& edit)
     {
         std::string filePath = uriToFilePath(uri);
 
-        // Read file
+        std::ifstream rawIfs(filePath, std::ios::binary);
+        if (!rawIfs.is_open())
+            continue;
+
+        std::ostringstream originalBuffer;
+        originalBuffer << rawIfs.rdbuf();
+        const std::string originalText = originalBuffer.str();
+        rawIfs.close();
+
+        // Read file line-wise for edit reconstruction
         std::ifstream ifs(filePath);
         if (!ifs.is_open())
             continue;
@@ -1577,34 +1565,33 @@ bool Win32IDE::applyWorkspaceEdit(const LSPWorkspaceEdit& edit)
                 lines.erase(lines.begin() + startLine + 1, lines.begin() + endLine + 1);
                 lines[startLine] = firstLine + te.newText + lastLine;
             }
-            editsApplied++;
+            editsQueued++;
         }
 
-        // Write file back
-        std::ofstream ofs(filePath);
-        if (ofs.is_open())
+        std::ostringstream rebuilt;
+        for (size_t i = 0; i < lines.size(); ++i)
         {
-            for (size_t i = 0; i < lines.size(); ++i)
-            {
-                ofs << lines[i];
-                if (i + 1 < lines.size())
-                    ofs << "\n";
-            }
-            filesChanged++;
+            rebuilt << lines[i];
+            if (i + 1 < lines.size())
+                rebuilt << "\n";
         }
+
+        queueFilePendingEdit(RawrXD::Review::EditSource::Lsp, RawrXD::Review::EditType::Replace, filePath,
+                             originalText, rebuilt.str());
+        filesQueued++;
     }
 
-    if (filesChanged > 0 || resourcesAffected > 0)
+    if (filesQueued > 0 || resourcesQueued > 0)
     {
-        std::string msg = "[LSP] Applied " + std::to_string(editsApplied) + " edits across " +
-                          std::to_string(filesChanged) + " file(s)";
-        if (resourcesAffected > 0)
-            msg += " and " + std::to_string(resourcesAffected) + " resource op(s)";
+        std::string msg = "[LSP] Queued " + std::to_string(editsQueued) + " edits across " +
+                          std::to_string(filesQueued) + " file(s)";
+        if (resourcesQueued > 0)
+            msg += " and " + std::to_string(resourcesQueued) + " resource op(s)";
         msg += ".";
         appendToOutput(msg, "General", OutputSeverity::Info);
     }
 
-    return filesChanged > 0 || resourcesAffected > 0;
+    return filesQueued > 0 || resourcesQueued > 0;
 }
 
 Win32IDE::LSPLanguage Win32IDE::detectLanguageForFile(const std::string& filePath) const

@@ -432,6 +432,128 @@ static std::unique_ptr<BoundedAgentLoop> s_agentLoop;
 #define IDC_AGENT_NEW_SESSION    14005
 #define IDC_AGENT_SUMMARY_EDIT   14006
 
+#define IDC_EDIT_REVIEW_STATUS_LABEL    14020
+#define IDC_EDIT_REVIEW_LIST            14021
+#define IDC_EDIT_REVIEW_PREVIEW         14022
+#define IDC_EDIT_REVIEW_APPROVE_BTN     14023
+#define IDC_EDIT_REVIEW_DECLINE_BTN     14024
+#define IDC_EDIT_REVIEW_ACCEPT_ALL_BTN  14025
+#define IDC_EDIT_REVIEW_DECLINE_ALL_BTN 14026
+
+namespace {
+
+const char* PendingEditSourceLabel(RawrXD::Review::EditSource source)
+{
+    switch (source)
+    {
+        case RawrXD::Review::EditSource::Agent:
+            return "Agent";
+        case RawrXD::Review::EditSource::GhostText:
+            return "GhostText";
+        case RawrXD::Review::EditSource::Lsp:
+            return "LSP";
+        case RawrXD::Review::EditSource::User:
+            return "User";
+        default:
+            return "Unknown";
+    }
+}
+
+const char* PendingEditStateLabel(RawrXD::Review::EditState state)
+{
+    switch (state)
+    {
+        case RawrXD::Review::EditState::Pending:
+            return "PENDING";
+        case RawrXD::Review::EditState::Approved:
+            return "APPROVED";
+        case RawrXD::Review::EditState::Applied:
+            return "APPLIED";
+        case RawrXD::Review::EditState::Committed:
+            return "COMMITTED";
+        case RawrXD::Review::EditState::Declined:
+            return "DECLINED";
+        case RawrXD::Review::EditState::Discarded:
+            return "DISCARDED";
+        case RawrXD::Review::EditState::Stale:
+            return "STALE";
+        case RawrXD::Review::EditState::AutoDeclined:
+            return "AUTO_DECLINED";
+        default:
+            return "UNKNOWN";
+    }
+}
+
+bool IsPendingState(RawrXD::Review::EditState state)
+{
+    return state == RawrXD::Review::EditState::Pending || state == RawrXD::Review::EditState::Approved ||
+           state == RawrXD::Review::EditState::Stale;
+}
+
+bool QueryFileWriteTime(const std::string& filePath, FILETIME* outWriteTime)
+{
+    if (!outWriteTime || filePath.empty())
+    {
+        return false;
+    }
+
+    WIN32_FILE_ATTRIBUTE_DATA data{};
+    if (!GetFileAttributesExA(filePath.c_str(), GetFileExInfoStandard, &data))
+    {
+        return false;
+    }
+
+    *outWriteTime = data.ftLastWriteTime;
+    return true;
+}
+
+bool IsValidCharRange(const CHARRANGE& range)
+{
+    return range.cpMin >= 0 && range.cpMax >= range.cpMin;
+}
+
+bool RangesOverlap(const CHARRANGE& left, const CHARRANGE& right)
+{
+    if (!IsValidCharRange(left) || !IsValidCharRange(right))
+    {
+        return false;
+    }
+    return left.cpMin < right.cpMax && right.cpMin < left.cpMax;
+}
+
+std::string ReadWindowTextUtf8(HWND hwnd)
+{
+    if (!hwnd || !IsWindow(hwnd))
+    {
+        return {};
+    }
+
+    const int length = GetWindowTextLengthA(hwnd);
+    if (length <= 0)
+    {
+        return {};
+    }
+
+    std::string text(static_cast<size_t>(length), '\0');
+    GetWindowTextA(hwnd, text.data(), length + 1);
+    return text;
+}
+
+std::string ApplyRangeReplacement(std::string original, const CHARRANGE& range, const std::string& replacement)
+{
+    if (!IsValidCharRange(range) || range.cpMin > static_cast<LONG>(original.size()))
+    {
+        return original;
+    }
+
+    const size_t start = static_cast<size_t>(range.cpMin);
+    const size_t end = static_cast<size_t>((std::min)(range.cpMax, static_cast<LONG>(original.size())));
+    original.replace(start, end - start, replacement);
+    return original;
+}
+
+}  // namespace
+
 LRESULT CALLBACK Win32IDE::AgentDiffPanelProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     Win32IDE* self = reinterpret_cast<Win32IDE*>(GetWindowLongPtrA(hwnd, GWLP_USERDATA));
 
@@ -468,6 +590,622 @@ LRESULT CALLBACK Win32IDE::AgentDiffPanelProc(HWND hwnd, UINT uMsg, WPARAM wPara
     }
 
     return DefWindowProcA(hwnd, uMsg, wParam, lParam);
+}
+
+void Win32IDE::initEditReviewPanel()
+{
+    if (m_editReviewPanelInitialized)
+        return;
+
+    HWND hwndParent = m_hwndPanelContainer ? m_hwndPanelContainer : m_hwndMain;
+    HFONT hBoldFont = CreateFontA(-14, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS,
+                                  CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+    HFONT hNormalFont = CreateFontA(-13, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS,
+                                    CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+
+    const int panelW = 780;
+    const int panelH = 320;
+    const int buttonY = panelH - 34;
+    const int leftW = 250;
+    const int previewX = leftW + 8;
+    const int previewW = panelW - previewX;
+    const int bodyTop = 28;
+    const int bodyHeight = buttonY - bodyTop - 4;
+    const int buttonW = (panelW - 25) / 4;
+
+    m_hwndEditReviewStatusLabel = CreateWindowExA(
+        0, "STATIC", " Edit Review — No pending edits", WS_CHILD | SS_LEFT | SS_CENTERIMAGE, 0, 0, panelW, 24,
+        hwndParent, (HMENU)IDC_EDIT_REVIEW_STATUS_LABEL, m_hInstance, nullptr);
+    if (m_hwndEditReviewStatusLabel)
+        SendMessage(m_hwndEditReviewStatusLabel, WM_SETFONT, (WPARAM)hBoldFont, TRUE);
+
+    m_hwndEditReviewList = CreateWindowExA(
+        WS_EX_CLIENTEDGE, "LISTBOX", "", WS_CHILD | LBS_NOTIFY | WS_VSCROLL | LBS_NOINTEGRALHEIGHT, 0, bodyTop,
+        leftW, bodyHeight, hwndParent, (HMENU)IDC_EDIT_REVIEW_LIST, m_hInstance, nullptr);
+    if (m_hwndEditReviewList)
+        SendMessage(m_hwndEditReviewList, WM_SETFONT, (WPARAM)hNormalFont, TRUE);
+
+    m_hwndEditReviewPreview = CreateWindowExA(
+        WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | ES_AUTOHSCROLL |
+                                             WS_VSCROLL | WS_HSCROLL,
+        previewX, bodyTop, previewW, bodyHeight, hwndParent, (HMENU)IDC_EDIT_REVIEW_PREVIEW, m_hInstance, nullptr);
+    if (m_hwndEditReviewPreview)
+        SendMessage(m_hwndEditReviewPreview, WM_SETFONT, (WPARAM)hNormalFont, TRUE);
+
+    m_hwndEditReviewApproveBtn = CreateWindowExA(0, "BUTTON", "Approve", WS_CHILD | BS_PUSHBUTTON, 5, buttonY,
+                                                 buttonW, 30, hwndParent, (HMENU)IDC_EDIT_REVIEW_APPROVE_BTN,
+                                                 m_hInstance, nullptr);
+    m_hwndEditReviewDeclineBtn = CreateWindowExA(0, "BUTTON", "Decline", WS_CHILD | BS_PUSHBUTTON,
+                                                 10 + buttonW, buttonY, buttonW, 30, hwndParent,
+                                                 (HMENU)IDC_EDIT_REVIEW_DECLINE_BTN, m_hInstance, nullptr);
+    m_hwndEditReviewAcceptAllBtn = CreateWindowExA(0, "BUTTON", "Accept All", WS_CHILD | BS_PUSHBUTTON,
+                                                   15 + buttonW * 2, buttonY, buttonW, 30, hwndParent,
+                                                   (HMENU)IDC_EDIT_REVIEW_ACCEPT_ALL_BTN, m_hInstance, nullptr);
+    m_hwndEditReviewDeclineAllBtn = CreateWindowExA(0, "BUTTON", "Decline All", WS_CHILD | BS_PUSHBUTTON,
+                                                    20 + buttonW * 3, buttonY, buttonW, 30, hwndParent,
+                                                    (HMENU)IDC_EDIT_REVIEW_DECLINE_ALL_BTN, m_hInstance, nullptr);
+
+    for (HWND button : {m_hwndEditReviewApproveBtn, m_hwndEditReviewDeclineBtn, m_hwndEditReviewAcceptAllBtn,
+                        m_hwndEditReviewDeclineAllBtn})
+    {
+        if (button)
+            SendMessage(button, WM_SETFONT, (WPARAM)hNormalFont, TRUE);
+    }
+
+    for (HWND control : {m_hwndEditReviewStatusLabel, m_hwndEditReviewList, m_hwndEditReviewPreview,
+                         m_hwndEditReviewApproveBtn, m_hwndEditReviewDeclineBtn, m_hwndEditReviewAcceptAllBtn,
+                         m_hwndEditReviewDeclineAllBtn})
+    {
+        if (control)
+            ShowWindow(control, SW_HIDE);
+    }
+
+    m_editReviewPanelInitialized = true;
+}
+
+std::string Win32IDE::buildPendingEditDiffPreview(const std::string& filePath, const std::string& oldText,
+                                                  const std::string& newText) const
+{
+    const std::string oldName = filePath.empty() ? "a/pending-edit" : "a/" + filePath;
+    const std::string newName = filePath.empty() ? "b/pending-edit" : "b/" + filePath;
+    auto diffResult = RawrXD::Diff::DiffEngine::ComputeDiff(oldText, newText, 3);
+    std::string unified = diffResult.ToUnifiedDiff(oldName, newName);
+    if (unified.empty())
+    {
+        unified = "[no textual diff available]";
+    }
+    if (unified.size() > 12000)
+    {
+        unified.resize(12000);
+        unified += "\n[diff preview truncated]";
+    }
+    return unified;
+}
+
+std::string Win32IDE::getPendingEditSummary() const
+{
+    size_t pending = 0;
+    size_t stale = 0;
+    size_t committed = 0;
+    for (const auto& edit : m_pendingEdits)
+    {
+        if (edit.state == RawrXD::Review::EditState::Pending || edit.state == RawrXD::Review::EditState::Approved)
+            ++pending;
+        else if (edit.state == RawrXD::Review::EditState::Stale)
+            ++stale;
+        else if (edit.state == RawrXD::Review::EditState::Committed)
+            ++committed;
+    }
+
+    std::ostringstream oss;
+    oss << " Edit Review — Pending: " << pending << " | Stale: " << stale << " | Committed: " << committed;
+    return oss.str();
+}
+
+void Win32IDE::rebuildPendingEditReviewList()
+{
+    if (!m_hwndEditReviewList)
+        return;
+
+    LRESULT previousSel = SendMessageA(m_hwndEditReviewList, LB_GETCURSEL, 0, 0);
+    uint64_t previousId = 0;
+    if (previousSel != LB_ERR)
+    {
+        previousId = static_cast<uint64_t>(SendMessageA(m_hwndEditReviewList, LB_GETITEMDATA, previousSel, 0));
+    }
+
+    SendMessageA(m_hwndEditReviewList, LB_RESETCONTENT, 0, 0);
+    int selectIndex = -1;
+
+    for (const auto& edit : m_pendingEdits)
+    {
+        if (!IsPendingState(edit.state))
+            continue;
+
+        std::ostringstream label;
+        label << '[' << PendingEditStateLabel(edit.state) << "] [" << PendingEditSourceLabel(edit.source) << "] ";
+        label << (edit.file.empty() ? "(active editor)" : edit.file);
+        const int index = static_cast<int>(SendMessageA(m_hwndEditReviewList, LB_ADDSTRING, 0,
+                                                        reinterpret_cast<LPARAM>(label.str().c_str())));
+        if (index >= 0)
+        {
+            SendMessageA(m_hwndEditReviewList, LB_SETITEMDATA, index, (LPARAM)edit.id);
+            if (edit.id == previousId || (selectIndex < 0 && edit.id == m_activeGhostPendingEditId))
+            {
+                selectIndex = index;
+            }
+            else if (selectIndex < 0)
+            {
+                selectIndex = index;
+            }
+        }
+    }
+
+    if (selectIndex >= 0)
+    {
+        SendMessageA(m_hwndEditReviewList, LB_SETCURSEL, selectIndex, 0);
+    }
+}
+
+void Win32IDE::onPendingEditSelectionChanged()
+{
+    if (!m_hwndEditReviewPreview || !m_hwndEditReviewList)
+        return;
+
+    const LRESULT sel = SendMessageA(m_hwndEditReviewList, LB_GETCURSEL, 0, 0);
+    if (sel == LB_ERR)
+    {
+        SetWindowTextA(m_hwndEditReviewPreview, "");
+        return;
+    }
+
+    const uint64_t selectedId = static_cast<uint64_t>(SendMessageA(m_hwndEditReviewList, LB_GETITEMDATA, sel, 0));
+    for (const auto& edit : m_pendingEdits)
+    {
+        if (edit.id == selectedId)
+        {
+            SetWindowTextA(m_hwndEditReviewPreview, edit.diffPreview.c_str());
+            return;
+        }
+    }
+
+    SetWindowTextA(m_hwndEditReviewPreview, "");
+}
+
+void Win32IDE::refreshPendingEditStaleStates()
+{
+    for (auto& edit : m_pendingEdits)
+    {
+        if (edit.state != RawrXD::Review::EditState::Pending && edit.state != RawrXD::Review::EditState::Approved)
+            continue;
+
+        if (edit.editorHandle && IsWindow(edit.editorHandle) && IsValidCharRange(edit.selectionSnapshot))
+        {
+            CHARRANGE current{};
+            SendMessageA(edit.editorHandle, EM_EXGETSEL, 0, reinterpret_cast<LPARAM>(&current));
+            if (current.cpMin != edit.selectionSnapshot.cpMin || current.cpMax != edit.selectionSnapshot.cpMax)
+            {
+                edit.state = RawrXD::Review::EditState::Stale;
+                continue;
+            }
+        }
+
+        const bool isCurrentEditorFile = !edit.file.empty() && !m_currentFile.empty() &&
+                                         _stricmp(edit.file.c_str(), m_currentFile.c_str()) == 0;
+        if (isCurrentEditorFile && !edit.editorHandle && !edit.oldText.empty() && getEditorText() != edit.oldText)
+        {
+            edit.state = RawrXD::Review::EditState::Stale;
+            continue;
+        }
+        if (!edit.file.empty() && edit.hasFileWriteTime && !isCurrentEditorFile)
+        {
+            FILETIME latestWriteTime{};
+            if (QueryFileWriteTime(edit.file, &latestWriteTime) &&
+                CompareFileTime(&latestWriteTime, &edit.fileWriteTime) != 0)
+            {
+                edit.state = RawrXD::Review::EditState::Stale;
+            }
+        }
+    }
+}
+
+void Win32IDE::refreshEditReviewPanel()
+{
+    if (!m_editReviewPanelInitialized)
+        return;
+
+    refreshPendingEditStaleStates();
+    rebuildPendingEditReviewList();
+    onPendingEditSelectionChanged();
+
+    const std::string summary = getPendingEditSummary();
+    if (m_hwndEditReviewStatusLabel)
+    {
+        SetWindowTextA(m_hwndEditReviewStatusLabel, summary.c_str());
+    }
+
+    const bool hasPending = std::any_of(m_pendingEdits.begin(), m_pendingEdits.end(), [](const PendingEditEntry& edit) {
+        return IsPendingState(edit.state);
+    });
+    const int showCmd = hasPending ? SW_SHOW : SW_HIDE;
+
+    for (HWND control : {m_hwndEditReviewStatusLabel, m_hwndEditReviewList, m_hwndEditReviewPreview,
+                         m_hwndEditReviewApproveBtn, m_hwndEditReviewDeclineBtn, m_hwndEditReviewAcceptAllBtn,
+                         m_hwndEditReviewDeclineAllBtn})
+    {
+        if (control)
+            ShowWindow(control, showCmd);
+    }
+
+    const bool hasSelection = hasPending && SendMessageA(m_hwndEditReviewList, LB_GETCURSEL, 0, 0) != LB_ERR;
+    if (m_hwndEditReviewApproveBtn)
+        EnableWindow(m_hwndEditReviewApproveBtn, hasSelection);
+    if (m_hwndEditReviewDeclineBtn)
+        EnableWindow(m_hwndEditReviewDeclineBtn, hasSelection);
+    if (m_hwndEditReviewAcceptAllBtn)
+        EnableWindow(m_hwndEditReviewAcceptAllBtn, hasPending);
+    if (m_hwndEditReviewDeclineAllBtn)
+        EnableWindow(m_hwndEditReviewDeclineAllBtn, hasPending);
+}
+
+uint64_t Win32IDE::queueEditorPendingEdit(RawrXD::Review::EditSource source, RawrXD::Review::EditType type,
+                                          HWND editorHandle, const CHARRANGE& oldRange, const std::string& oldText,
+                                          const std::string& newText, const std::string& filePath, bool replaceAll)
+{
+    PendingEditEntry edit{};
+    edit.id = m_nextPendingEditId++;
+    edit.type = type;
+    edit.file = filePath;
+    edit.oldRange = oldRange;
+    edit.oldText = oldText;
+    edit.newText = newText;
+    edit.source = source;
+    edit.created = GetTickCount64();
+    edit.state = RawrXD::Review::EditState::Pending;
+    edit.replaceAll = replaceAll;
+    edit.editorHandle = editorHandle;
+    edit.selectionSnapshot = oldRange;
+    if (!filePath.empty())
+    {
+        edit.hasFileWriteTime = QueryFileWriteTime(filePath, &edit.fileWriteTime);
+    }
+
+    for (auto& existing : m_pendingEdits)
+    {
+        if (!IsPendingState(existing.state))
+            continue;
+        if (!filePath.empty() && existing.file == filePath &&
+            (!IsValidCharRange(existing.oldRange) || !IsValidCharRange(oldRange) || RangesOverlap(existing.oldRange, oldRange)))
+        {
+            existing.state = RawrXD::Review::EditState::Stale;
+        }
+    }
+
+    if (editorHandle == m_hwndEditor && IsValidCharRange(oldRange))
+    {
+        const std::string beforeDoc = getEditorText();
+        edit.diffPreview = buildPendingEditDiffPreview(filePath, beforeDoc, ApplyRangeReplacement(beforeDoc, oldRange, newText));
+    }
+    else
+    {
+        edit.diffPreview = buildPendingEditDiffPreview(filePath, oldText, newText);
+    }
+
+    m_pendingEdits.push_back(edit);
+    if (source == RawrXD::Review::EditSource::GhostText)
+    {
+        m_activeGhostPendingEditId = edit.id;
+    }
+
+    appendToOutput("[ReviewGate] Queued editor edit #" + std::to_string(edit.id) + " from " +
+                       std::string(PendingEditSourceLabel(source)) + "\n",
+                   "Agent", OutputSeverity::Info);
+    refreshEditReviewPanel();
+    return edit.id;
+}
+
+uint64_t Win32IDE::queueFilePendingEdit(RawrXD::Review::EditSource source, RawrXD::Review::EditType type,
+                                        const std::string& filePath, const std::string& oldText,
+                                        const std::string& newText, const std::string& newPath)
+{
+    PendingEditEntry edit{};
+    edit.id = m_nextPendingEditId++;
+    edit.type = type;
+    edit.file = filePath;
+    edit.oldText = oldText;
+    edit.newText = newText;
+    edit.newPath = newPath;
+    edit.source = source;
+    edit.created = GetTickCount64();
+    edit.state = RawrXD::Review::EditState::Pending;
+    edit.hasFileWriteTime = QueryFileWriteTime(filePath, &edit.fileWriteTime);
+
+    for (auto& existing : m_pendingEdits)
+    {
+        if (IsPendingState(existing.state) && !filePath.empty() && existing.file == filePath)
+        {
+            existing.state = RawrXD::Review::EditState::Stale;
+        }
+    }
+
+    if (type == RawrXD::Review::EditType::Rename)
+    {
+        std::ostringstream preview;
+        preview << "--- a/" << filePath << "\n+++ b/" << newPath << "\n[rename pending]";
+        edit.diffPreview = preview.str();
+    }
+    else if (type == RawrXD::Review::EditType::Delete)
+    {
+        edit.diffPreview = buildPendingEditDiffPreview(filePath, oldText, std::string());
+    }
+    else if (type == RawrXD::Review::EditType::Create)
+    {
+        edit.diffPreview = buildPendingEditDiffPreview(filePath, std::string(), newText);
+    }
+    else
+    {
+        edit.diffPreview = buildPendingEditDiffPreview(filePath, oldText, newText);
+    }
+
+    m_pendingEdits.push_back(edit);
+    appendToOutput("[ReviewGate] Queued file edit #" + std::to_string(edit.id) + " for " + filePath + "\n",
+                   "General", OutputSeverity::Info);
+    refreshEditReviewPanel();
+    return edit.id;
+}
+
+void Win32IDE::queueNavigatorPendingEdit(RawrXD::Review::PendingEditRequest* request)
+{
+    std::unique_ptr<RawrXD::Review::PendingEditRequest> owned(request);
+    if (!owned)
+        return;
+
+    std::string filePath = owned->file;
+    if (filePath.empty() && owned->targetHandle == m_hwndEditor)
+    {
+        filePath = m_currentFile;
+    }
+
+    queueEditorPendingEdit(owned->source, owned->type, owned->targetHandle, owned->oldRange, owned->oldText,
+                           owned->newText, filePath, owned->replaceAll);
+}
+
+void Win32IDE::updateGhostTextPendingEditPreview(const std::string& textToInsert)
+{
+    if (!m_hwndEditor || textToInsert.empty())
+        return;
+
+    CHARRANGE snapshot{};
+    snapshot.cpMin = snapshot.cpMax = (m_ghostTextRequestCursorPos >= 0) ? static_cast<LONG>(m_ghostTextRequestCursorPos) : 0;
+    if (IsValidCharRange(m_ghostTextSelectionSnapshot))
+    {
+        snapshot = m_ghostTextSelectionSnapshot;
+    }
+
+    for (auto& edit : m_pendingEdits)
+    {
+        if (edit.id == m_activeGhostPendingEditId && edit.source == RawrXD::Review::EditSource::GhostText &&
+            IsPendingState(edit.state))
+        {
+            edit.newText = textToInsert;
+            const std::string beforeDoc = getEditorText();
+            edit.diffPreview = buildPendingEditDiffPreview(m_currentFile, beforeDoc,
+                                                           ApplyRangeReplacement(beforeDoc, snapshot, textToInsert));
+            refreshEditReviewPanel();
+            return;
+        }
+    }
+
+    queueEditorPendingEdit(RawrXD::Review::EditSource::GhostText, RawrXD::Review::EditType::Insert, m_hwndEditor,
+                           snapshot, std::string(), textToInsert, m_currentFile, false);
+}
+
+void Win32IDE::clearGhostTextPendingEdit(RawrXD::Review::EditState declineState)
+{
+    if (m_activeGhostPendingEditId == 0)
+        return;
+    declinePendingEdit(m_activeGhostPendingEditId, declineState);
+    m_activeGhostPendingEditId = 0;
+}
+
+bool Win32IDE::approvePendingEdit(uint64_t id)
+{
+    refreshPendingEditStaleStates();
+
+    for (auto& edit : m_pendingEdits)
+    {
+        if (edit.id != id)
+            continue;
+
+        if (edit.state == RawrXD::Review::EditState::Stale)
+        {
+            edit.state = RawrXD::Review::EditState::AutoDeclined;
+            refreshEditReviewPanel();
+            return false;
+        }
+
+        if (edit.state != RawrXD::Review::EditState::Pending && edit.state != RawrXD::Review::EditState::Approved)
+        {
+            return false;
+        }
+
+        edit.approved = true;
+        edit.state = RawrXD::Review::EditState::Approved;
+
+        bool applied = false;
+        if (edit.editorHandle && IsWindow(edit.editorHandle))
+        {
+            if (IsValidCharRange(edit.selectionSnapshot))
+            {
+                CHARRANGE current{};
+                SendMessageA(edit.editorHandle, EM_EXGETSEL, 0, reinterpret_cast<LPARAM>(&current));
+                if (current.cpMin != edit.selectionSnapshot.cpMin || current.cpMax != edit.selectionSnapshot.cpMax)
+                {
+                    edit.state = RawrXD::Review::EditState::AutoDeclined;
+                    refreshEditReviewPanel();
+                    return false;
+                }
+            }
+
+            SendMessageA(edit.editorHandle, EM_SETSEL, edit.oldRange.cpMin, edit.oldRange.cpMax);
+            SendMessageA(edit.editorHandle, EM_REPLACESEL, TRUE, reinterpret_cast<LPARAM>(edit.newText.c_str()));
+            const LONG caret = edit.oldRange.cpMin + static_cast<LONG>(edit.newText.size());
+            SendMessageA(edit.editorHandle, EM_SETSEL, caret, caret);
+            SendMessageA(edit.editorHandle, EM_SCROLLCARET, 0, 0);
+            applied = true;
+        }
+        else
+        {
+            switch (edit.type)
+            {
+                case RawrXD::Review::EditType::Rename:
+                    applied = MoveFileExA(edit.file.c_str(), edit.newPath.c_str(),
+                                          MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH) != FALSE;
+                    break;
+                case RawrXD::Review::EditType::Delete:
+                {
+                    DWORD attr = GetFileAttributesA(edit.file.c_str());
+                    if (attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY))
+                    {
+                        SHFILEOPSTRUCTA shop = {0};
+                        std::string doubleNullPath = edit.file;
+                        doubleNullPath.push_back('\0');
+                        shop.wFunc = FO_DELETE;
+                        shop.pFrom = doubleNullPath.c_str();
+                        shop.fFlags = FOF_NOCONFIRMATION | FOF_SILENT | FOF_NOERRORUI;
+                        applied = SHFileOperationA(&shop) == 0;
+                    }
+                    else
+                    {
+                        applied = DeleteFileA(edit.file.c_str()) != FALSE;
+                    }
+                    break;
+                }
+                case RawrXD::Review::EditType::Create:
+                {
+                    if (!edit.file.empty())
+                    {
+                        std::error_code ec;
+                        fs::create_directories(fs::path(edit.file).parent_path(), ec);
+                    }
+                    std::ofstream out(edit.file, std::ios::binary);
+                    if (out.is_open())
+                    {
+                        out << edit.newText;
+                        applied = true;
+                    }
+                    break;
+                }
+                case RawrXD::Review::EditType::Insert:
+                case RawrXD::Review::EditType::Replace:
+                default:
+                {
+                    const bool isCurrentEditorFile = !edit.file.empty() && !m_currentFile.empty() &&
+                                                     _stricmp(edit.file.c_str(), m_currentFile.c_str()) == 0;
+                    if (isCurrentEditorFile && m_hwndEditor)
+                    {
+                        SetWindowTextA(m_hwndEditor, edit.newText.c_str());
+                        applied = true;
+                    }
+                    else
+                    {
+                        std::ofstream out(edit.file, std::ios::binary);
+                        if (out.is_open())
+                        {
+                            out << edit.newText;
+                            applied = true;
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+
+        if (!applied)
+        {
+            edit.state = RawrXD::Review::EditState::AutoDeclined;
+            refreshEditReviewPanel();
+            return false;
+        }
+
+        edit.state = RawrXD::Review::EditState::Applied;
+        edit.state = RawrXD::Review::EditState::Committed;
+        if (edit.id == m_activeGhostPendingEditId)
+        {
+            m_activeGhostPendingEditId = 0;
+        }
+        appendToOutput("[ReviewGate] Applied pending edit #" + std::to_string(edit.id) + "\n", "General",
+                       OutputSeverity::Success);
+        refreshEditReviewPanel();
+        return true;
+    }
+
+    return false;
+}
+
+void Win32IDE::declinePendingEdit(uint64_t id, RawrXD::Review::EditState declineState)
+{
+    for (auto& edit : m_pendingEdits)
+    {
+        if (edit.id == id && IsPendingState(edit.state))
+        {
+            edit.state = declineState;
+            if (edit.id == m_activeGhostPendingEditId)
+            {
+                m_activeGhostPendingEditId = 0;
+            }
+            appendToOutput("[ReviewGate] Declined pending edit #" + std::to_string(edit.id) + "\n", "General",
+                           OutputSeverity::Info);
+            break;
+        }
+    }
+    refreshEditReviewPanel();
+}
+
+void Win32IDE::approveAllPendingEdits()
+{
+    std::vector<uint64_t> ids;
+    for (const auto& edit : m_pendingEdits)
+    {
+        if (edit.state == RawrXD::Review::EditState::Pending || edit.state == RawrXD::Review::EditState::Approved)
+        {
+            ids.push_back(edit.id);
+        }
+    }
+    for (uint64_t id : ids)
+    {
+        approvePendingEdit(id);
+    }
+}
+
+void Win32IDE::declineAllPendingEdits(RawrXD::Review::EditState declineState)
+{
+    for (auto& edit : m_pendingEdits)
+    {
+        if (IsPendingState(edit.state))
+        {
+            edit.state = declineState;
+        }
+    }
+    m_activeGhostPendingEditId = 0;
+    refreshEditReviewPanel();
+}
+
+void Win32IDE::selectNextPendingEdit()
+{
+    if (!m_hwndEditReviewList)
+        return;
+
+    const LRESULT count = SendMessageA(m_hwndEditReviewList, LB_GETCOUNT, 0, 0);
+    if (count <= 0)
+        return;
+
+    LRESULT current = SendMessageA(m_hwndEditReviewList, LB_GETCURSEL, 0, 0);
+    if (current == LB_ERR)
+        current = -1;
+    const LRESULT next = (current + 1) % count;
+    SendMessageA(m_hwndEditReviewList, LB_SETCURSEL, next, 0);
+    onPendingEditSelectionChanged();
 }
 
 void Win32IDE::initAgentPanel() {

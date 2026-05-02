@@ -10,6 +10,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <memory>
 #include <sstream>
 #include <unordered_set>
 
@@ -81,6 +82,83 @@ ToolExecResult HandlePurgeTelemetry(const json& args);
 
 namespace
 {
+
+const char* InternToolRegistryString(const std::string& value)
+{
+    static std::vector<std::unique_ptr<std::string>> storage;
+    storage.emplace_back(std::make_unique<std::string>(value));
+    return storage.back()->c_str();
+}
+
+void EnsureDescriptorFromHandlerSchema(const json& fn,
+                                       std::vector<ToolDescriptor>& tools,
+                                       std::unordered_map<std::string, size_t>& nameIndex)
+{
+    const std::string name = fn.value("name", "");
+    if (name.empty())
+    {
+        return;
+    }
+    if (nameIndex.find(name) != nameIndex.end())
+    {
+        return;
+    }
+
+    ToolDescriptor td{};
+    td.name = InternToolRegistryString(name);
+    const std::string description = fn.value("description", std::string());
+    td.description = InternToolRegistryString(description.empty() ? ("Bridged AgentToolHandlers tool: " + name)
+                                                                  : description);
+    td.params_schema = json::object();
+    td.handler = nullptr;
+    tools.push_back(std::move(td));
+    nameIndex[name] = tools.size() - 1;
+}
+
+json BuildRegistryParamSchemaFromHandlerSchema(const json& fn)
+{
+    json rebuilt = json::object();
+    if (!fn.contains("parameters") || !fn["parameters"].is_object())
+    {
+        return rebuilt;
+    }
+
+    const auto& params = fn["parameters"];
+    const json props = params.value("properties", json::object());
+    json required = params.value("required", json::array());
+
+    std::unordered_set<std::string> requiredSet;
+    if (required.is_array())
+    {
+        for (const auto& r : required)
+        {
+            if (r.is_string())
+            {
+                requiredSet.insert(r.get<std::string>());
+            }
+        }
+    }
+
+    if (!props.is_object())
+    {
+        return rebuilt;
+    }
+
+    for (auto pit = props.begin(); pit != props.end(); ++pit)
+    {
+        json p = json::object();
+        const json& in = pit.value();
+        p["type"] = in.value("type", "string");
+        p["description"] = in.value("description", "");
+        if (requiredSet.find(pit.key()) == requiredSet.end())
+        {
+            p["default"] = nullptr;
+        }
+        rebuilt[pit.key()] = p;
+    }
+
+    return rebuilt;
+}
 
 std::string ToLowerAscii(std::string s)
 {
@@ -262,6 +340,9 @@ std::string NormalizeToolName(const std::string& raw)
         return "debug_terminate";
     if (normalized == "take_screenshot" || normalized == "capture_screenshot" || normalized == "screen_capture")
         return "screenshot";
+    if (normalized == "memory" || normalized == "memoryfile" || normalized == "agentmemory" ||
+        normalized == "agent_memory" || normalized == "memories")
+        return "memory_file";
 
     return normalized;
 }
@@ -484,10 +565,41 @@ ToolExecResult HandleToolRegistrySelfCheck(const json& args)
     (void)args;
     auto& reg = AgentToolRegistry::Instance();
     const auto missing = reg.GetToolsMissingHandlers();
+    const auto tools = reg.ListTools();
+    std::unordered_set<std::string> registryTools(tools.begin(), tools.end());
+
+    json missingExposed = json::array();
+    try
+    {
+        const json handlerSchemas = AgentToolHandlers::GetAllSchemas();
+        for (const auto& schema : handlerSchemas)
+        {
+            if (!schema.is_object() || schema.value("type", "") != "function" || !schema.contains("function") ||
+                !schema["function"].is_object())
+            {
+                continue;
+            }
+
+            const std::string name = schema["function"].value("name", "");
+            if (name.empty())
+            {
+                continue;
+            }
+            if (registryTools.find(name) == registryTools.end())
+            {
+                missingExposed.push_back(name);
+            }
+        }
+    }
+    catch (...)
+    {
+    }
+
     json out;
-    out["ok"] = missing.empty();
-    out["tool_count"] = static_cast<int>(reg.ListTools().size());
+    out["ok"] = missing.empty() && missingExposed.empty();
+    out["tool_count"] = static_cast<int>(tools.size());
     out["missing_handlers"] = missing;
+    out["missing_exposed_tools"] = missingExposed;
     return ToolExecResult::ok(out.dump());
 }
 
@@ -1401,6 +1513,12 @@ ToolExecResult HandleGitStatus(const json& args)
     return ToToolExecResult(res);
 }
 
+ToolExecResult HandleMemoryFile(const json& args)
+{
+    auto res = AgentToolHandlers::Instance().Execute("memory_file", args);
+    return ToToolExecResult(res);
+}
+
 ToolExecResult HandleGitDiff(const json& args)
 {
     auto res = AgentToolHandlers::Instance().Execute("git_diff", args);
@@ -2170,10 +2288,10 @@ void AgentToolRegistry::InitDescriptors()
             {
                 continue;
             }
+            EnsureDescriptorFromHandlerSchema(fn, m_tools, m_nameIndex);
             auto it = m_nameIndex.find(name);
             if (it == m_nameIndex.end())
             {
-                // ToolRegistry remains the superset of tools for now; unknown tools are ignored here.
                 continue;
             }
 
@@ -2182,42 +2300,7 @@ void AgentToolRegistry::InitDescriptors()
             // We intentionally do not overwrite it with dynamic strings from JSON.
 
             // Rebuild param schema from AgentToolHandlers' OpenAI parameters shape.
-            json rebuilt = json::object();
-            if (fn.contains("parameters") && fn["parameters"].is_object())
-            {
-                const auto& params = fn["parameters"];
-                const json props = params.value("properties", json::object());
-                json required = params.value("required", json::array());
-
-                std::unordered_set<std::string> requiredSet;
-                if (required.is_array())
-                {
-                    for (const auto& r : required)
-                    {
-                        if (r.is_string())
-                        {
-                            requiredSet.insert(r.get<std::string>());
-                        }
-                    }
-                }
-
-                if (props.is_object())
-                {
-                    for (auto pit = props.begin(); pit != props.end(); ++pit)
-                    {
-                        json p = json::object();
-                        const json& in = pit.value();
-                        p["type"] = in.value("type", "string");
-                        p["description"] = in.value("description", "");
-                        if (requiredSet.find(pit.key()) == requiredSet.end())
-                        {
-                            // Mark optional so GetToolSchemas required[] stays correct.
-                            p["default"] = nullptr;
-                        }
-                        rebuilt[pit.key()] = p;
-                    }
-                }
-            }
+            json rebuilt = BuildRegistryParamSchemaFromHandlerSchema(fn);
 
             if (!rebuilt.empty())
             {
@@ -2495,6 +2578,7 @@ void AgentToolRegistry::InitDescriptors()
 
     // Wire sovereign operations handlers
     RegisterHandler("manage_local_embeddings", HandleManageLocalEmbeddings);
+    RegisterHandler("memory_file", HandleMemoryFile);
     RegisterHandler("purge_telemetry", HandlePurgeTelemetry);
     RegisterHandler("git_status", HandleGitStatus);
     RegisterHandler("git_diff", HandleGitDiff);
@@ -2547,47 +2631,14 @@ void AgentToolRegistry::InitDescriptors()
             {
                 continue;
             }
+            EnsureDescriptorFromHandlerSchema(fn, m_tools, m_nameIndex);
             auto it = m_nameIndex.find(name);
             if (it == m_nameIndex.end())
             {
                 continue;
             }
 
-            json rebuilt = json::object();
-            if (fn.contains("parameters") && fn["parameters"].is_object())
-            {
-                const auto& params = fn["parameters"];
-                const json props = params.value("properties", json::object());
-                json required = params.value("required", json::array());
-
-                std::unordered_set<std::string> requiredSet;
-                if (required.is_array())
-                {
-                    for (const auto& r : required)
-                    {
-                        if (r.is_string())
-                        {
-                            requiredSet.insert(r.get<std::string>());
-                        }
-                    }
-                }
-
-                if (props.is_object())
-                {
-                    for (auto pit = props.begin(); pit != props.end(); ++pit)
-                    {
-                        json p = json::object();
-                        const json& in = pit.value();
-                        p["type"] = in.value("type", "string");
-                        p["description"] = in.value("description", "");
-                        if (requiredSet.find(pit.key()) == requiredSet.end())
-                        {
-                            p["default"] = nullptr;
-                        }
-                        rebuilt[pit.key()] = p;
-                    }
-                }
-            }
+            json rebuilt = BuildRegistryParamSchemaFromHandlerSchema(fn);
 
             if (!rebuilt.empty())
             {
@@ -2737,7 +2788,8 @@ ToolExecResult AgentToolRegistry::Dispatch(const std::string& tool_name, const j
     }
 
     auto& td = m_tools[it->second];
-    if (!td.handler)
+    const bool hasBridgedAgentHandler = !td.handler && AgentToolHandlers::Instance().HasTool(normalizedTool);
+    if (!td.handler && !hasBridgedAgentHandler)
     {
         GetObs().logError(kRegistryComponent, "Dispatch: no handler",
                           nlohmann::json::object({{"tool", tool_name}, {"normalized", normalizedTool}}));
@@ -2784,7 +2836,8 @@ ToolExecResult AgentToolRegistry::Dispatch(const std::string& tool_name, const j
                       nlohmann::json::object({{"tool", tool_name}, {"normalized", normalizedTool}}));
 
     auto start = std::chrono::high_resolution_clock::now();
-    ToolExecResult result = td.handler(args);
+    ToolExecResult result = hasBridgedAgentHandler ? ToToolExecResult(AgentToolHandlers::Instance().Execute(normalizedTool, args))
+                                                   : td.handler(args);
     auto end = std::chrono::high_resolution_clock::now();
     result.elapsed_ms = std::chrono::duration<double, std::milli>(end - start).count();
 
@@ -2829,6 +2882,16 @@ void AgentToolRegistry::RegisterHandler(const std::string& tool_name, ToolHandle
 {
     const std::string normalizedTool = NormalizeToolName(tool_name);
     auto it = m_nameIndex.find(normalizedTool);
+    if (it == m_nameIndex.end() && !normalizedTool.empty())
+    {
+        ToolDescriptor td{};
+        td.name = InternToolRegistryString(normalizedTool);
+        td.description = InternToolRegistryString("Dynamically registered tool.");
+        td.params_schema = json::object();
+        td.handler = nullptr;
+        m_tools.push_back(std::move(td));
+        it = m_nameIndex.emplace(normalizedTool, m_tools.size() - 1).first;
+    }
     if (it != m_nameIndex.end())
     {
         m_tools[it->second].handler = handler;

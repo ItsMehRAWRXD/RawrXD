@@ -68,6 +68,7 @@ struct DownloadProgress;
 #include "../plan_orchestrator.h"
 #include "../streaming_gguf_loader.h"
 #include "IDELogger.h"
+#include "PendingEditReview.h"
 #include "TransparentRenderer.h"
 #include "Win32IDE_AgenticBridge.h"
 #include "Win32IDE_Autonomy.h"
@@ -86,7 +87,6 @@ class Win32IDE;
 void Win32IDE_HandleTitanGhostStreamMessage(Win32IDE* ide);
 
 class OutlinePanel;
-class DockingPaneManager;
 
 namespace rawrxd
 {
@@ -311,7 +311,7 @@ class Win32IDE
     friend class Win32IDE_SubAgent;
     friend class Win32IDE_WebView2;
     friend class Win32TerminalManager;
-    friend class DockingPaneManager;
+    friend class RawrXD::UI::AdvancedDockingManager;
     friend class OutlinePanel;
     friend void Win32IDE_HandleTitanGhostStreamMessage(Win32IDE* ide);
     friend class PeekOverlayWindow;
@@ -767,8 +767,12 @@ class Win32IDE
         uint64_t stateChangedTickMs = 0;
     };
 
+    struct PendingEditEntry;
+
     void acceptGhostText();
     void onGhostTextTimer();
+    void onPrefetchIdleTimer();        // Fires after 150ms idle to trigger speculative prefetch
+    void triggerSpeculativePrefetch(); // Background completion request to mask first-token latency
     void renderSuggestionTint(HDC hdc);
     void renderGhostText(HDC hdc);
     bool handleGhostTextKey(UINT vk);
@@ -794,6 +798,9 @@ class Win32IDE
     void editCut();
     void editCopy();
     void editPaste();
+
+    // Pending Edit Review Gate — apply an approved pending edit to the editor
+    bool ApplyPendingEdit(const PendingEditEntry& edit);
 
     // View Operations
     void toggleOutputPanel();
@@ -2910,15 +2917,17 @@ class Win32IDE
     // ========================================================================
     void initGhostText();
     void shutdownGhostText();
+    void cancelGhostTextInferenceRequests();
     void triggerGhostTextCompletion();
     struct GhostTextCacheEntry;
     GhostTextCacheEntry requestGhostTextCompletion(const std::string& context, const std::string& language);
     std::string requestTitanGhostTextCompletion(const std::string& context, const std::string& language,
                                                 const std::string& suffix, const std::string& filePath, int cursorLine,
-                                                int cursorCol, uint64_t expectedSeq = 0);
+                                                                int cursorCol, uint64_t expectedSeq = 0, bool streamToUi = false);
     GhostTextCacheEntry requestGhostTextCompletion(const std::string& context, const std::string& language,
                                                    const std::string& suffix, const std::string& filePath,
-                                                   int cursorLine, int cursorCol, uint64_t expectedSeq = 0);
+                                                                    int cursorLine, int cursorCol, uint64_t expectedSeq = 0,
+                                                                    bool streamToUi = false);
     bool startTitanAgentInferenceAsync(const std::string& prompt, uint32_t timeoutMs = 120000, bool stageOnly = false);
     void cancelTitanAgentInferenceAsync();
     void startTitanPagingHeartbeat(uint32_t timeoutMs);
@@ -2928,6 +2937,8 @@ class Win32IDE
     void onTitanAgentDone(int status);
     void onGhostTextReady(int requestedCursorPos, const char* completionText);
     void onGhostTextTokenChunk(const char* tokenChunk, uint64_t sessionId);
+    void onGhostTextRenderMessage();
+    void onGhostTextComplete(uint64_t sessionId, const char* completionText);
     void dismissGhostText();
     void scheduleTitanDraftPrefetch();
     void invalidateTitanDraftPrefetch();
@@ -2965,7 +2976,13 @@ class Win32IDE
     int m_ghostTextLine = -1;
     int m_ghostTextColumn = -1;
     int m_ghostTextRequestCursorPos = -1;
+    CHARRANGE m_ghostTextSelectionSnapshot{-1, -1};
     std::string m_ghostTextRequestLinePrefix;
+    std::string m_ghostTextBuffer;
+    size_t m_ghostTextCommittedPrefix = 0;
+    std::string m_pendingGhostAppend;
+    bool m_ghostTextRenderScheduled = false;
+    bool m_ghostTextStreamingActive = false;
     std::string m_ghostTextPlanId;
     std::string m_ghostTextSessionId;
     std::string m_ghostTextPendingPlanId;
@@ -2980,6 +2997,7 @@ class Win32IDE
     GhostTextMetrics m_ghostTextMetrics = {};
     std::mutex m_titanGhostMutex;
     std::string m_titanGhostStreamText;
+    uint64_t m_titanGhostStreamRequestSeq = 0;
     uint64_t m_titanGhostStreamSeq = 0;
     uint64_t m_titanGhostSeqGaps = 0;
     uint64_t m_titanGhostPackets = 0;
@@ -3076,6 +3094,69 @@ class Win32IDE
     HWND m_hwndAgentNewSessionBtn = nullptr;
     void onBoundedAgentLoop();  // Ctrl+Shift+I → Bounded Agent (FIM tools)
     void toggleAgentPanel();    // View > Agent Panel — show/hide agent chat panel
+
+    // ========================================================================
+    // Pending Edit Review Gate (Win32IDE_AgentPanel.cpp + source integrations)
+    // ========================================================================
+    struct PendingEditEntry
+    {
+        uint64_t id = 0;
+        RawrXD::Review::EditType type = RawrXD::Review::EditType::Replace;
+        std::string file;
+        CHARRANGE oldRange{-1, -1};
+        std::string oldText;
+        std::string newText;
+        std::string diffPreview;
+        RawrXD::Review::EditSource source = RawrXD::Review::EditSource::Agent;
+        uint64_t created = 0;
+        RawrXD::Review::EditState state = RawrXD::Review::EditState::Pending;
+        bool approved = false;
+        bool replaceAll = false;
+        HWND editorHandle = nullptr;
+        CHARRANGE selectionSnapshot{-1, -1};
+        std::string newPath;
+        FILETIME fileWriteTime{};
+        bool hasFileWriteTime = false;
+    };
+
+    void initEditReviewPanel();
+    void refreshEditReviewPanel();
+    void rebuildPendingEditReviewList();
+    void onPendingEditSelectionChanged();
+    void queueNavigatorPendingEdit(RawrXD::Review::PendingEditRequest* request);
+    uint64_t queueEditorPendingEdit(RawrXD::Review::EditSource source, RawrXD::Review::EditType type,
+                                    HWND editorHandle, const CHARRANGE& oldRange, const std::string& oldText,
+                                    const std::string& newText, const std::string& filePath,
+                                    bool replaceAll = false);
+    uint64_t queueFilePendingEdit(RawrXD::Review::EditSource source, RawrXD::Review::EditType type,
+                                  const std::string& filePath, const std::string& oldText,
+                                  const std::string& newText, const std::string& newPath = std::string());
+    void updateGhostTextPendingEditPreview(const std::string& textToInsert);
+    void clearGhostTextPendingEdit(
+        RawrXD::Review::EditState declineState = RawrXD::Review::EditState::Declined);
+    bool approvePendingEdit(uint64_t id);
+    void declinePendingEdit(uint64_t id,
+                            RawrXD::Review::EditState declineState = RawrXD::Review::EditState::Declined);
+    void approveAllPendingEdits();
+    void declineAllPendingEdits(
+        RawrXD::Review::EditState declineState = RawrXD::Review::EditState::Declined);
+    void selectNextPendingEdit();
+    void refreshPendingEditStaleStates();
+    std::string getPendingEditSummary() const;
+    std::string buildPendingEditDiffPreview(const std::string& filePath, const std::string& oldText,
+                                            const std::string& newText) const;
+
+    bool m_editReviewPanelInitialized = false;
+    HWND m_hwndEditReviewStatusLabel = nullptr;
+    HWND m_hwndEditReviewList = nullptr;
+    HWND m_hwndEditReviewPreview = nullptr;
+    HWND m_hwndEditReviewApproveBtn = nullptr;
+    HWND m_hwndEditReviewDeclineBtn = nullptr;
+    HWND m_hwndEditReviewAcceptAllBtn = nullptr;
+    HWND m_hwndEditReviewDeclineAllBtn = nullptr;
+    std::vector<PendingEditEntry> m_pendingEdits;
+    uint64_t m_nextPendingEditId = 1;
+    uint64_t m_activeGhostPendingEditId = 0;
 
     // Resolved Ollama model (used by GhostText, AI caller)
     std::string getResolvedOllamaModel() const;

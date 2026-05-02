@@ -17,7 +17,8 @@
 #include <thread>
 #include <vector>
 #include <windows.h>
-
+#include <dxgi.h>
+#pragma comment(lib, "dxgi.lib")
 
 #include <memoryapi.h>
 
@@ -2265,8 +2266,13 @@ bool RawrXDModelLoader::InitializeSlidingWindow(uint64_t fileSize)
     m_reservedApertureReserved = false;
 
     // For very large files, widen the aperture to reduce remap churn and legacy fallback thrash.
+    // 70B models need 8GB windows to avoid thrashing during attention layer jumps.
     uint64_t effectiveWindowSize = windowSize;
-    if (fileSize > 16ULL * 1024ULL * 1024ULL * 1024ULL)
+    if (fileSize > 20ULL * 1024ULL * 1024ULL * 1024ULL)
+    {                                                              // > 20GB (70B+ models)
+        effectiveWindowSize = 8ULL * 1024ULL * 1024ULL * 1024ULL;  // 8GB - reduces remap frequency
+    }
+    else if (fileSize > 16ULL * 1024ULL * 1024ULL * 1024ULL)
     {                                                              // > 16GB
         effectiveWindowSize = 4ULL * 1024ULL * 1024ULL * 1024ULL;  // 4GB
     }
@@ -2956,13 +2962,76 @@ void* RawrXDModelLoader::MapWindow(uint64_t offset, size_t size)
         return nullptr;
     }
 
+    // [SLIDING APERTURE FIX] For sovereign aperture mode, remap the window when request is outside current range
+    // Instead of failing, slide the window to cover the requested offset
     if (size > mapSize || reqEnd > mappedEnd)
     {
-        static size_t s_rangeExceedCount = 0;
-        if (++s_rangeExceedCount <= 5)
-            printf("[RawrXD] Requested range %llu..%llu exceeds mapped window %llu..%llu (count=%zu)\n", offset, reqEnd,
-                   windowStart, mappedEnd, s_rangeExceedCount);
-        return nullptr;
+        // For sovereign aperture, we can remap the window to a new position
+        if (useSovereign && m_computeSlots[0].view)
+        {
+            // Check if slot 0 is still in use - if so, we can't remap
+            if (m_computeSlots[0].inUseCount > 0)
+            {
+                static size_t s_remapInUseCount = 0;
+                if (++s_remapInUseCount <= 5)
+                    printf("[RawrXD] Sovereign window remap blocked: slot 0 in use (count=%u)\n", m_computeSlots[0].inUseCount);
+                return nullptr;
+            }
+            
+            // Remap sovereign window to new position
+            // Calculate new window start aligned to granularity (64KB) to cover the requested offset
+            // The window should start before the offset and cover the entire tensor
+            const uint64_t granularity64KB = 64ULL * 1024ULL;
+            uint64_t newWindowStart = 0;
+            
+            // If the tensor fits within one aperture window, align start to cover it
+            if (static_cast<uint64_t>(size) <= apertureSize)
+            {
+                // Align window start so that offset is within the window and tensor fits
+                // Start from offset aligned down to granularity, but ensure tensor fits
+                newWindowStart = (offset / granularity64KB) * granularity64KB;
+                // If tensor extends beyond window, shift window start back
+                if (offset + static_cast<uint64_t>(size) > newWindowStart + apertureSize)
+                {
+                    newWindowStart = ((offset + static_cast<uint64_t>(size) - apertureSize) / granularity64KB) * granularity64KB;
+                }
+            }
+            else
+            {
+                // Tensor is larger than aperture - align to aperture boundary
+                newWindowStart = (offset / apertureSize) * apertureSize;
+            }
+            
+            // Recalculate mapSize and remaining for the new window
+            const uint64_t newRemaining = m_fileSize - newWindowStart;
+            const size_t newMapSize = static_cast<size_t>(std::min<uint64_t>(apertureSize, newRemaining));
+            const uint64_t newMappedEnd = newWindowStart + newMapSize;
+            
+            static size_t s_remapCount = 0;
+            if (++s_remapCount <= 10)
+                printf("[RawrXD] ⚡ SLIDING APERTURE: Remapping window from %llu-%llu MB to %llu-%llu MB (tensor at %llu MB, size %zu KB)\n",
+                       windowStart / (1024ULL * 1024ULL), mappedEnd / (1024ULL * 1024ULL),
+                       newWindowStart / (1024ULL * 1024ULL), newMappedEnd / (1024ULL * 1024ULL),
+                       offset / (1024ULL * 1024ULL), size / 1024);
+            
+            // Unmap current sovereign window
+            unmapComputeSlotLocked_(0);
+            
+            // Update window parameters for remap
+            windowStart = newWindowStart;
+            mapSize = newMapSize;
+            mappedEnd = newMappedEnd;
+            
+            // Fall through to remap at new position
+        }
+        else
+        {
+            static size_t s_rangeExceedCount = 0;
+            if (++s_rangeExceedCount <= 5)
+                printf("[RawrXD] Requested range %llu..%llu exceeds mapped window %llu..%llu (count=%zu)\n", offset, reqEnd,
+                       windowStart, mappedEnd, s_rangeExceedCount);
+            return nullptr;
+        }
     }
 
     for (auto& sl : m_computeSlots)
@@ -3766,6 +3835,7 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
     }
 
     ptr += sizeof(GGUFFileHeader);
+    const uint32_t ggufVersion = hdr->version;
 
     // Skip metadata (simple parser to just skip it)
     ptr = ParseMetadata(ptr, hdr->kv_count);
@@ -3786,6 +3856,21 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
     if (n_heads_kv <= 0 && n_heads > 0)
     {
         n_heads_kv = n_heads;
+    }
+
+    // Gate: reject unsupported GGUF versions (only v1-v3 supported)
+    if (hdr->version == 0 || hdr->version > 3)
+    {
+        char buf[256] = {0};
+        snprintf(buf, sizeof(buf), "[RawrXD][GATE-1] unsupported GGUF version: %u (supported: 1-3)", hdr->version);
+        printf("%s\n", buf);
+        setLoadError("gate_version", buf);
+        CleanupSlidingWindow();
+        CloseHandle(m_mapping);
+        CloseHandle(m_file);
+        m_mapping = nullptr;
+        m_file = INVALID_HANDLE_VALUE;
+        return false;
     }
 
     // Gate 3: quantization allowlist based on GGUF file_type metadata.
@@ -3947,7 +4032,8 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
             return false;
         }
 
-        const uint64_t absoluteOffset = dataStart + relativeOffset;
+        // Version-aware offset: v1/v2 offsets are absolute; v3 offsets are relative to dataStart.
+        const uint64_t absoluteOffset = (ggufVersion >= 3) ? (dataStart + relativeOffset) : relativeOffset;
         if (absoluteOffset > m_fileSize || tensorSize > (m_fileSize - absoluteOffset))
         {
             char buf[512] = {0};
@@ -4959,6 +5045,13 @@ bool RawrXDModelLoader::hasTensorNamed(const std::string& name) const
 
 bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x, float* y, size_t K, size_t N)
 {
+    static bool first_call = true;
+    if (first_call) {
+        printf("[StreamingMatMul] FIRST CALL: tensor=%s K=%zu N=%zu\n", name.c_str(), K, N);
+        std::fflush(stdout);
+        first_call = false;
+    }
+    
     if (!x || !y || K == 0 || N == 0)
     {
         printf("[StreamingMatMul] Invalid args for tensor %s (x=%p y=%p K=%zu N=%zu)\n", name.c_str(), x, y, K, N);
@@ -6151,6 +6244,7 @@ bool RawrXDModelLoader::ResolveBackendModeAndPreflight(const wchar_t* path, uint
         // so we keep a conservative path and rely on provided physical-device props where available.
         (void)i;
     }
+    // Query VRAM via DXGI (Windows-only)
     IDXGIFactory1* factory = nullptr;
     if (SUCCEEDED(CreateDXGIFactory1(__uuidof(IDXGIFactory1), reinterpret_cast<void**>(&factory))))
     {
@@ -6199,6 +6293,114 @@ bool RawrXDModelLoader::ResolveBackendModeAndPreflight(const wchar_t* path, uint
     m_gpuUploadEnabled = gpuUsable;
     (void)path;
     return true;
+}
+
+// ============================================================================
+// Large Tensor Allocation with Mapped Window Fallback (Phase A)
+// Avoids 2GB std::vector::resize() ceiling for Qwen-40B/70B models
+// ============================================================================
+
+// Threshold: use mapped window for tensors > 1GB (268M floats)
+static constexpr size_t kLargeTensorThresholdElements = 268435456ULL;  // 1GB / sizeof(float)
+
+bool RawrXDModelLoader::AllocateLargeTensorWindow(Tensor& t, size_t elementCount)
+{
+    const size_t byteSize = elementCount * sizeof(float);
+    
+    // Small tensors: use standard vector
+    if (elementCount <= kLargeTensorThresholdElements) {
+        try {
+            t.cpuFloatData.resize(elementCount);
+            t.usesMappedWindow = false;
+            t.cpuFloatMappedPtr = nullptr;
+            t.cpuFloatMappedBase = nullptr;
+            t.cpuFloatMappedSize = 0;
+            return true;
+        } catch (const std::bad_alloc&) {
+            printf("[RawrXD] Standard allocation failed for %s (%zu elements)\n", t.name.c_str(), elementCount);
+            return false;
+        }
+    }
+    
+    // Large tensors: use mapped window fallback
+    printf("[RawrXD] Using mapped window for large tensor %s (%zu elements, %.1f GB)\n",
+           t.name.c_str(), elementCount, static_cast<double>(byteSize) / (1024*1024*1024));
+    
+    // Create an anonymous file mapping for the tensor data
+    HANDLE hMapping = CreateFileMapping(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE | SEC_COMMIT,
+                                        0, static_cast<DWORD>(byteSize), nullptr);
+    if (!hMapping) {
+        printf("[RawrXD] CreateFileMapping failed for large tensor %s (Error: %lu)\n", 
+               t.name.c_str(), GetLastError());
+        return false;
+    }
+    
+    // Map the entire region
+    void* mapped = MapViewOfFile(hMapping, FILE_MAP_READ | FILE_MAP_WRITE, 0, 0, byteSize);
+    if (!mapped) {
+        printf("[RawrXD] MapViewOfFile failed for large tensor %s (Error: %lu)\n",
+               t.name.c_str(), GetLastError());
+        CloseHandle(hMapping);
+        return false;
+    }
+    
+    // Store the mapping handle for later unmapping (we need to keep it open)
+    // We'll store the handle in a static map keyed by tensor address
+    static std::mutex g_largeTensorMutex;
+    static std::unordered_map<void*, HANDLE> g_largeTensorHandles;
+    
+    {
+        std::lock_guard<std::mutex> lock(g_largeTensorMutex);
+        g_largeTensorHandles[mapped] = hMapping;
+    }
+    
+    t.usesMappedWindow = true;
+    t.cpuFloatMappedBase = mapped;
+    t.cpuFloatMappedPtr = static_cast<float*>(mapped);
+    t.cpuFloatMappedSize = byteSize;
+    t.cpuFloatData.clear();  // Ensure vector is empty
+    
+    printf("[RawrXD] Large tensor %s mapped at %p (%.1f GB)\n",
+           t.name.c_str(), mapped, static_cast<double>(byteSize) / (1024*1024*1024));
+    return true;
+}
+
+void RawrXDModelLoader::FreeLargeTensorWindow(Tensor& t)
+{
+    if (!t.usesMappedWindow) {
+        // Standard vector cleanup
+        t.cpuFloatData.clear();
+        t.cpuFloatData.shrink_to_fit();
+        return;
+    }
+    
+    // Mapped window cleanup
+    if (t.cpuFloatMappedBase) {
+        static std::mutex g_largeTensorMutex;
+        static std::unordered_map<void*, HANDLE> g_largeTensorHandles;
+        
+        HANDLE hMapping = nullptr;
+        {
+            std::lock_guard<std::mutex> lock(g_largeTensorMutex);
+            auto it = g_largeTensorHandles.find(t.cpuFloatMappedBase);
+            if (it != g_largeTensorHandles.end()) {
+                hMapping = it->second;
+                g_largeTensorHandles.erase(it);
+            }
+        }
+        
+        UnmapViewOfFile(t.cpuFloatMappedBase);
+        if (hMapping) {
+            CloseHandle(hMapping);
+        }
+        
+        printf("[RawrXD] Large tensor %s unmapped from %p\n", t.name.c_str(), t.cpuFloatMappedBase);
+    }
+    
+    t.usesMappedWindow = false;
+    t.cpuFloatMappedBase = nullptr;
+    t.cpuFloatMappedPtr = nullptr;
+    t.cpuFloatMappedSize = 0;
 }
 
 #ifdef RAWR_ENABLE_VULKAN

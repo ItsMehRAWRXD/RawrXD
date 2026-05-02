@@ -50,6 +50,7 @@ private:
     
     void processResponse(const std::string& modelOutput);
     void appendToHistory(const std::string& role, const std::string& content);
+    void processSlashCommand(const std::string& text);
 };
 
 } // namespace RawrXD

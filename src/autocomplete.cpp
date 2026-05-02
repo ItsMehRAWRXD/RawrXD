@@ -466,12 +466,51 @@ static constexpr int QK = 32;
 
 static float dot_q4_0(const uint8_t* __restrict w,
                       const float*   __restrict x, int n) noexcept {
+#if HAVE_AVX2
+    // AVX2 path: 32 weights per block, process lo+hi nibbles with bias-8
+    // Block: 2B fp16 scale + 16B qs (4-bit pairs), stride=18B
+    __m256 acc0 = _mm256_setzero_ps();
+    __m256 acc1 = _mm256_setzero_ps();
+    __m256 acc2 = _mm256_setzero_ps();
+    __m256 acc3 = _mm256_setzero_ps();
+    const __m128i nibMask = _mm_set1_epi8(0x0F);
+    const __m128i bias8   = _mm_set1_epi8(8);
+    int nb = n / QK;
+    for (int j = 0; j < nb; ++j) {
+        const __m256 vd = _mm256_set1_ps(fp16_to_f32(*reinterpret_cast<const uint16_t*>(w)));
+        const __m128i pk = _mm_loadu_si128(reinterpret_cast<const __m128i*>(w + 2));
+        const float* xi = x + j * QK;
+        // lo nibbles: w[0..15]; hi nibbles: w[16..31]
+        __m128i lo = _mm_sub_epi8(_mm_and_si128(pk, nibMask), bias8);
+        __m128i hi = _mm_sub_epi8(_mm_and_si128(_mm_srli_epi16(pk, 4), nibMask), bias8);
+        // extend 16×int8 → 8+8×int32, convert to float, scale by d, dot with x
+        acc0 = _mm256_fmadd_ps(
+            _mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(lo)),          vd),
+            _mm256_loadu_ps(xi     ), acc0);
+        acc1 = _mm256_fmadd_ps(
+            _mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_bsrli_si128(lo, 8))), vd),
+            _mm256_loadu_ps(xi +  8), acc1);
+        acc2 = _mm256_fmadd_ps(
+            _mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(hi)),          vd),
+            _mm256_loadu_ps(xi + 16), acc2);
+        acc3 = _mm256_fmadd_ps(
+            _mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepi8_epi32(_mm_bsrli_si128(hi, 8))), vd),
+            _mm256_loadu_ps(xi + 24), acc3);
+        w += 18;
+    }
+    __m256 sum4 = _mm256_add_ps(_mm256_add_ps(acc0, acc1), _mm256_add_ps(acc2, acc3));
+    __m128 hi128 = _mm256_extractf128_ps(sum4, 1);
+    __m128 lo128 = _mm256_castps256_ps128(sum4);
+    lo128 = _mm_add_ps(lo128, hi128);
+    lo128 = _mm_hadd_ps(lo128, lo128);
+    lo128 = _mm_hadd_ps(lo128, lo128);
+    return _mm_cvtss_f32(lo128);
+#else
     float sum = 0.f;
     int nb = n / QK;
     for (int j = 0; j < nb; ++j) {
         float d = fp16_to_f32(*reinterpret_cast<const uint16_t*>(w));
         const uint8_t* qs = w + 2;
-        // low nibble = first QK/2 weights, high nibble = second QK/2 weights
         float s = 0.f;
         for (int k = 0; k < QK / 2; ++k) {
             s += (float)((int)(qs[k] & 0x0F) - 8) * x[j * QK + k];
@@ -481,6 +520,7 @@ static float dot_q4_0(const uint8_t* __restrict w,
         w += 18;
     }
     return sum;
+#endif
 }
 
 static float dot_q4_1(const uint8_t* __restrict w,
@@ -653,25 +693,99 @@ static void matmul(float* __restrict y,
         y[i] = dot_row(W, x, i);
 }
 
-// Parallel matmul split across multiple threads
+// ---------------------------------------------------------------------------
+// Persistent worker pool — eliminates OS thread spawn/join per matmul_par call.
+// On Phi-3-mini Q4_0 (32 layers × 7 matmuls × 8 threads = 1792 spawns/token),
+// each Windows std::thread spawn costs ~50-100µs → ~90-180ms/token overhead.
+// The pool keeps workers alive between calls, cutting this to ~2µs wakeup.
+// ---------------------------------------------------------------------------
+struct MatmulPool {
+    explicit MatmulPool(int nw) {
+        workers.reserve((size_t)nw);
+        for (int i = 0; i < nw; ++i)
+            workers.emplace_back([this]{ worker_fn(); });
+    }
+    ~MatmulPool() {
+        { std::lock_guard<std::mutex> lk(mtx); shutdown = true; }
+        work_cv.notify_all();
+        for (auto& t : workers) t.join();
+    }
+
+    // Submit tasks and block until all complete.
+    void run(std::function<void(int)> fn, int count) {
+        if (count <= 0) return;
+        {
+            std::lock_guard<std::mutex> lk(mtx);
+            pending = count;
+            task_fn = std::move(fn);
+            task_count = count;
+            next_task = 0;
+        }
+        work_cv.notify_all();
+        std::unique_lock<std::mutex> lk(mtx);
+        idle_cv.wait(lk, [this]{ return pending == 0; });
+    }
+
+private:
+    std::vector<std::thread> workers;
+    std::mutex               mtx;
+    std::condition_variable  work_cv, idle_cv;
+    std::function<void(int)> task_fn;
+    int task_count = 0;
+    int next_task  = 0;
+    int pending    = 0;
+    bool shutdown  = false;
+
+    void worker_fn() {
+        while (true) {
+            int idx = -1;
+            {
+                std::unique_lock<std::mutex> lk(mtx);
+                work_cv.wait(lk, [this]{ return shutdown || next_task < task_count; });
+                if (shutdown && next_task >= task_count) return;
+                idx = next_task++;
+            }
+            task_fn(idx);
+            {
+                std::lock_guard<std::mutex> lk(mtx);
+                if (--pending == 0)
+                    idle_cv.notify_one();
+            }
+        }
+    }
+};
+
+static MatmulPool* g_matmul_pool   = nullptr;
+static int         g_pool_nthreads = 0;
+
+static MatmulPool& get_matmul_pool(int n) {
+    if (!g_matmul_pool || g_pool_nthreads != n) {
+        delete g_matmul_pool;
+        g_matmul_pool   = new MatmulPool(n);
+        g_pool_nthreads = n;
+    }
+    return *g_matmul_pool;
+}
+
+// ---------------------------------------------------------------------------
+// Parallel matmul using the persistent pool.
+// Partition output rows across workers; each worker calls dot_row per row.
+// ---------------------------------------------------------------------------
 static void matmul_par(float* __restrict y,
                        const Tensor& W,
                        const float* __restrict x,
                        int d, int n_threads) {
     if (n_threads <= 1 || d < 64) { matmul(y, W, x, d); return; }
-    int chunk = (d + n_threads - 1) / n_threads;
-    std::vector<std::thread> threads;
-    threads.reserve((size_t)n_threads);
-    for (int t = 0; t < n_threads; ++t) {
+    // clamp workers to actual row count
+    int nw = std::min(n_threads, d);
+    int chunk = (d + nw - 1) / nw;
+    MatmulPool& pool = get_matmul_pool(nw);
+    pool.run([&](int t) {
         int beg = t * chunk;
         int end = std::min(beg + chunk, d);
-        if (beg >= end) break;
-        threads.emplace_back([&, beg, end]() {
-            for (int i = beg; i < end; ++i)
-                y[i] = dot_row(W, x, i);
-        });
-    }
-    for (auto& th : threads) th.join();
+        for (int i = beg; i < end; ++i)
+            y[i] = dot_row(W, x, i);
+    }, nw);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

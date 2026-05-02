@@ -119,7 +119,14 @@ ConnectionHealth NativeClient::healthCheck() {
     ConnectionHealth health;
     auto start = std::chrono::steady_clock::now();
     try {
-        std::string response = makeGetRequest("/api/tags");
+        // Use std::once_flag to deduplicate redundant /api/tags calls during startup.
+        // Multiple subsystems (agentic bridge, model selector, status bar) all call
+        // healthCheck() concurrently; this ensures only one GET /api/tags is issued.
+        std::call_once(m_health_check_once, [this]() {
+            m_health_check_tags_response = makeGetRequest("/api/tags");
+        });
+        std::string response = m_health_check_tags_response;
+
         auto elapsed = std::chrono::steady_clock::now() - start;
         health.latency_ms = static_cast<uint64_t>(
             std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count());
@@ -129,7 +136,7 @@ ConnectionHealth NativeClient::healthCheck() {
         if (j.contains("models") && j["models"].is_array())
             health.model_count = static_cast<uint32_t>(j["models"].size());
 
-        // Get version separately
+        // Get version separately (lightweight, not cached)
         std::string ver_resp = makeGetRequest("/api/version");
         json vj = json::parse(ver_resp);
         health.version = vj.value("version", std::string());
@@ -154,8 +161,26 @@ bool NativeClient::isCancelled() const {
 // ─── Model Listing ──────────────────────────────────────────────────
 
 std::vector<OllamaModel> NativeClient::listModels() {
+    // Return cached model list if still within TTL (deduplicates redundant /api/tags calls).
+    {
+        std::lock_guard<std::mutex> lock(m_model_cache_mutex);
+        auto now = std::chrono::steady_clock::now();
+        if (!m_cached_models.empty() &&
+            (now - m_cache_timestamp) < k_model_cache_ttl)
+        {
+            return m_cached_models;
+        }
+    }
+
     std::string response = makeGetRequestWithRetry("/api/tags");
-    return parseModels(response);
+    std::vector<OllamaModel> models = parseModels(response);
+
+    {
+        std::lock_guard<std::mutex> lock(m_model_cache_mutex);
+        m_cached_models = models;
+        m_cache_timestamp = std::chrono::steady_clock::now();
+    }
+    return models;
 }
 
 // ─── Synchronous Generation ─────────────────────────────────────────

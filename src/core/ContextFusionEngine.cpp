@@ -93,6 +93,9 @@ void ContextFusionEngine::EmitEvent(const ContextEvent& event) {
     // Process immediately (can be made async if needed)
     ProcessEvent(event);
     OnEventReceived.emit(event);
+    
+    // Broadcast updated frame to all subscribers
+    BroadcastFrame();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -308,6 +311,91 @@ std::vector<IContextSubscriber*> ContextFusionEngine::GetOrderedSubscribers() co
     });
     
     return result;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Frame Validation
+// ─────────────────────────────────────────────────────────────────────────────
+
+bool ContextFusionEngine::ValidateFrameIntegrity(const ContextFrame& frame) const {
+    // 1. Cursor must be within buffer bounds
+    int lineCount = 0;
+    {
+        std::istringstream stream(frame.bufferText);
+        std::string line;
+        while (std::getline(stream, line)) lineCount++;
+    }
+    if (frame.cursor.line < 0 || frame.cursor.line >= lineCount) return false;
+    
+    // 2. Selection must be valid
+    if (!frame.selection.isEmpty()) {
+        if (frame.selection.start.line < 0 || frame.selection.end.line < 0) return false;
+        if (frame.selection.start.line > frame.selection.end.line) return false;
+    }
+    
+    // 3. Visible range must be within total lines
+    if (frame.visible.startLine < 0 || frame.visible.endLine < frame.visible.startLine) return false;
+    if (frame.visible.endLine > lineCount) return false;
+    
+    // 4. Symbols must reference valid lines
+    for (const auto& sym : frame.symbols) {
+        if (sym.line < 0 || sym.line >= lineCount) return false;
+    }
+    
+    // 5. Diagnostics must reference valid lines
+    for (const auto& diag : frame.diagnostics) {
+        if (diag.line < 0 || diag.line >= lineCount) return false;
+    }
+    
+    // 6. Language ID must not be empty if file path is set
+    if (!frame.filePath.empty() && frame.languageId.empty()) return false;
+    
+    // 7. Version must be monotonic
+    if (frame.version == 0 && !frame.bufferText.empty()) return false;
+    
+    return true;
+}
+
+std::string ContextFusionEngine::GetFrameDiagnostics(const ContextFrame& frame) const {
+    std::ostringstream oss;
+    int issues = 0;
+    
+    int lineCount = 0;
+    {
+        std::istringstream stream(frame.bufferText);
+        std::string line;
+        while (std::getline(stream, line)) lineCount++;
+    }
+    
+    if (frame.cursor.line < 0 || frame.cursor.line >= lineCount) {
+        oss << "[INVALID] cursor.line=" << frame.cursor.line << " out of bounds (0-" << (lineCount-1) << ")\n";
+        issues++;
+    }
+    if (!frame.selection.isEmpty() && frame.selection.start.line > frame.selection.end.line) {
+        oss << "[INVALID] selection start > end\n";
+        issues++;
+    }
+    if (frame.visible.startLine < 0 || frame.visible.endLine > lineCount) {
+        oss << "[INVALID] visible range out of bounds\n";
+        issues++;
+    }
+    if (!frame.filePath.empty() && frame.languageId.empty()) {
+        oss << "[INVALID] filePath set but languageId empty\n";
+        issues++;
+    }
+    if (frame.version == 0 && !frame.bufferText.empty()) {
+        oss << "[INVALID] version=0 with non-empty buffer\n";
+        issues++;
+    }
+    
+    if (issues == 0) {
+        oss << "[VALID] Frame integrity OK. Lines=" << lineCount
+            << " Symbols=" << frame.symbols.size()
+            << " Diagnostics=" << frame.diagnostics.size()
+            << " Version=" << frame.version << "\n";
+    }
+    
+    return oss.str();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

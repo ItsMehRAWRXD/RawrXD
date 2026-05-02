@@ -184,6 +184,19 @@ class GGUFLoader : public RawrXD::IGGUFLoader
     bool ReadString(std::string& str);
     size_t CalculateTensorSize(const std::vector<uint64_t>& shape, RawrXD::GGMLType type) const;
 
+    // GGUF value types for metadata parsing
+    enum class GGUFValueType : uint32_t {
+        UINT8 = 0, INT8 = 1, UINT16 = 2, INT16 = 3,
+        UINT32 = 4, INT32 = 5, FLOAT32 = 6, BOOL = 7,
+        STRING = 8, ARRAY = 9, UINT64 = 10, INT64 = 11, FLOAT64 = 12
+    };
+
+    bool ParseMetadataValue(GGUFValueType type, std::string& out);
+    size_t GetValueTypeSize(GGUFValueType type);
+
+    // Get tensor data by name (with span validation)
+    bool GetTensorData(const std::string& tensor_name, std::vector<uint8_t>& data);
+
   protected:
     std::string filepath_;
     std::ifstream file_;

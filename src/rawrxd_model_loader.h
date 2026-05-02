@@ -54,6 +54,12 @@ struct Tensor
 
     // CPU Float cache for reference implementation
     std::vector<float> cpuFloatData;
+    
+    // Mapped window fallback for large tensors (>1GB) - avoids 2GB std::vector limit
+    void* cpuFloatMappedBase = nullptr;  // Base of mapped region (for UnmapViewOfFile)
+    size_t cpuFloatMappedSize = 0;       // Size of mapped region
+    float* cpuFloatMappedPtr = nullptr;  // Actual data pointer (may be offset from base)
+    bool usesMappedWindow = false;       // True if using mapped window instead of vector
 };
 
 /// File-backed byte span for a tensor (Swarm / prefetch planning). Offsets are relative to GGUF payload.
@@ -295,6 +301,10 @@ class RawrXDModelLoader
     void UploadChunkF32(Tensor& t, void* data, size_t chunkElements, size_t offset);
     void UploadToGPU(Tensor& t);
 
+    // Mapped window allocation for large tensors (>1GB) - avoids 2GB std::vector limit
+    bool AllocateTensorFloatData(Tensor& t, size_t elementCount);
+    void FreeTensorFloatData(Tensor& t);
+
     // Sliding window mapping helpers
     bool InitializeSlidingWindow(uint64_t fileSize);
     void CleanupSlidingWindow();
@@ -336,4 +346,8 @@ class RawrXDModelLoader
     bool IsSupportedFileType(uint32_t fileType) const;
     bool ResolveBackendModeAndPreflight(const wchar_t* path, uint64_t modelBytes, std::string& lane,
                                         std::string& reason);
+    
+    // Large tensor allocation (>1GB) using mapped window fallback - avoids 2GB std::vector limit
+    bool AllocateLargeTensorWindow(Tensor& t, size_t elementCount);
+    void FreeLargeTensorWindow(Tensor& t);
 };

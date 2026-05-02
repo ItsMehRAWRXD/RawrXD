@@ -201,6 +201,10 @@ public:
     uint64_t GetFrameVersion() const { return m_currentVersion.load(); }
     size_t GetSubscriberCount() const;
     
+    // Validation
+    bool ValidateFrameIntegrity(const ContextFrame& frame) const;
+    std::string GetFrameDiagnostics(const ContextFrame& frame) const;
+    
     // Signals (for reactive wiring)
     Signal<const ContextFrame&> OnFrameUpdated;
     Signal<const ContextEvent&> OnEventReceived;

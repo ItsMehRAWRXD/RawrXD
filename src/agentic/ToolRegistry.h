@@ -62,6 +62,7 @@ namespace Agent
     M(map_model_aperture, "Map a window (aperture) of a model file into memory for inspection/patching.")              \
     M(query_virtual_memory, "Query virtual memory information for a given address and process.")                       \
     M(manage_local_embeddings, "Manage local embeddings index (index/query/clear/stats) for semantic retrieval.")      \
+    M(memory_file, "Create, view, update, delete, rename, reindex, or retrieve persistent RawrXD agent memory files.") \
     M(purge_telemetry, "Purge telemetry/traces/cache/logs with optional dry-run and retention control.")               \
     M(git_status, "Get the current status of the git repository (branch, modified, staged files).")                    \
     M(git_diff, "Get the diff of changes in the repository against a target (default: HEAD).")                         \

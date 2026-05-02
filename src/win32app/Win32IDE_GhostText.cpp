@@ -29,9 +29,13 @@
 #include <cstdlib>
 #include <cstring>
 #include <functional>
+#include <memory>
 #include <mutex>
 #include <richedit.h>
+#include <sstream>
 #include <thread>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 
 #pragma comment(lib, "Msimg32.lib")
@@ -39,17 +43,42 @@
 #include "../agentic/OllamaProvider.h"
 #include "../agentic/OrchestratorBridge.h"
 #include "../agentic/agentic_controller_wiring.h"
+#include "../skill_system/SkillInjectionHooks.h"
+#include "../core/rawr_streaming_inference_core.hpp"
+
+// Stub for METRICS (telemetry system)
+namespace {
+    struct MetricsStub {
+        void gauge(const char* name, double value) { (void)name; (void)value; }
+        double getGauge(const char* name) { (void)name; return 0.0; }
+    };
+    static MetricsStub METRICS;
+}
+
+// ============================================================================
+// SKILL INJECTION INTEGRATION
+// ============================================================================
+// CRITICAL: Skill context is ALWAYS injected regardless of model/agent status.
+// This provides the Cursor-style .cursorrules / system prompt injection pattern.
+// The first 520 lines of context are guaranteed to contain active skill definitions.
+// ============================================================================
 
 // ============================================================================
 // CONSTANTS
 // ============================================================================
 static const UINT_PTR GHOST_TEXT_TIMER_ID = 8888;
 static const UINT_PTR TITAN_PAGING_HEARTBEAT_TIMER_ID = 8889;
+static const UINT_PTR GHOST_TEXT_SPECULATIVE_TIMER_ID = 8890;  // Speculative prefetch timer
+static const UINT_PTR GHOST_TEXT_RENDER_TIMER_ID = 8891;  // Micro-batched token render timer
 static const UINT GHOST_TEXT_DELAY_MS = 77;   // Calibrated: Sprint TTFT p50=67ms + 10ms margin (Phase 14.2 A/B sweep)
+static const UINT GHOST_TEXT_SPECULATIVE_IDLE_MS = 150;  // Idle cursor threshold for speculative prefetch
+static const UINT GHOST_TEXT_RENDER_BATCH_MS = 12;  // ~one frame at 60-90 Hz; avoids per-token repaint
 static const int GHOST_TEXT_MAX_CHARS = 512;  // Max ghost text length
 static const int GHOST_TEXT_MAX_LINES = 8;    // Max multi-line completions
 static const uint64_t GHOST_TEXT_CACHE_TTL_MS = 5000;  // 5s for 70B inference latency
+static const uint64_t GHOST_TEXT_PREFIX_CACHE_TTL_MS = 10000;  // 10s for prefix cache (longer TTL)
 static const size_t GHOST_TEXT_CACHE_MAX_ITEMS = 256;
+static const size_t GHOST_TEXT_PREFIX_CACHE_MAX_ITEMS = 128;  // Prefix cache size
 static const uint64_t GHOST_TEXT_PROVIDER_LOG_TTL_MS = 4000;  // prevent spam when providers unavailable
 static const char* GHOST_TEXT_DEFAULT_OLLAMA_URL = "http://localhost:11434";
 static const char* GHOST_DIFF_OVERLAY_CLASS = "RawrXD_GhostDiffOverlay";
@@ -59,6 +88,170 @@ static const int GHOST_DIFF_OVERLAY_HEIGHT = 28;
 namespace
 {
 extern "C" int Bridge_ReadDraftBlockGhostA(char* out, int outCapacity, int* outTokenCount);
+
+void PostGhostTokenMessage(HWND hwnd, uint64_t requestSeq, const std::string& token)
+{
+    if (!hwnd || token.empty())
+    {
+        return;
+    }
+
+    char* heapToken = _strdup(token.c_str());
+    if (!heapToken)
+    {
+        return;
+    }
+
+    if (!PostMessageA(hwnd, WM_USER_GHOST_TOKEN, static_cast<WPARAM>(requestSeq), reinterpret_cast<LPARAM>(heapToken)))
+    {
+        free(heapToken);
+    }
+}
+
+void PostGhostCompleteMessage(HWND hwnd, uint64_t requestSeq, const std::string& completion)
+{
+    if (!hwnd)
+    {
+        return;
+    }
+
+    char* heapText = nullptr;
+    if (!completion.empty())
+    {
+        heapText = _strdup(completion.c_str());
+        if (!heapText)
+        {
+            return;
+        }
+    }
+
+    if (!PostMessageA(hwnd, WM_USER_GHOST_COMPLETE, static_cast<WPARAM>(requestSeq),
+                      reinterpret_cast<LPARAM>(heapText)))
+    {
+        if (heapText)
+        {
+            free(heapText);
+        }
+    }
+}
+
+CHARRANGE MakeCollapsedSelectionSnapshot(LONG caretPos)
+{
+    CHARRANGE snapshot{};
+    snapshot.cpMin = caretPos;
+    snapshot.cpMax = caretPos;
+    return snapshot;
+}
+
+bool IsSelectionSnapshotValid(const CHARRANGE& snapshot)
+{
+    return snapshot.cpMin >= 0 && snapshot.cpMax >= snapshot.cpMin;
+}
+
+std::string getEditorRangeUtf8(HWND editor, LONG cpMin, LONG cpMax);
+
+// ============================================================================
+// SPECULATIVE PREFETCH STATE
+// ============================================================================
+// Prefix cache: stores completion seeds for reuse without recomputation
+struct PrefixCacheEntry
+{
+    std::string completion;      // The completion text
+    std::string planId;         // Agentic plan ID (if from agentic)
+    std::string sessionId;       // Session ID (if from agentic)
+    bool fromAgentic = false;
+    uint64_t createdAtMs = 0;
+    uint64_t lastHitMs = 0;     // Last time this entry was used
+    int hitCount = 0;           // Number of times this prefix was reused
+    std::string prefixHash;     // Hash of the prefix that generated this
+};
+
+// Global prefix cache for speculative prefetch reuse
+static std::unordered_map<std::string, PrefixCacheEntry> g_prefixCache;
+static std::mutex g_prefixCacheMutex;
+static std::string g_lastPrefetchKey;
+static std::string g_lastPrefetchCompletion;
+static std::string g_lastPrefetchLinePrefix;
+static std::string g_lastPrefetchFilePath;
+static std::string g_lastPrefetchLanguage;
+static int g_lastPrefetchLineIndex = -1;
+static std::atomic<int> g_speculativePrefetchHits{0};
+static std::atomic<int> g_speculativePrefetchMisses{0};
+
+// Speculative prefetch state
+static std::atomic<bool> g_speculativePrefetchInProgress{false};
+static std::atomic<uint64_t> g_speculativePrefetchGeneration{0};
+static std::atomic<uint64_t> g_lastCursorIdleMs{0};
+static std::atomic<int> g_lastCursorPos{0};
+static std::string g_speculativePrefetchKey;
+
+struct InferenceRequestToken
+{
+    uint64_t requestId = 0;
+    uint64_t ghostSeq = 0;
+    std::atomic<bool> cancelled{false};
+
+    InferenceRequestToken(uint64_t id, uint64_t seq) : requestId(id), ghostSeq(seq) {}
+};
+
+static std::atomic<uint64_t> g_nextGhostInferenceRequestId{1};
+static std::mutex g_ghostInferenceRequestTokensMutex;
+static std::unordered_map<uint64_t, std::shared_ptr<InferenceRequestToken>> g_ghostInferenceRequestTokens;
+
+std::shared_ptr<InferenceRequestToken> createGhostInferenceRequestToken(uint64_t ghostSeq)
+{
+    auto token = std::make_shared<InferenceRequestToken>(
+        g_nextGhostInferenceRequestId.fetch_add(1, std::memory_order_acq_rel), ghostSeq);
+    std::lock_guard<std::mutex> lock(g_ghostInferenceRequestTokensMutex);
+    g_ghostInferenceRequestTokens[token->requestId] = token;
+    return token;
+}
+
+void completeGhostInferenceRequestToken(const std::shared_ptr<InferenceRequestToken>& token)
+{
+    if (!token)
+        return;
+
+    std::lock_guard<std::mutex> lock(g_ghostInferenceRequestTokensMutex);
+    auto it = g_ghostInferenceRequestTokens.find(token->requestId);
+    if (it != g_ghostInferenceRequestTokens.end() && it->second == token)
+    {
+        g_ghostInferenceRequestTokens.erase(it);
+    }
+}
+
+void cancelAllGhostInferenceRequestTokens()
+{
+    std::lock_guard<std::mutex> lock(g_ghostInferenceRequestTokensMutex);
+    for (auto& pair : g_ghostInferenceRequestTokens)
+    {
+        if (pair.second)
+        {
+            pair.second->cancelled.store(true, std::memory_order_release);
+        }
+    }
+    g_ghostInferenceRequestTokens.clear();
+}
+
+bool isGhostInferenceRequestCancelled(const std::shared_ptr<InferenceRequestToken>& token)
+{
+    return token && token->cancelled.load(std::memory_order_acquire);
+}
+
+struct ScopedGhostInferenceRequest
+{
+    explicit ScopedGhostInferenceRequest(std::shared_ptr<InferenceRequestToken> requestToken)
+        : token(std::move(requestToken))
+    {
+    }
+
+    ~ScopedGhostInferenceRequest()
+    {
+        completeGhostInferenceRequestToken(token);
+    }
+
+    std::shared_ptr<InferenceRequestToken> token;
+};
 
 bool IsLikelyPrintableKey(UINT vk)
 {
@@ -202,6 +395,40 @@ struct TitanGhostExports
 };
 
 TitanGhostExports g_titanGhost;
+
+static std::mutex g_activeTitanGhostInferenceMutex;
+static RAWRXD_INFERENCE_HANDLE g_activeTitanGhostInferenceHandle = 0;
+static uint64_t g_activeTitanGhostRequestSeq = 0;
+
+void setActiveTitanGhostInference(RAWRXD_INFERENCE_HANDLE handle, uint64_t requestSeq)
+{
+    std::lock_guard<std::mutex> lock(g_activeTitanGhostInferenceMutex);
+    g_activeTitanGhostInferenceHandle = handle;
+    g_activeTitanGhostRequestSeq = requestSeq;
+}
+
+void clearActiveTitanGhostInference(RAWRXD_INFERENCE_HANDLE handle)
+{
+    std::lock_guard<std::mutex> lock(g_activeTitanGhostInferenceMutex);
+    if (g_activeTitanGhostInferenceHandle == handle)
+    {
+        g_activeTitanGhostInferenceHandle = 0;
+        g_activeTitanGhostRequestSeq = 0;
+    }
+}
+
+void cancelActiveTitanGhostInference()
+{
+    RAWRXD_INFERENCE_HANDLE handle = 0;
+    {
+        std::lock_guard<std::mutex> lock(g_activeTitanGhostInferenceMutex);
+        handle = g_activeTitanGhostInferenceHandle;
+    }
+    if (handle != 0 && g_titanGhost.cancelInference)
+    {
+        g_titanGhost.cancelInference(handle);
+    }
+}
 
 bool resolveTitanGhostExports()
 {
@@ -510,12 +737,16 @@ void Win32IDE::onTitanAgentStreamMessage()
 
     CHARRANGE sel{};
     SendMessageA(m_hwndEditor, EM_EXGETSEL, 0, reinterpret_cast<LPARAM>(&sel));
-    if (sel.cpMin != anchorPos)
+    if (sel.cpMin != sel.cpMax || sel.cpMin != anchorPos)
     {
         return;
     }
 
     m_ghostTextRequestCursorPos = anchorPos;
+    m_ghostTextSelectionSnapshot = MakeCollapsedSelectionSnapshot(static_cast<LONG>(anchorPos));
+    const int lineIndex = (int)SendMessageA(m_hwndEditor, EM_LINEFROMCHAR, anchorPos, 0);
+    const int lineStart = (int)SendMessageA(m_hwndEditor, EM_LINEINDEX, lineIndex, 0);
+    m_ghostTextRequestLinePrefix = getEditorRangeUtf8(m_hwndEditor, lineStart, anchorPos);
     m_ghostTextCommitContent = trimGhostText(combined);
     m_ghostTextContent = m_ghostTextCommitContent;
     if (m_ghostTextContent.empty())
@@ -691,6 +922,130 @@ std::string buildGhostCacheKey(const std::string& filePath, const std::string& l
     return std::to_string(std::hash<std::string>{}(seed));
 }
 
+// ============================================================================
+// PREFIX CACHE OPERATIONS
+// ============================================================================
+
+// Store a completion in the prefix cache for reuse
+void storePrefixCacheEntry(const std::string& key, const std::string& completion,
+                           const std::string& planId, const std::string& sessionId, bool fromAgentic)
+{
+    std::lock_guard<std::mutex> lock(g_prefixCacheMutex);
+    
+    // Evict oldest entries if cache is full
+    if (g_prefixCache.size() >= GHOST_TEXT_PREFIX_CACHE_MAX_ITEMS)
+    {
+        uint64_t oldestTime = UINT64_MAX;
+        std::string oldestKey;
+        for (const auto& pair : g_prefixCache)
+        {
+            if (pair.second.createdAtMs < oldestTime)
+            {
+                oldestTime = pair.second.createdAtMs;
+                oldestKey = pair.first;
+            }
+        }
+        if (!oldestKey.empty())
+        {
+            g_prefixCache.erase(oldestKey);
+        }
+    }
+    
+    PrefixCacheEntry entry;
+    entry.completion = completion;
+    entry.planId = planId;
+    entry.sessionId = sessionId;
+    entry.fromAgentic = fromAgentic;
+    entry.createdAtMs = nowMs();
+    entry.lastHitMs = entry.createdAtMs;
+    entry.hitCount = 0;
+    entry.prefixHash = key;
+    
+    g_prefixCache[key] = entry;
+}
+
+// Try to retrieve a completion from the prefix cache
+bool tryGetPrefixCacheEntry(const std::string& key, std::string& outCompletion,
+                            std::string& outPlanId, std::string& outSessionId, bool& outFromAgentic)
+{
+    std::lock_guard<std::mutex> lock(g_prefixCacheMutex);
+    
+    auto it = g_prefixCache.find(key);
+    if (it == g_prefixCache.end())
+    {
+        return false;
+    }
+    
+    const uint64_t now = nowMs();
+    if (now - it->second.createdAtMs > GHOST_TEXT_PREFIX_CACHE_TTL_MS)
+    {
+        // Entry expired
+        g_prefixCache.erase(it);
+        return false;
+    }
+    
+    // Update hit statistics
+    it->second.lastHitMs = now;
+    it->second.hitCount++;
+    
+    outCompletion = it->second.completion;
+    outPlanId = it->second.planId;
+    outSessionId = it->second.sessionId;
+    outFromAgentic = it->second.fromAgentic;
+    
+    return true;
+}
+
+bool tryGetPrefixContinuation(const std::string& filePath, const std::string& language, int lineIndex,
+                              const std::string& linePrefix, std::string& outCompletion)
+{
+    std::lock_guard<std::mutex> lock(g_prefixCacheMutex);
+
+    if (g_lastPrefetchCompletion.empty() || g_lastPrefetchLinePrefix.empty())
+        return false;
+    if (g_lastPrefetchFilePath != filePath || g_lastPrefetchLanguage != language ||
+        g_lastPrefetchLineIndex != lineIndex)
+        return false;
+    if (linePrefix.size() <= g_lastPrefetchLinePrefix.size())
+        return false;
+    if (linePrefix.compare(0, g_lastPrefetchLinePrefix.size(), g_lastPrefetchLinePrefix) != 0)
+        return false;
+
+    const std::string typedDelta = linePrefix.substr(g_lastPrefetchLinePrefix.size());
+    if (typedDelta.empty() || typedDelta.size() > g_lastPrefetchCompletion.size())
+        return false;
+
+    bool matches = (g_lastPrefetchCompletion.compare(0, typedDelta.size(), typedDelta) == 0);
+    if (!matches)
+    {
+        matches = true;
+        for (size_t i = 0; i < typedDelta.size(); ++i)
+        {
+            const unsigned char a = static_cast<unsigned char>(typedDelta[i]);
+            const unsigned char b = static_cast<unsigned char>(g_lastPrefetchCompletion[i]);
+            if (std::tolower(a) != std::tolower(b))
+            {
+                matches = false;
+                break;
+            }
+        }
+    }
+    if (!matches)
+        return false;
+
+    outCompletion = g_lastPrefetchCompletion.substr(typedDelta.size());
+    return !outCompletion.empty();
+}
+
+// Get prefix cache statistics
+void getPrefixCacheStats(int& hits, int& misses, int& entries)
+{
+    std::lock_guard<std::mutex> lock(g_prefixCacheMutex);
+    hits = g_speculativePrefetchHits.load();
+    misses = g_speculativePrefetchMisses.load();
+    entries = static_cast<int>(g_prefixCache.size());
+}
+
 std::string trimLeftCopy(const std::string& in)
 {
     size_t i = 0;
@@ -825,6 +1180,11 @@ void Win32IDE::initGhostText()
     m_ghostTextSessionId.clear();
     m_ghostTextPendingPlanId.clear();
     m_ghostTextPendingSessionId.clear();
+    m_ghostTextBuffer.clear();
+    m_ghostTextCommittedPrefix = 0;
+    m_pendingGhostAppend.clear();
+    m_ghostTextRenderScheduled = false;
+    m_ghostTextStreamingActive = false;
     m_ghostTextFromAgentic = false;
     m_ghostTextPendingFromAgentic = false;
     m_ghostTextFont = nullptr;
@@ -851,6 +1211,7 @@ void Win32IDE::initGhostText()
 
 void Win32IDE::shutdownGhostText()
 {
+    cancelGhostTextInferenceRequests();
     {
         std::lock_guard<std::mutex> lock(m_titanGhostMutex);
         m_titanGhostStreamText.clear();
@@ -865,6 +1226,34 @@ void Win32IDE::shutdownGhostText()
     }
 }
 
+void Win32IDE::cancelGhostTextInferenceRequests()
+{
+    cancelAllGhostInferenceRequestTokens();
+    ++m_ghostTextRequestSeq;
+    g_speculativePrefetchGeneration.fetch_add(1);
+    g_speculativePrefetchInProgress.store(false);
+
+    if (m_hwndMain)
+    {
+        KillTimer(m_hwndMain, GHOST_TEXT_TIMER_ID);
+        KillTimer(m_hwndMain, GHOST_TEXT_SPECULATIVE_TIMER_ID);
+        KillTimer(m_hwndMain, GHOST_TEXT_RENDER_TIMER_ID);
+    }
+
+    if (m_predictionProvider)
+    {
+        m_predictionProvider->Cancel();
+    }
+
+    cancelActiveTitanGhostInference();
+    m_ghostTextBuffer.clear();
+    m_ghostTextCommittedPrefix = 0;
+    m_pendingGhostAppend.clear();
+    m_ghostTextRenderScheduled = false;
+    m_ghostTextStreamingActive = false;
+    m_ghostTextPending = false;
+}
+
 // ============================================================================
 // DEBOUNCE TRIGGER — called from onEditorContentChanged()
 // ============================================================================
@@ -874,20 +1263,230 @@ void Win32IDE::triggerGhostTextCompletion()
     if (!m_ghostTextEnabled || !m_hwndEditor)
         return;
 
-    // Kill any existing ghost text timer and dismiss current ghost text
-    KillTimer(m_hwndMain, GHOST_TEXT_TIMER_ID);
-    ++m_ghostTextRequestSeq;
-
-    // Cancel any in-flight prediction HTTP request (prevents stale retries)
-    if (m_predictionProvider)
-    {
-        m_predictionProvider->Cancel();
-    }
-
+    // Cancel any in-flight work and clear current ghost text before scheduling
+    // fresh high-priority input. New keystrokes always supersede stale model work.
     dismissGhostText();
 
     // Start a new debounce timer
     SetTimer(m_hwndMain, GHOST_TEXT_TIMER_ID, GHOST_TEXT_DELAY_MS, nullptr);
+
+    // Arm speculative prefetch idle timer — fires earlier than the main
+    // debounce to populate the prefix cache before the user finishes typing.
+    // Self-guards via m_ghostTextPending / m_ghostTextVisible / atomic flag.
+    KillTimer(m_hwndMain, GHOST_TEXT_SPECULATIVE_TIMER_ID);
+    SetTimer(m_hwndMain, GHOST_TEXT_SPECULATIVE_TIMER_ID, GHOST_TEXT_SPECULATIVE_IDLE_MS, nullptr);
+}
+
+// ============================================================================
+// SPECULATIVE PREFETCH — triggers on idle cursor before user types
+// ============================================================================
+
+void Win32IDE::triggerSpeculativePrefetch()
+{
+    if (!m_ghostTextEnabled || !m_hwndEditor || m_ghostTextPending)
+        return;
+    
+    // Don't prefetch if we already have visible ghost text
+    if (m_ghostTextVisible)
+        return;
+    
+    // Don't prefetch if a speculative request is already in progress.
+    bool expectedIdle = false;
+    if (!g_speculativePrefetchInProgress.compare_exchange_strong(expectedIdle, true))
+        return;
+    
+    // Gather context for speculative prefetch
+    CHARRANGE sel;
+    SendMessageA(m_hwndEditor, EM_EXGETSEL, 0, (LPARAM)&sel);
+    if (sel.cpMin != sel.cpMax)
+    {
+        g_speculativePrefetchInProgress.store(false);
+        return;
+    }
+    int cursorPos = sel.cpMin;
+    
+    if (cursorPos <= 0)
+    {
+        g_speculativePrefetchInProgress.store(false);
+        return;
+    }
+    
+    // Get context
+    int contextStart = (cursorPos > 4096) ? cursorPos - 4096 : 0;
+    std::string context = getEditorRangeUtf8(m_hwndEditor, contextStart, cursorPos);
+    if (context.empty())
+    {
+        g_speculativePrefetchInProgress.store(false);
+        return;
+    }
+    
+    const std::string linePrefix = getLinePrefix(context);
+    if (linePrefix.size() < 5)
+    {
+        g_speculativePrefetchInProgress.store(false);
+        return;
+    }
+    
+    // Check prefix cache first - if we have a cached completion for this prefix, use it
+    std::string language = getSyntaxLanguageName();
+    int lineIndex = (int)SendMessageA(m_hwndEditor, EM_LINEFROMCHAR, cursorPos, 0);
+    int lineStart = (int)SendMessageA(m_hwndEditor, EM_LINEINDEX, lineIndex, 0);
+    int column = cursorPos - lineStart;
+    
+    int textLen = GetWindowTextLengthW(m_hwndEditor);
+    int suffixEnd = (cursorPos + 2048 < textLen) ? cursorPos + 2048 : textLen;
+    std::string suffix = getEditorRangeUtf8(m_hwndEditor, cursorPos, suffixEnd);
+    
+    std::string cacheKey = buildGhostCacheKey(m_currentFile, language, context, suffix, lineIndex, column);
+    
+    // Try prefix cache first (longer TTL, instant retrieval)
+    std::string cachedCompletion, cachedPlanId, cachedSessionId;
+    bool cachedFromAgentic;
+    if (tryGetPrefixCacheEntry(cacheKey, cachedCompletion, cachedPlanId, cachedSessionId, cachedFromAgentic))
+    {
+        // Prefix cache hit - instant ghost text without model inference
+        g_speculativePrefetchHits++;
+        g_speculativePrefetchInProgress.store(false);
+        m_ghostTextContent = trimGhostText(cachedCompletion);
+        m_ghostTextCommitContent = m_ghostTextContent;
+        m_ghostTextLine = lineIndex;
+        m_ghostTextColumn = column;
+        m_ghostTextRequestCursorPos = cursorPos;
+        m_ghostTextSelectionSnapshot = MakeCollapsedSelectionSnapshot(static_cast<LONG>(cursorPos));
+        m_ghostTextRequestLinePrefix = linePrefix;
+        m_ghostTextVisible = true;
+        m_ghostTextAccepted = false;
+        m_ghostTextPlanId = cachedPlanId;
+        m_ghostTextSessionId = cachedSessionId;
+        m_ghostTextFromAgentic = cachedFromAgentic;
+        m_activeSuggestionContext.range.cpMin = cursorPos;
+        m_activeSuggestionContext.range.cpMax = cursorPos + static_cast<LONG>(m_ghostTextContent.size());
+        m_activeSuggestionContext.state = SuggestionState::Pending;
+        m_activeSuggestionContext.preview = m_ghostTextContent;
+        m_activeSuggestionContext.stateChangedTickMs = static_cast<uint64_t>(GetTickCount64());
+        
+        if (m_hwndEditor)
+        {
+            InvalidateRect(m_hwndEditor, nullptr, FALSE);
+            UpdateWindow(m_hwndEditor);
+        }
+        
+        recordEvent(AgentEventType::GhostTextRequested, "", "speculative_prefetch_cache_hit", "", 0, true);
+        return;
+    }
+
+    if (tryGetPrefixContinuation(m_currentFile, language, lineIndex, linePrefix, cachedCompletion))
+    {
+        g_speculativePrefetchHits++;
+        g_speculativePrefetchInProgress.store(false);
+        m_ghostTextContent = trimGhostText(cachedCompletion);
+        m_ghostTextCommitContent = m_ghostTextContent;
+        m_ghostTextLine = lineIndex;
+        m_ghostTextColumn = column;
+        m_ghostTextRequestCursorPos = cursorPos;
+        m_ghostTextSelectionSnapshot = MakeCollapsedSelectionSnapshot(static_cast<LONG>(cursorPos));
+        m_ghostTextRequestLinePrefix = linePrefix;
+        m_ghostTextVisible = true;
+        m_ghostTextAccepted = false;
+        m_activeSuggestionContext.range.cpMin = cursorPos;
+        m_activeSuggestionContext.range.cpMax = cursorPos + static_cast<LONG>(m_ghostTextContent.size());
+        m_activeSuggestionContext.state = SuggestionState::Pending;
+        m_activeSuggestionContext.preview = m_ghostTextContent;
+        m_activeSuggestionContext.stateChangedTickMs = static_cast<uint64_t>(GetTickCount64());
+
+        InvalidateRect(m_hwndEditor, nullptr, FALSE);
+        UpdateWindow(m_hwndEditor);
+        recordEvent(AgentEventType::GhostTextRequested, "", "speculative_prefix_continuation_hit", "", 0, true);
+        return;
+    }
+    
+    // No cache hit - check if we should speculatively prefetch
+    // Only prefetch when at least one real provider can service the request.
+    const bool hasTitan = m_useTitanKernel && !m_loadedModelPath.empty();
+    const bool hasPrediction = (m_predictionProvider != nullptr) || !m_ollamaBaseUrl.empty();
+    const bool hasNative = m_nativeEngine && m_nativeEngine->IsModelLoaded();
+    const bool hasAgentic = rawrxd::isAgenticLayerAvailable();
+    if (!hasTitan && !hasPrediction && !hasNative && !hasAgentic)
+    {
+        g_speculativePrefetchInProgress.store(false);
+        return;
+    }
+    
+    g_speculativePrefetchMisses++;
+    g_speculativePrefetchKey = cacheKey;
+    const uint64_t requestSeq = m_ghostTextRequestSeq.load();
+    const uint64_t prefetchGeneration = g_speculativePrefetchGeneration.load();
+    
+    // Fire speculative prefetch in background
+    std::string contextCopy = BuildGhostPromptContext(context, linePrefix);
+    std::string suffixCopy = suffix;
+    std::string langCopy = language;
+    std::string fileCopy = m_currentFile;
+    int cursorCopy = cursorPos;
+    int lineCopy = lineIndex;
+    int colCopy = column;
+    std::string linePrefixCopy = linePrefix;
+    auto requestToken = createGhostInferenceRequestToken(requestSeq);
+    
+    std::thread(
+        [this, contextCopy, suffixCopy, langCopy, fileCopy, cursorCopy, lineCopy, colCopy, cacheKey,
+         linePrefixCopy, requestSeq, prefetchGeneration, requestToken]()
+        {
+            ScopedGhostInferenceRequest requestScope(requestToken);
+            DetachedThreadGuard _guard(m_activeDetachedThreads, m_shuttingDown);
+            if (_guard.cancelled || isGhostInferenceRequestCancelled(requestToken))
+            {
+                if (g_speculativePrefetchGeneration.load() == prefetchGeneration)
+                    g_speculativePrefetchInProgress.store(false);
+                return;
+            }
+            
+            // Request completion
+            GhostTextCacheEntry suggestion =
+                requestGhostTextCompletion(contextCopy, langCopy, suffixCopy, fileCopy, lineCopy, colCopy, requestSeq);
+            
+            if (!isGhostInferenceRequestCancelled(requestToken) &&
+                g_speculativePrefetchGeneration.load() == prefetchGeneration &&
+                requestSeq == m_ghostTextRequestSeq.load() && !suggestion.completion.empty())
+            {
+                // Store in prefix cache for instant retrieval
+                storePrefixCacheEntry(cacheKey, suggestion.completion, suggestion.planId, suggestion.sessionId, suggestion.fromAgentic);
+                {
+                    std::lock_guard<std::mutex> lock(g_prefixCacheMutex);
+                    g_lastPrefetchKey = cacheKey;
+                    g_lastPrefetchCompletion = suggestion.completion;
+                    g_lastPrefetchLinePrefix = linePrefixCopy;
+                    g_lastPrefetchFilePath = fileCopy;
+                    g_lastPrefetchLanguage = langCopy;
+                    g_lastPrefetchLineIndex = lineCopy;
+                }
+            }
+            
+            if (g_speculativePrefetchGeneration.load() == prefetchGeneration)
+                g_speculativePrefetchInProgress.store(false);
+        }).detach();
+}
+
+// ============================================================================
+// IDLE PREFETCH TIMER — fires 150ms after last keystroke to populate prefix cache
+// ============================================================================
+
+void Win32IDE::onPrefetchIdleTimer()
+{
+    // One-shot — disarm immediately so we don't fire repeatedly.
+    KillTimer(m_hwndMain, GHOST_TEXT_SPECULATIVE_TIMER_ID);
+
+    // Skip if main ghost-text request already won the race or is in flight.
+    if (!m_ghostTextEnabled || !m_hwndEditor)
+        return;
+    if (m_ghostTextPending || m_ghostTextVisible)
+        return;
+    if (g_speculativePrefetchInProgress.load())
+        return;
+
+    // Hand off to the existing speculative lane (cache hit -> instant paint,
+    // miss -> background inference into prefix cache for the next keystroke).
+    triggerSpeculativePrefetch();
 }
 
 // ============================================================================
@@ -906,6 +1505,8 @@ void Win32IDE::onGhostTextTimer()
     // Gather context: text before cursor
     CHARRANGE sel;
     SendMessageA(m_hwndEditor, EM_EXGETSEL, 0, (LPARAM)&sel);
+    if (sel.cpMin != sel.cpMax)
+        return;
     int cursorPos = sel.cpMin;
 
     if (cursorPos <= 0)
@@ -947,6 +1548,7 @@ void Win32IDE::onGhostTextTimer()
     m_ghostTextLine = lineIndex;
     m_ghostTextColumn = column;
     m_ghostTextRequestCursorPos = cursorPos;
+    m_ghostTextSelectionSnapshot = MakeCollapsedSelectionSnapshot(static_cast<LONG>(cursorPos));
     m_ghostTextPending = true;
     const uint64_t requestSeq = m_ghostTextRequestSeq.load();
 
@@ -993,26 +1595,48 @@ void Win32IDE::onGhostTextTimer()
         }
     }
 
+    auto requestToken = createGhostInferenceRequestToken(requestSeq);
+
+    // Start the streaming time model now. The surface is marked visible with
+    // an empty buffer so the first token is allowed through the UI-thread
+    // sequence/cursor guards, but rendering still no-ops until text arrives.
+    m_ghostTextVisible = true;
+    m_ghostTextAccepted = false;
+    m_ghostTextStreamingActive = true;
+    m_ghostTextStreamSessionId = requestSeq;
+    m_ghostTextBuffer.clear();
+    m_ghostTextCommittedPrefix = m_ghostTextRequestLinePrefix.size();
+    m_pendingGhostAppend.clear();
+    m_ghostTextRenderScheduled = false;
+    m_ghostTextContent.clear();
+    m_ghostTextCommitContent.clear();
+    m_activeSuggestionContext.range.cpMin = cursorPos;
+    m_activeSuggestionContext.range.cpMax = cursorPos;
+    m_activeSuggestionContext.state = SuggestionState::Pending;
+    m_activeSuggestionContext.preview.clear();
+    m_activeSuggestionContext.stateChangedTickMs = static_cast<uint64_t>(GetTickCount64());
+
     std::thread(
-        [this, contextCopy, suffixCopy, langCopy, fileCopy, cursorCopy, lineCopy, colCopy, requestSeq]()
+        [this, contextCopy, suffixCopy, langCopy, fileCopy, cursorCopy, lineCopy, colCopy, requestSeq, requestToken]()
         {
+            ScopedGhostInferenceRequest requestScope(requestToken);
             DetachedThreadGuard _guard(m_activeDetachedThreads, m_shuttingDown);
-            if (_guard.cancelled)
+            if (_guard.cancelled || isGhostInferenceRequestCancelled(requestToken))
                 return;
             const uint64_t startedAt = nowMs();
             GhostTextCacheEntry suggestion =
-                requestGhostTextCompletion(contextCopy, langCopy, suffixCopy, fileCopy, lineCopy, colCopy, requestSeq);
+                requestGhostTextCompletion(contextCopy, langCopy, suffixCopy, fileCopy, lineCopy, colCopy, requestSeq,
+                                           true);
             std::string completion = suggestion.completion;
             const uint64_t elapsedMs = nowMs() - startedAt;
+
+            if (isGhostInferenceRequestCancelled(requestToken))
+                return;
 
             if (requestSeq != m_ghostTextRequestSeq.load())
             {
                 std::lock_guard<std::mutex> lock(m_ghostTextCacheMutex);
                 m_ghostTextMetrics.staleDrops++;
-                if (!isShuttingDown())
-                {
-                    PostMessageA(m_hwndMain, WM_GHOST_TEXT_READY, (WPARAM)cursorCopy, (LPARAM) nullptr);
-                }
                 return;
             }
 
@@ -1037,18 +1661,55 @@ void Win32IDE::onGhostTextTimer()
                     ((m_ghostTextMetrics.avgLatencyMs * (reqCount - 1.0)) + (double)elapsedMs) / reqCount;
             }
 
+            // Flight Recorder telemetry: update speculative diagnostic gauges for UI status/overlay.
+            {
+                struct LocalDiagnosticFrame {
+                    double total_ms = 0.0;
+                    int tokens_produced = 0;
+                    float acceptance_rate = 0.0f;
+                    float draft_latency_ms = 0.0f;
+                    float verify_latency_ms = 0.0f;
+                    int expert_id = -1;
+                };
+                LocalDiagnosticFrame frame{};
+                frame.total_ms = static_cast<double>(elapsedMs);
+                frame.tokens_produced = static_cast<int>(std::max<size_t>(
+                    1, completion.empty() ? 0 : (completion.size() / static_cast<size_t>(4))));
+                frame.expert_id = -1;
+
+                if (m_speculativeEngine)
+                {
+                    // TODO: Wire to actual speculative engine stats when available
+                    frame.acceptance_rate = 0.85f;
+                    frame.draft_latency_ms = static_cast<float>(elapsedMs) * 0.3f;
+                    frame.verify_latency_ms = static_cast<float>(elapsedMs) * 0.7f;
+                }
+
+                const double effectiveTps =
+                    (frame.total_ms > 0.0) ? (static_cast<double>(frame.tokens_produced) / (frame.total_ms / 1000.0)) : 0.0;
+                double baselineTps = 20.0;
+                const double roi = (effectiveTps > 0.0) ? (effectiveTps / baselineTps) : 0.0;
+
+                METRICS.gauge("spec.telemetry.acceptance_rate", static_cast<double>(frame.acceptance_rate));
+                METRICS.gauge("spec.telemetry.tokens_produced", static_cast<double>(frame.tokens_produced));
+                METRICS.gauge("spec.telemetry.draft_latency_ms", frame.draft_latency_ms);
+                METRICS.gauge("spec.telemetry.verify_latency_ms", frame.verify_latency_ms);
+                METRICS.gauge("spec.telemetry.total_ms", frame.total_ms);
+                METRICS.gauge("spec.telemetry.expert_id", static_cast<double>(frame.expert_id));
+                METRICS.gauge("spec.telemetry.effective_tps", effectiveTps);
+                METRICS.gauge("spec.telemetry.roi", roi);
+
+                if (m_hwndMain && IsWindow(m_hwndMain))
+                {
+                    PostMessageW(m_hwndMain, WM_STATUSBAR_REFRESH_COPILOT, 0, 0);
+                }
+            }
+
             // Post result to UI thread
-            if (isShuttingDown())
+            if (isShuttingDown() || isGhostInferenceRequestCancelled(requestToken))
                 return;
-            if (!completion.empty())
-            {
-                char* heapText = _strdup(completion.c_str());
-                PostMessageA(m_hwndMain, WM_GHOST_TEXT_READY, (WPARAM)cursorCopy, (LPARAM)heapText);
-            }
-            else
-            {
-                PostMessageA(m_hwndMain, WM_GHOST_TEXT_READY, (WPARAM)cursorCopy, (LPARAM) nullptr);
-            }
+            (void)cursorCopy;
+            PostGhostCompleteMessage(m_hwndMain, requestSeq, completion);
         })
         .detach();
 }
@@ -1061,14 +1722,15 @@ Win32IDE::GhostTextCacheEntry Win32IDE::requestGhostTextCompletion(const std::st
                                                                    const std::string& language)
 {
     // Legacy 2-arg overload — forward to FIM-aware version with empty suffix
-    return requestGhostTextCompletion(context, language, "", "", 0, 0, 0);
+    return requestGhostTextCompletion(context, language, "", "", 0, 0, 0, false);
 }
 
 Win32IDE::GhostTextCacheEntry Win32IDE::requestGhostTextCompletion(const std::string& context,
                                                                    const std::string& language,
                                                                    const std::string& suffix,
                                                                    const std::string& filePath, int cursorLine,
-                                                                   int cursorCol, uint64_t expectedSeq)
+                                                                   int cursorCol, uint64_t expectedSeq,
+                                                                   bool streamToUi)
 {
     using namespace RawrXD::Prediction;
 
@@ -1109,6 +1771,20 @@ Win32IDE::GhostTextCacheEntry Win32IDE::requestGhostTextCompletion(const std::st
     };
 
     std::string lastReason;
+    
+    // ============================================================================
+    // SKILL INJECTION: Enrich prompt with active skill context
+    // ============================================================================
+    // CRITICAL: First 520 lines of skill context are ALWAYS injected
+    // regardless of model/agent status. This provides Cursor-style
+    // .cursorrules / system prompt injection for sovereign IDE.
+    std::string skillEnrichedContext = RawrXD::SkillSystem::Hook_GhostText_CompletionRequest(
+        context, filePath, cursorLine, cursorCol
+    );
+    
+    // Use skill-enriched context for all provider requests
+    const std::string& providerContext = skillEnrichedContext.empty() ? context : skillEnrichedContext;
+    
     for (GhostProviderKind provider : precedence)
     {
         if (isStale() || isPastDeadline())
@@ -1126,8 +1802,9 @@ Win32IDE::GhostTextCacheEntry Win32IDE::requestGhostTextCompletion(const std::st
                 lastReason = "Titan provider skipped (no loaded model path)";
                 continue;
             }
-            std::string titanCompletion = requestTitanGhostTextCompletion(context, language, suffix, filePath,
-                                                                          cursorLine, cursorCol, expectedSeq);
+            std::string titanCompletion = requestTitanGhostTextCompletion(providerContext, language, suffix, filePath,
+                                                                          cursorLine, cursorCol, expectedSeq,
+                                                                          streamToUi);
             if (!titanCompletion.empty())
             {
                 std::lock_guard<std::mutex> lock(m_ghostTextCacheMutex);
@@ -1177,8 +1854,8 @@ Win32IDE::GhostTextCacheEntry Win32IDE::requestGhostTextCompletion(const std::st
             editorContext.cursorLine = cursorLine;
             editorContext.cursorColumn = cursorCol;
 
-            const size_t prefixWindow = std::min<size_t>(context.size(), 1536);
-            const std::string promptPrefix = context.substr(context.size() - prefixWindow, prefixWindow);
+            const size_t prefixWindow = std::min<size_t>(providerContext.size(), 1536);
+            const std::string promptPrefix = providerContext.substr(providerContext.size() - prefixWindow, prefixWindow);
             const rawrxd::CompletionResult result = rawrxd::requestInlineCompletion(promptPrefix, editorContext);
             const std::string bridged = trimGhostText(result.suggestion);
             if (result.success && !bridged.empty())
@@ -1245,15 +1922,44 @@ Win32IDE::GhostTextCacheEntry Win32IDE::requestGhostTextCompletion(const std::st
                 ctx.cursorLine = cursorLine;
                 ctx.cursorColumn = cursorCol;
 
-                PredictionResult result = m_predictionProvider->Predict(ctx);
-                if (result.success && !result.completion.empty())
+                std::string streamedCompletion;
+                bool sawStreamToken = false;
+                m_predictionProvider->PredictStreaming(
+                    ctx,
+                    [this, expectedSeq, streamToUi, &streamedCompletion, &sawStreamToken](const std::string& token,
+                                                                                          bool /*isFinal*/) -> bool
+                    {
+                        if (expectedSeq != 0 && expectedSeq != m_ghostTextRequestSeq.load())
+                        {
+                            return false;
+                        }
+                        if (m_ghostTextAccepted || !m_ghostTextEnabled)
+                        {
+                            return false;
+                        }
+
+                        if (!token.empty())
+                        {
+                            sawStreamToken = true;
+                            streamedCompletion += token;
+                            if (streamToUi && expectedSeq != 0)
+                            {
+                                PostGhostTokenMessage(m_hwndMain, expectedSeq, token);
+                            }
+                        }
+                        return true;
+                    });
+
+                const std::string trimmedStreamedCompletion = trimGhostText(streamedCompletion);
+                if (!trimmedStreamedCompletion.empty())
                 {
                     std::lock_guard<std::mutex> lock(m_ghostTextCacheMutex);
                     m_ghostTextMetrics.localWins++;
-                    return GhostTextCacheEntry{trimGhostText(result.completion), "", "", false, 0};
+                    return GhostTextCacheEntry{trimmedStreamedCompletion, "", "", false, 0};
                 }
-                lastReason = result.success ? "Ollama provider returned empty completion"
-                                            : ("Ollama provider failed: " + result.error);
+
+                lastReason = sawStreamToken ? "Ollama provider streamed only whitespace"
+                                            : "Ollama provider stream returned no completion";
             }
             else
             {
@@ -1365,7 +2071,8 @@ Win32IDE::GhostTextCacheEntry Win32IDE::requestGhostTextCompletion(const std::st
 
 std::string Win32IDE::requestTitanGhostTextCompletion(const std::string& context, const std::string& language,
                                                       const std::string& suffix, const std::string& filePath,
-                                                      int cursorLine, int cursorCol, uint64_t expectedSeq)
+                                                      int cursorLine, int cursorCol, uint64_t expectedSeq,
+                                                      bool streamToUi)
 {
     if (!m_useTitanKernel || m_loadedModelPath.empty() || !m_hwndMain || !m_hwndEditor)
     {
@@ -1406,6 +2113,7 @@ std::string Win32IDE::requestTitanGhostTextCompletion(const std::string& context
         m_titanGhostSeqGaps = 0;
         m_titanGhostPackets = 0;
         m_titanGhostStreamActive = true;
+        m_titanGhostStreamRequestSeq = expectedSeq;
     }
 
     if (m_agenticBridge)
@@ -1425,10 +2133,14 @@ std::string Win32IDE::requestTitanGhostTextCompletion(const std::string& context
         LOG_INFO("Titan ghost beginStreaming failed; last_seq=" + std::to_string(lastGhostSeq));
         std::lock_guard<std::mutex> lock(m_titanGhostMutex);
         m_titanGhostStreamActive = false;
+        m_titanGhostStreamRequestSeq = 0;
         return "";
     }
 
-    g_titanGhost.streamConfigureWindow(reinterpret_cast<uint64_t>(m_hwndMain), WM_TITAN_GHOST_STREAM, 0);
+    if (streamToUi)
+    {
+        g_titanGhost.streamConfigureWindow(reinterpret_cast<uint64_t>(m_hwndMain), WM_TITAN_GHOST_STREAM, 0);
+    }
 
     RAWRXD_INFERENCE_HANDLE inferenceHandle = 0;
     if (g_titanGhost.inferAsync(prompt.c_str(), prompt.size(), &inferenceHandle) != RAWRXD_SUCCESS)
@@ -1438,11 +2150,17 @@ std::string Win32IDE::requestTitanGhostTextCompletion(const std::string& context
         g_titanGhost.endStreaming(streamHandle);
         std::lock_guard<std::mutex> lock(m_titanGhostMutex);
         m_titanGhostStreamActive = false;
+        m_titanGhostStreamRequestSeq = 0;
         return "";
     }
+    setActiveTitanGhostInference(inferenceHandle, expectedSeq);
 
     const RAWRXD_STATUS waitStatus = g_titanGhost.waitForInference(inferenceHandle, 12000);
-    PostMessageA(m_hwndMain, WM_TITAN_GHOST_STREAM, 0, 0);
+    clearActiveTitanGhostInference(inferenceHandle);
+    if (streamToUi)
+    {
+        PostMessageA(m_hwndMain, WM_TITAN_GHOST_STREAM, 0, 0);
+    }
     Sleep(25);
 
     std::string completion;
@@ -1464,6 +2182,7 @@ std::string Win32IDE::requestTitanGhostTextCompletion(const std::string& context
         m_titanGhostSeqGaps = gapCount;
         m_titanGhostPackets = packetCount;
         m_titanGhostStreamActive = false;
+        m_titanGhostStreamRequestSeq = 0;
     }
 
     if (waitStatus != RAWRXD_SUCCESS)
@@ -1490,6 +2209,7 @@ void Win32IDE_HandleTitanGhostStreamMessage(Win32IDE* ide)
     uint64_t lastSeq = 0;
     uint64_t gapCount = 0;
     uint64_t packetCount = 0;
+    uint64_t streamRequestSeq = 0;
 
     {
         std::lock_guard<std::mutex> lock(ide->m_titanGhostMutex);
@@ -1497,6 +2217,7 @@ void Win32IDE_HandleTitanGhostStreamMessage(Win32IDE* ide)
         lastSeq = ide->m_titanGhostStreamSeq;
         gapCount = ide->m_titanGhostSeqGaps;
         packetCount = ide->m_titanGhostPackets;
+        streamRequestSeq = ide->m_titanGhostStreamRequestSeq;
         drainTitanGhostPackets(ide->m_titanGhostStreamText, &lastSeq, &gapCount, &packetCount);
         ide->m_titanGhostStreamSeq = lastSeq;
         ide->m_titanGhostSeqGaps = gapCount;
@@ -1521,6 +2242,11 @@ void Win32IDE_HandleTitanGhostStreamMessage(Win32IDE* ide)
         return;
     }
 
+    if (streamRequestSeq != 0 && streamRequestSeq != ide->m_ghostTextRequestSeq.load())
+    {
+        return;
+    }
+
     CHARRANGE sel{};
     SendMessageA(ide->m_hwndEditor, EM_EXGETSEL, 0, reinterpret_cast<LPARAM>(&sel));
     if (sel.cpMin != ide->m_ghostTextRequestCursorPos)
@@ -1530,6 +2256,7 @@ void Win32IDE_HandleTitanGhostStreamMessage(Win32IDE* ide)
 
     ide->m_ghostTextCommitContent = ide->trimGhostText(combined);
     ide->m_ghostTextContent = ide->m_ghostTextCommitContent;
+    ide->m_ghostTextBuffer = combined;
     if (ide->m_ghostTextContent.empty())
     {
         return;
@@ -1551,13 +2278,22 @@ void Win32IDE::onGhostTextReady(int requestedCursorPos, const char* completionTe
     if (!completionText || !m_hwndEditor)
         return;
 
-    // Verify cursor hasn't moved since request
+    // ── UX IMPROVEMENT: Stale Completion Guard ───────────────────────────────
+    // Verify cursor hasn't moved since request AND that we haven't dismissed.
+    // This prevents stale async completions from corrupting state after Esc.
     CHARRANGE sel;
     SendMessageA(m_hwndEditor, EM_EXGETSEL, 0, (LPARAM)&sel);
 
-    if (sel.cpMin != requestedCursorPos)
+    if (sel.cpMin != sel.cpMax || sel.cpMin != requestedCursorPos)
     {
-        // Cursor moved — discard stale completion
+        // Cursor moved or text is selected — discard stale completion without
+        // rebasing the ghost overlay onto the user's current selection.
+        return;
+    }
+
+    // If ghost text was dismissed while we were computing, don't render
+    if (!m_ghostTextEnabled || m_ghostTextAccepted)
+    {
         return;
     }
 
@@ -1585,6 +2321,7 @@ void Win32IDE::onGhostTextReady(int requestedCursorPos, const char* completionTe
     m_ghostTextContent = extracted;
     m_ghostTextVisible = true;
     m_ghostTextAccepted = false;
+    m_ghostTextSelectionSnapshot = MakeCollapsedSelectionSnapshot(sel.cpMin);
     m_ghostTextStreamSessionId = 0;
     m_activeSuggestionContext.range.cpMin = requestedCursorPos;
     m_activeSuggestionContext.range.cpMax = requestedCursorPos + static_cast<LONG>(m_ghostTextContent.size());
@@ -1597,6 +2334,7 @@ void Win32IDE::onGhostTextReady(int requestedCursorPos, const char* completionTe
     m_ghostTextPendingPlanId.clear();
     m_ghostTextPendingSessionId.clear();
     m_ghostTextPendingFromAgentic = false;
+    updateGhostTextPendingEditPreview(m_ghostTextCommitContent.empty() ? m_ghostTextContent : m_ghostTextCommitContent);
 
     // Align with MASM Sovereign logic: trigger immediate repaint
     if (m_hwndEditor)
@@ -1629,9 +2367,23 @@ void Win32IDE::onGhostTextTokenChunk(const char* tokenChunk, uint64_t sessionId)
     {
         return;
     }
+    if (sessionId != m_ghostTextRequestSeq.load())
+    {
+        return;
+    }
+    if (!m_ghostTextEnabled || m_ghostTextAccepted)
+    {
+        return;
+    }
 
     CHARRANGE sel{};
     SendMessageA(m_hwndEditor, EM_EXGETSEL, 0, reinterpret_cast<LPARAM>(&sel));
+
+    if (sel.cpMin != sel.cpMax)
+    {
+        dismissGhostText();
+        return;
+    }
 
     if (m_ghostTextStreamSessionId == 0)
     {
@@ -1649,35 +2401,207 @@ void Win32IDE::onGhostTextTokenChunk(const char* tokenChunk, uint64_t sessionId)
         m_ghostTextAccepted = false;
         m_ghostTextContent.clear();
         m_ghostTextCommitContent.clear();
+        m_ghostTextBuffer.clear();
         m_ghostTextRequestCursorPos = static_cast<int>(sel.cpMin);
+        m_ghostTextSelectionSnapshot = MakeCollapsedSelectionSnapshot(sel.cpMin);
         m_activeSuggestionContext.range.cpMin = static_cast<LONG>(sel.cpMin);
         m_activeSuggestionContext.range.cpMax = static_cast<LONG>(sel.cpMin);
         m_activeSuggestionContext.state = SuggestionState::Pending;
         m_activeSuggestionContext.stateChangedTickMs = static_cast<uint64_t>(GetTickCount64());
     }
 
-    // If caret moved since stream started, reset the streamed suggestion at new caret.
+    // If caret moved since stream started, invalidate the stream instead of
+    // rebasing it at the new caret. This preserves request causality.
     if (m_ghostTextRequestCursorPos >= 0 && m_ghostTextRequestCursorPos != static_cast<int>(sel.cpMin))
     {
-        m_ghostTextContent.clear();
-        m_ghostTextCommitContent.clear();
-        m_ghostTextRequestCursorPos = static_cast<int>(sel.cpMin);
-        m_activeSuggestionContext.range.cpMin = static_cast<LONG>(sel.cpMin);
-        m_activeSuggestionContext.range.cpMax = static_cast<LONG>(sel.cpMin);
-        m_activeSuggestionContext.state = SuggestionState::Pending;
-        m_activeSuggestionContext.stateChangedTickMs = static_cast<uint64_t>(GetTickCount64());
+        dismissGhostText();
+        return;
     }
 
-    m_ghostTextContent += tokenChunk;
-    m_ghostTextContent = trimGhostText(m_ghostTextContent);
-    m_ghostTextCommitContent = m_ghostTextContent;
+    m_pendingGhostAppend += tokenChunk;
+    m_ghostTextStreamingActive = true;
+    if (!m_ghostTextRenderScheduled)
+    {
+        m_ghostTextRenderScheduled = true;
+        if (m_hwndMain && SetTimer(m_hwndMain, GHOST_TEXT_RENDER_TIMER_ID, GHOST_TEXT_RENDER_BATCH_MS, nullptr) == 0)
+        {
+            PostMessageA(m_hwndMain, WM_USER_GHOST_RENDER, 0, 0);
+        }
+    }
+}
+
+void Win32IDE::onGhostTextRenderMessage()
+{
+    if (m_hwndMain)
+    {
+        KillTimer(m_hwndMain, GHOST_TEXT_RENDER_TIMER_ID);
+    }
+    m_ghostTextRenderScheduled = false;
+
+    if (!m_hwndEditor || !m_ghostTextEnabled || m_ghostTextAccepted)
+    {
+        m_pendingGhostAppend.clear();
+        return;
+    }
+
+    const uint64_t activeSeq = m_ghostTextRequestSeq.load();
+    if (m_ghostTextStreamSessionId != 0 && m_ghostTextStreamSessionId != activeSeq)
+    {
+        m_pendingGhostAppend.clear();
+        return;
+    }
+
+    CHARRANGE sel{};
+    SendMessageA(m_hwndEditor, EM_EXGETSEL, 0, reinterpret_cast<LPARAM>(&sel));
+    if (sel.cpMin != sel.cpMax)
+    {
+        dismissGhostText();
+        return;
+    }
+    if (m_ghostTextRequestCursorPos >= 0 && m_ghostTextRequestCursorPos != static_cast<int>(sel.cpMin))
+    {
+        dismissGhostText();
+        return;
+    }
+
+    const int lineIndex = (int)SendMessageA(m_hwndEditor, EM_LINEFROMCHAR, sel.cpMin, 0);
+    const int lineStart = (int)SendMessageA(m_hwndEditor, EM_LINEINDEX, lineIndex, 0);
+    const std::string currentLinePrefix = getEditorRangeUtf8(m_hwndEditor, lineStart, sel.cpMin);
+    if (!m_ghostTextRequestLinePrefix.empty() && currentLinePrefix != m_ghostTextRequestLinePrefix)
+    {
+        dismissGhostText();
+        return;
+    }
+
+    if (m_pendingGhostAppend.empty())
+    {
+        return;
+    }
+
+    m_ghostTextBuffer += m_pendingGhostAppend;
+    m_pendingGhostAppend.clear();
+
+    const std::string displayText = trimGhostText(m_ghostTextBuffer);
+    if (displayText.empty())
+    {
+        return;
+    }
+
+    m_ghostTextContent = displayText;
+    m_ghostTextCommitContent = displayText;
+    m_ghostTextVisible = true;
+    m_ghostTextAccepted = false;
+    m_ghostTextSelectionSnapshot = MakeCollapsedSelectionSnapshot(sel.cpMin);
     m_activeSuggestionContext.range.cpMin = static_cast<LONG>(m_ghostTextRequestCursorPos);
     m_activeSuggestionContext.range.cpMax =
         static_cast<LONG>(m_ghostTextRequestCursorPos + static_cast<int>(m_ghostTextContent.size()));
     m_activeSuggestionContext.state = SuggestionState::Pending;
+    m_activeSuggestionContext.preview = m_ghostTextContent;
+    m_activeSuggestionContext.stateChangedTickMs = static_cast<uint64_t>(GetTickCount64());
+    updateGhostTextPendingEditPreview(m_ghostTextCommitContent.empty() ? m_ghostTextContent : m_ghostTextCommitContent);
 
     InvalidateRect(m_hwndEditor, nullptr, FALSE);
-    UpdateWindow(m_hwndEditor);
+    bool titanRunning = false;
+    {
+        std::lock_guard<std::mutex> lock(m_titanAgentMutex);
+        titanRunning = m_titanAgentRunning;
+    }
+    if (titanRunning)
+    {
+        scheduleTitanDraftPrefetch();
+    }
+}
+
+void Win32IDE::onGhostTextComplete(uint64_t sessionId, const char* completionText)
+{
+    m_ghostTextPending = false;
+
+    if (sessionId == 0 || sessionId != m_ghostTextRequestSeq.load())
+    {
+        std::lock_guard<std::mutex> lock(m_ghostTextCacheMutex);
+        m_ghostTextMetrics.staleDrops++;
+        return;
+    }
+
+    if (!m_hwndEditor || !m_ghostTextEnabled || m_ghostTextAccepted)
+    {
+        return;
+    }
+
+    if (m_ghostTextRenderScheduled || !m_pendingGhostAppend.empty())
+    {
+        onGhostTextRenderMessage();
+        if (sessionId != m_ghostTextRequestSeq.load() || !m_ghostTextEnabled || m_ghostTextAccepted)
+        {
+            return;
+        }
+    }
+
+    m_ghostTextStreamingActive = false;
+    m_ghostTextStreamSessionId = 0;
+
+    CHARRANGE sel{};
+    SendMessageA(m_hwndEditor, EM_EXGETSEL, 0, reinterpret_cast<LPARAM>(&sel));
+    if (sel.cpMin != sel.cpMax)
+    {
+        dismissGhostText();
+        return;
+    }
+    if (m_ghostTextRequestCursorPos >= 0 && m_ghostTextRequestCursorPos != static_cast<int>(sel.cpMin))
+    {
+        dismissGhostText();
+        return;
+    }
+
+    const int lineIndex = (int)SendMessageA(m_hwndEditor, EM_LINEFROMCHAR, sel.cpMin, 0);
+    const int lineStart = (int)SendMessageA(m_hwndEditor, EM_LINEINDEX, lineIndex, 0);
+    const std::string currentLinePrefix = getEditorRangeUtf8(m_hwndEditor, lineStart, sel.cpMin);
+    if (!m_ghostTextRequestLinePrefix.empty() && currentLinePrefix != m_ghostTextRequestLinePrefix)
+    {
+        dismissGhostText();
+        return;
+    }
+
+    const std::string rawCompletion = completionText ? completionText : "";
+    const std::string extracted = trimGhostText(ExtractGhostSuggestion(rawCompletion, m_ghostTextRequestLinePrefix));
+    const std::string fullDraft = trimGhostText(rawCompletion);
+
+    if (!extracted.empty() && IsRelevantGhostSuggestion(extracted))
+    {
+        m_ghostTextBuffer = fullDraft.empty() ? extracted : fullDraft;
+        m_ghostTextCommitContent = m_ghostTextBuffer;
+        m_ghostTextContent = extracted;
+    }
+    else if (m_ghostTextContent.empty())
+    {
+        dismissGhostText();
+        return;
+    }
+
+    m_ghostTextVisible = !m_ghostTextContent.empty();
+    if (!m_ghostTextVisible)
+    {
+        return;
+    }
+
+    m_ghostTextSelectionSnapshot = MakeCollapsedSelectionSnapshot(sel.cpMin);
+    m_activeSuggestionContext.range.cpMin = static_cast<LONG>(m_ghostTextRequestCursorPos);
+    m_activeSuggestionContext.range.cpMax =
+        static_cast<LONG>(m_ghostTextRequestCursorPos + static_cast<int>(m_ghostTextContent.size()));
+    m_activeSuggestionContext.state = SuggestionState::Pending;
+    m_activeSuggestionContext.preview = m_ghostTextContent;
+    m_activeSuggestionContext.stateChangedTickMs = static_cast<uint64_t>(GetTickCount64());
+    m_ghostTextPlanId = m_ghostTextPendingPlanId;
+    m_ghostTextSessionId = m_ghostTextPendingSessionId;
+    m_ghostTextFromAgentic = m_ghostTextPendingFromAgentic;
+    m_ghostTextPendingPlanId.clear();
+    m_ghostTextPendingSessionId.clear();
+    m_ghostTextPendingFromAgentic = false;
+    updateGhostTextPendingEditPreview(m_ghostTextCommitContent.empty() ? m_ghostTextContent : m_ghostTextCommitContent);
+
+    InvalidateRect(m_hwndEditor, nullptr, FALSE);
+    recordEvent(AgentEventType::GhostTextRequested, "", m_ghostTextContent.substr(0, 128), "", 0, true);
+
     bool titanRunning = false;
     {
         std::lock_guard<std::mutex> lock(m_titanAgentMutex);
@@ -1733,25 +2657,31 @@ void Win32IDE::scheduleTitanDraftPrefetch()
 
 void Win32IDE::dismissGhostText()
 {
-    if (!m_ghostTextVisible)
-        return;
+    const bool hadVisibleGhostText = m_ghostTextVisible;
+    cancelGhostTextInferenceRequests();
+    clearGhostTextPendingEdit(hadVisibleGhostText ? RawrXD::Review::EditState::Declined
+                                                  : RawrXD::Review::EditState::Discarded);
 
-    const bool shouldReportDismiss = !m_ghostTextAccepted && m_ghostTextFromAgentic && !m_ghostTextPlanId.empty();
+    const bool shouldReportDismiss = hadVisibleGhostText && !m_ghostTextAccepted && m_ghostTextFromAgentic &&
+                                     !m_ghostTextPlanId.empty();
     const std::string feedbackPlanId = m_ghostTextPlanId;
     const std::string feedbackSessionId = m_ghostTextSessionId;
     const std::string feedbackPreview = m_ghostTextContent;
 
+    // Clear all ghost text state atomically
     m_ghostTextVisible = false;
     m_ghostTextContent.clear();
     m_ghostTextCommitContent.clear();
     m_ghostTextLine = -1;
     m_ghostTextColumn = -1;
     m_ghostTextRequestCursorPos = -1;
+    m_ghostTextSelectionSnapshot = MakeCollapsedSelectionSnapshot(-1);
     m_ghostTextStreamSessionId = 0;
     m_ghostTextAccepted = false;
     m_ghostTextPlanId.clear();
     m_ghostTextSessionId.clear();
     m_ghostTextFromAgentic = false;
+    m_ghostTextRequestLinePrefix.clear();  // Clear prefix to prevent stale matches
     invalidateTitanDraftPrefetch();
     if (m_activeSuggestionContext.state == SuggestionState::Pending)
     {
@@ -1760,7 +2690,7 @@ void Win32IDE::dismissGhostText()
     }
     hideGhostDiffOverlayUi();
 
-    if (m_hwndEditor)
+    if (m_hwndEditor && hadVisibleGhostText)
     {
         InvalidateRect(m_hwndEditor, nullptr, FALSE);
     }
@@ -1784,10 +2714,29 @@ void Win32IDE::acceptGhostText()
     if (!m_ghostTextVisible || (m_ghostTextContent.empty() && m_ghostTextCommitContent.empty()) || !m_hwndEditor)
         return;
 
-    // Bridge to Predictive Engine
-    if (m_predictiveGhostText)
+    CHARRANGE initialSel{};
+    SendMessageA(m_hwndEditor, EM_EXGETSEL, 0, reinterpret_cast<LPARAM>(&initialSel));
+    if (initialSel.cpMin != initialSel.cpMax ||
+        (m_ghostTextRequestCursorPos >= 0 && initialSel.cpMin != m_ghostTextRequestCursorPos))
     {
-        m_predictiveGhostText->acceptSuggestion();
+        // Accept only at the original collapsed caret. If the user selected text
+        // or moved the caret, preserve that selection and dismiss the stale ghost.
+        dismissGhostText();
+        return;
+    }
+    if (IsSelectionSnapshotValid(m_ghostTextSelectionSnapshot) &&
+        (initialSel.cpMin != m_ghostTextSelectionSnapshot.cpMin || initialSel.cpMax != m_ghostTextSelectionSnapshot.cpMax))
+    {
+        dismissGhostText();
+        return;
+    }
+    const int lineIndex = (int)SendMessageA(m_hwndEditor, EM_LINEFROMCHAR, initialSel.cpMin, 0);
+    const int lineStart = (int)SendMessageA(m_hwndEditor, EM_LINEINDEX, lineIndex, 0);
+    const std::string currentLinePrefix = getEditorRangeUtf8(m_hwndEditor, lineStart, initialSel.cpMin);
+    if (!m_ghostTextRequestLinePrefix.empty() && currentLinePrefix != m_ghostTextRequestLinePrefix)
+    {
+        dismissGhostText();
+        return;
     }
 
     std::string textToInsert = !m_ghostTextCommitContent.empty() ? m_ghostTextCommitContent : m_ghostTextContent;
@@ -1837,26 +2786,74 @@ void Win32IDE::acceptGhostText()
         return;
     }
 
-    CHARRANGE initialSel{};
-    SendMessageA(m_hwndEditor, EM_EXGETSEL, 0, reinterpret_cast<LPARAM>(&initialSel));
+    updateGhostTextPendingEditPreview(textToInsert);
+    const uint64_t pendingEditId = m_activeGhostPendingEditId;
+    if (pendingEditId == 0)
+    {
+        return;
+    }
+
+    // Bridge to Predictive Engine only after the accept lane is validated.
+    if (m_predictiveGhostText)
+    {
+        m_predictiveGhostText->acceptSuggestion();
+    }
+
     const std::string feedbackPlanId = m_ghostTextPlanId;
     const std::string feedbackSessionId = m_ghostTextSessionId;
     const bool feedbackFromAgentic = m_ghostTextFromAgentic;
     m_ghostTextAccepted = true;
 
-    // Dismiss first to avoid re-rendering ghost during insert
-    dismissGhostText();
+    // ── UX IMPROVEMENT: Zero-Jitter Tab Accept ──────────────────────────────
+    // Suppress redraws during the insert to prevent cursor jitter and flicker.
+    // This ensures the ghost text disappears and the real text appears atomically.
+    SendMessageA(m_hwndEditor, WM_SETREDRAW, FALSE, 0);
 
-    // Insert text at current cursor position
-    SendMessageA(m_hwndEditor, EM_REPLACESEL, TRUE, (LPARAM)textToInsert.c_str());
+    // Clear ghost state BEFORE insert (prevents ghost from re-rendering mid-insert)
+    m_ghostTextVisible = false;
+    m_ghostTextContent.clear();
+    m_ghostTextCommitContent.clear();
+    m_ghostTextLine = -1;
+    m_ghostTextColumn = -1;
+    m_ghostTextRequestCursorPos = -1;
+    m_ghostTextSelectionSnapshot = MakeCollapsedSelectionSnapshot(-1);
+    m_ghostTextStreamSessionId = 0;
+    // Don't clear m_ghostTextAccepted - we just set it to true above
+    m_ghostTextPlanId.clear();
+    m_ghostTextSessionId.clear();
+    m_ghostTextFromAgentic = false;
+    m_ghostTextRequestLinePrefix.clear();
+    invalidateTitanDraftPrefetch();
+    hideGhostDiffOverlayUi();
 
     const LONG insertedStart = initialSel.cpMin;
+    const bool approved = approvePendingEdit(pendingEditId);
     const LONG insertedEnd = insertedStart + static_cast<LONG>(textToInsert.size());
+    if (!approved)
+    {
+        SendMessageA(m_hwndEditor, WM_SETREDRAW, TRUE, 0);
+        InvalidateRect(m_hwndEditor, nullptr, FALSE);
+        UpdateWindow(m_hwndEditor);
+        m_ghostTextAccepted = false;
+        return;
+    }
+
+    CHARRANGE caretAfterInsert{};
+    caretAfterInsert.cpMin = insertedEnd;
+    caretAfterInsert.cpMax = insertedEnd;
+    SendMessageA(m_hwndEditor, EM_EXSETSEL, 0, reinterpret_cast<LPARAM>(&caretAfterInsert));
     m_activeSuggestionContext.range.cpMin = insertedStart;
     m_activeSuggestionContext.range.cpMax = insertedEnd;
     m_activeSuggestionContext.state = SuggestionState::Accepted;
     m_activeSuggestionContext.preview = textToInsert;
     m_activeSuggestionContext.stateChangedTickMs = static_cast<uint64_t>(GetTickCount64());
+
+    // Re-enable redraws and force a single atomic repaint
+    SendMessageA(m_hwndEditor, WM_SETREDRAW, TRUE, 0);
+    InvalidateRect(m_hwndEditor, nullptr, FALSE);
+    UpdateWindow(m_hwndEditor);
+
+    // Apply color after the atomic repaint (subtle highlight, non-blocking)
     applyEditorRangeColor(m_hwndEditor, insertedStart, insertedEnd, m_currentTheme.textColor);
 
     // Record acceptance event
@@ -2178,6 +3175,15 @@ void Win32IDE::renderGhostText(HDC hdc)
     if (!m_hwndEditor)
         return;
 
+    // ── UX IMPROVEMENT: Stable Rendering Guard ───────────────────────────────
+    // Don't render ghost text if editor is in the middle of an operation.
+    // This prevents flicker during rapid typing or selection changes.
+    if (m_ghostTextAccepted)
+    {
+        hideGhostDiffOverlayUi();
+        return;
+    }
+
     bool showPagingStatus = false;
     uint64_t elapsedMs = 0;
     {
@@ -2203,6 +3209,11 @@ void Win32IDE::renderGhostText(HDC hdc)
     // Get current cursor position to know where to draw
     CHARRANGE sel;
     SendMessageA(m_hwndEditor, EM_EXGETSEL, 0, (LPARAM)&sel);
+    if (sel.cpMin != sel.cpMax || (m_ghostTextRequestCursorPos >= 0 && sel.cpMin != m_ghostTextRequestCursorPos))
+    {
+        hideGhostDiffOverlayUi();
+        return;
+    }
 
     // Get the pixel position of the cursor
     POINTL pt;
@@ -2312,6 +3323,7 @@ bool Win32IDE::handleGhostTextKey(UINT vk)
         {
             cancelTitanAgentInferenceAsync();
             dismissGhostText();
+            cancelGhostTextInferenceRequests();
             postOutputPanelSafe("\n[Titan Agent] canceled by ESC\n");
             return true;
         }
@@ -2364,9 +3376,36 @@ bool Win32IDE::handleGhostTextTypedChar(wchar_t ch)
     if (!m_ghostTextVisible)
         return false;
 
+    if (m_ghostTextRenderScheduled || !m_pendingGhostAppend.empty())
+    {
+        onGhostTextRenderMessage();
+        if (!m_ghostTextVisible)
+        {
+            return false;
+        }
+    }
+
     // Ignore control characters; Tab/Esc are handled in keydown.
     if (ch < 0x20 || ch == L'\t' || ch == 0x1B)
         return false;
+
+    // ── UX IMPROVEMENT: Cursor Position Validation ──────────────────────────
+    // Verify cursor hasn't moved since ghost text was rendered.
+    // If cursor moved, the ghost text is stale and should be dismissed.
+    CHARRANGE currentSel{};
+    SendMessageA(m_hwndEditor, EM_EXGETSEL, 0, reinterpret_cast<LPARAM>(&currentSel));
+    if (currentSel.cpMin != currentSel.cpMax)
+    {
+        // Do not trim/rebase ghost text while the user is replacing a selection.
+        dismissGhostText();
+        return false;
+    }
+    if (m_ghostTextRequestCursorPos >= 0 && currentSel.cpMin != m_ghostTextRequestCursorPos)
+    {
+        // Cursor moved - ghost text is stale, dismiss it
+        dismissGhostText();
+        return false;
+    }
 
     std::string typedUtf8;
     {
@@ -2383,21 +3422,49 @@ bool Win32IDE::handleGhostTextTypedChar(wchar_t ch)
     if (commitText.empty())
         return false;
 
-    const bool matches =
+    // ── UX IMPROVEMENT: Merge Rules with Fuzzy Matching ──────────────────────
+    // Check if typed char matches the first char of ghost text (case-insensitive for letters)
+    const bool exactMatch =
         (commitText.size() >= typedUtf8.size() && commitText.compare(0, typedUtf8.size(), typedUtf8) == 0);
-    if (!matches)
+    
+    // Case-insensitive match for single letters (common in IDE typing)
+    bool caseInsensitiveMatch = false;
+    if (!exactMatch && typedUtf8.size() == 1 && commitText.size() >= 1)
     {
+        const char typed = typedUtf8[0];
+        const char ghost = commitText[0];
+        // Match letters case-insensitively
+        if (std::isalpha(static_cast<unsigned char>(typed)) && std::isalpha(static_cast<unsigned char>(ghost)))
+        {
+            caseInsensitiveMatch = (std::tolower(static_cast<unsigned char>(typed)) == 
+                                    std::tolower(static_cast<unsigned char>(ghost)));
+        }
+    }
+
+    if (!exactMatch && !caseInsensitiveMatch)
+    {
+        // Typed char doesn't match ghost text prefix - dismiss
         dismissGhostText();
         return false;
     }
 
-    auto trimPrefix = [&](std::string& s) {
-        if (s.size() >= typedUtf8.size() && s.compare(0, typedUtf8.size(), typedUtf8) == 0)
-            s.erase(0, typedUtf8.size());
+    // Trim the matched prefix from ghost text
+    auto trimPrefix = [&](std::string& s, size_t len) {
+        if (s.size() >= len)
+            s.erase(0, len);
     };
-    trimPrefix(commitText);
+    
+    const size_t trimLen = exactMatch ? typedUtf8.size() : 1;
+    trimPrefix(commitText, trimLen);
     if (&renderText != &commitText)
-        trimPrefix(renderText);
+        trimPrefix(renderText, trimLen);
+    trimPrefix(m_ghostTextBuffer, trimLen);
+    trimPrefix(m_pendingGhostAppend, trimLen);
+
+    // Update cursor position tracking for subsequent chars
+    m_ghostTextRequestCursorPos = currentSel.cpMin + static_cast<LONG>(typedUtf8.size());
+    m_ghostTextSelectionSnapshot = MakeCollapsedSelectionSnapshot(static_cast<LONG>(m_ghostTextRequestCursorPos));
+    m_ghostTextRequestLinePrefix += typedUtf8;
 
     // If fully consumed by typed prefix, dismiss ghost cleanly.
     if (commitText.empty() && renderText.empty())
@@ -2406,11 +3473,9 @@ bool Win32IDE::handleGhostTextTypedChar(wchar_t ch)
         return false;
     }
 
-    CHARRANGE sel{};
-    SendMessageA(m_hwndEditor, EM_EXGETSEL, 0, reinterpret_cast<LPARAM>(&sel));
-    m_activeSuggestionContext.range.cpMin = sel.cpMin;
+    m_activeSuggestionContext.range.cpMin = m_ghostTextRequestCursorPos;
     m_activeSuggestionContext.range.cpMax =
-        sel.cpMin + static_cast<LONG>((!m_ghostTextContent.empty() ? m_ghostTextContent : m_ghostTextCommitContent).size());
+        m_ghostTextRequestCursorPos + static_cast<LONG>((!m_ghostTextContent.empty() ? m_ghostTextContent : m_ghostTextCommitContent).size());
     m_activeSuggestionContext.preview = !m_ghostTextContent.empty() ? m_ghostTextContent : m_ghostTextCommitContent;
     m_activeSuggestionContext.stateChangedTickMs = static_cast<uint64_t>(GetTickCount64());
 

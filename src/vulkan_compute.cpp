@@ -13,6 +13,73 @@
 #include <cstring>
 #include <windows.h>
 
+namespace {
+
+std::string toLowerCopy(std::string value) {
+    std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
+        return static_cast<char>(std::tolower(ch));
+    });
+    return value;
+}
+
+bool isQ4KQ81U32ShaderPath(const std::string& spirv_path) {
+    const std::string lower = toLowerCopy(spirv_path);
+    return lower.find("q4k_q8_1") != std::string::npos && lower.find("u32") != std::string::npos;
+}
+
+MatMulKernelMode detectMatMulKernelMode(const std::string& spirv_path) {
+    const std::string lower = toLowerCopy(spirv_path);
+    if (lower.find("q4k_q8_1") != std::string::npos && lower.find("u32") != std::string::npos) {
+        return MatMulKernelMode::Q4KQ81U32;
+    }
+    if (lower.find("q4_0") != std::string::npos && lower.find("u32") != std::string::npos) {
+        return MatMulKernelMode::Q40U32;
+    }
+    if (lower.find("q5_k") != std::string::npos && lower.find("u32") != std::string::npos) {
+        return MatMulKernelMode::Q5KU32;
+    }
+    if (lower.find("q6_k") != std::string::npos && lower.find("u32") != std::string::npos) {
+        return MatMulKernelMode::Q6KU32;
+    }
+    return MatMulKernelMode::FloatF32;
+}
+
+bool getEnvVarString(const char* name, std::string& out) {
+    out.clear();
+    if (!name || !name[0]) {
+        return false;
+    }
+    char value[MAX_PATH] = {};
+    const DWORD len = GetEnvironmentVariableA(name, value, static_cast<DWORD>(sizeof(value)));
+    if (len == 0 || len >= sizeof(value)) {
+        return false;
+    }
+    out.assign(value, value + len);
+    return true;
+}
+
+bool resolveMatMulSpvPathFromEnv(std::string& out_path) {
+    out_path.clear();
+
+    std::string kernel_key;
+    if (getEnvVarString("RAWRXD_VULKAN_MATMUL_KERNEL", kernel_key)) {
+        const std::string k = toLowerCopy(kernel_key);
+        if (k == "q4k_q8_1_u32") {
+            if (getEnvVarString("RAWRXD_VULKAN_MATMUL_SPV_Q4K_Q8_1_U32", out_path)) return true;
+        } else if (k == "q4_0_u32") {
+            if (getEnvVarString("RAWRXD_VULKAN_MATMUL_SPV_Q4_0_U32", out_path)) return true;
+        } else if (k == "q5_k_u32") {
+            if (getEnvVarString("RAWRXD_VULKAN_MATMUL_SPV_Q5_K_U32", out_path)) return true;
+        } else if (k == "q6_k_u32") {
+            if (getEnvVarString("RAWRXD_VULKAN_MATMUL_SPV_Q6_K_U32", out_path)) return true;
+        }
+    }
+
+    return getEnvVarString("RAWRXD_VULKAN_MATMUL_SPV", out_path);
+}
+
+} // namespace
+
 // SCAFFOLD_105: Vulkan compute backend init
 
 
@@ -1134,6 +1201,9 @@ bool VulkanCompute::EnsureMatMulPipeline(const std::string& spirv_path) {
     if (it != shaders_.end() && it->second.pipeline && matmul_descriptor_set_layout_ && matmul_descriptor_pool_) {
         return true;  // Already fully initialized
     }
+
+    matmul_kernel_mode_ = detectMatMulKernelMode(spirv_path);
+    matmul_push_constant_words_ = (matmul_kernel_mode_ == MatMulKernelMode::Q4KQ81U32) ? 5u : 3u;
     
     // 1. Load Shader
     if (!LoadShader("matmul", spirv_path)) {
@@ -1192,7 +1262,7 @@ bool VulkanCompute::EnsureMatMulPipeline(const std::string& spirv_path) {
     VkPushConstantRange push_constant{};
     push_constant.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
     push_constant.offset = 0;
-    push_constant.size = sizeof(uint32_t) * 3;  // For M, K, N
+    push_constant.size = sizeof(uint32_t) * matmul_push_constant_words_;
     
     VkPipelineLayoutCreateInfo pipeline_layout_info{};
     pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -1283,12 +1353,23 @@ bool VulkanCompute::DispatchMatMul(uint32_t input_a_idx,
         allocated_buffers_[output_idx].buffer
     };
     
-    // Calculate buffer sizes
+    // Use actual allocated sizes so packed quantized buffers can be bound unchanged.
     size_t sizes[3] = {
-        (size_t)M * K * sizeof(float),
-        (size_t)K * N * sizeof(float),
-        (size_t)M * N * sizeof(float)
+        allocated_buffers_[input_a_idx].size,
+        allocated_buffers_[input_b_idx].size,
+        allocated_buffers_[output_idx].size
     };
+
+    if (matmul_kernel_mode_ == MatMulKernelMode::Q4KQ81U32) {
+        if (N != 1u) {
+            std::cerr << "Q4_K x Q8_1 u32 kernel currently supports GEMV only (N must be 1)" << std::endl;
+            return false;
+        }
+        if ((K % 256u) != 0u) {
+            std::cerr << "Q4_K x Q8_1 u32 kernel requires K to be a multiple of 256" << std::endl;
+            return false;
+        }
+    }
 
     // --- 1. Allocate Descriptor Set from the PERMANENT Pool ---
     VkDescriptorSetAllocateInfo alloc_info{};
@@ -1329,15 +1410,25 @@ bool VulkanCompute::DispatchMatMul(uint32_t input_a_idx,
 
     // --- 3. Execute Command Buffer (Dispatch) ---
     bool success = ExecuteSingleTimeCommands([&](VkCommandBuffer cmd_buffer) {
-        
-        // Push Constants (M, K, N dimensions to shader)
-        uint32_t push_data[3] = {M, K, N};
-        vkCmdPushConstants(cmd_buffer, 
-                           it->second.layout, 
-                           VK_SHADER_STAGE_COMPUTE_BIT, 
-                           0, 
-                           sizeof(push_data), 
-                           push_data);
+        if (matmul_kernel_mode_ == MatMulKernelMode::Q4KQ81U32) {
+            const uint32_t stride_a = K / 256u;
+            const uint32_t stride_b = K / 32u;
+            const uint32_t push_data[5] = { M, N, K, stride_a, stride_b };
+            vkCmdPushConstants(cmd_buffer,
+                               it->second.layout,
+                               VK_SHADER_STAGE_COMPUTE_BIT,
+                               0,
+                               sizeof(push_data),
+                               push_data);
+        } else {
+            const uint32_t push_data[3] = { M, K, N };
+            vkCmdPushConstants(cmd_buffer,
+                               it->second.layout,
+                               VK_SHADER_STAGE_COMPUTE_BIT,
+                               0,
+                               sizeof(push_data),
+                               push_data);
+        }
 
         // Bind Compute Pipeline
         vkCmdBindPipeline(cmd_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, it->second.pipeline);
@@ -1348,10 +1439,15 @@ bool VulkanCompute::DispatchMatMul(uint32_t input_a_idx,
                                 it->second.layout, 
                                 0, 1, &descriptor_set, 0, nullptr);
 
-        // Dispatch Command (Assuming 16x16 tile workgroup size in shader)
-        const uint32_t TILE_SIZE = 16;
-        uint32_t group_count_x = (N + TILE_SIZE - 1) / TILE_SIZE;
-        uint32_t group_count_y = (M + TILE_SIZE - 1) / TILE_SIZE;
+        uint32_t group_count_x = 1;
+        uint32_t group_count_y = 1;
+        if (matmul_kernel_mode_ == MatMulKernelMode::Q4KQ81U32) {
+            group_count_x = M;
+        } else {
+            const uint32_t TILE_SIZE = 16;
+            group_count_x = (N + TILE_SIZE - 1) / TILE_SIZE;
+            group_count_y = (M + TILE_SIZE - 1) / TILE_SIZE;
+        }
         
         std::cout << "Dispatching: " << group_count_x << "x" << group_count_y << "x1 workgroups" << std::endl;
         vkCmdDispatch(cmd_buffer, group_count_x, group_count_y, 1);
@@ -1487,6 +1583,11 @@ bool VulkanCompute::DispatchMatMulAsync(uint32_t input_a_idx,
                                         uint32_t M,
                                         uint32_t K,
                                         uint32_t N) {
+    if (matmul_kernel_mode_ == MatMulKernelMode::Q4KQ81U32) {
+        std::cerr << "Async dispatch is not wired for Q4_K x Q8_1 u32 kernel yet" << std::endl;
+        return false;
+    }
+
     
     // Validate buffer indices
     if (input_a_idx >= allocated_buffers_.size() || 
@@ -3118,13 +3219,12 @@ bool ensureMatMulPipelineFromEnv(VulkanCompute* instance) {
     static std::once_flag s_once;
     static int s_ok = 0;
     std::call_once(s_once, [&]() {
-        char path_buf[MAX_PATH] = {};
-        const DWORD len = GetEnvironmentVariableA("RAWRXD_VULKAN_MATMUL_SPV", path_buf, static_cast<DWORD>(sizeof(path_buf)));
-        if (len == 0 || len >= sizeof(path_buf)) {
+        std::string spv_path;
+        if (!resolveMatMulSpvPathFromEnv(spv_path) || spv_path.empty()) {
             s_ok = 0;
             return;
         }
-        s_ok = instance->EnsureMatMulPipeline(path_buf) ? 1 : 0;
+        s_ok = instance->EnsureMatMulPipeline(spv_path) ? 1 : 0;
     });
 
     return s_ok == 1;

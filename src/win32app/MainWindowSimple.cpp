@@ -60,6 +60,14 @@ MainWindow::MainWindow()
                         (unsigned)RGB(128, 0, 0), (unsigned)RGB(0, 0, 0), (unsigned)RGB(163, 21, 21),
                         (unsigned)RGB(0, 128, 0)});
     loadSettings();
+    
+    // Phase 1: Auto-reload last model on startup (model persistence)
+    if (!m_lastModelPath.empty() && fs::exists(m_lastModelPath))
+    {
+        // Defer model reload to avoid blocking UI during startup
+        PostMessageA(m_hwnd, WM_USER + 500, 0, 0);  // WM_USER+500 = auto-reload model
+    }
+    
     if (m_tabs.empty())
     {
         addTab("Untitled");
@@ -2146,6 +2154,13 @@ LRESULT CALLBACK MainWindow::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPA
                 }
                 PostQuitMessage(0);
                 return 0;
+            case WM_USER + 500:  // Phase 1: Auto-reload last model on startup
+                if (!window->m_lastModelPath.empty() && !window->m_modelLoaded)
+                {
+                    window->sendToTerminal("[Startup] Auto-reloading last model: " + window->m_lastModelPath + "\n");
+                    window->reloadCurrentModel();
+                }
+                return 0;
             case WM_COMMAND:
                 // Tab handling
                 if (LOWORD(wParam) == 1999)
@@ -3421,7 +3436,9 @@ void MainWindow::loadGGUFModel()
 
         // Model loaded successfully
         m_currentModelPath = filename;
+        m_lastModelPath = filename;  // Phase 1: persist for auto-reload
         m_modelLoaded = true;
+        saveSettings();  // Phase 1: save model path immediately
 
         // Get model info
         int nLayer = m_ggufLoader->getParam("n_layer", 0).toInt();
@@ -3491,6 +3508,8 @@ void MainWindow::unloadGGUFModel()
     m_ggufLoader.reset();
     m_modelLoaded = false;
     m_currentModelPath.clear();
+    m_lastModelPath.clear();  // Phase 1: clear persisted model path
+    saveSettings();  // Phase 1: save cleared state
 
     MessageBoxA(m_hwnd, "Model unloaded successfully.", "Model Unloaded", MB_OK | MB_ICONINFORMATION);
     sendToTerminal("[Model Loader] Model unloaded\n");
@@ -3945,6 +3964,36 @@ void MainWindow::executePaletteSelection(int index)
 
 void MainWindow::loadSettings()
 {
+    // Auto-create default settings file if missing (ensures first-run works with zero setup)
+    std::ifstream checkExists("RawrXDSettings.json");
+    if (!checkExists.good())
+    {
+        checkExists.close();
+        // Write sensible defaults
+        std::ofstream out("RawrXDSettings.json", std::ios::trunc);
+        if (out)
+        {
+            out << "{\n";
+            out << "  \"theme\": \"dark\",\n";
+            out << "  \"fontSize\": 14,\n";
+            out << "  \"tabSize\": 4,\n";
+            out << "  \"secondarySidebarVisible\": false,\n";
+            out << "  \"statusBarVisible\": true,\n";
+            out << "  \"severityFilterMode\": 0,\n";
+            out << "  \"agentDiffPanelVisible\": false,\n";
+            out << "  \"debuggerContainerVisible\": false,\n";
+            out << "  \"debuggerTabIndex\": 0,\n";
+            out << "  \"debugWatchExpressions\": [],\n";
+            out << "  \"breakpoints\": []\n";
+            out << "}\n";
+            out.close();
+        }
+    }
+    else
+    {
+        checkExists.close();
+    }
+
     std::ifstream in("RawrXDSettings.json", std::ios::binary | std::ios::ate);
     if (!in)
         return;
@@ -4055,6 +4104,20 @@ void MainWindow::loadSettings()
             }
         }
     }
+    // Load last model path (Phase 1: model persistence)
+    const size_t modelKey = content.find("\"lastModelPath\"");
+    if (modelKey != std::string::npos)
+    {
+        const size_t q1 = content.find('"', modelKey + 16);
+        if (q1 != std::string::npos)
+        {
+            const size_t q2 = content.find('"', q1 + 1);
+            if (q2 != std::string::npos)
+            {
+                m_lastModelPath = content.substr(q1 + 1, q2 - q1 - 1);
+            }
+        }
+    }
     const size_t bpKey = content.find("\"breakpoints\"");
     if (bpKey != std::string::npos)
     {
@@ -4120,7 +4183,17 @@ void MainWindow::saveSettings()
         out << bp;
         first = false;
     }
-    out << "]\n";
+    out << "],\n";
+    // Save last model path (Phase 1: model persistence)
+    out << "  \"lastModelPath\": \"";
+    // Escape backslashes in path
+    for (char c : m_lastModelPath)
+    {
+        if (c == '\\') out << "\\\\";
+        else if (c == '"') out << "\\\"";
+        else out << c;
+    }
+    out << "\"\n";
     out << "}\n";
     out.close();
 }
