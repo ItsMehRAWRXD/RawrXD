@@ -44,7 +44,7 @@ public:
     uint64_t enqueue(PendingEdit edit);
     bool approve(uint64_t id);
     bool decline(uint64_t id);
-    bool apply(uint64_t id, class Win32IDE* ide);
+    bool apply(uint64_t id, void* context = nullptr);
     
     void approveAll(EditSource source);
     void declineAllOlderThan(std::chrono::seconds age);

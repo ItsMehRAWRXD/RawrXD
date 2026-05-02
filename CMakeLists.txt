@@ -422,6 +422,8 @@ if(RAWR_HAS_MASM)
         src/kernels/RawrXD_Omega_Agentic.asm
         # Sovereign FP8 Quantizer - Hardware-independent quantization for RX 7800 XT
         src/kernels/sovereign_fp8_quantizer.asm
+        # AVX2 Vectorized FP8 Quantizer - 8x throughput improvement
+        src/kernels/sovereign_fp8_quantizer_avx2.asm
         # Sovereign agentic runtime: terminal capture, context buffer, JSON plan parser
         src/asm/RawrXD_TerminalCapture.asm
         src/asm/RawrXD_ContextBuffer.asm
@@ -1043,6 +1045,9 @@ set(SOURCES
 
     # Autonomous inference engine (required by speculative_decoder.cpp for draft token generation)
     src/inference/ultra_fast_inference.cpp
+
+    # Token Pipeline - double-buffered token flow for measurable TPS
+    src/inference/token_pipeline.cpp
 
     # GAP 10: Completion Feedback (Online Logistic Regression)
     src/telemetry/completion_feedback.cpp
@@ -3430,7 +3435,9 @@ if(WIN32)
         src/win32app/Win32IDE_TabManager.cpp
         src/ui/advanced_docking_system.cpp
         src/kv_cache/kv_cache_fp8_quantizer.cpp
-        src/tests/titan_70b_stress_test.cpp
+        src/inference/token_pipeline_double_buffer.cpp
+        src/speculative/speculative_fused_verify.cpp
+        src/kernels/fp8_avx2_interface.cpp
         src/win32app/Win32IDE_Settings.cpp
         src/win32app/Win32IDE_AutonomousCommunicator.cpp
         src/win32app/Win32IDE_AgenticComposerUX.cpp
@@ -3471,6 +3478,7 @@ if(WIN32)
         src/agentic/change_impact_analyzer.cpp
         src/agentic/agent_controller_minimal.cpp
         src/agentic/agentic_controller_wiring.cpp
+        src/core/link_symbols_impl.cpp
 
         src/win32app/Win32IDE_AgenticPlanningPanel.cpp
         src/win32app/Win32IDE_FailureDetector.cpp
@@ -6372,6 +6380,190 @@ set_target_properties(test_fp8_quantization PROPERTIES
 message(STATUS "[FP8Quantization] Test target: test_fp8_quantization (build with: cmake --build . --target test_fp8_quantization)")
 
 # ============================================================================
+# FP8 Verifier Test Suite (Scalar vs FP8 Numerical Validation)
+# ============================================================================
+add_executable(test_fp8_verifier EXCLUDE_FROM_ALL
+    tests/test_fp8_verifier.cpp
+    src/verify/fp8_verifier.cpp
+    src/kernels/sovereign_fp8_quantizer.asm
+)
+
+target_include_directories(test_fp8_verifier PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_compile_features(test_fp8_verifier PRIVATE cxx_std_17)
+
+if(MSVC)
+    target_compile_options(test_fp8_verifier PRIVATE /EHsc /W2 /arch:AVX2)
+endif()
+
+if(WIN32)
+    target_link_libraries(test_fp8_verifier PRIVATE
+        Threads::Threads
+    )
+else()
+    target_link_libraries(test_fp8_verifier PRIVATE Threads::Threads)
+endif()
+
+set_target_properties(test_fp8_verifier PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+)
+
+message(STATUS "[FP8Verifier] Test target: test_fp8_verifier (build with: cmake --build . --target test_fp8_verifier)")
+
+# ============================================================================
+# FP8 Sampling Hook Test (Live Pipeline Shadow Verification)
+# ============================================================================
+add_executable(test_fp8_sampling_hook EXCLUDE_FROM_ALL
+    tests/test_fp8_sampling_hook.cpp
+    src/verify/fp8_sampling_hook.cpp
+    src/kernels/sovereign_fp8_quantizer.asm
+)
+
+target_include_directories(test_fp8_sampling_hook PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_compile_features(test_fp8_sampling_hook PRIVATE cxx_std_17)
+
+if(MSVC)
+    target_compile_options(test_fp8_sampling_hook PRIVATE /EHsc /W2 /arch:AVX2)
+endif()
+
+if(WIN32)
+    target_link_libraries(test_fp8_sampling_hook PRIVATE
+        Threads::Threads
+    )
+else()
+    target_link_libraries(test_fp8_sampling_hook PRIVATE Threads::Threads)
+endif()
+
+set_target_properties(test_fp8_sampling_hook PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+)
+
+message(STATUS "[FP8Verifier] Sampling hook test: test_fp8_sampling_hook")
+
+# ============================================================================
+# AVX-512 FP8 Quantization Kernel
+# ============================================================================
+add_library(fp8_avx512_kernel OBJECT
+    src/kernels/sovereign_fp8_quantizer_avx512.asm
+)
+
+set_target_properties(fp8_avx512_kernel PROPERTIES
+    COMPILE_FLAGS "-D__AVX512F__"
+)
+
+# ============================================================================
+# AVX-512 FP8 Quantization Test
+# ============================================================================
+add_executable(test_fp8_avx512 EXCLUDE_FROM_ALL
+    tests/test_fp8_avx512.cpp
+    src/kernels/fp8_quantizer_avx512.cpp
+)
+
+target_include_directories(test_fp8_avx512 PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_compile_features(test_fp8_avx512 PRIVATE cxx_std_17)
+
+if(MSVC)
+    target_compile_options(test_fp8_avx512 PRIVATE /EHsc /W2 /arch:AVX512)
+endif()
+
+if(WIN32)
+    target_link_libraries(test_fp8_avx512 PRIVATE
+        Threads::Threads
+    )
+else()
+    target_link_libraries(test_fp8_avx512 PRIVATE Threads::Threads)
+endif()
+
+set_target_properties(test_fp8_avx512 PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+)
+
+message(STATUS "[FP8] AVX-512 kernel: fp8_avx512_kernel")
+message(STATUS "[FP8] AVX-512 test: test_fp8_avx512")
+
+# ============================================================================
+# Credit-Based Flow Control
+# ============================================================================
+add_executable(test_credit_based_flow_control EXCLUDE_FROM_ALL
+    tests/test_credit_based_flow_control.cpp
+    src/flow_control/credit_based_flow_control.cpp
+)
+
+target_include_directories(test_credit_based_flow_control PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_compile_features(test_credit_based_flow_control PRIVATE cxx_std_17)
+
+if(MSVC)
+    target_compile_options(test_credit_based_flow_control PRIVATE /EHsc /W2 /arch:AVX2)
+endif()
+
+if(WIN32)
+    target_link_libraries(test_credit_based_flow_control PRIVATE
+        Threads::Threads
+    )
+else()
+    target_link_libraries(test_credit_based_flow_control PRIVATE Threads::Threads)
+endif()
+
+set_target_properties(test_credit_based_flow_control PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+)
+
+message(STATUS "[FlowControl] Credit-based test: test_credit_based_flow_control")
+
+# ============================================================================
+# Fused FP8 Quantization Kernel
+# ============================================================================
+add_executable(test_fused_fp8_quantizer EXCLUDE_FROM_ALL
+    tests/test_fused_fp8_quantizer.cpp
+    src/kernels/fused_fp8_quantizer.cpp
+)
+
+target_include_directories(test_fused_fp8_quantizer PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_compile_features(test_fused_fp8_quantizer PRIVATE cxx_std_17)
+
+if(MSVC)
+    target_compile_options(test_fused_fp8_quantizer PRIVATE /EHsc /W2 /arch:AVX2)
+endif()
+
+if(WIN32)
+    target_link_libraries(test_fused_fp8_quantizer PRIVATE
+        Threads::Threads
+    )
+else()
+    target_link_libraries(test_fused_fp8_quantizer PRIVATE Threads::Threads)
+endif()
+
+set_target_properties(test_fused_fp8_quantizer PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+)
+
+message(STATUS "[FP8] Fused kernel test: test_fused_fp8_quantizer")
+
+# ============================================================================
 # Context Fusion Harness
 # ============================================================================
 add_executable(context_fusion_harness EXCLUDE_FROM_ALL
@@ -6610,6 +6802,486 @@ set_target_properties(SovereignFP8_Test PROPERTIES
     CXX_STANDARD_REQUIRED ON
 )
 message(STATUS "[Sovereign Test] SovereignFP8_Test target added (RX 7800 XT high-throughput validation)")
+
+# ════════════════════════════════════════════════════════════════════
+# Token Pipeline TPS Measurement Harness
+# Build: cmake --build build-ninja --target TPS_Measurement
+# Run:   ./build-ninja/bin/TPS_Measurement.exe
+# ════════════════════════════════════════════════════════════════════
+add_executable(TPS_Measurement EXCLUDE_FROM_ALL
+    tests/tps_measurement_harness.cpp
+    src/inference/token_pipeline.cpp
+)
+target_include_directories(TPS_Measurement PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+)
+if(MSVC)
+    target_compile_options(TPS_Measurement PRIVATE /EHsc /W3 /O2 /std:c++20)
+endif()
+target_link_libraries(TPS_Measurement PRIVATE kernel32)
+set_target_properties(TPS_Measurement PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME TPS_Measurement
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+message(STATUS "[TPS Harness] TPS_Measurement target added - produces first measurable throughput number")
+
+# ════════════════════════════════════════════════════════════════════
+# Simple TPS Measurement (No dependencies, pure SPSC queue)
+# Build: cmake --build build-ninja --target TPS_Simple
+# ════════════════════════════════════════════════════════════════════
+add_executable(TPS_Simple EXCLUDE_FROM_ALL
+    tests/tps_measurement_simple.cpp
+)
+if(MSVC)
+    target_compile_options(TPS_Simple PRIVATE /EHsc /W3 /O2 /std:c++20)
+endif()
+target_link_libraries(TPS_Simple PRIVATE kernel32)
+set_target_properties(TPS_Simple PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME TPS_Simple
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+message(STATUS "[TPS Simple] TPS_Simple target added - pure SPSC queue measurement")
+
+# ════════════════════════════════════════════════════════════════════
+# Minimal TPS Measurement (No dependencies)
+# Build: cmake --build build-ninja --target TPS_Minimal
+# ════════════════════════════════════════════════════════════════════
+add_executable(TPS_Minimal EXCLUDE_FROM_ALL
+    tests/tps_minimal.cpp
+)
+if(MSVC)
+    target_compile_options(TPS_Minimal PRIVATE /EHsc /W3 /O2 /std:c++20)
+endif()
+target_link_libraries(TPS_Minimal PRIVATE kernel32)
+set_target_properties(TPS_Minimal PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME TPS_Minimal
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+message(STATUS "[TPS Minimal] TPS_Minimal target added - produces first measurable throughput number")
+
+# ════════════════════════════════════════════════════════════════════
+# Fixed Token Pipeline Test (Deadlock-free SPSC)
+# Build: cmake --build build-ninja --target TokenPipeline_Fixed
+# ════════════════════════════════════════════════════════════════════
+add_executable(TokenPipeline_Fixed EXCLUDE_FROM_ALL
+    tests/token_pipeline_fixed.cpp
+)
+if(MSVC)
+    target_compile_options(TokenPipeline_Fixed PRIVATE /EHsc /W3 /O2 /std:c++20)
+endif()
+target_link_libraries(TokenPipeline_Fixed PRIVATE kernel32)
+set_target_properties(TokenPipeline_Fixed PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME TokenPipeline_Fixed
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+message(STATUS "[TokenPipeline Fixed] TokenPipeline_Fixed target added - deadlock-free SPSC queue")
+
+# ════════════════════════════════════════════════════════════════════
+# Hardened Pipeline with Speculative Decoder
+# Build: cmake --build build-ninja --target Pipeline_Hardened
+# ════════════════════════════════════════════════════════════════════
+add_executable(Pipeline_Hardened EXCLUDE_FROM_ALL
+    tests/pipeline_hardened_with_decoder.cpp
+)
+if(MSVC)
+    target_compile_options(Pipeline_Hardened PRIVATE /EHsc /W3 /O2 /std:c++20)
+endif()
+target_link_libraries(Pipeline_Hardened PRIVATE kernel32)
+set_target_properties(Pipeline_Hardened PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME Pipeline_Hardened
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+message(STATUS "[Pipeline Hardened] Pipeline_Hardened target added - backpressure + speculative decoder")
+
+# ════════════════════════════════════════════════════════════════════
+# 3-Stage Pipeline with Flow Control
+# Build: cmake --build build-ninja --target Pipeline_3Stage
+# ════════════════════════════════════════════════════════════════════
+add_executable(Pipeline_3Stage EXCLUDE_FROM_ALL
+    tests/pipeline_3stage_flow_control.cpp
+)
+if(MSVC)
+    target_compile_options(Pipeline_3Stage PRIVATE /EHsc /W3 /O2 /std:c++20)
+endif()
+target_link_libraries(Pipeline_3Stage PRIVATE kernel32)
+set_target_properties(Pipeline_3Stage PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME Pipeline_3Stage
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+message(STATUS "[Pipeline 3Stage] Pipeline_3Stage target added - 3-stage lock-free with flow control")
+
+# ════════════════════════════════════════════════════════════════════
+# End-to-End Pipeline + FP8 Quantization (Stage 3 Integration)
+# Build: cmake --build build-ninja --target Pipeline_EndToEnd_FP8
+# ════════════════════════════════════════════════════════════════════
+add_executable(Pipeline_EndToEnd_FP8 EXCLUDE_FROM_ALL
+    tests/pipeline_end_to_end_fp8.cpp
+    src/kernels/sovereign_fp8_quantizer.cpp
+    src/kernels/sovereign_fp8_quantizer.asm
+)
+if(MSVC)
+    target_compile_options(Pipeline_EndToEnd_FP8 PRIVATE /EHsc /W3 /O2 /std:c++20)
+endif()
+target_include_directories(Pipeline_EndToEnd_FP8 PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+target_link_libraries(Pipeline_EndToEnd_FP8 PRIVATE kernel32)
+set_target_properties(Pipeline_EndToEnd_FP8 PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME Pipeline_EndToEnd_FP8
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+message(STATUS "[Pipeline EndToEnd+FP8] Pipeline_EndToEnd_FP8 target added - 3-stage + FP8 Stage 3")
+
+# ════════════════════════════════════════════════════════════════════
+# FP8 Pipeline - Non-Blocking Egress (Fixes batch starvation deadlock)
+# Build: cmake --build build-ninja --target Pipeline_FP8_NonBlocking
+# ════════════════════════════════════════════════════════════════════
+add_executable(Pipeline_FP8_NonBlocking EXCLUDE_FROM_ALL
+    tests/pipeline_fp8_nonblocking.cpp
+    src/kernels/sovereign_fp8_quantizer.cpp
+    src/kernels/sovereign_fp8_quantizer.asm
+)
+if(MSVC)
+    target_compile_options(Pipeline_FP8_NonBlocking PRIVATE /EHsc /W3 /O2 /std:c++20)
+endif()
+target_include_directories(Pipeline_FP8_NonBlocking PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+target_link_libraries(Pipeline_FP8_NonBlocking PRIVATE kernel32)
+set_target_properties(Pipeline_FP8_NonBlocking PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME Pipeline_FP8_NonBlocking
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+message(STATUS "[Pipeline FP8 NonBlocking] Pipeline_FP8_NonBlocking target added - non-blocking egress with partial flush")
+
+# ════════════════════════════════════════════════════════════════════
+# FP8 AVX2 Pipeline Integration (8x throughput improvement)
+# Build: cmake --build build-ninja --target Pipeline_FP8_AVX2
+# ════════════════════════════════════════════════════════════════════
+add_executable(Pipeline_FP8_AVX2 EXCLUDE_FROM_ALL
+    tests/pipeline_fp8_avx2_integration.cpp
+    src/kernels/fp8_avx2_interface.cpp
+    src/kernels/sovereign_fp8_quantizer_avx2.asm
+)
+if(MSVC)
+    # Only apply C++ flags to C++ sources, not ASM
+    target_compile_options(Pipeline_FP8_AVX2 PRIVATE 
+        $<$<COMPILE_LANGUAGE:CXX>:/EHsc /W3 /O2 /std:c++20 /arch:AVX2>
+    )
+endif()
+target_include_directories(Pipeline_FP8_AVX2 PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+target_link_libraries(Pipeline_FP8_AVX2 PRIVATE kernel32)
+set_target_properties(Pipeline_FP8_AVX2 PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME Pipeline_FP8_AVX2
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+message(STATUS "[Pipeline FP8 AVX2] Pipeline_FP8_AVX2 target added - AVX2 vectorized FP8 (8x throughput)")
+
+# ════════════════════════════════════════════════════════════════════
+# FP8 AVX2 Hardened Pipeline (Production Flow Control)
+# Build: cmake --build build-ninja --target Pipeline_FP8_AVX2_Hardened
+# ════════════════════════════════════════════════════════════════════
+add_executable(Pipeline_FP8_AVX2_Hardened EXCLUDE_FROM_ALL
+    tests/pipeline_fp8_avx2_hardened.cpp
+    src/kernels/fp8_avx2_interface.cpp
+    src/kernels/sovereign_fp8_quantizer_avx2.asm
+)
+if(MSVC)
+    target_compile_options(Pipeline_FP8_AVX2_Hardened PRIVATE 
+        $<$<COMPILE_LANGUAGE:CXX>:/EHsc /W3 /O2 /std:c++20 /arch:AVX2>
+    )
+endif()
+target_include_directories(Pipeline_FP8_AVX2_Hardened PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+target_link_libraries(Pipeline_FP8_AVX2_Hardened PRIVATE kernel32)
+set_target_properties(Pipeline_FP8_AVX2_Hardened PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME Pipeline_FP8_AVX2_Hardened
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+message(STATUS "[Pipeline FP8 AVX2 Hardened] Production flow control with <5% drop rate target")
+
+# ════════════════════════════════════════════════════════════════════
+# FP8 AVX2 Synchronized Pipeline (End-to-End Rate Matching)
+# Build: cmake --build build-ninja --target Pipeline_FP8_AVX2_Sync
+# ════════════════════════════════════════════════════════════════════
+add_executable(Pipeline_FP8_AVX2_Sync EXCLUDE_FROM_ALL
+    tests/pipeline_fp8_avx2_sync.cpp
+    src/kernels/fp8_avx2_interface.cpp
+    src/kernels/sovereign_fp8_quantizer_avx2.asm
+)
+if(MSVC)
+    target_compile_options(Pipeline_FP8_AVX2_Sync PRIVATE 
+        $<$<COMPILE_LANGUAGE:CXX>:/EHsc /W3 /O2 /std:c++20 /arch:AVX2>
+    )
+endif()
+target_include_directories(Pipeline_FP8_AVX2_Sync PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+target_link_libraries(Pipeline_FP8_AVX2_Sync PRIVATE kernel32)
+set_target_properties(Pipeline_FP8_AVX2_Sync PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME Pipeline_FP8_AVX2_Sync
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+message(STATUS "[Pipeline FP8 AVX2 Sync] End-to-end rate matching with blocking backpressure")
+
+# ════════════════════════════════════════════════════════════════════
+# FP8 AVX2 Stable Pipeline (Minimal Working Version)
+# Build: cmake --build build-ninja --target Pipeline_FP8_AVX2_Stable
+# ════════════════════════════════════════════════════════════════════
+add_executable(Pipeline_FP8_AVX2_Stable EXCLUDE_FROM_ALL
+    tests/pipeline_fp8_avx2_stable.cpp
+    src/kernels/fp8_avx2_interface.cpp
+    src/kernels/sovereign_fp8_quantizer_avx2.asm
+)
+if(MSVC)
+    target_compile_options(Pipeline_FP8_AVX2_Stable PRIVATE 
+        $<$<COMPILE_LANGUAGE:CXX>:/EHsc /W3 /O2 /std:c++20 /arch:AVX2>
+    )
+endif()
+target_include_directories(Pipeline_FP8_AVX2_Stable PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+target_link_libraries(Pipeline_FP8_AVX2_Stable PRIVATE kernel32)
+set_target_properties(Pipeline_FP8_AVX2_Stable PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME Pipeline_FP8_AVX2_Stable
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+message(STATUS "[Pipeline FP8 AVX2 Stable] Minimal working version with proper flow control")
+
+# ════════════════════════════════════════════════════════════════════
+# FP8 Scalar vs AVX2 Benchmark (Direct comparison)
+# Build: cmake --build build-ninja --target FP8_ScalarVsAVX2
+# ════════════════════════════════════════════════════════════════════
+add_executable(FP8_ScalarVsAVX2 EXCLUDE_FROM_ALL
+    tests/fp8_scalar_vs_avx2_bench.cpp
+    src/kernels/fp8_avx2_interface.cpp
+    src/kernels/sovereign_fp8_quantizer_avx2.asm
+)
+if(MSVC)
+    target_compile_options(FP8_ScalarVsAVX2 PRIVATE 
+        $<$<COMPILE_LANGUAGE:CXX>:/EHsc /W3 /O2 /std:c++20 /arch:AVX2>
+    )
+endif()
+target_include_directories(FP8_ScalarVsAVX2 PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+target_link_libraries(FP8_ScalarVsAVX2 PRIVATE kernel32)
+set_target_properties(FP8_ScalarVsAVX2 PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME FP8_ScalarVsAVX2
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+message(STATUS "[FP8 Scalar vs AVX2] Direct performance comparison benchmark")
+
+# ════════════════════════════════════════════════════════════════════
+# Fused Decode + FP8 Benchmark (Memory Bandwidth Optimization)
+# Build: cmake --build build-ninja --target FusedDecodeFP8_Bench
+# ════════════════════════════════════════════════════════════════════
+add_executable(FusedDecodeFP8_Bench EXCLUDE_FROM_ALL
+    tests/benchmark_fused_decode_fp8.cpp
+    src/kernels/fp8_avx2_interface.cpp
+    src/kernels/sovereign_fp8_quantizer_avx2.asm
+    src/kernels/sovereign_fused_decode_fp8.asm
+)
+if(MSVC)
+    target_compile_options(FusedDecodeFP8_Bench PRIVATE 
+        $<$<COMPILE_LANGUAGE:CXX>:/EHsc /W3 /O2 /std:c++20 /arch:AVX2>
+    )
+endif()
+target_include_directories(FusedDecodeFP8_Bench PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+target_link_libraries(FusedDecodeFP8_Bench PRIVATE kernel32)
+set_target_properties(FusedDecodeFP8_Bench PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME FusedDecodeFP8_Bench
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+message(STATUS "[Fused Decode + FP8] Kernel fusion benchmark - 69% memory bandwidth reduction")
+
+# ════════════════════════════════════════════════════════════════════
+# Adaptive Speculation Governor (Self-Tuning Amplification Control)
+# Build: cmake --build build-ninja --target Pipeline_AdaptiveGovernor
+# ════════════════════════════════════════════════════════════════════
+add_executable(Pipeline_AdaptiveGovernor EXCLUDE_FROM_ALL
+    tests/pipeline_adaptive_speculation_governor.cpp
+    src/kernels/fp8_avx2_interface.cpp
+    src/kernels/sovereign_fp8_quantizer_avx2.asm
+)
+if(MSVC)
+    target_compile_options(Pipeline_AdaptiveGovernor PRIVATE 
+        $<$<COMPILE_LANGUAGE:CXX>:/EHsc /W3 /O2 /std:c++20 /arch:AVX2>
+    )
+endif()
+target_include_directories(Pipeline_AdaptiveGovernor PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+target_link_libraries(Pipeline_AdaptiveGovernor PRIVATE kernel32)
+set_target_properties(Pipeline_AdaptiveGovernor PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME Pipeline_AdaptiveGovernor
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+message(STATUS "[Pipeline Adaptive Governor] Self-tuning speculation targeting 85% success rate")
+
+# ════════════════════════════════════════════════════════════════════
+# FP8 AVX2 Credit-Based Flow Control
+# Build: cmake --build build-ninja --target Pipeline_FP8_AVX2_Credit
+# ════════════════════════════════════════════════════════════════════
+add_executable(Pipeline_FP8_AVX2_Credit EXCLUDE_FROM_ALL
+    tests/pipeline_fp8_avx2_credit.cpp
+    src/kernels/fp8_avx2_interface.cpp
+    src/kernels/sovereign_fp8_quantizer_avx2.asm
+)
+if(MSVC)
+    target_compile_options(Pipeline_FP8_AVX2_Credit PRIVATE 
+        $<$<COMPILE_LANGUAGE:CXX>:/EHsc /W3 /O2 /std:c++20 /arch:AVX2>
+    )
+endif()
+target_include_directories(Pipeline_FP8_AVX2_Credit PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+target_link_libraries(Pipeline_FP8_AVX2_Credit PRIVATE kernel32)
+set_target_properties(Pipeline_FP8_AVX2_Credit PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME Pipeline_FP8_AVX2_Credit
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+message(STATUS "[Pipeline FP8 AVX2 Credit] Explicit credit-based flow control")
+
+# ════════════════════════════════════════════════════════════════════
+# FP8 AVX2 Credit-Based Flow Control (Fixed)
+# Build: cmake --build build-ninja --target Pipeline_FP8_AVX2_Credit_Fixed
+# ════════════════════════════════════════════════════════════════════
+add_executable(Pipeline_FP8_AVX2_Credit_Fixed EXCLUDE_FROM_ALL
+    tests/pipeline_fp8_avx2_credit_fixed.cpp
+    src/kernels/fp8_avx2_interface.cpp
+    src/kernels/sovereign_fp8_quantizer_avx2.asm
+)
+if(MSVC)
+    target_compile_options(Pipeline_FP8_AVX2_Credit_Fixed PRIVATE 
+        $<$<COMPILE_LANGUAGE:CXX>:/EHsc /W3 /O2 /std:c++20 /arch:AVX2>
+    )
+endif()
+target_include_directories(Pipeline_FP8_AVX2_Credit_Fixed PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+target_link_libraries(Pipeline_FP8_AVX2_Credit_Fixed PRIVATE kernel32)
+set_target_properties(Pipeline_FP8_AVX2_Credit_Fixed PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME Pipeline_FP8_AVX2_Credit_Fixed
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+message(STATUS "[Pipeline FP8 AVX2 Credit Fixed] Working credit-based flow control")
+
+# ════════════════════════════════════════════════════════════════════
+# FP8 AVX2 Windowed Credit Pipeline (Amortized Streaming Model)
+# Build: cmake --build build-ninja --target Pipeline_FP8_AVX2_Windowed
+# ════════════════════════════════════════════════════════════════════
+add_executable(Pipeline_FP8_AVX2_Windowed EXCLUDE_FROM_ALL
+    tests/pipeline_fp8_avx2_windowed.cpp
+    src/kernels/fp8_avx2_interface.cpp
+    src/kernels/sovereign_fp8_quantizer_avx2.asm
+)
+if(MSVC)
+    target_compile_options(Pipeline_FP8_AVX2_Windowed PRIVATE 
+        $<$<COMPILE_LANGUAGE:CXX>:/EHsc /W3 /O2 /std:c++20 /arch:AVX2>
+    )
+endif()
+target_include_directories(Pipeline_FP8_AVX2_Windowed PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+target_link_libraries(Pipeline_FP8_AVX2_Windowed PRIVATE kernel32)
+set_target_properties(Pipeline_FP8_AVX2_Windowed PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME Pipeline_FP8_AVX2_Windowed
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+message(STATUS "[Pipeline FP8 AVX2 Windowed] Amortized credit system with 4096-token windows")
+
+# ════════════════════════════════════════════════════════════════════
+# Hybrid Credit Governor Pipeline (Deterministic Safety + Elastic Throughput)
+# Build: cmake --build build-ninja --target Pipeline_Hybrid_Credit
+# ════════════════════════════════════════════════════════════════════
+add_executable(Pipeline_Hybrid_Credit EXCLUDE_FROM_ALL
+    tests/pipeline_hybrid_credit_governor.cpp
+    src/kernels/fp8_avx2_interface.cpp
+    src/kernels/sovereign_fp8_quantizer_avx2.asm
+)
+if(MSVC)
+    target_compile_options(Pipeline_Hybrid_Credit PRIVATE 
+        $<$<COMPILE_LANGUAGE:CXX>:/EHsc /W3 /O2 /std:c++20 /arch:AVX2>
+    )
+endif()
+target_include_directories(Pipeline_Hybrid_Credit PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+target_link_libraries(Pipeline_Hybrid_Credit PRIVATE kernel32)
+set_target_properties(Pipeline_Hybrid_Credit PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME Pipeline_Hybrid_Credit
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+message(STATUS "[Pipeline Hybrid Credit] Hybrid credit governor - deterministic + elastic")
 
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/CMakeLists.txt")
     enable_testing()

@@ -158,11 +158,6 @@ private:
     Engine() = default;
     void applyTemperaturePolicyLocked();
     
-    // Internal helpers
-    bool applyHook(HookConfig& config);
-    bool removeHook(HookConfig& config);
-    HookConfig* findHook(const std::string& name);
-
     mutable std::mutex mutex_;
     bool hotpatchingEnabled_ = true;
     double modelTemperature_ = 0.5;

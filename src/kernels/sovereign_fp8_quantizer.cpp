@@ -68,13 +68,9 @@ void SovereignFP8Quantizer::Quantize(const float* input, uint8_t* output, size_t
         return;
     }
 
-    std::cout << "[SovereignFP8] Quantize called: count=" << count << std::endl;
-
     // Call MASM64 kernel directly - no vendor SDK
     // Windows x64 ABI: RCX=input, RDX=output, R8=count, XMM3=scale
     quantize_kernel_(input, output, count, scale_);
-
-    std::cout << "[SovereignFP8] Quantize completed" << std::endl;
 
     // Ensure GPU completion without driver overhead
     SovereignGPUFlush();
@@ -459,6 +455,19 @@ void SovereignPipeline_EnterHighThroughput(SovereignPipelineHandle handle) {
 void SovereignPipeline_ExitHighThroughput(SovereignPipelineHandle handle) {
     if (!handle) return;
     static_cast<SovereignQuantizationPipeline*>(handle)->ExitHighThroughputMode();
+}
+
+// Simple FP8 kernel getter for pipeline integration
+typedef void (*fp8_quantize_fn)(const float* input, uint8_t* output, size_t n, int format);
+fp8_quantize_fn GetSovereignFP8Kernel() {
+    // Return E4M3 kernel as default (format 0 = E4M3, format 1 = E5M2)
+    return [](const float* input, uint8_t* output, size_t n, int format) {
+        if (format == 0) {
+            SovereignQuantizeE4M3(input, output, n, 1.0f);
+        } else {
+            SovereignQuantizeE5M2(input, output, n, 1.0f);
+        }
+    };
 }
 
 } // extern "C"

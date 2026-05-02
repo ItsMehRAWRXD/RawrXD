@@ -19,7 +19,10 @@
 #include <map>
 #include <memory>
 #include <functional>
-#include <json/json.h>
+#include <nlohmann/json.hpp>
+
+// Alias for convenience
+using JsonValue = nlohmann::json;
 
 namespace RawrXD {
 namespace UI {
@@ -88,8 +91,8 @@ struct DockingConfig {
     bool restoreLayoutOnStartup = true;
     std::string layoutFilePath = "docking_layout.json";
     
-    Json::Value toJson() const;
-    static DockingConfig fromJson(const Json::Value& json);
+    JsonValue toJson() const;
+    static DockingConfig fromJson(const JsonValue& json);
 };
 
 // ============================================================================
@@ -140,9 +143,9 @@ public:
     LRESULT handleMessage(UINT msg, WPARAM wParam, LPARAM lParam);
     
     // Serialization
-    Json::Value serialize() const;
-    void deserialize(const Json::Value& json);
-    
+    JsonValue serialize() const;
+    void deserialize(const JsonValue& json);
+
     // Drag-drop
     bool beginDrag(size_t tabIndex);
     void endDrag(bool cancelled);
@@ -213,11 +216,11 @@ public:
     // Hit testing
     bool hitTestGripper(int x, int y) const;
     bool hitTestCollapseButton(int x, int y) const;
-    
+
     // Serialization
-    Json::Value serialize() const;
-    void deserialize(const Json::Value& json);
-    
+    JsonValue serialize() const;
+    void deserialize(const JsonValue& json);
+
 private:
     DockingManager* manager_;
     DockZone zone_;
@@ -324,7 +327,7 @@ public:
     void resetLayout();
     
     // Panels
-    DockingPanel* getPanel(DockZone zone);
+    DockingPanel* getPanel(DockZone zone) const;
     DockingPanel* createPanel(DockZone zone, const std::string& id);
     void destroyPanel(const std::string& id);
     void togglePanel(DockZone zone);

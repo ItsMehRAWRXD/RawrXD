@@ -16,8 +16,8 @@ namespace UI {
 // ============================================================================
 // DockingConfig Serialization
 // ============================================================================
-Json::Value DockingConfig::toJson() const {
-    Json::Value root;
+JsonValue DockingConfig::toJson() const {
+    JsonValue root;
     root["leftSidebarWidth"] = leftSidebarWidth;
     root["rightSidebarWidth"] = rightSidebarWidth;
     root["leftSidebarState"] = panelStateToString(leftSidebarState);
@@ -33,23 +33,23 @@ Json::Value DockingConfig::toJson() const {
     return root;
 }
 
-DockingConfig DockingConfig::fromJson(const Json::Value& json) {
+DockingConfig DockingConfig::fromJson(const JsonValue& json) {
     DockingConfig config;
-    if (json.isMember("leftSidebarWidth")) config.leftSidebarWidth = json["leftSidebarWidth"].asInt();
-    if (json.isMember("rightSidebarWidth")) config.rightSidebarWidth = json["rightSidebarWidth"].asInt();
-    if (json.isMember("leftSidebarState")) config.leftSidebarState = stringToPanelState(json["leftSidebarState"].asString());
-    if (json.isMember("rightSidebarState")) config.rightSidebarState = stringToPanelState(json["rightSidebarState"].asString());
-    if (json.isMember("bottomPanelHeight")) config.bottomPanelHeight = json["bottomPanelHeight"].asInt();
-    if (json.isMember("bottomPanelState")) config.bottomPanelState = stringToPanelState(json["bottomPanelState"].asString());
-    if (json.isMember("showTabCloseButtons")) config.showTabCloseButtons = json["showTabCloseButtons"].asBool();
-    if (json.isMember("enableTabDragDrop")) config.enableTabDragDrop = json["enableTabDragDrop"].asBool();
-    if (json.isMember("showTabIcons")) config.showTabIcons = json["showTabIcons"].asBool();
-    if (json.isMember("tabOrientation")) {
-        config.tabOrientation = (json["tabOrientation"].asString() == "horizontal") 
+    if (json.contains("leftSidebarWidth")) config.leftSidebarWidth = json["leftSidebarWidth"].get<int>();
+    if (json.contains("rightSidebarWidth")) config.rightSidebarWidth = json["rightSidebarWidth"].get<int>();
+    if (json.contains("leftSidebarState")) config.leftSidebarState = stringToPanelState(json["leftSidebarState"].get<std::string>());
+    if (json.contains("rightSidebarState")) config.rightSidebarState = stringToPanelState(json["rightSidebarState"].get<std::string>());
+    if (json.contains("bottomPanelHeight")) config.bottomPanelHeight = json["bottomPanelHeight"].get<int>();
+    if (json.contains("bottomPanelState")) config.bottomPanelState = stringToPanelState(json["bottomPanelState"].get<std::string>());
+    if (json.contains("showTabCloseButtons")) config.showTabCloseButtons = json["showTabCloseButtons"].get<bool>();
+    if (json.contains("enableTabDragDrop")) config.enableTabDragDrop = json["enableTabDragDrop"].get<bool>();
+    if (json.contains("showTabIcons")) config.showTabIcons = json["showTabIcons"].get<bool>();
+    if (json.contains("tabOrientation")) {
+        config.tabOrientation = (json["tabOrientation"].get<std::string>() == "horizontal")
             ? TabGroupOrientation::Horizontal : TabGroupOrientation::Vertical;
     }
-    if (json.isMember("autoHideSidebars")) config.autoHideSidebars = json["autoHideSidebars"].asBool();
-    if (json.isMember("restoreLayoutOnStartup")) config.restoreLayoutOnStartup = json["restoreLayoutOnStartup"].asBool();
+    if (json.contains("autoHideSidebars")) config.autoHideSidebars = json["autoHideSidebars"].get<bool>();
+    if (json.contains("restoreLayoutOnStartup")) config.restoreLayoutOnStartup = json["restoreLayoutOnStartup"].get<bool>();
     return config;
 }
 
@@ -132,13 +132,13 @@ std::shared_ptr<TabItem> TabGroup::getTab(const std::string& tabId) const {
 
 void TabGroup::create(HWND parentHwnd, const RECT& rect) {
     // Create tab group window
-    hwnd_ = CreateWindowEx(
+    hwnd_ = CreateWindowExW(
         0, L"STATIC", nullptr,
         WS_CHILD | WS_VISIBLE | SS_BLACKRECT,
         rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top,
         parentHwnd, nullptr, GetModuleHandle(nullptr), nullptr
     );
-    
+
     if (!hwnd_) {
         std::cerr << "[Docking] Failed to create tab group window\n";
         return;
@@ -312,26 +312,26 @@ void TabGroup::endDrag(bool cancelled) {
     }
 }
 
-Json::Value TabGroup::serialize() const {
-    Json::Value json;
+JsonValue TabGroup::serialize() const {
+    JsonValue json;
     json["id"] = id_;
     json["activeTabIndex"] = static_cast<int>(activeTabIndex_);
-    Json::Value tabsJson;
+    JsonValue tabsJson = JsonValue::array();
     for (const auto& tab : tabs_) {
-        Json::Value tabJson;
+        JsonValue tabJson;
         tabJson["id"] = tab->id;
         tabJson["title"] = tab->title;
         tabJson["isModified"] = tab->isModified;
         tabJson["isPinned"] = tab->isPinned;
-        tabsJson.append(tabJson);
+        tabsJson.push_back(tabJson);
     }
     json["tabs"] = tabsJson;
     return json;
 }
 
-void TabGroup::deserialize(const Json::Value& json) {
+void TabGroup::deserialize(const JsonValue& json) {
     // Restore tabs from serialized state
-    activeTabIndex_ = json.get("activeTabIndex", 0).asUInt();
+    activeTabIndex_ = json.value("activeTabIndex", 0);
 }
 
 // ============================================================================
@@ -428,18 +428,18 @@ TabGroup* DockingPanel::getTabGroup(const std::string& id) const {
 }
 
 void DockingPanel::create(HWND parentHwnd) {
-    hwnd_ = CreateWindowEx(
+    hwnd_ = CreateWindowExW(
         WS_EX_CLIENTEDGE, L"STATIC", nullptr,
         WS_CHILD | WS_VISIBLE | SS_BLACKRECT,
         0, 0, 0, 0,
         parentHwnd, nullptr, GetModuleHandle(nullptr), nullptr
     );
-    
+
     if (!hwnd_) {
         std::cerr << "[Docking] Failed to create panel window\n";
         return;
     }
-    
+
     createTitleBar();
 }
 
@@ -665,8 +665,8 @@ void DockingPanel::drawCollapseButton(HDC hdc) {
     DeleteObject(pen);
 }
 
-Json::Value DockingPanel::serialize() const {
-    Json::Value json;
+JsonValue DockingPanel::serialize() const {
+    JsonValue json;
     json["id"] = id_;
     json["zone"] = dockZoneToString(zone_);
     json["title"] = title_;
@@ -675,10 +675,10 @@ Json::Value DockingPanel::serialize() const {
     return json;
 }
 
-void DockingPanel::deserialize(const Json::Value& json) {
-    title_ = json.get("title", "").asString();
-    state_ = stringToPanelState(json.get("state", "expanded").asString());
-    size_ = json.get("size", DEFAULT_SIDEBAR_WIDTH).asInt();
+void DockingPanel::deserialize(const JsonValue& json) {
+    title_ = json.value("title", "");
+    state_ = stringToPanelState(json.value("state", "expanded"));
+    size_ = json.value("size", DEFAULT_SIDEBAR_WIDTH);
 }
 
 // ============================================================================
@@ -767,22 +767,22 @@ void DockingManager::updateLayout() {
 }
 
 void DockingManager::saveLayout() {
-    Json::Value root;
+    JsonValue root;
     root["config"] = config_.toJson();
-    
-    Json::Value panelsJson;
+
+    JsonValue panelsJson = JsonValue::array();
     for (const auto& [zone, panel] : panels_) {
-        panelsJson.append(panel->serialize());
+        panelsJson.push_back(panel->serialize());
     }
     root["panels"] = panelsJson;
-    
+
     if (mainTabGroup_) {
         root["mainTabGroup"] = mainTabGroup_->serialize();
     }
-    
+
     std::ofstream file(config_.layoutFilePath);
     if (file.is_open()) {
-        file << root.toStyledString();
+        file << root.dump(4);
         file.close();
         std::cout << "[Docking] Layout saved to " << config_.layoutFilePath << "\n";
     }
@@ -791,37 +791,36 @@ void DockingManager::saveLayout() {
 void DockingManager::restoreLayout() {
     std::ifstream file(config_.layoutFilePath);
     if (!file.is_open()) return;
-    
-    Json::Value root;
-    Json::CharReaderBuilder builder;
-    std::string errors;
-    
-    if (!Json::parseFromStream(builder, file, &root, &errors)) {
-        std::cerr << "[Docking] Failed to parse layout file: " << errors << "\n";
-        return;
-    }
-    
-    if (root.isMember("config")) {
-        config_ = DockingConfig::fromJson(root["config"]);
-    }
-    
-    // Restore panels
-    if (root.isMember("panels")) {
-        for (const auto& panelJson : root["panels"]) {
-            DockZone zone = stringToDockZone(panelJson.get("zone", "").asString());
-            std::string id = panelJson.get("id", "").asString();
-            if (auto* panel = getPanel(zone)) {
-                panel->deserialize(panelJson);
+
+    try {
+        std::string content((std::istreambuf_iterator<char>(file)),
+                            std::istreambuf_iterator<char>());
+        JsonValue root = JsonValue::parse(content);
+
+        if (root.contains("config")) {
+            config_ = DockingConfig::fromJson(root["config"]);
+        }
+
+        // Restore panels
+        if (root.contains("panels")) {
+            for (const auto& panelJson : root["panels"]) {
+                DockZone zone = stringToDockZone(panelJson.value("zone", ""));
+                std::string id = panelJson.value("id", "");
+                if (auto* panel = getPanel(zone)) {
+                    panel->deserialize(panelJson);
+                }
             }
         }
+
+        if (root.contains("mainTabGroup") && mainTabGroup_) {
+            mainTabGroup_->deserialize(root["mainTabGroup"]);
+        }
+
+        updateLayout();
+        std::cout << "[Docking] Layout restored from " << config_.layoutFilePath << "\n";
+    } catch (const std::exception& e) {
+        std::cerr << "[Docking] Failed to parse layout file: " << e.what() << "\n";
     }
-    
-    if (root.isMember("mainTabGroup") && mainTabGroup_) {
-        mainTabGroup_->deserialize(root["mainTabGroup"]);
-    }
-    
-    updateLayout();
-    std::cout << "[Docking] Layout restored from " << config_.layoutFilePath << "\n";
 }
 
 void DockingManager::resetLayout() {
@@ -833,7 +832,7 @@ void DockingManager::resetLayout() {
     saveLayout();
 }
 
-DockingPanel* DockingManager::getPanel(DockZone zone) {
+DockingPanel* DockingManager::getPanel(DockZone zone) const {
     auto it = panels_.find(zone);
     if (it != panels_.end()) return it->second.get();
     return nullptr;
@@ -940,7 +939,7 @@ HCURSOR DockingManager::getResizeCursor(DockZone zone) const {
 
 void DockingManager::createGdiResources() {
     // Create fonts
-    tabFont_ = CreateFont(14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+    tabFont_ = CreateFontW(14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
                           DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
                           DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Segoe UI");
     
@@ -1017,6 +1016,99 @@ RECT DockingManager::getCenterRect(const RECT& total) const {
     }
     
     return rect;
+}
+
+// ============================================================================
+// SplitContainer Implementation
+// ============================================================================
+SplitContainer::SplitContainer(DockingManager* manager, Orientation orient)
+    : manager_(manager), orientation_(orient), splitRatio_(0.5f), hwnd_(nullptr),
+      firstType_(PaneType::None), secondType_(PaneType::None), isDragging_(false) {
+    firstPane_.tabGroup_ = nullptr;
+    secondPane_.tabGroup_ = nullptr;
+}
+
+SplitContainer::~SplitContainer() {
+    destroy();
+}
+
+void SplitContainer::setFirstPane(TabGroup* pane) {
+    firstType_ = PaneType::TabGroup;
+    firstPane_.tabGroup_ = pane;
+}
+
+void SplitContainer::setSecondPane(TabGroup* pane) {
+    secondType_ = PaneType::TabGroup;
+    secondPane_.tabGroup_ = pane;
+}
+
+void SplitContainer::setFirstPane(SplitContainer* pane) {
+    firstType_ = PaneType::SplitContainer;
+    firstPane_.splitContainer_ = pane;
+}
+
+void SplitContainer::setSecondPane(SplitContainer* pane) {
+    secondType_ = PaneType::SplitContainer;
+    secondPane_.splitContainer_ = pane;
+}
+
+void SplitContainer::setSplitRatio(float ratio) {
+    splitRatio_ = std::max(0.1f, std::min(0.9f, ratio));
+}
+
+void SplitContainer::create(HWND parentHwnd, const RECT& rect) {
+    (void)parentHwnd;
+    (void)rect;
+    // TODO: Implement window creation
+}
+
+void SplitContainer::destroy() {
+    // TODO: Implement cleanup
+    hwnd_ = nullptr;
+}
+
+void SplitContainer::layout(const RECT& rect) {
+    (void)rect;
+    // TODO: Implement layout
+}
+
+void SplitContainer::paint(HDC hdc) {
+    (void)hdc;
+    // TODO: Implement painting
+}
+
+LRESULT SplitContainer::handleMessage(UINT msg, WPARAM wParam, LPARAM lParam) {
+    (void)wParam;
+    (void)lParam;
+    switch (msg) {
+        case WM_PAINT:
+        case WM_SIZE:
+            return 0;
+    }
+    return DefWindowProc(hwnd_, msg, wParam, lParam);
+}
+
+bool SplitContainer::hitTestSplitter(int x, int y) const {
+    (void)x;
+    (void)y;
+    return false;
+}
+
+void SplitContainer::beginSplitterDrag(int x, int y) {
+    isDragging_ = true;
+    dragStartPos_ = {x, y};
+    dragStartRatio_ = splitRatio_;
+}
+
+void SplitContainer::updateSplitterDrag(int x, int y) {
+    if (!isDragging_) return;
+    (void)x;
+    (void)y;
+    // TODO: Calculate new split ratio based on drag position
+}
+
+void SplitContainer::endSplitterDrag() {
+    isDragging_ = false;
 }
 
 // ============================================================================
