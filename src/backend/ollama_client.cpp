@@ -69,30 +69,30 @@ namespace Backend {
 
 // ─── Constructor / Destructor ───────────────────────────────────────
 
-NativeClient::NativeClient(const std::string& base_url)
+OllamaClient::OllamaClient(const std::string& base_url)
     : m_base_url(base_url), m_timeout_seconds(300) {
 }
 
-NativeClient::~NativeClient() {
+OllamaClient::~OllamaClient() {
 }
 
 // ─── Configuration ──────────────────────────────────────────────────
 
-void NativeClient::setBaseUrl(const std::string& url) {
+void OllamaClient::setBaseUrl(const std::string& url) {
     m_base_url = url;
 }
 
-void NativeClient::setTimeoutSeconds(int seconds) {
+void OllamaClient::setTimeoutSeconds(int seconds) {
     m_timeout_seconds = (seconds > 0) ? seconds : 300;
 }
 
-void NativeClient::setRetryConfig(const RetryConfig& config) {
+void OllamaClient::setRetryConfig(const RetryConfig& config) {
     m_retry_config = config;
 }
 
 // ─── Connection ─────────────────────────────────────────────────────
 
-bool NativeClient::testConnection() {
+bool OllamaClient::testConnection() {
     try {
         std::string version = getVersion();
         return !version.empty();
@@ -101,7 +101,7 @@ bool NativeClient::testConnection() {
     }
 }
 
-std::string NativeClient::getVersion() {
+std::string OllamaClient::getVersion() {
     std::string response = makeGetRequest("/api/version");
     try {
         json j = json::parse(response);
@@ -111,11 +111,11 @@ std::string NativeClient::getVersion() {
     }
 }
 
-bool NativeClient::isRunning() {
+bool OllamaClient::isRunning() {
     return testConnection();
 }
 
-ConnectionHealth NativeClient::healthCheck() {
+ConnectionHealth OllamaClient::healthCheck() {
     ConnectionHealth health;
     auto start = std::chrono::steady_clock::now();
     try {
@@ -150,17 +150,17 @@ ConnectionHealth NativeClient::healthCheck() {
 
 // ─── Cancellation ───────────────────────────────────────────────────
 
-void NativeClient::cancelStream() {
+void OllamaClient::cancelStream() {
     m_cancelled.store(true, std::memory_order_release);
 }
 
-bool NativeClient::isCancelled() const {
+bool OllamaClient::isCancelled() const {
     return m_cancelled.load(std::memory_order_acquire);
 }
 
 // ─── Model Listing ──────────────────────────────────────────────────
 
-std::vector<OllamaModel> NativeClient::listModels() {
+std::vector<OllamaModel> OllamaClient::listModels() {
     // Return cached model list if still within TTL (deduplicates redundant /api/tags calls).
     {
         std::lock_guard<std::mutex> lock(m_model_cache_mutex);
@@ -185,7 +185,7 @@ std::vector<OllamaModel> NativeClient::listModels() {
 
 // ─── Synchronous Generation ─────────────────────────────────────────
 
-NativeInferenceResponse NativeClient::generateSync(const OllamaGenerateRequest& request) {
+NativeInferenceResponse OllamaClient::generateSync(const OllamaGenerateRequest& request) {
     OllamaGenerateRequest sync_req = request;
     sync_req.stream = false;
     std::string body = createGenerateRequestJson(sync_req);
@@ -193,7 +193,7 @@ NativeInferenceResponse NativeClient::generateSync(const OllamaGenerateRequest& 
     return parseResponse(response);
 }
 
-NativeInferenceResponse NativeClient::chatSync(const OllamaChatRequest& request) {
+NativeInferenceResponse OllamaClient::chatSync(const OllamaChatRequest& request) {
     OllamaChatRequest sync_req = request;
     sync_req.stream = false;
     std::string body = createChatRequestJson(sync_req);
@@ -203,7 +203,7 @@ NativeInferenceResponse NativeClient::chatSync(const OllamaChatRequest& request)
 
 // ─── Streaming Generation ───────────────────────────────────────────
 
-bool NativeClient::generate(const OllamaGenerateRequest& request,
+bool OllamaClient::generate(const OllamaGenerateRequest& request,
                             StreamCallback on_chunk,
                             ErrorCallback on_error,
                             CompletionCallback on_complete) {
@@ -212,7 +212,7 @@ bool NativeClient::generate(const OllamaGenerateRequest& request,
     return makeStreamingPostRequest("/api/generate", body, on_chunk, on_error, on_complete);
 }
 
-bool NativeClient::chat(const OllamaChatRequest& request,
+bool OllamaClient::chat(const OllamaChatRequest& request,
                         StreamCallback on_chunk,
                         ErrorCallback on_error,
                         CompletionCallback on_complete) {
@@ -223,7 +223,7 @@ bool NativeClient::chat(const OllamaChatRequest& request,
 
 // ─── Tool-Augmented Chat ────────────────────────────────────────────
 
-NativeInferenceResponse NativeClient::chatWithTools(
+NativeInferenceResponse OllamaClient::chatWithTools(
     const OllamaChatRequest& request,
     ToolExecutor executor,
     int max_tool_rounds) {
@@ -277,7 +277,7 @@ NativeInferenceResponse NativeClient::chatWithTools(
 
 // ─── Embeddings ─────────────────────────────────────────────────────
 
-std::vector<float> NativeClient::embeddings(const std::string& model, const std::string& prompt) {
+std::vector<float> OllamaClient::embeddings(const std::string& model, const std::string& prompt) {
     json req_json;
     req_json["model"] = model;
     req_json["prompt"] = prompt;
@@ -299,7 +299,7 @@ std::vector<float> NativeClient::embeddings(const std::string& model, const std:
 
 // ─── URL Parsing ────────────────────────────────────────────────────
 
-NativeClient::ParsedUrl NativeClient::parseBaseUrl() const {
+OllamaClient::ParsedUrl OllamaClient::parseBaseUrl() const {
     ParsedUrl parsed;
     std::string url = m_base_url;
 
@@ -324,7 +324,8 @@ NativeClient::ParsedUrl NativeClient::parseBaseUrl() const {
             OutputDebugStringA(("[ollama_client] port parse exception: " + std::string(e.what()) + "\n").c_str());
         } catch (...) {
             OutputDebugStringA("[ollama_client] port parse unknown exception\n");
-        } else {
+        }
+    } else {
         parsed.host = url;
     }
 
@@ -334,7 +335,7 @@ NativeClient::ParsedUrl NativeClient::parseBaseUrl() const {
 
 // ─── JSON Building ──────────────────────────────────────────────────
 
-std::string NativeClient::createGenerateRequestJson(const OllamaGenerateRequest& req) {
+std::string OllamaClient::createGenerateRequestJson(const OllamaGenerateRequest& req) {
     json j;
     j["model"] = req.model;
     j["prompt"] = req.prompt;
@@ -347,7 +348,7 @@ std::string NativeClient::createGenerateRequestJson(const OllamaGenerateRequest&
     return j.dump();
 }
 
-std::string NativeClient::createChatRequestJson(const OllamaChatRequest& req) {
+std::string OllamaClient::createChatRequestJson(const OllamaChatRequest& req) {
     json j;
     j["model"] = req.model;
     j["stream"] = req.stream;
@@ -430,7 +431,7 @@ std::string NativeClient::createChatRequestJson(const OllamaChatRequest& req) {
 
 // ─── Response Parsing ───────────────────────────────────────────────
 
-NativeInferenceResponse NativeClient::parseResponse(const std::string& json_str) {
+NativeInferenceResponse OllamaClient::parseResponse(const std::string& json_str) {
     NativeInferenceResponse resp;
 
     try {
@@ -480,7 +481,7 @@ NativeInferenceResponse NativeClient::parseResponse(const std::string& json_str)
     return resp;
 }
 
-std::vector<OllamaModel> NativeClient::parseModels(const std::string& json_str) {
+std::vector<OllamaModel> OllamaClient::parseModels(const std::string& json_str) {
     std::vector<OllamaModel> models;
     try {
         json j = json::parse(json_str);
@@ -510,7 +511,7 @@ std::vector<OllamaModel> NativeClient::parseModels(const std::string& json_str) 
 
 // ─── Retry Wrappers ─────────────────────────────────────────────────
 
-std::string NativeClient::makeGetRequestWithRetry(const std::string& endpoint) {
+std::string OllamaClient::makeGetRequestWithRetry(const std::string& endpoint) {
     int delay_ms = m_retry_config.base_delay_ms;
     for (int attempt = 0; attempt <= m_retry_config.max_retries; ++attempt) {
         std::string result = makeGetRequest(endpoint);
@@ -525,7 +526,7 @@ std::string NativeClient::makeGetRequestWithRetry(const std::string& endpoint) {
     return "";
 }
 
-std::string NativeClient::makePostRequestWithRetry(const std::string& endpoint, const std::string& json_body) {
+std::string OllamaClient::makePostRequestWithRetry(const std::string& endpoint, const std::string& json_body) {
     int delay_ms = m_retry_config.base_delay_ms;
     for (int attempt = 0; attempt <= m_retry_config.max_retries; ++attempt) {
         std::string result = makePostRequest(endpoint, json_body);
@@ -546,7 +547,7 @@ std::string NativeClient::makePostRequestWithRetry(const std::string& endpoint, 
 
 #ifdef _WIN32
 
-std::string NativeClient::makeGetRequest(const std::string& endpoint) {
+std::string OllamaClient::makeGetRequest(const std::string& endpoint) {
     ParsedUrl url = parseBaseUrl();
     std::wstring whost = ToWide(url.host);
     std::wstring wpath = ToWide(endpoint);
@@ -601,7 +602,7 @@ std::string NativeClient::makeGetRequest(const std::string& endpoint) {
     return body;
 }
 
-std::string NativeClient::makePostRequest(const std::string& endpoint, const std::string& json_body) {
+std::string OllamaClient::makePostRequest(const std::string& endpoint, const std::string& json_body) {
     ParsedUrl url = parseBaseUrl();
     std::wstring whost = ToWide(url.host);
     std::wstring wpath = ToWide(endpoint);
@@ -655,7 +656,7 @@ std::string NativeClient::makePostRequest(const std::string& endpoint, const std
     return body;
 }
 
-bool NativeClient::makeStreamingPostRequest(const std::string& endpoint,
+bool OllamaClient::makeStreamingPostRequest(const std::string& endpoint,
                                             const std::string& json_body,
                                             StreamCallback on_chunk,
                                             ErrorCallback on_error,
@@ -808,19 +809,19 @@ bool NativeClient::makeStreamingPostRequest(const std::string& endpoint,
 
 #else
 // Linux/Mac fallback: return explicit JSON error payloads instead of silent empty strings.
-std::string NativeClient::makeGetRequest(const std::string& endpoint) {
+std::string OllamaClient::makeGetRequest(const std::string& endpoint) {
     std::ostringstream oss;
     oss << "{\"error\":\"platform_transport_unavailable\",\"endpoint\":\"" << endpoint << "\"}";
     return oss.str();
 }
 
-std::string NativeClient::makePostRequest(const std::string& endpoint, const std::string&) {
+std::string OllamaClient::makePostRequest(const std::string& endpoint, const std::string&) {
     std::ostringstream oss;
     oss << "{\"error\":\"platform_transport_unavailable\",\"endpoint\":\"" << endpoint << "\"}";
     return oss.str();
 }
 
-bool NativeClient::makeStreamingPostRequest(const std::string& endpoint, const std::string&,
+bool OllamaClient::makeStreamingPostRequest(const std::string& endpoint, const std::string&,
                                             StreamCallback, ErrorCallback on_error, CompletionCallback on_complete) {
     if (on_error) {
         on_error("Streaming transport unavailable on this platform for endpoint: " + endpoint);

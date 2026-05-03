@@ -720,7 +720,9 @@ set(SOURCES
     src/agent/model_invoker.cpp
     src/agent/planner.cpp
     src/agent/eval_framework.cpp
-    src/ollama_client.cpp
+    src/backend/ollama_client.cpp
+    src/tools/file_ops.cpp
+    src/tools/git_client.cpp
 
     # LocalReasoningEngine — API-free static analysis + pattern detection (no Qt, no API key)
     src/agent/local_reasoning_engine.cpp
@@ -3488,7 +3490,9 @@ if(WIN32)
         src/flow_control/credit_based_flow_control.cpp
         src/flow_control/phase_latency_tracker.cpp
         src/backend/agentic_tools.cpp
-        src/ide/ast_completion_bridge.cpp
+        src/backend/ollama_client.cpp
+        src/tools/file_ops.cpp
+        src/tools/git_client.cpp
 
         src/win32app/Win32IDE_AgenticPlanningPanel.cpp
         src/win32app/Win32IDE_FailureDetector.cpp

@@ -135,10 +135,10 @@ using ToolExecutor = std::function<std::string(const std::string& tool_name, con
 
 // ─── Client ─────────────────────────────────────────────────────────
 
-class NativeClient {
+class OllamaClient {
 public:
-    explicit NativeClient(const std::string& base_url = "http://localhost:11435");
-    ~NativeClient();
+    explicit OllamaClient(const std::string& base_url = "http://localhost:11435");
+    ~OllamaClient();
 
     // --- Configuration ---
     void setBaseUrl(const std::string& url);

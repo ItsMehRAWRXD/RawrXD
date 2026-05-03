@@ -18,15 +18,11 @@
 #include <memory>
 #include <unordered_map>
 #include <optional>
+#include <mutex>
+#include <chrono>
 #include <nlohmann/json.hpp>
 
 namespace RawrXD {
-namespace IDE {
-
-// Forward declarations
-class LanguageServerIntegration;
-
-} // namespace IDE
 
 namespace Completion {
     struct CompletionContext;
@@ -34,6 +30,9 @@ namespace Completion {
 }
 
 namespace IDE {
+
+// Forward declarations
+class LanguageServerIntegration;
 
 // ============================================================================
 // AST Context Types
