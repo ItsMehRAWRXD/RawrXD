@@ -653,6 +653,7 @@ set(SOURCES
     src/core/streaming_engine_registry.cpp
     src/core/flash_attention.cpp
     src/core/gpu_backend_bridge.cpp
+    src/core/gpu_warming_engine.cpp
     
     # Native speed layer + local AI core (zero-dependency inference)
     src/core/native_speed_layer.cpp
@@ -781,6 +782,7 @@ set(SOURCES
     
     # Phase 25: AMD/ATI GPU Acceleration Toggle
     src/core/amd_gpu_accelerator.cpp
+    src/core/gpu_warmup.cpp
     src/core/unified_memory_executor.cpp
     src/core/model_runtime_gate.cpp
     src/runtime_surface/GenerationStopwatch.cpp
@@ -3479,6 +3481,12 @@ if(WIN32)
         src/agentic/agent_controller_minimal.cpp
         src/agentic/agentic_controller_wiring.cpp
         src/core/link_symbols_impl.cpp
+        src/core/rust_parser.cpp
+        src/core/ast_graph_engine_impl.cpp
+        src/core/kv_cache_credit_bridge.cpp
+        src/flow_control/credit_governor.cpp
+        src/flow_control/credit_based_flow_control.cpp
+        src/flow_control/phase_latency_tracker.cpp
 
         src/win32app/Win32IDE_AgenticPlanningPanel.cpp
         src/win32app/Win32IDE_FailureDetector.cpp
@@ -3795,6 +3803,7 @@ if(WIN32)
         
         # Phase 25: AMD/ATI GPU Acceleration Toggle
         src/core/amd_gpu_accelerator.cpp
+        src/core/gpu_warmup.cpp
         src/core/unified_memory_executor.cpp
         src/core/model_runtime_gate.cpp
         
@@ -4964,6 +4973,8 @@ if(WIN32)
         src/llm_adapter/ggufrunner_impl.cpp
         # Link-closure: LlamaNativeBridge used by SovereignInferenceClient
         src/inference/RawrXD_LlamaNative.cpp
+        # Live telemetry collector for CreditGovernor dashboard
+        src/inference/pipeline_telemetry.cpp
     )
 
     # Model Puller subsystem
@@ -5829,6 +5840,7 @@ if(WIN32)
         src/tools/router_benchmark_runner.cpp
         src/core/accelerator_router.cpp
         src/core/amd_gpu_accelerator.cpp
+        src/core/gpu_warmup.cpp
         src/core/intel_gpu_accelerator.cpp
         src/core/arm64_gpu_accelerator.cpp
         src/core/cerebras_wse_accelerator.cpp
@@ -6528,6 +6540,117 @@ set_target_properties(test_credit_based_flow_control PROPERTIES
 )
 
 message(STATUS "[FlowControl] Credit-based test: test_credit_based_flow_control")
+
+# ============================================================================
+# Credit Governor Auto-Tuner
+# ============================================================================
+add_executable(test_credit_governor EXCLUDE_FROM_ALL
+    tests/test_credit_governor.cpp
+    src/flow_control/credit_governor.cpp
+)
+
+target_include_directories(test_credit_governor PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_compile_features(test_credit_governor PRIVATE cxx_std_17)
+
+if(MSVC)
+    target_compile_options(test_credit_governor PRIVATE /EHsc /W2 /arch:AVX2)
+endif()
+
+set_target_properties(test_credit_governor PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+)
+
+message(STATUS "[FlowControl] Credit governor test: test_credit_governor")
+
+# ============================================================================
+# Pipeline Integration Harness (FP8 + Governor + Credits)
+# ============================================================================
+add_executable(test_pipeline_integration EXCLUDE_FROM_ALL
+    tests/test_pipeline_integration.cpp
+    src/flow_control/credit_governor.cpp
+    src/flow_control/credit_based_flow_control.cpp
+    src/kernels/fp8_quantizer_avx512.cpp
+)
+
+target_include_directories(test_pipeline_integration PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_compile_features(test_pipeline_integration PRIVATE cxx_std_17)
+
+if(MSVC)
+    target_compile_options(test_pipeline_integration PRIVATE /EHsc /W2 /arch:AVX512)
+endif()
+
+set_target_properties(test_pipeline_integration PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+)
+
+message(STATUS "[Integration] Pipeline harness: test_pipeline_integration")
+
+# ============================================================================
+# Rust Parser + Credit Governor Integration
+# ============================================================================
+add_executable(test_rust_parser_integration EXCLUDE_FROM_ALL
+    tests/test_rust_parser_integration.cpp
+    src/core/ast_graph_engine_impl.cpp
+    src/core/rust_parser_v2.cpp
+    src/flow_control/credit_governor.cpp
+    src/flow_control/credit_based_flow_control.cpp
+)
+
+target_include_directories(test_rust_parser_integration PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_compile_features(test_rust_parser_integration PRIVATE cxx_std_17)
+
+if(MSVC)
+    target_compile_options(test_rust_parser_integration PRIVATE /EHsc /W2 /arch:AVX2)
+endif()
+
+set_target_properties(test_rust_parser_integration PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+)
+
+message(STATUS "[Integration] Rust parser harness: test_rust_parser_integration")
+
+# ============================================================================
+# Pipeline Telemetry Dashboard (TUI)
+# ============================================================================
+add_executable(pipeline_dashboard EXCLUDE_FROM_ALL
+    tests/pipeline_dashboard.cpp
+    src/kernels/fp8_quantizer_avx512.cpp
+    src/flow_control/credit_governor.cpp
+    src/flow_control/credit_based_flow_control.cpp
+)
+
+target_include_directories(pipeline_dashboard PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_compile_features(pipeline_dashboard PRIVATE cxx_std_17)
+
+if(MSVC)
+    target_compile_options(pipeline_dashboard PRIVATE /EHsc /W2 /arch:AVX2)
+endif()
+
+set_target_properties(pipeline_dashboard PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+)
+
+message(STATUS "[Dashboard] Pipeline telemetry TUI: pipeline_dashboard")
 
 # ============================================================================
 # Fused FP8 Quantization Kernel
