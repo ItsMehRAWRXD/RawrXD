@@ -22362,6 +22362,49 @@ build tests\smoke_split_answers_toggle.exe: CXX_EXECUTABLE_LINKER__smoke_split_a
   TARGET_SUPPORT_DIR = tests\CMakeFiles\smoke_split_answers_toggle.dir
 
 # =============================================================================
+# Object build statements for EXECUTABLE target agentic_repair_stress_test
+
+
+#############################################
+# Order-only phony target for agentic_repair_stress_test
+
+build cmake_object_order_depends_target_agentic_repair_stress_test: phony || .
+
+build tests\CMakeFiles\agentic_repair_stress_test.dir\agentic_repair_stress_test.cpp.obj: CXX_COMPILER__agentic_repair_stress_test_unscanned_Release D$:\rawrxd\tests\agentic_repair_stress_test.cpp || cmake_object_order_depends_target_agentic_repair_stress_test
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DRAWRXD_MASM_CORE_NATIVE_BRIDGE=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MT /GS- /sdl-
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\include -ID:\rawrxd\src -external:IC:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\include -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = tests\CMakeFiles\agentic_repair_stress_test.dir
+  OBJECT_FILE_DIR = tests\CMakeFiles\agentic_repair_stress_test.dir
+  TARGET_COMPILE_PDB = tests\CMakeFiles\agentic_repair_stress_test.dir\
+  TARGET_PDB = tests\agentic_repair_stress_test.pdb
+  TARGET_SUPPORT_DIR = tests\CMakeFiles\agentic_repair_stress_test.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target agentic_repair_stress_test
+
+
+#############################################
+# Link the executable tests\agentic_repair_stress_test.exe
+
+build tests\agentic_repair_stress_test.exe: CXX_EXECUTABLE_LINKER__agentic_repair_stress_test_Release tests\CMakeFiles\agentic_repair_stress_test.dir\agentic_repair_stress_test.cpp.obj
+  CONFIG = Release
+  FLAGS = /DWIN32 /D_WINDOWS /EHsc /O2 /Ob2 /DNDEBUG -MT
+  LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG
+  LINK_LIBRARIES = kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
+  LINK_PATH = -LIBPATH:C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\lib\x64   -LIBPATH:C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64
+  OBJECT_DIR = tests\CMakeFiles\agentic_repair_stress_test.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_COMPILE_PDB = tests\CMakeFiles\agentic_repair_stress_test.dir\
+  TARGET_FILE = tests\agentic_repair_stress_test.exe
+  TARGET_IMPLIB = tests\agentic_repair_stress_test.lib
+  TARGET_PDB = tests\agentic_repair_stress_test.pdb
+  TARGET_SUPPORT_DIR = tests\CMakeFiles\agentic_repair_stress_test.dir
+
+# =============================================================================
 # Object build statements for EXECUTABLE target model_registry_test
 
 
@@ -25591,6 +25634,10 @@ build agentic_orchestrator_smoke_test: phony bin\agentic_orchestrator_smoke_test
 
 build agentic_orchestrator_smoke_test.exe: phony bin\agentic_orchestrator_smoke_test.exe
 
+build agentic_repair_stress_test: phony tests\agentic_repair_stress_test.exe
+
+build agentic_repair_stress_test.exe: phony tests\agentic_repair_stress_test.exe
+
 build atc_fingerprint_test: phony bin\atc_fingerprint_test.exe
 
 build atc_fingerprint_test.exe: phony bin\atc_fingerprint_test.exe
@@ -26004,7 +26051,7 @@ build src\tools\tokenizer_roundtrip_test\all: phony bin\tokenizer_roundtrip_test
 #############################################
 # Folder: D:/rawrxd/build-ninja/tests
 
-build tests\all: phony tests\test_ai_completions.exe tests\test_llm_connectivity.exe tests\test_tool_registry.exe tests\test_zero_retention_manager.exe tests\test_semantic_diff_analyzer.exe tests\test_ai_merge_resolver.exe tests\test_ide_model_autonomy.exe tests\test_extreme_memory_optimizer.exe tests\test_quality_corrector.exe tests\test_sandboxed_terminal.exe tests\test_agentic_file_operations.exe tests\smoke_split_answers_toggle.exe tests\model_registry_test.exe tests\test_gguf_integration.exe tests\test_engine_revolver.exe tests\test_swarm_scheduler_pin.exe tests\test_swarm_expert_heatmap_stress.exe tests\test_moe_mixture_reference.exe tests\test_moe_down_project_policy.exe tests\test_moe_plan_row_mixture_pack_cache.exe tests\test_moe_batched_down_project.exe tests\test_moe_pack_hud_metrics.exe tests\moe_grouped_gemm_bench.exe tests\test_basic_profiler.exe tests\test_batch3_profiler_smoke.exe tests\test_state_subscription_engine_smoke.exe tests\test_ai_execution_guardrails_smoke.exe tests\test_ai_execution_guardrails_chaos.exe tests\test_safe_inference_session_integration.exe tests\test_kv_cache_ownership.exe tests\test_speculative_pipeline.exe tests\test_extension_host.exe tests\extension_ipc_echo_stub.exe tests\extension_host_smoke_test.exe bin\batch4_ipc_spec_ast_arb_smoke.exe bin\autocomplete_kernel_wire_smoke.exe tests\autocomplete_kernel_compile_guard bin\cross_repo_router_smoke.exe bin\autocomplete_p95_latency_harness.exe bin\titan_rx_hotpath_smoke.exe tests\test_sovereign_kernels.exe tests\bench_sovereign_kernels.exe tests\test_production_regression.exe tests\test_instructions_provider.exe tests\test_model_loader_streamer_smoke.exe _deps\googletest-build\all
+build tests\all: phony tests\test_ai_completions.exe tests\test_llm_connectivity.exe tests\test_tool_registry.exe tests\test_zero_retention_manager.exe tests\test_semantic_diff_analyzer.exe tests\test_ai_merge_resolver.exe tests\test_ide_model_autonomy.exe tests\test_extreme_memory_optimizer.exe tests\test_quality_corrector.exe tests\test_sandboxed_terminal.exe tests\test_agentic_file_operations.exe tests\smoke_split_answers_toggle.exe tests\agentic_repair_stress_test.exe tests\model_registry_test.exe tests\test_gguf_integration.exe tests\test_engine_revolver.exe tests\test_swarm_scheduler_pin.exe tests\test_swarm_expert_heatmap_stress.exe tests\test_moe_mixture_reference.exe tests\test_moe_down_project_policy.exe tests\test_moe_plan_row_mixture_pack_cache.exe tests\test_moe_batched_down_project.exe tests\test_moe_pack_hud_metrics.exe tests\moe_grouped_gemm_bench.exe tests\test_basic_profiler.exe tests\test_batch3_profiler_smoke.exe tests\test_state_subscription_engine_smoke.exe tests\test_ai_execution_guardrails_smoke.exe tests\test_ai_execution_guardrails_chaos.exe tests\test_safe_inference_session_integration.exe tests\test_kv_cache_ownership.exe tests\test_speculative_pipeline.exe tests\test_extension_host.exe tests\extension_ipc_echo_stub.exe tests\extension_host_smoke_test.exe bin\batch4_ipc_spec_ast_arb_smoke.exe bin\autocomplete_kernel_wire_smoke.exe tests\autocomplete_kernel_compile_guard bin\cross_repo_router_smoke.exe bin\autocomplete_p95_latency_harness.exe bin\titan_rx_hotpath_smoke.exe tests\test_sovereign_kernels.exe tests\bench_sovereign_kernels.exe tests\test_production_regression.exe tests\test_instructions_provider.exe tests\test_model_loader_streamer_smoke.exe _deps\googletest-build\all
 
 # =============================================================================
 # Built-in targets

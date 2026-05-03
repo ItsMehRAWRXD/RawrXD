@@ -249,6 +249,15 @@ if(NOT TARGET smoke_split_answers_toggle AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}
     message(STATUS "  ✓ Added smoke_split_answers_toggle")
 endif()
 
+# Agentic Repair Stress Test — Self-Healing hotpatch lifecycle
+if(NOT TARGET agentic_repair_stress_test AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/agentic_repair_stress_test.cpp")
+    add_executable(agentic_repair_stress_test agentic_repair_stress_test.cpp)
+    target_include_directories(agentic_repair_stress_test PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
+    set_target_properties(agentic_repair_stress_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests" CXX_STANDARD 20)
+    add_test(NAME agentic_repair_stress_test COMMAND agentic_repair_stress_test)
+    message(STATUS "  ✓ Added agentic_repair_stress_test")
+endif()
+
 # Model Registry Test
 if(NOT TARGET model_registry_test AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/model_registry_test.cpp")
     add_executable(model_registry_test model_registry_test.cpp)
