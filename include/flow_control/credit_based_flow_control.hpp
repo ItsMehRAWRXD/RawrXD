@@ -39,6 +39,9 @@ struct CreditConfig {
     // Enable starvation prevention (reserve credits for partial batches)
     bool reserveForPartial = true;
     uint32_t partialReserve = 32;
+    
+    // Suppress diagnostic output (for TUI/dashboard use)
+    bool silent = false;
 };
 
 // Credit transaction result

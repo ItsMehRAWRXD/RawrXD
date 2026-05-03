@@ -227,11 +227,13 @@ bool FP8QuantizerAVX512::Initialize(QuantizeStrategy strategy) {
     SelectStrategy();
     initialized_ = true;
     
-    printf("[FP8Quantizer] Initialized with strategy: %s\n",
-           currentStrategy_ == QuantizeStrategy::AVX512 ? "AVX-512" :
-           currentStrategy_ == QuantizeStrategy::AVX2 ? "AVX2" : "Scalar");
-    printf("[FP8Quantizer] CPU Features: AVX512F=%d AVX2=%d\n",
-           features_.has_avx512f, features_.has_avx2);
+    if (!silent_) {
+        printf("[FP8Quantizer] Initialized with strategy: %s\n",
+               currentStrategy_ == QuantizeStrategy::AVX512 ? "AVX-512" :
+               currentStrategy_ == QuantizeStrategy::AVX2 ? "AVX2" : "Scalar");
+        printf("[FP8Quantizer] CPU Features: AVX512F=%d AVX2=%d\n",
+               features_.has_avx512f, features_.has_avx2);
+    }
     
     return true;
 }
@@ -415,6 +417,10 @@ void FP8QuantizerAVX512::PrintReport() const {
 // ============================================================================
 // Global functions
 // ============================================================================
+
+// Forward declaration for benchmark speedup calculation
+double BenchmarkFP8Quantization_ScalarRef(size_t elementCount);
+
 size_t GetRecommendedFP8BatchSize() {
     FP8QuantizerAVX512 quantizer;
     quantizer.Initialize();
@@ -467,9 +473,9 @@ void BenchmarkFP8Quantization(size_t elementCount) {
         printf("%s:\n", name);
         printf("  Avg time:        %.3f ms\n", avgTime * 1000);
         printf("  Throughput:      %.2f M elements/sec\n", throughput / 1e6);
+        double scalarTime = BenchmarkFP8Quantization_ScalarRef(elementCount);
         printf("  Speedup vs scalar: %.2fx\n", 
-               strategy == QuantizeStrategy::Scalar ? 1.0 : 
-               BenchmarkFP8Quantization_ScalarRef(elementCount) / avgTime);
+               strategy == QuantizeStrategy::Scalar ? 1.0 : scalarTime / avgTime);
         printf("\n");
     }
     

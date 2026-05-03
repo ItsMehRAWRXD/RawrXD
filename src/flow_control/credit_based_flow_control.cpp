@@ -26,8 +26,10 @@ bool CreditCounter::Initialize(const CreditConfig& config) {
     maxObserved_.store(config.initialCredits, std::memory_order_relaxed);
     pendingReturns_.store(0, std::memory_order_relaxed);
     
-    printf("[CreditCounter] Initialized: initial=%u, max=%u, min=%u\n",
-           config.initialCredits, config.maxCredits, config.minCredits);
+    if (!config.silent) {
+        printf("[CreditCounter] Initialized: initial=%u, max=%u, min=%u\n",
+               config.initialCredits, config.maxCredits, config.minCredits);
+    }
     return true;
 }
 

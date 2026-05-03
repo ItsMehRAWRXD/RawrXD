@@ -208,6 +208,12 @@ VerifyResult FusedSpeculativeVerifier::verifyAndAccept(const float* draft_logits
     total_verifications_.fetch_add(1);
     total_accepted_.fetch_add(result.num_accepted);
 
+    // Release credits for accepted tokens back to coordinator
+    if (result.num_accepted > 0 && credit_release_callback_) {
+        credit_release_callback_(result.num_accepted);
+        total_credits_released_.fetch_add(result.num_accepted);
+    }
+
     auto t_end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(t_end - t_start);
     total_verify_time_ns_.fetch_add(duration.count());

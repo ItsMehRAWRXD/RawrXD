@@ -39,11 +39,12 @@ struct SymbolInfo {
     std::string type;
     std::string kind;  // "class", "function", "variable", "namespace", etc.
     std::string scope; // Fully qualified scope: "MyNamespace::MyClass"
-    int line = 0;
-    int column = 0;
+    int32_t line = 0;      // Fixed-width for FFI stability
+    int32_t column = 0;     // Fixed-width for FFI stability
     bool isPublic = true;
     bool isStatic = false;
     bool isConst = false;
+    uint8_t _padding[5] = {0}; // Explicit padding for ABI stability across compilers
     std::vector<std::string> parameters; // For functions
 };
 
@@ -55,6 +56,7 @@ struct ScopeContext {
     bool inPrivateBlock = false;
     bool inProtectedBlock = false;
     bool inPublicBlock = true; // Default
+    uint8_t _padding[3] = {0}; // Explicit padding for ABI stability across compilers
 };
 
 struct ASTContext {
@@ -67,6 +69,7 @@ struct ASTContext {
     std::optional<SymbolInfo> currentClass;
     std::optional<SymbolInfo> currentFunction;
     bool isValid = false;
+    uint8_t _padding[7] = {0}; // Explicit padding for ABI stability across compilers
 };
 
 // ============================================================================

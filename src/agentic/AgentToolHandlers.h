@@ -135,6 +135,9 @@ class AgentToolHandlers
     static ToolCallResult AsmAssemble(const nlohmann::json& args);
     static ToolCallResult GetCoverage(const nlohmann::json& args);
     static ToolCallResult ApplyHotpatch(const nlohmann::json& args);
+    static ToolCallResult RevertHotpatch(const nlohmann::json& args);
+    static ToolCallResult ListHotpatches(const nlohmann::json& args);
+    static ToolCallResult HotpatchStatus(const nlohmann::json& args);
     static ToolCallResult SysGetCapabilities(const nlohmann::json& args);
     static ToolCallResult DiskRecovery(const nlohmann::json& args);
     static ToolCallResult GenerateImage(const nlohmann::json& args);

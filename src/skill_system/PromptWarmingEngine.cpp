@@ -34,7 +34,15 @@ bool PromptWarmingEngine::Initialize() {
         return true;  // Already running
     }
 
-    m_warmingThread = std::thread(&PromptWarmingEngine::WarmingLoop, this);
+    try {
+        m_warmingThread = std::thread(&PromptWarmingEngine::WarmingLoop, this);
+    } catch (const std::exception& e) {
+        OutputDebugStringA("[PromptWarming] Failed to start warming thread: ");
+        OutputDebugStringA(e.what());
+        OutputDebugStringA("\n");
+        m_running.store(false);
+        return false;
+    }
 
     OutputDebugStringA("[PromptWarming] Engine initialized\n");
     return true;

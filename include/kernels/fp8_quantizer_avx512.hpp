@@ -65,6 +65,9 @@ public:
     bool Initialize(QuantizeStrategy strategy = QuantizeStrategy::Auto);
     void Shutdown();
     
+    // Suppress diagnostic output (for TUI/dashboard use)
+    void SetSilent(bool silent) { silent_ = silent; }
+    
     // Quantize float array to E4M3 FP8
     // Input:  float array (32-byte aligned for AVX-512)
     // Output: uint8_t array (16-byte aligned)
@@ -86,6 +89,7 @@ public:
     // Get performance metrics
     QuantizeMetrics GetMetrics() const { return metrics_; }
     void ResetMetrics() { metrics_ = QuantizeMetrics{}; }
+    void PrintReport() const;
     
     // Check if AVX-512 is available
     static bool IsAVX512Available();
@@ -95,6 +99,7 @@ public:
 
 private:
     bool initialized_ = false;
+    bool silent_ = false;
     QuantizeStrategy requestedStrategy_ = QuantizeStrategy::Auto;
     QuantizeStrategy currentStrategy_ = QuantizeStrategy::Scalar;
     CPUFeatures features_;

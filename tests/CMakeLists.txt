@@ -233,6 +233,22 @@ if(NOT TARGET test_agentic_file_operations AND EXISTS "${CMAKE_CURRENT_SOURCE_DI
     message(STATUS "  ✓ Added test_agentic_file_operations")
 endif()
 
+# Split-Answers Toggle Smoke Test
+if(NOT TARGET smoke_split_answers_toggle AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/smoke_split_answers_toggle.cpp")
+    add_executable(smoke_split_answers_toggle
+        smoke_split_answers_toggle.cpp
+        ${CMAKE_SOURCE_DIR}/src/backend/agentic_tools.cpp
+        ${CMAKE_SOURCE_DIR}/tests/stubs/ollama_client_stub.cpp
+        ${CMAKE_SOURCE_DIR}/tests/stubs/agent_tool_registry_stub.cpp
+        ${CMAKE_SOURCE_DIR}/src/tools/git_client.cpp
+        ${CMAKE_SOURCE_DIR}/src/tools/file_ops.cpp
+    )
+    target_include_directories(smoke_split_answers_toggle PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(smoke_split_answers_toggle PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests" CXX_STANDARD 20)
+    add_test(NAME smoke_split_answers_toggle COMMAND smoke_split_answers_toggle)
+    message(STATUS "  ✓ Added smoke_split_answers_toggle")
+endif()
+
 # Model Registry Test
 if(NOT TARGET model_registry_test AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/model_registry_test.cpp")
     add_executable(model_registry_test model_registry_test.cpp)

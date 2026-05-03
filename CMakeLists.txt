@@ -6653,6 +6653,32 @@ set_target_properties(pipeline_dashboard PROPERTIES
 message(STATUS "[Dashboard] Pipeline telemetry TUI: pipeline_dashboard")
 
 # ============================================================================
+# Hotpatch Tool Smoke Test
+# ============================================================================
+add_executable(test_hotpatch_tools_smoke EXCLUDE_FROM_ALL
+    tests/test_hotpatch_tools_smoke.cpp
+    src/agentic/AgentToolHandlers.cpp
+)
+
+target_include_directories(test_hotpatch_tools_smoke PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_compile_features(test_hotpatch_tools_smoke PRIVATE cxx_std_17)
+
+if(MSVC)
+    target_compile_options(test_hotpatch_tools_smoke PRIVATE /EHsc /W2 /arch:AVX2)
+endif()
+
+set_target_properties(test_hotpatch_tools_smoke PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+)
+
+message(STATUS "[Smoke] Hotpatch tool smoke test: test_hotpatch_tools_smoke")
+
+# ============================================================================
 # Fused FP8 Quantization Kernel
 # ============================================================================
 add_executable(test_fused_fp8_quantizer EXCLUDE_FROM_ALL

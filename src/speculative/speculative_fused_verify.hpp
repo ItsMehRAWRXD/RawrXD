@@ -15,6 +15,7 @@
 #include <cstddef>
 #include <atomic>
 #include <memory>
+#include <functional>
 
 namespace RawrXD {
 namespace Speculative {
@@ -138,6 +139,10 @@ private:
     std::atomic<uint64_t> total_verifications_{0};
     std::atomic<uint64_t> total_accepted_{0};
     std::atomic<uint64_t> total_verify_time_ns_{0};
+    std::atomic<uint64_t> total_credits_released_{0};  // Track credits returned to coordinator
+
+    // Credit release callback (called when tokens are accepted)
+    std::function<void(uint32_t)> credit_release_callback_;
 
     // State
     bool initialized_ = false;

@@ -24,6 +24,7 @@
 #include <mutex>
 #include <shared_mutex>
 #include <optional>
+#include <thread>
 
 namespace RawrXD {
 namespace AST {
@@ -96,7 +97,11 @@ struct SourceLocation {
     bool operator==(const SourceLocation& other) const {
         return line == other.line && column == other.column && file_id == other.file_id;
     }
-    
+
+    bool operator<=(const SourceLocation& other) const {
+        return !(other < *this);
+    }
+
     bool operator<(const SourceLocation& other) const {
         if (file_id != other.file_id) return file_id < other.file_id;
         if (line != other.line) return line < other.line;

@@ -1330,12 +1330,44 @@ bool mapShardFileReadOnly(const std::string& path, int device_index, MappedShard
 
     // Reserve a fixed-size placeholder aperture so MapViewOfFile3 can atomically
     // replace the full placeholder region without needing placeholder splitting.
+    // P0 Fix: For models >2GB, try segmented reservation fallback when contiguous fails.
     const SIZE_T target_aperture = static_cast<SIZE_T>(std::min<uint64_t>(out.size_bytes, kSlidingApertureSize));
     if (!reserveSlidingAperture(target_aperture, out.view, out.reserved_aperture_size, out.has_placeholder_reservation))
     {
-        out.view = nullptr;
-        out.reserved_aperture_size = 0;
-        out.has_placeholder_reservation = false;
+        // Fallback 1: Try segmented reservation for models >2GB
+        MemoryModeConfig mem_config = SelectMemoryMode(out.size_bytes);
+        if (mem_config.mode == MemoryMode::Segmented && mem_config.max_windows > 1)
+        {
+            // Try reserving multiple smaller windows
+            bool any_reserved = false;
+            for (size_t w = 0; w < mem_config.max_windows && !any_reserved; ++w)
+            {
+                void* seg_view = nullptr;
+                size_t seg_size = 0;
+                bool seg_placeholder = false;
+                if (reserveSlidingAperture(static_cast<SIZE_T>(mem_config.window_size), seg_view, seg_size, seg_placeholder))
+                {
+                    // Use the first successful segment as the base view
+                    out.view = seg_view;
+                    out.reserved_aperture_size = seg_size;
+                    out.has_placeholder_reservation = seg_placeholder;
+                    any_reserved = true;
+                }
+            }
+            
+            if (!any_reserved)
+            {
+                out.view = nullptr;
+                out.reserved_aperture_size = 0;
+                out.has_placeholder_reservation = false;
+            }
+        }
+        else
+        {
+            out.view = nullptr;
+            out.reserved_aperture_size = 0;
+            out.has_placeholder_reservation = false;
+        }
     }
 
     const bool allowDirectMap =
@@ -1519,12 +1551,18 @@ bool mapSlidingWindow(MappedShardFile& file, uint64_t offset, size_t window_size
         // Legacy fallback for systems without placeholder swap support.
         if (!mapped_out)
         {
+            // P0 Fix: Segmented fallback allows direct mapping for multi-window models
+            // even when allowDirectMap is false, because this is an intentional fallback
+            // from failed placeholder reservation, not a bypass.
+            MemoryModeConfig mem_config = SelectMemoryMode(file.size_bytes);
+            bool is_segmented_fallback = (mem_config.mode == MemoryMode::Segmented);
+            
             if (file.has_placeholder_reservation && map_offset == 0 && one_map_size <= kSlidingApertureSize)
             {
                 mapped_out = MapViewOfFileEx(file.hMapping, FILE_MAP_READ, static_cast<DWORD>(map_offset >> 32),
                                              static_cast<DWORD>(map_offset), one_map_size, one_base);
             }
-            else if (!file.has_placeholder_reservation && allowDirectMap)
+            else if (!file.has_placeholder_reservation && (allowDirectMap || is_segmented_fallback))
             {
                 mapped_out = MapViewOfFileEx(file.hMapping, FILE_MAP_READ, static_cast<DWORD>(map_offset >> 32),
                                              static_cast<DWORD>(map_offset), one_map_size, nullptr);

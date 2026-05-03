@@ -3,6 +3,7 @@
 // Target: llama.cpp b3506+ with Vulkan backend for RX 7800 XT
 
 #include "RawrXD_LlamaNative.h"
+#include "inference/pipeline_telemetry.hpp"
 #include <chrono>
 #include <cstring>
 #include <algorithm>
@@ -472,6 +473,15 @@ LlamaNativeBridge::GenerationResult LlamaNativeBridge::Generate(
     auto timeGenDone = std::chrono::high_resolution_clock::now();
     result.t_gen_ms = std::chrono::duration<double, std::milli>(timeGenDone - timePromptDone).count();
     result.success = true;
+    
+    // Record telemetry for the governor/dashboard
+    if (result.tokens_generated > 0 && result.t_gen_ms > 0) {
+        auto* telemetry = RawrXD::Inference::PipelineTelemetryCollector::Instance();
+        telemetry->RecordTokenBatch(
+            static_cast<size_t>(result.tokens_generated),
+            result.t_gen_ms
+        );
+    }
 
     return result;
 }
@@ -612,6 +622,15 @@ LlamaNativeBridge::GenerationResult LlamaNativeBridge::GenerateStream(
     auto timeGenDone = std::chrono::high_resolution_clock::now();
     result.t_gen_ms = std::chrono::duration<double, std::milli>(timeGenDone - timePromptDone).count();
     result.success = true;
+    
+    // Record telemetry for the governor/dashboard
+    if (result.tokens_generated > 0 && result.t_gen_ms > 0) {
+        auto* telemetry = RawrXD::Inference::PipelineTelemetryCollector::Instance();
+        telemetry->RecordTokenBatch(
+            static_cast<size_t>(result.tokens_generated),
+            result.t_gen_ms
+        );
+    }
 
     return result;
 }

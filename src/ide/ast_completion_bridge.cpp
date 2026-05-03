@@ -6,8 +6,109 @@
 #include "ide/ast_completion_bridge.h"
 #include "LanguageServerIntegration.h"
 #include "completion/smart_completion.h"
+#include "core/rust_parser.hpp"
 #include <algorithm>
 #include <sstream>
+#include <fstream>
+
+namespace {
+
+std::string uriToPath(const std::string& uri) {
+    if (uri.size() >= 8 && uri.substr(0, 8) == "file:///") {
+        std::string path = uri.substr(8);
+        std::replace(path.begin(), path.end(), '/', '\\');
+        return path;
+    }
+    return uri;
+}
+
+std::string readFileContent(const std::string& path) {
+    std::ifstream in(path, std::ios::binary);
+    if (!in.is_open()) return "";
+    std::ostringstream ss;
+    ss << in.rdbuf();
+    return ss.str();
+}
+
+RawrXD::IDE::SymbolInfo nodeToSymbolInfo(const RawrXD::AST::ASTNode::Ptr& node) {
+    RawrXD::IDE::SymbolInfo info;
+    info.name = node->getName();
+    info.line = static_cast<int32_t>(node->getRange().start.line);
+    info.column = static_cast<int32_t>(node->getRange().start.column);
+    info.scope = "global";
+    info.isPublic = false;
+
+    const std::string& text = node->getText();
+
+    switch (node->getType()) {
+        case RawrXD::AST::NodeType::FunctionDecl:
+            info.type = "function";
+            info.kind = "function";
+            info.isPublic = (text.find("pub ") == 0) || (text.find("pub(") == 0);
+            break;
+        case RawrXD::AST::NodeType::StructDecl:
+            info.type = "struct";
+            info.kind = "struct";
+            info.isPublic = (text.find("pub ") == 0) || (text.find("pub(") == 0);
+            break;
+        case RawrXD::AST::NodeType::EnumDecl:
+            info.type = "enum";
+            info.kind = "enum";
+            info.isPublic = (text.find("pub ") == 0) || (text.find("pub(") == 0);
+            break;
+        case RawrXD::AST::NodeType::ClassDecl:
+            if (text.find("trait ") == 0 || text.find("pub trait ") == 0) {
+                info.type = "trait";
+                info.kind = "trait";
+            } else if (text.find("impl ") == 0 || text.find("pub impl ") == 0) {
+                info.type = "impl";
+                info.kind = "impl";
+            } else {
+                info.type = "class";
+                info.kind = "class";
+            }
+            info.isPublic = (text.find("pub ") == 0) || (text.find("pub(") == 0);
+            break;
+        case RawrXD::AST::NodeType::NamespaceDecl:
+            info.type = "module";
+            info.kind = "namespace";
+            info.isPublic = (text.find("pub ") == 0) || (text.find("pub(") == 0);
+            break;
+        case RawrXD::AST::NodeType::TypedefDecl:
+            info.type = "type";
+            info.kind = "typedef";
+            info.isPublic = (text.find("pub ") == 0) || (text.find("pub(") == 0);
+            break;
+        case RawrXD::AST::NodeType::UsingDecl:
+            info.type = "import";
+            info.kind = "using";
+            info.isPublic = (text.find("pub ") == 0) || (text.find("pub(") == 0);
+            break;
+        case RawrXD::AST::NodeType::VariableDecl:
+            if (text.find("const ") == 0 || text.find("pub const ") == 0) {
+                info.type = "const";
+                info.kind = "variable";
+                info.isConst = true;
+            } else if (text.find("static ") == 0 || text.find("pub static ") == 0) {
+                info.type = "static";
+                info.kind = "variable";
+                info.isStatic = true;
+            } else {
+                info.type = "variable";
+                info.kind = "variable";
+            }
+            info.isPublic = (text.find("pub ") == 0) || (text.find("pub(") == 0);
+            break;
+        default:
+            info.type = "unknown";
+            info.kind = "text";
+            break;
+    }
+
+    return info;
+}
+
+} // anonymous namespace
 
 namespace RawrXD {
 namespace IDE {
@@ -37,23 +138,56 @@ ASTContext ASTCompletionBridge::captureASTContext(const std::string& uri,
     ASTContext ast;
     ast.uri = uri;
     ast.language = language;
-    
+
     if (!m_lsp) {
         ast.isValid = false;
         return ast;
     }
-    
-    // Get document symbols from LSP
-    // This would typically call m_lsp->getDocumentSymbols(uri)
-    // For now, we construct from available context
-    
+
     // Build scope context from position
     ast.scope.currentScope = "global";
     ast.scope.scopeStack.push_back("global");
-    
-    // Parse the file to extract scope information
-    // In a full implementation, this would use LSP's documentSymbol
-    
+
+    // ------------------------------------------------------------------------
+    // Rust: use native parser (no LSP dependency)
+    // ------------------------------------------------------------------------
+    if (language == "rust" || language == "rs" ||
+        (uri.size() >= 3 && uri.substr(uri.size() - 3) == ".rs")) {
+        std::string filePath = uriToPath(uri);
+        std::string content = readFileContent(filePath);
+        if (!content.empty()) {
+            rawrxd::ast::rust::RustParser parser;
+            auto result = parser.parse(content, filePath);
+            if (result.success) {
+                for (const auto& node : result.nodes) {
+                    if (!node) continue;
+                    auto info = nodeToSymbolInfo(node);
+                    ast.visibleSymbols.push_back(info);
+
+                    // Determine if cursor is inside this node for scope detection
+                    const auto& range = node->getRange();
+                    if (range.start.line <= static_cast<uint32_t>(line) &&
+                        range.end.line >= static_cast<uint32_t>(line)) {
+                        ast.scope.inFunction = (node->getType() == RawrXD::AST::NodeType::FunctionDecl);
+                        ast.scope.inClass = (node->getType() == RawrXD::AST::NodeType::StructDecl ||
+                                             node->getType() == RawrXD::AST::NodeType::ClassDecl);
+                        if (ast.scope.inClass) {
+                            ast.currentClass = info;
+                        }
+                        if (ast.scope.inFunction) {
+                            ast.currentFunction = info;
+                        }
+                    }
+                }
+            }
+        }
+        ast.isValid = true;
+        return ast;
+    }
+
+    // ------------------------------------------------------------------------
+    // Other languages: fall back to LSP-based context (stubbed for now)
+    // ------------------------------------------------------------------------
     ast.isValid = true;
     return ast;
 }

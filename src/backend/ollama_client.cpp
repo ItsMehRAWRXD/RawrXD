@@ -1,4 +1,4 @@
-#include "backend/ollama_client.h"
+#include "ollama_client.h"
 #include <sstream>
 #include <stdexcept>
 #include <algorithm>

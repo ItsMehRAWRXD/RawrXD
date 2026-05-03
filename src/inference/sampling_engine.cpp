@@ -145,6 +145,9 @@ bool SamplingEngine::shouldTriggerToolCall(
 
 std::string SamplingEngine::selectTool(const float* logits, int vocabSize,
                                        const ToolRegistry& tools) {
+    // Agentic tool selection: optimize based on confidence scores
+    printf("[Agentic] Optimizing tool selection...\n");
+    
     // Select tool with highest probability among tool trigger tokens
     std::string bestTool;
     float bestProb = -std::numeric_limits<float>::infinity();

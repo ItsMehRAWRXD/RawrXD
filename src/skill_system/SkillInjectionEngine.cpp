@@ -139,7 +139,13 @@ bool SkillInjectionEngine::ParseSkillMarkdown(const std::wstring& filePath, Skil
                     else if (key == "version") outSkill.version = value;
                     else if (key == "specialistAgent") outSkill.specialistAgent = value;
                     else if (key == "alwaysInject") outSkill.alwaysInject = (value == "true" || value == "yes");
-                    else if (key == "priority") outSkill.priority = std::stoul(value);
+                    else if (key == "priority") {
+                        try {
+                            outSkill.priority = std::stoul(value);
+                        } catch (...) {
+                            outSkill.priority = 100; // Default priority on parse failure
+                        }
+                    }
                 }
                 continue;
             }
@@ -484,7 +490,14 @@ void SkillInjectionEngine::TrimToLineLimit(std::string& content, size_t maxLines
 void SkillInjectionEngine::StartFileWatcher() {
     if (m_watcherRunning.exchange(true)) return;
     
-    m_watcherThread = std::thread(&SkillInjectionEngine::WatcherLoop, this);
+    try {
+        m_watcherThread = std::thread(&SkillInjectionEngine::WatcherLoop, this);
+    } catch (const std::exception& e) {
+        OutputDebugStringA("[SkillInjection] Failed to start file watcher thread: ");
+        OutputDebugStringA(e.what());
+        OutputDebugStringA("\n");
+        m_watcherRunning.store(false);
+    }
 }
 
 void SkillInjectionEngine::StopFileWatcher() {

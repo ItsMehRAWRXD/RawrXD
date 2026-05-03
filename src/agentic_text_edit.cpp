@@ -9,6 +9,7 @@
 #include "lsp_client.h"
 #include "ghost_text_renderer.h"
 #include "ai_completion_provider.h"
+#include "core/rust_parser.hpp"
 #include <algorithm>
 #include <chrono>
 #include <thread>
@@ -82,9 +83,28 @@ void AgenticTextEdit::setDocumentUri(const std::string& uri) {
         m_documentOpened = false;
     }
     m_documentUri = uri;
+    // Auto-detect language from extension
+    size_t dot = uri.rfind('.');
+    if (dot != std::string::npos) {
+        std::string ext = uri.substr(dot + 1);
+        if (ext == "rs") m_languageId = "rust";
+        else if (ext == "cpp" || ext == "cc" || ext == "cxx") m_languageId = "cpp";
+        else if (ext == "c") m_languageId = "c";
+        else if (ext == "h" || ext == "hpp") m_languageId = "cpp";
+        else if (ext == "py") m_languageId = "python";
+        else if (ext == "js") m_languageId = "javascript";
+        else if (ext == "ts") m_languageId = "typescript";
+        else if (ext == "go") m_languageId = "go";
+        else if (ext == "java") m_languageId = "java";
+        else if (ext == "cs") m_languageId = "csharp";
+    }
     if (m_lspClient && !m_documentUri.empty()) {
         syncDocumentToLSP();
     }
+}
+
+void AgenticTextEdit::setLanguageId(const std::string& languageId) {
+    m_languageId = languageId;
 }
 
 std::string AgenticTextEdit::documentUri() const {
@@ -192,6 +212,37 @@ void AgenticTextEdit::onCompletionTimeout() {
         std::string prefix = m_buffer.substr(0, m_cursorPos);
         std::string suffix = m_buffer.substr(m_cursorPos);
         m_aiProvider->requestCompletion(prefix, suffix, m_languageId);
+    }
+    
+    // Rust: use native parser for scope-aware symbol completions
+    if (m_languageId == "rust" && !m_buffer.empty()) {
+        using namespace rawrxd::ast::rust;
+        RustParser parser;
+        auto result = parser.parse(m_buffer, m_documentUri.empty() ? "untitled.rs" : m_documentUri);
+        if (result.success && !result.nodes.empty()) {
+            std::vector<CompletionItem> rustItems;
+            for (const auto& node : result.nodes) {
+                CompletionItem item;
+                item.label = node->name;
+                switch (node->type) {
+                    case RustASTNode::Function: item.kind = 3; item.detail = "fn"; break;
+                    case RustASTNode::Struct: item.kind = 23; item.detail = "struct"; break;
+                    case RustASTNode::Trait: item.kind = 8; item.detail = "trait"; break;
+                    case RustASTNode::Impl: item.kind = 3; item.detail = "impl"; break;
+                    case RustASTNode::Module: item.kind = 9; item.detail = "mod"; break;
+                    case RustASTNode::Enum: item.kind = 13; item.detail = "enum"; break;
+                    case RustASTNode::TypeAlias: item.kind = 22; item.detail = "type"; break;
+                    case RustASTNode::Const: item.kind = 21; item.detail = "const"; break;
+                    case RustASTNode::Static: item.kind = 14; item.detail = "static"; break;
+                    case RustASTNode::Macro: item.kind = 20; item.detail = "macro"; break;
+                    default: item.kind = 1; item.detail = "symbol"; break;
+                }
+                rustItems.push_back(item);
+            }
+            if (!rustItems.empty()) {
+                onCompletionsReceived(m_documentUri, 0, 0, rustItems);
+            }
+        }
     }
 }
 

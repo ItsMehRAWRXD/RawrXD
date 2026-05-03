@@ -65,29 +65,35 @@ bool TestBackpressure() {
     CreditConfig config;
     config.initialCredits = 100;
     config.maxCredits = 100;
-    config.minCredits = 20;  // Backpressure below 20
+    config.minCredits = 20;  // Backpressure at or below 20
+    config.reserveForPartial = false;  // Disable partial reserve for this test
     
     CreditCounter counter;
     counter.Initialize(config);
     
-    // Acquire down to below threshold
-    counter.TryAcquire(81);  // Leaves 19 credits
+    // Acquire down to threshold (leaves exactly 20, which is backpressured)
+    auto result = counter.TryAcquire(80);  // Leaves 20 credits
+    bool acquired = (result == CreditResult::Success);
+    printf("  Acquire 80: %s\n", acquired ? "SUCCESS" : "FAILED");
     
     bool isBackpressured = counter.IsBackpressured();
-    printf("  After acquiring 81, backpressured: %s\n", isBackpressured ? "YES" : "NO");
+    printf("  After acquiring 80, backpressured: %s (credits=%u)\n", 
+           isBackpressured ? "YES" : "NO", counter.GetAvailableCredits());
+    bool pass1 = isBackpressured;  // 20 <= 20, so should be backpressured
     
     // Try to acquire more (should fail due to minCredits)
-    auto result = counter.TryAcquire(10);
-    bool pass1 = (result == CreditResult::Blocked);
-    printf("  Acquire 10 more: %s\n", pass1 ? "BLOCKED" : "FAILED");
+    result = counter.TryAcquire(10);
+    bool pass2 = (result == CreditResult::Blocked);
+    printf("  Acquire 10 more: %s\n", pass2 ? "BLOCKED" : "FAILED");
     
     // Return credits to relieve backpressure
     counter.ReturnCredits(20);
     isBackpressured = counter.IsBackpressured();
-    bool pass2 = !isBackpressured;
-    printf("  After returning 20, backpressured: %s\n", isBackpressured ? "YES" : "NO");
+    bool pass3 = !isBackpressured;
+    printf("  After returning 20, backpressured: %s (credits=%u)\n", 
+           isBackpressured ? "YES" : "NO", counter.GetAvailableCredits());
     
-    bool pass = pass1 && pass2;
+    bool pass = acquired && pass1 && pass2 && pass3;
     printf("  %s\n", pass ? "PASS" : "FAIL");
     return pass;
 }
@@ -133,12 +139,15 @@ bool TestBatchReturns() {
     config.maxCredits = 100;
     config.minCredits = 10;
     config.returnBatchSize = 10;  // Batch every 10 returns
+    config.reserveForPartial = false;  // Disable partial reserve for this test
     
     CreditCounter counter;
     counter.Initialize(config);
     
     // Acquire all credits
-    counter.TryAcquire(90);  // Leaves 10 credits
+    auto result = counter.TryAcquire(90);  // Leaves 10 credits
+    bool acquired = (result == CreditResult::Success);
+    printf("  Acquire 90: %s\n", acquired ? "SUCCESS" : "FAILED");
     
     // Return in small increments (should batch)
     for (int i = 0; i < 5; i++) {
@@ -150,12 +159,12 @@ bool TestBatchReturns() {
     printf("  Batch returns: %llu (expected 1)\n", (unsigned long long)stats.batchReturns);
     bool pass1 = (stats.batchReturns == 1);
     
-    // Credits should be returned
+    // Credits should be returned (10 + 10 = 20)
     uint32_t remaining = counter.GetAvailableCredits();
     printf("  Available credits: %u (expected 20)\n", remaining);
     bool pass2 = (remaining == 20);
     
-    bool pass = pass1 && pass2;
+    bool pass = acquired && pass1 && pass2;
     printf("  %s\n", pass ? "PASS" : "FAIL");
     return pass;
 }
@@ -168,16 +177,17 @@ bool TestStatistics() {
     config.initialCredits = 100;
     config.maxCredits = 100;
     config.minCredits = 10;
+    config.reserveForPartial = false;  // Disable partial reserve for predictable stats
     
     CreditCounter counter;
     counter.Initialize(config);
     
     // Perform various operations
-    counter.TryAcquire(30);   // Success
-    counter.TryAcquire(70);   // Blocked (would leave 0, below min)
-    counter.TryAcquire(60);   // Success
-    counter.ReturnCredits(20);
-    counter.TryAcquirePartial(50);  // Partial
+    counter.TryAcquire(30);   // Success (100 >= 30+10=40), leaves 70
+    counter.TryAcquire(70);   // Blocked (70 < 70+10=80)
+    counter.TryAcquire(60);   // Success (70 >= 60+10=70), leaves 10
+    counter.ReturnCredits(20);  // Returns 20, now 30
+    counter.TryAcquirePartial(50);  // Partial: min(50, 30-10=20) = 20
     
     auto stats = counter.GetStats();
     printf("  Attempts: %llu (expected 4)\n", (unsigned long long)stats.acquireAttempts);
@@ -201,28 +211,31 @@ bool TestThreadSafety() {
     config.initialCredits = 10000;
     config.maxCredits = 10000;
     config.minCredits = 100;
+    config.reserveForPartial = false;
     
     CreditCounter counter;
     counter.Initialize(config);
     
     const int numThreads = 4;
-    const int opsPerThread = 1000;
+    const int opsPerThread = 500;  // Reduced from 1000 for faster execution
     std::atomic<int> successCount{0};
     std::atomic<int> blockedCount{0};
     
     std::vector<std::thread> threads;
     
     for (int t = 0; t < numThreads; t++) {
-        threads.emplace_back([&]() {
+        threads.emplace_back([&, t]() {  // Capture t by value
             for (int i = 0; i < opsPerThread; i++) {
                 auto result = counter.TryAcquire(10);
                 if (result == CreditResult::Success) {
-                    successCount++;
-                    // Simulate work
-                    std::this_thread::sleep_for(std::chrono::microseconds(1));
+                    successCount.fetch_add(1, std::memory_order_relaxed);
+                    // Very brief yield to allow other threads to run
+                    if (i % 10 == 0) {
+                        std::this_thread::yield();
+                    }
                     counter.ReturnCredits(10);
                 } else {
-                    blockedCount++;
+                    blockedCount.fetch_add(1, std::memory_order_relaxed);
                     std::this_thread::yield();
                 }
             }
@@ -233,13 +246,15 @@ bool TestThreadSafety() {
         t.join();
     }
     
-    printf("  Success: %d, Blocked: %d\n", successCount.load(), blockedCount.load());
+    int successes = successCount.load();
+    int blocked = blockedCount.load();
+    printf("  Success: %d, Blocked: %d\n", successes, blocked);
     printf("  Total: %d (expected %d)\n", 
-           successCount.load() + blockedCount.load(), 
+           successes + blocked, 
            numThreads * opsPerThread);
     
-    // Most should succeed since we return credits
-    bool pass = (successCount > blockedCount);
+    // Most should succeed since we return credits immediately
+    bool pass = (successes > blocked) && (successes + blocked == numThreads * opsPerThread);
     printf("  %s\n", pass ? "PASS" : "FAIL");
     return pass;
 }

@@ -25,6 +25,7 @@
 #include <unordered_set>
 #include <memory>
 #include <mutex>
+#include <shared_mutex>
 #include <atomic>
 #include <functional>
 
@@ -317,7 +318,7 @@ private:
     // ---- Versioning ----
     std::atomic<GraphVersion> m_currentVersion{1};
     std::unordered_map<GraphVersion, GraphDiff> m_versionDiffs;
-    mutable std::mutex m_versionMutex;
+    mutable std::shared_mutex m_versionMutex;
     
     // ---- Completion Cache ----
     std::unordered_map<ContextFingerprint, CompletionCacheEntry, 

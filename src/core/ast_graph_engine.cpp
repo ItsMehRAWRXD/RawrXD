@@ -260,7 +260,7 @@ std::vector<NodeID> ASTGraphEngine::getPathToRoot(NodeID nodeID) const {
 }
 
 void ASTGraphEngine::applyDiff(const GraphDiff& diff) {
-    std::unique_lock<std::mutex> versionLock(m_versionMutex);
+    std::unique_lock<std::shared_mutex> versionLock(m_versionMutex);
     m_versionDiffs[diff.toVersion] = diff;
     m_currentVersion.store(diff.toVersion);
     versionLock.unlock();
@@ -276,7 +276,7 @@ void ASTGraphEngine::applyDiff(const GraphDiff& diff) {
 }
 
 GraphDiff ASTGraphEngine::getDiff(GraphVersion from, GraphVersion to) const {
-    std::shared_lock<std::mutex> lock(m_versionMutex);
+    std::shared_lock<std::shared_mutex> lock(m_versionMutex);
     
     GraphDiff diff;
     diff.fromVersion = from;
@@ -437,7 +437,7 @@ GraphDiff ASTGraphEngine::computeDiff(const FileInfo& oldFile, const FileInfo& n
 }
 
 void ASTGraphEngine::pruneOldVersions() {
-    std::unique_lock<std::mutex> lock(m_versionMutex);
+    std::unique_lock<std::shared_mutex> lock(m_versionMutex);
     
     GraphVersion current = m_currentVersion.load();
     GraphVersion keepThreshold = current > 100 ? current - 100 : 0;
@@ -449,6 +449,192 @@ void ASTGraphEngine::pruneOldVersions() {
             ++it;
         }
     }
+}
+
+// ============================================================================
+// ASTNode Implementation
+// ============================================================================
+
+ASTNode::ASTNode(NodeType type, SourceRange range, std::string text)
+    : type_(type), range_(range), text_(std::move(text)),
+      hash_(0), version_(0) {}
+
+ASTNode::Ptr ASTNode::withChildren(std::vector<Ptr> new_children) const {
+    auto node = std::make_shared<ASTNode>(type_, range_, text_);
+    node->children_ = std::move(new_children);
+    node->parent_ = parent_;
+    node->hash_ = hash_;
+    node->version_ = version_;
+    return node;
+}
+
+ASTNode::Ptr ASTNode::withParent(Ptr new_parent) const {
+    auto node = std::make_shared<ASTNode>(type_, range_, text_);
+    node->children_ = children_;
+    node->parent_ = new_parent;
+    node->hash_ = hash_;
+    node->version_ = version_;
+    return node;
+}
+
+ASTNode::Ptr ASTNode::withHash(NodeHash new_hash) const {
+    auto node = std::make_shared<ASTNode>(type_, range_, text_);
+    node->children_ = children_;
+    node->parent_ = parent_;
+    node->hash_ = new_hash;
+    node->version_ = version_;
+    return node;
+}
+
+ASTNode::Ptr ASTNode::getChild(size_t index) const {
+    if (index < children_.size()) return children_[index];
+    return nullptr;
+}
+
+bool ASTNode::isDeclaration() const {
+    return type_ == NodeType::FunctionDecl ||
+           type_ == NodeType::StructDecl ||
+           type_ == NodeType::ClassDecl ||
+           type_ == NodeType::EnumDecl ||
+           type_ == NodeType::VariableDecl ||
+           type_ == NodeType::NamespaceDecl ||
+           type_ == NodeType::TypedefDecl;
+}
+
+bool ASTNode::isStatement() const {
+    return type_ == NodeType::CompoundStmt ||
+           type_ == NodeType::IfStmt ||
+           type_ == NodeType::ForStmt ||
+           type_ == NodeType::WhileStmt ||
+           type_ == NodeType::ReturnStmt ||
+           type_ == NodeType::BreakStmt ||
+           type_ == NodeType::ContinueStmt ||
+           type_ == NodeType::ExprStmt;
+}
+
+bool ASTNode::isExpression() const {
+    return type_ == NodeType::CallExpr ||
+           type_ == NodeType::MemberExpr ||
+           type_ == NodeType::BinaryExpr ||
+           type_ == NodeType::UnaryExpr ||
+           type_ == NodeType::LiteralExpr ||
+           type_ == NodeType::IdentifierExpr ||
+           type_ == NodeType::LambdaExpr;
+}
+
+bool ASTNode::isType() const {
+    return type_ == NodeType::BuiltinType ||
+           type_ == NodeType::PointerType ||
+           type_ == NodeType::ReferenceType ||
+           type_ == NodeType::ArrayType ||
+           type_ == NodeType::FunctionType;
+}
+
+std::string ASTNode::getName() const {
+    std::shared_lock<std::shared_mutex> lock(cache_mutex_);
+    if (cached_name_) return *cached_name_;
+    lock.unlock();
+    
+    // Extract name from text (simplified)
+    std::string name = text_;
+    size_t pos = name.find(' ');
+    if (pos != std::string::npos) {
+        name = name.substr(pos + 1);
+    }
+    pos = name.find('(');
+    if (pos != std::string::npos) {
+        name = name.substr(0, pos);
+    }
+    pos = name.find(':');
+    if (pos != std::string::npos) {
+        name = name.substr(0, pos);
+    }
+    
+    std::unique_lock<std::shared_mutex> writeLock(cache_mutex_);
+    cached_name_ = name;
+    return name;
+}
+
+std::string ASTNode::getQualifiedName() const {
+    std::shared_lock<std::shared_mutex> lock(cache_mutex_);
+    if (cached_qualified_name_) return *cached_qualified_name_;
+    lock.unlock();
+    
+    std::string qname = getName();
+    if (auto p = getParent()) {
+        std::string parentName = p->getQualifiedName();
+        if (!parentName.empty()) {
+            qname = parentName + "::" + qname;
+        }
+    }
+    
+    std::unique_lock<std::shared_mutex> writeLock(cache_mutex_);
+    cached_qualified_name_ = qname;
+    return qname;
+}
+
+ASTNode::Ptr ASTNode::findNodeAt(const SourceLocation& loc) const {
+    if (!range_.contains(loc)) return nullptr;
+    
+    // Binary search on children (assumes sorted by range)
+    size_t left = 0, right = children_.size();
+    while (left < right) {
+        size_t mid = left + (right - left) / 2;
+        auto child = children_[mid];
+        if (child->getRange().end <= loc) {
+            left = mid + 1;
+        } else if (child->getRange().start > loc) {
+            right = mid;
+        } else {
+            // Found containing child, recurse
+            auto found = child->findNodeAt(loc);
+            return found ? found : child;
+        }
+    }
+    
+    return shared_from_this();
+}
+
+void ASTNode::findNodesOfType(NodeType type, std::vector<Ptr>& results) const {
+    if (type_ == type) {
+        results.push_back(shared_from_this());
+    }
+    for (const auto& child : children_) {
+        child->findNodesOfType(type, results);
+    }
+}
+
+size_t ASTNode::graphDistanceTo(Ptr other) const {
+    if (!other) return SIZE_MAX;
+    if (this == other.get()) return 0;
+    
+    // BFS from this node
+    std::unordered_set<const ASTNode*> visited;
+    std::vector<std::pair<const ASTNode*, size_t>> queue;
+    queue.push_back({this, 0});
+    visited.insert(this);
+    
+    for (size_t i = 0; i < queue.size(); ++i) {
+        auto [node, dist] = queue[i];
+        
+        // Check parent
+        if (auto parent = node->getParent()) {
+            if (parent.get() == other.get()) return dist + 1;
+            if (visited.insert(parent.get()).second) {
+                queue.push_back({parent.get(), dist + 1});
+            }
+        }
+        
+        // Check children
+        for (const auto& child : node->getChildren()) {
+            if (child.get() == other.get()) return dist + 1;
+            if (visited.insert(child.get()).second) {
+                queue.push_back({child.get(), dist + 1});
+            }
+        }
+    }
+    
+    return SIZE_MAX;
 }
 
 // ============================================================================

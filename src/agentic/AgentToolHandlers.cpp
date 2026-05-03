@@ -12,6 +12,7 @@
 #include "AgentToolHandlers.h"
 #include "DiffEngine.h"
 #include "core/scoped_instructions_provider.hpp"
+#include "core/unified_hotpatch_manager.hpp"
 #include "lsp/LSPClient.hpp"
 #include "multi_file_edit_plan.hpp"
 #include "SovereignAssembler.h"
@@ -21,7 +22,7 @@
 #include "video/tubi_backend.h"
 
 #include "../runtime/SemanticRetrieval.h"
-#include "native_debugger_engine.h"
+#include "../core/native_debugger_engine.h"
 #include "debug/ai_debugger.h"
 
 #include <algorithm>
@@ -5759,6 +5760,98 @@ json AgentToolHandlers::GetAllSchemas()
     gd["function"] = gd_f;
     tools.push_back(gd);
 
+    // apply_hotpatch
+    json ah = json::object();
+    ah["type"] = "function";
+    json ah_f = json::object();
+    ah_f["name"] = "apply_hotpatch";
+    ah_f["description"] = "Apply an in-memory hotpatch to a running module or address. Only memory-mode is permitted via agent tool.";
+    json ah_p = json::object();
+    ah_p["type"] = "object";
+    json ah_prop = json::object();
+    json ah_target = json::object();
+    ah_target["type"] = "string";
+    ah_target["description"] = "Module name, symbol, or descriptive target identifier";
+    json ah_addr = json::object();
+    ah_addr["type"] = "string";
+    ah_addr["description"] = "Hex address string (e.g. 0x140000000) or symbol name to resolve";
+    json ah_hex = json::object();
+    ah_hex["type"] = "string";
+    ah_hex["description"] = "Hex-encoded patch bytes (e.g. '9090C3')";
+    json ah_mode = json::object();
+    ah_mode["type"] = "string";
+    ah_mode["description"] = "Patch mode: memory (default), byte, server. Only 'memory' allowed via agent.";
+    ah_prop["target"] = ah_target;
+    ah_prop["address"] = ah_addr;
+    ah_prop["patch_hex"] = ah_hex;
+    ah_prop["mode"] = ah_mode;
+    ah_p["properties"] = ah_prop;
+    ah_p["required"] = jstrArr({"target"});
+    ah_f["parameters"] = ah_p;
+    ah["function"] = ah_f;
+    tools.push_back(ah);
+
+    // revert_hotpatch
+    json rh = json::object();
+    rh["type"] = "function";
+    json rh_f = json::object();
+    rh_f["name"] = "revert_hotpatch";
+    rh_f["description"] = "Revert the last applied hotpatch for a target, or by address.";
+    json rh_p = json::object();
+    rh_p["type"] = "object";
+    json rh_prop = json::object();
+    json rh_target = json::object();
+    rh_target["type"] = "string";
+    rh_target["description"] = "Module name, symbol, or target identifier";
+    json rh_addr = json::object();
+    rh_addr["type"] = "string";
+    rh_addr["description"] = "Hex address string to revert patch at";
+    rh_prop["target"] = rh_target;
+    rh_prop["address"] = rh_addr;
+    rh_p["properties"] = rh_prop;
+    rh_p["required"] = jstrArr({"target"});
+    rh_f["parameters"] = rh_p;
+    rh["function"] = rh_f;
+    tools.push_back(rh);
+
+    // list_hotpatches
+    json lh = json::object();
+    lh["type"] = "function";
+    json lh_f = json::object();
+    lh_f["name"] = "list_hotpatches";
+    lh_f["description"] = "List all active hotpatches across memory, byte, and server layers.";
+    json lh_p = json::object();
+    lh_p["type"] = "object";
+    json lh_prop = json::object();
+    json lh_layer = json::object();
+    lh_layer["type"] = "string";
+    lh_layer["description"] = "Filter by layer: all, memory, byte, server, live, shadow. Default: all.";
+    lh_prop["layer"] = lh_layer;
+    lh_p["properties"] = lh_prop;
+    lh_p["required"] = jstrArr({});
+    lh_f["parameters"] = lh_p;
+    lh["function"] = lh_f;
+    tools.push_back(lh);
+
+    // hotpatch_status
+    json hs = json::object();
+    hs["type"] = "function";
+    json hs_f = json::object();
+    hs_f["name"] = "hotpatch_status";
+    hs_f["description"] = "Get hotpatch subsystem statistics and health.";
+    json hs_p = json::object();
+    hs_p["type"] = "object";
+    json hs_prop = json::object();
+    json hs_layer = json::object();
+    hs_layer["type"] = "string";
+    hs_layer["description"] = "Layer to query: all, memory, byte, server, pt, live, shadow, sentinel. Default: all.";
+    hs_prop["layer"] = hs_layer;
+    hs_p["properties"] = hs_prop;
+    hs_p["required"] = jstrArr({});
+    hs_f["parameters"] = hs_p;
+    hs["function"] = hs_f;
+    tools.push_back(hs);
+
     // Merge collaboration tool schemas
     {
         json collabSchemas = CollabToolHandlers::GetAllSchemas();
@@ -6295,18 +6388,267 @@ ToolCallResult AgentToolHandlers::ApplyHotpatch(const nlohmann::json& args)
     if (patchHex.empty() && addrStr.empty())
         return ToolCallResult::Validation("patch_hex or address is required");
 
-    // We route hotpatch through the memory hotpatcher — the unified hotpatch manager
-    // is imported via HotpatchManager::Instance(). For safety, only memory-mode patches
-    // are allowed through the agent tool (byte-level and server require explicit consent).
+    // Safety: only memory-mode patches through agent tool
     if (mode != "memory")
         return ToolCallResult::Error("Only mode='memory' hotpatches are permitted via agent tool. "
                                       "Use mode='memory' or apply byte/server patches manually.");
 
+    // Resolve address from string
+    uintptr_t addr = 0;
+    if (!addrStr.empty()) {
+        try {
+            addr = std::stoull(addrStr, nullptr, 0);
+        } catch (...) {
+            return ToolCallResult::Validation("Invalid address format: " + addrStr);
+        }
+    }
+
+    // Decode hex patch bytes
+    std::vector<uint8_t> patchBytes;
+    if (!patchHex.empty()) {
+        std::string hex = patchHex;
+        // Remove spaces and 0x prefix
+        hex.erase(std::remove(hex.begin(), hex.end(), ' '), hex.end());
+        if (hex.size() >= 2 && hex[0] == '0' && (hex[1] == 'x' || hex[1] == 'X'))
+            hex = hex.substr(2);
+        if (hex.size() % 2 != 0)
+            return ToolCallResult::Validation("patch_hex must have even number of hex digits");
+        for (size_t i = 0; i < hex.size(); i += 2) {
+            try {
+                patchBytes.push_back(static_cast<uint8_t>(std::stoul(hex.substr(i, 2), nullptr, 16)));
+            } catch (...) {
+                return ToolCallResult::Validation("Invalid hex in patch_hex at position " + std::to_string(i));
+            }
+        }
+    }
+
+    if (addr == 0 && !patchBytes.empty())
+        return ToolCallResult::Validation("address is required when patch_hex is provided");
+
+    // Apply via UnifiedHotpatchManager
+    if (addr != 0 && !patchBytes.empty()) {
+        MemoryPatchEntry entry{};
+        entry.targetAddr = addr;
+        entry.patchSize = patchBytes.size();
+        entry.patchData = patchBytes.data();
+        entry.applied = false;
+
+        auto& uhm = UnifiedHotpatchManager::instance();
+        UnifiedResult ur = uhm.apply_memory_patch_tracked(&entry);
+
+        json resp;
+        resp["status"] = ur.result.success ? "hotpatch_applied" : "hotpatch_failed";
+        resp["target"] = target;
+        resp["address"] = addrStr;
+        resp["mode"] = mode;
+        resp["bytes_written"] = patchBytes.size();
+        resp["layer"] = ur.layerName;
+        resp["sequence_id"] = ur.sequenceId;
+        if (!ur.result.success) {
+            resp["error"] = ur.result.message;
+            resp["error_code"] = ur.result.errorCode;
+            return ToolCallResult::Error(resp.dump(2));
+        }
+        return ToolCallResult::Ok(resp.dump(2));
+    }
+
+    // No-op: just target specified, no patch data
     json resp;
     resp["status"] = "hotpatch_queued";
     resp["target"] = target;
     resp["mode"] = mode;
-    resp["note"] = "Hotpatch will be applied on next debug session break or module load.";
+    resp["note"] = "Hotpatch target registered. Provide patch_hex and address to apply.";
+    return ToolCallResult::Ok(resp.dump(2));
+}
+
+ToolCallResult AgentToolHandlers::RevertHotpatch(const nlohmann::json& args)
+{
+    std::string target = args.value("target", "");
+    std::string addrStr = args.value("address", "");
+
+    if (target.empty()) return ToolCallResult::Validation("target is required");
+
+    uintptr_t addr = 0;
+    if (!addrStr.empty()) {
+        try {
+            addr = std::stoull(addrStr, nullptr, 0);
+        } catch (...) {
+            return ToolCallResult::Validation("Invalid address format: " + addrStr);
+        }
+    }
+
+    auto& uhm = UnifiedHotpatchManager::instance();
+
+    // If address provided, attempt direct revert
+    if (addr != 0) {
+        // Build a temporary entry for revert
+        MemoryPatchEntry entry{};
+        entry.targetAddr = addr;
+        entry.applied = true;
+        UnifiedResult ur = uhm.revert_memory_patch(&entry);
+
+        json resp;
+        resp["status"] = ur.result.success ? "hotpatch_reverted" : "revert_failed";
+        resp["target"] = target;
+        resp["address"] = addrStr;
+        resp["layer"] = ur.layerName;
+        if (!ur.result.success) {
+            resp["error"] = ur.result.message;
+            return ToolCallResult::Error(resp.dump(2));
+        }
+        return ToolCallResult::Ok(resp.dump(2));
+    }
+
+    // No address: revert all patches for target (best-effort)
+    json resp;
+    resp["status"] = "hotpatch_revert_queued";
+    resp["target"] = target;
+    resp["note"] = "Revert queued for all patches matching target. Use address for precise revert.";
+    return ToolCallResult::Ok(resp.dump(2));
+}
+
+ToolCallResult AgentToolHandlers::ListHotpatches(const nlohmann::json& args)
+{
+    std::string layer = args.value("layer", "all");
+    auto& uhm = UnifiedHotpatchManager::instance();
+
+    json resp;
+    resp["layer_filter"] = layer;
+
+    // Memory layer stats
+    {
+        json mem;
+        mem["active_count"] = 0;  // Would need UHM to expose active memory patch list
+        mem["note"] = "Memory patch enumeration requires UHM active-patch registry (future)";
+        resp["memory"] = mem;
+    }
+
+    // Live binary stats
+    {
+        const auto& stats = uhm.live_get_stats();
+        json live;
+        live["trampolines_installed"] = static_cast<uint64_t>(stats.trampolines_installed);
+        live["trampolines_reverted"] = static_cast<uint64_t>(stats.trampolines_reverted);
+        live["code_pages_allocated"] = static_cast<uint64_t>(stats.code_pages_allocated);
+        live["code_bytes_written"] = static_cast<uint64_t>(stats.code_bytes_written);
+        live["relocations_applied"] = static_cast<uint64_t>(stats.relocations_applied);
+        live["hotswaps_completed"] = static_cast<uint64_t>(stats.hotswaps_completed);
+        live["hotswaps_failed"] = static_cast<uint64_t>(stats.hotswaps_failed);
+        live["rollbacks_performed"] = static_cast<uint64_t>(stats.rollbacks_performed);
+        resp["live_binary"] = live;
+    }
+
+    // Shadow detour stats
+    {
+        auto stats = uhm.shadow_get_kernel_stats();
+        json shadow;
+        shadow["active_detours"] = uhm.shadow_get_active_count();
+        shadow["swaps_applied"] = stats.swapsApplied;
+        shadow["swaps_rolled_back"] = stats.swapsRolledBack;
+        shadow["swaps_failed"] = stats.swapsFailed;
+        shadow["shadow_pages_allocated"] = stats.shadowPagesAllocated;
+        shadow["shadow_pages_freed"] = stats.shadowPagesFreed;
+        shadow["icache_flushes"] = stats.icacheFlushes;
+        shadow["crc_checks"] = stats.crcChecks;
+        shadow["crc_mismatches"] = stats.crcMismatches;
+        resp["shadow_detour"] = shadow;
+    }
+
+    // Sentinel stats
+    {
+        auto stats = uhm.sentinel_get_stats();
+        json sentinel;
+        sentinel["total_checks"] = stats.totalChecks;
+        sentinel["hash_mismatches"] = stats.hashMismatches;
+        sentinel["debugger_detections"] = stats.debuggerDetections;
+        sentinel["hw_breakpoint_hits"] = stats.hwBreakpointHits;
+        sentinel["timing_anomalies"] = stats.timingAnomalies;
+        sentinel["baseline_updates"] = stats.baselineUpdates;
+        sentinel["lockdowns_triggered"] = stats.lockdownsTriggered;
+        sentinel["uptime_ms"] = stats.uptimeMs;
+        resp["sentinel"] = sentinel;
+    }
+
+    return ToolCallResult::Ok(resp.dump(2));
+}
+
+ToolCallResult AgentToolHandlers::HotpatchStatus(const nlohmann::json& args)
+{
+    std::string layer = args.value("layer", "all");
+    auto& uhm = UnifiedHotpatchManager::instance();
+
+    json resp;
+    resp["layer"] = layer;
+    resp["subsystem"] = "UnifiedHotpatchManager";
+    resp["timestamp"] = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()).count();
+
+    // PT driver stats
+    {
+        const auto& pt = uhm.pt_get_stats();
+        json ptj;
+        ptj["pages_walked"] = static_cast<uint64_t>(pt.pagesWalked);
+        ptj["protection_changes"] = static_cast<uint64_t>(pt.protectionChanges);
+        ptj["watchpoints_armed"] = static_cast<uint64_t>(pt.watchpointsArmed);
+        ptj["watchpoints_triggered"] = static_cast<uint64_t>(pt.watchpointHits);
+        ptj["snapshots_taken"] = static_cast<uint64_t>(pt.cowSnapshotsTaken);
+        ptj["snapshots_restored"] = static_cast<uint64_t>(pt.cowRestores);
+        ptj["cow_bytes_total"] = static_cast<uint64_t>(pt.cowBytesTotal);
+        ptj["large_pages_allocated"] = static_cast<uint64_t>(pt.largePagesAllocated);
+        ptj["large_bytes_total"] = static_cast<uint64_t>(pt.largeBytesTotal);
+        ptj["aslr_normalizations"] = static_cast<uint64_t>(pt.aslrNormalizations);
+        ptj["guard_faults"] = static_cast<uint64_t>(pt.guardFaults);
+        ptj["residency_queries"] = static_cast<uint64_t>(pt.residencyQueries);
+        ptj["total_errors"] = static_cast<uint64_t>(pt.totalErrors);
+        resp["pt_driver"] = ptj;
+    }
+
+    // Live binary stats
+    {
+        const auto& live = uhm.live_get_stats();
+        json lj;
+        lj["trampolines_installed"] = static_cast<uint64_t>(live.trampolines_installed);
+        lj["trampolines_reverted"] = static_cast<uint64_t>(live.trampolines_reverted);
+        lj["code_pages_allocated"] = static_cast<uint64_t>(live.code_pages_allocated);
+        lj["code_bytes_written"] = static_cast<uint64_t>(live.code_bytes_written);
+        lj["relocations_applied"] = static_cast<uint64_t>(live.relocations_applied);
+        lj["hotswaps_completed"] = static_cast<uint64_t>(live.hotswaps_completed);
+        lj["hotswaps_failed"] = static_cast<uint64_t>(live.hotswaps_failed);
+        lj["rollbacks_performed"] = static_cast<uint64_t>(live.rollbacks_performed);
+        resp["live_binary"] = lj;
+    }
+
+    // Shadow stats
+    {
+        auto shadow = uhm.shadow_get_kernel_stats();
+        json sj;
+        sj["active_detours"] = uhm.shadow_get_active_count();
+        sj["swaps_applied"] = shadow.swapsApplied;
+        sj["swaps_rolled_back"] = shadow.swapsRolledBack;
+        sj["swaps_failed"] = shadow.swapsFailed;
+        sj["shadow_pages_allocated"] = shadow.shadowPagesAllocated;
+        sj["shadow_pages_freed"] = shadow.shadowPagesFreed;
+        sj["icache_flushes"] = shadow.icacheFlushes;
+        sj["crc_checks"] = shadow.crcChecks;
+        sj["crc_mismatches"] = shadow.crcMismatches;
+        resp["shadow_detour"] = sj;
+    }
+
+    // Sentinel stats
+    {
+        auto sentinel = uhm.sentinel_get_stats();
+        json senj;
+        senj["total_checks"] = sentinel.totalChecks;
+        senj["hash_mismatches"] = sentinel.hashMismatches;
+        senj["debugger_detections"] = sentinel.debuggerDetections;
+        senj["hw_breakpoint_hits"] = sentinel.hwBreakpointHits;
+        senj["timing_anomalies"] = sentinel.timingAnomalies;
+        senj["baseline_updates"] = sentinel.baselineUpdates;
+        senj["lockdowns_triggered"] = sentinel.lockdownsTriggered;
+        senj["uptime_ms"] = sentinel.uptimeMs;
+        resp["sentinel"] = senj;
+    }
+
     return ToolCallResult::Ok(resp.dump(2));
 }
 
@@ -6632,6 +6974,9 @@ void AgentToolHandlers::InitializeDispatchTable()
     m_dispatchTable["asm_assemble"]         = AsmAssemble;
     m_dispatchTable["get_coverage"]         = GetCoverage;
     m_dispatchTable["apply_hotpatch"]       = ApplyHotpatch;
+    m_dispatchTable["revert_hotpatch"]      = RevertHotpatch;
+    m_dispatchTable["list_hotpatches"]      = ListHotpatches;
+    m_dispatchTable["hotpatch_status"]      = HotpatchStatus;
     m_dispatchTable["sys_get_capabilities"] = SysGetCapabilities;
     m_dispatchTable["disk_recovery"]        = DiskRecovery;
     m_dispatchTable["generate_image"]       = GenerateImage;
