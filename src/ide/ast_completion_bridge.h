@@ -25,10 +25,15 @@ namespace IDE {
 
 // Forward declarations
 class LanguageServerIntegration;
+
+} // namespace IDE
+
 namespace Completion {
     struct CompletionContext;
     struct CompletionItem;
 }
+
+namespace IDE {
 
 // ============================================================================
 // AST Context Types

@@ -258,6 +258,20 @@ if(NOT TARGET agentic_repair_stress_test AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}
     message(STATUS "  ✓ Added agentic_repair_stress_test")
 endif()
 
+# Adaptive Credit Governor Test — Weight-Aware multi-modal tuning
+if(NOT TARGET test_adaptive_credit_governor AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_adaptive_credit_governor.cpp")
+    add_executable(test_adaptive_credit_governor
+        test_adaptive_credit_governor.cpp
+        ${CMAKE_SOURCE_DIR}/src/flow_control/adaptive_credit_governor.cpp
+        ${CMAKE_SOURCE_DIR}/src/flow_control/credit_governor.cpp
+        ${CMAKE_SOURCE_DIR}/src/flow_control/credit_based_flow_control.cpp
+    )
+    target_include_directories(test_adaptive_credit_governor PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
+    set_target_properties(test_adaptive_credit_governor PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests" CXX_STANDARD 20)
+    add_test(NAME test_adaptive_credit_governor COMMAND test_adaptive_credit_governor)
+    message(STATUS "  ✓ Added test_adaptive_credit_governor")
+endif()
+
 # Model Registry Test
 if(NOT TARGET model_registry_test AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/model_registry_test.cpp")
     add_executable(model_registry_test model_registry_test.cpp)

@@ -3487,6 +3487,8 @@ if(WIN32)
         src/flow_control/credit_governor.cpp
         src/flow_control/credit_based_flow_control.cpp
         src/flow_control/phase_latency_tracker.cpp
+        src/backend/agentic_tools.cpp
+        src/ide/ast_completion_bridge.cpp
 
         src/win32app/Win32IDE_AgenticPlanningPanel.cpp
         src/win32app/Win32IDE_FailureDetector.cpp
