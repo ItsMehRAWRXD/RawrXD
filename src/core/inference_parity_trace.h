@@ -25,6 +25,7 @@
 // Strings are escaped per RFC 8259 (no external JSON dep needed).
 #pragma once
 
+#include <atomic>
 #include <chrono>
 #include <cstdio>
 #include <mutex>
@@ -37,6 +38,29 @@ struct Recorder {
     std::string source;
     std::string model;
     std::string prompt;
+    // Immutable provenance for reproducibility and cross-host parity triage.
+    std::string runId;
+    std::string buildCommit = "unknown";
+    std::string buildConfig = "unknown";
+    // Backend identity at the moment of inference. Populated by setBackend()
+    // before/after the inference call. Distinguishes traces produced by:
+    //   "cpu-fallback"  — RawrXD::ParityFallback::run (deterministic oracle)
+    //   "plugin"        — InferencePlugin::generate via DLL bridge
+    //   "vulkan" / "cuda" / "hip" — real GPU backend identified at runtime
+    //   "unknown"       — capture path did not identify backend
+    std::string backend = "unknown";
+    // Optional human-readable device description (e.g. "AMD Radeon RX 7900 XTX").
+    std::string device;
+    // Optional backend/runtime fingerprint details.
+    std::string backendVersion;
+    std::string driverVersion;
+    std::string deviceId;
+    // Inference config snapshot used for this generation.
+    int maxTokens = -1;
+    float temperature = -1.0f;
+    int topK = -1;
+    float topP = -1.0f;
+    int seed = -1;
     std::vector<std::string> tokens;
     // Per-token monotonically-increasing sequence numbers stamped at the
     // recorder boundary. Any async reordering on the UI callback path
@@ -47,6 +71,8 @@ struct Recorder {
     // the recorder receives the token. Parallel to tokens[]. Computed from
     // steady_clock so the deltas are immune to wall-clock skew.
     std::vector<long long> tokenUs;
+    // Per-token inter-arrival delta in microseconds. Parallel to tokens[].
+    std::vector<long long> tokenDtUs;
     long long nextSeq = 0;
     long long startedMs = 0;
     long long firstTokenMs = -1;
@@ -54,6 +80,47 @@ struct Recorder {
     std::chrono::steady_clock::time_point startedSteady{};
     std::string error;
     std::mutex mu;
+
+    static long long nextRunSeq() {
+        static std::atomic<long long> g_seq{0};
+        return g_seq.fetch_add(1, std::memory_order_relaxed);
+    }
+
+    static std::string makeRunId(long long startedMs) {
+        return std::to_string(startedMs) + "-" + std::to_string(nextRunSeq());
+    }
+
+    void setBuildInfo(std::string commit, std::string config) {
+        std::lock_guard<std::mutex> lk(mu);
+        buildCommit = std::move(commit);
+        buildConfig = std::move(config);
+    }
+
+    void setBackend(std::string backendName, std::string deviceName = {}) {
+        setBackendDetails(std::move(backendName), std::move(deviceName), {}, {}, {});
+    }
+
+    void setBackendDetails(std::string backendName,
+                           std::string deviceName = {},
+                           std::string backendVer = {},
+                           std::string driverVer = {},
+                           std::string devId = {}) {
+        std::lock_guard<std::mutex> lk(mu);
+        backend = std::move(backendName);
+        device = std::move(deviceName);
+        backendVersion = std::move(backendVer);
+        driverVersion = std::move(driverVer);
+        deviceId = std::move(devId);
+    }
+
+    void setInferenceConfig(int maxTok, float temp, int topk = -1, float topp = -1.0f, int seedVal = -1) {
+        std::lock_guard<std::mutex> lk(mu);
+        maxTokens = maxTok;
+        temperature = temp;
+        topK = topk;
+        topP = topp;
+        seed = seedVal;
+    }
 
     static long long systemNowMs() {
         using namespace std::chrono;
@@ -76,12 +143,14 @@ struct Recorder {
         model = std::move(mdl);
         prompt = std::move(p);
         startedMs = systemNowMs();
+        runId = makeRunId(startedMs);
         startedSteady = std::chrono::steady_clock::now();
         firstTokenMs = -1;
         completedMs = -1;
         tokens.clear();
         seq.clear();
         tokenUs.clear();
+        tokenDtUs.clear();
         nextSeq = 0;
         error.clear();
     }
@@ -93,7 +162,9 @@ struct Recorder {
             if (firstTokenMs < 0) firstTokenMs = us / 1000;
             tokens.push_back(tok);
             seq.push_back(nextSeq++);
+            const long long prevUs = tokenUs.empty() ? 0 : tokenUs.back();
             tokenUs.push_back(us);
+            tokenDtUs.push_back(tokenUs.size() == 1 ? us : (us - prevUs));
         }
     }
 
@@ -140,10 +211,23 @@ inline bool writeJson(const Recorder& r, const std::string& path) {
     buf += "{\n  \"source\": ";    appendEscaped(buf, r.source);
     buf += ",\n  \"model\": ";     appendEscaped(buf, r.model);
     buf += ",\n  \"prompt\": ";    appendEscaped(buf, r.prompt);
+    buf += ",\n  \"run_id\": ";    appendEscaped(buf, r.runId);
+    buf += ",\n  \"build_commit\": "; appendEscaped(buf, r.buildCommit);
+    buf += ",\n  \"build_config\": "; appendEscaped(buf, r.buildConfig);
+    buf += ",\n  \"backend\": ";   appendEscaped(buf, r.backend);
+    buf += ",\n  \"device\": ";    appendEscaped(buf, r.device);
+    buf += ",\n  \"backend_version\": "; appendEscaped(buf, r.backendVersion);
+    buf += ",\n  \"driver_version\": "; appendEscaped(buf, r.driverVersion);
+    buf += ",\n  \"device_id\": "; appendEscaped(buf, r.deviceId);
     buf += ",\n  \"started_ms\": " + std::to_string(r.startedMs);
     buf += ",\n  \"first_token_ms\": " + std::to_string(r.firstTokenMs);
     buf += ",\n  \"completed_ms\": " + std::to_string(r.completedMs);
     buf += ",\n  \"token_count\": " + std::to_string(r.tokens.size());
+    buf += ",\n  \"max_tokens\": " + std::to_string(r.maxTokens);
+    buf += ",\n  \"temperature\": " + std::to_string(r.temperature);
+    buf += ",\n  \"top_k\": " + std::to_string(r.topK);
+    buf += ",\n  \"top_p\": " + std::to_string(r.topP);
+    buf += ",\n  \"seed\": " + std::to_string(r.seed);
     buf += ",\n  \"error\": ";     appendEscaped(buf, r.error);
     buf += ",\n  \"tokens\": [";
     for (size_t i = 0; i < r.tokens.size(); ++i) {
@@ -159,6 +243,11 @@ inline bool writeJson(const Recorder& r, const std::string& path) {
     for (size_t i = 0; i < r.tokenUs.size(); ++i) {
         if (i) buf += ", ";
         buf += std::to_string(r.tokenUs[i]);
+    }
+    buf += "],\n  \"token_dt_us\": [";
+    for (size_t i = 0; i < r.tokenDtUs.size(); ++i) {
+        if (i) buf += ", ";
+        buf += std::to_string(r.tokenDtUs[i]);
     }
     // seq_monotonic: true iff seq[i] == i for all i (no async reordering).
     bool monotonic = (r.seq.size() == r.tokens.size());

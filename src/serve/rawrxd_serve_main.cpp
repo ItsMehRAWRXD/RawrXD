@@ -73,6 +73,33 @@ static void stampCliTraceBackend(RawrXD::ParityTrace::Recorder& trace, const cha
     }
 }
 
+static std::string canonicalModelIdentity(const std::string& model)
+{
+    char out[MAX_PATH];
+    DWORD n = GetFullPathNameA(model.c_str(), MAX_PATH, out, nullptr);
+    if (n > 0 && n < MAX_PATH)
+        return std::string(out, n);
+    return model;
+}
+
+static std::string currentBuildConfig()
+{
+#if defined(NDEBUG)
+    return "Release";
+#else
+    return "Debug";
+#endif
+}
+
+static std::string currentBuildCommit()
+{
+    char buf[128];
+    DWORD n = GetEnvironmentVariableA("RAWRXD_BUILD_COMMIT", buf, static_cast<DWORD>(sizeof(buf)));
+    if (n > 0 && n < sizeof(buf))
+        return std::string(buf, n);
+    return "unknown";
+}
+
 // ============================================================================
 // Arg Parsing
 // ============================================================================
@@ -557,8 +584,10 @@ static int cmdRun(const CliArgs& args)
         RawrXD::ParityTrace::Recorder trace;
         const bool wantTrace = !args.traceFile.empty();
         if (wantTrace) {
-            trace.start("cli", args.model, args.prompt);
-            trace.setBackend("cpu-fallback", "ParityCpuFallback");
+            trace.start("cli", canonicalModelIdentity(args.model), args.prompt);
+            trace.setBuildInfo(currentBuildCommit(), currentBuildConfig());
+            trace.setBackendDetails("cpu-fallback", "ParityCpuFallback", "n/a", "n/a", "parity-cpu");
+            trace.setInferenceConfig(args.maxTokens, 0.7f, -1, -1.0f, -1);
         }
 
         RawrXD::ParityFallback::run(
@@ -634,8 +663,10 @@ static int cmdRun(const CliArgs& args)
         RawrXD::ParityTrace::Recorder trace;
         const bool wantTrace = !args.traceFile.empty();
         if (wantTrace) {
-            trace.start("cli", entry->path, args.prompt);
+            trace.start("cli", canonicalModelIdentity(entry->path), args.prompt);
+            trace.setBuildInfo(currentBuildCommit(), currentBuildConfig());
             stampCliTraceBackend(trace, "plugin");
+            trace.setInferenceConfig(args.maxTokens, 0.7f, -1, -1.0f, -1);
         }
 
         RawrXD::Serve::InferencePlugin::generate(
