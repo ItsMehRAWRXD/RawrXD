@@ -79,12 +79,12 @@ if ($preflightText -match 'No GPU backend available') {
     Defer "GPU preflight failed before inference (no Vulkan/CUDA/HIP device)."
 }
 
-$backendHint = ($preflightText -split "`r?`n" | Where-Object {
+$gpuHints = @($preflightText -split "`r?`n" | Where-Object {
     $_ -match 'GPU|Vulkan|CUDA|HIP'
-} | Select-Object -First 1)
+})
 
-if ($backendHint) {
-    Write-Host "[PREFLIGHT] backend hint: $backendHint"
+if ($gpuHints.Count -gt 0) {
+    Write-Host "[PREFLIGHT] backend hints: $($gpuHints -join '; ')"
 } else {
     Write-Host "[PREFLIGHT] no explicit GPU banner from 'rawrxd list'; continuing to real inference probe (exit=$preflightExit)"
 }
