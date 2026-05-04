@@ -17,6 +17,7 @@ param(
     [string]$Model    = "D:\TinyLlama-1.1B-Chat-v1.0.Q4_0.gguf",
     [string]$Prompt   = "Say exactly: ready",
     [int]   $MaxTokens = 16,
+    [int]   $MinRealTokens = 1,
     [switch]$Strict
 )
 
@@ -54,6 +55,40 @@ New-Item -ItemType Directory -Path $OutDir -Force | Out-Null
 # Make sure we are NOT in CPU-fallback mode for this lane.
 Remove-Item Env:\RAWRXD_PARITY_CPU -ErrorAction SilentlyContinue
 
+Write-Host "=== GPU preflight ==="
+Write-Host "[PREFLIGHT] inference DLL: $plugin"
+$preflightStdout = Join-Path $OutDir "preflight.stdout.txt"
+$preflightStderr = Join-Path $OutDir "preflight.stderr.txt"
+Remove-Item -Force $preflightStdout, $preflightStderr -ErrorAction SilentlyContinue
+
+$prevEAP = $ErrorActionPreference
+$ErrorActionPreference = 'Continue'
+$preflightProc = Start-Process -FilePath $cliExe `
+    -ArgumentList @('list') `
+    -RedirectStandardError $preflightStderr -RedirectStandardOutput $preflightStdout `
+    -NoNewWindow -PassThru -Wait
+$preflightExit = $preflightProc.ExitCode
+$ErrorActionPreference = $prevEAP
+
+$preflightText = @(
+    if (Test-Path $preflightStdout) { Get-Content $preflightStdout -Raw }
+    if (Test-Path $preflightStderr) { Get-Content $preflightStderr -Raw }
+) -join "`n"
+
+if ($preflightText -match 'No GPU backend available') {
+    Defer "GPU preflight failed before inference (no Vulkan/CUDA/HIP device)."
+}
+
+$backendHint = ($preflightText -split "`r?`n" | Where-Object {
+    $_ -match 'GPU|Vulkan|CUDA|HIP'
+} | Select-Object -First 1)
+
+if ($backendHint) {
+    Write-Host "[PREFLIGHT] backend hint: $backendHint"
+} else {
+    Write-Host "[PREFLIGHT] no explicit GPU banner from 'rawrxd list'; continuing to real inference probe (exit=$preflightExit)"
+}
+
 # We can't reliably probe GPU without invoking the real path, so we run the CLI
 # inference attempt under stderr capture and inspect the result. If the GPU
 # enforcement gate fires, we defer cleanly instead of failing.
@@ -67,7 +102,7 @@ Remove-Item -Force $cliTrace, $uiTrace -ErrorAction SilentlyContinue
 $prevEAP = $ErrorActionPreference
 $ErrorActionPreference = 'Continue'
 $proc = Start-Process -FilePath $cliExe `
-    -ArgumentList @('run', $Model, '--prompt', $Prompt, '--emit-json-trace', $cliTrace) `
+    -ArgumentList @('run', $Model, '--prompt', $Prompt, '--max-tokens', $MaxTokens, '--emit-json-trace', $cliTrace) `
     -RedirectStandardError $cliStderr -RedirectStandardOutput $cliStdout `
     -NoNewWindow -PassThru -Wait
 $cliExit = $proc.ExitCode
@@ -84,7 +119,21 @@ if ($cliExit -ne 0 -or -not (Test-Path $cliTrace)) {
     exit 2
 }
 
-Write-Host "[OK] CLI real-model trace written: $cliTrace"
+$cliJson = Get-Content $cliTrace -Raw | ConvertFrom-Json
+if (-not ($cliJson.PSObject.Properties.Name -contains 'backend')) {
+    Write-Host "[FAIL] CLI trace missing backend field" -ForegroundColor Red
+    exit 2
+}
+if ($cliJson.backend -eq 'cpu-fallback' -or $cliJson.backend -eq 'unknown') {
+    Write-Host "[FAIL] CLI trace did not exercise a real backend: backend=$($cliJson.backend)" -ForegroundColor Red
+    exit 2
+}
+if ($cliJson.token_count -lt $MinRealTokens) {
+    Write-Host "[FAIL] CLI trace emitted too few tokens: $($cliJson.token_count) < $MinRealTokens" -ForegroundColor Red
+    exit 2
+}
+
+Write-Host "[OK] CLI real-model trace written: $cliTrace (backend=$($cliJson.backend), device=$($cliJson.device))"
 
 Write-Host "=== UI inference (headless driver) ==="
 # The headless UI driver (rawrxd-parity-ui-driver.exe) calls the same
@@ -114,7 +163,26 @@ if ($uiExit -ne 0 -or -not (Test-Path $uiTrace)) {
     exit 2
 }
 
-Write-Host "[OK] UI real-model trace written: $uiTrace"
+$uiJson = Get-Content $uiTrace -Raw | ConvertFrom-Json
+if (-not ($uiJson.PSObject.Properties.Name -contains 'backend')) {
+    Write-Host "[FAIL] UI trace missing backend field" -ForegroundColor Red
+    exit 2
+}
+if ($uiJson.backend -eq 'cpu-fallback' -or $uiJson.backend -eq 'unknown') {
+    Write-Host "[FAIL] UI trace did not exercise a real backend: backend=$($uiJson.backend)" -ForegroundColor Red
+    exit 2
+}
+if ($uiJson.token_count -lt $MinRealTokens) {
+    Write-Host "[FAIL] UI trace emitted too few tokens: $($uiJson.token_count) < $MinRealTokens" -ForegroundColor Red
+    exit 2
+}
+
+Write-Host "[OK] UI real-model trace written: $uiTrace (backend=$($uiJson.backend), device=$($uiJson.device))"
+
+if ($Strict -and (($cliJson.backend -eq 'cpu-fallback') -or ($uiJson.backend -eq 'cpu-fallback'))) {
+    Write-Host "[FAIL] CPU fallback detected in strict GPU run: cli=$($cliJson.backend) ui=$($uiJson.backend)" -ForegroundColor Red
+    exit 2
+}
 
 Write-Host "=== Structural diff ==="
 $cmp = Join-Path $PSScriptRoot "compare_parity_trace.ps1"
