@@ -35,6 +35,8 @@ struct ExtensionInfo {
     std::string path;
     std::vector<std::string> activationEvents;
     std::vector<std::string> contributes;
+    // Parsed contribution points (populated during LoadExtension)
+    std::vector<std::pair<std::string, std::string>> contributedCommands; // {id, title}
     bool isActive = false;
     bool isBuiltin = false;
     HostProcessState state = HostProcessState::Uninitialized;
@@ -59,6 +61,10 @@ public:
     bool ReloadExtension(const std::string& extensionId);
     bool ActivateExtension(const std::string& extensionId);
     bool DeactivateExtension(const std::string& extensionId);
+
+    // --- Contribution Point Wiring ---
+    // Parses manifest.contributes and registers commands/providers with the IDE
+    bool RegisterContributionPoints(const std::string& extensionId);
 
     // --- Discovery ---
     void ScanExtensionsDirectory(const std::string& dir);
@@ -138,7 +144,7 @@ public:
     ExtensionSandboxManager& GetSandboxManager() { return *m_sandboxManager; }
     
     // --- Phase 2 Integration: Direct Access to Proxy for VS Code API Bridging ---
-    TitanProxy& GetTitanProxy() { return TitanProxy::instance(); }
+    // THIS IS A TEST COMMENT
 
     // --- Stats ---
     struct Stats {

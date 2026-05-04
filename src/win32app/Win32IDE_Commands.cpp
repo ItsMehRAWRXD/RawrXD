@@ -16,6 +16,7 @@
 #include "IDEConfig.h"
 #include "Win32IDE.h"
 #include "Win32IDE_Types.h"
+#include "ExtensionHost.h"
 #ifndef CP_UNICODE
 #define CP_UNICODE 1200
 #endif
@@ -1362,10 +1363,11 @@ void Win32IDE::handleViewCommand(int commandId)
                 toggleSidebar();
             SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "File Explorer");
             break;
-        case 2031:  // IDM_VIEW_EXTENSIONS — show sidebar with Extensions view
+        case 2031:  // IDM_VIEW_EXTENSIONS — show sidebar with Extensions view + floating panel
             setSidebarView(SidebarView::Extensions);
             if (!m_sidebarVisible)
                 toggleSidebar();
+            toggleExtensionPanel();  // Also open the LM Studio–style panel
             SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "Extensions");
             break;
         case IDM_VIEW_GITHUB:  // show sidebar with GitHub view
@@ -12582,8 +12584,9 @@ void Win32IDE::showCommandPalette()
     // Update command availability before populating
     updateCommandStates();
 
-    // Populate with all commands
+    // Populate with all commands (built-in + extensions)
     m_filteredCommands = m_commandRegistry;
+    m_filteredExtensionCommandIds.clear();
     m_fuzzyMatchPositions.clear();
     for (const auto& cmd : m_filteredCommands)
     {
@@ -12594,6 +12597,26 @@ void Win32IDE::showCommandPalette()
         }
         SendMessageA(m_hwndCommandPaletteList, LB_ADDSTRING, 0, (LPARAM)itemText.c_str());
         m_fuzzyMatchPositions.push_back({});  // no highlights when showing all
+        m_filteredExtensionCommandIds.emplace_back(); // empty = builtin
+    }
+
+    // Phase 5: Append extension commands
+    auto& extHost = RawrXD::Extensions::ExtensionHost::GetInstance();
+    if (extHost.IsInitialized()) {
+        auto extCmds = extHost.GetAvailableCommands();
+        for (const auto& cmdId : extCmds) {
+            CommandPaletteItem item;
+            item.id = -1; // sentinel: extension command
+            item.name = cmdId;
+            item.shortcut = "";
+            item.category = "Extension";
+            m_filteredCommands.push_back(item);
+            m_filteredExtensionCommandIds.push_back(cmdId);
+            m_fuzzyMatchPositions.push_back({});
+
+            std::string display = "Extension: " + cmdId;
+            SendMessageA(m_hwndCommandPaletteList, LB_ADDSTRING, 0, (LPARAM)display.c_str());
+        }
     }
 
     // Select first item
@@ -12624,6 +12647,7 @@ void Win32IDE::filterCommandPalette(const std::string& query)
     // Clear list
     SendMessageA(m_hwndCommandPaletteList, LB_RESETCONTENT, 0, 0);
     m_filteredCommands.clear();
+    m_filteredExtensionCommandIds.clear();
     m_fuzzyMatchPositions.clear();
 
     // ── Category prefix filter (:file, :ai, :theme, :git, etc.) ──
@@ -12732,6 +12756,7 @@ void Win32IDE::filterCommandPalette(const std::string& query)
     {
         const auto& cmd = m_commandRegistry[entry.registryIndex];
         m_filteredCommands.push_back(cmd);
+        m_filteredExtensionCommandIds.emplace_back(); // empty = builtin
         m_fuzzyMatchPositions.push_back(entry.fuzzy.matchPositions);
 
         std::string itemText = cmd.name;
@@ -12740,6 +12765,39 @@ void Win32IDE::filterCommandPalette(const std::string& query)
             itemText += "  [" + cmd.shortcut + "]";
         }
         SendMessageA(m_hwndCommandPaletteList, LB_ADDSTRING, 0, (LPARAM)itemText.c_str());
+    }
+
+    // Phase 5: Append matching extension commands
+    auto& extHost = RawrXD::Extensions::ExtensionHost::GetInstance();
+    if (extHost.IsInitialized()) {
+        auto extCmds = extHost.GetAvailableCommands();
+        for (const auto& cmdId : extCmds) {
+            bool matches = fuzzyQuery.empty();
+            if (!matches) {
+                std::string lowerCmd = cmdId;
+                std::transform(lowerCmd.begin(), lowerCmd.end(), lowerCmd.begin(),
+                               [](unsigned char c) { return (char)std::tolower(c); });
+                std::string lowerQ = fuzzyQuery;
+                std::transform(lowerQ.begin(), lowerQ.end(), lowerQ.begin(),
+                               [](unsigned char c) { return (char)std::tolower(c); });
+                matches = lowerCmd.find(lowerQ) != std::string::npos;
+            }
+            if (!categoryFilter.empty()) {
+                matches = matches && (categoryFilter == "ext" || categoryFilter == "extension");
+            }
+            if (matches) {
+                CommandPaletteItem item;
+                item.id = -1;
+                item.name = cmdId;
+                item.shortcut = "";
+                item.category = "Extension";
+                m_filteredCommands.push_back(item);
+                m_filteredExtensionCommandIds.push_back(cmdId);
+                m_fuzzyMatchPositions.push_back({});
+                std::string display = "Extension: " + cmdId;
+                SendMessageA(m_hwndCommandPaletteList, LB_ADDSTRING, 0, (LPARAM)display.c_str());
+            }
+        }
     }
 
     // Select first item if available
@@ -12760,9 +12818,25 @@ void Win32IDE::executeCommandFromPalette(int index)
     const auto& cmd = m_filteredCommands[index];
     int commandId = cmd.id;
     std::string cmdName = cmd.name;
-    bool enabled = isCommandEnabled(commandId);
 
     hideCommandPalette();
+
+    // Phase 5: Extension command dispatch (id == -1 sentinel)
+    if (commandId == -1 && index < (int)m_filteredExtensionCommandIds.size()) {
+        const std::string& extCmdId = m_filteredExtensionCommandIds[index];
+        auto& extHost = RawrXD::Extensions::ExtensionHost::GetInstance();
+        if (extHost.IsInitialized()) {
+            extHost.ExecuteCommand(extCmdId);
+            if (m_hwndStatusBar) {
+                std::string feedback = "\xE2\x9C\x93 Extension: " + extCmdId;
+                SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)feedback.c_str());
+                SetTimer(m_hwndMain, IDT_STATUS_FLASH, 2000, nullptr);
+            }
+        }
+        return;
+    }
+
+    bool enabled = isCommandEnabled(commandId);
 
     if (!enabled)
     {

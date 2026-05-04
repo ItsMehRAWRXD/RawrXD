@@ -36,6 +36,7 @@ constexpr int MOE_HEAD_DIM = 64;
 constexpr int MOE_LAYERS = 16;
 constexpr int MOE_FF = 2816;
 constexpr int MOE_VOCAB = 32000;
+constexpr int MOE_MAX_SEQ = 4096;
 constexpr int MOE_EXPERTS = 8;
 constexpr int MOE_ACTIVE_EXPERTS = 2;
 
@@ -329,6 +330,7 @@ private:
     // Model switching
     void switch_to_model(size_t idx);
     bool should_switch_model(const std::vector<int>& context);
+    void adapt_weights(MoEModel& model);
 };
 
 // ============================================================================

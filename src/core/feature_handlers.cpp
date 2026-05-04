@@ -403,25 +403,65 @@ CommandResult handleFileModelFromURL(const CommandContext& ctx)
     // Ensure models directory exists
     CreateDirectoryA(".\\models", nullptr);
     ctx.output(("[Download] Target: " + outPath + "\n").c_str());
-    // Convert to wide strings for WinHTTP URL crack
-    std::wstring wUrl(url.begin(), url.end());
-    URL_COMPONENTS uc = {};
-    uc.dwStructSize = sizeof(uc);
-    wchar_t hostBuf[256] = {}, pathBuf[2048] = {};
-    uc.lpszHostName = hostBuf;
-    uc.dwHostNameLength = 256;
-    uc.lpszUrlPath = pathBuf;
-    uc.dwUrlPathLength = 2048;
-    if (!WinHttpCrackUrl(wUrl.c_str(), (DWORD)wUrl.length(), 0, &uc))
+    // Parse URL manually to avoid WinHttpCrackUrl ANSI/wide mismatch across SDK configs.
+    bool isHttps = false;
+    INTERNET_PORT port = 80;
+    std::string host;
+    std::string path = "/";
+
+    size_t schemePos = url.find("://");
+    size_t hostStart = (schemePos == std::string::npos) ? 0 : schemePos + 3;
+    if (schemePos != std::string::npos)
+    {
+        std::string scheme = url.substr(0, schemePos);
+        if (scheme == "https")
+        {
+            isHttps = true;
+            port = 443;
+        }
+    }
+
+    size_t pathStart = url.find('/', hostStart);
+    std::string hostPort = (pathStart == std::string::npos) ? url.substr(hostStart) : url.substr(hostStart, pathStart - hostStart);
+    if (pathStart != std::string::npos)
+    {
+        path = url.substr(pathStart);
+    }
+
+    size_t colonPos = hostPort.rfind(':');
+    if (colonPos != std::string::npos)
+    {
+        host = hostPort.substr(0, colonPos);
+        try
+        {
+            int parsedPort = std::stoi(hostPort.substr(colonPos + 1));
+            if (parsedPort > 0 && parsedPort <= 65535)
+            {
+                port = static_cast<INTERNET_PORT>(parsedPort);
+            }
+        }
+        catch (...)
+        {
+        }
+    }
+    else
+    {
+        host = hostPort;
+    }
+
+    if (host.empty())
     {
         ctx.output("[Download] Invalid URL format.\n");
         return CommandResult::error("file.modelFromURL: bad url");
     }
+
+    std::wstring wHost(host.begin(), host.end());
+    std::wstring wPath(path.begin(), path.end());
     HINTERNET hSession = WinHttpOpen(L"RawrXD-Shell/1.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME,
                                      WINHTTP_NO_PROXY_BYPASS, 0);
-    HINTERNET hConnect = hSession ? WinHttpConnect(hSession, hostBuf, uc.nPort, 0) : nullptr;
-    DWORD flags = (uc.nScheme == INTERNET_SCHEME_HTTPS) ? WINHTTP_FLAG_SECURE : 0;
-    HINTERNET hRequest = hConnect ? WinHttpOpenRequest(hConnect, L"GET", pathBuf, nullptr, WINHTTP_NO_REFERER,
+    HINTERNET hConnect = hSession ? WinHttpConnect(hSession, wHost.c_str(), port, 0) : nullptr;
+    DWORD flags = isHttps ? WINHTTP_FLAG_SECURE : 0;
+    HINTERNET hRequest = hConnect ? WinHttpOpenRequest(hConnect, L"GET", wPath.c_str(), nullptr, WINHTTP_NO_REFERER,
                                                        WINHTTP_DEFAULT_ACCEPT_TYPES, flags)
                                   : nullptr;
     if (hRequest && WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0, WINHTTP_NO_REQUEST_DATA, 0, 0, 0) &&

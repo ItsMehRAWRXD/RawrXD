@@ -67,28 +67,41 @@ public:
             return false;
         }
 
-        // Parse endpoint
-        URL_COMPONENTS urlComp;
-        ZeroMemory(&urlComp, sizeof(urlComp));
-        urlComp.dwStructSize = sizeof(urlComp);
+        // Parse endpoint manually (avoid WinHttpCrackUrl SDK compatibility issues)
+        std::string host = "localhost";
+        INTERNET_PORT port = 11435;
+        std::string path = "/api/version";
 
-        std::wstring endpoint_wide(m_endpoint.begin(), m_endpoint.end());
-        wchar_t host[256] = L"";
-        wchar_t path[256] = L"/api/version";
+        // Simple URL parser: http://host:port/path
+        size_t protoEnd = m_endpoint.find("://");
+        size_t hostStart = (protoEnd == std::string::npos) ? 0 : protoEnd + 3;
+        size_t hostEnd = m_endpoint.find(':', hostStart);
+        size_t pathStart = m_endpoint.find('/', hostStart);
 
-        urlComp.lpszHostName = host;
-        urlComp.dwHostNameLength = sizeof(host) / sizeof(host[0]);
-        urlComp.lpszUrlPath = path;
-        urlComp.dwUrlPathLength = sizeof(path) / sizeof(path[0]);
-
-        if (!WinHttpCrackUrl(endpoint_wide.c_str(), 0, 0, &urlComp)) {
-            WinHttpCloseHandle(hSession);
-            m_connected = false;
-            return false;
+        if (hostEnd != std::string::npos && (pathStart == std::string::npos || hostEnd < pathStart)) {
+            host = m_endpoint.substr(hostStart, hostEnd - hostStart);
+            size_t portEnd = (pathStart == std::string::npos) ? std::string::npos : pathStart;
+            if (portEnd != std::string::npos) {
+                port = static_cast<INTERNET_PORT>(std::stoi(m_endpoint.substr(hostEnd + 1, portEnd - hostEnd - 1)));
+            } else {
+                port = static_cast<INTERNET_PORT>(std::stoi(m_endpoint.substr(hostEnd + 1)));
+            }
+        } else if (pathStart != std::string::npos) {
+            host = m_endpoint.substr(hostStart, pathStart - hostStart);
+        } else {
+            host = m_endpoint.substr(hostStart);
         }
 
-        HINTERNET hConnect = WinHttpConnect(hSession, urlComp.lpszHostName,
-            urlComp.nPort, 0);
+        if (pathStart != std::string::npos) {
+            path = m_endpoint.substr(pathStart);
+        }
+
+        // Convert host/path to wide for WinHttpConnect / WinHttpOpenRequest
+        wchar_t wHost[256] = L"";
+        wchar_t wPath[256] = L"";
+        MultiByteToWideChar(CP_UTF8, 0, host.c_str(), -1, wHost, 256);
+        MultiByteToWideChar(CP_UTF8, 0, path.c_str(), -1, wPath, 256);
+        HINTERNET hConnect = WinHttpConnect(hSession, wHost, port, 0);
 
         if (!hConnect) {
             WinHttpCloseHandle(hSession);
@@ -97,7 +110,7 @@ public:
         }
 
         HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"GET",
-            urlComp.lpszUrlPath, NULL, WINHTTP_NO_REFERER,
+            wPath, NULL, WINHTTP_NO_REFERER,
             WINHTTP_DEFAULT_ACCEPT_TYPES, 0);
 
         if (!hRequest) {
@@ -166,45 +179,57 @@ public:
             return models;
         }
 
-        // Parse the configured endpoint
-        URL_COMPONENTS urlComp;
-        ZeroMemory(&urlComp, sizeof(urlComp));
-        urlComp.dwStructSize = sizeof(urlComp);
+        // Parse the configured endpoint manually (avoid WinHttpCrackUrl SDK compatibility issues)
+        std::string host = "localhost";
+        INTERNET_PORT port = 11435;
+        std::string path = "/api/tags";
 
-        std::wstring endpoint_wide(m_endpoint.begin(), m_endpoint.end());
-        wchar_t host[256] = L"";
-        wchar_t path[256] = L"";
+        size_t protoEnd = m_endpoint.find("://");
+        size_t hostStart = (protoEnd == std::string::npos) ? 0 : protoEnd + 3;
+        size_t hostEnd = m_endpoint.find(':', hostStart);
+        size_t pathStart = m_endpoint.find('/', hostStart);
 
-        urlComp.lpszHostName = host;
-        urlComp.dwHostNameLength = sizeof(host) / sizeof(host[0]);
-        urlComp.lpszUrlPath = path;
-        urlComp.dwUrlPathLength = sizeof(path) / sizeof(path[0]);
+        if (hostEnd != std::string::npos && (pathStart == std::string::npos || hostEnd < pathStart)) {
+            host = m_endpoint.substr(hostStart, hostEnd - hostStart);
+            size_t portEnd = (pathStart == std::string::npos) ? std::string::npos : pathStart;
+            if (portEnd != std::string::npos) {
+                port = static_cast<INTERNET_PORT>(std::stoi(m_endpoint.substr(hostEnd + 1, portEnd - hostEnd - 1)));
+            } else {
+                port = static_cast<INTERNET_PORT>(std::stoi(m_endpoint.substr(hostEnd + 1)));
+            }
+        } else if (pathStart != std::string::npos) {
+            host = m_endpoint.substr(hostStart, pathStart - hostStart);
+        } else {
+            host = m_endpoint.substr(hostStart);
+        }
 
-        if (!WinHttpCrackUrl(endpoint_wide.c_str(), 0, 0, &urlComp)) {
-            WinHttpCloseHandle(hSession);
-            return models;
+        if (pathStart != std::string::npos) {
+            path = m_endpoint.substr(pathStart);
         }
 
         // Build request path (respect existing base path if provided)
-        std::wstring basePath(path, path + urlComp.dwUrlPathLength);
-        if (basePath.empty() || basePath == L"/") {
-            basePath = L"";
+        std::string basePath = path;
+        if (basePath.empty() || basePath == "/") {
+            basePath = "";
         }
-        if (!basePath.empty() && basePath.back() == L'/') {
+        if (!basePath.empty() && basePath.back() == '/') {
             basePath.pop_back();
         }
-        std::wstring tagsPath = basePath + L"/api/tags";
+        std::string tagsPath = basePath + "/api/tags";
 
-        HINTERNET hConnect = WinHttpConnect(hSession, urlComp.lpszHostName,
-            urlComp.nPort, 0);
+        // Convert host to wide for WinHttpConnect
+        wchar_t wHost[256] = L"";
+        MultiByteToWideChar(CP_UTF8, 0, host.c_str(), -1, wHost, 256);
+        HINTERNET hConnect = WinHttpConnect(hSession, wHost, port, 0);
 
         if (!hConnect) {
             WinHttpCloseHandle(hSession);
             return models;
         }
 
+        std::wstring wTagsPath(tagsPath.begin(), tagsPath.end());
         HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"GET",
-            tagsPath.c_str(), NULL, WINHTTP_NO_REFERER,
+            wTagsPath.c_str(), NULL, WINHTTP_NO_REFERER,
             WINHTTP_DEFAULT_ACCEPT_TYPES, 0);
 
         if (!hRequest) {

@@ -51,7 +51,7 @@ public:
     
     // Batch quantization with per-channel scaling
     void quantizeBatch(const float* input, uint8_t* output, size_t count, float scale = 1.0f);
-    void dequantizeBatch(const uint8_t* input, float* output, size_t count, float scale = 1.0f);
+    void dequantizeBatch(const uint8_t* input, float* output, size_t count, float scale = 1.0f) const;
     
     // Compute optimal scale factor for a tensor (absmax scaling)
     float computeScale(const float* data, size_t count);

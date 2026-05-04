@@ -1248,7 +1248,8 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             if (result->ggufOk || result->bridgeOk)
             {
                 m_lastLocalModelReadyTickMs = GetTickCount64();
-                syncAgentModeUiFromBridge();
+                // onModelReadyUnified: single authoritative post-load barrier.
+                onModelReadyUnified();
                 refreshAgenticChatSessionContext();
 
                 const bool hasPendingChat = !m_pendingChatOnLoadMessage.empty();

@@ -1316,19 +1316,18 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                 }
 
                 m_lastLocalModelReadyTickMs = GetTickCount64();
-                syncAgentModeUiFromBridge();
-                refreshAgenticChatSessionContext();
+
+                // Autorun prompt format detection upon model load success (UIP-001)
+                conversationDetectModelFormat(result->filepath);
+                auto style = ConversationSession::DetectFormatFromModel(result->filepath);
+                s_conversationSession.SetPromptFormat(style);
+
+                // onModelReadyUnified: single authoritative barrier — resets streaming state,
+                // syncs UI, then posts WM_SAFE_TO_REPLAY (which triggers replay if pending).
+                onModelReadyUnified();
 
                 const bool hasPendingChat = !m_pendingChatOnLoadMessage.empty();
                 appendModelLoadReadyCopilotTurns(result->filepath, !hasPendingChat);
-
-                // If the user clicked Send while the model was still loading, replay
-                // the message now that the model is ready.
-                if (hasPendingChat)
-                {
-                    OutputDebugStringA("[WM_MODEL_LOAD_DONE] scheduling pending chat replay\n");
-                    PostMessage(m_hwndMain, WM_PENDING_CHAT_REPLAY, 0, 0);
-                }
 
                 // Ensure status bar reflects newly loaded model (and any TPS changes soon after).
                 PostMessageW(m_hwndMain, WM_STATUSBAR_REFRESH_COPILOT, 0, 0);
@@ -3702,12 +3701,16 @@ void Win32IDE::deferredHeavyInitBody()
         OutputDebugStringA("ERROR: NativeAgent init failed\n");
     }
 
-    // Initialize Extension Loader
+    // Initialize Extension Loader + Installer
     try
     {
         m_extensionLoader = std::make_unique<RawrXD::ExtensionLoader>();
         m_extensionLoader->Scan();
         m_extensionLoader->LoadNativeModules();
+
+        m_extensionInstaller = std::make_unique<RawrXD::ExtensionInstaller>();
+        // Sync installer state into UI state model
+        RawrXD::ExtensionUIState::Instance().syncFromInstaller(m_extensionInstaller.get());
     }
     catch (...)
     {

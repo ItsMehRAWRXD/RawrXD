@@ -78,6 +78,7 @@ struct DownloadProgress;
 #include "Win32IDE_Types.h"
 #include "Win32IDE_WebView2.h"
 #include "Win32TerminalManager.h"
+#include "../bridge/symbol_index_bridge.hpp"
 #include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
@@ -110,6 +111,7 @@ class IDEFeatures;
 #include <vector>
 
 #include "Win32IDE_DownloadsPanel.h"
+#include "Win32IDE_ExtensionPanel.h"
 
 // Posted from AgenticChatSession worker thread; UI thread finalizes markdown + `m_chatHistory` + disk.
 struct Win32IDEAgenticCopilotFinalEnvelope
@@ -126,6 +128,7 @@ struct Win32IDEAgenticCopilotFinalEnvelope
 #include "../core/native_inference_pipeline.hpp"
 #include "../core/problems_aggregator.hpp"
 #include "../modules/ExtensionLoader.hpp"
+#include "ExtensionInstaller.hpp"
 #include "../modules/vscode_extension_api.h"
 #include "../ui/tool_action_status.h"
 #include <climits>
@@ -321,8 +324,10 @@ class Win32IDE
     friend void bgInitBody(void* self);
     friend void RawrXD_FinishCopilotMinimalAgentic(Win32IDE* ide, WPARAM wParam, LPARAM heapResponse);
     friend class RawrXD::D2DSyntaxBridge;
+    friend RawrXD::ExtensionPanelWindow* GetOrCreateExtensionPanel(Win32IDE* ide, HWND hwndMain, HINSTANCE hInst);
 
   public:
+    RawrXD::ExtensionInstaller* getExtensionInstaller() { return m_extensionInstaller.get(); }
     void runWorkspaceSearchFromDialog(const std::string& query);
     void deferredHeavyInitBody();  // SEH-safe body, called from bg thread via sehRunBgThread
 
@@ -343,6 +348,17 @@ class Win32IDE
         DebugConsole = 3
     };
 
+    // ---- Hybrid completion result (moved here to fix forward-reference) ----
+    struct HybridCompletionItem
+    {
+        std::string label;
+        std::string detail;
+        std::string insertText;
+        std::string source;  // "lsp", "ai", "asm", "merged"
+        float confidence = 0.0f;
+        int sortOrder = 0;
+    };
+
     Win32IDE(HINSTANCE hInstance);
     ~Win32IDE();
 
@@ -360,6 +376,8 @@ class Win32IDE
     void openModel();
     bool loadModelForInference(const std::string& filepath);
     void loadModelFromPathAsync(const std::string& filepath);
+    void resetChatStreamingState();
+    void onModelReadyUnified();
 
     // Test agent access
     HWND getMainWindow() const { return m_hwndMain; }
@@ -382,6 +400,9 @@ class Win32IDE
     std::unique_ptr<full_agentic_ide::FullAgenticIDE> m_fullAgenticIDE;
     AgenticBridge* m_agenticBridge = nullptr;                      // Non-owning; set from m_fullAgenticIDE->getBridge()
     std::unique_ptr<RawrXD::PlanOrchestrator> m_planOrchestrator;  // Autonomous task planning and execution
+    uint64_t m_titanGhostStreamSeq = 0; // Sequence number for Titan Ghost Stream
+    uint64_t m_titanGhostSeqGaps = 0;   // Count of gaps in Titan Ghost sequence
+    uint64_t m_titanGhostPackets = 0;    // Total packets received for Titan Ghost
     bool m_multiAgentEnabled = false;                              // Multi-agent orchestration toggle
     void initializeAgenticBridge();
     bool ensureAgenticBridgeHasModel(const std::string& path);
@@ -457,6 +478,7 @@ class Win32IDE
     void onAIModeAgentic();
     /** Sync main menu + agent chat panel checkboxes from AgenticBridge / NativeAgent (after init or config load). */
     void syncAgentModeUiFromBridge();
+    void resetChatStreamingState();
     void onAIContextSize(int sizeEnum);
 
     // Memory Plugin System (Native VSIX Style)
@@ -1488,6 +1510,11 @@ class Win32IDE
     void hideDownloadsPanel();
     void toggleDownloadsPanel();
 
+    // Extension Panel (LM Studio–style extension manager)
+    void showExtensionPanel();
+    void hideExtensionPanel();
+    void toggleExtensionPanel();
+
     // Command Palette (Ctrl+Shift+P)
     struct CommandPaletteItem
     {
@@ -1511,6 +1538,7 @@ class Win32IDE
     WNDPROC m_oldCommandPaletteInputProc;
     std::vector<CommandPaletteItem> m_commandRegistry;    // reserved large upfront to avoid realloc invalidation
     std::vector<CommandPaletteItem> m_filteredCommands;   // mirrors registry; also reserved
+    std::vector<std::string> m_filteredExtensionCommandIds; // parallel to m_filteredCommands: empty=builtin, non-empty=extension command ID
     std::vector<std::vector<int>> m_fuzzyMatchPositions;  // per-item match highlight positions
     uint64_t m_commandRegistryVersion = 0;                // bump on rebuild to detect stale filtered indexes
     uint64_t m_filteredVersion = 0;                       // version of current filtered list
@@ -1869,6 +1897,8 @@ class Win32IDE
     static const UINT WM_MODEL_PROGRESS_DONE = WM_APP + 301;
     static const UINT WM_MODEL_LOAD_DONE = WM_APP + 302;
     static const UINT WM_PENDING_CHAT_REPLAY = WM_APP + 303;
+    /// Posted by onModelReadyUnified(). Replay is only triggered from this handler.
+    static const UINT WM_SAFE_TO_REPLAY = WM_APP + 309;
     /// Posted after chat throughput gauges update so status bar can show ~t/s est (safe from worker threads).
     static const UINT WM_STATUSBAR_REFRESH_COPILOT = WM_APP + 308;
 
@@ -1899,6 +1929,7 @@ class Win32IDE
     std::string m_currentInferencePrompt;
     std::string m_currentInferenceResponse;
     std::string m_streamingTokenAccumulator;  // Accumulates tokens for markdown rendering on completion
+    int m_streamingWrittenWchars = 0;          // Wide-char count written to RichEdit during active stream (for replace-range math)
     bool m_nativeStreamingActive = false;     // True while native AI tokens are arriving
     std::thread m_inferenceThread;
     std::mutex m_inferenceMutex;
@@ -1951,6 +1982,7 @@ class Win32IDE
 
     // Extension Loader
     std::unique_ptr<RawrXD::ExtensionLoader> m_extensionLoader;
+    std::unique_ptr<RawrXD::ExtensionInstaller> m_extensionInstaller;
     void refreshExtensions();
     void loadExtension(const std::string& name);
     void unloadExtension(const std::string& name);
@@ -2017,6 +2049,15 @@ class Win32IDE
     std::thread m_ghostTextThread;
     std::atomic<bool> m_ghostTextRunning{false};
     std::atomic<bool> m_ghostTextStopRequested{false};
+    uint64_t m_titanGhostStreamSeq = 0;
+    uint64_t m_titanGhostSeqGaps = 0;
+    uint64_t m_titanGhostPackets = 0;
+
+    // Symbol Index Bridge (Rust Parser v2 integration)
+    std::unique_ptr<rawrxd::bridge::SymbolIndexBridge> m_symbolIndexBridge;
+    std::vector<rawrxd::bridge::SymbolCandidate> m_symbolBridgeCandidates;
+    rawrxd::bridge::CompletionTrigger m_symbolBridgeTrigger;
+    bool m_symbolBridgeReady = false;
 
     // Tab tracking
     std::vector<EditorTab> m_editorTabs;
@@ -2400,6 +2441,10 @@ class Win32IDE
 
     // Downloads Panel
     std::unique_ptr<DownloadsPanelWindow> m_downloadsPanel;
+
+    // Extension Panel
+    std::unique_ptr<RawrXD::ExtensionPanelWindow> m_extensionPanel;
+
     HWND m_hwndCopilotChatInput;
     HWND m_hwndCopilotChatOutput;
     HWND m_hwndCopilotSendBtn;
@@ -4496,18 +4541,6 @@ class Win32IDE
 #define IDM_HYBRID_STREAM_ANALYZE 5103
 #define IDM_HYBRID_SEMANTIC_PREFETCH 5104
 #define IDM_HYBRID_CORRECTION_LOOP 5105
-
-    // ---- Hybrid completion result ----
-  public:
-    struct HybridCompletionItem
-    {
-        std::string label;
-        std::string detail;
-        std::string insertText;
-        std::string source;  // "lsp", "ai", "asm", "merged"
-        float confidence = 0.0f;
-        int sortOrder = 0;
-    };
 
   private:
     // ---- Aggregate diagnostic with AI explanation ----

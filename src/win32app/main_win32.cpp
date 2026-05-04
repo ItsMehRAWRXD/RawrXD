@@ -3866,6 +3866,24 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
     earlyWinMainMilestone("winmain_early_e0_8",
                           "[IDE-Pipeline:WinMain-Early] E0-8/8: native IDE singleton allocation gate\n",
                           "[Init:WinMain-Early] E0-8/8: final pre-constructor gate; allocating Win32IDE\n");
+
+    // CRASH ISOLATION: Diagnostic early-return to test if crash is before or during Win32IDE ctor.
+    // If the binary exits cleanly with code 42, the crash is inside Win32IDE constructor.
+    // If it still crashes with STATUS_STACK_BUFFER_OVERRUN, the crash is earlier.
+    {
+        char buf[256];
+        snprintf(buf, sizeof(buf),
+                 "[CRASH-ISOLATION] Reached pre-Win32IDE ctor gate. lpCmdLine=%s\n",
+                 lpCmdLine ? lpCmdLine : "(null)");
+        OutputDebugStringA(buf);
+        if (s_startupLog)
+        {
+            *s_startupLog << "[CRASH-ISOLATION] Pre-Win32IDE ctor gate reached. Exiting with 42.\n";
+            s_startupLog->flush();
+        }
+        return 42;
+    }
+
     Win32IDE ide(hInstance);
     emitStartupHeapSnapshot("ide_constructed");
 

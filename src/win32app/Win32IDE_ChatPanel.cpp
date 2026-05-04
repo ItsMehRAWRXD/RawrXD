@@ -702,8 +702,8 @@ void Win32IDE::conversationDetectModelFormat(const std::string& modelPath)
 {
     if (!s_sessionInitialized)
         initConversationSession();
-    auto style = ConversationSession::DetectFormatFromModel(modelPath);
-    s_conversationSession.SetPromptFormat(style);
+    // Redirected to authoritative load pipeline:
+    // Prompt format detection now happens during model load success.
 }
 
 void Win32IDE::conversationSetContextWindow(int maxTokens)

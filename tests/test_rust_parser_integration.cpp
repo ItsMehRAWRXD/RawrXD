@@ -214,7 +214,12 @@ bool TestParseCorrectness() {
         
         auto micros = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
         
-        bool pass = result.success && result.nodes.size() >= w.expectedNodes;
+printf("  Found %zu nodes:\n", result.nodes.size());
+    for (const auto& node : result.nodes) {
+        printf("    - %s (type=%d)\n", node->getText().c_str(), static_cast<int>(node->getType()));
+    }
+    
+    bool pass = result.success && result.nodes.size() >= w.expectedNodes;
         printf("  %s: %zu nodes in %lld μs (expected >=%zu) %s\n",
                w.name, result.nodes.size(), (long long)micros, w.expectedNodes,
                pass ? "PASS" : "FAIL");
@@ -402,20 +407,133 @@ bool TestPerformanceScaling() {
     return pass;
 }
 
+// Test 6: Call graph extraction (v3.3) — with CallKind, resolution, and dead-code detection
+bool TestCallGraph() {
+    printf("\n[Test] Call graph extraction...\n");
+
+    static const char* RUST_CALLS = R"(
+fn helper() {}
+
+fn main() {
+    helper();
+    std::io::println("hello");
+    self.process();
+}
+
+fn process() {
+    helper();
+    main();
+}
+
+fn unused_fn() {
+    helper();
+}
+)";
+
+    RustParser parser;
+    rawrxd::ast::SymbolTable symbols;
+    auto result = parser.parse(RUST_CALLS, "calls.rs", &symbols);
+
+    if (!result.success) {
+        printf("  Parse failed\n");
+        return false;
+    }
+
+    // ---- 1. Basic edge extraction ----
+    auto edges = symbols.allEdges();
+    printf("  Found %zu call edges:\n", edges.size());
+    for (const auto& e : edges) {
+        const char* kind_str = "Direct";
+        if (e.kind == rawrxd::ast::CallKind::Method) kind_str = "Method";
+        else if (e.kind == rawrxd::ast::CallKind::Qualified) kind_str = "Qualified";
+        else if (e.kind == rawrxd::ast::CallKind::External) kind_str = "External";
+        printf("    - %s -> %s [%s]\n", e.caller_name.c_str(), e.callee_name.c_str(), kind_str);
+    }
+
+    bool has_main_to_helper = false;
+    bool has_main_to_println = false;
+    bool has_main_to_process = false;
+    bool has_process_to_helper = false;
+    bool has_process_to_main = false;
+    bool has_unused_to_helper = false;
+
+    for (const auto& e : edges) {
+        if (e.caller_name == "main" && e.callee_name == "helper") has_main_to_helper = true;
+        if (e.caller_name == "main" && e.callee_name == "std::io::println") has_main_to_println = true;
+        if (e.caller_name == "main" && e.callee_name == "self.process") has_main_to_process = true;
+        if (e.caller_name == "process" && e.callee_name == "helper") has_process_to_helper = true;
+        if (e.caller_name == "process" && e.callee_name == "main") has_process_to_main = true;
+        if (e.caller_name == "unused_fn" && e.callee_name == "helper") has_unused_to_helper = true;
+    }
+
+    printf("  main -> helper: %s\n", has_main_to_helper ? "FOUND" : "MISSING");
+    printf("  main -> std::io::println: %s\n", has_main_to_println ? "FOUND" : "MISSING");
+    printf("  main -> self.process: %s\n", has_main_to_process ? "FOUND" : "MISSING");
+    printf("  process -> helper: %s\n", has_process_to_helper ? "FOUND" : "MISSING");
+    printf("  process -> main: %s\n", has_process_to_main ? "FOUND" : "MISSING");
+    printf("  unused_fn -> helper: %s\n", has_unused_to_helper ? "FOUND" : "MISSING");
+
+    bool basic_pass = has_main_to_helper && has_main_to_println && has_main_to_process
+                   && has_process_to_helper && has_process_to_main && has_unused_to_helper;
+    printf("  Basic edges: %s\n", basic_pass ? "PASS" : "FAIL");
+
+    // ---- 2. CallKind tagging ----
+    bool kind_pass = true;
+    for (const auto& e : edges) {
+        if (e.callee_name == "helper" && e.kind != rawrxd::ast::CallKind::Direct) kind_pass = false;
+        if (e.callee_name == "std::io::println" && e.kind != rawrxd::ast::CallKind::Qualified) kind_pass = false;
+        if (e.callee_name == "self.process" && e.kind != rawrxd::ast::CallKind::Method) kind_pass = false;
+    }
+    printf("  CallKind tagging: %s\n", kind_pass ? "PASS" : "FAIL");
+
+    // ---- 3. resolveCalls() — cross-file symbol linking ----
+    symbols.resolveCalls();
+    int resolved_count = 0;
+    for (const auto& e : symbols.allEdges()) {
+        if (e.resolved_symbol != nullptr) resolved_count++;
+    }
+    printf("  Resolved %d/%zu edges to symbols\n", resolved_count, symbols.allEdges().size());
+    bool resolve_pass = (resolved_count >= 5); // helper, process, main should all resolve
+    printf("  Cross-file resolution: %s\n", resolve_pass ? "PASS" : "FAIL");
+
+    // ---- 4. deadSymbols() detection ----
+    auto dead = symbols.deadSymbols();
+    printf("  Dead symbols (%zu):\n", dead.size());
+    bool found_unused = false;
+    for (const auto* s : dead) {
+        printf("    - %s (file=%s)\n", s->name.c_str(), s->file.c_str());
+        if (s->name == "unused_fn") found_unused = true;
+    }
+    bool dead_pass = found_unused;
+    printf("  Dead-code detection: %s\n", dead_pass ? "PASS" : "FAIL");
+
+    // ---- 5. O(1) query indices ----
+    auto from_main = symbols.callsFrom("main");
+    auto to_helper = symbols.callsTo("helper");
+    bool index_pass = (from_main.size() == 3) && (to_helper.size() == 3);
+    printf("  callsFrom(main)=%zu, callsTo(helper)=%zu\n", from_main.size(), to_helper.size());
+    printf("  O(1) query indices: %s\n", index_pass ? "PASS" : "FAIL");
+
+    bool pass = basic_pass && kind_pass && resolve_pass && dead_pass && index_pass;
+    printf("  %s\n", pass ? "PASS" : "FAIL");
+    return pass;
+}
+
 // Main test runner
 int main() {
     printf("========================================\n");
     printf("Rust Parser + Credit Governor Integration\n");
     printf("========================================\n");
-    
+
     int passed = 0;
-    int total = 5;
-    
+    int total = 6;
+
     if (TestParseCorrectness()) passed++;
     if (TestGovernedParsing()) passed++;
     if (TestTokenizer()) passed++;
     if (TestIncrementalParse()) passed++;
     if (TestPerformanceScaling()) passed++;
+    if (TestCallGraph()) passed++;
     
     printf("\n========================================\n");
     printf("Results: %d/%d tests passed\n", passed, total);

@@ -22,6 +22,7 @@ ASTNode::Ptr ASTNode::withChildren(std::vector<Ptr> new_children) const {
     copy->children_ = std::move(new_children);
     copy->references_ = references_;
     copy->definitions_ = definitions_;
+    copy->rust_meta_ = rust_meta_;
     for (auto& c : copy->children_) {
         const_cast<ASTNode*>(c.get())->parent_ = copy;
     }
@@ -36,6 +37,7 @@ ASTNode::Ptr ASTNode::withParent(Ptr new_parent) const {
     copy->children_ = children_;
     copy->references_ = references_;
     copy->definitions_ = definitions_;
+    copy->rust_meta_ = rust_meta_;
     return copy;
 }
 
@@ -47,6 +49,7 @@ ASTNode::Ptr ASTNode::withHash(NodeHash new_hash) const {
     copy->children_ = children_;
     copy->references_ = references_;
     copy->definitions_ = definitions_;
+    copy->rust_meta_ = rust_meta_;
     return copy;
 }
 

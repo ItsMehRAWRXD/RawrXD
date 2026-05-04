@@ -120,6 +120,16 @@ bool ExtensionHost::LoadExtension(const std::string& path) {
         for (auto it = manifest["contributes"].begin(); it != manifest["contributes"].end(); ++it) {
             info->contributes.push_back(it.key());
         }
+        // Parse contributed commands for wiring into IDE command palette
+        if (manifest["contributes"].contains("commands") && manifest["contributes"]["commands"].is_array()) {
+            for (const auto& cmd : manifest["contributes"]["commands"]) {
+                if (cmd.is_object() && cmd.contains("command") && cmd["command"].is_string()) {
+                    std::string id = cmd["command"].get<std::string>();
+                    std::string title = cmd.value("title", id);
+                    info->contributedCommands.emplace_back(id, title);
+                }
+            }
+        }
     }
 
     {
@@ -198,6 +208,33 @@ bool ExtensionHost::ActivateExtension(const std::string& extensionId) {
 
     info->isActive = true;
     info->state = HostProcessState::Running;
+
+    // Wire contribution points into IDE command palette / providers
+    RegisterContributionPoints(extensionId);
+
+    return true;
+}
+
+bool ExtensionHost::RegisterContributionPoints(const std::string& extensionId) {
+    if (!m_initialized.load()) return false;
+
+    std::shared_ptr<ExtensionInfo> info;
+    {
+        std::lock_guard<std::mutex> lock(m_extensionsMutex);
+        auto it = m_extensions.find(extensionId);
+        if (it == m_extensions.end()) return false;
+        info = it->second;
+    }
+
+    // Wire contributed commands into VS Code API command registry
+    for (const auto& [cmdId, title] : info->contributedCommands) {
+        auto& api = VSCodeAPI::CommandsAPI::Get();
+        api.RegisterCommandWithArgs(cmdId, [this, cmdId](const std::string& args) {
+            // Dispatch to extension process via IPC
+            ExecuteCommand(cmdId, args);
+        });
+    }
+
     return true;
 }
 

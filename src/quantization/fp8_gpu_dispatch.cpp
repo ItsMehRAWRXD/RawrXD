@@ -3,7 +3,7 @@
 // Self-contained compute dispatch without vendor telemetry
 // ============================================================================
 
-#include "../fp8_quantizer.h"
+#include "fp8_quantizer.h"
 #include <string>
 #include <vector>
 

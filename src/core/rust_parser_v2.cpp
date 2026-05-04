@@ -1,907 +1,596 @@
 // rust_parser_v2.cpp
-// Hardened Rust parser addressing all tokenizer and parser gaps from review.
-// Replaces rust_parser.cpp with production-grade tokenization and parsing.
+// Cursor-based Rust parser v3 — deterministic, allocation-light, safe against infinite loops.
+// Replaces token-based v2 with a single-pass character scanner.
+// v3.1: captures doc comments, attributes, visibility, and modifiers into RustMeta.
+// v3.2: adds SymbolTable integration for indexing.
 
 #include "rust_parser.hpp"
+#include "symbol_table.hpp"
 #include <cctype>
 #include <cstring>
 #include <algorithm>
 
 namespace rawrxd::ast::rust {
 
-// ============================================================================
-// Tokenizer v2 — hardened against all edge cases
-// ============================================================================
-std::vector<RustParser::Token> RustParser::tokenize(std::string_view content) {
-    std::vector<Token> tokens;
-    size_t i = 0;
-    size_t line = 1;
-    size_t col = 1;
+using RawrXD::AST::RustMeta;
+using rawrxd::ast::SymbolTable;
+using rawrxd::ast::Symbol;
+using rawrxd::ast::CallEdge;
+using rawrxd::ast::CallKind;
 
-    auto advance = [&](size_t n = 1) {
-        for (size_t k = 0; k < n; ++k) {
-            if (i < content.size() && content[i] == '\n') { ++line; col = 1; }
-            else { ++col; }
-            if (i < content.size()) ++i;
+// ============================================================
+// Minimal scanner (NO tokenizer needed)
+// ============================================================
+
+struct Cursor {
+    const char* s;
+    size_t i;
+    size_t n;
+
+    Cursor(std::string_view sv) : s(sv.data()), i(0), n(sv.size()) {}
+
+    bool eof() const { return i >= n; }
+    char peek() const { return i < n ? s[i] : 0; }
+    char next() { return i < n ? s[i++] : 0; }
+
+    void skip_ws() {
+        while (!eof()) {
+            char c = peek();
+
+            // whitespace
+            if (isspace((unsigned char)c)) { i++; continue; }
+
+            // line comment (non-doc)
+            if (c == '/' && i + 1 < n && s[i+1] == '/' && (i+2 >= n || s[i+2] != '/')) {
+                i += 2;
+                while (!eof() && peek() != '\n') i++;
+                continue;
+            }
+
+            // block comment (nested, non-doc)
+            if (c == '/' && i + 1 < n && s[i+1] == '*' && (i+2 >= n || s[i+2] != '!')) {
+                i += 2;
+                int depth = 1;
+                while (!eof() && depth > 0) {
+                    if (peek() == '/' && i + 1 < n && s[i+1] == '*') { depth++; i += 2; }
+                    else if (peek() == '*' && i + 1 < n && s[i+1] == '/') { depth--; i += 2; }
+                    else i++;
+                }
+                continue;
+            }
+
+            break;
         }
-    };
+    }
 
-    while (i < content.size()) {
-        char c = content[i];
+    bool match_kw(const char* kw) {
+        size_t j = i;
+        for (size_t k = 0; kw[k]; ++k) {
+            if (j >= n || s[j] != kw[k]) return false;
+            j++;
+        }
+        if (j < n && (isalnum((unsigned char)s[j]) || s[j] == '_')) return false;
+        i = j;
+        return true;
+    }
+
+    std::string ident() {
         size_t start = i;
-        size_t startLine = line;
-        size_t startCol = col;
+        if (!(isalpha((unsigned char)peek()) || peek() == '_')) return "";
+        i++;
+        while (!eof() && (isalnum((unsigned char)peek()) || peek() == '_')) i++;
+        return std::string(s + start, i - start);
+    }
 
-        // Whitespace
-        if (std::isspace(static_cast<unsigned char>(c))) {
-            while (i < content.size() && std::isspace(static_cast<unsigned char>(content[i]))) advance();
-            tokens.push_back({Token::Whitespace, content.substr(start, i - start), start, startLine, startCol});
-            continue;
+    void skip_block(char open, char close) {
+        if (peek() != open) return;
+        i++;
+        int depth = 1;
+        while (!eof() && depth > 0) {
+            char c = next();
+            if (c == open) depth++;
+            else if (c == close) depth--;
         }
+    }
 
-        // Doc comments (must come before regular comments)
-        if (c == '/' && i + 2 < content.size()) {
-            // /// doc comment
-            if (content[i+1] == '/' && content[i+2] == '/') {
-                advance(3);
-                while (i < content.size() && content[i] != '\n') advance();
-                tokens.push_back({Token::DocComment, content.substr(start, i - start), start, startLine, startCol});
-                continue;
-            }
-            // //! inner doc comment
-            if (content[i+1] == '/' && content[i+2] == '!') {
-                advance(3);
-                while (i < content.size() && content[i] != '\n') advance();
-                tokens.push_back({Token::DocComment, content.substr(start, i - start), start, startLine, startCol});
-                continue;
-            }
-            // /** block doc comment */
-            if (content[i+1] == '*' && i + 2 < content.size() && content[i+2] == '*') {
-                advance(3);
-                int depth = 1;
-                while (i + 1 < content.size() && depth > 0) {
-                    if (content[i] == '/' && content[i+1] == '*') { ++depth; advance(2); }
-                    else if (content[i] == '*' && content[i+1] == '/') { --depth; advance(2); }
-                    else advance();
-                }
-                tokens.push_back({Token::DocComment, content.substr(start, i - start), start, startLine, startCol});
-                continue;
-            }
-            // // regular comment
-            if (content[i+1] == '/') {
-                while (i < content.size() && content[i] != '\n') advance();
-                tokens.push_back({Token::Comment, content.substr(start, i - start), start, startLine, startCol});
-                continue;
-            }
-            // /* block comment with nested depth tracking */
-            if (content[i+1] == '*') {
-                advance(2);
-                int depth = 1;
-                while (i + 1 < content.size() && depth > 0) {
-                    if (content[i] == '/' && content[i+1] == '*') { ++depth; advance(2); }
-                    else if (content[i] == '*' && content[i+1] == '/') { --depth; advance(2); }
-                    else advance();
-                }
-                tokens.push_back({Token::Comment, content.substr(start, i - start), start, startLine, startCol});
-                continue;
-            }
-        }
+    // ---- metadata capture helpers ----
 
-        // Raw string literals: r#N"..."#N
-        if (c == 'r' && i + 1 < content.size()) {
-            size_t hashCount = 0;
-            size_t j = i + 1;
-            while (j < content.size() && content[j] == '#') { ++hashCount; ++j; }
-            if (j < content.size() && content[j] == '"') {
-                advance(static_cast<size_t>(j - i) + 1); // advance past r, #s, and opening "
-                // Find closing " followed by exactly hashCount #
-                while (i < content.size()) {
-                    if (content[i] == '"') {
-                        size_t k = i + 1;
-                        size_t closingHashes = 0;
-                        while (k < content.size() && content[k] == '#' && closingHashes < hashCount) {
-                            ++closingHashes; ++k;
-                        }
-                        if (closingHashes == hashCount) {
-                            advance(static_cast<size_t>(k - i));
-                            break;
-                        }
-                    }
-                    advance();
-                }
-                tokens.push_back({Token::String, content.substr(start, i - start), start, startLine, startCol});
-                continue;
-            }
-        }
-
-        // Regular string literals
-        if (c == '"') {
-            advance();
-            while (i < content.size() && content[i] != '"') {
-                if (content[i] == '\\' && i + 1 < content.size()) {
-                    // Handle escape sequences: \xNN, \u{N...}, \n, \t, etc.
-                    advance(); // past backslash
-                    char esc = content[i];
-                    if (esc == 'x' && i + 2 < content.size()) advance(2); // \xNN
-                    else if (esc == 'u' && i + 1 < content.size() && content[i+1] == '{') {
-                        advance(2); // past u{
-                        while (i < content.size() && content[i] != '}') advance();
-                        if (i < content.size()) advance(); // past }
-                    }
-                    else advance(); // single-char escape
-                } else {
-                    advance();
-                }
-            }
-            if (i < content.size()) advance(); // closing "
-            tokens.push_back({Token::String, content.substr(start, i - start), start, startLine, startCol});
-            continue;
-        }
-
-        // Lifetimes: 'ident or '_ (including 'static which is a keyword, not lifetime)
-        // MUST come before character literal handler
-        if (c == '\'' && i + 1 < content.size()) {
-            char next = content[i+1];
-            if (std::isalpha(static_cast<unsigned char>(next)) || next == '_') {
-                // Check if it's 'static (keyword) — consume it as keyword, don't fall through
-                if (content.substr(i+1, 6) == "static" && (i+7 >= content.size() || !std::isalnum(static_cast<unsigned char>(content[i+7])))) {
-                    advance(7); // past 'static
-                    tokens.push_back({Token::Keyword, content.substr(start, i - start), start, startLine, startCol});
-                    continue;
-                } else {
-                    advance(); // past '
-                    // Lifetimes are single identifiers: 'a, 'b, '_, 'static
-                    // Only consume one char or the word 'static
-                    if (i < content.size() && (std::isalnum(static_cast<unsigned char>(content[i])) || content[i] == '_')) {
-                        advance(); // consume first char
-                    }
-                    tokens.push_back({Token::Lifetime, content.substr(start, i - start), start, startLine, startCol});
-                    continue;
-                }
-            }
-        }
-
-        // Character literals — hardened for multi-char escapes
-        if (c == '\'') {
-            advance(); // past '
-            if (i < content.size() && content[i] == '\\') {
-                advance(); // past backslash
-                char esc = content[i];
-                if (esc == 'x' && i + 2 < content.size()) advance(2); // \xNN
-                else if (esc == 'u' && i + 1 < content.size() && content[i+1] == '{') {
-                    advance(2); // past u{
-                    while (i < content.size() && content[i] != '}') advance();
-                    if (i < content.size()) advance(); // past }
-                }
-                else advance(); // single-char escape like \n, \t
+    // Collect consecutive `///` doc comments
+    std::string collect_doc() {
+        std::string doc;
+        while (!eof()) {
+            if (peek() == '/' && i + 2 < n && s[i+1] == '/' && s[i+2] == '/') {
+                i += 3;
+                size_t start = i;
+                while (!eof() && peek() != '\n') i++;
+                if (!doc.empty()) doc += "\n";
+                doc.append(s + start, i - start);
+                // skip newline
+                if (!eof() && peek() == '\n') i++;
+            } else if (isspace((unsigned char)peek())) {
+                i++;
             } else {
-                while (i < content.size() && content[i] != '\'') advance();
-            }
-            if (i < content.size()) advance(); // closing '
-            tokens.push_back({Token::String, content.substr(start, i - start), start, startLine, startCol});
-            continue;
-        }
-
-        // Numbers — hex/binary/octal + single dot only + suffix handling
-        if (std::isdigit(static_cast<unsigned char>(c))) {
-            bool isFloat = false;
-            if (c == '0' && i + 1 < content.size()) {
-                char prefix = content[i+1];
-                if (prefix == 'x' || prefix == 'X') {
-                    advance(2);
-                    while (i < content.size() && (std::isxdigit(static_cast<unsigned char>(content[i])) || content[i] == '_')) advance();
-                } else if (prefix == 'b' || prefix == 'B') {
-                    advance(2);
-                    while (i < content.size() && (content[i] == '0' || content[i] == '1' || content[i] == '_')) advance();
-                } else if (prefix == 'o' || prefix == 'O') {
-                    advance(2);
-                    while (i < content.size() && (content[i] >= '0' && content[i] <= '7' || content[i] == '_')) advance();
-                } else {
-                    goto regular_number;
-                }
-            } else {
-            regular_number:
-                while (i < content.size() && (std::isdigit(static_cast<unsigned char>(content[i])) || content[i] == '_')) advance();
-                if (i < content.size() && content[i] == '.' && !isFloat) {
-                    // Check next is digit (not .. range operator)
-                    if (i + 1 < content.size() && std::isdigit(static_cast<unsigned char>(content[i+1]))) {
-                        isFloat = true;
-                        advance(); // past .
-                        while (i < content.size() && (std::isdigit(static_cast<unsigned char>(content[i])) || content[i] == '_')) advance();
-                    }
-                }
-                // Exponent
-                if (i < content.size() && (content[i] == 'e' || content[i] == 'E')) {
-                    size_t expPos = i;
-                    advance();
-                    if (i < content.size() && (content[i] == '+' || content[i] == '-')) advance();
-                    bool hasExpDigit = false;
-                    while (i < content.size() && (std::isdigit(static_cast<unsigned char>(content[i])) || content[i] == '_')) {
-                        hasExpDigit = true; advance();
-                    }
-                    if (!hasExpDigit) i = expPos; // rollback
-                }
-            }
-            // Type suffix (e.g., u32, f64, i128)
-            if (i < content.size() && std::isalpha(static_cast<unsigned char>(content[i]))) {
-                while (i < content.size() && std::isalnum(static_cast<unsigned char>(content[i]))) advance();
-            }
-            tokens.push_back({Token::Number, content.substr(start, i - start), start, startLine, startCol});
-            continue;
-        }
-
-        // Identifiers / Keywords
-        if (std::isalpha(static_cast<unsigned char>(c)) || c == '_') {
-            while (i < content.size() && (std::isalnum(static_cast<unsigned char>(content[i])) || content[i] == '_')) advance();
-            std::string_view text = content.substr(start, i - start);
-            static const char* keywords[] = {
-                "as", "async", "await", "break", "const", "continue", "crate", "dyn",
-                "else", "enum", "extern", "false", "fn", "for", "if", "impl", "in",
-                "let", "loop", "match", "mod", "move", "mut", "pub", "ref", "return",
-                "self", "Self", "static", "struct", "super", "trait", "true", "type",
-                "union", "unsafe", "use", "where", "while"
-            };
-            bool isKw = false;
-            for (auto kw : keywords) {
-                if (text == kw) { isKw = true; break; }
-            }
-            tokens.push_back({isKw ? Token::Keyword : Token::Ident, text, start, startLine, startCol});
-            continue;
-        }
-
-        // Symbols (multi-char first)
-        static const char* symbols[] = {
-            "::", "->", "=>", "!=", "==", "<=", ">=", "<<", ">>", "&&", "||",
-            "+=", "-=", "*=", "/=", "%=", "&=", "|=", "^=", "<<=", ">>=",
-            "..", "...", "..=", "//", "/*", "*/",
-            "+", "-", "*", "/", "%", "&", "|", "^", "!", "<", ">", "=", ";",
-            ":", ",", ".", "(", ")", "[", "]", "{", "}", "#", "$", "?", "~"
-        };
-        bool matched = false;
-        for (auto sym : symbols) {
-            size_t len = std::strlen(sym);
-            if (i + len <= content.size() && content.substr(i, len) == sym) {
-                advance(len);
-                tokens.push_back({Token::Symbol, content.substr(start, i - start), start, startLine, startCol});
-                matched = true;
                 break;
             }
         }
-        if (matched) continue;
-
-        // Unknown char — advance once to prevent infinite loop
-        advance();
-        tokens.push_back({Token::Symbol, content.substr(start, i - start), start, startLine, startCol});
+        return doc;
     }
 
-    tokens.push_back({Token::Eof, "", i, line, col});
-    return tokens;
-}
-
-// ============================================================================
-// Helpers
-// ============================================================================
-void RustParser::skipWhitespaceAndComments(const std::vector<Token>& tokens, size_t& pos) {
-    while (pos < tokens.size() && (tokens[pos].type == Token::Whitespace || tokens[pos].type == Token::Comment)) {
-        ++pos;
+    // Collect consecutive `#[...]` or `#![...]` attributes
+    std::vector<std::string> collect_attrs() {
+        std::vector<std::string> attrs;
+        while (!eof()) {
+            skip_ws();
+            if (peek() == '#' && i + 1 < n && s[i+1] == '[') {
+                size_t start = i;
+                i += 2;
+                int depth = 1;
+                while (!eof() && depth > 0) {
+                    char c = next();
+                    if (c == '[') depth++;
+                    else if (c == ']') depth--;
+                }
+                attrs.emplace_back(s + start, i - start);
+            } else {
+                break;
+            }
+        }
+        return attrs;
     }
-}
 
-void RustParser::skipWhitespaceCommentsAndDoc(const std::vector<Token>& tokens, size_t& pos) {
-    while (pos < tokens.size() && (tokens[pos].type == Token::Whitespace || tokens[pos].type == Token::Comment || tokens[pos].type == Token::DocComment)) {
-        ++pos;
+    // Parse visibility: pub, pub(crate), pub(super), pub(self), pub(in path)
+    std::string collect_vis() {
+        skip_ws();
+        if (!match_kw("pub")) return "";
+        skip_ws();
+        if (peek() == '(') {
+            size_t start = i;
+            skip_block('(', ')');
+            return std::string("pub") + std::string(s + start, i - start);
+        }
+        return "pub";
     }
-}
 
-bool RustParser::peek(const std::vector<Token>& tokens, size_t pos, std::string_view text) {
-    skipWhitespaceAndComments(tokens, pos);
-    return pos < tokens.size() && tokens[pos].text == text;
-}
+    // Parse modifiers: async, unsafe, extern, const, static
+    void collect_modifiers(bool& isAsync, bool& isUnsafe, bool& isExtern,
+                           bool& isConst, bool& isStatic) {
+        bool loop = true;
+        while (loop) {
+            loop = false;
+            skip_ws();
+            if (match_kw("async"))   { isAsync = true;  loop = true; }
+            else if (match_kw("unsafe")) { isUnsafe = true; loop = true; }
+            else if (match_kw("extern")) { isExtern = true; loop = true; }
+            else if (match_kw("const"))  { isConst = true;  loop = true; }
+            else if (match_kw("static")) { isStatic = true; loop = true; }
+        }
+    }
+};
 
-bool RustParser::consume(const std::vector<Token>& tokens, size_t& pos, std::string_view text) {
-    skipWhitespaceAndComments(tokens, pos);
-    if (pos < tokens.size() && tokens[pos].text == text) {
-        ++pos;
-        return true;
+// ============================================================
+// Call graph scanner (v3.2) — lightweight, string-based, no type resolution
+// ============================================================
+
+static bool isRustKeyword(std::string_view ident) {
+    static const char* kw[] = {
+        "if","else","while","for","loop","match","return","break","continue",
+        "let","mut","ref","const","static","async","await","unsafe","move",
+        "where","impl","trait","struct","enum","fn","type","pub","use","mod",
+        "as","in","box","yield","try","dyn","abstract",
+        "become","do","final","macro","override","priv","typeof","unsized",
+        "virtual","union"
+        // NOTE: self, super, crate are NOT keywords here — they are valid path prefixes
+        // for qualified calls (self.method, crate::foo, super::bar)
+    };
+    for (const char* k : kw) {
+        if (ident == k) return true;
     }
     return false;
 }
 
-SourceLocation RustParser::tokenLoc(const Token& t, uint32_t file_id) {
-    SourceLocation loc;
-    loc.line = static_cast<uint32_t>(t.line);
-    loc.column = static_cast<uint32_t>(t.column);
-    loc.file_id = file_id;
-    return loc;
-}
+// Scan a function body range [body_start, body_end) for call sites.
+// Emits CallEdge entries into the provided SymbolTable.
+static void extractCallsFromBody(const char* s, size_t body_start, size_t body_end,
+                                 const std::string& caller_name,
+                                 SymbolTable* symbols) {
+    if (!symbols || body_start >= body_end) return;
 
-SourceRange RustParser::tokenRange(const Token& start, const Token& end, uint32_t file_id) {
-    SourceRange r;
-    r.start = tokenLoc(start, file_id);
-    r.end = tokenLoc(end, file_id);
-    return r;
-}
+    size_t i = body_start;
+    size_t n = body_end;
 
-// ============================================================================
-// Attribute / Visibility / Doc comment parser
-// ============================================================================
-RustSymbolMeta RustParser::parseAttributesAndVisibility(const std::vector<Token>& tokens, size_t& pos) {
-    RustSymbolMeta meta;
-    skipWhitespaceCommentsAndDoc(tokens, pos);
+    while (i < n) {
+        char c = s[i];
+        if (!(isalpha((unsigned char)c) || c == '_')) { i++; continue; }
 
-    // Doc comments before attributes
-    while (pos < tokens.size() && tokens[pos].type == Token::DocComment) {
-        if (!meta.docComment.empty()) meta.docComment += "\n";
-        meta.docComment += std::string(tokens[pos].text);
-        ++pos;
-        skipWhitespaceCommentsAndDoc(tokens, pos);
-    }
+        size_t ident_start = i;
+        i++;
+        while (i < n && (isalnum((unsigned char)s[i]) || s[i] == '_')) i++;
+        std::string first(s + ident_start, i - ident_start);
 
-    // Attributes: #[...] and #![...]
-    while (peek(tokens, pos, "#")) {
-        size_t attrStart = pos;
-        consume(tokens, pos, "#");
-        if (peek(tokens, pos, "!")) consume(tokens, pos, "!");
-        if (consume(tokens, pos, "[")) {
-            int depth = 1;
-            while (pos < tokens.size() && depth > 0) {
-                if (tokens[pos].text == "[") ++depth;
-                else if (tokens[pos].text == "]") --depth;
-                ++pos;
-            }
-            // Extract all attribute data
-            std::string attrName;
-            for (size_t i = attrStart; i < pos && i < tokens.size(); ++i) {
-                if (tokens[i].type == Token::Ident && attrName.empty()) {
-                    attrName = std::string(tokens[i].text);
-                    meta.attributes.emplace_back(attrName, "");
-                }
-                if (tokens[i].text == "derive") {
-                    size_t j = i + 1;
-                    while (j < pos && j < tokens.size()) {
-                        if (tokens[j].type == Token::Ident) {
-                            meta.derives.push_back(std::string(tokens[j].text));
-                        }
-                        ++j;
-                    }
-                }
-            }
+        if (isRustKeyword(first)) continue;
+
+        // Look ahead for call patterns: . or :: or (
+        size_t j = i;
+        while (j < n && isspace((unsigned char)s[j])) j++;
+
+        if (j < n && s[j] == '(') {
+            // simple call: first(...)
+            symbols->addCallEdge({caller_name, first, CallKind::Direct, nullptr, 0});
+            i = j + 1;
+            continue;
         }
-        skipWhitespaceCommentsAndDoc(tokens, pos);
-    }
 
-    // Visibility
-    if (peek(tokens, pos, "pub")) {
-        meta.isPub = true;
-        consume(tokens, pos, "pub");
-        if (consume(tokens, pos, "(")) {
-            if (consume(tokens, pos, "crate")) {
-                meta.visibilityPath = "crate";
-            } else if (consume(tokens, pos, "super")) {
-                meta.visibilityPath = "super";
-            } else if (consume(tokens, pos, "self")) {
-                meta.visibilityPath = "self";
-            } else if (consume(tokens, pos, "in")) {
-                size_t pathStart = pos;
-                while (pos < tokens.size() && !peek(tokens, pos, ")")) ++pos;
-                std::string path;
-                for (size_t k = pathStart; k < pos && k < tokens.size(); ++k) {
-                    if (tokens[k].type != Token::Whitespace && tokens[k].type != Token::Comment) {
-                        path += std::string(tokens[k].text);
-                    }
-                }
-                meta.visibilityPath = "in " + path;
-            }
-            consume(tokens, pos, ")");
-        }
-    }
+        // Build callee chain
+        std::string callee = first;
+        CallKind kind = CallKind::Direct;
 
-    // Modifiers: unsafe, async, const, extern
-    while (pos < tokens.size() && tokens[pos].type == Token::Keyword) {
-        if (tokens[pos].text == "unsafe") { meta.isUnsafe = true; ++pos; }
-        else if (tokens[pos].text == "async") { meta.isAsync = true; ++pos; }
-        else if (tokens[pos].text == "const") { meta.isConst = true; ++pos; }
-        else if (tokens[pos].text == "extern") { meta.isExtern = true; ++pos; }
-        else break;
-        skipWhitespaceCommentsAndDoc(tokens, pos);
-    }
-
-    return meta;
-}
-
-// ============================================================================
-// Item parsers — hardened with where-clause and return-type awareness
-// ============================================================================
-ASTNode::Ptr RustParser::parseItem(const std::vector<Token>& tokens, size_t& pos) {
-    skipWhitespaceCommentsAndDoc(tokens, pos);
-    if (pos >= tokens.size() || tokens[pos].type == Token::Eof) return nullptr;
-
-    RustSymbolMeta meta = parseAttributesAndVisibility(tokens, pos);
-    skipWhitespaceCommentsAndDoc(tokens, pos);
-
-    if (pos >= tokens.size()) return nullptr;
-
-    if (peek(tokens, pos, "fn")) return parseFunction(tokens, pos, meta);
-    if (peek(tokens, pos, "struct")) return parseStruct(tokens, pos, meta);
-    if (peek(tokens, pos, "enum")) return parseEnum(tokens, pos, meta);
-    if (peek(tokens, pos, "trait")) return parseTrait(tokens, pos, meta);
-    if (peek(tokens, pos, "impl")) return parseImpl(tokens, pos, meta);
-    if (peek(tokens, pos, "use")) return parseUse(tokens, pos);
-    if (peek(tokens, pos, "mod")) return parseMod(tokens, pos, meta);
-    if (peek(tokens, pos, "type")) return parseTypeAlias(tokens, pos, meta);
-    if (peek(tokens, pos, "const") || peek(tokens, pos, "static")) return parseConstOrStatic(tokens, pos, meta);
-    if (peek(tokens, pos, "let")) return parseLet(tokens, pos);
-
-    // Skip unknown — advance by at least one token to prevent infinite loop
-    ++pos;
-    return nullptr;
-}
-
-ASTNode::Ptr RustParser::parseFunction(const std::vector<Token>& tokens, size_t& pos, RustSymbolMeta meta) {
-    size_t fnStart = pos;
-    consume(tokens, pos, "fn");
-    skipWhitespaceCommentsAndDoc(tokens, pos);
-
-    std::string name;
-    if (pos < tokens.size() && tokens[pos].type == Token::Ident) {
-        name = std::string(tokens[pos].text);
-        ++pos;
-    }
-
-    // Generic params
-    if (consume(tokens, pos, "<")) {
-        int depth = 1;
-        while (pos < tokens.size() && depth > 0) {
-            if (tokens[pos].text == "<") ++depth;
-            else if (tokens[pos].text == ">") --depth;
-            ++pos;
-        }
-    }
-
-    // Parameters — now captured for self/&mut self detection
-    std::vector<std::string> params;
-    if (consume(tokens, pos, "(")) {
-        int depth = 1;
-        while (pos < tokens.size() && depth > 0) {
-            if (tokens[pos].type == Token::Ident) {
-                std::string paramName = std::string(tokens[pos].text);
-                // Detect self patterns
-                if (paramName == "self" || paramName == "mut" || paramName == "&") {
-                    params.push_back(paramName);
-                }
-            }
-            if (tokens[pos].text == "(") ++depth;
-            else if (tokens[pos].text == ")") --depth;
-            ++pos;
-        }
-    }
-
-    // Where clause — skip gracefully by tracking brace/paren depth
-    if (peek(tokens, pos, "where")) {
-        consume(tokens, pos, "where");
-        while (pos < tokens.size() && !peek(tokens, pos, "{") && !peek(tokens, pos, ";")) {
-            // Skip balanced parens/braces in where bounds
-            if (tokens[pos].text == "(") { int d=1; ++pos; while(pos<tokens.size()&&d>0){ if(tokens[pos].text=="(")++d; else if(tokens[pos].text==")")--d; ++pos; } }
-            else ++pos;
-        }
-    }
-
-    // Return type — hardened for impl Fn() -> bool
-    if (consume(tokens, pos, "->")) {
-        int parenDepth = 0;
-        while (pos < tokens.size() && (parenDepth > 0 || !peek(tokens, pos, "{"))) {
-            if (tokens[pos].text == "(") ++parenDepth;
-            else if (tokens[pos].text == ")") --parenDepth;
-            ++pos;
-        }
-    }
-
-    // Body or semicolon
-    if (consume(tokens, pos, "{")) {
-        int depth = 1;
-        while (pos < tokens.size() && depth > 0) {
-            if (tokens[pos].text == "{") ++depth;
-            else if (tokens[pos].text == "}") --depth;
-            ++pos;
-        }
-    } else {
-        consume(tokens, pos, ";");
-    }
-
-    size_t fnEnd = pos;
-    SourceRange range = tokenRange(tokens[fnStart], tokens[fnEnd > 0 ? fnEnd - 1 : fnEnd], file_id_);
-    std::string label = "fn " + name;
-    if (meta.isUnsafe) label = "unsafe " + label;
-    if (meta.isAsync) label = "async " + label;
-    if (meta.isConst) label = "const " + label;
-    if (meta.isExtern) label = "extern " + label;
-    if (meta.isPub) {
-        if (!meta.visibilityPath.empty()) {
-            label = "pub(" + meta.visibilityPath + ") " + label;
-        } else {
-            label = "pub " + label;
-        }
-    }
-    auto node = std::make_shared<ASTNode>(NodeType::FunctionDecl, range, label);
-    return node;
-}
-
-ASTNode::Ptr RustParser::parseStruct(const std::vector<Token>& tokens, size_t& pos, RustSymbolMeta meta) {
-    size_t start = pos;
-    consume(tokens, pos, "struct");
-    skipWhitespaceCommentsAndDoc(tokens, pos);
-    std::string name;
-    if (pos < tokens.size() && tokens[pos].type == Token::Ident) {
-        name = std::string(tokens[pos].text);
-        ++pos;
-    }
-    // Generic params
-    if (consume(tokens, pos, "<")) {
-        int depth = 1;
-        while (pos < tokens.size() && depth > 0) {
-            if (tokens[pos].text == "<") ++depth;
-            else if (tokens[pos].text == ">") --depth;
-            ++pos;
-        }
-    }
-    // Tuple struct or regular struct
-    if (consume(tokens, pos, "(")) {
-        int depth = 1;
-        while (pos < tokens.size() && depth > 0) {
-            if (tokens[pos].text == "(") ++depth;
-            else if (tokens[pos].text == ")") --depth;
-            ++pos;
-        }
-        consume(tokens, pos, ";");
-    } else if (consume(tokens, pos, "{")) {
-        int depth = 1;
-        while (pos < tokens.size() && depth > 0) {
-            if (tokens[pos].text == "{") ++depth;
-            else if (tokens[pos].text == "}") --depth;
-            ++pos;
-        }
-    } else {
-        consume(tokens, pos, ";");
-    }
-    size_t end = pos;
-    SourceRange range = tokenRange(tokens[start], tokens[end > 0 ? end - 1 : end], file_id_);
-    std::string label = "struct " + name;
-    if (meta.isPub) label = "pub " + label;
-    auto node = std::make_shared<ASTNode>(NodeType::StructDecl, range, label);
-    return node;
-}
-
-ASTNode::Ptr RustParser::parseEnum(const std::vector<Token>& tokens, size_t& pos, RustSymbolMeta meta) {
-    size_t start = pos;
-    consume(tokens, pos, "enum");
-    skipWhitespaceCommentsAndDoc(tokens, pos);
-    std::string name;
-    if (pos < tokens.size() && tokens[pos].type == Token::Ident) {
-        name = std::string(tokens[pos].text);
-        ++pos;
-    }
-    if (consume(tokens, pos, "<")) {
-        int depth = 1;
-        while (pos < tokens.size() && depth > 0) {
-            if (tokens[pos].text == "<") ++depth;
-            else if (tokens[pos].text == ">") --depth;
-            ++pos;
-        }
-    }
-    if (consume(tokens, pos, "{")) {
-        int depth = 1;
-        while (pos < tokens.size() && depth > 0) {
-            if (tokens[pos].text == "{") ++depth;
-            else if (tokens[pos].text == "}") --depth;
-            ++pos;
-        }
-    }
-    size_t end = pos;
-    SourceRange range = tokenRange(tokens[start], tokens[end > 0 ? end - 1 : end], file_id_);
-    std::string label = "enum " + name;
-    if (meta.isPub) label = "pub " + label;
-    auto node = std::make_shared<ASTNode>(NodeType::EnumDecl, range, label);
-    return node;
-}
-
-ASTNode::Ptr RustParser::parseTrait(const std::vector<Token>& tokens, size_t& pos, RustSymbolMeta meta) {
-    size_t start = pos;
-    consume(tokens, pos, "trait");
-    skipWhitespaceCommentsAndDoc(tokens, pos);
-    std::string name;
-    if (pos < tokens.size() && tokens[pos].type == Token::Ident) {
-        name = std::string(tokens[pos].text);
-        ++pos;
-    }
-    if (consume(tokens, pos, "<")) {
-        int depth = 1;
-        while (pos < tokens.size() && depth > 0) {
-            if (tokens[pos].text == "<") ++depth;
-            else if (tokens[pos].text == ">") --depth;
-            ++pos;
-        }
-    }
-    // Supertraits: trait Foo: Bar + Baz
-    if (consume(tokens, pos, ":")) {
-        while (pos < tokens.size() && !peek(tokens, pos, "{")) ++pos;
-    }
-    if (consume(tokens, pos, "{")) {
-        int depth = 1;
-        while (pos < tokens.size() && depth > 0) {
-            if (tokens[pos].text == "{") ++depth;
-            else if (tokens[pos].text == "}") --depth;
-            ++pos;
-        }
-    }
-    size_t end = pos;
-    SourceRange range = tokenRange(tokens[start], tokens[end > 0 ? end - 1 : end], file_id_);
-    std::string label = "trait " + name;
-    if (meta.isPub) label = "pub " + label;
-    if (meta.isUnsafe) label = "unsafe " + label;
-    auto node = std::make_shared<ASTNode>(NodeType::ClassDecl, range, label);
-    return node;
-}
-
-ASTNode::Ptr RustParser::parseImpl(const std::vector<Token>& tokens, size_t& pos, RustSymbolMeta meta) {
-    size_t start = pos;
-    consume(tokens, pos, "impl");
-    skipWhitespaceCommentsAndDoc(tokens, pos);
-
-    std::string traitName;
-    std::string typeName;
-
-    if (consume(tokens, pos, "<")) {
-        int depth = 1;
-        while (pos < tokens.size() && depth > 0) {
-            if (tokens[pos].text == "<") ++depth;
-            else if (tokens[pos].text == ">") --depth;
-            ++pos;
-        }
-    }
-
-    size_t typeStart = pos;
-    while (pos < tokens.size() && !peek(tokens, pos, "for") && !peek(tokens, pos, "{")) ++pos;
-    std::string firstPart;
-    for (size_t k = typeStart; k < pos && k < tokens.size(); ++k) {
-        if (tokens[k].type != Token::Whitespace && tokens[k].type != Token::Comment && tokens[k].type != Token::DocComment) {
-            firstPart += std::string(tokens[k].text);
-        }
-    }
-
-    if (consume(tokens, pos, "for")) {
-        traitName = firstPart;
-        size_t typeStart2 = pos;
-        while (pos < tokens.size() && !peek(tokens, pos, "{")) ++pos;
-        for (size_t k = typeStart2; k < pos && k < tokens.size(); ++k) {
-            if (tokens[k].type != Token::Whitespace && tokens[k].type != Token::Comment && tokens[k].type != Token::DocComment) {
-                typeName += std::string(tokens[k].text);
-            }
-        }
-    } else {
-        typeName = firstPart;
-    }
-
-    // Parse impl body — recurse into inner items (methods, associated functions)
-    std::vector<ASTNode::Ptr> children;
-    if (consume(tokens, pos, "{")) {
-        int depth = 1;
-        while (pos < tokens.size() && depth > 0) {
-            if (tokens[pos].text == "{") {
-                ++depth;
-                ++pos;
-            } else if (tokens[pos].text == "}") {
-                --depth;
-                if (depth == 0) { ++pos; break; }
-                ++pos;
-            } else {
-                // Try to parse inner item at depth 1
-                if (depth == 1) {
-                    auto child = parseItem(tokens, pos);
-                    if (child) children.push_back(child);
-                    else ++pos;
+        if (j + 1 < n && s[j] == ':' && s[j+1] == ':') {
+            // Qualified chain: first::second::third(...)
+            kind = CallKind::Qualified;
+            while (j + 1 < n && s[j] == ':' && s[j+1] == ':') {
+                j += 2;
+                while (j < n && isspace((unsigned char)s[j])) j++;
+                size_t seg_start = j;
+                if (j < n && (isalpha((unsigned char)s[j]) || s[j] == '_')) {
+                    j++;
+                    while (j < n && (isalnum((unsigned char)s[j]) || s[j] == '_')) j++;
+                    callee += "::" + std::string(s + seg_start, j - seg_start);
                 } else {
-                    ++pos;
+                    break;
                 }
             }
+        } else if (j < n && s[j] == '.') {
+            // Method chain: obj.method(...)
+            kind = CallKind::Method;
+            j++;
+            while (j < n && isspace((unsigned char)s[j])) j++;
+            size_t method_start = j;
+            if (j < n && (isalpha((unsigned char)s[j]) || s[j] == '_')) {
+                j++;
+                while (j < n && (isalnum((unsigned char)s[j]) || s[j] == '_')) j++;
+                callee += "." + std::string(s + method_start, j - method_start);
+            }
         }
-    }
 
-    size_t end = pos;
-    SourceRange range = tokenRange(tokens[start], tokens[end > 0 ? end - 1 : end], file_id_);
-    std::string label = traitName.empty() ? "impl " + typeName : "impl " + traitName + " for " + typeName;
-    ASTNode::Ptr node = std::make_shared<ASTNode>(NodeType::ClassDecl, range, label);
-    if (!children.empty()) {
-        node = node->withChildren(children);
+        // After building chain, verify it's a call site
+        while (j < n && isspace((unsigned char)s[j])) j++;
+        if (j < n && s[j] == '(') {
+            symbols->addCallEdge({caller_name, callee, kind, nullptr, 0});
+            i = j + 1;
+            continue;
+        }
+
+        // Not a call site — advance past consumed content
+        i = j;
     }
+}
+
+// ============================================================
+// Node helpers
+// ============================================================
+
+static ASTNode::Ptr makeNode(NodeType t, const std::string& label, uint32_t fid,
+                             const RustMeta& meta = RustMeta{}) {
+    SourceRange r{};
+    r.start.file_id = fid;
+    r.end.file_id = fid;
+    auto node = std::make_shared<ASTNode>(t, r, label);
+    node->rust_meta_ = meta;
     return node;
 }
 
-ASTNode::Ptr RustParser::parseUse(const std::vector<Token>& tokens, size_t& pos) {
-    size_t start = pos;
-    consume(tokens, pos, "use");
-    skipWhitespaceCommentsAndDoc(tokens, pos);
+// ============================================================
+// Core parse
+// ============================================================
 
-    // Parse use tree with nested braces: a::{b, c::{d, e}}
-    std::string path;
-    int braceDepth = 0;
-    while (pos < tokens.size() && !peek(tokens, pos, ";") && !peek(tokens, pos, "as")) {
-        if (tokens[pos].text == "{") { ++braceDepth; path += "{"; ++pos; }
-        else if (tokens[pos].text == "}") { --braceDepth; path += "}"; ++pos; }
-        else if (tokens[pos].type != Token::Whitespace && tokens[pos].type != Token::Comment && tokens[pos].type != Token::DocComment) {
-            path += std::string(tokens[pos].text);
-        }
-        ++pos;
-    }
-
-    if (consume(tokens, pos, "as")) {
-        skipWhitespaceCommentsAndDoc(tokens, pos);
-        if (pos < tokens.size() && tokens[pos].type == Token::Ident) {
-            path += " as " + std::string(tokens[pos].text);
-            ++pos;
-        }
-    }
-    consume(tokens, pos, ";");
-    size_t end = pos;
-    SourceRange range = tokenRange(tokens[start], tokens[end > 0 ? end - 1 : end], file_id_);
-    return std::make_shared<ASTNode>(NodeType::UsingDecl, range, "use " + path);
-}
-
-ASTNode::Ptr RustParser::parseMod(const std::vector<Token>& tokens, size_t& pos, RustSymbolMeta meta) {
-    size_t modStart = pos;
-    consume(tokens, pos, "mod");
-    skipWhitespaceCommentsAndDoc(tokens, pos);
-    if (pos >= tokens.size() || tokens[pos].type != Token::Ident) return nullptr;
-    std::string name(tokens[pos].text);
-    ++pos;
-    skipWhitespaceCommentsAndDoc(tokens, pos);
-
-    if (consume(tokens, pos, "{")) {
-        std::vector<ASTNode::Ptr> children;
-        while (!peek(tokens, pos, "}") && pos < tokens.size()) {
-            auto child = parseItem(tokens, pos);
-            if (child) children.push_back(child);
-            else ++pos;
-        }
-        consume(tokens, pos, "}");
-        size_t modEnd = pos;
-        SourceRange range = tokenRange(tokens[modStart], tokens[modEnd > 0 ? modEnd - 1 : modEnd], file_id_);
-        std::string label = "mod " + name;
-        if (meta.isPub) label = "pub " + label;
-        ASTNode::Ptr node = std::make_shared<ASTNode>(NodeType::NamespaceDecl, range, label);
-        if (!children.empty()) {
-            node = node->withChildren(children);
-        }
-        return node;
-    } else if (consume(tokens, pos, ";")) {
-        size_t modEnd = pos;
-        SourceRange range = tokenRange(tokens[modStart], tokens[modEnd > 0 ? modEnd - 1 : modEnd], file_id_);
-        std::string label = "mod " + name;
-        if (meta.isPub) label = "pub " + label;
-        auto node = std::make_shared<ASTNode>(NodeType::NamespaceDecl, range, label);
-        return node;
-    }
-    return nullptr;
-}
-
-ASTNode::Ptr RustParser::parseTypeAlias(const std::vector<Token>& tokens, size_t& pos, RustSymbolMeta meta) {
-    size_t start = pos;
-    consume(tokens, pos, "type");
-    skipWhitespaceCommentsAndDoc(tokens, pos);
-    std::string name;
-    if (pos < tokens.size() && tokens[pos].type == Token::Ident) {
-        name = std::string(tokens[pos].text);
-        ++pos;
-    }
-    if (consume(tokens, pos, "<")) {
-        int depth = 1;
-        while (pos < tokens.size() && depth > 0) {
-            if (tokens[pos].text == "<") ++depth;
-            else if (tokens[pos].text == ">") --depth;
-            ++pos;
-        }
-    }
-    if (consume(tokens, pos, "=")) {
-        while (pos < tokens.size() && !peek(tokens, pos, ";")) ++pos;
-    }
-    consume(tokens, pos, ";");
-    size_t end = pos;
-    SourceRange range = tokenRange(tokens[start], tokens[end > 0 ? end - 1 : end], file_id_);
-    std::string label = "type " + name;
-    if (meta.isPub) label = "pub " + label;
-    auto node = std::make_shared<ASTNode>(NodeType::TypedefDecl, range, label);
-    return node;
-}
-
-ASTNode::Ptr RustParser::parseConstOrStatic(const std::vector<Token>& tokens, size_t& pos, RustSymbolMeta meta) {
-    size_t start = pos;
-    bool isConst = peek(tokens, pos, "const");
-    if (isConst) consume(tokens, pos, "const");
-    else consume(tokens, pos, "static");
-    skipWhitespaceCommentsAndDoc(tokens, pos);
-    if (consume(tokens, pos, "mut")) skipWhitespaceCommentsAndDoc(tokens, pos);
-    std::string name;
-    if (pos < tokens.size() && tokens[pos].type == Token::Ident) {
-        name = std::string(tokens[pos].text);
-        ++pos;
-    }
-    // Skip type annotation
-    if (consume(tokens, pos, ":")) {
-        while (pos < tokens.size() && !peek(tokens, pos, "=") && !peek(tokens, pos, ";")) ++pos;
-    }
-    if (consume(tokens, pos, "=")) {
-        while (pos < tokens.size() && !peek(tokens, pos, ";")) ++pos;
-    }
-    consume(tokens, pos, ";");
-    size_t end = pos;
-    SourceRange range = tokenRange(tokens[start], tokens[end > 0 ? end - 1 : end], file_id_);
-    std::string label = isConst ? "const " + name : "static " + name;
-    if (meta.isPub) label = "pub " + label;
-    auto node = std::make_shared<ASTNode>(NodeType::VariableDecl, range, label);
-    return node;
-}
-
-ASTNode::Ptr RustParser::parseLet(const std::vector<Token>& tokens, size_t& pos) {
-    size_t start = pos;
-    consume(tokens, pos, "let");
-    skipWhitespaceCommentsAndDoc(tokens, pos);
-    if (consume(tokens, pos, "mut")) skipWhitespaceCommentsAndDoc(tokens, pos);
-    std::string name;
-    if (pos < tokens.size() && tokens[pos].type == Token::Ident) {
-        name = std::string(tokens[pos].text);
-        ++pos;
-    }
-    while (pos < tokens.size() && !peek(tokens, pos, ";")) ++pos;
-    consume(tokens, pos, ";");
-    size_t end = pos;
-    SourceRange range = tokenRange(tokens[start], tokens[end > 0 ? end - 1 : end], file_id_);
-    return std::make_shared<ASTNode>(NodeType::VariableDecl, range, "let " + name);
-}
-
-// ============================================================================
-// Top-level parse
-// ============================================================================
 RustParseResult RustParser::parse(std::string_view content, std::string_view file_path) {
-    RustParseResult result;
-    file_path_ = std::string(file_path);
-    file_id_ = static_cast<uint32_t>(std::hash<std::string>{}(file_path_) & 0xFFFFFF);
-
-    auto tokens = tokenize(content);
-    size_t pos = 0;
-
-    while (pos < tokens.size() && tokens[pos].type != Token::Eof) {
-        auto node = parseItem(tokens, pos);
-        if (node) result.nodes.push_back(node);
-        else ++pos;
-    }
-
-    result.success = true;
-    return result;
+    return parse(content, file_path, nullptr);
 }
 
-RustParseResult RustParser::parseIncremental(std::string_view content,
-                                              const std::vector<ASTNode::Ptr>& old_nodes,
-                                              size_t change_start, size_t change_end) {
-    // Simplified: full re-parse for now; incremental logic can be added later
+RustParseResult RustParser::parse(std::string_view content, std::string_view file_path,
+                                  SymbolTable* symbols) {
+    if (symbols) symbols->clear();
+
+    RustParseResult out;
+    uint32_t fid = (uint32_t)(std::hash<std::string>{}(std::string(file_path)) & 0xFFFFFF);
+
+    Cursor c(content);
+
+    std::vector<ASTNode::Ptr> nodes;
+
+    while (!c.eof()) {
+        c.skip_ws();
+
+        // ---- metadata capture pipeline (v3.1)
+        RustMeta meta;
+        meta.doc = c.collect_doc();
+        meta.attributes = c.collect_attrs();
+        meta.visibility = c.collect_vis();
+
+        bool isAsync=false, isUnsafe=false, isExtern=false, isConst=false, isStatic=false;
+        c.collect_modifiers(isAsync, isUnsafe, isExtern, isConst, isStatic);
+        meta.is_async = isAsync;
+        meta.is_unsafe = isUnsafe;
+        meta.is_extern = isExtern;
+        meta.is_const = isConst;
+        meta.is_static = isStatic;
+        meta.is_pub = !meta.visibility.empty();
+
+        // =====================================================
+        // FUNCTION (FIX: now always detected)
+        // =====================================================
+        if (c.match_kw("fn")) {
+            c.skip_ws();
+            std::string name = c.ident();
+
+            // generics
+            if (c.peek() == '<') c.skip_block('<','>');
+
+            // params
+            if (c.peek() == '(') c.skip_block('(',')');
+
+            // return
+            c.skip_ws();
+            if (c.peek() == '-' && c.i+1 < c.n && c.s[c.i+1] == '>') {
+                c.i += 2;
+                while (!c.eof() && c.peek()!='{' && c.peek()!=';') c.i++;
+            }
+
+            // body / ;
+            size_t body_start = 0, body_end = 0;
+            if (c.peek() == '{') {
+                body_start = c.i + 1;
+                c.skip_block('{','}');
+                body_end = c.i - 1;
+            } else if (c.peek() == ';') c.i++;
+
+            std::string label = "fn " + name;
+            if (isAsync) label = "async " + label;
+            if (isUnsafe) label = "unsafe " + label;
+            if (isExtern) label = "extern " + label;
+
+            auto node = makeNode(NodeType::FunctionDecl, label, fid, meta);
+            nodes.push_back(node);
+
+            if (symbols) {
+                symbols->add({name, std::string(file_path), NodeType::FunctionDecl, node->getRange(), meta, ""});
+                if (body_end > body_start) {
+                    extractCallsFromBody(c.s, body_start, body_end, name, symbols);
+                }
+            }
+            continue;
+        }
+
+        // =====================================================
+        // STRUCT
+        // =====================================================
+        if (c.match_kw("struct")) {
+            c.skip_ws();
+            std::string name = c.ident();
+
+            if (c.peek() == '<') c.skip_block('<','>');
+            if (c.peek() == '{') c.skip_block('{','}');
+            else if (c.peek() == '(') c.skip_block('(',')');
+
+            auto node = makeNode(NodeType::StructDecl, "struct " + name, fid, meta);
+            nodes.push_back(node);
+
+            if (symbols) {
+                symbols->add({name, std::string(file_path), NodeType::StructDecl, node->getRange(), meta, ""});
+            }
+            continue;
+        }
+
+        // =====================================================
+        // TRAIT
+        // =====================================================
+        if (c.match_kw("trait")) {
+            c.skip_ws();
+            std::string name = c.ident();
+
+            if (c.peek() == '<') c.skip_block('<','>');
+            if (c.peek() == ':') {
+                while (!c.eof() && c.peek()!='{') c.i++;
+            }
+            if (c.peek() == '{') c.skip_block('{','}');
+
+            auto node = makeNode(NodeType::ClassDecl, "trait " + name, fid, meta);
+            nodes.push_back(node);
+
+            if (symbols) {
+                symbols->add({name, std::string(file_path), NodeType::ClassDecl, node->getRange(), meta, ""});
+            }
+            continue;
+        }
+
+        // =====================================================
+        // ENUM
+        // =====================================================
+        if (c.match_kw("enum")) {
+            c.skip_ws();
+            std::string name = c.ident();
+
+            if (c.peek() == '{') c.skip_block('{','}');
+
+            auto node = makeNode(NodeType::EnumDecl, "enum " + name, fid, meta);
+            nodes.push_back(node);
+
+            if (symbols) {
+                symbols->add({name, std::string(file_path), NodeType::EnumDecl, node->getRange(), meta, ""});
+            }
+            continue;
+        }
+
+        // =====================================================
+        // IMPL (FIX: inner fn parsing)
+        // =====================================================
+        if (c.match_kw("impl")) {
+            c.skip_ws();
+
+            if (c.peek() == '<') c.skip_block('<','>');
+
+            // skip header
+            while (!c.eof() && c.peek()!='{') c.i++;
+
+            std::vector<ASTNode::Ptr> children;
+            std::string implParent; // for symbol table parent tracking
+
+            if (c.peek() == '{') {
+                c.i++;
+                int depth = 1;
+
+                while (!c.eof() && depth > 0) {
+                    c.skip_ws();
+
+                    if (c.peek() == '{') { depth++; c.i++; continue; }
+                    if (c.peek() == '}') { depth--; c.i++; continue; }
+
+                    // ---- inner fn detection (CRITICAL FIX)
+                    size_t save = c.i;
+
+                    // inner metadata
+                    RustMeta innerMeta;
+                    innerMeta.doc = c.collect_doc();
+                    innerMeta.attributes = c.collect_attrs();
+                    innerMeta.visibility = c.collect_vis();
+
+                    bool a=false,u=false,e=false,co=false,st=false;
+                    c.collect_modifiers(a, u, e, co, st);
+                    innerMeta.is_async = a;
+                    innerMeta.is_unsafe = u;
+                    innerMeta.is_extern = e;
+                    innerMeta.is_const = co;
+                    innerMeta.is_static = st;
+                    innerMeta.is_pub = !innerMeta.visibility.empty();
+
+                    if (c.match_kw("fn")) {
+                        c.skip_ws();
+                        std::string name = c.ident();
+
+                        if (c.peek() == '<') c.skip_block('<','>');
+                        if (c.peek() == '(') c.skip_block('(',')');
+
+                        size_t inner_body_start = 0, inner_body_end = 0;
+                        if (c.peek() == '{') {
+                            inner_body_start = c.i + 1;
+                            c.skip_block('{','}');
+                            inner_body_end = c.i - 1;
+                        } else if (c.peek() == ';') c.i++;
+
+                        std::string label = "fn " + name;
+                        if (a) label = "async " + label;
+                        if (u) label = "unsafe " + label;
+                        if (e) label = "extern " + label;
+
+                        auto child = makeNode(NodeType::FunctionDecl, label, fid, innerMeta);
+                        children.push_back(child);
+
+                        if (symbols) {
+                            symbols->add({name, std::string(file_path), NodeType::FunctionDecl, child->getRange(), innerMeta, implParent});
+                            if (inner_body_end > inner_body_start) {
+                                extractCallsFromBody(c.s, inner_body_start, inner_body_end, name, symbols);
+                            }
+                        }
+                        continue;
+                    }
+
+                    c.i = save + 1; // forward progress guarantee
+                }
+            }
+
+            auto implNode = makeNode(NodeType::ClassDecl, "impl", fid, meta);
+            if (!children.empty()) {
+                implNode = implNode->withChildren(children);
+            }
+            nodes.push_back(implNode);
+            continue;
+        }
+
+        // =====================================================
+        // USE
+        // =====================================================
+        if (c.match_kw("use")) {
+            size_t start = c.i;
+            while (!c.eof() && c.peek() != ';') c.i++;
+            if (!c.eof()) c.i++;
+            nodes.push_back(makeNode(NodeType::UsingDecl, "use", fid, meta));
+            continue;
+        }
+
+        // =====================================================
+        // MOD
+        // =====================================================
+        if (c.match_kw("mod")) {
+            c.skip_ws();
+            std::string name = c.ident();
+
+            if (c.peek() == '{') c.skip_block('{','}');
+            else if (c.peek() == ';') c.i++;
+
+            auto node = makeNode(NodeType::NamespaceDecl, "mod " + name, fid, meta);
+            nodes.push_back(node);
+
+            if (symbols) {
+                symbols->add({name, std::string(file_path), NodeType::NamespaceDecl, node->getRange(), meta, ""});
+            }
+            continue;
+        }
+
+        // =====================================================
+        // LET
+        // =====================================================
+        if (c.match_kw("let")) {
+            c.skip_ws();
+            std::string name = c.ident();
+
+            while (!c.eof() && c.peek() != ';') c.i++;
+            if (!c.eof()) c.i++;
+
+            auto node = makeNode(NodeType::VariableDecl, "let " + name, fid, meta);
+            nodes.push_back(node);
+
+            if (symbols) {
+                symbols->add({name, std::string(file_path), NodeType::VariableDecl, node->getRange(), meta, ""});
+            }
+            continue;
+        }
+
+        // fallback (never stall)
+        c.i++;
+    }
+
+    out.nodes = std::move(nodes);
+    out.success = true;
+    return out;
+}
+
+RustParseResult RustParser::parseIncremental(
+    std::string_view content,
+    const std::vector<ASTNode::Ptr>&,
+    size_t, size_t) {
     return parse(content, "");
 }
 
-// ============================================================================
-// Integration helpers
-// ============================================================================
-void registerRustFile(ASTGraphEngine& engine, const std::string& path, const std::string& content) {
-    RustParser parser;
-    auto result = parser.parse(content, path);
-    if (result.success) {
-        engine.registerFile(path, content);
-    }
+// ============================================================
+// Engine integration (unchanged contract)
+// ============================================================
+
+void registerRustFile(ASTGraphEngine& engine,
+                      const std::string& path,
+                      const std::string& content)
+{
+    RustParser p;
+    auto r = p.parse(content, path);
+    if (r.success) engine.registerFile(path, content);
 }
 
-void updateRustFile(ASTGraphEngine& engine, const std::string& path, const std::string& content) {
-    RustParser parser;
-    auto result = parser.parse(content, path);
-    if (result.success) {
-        engine.updateFile(path, content);
-    }
+void updateRustFile(ASTGraphEngine& engine,
+                    const std::string& path,
+                    const std::string& content)
+{
+    RustParser p;
+    auto r = p.parse(content, path);
+    if (r.success) engine.updateFile(path, content);
 }
 
 } // namespace rawrxd::ast::rust

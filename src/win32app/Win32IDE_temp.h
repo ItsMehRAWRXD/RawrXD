@@ -345,6 +345,10 @@ struct RefactoringOption
     void openModel();
     bool loadModelForInference(const std::string& filepath);
     void loadModelFromPathAsync(const std::string& filepath);
+    /** Single authoritative post-load barrier. Called by BOTH the sync (File→Open) and
+     *  async (dropdown WM_MODEL_LOAD_DONE) paths. Clears streaming state, syncs UI,
+     *  then posts WM_SAFE_TO_REPLAY so replay never races ahead of a clean slate. */
+    void onModelReadyUnified();
 
     // Test agent access
     HWND getMainWindow() const { return m_hwndMain; }
@@ -1826,6 +1830,9 @@ struct RefactoringOption
     static const UINT WM_MODEL_PROGRESS_DONE = WM_APP + 301;
     static const UINT WM_MODEL_LOAD_DONE = WM_APP + 302;
     static const UINT WM_PENDING_CHAT_REPLAY = WM_APP + 303;
+    /// Posted by onModelReadyUnified() once streaming state is clean. WM_PENDING_CHAT_REPLAY
+    /// is now gated behind this message so replay never races a dirty streaming state.
+    static const UINT WM_SAFE_TO_REPLAY = WM_APP + 309;
     /// Posted after chat throughput gauges update so status bar can show ~t/s est (safe from worker threads).
     static const UINT WM_STATUSBAR_REFRESH_COPILOT = WM_APP + 308;
 

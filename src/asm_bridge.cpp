@@ -3,6 +3,7 @@
 // DEP-free, no Qt, pure MASM x64 compatible, C++20
 
 #include <windows.h>
+#include <intrin.h>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
@@ -15,12 +16,23 @@
 #include <thread>
 #include <chrono>
 #include <condition_variable>
+#include <functional>
+#include <memory>
 #include <map>
 #include <sstream>
 #include <fstream>
 #include <algorithm>
 #include <cmath>
 #include <nlohmann/json.hpp>
+
+// Forward declarations for variables used before definition
+static std::atomic<bool> g_hybrid_gpu_ready{false};
+static std::vector<float> g_hybrid_cpu_buffer;
+static std::vector<float> g_hybrid_gpu_buffer;
+static std::mutex g_task_mutex;
+static std::queue<std::function<void()>> g_task_queue;
+static std::condition_variable g_task_cv;
+static std::atomic<bool> g_task_shutdown{false};
 
 // Basic logging stub (replace with real logging if available)
 extern "C" void LogMessage(const char* msg) {
@@ -621,7 +633,7 @@ enum class ModelState { Unloaded, Loading, Ready, Inferencing, Error };
 struct ModelInstance {
     std::string name;
     ModelState state{ModelState::Unloaded};
-    std::atomic<uint32_t> ref_count{0};
+    uint32_t ref_count{0};
 };
 static std::map<std::string, ModelInstance> g_model_instances;
 static std::mutex g_model_mutex;
@@ -649,8 +661,8 @@ extern "C" void ModelState_AcquireInstance() {
 struct SwarmJob {
     uint64_t id{0};
     std::string payload;
-    std::atomic<bool> completed{false};
-    std::atomic<bool> aborted{false};
+    bool completed{false};
+    bool aborted{false};
 };
 static std::vector<SwarmJob> g_swarm_jobs;
 static std::mutex g_swarm_mutex;
@@ -676,7 +688,7 @@ struct AgentTask {
     uint64_t id{0};
     std::string type;
     std::string params;
-    std::atomic<bool> done{false};
+    bool done{false};
 };
 static std::queue<AgentTask> g_agent_tasks;
 static std::mutex g_agent_mutex;
@@ -1291,10 +1303,7 @@ extern "C" void GGUF_LoadFile(const char* path) {
     }
 }
 
-// Hybrid CPU/GPU — functional C++ implementation
-static std::atomic<bool> g_hybrid_gpu_ready{false};
-static std::vector<float> g_hybrid_cpu_buffer;
-static std::vector<float> g_hybrid_gpu_buffer;
+// Hybrid CPU/GPU — functional C++ implementation (globals declared at top)
 
 extern "C" void HybridCPU_MatMul(const float* a, const float* b, float* out, int m, int n, int k) {
     if (!a || !b || !out) return;
@@ -1358,11 +1367,24 @@ extern "C" void Json_ParseObject(const char* str) {
     Json_ParseString(str);
 }
 
+static nlohmann::json Json_ParseFileImpl(const std::string& path) {
+    std::ifstream file(path, std::ios::binary);
+    if (!file.is_open()) {
+        return nlohmann::json();
+    }
+
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    return nlohmann::json::parse(buffer.str(), nullptr, false);
+}
+
 extern "C" void Json_ParseFile(const char* path) {
     if (!path) return;
     try {
-        std::ifstream f(path);
-        if (f) g_json_root = nlohmann::json::parse(f);
+        const nlohmann::json parsed = Json_ParseFileImpl(path);
+        if (!parsed.is_discarded()) {
+            g_json_root = parsed;
+        }
     } catch (...) {}
 }
 
@@ -1546,8 +1568,8 @@ extern "C" const char* ModelBridge_GetProfile(const char* model) {
 struct NanoDiskJob {
     uint64_t id{0};
     std::string operation;
-    std::atomic<bool> completed{false};
-    std::atomic<bool> aborted{false};
+    bool completed{false};
+    bool aborted{false};
     std::string result;
 };
 
@@ -1573,8 +1595,8 @@ extern "C" const char* NanoDisk_GetJobStatus(uint64_t jobId) {
     std::lock_guard<std::mutex> lock(g_nanodisk_mutex);
     auto it = g_nanodisk_jobs.find(jobId);
     if (it == g_nanodisk_jobs.end()) return "not_found";
-    if (it->second.aborted.load()) return "aborted";
-    if (it->second.completed.load()) return "completed";
+    if (it->second.aborted) return "aborted";
+    if (it->second.completed) return "completed";
     return "running";
 }
 
@@ -1694,15 +1716,15 @@ struct OutputChannel {
     std::mutex mutex;
 };
 
-static std::map<std::string, OutputChannel> g_output_channels;
+static std::map<std::string, std::unique_ptr<OutputChannel>> g_output_channels;
 static std::mutex g_output_mutex;
 
 extern "C" void OutputChannel_Create(const char* name) {
     if (!name) return;
     std::lock_guard<std::mutex> lock(g_output_mutex);
-    OutputChannel ch;
-    ch.name = name;
-    g_output_channels.insert_or_assign(name, std::move(ch));
+    auto ch = std::make_unique<OutputChannel>();
+    ch->name = name;
+    g_output_channels[name] = std::move(ch);
 }
 
 extern "C" void OutputChannel_CreateAPI(const char* name) {
@@ -1713,9 +1735,9 @@ extern "C" void OutputChannel_Append(const char* name, const char* text) {
     if (!name || !text) return;
     std::lock_guard<std::mutex> lock(g_output_mutex);
     auto it = g_output_channels.find(name);
-    if (it != g_output_channels.end()) {
-        std::lock_guard<std::mutex> chLock(it->second.mutex);
-        it->second.buffer << text;
+    if (it != g_output_channels.end() && it->second) {
+        std::lock_guard<std::mutex> chLock(it->second->mutex);
+        it->second->buffer << text;
     }
 }
 
@@ -1723,10 +1745,10 @@ extern "C" void OutputChannel_AppendLine(const char* name, const char* text) {
     if (!name) return;
     std::lock_guard<std::mutex> lock(g_output_mutex);
     auto it = g_output_channels.find(name);
-    if (it != g_output_channels.end()) {
-        std::lock_guard<std::mutex> chLock(it->second.mutex);
-        if (text) it->second.buffer << text;
-        it->second.buffer << "\n";
+    if (it != g_output_channels.end() && it->second) {
+        std::lock_guard<std::mutex> chLock(it->second->mutex);
+        if (text) it->second->buffer << text;
+        it->second->buffer << "\n";
     }
 }
 
@@ -1791,7 +1813,7 @@ extern "C" void ProcessSwarmQueue() {
     if (g_swarm_queue_running.exchange(true)) return;
     std::lock_guard<std::mutex> lock(g_swarm_mutex);
     for (auto& job : g_swarm_jobs) {
-        if (!job.completed.load() && !job.aborted.load()) {
+        if (!job.completed && !job.aborted) {
             job.completed = true;
         }
     }
@@ -1994,10 +2016,21 @@ extern "C" void StreamTensorByName(const char* name, float* data, int count) {
 }
 
 // Submit task — functional C++ implementation
+static void SubmitTaskInternal(std::function<void()> task) {
+    if (!task || g_task_shutdown.load(std::memory_order_acquire)) {
+        return;
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(g_task_mutex);
+        g_task_queue.push(std::move(task));
+    }
+    g_task_cv.notify_one();
+}
+
 extern "C" void SubmitTask(const char* type, const char* payload) {
     if (!type) return;
-    std::lock_guard<std::mutex> lock(g_task_mutex);
-    g_task_queue.push([type = std::string(type), payload = std::string(payload ? payload : "")]() {
+    SubmitTaskInternal([type = std::string(type), payload = std::string(payload ? payload : "")]() {
         // Execute task based on type
         if (type == "inference") {
             // Dispatch to inference engine
@@ -2012,7 +2045,6 @@ extern "C" void SubmitTask(const char* type, const char* payload) {
             LogMessage("SubmitTask: unknown task type");
         }
     });
-    g_task_cv.notify_one();
 }
 
 // Swarm transport — functional C++ implementation
@@ -2397,7 +2429,7 @@ extern "C" void HashMap_ForEach(void (*callback)(const char* key, const char* va
 struct DepNode {
     std::string id;
     std::vector<std::string> deps;
-    std::atomic<bool> resolved{false};
+    bool resolved{false};
 };
 static std::map<std::string, DepNode> g_dep_nodes;
 static std::mutex g_dep_mutex;
@@ -2410,12 +2442,15 @@ extern "C" void DependencyGraph_Create() {
 extern "C" void DependencyGraph_AddNode(const char* id, const char** deps, int dep_count) {
     if (!id) return;
     std::lock_guard<std::mutex> lock(g_dep_mutex);
-    DepNode node;
-    node.id = id;
-    for (int i = 0; i < dep_count; ++i) {
-        if (deps[i]) node.deps.push_back(deps[i]);
+    auto it = g_dep_nodes.find(id);
+    if (it == g_dep_nodes.end()) {
+        it = g_dep_nodes.emplace(id, DepNode{}).first;
     }
-    g_dep_nodes[id] = std::move(node);
+    it->second.id = id;
+    it->second.deps.clear();
+    for (int i = 0; i < dep_count; ++i) {
+        if (deps[i]) it->second.deps.push_back(deps[i]);
+    }
 }
 
 // Disposable — functional C++ implementation

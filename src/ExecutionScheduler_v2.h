@@ -24,11 +24,15 @@
 #include <chrono>
 #include <array>
 #include <variant>
+#include <mutex>
 
 // Platform-specific intrinsics for TSC
 #ifdef _WIN32
 #include <windows.h>
 #include <intrin.h>
+#ifdef CALLBACK
+#undef CALLBACK
+#endif
 #else
 #include <x86intrin.h>
 #endif

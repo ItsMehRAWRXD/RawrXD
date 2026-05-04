@@ -82,6 +82,7 @@ enum class NodeType : uint8_t {
     TemplateParam,
     Comment,
     Preprocessor,
+    MacroDecl,
     
     Unknown = 255
 };
@@ -129,6 +130,22 @@ struct SourceRange {
 // Node Hash (for change detection)
 // ============================================================================
 using NodeHash = uint64_t;
+
+// ============================================================================
+// Rust-specific metadata (zero-overhead when unused)
+// ============================================================================
+struct RustMeta {
+    bool is_pub = false;
+    bool is_async = false;
+    bool is_unsafe = false;
+    bool is_const = false;
+    bool is_extern = false;
+    bool is_static = false;
+    bool is_mut = false;
+    std::string visibility;              // "pub", "pub(crate)", etc.
+    std::vector<std::string> attributes; // #[derive(...)] etc.
+    std::string doc;                     // accumulated /// doc comments
+};
 
 // ============================================================================
 // AST Node (immutable, versioned)
@@ -179,6 +196,9 @@ public:
     
     // Distance in AST graph (for symbol scoring)
     size_t graphDistanceTo(Ptr other) const;
+
+    // Rust metadata (optional, populated by Rust parser)
+    RustMeta rust_meta_;
 
 private:
     NodeType type_;

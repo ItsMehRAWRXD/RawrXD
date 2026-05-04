@@ -1,6 +1,6 @@
 #pragma once
 
-#include "extension_api_bridge.h"
+#include "extensions/extension_api_bridge.h"
 #include "ExecutionScheduler_v2.h"
 #include <memory>
 #include <functional>
@@ -26,6 +26,12 @@ struct SchedulerEvent {
     std::string extensionId;
     std::string data;
     uint64_t timestamp;
+};
+
+struct SchedulerTelemetry {
+    uint64_t tasksSubmitted{0};
+    uint64_t tasksCompleted{0};
+    uint64_t budgetExceeded{0};
 };
 
 // Integration bridge between Extension API and ExecutionScheduler v2

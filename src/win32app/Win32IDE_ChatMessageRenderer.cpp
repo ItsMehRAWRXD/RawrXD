@@ -627,11 +627,32 @@ void Win32IDE::replaceLastStreamingBlockWithMarkdown(const std::string& markdown
     std::lock_guard<std::mutex> outLock(m_outputMutex);
 
     // Determine how many characters of raw streaming text to replace.
-    // The raw streaming text length == the accumulated token text length.
+    // Use the tracked wide-char write count so UTF-8 multi-byte tokens and the "Copilot: "
+    // prefix don't cause an off-by-N selection.
     int totalLen = GetWindowTextLengthW(m_hwndCopilotChatOutput);
-    int streamLen = static_cast<int>(m_streamingTokenAccumulator.size());
+    int streamLen = m_streamingWrittenWchars;
+
+    // Safety: don't allow out-of-bounds selection or negative stream lengths
+    if (streamLen < 0)
+        streamLen = 0;
     if (streamLen > totalLen)
+    {
+        OutputDebugStringA("[RawrXD] STREAM_DESYNC_DETECTED: streamLen > totalLen — stale streaming state, clamping.\n");
         streamLen = totalLen;
+    }
+
+    int accumulatorWideLen = 0;
+    if (!m_streamingTokenAccumulator.empty())
+    {
+        const int wlen = MultiByteToWideChar(CP_UTF8, 0, m_streamingTokenAccumulator.data(),
+                                             static_cast<int>(m_streamingTokenAccumulator.size()), nullptr, 0);
+        accumulatorWideLen = (wlen > 0) ? wlen : 0;
+    }
+
+    OutputDebugStringA(("[replaceLastStreaming] totalLen=" + std::to_string(totalLen) +
+                        " accumulatorWide=" + std::to_string(accumulatorWideLen) +
+                        " writtenWchars=" + std::to_string(m_streamingWrittenWchars) +
+                        " using streamLen=" + std::to_string(streamLen) + "\n").c_str());
 
     // Select the trailing block that was raw-streamed tokens
     int selStart = totalLen - streamLen;

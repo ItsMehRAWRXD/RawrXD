@@ -266,7 +266,7 @@ void SovereignFP8Quantizer::quantizeBatch(const float* input, uint8_t* output, s
     }
 }
 
-void SovereignFP8Quantizer::dequantizeBatch(const uint8_t* input, float* output, size_t count, float scale) {
+void SovereignFP8Quantizer::dequantizeBatch(const uint8_t* input, float* output, size_t count, float scale) const {
     #ifdef __AVX512F__
     if (count >= 64) {
         if (m_format == FP8Format::E4M3) {

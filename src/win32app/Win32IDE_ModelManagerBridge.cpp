@@ -115,3 +115,60 @@ void Win32IDE::toggleDownloadsPanel() {
     if (panel->IsVisible()) panel->Hide();
     else                    panel->Show();
 }
+
+// ============================================================================
+// Extension Panel
+// ============================================================================
+
+static RawrXD::ExtensionPanelWindow* GetOrCreateExtensionPanel(Win32IDE* ide, HWND hwndMain, HINSTANCE hInst) {
+    static RawrXD::ExtensionPanelWindow* s_panel = nullptr;
+    if (!s_panel) {
+        s_panel = new RawrXD::ExtensionPanelWindow(hwndMain, hInst);
+        s_panel->Create();
+
+        // Wire action buttons to ExtensionInstaller
+        s_panel->SetActionCallback([ide](const std::string& extId, const std::string& action) {
+            auto installer = ide->getExtensionInstaller();
+            if (!ide || !installer) return;
+            std::string err;
+            if (action == "activate") {
+                if (installer->activate(extId, &err)) {
+                    LOG_INFO("[ExtensionPanel] Activated: " + extId);
+                } else {
+                    LOG_ERROR("[ExtensionPanel] Activate failed: " + extId + " — " + err);
+                }
+            } else if (action == "deactivate") {
+                if (installer->deactivate(extId, &err)) {
+                    LOG_INFO("[ExtensionPanel] Deactivated: " + extId);
+                } else {
+                    LOG_ERROR("[ExtensionPanel] Deactivate failed: " + extId + " — " + err);
+                }
+            } else if (action == "remove") {
+                if (installer->uninstall(extId, &err)) {
+                    LOG_INFO("[ExtensionPanel] Uninstalled: " + extId);
+                } else {
+                    LOG_ERROR("[ExtensionPanel] Uninstall failed: " + extId + " — " + err);
+                }
+            }
+        });
+    }
+    (void)ide;
+    return s_panel;
+}
+
+void Win32IDE::showExtensionPanel() {
+    RawrXD::ExtensionPanelWindow* panel = GetOrCreateExtensionPanel(this, m_hwndMain, m_hInstance);
+    if (panel) panel->Show();
+}
+
+void Win32IDE::hideExtensionPanel() {
+    RawrXD::ExtensionPanelWindow* panel = GetOrCreateExtensionPanel(this, m_hwndMain, m_hInstance);
+    if (panel) panel->Hide();
+}
+
+void Win32IDE::toggleExtensionPanel() {
+    RawrXD::ExtensionPanelWindow* panel = GetOrCreateExtensionPanel(this, m_hwndMain, m_hInstance);
+    if (!panel) return;
+    if (panel->IsVisible()) panel->Hide();
+    else                    panel->Show();
+}

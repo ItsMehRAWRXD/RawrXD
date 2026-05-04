@@ -89,6 +89,21 @@ namespace
 {
 extern "C" int Bridge_ReadDraftBlockGhostA(char* out, int outCapacity, int* outTokenCount);
 
+struct TitanGhostTelemetryState
+{
+    uint64_t streamSeq = 0;
+    uint64_t seqGaps = 0;
+    uint64_t packets = 0;
+};
+
+TitanGhostTelemetryState& titanGhostTelemetryFor(Win32IDE* ide)
+{
+    static std::mutex telemetryMutex;
+    static std::unordered_map<Win32IDE*, TitanGhostTelemetryState> telemetryByIde;
+    std::lock_guard<std::mutex> lock(telemetryMutex);
+    return telemetryByIde[ide];
+}
+
 void PostGhostTokenMessage(HWND hwnd, uint64_t requestSeq, const std::string& token)
 {
     if (!hwnd || token.empty())
@@ -1746,15 +1761,16 @@ Win32IDE::GhostTextCacheEntry Win32IDE::requestGhostTextCompletion(const std::st
 
     enum class GhostProviderKind
     {
+        SymbolBridge,  // AST scope-aware candidates (fastest, deterministic)
         Titan,
         Agentic,
         Local,
         Snippet,
         Lsp
     };
-    const std::array<GhostProviderKind, 5> precedence = {GhostProviderKind::Titan, GhostProviderKind::Agentic,
-                                                         GhostProviderKind::Local, GhostProviderKind::Snippet,
-                                                         GhostProviderKind::Lsp};
+    const std::array<GhostProviderKind, 6> precedence = {GhostProviderKind::SymbolBridge, GhostProviderKind::Titan,
+                                                         GhostProviderKind::Agentic, GhostProviderKind::Local,
+                                                         GhostProviderKind::Snippet, GhostProviderKind::Lsp};
 
     auto logProviderSkip = [this](const std::string& msg)
     {
@@ -1789,6 +1805,53 @@ Win32IDE::GhostTextCacheEntry Win32IDE::requestGhostTextCompletion(const std::st
     {
         if (isStale() || isPastDeadline())
             return {};
+
+        if (provider == GhostProviderKind::SymbolBridge)
+        {
+            // Fast path: AST scope-aware candidates from SymbolIndexBridge
+            if (m_symbolBridgeReady && !m_symbolBridgeCandidates.empty())
+            {
+                // Find best matching candidate based on trigger prefix
+                const std::string& prefix = m_symbolBridgeTrigger.prefix;
+                std::string bestMatch;
+                int bestScore = -1;
+                
+                for (const auto& candidate : m_symbolBridgeCandidates)
+                {
+                    int score = 0;
+                    if (candidate.name.rfind(prefix, 0) == 0)
+                        score += 100;  // Prefix match
+                    if (candidate.kind == rawrxd::bridge::SymbolKind::Function)
+                        score += 10;   // Prefer functions
+                    if (candidate.kind == rawrxd::bridge::SymbolKind::Method)
+                        score += 10;   // Prefer methods
+                    if (candidate.accessibility == rawrxd::bridge::Accessibility::Public)
+                        score += 5;    // Prefer public
+                    
+                    if (score > bestScore)
+                    {
+                        bestScore = score;
+                        bestMatch = candidate.name;
+                        
+                        // Append signature for functions/methods
+                        if (!candidate.signature.empty() && 
+                            (candidate.kind == rawrxd::bridge::SymbolKind::Function ||
+                             candidate.kind == rawrxd::bridge::SymbolKind::Method))
+                        {
+                            bestMatch += candidate.signature;
+                        }
+                    }
+                }
+                
+                if (!bestMatch.empty())
+                {
+                    std::lock_guard<std::mutex> lock(m_ghostTextCacheMutex);
+                    m_ghostTextMetrics.localWins++;
+                    return GhostTextCacheEntry{bestMatch, "", "", false, 0};
+                }
+            }
+            lastReason = "SymbolBridge: no candidates or not ready";
+        }
 
         if (provider == GhostProviderKind::Titan)
         {
@@ -2044,6 +2107,14 @@ Win32IDE::GhostTextCacheEntry Win32IDE::requestGhostTextCompletion(const std::st
 
             // Fallback: hybrid merge if direct LSP did not yield usable insert text.
             auto items = requestHybridCompletion(filePath, lspLine, cursorCol);
+            
+            // ── BRIDGE WIRING: Store all candidates for ranked rendering ──────────
+            {
+                std::lock_guard<std::mutex> lock(m_completionCandidatesMutex);
+                m_completionCandidates = items;
+                m_completionSelectedIndex = 0; // Default to top-ranked
+            }
+            
             for (const auto& item : items)
             {
                 if (item.insertText.empty())
@@ -2108,10 +2179,11 @@ std::string Win32IDE::requestTitanGhostTextCompletion(const std::string& context
 
     {
         std::lock_guard<std::mutex> lock(m_titanGhostMutex);
+        TitanGhostTelemetryState& telemetry = titanGhostTelemetryFor(this);
         m_titanGhostStreamText.clear();
-        m_titanGhostStreamSeq = 0;
-        m_titanGhostSeqGaps = 0;
-        m_titanGhostPackets = 0;
+        telemetry.streamSeq = 0;
+        telemetry.seqGaps = 0;
+        telemetry.packets = 0;
         m_titanGhostStreamActive = true;
         m_titanGhostStreamRequestSeq = expectedSeq;
     }
@@ -2177,10 +2249,11 @@ std::string Win32IDE::requestTitanGhostTextCompletion(const std::string& context
 
     {
         std::lock_guard<std::mutex> lock(m_titanGhostMutex);
+        TitanGhostTelemetryState& telemetry = titanGhostTelemetryFor(this);
         m_titanGhostStreamText = completion;
-        m_titanGhostStreamSeq = lastSeq;
-        m_titanGhostSeqGaps = gapCount;
-        m_titanGhostPackets = packetCount;
+        telemetry.streamSeq = lastSeq;
+        telemetry.seqGaps = gapCount;
+        telemetry.packets = packetCount;
         m_titanGhostStreamActive = false;
         m_titanGhostStreamRequestSeq = 0;
     }
@@ -2213,15 +2286,16 @@ void Win32IDE_HandleTitanGhostStreamMessage(Win32IDE* ide)
 
     {
         std::lock_guard<std::mutex> lock(ide->m_titanGhostMutex);
-        prevGapCount = ide->m_titanGhostSeqGaps;
-        lastSeq = ide->m_titanGhostStreamSeq;
-        gapCount = ide->m_titanGhostSeqGaps;
-        packetCount = ide->m_titanGhostPackets;
+        TitanGhostTelemetryState& telemetry = titanGhostTelemetryFor(ide);
+        prevGapCount = telemetry.seqGaps;
+        lastSeq = telemetry.streamSeq;
+        gapCount = telemetry.seqGaps;
+        packetCount = telemetry.packets;
         streamRequestSeq = ide->m_titanGhostStreamRequestSeq;
         drainTitanGhostPackets(ide->m_titanGhostStreamText, &lastSeq, &gapCount, &packetCount);
-        ide->m_titanGhostStreamSeq = lastSeq;
-        ide->m_titanGhostSeqGaps = gapCount;
-        ide->m_titanGhostPackets = packetCount;
+        telemetry.streamSeq = lastSeq;
+        telemetry.seqGaps = gapCount;
+        telemetry.packets = packetCount;
         combined = ide->m_titanGhostStreamText;
         streamActive = ide->m_titanGhostStreamActive;
     }
@@ -3253,7 +3327,29 @@ void Win32IDE::renderGhostText(HDC hdc)
     }
     else
     {
-        std::istringstream stream(m_ghostTextContent);
+        // ── BRIDGE WIRING: Pull from ranked completion candidates ────────────
+        std::string ghostTextToRender;
+        {
+            std::lock_guard<std::mutex> lock(m_completionCandidatesMutex);
+            if (!m_completionCandidates.empty() && m_completionSelectedIndex >= 0 && 
+                m_completionSelectedIndex < static_cast<int>(m_completionCandidates.size()))
+            {
+                // Use selected candidate
+                ghostTextToRender = m_completionCandidates[m_completionSelectedIndex].insertText;
+            }
+            else if (!m_completionCandidates.empty())
+            {
+                // Default to top-ranked candidate (index 0)
+                ghostTextToRender = m_completionCandidates[0].insertText;
+            }
+            else
+            {
+                // Fallback to legacy ghost text content
+                ghostTextToRender = m_ghostTextContent;
+            }
+        }
+        
+        std::istringstream stream(ghostTextToRender);
         std::string line;
         int lineCount = 0;
         while (std::getline(stream, line) && lineCount < GHOST_TEXT_MAX_LINES)

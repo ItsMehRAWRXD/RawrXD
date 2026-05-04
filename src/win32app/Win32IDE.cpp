@@ -1085,6 +1085,14 @@ static std::string extractDisplayTextFromBackendPayload(const std::string& paylo
     if (trimmed.empty())
         return {};
 
+    auto stripSseDataPrefix = [](const std::string& line) -> std::string
+    {
+        std::string v = trimAsciiWhitespace(line);
+        if (v.rfind("data:", 0) == 0)
+            v = trimAsciiWhitespace(v.substr(5));
+        return v;
+    };
+
     auto parseAndExtract = [](const std::string& text) -> std::string
     {
         const auto parsed = nlohmann::json::parse(text, nullptr, false);
@@ -1095,9 +1103,11 @@ static std::string extractDisplayTextFromBackendPayload(const std::string& paylo
         return trimAsciiWhitespace(extracted);
     };
 
-    if (trimmed.front() == '{' || trimmed.front() == '[')
+    const std::string normalizedTopLevel = stripSseDataPrefix(trimmed);
+    if (!normalizedTopLevel.empty() &&
+        (normalizedTopLevel.front() == '{' || normalizedTopLevel.front() == '['))
     {
-        const std::string extracted = parseAndExtract(trimmed);
+        const std::string extracted = parseAndExtract(normalizedTopLevel);
         if (!extracted.empty())
             return extracted;
     }
@@ -1109,8 +1119,8 @@ static std::string extractDisplayTextFromBackendPayload(const std::string& paylo
         size_t end = trimmed.find('\n', start);
         if (end == std::string::npos)
             end = trimmed.size();
-        const std::string line = trimAsciiWhitespace(trimmed.substr(start, end - start));
-        if (!line.empty() && (line.front() == '{' || line.front() == '['))
+        const std::string line = stripSseDataPrefix(trimmed.substr(start, end - start));
+        if (!line.empty() && line != "[DONE]" && (line.front() == '{' || line.front() == '['))
         {
             const std::string extracted = parseAndExtract(line);
             if (!extracted.empty())
@@ -7149,6 +7159,28 @@ static void asyncModelLoadBodySEH(AsyncModelLoadParams* p) noexcept
 #endif
 }  // namespace
 
+void Win32IDE::resetChatStreamingState()
+{
+    std::lock_guard<std::mutex> outLock(m_outputMutex);
+    m_streamingTokenAccumulator.clear();
+    m_streamingWrittenWchars = 0;
+    m_nativeStreamingActive = false;
+}
+
+void Win32IDE::onModelReadyUnified()
+{
+    // INVARIANT: this is the single authoritative post-load transition.
+    // No streaming or UI mutation is valid before this runs after model load.
+    resetChatStreamingState();
+    syncAgentModeUiFromBridge();
+    refreshAgenticChatSessionContext();
+    if (m_hwndMain && IsWindow(m_hwndMain))
+    {
+        // WM_SAFE_TO_REPLAY: barrier message — streaming state guaranteed clean beforehand.
+        PostMessage(m_hwndMain, WM_SAFE_TO_REPLAY, 0, 0);
+    }
+}
+
 void Win32IDE::loadModelFromPathAsync(const std::string& filepath)
 {
     if (filepath.empty())
@@ -11066,12 +11098,15 @@ void Win32IDE::HandleCopilotSend()
                     m_streamingTokenAccumulator.clear();
                 }
                 OutputDebugStringA("[ChatUi] onResponse received empty completion marker\n");
+                m_nativeStreamingActive = false;
                 releaseSendInFlight();
             }
             return;
         }
 
         logRawResponseHexPreview(response);
+        // Temporary diagnostics: log raw payload seen by the active chat response handler.
+        OutputDebugStringA(("RAW_PAYLOAD: [" + response + "]\n").c_str());
         std::string safe = normalizeChatUtf8Chunk(this, response, complete);
         if (safe.empty() || safe == "[non-text backend payload suppressed]")
         {
@@ -11087,13 +11122,42 @@ void Win32IDE::HandleCopilotSend()
                             " complete=" + std::string(complete ? "true" : "false") + "\n")
                                .c_str());
 
+        // Only accumulate and display genuinely valid text tokens.
+        // Skip suppression placeholders and empty chunks — they poison the accumulator.
+        const bool isSuppressed = (safe == "[non-text backend payload suppressed]");
+        const bool isUsable = !safe.empty() && !isSuppressed;
+        if (!isUsable)
+        {
+            OutputDebugStringA(("[ChatUi] chunk skipped (suppressed or empty) complete=" +
+                                std::string(complete ? "true" : "false") + "\n").c_str());
+            if (complete)
+            {
+                if (!m_streamingTokenAccumulator.empty())
+                {
+                    replaceLastStreamingBlockWithMarkdown(m_streamingTokenAccumulator);
+                    conversationAddAssistant(m_streamingTokenAccumulator);
+                    m_chatHistory.push_back({"assistant", m_streamingTokenAccumulator});
+                    persistChatTurnToDisk("assistant", m_streamingTokenAccumulator);
+                    recordCopilotThroughputAtComplete(*sendStart, m_streamingTokenAccumulator);
+                    m_streamingTokenAccumulator.clear();
+                }
+                m_nativeStreamingActive = false;
+                releaseSendInFlight();
+            }
+            return;
+        }
+
         // Accumulate streaming tokens for markdown re-render on completion
-        std::string safeText = safe.empty() ? std::string("[non-text backend payload]") : safe;
-        m_streamingTokenAccumulator += safeText;
+        m_streamingTokenAccumulator += safe;
 
         // During streaming: show raw text for real-time feedback
         const bool needsPrefix = !aiPrefixWritten->exchange(true);
-        std::string displayResp = (needsPrefix ? "Copilot: " : "") + safeText;
+        if (needsPrefix)
+        {
+            m_nativeStreamingActive = true;
+            m_streamingWrittenWchars = 0; // reset wide-char counter at stream start
+        }
+        std::string displayResp = (needsPrefix ? "Copilot: " : "") + safe;
         appendCopilotChatTextOnUiThread(displayResp);
         OutputDebugStringA(("[ChatUi] appended text_len=" + std::to_string(displayResp.size()) + "\n").c_str());
 
@@ -11109,6 +11173,7 @@ void Win32IDE::HandleCopilotSend()
                 recordCopilotThroughputAtComplete(*sendStart, m_streamingTokenAccumulator);
                 m_streamingTokenAccumulator.clear();
             }
+            m_nativeStreamingActive = false;
             releaseSendInFlight();
         }
     };
@@ -11769,16 +11834,24 @@ void Win32IDE::appendCopilotChatTextOnUiThread(const std::string& text)
     if (text.empty() || !m_hwndCopilotChatOutput || !IsWindow(m_hwndCopilotChatOutput))
         return;
 
+    // Temporary diagnostics: verify whether text reaches the final UI append boundary.
+    OutputDebugStringA(("CHAT_APPEND_RAW: [" + text + "]\n").c_str());
+
     if (m_hwndMain && GetWindowThreadProcessId(m_hwndMain, nullptr) != GetCurrentThreadId())
     {
         postCopilotChatAppendSafe(text);
         return;
     }
 
-    std::lock_guard<std::mutex> outLock(m_outputMutex);
-    SendMessage(m_hwndCopilotChatOutput, EM_SETSEL, -1, -1);
-    SendMessageW(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE, (LPARAM)utf8ToWide(text).c_str());
-    SendMessage(m_hwndCopilotChatOutput, EM_SCROLLCARET, 0, 0);
+    {
+        std::lock_guard<std::mutex> outLock(m_outputMutex);
+        const std::wstring wide = utf8ToWide(text);
+        if (m_nativeStreamingActive)
+            m_streamingWrittenWchars += static_cast<int>(wide.size());
+        SendMessage(m_hwndCopilotChatOutput, EM_SETSEL, -1, -1);
+        SendMessageW(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE, (LPARAM)wide.c_str());
+        SendMessage(m_hwndCopilotChatOutput, EM_SCROLLCARET, 0, 0);
+    }
 }
 
 void Win32IDE::clearCopilotInputOnUiThread()
@@ -11956,12 +12029,13 @@ void Win32IDE::onModelSelectionChanged()
         }
         else
         {
-            OutputDebugStringA(("[ModelSelection] deferred local model load until explicit send/use path=" +
+            OutputDebugStringA(("[ModelSelection] auto-loading local model path=" +
                                 m_ollamaModelOverride + "\n")
                                    .c_str());
             appendToOutput("[ModelSelection] Selected local model: " + m_ollamaModelOverride +
-                               "\n[ModelSelection] Load is deferred until chat send or explicit model load.\n",
+                               "\n[ModelSelection] Triggering background load...\n",
                            "Output", OutputSeverity::Info);
+            loadModelFromPathAsync(m_ollamaModelOverride);
         }
     }
 }
@@ -14742,9 +14816,71 @@ LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wPara
             }
 
             case WM_CHAR:
+            {
+                wchar_t typedChar = static_cast<wchar_t>(wParam);
+                
+                // ─── Phase 1b: Symbol Index Bridge trigger detection ───────────
+                // Detect completion triggers (::, ., ->, identifier start)
+                // and query the SymbolIndexBridge for ranked candidates.
+                if (pThis->m_symbolIndexBridge && pThis->m_symbolIndexBridge->isInitialized())
+                {
+                    // Get cursor position
+                    CHARRANGE sel = {};
+                    SendMessageW(hwnd, EM_EXGETSEL, 0, (LPARAM)&sel);
+                    int line = (int)SendMessageW(hwnd, EM_LINEFROMCHAR, sel.cpMin, 0);
+                    int col = sel.cpMin - (int)SendMessageW(hwnd, EM_LINEINDEX, line, 0);
+                    
+                    // Get current file content for trigger detection
+                    int textLen = GetWindowTextLengthW(hwnd);
+                    std::wstring text;
+                    if (textLen > 0) {
+                        text.resize(textLen + 1);
+                        GetWindowTextW(hwnd, text.data(), textLen + 1);
+                        text.resize(textLen);
+                    }
+                    
+                    // Convert to UTF-8 for bridge
+                    std::string utf8Text;
+                    if (!text.empty()) {
+                        int needed = WideCharToMultiByte(CP_UTF8, 0, text.c_str(), -1, nullptr, 0, nullptr, nullptr);
+                        if (needed > 0) {
+                            utf8Text.resize(needed - 1);
+                            WideCharToMultiByte(CP_UTF8, 0, text.c_str(), -1, &utf8Text[0], needed, nullptr, nullptr);
+                        }
+                    }
+                    
+                    // Detect trigger
+                    auto trigger = pThis->m_symbolIndexBridge->detectTrigger(utf8Text, sel.cpMin);
+                    
+                    if (trigger.kind != rawrxd::bridge::TriggerKind::None)
+                    {
+                        // Query completions from bridge
+                        auto candidates = pThis->m_symbolIndexBridge->queryCompletions(
+                            pThis->m_currentFile, trigger.prefix, line, col);
+                        
+                        if (!candidates.empty())
+                        {
+                            // Store candidates for ghost text renderer (Phase 1c)
+                            pThis->m_symbolBridgeCandidates = std::move(candidates);
+                            pThis->m_symbolBridgeTrigger = trigger;
+                            
+                            // Signal that completions are ready
+                            // Ghost text renderer will pick these up in WM_PAINT
+                            pThis->m_symbolBridgeReady = true;
+                            
+                            // Debug output
+                            char dbg[256];
+                            snprintf(dbg, sizeof(dbg),
+                                "[SymbolBridge] Trigger='%s' kind=%d candidates=%zu\n",
+                                trigger.prefix.c_str(), (int)trigger.kind, pThis->m_symbolBridgeCandidates.size());
+                            OutputDebugStringA(dbg);
+                        }
+                    }
+                }
+                
                 if (pThis->m_ghostTextVisible)
                 {
-                    pThis->handleGhostTextTypedChar(static_cast<wchar_t>(wParam));
+                    pThis->handleGhostTextTypedChar(typedChar);
                 }
                 if (pThis->handleMultiCursorChar(wParam))
                 {
@@ -14759,6 +14895,7 @@ LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wPara
                     return result;
                 }
                 break;
+            }
 
             case WM_MOUSEMOVE:
             {

@@ -187,7 +187,7 @@ if(EXISTS "${RAWRXD_LOCAL_WIN32_SDK_DIR}")
     include_directories("${RAWRXD_LOCAL_WIN32_SDK_DIR}")
 endif()
 
-option(RAWRXD_BUILD_WIN32IDE "Build the legacy Win32IDE target" OFF)
+option(RAWRXD_BUILD_WIN32IDE "Build the legacy Win32IDE target" ON)
 option(RAWRXD_BUILD_CLI "Build the rawrxd CLI console target" OFF)
 option(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES "Strip stub/shim/mock source units from production targets" OFF)
 option(RAWRXD_INCLUDE_STRESS_AND_REPLAY_SOURCES "Include stress/replay harness sources in production targets" OFF)
@@ -3483,7 +3483,9 @@ if(WIN32)
         src/agentic/agent_controller_minimal.cpp
         src/agentic/agentic_controller_wiring.cpp
         src/core/link_symbols_impl.cpp
-        src/core/rust_parser.cpp
+        src/core/rust_parser_v2.cpp
+        src/core/symbol_table.cpp
+        src/bridge/symbol_index_bridge.cpp
         src/core/ast_graph_engine_impl.cpp
         src/core/kv_cache_credit_bridge.cpp
         src/flow_control/credit_governor.cpp
@@ -3771,6 +3773,7 @@ if(WIN32)
         
         # Module implementations
         src/modules/vsix_loader_win32.cpp
+        src/modules/ExtensionInstaller.cpp
         src/modules/codex_ultimate.cpp
 
         # Phase 29: VS Code Extension API Compatibility Layer
@@ -4994,6 +4997,8 @@ if(WIN32)
         src/win32app/Win32IDE_ModelManager.cpp
         src/win32app/Win32IDE_ModelManagerBridge.cpp
         src/win32app/Win32IDE_DownloadsPanel.cpp
+        src/win32app/Win32IDE_ExtensionPanel.cpp
+        src/modules/ExtensionUIState.cpp
         # Link-closure: Win32IDE missing-features method implementations referenced by Win32IDE/Core
         src/win32app/Win32IDE_MissingFeaturesCore.cpp
         # IDEFeatures implementation (initialize, loadWorkspace, openFile)
@@ -5020,6 +5025,7 @@ if(WIN32)
 
     target_include_directories(RawrXD-Win32IDE PRIVATE
         src/ggml-cpu
+        src/bridge
     )
 
     # GPU sovereign ASM link state (UI/runtime detection)
@@ -6608,6 +6614,7 @@ add_executable(test_rust_parser_integration EXCLUDE_FROM_ALL
     tests/test_rust_parser_integration.cpp
     src/core/ast_graph_engine_impl.cpp
     src/core/rust_parser_v2.cpp
+    src/core/symbol_table.cpp
     src/flow_control/credit_governor.cpp
     src/flow_control/credit_based_flow_control.cpp
 )

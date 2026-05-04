@@ -6,6 +6,7 @@
 #pragma once
 #include "rust_ast_nodes.hpp"
 #include "ast_graph_engine.hpp"
+#include "symbol_table.hpp"
 #include <string_view>
 #include <vector>
 #include <optional>
@@ -33,6 +34,10 @@ public:
 
     // Parse entire file content into AST nodes
     RustParseResult parse(std::string_view content, std::string_view file_path);
+
+    // Parse with symbol table population (indexing layer)
+    RustParseResult parse(std::string_view content, std::string_view file_path,
+                          rawrxd::ast::SymbolTable* symbols);
 
     // Incremental: re-parse only changed region
     RustParseResult parseIncremental(std::string_view content,
