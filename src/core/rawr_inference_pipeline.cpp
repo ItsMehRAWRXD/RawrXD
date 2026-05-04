@@ -11,6 +11,8 @@
 #include "inference_parity_trace.h"
 #include "parity_cpu_fallback.h"
 
+#include "../gpu_enforcement.h"
+
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -54,6 +56,53 @@ std::string pipelineTracePath()
     const char* v = std::getenv("RAWRXD_PIPELINE_TRACE");
     return (v && v[0]) ? std::string(v) : std::string();
 }
+
+std::string canonicalModelIdentity(const std::string& model)
+{
+#if defined(_WIN32)
+    char out[MAX_PATH];
+    DWORD n = GetFullPathNameA(model.c_str(), MAX_PATH, out, nullptr);
+    if (n > 0 && n < MAX_PATH)
+        return std::string(out, n);
+#endif
+    return model;
+}
+
+std::string currentBuildConfig()
+{
+#if defined(NDEBUG)
+    return "Release";
+#else
+    return "Debug";
+#endif
+}
+
+std::string currentBuildCommit()
+{
+    const char* v = std::getenv("RAWRXD_BUILD_COMMIT");
+    return (v && v[0]) ? std::string(v) : std::string("unknown");
+}
+
+void stampTraceBackend(RawrXD::ParityTrace::Recorder& trace, const char* fallbackBackend)
+{
+    const auto& st = rxd::gpu::status();
+    switch (st.active)
+    {
+        case rxd::gpu::Backend::Vulkan:
+            trace.setBackend("vulkan", st.device_name);
+            return;
+        case rxd::gpu::Backend::Cuda:
+            trace.setBackend("cuda", st.device_name);
+            return;
+        case rxd::gpu::Backend::Hip:
+            trace.setBackend("hip", st.device_name);
+            return;
+        case rxd::gpu::Backend::None:
+        default:
+            trace.setBackend(fallbackBackend ? fallbackBackend : "unknown", st.device_name);
+            return;
+    }
+}
 } // namespace
 
 bool isInferencePipelineReady()
@@ -87,8 +136,12 @@ bool runLocalInferencePipeline(const PipelineRequest& req, const InferenceCallba
 
         const std::string tracePath = pipelineTracePath();
         RawrXD::ParityTrace::Recorder trace;
-        if (!tracePath.empty())
-            trace.start("ui-pipeline", req.model, req.prompt);
+        if (!tracePath.empty()) {
+            trace.start("ui-pipeline", canonicalModelIdentity(req.model), req.prompt);
+            trace.setBuildInfo(currentBuildCommit(), currentBuildConfig());
+            trace.setBackendDetails("cpu-fallback", "ParityCpuFallback", "n/a", "n/a", "parity-cpu");
+            trace.setInferenceConfig(req.numPredict, req.temperature, -1, -1.0f, -1);
+        }
 
         RawrXD::ParityFallback::run(
             req.model, req.prompt, req.numPredict,
@@ -123,8 +176,12 @@ bool runLocalInferencePipeline(const PipelineRequest& req, const InferenceCallba
     // Optional structured parity trace.
     const std::string tracePath = pipelineTracePath();
     RawrXD::ParityTrace::Recorder trace;
-    if (!tracePath.empty())
-        trace.start("ui-pipeline", req.model, req.prompt);
+    if (!tracePath.empty()) {
+        trace.start("ui-pipeline", canonicalModelIdentity(req.model), req.prompt);
+        trace.setBuildInfo(currentBuildCommit(), currentBuildConfig());
+        stampTraceBackend(trace, "plugin");
+        trace.setInferenceConfig(req.numPredict, req.temperature, -1, -1.0f, -1);
+    }
 
     GenerateRequest gr;
     gr.model       = req.model;
