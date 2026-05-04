@@ -377,7 +377,7 @@ class Win32IDE
     bool loadModelForInference(const std::string& filepath);
     void loadModelFromPathAsync(const std::string& filepath);
     void resetChatStreamingState();
-    void onModelReadyUnified();
+    void onModelReadyUnified(bool shouldReplay);
 
     // Test agent access
     HWND getMainWindow() const { return m_hwndMain; }
@@ -400,9 +400,6 @@ class Win32IDE
     std::unique_ptr<full_agentic_ide::FullAgenticIDE> m_fullAgenticIDE;
     AgenticBridge* m_agenticBridge = nullptr;                      // Non-owning; set from m_fullAgenticIDE->getBridge()
     std::unique_ptr<RawrXD::PlanOrchestrator> m_planOrchestrator;  // Autonomous task planning and execution
-    uint64_t m_titanGhostStreamSeq = 0; // Sequence number for Titan Ghost Stream
-    uint64_t m_titanGhostSeqGaps = 0;   // Count of gaps in Titan Ghost sequence
-    uint64_t m_titanGhostPackets = 0;    // Total packets received for Titan Ghost
     bool m_multiAgentEnabled = false;                              // Multi-agent orchestration toggle
     void initializeAgenticBridge();
     bool ensureAgenticBridgeHasModel(const std::string& path);
@@ -478,7 +475,6 @@ class Win32IDE
     void onAIModeAgentic();
     /** Sync main menu + agent chat panel checkboxes from AgenticBridge / NativeAgent (after init or config load). */
     void syncAgentModeUiFromBridge();
-    void resetChatStreamingState();
     void onAIContextSize(int sizeEnum);
 
     // Memory Plugin System (Native VSIX Style)
@@ -2049,9 +2045,6 @@ class Win32IDE
     std::thread m_ghostTextThread;
     std::atomic<bool> m_ghostTextRunning{false};
     std::atomic<bool> m_ghostTextStopRequested{false};
-    uint64_t m_titanGhostStreamSeq = 0;
-    uint64_t m_titanGhostSeqGaps = 0;
-    uint64_t m_titanGhostPackets = 0;
 
     // Symbol Index Bridge (Rust Parser v2 integration)
     std::unique_ptr<rawrxd::bridge::SymbolIndexBridge> m_symbolIndexBridge;
@@ -3080,6 +3073,11 @@ class Win32IDE
     SuggestionContext m_activeSuggestionContext;
     bool m_ghostDiffOverlayHoverKeep = false;
     bool m_ghostDiffOverlayHoverUndo = false;
+
+    // Ranked completion candidates (populated by requestHybridCompletion; read by ghost text renderer)
+    std::mutex m_completionCandidatesMutex;
+    std::vector<HybridCompletionItem> m_completionCandidates;
+    int m_completionSelectedIndex = 0;
 
     // Agentic Composer state
     std::unique_ptr<RawrXD::IDE::AgenticComposer> m_agenticComposer;
@@ -7482,3 +7480,4 @@ inline rawrxd::IDEFeatures7& GetIDEFeatures7() {
 
 // Global IDE instance for C-callable bridges (agent streaming, etc.). Set in initProblemsPanel().
 extern Win32IDE* g_pMainIDE;
+

@@ -1319,12 +1319,11 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
                 // Autorun prompt format detection upon model load success (UIP-001)
                 conversationDetectModelFormat(result->filepath);
-                auto style = ConversationSession::DetectFormatFromModel(result->filepath);
-                s_conversationSession.SetPromptFormat(style);
 
                 // onModelReadyUnified: single authoritative barrier — resets streaming state,
                 // syncs UI, then posts WM_SAFE_TO_REPLAY (which triggers replay if pending).
-                onModelReadyUnified();
+                // Async path: replay pending message if queued before load completed.
+                onModelReadyUnified(!m_pendingChatOnLoadMessage.empty());
 
                 const bool hasPendingChat = !m_pendingChatOnLoadMessage.empty();
                 appendModelLoadReadyCopilotTurns(result->filepath, !hasPendingChat);
@@ -5285,3 +5284,4 @@ void Win32IDE::persistPerformanceVulkanRendererToConfig()
         cfg.saveToFile(dir + "rawrxd.config.json");
     }
 }
+

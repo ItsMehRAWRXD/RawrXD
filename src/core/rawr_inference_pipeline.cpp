@@ -1,0 +1,122 @@
+// rawr_inference_pipeline.cpp — Unified local-inference pipeline implementation
+// Wraps rawrxd_serve_inference_plugin so both CLI and Win32IDE use the same call
+// path for local GGUF weights.
+#include "rawr_inference_pipeline.h"
+
+// Pull in the DLL-bridge helpers from the serve layer.
+// Win32IDE links rawrxd_serve_inference_plugin.cpp directly; RawrXD-Serve also
+// includes this same TU — only one definition is needed per binary.
+#include "../serve/rawrxd_serve_inference_plugin.h"
+#include "../serve/rawrxd_serve.h"
+
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#if defined(_WIN32)
+  #include <windows.h>
+#endif
+
+namespace RawrXD {
+
+namespace {
+// Strict mode: when enabled (env RAWRXD_PIPELINE_STRICT=1), upstream callers
+// must treat a `false` return from runLocalInferencePipeline as fatal — no
+// fallback to the agentic bridge or Ollama path. Used for CLI/UI parity tests.
+bool isPipelineStrictEnabled()
+{
+    const char* v = std::getenv("RAWRXD_PIPELINE_STRICT");
+    return v && v[0] != '\0' && std::strcmp(v, "0") != 0;
+}
+
+void pipelineDebugMark(const char* tag)
+{
+#if defined(_WIN32)
+    OutputDebugStringA(tag);
+#endif
+    std::fputs(tag, stderr);
+    std::fflush(stderr);
+}
+} // namespace
+
+bool isPipelineStrictMode()
+{
+    static const bool kStrict = isPipelineStrictEnabled();
+    return kStrict;
+}
+
+bool isInferencePipelineReady()
+{
+    return RawrXD::Serve::InferencePlugin::hasPlugin();
+}
+
+std::string initInferencePipeline(const std::string& modelPath)
+{
+    if (!RawrXD::Serve::InferencePlugin::hasPlugin())
+    {
+        std::string detail;
+        if (!RawrXD::Serve::InferencePlugin::tryLoad(detail))
+            return std::string("InferencePlugin DLL not found: ") + detail;
+    }
+
+    std::string err;
+    if (!RawrXD::Serve::InferencePlugin::loadModel(modelPath, err))
+        return std::string("Model load failed: ") + err;
+
+    return {};
+}
+
+bool runLocalInferencePipeline(const PipelineRequest& req, const InferenceCallbacks& cbs)
+{
+    if (!RawrXD::Serve::InferencePlugin::hasPlugin())
+    {
+        if (isPipelineStrictMode())
+            pipelineDebugMark("[PIPELINE STRICT] hasPlugin=false — refusing fallback\n");
+        return false;
+    }
+
+    pipelineDebugMark("[PIPELINE ACTIVE] runLocalInferencePipeline entered\n");
+
+    using RawrXD::Serve::GenerateRequest;
+    using RawrXD::Serve::ChatMessage;
+
+    GenerateRequest gr;
+    gr.model       = req.model;
+    gr.prompt      = req.prompt;
+    gr.temperature = req.temperature;
+    gr.num_predict = req.numPredict;
+    gr.stream      = req.stream;
+    for (const auto& m : req.messages)
+    {
+        ChatMessage cm;
+        cm.role    = m.role;
+        cm.content = m.content;
+        gr.messages.push_back(std::move(cm));
+    }
+
+    std::string err;
+    RawrXD::Serve::InferencePlugin::generate(
+        gr,
+        [&cbs](const std::string& token, bool done)
+        {
+            if (cbs.onToken)
+                cbs.onToken(token, done);
+        },
+        err);
+
+    if (!err.empty())
+    {
+        if (cbs.onError)
+            cbs.onError(err);
+        return false;
+    }
+
+    if (cbs.onComplete)
+    {
+        // Accumulated text is not tracked here — callers accumulate via onToken.
+        cbs.onComplete({});
+    }
+    pipelineDebugMark("[PIPELINE DONE] runLocalInferencePipeline ok\n");
+    return true;
+}
+
+} // namespace RawrXD

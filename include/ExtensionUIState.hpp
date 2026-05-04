@@ -18,7 +18,9 @@
 #include <functional>
 #include <map>
 #include <mutex>
+#include <optional>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace RawrXD {

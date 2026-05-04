@@ -14,6 +14,7 @@
 #include "../core/gpu_backend_bridge.h"
 #include "../core/layer_offload_manager.hpp"
 #include "../core/PendingEditReviewGate.hpp"
+#include "../core/rawr_inference_pipeline.h"
 #include "../cpu_inference_engine.h"
 #include "../inference/speculative_execution_engine.h"  // Full type for unique_ptr<SpeculativeExecutionEngine> dtor
 #include "../model_source_resolver.h"
@@ -7091,8 +7092,8 @@ void Win32IDE::loadModelFromPath(const std::string& filepath)
         appendToOutput("Model loaded into Agentic Bridge (streaming GGUF skipped).\n", "Output", OutputSeverity::Info);
     if (ggufOk || bridgeOk)
     {
-        syncAgentModeUiFromBridge();
-        refreshAgenticChatSessionContext();
+        // Sync path: no pending replay — WM_SAFE_TO_REPLAY not posted.
+        onModelReadyUnified(false);
         appendModelLoadReadyCopilotTurns(filepath, true);
     }
 }
@@ -7167,16 +7168,17 @@ void Win32IDE::resetChatStreamingState()
     m_nativeStreamingActive = false;
 }
 
-void Win32IDE::onModelReadyUnified()
+void Win32IDE::onModelReadyUnified(bool shouldReplay)
 {
     // INVARIANT: this is the single authoritative post-load transition.
     // No streaming or UI mutation is valid before this runs after model load.
     resetChatStreamingState();
     syncAgentModeUiFromBridge();
     refreshAgenticChatSessionContext();
-    if (m_hwndMain && IsWindow(m_hwndMain))
+    if (shouldReplay && m_hwndMain && IsWindow(m_hwndMain))
     {
         // WM_SAFE_TO_REPLAY: barrier message — streaming state guaranteed clean beforehand.
+        // Only posted when caller has a pending message to replay (async path).
         PostMessage(m_hwndMain, WM_SAFE_TO_REPLAY, 0, 0);
     }
 }
@@ -9350,6 +9352,96 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
                         }
                     });
 
+                // ── Unified local-inference fast-path (CLI ground-truth) ──────────────
+                // For local GGUF weights, force the Win32IDE path through the same
+                // InferencePlugin.generate() spine used by `rawrxd serve`.
+                // When RAWRXD_PIPELINE_STRICT=1 is set, force pipeline regardless of
+                // path heuristic to guarantee CLI/UI parity (no agentic fallback).
+                const bool pipelineStrict = RawrXD::isPipelineStrictMode();
+                const bool localPipelineForce = pipelineStrict || looksLikeLocalModelPath(m_loadedModelPath);
+                bool pipelineHandled = false;
+                if (pipelineStrict)
+                    OutputDebugStringA("[PIPELINE STRICT] enabled via RAWRXD_PIPELINE_STRICT=1\n");
+                if (localPipelineForce && !m_inferenceStopRequested.load() && !isShuttingDown())
+                {
+                    const std::string initErr = RawrXD::initInferencePipeline(m_loadedModelPath);
+                    if (!initErr.empty())
+                    {
+                        OutputDebugStringA(("[InferencePipeline] init failed: " + initErr + "\n").c_str());
+                        if (m_inferenceCallback)
+                            m_inferenceCallback("Error: unified local pipeline init failed: " + initErr, true);
+                        finishAndScheduleNext();
+                        return;
+                    }
+
+                    OutputDebugStringA("[PROBE-B] Using unified InferencePipeline (CLI path, forced)\n");
+                    RawrXD::PipelineRequest pipeReq;
+                    pipeReq.model       = m_loadedModelPath;
+                    pipeReq.prompt      = prompt;
+                    pipeReq.numPredict  = m_inferenceConfig.maxTokens > 0 ? m_inferenceConfig.maxTokens : 512;
+                    pipeReq.temperature = m_inferenceConfig.temperature > 0.0f
+                                             ? m_inferenceConfig.temperature : 0.7f;
+                    pipeReq.stream      = true;
+                    // Seed conversation history into messages[] for multi-turn context.
+                    {
+                        std::lock_guard<std::mutex> hLock(m_outputMutex);
+                        for (const auto& turn : m_chatHistory)
+                        {
+                            RawrXD::InferenceMessage msg;
+                            msg.role    = turn.first;
+                            msg.content = turn.second;
+                            pipeReq.messages.push_back(std::move(msg));
+                        }
+                    }
+
+                    pipelineHandled = RawrXD::runLocalInferencePipeline(
+                        pipeReq,
+                        {
+                            // onToken — stream to chat UI (same contract as m_inferenceCallback)
+                            [this](const std::string& token, bool done)
+                            {
+                                if (m_inferenceStopRequested.load() || isShuttingDown())
+                                    return;
+                                if (!token.empty() && m_inferenceCallback)
+                                {
+                                    OutputDebugStringA(("[PIPELINE TOKEN] " + token + "\n").c_str());
+                                    m_currentInferenceResponse += token;
+                                    m_inferenceCallback(token, false);
+                                }
+                                if (done)
+                                    OutputDebugStringA("[PIPELINE TOKEN] <done=true>\n");
+                            },
+                            // onComplete
+                            [this](const std::string& /*accum*/)
+                            {
+                                if (m_inferenceCallback)
+                                    m_inferenceCallback({}, true);
+                            },
+                            // onError — fail closed for local forced pipeline.
+                            [this](const std::string& err)
+                            {
+                                OutputDebugStringA(("[InferencePipeline] error: " + err + "\n").c_str());
+                            }
+                        });
+
+                    if (pipelineHandled)
+                    {
+                        OutputDebugStringA("[PROBE-B2] InferencePipeline completed; skipping ExecuteAgentCommand\n");
+                    }
+                    else
+                    {
+                        const std::string errMsg =
+                            "Error: unified local pipeline generation failed (bridge fallback disabled for local-model parity test).";
+                        OutputDebugStringA("[InferencePipeline] returned false (local force mode fail-closed)\n");
+                        if (m_inferenceCallback)
+                            m_inferenceCallback(errMsg, true);
+                        finishAndScheduleNext();
+                        return;
+                    }
+                }
+
+                if (!pipelineHandled)
+                {
                 // Execute via agent bridge (supports /edit, /think, etc.)
                 OutputDebugStringA("[PROBE-B] Calling ExecuteAgentCommand\n");
                 m_agenticBridge->ExecuteAgentCommand(prompt);
@@ -9635,6 +9727,7 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
                         }
                     }
                 }
+                } // end if (!pipelineHandled)
 
                 // Phase 4B: Choke Point 4 — hookPostGeneration after streaming inference
                 // Note: For streaming responses, the full output was already sent via callback.
@@ -15730,3 +15823,4 @@ bool Win32IDE::DialogBoxWithInput(const wchar_t* title, const wchar_t* prompt, w
 
 // Destructor definition - must be in .cpp where NativeStreamProvider is complete
 Win32IDE::~Win32IDE() = default;
+
