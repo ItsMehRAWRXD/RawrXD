@@ -24,6 +24,30 @@ $b = Get-Content $Ui  -Raw | ConvertFrom-Json
 
 $mismatches = @()
 
+if ($a.PSObject.Properties.Name -contains 'backend') {
+    if ([string]::IsNullOrWhiteSpace($a.backend)) { $mismatches += "cli backend missing" }
+    if ([string]::IsNullOrWhiteSpace($b.backend)) { $mismatches += "ui backend missing" }
+    if (($a.PSObject.Properties.Name -contains 'backend') -and
+        ($b.PSObject.Properties.Name -contains 'backend') -and
+        -not [string]::IsNullOrWhiteSpace($a.backend) -and
+        -not [string]::IsNullOrWhiteSpace($b.backend) -and
+        ($a.backend -ne $b.backend)) {
+        $mismatches += "backend: '$($a.backend)' vs '$($b.backend)'"
+    }
+}
+
+if ($a.PSObject.Properties.Name -contains 'device') {
+    if ([string]::IsNullOrWhiteSpace($a.device)) { $mismatches += "cli device missing" }
+    if ([string]::IsNullOrWhiteSpace($b.device)) { $mismatches += "ui device missing" }
+    if (($a.PSObject.Properties.Name -contains 'device') -and
+        ($b.PSObject.Properties.Name -contains 'device') -and
+        -not [string]::IsNullOrWhiteSpace($a.device) -and
+        -not [string]::IsNullOrWhiteSpace($b.device) -and
+        ($a.device -ne $b.device)) {
+        $mismatches += "device: '$($a.device)' vs '$($b.device)'"
+    }
+}
+
 if ($a.model  -ne $b.model)  { $mismatches += "model: '$($a.model)' vs '$($b.model)'" }
 if ($a.prompt -ne $b.prompt) { $mismatches += "prompt mismatch" }
 if ($a.error  -ne $b.error)  { $mismatches += "error: '$($a.error)' vs '$($b.error)'" }
@@ -71,6 +95,12 @@ $cliTot = $a.completed_ms;  $uiTot = $b.completed_ms
 Write-Host ""
 Write-Host "=== Parity Trace Comparison ==="
 Write-Host ("  source       : {0,-12} {1,-12}" -f $a.source, $b.source)
+if ($a.PSObject.Properties.Name -contains 'backend') {
+    Write-Host ("  backend      : {0,-12} {1,-12}" -f $a.backend, $b.backend)
+}
+if ($a.PSObject.Properties.Name -contains 'device') {
+    Write-Host ("  device       : {0,-12} {1,-12}" -f $a.device, $b.device)
+}
 Write-Host ("  model        : {0,-12} {1,-12}" -f $a.model,  $b.model)
 Write-Host ("  token_count  : {0,-12} {1,-12}" -f $a.token_count, $b.token_count)
 Write-Host ("  first_token  : {0,-12} {1,-12} ms" -f $cliFt, $uiFt)
