@@ -7526,3 +7526,37 @@ if(TARGET RawrXD-ServeInference)
     add_dependencies(RawrXD-Serve RawrXD-ServeInference)
 endif()
 message(STATUS "[Serve] RawrXD-Serve target added (Ollama-compatible HTTP server + CLI)")
+
+# ============================================================================
+# RawrXD-ParityUIDriver — Headless UI-side driver for CLI/UI parity diff.
+# Calls runLocalInferencePipeline() the same way Win32IDE.cpp does, with no
+# WinMain / message loop. Lets the UI half of the parity proof run in CI.
+# ============================================================================
+add_executable(RawrXD-ParityUIDriver EXCLUDE_FROM_ALL
+    src/tools/parity_ui_driver_main.cpp
+    src/core/rawr_inference_pipeline.cpp
+    src/serve/rawrxd_serve_inference_plugin.cpp
+)
+target_include_directories(RawrXD-ParityUIDriver PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/serve
+    ${CMAKE_SOURCE_DIR}/include
+)
+if(MSVC)
+    target_compile_options(RawrXD-ParityUIDriver PRIVATE /EHsc /W3 /MT$<$<CONFIG:Debug>:d>)
+    target_compile_options(RawrXD-ParityUIDriver PRIVATE
+        $<$<CONFIG:Release>:/O2>
+        $<$<CONFIG:RelWithDebInfo>:/O2>
+    )
+endif()
+target_link_libraries(RawrXD-ParityUIDriver PRIVATE
+    kernel32
+    rawrxd_gpu_gate
+)
+set_target_properties(RawrXD-ParityUIDriver PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME rawrxd-parity-ui-driver
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+message(STATUS "[Parity] RawrXD-ParityUIDriver target added (headless UI-side parity driver)")
