@@ -14,8 +14,13 @@
 //     "completed_ms":   <delta from started_ms to done=true>,
 //     "tokens":  ["t0", "t1", ...],
 //     "token_count": N,
+//     "token_us":  [<int64 microseconds since started>, ...]   // parallel to tokens[]
 //     "error":   "..." | ""
 //   }
+//
+// Time fields use std::chrono::steady_clock for elapsed deltas (monotonic,
+// immune to wall-clock jumps); started_ms is the only system_clock value and
+// is kept only for cross-host correlation.
 //
 // Strings are escaped per RFC 8259 (no external JSON dep needed).
 #pragma once
@@ -33,15 +38,36 @@ struct Recorder {
     std::string model;
     std::string prompt;
     std::vector<std::string> tokens;
+    // Per-token monotonically-increasing sequence numbers stamped at the
+    // recorder boundary. Any async reordering on the UI callback path
+    // surfaces as a non-monotonic seq in the trace JSON instead of as a
+    // silent token-array divergence.
+    std::vector<long long> seq;
+    // Per-token elapsed microseconds since start(), captured at the moment
+    // the recorder receives the token. Parallel to tokens[]. Computed from
+    // steady_clock so the deltas are immune to wall-clock skew.
+    std::vector<long long> tokenUs;
+    long long nextSeq = 0;
     long long startedMs = 0;
     long long firstTokenMs = -1;
     long long completedMs = -1;
+    std::chrono::steady_clock::time_point startedSteady{};
     std::string error;
     std::mutex mu;
 
-    static long long nowMs() {
+    static long long systemNowMs() {
         using namespace std::chrono;
         return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+    }
+
+    long long elapsedMsLocked() const {
+        using namespace std::chrono;
+        return duration_cast<milliseconds>(steady_clock::now() - startedSteady).count();
+    }
+
+    long long elapsedUsLocked() const {
+        using namespace std::chrono;
+        return duration_cast<microseconds>(steady_clock::now() - startedSteady).count();
     }
 
     void start(std::string src, std::string mdl, std::string p) {
@@ -49,30 +75,37 @@ struct Recorder {
         source = std::move(src);
         model = std::move(mdl);
         prompt = std::move(p);
-        startedMs = nowMs();
+        startedMs = systemNowMs();
+        startedSteady = std::chrono::steady_clock::now();
         firstTokenMs = -1;
         completedMs = -1;
         tokens.clear();
+        seq.clear();
+        tokenUs.clear();
+        nextSeq = 0;
         error.clear();
     }
 
     void onToken(const std::string& tok, bool /*done*/) {
         std::lock_guard<std::mutex> lk(mu);
         if (!tok.empty()) {
-            if (firstTokenMs < 0) firstTokenMs = nowMs() - startedMs;
+            const long long us = elapsedUsLocked();
+            if (firstTokenMs < 0) firstTokenMs = us / 1000;
             tokens.push_back(tok);
+            seq.push_back(nextSeq++);
+            tokenUs.push_back(us);
         }
     }
 
     void onComplete() {
         std::lock_guard<std::mutex> lk(mu);
-        if (completedMs < 0) completedMs = nowMs() - startedMs;
+        if (completedMs < 0) completedMs = elapsedMsLocked();
     }
 
     void onError(const std::string& msg) {
         std::lock_guard<std::mutex> lk(mu);
         error = msg;
-        if (completedMs < 0) completedMs = nowMs() - startedMs;
+        if (completedMs < 0) completedMs = elapsedMsLocked();
     }
 };
 
@@ -117,7 +150,23 @@ inline bool writeJson(const Recorder& r, const std::string& path) {
         if (i) buf += ", ";
         appendEscaped(buf, r.tokens[i]);
     }
-    buf += "]\n}\n";
+    buf += "],\n  \"seq\": [";
+    for (size_t i = 0; i < r.seq.size(); ++i) {
+        if (i) buf += ", ";
+        buf += std::to_string(r.seq[i]);
+    }
+    buf += "],\n  \"token_us\": [";
+    for (size_t i = 0; i < r.tokenUs.size(); ++i) {
+        if (i) buf += ", ";
+        buf += std::to_string(r.tokenUs[i]);
+    }
+    // seq_monotonic: true iff seq[i] == i for all i (no async reordering).
+    bool monotonic = (r.seq.size() == r.tokens.size());
+    for (size_t i = 0; monotonic && i < r.seq.size(); ++i)
+        if (r.seq[i] != static_cast<long long>(i)) monotonic = false;
+    buf += "],\n  \"seq_monotonic\": ";
+    buf += (monotonic ? "true" : "false");
+    buf += "\n}\n";
 
     FILE* f = nullptr;
 #if defined(_WIN32)
