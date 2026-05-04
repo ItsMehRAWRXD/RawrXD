@@ -76,6 +76,24 @@ void detect_locked() {
     g_status.vram_total_bytes = 0;
     g_status.vram_free_bytes  = 0;
 
+    // 0. Parity CPU fallback — explicit opt-in for hardware-free parity tests.
+    //    Activated only when RAWRXD_PARITY_CPU=1 is set. Bypasses the fail-closed
+    //    GPU gate so CLI/UI deterministic-trace diffing can run on any machine.
+    {
+        const char* pc = std::getenv("RAWRXD_PARITY_CPU");
+        if (pc && pc[0] != '\0' && std::strcmp(pc, "0") != 0)
+        {
+            g_status.active       = Backend::None;
+            g_status.device_count = 1;
+            std::snprintf(g_status.device_name, sizeof(g_status.device_name),
+                          "ParityCpuFallback (RAWRXD_PARITY_CPU)");
+            g_active.store(true, std::memory_order_release);
+            std::fprintf(stderr,
+                "[RawrXD][GPU] Parity CPU fallback ACTIVE — GPU gate bypassed for deterministic trace test only.\n");
+            return;
+        }
+    }
+
     // 1. Vulkan first (broadest hardware coverage incl. AMD RDNA3).
     // Explicitly load ggml-vulkan.dll to ensure the real functions are available
 #if defined(_WIN32)

@@ -9,6 +9,7 @@
 #include "../serve/rawrxd_serve_inference_plugin.h"
 #include "../serve/rawrxd_serve.h"
 #include "inference_parity_trace.h"
+#include "parity_cpu_fallback.h"
 
 #include <cstdio>
 #include <cstdlib>
@@ -78,6 +79,35 @@ std::string initInferencePipeline(const std::string& modelPath)
 
 bool runLocalInferencePipeline(const PipelineRequest& req, const InferenceCallbacks& cbs)
 {
+    // Parity CPU fallback short-circuit. Both CLI and UI invoke the same
+    // deterministic generator → byte-identical token streams without GPU.
+    if (RawrXD::ParityFallback::isActive())
+    {
+        pipelineDebugMark("[PIPELINE PARITY-CPU] deterministic fallback active\n");
+
+        const std::string tracePath = pipelineTracePath();
+        RawrXD::ParityTrace::Recorder trace;
+        if (!tracePath.empty())
+            trace.start("ui-pipeline", req.model, req.prompt);
+
+        RawrXD::ParityFallback::run(
+            req.model, req.prompt, req.numPredict,
+            [&cbs, &trace, &tracePath](const std::string& tok, bool done)
+            {
+                if (!tracePath.empty()) trace.onToken(tok, done);
+                if (cbs.onToken) cbs.onToken(tok, done);
+            });
+
+        if (cbs.onComplete) cbs.onComplete({});
+        if (!tracePath.empty())
+        {
+            trace.onComplete();
+            RawrXD::ParityTrace::writeJson(trace, tracePath);
+            pipelineDebugMark("[PIPELINE TRACE] wrote trace JSON (parity-cpu)\n");
+        }
+        return true;
+    }
+
     if (!RawrXD::Serve::InferencePlugin::hasPlugin())
     {
         if (isPipelineStrictMode())

@@ -3485,6 +3485,11 @@ if(WIN32)
         src/core/link_symbols_impl.cpp
         src/core/rust_parser_v2.cpp
         src/core/symbol_table.cpp
+        # Unified local-inference pipeline (CLI ground-truth path shared with Win32IDE)
+        src/core/rawr_inference_pipeline.cpp
+        src/serve/rawrxd_serve_inference_plugin.cpp
+        # ExtensionHost minimal link stub for Win32IDE_Commands.cpp callsites
+        src/win32app/ExtensionHost_stub.cpp
         src/bridge/symbol_index_bridge.cpp
         src/core/ast_graph_engine_impl.cpp
         src/core/kv_cache_credit_bridge.cpp
@@ -5026,6 +5031,7 @@ if(WIN32)
     target_include_directories(RawrXD-Win32IDE PRIVATE
         src/ggml-cpu
         src/bridge
+        src/serve
     )
 
     # GPU sovereign ASM link state (UI/runtime detection)
@@ -7498,7 +7504,9 @@ target_include_directories(RawrXD-Serve PRIVATE
     ${CMAKE_SOURCE_DIR}/include
 )
 if(MSVC)
-    target_compile_options(RawrXD-Serve PRIVATE /EHsc /W3 /MT)
+    # Match static runtime flavor with configuration to avoid LNK2038 when
+    # dependent libs are built as MTd in Debug.
+    target_compile_options(RawrXD-Serve PRIVATE /EHsc /W3 /MT$<$<CONFIG:Debug>:d>)
     target_compile_options(RawrXD-Serve PRIVATE
         $<$<CONFIG:Release>:/O2>
         $<$<CONFIG:RelWithDebInfo>:/O2>

@@ -37,7 +37,7 @@ bool ExtensionHost::Initialize() {
     }
 
     m_shuttingDown.store(false);
-    m_sandboxManager = &ExtensionSandboxManager::Get();
+    m_sandboxManager = &ExtensionSandboxManager::GetInstance();
 
     // Scan default extensions directory
     std::string extDir = "extensions";
