@@ -52,6 +52,27 @@ class SpeculativeDecoderV2;
 }
 }  // namespace RawrXD
 
+static void stampCliTraceBackend(RawrXD::ParityTrace::Recorder& trace, const char* fallbackBackend)
+{
+    const auto& st = rxd::gpu::status();
+    switch (st.active)
+    {
+        case rxd::gpu::Backend::Vulkan:
+            trace.setBackend("vulkan", st.device_name);
+            return;
+        case rxd::gpu::Backend::Cuda:
+            trace.setBackend("cuda", st.device_name);
+            return;
+        case rxd::gpu::Backend::Hip:
+            trace.setBackend("hip", st.device_name);
+            return;
+        case rxd::gpu::Backend::None:
+        default:
+            trace.setBackend(fallbackBackend ? fallbackBackend : "unknown", st.device_name);
+            return;
+    }
+}
+
 // ============================================================================
 // Arg Parsing
 // ============================================================================
@@ -535,7 +556,10 @@ static int cmdRun(const CliArgs& args)
 
         RawrXD::ParityTrace::Recorder trace;
         const bool wantTrace = !args.traceFile.empty();
-        if (wantTrace) trace.start("cli", args.model, args.prompt);
+        if (wantTrace) {
+            trace.start("cli", args.model, args.prompt);
+            trace.setBackend("cpu-fallback", "ParityCpuFallback");
+        }
 
         RawrXD::ParityFallback::run(
             args.model, args.prompt, args.maxTokens,
@@ -609,8 +633,10 @@ static int cmdRun(const CliArgs& args)
         // Optional structured parity trace (--emit-json-trace path).
         RawrXD::ParityTrace::Recorder trace;
         const bool wantTrace = !args.traceFile.empty();
-        if (wantTrace)
-            trace.start("cli", entry->name, args.prompt);
+        if (wantTrace) {
+            trace.start("cli", entry->path, args.prompt);
+            stampCliTraceBackend(trace, "plugin");
+        }
 
         RawrXD::Serve::InferencePlugin::generate(
             req,

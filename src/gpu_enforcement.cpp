@@ -15,6 +15,8 @@
   #include <windows.h>
 #endif
 
+#include <string_view>
+
 // Vulkan via ggml backend. The ggml-vulkan target may or may not be linked
 // into the final binary; we weakly reference the Vulkan probe symbols and
 // fall back to a stub returning 0 when the Vulkan backend is absent.
@@ -51,6 +53,50 @@ extern "C" __attribute__((weak)) int ggml_rxd_backend_hip_get_device_count(void)
 namespace rxd::gpu {
 
 namespace {
+
+using VkGetDeviceCountFn = int (*)(void);
+using VkGetDeviceDescriptionFn = void (*)(int, char *, size_t);
+using VkGetDeviceMemoryFn = void (*)(int, size_t *, size_t *);
+
+struct VulkanProbe {
+    HMODULE module = nullptr;
+    VkGetDeviceCountFn get_device_count = nullptr;
+    VkGetDeviceDescriptionFn get_device_description = nullptr;
+    VkGetDeviceMemoryFn get_device_memory = nullptr;
+};
+
+VulkanProbe load_vulkan_probe() {
+    VulkanProbe probe{};
+#if defined(_WIN32)
+    probe.module = LoadLibraryA("ggml-vulkan.dll");
+    if (!probe.module) {
+        std::fprintf(stderr, "[RawrXD][GPU] Failed to load ggml-vulkan.dll: %lu\n", GetLastError());
+        return probe;
+    }
+
+    probe.get_device_count = reinterpret_cast<VkGetDeviceCountFn>(
+        GetProcAddress(probe.module, "ggml_backend_vk_get_device_count"));
+    probe.get_device_description = reinterpret_cast<VkGetDeviceDescriptionFn>(
+        GetProcAddress(probe.module, "ggml_backend_vk_get_device_description"));
+    probe.get_device_memory = reinterpret_cast<VkGetDeviceMemoryFn>(
+        GetProcAddress(probe.module, "ggml_backend_vk_get_device_memory"));
+
+    if (!probe.get_device_count || !probe.get_device_description || !probe.get_device_memory) {
+        std::fprintf(stderr,
+            "[RawrXD][GPU] ggml-vulkan.dll missing required probe exports"
+            " (count=%p desc=%p mem=%p)\n",
+            reinterpret_cast<void*>(probe.get_device_count),
+            reinterpret_cast<void*>(probe.get_device_description),
+            reinterpret_cast<void*>(probe.get_device_memory));
+        FreeLibrary(probe.module);
+        probe = {};
+        return probe;
+    }
+
+    std::fprintf(stderr, "[RawrXD][GPU] Loaded ggml-vulkan.dll for Vulkan backend detection\n");
+#endif
+    return probe;
+}
 
 std::once_flag         g_once;
 std::atomic<bool>      g_active{false};
@@ -95,24 +141,22 @@ void detect_locked() {
     }
 
     // 1. Vulkan first (broadest hardware coverage incl. AMD RDNA3).
-    // Explicitly load ggml-vulkan.dll to ensure the real functions are available
-#if defined(_WIN32)
-    HMODULE vkModule = LoadLibraryA("ggml-vulkan.dll");
-    if (vkModule) {
-        std::fprintf(stderr, "[RawrXD][GPU] Loaded ggml-vulkan.dll for Vulkan backend detection\n");
-    } else {
-        std::fprintf(stderr, "[RawrXD][GPU] Failed to load ggml-vulkan.dll: %lu\n", GetLastError());
-    }
-#endif
-    
+    // Resolve probe symbols from ggml-vulkan.dll at runtime so we don't
+    // silently fall back to the MSVC alternatename stubs when the import
+    // library is not linked into the final executable.
+    const VulkanProbe vk = load_vulkan_probe();
     int vk_count = 0;
-    try { vk_count = ggml_backend_vk_get_device_count(); } catch (...) { vk_count = 0; }
+    try {
+        vk_count = vk.get_device_count ? vk.get_device_count() : 0;
+    } catch (...) {
+        vk_count = 0;
+    }
     if (vk_count > 0) {
         g_status.active       = Backend::Vulkan;
         g_status.device_count = vk_count;
-        ggml_backend_vk_get_device_description(0, g_status.device_name, sizeof(g_status.device_name));
+        vk.get_device_description(0, g_status.device_name, sizeof(g_status.device_name));
         size_t fr = 0, tot = 0;
-        ggml_backend_vk_get_device_memory(0, &fr, &tot);
+        vk.get_device_memory(0, &fr, &tot);
         g_status.vram_free_bytes  = fr;
         g_status.vram_total_bytes = tot;
         g_active.store(true, std::memory_order_release);

@@ -14,7 +14,7 @@
 param(
     [string]$BinDir   = "d:\rawrxd\build_pipeline\bin",
     [string]$OutDir   = "d:\rawrxd\build_pipeline\parity_gpu",
-    [string]$Model    = "D:\TinyLlama-1.1B-Chat-v1.0.Q4_0.gguf",
+    [string]$Model    = "",
     [string]$Prompt   = "Say exactly: ready",
     [int]   $MaxTokens = 16,
     [int]   $MinRealTokens = 1,
@@ -32,6 +32,25 @@ function Defer([string]$why) {
         exit 1
     }
     exit 0
+}
+
+function Join-NativeArgs([string[]]$CliArgs) {
+    ($CliArgs | ForEach-Object {
+        if ($_ -eq $null) { '""'; return }
+        if ($_ -match '[\s"]') {
+            '"' + ($_ -replace '"', '\"') + '"'
+        } else {
+            $_
+        }
+    }) -join ' '
+}
+
+if ([string]::IsNullOrWhiteSpace($Model)) {
+    $candidates = @(
+        "D:\tinyllama_fresh.gguf",
+        "D:\TinyLlama-1.1B-Chat-v1.0.Q4_0.gguf"
+    )
+    $Model = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
 }
 
 if (!(Test-Path $cliExe)) { Defer "CLI binary not built: $cliExe" }
@@ -102,7 +121,7 @@ Remove-Item -Force $cliTrace, $uiTrace -ErrorAction SilentlyContinue
 $prevEAP = $ErrorActionPreference
 $ErrorActionPreference = 'Continue'
 $proc = Start-Process -FilePath $cliExe `
-    -ArgumentList @('run', $Model, '--prompt', $Prompt, '--max-tokens', $MaxTokens, '--emit-json-trace', $cliTrace) `
+    -ArgumentList (Join-NativeArgs @('run', $Model, '--prompt', $Prompt, '--max-tokens', "$MaxTokens", '--emit-json-trace', $cliTrace)) `
     -RedirectStandardError $cliStderr -RedirectStandardOutput $cliStdout `
     -NoNewWindow -PassThru -Wait
 $cliExit = $proc.ExitCode
@@ -116,6 +135,7 @@ if ($stderrText -match 'No GPU backend available') {
 if ($cliExit -ne 0 -or -not (Test-Path $cliTrace)) {
     Write-Host "[FAIL] CLI inference failed (exit=$cliExit)" -ForegroundColor Red
     Write-Host "stderr:`n$stderrText"
+    if (Test-Path $cliStdout) { Write-Host "stdout:`n$(Get-Content $cliStdout -Raw)" }
     exit 2
 }
 
@@ -152,7 +172,7 @@ if (!(Test-Path $uiDriver)) {
 $uiStderr = Join-Path $OutDir "ui.stderr.txt"
 $uiStdout = Join-Path $OutDir "ui.stdout.txt"
 $proc = Start-Process -FilePath $uiDriver `
-    -ArgumentList @('--model', $Model, '--prompt', $Prompt, '--num-predict', $MaxTokens) `
+    -ArgumentList (Join-NativeArgs @('--model', $Model, '--prompt', $Prompt, '--num-predict', "$MaxTokens")) `
     -RedirectStandardError $uiStderr -RedirectStandardOutput $uiStdout `
     -NoNewWindow -PassThru -Wait
 $uiExit = $proc.ExitCode
@@ -160,6 +180,7 @@ $uiExit = $proc.ExitCode
 if ($uiExit -ne 0 -or -not (Test-Path $uiTrace)) {
     Write-Host "[FAIL] UI driver failed (exit=$uiExit)" -ForegroundColor Red
     if (Test-Path $uiStderr) { Write-Host "stderr:`n$(Get-Content $uiStderr -Raw)" }
+    if (Test-Path $uiStdout) { Write-Host "stdout:`n$(Get-Content $uiStdout -Raw)" }
     exit 2
 }
 

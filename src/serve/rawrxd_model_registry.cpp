@@ -14,6 +14,18 @@ namespace RawrXD
 namespace Serve
 {
 
+static std::string joinPath(const std::string& dir, const char* fileName)
+{
+    if (dir.empty())
+        return fileName ? std::string(fileName) : std::string();
+
+    const char tail = dir.back();
+    if (tail == '\\' || tail == '/')
+        return dir + (fileName ? fileName : "");
+
+    return dir + "\\" + (fileName ? fileName : "");
+}
+
 // GGUF magic: "GGUF" in little-endian
 static constexpr uint32_t GGUF_MAGIC = 0x46554747u;  // 'G','G','U','F'
 
@@ -104,7 +116,7 @@ std::string ModelRegistry::defaultModelDir()
 void ModelRegistry::scanDirectory(const std::string& dir)
 {
     WIN32_FIND_DATAA fd;
-    std::string pattern = dir + "\\*.gguf";
+    std::string pattern = joinPath(dir, "*.gguf");
     HANDLE h = FindFirstFileA(pattern.c_str(), &fd);
     if (h == INVALID_HANDLE_VALUE)
         return;
@@ -114,7 +126,7 @@ void ModelRegistry::scanDirectory(const std::string& dir)
         if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
             continue;
 
-        std::string fullPath = dir + "\\" + fd.cFileName;
+        std::string fullPath = joinPath(dir, fd.cFileName);
         ModelEntry entry;
         if (probeGGUFHeader(fullPath, entry))
         {
