@@ -8,6 +8,7 @@
 // includes this same TU — only one definition is needed per binary.
 #include "../serve/rawrxd_serve_inference_plugin.h"
 #include "../serve/rawrxd_serve.h"
+#include "inference_parity_trace.h"
 
 #include <cstdio>
 #include <cstdlib>
@@ -44,6 +45,16 @@ bool isPipelineStrictMode()
     return kStrict;
 }
 
+namespace {
+// Trace path: RAWRXD_PIPELINE_TRACE=<file>. When set, every UI pipeline call
+// emits a JSON envelope identical in shape to `rawrxd run --emit-json-trace`.
+std::string pipelineTracePath()
+{
+    const char* v = std::getenv("RAWRXD_PIPELINE_TRACE");
+    return (v && v[0]) ? std::string(v) : std::string();
+}
+} // namespace
+
 bool isInferencePipelineReady()
 {
     return RawrXD::Serve::InferencePlugin::hasPlugin();
@@ -79,6 +90,12 @@ bool runLocalInferencePipeline(const PipelineRequest& req, const InferenceCallba
     using RawrXD::Serve::GenerateRequest;
     using RawrXD::Serve::ChatMessage;
 
+    // Optional structured parity trace.
+    const std::string tracePath = pipelineTracePath();
+    RawrXD::ParityTrace::Recorder trace;
+    if (!tracePath.empty())
+        trace.start("ui-pipeline", req.model, req.prompt);
+
     GenerateRequest gr;
     gr.model       = req.model;
     gr.prompt      = req.prompt;
@@ -96,8 +113,9 @@ bool runLocalInferencePipeline(const PipelineRequest& req, const InferenceCallba
     std::string err;
     RawrXD::Serve::InferencePlugin::generate(
         gr,
-        [&cbs](const std::string& token, bool done)
+        [&cbs, &trace, &tracePath](const std::string& token, bool done)
         {
+            if (!tracePath.empty()) trace.onToken(token, done);
             if (cbs.onToken)
                 cbs.onToken(token, done);
         },
@@ -105,6 +123,10 @@ bool runLocalInferencePipeline(const PipelineRequest& req, const InferenceCallba
 
     if (!err.empty())
     {
+        if (!tracePath.empty()) {
+            trace.onError(err);
+            RawrXD::ParityTrace::writeJson(trace, tracePath);
+        }
         if (cbs.onError)
             cbs.onError(err);
         return false;
@@ -114,6 +136,11 @@ bool runLocalInferencePipeline(const PipelineRequest& req, const InferenceCallba
     {
         // Accumulated text is not tracked here — callers accumulate via onToken.
         cbs.onComplete({});
+    }
+    if (!tracePath.empty()) {
+        trace.onComplete();
+        RawrXD::ParityTrace::writeJson(trace, tracePath);
+        pipelineDebugMark("[PIPELINE TRACE] wrote trace JSON\n");
     }
     pipelineDebugMark("[PIPELINE DONE] runLocalInferencePipeline ok\n");
     return true;

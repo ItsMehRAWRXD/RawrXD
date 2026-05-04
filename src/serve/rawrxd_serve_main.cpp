@@ -37,6 +37,7 @@
 #include "rawrxd_model_registry.h"
 #include "rawrxd_serve.h"
 #include "rawrxd_serve_inference_plugin.h"
+#include "../core/inference_parity_trace.h"
 
 
 // ============================================================================
@@ -67,6 +68,7 @@ struct CliArgs
     int maxTokens = 256;
     int runsPerThread = 50;
     bool help = false;
+    std::string traceFile;  // --emit-json-trace <path> : structured parity trace
 };
 
 static void printUsage()
@@ -76,7 +78,7 @@ RawrXD — Zero-dependency Ollama replacement
 
 USAGE:
   rawrxd serve  [--host <addr>] [--port <port>] [--model-dir <dir>]
-  rawrxd run    <model> [--prompt "your prompt"]
+  rawrxd run    <model> [--prompt "your prompt"] [--emit-json-trace <file>]
   rawrxd list
   rawrxd show   <model>
   rawrxd rm     <model>
@@ -164,6 +166,10 @@ static CliArgs parseArgs(int argc, char* argv[])
         else if (a == "--json" && i + 1 < argc)
         {
             args.jsonOutput = argv[++i];
+        }
+        else if (a == "--emit-json-trace" && i + 1 < argc)
+        {
+            args.traceFile = argv[++i];
         }
         else if (a == "--concurrency" && i + 1 < argc)
         {
@@ -561,15 +567,37 @@ static int cmdRun(const CliArgs& args)
         req.prompt = args.prompt;
         req.num_predict = args.maxTokens;
         std::string genErr;
+
+        // Optional structured parity trace (--emit-json-trace path).
+        RawrXD::ParityTrace::Recorder trace;
+        const bool wantTrace = !args.traceFile.empty();
+        if (wantTrace)
+            trace.start("cli", entry->name, args.prompt);
+
         RawrXD::Serve::InferencePlugin::generate(
             req,
-            [](const std::string& tok, bool /*done*/)
+            [&trace, wantTrace](const std::string& tok, bool done)
             {
+                if (wantTrace) trace.onToken(tok, done);
+                if (!tok.empty())
+                    fprintf(stderr, "[CLI TOKEN] %s\n", tok.c_str());
+                if (done)
+                    fprintf(stderr, "[CLI TOKEN] <done=true>\n");
                 printf("%s", tok.c_str());
                 fflush(stdout);
             },
             genErr);
         printf("\n");
+        if (wantTrace)
+        {
+            if (!genErr.empty()) trace.onError(genErr);
+            trace.onComplete();
+            if (!RawrXD::ParityTrace::writeJson(trace, args.traceFile))
+                fprintf(stderr, "Warning: could not write trace to %s\n", args.traceFile.c_str());
+            else
+                fprintf(stderr, "[CLI TRACE] wrote %s (%zu tokens, %lld ms)\n",
+                        args.traceFile.c_str(), trace.tokens.size(), trace.completedMs);
+        }
         if (!genErr.empty())
         {
             fprintf(stderr, "%s\n", genErr.c_str());
@@ -623,8 +651,12 @@ static int cmdRun(const CliArgs& args)
             printf("\n");
             RawrXD::Serve::InferencePlugin::generate(
                 req,
-                [](const std::string& tok, bool /*done*/)
+                [](const std::string& tok, bool done)
                 {
+                    if (!tok.empty())
+                        fprintf(stderr, "[CLI TOKEN] %s\n", tok.c_str());
+                    if (done)
+                        fprintf(stderr, "[CLI TOKEN] <done=true>\n");
                     printf("%s", tok.c_str());
                     fflush(stdout);
                 },
@@ -727,7 +759,15 @@ static int cmdServe(const CliArgs& args)
         std::string err;
         if (RawrXD::Serve::InferencePlugin::hasPlugin())
         {
-            return RawrXD::Serve::InferencePlugin::generate(req, onToken, err);
+            RawrXD::Serve::StreamTokenFn traced = [&](const std::string& tok, bool done)
+            {
+                if (!tok.empty())
+                    fprintf(stderr, "[CLI TOKEN] %s\n", tok.c_str());
+                if (done)
+                    fprintf(stderr, "[CLI TOKEN] <done=true>\n");
+                onToken(tok, done);
+            };
+            return RawrXD::Serve::InferencePlugin::generate(req, traced, err);
         }
         const std::string msg =
             std::string("[RawrXD-Serve] No inference plugin loaded. Set RAWRXD_SERVE_INFERENCE_DLL or place "
