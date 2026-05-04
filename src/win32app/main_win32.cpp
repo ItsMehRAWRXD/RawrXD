@@ -58,6 +58,7 @@
 #include <algorithm>
 #include <chrono>
 #include <csignal>
+#include <condition_variable>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -114,6 +115,16 @@ static bool isTruthyEnvVar(const char* name)
 {
     if (!name || !name[0])
         return false;
+
+    // Prefer Win32 environment block lookup; runtime bootstrap and CRT snapshots can diverge.
+    char buf[8] = {};
+    const DWORD n = GetEnvironmentVariableA(name, buf, static_cast<DWORD>(sizeof(buf)));
+    if (n > 0)
+    {
+        const char c = buf[0];
+        return !(c == '0' || c == 'n' || c == 'N' || c == 'f' || c == 'F');
+    }
+
     const char* value = std::getenv(name);
     if (!value || !value[0])
         return false;
@@ -470,6 +481,14 @@ static bool hasAgenticSmokeFlag(LPSTR lpCmdLine)
     // Both route to the same bounded, deterministic runAgenticSmokeTestExit().
     return strstr(lpCmdLine, "--agentic-smoke") != nullptr ||
            strstr(lpCmdLine, "--smoke-test") != nullptr;
+}
+
+static bool hasChatUiSmokeFlag(LPSTR lpCmdLine)
+{
+    if (!lpCmdLine)
+        return false;
+    return strstr(lpCmdLine, "--chat-ui-smoke-noninteractive") != nullptr ||
+           strstr(lpCmdLine, "--chat-smoke-noninteractive") != nullptr;
 }
 
 static void selfTestOutputSink(const char* text, void* userData)
@@ -3022,6 +3041,171 @@ static int runFastInferenceCLI(LPSTR lpCmdLine)
     return 0;
 }
 
+static bool envVarPresent(const char* name)
+{
+    if (!name || !name[0])
+        return false;
+    char buf[4] = {};
+    return GetEnvironmentVariableA(name, buf, static_cast<DWORD>(sizeof(buf))) > 0;
+}
+
+static std::string getEnvValueA(const char* name)
+{
+    if (!name || !name[0])
+        return {};
+    char buf[4096] = {};
+    const DWORD n = GetEnvironmentVariableA(name, buf, static_cast<DWORD>(sizeof(buf)));
+    if (n == 0 || n >= sizeof(buf))
+        return {};
+    return std::string(buf, n);
+}
+
+static int runHeadlessSmokeChatNoWindow(HINSTANCE hInstance, LPSTR lpCmdLine)
+{
+    int argc = 0;
+    char** argv = nullptr;
+    parseCmdLine(lpCmdLine, argc, argv);
+
+    std::string modelPath = getEnvValueA("RAWRXD_SMOKE_MODEL");
+    if (modelPath.empty())
+        (void)getArgValue(argc, argv, "--test-model", modelPath);
+    if (modelPath.empty())
+    {
+        fprintf(stderr,
+                "[chat-smoke-headless] FAIL: missing model path (set RAWRXD_SMOKE_MODEL or --test-model).\n");
+        return 2;
+    }
+
+    std::string prompt = getEnvValueA("RAWRXD_SMOKE_PROMPT");
+    if (prompt.empty())
+        (void)getArgValue(argc, argv, "--test-prompt", prompt);
+    if (prompt.empty())
+        prompt = "Reply with exactly: CHAT_SMOKE_HEADLESS_OK";
+
+    int timeoutMs = 90000;
+    {
+        const std::string envTimeout = getEnvValueA("RAWRXD_SMOKE_TIMEOUT_MS");
+        if (!envTimeout.empty())
+            timeoutMs = std::max(1000, atoi(envTimeout.c_str()));
+        timeoutMs = std::max(1000, getArgInt(argc, argv, "--test-timeout-ms", timeoutMs));
+    }
+
+    if (!envVarPresent("RAWRXD_PIPELINE_STRICT"))
+        SetEnvironmentVariableA("RAWRXD_PIPELINE_STRICT", "1");
+
+    std::string tracePath = getEnvValueA("RAWRXD_PIPELINE_TRACE");
+    if (tracePath.empty())
+    {
+        tracePath = "chat_ui_headless_trace.json";
+        SetEnvironmentVariableA("RAWRXD_PIPELINE_TRACE", tracePath.c_str());
+    }
+
+    std::error_code fsErr;
+    const std::filesystem::path traceFsPath(tracePath);
+    std::filesystem::remove(traceFsPath, fsErr);
+
+    Win32IDE ide(hInstance);
+    if (!ide.loadGGUFModel(modelPath))
+    {
+        fprintf(stderr, "[chat-smoke-headless] FAIL: loadGGUFModel model=%s\n", modelPath.c_str());
+        return 3;
+    }
+
+    std::mutex doneMu;
+    std::condition_variable doneCv;
+    bool done = false;
+    std::string err;
+
+    ide.generateResponseAsync(
+        prompt,
+        [&](const std::string& chunk, bool complete)
+        {
+            std::lock_guard<std::mutex> lk(doneMu);
+            if (!chunk.empty())
+                fprintf(stdout, "%s", chunk.c_str());
+            if (complete)
+            {
+                done = true;
+                doneCv.notify_one();
+            }
+        });
+
+    {
+        std::unique_lock<std::mutex> lk(doneMu);
+        if (!doneCv.wait_for(lk, std::chrono::milliseconds(timeoutMs), [&]() { return done; }))
+        {
+            err = "timed out waiting for completion callback";
+        }
+    }
+
+    if (!err.empty())
+    {
+        fprintf(stderr, "[chat-smoke-headless] FAIL: %s\n", err.c_str());
+        return 4;
+    }
+
+    std::error_code ec;
+    if (!std::filesystem::exists(traceFsPath, ec) || ec)
+    {
+        fprintf(stderr, "[chat-smoke-headless] FAIL: trace not written: %s\n", tracePath.c_str());
+        return 5;
+    }
+
+    const uintmax_t traceBytes = std::filesystem::file_size(traceFsPath, ec);
+    if (ec || traceBytes == 0)
+    {
+        fprintf(stderr, "[chat-smoke-headless] FAIL: trace empty: %s\n", tracePath.c_str());
+        return 6;
+    }
+
+    fprintf(stdout,
+            "\n[chat-smoke-headless] PASS: no-window chat path completed; trace=%s bytes=%llu\n",
+            tracePath.c_str(),
+            static_cast<unsigned long long>(traceBytes));
+    fflush(stdout);
+    return 0;
+}
+
+static int runNonInteractiveChatUiSmoke(HINSTANCE hInstance, LPSTR lpCmdLine)
+{
+    int argc = 0;
+    char** argv = nullptr;
+    parseCmdLine(lpCmdLine, argc, argv);
+
+    std::string modelPath;
+    if (!getArgValue(argc, argv, "--test-model", modelPath) || modelPath.empty())
+    {
+        fprintf(stderr,
+                "[chat-ui-smoke] FAIL: missing --test-model <path-to-gguf>\n"
+                "[chat-ui-smoke] Example: --chat-ui-smoke-noninteractive --test-model F:\\models\\my.gguf\n");
+        return 2;
+    }
+
+    const std::string prompt = [&]()
+    {
+        std::string p;
+        if (getArgValue(argc, argv, "--test-prompt", p) && !p.empty())
+            return p;
+        return std::string("Reply with exactly: CHAT_UI_SMOKE_OK");
+    }();
+    const int timeoutMs = std::max(1000, getArgInt(argc, argv, "--test-timeout-ms", 90000));
+
+    if (!envVarPresent("RAWRXD_PIPELINE_STRICT"))
+    {
+        SetEnvironmentVariableA("RAWRXD_PIPELINE_STRICT", "1");
+    }
+    if (!envVarPresent("RAWRXD_PARITY_CPU"))
+    {
+        SetEnvironmentVariableA("RAWRXD_PARITY_CPU", "1");
+    }
+
+    SetEnvironmentVariableA("RAWRXD_SMOKE_CHAT", "1");
+    SetEnvironmentVariableA("RAWRXD_SMOKE_MODEL", modelPath.c_str());
+    SetEnvironmentVariableA("RAWRXD_SMOKE_PROMPT", prompt.c_str());
+    SetEnvironmentVariableA("RAWRXD_SMOKE_TIMEOUT_MS", std::to_string(timeoutMs).c_str());
+
+    return runHeadlessSmokeChatNoWindow(hInstance, lpCmdLine);
+}
 static bool initIdeForFeatureProbe(Win32IDE& ide, HINSTANCE hInstance, LPSTR lpCmdLine)
 {
     for (const std::string& name : RawrXD::Startup::getPhaseOrder())
@@ -3457,6 +3641,25 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
         ensureConsoleAttached(true);
         const int rc = runAgenticSmokeTestExit();
         exportCommandArtifacts("--agentic-smoke");
+        FreeConsole();
+        return rc;
+    }
+
+    // Handle chat smoke hooks before runtime bootstrap because bootstrap may sanitize environment variables.
+    if (isTruthyEnvVar("RAWRXD_SMOKE_CHAT"))
+    {
+        ensureConsoleAttached(true);
+        int rc = runHeadlessSmokeChatNoWindow(hInstance, lpCmdLine);
+        exportCommandArtifacts("RAWRXD_SMOKE_CHAT");
+        FreeConsole();
+        return rc;
+    }
+
+    if (hasChatUiSmokeFlag(lpCmdLine))
+    {
+        ensureConsoleAttached(true);
+        int rc = runNonInteractiveChatUiSmoke(hInstance, lpCmdLine);
+        exportCommandArtifacts("--chat-ui-smoke-noninteractive");
         FreeConsole();
         return rc;
     }
@@ -4477,3 +4680,4 @@ int runSelftest(HWND hwnd)
     }
     return code;
 }
+

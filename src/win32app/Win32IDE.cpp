@@ -9242,16 +9242,26 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
                            modelPath.find('/') != std::string::npos || modelPath.find('\\') != std::string::npos;
                 };
 
+                const bool smokeChatMode = []()
+                {
+                    const char* v = std::getenv("RAWRXD_SMOKE_CHAT");
+                    return v && v[0] != '\0' && std::strcmp(v, "0") != 0;
+                }();
+
                 if (!m_agenticBridge)
                 {
-                    if (!m_loadedModelPath.empty() && looksLikeLocalModelPath(m_loadedModelPath))
+                    if (!smokeChatMode && !m_loadedModelPath.empty() && looksLikeLocalModelPath(m_loadedModelPath))
                         ensureAgenticBridgeHasModel(m_loadedModelPath);
                     if (!m_agenticBridge)
                     {
-                        if (m_inferenceCallback)
-                            m_inferenceCallback("Error: Agentic Bridge not initialized.", true);
-                        finishAndScheduleNext();
-                        return;
+                        if (!smokeChatMode)
+                        {
+                            if (m_inferenceCallback)
+                                m_inferenceCallback("Error: Agentic Bridge not initialized.", true);
+                            finishAndScheduleNext();
+                            return;
+                        }
+                        OutputDebugStringA("[SMOKE] bypassing Agentic Bridge precondition; pipeline path will be used\n");
                     }
                 }
                 if (m_agenticBridge && !m_loadedModelPath.empty())
