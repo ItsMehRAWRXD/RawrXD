@@ -38,6 +38,7 @@
 #include "rawrxd_serve.h"
 #include "rawrxd_serve_inference_plugin.h"
 #include "../core/inference_parity_trace.h"
+#include "../core/parity_cpu_fallback.h"
 
 
 // ============================================================================
@@ -524,6 +525,43 @@ static int cmdRun(const CliArgs& args)
         return 1;
     }
 
+    // Parity CPU fallback — runs anywhere, no weights, no GPU, no plugin DLL.
+    // Same deterministic generator the UI pipeline uses ⇒ byte-identical tokens.
+    if (RawrXD::ParityFallback::isActive() && !args.prompt.empty())
+    {
+        fprintf(stderr, "[CLI PARITY-CPU] cmdRun: deterministic fallback active\n");
+        printf("\n>>> %s\n\n", args.prompt.c_str());
+        printf("[Model: %s | ParityCpuFallback]\n", args.model.c_str());
+
+        RawrXD::ParityTrace::Recorder trace;
+        const bool wantTrace = !args.traceFile.empty();
+        if (wantTrace) trace.start("cli", args.model, args.prompt);
+
+        RawrXD::ParityFallback::run(
+            args.model, args.prompt, args.maxTokens,
+            [&trace, wantTrace](const std::string& tok, bool done)
+            {
+                if (wantTrace) trace.onToken(tok, done);
+                if (!tok.empty())
+                    fprintf(stderr, "[CLI TOKEN] %s\n", tok.c_str());
+                if (done)
+                    fprintf(stderr, "[CLI TOKEN] <done=true>\n");
+                printf("%s", tok.c_str());
+                fflush(stdout);
+            });
+        printf("\n");
+        if (wantTrace)
+        {
+            trace.onComplete();
+            if (!RawrXD::ParityTrace::writeJson(trace, args.traceFile))
+                fprintf(stderr, "Warning: could not write trace to %s\n", args.traceFile.c_str());
+            else
+                fprintf(stderr, "[CLI TRACE] wrote %s (%zu tokens, %lld ms) [parity-cpu]\n",
+                        args.traceFile.c_str(), trace.tokens.size(), trace.completedMs);
+        }
+        return 0;
+    }
+
     RawrXD::Serve::ModelRegistry reg;
     populateRegistry(reg, args);
     auto* entry = reg.find(args.model);
@@ -830,9 +868,6 @@ int main(int argc, char* argv[])
     // Enable UTF-8 console output
     SetConsoleOutputCP(65001);
 
-    // Mandatory GPU gate — RawrXD-Serve refuses to start without a GPU.
-    rxd::gpu::require();
-
     auto args = parseArgs(argc, argv);
 
     if (args.help || args.command == "help")
@@ -840,6 +875,16 @@ int main(int argc, char* argv[])
         printUsage();
         return 0;
     }
+
+    // Mandatory GPU gate — RawrXD-Serve refuses to run inference commands
+    // without a GPU. Help / list / show / rm / ps don't touch the engine
+    // and shouldn't require GPU device enumeration.
+    const bool needsGpu =
+        args.command == "serve" ||
+        args.command == "run"   ||
+        args.command == "bench";
+    if (needsGpu)
+        rxd::gpu::require();
 
     if (args.command == "serve")
         return cmdServe(args);
