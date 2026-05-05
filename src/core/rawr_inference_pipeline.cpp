@@ -116,6 +116,28 @@ void stampTraceBackend(RawrXD::ParityTrace::Recorder& trace, const char* fallbac
             return;
     }
 }
+
+void logPipelineModeBanner(const char* mode)
+{
+    char line[96] = {};
+    std::snprintf(line, sizeof(line), "[PIPELINE MODE] %s\n", (mode && mode[0]) ? mode : "unknown");
+    pipelineDebugMark(line);
+}
+
+const char* currentPipelineMode()
+{
+    const auto& st = rxd::gpu::status();
+    switch (st.active)
+    {
+        case rxd::gpu::Backend::Vulkan:
+        case rxd::gpu::Backend::Cuda:
+        case rxd::gpu::Backend::Hip:
+            return "gpu";
+        case rxd::gpu::Backend::None:
+        default:
+            return "cpu";
+    }
+}
 } // namespace
 
 bool isInferencePipelineReady()
@@ -145,6 +167,7 @@ bool runLocalInferencePipeline(const PipelineRequest& req, const InferenceCallba
     // deterministic generator → byte-identical token streams without GPU.
     if (RawrXD::ParityFallback::isActive())
     {
+        logPipelineModeBanner("parity-cpu");
         pipelineDebugMark("[PIPELINE PARITY-CPU] deterministic fallback active\n");
 
         const std::string tracePath = pipelineTracePath();
@@ -181,6 +204,7 @@ bool runLocalInferencePipeline(const PipelineRequest& req, const InferenceCallba
         return false;
     }
 
+    logPipelineModeBanner(currentPipelineMode());
     pipelineDebugMark("[PIPELINE ACTIVE] runLocalInferencePipeline entered\n");
 
     using RawrXD::Serve::GenerateRequest;

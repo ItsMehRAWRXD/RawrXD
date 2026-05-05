@@ -151,6 +151,10 @@ $cliErr = if (Test-Path $cliStderr) { Get-Content $cliStderr -Raw } else { '' }
 if ($cliErr -match 'No GPU backend available') {
     Defer "GPU enforcement gate fired (no Vulkan/CUDA/HIP device)." $EXIT_GPU_NOT_FOUND
 }
+if ($cliErr -match '\[PIPELINE PARITY-CPU\]') {
+    Write-Host "[FAIL] Unexpected parity CPU fallback marker in CLI run" -ForegroundColor Red
+    Exit-Script $EXIT_CPU_FALLBACK
+}
 if ($cliExit -ne 0 -or -not (Test-Path $cliTrace)) {
     Write-Host "[FAIL] CLI inference failed (exit=$cliExit)" -ForegroundColor Red
     if ($cliErr) { Write-Host "stderr:`n$cliErr" }
@@ -194,6 +198,12 @@ $uiProc = Start-Process -FilePath $uiDriver `
     -NoNewWindow -PassThru -Wait
 $uiExit = $uiProc.ExitCode
 $ErrorActionPreference = $prevEAP
+
+$uiErr = if (Test-Path $uiStderr) { Get-Content $uiStderr -Raw } else { '' }
+if ($uiErr -match '\[PIPELINE PARITY-CPU\]') {
+    Write-Host "[FAIL] Unexpected parity CPU fallback marker in UI run" -ForegroundColor Red
+    Exit-Script $EXIT_CPU_FALLBACK
+}
 
 if ($uiExit -ne 0 -or -not (Test-Path $uiTrace)) {
     Write-Host "[FAIL] UI driver failed (exit=$uiExit)" -ForegroundColor Red

@@ -3342,10 +3342,6 @@ static int runNonInteractiveChatUiSmoke(HINSTANCE hInstance, LPSTR lpCmdLine)
     {
         SetEnvironmentVariableA("RAWRXD_PIPELINE_STRICT", "1");
     }
-    if (!envVarPresent("RAWRXD_PARITY_CPU"))
-    {
-        SetEnvironmentVariableA("RAWRXD_PARITY_CPU", "1");
-    }
     // Pin explicit 1/0 values each run so stale shell env does not override CLI intent.
     SetEnvironmentVariableA("RAWRXD_SMOKE_CPU_ONLY", forceCpu ? "1" : "0");
     SetEnvironmentVariableA("RAWRXD_SMOKE_SKIP_GPU", forceCpu ? "1" : "0");
@@ -3354,6 +3350,11 @@ static int runNonInteractiveChatUiSmoke(HINSTANCE hInstance, LPSTR lpCmdLine)
     if (forceCpu)
     {
         SetEnvironmentVariableA("RAWRXD_PARITY_CPU", "1");
+    }
+    else
+    {
+        // Ensure smoke can exercise the real plugin/GPU lane when force-cpu is not requested.
+        SetEnvironmentVariableA("RAWRXD_PARITY_CPU", "0");
     }
 
     SetEnvironmentVariableA("RAWRXD_SMOKE_CHAT", "1");
