@@ -31,9 +31,26 @@ std::string OrchestratorBridge::RunAgent(const std::string& userPrompt) {
     if (!EnsureClientReady()) {
         return "[Error] Orchestrator not initialized";
     }
-    
-    // Simplified agent execution
-    return "Agent execution placeholder: " + userPrompt.substr(0, 50);
+
+    try {
+        ApplyConfig();
+
+        std::vector<ChatMessage> messages;
+        messages.push_back(ChatMessage{
+            "system",
+            "You are RawrXD Agentic Copilot running on local models. Execute requests with deterministic, actionable output.",
+            "",
+            json::array()});
+        messages.push_back(ChatMessage{"user", userPrompt, "", json::array()});
+
+        InferenceResult inference = m_nativeClient->ChatSyncWithRetry(messages, json::array(), 2);
+        if (!inference.success) {
+            return "[Error] " + (inference.error_message.empty() ? std::string("local inference failed") : inference.error_message);
+        }
+        return inference.response;
+    } catch (const std::exception& e) {
+        return std::string("[Error] exception: ") + e.what();
+    }
 }
 
 void OrchestratorBridge::RunAgentAsync(const std::string& userPrompt) {
@@ -68,12 +85,26 @@ Prediction::PredictionResult OrchestratorBridge::RequestGhostText(
         return result;
     }
     
-    // Build FIM prompt
-    std::string prompt = ctx.prefix + "<|fim_middle|>" + ctx.suffix;
-    
-    result.text = "// Ghost text placeholder";
-    result.completion = result.text;
-    result.success = true;
+    ApplyConfig();
+
+    // Use real FIM inference through NativeInferenceClient
+    try {
+        auto inferenceResult = m_nativeClient->FIMSync(ctx.prefix, ctx.suffix, ctx.filePath);
+        
+        if (inferenceResult.success) {
+            result.text = inferenceResult.response;
+            result.completion = inferenceResult.response;
+            result.success = true;
+            result.tokens = static_cast<int>(inferenceResult.completion_tokens);
+            result.elapsedMs = static_cast<int64_t>(inferenceResult.total_duration_ms);
+        } else {
+            result.success = false;
+            result.error = inferenceResult.error_message;
+        }
+    } catch (const std::exception& e) {
+        result.success = false;
+        result.error = std::string("FIM inference error: ") + e.what();
+    }
     
     return result;
 }
@@ -87,11 +118,10 @@ void OrchestratorBridge::RequestGhostTextStream(
     }
     
     try {
-        // Build FIM prompt
-        std::string prompt = ctx.prefix + "<|fim_middle|>" + ctx.suffix;
-        
+        ApplyConfig();
+
         // Use FIMStream from native client
-        m_nativeClient->FIMStream(prompt, "", "",
+        m_nativeClient->FIMStream(ctx.prefix, ctx.suffix, ctx.filePath,
             [onToken](const std::string& token) { onToken(token, false); },
             [onToken](const std::string& full, uint64_t, uint64_t, double) { onToken(full, true); },
             [](const std::string& err) { (void)err; });
@@ -124,7 +154,11 @@ void OrchestratorBridge::SetWorkingDirectory(const std::string& dir) {
 }
 
 bool OrchestratorBridge::EnsureClientReady() {
-    return m_initialized && m_nativeClient != nullptr;
+    if (!m_initialized || m_nativeClient == nullptr) {
+        return false;
+    }
+    ApplyConfig();
+    return true;
 }
 
 void OrchestratorBridge::RefreshAvailableModels() {

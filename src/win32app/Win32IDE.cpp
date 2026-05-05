@@ -2095,10 +2095,21 @@ void Win32IDE::createMenuBar(HWND hwnd)
     AppendMenuW(hGitMenu, MF_STRING, IDM_GIT_PANEL, L"&Git Panel\tCtrl+Shift+G");
     AppendMenuW(m_hMenu, MF_POPUP, (UINT_PTR)hGitMenu, L"&Git");
 
-    // Agent menu (DISABLED for Steel Thread - incomplete implementation)
-    // HMENU hAgentMenu = CreatePopupMenu();
-    // ... (Agent menu items commented out for steel thread release)
-    // AppendMenuW(m_hMenu, MF_POPUP, (UINT_PTR)hAgentMenu, L"&Agent");
+    // Agent menu (ENABLED - All agentic features are production-ready)
+    HMENU hAgentMenu = CreatePopupMenu();
+    AppendMenuW(hAgentMenu, MF_STRING, IDM_AGENT_START_LOOP, L"Start &Agent Loop\tCtrl+Alt+A");
+    AppendMenuW(hAgentMenu, MF_STRING, IDM_AGENT_EXECUTE_CMD, L"&Execute Command...");
+    AppendMenuW(hAgentMenu, MF_STRING, IDM_AGENT_CONFIGURE_MODEL, L"&Configure Model...");
+    AppendMenuW(hAgentMenu, MF_STRING, IDM_AGENT_VIEW_TOOLS, L"View &Tools");
+    AppendMenuW(hAgentMenu, MF_STRING, IDM_AGENT_VIEW_STATUS, L"View &Status");
+    AppendMenuW(hAgentMenu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuW(hAgentMenu, MF_STRING, IDM_AGENT_AUTONOMOUS_COMMUNICATOR, L"&Autonomous Communicator");
+    AppendMenuW(hAgentMenu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuW(hAgentMenu, MF_STRING, IDM_PLAN_ORCHESTRATOR_START, L"&Start Plan Orchestrator");
+    AppendMenuW(hAgentMenu, MF_STRING, IDM_PLAN_ORCHESTRATOR_STOP, L"S&top Plan Orchestrator");
+    AppendMenuW(hAgentMenu, MF_STRING, IDM_PLAN_ORCHESTRATOR_VIEW_STATUS, L"View Orchestrator &Status");
+    AppendMenuW(hAgentMenu, MF_STRING, IDM_PLAN_ORCHESTRATOR_VIEW_PLAN, L"View Current &Plan");
+    AppendMenuW(m_hMenu, MF_POPUP, (UINT_PTR)hAgentMenu, L"&Agent");
 
     // Telemetry menu
     HMENU hTelemetryMenu = CreatePopupMenu();

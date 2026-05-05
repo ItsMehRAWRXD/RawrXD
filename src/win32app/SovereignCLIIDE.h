@@ -63,6 +63,10 @@ public:
     CommandResult executeCommand(const std::string& command);
     void executeCommandAsync(const std::string& command, CompletionCallback callback = nullptr);
     
+    // Agentic execution helpers
+    CommandResult executeInference(const std::string& prompt);
+    CommandResult executeAgenticCommand(const std::string& command);
+    
     // Session management
     void startSession();
     void endSession();
@@ -120,6 +124,7 @@ private:
     std::vector<std::pair<std::string, std::string>> m_environmentVars;
     std::deque<std::string> m_commandHistory;
     std::vector<CommandResult> m_executionResults;
+    bool m_agenticMode;  // Agentic/Autopilot mode enabled
     
     // Callbacks
     OutputCallback m_outputCallback;
