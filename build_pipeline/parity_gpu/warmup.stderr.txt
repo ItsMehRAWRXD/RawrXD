@@ -11,5 +11,13 @@ ggml_vulkan: 1 = AMD Radeon(TM) Graphics (AMD proprietary driver) | uma: 1 | fp1
 [CLI TOKEN] ,
 [CLI TOKEN]  because
 [CLI TOKEN]  today
-[Measurement] invalid session measurement (ttft_ms=2446.0 decode_tps=14.00 e2e_tps=2.55)
+[CLI TOKEN]  we
+[CLI TOKEN]  got
+[CLI TOKEN]  a
+[CLI TOKEN]  special
+[CLI TOKEN]  #
+[CLI TOKEN] 1
+[CLI TOKEN] 2
+[CLI TOKEN] :
+[Measurement] invalid session measurement (ttft_ms=2663.0 decode_tps=10.15 e2e_tps=3.66)
 [CLI TOKEN] <done=true>
