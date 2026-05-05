@@ -37,6 +37,8 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+#include <winhttp.h>
+#pragma comment(lib, "winhttp.lib")
 
 #pragma comment(lib, "Msimg32.lib")
 
