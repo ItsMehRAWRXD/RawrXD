@@ -2986,6 +2986,34 @@ void Win32IDE::initializeEditorSurface()
         LOG_ERROR("Editor surface init failed with unknown error");
         m_rendererReady = false;
     }
+
+    // Initialize Symbol Index Bridge for AST-aware completions
+    try
+    {
+        if (!m_symbolIndexBridge)
+        {
+            m_symbolIndexBridge = std::make_unique<rawrxd::bridge::SymbolIndexBridge>();
+            if (m_symbolIndexBridge->initialize())
+            {
+                LOG_INFO("Symbol Index Bridge initialized successfully");
+            }
+            else
+            {
+                LOG_ERROR("Symbol Index Bridge initialization failed");
+                m_symbolIndexBridge.reset();
+            }
+        }
+    }
+    catch (const std::exception& e)
+    {
+        LOG_ERROR(std::string("Symbol Index Bridge creation failed: ") + e.what());
+        m_symbolIndexBridge.reset();
+    }
+    catch (...)
+    {
+        LOG_ERROR("Symbol Index Bridge creation failed with unknown error");
+        m_symbolIndexBridge.reset();
+    }
 }
 
 // ============================================================================
