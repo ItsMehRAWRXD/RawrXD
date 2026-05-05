@@ -1,23 +1,8 @@
 LIBRARY RawrXD_Titan
 EXPORTS
-    ; Titan Legacy API
+    ; Titan Legacy API (thin wrapper around llama.cpp)
     Titan_LoadModel
     Titan_IsLoaded
     Titan_UnloadModel
     Titan_PredictFIM
     Titan_PredictChat
-    
-    ; RawrXD API (for Win32IDE integration)
-    RawrXD_Initialize
-    RawrXD_Shutdown
-    RawrXD_LoadModel
-    RawrXD_SelectModel
-    RawrXD_SetSamplingParams
-    RawrXD_InferAsync
-    RawrXD_WaitForInference
-    RawrXD_CancelInference
-    RawrXD_BeginStreaming
-    RawrXD_EndStreaming
-    RawrXD_StreamPop
-    RawrXD_StreamConfigureWindow
-    RawrXD_StreamReset
