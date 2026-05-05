@@ -8,11 +8,14 @@ param(
     [string[]] $Arguments = @(),
     [string] $LogDir = "D:\agent_logs",
     [switch] $Strict,
-    [switch] $JsonOutput
+    [switch] $JsonOutput,
+    [ValidateSet("default", "implementation", "refactor", "contracts")]
+    [string] $PromptProfile = "default"
 )
 
 # Import completion validator
 . D:\RawrXD\scripts\agent_completion_validator.ps1
+. D:\RawrXD\scripts\Get-AgentExecutionKernel.ps1
 
 function Write-ExecutionLog {
     param([string] $Message, [string] $Level = "INFO")
@@ -51,6 +54,14 @@ Write-ExecutionLog "Agent: $AgentScript" "INFO"
 Write-ExecutionLog "Arguments: $($Arguments -join ' ')" "INFO"
 Write-ExecutionLog "Log file: $logFile" "INFO"
 Write-ExecutionLog "Strict mode: $Strict" "INFO"
+
+$promptPack = Get-AgentExecutionKernelPack -ProfileName $PromptProfile
+$env:RAWRXD_AGENT_EXECUTION_KERNEL = $promptPack.kernel
+$env:RAWRXD_AGENT_EXECUTION_OVERLAY = $promptPack.overlay
+$env:RAWRXD_AGENT_EXECUTION_PROFILE = $promptPack.profile
+if ($PromptProfile -ne "default") {
+    Write-ExecutionLog "Prompt profile: $PromptProfile" "INFO"
+}
 
 # Start agent execution
 $startTime = Get-Date

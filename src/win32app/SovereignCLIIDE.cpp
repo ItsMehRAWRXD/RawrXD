@@ -161,14 +161,31 @@ SovereignCLIIDE::CommandResult SovereignCLIIDE::executeCommand(const std::string
             }
         }
         
-        // Execute command
-        m_terminal->writeInput(command + "\r\n");
-        
-        // For simplicity, we'll just return immediate result
-        // In real implementation, we'd capture output and wait for completion
-        result.success = true;
-        result.exitCode = 0;
-        result.output = "Command executed: " + command;
+        // Check for agentic commands
+        if (command == "agentic on" || command == "autopilot on") {
+            m_agenticMode = true;
+            result.success = true;
+            result.output = "Agentic mode enabled. CLI will now use AI assistance.";
+        } else if (command == "agentic off" || command == "autopilot off") {
+            m_agenticMode = false;
+            result.success = true;
+            result.output = "Agentic mode disabled.";
+        } else if (command.starts_with("infer ")) {
+            // Direct inference command
+            std::string prompt = command.substr(6);
+            result = executeInference(prompt);
+        } else if (m_agenticMode) {
+            // Agentic mode: use AI to execute commands
+            result = executeAgenticCommand(command);
+        } else {
+            // Normal command execution
+            m_terminal->writeInput(command + "\r\n");
+            
+            // Capture output (simplified - real implementation would capture terminal output)
+            result.success = true;
+            result.exitCode = 0;
+            result.output = "Command executed: " + command;
+        }
         
         auto endTime = std::chrono::high_resolution_clock::now();
         result.executionTime = std::chrono::duration<double>(endTime - startTime).count();
@@ -468,4 +485,59 @@ void SovereignCLIIDE::setErrorCallback(ErrorCallback callback)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     m_errorCallback = callback;
+}
+
+// ============================================================================
+// Agentic Command Execution
+// ============================================================================
+
+SovereignCLIIDE::CommandResult SovereignCLIIDE::executeInference(const std::string& prompt)
+{
+    CommandResult result;
+    
+    try {
+        // Use OrchestratorBridge for inference
+        auto& bridge = RawrXD::Agent::OrchestratorBridge::Instance();
+        
+        // Simple inference - in real implementation, this would use proper context
+        std::string response = bridge.RunAgent(prompt);
+        
+        result.success = true;
+        result.output = response;
+        result.exitCode = 0;
+        
+    } catch (const std::exception& e) {
+        result.success = false;
+        result.error = std::string("Inference error: ") + e.what();
+        result.exitCode = -1;
+    }
+    
+    return result;
+}
+
+SovereignCLIIDE::CommandResult SovereignCLIIDE::executeAgenticCommand(const std::string& command)
+{
+    CommandResult result;
+    
+    try {
+        // Use agentic framework to interpret and execute commands
+        auto& bridge = RawrXD::Agent::OrchestratorBridge::Instance();
+        
+        // Create a prompt that asks the AI to execute the command
+        std::string prompt = "Execute the following command: " + command + "\n";
+        prompt += "Provide the output or result.";
+        
+        std::string response = bridge.RunAgent(prompt);
+        
+        result.success = true;
+        result.output = response;
+        result.exitCode = 0;
+        
+    } catch (const std::exception& e) {
+        result.success = false;
+        result.error = std::string("Agentic execution error: ") + e.what();
+        result.exitCode = -1;
+    }
+    
+    return result;
 }

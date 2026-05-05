@@ -50,12 +50,56 @@ function Defer([string]$why, [int]$strictExitCode = $EXIT_GPU_NOT_FOUND) {
 function Join-NativeArgs([string[]]$CliArgs) {
     ($CliArgs | ForEach-Object {
         if ($_ -eq $null) { '""'; return }
-        if ($_ -match '[\s"]') {
-            '"' + ($_ -replace '"', '\\"') + '"'
-        } else {
-            $_
-        }
+        if ($_ -match '[\s"]') { '"' + ($_ -replace '"', '\\"') + '"' } else { $_ }
     }) -join ' '
+}
+
+function Invoke-ProcessWithOutput {
+    param(
+        [string]$FilePath,
+        [string[]]$Arguments,
+        [string]$StdoutPath,
+        [string]$StderrPath,
+        [string]$Description
+    )
+    
+    Remove-Item -Force $StdoutPath, $StderrPath -ErrorAction SilentlyContinue
+    $prevEAP = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    
+    Write-Host "[$Description] executing: $FilePath $($Arguments -join ' ')"
+    $proc = Start-Process -FilePath $FilePath -ArgumentList (Join-NativeArgs $Arguments) `
+        -RedirectStandardError $StderrPath -RedirectStandardOutput $StdoutPath `
+        -NoNewWindow -PassThru -Wait
+    
+    $ErrorActionPreference = $prevEAP
+    return @{
+        ExitCode = $proc.ExitCode
+        Stdout = if (Test-Path $StdoutPath) { Get-Content $StdoutPath -Raw } else { '' }
+        Stderr = if (Test-Path $StderrPath) { Get-Content $StderrPath -Raw } else { '' }
+    }
+}
+
+function Test-TraceValidity {
+    param(
+        [object]$Trace,
+        [string]$Source,
+        [int]$MinTokens
+    )
+    
+    if (-not ($Trace.PSObject.Properties.Name -contains 'backend')) {
+        Write-Host "[FAIL] $Source trace missing backend field" -ForegroundColor Red
+        return $false
+    }
+    if ($Trace.backend -eq 'cpu-fallback' -or $Trace.backend -eq 'unknown') {
+        Write-Host "[FAIL] $Source trace did not exercise a real backend: backend=$($Trace.backend)" -ForegroundColor Red
+        return $false
+    }
+    if ($Trace.token_count -lt $MinTokens) {
+        Write-Host "[FAIL] $Source trace emitted too few tokens: $($Trace.token_count) < $MinTokens" -ForegroundColor Red
+        return $false
+    }
+    return $true
 }
 
 if ([string]::IsNullOrWhiteSpace($Model)) {
@@ -110,24 +154,12 @@ if (-not [string]::IsNullOrWhiteSpace($MatmulSpv)) {
 
 Write-Host "=== GPU preflight ==="
 Write-Host "[PREFLIGHT] inference DLL: $plugin"
-$preflightStdout = Join-Path $OutDir "preflight.stdout.txt"
-$preflightStderr = Join-Path $OutDir "preflight.stderr.txt"
-Remove-Item -Force $preflightStdout, $preflightStderr -ErrorAction SilentlyContinue
+$preflightResult = Invoke-ProcessWithOutput -FilePath $cliExe -Arguments @('list') `
+    -StdoutPath (Join-Path $OutDir "preflight.stdout.txt") `
+    -StderrPath (Join-Path $OutDir "preflight.stderr.txt") `
+    -Description "PREFLIGHT"
 
-$prevEAP = $ErrorActionPreference
-$ErrorActionPreference = 'Continue'
-$preflightProc = Start-Process -FilePath $cliExe `
-    -ArgumentList (Join-NativeArgs @('list')) `
-    -RedirectStandardError $preflightStderr -RedirectStandardOutput $preflightStdout `
-    -NoNewWindow -PassThru -Wait
-$preflightExit = $preflightProc.ExitCode
-$ErrorActionPreference = $prevEAP
-
-$preflightText = @(
-    if (Test-Path $preflightStdout) { Get-Content $preflightStdout -Raw }
-    if (Test-Path $preflightStderr) { Get-Content $preflightStderr -Raw }
-) -join "`n"
-
+$preflightText = ($preflightResult.Stdout, $preflightResult.Stderr -join "`n").Trim()
 if ($preflightText -match 'No GPU backend available') {
     Defer "GPU preflight failed before inference (no Vulkan/CUDA/HIP device)." $EXIT_GPU_NOT_FOUND
 }
@@ -136,23 +168,16 @@ $gpuHints = @($preflightText -split "`r?`n" | Where-Object { $_ -match 'GPU|Vulk
 if ($gpuHints.Count -gt 0) {
     Write-Host "[PREFLIGHT] backend hints: $($gpuHints -join '; ')"
 } else {
-    Write-Host "[PREFLIGHT] no explicit GPU banner from 'rawrxd list'; continuing to real inference probe (exit=$preflightExit)"
+    Write-Host "[PREFLIGHT] no explicit GPU banner from 'rawrxd list'; continuing to real inference probe (exit=$preflightResult.ExitCode)"
 }
 
 Write-Host "=== Warmup run (discarded) ==="
-$warmupStdout = Join-Path $OutDir "warmup.stdout.txt"
-$warmupStderr = Join-Path $OutDir "warmup.stderr.txt"
-Remove-Item -Force $warmupStdout, $warmupStderr -ErrorAction SilentlyContinue
-$prevEAP = $ErrorActionPreference
-$ErrorActionPreference = 'Continue'
-$warmupProc = Start-Process -FilePath $cliExe `
-    -ArgumentList (Join-NativeArgs @('run', $Model, '--prompt', $Prompt, '--max-tokens', "$MaxTokens")) `
-    -RedirectStandardError $warmupStderr -RedirectStandardOutput $warmupStdout `
-    -NoNewWindow -PassThru -Wait
-$warmupExit = $warmupProc.ExitCode
-$ErrorActionPreference = $prevEAP
-if ($warmupExit -ne 0) {
-    Write-Host "[WARMUP] non-zero exit=$warmupExit (continuing to strict validation)" -ForegroundColor Yellow
+$warmupResult = Invoke-ProcessWithOutput -FilePath $cliExe -Arguments @('run', $Model, '--prompt', $Prompt, '--max-tokens', "$MaxTokens") `
+    -StdoutPath (Join-Path $OutDir "warmup.stdout.txt") `
+    -StderrPath (Join-Path $OutDir "warmup.stderr.txt") `
+    -Description "WARMUP"
+if ($warmupResult.ExitCode -ne 0) {
+    Write-Host "[WARMUP] non-zero exit=$($warmupResult.ExitCode) (continuing to strict validation)" -ForegroundColor Yellow
 }
 
 Write-Host "=== Attempting CLI inference (will defer if GPU absent) ==="
