@@ -30,16 +30,8 @@ public:
     // Main execution loop that processes a sequence of tokens.
     bool generate_tokens(int* input_ids, int num_tokens);
 
-private:
-    // File and memory mapping handles
-    HANDLE h_model_file;
-    HANDLE h_map_object;
-    void*  mapped_base_addr; // Base address of the entire mapped file (virtual)
-
-    // Prefetches a tile's data from disk into the OS standby list.
+    // Test interface — public for benchmark/fingerprint tests
     void prefetch_tile(const TileMeta& tile);
-
-    // Decodes the base L0 (4-bit) tile data into a float buffer.
     void decode_tile_l0(const TileMeta& tile, TileBuffer* buffer);
 
     // Applies a refinement bit-plane to an already decoded tile.
@@ -54,4 +46,10 @@ private:
 
     // AVX-512 kernel for dequantizing a 4-bit block.
     void dequant_q4_avx512(const void* q_data, float* f_data, float scale, int8_t zero_point, int n_blocks);
+
+private:
+    // File and memory mapping handles
+    HANDLE h_model_file;
+    HANDLE h_map_object;
+    void*  mapped_base_addr; // Base address of the entire mapped file (virtual)
 };
