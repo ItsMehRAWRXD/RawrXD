@@ -175,6 +175,7 @@ bool runLocalInferencePipeline(const PipelineRequest& req, const InferenceCallba
         if (!tracePath.empty()) {
             trace.start("ui-pipeline", canonicalModelIdentity(req.model), req.prompt);
             trace.setBuildInfo(currentBuildCommit(), currentBuildConfig());
+            trace.setPipelineMode("parity-cpu");
             trace.setBackendDetails("cpu-fallback", "ParityCpuFallback", "n/a", "n/a", "parity-cpu");
             trace.setInferenceConfig(req.numPredict, req.temperature, -1, -1.0f, -1);
         }
@@ -187,13 +188,13 @@ bool runLocalInferencePipeline(const PipelineRequest& req, const InferenceCallba
                 if (cbs.onToken) cbs.onToken(tok, done);
             });
 
-        if (cbs.onComplete) cbs.onComplete({});
         if (!tracePath.empty())
         {
             trace.onComplete();
             RawrXD::ParityTrace::writeJson(trace, tracePath);
             pipelineDebugMark("[PIPELINE TRACE] wrote trace JSON (parity-cpu)\n");
         }
+        if (cbs.onComplete) cbs.onComplete({});
         return true;
     }
 
@@ -216,6 +217,7 @@ bool runLocalInferencePipeline(const PipelineRequest& req, const InferenceCallba
     if (!tracePath.empty()) {
         trace.start("ui-pipeline", canonicalModelIdentity(req.model), req.prompt);
         trace.setBuildInfo(currentBuildCommit(), currentBuildConfig());
+        trace.setPipelineMode(currentPipelineMode());
         stampTraceBackend(trace, "plugin");
         trace.setInferenceConfig(req.numPredict, req.temperature, -1, -1.0f, -1);
     }

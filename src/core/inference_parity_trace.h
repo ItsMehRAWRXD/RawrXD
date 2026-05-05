@@ -49,6 +49,9 @@ struct Recorder {
     //   "vulkan" / "cuda" / "hip" — real GPU backend identified at runtime
     //   "unknown"       — capture path did not identify backend
     std::string backend = "unknown";
+    // Explicit execution lane selected by the pipeline entrypoint.
+    // Expected values: "gpu", "cpu", "parity-cpu", or "unknown".
+    std::string pipelineMode = "unknown";
     // Optional human-readable device description (e.g. "AMD Radeon RX 7900 XTX").
     std::string device;
     // Optional backend/runtime fingerprint details.
@@ -98,6 +101,11 @@ struct Recorder {
 
     void setBackend(std::string backendName, std::string deviceName = {}) {
         setBackendDetails(std::move(backendName), std::move(deviceName), {}, {}, {});
+    }
+
+    void setPipelineMode(std::string mode) {
+        std::lock_guard<std::mutex> lk(mu);
+        pipelineMode = std::move(mode);
     }
 
     void setBackendDetails(std::string backendName,
@@ -215,6 +223,9 @@ inline bool writeJson(const Recorder& r, const std::string& path) {
     buf += ",\n  \"build_commit\": "; appendEscaped(buf, r.buildCommit);
     buf += ",\n  \"build_config\": "; appendEscaped(buf, r.buildConfig);
     buf += ",\n  \"backend\": ";   appendEscaped(buf, r.backend);
+    buf += ",\n  \"pipeline_mode\": "; appendEscaped(buf, r.pipelineMode);
+    buf += ",\n  \"parity_cpu\": ";
+    buf += (r.pipelineMode == "parity-cpu") ? "true" : "false";
     buf += ",\n  \"device\": ";    appendEscaped(buf, r.device);
     buf += ",\n  \"backend_version\": "; appendEscaped(buf, r.backendVersion);
     buf += ",\n  \"driver_version\": "; appendEscaped(buf, r.driverVersion);
