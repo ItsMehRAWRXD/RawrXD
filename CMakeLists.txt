@@ -3295,17 +3295,7 @@ set(SCHEDULER_BRIDGE src/render/SchedulerBridge.cpp)
     set_source_files_properties(${_TITAN_EXTRA_ASM} PROPERTIES LANGUAGE ASM_MASM)
 
     add_library(RawrXD_Titan SHARED EXCLUDE_FROM_ALL
-        src/titan_infer_dll.cpp
-        src/sovereign/rawr_transport_strict.cpp
-        ${TITAN_ASM_KERNEL}
-        ${TITAN_AVX512_DISPATCH_KERNEL}
-        ${TITAN_HEADER_VERIFY_KERNEL}
-        ${TITAN_JSON_SIMD_KERNEL}
-        ${TITAN_NTWRITE_LINK}
-        ${TITAN_PROFILER_CORE}
-        ${TITAN_QUERY_FUSION_CPP}
-        ${TITAN_QUERY_FUSION_KERNEL}
-        ${TITAN_GGML_BRIDGE_OBJECTS}
+        src/titan/RawrXD_Titan.cpp
     )
 
     # Combined export table link
@@ -3316,9 +3306,8 @@ set(SCHEDULER_BRIDGE src/render/SchedulerBridge.cpp)
     endif()
 
     if(_RAWRXD_OMEGA_HIP_ENABLED)
-        # Fail-safe default: keep AUTO lane compile-stable and only attach
-        # the known attention kernel bridge by default.
-        target_sources(RawrXD_Titan PRIVATE ${TITAN_OMEGA_SINGULARITY})
+        # Disabled for Ollama HTTP proxy build - no ASM dependencies
+        # target_sources(RawrXD_Titan PRIVATE ${TITAN_OMEGA_SINGULARITY})
         target_compile_definitions(RawrXD_Titan PRIVATE RAWRXD_ENABLE_OMEGA_HIP=1)
 
         if(RAWRXD_ENABLE_OMEGA_HIP_FULL_KERNEL_SET)
@@ -3355,7 +3344,8 @@ set(SCHEDULER_BRIDGE src/render/SchedulerBridge.cpp)
         )
     endif()
 
-    target_sources(RawrXD_Titan PRIVATE src/titan_infer_dll.cpp)
+    # Titan DLL source is now src/titan/RawrXD_Titan.cpp (thin wrapper around llama.cpp)
+    # Old src/titan_infer_dll.cpp removed to avoid DllMain conflict
 
     set_target_properties(RawrXD_Titan PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY bin

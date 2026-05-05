@@ -155,8 +155,8 @@ IDEAgentBridgeWithHotPatching::IDEAgentBridgeWithHotPatching()
     : m_hotPatcher(nullptr)
     , m_proxyServer(nullptr)
     , m_hotPatchingEnabled(false)
-    , m_proxyPort("11435")
-    , m_ggufEndpoint("localhost:11435")
+    , m_proxyPort("11434")  // Default Ollama port
+    , m_ggufEndpoint("localhost:11434")  // Default Ollama port
 {
 }
 

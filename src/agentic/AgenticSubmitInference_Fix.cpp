@@ -264,7 +264,7 @@ AgenticInferenceBridge::InferenceResult AgenticInferenceBridge::SubmitInferenceW
 
     Agent::NativeInferenceConfig clientConfig;
     clientConfig.host = runtime.host.empty() ? "127.0.0.1" : runtime.host;
-    clientConfig.port = runtime.port == 0 ? 11435 : runtime.port;
+    clientConfig.port = runtime.port == 0 ? 11434 : runtime.port;  // Default Ollama port
     clientConfig.chat_model = modelName.empty() ? "headless-default" : modelName;
     clientConfig.temperature = runtime.temperature;
     clientConfig.max_tokens = ClampMaxTokens(max_tokens);

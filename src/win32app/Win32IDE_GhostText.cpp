@@ -558,118 +558,167 @@ void drainTitanGhostPackets(std::string& out, uint64_t* inoutLastSeq, uint64_t* 
 
 }  // namespace
 
-bool Win32IDE::startTitanAgentInferenceAsync(const std::string& prompt, uint32_t timeoutMs, bool stageOnly)
+// ============================================================================
+// OLLAMA HTTP GHOST TEXT — Direct FIM completion via Ollama API
+// ============================================================================
+// Replaces Titan DLL stub with direct HTTP to localhost:11434
+// Uses FIM (Fill-In-the-Middle) prompt format for code completion
+// ============================================================================
+
+static std::string jsonEscapeGhost(const std::string& s)
 {
-    if (prompt.empty() || !m_useTitanKernel || m_loadedModelPath.empty() || !m_hwndMain)
+    std::string o;
+    o.reserve(s.size() * 2);
+    for (char c : s)
     {
-        return false;
-    }
-    if (!ensureTitanGhostReady(m_loadedModelPath))
-    {
-        postOutputPanelSafe("[Titan Agent] Titan backend unavailable\n");
-        return false;
-    }
-
-    {
-        std::lock_guard<std::mutex> lock(m_titanAgentMutex);
-        if (m_titanAgentRunning)
+        switch (c)
         {
-            postOutputPanelSafe("[Titan Agent] Inference already running\n");
-            return false;
+            case '"': o += "\\\""; break;
+            case '\\': o += "\\\\"; break;
+            case '\b': o += "\\b"; break;
+            case '\f': o += "\\f"; break;
+            case '\n': o += "\\n"; break;
+            case '\r': o += "\\r"; break;
+            case '\t': o += "\\t"; break;
+            default: o += c; break;
         }
-        m_titanAgentRunning = true;
-        m_titanAgentStreamText.clear();
-        m_titanAgentStreamSeq = 0;
-        m_titanAgentSeqGaps = 0;
-        m_titanAgentPackets = 0;
-        m_titanAgentPostedChars = 0;
-        m_titanAgentGhostAnchorPos = -1;
-        m_titanAgentStageOnly = stageOnly;
-        m_titanAgentStagedText.clear();
-        m_titanAgentStageSelStart = -1;
-        m_titanAgentStageSelEnd = -1;
-        m_titanAgentInferenceHandle = 0;
-        m_titanAgentStreamHandle = 0;
-        m_titanAgentStartMs = GetTickCount64();
-        m_titanAgentLastPacketMs = m_titanAgentStartMs;
     }
+    return o;
+}
 
-    if (m_hwndEditor)
+static std::string jsonUnescapeGhost(const std::string& s)
+{
+    std::string o;
+    o.reserve(s.size());
+    for (size_t i = 0; i < s.length(); i++)
     {
-        CHARRANGE sel{};
-        SendMessageA(m_hwndEditor, EM_EXGETSEL, 0, reinterpret_cast<LPARAM>(&sel));
-        std::lock_guard<std::mutex> lock(m_titanAgentMutex);
-        m_titanAgentGhostAnchorPos = sel.cpMin;
-        m_titanAgentStageSelStart = sel.cpMin;
-        m_titanAgentStageSelEnd = sel.cpMax;
-    }
-
-    RAWRXD_SAMPLING_PARAMS sampling{};
-    sampling.temperature = 0.25f;
-    sampling.top_p = 0.95f;
-    sampling.top_k = 48;
-    sampling.repetition_penalty = 1.05f;
-    sampling.max_tokens = 256;
-    if (g_titanGhost.setSamplingParams)
-    {
-        g_titanGhost.setSamplingParams(&sampling);
-    }
-
-    RAWRXD_INFERENCE_HANDLE streamHandle = 0;
-    if (g_titanGhost.beginStreaming(&streamHandle) != RAWRXD_SUCCESS)
-    {
-        std::lock_guard<std::mutex> lock(m_titanAgentMutex);
-        m_titanAgentRunning = false;
-        postOutputPanelSafe("[Titan Agent] beginStreaming failed\n");
-        return false;
-    }
-
-    if (g_titanGhost.streamReset)
-    {
-        g_titanGhost.streamReset();
-    }
-    g_titanGhost.streamConfigureWindow(reinterpret_cast<uint64_t>(m_hwndMain), WM_TITAN_AGENT_STREAM, 0);
-
-    RAWRXD_INFERENCE_HANDLE inferenceHandle = 0;
-    if (g_titanGhost.inferAsync(prompt.c_str(), prompt.size(), &inferenceHandle) != RAWRXD_SUCCESS)
-    {
-        g_titanGhost.endStreaming(streamHandle);
-        std::lock_guard<std::mutex> lock(m_titanAgentMutex);
-        m_titanAgentRunning = false;
-        postOutputPanelSafe("[Titan Agent] inferAsync failed\n");
-        return false;
-    }
-
-    {
-        std::lock_guard<std::mutex> lock(m_titanAgentMutex);
-        m_titanAgentInferenceHandle = inferenceHandle;
-        m_titanAgentStreamHandle = streamHandle;
-    }
-
-    postOutputPanelSafe(stageOnly ? "[Titan Agent] preview inference started (staging only)\n"
-                                  : "[Titan Agent] async inference started\n");
-
-    if (m_hwndStatusBar && IsWindow(m_hwndStatusBar))
-    {
-        SendMessageW(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)L" [Titan] Paging... 0%");
-    }
-
-    // Start the paging heartbeat (displays aperture utilization)
-    startTitanPagingHeartbeat(timeoutMs);
-
-    HWND mainHwnd = m_hwndMain;
-    std::thread(
-        [mainHwnd, inferenceHandle, timeoutMs]()
+        if (s[i] == '\\' && i + 1 < s.length())
         {
-            RAWRXD_STATUS status = g_titanGhost.waitForInference(inferenceHandle, timeoutMs);
-            if (mainHwnd && IsWindow(mainHwnd))
+            switch (s[++i])
             {
-                PostMessageA(mainHwnd, WM_TITAN_AGENT_DONE, (WPARAM)status, 0);
+                case 'n': o += '\n'; break;
+                case 'r': o += '\r'; break;
+                case 't': o += '\t'; break;
+                case '"': o += '"'; break;
+                case '\\': o += '\\'; break;
+                default: o += s[i]; break;
             }
-        })
-        .detach();
+        }
+        else
+        {
+            o += s[i];
+        }
+    }
+    return o;
+}
+
+bool Win32IDE::startTitanAgentInferenceAsync(const std::string& prefix,
+                                              const std::string& suffix)
+{
+    // Fire-and-forget thread: Ollama FIM → stream tokens to UI
+    std::thread([this, prefix, suffix]() {
+        HINTERNET hSession = WinHttpOpen(L"RawrXD-Ghost/1.0",
+            WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
+            WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
+        if (!hSession) return;
+
+        HINTERNET hConnect = WinHttpConnect(hSession, L"127.0.0.1", 11434, 0);
+        if (!hConnect) { WinHttpCloseHandle(hSession); return; }
+
+        HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"POST", L"/api/generate",
+            NULL, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, 0);
+        if (!hRequest) { WinHttpCloseHandle(hConnect); WinHttpCloseHandle(hSession); return; }
+
+        // FIM prompt format (works with codestral/qwen3/llama3)
+        std::string fimPrompt = "<|fim_prefix|>" + prefix +
+                                "<|fim_suffix|>" + suffix +
+                                "<|fim_middle|>";
+
+        // Resolve model name
+        std::string modelName = getResolvedOllamaModel();
+        if (modelName.empty()) modelName = "codestral22b-local:latest";
+
+        std::string body = "{"
+            "\"model\":\"" + jsonEscapeGhost(modelName) + "\","
+            "\"prompt\":\"" + jsonEscapeGhost(fimPrompt) + "\","
+            "\"stream\":true,"
+            "\"options\":{"
+                "\"temperature\":0.2,"
+                "\"num_predict\":64,"
+                "\"stop\":[\"<|fim_prefix|>\",\"<|fim_suffix|>\",\"<|fim_middle|>\",\"\\n\\n\\n\"]"
+            "}"
+        "}";
+
+        std::wstring hdr = L"Content-Type: application/json";
+        if (!WinHttpSendRequest(hRequest, hdr.c_str(), (ULONG)hdr.length(),
+            (LPVOID)body.c_str(), (DWORD)body.length(), (DWORD)body.length(), 0))
+        {
+            WinHttpCloseHandle(hRequest);
+            WinHttpCloseHandle(hConnect);
+            WinHttpCloseHandle(hSession);
+            return;
+        }
+
+        if (!WinHttpReceiveResponse(hRequest, NULL))
+        {
+            WinHttpCloseHandle(hRequest);
+            WinHttpCloseHandle(hConnect);
+            WinHttpCloseHandle(hSession);
+            return;
+        }
+
+        // Stream parse: {"response":"token"}\n
+        std::string buf;
+        DWORD avail = 0, read = 0;
+        char chunk[4096];
+        while (WinHttpQueryDataAvailable(hRequest, &avail) && avail > 0)
+        {
+            read = 0;
+            WinHttpReadData(hRequest, chunk, (avail < 4095) ? avail : 4095, &read);
+            if (read == 0) break;
+            chunk[read] = '\0';
+            buf += chunk;
+
+            size_t nl;
+            while ((nl = buf.find('\n')) != std::string::npos)
+            {
+                std::string line = buf.substr(0, nl);
+                buf.erase(0, nl + 1);
+
+                // Parse JSON line: {"response":"token"}
+                size_t p = line.find("\"response\":\"");
+                if (p == std::string::npos) continue;
+                p += 12;
+                size_t e = line.find("\"", p);
+                if (e == std::string::npos) continue;
+
+                std::string token = jsonUnescapeGhost(line.substr(p, e - p));
+                if (!token.empty() && m_hwndMain)
+                {
+                    // Post to UI thread for ghost text rendering
+                    char* heapToken = _strdup(token.c_str());
+                    if (heapToken)
+                    {
+                        PostMessageA(m_hwndMain, WM_USER_GHOST_TOKEN, 0, reinterpret_cast<LPARAM>(heapToken));
+                    }
+                }
+            }
+        }
+
+        WinHttpCloseHandle(hRequest);
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+    }).detach();
 
     return true;
+}
+
+// Legacy overload for compatibility
+bool Win32IDE::startTitanAgentInferenceAsync(const std::string& prompt, uint32_t timeoutMs, bool stageOnly)
+{
+    // Split prompt into prefix/suffix for FIM format
+    // For legacy callers, use prompt as prefix with empty suffix
+    return startTitanAgentInferenceAsync(prompt, "");
 }
 
 void Win32IDE::cancelTitanAgentInferenceAsync()

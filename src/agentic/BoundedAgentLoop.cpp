@@ -433,7 +433,7 @@ LLMChatResponse BoundedAgentLoop::NativeChat(const LLMChatRequest& request,
         try {
             cfg.port = static_cast<uint16_t>(std::stoi(hostPort.substr(colonPos + 1)));
         } catch (...) {
-            cfg.port = 11435;  // IDE embedded server default
+            cfg.port = 11434;  // Default Ollama port
         }
     } else if (!hostPort.empty()) {
         cfg.host = hostPort;

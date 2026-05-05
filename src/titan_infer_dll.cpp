@@ -1123,7 +1123,7 @@ static int OllamaGenerate(const char* prompt, int maxTokens, float temperature,
     static char httpReq[66000];
     int hp = 0;
     hp = StrCopy(httpReq, hp, "POST /api/generate HTTP/1.1\r\n");
-    hp = StrCopy(httpReq, hp, "Host: 127.0.0.1:11435\r\n");
+    hp = StrCopy(httpReq, hp, "Host: 127.0.0.1:11434\r\n");
     hp = StrCopy(httpReq, hp, "Content-Type: application/json\r\n");
     hp = StrCopy(httpReq, hp, "Content-Length: ");
     hp = IntToStr(httpReq, hp, bp);
@@ -1729,7 +1729,7 @@ static DWORD __stdcall InferenceThread(LPVOID param) {
 
     // ================================================================
     // Route 1: Ollama HTTP API — REAL 70B INFERENCE (non-simulated)
-    // POST http://127.0.0.1:11435/api/generate
+    // POST http://127.0.0.1:11434/api/generate
     // Model: bg40-unleashed:latest (BigDaddyG 70B Q4_K_M)
     // ================================================================
     static char ollamaResp[16384];
@@ -1781,7 +1781,7 @@ static DWORD __stdcall InferenceThread(LPVOID param) {
     if (_InterlockedCompareExchange(&g_allowOfflineFallback, 0, 0) == 0) {
         char liveErr[256];
         wsprintfA(liveErr,
-                  "[Titan live route unavailable: model=%s host=127.0.0.1:11435 rc=%d]",
+                  "[Titan live route unavailable: model=%s host=127.0.0.1:11434 rc=%d]",
                   g_liveModelName,
                   respLen);
         __try {
@@ -2802,7 +2802,7 @@ static int OllamaEmbeddingsRequest(const char* prompt, float* outVec, uint32_t o
     static char httpReq[70000];
     int hp = 0;
     hp = StrCopy(httpReq, hp, "POST /api/embeddings HTTP/1.1\r\n");
-    hp = StrCopy(httpReq, hp, "Host: 127.0.0.1:11435\r\n");
+    hp = StrCopy(httpReq, hp, "Host: 127.0.0.1:11434\r\n");
     hp = StrCopy(httpReq, hp, "Content-Type: application/json\r\n");
     hp = StrCopy(httpReq, hp, "Content-Length: ");
     hp = IntToStr(httpReq, hp, bp);
