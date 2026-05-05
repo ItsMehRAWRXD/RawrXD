@@ -3101,12 +3101,14 @@ static int runHeadlessSmokeChatNoWindow(HINSTANCE hInstance, LPSTR lpCmdLine)
         timeoutMs = std::max(1000, getArgInt(argc, argv, "--test-timeout-ms", timeoutMs));
     }
 
-    int smokeMaxTokens = std::max(1, getArgInt(argc, argv, "--test-max-tokens", 32));
+    int smokeMaxTokens = 32;
     {
         const std::string envMaxTokens = getEnvValueA("RAWRXD_SMOKE_MAX_TOKENS");
         if (!envMaxTokens.empty())
             smokeMaxTokens = std::max(1, atoi(envMaxTokens.c_str()));
     }
+    // Explicit CLI must win over ambient environment to keep smoke runs deterministic.
+    smokeMaxTokens = std::max(1, getArgInt(argc, argv, "--test-max-tokens", smokeMaxTokens));
     SetEnvironmentVariableA("RAWRXD_SMOKE_MAX_TOKENS", std::to_string(smokeMaxTokens).c_str());
 
         fprintf(stdout,
