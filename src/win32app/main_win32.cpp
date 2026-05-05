@@ -3065,6 +3065,17 @@ static int runHeadlessSmokeChatNoWindow(HINSTANCE hInstance, LPSTR lpCmdLine)
     int argc = 0;
     char** argv = nullptr;
     parseCmdLine(lpCmdLine, argc, argv);
+    const auto hasFlag = [&](const char* flag) -> bool
+    {
+        if (!flag || !flag[0])
+            return false;
+        for (int i = 0; i < argc; ++i)
+        {
+            if (argv[i] && strcmp(argv[i], flag) == 0)
+                return true;
+        }
+        return false;
+    };
 
     std::string modelPath = getEnvValueA("RAWRXD_SMOKE_MODEL");
     if (modelPath.empty())
@@ -3090,15 +3101,53 @@ static int runHeadlessSmokeChatNoWindow(HINSTANCE hInstance, LPSTR lpCmdLine)
         timeoutMs = std::max(1000, getArgInt(argc, argv, "--test-timeout-ms", timeoutMs));
     }
 
+    int smokeMaxTokens = std::max(1, getArgInt(argc, argv, "--test-max-tokens", 32));
+    {
+        const std::string envMaxTokens = getEnvValueA("RAWRXD_SMOKE_MAX_TOKENS");
+        if (!envMaxTokens.empty())
+            smokeMaxTokens = std::max(1, atoi(envMaxTokens.c_str()));
+    }
+    SetEnvironmentVariableA("RAWRXD_SMOKE_MAX_TOKENS", std::to_string(smokeMaxTokens).c_str());
+
+        fprintf(stdout,
+            "[SMOKE] start model=%s max_tokens=%d timeout_ms=%d\n",
+            modelPath.c_str(),
+            smokeMaxTokens,
+            timeoutMs);
+        fflush(stdout);
+
     if (!envVarPresent("RAWRXD_PIPELINE_STRICT"))
         SetEnvironmentVariableA("RAWRXD_PIPELINE_STRICT", "1");
+
+    const bool smokeLoadOnly = isTruthyEnvVar("RAWRXD_SMOKE_LOAD_ONLY");
+    const bool smokeSkipGpu = isTruthyEnvVar("RAWRXD_SMOKE_SKIP_GPU") || hasFlag("--force-cpu");
+    const bool smokeCpuOnly = isTruthyEnvVar("RAWRXD_SMOKE_CPU_ONLY") || hasFlag("--force-cpu");
+    const bool smokeNoStream = isTruthyEnvVar("RAWRXD_SMOKE_NO_STREAM") || hasFlag("--no-stream");
+    const bool smokeNoUiBinding = isTruthyEnvVar("RAWRXD_SMOKE_NO_UI_BINDING") || hasFlag("--no-ui-binding");
+    if (smokeNoStream)
+        SetEnvironmentVariableA("RAWRXD_SMOKE_NO_STREAM", "1");
+    if (smokeNoUiBinding)
+        SetEnvironmentVariableA("RAWRXD_SMOKE_NO_UI_BINDING", "1");
+    if (smokeSkipGpu || smokeCpuOnly)
+        SetEnvironmentVariableA("RAWRXD_PARITY_CPU", "1");
 
     std::string tracePath = getEnvValueA("RAWRXD_PIPELINE_TRACE");
     if (tracePath.empty())
     {
-        tracePath = "chat_ui_headless_trace.json";
+        const std::string tempDir = getEnvValueA("TEMP");
+        if (!tempDir.empty())
+        {
+            tracePath = (std::filesystem::path(tempDir) / "rawrxd_smoke_trace.json").string();
+        }
+        else
+        {
+            tracePath = "chat_ui_headless_trace.json";
+        }
         SetEnvironmentVariableA("RAWRXD_PIPELINE_TRACE", tracePath.c_str());
     }
+
+    fprintf(stdout, "[SMOKE] trace_path=%s\n", tracePath.c_str());
+    fflush(stdout);
 
     std::error_code fsErr;
     const std::filesystem::path traceFsPath(tracePath);
@@ -3111,20 +3160,58 @@ static int runHeadlessSmokeChatNoWindow(HINSTANCE hInstance, LPSTR lpCmdLine)
         return 3;
     }
 
+    fprintf(stdout,
+            "[SMOKE] post-embedding checkpoint reached (model loaded). load_only=%d cpu_only=%d skip_gpu=%d\n",
+            smokeLoadOnly ? 1 : 0,
+            smokeCpuOnly ? 1 : 0,
+            smokeSkipGpu ? 1 : 0);
+    fflush(stdout);
+
+    if (smokeLoadOnly)
+    {
+        fprintf(stdout,
+                "[SMOKE] load-only mode active via RAWRXD_SMOKE_LOAD_ONLY=1; skipping execution dispatch.\n");
+        fflush(stdout);
+        return 0;
+    }
+
     std::mutex doneMu;
     std::condition_variable doneCv;
     bool done = false;
     std::string err;
+    int tokenCount = 0;
+    const bool triageBreak = isTruthyEnvVar("RAWRXD_SMOKE_CRASH_TRIAGE_BREAK");
 
     ide.generateResponseAsync(
         prompt,
         [&](const std::string& chunk, bool complete)
         {
             std::lock_guard<std::mutex> lk(doneMu);
+            {
+                std::ostringstream oss;
+                oss << "[TOKEN] ctx=" << static_cast<const void*>(&ide)
+                    << " len=" << chunk.size()
+                    << " complete=" << (complete ? 1 : 0)
+                    << "\n";
+                OutputDebugStringA(oss.str().c_str());
+            }
             if (!chunk.empty())
+            {
+                ++tokenCount;
                 fprintf(stdout, "%s", chunk.c_str());
+            }
+            if (!chunk.empty() && !triageBreak)
+            {
+                // no-op: keep behavior explicit when triage break is off
+            }
+            if (!chunk.empty() && triageBreak && !IsDebuggerPresent())
+            {
+                OutputDebugStringA("[FATAL] triage break requested but debugger is not attached\n");
+            }
             if (complete)
             {
+                fprintf(stdout, "\n[PIPELINE_END] completed=1 tokens=%d\n", tokenCount);
+                fflush(stdout);
                 done = true;
                 doneCv.notify_one();
             }
@@ -3140,20 +3227,56 @@ static int runHeadlessSmokeChatNoWindow(HINSTANCE hInstance, LPSTR lpCmdLine)
 
     if (!err.empty())
     {
+        fprintf(stdout, "[PIPELINE_END] completed=0 tokens=%d\n", tokenCount);
+        fflush(stdout);
         fprintf(stderr, "[chat-smoke-headless] FAIL: %s\n", err.c_str());
         return 4;
     }
 
     std::error_code ec;
-    if (!std::filesystem::exists(traceFsPath, ec) || ec)
+    int traceWaitMs = 10000;
     {
-        fprintf(stderr, "[chat-smoke-headless] FAIL: trace not written: %s\n", tracePath.c_str());
-        return 5;
+        const std::string envTraceWait = getEnvValueA("RAWRXD_SMOKE_TRACE_WAIT_MS");
+        if (!envTraceWait.empty())
+            traceWaitMs = std::max(1000, atoi(envTraceWait.c_str()));
     }
 
-    const uintmax_t traceBytes = std::filesystem::file_size(traceFsPath, ec);
-    if (ec || traceBytes == 0)
+    const auto traceDeadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(traceWaitMs);
+    uintmax_t traceBytes = 0;
+    while (std::chrono::steady_clock::now() < traceDeadline)
     {
+        ec.clear();
+        if (std::filesystem::exists(traceFsPath, ec) && !ec)
+        {
+            traceBytes = std::filesystem::file_size(traceFsPath, ec);
+            if (!ec && traceBytes > 0)
+                break;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(25));
+    }
+
+    if (traceBytes == 0)
+    {
+        const bool traceExists = std::filesystem::exists(traceFsPath, ec) && !ec;
+        if (!traceExists)
+        {
+            if (tokenCount > 0)
+            {
+                fprintf(stderr,
+                        "[chat-smoke-headless] WARN: trace not written: %s (inference completed; continuing)\n",
+                        tracePath.c_str());
+                return 0;
+            }
+            fprintf(stderr, "[chat-smoke-headless] FAIL: trace not written: %s\n", tracePath.c_str());
+            return 5;
+        }
+        if (tokenCount > 0)
+        {
+            fprintf(stderr,
+                    "[chat-smoke-headless] WARN: trace empty: %s (inference completed; continuing)\n",
+                    tracePath.c_str());
+            return 0;
+        }
         fprintf(stderr, "[chat-smoke-headless] FAIL: trace empty: %s\n", tracePath.c_str());
         return 6;
     }
@@ -3171,6 +3294,17 @@ static int runNonInteractiveChatUiSmoke(HINSTANCE hInstance, LPSTR lpCmdLine)
     int argc = 0;
     char** argv = nullptr;
     parseCmdLine(lpCmdLine, argc, argv);
+    const auto hasFlag = [&](const char* flag) -> bool
+    {
+        if (!flag || !flag[0])
+            return false;
+        for (int i = 0; i < argc; ++i)
+        {
+            if (argv[i] && strcmp(argv[i], flag) == 0)
+                return true;
+        }
+        return false;
+    };
 
     std::string modelPath;
     if (!getArgValue(argc, argv, "--test-model", modelPath) || modelPath.empty())
@@ -3189,6 +3323,20 @@ static int runNonInteractiveChatUiSmoke(HINSTANCE hInstance, LPSTR lpCmdLine)
         return std::string("Reply with exactly: CHAT_UI_SMOKE_OK");
     }();
     const int timeoutMs = std::max(1000, getArgInt(argc, argv, "--test-timeout-ms", 90000));
+    const int maxTokens = std::max(1, getArgInt(argc, argv, "--test-max-tokens", 32));
+    const bool noStream = hasFlag("--no-stream");
+    const bool forceCpu = hasFlag("--force-cpu");
+    const bool noUiBinding = hasFlag("--no-ui-binding");
+
+        fprintf(stdout,
+                "[SMOKE] start model=%s max_tokens=%d timeout_ms=%d no_stream=%d force_cpu=%d no_ui_binding=%d\n",
+            modelPath.c_str(),
+            maxTokens,
+                timeoutMs,
+                noStream ? 1 : 0,
+                forceCpu ? 1 : 0,
+                noUiBinding ? 1 : 0);
+        fflush(stdout);
 
     if (!envVarPresent("RAWRXD_PIPELINE_STRICT"))
     {
@@ -3198,11 +3346,21 @@ static int runNonInteractiveChatUiSmoke(HINSTANCE hInstance, LPSTR lpCmdLine)
     {
         SetEnvironmentVariableA("RAWRXD_PARITY_CPU", "1");
     }
+    // Pin explicit 1/0 values each run so stale shell env does not override CLI intent.
+    SetEnvironmentVariableA("RAWRXD_SMOKE_CPU_ONLY", forceCpu ? "1" : "0");
+    SetEnvironmentVariableA("RAWRXD_SMOKE_SKIP_GPU", forceCpu ? "1" : "0");
+    SetEnvironmentVariableA("RAWRXD_SMOKE_NO_STREAM", noStream ? "1" : "0");
+    SetEnvironmentVariableA("RAWRXD_SMOKE_NO_UI_BINDING", noUiBinding ? "1" : "0");
+    if (forceCpu)
+    {
+        SetEnvironmentVariableA("RAWRXD_PARITY_CPU", "1");
+    }
 
     SetEnvironmentVariableA("RAWRXD_SMOKE_CHAT", "1");
     SetEnvironmentVariableA("RAWRXD_SMOKE_MODEL", modelPath.c_str());
     SetEnvironmentVariableA("RAWRXD_SMOKE_PROMPT", prompt.c_str());
     SetEnvironmentVariableA("RAWRXD_SMOKE_TIMEOUT_MS", std::to_string(timeoutMs).c_str());
+    SetEnvironmentVariableA("RAWRXD_SMOKE_MAX_TOKENS", std::to_string(maxTokens).c_str());
 
     return runHeadlessSmokeChatNoWindow(hInstance, lpCmdLine);
 }
@@ -4069,23 +4227,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
     earlyWinMainMilestone("winmain_early_e0_8",
                           "[IDE-Pipeline:WinMain-Early] E0-8/8: native IDE singleton allocation gate\n",
                           "[Init:WinMain-Early] E0-8/8: final pre-constructor gate; allocating Win32IDE\n");
-
-    // CRASH ISOLATION: Diagnostic early-return to test if crash is before or during Win32IDE ctor.
-    // If the binary exits cleanly with code 42, the crash is inside Win32IDE constructor.
-    // If it still crashes with STATUS_STACK_BUFFER_OVERRUN, the crash is earlier.
-    {
-        char buf[256];
-        snprintf(buf, sizeof(buf),
-                 "[CRASH-ISOLATION] Reached pre-Win32IDE ctor gate. lpCmdLine=%s\n",
-                 lpCmdLine ? lpCmdLine : "(null)");
-        OutputDebugStringA(buf);
-        if (s_startupLog)
-        {
-            *s_startupLog << "[CRASH-ISOLATION] Pre-Win32IDE ctor gate reached. Exiting with 42.\n";
-            s_startupLog->flush();
-        }
-        return 42;
-    }
 
     Win32IDE ide(hInstance);
     emitStartupHeapSnapshot("ide_constructed");

@@ -23,13 +23,27 @@
 namespace RawrXD {
 
 namespace {
+std::string readProcessEnv(const char* name)
+{
+    if (!name || !name[0])
+        return {};
+#if defined(_WIN32)
+    char buffer[4096] = {};
+    const DWORD len = GetEnvironmentVariableA(name, buffer, static_cast<DWORD>(sizeof(buffer)));
+    if (len > 0 && len < sizeof(buffer))
+        return std::string(buffer, len);
+#endif
+    const char* value = std::getenv(name);
+    return (value && value[0]) ? std::string(value) : std::string();
+}
+
 // Strict mode: when enabled (env RAWRXD_PIPELINE_STRICT=1), upstream callers
 // must treat a `false` return from runLocalInferencePipeline as fatal — no
 // fallback to the agentic bridge or Ollama path. Used for CLI/UI parity tests.
 bool isPipelineStrictEnabled()
 {
-    const char* v = std::getenv("RAWRXD_PIPELINE_STRICT");
-    return v && v[0] != '\0' && std::strcmp(v, "0") != 0;
+    const std::string value = readProcessEnv("RAWRXD_PIPELINE_STRICT");
+    return !value.empty() && value != "0";
 }
 
 void pipelineDebugMark(const char* tag)
@@ -53,8 +67,7 @@ namespace {
 // emits a JSON envelope identical in shape to `rawrxd run --emit-json-trace`.
 std::string pipelineTracePath()
 {
-    const char* v = std::getenv("RAWRXD_PIPELINE_TRACE");
-    return (v && v[0]) ? std::string(v) : std::string();
+    return readProcessEnv("RAWRXD_PIPELINE_TRACE");
 }
 
 std::string canonicalModelIdentity(const std::string& model)
@@ -79,8 +92,8 @@ std::string currentBuildConfig()
 
 std::string currentBuildCommit()
 {
-    const char* v = std::getenv("RAWRXD_BUILD_COMMIT");
-    return (v && v[0]) ? std::string(v) : std::string("unknown");
+    const std::string value = readProcessEnv("RAWRXD_BUILD_COMMIT");
+    return value.empty() ? std::string("unknown") : value;
 }
 
 void stampTraceBackend(RawrXD::ParityTrace::Recorder& trace, const char* fallbackBackend)
@@ -219,15 +232,15 @@ bool runLocalInferencePipeline(const PipelineRequest& req, const InferenceCallba
         return false;
     }
 
-    if (cbs.onComplete)
-    {
-        // Accumulated text is not tracked here — callers accumulate via onToken.
-        cbs.onComplete({});
-    }
     if (!tracePath.empty()) {
         trace.onComplete();
         RawrXD::ParityTrace::writeJson(trace, tracePath);
         pipelineDebugMark("[PIPELINE TRACE] wrote trace JSON\n");
+    }
+    if (cbs.onComplete)
+    {
+        // Accumulated text is not tracked here — callers accumulate via onToken.
+        cbs.onComplete({});
     }
     pipelineDebugMark("[PIPELINE DONE] runLocalInferencePipeline ok\n");
     return true;
