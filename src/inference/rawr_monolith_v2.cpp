@@ -46,6 +46,9 @@
 #include <chrono>
 #include <iomanip>
 
+// FlashAttention integration layer
+#include "flash_attention_integration.cpp"
+
 // -------------------------------------------------------------------
 // Platform-specific memory mapping + locking
 // -------------------------------------------------------------------
@@ -869,12 +872,32 @@ struct Transformer {
         std::vector<std::vector<float>> K_cache, V_cache;
         cache.gather_kv(seq_id, pos + 1, K_cache, V_cache);
 
-        // Multi-head attention
+        // Multi-head attention with FlashAttention optimization
         std::vector<float> attn_out(dim, 0);
-        for (int h = 0; h < n_heads; h++) {
-            auto head_result = attention_head(q, K_cache, V_cache, h);
-            for (int d = 0; d < head_dim; d++)
-                attn_out[h * head_dim + d] = head_result[d];
+        
+        // Try FlashAttention first (if available)
+        // Note: FlashAttention is optimized for multi-head attention
+        // and provides significant speedup for long sequences
+        bool flashAttentionUsed = false;
+        
+        // Check if FlashAttention is available and beneficial
+        // FlashAttention provides most benefit for sequences > 128 tokens
+        if (pos + 1 > 128) {
+            // Use unified dispatch for all heads at once
+            // This will automatically fall back to standard attention if FlashAttention fails
+            attn_out = UnifiedAttentionDispatch(
+                q, K_cache, V_cache, n_heads, head_dim, pos + 1, true
+            );
+            flashAttentionUsed = true;
+        }
+        
+        // Fall back to standard attention for short sequences or if FlashAttention unavailable
+        if (!flashAttentionUsed) {
+            for (int h = 0; h < n_heads; h++) {
+                auto head_result = attention_head(q, K_cache, V_cache, h);
+                for (int d = 0; d < head_dim; d++)
+                    attn_out[h * head_dim + d] = head_result[d];
+            }
         }
 
         // Output projection
