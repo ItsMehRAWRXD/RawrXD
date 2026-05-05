@@ -45,7 +45,7 @@ struct NativeInferenceConfig
     // Streaming env: RAWRXD_STREAM_VIA_ORCHESTRATOR=1 → orchestrator only.
     // RAWRXD_STREAM_FALLBACK_ORCHESTRATOR=1 → if direct Ollama fails, use orchestrator.
     std::string host = "127.0.0.1";
-    uint16_t port = 11435;   // IDE embedded server (avoid conflict with external Ollama 11434)
+    uint16_t port = 11434;   // External Ollama server (live, 83 models). Override via RAWRXD_OLLAMA_PORT env.
     std::string chat_model;  // Active chat model tag
     std::string fim_model;   // Active FIM model tag
     int timeout_ms = 120000;

@@ -128,11 +128,11 @@ private:
         }
     }
 
-    std::string m_modelPath;
-    int m_vocabSize = 50257;      // GPT-2 default
-    int m_embeddingDim = 768;     // GPT-2 small default
-};
+    void unloadModel() {
+        m_modelPath.clear();
+    }
 
+public:
     std::string generate(const std::string& prompt, int maxTokens) {
         if (m_modelPath.empty() || maxTokens <= 0) {
             return {};
@@ -152,10 +152,8 @@ private:
         return output;
     }
 
-    void unloadModel() {
-        m_modelPath.clear();
-    }
-
 private:
     std::string m_modelPath;
+    int m_vocabSize = 50257;      // GPT-2 default
+    int m_embeddingDim = 768;     // GPT-2 small default
 };

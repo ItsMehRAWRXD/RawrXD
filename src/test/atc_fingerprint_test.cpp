@@ -19,7 +19,7 @@ size_t get_process_memory_usage() {
 // --- Main Test Logic ---
 void run_fingerprint_test(const wchar_t* model_path) {
     std::cout << "--- Starting ATC Fingerprint Test ---" << std::endl;
-    std::cout << "Model: " << model_path << std::endl;
+    std::wcout << L"Model: " << model_path << std::endl;
 
     // Mandatory GPU gate — aborts the process if no GPU backend is available.
     rxd::gpu::require();
