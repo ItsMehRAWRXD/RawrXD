@@ -163,7 +163,7 @@ void NativeStreamProvider::WinHttpHandle::reset(void* handle)
 // Construction
 // ============================================================================
 
-NativeStreamProvider::NativeStreamProvider() : m_baseUrl("http://localhost:11435") {}
+NativeStreamProvider::NativeStreamProvider() : m_baseUrl("http://localhost:11434") {}  // Default Ollama port
 
 NativeStreamProvider::NativeStreamProvider(const std::string& baseUrl) : m_baseUrl(baseUrl) {}
 

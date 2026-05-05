@@ -2967,6 +2967,7 @@ class Win32IDE
                                                                     int cursorLine, int cursorCol, uint64_t expectedSeq = 0,
                                                                     bool streamToUi = false);
     bool startTitanAgentInferenceAsync(const std::string& prompt, uint32_t timeoutMs = 120000, bool stageOnly = false);
+    bool startTitanAgentInferenceAsync(const std::string& prefix, const std::string& suffix);
     void cancelTitanAgentInferenceAsync();
     void startTitanPagingHeartbeat(uint32_t timeoutMs);
     void onTitanPagingHeartbeatTimer();

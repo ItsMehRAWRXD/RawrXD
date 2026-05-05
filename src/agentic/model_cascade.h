@@ -63,7 +63,7 @@ const char* taskTypeName(TaskType type);
 
 struct ModelCapability {
     std::string modelId;            // e.g., "phi-3-mini", "llama-3-8b"
-    std::string endpoint;           // e.g., "http://localhost:11435"
+    std::string endpoint;           // e.g., "http://localhost:11434"  // Default Ollama port
     std::string provider;           // "native", "anthropic", "openai", "local"
 
     // Performance metrics (updated from telemetry)

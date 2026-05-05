@@ -23,7 +23,7 @@ public:
 
     // ---- Initialization (call during CLI startup) ----
     bool Initialize(const std::string& workingDir,
-                    const std::string& ollamaUrl = "http://localhost:11435");
+                    const std::string& ollamaUrl = "http://localhost:11434");  // Default Ollama port
 
     bool IsInitialized() const { return m_initialized; }
 

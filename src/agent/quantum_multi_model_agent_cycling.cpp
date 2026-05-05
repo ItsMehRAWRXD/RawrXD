@@ -38,15 +38,15 @@ namespace {
 
     // Model endpoint configurations
     const std::map<ModelType, std::string> DEFAULT_MODEL_ENDPOINTS = {
-        {ModelType::Qwen2_5_Coder_32B, "http://localhost:11435/api/generate"},
-        {ModelType::Qwen2_5_Coder_14B, "http://localhost:11435/api/generate"},
-        {ModelType::Qwen2_5_Coder_7B, "http://localhost:11435/api/generate"},
-        {ModelType::DeepSeek_Coder_33B, "http://localhost:11435/api/generate"},
-        {ModelType::DeepSeek_Coder_6_7B, "http://localhost:11435/api/generate"},
-        {ModelType::Codestral_22B, "http://localhost:11435/api/generate"},
-        {ModelType::Llama3_1_70B, "http://localhost:11435/api/generate"},
-        {ModelType::Llama3_1_8B, "http://localhost:11435/api/generate"},
-        {ModelType::Mixtral_8x7B, "http://localhost:11435/api/generate"}
+        {ModelType::Qwen2_5_Coder_32B, "http://localhost:11434/api/generate"},
+        {ModelType::Qwen2_5_Coder_14B, "http://localhost:11434/api/generate"},
+        {ModelType::Qwen2_5_Coder_7B, "http://localhost:11434/api/generate"},
+        {ModelType::DeepSeek_Coder_33B, "http://localhost:11434/api/generate"},
+        {ModelType::DeepSeek_Coder_6_7B, "http://localhost:11434/api/generate"},
+        {ModelType::Codestral_22B, "http://localhost:11434/api/generate"},
+        {ModelType::Llama3_1_70B, "http://localhost:11434/api/generate"},
+        {ModelType::Llama3_1_8B, "http://localhost:11434/api/generate"},
+        {ModelType::Mixtral_8x7B, "http://localhost:11434/api/generate"}
     };
 
     const std::map<ModelType, std::string> DEFAULT_MODEL_NAMES = {
