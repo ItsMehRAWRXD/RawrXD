@@ -4228,6 +4228,18 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
                           "[IDE-Pipeline:WinMain-Early] E0-8/8: native IDE singleton allocation gate\n",
                           "[Init:WinMain-Early] E0-8/8: final pre-constructor gate; allocating Win32IDE\n");
 
+    {
+        const std::string commit = getEnvValueA("RAWRXD_BUILD_COMMIT");
+        char buildStamp[256] = {};
+        snprintf(buildStamp,
+                 sizeof(buildStamp),
+                 "[BUILD] %s %s | commit=%s\n",
+                 __DATE__,
+                 __TIME__,
+                 commit.empty() ? "unknown" : commit.c_str());
+        OutputDebugStringA(buildStamp);
+    }
+
     Win32IDE ide(hInstance);
     emitStartupHeapSnapshot("ide_constructed");
 
