@@ -87,14 +87,14 @@ function Parse-AgentDoneBlock {
         # Extract key information from markdown
         if ($Content -match "### ✅ What's Done[\s\S]*?### 📊") {
             $tasksSection = $Matches[0]
-            $taskCount = ([regex]::Matches($tasksSection, "- \[")).Count
+            $taskCount = ([regex]::Matches($tasksSection, "- \*\*\[")).Count
             $result["tasks_completed"] = $taskCount
             $result["tasks_total"] = $taskCount
         }
         
         if ($Content -match "### 📍 Relevant Links[\s\S]*?\- \[.*?\]:") {
             $linksSection = $Matches[0]
-            $artifactCount = ([regex]::Matches($linksSection, "- \[")).Count
+            $artifactCount = ([regex]::Matches($linksSection, "- \*\*\[")).Count
             $result["artifacts"] = $artifactCount
         }
         

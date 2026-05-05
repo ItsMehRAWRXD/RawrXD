@@ -221,4 +221,40 @@ Log "Duration     : ${elapsed}s"
 Log "Trace dir    : $traceDir"
 Log "=======================================" 'Cyan'
 
+# ---- AGENT_DONE COMPLETION CONTRACT ----
+$commitHash = git -C D:\RawrXD rev-parse --short HEAD
+$artifacts = @("RawrXD-Agentic-Test.ps1", "run_parity_gpu_validation.ps1", "agent_completion_validator.ps1")
+
+# Emit completion contract
+$completionBlock = @"
+
+[AGENT_DONE]
+status=$(if ($failed -eq 0) { 'success' } else { 'partial' })
+phase=2B
+tasks_completed=$passed
+tasks_total=$total
+commit=$commitHash
+artifacts=$($artifacts.Count)
+duration_ms=$([math]::Round($elapsed * 1000))
+next=$(if ($failed -eq 0) { 'Phase 2C kernel tuning' } else { 'Retry failed tests' })
+"@
+
+Write-Host $completionBlock
+
+# Also emit JSON format for machine consumption
+$jsonBlock = @{
+    agent_done = $true
+    status = if ($failed -eq 0) { 'success' } else { 'partial' }
+    phase = '2B'
+    tasks_completed = $passed
+    tasks_total = $total
+    commit = $commitHash
+    artifacts = $artifacts
+    duration_ms = [math]::Round($elapsed * 1000)
+    next = if ($failed -eq 0) { 'Phase 2C kernel tuning' } else { 'Retry failed tests' }
+    timestamp = (Get-Date -Format "o")
+} | ConvertTo-Json -Depth 2
+
+Write-Host $jsonBlock
+
 exit $failed

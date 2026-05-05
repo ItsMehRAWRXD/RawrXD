@@ -19,6 +19,6 @@ ggml_vulkan: 1 = AMD Radeon(TM) Graphics (AMD proprietary driver) | uma: 1 | fp1
 [CLI TOKEN] 1
 [CLI TOKEN] 2
 [CLI TOKEN] :
-[Measurement] invalid session measurement (ttft_ms=2514.0 decode_tps=10.89 e2e_tps=3.92)
+[Measurement] invalid session measurement (ttft_ms=2506.0 decode_tps=10.20 e2e_tps=3.82)
 [CLI TOKEN] <done=true>
-[CLI TRACE] wrote d:\rawrxd\build_pipeline\parity_gpu\cli_real.json (16 tokens, 4086 ms)
+[CLI TRACE] wrote d:\rawrxd\build_pipeline\parity_gpu\cli_real.json (16 tokens, 4193 ms)

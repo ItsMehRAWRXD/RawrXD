@@ -21,7 +21,7 @@ ggml_vulkan: 1 = AMD Radeon(TM) Graphics (AMD proprietary driver) | uma: 1 | fp1
 [UI TOKEN] 1
 [UI TOKEN] 2
 [UI TOKEN] :
-[Measurement] invalid session measurement (ttft_ms=3855.0 decode_tps=4.05 e2e_tps=1.95)
+[Measurement] invalid session measurement (ttft_ms=2454.0 decode_tps=11.00 e2e_tps=3.98)
 [PIPELINE TRACE] wrote trace JSON
 [PIPELINE DONE] runLocalInferencePipeline ok
 [UI-DRIVER] done ok=1 tokens=16 error=0
