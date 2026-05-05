@@ -79,6 +79,19 @@ const char* AutopatchActionName(RawrXD::Inference::PatchAction action)
     }
 }
 
+bool IsTruthyEnvFlag(const char* name)
+{
+    const char* v = std::getenv(name);
+    if (!v || !v[0])
+        return false;
+
+    std::string value(v);
+    std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch)
+                   { return static_cast<char>(std::tolower(ch)); });
+
+    return !(value == "0" || value == "false" || value == "off" || value == "no");
+}
+
 #pragma pack(push, 1)
 struct RxaHeaderV1
 {
@@ -1260,6 +1273,12 @@ void CPUInferenceEngine::GenerateStreaming(const std::vector<int32_t>& input_tok
         autopatchCfg.headroomTps = 130.0;  // Optimistic with good cache locality
         autopatchCfg.highPressure = 0.85;  // Memory pressure threshold
         RawrXD::Inference::InferenceAutopatchController autopatch(autopatchCfg);
+        const bool autopatchDisabled = IsTruthyEnvFlag("RAWRXD_DISABLE_AUTOPATCH") ||
+                                       IsTruthyEnvFlag("RAWRXD_SMOKE_DISABLE_AUTOPATCH");
+        if (autopatchDisabled)
+        {
+            std::printf("[Autopatch] disabled via env flag\n");
+        }
 
         s_inferenceBackend.GenerateFromTokens(u32_toks, static_cast<uint32_t>(max_tokens),
                                               [&](uint32_t tok, const std::string& piece)
@@ -1323,21 +1342,24 @@ void CPUInferenceEngine::GenerateStreaming(const std::vector<int32_t>& input_tok
                                                           telem.cacheHitRate = std::min(telem.cacheHitRate, 0.35);
                                                       }
 
-                                                      autopatch.onToken(telem);
-                                                      const bool urgent_adapt = diag_compute_stalled && ((token_step % 2) == 0);
-                                                      if (autopatch.shouldAdapt() || urgent_adapt)
+                                                      if (!autopatchDisabled)
                                                       {
-                                                          const auto decision = autopatch.adapt();
-                                                          if (decision.action != RawrXD::Inference::PatchAction::None)
+                                                          autopatch.onToken(telem);
+                                                          const bool urgent_adapt = diag_compute_stalled && ((token_step % 2) == 0);
+                                                          if (autopatch.shouldAdapt() || urgent_adapt)
                                                           {
-                                                              std::printf(
-                                                                  "[Autopatch] tok=%llu action=%s tps=%.1f pressure=%.3f depth=%u diag=%s\n",
-                                                                  static_cast<unsigned long long>(autopatch.tokenCount()),
-                                                                  AutopatchActionName(decision.action),
-                                                                  decision.rollingTps,
-                                                                  decision.rollingPressure,
-                                                                  decision.suggestedPrefetchDepth,
-                                                                  latest_root_cause.c_str());
+                                                              const auto decision = autopatch.adapt();
+                                                              if (decision.action != RawrXD::Inference::PatchAction::None)
+                                                              {
+                                                                  std::printf(
+                                                                      "[Autopatch] tok=%llu action=%s tps=%.1f pressure=%.3f depth=%u diag=%s\n",
+                                                                      static_cast<unsigned long long>(autopatch.tokenCount()),
+                                                                      AutopatchActionName(decision.action),
+                                                                      decision.rollingTps,
+                                                                      decision.rollingPressure,
+                                                                      decision.suggestedPrefetchDepth,
+                                                                      latest_root_cause.c_str());
+                                                              }
                                                           }
                                                       }
 

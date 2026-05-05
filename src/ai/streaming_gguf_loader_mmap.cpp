@@ -1,6 +1,7 @@
 #include "streaming_gguf_loader_mmap.h"
 #include "../core/VulkanMemoryManager.h"
 #include <algorithm>
+#include <cstdio>
 #include <cstring>
 #include <sstream>
 
@@ -732,10 +733,19 @@ size_t StreamingGGUFLoaderMmap::getTypeSize(GGMLType type) const
 
 std::vector<uint8_t> StreamingGGUFLoaderMmap::getTensorData(const std::string& tensorName)
 {
+    const char* triage = std::getenv("RAWRXD_SMOKE_CRASH_TRIAGE_LOG");
+    if (triage && triage[0] != '\0')
+    {
+        std::fprintf(stderr, "[TENSOR_RESOLVE] name=%s\n", tensorName.c_str());
+    }
     auto it = tensorNameMap.find(tensorName);
     if (it == tensorNameMap.end())
     {
         setError("Tensor not found: " + tensorName);
+        if (triage && triage[0] != '\0')
+        {
+            std::fprintf(stderr, "[FATAL] NULL tensor name=%s\n", tensorName.c_str());
+        }
         return {};
     }
     return getTensorData(it->second);
@@ -743,9 +753,14 @@ std::vector<uint8_t> StreamingGGUFLoaderMmap::getTensorData(const std::string& t
 
 std::vector<uint8_t> StreamingGGUFLoaderMmap::getTensorData(size_t tensorIndex)
 {
+    const char* triage = std::getenv("RAWRXD_SMOKE_CRASH_TRIAGE_LOG");
     if (tensorIndex >= tensors.size())
     {
         setError("Tensor index out of range: " + std::to_string(tensorIndex));
+        if (triage && triage[0] != '\0')
+        {
+            std::fprintf(stderr, "[FATAL] NULL tensor id=%zu\n", tensorIndex);
+        }
         return {};
     }
 
@@ -753,9 +768,22 @@ std::vector<uint8_t> StreamingGGUFLoaderMmap::getTensorData(size_t tensorIndex)
 
     // Get tensor data from mapped region
     const void* tensorData = mappedFile.GetRegion(tensor.offset, tensor.size_bytes);
+    if (triage && triage[0] != '\0')
+    {
+        std::fprintf(stderr,
+                     "[TENSOR_RESOLVE] id=%zu name=%s -> ptr=%p size=%zu\n",
+                     tensorIndex,
+                     tensor.name.c_str(),
+                     tensorData,
+                     tensor.size_bytes);
+    }
     if (!tensorData)
     {
         setError("Failed to get tensor data region for: " + tensor.name);
+        if (triage && triage[0] != '\0')
+        {
+            std::fprintf(stderr, "[FATAL] NULL tensor id=%zu name=%s\n", tensorIndex, tensor.name.c_str());
+        }
         return {};
     }
 
@@ -857,6 +885,11 @@ StreamingGGUFLoaderMmap::MemoryStats StreamingGGUFLoaderMmap::getMemoryStats() c
 
 void* StreamingGGUFLoaderMmap::GetTensorVramPtr(const std::string& name)
 {
+    const char* triage = std::getenv("RAWRXD_SMOKE_CRASH_TRIAGE_LOG");
+    if (triage && triage[0] != '\0')
+    {
+        std::fprintf(stderr, "[TENSOR_RESOLVE] vram name=%s -> ptr=%p\n", name.c_str(), nullptr);
+    }
     (void)name;
     // Device-local buffers are not host-mapped; use getTensorData or a dedicated map path if needed.
     return nullptr;

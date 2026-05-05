@@ -1,6 +1,6 @@
 # Command Map
 
-Proof baseline: --agentic-smoke
+Proof baseline: RAWRXD_SMOKE_CHAT
 
 | cmdId | canonical | handler | category | enabled | attempts | proof note |
 |---:|---|---|---|---|---:|---|

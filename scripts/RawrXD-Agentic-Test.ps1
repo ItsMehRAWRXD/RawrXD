@@ -17,12 +17,35 @@ function Log($msg, [System.ConsoleColor]$color = 'White') {
     Write-Host "[$(Get-Date -Format 'HH:mm:ss')] $msg" -ForegroundColor $color
 }
 
+function Quote-Arg([string]$value) {
+    # Start-Process joins arguments into a single command line; quote values with spaces.
+    return '"' + ($value -replace '"', '\\"') + '"'
+}
+
 function Test-Exit($label, $actual, $expected, [switch]$Soft) {
     $ok = $actual -eq $expected
     $mark = if ($ok) { '[OK]' } else { '[FAIL]' }
     $severity = if ($Soft -and -not $ok) { 'Yellow' } elseif (-not $ok) { 'Red' } else { 'Green' }
     Log "$mark $label`: expected=$expected actual=$actual" $severity
     return $ok
+}
+
+function Wait-TraceFile([string]$Path, [int]$TimeoutMs = 10000) {
+    $deadline = (Get-Date).AddMilliseconds($TimeoutMs)
+    while ((Get-Date) -lt $deadline) {
+        if (Test-Path -LiteralPath $Path) {
+            try {
+                $item = Get-Item -LiteralPath $Path -ErrorAction Stop
+                if ($item.Length -gt 0) {
+                    return $true
+                }
+            } catch {
+                Start-Sleep -Milliseconds 100
+            }
+        }
+        Start-Sleep -Milliseconds 100
+    }
+    return $false
 }
 
 $results = @()
@@ -50,10 +73,10 @@ $cliOut = Join-Path $traceDir 'cli_parity.out.txt'
 $cliErr = Join-Path $traceDir 'cli_parity.err.txt'
 
 $cliProc = Start-Process -FilePath $cli -ArgumentList @(
-    'run', 'parity-test-model',
-    '--prompt', $Prompt,
+    'run', (Quote-Arg $ModelPath),
+    '--prompt', (Quote-Arg $Prompt),
     '--max-tokens', "$MaxTokens",
-    '--emit-json-trace', $cliTrace
+    '--emit-json-trace', (Quote-Arg $cliTrace)
 ) -RedirectStandardOutput $cliOut -RedirectStandardError $cliErr -NoNewWindow -PassThru -Wait
 
 $results += Test-Exit 'CLI parity exit code' $cliProc.ExitCode 0
@@ -74,10 +97,10 @@ $gpuOut = Join-Path $traceDir 'cli_gpu.out.txt'
 $gpuErr = Join-Path $traceDir 'cli_gpu.err.txt'
 
 $gpuProc = Start-Process -FilePath $cli -ArgumentList @(
-    'run', $ModelPath,
-    '--prompt', $Prompt,
+    'run', (Quote-Arg $ModelPath),
+    '--prompt', (Quote-Arg $Prompt),
     '--max-tokens', "$MaxTokens",
-    '--emit-json-trace', $gpuTrace
+    '--emit-json-trace', (Quote-Arg $gpuTrace)
 ) -RedirectStandardOutput $gpuOut -RedirectStandardError $gpuErr -NoNewWindow -PassThru -Wait
 
 $gpuErrText = if (Test-Path -LiteralPath $gpuErr) { Get-Content -LiteralPath $gpuErr -Raw } else { '' }
@@ -105,18 +128,24 @@ $env:RAWRXD_SMOKE_CHAT = '1'
 $env:RAWRXD_PIPELINE_TRACE = $smokeTrace
 $env:RAWRXD_PIPELINE_STRICT = '1'
 $env:RAWRXD_PARITY_CPU = '1'
+$env:RAWRXD_SMOKE_MODEL = $ModelPath
+$env:RAWRXD_SMOKE_PROMPT = $Prompt
+$env:RAWRXD_SMOKE_MAX_TOKENS = "$MaxTokens"
 
 $smokeProc = Start-Process -FilePath $exe -ArgumentList @(
     '--chat-ui-smoke-noninteractive',
-    '--test-model', $ModelPath,
-    '--test-prompt', $Prompt,
+    '--test-model', (Quote-Arg $ModelPath),
+    '--test-prompt', (Quote-Arg $Prompt),
+    '--test-max-tokens', "$MaxTokens",
     '--test-timeout-ms', ($TimeoutSec * 1000)
 ) -RedirectStandardOutput $smokeOut -RedirectStandardError $smokeErr -NoNewWindow -PassThru -Wait
 
-$results += Test-Exit 'Smoke exit code' $smokeProc.ExitCode 0 -Soft
-$results += Test-Exit 'Smoke trace written' (Test-Path -LiteralPath $smokeTrace) $true -Soft
+$smokeTraceReady = Wait-TraceFile -Path $smokeTrace -TimeoutMs 10000
 
-if (Test-Path -LiteralPath $smokeTrace) {
+$results += Test-Exit 'Smoke exit code' $smokeProc.ExitCode 0 -Soft
+$results += Test-Exit 'Smoke trace written' $smokeTraceReady $true -Soft
+
+if ($smokeTraceReady) {
     $s = Get-Content -LiteralPath $smokeTrace -Raw | ConvertFrom-Json
     $results += Test-Exit 'Smoke token_count > 0' ($s.token_count -gt 0) $true -Soft
     Log "Smoke: $($s.token_count) tokens, source=$($s.source)" 'Gray'
@@ -127,11 +156,37 @@ if (Test-Path -LiteralPath $smokeTrace) {
 
 # ---- 5. PARITY COMPARISON (CLI vs Smoke) ----
 Log "--- PHASE 5: Structural Parity Diff ---" 'Cyan'
-if ((Test-Path -LiteralPath $cliTrace) -and (Test-Path -LiteralPath $smokeTrace)) {
-    $cmp = & "D:\rawrxd\scripts\compare_parity_trace.ps1" -Cli $cliTrace -Ui $smokeTrace
-    $cmpExit = $LASTEXITCODE
-    $results += Test-Exit 'Parity diff exit' $cmpExit 0 -Soft
-    Log "Comparator: $cmp" $(if ($cmpExit -eq 0) { 'Green' } else { 'Red' })
+if ((Test-Path -LiteralPath $smokeTrace)) {
+    $cliAlignedTrace = Join-Path $traceDir 'cli_for_ui_compare.json'
+    $cliAlignedOut = Join-Path $traceDir 'cli_for_ui_compare.out.txt'
+    $cliAlignedErr = Join-Path $traceDir 'cli_for_ui_compare.err.txt'
+    $env:RAWRXD_PARITY_CPU = '1'
+    $cliAlignedProc = Start-Process -FilePath $cli -ArgumentList @(
+        'run', (Quote-Arg $ModelPath),
+        '--prompt', (Quote-Arg $Prompt),
+        '--max-tokens', "$MaxTokens",
+        '--emit-json-trace', (Quote-Arg $cliAlignedTrace)
+    ) -RedirectStandardOutput $cliAlignedOut -RedirectStandardError $cliAlignedErr -NoNewWindow -PassThru -Wait
+    $results += Test-Exit 'CLI aligned parity exit code' $cliAlignedProc.ExitCode 0 -Soft
+    $results += Test-Exit 'CLI aligned trace written' (Test-Path -LiteralPath $cliAlignedTrace) $true -Soft
+
+    if (-not (Test-Path -LiteralPath $cliAlignedTrace)) {
+        Log "Skipping parity diff (missing aligned CLI trace)" 'Yellow'
+        $results += $true
+    } else {
+        $cliJson = Get-Content -LiteralPath $cliAlignedTrace -Raw | ConvertFrom-Json
+        $uiJson = Get-Content -LiteralPath $smokeTrace -Raw | ConvertFrom-Json
+        $alignmentOk = ($cliJson.model -eq $uiJson.model) -and ($cliJson.prompt -eq $uiJson.prompt)
+        $results += Test-Exit 'Parity model/prompt aligned' $alignmentOk $true -Soft
+        if (-not $alignmentOk) {
+            Log ("Alignment mismatch: cli model='" + $cliJson.model + "' ui model='" + $uiJson.model +
+                "' | cli prompt='" + $cliJson.prompt + "' ui prompt='" + $uiJson.prompt + "'") 'Yellow'
+        }
+        $cmp = & "D:\rawrxd\scripts\compare_parity_trace.ps1" -Cli $cliAlignedTrace -Ui $smokeTrace
+        $cmpExit = $LASTEXITCODE
+        $results += Test-Exit 'Parity diff exit' $cmpExit 0 -Soft
+        Log "Comparator: $cmp" $(if ($cmpExit -eq 0) { 'Green' } else { 'Red' })
+    }
 } else {
     Log "Skipping parity diff (missing traces)" 'Yellow'
     $results += $true

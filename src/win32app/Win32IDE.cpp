@@ -104,6 +104,20 @@ static void ideCtorBootMilestone(const char* debugLine, const char* userLine)
         g_ideCtorBootUserLines.emplace_back(userLine);
 }
 
+static bool crashTriageBreakEnabled()
+{
+    const char* v = std::getenv("RAWRXD_SMOKE_CRASH_TRIAGE_BREAK");
+    return v && v[0] != '\0' && std::strcmp(v, "0") != 0;
+}
+
+static void crashTriageBreakIfAttached(const char* reason)
+{
+    if (reason && reason[0])
+        OutputDebugStringA(reason);
+    if (crashTriageBreakEnabled() && IsDebuggerPresent())
+        DebugBreak();
+}
+
 
 // Complete type declarations for unique_ptr<T> component managers.
 // Must come after all other includes to avoid circularity.
@@ -7391,47 +7405,27 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
             return false;
         }
 
-        appendToOutput("[2/5] Parsing header...\n", "Output", OutputSeverity::Info);
-        if (!m_ggufLoader->ParseHeader())
-        {
-            std::string error =
-                "❌ Failed to parse GGUF header from: " + resolvedPath + "\nFile may be corrupted or not a valid GGUF.";
-            appendToOutput(error, "Errors", OutputSeverity::Error);
-            ErrorReporter::report(error, m_hwndMain);
-            m_ggufLoader->Close();
-            return false;
-        }
-
-        appendToOutput("[3/5] Parsing metadata...\n", "Output", OutputSeverity::Info);
-        if (!m_ggufLoader->ParseMetadata())
-        {
-            std::string error =
-                "❌ Failed to parse GGUF metadata from: " + resolvedPath + "\nFile structure may be invalid.";
-            appendToOutput(error, "Errors", OutputSeverity::Error);
-            ErrorReporter::report(error, m_hwndMain);
-            m_ggufLoader->Close();
-            return false;
-        }
-
-        // Build tensor index (reads tensor offsets but NOT data)
-        appendToOutput("[4/5] Building tensor index (may take 10-30 seconds for large files)...\n", "Output",
-                       OutputSeverity::Info);
-        if (!m_ggufLoader->BuildTensorIndex())
-        {
-            std::string error =
-                "❌ Failed to build tensor index from: " + resolvedPath + "\nFile may be too large or corrupted.";
-            appendToOutput(error, "Errors", OutputSeverity::Error);
-            ErrorReporter::report(error, m_hwndMain);
-            m_ggufLoader->Close();
-            return false;
-        }
+        appendToOutput("[2/5] Header, metadata, and tensor index ready.\n", "Output", OutputSeverity::Info);
 
         // Pre-load embedding zone for inference preparation
-        appendToOutput("[5/5] Pre-loading embedding zone...\n", "Output", OutputSeverity::Info);
+        appendToOutput("[3/5] Pre-loading embedding zone...\n", "Output", OutputSeverity::Info);
         if (!m_ggufLoader->LoadZone("embedding"))
         {
             std::string warning = "⚠️  Warning: Could not pre-load embedding zone (non-critical)";
             appendToOutput(warning, "Output", OutputSeverity::Warning);
+        }
+        else
+        {
+            const auto loadedZones = m_ggufLoader->GetLoadedZones();
+            const auto tensorsNow = m_ggufLoader->GetAllTensorInfo();
+            const size_t memNow = m_ggufLoader->GetCurrentMemoryUsage();
+            std::ostringstream zlog;
+            zlog << "[ZONE_OK] name=embedding ptr=" << static_cast<const void*>(m_ggufLoader.get())
+                 << " size=" << memNow
+                 << " tensors=" << tensorsNow.size()
+                 << " zones=" << loadedZones.size()
+                 << "\n";
+            OutputDebugStringA(zlog.str().c_str());
         }
     }
     catch (const std::exception& e)
@@ -9247,6 +9241,16 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
                     const char* v = std::getenv("RAWRXD_SMOKE_CHAT");
                     return v && v[0] != '\0' && std::strcmp(v, "0") != 0;
                 }();
+                const bool smokeNoStream = []()
+                {
+                    const char* v = std::getenv("RAWRXD_SMOKE_NO_STREAM");
+                    return v && v[0] != '\0' && std::strcmp(v, "0") != 0;
+                }();
+                const bool smokeNoUiBinding = []()
+                {
+                    const char* v = std::getenv("RAWRXD_SMOKE_NO_UI_BINDING");
+                    return v && v[0] != '\0' && std::strcmp(v, "0") != 0;
+                }();
 
                 if (!m_agenticBridge)
                 {
@@ -9300,12 +9304,20 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
 
                 auto backendMissingNativeApi = std::make_shared<std::atomic<bool>>(false);
 
+                // Determine early whether we can proceed without AgenticBridge.
+                const bool pipelineStrict = RawrXD::isPipelineStrictMode();
+                const bool localPipelineForce = pipelineStrict || looksLikeLocalModelPath(m_loadedModelPath);
+                if (pipelineStrict)
+                    OutputDebugStringA("[PIPELINE STRICT] enabled via RAWRXD_PIPELINE_STRICT=1\n");
+
                 // Set callback to route NativeAgent stream to the UI
-                m_agenticBridge->SetOutputCallback(
-                    [this, backendMissingNativeApi](const std::string& type, const std::string& msg)
-                    {
-                        if (m_inferenceStopRequested.load() || isShuttingDown())
-                            return;
+                if (m_agenticBridge)
+                {
+                    m_agenticBridge->SetOutputCallback(
+                        [this, backendMissingNativeApi](const std::string& type, const std::string& msg)
+                        {
+                            if (m_inferenceStopRequested.load() || isShuttingDown())
+                                return;
 
                         // PROBE A: raw callback entry
                         {
@@ -9352,26 +9364,38 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
                         }
 
                         // "stream" type is what we send to chat UI
+                            if (m_inferenceCallback)
+                            {
+                                m_currentInferenceResponse += msg;
+                                OutputDebugStringA(("[ChatAccum] bridge path accumulated_len=" +
+                                                    std::to_string(m_currentInferenceResponse.size()) + "\n")
+                                                       .c_str());
+                                m_inferenceCallback(msg, false);
+                            }
+                        });
+                }
+                else
+                {
+                    OutputDebugStringA(
+                        "[SMOKE] Agentic Bridge unavailable at dispatch boundary; relying on local pipeline path\n");
+                    if (!localPipelineForce)
+                    {
                         if (m_inferenceCallback)
                         {
-                            m_currentInferenceResponse += msg;
-                            OutputDebugStringA(("[ChatAccum] bridge path accumulated_len=" +
-                                                std::to_string(m_currentInferenceResponse.size()) + "\n")
-                                                   .c_str());
-                            m_inferenceCallback(msg, false);
+                            m_inferenceCallback("Error: Agentic Bridge unavailable and pipeline path not forced.",
+                                                true);
                         }
-                    });
+                        finishAndScheduleNext();
+                        return;
+                    }
+                }
 
                 // ── Unified local-inference fast-path (CLI ground-truth) ──────────────
                 // For local GGUF weights, force the Win32IDE path through the same
                 // InferencePlugin.generate() spine used by `rawrxd serve`.
                 // When RAWRXD_PIPELINE_STRICT=1 is set, force pipeline regardless of
                 // path heuristic to guarantee CLI/UI parity (no agentic fallback).
-                const bool pipelineStrict = RawrXD::isPipelineStrictMode();
-                const bool localPipelineForce = pipelineStrict || looksLikeLocalModelPath(m_loadedModelPath);
                 bool pipelineHandled = false;
-                if (pipelineStrict)
-                    OutputDebugStringA("[PIPELINE STRICT] enabled via RAWRXD_PIPELINE_STRICT=1\n");
                 if (localPipelineForce && !m_inferenceStopRequested.load() && !isShuttingDown())
                 {
                     const std::string initErr = RawrXD::initInferencePipeline(m_loadedModelPath);
@@ -9389,9 +9413,28 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
                     pipeReq.model       = m_loadedModelPath;
                     pipeReq.prompt      = prompt;
                     pipeReq.numPredict  = m_inferenceConfig.maxTokens > 0 ? m_inferenceConfig.maxTokens : 512;
+                    char smokeMaxBuf[32] = {};
+                    const DWORD smokeMaxLen = GetEnvironmentVariableA("RAWRXD_SMOKE_MAX_TOKENS", smokeMaxBuf,
+                                                                      static_cast<DWORD>(sizeof(smokeMaxBuf)));
+                    if (smokeMaxLen > 0 && smokeMaxLen < sizeof(smokeMaxBuf))
+                    {
+                        pipeReq.numPredict = std::max(1, atoi(smokeMaxBuf));
+                    }
+                    {
+                        std::ostringstream bridge;
+                        bridge << "[ZONE_BRIDGE] name=embedding ctx=" << static_cast<const void*>(this)
+                               << " tensor_base=" << static_cast<const void*>(m_ggufLoader.get())
+                               << " num_predict=" << pipeReq.numPredict
+                               << "\n";
+                        OutputDebugStringA(bridge.str().c_str());
+                    }
+                    if (!m_ggufLoader)
+                    {
+                        crashTriageBreakIfAttached("[FATAL] zone bridge has null loader pointer\n");
+                    }
                     pipeReq.temperature = m_inferenceConfig.temperature > 0.0f
                                              ? m_inferenceConfig.temperature : 0.7f;
-                    pipeReq.stream      = true;
+                    pipeReq.stream      = !smokeNoStream;
                     // Seed conversation history into messages[] for multi-turn context.
                     {
                         std::lock_guard<std::mutex> hLock(m_outputMutex);
@@ -9408,23 +9451,44 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
                         pipeReq,
                         {
                             // onToken — stream to chat UI (same contract as m_inferenceCallback)
-                            [this](const std::string& token, bool done)
+                            [this, smokeNoUiBinding](const std::string& token, bool done)
                             {
                                 if (m_inferenceStopRequested.load() || isShuttingDown())
                                     return;
+                                {
+                                    std::ostringstream tlog;
+                                    tlog << "[TOKEN] ctx=" << static_cast<const void*>(this)
+                                         << " len=" << token.size()
+                                         << " done=" << (done ? 1 : 0)
+                                         << "\n";
+                                    OutputDebugStringA(tlog.str().c_str());
+                                }
                                 if (!token.empty() && m_inferenceCallback)
                                 {
                                     OutputDebugStringA(("[PIPELINE TOKEN] " + token + "\n").c_str());
                                     m_currentInferenceResponse += token;
-                                    m_inferenceCallback(token, false);
+                                    if (!smokeNoUiBinding)
+                                        m_inferenceCallback(token, false);
+                                }
+                                if (!token.empty() && smokeNoUiBinding)
+                                    m_currentInferenceResponse += token;
+                                if (!token.empty() && !m_inferenceCallback)
+                                {
+                                    crashTriageBreakIfAttached("[FATAL] NULL callback at token dispatch\n");
                                 }
                                 if (done)
                                     OutputDebugStringA("[PIPELINE TOKEN] <done=true>\n");
                             },
                             // onComplete
-                            [this](const std::string& /*accum*/)
+                            [this, smokeNoUiBinding](const std::string& /*accum*/)
                             {
-                                if (m_inferenceCallback)
+                                {
+                                    std::ostringstream elog;
+                                    elog << "[PIPELINE_END] completed=1 tokens=" << m_currentInferenceResponse.size()
+                                         << "\n";
+                                    OutputDebugStringA(elog.str().c_str());
+                                }
+                                if (m_inferenceCallback && !smokeNoUiBinding)
                                     m_inferenceCallback({}, true);
                             },
                             // onError — fail closed for local forced pipeline.
@@ -9452,6 +9516,16 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
 
                 if (!pipelineHandled)
                 {
+                if (!m_agenticBridge)
+                {
+                    if (m_inferenceCallback)
+                    {
+                        m_inferenceCallback("Error: Agentic Bridge unavailable and pipeline path did not complete.",
+                                            true);
+                    }
+                    finishAndScheduleNext();
+                    return;
+                }
                 // Execute via agent bridge (supports /edit, /think, etc.)
                 OutputDebugStringA("[PROBE-B] Calling ExecuteAgentCommand\n");
                 m_agenticBridge->ExecuteAgentCommand(prompt);

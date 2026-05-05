@@ -18,6 +18,9 @@ param(
     [string]$Prompt   = "Say exactly: ready",
     [int]   $MaxTokens = 16,
     [int]   $MinRealTokens = 1,
+    [string]$MatmulKernel = "",
+    [string]$MatmulSpv = "",
+    [switch]$DisableAutopatch,
     [switch]$Strict
 )
 
@@ -83,6 +86,27 @@ New-Item -ItemType Directory -Path $OutDir -Force | Out-Null
 
 # Make sure we are NOT in CPU-fallback mode for this lane.
 Remove-Item Env:\RAWRXD_PARITY_CPU -ErrorAction SilentlyContinue
+
+if ($DisableAutopatch) {
+    $env:RAWRXD_DISABLE_AUTOPATCH = '1'
+    Write-Host "[TUNING] Autopatch disabled (RAWRXD_DISABLE_AUTOPATCH=1)"
+} else {
+    Remove-Item Env:\RAWRXD_DISABLE_AUTOPATCH -ErrorAction SilentlyContinue
+}
+
+if (-not [string]::IsNullOrWhiteSpace($MatmulKernel)) {
+    $env:RAWRXD_VULKAN_MATMUL_KERNEL = $MatmulKernel
+    Write-Host "[TUNING] MatMul kernel key: $MatmulKernel"
+} else {
+    Remove-Item Env:\RAWRXD_VULKAN_MATMUL_KERNEL -ErrorAction SilentlyContinue
+}
+
+if (-not [string]::IsNullOrWhiteSpace($MatmulSpv)) {
+    $env:RAWRXD_VULKAN_MATMUL_SPV = $MatmulSpv
+    Write-Host "[TUNING] MatMul SPV: $MatmulSpv"
+} else {
+    Remove-Item Env:\RAWRXD_VULKAN_MATMUL_SPV -ErrorAction SilentlyContinue
+}
 
 Write-Host "=== GPU preflight ==="
 Write-Host "[PREFLIGHT] inference DLL: $plugin"

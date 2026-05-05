@@ -15,6 +15,35 @@
 using namespace rawrxd::ast::rust;
 using namespace RawrXD::FlowControl;
 
+static void CountNodeKindsRecursive(const RawrXD::AST::ASTNode::Ptr& node,
+                                    int& fnCount,
+                                    int& structCount,
+                                    int& traitCount,
+                                    int& implCount,
+                                    int& anonymousStructCount) {
+    if (!node) return;
+
+    switch (node->getType()) {
+        case RawrXD::AST::NodeType::FunctionDecl:
+            fnCount++;
+            break;
+        case RawrXD::AST::NodeType::StructDecl:
+            structCount++;
+            if (node->getText() == "struct ") anonymousStructCount++;
+            break;
+        case RawrXD::AST::NodeType::ClassDecl:
+            if (node->getText().find("trait") != std::string::npos) traitCount++;
+            else if (node->getText().find("impl") != std::string::npos) implCount++;
+            break;
+        default:
+            break;
+    }
+
+    for (const auto& child : node->getChildren()) {
+        CountNodeKindsRecursive(child, fnCount, structCount, traitCount, implCount, anonymousStructCount);
+    }
+}
+
 // Sample Rust code: small module
 static const char* RUST_SMALL = R"(
 pub mod utils;
@@ -316,27 +345,111 @@ bool TestTokenizer() {
         return false;
     }
     
-    // Check for expected node types
-    int fnCount = 0, structCount = 0, traitCount = 0, implCount = 0;
+    // Check for expected node types, including associated items nested under trait/impl nodes.
+    int fnCount = 0, structCount = 0, traitCount = 0, implCount = 0, anonymousStructCount = 0;
     for (const auto& node : result.nodes) {
-        switch (node->getType()) {
-            case RawrXD::AST::NodeType::FunctionDecl: fnCount++; break;
-            case RawrXD::AST::NodeType::StructDecl: structCount++; break;
-            case RawrXD::AST::NodeType::ClassDecl: 
-                // Traits and impls both map to ClassDecl in current parser
-                if (node->getText().find("trait") != std::string::npos) traitCount++;
-                else if (node->getText().find("impl") != std::string::npos) implCount++;
-                break;
-            default: break;
-        }
+        CountNodeKindsRecursive(node, fnCount, structCount, traitCount, implCount, anonymousStructCount);
     }
     
-    printf("  Functions: %d (expected 3)\n", fnCount);
-    printf("  Structs: %d (expected 1)\n", structCount);
+    printf("  Functions: %d (expected 6 incl. associated methods)\n", fnCount);
+    printf("  Structs: %d (expected 2)\n", structCount);
     printf("  Traits: %d (expected 1)\n", traitCount);
     printf("  Impls: %d (expected 1)\n", implCount);
+    printf("  Anonymous macro structs: %d (expected 0)\n", anonymousStructCount);
     
-    bool pass = (fnCount >= 2) && (structCount >= 1) && (traitCount >= 1);
+    bool pass = (fnCount >= 6) && (structCount >= 2) && (traitCount >= 1)
+             && (implCount >= 1) && (anonymousStructCount == 0);
+    printf("  %s\n", pass ? "PASS" : "FAIL");
+    return pass;
+}
+
+// Test 6: P2 parser hardening — macro-safe skipping + associated method capture
+bool TestParserP2Hardening() {
+    printf("\n[Test] Parser P2 hardening...\n");
+
+    static const char* RUST_P2 = R"(
+macro_rules! define_error {
+    ($name:ident) => {
+        pub struct $name {}
+
+        impl $name {
+            pub fn generated() -> Self {
+                Self {}
+            }
+        }
+    };
+}
+
+define_error!(GeneratedError);
+
+trait Service {
+    fn ping(&self) -> Result<(), Error>;
+    fn ready<T>(&self) -> Result<T, Error>
+    where
+        T: Default;
+}
+
+impl ServiceImpl {
+    pub fn new() -> Self {
+        Self {}
+    }
+
+    pub fn compute<T>(&self, input: T) -> Result<T, Error>
+    where
+        T: Clone + Send,
+    {
+        helper();
+        Ok(input)
+    }
+}
+
+fn helper() {}
+)";
+
+    RustParser parser;
+    rawrxd::ast::SymbolTable symbols;
+    auto result = parser.parse(RUST_P2, "p2.rs", &symbols);
+    if (!result.success) {
+        printf("  Parse failed\n");
+        return false;
+    }
+
+    int fnCount = 0, structCount = 0, traitCount = 0, implCount = 0, anonymousStructCount = 0;
+    for (const auto& node : result.nodes) {
+        CountNodeKindsRecursive(node, fnCount, structCount, traitCount, implCount, anonymousStructCount);
+    }
+
+    size_t traitChildren = 0;
+    size_t implChildren = 0;
+    for (const auto& node : result.nodes) {
+        if (node->getText().find("trait Service") != std::string::npos) {
+            traitChildren = node->getChildren().size();
+        }
+        if (node->getText() == "impl") {
+            implChildren = node->getChildren().size();
+        }
+    }
+
+    auto fromCompute = symbols.callsFrom("compute");
+    bool hasComputeToHelper = false;
+    for (const auto& edge : fromCompute) {
+        if (edge.callee_name == "helper") {
+            hasComputeToHelper = true;
+            break;
+        }
+    }
+
+    printf("  Recursive functions: %d\n", fnCount);
+    printf("  Recursive structs: %d\n", structCount);
+    printf("  Traits: %d, trait children: %zu\n", traitCount, traitChildren);
+    printf("  Impls: %d, impl children: %zu\n", implCount, implChildren);
+    printf("  Anonymous macro structs: %d\n", anonymousStructCount);
+    printf("  compute -> helper edge: %s\n", hasComputeToHelper ? "FOUND" : "MISSING");
+
+    bool pass = (fnCount >= 5) && (traitCount == 1) && (implCount == 1)
+             && (traitChildren >= 2) && (implChildren >= 2)
+             && (structCount == 0) && (anonymousStructCount == 0)
+             && hasComputeToHelper;
     printf("  %s\n", pass ? "PASS" : "FAIL");
     return pass;
 }
@@ -407,7 +520,7 @@ bool TestPerformanceScaling() {
     return pass;
 }
 
-// Test 6: Call graph extraction (v3.3) — with CallKind, resolution, and dead-code detection
+// Test 7: Call graph extraction (v3.3) — with CallKind, resolution, and dead-code detection
 bool TestCallGraph() {
     printf("\n[Test] Call graph extraction...\n");
 
@@ -526,13 +639,14 @@ int main() {
     printf("========================================\n");
 
     int passed = 0;
-    int total = 6;
+    int total = 7;
 
     if (TestParseCorrectness()) passed++;
     if (TestGovernedParsing()) passed++;
     if (TestTokenizer()) passed++;
     if (TestIncrementalParse()) passed++;
     if (TestPerformanceScaling()) passed++;
+    if (TestParserP2Hardening()) passed++;
     if (TestCallGraph()) passed++;
     
     printf("\n========================================\n");

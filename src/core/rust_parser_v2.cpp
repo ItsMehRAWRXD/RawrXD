@@ -87,6 +87,62 @@ struct Cursor {
         i++;
         int depth = 1;
         while (!eof() && depth > 0) {
+            if (peek() == '/' && i + 1 < n && s[i + 1] == '/') {
+                i += 2;
+                while (!eof() && peek() != '\n') i++;
+                continue;
+            }
+
+            if (peek() == '/' && i + 1 < n && s[i + 1] == '*') {
+                i += 2;
+                int commentDepth = 1;
+                while (!eof() && commentDepth > 0) {
+                    if (peek() == '/' && i + 1 < n && s[i + 1] == '*') { commentDepth++; i += 2; }
+                    else if (peek() == '*' && i + 1 < n && s[i + 1] == '/') { commentDepth--; i += 2; }
+                    else i++;
+                }
+                continue;
+            }
+
+            if (peek() == '"') {
+                i++;
+                bool escaped = false;
+                while (!eof()) {
+                    char ch = next();
+                    if (escaped) { escaped = false; continue; }
+                    if (ch == '\\') { escaped = true; continue; }
+                    if (ch == '"') break;
+                }
+                continue;
+            }
+
+            if (peek() == 'r') {
+                size_t start = i;
+                size_t probe = start + 1;
+                while (probe < n && s[probe] == '#') probe++;
+                if (probe < n && s[probe] == '"') {
+                    const size_t hashCount = probe - (start + 1);
+                    i = probe + 1;
+                    while (!eof()) {
+                        if (peek() == '"') {
+                            bool matched = true;
+                            for (size_t k = 0; k < hashCount; ++k) {
+                                if (i + 1 + k >= n || s[i + 1 + k] != '#') {
+                                    matched = false;
+                                    break;
+                                }
+                            }
+                            if (matched) {
+                                i += 1 + hashCount;
+                                break;
+                            }
+                        }
+                        i++;
+                    }
+                    continue;
+                }
+            }
+
             char c = next();
             if (c == open) depth++;
             else if (c == close) depth--;
@@ -160,12 +216,155 @@ struct Cursor {
             skip_ws();
             if (match_kw("async"))   { isAsync = true;  loop = true; }
             else if (match_kw("unsafe")) { isUnsafe = true; loop = true; }
-            else if (match_kw("extern")) { isExtern = true; loop = true; }
+            else if (match_kw("extern")) {
+                isExtern = true;
+                skip_ws();
+                if (peek() == '"') {
+                    i++;
+                    bool escaped = false;
+                    while (!eof()) {
+                        char ch = next();
+                        if (escaped) { escaped = false; continue; }
+                        if (ch == '\\') { escaped = true; continue; }
+                        if (ch == '"') break;
+                    }
+                }
+                loop = true;
+            }
             else if (match_kw("const"))  { isConst = true;  loop = true; }
             else if (match_kw("static")) { isStatic = true; loop = true; }
         }
     }
 };
+
+static bool isIdentStart(char ch) {
+    return std::isalpha(static_cast<unsigned char>(ch)) || ch == '_';
+}
+
+static bool isIdentContinue(char ch) {
+    return std::isalnum(static_cast<unsigned char>(ch)) || ch == '_';
+}
+
+static bool startsWithKeyword(const Cursor& c, const char* kw) {
+    size_t probe = c.i;
+    for (size_t k = 0; kw[k]; ++k) {
+        if (probe >= c.n || c.s[probe] != kw[k]) return false;
+        ++probe;
+    }
+    return probe >= c.n || !isIdentContinue(c.s[probe]);
+}
+
+static void skipUntilTopLevel(Cursor& c,
+                              std::initializer_list<char> stopChars,
+                              std::initializer_list<const char*> stopKeywords = {}) {
+    int parenDepth = 0;
+    int bracketDepth = 0;
+    int braceDepth = 0;
+    int angleDepth = 0;
+
+    while (!c.eof()) {
+        if (parenDepth == 0 && bracketDepth == 0 && braceDepth == 0 && angleDepth == 0) {
+            for (const char* kw : stopKeywords) {
+                if (startsWithKeyword(c, kw)) return;
+            }
+            for (char stop : stopChars) {
+                if (c.peek() == stop) return;
+            }
+        }
+
+        if (c.peek() == '/' && c.i + 1 < c.n && c.s[c.i + 1] == '/') {
+            c.i += 2;
+            while (!c.eof() && c.peek() != '\n') c.i++;
+            continue;
+        }
+        if (c.peek() == '/' && c.i + 1 < c.n && c.s[c.i + 1] == '*') {
+            c.i += 2;
+            int commentDepth = 1;
+            while (!c.eof() && commentDepth > 0) {
+                if (c.peek() == '/' && c.i + 1 < c.n && c.s[c.i + 1] == '*') { commentDepth++; c.i += 2; }
+                else if (c.peek() == '*' && c.i + 1 < c.n && c.s[c.i + 1] == '/') { commentDepth--; c.i += 2; }
+                else c.i++;
+            }
+            continue;
+        }
+        if (c.peek() == '"') {
+            c.skip_block('"', '"');
+            continue;
+        }
+
+        char ch = c.next();
+        if (ch == '(') ++parenDepth;
+        else if (ch == ')' && parenDepth > 0) --parenDepth;
+        else if (ch == '[') ++bracketDepth;
+        else if (ch == ']' && bracketDepth > 0) --bracketDepth;
+        else if (ch == '{') ++braceDepth;
+        else if (ch == '}' && braceDepth > 0) --braceDepth;
+        else if (ch == '<') ++angleDepth;
+        else if (ch == '>' && angleDepth > 0) --angleDepth;
+    }
+}
+
+static bool skipMacroInvocation(Cursor& c) {
+    size_t save = c.i;
+    std::string name = c.ident();
+    if (name.empty()) return false;
+
+    c.skip_ws();
+    while (c.peek() == ':' && c.i + 1 < c.n && c.s[c.i + 1] == ':') {
+        c.i += 2;
+        c.skip_ws();
+        if (c.ident().empty()) {
+            c.i = save;
+            return false;
+        }
+        c.skip_ws();
+    }
+
+    if (c.peek() != '!') {
+        c.i = save;
+        return false;
+    }
+
+    c.i++;
+    c.skip_ws();
+    if (c.peek() == '{') c.skip_block('{', '}');
+    else if (c.peek() == '(') c.skip_block('(', ')');
+    else if (c.peek() == '[') c.skip_block('[', ']');
+    else {
+        c.i = save;
+        return false;
+    }
+
+    c.skip_ws();
+    if (c.peek() == ';') c.i++;
+    return true;
+}
+
+static bool skipMacroRulesDefinition(Cursor& c) {
+    size_t save = c.i;
+    if (!c.match_kw("macro_rules")) return false;
+
+    c.skip_ws();
+    if (c.peek() != '!') {
+        c.i = save;
+        return false;
+    }
+    c.i++;
+    c.skip_ws();
+    c.ident();
+    c.skip_ws();
+
+    if (c.peek() == '{') c.skip_block('{', '}');
+    else if (c.peek() == '(') c.skip_block('(', ')');
+    else {
+        c.i = save;
+        return false;
+    }
+
+    c.skip_ws();
+    if (c.peek() == ';') c.i++;
+    return true;
+}
 
 // ============================================================
 // Call graph scanner (v3.2) — lightweight, string-based, no type resolution
@@ -279,6 +478,104 @@ static ASTNode::Ptr makeNode(NodeType t, const std::string& label, uint32_t fid,
     return node;
 }
 
+static void parseFunctionTail(Cursor& c, size_t& body_start, size_t& body_end) {
+    body_start = 0;
+    body_end = 0;
+
+    c.skip_ws();
+    if (c.peek() == '-' && c.i + 1 < c.n && c.s[c.i + 1] == '>') {
+        c.i += 2;
+        c.skip_ws();
+        skipUntilTopLevel(c, {'{', ';'}, {"where"});
+    }
+
+    c.skip_ws();
+    if (startsWithKeyword(c, "where")) {
+        c.match_kw("where");
+        c.skip_ws();
+        skipUntilTopLevel(c, {'{', ';'});
+    }
+
+    c.skip_ws();
+    if (c.peek() == '{') {
+        body_start = c.i + 1;
+        c.skip_block('{', '}');
+        body_end = c.i - 1;
+    } else if (c.peek() == ';') {
+        c.i++;
+    }
+}
+
+static std::vector<ASTNode::Ptr> parseAssociatedItems(Cursor& c,
+                                                      uint32_t fid,
+                                                      std::string_view file_path,
+                                                      SymbolTable* symbols,
+                                                      const std::string& parent_name = {}) {
+    std::vector<ASTNode::Ptr> children;
+    if (c.peek() != '{') return children;
+
+    c.i++;
+    int depth = 1;
+
+    while (!c.eof() && depth > 0) {
+        c.skip_ws();
+
+        if (c.peek() == '{') { depth++; c.i++; continue; }
+        if (c.peek() == '}') { depth--; c.i++; continue; }
+        if (skipMacroRulesDefinition(c) || skipMacroInvocation(c)) continue;
+
+        const size_t save = c.i;
+
+        RustMeta innerMeta;
+        innerMeta.doc = c.collect_doc();
+        innerMeta.attributes = c.collect_attrs();
+        innerMeta.visibility = c.collect_vis();
+
+        bool isAsync = false, isUnsafe = false, isExtern = false, isConst = false, isStatic = false;
+        c.collect_modifiers(isAsync, isUnsafe, isExtern, isConst, isStatic);
+        innerMeta.is_async = isAsync;
+        innerMeta.is_unsafe = isUnsafe;
+        innerMeta.is_extern = isExtern;
+        innerMeta.is_const = isConst;
+        innerMeta.is_static = isStatic;
+        innerMeta.is_pub = !innerMeta.visibility.empty();
+
+        if (c.match_kw("fn")) {
+            c.skip_ws();
+            std::string name = c.ident();
+
+            c.skip_ws();
+            if (c.peek() == '<') c.skip_block('<', '>');
+            c.skip_ws();
+            if (c.peek() == '(') c.skip_block('(', ')');
+
+            size_t body_start = 0;
+            size_t body_end = 0;
+            parseFunctionTail(c, body_start, body_end);
+
+            std::string label = "fn " + name;
+            if (isAsync) label = "async " + label;
+            if (isUnsafe) label = "unsafe " + label;
+            if (isExtern) label = "extern " + label;
+
+            auto child = makeNode(NodeType::FunctionDecl, label, fid, innerMeta);
+            children.push_back(child);
+
+            if (symbols) {
+                symbols->add({name, std::string(file_path), NodeType::FunctionDecl, child->getRange(), innerMeta, parent_name});
+                if (body_end > body_start) {
+                    extractCallsFromBody(c.s, body_start, body_end, name, symbols);
+                }
+            }
+            continue;
+        }
+
+        c.i = save + 1;
+    }
+
+    return children;
+}
+
 // ============================================================
 // Core parse
 // ============================================================
@@ -316,6 +613,10 @@ RustParseResult RustParser::parse(std::string_view content, std::string_view fil
         meta.is_static = isStatic;
         meta.is_pub = !meta.visibility.empty();
 
+        if (skipMacroRulesDefinition(c) || skipMacroInvocation(c)) {
+            continue;
+        }
+
         // =====================================================
         // FUNCTION (FIX: now always detected)
         // =====================================================
@@ -324,25 +625,15 @@ RustParseResult RustParser::parse(std::string_view content, std::string_view fil
             std::string name = c.ident();
 
             // generics
+            c.skip_ws();
             if (c.peek() == '<') c.skip_block('<','>');
 
             // params
+            c.skip_ws();
             if (c.peek() == '(') c.skip_block('(',')');
 
-            // return
-            c.skip_ws();
-            if (c.peek() == '-' && c.i+1 < c.n && c.s[c.i+1] == '>') {
-                c.i += 2;
-                while (!c.eof() && c.peek()!='{' && c.peek()!=';') c.i++;
-            }
-
-            // body / ;
             size_t body_start = 0, body_end = 0;
-            if (c.peek() == '{') {
-                body_start = c.i + 1;
-                c.skip_block('{','}');
-                body_end = c.i - 1;
-            } else if (c.peek() == ';') c.i++;
+            parseFunctionTail(c, body_start, body_end);
 
             std::string label = "fn " + name;
             if (isAsync) label = "async " + label;
@@ -368,7 +659,9 @@ RustParseResult RustParser::parse(std::string_view content, std::string_view fil
             c.skip_ws();
             std::string name = c.ident();
 
+            c.skip_ws();
             if (c.peek() == '<') c.skip_block('<','>');
+            c.skip_ws();
             if (c.peek() == '{') c.skip_block('{','}');
             else if (c.peek() == '(') c.skip_block('(',')');
 
@@ -388,13 +681,21 @@ RustParseResult RustParser::parse(std::string_view content, std::string_view fil
             c.skip_ws();
             std::string name = c.ident();
 
+            c.skip_ws();
             if (c.peek() == '<') c.skip_block('<','>');
+            c.skip_ws();
             if (c.peek() == ':') {
-                while (!c.eof() && c.peek()!='{') c.i++;
+                c.i++;
+                skipUntilTopLevel(c, {'{'});
             }
-            if (c.peek() == '{') c.skip_block('{','}');
+            c.skip_ws();
+
+            auto children = parseAssociatedItems(c, fid, file_path, symbols, name);
 
             auto node = makeNode(NodeType::ClassDecl, "trait " + name, fid, meta);
+            if (!children.empty()) {
+                node = node->withChildren(std::move(children));
+            }
             nodes.push_back(node);
 
             if (symbols) {
@@ -410,6 +711,7 @@ RustParseResult RustParser::parse(std::string_view content, std::string_view fil
             c.skip_ws();
             std::string name = c.ident();
 
+            c.skip_ws();
             if (c.peek() == '{') c.skip_block('{','}');
 
             auto node = makeNode(NodeType::EnumDecl, "enum " + name, fid, meta);
@@ -429,78 +731,13 @@ RustParseResult RustParser::parse(std::string_view content, std::string_view fil
 
             if (c.peek() == '<') c.skip_block('<','>');
 
-            // skip header
-            while (!c.eof() && c.peek()!='{') c.i++;
+            skipUntilTopLevel(c, {'{'});
 
-            std::vector<ASTNode::Ptr> children;
-            std::string implParent; // for symbol table parent tracking
-
-            if (c.peek() == '{') {
-                c.i++;
-                int depth = 1;
-
-                while (!c.eof() && depth > 0) {
-                    c.skip_ws();
-
-                    if (c.peek() == '{') { depth++; c.i++; continue; }
-                    if (c.peek() == '}') { depth--; c.i++; continue; }
-
-                    // ---- inner fn detection (CRITICAL FIX)
-                    size_t save = c.i;
-
-                    // inner metadata
-                    RustMeta innerMeta;
-                    innerMeta.doc = c.collect_doc();
-                    innerMeta.attributes = c.collect_attrs();
-                    innerMeta.visibility = c.collect_vis();
-
-                    bool a=false,u=false,e=false,co=false,st=false;
-                    c.collect_modifiers(a, u, e, co, st);
-                    innerMeta.is_async = a;
-                    innerMeta.is_unsafe = u;
-                    innerMeta.is_extern = e;
-                    innerMeta.is_const = co;
-                    innerMeta.is_static = st;
-                    innerMeta.is_pub = !innerMeta.visibility.empty();
-
-                    if (c.match_kw("fn")) {
-                        c.skip_ws();
-                        std::string name = c.ident();
-
-                        if (c.peek() == '<') c.skip_block('<','>');
-                        if (c.peek() == '(') c.skip_block('(',')');
-
-                        size_t inner_body_start = 0, inner_body_end = 0;
-                        if (c.peek() == '{') {
-                            inner_body_start = c.i + 1;
-                            c.skip_block('{','}');
-                            inner_body_end = c.i - 1;
-                        } else if (c.peek() == ';') c.i++;
-
-                        std::string label = "fn " + name;
-                        if (a) label = "async " + label;
-                        if (u) label = "unsafe " + label;
-                        if (e) label = "extern " + label;
-
-                        auto child = makeNode(NodeType::FunctionDecl, label, fid, innerMeta);
-                        children.push_back(child);
-
-                        if (symbols) {
-                            symbols->add({name, std::string(file_path), NodeType::FunctionDecl, child->getRange(), innerMeta, implParent});
-                            if (inner_body_end > inner_body_start) {
-                                extractCallsFromBody(c.s, inner_body_start, inner_body_end, name, symbols);
-                            }
-                        }
-                        continue;
-                    }
-
-                    c.i = save + 1; // forward progress guarantee
-                }
-            }
+            auto children = parseAssociatedItems(c, fid, file_path, symbols);
 
             auto implNode = makeNode(NodeType::ClassDecl, "impl", fid, meta);
             if (!children.empty()) {
-                implNode = implNode->withChildren(children);
+                implNode = implNode->withChildren(std::move(children));
             }
             nodes.push_back(implNode);
             continue;

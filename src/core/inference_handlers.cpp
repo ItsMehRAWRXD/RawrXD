@@ -34,7 +34,12 @@
 #include "../gguf_loader.h"
 #include "../inference/ultra_fast_inference.h"
 #include "../inference/autonomous_inference.h"  // AutonomousInferenceEngine
+#include "../layer_offload_manager.hpp"
+#include "../gpu_enforcement.h"
 
+#include <algorithm>
+#include <cstdlib>
+#include <filesystem>
 #include <string>
 #include <vector>
 #include <mutex>
@@ -50,6 +55,26 @@ using namespace RawrXD;
 // ============================================================================
 
 namespace {
+
+bool parseEnvInt(const char* name, int minValue, int maxValue, int& outValue) {
+    if (!name || !name[0]) {
+        return false;
+    }
+    const char* raw = std::getenv(name);
+    if (!raw || !raw[0]) {
+        return false;
+    }
+    char* end = nullptr;
+    long parsed = std::strtol(raw, &end, 10);
+    if (end == raw || (end && *end != '\0')) {
+        return false;
+    }
+    if (parsed < minValue || parsed > maxValue) {
+        return false;
+    }
+    outValue = static_cast<int>(parsed);
+    return true;
+}
 
 struct InferenceState {
     std::mutex                                  mtx;
@@ -334,9 +359,66 @@ CommandResult handleInferenceLoadRun(const CommandContext& ctx) {
         inference::AutonomousInferenceEngine::InferenceConfig config;
         config.max_batch_size = 1;
         config.ctx_size = state.contextSize;
-        // GPU inference is mandatory across IDE/CLI/Model. 999 mirrors llama.cpp's
-        // "-ngl 999" sentinel for full offload; the runtime clamps to layer count.
-        config.n_gpu_layers = 999;
+        // GPU inference remains mandatory, but full offload can be unstable for
+        // larger models on fixed-VRAM cards. Use env override first, then fall
+        // back to an empirical layer split derived from model metadata.
+        int selectedGpuLayers = 999;
+        bool hasEnvOverride = parseEnvInt("RAWRXD_N_GPU_LAYERS", 1, 999, selectedGpuLayers)
+            || parseEnvInt("RAWRXD_GPU_LAYERS", 1, 999, selectedGpuLayers);
+        if (!hasEnvOverride) {
+            uint64_t vramBytes = rxd::gpu::status().vram_total_bytes;
+            if (vramBytes == 0) {
+                vramBytes = 16ULL * 1024 * 1024 * 1024;
+            }
+
+            MEMORYSTATUSEX memstat{};
+            memstat.dwLength = sizeof(memstat);
+            uint64_t sysRAM = GlobalMemoryStatusEx(&memstat) ? memstat.ullTotalPhys : 0;
+
+            const uint32_t layers = meta.layer_count;
+            const uint32_t kvHeads = (meta.head_count_kv > 0) ? meta.head_count_kv : meta.head_count;
+            const uint32_t headDim = (meta.embedding_dim > 0 && meta.head_count > 0)
+                ? (meta.embedding_dim / meta.head_count)
+                : 128;
+            const uint32_t ctxLen = (state.contextSize > 0)
+                ? static_cast<uint32_t>(state.contextSize)
+                : ((meta.context_length > 0) ? meta.context_length : 4096);
+
+            if (layers > 0 && kvHeads > 0) {
+                const std::error_code ec;
+                const uint64_t fileSize = static_cast<uint64_t>(std::filesystem::file_size(modelPath, ec));
+                if (!ec && fileSize > 0) {
+                    const auto split = RawrXD::computeOptimalGPULayers(
+                        fileSize,
+                        layers,
+                        kvHeads,
+                        headDim,
+                        ctxLen,
+                        vramBytes,
+                        sysRAM);
+                    selectedGpuLayers = std::max(1, std::min(999, static_cast<int>(split.gpuLayers)));
+
+                    char splitInfo[256];
+                    std::snprintf(splitInfo,
+                                  sizeof(splitInfo),
+                                  "[INFERENCE] Auto GPU layer split selected: %d/%u (stable=%s, est tg128=%.1f t/s)\n",
+                                  selectedGpuLayers,
+                                  split.totalLayers,
+                                  split.stable ? "YES" : "NO",
+                                  split.estGenerateTps);
+                    ctx.output(splitInfo);
+                }
+            }
+        } else {
+            char envInfo[128];
+            std::snprintf(envInfo,
+                          sizeof(envInfo),
+                          "[INFERENCE] Using RAWRXD_*_GPU_LAYERS override: %d\n",
+                          selectedGpuLayers);
+            ctx.output(envInfo);
+        }
+
+        config.n_gpu_layers = selectedGpuLayers;
         config.flash_attention = false;
         
         auto engine = std::make_unique<inference::UltraFastInferenceEngine>(config);

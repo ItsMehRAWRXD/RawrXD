@@ -10,6 +10,8 @@
 #include <cstring>
 #include <string>
 
+extern "C" void ModelBridge_LoadModel(const char* path);
+
 namespace {
 
 // Global AI state (mirrors auto_feature_registry.cpp)
