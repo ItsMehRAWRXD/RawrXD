@@ -56,6 +56,11 @@ namespace RawrXD
 struct DownloadProgress;
 }  // namespace RawrXD
 #include "../../include/plugin_system/win32_plugin_loader.h"
+#include "../../include/slash_router.h"
+#include "../autonomous_feature_engine.h"
+#include "../autonomous_feature_engine.h"
+#include "../autonomous_intelligence_orchestrator.h"
+#include "../autonomous_model_manager.h"
 #include "../agentic/agent_controller_minimal.h"
 #include "../full_agentic_ide/FullAgenticIDE.h"
 #include "../gguf_loader.h"
@@ -71,6 +76,7 @@ struct DownloadProgress;
 #include "PendingEditReview.h"
 #include "TransparentRenderer.h"
 #include "Win32IDE_AgenticBridge.h"
+#include "Win32IDE_AgenticIntegration.h"
 #include "Win32IDE_Autonomy.h"
 #include "Win32IDE_IRCBridge.h"
 #include "Win32IDE_SubAgent.h"
@@ -348,6 +354,14 @@ class Win32IDE
         DebugConsole = 3
     };
 
+    enum class ExecutionMode
+    {
+        Safe = 0,       // Shadow mode: propose only, no auto-apply
+        Normal = 1,     // Standard: apply after user confirmation
+        Unsafe = 2,     // Direct apply: no confirmation, auto-execute
+        Kernel = 3      // System-level: requires explicit compile-time gate
+    };
+
     // ---- Hybrid completion result (moved here to fix forward-reference) ----
     struct HybridCompletionItem
     {
@@ -391,6 +405,21 @@ class Win32IDE
     WNDPROC getOldTabBarProc() const { return m_oldTabBarProc; }
     const std::string& getProjectRoot() const { return m_projectRoot; }
     const std::string& getCurrentDirectory() const { return m_currentDirectory; }
+
+    // AST Context Extractor accessors
+    std::string getActiveFilePath() const;
+    uint64_t getCursorLine() const;
+    std::string getActiveFileLanguage() const;
+    std::string getActiveModelName() const;
+    uint64_t getActiveModelParameterCount() const;
+    uint64_t getActiveModelContextWindow() const;
+
+    // Execution mode accessors
+    ExecutionMode getExecutionMode() const { return m_executionMode; }
+    void setExecutionMode(ExecutionMode mode) { m_executionMode = mode; updateExecutionModeStatusBar(); }
+    std::string getExecutionModeLabel() const;
+    void updateExecutionModeStatusBar();
+
     void refreshWorkspaceSymbolPickerResults(const std::string& queryUtf8);
     void jumpToWorkspaceSymbolPickerResult(const std::string& filePath, uint32_t line1Based);
     /// Canonical workspace directory for repo-relative paths and `.rawrxd/` artifacts (matches Help metrics export).
@@ -399,8 +428,44 @@ class Win32IDE
     // Agentic Framework — Full Agentic IDE owns the bridge (single entry point: src/full_agentic_ide/)
     std::unique_ptr<full_agentic_ide::FullAgenticIDE> m_fullAgenticIDE;
     AgenticBridge* m_agenticBridge = nullptr;                      // Non-owning; set from m_fullAgenticIDE->getBridge()
+    std::unique_ptr<Win32IDE_AgenticIntegration> m_agenticIntegration; // Execution safety + patch + verification layer
     std::unique_ptr<RawrXD::PlanOrchestrator> m_planOrchestrator;  // Autonomous task planning and execution
+    std::unique_ptr<AutonomousFeatureEngine> m_autonomousFeatureEngine;
+    std::unique_ptr<RawrXD::AutonomousIntelligenceOrchestrator> m_autonomousOrchestrator;
+    std::unique_ptr<RawrXD::AutonomousModelManager> m_autonomousModelManager;
     bool m_multiAgentEnabled = false;                              // Multi-agent orchestration toggle
+    // (Removed: std::unique_ptr<SlashRouter> m_slashRouter — replaced by free
+    //  RawrXD::SlashRouter namespace in Win32IDE_Commands.cpp.)
+    void initializeAutonomousSystems();
+    void UpdateAutonomyStatus();
+    
+    // Unified Command Router Methods
+    // Nested LSP completion item used by the Win32IDE pipeline (do not confuse
+    // with ::LSPCompletionItem in agentic/lsp/LSPClient.hpp).
+    struct LSPCompletionItem
+    {
+        std::string label;
+        std::string detail;
+        std::string insertText;
+        int kind = 0;
+        bool isSnippet = false;
+    };
+    // Compile-fix shims for code added in the Unified Command Router merge.
+    // Definitions live in Win32IDE_Core.cpp.
+    void SetStatusBarText(int part, const std::wstring& text);
+    void AppendChatMessage(const std::string& msg);
+    // Public wrapper so free static command-handlers can dismiss ghost text
+    // without violating private access on dismissGhostText().
+    void dismissGhostTextPublic() { dismissGhostText(); }
+    void RequestLspCompletion();
+    void OnLspCompletionReceived(const std::vector<LSPCompletionItem>& items);
+    void CheckSystemHealth();
+    void StartAutonomousAgent(const char* task);
+    void StopAutonomousAgent();
+    void QueryAutonomousAgent(const char* query);
+    void ExecuteSlashCommand(const char* command);
+    void OnChatSubmit(const std::string& text);
+    
     void initializeAgenticBridge();
     bool ensureAgenticBridgeHasModel(const std::string& path);
     void initializeAutonomy();
@@ -1895,6 +1960,8 @@ class Win32IDE
     static const UINT WM_PENDING_CHAT_REPLAY = WM_APP + 303;
     /// Posted by onModelReadyUnified(). Replay is only triggered from this handler.
     static const UINT WM_SAFE_TO_REPLAY = WM_APP + 309;
+    /// Posted by restoreSession() to defer startup model restore until UI create pipeline has returned.
+    static const UINT WM_STARTUP_RESTORE_MODEL = WM_APP + 310;
     /// Posted after chat throughput gauges update so status bar can show ~t/s est (safe from worker threads).
     static const UINT WM_STATUSBAR_REFRESH_COPILOT = WM_APP + 308;
 
@@ -1912,14 +1979,16 @@ class Win32IDE
     void initModelSubsystems();
 
   private:
-    std::mutex m_asyncModelLoadMutex;
+    mutable std::mutex m_asyncModelLoadMutex;
     bool m_asyncModelLoadRunning = false;
 
     std::string m_pendingChatOnLoadMessage;            // queued chat sent while model was loading
     bool m_pendingChatOnLoadUserTurnRendered = false;  // chat UI already rendered queued user turn
+    std::string m_pendingStartupRestoreModelPath;
 
     // AI Inference State
     InferenceConfig m_inferenceConfig;
+    ExecutionMode m_executionMode = ExecutionMode::Safe;  // Default to safe mode
     std::atomic<bool> m_inferenceRunning{false};
     std::atomic<bool> m_inferenceStopRequested{false};
     std::string m_currentInferencePrompt;
@@ -2118,6 +2187,9 @@ class Win32IDE
     std::vector<std::string> m_recentFiles;
     static const size_t MAX_RECENT_FILES = 10;
     std::string m_currentDirectory;
+    std::string m_activeFilePath;
+    uint64_t m_cursorLine = 0;
+    std::string m_activeFileLanguage = "cpp";
     std::string m_defaultFileExtension;
     bool m_autoSaveEnabled;
     AutoSaveMode m_autoSaveMode = AutoSaveMode::Off;
@@ -3900,15 +3972,6 @@ class Win32IDE
         std::string contents;  // Markdown hover text
         LSPRange range;        // Range the hover applies to
         bool valid = false;
-    };
-
-    struct LSPCompletionItem
-    {
-        std::string label;
-        std::string detail;
-        std::string insertText;
-        int kind = 0;
-        bool isSnippet = false;
     };
 
     struct LSPSignatureHelpInfo
@@ -7208,6 +7271,25 @@ class Win32IDE
     bool isModelDiscoveryEnabled() const;
     void setModelDiscoveryPaths(const std::vector<std::string>& paths);
     std::vector<std::string> getModelDiscoveryPaths() const;
+
+    // Output-pane startup banner (extensions + local model surface)
+    void emitStartupBanner();
+    void logModelRequestUsage(const std::string& modelId,
+                              size_t promptTokens,
+                              size_t completionTokens,
+                              double durationMs);
+    bool m_startupBannerEmitted = false;
+
+    // Slash command router (25 parity-validated commands)
+    std::string processSlashCommand(const std::string& input);
+    std::string makeParityItem(const std::string& cmdLine);
+
+    // KV-Cache management (memory leak prevention)
+    void beginInferenceSession();
+    void endInferenceSession();
+    void updateKVCacheSeqLen(uint32_t len);
+    uint32_t getKVCacheSeqLen() const;
+    void forceKVCacheCleanup();
 
     // Enterprise Stress Tests
     void initEnterpriseStressTests();
