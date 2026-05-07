@@ -142,6 +142,7 @@ class AgentToolHandlers
     static ToolCallResult DiskRecovery(const nlohmann::json& args);
     static ToolCallResult GenerateImage(const nlohmann::json& args);
     static ToolCallResult GenerateVideo(const nlohmann::json& args);
+    static ToolCallResult EscalateToSwarm(const nlohmann::json& args);
 
     // ---- Schema generation (OpenAI function-calling format) ----
     static nlohmann::json GetAllSchemas();
