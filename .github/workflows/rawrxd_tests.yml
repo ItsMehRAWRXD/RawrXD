@@ -24,8 +24,6 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      with:
-        submodules: recursive
     
     - name: Install dependencies
       run: |
@@ -98,8 +96,6 @@ jobs:
 
     - name: Checkout code
       uses: actions/checkout@v4
-      with:
-        submodules: recursive
     
     - name: Install Catch2
       run: |
@@ -139,8 +135,6 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      with:
-        submodules: recursive
     
     - name: Install dependencies
       run: brew install cmake ninja catch2
