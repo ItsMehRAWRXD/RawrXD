@@ -5656,6 +5656,37 @@ json AgentToolHandlers::GetAllSchemas()
     gv["function"] = gv_f;
     tools.push_back(gv);
 
+    // escalate_to_swarm - Structural escape hatch for model reasoning limits
+    json ets = json::object();
+    ets["type"] = "function";
+    json ets_f = json::object();
+    ets_f["name"] = "escalate_to_swarm";
+    ets_f["description"] = "Escalate to a swarm of models or switch backends when current model hits reasoning limits. Provides context-aware multi-model routing and parallel task distribution.";
+    json ets_p = json::object();
+    ets_p["type"] = "object";
+    json ets_prop = json::object();
+    json ets_reason = json::object();
+    ets_reason["type"] = "string";
+    ets_reason["description"] = "Detailed explanation of why escalation is needed (e.g. 'Context limit reached', 'MASM expertise required', 'Requires model specialization')";
+    json ets_task = json::object();
+    ets_task["type"] = "string";
+    ets_task["description"] = "Specific sub-problem to hand off to the swarm";
+    json ets_model = json::object();
+    ets_model["type"] = "string";
+    ets_model["description"] = "Preferred backend model hint (e.g. 'codestral' for asm, 'gpt-4o' for reasoning, 'llamacpp-local')";
+    json ets_subtasks = json::object();
+    ets_subtasks["type"] = "integer";
+    ets_subtasks["description"] = "Number of parallel subtask instances to fan-out (1-16, default 1)";
+    ets_prop["reason"] = ets_reason;
+    ets_prop["task"] = ets_task;
+    ets_prop["preferred_model"] = ets_model;
+    ets_prop["subtask_count"] = ets_subtasks;
+    ets_p["properties"] = ets_prop;
+    ets_p["required"] = jstrArr({"reason", "task"});
+    ets_f["parameters"] = ets_p;
+    ets["function"] = ets_f;
+    tools.push_back(ets);
+
     // swebench_autonomous_eval
     json sae = json::object();
     sae["type"] = "function";
@@ -5853,6 +5884,45 @@ json AgentToolHandlers::GetAllSchemas()
     tools.push_back(hs);
 
     // Merge collaboration tool schemas
+    
+        // escalate_to_swarm — Structural escape hatch for agent reasoning limits
+        json ets = json::object();
+        ets["type"] = "function";
+        json ets_f = json::object();
+        ets_f["name"] = "escalate_to_swarm";
+        ets_f["description"] = "Structural escape hatch: escalate to swarm when reasoning limits hit. "
+            "Allows self-detection of model capability gaps (context saturation, architecture mismatch) "
+            "and request swarm fan-out + model switch. Used by: primary agent when stuck; orchestrator routes "
+            "swarm spawn, model switch, and result merging. Aliases: model_escalate, escalate_model_switch.";
+        json ets_p = json::object();
+        ets_p["type"] = "object";
+        json ets_prop = json::object();
+        json ets_reason = json::object();
+        ets_reason["type"] = "string";
+        ets_reason["description"] = "Why the current model is stuck (e.g. 'Architecture mismatch', "
+            "'Context saturation', 'Repeated failures', 'Specialized requirement'). Required.";
+        json ets_task = json::object();
+        ets_task["type"] = "string";
+        ets_task["description"] = "The task or subtask description to escalate for swarm processing. Required. "
+            "This is handed to subordinate agents or the preferred_model for parallel execution.";
+        json ets_model = json::object();
+        ets_model["type"] = "string";
+        ets_model["description"] = "Optional preferred backend/model (e.g. 'codestral', 'gpt-4o', '70b-q4'). "
+            "If set, orchestrator switches backend before spawning swarm. Omit to use current model.";
+        json ets_count = json::object();
+        ets_count["type"] = "integer";
+        ets_count["description"] = "Breadth of swarm fan-out (1-16 subtasks, default 1). "
+            "1 = sequential escalation for specialist model; >1 = parallel fan-out via orchestrator.";
+        ets_prop["reason"] = ets_reason;
+        ets_prop["task"] = ets_task;
+        ets_prop["preferred_model"] = ets_model;
+        ets_prop["subtask_count"] = ets_count;
+        ets_p["properties"] = ets_prop;
+        ets_p["required"] = jstrArr({"reason", "task"});
+        ets_f["parameters"] = ets_p;
+        ets["function"] = ets_f;
+        tools.push_back(ets);
+    
     {
         json collabSchemas = CollabToolHandlers::GetAllSchemas();
         for (auto& s : collabSchemas)
@@ -6889,6 +6959,43 @@ ToolCallResult AgentToolHandlers::GenerateVideo(const nlohmann::json& args)
     return ToolCallResult::Ok(rendered->mp4Created ? rendered->mp4Path.string() : rendered->framesDir.string(), meta);
 }
 
+// ============================================================================
+// EscalateToSwarm — Structural escape hatch for model reasoning limits
+// ============================================================================
+ToolCallResult AgentToolHandlers::EscalateToSwarm(const nlohmann::json& args)
+{
+    const std::string reason = TrimAscii(args.value("reason", std::string()));
+    const std::string task = TrimAscii(args.value("task", std::string()));
+    const std::string preferredModel = args.value("preferred_model", std::string());
+    const int subtaskCount = args.value("subtask_count", 1);
+
+    if (reason.empty() || task.empty())
+    {
+        return ToolCallResult::Validation("escalate_to_swarm requires non-empty 'reason' and 'task'");
+    }
+
+    if (subtaskCount < 1 || subtaskCount > 16)
+    {
+        return ToolCallResult::Validation("escalate_to_swarm 'subtask_count' must be between 1 and 16");
+    }
+
+    // Generate unique session ID for swarm tracking
+    const auto now = std::chrono::system_clock::now();
+    const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
+    const std::string sessionId = "swarm_" + std::to_string(ms) + "_" + std::to_string(std::rand() % 100000);
+
+    json result = json::object();
+    result["status"] = "escalated";
+    result["session_id"] = sessionId;
+    result["reason"] = reason;
+    result["task"] = task;
+    result["preferred_model"] = preferredModel;
+    result["subtask_count"] = subtaskCount;
+    result["timestamp"] = std::to_string(ms);
+
+    return ToolCallResult::Ok(sessionId, result);
+}
+
 void AgentToolHandlers::InitializeDispatchTable()
 {
     m_dispatchTable["read_file"] = ToolReadFile;
@@ -6981,6 +7088,9 @@ void AgentToolHandlers::InitializeDispatchTable()
     m_dispatchTable["disk_recovery"]        = DiskRecovery;
     m_dispatchTable["generate_image"]       = GenerateImage;
     m_dispatchTable["generate_video"]       = GenerateVideo;
+    m_dispatchTable["escalate_to_swarm"]    = EscalateToSwarm;
+    m_dispatchTable["model_escalate"]       = EscalateToSwarm;  // Alias
+    m_dispatchTable["escalate_model_switch"]= EscalateToSwarm;  // Alias
 
     // Collaboration tools (Live Share, shared terminals, pair programming AI)
     m_dispatchTable["collab_host_session"]     = CollabToolHandlers::HostSession;
