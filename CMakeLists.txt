@@ -5425,6 +5425,58 @@ if(WIN32)
     #     add_dependencies(RawrXD-Win32IDE re_model_reverse)
     #     target_link_libraries(RawrXD-Win32IDE PRIVATE ${RE_MODEL_OBJECTS})
     # endif()
+
+    # =========================================================================
+    # Runtime Plugin & Library Staging
+    # =========================================================================
+    # Stage ServeInference plugin if available
+    if(TARGET RawrXD-ServeInference)
+        add_dependencies(RawrXD-Win32IDE RawrXD-ServeInference)
+        add_custom_command(TARGET RawrXD-Win32IDE POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different 
+                    $<TARGET_FILE:RawrXD-ServeInference>
+                    $<TARGET_FILE_DIR:RawrXD-Win32IDE>
+            COMMENT "[Win32IDE] Staging RawrXD-ServeInference plugin"
+            VERBATIM
+        )
+    endif()
+
+    # Stage GGML/Llama runtime DLLs for GPU inference support (Vulkan backend)
+    # These DLLs provide the backend inference engine that Win32IDE invokes at runtime.
+    # Source: local llama.cpp build (D:\llama.cpp\build\bin) or custom GGML_BIN_DIR override.
+    if(NOT DEFINED GGML_BIN_DIR)
+        # Auto-detect: check D: first (staging branch), then C: (development)
+        if(EXISTS "D:/llama.cpp/build/bin/ggml.dll")
+            set(GGML_BIN_DIR "D:/llama.cpp/build/bin")
+        elseif(EXISTS "C:/llama.cpp/build/bin/ggml.dll")
+            set(GGML_BIN_DIR "C:/llama.cpp/build/bin")
+        endif()
+    endif()
+    
+    if(DEFINED GGML_BIN_DIR AND EXISTS "${GGML_BIN_DIR}")
+        set(_GGML_DLLS
+            "ggml.dll"
+            "ggml-base.dll"
+            "ggml-cpu.dll"
+            "ggml-vulkan.dll"
+            "llama.dll"
+        )
+        foreach(_dll ${_GGML_DLLS})
+            set(_dll_src "${GGML_BIN_DIR}/${_dll}")
+            if(EXISTS "${_dll_src}")
+                add_custom_command(TARGET RawrXD-Win32IDE POST_BUILD
+                    COMMAND ${CMAKE_COMMAND} -E copy_if_different 
+                            "${_dll_src}"
+                            "$<TARGET_FILE_DIR:RawrXD-Win32IDE>"
+                    COMMENT "[Win32IDE] Staging ${_dll} for GPU inference support"
+                    VERBATIM
+                )
+            endif()
+        endforeach()
+        message(STATUS "[Win32IDE] GGML DLL staging enabled from ${GGML_BIN_DIR}")
+    else()
+        message(WARNING "[Win32IDE] GGML DLL source not found. Set -DGGML_BIN_DIR=<path> to stage backend DLLs manually.")
+    endif()
     
     target_include_directories(RawrXD-Win32IDE PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
