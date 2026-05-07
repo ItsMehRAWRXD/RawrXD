@@ -5443,14 +5443,44 @@ if(WIN32)
 
     # Stage GGML/Llama runtime DLLs for GPU inference support (Vulkan backend)
     # These DLLs provide the backend inference engine that Win32IDE invokes at runtime.
-    # Source: local llama.cpp build (D:\llama.cpp\build\bin) or custom GGML_BIN_DIR override.
-    if(NOT DEFINED GGML_BIN_DIR)
-        # Auto-detect: check D: first (staging branch), then C: (development)
-        if(EXISTS "D:/llama.cpp/build/bin/ggml.dll")
-            set(GGML_BIN_DIR "D:/llama.cpp/build/bin")
-        elseif(EXISTS "C:/llama.cpp/build/bin/ggml.dll")
-            set(GGML_BIN_DIR "C:/llama.cpp/build/bin")
+    # Resolution order is CI-first, then local-machine fallbacks.
+    if(NOT DEFINED GGML_BIN_DIR OR GGML_BIN_DIR STREQUAL "")
+        set(_GGML_BIN_CANDIDATES)
+
+        # Explicit overrides (recommended for CI).
+        if(DEFINED ENV{GGML_BIN_DIR} AND NOT "$ENV{GGML_BIN_DIR}" STREQUAL "")
+            list(APPEND _GGML_BIN_CANDIDATES "$ENV{GGML_BIN_DIR}")
         endif()
+        if(DEFINED ENV{GGML_SDK_PATH} AND NOT "$ENV{GGML_SDK_PATH}" STREQUAL "")
+            list(APPEND _GGML_BIN_CANDIDATES "$ENV{GGML_SDK_PATH}")
+            list(APPEND _GGML_BIN_CANDIDATES "$ENV{GGML_SDK_PATH}/bin")
+        endif()
+        if(DEFINED ENV{LLAMA_CPP_BUILD_BIN} AND NOT "$ENV{LLAMA_CPP_BUILD_BIN}" STREQUAL "")
+            list(APPEND _GGML_BIN_CANDIDATES "$ENV{LLAMA_CPP_BUILD_BIN}")
+        endif()
+
+        # GitHub Actions-friendly guesses.
+        if(DEFINED ENV{GITHUB_WORKSPACE} AND NOT "$ENV{GITHUB_WORKSPACE}" STREQUAL "")
+            list(APPEND _GGML_BIN_CANDIDATES "$ENV{GITHUB_WORKSPACE}/llama.cpp/build/bin")
+            list(APPEND _GGML_BIN_CANDIDATES "$ENV{GITHUB_WORKSPACE}/../llama.cpp/build/bin")
+            list(APPEND _GGML_BIN_CANDIDATES "$ENV{GITHUB_WORKSPACE}/external/llama.cpp/build/bin")
+        endif()
+
+        # Local-machine fallbacks.
+        list(APPEND _GGML_BIN_CANDIDATES
+            "D:/llama.cpp/build/bin"
+            "C:/llama.cpp/build/bin"
+            "${CMAKE_SOURCE_DIR}/llama.cpp/build/bin"
+            "${CMAKE_SOURCE_DIR}/external/llama.cpp/build/bin"
+        )
+
+        foreach(_ggml_candidate ${_GGML_BIN_CANDIDATES})
+            if(EXISTS "${_ggml_candidate}/ggml.dll" AND EXISTS "${_ggml_candidate}/llama.dll")
+                set(GGML_BIN_DIR "${_ggml_candidate}")
+                break()
+            endif()
+        endforeach()
+        unset(_GGML_BIN_CANDIDATES)
     endif()
     
     if(DEFINED GGML_BIN_DIR AND EXISTS "${GGML_BIN_DIR}")
@@ -5475,7 +5505,7 @@ if(WIN32)
         endforeach()
         message(STATUS "[Win32IDE] GGML DLL staging enabled from ${GGML_BIN_DIR}")
     else()
-        message(WARNING "[Win32IDE] GGML DLL source not found. Set -DGGML_BIN_DIR=<path> to stage backend DLLs manually.")
+        message(STATUS "[Win32IDE] GGML DLL source not found; continuing without runtime staging. Set GGML_BIN_DIR/GGML_SDK_PATH env var or -DGGML_BIN_DIR=<path> to enable staging.")
     endif()
     
     target_include_directories(RawrXD-Win32IDE PRIVATE
