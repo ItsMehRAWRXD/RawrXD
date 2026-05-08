@@ -780,6 +780,14 @@ void Win32IDE::loadSession()
 void Win32IDE::restoreSession()
 {
     LOG_INFO("Restoring IDE session...");
+    {
+        std::ostringstream os;
+        os << "[SessionRestore] begin tid=" << GetCurrentThreadId()
+           << " hwndMain=" << static_cast<const void*>(m_hwndMain)
+           << " outputTabs=" << static_cast<const void*>(m_hwndOutputTabs)
+           << " deferredInitShuttingDown=" << (isShuttingDown() ? 1 : 0) << "\n";
+        OutputDebugStringA(os.str().c_str());
+    }
 
     char disableRestore[16] = {};
     const DWORD disableRestoreLen = GetEnvironmentVariableA("RAWRXD_DISABLE_SESSION_RESTORE", disableRestore,
@@ -844,18 +852,27 @@ void Win32IDE::restoreSession()
         {
             bool restoredModel = false;
             DWORD modelAttrs = GetFileAttributesA(savedModelPath.c_str());
+            {
+                std::ostringstream os;
+                os << "[SessionRestore] model candidate path='" << savedModelPath << "' attrs=0x" << std::hex
+                   << static_cast<unsigned long>(modelAttrs) << std::dec
+                   << " exists=" << ((modelAttrs != INVALID_FILE_ATTRIBUTES) ? 1 : 0)
+                   << " isDir=" << ((modelAttrs != INVALID_FILE_ATTRIBUTES && (modelAttrs & FILE_ATTRIBUTE_DIRECTORY))
+                                         ? 1
+                                         : 0)
+                   << "\n";
+                OutputDebugStringA(os.str().c_str());
+            }
             if (modelAttrs != INVALID_FILE_ATTRIBUTES && !(modelAttrs & FILE_ATTRIBUTE_DIRECTORY))
             {
                 LOG_INFO("Session: restoring model from path " + savedModelPath);
-                bool ggufOk = loadGGUFModel(savedModelPath);
-                if (ggufOk)
-                {
-                    initializeInference();
-                    initBackendManager();
-                    initLLMRouter();
-                }
-                bool bridgeOk = loadModelForInference(savedModelPath);
-                restoredModel = ggufOk || bridgeOk;
+                // Startup restore must avoid direct sync GGUF parsing on the UI thread.
+                // The async path has SEH hardening around model load and reports completion
+                // through WM_MODEL_LOAD_DONE.
+                loadModelFromPathAsync(savedModelPath);
+                restoredModel = true;
+                LOG_INFO("Session: queued async startup model restore for " + savedModelPath);
+                OutputDebugStringA("[SessionRestore] queued async startup model restore via loadModelFromPathAsync\n");
             }
             else
             {
@@ -888,7 +905,9 @@ void Win32IDE::restoreSession()
     catch (const std::exception& e)
     {
         LOG_ERROR("Session restore error: " + std::string(e.what()));
+        OutputDebugStringA((std::string("[SessionRestore] std::exception: ") + e.what() + "\n").c_str());
     }
+    OutputDebugStringA("[SessionRestore] end\n");
     reloadPersistedChatHistoryIntoUi();
 }
 

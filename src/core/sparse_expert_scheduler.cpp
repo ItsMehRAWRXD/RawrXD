@@ -3,11 +3,27 @@
 // ============================================================================
 #include "sparse_expert_scheduler.h"
 
+#include <immintrin.h>
 #include <cmath>
+#include <cstdlib>
 #include <numeric>
 #include <random>
 
 namespace rawrxd {
+
+namespace {
+
+bool isFastTopKEnabled()
+{
+    const char* v = std::getenv("RAWRXD_MOE_ROUTER_FAST_TOPK");
+    if (!v || !*v)
+    {
+        return true;
+    }
+    return !(v[0] == '0' || v[0] == 'n' || v[0] == 'N' || v[0] == 'f' || v[0] == 'F');
+}
+
+} // namespace
 
 // ============================================================================
 // Construction / Destruction
@@ -79,6 +95,11 @@ void SparseExpertScheduler::addJitter(float* scores, uint32_t n) const
 ExpertSelection SparseExpertScheduler::selectTopK(const float* scores,
                                                     uint32_t tokenIndex) const
 {
+    if (isFastTopKEnabled() && m_cfg.topK <= 2 && m_cfg.numExperts > 0)
+    {
+        return selectTopKFast(scores, tokenIndex);
+    }
+
     ExpertSelection sel;
     sel.tokenIndex = tokenIndex;
     sel.numActive = 0;
@@ -115,6 +136,77 @@ ExpertSelection SparseExpertScheduler::selectTopK(const float* scores,
     return sel;
 }
 
+ExpertSelection SparseExpertScheduler::selectTopKFast(const float* scores,
+                                                        uint32_t tokenIndex) const
+{
+    ExpertSelection sel;
+    sel.tokenIndex = tokenIndex;
+    sel.numActive = 0;
+
+    const uint32_t n = m_cfg.numExperts;
+    if (n == 0)
+    {
+        return sel;
+    }
+
+    const uint32_t k = std::min(m_cfg.topK, n);
+    if (k == 1)
+    {
+        uint32_t bestId = 0;
+        float bestScore = scores[0];
+        for (uint32_t i = 1; i < n; ++i)
+        {
+            if (scores[i] > bestScore)
+            {
+                bestScore = scores[i];
+                bestId = i;
+            }
+        }
+        sel.expertIds[0] = static_cast<int32_t>(bestId);
+        sel.expertWeights[0] = 1.0f;
+        sel.numActive = 1;
+        return sel;
+    }
+
+    // k >= 2 and n >= 2 path.
+    uint32_t best1Id = 0;
+    uint32_t best2Id = 1;
+    float best1 = scores[0];
+    float best2 = scores[1];
+    if (best2 > best1)
+    {
+        std::swap(best1, best2);
+        std::swap(best1Id, best2Id);
+    }
+
+    for (uint32_t i = 2; i < n; ++i)
+    {
+        const float s = scores[i];
+        if (s > best1)
+        {
+            best2 = best1;
+            best2Id = best1Id;
+            best1 = s;
+            best1Id = i;
+        }
+        else if (s > best2)
+        {
+            best2 = s;
+            best2Id = i;
+        }
+    }
+
+    const float sum = best1 + best2;
+    const float inv = (sum > 0.0f) ? (1.0f / sum) : 0.5f;
+
+    sel.expertIds[0] = static_cast<int32_t>(best1Id);
+    sel.expertIds[1] = static_cast<int32_t>(best2Id);
+    sel.expertWeights[0] = best1 * inv;
+    sel.expertWeights[1] = best2 * inv;
+    sel.numActive = 2;
+    return sel;
+}
+
 // ============================================================================
 // Build Dispatch Plan — the main scheduling function
 // ============================================================================
@@ -136,6 +228,11 @@ SparseDispatchPlan SparseExpertScheduler::buildPlan(const float* routerScores,
     // Phase 1: Select top-K for each token
     std::vector<float> scoreBuf(m_cfg.numExperts);
     for (uint32_t t = 0; t < batchSize; ++t) {
+        // Speculatively warm next token's router row while processing current token.
+        if (t + 1 < batchSize) {
+            _mm_prefetch(reinterpret_cast<const char*>(routerScores + (t + 1) * m_cfg.numExperts), _MM_HINT_T0);
+        }
+
         // Copy and preprocess router scores for this token
         std::memcpy(scoreBuf.data(), routerScores + t * m_cfg.numExperts,
                     m_cfg.numExperts * sizeof(float));

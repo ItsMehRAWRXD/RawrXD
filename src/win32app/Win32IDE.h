@@ -1977,6 +1977,9 @@ class Win32IDE
 
     // Public entry point for SEH-safe async model init sequence
     void initModelSubsystems();
+    void asyncModelLoadWorker(std::string filepath);
+
+
 
   private:
     mutable std::mutex m_asyncModelLoadMutex;

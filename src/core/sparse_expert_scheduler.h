@@ -167,6 +167,9 @@ public:
     const SparseSchedulerConfig& config() const { return m_cfg; }
 
 private:
+    // Fast path for common MoE settings (k <= 2): linear scan with no partial sort.
+    ExpertSelection selectTopKFast(const float* scores, uint32_t tokenIndex) const;
+
     // Softmax over expert scores for one token
     void softmaxInPlace(float* scores, uint32_t n) const;
 

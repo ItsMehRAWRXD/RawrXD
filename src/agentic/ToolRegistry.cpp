@@ -2273,45 +2273,10 @@ void AgentToolRegistry::InitDescriptors()
     // NOTE: ToolRegistry marks a parameter as "optional" if it has a "default".
     // For schemas that don't express defaults, we set default=null for non-required params
     // to keep required detection stable.
-    try
-    {
-        const json handlerSchemas = AgentToolHandlers::GetAllSchemas();
-        for (const auto& s : handlerSchemas)
-        {
-            if (!s.is_object() || s.value("type", "") != "function" || !s.contains("function"))
-            {
-                continue;
-            }
-            const auto& fn = s["function"];
-            const std::string name = fn.value("name", "");
-            if (name.empty())
-            {
-                continue;
-            }
-            EnsureDescriptorFromHandlerSchema(fn, m_tools, m_nameIndex);
-            auto it = m_nameIndex.find(name);
-            if (it == m_nameIndex.end())
-            {
-                continue;
-            }
-
-            ToolDescriptor& td = m_tools[it->second];
-            // Note: ToolDescriptor::description is a const char* (static storage expectation).
-            // We intentionally do not overwrite it with dynamic strings from JSON.
-
-            // Rebuild param schema from AgentToolHandlers' OpenAI parameters shape.
-            json rebuilt = BuildRegistryParamSchemaFromHandlerSchema(fn);
-
-            if (!rebuilt.empty())
-            {
-                td.params_schema = std::move(rebuilt);
-            }
-        }
-    }
-    catch (...)
-    {
-        // Fail-closed: keep the ToolRegistry-built schemas as a fallback.
-    }
+    // Startup hardening: keep the X-macro descriptor set as the authoritative
+    // baseline and skip dynamic schema reconciliation here. Recent startup
+    // crashes were localised to AgentToolHandlers::GetAllSchemas() during
+    // registry construction, and the base descriptors are sufficient for boot.
 
     // -----------------------------------------------------------------------
     // Wire parameter schemas programmatically (avoids preprocessor comma issue)
@@ -2611,45 +2576,9 @@ void AgentToolRegistry::InitDescriptors()
     RegisterHandler("debug_snapshot", HandleDebugSnapshot);
     RegisterHandler("debug_suggest_breakpoints", HandleDebugSuggestBreakpoints);
 
-    // -----------------------------------------------------------------------
-    // Final reconciliation pass:
-    // Ensure ToolRegistry parameter schemas match AgentToolHandlers catalog.
-    // This intentionally runs AFTER local setParam() wiring so we don't drift.
-    // -----------------------------------------------------------------------
-    try
-    {
-        const json handlerSchemas = AgentToolHandlers::GetAllSchemas();
-        for (const auto& s : handlerSchemas)
-        {
-            if (!s.is_object() || s.value("type", "") != "function" || !s.contains("function"))
-            {
-                continue;
-            }
-            const auto& fn = s["function"];
-            const std::string name = fn.value("name", "");
-            if (name.empty())
-            {
-                continue;
-            }
-            EnsureDescriptorFromHandlerSchema(fn, m_tools, m_nameIndex);
-            auto it = m_nameIndex.find(name);
-            if (it == m_nameIndex.end())
-            {
-                continue;
-            }
-
-            json rebuilt = BuildRegistryParamSchemaFromHandlerSchema(fn);
-
-            if (!rebuilt.empty())
-            {
-                m_tools[it->second].params_schema = std::move(rebuilt);
-            }
-        }
-    }
-    catch (...)
-    {
-        // Keep local schema as fallback.
-    }
+    // Startup hardening: skip the final dynamic schema reconciliation pass too.
+    // The static descriptor + local setParam wiring above is sufficient for boot,
+    // and startup crashes were localised to AgentToolHandlers::GetAllSchemas().
 }
 
 json AgentToolRegistry::GetToolSchemas() const

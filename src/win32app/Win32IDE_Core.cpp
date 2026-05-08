@@ -1263,7 +1263,23 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             std::unique_ptr<AsyncModelLoadResult> result(reinterpret_cast<AsyncModelLoadResult*>(lParam));
             if (!result)
             {
+                OutputDebugStringA("[WM_MODEL_LOAD_DONE] null result payload\n");
+                LOG_WARNING("[WM_MODEL_LOAD_DONE] null result payload");
                 return 0;
+            }
+
+            {
+                std::ostringstream os;
+                os << "[WM_MODEL_LOAD_DONE] tid=" << GetCurrentThreadId() << " path='" << result->filepath << "'"
+                   << " ggufOk=" << (result->ggufOk ? 1 : 0)
+                   << " bridgeOk=" << (result->bridgeOk ? 1 : 0)
+                   << " bytes=" << result->fileBytes
+                   << " wallMs=" << result->wallMs << "\n";
+                OutputDebugStringA(os.str().c_str());
+                     LOG_INFO(std::string("[WM_MODEL_LOAD_DONE] path=") + result->filepath +
+                                 " ggufOk=" + (result->ggufOk ? "1" : "0") +
+                                 " bridgeOk=" + (result->bridgeOk ? "1" : "0") +
+                                 " wallMs=" + std::to_string(result->wallMs));
             }
 
             {
@@ -3950,49 +3966,58 @@ void Win32IDE::deferredHeavyInitBody()
     }
 
     // Initialize MultiResponse, LSP Server, Hotpatch UI (lazy-ready)
-    try
+    // MultiResponse, LSP, Hotpatch, Swarm, Debugger — all opt-in via env for smoke stability.
+    const bool enableDeferredSubsystems = std::getenv("RAWRXD_ENABLE_DEFERRED_SUBSYSTEMS");
+    if (enableDeferredSubsystems)
     {
-        initMultiResponse();
-    }
-    catch (...)
-    {
-        OutputDebugStringA("ERROR: initMultiResponse failed\n");
-    }
-    try
-    {
-        initLSPServer();
-    }
-    catch (...)
-    {
-        OutputDebugStringA("ERROR: initLSPServer failed\n");
-    }
-    try
-    {
-        initHotpatchUI();
-    }
-    catch (...)
-    {
-        OutputDebugStringA("ERROR: initHotpatchUI failed\n");
-    }
+        try
+        {
+            initMultiResponse();
+        }
+        catch (...)
+        {
+            OutputDebugStringA("ERROR: initMultiResponse failed\n");
+        }
+        try
+        {
+            initLSPServer();
+        }
+        catch (...)
+        {
+            OutputDebugStringA("ERROR: initLSPServer failed\n");
+        }
+        try
+        {
+            initHotpatchUI();
+        }
+        catch (...)
+        {
+            OutputDebugStringA("ERROR: initHotpatchUI failed\n");
+        }
 
-    // Initialize Phase 11: Distributed Swarm Compilation
-    try
-    {
-        initPhase11();
-    }
-    catch (...)
-    {
-        OutputDebugStringA("ERROR: initPhase11 failed\n");
-    }
+        // Initialize Phase 11: Distributed Swarm Compilation
+        try
+        {
+            initPhase11();
+        }
+        catch (...)
+        {
+            OutputDebugStringA("ERROR: initPhase11 failed\n");
+        }
 
-    // Initialize Phase 12: Native Debugger Engine
-    try
-    {
-        initPhase12();
+        // Initialize Phase 12: Native Debugger Engine
+        try
+        {
+            initPhase12();
+        }
+        catch (...)
+        {
+            OutputDebugStringA("ERROR: initPhase12 failed\n");
+        }
     }
-    catch (...)
+    else
     {
-        OutputDebugStringA("ERROR: initPhase12 failed\n");
+        OutputDebugStringA("[Smoke] Deferred subsystems skipped (set RAWRXD_ENABLE_DEFERRED_SUBSYSTEMS=1 to enable)\n");
     }
 
     // Initialize Decompiler View (Phase 18B)

@@ -964,12 +964,15 @@ bool AgenticBridge::Initialize(const std::string& frameworkPath, const std::stri
     LOG_INFO("Initializing Native Inference Stack...");
 
     m_frameworkPath = frameworkPath.empty() ? ResolveFrameworkPath() : frameworkPath;
+    LOG_INFO("AgenticBridge::Initialize resolved framework path");
 
     const auto cpu = SharedCpuEngine();
+    LOG_INFO("AgenticBridge::Initialize acquired shared CPU engine");
 
     if (!g_prodEngine)
     {
         g_prodEngine = std::make_shared<RawrXD::ProductionInferenceEngine>();
+        LOG_INFO("AgenticBridge::Initialize created production inference engine");
     }
 
     if (!g_agentEngine)
@@ -977,13 +980,16 @@ bool AgenticBridge::Initialize(const std::string& frameworkPath, const std::stri
         g_agentEngine = std::make_shared<AgenticEngine>();
         // Preference for production engine if available
         g_agentEngine->setInferenceEngine(g_prodEngine.get());
+        LOG_INFO("AgenticBridge::Initialize created agent engine");
     }
 
     // Wire the minimal agentic controller once inference is available.
     rawrxd::initializeAgentControllerWiring(g_prodEngine.get());
+    LOG_INFO("AgenticBridge::Initialize wired agent controller");
 
     // P1: Initialize the Tool Registry for the agentic layer (44-tool base)
     RawrXD::Agent::AgentToolRegistry::Instance();
+    LOG_INFO("AgenticBridge::Initialize tool registry ready");
 
     // Hot-patch the internal tokenizer with AVX2 if an optional PE is present (sovereign-assembled DLL).
     {
@@ -1007,8 +1013,10 @@ bool AgenticBridge::Initialize(const std::string& frameworkPath, const std::stri
     if (!m_workspaceRoot.empty())
     {
         g_agentEngine->setWorkspaceRoot(m_workspaceRoot);
+        LOG_INFO("AgenticBridge::Initialize workspace root applied");
     }
     SetIDEAgenticEngineForCommands(g_agentEngine.get());
+    LOG_INFO("AgenticBridge::Initialize command dispatch wired");
 
     if (!modelName.empty())
     {

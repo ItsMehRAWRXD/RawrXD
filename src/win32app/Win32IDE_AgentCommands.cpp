@@ -313,39 +313,9 @@ void Win32IDE::initializeAgenticBridge()
                 // Initialize Autonomy Manager
                 initializeAutonomy();
 
-                // Wire AgenticPlanningOrchestrator tool executor to production AgentToolRegistry.
-                // Without this, plan execution reports "No tool executor configured" even though tools exist.
-                {
-                    auto& integration = Agentic::OrchestratorIntegration::instance();
-                    integration.initialize();
-                    integration.setToolExecutor(
-                        [](const std::string& tool_name, const std::string& args, std::string& output) -> bool
-                        {
-                            // args is expected to be JSON (object); allow empty.
-                            json jargs = json::object();
-                            if (!args.empty())
-                            {
-                                try
-                                {
-                                    jargs = json::parse(args);
-                                    if (!jargs.is_object())
-                                    {
-                                        // Normalize to object so tool handlers can read keys.
-                                        jargs = json::object({{"value", jargs}});
-                                    }
-                                }
-                                catch (...)
-                                {
-                                    // If parsing fails, pass the raw string in a stable key.
-                                    jargs = json::object({{"raw", args}});
-                                }
-                            }
-                            RawrXD::Agent::ToolExecResult r =
-                                RawrXD::Agent::AgentToolRegistry::Instance().Dispatch(tool_name, jargs);
-                            output = r.output;
-                            return r.success;
-                        });
-                }
+                // Startup hardening: defer plan-orchestrator wiring until after boot.
+                // This path is optional for IDE startup and has been a recurring crash point.
+                LOG_WARNING("Skipping plan orchestrator wiring during startup hardening pass");
 
                 // Initialize Native Engine if not already done
                 if (!m_nativeEngine)

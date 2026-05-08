@@ -63,22 +63,22 @@ struct IDEConfig {
     std::chrono::seconds requestTimeout{30};
     std::chrono::seconds keepAliveTimeout{60};
     
-    bool enableLSP = true;
-    bool enableTerminal = true;
-    bool enableChat = true;
-    bool enableOrchestrator = true;
-    bool enableZeroDay = true;
-    bool enableSwarm = true;
-    bool enableNetwork = true;
-    bool enableVulkan = true;
-    bool headless = false;
-    bool enableLogging = true;
-    bool enableFileLogging = true;
-    bool enableTokenization = true;
-    bool enableChainOfThought = true;
-    bool enableMonaco = true;
-    bool enableMetrics = true;
-    int logLevel = 2;
+    bool enableLSP = false;
+    bool enableTerminal = false;
+    bool enableChat = false;
+    bool enableOrchestrator = false;
+    bool enableZeroDay = false;
+    bool enableSwarm = false;
+    bool enableNetwork = false;
+    bool enableVulkan = false;
+    bool headless = true;
+    bool enableLogging = false;
+    bool enableFileLogging = false;
+    bool enableTokenization = false;
+    bool enableChainOfThought = false;
+    bool enableMonaco = false;
+    bool enableMetrics = false;
+    int logLevel = 0;
 };
 #endif
 

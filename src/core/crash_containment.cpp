@@ -184,57 +184,122 @@ static void writeCrashLog(const char* path, const CrashReport& report) {
                                CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (hFile == INVALID_HANDLE_VALUE) return;
 
-    char buf[2048];
-    DWORD written = 0;
+    auto writeBytes = [&](const char* data, size_t len) {
+        if (!data || len == 0)
+            return;
+        DWORD written = 0;
+        WriteFile(hFile, data, (DWORD)len, &written, nullptr);
+    };
 
-    int len = snprintf(buf, sizeof(buf),
-        "=== RawrXD IDE Crash Report ===\r\n"
-        "Timestamp: %llu\r\n"
-        "Thread: %u  Process: %u\r\n"
-        "Exception: 0x%08X at 0x%016llX\r\n"
-        "Module: %s\r\n\r\n"
-        "Registers:\r\n"
-        "  RIP = 0x%016llX  RSP = 0x%016llX  RBP = 0x%016llX\r\n"
-        "  RAX = 0x%016llX  RBX = 0x%016llX  RCX = 0x%016llX\r\n"
-        "  RDX = 0x%016llX  RSI = 0x%016llX  RDI = 0x%016llX\r\n"
-        "  R8  = 0x%016llX  R9  = 0x%016llX  R10 = 0x%016llX\r\n"
-        "  R11 = 0x%016llX  R12 = 0x%016llX  R13 = 0x%016llX\r\n"
-        "  R14 = 0x%016llX  R15 = 0x%016llX\r\n\r\n"
-        "Active Patches: %d\r\n"
-        "Last Applied Patch ID: %u\r\n"
-        "Patch Rollback Attempted: %s\r\n"
-        "Patch Rollback Succeeded: %s\r\n\r\n"
-        "Dump File: %s\r\n",
-        (unsigned long long)report.timestampMs,
-        (unsigned)report.threadId, (unsigned)report.processId,
-        (unsigned)report.exceptionCode, (unsigned long long)report.rip,
-        report.moduleName,
-        (unsigned long long)report.rip,
-        (unsigned long long)report.rsp,
-        (unsigned long long)report.rbp,
-        (unsigned long long)report.registers[0],
-        (unsigned long long)report.registers[1],
-        (unsigned long long)report.registers[2],
-        (unsigned long long)report.registers[3],
-        (unsigned long long)report.registers[4],
-        (unsigned long long)report.registers[5],
-        (unsigned long long)report.registers[6],
-        (unsigned long long)report.registers[7],
-        (unsigned long long)report.registers[8],
-        (unsigned long long)report.registers[9],
-        (unsigned long long)report.registers[10],
-        (unsigned long long)report.registers[11],
-        (unsigned long long)report.registers[12],
-        (unsigned long long)report.registers[13],
-        (unsigned long long)report.registers[14],
-        (unsigned long long)report.registers[15],
-        (int)report.activePatchCount,
-        (unsigned)report.lastAppliedPatchId,
-        report.patchRollbackAttempted ? "Yes" : "No",
-        report.patchRollbackSucceeded ? "Yes" : "No",
-        report.dumpPath);
+    auto writeLiteral = [&](const char* s) {
+        if (!s)
+            return;
+        size_t n = 0;
+        while (s[n])
+            ++n;
+        writeBytes(s, n);
+    };
 
-    WriteFile(hFile, buf, (DWORD)len, &written, nullptr);
+    auto writeDecU64 = [&](uint64_t v) {
+        char tmp[32];
+        int pos = 0;
+        if (v == 0) {
+            tmp[pos++] = '0';
+        } else {
+            char rev[32];
+            int r = 0;
+            while (v > 0 && r < (int)sizeof(rev)) {
+                rev[r++] = (char)('0' + (v % 10));
+                v /= 10;
+            }
+            while (r > 0)
+                tmp[pos++] = rev[--r];
+        }
+        writeBytes(tmp, (size_t)pos);
+    };
+
+    auto writeDecS32 = [&](int32_t v) {
+        if (v < 0) {
+            writeLiteral("-");
+            writeDecU64((uint64_t)(-(int64_t)v));
+        } else {
+            writeDecU64((uint64_t)v);
+        }
+    };
+
+    auto writeHexU64 = [&](uint64_t v) {
+        static const char kHex[] = "0123456789ABCDEF";
+        char out[16];
+        for (int i = 15; i >= 0; --i) {
+            out[i] = kHex[v & 0xF];
+            v >>= 4;
+        }
+        writeBytes(out, sizeof(out));
+    };
+
+    auto writeHexU32 = [&](uint32_t v) {
+        static const char kHex[] = "0123456789ABCDEF";
+        char out[8];
+        for (int i = 7; i >= 0; --i) {
+            out[i] = kHex[v & 0xF];
+            v >>= 4;
+        }
+        writeBytes(out, sizeof(out));
+    };
+
+    auto writeBoundedCString = [&](const char* s, size_t maxLen) {
+        if (!s || maxLen == 0)
+            return;
+        size_t n = 0;
+        while (n < maxLen && s[n])
+            ++n;
+        if (n > 0)
+            writeBytes(s, n);
+    };
+
+    writeLiteral("=== RawrXD IDE Crash Report ===\r\n");
+    writeLiteral("Timestamp: ");
+    writeDecU64(report.timestampMs);
+    writeLiteral("\r\nThread: ");
+    writeDecU64((uint64_t)report.threadId);
+    writeLiteral("  Process: ");
+    writeDecU64((uint64_t)report.processId);
+    writeLiteral("\r\nException: 0x");
+    writeHexU32(report.exceptionCode);
+    writeLiteral(" at 0x");
+    writeHexU64(report.rip);
+    writeLiteral("\r\nModule: ");
+    writeBoundedCString(report.moduleName, sizeof(report.moduleName));
+    writeLiteral("\r\n\r\nRegisters:\r\n");
+
+    writeLiteral("  RIP = 0x"); writeHexU64(report.rip);
+    writeLiteral("  RSP = 0x"); writeHexU64(report.rsp);
+    writeLiteral("  RBP = 0x"); writeHexU64(report.rbp);
+    writeLiteral("\r\n");
+
+    const char* regNames[16] = {
+        "RAX", "RBX", "RCX", "RDX", "RSI", "RDI", "R8", "R9",
+        "R10", "R11", "R12", "R13", "R14", "R15", "RSV0", "RSV1"
+    };
+    for (int i = 0; i < 16; ++i) {
+        writeLiteral("  ");
+        writeLiteral(regNames[i]);
+        writeLiteral(" = 0x");
+        writeHexU64(report.registers[i]);
+        writeLiteral(((i % 3) == 2) ? "\r\n" : "  ");
+    }
+    writeLiteral("\r\nActive Patches: ");
+    writeDecS32(report.activePatchCount);
+    writeLiteral("\r\nLast Applied Patch ID: ");
+    writeDecU64((uint64_t)report.lastAppliedPatchId);
+    writeLiteral("\r\nPatch Rollback Attempted: ");
+    writeLiteral(report.patchRollbackAttempted ? "Yes" : "No");
+    writeLiteral("\r\nPatch Rollback Succeeded: ");
+    writeLiteral(report.patchRollbackSucceeded ? "Yes" : "No");
+    writeLiteral("\r\n\r\nDump File: ");
+    writeBoundedCString(report.dumpPath, sizeof(report.dumpPath));
+    writeLiteral("\r\n");
+
     CloseHandle(hFile);
 }
 
@@ -281,6 +346,19 @@ static void emergencyPatchRollback(CrashReport& report) {
 // ============================================================================
 
 static LONG WINAPI CathedralCrashFilter(EXCEPTION_POINTERS* ep) {
+    if (!ep || !ep->ExceptionRecord || !ep->ContextRecord) {
+        return EXCEPTION_CONTINUE_SEARCH;
+    }
+
+    // OutputDebugStringA/W can raise debug-print exceptions as part of normal telemetry.
+    // Never treat those as fatal process crashes.
+    constexpr DWORD kDbgPrintExceptionC = 0x40010006u;
+    constexpr DWORD kDbgPrintExceptionWideC = 0x4001000Au;
+    const DWORD exceptionCode = ep->ExceptionRecord->ExceptionCode;
+    if (exceptionCode == kDbgPrintExceptionC || exceptionCode == kDbgPrintExceptionWideC) {
+        return EXCEPTION_CONTINUE_EXECUTION;
+    }
+
     // Prevent re-entrancy (crash in crash handler)
     bool expected = false;
     if (!g_inCrashHandler.compare_exchange_strong(expected, true)) {

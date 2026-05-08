@@ -47,13 +47,24 @@ BOOL ZenithMoERouter::InitializeRouterWeights(float* Weights, UINT32 HiddenDim, 
 //   4. Capacity enforcement: skip experts already at token capacity
 //   5. Fill OutExperts with selected ExpertIDs and their routing probabilities
 // ============================================================================
+
+// Branchless argmax update — MSVC /O2 emits CMOVcc for simple scalar selects.
+// This keeps the pipeline full during the O(n) top-K scan.
+__forceinline void branchless_argmax_update(float candidateProb, UINT32 candidateIdx,
+                                            float& bestProb, UINT32& bestIdx)
+{
+    const bool take = candidateProb > bestProb;
+    bestProb  = take ? candidateProb : bestProb;
+    bestIdx   = take ? candidateIdx : bestIdx;
+}
+
 BOOL ZenithMoERouter::RouteFromLogits(float* Logits, ExpertDescriptor* OutExperts, UINT32& ExpertCount) {
     const UINT32 n = m_NumExperts;
 
     // --- Softmax with numerically stable max subtraction ---
     float maxLogit = Logits[0];
     for (UINT32 e = 1; e < n; ++e) {
-        if (Logits[e] > maxLogit) maxLogit = Logits[e];
+        branchless_argmax_update(Logits[e], e, maxLogit, maxLogit); // max-only, idx unused
     }
 
     float sumExp = 0.0f;
@@ -81,6 +92,7 @@ BOOL ZenithMoERouter::RouteFromLogits(float* Logits, ExpertDescriptor* OutExpert
     // --- Top-K selection via linear scan (K ≤ MAX_ACTIVE_EXPERTS = 4) ---
     // For K=2–4 experts, a linear scan outperforms partial_sort on typical
     // cache-resident arrays of 128 floats (no heap allocation, fully predictable).
+    // Inner argmax is branchless to avoid pipeline flushes on every comparison.
     UINT32 selected = 0;
     UINT32 remaining = n;
 
@@ -89,10 +101,7 @@ BOOL ZenithMoERouter::RouteFromLogits(float* Logits, ExpertDescriptor* OutExpert
         float   bestProb  = -1.0f;
         UINT32  bestIndex = 0;
         for (UINT32 e = 0; e < n; ++e) {
-            if (Logits[e] > bestProb) {
-                bestProb  = Logits[e];
-                bestIndex = e;
-            }
+            branchless_argmax_update(Logits[e], e, bestProb, bestIndex);
         }
         Logits[bestIndex] = -1.0f; // mark consumed
         --remaining;

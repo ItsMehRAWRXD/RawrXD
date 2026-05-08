@@ -93,6 +93,21 @@ static std::string EnvString(const char* name) {
     return std::string(value, value + len);
 }
 
+static int EnvInt(const char* name, int defaultValue, int minValue, int maxValue) {
+    const std::string raw = EnvString(name);
+    if (raw.empty()) {
+        return defaultValue;
+    }
+    char* end = nullptr;
+    long parsed = std::strtol(raw.c_str(), &end, 10);
+    if (end == raw.c_str()) {
+        return defaultValue;
+    }
+    if (parsed < minValue) parsed = minValue;
+    if (parsed > maxValue) parsed = maxValue;
+    return static_cast<int>(parsed);
+}
+
 // Basic structured logging for this module
 static void LogInfo(const char* fmt, ...) {
     va_list args;
@@ -335,6 +350,17 @@ struct ModelState {
 
     std::vector<ggml_rxd_tensor*> layers_k;
     std::vector<ggml_rxd_tensor*> layers_v;
+
+    // Per-layer tensor caches to avoid repeated name lookups in BuildGraph.
+    std::vector<ggml_rxd_tensor*> layer_attn_norm;
+    std::vector<ggml_rxd_tensor*> layer_wq;
+    std::vector<ggml_rxd_tensor*> layer_wk;
+    std::vector<ggml_rxd_tensor*> layer_wv;
+    std::vector<ggml_rxd_tensor*> layer_wo;
+    std::vector<ggml_rxd_tensor*> layer_ffn_norm;
+    std::vector<ggml_rxd_tensor*> layer_ffn_gate;
+    std::vector<ggml_rxd_tensor*> layer_ffn_up;
+    std::vector<ggml_rxd_tensor*> layer_ffn_down;
 };
 
 static ModelState g_model;
@@ -452,6 +478,15 @@ bool LoadModelReal(const char* path) {
         return false;
     }
 
+    // CPU inference throughput is typically better with one worker per physical core.
+    SYSTEM_INFO sysInfo{};
+    GetSystemInfo(&sysInfo);
+    const int logicalCores = std::max<int>(1, static_cast<int>(sysInfo.dwNumberOfProcessors));
+    const int defaultThreads = std::max<int>(1, logicalCores / 2);
+    const int cpuThreads = EnvInt("RAWRXD_CPU_THREADS", defaultThreads, 1, 128);
+    ggml_rxd_backend_cpu_set_n_threads(g_model.backend, cpuThreads);
+    LogInfo("CPU backend threads: logical=%d configured=%d", logicalCores, cpuThreads);
+
     // Allocate context
     size_t ctx_size = ggml_rxd_tensor_overhead() * (6 + g_model.n_layer * 6) + ggml_rxd_graph_overhead();
     ggml_rxd_init_params ctx_params = {};
@@ -489,6 +524,55 @@ bool LoadModelReal(const char* path) {
     g_model.layers_k.resize(g_model.n_layer, nullptr);
     g_model.layers_v.resize(g_model.n_layer, nullptr);
 
+    g_model.layer_attn_norm.resize(g_model.n_layer, nullptr);
+    g_model.layer_wq.resize(g_model.n_layer, nullptr);
+    g_model.layer_wk.resize(g_model.n_layer, nullptr);
+    g_model.layer_wv.resize(g_model.n_layer, nullptr);
+    g_model.layer_wo.resize(g_model.n_layer, nullptr);
+    g_model.layer_ffn_norm.resize(g_model.n_layer, nullptr);
+    g_model.layer_ffn_gate.resize(g_model.n_layer, nullptr);
+    g_model.layer_ffn_up.resize(g_model.n_layer, nullptr);
+    g_model.layer_ffn_down.resize(g_model.n_layer, nullptr);
+
+    // Cache all per-layer tensor pointers once at model load.
+    for (int il = 0; il < g_model.n_layer; ++il) {
+        char name[128];
+
+        std::snprintf(name, sizeof(name), "blk.%d.attn_norm.weight", il);
+        g_model.layer_attn_norm[il] = ggml_rxd_get_tensor(g_model.ctx, name);
+
+        std::snprintf(name, sizeof(name), "blk.%d.attn_q.weight", il);
+        g_model.layer_wq[il] = ggml_rxd_get_tensor(g_model.ctx, name);
+
+        std::snprintf(name, sizeof(name), "blk.%d.attn_k.weight", il);
+        g_model.layer_wk[il] = ggml_rxd_get_tensor(g_model.ctx, name);
+
+        std::snprintf(name, sizeof(name), "blk.%d.attn_v.weight", il);
+        g_model.layer_wv[il] = ggml_rxd_get_tensor(g_model.ctx, name);
+
+        std::snprintf(name, sizeof(name), "blk.%d.attn_output.weight", il);
+        g_model.layer_wo[il] = ggml_rxd_get_tensor(g_model.ctx, name);
+
+        std::snprintf(name, sizeof(name), "blk.%d.ffn_norm.weight", il);
+        g_model.layer_ffn_norm[il] = ggml_rxd_get_tensor(g_model.ctx, name);
+
+        std::snprintf(name, sizeof(name), "blk.%d.ffn_gate.weight", il);
+        g_model.layer_ffn_gate[il] = ggml_rxd_get_tensor(g_model.ctx, name);
+
+        std::snprintf(name, sizeof(name), "blk.%d.ffn_up.weight", il);
+        g_model.layer_ffn_up[il] = ggml_rxd_get_tensor(g_model.ctx, name);
+
+        std::snprintf(name, sizeof(name), "blk.%d.ffn_down.weight", il);
+        g_model.layer_ffn_down[il] = ggml_rxd_get_tensor(g_model.ctx, name);
+
+        if (!g_model.layer_attn_norm[il] || !g_model.layer_wq[il] || !g_model.layer_wk[il] ||
+            !g_model.layer_wv[il] || !g_model.layer_wo[il] || !g_model.layer_ffn_norm[il] ||
+            !g_model.layer_ffn_gate[il] || !g_model.layer_ffn_up[il] || !g_model.layer_ffn_down[il]) {
+            LogError("Missing required layer tensor(s) at layer %d", il);
+            return false;
+        }
+    }
+
     LogInfo("Model loaded: %d layers, %d embd, %d vocab", g_model.n_layer, g_model.n_embd, g_model.n_vocab);
 
     return true;
@@ -510,19 +594,14 @@ static ggml_rxd_cgraph* BuildGraph(ModelState& model, const std::vector<int32_t>
         ggml_rxd_tensor* cur = inpL;
 
         // Layer norm
-        char buf[128];
-        std::snprintf(buf, sizeof(buf), "blk.%d.attn_norm.weight", il);
-        ggml_rxd_tensor* attn_norm = ggml_rxd_get_tensor(model.ctx, buf);
+        ggml_rxd_tensor* attn_norm = model.layer_attn_norm[il];
         cur = ggml_rxd_rms_norm(model.ctx, cur, model.f_norm_rms_eps);
         cur = ggml_rxd_mul(model.ctx, cur, attn_norm);
 
         // QKV projections
-        std::snprintf(buf, sizeof(buf), "blk.%d.attn_q.weight", il);
-        ggml_rxd_tensor* wq = ggml_rxd_get_tensor(model.ctx, buf);
-        std::snprintf(buf, sizeof(buf), "blk.%d.attn_k.weight", il);
-        ggml_rxd_tensor* wk = ggml_rxd_get_tensor(model.ctx, buf);
-        std::snprintf(buf, sizeof(buf), "blk.%d.attn_v.weight", il);
-        ggml_rxd_tensor* wv = ggml_rxd_get_tensor(model.ctx, buf);
+        ggml_rxd_tensor* wq = model.layer_wq[il];
+        ggml_rxd_tensor* wk = model.layer_wk[il];
+        ggml_rxd_tensor* wv = model.layer_wv[il];
 
         ggml_rxd_tensor* Q = ggml_rxd_mul_mat(model.ctx, wq, cur);
         ggml_rxd_tensor* K = ggml_rxd_mul_mat(model.ctx, wk, cur);
@@ -574,26 +653,21 @@ static ggml_rxd_cgraph* BuildGraph(ModelState& model, const std::vector<int32_t>
         ggml_rxd_tensor* KQV = ggml_rxd_mul_mat(model.ctx, V, KQ);
 
         // Output projection
-        std::snprintf(buf, sizeof(buf), "blk.%d.attn_output.weight", il);
-        ggml_rxd_tensor* wo = ggml_rxd_get_tensor(model.ctx, buf);
+        ggml_rxd_tensor* wo = model.layer_wo[il];
         cur = ggml_rxd_mul_mat(model.ctx, wo, KQV);
 
         // Residual
         inpL = ggml_rxd_add(model.ctx, inpL, cur);
 
         // FFN
-        std::snprintf(buf, sizeof(buf), "blk.%d.ffn_norm.weight", il);
-        ggml_rxd_tensor* ffn_norm = ggml_rxd_get_tensor(model.ctx, buf);
+        ggml_rxd_tensor* ffn_norm = model.layer_ffn_norm[il];
         cur = ggml_rxd_rms_norm(model.ctx, inpL, model.f_norm_rms_eps);
         cur = ggml_rxd_mul(model.ctx, cur, ffn_norm);
 
         // SwiGLU
-        std::snprintf(buf, sizeof(buf), "blk.%d.ffn_gate.weight", il);
-        ggml_rxd_tensor* w1 = ggml_rxd_get_tensor(model.ctx, buf);
-        std::snprintf(buf, sizeof(buf), "blk.%d.ffn_up.weight", il);
-        ggml_rxd_tensor* w3 = ggml_rxd_get_tensor(model.ctx, buf);
-        std::snprintf(buf, sizeof(buf), "blk.%d.ffn_down.weight", il);
-        ggml_rxd_tensor* w2 = ggml_rxd_get_tensor(model.ctx, buf);
+        ggml_rxd_tensor* w1 = model.layer_ffn_gate[il];
+        ggml_rxd_tensor* w3 = model.layer_ffn_up[il];
+        ggml_rxd_tensor* w2 = model.layer_ffn_down[il];
 
         ggml_rxd_tensor* tmp = ggml_rxd_silu(model.ctx, ggml_rxd_mul_mat(model.ctx, w1, cur));
         cur = ggml_rxd_mul(model.ctx, tmp, ggml_rxd_mul_mat(model.ctx, w3, cur));
@@ -627,6 +701,10 @@ InferenceResult RunInferenceReal(const std::string& prompt) {
 
     // Build and compute graph
     ggml_rxd_cgraph* gf = BuildGraph(g_model, tokens, 0);
+    if (!gf) {
+        result.error = "Failed to build inference graph";
+        return result;
+    }
     ggml_rxd_backend_graph_compute(g_model.backend, gf);
 
     // Get logits for last token

@@ -235,7 +235,7 @@ int main(int argc, char* argv[])
     IDEConfig config;
     config.theme = "dark";
     config.fontSize = 14;
-    config.enableAI = true;
+    config.enableAI = false;
     config.ollamaEndpoint = "http://localhost:11434";
     config.defaultModel = model.empty() ? "codellama" : model;
     

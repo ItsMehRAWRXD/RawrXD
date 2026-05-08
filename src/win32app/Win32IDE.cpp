@@ -7193,6 +7193,13 @@ void Win32IDE::initModelSubsystems()
     initLLMRouter();
 }
 
+// Context struct for the 8 MB CreateThread async model loader
+struct AsyncModelLoadCtx
+{
+    Win32IDE* ide;
+    std::string filepath;
+};
+
 namespace
 {
 struct AsyncModelLoadParams
@@ -7206,18 +7213,21 @@ static void asyncModelLoadBodySEH(AsyncModelLoadParams* p) noexcept
 {
     __try
     {
+        OutputDebugStringA("[AsyncModelLoad] entering SEH load body\n");
         p->result->ggufOk = p->ide->loadGGUFModel(p->result->filepath);
         if (p->result->ggufOk)
         {
             p->ide->initModelSubsystems();
         }
         p->result->bridgeOk = p->ide->loadModelForInference(p->result->filepath);
+        OutputDebugStringA("[AsyncModelLoad] leaving SEH load body (success path)\n");
     }
     __except (EXCEPTION_EXECUTE_HANDLER)
     {
         char buf[256];
-        snprintf(buf, sizeof(buf), "[AsyncModelLoad] SEH exception 0x%08lX during model load — aborting load\n",
-                 GetExceptionCode());
+        const unsigned long sehCode = GetExceptionCode();
+        snprintf(buf, sizeof(buf), "[AsyncModelLoad] SEH exception 0x%08lX during model load - aborting load\n",
+                 sehCode);
         OutputDebugStringA(buf);
         // postOutputPanelSafe is NOT called from __except because it has C++ dtor baggage;
         // the result flags remain false so WM_MODEL_LOAD_DONE will surface a failure message.
@@ -7241,7 +7251,95 @@ static void asyncModelLoadBodySEH(AsyncModelLoadParams* p) noexcept
     }
 }
 #endif
+
+// Free thread proc — compatible with LPTHREAD_START_ROUTINE for CreateThread 8MB stack.
+// Delegates immediately to Win32IDE::asyncModelLoadWorker so that the real logic lives
+// inside the class and has full access to private members.
+static DWORD WINAPI s_asyncModelLoadProc(LPVOID param) noexcept
+{
+    auto* c = static_cast<AsyncModelLoadCtx*>(param);
+    Win32IDE* self = c->ide;
+    std::string path = std::move(c->filepath);
+    delete c;
+    self->asyncModelLoadWorker(std::move(path));
+    return 0;
+}
+
 }  // namespace
+
+// Body of async model load — runs on the 8MB stack CreateThread worker.
+void Win32IDE::asyncModelLoadWorker(std::string path)
+{
+    Win32IDE* self = this;
+
+    DetachedThreadGuard _guard(self->m_activeDetachedThreads, self->m_shuttingDown);
+    if (_guard.cancelled)
+    {
+        std::lock_guard<std::mutex> lock(self->m_asyncModelLoadMutex);
+        self->m_asyncModelLoadRunning = false;
+        return;
+    }
+
+    OutputDebugStringA("[AsyncModelLoad] worker thread started (8MB stack)\n");
+    LOG_INFO("[AsyncModelLoad] worker thread started");
+
+    auto result = std::make_unique<AsyncModelLoadResult>();
+    result->filepath = path;
+    const uint64_t tick0 = GetTickCount64();
+    {
+        std::error_code ec;
+        const auto sz = std::filesystem::file_size(std::filesystem::path(path), ec);
+        if (!ec)
+            result->fileBytes = static_cast<uint64_t>(sz);
+        std::ostringstream os;
+        os << "[AsyncModelLoad] file probe path='" << path << "' bytes=" << result->fileBytes
+           << " probeError=" << (ec ? ec.message() : std::string("none")) << "\n";
+        OutputDebugStringA(os.str().c_str());
+        LOG_INFO(std::string("[AsyncModelLoad] file probe bytes=") + std::to_string(result->fileBytes));
+    }
+
+    AsyncModelLoadParams amlp{self, result.get()};
+    try
+    {
+        asyncModelLoadBodySEH(&amlp);
+    }
+    catch (const std::exception& ex)
+    {
+        OutputDebugStringA(("[AsyncModelLoad] C++ exception: " + std::string(ex.what()) + "\n").c_str());
+        self->postOutputPanelSafe("[Error] Model load crashed: " + std::string(ex.what()) + "\n");
+    }
+    catch (...)
+    {
+        OutputDebugStringA("[AsyncModelLoad] Unknown exception during model load\n");
+        self->postOutputPanelSafe("[Error] Model load crashed with unknown error.\n");
+    }
+
+    result->wallMs = static_cast<double>(GetTickCount64() - tick0);
+    {
+        std::ostringstream os;
+        os << "[AsyncModelLoad] load finished ggufOk=" << (result->ggufOk ? 1 : 0)
+           << " bridgeOk=" << (result->bridgeOk ? 1 : 0)
+           << " wallMs=" << result->wallMs << "\n";
+        OutputDebugStringA(os.str().c_str());
+        LOG_INFO(std::string("[AsyncModelLoad] load finished ggufOk=") + (result->ggufOk ? "1" : "0") +
+                 " bridgeOk=" + (result->bridgeOk ? "1" : "0") +
+                 " wallMs=" + std::to_string(result->wallMs));
+    }
+
+    if (!self->m_hwndMain || !IsWindow(self->m_hwndMain) ||
+        !PostMessage(self->m_hwndMain, WM_MODEL_LOAD_DONE, 0, reinterpret_cast<LPARAM>(result.release())))
+    {
+        OutputDebugStringA("[AsyncModelLoad] failed to post WM_MODEL_LOAD_DONE (main window unavailable)\n");
+        LOG_WARNING("[AsyncModelLoad] failed to post WM_MODEL_LOAD_DONE (main window unavailable)");
+        std::lock_guard<std::mutex> lock(self->m_asyncModelLoadMutex);
+        self->m_asyncModelLoadRunning = false;
+    }
+    else
+    {
+        OutputDebugStringA("[AsyncModelLoad] posted WM_MODEL_LOAD_DONE\n");
+        LOG_INFO("[AsyncModelLoad] posted WM_MODEL_LOAD_DONE");
+    }
+}
 
 void Win32IDE::resetChatStreamingState()
 {
@@ -7272,6 +7370,16 @@ void Win32IDE::loadModelFromPathAsync(const std::string& filepath)
         return;
 
     {
+        std::ostringstream os;
+        os << "[AsyncModelLoad] request tid=" << GetCurrentThreadId() << " path='" << filepath << "'"
+           << " shuttingDown=" << (isShuttingDown() ? 1 : 0)
+           << " hwndMain=" << static_cast<const void*>(m_hwndMain)
+           << "\n";
+        OutputDebugStringA(os.str().c_str());
+        LOG_INFO(std::string("[AsyncModelLoad] request ") + filepath);
+    }
+
+    {
         std::lock_guard<std::mutex> lock(m_asyncModelLoadMutex);
         if (m_asyncModelLoadRunning)
         {
@@ -7283,61 +7391,19 @@ void Win32IDE::loadModelFromPathAsync(const std::string& filepath)
 
     appendToOutput("Starting background model load: " + filepath + "\n", "Output", OutputSeverity::Info);
 
-    std::thread(
-        [this, filepath]()
-        {
-            DetachedThreadGuard _guard(m_activeDetachedThreads, m_shuttingDown);
-            if (_guard.cancelled)
-            {
-                std::lock_guard<std::mutex> lock(m_asyncModelLoadMutex);
-                m_asyncModelLoadRunning = false;
-                return;
-            }
-
-            auto result = std::make_unique<AsyncModelLoadResult>();
-            result->filepath = filepath;
-            const uint64_t tick0 = GetTickCount64();
-            {
-                std::error_code ec;
-                const auto sz = std::filesystem::file_size(std::filesystem::path(filepath), ec);
-                if (!ec)
-                {
-                    result->fileBytes = static_cast<uint64_t>(sz);
-                }
-            }
-
-            // Route through the SEH-safe standalone helper so that hardware faults
-            // (access violations, etc.) in the GGUF loader / bridge init are caught before
-            // they propagate out of the thread and call std::terminate().
-            // C++ catch(...) with /EHsc does NOT catch SEH; __try must be in a function
-            // that has no C++ objects with destructors in scope (MSVC C2712).
-            AsyncModelLoadParams amlp{this, result.get()};
-            try
-            {
-                asyncModelLoadBodySEH(&amlp);
-            }
-            catch (const std::exception& ex)
-            {
-                OutputDebugStringA(
-                    ("[AsyncModelLoad] C++ exception during model load: " + std::string(ex.what()) + "\n").c_str());
-                postOutputPanelSafe("[Error] Model load crashed: " + std::string(ex.what()) + "\n");
-            }
-            catch (...)
-            {
-                OutputDebugStringA("[AsyncModelLoad] Unknown exception during model load\n");
-                postOutputPanelSafe("[Error] Model load crashed with unknown error.\n");
-            }
-
-            result->wallMs = static_cast<double>(GetTickCount64() - tick0);
-
-            if (!m_hwndMain || !IsWindow(m_hwndMain) ||
-                !PostMessage(m_hwndMain, WM_MODEL_LOAD_DONE, 0, reinterpret_cast<LPARAM>(result.release())))
-            {
-                std::lock_guard<std::mutex> lock(m_asyncModelLoadMutex);
-                m_asyncModelLoadRunning = false;
-            }
-        })
-        .detach();
+    // CreateThread with 8 MB stack — prevents STATUS_STACK_OVERFLOW (0xc00000fd / ntdll crash)
+    // that kills the process when large GGUF files exhaust the default 1 MB std::thread stack.
+    auto* ctx = new AsyncModelLoadCtx{this, filepath};
+    HANDLE hThread = CreateThread(nullptr, 8u * 1024u * 1024u, s_asyncModelLoadProc, ctx, 0, nullptr);
+    if (hThread)
+        CloseHandle(hThread);
+    else
+    {
+        delete ctx;
+        std::lock_guard<std::mutex> lock(m_asyncModelLoadMutex);
+        m_asyncModelLoadRunning = false;
+        appendToOutput("[Error] Failed to create model load thread.\n", "Errors", OutputSeverity::Error);
+    }
 }
 
 // ============================================================================
@@ -11016,6 +11082,8 @@ void Win32IDE::postDeferredCopilotSend()
 
 void Win32IDE::HandleCopilotSend()
 {
+    try
+    {
     // [BOUNDARY-POINT LOGGING] Chat send entry
     OutputDebugStringA("[Win32IDE::HandleCopilotSend] ENTRY\n");
 
@@ -11177,6 +11245,26 @@ void Win32IDE::HandleCopilotSend()
                                     selectedModelResolved.find(":\\") != std::string::npos ||
                                     selectedModelResolved.find('/') != std::string::npos ||
                                     selectedModelResolved.find('\\') != std::string::npos;
+
+    if (selectedLocalModel)
+    {
+        std::error_code modelPathEc;
+        const bool localModelPathMissing =
+            selectedModelResolved.empty() ||
+            !std::filesystem::exists(std::filesystem::path(selectedModelResolved), modelPathEc);
+        if (localModelPathMissing)
+        {
+            appendToOutput("\n[Error] Selected GGUF model path is missing. Please open/select a valid .gguf model and retry.\n",
+                           "Errors", OutputSeverity::Error);
+            appendCopilotChatTextOnUiThread(
+                "\n[Error] Selected GGUF model is unavailable. Please choose/open a valid .gguf model first.\n");
+            OutputDebugStringA(("[HandleCopilotSend] invalid local model path='" + selectedModelResolved +
+                                "' ec='" + modelPathEc.message() + "'\n")
+                                   .c_str());
+            releaseSendInFlight();
+            return;
+        }
+    }
 
     if (m_hwndCopilotModelUsedLabel && IsWindow(m_hwndCopilotModelUsedLabel))
     {
@@ -11627,6 +11715,22 @@ void Win32IDE::HandleCopilotSend()
         }
         // Generate response using traditional method (GGUF async / Ollama bridge)
         generateResponseAsync(userMessage, onResponse);
+    }
+    }
+    catch (const std::exception& ex)
+    {
+        OutputDebugStringA(("[HandleCopilotSend] C++ exception: " + std::string(ex.what()) + "\n").c_str());
+        appendToOutput(std::string("\n[Error] Chat send failed with exception: ") + ex.what() + "\n", "Errors",
+                       OutputSeverity::Error);
+        m_chatSendInFlight.store(false);
+        setCopilotInteractionBusyOnUiThread(false);
+    }
+    catch (...)
+    {
+        OutputDebugStringA("[HandleCopilotSend] Unknown exception\n");
+        appendToOutput("\n[Error] Chat send failed with an unknown exception.\n", "Errors", OutputSeverity::Error);
+        m_chatSendInFlight.store(false);
+        setCopilotInteractionBusyOnUiThread(false);
     }
 }
 
@@ -14871,6 +14975,16 @@ LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wPara
 {
     Win32IDE* pThis = (Win32IDE*)GetPropW(hwnd, kEditorWndProp);
     WNDPROC oldProc = (WNDPROC)GetPropW(hwnd, kEditorProcProp);
+    // Prevent recursive editor subclass re-entry loops triggered by overlay queries
+    // that synchronously SendMessage back into the same subclass proc.
+    static thread_local int s_editorSubclassDepth = 0;
+    struct EditorSubclassDepthGuard
+    {
+        int& depth;
+        explicit EditorSubclassDepthGuard(int& d) : depth(d) { ++depth; }
+        ~EditorSubclassDepthGuard() { --depth; }
+    } depthGuard(s_editorSubclassDepth);
+    const bool canQueryOverlayCaret = (s_editorSubclassDepth == 1);
 
     if (pThis)
     {
@@ -14887,11 +15001,14 @@ LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wPara
                         pThis->updateMinimap();
                     if (pThis->m_ghostTextVisible)
                     {
-                        CHARRANGE sel = {};
-                        SendMessageA(hwnd, EM_EXGETSEL, 0, reinterpret_cast<LPARAM>(&sel));
-                        POINTL pt = {};
-                        SendMessageA(hwnd, EM_POSFROMCHAR, (WPARAM)sel.cpMin, reinterpret_cast<LPARAM>(&pt));
-                        pThis->updateGhostDiffOverlayUi(pt);
+                        if (canQueryOverlayCaret)
+                        {
+                            CHARRANGE sel = {};
+                            SendMessageA(hwnd, EM_EXGETSEL, 0, reinterpret_cast<LPARAM>(&sel));
+                            POINTL pt = {};
+                            SendMessageA(hwnd, EM_POSFROMCHAR, (WPARAM)sel.cpMin, reinterpret_cast<LPARAM>(&pt));
+                            pThis->updateGhostDiffOverlayUi(pt);
+                        }
                     }
                     else
                     {
@@ -15238,17 +15355,23 @@ LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wPara
 
     if (oldProc)
     {
-        if (pThis->m_ghostTextVisible)
+        if (pThis)
         {
-            CHARRANGE sel = {};
-            SendMessageA(hwnd, EM_EXGETSEL, 0, reinterpret_cast<LPARAM>(&sel));
-            POINTL pt = {};
-            SendMessageA(hwnd, EM_POSFROMCHAR, (WPARAM)sel.cpMin, reinterpret_cast<LPARAM>(&pt));
-            pThis->updateGhostDiffOverlayUi(pt);
-        }
-        else
-        {
-            pThis->hideGhostDiffOverlayUi();
+            if (pThis->m_ghostTextVisible)
+            {
+                if (canQueryOverlayCaret)
+                {
+                    CHARRANGE sel = {};
+                    SendMessageA(hwnd, EM_EXGETSEL, 0, reinterpret_cast<LPARAM>(&sel));
+                    POINTL pt = {};
+                    SendMessageA(hwnd, EM_POSFROMCHAR, (WPARAM)sel.cpMin, reinterpret_cast<LPARAM>(&pt));
+                    pThis->updateGhostDiffOverlayUi(pt);
+                }
+            }
+            else
+            {
+                pThis->hideGhostDiffOverlayUi();
+            }
         }
         return CallWindowProcW(oldProc, hwnd, uMsg, wParam, lParam);
     }

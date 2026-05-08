@@ -69,10 +69,10 @@ struct SovereignConfig
     uint32_t active_tab_index = 0;
     uint32_t max_memory_mb = 4096;
     uint32_t target_fps = 60;
-    bool enable_vector7_autogen = true;
-    bool model_prefetch_enabled = true;
+    bool enable_vector7_autogen = false;
+    bool model_prefetch_enabled = false;
     bool model_workingset_lock_enabled = false;
-    bool silence_privilege_warnings = true;
+    bool silence_privilege_warnings = false;
     // Model Puller settings
     std::string huggingface_token;
     std::string models_base_path;

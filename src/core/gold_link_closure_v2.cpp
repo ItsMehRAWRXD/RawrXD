@@ -212,7 +212,7 @@ public:
 // ============================================================================
 // SovereignInferenceClient Stub
 // ============================================================================
-namespace nlohmann { class json {}; }
+#include <nlohmann/json.hpp>
 
 namespace RawrXD {
 namespace Agent {
@@ -229,7 +229,7 @@ public:
     void UnloadModel() {}
     bool IsLoaded() const { return false; }
     void ClearKVCache() {}
-    InferenceResult ChatSync(const std::vector<ChatMessage>&, const nlohmann::json& = {}) { return {}; }
+    InferenceResult ChatSync(const std::vector<ChatMessage>&, const nlohmann::json& = nlohmann::json()) { return {}; }
 };
 
 } // namespace Agent
@@ -304,3 +304,74 @@ public:
 };
 
 } // namespace vscode
+
+// ============================================================================
+// MemoryPressureGuard Stub
+// ============================================================================
+namespace RawrXD {
+namespace Inference {
+
+class MemoryPressureGuard {
+public:
+    static uint64_t committedRAM() { return 0; }
+    static uint64_t committedVRAM() { return 0; }
+};
+
+} // namespace Inference
+} // namespace RawrXD
+
+// ============================================================================
+// InferenceAutopatchController Stub
+// ============================================================================
+namespace RawrXD {
+namespace Inference {
+
+struct TokenTelemetry {};
+struct PatchDecision {};
+struct InferenceAutopatchConfig {};
+
+class InferenceAutopatchController {
+public:
+    InferenceAutopatchController(const InferenceAutopatchConfig&) {}
+    void onToken(const TokenTelemetry&) {}
+    bool shouldAdapt() const { return false; }
+    PatchDecision adapt() { return {}; }
+};
+
+} // namespace Inference
+} // namespace RawrXD
+
+// ============================================================================
+// ExtensionAPIBridge Stub
+// ============================================================================
+namespace RawrXD {
+namespace Extensions {
+
+class ExtensionAPIBridge {
+public:
+    static ExtensionAPIBridge& instance() {
+        static ExtensionAPIBridge inst;
+        return inst;
+    }
+    void emitEvent(const char*, const char*) {}
+};
+
+} // namespace Extensions
+} // namespace RawrXD
+
+// ============================================================================
+// KV Globals
+// ============================================================================
+extern "C" {
+std::atomic<uint64_t> g_kv_aperture_hits{0};
+std::atomic<uint64_t> g_kv_pages_flushed{0};
+}
+
+// ============================================================================
+// Sampler AVX512 Stubs
+// ============================================================================
+extern "C" {
+void Sampler_SoftMax_TopK_Fused(float*, int, float, int, int*) { }
+void Titan_SiLU_AVX512(float*, int) { }
+void Titan_RMSNorm_AVX512(float*, int, float) { }
+}

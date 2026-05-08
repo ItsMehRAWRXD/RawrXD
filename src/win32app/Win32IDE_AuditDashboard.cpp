@@ -46,6 +46,7 @@
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <iomanip>
 #include <richedit.h>  // CHARRANGE / EM_EXGETSEL
 #include <shlobj.h>
 #include <sstream>
@@ -705,6 +706,44 @@ static bool auditLocalApiStatusOk(uint16_t port, std::string& detail)
     detail = "port=" + std::to_string(port) + " http_status=" + std::to_string(status);
     return sent && status == 200;
 }
+
+static std::string auditBuildFingerprintA()
+{
+#if defined(_MSC_FULL_VER)
+    return std::string("msvc-") + std::to_string(_MSC_FULL_VER) + "|" + __DATE__ + "|" + __TIME__;
+#else
+    return std::string("unknown-build|") + __DATE__ + "|" + __TIME__;
+#endif
+}
+
+static std::string auditBytesToHexA(const uint8_t* data, size_t len)
+{
+    std::ostringstream oss;
+    oss << std::hex << std::setfill('0');
+    for (size_t i = 0; i < len; ++i)
+    {
+        oss << std::setw(2) << static_cast<unsigned int>(data[i]);
+    }
+    return oss.str();
+}
+
+static void auditAppendCamelliaTraceA(const std::string& line)
+{
+    char tempPath[MAX_PATH] = {};
+    if (GetTempPathA(MAX_PATH, tempPath) == 0)
+        return;
+
+    const std::string tracePath = std::string(tempPath) + "rawrxd_camellia_e0_trace.log";
+    HANDLE hFile = CreateFileA(tracePath.c_str(), FILE_APPEND_DATA, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
+                               OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (hFile == INVALID_HANDLE_VALUE)
+        return;
+
+    DWORD written = 0;
+    WriteFile(hFile, line.data(), static_cast<DWORD>(line.size()), &written, nullptr);
+    WriteFile(hFile, "\r\n", 2, &written, nullptr);
+    CloseHandle(hFile);
+}
 }  // namespace
 
 Win32IDE::RuntimeValidationCheck Win32IDE::runCriticalValidationE0Check(int e0Index1Based)
@@ -752,7 +791,29 @@ Win32IDE::RuntimeValidationCheck Win32IDE::runCriticalValidationE0Check(int e0In
             // E0-03 — Camellia MASM RFC self-test (phase: camellia_init)
             const auto tr = RawrXD::Crypto::Camellia256Bridge::instance().selfTest();
             std::ostringstream oss;
-            oss << (tr.detail ? tr.detail : "");
+            oss << (tr.detail ? tr.detail : "")
+                << "; thread_id=" << GetCurrentThreadId()
+                << "; build_fp=" << auditBuildFingerprintA()
+                << "; expected_e0=0x00000000"
+                << "; actual_e0=0x" << std::hex << std::setw(8) << std::setfill('0')
+                << static_cast<uint32_t>(tr.errorCode)
+                << std::dec;
+
+            uint8_t hmacKey[32] = {};
+            const int hmacRc = asm_camellia256_get_hmac_key(hmacKey);
+            oss << "; hmac_snapshot_rc=" << hmacRc;
+            if (hmacRc == 0)
+            {
+                oss << "; state256_hmac_hex=" << auditBytesToHexA(hmacKey, sizeof(hmacKey));
+            }
+
+            if (!tr.success)
+            {
+                const std::string traceLine = std::string("[Camellia][E0-03]") + " " + oss.str();
+                OutputDebugStringA((traceLine + "\n").c_str());
+                auditAppendCamelliaTraceA(traceLine);
+            }
+
             c.name = "E0-03 Camellia256 RFC self-test";
             c.passed = tr.success;
             c.detail = oss.str();

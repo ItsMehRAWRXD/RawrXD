@@ -7,6 +7,7 @@
 
 
 #include <algorithm>
+#include <atomic>
 #include <cassert>
 #include <cctype>
 #include <cstdlib>
@@ -22,11 +23,11 @@
 #include <sstream>
 #include <unordered_set>
 
-
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
 #define WIN32_LEAN_AND_MEAN
+#include <intrin.h>
 #include <psapi.h>
 #include <windows.h>
 
@@ -223,6 +224,8 @@ PFN_PrefetchVirtualMemory GetPrefetchVirtualMemoryPtr()
 static constexpr uint64_t kGgufMapTelemetryDecisionBudget = 128;
 static constexpr size_t kGgufApertureMinWindowBytes = 2ULL * 1024ULL * 1024ULL;
 static constexpr size_t kGgufAperturePrefetchBytes = 2ULL * 1024ULL * 1024ULL;
+static constexpr size_t kGgufAperturePrefetchMinBytes = 256ULL * 1024ULL;
+static constexpr size_t kGgufAperturePrefetchMaxBytes = 16ULL * 1024ULL * 1024ULL;
 
 struct GgufMapTelemetry
 {
@@ -339,6 +342,117 @@ void RecordGgufAlignmentMode(uint32_t mode)
         telemetry.align_direct_map.fetch_add(1, std::memory_order_relaxed);
     }
 }
+
+// ============================================================================
+// Aperture Throughput Monitor (RDTSC-based CPM + EWMA adaptive controller)
+// ============================================================================
+
+struct ApertureThroughputMonitor
+{
+    std::atomic<uint64_t> last_tsc{0};
+    std::atomic<uint64_t> last_bytes{0};
+    std::atomic<uint64_t> ema_cpm{0}; // cycles per megabyte, Q16.16 fixed-point
+    std::atomic<uint32_t> sample_count{0};
+    std::atomic<bool> congested{false};
+};
+
+ApertureThroughputMonitor& GetApertureThroughputMonitor()
+{
+    static ApertureThroughputMonitor mon;
+    return mon;
+}
+
+static uint64_t read_tsc()
+{
+#if defined(_MSC_VER)
+    return __rdtsc();
+#else
+    unsigned int lo = 0, hi = 0;
+    __asm__ __volatile__("rdtsc" : "=a"(lo), "=d"(hi));
+    return (static_cast<uint64_t>(hi) << 32) | lo;
+#endif
+}
+
+void RecordApertureTransfer(size_t bytes)
+{
+    auto& mon = GetApertureThroughputMonitor();
+    const uint64_t t0 = mon.last_tsc.load(std::memory_order_relaxed);
+    const uint64_t b0 = mon.last_bytes.load(std::memory_order_relaxed);
+    const uint64_t t1 = read_tsc();
+    const uint64_t b1 = static_cast<uint64_t>(bytes);
+
+    mon.last_tsc.store(t1, std::memory_order_relaxed);
+    mon.last_bytes.store(b1, std::memory_order_relaxed);
+
+    if (t0 == 0 || b0 == 0 || t1 <= t0)
+    {
+        return;
+    }
+
+    const uint64_t delta_t = t1 - t0;
+    const uint64_t delta_b = b1; // treat as incremental bytes for this call
+    if (delta_b == 0)
+    {
+        return;
+    }
+
+    // CPM in Q16.16 fixed-point: (delta_t << 16) / (delta_b / 1048576)
+    // Simplified: cpm_fp = (delta_t << 16) * 1048576 / delta_b
+    // Clamp to avoid overflow on extreme deltas.
+    constexpr uint64_t kMegabyte = 1048576ULL;
+    constexpr uint64_t kMaxDeltaT = 0xFFFFFFFFULL; // ~4B cycles cap
+    const uint64_t clamped_dt = (delta_t > kMaxDeltaT) ? kMaxDeltaT : delta_t;
+    const uint64_t cpm_fp = (clamped_dt << 16) * kMegabyte / delta_b;
+
+    // EWMA alpha = 1/8 (smooth but responsive). New = (7*Old + 1*Sample) / 8.
+    uint64_t old_ema = mon.ema_cpm.load(std::memory_order_relaxed);
+    uint64_t new_ema = cpm_fp;
+    if (old_ema != 0)
+    {
+        new_ema = (old_ema * 7 + cpm_fp) / 8;
+    }
+    mon.ema_cpm.store(new_ema, std::memory_order_relaxed);
+    mon.sample_count.fetch_add(1, std::memory_order_relaxed);
+
+    // Congestion detection: compare against env-tunable threshold.
+    // Default threshold ~ 2M cycles/MB (roughly 1ms/MB at 2GHz).
+    const uint64_t threshold = static_cast<uint64_t>(RawrXD::readEnvInt("RAWRXD_APERTURE_CPM_THRESHOLD", 2000000, 1000, 100000000)) << 16;
+    const bool now_congested = new_ema > threshold;
+    mon.congested.store(now_congested, std::memory_order_relaxed);
+
+    if (GetGgufMapTelemetry().enabled)
+    {
+        std::ostringstream oss;
+        oss << "[ApertureThroughput] sample_cpm=" << (cpm_fp >> 16)
+            << "." << ((cpm_fp & 0xFFFF) * 1000 / 0xFFFF)
+            << " ema_cpm=" << (new_ema >> 16)
+            << "." << ((new_ema & 0xFFFF) * 1000 / 0xFFFF)
+            << " congested=" << (now_congested ? 1 : 0)
+            << " bytes=" << bytes << "\n";
+        OutputDebugStringA(oss.str().c_str());
+    }
+}
+
+bool IsApertureCongested()
+{
+    return GetApertureThroughputMonitor().congested.load(std::memory_order_relaxed);
+}
+
+size_t getAdaptivePrefetchBudgetBytes()
+{
+    const size_t base = getAperturePrefetchBudgetBytes();
+    if (!IsApertureCongested())
+    {
+        return base;
+    }
+    // Under congestion, halve prefetch to reduce bus pressure.
+    // Clamp to minimum so we never drop below 256KB.
+    constexpr size_t kMinPrefetch = 256ULL * 1024ULL;
+    const size_t reduced = base / 2;
+    return (reduced < kMinPrefetch) ? kMinPrefetch : reduced;
+}
+
+} // namespace
 
 bool HasSeLockMemoryPrivilege()
 {
@@ -1086,6 +1200,76 @@ bool useGraphAwarePrefetch()
     return readEnvFlag("RAWRXD_GRAPH_AWARE_PREFETCH", true);
 }
 
+enum class ApertureAlignPolicy
+{
+    Auto,
+    Force2MB,
+    Force64KB,
+};
+
+ApertureAlignPolicy getApertureAlignPolicy()
+{
+    char policyBuf[32] = {};
+    const DWORD len = GetEnvironmentVariableA("RAWRXD_APERTURE_ALIGN_POLICY", policyBuf,
+                                              static_cast<DWORD>(sizeof(policyBuf)));
+    if (len > 0 && len < sizeof(policyBuf))
+    {
+        std::string policy(policyBuf, policyBuf + len);
+        policy = toLowerAsciiCopy(trimAsciiCopy(policy));
+        if (policy == "2mb" || policy == "large" || policy == "force2mb")
+        {
+            return ApertureAlignPolicy::Force2MB;
+        }
+        if (policy == "64kb" || policy == "sys" || policy == "force64kb")
+        {
+            return ApertureAlignPolicy::Force64KB;
+        }
+    }
+
+    // Backward compatibility for existing knob.
+    char legacy[8] = {};
+    const DWORD legacyLen = GetEnvironmentVariableA("RAWRXD_PLACEHOLDER_ALIGN_2MB", legacy,
+                                                     static_cast<DWORD>(sizeof(legacy)));
+    if (legacyLen > 0 && legacyLen < sizeof(legacy) && legacy[0] == '0')
+    {
+        return ApertureAlignPolicy::Force64KB;
+    }
+    return ApertureAlignPolicy::Auto;
+}
+
+size_t getAperturePrefetchBudgetBytes()
+{
+    size_t budget = kGgufAperturePrefetchBytes;
+
+    // Allow explicit tuning in KB to match workload/cache pressure characteristics.
+    const int prefetchKb = readEnvInt("RAWRXD_APERTURE_PREFETCH_KB",
+                                      static_cast<int>(kGgufAperturePrefetchBytes / 1024ULL),
+                                      static_cast<int>(kGgufAperturePrefetchMinBytes / 1024ULL),
+                                      static_cast<int>(kGgufAperturePrefetchMaxBytes / 1024ULL));
+    if (prefetchKb > 0)
+    {
+        budget = static_cast<size_t>(prefetchKb) * 1024ULL;
+    }
+
+    // Optional convenience profile for RX 7800 XT style cache behavior.
+    char gpuProfile[64] = {};
+    const DWORD profileLen = GetEnvironmentVariableA("RAWRXD_GPU_PROFILE", gpuProfile,
+                                                      static_cast<DWORD>(sizeof(gpuProfile)));
+    if (profileLen > 0 && profileLen < sizeof(gpuProfile))
+    {
+        std::string profile(gpuProfile, gpuProfile + profileLen);
+        profile = toLowerAsciiCopy(trimAsciiCopy(profile));
+        if (profile == "rx7800xt" || profile == "7800xt")
+        {
+            budget = std::max<size_t>(budget, 4ULL * 1024ULL * 1024ULL);
+        }
+    }
+
+    budget = std::max<size_t>(budget, kGgufAperturePrefetchMinBytes);
+    budget = std::min<size_t>(budget, kGgufAperturePrefetchMaxBytes);
+    return budget;
+}
+
 SIZE_T alignDownSize(SIZE_T value, SIZE_T alignment)
 {
     if (alignment == 0)
@@ -1135,13 +1319,30 @@ bool reserveSlidingAperture(SIZE_T requested_size, void*& out_view, size_t& out_
         attempt_size = min_reserve;
     }
 
-    bool allow2mb = IsLargePageAlignmentAvailable();
+    const ApertureAlignPolicy alignPolicy = getApertureAlignPolicy();
+    const bool largePagesAvailable = IsLargePageAlignmentAvailable();
+    bool allow2mb = false;
+    switch (alignPolicy)
     {
-        char v[8] = {};
-        const DWORD len = GetEnvironmentVariableA("RAWRXD_PLACEHOLDER_ALIGN_2MB", v, static_cast<DWORD>(sizeof(v)));
-        if (len > 0 && len < sizeof(v) && v[0] == '0')
-        {
+        case ApertureAlignPolicy::Force2MB:
+            allow2mb = largePagesAvailable;
+            break;
+        case ApertureAlignPolicy::Force64KB:
             allow2mb = false;
+            break;
+        case ApertureAlignPolicy::Auto:
+        default:
+            allow2mb = largePagesAvailable;
+            break;
+    }
+
+    const bool strict2mb = readEnvFlag("RAWRXD_APERTURE_ALIGN_STRICT", false);
+    if (alignPolicy == ApertureAlignPolicy::Force2MB && !largePagesAvailable)
+    {
+        OutputDebugStringA("[ApertureAlign] Force2MB requested but SeLockMemoryPrivilege unavailable\n");
+        if (strict2mb)
+        {
+            return false;
         }
     }
     const SIZE_T large_page_alignment = 2ULL * 1024ULL * 1024ULL;
@@ -1601,8 +1802,10 @@ bool mapSlidingWindow(MappedShardFile& file, uint64_t offset, size_t window_size
     }
 
     const bool graph_prefetch = useGraphAwarePrefetch();
+    const size_t prefetch_budget_base = getAdaptivePrefetchBudgetBytes();
     const size_t prefetch_budget =
-        graph_prefetch ? static_cast<size_t>(kGgufAperturePrefetchBytes * 2ULL) : kGgufAperturePrefetchBytes;
+        graph_prefetch ? std::min<size_t>(prefetch_budget_base * 2ULL, kGgufAperturePrefetchMaxBytes)
+                       : prefetch_budget_base;
 
     // Rebuild stripe set for this region.
     unmapSlidingWindow(file);
@@ -1639,6 +1842,7 @@ bool mapSlidingWindow(MappedShardFile& file, uint64_t offset, size_t window_size
         file.stripes[static_cast<size_t>(i)].offset = stripe_offset;
         file.stripes[static_cast<size_t>(i)].size = stripe_size;
         RecordGgufMapRemap(stripe_size);
+        RecordApertureTransfer(stripe_size);
 
         if (PFN_PrefetchVirtualMemory prefetchVirtualMemory = GetPrefetchVirtualMemoryPtr())
         {
@@ -1712,7 +1916,17 @@ namespace RawrXD {
 
 std::string GetApertureAlignmentStrategyLabel()
 {
-    return IsLargePageAlignmentAvailable() ? "LARGE_2MB->SYS_64KB" : "SYS_64KB_ONLY";
+    const bool hasLarge = IsLargePageAlignmentAvailable();
+    switch (getApertureAlignPolicy())
+    {
+        case ApertureAlignPolicy::Force2MB:
+            return hasLarge ? "FORCE_2MB" : "FORCE_2MB_NO_PRIV";
+        case ApertureAlignPolicy::Force64KB:
+            return "FORCE_64KB";
+        case ApertureAlignPolicy::Auto:
+        default:
+            return hasLarge ? "AUTO_2MB->SYS_64KB" : "AUTO_SYS_64KB_ONLY";
+    }
 }
 
 // ─── Singleton ────────────────────────────────────────────────────────────────

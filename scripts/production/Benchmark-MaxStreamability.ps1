@@ -29,6 +29,17 @@ function Get-TokenEstimate {
     return $matches.Count
 }
 
+function Get-TextFileOrEmpty {
+    param([string]$Path)
+
+    if (-not (Test-Path -LiteralPath $Path)) {
+        return ""
+    }
+
+    # Force plain text to keep JSON reports stable and compact.
+    return [string](Get-Content -LiteralPath $Path -Raw -ErrorAction SilentlyContinue)
+}
+
 function Invoke-StreamProbe {
     param(
         [int]$MaxTokens,
@@ -71,10 +82,15 @@ function Invoke-StreamProbe {
             Start-Sleep -Milliseconds 20
         }
 
+        if (-not $timedOut) {
+            # Ensure ExitCode is populated before scoring the run.
+            $proc.WaitForExit()
+        }
+
         $sw.Stop()
 
-        $stdout = if (Test-Path -LiteralPath $tmpOut) { Get-Content -LiteralPath $tmpOut -Raw } else { "" }
-        $stderr = if (Test-Path -LiteralPath $tmpErr) { Get-Content -LiteralPath $tmpErr -Raw } else { "" }
+        $stdout = Get-TextFileOrEmpty -Path $tmpOut
+        $stderr = Get-TextFileOrEmpty -Path $tmpErr
 
         if ($firstByteMs -eq $null) {
             $firstByteMs = [double]$sw.ElapsedMilliseconds
@@ -83,18 +99,21 @@ function Invoke-StreamProbe {
         $tokenEstimate = Get-TokenEstimate -Text $stdout
         $streamMs = [Math]::Max(1.0, [double]$sw.ElapsedMilliseconds - [double]$firstByteMs)
         $tps = if ($tokenEstimate -gt 0) { [double]$tokenEstimate / ($streamMs / 1000.0) } else { 0.0 }
-        $exitCode = if ($timedOut) { 124 } else { $proc.ExitCode }
+        $exitCode = if ($timedOut) { 124 } else { [int]$proc.ExitCode }
+        $exitCodeHex = ('0x{0:X8}' -f ([BitConverter]::ToUInt32([BitConverter]::GetBytes([int]$exitCode), 0)))
+        $stderrTailText = if ($stderr.Length -gt 2048) { $stderr.Substring($stderr.Length - 2048) } else { $stderr }
 
         return [ordered]@{
             maxTokens = $MaxTokens
             timeoutSeconds = $TimeoutSeconds
             exitCode = $exitCode
+            exitCodeHex = $exitCodeHex
             timedOut = $timedOut
             elapsedMs = [Math]::Round([double]$sw.ElapsedMilliseconds, 2)
             ttftMs = [Math]::Round([double]$firstByteMs, 2)
             tokenEstimate = $tokenEstimate
             tpsEstimate = [Math]::Round([double]$tps, 4)
-            stderrTail = if ($stderr.Length -gt 2048) { $stderr.Substring($stderr.Length - 2048) } else { $stderr }
+            stderrTail = $stderrTailText
             success = (($exitCode -eq 0) -and (-not $timedOut) -and ($tokenEstimate -gt 0))
         }
     }
