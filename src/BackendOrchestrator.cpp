@@ -343,117 +343,6 @@ void RecordGgufAlignmentMode(uint32_t mode)
     }
 }
 
-// ============================================================================
-// Aperture Throughput Monitor (RDTSC-based CPM + EWMA adaptive controller)
-// ============================================================================
-
-struct ApertureThroughputMonitor
-{
-    std::atomic<uint64_t> last_tsc{0};
-    std::atomic<uint64_t> last_bytes{0};
-    std::atomic<uint64_t> ema_cpm{0}; // cycles per megabyte, Q16.16 fixed-point
-    std::atomic<uint32_t> sample_count{0};
-    std::atomic<bool> congested{false};
-};
-
-ApertureThroughputMonitor& GetApertureThroughputMonitor()
-{
-    static ApertureThroughputMonitor mon;
-    return mon;
-}
-
-static uint64_t read_tsc()
-{
-#if defined(_MSC_VER)
-    return __rdtsc();
-#else
-    unsigned int lo = 0, hi = 0;
-    __asm__ __volatile__("rdtsc" : "=a"(lo), "=d"(hi));
-    return (static_cast<uint64_t>(hi) << 32) | lo;
-#endif
-}
-
-void RecordApertureTransfer(size_t bytes)
-{
-    auto& mon = GetApertureThroughputMonitor();
-    const uint64_t t0 = mon.last_tsc.load(std::memory_order_relaxed);
-    const uint64_t b0 = mon.last_bytes.load(std::memory_order_relaxed);
-    const uint64_t t1 = read_tsc();
-    const uint64_t b1 = static_cast<uint64_t>(bytes);
-
-    mon.last_tsc.store(t1, std::memory_order_relaxed);
-    mon.last_bytes.store(b1, std::memory_order_relaxed);
-
-    if (t0 == 0 || b0 == 0 || t1 <= t0)
-    {
-        return;
-    }
-
-    const uint64_t delta_t = t1 - t0;
-    const uint64_t delta_b = b1; // treat as incremental bytes for this call
-    if (delta_b == 0)
-    {
-        return;
-    }
-
-    // CPM in Q16.16 fixed-point: (delta_t << 16) / (delta_b / 1048576)
-    // Simplified: cpm_fp = (delta_t << 16) * 1048576 / delta_b
-    // Clamp to avoid overflow on extreme deltas.
-    constexpr uint64_t kMegabyte = 1048576ULL;
-    constexpr uint64_t kMaxDeltaT = 0xFFFFFFFFULL; // ~4B cycles cap
-    const uint64_t clamped_dt = (delta_t > kMaxDeltaT) ? kMaxDeltaT : delta_t;
-    const uint64_t cpm_fp = (clamped_dt << 16) * kMegabyte / delta_b;
-
-    // EWMA alpha = 1/8 (smooth but responsive). New = (7*Old + 1*Sample) / 8.
-    uint64_t old_ema = mon.ema_cpm.load(std::memory_order_relaxed);
-    uint64_t new_ema = cpm_fp;
-    if (old_ema != 0)
-    {
-        new_ema = (old_ema * 7 + cpm_fp) / 8;
-    }
-    mon.ema_cpm.store(new_ema, std::memory_order_relaxed);
-    mon.sample_count.fetch_add(1, std::memory_order_relaxed);
-
-    // Congestion detection: compare against env-tunable threshold.
-    // Default threshold ~ 2M cycles/MB (roughly 1ms/MB at 2GHz).
-    const uint64_t threshold = static_cast<uint64_t>(RawrXD::readEnvInt("RAWRXD_APERTURE_CPM_THRESHOLD", 2000000, 1000, 100000000)) << 16;
-    const bool now_congested = new_ema > threshold;
-    mon.congested.store(now_congested, std::memory_order_relaxed);
-
-    if (GetGgufMapTelemetry().enabled)
-    {
-        std::ostringstream oss;
-        oss << "[ApertureThroughput] sample_cpm=" << (cpm_fp >> 16)
-            << "." << ((cpm_fp & 0xFFFF) * 1000 / 0xFFFF)
-            << " ema_cpm=" << (new_ema >> 16)
-            << "." << ((new_ema & 0xFFFF) * 1000 / 0xFFFF)
-            << " congested=" << (now_congested ? 1 : 0)
-            << " bytes=" << bytes << "\n";
-        OutputDebugStringA(oss.str().c_str());
-    }
-}
-
-bool IsApertureCongested()
-{
-    return GetApertureThroughputMonitor().congested.load(std::memory_order_relaxed);
-}
-
-size_t getAdaptivePrefetchBudgetBytes()
-{
-    const size_t base = getAperturePrefetchBudgetBytes();
-    if (!IsApertureCongested())
-    {
-        return base;
-    }
-    // Under congestion, halve prefetch to reduce bus pressure.
-    // Clamp to minimum so we never drop below 256KB.
-    constexpr size_t kMinPrefetch = 256ULL * 1024ULL;
-    const size_t reduced = base / 2;
-    return (reduced < kMinPrefetch) ? kMinPrefetch : reduced;
-}
-
-} // namespace
-
 bool HasSeLockMemoryPrivilege()
 {
     HANDLE token = nullptr;
@@ -1268,6 +1157,115 @@ size_t getAperturePrefetchBudgetBytes()
     budget = std::max<size_t>(budget, kGgufAperturePrefetchMinBytes);
     budget = std::min<size_t>(budget, kGgufAperturePrefetchMaxBytes);
     return budget;
+}
+
+// ============================================================================
+// Aperture Throughput Monitor (RDTSC-based CPM + EWMA adaptive controller)
+// ============================================================================
+
+struct ApertureThroughputMonitor
+{
+    std::atomic<uint64_t> last_tsc{0};
+    std::atomic<uint64_t> last_bytes{0};
+    std::atomic<uint64_t> ema_cpm{0}; // cycles per megabyte, Q16.16 fixed-point
+    std::atomic<uint32_t> sample_count{0};
+    std::atomic<bool> congested{false};
+};
+
+ApertureThroughputMonitor& GetApertureThroughputMonitor()
+{
+    static ApertureThroughputMonitor mon;
+    return mon;
+}
+
+static uint64_t read_tsc()
+{
+#if defined(_MSC_VER)
+    return __rdtsc();
+#else
+    unsigned int lo = 0, hi = 0;
+    __asm__ __volatile__("rdtsc" : "=a"(lo), "=d"(hi));
+    return (static_cast<uint64_t>(hi) << 32) | lo;
+#endif
+}
+
+void RecordApertureTransfer(size_t bytes)
+{
+    auto& mon = GetApertureThroughputMonitor();
+    const uint64_t t0 = mon.last_tsc.load(std::memory_order_relaxed);
+    const uint64_t b0 = mon.last_bytes.load(std::memory_order_relaxed);
+    const uint64_t t1 = read_tsc();
+    const uint64_t b1 = static_cast<uint64_t>(bytes);
+
+    mon.last_tsc.store(t1, std::memory_order_relaxed);
+    mon.last_bytes.store(b1, std::memory_order_relaxed);
+
+    if (t0 == 0 || b0 == 0 || t1 <= t0)
+    {
+        return;
+    }
+
+    const uint64_t delta_t = t1 - t0;
+    const uint64_t delta_b = b1; // treat as incremental bytes for this call
+    if (delta_b == 0)
+    {
+        return;
+    }
+
+    // CPM in Q16.16 fixed-point: (delta_t << 16) / (delta_b / 1048576)
+    // Simplified: cpm_fp = (delta_t << 16) * 1048576 / delta_b
+    // Clamp to avoid overflow on extreme deltas.
+    constexpr uint64_t kMegabyte = 1048576ULL;
+    constexpr uint64_t kMaxDeltaT = 0xFFFFFFFFULL; // ~4B cycles cap
+    const uint64_t clamped_dt = (delta_t > kMaxDeltaT) ? kMaxDeltaT : delta_t;
+    const uint64_t cpm_fp = (clamped_dt << 16) * kMegabyte / delta_b;
+
+    // EWMA alpha = 1/8 (smooth but responsive). New = (7*Old + 1*Sample) / 8.
+    uint64_t old_ema = mon.ema_cpm.load(std::memory_order_relaxed);
+    uint64_t new_ema = cpm_fp;
+    if (old_ema != 0)
+    {
+        new_ema = (old_ema * 7 + cpm_fp) / 8;
+    }
+    mon.ema_cpm.store(new_ema, std::memory_order_relaxed);
+    mon.sample_count.fetch_add(1, std::memory_order_relaxed);
+
+    // Congestion detection: compare against env-tunable threshold.
+    // Default threshold ~ 2M cycles/MB (roughly 1ms/MB at 2GHz).
+    const uint64_t threshold = static_cast<uint64_t>(readEnvInt("RAWRXD_APERTURE_CPM_THRESHOLD", 2000000, 1000, 100000000)) << 16;
+    const bool now_congested = new_ema > threshold;
+    mon.congested.store(now_congested, std::memory_order_relaxed);
+
+    if (GetGgufMapTelemetry().enabled)
+    {
+        std::ostringstream oss;
+        oss << "[ApertureThroughput] sample_cpm=" << (cpm_fp >> 16)
+            << "." << ((cpm_fp & 0xFFFF) * 1000 / 0xFFFF)
+            << " ema_cpm=" << (new_ema >> 16)
+            << "." << ((new_ema & 0xFFFF) * 1000 / 0xFFFF)
+            << " congested=" << (now_congested ? 1 : 0)
+            << " bytes=" << bytes << "\n";
+        OutputDebugStringA(oss.str().c_str());
+    }
+}
+
+bool IsApertureCongested()
+{
+    return GetApertureThroughputMonitor().congested.load(std::memory_order_relaxed);
+}
+
+size_t getAdaptivePrefetchBudgetBytes()
+{
+    const size_t base = getAperturePrefetchBudgetBytes();
+    if (!IsApertureCongested())
+    {
+        return base;
+    }
+    // Under congestion, halve prefetch to reduce bus pressure.
+    // Clamp to minimum so we never drop below 256KB.
+    constexpr size_t kMinPrefetch = 256ULL * 1024ULL;
+    const size_t reduced = base / 2;
+    return (reduced < kMinPrefetch) ? kMinPrefetch : reduced;
 }
 
 SIZE_T alignDownSize(SIZE_T value, SIZE_T alignment)
