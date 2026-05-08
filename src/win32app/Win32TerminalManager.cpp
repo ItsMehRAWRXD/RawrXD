@@ -20,7 +20,7 @@ using ClosePseudoConsoleFn = VOID(WINAPI*)(HPCON);
 Win32TerminalManager::Win32TerminalManager()
     : m_hProcess(nullptr), m_hThread(nullptr), m_processId(0), m_hStdInRead(nullptr), m_hStdInWrite(nullptr),
     m_hStdOutRead(nullptr), m_hStdOutWrite(nullptr), m_hStdErrRead(nullptr), m_hStdErrWrite(nullptr),
-    m_hPseudoConsole(nullptr), m_hPtyInputWrite(nullptr), m_hPtyOutputRead(nullptr), m_running(false),
+    m_hPseudoConsole(nullptr), m_hPtyInputWrite(nullptr), m_hPtyOutputRead(nullptr), m_running(false), m_destroying(false),
     m_outputRingBytes(0)
 {
 }
@@ -347,6 +347,7 @@ bool Win32TerminalManager::start(ShellType shell, const char* workingDirectoryUt
 {
     if (m_running)
         return false;
+    m_destroying.store(false, std::memory_order_release);
     resetStaleStateFromExitedProcess();
 
     m_shellType = shell;
@@ -393,16 +394,11 @@ bool Win32TerminalManager::start(ShellType shell, const char* workingDirectoryUt
 
 void Win32TerminalManager::stop()
 {
+    m_destroying.store(true, std::memory_order_release);
+
     if (m_running)
     {
         m_running = false;
-
-        // Null callbacks BEFORE terminating process to prevent
-        // output/error/monitor threads from calling into destroyed owners
-        onOutput = nullptr;
-        onError = nullptr;
-        onStarted = nullptr;
-        onFinished = nullptr;
 
         TerminateProcess(m_hProcess, 0);
         WaitForSingleObject(m_hProcess, 5000);  // 5s max instead of INFINITE
@@ -532,13 +528,16 @@ void Win32TerminalManager::readOutputThread()
 
     while (m_running)
     {
+        if (m_destroying.load(std::memory_order_acquire))
+            break;
+
         if (ReadFile(m_hStdOutRead, buffer, kMaxChunk, &bytesRead, nullptr) && bytesRead > 0)
         {
             const size_t safeBytes =
                 (bytesRead <= kMaxChunk) ? static_cast<size_t>(bytesRead) : static_cast<size_t>(kMaxChunk);
             buffer[safeBytes] = '\0';
             appendToOutputRing(buffer, safeBytes);
-            if (onOutput)
+            if (!m_destroying.load(std::memory_order_acquire) && onOutput)
             {
                 onOutput(std::string(buffer, safeBytes));
             }
@@ -558,13 +557,16 @@ void Win32TerminalManager::readErrorThread()
 
     while (m_running)
     {
+        if (m_destroying.load(std::memory_order_acquire))
+            break;
+
         if (ReadFile(m_hStdErrRead, buffer, kMaxChunk, &bytesRead, nullptr) && bytesRead > 0)
         {
             const size_t safeBytes =
                 (bytesRead <= kMaxChunk) ? static_cast<size_t>(bytesRead) : static_cast<size_t>(kMaxChunk);
             buffer[safeBytes] = '\0';
             appendToOutputRing(buffer, safeBytes);
-            if (onError)
+            if (!m_destroying.load(std::memory_order_acquire) && onError)
             {
                 onError(std::string(buffer, safeBytes));
             }
@@ -584,7 +586,7 @@ void Win32TerminalManager::monitorProcessThread()
     DWORD exitCode;
     GetExitCodeProcess(m_hProcess, &exitCode);
 
-    if (onFinished)
+    if (!m_destroying.load(std::memory_order_acquire) && onFinished)
     {
         onFinished(exitCode);
     }

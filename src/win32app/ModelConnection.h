@@ -542,11 +542,19 @@ private:
     // Build JSON payload for API
     std::string buildPayload(const std::string& model, const std::string& prompt)
     {
+        const std::string safePrompt = prompt.empty() ? std::string(" ") : prompt;
+
         // Use nlohmann/json for robust JSON building with proper escaping
         json payload;
         payload["model"] = model;
-        payload["prompt"] = prompt;
+        payload["prompt"] = safePrompt;
         payload["stream"] = true;  // Enable streaming for real-time responses
+        payload["options"] = {
+            {"num_ctx", 1024},
+            {"num_predict", 256},
+            {"num_batch", 64},
+            {"use_mmap", false}
+        };
         return payload.dump();
     }
 

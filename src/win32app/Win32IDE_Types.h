@@ -485,6 +485,9 @@ struct IDESettings
     // dedicated terminal so user sessions are never interrupted.
     bool agentTerminalIsolated = true;
 
+    /// When enabled, agentic AI automatically analyzes the active file for context-aware completions and chat.
+    bool currentFileContextEnabled = true;
+
     /// Integrated terminal RichEdit scrollback (character cap). Env RAWRXD_TERMINAL_SCROLLBACK_CHARS overrides when
     /// set.
     uint32_t integratedTerminalScrollbackChars = 2000000u;

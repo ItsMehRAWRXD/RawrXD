@@ -153,6 +153,7 @@
 #define IDM_AGENT_VIEW_TOOLS 4103
 #define IDM_AGENT_VIEW_STATUS 4104
 #define IDM_AGENT_STOP 4105
+#define IDM_AGENT_TOGGLE_FILE_CONTEXT 4168
 #define IDM_AGENT_MEMORY 4106
 #define IDM_AGENT_MEMORY_VIEW 4107
 #define IDM_AGENT_MEMORY_CLEAR 4108
@@ -293,6 +294,10 @@
 // ---- Copilot chat — workspace transcript (4390–4391) ------------------------
 #define IDM_COPILOT_EXPORT_CHAT 4390
 #define IDM_COPILOT_RELOAD_HISTORY 4391
+#define IDM_COPILOT_MARK_HELPFUL 4392
+#define IDM_COPILOT_MARK_UNHELPFUL 4393
+#define IDM_COPILOT_COPY_LAST_RESPONSE 4394
+#define IDM_COPILOT_RETRY_LAST_PROMPT 4395
 
 // ---- Reverse engineering commands (4300–4323) ------------------------------
 #define IDM_REVENG_ANALYZE 4300
@@ -427,6 +432,7 @@
 #define IDM_VIEW_THERMAL_DASHBOARD 5311
 #define IDM_AGENT_SMOKE_TEST 5320
 #define IDM_AGENT_SET_CYCLE_AGENT_COUNTER 5321
+#define IDM_BACKEND_TOGGLE_LOCAL_GPU 5322
 
 // ---- Plan Approval Dialog controls (7001–7032) -----------------------------
 #define IDC_PLAN_LIST 7001

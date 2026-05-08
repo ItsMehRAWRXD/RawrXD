@@ -120,6 +120,11 @@ std::string formatBackendError(const char* stage, const std::string& detail)
     return std::string("[BackendError] stage=") + stage + " detail=" + trimmed;
 }
 
+int clampIntRange(int value, int minValue, int maxValue)
+{
+    return std::max(minValue, std::min(value, maxValue));
+}
+
 int parseContextMetadataInt(const nlohmann::json& metadata, const char* key)
 {
     if (!metadata.contains(key))
@@ -543,21 +548,25 @@ bool NativeInferenceClient::runChatStreamDirect(const std::string& prompt, const
         return false;
     }
 
+    const std::string safePrompt = trimAsciiCopy(prompt).empty() ? std::string(" ") : prompt;
+    const int safePredict = clampIntRange(m_config.max_tokens, 16, 512);
+    const int requestedCtx = m_config.num_ctx > 0 ? m_config.num_ctx : 1024;
+    const int safeCtx = clampIntRange(requestedCtx, 256, 2048);
+
     nlohmann::json body;
     body["model"] = model;
-    body["prompt"] = prompt;
+    body["prompt"] = safePrompt;
     body["stream"] = true;
     body["raw"] = false;
     body["options"] = {
         {"temperature", m_config.temperature},
-        {"num_predict", m_config.max_tokens},
+        {"num_predict", safePredict},
+        {"num_ctx", safeCtx},
         {"top_p", m_config.top_p},
         {"repeat_penalty", 1.1},
+        {"num_batch", 64},
+        {"use_mmap", false},
     };
-    if (m_config.num_ctx > 0)
-    {
-        body["options"]["num_ctx"] = m_config.num_ctx;
-    }
 
     m_streaming.store(true);
     m_cancelRequested.store(false);
@@ -938,16 +947,24 @@ bool NativeInferenceClient::runFimStreamDirect(const std::string& prompt, TokenC
         return false;
     }
 
+    const std::string safePrompt = trimAsciiCopy(prompt).empty() ? std::string(" ") : prompt;
+    const int safePredict = clampIntRange(m_config.fim_max_tokens, 16, 512);
+    const int requestedCtx = m_config.num_ctx > 0 ? m_config.num_ctx : 1024;
+    const int safeCtx = clampIntRange(requestedCtx, 256, 2048);
+
     nlohmann::json body;
     body["model"] = model;
-    body["prompt"] = prompt;
+    body["prompt"] = safePrompt;
     body["stream"] = true;
     body["raw"] = true;
     body["options"] = {
         {"temperature", m_config.temperature},
-        {"num_predict", m_config.fim_max_tokens},
+        {"num_predict", safePredict},
+        {"num_ctx", safeCtx},
         {"top_p", m_config.top_p},
         {"repeat_penalty", 1.1},
+        {"num_batch", 64},
+        {"use_mmap", false},
     };
 
     m_streaming.store(true);

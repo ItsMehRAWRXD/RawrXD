@@ -1097,7 +1097,7 @@ bool RemoveHotpatch(void* address, size_t size) {
     
     std::lock_guard<std::mutex> lock(g_hookMutex);
     
-    for (auto it = g_hookBackups.begin(); it != g_hookBackups.end(); ++it) {
+    for (auto it = g_hookBackups.begin(); it != g_hookBackups.end(); /* no-op */) {
         if (it->target == address) {
             // Restore original bytes
             DWORD oldProtect;
@@ -1115,10 +1115,11 @@ bool RemoveHotpatch(void* address, size_t size) {
                 VirtualFree(it->trampoline, 0, MEM_RELEASE);
             }
             
-            g_hookBackups.erase(it);
+            it = g_hookBackups.erase(it);
             OutputDebugStringA("[OSIntercept] Hotpatch removed, original bytes restored\n");
             return true;
         }
+        ++it;
     }
     
     // Address not found in backup table

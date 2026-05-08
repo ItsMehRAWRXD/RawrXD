@@ -64,8 +64,6 @@ void Win32IDE_TabManager::applySovereignTheme()
 {
     if (!m_hwndTabBar) return;
 
-    // Get sovereign colors from settings
-    auto config = GetSovereignConfig();
     COLORREF tabBg = RGB(30, 30, 30);
     COLORREF tabActiveBg = RGB(45, 45, 45);
     COLORREF tabText = RGB(200, 200, 200);
@@ -388,12 +386,30 @@ std::string Win32IDE_TabManager::extractFileName(const std::string& filePath) co
 
 std::wstring Win32IDE_TabManager::utf8ToWide(const std::string& str) const
 {
-    if (str.empty()) return L"";
+    if (str.empty())
+        return L"";
 
-    int size = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, nullptr, 0);
-    std::wstring result(size, 0);
-    MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, &result[0], size);
-    result.resize(size - 1); // Remove null terminator
+    int size = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, str.c_str(), -1, nullptr, 0);
+    if (size <= 0)
+    {
+        // Persisted tab state can contain non-UTF-8 bytes from older builds or external edits.
+        // Fall back to a byte-wise widening path rather than tripping a Debug CRT assertion.
+        return std::wstring(str.begin(), str.end());
+    }
+
+    std::wstring result(static_cast<size_t>(size), L'\0');
+    const int written = MultiByteToWideChar(CP_UTF8,
+                                            MB_ERR_INVALID_CHARS,
+                                            str.c_str(),
+                                            -1,
+                                            result.data(),
+                                            size);
+    if (written <= 0)
+    {
+        return std::wstring(str.begin(), str.end());
+    }
+
+    result.resize(static_cast<size_t>(written - 1));
     return result;
 }
 

@@ -856,22 +856,6 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                 {
                     return handleStatusBarCustomDraw(pNMHDR);
                 }
-                // Output panel tab switch (Output / Errors / Debug / Find Results)
-                if (pNMHDR->code == TCN_SELCHANGE && pNMHDR->hwndFrom == m_hwndOutputTabs)
-                {
-                    int idx = (int)TabCtrl_GetCurSel(m_hwndOutputTabs);
-                    static const char* outputTabKeys[] = {"Output", "Errors", "Debug", "Find Results"};
-                    if (idx >= 0 && idx < 4)
-                    {
-                        m_activeOutputTab = outputTabKeys[idx];
-                        m_selectedOutputTab = idx;
-                        for (auto& kv : m_outputWindows)
-                        {
-                            ShowWindow(kv.second,
-                                       (kv.first == m_activeOutputTab && m_outputPanelVisible) ? SW_SHOW : SW_HIDE);
-                        }
-                    }
-                }
                 // Output panel tab switch (Output / Errors / Debug / Find Results / Problems)
                 if (pNMHDR->code == TCN_SELCHANGE && pNMHDR->hwndFrom == m_hwndOutputTabs)
                 {
@@ -2408,6 +2392,12 @@ int Win32IDE::runMessageLoop()
                 if (ctrl && shift && msg.wParam == 'I')
                 {
                     routeCommandUnified(IDM_AGENT_BOUNDED_LOOP, this, m_hwndMain);
+                    continue;
+                }
+                // Ctrl+Shift+Y → Toggle Current File Context
+                if (ctrl && shift && msg.wParam == 'Y')
+                {
+                    routeCommandUnified(IDM_AGENT_TOGGLE_FILE_CONTEXT, this, m_hwndMain);
                     continue;
                 }
                 // Ctrl+, → Settings (full GUI)

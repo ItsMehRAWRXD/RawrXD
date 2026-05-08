@@ -92,7 +92,7 @@ class AgentToolHandlers
     static ToolCallResult GetCodeOutline(const nlohmann::json& args);
     static ToolCallResult SearchCode(const nlohmann::json& args);
     static ToolCallResult FileSearch(const nlohmann::json& args);
-    static ToolCallResult GetDiagnostics(const nlohmann::json& args);
+    static ToolCallResult GetCompileDiagnostics(const nlohmann::json& args);
     static ToolCallResult SemanticSearch(const nlohmann::json& args);
     static ToolCallResult MentionLookup(const nlohmann::json& args);
     static ToolCallResult NextEditHint(const nlohmann::json& args);

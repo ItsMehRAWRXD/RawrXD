@@ -87,7 +87,8 @@ void Win32IDE::buildSettingsSchema()
                     "modelPrefetchEnabled",
                     "modelWorkingSetLockEnabled",
                     "silencePrivilegeWarnings",
-                    "agentTerminalIsolated"};
+                    "agentTerminalIsolated",
+                    "currentFileContext"};
         m_settingsSchema.push_back(cat);
     }
 
@@ -126,7 +127,8 @@ static std::string getSettingType(const std::string& key)
         key == "syntaxColoring" || key == "minimap" || key == "smoothScroll" || key == "caretAnimation" ||
         key == "breadcrumbs" || key == "ghostText" || key == "failureDetector" || key == "amdUnifiedMemory" ||
         key == "localServer" || key == "modelPrefetchEnabled" || key == "modelWorkingSetLockEnabled" ||
-        key == "silencePrivilegeWarnings" || key == "agentTerminalIsolated" || key == "autoUpdateCheck" ||
+        key == "silencePrivilegeWarnings" || key == "agentTerminalIsolated" || key == "currentFileContext" ||
+        key == "autoUpdateCheck" ||
         key == "showWelcomeOnStartup")
     {
         return "bool";
@@ -178,6 +180,7 @@ static std::string getSettingLabel(const std::string& key)
         {"modelWorkingSetLockEnabled", "High-Performance Streaming: Working Set Lock (best-effort)"},
         {"silencePrivilegeWarnings", "Silence Privilege Warnings (1314)"},
         {"agentTerminalIsolated", "Agent: isolated terminal mirror"},
+        {"currentFileContext", "Agent: current file context"},
         {"themeId", "Color Theme"},
         {"windowAlpha", "Window Transparency (0-255)"},
         {"fileIconTheme", "File Icon Theme"},
@@ -219,6 +222,8 @@ static std::string getSettingDescription(const std::string& key)
         {"fileIconTheme", "Icon theme for file explorer (seti, material, none)."},
         {"agentTerminalIsolated",
          "When enabled, agent tool output goes to a dedicated read-only terminal pane (Cursor-style)."},
+        {"currentFileContext",
+         "When enabled, agentic AI automatically analyzes the active file for context-aware completions and chat."},
         {"terminalScrollback", "RichEdit buffer limit per integrated terminal (clamped 262144–16777216)."},
         {"terminalFontSize", "Point size for integrated terminal and PowerShell panel RichEdit (8–32)."},
         {"terminalFontFamily", "Font family name (e.g. Consolas, Cascadia Mono)."}};
@@ -318,6 +323,8 @@ std::string Win32IDE_GetSettingValue(const IDESettings& s, const std::string& ke
         return s.showWelcomeOnStartup ? "true" : "false";
     if (key == "agentTerminalIsolated")
         return s.agentTerminalIsolated ? "true" : "false";
+    if (key == "currentFileContext")
+        return s.currentFileContextEnabled ? "true" : "false";
     if (key == "terminalScrollback")
         return std::to_string(s.integratedTerminalScrollbackChars);
     if (key == "terminalFontSize")
@@ -431,6 +438,8 @@ static void Win32IDE_SetSettingValue(IDESettings& s, const std::string& key, con
         s.showWelcomeOnStartup = toBool(value);
     else if (key == "agentTerminalIsolated")
         s.agentTerminalIsolated = toBool(value);
+    else if (key == "currentFileContext")
+        s.currentFileContextEnabled = toBool(value);
     else if (key == "terminalScrollback")
     {
         unsigned long v = 0;

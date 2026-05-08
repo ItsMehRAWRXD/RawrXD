@@ -8,8 +8,8 @@
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
-#include <psapi.h>
 #include <windows.h>
+#include <psapi.h>
 
 namespace RawrXD
 {
@@ -29,7 +29,7 @@ bool IDEEngine::Initialize(const IDEConfig& config)
     if (config.enableAI)
     {
         aiBridge_ = std::make_unique<AIAgenticBridge>();
-        if (!aiBridge_->Initialize(config.nativeEndpoint, config.defaultModel))
+        if (!aiBridge_->Initialize(config.ollamaEndpoint, config.defaultModel))
             aiBridge_.reset();
     }
     running_ = true;

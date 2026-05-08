@@ -203,6 +203,11 @@ class CPUInferenceEngine : public InferenceEngine
                                 std::function<void()> complete_callback,
                                 std::function<void(int32_t)> token_id_callback = nullptr);
 
+    // Cooperative cancellation for LocalGGUF backpressure
+    void RequestCancelGeneration();
+    void ResetCancelGeneration();
+    bool IsCancelGenerationRequested() const;
+
     // Titan assembly engine (RawrXD_Interconnect / static ASM) — toggable
     void SetUseTitanAssembly(bool use) { m_useTitanAssembly = use; }
     bool IsTitanAssemblyEnabled() const { return m_useTitanAssembly; }
@@ -298,6 +303,9 @@ class CPUInferenceEngine : public InferenceEngine
     bool m_swarmMode = false;
     int m_swarmChainDepth = 5;
     std::vector<std::unique_ptr<RawrXDInference>> m_swarmModels;
+
+    // Cooperative cancellation for LocalGGUF backpressure
+    std::atomic<bool> m_cancelGenerationRequested{false};
 
     // Model weights and Data
     std::unordered_map<std::string, Tensor> m_weights;

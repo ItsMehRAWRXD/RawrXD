@@ -566,7 +566,7 @@ void MainWindow::handleMenuCommand(WORD cmdId)
             {
                 RECT rc;
                 GetClientRect(m_hwnd, &rc);
-                SendMessage(m_hwnd, WM_SIZE, 0, MAKELPARAM(rc.right, rc.bottom));
+                PostMessage(m_hwnd, WM_SIZE, 0, MAKELPARAM(rc.right, rc.bottom));
             }
             break;
         case IDM_VIEW_PRIMARY_SIDEBAR:
@@ -578,7 +578,7 @@ void MainWindow::handleMenuCommand(WORD cmdId)
             {
                 RECT rc;
                 GetClientRect(m_hwnd, &rc);
-                SendMessage(m_hwnd, WM_SIZE, 0, MAKELPARAM(rc.right, rc.bottom));
+                PostMessage(m_hwnd, WM_SIZE, 0, MAKELPARAM(rc.right, rc.bottom));
             }
             break;
         case IDM_VIEW_SECONDARY_SIDEBAR:

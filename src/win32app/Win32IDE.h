@@ -2514,6 +2514,11 @@ class Win32IDE
     HWND m_hwndCopilotChatOutput;
     HWND m_hwndCopilotSendBtn;
     HWND m_hwndCopilotClearBtn;
+    HWND m_hwndCopilotModelUsedLabel = nullptr;
+    HWND m_hwndCopilotHelpfulBtn = nullptr;
+    HWND m_hwndCopilotUnhelpfulBtn = nullptr;
+    HWND m_hwndCopilotCopyBtn = nullptr;
+    HWND m_hwndCopilotRetryBtn = nullptr;
     HWND m_hwndModelSelector;
     HWND m_hwndMaxTokensSlider;
     HWND m_hwndMaxTokensLabel;
@@ -2539,6 +2544,10 @@ class Win32IDE
     mutable std::mutex m_availableModelsMutex;
     std::vector<std::string> m_userModelDirectories;
     std::vector<std::pair<std::string, std::string>> m_chatHistory;  // role, message
+    std::string m_lastCopilotUserPrompt;
+    std::string m_lastCopilotAssistantResponse;
+    int m_copilotHelpfulCount = 0;
+    int m_copilotUnhelpfulCount = 0;
     /// Last workspace path passed to RawrXD_Agent_InitProjectChat (avoid re-init on every turn).
     std::string m_projectChatPersistenceRoot;
     std::string workspaceDirectoryForChatPersistence() const;
@@ -3529,6 +3538,7 @@ class Win32IDE
         std::string endpoint;  // Base URL (e.g., "http://localhost:11435", "https://api.openai.com")
         std::string model;     // Model identifier (e.g., "llama3.2", "gpt-4o", "claude-sonnet-4-20250514")
         std::string apiKey;    // API key for remote backends (empty for local)
+        bool localGpuEnabled = true;  // LocalGGUF runtime GPU/ASM acceleration toggle
         bool enabled = true;
         int timeoutMs = 30000;     // Request timeout
         int maxTokens = 2048;      // Default max tokens for this backend
@@ -3572,6 +3582,8 @@ class Win32IDE
     void setBackendApiKey(AIBackendType type, const std::string& apiKey);
     void setBackendEnabled(AIBackendType type, bool enabled);
     void setBackendTimeout(AIBackendType type, int timeoutMs);
+    void setLocalGGUFGPUEnabled(bool enabled);
+    bool isLocalGGUFGPUEnabled() const;
 
     // Backend health probing
     bool probeBackendHealth(AIBackendType type);

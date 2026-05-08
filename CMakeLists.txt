@@ -1833,11 +1833,10 @@ endif()
 
 # Gold-only sources not present in the main SOURCES aggregation lane.
 target_sources(RawrXD_Gold PRIVATE
+    src/autonomous_model_manager.cpp
     src/core/native_debugger_engine.cpp
     src/core/native_debugger_symbols.cpp
     src/agentic/AgentOllamaClient.cpp
-    src/asm_bridge.cpp
-    src/sovereign/SovereignCoreWrapper.cpp
     src/sovereign/fips_compliance.cpp
     src/sovereign/hsm_integration.cpp
     src/sovereign/policy_engine.cpp
@@ -1850,6 +1849,37 @@ target_sources(RawrXD_Gold PRIVATE
     src/runtime/SovereignCRDTSync.cpp
     src/runtime/SovereignFuzzEngine.cpp
     src/runtime/SovereignReplication.cpp
+    src/runtime/RawrXDVectorIndex.cpp
+    src/runtime/SovereignMeshProvider.cpp
+    src/runtime/SovereignMCPBridge.cpp
+    src/agentic/ToolRegistry_HardwareSecurity_Batch1.cpp
+    src/agentic/RawrXD_ToolRegistry.cpp
+    src/debug/ai_debugger.cpp
+    src/collab/CollabToolHandlers.cpp
+    src/modules/game_engine_manager.cpp
+    src/modules/unity_engine_integration.cpp
+    src/modules/unreal_engine_integration.cpp
+    src/core/feature_handlers_model_load.cpp
+    src/core/rawr_engine_link_closure.cpp
+    src/core/vram_probe.cpp
+    src/core/gold_sentinel_hash_stub.cpp
+    src/core/gold_link_closure_v2.cpp
+    src/core/enterprise_devunlock_bridge.cpp
+    src/core/cot_fallback_system_impl.cpp
+    src/core/dml_asm_impl.cpp
+    src/ide_engine.cpp
+    src/agentic_bridge.cpp
+    src/text_buffer.cpp
+    src/ai/fast_spec.cpp
+    src/ai/fast_spec_inference_bridge.cpp
+    src/native_agent.cpp
+    src/mapped_window_streamer.cpp
+    src/win32app/TodoManager.cpp
+    src/ollama_client.cpp
+    src/ExecutionScheduler_v2.cpp
+    src/agentic/OllamaProvider.cpp
+    src/gpu_enforcement.cpp
+    src/ai/inference_retry_shim.cpp
     src/agentic/observability/Telemetry.cpp
     src/logging/Logger.cpp
     src/security/InputSanitizer.cpp
@@ -1872,13 +1902,6 @@ target_sources(RawrXD_Gold PRIVATE
     src/core/rawrxd_native_log_fallback.cpp
     src/core/gold_enterprise_devunlock_stub.cpp
     src/core/gold_beacon_handlers.cpp
-    src/core/unlinked_symbols_batch_001.cpp
-    src/core/unlinked_symbols_batch_006.cpp
-    src/core/unlinked_symbols_batch_007.cpp
-    src/core/unlinked_symbols_batch_008.cpp
-    src/core/unlinked_symbols_batch_009.cpp
-    src/core/unlinked_symbols_batch_012.cpp
-    src/core/unlinked_symbols_batch_014.cpp
 )
 
 # Vulkan SDK for Gold build — linked later after find_package(Vulkan)
@@ -3483,6 +3506,11 @@ if(WIN32)
         src/kernels/fp8_avx2_interface.cpp
         src/win32app/Win32IDE_Settings.cpp
         src/win32app/Win32IDE_AutonomousCommunicator.cpp
+        src/win32app/Win32IDE_AgenticIntegration_stub.cpp
+        src/win32ide/ExecModeToolbar.cpp
+        src/win32ide/GhostOverlay.cpp
+        src/agentic/ExecPipeline.cpp
+        src/agentic/PatchEngine.cpp
         src/win32app/Win32IDE_AgenticComposerUX.cpp
         src/win32app/Win32IDE_ContextMentionParser.cpp
         src/win32app/Win32IDE_UnifiedTelemetry.cpp
@@ -3527,6 +3555,7 @@ if(WIN32)
         # Unified local-inference pipeline (CLI ground-truth path shared with Win32IDE)
         src/core/rawr_inference_pipeline.cpp
         src/serve/rawrxd_serve_inference_plugin.cpp
+        src/autonomous_model_manager.cpp
         # ExtensionHost minimal link stub for Win32IDE_Commands.cpp callsites
         src/win32app/ExtensionHost_stub.cpp
         src/bridge/symbol_index_bridge.cpp
@@ -4542,7 +4571,6 @@ if(WIN32)
                 src/core/rawr_engine_link_shims.cpp
                 src/core/cot_fallback_system.cpp
                 src/core/model_loader_fallbacks.cpp
-                src/core/rawrxd_native_log_fallback.cpp
                 src/llm_adapter/ggufrunner_link_fallbacks.cpp
                 src/inference/gpu_dispatch_gate_win32ide_fallback.cpp
                 src/inference/gguf_d3d12_bridge_link_fallback.cpp
@@ -4798,7 +4826,6 @@ if(WIN32)
     set(_RAWRXD_REQUIRED_WIN32IDE_PROVIDER_SOURCES
         src/core/ai_agent_masm_stubs.cpp
         src/core/model_loader_fallbacks.cpp
-        src/core/rawrxd_native_log_fallback.cpp
         src/core/native_gguf_loader_link_stub.cpp
         src/core/cot_fallback_system.cpp
         src/win32app/collab_cursor_fallbacks.cpp

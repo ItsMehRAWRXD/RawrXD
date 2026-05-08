@@ -120,6 +120,12 @@ extern void AIWorkersProcessInvokeQueue();
 // ============================================================================
 // Destructor
 // ============================================================================
+// Forward declarations for global map cleanup (defined in Win32IDE.cpp)
+extern void ClearChatUtf8Carry(Win32IDE* ide);
+extern void ClearPendingInference(Win32IDE* ide);
+extern void ClearBuildRunnerState(Win32IDE* ide);
+extern void ClearTerminalCallbackLiveness(Win32IDE* ide);
+
 Win32IDE::~Win32IDE()
 {
     // Ensure shutdown flag is set (may already be from onDestroy)
@@ -133,6 +139,13 @@ Win32IDE::~Win32IDE()
             Sleep(10);
         }
     }
+
+    // Clean up global maps that hold raw Win32IDE* keys to prevent
+    // dangling-pointer access after destruction (xtree/xmemory hardening).
+    ClearChatUtf8Carry(this);
+    ClearPendingInference(this);
+    ClearBuildRunnerState(this);
+    ClearTerminalCallbackLiveness(this);
 
     // Explicitly destroy objects that detached threads reference BEFORE
     // implicit member destruction order (which is reverse-declaration-order

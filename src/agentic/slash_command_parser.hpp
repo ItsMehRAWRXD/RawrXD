@@ -24,6 +24,12 @@
  * /fix [file|selection]                → fix issues in file or selection
  * /test [file|pattern]                 → generate/run tests
  * /optimize [file|selection]           → optimize code performance
+ * /taskframe <job/task text>           → generate deterministic execution framework
+ * /harden <module_name>                → generate reliability audit harness template
+ * /audit <module_name>                 → alias for /harden
+ * /language <id> [modifiers]           → switch language/context mode (syntax, toolchain, inference)
+ * /lang <id> [modifiers]              → alias for /language
+ * /context <profile> [modifiers]       → full execution context switch (language + runtime + target)
  * /help [command]                      → show command help
  */
 
@@ -81,13 +87,27 @@ private:
     static ParsedCommand ParseFix(const std::vector<std::string>& args);
     static ParsedCommand ParseTest(const std::vector<std::string>& args);
     static ParsedCommand ParseOptimize(const std::vector<std::string>& args);
-    
+    static ParsedCommand ParseTaskframe(const std::vector<std::string>& args);
+    static ParsedCommand ParseHarden(const std::vector<std::string>& args);
+    static ParsedCommand ParseLanguage(const std::vector<std::string>& args);
+    static ParsedCommand ParseContext(const std::vector<std::string>& args);
+
     // Streaming control commands (NEW)
     static ParsedCommand ParseStreaming(const std::vector<std::string>& args);
     static ParsedCommand ParseStreamingStatus(const std::vector<std::string>& args);
     static ParsedCommand ParseStreamingAutopatch(const std::vector<std::string>& args);
     static ParsedCommand ParseStreamingThrottle(const std::vector<std::string>& args);
-    
+
+public:
+    // Build deterministic job/task framework text from slash-command arguments.
+    static std::string BuildTaskFramework(const std::vector<std::string>& args);
+    // Build deterministic hardening harness output for a module.
+    static std::string BuildHardenHarness(const std::vector<std::string>& args);
+    // Resolve language alias to canonical mode string.
+    static std::string ResolveLanguageMode(const std::string& id);
+    // Build context switch response text.
+    static std::string BuildContextSwitchResponse(const std::vector<std::string>& args);
+
     static std::vector<std::string> Tokenize(const std::string& input);
 };
 

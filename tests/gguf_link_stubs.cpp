@@ -123,4 +123,10 @@ std::vector<uint8_t> decompress(const std::vector<uint8_t>& in, bool* ok)
 {
     return rleDecode(in, ok);
 }
+
+std::vector<uint8_t> decompress(const std::vector<uint8_t>& in)
+{
+    bool ok = true;
+    return rleDecode(in, &ok);
+}
 }  // namespace brutal

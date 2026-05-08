@@ -215,8 +215,9 @@ bool AIAgenticBridge::CallOllamaAPI(const std::string& prompt, std::string& resp
         nullptr, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, 0);
     if (!scope.hRequest) return false;
     // Build JSON payload (no external dep)
+    const std::string safePrompt = prompt.empty() ? std::string(" ") : prompt;
     std::string jsonData = "{\"model\":\"" + currentModel_ + "\",\"prompt\":\"";
-    for (char c : prompt) {
+    for (char c : safePrompt) {
         if (c == '"')  { jsonData += "\\\""; continue; }
         if (c == '\\') { jsonData += "\\\\"; continue; }
         if (c == '\n') { jsonData += "\\n";  continue; }
@@ -224,7 +225,7 @@ bool AIAgenticBridge::CallOllamaAPI(const std::string& prompt, std::string& resp
         if (c == '\t') { jsonData += "\\t";  continue; }
         jsonData += c;
     }
-    jsonData += "\",\"stream\":false}";
+    jsonData += "\",\"stream\":false,\"options\":{\"num_ctx\":1024,\"num_predict\":256,\"num_batch\":64,\"use_mmap\":false}}";
     std::wstring headers = L"Content-Type: application/json\r\n";
     if (!WinHttpSendRequest(scope.hRequest, headers.c_str(), (DWORD)headers.size(),
         (LPVOID)jsonData.data(), (DWORD)jsonData.size(), (DWORD)jsonData.size(), 0)) return false;

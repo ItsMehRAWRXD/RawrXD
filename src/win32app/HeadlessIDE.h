@@ -117,6 +117,7 @@ struct HeadlessConfig
     bool enableServer = true;      // --no-server: disable HTTP
     int maxTokens = 2048;
     float temperature = 0.7f;
+    bool localGpuEnabled = true;   // --local-gpu on|off
     std::string ollamaHost = "127.0.0.1";
     int ollamaPort = 11434;
     std::string workingDir;          // --dir <path>
@@ -415,6 +416,7 @@ class HeadlessIDE
 
     // Active backend state
     AIBackendType m_activeBackend = AIBackendType::LocalGGUF;
+    bool m_localGpuEnabled = true;
     uint64_t m_inferenceRequestCount = 0;
 
     // Real subsystem instances (owned by HeadlessIDE)
@@ -448,9 +450,9 @@ class HeadlessIDE
     uint32_t m_debugBreakpointCount = 0;
 
     // Experimental toggles (enabled via environment/config)
-    bool m_expHotpatchEnabled = true;
-    bool m_expLayerEvictionEnabled = true;
-    bool m_expGovernorEnabled = true;
+    bool m_expHotpatchEnabled = false;
+    bool m_expLayerEvictionEnabled = false;
+    bool m_expGovernorEnabled = false;
     bool m_expQuantumTimeEnabled = false;
     bool m_expQuantumOrchEnabled = false;
     bool m_expQuantumMissingEnabled = false;

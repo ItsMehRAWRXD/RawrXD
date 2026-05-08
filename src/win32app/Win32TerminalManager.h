@@ -64,6 +64,7 @@ class Win32TerminalManager
     std::thread m_monitorThread;
 
     std::atomic<bool> m_running;
+    std::atomic<bool> m_destroying;
     ShellType m_shellType;
     std::mutex m_stdinWriteMutex;
 

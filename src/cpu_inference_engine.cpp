@@ -976,6 +976,24 @@ CPUInferenceEngine::~CPUInferenceEngine()
 }
 
 // ============================================================================
+// Cooperative cancellation for LocalGGUF backpressure
+// ============================================================================
+void CPUInferenceEngine::RequestCancelGeneration()
+{
+    m_cancelGenerationRequested.store(true, std::memory_order_release);
+}
+
+void CPUInferenceEngine::ResetCancelGeneration()
+{
+    m_cancelGenerationRequested.store(false, std::memory_order_release);
+}
+
+bool CPUInferenceEngine::IsCancelGenerationRequested() const
+{
+    return m_cancelGenerationRequested.load(std::memory_order_acquire);
+}
+
+// ============================================================================
 // Model Loading — delegates to RawrXDInference::Initialize
 // ============================================================================
 bool CPUInferenceEngine::LoadModel(const std::string& model_path)
@@ -1283,6 +1301,11 @@ void CPUInferenceEngine::GenerateStreaming(const std::vector<int32_t>& input_tok
         s_inferenceBackend.GenerateFromTokens(u32_toks, static_cast<uint32_t>(max_tokens),
                                               [&](uint32_t tok, const std::string& piece)
                                               {
+                                                  // Cooperative cancellation check for LocalGGUF backpressure
+                                                  if (m_cancelGenerationRequested.load(std::memory_order_acquire))
+                                                  {
+                                                      return false;  // Stop generation
+                                                  }
                                                   emitSwarmTelemetryThrottled_(false);
                                                   const std::string safePiece = sanitizeUtf8Lossy(piece);
                                                   if (token_callback && !safePiece.empty())

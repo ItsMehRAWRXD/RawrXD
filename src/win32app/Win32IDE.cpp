@@ -168,6 +168,42 @@ std::mutex g_chatUtf8CarryMutex;
 std::unordered_map<Win32IDE*, std::string> g_chatUtf8CarryByIde;
 std::mutex g_chatInputBufferMutex;
 
+std::mutex g_terminalCallbackLivenessMutex;
+std::unordered_map<Win32IDE*, std::weak_ptr<std::atomic<bool>>> g_terminalCallbackLivenessByIde;
+
+std::shared_ptr<std::atomic<bool>> AcquireTerminalCallbackLiveness(Win32IDE* ide)
+{
+    if (!ide)
+        return nullptr;
+    std::lock_guard<std::mutex> lock(g_terminalCallbackLivenessMutex);
+    auto it = g_terminalCallbackLivenessByIde.find(ide);
+    if (it != g_terminalCallbackLivenessByIde.end())
+    {
+        if (auto existing = it->second.lock())
+            return existing;
+    }
+    auto token = std::make_shared<std::atomic<bool>>(true);
+    g_terminalCallbackLivenessByIde[ide] = token;
+    return token;
+}
+
+inline bool IsTerminalCallbackOwnerAlive(const std::shared_ptr<std::atomic<bool>>& token)
+{
+    return token && token->load(std::memory_order_acquire);
+}
+
+void ClearTerminalCallbackLiveness(Win32IDE* ide)
+{
+    std::lock_guard<std::mutex> lock(g_terminalCallbackLivenessMutex);
+    auto it = g_terminalCallbackLivenessByIde.find(ide);
+    if (it != g_terminalCallbackLivenessByIde.end())
+    {
+        if (auto token = it->second.lock())
+            token->store(false, std::memory_order_release);
+        g_terminalCallbackLivenessByIde.erase(it);
+    }
+}
+
 inline bool IsUtf8ContinuationByte(unsigned char b)
 {
     return (b & 0xC0u) == 0x80u;
@@ -1416,6 +1452,11 @@ static void logRawResponseHexPreview(const std::string& response)
 #define IDC_COPILOT_CHAT_OUTPUT 1203
 #define IDC_COPILOT_SEND_BTN 1204
 #define IDC_COPILOT_CLEAR_BTN 1205
+#define IDC_COPILOT_MODEL_BADGE 1206
+#define IDC_COPILOT_HELPFUL_BTN 1207
+#define IDC_COPILOT_UNHELPFUL_BTN 1213
+#define IDC_COPILOT_COPY_BTN 1214
+#define IDC_COPILOT_RETRY_BTN 1215
 
 // Redeclare IDs to avoid header duplication or linkage issues
 #ifndef IDC_MODEL_SELECTOR
@@ -1595,6 +1636,7 @@ static void logRawResponseHexPreview(const std::string& response)
 #define IDM_AGENT_CONFIGURE_MODEL 4102
 #define IDM_AGENT_VIEW_TOOLS 4103
 #define IDM_AGENT_VIEW_STATUS 4104
+#define IDM_AGENT_TOGGLE_FILE_CONTEXT 4168  // Toggle current file context analysis
 #define IDM_AGENT_AUTONOMOUS_COMMUNICATOR 4163  // free slot; 4106=IDM_AGENT_MEMORY, 4110=IDM_SUBAGENT_CHAIN
 #define IDM_PLAN_ORCHESTRATOR_START 4164
 #define IDM_PLAN_ORCHESTRATOR_STOP 4165
@@ -1709,19 +1751,14 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
     ideCtorBootMilestone("[IDE-Pipeline:Ctor] Batch 5/8: native engine slot marked unloaded (lazy bind)\n",
                          "[Init:Ctor] Batch 5/8: native engine loaded flag cleared until backend wiring\n");
 
-    // Initialize 70B GGUF Hotpatch
-    m_ggufHotpatch = std::make_unique<RawrXD::GGUFHotpatch>();
-    if (!RawrXD::GGUFHotpatch::apply70BGgufHotpatch())
-    {
-        LOG_WARNING("70B GGUF hotpatch skipped; running with default loader settings");
-    }
-    ideCtorBootMilestone("[IDE-Pipeline:Ctor] Batch 6/8: GGUF hotpatch module constructed + apply evaluated\n",
-                         "[Init:Ctor] Batch 6/8: 70B GGUF hotpatch path evaluated\n");
+    // DEFERRED: 70B GGUF Hotpatch — initialized on-demand via lazyInitHeavySubsystems()
+    // (was causing smoke-test failures by doing heavy work in ctor)
+    ideCtorBootMilestone("[IDE-Pipeline:Ctor] Batch 6/8: GGUF hotpatch deferred to onCreate/lazy init\n",
+                         "[Init:Ctor] Batch 6/8: 70B GGUF hotpatch path deferred\n");
 
-    // Initialize Governor/Throttling
-    m_governorThrottling = std::make_unique<RawrXD::GovernorThrottling>();
-    ideCtorBootMilestone("[IDE-Pipeline:Ctor] Batch 7/8: governor throttling subsystem constructed\n",
-                         "[Init:Ctor] Batch 7/8: execution governor and throttling online\n");
+    // DEFERRED: Governor/Throttling — initialized on-demand via lazyInitHeavySubsystems()
+    ideCtorBootMilestone("[IDE-Pipeline:Ctor] Batch 7/8: governor throttling deferred to onCreate/lazy init\n",
+                         "[Init:Ctor] Batch 7/8: execution governor and throttling deferred\n");
 
     ideCtorBootMilestone("[IDE-Pipeline:Ctor] Batch 8/8: minimal Win32IDE ctor body complete\n",
                          "[Init:Ctor] Batch 8/8: constructor finished; window shell deferred to onCreate\n");
@@ -2102,6 +2139,18 @@ void Win32IDE::createMenuBar(HWND hwnd)
     AppendMenuW(hAgentMenu, MF_STRING, IDM_AGENT_CONFIGURE_MODEL, L"&Configure Model...");
     AppendMenuW(hAgentMenu, MF_STRING, IDM_AGENT_VIEW_TOOLS, L"View &Tools");
     AppendMenuW(hAgentMenu, MF_STRING, IDM_AGENT_VIEW_STATUS, L"View &Status");
+
+    HMENU hAgentChatActions = CreatePopupMenu();
+    AppendMenuW(hAgentChatActions, MF_STRING, IDM_COPILOT_MARK_HELPFUL, L"Mark &Helpful");
+    AppendMenuW(hAgentChatActions, MF_STRING, IDM_COPILOT_MARK_UNHELPFUL, L"Mark &Unhelpful");
+    AppendMenuW(hAgentChatActions, MF_SEPARATOR, 0, nullptr);
+    AppendMenuW(hAgentChatActions, MF_STRING, IDM_COPILOT_COPY_LAST_RESPONSE, L"&Copy Last Response");
+    AppendMenuW(hAgentChatActions, MF_STRING, IDM_COPILOT_RETRY_LAST_PROMPT, L"&Retry Last Prompt");
+    AppendMenuW(hAgentMenu, MF_POPUP, (UINT_PTR)hAgentChatActions, L"Chat &Actions");
+
+    AppendMenuW(hAgentMenu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuW(hAgentMenu, MF_STRING | (m_settings.currentFileContextEnabled ? MF_CHECKED : 0),
+                IDM_AGENT_TOGGLE_FILE_CONTEXT, L"&Current File Context\tCtrl+Shift+Y");
     AppendMenuW(hAgentMenu, MF_SEPARATOR, 0, nullptr);
     AppendMenuW(hAgentMenu, MF_STRING, IDM_AGENT_AUTONOMOUS_COMMUNICATOR, L"&Autonomous Communicator");
     AppendMenuW(hAgentMenu, MF_SEPARATOR, 0, nullptr);
@@ -2717,14 +2766,20 @@ int Win32IDE::createTerminalPane(Win32TerminalManager::ShellType shellType, cons
     pane.isActive = false;
     pane.bounds = {0, 0, 0, 0};
 
-    pane.manager->onOutput = [this, paneId](const std::string& output)
+    auto terminalLiveness = AcquireTerminalCallbackLiveness(this);
+
+    pane.manager->onOutput = [this, paneId, terminalLiveness](const std::string& output)
     {
+        if (!IsTerminalCallbackOwnerAlive(terminalLiveness))
+            return;
         if (isShuttingDown())
             return;
         onTerminalOutput(paneId, output);
     };
-    pane.manager->onError = [this, paneId](const std::string& error)
+    pane.manager->onError = [this, paneId, terminalLiveness](const std::string& error)
     {
+        if (!IsTerminalCallbackOwnerAlive(terminalLiveness))
+            return;
         if (isShuttingDown())
             return;
         onTerminalError(paneId, error);
@@ -2852,8 +2907,11 @@ void Win32IDE::ensureShellRunningForPane(TerminalPane* pane, Win32TerminalManage
     std::string cwdStore;
     const char* cwd = preferredIntegratedTerminalWorkingDirectory(cwdStore);
     const int pid = pane->id;
-    pane->manager->onFinished = [this, pid](int exitCode)
+    auto terminalLiveness = AcquireTerminalCallbackLiveness(this);
+    pane->manager->onFinished = [this, pid, terminalLiveness](int exitCode)
     {
+        if (!IsTerminalCallbackOwnerAlive(terminalLiveness))
+            return;
         if (isShuttingDown())
             return;
         if (m_hwndMain && IsWindow(m_hwndMain))
@@ -7751,8 +7809,7 @@ HTREEITEM Win32IDE::addTreeItem(HTREEITEM hParent, const std::string& text, cons
     tvins.hInsertAfter = TVI_LAST;
     tvins.item.mask = TVIF_TEXT | TVIF_PARAM | TVIF_IMAGE | TVIF_SELECTEDIMAGE;
 
-    char* pathData = new char[fullPath.length() + 1];
-    strcpy_s(pathData, fullPath.length() + 1, fullPath.c_str());
+    std::string* pathData = new std::string(fullPath);
 
     wchar_t wbuf[MAX_PATH];
     MultiByteToWideChar(CP_ACP, 0, text.c_str(), -1, wbuf, MAX_PATH);
@@ -9068,8 +9125,11 @@ std::string Win32IDE::generateResponse(const std::string& prompt)
             else
                 escPrompt += c;
         }
-        std::string body =
-            std::string("{\"model\":\"") + modelTag + "\",\"prompt\":\"" + escPrompt + "\",\"stream\":false}";
+        if (escPrompt.empty())
+            escPrompt = " ";
+        std::string body = std::string("{\"model\":\"") + modelTag +
+                           "\",\"prompt\":\"" + escPrompt +
+                           "\",\"stream\":false,\"options\":{\"num_ctx\":1024,\"num_predict\":256,\"num_batch\":64,\"use_mmap\":false}}";
         std::wstring wHeaders = L"Content-Type: application/json";
         BOOL bResults = WinHttpSendRequest(hRequest, wHeaders.c_str(), (DWORD)-1L, (LPVOID)body.c_str(),
                                            (DWORD)body.size(), (DWORD)body.size(), 0);
@@ -10530,6 +10590,36 @@ void Win32IDE::createChatPanel()
         SendMessage(hwndNewChatBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
     }
 
+    m_hwndCopilotModelUsedLabel =
+        CreateWindowExW(0, L"STATIC", L"GPT-5.3-Codex • 0.9x", WS_CHILD | WS_VISIBLE | SS_LEFT, 5, 540, 286, 18,
+                        m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_MODEL_BADGE, m_hInstance, nullptr);
+    if (m_hwndCopilotModelUsedLabel)
+    {
+        SendMessage(m_hwndCopilotModelUsedLabel, WM_SETFONT, (WPARAM)hFont, TRUE);
+    }
+
+    m_hwndCopilotHelpfulBtn =
+        CreateWindowExW(0, L"BUTTON", L"Helpful", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 5, 562, 68, 24,
+                        m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_HELPFUL_BTN, m_hInstance, nullptr);
+    m_hwndCopilotUnhelpfulBtn =
+        CreateWindowExW(0, L"BUTTON", L"Unhelpful", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 78, 562, 68, 24,
+                        m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_UNHELPFUL_BTN, m_hInstance, nullptr);
+    m_hwndCopilotCopyBtn =
+        CreateWindowExW(0, L"BUTTON", L"Copy", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 151, 562, 68, 24,
+                        m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_COPY_BTN, m_hInstance, nullptr);
+    m_hwndCopilotRetryBtn =
+        CreateWindowExW(0, L"BUTTON", L"Retry", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 224, 562, 68, 24,
+                        m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_RETRY_BTN, m_hInstance, nullptr);
+
+    if (m_hwndCopilotHelpfulBtn)
+        SendMessage(m_hwndCopilotHelpfulBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
+    if (m_hwndCopilotUnhelpfulBtn)
+        SendMessage(m_hwndCopilotUnhelpfulBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
+    if (m_hwndCopilotCopyBtn)
+        SendMessage(m_hwndCopilotCopyBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
+    if (m_hwndCopilotRetryBtn)
+        SendMessage(m_hwndCopilotRetryBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
+
     RawrXD_ApplyCopilotChatEditLimits(m_hwndCopilotChatOutput, m_hwndCopilotChatInput);
     reloadPersistedChatHistoryIntoUi();
 
@@ -10961,6 +11051,8 @@ void Win32IDE::HandleCopilotSend()
         return;
     }
 
+    m_lastCopilotUserPrompt = userMessage;
+
     const bool hasAgenticPrefix = HasAgenticPrefix(userMessage);
 
     wchar_t validationError[512] = {};
@@ -11085,6 +11177,14 @@ void Win32IDE::HandleCopilotSend()
                                     selectedModelResolved.find(":\\") != std::string::npos ||
                                     selectedModelResolved.find('/') != std::string::npos ||
                                     selectedModelResolved.find('\\') != std::string::npos;
+
+    if (m_hwndCopilotModelUsedLabel && IsWindow(m_hwndCopilotModelUsedLabel))
+    {
+        const std::string modelSuffix = selectedModelResolved.empty() ? selectedModel : selectedModelResolved;
+        const std::string badge = modelSuffix.empty() ? "GPT-5.3-Codex • 0.9x"
+                                                      : "GPT-5.3-Codex • 0.9x | " + modelSuffix;
+        SetWindowTextW(m_hwndCopilotModelUsedLabel, utf8ToWide(badge).c_str());
+    }
 
     const bool replayingDeferredUserTurn =
         m_pendingChatOnLoadUserTurnRendered && (m_pendingChatOnLoadMessage == userMessage);
@@ -11282,6 +11382,7 @@ void Win32IDE::HandleCopilotSend()
                     conversationAddAssistant(m_streamingTokenAccumulator);
                     m_chatHistory.push_back({"assistant", m_streamingTokenAccumulator});
                     persistChatTurnToDisk("assistant", m_streamingTokenAccumulator);
+                    m_lastCopilotAssistantResponse = m_streamingTokenAccumulator;
                     recordCopilotThroughputAtComplete(*sendStart, m_streamingTokenAccumulator);
                     m_streamingTokenAccumulator.clear();
                 }
@@ -11358,6 +11459,7 @@ void Win32IDE::HandleCopilotSend()
                 conversationAddAssistant(m_streamingTokenAccumulator);
                 m_chatHistory.push_back({"assistant", m_streamingTokenAccumulator});
                 persistChatTurnToDisk("assistant", m_streamingTokenAccumulator);
+                m_lastCopilotAssistantResponse = m_streamingTokenAccumulator;
                 recordCopilotThroughputAtComplete(*sendStart, m_streamingTokenAccumulator);
                 m_streamingTokenAccumulator.clear();
             }
@@ -11543,6 +11645,14 @@ void Win32IDE::HandleCopilotClear()
     conversationClear();
     m_streamingTokenAccumulator.clear();
     ClearChatUtf8Carry(this);
+    m_lastCopilotUserPrompt.clear();
+    m_lastCopilotAssistantResponse.clear();
+    m_copilotHelpfulCount = 0;
+    m_copilotUnhelpfulCount = 0;
+    if (m_hwndCopilotModelUsedLabel && IsWindow(m_hwndCopilotModelUsedLabel))
+    {
+        SetWindowTextW(m_hwndCopilotModelUsedLabel, L"GPT-5.3-Codex • 0.9x");
+    }
     m_lastSlashStatusHint.clear();
     hideSlashOverlay();
     CommandPreview_Hide();
@@ -12071,6 +12181,9 @@ void Win32IDE::setCopilotInteractionBusyOnUiThread(bool busy)
     if (m_hwndCopilotSendBtn && IsWindow(m_hwndCopilotSendBtn))
         EnableWindow(m_hwndCopilotSendBtn, busy ? FALSE : TRUE);
 
+    if (m_hwndCopilotRetryBtn && IsWindow(m_hwndCopilotRetryBtn))
+        EnableWindow(m_hwndCopilotRetryBtn, busy ? FALSE : TRUE);
+
     if (m_hwndCopilotChatInput && IsWindow(m_hwndCopilotChatInput))
         EnableWindow(m_hwndCopilotChatInput, busy ? FALSE : TRUE);
 }
@@ -12145,6 +12258,7 @@ void Win32IDE::applyAgenticAssistantFinalOnUiThread(std::string streamAccumulato
     conversationAddAssistant(finalAssistantText);
     m_chatHistory.push_back({"assistant", finalAssistantText});
     persistChatTurnToDisk("assistant", finalAssistantText);
+    m_lastCopilotAssistantResponse = finalAssistantText;
     m_streamingTokenAccumulator.clear();
     m_chatSendInFlight.store(false);
     setCopilotInteractionBusyOnUiThread(false);
@@ -12674,7 +12788,10 @@ void Win32IDE::syncAgentContextFromActiveTab()
         if (m_agenticBridge)
         {
             m_agenticBridge->SetWorkspaceRoot(workspaceRoot);
-            m_agenticBridge->SetLanguageContext(getSyntaxLanguageName(), m_currentFile);
+            if (m_settings.currentFileContextEnabled)
+                m_agenticBridge->SetLanguageContext(getSyntaxLanguageName(), m_currentFile);
+            else
+                m_agenticBridge->SetLanguageContext(getSyntaxLanguageName(), "");
         }
         return;
     }
@@ -14847,6 +14964,12 @@ LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wPara
                         pThis->showCommandPalette();
                     return 0;
                 }
+                // Ctrl+Shift+Y → toggle current file context (fallback when accelerator isn't active)
+                if (wParam == 'Y' && ctrl && shift && !alt)
+                {
+                    pThis->routeCommand(IDM_AGENT_TOGGLE_FILE_CONTEXT);
+                    return 0;
+                }
                 // Ctrl+Shift+D → Downloads panel toggle
                 if (wParam == 'D' && ctrl && shift && !alt)
                 {
@@ -15253,7 +15376,7 @@ LRESULT CALLBACK Win32IDE::SidebarProcImpl(HWND hwnd, UINT uMsg, WPARAM wParam, 
                 {
                     if (controlId == 7211)
                     {
-                        pThis->HandleCopilotSend();
+                        pThis->postDeferredCopilotSend();
                     }
                     return 0;
                 }
@@ -15283,7 +15406,9 @@ LRESULT CALLBACK Win32IDE::SidebarProcImpl(HWND hwnd, UINT uMsg, WPARAM wParam, 
                          ", layerAvailable=" + std::to_string(layerAvailable ? 1 : 0) + "\n")
                             .c_str());
                     OutputDebugStringA("[SidebarProcImpl] Send clicked\n");
-                    pThis->HandleCopilotSend();
+                    // Leave sidebar child-control wndproc stack before executing send logic.
+                    // This avoids nested SendMessage chains and reduces stack depth spikes.
+                    pThis->postDeferredCopilotSend();
                     return 0;
                 }
                 else if (controlId == IDC_COPILOT_CLEAR_BTN)
@@ -15300,6 +15425,87 @@ LRESULT CALLBACK Win32IDE::SidebarProcImpl(HWND hwnd, UINT uMsg, WPARAM wParam, 
                         "\n[Chat] Started a new chat. Model and mode are ready.\n");
                     if (pThis->m_hwndCopilotChatInput && IsWindow(pThis->m_hwndCopilotChatInput))
                         SetFocus(pThis->m_hwndCopilotChatInput);
+                    return 0;
+                }
+                else if (controlId == IDC_COPILOT_HELPFUL_BTN)
+                {
+                    ++pThis->m_copilotHelpfulCount;
+                    pThis->appendToOutput("[ChatFeedback] Helpful +1 (helpful=" +
+                                              std::to_string(pThis->m_copilotHelpfulCount) +
+                                              ", unhelpful=" + std::to_string(pThis->m_copilotUnhelpfulCount) + ")\n",
+                                          "Output", OutputSeverity::Info);
+                    pThis->appendCopilotChatTextOnUiThread("\n[Feedback] Marked as helpful.\n");
+                    return 0;
+                }
+                else if (controlId == IDC_COPILOT_UNHELPFUL_BTN)
+                {
+                    ++pThis->m_copilotUnhelpfulCount;
+                    pThis->appendToOutput("[ChatFeedback] Unhelpful +1 (helpful=" +
+                                              std::to_string(pThis->m_copilotHelpfulCount) +
+                                              ", unhelpful=" + std::to_string(pThis->m_copilotUnhelpfulCount) +
+                                              ")\n",
+                                          "Output", OutputSeverity::Warning);
+                    pThis->appendCopilotChatTextOnUiThread("\n[Feedback] Marked as unhelpful.\n");
+                    return 0;
+                }
+                else if (controlId == IDC_COPILOT_COPY_BTN)
+                {
+                    if (pThis->m_lastCopilotAssistantResponse.empty())
+                    {
+                        pThis->appendCopilotChatTextOnUiThread("\n[Copy] No assistant response to copy yet.\n");
+                        return 0;
+                    }
+
+                    const std::wstring wText = utf8ToWide(pThis->m_lastCopilotAssistantResponse);
+                    HWND owner = pThis->m_hwndMain ? pThis->m_hwndMain : hwnd;
+                    if (!OpenClipboard(owner))
+                    {
+                        pThis->appendCopilotChatTextOnUiThread("\n[Copy] Clipboard unavailable.\n");
+                        return 0;
+                    }
+                    EmptyClipboard();
+
+                    const size_t bytes = (wText.size() + 1) * sizeof(wchar_t);
+                    HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, bytes);
+                    if (hMem)
+                    {
+                        void* data = GlobalLock(hMem);
+                        if (data)
+                        {
+                            memcpy(data, wText.c_str(), bytes);
+                            GlobalUnlock(hMem);
+                            if (!SetClipboardData(CF_UNICODETEXT, hMem))
+                            {
+                                GlobalFree(hMem);
+                            }
+                            else
+                            {
+                                pThis->appendCopilotChatTextOnUiThread("\n[Copy] Last response copied.\n");
+                            }
+                        }
+                        else
+                        {
+                            GlobalFree(hMem);
+                        }
+                    }
+                    CloseClipboard();
+                    return 0;
+                }
+                else if (controlId == IDC_COPILOT_RETRY_BTN)
+                {
+                    if (pThis->m_lastCopilotUserPrompt.empty())
+                    {
+                        pThis->appendCopilotChatTextOnUiThread("\n[Retry] No prior prompt to retry.\n");
+                        return 0;
+                    }
+
+                    if (pThis->m_hwndCopilotChatInput && IsWindow(pThis->m_hwndCopilotChatInput))
+                    {
+                        const std::wstring wPrompt = utf8ToWide(pThis->m_lastCopilotUserPrompt);
+                        SetWindowTextW(pThis->m_hwndCopilotChatInput, wPrompt.c_str());
+                    }
+                    pThis->appendCopilotChatTextOnUiThread("\n[Retry] Re-sending last prompt.\n");
+                    pThis->postDeferredCopilotSend();
                     return 0;
                 }
                 else if (controlId == IDC_MODEL_BROWSE_BTN)
@@ -15421,7 +15627,8 @@ LRESULT CALLBACK Win32IDE::SidebarProcImpl(HWND hwnd, UINT uMsg, WPARAM wParam, 
                 const int gap = pThis->dpiScale(6);
                 const int headerH = pThis->dpiScale(28);
                 const int buttonH = pThis->dpiScale(30);
-                const int minButtonW = pThis->dpiScale(76);
+                const int utilityButtonH = pThis->dpiScale(24);
+                const int modelBadgeH = pThis->dpiScale(18);
                 const int minInputH = pThis->dpiScale(72);
                 const int maxInputH = pThis->dpiScale(160);
 
@@ -15463,7 +15670,9 @@ LRESULT CALLBACK Win32IDE::SidebarProcImpl(HWND hwnd, UINT uMsg, WPARAM wParam, 
                 }
 
                 const int buttonW = (std::max)(pThis->dpiScale(72), (fullW - gap * 2) / 3);
-                const int buttonY = (std::max)(topY, panelH - margin - buttonH);
+                const int utilityButtonY = (std::max)(topY, panelH - margin - utilityButtonH);
+                const int modelBadgeY = (std::max)(topY, utilityButtonY - gap - modelBadgeH);
+                const int buttonY = (std::max)(topY, modelBadgeY - gap - buttonH);
                 const int inputH = (std::max)(minInputH, (std::min)(maxInputH, panelH / 4));
                 const int inputY = (std::max)(topY, buttonY - gap - inputH);
                 const int outputY = topY;
@@ -15474,6 +15683,16 @@ LRESULT CALLBACK Win32IDE::SidebarProcImpl(HWND hwnd, UINT uMsg, WPARAM wParam, 
                 moveControl(pThis->m_hwndCopilotSendBtn, margin, buttonY, buttonW, buttonH);
                 moveControl(pThis->m_hwndCopilotClearBtn, margin + buttonW + gap, buttonY, buttonW, buttonH);
                 moveControl(hwndNewChatBtn, margin + (buttonW + gap) * 2, buttonY, buttonW, buttonH);
+
+                const int utilityButtonW = (std::max)(pThis->dpiScale(62), (fullW - gap * 3) / 4);
+                moveControl(pThis->m_hwndCopilotModelUsedLabel, margin, modelBadgeY, fullW, modelBadgeH);
+                moveControl(pThis->m_hwndCopilotHelpfulBtn, margin, utilityButtonY, utilityButtonW, utilityButtonH);
+                moveControl(pThis->m_hwndCopilotUnhelpfulBtn, margin + utilityButtonW + gap, utilityButtonY,
+                            utilityButtonW, utilityButtonH);
+                moveControl(pThis->m_hwndCopilotCopyBtn, margin + (utilityButtonW + gap) * 2, utilityButtonY,
+                            utilityButtonW, utilityButtonH);
+                moveControl(pThis->m_hwndCopilotRetryBtn, margin + (utilityButtonW + gap) * 3, utilityButtonY,
+                            utilityButtonW, utilityButtonH);
 
                 if (hdwp)
                     EndDeferWindowPos(hdwp);
@@ -15534,7 +15753,7 @@ void Win32IDE::switchTerminalPane(int paneId)
 void Win32IDE::closeTerminalPane(int paneId)
 {
     LOG_INFO("closeTerminalPane: paneId=" + std::to_string(paneId));
-    for (auto it = m_terminalPanes.begin(); it != m_terminalPanes.end(); ++it)
+    for (auto it = m_terminalPanes.begin(); it != m_terminalPanes.end(); /* no-op */)
     {
         if (it->id == paneId)
         {
@@ -15545,7 +15764,7 @@ void Win32IDE::closeTerminalPane(int paneId)
             const bool wasPrimaryAgent = (m_primaryAgentTerminalId == paneId);
             const bool wasLastUser =
                 (m_lastUserInteractiveTerminalId == paneId) && (it->kind == TerminalPaneKind::UserInteractive);
-            m_terminalPanes.erase(it);
+            it = m_terminalPanes.erase(it);
             if (wasPrimaryAgent)
                 m_primaryAgentTerminalId = -1;
             if (wasLastUser)
@@ -15568,6 +15787,10 @@ void Win32IDE::closeTerminalPane(int paneId)
             appendToOutput("Closed terminal pane " + std::to_string(paneId) + "\n", "Output", OutputSeverity::Info);
             layoutTerminalStrip();
             return;
+        }
+        else
+        {
+            ++it;
         }
     }
     appendToOutput("Terminal pane " + std::to_string(paneId) + " not found\n", "Output", OutputSeverity::Warning);

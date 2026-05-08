@@ -254,7 +254,7 @@ std::string BoundedAgentLoop::RunLoop(const std::string& userPrompt) {
 
                 m_state.store(AgentLoopState::Verifying);
                 json diagArgs = nlohmann::json::object({{"file", toolResult.filePath}});
-                auto diagResult = AgentToolHandlers::GetDiagnostics(diagArgs);
+                auto diagResult = AgentToolHandlers::GetCompileDiagnostics(diagArgs);
 
                 if (diagResult.isSuccess() && !diagResult.output.empty() &&
                     diagResult.output != "No diagnostics") {

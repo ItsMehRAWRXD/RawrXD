@@ -742,18 +742,29 @@ void AIIDEIntegration::SwitchToModel(const std::string& model_name) {
 
 CodeContext AIIDEIntegration::GetCurrentCodeContext() {
     CodeContext context;
-    context.file_content = GetCurrentFileContent();
-    context.selected_text = GetSelectedText();
-    context.language = GetCurrentLanguage();
     
-    // Get cursor position
-    DWORD sel_start, sel_end;
-    SendMessage(m_editor_control, EM_GETSEL, (WPARAM)&sel_start, (LPARAM)&sel_end);
-    
-    // Convert character position to line/column
-    context.cursor_line = (int)SendMessage(m_editor_control, EM_LINEFROMCHAR, sel_start, 0);
-    int line_start = (int)SendMessage(m_editor_control, EM_LINEINDEX, context.cursor_line, 0);
-    context.cursor_column = (int)(sel_start - line_start);
+    // Only gather editor context if current file context is enabled
+    if (m_settings.current_file_context_enabled) {
+        context.file_content = GetCurrentFileContent();
+        context.selected_text = GetSelectedText();
+        context.language = GetCurrentLanguage();
+        
+        // Get cursor position
+        DWORD sel_start, sel_end;
+        SendMessage(m_editor_control, EM_GETSEL, (WPARAM)&sel_start, (LPARAM)&sel_end);
+        
+        // Convert character position to line/column
+        context.cursor_line = (int)SendMessage(m_editor_control, EM_LINEFROMCHAR, sel_start, 0);
+        int line_start = (int)SendMessage(m_editor_control, EM_LINEINDEX, context.cursor_line, 0);
+        context.cursor_column = (int)(sel_start - line_start);
+    } else {
+        // Context disabled: return empty context with cursor at origin
+        context.file_content = "";
+        context.selected_text = "";
+        context.language = "text";
+        context.cursor_line = 0;
+        context.cursor_column = 0;
+    }
 
     return context;
 }
@@ -879,6 +890,7 @@ void AIIDEIntegration::LoadSettings() {
     m_settings.preferred_provider = ModelProvider::Local_GGUF;
     m_settings.api_key = "";
     m_settings.api_endpoint = "";
+    m_settings.current_file_context_enabled = true;
 
     const char* appdata = std::getenv("APPDATA");
     std::filesystem::path cfg_dir = appdata ? std::filesystem::path(appdata) / "RawrXD" : std::filesystem::current_path();
@@ -914,6 +926,7 @@ void AIIDEIntegration::LoadSettings() {
         else if (key == "api_key") m_settings.api_key = val; // Legacy fallback (plaintext)
         else if (key == "api_key_enc") encryptedApiKey = val;
         else if (key == "api_endpoint") m_settings.api_endpoint = val;
+        else if (key == "current_file_context") m_settings.current_file_context_enabled = (val == "1");
     }
 
     if (!encryptedApiKey.empty()) {
@@ -946,6 +959,7 @@ void AIIDEIntegration::SaveSettings() {
         out << "api_key_enc=\n";
     }
     out << "api_endpoint=" << m_settings.api_endpoint << "\n";
+    out << "current_file_context=" << (m_settings.current_file_context_enabled ? "1" : "0") << "\n";
 }
 
 void AIIDEIntegration::ShowSettingsDialog() {

@@ -32,6 +32,7 @@
 #include "Win32IDE_SubAgent.h"
 #include <algorithm>
 #include <chrono>
+#include <cctype>
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>
@@ -47,6 +48,31 @@
 
 namespace
 {
+
+[[nodiscard]] bool isBlankPrompt(const std::string& prompt)
+{
+    for (unsigned char ch : prompt)
+    {
+        if (!std::isspace(ch))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+[[nodiscard]] std::string clampPromptForContextBudget(const std::string& prompt, size_t contextLimit)
+{
+    const size_t dynamicBudget = std::clamp(contextLimit * 8ull, 4096ull, 96ull * 1024ull);
+    if (prompt.size() <= dynamicBudget)
+    {
+        return prompt;
+    }
+
+    std::string clamped = prompt.substr(0, dynamicBudget);
+    clamped += "\n\n[truncated by RawrXD: prompt exceeded local context-safe budget]";
+    return clamped;
+}
 
 /// Match Win32IDE::syncAgenticToolGuardrailsFromWorkspace — one canonical root for tools + explorer parity.
 [[nodiscard]] std::string canonicalWorkspaceRootForAgent(const std::string& root)
@@ -734,11 +760,43 @@ bool envDisablesCapabilityHotpatch(const char* varName)
     return "cmd /c \"call \\\"" + vcvarsBat + "\\\" && \\\"" + toolPath + "\\\" " + toolArgsTail + "\"";
 }
 
+[[nodiscard]] std::optional<bool> currentFileContextEnvOverride()
+{
+    const char* value = std::getenv("RAWRXD_CURRENT_FILE_CONTEXT");
+    if (!value || !value[0])
+    {
+        return std::nullopt;
+    }
+
+    std::string normalized(value);
+    std::transform(normalized.begin(), normalized.end(), normalized.begin(),
+                   [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+
+    if (normalized == "0" || normalized == "false" || normalized == "no" || normalized == "off")
+    {
+        return false;
+    }
+    return true;
+}
+
+[[nodiscard]] bool shouldInjectCurrentFileContext(const Win32IDE* ide)
+{
+    if (const std::optional<bool> envOverride = currentFileContextEnvOverride(); envOverride.has_value())
+    {
+        return envOverride.value();
+    }
+    if (!ide)
+    {
+        return true;
+    }
+    return ide->m_settings.currentFileContextEnabled;
+}
+
 }  // namespace
 
 std::string AgenticBridge::BuildOpenTabsPromptContext() const
 {
-    if (!m_ide || m_ide->m_editorTabs.empty())
+    if (!m_ide || !shouldInjectCurrentFileContext(m_ide) || m_ide->m_editorTabs.empty())
     {
         return {};
     }
@@ -1264,22 +1322,60 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt)
         }
     }
 
-    // Prepend workspace and active-editor context so generic tab switches immediately
-    // influence agent reasoning.
+    // Always include workspace root; active-editor/open-tab context is optional.
     if (!m_workspaceRoot.empty())
     {
         refinedPrompt = "[Workspace root: " + m_workspaceRoot + "]\n\n" + refinedPrompt;
     }
-    const std::string openTabsContext = BuildOpenTabsPromptContext();
-    if (!openTabsContext.empty())
+    if (shouldInjectCurrentFileContext(m_ide))
     {
-        refinedPrompt = openTabsContext + refinedPrompt;
+        const std::string openTabsContext = BuildOpenTabsPromptContext();
+        if (!openTabsContext.empty())
+        {
+            refinedPrompt = openTabsContext + refinedPrompt;
+        }
+    }
+
+    // Prompt diff logging — opt-in via RAWRXD_PROMPT_DIFF_LOG=1.
+    // Writes a compact summary to the IDE log so hot-toggle transitions can be audited
+    // without leaking full prompt content into production logs.
+    {
+        static const bool s_promptDiffLog = []() {
+            char buf[8]{};
+            return GetEnvironmentVariableA("RAWRXD_PROMPT_DIFF_LOG", buf, sizeof(buf)) > 0 &&
+                   buf[0] == '1';
+        }();
+        if (s_promptDiffLog)
+        {
+            const bool ctxEnabled = shouldInjectCurrentFileContext(m_ide);
+            std::string summary = "[PromptDiff] ctx=" + std::string(ctxEnabled ? "ON" : "OFF") +
+                                  " bytes=" + std::to_string(refinedPrompt.size());
+            // Append the first 120 chars so stale fragments (file paths, language hints) are
+            // visible in the log without dumping the full prompt.
+            if (!refinedPrompt.empty())
+            {
+                const std::string head = refinedPrompt.substr(0, 120);
+                summary += " head=[" + head + "]";
+            }
+            IDELogger::getInstance().info(__FUNCTION__, summary);
+        }
     }
 
     if (refinedPrompt.size() > kMaxRefinedPromptBytes)
     {
         closePerf();
         return {AgentResponseType::ANSWER, "Error: Prompt exceeds maximum allowed size"};
+    }
+
+    if (isBlankPrompt(refinedPrompt))
+    {
+        closePerf();
+        return {AgentResponseType::ANSWER, "Error: Empty prompt suppressed (backend safety guard)."};
+    }
+
+    if (SharedCpuEngine()->IsModelLoaded())
+    {
+        refinedPrompt = clampPromptForContextBudget(refinedPrompt, SharedCpuEngine()->GetContextLimit());
     }
 
     applyAgentCapabilityHotpatches(refinedPrompt);
@@ -1340,13 +1436,15 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt)
         }
     }
     {
-        char correctedBuf[65536];
+        // Heap-allocate: 64 KB on the stack inside ExecuteAgentCommand (which already carries
+        // large locals + lambda frames) is the primary STATUS_STACK_BUFFER_OVERRUN trigger.
+        std::vector<char> correctedBuf(65536, '\0');
         CorrectionOutcome hot = AgenticHotpatchOrchestrator::instance().analyzeAndCorrect(
-            response.c_str(), response.size(), refinedPrompt.c_str(), refinedPrompt.size(), correctedBuf,
-            sizeof(correctedBuf));
+            response.c_str(), response.size(), refinedPrompt.c_str(), refinedPrompt.size(),
+            correctedBuf.data(), correctedBuf.size());
         if (hot.success && hot.detail && correctedBuf[0] != '\0')
         {
-            response.assign(correctedBuf);
+            response.assign(correctedBuf.data());
             LOG_INFO("AgenticHotpatchOrchestrator correction applied: " + std::string(hot.detail ? hot.detail : ""));
         }
     }
@@ -1480,15 +1578,19 @@ void AgenticBridge::applyAgentCapabilityHotpatches(std::string& refinedPrompt)
 
 void AgenticBridge::SetLanguageContext(const std::string& language, const std::string& filePath)
 {
-    m_languageContext = language;
-    m_fileContext = filePath;
+    const bool allowCurrentFileContext = shouldInjectCurrentFileContext(m_ide);
+    const std::string effectiveLanguage = allowCurrentFileContext ? language : std::string();
+    const std::string effectiveFilePath = allowCurrentFileContext ? filePath : std::string();
+
+    m_languageContext = effectiveLanguage;
+    m_fileContext = effectiveFilePath;
     // Propagate to the native agent if available
     if (m_nativeAgent)
     {
-        m_nativeAgent->SetLanguageContext(language);
-        m_nativeAgent->SetFileContext(filePath);
+        m_nativeAgent->SetLanguageContext(effectiveLanguage);
+        m_nativeAgent->SetFileContext(effectiveFilePath);
     }
-    LOG_INFO("Language context set: " + language + " file: " + filePath);
+    LOG_INFO("Language context set: " + effectiveLanguage + " file: " + effectiveFilePath);
 }
 
 void AgenticBridge::SetContextSize(const std::string& sizeName)

@@ -1277,7 +1277,7 @@ bool SelfHealingEngine::RecreateWindows()
     // Trigger a WM_SIZE to re-layout child panels
     RECT rc;
     GetClientRect(hwnd, &rc);
-    SendMessageA(hwnd, WM_SIZE, SIZE_RESTORED,
+    PostMessageA(hwnd, WM_SIZE, SIZE_RESTORED,
                  MAKELPARAM(rc.right - rc.left, rc.bottom - rc.top));
     
     return true;

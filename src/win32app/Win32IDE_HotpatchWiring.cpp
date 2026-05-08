@@ -1976,6 +1976,13 @@ bool HeadlessIDE::probeBackendHealth(AIBackendType type)
 
 std::string HeadlessIDE::routeInferenceRequest(const std::string& prompt)
 {
+    const bool blankPrompt = std::all_of(prompt.begin(), prompt.end(), [](unsigned char ch)
+                                         { return std::isspace(ch) != 0; });
+    if (blankPrompt)
+    {
+        return "[error] Empty prompt suppressed (backend safety guard)";
+    }
+
     if (!isReasonablePromptSize(prompt))
     {
         return "[error] Prompt too large";

@@ -191,6 +191,18 @@ double ComputeTemperatureLinkedTargetTps(float temperature) {
 
 void Win32IDE::initHotpatchUI() {
     if (m_hotpatchUIInitialized) return;
+
+    // Hotpatching is opt-in via environment variable for stability.
+    // Default OFF to prevent startup crashes from experimental code paths.
+    const char* envHotpatch = std::getenv("RAWRXD_ENABLE_70B_HOTPATCH");
+    const bool hotpatchRequested = envHotpatch && (envHotpatch[0] == '1' ||
+        envHotpatch[0] == 't' || envHotpatch[0] == 'T');
+    if (!hotpatchRequested) {
+        m_hotpatchEnabled = false;
+        m_hotpatchUIInitialized = true;
+        return;
+    }
+
     m_hotpatchEnabled = true;
     m_hotpatchSavedTargetTps = ComputeTemperatureLinkedTargetTps(m_inferenceConfig.temperature);
     UnifiedHotpatchManager::instance().set_target_tps(m_hotpatchSavedTargetTps);

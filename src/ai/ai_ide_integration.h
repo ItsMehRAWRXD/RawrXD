@@ -147,7 +147,12 @@ private:
         ModelProvider preferred_provider;
         std::string api_key;
         std::string api_endpoint;
+        bool current_file_context_enabled = true;  // Toggle for current file context analysis
     } m_settings;
+
+    // Current File Context Toggle
+    void SetCurrentFileContextEnabled(bool enabled) { m_settings.current_file_context_enabled = enabled; }
+    bool IsCurrentFileContextEnabled() const { return m_settings.current_file_context_enabled; }
 
     // Sovereign Cursor
     std::unique_ptr<SovereignCursor> m_sovereign_cursor;

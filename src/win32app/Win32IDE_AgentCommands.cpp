@@ -20,6 +20,7 @@
 #include <cctype>
 #include <fstream>
 #include <sstream>
+#include <vector>
 
 // Local IDM constants used in switch-case dispatch (defined via #define in Commands.cpp/Win32IDE.cpp)
 // IDM_AGENT_AUTONOMOUS_COMMUNICATOR: free slot in 4163–4199 range
@@ -37,6 +38,20 @@ void HandleUnifiedTelemetry(void* idePtr);
 
 namespace
 {
+
+std::wstring utf8ToWideLocal(const std::string& text)
+{
+    if (text.empty())
+        return {};
+
+    const int wideLength = MultiByteToWideChar(CP_UTF8, 0, text.c_str(), static_cast<int>(text.size()), nullptr, 0);
+    if (wideLength <= 0)
+        return {};
+
+    std::wstring result(static_cast<size_t>(wideLength), L'\0');
+    MultiByteToWideChar(CP_UTF8, 0, text.c_str(), static_cast<int>(text.size()), result.data(), wideLength);
+    return result;
+}
 
 Agentic::AgenticPlanningOrchestrator* getPlanningOrchestratorReady()
 {
@@ -424,7 +439,10 @@ void Win32IDE::initializeAgenticBridge()
                 }
 
                 // Set initial language context
-                m_agenticBridge->SetLanguageContext(getSyntaxLanguageName(), m_currentFile);
+                if (m_settings.currentFileContextEnabled)
+                    m_agenticBridge->SetLanguageContext(getSyntaxLanguageName(), m_currentFile);
+                else
+                    m_agenticBridge->SetLanguageContext(getSyntaxLanguageName(), "");
 
                 // Warm up the model with a simple query to reduce first-response latency
                 std::thread(
@@ -1505,10 +1523,13 @@ void Win32IDE::handleAgentCommand(int commandId)
     if (!m_agenticBridge)
         initializeAgenticBridge();
 
-    // Push current language context to the agent on every command dispatch
+    // Sync language/file context to match current-file-context setting.
     if (m_agenticBridge)
     {
-        m_agenticBridge->SetLanguageContext(getSyntaxLanguageName(), m_currentFile);
+        if (m_settings.currentFileContextEnabled)
+            m_agenticBridge->SetLanguageContext(getSyntaxLanguageName(), m_currentFile);
+        else
+            m_agenticBridge->SetLanguageContext("", "");
     }
 
     switch (commandId)
@@ -1538,6 +1559,114 @@ void Win32IDE::handleAgentCommand(int commandId)
         case IDM_AGENT_AUTONOMOUS_COMMUNICATOR:
             HandleAutonomousCommunicator(this);
             break;
+
+        // --- Copilot Chat Actions (Global GUI commands) ---
+        case IDM_COPILOT_MARK_HELPFUL:
+        {
+            ++m_copilotHelpfulCount;
+            appendToOutput("[ChatFeedback] Helpful +1 (helpful=" + std::to_string(m_copilotHelpfulCount) +
+                               ", unhelpful=" + std::to_string(m_copilotUnhelpfulCount) + ")\n",
+                           "Output", OutputSeverity::Info);
+            appendCopilotChatTextOnUiThread("\n[Feedback] Marked as helpful.\n");
+            break;
+        }
+        case IDM_COPILOT_MARK_UNHELPFUL:
+        {
+            ++m_copilotUnhelpfulCount;
+            appendToOutput("[ChatFeedback] Unhelpful +1 (helpful=" + std::to_string(m_copilotHelpfulCount) +
+                               ", unhelpful=" + std::to_string(m_copilotUnhelpfulCount) + ")\n",
+                           "Output", OutputSeverity::Warning);
+            appendCopilotChatTextOnUiThread("\n[Feedback] Marked as unhelpful.\n");
+            break;
+        }
+        case IDM_COPILOT_COPY_LAST_RESPONSE:
+        {
+            if (m_lastCopilotAssistantResponse.empty())
+            {
+                appendCopilotChatTextOnUiThread("\n[Copy] No assistant response to copy yet.\n");
+                break;
+            }
+
+            const std::wstring wText = utf8ToWideLocal(m_lastCopilotAssistantResponse);
+            HWND owner = m_hwndMain && IsWindow(m_hwndMain) ? m_hwndMain : nullptr;
+            if (!OpenClipboard(owner))
+            {
+                appendCopilotChatTextOnUiThread("\n[Copy] Clipboard unavailable.\n");
+                break;
+            }
+
+            EmptyClipboard();
+            const size_t bytes = (wText.size() + 1) * sizeof(wchar_t);
+            HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, bytes);
+            if (hMem)
+            {
+                void* data = GlobalLock(hMem);
+                if (data)
+                {
+                    memcpy(data, wText.c_str(), bytes);
+                    GlobalUnlock(hMem);
+                    if (!SetClipboardData(CF_UNICODETEXT, hMem))
+                    {
+                        GlobalFree(hMem);
+                    }
+                    else
+                    {
+                        appendCopilotChatTextOnUiThread("\n[Copy] Last response copied.\n");
+                    }
+                }
+                else
+                {
+                    GlobalFree(hMem);
+                }
+            }
+            CloseClipboard();
+            break;
+        }
+        case IDM_COPILOT_RETRY_LAST_PROMPT:
+        {
+            if (m_lastCopilotUserPrompt.empty())
+            {
+                appendCopilotChatTextOnUiThread("\n[Retry] No prior prompt to retry.\n");
+                break;
+            }
+
+            if (m_hwndCopilotChatInput && IsWindow(m_hwndCopilotChatInput))
+            {
+                const std::wstring retryPrompt = utf8ToWideLocal(m_lastCopilotUserPrompt);
+                SetWindowTextW(m_hwndCopilotChatInput, retryPrompt.c_str());
+            }
+            appendCopilotChatTextOnUiThread("\n[Retry] Re-sending last prompt.\n");
+            postDeferredCopilotSend();
+            break;
+        }
+
+        // --- Current File Context Toggle ---
+        case IDM_AGENT_TOGGLE_FILE_CONTEXT:
+        {
+            m_settings.currentFileContextEnabled = !m_settings.currentFileContextEnabled;
+            saveSettings();
+            std::string status = m_settings.currentFileContextEnabled ? "enabled" : "disabled";
+            showAgentActivityStatus("Current File Context " + status);
+            if (m_agenticBridge)
+            {
+                if (m_settings.currentFileContextEnabled)
+                    m_agenticBridge->SetLanguageContext(getSyntaxLanguageName(), m_currentFile);
+                else
+                    m_agenticBridge->SetLanguageContext("", "");
+            }
+            // Refresh menu checkmark
+            HMENU hMenu = GetMenu(m_hwndMain);
+            if (hMenu)
+            {
+                HMENU hAgentMenu = GetSubMenu(hMenu, 6); // Approximate Agent menu index
+                if (hAgentMenu)
+                {
+                    CheckMenuItem(hAgentMenu, IDM_AGENT_TOGGLE_FILE_CONTEXT,
+                                  m_settings.currentFileContextEnabled ? MF_CHECKED : MF_UNCHECKED);
+                }
+            }
+            break;
+        }
 
         // --- Autonomy ---
         case IDM_AUTONOMY_TOGGLE:

@@ -42,7 +42,9 @@ bool SlashCommandParser::IsSlashCommand(const std::string& input) {
 std::vector<std::string> SlashCommandParser::AvailableCommands() {
     return {
         "edit", "terminal", "search", "read", "write", "memory", "refactor", "git",
-        "explain", "fix", "test", "optimize", "help",
+        "edit", "terminal", "search", "read", "write", "memory", "refactor", "git",
+        "explain", "fix", "test", "optimize", "taskframe", "framework", "harden", "audit",
+        "language", "lang", "context", "help",
         "streaming", "streaming status", "streaming autopatch", "streaming throttle"
     };
 }
@@ -59,6 +61,10 @@ RawrXD Slash Commands:
     /memory <cmd> [path] [text] Manage persistent /memories files via the main agent HUB
   /refactor <type> [sel]      Refactor code (extract, rename, simplify, etc)
   /git <action> [args]        Git operations (commit, diff, log, status)
+    /taskframe <job text>       Build deterministic execution framework for a task
+    /framework <job text>       Alias for /taskframe
+    /harden <module_name>       Generate reliability audit harness scaffold
+    /audit <module_name>        Alias for /harden
   /help [command]             Show this help or help for specific command
 )";
     } else if (command == "edit") {
@@ -85,6 +91,14 @@ RawrXD Slash Commands:
         return "/test [FILE|PATTERN]\nGenerate or run tests for the specified file or pattern.";
     } else if (command == "optimize") {
         return "/optimize [FILE|selection]\nOptimize code performance in the specified file or selection.";
+    } else if (command == "taskframe" || command == "framework") {
+        return "/taskframe <job/task text>\nGenerate a deterministic phased execution framework including assertions, logging plan, and pass/fail gates.";
+    } else if (command == "harden" || command == "audit") {
+        return "/harden <module_name>\nGenerate deterministic audit harness scaffolding (PromptAuditHarness + module-specific _Audit.cpp template) with boundary purge assertions.";
+    } else if (command == "language" || command == "lang") {
+        return "/language <id> [modifiers]\nSwitch language context. Alias: /lang\nExamples:\n  /language cpp\n  /language rust gpu\n  /language python ml\n  /lang ts\n  /language detect  (infer from active file extension)";
+    } else if (command == "context") {
+        return "/context <profile> [modifiers]\nFull execution context switch bundling language, runtime, toolchain, target, and inference routing.\nExamples:\n  /context rust\n  /context cpp +cuda +vulkan\n  /context python ml gpu\n  /context wasm systems\n  /context detect";
     } else if (command == "streaming") {
         return R"(/streaming <subcommand> [args]
 Streaming engine control commands:
@@ -271,6 +285,10 @@ ParsedCommand SlashCommandParser::Parse(const std::string& input) {
     if (cmdName == "fix")      return ParseFix(args);
     if (cmdName == "test")     return ParseTest(args);
     if (cmdName == "optimize") return ParseOptimize(args);
+    if (cmdName == "taskframe" || cmdName == "framework") return ParseTaskframe(args);
+    if (cmdName == "harden" || cmdName == "audit") return ParseHarden(args);
+    if (cmdName == "language" || cmdName == "lang") return ParseLanguage(args);
+    if (cmdName == "context") return ParseContext(args);
     if (cmdName == "streaming") return ParseStreaming(args);
     if (cmdName == "help") {
         cmd.command = "help";
@@ -467,6 +485,394 @@ ParsedCommand SlashCommandParser::ParseOptimize(const std::vector<std::string>& 
     cmd.args = args;
     cmd.valid = true;
     return cmd;
+}
+
+ParsedCommand SlashCommandParser::ParseTaskframe(const std::vector<std::string>& args) {
+    ParsedCommand cmd;
+    cmd.command = "taskframe";
+    if (args.empty()) {
+        cmd.error = "taskframe requires job/task text. Example: /taskframe context firewall stress harness";
+        return cmd;
+    }
+    cmd.args = args;
+    cmd.valid = true;
+    return cmd;
+}
+
+ParsedCommand SlashCommandParser::ParseHarden(const std::vector<std::string>& args) {
+    ParsedCommand cmd;
+    cmd.command = "harden";
+    if (args.empty()) {
+        cmd.error = "harden requires a module name. Example: /harden AgenticBridge";
+        return cmd;
+    }
+    cmd.args = args;
+    cmd.valid = true;
+    return cmd;
+}
+
+std::string SlashCommandParser::BuildTaskFramework(const std::vector<std::string>& args) {
+    std::string objective;
+    for (size_t i = 0; i < args.size(); ++i) {
+        if (i > 0) {
+            objective += " ";
+        }
+        objective += args[i];
+    }
+
+    std::string text;
+    text += "Execution Framework\n";
+    text += "Objective: " + objective + "\n\n";
+    text += "Phase 1 - Deterministic Harness\n";
+    text += "1. Capture initial bridge snapshot (toggle state, active file, language, session id).\n";
+    text += "2. Execute sequence: open file -> query -> disable context -> query -> enable context -> query.\n";
+    text += "3. Record per-dispatch audit entry (sequence, context-enabled, injected byte counters, prompt hash).\n\n";
+    text += "Phase 2 - Assertions\n";
+    text += "1. Disabled state: openTabsBytes == 0 and activeFile/language are empty.\n";
+    text += "2. Re-enable state: context bytes increase and active file context returns without restart.\n";
+    text += "3. Boundary purge: no stale prompt hash reuse across disable transition.\n\n";
+    text += "Phase 3 - Evidence Collection\n";
+    text += "1. Save compact prompt audit logs (sizes + hashes, no raw prompt body).\n";
+    text += "2. Save bridge state snapshots before/after each transition.\n";
+    text += "3. Emit pass/fail summary with first offending sequence id on failure.\n\n";
+    text += "Phase 4 - Hardening Extensions\n";
+    text += "1. Rapid toggle spam test (20 cycles).\n";
+    text += "2. Concurrent request test (2 overlapping agent requests).\n";
+    text += "3. Headless override test (--no-current-file-context).\n";
+    text += "4. Workspace switch and panel reopen lifecycle test.\n\n";
+    text += "Definition of Done\n";
+    text += "1. All assertions pass across GUI and headless lanes.\n";
+    text += "2. No stale context after disable transitions.\n";
+    text += "3. Evidence artifacts are reproducible and deterministic.\n";
+    return text;
+}
+
+std::string SlashCommandParser::BuildHardenHarness(const std::vector<std::string>& args) {
+    std::string module;
+    for (size_t i = 0; i < args.size(); ++i) {
+        if (i > 0) {
+            module += "_";
+        }
+        module += args[i];
+    }
+
+    std::string objective;
+    for (size_t i = 0; i < args.size(); ++i) {
+        if (i > 0) {
+            objective += " ";
+        }
+        objective += args[i];
+    }
+
+    std::string out;
+    out += "Harden Scaffold\n";
+    out += "Module: " + objective + "\n";
+    out += "Generated files:\n";
+    out += "1. PromptAuditHarness.h\n";
+    out += "2. " + module + "_Audit.cpp\n\n";
+
+    out += "PromptAuditHarness.h template\n";
+    out += "--------------------------------\n";
+    out += "#pragma once\n";
+    out += "#include <cstdint>\n";
+    out += "#include <functional>\n";
+    out += "#include <string>\n";
+    out += "#include <vector>\n\n";
+    out += "struct PromptAuditEntry {\n";
+    out += "    uint64_t sequence = 0;\n";
+    out += "    bool currentFileContextEnabled = false;\n";
+    out += "    bool cliOverridePresent = false;\n";
+    out += "    size_t injectedBytes = 0;\n";
+    out += "    size_t openTabsBytes = 0;\n";
+    out += "    size_t workspaceBytes = 0;\n";
+    out += "    size_t activeFileBytes = 0;\n";
+    out += "    size_t languageBytes = 0;\n";
+    out += "    size_t userPromptBytes = 0;\n";
+    out += "    std::string activeFile;\n";
+    out += "    std::string language;\n";
+    out += "    uint64_t promptHash = 0;\n";
+    out += "    std::string sources;\n";
+    out += "};\n\n";
+    out += "class PromptAuditHarness {\n";
+    out += "public:\n";
+    out += "    using Step = std::function<void()>;\n";
+    out += "    explicit PromptAuditHarness(std::string moduleName);\n";
+    out += "    void AddStep(const std::string& name, Step fn);\n";
+    out += "    void Snapshot(const PromptAuditEntry& entry);\n";
+    out += "    bool AssertBoundaryPurge(const PromptAuditEntry& entry, std::string& reason) const;\n";
+    out += "    bool AssertHashShift(uint64_t previousHash, uint64_t currentHash, std::string& reason) const;\n";
+    out += "    int Run(std::string& reportOut);\n";
+    out += "private:\n";
+    out += "    std::string module_;\n";
+    out += "    std::vector<std::pair<std::string, Step>> steps_;\n";
+    out += "    std::vector<PromptAuditEntry> entries_;\n";
+    out += "};\n\n";
+
+    out += module + "_Audit.cpp template\n";
+    out += "--------------------------------\n";
+    out += "#include \"PromptAuditHarness.h\"\n";
+    out += "#include <string>\n\n";
+    out += "int Run" + module + "HardenAudit() {\n";
+    out += "    PromptAuditHarness harness(\"" + objective + "\");\n";
+    out += "    harness.AddStep(\"Open Source\", []() { /* open target file */ });\n";
+    out += "    harness.AddStep(\"Enable Context\", []() { /* toggle ON */ });\n";
+    out += "    harness.AddStep(\"Verify Injection\", []() { /* assert openTabsBytes > 0 */ });\n";
+    out += "    harness.AddStep(\"Disable Context\", []() { /* toggle OFF */ });\n";
+    out += "    harness.AddStep(\"Assert Purge\", []() {\n";
+    out += "        // assert openTabsBytes == 0, activeFile empty, language empty\n";
+    out += "    });\n";
+    out += "    harness.AddStep(\"Re-enable Context\", []() { /* toggle ON */ });\n";
+    out += "    harness.AddStep(\"Verify Reinjection\", []() { /* assert context returns */ });\n\n";
+    out += "    std::string report;\n";
+    out += "    return harness.Run(report);\n";
+    out += "}\n\n";
+
+    out += "Deterministic validation sequence\n";
+    out += "--------------------------------\n";
+    out += "1. open file -> query -> snapshot\n";
+    out += "2. disable context -> query -> snapshot\n";
+    out += "3. enable context -> query -> snapshot\n";
+    out += "4. assert OFF snapshot has zero context bytes\n";
+    out += "5. assert hash changes after file switch and after re-enable\n";
+    out += "6. run rapid-toggle and concurrent-request stress lanes\n";
+    return out;
+}
+
+// ---------------------------------------------------------------------------
+// Language / Context registry and resolver
+// ---------------------------------------------------------------------------
+
+namespace {
+
+struct LanguageEntry {
+    const char* id;
+    const char* mode;
+    const char* runtime;
+    const char* toolchain;
+    const char* target;
+    const char* ext;    // canonical file extension for auto-detect
+};
+
+// Full coverage registry — maps every alias to a canonical profile.
+static const LanguageEntry kLangRegistry[] = {
+    // Systems
+    {"c",          "C",        "native",  "gcc",     "cpu",      ".c"},
+    {"cpp",        "CPP",      "native",  "msvc",    "cpu",      ".cpp"},
+    {"c++",        "CPP",      "native",  "msvc",    "cpu",      ".cpp"},
+    {"c/c++",      "CPP",      "native",  "msvc",    "cpu",      ".cpp"},
+    {"rust",       "RUST",     "native",  "cargo",   "cpu",      ".rs"},
+    {"rs",         "RUST",     "native",  "cargo",   "cpu",      ".rs"},
+    {"zig",        "ZIG",      "native",  "zig",     "cpu",      ".zig"},
+    {"asm",        "ASM",      "native",  "masm64",  "cpu",      ".asm"},
+    {"assembly",   "ASM",      "native",  "masm64",  "cpu",      ".asm"},
+    {"nasm",       "ASM",      "native",  "nasm",    "cpu",      ".asm"},
+    {"fortran",    "FORTRAN",  "native",  "gfortran","cpu",      ".f90"},
+    // Web
+    {"html",       "HTML",     "browser", "none",    "wasm",     ".html"},
+    {"css",        "CSS",      "browser", "none",    "wasm",     ".css"},
+    {"javascript", "JS",       "browser", "node",    "wasm",     ".js"},
+    {"js",         "JS",       "browser", "node",    "wasm",     ".js"},
+    {"typescript", "TS",       "browser", "node",    "wasm",     ".ts"},
+    {"ts",         "TS",       "browser", "node",    "wasm",     ".ts"},
+    {"js/ts",      "TS",       "browser", "node",    "wasm",     ".ts"},
+    {"html/css",   "WEB",      "browser", "none",    "wasm",     ".html"},
+    {"react",      "REACT",    "browser", "node",    "wasm",     ".tsx"},
+    {"vue",        "VUE",      "browser", "node",    "wasm",     ".vue"},
+    {"svelte",     "SVELTE",   "browser", "node",    "wasm",     ".svelte"},
+    {"node",       "JS",       "node",    "node",    "cpu",      ".js"},
+    {"deno",       "TS",       "deno",    "deno",    "cpu",      ".ts"},
+    {"wasm",       "WASM",     "wasm",    "emcc",    "wasm",     ".wat"},
+    // JVM
+    {"java",       "JAVA",     "jvm",     "maven",   "cpu",      ".java"},
+    {"kotlin",     "KOTLIN",   "jvm",     "gradle",  "cpu",      ".kt"},
+    {"scala",      "SCALA",    "jvm",     "sbt",     "cpu",      ".scala"},
+    {"groovy",     "GROOVY",   "jvm",     "gradle",  "cpu",      ".groovy"},
+    // .NET
+    {"csharp",     "CSHARP",   "clr",     "msbuild", "cpu",      ".cs"},
+    {"c#",         "CSHARP",   "clr",     "msbuild", "cpu",      ".cs"},
+    {"fsharp",     "FSHARP",   "clr",     "msbuild", "cpu",      ".fs"},
+    {"f#",         "FSHARP",   "clr",     "msbuild", "cpu",      ".fs"},
+    {"vbnet",      "VBNET",    "clr",     "msbuild", "cpu",      ".vb"},
+    // Scripting / AI
+    {"python",     "PYTHON",   "cpython", "pip",     "cpu",      ".py"},
+    {"py",         "PYTHON",   "cpython", "pip",     "cpu",      ".py"},
+    {"r",          "R",        "r",       "rscript", "cpu",      ".r"},
+    {"julia",      "JULIA",    "julia",   "julia",   "cpu",      ".jl"},
+    {"lua",        "LUA",      "lua",     "lua",     "cpu",      ".lua"},
+    {"perl",       "PERL",     "perl",    "perl",    "cpu",      ".pl"},
+    {"bash",       "SHELL",    "bash",    "bash",    "cpu",      ".sh"},
+    {"shell",      "SHELL",    "bash",    "bash",    "cpu",      ".sh"},
+    {"zsh",        "SHELL",    "zsh",     "zsh",     "cpu",      ".zsh"},
+    {"powershell", "PWSH",     "pwsh",    "pwsh",    "cpu",      ".ps1"},
+    // Functional
+    {"haskell",    "HASKELL",  "ghc",     "cabal",   "cpu",      ".hs"},
+    {"elixir",     "ELIXIR",   "beam",    "mix",     "cpu",      ".ex"},
+    {"erlang",     "ERLANG",   "beam",    "rebar3",  "cpu",      ".erl"},
+    {"ocaml",      "OCAML",    "ocaml",   "dune",    "cpu",      ".ml"},
+    {"lisp",       "LISP",     "lisp",    "sbcl",    "cpu",      ".lisp"},
+    {"clojure",    "CLOJURE",  "jvm",     "lein",    "cpu",      ".clj"},
+    // Data / AI / ML
+    {"python-ml",  "PYTHON_ML","cpython", "pip",     "gpu",      ".py"},
+    {"pytorch",    "PYTHON_ML","cpython", "pip",     "gpu",      ".py"},
+    {"tensorflow", "PYTHON_ML","cpython", "pip",     "gpu",      ".py"},
+    {"jax",        "PYTHON_ML","cpython", "pip",     "gpu",      ".py"},
+    {"sql",        "SQL",      "none",    "none",    "cpu",      ".sql"},
+    {"nosql",      "NOSQL",    "none",    "none",    "cpu",      ""},
+    // GPU / Compute
+    {"cuda",       "CUDA",     "nvcc",    "nvcc",    "gpu",      ".cu"},
+    {"opencl",     "OPENCL",   "ocl",     "gcc",     "gpu",      ".cl"},
+    {"vulkan",     "VULKAN",   "vulkan",  "glslc",   "gpu",      ".glsl"},
+    {"metal",      "METAL",    "metal",   "xcrun",   "gpu",      ".metal"},
+    {"hlsl",       "HLSL",     "dx12",    "fxc",     "gpu",      ".hlsl"},
+    // Embedded
+    {"arm",        "ARM",      "native",  "arm-gcc", "embedded", ".s"},
+    {"riscv",      "RISCV",    "native",  "riscv-gcc","embedded",".s"},
+    {"embedded-c", "C",        "none",    "arm-gcc", "embedded", ".c"},
+    // Meta / Tooling
+    {"cmake",      "CMAKE",    "none",    "cmake",   "cpu",      ".cmake"},
+    {"dockerfile", "DOCKER",   "docker",  "docker",  "cpu",      "Dockerfile"},
+    {"go",         "GO",       "go",      "go",      "cpu",      ".go"},
+    {"golang",     "GO",       "go",      "go",      "cpu",      ".go"},
+    {"ruby",       "RUBY",     "ruby",    "gem",     "cpu",      ".rb"},
+    {"php",        "PHP",      "php",     "php",     "cpu",      ".php"},
+    {"swift",      "SWIFT",    "swift",   "xcode",   "cpu",      ".swift"},
+    {"dart",       "DART",     "dart",    "flutter", "cpu",      ".dart"},
+    // Compound profiles
+    {"rust/cpp",   "SYSTEMS",  "native",  "msvc",    "cpu",      ""},
+    {"systems",    "SYSTEMS",  "native",  "msvc",    "cpu",      ""},
+};
+
+const LanguageEntry* FindLangEntry(const std::string& id) {
+    std::string lower = id;
+    std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
+    for (const auto& e : kLangRegistry) {
+        if (lower == e.id) return &e;
+    }
+    return nullptr;
+}
+
+// Extension → mode (for /language detect)
+const char* LangFromExtension(const std::string& ext) {
+    for (const auto& e : kLangRegistry) {
+        if (*e.ext && ext == e.ext) return e.mode;
+    }
+    return nullptr;
+}
+
+struct ContextModifiers {
+    bool gpu = false;
+    bool wasm = false;
+    bool ml = false;
+    bool cuda = false;
+    bool vulkan = false;
+    bool embedded = false;
+};
+
+ContextModifiers ParseModifiers(const std::vector<std::string>& tokens, size_t start) {
+    ContextModifiers m;
+    for (size_t i = start; i < tokens.size(); ++i) {
+        std::string t = tokens[i];
+        std::transform(t.begin(), t.end(), t.begin(), ::tolower);
+        // Strip leading +/-
+        if (!t.empty() && (t[0] == '+' || t[0] == '-')) t = t.substr(1);
+        if (t == "gpu") m.gpu = true;
+        else if (t == "wasm") m.wasm = true;
+        else if (t == "ml") m.ml = true;
+        else if (t == "cuda") m.cuda = true;
+        else if (t == "vulkan") m.vulkan = true;
+        else if (t == "embedded") m.embedded = true;
+    }
+    return m;
+}
+
+} // anonymous namespace
+
+std::string SlashCommandParser::ResolveLanguageMode(const std::string& id) {
+    const LanguageEntry* e = FindLangEntry(id);
+    return e ? e->mode : "";
+}
+
+ParsedCommand SlashCommandParser::ParseLanguage(const std::vector<std::string>& args) {
+    ParsedCommand cmd;
+    cmd.command = "language";
+    if (args.empty()) {
+        cmd.error = "language requires an id or 'detect'. Example: /language cpp";
+        return cmd;
+    }
+    cmd.args = args;
+    cmd.valid = true;
+    return cmd;
+}
+
+ParsedCommand SlashCommandParser::ParseContext(const std::vector<std::string>& args) {
+    ParsedCommand cmd;
+    cmd.command = "context";
+    if (args.empty()) {
+        cmd.error = "context requires a profile. Example: /context cpp +cuda";
+        return cmd;
+    }
+    cmd.args = args;
+    cmd.valid = true;
+    return cmd;
+}
+
+std::string SlashCommandParser::BuildContextSwitchResponse(const std::vector<std::string>& args) {
+    if (args.empty()) {
+        return "Error: context requires a profile. Example: /context cpp +cuda\nTry /help context for usage.";
+    }
+
+    std::string id = args[0];
+    std::transform(id.begin(), id.end(), id.begin(), ::tolower);
+
+    // Detect sub-command
+    if (id == "detect") {
+        return "Language detect: not yet wired to active editor extension — open a file and re-run.";
+    }
+
+    const LanguageEntry* entry = FindLangEntry(id);
+    ContextModifiers mods = ParseModifiers(args, 1);
+
+    std::string mode       = entry ? entry->mode      : id;
+    std::string runtime    = entry ? entry->runtime   : "native";
+    std::string toolchain  = entry ? entry->toolchain : "?";
+    std::string target     = entry ? entry->target    : "cpu";
+
+    // Modifier overrides
+    if (mods.gpu || mods.cuda)    target = "gpu";
+    if (mods.wasm)                target = "wasm";
+    if (mods.embedded)            target = "embedded";
+    if (mods.ml)                  { mode = "PYTHON_ML"; runtime = "cpython"; toolchain = "pip"; target = target == "cpu" ? "gpu" : target; }
+    if (mods.cuda)                toolchain += "+nvcc";
+    if (mods.vulkan)              toolchain += "+glslc";
+
+    // Build active modifier tag list
+    std::string tags = "[LANG:" + mode + "][TARGET:" + std::string(target) + "]";
+    if (mods.cuda)   tags += "[CTX:CUDA]";
+    if (mods.vulkan) tags += "[CTX:VULKAN]";
+    if (mods.ml)     tags += "[CTX:ML]";
+    if (mods.wasm)   tags += "[CTX:WASM]";
+
+    std::string out;
+    out += "Context switched\n";
+    out += "Mode:      " + mode + "\n";
+    out += "Runtime:   " + runtime + "\n";
+    out += "Toolchain: " + toolchain + "\n";
+    out += "Target:    " + target + "\n";
+    out += "Tags:      " + tags + "\n\n";
+    out += "Activated:\n";
+    out += "  Syntax:      " + mode + " highlight\n";
+    out += "  Autocomplete: " + mode + " profile\n";
+    out += "  Prompt tags: " + tags + "\n";
+    out += "  Diagnostics: " + toolchain + " errors\n";
+    if (mods.ml) {
+        out += "  Inference routing: GPU-accelerated (PyTorch/TF)\n";
+        out += "  Memory planner:    GPU expert load enabled\n";
+    }
+    if (mods.cuda || mods.vulkan) {
+        out += "  Compute bridge:    GPU shader hooks active\n";
+    }
+    out += "\nPrompt diff logger will now tag dispatches with: " + tags;
+    return out;
 }
 
 // Parse /streaming <subcommand> [args]

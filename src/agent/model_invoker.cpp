@@ -40,6 +40,16 @@ std::string toLower(std::string s) {
     return s;
 }
 
+int clampInt(int v, int lo, int hi) {
+    return std::max(lo, std::min(hi, v));
+}
+
+bool isMemBufferCrashSignature(const std::string& text) {
+    const std::string lowered = toLower(text);
+    return lowered.find("ggml_assert") != std::string::npos &&
+           lowered.find("mem_buffer") != std::string::npos;
+}
+
 } // anon
 
 /**
@@ -293,13 +303,19 @@ json ModelInvoker::sendOllamaRequest(const std::string& model,
                                       double temperature)
 {
     std::string url = m_endpoint + "/api/generate";
+    const std::string safePrompt = prompt.empty() ? std::string(" ") : prompt;
 
     json payload;
     payload["model"] = model;
-    payload["prompt"] = prompt;
+    payload["prompt"] = safePrompt;
     payload["temperature"] = temperature;
-    payload["num_predict"] = maxTokens;
+    payload["num_predict"] = clampInt(maxTokens, 16, 512);
     payload["stream"] = false;
+    payload["options"] = {
+        {"num_ctx", clampInt(maxTokens * 2, 256, 2048)},
+        {"num_batch", 64},
+        {"use_mmap", false}
+    };
 
     std::string body = payload.dump();
 
@@ -312,6 +328,28 @@ json ModelInvoker::sendOllamaRequest(const std::string& model,
     if (!resp.ok()) {
         fprintf(stderr, "[WARN] [ModelInvoker] Ollama error (HTTP %d): %s\n",
                 resp.statusCode, resp.error.c_str());
+
+        // One-shot safety retry for known llama.cpp runner mem-buffer crash path.
+        if (resp.statusCode == 500 &&
+            (isMemBufferCrashSignature(resp.error) || isMemBufferCrashSignature(resp.body))) {
+            json retryPayload = payload;
+            retryPayload["num_predict"] = 128;
+            retryPayload["options"]["num_ctx"] = 512;
+            retryPayload["options"]["num_batch"] = 32;
+            retryPayload["options"]["use_mmap"] = false;
+            retryPayload["options"]["num_gpu"] = 0;
+
+            const std::string retryBody = retryPayload.dump();
+            fprintf(stderr, "[WARN] [ModelInvoker] Retrying Ollama with reduced memory profile\n");
+            http::Response retryResp = http::post(url, retryBody, {
+                {"Content-Type", "application/json"}
+            });
+            if (retryResp.ok()) {
+                return json::parse(retryResp.body, nullptr, false);
+            }
+            fprintf(stderr, "[WARN] [ModelInvoker] Retry failed (HTTP %d): %s\n",
+                    retryResp.statusCode, retryResp.error.c_str());
+        }
         return json();
     }
 

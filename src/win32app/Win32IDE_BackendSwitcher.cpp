@@ -22,6 +22,7 @@
 #include "Win32IDE.h"
 #include "rawrxd/ide/inference_facade.hpp"
 #include <algorithm>
+#include <cctype>
 #include <chrono>
 #include <cstdlib>
 #include <filesystem>
@@ -34,6 +35,18 @@
 
 namespace
 {
+bool isBlankPrompt(const std::string& prompt)
+{
+    for (unsigned char ch : prompt)
+    {
+        if (!std::isspace(ch))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
 bool isTruthyEnv(const char* value)
 {
     if (!value || !*value)
@@ -116,6 +129,20 @@ std::string clampPromptForHeapSafety(const std::string& prompt)
     return clamped;
 }
 
+std::string clampPromptForContextBudget(const std::string& prompt, size_t contextLimit)
+{
+    // Conservative byte budget for tiny models: keep prompt bounded by context limit.
+    const size_t dynamicBudget = std::clamp(contextLimit * 8ull, 4096ull, 128ull * 1024ull);
+    if (prompt.size() <= dynamicBudget)
+    {
+        return prompt;
+    }
+
+    std::string clamped = prompt.substr(0, dynamicBudget);
+    clamped += "\n\n[truncated by RawrXD: prompt exceeded context-safe budget]";
+    return clamped;
+}
+
 bool isCriticalBackendMemoryPressure(const BackendMemorySnapshot& snapshot)
 {
     static constexpr SIZE_T kCriticalWorkingSetBytes = 3ull * 1024ull * 1024ull * 1024ull;
@@ -152,6 +179,7 @@ void Win32IDE::initBackendManager()
     local.endpoint = "";  // No endpoint — uses native engine directly
     local.model = "";     // Determined by loaded model file
     local.apiKey = "";
+    local.localGpuEnabled = true;
     local.enabled = true;
     local.timeoutMs = 60000;  // Local can be slow on large models
     local.maxTokens = 2048;
@@ -254,6 +282,11 @@ void Win32IDE::initBackendManager()
 
     // ---- Load saved configs (overrides defaults) ---------------------------
     loadBackendConfigs();
+
+    if (auto engine = m_nativeEngine ? m_nativeEngine : RawrXD::CPUInferenceEngine::GetSharedInstance())
+    {
+        engine->SetUseTitanAssembly(m_backendConfigs[(size_t)AIBackendType::LocalGGUF].localGpuEnabled);
+    }
 
     // ---- Auto-detect native model if still empty ----------------------------
     {
@@ -378,6 +411,8 @@ void Win32IDE::loadBackendConfigs()
                     cfg.model = bj["model"].get<std::string>();
                 if (bj.contains("apiKey"))
                     cfg.apiKey = bj["apiKey"].get<std::string>();
+                if (bj.contains("localGpuEnabled"))
+                    cfg.localGpuEnabled = bj["localGpuEnabled"].get<bool>();
                 if (bj.contains("enabled"))
                     cfg.enabled = bj["enabled"].get<bool>();
                 if (bj.contains("timeoutMs"))
@@ -422,6 +457,7 @@ void Win32IDE::saveBackendConfigs()
         bj["model"] = cfg.model;
         // NOTE: API keys are stored in plaintext — user-local config only
         bj["apiKey"] = cfg.apiKey;
+        bj["localGpuEnabled"] = cfg.localGpuEnabled;
         bj["enabled"] = cfg.enabled;
         bj["timeoutMs"] = cfg.timeoutMs;
         bj["maxTokens"] = cfg.maxTokens;
@@ -555,6 +591,8 @@ std::string Win32IDE::getBackendStatusString() const
         ss << "\n";
         ss << "     endpoint: " << (cfg.endpoint.empty() ? "(native)" : cfg.endpoint) << "\n";
         ss << "     model:    " << (cfg.model.empty() ? "(loaded file)" : cfg.model) << "\n";
+        if ((AIBackendType)i == AIBackendType::LocalGGUF)
+            ss << "     localGPU: " << (cfg.localGpuEnabled ? "enabled" : "disabled") << "\n";
     }
     // Native stream routing env label temporarily disabled - function not found
     // ss << "  Native stream routing (env): " << RawrXD::Agent::GetOllamaStreamRoutingEnvLabel() << "\n";
@@ -784,6 +822,11 @@ void Win32IDE::onBackendHealthResult(AIBackendType type, bool healthy, int laten
 
 std::string Win32IDE::routeInferenceRequest(const std::string& prompt)
 {
+    if (isBlankPrompt(prompt))
+    {
+        return "[BackendSwitcher] Error: Empty prompt suppressed (backend safety guard).";
+    }
+
     AIBackendType active;
     {
         std::lock_guard<std::mutex> lock(m_backendMutex);
@@ -794,6 +837,12 @@ std::string Win32IDE::routeInferenceRequest(const std::string& prompt)
             " op=routeInferenceRequest");
 
     std::string effectivePrompt = clampPromptForHeapSafety(prompt);
+
+    if (active == AIBackendType::LocalGGUF && m_nativeEngine)
+    {
+        effectivePrompt = clampPromptForContextBudget(effectivePrompt, m_nativeEngine->GetContextLimit());
+    }
+
     const BackendMemorySnapshot memorySnapshot = sampleBackendMemorySnapshot();
 
     if (active == AIBackendType::LocalGGUF && m_nativeEngine && m_nativeEngine->IsModelLoaded() &&
@@ -893,6 +942,12 @@ void Win32IDE::routeInferenceRequestAsync(const std::string& prompt,
 
 std::string Win32IDE::routeToLocalGGUF(const std::string& prompt)
 {
+    auto engine = m_nativeEngine ? m_nativeEngine : RawrXD::CPUInferenceEngine::GetSharedInstance();
+    if (engine)
+    {
+        engine->SetUseTitanAssembly(m_backendConfigs[(size_t)AIBackendType::LocalGGUF].localGpuEnabled);
+    }
+
     // Use the existing native engine path
     if (!m_nativeEngine || !m_nativeEngine->IsModelLoaded())
     {
@@ -911,11 +966,20 @@ std::string Win32IDE::routeToOllama(const std::string& prompt)
     }
 
     // Build native /api/generate request body
+    const std::string safePrompt = prompt.empty() ? std::string(" ") : prompt;
+    const int safeNumPredict = std::max(16, std::min(cfg.maxTokens, 512));
+    const int safeNumCtx = std::max(256, std::min(safeNumPredict * 2, 2048));
     nlohmann::json reqBody;
     reqBody["model"] = cfg.model;
-    reqBody["prompt"] = prompt;
+    reqBody["prompt"] = safePrompt;
     reqBody["stream"] = false;
-    reqBody["options"] = {{"temperature", cfg.temperature}, {"num_predict", cfg.maxTokens}};
+    reqBody["options"] = {
+        {"temperature", cfg.temperature},
+        {"num_predict", safeNumPredict},
+        {"num_ctx", safeNumCtx},
+        {"num_batch", 64},
+        {"use_mmap", false}
+    };
 
     try
     {
@@ -928,7 +992,33 @@ std::string Win32IDE::routeToOllama(const std::string& prompt)
         }
         if (rj.contains("error"))
         {
-            return "[BackendSwitcher] Error (native): " + rj["error"].get<std::string>();
+            const std::string err = rj["error"].get<std::string>();
+            std::string lowered = err;
+            std::transform(lowered.begin(), lowered.end(), lowered.begin(),
+                           [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+            if (lowered.find("ggml_assert") != std::string::npos && lowered.find("mem_buffer") != std::string::npos)
+            {
+                nlohmann::json retryBody = reqBody;
+                retryBody["options"]["num_predict"] = std::max(16, std::min(safeNumPredict, 128));
+                retryBody["options"]["num_ctx"] = 512;
+                retryBody["options"]["num_batch"] = 32;
+                retryBody["options"]["num_gpu"] = 0;
+                retryBody["options"]["use_mmap"] = false;
+
+                std::string retryResp = httpPost(cfg.endpoint + "/api/generate", retryBody.dump(),
+                                                 {"Content-Type: application/json"}, cfg.timeoutMs);
+                nlohmann::json rr = nlohmann::json::parse(retryResp);
+                if (rr.contains("response"))
+                {
+                    return rr["response"].get<std::string>();
+                }
+                if (rr.contains("error"))
+                {
+                    return "[BackendSwitcher] Error (native retry): " + rr["error"].get<std::string>();
+                }
+                return "[BackendSwitcher] Error (native retry): Unexpected response format";
+            }
+            return "[BackendSwitcher] Error (native): " + err;
         }
         return "[BackendSwitcher] Error (native): Unexpected response format";
     }
@@ -1425,7 +1515,8 @@ void Win32IDE::showBackendSwitcherDialog()
                    "  'AI: Switch to Ollama'\n"
                    "  'AI: Switch to OpenAI'\n"
                    "  'AI: Switch to Claude'\n"
-                   "  'AI: Switch to Gemini'\n",
+                   "  'AI: Switch to Gemini'\n"
+                   "  'Backend: Toggle LocalGGUF GPU'\n",
                    "General", OutputSeverity::Info);
 }
 
@@ -1448,6 +1539,8 @@ void Win32IDE::showBackendConfigDialog(AIBackendType type)
     ss << "  Timeout:     " << cfg.timeoutMs << " ms\n";
     ss << "  Max Tokens:  " << cfg.maxTokens << "\n";
     ss << "  Temperature: " << cfg.temperature << "\n";
+    if (type == AIBackendType::LocalGGUF)
+        ss << "  Local GPU:   " << (cfg.localGpuEnabled ? "enabled" : "disabled") << "\n";
 
     appendToOutput(ss.str(), "General", OutputSeverity::Info);
 }
@@ -1487,6 +1580,31 @@ void Win32IDE::updateStatusBarBackend()
     SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 11, (LPARAM)label.c_str());
 
     refreshMoEPackHudStatusBarPart();
+}
+
+void Win32IDE::setLocalGGUFGPUEnabled(bool enabled)
+{
+    {
+        std::lock_guard<std::mutex> lock(m_backendMutex);
+        m_backendConfigs[(size_t)AIBackendType::LocalGGUF].localGpuEnabled = enabled;
+    }
+
+    auto engine = m_nativeEngine ? m_nativeEngine : RawrXD::CPUInferenceEngine::GetSharedInstance();
+    if (engine)
+    {
+        engine->SetUseTitanAssembly(enabled);
+    }
+
+    logInfo(std::string("[BackendSwitcher] LocalGGUF GPU ") + (enabled ? "enabled" : "disabled"));
+    appendToOutput(std::string("[BackendSwitcher] LocalGGUF GPU ") + (enabled ? "enabled" : "disabled"),
+                   "General", OutputSeverity::Info);
+    updateStatusBarBackend();
+    saveBackendConfigs();
+}
+
+bool Win32IDE::isLocalGGUFGPUEnabled() const
+{
+    return m_backendConfigs[(size_t)AIBackendType::LocalGGUF].localGpuEnabled;
 }
 
 std::string Win32IDE::backendTypeString(AIBackendType type) const

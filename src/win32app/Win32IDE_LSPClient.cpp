@@ -1276,6 +1276,14 @@ void Win32IDE::onDiagnosticsReceived(const std::string& uri, const std::vector<L
         m_lspDiagnostics[uri] = diagnostics;
     }
 
+    // LSP notifications arrive on worker threads; only the UI thread may touch Win32 controls.
+    const bool onUiThread =
+        (m_hwndMain && IsWindow(m_hwndMain) && GetWindowThreadProcessId(m_hwndMain, nullptr) == GetCurrentThreadId());
+    if (!onUiThread)
+    {
+        return;
+    }
+
     // Bridge to Problems panel (Output > Problems tab)
     std::string filePath = uriToFilePath(uri);
     if (!filePath.empty() && m_hwndProblemsListView)

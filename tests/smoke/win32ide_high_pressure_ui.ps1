@@ -6,6 +6,13 @@ param(
     [int]$StressCycles = 40,
     [int]$PostSettleSec = 8,
 
+    # Stabilization defaults: disable optional startup subsystems for deterministic smoke.
+    [bool]$UseSafeStartup = $true,
+
+    # Disable model-command spam by default in stress loops; it can pull in heavyweight
+    # model/download/hotpatch-adjacent paths that are not needed for UI/LSP pressure validation.
+    [bool]$EnableModelCommand = $false,
+
     # Safe default command path through model subsystem (lists/refreshes models).
     # Override to a download command id in local labs if desired.
     [int]$ModelCommandId = 1036
@@ -47,6 +54,26 @@ $IDM_LSP_SHOW_SYMBOL_INFO = 5068
 $IDM_REFACTOR_SHOW_ALL = 11546
 
 Write-Host "[stress] Launching: $ExePath"
+
+$originalEnv = @{}
+if ($UseSafeStartup) {
+    $safeEnv = @{
+        "RAWRXD_SAFE_MODE" = "1"
+        "RAWRXD_DISABLE_STARTUP_EXTENSION_BOOTSTRAP" = "1"
+        "RAWRXD_SKIP_STARTUP_ATTEST" = "1"
+        "RAWRXD_ENABLE_BACKGROUND_BOOT" = "0"
+        "RAWRXD_AGENTIC_BROWSER" = "0"
+        "RAWRXD_ENABLE_STARTUP_CAMELLIA" = "0"
+    }
+
+    foreach ($kv in $safeEnv.GetEnumerator()) {
+        $originalEnv[$kv.Key] = [System.Environment]::GetEnvironmentVariable($kv.Key, "Process")
+        [System.Environment]::SetEnvironmentVariable($kv.Key, $kv.Value, "Process")
+    }
+
+    Write-Host "[stress] Safe startup mode enabled (optional startup subsystems disabled)"
+}
+
 $proc = Start-Process -FilePath $ExePath -PassThru
 
 try {
@@ -94,7 +121,7 @@ try {
             [void][Win32Interop]::PostMessage($hwnd, $WM_COMMAND, [IntPtr]$IDM_REFACTOR_SHOW_ALL, [IntPtr]::Zero)
         }
 
-        if (($i % 8) -eq 0) {
+        if ($EnableModelCommand -and ($i % 8) -eq 0) {
             # Exercises model command path (default is safe list/refresh lane).
             [void][Win32Interop]::PostMessage($hwnd, $WM_COMMAND, [IntPtr]$ModelCommandId, [IntPtr]::Zero)
         }
@@ -118,6 +145,12 @@ try {
     Write-Host "[stress] PASS: process remained alive under concurrent command pressure"
 }
 finally {
+    if ($UseSafeStartup) {
+        foreach ($kv in $originalEnv.GetEnumerator()) {
+            [System.Environment]::SetEnvironmentVariable($kv.Key, $kv.Value, "Process")
+        }
+    }
+
     if ($null -ne $proc) {
         $proc.Refresh()
         if (-not $proc.HasExited) {

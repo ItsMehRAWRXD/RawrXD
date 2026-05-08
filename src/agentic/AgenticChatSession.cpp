@@ -274,6 +274,18 @@ void AgenticChatSession::RunTurn(const std::string& user_message,
             const std::string topic = parsed.args.empty() ? std::string() : parsed.args.front();
             finalText = RawrXD::Agentic::SlashCommandParser::GetHelp(topic);
         }
+        else if (parsed.command == "taskframe")
+        {
+            finalText = RawrXD::Agentic::SlashCommandParser::BuildTaskFramework(parsed.args);
+        }
+        else if (parsed.command == "harden")
+        {
+            finalText = RawrXD::Agentic::SlashCommandParser::BuildHardenHarness(parsed.args);
+        }
+        else if (parsed.command == "language" || parsed.command == "context")
+        {
+            finalText = RawrXD::Agentic::SlashCommandParser::BuildContextSwitchResponse(parsed.args);
+        }
         else
         {
             const json toolCall = parsed.ToToolCall();

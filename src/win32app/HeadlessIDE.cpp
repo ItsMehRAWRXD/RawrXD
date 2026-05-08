@@ -1207,6 +1207,7 @@ static std::string discoverHeadlessLocalModelPath(const HeadlessConfig& config, 
     };
 
     appendParentIfFile(config.modelPath);
+
     appendParentIfFile(loadedModelPath);
     if (const char* envModel = std::getenv("RAWRXD_NATIVE_MODEL_PATH"))
     {
@@ -1818,10 +1819,10 @@ HeadlessResult HeadlessIDE::initialize(const HeadlessConfig& config)
         }
     }
 
-    // Experimental toggles (env-driven)
-    m_expHotpatchEnabled = readEnvFlag("RAWRXD_ENABLE_70B_HOTPATCH", true);
-    m_expLayerEvictionEnabled = readEnvFlag("RAWRXD_ENABLE_LAYER_EVICTION", true);
-    m_expGovernorEnabled = readEnvFlag("RAWRXD_ENABLE_GOVERNOR", true);
+    // Experimental toggles (env-driven) — default OFF for stability
+    m_expHotpatchEnabled = readEnvFlag("RAWRXD_ENABLE_70B_HOTPATCH", false);
+    m_expLayerEvictionEnabled = readEnvFlag("RAWRXD_ENABLE_LAYER_EVICTION", false);
+    m_expGovernorEnabled = readEnvFlag("RAWRXD_ENABLE_GOVERNOR", false);
     m_expQuantumTimeEnabled = readEnvFlag("RAWRXD_ENABLE_QTIME_MANAGER", false);
     m_expQuantumOrchEnabled = readEnvFlag("RAWRXD_ENABLE_QAGENT_ORCH", false);
     m_expQuantumMissingEnabled = readEnvFlag("RAWRXD_ENABLE_QMISSING_IMPL", false);
@@ -2336,6 +2337,27 @@ HeadlessResult HeadlessIDE::parseArgs(int argc, char* argv[])
             m_config.temperature = parsedTemperature;
             ++i;
         }
+        else if (arg == "--local-gpu")
+        {
+            if (i + 1 >= argc)
+            {
+                return HeadlessResult::error("Missing value for --local-gpu (on|off)", 2);
+            }
+            std::string v = argv[++i];
+            std::transform(v.begin(), v.end(), v.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+            if (v == "on" || v == "1" || v == "true" || v == "yes")
+            {
+                m_config.localGpuEnabled = true;
+            }
+            else if (v == "off" || v == "0" || v == "false" || v == "no")
+            {
+                m_config.localGpuEnabled = false;
+            }
+            else
+            {
+                return HeadlessResult::error("Invalid value for --local-gpu (expected on|off)", 2);
+            }
+        }
         else if (arg == "--repl")
         {
             m_config.enableRepl = true;
@@ -2524,6 +2546,7 @@ HeadlessResult HeadlessIDE::initEngines()
 HeadlessResult HeadlessIDE::initBackendManager()
 {
     auto startTime = std::chrono::steady_clock::now();
+    m_localGpuEnabled = m_config.localGpuEnabled;
 
     // Configure default backend based on config
     if (!m_config.backend.empty())
@@ -2591,7 +2614,8 @@ HeadlessResult HeadlessIDE::initBackendManager()
     }
 
     const char* backendNames[] = {"LocalGGUF", "native", "OpenAI", "Claude", "Gemini"};
-    statusMsg << " | Active: " << backendNames[static_cast<int>(m_activeBackend)];
+    statusMsg << " | Active: " << backendNames[static_cast<int>(m_activeBackend)]
+              << " | LocalGPU: " << (m_localGpuEnabled ? "on" : "off");
 
     m_backendManagerInitialized = true;
     auto elapsed =
@@ -3517,6 +3541,14 @@ bool HeadlessIDE::setActiveBackend(AIBackendType type)
     AIBackendType previousBackend = m_activeBackend;
     m_activeBackend = type;
 
+    if (m_activeBackend == AIBackendType::LocalGGUF)
+    {
+        if (auto engine = RawrXD::CPUInferenceEngine::GetSharedInstance())
+        {
+            engine->SetUseTitanAssembly(m_localGpuEnabled);
+        }
+    }
+
     char buf[256];
     snprintf(buf, sizeof(buf), "Backend switched: %s → %s", backendNames[static_cast<int>(previousBackend)],
              backendNames[idx]);
@@ -3538,6 +3570,7 @@ std::string HeadlessIDE::getBackendStatusString() const
     std::ostringstream oss;
     oss << "Backend: " << (idx >= 0 && idx < 5 ? backendNames[idx] : "Unknown") << " (headless)\n";
     oss << "Status: Active\n";
+    oss << "Local GPU: " << (m_localGpuEnabled ? "enabled" : "disabled") << "\n";
     oss << "Model: " << (m_loadedModelName.empty() ? "(none)" : m_loadedModelName) << "\n";
     oss << "Inference requests: " << m_inferenceRequestCount;
     return oss.str();
@@ -3838,6 +3871,13 @@ std::string HeadlessIDE::processInferenceWithToolLoop(const std::string& initial
 
 std::string HeadlessIDE::routeInferenceRequest(const std::string& prompt)
 {
+    const bool blankPrompt = std::all_of(prompt.begin(), prompt.end(), [](unsigned char ch)
+                                         { return std::isspace(ch) != 0; });
+    if (blankPrompt)
+    {
+        return "[error] Empty prompt suppressed (backend safety guard)";
+    }
+
     m_inferenceRequestCount++;
     recordSimpleEvent("inference_request");
 
@@ -3937,6 +3977,8 @@ std::string HeadlessIDE::routeInferenceRequest(const std::string& prompt)
         {
             return "[error] LocalGGUF backend active but CPU fallback engine is unavailable";
         }
+
+        engine->SetUseTitanAssembly(m_localGpuEnabled);
 
         if (!engine->IsModelLoaded())
         {
@@ -8230,6 +8272,27 @@ void HeadlessIDE::processReplCommand(const std::string& input)
     {
         m_outputSink->appendOutput(getBackendStatusString().c_str(), OutputSeverity::Info);
     }
+    else if (input == "gpu" || input == "gpu status")
+    {
+        m_outputSink->appendOutput((std::string("LocalGGUF GPU: ") + (m_localGpuEnabled ? "enabled" : "disabled")).c_str(),
+                                   OutputSeverity::Info);
+    }
+    else if (input == "gpu on")
+    {
+        m_localGpuEnabled = true;
+        m_config.localGpuEnabled = true;
+        if (auto engine = RawrXD::CPUInferenceEngine::GetSharedInstance())
+            engine->SetUseTitanAssembly(true);
+        m_outputSink->appendOutput("LocalGGUF GPU enabled", OutputSeverity::Info);
+    }
+    else if (input == "gpu off")
+    {
+        m_localGpuEnabled = false;
+        m_config.localGpuEnabled = false;
+        if (auto engine = RawrXD::CPUInferenceEngine::GetSharedInstance())
+            engine->SetUseTitanAssembly(false);
+        m_outputSink->appendOutput("LocalGGUF GPU disabled", OutputSeverity::Info);
+    }
     else if (input == "router")
     {
         m_outputSink->appendOutput(getRouterStatusString().c_str(), OutputSeverity::Info);
@@ -8548,6 +8611,9 @@ RawrXD Headless IDE — REPL Commands
   unload           Unload current model
   model            Show loaded model info
   backends         Backend switcher status
+    gpu              Show LocalGGUF GPU toggle status
+    gpu on           Enable LocalGGUF GPU acceleration
+    gpu off          Disable LocalGGUF GPU acceleration
   router           LLM router status
   failures         Failure detector stats
   history          Agent history stats
@@ -8607,6 +8673,7 @@ Command-line flags:
   --input <file>                Batch mode: read prompts from file
   --output <file>               Batch mode: write results to file
   --backend <name>              Set default backend
+    --local-gpu <on|off>          Toggle LocalGGUF GPU acceleration
   --max-tokens <n>              Max tokens (default: 2048)
   --temperature <f>             Temperature (default: 0.7)
   --repl                        Interactive REPL mode

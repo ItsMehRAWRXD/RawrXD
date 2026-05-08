@@ -66,6 +66,7 @@
 #include <iostream>
 #include <mutex>
 #include <nlohmann/json.hpp>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -441,9 +442,56 @@ static void printHeadlessQuickHelp()
           "  --prompt <txt>    Single-shot Ollama chat (one /api/chat turn)\n"
           "  --agent-prompt    Same prompt, but use multi-turn tool loop (IDE agentic parity)\n"
           "  --ollama-model M  Pin Ollama model (else /api/tags or RAWRXD_NATIVE_MODEL)\n"
+          "  --current-file-context[=0|1]  Override current-file context injection for this launch\n"
+          "  --no-current-file-context     Disable current-file context injection for this launch\n"
           "  --help            Show this help and exit\n",
           stdout);
     fflush(stdout);
+}
+
+static std::optional<bool> parseCurrentFileContextCliOverride(LPSTR lpCmdLine)
+{
+    if (!lpCmdLine || !lpCmdLine[0])
+    {
+        return std::nullopt;
+    }
+
+    std::istringstream iss(lpCmdLine);
+    std::string token;
+    while (iss >> token)
+    {
+        if (token == "--no-current-file-context" || token == "--disable-current-file-context")
+        {
+            return false;
+        }
+        if (token == "--current-file-context")
+        {
+            return true;
+        }
+        const std::string prefix = "--current-file-context=";
+        if (token.rfind(prefix, 0) == 0)
+        {
+            const std::string value = token.substr(prefix.size());
+            if (value == "0" || value == "false" || value == "False" || value == "FALSE" || value == "no" ||
+                value == "No" || value == "NO" || value == "off" || value == "Off" || value == "OFF")
+            {
+                return false;
+            }
+            return true;
+        }
+    }
+
+    return std::nullopt;
+}
+
+static void applyCurrentFileContextCliOverride(LPSTR lpCmdLine)
+{
+    const std::optional<bool> enabled = parseCurrentFileContextCliOverride(lpCmdLine);
+    if (!enabled.has_value())
+    {
+        return;
+    }
+    SetEnvironmentVariableA("RAWRXD_CURRENT_FILE_CONTEXT", enabled.value() ? "1" : "0");
 }
 
 // ============================================================================
@@ -3765,6 +3813,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
     // Explorer, shortcuts, or different CWD. Prevents silent failures on init.
     // ========================================================================
     setCwdToExeDirectory();
+    applyCurrentFileContextCliOverride(lpCmdLine);
     earlyWinMainMilestone("winmain_early_b1",
                           "[IDE-Pipeline:WinMain-Early] Batch 1/8: working directory pinned to exe folder\n",
                           "[Init:WinMain-Early] Batch 1/8: process CWD set to executable directory\n");

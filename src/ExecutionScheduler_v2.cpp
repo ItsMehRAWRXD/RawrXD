@@ -210,7 +210,7 @@ TaskID ExecutionScheduler_v2::submit(std::function<void()> work,
     // Round-robin to worker queues
     static std::atomic<uint32_t> next_worker{0};
     uint32_t worker_id = next_worker.fetch_add(1, std::memory_order_relaxed) % 
-n                         static_cast<uint32_t>(workers_.size());
+                         static_cast<uint32_t>(workers_.size());
     
     // Wrap in priority-aware execution
     auto wrapped_work = [this, node, priority]() {
@@ -272,8 +272,12 @@ n                         static_cast<uint32_t>(workers_.size());
 }
 
 void ExecutionScheduler_v2::execute_phase(ExecutionPhase phase, const PhaseBudget& budget) {
-    phase_budgets_[static_cast<size_t>(phase)] = budget;
-    phase_budgets_[static_cast<size_t>(phase)].begin();
+    auto& phase_budget = phase_budgets_[static_cast<size_t>(phase)];
+    phase_budget.max_ns = budget.max_ns;
+    phase_budget.used_ns = 0;
+    phase_budget.start_time = 0;
+    phase_budget.exceeded.store(false, std::memory_order_relaxed);
+    phase_budget.begin();
     
     phase_state_.transition_to(phase);
     

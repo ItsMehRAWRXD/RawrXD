@@ -87,16 +87,16 @@ PlaybackController* playback_create(OmnidirectionalHotpatch* omni) {
         ctrl->current_state_id = omni->state_graph->states[0].state_id;
     }
     
-    // Default smoke test config
+    // Default smoke test config — conservative: hotpatching off by default
     ctrl->smoke_config.mode = SMOKE_STANDARD;
     ctrl->smoke_config.max_iterations = 100;
     ctrl->smoke_config.max_time_seconds = 300;
-    ctrl->smoke_config.test_operations = HOTPATCH_ALL;
+    ctrl->smoke_config.test_operations = 0;  // HOTPATCH_ALL requires explicit opt-in
     ctrl->smoke_config.exploration_rate = 0.3f;
-    ctrl->smoke_config.validate_each_step = true;
-    ctrl->smoke_config.validation_tokens = 100;
-    ctrl->smoke_config.record_session = true;
-    ctrl->smoke_config.generate_report = true;
+    ctrl->smoke_config.validate_each_step = false;
+    ctrl->smoke_config.validation_tokens = 0;
+    ctrl->smoke_config.record_session = false;
+    ctrl->smoke_config.generate_report = false;
     
     // Initialize best/worst tracking
     ctrl->session->best_quality_score = -FLT_MAX;

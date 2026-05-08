@@ -3036,6 +3036,13 @@ void Win32IDE::handleToolsCommand(int commandId)
             appendToOutput("[BackendSwitcher] Backend configs saved to disk.", "General", OutputSeverity::Info);
             break;
 
+        case IDM_BACKEND_TOGGLE_LOCAL_GPU:  // 5322
+        {
+            const bool nextState = !isLocalGGUFGPUEnabled();
+            setLocalGGUFGPUEnabled(nextState);
+        }
+        break;
+
         // ================================================================
         // LLM Router — Phase 8C (5048+)
         // ================================================================
@@ -12073,6 +12080,7 @@ void Win32IDE::buildCommandRegistry()
                                  "Inference: Reload Speculative Decoding (Draft + Target GGUF)", "", "Inference"});
     m_commandRegistry.push_back({IDM_BACKEND_SET_API_KEY, "AI: Set API Key (Active Backend)", "", "AI"});
     m_commandRegistry.push_back({IDM_BACKEND_SAVE_CONFIGS, "Backend: Save Backend Configurations", "", "Backend"});
+    m_commandRegistry.push_back({IDM_BACKEND_TOGGLE_LOCAL_GPU, "Backend: Toggle LocalGGUF GPU", "", "Backend"});
 
     // ================================================================
     // LLM Router (5048–5057 range — routed via handleToolsCommand)

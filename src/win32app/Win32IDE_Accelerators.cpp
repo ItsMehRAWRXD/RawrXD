@@ -101,6 +101,7 @@ void Win32IDE::createAcceleratorTable()
         {FCONTROL | FALT | FVIRTKEY, 'I', IDM_EDITOR_SHOW_INLAY_HINTS},
         {FCONTROL | FALT | FVIRTKEY, 'T', 4011},
         {FCONTROL | FALT | FVIRTKEY, 'A', 4012},
+        {FCONTROL | FSHIFT | FVIRTKEY, 'Y', IDM_AGENT_TOGGLE_FILE_CONTEXT},
     };
     m_hAccel = CreateAcceleratorTableA(accelTable, static_cast<int>(sizeof(accelTable) / sizeof(accelTable[0])));
 }
