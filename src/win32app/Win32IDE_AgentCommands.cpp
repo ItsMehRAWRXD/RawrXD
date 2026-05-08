@@ -1241,7 +1241,21 @@ void Win32IDE::onAgentConfigureModel()
 
     EnableWindow(m_hwndMain, FALSE);
 
-    HWND hwndDlg = CreateWindowExA(WS_EX_DLGMODALFRAME, "STATIC", "🤖 Configure AI Model",
+    // Register a proper dialog window class — "STATIC" is for labels, not top-level windows.
+    static bool s_modelDlgClassRegistered = false;
+    if (!s_modelDlgClassRegistered)
+    {
+        WNDCLASSA wc{};
+        wc.lpfnWndProc = DefWindowProcA;
+        wc.hInstance = m_hInstance;
+        wc.lpszClassName = "RawrXD_ModelDlg";
+        wc.hCursor = LoadCursorA(nullptr, IDC_ARROW);
+        wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+        RegisterClassA(&wc);
+        s_modelDlgClassRegistered = true;
+    }
+
+    HWND hwndDlg = CreateWindowExA(WS_EX_DLGMODALFRAME, "RawrXD_ModelDlg", "Configure AI Model",
                                    WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE, dlgX, dlgY, dlgWidth, dlgHeight,
                                    m_hwndMain, nullptr, m_hInstance, nullptr);
 
