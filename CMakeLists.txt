@@ -4378,6 +4378,7 @@ if(WIN32)
         # Phase 2: Aggressive Memory Architecture
         # VirtualAlloc reservation + lazy commitment for 26.5GB floor
         src/compression/virtualalloc_reservation_manager.cpp
+        src/compression/sovereign_pager.cpp
         # INT4 KV unpacking hot-path for 4x memory compression
         src/compression/int4_kv_dequant_kernel.cpp
         # IQ2_M 2.5-bit weight dequantization kernel (scalar fallback + batch dispatch)
@@ -6696,6 +6697,25 @@ set_target_properties(test_fp8_quantization PROPERTIES
 )
 
 message(STATUS "[FP8Quantization] Test target: test_fp8_quantization (build with: cmake --build . --target test_fp8_quantization)")
+
+if(WIN32)
+    add_executable(test_sovereign_pager_smoke EXCLUDE_FROM_ALL
+        tests/test_sovereign_pager_smoke.cpp
+        src/compression/sovereign_pager.cpp
+    )
+    target_include_directories(test_sovereign_pager_smoke PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/src
+    )
+    target_compile_features(test_sovereign_pager_smoke PRIVATE cxx_std_17)
+    if(MSVC)
+        target_compile_options(test_sovereign_pager_smoke PRIVATE /EHsc /W3)
+    endif()
+    target_link_libraries(test_sovereign_pager_smoke PRIVATE kernel32)
+    set_target_properties(test_sovereign_pager_smoke PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+    )
+endif()
 
 # ============================================================================
 # FP8 Verifier Test Suite (Scalar vs FP8 Numerical Validation)
