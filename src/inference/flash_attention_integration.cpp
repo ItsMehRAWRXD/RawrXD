@@ -83,14 +83,14 @@ bool DispatchMultiHeadAttention(
     };
     
     // Allocate Q (single token, all heads)
-    float* Q_aligned = allocate_aligned(numHeads * headDim, 64);
+    float* Q_aligned = allocate_aligned(numHeads * head_dim, 64);
     if (!Q_aligned) {
         std::cerr << "[FlashAttention] Failed to allocate aligned Q buffer\n";
         return false;
     }
     
     // Allocate K (full sequence, all heads)
-    float* K_aligned = allocate_aligned(numKVHeads * seqLenN * headDim, 64);
+    float* K_aligned = allocate_aligned(numKVHeads * seqLenN * head_dim, 64);
     if (!K_aligned) {
         free_aligned(Q_aligned);
         std::cerr << "[FlashAttention] Failed to allocate aligned K buffer\n";
@@ -98,7 +98,7 @@ bool DispatchMultiHeadAttention(
     }
     
     // Allocate V (full sequence, all heads)
-    float* V_aligned = allocate_aligned(numKVHeads * seqLenN * headDim, 64);
+    float* V_aligned = allocate_aligned(numKVHeads * seqLenN * head_dim, 64);
     if (!V_aligned) {
         free_aligned(Q_aligned);
         free_aligned(K_aligned);
@@ -107,7 +107,7 @@ bool DispatchMultiHeadAttention(
     }
     
     // Allocate O (single token, all heads)
-    float* O_aligned = allocate_aligned(numHeads * headDim, 64);
+    float* O_aligned = allocate_aligned(numHeads * head_dim, 64);
     if (!O_aligned) {
         free_aligned(Q_aligned);
         free_aligned(K_aligned);
@@ -123,10 +123,10 @@ bool DispatchMultiHeadAttention(
     // to [n_heads][seq_len][head_dim])
     for (int h = 0; h < numKVHeads; h++) {
         for (int s = 0; s < seqLenN; s++) {
-            for (int d = 0; d < headDim; d++) {
-                // K_cache[s][h * head_dim + d] -> K_aligned[h * seqLenN * headDim + s * headDim + d]
-                K_aligned[h * seqLenN * headDim + s * headDim + d] = K_cache[s][h * headDim + d];
-                V_aligned[h * seqLenN * headDim + s * headDim + d] = V_cache[s][h * headDim + d];
+            for (int d = 0; d < head_dim; d++) {
+                // K_cache[s][h * head_dim + d] -> K_aligned[h * seqLenN * head_dim + s * head_dim + d]
+                K_aligned[h * seqLenN * head_dim + s * head_dim + d] = K_cache[s][h * head_dim + d];
+                V_aligned[h * seqLenN * head_dim + s * head_dim + d] = V_cache[s][h * head_dim + d];
             }
         }
     }
@@ -139,7 +139,7 @@ bool DispatchMultiHeadAttention(
         O_aligned,
         seqLenM,
         seqLenN,
-        headDim,
+        head_dim,
         numHeads,
         numKVHeads,
         batchSize,
@@ -149,7 +149,7 @@ bool DispatchMultiHeadAttention(
     if (success) {
         // Copy output back to out vector
         // O_aligned is [n_heads * head_dim] (single token)
-        std::copy(O_aligned, O_aligned + numHeads * headDim, out.begin());
+        std::copy(O_aligned, O_aligned + numHeads * head_dim, out.begin());
     }
     
     // Free aligned buffers

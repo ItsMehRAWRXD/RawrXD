@@ -29,6 +29,11 @@ namespace RawrXD {
  * @param batchSize Batch size
  * @param causal Whether to apply causal mask (autoregressive)
  * @return true if FlashAttention was used, false if standard fallback
+ *
+ * Contract (v1): Q/K/V/O are **FP32**, contiguous, 64-byte aligned (CPU AVX-512 path).
+ * FP8-packed KV + per-block scales and a Vulkan fused dequant+attention entry point are
+ * intentionally **not** wired here yet — add a parallel `DispatchFlashAttentionFP8Packed` (or
+ * Vulkan buffer/bindings) rather than overloading these `float*` parameters.
  */
 bool DispatchFlashAttention(
     float* Q,
