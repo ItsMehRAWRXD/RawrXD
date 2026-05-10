@@ -6,6 +6,9 @@
 //
 // Instances are large (~fixed pools); allocate with std::make_unique / new, not
 // on the default thread stack.
+//
+// GPU: `ExpertWeights()` returns CPU RAM; bind to Vulkan by copying into a
+// host-visible `VkBuffer` or staging to `DEVICE_LOCAL` (see flash_attention_vulkan_fp8.h).
 // ============================================================================
 
 #pragma once
@@ -108,11 +111,9 @@ class SovereignPager
     bool find_contiguous_free(uint32_t need, uint32_t* out_start) const;
     bool mark_contiguous_busy(uint32_t start, uint32_t need, bool busy);
     bool read_page_sync(Page& p, uint64_t file_offset_bytes);
-    static DWORD WINAPI io_thread_main(LPVOID ctx);
 
     HANDLE iocp_ = nullptr;
     HANDLE h_disk_ = INVALID_HANDLE_VALUE;
-    HANDLE h_io_thread_ = nullptr;
 
     uint64_t hot_budget_pages_ = 0;
     uint64_t warm_budget_pages_ = 0;

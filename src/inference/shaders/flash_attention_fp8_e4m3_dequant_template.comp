@@ -2,12 +2,32 @@
 // flash_attention_fp8_e4m3_dequant_template.comp — Reference E4M3 → float32
 // ============================================================================
 // glslangValidator -V --target-env vulkan1.3 this_file.comp -o e4m3_dequant.spv
-// Mirrors host RawrXD::Quantization E4M3 decode (OCP NaN: exp=15, mant=7).
+//
+// Push layout: MUST match C++ RawrXD::FlashAttentionFP8PushConstants (36 bytes).
+// Use explicit offsets so padding cannot drift vs MSVC/clang.
+//
+// Decode policy (flags bit kFlashAttentionFP8FlagDecodeNoRefusal):
+//   Strict (0): OCP NaN (exp=15, mant=7) → quiet NaN (matches host e4m3ToFloat).
+//   No-refusal (1): same pattern → 0.0 so attention matmuls never ingest NaN.
 // ============================================================================
 
 #version 450
 
+layout(push_constant) uniform Push
+{
+    layout(offset = 0) uint seqLenM;
+    layout(offset = 4) uint seqLenN;
+    layout(offset = 8) uint headDim;
+    layout(offset = 12) uint numHeads;
+    layout(offset = 16) uint numKVHeads;
+    layout(offset = 20) uint flags;
+    layout(offset = 24) float qScale;
+    layout(offset = 28) float kScale;
+    layout(offset = 32) float vScale;
+} pc;
+
 const uint FP8_E4M3_BIAS = 7u;
+const uint SOVEREIGN_FP8_DECODE_NO_REFUSAL = 1u;
 
 float e4m3_u8_to_f32(uint u8)
 {
@@ -18,6 +38,10 @@ float e4m3_u8_to_f32(uint u8)
 
     if (exp == 15u && mant == 7u)
     {
+        if ((pc.flags & SOVEREIGN_FP8_DECODE_NO_REFUSAL) != 0u)
+        {
+            return 0.0f;
+        }
         return uintBitsToFloat(0x7fc00000u);
     }
 
@@ -47,10 +71,12 @@ float dequant_e4m3_byte(uint packed_u32, uint byte_idx, float inv_scale)
 layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
 void main()
 {
-    const uint lane = gl_LocalInvocationIndex;
-    const float f = e4m3_u8_to_f32(lane & 0xFFu);
-    if (f != f)
+    const uint lane = gl_LocalInvocationIndex & 0xFFu;
+    float f = e4m3_u8_to_f32(lane) * pc.qScale;
+    f += pc.kScale * 1e-20f;
+    f += pc.vScale * 1e-20f;
+    f += float(pc.seqLenM + pc.seqLenN + pc.headDim + pc.numHeads + pc.numKVHeads + pc.flags) * 1e-30f;
+    if (lane == 0u && f > -1e40f)
     {
-        return;
     }
 }
