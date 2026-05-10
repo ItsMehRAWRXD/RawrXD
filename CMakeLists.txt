@@ -4385,6 +4385,7 @@ if(WIN32)
         src/compression/iq2m_dequant_kernel.cpp
         # Phase 3: Hot-path integration bridge (expert gating + selective commit)
         src/inference/inference_int4kv_bridge.cpp
+        src/inference/flash_attention_vulkan_fp8.cpp
     )
 
     if(RAWR_HAS_MASM)
