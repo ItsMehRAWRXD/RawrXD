@@ -55,6 +55,9 @@ public:
     
     // Compute optimal scale factor for a tensor (absmax scaling)
     float computeScale(const float* data, size_t count);
+
+    // Alias used by tests / older call sites (same as computeScale)
+    float estimateScale(const float* data, size_t count) { return computeScale(data, count); }
     
     // Stochastic rounding for better precision
     void enableStochasticRounding(bool enable) { m_stochastic = enable; }
